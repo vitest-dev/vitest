@@ -290,7 +290,10 @@ describe('reporters', () => {
 
     expect(ctx).toBeDefined()
 
-    const result = stdout.replace(new RegExp(ctx!.config.root, 'g'), '<root>')
+    // the file path is escaped on windows
+    const result = stdout
+      .replace(/file=(\w)%3A/g, 'file=$1:')
+      .replace(new RegExp(ctx!.config.root, 'g'), '<root>')
     expect(result).toMatchInlineSnapshot(`
       "
       ::notice file=<root>/basic.test.ts,line=5,column=3::1
