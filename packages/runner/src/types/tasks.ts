@@ -684,22 +684,26 @@ export interface TestContext {
   /**
    * An [`AbortSignal`](https://developer.mozilla.org/en-US/docs/Web/API/AbortSignal) that will be aborted if the test times out or
    * the test run was cancelled.
+   * @see {@link https://vitest.dev/guide/test-context#signal}
    */
   readonly signal: AbortSignal
 
   /**
    * Extract hooks on test failed
+   * @see {@link https://vitest.dev/guide/test-context#ontestfailed}
    */
   readonly onTestFailed: (fn: OnTestFailedHandler, timeout?: number) => void
 
   /**
    * Extract hooks on test failed
+   * @see {@link https://vitest.dev/guide/test-context#ontestfinished}
    */
   readonly onTestFinished: (fn: OnTestFinishedHandler, timeout?: number) => void
 
   /**
    * Mark tests as skipped. All execution after this call will be skipped.
    * This function throws an error, so make sure you are not catching it accidentally.
+   * @see {@link https://vitest.dev/guide/test-context#skip}
    */
   readonly skip: {
     (note?: string): never
@@ -707,7 +711,8 @@ export interface TestContext {
   }
 
   /**
-   * // TODO
+   * Add a test annotation that will be displayed by your reporter.
+   * @see {@link https://vitest.dev/guide/test-context#annotate}
    */
   readonly annotate: {
     (message: string, type?: string, attachment?: TestAttachment): void

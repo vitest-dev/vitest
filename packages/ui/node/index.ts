@@ -7,7 +7,7 @@ import { basename, resolve } from 'pathe'
 import sirv from 'sirv'
 import c from 'tinyrainbow'
 import { coverageConfigDefaults } from 'vitest/config'
-import { isValidApiRequest } from 'vitest/node'
+import { isFileServingAllowed, isValidApiRequest } from 'vitest/node'
 import { version } from '../package.json'
 
 export default (ctx: Vitest): Plugin => {
@@ -69,6 +69,12 @@ export default (ctx: Vitest): Plugin => {
 
             // ignore invalid requests
             if (!isValidApiRequest(ctx.config, req) || !contentType || !path) {
+              return next()
+            }
+
+            const fsPath = decodeURIComponent(path)
+
+            if (!isFileServingAllowed(ctx.vite.config, fsPath)) {
               return next()
             }
 

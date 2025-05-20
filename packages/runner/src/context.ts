@@ -176,7 +176,7 @@ export function createTestContext(
       annotation.attachment = attachment
       // convert to a string so it's easier to serialise
       if (attachment.body instanceof Uint8Array) {
-        attachment.body = encodeUin8Array(attachment.body)
+        attachment.body = encodeUint8Array(attachment.body)
       }
     }
     if (location) {
@@ -265,7 +265,7 @@ for (let i = 0; i < 10; i++) {
   table.push(i.toString(10))
 }
 
-function encodeUin8Array(bytes: Uint8Array): string {
+function encodeUint8Array(bytes: Uint8Array): string {
   let base64 = ''
   const len = bytes.byteLength
   for (let i = 0; i < len; i += 3) {

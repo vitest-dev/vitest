@@ -85,6 +85,7 @@ export function extractSourceMap(code: string): EncodedSourceMap | null {
   while ((match = regexp.exec(code))) {
     lastMatch = match
   }
+  // remove only the last source map keeping user strings that look like maps
   if (lastMatch) {
     return JSON.parse(Buffer.from(lastMatch[1], 'base64').toString('utf-8'))
   }

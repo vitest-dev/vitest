@@ -7,7 +7,7 @@ if (!testPath || !testPath.includes('basic.test.ts')) {
   throw new Error(`testPath is not correct: ${testPath}`)
 }
 
-test.only('Math.sqrt()', async () => {
+test('Math.sqrt()', async () => {
   assert.equal(Math.sqrt(4), two)
   assert.equal(Math.sqrt(2), Math.SQRT2)
   expect(Math.sqrt(144)).toStrictEqual(12)

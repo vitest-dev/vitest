@@ -1,4 +1,4 @@
-import type { Task } from '@vitest/runner'
+import type { Task, TestAttachment } from '@vitest/runner'
 import type { ModuleGraphData, RunnerTestFile, SerializedConfig } from 'vitest'
 import type { HTMLOptions, Vitest } from 'vitest/node'
 import type { Reporter } from 'vitest/reporters'
@@ -86,37 +86,9 @@ export default class HTMLReporter implements Reporter {
       if (task.type === 'test') {
         task.annotations.forEach((annotation) => {
           const attachment = annotation.attachment
-          if (!attachment) {
-            return
+          if (attachment) {
+            promises.push(this.processAttachment(attachment))
           }
-
-          promises.push((async () => {
-            if (attachment.path) {
-              if (attachment.path.startsWith('http://') || attachment.path.startsWith('https://')) {
-                return
-              }
-              const buffer = await readFile(attachment.path)
-              const hash = crypto.createHash('sha1').update(buffer).digest('hex')
-              const filename = hash + extname(attachment.path)
-              await writeFile(resolve(this.reporterDir, 'data', filename), buffer)
-              attachment.path = filename
-              attachment.body = undefined
-              return
-            }
-
-            if (attachment.body) {
-              const buffer = typeof attachment.body === 'string'
-                ? Buffer.from(attachment.body, 'base64')
-                : Buffer.from(attachment.body)
-
-              const hash = crypto.createHash('sha1').update(buffer).digest('hex')
-              const extension = mime.getExtension(attachment.contentType || 'application/octet-stream') || 'dat'
-              const filename = `${hash}.${extension}`
-              await writeFile(resolve(this.reporterDir, 'data', filename), buffer)
-              attachment.path = filename
-              attachment.body = undefined
-            }
-          })())
         })
       }
       else {
@@ -152,9 +124,44 @@ export default class HTMLReporter implements Reporter {
     await this.writeReport(stringify(result))
   }
 
+  async processAttachment(attachment: TestAttachment): Promise<void> {
+    if (attachment.path) {
+      // keep external resource as is, but remove body if it's set somehow
+      if (
+        attachment.path.startsWith('http://')
+        || attachment.path.startsWith('https://')
+      ) {
+        attachment.body = undefined
+        return
+      }
+
+      const buffer = await readFile(attachment.path)
+      const hash = crypto.createHash('sha1').update(buffer).digest('hex')
+      const filename = hash + extname(attachment.path)
+      // move the file into an html directory to make access/publishing UI easier
+      await writeFile(resolve(this.reporterDir, 'data', filename), buffer)
+      attachment.path = filename
+      attachment.body = undefined
+      return
+    }
+
+    if (attachment.body) {
+      const buffer = typeof attachment.body === 'string'
+        ? Buffer.from(attachment.body, 'base64')
+        : Buffer.from(attachment.body)
+
+      const hash = crypto.createHash('sha1').update(buffer).digest('hex')
+      const extension = mime.getExtension(attachment.contentType || 'application/octet-stream') || 'dat'
+      const filename = `${hash}.${extension}`
+      // store the file in html directory instead of passing down as a body
+      await writeFile(resolve(this.reporterDir, 'data', filename), buffer)
+      attachment.path = filename
+      attachment.body = undefined
+    }
+  }
+
   async writeReport(report: string): Promise<void> {
-    const htmlDir = this.reporterDir
-    const metaFile = resolve(htmlDir, 'html.meta.json.gz')
+    const metaFile = resolve(this.reporterDir, 'html.meta.json.gz')
 
     const promiseGzip = promisify(gzip)
     const data = await promiseGzip(report, {
@@ -168,7 +175,7 @@ export default class HTMLReporter implements Reporter {
       files.map(async (f) => {
         if (f === 'index.html') {
           const html = await fs.readFile(resolve(ui, f), 'utf-8')
-          const filePath = relative(htmlDir, metaFile)
+          const filePath = relative(this.reporterDir, metaFile)
           await fs.writeFile(
             this.htmlFilePath,
             html.replace(
@@ -178,7 +185,7 @@ export default class HTMLReporter implements Reporter {
           )
         }
         else {
-          await fs.copyFile(resolve(ui, f), resolve(htmlDir, f))
+          await fs.copyFile(resolve(ui, f), resolve(this.reporterDir, f))
         }
       }),
     )
@@ -190,7 +197,7 @@ export default class HTMLReporter implements Reporter {
     )
     this.ctx.logger.log(
       `${c.dim('       You can run ')}${c.bold(
-        `npx vite preview --outDir ${relative(this.ctx.config.root, htmlDir)}`,
+        `npx vite preview --outDir ${relative(this.ctx.config.root, this.reporterDir)}`,
       )}${c.dim(' to see the test results.')}`,
     )
   }
