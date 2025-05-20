@@ -26,7 +26,7 @@
   },
   "devDependencies": {
     "@testing-library/react": "^13.4.0",
-    "@types/react": "^19.1.2",
+    "@types/react": "^19.1.4",
     "@vitejs/plugin-basic-ssl": "^1.2.0",
     "@vitest/browser": "workspace:*",
     "@vitest/bundled-lib": "link:./bundled-lib",
@@ -37,7 +37,7 @@
     "react-dom": "^19.1.0",
     "url": "^0.11.4",
     "vitest": "workspace:*",
-    "vitest-browser-react": "^0.1.1",
+    "vitest-browser-react": "^0.2.0",
     "ws": "catalog:"
   }
 }

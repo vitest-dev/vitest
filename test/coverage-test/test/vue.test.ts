@@ -26,30 +26,30 @@ test('coverage results matches snapshot', async () => {
   if (isV8Provider() && isBrowser()) {
     expect(coverageMap).toMatchInlineSnapshot(`
       {
-        "branches": "5/6 (83.33%)",
+        "branches": "5/7 (71.42%)",
         "functions": "3/5 (60%)",
-        "lines": "40/48 (83.33%)",
-        "statements": "40/48 (83.33%)",
+        "lines": "39/48 (81.25%)",
+        "statements": "39/48 (81.25%)",
       }
     `)
   }
   else if (isV8Provider()) {
     expect(coverageMap).toMatchInlineSnapshot(`
       {
-        "branches": "5/6 (83.33%)",
+        "branches": "5/7 (71.42%)",
         "functions": "3/5 (60%)",
-        "lines": "35/43 (81.39%)",
-        "statements": "35/43 (81.39%)",
+        "lines": "38/47 (80.85%)",
+        "statements": "38/47 (80.85%)",
       }
     `)
   }
   else {
     expect(coverageMap).toMatchInlineSnapshot(`
       {
-        "branches": "5/6 (83.33%)",
+        "branches": "6/8 (75%)",
         "functions": "5/7 (71.42%)",
-        "lines": "13/16 (81.25%)",
-        "statements": "14/17 (82.35%)",
+        "lines": "14/17 (82.35%)",
+        "statements": "15/18 (83.33%)",
       }
     `)
   }
