@@ -346,3 +346,42 @@ describe('iterator', () => {
     expect(a).not.toStrictEqual(b)
   })
 })
+
+describe('Temporal equality', () => {
+  describe.each([
+    ['Temporal.Instant', ['2025-01-01T00:00:00.000Z', '2026-01-01T00:00:00.000Z']],
+    ['Temporal.ZonedDateTime', ['2025-01-01T00:00:00+01:00[Europe/Amsterdam]', '2025-01-01T00:00:00+01:00[Europe/Paris]']],
+    ['Temporal.PlainDateTime', ['2025-01-01T00:00:00.000', '2026-01-01T00:00:00.000']],
+    ['Temporal.PlainDate', ['2025-01-01', '2026-01-01']],
+    ['Temporal.PlainTime', ['15:00:00.000', '16:00:00.000']],
+    ['Temporal.PlainYearMonth', ['2025-01', '2026-01']],
+    ['Temporal.PlainMonthDay', ['01-01', '02-01']],
+    ['Temporal.Duration', ['P1DT2', 'P1DT3']],
+  ])('of $className', (className, [first, second]) => {
+    test('returns true when .toString() is equal', () => {
+      const a = {
+        [Symbol.toStringTag]: className,
+        toString: () => first,
+      }
+      const b = {
+        [Symbol.toStringTag]: className,
+        toString: () => first,
+      }
+
+      expect(a).toStrictEqual(b)
+    })
+
+    test('returns false when .toString() is not equal', () => {
+      const a = {
+        [Symbol.toStringTag]: className,
+        toString: () => first,
+      }
+      const b = {
+        [Symbol.toStringTag]: className,
+        toString: () => second,
+      }
+
+      expect(a).not.toStrictEqual(b)
+    })
+  })
+})
