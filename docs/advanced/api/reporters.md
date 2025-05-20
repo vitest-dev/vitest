@@ -330,4 +330,4 @@ function onTestAnnotate(
 
 The `onTestAnnotate` hook is associated with the [`context.annotate`](/guide/test-context#annotate) method. When `annotate` is invoked, Vitest serialises it and sends the same attachment to the main thread where reporter can interact with it.
 
-When reporter recieves the attachment, path is already resolved relative to the root of the project.
+If the path is specified, Vitest stores it in a separate directory (configured by [`attachmentsDir`](/config/#attachmentsdir)) and modifies the `path` property to reference it.
