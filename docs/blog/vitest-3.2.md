@@ -173,7 +173,7 @@ it('stop request when test times out', async ({ signal }) => {
 
 ## Coverage V8 AST-aware remapping
 
-Vitest now uses `ast-v8-to-istanbul` package developed by one of the Vitest maintainers, [AriPerkkio](https://github.com/AriPerkkio). This brings v8 coverage report in line with istanbul, but has a better performance! Enable this feature by setting [`coverage.experimentalAstAwareRemapping`](/config/#experimentalastawareremapping) to `true`.
+Vitest now uses `ast-v8-to-istanbul` package developed by one of the Vitest maintainers, [AriPerkkio](https://github.com/AriPerkkio). This brings v8 coverage report in line with istanbul, but has a better performance! Enable this feature by setting [`coverage.experimentalAstAwareRemapping`](/config/#coverage-experimentalastawareremapping) to `true`.
 
 We are planning to make this the default remapping mode in the next major. The old `v8-to-istanbul` will be removed completely. Feel free to join discussion at https://github.com/vitest-dev/vitest/issues/7928.
 
