@@ -382,11 +382,13 @@ export default (parentServer: ParentBrowserProject, base = '/'): Plugin[] => {
     {
       name: 'vitest:browser:in-source-tests',
       transform(code, id) {
+        const filename = cleanUrl(id)
         const project = parentServer.vitest.getProjectByName(parentServer.config.name)
-        if (!project._isCachedTestFile(id) || !code.includes('import.meta.vitest')) {
+
+        if (!project._isCachedTestFile(filename) || !code.includes('import.meta.vitest')) {
           return
         }
-        const s = new MagicString(code, { filename: cleanUrl(id) })
+        const s = new MagicString(code, { filename })
         s.prepend(
           `import.meta.vitest = __vitest_index__;\n`,
         )
