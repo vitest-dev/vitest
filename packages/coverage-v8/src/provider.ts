@@ -283,6 +283,19 @@ export class V8CoverageProvider extends BaseCoverageProvider<ResolvedCoverageOpt
           ) {
             return true
           }
+
+          // in-source test with "if (import.meta.vitest)"
+          if (
+            (type === 'branch' || type === 'statement')
+            && node.type === 'IfStatement'
+            && node.test.type === 'MemberExpression'
+            && node.test.object.type === 'Identifier'
+            && node.test.object.name === '__vite_ssr_import_meta__'
+            && node.test.property.type === 'Identifier'
+            && node.test.property.name === 'vitest'
+          ) {
+            return true
+          }
         },
       },
       )
