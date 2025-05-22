@@ -166,6 +166,7 @@ function eq(
     case '[object Temporal.PlainTime]':
     case '[object Temporal.PlainYearMonth]':
     case '[object Temporal.PlainMonthDay]':
+      return a.equals(b)
     case '[object Temporal.Duration]':
       return a.toString() === b.toString()
   }
