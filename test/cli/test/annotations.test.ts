@@ -39,7 +39,7 @@ describe('API', () => {
     const events: string[] = []
     const annotations: Record<string, ReadonlyArray<TestAnnotation>> = {}
 
-    const { stderr, stdout } = await runInlineTests(
+    const { stderr } = await runInlineTests(
       {
         'basic.test.ts': annotationTest,
         'test-3.js': '',

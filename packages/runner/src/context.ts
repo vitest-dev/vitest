@@ -13,8 +13,8 @@ import type {
 import { getSafeTimers } from '@vitest/utils'
 import { parseSingleStack } from '@vitest/utils/source-map'
 import { PendingError } from './errors'
-import { getRunner } from './suite'
 import { finishSendTasksUpdate } from './run'
+import { getRunner } from './suite'
 
 const now = Date.now
 
