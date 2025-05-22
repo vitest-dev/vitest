@@ -11,6 +11,9 @@ interface EnhancedPage extends BrowserPage {
     createFrameContext(selector: string, parameters?: { timeout?: number }): FrameLocator
     locateFrame(criteria: FrameCriteria): Promise<Frame>
     listFrames(): Promise<Frame[]>
+    frameLocator(selector: string, parameters?: object): FrameLocator
+    frame(selector: string, parameters?: object): FrameLocator
+    frames(): FrameLocator[]
 }
 
 interface Frame {
@@ -47,7 +50,8 @@ class FrameImplementation implements Frame {
     }
 
     getSource(): string {
-        return this.frameElement.src || this.frameElement.getAttribute('srcdoc') || ''
+        // Fix: Return the actual srcdoc attribute or src URL, not the content
+        return this.frameElement.getAttribute('srcdoc') || this.frameElement.src || ''
     }
 
     isActive(): boolean {
@@ -91,7 +95,7 @@ class FrameImplementation implements Frame {
     }
 
     async executeScriptWithArgument<T, A>(operation: (arg: A) => T, argument: A): Promise<T> {
-        return this.evaluateScript(operation, argument)
+        return this.evaluateScriptWithArgument(operation, argument)
     }
 
     async awaitReadyState(state: 'load' | 'domcontentloaded' | 'networkidle' = 'load'): Promise<void> {
@@ -119,23 +123,65 @@ class FrameImplementation implements Frame {
 
     private generateLocator(selector: string, parameters?: object): FrameLocator {
         const frameSelector = `iframe[data-frame-id="${this.frameIdentifier}"]`
-        return new FrameLocator(this.frameManager, frameSelector, parameters)
+        return new FrameLocator(this.frameManager, frameSelector, selector, parameters)
     }
 
-    private async evaluateScript<T>(operation: Function, argument?: any): Promise<T> {
-        const frame = await this.frameManager.verifyFrameReady(this.frameIdentifier)
+    private async evaluateScript<T>(operation: () => T): Promise<T> {
+        // Wait for iframe to be ready and accessible
+        await this.waitForIframeReady()
 
-        if (!frame.contentWindow) {
+        if (!this.frameElement.contentWindow) {
             throw new Error('Frame execution context unavailable')
         }
 
         try {
-            return argument !== undefined ?
-                frame.contentWindow.eval(`(${operation.toString()})(${JSON.stringify(argument)})`) :
-                frame.contentWindow.eval(`(${operation.toString()})()`)
+            // Execute the function in the iframe's context
+            const result = this.frameElement.contentWindow.eval(`(${operation.toString()})()`)
+            return result
         } catch (error) {
             throw new Error(`Frame script execution failed: ${error}`)
         }
+    }
+
+    private async evaluateScriptWithArgument<T, A>(operation: (arg: A) => T, argument: A): Promise<T> {
+        // Wait for iframe to be ready and accessible
+        await this.waitForIframeReady()
+
+        if (!this.frameElement.contentWindow) {
+            throw new Error('Frame execution context unavailable')
+        }
+
+        try {
+            // Serialize the argument and execute the function
+            const serializedArg = JSON.stringify(argument)
+            const result = this.frameElement.contentWindow.eval(`(${operation.toString()})(${serializedArg})`)
+            return result
+        } catch (error) {
+            throw new Error(`Frame script execution failed: ${error}`)
+        }
+    }
+
+    private async waitForIframeReady(): Promise<void> {
+        return new Promise((resolve, reject) => {
+            if (this.frameElement.contentDocument && this.frameElement.contentWindow) {
+                resolve()
+                return
+            }
+
+            const checkReady = () => {
+                if (this.frameElement.contentDocument && this.frameElement.contentWindow) {
+                    resolve()
+                } else {
+                    setTimeout(checkReady, 10)
+                }
+            }
+
+            // Set a timeout to avoid infinite waiting
+            setTimeout(() => reject(new Error('Iframe failed to load within timeout')), 5000)
+
+            this.frameElement.addEventListener('load', checkReady, { once: true })
+            checkReady()
+        })
     }
 
     private createTextSelector(content: string | RegExp): string {

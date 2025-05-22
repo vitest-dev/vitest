@@ -6,22 +6,27 @@ interface FrameLocatorOptions {
     waitForReady?: boolean
 }
 
-export class FrameLocator {
+export class FrameLocator implements Locator {
     private iframeManager: IframeManager
     private frameSelector: string
+    private elementSelector: string
     private options: FrameLocatorOptions
 
     constructor(
         iframeManager: IframeManager,
         frameSelector: string,
+        selectorOrOptions: string | FrameLocatorOptions = {},
         options: FrameLocatorOptions = {}
     ) {
         this.iframeManager = iframeManager
         this.frameSelector = frameSelector
-        this.options = {
-            timeout: 30000,
-            waitForReady: true,
-            ...options
+
+        if (typeof selectorOrOptions === 'string') {
+            this.elementSelector = selectorOrOptions
+            this.options = { timeout: 30000, waitForReady: true, ...options }
+        } else {
+            this.elementSelector = ''
+            this.options = { timeout: 30000, waitForReady: true, ...selectorOrOptions }
         }
     }
 
@@ -49,7 +54,7 @@ export class FrameLocator {
         return this.generateLocator(this.titleToSelector(text), options)
     }
 
-    getByLabelText(text: string | RegExp, options?: LocatorOptions): Locator {
+    getByLabel(text: string | RegExp, options?: LocatorOptions): Locator {
         return this.generateLocator(this.labelToSelector(text), options)
     }
 
@@ -57,61 +62,39 @@ export class FrameLocator {
         return this.generateLocator(selector)
     }
 
-    private generateLocator(selector: string, options?: any): Locator {
-        return new FrameLocatorImplementation(
+    filter(options: { hasText?: string | RegExp; has?: Locator }): Locator {
+        let modifiedSelector = this.elementSelector
+        if (options.hasText) {
+            const textContent = options.hasText instanceof RegExp ?
+                options.hasText.source :
+                options.hasText
+            modifiedSelector += `[contains(text(), '${textContent}')]`
+        }
+        return new FrameLocator(
             this.iframeManager,
             this.frameSelector,
-            selector,
-            { ...this.options, ...options }
+            modifiedSelector,
+            this.options
         )
     }
 
-    private textToSelector(text: string | RegExp): string {
-        return `*[contains(text(), '${text instanceof RegExp ? text.source : text}')]`
+    first(): Locator {
+        return this.createNestedLocator(`(${this.elementSelector})[1]`)
     }
 
-    private testIdToSelector(testId: string | RegExp): string {
-        return `[data-testid${testId instanceof RegExp ? '*' : ''}="${testId instanceof RegExp ? testId.source : testId}"]`
+    last(): Locator {
+        return this.createNestedLocator(`(${this.elementSelector})[last()]`)
     }
 
-    private placeholderToSelector(text: string | RegExp): string {
-        return `[placeholder${text instanceof RegExp ? '*' : ''}="${text instanceof RegExp ? text.source : text}"]`
-    }
-
-    private altTextToSelector(text: string | RegExp): string {
-        return `[alt${text instanceof RegExp ? '*' : ''}="${text instanceof RegExp ? text.source : text}"]`
-    }
-
-    private titleToSelector(text: string | RegExp): string {
-        return `[title${text instanceof RegExp ? '*' : ''}="${text instanceof RegExp ? text.source : text}"]`
-    }
-
-    private labelToSelector(text: string | RegExp): string {
-        const target = text instanceof RegExp ? `*="${text.source}"` : `="${text}"`
-        return `input[aria-label${target}], textarea[aria-label${target}], select[aria-label${target}]`
-    }
-}
-
-class FrameLocatorImplementation implements Locator {
-    private iframeManager: IframeManager
-    private frameSelector: string
-    private elementSelector: string
-    private options: FrameLocatorOptions
-
-    constructor(
-        iframeManager: IframeManager,
-        frameSelector: string,
-        elementSelector: string,
-        options: FrameLocatorOptions
-    ) {
-        this.iframeManager = iframeManager
-        this.frameSelector = frameSelector
-        this.elementSelector = elementSelector
-        this.options = options
+    nth(index: number): Locator {
+        return this.createNestedLocator(`(${this.elementSelector})[${index + 1}]`)
     }
 
     get selector(): string {
-        return `${this.frameSelector} >>> ${this.elementSelector}`
+        if (this.elementSelector)
+            return `${this.frameSelector} >>> ${this.elementSelector}`
+        else
+            return this.frameSelector
     }
 
     async click(options?: any): Promise<void> {
@@ -172,49 +155,47 @@ class FrameLocatorImplementation implements Locator {
             []
     }
 
-    getByRole(role: ARIARole | string, options?: LocatorByRoleOptions): Locator {
-        return this.createNestedLocator(`[role="${role}"]`)
-    }
-
-    getByText(text: string | RegExp, options?: LocatorOptions): Locator {
-        return this.createNestedLocator(`*[contains(text(), '${text instanceof RegExp ? text.source : text}')]`)
-    }
-
-    filter(options: { hasText?: string | RegExp; has?: Locator }): Locator {
-        let modifiedSelector = this.elementSelector
-        if (options.hasText) {
-            const textContent = options.hasText instanceof RegExp ?
-                options.hasText.source :
-                options.hasText
-            modifiedSelector += `[contains(text(), '${textContent}')]`
-        }
-        return new FrameLocatorImplementation(
+    private generateLocator(selector: string, options?: any): Locator {
+        return new FrameLocator(
             this.iframeManager,
             this.frameSelector,
-            modifiedSelector,
-            this.options
+            selector,
+            { ...this.options, ...options }
         )
     }
 
-    first(): Locator {
-        return this.createNestedLocator(`(${this.elementSelector})[1]`)
-    }
-
-    last(): Locator {
-        return this.createNestedLocator(`(${this.elementSelector})[last()]`)
-    }
-
-    nth(index: number): Locator {
-        return this.createNestedLocator(`(${this.elementSelector})[${index + 1}]`)
-    }
-
     private createNestedLocator(extension: string): Locator {
-        return new FrameLocatorImplementation(
+        return new FrameLocator(
             this.iframeManager,
             this.frameSelector,
             `${this.elementSelector} ${extension}`,
             this.options
         )
+    }
+
+    private textToSelector(text: string | RegExp): string {
+        return `*[contains(text(), '${text instanceof RegExp ? text.source : text}')]`
+    }
+
+    private testIdToSelector(testId: string | RegExp): string {
+        return `[data-testid${testId instanceof RegExp ? '*' : ''}="${testId instanceof RegExp ? testId.source : testId}"]`
+    }
+
+    private placeholderToSelector(text: string | RegExp): string {
+        return `[placeholder${text instanceof RegExp ? '*' : ''}="${text instanceof RegExp ? text.source : text}"]`
+    }
+
+    private altTextToSelector(text: string | RegExp): string {
+        return `[alt${text instanceof RegExp ? '*' : ''}="${text instanceof RegExp ? text.source : text}"]`
+    }
+
+    private titleToSelector(text: string | RegExp): string {
+        return `[title${text instanceof RegExp ? '*' : ''}="${text instanceof RegExp ? text.source : text}"]`
+    }
+
+    private labelToSelector(text: string | RegExp): string {
+        const target = text instanceof RegExp ? `*="${text.source}"` : `="${text}"`
+        return `input[aria-label${target}], textarea[aria-label${target}], select[aria-label${target}]`
     }
 
     private async retrieveIframe(): Promise<HTMLIFrameElement> {
@@ -223,8 +204,8 @@ class FrameLocatorImplementation implements Locator {
             throw new Error(`Target frame "${this.frameSelector}" not found in document`)
         }
 
-        const frameIdentifier = this.iframeManager.registerIframe(frameElement)
-        return this.iframeManager.waitForReady(frameIdentifier)
+        const frameIdentifier = this.iframeManager.registerFrame(frameElement)
+        return this.iframeManager.awaitFramePreparation(frameIdentifier).then(meta => meta.element)
     }
 
     private async retrieveElement(): Promise<Element> {
@@ -232,12 +213,13 @@ class FrameLocatorImplementation implements Locator {
         if (!iframe.contentDocument) {
             throw new Error('Iframe content document unavailable')
         }
-
+        if (!this.elementSelector) {
+            throw new Error('No selector provided for element lookup')
+        }
         const targetElement = iframe.contentDocument.querySelector(this.elementSelector)
         if (!targetElement) {
             throw new Error(`Element "${this.elementSelector}" not found within iframe`)
         }
-
         return targetElement
     }
 }
