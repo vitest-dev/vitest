@@ -166,7 +166,7 @@ class FrameImplementation implements Frame {
 }
 
 export function enhanceBrowserPage(basePage: BrowserPage): EnhancedPage {
-    const frameManager = new FrameManager()
+    const frameManager = new IframeManager()
 
     function buildFrameSelector(criteria: FrameCriteria): string {
         const selectors = ['iframe']
@@ -205,5 +205,16 @@ export function enhanceBrowserPage(basePage: BrowserPage): EnhancedPage {
             return Array.from(document.querySelectorAll('iframe'))
                 .map(frame => registerFrameElement(frame as HTMLIFrameElement))
         },
+
+        frameLocator(selector: string, parameters = {}) {
+            return this.createFrameContext(selector, parameters)
+        },
+        frame(selector: string, parameters = {}) {
+            return this.createFrameContext(selector, parameters)
+        },
+        frames() {
+            return Array.from(document.querySelectorAll('iframe'))
+                .map((_, i) => this.createFrameContext(`iframe:nth-of-type(${i + 1})`))
+        }
     }
 }

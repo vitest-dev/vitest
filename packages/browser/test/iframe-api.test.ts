@@ -1,7 +1,7 @@
 import { beforeEach, afterEach, describe, expect, test, vi } from 'vitest'
 import { IframeManager } from '../src/client/iframe-manager'
 import { FrameLocator } from '../src/client/frame-locator'
-import { createEnhancedPage } from '../src/client/page-extensions'
+import { enhanceBrowserPage } from '../src/client/page-extensions'
 
 const createMockPage = () => ({
     extend: vi.fn(),
@@ -51,7 +51,7 @@ describe('Browser Iframe API', () => {
             iframe.srcdoc = '<html><body><p>Test</p></body></html>'
             testContainer.appendChild(iframe)
 
-            const frameId = iframeManager.registerIframe(iframe)
+            const frameId = iframeManager.registerFrame(iframe)
 
             expect(frameId).toBeDefined()
             expect(typeof frameId).toBe('string')
@@ -64,7 +64,7 @@ describe('Browser Iframe API', () => {
             iframe.srcdoc = '<html><body><p>Test</p></body></html>'
             testContainer.appendChild(iframe)
 
-            const frameId = iframeManager.registerIframe(iframe)
+            const frameId = iframeManager.registerFrame(iframe)
 
             expect(frameId).toBe('custom-frame')
         })
@@ -74,23 +74,23 @@ describe('Browser Iframe API', () => {
             iframe.id = 'test-frame'
             testContainer.appendChild(iframe)
 
-            const frameId = iframeManager.registerIframe(iframe)
-            const iframeInfo = iframeManager.getIframe(frameId)
+            const frameId = iframeManager.registerFrame(iframe)
+            const iframeInfo = iframeManager.retrieveFrameData(frameId)
 
             expect(iframeInfo).toBeDefined()
             expect(iframeInfo?.element).toBe(iframe)
-            expect(iframeInfo?.id).toBe(frameId)
+            expect(iframeInfo?.identifier).toBe(frameId)
         })
 
         test('should unregister iframe correctly', () => {
             const iframe = document.createElement('iframe')
             testContainer.appendChild(iframe)
 
-            const frameId = iframeManager.registerIframe(iframe)
-            expect(iframeManager.getIframe(frameId)).toBeDefined()
+            const frameId = iframeManager.registerFrame(iframe)
+            expect(iframeManager.retrieveFrameData(frameId)).toBeDefined()
 
-            iframeManager.unregisterIframe(frameId)
-            expect(iframeManager.getIframe(frameId)).toBeUndefined()
+            iframeManager.deregisterFrame(frameId)
+            expect(iframeManager.retrieveFrameData(frameId)).toBeUndefined()
         })
     })
 
@@ -126,11 +126,11 @@ describe('Browser Iframe API', () => {
 
     describe('Enhanced Page API', () => {
         let mockPage: ReturnType<typeof createMockPage>
-        let enhancedPage: ReturnType<typeof createEnhancedPage>
+        let enhancedPage: ReturnType<typeof enhanceBrowserPage>
 
         beforeEach(() => {
             mockPage = createMockPage()
-            enhancedPage = createEnhancedPage(mockPage as any)
+            enhancedPage = enhanceBrowserPage(mockPage as any)
         })
 
         test('should extend page with iframe methods', () => {
@@ -172,7 +172,7 @@ describe('Browser Iframe API', () => {
             testContainer.appendChild(iframe)
 
             const mockPage = createMockPage()
-            const enhancedPage = createEnhancedPage(mockPage as any)
+            const enhancedPage = enhanceBrowserPage(mockPage as any)
 
             const frameLocator = enhancedPage.frameLocator('[data-testid="app-frame"]')
 

@@ -4,7 +4,6 @@ import { resolve } from 'pathe'
 export default defineConfig({
     test: {
         name: 'browser',
-        environment: 'jsdom',
         globals: true,
         setupFiles: ['./test/setup.ts'],
         include: ['test/**/*.test.ts'],
@@ -14,6 +13,16 @@ export default defineConfig({
             '**/fixtures/**',
             '**/build/**'
         ],
+        browser: {
+            enabled: true,
+            instances: [
+                {
+                    browser: 'chromium',    // ou 'firefox', 'webkit'
+                    provider: 'playwright', // <-- ESSENCIAL! NÃO USE 'preview'
+                    headless: true
+                }
+            ]
+        }
     },
     resolve: {
         alias: {

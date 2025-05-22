@@ -1,40 +1,15 @@
 import { vi } from 'vitest'
-import { JSDOM } from 'jsdom'
 
-// Setup DOM environment similar to other Vitest tests
-const dom = new JSDOM('<!DOCTYPE html><html><body></body></html>', {
-    url: 'http://localhost:3000',
-    pretendToBeVisual: true,
-    resources: 'usable'
-})
+// Para testes E2E browser, normalmente não precisa de setup adicional.
+// Se precisar mockar APIs globais, faça isso condicionalmente:
 
-// Setup globals
-Object.defineProperty(global, 'document', {
-    value: dom.window.document,
-    writable: true,
-})
+// Exemplo: mock para requestAnimationFrame se não existir (opcional)
+if (typeof window !== 'undefined' && !window.requestAnimationFrame) {
+    window.requestAnimationFrame = (cb) => setTimeout(cb, 16)
+    window.cancelAnimationFrame = (id) => clearTimeout(id)
+}
 
-Object.defineProperty(global, 'window', {
-    value: dom.window,
-    writable: true,
-})
-
-// Setup HTMLElement and other DOM classes
-global.HTMLElement = dom.window.HTMLElement
-global.HTMLIFrameElement = dom.window.HTMLIFrameElement
-global.Element = dom.window.Element
-global.Node = dom.window.Node
-global.MutationObserver = dom.window.MutationObserver
-
-// Mock performance and crypto APIs
-global.performance = {
-    now: vi.fn(() => Date.now()),
-} as any
-
-global.crypto = {
-    randomUUID: vi.fn(() => Math.random().toString(36).substring(2, 15)),
-} as any
-
-// Mock requestAnimationFrame
-global.requestAnimationFrame = vi.fn((cb) => setTimeout(cb, 16))
-global.cancelAnimationFrame = vi.fn((id) => clearTimeout(id))
+// Se precisar de mocks só no Node:
+// if (typeof window === 'undefined') {
+//   // node-only setup
+// }
