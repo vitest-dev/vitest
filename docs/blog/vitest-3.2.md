@@ -13,10 +13,10 @@ head:
       content: Announcing Vitest 3.2
   - - meta
     - property: og:image
-      content: https://vitest.dev/og-vitest-3.jpg
+      content: https://vitest.dev/og-vitest-3-2.png
   - - meta
     - property: og:url
-      content: https://vitest.dev/blog/vitest-3
+      content: https://vitest.dev/blog/vitest-3-2
   - - meta
     - property: og:description
       content: Vitest 3.2 Release Announcement
@@ -25,9 +25,11 @@ head:
       content: summary_large_image
 ---
 
-Vitest 3.2 is out!
+# Vitest 3.2 is out!
 
 _Date Day, 2025_
+
+![Vitest 3.2 Announcement Cover Image](/og-vitest-3-2.png)
 
 Vitest 3.2 focuses on improvements to Browser Mode and TypeScript support. This release also includes some new useful methods, config options and deprecates the `workspace` config in favour of `projects`.
 
