@@ -2651,4 +2651,4 @@ Always print console traces when calling any `console` method. This is useful fo
 - **Type:** `string`
 - **Default:** `'.vitest-attachments'`
 
-Directory path for storing attachments created by [`context.annotate`](/test-context/#annotate) relative to the project root.
+Directory path for storing attachments created by [`context.annotate`](/test-context#annotate) relative to the project root.
