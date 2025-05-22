@@ -297,31 +297,34 @@ export const page: BrowserPage = {
     })], error))
   },
   getByRole() {
-    throw new Error(`Method "getByRole" is not implemented in the "${provider}" provider.`)
+    throw new Error(`Method "getByRole" is not supported by the "${provider}" provider.`)
   },
   getByLabelText() {
-    throw new Error(`Method "getByLabelText" is not implemented in the "${provider}" provider.`)
+    throw new Error(`Method "getByLabelText" is not supported by the "${provider}" provider.`)
   },
   getByTestId() {
-    throw new Error(`Method "getByTestId" is not implemented in the "${provider}" provider.`)
+    throw new Error(`Method "getByTestId" is not supported by the "${provider}" provider.`)
   },
   getByAltText() {
-    throw new Error(`Method "getByAltText" is not implemented in the "${provider}" provider.`)
+    throw new Error(`Method "getByAltText" is not supported by the "${provider}" provider.`)
   },
   getByPlaceholder() {
-    throw new Error(`Method "getByPlaceholder" is not implemented in the "${provider}" provider.`)
+    throw new Error(`Method "getByPlaceholder" is not supported by the "${provider}" provider.`)
   },
   getByText() {
-    throw new Error(`Method "getByText" is not implemented in the "${provider}" provider.`)
+    throw new Error(`Method "getByText" is not supported by the "${provider}" provider.`)
   },
   getByTitle() {
-    throw new Error(`Method "getByTitle" is not implemented in the "${provider}" provider.`)
+    throw new Error(`Method "getByTitle" is not supported by the "${provider}" provider.`)
   },
   elementLocator() {
-    throw new Error(`Method "elementLocator" is not implemented in the "${provider}" provider.`)
+    throw new Error(`Method "elementLocator" is not supported by the "${provider}" provider.`)
+  },
+  frameLocator() {
+    throw new Error(`Method "frameLocator" is not supported by the "${provider}" provider.`)
   },
   _createLocator() {
-    throw new Error(`Method "_createLocator" is not implemented in the "${provider}" provider.`)
+    throw new Error(`Method "_createLocator" is not supported by the "${provider}" provider.`)
   },
   extend(methods) {
     for (const key in methods) {
