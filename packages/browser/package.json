@@ -51,18 +51,6 @@
       "types": "./utils.d.ts",
       "default": "./dist/utils.js"
     },
-    "./iframe": {
-      "types": "./dist/iframe-manager.d.ts",
-      "default": "./dist/iframe-manager.js"
-    },
-    "./frame-locator": {
-      "types": "./dist/frame-locator.d.ts",
-      "default": "./dist/frame-locator.js"
-    },
-    "./page-extensions": {
-      "types": "./dist/page-extensions.d.ts",
-      "default": "./dist/page-extensions.js"
-    },
     "./*": "./*"
   },
   "main": "./dist/index.js",
