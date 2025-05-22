@@ -201,8 +201,10 @@ function createAnnotationElement(annotation: TestAnnotation) {
     'py-3',
     'px-6',
     'my-1',
-    'text-white',
   )
+
+  const messageWrapper = document.createElement('div')
+  messageWrapper.classList.add('block', 'text-black', 'dark:text-white')
 
   const type = document.createElement('span')
   type.textContent = `${annotation.type}: `
@@ -212,13 +214,14 @@ function createAnnotationElement(annotation: TestAnnotation) {
   message.classList.add('whitespace-pre')
   message.textContent = annotation.message.replace(/[^\r]\n/, '\r\n')
 
-  notice.append(type, message)
+  messageWrapper.append(type, message)
+  notice.append(messageWrapper)
   const attachment = annotation.attachment
   if (attachment?.path || attachment?.body) {
     if (attachment.contentType?.startsWith('image/')) {
       const link = document.createElement('a')
       const img = document.createElement('img')
-      img.classList.add('mt-3')
+      img.classList.add('mt-3', 'inline-block')
       img.width = 600
       img.width = 400
       const potentialUrl = attachment.path || attachment.body

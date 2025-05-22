@@ -1,12 +1,12 @@
 import type {
   File as RunnerTestFile,
-  TaskEventData,
   TaskEventPack,
   TaskResultPack,
   TaskUpdateEvent,
   TestAnnotation,
   TestAttachment,
 } from '@vitest/runner'
+import type { TaskEventData } from '@vitest/runner/types/tasks'
 import type { SerializedError } from '@vitest/utils'
 import type { UserConsoleLog } from '../types/general'
 import type { Vitest } from './core'
@@ -52,6 +52,21 @@ export class TestRun {
   async log(log: UserConsoleLog): Promise<void> {
     this.vitest.state.updateUserLog(log)
     await this.vitest.report('onUserConsoleLog', log)
+  }
+
+  async annotate(testId: string, annotation: TestAnnotation): Promise<TestAnnotation> {
+    const task = this.vitest.state.idMap.get(testId)
+    const entity = task && this.vitest.state.getReportedEntity(task)
+
+    assert(task && entity, `Entity must be found for task ${task?.name || testId}`)
+    assert(entity.type === 'test', `Annotation can only be added to a test, instead got ${entity.type}`)
+
+    await this.resolveTestAttachment(entity, annotation)
+
+    entity.task.annotations.push(annotation)
+
+    await this.vitest.report('onTestCaseAnnotate', entity, annotation)
+    return annotation
   }
 
   async updated(update: TaskResultPack[], events: TaskEventPack[]): Promise<void> {
@@ -157,17 +172,14 @@ export class TestRun {
       else {
         await this.vitest.report('onHookEnd', hook)
       }
-    }
 
-    if (event === 'test-annotation') {
-      assert(entity.type === 'test', `Annotation can only be added to a test, instead got ${entity.type}`)
-      assert(data?.annotation)
-
-      await this.resolveTestAttachment(entity, data.annotation)
-
-      entity.task.annotations.push(data.annotation)
-
-      await this.vitest.report('onTestCaseAnnotate', entity, data.annotation)
+      // this can only happen in --merge-reports, and annotation is already resolved
+      if (event === 'test-annotation') {
+        const annotation = data?.annotation
+        assert(annotation)
+        assert(entity.type === 'test')
+        await this.vitest.report('onTestCaseAnnotate', entity, annotation)
+      }
     }
   }
 

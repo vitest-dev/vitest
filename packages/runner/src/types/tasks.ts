@@ -715,8 +715,8 @@ export interface TestContext {
    * @see {@link https://vitest.dev/guide/test-context#annotate}
    */
   readonly annotate: {
-    (message: string, type?: string, attachment?: TestAttachment): void
-    (message: string, attachment?: TestAttachment): void
+    (message: string, type?: string, attachment?: TestAttachment): Promise<TestAnnotation>
+    (message: string, attachment?: TestAttachment): Promise<TestAnnotation>
   }
 }
 

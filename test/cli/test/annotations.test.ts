@@ -174,6 +174,23 @@ describe('API', () => {
       }
     `)
   })
+
+  test('cannot annotate tests when the test finished running', async () => {
+    const { stderr } = await runInlineTests({
+      'basic.test.ts': `
+        test('finished early', ({ annotate }) => {
+          setTimeout(() => {
+            annotate('invalid annotations')
+          }, 50)
+        })
+
+        test('long running test ', async () => {
+          await new Promise(r => setTimeout(() => r(), 100))
+        })
+      `,
+    }, { globals: true })
+    expect(stderr).toContain('Cannot annotate tests outside of the test run. The test "finished early" finished running with the "pass" state already.')
+  })
 })
 
 describe('reporters', () => {

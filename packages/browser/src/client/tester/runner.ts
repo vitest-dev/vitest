@@ -1,5 +1,5 @@
-import type { CancelReason, File, Suite, Task, TaskEventPack, TaskResultPack, VitestRunner } from '@vitest/runner'
-import type { SerializedConfig, TestExecutionMethod, WorkerGlobalState } from 'vitest'
+import type { CancelReason, File, Suite, Task, TaskEventPack, TaskResultPack, TestAnnotation, VitestRunner } from '@vitest/runner'
+import type { RunnerTestCase, SerializedConfig, TestExecutionMethod, WorkerGlobalState } from 'vitest'
 import type { VitestExecutor } from 'vitest/execute'
 import type { VitestBrowserClientMocker } from './mocker'
 import { globalChannel, onCancel } from '@vitest/browser/client'
@@ -146,39 +146,41 @@ export function createBrowserRunner(
       return rpc().onCollected(this.method, files)
     }
 
-    onTaskUpdate = (task: TaskResultPack[], events: TaskEventPack[]): Promise<void> => {
-      events.forEach(([__, _, data]) => {
-        const annotation = data?.annotation
-        if (annotation && annotation.location) {
-          // the file should be the test file
-          // tests from other files are not supported
-          const map = this.sourceMapCache.get(annotation.location.file)
-          const traceMap = new TraceMap(map as any)
-          if (!traceMap) {
-            return
-          }
-          const { line, column, source } = originalPositionFor(traceMap, annotation.location)
-          if (line != null && column != null && source != null) {
-            let file: string = annotation.location.file
-            if (source) {
-              const fileUrl = annotation.location.file.startsWith('file://')
-                ? annotation.location.file
-                : `file://${annotation.location.file}`
-              const sourceRootUrl = map.sourceRoot
-                ? new URL(map.sourceRoot, fileUrl)
-                : fileUrl
-              file = new URL(source, sourceRootUrl).pathname
-            }
+    onTestAnnotate = (test: RunnerTestCase, annotation: TestAnnotation): Promise<TestAnnotation> => {
+      if (annotation.location) {
+        // the file should be the test file
+        // tests from other files are not supported
+        const map = this.sourceMapCache.get(annotation.location.file)
+        const traceMap = new TraceMap(map as any)
+        if (!traceMap) {
+          return rpc().onTaskAnnotate(test.id, annotation)
+        }
 
-            annotation.location = {
-              line,
-              column: column + 1,
-              // if the file path is on windows, we need to remove the starting slash
-              file: file.match(/\/\w:\//) ? file.slice(1) : file,
-            }
+        const { line, column, source } = originalPositionFor(traceMap, annotation.location)
+        if (line != null && column != null && source != null) {
+          let file: string = annotation.location.file
+          if (source) {
+            const fileUrl = annotation.location.file.startsWith('file://')
+              ? annotation.location.file
+              : `file://${annotation.location.file}`
+            const sourceRootUrl = map.sourceRoot
+              ? new URL(map.sourceRoot, fileUrl)
+              : fileUrl
+            file = new URL(source, sourceRootUrl).pathname
+          }
+
+          annotation.location = {
+            line,
+            column: column + 1,
+            // if the file path is on windows, we need to remove the starting slash
+            file: file.match(/\/\w:\//) ? file.slice(1) : file,
           }
         }
-      })
+      }
+      return rpc().onTaskAnnotate(test.id, annotation)
+    }
+
+    onTaskUpdate = (task: TaskResultPack[], events: TaskEventPack[]): Promise<void> => {
       return rpc().onTaskUpdate(this.method, task, events)
     }
 

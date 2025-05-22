@@ -13,7 +13,6 @@ import type {
 import { getSafeTimers } from '@vitest/utils'
 import { parseSingleStack } from '@vitest/utils/source-map'
 import { PendingError } from './errors'
-import { updateTask } from './run'
 import { getRunner } from './suite'
 
 const now = Date.now
@@ -156,7 +155,7 @@ export function createTestContext(
     )
   }
 
-  function annotate(
+  async function annotate(
     message: string,
     location?: TestAnnotationLocation,
     type?: string,
@@ -182,12 +181,21 @@ export function createTestContext(
     if (location) {
       annotation.location = location
     }
-    test.annotations.push(annotation)
 
-    updateTask('test-annotation', test, runner, { annotation })
+    if (!runner.onTestAnnotate) {
+      throw new Error(`Test runner doesn't support test annotations.`)
+    }
+
+    const resolvedAnnotation = await runner.onTestAnnotate(test, annotation)
+    test.annotations.push(resolvedAnnotation)
+    return resolvedAnnotation
   }
 
   context.annotate = ((message, type, attachment) => {
+    if (test.result && test.result.state !== 'run') {
+      throw new Error(`Cannot annotate tests outside of the test run. The test "${test.name}" finished running with the "${test.result.state}" state already.`)
+    }
+
     let location: undefined | TestAnnotationLocation
 
     const stack = new Error('STACK_TRACE').stack!
@@ -203,10 +211,16 @@ export function createTestContext(
     }
 
     if (typeof type === 'object') {
-      annotate(message, location, undefined, type)
+      return recordAsyncAnnotation(
+        test,
+        annotate(message, location, undefined, type),
+      )
     }
     else {
-      annotate(message, location, type, attachment)
+      return recordAsyncAnnotation(
+        test,
+        annotate(message, location, type, attachment),
+      )
     }
   }) as TestContext['annotate']
 
@@ -297,4 +311,27 @@ function encodeUint8Array(bytes: Uint8Array): string {
     }
   }
   return base64
+}
+
+function recordAsyncAnnotation<T>(
+  test: Test,
+  promise: Promise<T>,
+): Promise<T> {
+  // if promise is explicitly awaited, remove it from the list
+  promise = promise.finally(() => {
+    if (!test.promises) {
+      return
+    }
+    const index = test.promises.indexOf(promise)
+    if (index !== -1) {
+      test.promises.splice(index, 1)
+    }
+  })
+
+  // record promise
+  if (!test.promises) {
+    test.promises = []
+  }
+  test.promises.push(promise)
+  return promise
 }

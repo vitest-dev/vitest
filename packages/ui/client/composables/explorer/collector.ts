@@ -1,6 +1,5 @@
-import type { File, Task, TaskResultPack, Test } from '@vitest/runner'
+import type { File, Task, TaskResultPack, Test, TestAnnotation } from '@vitest/runner'
 import type { Arrayable } from '@vitest/utils'
-import type { RunnerTaskEventPack } from 'vitest'
 import type { CollectFilteredTests, CollectorInfo, Filter, FilteredTests } from '~/composables/explorer/types'
 import { isTestCase } from '@vitest/runner/utils'
 import { toArray } from '@vitest/utils'
@@ -46,7 +45,7 @@ export function runLoadFiles(
   })
 }
 
-export function preparePendingTasks(packs: TaskResultPack[], events: RunnerTaskEventPack[]) {
+export function preparePendingTasks(packs: TaskResultPack[]) {
   queueMicrotask(() => {
     const pending = explorerTree.pendingTasks
     const idMap = client.state.idMap
@@ -64,18 +63,25 @@ export function preparePendingTasks(packs: TaskResultPack[], events: RunnerTaskE
         }
       }
     }
-    for (const event of events) {
-      const annotation = event[2]?.annotation
-      if (event[1] !== 'test-annotation' || !annotation) {
-        continue
-      }
-
-      const task = idMap.get(event[0])
-      if (task?.type === 'test') {
-        task.annotations.push(annotation)
-      }
-    }
   })
+}
+
+export function annotateTest(
+  id: string,
+  annotation: TestAnnotation,
+) {
+  const pending = explorerTree.pendingTasks
+  const idMap = client.state.idMap
+  const test = idMap.get(id)
+  if (test?.type === 'test') {
+    let file = pending.get(test.file.id)
+    if (!file) {
+      file = new Set()
+      pending.set(test.file.id, file)
+    }
+    file.add(test.id)
+    test.annotations.push(annotation)
+  }
 }
 
 export function runCollect(

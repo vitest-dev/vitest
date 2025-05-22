@@ -66,7 +66,9 @@ export default defineConfig({
       './test/setup.ts',
     ],
     includeTaskLocation: true,
-    reporters: [['default', { summary: true }], 'hanging-process'],
+    reporters: process.env.GITHUB_ACTIONS
+      ? ['default', 'github-actions']
+      : [['default', { summary: true }], 'hanging-process'],
     testNamePattern: '^((?!does not include test that).)*$',
     coverage: {
       provider: 'istanbul',

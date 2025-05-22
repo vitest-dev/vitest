@@ -81,50 +81,25 @@ it('math is hard', ({ skip, mind }) => {
 
 #### `annotate` <Version>3.2.0</Version> {#annotate}
 
-Add a test annotation that will be displayed by your [reporter](/config/#reporter).
+```ts
+function annotate(
+  message: string,
+  attachment?: TestAttachment,
+): Promise<TestAnnotation>
 
-The `github-actions` reporter will print the annotation as a [notice message](https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/workflow-commands-for-github-actions#setting-a-notice-message) by default. You can configure the `type` by passing down the second argument as `notice`, `warning` or `error`. If type is none of these, Vitest will show the message as a notice.
-
-The `tap` and `tap-flat` reporters print annotations as diagnostic messages on a new line starting with a `#` symbol. They will ignore all attachments and will print only the type and message:
-
-```
-ok 1 - an example of a test with annotation # time=143.15ms
-    # notice: the message of the annotation
-```
-
-The `junit` reporter lists annotations inside the testcase's `properties` tag. The JUnit reporter will ignore all attachments and will print only the type and the message.
-
-```xml
-<testcase classname="basic/example.test.js" name="an example of a test with annotation" time="0.14315">
-    <properties>
-        <property name="notice" value="the message of the annotation">
-        </property>
-    </properties>
-</testcase>
+function annotate(
+  message: string,
+  type?: string,
+  attachment?: TestAttachment,
+): Promise<TestAnnotation>
 ```
 
-The `verbose` reporter in non-TTY terminals will print annotations after the test has finished. Otherwise, annotations are visible only if the test has failed.
+Add a [test annotation](/guide/test-annotations) that will be displayed by your [reporter](/config/#reporter).
 
-The `default` reporter prints annotations only if the test has failed:
-
-```
-  ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
-
-  FAIL  example.test.js > an example of a test with annotation
-Error: thrown error
-  ❯ example.test.js:11:21
-      9 |    annotate('annotation 1')
-      10|    annotate('annotation 2', 'warning')
-      11|    throw new Error('thrown error')
-        |          ^
-      12|  })
-
-  ❯ example.test.js:9:15 notice
-    ↳ annotation 1
-  ❯ example.test.js:10:15 warning
-    ↳ annotation 2
-
-  ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+```ts
+test('annotations API', async ({ annotate }) => {
+  await annotate('https://github.com/vitest-dev/vitest/pull/7953', 'issues')
+})
 ```
 
 #### `signal` <Version>3.2.0</Version> {#signal}

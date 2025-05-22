@@ -82,7 +82,7 @@ export default (ctx: Vitest): Plugin => {
               res.writeHead(200, {
                 'content-type': contentType,
               })
-              fs.createReadStream(decodeURIComponent(path), 'utf-8')
+              fs.createReadStream(fsPath)
                 .pipe(res)
                 .on('close', () => res.end())
             }
