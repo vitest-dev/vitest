@@ -1,3 +1,4 @@
+import type { BrowserPage, Locator, ScreenshotOptions } from '@vitest/browser/context'
 import type { MockedModule } from '@vitest/mocker'
 import type {
   Browser,
@@ -21,6 +22,7 @@ import type {
 import { createManualModuleSource } from '@vitest/mocker/node'
 import c from 'tinyrainbow'
 import { createDebugger } from 'vitest/node'
+import { selectorEngine } from '../../client/tester/locators'
 
 const debug = createDebugger('vitest:browser:playwright')
 
@@ -313,6 +315,7 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
     context: BrowserContext
     frame: () => Promise<Frame>
     readonly iframe: FrameLocator
+    createIframePage: (iframeElement: Element) => Promise<BrowserPage>
   } {
     const page = this.getPage(sessionId)
     return {
@@ -337,6 +340,92 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
       },
       get iframe(): FrameLocator {
         return page.frameLocator('[data-vitest="true"]')!
+      },
+      async createIframePage(iframeElement: Element): Promise<BrowserPage> {
+        const frame = await page.frameLocator(`iframe[name="${iframeElement.getAttribute('name')}"]`)
+        if (!frame) {
+          throw new Error('Could not find iframe with the given element')
+        }
+
+        // Create a new BrowserPage instance that works with the iframe
+        const iframePage: BrowserPage = {
+          // Override locator methods to work within the iframe context
+          _createLocator: (selector: string): Locator => frame.locator(selector) as unknown as Locator,
+          getByText: (text: string | RegExp, options?: { exact?: boolean }): Locator => frame.getByText(text, options) as unknown as Locator,
+          getByTestId: (text: string | RegExp): Locator => frame.getByTestId(text) as unknown as Locator,
+          getByRole: (role: string, options?: { name?: string | RegExp; exact?: boolean }): Locator => frame.getByRole(role as any, options) as unknown as Locator,
+          getByLabelText: (text: string | RegExp, options?: { exact?: boolean }): Locator => frame.getByLabel(text, options) as unknown as Locator,
+          getByPlaceholder: (text: string | RegExp, options?: { exact?: boolean }): Locator => frame.getByPlaceholder(text, options) as unknown as Locator,
+          getByAltText: (text: string | RegExp, options?: { exact?: boolean }): Locator => frame.getByAltText(text, options) as unknown as Locator,
+          getByTitle: (text: string | RegExp, options?: { exact?: boolean }): Locator => frame.getByTitle(text, options) as unknown as Locator,
+          elementLocator: (element: Element): Locator => frame.locator(selectorEngine.generateSelectorSimple(element)) as unknown as Locator,
+          extend: (methods: Partial<BrowserPage>): BrowserPage => {
+            const extendedPage = { ...iframePage }
+            for (const key in methods) {
+              (extendedPage as any)[key] = (methods as any)[key].bind(extendedPage)
+            }
+            return extendedPage
+          },
+          createIframePage: async (iframeElement: Element): Promise<BrowserPage> => {
+            const iframe = await frame.locator(selectorEngine.generateSelectorSimple(iframeElement)).first()
+            if (!iframe) {
+              throw new Error('Could not find iframe element')
+            }
+            const iframeFrame = await iframe.evaluateHandle((el: HTMLIFrameElement) => el.contentWindow?.document)
+            if (!iframeFrame) {
+              throw new Error('Could not get iframe content frame')
+            }
+            return this.createIframePage(iframeFrame as unknown as Element)
+          },
+          viewport: async (width: number, height: number): Promise<void> => {
+            const iframeLocator = frame.owner()
+            await iframeLocator.evaluate((iframe: HTMLIFrameElement, size: { w: number; h: number }) => {
+              iframe.style.width = `${size.w}px`
+              iframe.style.height = `${size.h}px`
+            }, { w: width, h: height })
+          },
+          screenshot: async function screenshot(
+            options?: ScreenshotOptions,
+          ): Promise<string | { path: string; base64: string }> {
+            const iframeLocator = frame.owner()
+            let buf: Buffer
+
+            if (options?.element && !(options.element as any)._selector) {
+              const element = options.element as Element
+              const elementLocator = page.locator(selectorEngine.generateSelectorSimple(element))
+              buf = await elementLocator.screenshot(options)
+            }
+            else {
+              buf = await iframeLocator.screenshot(options)
+            }
+
+            // Handle save: false case
+            if (options?.save === false) {
+              return buf.toString('base64')
+            }
+
+            // Handle base64: true case
+            if (options?.base64) {
+              return {
+                path: options.path || '',
+                base64: buf.toString('base64'),
+              }
+            }
+
+            // Default case - return path
+            return options?.path || ''
+          } as {
+            (options: Omit<ScreenshotOptions, 'save'> & { save: false }): Promise<string>
+            (options: Omit<ScreenshotOptions, 'base64'> & { base64: true }): Promise<{ path: string; base64: string }>
+            (options?: Omit<ScreenshotOptions, 'base64'>): Promise<string>
+            (options?: ScreenshotOptions): Promise<string | { path: string; base64: string }>
+          },
+          evaluate: async function evaluate<T>(fn: () => T): Promise<T> {
+            const iframeLocator = frame.owner()
+            return iframeLocator.evaluate(fn)
+          },
+        }
+        return iframePage
       },
     }
   }
