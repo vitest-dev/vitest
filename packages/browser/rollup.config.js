@@ -78,6 +78,9 @@ export default () =>
         'locators/index': './src/client/tester/locators/index.ts',
         'expect-element': './src/client/tester/expect-element.ts',
         'utils': './src/client/tester/public-utils.ts',
+        'iframe-manager': './src/client/iframe-manager.ts',
+        'frame-locator': './src/client/frame-locator.ts',
+        'page-extensions': './src/client/page-extensions.ts',
       },
       output: {
         dir: 'dist',

@@ -4,4 +4,5 @@ export default defineWorkspace([
   './test/core',
   './test/cli',
   './test/config',
+  './packages/browser',
 ])
