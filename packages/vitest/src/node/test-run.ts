@@ -176,8 +176,7 @@ export class TestRun {
       // this can only happen in --merge-reports, and annotation is already resolved
       if (event === 'test-annotation') {
         const annotation = data?.annotation
-        assert(annotation)
-        assert(entity.type === 'test')
+        assert(annotation && entity.type === 'test')
         await this.vitest.report('onTestCaseAnnotate', entity, annotation)
       }
     }

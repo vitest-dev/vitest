@@ -5,17 +5,17 @@ import { runInlineTests } from '../../test-utils'
 const annotationTest = /* ts */`
 import { test, describe } from 'vitest'
 
-test('simple', ({ annotate }) => {
-  annotate('1')
-  annotate('2', 'warning')
-  annotate('3', { path: './test-3.js' })
-  annotate('4', 'warning', { path: './test-4.js' })
+test('simple', async ({ annotate }) => {
+  await annotate('1')
+  await annotate('2', 'warning')
+  await annotate('3', { path: './test-3.js' })
+  await annotate('4', 'warning', { path: './test-4.js' })
 })
 
 describe('suite', () => {
-  test('second', ({ annotate }) => {
-    annotate('5')
-    annotate('6', { path: 'https://absolute-path.com' })
+  test('second', async ({ annotate }) => {
+    await annotate('5')
+    await annotate('6', { path: 'https://absolute-path.com' })
   })
 })
 `
@@ -39,7 +39,7 @@ describe('API', () => {
     const events: string[] = []
     const annotations: Record<string, ReadonlyArray<TestAnnotation>> = {}
 
-    const { stderr } = await runInlineTests(
+    const { stderr, stdout } = await runInlineTests(
       {
         'basic.test.ts': annotationTest,
         'test-3.js': '',
@@ -105,7 +105,7 @@ describe('API', () => {
         "second": [
           {
             "location": {
-              "column": 5,
+              "column": 11,
               "file": "<root>/basic.test.ts",
               "line": 13,
             },
@@ -117,7 +117,7 @@ describe('API', () => {
               "path": "https://absolute-path.com",
             },
             "location": {
-              "column": 5,
+              "column": 11,
               "file": "<root>/basic.test.ts",
               "line": 14,
             },
@@ -128,7 +128,7 @@ describe('API', () => {
         "simple": [
           {
             "location": {
-              "column": 3,
+              "column": 9,
               "file": "<root>/basic.test.ts",
               "line": 5,
             },
@@ -137,7 +137,7 @@ describe('API', () => {
           },
           {
             "location": {
-              "column": 3,
+              "column": 9,
               "file": "<root>/basic.test.ts",
               "line": 6,
             },
@@ -150,7 +150,7 @@ describe('API', () => {
               "path": "<root>/.vitest-attachments/3-<hash>.js",
             },
             "location": {
-              "column": 3,
+              "column": 9,
               "file": "<root>/basic.test.ts",
               "line": 7,
             },
@@ -163,7 +163,7 @@ describe('API', () => {
               "path": "<root>/.vitest-attachments/4-<hash>.js",
             },
             "location": {
-              "column": 3,
+              "column": 9,
               "file": "<root>/basic.test.ts",
               "line": 8,
             },
@@ -313,17 +313,17 @@ describe('reporters', () => {
       .replace(new RegExp(ctx!.config.root, 'g'), '<root>')
     expect(result).toMatchInlineSnapshot(`
       "
-      ::notice file=<root>/basic.test.ts,line=5,column=3::1
+      ::notice file=<root>/basic.test.ts,line=5,column=9::1
 
-      ::warning file=<root>/basic.test.ts,line=6,column=3::2
+      ::warning file=<root>/basic.test.ts,line=6,column=9::2
 
-      ::notice file=<root>/basic.test.ts,line=7,column=3::3
+      ::notice file=<root>/basic.test.ts,line=7,column=9::3
 
-      ::warning file=<root>/basic.test.ts,line=8,column=3::4
+      ::warning file=<root>/basic.test.ts,line=8,column=9::4
 
-      ::notice file=<root>/basic.test.ts,line=13,column=5::5
+      ::notice file=<root>/basic.test.ts,line=13,column=11::5
 
-      ::notice file=<root>/basic.test.ts,line=14,column=5::6
+      ::notice file=<root>/basic.test.ts,line=14,column=11::6
       "
     `)
   })
@@ -348,20 +348,20 @@ describe('reporters', () => {
     expect(result).toMatchInlineSnapshot(`
       " ✓ basic.test.ts > simple <time>
 
-         ❯ basic.test.ts:5:3 notice
+         ❯ basic.test.ts:5:9 notice
            ↳ 1
-         ❯ basic.test.ts:6:3 warning
+         ❯ basic.test.ts:6:9 warning
            ↳ 2
-         ❯ basic.test.ts:7:3 notice
+         ❯ basic.test.ts:7:9 notice
            ↳ 3
-         ❯ basic.test.ts:8:3 warning
+         ❯ basic.test.ts:8:9 warning
            ↳ 4
 
        ✓ basic.test.ts > suite > second <time>
 
-         ❯ basic.test.ts:13:5 notice
+         ❯ basic.test.ts:13:11 notice
            ↳ 5
-         ❯ basic.test.ts:14:5 notice
+         ❯ basic.test.ts:14:11 notice
            ↳ 6
 
       "

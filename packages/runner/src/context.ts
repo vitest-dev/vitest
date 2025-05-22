@@ -14,6 +14,7 @@ import { getSafeTimers } from '@vitest/utils'
 import { parseSingleStack } from '@vitest/utils/source-map'
 import { PendingError } from './errors'
 import { getRunner } from './suite'
+import { finishSendTasksUpdate } from './run'
 
 const now = Date.now
 
@@ -185,6 +186,8 @@ export function createTestContext(
     if (!runner.onTestAnnotate) {
       throw new Error(`Test runner doesn't support test annotations.`)
     }
+
+    await finishSendTasksUpdate(runner)
 
     const resolvedAnnotation = await runner.onTestAnnotate(test, annotation)
     test.annotations.push(resolvedAnnotation)

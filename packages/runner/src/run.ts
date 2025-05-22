@@ -204,7 +204,7 @@ function sendTasksUpdate(runner: VitestRunner): void {
   }
 }
 
-async function finishSendTasksUpdate(runner: VitestRunner) {
+export async function finishSendTasksUpdate(runner: VitestRunner): Promise<void> {
   sendTasksUpdate(runner)
   await Promise.all(pendingTasksUpdates)
 }
