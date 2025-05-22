@@ -68,6 +68,7 @@ export default class HTMLReporter implements Reporter {
     this.htmlFilePath = htmlFilePath
 
     await fs.mkdir(resolve(this.reporterDir, 'data'), { recursive: true })
+    await fs.mkdir(resolve(this.reporterDir, 'assets'), { recursive: true })
   }
 
   async onFinished(): Promise<void> {
