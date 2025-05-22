@@ -1,5 +1,5 @@
 import type { BrowserPage } from '../types'
-import { FrameManager } from './frame-manager'
+import { IframeManager } from './iframe-manager'
 import { FrameLocator } from './frame-locator'
 
 interface FrameCriteria {
@@ -32,11 +32,11 @@ interface Frame {
 }
 
 class FrameImplementation implements Frame {
-    private frameManager: FrameManager
+    private frameManager: IframeManager
     private frameIdentifier: string
     private frameElement: HTMLIFrameElement
 
-    constructor(frameManager: FrameManager, identifier: string, element: HTMLIFrameElement) {
+    constructor(frameManager: IframeManager, identifier: string, element: HTMLIFrameElement) {
         this.frameManager = frameManager
         this.frameIdentifier = identifier
         this.frameElement = element
@@ -168,6 +168,18 @@ class FrameImplementation implements Frame {
 export function enhanceBrowserPage(basePage: BrowserPage): EnhancedPage {
     const frameManager = new FrameManager()
 
+    function buildFrameSelector(criteria: FrameCriteria): string {
+        const selectors = ['iframe']
+        if (criteria.identifier) selectors.push(`[name="${criteria.identifier}"]`)
+        if (typeof criteria.urlPattern === 'string') selectors.push(`[src="${criteria.urlPattern}"]`)
+        return selectors.join('')
+    }
+
+    function registerFrameElement(element: HTMLIFrameElement): Frame {
+        const identifier = frameManager.registerFrame(element)
+        return new FrameImplementation(frameManager, identifier, element)
+    }
+
     return {
         ...basePage,
 
@@ -176,7 +188,7 @@ export function enhanceBrowserPage(basePage: BrowserPage): EnhancedPage {
         },
 
         async locateFrame(criteria: FrameCriteria): Promise<Frame> {
-            const frameQuery = this.buildFrameSelector(criteria)
+            const frameQuery = buildFrameSelector(criteria)
             const targetFrame = document.querySelector(frameQuery) as HTMLIFrameElement
 
             if (!targetFrame) {
@@ -186,24 +198,12 @@ export function enhanceBrowserPage(basePage: BrowserPage): EnhancedPage {
                 throw new Error(errorMessage)
             }
 
-            return this.registerFrameElement(targetFrame)
+            return registerFrameElement(targetFrame)
         },
 
         async listFrames(): Promise<Frame[]> {
             return Array.from(document.querySelectorAll('iframe'))
-                .map(frame => this.registerFrameElement(frame as HTMLIFrameElement))
+                .map(frame => registerFrameElement(frame as HTMLIFrameElement))
         },
-
-        private buildFrameSelector(criteria: FrameCriteria): string {
-            const selectors = ['iframe']
-            if (criteria.identifier) selectors.push(`[name="${criteria.identifier}"]`)
-            if (typeof criteria.urlPattern === 'string') selectors.push(`[src="${criteria.urlPattern}"]`)
-            return selectors.join('')
-        },
-
-        private registerFrameElement(element: HTMLIFrameElement): Frame {
-            const identifier = frameManager.registerFrame(element)
-            return new FrameImplementation(frameManager, identifier, element)
-        }
     }
 }
