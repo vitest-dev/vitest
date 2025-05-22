@@ -149,3 +149,12 @@ result.options
 result.filter
 // ['./files.ts']
 ```
+
+## Advanced Iframe Support
+
+Vitest’s browser API now enables advanced control over iframes, including:
+- Locating and manipulating elements within nested frames
+- Executing scripts in the context of a specific frame
+- Multi-provider support (Playwright, WebdriverIO)
+
+See the [Interactivity API](../../guide/browser/interactivity-api.md#iframe-api) for full details.
