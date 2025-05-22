@@ -1,16 +1,11 @@
 name: CI
 
-# Remove default permissions of GITHUB_TOKEN for security
-# https://docs.github.com/en/actions/using-jobs/assigning-permissions-to-jobs
 permissions: {}
 
 on:
   push:
-    branches:
-      - main
-
+    branches: [main]
   pull_request:
-
   workflow_dispatch:
 
 concurrency:
@@ -19,24 +14,33 @@ concurrency:
 
 env:
   PLAYWRIGHT_BROWSERS_PATH: ${{ github.workspace }}/.cache/ms-playwright
+  PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: 1
 
 jobs:
   lint:
-    timeout-minutes: 10
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     name: 'Lint: node-latest, ubuntu-latest'
     steps:
       - uses: actions/checkout@v4
 
-      - uses: ./.github/actions/setup-and-cache
+      - name: Setup PNPM
+        uses: pnpm/action-setup@v3
+        with:
+          version: 8
 
-      - name: Install
-        run: pnpm i
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - name: Install Dependencies
+        run: pnpm install --lockfile-only
 
       - name: Build
         run: pnpm run build
 
-      # check uncommited LICENSE.md, auto-imports.d.ts, etc...
       - name: Check stale build artifacts
         run: git diff --exit-code
 
@@ -46,7 +50,6 @@ jobs:
       - name: Typecheck
         run: pnpm run typecheck
 
-      # From https://github.com/rhysd/actionlint/blob/main/docs/usage.md#use-actionlint-on-github-actions
       - name: Check workflow files
         run: |
           bash <(curl https://raw.githubusercontent.com/rhysd/actionlint/main/scripts/download-actionlint.bash)
@@ -57,13 +60,12 @@ jobs:
     name: 'Diff: node-latest, ubuntu-latest'
     outputs:
       should_skip: ${{ steps.changed-files.outputs.only_changed == 'true' }}
-
     steps:
       - uses: actions/checkout@v4
 
       - name: Get changed files
         id: changed-files
-        uses: tj-actions/changed-files@a284dc1814e3fd07f2e34267fc8f81227ed29fb8 # v45.0.9
+        uses: tj-actions/changed-files@v45
         with:
           files: |
             docs/**
@@ -76,7 +78,6 @@ jobs:
     name: 'Build&Test: node-${{ matrix.node_version }}, ${{ matrix.os }}'
     if: needs.changed.outputs.should_skip != 'true'
     runs-on: ${{ matrix.os }}
-
     timeout-minutes: 30
 
     strategy:
@@ -93,17 +94,32 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: ./.github/actions/setup-and-cache
+      - uses: pnpm/action-setup@v3
+        with:
+          version: 8
+
+      - uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node_version }}
+          cache: 'pnpm'
 
-      - uses: browser-actions/setup-chrome@c785b87e244131f27c9f19c1a33e2ead956ab7ce # v1.7.3
+      - name: Cache Playwright
+        uses: actions/cache@v3
+        with:
+          path: .cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ hashFiles('pnpm-lock.yaml') }}
 
-      - name: Install
-        run: pnpm i
+      - name: Install Dependencies
+        run: pnpm install --lockfile-only
 
-      - name: Install Playwright Dependencies
-        run: pnpm exec playwright install chromium --with-deps --only-shell
+      - name: Install Playwright Browsers with retry
+        run: |
+          n=0
+          until [ "$n" -ge 3 ]; do
+            pnpm exec playwright install --with-deps && break
+            n=$((n+1))
+            sleep 5
+          done
 
       - name: Build
         run: pnpm run build
@@ -121,32 +137,46 @@ jobs:
     needs: changed
     name: 'Browsers: node-20, ${{ matrix.os }}'
     if: needs.changed.outputs.should_skip != 'true'
-
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+
     strategy:
       matrix:
-        os:
-          - macos-latest
-          - windows-latest
+        os: [macos-latest, windows-latest]
       fail-fast: false
-
-    timeout-minutes: 30
 
     steps:
       - uses: actions/checkout@v4
 
-      - uses: ./.github/actions/setup-and-cache
+      - uses: pnpm/action-setup@v3
+        with:
+          version: 8
+
+      - uses: actions/setup-node@v4
         with:
           node-version: 20
+          cache: 'pnpm'
 
-      - uses: browser-actions/setup-chrome@c785b87e244131f27c9f19c1a33e2ead956ab7ce # v1.7.3
-      - uses: browser-actions/setup-firefox@634a60ccd6599686158cf5a570481b4cd30455a2 # v1.5.4
+      - name: Cache Playwright
+        uses: actions/cache@v3
+        with:
+          path: .cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ hashFiles('pnpm-lock.yaml') }}
 
-      - name: Install
-        run: pnpm i
+      - uses: browser-actions/setup-chrome@v1
+      - uses: browser-actions/setup-firefox@v1
 
-      - name: Install Playwright Dependencies
-        run: pnpm exec playwright install --with-deps --only-shell
+      - name: Install Dependencies
+        run: pnpm install --lockfile-only
+
+      - name: Install Playwright Browsers with retry
+        run: |
+          n=0
+          until [ "$n" -ge 3 ]; do
+            pnpm exec playwright install --with-deps && break
+            n=$((n+1))
+            sleep 5
+          done
 
       - name: Build
         run: pnpm run build
