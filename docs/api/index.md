@@ -1312,3 +1312,17 @@ test.concurrent('performs a query', ({ onTestFailed }) => {
 })
 ```
 :::
+
+## Iframe API
+
+The browser interface expands to include robust iframe manipulation capabilities:
+
+### Core Methods
+
+- `frameLocator(selector, options?): FrameLocator`
+- `locateFrame(criteria): Promise<Frame>`
+- `listFrames(): Promise<Frame[]>`
+
+See the [Interactivity API documentation](/guide/browser/interactivity-api#iframe-api) for usage examples and a detailed list of methods.
+
+

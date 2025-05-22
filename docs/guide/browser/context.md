@@ -156,3 +156,21 @@ export const server: {
   config: SerializedConfig
 }
 ```
+
+## Accessing Iframes via `page`
+
+the `page` object supports methods to interact with rendered iframes:
+
+```ts
+const frame = page.frameLocator('iframe#my-frame')
+await frame.getByText('Sign In').click()
+```
+
+You may also list and directly locate frames:
+
+```ts
+const frames = await page.listFrames()
+const frame = await page.locateFrame({ identifier: 'main-frame' })
+```
+
+Refer to the [Interactivity API](/guide/browser/interactivity-api#iframe-api) for comprehensive examples and details.

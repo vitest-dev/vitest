@@ -597,3 +597,74 @@ Paste the text from the clipboard. See [`userEvent.copy`](#userevent-copy) and [
 References:
 
 - [testing-library `paste` API](https://testing-library.com/docs/user-event/clipboard#paste)
+
+## Iframe API
+
+> **New in version X.X.X:** Vitest Browser Mode provides a robust API to interact with content and elements inside `<iframe>`s rendered during browser tests.
+
+### Accessing Frames
+
+Use the `frameLocator` method to interact with elements inside an iframe:
+
+```ts
+const frame = page.frameLocator('iframe[data-testid="my-frame"]')
+await frame.getByRole('button').click()
+await frame.getByText('Some Text').click()
+```
+
+### Available Methods
+
+- `frameLocator(selector, options?)`: Locates an iframe on the page using a selector.
+- FrameLocator interface methods:
+  - `.getByRole(role, options?)`
+  - `.getByText(text, options?)`
+  - `.getByTestId(testId)`
+  - `.getByPlaceholder(text, options?)`
+  - `.getByAltText(text, options?)`
+  - `.getByTitle(text, options?)`
+  - `.getByLabel(text, options?)`
+  - `.locator(selector)`
+  - `.first()`, `.last()`, `.nth(index)`
+
+### Executing Scripts Within the Frame Context
+
+You can run scripts within the context of a specific iframe:
+
+```ts
+const frameObj = await page.locateFrame({ identifier: 'my-frame' })
+const result = await frameObj.executeScript(() => {
+  return document.title
+})
+```
+
+You can also pass arguments:
+
+```ts
+const result = await frameObj.executeScriptWithArgument((id) => {
+  return document.getElementById(id)?.textContent
+}, 'foo')
+```
+
+### Listing and Manipulating Frames
+
+Retrieve all frames and interact with them:
+
+```ts
+const frames = await page.listFrames()
+for (const frame of frames) {
+  console.log(await frame.getIdentifier())
+}
+```
+
+### Complete Example
+
+```ts
+const frame = page.frameLocator('iframe#login')
+await frame.getByPlaceholder('Username').fill('dev')
+await frame.getByPlaceholder('Password').fill('12345')
+await frame.getByRole('button', { name: /sign in/i }).click()
+```
+
+> **Tip:** The Iframe API is compatible with both Playwright and WebdriverIO providers.
+
+See the [API Reference](/api/index) for a complete list of available methods and interfaces.
