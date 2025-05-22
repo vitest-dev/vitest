@@ -10,7 +10,7 @@ import { promisify } from 'node:util'
 import { gzip, constants as zlibConstants } from 'node:zlib'
 import { stringify } from 'flatted'
 import mime from 'mime/lite'
-import { basename, dirname, extname, relative, resolve } from 'pathe'
+import { dirname, extname, relative, resolve } from 'pathe'
 import { globSync } from 'tinyglobby'
 import c from 'tinyrainbow'
 import { getModuleGraph } from '../../vitest/src/utils/graph'
@@ -63,9 +63,9 @@ export default class HTMLReporter implements Reporter {
       = this.options.outputFile
         || getOutputFile(this.ctx.config)
         || 'html/index.html'
-    const htmlDir = resolve(this.ctx.config.root, dirname(htmlFile))
-    this.reporterDir = htmlDir
-    this.htmlFilePath = resolve(htmlDir, basename(htmlFile))
+    const htmlFilePath = resolve(this.ctx.config.root, htmlFile)
+    this.reporterDir = dirname(htmlFilePath)
+    this.htmlFilePath = htmlFilePath
 
     await fs.mkdir(resolve(this.reporterDir, 'data'), { recursive: true })
   }
