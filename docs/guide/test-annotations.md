@@ -68,8 +68,6 @@ The HRML reporter shows annotations the same way the UI does. You can see the an
 <img alt="Vitest UI" img-light src="/annotations-html-light.png">
 <img alt="Vitest UI" img-dark src="/annotations-html-dark.png">
 
-<!-- add screenshot -->
-
 ### junit
 
 The `junit` reporter lists annotations inside the testcase's `properties` tag. The JUnit reporter will ignore all attachments and will print only the type and the message.
@@ -87,7 +85,8 @@ The `junit` reporter lists annotations inside the testcase's `properties` tag. T
 
 The `github-actions` reporter will print the annotation as a [notice message](https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/workflow-commands-for-github-actions#setting-a-notice-message) by default. You can configure the `type` by passing down the second argument as `notice`, `warning` or `error`. If type is none of these, Vitest will show the message as a notice.
 
-<!-- example image -->
+<img alt="GitHub Actions" img-light src="/annotations-gha-light.png">
+<img alt="GitHub Actions" img-dark src="/annotations-gha-dark.png">
 
 ### tap
 
