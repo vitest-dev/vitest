@@ -382,8 +382,8 @@ describe('Temporal equality', () => {
     })
 
     test('returns true when .toString() is not equal', () => {
-      const a = Temporal.Duration.from('P1M')
-      const b = Temporal.Duration.from('P60S')
+      const a = Temporal.Duration.from('PT1M')
+      const b = Temporal.Duration.from('PT60S')
 
       expect(a).not.toStrictEqual(b)
     })
