@@ -110,7 +110,7 @@ jobs:
           key: ${{ runner.os }}-playwright-${{ hashFiles('pnpm-lock.yaml') }}
 
       - name: Install Dependencies
-        run: pnpm install --lockfile-only
+        run: pnpm install --frozen-lockfile
 
       - name: Install Playwright Browsers with retry
         run: |
@@ -167,7 +167,7 @@ jobs:
       - uses: browser-actions/setup-firefox@v1
 
       - name: Install Dependencies
-        run: pnpm install --lockfile-only
+        run: pnpm install --frozen-lockfile
 
       - name: Install Playwright Browsers with retry
         run: |
