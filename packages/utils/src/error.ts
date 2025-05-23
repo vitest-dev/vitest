@@ -124,10 +124,10 @@ export function processError(
 
   // stack is not serialized in worker communication
   // we stringify it first
-  if (err.stack) {
+  if (typeof err.stack === 'string') {
     err.stackStr = String(err.stack)
   }
-  if (err.name) {
+  if (typeof err.name === 'string') {
     err.nameStr = String(err.name)
   }
 

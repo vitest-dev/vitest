@@ -223,7 +223,7 @@ export function createVmForksPool(
 
 function getMemoryLimit(config: ResolvedConfig) {
   const memory = nodeos.totalmem()
-  const limit = getWorkerMemoryLimit(config)
+  const limit = getWorkerMemoryLimit(config, 'vmForks')
 
   if (typeof memory === 'number') {
     return stringToBytes(limit, config.watch ? memory / 2 : memory)

@@ -28,7 +28,6 @@ const entries = {
   'mocker': 'src/public/mocker.ts',
   'spy': 'src/integrations/spy.ts',
   'coverage': 'src/public/coverage.ts',
-  'utils': 'src/public/utils.ts',
   'execute': 'src/public/execute.ts',
   'reporters': 'src/public/reporters.ts',
   // TODO: advanced docs
@@ -55,7 +54,6 @@ const dtsEntries = {
   suite: 'src/public/suite.ts',
   config: 'src/public/config.ts',
   coverage: 'src/public/coverage.ts',
-  utils: 'src/public/utils.ts',
   execute: 'src/public/execute.ts',
   reporters: 'src/public/reporters.ts',
   mocker: 'src/public/mocker.ts',

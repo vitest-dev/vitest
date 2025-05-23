@@ -209,7 +209,7 @@ export function createVmThreadsPool(
 
 function getMemoryLimit(config: ResolvedConfig) {
   const memory = nodeos.totalmem()
-  const limit = getWorkerMemoryLimit(config)
+  const limit = getWorkerMemoryLimit(config, 'vmThreads')
 
   if (typeof memory === 'number') {
     return stringToBytes(limit, config.watch ? memory / 2 : memory)
