@@ -112,6 +112,8 @@ declare module '@vitest/runner' {
      * This API is useful for running snapshot tests concurrently because global expect cannot track them.
      */
     readonly expect: ExpectStatic
+    /** @internal */
+    _local: boolean
   }
 
   interface TaskMeta {

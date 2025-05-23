@@ -63,6 +63,7 @@ export function createThreadsPool(
 
   const options: TinypoolOptions = {
     filename: resolve(ctx.distPath, 'worker.js'),
+    teardown: 'teardown',
     // TODO: investigate further
     // It seems atomics introduced V8 Fatal Error https://github.com/vitest-dev/vitest/issues/1191
     useAtomics: poolOptions.useAtomics ?? false,
@@ -224,6 +225,7 @@ export function createThreadsPool(
             await new Promise<void>(resolve =>
               pool.queueSize === 0 ? resolve() : pool.once('drain', resolve),
             )
+            await cleanupWorkers()
             await pool.recycleWorkers()
           }
         }
@@ -259,6 +261,7 @@ export function createThreadsPool(
           )
 
           for (const files of Object.values(filesByOptions)) {
+            await cleanupWorkers()
             // Always run environments isolated between each other
             await pool.recycleWorkers()
 
@@ -276,10 +279,17 @@ export function createThreadsPool(
     }
   }
 
+  async function cleanupWorkers() {
+    // await pool.run({}, { name: 'cleanup' })
+  }
+
   return {
     name: 'threads',
     runTests: runWithFiles('run'),
     collectTests: runWithFiles('collect'),
-    close: () => pool.destroy(),
+    close: async () => {
+      await cleanupWorkers()
+      await pool.destroy()
+    },
   }
 }

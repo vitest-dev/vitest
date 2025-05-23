@@ -168,7 +168,7 @@
     "tinybench": "^2.9.0",
     "tinyexec": "^0.3.2",
     "tinyglobby": "catalog:",
-    "tinypool": "^1.0.2",
+    "tinypool": "https://pkg.pr.new/tinypool@115",
     "tinyrainbow": "catalog:",
     "vite": "^5.0.0 || ^6.0.0",
     "vite-node": "workspace:*",
