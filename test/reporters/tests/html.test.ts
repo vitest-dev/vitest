@@ -10,12 +10,8 @@ describe('html reporter', async () => {
   const vitestRoot = resolve(import.meta.dirname, '../../..')
   const root = resolve(import.meta.dirname, '../fixtures')
 
-  it('resolves to "passing" status for test file "all-passing-or-skipped"', async ({ onTestFailed }) => {
+  it('resolves to "passing" status for test file "all-passing-or-skipped"', async () => {
     const basePath = 'html/all-passing-or-skipped'
-
-    onTestFailed(() => {
-      console.error('files', fs.readdirSync(resolve(root, basePath)))
-    })
 
     const { stderr } = await runVitest(
       {
