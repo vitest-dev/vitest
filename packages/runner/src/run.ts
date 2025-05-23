@@ -181,7 +181,7 @@ export async function callSuiteHook<T extends keyof SuiteHooks>(
 }
 
 const packs = new Map<string, [TaskResult | undefined, TaskMeta]>()
-const eventsPacks: [string, TaskUpdateEvent][] = []
+const eventsPacks: [string, TaskUpdateEvent, undefined][] = []
 const pendingTasksUpdates: Promise<void>[] = []
 
 function sendTasksUpdate(runner: VitestRunner): void {
@@ -204,7 +204,7 @@ function sendTasksUpdate(runner: VitestRunner): void {
   }
 }
 
-async function finishSendTasksUpdate(runner: VitestRunner) {
+export async function finishSendTasksUpdate(runner: VitestRunner): Promise<void> {
   sendTasksUpdate(runner)
   await Promise.all(pendingTasksUpdates)
 }
@@ -224,7 +224,7 @@ function throttle<T extends (...args: any[]) => void>(fn: T, ms: number): T {
 const sendTasksUpdateThrottled = throttle(sendTasksUpdate, 100)
 
 export function updateTask(event: TaskUpdateEvent, task: Task, runner: VitestRunner): void {
-  eventsPacks.push([task.id, event])
+  eventsPacks.push([task.id, event, undefined])
   packs.set(task.id, [task.result, task.meta])
   sendTasksUpdateThrottled(runner)
 }

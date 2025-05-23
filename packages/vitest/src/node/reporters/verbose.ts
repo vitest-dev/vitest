@@ -58,6 +58,12 @@ export class VerboseReporter extends DefaultReporter {
     if (testResult.state === 'failed') {
       testResult.errors.forEach(error => this.log(c.red(`   ${F_RIGHT} ${error?.message}`)))
     }
+
+    if (test.annotations().length) {
+      this.log()
+      this.printAnnotations(test, 'log', 3)
+      this.log()
+    }
   }
 
   protected printTestSuite(testSuite: TestSuite): void {

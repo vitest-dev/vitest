@@ -1,4 +1,5 @@
-import type { File, TaskResultPack } from '@vitest/runner'
+import type { File, TaskResultPack, TestAnnotation } from '@vitest/runner'
+import type { RunnerTaskEventPack } from 'vitest'
 import type {
   CollectorInfo,
   FilteredTests,
@@ -6,7 +7,7 @@ import type {
   UITaskTreeNode,
 } from '~/composables/explorer/types'
 import { runCollapseAllTask, runCollapseNode } from '~/composables/explorer/collapse'
-import { collectTestsTotalData, preparePendingTasks, runCollect, runLoadFiles } from '~/composables/explorer/collector'
+import { annotateTest, collectTestsTotalData, preparePendingTasks, runCollect, runLoadFiles } from '~/composables/explorer/collector'
 import { runExpandAll, runExpandNode } from '~/composables/explorer/expand'
 import { runFilter } from '~/composables/explorer/filter'
 import {
@@ -77,7 +78,17 @@ export class ExplorerTree {
     this.collect(true, false)
   }
 
-  resumeRun(packs: TaskResultPack[]) {
+  annotateTest(testId: string, annotation: TestAnnotation) {
+    annotateTest(testId, annotation)
+    if (!this.onTaskUpdateCalled) {
+      clearTimeout(this.resumeEndRunId)
+      this.onTaskUpdateCalled = true
+      this.collect(true, false, false)
+      this.rafCollector.resume()
+    }
+  }
+
+  resumeRun(packs: TaskResultPack[], _events: RunnerTaskEventPack[]) {
     preparePendingTasks(packs)
     if (!this.onTaskUpdateCalled) {
       clearTimeout(this.resumeEndRunId)

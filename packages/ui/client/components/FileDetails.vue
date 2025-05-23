@@ -168,7 +168,7 @@ const projectNameTextColor = computed(() => {
         <div v-if="isTypecheck" v-tooltip.bottom="'This is a typecheck test. It won\'t report results of the runtime tests'" class="i-logos:typescript-icon" flex-shrink-0 />
         <span
           v-if="current?.file.projectName"
-          class="rounded-full py-0.5 px-1 text-xs font-light"
+          class="rounded-full py-0.5 px-2 text-xs font-light"
           :style="{ backgroundColor: projectNameColor, color: projectNameTextColor }"
         >
           {{ current.file.projectName }}

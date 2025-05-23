@@ -517,6 +517,10 @@ function guide(): DefaultTheme.SidebarItem[] {
       link: '/guide/test-context',
     },
     {
+      text: 'Test Annotations',
+      link: '/guide/test-annotations',
+    },
+    {
       text: 'Environment',
       link: '/guide/environment',
     },

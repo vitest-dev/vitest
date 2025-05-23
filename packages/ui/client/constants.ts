@@ -1,6 +1,7 @@
 // @ts-expect-error not typed global
 const browserState = window.__vitest_browser_runner__
-export const PORT = import.meta.hot && !browserState ? '51204' : location.port
+// TODO: update
+export const PORT = import.meta.hot && !browserState ? '3023' : location.port
 export const HOST = [location.hostname, PORT].filter(Boolean).join(':')
 export const ENTRY_URL = `${
   location.protocol === 'https:' ? 'wss:' : 'ws:'
