@@ -3,6 +3,7 @@ import type { File, Task, TaskEventPack, TaskResultPack, TaskState } from '@vite
 import type { ParsedStack } from '@vitest/utils'
 import type { EachMapping } from '@vitest/utils/source-map'
 import type { ChildProcess } from 'node:child_process'
+import type { Result } from 'tinyexec'
 import type { Vitest } from '../node/core'
 import type { TestProject } from '../node/project'
 import type { Awaitable } from '../types/general'
@@ -277,11 +278,7 @@ export class Typechecker {
     return this._output
   }
 
-  public async start(): Promise<void> {
-    if (this.process) {
-      return
-    }
-
+  private async spawn() {
     const { root, watch, typecheck } = this.project.config
 
     const args = [
@@ -314,31 +311,88 @@ export class Typechecker {
       },
       throwOnError: false,
     })
+
     this.process = child.process
-    await this._onParseStart?.()
+
     let rerunTriggered = false
-    child.process?.stdout?.on('data', (chunk) => {
-      this._output += chunk
-      if (!watch) {
+    let dataReceived = false
+
+    return new Promise<{ result: Result }>((resolve, reject) => {
+      if (!child.process || !child.process.stdout) {
+        reject(new Error(`Failed to initialize ${typecheck.checker}. This is a bug in Vitest - please, open an issue with reproduction.`))
         return
       }
-      if (this._output.includes('File change detected') && !rerunTriggered) {
-        this._onWatcherRerun?.()
-        this._startTime = performance.now()
-        this._result.sourceErrors = []
-        this._result.files = []
-        this._tests = null // test structure might've changed
-        rerunTriggered = true
+
+      child.process.stdout.on('data', (chunk) => {
+        dataReceived = true
+        this._output += chunk
+        if (!watch) {
+          return
+        }
+        if (this._output.includes('File change detected') && !rerunTriggered) {
+          this._onWatcherRerun?.()
+          this._startTime = performance.now()
+          this._result.sourceErrors = []
+          this._result.files = []
+          this._tests = null // test structure might've changed
+          rerunTriggered = true
+        }
+        if (/Found \w+ errors*. Watching for/.test(this._output)) {
+          rerunTriggered = false
+          this.prepareResults(this._output).then((result) => {
+            this._result = result
+            this._onParseEnd?.(result)
+          })
+          this._output = ''
+        }
+      })
+
+      const timeout = setTimeout(
+        () => reject(new Error(`${typecheck.checker} spawn timed out`)),
+        this.project.config.typecheck.spawnTimeout,
+      )
+
+      function onError(cause: Error) {
+        clearTimeout(timeout)
+        reject(new Error('Spawning typechecker failed - is typescript installed?', { cause }))
       }
-      if (/Found \w+ errors*. Watching for/.test(this._output)) {
-        rerunTriggered = false
-        this.prepareResults(this._output).then((result) => {
-          this._result = result
-          this._onParseEnd?.(result)
+
+      child.process.once('spawn', () => {
+        this._onParseStart?.()
+        child.process?.off('error', onError)
+        clearTimeout(timeout)
+        if (process.platform === 'win32') {
+          // on Windows, the process might be spawned but fail to start
+          // we wait for a potential error here. if "close" event didn't trigger,
+          // we resolve the promise
+          setTimeout(() => {
+            resolve({ result: child })
+          }, 200)
+        }
+        else {
+          resolve({ result: child })
+        }
+      })
+
+      if (process.platform === 'win32') {
+        child.process.once('close', (code) => {
+          if (code != null && code !== 0 && !dataReceived) {
+            onError(new Error(`The ${typecheck.checker} command exited with code ${code}.`))
+          }
         })
-        this._output = ''
       }
+      child.process.once('error', onError)
     })
+  }
+
+  public async start(): Promise<void> {
+    if (this.process) {
+      return
+    }
+
+    const { watch } = this.project.config
+    const { result: child } = await this.spawn()
+
     if (!watch) {
       await child
       this._result = await this.prepareResults(this._output)
