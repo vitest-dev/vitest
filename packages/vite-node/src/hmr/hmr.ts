@@ -300,6 +300,7 @@ export function createHotContext(
       notifyListeners(runner, 'vite:invalidate', {
         path: ownerPath,
         message: undefined,
+        firstInvalidatedBy: ownerPath,
       })
       return reload(runner, files)
     },

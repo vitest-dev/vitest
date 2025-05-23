@@ -10,6 +10,7 @@ import { toArray } from '@vitest/utils'
 import MagicString from 'magic-string'
 import { basename, dirname, extname, resolve } from 'pathe'
 import sirv from 'sirv'
+import { escapePath, isDynamicPattern } from 'tinyglobby'
 import * as vite from 'vite'
 import { coverageConfigDefaults } from 'vitest/config'
 import { getFilePoolName, resolveApiServerConfig, resolveFsAllow, distDir as vitestDist } from 'vitest/node'
@@ -178,15 +179,22 @@ export default (parentServer: ParentBrowserProject, base = '/'): Plugin[] => {
           define[`import.meta.env.${env}`] = stringValue
         }
 
-        const entries: string[] = [
+        let entries: string[] = [
           ...browserTestFiles,
           ...setupFiles,
           resolve(vitestDist, 'index.js'),
           resolve(vitestDist, 'browser.js'),
           resolve(vitestDist, 'runners.js'),
-          resolve(vitestDist, 'utils.js'),
           ...(project.config.snapshotSerializers || []),
         ]
+
+        if (entries.some(p => isDynamicPattern(p))) {
+          entries = entries.map(entry => escapePath(entry))
+          // push a single glob pattern so Vite will find the file when it's escape,
+          // otherwise the file has invalid path
+          // some/(var)/path.js -> some/\\(var\\)/path.js
+          entries.push('!')
+        }
 
         const exclude = [
           'vitest',
@@ -206,8 +214,6 @@ export default (parentServer: ParentBrowserProject, base = '/'): Plugin[] => {
           'tinyspy',
           'tinyrainbow',
           'pathe',
-          'msw',
-          'msw/browser',
         ]
 
         if (typeof project.config.diff === 'string') {
