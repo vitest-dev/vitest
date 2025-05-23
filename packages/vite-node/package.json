@@ -86,7 +86,7 @@
     "debug": "catalog:",
     "es-module-lexer": "^1.7.0",
     "pathe": "catalog:",
-    "vite": "^5.0.0 || ^6.0.0"
+    "vite": "^5.0.0 || ^6.0.0 || ^7.0.0-0"
   },
   "devDependencies": {
     "@jridgewell/trace-mapping": "catalog:",
