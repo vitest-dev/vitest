@@ -1,5 +1,4 @@
 import type { File, Test } from '@vitest/runner'
-import type { Writable } from 'node:stream'
 import type { Vitest } from '../core'
 import type { TestCase, TestModule } from './reported-tasks'
 import c from 'tinyrainbow'
@@ -73,7 +72,7 @@ export class DotReporter extends BaseReporter {
   onTestCaseResult(test: TestCase): void {
     const result = test.result().state
     if (!this.isTTY && result !== 'pending') {
-      (this.ctx.logger.outputStream as Writable).write(formatTests([result]))
+      this.ctx.logger.write(formatTests([result]))
     }
 
     super.onTestCaseResult(test)
