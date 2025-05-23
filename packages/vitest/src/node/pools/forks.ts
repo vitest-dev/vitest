@@ -72,6 +72,7 @@ export function createForksPool(
   const options: TinypoolOptions = {
     runtime: 'child_process',
     filename: resolve(ctx.distPath, 'worker.js'),
+    teardown: 'teardown',
 
     maxThreads,
     minThreads,

@@ -123,6 +123,6 @@ export function collect(ctx: ContextRPC): Promise<void> {
   return execute('collect', ctx)
 }
 
-export async function cleanup(): Promise<void> {
+export async function teardown(): Promise<void> {
   return cleanupWorker()
 }

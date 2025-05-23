@@ -66,7 +66,7 @@ test('can import file fixture inside the local fixture', async () => {
   expect(tests).toMatchInlineSnapshot(`" ✓ basic.test.ts > test1 <time>"`)
 })
 
-test.skip('can import worker fixture inside the local fixture', async () => {
+test.only('can import worker fixture inside the local fixture', async () => {
   const { stderr, stdout, fixtures, tests } = await runFixtureTests(({ log }) => it.extend<{
     worker: string
     local: string
@@ -98,7 +98,8 @@ test.skip('can import worker fixture inside the local fixture', async () => {
   expect(fixtures).toMatchInlineSnapshot(`
     ">> fixture | init worker | test1
     >> fixture | init local | test1
-    >> fixture | teardown local | test1"
+    >> fixture | teardown local | test1
+    >> fixture | teardown worker | test1"
   `)
   expect(tests).toMatchInlineSnapshot(`" ✓ basic.test.ts > test1 <time>"`)
 })

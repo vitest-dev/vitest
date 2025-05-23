@@ -63,6 +63,7 @@ export function createThreadsPool(
 
   const options: TinypoolOptions = {
     filename: resolve(ctx.distPath, 'worker.js'),
+    teardown: 'teardown',
     // TODO: investigate further
     // It seems atomics introduced V8 Fatal Error https://github.com/vitest-dev/vitest/issues/1191
     useAtomics: poolOptions.useAtomics ?? false,
