@@ -27,7 +27,6 @@ describe(GithubActionsReporter, () => {
         }),
         root: './fixtures',
         include: ['**/some-failing.test.ts'],
-        env: { GITHUB_WORKSPACE: '/home/user/workspace' },
       },
     )
     expect(stdout).toMatchInlineSnapshot(`
