@@ -399,6 +399,9 @@ export class V8CoverageProvider extends BaseCoverageProvider<ResolvedCoverageOpt
         if (result.url.startsWith('/@fs')) {
           result.url = `${FILE_PROTOCOL}${removeStartsWith(result.url, '/@fs')}`
         }
+        else if (result.url.startsWith(project.config.root)) {
+          result.url = `${FILE_PROTOCOL}${result.url}`
+        }
         else {
           result.url = `${FILE_PROTOCOL}${project.config.root}${result.url}`
         }
