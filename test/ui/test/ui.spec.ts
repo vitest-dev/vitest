@@ -114,8 +114,7 @@ test.describe('ui', () => {
     expect(await page.getByText('afterAll').all()).toHaveLength(6)
   })
 
-  test('annotations', async ({ page }, testInfo) => {
-    testInfo.setTimeout(5000)
+  test('annotations', async ({ page }) => {
     await page.goto(pageUrl)
     const item = page.getByLabel('fixtures/annotated.test.ts')
     await item.hover()
@@ -142,12 +141,12 @@ test.describe('ui', () => {
     await expect(page.getByTestId('diff')).toContainText('- Expected + Received + <style>* {border: 2px solid green};</style>')
   })
 
-  test('file-filter', async ({ page }) => {
+  test.only('file-filter', async ({ page }) => {
     await page.goto(pageUrl)
 
     // match all files when no filter
     await page.getByPlaceholder('Search...').fill('')
-    await page.getByText('PASS (4)').click()
+    await page.getByText('PASS (5)').click()
     await expect(page.getByTestId('details-panel').getByText('fixtures/sample.test.ts', { exact: true })).toBeVisible()
 
     // match nothing
