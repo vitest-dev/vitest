@@ -184,11 +184,11 @@ function createErrorElement(e: ErrorWithDiff) {
 
 function createAnnotationElement(annotation: TestAnnotation) {
   if (!annotation.location) {
-    // TODO: print unknown annotations somewhere
+    // TODO(v4): print unknown annotations somewhere
     return
   }
 
-  // TODO: design
+  // TODO(v4): design
   const { line, file } = annotation.location
   if (file !== props.file?.filepath) {
     return
@@ -202,6 +202,7 @@ function createAnnotationElement(annotation: TestAnnotation) {
     'px-6',
     'my-1',
   )
+  notice.role = 'note'
 
   const messageWrapper = document.createElement('div')
   messageWrapper.classList.add('block', 'text-black', 'dark:text-white')
