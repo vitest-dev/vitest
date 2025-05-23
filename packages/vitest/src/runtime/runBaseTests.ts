@@ -40,7 +40,7 @@ export async function run(
 
   workerState.onCancel.then((reason) => {
     closeInspector(config)
-    runner.onCancel?.(reason)
+    runner.cancel?.(reason)
   })
 
   workerState.durations.prepare = performance.now() - workerState.durations.prepare

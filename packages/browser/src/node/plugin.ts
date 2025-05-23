@@ -190,8 +190,7 @@ export default (parentServer: ParentBrowserProject, base = '/'): Plugin[] => {
 
         const exclude = [
           'vitest',
-          'vitest/utils',
-          'vitest/browser',
+          'vitest/internal/browser',
           'vitest/runners',
           '@vitest/browser',
           '@vitest/browser/client',

@@ -410,7 +410,7 @@ function wrapCallSite(frame: CallSite, state: State) {
       return state.nextPosition.name || originalFunctionName()
     }
     frame.getFileName = function () {
-      return position.source ?? undefined
+      return position.source ?? null
     }
     frame.getLineNumber = function () {
       return position.line

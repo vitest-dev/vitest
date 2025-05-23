@@ -22,7 +22,7 @@ The `require` of CSS and assets inside the external dependencies are resolved au
 ::: warning
 "Environments" exist only when running tests in Node.js.
 
-`browser` is not considered an environment in Vitest. If you wish to run part of your tests using [Browser Mode](/guide/browser/), you can create a [workspace project](/guide/browser/#workspace-config).
+`browser` is not considered an environment in Vitest. If you wish to run part of your tests using [Browser Mode](/guide/browser/), you can create a [test project](/guide/browser/#projects-config).
 :::
 
 ## Environments for Specific Files

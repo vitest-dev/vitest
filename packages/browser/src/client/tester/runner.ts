@@ -4,9 +4,14 @@ import type { VitestExecutor } from 'vitest/execute'
 import type { VitestBrowserClientMocker } from './mocker'
 import { globalChannel, onCancel } from '@vitest/browser/client'
 import { page, userEvent } from '@vitest/browser/context'
-import { loadDiffConfig, loadSnapshotSerializers, takeCoverageInsideWorker } from 'vitest/browser'
+import {
+  loadDiffConfig,
+  loadSnapshotSerializers,
+  originalPositionFor,
+  takeCoverageInsideWorker,
+  TraceMap,
+} from 'vitest/internal/browser'
 import { NodeBenchmarkRunner, VitestTestRunner } from 'vitest/runners'
-import { originalPositionFor, TraceMap } from 'vitest/utils'
 import { createStackString, parseStacktrace } from '../../../../utils/src/source-map'
 import { executor, getWorkerState } from '../utils'
 import { rpc } from './rpc'
@@ -62,8 +67,8 @@ export function createBrowserRunner(
         const currentFailures = 1 + previousFailures
 
         if (currentFailures >= this.config.bail) {
-          rpc().onCancel('test-failure')
-          this.onCancel('test-failure')
+          rpc().cancelCurrentRun('test-failure')
+          this.cancel('test-failure')
         }
       }
     }
@@ -81,8 +86,8 @@ export function createBrowserRunner(
       }
     }
 
-    onCancel = (reason: CancelReason) => {
-      super.onCancel?.(reason)
+    cancel = (reason: CancelReason) => {
+      super.cancel?.(reason)
       globalChannel.postMessage({ type: 'cancel', reason })
     }
 
@@ -196,7 +201,7 @@ export async function initiateRunner(
   cachedRunner = runner
 
   onCancel.then((reason) => {
-    runner.onCancel?.(reason)
+    runner.cancel?.(reason)
   })
 
   const [diffOptions] = await Promise.all([

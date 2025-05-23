@@ -27,7 +27,7 @@ export interface VitestRunnerCLIOptions {
 }
 
 export async function runVitest(
-  config: UserConfig,
+  cliOptions: UserConfig,
   cliFilters: string[] = [],
   mode: VitestRunMode = 'test',
   viteOverrides: ViteUserConfig = {},
@@ -72,7 +72,7 @@ export async function runVitest(
   let ctx: Vitest | undefined
   let thrown = false
   try {
-    const { reporters, ...rest } = config
+    const { reporters, ...rest } = cliOptions
 
     ctx = await startVitest(mode, cliFilters, {
       watch: false,
@@ -149,6 +149,7 @@ export async function runVitest(
 
 interface CliOptions extends Partial<Options> {
   earlyReturn?: boolean
+  preserveAnsi?: boolean
 }
 
 async function runCli(command: 'vitest' | 'vite-node', _options?: CliOptions | string, ...args: string[]) {
@@ -169,6 +170,7 @@ async function runCli(command: 'vitest' | 'vite-node', _options?: CliOptions | s
     stdin: subprocess.stdin!,
     stdout: subprocess.stdout!,
     stderr: subprocess.stderr!,
+    preserveAnsi: typeof _options !== 'string' ? _options?.preserveAnsi : false,
   })
 
   let setDone: (value?: unknown) => void

@@ -1,4 +1,4 @@
-import { format, stringify } from 'vitest/utils'
+import { format, stringify } from 'vitest/internal/browser'
 import { getConfig } from '../utils'
 import { rpc } from './rpc'
 import { getBrowserRunner } from './runner'

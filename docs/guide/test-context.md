@@ -79,6 +79,21 @@ it('math is hard', ({ skip, mind }) => {
 })
 ```
 
+#### `context.signal` <Version>3.2.0</Version> {#context-signal}
+
+An [`AbortSignal`](https://developer.mozilla.org/en-US/docs/Web/API/AbortSignal) that can be aborted by Vitest. The signal is aborted in these situations:
+
+- Test times out
+- User manually cancelled the test run with Ctrl+C
+- [`vitest.cancelCurrentRun`](/advanced/api/vitest#cancelcurrentrun) was called programmatically
+- Another test failed in parallel and the [`bail`](/config/#bail) flag is set
+
+```ts
+it('stop request when test times out', async ({ signal }) => {
+  await fetch('/resource', { signal })
+}, 2000)
+```
+
 #### `onTestFailed`
 
 The [`onTestFailed`](/api/#ontestfailed) hook bound to the current test. This API is useful if you are running tests concurrently and need to have a special handling only for this specific test.
@@ -217,7 +232,7 @@ test('works correctly')
 
 #### Default fixture
 
-Since Vitest 3, you can provide different values in different [projects](/guide/workspace). To enable this feature, pass down `{ injected: true }` to the options. If the key is not specified in the [project configuration](/config/#provide), then the default value will be used.
+Since Vitest 3, you can provide different values in different [projects](/guide/projects). To enable this feature, pass down `{ injected: true }` to the options. If the key is not specified in the [project configuration](/config/#provide), then the default value will be used.
 
 :::code-group
 ```ts [fixtures.test.ts]
@@ -238,32 +253,36 @@ test('works correctly', ({ url }) => {
   // url is "/empty" in "project-empty"
 })
 ```
-```ts [vitest.workspace.ts]
-import { defineWorkspace } from 'vitest/config'
+```ts [vitest.config.ts]
+import { defineConfig } from 'vitest/config'
 
-export default defineWorkspace([
-  {
-    test: {
-      name: 'project-new',
-    },
-  },
-  {
-    test: {
-      name: 'project-full',
-      provide: {
-        url: '/full',
+export default defineConfig({
+  test: {
+    projects: [
+      {
+        test: {
+          name: 'project-new',
+        },
       },
-    },
-  },
-  {
-    test: {
-      name: 'project-empty',
-      provide: {
-        url: '/empty',
+      {
+        test: {
+          name: 'project-full',
+          provide: {
+            url: '/full',
+          },
+        },
       },
-    },
+      {
+        test: {
+          name: 'project-empty',
+          provide: {
+            url: '/empty',
+          },
+        },
+      },
+    ],
   },
-])
+})
 ```
 :::
 

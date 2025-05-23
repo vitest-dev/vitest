@@ -21,7 +21,7 @@ interface Options {
   stylize: (value: string, styleType: string) => string
 }
 
-type LoupeOptions = Partial<Options>
+export type LoupeOptions = Partial<Options>
 
 const {
   AsymmetricMatcher,

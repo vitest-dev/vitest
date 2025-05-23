@@ -14,7 +14,7 @@ async function vitest(cliOptions: UserConfig, configValue: UserConfig = {}, vite
 }
 
 test('assigns names as browsers', async () => {
-  const { projects } = await vitest({
+  const { projects } = await vitest({}, {
     browser: {
       enabled: true,
       headless: true,
@@ -33,8 +33,7 @@ test('assigns names as browsers', async () => {
 })
 
 test('filters projects', async () => {
-  const { projects } = await vitest({
-    project: 'chromium',
+  const { projects } = await vitest({ project: 'chromium' }, {
     browser: {
       enabled: true,
       instances: [
@@ -50,8 +49,7 @@ test('filters projects', async () => {
 })
 
 test('filters projects with a wildcard', async () => {
-  const { projects } = await vitest({
-    project: 'chrom*',
+  const { projects } = await vitest({ project: 'chrom*' }, {
     browser: {
       enabled: true,
       instances: [
@@ -67,8 +65,8 @@ test('filters projects with a wildcard', async () => {
 })
 
 test('assignes names as browsers in a custom project', async () => {
-  const { projects } = await vitest({
-    workspace: [
+  const { projects } = await vitest({}, {
+    projects: [
       {
         test: {
           name: 'custom',
@@ -95,7 +93,7 @@ test('assignes names as browsers in a custom project', async () => {
 })
 
 test('inherits browser options', async () => {
-  const { projects } = await vitest({
+  const { projects } = await vitest({}, {
     setupFiles: ['/test/setup.ts'],
     provide: {
       browser: true,
@@ -183,31 +181,34 @@ test('inherits browser options', async () => {
 })
 
 test('coverage provider v8 works correctly in browser mode if instances are filtered', async () => {
-  const { projects } = await vitest({
-    project: 'chromium',
-    coverage: {
-      enabled: true,
-      provider: 'v8',
+  const { projects } = await vitest(
+    {
+      project: 'chromium',
     },
-    browser: {
-      enabled: true,
-      provider: 'playwright',
-      instances: [
-        { browser: 'chromium' },
-        { browser: 'firefox' },
-        { browser: 'webkit' },
-      ],
+    {
+      coverage: {
+        enabled: true,
+        provider: 'v8',
+      },
+      browser: {
+        enabled: true,
+        provider: 'playwright',
+        instances: [
+          { browser: 'chromium' },
+          { browser: 'firefox' },
+          { browser: 'webkit' },
+        ],
+      },
     },
-  })
+  )
   expect(projects.map(p => p.name)).toEqual([
     'chromium',
   ])
 })
 
 test('coverage provider v8 works correctly in workspaced browser mode if instances are filtered', async () => {
-  const { projects } = await vitest({
-    project: 'browser (chromium)',
-    workspace: [
+  const { projects } = await vitest({ project: 'browser (chromium)' }, {
+    projects: [
       {
         test: {
           name: 'browser',
@@ -234,9 +235,8 @@ test('coverage provider v8 works correctly in workspaced browser mode if instanc
 })
 
 test('filter for the global browser project includes all browser instances', async () => {
-  const { projects } = await vitest({
-    project: 'myproject',
-    workspace: [
+  const { projects } = await vitest({ project: 'myproject' }, {
+    projects: [
       {
         test: {
           name: 'myproject',
@@ -275,7 +275,7 @@ test('can enable browser-cli options for multi-project workspace', async () => {
       },
     },
     {
-      workspace: [
+      projects: [
         {
           test: {
             name: 'unit',
@@ -373,7 +373,7 @@ function getCliConfig(options: UserConfig, cli: string[], fs: TestFsStructure = 
 describe('[e2e] workspace configs are affected by the CLI options', () => {
   test('UI is not enabled by default in headless config', async () => {
     const vitest = await getCliConfig({
-      workspace: [
+      projects: [
         {
           test: {
             name: 'unit',
@@ -426,7 +426,7 @@ describe('[e2e] workspace configs are affected by the CLI options', () => {
 
   test('CLI options correctly override inline workspace options', async () => {
     const vitest = await getCliConfig({
-      workspace: [
+      projects: [
         {
           test: {
             name: 'unit',
@@ -481,7 +481,7 @@ describe('[e2e] workspace configs are affected by the CLI options', () => {
   test('CLI options correctly override config file workspace options', async () => {
     const vitest = await getCliConfig(
       {
-        workspace: [
+        projects: [
           {
             test: {
               name: 'unit',
@@ -532,6 +532,148 @@ describe('[e2e] workspace configs are affected by the CLI options', () => {
         browser: true,
         ui: true,
       },
+    })
+  })
+
+  test('correctly resolves extended project', async () => {
+    const { stdout } = await getCliConfig({
+      browser: {
+        provider: 'playwright',
+        headless: true,
+        instances: [
+          { browser: 'chromium' },
+        ],
+      },
+      projects: [
+        {
+          extends: true,
+          test: {
+            name: 'node',
+          },
+        },
+        {
+          extends: true,
+          test: {
+            name: 'browser',
+            browser: {
+              enabled: true,
+            },
+          },
+        },
+      ],
+    }, [])
+
+    const config = JSON.parse(stdout)
+
+    expect(config.workspace).toHaveLength(2)
+    expect(config.workspace[0]).toEqual({
+      name: 'node',
+      headless: true,
+      browser: false,
+      ui: false,
+      parent: null,
+    })
+
+    expect(config.workspace[1]).toEqual({
+      name: 'browser (chromium)',
+      headless: true,
+      browser: true,
+      ui: false,
+      parent: {
+        name: 'browser',
+        headless: true,
+        browser: true,
+        ui: false,
+      },
+    })
+  })
+
+  test('correctly overrides extended project', async () => {
+    const { stdout } = await getCliConfig({
+      browser: {
+        provider: 'playwright',
+        headless: true,
+        instances: [
+          { browser: 'chromium' },
+        ],
+      },
+      projects: [
+        {
+          extends: true,
+          test: {
+            name: 'node',
+          },
+        },
+        {
+          extends: true,
+          test: {
+            name: 'browser',
+            browser: {
+              enabled: true,
+            },
+          },
+        },
+      ],
+    }, ['--browser.headless=false'])
+
+    const config = JSON.parse(stdout)
+
+    expect(config.workspace).toHaveLength(2)
+    expect(config.workspace[0]).toEqual({
+      name: 'node',
+      headless: false,
+      browser: false,
+      ui: true,
+      parent: null,
+    })
+
+    expect(config.workspace[1]).toEqual({
+      name: 'browser (chromium)',
+      headless: false,
+      browser: true,
+      ui: true,
+      parent: {
+        name: 'browser',
+        headless: false,
+        browser: true,
+        ui: true,
+      },
+    })
+  })
+
+  test('CLI options override the config if --browser.enabled is passed down manually', async () => {
+    const { stdout } = await getCliConfig({
+      browser: {
+        enabled: false,
+        provider: 'playwright',
+        headless: true,
+        instances: [
+          { browser: 'chromium' },
+        ],
+      },
+    }, ['--browser.headless=false', '--browser.enabled'])
+
+    const config = JSON.parse(stdout)
+    expect(config).toEqual({
+      browser: {
+        headless: false,
+        browser: true,
+        ui: true,
+      },
+      workspace: [
+        {
+          name: 'chromium',
+          headless: false,
+          browser: true,
+          ui: true,
+          parent: {
+            name: '',
+            headless: false,
+            browser: true,
+            ui: true,
+          },
+        },
+      ],
     })
   })
 })

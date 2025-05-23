@@ -72,6 +72,7 @@ type UnsupportedProperties =
   | 'environmentOptions'
   | 'server'
   | 'benchmark'
+  | 'name'
 
 export interface BrowserInstanceOption extends BrowserProviderOptions,
   Omit<ProjectConfig, UnsupportedProperties>,
@@ -88,6 +89,8 @@ export interface BrowserInstanceOption extends BrowserProviderOptions,
    * Name of the browser
    */
   browser: string
+
+  name?: string
 }
 
 export interface BrowserConfigOptions {
