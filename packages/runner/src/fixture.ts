@@ -233,7 +233,7 @@ function resolveFixtureValue(
 
   if (fixture.scope === 'worker') {
     if (!workerContext) {
-      throw new TypeError('[@vitets/runner] The worker context is not available in the current test runner. Please, provide the `getWorkerContext` method when initiating the runner.')
+      throw new TypeError('[@vitest/runner] The worker context is not available in the current test runner. Please, provide the `getWorkerContext` method when initiating the runner.')
     }
     fixtureContext = workerContext
   }

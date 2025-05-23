@@ -163,7 +163,7 @@ export interface VitestRunner {
   pool?: string
 
   /**
-   * Return the worker context for fixutres specified with `scope: 'worker'`
+   * Return the worker context for fixtures specified with `scope: 'worker'`
    */
   getWorkerContext?: () => Record<string, unknown>
   onCleanupWorkerContext?: (cleanup: () => unknown) => void
