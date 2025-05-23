@@ -141,7 +141,7 @@ test.describe('ui', () => {
     await expect(page.getByTestId('diff')).toContainText('- Expected + Received + <style>* {border: 2px solid green};</style>')
   })
 
-  test.only('file-filter', async ({ page }) => {
+  test('file-filter', async ({ page }) => {
     await page.goto(pageUrl)
 
     // match all files when no filter
