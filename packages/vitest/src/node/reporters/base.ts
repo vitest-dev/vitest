@@ -4,7 +4,6 @@ import type { Vitest } from '../core'
 import type { Reporter } from '../types/reporter'
 import type { TestCase, TestCollection, TestModule, TestModuleState, TestResult, TestSuite, TestSuiteState } from './reported-tasks'
 import { performance } from 'node:perf_hooks'
-import { equals } from '@vitest/expect'
 import { getFullName, getSuites, getTestName, getTests, hasFailed } from '@vitest/runner/utils'
 import { toArray } from '@vitest/utils'
 import { parseStacktrace } from '@vitest/utils/source-map'
@@ -618,7 +617,7 @@ export abstract class BaseReporter implements Reporter {
             const currentAnnotations = task.type === 'test' && task.annotations
             const itemAnnotations = i[1][0].type === 'test' && i[1][0].annotations
 
-            return projectName === currentProjectName && equals(currentAnnotations, itemAnnotations)
+            return projectName === currentProjectName && deepEqual(currentAnnotations, itemAnnotations)
           })
         }
 
@@ -666,6 +665,28 @@ export abstract class BaseReporter implements Reporter {
       errorDivider()
     }
   }
+}
+
+function deepEqual(a: any, b: any): boolean {
+  if (a === b) {
+    return true
+  }
+  if (typeof a !== 'object' || typeof b !== 'object' || a === null || b === null) {
+    return false
+  }
+
+  const keysA = Object.keys(a)
+  const keysB = Object.keys(b)
+  if (keysA.length !== keysB.length) {
+    return false
+  }
+
+  for (const key of keysA) {
+    if (!keysB.includes(key) || !deepEqual(a[key], b[key])) {
+      return false
+    }
+  }
+  return true
 }
 
 function sum<T>(items: T[], cb: (_next: T) => number | undefined) {
