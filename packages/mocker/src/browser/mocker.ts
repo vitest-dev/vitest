@@ -53,7 +53,7 @@ export class ModuleMocker {
       return
     }
     await this.rpc.invalidate(ids)
-    this.interceptor.invalidate()
+    await this.interceptor.invalidate()
     this.registry.clear()
   }
 

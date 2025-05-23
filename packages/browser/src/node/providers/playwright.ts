@@ -179,8 +179,12 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
       const ids = sessionIds.get(sessionId) || []
       ids.push(moduleUrl.href)
       sessionIds.set(sessionId, ids)
-      idPreficates.set(moduleUrl.href, predicate)
+      idPreficates.set(predicateKey(sessionId, moduleUrl.href), predicate)
       return predicate
+    }
+
+    function predicateKey(sessionId: string, url: string) {
+      return `${sessionId}:${url}`
     }
 
     return {
@@ -252,18 +256,20 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
       },
       delete: async (sessionId: string, id: string): Promise<void> => {
         const page = this.getPage(sessionId)
-        const predicate = idPreficates.get(id)
+        const key = predicateKey(sessionId, id)
+        const predicate = idPreficates.get(key)
         if (predicate) {
-          await page.unroute(predicate).finally(() => idPreficates.delete(id))
+          await page.unroute(predicate).finally(() => idPreficates.delete(key))
         }
       },
       clear: async (sessionId: string): Promise<void> => {
         const page = this.getPage(sessionId)
         const ids = sessionIds.get(sessionId) || []
         const promises = ids.map((id) => {
-          const predicate = idPreficates.get(id)
+          const key = predicateKey(sessionId, id)
+          const predicate = idPreficates.get(key)
           if (predicate) {
-            return page.unroute(predicate).finally(() => idPreficates.delete(id))
+            return page.unroute(predicate).finally(() => idPreficates.delete(key))
           }
           return null
         })
