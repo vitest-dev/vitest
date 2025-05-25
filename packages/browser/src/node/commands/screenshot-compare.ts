@@ -1,27 +1,85 @@
-import type { BrowserCommand, BrowserCommandContext, ResolvedConfig } from 'vitest/node'
-import type { ScreenshotCompareOptions, ScreenshotOptions } from '../../../context'
+import type { BrowserCommand } from 'vitest/node'
+import type { ResolvedScreenshotCompareOptions, ScreenshotCompareResult } from '../../../context'
 import { existsSync } from 'node:fs'
-import { mkdir } from 'node:fs/promises'
-import { normalize } from 'node:path'
-import { basename, dirname, isAbsolute, relative, resolve } from 'pathe'
-import { PlaywrightBrowserProvider } from '../providers/playwright'
-import { WebdriverBrowserProvider } from '../providers/webdriver'
+import { mkdir, readFile, writeFile } from 'node:fs/promises'
+import { dirname, isAbsolute, normalize, resolve } from 'node:path'
+import pixelmatch from 'pixelmatch'
+import { PNG } from 'pngjs'
 import { takeScreenshot } from './screenshot'
 
-export const screenshotCompare: BrowserCommand<[ScreenshotCompareOptions]> = async (
+export const screenshotCompare: BrowserCommand<[ResolvedScreenshotCompareOptions]> = async (
   context,
   options,
-) => {
+): Promise<ScreenshotCompareResult> => {
   if (!context.testPath) {
     throw new Error(`Cannot take a screenshot without a test path`)
+  }
+
+  if (!options.baselinePath) {
+    throw new Error(`Baseline path not provided`)
   }
 
   const baselinePath = isAbsolute(options.baselinePath)
     ? normalize(options.baselinePath)
     : normalize(resolve(dirname(context.testPath), options.baselinePath))
 
-  await mkdir(dirname(baselinePath), { recursive: true })
+  if (!existsSync(baselinePath) || options.updateBaselines) {
+    await takeScreenshot(context, { element: options.element }, baselinePath)
+    return { pass: true, diff: 0, written: true }
+  }
 
-  const buffer = takeScreenshot(context, { element: options.element })
-  return buffer
+  const baselineBuffer = await readFile(baselinePath)
+  const currentBuffer = await takeScreenshot(context, { element: options.element, save: false })
+
+  return await comparePNGs(baselineBuffer, currentBuffer, options)
+}
+
+async function comparePNGs(
+  baselineBuffer: Buffer,
+  currentBuffer: Buffer,
+  options: ResolvedScreenshotCompareOptions,
+): Promise<ScreenshotCompareResult> {
+  const baselineImage = PNG.sync.read(baselineBuffer)
+  const currentImage = PNG.sync.read(currentBuffer)
+
+  if (baselineImage.width !== currentImage.width || baselineImage.height !== currentImage.height) {
+    // TODO Handle resizing image
+    return {
+      diff: 0,
+      written: false,
+      pass: false,
+      message: `Image dimensions do not match: baseline (${baselineImage.width}x${baselineImage.height}) vs current (${currentImage.width}x${currentImage.height})`,
+    }
+  }
+
+  const { width, height } = baselineImage
+  const diff = new PNG({ width, height })
+
+  const numDiffPixels = pixelmatch(
+    baselineImage.data,
+    currentImage.data,
+    diff.data,
+    width,
+    height,
+    { threshold: options.pixelMatchThreshold },
+  )
+
+  // TODO Support the percentage threshold
+  if (numDiffPixels > options.failureThreshold) {
+    await mkdir(dirname(options.diffPath), { recursive: true })
+    await writeFile(options.diffPath, PNG.sync.write(diff))
+    return {
+      pass: false,
+      diff: numDiffPixels,
+      written: false,
+      message: `Images differ by ${numDiffPixels} pixels. Diff image written to ${options.diffPath}`,
+    }
+  }
+
+  return {
+    pass: true,
+    diff: numDiffPixels,
+    written: false,
+    message: `Images match with a difference of ${numDiffPixels} pixels.`,
+  }
 }
