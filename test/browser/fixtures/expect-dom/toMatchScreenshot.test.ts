@@ -1,8 +1,8 @@
 import { expect, test } from 'vitest'
 
-test('screenshot', async () => {
+test('matches screenshot baseline', async () => {
   const div = document.createElement('div')
-  div.textContent = 'Hello, World!'
+  div.textContent = 'Hello, World!!'
   div.style.fontSize = '24px'
   div.style.color = 'blue'
   div.style.textAlign = 'center'

@@ -1,5 +1,5 @@
 import type { AsyncExpectationResult, MatcherState } from '@vitest/expect'
-import type { ScreenshotCompareOptions } from '../../../../context'
+import { ScreenshotCompareResult, type ResolvedScreenshotCompareOptions, type ScreenshotCompareOptions } from '../../../../context'
 import type { Locator } from '../locators'
 
 import { basename, dirname, join, resolve } from 'pathe'
@@ -7,8 +7,13 @@ import { ensureAwaited, getBrowserState, getWorkerState } from '../../utils'
 import { convertToSelector } from '../context'
 import { processTimeoutOptions } from '../utils'
 
-function triggerCommand<T>(command: string, args: any[], error?: Error) {
-  return getBrowserState().commands.triggerCommand<T>(command, args, error)
+function triggerCommand<T>(command: string, ...args: any[]): Promise<T> {
+  const commands = getBrowserState().commands
+  return ensureAwaited(error => commands.triggerCommand<T>(
+    command,
+    args,
+    error,
+  ))
 }
 
 export default async function toMatchScreenshot(
@@ -26,24 +31,49 @@ export default async function toMatchScreenshot(
   }
 
   const snapshotsDir = dirname(this.snapshotState.snapshotPath)
-  const screenshotFileName = `${currentTestName}.png`
-  options.baselinePath = options.baselinePath ? resolve(options.baselinePath) : join(snapshotsDir, screenshotFileName)
+  const defaultScreenshotName = `${currentTestName.replace(/[^a-z0-9]/gi, '-')}.png`
 
-  options.diffPath = options.diffPath
-    ? resolve(options.diffPath)
-    : join(
-        dirname(options.baselinePath),
-        '__diff_images__',
-        `${basename(options.baselinePath, '.png')}-diff.png`,
-      )
+  const resolvedOptions = resolveOptions(
+    received,
+    snapshotsDir,
+    defaultScreenshotName,
+    options,
+  )
 
-  const updateBaselines = getWorkerState().config.snapshotOptions.updateSnapshot === 'all'
-  options.updateBaselines ||= updateBaselines
+  const {pass, message} = await triggerCommand<ScreenshotCompareResult>(
+    '__vitest_screenshot_compare',
+    processTimeoutOptions({
+      ...resolvedOptions,
+      element: convertToSelector(received),
+    })
+  )
 
-  return ensureAwaited(error => triggerCommand('__vitest_screenshot_compare', [processTimeoutOptions({
-    ...options,
-    element: options.element
-      ? convertToSelector(received)
-      : undefined,
-  })], error))
+  return { pass, message: () => message }
+}
+
+function resolveOptions(
+  received: Element | Locator,
+  snapshotsDir: string,
+  defaultScreenshotName: string,
+  options: ScreenshotCompareOptions,
+): ResolvedScreenshotCompareOptions {
+  const baselinePath = options.baselinePath
+    ? resolve(options.baselinePath)
+    : join(snapshotsDir, defaultScreenshotName)
+
+  return {
+    element: received,
+    baselinePath,
+    diffPath: options.diffPath
+      ? resolve(options.diffPath)
+      : join(
+          dirname(baselinePath),
+          '__diff_images__',
+          `${basename(baselinePath, '.png')}-diff.png`,
+        ),
+    pixelMatchThreshold: options.pixelMatchThreshold || 0.1,
+    failureThreshold: options.failureThreshold || 0,
+    failureThresholdType: options.failureThresholdType || 'pixel',
+    updateBaselines: options.updateBaselines || getWorkerState().config.snapshotOptions.updateSnapshot === 'all',
+  }
 }

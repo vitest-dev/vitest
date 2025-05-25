@@ -45,32 +45,24 @@ export interface ScreenshotOptions {
 }
 
 export interface ScreenshotCompareOptions {
-  element?: Element | Locator
-  /**
-   * Path relative to the current test file.
-   */
   baselinePath?: string
-
   diffPath?: string
-
   pixelMatchThreshold?: number
-
   failureThreshold?: number
-
   failureThresholdType?: 'pixel' | 'percent'
-
-  timeout?: number
-
   updateBaselines?: boolean
 }
 
-export type ResolvedScreenshotCompareOptions = Required<ScreenshotCompareOptions>
+export type ResolvedScreenshotCompareOptions = Required<ScreenshotCompareOptions> & {
+  element: Element | Locator
+  timeout?: number
+}
 
 export interface ScreenshotCompareResult {
   pass: boolean
   diff: number
   written: boolean
-  message?: string
+  message: string
 }
 
 export interface BrowserCommands {

@@ -1,7 +1,7 @@
 import type { BrowserCommand } from 'vitest/node'
 import type { ResolvedScreenshotCompareOptions, ScreenshotCompareResult } from '../../../context'
 import { existsSync } from 'node:fs'
-import { mkdir, readFile, writeFile } from 'node:fs/promises'
+import { mkdir, readFile, writeFile, rm } from 'node:fs/promises'
 import { dirname, isAbsolute, normalize, resolve } from 'node:path'
 import pixelmatch from 'pixelmatch'
 import { PNG } from 'pngjs'
@@ -23,9 +23,11 @@ export const screenshotCompare: BrowserCommand<[ResolvedScreenshotCompareOptions
     ? normalize(options.baselinePath)
     : normalize(resolve(dirname(context.testPath), options.baselinePath))
 
+  await rm(options.diffPath, { force: true })
+
   if (!existsSync(baselinePath) || options.updateBaselines) {
-    await takeScreenshot(context, { element: options.element }, baselinePath)
-    return { pass: true, diff: 0, written: true }
+    await takeScreenshot(context, { element: options.element, save: true }, baselinePath)
+    return { pass: true, diff: 0, written: true, message: `Baseline screenshot saved to ${baselinePath}` }
   }
 
   const baselineBuffer = await readFile(baselinePath)
@@ -55,6 +57,7 @@ async function comparePNGs(
   const { width, height } = baselineImage
   const diff = new PNG({ width, height })
 
+  // TODO: Add baseline and current images to the sides of the diff image
   const numDiffPixels = pixelmatch(
     baselineImage.data,
     currentImage.data,
@@ -69,10 +72,10 @@ async function comparePNGs(
     await mkdir(dirname(options.diffPath), { recursive: true })
     await writeFile(options.diffPath, PNG.sync.write(diff))
     return {
+      message: `Images differ by ${numDiffPixels} pixels. Diff image written to ${options.diffPath}`,
       pass: false,
       diff: numDiffPixels,
       written: false,
-      message: `Images differ by ${numDiffPixels} pixels. Diff image written to ${options.diffPath}`,
     }
   }
 
