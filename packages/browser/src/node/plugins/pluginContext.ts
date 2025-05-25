@@ -49,7 +49,7 @@ async function generateContextFile(
   const distContextPath = slash(`/@fs/${resolve(__dirname, 'context.js')}`)
 
   return `
-import { page, createUserEvent, cdp } from '${distContextPath}'
+import { page, createUserEvent, cdp, locators } from '${distContextPath}'
 ${userEventNonProviderImport}
 
 export const server = {
@@ -64,7 +64,7 @@ export const server = {
 }
 export const commands = server.commands
 export const userEvent = createUserEvent(_userEventSetup)
-export { page, cdp }
+export { page, cdp, locators }
 `
 }
 

@@ -16,9 +16,9 @@ Alternatively, you can also add it to `compilerOptions.types` field in your `tsc
 }
 ```
 
-Vitest opens a single page to run all tests in the same file. You can configure the `launch` and `context` properties in `instances`:
+Vitest opens a single page to run all tests in the same file. You can configure the `launch`, `connect` and `context` properties in `instances`:
 
-```ts{9-10} [vitest.config.ts]
+```ts{9-11} [vitest.config.ts]
 import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
@@ -28,6 +28,7 @@ export default defineConfig({
         {
           browser: 'firefox',
           launch: {},
+          connect: {},
           context: {},
         },
       ],
@@ -63,6 +64,14 @@ These options are directly passed down to `playwright[browser].launch` command. 
 Vitest will ignore `launch.headless` option. Instead, use [`test.browser.headless`](/guide/browser/config#browser-headless).
 
 Note that Vitest will push debugging flags to `launch.args` if [`--inspect`](/guide/cli#inspect) is enabled.
+:::
+
+## connect <Version>3.2.0</Version> {#connect}
+
+These options are directly passed down to `playwright[browser].connect` command. You can read more about the command and available arguments in the [Playwright documentation](https://playwright.dev/docs/api/class-browsertype#browser-type-connect).
+
+::: warning
+Since this command connects to an existing Playwright server, any `launch` options will be ignored.
 :::
 
 ## context

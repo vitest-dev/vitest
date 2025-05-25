@@ -64,7 +64,7 @@ Benchmark mode calls `bench` functions and throws an error, when it encounters `
 
 ## config
 
-The root (or global) config. If workspace feature is enabled, projects will reference this as `globalConfig`.
+The root (or global) config. If projects are defined, they will reference this as `globalConfig`.
 
 ::: warning
 This is Vitest config, it doesn't extend _Vite_ config. It only has resolved values from the `test` property.
@@ -101,9 +101,9 @@ Cache manager that stores information about latest test results and test file st
 
 ## projects
 
-An array of [test projects](/advanced/api/test-project) that belong to the user's workspace. If the user did not specify a custom workspace, the workspace will only have a [root project](#getrootproject).
+An array of [test projects](/advanced/api/test-project) that belong to user's projects. If the user did not specify a them, this array will only contain a [root project](#getrootproject).
 
-Vitest will ensure that there is always at least one project in the workspace. If the user specifies a non-existent `--project` name, Vitest will throw an error.
+Vitest will ensure that there is always at least one project in this array. If the user specifies a non-existent `--project` name, Vitest will throw an error before this array is defined.
 
 ## getRootProject
 
@@ -111,7 +111,7 @@ Vitest will ensure that there is always at least one project in the workspace. I
 function getRootProject(): TestProject
 ```
 
-This returns the root test project. The root project generally doesn't run any tests and is not included in `vitest.projects` unless the user explicitly includes the root config in their workspace, or the workspace is not defined at all.
+This returns the root test project. The root project generally doesn't run any tests and is not included in `vitest.projects` unless the user explicitly includes the root config in their configuration, or projects are not defined at all.
 
 The primary goal of the root project is to setup the global config. In fact, `rootProject.config` references `rootProject.globalConfig` and `vitest.config` directly:
 
@@ -433,7 +433,7 @@ dynamicExample !== staticExample // ✅
 :::
 
 ::: info
-Internally, Vitest uses this method to import global setups, custom coverage providers, workspace file, and custom reporters, meaning all of them share the same module graph as long as they belong to the same Vite server.
+Internally, Vitest uses this method to import global setups, custom coverage providers, and custom reporters, meaning all of them share the same module graph as long as they belong to the same Vite server.
 :::
 
 ## close

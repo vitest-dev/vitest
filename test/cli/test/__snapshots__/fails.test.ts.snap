@@ -127,3 +127,5 @@ exports[`should fail unhandled.test.ts 1`] = `
 "Error: some error
 Error: Uncaught [Error: some error]"
 `;
+
+exports[`should fail unhandled-suite.test.ts 1`] = `"Unknown Error: promise error"`;

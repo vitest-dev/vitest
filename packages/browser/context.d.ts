@@ -29,12 +29,19 @@ export interface ScreenshotOptions {
   element?: Element | Locator
   /**
    * Path relative to the current test file.
+   * @default `__screenshots__/${testFileName}/${testName}.png`
    */
   path?: string
   /**
    * Will also return the base64 encoded screenshot alongside the path.
    */
   base64?: boolean
+  /**
+   * Keep the screenshot on the file system. If file is not saved,
+   * `page.screenshot` always returns `base64` screenshot.
+   * @default true
+   */
+  save?: boolean
 }
 
 export interface ScreenshotCompareOptions {
@@ -560,11 +567,16 @@ export interface BrowserPage extends LocatorSelectors {
    * Make a screenshot of the test iframe or a specific element.
    * @returns Path to the screenshot file or path and base64.
    */
+  screenshot(options: Omit<ScreenshotOptions, 'save'> & { save: false }): Promise<string>
   screenshot(options: Omit<ScreenshotOptions, 'base64'> & { base64: true }): Promise<{
     path: string
     base64: string
   }>
-  screenshot(options?: ScreenshotOptions): Promise<string>
+  screenshot(options?: Omit<ScreenshotOptions, 'base64'>): Promise<string>
+  screenshot(options?: ScreenshotOptions): Promise<string | {
+    path: string
+    base64: string
+  }>
   /**
    * Extend default `page` object with custom methods.
    */
@@ -575,6 +587,15 @@ export interface BrowserPage extends LocatorSelectors {
    */
   elementLocator(element: Element): Locator
 }
+
+export interface BrowserLocators {
+  createElementLocators(element: Element): LocatorSelectors
+  extend(methods: {
+    [K in keyof LocatorSelectors]?: (...args: Parameters<LocatorSelectors[K]>) => ReturnType<LocatorSelectors[K]> | string
+  }): void
+}
+
+export const locators: BrowserLocators
 
 export const page: BrowserPage
 export const cdp: () => CDPSession

@@ -3,7 +3,7 @@
   "type": "module",
   "scripts": {
     "test": "vitest --test-timeout 60000",
-    "types": "vitest --typecheck --run",
+    "types": "vitest --typecheck.only --typecheck.allowJs --run",
     "tsc": "tsc --watch --pretty false --noEmit"
   },
   "dependencies": {

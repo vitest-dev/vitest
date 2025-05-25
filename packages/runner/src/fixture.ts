@@ -245,8 +245,8 @@ function getUsedProps(fn: Function) {
   //   __async(this, null, function*
   //   __async(this, arguments, function*
   //   __async(this, [_0, _1], function*
-  if (/__async\(this, (?:null|arguments|\[[_0-9, ]*\]), function\*/.test(fnString)) {
-    fnString = fnString.split('__async(this,')[1]
+  if (/__async\((?:this|null), (?:null|arguments|\[[_0-9, ]*\]), function\*/.test(fnString)) {
+    fnString = fnString.split(/__async\((?:this|null),/)[1]
   }
   const match = fnString.match(/[^(]*\(([^)]*)/)
   if (!match) {

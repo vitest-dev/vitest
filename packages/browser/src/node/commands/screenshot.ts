@@ -1,6 +1,6 @@
 import type { BrowserCommand, BrowserCommandContext, ResolvedConfig } from 'vitest/node'
 import type { ScreenshotOptions } from '../../../context'
-import { mkdir } from 'node:fs/promises'
+import { mkdir, rm } from 'node:fs/promises'
 import * as nodeos from 'node:os'
 import { normalize } from 'node:path'
 import { basename, dirname, relative, resolve } from 'pathe'
@@ -14,6 +14,12 @@ export const screenshot: BrowserCommand<[string, ScreenshotOptions]> = async (
 ) => {
   if (!context.testPath) {
     throw new Error(`Cannot take a screenshot without a test path`)
+  }
+
+  options.save ??= true
+
+  if (!options.save) {
+    options.base64 = true
   }
 
   const path = options.path
@@ -40,7 +46,7 @@ export async function takeScreenshot(context: BrowserCommandContext, options: Sc
     const element = context.iframe.locator(selectorWithFallback)
     return await element.screenshot({
       ...config,
-      path: savePath,
+      path: options.save ? savePath : undefined,
     })
   }
 
@@ -80,6 +86,9 @@ function returnResult(
   path: string,
   buffer: Buffer,
 ) {
+  if (!options.save) {
+    return buffer.toString('base64')
+  }
   if (options.base64) {
     return { path, base64: buffer.toString('base64') }
   }
