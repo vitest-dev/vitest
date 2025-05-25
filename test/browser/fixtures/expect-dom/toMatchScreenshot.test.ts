@@ -1,6 +1,6 @@
 import { expect, test } from 'vitest'
 
-test('screenshot', () => {
+test('screenshot', async () => {
   const div = document.createElement('div')
   div.textContent = 'Hello, World!'
   div.style.fontSize = '24px'
@@ -9,5 +9,5 @@ test('screenshot', () => {
   div.style.marginTop = '20px'
   document.body.appendChild(div)
 
-  expect(document.body).toMatchScreenshot()
+  await expect(document.body).toMatchScreenshot()
 })

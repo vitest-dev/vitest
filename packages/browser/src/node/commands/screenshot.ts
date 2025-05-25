@@ -1,6 +1,7 @@
-import type { BrowserCommand, ResolvedConfig } from 'vitest/node'
+import type { BrowserCommand, BrowserCommandContext, ResolvedConfig } from 'vitest/node'
 import type { ScreenshotOptions } from '../../../context'
 import { mkdir } from 'node:fs/promises'
+import * as nodeos from 'node:os'
 import { normalize } from 'node:path'
 import { basename, dirname, relative, resolve } from 'pathe'
 import { PlaywrightBrowserProvider } from '../providers/playwright'
@@ -22,38 +23,33 @@ export const screenshot: BrowserCommand<[string, ScreenshotOptions]> = async (
         name,
         context.project.config,
       )
-  const savePath = normalize(path)
-  await mkdir(dirname(path), { recursive: true })
+
+  const buffer = await takeScreenshot(context, options, path)
+  return returnResult(options, path, buffer)
+}
+
+export async function takeScreenshot(context: BrowserCommandContext, options: ScreenshotOptions, path?: string): Promise<Buffer> {
+  const savePath = path ? normalize(path) : undefined
+  if (path) {
+    await mkdir(dirname(path), { recursive: true })
+  }
+  const { element: selector, ...config } = options
+  const selectorWithFallback = selector ? `${selector}` : 'body'
 
   if (context.provider instanceof PlaywrightBrowserProvider) {
-    if (options.element) {
-      const { element: selector, ...config } = options
-      const element = context.iframe.locator(`${selector}`)
-      const buffer = await element.screenshot({
-        ...config,
-        path: savePath,
-      })
-      return returnResult(options, path, buffer)
-    }
-
-    const buffer = await context.iframe.locator('body').screenshot({
-      ...options,
+    const element = context.iframe.locator(selectorWithFallback)
+    return await element.screenshot({
+      ...config,
       path: savePath,
     })
-    return returnResult(options, path, buffer)
   }
 
   if (context.provider instanceof WebdriverBrowserProvider) {
     const page = context.provider.browser!
-    if (!options.element) {
-      const body = await page.$('body')
-      const buffer = await body.saveScreenshot(savePath)
-      return returnResult(options, path, buffer)
-    }
+    const element = await page.$(selectorWithFallback)
 
-    const element = await page.$(`${options.element}`)
-    const buffer = await element.saveScreenshot(savePath)
-    return returnResult(options, path, buffer)
+    // Since WebdriverIO can't generate a screenshot without saving it, we save it in a tmpdir
+    return await element.saveScreenshot(savePath || relative(nodeos.tmpdir(), 'screenshot.png'))
   }
 
   throw new Error(

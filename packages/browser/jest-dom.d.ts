@@ -627,4 +627,6 @@ export interface TestingLibraryMatchers<E, R> {
    * @see https://vitest.dev/guide/browser/assertion-api#tohaveselection
    */
   toHaveSelection(selection?: string): R
+
+  toMatchScreenshot(options?: { threshold?: number }): Promise<R>
 }

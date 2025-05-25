@@ -37,6 +37,14 @@ export interface ScreenshotOptions {
   base64?: boolean
 }
 
+export interface ScreenshotCompareOptions {
+  element?: Element | Locator
+  /**
+   * Path relative to the current test file.
+   */
+  baselinePath: string
+}
+
 export interface BrowserCommands {
   readFile: (
     path: string,
