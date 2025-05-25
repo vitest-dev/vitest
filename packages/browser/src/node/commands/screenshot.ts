@@ -55,7 +55,12 @@ export async function takeScreenshot(context: BrowserCommandContext, options: Sc
     const element = await page.$(selectorWithFallback)
 
     // Since WebdriverIO can't generate a screenshot without saving it, we save it in a tmpdir
-    return await element.saveScreenshot(savePath || relative(nodeos.tmpdir(), 'screenshot.png'))
+    const savePathWithFallback = savePath || relative(nodeos.tmpdir(), 'screenshot.png')
+    const buffer = await element.saveScreenshot(savePathWithFallback)
+    if (!options.save) {
+      await rm(savePathWithFallback, { force: true })
+    }
+    return buffer
   }
 
   throw new Error(
