@@ -292,6 +292,20 @@ export class V8CoverageProvider extends BaseCoverageProvider<ResolvedCoverageOpt
           ) {
             return true
           }
+
+          // Browser mode's "import.meta.env ="
+          if (
+            type === 'statement'
+            && node.type === 'ExpressionStatement'
+            && node.expression.type === 'AssignmentExpression'
+            && node.expression.left.type === 'MemberExpression'
+            && node.expression.left.object.type === 'MetaProperty'
+            && node.expression.left.object.meta.name === 'import'
+            && node.expression.left.object.property.name === 'meta'
+            && node.expression.left.property.type === 'Identifier'
+            && node.expression.left.property.name === 'env') {
+            return true
+          }
         },
       },
       )
