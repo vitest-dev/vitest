@@ -208,14 +208,6 @@ export function createVmForksPool(
     runTests: runWithFiles('run'),
     collectTests: runWithFiles('collect'),
     close: async () => {
-      const emitter = new EventEmitter()
-
-      const events = { message: 'message', response: 'response' }
-      const channel: TinypoolChannel = {
-        onMessage: callback => emitter.on(events.message, callback),
-        postMessage: message => emitter.emit(events.response, message),
-      }
-      await pool.run({}, { name: 'cleanup', channel })
       await pool.destroy()
     },
   }
