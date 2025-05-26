@@ -2,7 +2,6 @@ export {
   format,
   inspect,
   objDisplay,
-  redent,
   stringify,
 } from './display'
 export type { LoupeOptions, StringifyOptions } from './display'
