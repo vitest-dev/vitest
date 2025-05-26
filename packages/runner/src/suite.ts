@@ -423,7 +423,7 @@ function createSuiteCollector(
       const parsed = mergeContextFixtures(
         fixtures,
         { fixtures: collectorFixtures },
-        (key: string) => getRunner().injectValue?.(key),
+        runner,
       )
       if (parsed.fixtures) {
         collectorFixtures = parsed.fixtures
@@ -766,7 +766,7 @@ export function createTaskCollector(
     const _context = mergeContextFixtures(
       fixtures,
       context || {},
-      (key: string) => getRunner().injectValue?.(key),
+      runner,
     )
 
     return createTest(function fn(

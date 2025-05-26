@@ -46,7 +46,7 @@ export function mergeScopedFixtures(
 export function mergeContextFixtures<T extends { fixtures?: FixtureItem[] }>(
   fixtures: Record<string, any>,
   context: T,
-  inject: (key: string) => unknown,
+  runner: VitestRunner,
 ): T {
   const fixtureOptionKeys = ['auto', 'injected', 'scope']
   const fixtureArray: FixtureItem[] = Object.entries(fixtures).map(
@@ -63,11 +63,14 @@ export function mergeContextFixtures<T extends { fixtures?: FixtureItem[] }>(
         Object.assign(fixtureItem, value[1])
         const userValue = value[0]
         fixtureItem.value = fixtureItem.injected
-          ? (inject(prop) ?? userValue)
+          ? (runner.injectValue?.(prop) ?? userValue)
           : userValue
       }
 
       fixtureItem.scope = fixtureItem.scope || 'test'
+      if (fixtureItem.scope === 'worker' && !runner.getWorkerContext) {
+        fixtureItem.scope = 'file'
+      }
       fixtureItem.prop = prop
       fixtureItem.isFn = typeof fixtureItem.value === 'function'
       return fixtureItem

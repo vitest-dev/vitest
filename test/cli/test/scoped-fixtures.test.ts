@@ -208,6 +208,87 @@ test('file fixture can import a static value from test fixture', async () => {
   expect(stderr).toBe('')
 })
 
+test('worker fixture works in vmThreads and runs for every file', async () => {
+  const { stderr, fixtures, tests } = await runFixtureTests(({ log }) => it.extend<{ worker: string }>({
+    worker: [
+      async ({}, use) => {
+        log('init worker')
+        await use('worker')
+        log('teardown worker')
+      },
+      { scope: 'worker' },
+    ],
+  }), {
+    '1-basic.test.ts': ({ extendedTest }) => {
+      extendedTest('test1', ({ worker: _worker }) => {})
+    },
+    '2-basic.test.ts': ({ extendedTest }) => {
+      extendedTest('test1', ({ worker: _worker }) => {})
+    },
+    'vitest.config.ts': {
+      test: {
+        globals: true,
+        maxWorkers: 1,
+        minWorkers: 1,
+        pool: 'vmThreads',
+      },
+    },
+  })
+
+  expect(stderr).toBe('')
+  expect(fixtures).toMatchInlineSnapshot(`
+    ">> fixture | init worker | test1
+    >> fixture | teardown worker | test1
+    >> fixture | init worker | test1
+    >> fixture | teardown worker | test1"
+  `)
+  expect(tests).toMatchInlineSnapshot(`
+    " ✓ 1-basic.test.ts > test1 <time>
+     ✓ 2-basic.test.ts > test1 <time>"
+  `)
+})
+
+test('worker fixtures in isolated tests init and teardown twice', async () => {
+  const { stderr, fixtures, tests } = await runFixtureTests(({ log }) => it.extend<{ worker: string }>({
+    worker: [
+      async ({}, use) => {
+        log('init worker')
+        await use('worker')
+        log('teardown worker')
+      },
+      { scope: 'worker' },
+    ],
+  }), {
+    '1-basic.test.ts': ({ extendedTest }) => {
+      extendedTest('test1', ({ worker: _worker }) => {})
+    },
+    '2-basic.test.ts': ({ extendedTest }) => {
+      extendedTest('test1', ({ worker: _worker }) => {})
+    },
+    'vitest.config.ts': {
+      test: {
+        globals: true,
+        isolate: true,
+        maxWorkers: 2,
+        minWorkers: 2,
+        pool: 'threads',
+      },
+    },
+  })
+
+  expect(stderr).toBe('')
+  expect(fixtures).toMatchInlineSnapshot(`
+    ">> fixture | init worker | test1
+    >> fixture | teardown worker | test1
+    >> fixture | init worker | test1
+    >> fixture | teardown worker | test1"
+  `)
+  expect(tests).toMatchInlineSnapshot(`
+    " ✓ 1-basic.test.ts > test1 <time>
+     ✓ 2-basic.test.ts > test1 <time>"
+  `)
+})
+
 test('worker fixture initiates and torn down in different workers', async () => {
   const { stderr, fixtures, tests } = await runFixtureTests(({ log }) => it.extend<{ worker: string }>({
     worker: [
@@ -249,7 +330,7 @@ test('worker fixture initiates and torn down in different workers', async () => 
   `)
 })
 
-test.only('worker fixture initiates and torn down in one worker', async () => {
+test('worker fixture initiates and torn down in one non-isolated worker', async () => {
   const { stderr, fixtures, tests } = await runFixtureTests(({ log }) => it.extend<{ worker: string }>({
     worker: [
       async ({}, use) => {
