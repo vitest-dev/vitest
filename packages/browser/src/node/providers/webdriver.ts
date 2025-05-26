@@ -28,6 +28,7 @@ export class WebdriverBrowserProvider implements BrowserProvider {
   private options?: Capabilities.WebdriverIOConfig
 
   private closing = false
+  private iframeSwitched = false
 
   getSupportedBrowsers(): readonly string[] {
     return webdriverBrowsers
@@ -43,6 +44,10 @@ export class WebdriverBrowserProvider implements BrowserProvider {
     this.options = options as Capabilities.WebdriverIOConfig
   }
 
+  isIframeSwitched(): boolean {
+    return this.iframeSwitched
+  }
+
   async switchToTestFrame(): Promise<void> {
     const page = this.browser!
     // support wdio@9
@@ -56,6 +61,7 @@ export class WebdriverBrowserProvider implements BrowserProvider {
       )
       await page.switchToFrame(iframe)
     }
+    this.iframeSwitched = true
   }
 
   async switchToMainFrame(): Promise<void> {
@@ -66,6 +72,7 @@ export class WebdriverBrowserProvider implements BrowserProvider {
     else {
       await page.switchToParentFrame()
     }
+    this.iframeSwitched = false
   }
 
   getCommandsContext(): {
