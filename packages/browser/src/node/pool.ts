@@ -69,28 +69,56 @@ export function createBrowserPool(vitest: Vitest): ProcessPool {
       isCancelled = true
     })
 
-    // TODO: this might now be a good idea... should we run these in chunks?
-    await Promise.all(
-      [...groupedFiles.entries()].map(async ([project, files]) => {
-        await project._initBrowserProvider()
+    const groupedSpecifications = [...groupedFiles.entries()]
+    const initialisedPools = (await Promise.all(groupedSpecifications.map(async ([project, files]) => {
+      await project._initBrowserProvider()
 
-        if (!project.browser) {
-          throw new TypeError(`The browser server was not initialized${project.name ? ` for the "${project.name}" project` : ''}. This is a bug in Vitest. Please, open a new issue with reproduction.`)
-        }
+      if (!project.browser) {
+        throw new TypeError(`The browser server was not initialized${project.name ? ` for the "${project.name}" project` : ''}. This is a bug in Vitest. Please, open a new issue with reproduction.`)
+      }
 
-        if (isCancelled) {
-          return
-        }
+      if (isCancelled) {
+        return
+      }
 
-        debug?.('provider is ready for %s project', project.name)
+      debug?.('provider is ready for %s project', project.name)
 
-        const pool = ensurePool(project)
-        vitest.state.clearFiles(project, files)
-        providers.add(project.browser!.provider)
+      const pool = ensurePool(project)
+      vitest.state.clearFiles(project, files)
+      providers.add(project.browser!.provider)
 
-        await pool.runTests(method, files)
-      }),
-    )
+      return {
+        pool,
+        provider: project.browser!.provider,
+        runTests: () => pool.runTests(method, files),
+      }
+    })))
+
+    if (isCancelled) {
+      return
+    }
+
+    const parallelPools: (() => Promise<void>)[] = []
+    const nonParallelPools: (() => Promise<void>)[] = []
+
+    for (const result of initialisedPools) {
+      if (!result) {
+        return
+      }
+
+      if (result.provider.mocker && result.provider.supportsParallelism) {
+        parallelPools.push(result.runTests)
+      }
+      else {
+        nonParallelPools.push(result.runTests)
+      }
+    }
+
+    await Promise.all(parallelPools.map(runTests => runTests()))
+
+    for (const runTests of nonParallelPools) {
+      await runTests()
+    }
   }
 
   function getThreadsCount(project: TestProject) {
