@@ -5,12 +5,14 @@ import type { ViteUserConfig } from 'vitest/config'
 import type { TestFsStructure } from '../../test-utils'
 import { runInlineTests } from '../../test-utils'
 
-declare module 'vitest' {
-  interface TestContext {
-    file: string
-    worker: string
-  }
+interface TestContext {
+  file: string
+  worker: string
 }
+
+// TODO: test several workers
+// TODO: works in the browser
+// TODO: works in vmThreads, vmForks, forks, threads
 
 test('test fixture cannot import from file fixture', async () => {
   const { stderr } = await runInlineTests({
@@ -206,6 +208,83 @@ test('file fixture can import a static value from test fixture', async () => {
   expect(stderr).toBe('')
 })
 
+test('worker fixture initiates and torn down in different workers', async () => {
+  const { stderr, fixtures, tests } = await runFixtureTests(({ log }) => it.extend<{ worker: string }>({
+    worker: [
+      async ({}, use) => {
+        log('init worker')
+        await use('worker')
+        log('teardown worker')
+      },
+      { scope: 'worker' },
+    ],
+  }), {
+    '1-basic.test.ts': ({ extendedTest }) => {
+      extendedTest('test1', ({ worker: _worker }) => {})
+    },
+    '2-basic.test.ts': ({ extendedTest }) => {
+      extendedTest('test1', ({ worker: _worker }) => {})
+    },
+    'vitest.config.ts': {
+      test: {
+        globals: true,
+        isolate: false,
+        maxWorkers: 2,
+        minWorkers: 2,
+        pool: 'threads',
+      },
+    },
+  })
+
+  expect(stderr).toBe('')
+  expect(fixtures).toMatchInlineSnapshot(`
+    ">> fixture | init worker | test1
+    >> fixture | teardown worker | test1
+    >> fixture | init worker | test1
+    >> fixture | teardown worker | test1"
+  `)
+  expect(tests).toMatchInlineSnapshot(`
+    " ✓ 1-basic.test.ts > test1 <time>
+     ✓ 2-basic.test.ts > test1 <time>"
+  `)
+})
+
+test.only('worker fixture initiates and torn down in one worker', async () => {
+  const { stderr, fixtures, tests } = await runFixtureTests(({ log }) => it.extend<{ worker: string }>({
+    worker: [
+      async ({}, use) => {
+        log('init worker')
+        await use('worker')
+        log('teardown worker')
+      },
+      { scope: 'worker' },
+    ],
+  }), {
+    '1-basic.test.ts': ({ extendedTest }) => {
+      extendedTest('test1', ({ worker: _worker }) => {})
+    },
+    '2-basic.test.ts': ({ extendedTest }) => {
+      extendedTest('test1', ({ worker: _worker }) => {})
+    },
+    'vitest.config.ts': {
+      test: {
+        globals: true,
+        isolate: false,
+        maxWorkers: 1,
+        minWorkers: 1,
+        pool: 'threads',
+      },
+    },
+  })
+
+  expect(stderr).toBe('')
+  expect(fixtures).toMatchInlineSnapshot(`">> fixture | init worker | test1"`)
+  expect(tests).toMatchInlineSnapshot(`
+    " ✓ 1-basic.test.ts > test1 <time>
+     ✓ 2-basic.test.ts > test1 <time>"
+  `)
+})
+
 test('worker fixtures are available in beforeEach and afterEach', async () => {
   const { stderr, fixtures, tests } = await runFixtureTests(({ log }) => it.extend<{ worker: string }>({
     worker: [
@@ -218,10 +297,10 @@ test('worker fixtures are available in beforeEach and afterEach', async () => {
     ],
   }), {
     'basic.test.ts': ({ extendedTest }) => {
-      beforeEach(({ worker }) => {
+      beforeEach<TestContext>(({ worker }) => {
         console.log('>> fixture | beforeEach |', worker)
       })
-      afterEach(({ worker }) => {
+      afterEach<TestContext>(({ worker }) => {
         console.log('>> fixture | afterEach |', worker)
       })
       extendedTest('test1', ({}) => {})
@@ -258,10 +337,10 @@ test('file fixtures are available in beforeEach and afterEach', async () => {
     ],
   }), {
     'basic.test.ts': ({ extendedTest }) => {
-      beforeEach(({ file }) => {
+      beforeEach<TestContext>(({ file }) => {
         console.log('>> fixture | beforeEach |', file)
       })
-      afterEach(({ file }) => {
+      afterEach<TestContext>(({ file }) => {
         console.log('>> fixture | afterEach |', file)
       })
       extendedTest('test1', ({}) => {})
