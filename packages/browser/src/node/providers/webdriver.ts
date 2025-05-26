@@ -86,7 +86,7 @@ export class WebdriverBrowserProvider implements BrowserProvider {
         context: this.topLevelContext,
         devicePixelRatio: 1,
         viewport: options,
-      }
+      },
     })
   }
 
