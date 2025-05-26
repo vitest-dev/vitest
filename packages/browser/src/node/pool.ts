@@ -117,6 +117,10 @@ export function createBrowserPool(vitest: Vitest): ProcessPool {
     await Promise.all(parallelPools.map(runTests => runTests()))
 
     for (const runTests of nonParallelPools) {
+      if (isCancelled) {
+        return
+      }
+
       await runTests()
     }
   }
