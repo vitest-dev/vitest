@@ -663,7 +663,7 @@ describe.for([
 })
 
 describe('browser tests', () => {
-  test.only('initiates worker scope once for non-isolated tests', async () => {
+  test('initiates worker scope once for non-isolated tests', async () => {
     const { stderr, fixtures, tests } = await runFixtureTests(({ log }) => it.extend<{
       file: string
       worker: string
