@@ -211,35 +211,3 @@ export function objDisplay(obj: unknown, options: LoupeOptions = {}): string {
   }
   return str
 }
-
-export function redent(string: string, count: number): string {
-  return indentString(stripIndent(string), count)
-}
-
-function indentString(string: string, count: number) {
-  const regex = /^(?!\s*$)/gm
-
-  return string.replace(regex, ' '.repeat(count))
-}
-
-function minIndent(string: string) {
-  const match = string.match(/^[ \t]*(?=\S)/gm)
-
-  if (!match) {
-    return 0
-  }
-
-  return match.reduce((r, a) => Math.min(r, a.length), Infinity)
-}
-
-function stripIndent(string: string) {
-  const indent = minIndent(string)
-
-  if (indent === 0) {
-    return string
-  }
-
-  const regex = new RegExp(`^[ \\t]{${indent}}`, 'gm')
-
-  return string.replace(regex, '')
-}
