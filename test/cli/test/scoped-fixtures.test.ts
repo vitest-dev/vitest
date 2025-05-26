@@ -8,6 +8,7 @@ import { runInlineTests } from '../../test-utils'
 declare module 'vitest' {
   interface TestContext {
     file: string
+    worker: string
   }
 }
 
@@ -66,8 +67,8 @@ test('can import file fixture inside the local fixture', async () => {
   expect(tests).toMatchInlineSnapshot(`" ✓ basic.test.ts > test1 <time>"`)
 })
 
-test.only('can import worker fixture inside the local fixture', async () => {
-  const { stderr, stdout, fixtures, tests } = await runFixtureTests(({ log }) => it.extend<{
+test('can import worker fixture inside the local fixture', async () => {
+  const { stderr, fixtures, tests } = await runFixtureTests(({ log }) => it.extend<{
     worker: string
     local: string
   }>({
@@ -91,10 +92,8 @@ test.only('can import worker fixture inside the local fixture', async () => {
       })
     },
   })
-  console.log(stdout)
 
   expect(stderr).toBe('')
-  // TODO: worker teardown is not called
   expect(fixtures).toMatchInlineSnapshot(`
     ">> fixture | init worker | test1
     >> fixture | init local | test1
@@ -125,7 +124,7 @@ test('test fixture cannot import from worker fixture', async () => {
   expect(stderr).toContain('cannot use the test fixture "local" inside the worker fixture "worker"')
 })
 
-test.skip('auto worker fixture is initialised always before the first test', async () => {
+test('auto worker fixture is initialised always before the first test', async () => {
   const { stderr, fixtures, tests } = await runFixtureTests(({ log }) => it.extend<{ worker: string }>({
     worker: [
       async ({}, use) => {
@@ -145,8 +144,10 @@ test.skip('auto worker fixture is initialised always before the first test', asy
   })
 
   expect(stderr).toBe('')
-  // TODO: teardown is not called
-  expect(fixtures).toMatchInlineSnapshot(`">> fixture | init file | test1"`)
+  expect(fixtures).toMatchInlineSnapshot(`
+    ">> fixture | init file | test1
+    >> fixture | teardown file | test4"
+  `)
   expect(tests).toMatchInlineSnapshot(`
     " ✓ basic.test.ts > test1 <time>
      ✓ basic.test.ts > test2 <time>
@@ -205,7 +206,7 @@ test('file fixture can import a static value from test fixture', async () => {
   expect(stderr).toBe('')
 })
 
-test.skip('worker fixtures are available in beforeEach and afterEach', async () => {
+test('worker fixtures are available in beforeEach and afterEach', async () => {
   const { stderr, fixtures, tests } = await runFixtureTests(({ log }) => it.extend<{ worker: string }>({
     worker: [
       async ({}, use) => {
@@ -217,11 +218,11 @@ test.skip('worker fixtures are available in beforeEach and afterEach', async () 
     ],
   }), {
     'basic.test.ts': ({ extendedTest }) => {
-      beforeEach(({ file }) => {
-        console.log('>> fixture | beforeEach |', file)
+      beforeEach(({ worker }) => {
+        console.log('>> fixture | beforeEach |', worker)
       })
-      afterEach(({ file }) => {
-        console.log('>> fixture | afterEach |', file)
+      afterEach(({ worker }) => {
+        console.log('>> fixture | afterEach |', worker)
       })
       extendedTest('test1', ({}) => {})
       extendedTest('test2', ({}) => {})
@@ -229,8 +230,14 @@ test.skip('worker fixtures are available in beforeEach and afterEach', async () 
   })
 
   expect(stderr).toBe('')
-  // TODO: teardown is not called
-  expect(fixtures).toMatchInlineSnapshot()
+  expect(fixtures).toMatchInlineSnapshot(`
+    ">> fixture | init worker | test1
+    >> fixture | beforeEach | worker
+    >> fixture | afterEach | worker
+    >> fixture | beforeEach | worker
+    >> fixture | afterEach | worker
+    >> fixture | teardown worker | test2"
+  `)
   expect(tests).toMatchInlineSnapshot(`
     " ✓ basic.test.ts > test1 <time>
      ✓ basic.test.ts > test2 <time>"
