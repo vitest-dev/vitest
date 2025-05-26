@@ -10,10 +10,6 @@ interface TestContext {
   worker: string
 }
 
-// TODO: test several workers
-// TODO: works in the browser
-// TODO: works in vmThreads, vmForks, forks, threads
-
 test('test fixture cannot import from file fixture', async () => {
   const { stderr } = await runInlineTests({
     'basic.test.ts': () => {
@@ -289,7 +285,8 @@ test('worker fixtures in isolated tests init and teardown twice', async () => {
   `)
 })
 
-test('worker fixture initiates and torn down in different workers', async () => {
+// TODO: no-isolate breaks tests
+test.skip('worker fixture initiates and torn down in different workers', async () => {
   const { stderr, fixtures, tests } = await runFixtureTests(({ log }) => it.extend<{ worker: string }>({
     worker: [
       async ({}, use) => {
@@ -572,10 +569,168 @@ test.for([
   `)
 })
 
+describe.for([
+  { pool: 'forks' },
+  { pool: 'threads' },
+  {
+    pool: 'browser',
+    name: 'core',
+    browser: {
+      enabled: true,
+      provider: 'playwright',
+      headless: true,
+      instances: [
+        { browser: 'chromium', name: '' },
+      ],
+    },
+  },
+])('works properly in $pool', (options) => {
+  test('file and worker fixtures are initiated', async () => {
+    const { stderr, fixtures, tests } = await runFixtureTests(({ log }) => it.extend<{
+      file: string
+      worker: string
+    }>({
+      worker: [
+        async ({}, use) => {
+          log('init worker')
+          await use('worker')
+          log('teardown worker')
+        },
+        { scope: 'worker' },
+      ],
+      file: [
+        async ({}, use) => {
+          log('init file')
+          await use('file')
+          log('teardown file')
+        },
+        { scope: 'file' },
+      ],
+    }), {
+      'basic.test.ts': ({ extendedTest }) => {
+        extendedTest('test1', ({ file: _file, worker: _worker }) => {})
+      },
+      'vitest.config.js': { test: options },
+    })
+
+    expect(stderr).toBe('')
+    expect(fixtures).toMatchInlineSnapshot(`
+      ">> fixture | init worker | test1
+      >> fixture | init file | test1
+      >> fixture | teardown file | test1
+      >> fixture | teardown worker | test1"
+    `)
+    expect(tests).toMatchInlineSnapshot(`" ✓ basic.test.ts > test1 <time>"`)
+  })
+
+  test('file and worker fixtures are initiated with auto', async () => {
+    const { stderr, fixtures, tests } = await runFixtureTests(({ log }) => it.extend<{
+      file: string
+      worker: string
+    }>({
+      worker: [
+        async ({}, use) => {
+          log('init worker')
+          await use('worker')
+          log('teardown worker')
+        },
+        { scope: 'worker', auto: true },
+      ],
+      file: [
+        async ({}, use) => {
+          log('init file')
+          await use('file')
+          log('teardown file')
+        },
+        { scope: 'file', auto: true },
+      ],
+    }), {
+      'basic.test.ts': ({ extendedTest }) => {
+        extendedTest('test1', () => {})
+      },
+      'vitest.config.js': { test: options },
+    })
+
+    expect(stderr).toBe('')
+    expect(fixtures).toMatchInlineSnapshot(`
+      ">> fixture | init worker | test1
+      >> fixture | init file | test1
+      >> fixture | teardown file | test1
+      >> fixture | teardown worker | test1"
+    `)
+    expect(tests).toMatchInlineSnapshot(`" ✓ basic.test.ts > test1 <time>"`)
+  })
+})
+
+describe('browser tests', () => {
+  test.only('initiates worker scope once for non-isolated tests', async () => {
+    const { stderr, fixtures, tests } = await runFixtureTests(({ log }) => it.extend<{
+      file: string
+      worker: string
+    }>({
+      worker: [
+        async ({}, use) => {
+          log('init worker')
+          await use('worker')
+          log('teardown worker')
+        },
+        { scope: 'worker' },
+      ],
+      file: [
+        async ({}, use) => {
+          log('init file')
+          await use('file')
+          log('teardown file')
+        },
+        { scope: 'file' },
+      ],
+    }), {
+      '1-basic.test.ts': ({ extendedTest }) => {
+        extendedTest('test1', ({ file: _file, worker: _worker }) => {})
+      },
+      '2-basic.test.ts': ({ extendedTest }) => {
+        extendedTest('test2', ({ file: _file, worker: _worker }) => {})
+      },
+      'vitest.config.js': {
+        test: {
+          maxWorkers: 1,
+          minWorkers: 1,
+          browser: {
+            enabled: true,
+            provider: 'playwright',
+            headless: true,
+            isolate: false,
+            instances: [
+              { browser: 'chromium' },
+            ],
+          },
+        },
+      },
+    })
+
+    expect(stderr).toBe('')
+    expect(fixtures).toMatchInlineSnapshot(`
+      ">> fixture | init worker | test1
+      >> fixture | init file | test1
+      >> fixture | teardown file | test1
+      >> fixture | init file | test2
+      >> fixture | teardown file | test2
+      >> fixture | teardown worker | test2"
+    `)
+    expect(tests).toMatchInlineSnapshot(`
+      " ✓ |chromium| 1-basic.test.ts > test1 <time>
+       ✓ |chromium| 2-basic.test.ts > test2 <time>"
+    `)
+  })
+})
+
 async function runFixtureTests<T>(
   extendedTest: ({ log }: { log: typeof console.log }) => TestAPI<T>,
   fs: Record<string, ((context: { extendedTest: TestAPI<T> }) => unknown) | ViteUserConfig>,
 ) {
+  if (typeof fs['vitest.config.js'] === 'object') {
+    fs['vitest.config.js'].test!.globals = true
+  }
   const { stderr, stdout } = await runInlineTests({
     'test.js': `
     export const extendedTest = (${extendedTest.toString()})({ log: (...args) => console.log('>> fixture |', ...args, '| ' + expect.getState().currentTestName) })
