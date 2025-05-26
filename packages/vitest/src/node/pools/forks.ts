@@ -229,9 +229,6 @@ export function createForksPool(
             await new Promise<void>(resolve =>
               pool.queueSize === 0 ? resolve() : pool.once('drain', resolve),
             )
-            if (pool.threads.length) {
-              await cleanupWorkers()
-            }
             await pool.recycleWorkers()
           }
         }
@@ -268,7 +265,6 @@ export function createForksPool(
 
           for (const files of Object.values(filesByOptions)) {
             // Always run environments isolated between each other
-            await cleanupWorkers()
             await pool.recycleWorkers()
 
             const filenames = files.map(f => f.file)
@@ -285,22 +281,11 @@ export function createForksPool(
     }
   }
 
-  async function cleanupWorkers() {
-    const emitter = new EventEmitter()
-    const events = { message: 'message', response: 'response' }
-    const channel: TinypoolChannel = {
-      onMessage: callback => emitter.on(events.message, callback),
-      postMessage: message => emitter.emit(events.response, message),
-    }
-    await pool.run({}, { name: 'cleanup', channel })
-  }
-
   return {
     name: 'forks',
     runTests: runWithFiles('run'),
     collectTests: runWithFiles('collect'),
     close: async () => {
-      await cleanupWorkers()
       await pool.destroy()
     },
   }
