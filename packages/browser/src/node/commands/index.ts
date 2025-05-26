@@ -11,6 +11,7 @@ import {
 import { hover } from './hover'
 import { keyboard, keyboardCleanup } from './keyboard'
 import { screenshot } from './screenshot'
+import { screenshotCompare } from './screenshot-compare'
 import { selectOptions } from './select'
 import { tab } from './tab'
 import { type } from './type'
@@ -26,6 +27,7 @@ export default {
   __vitest_dblClick: dblClick as typeof dblClick,
   __vitest_tripleClick: tripleClick as typeof tripleClick,
   __vitest_screenshot: screenshot as typeof screenshot,
+  __vitest_screenshot_compare: screenshotCompare as typeof screenshotCompare,
   __vitest_type: type as typeof type,
   __vitest_clear: clear as typeof clear,
   __vitest_fill: fill as typeof fill,

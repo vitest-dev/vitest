@@ -16,6 +16,7 @@ catalog:
   '@types/istanbul-lib-report': ^3.0.3
   '@types/istanbul-lib-source-maps': ^4.0.4
   '@types/istanbul-reports': ^3.0.4
+  '@types/pngjs': ^6.0.5
   '@types/test-exclude': ^6.0.2
   '@types/ws': ^8.18.1
   '@unocss/reset': ^66.1.2
@@ -35,6 +36,8 @@ catalog:
   magicast: ^0.3.5
   msw: ^2.8.4
   pathe: ^2.0.3
+  pixelmatch: ^7.1.0
+  pngjs: ^7.0.0
   sirv: ^3.0.1
   std-env: ^3.9.0
   test-exclude: ^7.0.1

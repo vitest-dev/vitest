@@ -98,6 +98,7 @@
     "ws": "catalog:"
   },
   "devDependencies": {
+    "@types/pngjs": "catalog:",
     "@types/ws": "catalog:",
     "@vitest/runner": "workspace:*",
     "@vitest/ui": "workspace:*",
@@ -110,8 +111,10 @@
     "mime": "^4.0.7",
     "pathe": "catalog:",
     "periscopic": "^4.0.2",
+    "pixelmatch": "catalog:",
     "playwright": "^1.52.0",
     "playwright-core": "^1.52.0",
+    "pngjs": "catalog:",
     "safaridriver": "^1.0.0",
     "vitest": "workspace:*",
     "webdriverio": "^9.14.0"

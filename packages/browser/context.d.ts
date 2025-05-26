@@ -44,6 +44,27 @@ export interface ScreenshotOptions {
   save?: boolean
 }
 
+export interface ScreenshotCompareOptions {
+  baselinePath?: string
+  diffPath?: string
+  pixelMatchThreshold?: number
+  failureThreshold?: number
+  failureThresholdType?: 'pixel' | 'percent'
+  updateBaselines?: boolean
+}
+
+export type ResolvedScreenshotCompareOptions = Required<ScreenshotCompareOptions> & {
+  element: Element | Locator
+  timeout?: number
+}
+
+export interface ScreenshotCompareResult {
+  pass: boolean
+  diff: number
+  written: boolean
+  message: string
+}
+
 export interface BrowserCommands {
   readFile: (
     path: string,
