@@ -93,11 +93,14 @@
     "@vitest/mocker": "workspace:*",
     "@vitest/utils": "workspace:*",
     "magic-string": "catalog:",
+    "pixelmatch": "7.1.0",
+    "pngjs": "^7.0.0",
     "sirv": "catalog:",
     "tinyrainbow": "catalog:",
     "ws": "catalog:"
   },
   "devDependencies": {
+    "@types/pngjs": "^6.0.5",
     "@types/ws": "catalog:",
     "@vitest/runner": "workspace:*",
     "@vitest/ui": "workspace:*",
