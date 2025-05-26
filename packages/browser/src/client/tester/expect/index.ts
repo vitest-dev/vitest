@@ -23,6 +23,7 @@ import toHaveSelection from './toHaveSelection'
 import toHaveStyle from './toHaveStyle'
 import toHaveTextContent from './toHaveTextContent'
 import toHaveValue from './toHaveValue'
+import toMatchScreenshot from './toMatchScreenshot'
 
 export const matchers: MatchersObject = {
   toBeDisabled,
@@ -51,4 +52,5 @@ export const matchers: MatchersObject = {
   toBePartiallyChecked,
   toHaveRole,
   toHaveSelection,
+  toMatchScreenshot,
 }

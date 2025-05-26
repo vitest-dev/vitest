@@ -21,13 +21,12 @@ export const screenshot: BrowserCommand<[string, ScreenshotOptions]> = async (
     options.base64 = true
   }
 
-  const path = options.path
-    ? resolve(dirname(context.testPath), options.path)
-    : resolveScreenshotPath(
-        context.testPath,
-        name,
-        context.project.config,
-      )
+  const path = resolveScreenshotPath(
+    context.testPath,
+    name,
+    context.project.config,
+    options.path,
+  )
   const savePath = normalize(path)
   await mkdir(dirname(path), { recursive: true })
 
@@ -67,11 +66,15 @@ export const screenshot: BrowserCommand<[string, ScreenshotOptions]> = async (
   )
 }
 
-function resolveScreenshotPath(
+export function resolveScreenshotPath(
   testPath: string,
   name: string,
   config: ResolvedConfig,
-) {
+  customPath: string | undefined,
+): string {
+  if (customPath) {
+    return resolve(dirname(testPath), customPath)
+  }
   const dir = dirname(testPath)
   const base = basename(testPath)
   if (config.browser.screenshotDirectory) {
