@@ -338,7 +338,7 @@ function convertToLocator(element: Element | Locator): Locator {
   return element
 }
 
-function convertToSelector(elementOrLocator: Element | Locator): string {
+export function convertToSelector(elementOrLocator: Element | Locator): string {
   if (!elementOrLocator) {
     throw new Error('Expected element or locator to be defined.')
   }
