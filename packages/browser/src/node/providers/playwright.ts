@@ -204,17 +204,17 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
           // https://github.com/microsoft/playwright/issues/18318
           const isWebkit = this.browserName === 'webkit'
           if (isWebkit) {
-            const url = module.type === 'redirect'
-              ? (() => {
-                  // url has http:// which vite.trasnformRequest doesn't understand
-                  const url = new URL(module.redirect)
-                  return url.href.slice(url.origin.length)
-                })()
-              : (() => {
-                  const url = new URL(route.request().url())
-                  url.searchParams.set('mock', module.type)
-                  return url.href.slice(url.origin.length)
-                })()
+            let url: string
+            if (module.type === 'redirect') {
+              const redirect = new URL(module.redirect)
+              url = redirect.href.slice(redirect.origin.length)
+            }
+            else {
+              const request = new URL(route.request().url())
+              request.searchParams.set('mock', module.type)
+              url = request.href.slice(request.origin.length)
+            }
+
             const result = await this.project.browser!.vite.transformRequest(url).catch(() => null)
             if (!result) {
               return route.continue()
