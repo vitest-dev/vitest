@@ -22,7 +22,7 @@ const defaultOptions = {
 
 export default async function toMatchScreenshot(
   this: MatcherState,
-  actual: Locator,
+  actual: Element | Locator,
   nameOrOptions?: ScreenshotMatcherOptions | string,
   options: ScreenshotMatcherOptions = typeof nameOrOptions === 'object'
     ? nameOrOptions
