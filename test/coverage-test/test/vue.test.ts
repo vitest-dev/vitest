@@ -28,8 +28,8 @@ test('coverage results matches snapshot', async () => {
       {
         "branches": "5/7 (71.42%)",
         "functions": "3/5 (60%)",
-        "lines": "39/48 (81.25%)",
-        "statements": "39/48 (81.25%)",
+        "lines": "37/46 (80.43%)",
+        "statements": "37/46 (80.43%)",
       }
     `)
   }
@@ -38,8 +38,8 @@ test('coverage results matches snapshot', async () => {
       {
         "branches": "5/7 (71.42%)",
         "functions": "3/5 (60%)",
-        "lines": "38/47 (80.85%)",
-        "statements": "38/47 (80.85%)",
+        "lines": "36/45 (80%)",
+        "statements": "36/45 (80%)",
       }
     `)
   }
@@ -48,8 +48,8 @@ test('coverage results matches snapshot', async () => {
       {
         "branches": "6/8 (75%)",
         "functions": "5/7 (71.42%)",
-        "lines": "14/17 (82.35%)",
-        "statements": "15/18 (83.33%)",
+        "lines": "13/16 (81.25%)",
+        "statements": "14/17 (82.35%)",
       }
     `)
   }
