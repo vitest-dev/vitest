@@ -88,14 +88,14 @@ export const screenshotMatcher: BrowserCommand<
   }
 
   // if there's no reference or if we want to update snapshots, we have to finish the comparison early
-  if (reference === null || context.project.config.snapshotOptions.updateSnapshot !== 'none') {
+  if (reference === null || context.project.serializedConfig.snapshotOptions.updateSnapshot !== 'none') {
     await writeScreenshot(referencePath, await codec.encode(value.actual, {}))
 
     // case #02
     //  - got a stable screenshot, but there is no reference and we don't want to update screenshots
     //  - fail
     if (
-      context.project.config.snapshotOptions.updateSnapshot === 'none'
+      context.project.serializedConfig.snapshotOptions.updateSnapshot === 'none'
     ) {
       return {
         pass: false,
