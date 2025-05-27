@@ -2,7 +2,6 @@ import type { Comparators, ScreenshotMatcherOptions, TypedArray } from '@vitest/
 import type { BrowserCommand, BrowserCommandContext } from 'vitest/node'
 import { access, mkdir, readFile, writeFile } from 'node:fs/promises'
 import { dirname, normalize, resolve } from 'node:path'
-import { getSafeTimers } from '@vitest/utils'
 import { resolveScreenshotPath, screenshot } from '../screenshot'
 import { getCodec } from './codecs'
 import { getComparator } from './comparators'
@@ -306,7 +305,7 @@ function asyncTimeout(timeout: number): Promise<null> {
       resolve(null)
     }
     else {
-      getSafeTimers().setTimeout(() => resolve(null), timeout)
+      setTimeout(() => resolve(null), timeout)
     }
   })
 }
