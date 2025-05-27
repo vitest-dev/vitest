@@ -503,7 +503,7 @@ test('greeting appears on click', async () => {
 ```
 ```ts [preact]
 import { render } from 'vitest-browser-preact'
-import { createElement } from 'preact';
+import { createElement } from 'preact'
 import Greeting from '.Greeting'
 
 test('greeting appears on click', async () => {
