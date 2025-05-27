@@ -501,6 +501,20 @@ test('greeting appears on click', async () => {
   await expect.element(greeting).toBeInTheDocument()
 })
 ```
+```ts [preact]
+import { render } from 'vitest-browser-preact'
+import Greeting from '.Greeting'
+
+test('greeting appears on click', async () => {
+  const screen = render(<Greeting />)
+
+  const button = screen.getByRole('button')
+  await button.click()
+  const greeting = screen.getByText(/hello world/iu)
+
+  await expect.element(greeting).toBeInTheDocument()
+})
+```
 :::
 
 Vitest doesn't support all frameworks out of the box, but you can use external tools to run tests with these frameworks. We also encourage the community to create their own `vitest-browser` wrappers - if you have one, feel free to add it to the examples above.
