@@ -48,7 +48,7 @@ function createChildProcessChannel(project: TestProject, collect = false) {
 }
 
 export function createForksPool(
-  ctx: Vitest,
+  vitest: Vitest,
   { execArgv, env }: PoolProcessOptions,
 ): ProcessPool {
   const numCpus
@@ -56,22 +56,22 @@ export function createForksPool(
       ? nodeos.availableParallelism()
       : nodeos.cpus().length
 
-  const threadsCount = ctx.config.watch
+  const threadsCount = vitest.config.watch
     ? Math.max(Math.floor(numCpus / 2), 1)
     : Math.max(numCpus - 1, 1)
 
-  const poolOptions = ctx.config.poolOptions?.forks ?? {}
+  const poolOptions = vitest.config.poolOptions?.forks ?? {}
 
   const maxThreads
-    = poolOptions.maxForks ?? ctx.config.maxWorkers ?? threadsCount
+    = poolOptions.maxForks ?? vitest.config.maxWorkers ?? threadsCount
   const minThreads
-    = poolOptions.minForks ?? ctx.config.minWorkers ?? threadsCount
+    = poolOptions.minForks ?? vitest.config.minWorkers ?? threadsCount
 
-  const worker = resolve(ctx.distPath, 'workers/forks.js')
+  const worker = resolve(vitest.distPath, 'workers/forks.js')
 
   const options: TinypoolOptions = {
     runtime: 'child_process',
-    filename: resolve(ctx.distPath, 'worker.js'),
+    filename: resolve(vitest.distPath, 'worker.js'),
     teardown: 'teardown',
 
     maxThreads,
@@ -80,7 +80,7 @@ export function createForksPool(
     env,
     execArgv: [...(poolOptions.execArgv ?? []), ...execArgv],
 
-    terminateTimeout: ctx.config.teardownTimeout,
+    terminateTimeout: vitest.config.teardownTimeout,
     concurrentTasksPerWorker: 1,
   }
 
@@ -90,7 +90,7 @@ export function createForksPool(
     options.isolateWorkers = true
   }
 
-  if (poolOptions.singleFork || !ctx.config.fileParallelism) {
+  if (poolOptions.singleFork || !vitest.config.fileParallelism) {
     options.maxThreads = 1
     options.minThreads = 1
   }
@@ -108,7 +108,7 @@ export function createForksPool(
       invalidates: string[] = [],
     ) {
       const paths = files.map(f => f.filepath)
-      ctx.state.clearFiles(project, paths)
+      vitest.state.clearFiles(project, paths)
 
       const { channel, cleanup } = createChildProcessChannel(project, name === 'collect')
       const workerId = ++id
@@ -132,17 +132,17 @@ export function createForksPool(
           error instanceof Error
           && /Failed to terminate worker/.test(error.message)
         ) {
-          ctx.state.addProcessTimeoutCause(
+          vitest.state.addProcessTimeoutCause(
             `Failed to terminate worker while running ${paths.join(', ')}.`,
           )
         }
         // Intentionally cancelled
         else if (
-          ctx.isCancelling
+          vitest.isCancelling
           && error instanceof Error
           && /The task has been cancelled/.test(error.message)
         ) {
-          ctx.state.cancelFiles(paths, project)
+          vitest.state.cancelFiles(paths, project)
         }
         else {
           throw error
@@ -155,7 +155,7 @@ export function createForksPool(
 
     return async (specs, invalidates) => {
       // Cancel pending tasks from pool when possible
-      ctx.onCancel(() => pool.cancelPendingTasks())
+      vitest.onCancel(() => pool.cancelPendingTasks())
 
       const configs = new WeakMap<TestProject, SerializedConfig>()
       const getConfig = (project: TestProject): SerializedConfig => {
