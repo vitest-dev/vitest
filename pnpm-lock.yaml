@@ -273,8 +273,8 @@ importers:
         specifier: ^0.2.6
         version: 0.2.6
       '@vite-pwa/vitepress':
-        specifier: ^0.5.4
-        version: 0.5.4(@vite-pwa/assets-generator@0.2.6)(vite-plugin-pwa@0.21.2(@vite-pwa/assets-generator@0.2.6)(vite@6.2.0(@types/node@22.15.21)(jiti@2.4.2)(terser@5.36.0)(tsx@4.19.4)(yaml@2.8.0))(workbox-build@7.1.0(@types/babel__core@7.20.5))(workbox-window@7.3.0))
+        specifier: ^1.0.0
+        version: 1.0.0(@vite-pwa/assets-generator@0.2.6)(vite-plugin-pwa@0.21.2(@vite-pwa/assets-generator@0.2.6)(vite@6.2.0(@types/node@22.15.21)(jiti@2.4.2)(terser@5.36.0)(tsx@4.19.4)(yaml@2.8.0))(workbox-build@7.1.0(@types/babel__core@7.20.5))(workbox-window@7.3.0))
       '@vitejs/plugin-vue':
         specifier: 'catalog:'
         version: 5.2.4(vite@6.2.0(@types/node@22.15.21)(jiti@2.4.2)(terser@5.36.0)(tsx@4.19.4)(yaml@2.8.0))(vue@3.5.15(typescript@5.8.3))
@@ -3960,11 +3960,11 @@ packages:
     engines: {node: '>=16.14.0'}
     hasBin: true
 
-  '@vite-pwa/vitepress@0.5.4':
-    resolution: {integrity: sha512-g57qwG983WTyQNLnOcDVPQEIeN+QDgK/HdqghmygiUFp3a/MzVvmLXC/EVnPAXxWa8W2g9pZ9lE3EiDGs2HjsA==}
+  '@vite-pwa/vitepress@1.0.0':
+    resolution: {integrity: sha512-i5RFah4urA6tZycYlGyBslVx8cVzbZBcARJLDg5rWMfAkRmyLtpRU6usGfVOwyN9kjJ2Bkm+gBHXF1hhr7HptQ==}
     peerDependencies:
-      '@vite-pwa/assets-generator': ^0.2.6
-      vite-plugin-pwa: '>=0.21.2 <1'
+      '@vite-pwa/assets-generator': ^1.0.0
+      vite-plugin-pwa: ^1.0.0
     peerDependenciesMeta:
       '@vite-pwa/assets-generator':
         optional: true
@@ -4625,6 +4625,7 @@ packages:
   chai-subset@1.6.0:
     resolution: {integrity: sha512-K3d+KmqdS5XKW5DWPd5sgNffL3uxdDe+6GdnJh3AYPhwnBGRY5urfvfcbRtWIvvpz+KxkL9FeBB6MZewLUNwug==}
     engines: {node: '>=4'}
+    deprecated: 'functionality of this lib is built-in to chai now. see more details here: https://github.com/debitoor/chai-subset/pull/85'
 
   chai@5.2.0:
     resolution: {integrity: sha512-mCuXncKXk5iCLhfhwTc0izo0gtEmpz5CtG2y8GiOINBlMVS6v8TMRc5TaLWKS6692m9+dVVfzgeVxR5UxWHTYw==}
@@ -11573,7 +11574,7 @@ snapshots:
       sharp-ico: 0.1.5
       unconfig: 0.3.11
 
-  '@vite-pwa/vitepress@0.5.4(@vite-pwa/assets-generator@0.2.6)(vite-plugin-pwa@0.21.2(@vite-pwa/assets-generator@0.2.6)(vite@6.2.0(@types/node@22.15.21)(jiti@2.4.2)(terser@5.36.0)(tsx@4.19.4)(yaml@2.8.0))(workbox-build@7.1.0(@types/babel__core@7.20.5))(workbox-window@7.3.0))':
+  '@vite-pwa/vitepress@1.0.0(@vite-pwa/assets-generator@0.2.6)(vite-plugin-pwa@0.21.2(@vite-pwa/assets-generator@0.2.6)(vite@6.2.0(@types/node@22.15.21)(jiti@2.4.2)(terser@5.36.0)(tsx@4.19.4)(yaml@2.8.0))(workbox-build@7.1.0(@types/babel__core@7.20.5))(workbox-window@7.3.0))':
     dependencies:
       vite-plugin-pwa: 0.21.2(@vite-pwa/assets-generator@0.2.6)(vite@6.2.0(@types/node@22.15.21)(jiti@2.4.2)(terser@5.36.0)(tsx@4.19.4)(yaml@2.8.0))(workbox-build@7.1.0(@types/babel__core@7.20.5))(workbox-window@7.3.0)
     optionalDependencies:
