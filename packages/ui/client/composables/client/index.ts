@@ -137,8 +137,13 @@ export function runCurrent() {
 // for testing during dev
 // export const browserState: BrowserRunnerState = {
 //   files: [],
-//   config: {},
+//   config: {
+//     browser: {
+//       name: 'chrome',
+//     }
+//   } as any,
 //   type: 'orchestrator',
+//   provider: 'webdriverio',
 //   wrapModule: () => {},
 // }
 // @ts-expect-error not typed global
