@@ -410,6 +410,7 @@ However, Vitest also provides packages to render components for several popular 
 Community packages are available for other frameworks:
 
 - [`vitest-browser-lit`](https://github.com/EskiMojo14/vitest-browser-lit) to render [lit](https://lit.dev) components
+- [`vitest-browser-preact`](https://github.com/JoviDeCroock/vitest-browser-preact) to render [preact](https://preactjs.com) components
 
 If your framework is not represented, feel free to create your own package - it is a simple wrapper around the framework renderer and `page.elementLocator` API. We will add a link to it on this page. Make sure it has a name starting with `vitest-browser-`.
 
@@ -500,13 +501,27 @@ test('greeting appears on click', async () => {
   await expect.element(greeting).toBeInTheDocument()
 })
 ```
+```tsx [preact]
+import { render } from 'vitest-browser-preact'
+import { createElement } from 'preact'
+import Greeting from '.Greeting'
+
+test('greeting appears on click', async () => {
+  const screen = render(<Greeting />)
+
+  const button = screen.getByRole('button')
+  await button.click()
+  const greeting = screen.getByText(/hello world/iu)
+
+  await expect.element(greeting).toBeInTheDocument()
+})
+```
 :::
 
 Vitest doesn't support all frameworks out of the box, but you can use external tools to run tests with these frameworks. We also encourage the community to create their own `vitest-browser` wrappers - if you have one, feel free to add it to the examples above.
 
 For unsupported frameworks, we recommend using `testing-library` packages:
 
-- [`@testing-library/preact`](https://testing-library.com/docs/preact-testing-library/intro) to render [preact](https://preactjs.com) components
 - [`@solidjs/testing-library`](https://testing-library.com/docs/solid-testing-library/intro) to render [solid](https://www.solidjs.com) components
 - [`@marko/testing-library`](https://testing-library.com/docs/marko-testing-library/intro) to render [marko](https://markojs.com) components
 
@@ -517,36 +532,6 @@ You can also see more examples in [`browser-examples`](https://github.com/vitest
 :::
 
 ::: code-group
-```tsx [preact]
-// based on @testing-library/preact example
-// https://testing-library.com/docs/preact-testing-library/example
-
-import { h } from 'preact'
-import { page } from '@vitest/browser/context'
-import { render } from '@testing-library/preact'
-
-import HiddenMessage from '../hidden-message'
-
-test('shows the children when the checkbox is checked', async () => {
-  const testMessage = 'Test Message'
-
-  const { baseElement } = render(
-    <HiddenMessage>{testMessage}</HiddenMessage>,
-  )
-
-  const screen = page.elementLocator(baseElement)
-
-  // .query() will return the element or null if it cannot be found.
-  // .element() will return the element or throw an error if it cannot be found.
-  expect(screen.getByText(testMessage).query()).not.toBeInTheDocument()
-
-  // The queries can accept a regex to make your selectors more
-  // resilient to content tweaks and changes.
-  await screen.getByLabelText(/show/i).click()
-
-  await expect.element(screen.getByText(testMessage)).toBeInTheDocument()
-})
-```
 ```tsx [solid]
 // based on @testing-library/solid API
 // https://testing-library.com/docs/solid-testing-library/api

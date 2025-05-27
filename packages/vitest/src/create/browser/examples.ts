@@ -233,15 +233,15 @@ test('renders name', () => {
 function getExampleTest(framework: string) {
   switch (framework) {
     case 'solid':
-    case 'preact':
       return {
         ...jsxExample,
         test: jsxExample.test.replace('@testing-library/jsx', `@testing-library/${framework}`),
       }
+    case 'preact':
     case 'react':
       return {
         ...jsxExample,
-        test: jsxExample.test.replace('@testing-library/jsx', 'vitest-browser-react'),
+        test: jsxExample.test.replace('@testing-library/jsx', `vitest-browser-${framework}`),
       }
     case 'vue':
       return vueExample
