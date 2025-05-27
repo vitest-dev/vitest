@@ -1,8 +1,8 @@
 import type { File, Task } from '@vitest/runner'
 import type { Params } from './params'
+import { viewport } from './browser'
 import { browserState, client, config, findById } from './client'
 import { testRunState } from './client/state'
-import { viewport } from './browser'
 import { activeFileId, lineNumber, selectedTest, viewMode } from './params'
 
 export const currentModule = ref<File>()
