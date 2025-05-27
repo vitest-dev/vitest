@@ -4,8 +4,8 @@ import type { ScreenshotMatcherArguments, ScreenshotMatcherOutput } from '../../
 import type { Locator } from '../locators'
 import { deepMerge } from '@vitest/utils'
 import { ensureAwaited, getBrowserState } from '../../utils'
-import { convertToSelector } from '../context'
-import { getMessage } from './utils'
+import { convertElementToCssSelector } from '../utils'
+import { getElementFromUserInput, getMessage } from './utils'
 
 const defaultOptions = {
   comparatorOptions: {
@@ -47,7 +47,9 @@ export default async function toMatchScreenshot(
         name,
         deepMerge<ScreenshotMatcherArguments[1]>(
           {
-            element: convertToSelector(actual),
+            element: convertElementToCssSelector(
+              getElementFromUserInput(actual, toMatchScreenshot, this),
+            ),
             timeout: 5_000,
           } satisfies Omit<
             ScreenshotMatcherArguments[1],
