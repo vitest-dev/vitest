@@ -27,7 +27,7 @@
   },
   "devDependencies": {
     "@testing-library/react": "^13.4.0",
-    "@types/react": "^19.1.4",
+    "@types/react": "^19.1.5",
     "@vitejs/plugin-basic-ssl": "^1.2.0",
     "@vitest/browser": "workspace:*",
     "@vitest/bundled-lib": "link:./bundled-lib",
