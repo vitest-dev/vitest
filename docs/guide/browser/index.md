@@ -501,13 +501,13 @@ test('greeting appears on click', async () => {
   await expect.element(greeting).toBeInTheDocument()
 })
 ```
-```ts [preact]
+```tsx [preact]
 import { render } from 'vitest-browser-preact'
 import { createElement } from 'preact'
 import Greeting from '.Greeting'
 
 test('greeting appears on click', async () => {
-  const screen = render(createElement(Greeting, {}))
+  const screen = render(<Greeting />)
 
   const button = screen.getByRole('button')
   await button.click()

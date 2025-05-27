@@ -120,7 +120,7 @@ function getFrameworkTestPackage(framework: string) {
     case 'lit':
       return 'vitest-browser-lit'
     case 'preact':
-      return '@testing-library/preact'
+      return 'vitest-browser-preact'
     case 'solid':
       return '@solidjs/testing-library'
     case 'marko':
