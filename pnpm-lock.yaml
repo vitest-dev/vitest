@@ -857,6 +857,9 @@ importers:
       floating-vue:
         specifier: ^5.2.2
         version: 5.2.2(vue@3.5.15(typescript@5.8.3))
+      mime:
+        specifier: ^4.0.7
+        version: 4.0.7
       rollup:
         specifier: ^4.41.1
         version: 4.41.1
