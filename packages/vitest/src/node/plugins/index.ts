@@ -40,7 +40,7 @@ export async function VitestPlugin(
   return [
     <VitePlugin>{
       name: 'vitest',
-      enforce: 'pre',
+      enforce: 'post',
       options() {
         this.meta.watchMode = false
       },
