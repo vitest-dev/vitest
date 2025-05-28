@@ -2,7 +2,7 @@ import type { Comparators, ScreenshotMatcherOptions, TypedArray } from '@vitest/
 import type { BrowserCommand, BrowserCommandContext } from 'vitest/node'
 import { access, mkdir, readFile, writeFile } from 'node:fs/promises'
 import { dirname, normalize, resolve } from 'node:path'
-import { resolveScreenshotPath, screenshot } from '../screenshot'
+import { resolveScreenshotPath, takeScreenshot } from '../screenshot'
 import { getCodec } from './codecs'
 import { getComparator } from './comparators'
 
@@ -227,7 +227,7 @@ async function getStableScreenshots({
     element,
     name,
     screenshotOptions,
-  } satisfies Parameters<typeof takeScreenshot>[0]
+  } satisfies Parameters<typeof takeDecodedScreenshot>[0]
 
   let retries = 0
 
@@ -235,12 +235,12 @@ async function getStableScreenshots({
 
   while (signal.aborted === false) {
     if (decodedBaseline === null) {
-      decodedBaseline = takeScreenshot(screenshotArgument)
+      decodedBaseline = takeDecodedScreenshot(screenshotArgument)
     }
 
     const [image1, image2] = await Promise.all([
       decodedBaseline,
-      takeScreenshot(screenshotArgument),
+      takeDecodedScreenshot(screenshotArgument),
     ])
 
     const comparatorResult = (await comparator(
@@ -272,7 +272,7 @@ async function getStableScreenshots({
  *
  * @returns `Promise` resolving to the decoded screenshot data
  */
-function takeScreenshot({
+function takeDecodedScreenshot({
   codec,
   context,
   element,
@@ -285,14 +285,13 @@ function takeScreenshot({
   name: string
   screenshotOptions: ScreenshotMatcherOptions['screenshotOptions']
 }) {
-  return (screenshot(
+  return takeScreenshot(
     context,
     name,
     { ...screenshotOptions, save: false, element },
-  ) as Promise<string>)
-    .then(
-      (data: string) => codec.decode(Buffer.from(data, 'base64'), {}),
-    )
+  ).then(
+    ({ buffer }) => codec.decode(buffer, {}),
+  )
 }
 
 /**
