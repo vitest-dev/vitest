@@ -25,12 +25,11 @@ export class VitestCache {
 
   static resolveCacheDir(root: string, dir?: string, projectName?: string): string {
     const baseDir = slash(dir || 'node_modules/.vite/vitest')
-    return projectName
-      ? resolve(
-          root,
-          baseDir,
-          hash('md5', projectName, 'hex'),
-        )
-      : resolve(root, baseDir)
+    return resolve(
+      root,
+      baseDir,
+      'vitest',
+      hash('md5', projectName || '', 'hex'),
+    )
   }
 }

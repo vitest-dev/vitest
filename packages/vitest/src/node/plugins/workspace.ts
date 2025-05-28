@@ -4,8 +4,10 @@ import type { ResolvedConfig, TestProjectInlineConfiguration } from '../types/co
 import { existsSync, readFileSync } from 'node:fs'
 import { deepMerge } from '@vitest/utils'
 import { basename, dirname, relative, resolve } from 'pathe'
+import c from 'tinyrainbow'
 import { configDefaults } from '../../defaults'
 import { generateScopedClassName } from '../../integrations/css/css-modules'
+import { VitestCache } from '../cache'
 import { VitestFilteredOutProjectError } from '../errors'
 import { createViteLogger, silenceImportViteIgnoreWarning } from '../viteLogger'
 import { CoverageTransform } from './coverageTransform'
@@ -33,7 +35,7 @@ export function WorkspaceVitestPlugin(
   return <VitePlugin[]>[
     {
       name: 'vitest:project',
-      enforce: 'pre',
+      enforce: 'post',
       options() {
         this.meta.watchMode = false
       },
@@ -178,6 +180,24 @@ export function WorkspaceVitestPlugin(
           },
         )
         config.customLogger = silenceImportViteIgnoreWarning(config.customLogger)
+
+        if (testConfig.cache != null && testConfig.cache !== false) {
+          project.vitest.logger.console.warn(
+            c.yellow(
+              `${c.inverse(
+                c.yellow(' Vitest '),
+              )} "cache.dir" is deprecated, use Vite's "cacheDir" instead if you want to change the cache director. Note caches will be written to "cacheDir\/vitest"`,
+            ),
+          )
+        }
+
+        config.cacheDir = VitestCache.resolveCacheDir(
+          resolve(root || process.cwd()),
+          testConfig.cache != null && testConfig.cache !== false
+            ? testConfig.cache.dir
+            : viteConfig.cacheDir,
+          name,
+        )
 
         return config
       },
