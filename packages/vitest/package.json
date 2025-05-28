@@ -170,7 +170,7 @@
     "tinyglobby": "catalog:",
     "tinypool": "^1.0.2",
     "tinyrainbow": "catalog:",
-    "vite": "^5.0.0 || ^6.0.0",
+    "vite": "^5.0.0 || ^6.0.0 || ^7.0.0-0",
     "vite-node": "workspace:*",
     "why-is-node-running": "^2.3.0"
   },
@@ -185,7 +185,7 @@
     "@types/istanbul-reports": "catalog:",
     "@types/jsdom": "^21.1.7",
     "@types/mime": "^4.0.0",
-    "@types/node": "^22.15.19",
+    "@types/node": "^22.15.21",
     "@types/picomatch": "^4.0.0",
     "@types/prompts": "^2.4.9",
     "@types/sinonjs__fake-timers": "^8.1.5",

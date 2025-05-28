@@ -152,6 +152,7 @@ export default ({ watch }) =>
         format: 'esm',
         chunkFileNames: 'chunks/[name].[hash].d.ts',
       },
+      watch: false,
       external,
       plugins: dtsUtils.dts(),
     },

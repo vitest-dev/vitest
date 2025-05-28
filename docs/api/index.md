@@ -1115,7 +1115,7 @@ Optionally, you can pass a timeout (in milliseconds) defining how long to wait b
 import { beforeEach } from 'vitest'
 
 beforeEach(async () => {
-  // Clear mocks and add some testing data after before each test run
+  // Clear mocks and add some testing data before each test run
   await stopMocking()
   await addUser({ name: 'John' })
 })

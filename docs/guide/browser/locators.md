@@ -702,7 +702,7 @@ await page.getByRole('img', { name: 'Rose' }).unhover()
 function fill(text: string, options?: UserEventFillOptions): Promise<void>
 ```
 
-Sets the value of the current `input`, `textarea` or `conteneditable` element.
+Sets the value of the current `input`, `textarea` or `contenteditable` element.
 
 ```ts
 import { page } from '@vitest/browser/context'
