@@ -42,6 +42,7 @@ jobs:
         run: pnpm build
         env:
           VITEST_PRODUCTION: '1'
+          VITEST_RELEASE: '1'
 
       - name: Publish to StackBlitz
         run: pnpx pkg-pr-new publish --compact --no-template --pnpm './packages/*'

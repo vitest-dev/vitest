@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { $ } from 'zx'
 
-if (!process.env.VITEST_PRODUCTION) {
+if (!process.env.VITEST_PRODUCTION || !process.env.VITEST_RELEASE) {
   throw new Error(`Cannot release Vitest without VITEST_PRODUCTION environment variable.`)
 }
 

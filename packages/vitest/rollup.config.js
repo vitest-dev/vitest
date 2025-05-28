@@ -106,7 +106,14 @@ const plugins = [
     transform: {
       target: 'node18',
       define: {
+        // change the behaviour of certain feature allowed only on local machines
         __VITEST_PRODUCTION__: process.env.VITEST_PRODUCTION ? 'true' : 'false',
+        // remove extra code that is used only for testing
+        ...(process.env.VITEST_RELEASE
+          ? {
+              'process.env.VITE_TEST_WATCHER_DEBUG': 'false',
+            }
+          : {}),
       },
     },
     sourcemap: true,
