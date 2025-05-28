@@ -45,8 +45,9 @@ export class ResultsCache {
 
     const resultsCache = await fs.promises.readFile(this.cachePath, 'utf8')
     const { results, version } = JSON.parse(resultsCache || '[]')
+    const [major, minor] = version.split('.')
     // handling changed in 0.30.0
-    if (Number(version.split('.')[1]) >= 30) {
+    if (major > 0 || Number(minor) >= 30) {
       this.cache = new Map(results)
       this.version = version
       results.forEach(([spec]: [string]) => {
