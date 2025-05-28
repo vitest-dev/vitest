@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs'
 import { resolve } from 'pathe'
 import { describe, expect, test } from 'vitest'
 import { runVitest } from '../../test-utils'
@@ -55,6 +56,31 @@ test('use cacheDir', async () => {
   const cachePath = ctx!.cache.results.getCachePath()
   const path = resolve(root, 'node_modules/.vite-custom/results.json')
   expect(cachePath).toMatch(path)
+})
+
+test('preserves previous test results', async () => {
+  const firstRun = await runVitest({
+    root,
+    include: ['basic.test.ts'],
+  })
+
+  expect(firstRun.stdout).toContain('✓ basic.test.ts >')
+  expect(firstRun.stderr).toBe('')
+
+  const cachePath = firstRun.ctx!.cache.results.getCachePath()
+  const firstRunCacheContent = readFileSync(cachePath!, 'utf-8')
+  expect(firstRunCacheContent).toContain('basic.test.ts')
+
+  const secondRun = await runVitest({
+    root,
+    include: ['second.test.ts'],
+  })
+  expect(secondRun.stdout).toContain('✓ second.test.ts >')
+  expect(secondRun.stderr).toBe('')
+
+  const secondRunCacheContent = readFileSync(cachePath!, 'utf-8')
+  expect(secondRunCacheContent).toContain('basic.test.ts')
+  expect(secondRunCacheContent).toContain('second.test.ts')
 })
 
 describe('with optimizer enabled', () => {
