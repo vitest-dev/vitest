@@ -5,7 +5,7 @@ import { createCLI, parseCLI } from '../../../packages/vitest/src/node/cli/cac.j
 import { resolveConfig } from '../../../packages/vitest/src/node/config/resolveConfig.js'
 
 // @ts-expect-error not typed global
-globalThis.__VITEST_PRODUCTION__ = true
+globalThis.__VITEST_GENERATE_UI_TOKEN__ = true
 
 const vitestCli = createCLI()
 

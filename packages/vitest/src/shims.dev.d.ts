@@ -1,5 +1,5 @@
 declare global {
-  const __VITEST_PRODUCTION__: boolean | undefined
+  const __VITEST_GENERATE_UI_TOKEN__: boolean
 }
 
 export {}

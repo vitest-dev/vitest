@@ -37,8 +37,8 @@ jobs:
       - name: Build
         run: pnpm build
         env:
-          VITEST_PRODUCTION: '1'
-          VITEST_RELEASE: '1'
+          VITEST_GENERATE_UI_TOKEN: '1'
+          VITE_TEST_WATCHER_DEBUG: 'false'
 
       - name: Publish to npm
         run: pnpm run publish-ci ${{ github.ref_name }}

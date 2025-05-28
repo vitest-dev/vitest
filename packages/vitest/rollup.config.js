@@ -106,10 +106,10 @@ const plugins = [
     transform: {
       target: 'node18',
       define: {
-        // change the behaviour of certain feature allowed only on local machines
-        __VITEST_PRODUCTION__: process.env.VITEST_PRODUCTION ? 'true' : 'false',
-        // remove extra code that is used only for testing
-        ...(process.env.VITEST_RELEASE
+        // __VITEST_GENERATE_UI_TOKEN__ is set as a global to catch accidental leaking,
+        // in the release version the "if" with this condition should not be present
+        __VITEST_GENERATE_UI_TOKEN__: process.env.VITEST_GENERATE_UI_TOKEN ? 'true' : 'false',
+        ...(process.env.VITE_TEST_WATCHER_DEBUG === 'false'
           ? {
               'process.env.VITE_TEST_WATCHER_DEBUG': 'false',
             }
