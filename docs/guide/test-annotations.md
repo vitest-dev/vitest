@@ -63,7 +63,7 @@ In a TTY terminal, the `verbose` reporter works similarly to the `default` repor
 
 ### html
 
-The HRML reporter shows annotations the same way the UI does. You can see the annotation on the line where it was called. At the moment, if the annotation wasn't called in a test file, you cannot see it in the UI. We are planning to support a separate test summary view where it will be visible.
+The HTML reporter shows annotations the same way the UI does. You can see the annotation on the line where it was called. At the moment, if the annotation wasn't called in a test file, you cannot see it in the UI. We are planning to support a separate test summary view where it will be visible.
 
 <img alt="Vitest UI" img-light src="/annotations-html-light.png">
 <img alt="Vitest UI" img-dark src="/annotations-html-dark.png">

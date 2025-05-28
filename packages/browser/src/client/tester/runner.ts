@@ -151,11 +151,11 @@ export function createBrowserRunner(
         // the file should be the test file
         // tests from other files are not supported
         const map = this.sourceMapCache.get(annotation.location.file)
-        const traceMap = new TraceMap(map as any)
-        if (!traceMap) {
+        if (!map) {
           return rpc().onTaskAnnotate(test.id, annotation)
         }
 
+        const traceMap = new TraceMap(map as any)
         const { line, column, source } = originalPositionFor(traceMap, annotation.location)
         if (line != null && column != null && source != null) {
           let file: string = annotation.location.file
