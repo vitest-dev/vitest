@@ -913,7 +913,7 @@ describe('uploading files', async () => {
     input.id = 'file'
     input.type = 'file'
     document.body.appendChild(input)
-    await userEvent.upload(input, '../src/button.css')
+    await userEvent.upload(input, './src/button.css')
     await expect.poll(() => input.files.length).toBe(1)
 
     const uploadedFile = input.files[0]
@@ -929,7 +929,7 @@ describe('uploading files', async () => {
     input.type = 'file'
     input.multiple = true
     document.body.appendChild(input)
-    await userEvent.upload(input, ['../src/button.css', '../package.json'])
+    await userEvent.upload(input, ['./src/button.css', './package.json'])
     await expect.poll(() => input.files.length).toBe(2)
 
     const uploadedFile1 = input.files[0]
