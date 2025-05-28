@@ -19,7 +19,7 @@ concurrency:
 
 env:
   PLAYWRIGHT_BROWSERS_PATH: ${{ github.workspace }}/.cache/ms-playwright
-  VITEST_GENERATE_UI_TOKEN: 1
+  VITEST_GENERATE_UI_TOKEN: 'true'
 
 jobs:
   lint:

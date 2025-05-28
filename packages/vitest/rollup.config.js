@@ -108,7 +108,7 @@ const plugins = [
       define: {
         // __VITEST_GENERATE_UI_TOKEN__ is set as a global to catch accidental leaking,
         // in the release version the "if" with this condition should not be present
-        __VITEST_GENERATE_UI_TOKEN__: process.env.VITEST_GENERATE_UI_TOKEN ? 'true' : 'false',
+        __VITEST_GENERATE_UI_TOKEN__: process.env.VITEST_GENERATE_UI_TOKEN === 'true' ? 'true' : 'false',
         ...(process.env.VITE_TEST_WATCHER_DEBUG === 'false'
           ? {
               'process.env.VITE_TEST_WATCHER_DEBUG': 'false',
