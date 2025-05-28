@@ -2,18 +2,15 @@ import type {
   DepOptimizationOptions,
   UserConfig as ViteConfig,
 } from 'vite'
-import type { DepsOptimizationOptions, InlineConfig } from '../types/config'
+import type { DepsOptimizationOptions } from '../types/config'
 import { dirname } from 'pathe'
 import { searchForWorkspaceRoot, version as viteVersion } from 'vite'
 import * as vite from 'vite'
 import { rootDir } from '../../paths'
-import { VitestCache } from '../cache'
 
 export function resolveOptimizerConfig(
   _testOptions: DepsOptimizationOptions | undefined,
   viteOptions: DepOptimizationOptions | undefined,
-  testConfig: InlineConfig,
-  viteCacheDir: string | undefined,
 ): { cacheDir?: string; optimizeDeps: DepOptimizationOptions } {
   const testOptions = _testOptions || {}
   const newConfig: { cacheDir?: string; optimizeDeps: DepOptimizationOptions }
@@ -41,7 +38,6 @@ export function resolveOptimizerConfig(
     }
   }
   else {
-    const root = testConfig.root ?? process.cwd()
     const currentInclude = testOptions.include || viteOptions?.include || []
     const exclude = [
       'vitest',
@@ -59,9 +55,6 @@ export function resolveOptimizerConfig(
       (n: string) => !exclude.includes(n),
     )
 
-    const projectName = typeof testConfig.name === 'string' ? testConfig.name : testConfig.name?.label
-
-    newConfig.cacheDir = (testConfig.cache !== false && testConfig.cache?.dir) || VitestCache.resolveCacheDir(root, viteCacheDir, projectName)
     newConfig.optimizeDeps = {
       ...viteOptions,
       ...testOptions,

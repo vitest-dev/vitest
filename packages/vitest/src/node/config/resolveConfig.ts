@@ -744,6 +744,12 @@ export function resolveConfig(
   }
 
   if (resolved.cache !== false) {
+    if (resolved.cache && typeof resolved.cache.dir === 'string') {
+      vitest.logger.deprecate(
+        `"cache.dir" is deprecated, use Vite's "cacheDir" instead if you want to change the cache director. Note caches will be written to "cacheDir\/vitest"`,
+      )
+    }
+
     resolved.cache = { dir: viteConfig.cacheDir }
   }
 

@@ -24,7 +24,7 @@ export class VitestCache {
   }
 
   static resolveCacheDir(root: string, dir?: string, projectName?: string): string {
-    const baseDir = slash(dir || 'node_modules/.vite/vitest')
+    const baseDir = slash(dir || 'node_modules/.vite')
     return resolve(
       root,
       baseDir,
