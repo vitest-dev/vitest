@@ -20,7 +20,7 @@ export const pixelmatch: Comparators['pixelmatch']['instance'] = (
   )
 
   return {
-    pass: result > 0,
+    pass: result < 1,
     diff: diffBuffer ?? null,
   }
 }
