@@ -86,16 +86,19 @@ export const screenshotMatcher: BrowserCommand<
     }
   }
 
+  const { updateSnapshot } = context.project.serializedConfig.snapshotOptions
+
   // if there's no reference or if we want to update snapshots, we have to finish the comparison early
-  if (reference === null || context.project.serializedConfig.snapshotOptions.updateSnapshot !== 'none') {
-    await writeScreenshot(referencePath, await codec.encode(value.actual, {}))
+  if (reference === null || updateSnapshot === 'all') {
+    // @todo this should still be written in CI along with diff for artifacts
+    if (updateSnapshot !== 'none') {
+      await writeScreenshot(referencePath, await codec.encode(value.actual, {}))
+    }
 
     // case #02
     //  - got a stable screenshot, but there is no reference and we don't want to update screenshots
     //  - fail
-    if (
-      context.project.serializedConfig.snapshotOptions.updateSnapshot === 'none'
-    ) {
+    if (updateSnapshot !== 'all') {
       return {
         pass: false,
         reference: referencePath,
