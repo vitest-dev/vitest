@@ -1,4 +1,4 @@
-import type { BrowserCommand, ResolvedConfig } from 'vitest/node'
+import type { BrowserCommand, BrowserCommandContext, ResolvedConfig } from 'vitest/node'
 import type { ScreenshotOptions } from '../../../context'
 import { mkdir, rm } from 'node:fs/promises'
 import { normalize } from 'node:path'
@@ -11,14 +11,32 @@ export const screenshot: BrowserCommand<[string, ScreenshotOptions]> = async (
   name: string,
   options = {},
 ) => {
-  if (!context.testPath) {
-    throw new Error(`Cannot take a screenshot without a test path`)
-  }
-
   options.save ??= true
 
   if (!options.save) {
     options.base64 = true
+  }
+
+  const { buffer, path } = await takeScreenshot(context, name, options)
+
+  return returnResult(options, path, buffer)
+}
+
+/**
+ * Takes a screenshot using the provided browser context and returns a buffer and the expected screenshot path.
+ *
+ * **Note**: the returned `path` indicates where the screenshot *might* be found.
+ * It is not guaranteed to exist, especially if `options.save` is `false`.
+ *
+ * @throws {Error} If the function is not called within a test or if the browser provider does not support screenshots.
+ */
+export async function takeScreenshot(
+  context: BrowserCommandContext,
+  name: string,
+  options: Omit<ScreenshotOptions, 'base64'>,
+): Promise<{ buffer: Buffer<ArrayBufferLike>; path: string }> {
+  if (!context.testPath) {
+    throw new Error(`Cannot take a screenshot without a test path`)
   }
 
   const path = resolveScreenshotPath(
@@ -38,14 +56,14 @@ export const screenshot: BrowserCommand<[string, ScreenshotOptions]> = async (
         ...config,
         path: options.save ? savePath : undefined,
       })
-      return returnResult(options, path, buffer)
+      return { buffer, path }
     }
 
     const buffer = await context.iframe.locator('body').screenshot({
       ...options,
       path: options.save ? savePath : undefined,
     })
-    return returnResult(options, path, buffer)
+    return { buffer, path }
   }
 
   if (context.provider instanceof WebdriverBrowserProvider) {
@@ -58,7 +76,7 @@ export const screenshot: BrowserCommand<[string, ScreenshotOptions]> = async (
     if (!options.save) {
       await rm(savePath, { force: true })
     }
-    return returnResult(options, path, buffer)
+    return { buffer, path }
   }
 
   throw new Error(
