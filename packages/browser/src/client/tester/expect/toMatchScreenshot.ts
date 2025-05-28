@@ -1,5 +1,5 @@
 import type { ScreenshotMatcherOptions } from '@vitest/browser/context'
-import type { AsyncExpectationResult, MatcherState } from '@vitest/expect'
+import type { AsyncExpectationResult, MatcherState, SyncExpectationResult } from '@vitest/expect'
 import type { ScreenshotMatcherArguments, ScreenshotMatcherOutput } from '../../../node/commands/screenshotMatcher'
 import type { Locator } from '../locators'
 import { deepMerge } from '@vitest/utils'
@@ -20,7 +20,7 @@ const defaultOptions = {
   },
 } satisfies ScreenshotMatcherOptions<'pixelmatch'>
 
-export default async function toMatchScreenshot(
+export default function toMatchScreenshot(
   this: MatcherState,
   actual: Element | Locator,
   nameOrOptions?: ScreenshotMatcherOptions | string,
@@ -28,58 +28,60 @@ export default async function toMatchScreenshot(
     ? nameOrOptions
     : defaultOptions,
 ): AsyncExpectationResult {
-  if (this.isNot) {
-    throw new Error('\'toMatchScreenshot\' cannot be used with "not"')
-  }
+  return ensureAwaited<SyncExpectationResult>(async (error) => {
+    if (this.isNot) {
+      throw new Error('\'toMatchScreenshot\' cannot be used with "not"')
+    }
 
-  if (this.currentTestName === undefined) {
-    throw new Error('\'toMatchScreenshot\' cannot be used without test context')
-  }
+    if (this.currentTestName === undefined) {
+      throw new Error('\'toMatchScreenshot\' cannot be used without test context')
+    }
 
-  // @todo add a counter after the name
-  const name
-    = typeof nameOrOptions === 'string' ? nameOrOptions : this.currentTestName
+    // @todo add a counter after the name
+    const name
+      = typeof nameOrOptions === 'string' ? nameOrOptions : this.currentTestName
 
-  const result = await ensureAwaited(error =>
+    const result = await
     getBrowserState().commands.triggerCommand<ScreenshotMatcherOutput>(
       '__vitest_screenshotMatcher',
-      [
-        name,
-        deepMerge<ScreenshotMatcherArguments[1]>(
-          {
-            element: convertElementToCssSelector(
-              getElementFromUserInput(actual, toMatchScreenshot, this),
-            ),
-            timeout: 5_000,
-          } satisfies Omit<
-            ScreenshotMatcherArguments[1],
-            'comparatorOptions' | 'screenshotOptions'
-          > as any,
-          defaultOptions,
-          options,
-        ),
-      ] satisfies ScreenshotMatcherArguments,
-      error,
-    ))
-
-  let message = ''
-
-  if (result.pass === false) {
-    message = getMessage(
-      this,
-      'toMatchScreenshot',
-      `${result.message}${result.reference ? '\nReference screenshot:' : ''}`,
-      result.reference,
-      result.actual ? 'Actual screenshot:' : '',
-      result.actual,
+        [
+          name,
+          deepMerge<ScreenshotMatcherArguments[1]>(
+            {
+              element: convertElementToCssSelector(
+                getElementFromUserInput(actual, toMatchScreenshot, this),
+              ),
+              timeout: 5_000,
+            } satisfies Omit<
+              ScreenshotMatcherArguments[1],
+              'comparatorOptions' | 'screenshotOptions'
+            > as any,
+            defaultOptions,
+            options,
+          ),
+        ] satisfies ScreenshotMatcherArguments,
+        error,
     )
 
-    // @todo use annotate to log diff images: https://github.com/vitest-dev/vitest/pull/7953
-  }
+    let message = ''
 
-  return {
-    pass: result.pass,
-    message: () =>
-      message,
-  }
+    if (result.pass === false) {
+      message = getMessage(
+        this,
+        'toMatchScreenshot',
+        `${result.message}${result.reference ? '\nReference screenshot:' : ''}`,
+        result.reference,
+        result.actual ? 'Actual screenshot:' : '',
+        result.actual,
+      )
+
+      // @todo use annotate to log diff images: https://github.com/vitest-dev/vitest/pull/7953
+    }
+
+    return {
+      pass: result.pass,
+      message: () =>
+        message,
+    }
+  })
 }
