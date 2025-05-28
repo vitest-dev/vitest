@@ -15,7 +15,10 @@ const codec: Codec<ParserOptions, Metadata, PackerOptions> = {
       interlace,
       palette,
       width,
-    } = PNG.sync.read(Buffer.from(buffer), options)
+    } = PNG.sync.read(
+      Buffer.isBuffer(buffer) ? buffer : Buffer.from(buffer),
+      options,
+    )
 
     return {
       metadata: {
@@ -38,7 +41,7 @@ const codec: Codec<ParserOptions, Metadata, PackerOptions> = {
       width,
     })
 
-    png.data = Buffer.from(data)
+    png.data = Buffer.isBuffer(data) ? data : Buffer.from(data)
 
     return PNG.sync.write(png, options)
   },
