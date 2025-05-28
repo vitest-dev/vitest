@@ -4,6 +4,10 @@ import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { $ } from 'zx'
 
+if (!process.env.VITEST_PRODUCTION) {
+  throw new Error(`Cannot release Vitest without VITEST_PRODUCTION environment variable.`)
+}
+
 let version = process.argv[2]
 
 if (!version) {

@@ -41,7 +41,7 @@ jobs:
       - name: Build
         run: pnpm build
         env:
-          NO_VITE_TEST_WATCHER_DEBUG: '1'
+          VITEST_PRODUCTION: '1'
 
       - name: Publish to StackBlitz
         run: pnpx pkg-pr-new publish --compact --no-template --pnpm './packages/*'

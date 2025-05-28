@@ -103,7 +103,12 @@ const plugins = [
   json(),
   commonjs(),
   oxc({
-    transform: { target: 'node18' },
+    transform: {
+      target: 'node18',
+      define: {
+        __VITEST_PRODUCTION__: process.env.VITEST_PRODUCTION ? 'true' : 'false',
+      },
+    },
     sourcemap: true,
   }),
 ]
