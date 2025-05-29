@@ -32,12 +32,10 @@ export function serializeValue(val: any, seen: WeakMap<WeakKey, any> = new WeakM
   if (!val || typeof val === 'string') {
     return val
   }
-  if (val instanceof Error) {
-    const jsonValue = 'toJSON' in val && typeof val.toJSON === 'function'
-      ? val.toJSON()
-      : { ...val }
+  if (val instanceof Error && 'toJSON' in val && typeof val.toJSON === 'function') {
+    const jsonValue = val.toJSON()
 
-    if (jsonValue && typeof jsonValue === 'object') {
+    if (jsonValue && jsonValue !== val && typeof jsonValue === 'object') {
       if (typeof val.message === 'string') {
         safe(() => jsonValue.message ??= val.message)
       }
@@ -46,6 +44,9 @@ export function serializeValue(val: any, seen: WeakMap<WeakKey, any> = new WeakM
       }
       if (typeof val.name === 'string') {
         safe(() => jsonValue.name ??= val.name)
+      }
+      if (val.cause != null) {
+        safe(() => jsonValue.cause ??= serializeValue(val.cause, seen))
       }
     }
     return serializeValue(jsonValue, seen)
