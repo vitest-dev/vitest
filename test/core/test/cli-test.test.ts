@@ -342,6 +342,20 @@ test('configure expect', () => {
   })
 })
 
+test('silent', () => {
+  expect(getCLIOptions('--silent')).toEqual({ silent: true })
+  expect(getCLIOptions('--silent=true')).toEqual({ silent: true })
+  expect(getCLIOptions('--silent=yes')).toEqual({ silent: true })
+
+  expect(getCLIOptions('--silent=false')).toEqual({ silent: false })
+  expect(getCLIOptions('--silent=no')).toEqual({ silent: false })
+
+  expect(getCLIOptions('--silent=passed-only')).toEqual({ silent: 'passed-only' })
+  expect(getCLIOptions('--silent=true example.test.ts')).toEqual({ silent: true })
+
+  expect(() => getCLIOptions('--silent example.test.ts')).toThrowErrorMatchingInlineSnapshot(`[TypeError: Unexpected value "--silent=example.test.ts". Use "--silent=true example.test.ts" instead.]`)
+})
+
 test('public parseCLI works correctly', () => {
   expect(parseCLI('vitest dev')).toEqual({
     filter: [],
