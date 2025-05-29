@@ -1,9 +1,9 @@
 import type { ScreenshotMatcherOptions } from '@vitest/browser/context'
-import type { AsyncExpectationResult, MatcherState, SyncExpectationResult } from '@vitest/expect'
+import type { AsyncExpectationResult, MatcherState } from '@vitest/expect'
 import type { ScreenshotMatcherArguments, ScreenshotMatcherOutput } from '../../../node/commands/screenshotMatcher'
 import type { Locator } from '../locators'
 import { deepMerge } from '@vitest/utils'
-import { ensureAwaited, getBrowserState } from '../../utils'
+import { getBrowserState } from '../../utils'
 import { convertElementToCssSelector } from '../utils'
 import { getElementFromUserInput, getMessage } from './utils'
 
@@ -20,7 +20,7 @@ const defaultOptions = {
   },
 } satisfies ScreenshotMatcherOptions<'pixelmatch'>
 
-export default function toMatchScreenshot(
+export default async function toMatchScreenshot(
   this: MatcherState,
   actual: Element | Locator,
   nameOrOptions?: ScreenshotMatcherOptions | string,
@@ -28,60 +28,57 @@ export default function toMatchScreenshot(
     ? nameOrOptions
     : defaultOptions,
 ): AsyncExpectationResult {
-  return ensureAwaited<SyncExpectationResult>(async (error) => {
-    if (this.isNot) {
-      throw new Error('\'toMatchScreenshot\' cannot be used with "not"')
-    }
+  if (this.isNot) {
+    throw new Error('\'toMatchScreenshot\' cannot be used with "not"')
+  }
 
-    if (this.currentTestName === undefined) {
-      throw new Error('\'toMatchScreenshot\' cannot be used without test context')
-    }
+  if (this.currentTestName === undefined) {
+    throw new Error('\'toMatchScreenshot\' cannot be used without test context')
+  }
 
-    // @todo add a counter after the name
-    const name
+  // @todo add a counter after the name
+  const name
       = typeof nameOrOptions === 'string' ? nameOrOptions : this.currentTestName
 
-    const result = await
-    getBrowserState().commands.triggerCommand<ScreenshotMatcherOutput>(
-      '__vitest_screenshotMatcher',
-        [
-          name,
-          deepMerge<ScreenshotMatcherArguments[1]>(
-            {
-              element: convertElementToCssSelector(
-                getElementFromUserInput(actual, toMatchScreenshot, this),
-              ),
-              timeout: 5_000,
-            } satisfies Omit<
-              ScreenshotMatcherArguments[1],
-              'comparatorOptions' | 'screenshotOptions'
-            > as any,
-            defaultOptions,
-            options,
+  const result = await
+  getBrowserState().commands.triggerCommand<ScreenshotMatcherOutput>(
+    '__vitest_screenshotMatcher',
+    [
+      name,
+      deepMerge<ScreenshotMatcherArguments[1]>(
+        {
+          element: convertElementToCssSelector(
+            getElementFromUserInput(actual, toMatchScreenshot, this),
           ),
-        ] satisfies ScreenshotMatcherArguments,
-        error,
+          timeout: 5_000,
+        } satisfies Omit<
+          ScreenshotMatcherArguments[1],
+              'comparatorOptions' | 'screenshotOptions'
+        > as any,
+        defaultOptions,
+        options,
+      ),
+    ] satisfies ScreenshotMatcherArguments,
+  )
+
+  let message = ''
+
+  if (result.pass === false) {
+    message = getMessage(
+      this,
+      'toMatchScreenshot',
+      `${result.message}${result.reference ? '\nReference screenshot:' : ''}`,
+      result.reference,
+      result.actual ? 'Actual screenshot:' : '',
+      result.actual,
     )
 
-    let message = ''
+    // @todo use annotate to log diff images: https://github.com/vitest-dev/vitest/pull/7953
+  }
 
-    if (result.pass === false) {
-      message = getMessage(
-        this,
-        'toMatchScreenshot',
-        `${result.message}${result.reference ? '\nReference screenshot:' : ''}`,
-        result.reference,
-        result.actual ? 'Actual screenshot:' : '',
-        result.actual,
-      )
-
-      // @todo use annotate to log diff images: https://github.com/vitest-dev/vitest/pull/7953
-    }
-
-    return {
-      pass: result.pass,
-      message: () =>
-        message,
-    }
-  })
+  return {
+    pass: result.pass,
+    message: () =>
+      message,
+  }
 }
