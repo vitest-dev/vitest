@@ -240,7 +240,7 @@ function printErrorInner(
     })
   }
 
-  handleImportOutsideModuleError(e.stack || e.stackStr || '', logger)
+  handleImportOutsideModuleError(e.stack || '', logger)
 
   return { nearest }
 }
@@ -250,10 +250,8 @@ function printErrorType(type: string, ctx: Vitest) {
 }
 
 const skipErrorProperties = new Set([
-  'nameStr',
   'cause',
   'stacks',
-  'stackStr',
   'type',
   'showDiff',
   'ok',
@@ -366,7 +364,7 @@ function printModuleWarningForSourceCode(logger: ErrorLogger, path: string) {
 }
 
 function printErrorMessage(error: ErrorWithDiff, logger: ErrorLogger) {
-  const errorName = error.name || error.nameStr || 'Unknown Error'
+  const errorName = error.name || 'Unknown Error'
   if (!error.message) {
     logger.error(error)
     return

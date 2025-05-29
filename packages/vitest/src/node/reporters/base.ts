@@ -585,9 +585,9 @@ export abstract class BaseReporter implements Reporter {
       task.result?.errors?.forEach((error) => {
         let previous
 
-        if (error?.stackStr) {
+        if (error?.stack) {
           previous = errorsQueue.find((i) => {
-            if (i[0]?.stackStr !== error.stackStr) {
+            if (i[0]?.stack !== error.stack) {
               return false
             }
 
