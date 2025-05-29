@@ -1,4 +1,5 @@
-import type { Comparator, Comparators } from '../../../../../screenshot'
+import type { ComparatorRegistry } from '../../../../../context'
+import type { Comparator } from '../types'
 import { pixelmatch } from './pixelmatch'
 
 function guard<C extends Comparator<any>>(comparator: C): C {
@@ -17,12 +18,14 @@ function guard<C extends Comparator<any>>(comparator: C): C {
 const comparators = new Map(Object.entries({
   pixelmatch,
 } satisfies {
-  [k in keyof Comparators]: Comparators[k]['instance']
+  [ComparatorName in keyof ComparatorRegistry]: Comparator<
+    ComparatorRegistry[ComparatorName]
+  >
 }))
 
-export function getComparator<Comparator extends keyof Comparators>(
-  comparator: Comparator,
-): Comparators[Comparator]['instance'] {
+export function getComparator<ComparatorName extends keyof ComparatorRegistry>(
+  comparator: ComparatorName,
+): Comparator<ComparatorRegistry[ComparatorName]> {
   if (comparators.has(comparator)) {
     return guard(comparators.get(comparator)!)
   }

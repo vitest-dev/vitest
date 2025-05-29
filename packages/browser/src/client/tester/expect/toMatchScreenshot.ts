@@ -1,6 +1,6 @@
-import type { ScreenshotMatcherOptions } from '@vitest/browser/context'
 import type { AsyncExpectationResult, MatcherState } from '@vitest/expect'
-import type { ScreenshotMatcherArguments, ScreenshotMatcherOutput } from '../../../node/commands/screenshotMatcher'
+import type { ScreenshotMatcherOptions } from '../../../../context'
+import type { ScreenshotMatcherArguments, ScreenshotMatcherOutput } from '../../../shared/screenshotMatcher/types'
 import type { Locator } from '../locators'
 import { deepMerge } from '@vitest/utils'
 import { getBrowserState } from '../../utils'

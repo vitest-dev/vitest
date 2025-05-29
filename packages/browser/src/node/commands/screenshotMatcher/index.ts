@@ -1,5 +1,7 @@
-import type { Comparators, ScreenshotMatcherOptions, TypedArray } from '@vitest/browser/context'
 import type { BrowserCommand, BrowserCommandContext } from 'vitest/node'
+import type { ScreenshotMatcherOptions } from '../../../../context'
+import type { ScreenshotMatcherArguments, ScreenshotMatcherOutput } from '../../../shared/screenshotMatcher/types'
+import type { TypedArray } from './types'
 import { access, mkdir, readFile, writeFile } from 'node:fs/promises'
 import { dirname, normalize, resolve } from 'node:path'
 import { resolveScreenshotPath, takeScreenshot } from '../screenshot'
@@ -9,27 +11,13 @@ import { getComparator } from './comparators'
 type Codec = ReturnType<typeof getCodec>
 type Comparator = ReturnType<typeof getComparator>
 
-export type ScreenshotMatcherArguments<
-  Comparator extends keyof Comparators = keyof Comparators,
-> = [name: string, options: Required<ScreenshotMatcherOptions<Comparator>> & { element: string }]
-export type ScreenshotMatcherOutput = Promise<
-  {
-    pass: false
-    reference: string | null
-    actual: string | null
-    diff: string | null
-    message: string
-  } |
-  { pass: true }
->
-
 export const screenshotMatcher: BrowserCommand<
   ScreenshotMatcherArguments
 > = async (context, name, {
   comparatorOptions,
   screenshotOptions,
   element,
-  timeout,
+  timeout = 5_000,
 }): ScreenshotMatcherOutput => {
   if (!context.testPath) {
     throw new Error(`Cannot compare screenshots without a test path`)
@@ -46,7 +34,7 @@ export const screenshotMatcher: BrowserCommand<
     context.testPath,
     name,
     context.project.config,
-    screenshotOptions.path,
+    undefined,
   ))
   const hasReference = await access(referencePath).then(() => true).catch(() => false)
   const reference = hasReference ? await codec.decode(await readFile(referencePath), {}) : null

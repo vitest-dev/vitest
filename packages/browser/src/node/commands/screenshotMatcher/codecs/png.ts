@@ -1,5 +1,5 @@
 import type { Metadata, PackerOptions, ParserOptions } from 'pngjs'
-import type { Codec } from './utils'
+import type { Codec } from '../types'
 import { PNG } from 'pngjs'
 
 const codec: Codec<ParserOptions, Metadata, PackerOptions> = {

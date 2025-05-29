@@ -6,7 +6,11 @@ import { basename, dirname, relative, resolve } from 'pathe'
 import { PlaywrightBrowserProvider } from '../providers/playwright'
 import { WebdriverBrowserProvider } from '../providers/webdriver'
 
-export const screenshot: BrowserCommand<[string, ScreenshotOptions]> = async (
+interface ScreenshotCommandOptions extends Omit<ScreenshotOptions, 'element'> {
+  element?: string
+}
+
+export const screenshot: BrowserCommand<[string, ScreenshotCommandOptions]> = async (
   context,
   name: string,
   options = {},
@@ -33,7 +37,7 @@ export const screenshot: BrowserCommand<[string, ScreenshotOptions]> = async (
 export async function takeScreenshot(
   context: BrowserCommandContext,
   name: string,
-  options: Omit<ScreenshotOptions, 'base64'>,
+  options: Omit<ScreenshotCommandOptions, 'base64'>,
 ): Promise<{ buffer: Buffer<ArrayBufferLike>; path: string }> {
   if (!context.testPath) {
     throw new Error(`Cannot take a screenshot without a test path`)
@@ -107,7 +111,7 @@ export function resolveScreenshotPath(
 }
 
 function returnResult(
-  options: ScreenshotOptions,
+  options: ScreenshotCommandOptions,
   path: string,
   buffer: Buffer,
 ) {
