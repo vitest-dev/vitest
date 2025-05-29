@@ -8,9 +8,8 @@ import { convertElementToCssSelector } from '../utils'
 import { getElementFromUserInput, getMessage } from './utils'
 
 const defaultOptions = {
-  comparatorOptions: {
-    name: 'pixelmatch',
-  },
+  comparatorName: 'pixelmatch',
+  comparatorOptions: {},
   screenshotOptions: {
     animations: 'disabled',
     caret: 'hide',
@@ -53,7 +52,7 @@ export default async function toMatchScreenshot(
           timeout: 5_000,
         } satisfies Omit<
           ScreenshotMatcherArguments[1],
-              'comparatorOptions' | 'screenshotOptions'
+              'comparatorName' | 'comparatorOptions' | 'screenshotOptions'
         > as any,
         defaultOptions,
         options,

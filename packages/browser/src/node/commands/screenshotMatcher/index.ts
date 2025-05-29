@@ -14,6 +14,7 @@ type Comparator = ReturnType<typeof getComparator>
 export const screenshotMatcher: BrowserCommand<
   ScreenshotMatcherArguments
 > = async (context, name, {
+  comparatorName,
   comparatorOptions,
   screenshotOptions,
   element,
@@ -27,7 +28,7 @@ export const screenshotMatcher: BrowserCommand<
   const screenshotType = 'png'
 
   const codec = getCodec(screenshotType)
-  const comparator = getComparator(comparatorOptions.name)
+  const comparator = getComparator(comparatorName)
 
   // @todo check if this is the correct path
   const referencePath = normalize(resolveScreenshotPath(
