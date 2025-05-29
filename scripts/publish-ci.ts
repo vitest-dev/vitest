@@ -4,6 +4,10 @@ import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { $ } from 'zx'
 
+if (process.env.VITEST_GENERATE_UI_TOKEN !== 'true' || process.env.VITE_TEST_WATCHER_DEBUG !== 'false') {
+  throw new Error(`Cannot release Vitest without VITEST_GENERATE_UI_TOKEN and VITE_TEST_WATCHER_DEBUG environment variable.`)
+}
+
 let version = process.argv[2]
 
 if (!version) {
