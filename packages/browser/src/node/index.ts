@@ -45,6 +45,7 @@ export async function createBrowserServer(
   const vite = await createViteServer({
     ...project.options, // spread project config inlined in root workspace config
     base: '/',
+    root: project.config.root,
     logLevel,
     customLogger: {
       ...logger,
@@ -68,6 +69,7 @@ export async function createBrowserServer(
       hmr: false,
       watch: null,
     },
+    cacheDir: project.vite.config.cacheDir,
     plugins: [
       ...prePlugins,
       ...(project.options?.plugins || []),

@@ -9,6 +9,7 @@ import { extractSourceMap } from './source-map'
 import {
   cleanUrl,
   createImportMetaEnvProxy,
+  isBareImport,
   isInternalRequest,
   isNodeBuiltin,
   isPrimitive,
@@ -175,7 +176,29 @@ export class ModuleCacheMap extends Map<string, ModuleCache> {
   }
 }
 
-export type ModuleExecutionInfo = Map<string, { startOffset: number }>
+export type ModuleExecutionInfo = Map<string, ModuleExecutionInfoEntry>
+
+export interface ModuleExecutionInfoEntry {
+  startOffset: number
+
+  /** The duration that was spent executing the module. */
+  duration: number
+
+  /** The time that was spent executing the module itself and externalized imports. */
+  selfTime: number
+}
+
+/** Stack to track nested module execution for self-time calculation. */
+type ExecutionStack = Array<{
+  /** The file that is being executed. */
+  filename: string
+
+  /** The start time of this module's execution. */
+  startTime: number
+
+  /** Accumulated time spent importing all sub-imports. */
+  subImportTime: number
+}>
 
 export class ViteNodeRunner {
   root: string
@@ -187,6 +210,27 @@ export class ViteNodeRunner {
    * Keys of the map are filepaths, or plain package names
    */
   moduleCache: ModuleCacheMap
+
+  /**
+   * Tracks the stack of modules being executed for the purpose of calculating import self-time.
+   *
+   * Note that while in most cases, imports are a linear stack of modules,
+   * this is occasionally not the case, for example when you have parallel top-level dynamic imports like so:
+   *
+   * ```ts
+   * await Promise.all([
+   *  import('./module1'),
+   *  import('./module2'),
+   * ]);
+   * ```
+   *
+   * In this case, the self time will be reported incorrectly for one of the modules (could go negative).
+   * As top-level awaits with dynamic imports like this are uncommon, we don't handle this case specifically.
+   */
+  private executionStack: ExecutionStack = []
+
+  // `performance` can be mocked, so make sure we're using the original function
+  private performanceNow = performance.now.bind(performance)
 
   constructor(public options: ViteNodeRunnerOptions) {
     this.root = options.root ?? process.cwd()
@@ -325,6 +369,28 @@ export class ViteNodeRunner {
     return await this.cachedRequest(id, fsPath, callstack)
   }
 
+  private async _fetchModule(id: string, importer?: string) {
+    try {
+      return await this.options.fetchModule(id)
+    }
+    catch (cause: any) {
+      // rethrow vite error if it cannot load the module because it's not resolved
+      if (
+        (typeof cause === 'object' && cause.code === 'ERR_LOAD_URL')
+        || (typeof cause?.message === 'string' && cause.message.includes('Failed to load url'))
+      ) {
+        const error = new Error(
+          `Cannot find ${isBareImport(id) ? 'package' : 'module'} '${id}'${importer ? ` imported from '${importer}'` : ''}`,
+          { cause },
+        ) as Error & { code: string }
+        error.code = 'ERR_MODULE_NOT_FOUND'
+        throw error
+      }
+
+      throw cause
+    }
+  }
+
   /** @internal */
   async directRequest(id: string, fsPath: string, _callstack: string[]) {
     const moduleId = normalizeModuleId(fsPath)
@@ -345,7 +411,10 @@ export class ViteNodeRunner {
     if (id in requestStubs) {
       return requestStubs[id]
     }
-    let { code: transformed, externalize } = await this.options.fetchModule(id)
+    let { code: transformed, externalize } = await this._fetchModule(
+      id,
+      callstack[callstack.length - 2],
+    )
 
     if (externalize) {
       debugNative(externalize)
@@ -469,6 +538,11 @@ export class ViteNodeRunner {
       __vite_ssr_dynamic_import__: request,
       __vite_ssr_exports__: exports,
       __vite_ssr_exportAll__: (obj: any) => exportAll(exports, obj),
+      __vite_ssr_exportName__: (name: string, getter: () => unknown) => Object.defineProperty(exports, name, {
+        enumerable: true,
+        configurable: true,
+        get: getter,
+      }),
       __vite_ssr_import_meta__: meta,
 
       // cjs compact
@@ -511,10 +585,51 @@ export class ViteNodeRunner {
       columnOffset: -codeDefinition.length,
     }
 
-    this.options.moduleExecutionInfo?.set(options.filename, { startOffset: codeDefinition.length })
+    const finishModuleExecutionInfo = this.startCalculateModuleExecutionInfo(options.filename, codeDefinition.length)
 
-    const fn = vm.runInThisContext(code, options)
-    await fn(...Object.values(context))
+    try {
+      const fn = vm.runInThisContext(code, options)
+      await fn(...Object.values(context))
+    }
+    finally {
+      this.options.moduleExecutionInfo?.set(options.filename, finishModuleExecutionInfo())
+    }
+  }
+
+  /**
+   * Starts calculating the module execution info such as the total duration and self time spent on executing the module.
+   * Returns a function to call once the module has finished executing.
+   */
+  protected startCalculateModuleExecutionInfo(filename: string, startOffset: number): () => ModuleExecutionInfoEntry {
+    const startTime = this.performanceNow()
+
+    this.executionStack.push({
+      filename,
+      startTime,
+      subImportTime: 0,
+    })
+
+    return () => {
+      const duration = this.performanceNow() - startTime
+
+      const currentExecution = this.executionStack.pop()
+
+      if (currentExecution == null) {
+        throw new Error('Execution stack is empty, this should never happen')
+      }
+
+      const selfTime = duration - currentExecution.subImportTime
+
+      if (this.executionStack.length > 0) {
+        this.executionStack.at(-1)!.subImportTime += duration
+      }
+
+      return {
+        startOffset,
+        duration,
+        selfTime,
+      }
+    }
   }
 
   prepareContext(context: Record<string, any>): Record<string, any> {

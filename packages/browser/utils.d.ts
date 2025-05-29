@@ -3,7 +3,7 @@
 // fortunately, the file is quite small
 
 import { LocatorSelectors, Locator } from '@vitest/browser/context'
-import { StringifyOptions } from 'vitest/utils'
+import { StringifyOptions } from 'vitest/internal/browser'
 
 export type PrettyDOMOptions = Omit<StringifyOptions, 'maxLength'>
 

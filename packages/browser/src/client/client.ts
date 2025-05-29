@@ -2,6 +2,7 @@ import type { ModuleMocker } from '@vitest/mocker/browser'
 import type { CancelReason } from '@vitest/runner'
 import type { BirpcReturn } from 'birpc'
 import type { WebSocketBrowserEvents, WebSocketBrowserHandlers } from '../node/types'
+import type { IframeOrchestrator } from './orchestrator'
 import { createBirpc } from 'birpc'
 import { parse, stringify } from 'flatted'
 import { getBrowserState } from './utils'
@@ -17,7 +18,7 @@ export const RPC_ID: string
 const METHOD = getBrowserState().method
 export const ENTRY_URL: string = `${
   location.protocol === 'https:' ? 'wss:' : 'ws:'
-}//${HOST}/__vitest_browser_api__?type=${PAGE_TYPE}&rpcId=${RPC_ID}&sessionId=${getBrowserState().sessionId}&projectName=${getBrowserState().config.name || ''}&method=${METHOD}&token=${(window as any).VITEST_API_TOKEN}`
+}//${HOST}/__vitest_browser_api__?type=${PAGE_TYPE}&rpcId=${RPC_ID}&sessionId=${getBrowserState().sessionId}&projectName=${getBrowserState().config.name || ''}&method=${METHOD}&token=${(window as any).VITEST_API_TOKEN || '0'}`
 
 let setCancel = (_: CancelReason) => {}
 export const onCancel: Promise<CancelReason> = new Promise((resolve) => {
@@ -34,6 +35,27 @@ export type BrowserRPC = BirpcReturn<
   WebSocketBrowserHandlers,
   WebSocketBrowserEvents
 >
+
+// ws connection can be established before the orchestrator is fully loaded
+// in very rare cases in the preview provider
+function waitForOrchestrator() {
+  return new Promise<IframeOrchestrator>((resolve, reject) => {
+    const type = getBrowserState().type
+    if (type !== 'orchestrator') {
+      reject(new TypeError('Only orchestrator can create testers.'))
+      return
+    }
+
+    function check() {
+      const orchestrator = getBrowserState().orchestrator
+      if (orchestrator) {
+        return resolve(orchestrator)
+      }
+      setTimeout(check)
+    }
+    check()
+  })
+}
 
 function createClient() {
   const autoReconnect = true
@@ -53,11 +75,13 @@ function createClient() {
   ctx.rpc = createBirpc<WebSocketBrowserHandlers, WebSocketBrowserEvents>(
     {
       onCancel: setCancel,
-      async createTesters(files: string[]) {
-        if (PAGE_TYPE !== 'orchestrator') {
-          return
-        }
-        getBrowserState().createTesters?.(files)
+      async createTesters(options) {
+        const orchestrator = await waitForOrchestrator()
+        return orchestrator.createTesters(options)
+      },
+      async cleanupTesters() {
+        const orchestrator = await waitForOrchestrator()
+        return orchestrator.cleanupTesters()
       },
       cdpEvent(event: string, payload: unknown) {
         const cdp = getBrowserState().cdp
@@ -85,6 +109,7 @@ function createClient() {
     {
       post: msg => ctx.ws.send(msg),
       on: fn => (onMessage = fn),
+      timeout: -1, // createTesters can take a while
       serialize: e =>
         stringify(e, (_, v) => {
           if (v instanceof Error) {

@@ -9,7 +9,6 @@ import {
   getByTextSelector,
   getByTitleSelector,
 } from 'ivya'
-import { getBrowserState } from '../../utils'
 import { getIframeScale, processTimeoutOptions } from '../utils'
 import { Locator, selectorEngine } from './index'
 
@@ -36,6 +35,9 @@ page.extend({
     return new PlaywrightLocator(getByTitleSelector(title, options))
   },
 
+  _createLocator(selector: string) {
+    return new PlaywrightLocator(selector)
+  },
   elementLocator(element: Element) {
     return new PlaywrightLocator(
       selectorEngine.generateSelectorSimple(element),
@@ -106,8 +108,7 @@ class PlaywrightLocator extends Locator {
 }
 
 function processDragAndDropOptions(options_?: UserEventDragAndDropOptions) {
-  // only ui scales the iframe, so we need to adjust the position
-  if (!options_ || !getBrowserState().config.browser.ui) {
+  if (!options_) {
     return options_
   }
   const options = options_ as NonNullable<
@@ -123,8 +124,7 @@ function processDragAndDropOptions(options_?: UserEventDragAndDropOptions) {
 }
 
 function processHoverOptions(options_?: UserEventHoverOptions) {
-  // only ui scales the iframe, so we need to adjust the position
-  if (!options_ || !getBrowserState().config.browser.ui) {
+  if (!options_) {
     return options_
   }
   const options = options_ as NonNullable<
@@ -137,8 +137,7 @@ function processHoverOptions(options_?: UserEventHoverOptions) {
 }
 
 function processClickOptions(options_?: UserEventClickOptions) {
-  // only ui scales the iframe, so we need to adjust the position
-  if (!options_ || !getBrowserState().config.browser.ui) {
+  if (!options_) {
     return options_
   }
   const options = options_ as NonNullable<

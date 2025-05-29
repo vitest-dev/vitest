@@ -2,7 +2,7 @@ import { commands } from '@vitest/browser/context'
 import { prettyDOM } from '@vitest/browser/utils'
 import { afterEach, expect, it, test } from 'vitest'
 
-import { inspect } from 'vitest/utils'
+import { inspect } from 'vitest/internal/browser'
 
 afterEach(() => {
   document.body.innerHTML = ''

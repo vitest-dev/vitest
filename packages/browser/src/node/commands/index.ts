@@ -15,6 +15,7 @@ import { selectOptions } from './select'
 import { tab } from './tab'
 import { type } from './type'
 import { upload } from './upload'
+import { viewport } from './viewport'
 
 export default {
   readFile: readFile as typeof readFile,
@@ -35,4 +36,5 @@ export default {
   __vitest_dragAndDrop: dragAndDrop as typeof dragAndDrop,
   __vitest_hover: hover as typeof hover,
   __vitest_cleanup: keyboardCleanup as typeof keyboardCleanup,
+  __vitest_viewport: viewport as typeof viewport,
 }

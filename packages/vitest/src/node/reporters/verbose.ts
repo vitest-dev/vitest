@@ -38,7 +38,7 @@ export class VerboseReporter extends DefaultReporter {
     let title = ` ${getStateSymbol(test.task)} `
 
     if (test.project.name) {
-      title += formatProjectName(test.project.name)
+      title += formatProjectName(test.project)
     }
 
     title += getFullName(test.task, c.dim(' > '))

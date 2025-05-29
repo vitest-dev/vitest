@@ -110,7 +110,7 @@ Under the hood, Vitest transforms these instances into separate [test projects](
 - **Type:** `string`
 - **CLI:** `--browser=safari`
 
-::: danger
+::: danger DEPRECATED
 This API is deprecated an will be removed in Vitest 4. Please, use [`browser.instances`](#browser-instances) option instead.
 :::
 
@@ -150,15 +150,11 @@ A path to the HTML entry point. Can be relative to the root of the project. This
 
 Configure options for Vite server that serves code in the browser. Does not affect [`test.api`](#api) option. By default, Vitest assigns port `63315` to avoid conflicts with the development server, allowing you to run both in parallel.
 
-## browser.provider <Badge type="warning">experimental</Badge> {#browser-provider}
+## browser.provider {#browser-provider}
 
 - **Type:** `'webdriverio' | 'playwright' | 'preview' | string`
 - **Default:** `'preview'`
 - **CLI:** `--browser.provider=playwright`
-
-::: danger ADVANCED API
-The provider API is highly experimental and can change between patches. If you just need to run tests in a browser, use the [`browser.instances`](#browser-instances) option instead.
-:::
 
 Path to a provider that will be used when running browser tests. Vitest provides three providers which are `preview` (default), `webdriverio` and `playwright`. Custom providers should be exported using `default` export and have this shape:
 
@@ -180,11 +176,15 @@ export interface BrowserProvider {
 }
 ```
 
+::: danger ADVANCED API
+The custom provider API is highly experimental and can change between patches. If you just need to run tests in a browser, use the [`browser.instances`](#browser-instances) option instead.
+:::
+
 ## browser.providerOptions <Badge type="danger">deprecated</Badge> {#browser-provideroptions}
 
 - **Type:** `BrowserProviderOptions`
 
-::: danger
+::: danger DEPRECATED
 This API is deprecated an will be removed in Vitest 4. Please, use [`browser.instances`](#browser-instances) option instead.
 :::
 
@@ -300,7 +300,7 @@ export interface BrowserScript {
 - **Type:** `BrowserScript[]`
 - **Default:** `[]`
 
-::: danger
+::: danger DEPRECATED
 This API is deprecated an will be removed in Vitest 4. Please, use [`browser.testerHtmlPath`](#browser-testerhtmlpath) field instead.
 :::
 

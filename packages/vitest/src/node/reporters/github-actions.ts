@@ -4,10 +4,19 @@ import type { TestProject } from '../project'
 import type { Reporter } from '../types/reporter'
 import { stripVTControlCharacters } from 'node:util'
 import { getFullName, getTasks } from '@vitest/runner/utils'
-import { capturePrintError } from '../error'
+import { capturePrintError } from '../printError'
+
+export interface GithubActionsReporterOptions {
+  onWritePath?: (path: string) => string
+}
 
 export class GithubActionsReporter implements Reporter {
   ctx: Vitest = undefined!
+  options: GithubActionsReporterOptions
+
+  constructor(options: GithubActionsReporterOptions = {}) {
+    this.options = options
+  }
 
   onInit(ctx: Vitest): void {
     this.ctx = ctx
@@ -48,6 +57,8 @@ export class GithubActionsReporter implements Reporter {
       }
     }
 
+    const onWritePath = this.options.onWritePath ?? defaultOnWritePath
+
     // format errors via `printError`
     for (const { project, title, error, file } of projectErrors) {
       const result = capturePrintError(error, this.ctx, { project, task: file })
@@ -58,7 +69,7 @@ export class GithubActionsReporter implements Reporter {
       const formatted = formatMessage({
         command: 'error',
         properties: {
-          file: stack.file,
+          file: onWritePath(stack.file),
           title,
           line: String(stack.line),
           column: String(stack.column),
@@ -68,6 +79,10 @@ export class GithubActionsReporter implements Reporter {
       this.ctx.logger.log(`\n${formatted}`)
     }
   }
+}
+
+function defaultOnWritePath(path: string): string {
+  return path
 }
 
 // workflow command formatting based on

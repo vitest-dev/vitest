@@ -18,6 +18,8 @@ import { Cli } from './cli'
 
 // override default colors to disable them in tests
 Object.assign(tinyrainbow.default, tinyrainbow.getDefaultColors())
+// @ts-expect-error not typed global
+globalThis.__VITEST_GENERATE_UI_TOKEN__ = true
 
 export interface VitestRunnerCLIOptions {
   std?: 'inherit'
@@ -27,7 +29,7 @@ export interface VitestRunnerCLIOptions {
 }
 
 export async function runVitest(
-  config: UserConfig,
+  cliOptions: UserConfig,
   cliFilters: string[] = [],
   mode: VitestRunMode = 'test',
   viteOverrides: ViteUserConfig = {},
@@ -72,7 +74,7 @@ export async function runVitest(
   let ctx: Vitest | undefined
   let thrown = false
   try {
-    const { reporters, ...rest } = config
+    const { reporters, ...rest } = cliOptions
 
     ctx = await startVitest(mode, cliFilters, {
       watch: false,
@@ -149,6 +151,7 @@ export async function runVitest(
 
 interface CliOptions extends Partial<Options> {
   earlyReturn?: boolean
+  preserveAnsi?: boolean
 }
 
 async function runCli(command: 'vitest' | 'vite-node', _options?: CliOptions | string, ...args: string[]) {
@@ -169,6 +172,7 @@ async function runCli(command: 'vitest' | 'vite-node', _options?: CliOptions | s
     stdin: subprocess.stdin!,
     stdout: subprocess.stdout!,
     stderr: subprocess.stderr!,
+    preserveAnsi: typeof _options !== 'string' ? _options?.preserveAnsi : false,
   })
 
   let setDone: (value?: unknown) => void
@@ -269,7 +273,9 @@ export function resolvePath(baseUrl: string, path: string) {
   return resolve(dirname(filename), path)
 }
 
-export function useFS(root: string, structure: Record<string, string | ViteUserConfig | WorkspaceProjectConfiguration[]>) {
+export type TestFsStructure = Record<string, string | ViteUserConfig | WorkspaceProjectConfiguration[]>
+
+export function useFS(root: string, structure: TestFsStructure) {
   const files = new Set<string>()
   const hasConfig = Object.keys(structure).some(file => file.includes('.config.'))
   if (!hasConfig) {

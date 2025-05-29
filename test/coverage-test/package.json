@@ -21,7 +21,7 @@
     "istanbul-lib-report": "catalog:",
     "magic-string": "^0.30.17",
     "magicast": "^0.3.5",
-    "unplugin-swc": "^1.5.1",
+    "unplugin-swc": "^1.5.3",
     "vite": "latest",
     "vitest": "workspace:*",
     "vue": "catalog:"

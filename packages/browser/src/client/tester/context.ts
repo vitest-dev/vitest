@@ -1,11 +1,15 @@
 import type { Options as TestingLibraryOptions, UserEvent as TestingLibraryUserEvent } from '@testing-library/user-event'
 import type { RunnerTask } from 'vitest'
 import type {
+  BrowserLocators,
   BrowserPage,
   Locator,
   UserEvent,
 } from '../../../context'
+import type { IframeViewportEvent } from '../client'
 import type { BrowserRunnerState } from '../utils'
+import type { Locator as LocatorAPI } from './locators/index'
+import { getElementLocatorSelectors } from '@vitest/browser/utils'
 import { ensureAwaited, getBrowserState, getWorkerState } from '../utils'
 import { convertElementToCssSelector, processTimeoutOptions } from './utils'
 
@@ -241,15 +245,20 @@ export function cdp(): BrowserRunnerState['cdp'] {
 const screenshotIds: Record<string, Record<string, string>> = {}
 export const page: BrowserPage = {
   viewport(width, height) {
-    const id = getBrowserState().iframeId
-    channel.postMessage({ type: 'viewport', width, height, id })
+    const id = getBrowserState().iframeId!
+    channel.postMessage({
+      event: 'viewport',
+      width,
+      height,
+      iframeId: id,
+    } satisfies IframeViewportEvent)
     return new Promise((resolve, reject) => {
       channel.addEventListener('message', function handler(e) {
-        if (e.data.type === 'viewport:done' && e.data.id === id) {
+        if (e.data.event === 'viewport:done' && e.data.iframeId === id) {
           channel.removeEventListener('message', handler)
           resolve()
         }
-        if (e.data.type === 'viewport:fail' && e.data.id === id) {
+        if (e.data.event === 'viewport:fail' && e.data.iframeId === id) {
           channel.removeEventListener('message', handler)
           reject(new Error(e.data.error))
         }
@@ -311,9 +320,12 @@ export const page: BrowserPage = {
   elementLocator() {
     throw new Error(`Method "elementLocator" is not implemented in the "${provider}" provider.`)
   },
+  _createLocator() {
+    throw new Error(`Method "_createLocator" is not implemented in the "${provider}" provider.`)
+  },
   extend(methods) {
     for (const key in methods) {
-      (page as any)[key] = (methods as any)[key]
+      (page as any)[key] = (methods as any)[key].bind(page)
     }
     return page
   },
@@ -341,4 +353,36 @@ function convertToSelector(elementOrLocator: Element | Locator): string {
 
 function getTaskFullName(task: RunnerTask): string {
   return task.suite ? `${getTaskFullName(task.suite)} ${task.name}` : task.name
+}
+
+export const locators: BrowserLocators = {
+  createElementLocators: getElementLocatorSelectors,
+  extend(methods) {
+    const Locator = page._createLocator('css=body').constructor as typeof LocatorAPI
+    for (const method in methods) {
+      const cb = (methods as any)[method] as (...args: any[]) => string | Locator
+      // @ts-expect-error types are hard to make work
+      Locator.prototype[method] = function (...args: any[]) {
+        const selectorOrLocator = cb.call(this, ...args)
+        if (typeof selectorOrLocator === 'string') {
+          return this.locator(selectorOrLocator)
+        }
+        return selectorOrLocator
+      }
+      page[method as 'getByRole'] = function (...args: any[]) {
+        const selectorOrLocator = cb.call(this, ...args)
+        if (typeof selectorOrLocator === 'string') {
+          return page._createLocator(selectorOrLocator)
+        }
+        return selectorOrLocator
+      }
+    }
+  },
+}
+
+declare module '@vitest/browser/context' {
+  interface BrowserPage {
+    /** @internal */
+    _createLocator: (selector: string) => Locator
+  }
 }

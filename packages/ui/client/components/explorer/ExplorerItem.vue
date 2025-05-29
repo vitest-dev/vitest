@@ -158,7 +158,13 @@ const projectNameTextColor = computed(() => {
     case 'blue':
     case 'green':
     case 'magenta':
+    case 'black':
+    case 'red':
       return 'white'
+
+    case 'yellow':
+    case 'cyan':
+    case 'white':
     default:
       return 'black'
   }

@@ -1,5 +1,5 @@
 import type { File as RunnerTestFile, TaskEventPack, TaskResultPack, TaskUpdateEvent } from '@vitest/runner'
-import type { SerializedError } from '../public/utils'
+import type { SerializedError } from '@vitest/utils'
 import type { UserConsoleLog } from '../types/general'
 import type { Vitest } from './core'
 import type { TestProject } from './project'

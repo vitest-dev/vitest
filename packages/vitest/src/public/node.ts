@@ -130,6 +130,7 @@ export type { TestRunResult } from '../node/types/tests'
 export const TestFile: typeof _TestFile = _TestFile
 export type { WorkerContext } from '../node/types/worker'
 export { createViteLogger } from '../node/viteLogger'
+export type { WatcherTriggerPattern } from '../node/watcher'
 
 /**
  * @deprecated Use `ModuleDiagnostic` instead
@@ -147,8 +148,8 @@ export type {
   RootAndTarget as TypeCheckRootAndTarget,
 } from '../typecheck/types'
 
+export type { TestExecutionMethod as TestExecutionType } from '../types/worker'
 export { createDebugger } from '../utils/debugger'
-
 export type {
   RunnerTask,
   RunnerTaskResult,

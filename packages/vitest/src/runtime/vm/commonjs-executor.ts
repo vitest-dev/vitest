@@ -92,6 +92,12 @@ export class CommonjsExecutor {
         )
       }
 
+      static registerHooks = () => {
+        throw new Error(
+          `[vitest] "registerHooks" is not available when running in Vitest.`,
+        )
+      }
+
       _compile(code: string, filename: string) {
         const cjsModule = Module.wrap(code)
         const script = new vm.Script(cjsModule, {

@@ -2,6 +2,7 @@ import type { ExpectStatic } from '@vitest/expect'
 import type {
   CancelReason,
   File,
+  ImportDuration,
   Suite,
   Task,
   TestContext,
@@ -12,6 +13,7 @@ import type { SerializedConfig } from '../config'
 import type { VitestExecutor } from '../execute'
 import { getState, GLOBAL_EXPECT, setState } from '@vitest/expect'
 import { getNames, getTestName, getTests } from '@vitest/runner/utils'
+import { normalize } from 'pathe'
 import { createExpect } from '../../integrations/chai/index'
 import { inject } from '../../integrations/inject'
 import { getSnapshotClient } from '../../integrations/snapshot/chai'
@@ -76,7 +78,7 @@ export class VitestTestRunner implements VitestRunner {
     this.workerState.current = test.suite || test.file
   }
 
-  onCancel(_reason: CancelReason): void {
+  cancel(_reason: CancelReason): void {
     this.cancelRun = true
   }
 
@@ -94,8 +96,6 @@ export class VitestTestRunner implements VitestRunner {
     if (test.mode !== 'run' && test.mode !== 'queued') {
       return
     }
-
-    clearModuleMocks(this.config)
 
     this.workerState.current = test
   }
@@ -117,6 +117,7 @@ export class VitestTestRunner implements VitestRunner {
   }
 
   onBeforeTryTask(test: Task): void {
+    clearModuleMocks(this.config)
     this.snapshotClient.clearTest(test.file.filepath, test.id)
     setState(
       {
@@ -181,6 +182,17 @@ export class VitestTestRunner implements VitestRunner {
       },
     })
     return context
+  }
+
+  getImportDurations(): Record<string, ImportDuration> {
+    const entries = [...(this.workerState.moduleExecutionInfo?.entries() ?? [])]
+    return Object.fromEntries(entries.map(([filepath, { duration, selfTime }]) => [
+      normalize(filepath),
+      {
+        selfTime,
+        totalTime: duration,
+      },
+    ]))
   }
 }
 
