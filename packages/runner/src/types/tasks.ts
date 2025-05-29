@@ -155,6 +155,15 @@ export interface TaskResult {
   pending?: boolean
 }
 
+/** The time spent importing & executing a non-externalized file. */
+export interface ImportDuration {
+  /** The time spent importing & executing the file itself, not counting all non-externalized imports that the file does. */
+  selfTime: number
+
+  /** The time spent importing & executing the file and all its imports. */
+  totalTime: number
+}
+
 /**
  * The tuple representing a single task update.
  * Usually reported after the task finishes.
@@ -239,6 +248,9 @@ export interface File extends Suite {
    * @internal
    */
   local?: boolean
+
+  /** The time spent importing every non-externalized dependency that Vitest has processed. */
+  importDurations?: Record<string, ImportDuration>
 }
 
 export interface Test<ExtraContext = object> extends TaskPopulated {

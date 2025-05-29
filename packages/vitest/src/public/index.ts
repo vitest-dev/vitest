@@ -270,6 +270,7 @@ export type {
   ExtendedContext,
   HookCleanupCallback,
   HookListener,
+  ImportDuration,
   OnTestFailedHandler,
   OnTestFinishedHandler,
   RunMode,
