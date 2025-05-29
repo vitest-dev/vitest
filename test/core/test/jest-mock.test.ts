@@ -377,6 +377,19 @@ describe('jest mock compat layer', () => {
     expect(obj.method).toHaveBeenCalledTimes(1)
   })
 
+  it('spyOn on the getter multiple times', () => {
+    const obj = {
+      get getter() {
+        return 'original'
+      },
+    }
+
+    vi.spyOn(obj, 'getter', 'get').mockImplementation(() => 'mocked')
+    vi.spyOn(obj, 'getter', 'get')
+
+    expect(obj.getter).toBe('mocked')
+  })
+
   it('spyOn multiple times', () => {
     const obj = {
       method() {
