@@ -3,7 +3,7 @@ import { isV8Provider, readCoverageMap, runVitest, test } from '../utils'
 
 test('{ all: true } includes uncovered files that require custom transform', async () => {
   await runVitest({
-    workspace: 'fixtures/configs/vitest.workspace.multi-transforms.ts',
+    config: './fixtures/configs/vitest.config.multi-transforms.ts',
     coverage: {
       all: true,
       extension: ['.ts', '.custom-1', '.custom-2'],
