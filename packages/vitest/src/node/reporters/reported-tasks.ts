@@ -1,4 +1,5 @@
 import type {
+  ImportDuration,
   Task as RunnerTask,
   Test as RunnerTestCase,
   File as RunnerTestFile,
@@ -475,6 +476,7 @@ export class TestModule extends SuiteImplementation {
     const environmentSetupDuration = this.task.environmentLoad || 0
     const duration = this.task.result?.duration || 0
     const heap = this.task.result?.heap
+    const importDurations = this.task.importDurations ?? {}
     return {
       environmentSetupDuration,
       prepareDuration,
@@ -482,6 +484,7 @@ export class TestModule extends SuiteImplementation {
       setupDuration,
       duration,
       heap,
+      importDurations,
     }
   }
 }
@@ -634,6 +637,10 @@ export interface ModuleDiagnostic {
    * This value is only available if the test was executed with `logHeapUsage` flag.
    */
   readonly heap: number | undefined
+  /**
+   * The time spent importing every non-externalized dependency that Vitest has processed.
+   */
+  readonly importDurations: Record<string, ImportDuration>
 }
 
 function storeTask(

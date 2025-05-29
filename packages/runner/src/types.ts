@@ -23,6 +23,7 @@ export type {
   Fixtures,
   HookCleanupCallback,
   HookListener,
+  ImportDuration,
   InferFixturesTypes,
   OnTestFailedHandler,
   OnTestFinishedHandler,

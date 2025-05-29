@@ -687,7 +687,7 @@ export interface InlineConfig {
 
   /**
    * Options for configuring cache policy.
-   * @default { dir: 'node_modules/.vite/vitest' }
+   * @default { dir: 'node_modules/.vite/vitest/{project-hash}' }
    */
   cache?:
     | false

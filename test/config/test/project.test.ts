@@ -15,7 +15,7 @@ test.each([
 ])('should match projects correctly: $pattern', async ({ pattern, expected }) => {
   const { ctx, stderr, stdout } = await runVitest({
     root: 'fixtures/project',
-    reporters: ['basic'],
+    reporters: ['default'],
     project: pattern,
   })
 

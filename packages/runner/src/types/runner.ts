@@ -1,6 +1,7 @@
 import type { DiffOptions } from '@vitest/utils/diff'
 import type {
   File,
+  ImportDuration,
   SequenceHooks,
   SequenceSetupFiles,
   Suite,
@@ -160,6 +161,10 @@ export interface VitestRunner {
    * Function that is called when the runner attempts to get the value when `test.extend` is used with `{ injected: true }`
    */
   injectValue?: (key: string) => unknown
+  /**
+   * Gets the time spent importing each individual non-externalized file that Vitest collected.
+   */
+  getImportDurations?: () => Record<string, ImportDuration>
   /**
    * Publicly available configuration.
    */

@@ -44,7 +44,7 @@ const plugins = [
   oxc({
     transform: {
       target: 'node14',
-      define: process.env.NO_VITE_TEST_WATCHER_DEBUG
+      define: process.env.VITE_TEST_WATCHER_DEBUG === 'false'
         ? { 'process.env.VITE_TEST_WATCHER_DEBUG': 'false' }
         : {},
     },
