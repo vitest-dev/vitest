@@ -99,7 +99,8 @@ test('{ all: true } includes uncovered files that require custom transform', asy
         },
       }
     `)
-  } else {
+  }
+  else {
     expect(fileCoverages).toMatchInlineSnapshot(`
       {
         "<process-cwd>/fixtures/src/covered.custom-1": {
