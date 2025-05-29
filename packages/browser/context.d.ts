@@ -53,9 +53,15 @@ export interface ComparatorRegistry {
 export interface ScreenshotMatcherOptions<
   ComparatorName extends keyof ComparatorRegistry = keyof ComparatorRegistry
 > {
-  comparatorOptions: {
-    name: Comparator
-  } & ComparatorRegistry[Comparator]
+  /**
+   * The name of the comparator to use for visual diffing.
+   *
+   * Must be one of the keys from {@linkcode ComparatorRegistry}.
+   *
+   * @defaultValue `'pixelmatch'`
+   */
+  comparatorName: ComparatorName
+  comparatorOptions: ComparatorRegistry[ComparatorName]
   screenshotOptions: Omit<
     ScreenshotOptions,
     'element' | 'base64' | 'path' | 'save' | 'type'
