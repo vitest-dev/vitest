@@ -1,7 +1,8 @@
-import type { Comparators } from '../../../../../screenshot'
+import type { ComparatorRegistry } from '../../../../../context'
+import type { Comparator } from '../types'
 import pm from 'pixelmatch'
 
-export const pixelmatch: Comparators['pixelmatch']['instance'] = (
+export const pixelmatch: Comparator<ComparatorRegistry['pixelmatch']> = (
   reference,
   actual,
   { createDiff, ...options },
