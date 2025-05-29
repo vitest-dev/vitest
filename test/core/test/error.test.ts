@@ -69,6 +69,15 @@ test('Can correctly process error where cause leads to an infinite recursion', (
   expect(serialisedError.cause.message).toBeTypeOf('string')
 })
 
+test('simple error has message, stack and name', () => {
+  const error = new Error('My error')
+  const serialisedError = processError(error)
+
+  expect(error.message).toBe(serialisedError.message)
+  expect(error.name).toBe(serialisedError.name)
+  expect(error.stack).toBe(serialisedError.stack)
+})
+
 test('error with toJSON has message, stack and name', () => {
   class SerializableError extends Error {
     toJSON() {
