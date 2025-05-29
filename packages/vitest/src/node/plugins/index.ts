@@ -40,191 +40,194 @@ export async function VitestPlugin(
   return [
     <VitePlugin>{
       name: 'vitest',
-      enforce: 'post',
+      enforce: 'pre',
       options() {
         this.meta.watchMode = false
       },
-      async config(viteConfig) {
-        if (options.watch) {
+      config: {
+        order: 'post',
+        async handler(viteConfig) {
+          if (options.watch) {
           // Earlier runs have overwritten values of the `options`.
           // Reset it back to initial user config before setting up the server again.
-          options = deepMerge({}, userConfig) as UserConfig
-        }
+            options = deepMerge({}, userConfig) as UserConfig
+          }
 
-        // preliminary merge of options to be able to create server options for vite
-        // however to allow vitest plugins to modify vitest config values
-        // this is repeated in configResolved where the config is final
-        const testConfig = deepMerge(
-          {} as UserConfig,
-          configDefaults,
-          removeUndefinedValues(viteConfig.test ?? {}),
-          options,
-        )
-        testConfig.api = resolveApiServerConfig(testConfig, defaultPort)
+          // preliminary merge of options to be able to create server options for vite
+          // however to allow vitest plugins to modify vitest config values
+          // this is repeated in configResolved where the config is final
+          const testConfig = deepMerge(
+            {} as UserConfig,
+            configDefaults,
+            removeUndefinedValues(viteConfig.test ?? {}),
+            options,
+          )
+          testConfig.api = resolveApiServerConfig(testConfig, defaultPort)
 
-        // store defines for globalThis to make them
-        // reassignable when running in worker in src/runtime/setup.ts
-        const defines: Record<string, any> = deleteDefineConfig(viteConfig)
+          // store defines for globalThis to make them
+          // reassignable when running in worker in src/runtime/setup.ts
+          const defines: Record<string, any> = deleteDefineConfig(viteConfig)
 
-        ;(options as unknown as ResolvedConfig).defines = defines
+          ;(options as unknown as ResolvedConfig).defines = defines
 
-        let open: string | boolean | undefined = false
+          let open: string | boolean | undefined = false
 
-        if (testConfig.ui && testConfig.open) {
-          open = testConfig.uiBase ?? '/__vitest__/'
-        }
+          if (testConfig.ui && testConfig.open) {
+            open = testConfig.uiBase ?? '/__vitest__/'
+          }
 
-        const resolveOptions = getDefaultResolveOptions()
+          const resolveOptions = getDefaultResolveOptions()
 
-        const config: ViteConfig = {
-          root: viteConfig.test?.root || options.root,
-          define: {
+          const config: ViteConfig = {
+            root: viteConfig.test?.root || options.root,
+            define: {
             // disable replacing `process.env.NODE_ENV` with static string by vite:client-inject
-            'process.env.NODE_ENV': 'process.env.NODE_ENV',
-          },
-          esbuild:
-            viteConfig.esbuild === false
-              ? false
-              : {
-                  // Lowest target Vitest supports is Node18
-                  target: viteConfig.esbuild?.target || 'node18',
-                  sourcemap: 'external',
-                  // Enables using ignore hint for coverage providers with @preserve keyword
-                  legalComments: 'inline',
-                },
-          resolve: {
-            ...resolveOptions,
-            alias: testConfig.alias,
-          },
-          server: {
-            ...testConfig.api,
-            open,
-            hmr: false,
-            ws: testConfig.api?.middlewareMode ? false : undefined,
-            preTransformRequests: false,
-            fs: {
-              allow: resolveFsAllow(options.root || process.cwd(), testConfig.config),
+              'process.env.NODE_ENV': 'process.env.NODE_ENV',
             },
-          },
-          build: {
+            esbuild:
+              viteConfig.esbuild === false
+                ? false
+                : {
+                    // Lowest target Vitest supports is Node18
+                    target: viteConfig.esbuild?.target || 'node18',
+                    sourcemap: 'external',
+                    // Enables using ignore hint for coverage providers with @preserve keyword
+                    legalComments: 'inline',
+                  },
+            resolve: {
+              ...resolveOptions,
+              alias: testConfig.alias,
+            },
+            server: {
+              ...testConfig.api,
+              open,
+              hmr: false,
+              ws: testConfig.api?.middlewareMode ? false : undefined,
+              preTransformRequests: false,
+              fs: {
+                allow: resolveFsAllow(options.root || process.cwd(), testConfig.config),
+              },
+            },
+            build: {
             // Vitest doesn't use outputDir, but this value affects what folders are watched
             // https://github.com/vitest-dev/vitest/issues/5429
             // This works for Vite <5.2.10
-            outDir: 'dummy-non-existing-folder',
-            // This works for Vite >=5.2.10
-            // https://github.com/vitejs/vite/pull/16453
-            emptyOutDir: false,
-          },
-          // eslint-disable-next-line ts/ban-ts-comment
-          // @ts-ignore Vite 6 compat
-          environments: {
-            ssr: {
-              resolve: resolveOptions,
+              outDir: 'dummy-non-existing-folder',
+              // This works for Vite >=5.2.10
+              // https://github.com/vitejs/vite/pull/16453
+              emptyOutDir: false,
             },
-          },
-          test: {
-            poolOptions: {
-              threads: {
-                isolate:
-                  options.poolOptions?.threads?.isolate
-                  ?? options.isolate
-                  ?? testConfig.poolOptions?.threads?.isolate
-                  ?? viteConfig.test?.isolate,
-              },
-              forks: {
-                isolate:
-                  options.poolOptions?.forks?.isolate
-                  ?? options.isolate
-                  ?? testConfig.poolOptions?.forks?.isolate
-                  ?? viteConfig.test?.isolate,
-              },
-            },
-            root: testConfig.root ?? viteConfig.test?.root,
-            deps: testConfig.deps ?? viteConfig.test?.deps,
-          },
-        }
-
-        // inherit so it's available in VitestOptimizer
-        // I cannot wait to rewrite all of this in Vitest 4
-        if (options.cache != null) {
-          config.test!.cache = options.cache
-        }
-
-        if (vitest.configOverride.project) {
-          // project filter was set by the user, so we need to filter the project
-          options.project = vitest.configOverride.project
-        }
-
-        config.customLogger = createViteLogger(
-          vitest.logger,
-          viteConfig.logLevel || 'warn',
-          {
-            allowClearScreen: false,
-          },
-        )
-        config.customLogger = silenceImportViteIgnoreWarning(config.customLogger)
-
-        // we want inline dependencies to be resolved by analyser plugin so module graph is populated correctly
-        if (viteConfig.ssr?.noExternal !== true) {
-          const inline = testConfig.server?.deps?.inline
-          if (inline === true) {
-            config.ssr = { noExternal: true }
-          }
-          else {
-            const noExternal = viteConfig.ssr?.noExternal
-            const noExternalArray
-              = typeof noExternal !== 'undefined'
-                ? toArray(noExternal)
-                : undefined
-            // filter the same packages
-            const uniqueInline
-              = inline && noExternalArray
-                ? inline.filter(dep => !noExternalArray.includes(dep))
-                : inline
-            config.ssr = {
-              noExternal: uniqueInline,
-            }
-          }
-        }
-
-        // chokidar fsevents is unstable on macos when emitting "ready" event
-        if (
-          process.platform === 'darwin'
-          && process.env.VITE_TEST_WATCHER_DEBUG
-        ) {
-          const watch = config.server!.watch
-          if (watch) {
             // eslint-disable-next-line ts/ban-ts-comment
             // @ts-ignore Vite 6 compat
-            watch.useFsEvents = false
-            watch.usePolling = false
+            environments: {
+              ssr: {
+                resolve: resolveOptions,
+              },
+            },
+            test: {
+              poolOptions: {
+                threads: {
+                  isolate:
+                    options.poolOptions?.threads?.isolate
+                    ?? options.isolate
+                    ?? testConfig.poolOptions?.threads?.isolate
+                    ?? viteConfig.test?.isolate,
+                },
+                forks: {
+                  isolate:
+                    options.poolOptions?.forks?.isolate
+                    ?? options.isolate
+                    ?? testConfig.poolOptions?.forks?.isolate
+                    ?? viteConfig.test?.isolate,
+                },
+              },
+              root: testConfig.root ?? viteConfig.test?.root,
+              deps: testConfig.deps ?? viteConfig.test?.deps,
+            },
           }
-        }
 
-        const classNameStrategy
-          = (typeof testConfig.css !== 'boolean'
-            && testConfig.css?.modules?.classNameStrategy)
-          || 'stable'
+          // inherit so it's available in VitestOptimizer
+          // I cannot wait to rewrite all of this in Vitest 4
+          if (options.cache != null) {
+            config.test!.cache = options.cache
+          }
 
-        if (classNameStrategy !== 'scoped') {
-          config.css ??= {}
-          config.css.modules ??= {}
-          if (config.css.modules) {
-            config.css.modules.generateScopedName = (
-              name: string,
-              filename: string,
-            ) => {
-              const root = vitest.config.root || options.root || process.cwd()
-              return generateScopedClassName(
-                classNameStrategy,
-                name,
-                relative(root, filename),
-              )!
+          if (vitest.configOverride.project) {
+          // project filter was set by the user, so we need to filter the project
+            options.project = vitest.configOverride.project
+          }
+
+          config.customLogger = createViteLogger(
+            vitest.logger,
+            viteConfig.logLevel || 'warn',
+            {
+              allowClearScreen: false,
+            },
+          )
+          config.customLogger = silenceImportViteIgnoreWarning(config.customLogger)
+
+          // we want inline dependencies to be resolved by analyser plugin so module graph is populated correctly
+          if (viteConfig.ssr?.noExternal !== true) {
+            const inline = testConfig.server?.deps?.inline
+            if (inline === true) {
+              config.ssr = { noExternal: true }
+            }
+            else {
+              const noExternal = viteConfig.ssr?.noExternal
+              const noExternalArray
+                = typeof noExternal !== 'undefined'
+                  ? toArray(noExternal)
+                  : undefined
+              // filter the same packages
+              const uniqueInline
+                = inline && noExternalArray
+                  ? inline.filter(dep => !noExternalArray.includes(dep))
+                  : inline
+              config.ssr = {
+                noExternal: uniqueInline,
+              }
             }
           }
-        }
 
-        return config
+          // chokidar fsevents is unstable on macos when emitting "ready" event
+          if (
+            process.platform === 'darwin'
+            && process.env.VITE_TEST_WATCHER_DEBUG
+          ) {
+            const watch = config.server!.watch
+            if (watch) {
+            // eslint-disable-next-line ts/ban-ts-comment
+            // @ts-ignore Vite 6 compat
+              watch.useFsEvents = false
+              watch.usePolling = false
+            }
+          }
+
+          const classNameStrategy
+            = (typeof testConfig.css !== 'boolean'
+              && testConfig.css?.modules?.classNameStrategy)
+            || 'stable'
+
+          if (classNameStrategy !== 'scoped') {
+            config.css ??= {}
+            config.css.modules ??= {}
+            if (config.css.modules) {
+              config.css.modules.generateScopedName = (
+                name: string,
+                filename: string,
+              ) => {
+                const root = vitest.config.root || options.root || process.cwd()
+                return generateScopedClassName(
+                  classNameStrategy,
+                  name,
+                  relative(root, filename),
+                )!
+              }
+            }
+          }
+
+          return config
+        },
       },
       async configResolved(viteConfig) {
         const viteConfigTest = (viteConfig.test as UserConfig) || {}
