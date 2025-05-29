@@ -33,7 +33,7 @@ export function WorkspaceVitestPlugin(
   return <VitePlugin[]>[
     {
       name: 'vitest:project',
-      enforce: 'pre',
+      enforce: 'post',
       options() {
         this.meta.watchMode = false
       },
@@ -190,9 +190,9 @@ export function WorkspaceVitestPlugin(
     },
     SsrReplacerPlugin(),
     ...CSSEnablerPlugin(project),
-    CoverageTransform(project.ctx),
+    CoverageTransform(project.vitest),
     ...MocksPlugins(),
-    VitestProjectResolver(project.ctx),
+    VitestProjectResolver(project.vitest),
     VitestOptimizer(),
     NormalizeURLPlugin(),
   ]

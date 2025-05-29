@@ -24,7 +24,6 @@ import {
 import { benchmarkConfigDefaults, configDefaults } from '../../defaults'
 import { isCI, stdProvider } from '../../utils/env'
 import { getWorkersCountByPercentage } from '../../utils/workers'
-import { VitestCache } from '../cache'
 import { builtinPools } from '../pool'
 import { BaseSequencer } from '../sequencers/BaseSequencer'
 import { RandomSequencer } from '../sequencers/RandomSequencer'
@@ -745,29 +744,13 @@ export function resolveConfig(
   }
 
   if (resolved.cache !== false) {
-    let cacheDir = VitestCache.resolveCacheDir(
-      '',
-      viteConfig.cacheDir,
-      resolved.name,
-    )
-
-    if (resolved.cache && resolved.cache.dir) {
-      logger.console.warn(
-        c.yellow(
-          `${c.inverse(
-            c.yellow(' Vitest '),
-          )} "cache.dir" is deprecated, use Vite's "cacheDir" instead if you want to change the cache director. Note caches will be written to "cacheDir\/vitest"`,
-        ),
-      )
-
-      cacheDir = VitestCache.resolveCacheDir(
-        resolved.root,
-        resolved.cache.dir,
-        resolved.name,
+    if (resolved.cache && typeof resolved.cache.dir === 'string') {
+      vitest.logger.deprecate(
+        `"cache.dir" is deprecated, use Vite's "cacheDir" instead if you want to change the cache director. Note caches will be written to "cacheDir\/vitest"`,
       )
     }
 
-    resolved.cache = { dir: cacheDir }
+    resolved.cache = { dir: viteConfig.cacheDir }
   }
 
   resolved.sequence ??= {} as any
