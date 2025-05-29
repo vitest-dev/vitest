@@ -363,6 +363,20 @@ describe('jest mock compat layer', () => {
     expect(obj.property).toBe(true)
   })
 
+  it('respyin on a spy resets the counter', () => {
+    const obj = {
+      method() {
+        return 'original'
+      },
+    }
+    vi.spyOn(obj, 'method')
+    obj.method()
+    expect(obj.method).toHaveBeenCalledTimes(1)
+    vi.spyOn(obj, 'method')
+    obj.method()
+    expect(obj.method).toHaveBeenCalledTimes(1)
+  })
+
   it('spyOn multiple times', () => {
     const obj = {
       method() {
@@ -383,9 +397,9 @@ describe('jest mock compat layer', () => {
 
     spy2.mockRestore()
 
-    expect(obj.method()).toBe('mocked')
-    expect(vi.isMockFunction(obj.method)).toBe(true)
-    expect(obj.method).toBe(spy1)
+    expect(obj.method()).toBe('original')
+    expect(vi.isMockFunction(obj.method)).toBe(false)
+    expect(obj.method).not.toBe(spy1)
 
     spy1.mockRestore()
     expect(vi.isMockFunction(obj.method)).toBe(false)
@@ -565,6 +579,7 @@ describe('jest mock compat layer', () => {
       it('has dispose property', () => {
         expect(vi.fn()[Symbol.dispose]).toBeTypeOf('function')
       })
+
       it('calls mockRestore when disposing', () => {
         const fn = vi.fn()
         const restoreSpy = vi.spyOn(fn, 'mockRestore')
@@ -573,10 +588,12 @@ describe('jest mock compat layer', () => {
         }
         expect(restoreSpy).toHaveBeenCalled()
       })
+
       it('allows disposal when using mockImplementation', () => {
         expect(vi.fn().mockImplementation(() => {})[Symbol.dispose]).toBeTypeOf('function')
       })
     })
+
     describe.skipIf(Symbol.dispose)('in environments not supporting it', () => {
       it('does not have dispose property', () => {
         expect(vi.fn()[Symbol.dispose]).toBeUndefined()
