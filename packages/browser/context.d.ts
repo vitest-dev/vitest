@@ -1,8 +1,7 @@
 import { SerializedConfig } from 'vitest'
+import type pm from 'pixelmatch'
 import { ARIARole } from './aria-role.js'
 import {} from './matchers.js'
-
-export * from './screenshot.js'
 
 export type BufferEncoding =
   | 'ascii'
@@ -25,6 +24,51 @@ export interface FsOptions {
 
 export interface CDPSession {
   // methods are defined by the provider type augmentation
+}
+
+export interface ScreenshotOptions {
+  element?: Element | Locator
+  /**
+   * Path relative to the current test file.
+   * @default `__screenshots__/${testFileName}/${testName}.png`
+   */
+  path?: string
+  /**
+   * Will also return the base64 encoded screenshot alongside the path.
+   */
+  base64?: boolean
+  /**
+   * Keep the screenshot on the file system. If file is not saved,
+   * `page.screenshot` always returns `base64` screenshot.
+   * @default true
+   */
+  save?: boolean
+}
+
+export interface ComparatorRegistry {
+  // @todo percentage-based threshold
+  pixelmatch: NonNullable<Parameters<typeof pm>['5']>
+}
+
+export interface ScreenshotMatcherOptions<
+  ComparatorName extends keyof ComparatorRegistry = keyof ComparatorRegistry
+> {
+  comparatorOptions: {
+    name: Comparator
+  } & ComparatorRegistry[Comparator]
+  screenshotOptions: Omit<
+    ScreenshotOptions,
+    'element' | 'base64' | 'path' | 'save' | 'type'
+  >
+  /**
+   * Time to wait until a stable screenshot is found.
+   *
+   * Setting this value to `0` disables the timeout, but if a stable screenshot
+   * can't be determined the process will not end.
+   *
+   * @default 5000
+   */
+  timeout?: number
 }
 
 export interface BrowserCommands {

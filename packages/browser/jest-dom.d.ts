@@ -1,7 +1,7 @@
 // Disable automatic exports.
 
 import { ARIARole } from './aria-role.ts'
-import { Comparators, ScreenshotMatcherOptions } from './screenshot.js'
+import { ComparatorRegistry, ScreenshotMatcherOptions } from './context.js'
 
 export interface TestingLibraryMatchers<E, R> {
   /**
@@ -629,11 +629,11 @@ export interface TestingLibraryMatchers<E, R> {
    */
   toHaveSelection(selection?: string): R
 
-  toMatchScreenshot<Comparator extends keyof Comparators>(
-    name?: string,
-    options?: ScreenshotMatcherOptions<Comparator>,
+  toMatchScreenshot<ComparatorName extends keyof ComparatorRegistry>(
+    options?: ScreenshotMatcherOptions<ComparatorName>,
   ): Promise<R>
-  toMatchScreenshot<Comparator extends keyof Comparators>(
-    options?: ScreenshotMatcherOptions<Comparator>,
+  toMatchScreenshot<ComparatorName extends keyof ComparatorRegistry>(
+    name?: string,
+    options?: ScreenshotMatcherOptions<ComparatorName>,
   ): Promise<R>
 }
