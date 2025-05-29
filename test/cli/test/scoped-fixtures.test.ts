@@ -221,7 +221,7 @@ test('worker fixture works in vmThreads and runs for every file', async () => {
     '2-basic.test.ts': ({ extendedTest }) => {
       extendedTest('test1', ({ worker: _worker }) => {})
     },
-    'vitest.config.ts': {
+    'vitest.config.js': {
       test: {
         globals: true,
         maxWorkers: 1,
@@ -261,7 +261,7 @@ test('worker fixtures in isolated tests init and teardown twice', async () => {
     '2-basic.test.ts': ({ extendedTest }) => {
       extendedTest('test1', ({ worker: _worker }) => {})
     },
-    'vitest.config.ts': {
+    'vitest.config.js': {
       test: {
         globals: true,
         isolate: true,
@@ -285,8 +285,7 @@ test('worker fixtures in isolated tests init and teardown twice', async () => {
   `)
 })
 
-// TODO: no-isolate breaks tests
-test.skip('worker fixture initiates and torn down in different workers', async () => {
+test('worker fixture initiates and torn down in different workers', async () => {
   const { stderr, fixtures, tests } = await runFixtureTests(({ log }) => it.extend<{ worker: string }>({
     worker: [
       async ({}, use) => {
@@ -303,7 +302,7 @@ test.skip('worker fixture initiates and torn down in different workers', async (
     '2-basic.test.ts': ({ extendedTest }) => {
       extendedTest('test1', ({ worker: _worker }) => {})
     },
-    'vitest.config.ts': {
+    'vitest.config.js': {
       test: {
         globals: true,
         isolate: false,
@@ -317,8 +316,8 @@ test.skip('worker fixture initiates and torn down in different workers', async (
   expect(stderr).toBe('')
   expect(fixtures).toMatchInlineSnapshot(`
     ">> fixture | init worker | test1
-    >> fixture | teardown worker | test1
     >> fixture | init worker | test1
+    >> fixture | teardown worker | test1
     >> fixture | teardown worker | test1"
   `)
   expect(tests).toMatchInlineSnapshot(`

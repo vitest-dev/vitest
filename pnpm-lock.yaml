@@ -1001,8 +1001,8 @@ importers:
         specifier: 'catalog:'
         version: 0.2.14
       tinypool:
-        specifier: https://pkg.pr.new/tinypool@115
-        version: https://pkg.pr.new/tinypool@115
+        specifier: https://pkg.pr.new/tinypool@b0f41a1
+        version: https://pkg.pr.new/tinypool@b0f41a1
       tinyrainbow:
         specifier: 'catalog:'
         version: 2.0.0
@@ -8159,8 +8159,8 @@ packages:
       picocolors:
         optional: true
 
-  tinypool@https://pkg.pr.new/tinypool@115:
-    resolution: {tarball: https://pkg.pr.new/tinypool@115}
+  tinypool@https://pkg.pr.new/tinypool@b0f41a1:
+    resolution: {tarball: https://pkg.pr.new/tinypool@b0f41a1}
     version: 1.0.2
     engines: {node: ^18.0.0 || >=20.0.0}
 
@@ -16477,7 +16477,7 @@ snapshots:
     optionalDependencies:
       picocolors: 1.1.1
 
-  tinypool@https://pkg.pr.new/tinypool@115: {}
+  tinypool@https://pkg.pr.new/tinypool@b0f41a1: {}
 
   tinyrainbow@2.0.0: {}
 

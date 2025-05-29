@@ -75,6 +75,10 @@ export async function runVitest(
     const { reporters, ...rest } = cliOptions
 
     ctx = await startVitest(mode, cliFilters, {
+      // Test cases are already run with multiple forks/threads
+      maxWorkers: 1,
+      minWorkers: 1,
+
       watch: false,
       // "none" can be used to disable passing "reporter" option so that default value is used (it's not same as reporters: ["default"])
       ...(reporters === 'none' ? {} : reporters ? { reporters } : { reporters: ['verbose'] }),
@@ -83,10 +87,6 @@ export async function runVitest(
         NO_COLOR: 'true',
         ...rest.env,
       },
-
-      // Test cases are already run with multiple forks/threads
-      maxWorkers: 1,
-      minWorkers: 1,
     }, {
       ...viteOverrides,
       server: {
@@ -347,6 +347,11 @@ export async function runInlineTests(
   const fs = useFS(root, structure)
   const vitest = await runVitest({
     root,
+    globals: true,
+    isolate: false,
+    maxWorkers: 2,
+    minWorkers: 2,
+    pool: 'threads',
     ...config,
   }, [], 'test', {}, options)
   return {

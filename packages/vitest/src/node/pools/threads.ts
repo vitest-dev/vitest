@@ -105,6 +105,11 @@ export function createThreadsPool(
       vitest.state.clearFiles(project, paths)
 
       const { workerPort, port } = createWorkerChannel(project, name === 'collect')
+      const onClose = () => {
+        port.close()
+        workerPort.close()
+      }
+
       const workerId = ++id
       const data: WorkerContext = {
         pool: 'threads',
@@ -119,7 +124,7 @@ export function createThreadsPool(
         providedContext: project.getProvidedContext(),
       }
       try {
-        await pool.run(data, { transferList: [workerPort], name })
+        await pool.run(data, { transferList: [workerPort], name, channel: { onClose } })
       }
       catch (error) {
         // Worker got stuck and won't terminate - this may cause process to hang
@@ -144,10 +149,6 @@ export function createThreadsPool(
         else {
           throw error
         }
-      }
-      finally {
-        port.unref()
-        workerPort.unref()
       }
     }
 

@@ -19,12 +19,12 @@ import { createMethodsRPC } from './rpc'
 
 function createChildProcessChannel(project: TestProject, collect = false) {
   const emitter = new EventEmitter()
-  const cleanup = () => emitter.removeAllListeners()
 
   const events = { message: 'message', response: 'response' }
   const channel: TinypoolChannel = {
     onMessage: callback => emitter.on(events.message, callback),
     postMessage: message => emitter.emit(events.response, message),
+    onClose: () => emitter.removeAllListeners(),
   }
 
   const rpc = createBirpc<RunnerRPC, RuntimeRPC>(createMethodsRPC(project, { cacheFs: true, collect }), {
@@ -44,7 +44,7 @@ function createChildProcessChannel(project: TestProject, collect = false) {
 
   project.vitest.onCancel(reason => rpc.onCancel(reason))
 
-  return { channel, cleanup }
+  return channel
 }
 
 export function createForksPool(
@@ -110,7 +110,7 @@ export function createForksPool(
       const paths = files.map(f => f.filepath)
       vitest.state.clearFiles(project, paths)
 
-      const { channel, cleanup } = createChildProcessChannel(project, name === 'collect')
+      const channel = createChildProcessChannel(project, name === 'collect')
       const workerId = ++id
       const data: ContextRPC = {
         pool: 'forks',
@@ -147,9 +147,6 @@ export function createForksPool(
         else {
           throw error
         }
-      }
-      finally {
-        cleanup()
       }
     }
 
