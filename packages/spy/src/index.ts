@@ -460,7 +460,7 @@ export function spyOn<T, K extends keyof T>(
   let state: InternalState | undefined
 
   const descriptor = getDescriptor(obj, method)
-  const fn = descriptor && descriptor[1][accessType || 'value']
+  const fn = descriptor && descriptor[accessType || 'value']
 
   // inherit implementations if it was already mocked
   if (isMockFunction(fn)) {
@@ -677,16 +677,16 @@ export function fn<T extends Procedure = Procedure>(
 function getDescriptor(
   obj: any,
   method: string | symbol | number,
-): [any, PropertyDescriptor] | undefined {
+): PropertyDescriptor | undefined {
   const objDescriptor = Object.getOwnPropertyDescriptor(obj, method)
   if (objDescriptor) {
-    return [obj, objDescriptor]
+    return objDescriptor
   }
   let currentProto = Object.getPrototypeOf(obj)
   while (currentProto !== null) {
     const descriptor = Object.getOwnPropertyDescriptor(currentProto, method)
     if (descriptor) {
-      return [currentProto, descriptor]
+      return descriptor
     }
     currentProto = Object.getPrototypeOf(currentProto)
   }
