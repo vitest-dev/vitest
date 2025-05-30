@@ -18,6 +18,8 @@ import { Cli } from './cli'
 
 // override default colors to disable them in tests
 Object.assign(tinyrainbow.default, tinyrainbow.getDefaultColors())
+// @ts-expect-error not typed global
+globalThis.__VITEST_GENERATE_UI_TOKEN__ = true
 
 export interface VitestRunnerCLIOptions {
   std?: 'inherit'
@@ -342,6 +344,7 @@ export async function runInlineTests(
   structure: TestFsStructure,
   config?: UserConfig,
   options?: VitestRunnerCLIOptions,
+  viteOverrides: ViteUserConfig = {},
 ) {
   const root = resolve(process.cwd(), `vitest-test-${crypto.randomUUID()}`)
   const fs = useFS(root, structure)
@@ -353,7 +356,7 @@ export async function runInlineTests(
     minWorkers: 2,
     pool: 'threads',
     ...config,
-  }, [], 'test', {}, options)
+  }, [], 'test', viteOverrides, options)
   return {
     fs,
     root,

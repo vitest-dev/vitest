@@ -7,6 +7,7 @@ import { basename, resolve } from 'pathe'
 import sirv from 'sirv'
 import c from 'tinyrainbow'
 import { coverageConfigDefaults } from 'vitest/config'
+import { isFileServingAllowed, isValidApiRequest } from 'vitest/node'
 import { version } from '../package.json'
 
 export default (ctx: Vitest): Plugin => {
@@ -54,6 +55,45 @@ export default (ctx: Vitest): Plugin => {
 
         const clientDist = resolve(fileURLToPath(import.meta.url), '../client')
         const clientIndexHtml = fs.readFileSync(resolve(clientDist, 'index.html'), 'utf-8')
+
+        // eslint-disable-next-line prefer-arrow-callback
+        server.middlewares.use(function vitestAttachment(req, res, next) {
+          if (!req.url) {
+            return next()
+          }
+
+          const url = new URL(req.url, 'http://localhost')
+          if (url.pathname === '/__vitest_attachment__') {
+            const path = url.searchParams.get('path')
+            const contentType = url.searchParams.get('contentType')
+
+            // ignore invalid requests
+            if (!isValidApiRequest(ctx.config, req) || !contentType || !path) {
+              return next()
+            }
+
+            const fsPath = decodeURIComponent(path)
+
+            if (!isFileServingAllowed(ctx.vite.config, fsPath)) {
+              return next()
+            }
+
+            try {
+              res.writeHead(200, {
+                'content-type': contentType,
+              })
+              fs.createReadStream(fsPath)
+                .pipe(res)
+                .on('close', () => res.end())
+            }
+            catch (err) {
+              next(err)
+            }
+          }
+          else {
+            next()
+          }
+        })
 
         // serve index.html with api token
         // eslint-disable-next-line prefer-arrow-callback

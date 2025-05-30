@@ -1,7 +1,8 @@
-import type { File } from '@vitest/runner'
+import type { File, TestAnnotation } from '@vitest/runner'
 import type { Vitest } from '../core'
 import type { TestProject } from '../project'
 import type { Reporter } from '../types/reporter'
+import type { TestCase } from './reported-tasks'
 import { stripVTControlCharacters } from 'node:util'
 import { getFullName, getTasks } from '@vitest/runner/utils'
 import { capturePrintError } from '../printError'
@@ -20,6 +21,25 @@ export class GithubActionsReporter implements Reporter {
 
   onInit(ctx: Vitest): void {
     this.ctx = ctx
+  }
+
+  onTestCaseAnnotate(testCase: TestCase, annotation: TestAnnotation): void {
+    if (!annotation.location) {
+      return
+    }
+
+    const type = getTitle(annotation.type)
+    const formatted = formatMessage({
+      command: getType(annotation.type),
+      properties: {
+        file: annotation.location.file,
+        line: String(annotation.location.line),
+        column: String(annotation.location.column),
+        ...(type && { title: type }),
+      },
+      message: stripVTControlCharacters(annotation.message),
+    })
+    this.ctx.logger.log(`\n${formatted}`)
   }
 
   onFinished(files: File[] = [], errors: unknown[] = []): void {
@@ -79,6 +99,22 @@ export class GithubActionsReporter implements Reporter {
       this.ctx.logger.log(`\n${formatted}`)
     }
   }
+}
+
+const BUILT_IN_TYPES = ['notice', 'error', 'warning']
+
+function getTitle(type: string) {
+  if (BUILT_IN_TYPES.includes(type)) {
+    return undefined
+  }
+  return type
+}
+
+function getType(type: string) {
+  if (BUILT_IN_TYPES.includes(type)) {
+    return type
+  }
+  return 'notice'
 }
 
 function defaultOnWritePath(path: string): string {

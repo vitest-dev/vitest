@@ -69,8 +69,7 @@ export function createBrowserPool(vitest: Vitest): ProcessPool {
       isCancelled = true
     })
 
-    const groupedSpecifications = [...groupedFiles.entries()]
-    const initialisedPools = (await Promise.all(groupedSpecifications.map(async ([project, files]) => {
+    const initialisedPools = await Promise.all([...groupedFiles.entries()].map(async ([project, files]) => {
       await project._initBrowserProvider()
 
       if (!project.browser) {
@@ -92,7 +91,7 @@ export function createBrowserPool(vitest: Vitest): ProcessPool {
         provider: project.browser!.provider,
         runTests: () => pool.runTests(method, files),
       }
-    })))
+    }))
 
     if (isCancelled) {
       return

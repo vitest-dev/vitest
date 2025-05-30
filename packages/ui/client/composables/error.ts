@@ -44,7 +44,7 @@ export function parseError(e: unknown) {
     }
   }
 
-  error.stacks = parseStacktrace(error.stack || error.stackStr || '', {
+  error.stacks = parseStacktrace(error.stack || '', {
     ignoreStackEntries: [],
   })
 

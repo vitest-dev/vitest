@@ -276,6 +276,15 @@ it('correctly builds the full name', () => {
   expect(suiteSecondLevel.fullName).toBe('a group > a nested group')
 })
 
+it('correctly reports import durations', () => {
+  const diagnostic = testModule.diagnostic()
+
+  const filePath = resolve(root, './1_first.test.ts')
+  const importDuration = diagnostic.importDurations[filePath]
+  expect(importDuration.selfTime).toBeGreaterThan(0)
+  expect(importDuration.totalTime).toBeGreaterThan(0)
+})
+
 function date(time: Date) {
   return `${time.getDate()}/${time.getMonth() + 1}/${time.getFullYear()}`
 }

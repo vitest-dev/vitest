@@ -469,8 +469,8 @@ test('can upload a file', async () => {
   // or you can access it directly on the locator
   await input.upload(file)
 
-  // you can also use file paths relative to the test file
-  await userEvent.upload(input, '../fixtures/file.png')
+  // you can also use file paths relative to the root of the project
+  await userEvent.upload(input, './fixtures/file.png')
 })
 ```
 

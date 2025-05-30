@@ -1,12 +1,14 @@
 import type { DiffOptions } from '@vitest/utils/diff'
 import type {
   File,
+  ImportDuration,
   SequenceHooks,
   SequenceSetupFiles,
   Suite,
   TaskEventPack,
   TaskResultPack,
   Test,
+  TestAnnotation,
   TestContext,
 } from './tasks'
 
@@ -131,6 +133,11 @@ export interface VitestRunner {
   onTaskUpdate?: (task: TaskResultPack[], events: TaskEventPack[]) => Promise<void>
 
   /**
+   * Called when annotation is added via the `context.annotate` method.
+   */
+  onTestAnnotate?: (test: Test, annotation: TestAnnotation) => Promise<TestAnnotation>
+
+  /**
    * Called before running all tests in collected paths.
    */
   onBeforeRunFiles?: (files: File[]) => unknown
@@ -153,6 +160,10 @@ export interface VitestRunner {
    * Function that is called when the runner attempts to get the value when `test.extend` is used with `{ injected: true }`
    */
   injectValue?: (key: string) => unknown
+  /**
+   * Gets the time spent importing each individual non-externalized file that Vitest collected.
+   */
+  getImportDurations?: () => Record<string, ImportDuration>
   /**
    * Publicly available configuration.
    */

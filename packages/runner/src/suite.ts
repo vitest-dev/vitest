@@ -326,6 +326,7 @@ function createSuiteCollector(
             ? 'todo'
             : 'run',
       meta: options.meta ?? Object.create(null),
+      annotations: [],
     }
     const handler = options.handler
     if (
