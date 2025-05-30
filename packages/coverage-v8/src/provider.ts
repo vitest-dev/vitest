@@ -260,7 +260,7 @@ export class V8CoverageProvider extends BaseCoverageProvider<ResolvedCoverageOpt
         coverage: { functions, url: filename },
         ignoreClassMethods: this.options.ignoreClassMethods,
         wrapperLength,
-        ignoreNode: (node, type) => {
+        ignoreNode: (node, type, parent) => {
           // SSR transformed imports
           if (
             type === 'statement'
@@ -272,7 +272,7 @@ export class V8CoverageProvider extends BaseCoverageProvider<ResolvedCoverageOpt
             return true
           }
 
-          // SSR transformed exports
+          // SSR transformed exports vite@>6.3.5
           if (
             type === 'statement'
             && node.type === 'ExpressionStatement'
@@ -280,6 +280,16 @@ export class V8CoverageProvider extends BaseCoverageProvider<ResolvedCoverageOpt
             && node.expression.left.type === 'MemberExpression'
             && node.expression.left.object.type === 'Identifier'
             && node.expression.left.object.name === '__vite_ssr_exports__'
+          ) {
+            return true
+          }
+
+          // SSR transformed exports vite@^6.3.5
+          if (
+            type === 'statement'
+            && parent?.type === 'VariableDeclarator'
+            && parent.id.type === 'Identifier'
+            && parent.id.name === '__vite_ssr_export_default__'
           ) {
             return true
           }
