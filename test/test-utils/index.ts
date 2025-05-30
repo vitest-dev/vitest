@@ -350,11 +350,6 @@ export async function runInlineTests(
   const fs = useFS(root, structure)
   const vitest = await runVitest({
     root,
-    globals: true,
-    isolate: false,
-    maxWorkers: 2,
-    minWorkers: 2,
-    pool: 'threads',
     ...config,
   }, [], 'test', viteOverrides, options)
   return {

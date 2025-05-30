@@ -2,6 +2,7 @@
 
 import type { TestAPI } from 'vitest'
 import type { ViteUserConfig } from 'vitest/config'
+import type { UserConfig } from 'vitest/node'
 import type { TestFsStructure } from '../../test-utils'
 import { runInlineTests } from '../../test-utils'
 
@@ -26,8 +27,7 @@ test('test fixture cannot import from file fixture', async () => {
 
       extendedTest('not working', ({ file: _file }) => {})
     },
-    'vitest.config.js': { test: { globals: true } },
-  })
+  }, { globals: true })
   expect(stderr).toContain('cannot use the test fixture "local" inside the file fixture "file"')
 })
 
@@ -117,8 +117,7 @@ test('test fixture cannot import from worker fixture', async () => {
 
       extendedTest('not working', ({ worker: _worker }) => {})
     },
-    'vitest.config.js': { test: { globals: true } },
-  })
+  }, { globals: true })
   expect(stderr).toContain('cannot use the test fixture "local" inside the worker fixture "worker"')
 })
 
@@ -173,8 +172,7 @@ test('worker fixture can import a static value from test fixture', async () => {
         expect(worker).toBe('local')
       })
     },
-    'vitest.config.js': { test: { globals: true } },
-  })
+  }, { globals: true })
   expect(stdout).toContain('basic.test.ts')
   expect(stderr).toBe('')
 })
@@ -198,8 +196,7 @@ test('file fixture can import a static value from test fixture', async () => {
         expect(file).toBe('local')
       })
     },
-    'vitest.config.js': { test: { globals: true } },
-  })
+  }, { globals: true })
   expect(stdout).toContain('basic.test.ts')
   expect(stderr).toBe('')
 })
@@ -220,14 +217,6 @@ test('worker fixture works in vmThreads and runs for every file', async () => {
     },
     '2-basic.test.ts': ({ extendedTest }) => {
       extendedTest('test1', ({ worker: _worker }) => {})
-    },
-    'vitest.config.js': {
-      test: {
-        globals: true,
-        maxWorkers: 1,
-        minWorkers: 1,
-        pool: 'vmThreads',
-      },
     },
   })
 
@@ -261,15 +250,11 @@ test('worker fixtures in isolated tests init and teardown twice', async () => {
     '2-basic.test.ts': ({ extendedTest }) => {
       extendedTest('test1', ({ worker: _worker }) => {})
     },
-    'vitest.config.js': {
-      test: {
-        globals: true,
-        isolate: true,
-        maxWorkers: 2,
-        minWorkers: 2,
-        pool: 'threads',
-      },
-    },
+  }, {
+    globals: true,
+    maxWorkers: 1,
+    minWorkers: 1,
+    pool: 'vmThreads',
   })
 
   expect(stderr).toBe('')
@@ -302,15 +287,12 @@ test('worker fixture initiates and torn down in different workers', async () => 
     '2-basic.test.ts': ({ extendedTest }) => {
       extendedTest('test1', ({ worker: _worker }) => {})
     },
-    'vitest.config.js': {
-      test: {
-        globals: true,
-        isolate: false,
-        maxWorkers: 2,
-        minWorkers: 2,
-        pool: 'threads',
-      },
-    },
+  }, {
+    globals: true,
+    isolate: false,
+    maxWorkers: 2,
+    minWorkers: 2,
+    pool: 'threads',
   })
 
   expect(stderr).toBe('')
@@ -343,19 +325,19 @@ test('worker fixture initiates and torn down in one non-isolated worker', async 
     '2-basic.test.ts': ({ extendedTest }) => {
       extendedTest('test1', ({ worker: _worker }) => {})
     },
-    'vitest.config.ts': {
-      test: {
-        globals: true,
-        isolate: false,
-        maxWorkers: 1,
-        minWorkers: 1,
-        pool: 'threads',
-      },
-    },
+  }, {
+    globals: true,
+    isolate: false,
+    maxWorkers: 1,
+    minWorkers: 1,
+    pool: 'threads',
   })
 
   expect(stderr).toBe('')
-  expect(fixtures).toMatchInlineSnapshot(`">> fixture | init worker | test1"`)
+  expect(fixtures).toMatchInlineSnapshot(`
+    ">> fixture | init worker | test1
+    >> fixture | teardown worker | test1"
+  `)
   expect(tests).toMatchInlineSnapshot(`
     " ✓ 1-basic.test.ts > test1 <time>
      ✓ 2-basic.test.ts > test1 <time>"
@@ -534,14 +516,10 @@ test.for([
       // doesn't access "file" at all
       extendedTest('[third] test 0', ({}) => {})
     },
-
-    'vitest.config.js': {
-      test: {
-        globals: true,
-        isolate,
-        maxWorkers: 1,
-      },
-    },
+  }, {
+    globals: true,
+    isolate,
+    maxWorkers: 1,
   })
 
   expect(stderr).toBe('')
@@ -555,11 +533,11 @@ test.for([
 
   expect(tests).toMatchInlineSnapshot(`
     " ✓ basic.test.js > [first] test 1 <time>
-     ✓ basic.test.js > test 2 <time>
-     ✓ basic.test.js > test 3 <time>
+     ✓ basic.test.js > suite 1 > suite 2 > [first] test 1 2 1 <time>
      ✓ basic.test.js > suite 1 > test 1 1 <time>
      ✓ basic.test.js > suite 1 > test 1 2 <time>
-     ✓ basic.test.js > suite 1 > suite 2 > [first] test 1 2 1 <time>
+     ✓ basic.test.js > test 2 <time>
+     ✓ basic.test.js > test 3 <time>
      ✓ second.test.js > [second] test 0 <time>
      ✓ second.test.js > [second] test 1 <time>
      ✓ second.test.js > [second] test 2 <time>
@@ -692,8 +670,6 @@ describe('browser tests', () => {
       },
       'vitest.config.js': {
         test: {
-          maxWorkers: 1,
-          minWorkers: 1,
           browser: {
             enabled: true,
             provider: 'playwright',
@@ -726,6 +702,7 @@ describe('browser tests', () => {
 async function runFixtureTests<T>(
   extendedTest: ({ log }: { log: typeof console.log }) => TestAPI<T>,
   fs: Record<string, ((context: { extendedTest: TestAPI<T> }) => unknown) | ViteUserConfig>,
+  config?: UserConfig,
 ) {
   if (typeof fs['vitest.config.js'] === 'object') {
     fs['vitest.config.js'].test!.globals = true
@@ -744,7 +721,7 @@ async function runFixtureTests<T>(
       }
       return acc
     }, {} as TestFsStructure),
-  })
+  }, config)
 
   return {
     stderr,
@@ -759,6 +736,7 @@ function getSuccessTests(stdout: string) {
     .split('\n')
     .filter(f => f.startsWith(' ✓ '))
     .map(f => f.replace(/\dms/, '<time>'))
+    .sort()
     .join('\n')
 }
 
