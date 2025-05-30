@@ -26,7 +26,7 @@ export function NormalizeURLPlugin(): Plugin {
       const assetImportMetaUrlRE
       // vite injects new URL(path, import.meta.url) in the code
       // rolldown-vite injects new URL(path, '' + import.meta.url) in the code
-          = /\bnew\s+URL\s*\(\s*(?:'[^']+'|"[^"]+"|`[^`]+`)\s*,\s*(?:'' \+ )?import\.meta\.url\s*(?:,\s*)?\)/g
+        = /\bnew\s+URL\s*\(\s*(?:'[^']+'|"[^"]+"|`[^`]+`)\s*,\s*(?:'' \+ )?import\.meta\.url\s*(?:,\s*)?\)/g
 
       let updatedCode = code
       let match: RegExpExecArray | null

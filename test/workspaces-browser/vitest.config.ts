@@ -14,6 +14,7 @@ export default defineConfig({
     projects: [
       './space_*/*.config.ts',
       {
+        cacheDir: '.cache/inline',
         test: {
           name: 'space_browser_inline',
           root: './space_browser_inline',

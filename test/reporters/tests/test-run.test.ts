@@ -886,6 +886,7 @@ describe('merge reports', () => {
     }, {
       globals: true,
       reporters: [['blob', { outputFile: blobOutputFile1 }]],
+      watch: false,
     })
 
     const { root: root2 } = await runInlineTests({
@@ -901,10 +902,12 @@ describe('merge reports', () => {
     }, {
       globals: true,
       reporters: [['blob', { outputFile: blobOutputFile2 }]],
+      watch: false,
     })
 
     const report = await run({}, {
       mergeReports: blobsOutputDirectory,
+      watch: false,
     }, {
       roots: [root1, root2],
     })

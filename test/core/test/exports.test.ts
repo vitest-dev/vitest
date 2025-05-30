@@ -110,6 +110,7 @@ it('exports snapshot', async ({ skip, task }) => {
           "resolveApiServerConfig": "function",
           "resolveConfig": "function",
           "resolveFsAllow": "function",
+          "rolldownVersion": "string",
           "rollupVersion": "string",
           "rootDir": "string",
           "startVitest": "function",
