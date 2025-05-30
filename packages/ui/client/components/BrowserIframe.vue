@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import type { ViewportSize } from '~/composables/browser'
 import { viewport } from '~/composables/browser'
+import { browserState } from '~/composables/client'
 import {
   hideRightPanel,
   panels,
   showNavigationPanel,
   showRightPanel,
+  updateBrowserPanel,
 } from '~/composables/navigation'
 
 const sizes: Record<ViewportSize, [width: number, height: number]> = {
@@ -19,16 +21,24 @@ function isViewport(name: ViewportSize) {
   return viewport.value[0] === preset[0] && viewport.value[1] === preset[1]
 }
 
+const { width: windowWidth, height: windowHeight } = useWindowSize()
+
 async function changeViewport(name: ViewportSize) {
   viewport.value = sizes[name]
+  if (browserState?.provider === 'webdriverio') {
+    updateBrowserPanel()
+  }
 }
-
-const { width: windowWidth, height: windowHeight } = useWindowSize()
 
 const PADDING_SIDES = 20
 const PADDING_TOP = 100
 
 const containerSize = computed(() => {
+  if (browserState?.provider === 'webdriverio') {
+    const [width, height] = viewport.value
+    return { width, height }
+  }
+
   const parentContainerWidth = windowWidth.value * (panels.details.size / 100)
   const parentOffsetWidth = parentContainerWidth * (panels.details.browser / 100)
   const containerWidth = parentOffsetWidth - PADDING_SIDES
@@ -40,6 +50,10 @@ const containerSize = computed(() => {
 })
 
 const scale = computed(() => {
+  if (browserState?.provider === 'webdriverio') {
+    return 1
+  }
+
   const [iframeWidth, iframeHeight] = viewport.value
   const { width: containerWidth, height: containerHeight } = containerSize.value
   const widthScale = containerWidth > iframeWidth ? 1 : containerWidth / iframeWidth
@@ -59,7 +73,7 @@ const marginLeft = computed(() => {
   <div h="full" flex="~ col">
     <div p="3" h-10 flex="~ gap-2" items-center bg-header border="b base">
       <IconButton
-        v-show="panels.navigation <= 2"
+        v-show="panels.navigation <= 15"
         v-tooltip.bottom="'Show Navigation Panel'"
         title="Show Navigation Panel"
         rotate-180

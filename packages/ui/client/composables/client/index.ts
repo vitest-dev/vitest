@@ -134,13 +134,6 @@ export function runCurrent() {
   }
 }
 
-// for testing during dev
-// export const browserState: BrowserRunnerState = {
-//   files: [],
-//   config: {},
-//   type: 'orchestrator',
-//   wrapModule: () => {},
-// }
 // @ts-expect-error not typed global
 export const browserState = window.__vitest_browser_runner__ as
   | BrowserRunnerState
@@ -161,7 +154,7 @@ watch(
         client.rpc.getFiles(),
         client.rpc.getConfig(),
         client.rpc.getUnhandledErrors(),
-        client.rpc.getResolvedProjectNames(),
+        client.rpc.getResolvedProjectLabels(),
       ])
       if (_config.standalone) {
         const filenames = await client.rpc.getTestFiles()

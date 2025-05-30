@@ -351,6 +351,10 @@ export default ({ mode }: { mode: string }) => {
                 ],
               },
               {
+                text: 'Plugin API',
+                link: '/advanced/api/plugin',
+              },
+              {
                 text: 'Runner API',
                 link: '/advanced/runner',
               },
@@ -473,8 +477,8 @@ function guide(): DefaultTheme.SidebarItem[] {
       link: '/guide/filtering',
     },
     {
-      text: 'Workspace',
-      link: '/guide/workspace',
+      text: 'Test Projects',
+      link: '/guide/projects',
     },
     {
       text: 'Reporters',
@@ -491,6 +495,10 @@ function guide(): DefaultTheme.SidebarItem[] {
     {
       text: 'Mocking',
       link: '/guide/mocking',
+    },
+    {
+      text: 'Parallelism',
+      link: '/guide/parallelism',
     },
     {
       text: 'Testing Types',

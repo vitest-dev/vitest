@@ -11,7 +11,7 @@ export function second() {
 // Covered line
 second()
 
-/* v8 ignore next -- Uncovered line v8 */
+/* v8 ignore next -- @preserve, Uncovered line v8 */
 second()
 
 /* istanbul ignore next -- @preserve, Uncovered line istanbul */

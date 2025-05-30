@@ -6,10 +6,10 @@ import json from '@rollup/plugin-json'
 import nodeResolve from '@rollup/plugin-node-resolve'
 import { dirname, join, normalize, resolve } from 'pathe'
 import { defineConfig } from 'rollup'
-import esbuild from 'rollup-plugin-esbuild'
 import license from 'rollup-plugin-license'
 import { globSync } from 'tinyglobby'
 import c from 'tinyrainbow'
+import oxc from 'unplugin-oxc/rollup'
 import { createDtsUtils } from '../../scripts/build-utils.js'
 
 const require = createRequire(import.meta.url)
@@ -28,7 +28,6 @@ const entries = {
   'mocker': 'src/public/mocker.ts',
   'spy': 'src/integrations/spy.ts',
   'coverage': 'src/public/coverage.ts',
-  'utils': 'src/public/utils.ts',
   'execute': 'src/public/execute.ts',
   'reporters': 'src/public/reporters.ts',
   // TODO: advanced docs
@@ -55,7 +54,6 @@ const dtsEntries = {
   suite: 'src/public/suite.ts',
   config: 'src/public/config.ts',
   coverage: 'src/public/coverage.ts',
-  utils: 'src/public/utils.ts',
   execute: 'src/public/execute.ts',
   reporters: 'src/public/reporters.ts',
   mocker: 'src/public/mocker.ts',
@@ -76,6 +74,7 @@ const external = [
   'node:http',
   'node:console',
   'inspector',
+  'vitest/optional-types.js',
   'vite-node/source-map',
   'vite-node/client',
   'vite-node/server',
@@ -103,8 +102,21 @@ const plugins = [
   }),
   json(),
   commonjs(),
-  esbuild({
-    target: 'node18',
+  oxc({
+    transform: {
+      target: 'node18',
+      define: {
+        // __VITEST_GENERATE_UI_TOKEN__ is set as a global to catch accidental leaking,
+        // in the release version the "if" with this condition should not be present
+        __VITEST_GENERATE_UI_TOKEN__: process.env.VITEST_GENERATE_UI_TOKEN === 'true' ? 'true' : 'false',
+        ...(process.env.VITE_TEST_WATCHER_DEBUG === 'false'
+          ? {
+              'process.env.VITE_TEST_WATCHER_DEBUG': 'false',
+            }
+          : {}),
+      },
+    },
+    sourcemap: true,
   }),
 ]
 
@@ -146,6 +158,7 @@ export default ({ watch }) =>
         format: 'esm',
         chunkFileNames: 'chunks/[name].[hash].d.ts',
       },
+      watch: false,
       external,
       plugins: dtsUtils.dts(),
     },

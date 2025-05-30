@@ -9,7 +9,6 @@ import type {
   VariableDeclaration,
 } from 'estree'
 import type { SourceMap } from 'magic-string'
-import type { RollupAstNode } from 'rollup'
 import type { Plugin, Rollup } from 'vite'
 import type { Node, Positioned } from './esmWalker'
 import { findNodeAround } from 'acorn-walk'
@@ -174,7 +173,7 @@ export function hoistMocks(
   const idToImportMap = new Map<string, string>()
 
   const imports: {
-    node: RollupAstNode<ImportDeclaration>
+    node: Positioned<ImportDeclaration>
     id: string
   }[] = []
 
@@ -499,11 +498,11 @@ export function hoistMocks(
   // hoist vi.mock/vi.hoisted
   for (const node of hoistedNodes) {
     const end = getNodeTail(code, node)
-    if (hoistIndex === end) {
+    // don't hoist into itself if it's already at the top
+    if (hoistIndex === end || hoistIndex === node.start) {
       hoistIndex = end
     }
-    // don't hoist into itself if it's already at the top
-    else if (hoistIndex !== node.start) {
+    else {
       s.move(node.start, end, hoistIndex)
     }
   }

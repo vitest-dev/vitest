@@ -53,7 +53,7 @@ export class ModuleMocker {
       return
     }
     await this.rpc.invalidate(ids)
-    this.interceptor.invalidate()
+    await this.interceptor.invalidate()
     this.registry.clear()
   }
 
@@ -94,10 +94,10 @@ export class ModuleMocker {
     if (!mock) {
       if (redirectUrl) {
         const resolvedRedirect = new URL(this.resolveMockPath(cleanVersion(redirectUrl)), location.href).toString()
-        mock = new RedirectedModule(rawId, mockUrl, resolvedRedirect)
+        mock = new RedirectedModule(rawId, resolvedId, mockUrl, resolvedRedirect)
       }
       else {
-        mock = new AutomockedModule(rawId, mockUrl)
+        mock = new AutomockedModule(rawId, resolvedId, mockUrl)
       }
     }
 
@@ -157,17 +157,17 @@ export class ModuleMocker {
 
         let module: MockedModule
         if (mockType === 'manual') {
-          module = this.registry.register('manual', rawId, mockUrl, factory!)
+          module = this.registry.register('manual', rawId, resolvedId, mockUrl, factory!)
         }
         // autospy takes higher priority over redirect, so it needs to be checked first
         else if (mockType === 'autospy') {
-          module = this.registry.register('autospy', rawId, mockUrl)
+          module = this.registry.register('autospy', rawId, resolvedId, mockUrl)
         }
         else if (mockType === 'redirect') {
-          module = this.registry.register('redirect', rawId, mockUrl, mockRedirect!)
+          module = this.registry.register('redirect', rawId, resolvedId, mockUrl, mockRedirect!)
         }
         else {
-          module = this.registry.register('automock', rawId, mockUrl)
+          module = this.registry.register('automock', rawId, resolvedId, mockUrl)
         }
 
         await this.interceptor.register(module)

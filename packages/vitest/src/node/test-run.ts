@@ -1,5 +1,5 @@
 import type { File as RunnerTestFile, TaskEventPack, TaskResultPack, TaskUpdateEvent } from '@vitest/runner'
-import type { SerializedError } from '../public/utils'
+import type { SerializedError } from '@vitest/utils'
 import type { UserConsoleLog } from '../types/general'
 import type { Vitest } from './core'
 import type { TestProject } from './project'
@@ -106,17 +106,6 @@ export class TestRun {
         // so we won't get any children events
         // we need to report everything manually
         await this.reportChildren(entity.children)
-      }
-      else {
-        // skipped tests need to be reported manually once test module/suite has finished
-        for (const test of entity.children.tests('skipped')) {
-          if (test.task.result?.pending) {
-            // pending error tasks are reported normally
-            continue
-          }
-          await this.vitest.report('onTestCaseReady', test)
-          await this.vitest.report('onTestCaseResult', test)
-        }
       }
 
       if (entity.type === 'module') {

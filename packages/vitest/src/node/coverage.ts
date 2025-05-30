@@ -5,8 +5,8 @@ import type { BaseCoverageOptions, CoverageModuleLoader, CoverageProvider, Repor
 import type { SerializedCoverageConfig } from '../runtime/config'
 import type { AfterSuiteRunMeta } from '../types/general'
 import { existsSync, promises as fs, readdirSync, writeFileSync } from 'node:fs'
-import mm from 'micromatch'
 import { relative, resolve } from 'pathe'
+import pm from 'picomatch'
 import c from 'tinyrainbow'
 import { coverageConfigDefaults } from '../defaults'
 import { resolveCoverageReporters } from '../node/config/resolveConfig'
@@ -217,7 +217,7 @@ export class BaseCoverageProvider<Options extends ResolvedCoverageOptions<'istan
         for (const chunk of this.toSlices(filenames, this.options.processingConcurrency)) {
           if (onDebug.enabled) {
             index += chunk.length
-            onDebug('Covered files %d/%d', index, total)
+            onDebug(`Reading coverage results ${index}/${total}`)
           }
 
           await Promise.all(chunk.map(async (filename) => {
@@ -316,8 +316,9 @@ export class BaseCoverageProvider<Options extends ResolvedCoverageOptions<'istan
       const globThresholds = resolveGlobThresholds(this.options.thresholds![glob])
       const globCoverageMap = this.createCoverageMap()
 
+      const matcher = pm(glob)
       const matchingFiles = files.filter(file =>
-        mm.isMatch(relative(this.ctx.config.root, file), glob),
+        matcher(relative(this.ctx.config.root, file)),
       )
 
       for (const file of matchingFiles) {
@@ -552,18 +553,28 @@ export class BaseCoverageProvider<Options extends ResolvedCoverageOptions<'istan
     const servers = [
       ...ctx.projects.map(project => ({
         root: project.config.root,
+        isBrowserEnabled: project.isBrowserEnabled(),
         vitenode: project.vitenode,
       })),
       // Check core last as it will match all files anyway
-      { root: ctx.config.root, vitenode: ctx.vitenode },
+      { root: ctx.config.root, vitenode: ctx.vitenode, isBrowserEnabled: ctx.getRootProject().isBrowserEnabled() },
     ]
 
     return async function transformFile(filename: string): Promise<TransformResult | null | undefined> {
       let lastError
 
-      for (const { root, vitenode } of servers) {
-        if (!filename.startsWith(root)) {
+      for (const { root, vitenode, isBrowserEnabled } of servers) {
+        // On Windows root doesn't start with "/" while filenames do
+        if (!filename.startsWith(root) && !filename.startsWith(`/${root}`)) {
           continue
+        }
+
+        if (isBrowserEnabled) {
+          const result = await vitenode.transformRequest(filename, undefined, 'web').catch(() => null)
+
+          if (result) {
+            return result
+          }
         }
 
         try {

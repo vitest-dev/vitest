@@ -106,7 +106,7 @@ export default defineConfig({
 
 Since Vitest uses Vite config, you can also use any configuration option from [Vite](https://vitejs.dev/config/). For example, `define` to define global variables, or `resolve.alias` to define aliases - these options should be defined on the top level, _not_ within a `test` property.
 
-Configuration options that are not supported inside a [workspace](/guide/workspace) project config have <NonProjectOption /> sign next to them.
+Configuration options that are not supported inside a [project](/guide/projects) config have <NonProjectOption /> sign next to them. This means they can only be set in the root Vitest config.
 :::
 
 ### include
@@ -146,9 +146,11 @@ When defined, Vitest will run all matched files with `import.meta.vitest` inside
 
 ### name
 
-- **Type:** `string`
+- **Type:** `string | { label: string, color?: LabelColor }`
 
-Assign a custom name to the test project or Vitest process. The name will be visible in the CLI and available in the Node.js API via [`project.name`](/advanced/api/test-project#name).
+Assign a custom name to the test project or Vitest process. The name will be visible in the CLI and UI, and available in the Node.js API via [`project.name`](/advanced/api/test-project#name).
+
+Color used by CLI and UI can be changed by providing an object with `color` property.
 
 ### server {#server}
 
@@ -466,6 +468,17 @@ To get TypeScript working with the global APIs, add `vitest/globals` to the `typ
 }
 ```
 
+If you have redefined your [`typeRoots`](https://www.typescriptlang.org/tsconfig/#typeRoots) to include more types in your compilation, you will have to add back the `node_modules` to make `vitest/globals` discoverable.
+
+```json [tsconfig.json]
+{
+  "compilerOptions": {
+    "typeRoots": ["./types", "./node_modules/@types", "./node_modules"],
+    "types": ["vitest/globals"]
+  }
+}
+```
+
 If you are already using [`unplugin-auto-import`](https://github.com/antfu/unplugin-auto-import) in your project, you can also use it directly for auto importing those APIs.
 
 ```ts [vitest.config.js]
@@ -586,7 +599,7 @@ These options are passed down to `setup` method of current [`environment`](#envi
 - **Default:** `[]`
 
 ::: danger DEPRECATED
-This API was deprecated in Vitest 3. Use [workspace](/guide/workspace) to define different configurations instead.
+This API was deprecated in Vitest 3. Use [projects](/guide/projects) to define different configurations instead.
 
 ```ts
 export default defineConfig({
@@ -594,7 +607,7 @@ export default defineConfig({
     environmentMatchGlobs: [ // [!code --]
       ['./*.jsdom.test.ts', 'jsdom'], // [!code --]
     ], // [!code --]
-    workspace: [ // [!code ++]
+    projects: [ // [!code ++]
       { // [!code ++]
         extends: true, // [!code ++]
         test: { // [!code ++]
@@ -633,7 +646,7 @@ export default defineConfig({
 - **Default:** `[]`
 
 ::: danger DEPRECATED
-This API was deprecated in Vitest 3. Use [workspace](/guide/workspace) to define different configurations instead:
+This API was deprecated in Vitest 3. Use [projects](/guide/projects) to define different configurations instead:
 
 ```ts
 export default defineConfig({
@@ -641,7 +654,7 @@ export default defineConfig({
     poolMatchGlobs: [ // [!code --]
       ['./*.threads.test.ts', 'threads'], // [!code --]
     ], // [!code --]
-    workspace: [ // [!code ++]
+    projects: [ // [!code ++]
       { // [!code ++]
         test: { // [!code ++]
           extends: true, // [!code ++]
@@ -686,10 +699,44 @@ Update snapshot files. This will update all changed snapshots and delete obsolet
 ### watch<NonProjectOption />
 
 - **Type:** `boolean`
-- **Default:** `!process.env.CI`
+- **Default:** `!process.env.CI && process.stdin.isTTY`
 - **CLI:** `-w`, `--watch`, `--watch=false`
 
 Enable watch mode
+
+In interactive environments, this is the default, unless `--run` is specified explicitly.
+
+In CI, or when run from a non-interactive shell, "watch" mode is not the default, but can be enabled explicitly with this flag.
+
+### watchTriggerPatterns <Version>3.2.0</Version><NonProjectOption /> {#watchtriggerpatterns}
+
+- **Type:** `WatcherTriggerPattern[]`
+
+Vitest reruns tests based on the module graph which is populated by static and dynamic `import` statements. However, if you are reading from the file system or fetching from a proxy, then Vitest cannot detect those dependencies.
+
+To correctly rerun those tests, you can define a regex pattern and a function that retuns a list of test files to run.
+
+```ts
+import { defineConfig } from 'vitest/config'
+
+export default defineConfig({
+  test: {
+    watchTriggerPatterns: [
+      {
+        pattern: /^src\/(mailers|templates)\/(.*)\.(ts|html|txt)$/,
+        testToRun: (id, match) => {
+          // relative to the root value
+          return `./api/tests/mailers/${match[2]}.test.ts`
+        },
+      },
+    ],
+  },
+})
+```
+
+::: warning
+Returned files should be either absolute or relative to the root. Note that this is a global option, and it cannot be used inside of [project](/guide/projects) configs.
+:::
 
 ### root
 
@@ -1089,11 +1136,13 @@ Default timeout to wait for close when Vitest shuts down, in milliseconds
 
 ### silent<NonProjectOption />
 
-- **Type:** `boolean`
+- **Type:** `boolean | 'passed-only'`
 - **Default:** `false`
 - **CLI:** `--silent`, `--silent=false`
 
-Silent console output from tests
+Silent console output from tests.
+
+Use `'passed-only'` to see logs from failing tests only. Logs from failing tests are printed after a test has finished.
 
 ### setupFiles
 
@@ -1636,7 +1685,7 @@ Sets thresholds to 100 for files matching the glob pattern.
 - **Available for providers:** `'v8'`
 - **CLI:** `--coverage.ignoreEmptyLines=<boolean>`
 
-Ignore empty lines, comments and other non-runtime code, e.g. Typescript types.
+Ignore empty lines, comments and other non-runtime code, e.g. Typescript types. Requires `experimentalAstAwareRemapping: false`.
 
 This option works only if the used compiler removes comments and other non-runtime code from the transpiled code.
 By default Vite uses ESBuild which removes comments and Typescript types from `.ts`, `.tsx` and `.jsx` files.
@@ -1660,6 +1709,14 @@ export default defineConfig({
   },
 })
 ```
+#### coverage.experimentalAstAwareRemapping
+
+- **Type:** `boolean`
+- **Default:** `false`
+- **Available for providers:** `'v8'`
+- **CLI:** `--coverage.experimentalAstAwareRemapping=<boolean>`
+
+Remap coverage with experimental AST based analysis. Provides more accurate results compared to default mode.
 
 #### coverage.ignoreClassMethods
 
@@ -1977,7 +2034,7 @@ export default defineConfig({
 
 ### sequence
 
-- **Type**: `{ sequencer?, shuffle?, seed?, hooks?, setupFiles? }`
+- **Type**: `{ sequencer?, shuffle?, seed?, hooks?, setupFiles?, groupOrder }`
 
 Options for how tests should be sorted.
 
@@ -1995,6 +2052,71 @@ npx vitest --sequence.shuffle --sequence.seed=1000
 A custom class that defines methods for sharding and sorting. You can extend `BaseSequencer` from `vitest/node`, if you only need to redefine one of the `sort` and `shard` methods, but both should exist.
 
 Sharding is happening before sorting, and only if `--shard` option is provided.
+
+If [`sequencer.groupOrder`](#groupOrder) is specified, the sequencer will be called once for each group and pool.
+
+#### groupOrder <Version>3.2.0</Version> {#groupOrder}
+
+- **Type:** `number`
+- **Default:** `0`
+
+Controls the order in which this project runs its tests when using multiple [projects](/guide/projects).
+
+- Projects with the same group order number will run together, and groups are run from lowest to highest.
+- If you don’t set this option, all projects run in parallel.
+- If several projects use the same group order, they will run at the same time.
+
+This setting only affects the order in which projects run, not the order of tests within a project.
+To control test isolation or the order of tests inside a project, use the [`isolate`](#isolate) and [`sequence.sequencer`](#sequence-sequencer) options.
+
+::: details Example
+Consider this example:
+
+```ts
+import { defineConfig } from 'vitest/config'
+
+export default defineConfig({
+  test: {
+    projects: [
+      {
+        test: {
+          name: 'slow',
+          sequence: {
+            groupOrder: 0,
+          },
+        },
+      },
+      {
+        test: {
+          name: 'fast',
+          sequence: {
+            groupOrder: 0,
+          },
+        },
+      },
+      {
+        test: {
+          name: 'flaky',
+          sequence: {
+            groupOrder: 1,
+          },
+        },
+      },
+    ],
+  },
+})
+```
+
+Tests in these projects will run in this order:
+
+```
+ 0. slow  |
+          |> running together
+ 0. fast  |
+
+ 1. flaky |> runs after slow and fast alone
+```
+:::
 
 #### sequence.shuffle
 
@@ -2135,6 +2257,13 @@ By default, if Vitest finds source error, it will fail test suite.
 - **Default**: _tries to find closest tsconfig.json_
 
 Path to custom tsconfig, relative to the project root.
+
+#### typecheck.spawnTimeout
+
+- **Type**: `number`
+- **Default**: `10_000`
+
+Minimum time in milliseconds it takes to spawn the typechecker.
 
 ### slowTestThreshold<NonProjectOption />
 
@@ -2329,6 +2458,13 @@ Color of truncate annotation, default is output with no color.
 
 Print basic prototype `Object` and `Array` in diff output
 
+#### diff.maxDepth
+
+- **Type**: `number`
+- **Default**: `20` (or `8` when comparing different types)
+
+Limit the depth to recurse when printing nested objects
+
 ### fakeTimers
 
 - **Type:** `FakeTimerInstallOpts`
@@ -2383,13 +2519,24 @@ Tells fake timers to clear "native" (i.e. not fake) timers by delegating to thei
 
 ### workspace<NonProjectOption /> {#workspace}
 
-- **Type:** `string | TestProjectConfiguration`
+::: danger DEPRECATED
+This options is deprecated and will be removed in the next major. Please, use [`projects`](#projects) instead.
+:::
+
+- **Type:** `string | TestProjectConfiguration[]`
 - **CLI:** `--workspace=./file.js`
 - **Default:** `vitest.{workspace,projects}.{js,ts,json}` close to the config file or root
 
-Path to a [workspace](/guide/workspace) config file relative to [root](#root).
+Path to a [workspace](/guide/projects) config file relative to [root](#root).
 
 Since Vitest 3, you can also define the workspace array in the root config. If the `workspace` is defined in the config manually, Vitest will ignore the `vitest.workspace` file in the root.
+
+### projects<NonProjectOption /> {#projects}
+
+- **Type:** `TestProjectConfiguration[]`
+- **Default:** `[]`
+
+An array of [projects](/guide/projects).
 
 ### isolate
 

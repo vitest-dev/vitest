@@ -10,6 +10,7 @@ import { toArray } from '@vitest/utils'
 import MagicString from 'magic-string'
 import { basename, dirname, extname, resolve } from 'pathe'
 import sirv from 'sirv'
+import * as vite from 'vite'
 import { coverageConfigDefaults } from 'vitest/config'
 import { getFilePoolName, resolveApiServerConfig, resolveFsAllow, distDir as vitestDist } from 'vitest/node'
 import { distRoot } from './constants'
@@ -189,8 +190,7 @@ export default (parentServer: ParentBrowserProject, base = '/'): Plugin[] => {
 
         const exclude = [
           'vitest',
-          'vitest/utils',
-          'vitest/browser',
+          'vitest/internal/browser',
           'vitest/runners',
           '@vitest/browser',
           '@vitest/browser/client',
@@ -382,11 +382,13 @@ export default (parentServer: ParentBrowserProject, base = '/'): Plugin[] => {
     {
       name: 'vitest:browser:in-source-tests',
       transform(code, id) {
+        const filename = cleanUrl(id)
         const project = parentServer.vitest.getProjectByName(parentServer.config.name)
-        if (!project._isCachedTestFile(id) || !code.includes('import.meta.vitest')) {
+
+        if (!project._isCachedTestFile(filename) || !code.includes('import.meta.vitest')) {
           return
         }
-        const s = new MagicString(code, { filename: cleanUrl(id) })
+        const s = new MagicString(code, { filename })
         s.prepend(
           `import.meta.vitest = __vitest_index__;\n`,
         )
@@ -505,6 +507,14 @@ body {
             },
             injectTo: 'head' as const,
           },
+          {
+            tag: 'script',
+            attrs: {
+              type: 'module',
+              src: parentServer.matchersUrl,
+            },
+            injectTo: 'head' as const,
+          },
           parentServer.locatorsUrl
             ? {
                 tag: 'script',
@@ -517,42 +527,46 @@ body {
             : null,
           ...parentServer.testerScripts,
           ...testerTags,
-          {
-            tag: 'script',
-            attrs: {
-              'type': 'module',
-              'data-vitest-append': '',
-            },
-            children: '{__VITEST_APPEND__}',
-            injectTo: 'body',
-          } as const,
         ].filter(s => s != null)
       },
     },
     {
       name: 'vitest:browser:support-testing-library',
       config() {
-        return {
-          optimizeDeps: {
-            rollupOptions: {
-              plugins: [
-                {
-                  name: 'vue-test-utils-rewrite',
-                  resolveId: {
-                    // test-utils: resolve to CJS instead of the browser because the browser version expects a global Vue object
-                    // compiler-core: only CJS version allows slots as strings
-                    filter: { id: /^@vue\/(test-utils|compiler-core)$/ },
-                    handler(source, importer) {
-                      const resolved = getRequire().resolve(source, {
-                        paths: [importer!],
-                      })
-                      return resolved
-                    },
-                  },
-                },
-              ],
+        const rolldownPlugin = {
+          name: 'vue-test-utils-rewrite',
+          resolveId: {
+            // test-utils: resolve to CJS instead of the browser because the browser version expects a global Vue object
+            // compiler-core: only CJS version allows slots as strings
+            filter: { id: /^@vue\/(test-utils|compiler-core)$/ },
+            handler(source: string, importer: string) {
+              const resolved = getRequire().resolve(source, {
+                paths: [importer!],
+              })
+              return resolved
             },
           },
+        }
+
+        const esbuildPlugin = {
+          name: 'test-utils-rewrite',
+          // "any" because vite doesn't expose any types for this
+          setup(build: any) {
+            // test-utils: resolve to CJS instead of the browser because the browser version expects a global Vue object
+            // compiler-core: only CJS version allows slots as strings
+            build.onResolve({ filter: /^@vue\/(test-utils|compiler-core)$/ }, (args: any) => {
+              const resolved = getRequire().resolve(args.path, {
+                paths: [args.importer],
+              })
+              return { path: resolved }
+            })
+          },
+        }
+
+        return {
+          optimizeDeps: 'rolldownVersion' in vite
+            ? { rollupOptions: { plugins: [rolldownPlugin] } }
+            : { esbuildOptions: { plugins: [esbuildPlugin] } },
         }
       },
     },

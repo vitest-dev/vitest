@@ -578,7 +578,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
   })
 
   // manually compare array elements since `jestEquals` cannot
-  // apply assymetric matcher to `undefined` array element.
+  // apply asymmetric matcher to `undefined` array element.
   function equalsArgumentArray(a: unknown[], b: unknown[]) {
     return a.length === b.length && a.every((aItem, i) =>
       jestEquals(aItem, b[i], [...customTesters, iterableEquality]),
@@ -1206,7 +1206,7 @@ function ordinalOf(i: number) {
 }
 
 function formatCalls(spy: MockInstance, msg: string, showActualCall?: any) {
-  if (spy.mock.calls) {
+  if (spy.mock.calls.length) {
     msg += c.gray(
       `\n\nReceived: \n\n${spy.mock.calls
         .map((callArg, i) => {
@@ -1243,29 +1243,31 @@ function formatReturns(
   msg: string,
   showActualReturn?: any,
 ) {
-  msg += c.gray(
-    `\n\nReceived: \n\n${results
-      .map((callReturn, i) => {
-        let methodCall = c.bold(
-          `  ${ordinalOf(i + 1)} ${spy.getMockName()} call return:\n\n`,
-        )
-        if (showActualReturn) {
-          methodCall += diff(showActualReturn, callReturn.value, {
-            omitAnnotationLines: true,
-          })
-        }
-        else {
-          methodCall += stringify(callReturn)
-            .split('\n')
-            .map(line => `    ${line}`)
-            .join('\n')
-        }
+  if (results.length) {
+    msg += c.gray(
+      `\n\nReceived: \n\n${results
+        .map((callReturn, i) => {
+          let methodCall = c.bold(
+            `  ${ordinalOf(i + 1)} ${spy.getMockName()} call return:\n\n`,
+          )
+          if (showActualReturn) {
+            methodCall += diff(showActualReturn, callReturn.value, {
+              omitAnnotationLines: true,
+            })
+          }
+          else {
+            methodCall += stringify(callReturn)
+              .split('\n')
+              .map(line => `    ${line}`)
+              .join('\n')
+          }
 
-        methodCall += '\n'
-        return methodCall
-      })
-      .join('\n')}`,
-  )
+          methodCall += '\n'
+          return methodCall
+        })
+        .join('\n')}`,
+    )
+  }
   msg += c.gray(
     `\n\nNumber of calls: ${c.bold(spy.mock.calls.length)}\n`,
   )

@@ -3,7 +3,7 @@ import type { TestSpecification } from '../node/spec'
 import type { EnvironmentOptions, TransformModePatterns, VitestEnvironment } from '../node/types/config'
 import type { ContextTestEnvironment } from '../types/worker'
 import { promises as fs } from 'node:fs'
-import mm from 'micromatch'
+import pm from 'picomatch'
 import { groupBy } from './base'
 
 export const envsOrder: string[] = ['node', 'jsdom', 'happy-dom', 'edge-runtime']
@@ -18,10 +18,10 @@ function getTransformMode(
   patterns: TransformModePatterns,
   filename: string,
 ): 'web' | 'ssr' | undefined {
-  if (patterns.web && mm.isMatch(filename, patterns.web)) {
+  if (patterns.web && pm.isMatch(filename, patterns.web)) {
     return 'web'
   }
-  if (patterns.ssr && mm.isMatch(filename, patterns.ssr)) {
+  if (patterns.ssr && pm.isMatch(filename, patterns.ssr)) {
     return 'ssr'
   }
   return undefined
@@ -44,7 +44,7 @@ export async function groupFilesByEnv(
       if (!env) {
         for (const [glob, target] of project.config.environmentMatchGlobs
           || []) {
-          if (mm.isMatch(filepath, glob, { cwd: project.config.root })) {
+          if (pm.isMatch(filepath, glob, { cwd: project.config.root })) {
             env = target
             break
           }

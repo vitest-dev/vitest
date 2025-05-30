@@ -27,14 +27,15 @@ import {
 } from '@vitest/utils'
 import { parseSingleStack } from '@vitest/utils/source-map'
 import {
+  abortIfTimeout,
   collectorContext,
   collectTask,
   createTestContext,
   runWithSuite,
   withTimeout,
 } from './context'
-import { mergeContextFixtures, withFixtures } from './fixture'
-import { getHooks, setFixture, setFn, setHooks } from './map'
+import { mergeContextFixtures, mergeScopedFixtures, withFixtures } from './fixture'
+import { getHooks, setFn, setHooks, setTestFixture } from './map'
 import { getCurrentTest } from './test-state'
 import { createChainable } from './utils/chain'
 
@@ -295,6 +296,7 @@ function createSuiteCollector(
   mode: RunMode,
   each?: boolean,
   suiteOptions?: TestOptions,
+  parentCollectorFixtures?: FixtureItem[],
 ) {
   const tasks: (Test | Suite | SuiteCollector)[] = []
 
@@ -340,7 +342,13 @@ function createSuiteCollector(
       value: context,
       enumerable: false,
     })
-    setFixture(context, options.fixtures)
+    setTestFixture(context, options.fixtures)
+
+    // custom can be called from any place, let's assume the limit is 15 stacks
+    const limit = Error.stackTraceLimit
+    Error.stackTraceLimit = 15
+    const stackTraceError = new Error('STACK_TRACE_ERROR')
+    Error.stackTraceLimit = limit
 
     if (handler) {
       setFn(
@@ -348,16 +356,15 @@ function createSuiteCollector(
         withTimeout(
           withAwaitAsyncAssertions(withFixtures(handler, context), task),
           timeout,
+          false,
+          stackTraceError,
+          (_, error) => abortIfTimeout([context], error),
         ),
       )
     }
 
     if (runner.config.includeTaskLocation) {
-      const limit = Error.stackTraceLimit
-      // custom can be called from any place, let's assume the limit is 15 stacks
-      Error.stackTraceLimit = 15
-      const error = new Error('stacktrace').stack!
-      Error.stackTraceLimit = limit
+      const error = stackTraceError.stack!
       const stack = findTestFileStackTrace(error)
       if (stack) {
         task.location = stack
@@ -395,6 +402,8 @@ function createSuiteCollector(
     test.type = 'test'
   })
 
+  let collectorFixtures = parentCollectorFixtures
+
   const collector: SuiteCollector = {
     type: 'collector',
     name,
@@ -407,6 +416,19 @@ function createSuiteCollector(
     task,
     clear,
     on: addHook,
+    fixtures() {
+      return collectorFixtures
+    },
+    scoped(fixtures) {
+      const parsed = mergeContextFixtures(
+        fixtures,
+        { fixtures: collectorFixtures },
+        (key: string) => getRunner().injectValue?.(key),
+      )
+      if (parsed.fixtures) {
+        collectorFixtures = parsed.fixtures
+      }
+    },
   }
 
   function addHook<T extends keyof SuiteHooks>(name: T, ...fn: SuiteHooks[T]) {
@@ -540,6 +562,7 @@ function createSuite() {
       mode,
       this.each,
       options,
+      currentSuite?.fixtures(),
     )
   }
 
@@ -734,6 +757,11 @@ export function createTaskCollector(
     return condition ? this : this.skip
   }
 
+  taskFn.scoped = function (fixtures: Fixtures<Record<string, any>>) {
+    const collector = getCurrentSuite()
+    collector.scoped(fixtures)
+  }
+
   taskFn.extend = function (fixtures: Fixtures<Record<string, any>>) {
     const _context = mergeContextFixtures(
       fixtures,
@@ -746,8 +774,17 @@ export function createTaskCollector(
       optionsOrFn?: TestOptions | TestFunction,
       optionsOrTest?: number | TestOptions | TestFunction,
     ) {
-      getCurrentSuite().test.fn.call(
-        this,
+      const collector = getCurrentSuite()
+      const scopedFixtures = collector.fixtures()
+      const context = { ...this }
+      if (scopedFixtures) {
+        context.fixtures = mergeScopedFixtures(
+          context.fixtures || [],
+          scopedFixtures,
+        )
+      }
+      collector.test.fn.call(
+        context,
         formatName(name),
         optionsOrFn as TestOptions,
         optionsOrTest as TestFunction,
@@ -791,11 +828,12 @@ function formatName(name: string | Function) {
 }
 
 function formatTitle(template: string, items: any[], idx: number) {
-  if (template.includes('%#')) {
+  if (template.includes('%#') || template.includes('%$')) {
     // '%#' match index of the test case
     template = template
       .replace(/%%/g, '__vitest_escaped_%__')
       .replace(/%#/g, `${idx}`)
+      .replace(/%\$/g, `${idx + 1}`)
       .replace(/__vitest_escaped_%__/g, '%%')
   }
   const count = template.split('%').length - 1
@@ -815,16 +853,21 @@ function formatTitle(template: string, items: any[], idx: number) {
   }
 
   let formatted = format(template, ...items.slice(0, count))
-  if (isObject(items[0])) {
-    formatted = formatted.replace(
-      /\$([$\w.]+)/g,
-      // https://github.com/chaijs/chai/pull/1490
-      (_, key) =>
-        objDisplay(objectAttr(items[0], key), {
-          truncate: runner?.config?.chaiConfig?.truncateThreshold,
-        }) as unknown as string,
-    )
-  }
+  const isObjectItem = isObject(items[0])
+  formatted = formatted.replace(
+    /\$([$\w.]+)/g,
+    (_, key: string) => {
+      const isArrayKey = /^\d+$/.test(key)
+      if (!isObjectItem && !isArrayKey) {
+        return `$${key}`
+      }
+      const arrayElement = isArrayKey ? objectAttr(items, key) : undefined
+      const value = isObjectItem ? objectAttr(items[0], key, arrayElement) : arrayElement
+      return objDisplay(value, {
+        truncate: runner?.config?.chaiConfig?.truncateThreshold,
+      }) as unknown as string
+    },
+  )
   return formatted
 }
 

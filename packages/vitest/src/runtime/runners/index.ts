@@ -113,7 +113,7 @@ export async function resolveTestRunner(
 
       if (currentFailures >= config.bail) {
         rpc().onCancel('test-failure')
-        testRunner.onCancel?.('test-failure')
+        testRunner.cancel?.('test-failure')
       }
     }
     await originalOnAfterRunTask?.call(testRunner, test)

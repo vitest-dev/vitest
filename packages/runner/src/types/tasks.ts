@@ -149,10 +149,19 @@ export interface TaskResult {
   /** @private */
   note?: string
   /**
-   * Whether the task was skipped by calling `t.skip()`.
+   * Whether the task was skipped by calling `context.skip()`.
    * @internal
    */
   pending?: boolean
+}
+
+/** The time spent importing & executing a non-externalized file. */
+export interface ImportDuration {
+  /** The time spent importing & executing the file itself, not counting all non-externalized imports that the file does. */
+  selfTime: number
+
+  /** The time spent importing & executing the file and all its imports. */
+  totalTime: number
 }
 
 /**
@@ -239,6 +248,9 @@ export interface File extends Suite {
    * @internal
    */
   local?: boolean
+
+  /** The time spent importing every non-externalized dependency that Vitest has processed. */
+  importDurations?: Record<string, ImportDuration>
 }
 
 export interface Test<ExtraContext = object> extends TaskPopulated {
@@ -468,6 +480,9 @@ export type TestAPI<ExtraContext = object> = ChainableTestAPI<ExtraContext> &
           ? ExtraContext[K]
           : never;
     }>
+    scoped: (
+      fixtures: Fixtures<Partial<ExtraContext>>
+    ) => void
   }
 
 /** @deprecated use `TestAPI` instead */
@@ -616,6 +631,8 @@ export interface SuiteCollector<ExtraContext = object> {
     | Test<ExtraContext>
     | SuiteCollector<ExtraContext>
   )[]
+  scoped: (fixtures: Fixtures<any, ExtraContext>) => void
+  fixtures: () => FixtureItem[] | undefined
   suite?: Suite
   task: (name: string, options?: TaskCustomOptions) => Test<ExtraContext>
   collect: (file: File) => Promise<Suite>
@@ -642,23 +659,32 @@ export interface TestContext {
   /**
    * Metadata of the current test
    */
-  task: Readonly<Task>
+  readonly task: Readonly<Test>
+
+  /**
+   * An [`AbortSignal`](https://developer.mozilla.org/en-US/docs/Web/API/AbortSignal) that will be aborted if the test times out or
+   * the test run was cancelled.
+   */
+  readonly signal: AbortSignal
 
   /**
    * Extract hooks on test failed
    */
-  onTestFailed: (fn: OnTestFailedHandler, timeout?: number) => void
+  readonly onTestFailed: (fn: OnTestFailedHandler, timeout?: number) => void
 
   /**
    * Extract hooks on test failed
    */
-  onTestFinished: (fn: OnTestFinishedHandler, timeout?: number) => void
+  readonly onTestFinished: (fn: OnTestFinishedHandler, timeout?: number) => void
 
   /**
    * Mark tests as skipped. All execution after this call will be skipped.
    * This function throws an error, so make sure you are not catching it accidentally.
    */
-  skip: (note?: string) => never
+  readonly skip: {
+    (note?: string): never
+    (condition: boolean, note?: string): void
+  }
 }
 
 /**
@@ -679,3 +705,7 @@ export interface TaskHook<HookListener> {
 
 export type SequenceHooks = 'stack' | 'list' | 'parallel'
 export type SequenceSetupFiles = 'list' | 'parallel'
+
+export type WriteableTestContext = {
+  -readonly [P in keyof TestContext]: TestContext[P]
+}

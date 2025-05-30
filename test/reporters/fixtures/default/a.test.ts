@@ -24,3 +24,17 @@ describe('a failed', () => {
     })
   })
 })
+
+describe('a skipped', () => {
+  test('skipped with note', ({ skip }) => {
+    skip('reason')
+  })
+
+  test('condition', ({ skip }) => {
+    skip(true)
+  })
+
+  test('condition with note', ({ skip }) => {
+    skip(true, 'note')
+  })
+})

@@ -30,6 +30,16 @@ export class DefaultReporter extends BaseReporter {
   }
 
   onTestRunStart(specifications: ReadonlyArray<TestSpecification>): void {
+    if (this.isTTY) {
+      if (this.renderSucceed === undefined) {
+        this.renderSucceed = !!this.renderSucceed
+      }
+
+      if (this.renderSucceed !== true) {
+        this.renderSucceed = specifications.length <= 1
+      }
+    }
+
     this.summary?.onTestRunStart(specifications)
   }
 
@@ -42,6 +52,7 @@ export class DefaultReporter extends BaseReporter {
   }
 
   onTestModuleEnd(module: TestModule): void {
+    super.onTestModuleEnd(module)
     this.summary?.onTestModuleEnd(module)
   }
 
@@ -50,6 +61,7 @@ export class DefaultReporter extends BaseReporter {
   }
 
   onTestCaseResult(test: TestCase): void {
+    super.onTestCaseResult(test)
     this.summary?.onTestCaseResult(test)
   }
 
@@ -64,18 +76,6 @@ export class DefaultReporter extends BaseReporter {
   onInit(ctx: Vitest): void {
     super.onInit(ctx)
     this.summary?.onInit(ctx, { verbose: this.verbose })
-  }
-
-  onPathsCollected(paths: string[] = []): void {
-    if (this.isTTY) {
-      if (this.renderSucceed === undefined) {
-        this.renderSucceed = !!this.renderSucceed
-      }
-
-      if (this.renderSucceed !== true) {
-        this.renderSucceed = paths.length <= 1
-      }
-    }
   }
 
   onTestRunEnd(): void {

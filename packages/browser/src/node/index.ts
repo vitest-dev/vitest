@@ -1,5 +1,7 @@
 import type { Plugin } from 'vitest/config'
 import type { TestProject } from 'vitest/node'
+import { MockerRegistry } from '@vitest/mocker'
+import { interceptorPlugin } from '@vitest/mocker/node'
 import c from 'tinyrainbow'
 import { createViteLogger, createViteServer } from 'vitest/node'
 import { version } from '../../package.json'
@@ -38,9 +40,12 @@ export async function createBrowserServer(
     allowClearScreen: false,
   })
 
+  const mockerRegistry = new MockerRegistry()
+
   const vite = await createViteServer({
     ...project.options, // spread project config inlined in root workspace config
     base: '/',
+    root: project.config.root,
     logLevel,
     customLogger: {
       ...logger,
@@ -58,22 +63,25 @@ export async function createBrowserServer(
     },
     mode: project.config.mode,
     configFile: configPath,
+    configLoader: project.vite.config.inlineConfig.configLoader,
     // watch is handled by Vitest
     server: {
       hmr: false,
       watch: null,
     },
+    cacheDir: project.vite.config.cacheDir,
     plugins: [
       ...prePlugins,
       ...(project.options?.plugins || []),
       BrowserPlugin(server),
+      interceptorPlugin({ registry: mockerRegistry }),
       ...postPlugins,
     ],
   })
 
   await vite.listen()
 
-  setupBrowserRpc(server)
+  setupBrowserRpc(server, mockerRegistry)
 
   return server
 }

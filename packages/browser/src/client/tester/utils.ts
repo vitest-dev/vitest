@@ -144,14 +144,14 @@ export function processTimeoutOptions<T extends { timeout?: number }>(options_?:
   if (getWorkerState().config.browser.providerOptions.actionTimeout != null) {
     return options_
   }
-  const currentTest = getWorkerState().current
-  const startTime = currentTest?.result?.startTime
+  const runner = getBrowserState().runner
+  const startTime = runner._currentTaskStartTime
   // ignore timeout if this is called outside of a test
-  if (!currentTest || currentTest.type === 'suite' || !startTime) {
+  if (!startTime) {
     return options_
   }
-  const timeout = currentTest.timeout
-  if (timeout === 0 || timeout === Number.POSITIVE_INFINITY) {
+  const timeout = runner._currentTaskTimeout
+  if (timeout === 0 || timeout == null || timeout === Number.POSITIVE_INFINITY) {
     return options_
   }
   options_ = options_ || {} as T
@@ -167,7 +167,7 @@ export function processTimeoutOptions<T extends { timeout?: number }>(options_?:
 }
 
 export function getIframeScale(): number {
-  const testerUi = window.parent.document.querySelector('#tester-ui') as HTMLElement | null
+  const testerUi = window.parent.document.querySelector(`iframe[data-vitest]`)?.parentElement
   if (!testerUi) {
     throw new Error(`Cannot find Tester element. This is a bug in Vitest. Please, open a new issue with reproduction.`)
   }
@@ -177,4 +177,23 @@ export function getIframeScale(): number {
     throw new TypeError(`Cannot parse scale value from Tester element (${scaleAttribute}). This is a bug in Vitest. Please, open a new issue with reproduction.`)
   }
   return scale
+}
+
+function escapeRegexForSelector(re: RegExp): string {
+  // Unicode mode does not allow "identity character escapes", so we do not escape and
+  // hope that it does not contain quotes and/or >> signs.
+  // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Regular_expressions/Character_escape
+  // TODO: rework RE usages in internal selectors away from literal representation to json, e.g. {source,flags}.
+  if (re.unicode || (re as any).unicodeSets) {
+    return String(re)
+  }
+  // Even number of backslashes followed by the quote -> insert a backslash.
+  return String(re).replace(/(^|[^\\])(\\\\)*(["'`])/g, '$1$2\\$3').replace(/>>/g, '\\>\\>')
+}
+
+export function escapeForTextSelector(text: string | RegExp, exact: boolean): string {
+  if (typeof text !== 'string') {
+    return escapeRegexForSelector(text)
+  }
+  return `${JSON.stringify(text)}${exact ? 's' : 'i'}`
 }

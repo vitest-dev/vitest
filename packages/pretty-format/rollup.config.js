@@ -3,7 +3,7 @@ import commonjs from '@rollup/plugin-commonjs'
 import json from '@rollup/plugin-json'
 import resolve from '@rollup/plugin-node-resolve'
 import { defineConfig } from 'rollup'
-import esbuild from 'rollup-plugin-esbuild'
+import oxc from 'unplugin-oxc/rollup'
 import { createDtsUtils } from '../../scripts/build-utils.js'
 
 const require = createRequire(import.meta.url)
@@ -27,8 +27,8 @@ const plugins = [
     preferBuiltins: true,
   }),
   json(),
-  esbuild({
-    target: 'node14',
+  oxc({
+    transform: { target: 'node14' },
   }),
   commonjs(),
 ]
@@ -53,6 +53,7 @@ export default defineConfig([
       entryFileNames: '[name].d.ts',
       format: 'esm',
     },
+    watch: false,
     external,
     plugins: dtsUtils.dts(),
     onwarn,

@@ -74,6 +74,8 @@ Error: expect.poll(assertion).toBe() was not awaited. This assertion is asynchro
 
 exports[`should fail primitive-error.test.ts 1`] = `"Unknown Error: 42"`;
 
+exports[`should fail skip-conditional.test.ts 1`] = `"Error: doesnt skip"`;
+
 exports[`should fail snapshot-with-not.test.ts 1`] = `
 "Error: toThrowErrorMatchingInlineSnapshot cannot be used with "not"
 Error: toThrowErrorMatchingSnapshot cannot be used with "not"
@@ -125,3 +127,5 @@ exports[`should fail unhandled.test.ts 1`] = `
 "Error: some error
 Error: Uncaught [Error: some error]"
 `;
+
+exports[`should fail unhandled-suite.test.ts 1`] = `"Unknown Error: promise error"`;

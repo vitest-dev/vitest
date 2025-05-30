@@ -7,15 +7,16 @@
   },
   "devDependencies": {
     "@types/debug": "catalog:",
-    "@types/ws": "^8.5.9",
-    "@vitejs/plugin-basic-ssl": "^1.0.2",
+    "@types/ws": "catalog:",
+    "@vitejs/plugin-basic-ssl": "^1.2.0",
     "@vitest/runner": "workspace:^",
     "@vitest/test-dep-error": "file:./deps/error",
+    "@vitest/test-dep-linked": "link:./deps/linked",
     "@vitest/utils": "workspace:*",
-    "debug": "^4.3.4",
-    "unplugin-swc": "^1.4.4",
+    "debug": "^4.4.1",
+    "unplugin-swc": "^1.5.3",
     "vite": "latest",
     "vitest": "workspace:*",
-    "ws": "^8.14.2"
+    "ws": "catalog:"
   }
 }

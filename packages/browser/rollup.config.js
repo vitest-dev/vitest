@@ -3,7 +3,7 @@ import commonjs from '@rollup/plugin-commonjs'
 import json from '@rollup/plugin-json'
 import resolve from '@rollup/plugin-node-resolve'
 import { defineConfig } from 'rollup'
-import esbuild from 'rollup-plugin-esbuild'
+import oxc from 'unplugin-oxc/rollup'
 import { createDtsUtils } from '../../scripts/build-utils.js'
 
 const require = createRequire(import.meta.url)
@@ -13,6 +13,7 @@ const external = [
   ...Object.keys(pkg.dependencies),
   ...Object.keys(pkg.peerDependencies || {}),
   /^@?vitest(\/|$)/,
+  '@vitest/browser/utils',
   'worker_threads',
   'node:worker_threads',
   'vite',
@@ -31,8 +32,8 @@ const plugins = [
   }),
   json(),
   commonjs(),
-  esbuild({
-    target: 'node18',
+  oxc({
+    transform: { target: 'node18' },
   }),
 ]
 
@@ -75,6 +76,7 @@ export default () =>
         'locators/webdriverio': './src/client/tester/locators/webdriverio.ts',
         'locators/preview': './src/client/tester/locators/preview.ts',
         'locators/index': './src/client/tester/locators/index.ts',
+        'expect-element': './src/client/tester/expect-element.ts',
         'utils': './src/client/tester/public-utils.ts',
       },
       output: {
@@ -84,7 +86,11 @@ export default () =>
       external,
       plugins: [
         ...dtsUtilsClient.isolatedDecl(),
-        ...plugins,
+        ...plugins.filter(p => p.name !== 'unplugin-oxc'),
+        oxc({
+          transform: { target: 'node18' },
+          minify: true,
+        }),
       ],
     },
     {
@@ -93,9 +99,10 @@ export default () =>
         file: 'dist/context.js',
         format: 'esm',
       },
+      external: ['@vitest/browser/utils'],
       plugins: [
-        esbuild({
-          target: 'node18',
+        oxc({
+          transform: { target: 'node18' },
         }),
       ],
     },
@@ -109,8 +116,8 @@ export default () =>
         resolve({
           preferBuiltins: true,
         }),
-        esbuild({
-          target: 'node18',
+        oxc({
+          transform: { target: 'node18' },
         }),
       ],
     },
@@ -121,9 +128,8 @@ export default () =>
         format: 'iife',
       },
       plugins: [
-        esbuild({
-          target: 'node18',
-          minifyWhitespace: true,
+        oxc({
+          transform: { target: 'node18' },
         }),
         resolve(),
       ],
@@ -135,6 +141,7 @@ export default () =>
         entryFileNames: '[name].d.ts',
         format: 'esm',
       },
+      watch: false,
       external,
       plugins: dtsUtils.dts(),
     },
@@ -147,6 +154,7 @@ export default () =>
         entryFileNames: '[name].d.ts',
         format: 'esm',
       },
+      watch: false,
       external,
       plugins: dtsUtilsClient.dts(),
     },

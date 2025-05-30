@@ -1,4 +1,4 @@
-import { channel, client } from '@vitest/browser/client'
+import { client } from '@vitest/browser/client'
 
 function serializeError(unhandledError) {
   const state = globalThis.__vitest_worker__
@@ -69,19 +69,6 @@ async function reportUnexpectedError(
   await client.waitForConnection().then(() => {
     return client.rpc.onUnhandledError(processedError, type)
   }).catch(console.error)
-  const state = __vitest_browser_runner__
-
-  if (state.type === 'orchestrator') {
-    return
-  }
-
-  if (!state.runTests || !__vitest_worker__.current) {
-    channel.postMessage({
-      type: 'done',
-      filenames: state.files,
-      id: state.iframeId,
-    })
-  }
 }
 
 registerUnexpectedErrors()

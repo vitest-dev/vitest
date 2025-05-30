@@ -54,6 +54,11 @@ export async function collectTests(
 
       await runner.importFile(filepath, 'collect')
 
+      const durations = runner.getImportDurations?.()
+      if (durations) {
+        file.importDurations = durations
+      }
+
       const defaultTasks = await getDefaultSuite().collect(file)
 
       const fileHooks = createSuiteHooks()
@@ -84,6 +89,11 @@ export async function collectTests(
       file.result = {
         state: 'fail',
         errors: [error],
+      }
+
+      const durations = runner.getImportDurations?.()
+      if (durations) {
+        file.importDurations = durations
       }
     }
 

@@ -64,7 +64,7 @@ Benchmark mode calls `bench` functions and throws an error, when it encounters `
 
 ## config
 
-The root (or global) config. If workspace feature is enabled, projects will reference this as `globalConfig`.
+The root (or global) config. If projects are defined, they will reference this as `globalConfig`.
 
 ::: warning
 This is Vitest config, it doesn't extend _Vite_ config. It only has resolved values from the `test` property.
@@ -93,7 +93,7 @@ In the future, the old API won't be exposed anymore.
 
 The global snapshot manager. Vitest keeps track of all snapshots using the `snapshot.add` method.
 
-You can get the latest summary of snapshots via the `vitest.snapshot.summay` property.
+You can get the latest summary of snapshots via the `vitest.snapshot.summary` property.
 
 ## cache
 
@@ -101,9 +101,9 @@ Cache manager that stores information about latest test results and test file st
 
 ## projects
 
-An array of [test projects](/advanced/api/test-project) that belong to the user's workspace. If the user did not specify a custom workspace, the workspace will only have a [root project](#getrootproject).
+An array of [test projects](/advanced/api/test-project) that belong to user's projects. If the user did not specify a them, this array will only contain a [root project](#getrootproject).
 
-Vitest will ensure that there is always at least one project in the workspace. If the user specifies a non-existent `--project` name, Vitest will throw an error.
+Vitest will ensure that there is always at least one project in this array. If the user specifies a non-existent `--project` name, Vitest will throw an error before this array is defined.
 
 ## getRootProject
 
@@ -111,7 +111,7 @@ Vitest will ensure that there is always at least one project in the workspace. I
 function getRootProject(): TestProject
 ```
 
-This returns the root test project. The root project generally doesn't run any tests and is not included in `vitest.projects` unless the user explicitly includes the root config in their workspace, or the workspace is not defined at all.
+This returns the root test project. The root project generally doesn't run any tests and is not included in `vitest.projects` unless the user explicitly includes the root config in their configuration, or projects are not defined at all.
 
 The primary goal of the root project is to setup the global config. In fact, `rootProject.config` references `rootProject.globalConfig` and `vitest.config` directly:
 
@@ -130,7 +130,7 @@ function provide<T extends keyof ProvidedContext & string>(
 
 Vitest exposes `provide` method which is a shorthand for `vitest.getRootProject().provide`. With this method you can pass down values from the main thread to tests. All values are checked with `structuredClone` before they are stored, but the values themselves are not cloned.
 
-To recieve the values in the test, you need to import `inject` method from `vitest` entrypont:
+To receive the values in the test, you need to import `inject` method from `vitest` entrypoint:
 
 ```ts
 import { inject } from 'vitest'
@@ -172,7 +172,7 @@ This returns the root context object. This is a shorthand for `vitest.getRootPro
 function getProjectByName(name: string): TestProject
 ```
 
-This method returns the project by its name. Simillar to calling `vitest.projects.find`.
+This method returns the project by its name. Similar to calling `vitest.projects.find`.
 
 ::: warning
 In case the project doesn't exist, this method will return the root project - make sure to check the names again if the project you are looking for is the one returned.
@@ -297,7 +297,7 @@ As of Vitest 3, this method uses a cache to check if the file is a test. To make
 function clearSpecificationsCache(moduleId?: string): void
 ```
 
-Vitest automatically caches test specifications for each file when [`globTestSpecifications`](#globtestspecifications) or [`runTestSpecifications`](#runtestspecifications) is called. This method clears the cache for the given file or the whole cache alltogether depending on the first argument.
+Vitest automatically caches test specifications for each file when [`globTestSpecifications`](#globtestspecifications) or [`runTestSpecifications`](#runtestspecifications) is called. This method clears the cache for the given file or the whole cache altogether depending on the first argument.
 
 ## runTestSpecifications
 
@@ -433,7 +433,7 @@ dynamicExample !== staticExample // ✅
 :::
 
 ::: info
-Internally, Vitest uses this method to import global setups, custom coverage providers, workspace file, and custom reporters, meaning all of them share the same module graph as long as they belong to the same Vite server.
+Internally, Vitest uses this method to import global setups, custom coverage providers, and custom reporters, meaning all of them share the same module graph as long as they belong to the same Vite server.
 :::
 
 ## close
@@ -452,7 +452,7 @@ function exit(force = false): Promise<void>
 
 Closes all projects and exit the process. If `force` is set to `true`, the process will exit immediately after closing the projects.
 
-This method will also forcefuly call `process.exit()` if the process is still active after [`config.teardownTimeout`](/config/#teardowntimeout) milliseconds.
+This method will also forcefully call `process.exit()` if the process is still active after [`config.teardownTimeout`](/config/#teardowntimeout) milliseconds.
 
 ## shouldKeepServer
 
@@ -518,3 +518,13 @@ vitest.onFilterWatchedSpecification(specification =>
 ```
 
 Vitest can create different specifications for the same file depending on the `pool` or `locations` options, so do not rely on the reference. Vitest can also return cached specification from [`vitest.getModuleSpecifications`](#getmodulespecifications) - the cache is based on the `moduleId` and `pool`. Note that [`project.createSpecification`](/advanced/api/test-project#createspecification) always returns a new instance.
+
+## matchesProjectFilter <Version>3.1.0</Version> {#matchesprojectfilter}
+
+```ts
+function matchesProjectFilter(name: string): boolean
+```
+
+Check if the name matches the current [project filter](/guide/cli#project). If there is no project filter, this will always return `true`.
+
+It is not possible to programmatically change the `--project` CLI option.

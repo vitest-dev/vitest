@@ -1,5 +1,6 @@
-import type { SerializedConfig } from 'vitest'
+import { SerializedConfig } from 'vitest'
 import { ARIARole } from './aria-role.js'
+import {} from './matchers.js'
 
 export type BufferEncoding =
   | 'ascii'
@@ -28,12 +29,19 @@ export interface ScreenshotOptions {
   element?: Element | Locator
   /**
    * Path relative to the current test file.
+   * @default `__screenshots__/${testFileName}/${testName}.png`
    */
   path?: string
   /**
    * Will also return the base64 encoded screenshot alongside the path.
    */
   base64?: boolean
+  /**
+   * Keep the screenshot on the file system. If file is not saved,
+   * `page.screenshot` always returns `base64` screenshot.
+   * @default true
+   */
+  save?: boolean
 }
 
 export interface BrowserCommands {
@@ -372,7 +380,7 @@ export interface Locator extends LocatorSelectors {
    */
   unhover(options?: UserEventHoverOptions): Promise<void>
   /**
-   * Sets the value of the current `input`, `textarea` or `conteneditable` element.
+   * Sets the value of the current `input`, `textarea` or `contenteditable` element.
    * @see {@link https://vitest.dev/guide/browser/interactivity-api#userevent-fill}
    */
   fill(text: string, options?: UserEventFillOptions): Promise<void>
@@ -452,6 +460,21 @@ export interface Locator extends LocatorSelectors {
    * @see {@link https://vitest.dev/guide/browser/locators#last}
    */
   last(): Locator
+  /**
+   * Returns a locator that matches both the current locator and the provided locator.
+   * @see {@link https://vitest.dev/guide/browser/locators#and}
+   */
+  and(locator: Locator): Locator
+  /**
+   * Returns a locator that matches either the current locator or the provided locator.
+   * @see {@link https://vitest.dev/guide/browser/locators#or}
+   */
+  or(locator: Locator): Locator
+  /**
+   * Narrows existing locator according to the options.
+   * @see {@link https://vitest.dev/guide/browser/locators#filter}
+   */
+  filter(options: LocatorOptions): Locator
 }
 
 export interface UserEventTabOptions {
@@ -506,6 +529,13 @@ export const server: {
   config: SerializedConfig
 }
 
+export interface LocatorOptions {
+  hasText?: string | RegExp
+  hasNotText?: string | RegExp
+  has?: Locator
+  hasNot?: Locator
+}
+
 /**
  * Handler for user interactions. The support is provided by the browser provider (`playwright` or `webdriverio`).
  * If used with `preview` provider, fallbacks to simulated events via `@testing-library/user-event`.
@@ -529,11 +559,16 @@ export interface BrowserPage extends LocatorSelectors {
    * Make a screenshot of the test iframe or a specific element.
    * @returns Path to the screenshot file or path and base64.
    */
+  screenshot(options: Omit<ScreenshotOptions, 'save'> & { save: false }): Promise<string>
   screenshot(options: Omit<ScreenshotOptions, 'base64'> & { base64: true }): Promise<{
     path: string
     base64: string
   }>
-  screenshot(options?: ScreenshotOptions): Promise<string>
+  screenshot(options?: Omit<ScreenshotOptions, 'base64'>): Promise<string>
+  screenshot(options?: ScreenshotOptions): Promise<string | {
+    path: string
+    base64: string
+  }>
   /**
    * Extend default `page` object with custom methods.
    */
@@ -544,6 +579,15 @@ export interface BrowserPage extends LocatorSelectors {
    */
   elementLocator(element: Element): Locator
 }
+
+export interface BrowserLocators {
+  createElementLocators(element: Element): LocatorSelectors
+  extend(methods: {
+    [K in keyof LocatorSelectors]?: (...args: Parameters<LocatorSelectors[K]>) => ReturnType<LocatorSelectors[K]> | string
+  }): void
+}
+
+export const locators: BrowserLocators
 
 export const page: BrowserPage
 export const cdp: () => CDPSession

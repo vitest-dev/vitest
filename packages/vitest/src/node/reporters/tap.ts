@@ -41,7 +41,7 @@ export class TapReporter implements Reporter {
   }
 
   private logErrorDetails(error: ErrorWithDiff, stack?: ParsedStack) {
-    const errorName = error.name || error.nameStr || 'Unknown Error'
+    const errorName = error.name || 'Unknown Error'
     this.logger.log(`name: ${yamlString(String(errorName))}`)
     this.logger.log(`message: ${yamlString(String(error.message))}`)
 

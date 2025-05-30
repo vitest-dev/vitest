@@ -25,7 +25,7 @@ export function NormalizeURLPlugin(): Plugin {
       const cleanString = stripLiteral(code)
       const assetImportMetaUrlRE
       // vite injects new URL(path, import.meta.url) in the code
-      // rolldown injects new URL(path, '' + import.meta.url) in the code
+      // rolldown-vite injects new URL(path, '' + import.meta.url) in the code
         = /\bnew\s+URL\s*\(\s*(?:'[^']+'|"[^"]+"|`[^`]+`)\s*,\s*(?:'' \+ )?import\.meta\.url\s*(?:,\s*)?\)/g
 
       let updatedCode = code

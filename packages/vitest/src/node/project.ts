@@ -14,18 +14,19 @@ import type { WorkspaceSpec as DeprecatedWorkspaceSpec } from './pool'
 import type { Reporter } from './reporters'
 import type { ParentProjectBrowser, ProjectBrowser } from './types/browser'
 import type {
+  ProjectName,
   ResolvedConfig,
   SerializedConfig,
+  TestProjectInlineConfiguration,
   UserConfig,
-  UserWorkspaceConfig,
 } from './types/config'
 import { promises as fs, readFileSync } from 'node:fs'
 import { rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { deepMerge, nanoid, slash } from '@vitest/utils'
-import mm from 'micromatch'
 import { isAbsolute, join, relative } from 'pathe'
+import pm from 'picomatch'
 import { glob } from 'tinyglobby'
 import { ViteNodeRunner } from 'vite-node/client'
 import { ViteNodeServer } from 'vite-node/server'
@@ -69,6 +70,7 @@ export class TestProject {
   /** @internal */ typechecker?: Typechecker
   /** @internal */ _config?: ResolvedConfig
   /** @internal */ _vite?: ViteDevServer
+  /** @internal */ _hash?: string
 
   private runner!: ViteNodeRunner
 
@@ -89,6 +91,18 @@ export class TestProject {
     this.vitest = vitest
     this.ctx = vitest
     this.globalConfig = vitest.config
+  }
+
+  /**
+   * The unique hash of this project. This value is consistent between the reruns.
+   *
+   * It is based on the root of the project (not consistent between OS) and its name.
+   */
+  public get hash(): string {
+    if (!this._hash) {
+      throw new Error('The server was not set. It means that `project.hash` was called before the Vite server was established.')
+    }
+    return this._hash
   }
 
   // "provide" is a property, not a method to keep the context when destructed in the global setup,
@@ -193,6 +207,13 @@ export class TestProject {
    */
   public get name(): string {
     return this.config.name || ''
+  }
+
+  /**
+   * The color used when reporting tasks of this project.
+   */
+  public get color(): ProjectName['color'] {
+    return this.config.color
   }
 
   /**
@@ -445,16 +466,16 @@ export class TestProject {
       return true
     }
     const relativeId = relative(this.config.dir || this.config.root, moduleId)
-    if (mm.isMatch(relativeId, this.config.exclude)) {
+    if (pm.isMatch(relativeId, this.config.exclude)) {
       return false
     }
-    if (mm.isMatch(relativeId, this.config.include)) {
+    if (pm.isMatch(relativeId, this.config.include)) {
       this.markTestFile(moduleId)
       return true
     }
     if (
       this.config.includeSource?.length
-      && mm.isMatch(relativeId, this.config.includeSource)
+      && pm.isMatch(relativeId, this.config.includeSource)
     ) {
       const code = source?.() || readFileSync(moduleId, 'utf-8')
       if (this.isInSourceTestCode(code)) {
@@ -503,7 +524,8 @@ export class TestProject {
   }
 
   private _parentBrowser?: ParentProjectBrowser
-  private _parent?: TestProject
+  /** @internal */
+  public _parent?: TestProject
   /** @internal */
   _initParentBrowser = deduped(async () => {
     if (!this.isBrowserEnabled() || this._parentBrowser) {
@@ -515,13 +537,20 @@ export class TestProject {
       this.vitest.version,
     )
     const { createBrowserServer, distRoot } = await import('@vitest/browser')
+    let cacheDir: string
     const browser = await createBrowserServer(
       this,
       this.vite.config.configFile,
       [
+        {
+          name: 'vitest:browser-cacheDir',
+          configResolved(config) {
+            cacheDir = config.cacheDir
+          },
+        },
         ...MocksPlugins({
           filter(id) {
-            if (id.includes(distRoot)) {
+            if (id.includes(distRoot) || id.includes(cacheDir)) {
               return false
             }
             return true
@@ -585,6 +614,12 @@ export class TestProject {
     return this._configureServer(options, server)
   }
 
+  private _setHash() {
+    this._hash = generateHash(
+      this._config!.root + this._config!.name,
+    )
+  }
+
   /** @internal */
   async _configureServer(options: UserConfig, server: ViteDevServer): Promise<void> {
     this._config = resolveConfig(
@@ -595,6 +630,7 @@ export class TestProject {
       },
       server.config,
     )
+    this._setHash()
     for (const _providedKey in this.config.provide) {
       const providedKey = _providedKey as keyof ProvidedContext
       // type is very strict here, so we cast it to any
@@ -683,6 +719,7 @@ export class TestProject {
     project.runner = vitest.runner
     project._vite = vitest.server
     project._config = vitest.config
+    project._setHash()
     project._provideObject(vitest.config.provide)
     return project
   }
@@ -697,6 +734,7 @@ export class TestProject {
     clone.runner = parent.runner
     clone._vite = parent._vite
     clone._config = config
+    clone._setHash()
     clone._parent = parent
     clone._provideObject(config.provide)
     return clone
@@ -726,7 +764,7 @@ export interface SerializedTestProject {
   context: ProvidedContext
 }
 
-interface InitializeProjectOptions extends UserWorkspaceConfig {
+interface InitializeProjectOptions extends TestProjectInlineConfiguration {
   configFile: string | false
 }
 
@@ -742,6 +780,7 @@ export async function initializeProject(
   const config: ViteInlineConfig = {
     ...restOptions,
     configFile,
+    configLoader: ctx.vite.config.inlineConfig.configLoader,
     // this will make "mode": "test" | "benchmark" inside defineConfig
     mode: options.test?.mode || options.mode || ctx.config.mode,
     plugins: [
@@ -753,4 +792,17 @@ export async function initializeProject(
   await createViteServer(config)
 
   return project
+}
+
+function generateHash(str: string): string {
+  let hash = 0
+  if (str.length === 0) {
+    return `${hash}`
+  }
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i)
+    hash = (hash << 5) - hash + char
+    hash = hash & hash // Convert to 32bit integer
+  }
+  return `${hash}`
 }

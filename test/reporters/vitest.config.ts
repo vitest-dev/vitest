@@ -2,6 +2,7 @@ import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
   test: {
+    watch: false,
     exclude: ['node_modules', 'fixtures', 'dist', '**/vitest-test-*/**'],
     reporters: ['verbose'],
     testTimeout: 100000,

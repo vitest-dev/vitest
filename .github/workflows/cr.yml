@@ -24,7 +24,7 @@ jobs:
           fetch-depth: 0
 
       - name: Install pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@a7487c7e89a18df4991f7f222e4898a00d66ddda # v4.1.0
 
       - name: Set node version to 20
         uses: actions/setup-node@v4
@@ -41,7 +41,8 @@ jobs:
       - name: Build
         run: pnpm build
         env:
-          NO_VITE_TEST_WATCHER_DEBUG: '1'
+          VITEST_GENERATE_UI_TOKEN: 'true'
+          VITE_TEST_WATCHER_DEBUG: 'false'
 
       - name: Publish to StackBlitz
         run: pnpx pkg-pr-new publish --compact --no-template --pnpm './packages/*'

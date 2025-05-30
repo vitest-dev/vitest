@@ -135,6 +135,62 @@ test('renders name', async () => {
 `,
 }
 
+const litExample = {
+  name: 'HelloWorld.js',
+  js: `
+import { html, LitElement } from 'lit'
+
+export class HelloWorld extends LitElement {
+  static properties = {
+    name: { type: String },
+  }
+
+  constructor() {
+    super()
+    this.name = 'World'
+  }
+
+  render() {
+    return html\`<h1>Hello \${this.name}!</h1>\`
+  }
+}
+
+customElements.define('hello-world', HelloWorld)
+`,
+  ts: `
+import { html, LitElement } from 'lit'
+import { customElement, property } from 'lit/decorators.js'
+
+@customElement('hello-world')
+export class HelloWorld extends LitElement {
+  @property({ type: String })
+  name = 'World'
+
+  render() {
+    return html\`<h1>Hello \${this.name}!</h1>\`
+  }
+}
+
+declare global {
+  interface HTMLElementTagNameMap {
+    'hello-world': HelloWorld
+  }
+}
+`,
+  test: `
+import { expect, test } from 'vitest'
+import { render } from 'vitest-browser-lit'
+import { html } from 'lit'
+import './HelloWorld.js'
+
+test('renders name', async () => {
+  const screen = render(html\`<hello-world name="Vitest"></hello-world>\`)
+  const element = screen.getByText('Hello Vitest!')
+  await expect.element(element).toBeInTheDocument()
+})
+`,
+}
+
 const vanillaExample = {
   name: 'HelloWorld.js',
   js: `
@@ -177,20 +233,22 @@ test('renders name', () => {
 function getExampleTest(framework: string) {
   switch (framework) {
     case 'solid':
-    case 'preact':
       return {
         ...jsxExample,
         test: jsxExample.test.replace('@testing-library/jsx', `@testing-library/${framework}`),
       }
+    case 'preact':
     case 'react':
       return {
         ...jsxExample,
-        test: jsxExample.test.replace('@testing-library/jsx', 'vitest-browser-react'),
+        test: jsxExample.test.replace('@testing-library/jsx', `vitest-browser-${framework}`),
       }
     case 'vue':
       return vueExample
     case 'svelte':
       return svelteExample
+    case 'lit':
+      return litExample
     case 'marko':
       return markoExample
     default:

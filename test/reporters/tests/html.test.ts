@@ -27,6 +27,7 @@ describe('html reporter', async () => {
     file.environmentLoad = 0
     file.prepareDuration = 0
     file.setupDuration = 0
+    file.importDurations = {}
     file.result.duration = 0
     file.result.startTime = 0
     const task = file.tasks[0]
@@ -55,6 +56,7 @@ describe('html reporter', async () => {
     file.environmentLoad = 0
     file.prepareDuration = 0
     file.setupDuration = 0
+    file.importDurations = {}
     file.result.duration = 0
     file.result.startTime = 0
     const task = file.tasks[0]
@@ -63,7 +65,6 @@ describe('html reporter', async () => {
     task.result.startTime = 0
     expect(task.result.errors).toBeDefined()
     task.result.errors[0].stack = task.result.errors[0].stack.split('\n')[0]
-    task.result.errors[0].stackStr = task.result.errors[0].stackStr.split('\n')[0]
     expect(task.logs).toBeDefined()
     expect(task.logs).toHaveLength(1)
     task.logs[0].taskId = 0

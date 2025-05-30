@@ -1,7 +1,6 @@
 import { builtinModules, createRequire } from 'node:module'
 import { defineConfig } from 'rollup'
-import copy from 'rollup-plugin-copy'
-import esbuild from 'rollup-plugin-esbuild'
+import oxc from 'unplugin-oxc/rollup'
 import { createDtsUtils } from '../../scripts/build-utils.js'
 
 const require = createRequire(import.meta.url)
@@ -18,17 +17,8 @@ const dtsUtils = createDtsUtils()
 
 const plugins = [
   ...dtsUtils.isolatedDecl(),
-  esbuild({
-    target: 'node14',
-  }),
-  copy({
-    targets: [
-      {
-        src: 'node_modules/@types/chai/index.d.ts',
-        dest: 'dist',
-        rename: 'chai.d.cts',
-      },
-    ],
+  oxc({
+    transform: { target: 'node14' },
   }),
 ]
 
@@ -52,6 +42,7 @@ export default defineConfig([
       entryFileNames: '[name].d.ts',
       format: 'esm',
     },
+    watch: false,
     external,
     plugins: dtsUtils.dts(),
     onwarn,

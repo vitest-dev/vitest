@@ -31,8 +31,8 @@ export {
 }
 export type { BaseReporter, Reporter, TestRunEndReason }
 
+export type { BenchmarkBuiltinReporters } from './benchmark'
 export {
-  BenchmarkBuiltinReporters,
   BenchmarkReporter,
   BenchmarkReportsMap,
   VerboseBenchmarkReporter,
