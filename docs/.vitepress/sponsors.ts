@@ -17,9 +17,9 @@ const vitestSponsors = {
       img: '/nuxtlabs.svg',
     },
     {
-      name: 'Stackblitz',
-      url: 'https://stackblitz.com',
-      img: '/stackblitz.svg',
+      name: 'Bolt',
+      url: 'https://bolt.new',
+      img: '/bolt.svg',
     },
     {
       name: 'Zammad',
