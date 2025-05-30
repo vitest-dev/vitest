@@ -200,9 +200,7 @@ export function createVmThreadsPool(
     name: 'vmThreads',
     runTests: runWithFiles('run'),
     collectTests: runWithFiles('collect'),
-    close: async () => {
-      await pool.destroy()
-    },
+    close: () => pool.destroy(),
   }
 }
 

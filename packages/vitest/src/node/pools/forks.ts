@@ -282,8 +282,6 @@ export function createForksPool(
     name: 'forks',
     runTests: runWithFiles('run'),
     collectTests: runWithFiles('collect'),
-    close: async () => {
-      await pool.destroy()
-    },
+    close: () => pool.destroy(),
   }
 }

@@ -373,7 +373,7 @@ describe('another type of schema', () => {
 })
 ```
 
-#### Per-Scope Context <Version>?</Version>
+#### Per-Scope Context <Version>3.2.0</Version>
 
 You can define context that will be initiated once per file or a worker. It is initiated the same way as a regular fixture with an objects parameter:
 

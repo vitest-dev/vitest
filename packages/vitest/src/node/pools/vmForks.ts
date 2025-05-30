@@ -207,9 +207,7 @@ export function createVmForksPool(
     name: 'vmForks',
     runTests: runWithFiles('run'),
     collectTests: runWithFiles('collect'),
-    close: async () => {
-      await pool.destroy()
-    },
+    close: () => pool.destroy(),
   }
 }
 
