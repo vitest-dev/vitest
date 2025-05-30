@@ -815,6 +815,9 @@ importers:
       '@types/d3-selection':
         specifier: ^3.0.11
         version: 3.0.11
+      '@types/mime':
+        specifier: ^4.0.0
+        version: 4.0.0
       '@types/ws':
         specifier: 'catalog:'
         version: 8.18.1
@@ -854,6 +857,9 @@ importers:
       floating-vue:
         specifier: ^5.2.2
         version: 5.2.2(vue@3.5.15(typescript@5.8.3))
+      mime:
+        specifier: ^4.0.7
+        version: 4.0.7
       rollup:
         specifier: ^4.41.1
         version: 4.41.1
@@ -1043,6 +1049,9 @@ importers:
       '@types/jsdom':
         specifier: ^21.1.7
         version: 21.1.7
+      '@types/mime':
+        specifier: ^4.0.0
+        version: 4.0.0
       '@types/node':
         specifier: ^22.15.21
         version: 22.15.21
@@ -1082,6 +1091,9 @@ importers:
       local-pkg:
         specifier: ^1.1.1
         version: 1.1.1
+      mime:
+        specifier: ^4.0.7
+        version: 4.0.7
       pretty-format:
         specifier: ^29.7.0
         version: 29.7.0
@@ -3647,6 +3659,10 @@ packages:
 
   '@types/mdast@4.0.3':
     resolution: {integrity: sha512-LsjtqsyF+d2/yFOYaN22dHZI1Cpwkrj+g06G8+qtUKlhovPW89YhqSnfKtMbkgmEtYpH2gydRNULd6y8mciAFg==}
+
+  '@types/mime@4.0.0':
+    resolution: {integrity: sha512-5eEkJZ/BLvTE3vXGKkWlyTSUVZuzj23Wj8PoyOq2lt5I3CYbiLBOPb3XmCW6QcuOibIUE6emHXHt9E/F/rCa6w==}
+    deprecated: This is a stub types definition. mime provides its own type definitions, so you do not need this installed.
 
   '@types/minimatch@5.1.1':
     resolution: {integrity: sha512-v55NF6Dz0wrj14Rn8iEABTWrhYRmgkJYuokduunSiq++t3hZ9VZ6dvcDt+850Pm5sGJZk8RaHzkFCXPxVINZ+g==}
@@ -11197,6 +11213,10 @@ snapshots:
   '@types/mdast@4.0.3':
     dependencies:
       '@types/unist': 3.0.2
+
+  '@types/mime@4.0.0':
+    dependencies:
+      mime: 4.0.7
 
   '@types/minimatch@5.1.1': {}
 

@@ -79,7 +79,30 @@ it('math is hard', ({ skip, mind }) => {
 })
 ```
 
-#### `context.signal` <Version>3.2.0</Version> {#context-signal}
+#### `annotate` <Version>3.2.0</Version> {#annotate}
+
+```ts
+function annotate(
+  message: string,
+  attachment?: TestAttachment,
+): Promise<TestAnnotation>
+
+function annotate(
+  message: string,
+  type?: string,
+  attachment?: TestAttachment,
+): Promise<TestAnnotation>
+```
+
+Add a [test annotation](/guide/test-annotations) that will be displayed by your [reporter](/config/#reporter).
+
+```ts
+test('annotations API', async ({ annotate }) => {
+  await annotate('https://github.com/vitest-dev/vitest/pull/7953', 'issues')
+})
+```
+
+#### `signal` <Version>3.2.0</Version> {#signal}
 
 An [`AbortSignal`](https://developer.mozilla.org/en-US/docs/Web/API/AbortSignal) that can be aborted by Vitest. The signal is aborted in these situations:
 

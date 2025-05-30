@@ -82,6 +82,14 @@ export class TapReporter implements Reporter {
 
         const project = this.ctx.getProjectByName(task.file.projectName || '')
 
+        if (task.type === 'test' && task.annotations) {
+          this.logger.indent()
+          task.annotations.forEach(({ type, message }) => {
+            this.logger.log(`# ${type}: ${message}`)
+          })
+          this.logger.unindent()
+        }
+
         if (task.result?.state === 'fail' && task.result.errors) {
           this.logger.indent()
 

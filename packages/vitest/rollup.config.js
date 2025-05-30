@@ -131,6 +131,12 @@ export default ({ watch }) =>
         chunkFileNames: 'chunks/[name].[hash].js',
       },
       external,
+      moduleContext: (id) => {
+        // mime has `this.__classPrivateFieldGet` check which should be ignored in esm
+        if (id.includes('mime/dist/src') || id.includes('mime\\dist\\src')) {
+          return '{}'
+        }
+      },
       plugins: [
         ...dtsUtils.isolatedDecl(),
         ...plugins,

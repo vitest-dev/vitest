@@ -5,6 +5,7 @@ import type {
   File as RunnerTestFile,
   Suite as RunnerTestSuite,
   TaskMeta,
+  TestAnnotation,
 } from '@vitest/runner'
 import type { SerializedError, TestError } from '@vitest/utils'
 import type { TestProject } from '../project'
@@ -176,6 +177,13 @@ export class TestCase extends ReportedTaskImplementation {
       state,
       errors: (result.errors || []) as TestError[],
     } satisfies TestResultFailed
+  }
+
+  /**
+   * Test annotations added via the `task.annotate` API during the test execution.
+   */
+  public annotations(): ReadonlyArray<TestAnnotation> {
+    return [...this.task.annotations]
   }
 
   /**

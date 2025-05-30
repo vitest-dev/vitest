@@ -9,6 +9,7 @@ import type {
   TaskEventPack,
   TaskResultPack,
   Test,
+  TestAnnotation,
   TestContext,
 } from './tasks'
 
@@ -131,6 +132,11 @@ export interface VitestRunner {
    * Called, when a task is updated. The same as "onTaskUpdate" in a reporter, but this is running in the same thread as tests.
    */
   onTaskUpdate?: (task: TaskResultPack[], events: TaskEventPack[]) => Promise<void>
+
+  /**
+   * Called when annotation is added via the `context.annotate` method.
+   */
+  onTestAnnotate?: (test: Test, annotation: TestAnnotation) => Promise<TestAnnotation>
 
   /**
    * Called before running all tests in collected paths.

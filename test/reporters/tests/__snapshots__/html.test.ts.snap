@@ -25,6 +25,7 @@ exports[`html reporter > resolves to "failing" status for test file "json-fail" 
       "setupDuration": 0,
       "tasks": [
         {
+          "annotations": [],
           "file": [Circular],
           "id": 0,
           "location": {
@@ -135,6 +136,7 @@ exports[`html reporter > resolves to "passing" status for test file "all-passing
       "setupDuration": 0,
       "tasks": [
         {
+          "annotations": [],
           "file": [Circular],
           "id": 0,
           "location": {
@@ -155,6 +157,7 @@ exports[`html reporter > resolves to "passing" status for test file "all-passing
           "type": "test",
         },
         {
+          "annotations": [],
           "file": [Circular],
           "id": "1111755131_1",
           "location": {
