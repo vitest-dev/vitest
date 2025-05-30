@@ -890,11 +890,12 @@ function formatTemplateString(cases: any[], args: any[]): any[] {
 }
 
 function findTestFileStackTrace(error: string) {
+  const testFilePath = getTestFilepath()
   // first line is the error message
   const lines = error.split('\n').slice(1)
   for (const line of lines) {
     const stack = parseSingleStack(line)
-    if (stack && stack.file === getTestFilepath()) {
+    if (stack && stack.file === testFilePath) {
       return {
         line: stack.line,
         column: stack.column,
