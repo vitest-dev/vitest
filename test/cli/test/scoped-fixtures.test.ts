@@ -285,7 +285,7 @@ test('worker fixture initiates and torn down in different workers', async () => 
       extendedTest('test1', ({ worker: _worker }) => {})
     },
     '2-basic.test.ts': ({ extendedTest }) => {
-      extendedTest('test1', ({ worker: _worker }) => {})
+      extendedTest('test2', ({ worker: _worker }) => {})
     },
   }, {
     globals: true,
@@ -296,16 +296,16 @@ test('worker fixture initiates and torn down in different workers', async () => 
   })
 
   expect(stderr).toBe('')
-  expect(fixtures).toMatchInlineSnapshot(`
-    ">> fixture | init worker | test1
-    >> fixture | init worker | test1
-    >> fixture | teardown worker | test1
-    >> fixture | teardown worker | test1"
-  `)
-  expect(tests).toMatchInlineSnapshot(`
-    " ✓ 1-basic.test.ts > test1 <time>
-     ✓ 2-basic.test.ts > test1 <time>"
-  `)
+
+  // tests run in parallel so we can't guarantee the order
+  expect(fixtures).toContain(`>> fixture | init worker | test1`)
+  expect(fixtures).toContain(`>> fixture | teardown worker | test1`)
+
+  expect(fixtures).toContain(`>> fixture | init worker | test2`)
+  expect(fixtures).toContain(`>> fixture | teardown worker | test2`)
+
+  expect(tests).toContain(' ✓ 1-basic.test.ts > test1 <time>')
+  expect(tests).toContain(' ✓ 2-basic.test.ts > test2 <time>')
 })
 
 test('worker fixture initiates and torn down in one non-isolated worker', async () => {
