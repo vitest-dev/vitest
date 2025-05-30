@@ -250,7 +250,7 @@ export class JUnitReporter implements Reporter {
                 'failure',
                 {
                   message: error?.message,
-                  type: error?.name ?? error?.nameStr,
+                  type: error?.name,
                 },
                 async () => {
                   if (!error) {

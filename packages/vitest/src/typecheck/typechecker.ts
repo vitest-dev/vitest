@@ -244,11 +244,9 @@ export class Typechecker {
           originalError: info,
           error: {
             name: error.name,
-            nameStr: String(error.name),
             message: errMsg,
             stacks: error.stacks,
             stack: '',
-            stackStr: '',
           },
         }
       })
