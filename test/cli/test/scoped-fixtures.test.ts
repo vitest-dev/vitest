@@ -2,7 +2,7 @@
 
 import type { TestAPI } from 'vitest'
 import type { ViteUserConfig } from 'vitest/config'
-import type { UserConfig } from 'vitest/node'
+import type { TestSpecification, UserConfig } from 'vitest/node'
 import type { TestFsStructure } from '../../test-utils'
 import { runInlineTests } from '../../test-utils'
 
@@ -533,11 +533,11 @@ test.for([
 
   expect(tests).toMatchInlineSnapshot(`
     " ✓ basic.test.js > [first] test 1 <time>
-     ✓ basic.test.js > suite 1 > suite 2 > [first] test 1 2 1 <time>
-     ✓ basic.test.js > suite 1 > test 1 1 <time>
-     ✓ basic.test.js > suite 1 > test 1 2 <time>
      ✓ basic.test.js > test 2 <time>
      ✓ basic.test.js > test 3 <time>
+     ✓ basic.test.js > suite 1 > test 1 1 <time>
+     ✓ basic.test.js > suite 1 > test 1 2 <time>
+     ✓ basic.test.js > suite 1 > suite 2 > [first] test 1 2 1 <time>
      ✓ second.test.js > [second] test 0 <time>
      ✓ second.test.js > [second] test 1 <time>
      ✓ second.test.js > [second] test 2 <time>
@@ -721,7 +721,7 @@ async function runFixtureTests<T>(
       }
       return acc
     }, {} as TestFsStructure),
-  }, config)
+  }, { ...config, sequence: { sequencer: StableTestFileOrderSorter } })
 
   return {
     stderr,
@@ -736,7 +736,6 @@ function getSuccessTests(stdout: string) {
     .split('\n')
     .filter(f => f.startsWith(' ✓ '))
     .map(f => f.replace(/\dms/, '<time>'))
-    .sort()
     .join('\n')
 }
 
@@ -745,4 +744,14 @@ function getFixtureLogs(stdout: string) {
     .split('\n')
     .filter(f => f.startsWith('>> fixture |'))
     .join('\n')
+}
+
+class StableTestFileOrderSorter {
+  sort(files: TestSpecification[]) {
+    return files.sort((a, b) => a.moduleId.localeCompare(b.moduleId))
+  }
+
+  shard(files: TestSpecification[]) {
+    return files
+  }
 }
