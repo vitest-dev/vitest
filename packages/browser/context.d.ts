@@ -60,9 +60,9 @@ export interface ScreenshotMatcherOptions<
    *
    * @defaultValue `'pixelmatch'`
    */
-  comparatorName: ComparatorName
-  comparatorOptions: ComparatorRegistry[ComparatorName]
-  screenshotOptions: Omit<
+  comparatorName?: ComparatorName
+  comparatorOptions?: ComparatorRegistry[ComparatorName]
+  screenshotOptions?: Omit<
     ScreenshotOptions,
     'element' | 'base64' | 'path' | 'save' | 'type'
   >
