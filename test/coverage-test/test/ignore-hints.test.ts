@@ -4,7 +4,7 @@
 */
 
 import { expect } from 'vitest'
-import { isExperimentalV8Provider, isV8Provider, readCoverageMap, runVitest, test } from '../utils'
+import { isV8Provider, readCoverageMap, runVitest, test } from '../utils'
 
 test('ignore hints work', async () => {
   await runVitest({
@@ -20,10 +20,6 @@ test('ignore hints work', async () => {
   expect(lines[12]).toBeGreaterThanOrEqual(1)
 
   if (isV8Provider()) {
-    expect(lines[15]).toBeUndefined()
-    expect(lines[18]).toBeGreaterThanOrEqual(1)
-  }
-  else if (isExperimentalV8Provider()) {
     expect(lines[15]).toBeUndefined()
     expect(lines[18]).toBeUndefined()
   }
