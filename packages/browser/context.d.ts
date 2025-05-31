@@ -47,7 +47,69 @@ export interface ScreenshotOptions {
 
 export interface ComparatorRegistry {
   // @todo percentage-based threshold
-  pixelmatch: NonNullable<Parameters<typeof pm>['5']>
+  pixelmatch: {
+    /**
+     * Acceptable perceived color difference between the same pixel in two images.
+     *
+     * Value ranges from `0` (strict) to `1` (very lenient). Lower values mean
+     * small differences will be detected.
+     *
+     * The comparison uses the {@link https://en.wikipedia.org/wiki/YIQ | YIQ color space}.
+     *
+     * @default 0.1
+     */
+    threshold?: number | undefined
+    /**
+     * If `true`, disables detection and ignoring of anti-aliased pixels.
+     *
+     * @default false
+     */
+    includeAA?: boolean | undefined
+    /**
+     * Blending level of unchanged pixels in the diff image.
+     *
+     * Ranges from `0` (white) to `1` (original brightness).
+     *
+     * @default 0.1
+     */
+    alpha?: number | undefined
+    /**
+     * Color used for anti-aliased pixels in the diff image.
+     *
+     * Format: `[R, G, B]`
+     *
+     * @default [255, 255, 0]
+     */
+    aaColor?: [r: number, g: number, b: number] | undefined
+    /**
+     * Color used for differing pixels in the diff image.
+     *
+     * Format: `[R, G, B]`
+     *
+     * @default [255, 0, 0]
+     */
+    diffColor?: [r: number, g: number, b: number] | undefined
+    /**
+     * Optional alternative color for dark-on-light differences, to help show
+     * what's added vs. removed.
+     *
+     * If not set, `diffColor` is used for all differences.
+     *
+     * Format: `[R, G, B]`
+     *
+     * @default undefined
+     */
+    diffColorAlt?: [r: number, g: number, b: number] | undefined
+    /**
+     * If `true`, shows only the diff as a mask on a transparent background,
+     * instead of overlaying it on the original image.
+     *
+     * Anti-aliased pixels won't be shown (if detected).
+     *
+     * @default false
+     */
+    diffMask?: boolean | undefined
+  }
 }
 
 export interface ScreenshotMatcherOptions<
