@@ -587,6 +587,98 @@ describe('jest mock compat layer', () => {
     expect(fn.getMockImplementation()).toBe(temporaryMockImplementation)
   })
 
+  it('keeps the descriptor the same as the original one when restoring', () => {
+    class Foo {
+      f() {
+        return 'original'
+      }
+    }
+
+    // initially there's no own properties
+    const foo = new Foo()
+    expect(foo.f()).toMatchInlineSnapshot(`"original"`)
+    expect(Object.getOwnPropertyDescriptors(foo)).toMatchInlineSnapshot(`{}`)
+
+    // mocked function in own property
+    const spy = vi.spyOn(foo, 'f').mockImplementation(() => 'mocked')
+    expect(foo.f()).toMatchInlineSnapshot(`"mocked"`)
+    expect(Object.getOwnPropertyDescriptors(foo)).toMatchInlineSnapshot(`
+    {
+      "f": {
+        "configurable": true,
+        "enumerable": false,
+        "value": [MockFunction f] {
+          "calls": [
+            [],
+          ],
+          "results": [
+            {
+              "type": "return",
+              "value": "mocked",
+            },
+          ],
+        },
+        "writable": true,
+      },
+    }
+  `)
+
+    // probably original prototype method is not moved to own property
+    spy.mockRestore()
+    expect(foo.f()).toMatchInlineSnapshot(`"original"`)
+    expect(Object.getOwnPropertyDescriptors(foo)).toMatchInlineSnapshot(`{}`)
+  })
+
+  it('mocks inherited methods', () => {
+    class Bar {
+      _bar = 'bar'
+      get bar(): string {
+        return this._bar
+      }
+
+      set bar(bar: string) {
+        this._bar = bar
+      }
+    }
+    class Foo extends Bar {}
+    const foo = new Foo()
+    vi.spyOn(foo, 'bar', 'get').mockImplementation(() => 'foo')
+    expect(foo.bar).toEqual('foo')
+    // foo.bar setter is inherited from Bar, so we can set it
+    expect(() => {
+      foo.bar = 'baz'
+    }).not.toThrowError()
+    expect(foo.bar).toEqual('foo')
+  })
+
+  it('mocks inherited overridden methods', () => {
+    class Bar {
+      _bar = 'bar'
+      get bar(): string {
+        return this._bar
+      }
+
+      set bar(bar: string) {
+        this._bar = bar
+      }
+    }
+    class Foo extends Bar {
+      get bar(): string {
+        return `${super.bar}-foo`
+      }
+    }
+    const foo = new Foo()
+    expect(foo.bar).toEqual('bar-foo')
+    vi.spyOn(foo, 'bar', 'get').mockImplementation(() => 'foo')
+    expect(foo.bar).toEqual('foo')
+    // foo.bar setter is not inherited from Bar
+    expect(() => {
+      // @ts-expect-error bar is readonly
+      foo.bar = 'baz'
+    }).toThrowError()
+    expect(foo.bar).toEqual('foo')
+  })
+
   describe('is disposable', () => {
     describe.runIf(Symbol.dispose)('in environments supporting it', () => {
       it('has dispose property', () => {
