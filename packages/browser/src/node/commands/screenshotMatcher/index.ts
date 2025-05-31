@@ -1,44 +1,40 @@
 import type { BrowserCommand, BrowserCommandContext } from 'vitest/node'
 import type { ScreenshotMatcherOptions } from '../../../../context'
 import type { ScreenshotMatcherArguments, ScreenshotMatcherOutput } from '../../../shared/screenshotMatcher/types'
+import type { getCodec } from './codecs'
+import type { getComparator } from './comparators'
 import type { TypedArray } from './types'
 import { access, mkdir, readFile, writeFile } from 'node:fs/promises'
-import { dirname, normalize, resolve } from 'node:path'
-import { resolveScreenshotPath, takeScreenshot } from '../screenshot'
-import { getCodec } from './codecs'
-import { getComparator } from './comparators'
+import { dirname } from 'node:path'
+import { takeScreenshot } from '../screenshot'
+import { resolveOptions } from './utils'
 
 type Codec = ReturnType<typeof getCodec>
 type Comparator = ReturnType<typeof getComparator>
 
+// @todo if reporter is HTML, for convenience it would be great to write reference in its output folder
+// @todo wrap `screenshotMatcher` with a function that checks result and copies reference
+
 export const screenshotMatcher: BrowserCommand<
   ScreenshotMatcherArguments
-> = async (context, name, {
-  comparatorName,
-  comparatorOptions,
-  screenshotOptions,
-  element,
-  timeout = 5_000,
-}): ScreenshotMatcherOutput => {
+> = async (context, name, testName, options): ScreenshotMatcherOutput => {
   if (!context.testPath) {
     throw new Error(`Cannot compare screenshots without a test path`)
   }
 
-  // when more codecs will be available, allow `type` in `screenshotOptions`
-  const screenshotType = 'png'
+  const { element } = options
 
-  const codec = getCodec(screenshotType)
-  const comparator = getComparator(comparatorName)
+  const {
+    codec,
+    comparator,
+    paths,
+    resolvedOptions: { comparatorOptions, screenshotOptions, timeout },
+  } = resolveOptions({ context, name, testName, options })
 
-  // @todo check if this is the correct path
-  const referencePath = normalize(resolveScreenshotPath(
-    context.testPath,
-    name,
-    context.project.config,
-    undefined,
-  ))
-  const hasReference = await access(referencePath).then(() => true).catch(() => false)
-  const reference = hasReference ? await codec.decode(await readFile(referencePath), {}) : null
+  const hasReference = await access(paths.reference).then(() => true).catch(() => false)
+  const reference = hasReference
+    ? await codec.decode(await readFile(paths.reference), {})
+    : null
 
   const abortController = new AbortController()
   const stableScreenshot = getStableScreenshots({
@@ -68,7 +64,7 @@ export const screenshotMatcher: BrowserCommand<
   if (value === null || value.actual === null) {
     return {
       pass: false,
-      reference: hasReference ? referencePath : null,
+      reference: hasReference ? paths.reference : null,
       actual: null,
       diff: null,
       message: `It was impossible to get a stable screenshot in ${timeout}ms`,
@@ -81,7 +77,7 @@ export const screenshotMatcher: BrowserCommand<
   if (reference === null || updateSnapshot === 'all') {
     // @todo this should still be written in CI along with diff for artifacts
     if (updateSnapshot !== 'none') {
-      await writeScreenshot(referencePath, await codec.encode(value.actual, {}))
+      await writeScreenshot(paths.reference, await codec.encode(value.actual, {}))
     }
 
     // case #02
@@ -90,7 +86,7 @@ export const screenshotMatcher: BrowserCommand<
     if (updateSnapshot !== 'all') {
       return {
         pass: false,
-        reference: referencePath,
+        reference: paths.reference,
         actual: null,
         diff: null,
         message: 'Created reference screenshot while running this test',
@@ -116,9 +112,6 @@ export const screenshotMatcher: BrowserCommand<
 
   const finalResult = await comparator(reference, value.actual, { createDiff: true, ...comparatorOptions })
 
-  const diffBase = '/tmp/todo/' // @todo
-  let diffPath: string | null = null
-
   if (finalResult.pass === false && finalResult.diff !== null) {
     const diff = await codec.encode(
       {
@@ -131,9 +124,7 @@ export const screenshotMatcher: BrowserCommand<
       {},
     )
 
-    diffPath = resolve(diffBase, `todo.diff.${screenshotType}`) // @todo
-
-    await writeScreenshot(diffPath, diff)
+    await writeScreenshot(paths.diffs.diff, diff)
   }
 
   // case #05
@@ -145,19 +136,18 @@ export const screenshotMatcher: BrowserCommand<
     }
   }
 
-  const actualPath = resolve(diffBase, `todo.actual.${screenshotType}`) // @todo
   const actual = await codec.encode(value.actual, {})
 
-  await writeScreenshot(actualPath, actual)
+  await writeScreenshot(paths.diffs.actual, actual)
 
   // case #06
   //  - fallback, reference does NOT matches stable screenshot
   //  - fail
   return {
     pass: false,
-    reference: referencePath,
-    actual: actualPath,
-    diff: diffPath,
+    reference: paths.reference,
+    actual: paths.diffs.actual,
+    diff: paths.diffs.diff,
     message: 'Expected the element to match the reference screenshot',
   }
 }
