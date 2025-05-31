@@ -2,22 +2,9 @@ import type { AsyncExpectationResult, MatcherState } from '@vitest/expect'
 import type { ScreenshotMatcherOptions } from '../../../../context'
 import type { ScreenshotMatcherArguments, ScreenshotMatcherOutput } from '../../../shared/screenshotMatcher/types'
 import type { Locator } from '../locators'
-import { deepMerge } from '@vitest/utils'
 import { getBrowserState } from '../../utils'
 import { convertElementToCssSelector } from '../utils'
 import { getElementFromUserInput, getMessage } from './utils'
-
-const defaultOptions = {
-  comparatorName: 'pixelmatch',
-  comparatorOptions: {},
-  screenshotOptions: {
-    animations: 'disabled',
-    caret: 'hide',
-    fullPage: false,
-    omitBackground: false,
-    scale: 'css',
-  },
-} satisfies ScreenshotMatcherOptions<'pixelmatch'>
 
 export default async function toMatchScreenshot(
   this: MatcherState,
@@ -25,7 +12,7 @@ export default async function toMatchScreenshot(
   nameOrOptions?: ScreenshotMatcherOptions | string,
   options: ScreenshotMatcherOptions = typeof nameOrOptions === 'object'
     ? nameOrOptions
-    : defaultOptions,
+    : {},
 ): AsyncExpectationResult {
   if (this.isNot) {
     throw new Error('\'toMatchScreenshot\' cannot be used with "not"')
@@ -44,19 +31,13 @@ export default async function toMatchScreenshot(
     '__vitest_screenshotMatcher',
     [
       name,
-      deepMerge<ScreenshotMatcherArguments[1]>(
-        {
-          element: convertElementToCssSelector(
-            getElementFromUserInput(actual, toMatchScreenshot, this),
-          ),
-          timeout: 5_000,
-        } satisfies Omit<
-          ScreenshotMatcherArguments[1],
-              'comparatorName' | 'comparatorOptions' | 'screenshotOptions'
-        > as any,
-        defaultOptions,
-        options,
-      ),
+      this.currentTestName,
+      {
+        element: convertElementToCssSelector(
+          getElementFromUserInput(actual, toMatchScreenshot, this),
+        ),
+        ...options,
+      },
     ] satisfies ScreenshotMatcherArguments,
   )
 

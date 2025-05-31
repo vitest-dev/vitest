@@ -88,7 +88,7 @@ export async function takeScreenshot(
   )
 }
 
-export function resolveScreenshotPath(
+function resolveScreenshotPath(
   testPath: string,
   name: string,
   config: ResolvedConfig,
