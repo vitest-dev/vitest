@@ -38,6 +38,7 @@ export class Logger {
   private _clearScreenPending: string | undefined
   private _highlights = new Map<string, string>()
   private cleanupListeners: Listener[] = []
+  private prependNewline = false
   public console: Console
 
   constructor(
@@ -53,6 +54,9 @@ export class Logger {
     if ((this.outputStream as typeof process.stdout).isTTY) {
       (this.outputStream as Writable).write(HIDE_CURSOR)
     }
+
+    this.applyNewlineCheck(outputStream)
+    this.applyNewlineCheck(errorStream)
   }
 
   log(...args: any[]): void {
@@ -68,6 +72,12 @@ export class Logger {
   warn(...args: any[]): void {
     this._clearScreen()
     this.console.warn(...args)
+  }
+
+  write(...args: Parameters<NodeJS.WriteStream['write']>): void {
+    this.prependNewline = false;
+    (this.outputStream as NodeJS.WriteStream).write(...args)
+    this.prependNewline = true
   }
 
   clearFullScreen(message = ''): void {
@@ -94,6 +104,18 @@ export class Logger {
     if (force) {
       this._clearScreen()
     }
+  }
+
+  private applyNewlineCheck(stream: Writable) {
+    const originalWrite = stream.write.bind(stream) as Writable['write']
+
+    stream.write = ((...args: Parameters<Writable['write']>) => {
+      if (this.prependNewline) {
+        originalWrite('\n')
+        this.prependNewline = false
+      }
+      return originalWrite(...args)
+    }) as Writable['write']
   }
 
   private _clearScreen() {

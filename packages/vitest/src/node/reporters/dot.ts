@@ -30,11 +30,8 @@ export class DotReporter extends BaseReporter {
     }
   }
 
-  printTestModule(testModule: TestModule): void {
-    if (!this.isTTY) {
-      super.printTestModule(testModule)
-    }
-  }
+  // ignore base reporter
+  printTestModule(): void {}
 
   onWatcherRerun(files: string[], trigger?: string): void {
     this.tests.clear()
@@ -46,6 +43,9 @@ export class DotReporter extends BaseReporter {
     if (this.isTTY) {
       const finalLog = formatTests(Array.from(this.tests.values()))
       this.ctx.logger.log(finalLog)
+    }
+    else {
+      this.ctx.logger.log()
     }
 
     this.tests.clear()
@@ -70,10 +70,15 @@ export class DotReporter extends BaseReporter {
   }
 
   onTestCaseResult(test: TestCase): void {
+    const result = test.result().state
+    if (!this.isTTY && result !== 'pending') {
+      this.ctx.logger.write(formatTests([result]))
+    }
+
     super.onTestCaseResult(test)
 
     this.finishedTests.add(test.id)
-    this.tests.set(test.id, test.result().state || 'skipped')
+    this.tests.set(test.id, result || 'skipped')
     this.renderer?.schedule()
   }
 
