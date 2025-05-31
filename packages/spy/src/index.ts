@@ -145,6 +145,14 @@ export interface MockContext<T extends Procedure> {
    * @see https://vitest.dev/api/mock#mock-lastcall
    */
   lastCall: Parameters<T> | undefined
+  /** @internal */
+  _state: (state?: InternalState) => InternalState
+}
+
+interface InternalState {
+  implementation: Procedure | undefined
+  onceImplementations: Procedure[]
+  implementationChangedTemporarily: boolean
 }
 
 type Procedure = (...args: any[]) => any
@@ -412,7 +420,7 @@ export type Mocked<T> = {
       : T[P];
 } & T
 
-export const mocks: Set<MockInstance> = new Set()
+export const mocks: Set<MockInstance<any>> = new Set()
 
 export function isMockFunction(fn: any): fn is MockInstance {
   return (
@@ -449,9 +457,24 @@ export function spyOn<T, K extends keyof T>(
   } as const
   const objMethod = accessType ? { [dictionary[accessType]]: method } : method
 
-  const stub = tinyspy.internalSpyOn(obj, objMethod as any)
+  let state: InternalState | undefined
 
-  return enhanceSpy(stub) as MockInstance
+  const descriptor = getDescriptor(obj, method)
+  const fn = descriptor && descriptor[accessType || 'value']
+
+  // inherit implementations if it was already mocked
+  if (isMockFunction(fn)) {
+    state = fn.mock._state()
+  }
+
+  const stub = tinyspy.internalSpyOn(obj, objMethod as any)
+  const spy = enhanceSpy(stub) as MockInstance
+
+  if (state) {
+    spy.mock._state(state)
+  }
+
+  return spy
 }
 
 let callOrder = 0
@@ -459,12 +482,14 @@ let callOrder = 0
 function enhanceSpy<T extends Procedure>(
   spy: SpyInternalImpl<Parameters<T>, ReturnType<T>>,
 ): MockInstance<T> {
-  type TArgs = Parameters<T>
   type TReturns = ReturnType<T>
 
   const stub = spy as unknown as MockInstance<T>
 
   let implementation: T | undefined
+
+  let onceImplementations: T[] = []
+  let implementationChangedTemporarily = false
 
   let instances: any[] = []
   let contexts: any[] = []
@@ -502,10 +527,19 @@ function enhanceSpy<T extends Procedure>(
     get lastCall() {
       return state.calls[state.calls.length - 1]
     },
+    _state(state) {
+      if (state) {
+        implementation = state.implementation as T
+        onceImplementations = state.onceImplementations as T[]
+        implementationChangedTemporarily = state.implementationChangedTemporarily
+      }
+      return {
+        implementation,
+        onceImplementations,
+        implementationChangedTemporarily,
+      }
+    },
   }
-
-  let onceImplementations: ((...args: TArgs) => TReturns)[] = []
-  let implementationChangedTemporarily = false
 
   function mockCall(this: unknown, ...args: any) {
     instances.push(this)
@@ -582,7 +616,7 @@ function enhanceSpy<T extends Procedure>(
 
     const result = cb()
 
-    if (result instanceof Promise) {
+    if (typeof result === 'object' && result && typeof result.then === 'function') {
       return result.then(() => {
         reset()
         return stub
@@ -638,4 +672,22 @@ export function fn<T extends Procedure = Procedure>(
   }
 
   return enhancedSpy as any
+}
+
+function getDescriptor(
+  obj: any,
+  method: string | symbol | number,
+): PropertyDescriptor | undefined {
+  const objDescriptor = Object.getOwnPropertyDescriptor(obj, method)
+  if (objDescriptor) {
+    return objDescriptor
+  }
+  let currentProto = Object.getPrototypeOf(obj)
+  while (currentProto !== null) {
+    const descriptor = Object.getOwnPropertyDescriptor(currentProto, method)
+    if (descriptor) {
+      return descriptor
+    }
+    currentProto = Object.getPrototypeOf(currentProto)
+  }
 }
