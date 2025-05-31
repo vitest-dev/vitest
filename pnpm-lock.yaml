@@ -591,8 +591,8 @@ importers:
         specifier: ^1.0.2
         version: 1.0.2
       ast-v8-to-istanbul:
-        specifier: https://pkg.pr.new/AriPerkkio/ast-v8-to-istanbul@51
-        version: https://pkg.pr.new/AriPerkkio/ast-v8-to-istanbul@51
+        specifier: https://pkg.pr.new/AriPerkkio/ast-v8-to-istanbul@1371c9f
+        version: https://pkg.pr.new/AriPerkkio/ast-v8-to-istanbul@1371c9f
       debug:
         specifier: 'catalog:'
         version: 4.4.1
@@ -4422,8 +4422,8 @@ packages:
     resolution: {integrity: sha512-x1FCFnFifvYDDzTaLII71vG5uvDwgtmDTEVWAxrgeiR8VjMONcCXJx7E+USjDtHlwFmt9MysbqgF9b9Vjr6w+w==}
     engines: {node: '>=4'}
 
-  ast-v8-to-istanbul@https://pkg.pr.new/AriPerkkio/ast-v8-to-istanbul@51:
-    resolution: {tarball: https://pkg.pr.new/AriPerkkio/ast-v8-to-istanbul@51}
+  ast-v8-to-istanbul@https://pkg.pr.new/AriPerkkio/ast-v8-to-istanbul@1371c9f:
+    resolution: {tarball: https://pkg.pr.new/AriPerkkio/ast-v8-to-istanbul@1371c9f}
     version: 0.3.2
 
   async@3.2.6:
@@ -12066,7 +12066,7 @@ snapshots:
     dependencies:
       tslib: 2.8.1
 
-  ast-v8-to-istanbul@https://pkg.pr.new/AriPerkkio/ast-v8-to-istanbul@51:
+  ast-v8-to-istanbul@https://pkg.pr.new/AriPerkkio/ast-v8-to-istanbul@1371c9f:
     dependencies:
       '@jridgewell/trace-mapping': 0.3.25
       estree-walker: 3.0.3
