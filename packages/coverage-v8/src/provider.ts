@@ -292,6 +292,46 @@ export class V8CoverageProvider extends BaseCoverageProvider<ResolvedCoverageOpt
           ) {
             return true
           }
+
+          // in-source test with "if (import.meta.vitest)"
+          if (
+            (type === 'branch' || type === 'statement')
+            && node.type === 'IfStatement'
+            && node.test.type === 'MemberExpression'
+            && node.test.property.type === 'Identifier'
+            && node.test.property.name === 'vitest'
+          ) {
+            // SSR
+            if (
+              node.test.object.type === 'Identifier'
+              && node.test.object.name === '__vite_ssr_import_meta__'
+            ) {
+              return 'ignore-this-and-nested-nodes'
+            }
+
+            // Web
+            if (
+              node.test.object.type === 'MetaProperty'
+              && node.test.object.meta.name === 'import'
+              && node.test.object.property.name === 'meta'
+            ) {
+              return 'ignore-this-and-nested-nodes'
+            }
+          }
+
+          // Browser mode's "import.meta.env ="
+          if (
+            type === 'statement'
+            && node.type === 'ExpressionStatement'
+            && node.expression.type === 'AssignmentExpression'
+            && node.expression.left.type === 'MemberExpression'
+            && node.expression.left.object.type === 'MetaProperty'
+            && node.expression.left.object.meta.name === 'import'
+            && node.expression.left.object.property.name === 'meta'
+            && node.expression.left.property.type === 'Identifier'
+            && node.expression.left.property.name === 'env') {
+            return true
+          }
         },
       },
       )
