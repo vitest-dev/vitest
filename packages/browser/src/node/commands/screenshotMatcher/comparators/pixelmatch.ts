@@ -2,6 +2,16 @@ import type { ComparatorRegistry } from '../../../../../context'
 import type { Comparator } from '../types'
 import pm from 'pixelmatch'
 
+const defaultOptions = {
+  threshold: 0.1,
+  includeAA: false,
+  alpha: 0.1,
+  aaColor: [255, 255, 0],
+  diffColor: [255, 0, 0],
+  diffColorAlt: undefined,
+  diffMask: false,
+} satisfies ComparatorRegistry['pixelmatch']
+
 export const pixelmatch: Comparator<ComparatorRegistry['pixelmatch']> = (
   reference,
   actual,
@@ -17,7 +27,7 @@ export const pixelmatch: Comparator<ComparatorRegistry['pixelmatch']> = (
     diffBuffer,
     reference.metadata.width,
     reference.metadata.height,
-    options,
+    { ...defaultOptions, ...options },
   )
 
   return {
