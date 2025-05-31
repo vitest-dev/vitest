@@ -4,6 +4,7 @@ export type ScreenshotMatcherArguments<
   ComparatorName extends keyof ComparatorRegistry = keyof ComparatorRegistry,
 > = [
   name: string,
+  testName: string,
   options: ScreenshotMatcherOptions<ComparatorName> & { element: string },
 ]
 
