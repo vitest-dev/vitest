@@ -146,12 +146,12 @@ export interface MockContext<T extends Procedure> {
    */
   lastCall: Parameters<T> | undefined
   /** @internal */
-  _state: (state?: InternalState<T>) => InternalState<T>
+  _state: (state?: InternalState) => InternalState
 }
 
-interface InternalState<T extends Procedure = Procedure> {
-  implementation: T | undefined
-  onceImplementations: T[]
+interface InternalState {
+  implementation: Procedure | undefined
+  onceImplementations: Procedure[]
   implementationChangedTemporarily: boolean
 }
 
@@ -529,8 +529,8 @@ function enhanceSpy<T extends Procedure>(
     },
     _state(state) {
       if (state) {
-        implementation = state.implementation
-        onceImplementations = state.onceImplementations
+        implementation = state.implementation as T
+        onceImplementations = state.onceImplementations as T[]
         implementationChangedTemporarily = state.implementationChangedTemporarily
       }
       return {
