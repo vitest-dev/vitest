@@ -78,7 +78,6 @@ export const coverageConfigDefaults: ResolvedCoverageOptions = {
   ],
   allowExternal: false,
   excludeAfterRemap: false,
-  ignoreEmptyLines: true,
   processingConcurrency: Math.min(
     20,
     os.availableParallelism?.() ?? os.cpus().length,

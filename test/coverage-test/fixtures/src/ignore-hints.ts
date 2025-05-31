@@ -1,4 +1,4 @@
-/* v8 ignore next 4 */
+// padding
 /* istanbul ignore next -- @preserve */
 export function first() {
   return "First"
