@@ -13,9 +13,6 @@ SOURCEMAPPING_URL += 'ppingURL'
 
 const VITE_NODE_SOURCEMAPPING_SOURCE = '//# sourceMappingSource=vite-node'
 const VITE_NODE_SOURCEMAPPING_URL = `${SOURCEMAPPING_URL}=data:application/json;charset=utf-8`
-const VITE_NODE_SOURCEMAPPING_REGEXP = new RegExp(
-  `//# ${VITE_NODE_SOURCEMAPPING_URL};base64,(.+)`,
-)
 
 export function withInlineSourcemap(
   result: TransformResult,
@@ -79,9 +76,18 @@ export function withInlineSourcemap(
 }
 
 export function extractSourceMap(code: string): EncodedSourceMap | null {
-  const mapString = code.match(VITE_NODE_SOURCEMAPPING_REGEXP)?.[1]
-  if (mapString) {
-    return JSON.parse(Buffer.from(mapString, 'base64').toString('utf-8'))
+  const regexp = new RegExp(
+    `//# ${VITE_NODE_SOURCEMAPPING_URL};base64,(.+)`,
+    'gm',
+  )
+  let lastMatch!: RegExpExecArray | null, match!: RegExpExecArray | null
+  // eslint-disable-next-line no-cond-assign
+  while ((match = regexp.exec(code))) {
+    lastMatch = match
+  }
+  // pick only the last source map keeping user strings that look like maps
+  if (lastMatch) {
+    return JSON.parse(Buffer.from(lastMatch[1], 'base64').toString('utf-8'))
   }
   return null
 }

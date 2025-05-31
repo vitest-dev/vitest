@@ -281,7 +281,7 @@ export function parseErrorStacktrace(
     return e.stacks
   }
 
-  const stackStr = e.stack || e.stackStr || ''
+  const stackStr = e.stack || ''
   // if "stack" property was overwritten at runtime to be something else,
   // ignore the value because we don't know how to process it
   let stackFrames = typeof stackStr === 'string'

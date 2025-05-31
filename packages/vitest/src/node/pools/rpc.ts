@@ -100,6 +100,9 @@ export function createMethodsRPC(project: TestProject, options: MethodsOptions =
     onAfterSuiteRun(meta) {
       ctx.coverageProvider?.onAfterSuiteRun(meta)
     },
+    async onTaskAnnotate(testId, annotation) {
+      return ctx._testRun.annotate(testId, annotation)
+    },
     async onTaskUpdate(packs, events) {
       if (options.collect) {
         ctx.state.updateTasks(packs)

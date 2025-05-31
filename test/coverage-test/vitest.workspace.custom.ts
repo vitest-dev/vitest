@@ -108,7 +108,7 @@ export default defineWorkspace([
     test: {
       ...config.test,
       name: { label: 'v8-browser', color: 'red' },
-      env: { COVERAGE_PROVIDER: 'v8', COVERAGE_BROWSER: 'true' },
+      env: { COVERAGE_PROVIDER: 'v8-ast-aware', COVERAGE_BROWSER: 'true' },
       include: [
         BROWSER_TESTS,
 

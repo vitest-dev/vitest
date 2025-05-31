@@ -155,6 +155,19 @@ export const cliOptionsConfig: VitestCLIOptions = {
   silent: {
     description: 'Silent console output from tests. Use `\'passed-only\'` to see logs from failing tests only.',
     argument: '[value]',
+    transform(value) {
+      if (value === 'true' || value === 'yes' || value === true) {
+        return true
+      }
+      if (value === 'false' || value === 'no' || value === false) {
+        return false
+      }
+      if (value === 'passed-only') {
+        return value
+      }
+
+      throw new TypeError(`Unexpected value "--silent=${value}". Use "--silent=true ${value}" instead.`)
+    },
   },
   hideSkippedTests: {
     description: 'Hide logs for skipped tests',
@@ -798,6 +811,10 @@ export const cliOptionsConfig: VitestCLIOptions = {
   },
   includeTaskLocation: {
     description: 'Collect test and suite locations in the `location` property',
+  },
+  attachmentsDir: {
+    description: 'The directory where attachments from `context.annotate` are stored in (default: `.vitest-attachments`)',
+    argument: '<dir>',
   },
 
   // CLI only options
