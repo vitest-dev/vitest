@@ -4,8 +4,6 @@ import type { AnyCodec } from './codecs'
 import { platform } from 'node:os'
 import { basename, dirname, extname, join, relative, resolve, sep } from 'node:path'
 import { deepMerge } from '@vitest/utils'
-import { PlaywrightBrowserProvider } from '../../providers/playwright'
-import { WebdriverBrowserProvider } from '../../providers/webdriver'
 import { takeScreenshot } from '../screenshot'
 import { getCodec } from './codecs'
 import { getComparator } from './comparators'
@@ -130,7 +128,7 @@ export function resolveOptions(
     testFileDirectory: relative(root, dirname(context.testPath)),
     testFileName: basename(context.testPath),
     testName: sanitize(testName, false),
-    browserName: getBrowserName(context),
+    browserName: context.project.config.browser.name,
   } satisfies Parameters<GlobalOptions['resolveDiffPath']>[0]
 
   return {
@@ -213,23 +211,6 @@ function sanitize(input: string, keepPaths: boolean): string {
  */
 function sanitizeArg(input: string): string {
   return sanitize(relative(sep, join(sep, input)), true)
-}
-
-/**
- * Retrieves the name of the browser from a given context.
- */
-function getBrowserName(context: BrowserCommandContext): string {
-  if (context.provider instanceof PlaywrightBrowserProvider) {
-    return context.provider.browser?.browserType().name() ?? ''
-  }
-
-  if (context.provider instanceof WebdriverBrowserProvider) {
-    return context.provider.browser?.capabilities.browserName ?? ''
-  }
-
-  throw new Error(
-    `Provider "${context.provider.name}" does not support retrieving the browser's name`,
-  )
 }
 
 /**
