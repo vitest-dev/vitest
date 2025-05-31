@@ -1,10 +1,12 @@
 import type { BrowserCommandContext, BrowserConfigOptions } from 'vitest/node'
 import type { ScreenshotMatcherOptions } from '../../../../context'
+import type { AnyCodec } from './codecs'
 import { platform } from 'node:os'
 import { basename, dirname, extname, join, relative, resolve, sep } from 'node:path'
 import { deepMerge } from '@vitest/utils'
 import { PlaywrightBrowserProvider } from '../../providers/playwright'
 import { WebdriverBrowserProvider } from '../../providers/webdriver'
+import { takeScreenshot } from '../screenshot'
 import { getCodec } from './codecs'
 import { getComparator } from './comparators'
 
@@ -228,4 +230,52 @@ function getBrowserName(context: BrowserCommandContext): string {
   throw new Error(
     `Provider "${context.provider.name}" does not support retrieving the browser's name`,
   )
+}
+
+/**
+ * Takes a screenshot and decodes it using the provided codec.
+ *
+ * The screenshot is taken as a base64 string and then decoded into the format
+ * expected by the comparator.
+ *
+ * @returns `Promise` resolving to the decoded screenshot data
+ */
+export function takeDecodedScreenshot({
+  codec,
+  context,
+  element,
+  name,
+  screenshotOptions,
+}: {
+  codec: AnyCodec
+  context: BrowserCommandContext
+  element: string
+  name: string
+  screenshotOptions: ScreenshotMatcherOptions['screenshotOptions']
+}): ReturnType<AnyCodec['decode']> {
+  return takeScreenshot(
+    context,
+    name,
+    { ...screenshotOptions, save: false, element },
+  ).then(
+    ({ buffer }) => codec.decode(buffer, {}),
+  )
+}
+
+/**
+ * Creates a promise that resolves to `null` after the specified timeout.
+ * If the timeout is `0`, the promise resolves immediately.
+ *
+ * @param timeout - The delay in milliseconds before the promise resolves
+ * @returns `Promise` that resolves to `null` after the timeout
+ */
+export function asyncTimeout(timeout: number): Promise<null> {
+  return new Promise((resolve) => {
+    if (timeout === 0) {
+      resolve(null)
+    }
+    else {
+      setTimeout(() => resolve(null), timeout)
+    }
+  })
 }
