@@ -1,6 +1,7 @@
 // Disable automatic exports.
 
 import { ARIARole } from './aria-role.ts'
+import { ComparatorRegistry, ScreenshotMatcherOptions } from './context.js'
 
 export interface TestingLibraryMatchers<E, R> {
   /**
@@ -627,4 +628,12 @@ export interface TestingLibraryMatchers<E, R> {
    * @see https://vitest.dev/guide/browser/assertion-api#tohaveselection
    */
   toHaveSelection(selection?: string): R
+
+  toMatchScreenshot<ComparatorName extends keyof ComparatorRegistry>(
+    options?: ScreenshotMatcherOptions<ComparatorName>,
+  ): Promise<R>
+  toMatchScreenshot<ComparatorName extends keyof ComparatorRegistry>(
+    name?: string,
+    options?: ScreenshotMatcherOptions<ComparatorName>,
+  ): Promise<R>
 }

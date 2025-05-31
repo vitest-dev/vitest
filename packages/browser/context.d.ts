@@ -1,4 +1,5 @@
 import { SerializedConfig } from 'vitest'
+import type pm from 'pixelmatch'
 import { ARIARole } from './aria-role.js'
 import {} from './matchers.js'
 
@@ -42,6 +43,38 @@ export interface ScreenshotOptions {
    * @default true
    */
   save?: boolean
+}
+
+export interface ComparatorRegistry {
+  // @todo percentage-based threshold
+  pixelmatch: NonNullable<Parameters<typeof pm>['5']>
+}
+
+export interface ScreenshotMatcherOptions<
+  ComparatorName extends keyof ComparatorRegistry = keyof ComparatorRegistry
+> {
+  /**
+   * The name of the comparator to use for visual diffing.
+   *
+   * Must be one of the keys from {@linkcode ComparatorRegistry}.
+   *
+   * @defaultValue `'pixelmatch'`
+   */
+  comparatorName?: ComparatorName
+  comparatorOptions?: ComparatorRegistry[ComparatorName]
+  screenshotOptions?: Omit<
+    ScreenshotOptions,
+    'element' | 'base64' | 'path' | 'save' | 'type'
+  >
+  /**
+   * Time to wait until a stable screenshot is found.
+   *
+   * Setting this value to `0` disables the timeout, but if a stable screenshot
+   * can't be determined the process will not end.
+   *
+   * @default 5000
+   */
+  timeout?: number
 }
 
 export interface BrowserCommands {
