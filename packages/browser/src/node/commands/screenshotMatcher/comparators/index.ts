@@ -32,3 +32,5 @@ export function getComparator<ComparatorName extends keyof ComparatorRegistry>(
 
   throw new Error(`Unrecognized comparator ${comparator}`)
 }
+
+export type AnyComparator = Comparator<ComparatorRegistry[keyof ComparatorRegistry]>
