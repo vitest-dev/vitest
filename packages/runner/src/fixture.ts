@@ -97,7 +97,7 @@ export function mergeContextFixtures<T extends { fixtures?: FixtureItem[] }>(
       if (fixture.scope !== 'test') {
         fixture.deps?.forEach((dep) => {
           if (!dep.isFn) {
-            // non fn fixtures are always resolved an available to anyone
+            // non fn fixtures are always resolved and available to anyone
             return
           }
           // worker scope can only import from worker scope

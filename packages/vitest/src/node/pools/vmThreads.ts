@@ -150,8 +150,8 @@ export function createVmThreadsPool(
         }
       }
       finally {
-        port.unref()
-        workerPort.unref()
+        port.close()
+        workerPort.close()
       }
     }
 
