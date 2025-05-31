@@ -1,5 +1,5 @@
-import type { CancelReason, File, Suite, Task, TaskEventPack, TaskResultPack, TestAnnotation, VitestRunner } from '@vitest/runner'
-import type { RunnerTestCase, SerializedConfig, TestExecutionMethod, WorkerGlobalState } from 'vitest'
+import type { CancelReason, File, Suite, Task, TaskEventPack, TaskResultPack, Test, TestAnnotation, VitestRunner } from '@vitest/runner'
+import type { SerializedConfig, TestExecutionMethod, WorkerGlobalState } from 'vitest'
 import type { VitestExecutor } from 'vitest/execute'
 import type { VitestBrowserClientMocker } from './mocker'
 import { globalChannel, onCancel } from '@vitest/browser/client'
@@ -59,7 +59,7 @@ export function createBrowserRunner(
       await super.onBeforeTryTask?.(...args)
     }
 
-    onAfterRunTask = async (task: Task) => {
+    onAfterRunTask = async (task: Test) => {
       await super.onAfterRunTask?.(task)
 
       if (this.config.bail && task.result?.state === 'fail') {
@@ -146,7 +146,7 @@ export function createBrowserRunner(
       return rpc().onCollected(this.method, files)
     }
 
-    onTestAnnotate = (test: RunnerTestCase, annotation: TestAnnotation): Promise<TestAnnotation> => {
+    onTestAnnotate = (test: Test, annotation: TestAnnotation): Promise<TestAnnotation> => {
       if (annotation.location) {
         // the file should be the test file
         // tests from other files are not supported

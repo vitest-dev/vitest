@@ -20,6 +20,7 @@
     wrapModule,
     wrapDynamicImport: wrapModule,
     moduleCache,
+    cleanups: [],
     config: { __VITEST_CONFIG__ },
     viteConfig: { __VITEST_VITE_CONFIG__ },
     type: { __VITEST_TYPE__ },

@@ -6,6 +6,7 @@ export default defineConfig({
     includeTaskLocation: true,
     reporters: ['verbose'],
     testTimeout: 60_000,
+    globals: true,
     poolOptions: {
       forks: {
         singleFork: true,

@@ -373,6 +373,46 @@ describe('another type of schema', () => {
 })
 ```
 
+#### Per-Scope Context <Version>3.2.0</Version>
+
+You can define context that will be initiated once per file or a worker. It is initiated the same way as a regular fixture with an objects parameter:
+
+```ts
+import { test as baseTest } from 'vitest'
+
+export const test = baseTest.extend({
+  perFile: [
+    ({}, { use }) => use([]),
+    { scope: 'file' },
+  ],
+  perWorker: [
+    ({}, { use }) => use([]),
+    { scope: 'worker' },
+  ],
+})
+```
+
+The value is initialised the first time any test has accessed it, unless the fixture options have `auto: true` - in this case the value is initialised before any test has run.
+
+```ts
+const test = baseTest.extend({
+  perFile: [
+    ({}, { use }) => use([]),
+    {
+      scope: 'file',
+      // always run this hook before any test
+      auto: true
+    },
+  ],
+})
+```
+
+The `worker` scope will run the fixture once per worker. The number of running workers depends on various factors. By default, every file runs in a separate worker, so `file` and `worker` scopes work the same way.
+
+However, if you disable [isolation](/config/#isolate), then the number of workers is limited by the [`maxWorkers`](/config/#maxworkers) or [`poolOptions`](/config/#pooloptions) configuration.
+
+Note that specifying `scope: 'worker'` when running tests in `vmThreads` or `vmForks` will work the same way as `scope: 'file'`. This limitation exists because every test file has its own VM context, so if Vitest were to initiate it once, one context could leak to another and create many reference inconsistencies (instances of the same class would reference different constructors, for example).
+
 #### TypeScript
 
 To provide fixture types for all your custom contexts, you can pass the fixtures type as a generic.

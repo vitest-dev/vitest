@@ -81,6 +81,7 @@ export interface BrowserRunnerState {
   method: 'run' | 'collect'
   orchestrator?: IframeOrchestrator
   commands: CommandsManager
+  cleanups: Array<() => unknown>
   cdp?: {
     on: (event: string, listener: (payload: any) => void) => void
     once: (event: string, listener: (payload: any) => void) => void

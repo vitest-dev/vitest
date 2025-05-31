@@ -5,7 +5,6 @@ import type {
   SequenceHooks,
   SequenceSetupFiles,
   Suite,
-  Task,
   TaskEventPack,
   TaskResultPack,
   Test,
@@ -84,12 +83,12 @@ export interface VitestRunner {
   /**
    * Called before running a single test. Doesn't have "result" yet.
    */
-  onBeforeRunTask?: (test: Task) => unknown
+  onBeforeRunTask?: (test: Test) => unknown
   /**
    * Called before actually running the test function. Already has "result" with "state" and "startTime".
    */
   onBeforeTryTask?: (
-    test: Task,
+    test: Test,
     options: { retry: number; repeats: number }
   ) => unknown
   /**
@@ -99,12 +98,12 @@ export interface VitestRunner {
   /**
    * Called after result and state are set.
    */
-  onAfterRunTask?: (test: Task) => unknown
+  onAfterRunTask?: (test: Test) => unknown
   /**
    * Called right after running the test function. Doesn't have new state yet. Will not be called, if the test function throws.
    */
   onAfterTryTask?: (
-    test: Task,
+    test: Test,
     options: { retry: number; repeats: number }
   ) => unknown
 
@@ -126,7 +125,7 @@ export interface VitestRunner {
    * If defined, will be called instead of usual Vitest handling. Useful, if you have your custom test function.
    * "before" and "after" hooks will not be ignored.
    */
-  runTask?: (test: Task) => Promise<void>
+  runTask?: (test: Test) => Promise<void>
 
   /**
    * Called, when a task is updated. The same as "onTaskUpdate" in a reporter, but this is running in the same thread as tests.
@@ -173,6 +172,12 @@ export interface VitestRunner {
    * The name of the current pool. Can affect how stack trace is inferred on the server side.
    */
   pool?: string
+
+  /**
+   * Return the worker context for fixtures specified with `scope: 'worker'`
+   */
+  getWorkerContext?: () => Record<string, unknown>
+  onCleanupWorkerContext?: (cleanup: () => unknown) => void
 
   /** @private */
   _currentTaskStartTime?: number
