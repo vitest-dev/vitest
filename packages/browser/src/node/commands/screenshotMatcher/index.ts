@@ -1,16 +1,12 @@
 import type { BrowserCommand, BrowserCommandContext } from 'vitest/node'
 import type { ScreenshotMatcherOptions } from '../../../../context'
 import type { ScreenshotMatcherArguments, ScreenshotMatcherOutput } from '../../../shared/screenshotMatcher/types'
-import type { getCodec } from './codecs'
-import type { getComparator } from './comparators'
+import type { AnyCodec } from './codecs'
+import type { AnyComparator } from './comparators'
 import type { TypedArray } from './types'
 import { access, mkdir, readFile, writeFile } from 'node:fs/promises'
 import { dirname } from 'node:path'
-import { takeScreenshot } from '../screenshot'
-import { resolveOptions } from './utils'
-
-type Codec = ReturnType<typeof getCodec>
-type Comparator = ReturnType<typeof getComparator>
+import { asyncTimeout, resolveOptions, takeDecodedScreenshot } from './utils'
 
 // @todo if reporter is HTML, for convenience it would be great to write reference in its output folder
 // @todo wrap `screenshotMatcher` with a function that checks result and copies reference
@@ -190,13 +186,13 @@ async function getStableScreenshots({
   screenshotOptions,
   signal,
 }: {
-  codec: Codec
-  comparator: Comparator
+  codec: AnyCodec
+  comparator: AnyComparator
   comparatorOptions: ScreenshotMatcherOptions['comparatorOptions']
   context: BrowserCommandContext
   element: string
   name: string
-  reference: ReturnType<Codec['decode']> | null
+  reference: ReturnType<AnyCodec['decode']> | null
   screenshotOptions: ScreenshotMatcherOptions['screenshotOptions']
   signal: AbortSignal
 }) {
@@ -241,52 +237,4 @@ async function getStableScreenshots({
     retries,
     actual: await decodedBaseline,
   }
-}
-
-/**
- * Takes a screenshot and decodes it using the provided codec.
- *
- * The screenshot is taken as a base64 string and then decoded into the format
- * expected by the comparator.
- *
- * @returns `Promise` resolving to the decoded screenshot data
- */
-function takeDecodedScreenshot({
-  codec,
-  context,
-  element,
-  name,
-  screenshotOptions,
-}: {
-  codec: Codec
-  context: BrowserCommandContext
-  element: string
-  name: string
-  screenshotOptions: ScreenshotMatcherOptions['screenshotOptions']
-}) {
-  return takeScreenshot(
-    context,
-    name,
-    { ...screenshotOptions, save: false, element },
-  ).then(
-    ({ buffer }) => codec.decode(buffer, {}),
-  )
-}
-
-/**
- * Creates a promise that resolves to `null` after the specified timeout.
- * If the timeout is `0`, the promise resolves immediately.
- *
- * @param timeout - The delay in milliseconds before the promise resolves
- * @returns `Promise` that resolves to `null` after the timeout
- */
-function asyncTimeout(timeout: number): Promise<null> {
-  return new Promise((resolve) => {
-    if (timeout === 0) {
-      resolve(null)
-    }
-    else {
-      setTimeout(() => resolve(null), timeout)
-    }
-  })
 }
