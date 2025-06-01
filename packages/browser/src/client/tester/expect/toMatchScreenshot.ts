@@ -2,9 +2,11 @@ import type { AsyncExpectationResult, MatcherState } from '@vitest/expect'
 import type { ScreenshotMatcherOptions } from '../../../../context'
 import type { ScreenshotMatcherArguments, ScreenshotMatcherOutput } from '../../../shared/screenshotMatcher/types'
 import type { Locator } from '../locators'
-import { getBrowserState } from '../../utils'
+import { getBrowserState, getWorkerState } from '../../utils'
 import { convertElementToCssSelector } from '../utils'
 import { getElementFromUserInput } from './utils'
+
+const counters = new Map<string, { current: number }>([])
 
 export default async function toMatchScreenshot(
   this: MatcherState,
@@ -18,13 +20,26 @@ export default async function toMatchScreenshot(
     throw new Error('\'toMatchScreenshot\' cannot be used with "not"')
   }
 
-  if (this.currentTestName === undefined) {
+  const currentTest = getWorkerState().current
+
+  if (currentTest === undefined || this.currentTestName === undefined) {
     throw new Error('\'toMatchScreenshot\' cannot be used without test context')
   }
 
-  // @todo add a counter after the name
-  const name
-      = typeof nameOrOptions === 'string' ? nameOrOptions : this.currentTestName
+  const counterName = `${currentTest.result?.repeatCount ?? 0}${this.testPath}${this.currentTestName}`
+  let counter = counters.get(counterName)
+
+  if (counter === undefined) {
+    counter = { current: 0 }
+
+    counters.set(counterName, counter)
+  }
+
+  counter.current += 1
+
+  const name = typeof nameOrOptions === 'string'
+    ? nameOrOptions
+    : `${this.currentTestName} ${counter.current}`
 
   const result = await
   getBrowserState().commands.triggerCommand<ScreenshotMatcherOutput>(
