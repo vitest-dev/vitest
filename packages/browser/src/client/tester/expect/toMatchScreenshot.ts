@@ -4,7 +4,7 @@ import type { ScreenshotMatcherArguments, ScreenshotMatcherOutput } from '../../
 import type { Locator } from '../locators'
 import { getBrowserState } from '../../utils'
 import { convertElementToCssSelector } from '../utils'
-import { getElementFromUserInput, getMessage } from './utils'
+import { getElementFromUserInput } from './utils'
 
 export default async function toMatchScreenshot(
   this: MatcherState,
@@ -41,24 +41,27 @@ export default async function toMatchScreenshot(
     ] satisfies ScreenshotMatcherArguments,
   )
 
-  let message = ''
-
   if (result.pass === false) {
-    message = getMessage(
-      this,
-      'toMatchScreenshot',
-      `${result.message}${result.reference ? '\nReference screenshot:' : ''}`,
-      result.reference,
-      result.actual ? 'Actual screenshot:' : '',
-      result.actual,
-    )
-
     // @todo use annotate to log diff images: https://github.com/vitest-dev/vitest/pull/7953
   }
 
   return {
     pass: result.pass,
     message: () =>
-      message,
+      result.pass
+        ? ''
+        : [
+            this.utils.matcherHint('toMatchScreenshot', 'element', ''),
+            '',
+            result.message,
+            result.reference
+              ? `\nReference screenshot:\n  ${this.utils.EXPECTED_COLOR(result.reference)}`
+              : null,
+            result.actual
+              ? `\nActual screenshot:\n  ${this.utils.RECEIVED_COLOR(result.actual)}`
+              : null,
+          ]
+            .filter(element => element !== null)
+            .join('\n'),
   }
 }
