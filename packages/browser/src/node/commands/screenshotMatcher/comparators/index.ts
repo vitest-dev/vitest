@@ -8,11 +8,16 @@ function guard<C extends Comparator<any>>(comparator: C): C {
       return {
         pass: false,
         diff: null,
+        message: `Expected image dimensions to be ${reference.metadata.width}×${
+          reference.metadata.height
+        }px, but received ${actual.metadata.width}×${
+          actual.metadata.height
+        }px.`,
       }
     }
 
     return comparator(reference, actual, options)
-  }) as C
+  }) satisfies Comparator<any> as C
 }
 
 const comparators = new Map(Object.entries({
