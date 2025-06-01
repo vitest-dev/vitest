@@ -40,4 +40,4 @@ export type Comparator<Options extends Record<string, unknown>> = (
      */
     createDiff: boolean
   } & Options
-) => Promisable<{ pass: boolean; diff: TypedArray | null }>
+) => Promisable<{ pass: boolean; diff: TypedArray | null; message: string | null }>

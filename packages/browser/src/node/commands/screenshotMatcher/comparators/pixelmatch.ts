@@ -24,7 +24,7 @@ export const pixelmatch: Comparator<ComparatorRegistry['pixelmatch']> = (
     ? new Uint8Array(reference.data.length)
     : undefined
 
-  const result = pm(
+  const mismatchedPixels = pm(
     reference.data,
     actual.data,
     diffBuffer,
@@ -33,20 +33,30 @@ export const pixelmatch: Comparator<ComparatorRegistry['pixelmatch']> = (
     optionsWithDefaults,
   )
 
+  const imageArea = reference.metadata.width * reference.metadata.height
+
   let allowedMismatchedPixels = Math.min(
     optionsWithDefaults.allowedMismatchedPixels ?? Number.POSITIVE_INFINITY,
     (optionsWithDefaults.allowedMismatchedPixelRatio
       ?? Number.POSITIVE_INFINITY)
-    * reference.metadata.height
-    * reference.metadata.width,
+    * imageArea,
   )
 
   if (allowedMismatchedPixels === Number.POSITIVE_INFINITY) {
     allowedMismatchedPixels = 0
   }
 
+  const pass = mismatchedPixels <= allowedMismatchedPixels
+
   return {
-    pass: result <= allowedMismatchedPixels,
+    pass,
     diff: diffBuffer ?? null,
+    message: pass
+      ? `${mismatchedPixels} pixels (ratio ${(
+        // as we compare using `<=`, use `Math.ceil` to ensure the reported ratio
+        // doesn't appear equal to the allowed limit when it's a bit over
+        Math.ceil((mismatchedPixels / imageArea) * 100) / 100
+      ).toFixed(2)}) differ.`
+      : null,
   }
 }
