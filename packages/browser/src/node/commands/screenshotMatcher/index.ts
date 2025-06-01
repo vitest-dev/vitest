@@ -63,7 +63,7 @@ export const screenshotMatcher: BrowserCommand<
       reference: hasReference ? paths.reference : null,
       actual: null,
       diff: null,
-      message: `It was impossible to get a stable screenshot in ${timeout}ms`,
+      message: `Could not capture a stable screenshot within ${timeout}ms.`,
     }
   }
 
@@ -85,7 +85,7 @@ export const screenshotMatcher: BrowserCommand<
         reference: paths.reference,
         actual: null,
         diff: null,
-        message: 'Created reference screenshot while running this test',
+        message: 'No existing reference screenshot found; a new one was created. Review it before running tests again.',
       }
     }
 
@@ -145,7 +145,7 @@ export const screenshotMatcher: BrowserCommand<
     actual: paths.diffs.actual,
     diff: paths.diffs.diff,
     message: finalResult.message
-      ?? 'Expected the element to match the reference screenshot',
+      ?? 'Screenshot does not match the stored reference.',
   }
 }
 
