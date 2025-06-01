@@ -46,8 +46,37 @@ export interface ScreenshotOptions {
 }
 
 export interface ComparatorRegistry {
-  // @todo percentage-based threshold
   pixelmatch: {
+    /**
+     * The maximum number of pixels that are allowed to differ between the captured
+     * screenshot and the stored reference image.
+     *
+     * If set to `undefined`, any non-zero difference will cause the test to fail.
+     *
+     * For example, `allowedMismatchedPixels: 10` means the test will pass if 10
+     * or fewer pixels differ, but fail if 11 or more differ.
+     *
+     * If both this and `allowedMismatchedPixelRatio` are set, the more restrictive
+     * value (i.e., fewer allowed mismatches) will be used.
+     *
+     * @default undefined
+     */
+    allowedMismatchedPixels?: number | undefined
+    /**
+     * The maximum allowed ratio of differing pixels between the captured screenshot
+     * and the reference image.
+     *
+     * Must be a value between `0` and `1`.
+     *
+     * For example, `allowedMismatchedPixelRatio: 0.02` means the test will pass
+     * if up to 2% of pixels differ, but fail if more than 2% differ.
+     *
+     * If both this and `allowedMismatchedPixels` are set, the more restrictive
+     * value (i.e., fewer allowed mismatches) will be used.
+     *
+     * @default undefined
+     */
+    allowedMismatchedPixelRatio?: number | undefined
     /**
      * Acceptable perceived color difference between the same pixel in two images.
      *
