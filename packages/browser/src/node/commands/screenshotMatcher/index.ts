@@ -144,7 +144,8 @@ export const screenshotMatcher: BrowserCommand<
     reference: paths.reference,
     actual: paths.diffs.actual,
     diff: paths.diffs.diff,
-    message: 'Expected the element to match the reference screenshot',
+    message: finalResult.message
+      ?? 'Expected the element to match the reference screenshot',
   }
 }
 
