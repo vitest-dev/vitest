@@ -137,7 +137,7 @@ export const screenshotMatcher: BrowserCommand<
   await writeScreenshot(paths.diffs.actual, actual)
 
   // case #06
-  //  - fallback, reference does NOT matches stable screenshot
+  //  - fallback, reference does NOT match stable screenshot
   //  - fail
   return {
     pass: false,
