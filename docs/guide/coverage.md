@@ -41,7 +41,7 @@ npm i -D @vitest/coverage-istanbul
 
 ::: info
 The description of V8 coverage below is Vitest specific and does not apply to other test runners.
-Since `v3.2.0` Vitest has used [AST based coverage remapping](https://vitest.dev/blog/vitest-3.2.html#coverage-v8-ast-aware-remapping) for V8 coverage, which produces identical coverage reports to Istanbul.
+Since `v3.2.0` Vitest has used [AST based coverage remapping](/blog/vitest-3-2#coverage-v8-ast-aware-remapping) for V8 coverage, which produces identical coverage reports to Istanbul.
 
 This allows users to have the speed of V8 coverage with accuracy of Istanbul coverage.
 :::
@@ -55,7 +55,7 @@ Coverage collection is performed during runtime by instructing V8 using [`node:i
 - ✅ No pre-transpile step. Test files can be executed as-is.
 - ✅ Faster execute times than Istanbul.
 - ✅ Lower memory usagethan Istanbul.
-- ✅ Coverage report accuracy is as good as with Istanbul ([since Vitest `v3.2.0`](https://vitest.dev/blog/vitest-3.2.html#coverage-v8-ast-aware-remapping)).
+- ✅ Coverage report accuracy is as good as with Istanbul ([since Vitest `v3.2.0`](/blog/vitest-3-2#coverage-v8-ast-aware-remapping)).
 - ⚠️ In some cases can be slower than Istanbul, e.g. when loading lots of different modules. V8 does not support limiting coverage collection to specific modules.
 - ⚠️ There are some minor limitations set by V8 engine. See [`ast-v8-to-istanbl` | Limitations](https://github.com/AriPerkkio/ast-v8-to-istanbul?tab=readme-ov-file#limitations).
 - ❌ Does not work on environments that don't use V8, such as Firefox or Bun. Or on environments that don't expose V8 coverage via profiler, such as Cloudflare Workers.
