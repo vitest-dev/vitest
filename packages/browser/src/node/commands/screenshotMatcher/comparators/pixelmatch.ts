@@ -52,11 +52,11 @@ export const pixelmatch: Comparator<ComparatorRegistry['pixelmatch']> = (
     pass,
     diff: diffBuffer ?? null,
     message: pass
-      ? `${mismatchedPixels} pixels (ratio ${(
+      ? null
+      : `${mismatchedPixels} pixels (ratio ${(
         // as we compare using `<=`, use `Math.ceil` to ensure the reported ratio
         // doesn't appear equal to the allowed limit when it's a bit over
         Math.ceil((mismatchedPixels / imageArea) * 100) / 100
-      ).toFixed(2)}) differ.`
-      : null,
+      ).toFixed(2)}) differ.`,
   }
 }
