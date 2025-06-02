@@ -111,7 +111,7 @@ type ToMatchScreenshotResolvePath = (data: {
   platform: NodeJS.Platform
   /**
    * The value provided to
-   * {@linkcode https://main.vitest.dev/guide/browser/config.html#browser-screenshotdirectory|browser.screenshotDirectory},
+   * {@linkcode https://main.vitest.dev/guide/browser/config#browser-screenshotdirectory|browser.screenshotDirectory},
    * if none is provided, its default value.
    */
   screenshotDirectory: string
