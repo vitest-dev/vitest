@@ -2,7 +2,7 @@
 title: Vitest 3.2 is out!
 author:
   name: The Vitest Team
-date: 2025-01-17
+date: 2025-06-02
 sidebar: false
 head:
   - - meta
@@ -27,7 +27,7 @@ head:
 
 # Vitest 3.2 is out!
 
-_Date Day, 2025_
+_June 2, 2025_
 
 ![Vitest 3.2 Announcement Cover Image](/og-vitest-3-2.png)
 
@@ -208,7 +208,7 @@ We are planning to make this the default remapping mode in the next major. The o
 
 ## `watchTriggerPatterns` Option
 
-When you edit a file, Vitest is smart enough to rerun only tests that import this file. Unfortunetly, Vitest static analysis respects only static and dynamic `import` statement. If you are reading a file or start a separate process, Vitest will ignore the change to related files.
+When you edit a file, Vitest is smart enough to rerun only tests that import this file. Unfortunately, Vitest static analysis respects only static and dynamic `import` statement. If you are reading a file or start a separate process, Vitest will ignore the change to related files.
 
 With `watchTriggerPatterns` option you can configure which tests to rerun depending on the file that was changed. For example, to always rerun `mailers` tests when a template is changed, add a trigger pattern:
 
