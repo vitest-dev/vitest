@@ -267,7 +267,7 @@ expect.toBeFoo('foo')
 
 ## `sequence.groupOrder`
 
-The new `sequence.groupOrder` option controls the order in which the project runs its tests when using multiple [projects](/guide/projects).
+The new [`sequence.groupOrder`](/config/#grouporder) option controls the order in which the project runs its tests when using multiple [projects](/guide/projects).
 
 - Projects with the same group order number will run together, and groups are run from lowest to highest.
 - If you don’t set this option, all projects run in parallel.
