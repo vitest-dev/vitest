@@ -58,7 +58,7 @@ Coverage collection is performed during runtime by instructing V8 using [`node:i
 - ✅ Coverage report accuracy is as good as with Istanbul ([since Vitest `v3.2.0`](https://vitest.dev/blog/vitest-3.2.html#coverage-v8-ast-aware-remapping)).
 - ⚠️ In some cases can be slower than Istanbul, e.g. when loading lots of different modules. V8 does not support limiting coverage collection to specific modules.
 - ⚠️ There are some minor limitations set by V8 engine. See [`ast-v8-to-istanbl` | Limitations](https://github.com/AriPerkkio/ast-v8-to-istanbul?tab=readme-ov-file#limitations).
-- ❌ Does not work on environments that don't use V8, such as Firefox, Cloudflare Workers or Bun.
+- ❌ Does not work on environments that don't use V8, such as Firefox or Bun. Or on environments that don't expose V8 coverage via profiler, such as Cloudflare Workers.
 
 <div style="display: flex; align-items: stretch; padding: 2rem 0; max-width: 100%; overflow: auto">
   <Box>Test&nbsp;file</Box>
@@ -74,7 +74,7 @@ Coverage collection is performed during runtime by instructing V8 using [`node:i
   <Box>Coverage&nbsp;report</Box>
 </div>
 
-### Istanbul provider
+## Istanbul provider
 
 [Istanbul code coverage tooling](https://istanbul.js.org/) has existed since 2012 and is very well battle-tested.
 This provider works on any Javascript runtime as coverage tracking is done by instrumenting user's source files.
