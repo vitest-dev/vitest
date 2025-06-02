@@ -51,7 +51,7 @@
     "bumpp": "^10.1.1",
     "changelogithub": "^13.14.0",
     "esbuild": "^0.25.5",
-    "eslint": "^9.27.0",
+    "eslint": "^9.28.0",
     "magic-string": "^0.30.17",
     "pathe": "^2.0.3",
     "rimraf": "^6.0.1",
