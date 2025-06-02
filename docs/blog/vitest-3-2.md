@@ -41,6 +41,33 @@ We also decided to deprecate the `workspace` name because it clashes with other 
 
 This option will be removed completely in a future major, replaced by `projects`. Until then, Vitest will print a warning if workspace feature is used.
 
+## Annotation API
+
+The new [annotation API](/guide/test-annotations) allows you to annotate any test with a custom message and attachment. These annotations are visible in the UI, HTML, junit, tap and GitHub Actions reporters. Vitest will also print related annotation in the CLI if the test fails.
+
+<img src="/annotation-api-cute-puppy-example.png" />
+
+## Scoped Fixtures
+
+The `test.extend` fixtures can now specify the `scope` option: either `file` or `worker`.
+
+```ts
+const test = baseTest.extend({
+  db: [
+    async ({}, use) => {
+      // ...setup
+      await use(db)
+      await db.close()
+    },
+    { scope: 'worker' },
+  ],
+})
+```
+
+The file fixture is similar to using `beforeAll` and `afterAll` at the top level of the file, but it won't be called if the fixture is not used in any test.
+
+The `worker` fixture is initiated once per worker, but note that by default Vitest creates one worker for every test, so you need to disable [isolation](/config/#isolate) to benefit from it.
+
 ## Custom Project Name Colors
 
 You can now set a custom [color](/config/#name) when using `projects`:
@@ -181,7 +208,7 @@ We are planning to make this the default remapping mode in the next major. The o
 
 ## `watchTriggerPatterns` Option
 
-When you edit a file, Vitest is smart enough to rerun only tests that import this file. Unfortunetly, Vitest static analysis respects only static and dynamic `import` statement. If you are reading a file or start a process, Vitest will ignore the change to that file.
+When you edit a file, Vitest is smart enough to rerun only tests that import this file. Unfortunetly, Vitest static analysis respects only static and dynamic `import` statement. If you are reading a file or start a separate process, Vitest will ignore the change to related files.
 
 With `watchTriggerPatterns` option you can configure which tests to rerun depending on the file that was changed. For example, to always rerun `mailers` tests when a template is changed, add a trigger pattern:
 
