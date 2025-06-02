@@ -13,6 +13,7 @@ import type { Vitest } from './core'
 import type { TestProject } from './project'
 import type { ReportedHookContext, TestCase, TestCollection, TestModule } from './reporters/reported-tasks'
 import type { TestSpecification } from './spec'
+import type { TestRunEndReason } from './types/reporter'
 import assert from 'node:assert'
 import { createHash } from 'node:crypto'
 import { copyFile, mkdir } from 'node:fs/promises'
@@ -89,13 +90,17 @@ export class TestRun {
     const modules = specifications.map(spec => spec.testModule).filter(s => s != null)
     const files = modules.map(m => m.task)
 
-    const state = this.vitest.isCancelling
+    const state: TestRunEndReason = this.vitest.isCancelling
       ? 'interrupted'
       // by this point, the run will be marked as failed if there are any errors,
       // should it be done by testRun.end?
-      : process.exitCode
+      : this.hasFailed(modules)
         ? 'failed'
         : 'passed'
+
+    if (state !== 'passed') {
+      process.exitCode = 1
+    }
 
     try {
       await Promise.all([
@@ -109,6 +114,14 @@ export class TestRun {
         await this.vitest.report('onCoverage', coverage)
       }
     }
+  }
+
+  private hasFailed(modules: TestModule[]) {
+    if (!modules.length) {
+      return !this.vitest.config.passWithNoTests
+    }
+
+    return modules.some(m => !m.ok())
   }
 
   private async reportEvent(id: string, event: TaskUpdateEvent, data: TaskEventData | undefined) {
