@@ -9,6 +9,10 @@ permissions:
   contents: write
   id-token: write
 
+env:
+  VITEST_GENERATE_UI_TOKEN: 'true'
+  VITE_TEST_WATCHER_DEBUG: 'false'
+
 jobs:
   publish:
     if: github.repository == 'vitest-dev/vitest'
@@ -36,9 +40,6 @@ jobs:
 
       - name: Build
         run: pnpm build
-        env:
-          VITEST_GENERATE_UI_TOKEN: 'true'
-          VITE_TEST_WATCHER_DEBUG: 'false'
 
       - name: Publish to npm
         run: pnpm run publish-ci ${{ github.ref_name }}
