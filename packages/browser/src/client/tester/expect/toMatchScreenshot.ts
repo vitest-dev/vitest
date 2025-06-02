@@ -2,6 +2,7 @@ import type { AsyncExpectationResult, MatcherState } from '@vitest/expect'
 import type { ScreenshotMatcherOptions } from '../../../../context'
 import type { ScreenshotMatcherArguments, ScreenshotMatcherOutput } from '../../../shared/screenshotMatcher/types'
 import type { Locator } from '../locators'
+import { getCurrentTest } from '@vitest/runner'
 import { getBrowserState, getWorkerState } from '../../utils'
 import { convertElementToCssSelector } from '../utils'
 import { getElementFromUserInput } from './utils'
@@ -57,7 +58,29 @@ export default async function toMatchScreenshot(
   )
 
   if (result.pass === false) {
-    // @todo use annotate to log diff images: https://github.com/vitest-dev/vitest/pull/7953
+    const test = getCurrentTest()
+
+    if (test === undefined) {
+      throw new Error('\'toMatchScreenshot\' cannot be used without test context')
+    }
+
+    const { annotate } = test.context
+
+    const annotations: ReturnType<typeof annotate>[] = []
+
+    if (result.reference) {
+      annotations.push(annotate('Reference screenshot', { path: result.reference }))
+    }
+
+    if (result.actual) {
+      annotations.push(annotate('Actual screenshot', { path: result.actual }))
+    }
+
+    if (result.diff) {
+      annotations.push(annotate('Diff', { path: result.diff }))
+    }
+
+    await Promise.all(annotations)
   }
 
   return {
