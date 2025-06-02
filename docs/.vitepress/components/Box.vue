@@ -4,7 +4,7 @@
   </span>
 </template>
 
-<style>
+<style scoped>
 .box {
   display: flex;
   align-items: center;

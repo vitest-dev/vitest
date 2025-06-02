@@ -5,7 +5,7 @@
   </span>
 </template>
 
-<style>
+<style scoped>
 .arrow-right {
   display: flex;
   align-items: center;
