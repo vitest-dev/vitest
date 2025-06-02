@@ -8,9 +8,6 @@ import { access, mkdir, readFile, writeFile } from 'node:fs/promises'
 import { dirname } from 'node:path'
 import { asyncTimeout, resolveOptions, takeDecodedScreenshot } from './utils'
 
-// @todo if reporter is HTML, for convenience it would be great to write reference in its output folder
-// @todo wrap `screenshotMatcher` with a function that checks result and copies reference
-
 export const screenshotMatcher: BrowserCommand<
   ScreenshotMatcherArguments
 > = async (context, name, testName, options): ScreenshotMatcherOutput => {
