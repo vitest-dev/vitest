@@ -60,18 +60,18 @@ Coverage collection is performed during runtime by instructing V8 using [`node:i
 - ⚠️ There are some minor limitations set by V8 engine. See [`ast-v8-to-istanbl` | Limitations](https://github.com/AriPerkkio/ast-v8-to-istanbul?tab=readme-ov-file#limitations).
 - ❌ Does not work on environments that don't use V8, such as Firefox or Bun. Or on environments that don't expose V8 coverage via profiler, such as Cloudflare Workers.
 
-<div style="display: flex; align-items: stretch; padding: 2rem 0; max-width: 100%; overflow: auto">
-  <Box>Test&nbsp;file</Box>
-  <ArrowRight />
-  <Box>Enable&nbsp;V8&nbsp;runtime coverage&nbsp;collection</Box>
-  <ArrowRight />
-  <Box>Run&nbsp;file</Box>
-  <ArrowRight />
-  <Box>Collect&nbsp;coverage results&nbsp;from&nbsp;V8</Box>
-  <ArrowRight />
-  <Box>Remap&nbsp;coverage&nbsp;results to source files</Box>
-  <ArrowRight />
-  <Box>Coverage&nbsp;report</Box>
+<div style="display: flex; flex-direction: column; align-items: center; padding: 2rem 0; max-width: 20rem;">
+  <Box>Test file</Box>
+  <ArrowDown />
+  <Box>Enable V8 runtime coverage collection</Box>
+  <ArrowDown />
+  <Box>Run file</Box>
+  <ArrowDown />
+  <Box>Collect coverage results from V8</Box>
+  <ArrowDown />
+  <Box>Remap coverage results to source files</Box>
+  <ArrowDown />
+  <Box>Coverage report</Box>
 </div>
 
 ## Istanbul provider
@@ -116,18 +116,18 @@ globalThis.__VITEST_COVERAGE__[filename] = coverage // [!code ++]
 - ❌ Instrumentation increases file sizes
 - ❌ Memory usage is higher than V8
 
-<div style="display: flex; align-items: stretch; padding: 2rem 0; max-width: 100%; overflow: auto">
-  <Box>Test&nbsp;file</Box>
-  <ArrowRight />
+<div style="display: flex; flex-direction: column; align-items: center; padding: 2rem 0; max-width: 20rem;">
+  <Box>Test file</Box>
+  <ArrowDown />
   <Box>Pre‑instrumentation with Babel</Box>
-  <ArrowRight />
-  <Box>Run&nbsp;file</Box>
-  <ArrowRight />
-  <Box>Collect&nbsp;coverage&nbsp;results from&nbsp;Javascript&nbsp;scope</Box>
-  <ArrowRight />
-  <Box>Remap&nbsp;coverage&nbsp;results to source files</Box>
-  <ArrowRight />
-  <Box>Coverage&nbsp;report</Box>
+  <ArrowDown />
+  <Box>Run file</Box>
+  <ArrowDown />
+  <Box>Collect coverage results from Javascript scope</Box>
+  <ArrowDown />
+  <Box>Remap coverage results to source files</Box>
+  <ArrowDown />
+  <Box>Coverage report</Box>
 </div>
 
 ## Coverage Setup

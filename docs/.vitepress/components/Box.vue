@@ -7,6 +7,7 @@
 <style scoped>
 .box {
   display: flex;
+  width: 100%;
   align-items: center;
   justify-content: center;
   text-align: center;
