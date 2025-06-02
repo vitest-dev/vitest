@@ -583,7 +583,7 @@ export interface BrowserPage extends LocatorSelectors {
 export interface BrowserLocators {
   createElementLocators(element: Element): LocatorSelectors
   extend(methods: {
-    [K in keyof LocatorSelectors]?: (...args: Parameters<LocatorSelectors[K]>) => ReturnType<LocatorSelectors[K]> | string
+    [K in keyof LocatorSelectors]?: (this: BrowserPage | Locator, ...args: Parameters<LocatorSelectors[K]>) => ReturnType<LocatorSelectors[K]> | string
   }): void
 }
 
