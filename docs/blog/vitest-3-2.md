@@ -39,7 +39,7 @@ In an effort to simplify the configuration, the team decided to deprecate the se
 
 We also decided to deprecate the `workspace` name because it clashes with other tools like PNPM that provide monorepo support via this option. Vitest doesn't run these projects with separate `CWD` and treats them more like sub-Vitests. It also gives us more space to come up with a better solution for monorepos without breaking others.
 
-This option will be removed completely in a future major. Until then, Vitest will print a warning if workspace feature is used.
+This option will be removed completely in a future major, replaced by `projects`. Until then, Vitest will print a warning if workspace feature is used.
 
 ## Custom Project Name Colors
 
