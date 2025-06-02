@@ -60,7 +60,7 @@
     "@iconify-json/carbon": "catalog:",
     "@iconify-json/logos": "catalog:",
     "@testing-library/vue": "^8.1.0",
-    "@types/codemirror": "^5.60.15",
+    "@types/codemirror": "^5.60.16",
     "@types/d3-force": "^3.0.10",
     "@types/d3-selection": "^3.0.11",
     "@types/mime": "^4.0.0",
