@@ -20,6 +20,10 @@ test('hello world', async ({ annotate }) => {
 })
 ```
 
+::: warning
+The `annotate` function returns a Promise, so it needs to be awaited if you rely on it somehow. However, Vitest will also automatically await any non-awaited annotation before the test finishes.
+:::
+
 Depending on your reporter, you will see these annotations differently.
 
 ## Built-in Reporters
