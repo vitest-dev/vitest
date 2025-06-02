@@ -177,7 +177,7 @@ function mapSourcePosition(position: OriginalMapping) {
   if (!sourceMap) {
     // Call the (overridable) retrieveSourceMap function to get the source map.
     const urlAndMap = retrieveSourceMap(position.source)
-    if (urlAndMap && urlAndMap.map) {
+    if (urlAndMap && urlAndMap.map && urlAndMap.map.mappings !== '') {
       sourceMap = sourceMapCache[position.source] = {
         url: urlAndMap.url,
         map: new TraceMap(urlAndMap.map),
