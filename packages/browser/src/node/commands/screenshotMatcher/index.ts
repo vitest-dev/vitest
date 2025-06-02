@@ -72,9 +72,10 @@ export const screenshotMatcher: BrowserCommand<
   // if there's no reference or if we want to update snapshots, we have to finish the comparison early
   if (reference === null || updateSnapshot === 'all') {
     const shouldCreateReference = updateSnapshot !== 'none'
+    const referencePath = shouldCreateReference ? paths.reference : paths.diffs.reference
 
     await writeScreenshot(
-      shouldCreateReference ? paths.reference : paths.diffs.reference,
+      referencePath,
       await codec.encode(value.actual, {}),
     )
 
@@ -84,7 +85,7 @@ export const screenshotMatcher: BrowserCommand<
     if (updateSnapshot !== 'all') {
       return {
         pass: false,
-        reference: shouldCreateReference ? paths.reference : paths.diffs.reference,
+        reference: referencePath,
         actual: null,
         diff: null,
         message: `No existing reference screenshot found${
