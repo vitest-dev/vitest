@@ -143,7 +143,7 @@ export const screenshotMatcher: BrowserCommand<
     pass: false,
     reference: paths.reference,
     actual: paths.diffs.actual,
-    diff: paths.diffs.diff,
+    diff: finalResult.diff && paths.diffs.diff,
     message: finalResult.message
       ?? 'Screenshot does not match the stored reference.',
   }
