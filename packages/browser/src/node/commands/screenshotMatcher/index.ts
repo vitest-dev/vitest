@@ -73,10 +73,10 @@ export const screenshotMatcher: BrowserCommand<
   if (reference === null || updateSnapshot === 'all') {
     const shouldCreateReference = updateSnapshot !== 'none'
 
-    // @todo this should still be written in CI along with diff for artifacts
-    if (shouldCreateReference) {
-      await writeScreenshot(paths.reference, await codec.encode(value.actual, {}))
-    }
+    await writeScreenshot(
+      shouldCreateReference ? paths.reference : paths.diffs.reference,
+      await codec.encode(value.actual, {}),
+    )
 
     // case #02
     //  - got a stable screenshot, but there is no reference and we don't want to update screenshots
@@ -84,7 +84,7 @@ export const screenshotMatcher: BrowserCommand<
     if (updateSnapshot !== 'all') {
       return {
         pass: false,
-        reference: shouldCreateReference ? paths.reference : null,
+        reference: shouldCreateReference ? paths.reference : paths.diffs.reference,
         actual: null,
         diff: null,
         message: `No existing reference screenshot found${
