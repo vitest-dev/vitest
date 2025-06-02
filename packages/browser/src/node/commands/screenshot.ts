@@ -76,7 +76,10 @@ export async function takeScreenshot(
       ? await page.$('body')
       : await page.$(`${options.element}`)
 
-    const buffer = await element.saveScreenshot(savePath)
+    const buffer = await element.saveScreenshot(
+      // webdriverio expects the path to contain the extension and only works with PNG files
+      savePath.endsWith('.png') ? savePath : `${savePath}.png`,
+    )
     if (!options.save) {
       await rm(savePath, { force: true })
     }
