@@ -13,6 +13,7 @@ test('prints a custom error stack', async () => {
 
     test('fails toJson', () => {
       class CustomError extends Error {
+        name = 'CustomError'
         toJSON() {
           return {
             message: this.message,
@@ -35,7 +36,7 @@ Serialized Error: { stack: [ 'stack 1', 'stack 2' ] }
 
   expect(stderr).toContain(`
  FAIL  basic.test.ts > fails toJson
-Unknown Error: custom error
+CustomError: custom error
 ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
 Serialized Error: { stack: [ 'custom stack 1', 'custom stack 2' ] }
     `.trim())

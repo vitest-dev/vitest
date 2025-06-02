@@ -15,6 +15,7 @@ Vitest has its own test run lifecycle. These are represented by reporter's metho
       - [`onHookStart(beforeAll)`](#onhookstart)
       - [`onHookEnd(beforeAll)`](#onhookend)
         - [`onTestCaseReady`](#ontestcaseready)
+          - [`onTestAnnotate`](#ontestannotate) <Version>3.2.0</Version>
           - [`onHookStart(beforeEach)`](#onhookstart)
           - [`onHookEnd(beforeEach)`](#onhookend)
           - [`onHookStart(afterEach)`](#onhookstart)
@@ -317,3 +318,16 @@ function onTestCaseResult(testCase: TestCase): Awaitable<void>
 This method is called when the test has finished running or was just skipped. Note that this will be called after the `afterEach` hook is finished, if there are any.
 
 At this point, [`testCase.result()`](/advanced/api/test-case#result) will have non-pending state.
+
+## onTestAnnotate <Version>3.2.0</Version> {#ontestannotate}
+
+```ts
+function onTestAnnotate(
+  testCase: TestCase,
+  annotation: TestAnnotation,
+): Awaitable<void>
+```
+
+The `onTestAnnotate` hook is associated with the [`context.annotate`](/guide/test-context#annotate) method. When `annotate` is invoked, Vitest serialises it and sends the same attachment to the main thread where reporter can interact with it.
+
+If the path is specified, Vitest stores it in a separate directory (configured by [`attachmentsDir`](/config/#attachmentsdir)) and modifies the `path` property to reference it.

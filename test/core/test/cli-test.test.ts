@@ -4,6 +4,9 @@ import { ReportersMap } from 'vitest/reporters'
 import { createCLI, parseCLI } from '../../../packages/vitest/src/node/cli/cac.js'
 import { resolveConfig } from '../../../packages/vitest/src/node/config/resolveConfig.js'
 
+// @ts-expect-error not typed global
+globalThis.__VITEST_GENERATE_UI_TOKEN__ = true
+
 const vitestCli = createCLI()
 
 function parseArguments(commands: string, full = false) {
@@ -270,7 +273,7 @@ test('browser by name', () => {
   const { options, args } = parseArguments('--browser=firefox', false)
 
   expect(args).toEqual([])
-  expect(options).toEqual({ browser: { enabled: true, name: 'firefox' } })
+  expect(options).toEqual({ browser: { name: 'firefox' } })
 })
 
 test('clearScreen', async () => {
@@ -293,7 +296,11 @@ test('clearScreen', async () => {
       clearScreen: viteClearScreen,
     }
     const vitestConfig = getCLIOptions(vitestClearScreen)
-    const config = resolveConfig({ logger: undefined, mode: 'test' } as any, vitestConfig, viteConfig)
+    const config = resolveConfig({
+      logger: undefined,
+      mode: 'test',
+      _cliOptions: {},
+    } as any, vitestConfig, viteConfig)
     return config.clearScreen
   })
   expect(results).toMatchInlineSnapshot(`
@@ -335,6 +342,20 @@ test('configure expect', () => {
   })
 })
 
+test('silent', () => {
+  expect(getCLIOptions('--silent')).toEqual({ silent: true })
+  expect(getCLIOptions('--silent=true')).toEqual({ silent: true })
+  expect(getCLIOptions('--silent=yes')).toEqual({ silent: true })
+
+  expect(getCLIOptions('--silent=false')).toEqual({ silent: false })
+  expect(getCLIOptions('--silent=no')).toEqual({ silent: false })
+
+  expect(getCLIOptions('--silent=passed-only')).toEqual({ silent: 'passed-only' })
+  expect(getCLIOptions('--silent=true example.test.ts')).toEqual({ silent: true })
+
+  expect(() => getCLIOptions('--silent example.test.ts')).toThrowErrorMatchingInlineSnapshot(`[TypeError: Unexpected value "--silent=example.test.ts". Use "--silent=true example.test.ts" instead.]`)
+})
+
 test('public parseCLI works correctly', () => {
   expect(parseCLI('vitest dev')).toEqual({
     filter: [],
@@ -374,7 +395,7 @@ test('public parseCLI works correctly', () => {
     filter: [],
     options: {
       'coverage': { enabled: true },
-      'browser': { enabled: true, name: 'chrome' },
+      'browser': { name: 'chrome' },
       '--': [],
       'color': true,
     },

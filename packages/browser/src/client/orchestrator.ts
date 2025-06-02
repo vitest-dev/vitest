@@ -306,9 +306,13 @@ async function setIframeViewport(
     await ui.setIframeViewport(width, height)
   }
   else if (getBrowserState().provider === 'webdriverio') {
-    iframe.style.width = `${width}px`
-    iframe.style.height = `${height}px`
     iframe.parentElement?.setAttribute('data-scale', '1')
+    await client.rpc.triggerCommand(
+      getBrowserState().sessionId,
+      '__vitest_viewport',
+      undefined,
+      [{ width, height }],
+    )
   }
   else {
     const scale = Math.min(

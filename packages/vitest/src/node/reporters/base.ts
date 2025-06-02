@@ -11,7 +11,7 @@ import { relative } from 'pathe'
 import c from 'tinyrainbow'
 import { isTTY } from '../../utils/env'
 import { hasFailedSnapshot } from '../../utils/tasks'
-import { F_CHECK, F_POINTER, F_RIGHT } from './renderers/figures'
+import { F_CHECK, F_DOWN_RIGHT, F_POINTER, F_RIGHT } from './renderers/figures'
 import { countTestErrors, divider, errorBanner, formatProjectName, formatTime, formatTimeString, getStateString, getStateSymbol, padSummaryTitle, renderSnapshotSummary, taskFail, withLabel } from './renderers/utils'
 
 const BADGE_PADDING = '       '
@@ -255,6 +255,26 @@ export abstract class BaseReporter implements Reporter {
 
   protected getTestIndentation(_test: Task) {
     return '  '
+  }
+
+  protected printAnnotations(test: TestCase, console: 'log' | 'error', padding = 0): void {
+    const annotations = test.annotations()
+    if (!annotations.length) {
+      return
+    }
+
+    const PADDING = ' '.repeat(padding)
+
+    annotations.forEach(({ location, type, message }) => {
+      if (location) {
+        const file = relative(test.project.config.root, location.file)
+        this[console](`${PADDING}${c.blue(F_POINTER)} ${c.gray(`${file}:${location.line}:${location.column}`)} ${c.bold(type)}`)
+      }
+      else {
+        this[console](`${PADDING}${c.blue(F_POINTER)} ${c.bold(type)}`)
+      }
+      this[console](`${PADDING}  ${c.blue(F_DOWN_RIGHT)} ${message}`)
+    })
   }
 
   protected getDurationPrefix(task: Task): string {
@@ -585,16 +605,19 @@ export abstract class BaseReporter implements Reporter {
       task.result?.errors?.forEach((error) => {
         let previous
 
-        if (error?.stackStr) {
+        if (error?.stack) {
           previous = errorsQueue.find((i) => {
-            if (i[0]?.stackStr !== error.stackStr) {
+            if (i[0]?.stack !== error.stack) {
               return false
             }
 
             const currentProjectName = (task as File)?.projectName || task.file?.projectName || ''
             const projectName = (i[1][0] as File)?.projectName || i[1][0].file?.projectName || ''
 
-            return projectName === currentProjectName
+            const currentAnnotations = task.type === 'test' && task.annotations
+            const itemAnnotations = i[1][0].type === 'test' && i[1][0].annotations
+
+            return projectName === currentProjectName && deepEqual(currentAnnotations, itemAnnotations)
           })
         }
 
@@ -633,9 +656,37 @@ export abstract class BaseReporter implements Reporter {
         task: tasks[0],
       })
 
+      if (tasks[0].type === 'test' && tasks[0].annotations.length) {
+        const test = this.ctx.state.getReportedEntity(tasks[0]) as TestCase
+        this.printAnnotations(test, 'error', 1)
+        this.error()
+      }
+
       errorDivider()
     }
   }
+}
+
+function deepEqual(a: any, b: any): boolean {
+  if (a === b) {
+    return true
+  }
+  if (typeof a !== 'object' || typeof b !== 'object' || a === null || b === null) {
+    return false
+  }
+
+  const keysA = Object.keys(a)
+  const keysB = Object.keys(b)
+  if (keysA.length !== keysB.length) {
+    return false
+  }
+
+  for (const key of keysA) {
+    if (!keysB.includes(key) || !deepEqual(a[key], b[key])) {
+      return false
+    }
+  }
+  return true
 }
 
 function sum<T>(items: T[], cb: (_next: T) => number | undefined) {

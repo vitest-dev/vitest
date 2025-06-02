@@ -1,5 +1,6 @@
 import type { Tester } from '@vitest/expect'
 import { getCurrentTest } from '@vitest/runner'
+import { Temporal } from 'temporal-polyfill'
 import { describe, expect, expectTypeOf, test, vi } from 'vitest'
 
 describe('expect.soft', () => {
@@ -344,5 +345,47 @@ describe('iterator', () => {
     }
 
     expect(a).not.toStrictEqual(b)
+  })
+})
+
+describe('Temporal equality', () => {
+  describe.each([
+    ['Instant', ['2025-01-01T00:00:00.000Z', '2026-01-01T00:00:00.000Z']],
+    ['ZonedDateTime', ['2025-01-01T00:00:00+01:00[Europe/Amsterdam]', '2025-01-01T00:00:00+01:00[Europe/Paris]']],
+    ['PlainDateTime', ['2025-01-01T00:00:00.000', '2026-01-01T00:00:00.000']],
+    ['PlainDate', ['2025-01-01', '2026-01-01']],
+    ['PlainTime', ['15:00:00.000', '16:00:00.000']],
+    ['PlainYearMonth', ['2025-01', '2026-01']],
+    ['PlainMonthDay', ['01-01', '02-01']],
+  ] as const)('of $className', (className, [first, second]) => {
+    test('returns true when equal', () => {
+      const a = Temporal[className].from(first)
+      const b = Temporal[className].from(first)
+
+      expect(a).toStrictEqual(b)
+    })
+
+    test('returns false when not equal', () => {
+      const a = Temporal[className].from(first)
+      const b = Temporal[className].from(second)
+
+      expect(a).not.toStrictEqual(b)
+    })
+  })
+
+  describe('of Duration', () => {
+    test('returns true when .toString() is equal', () => {
+      const a = Temporal.Duration.from('P1M')
+      const b = Temporal.Duration.from('P1M')
+
+      expect(a).toStrictEqual(b)
+    })
+
+    test('returns true when .toString() is not equal', () => {
+      const a = Temporal.Duration.from('PT1M')
+      const b = Temporal.Duration.from('PT60S')
+
+      expect(a).not.toStrictEqual(b)
+    })
   })
 })

@@ -28,6 +28,8 @@ export class WebdriverBrowserProvider implements BrowserProvider {
   private options?: Capabilities.WebdriverIOConfig
 
   private closing = false
+  private iframeSwitched = false
+  private topLevelContext: string | undefined
 
   getSupportedBrowsers(): readonly string[] {
     return webdriverBrowsers
@@ -43,6 +45,10 @@ export class WebdriverBrowserProvider implements BrowserProvider {
     this.options = options as Capabilities.WebdriverIOConfig
   }
 
+  isIframeSwitched(): boolean {
+    return this.iframeSwitched
+  }
+
   async switchToTestFrame(): Promise<void> {
     const page = this.browser!
     // support wdio@9
@@ -56,6 +62,7 @@ export class WebdriverBrowserProvider implements BrowserProvider {
       )
       await page.switchToFrame(iframe)
     }
+    this.iframeSwitched = true
   }
 
   async switchToMainFrame(): Promise<void> {
@@ -66,6 +73,21 @@ export class WebdriverBrowserProvider implements BrowserProvider {
     else {
       await page.switchToParentFrame()
     }
+    this.iframeSwitched = false
+  }
+
+  async setViewport(options: { width: number; height: number }): Promise<void> {
+    if (this.topLevelContext == null || !this.browser) {
+      throw new Error(`The browser has no open pages.`)
+    }
+    await this.browser.send({
+      method: 'browsingContext.setViewport',
+      params: {
+        context: this.topLevelContext,
+        devicePixelRatio: 1,
+        viewport: options,
+      },
+    })
   }
 
   getCommandsContext(): {
@@ -153,6 +175,7 @@ export class WebdriverBrowserProvider implements BrowserProvider {
     const browserInstance = await this.openBrowser()
     debug?.('[%s][%s] browser page is created, opening %s', sessionId, this.browserName, url)
     await browserInstance.url(url)
+    this.topLevelContext = await browserInstance.getWindowHandle()
     await this._throwIfClosing('opening the url')
   }
 

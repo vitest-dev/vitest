@@ -55,7 +55,7 @@ export class ModuleMockerMSWInterceptor implements ModuleMockerInterceptor {
     this.mocks.delete(url)
   }
 
-  invalidate(): void {
+  async invalidate(): Promise<void> {
     this.mocks.clear()
   }
 
