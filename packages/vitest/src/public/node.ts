@@ -175,6 +175,7 @@ export {
   version as viteVersion,
 } from 'vite'
 
-export const rolldownVersion: string | undefined = vite.rolldownVersion
+// rolldownVersion is exported only by rolldown-vite
+export const rolldownVersion: string | undefined = (vite as any).rolldownVersion
 
 export type * as Vite from 'vite'
