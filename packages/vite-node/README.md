@@ -58,7 +58,7 @@ Options may also be defined using the `nodeServer` property in your config file:
 
 ```ts [vitest.config.ts]
 import { defineConfig } from 'vite'
-import type { defineConfig } from 'vite-node'
+import type { ViteNodeServerOptions } from 'vite-node'
 
 export default defineConfig({
   nodeServer: {
