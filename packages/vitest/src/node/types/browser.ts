@@ -136,6 +136,12 @@ type ToMatchScreenshotResolvePath = (data: {
    * parent {@linkcode https://main.vitest.dev/api/#describe|describe}, sanitized.
    */
   testName: string
+  /**
+   * The value provided to
+   * {@linkcode https://main.vitest.dev/config/#attachmentsdir|attachmentsDir},
+   * if none is provided, its default value.
+   */
+  attachmentsDir: string
 }) => string
 
 export interface BrowserInstanceOption extends BrowserProviderOptions,
@@ -316,7 +322,7 @@ export interface BrowserConfigOptions {
       /**
        * Overrides default screenshot path used for diffs.
        *
-       * @default `${root}/__diffs__/${testFileDirectory}/${testFileName}/${arg}-${browserName}${ext}`
+       * @default `${root}/${attachmentsDir}/${testFileDirectory}/${testFileName}/${arg}-${browserName}${ext}`
        */
       resolveDiffPath?: ToMatchScreenshotResolvePath
     }
