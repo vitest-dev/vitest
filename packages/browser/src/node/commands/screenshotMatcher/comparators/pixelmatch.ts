@@ -19,6 +19,18 @@ export const pixelmatch: Comparator<ScreenshotComparatorRegistry['pixelmatch']> 
   actual,
   { createDiff, ...options },
 ) => {
+  if (reference.metadata.height !== actual.metadata.height || reference.metadata.width !== actual.metadata.width) {
+    return {
+      pass: false,
+      diff: null,
+      message: `Expected image dimensions to be ${reference.metadata.width}×${
+        reference.metadata.height
+      }px, but received ${actual.metadata.width}×${
+        actual.metadata.height
+      }px.`,
+    }
+  }
+
   const optionsWithDefaults = { ...defaultOptions, ...options }
   const diffBuffer = createDiff
     ? new Uint8Array(reference.data.length)
