@@ -72,76 +72,6 @@ type UnsupportedProperties
     | 'benchmark'
     | 'name'
 
-type ToMatchScreenshotResolvePath = (data: {
-  /**
-   * Path **without** extension, sanitized and relative to the test file.
-   *
-   * This comes from the arguments passed to `toMatchScreenshot`; if called
-   * without arguments this will be the auto-generated name.
-   *
-   * @example
-   * test('calls `onClick`', () => {
-   *   expect(locator).toMatchScreenshot()
-   *   // arg = "calls-onclick-1"
-   * })
-   *
-   * @example
-   * expect(locator).toMatchScreenshot('foo/bar/baz.png')
-   * // arg = "foo/bar/baz"
-   *
-   * @example
-   * expect(locator).toMatchScreenshot('../foo/bar/baz.png')
-   * // arg = "foo/bar/baz"
-   */
-  arg: string
-  /**
-   * Screenshot extension, with leading dot.
-   *
-   * This can be set through the arguments passed to `toMatchScreenshot`, but
-   * the value will fall back to `'.png'` if an unsupported extension is used.
-   */
-  ext: string
-  /**
-   * The instance's browser name.
-   */
-  browserName: string
-  /**
-   * The value of {@linkcode process.platform}.
-   */
-  platform: NodeJS.Platform
-  /**
-   * The value provided to
-   * {@linkcode https://main.vitest.dev/guide/browser/config#browser-screenshotdirectory|browser.screenshotDirectory},
-   * if none is provided, its default value.
-   */
-  screenshotDirectory: string
-  /**
-   * Absolute path to the project's
-   * {@linkcode https://main.vitest.dev/config/#root|root}.
-   */
-  root: string
-  /**
-   * Path to the test file, relative to the project's
-   * {@linkcode https://main.vitest.dev/config/#root|root}.
-   */
-  testFileDirectory: string
-  /**
-   * The test's filename.
-   */
-  testFileName: string
-  /**
-   * The {@linkcode https://main.vitest.dev/api/#test|test}'s name, including
-   * parent {@linkcode https://main.vitest.dev/api/#describe|describe}, sanitized.
-   */
-  testName: string
-  /**
-   * The value provided to
-   * {@linkcode https://main.vitest.dev/config/#attachmentsdir|attachmentsDir},
-   * if none is provided, its default value.
-   */
-  attachmentsDir: string
-}) => string
-
 export interface BrowserInstanceOption extends BrowserProviderOptions,
   Omit<ProjectConfig, UnsupportedProperties>,
   Pick<
@@ -307,23 +237,17 @@ export interface BrowserConfigOptions {
 
   expect?: {
     toMatchScreenshot?: {
-      comparatorName?: string
-      comparatorOptions?: object
-      screenshotOptions?: object
-      timeout?: number
-      /**
-       * Overrides default reference screenshot path.
-       *
-       * @default `${root}/${testFileDirectory}/${screenshotDirectory}/${testFileName}/${arg}-${browserName}${ext}`
-       */
-      resolveScreenshotPath?: ToMatchScreenshotResolvePath
-      /**
-       * Overrides default screenshot path used for diffs.
-       *
-       * @default `${root}/${attachmentsDir}/${testFileDirectory}/${testFileName}/${arg}-${browserName}${ext}`
-       */
-      resolveDiffPath?: ToMatchScreenshotResolvePath
-    }
+      [ComparatorName in keyof ToMatchScreenshotComparators]:
+      {
+        /**
+         * The name of the comparator to use for visual diffing.
+         *
+         * @defaultValue `'pixelmatch'`
+         */
+        comparatorName?: ComparatorName
+        comparatorOptions?: ToMatchScreenshotComparators[ComparatorName]
+      }
+    }[keyof ToMatchScreenshotComparators] & ToMatchScreenshotOptions
   }
 }
 
@@ -416,3 +340,90 @@ export interface ResolvedBrowserOptions extends BrowserConfigOptions {
     testIdAttribute: string
   }
 }
+
+type ToMatchScreenshotResolvePath = (data: {
+  /**
+   * Path **without** extension, sanitized and relative to the test file.
+   *
+   * This comes from the arguments passed to `toMatchScreenshot`; if called
+   * without arguments this will be the auto-generated name.
+   *
+   * @example
+   * test('calls `onClick`', () => {
+   *   expect(locator).toMatchScreenshot()
+   *   // arg = "calls-onclick-1"
+   * })
+   *
+   * @example
+   * expect(locator).toMatchScreenshot('foo/bar/baz.png')
+   * // arg = "foo/bar/baz"
+   *
+   * @example
+   * expect(locator).toMatchScreenshot('../foo/bar/baz.png')
+   * // arg = "foo/bar/baz"
+   */
+  arg: string
+  /**
+   * Screenshot extension, with leading dot.
+   *
+   * This can be set through the arguments passed to `toMatchScreenshot`, but
+   * the value will fall back to `'.png'` if an unsupported extension is used.
+   */
+  ext: string
+  /**
+   * The instance's browser name.
+   */
+  browserName: string
+  /**
+   * The value of {@linkcode process.platform}.
+   */
+  platform: NodeJS.Platform
+  /**
+   * The value provided to
+   * {@linkcode https://main.vitest.dev/guide/browser/config#browser-screenshotdirectory|browser.screenshotDirectory},
+   * if none is provided, its default value.
+   */
+  screenshotDirectory: string
+  /**
+   * Absolute path to the project's
+   * {@linkcode https://main.vitest.dev/config/#root|root}.
+   */
+  root: string
+  /**
+   * Path to the test file, relative to the project's
+   * {@linkcode https://main.vitest.dev/config/#root|root}.
+   */
+  testFileDirectory: string
+  /**
+   * The test's filename.
+   */
+  testFileName: string
+  /**
+   * The {@linkcode https://main.vitest.dev/api/#test|test}'s name, including
+   * parent {@linkcode https://main.vitest.dev/api/#describe|describe}, sanitized.
+   */
+  testName: string
+  /**
+   * The value provided to
+   * {@linkcode https://main.vitest.dev/config/#attachmentsdir|attachmentsDir},
+   * if none is provided, its default value.
+   */
+  attachmentsDir: string
+}) => string
+
+export interface ToMatchScreenshotOptions {
+  /**
+   * Overrides default reference screenshot path.
+   *
+   * @default `${root}/${testFileDirectory}/${screenshotDirectory}/${testFileName}/${arg}-${browserName}${ext}`
+   */
+  resolveScreenshotPath?: ToMatchScreenshotResolvePath
+  /**
+   * Overrides default screenshot path used for diffs.
+   *
+   * @default `${root}/${attachmentsDir}/${testFileDirectory}/${testFileName}/${arg}-${browserName}${ext}`
+   */
+  resolveDiffPath?: ToMatchScreenshotResolvePath
+}
+
+export interface ToMatchScreenshotComparators {}
