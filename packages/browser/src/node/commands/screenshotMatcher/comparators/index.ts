@@ -1,4 +1,4 @@
-import type { ComparatorRegistry } from '../../../../../context'
+import type { ScreenshotComparatorRegistry } from '../../../../../context'
 import type { Comparator } from '../types'
 import { pixelmatch } from './pixelmatch'
 
@@ -23,14 +23,14 @@ function guard<C extends Comparator<any>>(comparator: C): C {
 const comparators = new Map(Object.entries({
   pixelmatch,
 } satisfies {
-  [ComparatorName in keyof ComparatorRegistry]: Comparator<
-    ComparatorRegistry[ComparatorName]
+  [ComparatorName in keyof ScreenshotComparatorRegistry]: Comparator<
+    ScreenshotComparatorRegistry[ComparatorName]
   >
 }))
 
-export function getComparator<ComparatorName extends keyof ComparatorRegistry>(
+export function getComparator<ComparatorName extends keyof ScreenshotComparatorRegistry>(
   comparator: ComparatorName,
-): Comparator<ComparatorRegistry[ComparatorName]> {
+): Comparator<ScreenshotComparatorRegistry[ComparatorName]> {
   if (comparators.has(comparator)) {
     return guard(comparators.get(comparator)!)
   }
@@ -38,4 +38,4 @@ export function getComparator<ComparatorName extends keyof ComparatorRegistry>(
   throw new Error(`Unrecognized comparator ${comparator}`)
 }
 
-export type AnyComparator = Comparator<ComparatorRegistry[keyof ComparatorRegistry]>
+export type AnyComparator = Comparator<ScreenshotComparatorRegistry[keyof ScreenshotComparatorRegistry]>
