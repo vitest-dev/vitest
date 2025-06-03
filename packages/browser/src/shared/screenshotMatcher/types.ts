@@ -1,7 +1,7 @@
-import type { ComparatorRegistry, ScreenshotMatcherOptions } from '../../../context'
+import type { ScreenshotComparatorRegistry, ScreenshotMatcherOptions } from '../../../context'
 
 export type ScreenshotMatcherArguments<
-  ComparatorName extends keyof ComparatorRegistry = keyof ComparatorRegistry,
+  ComparatorName extends keyof ScreenshotComparatorRegistry = keyof ScreenshotComparatorRegistry,
 > = [
   name: string,
   testName: string,

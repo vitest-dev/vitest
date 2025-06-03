@@ -45,7 +45,7 @@ export interface ScreenshotOptions {
   save?: boolean
 }
 
-export interface ComparatorRegistry {
+export interface ScreenshotComparatorRegistry {
   pixelmatch: {
     /**
      * The maximum number of pixels that are allowed to differ between the captured
@@ -142,17 +142,17 @@ export interface ComparatorRegistry {
 }
 
 export interface ScreenshotMatcherOptions<
-  ComparatorName extends keyof ComparatorRegistry = keyof ComparatorRegistry
+  ComparatorName extends keyof ScreenshotComparatorRegistry = keyof ScreenshotComparatorRegistry
 > {
   /**
    * The name of the comparator to use for visual diffing.
    *
-   * Must be one of the keys from {@linkcode ComparatorRegistry}.
+   * Must be one of the keys from {@linkcode ScreenshotComparatorRegistry}.
    *
    * @defaultValue `'pixelmatch'`
    */
   comparatorName?: ComparatorName
-  comparatorOptions?: ComparatorRegistry[ComparatorName]
+  comparatorOptions?: ScreenshotComparatorRegistry[ComparatorName]
   screenshotOptions?: Omit<
     ScreenshotOptions,
     'element' | 'base64' | 'path' | 'save' | 'type'
