@@ -62,8 +62,6 @@ export default defineConfig({
     exclude: [
       '**/fixtures/**',
       ...defaultExclude,
-      // FIXME: wait for support in rolldown
-      '**/esnext.test.ts',
     ],
     slowTestThreshold: 1000,
     testTimeout: process.env.CI ? 10_000 : 5_000,

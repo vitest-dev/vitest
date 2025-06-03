@@ -102,8 +102,6 @@ it('stacktrace in vmThreads', async () => {
 })
 
 function removeLines(log: string) {
-  // strip vite oxc transform warning
-  log = log.replace(/target was modified to include ES2021.*\n/g, '')
   return log.replace(/⎯{2,}/g, '⎯⎯')
 }
 
