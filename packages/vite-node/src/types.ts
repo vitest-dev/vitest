@@ -141,4 +141,13 @@ export interface DebuggerOptions {
   loadDumppedModules?: boolean
 }
 
+declare module 'vite' {
+  interface UserConfig {
+    /**
+     * Options for `vite-node`
+     */
+    nodeServer?: ViteNodeServerOptions
+  }
+}
+
 export type { ModuleCacheMap, ModuleExecutionInfo }

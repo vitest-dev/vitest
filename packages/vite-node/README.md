@@ -38,15 +38,39 @@ Options:
 npx vite-node -h
 ```
 
-### Options via CLI
+### Options
 
-[All `ViteNodeServer` options](https://github.com/vitest-dev/vitest/blob/main/packages/vite-node/src/types.ts#L92-L111) are supported by the CLI. They may be defined through the dot syntax, as shown below:
+[All `ViteNodeServer` options](https://github.com/vitest-dev/vitest/blob/main/packages/vite-node/src/types.ts#L92-L111) are supported by both the CLI and the Vite config file.
+
+#### Options via CLI
+
+Options may be defined through the dot syntax, as shown below:
 
 ```bash
 npx vite-node --options.deps.inline="module-name" --options.deps.external="/module-regexp/" index.ts
 ```
 
 Note that for options supporting RegExps, strings passed to the CLI must start _and_ end with a `/`;
+
+#### Options via Vite config file
+
+Options may also be defined using the `nodeServer` property in your config file:
+
+```ts [vitest.config.ts]
+import { defineConfig } from 'vite'
+import type { defineConfig } from 'vite-node'
+
+export default defineConfig({
+  nodeServer: {
+    deps: {
+      inline: 'module-name',
+      external: /module-regexp/
+    },
+  } satisfies ViteNodeServerOptions,
+})
+```
+
+Note that passing options via the CLI overrides any config file options.
 
 ### Hashbang
 

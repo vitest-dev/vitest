@@ -6,7 +6,7 @@ import { createServer, loadEnv, version as viteVersion } from 'vite'
 import { version } from '../package.json'
 import { ViteNodeRunner } from './client'
 import { createHotContext, handleMessage, viteNodeHmrPlugin } from './hmr'
-import { ViteNodeServer } from './server'
+import { getServerOptionsFromConfig, ViteNodeServer } from './server'
 import { installSourcemapsSupport } from './source-map'
 import { toArray } from './utils'
 
@@ -79,9 +79,10 @@ async function run(files: string[], options: CliOptions = {}) {
     process.exit(1)
   }
 
-  const serverOptions = options.options
-    ? parseServerOptions(options.options)
-    : {}
+  const serverOptions: ViteNodeServerOptions = {
+    ...await getServerOptionsFromConfig(options.config),
+    ...options.options ? parseServerOptions(options.options) : {},
+  }
 
   const server = await createServer({
     logLevel: 'error',

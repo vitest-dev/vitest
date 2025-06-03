@@ -12,7 +12,7 @@ import { performance } from 'node:perf_hooks'
 import { pathToFileURL } from 'node:url'
 import createDebug from 'debug'
 import { join, normalize, relative, resolve } from 'pathe'
-import { version as viteVersion } from 'vite'
+import { resolveConfig, version as viteVersion } from 'vite'
 import { Debugger } from './debug'
 import { shouldExternalize } from './externalize'
 import { withInlineSourcemap } from './source-map'
@@ -32,6 +32,17 @@ interface FetchCache {
 }
 
 const debugRequest = createDebug('vite-node:server:request')
+
+export async function getServerOptionsFromConfig(
+  configFile?: string,
+  mode?: 'build' | 'serve',
+): Promise<ViteNodeServerOptions | undefined> {
+  const config = await resolveConfig(
+    { configFile, mode },
+    mode ?? 'serve',
+  )
+  return config.nodeServer
+}
 
 export class ViteNodeServer {
   private fetchPromiseMap = {
