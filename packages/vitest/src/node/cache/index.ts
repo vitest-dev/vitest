@@ -29,7 +29,7 @@ export class VitestCache {
       root,
       baseDir,
       'vitest',
-      hash('md5', projectName || '', 'hex'),
+      hash('sha1', projectName || '', 'hex'),
     )
   }
 }
