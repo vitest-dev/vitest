@@ -49,7 +49,7 @@ it('uses config file nodeServer options', async () => {
   const cliNoConfig = await runViteNodeCli(entryPath)
   expect(cliNoConfig.stdout).not.toContain(`dump modules to`)
 
-  const { viteNode } = await runViteNodeCli('--config', resolve(__dirname, "../viteNodeServer.config.ts"), entryPath)
+  const { viteNode } = await runViteNodeCli('--config', resolve(__dirname, '../viteNodeServer.config.ts'), entryPath)
   await viteNode.waitForStdout(/\[vite-node\] \[debug\] dump modules to.*\.vite-node\/dump/)
 })
 
