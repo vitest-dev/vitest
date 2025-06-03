@@ -124,7 +124,10 @@ export function resolveOptions(
     ext: `.${extension}`,
     platform: platform(),
     root,
-    screenshotDirectory: context.project.config.browser.screenshotDirectory ?? '__screenshots__',
+    screenshotDirectory: relative(
+      root,
+      join(root, context.project.config.browser.screenshotDirectory ?? '__screenshots__'),
+    ),
     testFileDirectory: relative(root, dirname(context.testPath)),
     testFileName: basename(context.testPath),
     testName: sanitize(testName, false),
