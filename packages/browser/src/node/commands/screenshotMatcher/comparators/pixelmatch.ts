@@ -1,4 +1,4 @@
-import type { ComparatorRegistry } from '../../../../../context'
+import type { ScreenshotComparatorRegistry } from '../../../../../context'
 import type { Comparator } from '../types'
 import pm from 'pixelmatch'
 
@@ -12,9 +12,9 @@ const defaultOptions = {
   diffColor: [255, 0, 0],
   diffColorAlt: undefined,
   diffMask: false,
-} satisfies ComparatorRegistry['pixelmatch']
+} satisfies ScreenshotComparatorRegistry['pixelmatch']
 
-export const pixelmatch: Comparator<ComparatorRegistry['pixelmatch']> = (
+export const pixelmatch: Comparator<ScreenshotComparatorRegistry['pixelmatch']> = (
   reference,
   actual,
   { createDiff, ...options },
