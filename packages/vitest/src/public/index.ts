@@ -249,6 +249,7 @@ export type {
 export type {
   Assertion,
   AsymmetricMatchersContaining,
+  DeeplyAllowMatchers,
   ExpectPollOptions,
   ExpectStatic,
   JestAssertion,
@@ -290,6 +291,7 @@ export type {
   TaskCustomOptions,
   TaskMeta,
   TaskState,
+  TestAnnotation,
   TestAPI,
   TestContext,
   TestFunction,

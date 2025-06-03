@@ -32,7 +32,7 @@
     "sweetalert2": "^11.22.0",
     "temporal-polyfill": "~0.3.0",
     "tinyrainbow": "catalog:",
-    "tinyspy": "^1.1.1",
+    "tinyspy": "^4.0.3",
     "url": "^0.11.4",
     "vite-node": "workspace:*",
     "vitest": "workspace:*",

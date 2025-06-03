@@ -548,10 +548,6 @@ export class Vitest {
       await this._reportFileTask(file)
     }
 
-    if (hasFailed(files)) {
-      process.exitCode = 1
-    }
-
     this._checkUnhandledErrors(errors)
     await this._testRun.end(specifications, errors).catch(noop)
     await this.initCoverageProvider()
@@ -632,22 +628,14 @@ export class Vitest {
 
     // if run with --changed, don't exit if no tests are found
     if (!files.length) {
-      const throwAnError = !this.config.watch || !(this.config.changed || this.config.related?.length)
-
       await this._testRun.start([])
       const coverage = await this.coverageProvider?.generateCoverage?.({ allTestsRun: true })
-
-      // set exit code before calling `onTestRunEnd` so the lifecycle is consistent
-      if (throwAnError) {
-        const exitCode = this.config.passWithNoTests ? 0 : 1
-        process.exitCode = exitCode
-      }
 
       await this._testRun.end([], [], coverage)
       // Report coverage for uncovered files
       await this.reportCoverage(coverage, true)
 
-      if (throwAnError) {
+      if (!this.config.watch || !(this.config.changed || this.config.related?.length)) {
         throw new FilesNotFoundError(this.mode)
       }
     }
@@ -783,10 +771,6 @@ export class Vitest {
         }
 
         const files = this.state.getFiles()
-
-        if (hasFailed(files)) {
-          process.exitCode = 1
-        }
 
         this.cache.results.updateResults(files)
         try {

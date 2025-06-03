@@ -5,6 +5,7 @@ import type {
   ImportDuration,
   Suite,
   Task,
+  Test,
   TestContext,
   VitestRunner,
   VitestRunnerImportSource,
@@ -20,6 +21,9 @@ import { getSnapshotClient } from '../../integrations/snapshot/chai'
 import { vi } from '../../integrations/vi'
 import { rpc } from '../rpc'
 import { getWorkerState } from '../utils'
+
+// worker context is shared between all tests
+const workerContext = Object.create(null)
 
 export class VitestTestRunner implements VitestRunner {
   private snapshotClient = getSnapshotClient()
@@ -44,9 +48,17 @@ export class VitestTestRunner implements VitestRunner {
     this.workerState.current = file
   }
 
+  onCleanupWorkerContext(listener: () => unknown): void {
+    this.workerState.onCleanup(listener)
+  }
+
   onAfterRunFiles(): void {
     this.snapshotClient.clear()
     this.workerState.current = undefined
+  }
+
+  getWorkerContext(): Record<string, unknown> {
+    return workerContext
   }
 
   async onAfterRunSuite(suite: Suite): Promise<void> {
@@ -133,7 +145,7 @@ export class VitestTestRunner implements VitestRunner {
     )
   }
 
-  onAfterTryTask(test: Task): void {
+  onAfterTryTask(test: Test): void {
     const {
       assertionCalls,
       expectedAssertionsNumber,
@@ -141,8 +153,7 @@ export class VitestTestRunner implements VitestRunner {
       isExpectingAssertions,
       isExpectingAssertionsError,
     }
-      // @ts-expect-error _local is untyped
-      = 'context' in test && test.context._local
+      = test.context._local
         ? test.context.expect.getState()
         : getState((globalThis as any)[GLOBAL_EXPECT])
     if (

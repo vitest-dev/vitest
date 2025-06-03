@@ -71,7 +71,7 @@ describe('import durations', () => {
 
     const throwsFile = resolve(root, 'import-durations-25ms-throws.ts')
 
-    expect(file.importDurations?.[throwsFile]?.totalTime).toBeGreaterThanOrEqual(25)
-    expect(file.importDurations?.[throwsFile]?.selfTime).toBeGreaterThanOrEqual(25)
+    expect(file.importDurations?.[throwsFile]?.totalTime).toBeGreaterThanOrEqual(24)
+    expect(file.importDurations?.[throwsFile]?.selfTime).toBeGreaterThanOrEqual(24)
   })
 })

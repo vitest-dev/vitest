@@ -2053,9 +2053,9 @@ A custom class that defines methods for sharding and sorting. You can extend `Ba
 
 Sharding is happening before sorting, and only if `--shard` option is provided.
 
-If [`sequencer.groupOrder`](#groupOrder) is specified, the sequencer will be called once for each group and pool.
+If [`sequencer.groupOrder`](#grouporder) is specified, the sequencer will be called once for each group and pool.
 
-#### groupOrder <Version>3.2.0</Version> {#groupOrder}
+#### groupOrder <Version>3.2.0</Version> {#grouporder}
 
 - **Type:** `number`
 - **Default:** `0`
@@ -2645,3 +2645,10 @@ Polling timeout in milliseconds
 - **Default:** `false`
 
 Always print console traces when calling any `console` method. This is useful for debugging.
+
+### attachmentsDir <Version>3.2.0</Version>
+
+- **Type:** `string`
+- **Default:** `'.vitest-attachments'`
+
+Directory path for storing attachments created by [`context.annotate`](/guide/test-context#annotate) relative to the project root.

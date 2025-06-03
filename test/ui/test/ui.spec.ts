@@ -68,7 +68,7 @@ test.describe('ui', () => {
     await page.goto(pageUrl)
 
     // dashboard
-    await expect(page.locator('[aria-labelledby=tests]')).toContainText('9 Pass 1 Fail 10 Total')
+    await expect(page.locator('[aria-labelledby=tests]')).toContainText('13 Pass 1 Fail 14 Total')
 
     // unhandled errors
     await expect(page.getByTestId('unhandled-errors')).toContainText(
@@ -114,6 +114,25 @@ test.describe('ui', () => {
     expect(await page.getByText('afterAll').all()).toHaveLength(6)
   })
 
+  test('annotations', async ({ page }) => {
+    await page.goto(pageUrl)
+    const item = page.getByLabel('fixtures/annotated.test.ts')
+    await item.hover()
+    await item.getByTestId('btn-open-details').click({ force: true })
+    await page.getByTestId('btn-code').click({ force: true })
+
+    const annotations = page.getByRole('note')
+    await expect(annotations).toHaveCount(4)
+
+    await expect(annotations.first()).toHaveText('notice: hello world')
+    await expect(annotations.nth(1)).toHaveText('warning: beware!')
+    await expect(annotations.nth(2)).toHaveText(/notice: file annotation/)
+    await expect(annotations.nth(3)).toHaveText('notice: image annotation')
+
+    await expect(annotations.last().getByRole('link')).toHaveAttribute('href', /__vitest_attachment__\?path=/)
+    await expect(annotations.nth(2).getByRole('link')).toHaveAttribute('href', /__vitest_attachment__\?path=/)
+  })
+
   test('error', async ({ page }) => {
     await page.goto(pageUrl)
     const item = page.getByLabel('fixtures/error.test.ts')
@@ -127,7 +146,7 @@ test.describe('ui', () => {
 
     // match all files when no filter
     await page.getByPlaceholder('Search...').fill('')
-    await page.getByText('PASS (4)').click()
+    await page.getByText('PASS (5)').click()
     await expect(page.getByTestId('details-panel').getByText('fixtures/sample.test.ts', { exact: true })).toBeVisible()
 
     // match nothing
