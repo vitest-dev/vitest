@@ -138,7 +138,6 @@ export function resolveOptions(
 
   return {
     codec: getCodec(extension),
-    // @ts-expect-error should get fixed by changing the config types
     comparator: getComparator(resolvedOptions.comparatorName),
     resolvedOptions,
     paths: {
