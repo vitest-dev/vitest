@@ -249,6 +249,7 @@ export type {
 export type {
   Assertion,
   AsymmetricMatchersContaining,
+  DeeplyAllowMatchers,
   ExpectPollOptions,
   ExpectStatic,
   JestAssertion,
