@@ -8,6 +8,7 @@ import {
   groupIconMdPlugin,
   groupIconVitePlugin,
 } from 'vitepress-plugin-group-icons'
+import llmstxt from 'vitepress-plugin-llms'
 import { version } from '../../package.json'
 import { teamMembers } from './contributors'
 import {
@@ -79,6 +80,7 @@ export default ({ mode }: { mode: string }) => {
             'marko': 'vscode-icons:file-type-marko',
           },
         }),
+        llmstxt()
       ],
     },
     markdown: {
