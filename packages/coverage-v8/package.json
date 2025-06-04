@@ -77,7 +77,6 @@
     "@types/test-exclude": "catalog:",
     "@vitest/browser": "workspace:*",
     "pathe": "catalog:",
-    "v8-to-istanbul": "^9.3.0",
     "vite-node": "workspace:*",
     "vitest": "workspace:*"
   }
