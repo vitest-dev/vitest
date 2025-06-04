@@ -72,6 +72,8 @@ export class DotReporter extends BaseReporter {
 
   onTestCaseResult(test: TestCase): void {
     const result = test.result().state
+    
+    // On non-TTY the finished tests are printed immediately
     if (!this.isTTY && result !== 'pending') {
       (this.ctx.logger.outputStream as Writable).write(formatTests([result]))
     }
