@@ -1,5 +1,4 @@
 import { SerializedConfig } from 'vitest'
-import type pm from 'pixelmatch'
 import { ARIARole } from './aria-role.js'
 import {} from './matchers.js'
 
