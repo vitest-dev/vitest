@@ -77,6 +77,8 @@ export async function run(
 
   config.snapshotOptions.snapshotEnvironment = snapshotEnvironment
 
+  runner.getWorkerContext = undefined
+
   workerState.onCancel.then((reason) => {
     closeInspector(config)
     runner.cancel?.(reason)

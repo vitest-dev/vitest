@@ -65,11 +65,18 @@ export default defineConfig({
     setupFiles: [
       './test/setup.ts',
     ],
-    reporters: [['default', { summary: true }], 'hanging-process'],
+    includeTaskLocation: true,
+    reporters: process.env.GITHUB_ACTIONS
+      ? ['default', 'github-actions']
+      : [['default', { summary: true }], 'hanging-process'],
     testNamePattern: '^((?!does not include test that).)*$',
     coverage: {
       provider: 'istanbul',
       reporter: ['text', 'html'],
+    },
+    typecheck: {
+      enabled: true,
+      tsconfig: './tsconfig.typecheck.json',
     },
     environmentMatchGlobs: [
       ['**/*.dom.test.ts', 'happy-dom'],
@@ -134,6 +141,9 @@ export default defineConfig({
         return false
       }
       if (log.includes('Importing WebAssembly ')) {
+        return false
+      }
+      if (log.includes('run [...filters]')) {
         return false
       }
     },

@@ -32,6 +32,25 @@ export function serializeValue(val: any, seen: WeakMap<WeakKey, any> = new WeakM
   if (!val || typeof val === 'string') {
     return val
   }
+  if (val instanceof Error && 'toJSON' in val && typeof val.toJSON === 'function') {
+    const jsonValue = val.toJSON()
+
+    if (jsonValue && jsonValue !== val && typeof jsonValue === 'object') {
+      if (typeof val.message === 'string') {
+        safe(() => jsonValue.message ??= val.message)
+      }
+      if (typeof val.stack === 'string') {
+        safe(() => jsonValue.stack ??= val.stack)
+      }
+      if (typeof val.name === 'string') {
+        safe(() => jsonValue.name ??= val.name)
+      }
+      if (val.cause != null) {
+        safe(() => jsonValue.cause ??= serializeValue(val.cause, seen))
+      }
+    }
+    return serializeValue(jsonValue, seen)
+  }
   if (typeof val === 'function') {
     return `Function<${val.name || 'anonymous'}>`
   }
@@ -106,6 +125,15 @@ export function serializeValue(val: any, seen: WeakMap<WeakKey, any> = new WeakM
   }
 }
 
+function safe(fn: () => void) {
+  try {
+    return fn()
+  }
+  catch {
+    // ignore
+  }
+}
+
 export { serializeValue as serializeError }
 
 function normalizeErrorMessage(message: string) {
@@ -122,15 +150,6 @@ export function processError(
   }
   const err = _err as TestError
 
-  // stack is not serialized in worker communication
-  // we stringify it first
-  if (err.stack) {
-    err.stackStr = String(err.stack)
-  }
-  if (err.name) {
-    err.nameStr = String(err.name)
-  }
-
   if (
     err.showDiff
     || (err.showDiff === undefined
@@ -143,10 +162,10 @@ export function processError(
     })
   }
 
-  if (typeof err.expected !== 'string') {
+  if ('expected' in err && typeof err.expected !== 'string') {
     err.expected = stringify(err.expected, 10)
   }
-  if (typeof err.actual !== 'string') {
+  if ('actual' in err && typeof err.actual !== 'string') {
     err.actual = stringify(err.actual, 10)
   }
 

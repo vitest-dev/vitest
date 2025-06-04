@@ -1,34 +1,38 @@
 import { readFileSync } from "node:fs";
-import { Plugin, defineWorkspace } from "vitest/config";
+import { Plugin, defineConfig } from "vitest/config";
 import MagicString from "magic-string";
 
-export default defineWorkspace([
-  // Project that uses its own "root" and custom transform plugin
-  {
-    test: {
-      name: "custom-with-root",
-      root: "fixtures/workspaces/custom-2",
-    },
-    plugins: [customFilePlugin("2")],
-  },
+export default defineConfig({
+  test: {
+    projects: [
+      // Project that uses its own "root" and custom transform plugin
+      {
+        test: {
+          name: "custom-with-root",
+          root: "fixtures/workspaces/custom-2",
+        },
+        plugins: [customFilePlugin("2")],
+      },
 
-  // Project that cannot transform "*.custom-x" files
-  {
-    test: {
-      name: "normal",
-      include: ["fixtures/test/math.test.ts"],
-    },
-  },
+      // Project that cannot transform "*.custom-x" files
+      {
+        test: {
+          name: "normal",
+          include: ["fixtures/test/math.test.ts"],
+        },
+      },
 
-  // Project that uses default "root" and has custom transform plugin
-  {
-    test: {
-      name: "custom",
-      include: ["fixtures/test/custom-1-syntax.test.ts"],
-    },
-    plugins: [customFilePlugin("1")],
-  },
-]);
+      // Project that uses default "root" and has custom transform plugin
+      {
+        test: {
+          name: "custom",
+          include: ["fixtures/test/custom-1-syntax.test.ts"],
+        },
+        plugins: [customFilePlugin("1")],
+      },
+    ]
+  }
+});
 
 /**
  * Plugin for transforming `.custom-1` and/or `.custom-2` files to Javascript

@@ -34,23 +34,23 @@ function collectFailed(task: Task, level: number): LeveledTask[] {
 function createHtmlError(filter: Convert, error: ErrorWithDiff) {
   let htmlError = ''
   if (error.message?.includes('\x1B')) {
-    htmlError = `<b>${error.nameStr || error.name}</b>: ${filter.toHtml(
+    htmlError = `<b>${error.name}</b>: ${filter.toHtml(
       escapeHtml(error.message),
     )}`
   }
 
-  const startStrWithX1B = error.stackStr?.includes('\x1B')
-  if (startStrWithX1B || error.stack?.includes('\x1B')) {
+  const startStrWithX1B = error.stack?.includes('\x1B')
+  if (startStrWithX1B) {
     if (htmlError.length > 0) {
       htmlError += filter.toHtml(
-        escapeHtml((startStrWithX1B ? error.stackStr : error.stack) as string),
+        escapeHtml((error.stack) as string),
       )
     }
     else {
-      htmlError = `<b>${error.nameStr || error.name}</b>: ${
+      htmlError = `<b>${error.name}</b>: ${
         error.message
       }${filter.toHtml(
-        escapeHtml((startStrWithX1B ? error.stackStr : error.stack) as string),
+        escapeHtml((error.stack) as string),
       )}`
     }
   }

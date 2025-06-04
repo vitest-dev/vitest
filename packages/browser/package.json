@@ -1,7 +1,7 @@
 {
   "name": "@vitest/browser",
   "type": "module",
-  "version": "3.2.0-beta.1",
+  "version": "3.2.1",
   "description": "Browser running for Vitest",
   "license": "MIT",
   "funding": "https://opencollective.com/vitest",
@@ -102,8 +102,8 @@
     "@vitest/runner": "workspace:*",
     "@vitest/ui": "workspace:*",
     "@vitest/ws-client": "workspace:*",
-    "@wdio/protocols": "^9.12.5",
-    "@wdio/types": "^9.12.6",
+    "@wdio/protocols": "^9.15.0",
+    "@wdio/types": "^9.15.0",
     "birpc": "catalog:",
     "flatted": "catalog:",
     "ivya": "^1.6.0",
@@ -114,6 +114,6 @@
     "playwright-core": "^1.52.0",
     "safaridriver": "^1.0.0",
     "vitest": "workspace:*",
-    "webdriverio": "^9.12.7"
+    "webdriverio": "^9.15.0"
   }
 }

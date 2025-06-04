@@ -1,7 +1,7 @@
 import type { VitestBrowserClient } from '@vitest/browser/client'
+import type { ParsedStack } from 'vitest/internal/browser'
 import type { SnapshotEnvironment } from 'vitest/snapshot'
-import type { ParsedStack } from 'vitest/utils'
-import { originalPositionFor, TraceMap } from 'vitest/utils'
+import { originalPositionFor, TraceMap } from 'vitest/internal/browser'
 
 export class VitestBrowserSnapshotEnvironment implements SnapshotEnvironment {
   private sourceMaps = new Map<string, any>()

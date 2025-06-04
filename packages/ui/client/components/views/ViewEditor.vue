@@ -1,6 +1,7 @@
 <script setup lang="ts">
+import type { Task, TestAttachment } from '@vitest/runner'
 import type CodeMirror from 'codemirror'
-import type { ErrorWithDiff, File } from 'vitest'
+import type { ErrorWithDiff, File, TestAnnotation, TestError } from 'vitest'
 import { createTooltip, destroyTooltip } from 'floating-vue'
 import { client, isReport } from '~/composables/client'
 import { finished } from '~/composables/client/state'
@@ -85,9 +86,33 @@ watch(() => [loading.value, saving.value, props.file, lineNumber.value] as const
 const ext = computed(() => props.file?.filepath?.split(/\./g).pop() || 'js')
 const editor = ref<any>()
 
-const failed = computed(
-  () => props.file?.tasks.filter(i => i.result?.state === 'fail') || [],
-)
+const errors = computed(() => {
+  const errors: TestError[] = []
+  function addFailed(task: Task) {
+    if (task.result?.errors) {
+      errors.push(...task.result.errors as TestError[])
+    }
+    if (task.type === 'suite') {
+      task.tasks.forEach(addFailed)
+    }
+  }
+  props.file?.tasks.forEach(addFailed)
+  return errors
+})
+
+const annotations = computed(() => {
+  const annotations: TestAnnotation[] = []
+  function addAnnotations(task: Task) {
+    if (task.type === 'test') {
+      annotations.push(...task.annotations)
+    }
+    if (task.type === 'suite') {
+      task.tasks.forEach(addAnnotations)
+    }
+  }
+  props.file?.tasks.forEach(addAnnotations)
+  return annotations
+})
 const widgets: CodeMirror.LineWidget[] = []
 const handles: CodeMirror.LineHandle[] = []
 const listeners: [el: HTMLSpanElement, l: EventListener, t: () => void][] = []
@@ -157,9 +182,94 @@ function createErrorElement(e: ErrorWithDiff) {
   widgets.push(codemirrorRef.value!.addLineWidget(stack.line - 1, div))
 }
 
+function createAnnotationElement(annotation: TestAnnotation) {
+  if (!annotation.location) {
+    // TODO(v4): print unknown annotations somewhere
+    return
+  }
+
+  // TODO(v4): design
+  const { line, file } = annotation.location
+  if (file !== props.file?.filepath) {
+    return
+  }
+
+  const notice = document.createElement('div')
+  notice.classList.add(
+    'wrap',
+    'bg-active',
+    'py-3',
+    'px-6',
+    'my-1',
+  )
+  notice.role = 'note'
+
+  const messageWrapper = document.createElement('div')
+  messageWrapper.classList.add('block', 'text-black', 'dark:text-white')
+
+  const type = document.createElement('span')
+  type.textContent = `${annotation.type}: `
+  type.classList.add('font-bold')
+
+  const message = document.createElement('span')
+  message.classList.add('whitespace-pre')
+  message.textContent = annotation.message.replace(/[^\r]\n/, '\r\n')
+
+  messageWrapper.append(type, message)
+  notice.append(messageWrapper)
+  const attachment = annotation.attachment
+  if (attachment?.path || attachment?.body) {
+    if (attachment.contentType?.startsWith('image/')) {
+      const link = document.createElement('a')
+      const img = document.createElement('img')
+      img.classList.add('mt-3', 'inline-block')
+      img.width = 600
+      img.width = 400
+      const potentialUrl = attachment.path || attachment.body
+      if (typeof potentialUrl === 'string' && (potentialUrl.startsWith('http://') || potentialUrl.startsWith('https://'))) {
+        img.setAttribute('src', potentialUrl)
+        link.referrerPolicy = 'no-referrer'
+      }
+      else {
+        img.setAttribute('src', getAttachmentUrl(attachment))
+      }
+      link.target = '_blank'
+      link.href = img.src
+      link.append(img)
+      notice.append(link)
+    }
+    else {
+      const download = document.createElement('a')
+      download.href = getAttachmentUrl(attachment)
+      download.download = sanitizeFilePath(annotation.message)
+      download.classList.add('flex', 'w-min', 'gap-2', 'items-center', 'font-sans', 'underline', 'cursor-pointer')
+      const icon = document.createElement('div')
+      icon.classList.add('i-carbon:download', 'block')
+      const text = document.createElement('span')
+      text.textContent = 'Download'
+      download.append(icon, text)
+      notice.append(download)
+    }
+  }
+  widgets.push(codemirrorRef.value!.addLineWidget(line - 1, notice))
+}
+
+function getAttachmentUrl(attachment: TestAttachment) {
+  // html reporter always saves files into /data/ folder
+  if (isReport) {
+    return `/data/${attachment.path}`
+  }
+  const contentType = attachment.contentType ?? 'application/octet-stream'
+  if (attachment.path) {
+    return `/__vitest_attachment__?path=${encodeURIComponent(attachment.path)}&contentType=${contentType}&token=${(window as any).VITEST_API_TOKEN}`
+  }
+  // attachment.body is always a string outside of the test frame
+  return `data:${contentType};base64,${attachment.body}`
+}
+
 const { pause, resume } = watch(
-  [codemirrorRef, failed, finished] as const,
-  ([cmValue, f, end]) => {
+  [codemirrorRef, errors, annotations, finished] as const,
+  ([cmValue, errors, annotations, end]) => {
     if (!cmValue) {
       widgets.length = 0
       handles.length = 0
@@ -184,9 +294,9 @@ const { pause, resume } = watch(
 
     setTimeout(() => {
       // add new data
-      f.forEach((i) => {
-        i.result?.errors?.forEach(createErrorElement)
-      })
+      errors.forEach(createErrorElement)
+
+      annotations.forEach(createAnnotationElement)
 
       // Prevent getting access to initial state
       if (!hasBeenEdited.value) {
@@ -261,9 +371,8 @@ async function onSave(content: string) {
   }
 
   // add new data
-  failed.value.forEach((i) => {
-    i.result?.errors?.forEach(createErrorElement)
-  })
+  errors.value.forEach(createErrorElement)
+  annotations.value.forEach(createAnnotationElement)
 
   cmValue?.on('changes', codemirrorChanges)
 
@@ -280,6 +389,11 @@ async function onSave(content: string) {
 
 // we need to remove listeners before unmounting the component: the watcher will not be called
 onBeforeUnmount(clearListeners)
+
+function sanitizeFilePath(s: string): string {
+  // eslint-disable-next-line no-control-regex
+  return s.replace(/[\x00-\x2C\x2E\x2F\x3A-\x40\x5B-\x60\x7B-\x7F]+/g, '-')
+}
 </script>
 
 <template>

@@ -240,7 +240,7 @@ function printErrorInner(
     })
   }
 
-  handleImportOutsideModuleError(e.stack || e.stackStr || '', logger)
+  handleImportOutsideModuleError(e.stack || '', logger)
 
   return { nearest }
 }
@@ -250,11 +250,8 @@ function printErrorType(type: string, ctx: Vitest) {
 }
 
 const skipErrorProperties = new Set([
-  'nameStr',
-  'stack',
   'cause',
   'stacks',
-  'stackStr',
   'type',
   'showDiff',
   'ok',
@@ -275,6 +272,7 @@ const skipErrorProperties = new Set([
   'VITEST_TEST_NAME',
   'VITEST_TEST_PATH',
   'VITEST_AFTER_ENV_TEARDOWN',
+  '__vitest_rollup_error__',
   ...Object.getOwnPropertyNames(Error.prototype),
   ...Object.getOwnPropertyNames(Object.prototype),
 ])
@@ -286,7 +284,11 @@ function getErrorProperties(e: ErrorWithDiff) {
   }
 
   for (const key of Object.getOwnPropertyNames(e)) {
-    if (!skipErrorProperties.has(key)) {
+    // print the original stack if it was ever changed manually by the user
+    if (key === 'stack' && e[key] != null && typeof e[key] !== 'string') {
+      errorObject[key] = e[key]
+    }
+    else if (key !== 'stack' && !skipErrorProperties.has(key)) {
       errorObject[key] = e[key as keyof ErrorWithDiff]
     }
   }
@@ -363,7 +365,7 @@ function printModuleWarningForSourceCode(logger: ErrorLogger, path: string) {
 }
 
 function printErrorMessage(error: ErrorWithDiff, logger: ErrorLogger) {
-  const errorName = error.name || error.nameStr || 'Unknown Error'
+  const errorName = error.name || 'Unknown Error'
   if (!error.message) {
     logger.error(error)
     return

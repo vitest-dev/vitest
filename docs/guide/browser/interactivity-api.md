@@ -156,7 +156,7 @@ function fill(
 ): Promise<void>
 ```
 
-Set a value to the `input/textarea/conteneditable` field. This will remove any existing text in the input before setting the new value.
+Set a value to the `input`/`textarea`/`contenteditable` field. This will remove any existing text in the input before setting the new value.
 
 ```ts
 import { page, userEvent } from '@vitest/browser/context'
@@ -263,7 +263,7 @@ If you don't rely on [special characters](https://testing-library.com/docs/user-
 
 The `type` method implements `@testing-library/user-event`'s [`type`](https://testing-library.com/docs/user-event/utility/#type) utility built on top of [`keyboard`](https://testing-library.com/docs/user-event/keyboard) API.
 
-This function allows you to type characters into an input/textarea/conteneditable element. It supports [user-event `keyboard` syntax](https://testing-library.com/docs/user-event/keyboard).
+This function allows you to type characters into an `input`/`textarea`/`contenteditable` element. It supports [user-event `keyboard` syntax](https://testing-library.com/docs/user-event/keyboard).
 
 If you just need to press characters without an input, use [`userEvent.keyboard`](#userevent-keyboard) API.
 
@@ -469,8 +469,8 @@ test('can upload a file', async () => {
   // or you can access it directly on the locator
   await input.upload(file)
 
-  // you can also use file paths relative to the test file
-  await userEvent.upload(input, '../fixtures/file.png')
+  // you can also use file paths relative to the root of the project
+  await userEvent.upload(input, './fixtures/file.png')
 })
 ```
 

@@ -9,6 +9,7 @@
 import type { MockInstance } from '@vitest/spy'
 import type { Constructable } from '@vitest/utils'
 import type { Formatter } from 'tinyrainbow'
+import type { AsymmetricMatcher } from './jest-asymmetric-matchers'
 import type { diff, getMatcherUtils, stringify } from './jest-matcher-utils'
 
 export type ChaiPlugin = Chai.ChaiPlugin
@@ -85,22 +86,30 @@ export type AsyncExpectationResult = Promise<SyncExpectationResult>
 
 export type ExpectationResult = SyncExpectationResult | AsyncExpectationResult
 
-export interface RawMatcherFn<T extends MatcherState = MatcherState> {
-  (this: T, received: any, ...expected: Array<any>): ExpectationResult
+export interface RawMatcherFn<T extends MatcherState = MatcherState, E extends Array<any> = Array<any>> {
+  (this: T, received: any, ...expected: E): ExpectationResult
 }
+
+// Allow unused `T` to preserve its name for extensions.
+// Type parameter names must be identical when extending those types.
+// eslint-disable-next-line
+export interface Matchers<T = any> {}
 
 export type MatchersObject<T extends MatcherState = MatcherState> = Record<
   string,
   RawMatcherFn<T>
-> & ThisType<T>
+> & ThisType<T> & {
+  [K in keyof Matchers<T>]?: RawMatcherFn<T, Parameters<Matchers<T>[K]>>
+}
 
 export interface ExpectStatic
   extends Chai.ExpectStatic,
+  Matchers,
   AsymmetricMatchersContaining {
   <T>(actual: T, message?: string): Assertion<T>
   extend: (expects: MatchersObject) => void
-  anything: () => any
-  any: (constructor: unknown) => any
+  anything: () => AsymmetricMatcher<unknown>
+  any: (constructor: unknown) => AsymmetricMatcher<unknown>
   getState: () => MatcherState
   setState: (state: Partial<MatcherState>) => void
   not: AsymmetricMatchersContaining
@@ -146,7 +155,7 @@ export interface AsymmetricMatchersContaining extends CustomMatcher {
    * @example
    * expect({ a: '1', b: 2 }).toEqual(expect.objectContaining({ a: '1' }))
    */
-  objectContaining: <T = any>(expected: T) => any
+  objectContaining: <T = any>(expected: DeeplyAllowMatchers<T>) => any
 
   /**
    * Matches if the received array contains all elements in the expected array.
@@ -154,7 +163,7 @@ export interface AsymmetricMatchersContaining extends CustomMatcher {
    * @example
    * expect(['a', 'b', 'c']).toEqual(expect.arrayContaining(['b', 'a']));
    */
-  arrayContaining: <T = unknown>(expected: Array<T>) => any
+  arrayContaining: <T = unknown>(expected: Array<DeeplyAllowMatchers<T>>) => any
 
   /**
    * Matches if the received string or regex matches the expected pattern.
@@ -177,6 +186,14 @@ export interface AsymmetricMatchersContaining extends CustomMatcher {
   closeTo: (expected: number, precision?: number) => any
 }
 
+export type DeeplyAllowMatchers<T> = T extends Array<infer Element>
+  ? (DeeplyAllowMatchers<Element> | Element)[]
+  : T extends object
+    ? {
+        [K in keyof T]: DeeplyAllowMatchers<T[K]> | AsymmetricMatcher<unknown>
+      }
+    : T
+
 export interface JestAssertion<T = any> extends jest.Matchers<void, T>, CustomMatcher {
   /**
    * Used when you want to check that two objects have the same value.
@@ -185,7 +202,7 @@ export interface JestAssertion<T = any> extends jest.Matchers<void, T>, CustomMa
    * @example
    * expect(user).toEqual({ name: 'Alice', age: 30 });
    */
-  toEqual: <E>(expected: E) => void
+  toEqual: <E>(expected: DeeplyAllowMatchers<E>) => void
 
   /**
    * Use to test that objects have the same types as well as structure.
@@ -193,7 +210,7 @@ export interface JestAssertion<T = any> extends jest.Matchers<void, T>, CustomMa
    * @example
    * expect(user).toStrictEqual({ name: 'Alice', age: 30 });
    */
-  toStrictEqual: <E>(expected: E) => void
+  toStrictEqual: <E>(expected: DeeplyAllowMatchers<E>) => void
 
   /**
    * Checks that a value is what you expect. It calls `Object.is` to compare values.
@@ -223,7 +240,7 @@ export interface JestAssertion<T = any> extends jest.Matchers<void, T>, CustomMa
    *   address: { city: 'Wonderland' }
    * });
    */
-  toMatchObject: <E extends object | any[]>(expected: E) => void
+  toMatchObject: <E extends object | any[]>(expected: DeeplyAllowMatchers<E>) => void
 
   /**
    * Used when you want to check that an item is in a list.
@@ -630,7 +647,8 @@ export type PromisifyAssertion<T> = Promisify<Assertion<T>>
 
 export interface Assertion<T = any>
   extends VitestAssertion<Chai.Assertion, T>,
-  JestAssertion<T> {
+  JestAssertion<T>,
+  Matchers<T> {
   /**
    * Ensures a value is of a specific type.
    *

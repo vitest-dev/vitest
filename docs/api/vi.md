@@ -460,6 +460,19 @@ expect(spy).toHaveReturnedWith(1)
 ```
 
 ::: tip
+In environments that support [Explicit Resource Management](https://github.com/tc39/proposal-explicit-resource-management), you can use `using` instead of `const` to automatically call `mockRestore` on any mocked function when the containing block is exited. This is especially useful for spied methods:
+
+```ts
+it('calls console.log', () => {
+  using spy = vi.spyOn(console, 'log').mockImplementation(() => {})
+  debug('message')
+  expect(spy).toHaveBeenCalled()
+})
+// console.log is restored here
+```
+:::
+
+::: tip
 You can call [`vi.restoreAllMocks`](#vi-restoreallmocks) inside [`afterEach`](/api/#aftereach) (or enable [`test.restoreMocks`](/config/#restoreMocks)) to restore all methods to their original implementations. This will restore the original [object descriptor](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/defineProperty), so you won't be able to change method's implementation:
 
 ```ts

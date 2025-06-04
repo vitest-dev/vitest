@@ -107,9 +107,7 @@ export type {
 } from '../api/types'
 export { assert, chai, createExpect, expect, should } from '../integrations/chai'
 export { inject } from '../integrations/inject'
-export { isFirstRun, runOnce } from '../integrations/run-once'
 
-export { getRunningMode, isWatchMode } from '../integrations/utils'
 export { vi, vitest } from '../integrations/vi'
 export type { VitestUtils } from '../integrations/vi'
 export { bench } from '../runtime/benchmark'
@@ -251,9 +249,11 @@ export type {
 export type {
   Assertion,
   AsymmetricMatchersContaining,
+  DeeplyAllowMatchers,
   ExpectPollOptions,
   ExpectStatic,
   JestAssertion,
+  Matchers,
 } from '@vitest/expect'
 export {
   afterAll,
@@ -271,6 +271,7 @@ export type {
   ExtendedContext,
   HookCleanupCallback,
   HookListener,
+  ImportDuration,
   OnTestFailedHandler,
   OnTestFinishedHandler,
   RunMode,
@@ -290,6 +291,7 @@ export type {
   TaskCustomOptions,
   TaskMeta,
   TaskState,
+  TestAnnotation,
   TestAPI,
   TestContext,
   TestFunction,

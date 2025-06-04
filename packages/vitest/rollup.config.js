@@ -28,7 +28,6 @@ const entries = {
   'mocker': 'src/public/mocker.ts',
   'spy': 'src/integrations/spy.ts',
   'coverage': 'src/public/coverage.ts',
-  'utils': 'src/public/utils.ts',
   'execute': 'src/public/execute.ts',
   'reporters': 'src/public/reporters.ts',
   // TODO: advanced docs
@@ -55,7 +54,6 @@ const dtsEntries = {
   suite: 'src/public/suite.ts',
   config: 'src/public/config.ts',
   coverage: 'src/public/coverage.ts',
-  utils: 'src/public/utils.ts',
   execute: 'src/public/execute.ts',
   reporters: 'src/public/reporters.ts',
   mocker: 'src/public/mocker.ts',
@@ -105,7 +103,19 @@ const plugins = [
   json(),
   commonjs(),
   oxc({
-    transform: { target: 'node18' },
+    transform: {
+      target: 'node18',
+      define: {
+        // __VITEST_GENERATE_UI_TOKEN__ is set as a global to catch accidental leaking,
+        // in the release version the "if" with this condition should not be present
+        __VITEST_GENERATE_UI_TOKEN__: process.env.VITEST_GENERATE_UI_TOKEN === 'true' ? 'true' : 'false',
+        ...(process.env.VITE_TEST_WATCHER_DEBUG === 'false'
+          ? {
+              'process.env.VITE_TEST_WATCHER_DEBUG': 'false',
+            }
+          : {}),
+      },
+    },
     sourcemap: true,
   }),
 ]
@@ -121,6 +131,12 @@ export default ({ watch }) =>
         chunkFileNames: 'chunks/[name].[hash].js',
       },
       external,
+      moduleContext: (id) => {
+        // mime has `this.__classPrivateFieldGet` check which should be ignored in esm
+        if (id.includes('mime/dist/src') || id.includes('mime\\dist\\src')) {
+          return '{}'
+        }
+      },
       plugins: [
         ...dtsUtils.isolatedDecl(),
         ...plugins,
@@ -148,6 +164,7 @@ export default ({ watch }) =>
         format: 'esm',
         chunkFileNames: 'chunks/[name].[hash].d.ts',
       },
+      watch: false,
       external,
       plugins: dtsUtils.dts(),
     },

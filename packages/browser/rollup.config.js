@@ -13,6 +13,7 @@ const external = [
   ...Object.keys(pkg.dependencies),
   ...Object.keys(pkg.peerDependencies || {}),
   /^@?vitest(\/|$)/,
+  '@vitest/browser/utils',
   'worker_threads',
   'node:worker_threads',
   'vite',
@@ -98,6 +99,7 @@ export default () =>
         file: 'dist/context.js',
         format: 'esm',
       },
+      external: ['@vitest/browser/utils'],
       plugins: [
         oxc({
           transform: { target: 'node18' },
@@ -139,6 +141,7 @@ export default () =>
         entryFileNames: '[name].d.ts',
         format: 'esm',
       },
+      watch: false,
       external,
       plugins: dtsUtils.dts(),
     },
@@ -151,6 +154,7 @@ export default () =>
         entryFileNames: '[name].d.ts',
         format: 'esm',
       },
+      watch: false,
       external,
       plugins: dtsUtilsClient.dts(),
     },

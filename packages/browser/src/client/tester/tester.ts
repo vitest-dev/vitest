@@ -9,7 +9,7 @@ import {
   startCoverageInsideWorker,
   startTests,
   stopCoverageInsideWorker,
-} from 'vitest/browser'
+} from 'vitest/internal/browser'
 import { executor, getBrowserState, getConfig, getWorkerState } from '../utils'
 import { setupDialogsSpy } from './dialog'
 import { setupConsoleLogSpy } from './logger'
@@ -233,6 +233,10 @@ async function cleanup() {
   // since playwright keyboard API is stateful on page instance level
   await userEvent.cleanup()
     .catch(error => unhandledError(error, 'Cleanup Error'))
+
+  await Promise.all(
+    getBrowserState().cleanups.map(fn => fn()),
+  ).catch(error => unhandledError(error, 'Cleanup Error'))
 
   // if isolation is disabled, Vitest reuses the same iframe and we
   // don't need to switch the context back at all

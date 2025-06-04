@@ -1,6 +1,7 @@
 {
   "extends": ["./tsconfig.patch.json"],
   "compilerOptions": {
+    "noUncheckedSideEffectImports": true,
     "target": "ESNext",
     "module": "ESNext",
     "moduleResolution": "Bundler",
