@@ -52,7 +52,7 @@ it('nested script options get passed (and as boolean, when necessary)', async ()
   const cliDefault = await runViteNodeCli('--options.debug.dumpModules=true', entryPath)
   await cliDefault.viteNode.waitForStdout(/\[vite-node\] \[debug\] dump modules to.*\.vite-node\/dump/)
 
-   const cliSpecific = await runViteNodeCli('--options.debug.dumpModules=.vite-node/test-dump', entryPath)
+  const cliSpecific = await runViteNodeCli('--options.debug.dumpModules=.vite-node/test-dump', entryPath)
   await cliSpecific.viteNode.waitForStdout(/\[vite-node\] \[debug\] dump modules to.*\.vite-node\/test-dump/)
 })
 
