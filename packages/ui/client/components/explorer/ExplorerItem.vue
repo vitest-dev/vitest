@@ -9,6 +9,7 @@ import { explorerTree } from '~/composables/explorer'
 import { hasFailedSnapshot } from '~/composables/explorer/collector'
 import { escapeHtml, highlightRegex } from '~/composables/explorer/state'
 import { coverageEnabled } from '~/composables/navigation'
+import { getProjectTextColor } from '~/utils/task'
 
 // TODO: better handling of "opened" - it means to forcefully open the tree item and set in TasksList right now
 const {
@@ -153,22 +154,7 @@ function showDetails() {
   }
 }
 
-const projectNameTextColor = computed(() => {
-  switch (projectNameColor) {
-    case 'blue':
-    case 'green':
-    case 'magenta':
-    case 'black':
-    case 'red':
-      return 'white'
-
-    case 'yellow':
-    case 'cyan':
-    case 'white':
-    default:
-      return 'black'
-  }
-})
+const projectNameTextColor = computed(() => getProjectTextColor(projectNameColor))
 </script>
 
 <template>

@@ -10,10 +10,11 @@ import {
   currentLogs,
   isReport,
 } from '~/composables/client'
+import { explorerTree } from '~/composables/explorer'
 import { hasFailedSnapshot } from '~/composables/explorer/collector'
 import { getModuleGraph } from '~/composables/module-graph'
 import { viewMode } from '~/composables/params'
-import { getProjectNameColor } from '~/utils/task'
+import { getProjectNameColor, getProjectTextColor } from '~/utils/task'
 
 const graph = ref<ModuleGraph>({ nodes: [], links: [] })
 const draft = ref(false)
@@ -144,19 +145,11 @@ debouncedWatch(
 )
 
 const projectNameColor = computed(() => {
-  return getProjectNameColor(current.value?.file.projectName)
+  const projectName = current.value?.file.projectName || ''
+  return explorerTree.colors.get(projectName) || getProjectNameColor(current.value?.file.projectName)
 })
 
-const projectNameTextColor = computed(() => {
-  switch (projectNameColor.value) {
-    case 'blue':
-    case 'green':
-    case 'magenta':
-      return 'white'
-    default:
-      return 'black'
-  }
-})
+const projectNameTextColor = computed(() => getProjectTextColor(projectNameColor.value))
 
 const testTitle = computed(() => {
   const testId = selectedTest.value
@@ -286,8 +279,8 @@ const testTitle = computed(() => {
         :file="current"
         data-testid="console"
       />
-      <ViewReport v-else-if="!viewMode && !test" :file="current" data-testid="report" />
-      <ViewTestReport v-else-if="!viewMode && test && current" :file="current" :test="test" data-testid="report" />
+      <ViewReport v-else-if="!viewMode && !test && current" :file="current" data-testid="report" />
+      <ViewTestReport v-else-if="!viewMode && test" :test="test" data-testid="report" />
     </div>
   </div>
 </template>

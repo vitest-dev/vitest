@@ -1,4 +1,4 @@
-import type { File, Task, TaskResultPack, TestAnnotation } from '@vitest/runner'
+import type { File, Task, TaskResultPack } from '@vitest/runner'
 // eslint-disable-next-line no-restricted-imports
 import type { UserConsoleLog } from 'vitest'
 
@@ -13,13 +13,6 @@ export class StateManager {
 
   getPaths(): string[] {
     return Array.from(this.pathsSet)
-  }
-
-  annotateTest(testId: string, annotation: TestAnnotation): void {
-    const test = this.idMap.get(testId)
-    if (test?.type === 'test') {
-      test.annotations.push(annotation)
-    }
   }
 
   /**

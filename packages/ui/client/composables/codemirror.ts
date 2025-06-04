@@ -72,13 +72,23 @@ export async function showTaskSource(task: Task) {
   })
 }
 
+export function showLocationSource(fileId: string, location: { line: number; column: number }) {
+  navigateTo({
+    file: fileId,
+    column: location.column - 1,
+    line: location.line,
+    view: 'editor',
+    test: selectedTest.value,
+  })
+}
+
 export function showAnnotationSource(task: RunnerTestCase, annotation: TestAnnotation) {
   if (!annotation.location) {
     return
   }
   const { line, column, file } = annotation.location
   if (task.file.filepath !== file) {
-    return
+    return openInEditor(file, line, column)
   }
   navigateTo({
     file: task.file.id,
