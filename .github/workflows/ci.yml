@@ -180,7 +180,7 @@ jobs:
         run: pnpm add vite@npm:rolldown-vite && git add . && git commit -m "ci" && pnpm i --prefer-offline --no-frozen-lockfile
 
       - name: Install Playwright Dependencies
-        run: pnpm exec playwright install chromium --with-deps --only-shell
+        run: pnpm exec playwright install --with-deps --only-shell
 
       - name: Build
         run: pnpm run build
