@@ -14,7 +14,7 @@
     "build": "pnpm -r --filter @vitest/ui --filter='./packages/**' run build",
     "dev": "NODE_OPTIONS=\"--max-old-space-size=8192\" pnpm -r --parallel --filter='./packages/**' run dev",
     "docs": "pnpm -C docs run dev",
-    "docs:build": "pnpm -C docs run build",
+    "docs:build": "ROLLDOWN_OPTIONS_VALIDATION=loose pnpm -C docs run build",
     "docs:serve": "pnpm -C docs run serve",
     "docs:https": "pnpm -C docs run preview-https",
     "docs:https-no-prefetch": "pnpm -C docs run preview-https-no-prefetch",
@@ -96,6 +96,7 @@
       "esbuild",
       "geckodriver",
       "msw",
+      "rolldown",
       "sharp",
       "svelte-preprocess",
       "vue-demi"
