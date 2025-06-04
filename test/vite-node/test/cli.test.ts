@@ -45,6 +45,14 @@ it('exposes .env variables', async () => {
   expect(env.MY_TEST_ENV).toBe('hello')
 })
 
+it.only('script options convert boolean strings to booleans', async () => {
+  const cliNoConfig = await runViteNodeCli(entryPath)
+  expect(cliNoConfig.stdout).not.toContain(`dump modules to`)
+
+  const { viteNode } = await runViteNodeCli('--options.debug.dumpModules=true', entryPath)
+  await viteNode.waitForStdout(/\[vite-node\] \[debug\] dump modules to.*\.vite-node\/dump/)
+})
+
 it.each(['index.js', 'index.cjs', 'index.mjs'])('correctly runs --watch %s', async (file) => {
   const entryPath = resolve(__dirname, '../src/watch', file)
   const { viteNode } = await runViteNodeCli('--watch', entryPath)
