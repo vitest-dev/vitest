@@ -63,20 +63,17 @@
     "typescript": "^5.8.3",
     "unplugin-isolated-decl": "^0.14.2",
     "unplugin-oxc": "^0.4.5",
-    "vite": "^6.3.5",
+    "vite": "npm:rolldown-vite@6.3.16",
     "vitest": "workspace:*",
     "zx": "^8.5.4"
   },
   "pnpm": {
     "overrides": {
-      "@types/node": "$@types/node",
       "@vitest/browser": "workspace:*",
       "@vitest/ui": "workspace:*",
       "acorn": "8.11.3",
-      "esbuild": "$esbuild",
       "mlly": "^1.7.4",
       "rollup": "$rollup",
-      "tsx": "$tsx",
       "vite": "$vite",
       "vitest": "workspace:*"
     },
