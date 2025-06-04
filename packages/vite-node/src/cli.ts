@@ -1,4 +1,4 @@
-import type { ViteNodeServerOptions } from './types'
+import type { ChangeTypeDeep, ViteNodeServerOptions } from './types'
 import { resolve } from 'node:path'
 import cac from 'cac'
 import c from 'tinyrainbow'
@@ -35,6 +35,9 @@ else {
   const executeArgs = [...cli.rawArgs.slice(0, i), '--', ...scriptArgs]
   cli.parse(executeArgs)
 }
+
+// cac only passes strings, not RegExp (or in this nested options case, boolean as well)
+export type ViteNodeServerOptionsCLI = ChangeTypeDeep<ViteNodeServerOptions, RegExp | boolean, string>
 
 export interface CliOptions {
   'root'?: string
@@ -177,8 +180,9 @@ async function run(files: string[], options: CliOptions = {}) {
 }
 
 function parseServerOptions(
-  serverOptions: ViteNodeServerOptionsCLI,
+  serverOptionsCli: ViteNodeServerOptionsCLI,
 ): ViteNodeServerOptions {
+  const serverOptions: ChangeTypeDeep<ViteNodeServerOptions, RegExp, string> = deepCoerceBooleans(serverOptionsCli)
   const inlineOptions
     = serverOptions.deps?.inline === true
       ? true
@@ -190,13 +194,13 @@ function parseServerOptions(
       ...serverOptions.deps,
       inlineFiles: toArray(serverOptions.deps?.inlineFiles),
       inline:
-        inlineOptions !== true
-          ? inlineOptions.map((dep) => {
-              return dep.startsWith('/') && dep.endsWith('/')
+        inlineOptions === true
+          ? true
+          : inlineOptions.map(dep =>
+              dep.startsWith('/') && dep.endsWith('/')
                 ? new RegExp(dep)
-                : dep
-            })
-          : true,
+                : dep,
+            ),
       external: toArray(serverOptions.deps?.external).map((dep) => {
         return dep.startsWith('/') && dep.endsWith('/') ? new RegExp(dep) : dep
       }),
@@ -217,18 +221,23 @@ function parseServerOptions(
   }
 }
 
-type Optional<T> = T | undefined
-type ComputeViteNodeServerOptionsCLI<T extends Record<string, any>> = {
-  [K in keyof T]: T[K] extends Optional<RegExp[]>
-    ? string | string[]
-    : T[K] extends Optional<(string | RegExp)[]>
-      ? string | string[]
-      : T[K] extends Optional<(string | RegExp)[] | true>
-        ? string | string[] | true
-        : T[K] extends Optional<Record<string, any>>
-          ? ComputeViteNodeServerOptionsCLI<T[K]>
-          : T[K];
+/** Convert "true"/"false" string values to booleans deeply. */
+function deepCoerceBooleans(obj: any): any {
+  if (Array.isArray(obj)) {
+    return obj.map(deepCoerceBooleans)
+  }
+  else if (obj !== null && typeof obj === 'object') {
+    return Object.fromEntries(Object.entries(obj).map(([k, v]) => [k, deepCoerceBooleans(v)]))
+  }
+  else if (typeof obj === 'string') {
+    const lower = obj.toLowerCase()
+    if (lower === 'true') {
+      return true
+    }
+    if (lower === 'false') {
+      return false
+    }
+    return obj
+  }
+  return obj
 }
-
-export type ViteNodeServerOptionsCLI =
-  ComputeViteNodeServerOptionsCLI<ViteNodeServerOptions>

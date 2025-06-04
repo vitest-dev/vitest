@@ -45,7 +45,7 @@ it('exposes .env variables', async () => {
   expect(env.MY_TEST_ENV).toBe('hello')
 })
 
-it.only('script options convert boolean strings to booleans', async () => {
+it('script options convert boolean strings to booleans', async () => {
   const cliNoConfig = await runViteNodeCli(entryPath)
   expect(cliNoConfig.stdout).not.toContain(`dump modules to`)
 

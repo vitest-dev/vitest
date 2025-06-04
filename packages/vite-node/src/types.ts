@@ -6,6 +6,13 @@ export type Nullable<T> = T | null | undefined
 export type Arrayable<T> = T | Array<T>
 export type Awaitable<T> = T | PromiseLike<T>
 
+export type ChangeTypeDeep<T, From, To> = T extends From ? To :
+  T extends (infer U)[] ? ChangeTypeDeep<U, From, To>[] :
+    T extends object ? {
+      [K in keyof T]: ChangeTypeDeep<T[K], From, To>
+    } :
+      T
+
 export interface DepsHandlingOptions {
   external?: (string | RegExp)[]
   inline?: (string | RegExp)[] | true
