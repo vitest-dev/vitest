@@ -5,11 +5,10 @@ import type { ErrorWithDiff, File, RunnerTestCase, Task } from 'vitest'
 import { relative } from 'pathe'
 import { getAttachmentUrl, sanitizeFilePath } from '~/composables/attachments'
 import { browserState, config } from '~/composables/client'
+import { showAnnotationSource } from '~/composables/codemirror'
 import { isDark } from '~/composables/dark'
 import { createAnsiToHtmlFilter } from '~/composables/error'
-import { selectedTest } from '~/composables/params'
 import { escapeHtml } from '~/utils/escape'
-import { showAnnotationSource } from '~/composables/codemirror'
 
 declare module '@vitest/runner' {
   interface TaskResult {
@@ -110,23 +109,22 @@ function getLocationString(location: TestAnnotationLocation) {
   return `${path}:${location.line}:${location.column}`
 }
 
-watch(() => [selectedTest.value] as const, ([test]) => {
-  if (test != null) {
-    // Have to wrap the selector in [id=''] since #{test} will produce an invalid selector because the test ID is a number
-    const testElement = document.querySelector(`[id='${test}'`)
-    if (testElement != null) {
-      nextTick(() => {
-        testElement.scrollIntoView()
-      })
-    }
-  }
-}, { flush: 'post' })
+const kWellKnownMeta = new Set([
+  'benchmark',
+  'failScreenshotPath',
+  'typecheck',
+])
+const meta = computed(() => {
+  return Object.entries(props.test.meta).filter(([name]) => {
+    return !kWellKnownMeta.has(name)
+  })
+})
 </script>
 
 <template>
   <div h-full class="scrolls">
     <template v-if="failed.length">
-      <div v-for="task of failed" :id="task.id" :key="task.id">
+      <div v-for="task of failed" :key="task.id">
         <div
           bg="red-500/10"
           text="red-500 sm"
@@ -231,6 +229,27 @@ watch(() => [selectedTest.value] as const, ([test]) => {
 
           <AnnotationAttachmentImage :annotation="annotation" />
         </div>
+      </div>
+    </template>
+    <template v-if="meta.length">
+      <h1 m-2>
+        Test Meta
+      </h1>
+      <div
+        bg="gray/10"
+        text="black-100 sm"
+        p="x3 y2"
+        m-2
+        rounded
+        class="grid grid-cols-1 md:grid-cols-[200px_1fr] gap-2"
+        overflow-hidden
+      >
+        <template v-for="([name, content]) of meta" :key="name">
+          <div font-bold ws-nowrap truncate py-2>
+            {{ name }}
+          </div>
+          <pre overflow-auto bg="gray/30" rounded p-2>{{ content }}</pre>
+        </template>
       </div>
     </template>
     <template v-if="browserState">

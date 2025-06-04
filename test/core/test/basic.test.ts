@@ -7,12 +7,7 @@ if (!testPath || !testPath.includes('basic.test.ts')) {
   throw new Error(`testPath is not correct: ${testPath}`)
 }
 
-test('Math.sqrt()', async ({ annotate }) => {
-  await annotate('hello world', {
-    path: 'https://hips.hearstapps.com/hmg-prod/images/dog-puppy-on-garden-royalty-free-image-1586966191.jpg',
-    contentType: 'image/jpg',
-  })
-  await annotate('hello world')
+test('Math.sqrt()', () => {
   assert.equal(Math.sqrt(4), two)
   assert.equal(Math.sqrt(2), Math.SQRT2)
   expect(Math.sqrt(144)).toStrictEqual(12)
@@ -31,7 +26,7 @@ test('JSON', () => {
     foo: 'hello',
     bar: 'world',
   })
-  expect(output).toEqual('{"foo": "hello","bar":"world"}')
+  expect(output).toEqual('{"foo":"hello","bar":"world"}')
   assert.deepEqual(JSON.parse(output), input, 'matches original')
 })
 
