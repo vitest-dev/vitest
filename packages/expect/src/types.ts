@@ -186,13 +186,13 @@ export interface AsymmetricMatchersContaining extends CustomMatcher {
   closeTo: (expected: number, precision?: number) => any
 }
 
+type WithAsymmetricMatcher<T> = T | AsymmetricMatcher<unknown>
+
 export type DeeplyAllowMatchers<T> = T extends Array<infer Element>
-  ? (DeeplyAllowMatchers<Element> | Element)[]
+  ? WithAsymmetricMatcher<T> | DeeplyAllowMatchers<Element>[]
   : T extends object
-    ? {
-        [K in keyof T]: DeeplyAllowMatchers<T[K]> | AsymmetricMatcher<unknown>
-      }
-    : T
+    ? WithAsymmetricMatcher<T> | { [K in keyof T]: DeeplyAllowMatchers<T[K]> }
+    : WithAsymmetricMatcher<T>
 
 export interface JestAssertion<T = any> extends jest.Matchers<void, T>, CustomMatcher {
   /**
