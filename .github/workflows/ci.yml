@@ -163,6 +163,7 @@ jobs:
     # macos-latest is the fastes one
     name: 'Rolldown&Test: node-20, macos-latest'
     if: needs.changed.outputs.should_skip != 'true'
+    runs-on: macos-latest
 
     timeout-minutes: 30
 
