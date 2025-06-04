@@ -31,7 +31,7 @@ export class DotReporter extends BaseReporter {
     }
   }
 
-  // ignore base reporter
+  // Ignore default logging of base reporter
   printTestModule(): void {}
 
   onWatcherRerun(files: string[], trigger?: string): void {
