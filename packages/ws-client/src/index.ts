@@ -52,6 +52,7 @@ export function createClient(url: string, options: VitestClientOptions = {}): Vi
   let onMessage: (data: any) => void
   const functions: WebSocketEvents = {
     onTestAnnotate(testId, annotation) {
+      // ctx.state.annotateTest(testId, annotation)
       handlers.onTestAnnotate?.(testId, annotation)
     },
     onSpecsCollected(specs) {

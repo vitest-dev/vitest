@@ -7,7 +7,12 @@ if (!testPath || !testPath.includes('basic.test.ts')) {
   throw new Error(`testPath is not correct: ${testPath}`)
 }
 
-test('Math.sqrt()', () => {
+test('Math.sqrt()', async ({ annotate }) => {
+  await annotate('hello world', {
+    path: 'https://hips.hearstapps.com/hmg-prod/images/dog-puppy-on-garden-royalty-free-image-1586966191.jpg',
+    contentType: 'image/jpg',
+  })
+  await annotate('hello world')
   assert.equal(Math.sqrt(4), two)
   assert.equal(Math.sqrt(2), Math.SQRT2)
   expect(Math.sqrt(144)).toStrictEqual(12)
@@ -26,7 +31,7 @@ test('JSON', () => {
     foo: 'hello',
     bar: 'world',
   })
-  expect(output).toEqual('{"foo":"hello","bar":"world"}')
+  expect(output).toEqual('{"foo": "hello","bar":"world"}')
   assert.deepEqual(JSON.parse(output), input, 'matches original')
 })
 
@@ -41,11 +46,11 @@ test('assertion is callable', () => {
   expect(str).not.to.be.a('number')
 })
 
-const hi = suite('suite')
-
-hi.test('expect truthy', () => {
-  expect({}).toBeTruthy()
-  expect(null).not.toBeTruthy()
+suite('suite', () => {
+  test('expect truthy', () => {
+    expect({}).toBeTruthy()
+    expect(null).not.toBeTruthy()
+  })
 })
 
 // Remove .skip to test async fail by timeout

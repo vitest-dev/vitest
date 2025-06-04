@@ -1,4 +1,4 @@
-import type { Task } from '@vitest/runner'
+import type { Task, TestAnnotation } from '@vitest/runner'
 import type { Ref, WritableComputedRef } from 'vue'
 import CodeMirror from 'codemirror'
 import { watch } from 'vue'
@@ -13,6 +13,7 @@ import 'codemirror/mode/jsx/jsx'
 import 'codemirror/addon/display/placeholder'
 import 'codemirror/addon/scroll/simplescrollbars'
 import 'codemirror/addon/scroll/simplescrollbars.css'
+import { RunnerTestCase } from 'vitest'
 
 export const codemirrorRef = shallowRef<CodeMirror.EditorFromTextArea>()
 
@@ -61,11 +62,29 @@ export function useCodeMirror(
   return markRaw(cm)
 }
 
-export async function showSource(task: Task) {
+export async function showTaskSource(task: Task) {
   navigateTo({
     file: task.file.id,
     line: task.location?.line ?? 0,
     view: 'editor',
     test: null,
+    column: null,
+  })
+}
+
+export function showAnnotationSource(task: RunnerTestCase, annotation: TestAnnotation) {
+  if (!annotation.location) {
+    return
+  }
+  const { line, column, file } = annotation.location
+  if (task.file.filepath !== file) {
+    return
+  }
+  navigateTo({
+    file: task.file.id,
+    column: column - 1,
+    line,
+    view: 'editor',
+    test: selectedTest.value,
   })
 }

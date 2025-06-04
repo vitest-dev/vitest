@@ -4,7 +4,7 @@ import type { TaskTreeNodeType } from '~/composables/explorer/types'
 import { Tooltip as VueTooltip } from 'floating-vue'
 import { nextTick } from 'vue'
 import { client, isReport, runFiles, runTask } from '~/composables/client'
-import { showSource } from '~/composables/codemirror'
+import { showTaskSource } from '~/composables/codemirror'
 import { explorerTree } from '~/composables/explorer'
 import { hasFailedSnapshot } from '~/composables/explorer/collector'
 import { escapeHtml, highlightRegex } from '~/composables/explorer/state'
@@ -149,7 +149,7 @@ function showDetails() {
     onItemClick?.(t)
   }
   else {
-    showSource(t)
+    showTaskSource(t)
   }
 }
 
@@ -223,7 +223,7 @@ const projectNameTextColor = computed(() => {
       >
         <IconButton
           data-testid="btn-open-details"
-          icon="i-carbon:intrusion-prevention"
+          :icon="type === 'file' ? 'i-carbon:intrusion-prevention' : 'i-carbon:code-reference'"
           @click.prevent.stop="showDetails"
         />
         <template #popper>

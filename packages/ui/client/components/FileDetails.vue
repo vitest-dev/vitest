@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { RunnerTask, RunnerTestCase } from 'vitest'
 import type { ModuleGraph } from '~/composables/module-graph'
 import type { Params } from '~/composables/params'
 import { toJSON } from 'flatted'
@@ -20,6 +21,12 @@ const hasGraphBeenDisplayed = ref(false)
 const loadingModuleGraph = ref(false)
 const currentFilepath = ref<string | undefined>(undefined)
 const hideNodeModules = ref(true)
+
+const test = computed(() => {
+  return selectedTest.value
+    ? client.state.idMap.get(selectedTest.value) as RunnerTestCase
+    : undefined
+})
 
 const graphData = computed(() => {
   const c = current.value
@@ -150,6 +157,22 @@ const projectNameTextColor = computed(() => {
       return 'black'
   }
 })
+
+const testTitle = computed(() => {
+  const testId = selectedTest.value
+  if (!testId) {
+    return current.value?.name
+  }
+  const names: string[] = []
+  let node: RunnerTask | undefined = client.state.idMap.get(testId)
+  while (node) {
+    names.push(node.name)
+    node = node.suite
+      ? node.suite
+      : (node === node.file ? undefined : node.file)
+  }
+  return names.reverse().join(' > ')
+})
 </script>
 
 <template>
@@ -174,7 +197,7 @@ const projectNameTextColor = computed(() => {
           {{ current.file.projectName }}
         </span>
         <div flex-1 font-light op-50 ws-nowrap truncate text-sm>
-          {{ current?.name }}
+          {{ testTitle }}
         </div>
         <div class="flex text-lg">
           <IconButton
@@ -263,7 +286,8 @@ const projectNameTextColor = computed(() => {
         :file="current"
         data-testid="console"
       />
-      <ViewReport v-else-if="!viewMode" :file="current" data-testid="report" />
+      <ViewReport v-else-if="!viewMode && !test" :file="current" data-testid="report" />
+      <ViewTestReport v-else-if="!viewMode && test && current" :file="current" :test="test" data-testid="report" />
     </div>
   </div>
 </template>
