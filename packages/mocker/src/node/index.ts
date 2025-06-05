@@ -1,3 +1,6 @@
+import { fileURLToPath } from 'node:url'
+import { resolve } from 'pathe'
+
 export { createManualModuleSource } from '../utils'
 export { automockModule, automockPlugin } from './automockPlugin'
 export type { AutomockPluginOptions } from './automockPlugin'
@@ -15,3 +18,6 @@ export type {
   ServerMockResolution,
   ServerResolverOptions,
 } from './resolver'
+
+const pkgRoot = resolve(fileURLToPath(import.meta.url), '../..')
+export const distRoot: string = resolve(pkgRoot, 'dist')
