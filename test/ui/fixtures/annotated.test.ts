@@ -2,6 +2,7 @@ import { test } from 'vitest'
 
 test('annotated test', async ({ annotate }) => {
   await annotate('hello world')
+  await annotate('second annotation')
 })
 
 test('annotated typed test', async ({ annotate }) => {
