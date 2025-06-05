@@ -5,7 +5,7 @@ import type { TestModule, TestSuite } from '../reporters/reported-tasks'
 import type { TestSpecification } from '../spec'
 import type { UserConfig, VitestEnvironment, VitestRunMode } from '../types/config'
 import { mkdirSync, writeFileSync } from 'node:fs'
-import { dirname, relative, resolve } from 'pathe'
+import { dirname, isAbsolute, relative, resolve } from 'pathe'
 import { CoverageProviderMap } from '../../utils/coverage'
 import { createVitest } from '../create'
 import { FilesNotFoundError, GitNotFoundError, IncludeTaskLocationDisabledError, LocationFilterFileNotFoundError, RangeLocationFilterProvidedError } from '../errors'
@@ -317,7 +317,7 @@ function getEnvPackageName(env: VitestEnvironment) {
   if (env in envPackageNames) {
     return (envPackageNames as any)[env]
   }
-  if (env[0] === '.' || env[0] === '/') {
+  if (env[0] === '.' || isAbsolute(env)) {
     return null
   }
   return `vitest-environment-${env}`
