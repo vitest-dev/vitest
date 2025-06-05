@@ -23,7 +23,7 @@
     "@shikijs/transformers": "^3.4.2",
     "@shikijs/vitepress-twoslash": "^3.4.2",
     "@unocss/reset": "catalog:",
-    "@vite-pwa/assets-generator": "^0.2.6",
+    "@vite-pwa/assets-generator": "^1.0.0",
     "@vite-pwa/vitepress": "^1.0.0",
     "@vitejs/plugin-vue": "catalog:",
     "https-localhost": "^4.7.1",
