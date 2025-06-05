@@ -1,5 +1,6 @@
 import { type Locator, locators, page } from '@vitest/browser/context';
 import { beforeEach, expect, test } from 'vitest';
+import { getElementLocatorSelectors } from '@vitest/browser/utils'
 
 declare module '@vitest/browser/context' {
   interface LocatorSelectors {
@@ -83,4 +84,13 @@ test('new added method works on the page', async () => {
   await page.updateDocumentHtml('New Content')
 
   expect(document.body).toHaveTextContent('New Content')
+})
+
+test('locators are available from getElementLocatorSelectors', () => {
+  const locators = getElementLocatorSelectors(document.body)
+
+  expect(locators.updateHtml).toBeTypeOf('function')
+  expect(locators.getByCustomTitle).toBeTypeOf('function')
+  expect(locators.updateDocumentHtml).toBeTypeOf('function')
+  expect(locators.getByNestedTitle).toBeTypeOf('function')
 })

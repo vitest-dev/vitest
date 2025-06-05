@@ -34,7 +34,7 @@ test('custom locators work', async () => {
   })
 
   const COUNT_TEST_FILES = 1
-  const COUNT_TESTS_OVERALL = 4
+  const COUNT_TESTS_OVERALL = 5
 
   expect(stdout).toReportSummaryTestFiles({ passed: instances.length * COUNT_TEST_FILES })
   expect(stdout).toReportSummaryTests({ passed: instances.length * COUNT_TESTS_OVERALL })
