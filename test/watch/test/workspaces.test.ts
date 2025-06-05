@@ -3,7 +3,7 @@ import { fileURLToPath } from 'node:url'
 import { dirname, resolve } from 'pathe'
 import { afterAll, afterEach, expect, it } from 'vitest'
 
-import { runVitestCli } from '../../test-utils'
+import { runInlineTests, runVitestCli } from '../../test-utils'
 
 const file = fileURLToPath(import.meta.url)
 const dir = dirname(file)
@@ -124,4 +124,45 @@ it('adding a new test file matching project specific config triggers re-run', as
   expect(vitest.stdout).not.include('|space_2|')
   expect(vitest.stdout).not.include('|node|')
   expect(vitest.stdout).not.include('|happy-dom|')
+})
+
+it('editing a setup file inside the project reruns tests', async () => {
+  const { fs, vitest } = await runInlineTests({
+    'setupFile.js': '',
+    'project-1/basic.test.js': `test("[p1] reruns")`,
+    'project-2/basic.test.js': `test("[p2] doesn\'t rerun")`,
+    'vitest.config.js': {
+      test: {
+        projects: [
+          {
+            test: {
+              name: 'p1',
+              include: ['./project-1/basic.test.js'],
+              setupFiles: ['./setupFile.js'],
+              globals: true,
+            },
+          },
+          {
+            test: {
+              name: 'p2',
+              include: ['./project-2/basic.test.js'],
+              globals: true,
+            },
+          },
+        ],
+      },
+    },
+  }, { watch: true })
+
+  await vitest.waitForStdout('Waiting for file changes')
+  expect(vitest.stdout).toContain('[p1] reruns')
+  expect(vitest.stdout).toContain('[p2] doesn\'t rerun')
+
+  fs.editFile('./setupFile.js', () => '// ---edit')
+
+  vitest.resetOutput()
+  await vitest.waitForStdout('Test Files  1 passed')
+
+  expect(vitest.stdout).toContain('[p1] reruns')
+  expect(vitest.stdout).not.toContain('[p2] doesn\'t rerun')
 })
