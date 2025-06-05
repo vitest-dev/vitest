@@ -360,6 +360,7 @@ export const locators: BrowserLocators = {
   extend(methods) {
     const Locator = page._createLocator('css=body').constructor as typeof LocatorAPI
     for (const method in methods) {
+      locators._extendedMethods.add(method)
       const cb = (methods as any)[method] as (...args: any[]) => string | Locator
       // @ts-expect-error types are hard to make work
       Locator.prototype[method] = function (...args: any[]) {
@@ -378,11 +379,17 @@ export const locators: BrowserLocators = {
       }
     }
   },
+  _extendedMethods: new Set<string>(),
 }
 
 declare module '@vitest/browser/context' {
   interface BrowserPage {
     /** @internal */
     _createLocator: (selector: string) => Locator
+  }
+
+  interface BrowserLocators {
+    /** @internal */
+    _extendedMethods: Set<string>
   }
 }

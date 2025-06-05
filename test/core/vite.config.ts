@@ -2,6 +2,7 @@ import type { LabelColor } from 'vitest'
 import type { Pool } from 'vitest/node'
 import { basename, dirname, join, resolve } from 'pathe'
 import { defaultExclude, defineConfig } from 'vitest/config'
+import { rolldownVersion } from 'vitest/node'
 
 export default defineConfig({
   plugins: [
@@ -59,7 +60,13 @@ export default defineConfig({
     includeSource: [
       'src/in-source/*.ts',
     ],
-    exclude: ['**/fixtures/**', ...defaultExclude],
+    exclude: [
+      '**/fixtures/**',
+      ...defaultExclude,
+      // FIXME: wait for ecma decorator support in rolldown/oxc
+      // https://github.com/oxc-project/oxc/issues/9170
+      ...(rolldownVersion ? ['**/esnext.test.ts'] : []),
+    ],
     slowTestThreshold: 1000,
     testTimeout: process.env.CI ? 10_000 : 5_000,
     setupFiles: [
