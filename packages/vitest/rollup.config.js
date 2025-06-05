@@ -82,7 +82,6 @@ const external = [
   'vite-node/utils',
   '@vitest/mocker',
   '@vitest/mocker/node',
-  '@vitest/mocker/browser',
   '@vitest/utils/diff',
   '@vitest/utils/ast',
   '@vitest/utils/error',

@@ -1,4 +1,4 @@
-import { ModuleMocker } from 'vitest/internal/browser'
+import { ModuleMocker } from '@vitest/mocker/browser'
 import { getBrowserState } from '../utils'
 
 export class VitestBrowserClientMocker extends ModuleMocker {

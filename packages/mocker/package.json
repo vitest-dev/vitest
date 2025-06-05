@@ -67,7 +67,6 @@
   },
   "dependencies": {
     "@vitest/spy": "workspace:*",
-    "@vitest/utils": "workspace:*",
     "estree-walker": "^3.0.3",
     "magic-string": "catalog:"
   },

@@ -536,13 +536,7 @@ export class TestProject {
       this.config.root,
       this.vitest.version,
     )
-    const [
-      { createBrowserServer, distRoot },
-      { distRoot: mockerDist },
-    ] = await Promise.all([
-      import('@vitest/browser'),
-      import('@vitest/mocker/node'),
-    ])
+    const { createBrowserServer, distRoot } = await import('@vitest/browser')
     let cacheDir: string
     const browser = await createBrowserServer(
       this,
@@ -556,7 +550,7 @@ export class TestProject {
         },
         ...MocksPlugins({
           filter(id) {
-            if (id.includes(distRoot) || id.includes(mockerDist) || id.includes(cacheDir)) {
+            if (id.includes(distRoot) || id.includes(cacheDir)) {
               return false
             }
             return true

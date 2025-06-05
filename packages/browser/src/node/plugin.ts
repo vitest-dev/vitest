@@ -188,11 +188,31 @@ export default (parentServer: ParentBrowserProject, base = '/'): Plugin[] => {
           ...(project.config.snapshotSerializers || []),
         ]
 
+        const exclude = [
+          'vitest',
+          'vitest/internal/browser',
+          'vitest/runners',
+          '@vitest/browser',
+          '@vitest/browser/client',
+          '@vitest/utils',
+          '@vitest/utils/source-map',
+          '@vitest/runner',
+          '@vitest/spy',
+          '@vitest/utils/error',
+          '@vitest/snapshot',
+          '@vitest/expect',
+          'std-env',
+          'tinybench',
+          'tinyspy',
+          'tinyrainbow',
+          'pathe',
+          'msw',
+          'msw/browser',
+        ]
+
         if (typeof project.config.diff === 'string') {
           entries.push(project.config.diff)
         }
-
-        const exclude: string[] = []
 
         if (parentServer.vitest.coverageProvider) {
           const coverage = parentServer.vitest.config.coverage
@@ -217,8 +237,6 @@ export default (parentServer: ParentBrowserProject, base = '/'): Plugin[] => {
         }
 
         const include = [
-          'vitest',
-          'vitest/internal/browser',
           'vitest > expect-type',
           'vitest > @vitest/snapshot > magic-string',
           'vitest > chai',
@@ -257,7 +275,7 @@ export default (parentServer: ParentBrowserProject, base = '/'): Plugin[] => {
           },
           optimizeDeps: {
             entries,
-            // exclude,
+            exclude,
             include,
           },
         }

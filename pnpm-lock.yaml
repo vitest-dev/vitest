@@ -688,9 +688,6 @@ importers:
       '@vitest/spy':
         specifier: workspace:*
         version: link:../spy
-      '@vitest/utils':
-        specifier: workspace:*
-        version: link:../utils
       estree-walker:
         specifier: ^3.0.3
         version: 3.0.3
@@ -701,6 +698,9 @@ importers:
       '@types/estree':
         specifier: 'catalog:'
         version: 1.0.7
+      '@vitest/utils':
+        specifier: workspace:*
+        version: link:../utils
       acorn-walk:
         specifier: 'catalog:'
         version: 8.3.4
