@@ -191,6 +191,7 @@ export default (parentServer: ParentBrowserProject, base = '/'): Plugin[] => {
         const exclude = [
           '@vitest/browser/context',
           '@vitest/browser/client',
+          '@vitest/browser/utils',
         ]
 
         if (typeof project.config.diff === 'string') {
