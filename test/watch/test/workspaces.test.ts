@@ -126,7 +126,7 @@ it('adding a new test file matching project specific config triggers re-run', as
   expect(vitest.stdout).not.include('|happy-dom|')
 })
 
-it.only('editing a setup file inside the project reruns tests', async () => {
+it('editing a setup file inside the project reruns tests', async () => {
   const { fs, vitest } = await runInlineTests({
     'setupFile.js': '',
     'project-1/basic.test.js': `test("[p1] reruns")`,
