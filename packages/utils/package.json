@@ -24,10 +24,6 @@
       "types": "./dist/diff.d.ts",
       "default": "./dist/diff.js"
     },
-    "./ast": {
-      "types": "./dist/ast.d.ts",
-      "default": "./dist/ast.js"
-    },
     "./error": {
       "types": "./dist/error.d.ts",
       "default": "./dist/error.js"
