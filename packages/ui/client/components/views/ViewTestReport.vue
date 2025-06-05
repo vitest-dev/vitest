@@ -104,57 +104,58 @@ const meta = computed(() => {
       <h1 m-2>
         Test Annotations
       </h1>
-      <div v-for="annotation of test.annotations" :key="annotation.type + annotation.message">
-        <div
-          bg="yellow-500/10"
-          text="yellow-500 sm"
-          p="x3 y2"
-          m-2
-          rounded
-        >
-          <div flex="~ gap-2 items-center justify-between" overflow-hidden>
-            <div class="flex gap-2" overflow-hidden>
-              <span class="font-bold" ws-nowrap truncate>{{ annotation.type }}</span>
-              <a
-                v-if="annotation.attachment && !annotation.attachment.contentType?.startsWith('image/')"
-                class="flex gap-1 items-center text-yellow-500/80 cursor-pointer"
-                :href="getAttachmentUrl(annotation.attachment)"
-                :download="sanitizeFilePath(annotation.message, annotation.attachment.contentType)"
-              >
-                <span class="i-carbon:download block" />
-                Download
-              </a>
-            </div>
-            <div>
-              <span
-                v-if="annotation.location && annotation.location.file === test.file.filepath"
-                v-tooltip.bottom="'Open in Editor'"
-                title="Open in Editor"
-                class="flex gap-1 text-yellow-500/80 cursor-pointer"
-                ws-nowrap
-                @click="openAnnotation(annotation)"
-              >
-                {{ getLocationString(annotation.location) }}
-              </span>
-              <span
-                v-else-if="annotation.location && annotation.location.file !== test.file.filepath"
-                class="flex gap-1 text-yellow-500/80"
-                ws-nowrap
-              >
-                {{ getLocationString(annotation.location) }}
-              </span>
-            </div>
+      <div
+        v-for="annotation of test.annotations"
+        :key="annotation.type + annotation.message"
+        bg="yellow-500/10"
+        text="yellow-500 sm"
+        p="x3 y2"
+        m-2
+        rounded
+        role="note"
+      >
+        <div flex="~ gap-2 items-center justify-between" overflow-hidden>
+          <div class="flex gap-2" overflow-hidden>
+            <span class="font-bold" ws-nowrap truncate>{{ annotation.type }}</span>
+            <a
+              v-if="annotation.attachment && !annotation.attachment.contentType?.startsWith('image/')"
+              class="flex gap-1 items-center text-yellow-500/80 cursor-pointer"
+              :href="getAttachmentUrl(annotation.attachment)"
+              :download="sanitizeFilePath(annotation.message, annotation.attachment.contentType)"
+            >
+              <span class="i-carbon:download block" />
+              Download
+            </a>
           </div>
-
-          <div
-            class="scrolls scrolls-rounded task-error"
-            data-testid="task-error"
-          >
-            {{ annotation.message }}
+          <div>
+            <span
+              v-if="annotation.location && annotation.location.file === test.file.filepath"
+              v-tooltip.bottom="'Open in Editor'"
+              title="Open in Editor"
+              class="flex gap-1 text-yellow-500/80 cursor-pointer"
+              ws-nowrap
+              @click="openAnnotation(annotation)"
+            >
+              {{ getLocationString(annotation.location) }}
+            </span>
+            <span
+              v-else-if="annotation.location && annotation.location.file !== test.file.filepath"
+              class="flex gap-1 text-yellow-500/80"
+              ws-nowrap
+            >
+              {{ getLocationString(annotation.location) }}
+            </span>
           </div>
-
-          <AnnotationAttachmentImage :annotation="annotation" />
         </div>
+
+        <div
+          class="scrolls scrolls-rounded task-error"
+          data-testid="task-error"
+        >
+          {{ annotation.message }}
+        </div>
+
+        <AnnotationAttachmentImage :annotation="annotation" />
       </div>
     </template>
     <template v-if="meta.length">
