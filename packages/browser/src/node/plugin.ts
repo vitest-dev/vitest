@@ -257,7 +257,7 @@ export default (parentServer: ParentBrowserProject, base = '/'): Plugin[] => {
           },
           optimizeDeps: {
             entries,
-            // exclude,
+            exclude,
             include,
           },
         }
