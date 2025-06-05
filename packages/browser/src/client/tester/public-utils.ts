@@ -1,6 +1,6 @@
 import type { Locator, LocatorSelectors } from '@vitest/browser/context'
 import type { StringifyOptions } from 'vitest/internal/browser'
-import { page } from '@vitest/browser/context'
+import { locators, page } from '@vitest/browser/context'
 import { asLocator } from 'ivya'
 import { stringify } from 'vitest/internal/browser'
 
@@ -14,6 +14,10 @@ export function getElementLocatorSelectors(element: Element): LocatorSelectors {
     getByTestId: testId => locator.getByTestId(testId),
     getByText: (text, options) => locator.getByText(text, options),
     getByTitle: (title, options) => locator.getByTitle(title, options),
+    ...Array.from(locators._extendedMethods).reduce((methods, method) => {
+      methods[method] = (...args: any[]) => (locator as any)[method](...args)
+      return methods
+    }, {} as any),
   }
 }
 
