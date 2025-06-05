@@ -188,11 +188,14 @@ export default (parentServer: ParentBrowserProject, base = '/'): Plugin[] => {
           ...(project.config.snapshotSerializers || []),
         ]
 
+        const exclude = [
+          '@vitest/browser/context',
+          '@vitest/browser/client',
+        ]
+
         if (typeof project.config.diff === 'string') {
           entries.push(project.config.diff)
         }
-
-        const exclude: string[] = []
 
         if (parentServer.vitest.coverageProvider) {
           const coverage = parentServer.vitest.config.coverage
