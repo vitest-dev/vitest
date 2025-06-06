@@ -1,8 +1,8 @@
 import type { UserConfig as ViteUserConfig } from 'vite'
 import type { UserConfig } from 'vitest/node'
 import type { VitestRunnerCLIOptions } from '../../test-utils'
+import { cpus } from 'node:os'
 import { normalize, resolve } from 'pathe'
-
 import { beforeEach, expect, test } from 'vitest'
 import { version } from 'vitest/package.json'
 import * as testUtils from '../../test-utils'
@@ -12,7 +12,7 @@ const names = ['edge', 'chromium', 'webkit', 'chrome', 'firefox', 'safari'] as c
 const browsers = providers.map(provider => names.map(name => ({ name, provider }))).flat()
 
 function runVitest(config: NonNullable<UserConfig> & { shard?: any }, viteOverrides: ViteUserConfig = {}, runnerOptions?: VitestRunnerCLIOptions) {
-  return testUtils.runVitest({ root: './fixtures/test', ...config }, [], undefined, viteOverrides, runnerOptions)
+  return testUtils.runVitest({ root: './fixtures/test', include: ['example.test.ts'], ...config }, [], undefined, viteOverrides, runnerOptions)
 }
 
 function runVitestCli(...cliArgs: string[]) {
@@ -552,4 +552,24 @@ test('non existing project name will throw', async () => {
 test('non existing project name array will throw', async () => {
   const { stderr } = await runVitest({ project: ['non-existing-project', 'also-non-existing'] })
   expect(stderr).toMatch('No projects matched the filter "non-existing-project", "also-non-existing".')
+})
+
+test('minWorkers must be smaller than maxWorkers', async () => {
+  const { stderr } = await runVitest({ minWorkers: 2, maxWorkers: 1 })
+
+  expect(stderr).toMatch('RangeError: options.minThreads and options.maxThreads must not conflict')
+})
+
+test('minWorkers higher than maxWorkers does not crash', async ({ skip }) => {
+  skip(cpus().length < 2, 'Test requires +2 CPUs')
+
+  const { stdout, stderr } = await runVitest({
+    maxWorkers: 1,
+
+    // Overrides defaults of "runVitest" of "test-utils"
+    minWorkers: undefined,
+  })
+
+  expect(stdout).toMatch('✓ example.test.ts > it works')
+  expect(stderr).toBe('')
 })

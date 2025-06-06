@@ -65,7 +65,7 @@ export function createForksPool(
   const maxThreads
     = poolOptions.maxForks ?? vitest.config.maxWorkers ?? threadsCount
   const minThreads
-    = poolOptions.minForks ?? vitest.config.minWorkers ?? threadsCount
+    = poolOptions.minForks ?? vitest.config.minWorkers ?? Math.min(threadsCount, maxThreads)
 
   const worker = resolve(vitest.distPath, 'workers/forks.js')
 
