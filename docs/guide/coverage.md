@@ -54,10 +54,10 @@ Coverage collection is performed during runtime by instructing V8 using [`node:i
 - ✅ Recommended option to use
 - ✅ No pre-transpile step. Test files can be executed as-is.
 - ✅ Faster execute times than Istanbul.
-- ✅ Lower memory usagethan Istanbul.
+- ✅ Lower memory usage than Istanbul.
 - ✅ Coverage report accuracy is as good as with Istanbul ([since Vitest `v3.2.0`](/blog/vitest-3-2#coverage-v8-ast-aware-remapping)).
 - ⚠️ In some cases can be slower than Istanbul, e.g. when loading lots of different modules. V8 does not support limiting coverage collection to specific modules.
-- ⚠️ There are some minor limitations set by V8 engine. See [`ast-v8-to-istanbl` | Limitations](https://github.com/AriPerkkio/ast-v8-to-istanbul?tab=readme-ov-file#limitations).
+- ⚠️ There are some minor limitations set by V8 engine. See [`ast-v8-to-istanbul` | Limitations](https://github.com/AriPerkkio/ast-v8-to-istanbul?tab=readme-ov-file#limitations).
 - ❌ Does not work on environments that don't use V8, such as Firefox or Bun. Or on environments that don't expose V8 coverage via profiler, such as Cloudflare Workers.
 
 <div style="display: flex; flex-direction: column; align-items: center; padding: 2rem 0; max-width: 20rem;">
@@ -282,7 +282,7 @@ export default defineConfig({
 Both coverage providers have their own ways how to ignore code from coverage reports:
 
 - [`v8`](https://github.com/istanbuljs/v8-to-istanbul#ignoring-uncovered-lines)
-- [`ìstanbul`](https://github.com/istanbuljs/nyc#parsing-hints-ignoring-lines)
+- [`istanbul`](https://github.com/istanbuljs/nyc#parsing-hints-ignoring-lines)
 - `v8` with [`experimentalAstAwareRemapping: true`](https://vitest.dev/config/#coverage-experimentalAstAwareRemapping) see [ast-v8-to-istanbul | Ignoring code](https://github.com/AriPerkkio/ast-v8-to-istanbul?tab=readme-ov-file#ignoring-code)
 
 When using TypeScript the source codes are transpiled using `esbuild`, which strips all comments from the source codes ([esbuild#516](https://github.com/evanw/esbuild/issues/516)).
