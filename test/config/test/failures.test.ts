@@ -51,6 +51,12 @@ test('shard index must be smaller than count', async () => {
   expect(stderr).toMatch('Error: --shard <index> must be a positive number less then <count>')
 })
 
+test('shard count must be smaller than count of test files', async () => {
+  const { stderr } = await runVitest({ root: './fixtures/shard', shard: '1/4' })
+
+  expect(stderr).toMatch('Error: --shard <count> must be a smaller than count of test files. Resolved 3 test files for --shard=1/4.')
+})
+
 test('inspect requires changing pool and singleThread/singleFork', async () => {
   const { stderr } = await runVitest({ inspect: true })
 

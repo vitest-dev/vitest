@@ -224,6 +224,13 @@ export function createPool(ctx: Vitest): ProcessPool {
 
     async function sortSpecs(specs: TestSpecification[]) {
       if (ctx.config.shard) {
+        if (ctx.config.shard.count > specs.length) {
+          throw new Error(
+            '--shard <count> must be a smaller than count of test files. '
+            + `Resolved ${specs.length} test files for --shard=${ctx.config.shard.index}/${ctx.config.shard.count}.`,
+          )
+        }
+
         specs = await sequencer.shard(specs)
       }
       return sequencer.sort(specs)
