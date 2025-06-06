@@ -1,13 +1,14 @@
 <script setup lang="ts">
-import type { Task, TestAttachment } from '@vitest/runner'
+import type { Task } from '@vitest/runner'
 import type CodeMirror from 'codemirror'
 import type { ErrorWithDiff, File, TestAnnotation, TestError } from 'vitest'
 import { createTooltip, destroyTooltip } from 'floating-vue'
+import { getAttachmentUrl, sanitizeFilePath } from '~/composables/attachments'
 import { client, isReport } from '~/composables/client'
 import { finished } from '~/composables/client/state'
 import { codemirrorRef } from '~/composables/codemirror'
 import { openInEditor } from '~/composables/error'
-import { lineNumber } from '~/composables/params'
+import { columnNumber, lineNumber } from '~/composables/params'
 
 const props = defineProps<{
   file?: File
@@ -56,12 +57,12 @@ watch(
   { immediate: true },
 )
 
-watch(() => [loading.value, saving.value, props.file, lineNumber.value] as const, ([loadingFile, s, _, l]) => {
+watch(() => [loading.value, saving.value, props.file, lineNumber.value, columnNumber.value] as const, ([loadingFile, s, _, l, c]) => {
   if (!loadingFile && !s) {
     if (l != null) {
       nextTick(() => {
         const cp = currentPosition.value
-        const line = cp ?? { line: l ?? 0, ch: 0 }
+        const line = cp ?? { line: (l ?? 1) - 1, ch: c ?? 0 }
         // restore caret position: the watchDebounced below will use old value
         if (cp) {
           currentPosition.value = undefined
@@ -155,7 +156,7 @@ function createErrorElement(e: ErrorWithDiff) {
   div.className = 'op80 flex gap-x-2 items-center'
   const pre = document.createElement('pre')
   pre.className = 'c-red-600 dark:c-red-400'
-  pre.textContent = `${' '.repeat(stack.column)}^ ${e?.nameStr || e.name}: ${
+  pre.textContent = `${' '.repeat(stack.column)}^ ${e.name}: ${
     e?.message || ''
   }`
   div.appendChild(pre)
@@ -184,7 +185,6 @@ function createErrorElement(e: ErrorWithDiff) {
 
 function createAnnotationElement(annotation: TestAnnotation) {
   if (!annotation.location) {
-    // TODO(v4): print unknown annotations somewhere
     return
   }
 
@@ -222,9 +222,8 @@ function createAnnotationElement(annotation: TestAnnotation) {
     if (attachment.contentType?.startsWith('image/')) {
       const link = document.createElement('a')
       const img = document.createElement('img')
-      img.classList.add('mt-3', 'inline-block')
-      img.width = 600
-      img.width = 400
+      link.classList.add('inline-block', 'mt-3')
+      link.style.maxWidth = '50vw'
       const potentialUrl = attachment.path || attachment.body
       if (typeof potentialUrl === 'string' && (potentialUrl.startsWith('http://') || potentialUrl.startsWith('https://'))) {
         img.setAttribute('src', potentialUrl)
@@ -241,7 +240,7 @@ function createAnnotationElement(annotation: TestAnnotation) {
     else {
       const download = document.createElement('a')
       download.href = getAttachmentUrl(attachment)
-      download.download = sanitizeFilePath(annotation.message)
+      download.download = sanitizeFilePath(annotation.message, attachment.contentType)
       download.classList.add('flex', 'w-min', 'gap-2', 'items-center', 'font-sans', 'underline', 'cursor-pointer')
       const icon = document.createElement('div')
       icon.classList.add('i-carbon:download', 'block')
@@ -252,19 +251,6 @@ function createAnnotationElement(annotation: TestAnnotation) {
     }
   }
   widgets.push(codemirrorRef.value!.addLineWidget(line - 1, notice))
-}
-
-function getAttachmentUrl(attachment: TestAttachment) {
-  // html reporter always saves files into /data/ folder
-  if (isReport) {
-    return `/data/${attachment.path}`
-  }
-  const contentType = attachment.contentType ?? 'application/octet-stream'
-  if (attachment.path) {
-    return `/__vitest_attachment__?path=${encodeURIComponent(attachment.path)}&contentType=${contentType}&token=${(window as any).VITEST_API_TOKEN}`
-  }
-  // attachment.body is always a string outside of the test frame
-  return `data:${contentType};base64,${attachment.body}`
 }
 
 const { pause, resume } = watch(
@@ -389,11 +375,6 @@ async function onSave(content: string) {
 
 // we need to remove listeners before unmounting the component: the watcher will not be called
 onBeforeUnmount(clearListeners)
-
-function sanitizeFilePath(s: string): string {
-  // eslint-disable-next-line no-control-regex
-  return s.replace(/[\x00-\x2C\x2E\x2F\x3A-\x40\x5B-\x60\x7B-\x7F]+/g, '-')
-}
 </script>
 
 <template>

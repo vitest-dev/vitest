@@ -7,6 +7,7 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
+    AnnotationAttachmentImage: typeof import('./components/AnnotationAttachmentImage.vue')['default']
     BrowserIframe: typeof import('./components/BrowserIframe.vue')['default']
     CodeMirrorContainer: typeof import('./components/CodeMirrorContainer.vue')['default']
     ConnectionOverlay: typeof import('./components/ConnectionOverlay.vue')['default']
@@ -38,5 +39,6 @@ declare module 'vue' {
     ViewModuleGraph: typeof import('./components/views/ViewModuleGraph.vue')['default']
     ViewReport: typeof import('./components/views/ViewReport.vue')['default']
     ViewReportError: typeof import('./components/views/ViewReportError.vue')['default']
+    ViewTestReport: typeof import('./components/views/ViewTestReport.vue')['default']
   }
 }
