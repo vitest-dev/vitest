@@ -40,6 +40,7 @@ export interface IframeCleanupEvent {
 export interface IframePrepareEvent {
   event: 'prepare'
   iframeId: string
+  startTime: number
 }
 
 export type GlobalChannelIncomingEvent = GlobalChannelTestRunCanceledEvent

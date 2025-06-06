@@ -3,7 +3,7 @@ import type { Params } from './params'
 import { viewport } from './browser'
 import { browserState, client, config, findById } from './client'
 import { testRunState } from './client/state'
-import { activeFileId, lineNumber, selectedTest, viewMode } from './params'
+import { activeFileId, columnNumber, lineNumber, selectedTest, viewMode } from './params'
 
 export const currentModule = ref<File>()
 export const dashboardVisible = ref(true)
@@ -101,9 +101,10 @@ export function showDashboard(show: boolean) {
   }
 }
 
-export function navigateTo({ file, line, view, test }: Params) {
+export function navigateTo({ file, line, view, test, column }: Params) {
   activeFileId.value = file
   lineNumber.value = line
+  columnNumber.value = column
   viewMode.value = view
   selectedTest.value = test
   currentModule.value = findById(file)
@@ -116,6 +117,7 @@ export function showReport(task: Task) {
     test: task.type === 'test' ? task.id : null,
     line: null,
     view: null,
+    column: null,
   })
 }
 

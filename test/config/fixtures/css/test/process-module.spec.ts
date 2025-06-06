@@ -16,16 +16,16 @@ describe('processing module css', () => {
   test('module is processed', async () => {
     const { default: styles } = await import('../App.module.css')
 
-    expect(styles.module).toBe('_module_c70a46')
+    expect(styles.module).toBe('_module_cdbed7')
     expect(styles.someRandomValue).toBeUndefined()
     const element = document.createElement('div')
-    element.className = '_main_c70a46 _module_c70a46'
+    element.className = '_main_cdbed7 _module_cdbed7'
     const computed = window.getComputedStyle(element)
     expect(computed.display, 'css is processed').toBe('flex')
     expect(computed.width).toBe('100px')
     expect(element).toMatchInlineSnapshot(`
       <div
-        class="_main_c70a46 _module_c70a46"
+        class="_main_cdbed7 _module_cdbed7"
       />
     `)
   })

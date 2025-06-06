@@ -140,6 +140,27 @@ export class VitestWatcher {
     }
   }
 
+  private handleSetupFile(filepath: string) {
+    let isSetupFile: boolean = false
+
+    this.vitest.projects.forEach((project) => {
+      if (!project.config.setupFiles.includes(filepath)) {
+        return
+      }
+
+      this.vitest.state.filesMap.forEach((files) => {
+        files.forEach((file) => {
+          if (file.projectName === project.name) {
+            isSetupFile = true
+            this.changedTests.add(file.filepath)
+          }
+        })
+      })
+    })
+
+    return isSetupFile
+  }
+
   /**
    * @returns A value indicating whether rerun is needed (changedTests was mutated)
    */
@@ -150,6 +171,10 @@ export class VitestWatcher {
 
     if (pm.isMatch(filepath, this.vitest.config.forceRerunTriggers)) {
       this.vitest.state.getFilepaths().forEach(file => this.changedTests.add(file))
+      return true
+    }
+
+    if (this.handleSetupFile(filepath)) {
       return true
     }
 

@@ -228,3 +228,100 @@ export default defineConfig({
   },
 })
 ```
+
+## The New Multi-Purpose `Matchers` Type
+
+Vitest now has a `Matchers` type that you can extend to add type support for all your custom matchers in one place. This type affects all these use cases:
+
+- `expect().to*`
+- `expect.to*`
+- `expect.extend({ to* })`
+
+For example, to have a type-safe `toBeFoo` matcher, you can write something like this:
+
+```ts twoslash
+import { expect } from 'vitest'
+
+interface CustomMatchers<R = unknown> {
+  toBeFoo: (arg: string) => R
+}
+
+declare module 'vitest' {
+  interface Matchers<T = any> extends CustomMatchers<T> {}
+}
+
+expect.extend({
+  toBeFoo(actual, arg) {
+    //            ^?
+    // ... implementation
+    return {
+      pass: true,
+      message: () => '',
+    }
+  }
+})
+
+expect('foo').toBeFoo('foo')
+expect.toBeFoo('foo')
+```
+
+## `sequence.groupOrder`
+
+The new [`sequence.groupOrder`](/config/#grouporder) option controls the order in which the project runs its tests when using multiple [projects](/guide/projects).
+
+- Projects with the same group order number will run together, and groups are run from lowest to highest.
+- If you don’t set this option, all projects run in parallel.
+- If several projects use the same group order, they will run at the same time.
+
+::: details Example
+Consider this example:
+
+```ts
+import { defineConfig } from 'vitest/config'
+
+export default defineConfig({
+  test: {
+    projects: [
+      {
+        test: {
+          name: 'slow',
+          sequence: {
+            groupOrder: 0,
+          },
+        },
+      },
+      {
+        test: {
+          name: 'fast',
+          sequence: {
+            groupOrder: 0,
+          },
+        },
+      },
+      {
+        test: {
+          name: 'flaky',
+          sequence: {
+            groupOrder: 1,
+          },
+        },
+      },
+    ],
+  },
+})
+```
+
+Tests in these projects will run in this order:
+
+```
+ 0. slow  |
+          |> running together
+ 0. fast  |
+
+ 1. flaky |> runs after slow and fast alone
+```
+:::
+
+----
+
+The complete list of changes is at the [Vitest 3.2 Changelog](https://github.com/vitest-dev/vitest/releases/tag/v3.2.0).

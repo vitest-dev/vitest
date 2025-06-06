@@ -845,6 +845,13 @@ Ignore type errors from source files
 
 Path to a custom tsconfig file
 
+### typecheck.spawnTimeout
+
+- **CLI:** `--typecheck.spawnTimeout <time>`
+- **Config:** [typecheck.spawnTimeout](/config/#typecheck-spawntimeout)
+
+Minimum time in milliseconds it takes to spawn the typechecker
+
 ### project
 
 - **CLI:** `--project <name>`
@@ -907,6 +914,13 @@ Always print console stack traces
 - **Config:** [includeTaskLocation](/config/#includetasklocation)
 
 Collect test and suite locations in the `location` property
+
+### attachmentsDir
+
+- **CLI:** `--attachmentsDir <dir>`
+- **Config:** [attachmentsDir](/config/#attachmentsdir)
+
+The directory where attachments from `context.annotate` are stored in (default: `.vitest-attachments`)
 
 ### run
 

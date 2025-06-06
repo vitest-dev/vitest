@@ -15,7 +15,7 @@ test('default', async () => {
   expect(stderr).toBe('')
 
   const cachePath = ctx!.cache.results.getCachePath()
-  const path = resolve(root, 'node_modules/.vite/vitest/d41d8cd98f00b204e9800998ecf8427e/results.json')
+  const path = resolve(root, 'node_modules/.vite/vitest/da39a3ee5e6b4b0d3255bfef95601890afd80709/results.json')
   expect(cachePath).toMatch(path)
 })
 
@@ -34,7 +34,7 @@ test('use cache.dir', async () => {
   expect(stderr).toContain('"cache.dir" is deprecated')
 
   const cachePath = ctx!.cache.results.getCachePath()
-  const path = resolve(root, 'node_modules/.vitest-custom/vitest/d41d8cd98f00b204e9800998ecf8427e/results.json')
+  const path = resolve(root, 'node_modules/.vitest-custom/vitest/da39a3ee5e6b4b0d3255bfef95601890afd80709/results.json')
   expect(cachePath).toMatch(path)
 })
 
@@ -53,7 +53,7 @@ test('use cacheDir', async () => {
   expect(stderr).toBe('')
 
   const cachePath = ctx!.cache.results.getCachePath()
-  const path = resolve(root, 'node_modules/.vite-custom/vitest/d41d8cd98f00b204e9800998ecf8427e/results.json')
+  const path = resolve(root, 'node_modules/.vite-custom/vitest/da39a3ee5e6b4b0d3255bfef95601890afd80709/results.json')
   expect(cachePath).toMatch(path)
 })
 
@@ -102,7 +102,7 @@ describe('with optimizer enabled', () => {
     expect(stderr).toBe('')
 
     const cachePath = ctx!.cache.results.getCachePath()
-    const path = resolve(root, 'node_modules/.vite/vitest/d41d8cd98f00b204e9800998ecf8427e/results.json')
+    const path = resolve(root, 'node_modules/.vite/vitest/da39a3ee5e6b4b0d3255bfef95601890afd80709/results.json')
     expect(cachePath).toBe(path)
   })
 
@@ -122,7 +122,7 @@ describe('with optimizer enabled', () => {
     expect(stderr).toContain('"cache.dir" is deprecated')
 
     const cachePath = ctx!.cache.results.getCachePath()
-    const path = resolve(root, 'node_modules/.vitest-custom/vitest/d41d8cd98f00b204e9800998ecf8427e/results.json')
+    const path = resolve(root, 'node_modules/.vitest-custom/vitest/da39a3ee5e6b4b0d3255bfef95601890afd80709/results.json')
     expect(cachePath).toBe(path)
   })
 
@@ -142,7 +142,7 @@ describe('with optimizer enabled', () => {
     expect(stderr).toBe('')
 
     const cachePath = ctx!.cache.results.getCachePath()
-    const path = resolve(root, 'node_modules/.vite-custom/vitest/d41d8cd98f00b204e9800998ecf8427e/results.json')
+    const path = resolve(root, 'node_modules/.vite-custom/vitest/da39a3ee5e6b4b0d3255bfef95601890afd80709/results.json')
     expect(cachePath).toBe(path)
   })
 })

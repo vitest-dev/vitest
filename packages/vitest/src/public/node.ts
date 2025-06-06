@@ -1,5 +1,5 @@
 import type { ModuleDiagnostic as _FileDiagnostic } from '../node/reporters/reported-tasks'
-import { createServer as _createServer } from 'vite'
+import * as vite from 'vite'
 import { Vitest } from '../node/core'
 import { TestModule as _TestFile } from '../node/reporters/reported-tasks'
 
@@ -81,8 +81,8 @@ export type {
   ResolvedBrowserOptions,
 } from '../node/types/browser'
 /** @deprecated use `createViteServer` instead */
-export const createServer: typeof _createServer = _createServer
-export const createViteServer: typeof _createServer = _createServer
+export const createServer: typeof vite.createServer = vite.createServer
+export const createViteServer: typeof vite.createServer = vite.createServer
 export type {
   ApiConfig,
   BuiltinEnvironment,
@@ -174,5 +174,8 @@ export {
   rollupVersion,
   version as viteVersion,
 } from 'vite'
+
+// rolldownVersion is exported only by rolldown-vite
+export const rolldownVersion: string | undefined = (vite as any).rolldownVersion
 
 export type * as Vite from 'vite'

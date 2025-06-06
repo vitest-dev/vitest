@@ -2,6 +2,7 @@ import type { RunnerTaskResultPack, RunnerTestFile } from 'vitest'
 import type { UserConfig } from 'vitest/node'
 import { resolve } from 'pathe'
 import { expect, it } from 'vitest'
+import { rolldownVersion } from 'vitest/node'
 import { runVitest } from '../../test-utils'
 
 it.each([
@@ -91,7 +92,9 @@ it.each([
     expect(files[0].tasks[index + 1].name).toBe(`custom ${name}`)
     expect(files[0].tasks[index + 1].location).toEqual({
       line: 18,
-      column: 18,
+      // TODO: rolldown is more correct, but regular vite's source map is
+      // a little bit wrong with the boundaries (maybe because of the SSR transform?)
+      column: rolldownVersion || config.browser?.enabled ? 18 : 17,
     })
   })
 })

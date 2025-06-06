@@ -366,7 +366,7 @@ function createSuiteCollector(
 
     if (runner.config.includeTaskLocation) {
       const error = stackTraceError.stack!
-      const stack = findTestFileStackTrace(error, task.each ?? false)
+      const stack = findTestFileStackTrace(error)
       if (stack) {
         task.location = stack
       }
@@ -460,7 +460,7 @@ function createSuiteCollector(
       Error.stackTraceLimit = 15
       const error = new Error('stacktrace').stack!
       Error.stackTraceLimit = limit
-      const stack = findTestFileStackTrace(error, suite.each ?? false)
+      const stack = findTestFileStackTrace(error)
       if (stack) {
         suite.location = stack
       }
@@ -890,21 +890,16 @@ function formatTemplateString(cases: any[], args: any[]): any[] {
   return res
 }
 
-function findTestFileStackTrace(error: string, each: boolean) {
+function findTestFileStackTrace(error: string) {
+  const testFilePath = getTestFilepath()
   // first line is the error message
   const lines = error.split('\n').slice(1)
   for (const line of lines) {
     const stack = parseSingleStack(line)
-    if (stack && stack.file === getTestFilepath()) {
+    if (stack && stack.file === testFilePath) {
       return {
         line: stack.line,
-        /**
-         * test.each([1, 2])('name')
-         *                 ^ leads here, but should
-         *                  ^ lead here
-         * in source maps it's the same boundary, so it just points to the start of it
-         */
-        column: each ? stack.column + 1 : stack.column,
+        column: stack.column,
       }
     }
   }
