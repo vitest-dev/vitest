@@ -249,6 +249,10 @@ export abstract class BaseReporter implements Reporter {
     return getTestName(test, separator)
   }
 
+  protected getFullName(test: Task, separator?: string): string {
+    return getFullName(test, separator)
+  }
+
   protected formatShortError(error: ErrorWithDiff): string {
     return `${F_RIGHT} ${error.message}`
   }
@@ -374,7 +378,7 @@ export abstract class BaseReporter implements Reporter {
     const task = log.taskId ? this.ctx.state.idMap.get(log.taskId) : undefined
 
     if (task) {
-      headerText = getFullName(task, c.dim(' > '))
+      headerText = this.getFullName(task, c.dim(' > '))
     }
     else if (log.taskId && log.taskId !== '__vitest__unknown_test__') {
       headerText = log.taskId
@@ -579,7 +583,7 @@ export abstract class BaseReporter implements Reporter {
         continue
       }
 
-      const groupName = getFullName(group, c.dim(' > '))
+      const groupName = this.getFullName(group, c.dim(' > '))
       const project = this.ctx.projects.find(p => p.name === bench.file.projectName)
 
       this.log(`  ${formatProjectName(project)}${bench.name}${c.dim(` - ${groupName}`)}`)
@@ -636,7 +640,7 @@ export abstract class BaseReporter implements Reporter {
         const projectName = (task as File)?.projectName || task.file?.projectName || ''
         const project = this.ctx.projects.find(p => p.name === projectName)
 
-        let name = getFullName(task, c.dim(' > '))
+        let name = this.getFullName(task, c.dim(' > '))
 
         if (filepath) {
           name += c.dim(` [ ${this.relative(filepath)} ]`)

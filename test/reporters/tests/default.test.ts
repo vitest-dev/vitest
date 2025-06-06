@@ -1,5 +1,6 @@
-import type { TestSpecification } from 'vitest/node'
+import type { RunnerTask, TestSpecification } from 'vitest/node'
 import { describe, expect, test } from 'vitest'
+import { DefaultReporter } from 'vitest/reporters'
 import { runVitest, runVitestCli } from '../../test-utils'
 
 describe('default reporter', async () => {
@@ -237,6 +238,21 @@ describe('default reporter', async () => {
 
     expect(stdout).toContain('Example project')
     expect(stdout).toContain('\x1B[30m\x1B[45m Example project \x1B[49m\x1B[39m')
+  })
+
+  test('extended reporter can override getFullName', async () => {
+    class Custom extends DefaultReporter {
+      getFullName(test: RunnerTask, separator?: string): string {
+        return `${separator}{ name: ${test.name}, meta: ${test.meta.custom} } (Custom getFullName here)`
+      }
+    }
+
+    const { stderr } = await runVitest({
+      root: 'fixtures/metadata',
+      reporters: new Custom(),
+    })
+
+    expect(stderr).toMatch('FAIL   > { name: fails, meta: Failing test added this } (Custom getFullName here')
   })
 }, 120000)
 
