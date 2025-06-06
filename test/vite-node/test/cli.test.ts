@@ -74,3 +74,9 @@ it('buildStart with all ssr', async () => {
   )
   await result.viteNode.waitForStdout('["buildStart:in","buildStart:out"]')
 })
+
+it('empty mappings', async () => {
+  const root = resolve(__dirname, '../src/empty-mappings')
+  const result = await runViteNodeCli('--root', root, resolve(root, 'main.ts'))
+  await result.viteNode.waitForStdout('[ok]')
+})
