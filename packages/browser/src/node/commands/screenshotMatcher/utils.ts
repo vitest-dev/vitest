@@ -2,8 +2,8 @@ import type { BrowserCommandContext, BrowserConfigOptions } from 'vitest/node'
 import type { ScreenshotMatcherOptions } from '../../../../context'
 import type { AnyCodec } from './codecs'
 import { platform } from 'node:os'
-import { basename, dirname, extname, join, relative, resolve, sep } from 'node:path'
 import { deepMerge } from '@vitest/utils'
+import { basename, dirname, extname, join, relative, resolve } from 'pathe'
 import { takeScreenshot } from '../screenshot'
 import { getCodec } from './codecs'
 import { getComparator } from './comparators'
@@ -179,9 +179,9 @@ export function resolveOptions(
  *    - Collapses multiple consecutive hyphens (`-{2,}`) into a single hyphen.
  *
  * 2. Path-preserving mode (`keepPaths === true`):
- *    - Splits the input string on the platform-specific path separator ({@linkcode sep}).
+ *    - Splits the input string on the path separator.
  *    - Sanitizes each path segment individually in non-path mode.
- *    - Joins the sanitized segments back together using the same {@linkcode sep}.
+ *    - Joins the sanitized segments back together.
  *
  * @param input - The raw string to sanitize.
  * @param keepPaths - If `false`, performs a flat sanitization (drops path segments).
@@ -196,25 +196,24 @@ function sanitize(input: string, keepPaths: boolean): string {
       .replace(/-{2,}/g, '-')
   }
 
-  return input.split(sep).map(path => sanitize(path, false)).join(sep)
+  return input.split('/').map(path => sanitize(path, false)).join('/')
 }
 
 /**
  * Takes a string, treats it as a potential path or filename, and ensures it cannot
  * escape the root directory or contain invalid characters. Internally, it:
  *
- * 1. Prepends the platform-specific separator ({@linkcode sep}) to the raw input
- * to form a path-like string.
- * 2. Uses {@linkcode relative|relative(sep, <that-path>)} to compute a relative
- * path from the root ({@linkcode sep}), which effectively strips any leading
- * separators and prevents traversal above the root.
+ * 1. Prepends the path separator to the raw input to form a path-like string.
+ * 2. Uses {@linkcode relative|relative('/', <that-path>)} to compute a relative
+ * path from the root, which effectively strips any leading separators and prevents
+ * traversal above the root.
  * 3. Passes the resulting relative path into {@linkcode sanitize|sanitize(..., true)},
  * preserving any path separators but sanitizing each segment.
  *
  * @param input - The raw string to clean.
  */
 function sanitizeArg(input: string): string {
-  return sanitize(relative(sep, join(sep, input)), true)
+  return sanitize(relative('/', join('/', input)), true)
 }
 
 /**
