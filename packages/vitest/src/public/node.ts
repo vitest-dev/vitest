@@ -1,5 +1,5 @@
 import type { ModuleDiagnostic as _FileDiagnostic } from '../node/reporters/reported-tasks'
-import { createServer as _createServer } from 'vite'
+import * as vite from 'vite'
 import { Vitest } from '../node/core'
 import { TestModule as _TestFile } from '../node/reporters/reported-tasks'
 
@@ -81,8 +81,8 @@ export type {
   ResolvedBrowserOptions,
 } from '../node/types/browser'
 /** @deprecated use `createViteServer` instead */
-export const createServer: typeof _createServer = _createServer
-export const createViteServer: typeof _createServer = _createServer
+export const createServer: typeof vite.createServer = vite.createServer
+export const createViteServer: typeof vite.createServer = vite.createServer
 export type {
   ApiConfig,
   BuiltinEnvironment,
@@ -130,12 +130,14 @@ export type { TestRunResult } from '../node/types/tests'
 export const TestFile: typeof _TestFile = _TestFile
 export type { WorkerContext } from '../node/types/worker'
 export { createViteLogger } from '../node/viteLogger'
-export { distDir, rootDir } from '../paths'
+export type { WatcherTriggerPattern } from '../node/watcher'
 
 /**
  * @deprecated Use `ModuleDiagnostic` instead
  */
 export type FileDiagnostic = _FileDiagnostic
+
+export { distDir, rootDir } from '../paths'
 
 export type {
   CollectLineNumbers as TypeCheckCollectLineNumbers,
@@ -147,9 +149,7 @@ export type {
 } from '../typecheck/types'
 
 export type { TestExecutionMethod as TestExecutionType } from '../types/worker'
-
 export { createDebugger } from '../utils/debugger'
-
 export type {
   RunnerTask,
   RunnerTaskResult,
@@ -174,5 +174,8 @@ export {
   rollupVersion,
   version as viteVersion,
 } from 'vite'
+
+// rolldownVersion is exported only by rolldown-vite
+export const rolldownVersion: string | undefined = (vite as any).rolldownVersion
 
 export type * as Vite from 'vite'

@@ -3,6 +3,7 @@ import type {
   Browser,
   BrowserContext,
   BrowserContextOptions,
+  ConnectOptions,
   Frame,
   FrameLocator,
   LaunchOptions,
@@ -18,6 +19,10 @@ import type {
   TestProject,
 } from 'vitest/node'
 import { createManualModuleSource } from '@vitest/mocker/node'
+import c from 'tinyrainbow'
+import { createDebugger } from 'vitest/node'
+
+const debug = createDebugger('vitest:browser:playwright')
 
 export const playwrightBrowsers = ['firefox', 'webkit', 'chromium'] as const
 export type PlaywrightBrowser = (typeof playwrightBrowsers)[number]
@@ -38,6 +43,10 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
 
   private options?: {
     launch?: LaunchOptions
+    connect?: {
+      wsEndpoint: string
+      options?: ConnectOptions
+    }
     context?: BrowserContextOptions & { actionTimeout?: number }
   }
 
@@ -48,6 +57,8 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
 
   public mocker: BrowserModuleMocker | undefined
 
+  private closing = false
+
   getSupportedBrowsers(): readonly string[] {
     return playwrightBrowsers
   }
@@ -56,6 +67,7 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
     project: TestProject,
     { browser, options }: PlaywrightProviderOptions,
   ): void {
+    this.closing = false
     this.project = project
     this.browserName = browser
     this.options = options as any
@@ -63,11 +75,15 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
   }
 
   private async openBrowser() {
+    await this._throwIfClosing()
+
     if (this.browserPromise) {
+      debug?.('[%s] the browser is resolving, reusing the promise', this.browserName)
       return this.browserPromise
     }
 
     if (this.browser) {
+      debug?.('[%s] the browser is resolved, reusing it', this.browserName)
       return this.browser
     }
 
@@ -75,6 +91,20 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
       const options = this.project.config.browser
 
       const playwright = await import('playwright')
+
+      if (this.options?.connect) {
+        if (this.options.launch) {
+          this.project.vitest.logger.warn(
+            c.yellow(`Found both ${c.bold(c.italic(c.yellow('connect')))} and ${c.bold(c.italic(c.yellow('launch')))} options in browser instance configuration.
+          Ignoring ${c.bold(c.italic(c.yellow('launch')))} options and using ${c.bold(c.italic(c.yellow('connect')))} mode.
+          You probably want to remove one of the two options and keep only the one you want to use.`),
+          )
+        }
+        const browser = await playwright[this.browserName].connect(this.options.connect.wsEndpoint, this.options.connect.options)
+        this.browser = browser
+        this.browserPromise = null
+        return this.browser
+      }
 
       const launchOptions = {
         ...this.options?.launch,
@@ -103,8 +133,8 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
         }
       }
 
-      const browser = await playwright[this.browserName].launch(launchOptions)
-      this.browser = browser
+      debug?.('[%s] initializing the browser with launch options: %O', this.browserName, launchOptions)
+      this.browser = await playwright[this.browserName].launch(launchOptions)
       this.browserPromise = null
       return this.browser
     })()
@@ -149,8 +179,12 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
       const ids = sessionIds.get(sessionId) || []
       ids.push(moduleUrl.href)
       sessionIds.set(sessionId, ids)
-      idPreficates.set(moduleUrl.href, predicate)
+      idPreficates.set(predicateKey(sessionId, moduleUrl.href), predicate)
       return predicate
+    }
+
+    function predicateKey(sessionId: string, url: string) {
+      return `${sessionId}:${url}`
     }
 
     return {
@@ -170,17 +204,17 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
           // https://github.com/microsoft/playwright/issues/18318
           const isWebkit = this.browserName === 'webkit'
           if (isWebkit) {
-            const url = module.type === 'redirect'
-              ? (() => {
-                  // url has http:// which vite.trasnformRequest doesn't understand
-                  const url = new URL(module.redirect)
-                  return url.href.slice(url.origin.length)
-                })()
-              : (() => {
-                  const url = new URL(route.request().url())
-                  url.searchParams.set('mock', module.type)
-                  return url.href.slice(url.origin.length)
-                })()
+            let url: string
+            if (module.type === 'redirect') {
+              const redirect = new URL(module.redirect)
+              url = redirect.href.slice(redirect.origin.length)
+            }
+            else {
+              const request = new URL(route.request().url())
+              request.searchParams.set('mock', module.type)
+              url = request.href.slice(request.origin.length)
+            }
+
             const result = await this.project.browser!.vite.transformRequest(url).catch(() => null)
             if (!result) {
               return route.continue()
@@ -222,18 +256,20 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
       },
       delete: async (sessionId: string, id: string): Promise<void> => {
         const page = this.getPage(sessionId)
-        const predicate = idPreficates.get(id)
+        const key = predicateKey(sessionId, id)
+        const predicate = idPreficates.get(key)
         if (predicate) {
-          await page.unroute(predicate).finally(() => idPreficates.delete(id))
+          await page.unroute(predicate).finally(() => idPreficates.delete(key))
         }
       },
       clear: async (sessionId: string): Promise<void> => {
         const page = this.getPage(sessionId)
         const ids = sessionIds.get(sessionId) || []
         const promises = ids.map((id) => {
-          const predicate = idPreficates.get(id)
+          const key = predicateKey(sessionId, id)
+          const predicate = idPreficates.get(key)
           if (predicate) {
-            return page.unroute(predicate).finally(() => idPreficates.delete(id))
+            return page.unroute(predicate).finally(() => idPreficates.delete(key))
           }
           return null
         })
@@ -243,11 +279,15 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
   }
 
   private async createContext(sessionId: string) {
+    await this._throwIfClosing()
+
     if (this.contexts.has(sessionId)) {
+      debug?.('[%s][%s] the context already exists, reusing it', sessionId, this.browserName)
       return this.contexts.get(sessionId)!
     }
 
     const browser = await this.openBrowser()
+    await this._throwIfClosing(browser)
     const { actionTimeout, ...contextOptions } = this.options?.context ?? {}
     const options = {
       ...contextOptions,
@@ -257,9 +297,11 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
       options.viewport = null
     }
     const context = await browser.newContext(options)
+    await this._throwIfClosing(context)
     if (actionTimeout) {
       context.setDefaultTimeout(actionTimeout)
     }
+    debug?.('[%s][%s] the context is ready', sessionId, this.browserName)
     this.contexts.set(sessionId, context)
     return context
   }
@@ -306,7 +348,10 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
   }
 
   private async openBrowserPage(sessionId: string) {
+    await this._throwIfClosing()
+
     if (this.pages.has(sessionId)) {
+      debug?.('[%s][%s] the page already exists, closing the old one', sessionId, this.browserName)
       const page = this.pages.get(sessionId)!
       await page.close()
       this.pages.delete(sessionId)
@@ -314,6 +359,8 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
 
     const context = await this.createContext(sessionId)
     const page = await context.newPage()
+    debug?.('[%s][%s] the page is ready', sessionId, this.browserName)
+    await this._throwIfClosing(page)
     this.pages.set(sessionId, page)
 
     if (process.env.VITEST_PW_DEBUG) {
@@ -333,9 +380,24 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
   }
 
   async openPage(sessionId: string, url: string, beforeNavigate?: () => Promise<void>): Promise<void> {
+    debug?.('[%s][%s] creating the browser page for %s', sessionId, this.browserName, url)
     const browserPage = await this.openBrowserPage(sessionId)
     await beforeNavigate?.()
+    debug?.('[%s][%s] browser page is created, opening %s', sessionId, this.browserName, url)
     await browserPage.goto(url, { timeout: 0 })
+    await this._throwIfClosing(browserPage)
+  }
+
+  private async _throwIfClosing(disposable?: { close: () => Promise<void> }) {
+    if (this.closing) {
+      debug?.('[%s] provider was closed, cannot perform the action on %s', this.browserName, String(disposable))
+      await disposable?.close()
+      this.pages.clear()
+      this.contexts.clear()
+      this.browser = null
+      this.browserPromise = null
+      throw new Error(`[vitest] The provider was closed.`)
+    }
   }
 
   async getCDPSession(sessionid: string): Promise<CDPSession> {
@@ -359,13 +421,20 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
   }
 
   async close(): Promise<void> {
+    debug?.('[%s] closing provider', this.browserName)
+    this.closing = true
     const browser = this.browser
     this.browser = null
+    if (this.browserPromise) {
+      await this.browserPromise
+      this.browserPromise = null
+    }
     await Promise.all([...this.pages.values()].map(p => p.close()))
     this.pages.clear()
     await Promise.all([...this.contexts.values()].map(c => c.close()))
     this.contexts.clear()
     await browser?.close()
+    debug?.('[%s] provider is closed', this.browserName)
   }
 }
 

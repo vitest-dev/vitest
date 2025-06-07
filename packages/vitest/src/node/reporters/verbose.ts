@@ -38,7 +38,7 @@ export class VerboseReporter extends DefaultReporter {
     let title = ` ${getStateSymbol(test.task)} `
 
     if (test.project.name) {
-      title += formatProjectName(test.project.name)
+      title += formatProjectName(test.project)
     }
 
     title += getFullName(test.task, c.dim(' > '))
@@ -57,6 +57,12 @@ export class VerboseReporter extends DefaultReporter {
 
     if (testResult.state === 'failed') {
       testResult.errors.forEach(error => this.log(c.red(`   ${F_RIGHT} ${error?.message}`)))
+    }
+
+    if (test.annotations().length) {
+      this.log()
+      this.printAnnotations(test, 'log', 3)
+      this.log()
     }
   }
 

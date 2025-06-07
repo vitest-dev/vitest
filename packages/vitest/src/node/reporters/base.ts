@@ -11,7 +11,7 @@ import { relative } from 'pathe'
 import c from 'tinyrainbow'
 import { isTTY } from '../../utils/env'
 import { hasFailedSnapshot } from '../../utils/tasks'
-import { F_CHECK, F_POINTER, F_RIGHT } from './renderers/figures'
+import { F_CHECK, F_DOWN_RIGHT, F_POINTER, F_RIGHT } from './renderers/figures'
 import { countTestErrors, divider, errorBanner, formatProjectName, formatTime, formatTimeString, getStateString, getStateSymbol, padSummaryTitle, renderSnapshotSummary, taskFail, withLabel } from './renderers/utils'
 
 const BADGE_PADDING = '       '
@@ -235,7 +235,7 @@ export abstract class BaseReporter implements Reporter {
     }
 
     if (testModule.project.name) {
-      title += ` ${formatProjectName(testModule.project.name, '')}`
+      title += ` ${formatProjectName(testModule.project, '')}`
     }
 
     return ` ${title} ${testModule.task.name} ${suffix}`
@@ -255,6 +255,26 @@ export abstract class BaseReporter implements Reporter {
 
   protected getTestIndentation(_test: Task) {
     return '  '
+  }
+
+  protected printAnnotations(test: TestCase, console: 'log' | 'error', padding = 0): void {
+    const annotations = test.annotations()
+    if (!annotations.length) {
+      return
+    }
+
+    const PADDING = ' '.repeat(padding)
+
+    annotations.forEach(({ location, type, message }) => {
+      if (location) {
+        const file = relative(test.project.config.root, location.file)
+        this[console](`${PADDING}${c.blue(F_POINTER)} ${c.gray(`${file}:${location.line}:${location.column}`)} ${c.bold(type)}`)
+      }
+      else {
+        this[console](`${PADDING}${c.blue(F_POINTER)} ${c.bold(type)}`)
+      }
+      this[console](`${PADDING}  ${c.blue(F_DOWN_RIGHT)} ${message}`)
+    })
   }
 
   protected getDurationPrefix(task: Task): string {
@@ -489,7 +509,11 @@ export abstract class BaseReporter implements Reporter {
       this.log(padSummaryTitle('Duration'), formatTime(collectTime + testsTime + setupTime))
     }
     else {
-      const executionTime = this.end - this.start
+      const blobs = this.ctx.state.blobs
+
+      // Execution time is either sum of all runs of `--merge-reports` or the current run's time
+      const executionTime = blobs?.executionTimes ? sum(blobs.executionTimes, time => time) : this.end - this.start
+
       const environmentTime = sum(files, file => file.environmentLoad)
       const prepareTime = sum(files, file => file.prepareDuration)
       const transformTime = sum(this.ctx.projects, project => project.vitenode.getTotalDuration())
@@ -506,6 +530,10 @@ export abstract class BaseReporter implements Reporter {
       ].filter(Boolean).join(', ')
 
       this.log(padSummaryTitle('Duration'), formatTime(executionTime) + c.dim(` (${timers})`))
+
+      if (blobs?.executionTimes) {
+        this.log(padSummaryTitle('Per blob') + blobs.executionTimes.map(time => ` ${formatTime(time)}`).join(''))
+      }
     }
 
     this.log()
@@ -552,7 +580,9 @@ export abstract class BaseReporter implements Reporter {
       }
 
       const groupName = getFullName(group, c.dim(' > '))
-      this.log(`  ${formatProjectName(bench.file.projectName)}${bench.name}${c.dim(` - ${groupName}`)}`)
+      const project = this.ctx.projects.find(p => p.name === bench.file.projectName)
+
+      this.log(`  ${formatProjectName(project)}${bench.name}${c.dim(` - ${groupName}`)}`)
 
       const siblings = group.tasks
         .filter(i => i.meta.benchmark && i.result?.benchmark && i !== bench)
@@ -575,16 +605,19 @@ export abstract class BaseReporter implements Reporter {
       task.result?.errors?.forEach((error) => {
         let previous
 
-        if (error?.stackStr) {
+        if (error?.stack) {
           previous = errorsQueue.find((i) => {
-            if (i[0]?.stackStr !== error.stackStr) {
+            if (i[0]?.stack !== error.stack) {
               return false
             }
 
             const currentProjectName = (task as File)?.projectName || task.file?.projectName || ''
             const projectName = (i[1][0] as File)?.projectName || i[1][0].file?.projectName || ''
 
-            return projectName === currentProjectName
+            const currentAnnotations = task.type === 'test' && task.annotations
+            const itemAnnotations = i[1][0].type === 'test' && i[1][0].annotations
+
+            return projectName === currentProjectName && deepEqual(currentAnnotations, itemAnnotations)
           })
         }
 
@@ -601,6 +634,7 @@ export abstract class BaseReporter implements Reporter {
       for (const task of tasks) {
         const filepath = (task as File)?.filepath || ''
         const projectName = (task as File)?.projectName || task.file?.projectName || ''
+        const project = this.ctx.projects.find(p => p.name === projectName)
 
         let name = getFullName(task, c.dim(' > '))
 
@@ -609,7 +643,7 @@ export abstract class BaseReporter implements Reporter {
         }
 
         this.ctx.logger.error(
-          `${c.bgRed(c.bold(' FAIL '))} ${formatProjectName(projectName)}${name}`,
+          `${c.bgRed(c.bold(' FAIL '))} ${formatProjectName(project)}${name}`,
         )
       }
 
@@ -622,9 +656,37 @@ export abstract class BaseReporter implements Reporter {
         task: tasks[0],
       })
 
+      if (tasks[0].type === 'test' && tasks[0].annotations.length) {
+        const test = this.ctx.state.getReportedEntity(tasks[0]) as TestCase
+        this.printAnnotations(test, 'error', 1)
+        this.error()
+      }
+
       errorDivider()
     }
   }
+}
+
+function deepEqual(a: any, b: any): boolean {
+  if (a === b) {
+    return true
+  }
+  if (typeof a !== 'object' || typeof b !== 'object' || a === null || b === null) {
+    return false
+  }
+
+  const keysA = Object.keys(a)
+  const keysB = Object.keys(b)
+  if (keysA.length !== keysB.length) {
+    return false
+  }
+
+  for (const key of keysA) {
+    if (!keysB.includes(key) || !deepEqual(a[key], b[key])) {
+      return false
+    }
+  }
+  return true
 }
 
 function sum<T>(items: T[], cb: (_next: T) => number | undefined) {

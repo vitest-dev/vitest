@@ -8,6 +8,7 @@ import type {
   TestSpecification,
   TestSuite,
   UserConfig,
+  Vitest,
 } from 'vitest/node'
 import { rmSync } from 'node:fs'
 import { resolve, sep } from 'node:path'
@@ -886,6 +887,7 @@ describe('merge reports', () => {
     }, {
       globals: true,
       reporters: [['blob', { outputFile: blobOutputFile1 }]],
+      watch: false,
     })
 
     const { root: root2 } = await runInlineTests({
@@ -901,10 +903,12 @@ describe('merge reports', () => {
     }, {
       globals: true,
       reporters: [['blob', { outputFile: blobOutputFile2 }]],
+      watch: false,
     })
 
     const report = await run({}, {
       mergeReports: blobsOutputDirectory,
+      watch: false,
     }, {
       roots: [root1, root2],
     })
@@ -1008,6 +1012,88 @@ describe('type checking', () => {
 
       onTestRunEnd   (failed, 2 modules, 0 errors)"
     `)
+  })
+})
+
+describe('test run result', () => {
+  test('test run is interrupted', async () => {
+    let vitest: Vitest
+    let reason: TestRunEndReason | undefined
+
+    await runInlineTests({
+      'example.test.js': `
+        test('basic', () => new Promise(() => {}))
+      `,
+    }, {
+      globals: true,
+      reporters: [
+        {
+          onInit(ctx) {
+            vitest = ctx
+          },
+          async onTestModuleCollected() {
+            await vitest.cancelCurrentRun('keyboard-input')
+          },
+          onTestRunEnd(_, __, reason_) {
+            reason = reason_
+          },
+        },
+      ],
+    })
+
+    expect(reason).toBe('interrupted')
+  })
+
+  test('test run failed, but passed afterwards', async () => {
+    let reason: TestRunEndReason | undefined
+
+    const { fs } = await runInlineTests({
+      'example.test.js': `
+        test('basic', () => {
+          expect(1).toBe(2)
+        })
+      `,
+    }, {
+      globals: true,
+      watch: true,
+      reporters: [
+        {
+          onTestRunEnd(_, __, reason_) {
+            reason = reason_
+          },
+        },
+      ],
+    })
+
+    expect(reason).toBe('failed')
+
+    fs.editFile('./example.test.js', c => c.replace('toBe(2)', 'toBe(1)'))
+
+    await expect.poll(() => reason).toBe('passed')
+  })
+
+  test('test run passed', async () => {
+    let reason: TestRunEndReason | undefined
+
+    await runInlineTests({
+      'example.test.js': `
+        test('basic', () => {
+          expect(1).toBe(1)
+        })
+      `,
+    }, {
+      globals: true,
+      watch: true,
+      reporters: [
+        {
+          onTestRunEnd(_, __, reason_) {
+            reason = reason_
+          },
+        },
+      ],
+    })
+
+    expect(reason).toBe('passed')
   })
 })
 

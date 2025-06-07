@@ -11,9 +11,12 @@
     "test-fixtures": "vitest",
     "test-expect-dom": "vitest --root ./fixtures/expect-dom",
     "test-mocking": "vitest --root ./fixtures/mocking",
+    "test-failing": "vitest --root ./fixtures/failing",
     "test-timeout": "vitest --root ./fixtures/timeout",
+    "test-timeout-hooks": "vitest --root ./fixtures/timeout-hooks",
     "test-mocking-watch": "vitest --root ./fixtures/mocking-watch",
     "test-locators": "vitest --root ./fixtures/locators",
+    "test-locators-custom": "vitest --root ./fixtures/locators-custom",
     "test-different-configs": "vitest --root ./fixtures/multiple-different-configs",
     "test-setup-file": "vitest --root ./fixtures/setup-file",
     "test-snapshots": "vitest --root ./fixtures/update-snapshot",
@@ -25,17 +28,18 @@
   },
   "devDependencies": {
     "@testing-library/react": "^13.4.0",
-    "@types/react": "^19.1.2",
+    "@types/react": "^19.1.6",
     "@vitejs/plugin-basic-ssl": "^1.2.0",
     "@vitest/browser": "workspace:*",
     "@vitest/bundled-lib": "link:./bundled-lib",
     "@vitest/cjs-lib": "link:./cjs-lib",
     "@vitest/injected-lib": "link:./injected-lib",
+    "playwright": "^1.52.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "url": "^0.11.4",
     "vitest": "workspace:*",
-    "vitest-browser-react": "^0.1.1",
+    "vitest-browser-react": "^0.2.0",
     "ws": "catalog:"
   }
 }

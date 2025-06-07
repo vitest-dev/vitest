@@ -1,6 +1,5 @@
 import { builtinModules, createRequire } from 'node:module'
 import { defineConfig } from 'rollup'
-import copy from 'rollup-plugin-copy'
 import oxc from 'unplugin-oxc/rollup'
 import { createDtsUtils } from '../../scripts/build-utils.js'
 
@@ -20,15 +19,6 @@ const plugins = [
   ...dtsUtils.isolatedDecl(),
   oxc({
     transform: { target: 'node14' },
-  }),
-  copy({
-    targets: [
-      {
-        src: 'node_modules/@types/chai/index.d.ts',
-        dest: 'dist',
-        rename: 'chai.d.cts',
-      },
-    ],
   }),
 ]
 
@@ -52,6 +42,7 @@ export default defineConfig([
       entryFileNames: '[name].d.ts',
       format: 'esm',
     },
+    watch: false,
     external,
     plugins: dtsUtils.dts(),
     onwarn,

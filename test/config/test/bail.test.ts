@@ -16,6 +16,7 @@ if (process.platform !== 'win32') {
       browser: {
         enabled: true,
         provider: 'playwright',
+        headless: true,
         fileParallelism: false,
         instances: [
           { browser: 'chromium' },
@@ -26,6 +27,7 @@ if (process.platform !== 'win32') {
       browser: {
         enabled: true,
         provider: 'playwright',
+        headless: true,
         fileParallelism: true,
         instances: [
           { browser: 'chromium' },
@@ -72,9 +74,12 @@ for (const config of configs) {
       const { exitCode, stdout, ctx } = await runVitest({
         root: './fixtures/bail',
         bail: 1,
-        ...config,
-        env: {
-          THREADS: process.env.THREADS,
+      }, [], 'test', {
+        test: {
+          ...config,
+          env: {
+            THREADS: process.env.THREADS,
+          },
         },
       })
 

@@ -35,6 +35,9 @@ page.extend({
     return new PreviewLocator(getByTitleSelector(title, options))
   },
 
+  _createLocator(selector: string) {
+    return new PreviewLocator(selector)
+  },
   elementLocator(element: Element) {
     return new PreviewLocator(
       selectorEngine.generateSelectorSimple(element),

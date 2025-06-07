@@ -37,7 +37,7 @@ export default defineConfig({
       commands: { forceCrash },
       enabled: true,
       provider,
-      instances: instances.map(instance => ({
+      instances: instances.filter(i => i.browser !== 'webkit').map(instance => ({
         ...instance,
         context: {
           actionTimeout: 500,

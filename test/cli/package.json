@@ -13,8 +13,8 @@
     "@vitest/test-dep-error": "file:./deps/error",
     "@vitest/test-dep-linked": "link:./deps/linked",
     "@vitest/utils": "workspace:*",
-    "debug": "^4.4.0",
-    "unplugin-swc": "^1.5.1",
+    "debug": "^4.4.1",
+    "unplugin-swc": "^1.5.4",
     "vite": "latest",
     "vitest": "workspace:*",
     "ws": "catalog:"

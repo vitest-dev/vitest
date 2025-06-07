@@ -71,7 +71,7 @@ export function createOrUpdateFileNode(
       duration: file.result?.duration != null ? Math.round(file.result?.duration) : undefined,
       filepath: file.filepath,
       projectName: file.projectName || '',
-      projectNameColor: getProjectNameColor(file.projectName),
+      projectNameColor: explorerTree.colors.get(file.projectName || '') || getProjectNameColor(file.projectName),
       collectDuration: file.collectDuration,
       setupDuration: file.setupDuration,
       environmentLoad: file.environmentLoad,
@@ -142,6 +142,7 @@ export function createOrUpdateNode(
         node.children.add(task.id)
       }
 
+      taskNode.name = task.name
       taskNode.mode = task.mode
       taskNode.duration = duration
       taskNode.state = task.result?.state

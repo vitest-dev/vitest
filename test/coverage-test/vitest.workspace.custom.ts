@@ -19,7 +19,7 @@ export default defineWorkspace([
   {
     test: {
       ...config.test,
-      name: 'v8',
+      name: { label: 'v8', color: 'green' },
       env: { COVERAGE_PROVIDER: 'v8' },
       include: [GENERIC_TESTS, V8_TESTS],
       exclude: [
@@ -31,11 +31,30 @@ export default defineWorkspace([
     },
   },
 
+  // Test cases for experimental AST aware v8-provider
+  {
+    test: {
+      ...config.test,
+      name: 'v8-ast-aware',
+      env: { COVERAGE_PROVIDER: 'v8-ast-aware' },
+
+      // Intentionally run Istanbul tests too
+      include: [GENERIC_TESTS, ISTANBUL_TESTS, V8_TESTS],
+      exclude: [
+        UNIT_TESTS,
+        CUSTOM_TESTS,
+        BROWSER_TESTS,
+        // Not using original v8-to-istanbul that has patch applied: github.com/istanbuljs/v8-to-istanbul/pull/244
+        'test/empty-lines.v8.test.ts',
+      ],
+    },
+  },
+
   // Test cases for istanbul-provider
   {
     test: {
       ...config.test,
-      name: 'istanbul',
+      name: { label: 'istanbul', color: 'magenta' },
       env: { COVERAGE_PROVIDER: 'istanbul' },
       include: [GENERIC_TESTS, ISTANBUL_TESTS],
       exclude: [
@@ -51,7 +70,7 @@ export default defineWorkspace([
   {
     test: {
       ...config.test,
-      name: 'custom',
+      name: { label: 'custom', color: 'yellow' },
       env: { COVERAGE_PROVIDER: 'custom' },
       include: [CUSTOM_TESTS],
     },
@@ -61,7 +80,7 @@ export default defineWorkspace([
   {
     test: {
       ...config.test,
-      name: 'istanbul-browser',
+      name: { label: 'istanbul-browser', color: 'blue' },
       env: { COVERAGE_PROVIDER: 'istanbul', COVERAGE_BROWSER: 'true' },
       include: [
         BROWSER_TESTS,
@@ -81,14 +100,15 @@ export default defineWorkspace([
         '**/temporary-files.test.ts',
         '**/test-reporter-conflicts.test.ts',
         '**/vue.test.ts',
+        '**/in-source.test.ts',
       ],
     },
   },
   {
     test: {
       ...config.test,
-      name: 'v8-browser',
-      env: { COVERAGE_PROVIDER: 'v8', COVERAGE_BROWSER: 'true' },
+      name: { label: 'v8-browser', color: 'red' },
+      env: { COVERAGE_PROVIDER: 'v8-ast-aware', COVERAGE_BROWSER: 'true' },
       include: [
         BROWSER_TESTS,
 
@@ -107,6 +127,7 @@ export default defineWorkspace([
         '**/temporary-files.test.ts',
         '**/test-reporter-conflicts.test.ts',
         '**/vue.test.ts',
+        '**/in-source.test.ts',
       ],
     },
   },
@@ -115,7 +136,7 @@ export default defineWorkspace([
   {
     test: {
       ...config.test,
-      name: 'unit',
+      name: { label: 'unit', color: 'cyan' },
       include: [UNIT_TESTS],
       typecheck: {
         enabled: true,

@@ -5,6 +5,7 @@ import type { ViteDevServer } from 'vite'
 import type { defineWorkspace } from 'vitest/config'
 import type { SerializedCoverageConfig } from '../runtime/config'
 import type { ArgumentsType, ProvidedContext, UserConsoleLog } from '../types/general'
+import type { CliOptions } from './cli/cli-api'
 import type { ProcessPool, WorkspaceSpec } from './pool'
 import type { TestSpecification } from './spec'
 import type { ResolvedConfig, TestProjectConfiguration, UserConfig, VitestRunMode } from './types/config'
@@ -15,7 +16,7 @@ import { promises as fs } from 'node:fs'
 import { getTasks, hasFailed } from '@vitest/runner/utils'
 import { SnapshotManager } from '@vitest/snapshot/manager'
 import { noop, toArray } from '@vitest/utils'
-import { dirname, join, normalize, relative } from 'pathe'
+import { dirname, join, normalize, relative, resolve } from 'pathe'
 import { ViteNodeRunner } from 'vite-node/client'
 import { ViteNodeServer } from 'vite-node/server'
 import { version } from '../../package.json' with { type: 'json' }
@@ -33,6 +34,7 @@ import { Logger } from './logger'
 import { VitestPackageInstaller } from './packageInstaller'
 import { createPool } from './pool'
 import { TestProject } from './project'
+import { getDefaultTestProject, resolveBrowserProjects, resolveProjects } from './projects/resolveProjects'
 import { BlobReporter, readBlobs } from './reporters/blob'
 import { HangingProcessReporter } from './reporters/hanging-process'
 import { createBenchmarkReporters, createReporters } from './reporters/utils'
@@ -40,7 +42,6 @@ import { VitestSpecifications } from './specifications'
 import { StateManager } from './state'
 import { TestRun } from './test-run'
 import { VitestWatcher } from './watcher'
-import { getDefaultTestProject, resolveBrowserWorkspace, resolveWorkspace } from './workspace/resolveWorkspace'
 
 const WATCHER_DEBOUNCE = 100
 
@@ -97,7 +98,7 @@ export class Vitest {
   resolvedProjects: TestProject[] = []
   /** @internal */ _browserLastPort = defaultBrowserPort
   /** @internal */ _browserSessions = new BrowserSessions()
-  /** @internal */ _options: UserConfig = {}
+  /** @internal */ _cliOptions: CliOptions = {}
   /** @internal */ reporters: Reporter[] = []
   /** @internal */ vitenode: ViteNodeServer = undefined!
   /** @internal */ runner: ViteNodeRunner = undefined!
@@ -118,8 +119,10 @@ export class Vitest {
 
   constructor(
     public readonly mode: VitestRunMode,
+    cliOptions: UserConfig,
     options: VitestOptions = {},
   ) {
+    this._cliOptions = cliOptions
     this.logger = new Logger(this, options.stdout, options.stderr)
     this.packageInstaller = options.packageInstaller || new VitestPackageInstaller()
     this.specifications = new VitestSpecifications(this)
@@ -192,13 +195,12 @@ export class Vitest {
   }
 
   /** @deprecated internal */
-  setServer(options: UserConfig, server: ViteDevServer, cliOptions: UserConfig): Promise<void> {
-    return this._setServer(options, server, cliOptions)
+  setServer(options: UserConfig, server: ViteDevServer): Promise<void> {
+    return this._setServer(options, server)
   }
 
   /** @internal */
-  async _setServer(options: UserConfig, server: ViteDevServer, cliOptions: UserConfig) {
-    this._options = options
+  async _setServer(options: UserConfig, server: ViteDevServer) {
     this.watcher.unregisterWatcher()
     clearTimeout(this._rerunTimer)
     this.restartsCount += 1
@@ -274,7 +276,7 @@ export class Vitest {
     }
     catch { }
 
-    const projects = await this.resolveWorkspace(cliOptions)
+    const projects = await this.resolveProjects(this._cliOptions)
     this.resolvedProjects = projects
     this.projects = projects
 
@@ -287,9 +289,22 @@ export class Vitest {
       }))
     }))
 
-    if (!this.projects.length) {
-      throw new Error(`No projects matched the filter "${toArray(resolved.project).join('", "')}".`)
+    if (this._cliOptions.browser?.enabled) {
+      const browserProjects = this.projects.filter(p => p.config.browser.enabled)
+      if (!browserProjects.length) {
+        throw new Error(`Vitest received --browser flag, but no project had a browser configuration.`)
+      }
     }
+    if (!this.projects.length) {
+      const filter = toArray(resolved.project).join('", "')
+      if (filter) {
+        throw new Error(`No projects matched the filter "${filter}".`)
+      }
+      else {
+        throw new Error(`Vitest wasn't able to resolve any project.`)
+      }
+    }
+
     if (!this.coreWorkspaceProject) {
       this.coreWorkspaceProject = TestProject._createBasicProject(this)
     }
@@ -312,15 +327,15 @@ export class Vitest {
    */
   private injectTestProject = async (config: TestProjectConfiguration | TestProjectConfiguration[]): Promise<TestProject[]> => {
     const currentNames = new Set(this.projects.map(p => p.name))
-    const workspace = await resolveWorkspace(
+    const projects = await resolveProjects(
       this,
-      this._options,
+      this._cliOptions,
       undefined,
       Array.isArray(config) ? config : [config],
       currentNames,
     )
-    this.projects.push(...workspace)
-    return workspace
+    this.projects.push(...projects)
+    return projects
   }
 
   /**
@@ -410,11 +425,30 @@ export class Vitest {
     return join(configDir, workspaceConfigName)
   }
 
-  private async resolveWorkspace(cliOptions: UserConfig): Promise<TestProject[]> {
+  private async resolveProjects(cliOptions: UserConfig): Promise<TestProject[]> {
     const names = new Set<string>()
 
+    if (this.config.projects) {
+      if (typeof this.config.workspace !== 'undefined') {
+        this.logger.warn(
+          'Both `config.projects` and `config.workspace` are defined. Ignoring the `workspace` option.',
+        )
+      }
+
+      return resolveProjects(
+        this,
+        cliOptions,
+        undefined,
+        this.config.projects,
+        names,
+      )
+    }
+
     if (Array.isArray(this.config.workspace)) {
-      return resolveWorkspace(
+      this.logger.deprecate(
+        'The `workspace` option is deprecated and will be removed in the next major. To hide this warning, rename `workspace` option to `projects`.',
+      )
+      return resolveProjects(
         this,
         cliOptions,
         undefined,
@@ -435,8 +469,16 @@ export class Vitest {
       if (!project) {
         return []
       }
-      return resolveBrowserWorkspace(this, new Set([project.name]), [project])
+      return resolveBrowserProjects(this, new Set([project.name]), [project])
     }
+
+    const configFile = this.vite.config.configFile
+      ? resolve(this.vite.config.root, this.vite.config.configFile)
+      : 'the root config file'
+
+    this.logger.deprecate(
+      `The workspace file is deprecated and will be removed in the next major. Please, use the \`projects\` field in ${configFile} instead.`,
+    )
 
     const workspaceModule = await this.import<{
       default: ReturnType<typeof defineWorkspace>
@@ -446,7 +488,7 @@ export class Vitest {
       throw new TypeError(`Workspace config file "${workspaceConfigPath}" must export a default array of project paths.`)
     }
 
-    return resolveWorkspace(
+    return resolveProjects(
       this,
       cliOptions,
       workspaceConfigPath,
@@ -486,7 +528,8 @@ export class Vitest {
       throw new Error('Cannot merge reports when `--reporter=blob` is used. Remove blob reporter from the config first.')
     }
 
-    const { files, errors, coverages } = await readBlobs(this.version, directory || this.config.mergeReports, this.projects)
+    const { files, errors, coverages, executionTimes } = await readBlobs(this.version, directory || this.config.mergeReports, this.projects)
+    this.state.blobs = { files, errors, coverages, executionTimes }
 
     await this.report('onInit', this)
     await this.report('onPathsCollected', files.flatMap(f => f.filepath))
@@ -503,10 +546,6 @@ export class Vitest {
 
     for (const file of files) {
       await this._reportFileTask(file)
-    }
-
-    if (hasFailed(files)) {
-      process.exitCode = 1
     }
 
     this._checkUnhandledErrors(errors)
@@ -589,22 +628,14 @@ export class Vitest {
 
     // if run with --changed, don't exit if no tests are found
     if (!files.length) {
-      const throwAnError = !this.config.watch || !(this.config.changed || this.config.related?.length)
-
       await this._testRun.start([])
       const coverage = await this.coverageProvider?.generateCoverage?.({ allTestsRun: true })
-
-      // set exit code before calling `onTestRunEnd` so the lifecycle is consistent
-      if (throwAnError) {
-        const exitCode = this.config.passWithNoTests ? 0 : 1
-        process.exitCode = exitCode
-      }
 
       await this._testRun.end([], [], coverage)
       // Report coverage for uncovered files
       await this.reportCoverage(coverage, true)
 
-      if (throwAnError) {
+      if (!this.config.watch || !(this.config.changed || this.config.related?.length)) {
         throw new FilesNotFoundError(this.mode)
       }
     }
@@ -741,12 +772,11 @@ export class Vitest {
 
         const files = this.state.getFiles()
 
-        if (hasFailed(files)) {
-          process.exitCode = 1
-        }
-
         this.cache.results.updateResults(files)
-        await this.cache.results.writeToCache()
+        try {
+          await this.cache.results.writeToCache()
+        }
+        catch {}
 
         return {
           testModules: this.state.getTestModules(),
@@ -1291,7 +1321,7 @@ export class Vitest {
    * Check if the project with a given name should be included.
    */
   matchesProjectFilter(name: string): boolean {
-    const projects = this._config?.project || this._options?.project
+    const projects = this._config?.project || this._cliOptions?.project
     // no filters applied, any project can be included
     if (!projects || !projects.length) {
       return true

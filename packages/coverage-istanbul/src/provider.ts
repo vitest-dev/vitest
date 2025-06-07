@@ -61,18 +61,26 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider<ResolvedCover
   }
 
   onFileTransform(sourceCode: string, id: string, pluginCtx: any): { code: string; map: any } | undefined {
-    if (!this.testExclude.shouldInstrument(id)) {
+    // Istanbul/babel cannot instrument CSS - e.g. Vue imports end up here.
+    // File extension itself is .vue, but it contains CSS.
+    // e.g. "Example.vue?vue&type=style&index=0&scoped=f7f04e08&lang.css"
+    if (id.endsWith('.css')) {
+      return
+    }
+
+    if (!this.testExclude.shouldInstrument(removeQueryParameters(id))) {
       return
     }
 
     const sourceMap = pluginCtx.getCombinedSourcemap()
     sourceMap.sources = sourceMap.sources.map(removeQueryParameters)
 
-    // Exclude SWC's decorators that are left in source maps
-    sourceCode = sourceCode.replaceAll(
-      '_ts_decorate',
-      '/* istanbul ignore next */_ts_decorate',
-    )
+    sourceCode = sourceCode
+      // Exclude SWC's decorators that are left in source maps
+      .replaceAll('_ts_decorate', '/* istanbul ignore next */_ts_decorate')
+
+      // Exclude in-source test's test cases
+      .replaceAll(/(if +\(import\.meta\.vitest\))/g, '/* istanbul ignore next */ $1')
 
     const code = this.instrumenter.instrumentSync(
       sourceCode,
@@ -199,7 +207,7 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider<ResolvedCover
       }
 
       // Make sure file is not served from cache so that instrumenter loads up requested file coverage
-      await transform(`${filename}?v=${cacheKey}`)
+      await transform(`${filename}?cache=${cacheKey}`)
       const lastCoverage = this.instrumenter.lastFileCoverage()
       coverageMap.addFileCoverage(lastCoverage)
 

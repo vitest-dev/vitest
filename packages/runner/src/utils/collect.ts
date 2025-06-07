@@ -1,6 +1,7 @@
 import type { File, Suite, TaskBase } from '../types/tasks'
 import { processError } from '@vitest/utils/error'
 import { relative } from 'pathe'
+import { setFileContext } from '../context'
 
 /**
  * If any tasks been marked as `only`, mark all other tasks as `skip`.
@@ -194,6 +195,7 @@ export function createFileTask(
     pool,
   }
   file.file = file
+  setFileContext(file, Object.create(null))
   return file
 }
 

@@ -35,6 +35,9 @@ page.extend({
     return new PlaywrightLocator(getByTitleSelector(title, options))
   },
 
+  _createLocator(selector: string) {
+    return new PlaywrightLocator(selector)
+  },
   elementLocator(element: Element) {
     return new PlaywrightLocator(
       selectorEngine.generateSelectorSimple(element),

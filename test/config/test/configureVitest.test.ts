@@ -30,7 +30,7 @@ test('can change global configuration', async () => {
 
 test('can change the project and the global configurations', async () => {
   const v = await vitest({}, {
-    workspace: [
+    projects: [
       {
         plugins: [
           {
@@ -59,7 +59,7 @@ test('plugin is not called if the project is filtered out', async () => {
   const { projects } = await vitest({
     project: 'project-2',
   }, {
-    workspace: [
+    projects: [
       {
         test: {
           name: 'project-1',
@@ -113,7 +113,7 @@ test('injected plugin is filtered by the --project filter', async () => {
   let newWorkspace: TestProject[] = []
   const { projects } = await vitest({
     project: 'project-1',
-    workspace: [
+    projects: [
       {
         test: {
           name: 'project-1',
@@ -143,7 +143,7 @@ test('injected plugin is not filtered by the --project filter when it\'s overrid
   let newWorkspace: TestProject[] = []
   const { projects } = await vitest({
     project: 'project-1',
-    workspace: [
+    projects: [
       {
         test: {
           name: 'project-1',
@@ -174,7 +174,7 @@ test('injected plugin is not filtered by the --project filter when it\'s overrid
 
 test('adding a plugin with existing name throws and error', async () => {
   await expect(() => vitest({
-    workspace: [
+    projects: [
       {
         test: {
           name: 'project-1',
@@ -194,10 +194,10 @@ test('adding a plugin with existing name throws and error', async () => {
       },
     ],
   }),
-  ).rejects.toThrowError('Project name "project-1" is not unique. All projects in a workspace should have unique names. Make sure your configuration is correct.')
+  ).rejects.toThrowError('Project name "project-1" is not unique. All projects should have unique names. Make sure your configuration is correct.')
 
   await expect(() => vitest({
-    workspace: [
+    projects: [
       {
         plugins: [
           {
@@ -219,10 +219,10 @@ test('adding a plugin with existing name throws and error', async () => {
       },
     ],
   }),
-  ).rejects.toThrowError('Project name "project-1" is not unique. All projects in a workspace should have unique names. Make sure your configuration is correct.')
+  ).rejects.toThrowError('Project name "project-1" is not unique. All projects should have unique names. Make sure your configuration is correct.')
 
   await expect(() => vitest({
-    workspace: [
+    projects: [
       {
         plugins: [
           {
@@ -246,5 +246,5 @@ test('adding a plugin with existing name throws and error', async () => {
       },
     ],
   }),
-  ).rejects.toThrowError('Project name "project-1" is not unique. All projects in a workspace should have unique names. Make sure your configuration is correct.')
+  ).rejects.toThrowError('Project name "project-1" is not unique. All projects should have unique names. Make sure your configuration is correct.')
 })

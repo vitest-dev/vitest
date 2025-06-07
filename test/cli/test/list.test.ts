@@ -7,6 +7,8 @@ test.each([
   ['--pool=forks'],
   ['--pool=vmForks'],
   ['--browser.enabled'],
+  ['--typecheck'],
+  ['--typecheck.only'],
 ])('correctly outputs all tests with args: "%s"', async (...args) => {
   const { stdout, exitCode } = await runVitestCli('list', '-r=./fixtures/list', ...args)
   expect(stdout).toMatchSnapshot()

@@ -1,12 +1,13 @@
-import type { File, TaskResultPack } from '@vitest/runner'
+import type { File, TaskEventPack, TaskResultPack, TestAnnotation } from '@vitest/runner'
 
 import type { IncomingMessage } from 'node:http'
 import type { ViteDevServer } from 'vite'
 import type { WebSocket } from 'ws'
 import type { Vitest } from '../node/core'
+import type { TestCase } from '../node/reporters/reported-tasks'
 import type { Reporter } from '../node/types/reporter'
 import type { SerializedTestSpecification } from '../runtime/types/utils'
-import type { Awaitable, ModuleGraphData, UserConsoleLog } from '../types/general'
+import type { Awaitable, LabelColor, ModuleGraphData, UserConsoleLog } from '../types/general'
 import type {
   TransformResultWithSource,
   WebSocketEvents,
@@ -89,6 +90,9 @@ export function setup(ctx: Vitest, _server?: ViteDevServer): void {
         },
         getResolvedProjectNames(): string[] {
           return ctx.projects.map(p => p.name)
+        },
+        getResolvedProjectLabels(): { name: string; color?: LabelColor }[] {
+          return ctx.projects.map(p => ({ name: p.name, color: p.color }))
         },
         async getTransformResult(projectName: string, id, browser = false) {
           const project = ctx.getProjectByName(projectName)
@@ -182,7 +186,17 @@ export class WebSocketReporter implements Reporter {
     })
   }
 
-  async onTaskUpdate(packs: TaskResultPack[]): Promise<void> {
+  async onTestCaseAnnotate(testCase: TestCase, annotation: TestAnnotation): Promise<void> {
+    if (this.clients.size === 0) {
+      return
+    }
+
+    this.clients.forEach((client) => {
+      client.onTestAnnotate?.(testCase.id, annotation)?.catch?.(noop)
+    })
+  }
+
+  async onTaskUpdate(packs: TaskResultPack[], events: TaskEventPack[]): Promise<void> {
     if (this.clients.size === 0) {
       return
     }
@@ -207,7 +221,7 @@ export class WebSocketReporter implements Reporter {
     })
 
     this.clients.forEach((client) => {
-      client.onTaskUpdate?.(packs)?.catch?.(noop)
+      client.onTaskUpdate?.(packs, events)?.catch?.(noop)
     })
   }
 

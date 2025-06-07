@@ -25,7 +25,19 @@ expect.extend({
 
 If you are using TypeScript, you can extend default `Assertion` interface in an ambient declaration file (e.g: `vitest.d.ts`) with the code below:
 
-```ts
+::: code-group
+```ts [<Version>3.2.0</Version>]
+import 'vitest'
+
+interface CustomMatchers<R = unknown> {
+  toBeFoo: () => R
+}
+
+declare module 'vitest' {
+  interface Matchers<T = any> extends CustomMatchers<T> {}
+}
+```
+```ts [<Version>3.0.0</Version>]
 import 'vitest'
 
 interface CustomMatchers<R = unknown> {
@@ -37,6 +49,11 @@ declare module 'vitest' {
   interface AsymmetricMatchersContaining extends CustomMatchers {}
 }
 ```
+:::
+
+::: tip
+Since Vitest 3.2, you can extend the `Matchers` interface to have type-safe assertions in `expect.extend`, `expect().*`, and `expect.*` methods at the same time. Previously, you had to define separate interfaces for each of them.
+:::
 
 ::: warning
 Don't forget to include the ambient declaration file in your `tsconfig.json`.
@@ -56,35 +73,45 @@ interface ExpectationResult {
 ```
 
 ::: warning
-If you create an asynchronous matcher, don't forget to `await` the result (`await expect('foo').toBeFoo()`) in the test itself.
+If you create an asynchronous matcher, don't forget to `await` the result (`await expect('foo').toBeFoo()`) in the test itself::
+
+```ts
+expect.extend({
+  async toBeAsyncAssertion() {
+    // ...
+  }
+})
+
+await expect().toBeAsyncAssertion()
+```
 :::
 
 The first argument inside a matcher's function is the received value (the one inside `expect(received)`). The rest are arguments passed directly to the matcher.
 
-Matcher function have access to `this` context with the following properties:
+Matcher function has access to `this` context with the following properties:
 
-- `isNot`
+### `isNot`
 
-  Returns true, if matcher was called on `not` (`expect(received).not.toBeFoo()`).
+Returns true, if matcher was called on `not` (`expect(received).not.toBeFoo()`).
 
-- `promise`
+### `promise`
 
-  If matcher was called on `resolved/rejected`, this value will contain the name of modifier. Otherwise, it will be an empty string.
+If matcher was called on `resolved/rejected`, this value will contain the name of modifier. Otherwise, it will be an empty string.
 
-- `equals`
+### `equals`
 
-  This is a utility function that allows you to compare two values. It will return `true` if values are equal, `false` otherwise. This function is used internally for almost every matcher. It supports objects with asymmetric matchers by default.
+This is a utility function that allows you to compare two values. It will return `true` if values are equal, `false` otherwise. This function is used internally for almost every matcher. It supports objects with asymmetric matchers by default.
 
-- `utils`
+### `utils`
 
-  This contains a set of utility functions that you can use to display messages.
+This contains a set of utility functions that you can use to display messages.
 
 `this` context also contains information about the current test. You can also get it by calling `expect.getState()`. The most useful properties are:
 
-- `currentTestName`
+### `currentTestName`
 
-  Full name of the current test (including describe block).
+Full name of the current test (including describe block).
 
-- `testPath`
+### `testPath`
 
-  Path to the current test.
+Path to the current test.

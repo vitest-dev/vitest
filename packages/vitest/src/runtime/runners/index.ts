@@ -68,6 +68,15 @@ export async function resolveTestRunner(
     return p
   }
 
+  // patch some methods, so custom runners don't need to call RPC
+  const originalOnTestAnnotate = testRunner.onTestAnnotate
+  testRunner.onTestAnnotate = async (test, annotation) => {
+    const p = rpc().onTaskAnnotate(test.id, annotation)
+    const overridenResult = await originalOnTestAnnotate?.call(testRunner, test, annotation)
+    const vitestResult = await p
+    return overridenResult || vitestResult
+  }
+
   const originalOnCollectStart = testRunner.onCollectStart
   testRunner.onCollectStart = async (file) => {
     await rpc().onQueued(file)
@@ -113,7 +122,7 @@ export async function resolveTestRunner(
 
       if (currentFailures >= config.bail) {
         rpc().onCancel('test-failure')
-        testRunner.onCancel?.('test-failure')
+        testRunner.cancel?.('test-failure')
       }
     }
     await originalOnAfterRunTask?.call(testRunner, test)
