@@ -5,7 +5,7 @@ import type { AnyCodec } from './codecs'
 import type { AnyComparator } from './comparators'
 import type { TypedArray } from './types'
 import { access, mkdir, readFile, writeFile } from 'node:fs/promises'
-import { dirname } from 'node:path'
+import { dirname } from 'pathe'
 import { asyncTimeout, resolveOptions, takeDecodedScreenshot } from './utils'
 
 export const screenshotMatcher: BrowserCommand<
