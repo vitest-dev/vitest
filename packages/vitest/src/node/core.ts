@@ -477,7 +477,7 @@ export class Vitest {
       : 'the root config file'
 
     this.logger.deprecate(
-      `The workspace file is deprecated and will be removed in the next major. Please, use the \`projects\` field in ${configFile} instead.`,
+      `The workspace file is deprecated and will be removed in the next major. Please, use the \`test.projects\` field in ${configFile} instead.`,
     )
 
     const workspaceModule = await this.import<{
