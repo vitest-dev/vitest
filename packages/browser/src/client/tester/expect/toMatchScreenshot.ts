@@ -92,6 +92,9 @@ export default async function toMatchScreenshot(
             result.actual
               ? `\nActual screenshot:\n  ${this.utils.RECEIVED_COLOR(result.actual)}`
               : null,
+            result.diff
+              ? this.utils.DIM_COLOR(`\nDiff screenshot:\n  ${result.diff}`)
+              : null,
           ]
             .filter(element => element !== null)
             .join('\n'),
