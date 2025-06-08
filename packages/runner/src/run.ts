@@ -17,7 +17,7 @@ import type {
   TestContext,
   WriteableTestContext,
 } from './types/tasks'
-import { shuffle } from '@vitest/utils'
+import { getSafeTimers, shuffle } from '@vitest/utils'
 import { processError } from '@vitest/utils/error'
 import { collectTests } from './collect'
 import { abortContextSignal, getFileContext } from './context'
@@ -32,6 +32,7 @@ import { hasFailed, hasTests } from './utils/tasks'
 
 const now = globalThis.performance ? globalThis.performance.now.bind(globalThis.performance) : Date.now
 const unixNow = Date.now
+const { clearTimeout, setTimeout } = getSafeTimers()
 
 function updateSuiteHookState(
   task: Task,
@@ -211,12 +212,21 @@ export async function finishSendTasksUpdate(runner: VitestRunner): Promise<void>
 
 function throttle<T extends (...args: any[]) => void>(fn: T, ms: number): T {
   let last = 0
-  return function (this: any, ...args: any[]) {
+  let pendingCall: ReturnType<typeof setTimeout> | undefined
+
+  return function call(this: any, ...args: any[]) {
     const now = unixNow()
     if (now - last > ms) {
       last = now
+
+      clearTimeout(pendingCall)
+      pendingCall = undefined
+
       return fn.apply(this, args)
     }
+
+    // Make sure fn is still called even if there are no further calls
+    pendingCall ??= setTimeout(() => call.bind(this)(...args), ms)
   } as any
 }
 
