@@ -65,6 +65,20 @@ describe('dom related activity', () => {
     expect(base64).toBeTypeOf('string')
   })
 
+  test('doesn\'t save base64', async () => {
+    const wrapper = createWrapper()
+    const div = createNode()
+    wrapper.appendChild(div)
+
+    const base64 = await page.screenshot({
+      element: wrapper,
+      save: false,
+    })
+    expect(base64).toBeTypeOf('string')
+    expect(base64).not.toContain('__screenshots__')
+    expect(base64).not.toContain('dom.test.ts')
+  })
+
   test('shadow dom screenshot', async () => {
     const wrapper = createWrapper()
     const div = createNode()

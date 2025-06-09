@@ -107,7 +107,7 @@ export class IframeOrchestrator {
 
     if (!this.iframes.has(ID_ALL)) {
       debug('preparing non-isolated iframe')
-      await this.prepareIframe(container, ID_ALL)
+      await this.prepareIframe(container, ID_ALL, options.startTime)
     }
 
     const config = getConfig()
@@ -140,7 +140,7 @@ export class IframeOrchestrator {
       this.iframes.delete(file)
     }
 
-    const iframe = await this.prepareIframe(container, file)
+    const iframe = await this.prepareIframe(container, file, options.startTime)
     await setIframeViewport(iframe, width, height)
     // running tests after the "prepare" event
     await sendEventToIframe({
@@ -157,7 +157,7 @@ export class IframeOrchestrator {
     })
   }
 
-  private async prepareIframe(container: HTMLDivElement, iframeId: string) {
+  private async prepareIframe(container: HTMLDivElement, iframeId: string, startTime: number) {
     const iframe = this.createTestIframe(iframeId)
     container.appendChild(iframe)
 
@@ -167,6 +167,7 @@ export class IframeOrchestrator {
         sendEventToIframe({
           event: 'prepare',
           iframeId,
+          startTime,
         }).then(resolve, reject)
       }
       iframe.onerror = (e) => {
@@ -306,9 +307,13 @@ async function setIframeViewport(
     await ui.setIframeViewport(width, height)
   }
   else if (getBrowserState().provider === 'webdriverio') {
-    iframe.style.width = `${width}px`
-    iframe.style.height = `${height}px`
     iframe.parentElement?.setAttribute('data-scale', '1')
+    await client.rpc.triggerCommand(
+      getBrowserState().sessionId,
+      '__vitest_viewport',
+      undefined,
+      [{ width, height }],
+    )
   }
   else {
     const scale = Math.min(

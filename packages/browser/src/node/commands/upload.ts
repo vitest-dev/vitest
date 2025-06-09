@@ -1,6 +1,6 @@
 import type { UserEventUploadOptions } from '@vitest/browser/context'
 import type { UserEventCommand } from './utils'
-import { dirname, resolve } from 'pathe'
+import { resolve } from 'pathe'
 import { PlaywrightBrowserProvider } from '../providers/playwright'
 import { WebdriverBrowserProvider } from '../providers/webdriver'
 
@@ -18,13 +18,13 @@ export const upload: UserEventCommand<(element: string, files: Array<string | {
   if (!testPath) {
     throw new Error(`Cannot upload files outside of a test`)
   }
-  const testDir = dirname(testPath)
+  const root = context.project.config.root
 
   if (context.provider instanceof PlaywrightBrowserProvider) {
     const { iframe } = context
     const playwrightFiles = files.map((file) => {
       if (typeof file === 'string') {
-        return resolve(testDir, file)
+        return resolve(root, file)
       }
       return {
         name: file.name,
@@ -44,7 +44,7 @@ export const upload: UserEventCommand<(element: string, files: Array<string | {
     const element = context.browser.$(selector)
 
     for (const file of files) {
-      const filepath = resolve(testDir, file as string)
+      const filepath = resolve(root, file as string)
       const remoteFilePath = await context.browser.uploadFile(filepath)
       await element.addValue(remoteFilePath)
     }

@@ -95,7 +95,7 @@ bun add -D vitest @vitest/browser webdriverio
 
 ## Configuration
 
-To activate browser mode in your Vitest configuration, you can use the `--browser=name` flag or set the `browser.enabled` field to `true` in your Vitest configuration file. Here is an example configuration using the browser field:
+To activate browser mode in your Vitest configuration, set the `browser.enabled` field to `true` in your Vitest configuration file. Here is an example configuration using the browser field:
 
 ```ts [vitest.config.ts]
 import { defineConfig } from 'vitest/config'
@@ -327,7 +327,7 @@ When you specify a browser name in the browser option, Vitest will try to run th
 To specify a browser using the CLI, use the `--browser` flag followed by the browser name, like this:
 
 ```sh
-npx vitest --browser=chrome
+npx vitest --browser=chromium
 ```
 
 Or you can provide browser options to CLI with dot notation:
@@ -335,6 +335,10 @@ Or you can provide browser options to CLI with dot notation:
 ```sh
 npx vitest --browser.headless
 ```
+
+::: warning
+Since Vitest 3.2, if you don't have the `browser` option in your config but specify the `--browser` flag, Vitest will fail because it can't assume that config is meant for the browser and not Node.js tests.
+:::
 
 By default, Vitest will automatically open the browser UI for development. Your tests will run inside an iframe in the center. You can configure the viewport by selecting the preferred dimensions, calling `page.viewport` inside the test, or setting default values in [the config](/config/#browser-viewport).
 
@@ -406,6 +410,7 @@ However, Vitest also provides packages to render components for several popular 
 Community packages are available for other frameworks:
 
 - [`vitest-browser-lit`](https://github.com/EskiMojo14/vitest-browser-lit) to render [lit](https://lit.dev) components
+- [`vitest-browser-preact`](https://github.com/JoviDeCroock/vitest-browser-preact) to render [preact](https://preactjs.com) components
 
 If your framework is not represented, feel free to create your own package - it is a simple wrapper around the framework renderer and `page.elementLocator` API. We will add a link to it on this page. Make sure it has a name starting with `vitest-browser-`.
 
@@ -496,13 +501,27 @@ test('greeting appears on click', async () => {
   await expect.element(greeting).toBeInTheDocument()
 })
 ```
+```tsx [preact]
+import { render } from 'vitest-browser-preact'
+import { createElement } from 'preact'
+import Greeting from '.Greeting'
+
+test('greeting appears on click', async () => {
+  const screen = render(<Greeting />)
+
+  const button = screen.getByRole('button')
+  await button.click()
+  const greeting = screen.getByText(/hello world/iu)
+
+  await expect.element(greeting).toBeInTheDocument()
+})
+```
 :::
 
 Vitest doesn't support all frameworks out of the box, but you can use external tools to run tests with these frameworks. We also encourage the community to create their own `vitest-browser` wrappers - if you have one, feel free to add it to the examples above.
 
 For unsupported frameworks, we recommend using `testing-library` packages:
 
-- [`@testing-library/preact`](https://testing-library.com/docs/preact-testing-library/intro) to render [preact](https://preactjs.com) components
 - [`@solidjs/testing-library`](https://testing-library.com/docs/solid-testing-library/intro) to render [solid](https://www.solidjs.com) components
 - [`@marko/testing-library`](https://testing-library.com/docs/marko-testing-library/intro) to render [marko](https://markojs.com) components
 
@@ -513,38 +532,8 @@ You can also see more examples in [`browser-examples`](https://github.com/vitest
 :::
 
 ::: code-group
-```tsx [preact]
-// based on @testing-library/preact example
-// https://testing-library.com/docs/preact-testing-library/example
-
-import { h } from 'preact'
-import { page } from '@vitest/browser/context'
-import { render } from '@testing-library/preact'
-
-import HiddenMessage from '../hidden-message'
-
-test('shows the children when the checkbox is checked', async () => {
-  const testMessage = 'Test Message'
-
-  const { baseElement } = render(
-    <HiddenMessage>{testMessage}</HiddenMessage>,
-  )
-
-  const screen = page.elementLocator(baseElement)
-
-  // .query() will return the element or null if it cannot be found.
-  // .element() will return the element or throw an error if it cannot be found.
-  expect(screen.getByText(testMessage).query()).not.toBeInTheDocument()
-
-  // The queries can accept a regex to make your selectors more
-  // resilient to content tweaks and changes.
-  await screen.getByLabelText(/show/i).click()
-
-  await expect.element(screen.getByText(testMessage)).toBeInTheDocument()
-})
-```
 ```tsx [solid]
-// baed on @testing-library/solid API
+// based on @testing-library/solid API
 // https://testing-library.com/docs/solid-testing-library/api
 
 import { render } from '@testing-library/solid'
@@ -571,7 +560,7 @@ it('uses params', async () => {
 })
 ```
 ```ts [marko]
-// baed on @testing-library/marko API
+// based on @testing-library/marko API
 // https://testing-library.com/docs/marko-testing-library/api
 
 import { render, screen } from '@marko/testing-library'

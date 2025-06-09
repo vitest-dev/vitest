@@ -148,6 +148,7 @@ export function createPool(ctx: Vitest): ProcessPool {
       }
     }
 
+    const poolConcurrentPromises = new Map<string, Promise<ProcessPool>>()
     const customPools = new Map<string, ProcessPool>()
     async function resolveCustomPool(filepath: string) {
       if (customPools.has(filepath)) {
@@ -178,26 +179,44 @@ export function createPool(ctx: Vitest): ProcessPool {
       return poolInstance as ProcessPool
     }
 
-    const filesByPool: Record<LocalPool, TestSpecification[]> = {
-      forks: [],
-      threads: [],
-      vmThreads: [],
-      vmForks: [],
-      typescript: [],
+    function getConcurrentPool(pool: string, fn: () => Promise<ProcessPool>) {
+      if (poolConcurrentPromises.has(pool)) {
+        return poolConcurrentPromises.get(pool)!
+      }
+      const promise = fn().finally(() => {
+        poolConcurrentPromises.delete(pool)
+      })
+      poolConcurrentPromises.set(pool, promise)
+      return promise
     }
+
+    function getCustomPool(pool: string) {
+      return getConcurrentPool(pool, () => resolveCustomPool(pool))
+    }
+
+    function getBrowserPool() {
+      return getConcurrentPool('browser', async () => {
+        const { createBrowserPool } = await import('@vitest/browser')
+        return createBrowserPool(ctx)
+      })
+    }
+
+    const groupedSpecifications: Record<string, TestSpecification[]> = {}
+    const groups = new Set<number>()
 
     const factories: Record<LocalPool, () => ProcessPool> = {
       vmThreads: () => createVmThreadsPool(ctx, options),
+      vmForks: () => createVmForksPool(ctx, options),
       threads: () => createThreadsPool(ctx, options),
       forks: () => createForksPool(ctx, options),
-      vmForks: () => createVmForksPool(ctx, options),
       typescript: () => createTypecheckPool(ctx),
     }
 
     for (const spec of files) {
-      const { pool } = spec[2]
-      filesByPool[pool] ??= []
-      filesByPool[pool].push(spec)
+      const group = spec[0].config.sequence.groupOrder ?? 0
+      groups.add(group)
+      groupedSpecifications[group] ??= []
+      groupedSpecifications[group].push(spec)
     }
 
     const Sequencer = ctx.config.sequence.sequencer
@@ -210,35 +229,55 @@ export function createPool(ctx: Vitest): ProcessPool {
       return sequencer.sort(specs)
     }
 
-    await Promise.all(
-      Object.entries(filesByPool).map(async (entry) => {
-        const [pool, files] = entry as [Pool, TestSpecification[]]
+    const sortedGroups = Array.from(groups).sort()
+    for (const group of sortedGroups) {
+      const specifications = groupedSpecifications[group]
 
-        if (!files.length) {
-          return null
-        }
+      if (!specifications?.length) {
+        continue
+      }
 
-        const specs = await sortSpecs(files)
+      const filesByPool: Record<LocalPool, TestSpecification[]> = {
+        forks: [],
+        threads: [],
+        vmThreads: [],
+        vmForks: [],
+        typescript: [],
+      }
 
-        if (pool in factories) {
-          const factory = factories[pool]
-          pools[pool] ??= factory()
-          return pools[pool]![method](specs, invalidate)
-        }
+      specifications.forEach((specification) => {
+        const pool = specification[2].pool
+        filesByPool[pool] ??= []
+        filesByPool[pool].push(specification)
+      })
 
-        if (pool === 'browser') {
-          pools[pool] ??= await (async () => {
-            const { createBrowserPool } = await import('@vitest/browser')
-            return createBrowserPool(ctx)
-          })()
-          return pools[pool]![method](specs, invalidate)
-        }
+      await Promise.all(
+        Object.entries(filesByPool).map(async (entry) => {
+          const [pool, files] = entry as [Pool, TestSpecification[]]
 
-        const poolHandler = await resolveCustomPool(pool)
-        pools[poolHandler.name] ??= poolHandler
-        return poolHandler[method](specs, invalidate)
-      }),
-    )
+          if (!files.length) {
+            return null
+          }
+
+          const specs = await sortSpecs(files)
+
+          if (pool in factories) {
+            const factory = factories[pool]
+            pools[pool] ??= factory()
+            return pools[pool]![method](specs, invalidate)
+          }
+
+          if (pool === 'browser') {
+            pools.browser ??= await getBrowserPool()
+            return pools.browser[method](specs, invalidate)
+          }
+
+          const poolHandler = await getCustomPool(pool)
+          pools[poolHandler.name] ??= poolHandler
+          return poolHandler[method](specs, invalidate)
+        }),
+      )
+    }
   }
 
   return {

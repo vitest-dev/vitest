@@ -66,7 +66,7 @@ test.describe('html report', () => {
     await page.goto(pageUrl)
 
     // dashboard
-    await expect(page.locator('[aria-labelledby=tests]')).toContainText('9 Pass 1 Fail 10 Total')
+    await expect(page.locator('[aria-labelledby=tests]')).toContainText('13 Pass 1 Fail 14 Total')
 
     // unhandled errors
     await expect(page.getByTestId('unhandled-errors')).toContainText(
@@ -106,5 +106,88 @@ test.describe('html report', () => {
     await sample.hover()
     await sample.getByTestId('btn-open-details').click({ force: true })
     await expect(page.getByTestId('diff')).toContainText('- Expected + Received + <style>* {border: 2px solid green};</style>')
+  })
+
+  test('annotations in the report tab', async ({ page }) => {
+    await page.goto(pageUrl)
+
+    await test.step('annotated test', async () => {
+      const item = page.getByLabel('annotated test')
+      await item.click({ force: true })
+      await page.getByTestId('btn-report').click({ force: true })
+
+      const annotations = page.getByRole('note')
+      await expect(annotations).toHaveCount(2)
+
+      await expect(annotations.first()).toContainText('hello world')
+      await expect(annotations.first()).toContainText('notice')
+      await expect(annotations.first()).toContainText('fixtures/annotated.test.ts:4:9')
+
+      await expect(annotations.last()).toContainText('second annotation')
+      await expect(annotations.last()).toContainText('notice')
+      await expect(annotations.last()).toContainText('fixtures/annotated.test.ts:5:9')
+    })
+
+    await test.step('annotated typed test', async () => {
+      const item = page.getByLabel('annotated typed test')
+      await item.click({ force: true })
+      await page.getByTestId('btn-report').click({ force: true })
+
+      const annotation = page.getByRole('note')
+      await expect(annotation).toHaveCount(1)
+
+      await expect(annotation).toContainText('beware!')
+      await expect(annotation).toContainText('warning')
+      await expect(annotation).toContainText('fixtures/annotated.test.ts:9:9')
+    })
+
+    await test.step('annotated file test', async () => {
+      const item = page.getByLabel('annotated file test')
+      await item.click({ force: true })
+      await page.getByTestId('btn-report').click({ force: true })
+
+      const annotation = page.getByRole('note')
+      await expect(annotation).toHaveCount(1)
+
+      await expect(annotation).toContainText('file annotation')
+      await expect(annotation).toContainText('notice')
+      await expect(annotation).toContainText('fixtures/annotated.test.ts:13:9')
+      await expect(annotation.getByRole('link')).toHaveAttribute('href', /data\/\w+/)
+    })
+
+    await test.step('annotated image test', async () => {
+      const item = page.getByLabel('annotated image test')
+      await item.click({ force: true })
+      await page.getByTestId('btn-report').click({ force: true })
+
+      const annotation = page.getByRole('note')
+      await expect(annotation).toHaveCount(1)
+
+      await expect(annotation).toContainText('image annotation')
+      await expect(annotation).toContainText('notice')
+      await expect(annotation).toContainText('fixtures/annotated.test.ts:19:9')
+      await expect(annotation.getByRole('link')).toHaveAttribute('href', /data\/\w+/)
+      await expect(annotation.getByRole('img')).toHaveAttribute('src', /data\/\w+/)
+    })
+  })
+
+  test('annotations', async ({ page }) => {
+    await page.goto(pageUrl)
+    const item = page.getByLabel('fixtures/annotated.test.ts')
+    await item.hover()
+    await item.getByTestId('btn-open-details').click({ force: true })
+    await page.getByTestId('btn-code').click({ force: true })
+
+    const annotations = page.getByRole('note')
+    await expect(annotations).toHaveCount(5)
+
+    await expect(annotations.first()).toHaveText('notice: hello world')
+    await expect(annotations.nth(1)).toHaveText('notice: second annotation')
+    await expect(annotations.nth(2)).toHaveText('warning: beware!')
+    await expect(annotations.nth(3)).toHaveText(/notice: file annotation/)
+    await expect(annotations.nth(4)).toHaveText('notice: image annotation')
+
+    await expect(annotations.last().getByRole('link')).toHaveAttribute('href', /data\/\w+/)
+    await expect(annotations.nth(3).getByRole('link')).toHaveAttribute('href', /data\/\w+/)
   })
 })

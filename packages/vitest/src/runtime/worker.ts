@@ -5,6 +5,7 @@ import { createStackString, parseStacktrace } from '@vitest/utils/source-map'
 import { workerId as poolId } from 'tinypool'
 import { ModuleCacheMap } from 'vite-node/client'
 import { loadEnvironment } from '../integrations/env/loader'
+import { addCleanupListener, cleanup as cleanupWorker } from './cleanup'
 import { setupInspect } from './inspector'
 import { createRuntimeRpc, rpcDone } from './rpc'
 import { isChildProcess, setProcessTitle } from './utils'
@@ -91,6 +92,7 @@ async function execute(method: 'run' | 'collect', ctx: ContextRPC) {
         prepare: prepareStart,
       },
       rpc,
+      onCleanup: listener => addCleanupListener(listener),
       providedContext: ctx.providedContext,
       onFilterStackTrace(stack) {
         return createStackString(parseStacktrace(stack))
@@ -119,4 +121,8 @@ export function run(ctx: ContextRPC): Promise<void> {
 
 export function collect(ctx: ContextRPC): Promise<void> {
   return execute('collect', ctx)
+}
+
+export async function teardown(): Promise<void> {
+  return cleanupWorker()
 }

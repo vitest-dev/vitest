@@ -90,12 +90,7 @@ AssertionError: expected { hello: &apos;x&apos; } to deeply equal { hello: &apos
         </testcase>
         <testcase classname="error.test.ts" name="no name object" time="...">
             <failure>
-{
-  noName: &apos;hi&apos;,
-  expected: &apos;undefined&apos;,
-  actual: &apos;undefined&apos;,
-  stacks: []
-}
+{ noName: &apos;hi&apos;, stacks: [] }
 ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
 Serialized Error: { noName: &apos;hi&apos; }
             </failure>
@@ -112,13 +107,7 @@ Unknown Error: 1234
         </testcase>
         <testcase classname="error.test.ts" name="number name object" time="...">
             <failure type="1234">
-{
-  name: 1234,
-  nameStr: &apos;1234&apos;,
-  expected: &apos;undefined&apos;,
-  actual: &apos;undefined&apos;,
-  stacks: []
-}
+{ name: 1234, stacks: [] }
             </failure>
         </testcase>
         <testcase classname="error.test.ts" name="xml" time="...">

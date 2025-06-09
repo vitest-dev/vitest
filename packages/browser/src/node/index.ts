@@ -69,6 +69,7 @@ export async function createBrowserServer(
       hmr: false,
       watch: null,
     },
+    cacheDir: project.vite.config.cacheDir,
     plugins: [
       ...prePlugins,
       ...(project.options?.plugins || []),

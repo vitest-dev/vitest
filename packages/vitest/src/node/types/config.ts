@@ -65,6 +65,15 @@ interface SequenceOptions {
    */
   sequencer?: TestSequencerConstructor
   /**
+   * Controls the order in which this project runs its tests when using multiple [projects](/guide/projects).
+   *
+   * - Projects with the same group order number will run together, and groups are run from lowest to highest.
+   * - If you don’t set this option, all projects run in parallel.
+   * - If several projects use the same group order, they will run at the same time.
+   * @default 0
+   */
+  groupOrder?: number
+  /**
    * Should files and tests run in random order.
    * @default false
    */
@@ -678,7 +687,7 @@ export interface InlineConfig {
 
   /**
    * Options for configuring cache policy.
-   * @default { dir: 'node_modules/.vite/vitest' }
+   * @default { dir: 'node_modules/.vite/vitest/{project-hash}' }
    */
   cache?:
     | false
@@ -856,6 +865,13 @@ export interface InlineConfig {
    * @default false
    */
   includeTaskLocation?: boolean
+
+  /**
+   * Directory path for storing attachments created by `context.annotate`
+   *
+   * @default '.vitest-attachments'
+   */
+  attachmentsDir?: string
 }
 
 export interface TypecheckConfig {
@@ -898,6 +914,11 @@ export interface TypecheckConfig {
    * Path to tsconfig, relative to the project root.
    */
   tsconfig?: string
+  /**
+   * Minimum time in milliseconds it takes to spawn the typechecker.
+   * @default 10_000
+   */
+  spawnTimeout?: number
 }
 
 export interface UserConfig extends InlineConfig {
@@ -1066,6 +1087,7 @@ export interface ResolvedConfig
     shuffle?: boolean
     concurrent?: boolean
     seed: number
+    groupOrder: number
   }
 
   typecheck: Omit<TypecheckConfig, 'enabled'> & {
