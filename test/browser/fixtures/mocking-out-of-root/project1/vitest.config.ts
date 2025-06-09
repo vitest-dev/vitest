@@ -14,7 +14,6 @@ export default defineConfig({
       screenshotFailures: false,
       headless: true,
       instances,
-      headless: true,
     },
   },
 })
