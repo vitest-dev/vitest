@@ -177,10 +177,11 @@ function mapSourcePosition(position: OriginalMapping) {
   if (!sourceMap) {
     // Call the (overridable) retrieveSourceMap function to get the source map.
     const urlAndMap = retrieveSourceMap(position.source)
-    if (urlAndMap && urlAndMap.map) {
+    const map = urlAndMap && urlAndMap.map
+    if (map && !(typeof map === 'object' && 'mappings' in map && map.mappings === '')) {
       sourceMap = sourceMapCache[position.source] = {
         url: urlAndMap.url,
-        map: new TraceMap(urlAndMap.map),
+        map: new TraceMap(map),
       }
 
       // Load all sources stored inline with the source map into the file cache
