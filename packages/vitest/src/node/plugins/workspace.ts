@@ -153,6 +153,7 @@ export function WorkspaceVitestPlugin(
               resolve: resolveOptions,
             },
           },
+          test: {},
         }
 
         ;(config.test as ResolvedConfig).defines = defines
