@@ -102,6 +102,9 @@ catalogs:
     std-env:
       specifier: ^3.9.0
       version: 3.9.0
+    strip-literal:
+      specifier: ^3.0.0
+      version: 3.0.0
     test-exclude:
       specifier: ^7.0.1
       version: 7.0.1
@@ -738,6 +741,9 @@ importers:
       pathe:
         specifier: 'catalog:'
         version: 2.0.3
+      strip-literal:
+        specifier: 'catalog:'
+        version: 3.0.0
 
   packages/snapshot:
     dependencies:
@@ -1101,7 +1107,7 @@ importers:
         specifier: ^2.4.2
         version: 2.4.2
       strip-literal:
-        specifier: ^3.0.0
+        specifier: 'catalog:'
         version: 3.0.0
       ws:
         specifier: 'catalog:'

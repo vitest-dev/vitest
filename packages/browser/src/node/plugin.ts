@@ -241,6 +241,7 @@ export default (parentServer: ParentBrowserProject, base = '/'): Plugin[] => {
           'vitest > @vitest/snapshot > magic-string',
           'vitest > chai',
           'vitest > chai > loupe',
+          'vitest > strip-literal',
           'vitest > @vitest/utils > loupe',
           '@vitest/browser > @testing-library/user-event',
           '@vitest/browser > @testing-library/dom',

@@ -37,6 +37,7 @@ catalog:
   pathe: ^2.0.3
   sirv: ^3.0.1
   std-env: ^3.9.0
+  strip-literal: ^3.0.0
   test-exclude: ^7.0.1
   tinyglobby: ^0.2.14
   tinyrainbow: ^2.0.0
