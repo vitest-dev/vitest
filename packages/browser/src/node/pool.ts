@@ -248,9 +248,10 @@ class BrowserPool {
       this.project,
       this,
     )
-    const url = new URL('/', this.options.origin)
+    const browser = this.project.browser!
+    const url = new URL('/__vitest_test__/', this.options.origin)
     url.searchParams.set('sessionId', sessionId)
-    const pagePromise = this.project.browser!.provider.openPage(
+    const pagePromise = browser.provider.openPage(
       sessionId,
       url.toString(),
     )
