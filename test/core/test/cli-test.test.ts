@@ -381,6 +381,15 @@ test('public parseCLI works correctly', () => {
       'color': true,
     },
   })
+  expect(parseCLI('vitest run --watch')).toEqual({
+    filter: [],
+    options: {
+      'watch': true,
+      'w': true,
+      '--': [],
+      'color': true,
+    },
+  })
   expect(parseCLI('vitest related ./some-files.js')).toEqual({
     filter: [],
     options: {
