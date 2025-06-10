@@ -190,7 +190,7 @@ async function runCli(command: 'vitest' | 'vite-node', _options?: CliOptions | s
   }
 
   // Manually stop the processes so that each test don't have to do this themselves
-  afterEach(async () => {
+  onTestFinished(async () => {
     if (subprocess.exitCode === null) {
       subprocess.kill()
     }
@@ -206,7 +206,7 @@ async function runCli(command: 'vitest' | 'vite-node', _options?: CliOptions | s
     return output()
   }
 
-  if (args[0] !== 'list' && args.includes('--watch')) {
+  if (args[0] !== 'list' && (args.includes('--watch') || args[0] === 'watch')) {
     if (command === 'vitest') {
       // Wait for initial test run to complete
       await cli.waitForStdout('Waiting for file changes')

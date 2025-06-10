@@ -130,7 +130,7 @@ function printErrorInner(
       : stacks.find((stack) => {
           try {
             return (
-              project.server
+              project._vite
               && project.getModuleById(stack.file)
               && existsSync(stack.file)
             )

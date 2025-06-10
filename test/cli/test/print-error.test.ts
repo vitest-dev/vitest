@@ -41,3 +41,19 @@ CustomError: custom error
 Serialized Error: { stack: [ 'custom stack 1', 'custom stack 2' ] }
     `.trim())
 })
+
+test('prints buffer and UintArray', async () => {
+  const { stderr } = await runInlineTests({
+    'basic.test.ts': `
+    test('failed test', () => {
+      throw {
+        buffer: Buffer.from([1, 2, 3]),
+        uintarray: Uint8Array.from([1, 2, 3]),
+      }
+    })
+    `,
+  }, { globals: true })
+
+  expect(stderr).toContain(`buffer: '<Buffer(3) ...>'`)
+  expect(stderr).toContain(`uintarray: '<Uint8Array(3) ...>'`)
+})
