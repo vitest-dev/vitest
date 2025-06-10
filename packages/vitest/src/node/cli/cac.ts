@@ -239,7 +239,7 @@ export function parseCLI(argv: string | string[], config: CliParseOptions = {}):
   if (arrayArgs[2] === 'watch' || arrayArgs[2] === 'dev') {
     options.watch = true
   }
-  if (arrayArgs[2] === 'run') {
+  if (arrayArgs[2] === 'run' && !options.watch) {
     options.run = true
   }
   if (arrayArgs[2] === 'related') {
@@ -265,7 +265,9 @@ async function watch(cliFilters: string[], options: CliOptions): Promise<void> {
 }
 
 async function run(cliFilters: string[], options: CliOptions): Promise<void> {
-  options.run = true
+  // "vitest run --watch" should still be watch mode
+  options.run = !options.watch
+
   await start('test', cliFilters, options)
 }
 
