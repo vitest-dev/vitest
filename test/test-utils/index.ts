@@ -363,8 +363,10 @@ export async function runInlineTests(
   const root = resolve(process.cwd(), `vitest-test-${crypto.randomUUID()}`)
   const fs = useFS(root, structure)
   const vitest = await runVitest({
-    root,
-    ...cliOptions,
+    cliOptions: {
+      root,
+      ...cliOptions,
+    },
     viteConfig: viteOverrides,
   }, [], options)
   return {

@@ -44,6 +44,7 @@ describe('API', () => {
         'basic.test.ts': annotationTest,
         'test-3.js': '',
         'test-4.js': '',
+        'vitest.config.js': { test: options },
       },
       {
         includeTaskLocation: true,
@@ -77,10 +78,6 @@ describe('API', () => {
             },
           },
         ],
-      },
-      {},
-      {
-        test: options,
       },
     )
 
