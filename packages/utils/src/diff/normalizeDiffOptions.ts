@@ -44,9 +44,7 @@ function getDefaultOptions(): DiffOptionsNormalized {
 function getCompareKeys(compareKeys?: CompareKeys): CompareKeys {
   return compareKeys && typeof compareKeys === 'function'
     ? compareKeys
-    : compareKeys === null
-      ? null
-      : undefined
+    : undefined
 }
 
 function getContextLines(contextLines?: number): number {
