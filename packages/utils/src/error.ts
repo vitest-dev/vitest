@@ -60,6 +60,12 @@ export function serializeValue(val: any, seen: WeakMap<WeakKey, any> = new WeakM
   if (typeof val !== 'object') {
     return val
   }
+  if (typeof Buffer !== 'undefined' && val instanceof Buffer) {
+    return `<Buffer(${val.length}) ...>`
+  }
+  if (typeof Uint8Array !== 'undefined' && val instanceof Uint8Array) {
+    return `<Uint8Array(${val.length}) ...>`
+  }
   // cannot serialize immutables as immutables
   if (isImmutable(val)) {
     return serializeValue(val.toJSON(), seen)
