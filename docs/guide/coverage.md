@@ -37,7 +37,7 @@ npm i -D @vitest/coverage-istanbul
 ```
 :::
 
-## V8 provider
+## V8 Provider
 
 ::: info
 The description of V8 coverage below is Vitest specific and does not apply to other test runners.
@@ -305,7 +305,7 @@ if (condition) {
 
 To see all configurable options for coverage, see the [coverage Config Reference](https://vitest.dev/config/#coverage).
 
-## Coverage performance
+## Coverage Performance
 
 If code coverage generation is slow on your project, see [Profiling Test Performance | Code coverage](/guide/profiling-test-performance.html#code-coverage).
 
