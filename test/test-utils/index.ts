@@ -78,7 +78,7 @@ export async function runVitest(
   let ctx: Vitest | undefined
   let thrown = false
 
-  const { reporters, cliOptions, viteConfig = {}, ...rest } = config
+  const { reporters, root, watch, cliOptions, viteConfig = {}, ...rest } = config
 
   if (viteConfig.test) {
     throw new Error(`Don't pass down "viteConfig" with "test" property. Use the rest of the first argument.`)
@@ -87,14 +87,14 @@ export async function runVitest(
   viteConfig.test = rest
 
   try {
-    viteConfig.test = rest
-
     ctx = await startVitest(runnerOptions.mode || 'test', cliFilters, {
+      root,
+
       // Test cases are already run with multiple forks/threads
       maxWorkers: 1,
       minWorkers: 1,
 
-      watch: false,
+      watch: watch ?? false,
       // "none" can be used to disable passing "reporter" option so that default value is used (it's not same as reporters: ["default"])
       ...(reporters === 'none' ? {} : reporters ? { reporters } : { reporters: ['verbose'] }),
       ...cliOptions,
