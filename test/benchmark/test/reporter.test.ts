@@ -4,7 +4,7 @@ import { runVitest } from '../../test-utils'
 
 it('summary', async () => {
   const root = pathe.join(import.meta.dirname, '../fixtures/reporter')
-  const result = await runVitest({ root }, ['summary.bench.ts'], 'benchmark')
+  const result = await runVitest({ root }, ['summary.bench.ts'], { mode: 'benchmark' })
   expect(result.stderr).toBe('')
   expect(result.stdout).not.toContain('NaNx')
   expect(result.stdout.split('BENCH  Summary')[1].replaceAll(/[0-9.]+x/g, '(?)')).toMatchSnapshot()
@@ -12,7 +12,7 @@ it('summary', async () => {
 
 it('non-tty', async () => {
   const root = pathe.join(import.meta.dirname, '../fixtures/basic')
-  const result = await runVitest({ root }, ['base.bench.ts'], 'benchmark')
+  const result = await runVitest({ root }, ['base.bench.ts'], { mode: 'benchmark' })
   const lines = result.stdout.split('\n').slice(4).slice(0, 11)
   const expected = `\
  ✓ base.bench.ts > sort
@@ -40,7 +40,7 @@ it.for([true, false])('includeSamples %s', async (includeSamples) => {
       benchmark: { includeSamples },
     },
     ['summary.bench.ts'],
-    'benchmark',
+    { mode: 'benchmark' },
   )
   assert(result.ctx)
   const allSamples = [...result.ctx.state.idMap.values()]

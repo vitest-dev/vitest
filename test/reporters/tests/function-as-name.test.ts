@@ -17,7 +17,7 @@ test('should print function name', async () => {
 
 test('should print function name in benchmark', async () => {
   const filename = resolve('./fixtures/function-as-name.bench.ts')
-  const { stdout } = await runVitest({ root: './fixtures' }, [filename], 'benchmark')
+  const { stdout } = await runVitest({ root: './fixtures' }, [filename], { mode: 'benchmark' })
 
   expect(stdout).toBeTruthy()
   expect(stdout).toContain('Bar')

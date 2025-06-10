@@ -2,7 +2,7 @@ import type { Options } from 'tinyexec'
 import type { UserConfig as ViteUserConfig } from 'vite'
 import type { WorkerGlobalState } from 'vitest'
 import type { WorkspaceProjectConfiguration } from 'vitest/config'
-import type { TestModule, UserConfig, Vitest, VitestRunMode } from 'vitest/node'
+import type { TestModule, UserConfig, Vitest } from 'vitest/node'
 import { webcrypto as crypto } from 'node:crypto'
 import fs from 'node:fs'
 import { Readable, Writable } from 'node:stream'
@@ -26,13 +26,17 @@ export interface VitestRunnerCLIOptions {
   fails?: boolean
   preserveAnsi?: boolean
   tty?: boolean
+  mode?: 'test' | 'benchmark'
+}
+
+export interface RunVitestConfig extends UserConfig {
+  viteConfig?: ViteUserConfig
+  cliOptions?: UserConfig
 }
 
 export async function runVitest(
-  cliOptions: UserConfig,
+  config: RunVitestConfig,
   cliFilters: string[] = [],
-  mode: VitestRunMode = 'test',
-  viteOverrides: ViteUserConfig = {},
   runnerOptions: VitestRunnerCLIOptions = {},
 ) {
   // Reset possible previous runs
@@ -73,10 +77,19 @@ export async function runVitest(
 
   let ctx: Vitest | undefined
   let thrown = false
-  try {
-    const { reporters, ...rest } = cliOptions
 
-    ctx = await startVitest(mode, cliFilters, {
+  const { reporters, cliOptions, viteConfig = {}, ...rest } = config
+
+  if (viteConfig.test) {
+    throw new Error(`Don't pass down "viteConfig" with "test" property. Use the rest of the first argument.`)
+  }
+
+  viteConfig.test = rest
+
+  try {
+    viteConfig.test = rest
+
+    ctx = await startVitest(runnerOptions.mode || 'test', cliFilters, {
       // Test cases are already run with multiple forks/threads
       maxWorkers: 1,
       minWorkers: 1,
@@ -84,13 +97,13 @@ export async function runVitest(
       watch: false,
       // "none" can be used to disable passing "reporter" option so that default value is used (it's not same as reporters: ["default"])
       ...(reporters === 'none' ? {} : reporters ? { reporters } : { reporters: ['verbose'] }),
-      ...rest,
+      ...cliOptions,
       env: {
         NO_COLOR: 'true',
-        ...rest.env,
+        ...cliOptions?.env,
       },
     }, {
-      ...viteOverrides,
+      ...viteConfig,
       server: {
         // we never need a websocket connection for the root config because it doesn't connect to the browser
         // browser mode uses a separate config that doesn't inherit CLI overrides
@@ -101,8 +114,9 @@ export async function runVitest(
           // https://github.com/vitejs/vite/blob/b723a753ced0667470e72b4853ecda27b17f546a/playground/vitestSetup.ts#L211
           usePolling: true,
           interval: 100,
+          ...viteConfig.server?.watch,
         },
-        ...viteOverrides?.server,
+        ...viteConfig?.server,
       },
     }, {
       stdin,
@@ -342,7 +356,7 @@ export function useFS<T extends TestFsStructure>(root: string, structure: T) {
 
 export async function runInlineTests(
   structure: TestFsStructure,
-  config?: UserConfig,
+  cliOptions?: UserConfig,
   options?: VitestRunnerCLIOptions,
   viteOverrides: ViteUserConfig = {},
 ) {
@@ -350,8 +364,9 @@ export async function runInlineTests(
   const fs = useFS(root, structure)
   const vitest = await runVitest({
     root,
-    ...config,
-  }, [], 'test', viteOverrides, options)
+    ...cliOptions,
+    viteConfig: viteOverrides,
+  }, [], options)
   return {
     fs,
     root,
