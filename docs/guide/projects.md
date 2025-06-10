@@ -115,7 +115,7 @@ export default defineProject({
 })
 ```
 
-## Running tests
+## Running Tests
 
 To run tests, define a script in your root `package.json`:
 
