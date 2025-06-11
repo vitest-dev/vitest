@@ -197,43 +197,43 @@ describe('.toMatchScreenshot', () => {
           @keyframes pong {
             0% {
               --blocks: 0;
-              background-color: oklch(84.1% 0.238 128.85);
+              background-color: oklch(0% 0 0);
             }
             11.11% {
               --blocks: 1;
-              background-color: oklch(71.2% 0.194 13.428);
+              background-color: oklch(100% 0 0);
             }
             22.22% {
               --blocks: 2;
-              background-color: oklch(84.1% 0.238 128.85);
+              background-color: oklch(0% 0 0);
             }
             33.33% {
               --blocks: 3;
-              background-color: oklch(71.2% 0.194 13.428);
+              background-color: oklch(100% 0 0);
             }
             44.44% {
               --blocks: 4;
-              background-color: oklch(84.1% 0.238 128.85);
+              background-color: oklch(0% 0 0);
             }
             55.55% {
               --blocks: 5;
-              background-color: oklch(71.2% 0.194 13.428);
+              background-color: oklch(100% 0 0);
             }
             66.66% {
               --blocks: 6;
-              background-color: oklch(84.1% 0.238 128.85);
+              background-color: oklch(0% 0 0);
             }
             77.77% {
               --blocks: 7;
-              background-color: oklch(71.2% 0.194 13.428);
+              background-color: oklch(100% 0 0);
             }
             88.88% {
               --blocks: 8;
-              background-color: oklch(84.1% 0.238 128.85);
+              background-color: oklch(0% 0 0);
             }
             100% {
               --blocks: 9;
-              background-color: oklch(71.2% 0.194 13.428);
+              background-color: oklch(100% 0 0);
             }
           }
         </style>
@@ -244,7 +244,7 @@ describe('.toMatchScreenshot', () => {
       try {
         await expect(queryByTestId(dataTestId)).toMatchScreenshot(filename, {
           screenshotOptions: { animations: 'allow' },
-          timeout: 1_000,
+          timeout: 1,
         })
       } catch (error) {
         errorMessage = error.message
@@ -261,7 +261,7 @@ describe('.toMatchScreenshot', () => {
       expect(errorMessage).toMatchInlineSnapshot(`
         expect(element).toMatchScreenshot()
 
-        Could not capture a stable screenshot within 1000ms.
+        Could not capture a stable screenshot within 1ms.
       `)
     },
   )
