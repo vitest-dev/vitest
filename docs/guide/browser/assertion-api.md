@@ -1089,7 +1089,7 @@ However, browser rendering can vary across:
 - Font rendering and system fonts
 
 It is recommended to read the
-[Visual Regression Testing guide](/guide/browser/visual-regression-testing) to
+[Visual Regression Testing guide](/) to
 implement this testing strategy efficiently.
 :::
 
@@ -1167,6 +1167,7 @@ await expect.element(getByTestId('button')).toMatchScreenshot('fancy-button', {
       allowedMismatchedPixelRatio: 0.01,
     },
   })
+  ```
   :::
 
 - `screenshotOptions: object`
