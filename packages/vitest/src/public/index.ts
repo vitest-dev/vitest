@@ -249,6 +249,7 @@ export type {
 export type {
   Assertion,
   AsymmetricMatchersContaining,
+  DeeplyAllowMatchers,
   ExpectPollOptions,
   ExpectStatic,
   JestAssertion,
@@ -270,6 +271,7 @@ export type {
   ExtendedContext,
   HookCleanupCallback,
   HookListener,
+  ImportDuration,
   OnTestFailedHandler,
   OnTestFinishedHandler,
   RunMode,
@@ -289,6 +291,7 @@ export type {
   TaskCustomOptions,
   TaskMeta,
   TaskState,
+  TestAnnotation,
   TestAPI,
   TestContext,
   TestFunction,

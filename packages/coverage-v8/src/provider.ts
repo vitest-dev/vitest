@@ -264,15 +264,14 @@ export class V8CoverageProvider extends BaseCoverageProvider<ResolvedCoverageOpt
           // SSR transformed imports
           if (
             type === 'statement'
-            && node.type === 'AwaitExpression'
-            && node.argument.type === 'CallExpression'
-            && node.argument.callee.type === 'Identifier'
-            && node.argument.callee.name === '__vite_ssr_import__'
+            && node.type === 'VariableDeclarator'
+            && node.id.type === 'Identifier'
+            && node.id.name.startsWith('__vite_ssr_import_')
           ) {
             return true
           }
 
-          // SSR transformed exports
+          // SSR transformed exports vite@>6.3.5
           if (
             type === 'statement'
             && node.type === 'ExpressionStatement'
@@ -281,6 +280,56 @@ export class V8CoverageProvider extends BaseCoverageProvider<ResolvedCoverageOpt
             && node.expression.left.object.type === 'Identifier'
             && node.expression.left.object.name === '__vite_ssr_exports__'
           ) {
+            return true
+          }
+
+          // SSR transformed exports vite@^6.3.5
+          if (
+            type === 'statement'
+            && node.type === 'VariableDeclarator'
+            && node.id.type === 'Identifier'
+            && node.id.name === '__vite_ssr_export_default__'
+          ) {
+            return true
+          }
+
+          // in-source test with "if (import.meta.vitest)"
+          if (
+            (type === 'branch' || type === 'statement')
+            && node.type === 'IfStatement'
+            && node.test.type === 'MemberExpression'
+            && node.test.property.type === 'Identifier'
+            && node.test.property.name === 'vitest'
+          ) {
+            // SSR
+            if (
+              node.test.object.type === 'Identifier'
+              && node.test.object.name === '__vite_ssr_import_meta__'
+            ) {
+              return 'ignore-this-and-nested-nodes'
+            }
+
+            // Web
+            if (
+              node.test.object.type === 'MetaProperty'
+              && node.test.object.meta.name === 'import'
+              && node.test.object.property.name === 'meta'
+            ) {
+              return 'ignore-this-and-nested-nodes'
+            }
+          }
+
+          // Browser mode's "import.meta.env ="
+          if (
+            type === 'statement'
+            && node.type === 'ExpressionStatement'
+            && node.expression.type === 'AssignmentExpression'
+            && node.expression.left.type === 'MemberExpression'
+            && node.expression.left.object.type === 'MetaProperty'
+            && node.expression.left.object.meta.name === 'import'
+            && node.expression.left.object.property.name === 'meta'
+            && node.expression.left.property.type === 'Identifier'
+            && node.expression.left.property.name === 'env') {
             return true
           }
         },
@@ -398,6 +447,9 @@ export class V8CoverageProvider extends BaseCoverageProvider<ResolvedCoverageOpt
       if (transformMode === 'browser') {
         if (result.url.startsWith('/@fs')) {
           result.url = `${FILE_PROTOCOL}${removeStartsWith(result.url, '/@fs')}`
+        }
+        else if (result.url.startsWith(project.config.root)) {
+          result.url = `${FILE_PROTOCOL}${result.url}`
         }
         else {
           result.url = `${FILE_PROTOCOL}${project.config.root}${result.url}`

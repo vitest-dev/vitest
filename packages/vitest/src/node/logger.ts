@@ -8,7 +8,7 @@ import { Console } from 'node:console'
 import { toArray } from '@vitest/utils'
 import c from 'tinyrainbow'
 import { highlightCode } from '../utils/colors'
-import { printError } from './error'
+import { printError } from './printError'
 import { divider, errorBanner, formatProjectName, withLabel } from './reporters/renderers/utils'
 import { RandomSequencer } from './sequencers/RandomSequencer'
 
@@ -111,7 +111,7 @@ export class Logger {
   }
 
   deprecate(message: string): void {
-    this.log(c.bold(c.bgYellow(' DEPRECATED ')), c.yellow(message))
+    this.error(c.bold(c.bgYellow(' DEPRECATED ')), c.yellow(message))
   }
 
   clearHighlightCache(filename?: string): void {
@@ -252,7 +252,7 @@ export class Logger {
     const providerString = provider === 'preview' ? '' : ` by ${c.reset(c.bold(provider))}`
     this.log(
       c.dim(
-        `${output}Browser runner started${providerString} ${c.dim('at')} ${c.blue(new URL('/', origin))}\n`,
+        `${output}Browser runner started${providerString} ${c.dim('at')} ${c.blue(new URL('/__vitest_test__/', origin))}\n`,
       ),
     )
   }

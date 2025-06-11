@@ -8,6 +8,7 @@ import type {
 } from 'vitest/node'
 import crypto from 'node:crypto'
 import * as nodeos from 'node:os'
+import { performance } from 'node:perf_hooks'
 import { createDefer } from '@vitest/utils'
 import { stringify } from 'flatted'
 import { createDebugger } from 'vitest/node'
@@ -69,28 +70,59 @@ export function createBrowserPool(vitest: Vitest): ProcessPool {
       isCancelled = true
     })
 
-    // TODO: this might now be a good idea... should we run these in chunks?
-    await Promise.all(
-      [...groupedFiles.entries()].map(async ([project, files]) => {
-        await project._initBrowserProvider()
+    const initialisedPools = await Promise.all([...groupedFiles.entries()].map(async ([project, files]) => {
+      await project._initBrowserProvider()
 
-        if (!project.browser) {
-          throw new TypeError(`The browser server was not initialized${project.name ? ` for the "${project.name}" project` : ''}. This is a bug in Vitest. Please, open a new issue with reproduction.`)
-        }
+      if (!project.browser) {
+        throw new TypeError(`The browser server was not initialized${project.name ? ` for the "${project.name}" project` : ''}. This is a bug in Vitest. Please, open a new issue with reproduction.`)
+      }
 
-        if (isCancelled) {
-          return
-        }
+      if (isCancelled) {
+        return
+      }
 
-        debug?.('provider is ready for %s project', project.name)
+      debug?.('provider is ready for %s project', project.name)
 
-        const pool = ensurePool(project)
-        vitest.state.clearFiles(project, files)
-        providers.add(project.browser!.provider)
+      const pool = ensurePool(project)
+      vitest.state.clearFiles(project, files)
+      providers.add(project.browser!.provider)
 
-        await pool.runTests(method, files)
-      }),
-    )
+      return {
+        pool,
+        provider: project.browser!.provider,
+        runTests: () => pool.runTests(method, files),
+      }
+    }))
+
+    if (isCancelled) {
+      return
+    }
+
+    const parallelPools: (() => Promise<void>)[] = []
+    const nonParallelPools: (() => Promise<void>)[] = []
+
+    for (const result of initialisedPools) {
+      if (!result) {
+        return
+      }
+
+      if (result.provider.mocker && result.provider.supportsParallelism) {
+        parallelPools.push(result.runTests)
+      }
+      else {
+        nonParallelPools.push(result.runTests)
+      }
+    }
+
+    await Promise.all(parallelPools.map(runTests => runTests()))
+
+    for (const runTests of nonParallelPools) {
+      if (isCancelled) {
+        return
+      }
+
+      await runTests()
+    }
   }
 
   function getThreadsCount(project: TestProject) {
@@ -216,9 +248,10 @@ class BrowserPool {
       this.project,
       this,
     )
-    const url = new URL('/', this.options.origin)
+    const browser = this.project.browser!
+    const url = new URL('/__vitest_test__/', this.options.origin)
     url.searchParams.set('sessionId', sessionId)
-    const pagePromise = this.project.browser!.provider.openPage(
+    const pagePromise = browser.provider.openPage(
       sessionId,
       url.toString(),
     )
@@ -276,6 +309,7 @@ class BrowserPool {
     if (!this._promise) {
       throw new Error(`Unexpected empty queue`)
     }
+    const startTime = performance.now()
 
     const orchestrator = this.getOrchestrator(sessionId)
     debug?.('[%s] run test %s', sessionId, file)
@@ -289,6 +323,7 @@ class BrowserPool {
           // this will be parsed by the test iframe, not the orchestrator
           // so we need to stringify it first to avoid double serialization
           providedContext: this._providedContext || '[{}]',
+          startTime,
         },
       )
         .then(() => {

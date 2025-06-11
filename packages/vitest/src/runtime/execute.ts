@@ -343,15 +343,20 @@ export class VitestExecutor extends ViteNodeRunner {
       columnOffset: -codeDefinition.length,
     }
 
-    this.options.moduleExecutionInfo?.set(options.filename, { startOffset: codeDefinition.length })
+    const finishModuleExecutionInfo = this.startCalculateModuleExecutionInfo(options.filename, codeDefinition.length)
 
-    const fn = vm.runInContext(code, vmContext, {
-      ...options,
-      // if we encountered an import, it's not inlined
-      importModuleDynamically: this.externalModules
-        .importModuleDynamically as any,
-    } as any)
-    await fn(...Object.values(context))
+    try {
+      const fn = vm.runInContext(code, vmContext, {
+        ...options,
+        // if we encountered an import, it's not inlined
+        importModuleDynamically: this.externalModules
+          .importModuleDynamically as any,
+      } as any)
+      await fn(...Object.values(context))
+    }
+    finally {
+      this.options.moduleExecutionInfo?.set(options.filename, finishModuleExecutionInfo())
+    }
   }
 
   public async importExternalModule(path: string): Promise<any> {

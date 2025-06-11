@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { RunnerTask, RunnerTestCase } from 'vitest'
 import type { ModuleGraph } from '~/composables/module-graph'
 import type { Params } from '~/composables/params'
 import { toJSON } from 'flatted'
@@ -9,10 +10,11 @@ import {
   currentLogs,
   isReport,
 } from '~/composables/client'
+import { explorerTree } from '~/composables/explorer'
 import { hasFailedSnapshot } from '~/composables/explorer/collector'
 import { getModuleGraph } from '~/composables/module-graph'
 import { viewMode } from '~/composables/params'
-import { getProjectNameColor } from '~/utils/task'
+import { getProjectNameColor, getProjectTextColor } from '~/utils/task'
 
 const graph = ref<ModuleGraph>({ nodes: [], links: [] })
 const draft = ref(false)
@@ -20,6 +22,12 @@ const hasGraphBeenDisplayed = ref(false)
 const loadingModuleGraph = ref(false)
 const currentFilepath = ref<string | undefined>(undefined)
 const hideNodeModules = ref(true)
+
+const test = computed(() => {
+  return selectedTest.value
+    ? client.state.idMap.get(selectedTest.value) as RunnerTestCase
+    : undefined
+})
 
 const graphData = computed(() => {
   const c = current.value
@@ -137,18 +145,26 @@ debouncedWatch(
 )
 
 const projectNameColor = computed(() => {
-  return getProjectNameColor(current.value?.file.projectName)
+  const projectName = current.value?.file.projectName || ''
+  return explorerTree.colors.get(projectName) || getProjectNameColor(current.value?.file.projectName)
 })
 
-const projectNameTextColor = computed(() => {
-  switch (projectNameColor.value) {
-    case 'blue':
-    case 'green':
-    case 'magenta':
-      return 'white'
-    default:
-      return 'black'
+const projectNameTextColor = computed(() => getProjectTextColor(projectNameColor.value))
+
+const testTitle = computed(() => {
+  const testId = selectedTest.value
+  if (!testId) {
+    return current.value?.name
   }
+  const names: string[] = []
+  let node: RunnerTask | undefined = client.state.idMap.get(testId)
+  while (node) {
+    names.push(node.name)
+    node = node.suite
+      ? node.suite
+      : (node === node.file ? undefined : node.file)
+  }
+  return names.reverse().join(' > ')
 })
 </script>
 
@@ -168,13 +184,13 @@ const projectNameTextColor = computed(() => {
         <div v-if="isTypecheck" v-tooltip.bottom="'This is a typecheck test. It won\'t report results of the runtime tests'" class="i-logos:typescript-icon" flex-shrink-0 />
         <span
           v-if="current?.file.projectName"
-          class="rounded-full py-0.5 px-1 text-xs font-light"
+          class="rounded-full py-0.5 px-2 text-xs font-light"
           :style="{ backgroundColor: projectNameColor, color: projectNameTextColor }"
         >
           {{ current.file.projectName }}
         </span>
         <div flex-1 font-light op-50 ws-nowrap truncate text-sm>
-          {{ current?.name }}
+          {{ testTitle }}
         </div>
         <div class="flex text-lg">
           <IconButton
@@ -263,7 +279,8 @@ const projectNameTextColor = computed(() => {
         :file="current"
         data-testid="console"
       />
-      <ViewReport v-else-if="!viewMode" :file="current" data-testid="report" />
+      <ViewReport v-else-if="!viewMode && !test && current" :file="current" data-testid="report" />
+      <ViewTestReport v-else-if="!viewMode && test" :test="test" data-testid="report" />
     </div>
   </div>
 </template>

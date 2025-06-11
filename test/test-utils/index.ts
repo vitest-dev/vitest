@@ -18,6 +18,8 @@ import { Cli } from './cli'
 
 // override default colors to disable them in tests
 Object.assign(tinyrainbow.default, tinyrainbow.getDefaultColors())
+// @ts-expect-error not typed global
+globalThis.__VITEST_GENERATE_UI_TOKEN__ = true
 
 export interface VitestRunnerCLIOptions {
   std?: 'inherit'
@@ -27,7 +29,7 @@ export interface VitestRunnerCLIOptions {
 }
 
 export async function runVitest(
-  config: UserConfig,
+  cliOptions: UserConfig,
   cliFilters: string[] = [],
   mode: VitestRunMode = 'test',
   viteOverrides: ViteUserConfig = {},
@@ -72,9 +74,13 @@ export async function runVitest(
   let ctx: Vitest | undefined
   let thrown = false
   try {
-    const { reporters, ...rest } = config
+    const { reporters, ...rest } = cliOptions
 
     ctx = await startVitest(mode, cliFilters, {
+      // Test cases are already run with multiple forks/threads
+      maxWorkers: 1,
+      minWorkers: 1,
+
       watch: false,
       // "none" can be used to disable passing "reporter" option so that default value is used (it's not same as reporters: ["default"])
       ...(reporters === 'none' ? {} : reporters ? { reporters } : { reporters: ['verbose'] }),
@@ -83,10 +89,6 @@ export async function runVitest(
         NO_COLOR: 'true',
         ...rest.env,
       },
-
-      // Test cases are already run with multiple forks/threads
-      maxWorkers: 1,
-      minWorkers: 1,
     }, {
       ...viteOverrides,
       server: {
@@ -188,7 +190,7 @@ async function runCli(command: 'vitest' | 'vite-node', _options?: CliOptions | s
   }
 
   // Manually stop the processes so that each test don't have to do this themselves
-  afterEach(async () => {
+  onTestFinished(async () => {
     if (subprocess.exitCode === null) {
       subprocess.kill()
     }
@@ -204,7 +206,7 @@ async function runCli(command: 'vitest' | 'vite-node', _options?: CliOptions | s
     return output()
   }
 
-  if (args[0] !== 'list' && args.includes('--watch')) {
+  if (args[0] !== 'list' && (args.includes('--watch') || args[0] === 'watch')) {
     if (command === 'vitest') {
       // Wait for initial test run to complete
       await cli.waitForStdout('Waiting for file changes')
@@ -271,20 +273,43 @@ export function resolvePath(baseUrl: string, path: string) {
   return resolve(dirname(filename), path)
 }
 
-export type TestFsStructure = Record<string, string | ViteUserConfig | WorkspaceProjectConfiguration[]>
+export type TestFsStructure = Record<
+  string,
+  | string
+  | ViteUserConfig
+  | WorkspaceProjectConfiguration[]
+  | ((...args: any[]) => unknown)
+  | [(...args: any[]) => unknown, { exports?: string[]; imports?: Record<string, string[]> }]
+>
 
-export function useFS(root: string, structure: TestFsStructure) {
+function getGeneratedFileContent(content: TestFsStructure[string]) {
+  if (typeof content === 'string') {
+    return content
+  }
+  if (typeof content === 'function') {
+    return `await (${content})()`
+  }
+  if (Array.isArray(content) && typeof content[1] === 'object' && ('exports' in content[1] || 'imports' in content[1])) {
+    const imports = Object.entries(content[1].imports || [])
+    return `
+${imports.map(([path, is]) => `import { ${is.join(', ')} } from '${path}'`)}
+const results = await (${content[0]})({ ${imports.flatMap(([_, is]) => is).join(', ')} })
+${(content[1].exports || []).map(e => `export const ${e} = results["${e}"]`)}
+    `
+  }
+  return `export default ${JSON.stringify(content)}`
+}
+
+export function useFS<T extends TestFsStructure>(root: string, structure: T) {
   const files = new Set<string>()
   const hasConfig = Object.keys(structure).some(file => file.includes('.config.'))
   if (!hasConfig) {
-    structure['./vitest.config.js'] = {}
+    ;(structure as any)['./vitest.config.js'] = {}
   }
   for (const file in structure) {
     const filepath = resolve(root, file)
     files.add(filepath)
-    const content = typeof structure[file] === 'string'
-      ? structure[file]
-      : `export default ${JSON.stringify(structure[file])}`
+    const content = getGeneratedFileContent(structure[file])
     fs.mkdirSync(dirname(filepath), { recursive: true })
     fs.writeFileSync(filepath, String(content), 'utf-8')
   }
@@ -316,16 +341,17 @@ export function useFS(root: string, structure: TestFsStructure) {
 }
 
 export async function runInlineTests(
-  structure: Record<string, string | ViteUserConfig | WorkspaceProjectConfiguration[]>,
+  structure: TestFsStructure,
   config?: UserConfig,
   options?: VitestRunnerCLIOptions,
+  viteOverrides: ViteUserConfig = {},
 ) {
   const root = resolve(process.cwd(), `vitest-test-${crypto.randomUUID()}`)
   const fs = useFS(root, structure)
   const vitest = await runVitest({
     root,
     ...config,
-  }, [], 'test', {}, options)
+  }, [], 'test', viteOverrides, options)
   return {
     fs,
     root,

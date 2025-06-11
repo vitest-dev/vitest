@@ -63,7 +63,7 @@ channel.addEventListener('message', async (e) => {
       break
     }
     case 'prepare': {
-      await prepare().catch(err => unhandledError(err, 'Prepare Error'))
+      await prepare(data).catch(err => unhandledError(err, 'Prepare Error'))
       break
     }
     case 'viewport:done':
@@ -93,7 +93,7 @@ getBrowserState().iframeId = iframeId
 
 let contextSwitched = false
 
-async function prepareTestEnvironment() {
+async function prepareTestEnvironment(options: PrepareOptions) {
   debug?.('trying to resolve runner', `${reloadStart}`)
   const config = getConfig()
 
@@ -142,7 +142,7 @@ async function prepareTestEnvironment() {
     })
   }
 
-  state.durations.prepare = performance.now() - state.durations.prepare
+  state.durations.prepare = performance.now() - options.startTime
 
   return {
     runner,
@@ -189,8 +189,12 @@ async function executeTests(method: 'run' | 'collect', files: string[]) {
   }
 }
 
-async function prepare() {
-  preparedData = await prepareTestEnvironment()
+interface PrepareOptions {
+  startTime: number
+}
+
+async function prepare(options: PrepareOptions) {
+  preparedData = await prepareTestEnvironment(options)
 
   // page is reloading
   debug?.('runner resolved successfully')
@@ -233,6 +237,10 @@ async function cleanup() {
   // since playwright keyboard API is stateful on page instance level
   await userEvent.cleanup()
     .catch(error => unhandledError(error, 'Cleanup Error'))
+
+  await Promise.all(
+    getBrowserState().cleanups.map(fn => fn()),
+  ).catch(error => unhandledError(error, 'Cleanup Error'))
 
   // if isolation is disabled, Vitest reuses the same iframe and we
   // don't need to switch the context back at all

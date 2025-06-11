@@ -380,7 +380,7 @@ export interface Locator extends LocatorSelectors {
    */
   unhover(options?: UserEventHoverOptions): Promise<void>
   /**
-   * Sets the value of the current `input`, `textarea` or `conteneditable` element.
+   * Sets the value of the current `input`, `textarea` or `contenteditable` element.
    * @see {@link https://vitest.dev/guide/browser/interactivity-api#userevent-fill}
    */
   fill(text: string, options?: UserEventFillOptions): Promise<void>
@@ -583,7 +583,7 @@ export interface BrowserPage extends LocatorSelectors {
 export interface BrowserLocators {
   createElementLocators(element: Element): LocatorSelectors
   extend(methods: {
-    [K in keyof LocatorSelectors]?: (...args: Parameters<LocatorSelectors[K]>) => ReturnType<LocatorSelectors[K]> | string
+    [K in keyof LocatorSelectors]?: (this: BrowserPage | Locator, ...args: Parameters<LocatorSelectors[K]>) => ReturnType<LocatorSelectors[K]> | string
   }): void
 }
 

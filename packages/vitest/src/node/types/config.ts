@@ -687,7 +687,7 @@ export interface InlineConfig {
 
   /**
    * Options for configuring cache policy.
-   * @default { dir: 'node_modules/.vite/vitest' }
+   * @default { dir: 'node_modules/.vite/vitest/{project-hash}' }
    */
   cache?:
     | false
@@ -865,6 +865,13 @@ export interface InlineConfig {
    * @default false
    */
   includeTaskLocation?: boolean
+
+  /**
+   * Directory path for storing attachments created by `context.annotate`
+   *
+   * @default '.vitest-attachments'
+   */
+  attachmentsDir?: string
 }
 
 export interface TypecheckConfig {

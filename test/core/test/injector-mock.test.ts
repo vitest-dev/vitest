@@ -2,10 +2,10 @@ import type { HoistMocksPluginOptions } from '../../../packages/mocker/src/node/
 import { stripVTControlCharacters } from 'node:util'
 import { parseAst } from 'vite'
 import { describe, expect, it, test } from 'vitest'
-import { generateCodeFrame } from 'vitest/src/node/error.js'
 import { hoistMocks } from '../../../packages/mocker/src/node/hoistMocksPlugin'
+import { generateCodeFrame } from '../../../packages/vitest/src/node/printError.js'
 
-function parse(code: string, options: any) {
+function parse(code: string, options: any): any {
   return parseAst(code, options)
 }
 

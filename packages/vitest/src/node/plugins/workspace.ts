@@ -4,7 +4,6 @@ import type { ResolvedConfig, TestProjectInlineConfiguration } from '../types/co
 import { existsSync, readFileSync } from 'node:fs'
 import { deepMerge } from '@vitest/utils'
 import { basename, dirname, relative, resolve } from 'pathe'
-import { mergeConfig } from 'vite'
 import { configDefaults } from '../../defaults'
 import { generateScopedClassName } from '../../integrations/css/css-modules'
 import { VitestFilteredOutProjectError } from '../errors'
@@ -33,17 +32,10 @@ export function WorkspaceVitestPlugin(
 ) {
   return <VitePlugin[]>[
     {
-      name: 'vitest:project',
-      enforce: 'pre',
-      options() {
-        this.meta.watchMode = false
-      },
+      name: 'vitest:project:name',
+      enforce: 'post',
       config(viteConfig) {
-        const defines: Record<string, any> = deleteDefineConfig(viteConfig)
-
         const testConfig = viteConfig.test || {}
-
-        const root = testConfig.root || viteConfig.root || options.root
 
         let { label: name, color } = typeof testConfig.name === 'string'
           ? { label: testConfig.name }
@@ -67,6 +59,56 @@ export function WorkspaceVitestPlugin(
             name = options.workspacePath.toString()
           }
         }
+
+        const isUserBrowserEnabled = viteConfig.test?.browser?.enabled
+        const isBrowserEnabled = isUserBrowserEnabled ?? (viteConfig.test?.browser && project.vitest._cliOptions.browser?.enabled)
+        // keep project names to potentially filter it out
+        const workspaceNames = [name]
+        const browser = viteConfig.test!.browser || {}
+        if (isBrowserEnabled && browser.name && !browser.instances?.length) {
+          // vitest injects `instances` in this case later on
+          workspaceNames.push(name ? `${name} (${browser.name})` : browser.name)
+        }
+
+        viteConfig.test?.browser?.instances?.forEach((instance) => {
+          // every instance is a potential project
+          instance.name ??= name ? `${name} (${instance.browser})` : instance.browser
+          if (isBrowserEnabled) {
+            workspaceNames.push(instance.name)
+          }
+        })
+
+        const filters = project.vitest.config.project
+        // if there is `--project=...` filter, check if any of the potential projects match
+        // if projects don't match, we ignore the test project altogether
+        // if some of them match, they will later be filtered again by `resolveWorkspace`
+        if (filters.length) {
+          const hasProject = workspaceNames.some((name) => {
+            return project.vitest.matchesProjectFilter(name)
+          })
+          if (!hasProject) {
+            throw new VitestFilteredOutProjectError()
+          }
+        }
+
+        return {
+          test: {
+            name: { label: name, color },
+          },
+        }
+      },
+    },
+    {
+      name: 'vitest:project',
+      enforce: 'pre',
+      options() {
+        this.meta.watchMode = false
+      },
+      config(viteConfig) {
+        const defines: Record<string, any> = deleteDefineConfig(viteConfig)
+
+        const testConfig = viteConfig.test || {}
+        const root = testConfig.root || viteConfig.root || options.root
 
         const resolveOptions = getDefaultResolveOptions()
         const config: ViteConfig = {
@@ -111,50 +153,10 @@ export function WorkspaceVitestPlugin(
               resolve: resolveOptions,
             },
           },
-          test: {
-            name: { label: name, color },
-          },
+          test: {},
         }
 
-        // if this project defines a browser configuration, respect --browser flag
-        // otherwise if we always override the configuration, every project will run in browser mode
-        if (project.vitest._options.browser && viteConfig.test?.browser) {
-          viteConfig.test.browser = mergeConfig(
-            viteConfig.test.browser,
-            project.vitest._options.browser,
-          )
-        }
-
-        (config.test as ResolvedConfig).defines = defines
-
-        // keep project names to potentially filter it out
-        const workspaceNames = [name]
-        if (viteConfig.test?.browser?.enabled) {
-          if (viteConfig.test.browser.name && !viteConfig.test.browser.instances?.length) {
-            const browser = viteConfig.test.browser.name
-            // vitest injects `instances` in this case later on
-            workspaceNames.push(name ? `${name} (${browser})` : browser)
-          }
-
-          viteConfig.test.browser.instances?.forEach((instance) => {
-            // every instance is a potential project
-            instance.name ??= name ? `${name} (${instance.browser})` : instance.browser
-            workspaceNames.push(instance.name)
-          })
-        }
-
-        const filters = project.vitest.config.project
-        // if there is `--project=...` filter, check if any of the potential projects match
-        // if projects don't match, we ignore the test project altogether
-        // if some of them match, they will later be filtered again by `resolveWorkspace`
-        if (filters.length) {
-          const hasProject = workspaceNames.some((name) => {
-            return project.vitest.matchesProjectFilter(name)
-          })
-          if (!hasProject) {
-            throw new VitestFilteredOutProjectError()
-          }
-        }
+        ;(config.test as ResolvedConfig).defines = defines
 
         const classNameStrategy
           = (typeof testConfig.css !== 'boolean'
@@ -189,6 +191,10 @@ export function WorkspaceVitestPlugin(
 
         return config
       },
+    },
+    {
+      name: 'vitest:project:server',
+      enforce: 'post',
       async configureServer(server) {
         const options = deepMerge({}, configDefaults, server.config.test || {})
         await project._configureServer(options, server)
@@ -198,9 +204,9 @@ export function WorkspaceVitestPlugin(
     },
     SsrReplacerPlugin(),
     ...CSSEnablerPlugin(project),
-    CoverageTransform(project.ctx),
+    CoverageTransform(project.vitest),
     ...MocksPlugins(),
-    VitestProjectResolver(project.ctx),
+    VitestProjectResolver(project.vitest),
     VitestOptimizer(),
     NormalizeURLPlugin(),
   ]

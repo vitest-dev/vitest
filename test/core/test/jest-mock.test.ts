@@ -363,6 +363,33 @@ describe('jest mock compat layer', () => {
     expect(obj.property).toBe(true)
   })
 
+  it('respyin on a spy resets the counter', () => {
+    const obj = {
+      method() {
+        return 'original'
+      },
+    }
+    vi.spyOn(obj, 'method')
+    obj.method()
+    expect(obj.method).toHaveBeenCalledTimes(1)
+    vi.spyOn(obj, 'method')
+    obj.method()
+    expect(obj.method).toHaveBeenCalledTimes(1)
+  })
+
+  it('spyOn on the getter multiple times', () => {
+    const obj = {
+      get getter() {
+        return 'original'
+      },
+    }
+
+    vi.spyOn(obj, 'getter', 'get').mockImplementation(() => 'mocked')
+    vi.spyOn(obj, 'getter', 'get')
+
+    expect(obj.getter).toBe('mocked')
+  })
+
   it('spyOn multiple times', () => {
     const obj = {
       method() {
@@ -383,9 +410,9 @@ describe('jest mock compat layer', () => {
 
     spy2.mockRestore()
 
-    expect(obj.method()).toBe('mocked')
-    expect(vi.isMockFunction(obj.method)).toBe(true)
-    expect(obj.method).toBe(spy1)
+    expect(obj.method()).toBe('original')
+    expect(vi.isMockFunction(obj.method)).toBe(false)
+    expect(obj.method).not.toBe(spy1)
 
     spy1.mockRestore()
     expect(vi.isMockFunction(obj.method)).toBe(false)
@@ -560,11 +587,104 @@ describe('jest mock compat layer', () => {
     expect(fn.getMockImplementation()).toBe(temporaryMockImplementation)
   })
 
+  it('keeps the descriptor the same as the original one when restoring', () => {
+    class Foo {
+      f() {
+        return 'original'
+      }
+    }
+
+    // initially there's no own properties
+    const foo = new Foo()
+    expect(foo.f()).toMatchInlineSnapshot(`"original"`)
+    expect(Object.getOwnPropertyDescriptors(foo)).toMatchInlineSnapshot(`{}`)
+
+    // mocked function in own property
+    const spy = vi.spyOn(foo, 'f').mockImplementation(() => 'mocked')
+    expect(foo.f()).toMatchInlineSnapshot(`"mocked"`)
+    expect(Object.getOwnPropertyDescriptors(foo)).toMatchInlineSnapshot(`
+    {
+      "f": {
+        "configurable": true,
+        "enumerable": false,
+        "value": [MockFunction f] {
+          "calls": [
+            [],
+          ],
+          "results": [
+            {
+              "type": "return",
+              "value": "mocked",
+            },
+          ],
+        },
+        "writable": true,
+      },
+    }
+  `)
+
+    // probably original prototype method is not moved to own property
+    spy.mockRestore()
+    expect(foo.f()).toMatchInlineSnapshot(`"original"`)
+    expect(Object.getOwnPropertyDescriptors(foo)).toMatchInlineSnapshot(`{}`)
+  })
+
+  it('mocks inherited methods', () => {
+    class Bar {
+      _bar = 'bar'
+      get bar(): string {
+        return this._bar
+      }
+
+      set bar(bar: string) {
+        this._bar = bar
+      }
+    }
+    class Foo extends Bar {}
+    const foo = new Foo()
+    vi.spyOn(foo, 'bar', 'get').mockImplementation(() => 'foo')
+    expect(foo.bar).toEqual('foo')
+    // foo.bar setter is inherited from Bar, so we can set it
+    expect(() => {
+      foo.bar = 'baz'
+    }).not.toThrowError()
+    expect(foo.bar).toEqual('foo')
+  })
+
+  it('mocks inherited overridden methods', () => {
+    class Bar {
+      _bar = 'bar'
+      get bar(): string {
+        return this._bar
+      }
+
+      set bar(bar: string) {
+        this._bar = bar
+      }
+    }
+    class Foo extends Bar {
+      get bar(): string {
+        return `${super.bar}-foo`
+      }
+    }
+    const foo = new Foo()
+    expect(foo.bar).toEqual('bar-foo')
+    vi.spyOn(foo, 'bar', 'get').mockImplementation(() => 'foo')
+    expect(foo.bar).toEqual('foo')
+    // foo.bar setter is not inherited from Bar
+    expect(() => {
+      // @ts-expect-error bar is readonly
+      foo.bar = 'baz'
+    }).toThrowError()
+    expect(foo.bar).toEqual('foo')
+  })
+
   describe('is disposable', () => {
     describe.runIf(Symbol.dispose)('in environments supporting it', () => {
       it('has dispose property', () => {
         expect(vi.fn()[Symbol.dispose]).toBeTypeOf('function')
       })
+
       it('calls mockRestore when disposing', () => {
         const fn = vi.fn()
         const restoreSpy = vi.spyOn(fn, 'mockRestore')
@@ -573,10 +693,12 @@ describe('jest mock compat layer', () => {
         }
         expect(restoreSpy).toHaveBeenCalled()
       })
+
       it('allows disposal when using mockImplementation', () => {
         expect(vi.fn().mockImplementation(() => {})[Symbol.dispose]).toBeTypeOf('function')
       })
     })
+
     describe.skipIf(Symbol.dispose)('in environments not supporting it', () => {
       it('does not have dispose property', () => {
         expect(vi.fn()[Symbol.dispose]).toBeUndefined()

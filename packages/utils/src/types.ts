@@ -55,9 +55,7 @@ export interface ErrorWithDiff {
   message: string
   name?: string
   cause?: unknown
-  nameStr?: string
   stack?: string
-  stackStr?: string
   stacks?: ParsedStack[]
   showDiff?: boolean
   actual?: any
