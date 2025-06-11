@@ -1,5 +1,6 @@
 import type { Test } from '@vitest/runner/types'
 import type { Assertion } from './types'
+import { noop } from '@vitest/utils'
 import { processError } from '@vitest/utils/error'
 
 export function createAssertionMessage(
@@ -83,9 +84,9 @@ function handleTestError(test: Test, err: unknown) {
 export function wrapAssertion(
   utils: Chai.ChaiUtils,
   name: string,
-  fn: (this: Chai.AssertionStatic & Assertion, ...args: any[]) => void | Promise<void>,
+  fn: (this: Chai.AssertionStatic & Assertion, ...args: any[]) => void | PromiseLike<void>,
 ) {
-  return function (this: Chai.AssertionStatic & Assertion, ...args: any[]): void | Promise<void> {
+  return function (this: Chai.AssertionStatic & Assertion, ...args: any[]): void | PromiseLike<void> {
     // private
     if (name !== 'withTest') {
       utils.flag(this, '_name', name)
@@ -104,8 +105,8 @@ export function wrapAssertion(
     try {
       const result = fn.apply(this, args)
 
-      if (result && typeof result === 'object' && result instanceof Promise) {
-        return result.catch((err) => {
+      if (result && typeof result === 'object' && typeof result.then === 'function') {
+        return result.then(noop, (err) => {
           handleTestError(test, err)
         })
       }
