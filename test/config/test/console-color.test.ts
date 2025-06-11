@@ -11,7 +11,7 @@ test('with color', async () => {
       NO_COLOR: undefined,
       GITHUB_ACTIONS: undefined,
     },
-  }, undefined, undefined, undefined, { preserveAnsi: true })
+  }, [], { preserveAnsi: true })
 
   expect(stdout).toContain('\x1B[33mtrue\x1B[39m\n')
 })
@@ -25,7 +25,7 @@ test('without color', async () => {
       NO_COLOR: '1',
       GITHUB_ACTIONS: undefined,
     },
-  }, undefined, undefined, undefined, { preserveAnsi: true })
+  }, [], { preserveAnsi: true })
 
   expect(stdout).toContain('true\n')
   expect(stdout).not.toContain('\x1B[33mtrue\x1B[39m\n')
@@ -43,7 +43,7 @@ test.skipIf(isWindows)('without color, forks pool in non-TTY parent', async () =
       // Overrides current process's value, since we are running Vitest in Vitest here
       FORCE_TTY: undefined,
     },
-  }, undefined, undefined, undefined, { preserveAnsi: true })
+  }, [], { preserveAnsi: true })
 
   expect(stdout).toContain('true\n')
   expect(stdout).not.toContain('\x1B[33mtrue\x1B[39m\n')
@@ -58,7 +58,7 @@ test('with color, forks pool in TTY parent', async () => {
       NO_COLOR: undefined,
       GITHUB_ACTIONS: undefined,
     },
-  }, undefined, undefined, undefined, { preserveAnsi: true })
+  }, [], { preserveAnsi: true })
 
   expect(stdout).toContain('\x1B[33mtrue\x1B[39m\n')
 })

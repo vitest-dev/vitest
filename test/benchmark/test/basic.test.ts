@@ -16,7 +16,7 @@ it('basic', { timeout: 60_000 }, async () => {
 
     // Verify that type testing cannot be used with benchmark
     typecheck: { enabled: true },
-  }, [], 'benchmark')
+  }, [], { mode: 'benchmark' })
   expect(result.stderr).toBe('')
   expect(result.exitCode).toBe(0)
 

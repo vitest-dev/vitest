@@ -11,7 +11,7 @@ test('compare', { timeout: 60_000 }, async () => {
       root: './fixtures/compare',
       outputJson: './bench.json',
       reporters: ['default'],
-    }, [], 'benchmark')
+    }, [], { mode: 'benchmark' })
     expect(result.exitCode).toBe(0)
     expect(fs.existsSync('./fixtures/compare/bench.json')).toBe(true)
   }
@@ -22,7 +22,7 @@ test('compare', { timeout: 60_000 }, async () => {
       root: './fixtures/compare',
       compare: './bench.json',
       reporters: ['default'],
-    }, [], 'benchmark')
+    }, [], { mode: 'benchmark' })
     expect(result.exitCode).toBe(0)
     const lines = result.stdout.split('\n').slice(4).slice(0, 6)
     const expected = `
