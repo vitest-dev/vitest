@@ -596,7 +596,7 @@ export function resolveConfig(
     resolved.pool = resolvePath(resolved.pool, resolved.root)
   }
   if (resolved.poolMatchGlobs) {
-    logger.deprecate('"poolMatchGlobs" is deprecated. Use `test.projects` to define different configurations instead.')
+    logger.deprecate('`poolMatchGlobs` is deprecated. Use `test.projects` to define different configurations instead.')
   }
   resolved.poolMatchGlobs = (resolved.poolMatchGlobs || []).map(
     ([glob, pool]) => {
