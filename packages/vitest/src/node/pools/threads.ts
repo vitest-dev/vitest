@@ -57,7 +57,7 @@ export function createThreadsPool(
   const maxThreads
     = poolOptions.maxThreads ?? vitest.config.maxWorkers ?? threadsCount
   const minThreads
-    = poolOptions.minThreads ?? vitest.config.minWorkers ?? threadsCount
+    = poolOptions.minThreads ?? vitest.config.minWorkers ?? Math.min(threadsCount, maxThreads)
 
   const worker = resolve(vitest.distPath, 'workers/threads.js')
 
