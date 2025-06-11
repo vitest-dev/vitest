@@ -72,5 +72,5 @@ function invertPool(pool: 'threads' | 'forks') {
 }
 
 function deprecatedPoolMatchGlob() {
-  return ' Vitest  "poolMatchGlobs" is deprecated. Use "workspace" to define different configurations instead.\n'
+  return ' Vitest  "poolMatchGlobs" is deprecated. Use "test.projects" to define different configurations instead.\n'
 }
