@@ -380,18 +380,18 @@ type ToMatchScreenshotResolvePath = (data: {
   platform: NodeJS.Platform
   /**
    * The value provided to
-   * {@linkcode https://main.vitest.dev/guide/browser/config#browser-screenshotdirectory|browser.screenshotDirectory},
+   * {@linkcode https://vitest.dev/guide/browser/config#browser-screenshotdirectory|browser.screenshotDirectory},
    * if none is provided, its default value.
    */
   screenshotDirectory: string
   /**
    * Absolute path to the project's
-   * {@linkcode https://main.vitest.dev/config/#root|root}.
+   * {@linkcode https://vitest.dev/config/#root|root}.
    */
   root: string
   /**
    * Path to the test file, relative to the project's
-   * {@linkcode https://main.vitest.dev/config/#root|root}.
+   * {@linkcode https://vitest.dev/config/#root|root}.
    */
   testFileDirectory: string
   /**
@@ -399,13 +399,13 @@ type ToMatchScreenshotResolvePath = (data: {
    */
   testFileName: string
   /**
-   * The {@linkcode https://main.vitest.dev/api/#test|test}'s name, including
-   * parent {@linkcode https://main.vitest.dev/api/#describe|describe}, sanitized.
+   * The {@linkcode https://vitest.dev/api/#test|test}'s name, including
+   * parent {@linkcode https://vitest.dev/api/#describe|describe}, sanitized.
    */
   testName: string
   /**
    * The value provided to
-   * {@linkcode https://main.vitest.dev/config/#attachmentsdir|attachmentsDir},
+   * {@linkcode https://vitest.dev/config/#attachmentsdir|attachmentsDir},
    * if none is provided, its default value.
    */
   attachmentsDir: string
