@@ -72,5 +72,5 @@ function invertPool(pool: 'threads' | 'forks') {
 }
 
 function deprecatedPoolMatchGlob() {
-  return 'DEPRECATED  `poolMatchGlobs` is deprecated. Use `test.projects` to define different configurations instead.\n'
+  return ' DEPRECATED  `poolMatchGlobs` is deprecated. Use `test.projects` to define different configurations instead.\n'
 }
