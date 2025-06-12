@@ -161,7 +161,7 @@ describe('TestCase', () => {
     const report = await run({
       'example.test.ts': ts`
         test('single test case', async () => {
-          await new Promise(resolve => setTimeout(resolve, 150))
+          await new Promise(resolve => setTimeout(resolve, 300))
           console.log("Test running!")
         });
       `,
