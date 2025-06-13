@@ -11,7 +11,7 @@ const extractPaths = (errorMessage: string, filename: string): string[] =>
   // `map` on `Iterator` is only available in Node >= 22
   Array.from(
     errorMessage.matchAll(
-      new RegExp(`^.*?(/.*?${filename}-[\\w-]+\\.png)`, 'gm'),
+      new RegExp(`^.*?((?:[A-Z]:)?/.*?${filename}-[\\w-]+\\.png)`, 'gm'),
     ),
     ([_, path]) => path,
   )
