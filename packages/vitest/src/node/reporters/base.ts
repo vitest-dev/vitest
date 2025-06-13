@@ -433,11 +433,13 @@ export abstract class BaseReporter implements Reporter {
       return false
     }
 
-    const task = log.taskId ? this.ctx.state.idMap.get(log.taskId) : undefined
-    const entity = task && this.ctx.state.getReportedEntity(task)
-    const shouldLog = this.ctx.config.onConsoleLog?.(log.content, log.type, entity)
-    if (shouldLog === false) {
-      return shouldLog
+    if (this.ctx.config.onConsoleLog) {
+      const task = log.taskId ? this.ctx.state.idMap.get(log.taskId) : undefined
+      const entity = task && this.ctx.state.getReportedEntity(task)
+      const shouldLog = this.ctx.config.onConsoleLog(log.content, log.type, entity)
+      if (shouldLog === false) {
+        return shouldLog
+      }
     }
     return true
   }
