@@ -629,6 +629,45 @@ export interface TestingLibraryMatchers<E, R> {
    */
   toHaveSelection(selection?: string): R
 
+  /**
+   * @description
+   * This assertion allows you to perform visual regression testing by comparing
+   * screenshots of elements or pages against stored reference images.
+   *
+   * When differences are detected beyond the configured threshold, the test fails.
+   * To help identify the changes, the assertion generates:
+   *
+   * - The actual screenshot captured during the test
+   * - The expected reference screenshot
+   * - A diff image highlighting the differences (when possible)
+   *
+   * @example
+   * <button data-testid="button">Fancy Button</button>
+   *
+   * // basic usage, auto-generates screenshot name
+   * await expect.element(getByTestId('button')).toMatchScreenshot()
+   *
+   * // with custom name
+   * await expect.element(getByTestId('button')).toMatchScreenshot('fancy-button')
+   *
+   * // with options
+   * await expect.element(getByTestId('button')).toMatchScreenshot({
+   *   comparatorName: 'pixelmatch',
+   *   comparatorOptions: {
+   *     allowedMismatchedPixelRatio: 0.01,
+   *   },
+   * })
+   *
+   * // with both name and options
+   * await expect.element(getByTestId('button')).toMatchScreenshot('fancy-button', {
+   *   comparatorName: 'pixelmatch',
+   *   comparatorOptions: {
+   *     allowedMismatchedPixelRatio: 0.01,
+   *   },
+   * })
+   *
+   * @see https://vitest.dev/guide/browser/assertion-api#tomatchscreenshot
+   */
   toMatchScreenshot<ComparatorName extends keyof ScreenshotComparatorRegistry>(
     options?: ScreenshotMatcherOptions<ComparatorName>,
   ): Promise<R>
