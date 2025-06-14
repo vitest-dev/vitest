@@ -130,7 +130,7 @@ describe('.toMatchScreenshot', () => {
       Actual screenshot:
         ${actualPath}
 
-      Diff screenshot:
+      Diff image:
         ${diffPath}
     `)
   })
