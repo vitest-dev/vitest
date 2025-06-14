@@ -222,7 +222,9 @@ export class Vitest {
     const resolved = resolveConfig(this, options, server.config)
 
     this._config = resolved
-    this._state = new StateManager()
+    this._state = new StateManager({
+      onUnhandledError: resolved.onUnhandledError,
+    })
     this._cache = new VitestCache(this.version)
     this._snapshot = new SnapshotManager({ ...resolved.snapshotOptions })
     this._testRun = new TestRun(this)
