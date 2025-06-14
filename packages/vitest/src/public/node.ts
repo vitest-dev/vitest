@@ -168,6 +168,7 @@ export type { SerializedError } from '@vitest/utils'
 
 export {
   esbuildVersion,
+  isCSSRequest,
   isFileServingAllowed,
   parseAst,
   parseAstAsync,
