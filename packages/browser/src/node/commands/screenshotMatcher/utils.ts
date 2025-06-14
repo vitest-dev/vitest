@@ -24,7 +24,7 @@ const defaultOptions = {
     fullPage: false,
     maskColor: '#ff00ff',
     omitBackground: false,
-    scale: 'css',
+    scale: 'device',
   },
   timeout: 5_000,
   resolveDiffPath: ({
