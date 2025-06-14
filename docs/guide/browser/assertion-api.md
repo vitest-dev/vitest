@@ -1047,7 +1047,7 @@ await expect.element(queryByTestId('prev')).not.toHaveSelection()
 await expect.element(queryByTestId('next')).toHaveSelection('ne')
 ```
 
-## toMatchScreenshot
+## toMatchScreenshot <Version>3.3.0</Version> {#tomatchscreenshot}
 
 ```ts
 function toMatchScreenshot(
