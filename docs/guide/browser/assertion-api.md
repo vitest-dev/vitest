@@ -1089,7 +1089,7 @@ However, browser rendering can vary across:
 - Font rendering and system fonts
 
 It is recommended to read the
-[Visual Regression Testing guide](/) to
+[Visual Regression Testing guide](/guide/browser/visual-regression-testing) to
 implement this testing strategy efficiently.
 :::
 
