@@ -415,13 +415,13 @@ export interface ToMatchScreenshotOptions {
   /**
    * Overrides default reference screenshot path.
    *
-   * @default `${root}/${testFileDirectory}/${screenshotDirectory}/${testFileName}/${arg}-${browserName}${ext}`
+   * @default `${root}/${testFileDirectory}/${screenshotDirectory}/${testFileName}/${arg}-${browserName}-${platform}${ext}`
    */
   resolveScreenshotPath?: ToMatchScreenshotResolvePath
   /**
    * Overrides default screenshot path used for diffs.
    *
-   * @default `${root}/${attachmentsDir}/${testFileDirectory}/${testFileName}/${arg}-${browserName}${ext}`
+   * @default `${root}/${attachmentsDir}/${testFileDirectory}/${testFileName}/${arg}-${browserName}-${platform}${ext}`
    */
   resolveDiffPath?: ToMatchScreenshotResolvePath
 }

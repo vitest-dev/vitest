@@ -33,6 +33,7 @@ const defaultOptions = {
     root,
     attachmentsDir,
     browserName,
+    platform,
     testFileDirectory,
     testFileName,
   }) => resolve(
@@ -40,7 +41,7 @@ const defaultOptions = {
     attachmentsDir,
     testFileDirectory,
     testFileName,
-    `${arg}-${browserName}${ext}`,
+    `${arg}-${browserName}-${platform}${ext}`,
   ),
   resolveScreenshotPath: ({
     arg,
@@ -55,7 +56,7 @@ const defaultOptions = {
     testFileDirectory,
     screenshotDirectory,
     testFileName,
-    `${arg}-${browserName}${ext}`,
+    `${arg}-${browserName}-${platform}${ext}`,
   ),
 } satisfies GlobalOptions
 

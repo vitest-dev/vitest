@@ -32,7 +32,7 @@ describe('.toMatchScreenshot', () => {
       import.meta.dirname,
       '__screenshots__',
       'toMatchScreenshot.test.ts',
-      `${filename}-${server.browser}.png`,
+      `${filename}-${server.browser}-${server.platform}.png`,
     )
 
     onTestFinished(async () => {
@@ -61,7 +61,7 @@ describe('.toMatchScreenshot', () => {
       import.meta.dirname,
       '__screenshots__',
       'toMatchScreenshot.test.ts',
-      `${filename}-${server.browser}.png`,
+      `${filename}-${server.browser}-${server.platform}.png`,
     )
 
     onTestFinished(async () => {
