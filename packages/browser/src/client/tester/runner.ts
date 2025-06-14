@@ -5,14 +5,16 @@ import type { VitestBrowserClientMocker } from './mocker'
 import { globalChannel, onCancel } from '@vitest/browser/client'
 import { page, userEvent } from '@vitest/browser/context'
 import {
+  createStackString,
   loadDiffConfig,
   loadSnapshotSerializers,
+  NodeBenchmarkRunner,
   originalPositionFor,
+  parseStacktrace,
   takeCoverageInsideWorker,
   TraceMap,
+  VitestTestRunner,
 } from 'vitest/internal/browser'
-import { NodeBenchmarkRunner, VitestTestRunner } from 'vitest/runners'
-import { createStackString, parseStacktrace } from '../../../../utils/src/source-map'
 import { executor, getWorkerState } from '../utils'
 import { rpc } from './rpc'
 import { VitestBrowserSnapshotEnvironment } from './snapshot'
