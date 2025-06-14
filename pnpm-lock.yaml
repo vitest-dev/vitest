@@ -465,6 +465,9 @@ importers:
       sirv:
         specifier: 'catalog:'
         version: 3.0.1
+      tinyglobby:
+        specifier: 'catalog:'
+        version: 0.2.13
       tinyrainbow:
         specifier: 'catalog:'
         version: 2.0.0
@@ -1240,6 +1243,9 @@ importers:
 
   test/config:
     devDependencies:
+      '@test/analyse':
+        specifier: file:./deps/analyse
+        version: file:test/config/deps/analyse
       '@vitest/test-dep-conditions':
         specifier: file:./deps/test-dep-conditions
         version: file:test/config/deps/test-dep-conditions
@@ -3566,6 +3572,9 @@ packages:
 
   '@swc/types@0.1.12':
     resolution: {integrity: sha512-wBJA+SdtkbFhHjTMYH+dEH1y4VpfGdAc2Kw/LK09i9bXd/K6j6PkDcFCEzb6iVfZMkPRrl/q0e3toqTAJdkIVA==}
+
+  '@test/analyse@file:test/config/deps/analyse':
+    resolution: {directory: test/config/deps/analyse, type: directory}
 
   '@testing-library/dom@10.4.0':
     resolution: {integrity: sha512-pemlzrSESWbdAloYml3bAJMEfNh1Z7EduzqPKprCH5S341frlpYnUEW0H72dLxa6IsYr+mPno20GiSm+h9dEdQ==}
@@ -10868,6 +10877,8 @@ snapshots:
   '@swc/types@0.1.12':
     dependencies:
       '@swc/counter': 0.1.3
+
+  '@test/analyse@file:test/config/deps/analyse': {}
 
   '@testing-library/dom@10.4.0':
     dependencies:
