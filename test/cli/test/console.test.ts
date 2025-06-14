@@ -1,7 +1,7 @@
-import { resolve } from 'pathe'
+import { relative, resolve } from 'pathe'
 import { expect, test } from 'vitest'
 import { DefaultReporter } from 'vitest/reporters'
-import { runVitest } from '../../test-utils'
+import { runInlineTests, runVitest } from '../../test-utils'
 
 test('can run custom pools with Vitest', async () => {
   const reporter = new DefaultReporter()
@@ -71,4 +71,78 @@ test('can run custom pools with Vitest', async () => {
           at <root>/test/cli/fixtures/console/trace.test.ts:ln:cl"
     `)
   }
+})
+
+test('onConsoleLog receives the entity', async () => {
+  const logs: {
+    log: string
+    type: 'stderr' | 'stdout'
+    entity: { type: string; name: string } | undefined
+  }[] = []
+  const { stderr } = await runInlineTests(
+    {
+      'basic.test.ts': `
+    console.log('module')
+
+    describe('suite', () => {
+      beforeAll(() => {
+        console.log('suite')
+      })
+
+      test('test', () => {
+        console.log('test')
+      })
+    })
+    `,
+    },
+    {
+      globals: true,
+      onConsoleLog(log, type, entity) {
+        logs.push({
+          log,
+          type,
+          entity: entity
+            ? {
+                type: entity.type,
+                name: entity.type === 'module'
+                  ? relative(entity.project.config.root, entity.moduleId)
+                  : entity.name,
+              }
+            : undefined,
+        })
+      },
+    },
+  )
+  expect(stderr).toBe('')
+  expect(logs).toMatchInlineSnapshot(`
+    [
+      {
+        "entity": {
+          "name": "basic.test.ts",
+          "type": "module",
+        },
+        "log": "module
+    ",
+        "type": "stdout",
+      },
+      {
+        "entity": {
+          "name": "suite",
+          "type": "suite",
+        },
+        "log": "suite
+    ",
+        "type": "stdout",
+      },
+      {
+        "entity": {
+          "name": "test",
+          "type": "test",
+        },
+        "log": "test
+    ",
+        "type": "stdout",
+      },
+    ]
+  `)
 })
