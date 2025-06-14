@@ -290,6 +290,11 @@ export default ({ mode }: { mode: string }) => {
                 link: '/guide/browser/multiple-setups',
                 docFooterText: 'Multiple Setups | Browser Mode',
               },
+              {
+                text: 'Visual Regression Testing',
+                link: '/guide/browser/visual-regression-testing',
+                docFooterText: 'Visual Regression Testing | Browser Mode',
+              },
             ],
           },
           {
