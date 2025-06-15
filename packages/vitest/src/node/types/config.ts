@@ -599,7 +599,9 @@ export interface InlineConfig {
   /**
    * Format options for snapshot testing.
    */
-  snapshotFormat?: Omit<PrettyFormatOptions, 'plugins'>
+  snapshotFormat?: Omit<PrettyFormatOptions, 'plugins' | 'compareKeys'> & {
+    compareKeys?: null | undefined
+  }
 
   /**
    * Path to a module which has a default export of diff config.
