@@ -19,9 +19,11 @@ import { createSafeRpc } from './rpc'
 import { browserHashMap, initiateRunner } from './runner'
 import { CommandsManager } from './utils'
 
+const now = performance.now.bind(performance)
+
 const debugVar = getConfig().env.VITEST_BROWSER_DEBUG
 const debug = debugVar && debugVar !== 'false'
-  ? (...args: unknown[]) => client.rpc.debug?.(...args.map(String))
+  ? (...args: unknown[]) => client.rpc.debug(...args.map(String))
   : undefined
 
 channel.addEventListener('message', async (e) => {
@@ -142,7 +144,7 @@ async function prepareTestEnvironment(options: PrepareOptions) {
     })
   }
 
-  state.durations.prepare = performance.now() - options.startTime
+  state.durations.prepare = options.startTime - now()
 
   return {
     runner,
@@ -194,14 +196,14 @@ interface PrepareOptions {
 }
 
 async function prepare(options: PrepareOptions) {
+  // fetch('file://non-existing-1').catch(() => {})
   preparedData = await prepareTestEnvironment(options)
+  // fetch('file://non-existing-2').catch(() => {})
 
   // page is reloading
   debug?.('runner resolved successfully')
 
   const { config, state } = preparedData
-
-  state.durations.prepare = performance.now() - state.durations.prepare
 
   debug?.('prepare time', state.durations.prepare, 'ms')
 
