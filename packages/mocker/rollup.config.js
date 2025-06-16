@@ -23,6 +23,7 @@ const external = [
   ...Object.keys(pkg.dependencies || {}),
   ...Object.keys(pkg.peerDependencies || {}),
   /^msw/,
+  '@vitest/utils/source-map',
 ]
 
 const dtsUtils = createDtsUtils()

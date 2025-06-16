@@ -189,25 +189,9 @@ export default (parentServer: ParentBrowserProject, base = '/'): Plugin[] => {
         ]
 
         const exclude = [
-          'vitest',
-          'vitest/internal/browser',
-          'vitest/runners',
-          '@vitest/browser',
+          '@vitest/browser/context',
           '@vitest/browser/client',
-          '@vitest/utils',
-          '@vitest/utils/source-map',
-          '@vitest/runner',
-          '@vitest/spy',
-          '@vitest/utils/error',
-          '@vitest/snapshot',
-          '@vitest/expect',
-          'std-env',
-          'tinybench',
-          'tinyspy',
-          'tinyrainbow',
-          'pathe',
-          'msw',
-          'msw/browser',
+          '@vitest/browser/utils',
         ]
 
         if (typeof project.config.diff === 'string') {
@@ -237,6 +221,8 @@ export default (parentServer: ParentBrowserProject, base = '/'): Plugin[] => {
         }
 
         const include = [
+          'vitest',
+          'vitest/internal/browser',
           'vitest > expect-type',
           'vitest > @vitest/snapshot > magic-string',
           'vitest > chai',
