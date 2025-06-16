@@ -724,7 +724,7 @@ export default defineConfig({
     watchTriggerPatterns: [
       {
         pattern: /^src\/(mailers|templates)\/(.*)\.(ts|html|txt)$/,
-        testToRun: (id, match) => {
+        testsToRun: (id, match) => {
           // relative to the root value
           return `./api/tests/mailers/${match[2]}.test.ts`
         },

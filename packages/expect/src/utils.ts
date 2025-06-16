@@ -1,5 +1,6 @@
 import type { Test } from '@vitest/runner/types'
 import type { Assertion } from './types'
+import { noop } from '@vitest/utils'
 import { processError } from '@vitest/utils/error'
 
 export function createAssertionMessage(
@@ -73,12 +74,19 @@ export function recordAsyncExpect(
   return promise
 }
 
+function handleTestError(test: Test, err: unknown) {
+  test.result ||= { state: 'fail' }
+  test.result.state = 'fail'
+  test.result.errors ||= []
+  test.result.errors.push(processError(err))
+}
+
 export function wrapAssertion(
   utils: Chai.ChaiUtils,
   name: string,
-  fn: (this: Chai.AssertionStatic & Assertion, ...args: any[]) => void,
+  fn: (this: Chai.AssertionStatic & Assertion, ...args: any[]) => void | PromiseLike<void>,
 ) {
-  return function (this: Chai.AssertionStatic & Assertion, ...args: any[]): void {
+  return function (this: Chai.AssertionStatic & Assertion, ...args: any[]): void | PromiseLike<void> {
     // private
     if (name !== 'withTest') {
       utils.flag(this, '_name', name)
@@ -95,13 +103,18 @@ export function wrapAssertion(
     }
 
     try {
-      return fn.apply(this, args)
+      const result = fn.apply(this, args)
+
+      if (result && typeof result === 'object' && typeof result.then === 'function') {
+        return result.then(noop, (err) => {
+          handleTestError(test, err)
+        })
+      }
+
+      return result
     }
     catch (err) {
-      test.result ||= { state: 'fail' }
-      test.result.state = 'fail'
-      test.result.errors ||= []
-      test.result.errors.push(processError(err))
+      handleTestError(test, err)
     }
   }
 }

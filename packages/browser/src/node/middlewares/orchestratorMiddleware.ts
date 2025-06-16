@@ -9,7 +9,7 @@ export function createOrchestratorMiddleware(parentServer: ParentBrowserProject)
       return next()
     }
     const url = new URL(req.url, 'http://localhost')
-    if (url.pathname !== parentServer.base) {
+    if (url.pathname !== parentServer.prefixOrchestratorUrl) {
       return next()
     }
 

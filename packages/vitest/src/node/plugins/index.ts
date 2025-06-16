@@ -258,6 +258,11 @@ export async function VitestPlugin(
           viteConfig.server.watch = null
         }
 
+        if (options.ui) {
+          // @ts-expect-error mutate readonly
+          viteConfig.plugins.push(await UIPlugin())
+        }
+
         Object.defineProperty(viteConfig, '_vitest', {
           value: options,
           enumerable: false,
@@ -297,7 +302,6 @@ export async function VitestPlugin(
     ...CSSEnablerPlugin(vitest),
     CoverageTransform(vitest),
     VitestCoreResolver(vitest),
-    options.ui ? await UIPlugin() : null,
     ...MocksPlugins(),
     VitestOptimizer(),
     NormalizeURLPlugin(),

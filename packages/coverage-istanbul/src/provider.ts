@@ -16,6 +16,7 @@ import { resolve } from 'pathe'
 import TestExclude from 'test-exclude'
 import c from 'tinyrainbow'
 import { BaseCoverageProvider } from 'vitest/coverage'
+import { isCSSRequest } from 'vitest/node'
 
 import { version } from '../package.json' with { type: 'json' }
 import { COVERAGE_STORE_KEY } from './constants'
@@ -64,7 +65,7 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider<ResolvedCover
     // Istanbul/babel cannot instrument CSS - e.g. Vue imports end up here.
     // File extension itself is .vue, but it contains CSS.
     // e.g. "Example.vue?vue&type=style&index=0&scoped=f7f04e08&lang.css"
-    if (id.endsWith('.css')) {
+    if (isCSSRequest(id)) {
       return
     }
 

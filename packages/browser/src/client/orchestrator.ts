@@ -6,7 +6,6 @@ import { relative } from 'pathe'
 import { getUiAPI } from './ui'
 import { getBrowserState, getConfig } from './utils'
 
-const url = new URL(location.href)
 const ID_ALL = '__vitest_all__'
 
 export class IframeOrchestrator {
@@ -187,7 +186,7 @@ export class IframeOrchestrator {
 
   private createTestIframe(iframeId: string) {
     const iframe = document.createElement('iframe')
-    const src = `${url.pathname}__vitest_test__/__test__/?sessionId=${getBrowserState().sessionId}&iframeId=${iframeId}`
+    const src = `/?sessionId=${getBrowserState().sessionId}&iframeId=${iframeId}`
     iframe.setAttribute('loading', 'eager')
     iframe.setAttribute('src', src)
     iframe.setAttribute('data-vitest', 'true')

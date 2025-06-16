@@ -26,6 +26,7 @@ export class ParentBrowserProject {
   public testerScripts: HtmlTagDescriptor[] | undefined
 
   public faviconUrl: string
+  public prefixOrchestratorUrl: string
   public prefixTesterUrl: string
   public manifest: Promise<Vite.Manifest> | Vite.Manifest
 
@@ -108,7 +109,8 @@ export class ParentBrowserProject {
       this.commands[command] = project.config.browser.commands[command]
     }
 
-    this.prefixTesterUrl = `${base}__vitest_test__/__test__/`
+    this.prefixTesterUrl = `${base || '/'}`
+    this.prefixOrchestratorUrl = `${base}__vitest_test__/`
     this.faviconUrl = `${base}__vitest__/favicon.svg`
 
     this.manifest = (async () => {

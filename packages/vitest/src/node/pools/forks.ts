@@ -30,7 +30,21 @@ function createChildProcessChannel(project: TestProject, collect = false) {
   const rpc = createBirpc<RunnerRPC, RuntimeRPC>(createMethodsRPC(project, { cacheFs: true, collect }), {
     eventNames: ['onCancel'],
     serialize: v8.serialize,
-    deserialize: v => v8.deserialize(Buffer.from(v)),
+    deserialize: (v) => {
+      try {
+        return v8.deserialize(Buffer.from(v))
+      }
+      catch (error) {
+        let stringified = ''
+
+        try {
+          stringified = `\nReceived value: ${JSON.stringify(v)}`
+        }
+        catch {}
+
+        throw new Error(`[vitest-pool]: Unexpected call to process.send(). Make sure your test cases are not interfering with process's channel.${stringified}`, { cause: error })
+      }
+    },
     post(v) {
       emitter.emit(events.message, v)
     },
@@ -65,7 +79,7 @@ export function createForksPool(
   const maxThreads
     = poolOptions.maxForks ?? vitest.config.maxWorkers ?? threadsCount
   const minThreads
-    = poolOptions.minForks ?? vitest.config.minWorkers ?? threadsCount
+    = poolOptions.minForks ?? vitest.config.minWorkers ?? Math.min(threadsCount, maxThreads)
 
   const worker = resolve(vitest.distPath, 'workers/forks.js')
 

@@ -35,7 +35,21 @@ function createChildProcessChannel(project: TestProject, collect: boolean) {
     {
       eventNames: ['onCancel'],
       serialize: v8.serialize,
-      deserialize: v => v8.deserialize(Buffer.from(v)),
+      deserialize: (v) => {
+        try {
+          return v8.deserialize(Buffer.from(v))
+        }
+        catch (error) {
+          let stringified = ''
+
+          try {
+            stringified = `\nReceived value: ${JSON.stringify(v)}`
+          }
+          catch {}
+
+          throw new Error(`[vitest-pool]: Unexpected call to process.send(). Make sure your test cases are not interfering with process's channel.${stringified}`, { cause: error })
+        }
+      },
       post(v) {
         emitter.emit(events.message, v)
       },
@@ -71,7 +85,7 @@ export function createVmForksPool(
   const maxThreads
     = poolOptions.maxForks ?? vitest.config.maxWorkers ?? threadsCount
   const minThreads
-    = poolOptions.maxForks ?? vitest.config.minWorkers ?? threadsCount
+    = poolOptions.maxForks ?? vitest.config.minWorkers ?? Math.min(threadsCount, maxThreads)
 
   const worker = resolve(vitest.distPath, 'workers/vmForks.js')
 

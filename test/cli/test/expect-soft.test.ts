@@ -40,6 +40,12 @@ describe('expect.soft', () => {
     expect.soft(stderr).toContain('AssertionError: expected 5 to deeply equal 6')
   })
 
+  test('promise with expect.extend', async () => {
+    const { stderr } = await run()
+    expect.soft(stderr).toContain('Error: expected 2 to be 3')
+    expect.soft(stderr).toContain('Error: expected 4 to be 3')
+  })
+
   test('passed', async () => {
     const { stdout } = await run()
     expect.soft(stdout).toContain('soft.test.ts > passed')

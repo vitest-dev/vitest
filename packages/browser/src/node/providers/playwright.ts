@@ -20,7 +20,7 @@ import type {
 } from 'vitest/node'
 import { createManualModuleSource } from '@vitest/mocker/node'
 import c from 'tinyrainbow'
-import { createDebugger } from 'vitest/node'
+import { createDebugger, isCSSRequest } from 'vitest/node'
 
 const debug = createDebugger('vitest:browser:playwright')
 
@@ -471,10 +471,8 @@ function genSourceMapUrl(map: SourceMap | string): string {
   return `data:application/json;base64,${Buffer.from(map).toString('base64')}`
 }
 
-const CSS_LANGS_RE
-  = /\.(?:css|less|sass|scss|styl|stylus|pcss|postcss|sss)(?:$|\?)/
 const directRequestRE = /[?&]direct\b/
 
 function isDirectCSSRequest(request: string): boolean {
-  return CSS_LANGS_RE.test(request) && directRequestRE.test(request)
+  return isCSSRequest(request) && directRequestRE.test(request)
 }
