@@ -28,18 +28,18 @@
   },
   "devDependencies": {
     "@testing-library/react": "^13.4.0",
-    "@types/react": "^19.1.6",
+    "@types/react": "^19.1.8",
     "@vitejs/plugin-basic-ssl": "^2.0.0",
     "@vitest/browser": "workspace:*",
     "@vitest/bundled-lib": "link:./bundled-lib",
     "@vitest/cjs-lib": "link:./cjs-lib",
     "@vitest/injected-lib": "link:./injected-lib",
-    "playwright": "^1.52.0",
+    "playwright": "^1.53.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "url": "^0.11.4",
     "vitest": "workspace:*",
-    "vitest-browser-react": "^0.2.0",
+    "vitest-browser-react": "^0.3.0",
     "ws": "catalog:"
   }
 }
