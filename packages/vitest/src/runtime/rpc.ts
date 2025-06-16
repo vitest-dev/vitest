@@ -1,9 +1,9 @@
-import type { CancelReason } from '@vitest/runner'
+import type { CancelReason, FileSpecification } from '@vitest/runner'
 import type { BirpcOptions, BirpcReturn } from 'birpc'
 import type { RunnerRPC, RuntimeRPC } from '../types/rpc'
 import type { WorkerRPC } from '../types/worker'
 import { getSafeTimers } from '@vitest/utils'
-import { createBirpc } from 'birpc'
+import { DEFAULT_TIMEOUT as BIRPC_DEFAULT_TIMEOUT, createBirpc } from 'birpc'
 import { getWorkerState } from './utils'
 
 const { get } = Reflect
@@ -61,6 +61,8 @@ export function createRuntimeRpc(
     BirpcOptions<RuntimeRPC>,
     'on' | 'post' | 'serialize' | 'deserialize'
   >,
+  timeout: number,
+  files: string[] | FileSpecification[],
 ): { rpc: WorkerRPC; onCancel: Promise<CancelReason> } {
   let setCancel = (_reason: CancelReason) => {}
   const onCancel = new Promise<CancelReason>((resolve) => {
@@ -78,6 +80,7 @@ export function createRuntimeRpc(
           'onCollected',
           'onCancel',
         ],
+        timeout: Math.max(BIRPC_DEFAULT_TIMEOUT, timeout),
         onTimeoutError(functionName, args) {
           let message = `[vitest-worker]: Timeout calling "${functionName}"`
 
@@ -92,6 +95,14 @@ export function createRuntimeRpc(
           // JSON.stringify cannot serialize Error instances
           if (functionName === 'onUnhandledError') {
             message += ` with "${args[0]?.message || args[0]}"`
+          }
+
+          if (files.length > 0) {
+            message += ` in files:\n - `
+
+            message += files
+              .map(file => typeof file === 'string' ? file : file.filepath)
+              .join('- \n')
           }
 
           throw new Error(message)

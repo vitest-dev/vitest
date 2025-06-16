@@ -10,7 +10,7 @@ import type { WorkerContext } from '../types/worker'
 import * as nodeos from 'node:os'
 import { resolve } from 'node:path'
 import { MessageChannel } from 'node:worker_threads'
-import { createBirpc } from 'birpc'
+import { DEFAULT_TIMEOUT as BIRPC_DEFAULT_TIMEOUT, createBirpc } from 'birpc'
 import Tinypool from 'tinypool'
 import { rootDir } from '../../paths'
 import { getWorkerMemoryLimit, stringToBytes } from '../../utils/memory-limit'
@@ -32,6 +32,7 @@ function createWorkerChannel(project: TestProject, collect: boolean) {
     on(fn) {
       port.on('message', fn)
     },
+    timeout: Math.max(BIRPC_DEFAULT_TIMEOUT, project.config.maxTimeout),
     onTimeoutError(functionName) {
       throw new Error(`[vitest-pool]: Timeout calling "${functionName}"`)
     },

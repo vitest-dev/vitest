@@ -10,7 +10,7 @@ import EventEmitter from 'node:events'
 import * as nodeos from 'node:os'
 import { resolve } from 'node:path'
 import v8 from 'node:v8'
-import { createBirpc } from 'birpc'
+import { DEFAULT_TIMEOUT as BIRPC_DEFAULT_TIMEOUT, createBirpc } from 'birpc'
 import Tinypool from 'tinypool'
 import { rootDir } from '../../paths'
 import { wrapSerializableConfig } from '../../utils/config-helpers'
@@ -56,6 +56,7 @@ function createChildProcessChannel(project: TestProject, collect: boolean) {
       on(fn) {
         emitter.on(events.response, fn)
       },
+      timeout: Math.max(BIRPC_DEFAULT_TIMEOUT, project.config.maxTimeout),
       onTimeoutError(functionName) {
         throw new Error(`[vitest-pool]: Timeout calling "${functionName}"`)
       },

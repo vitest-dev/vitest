@@ -868,6 +868,7 @@ export function resolveConfig(
 
   resolved.testTimeout ??= resolved.browser.enabled ? 15000 : 5000
   resolved.hookTimeout ??= resolved.browser.enabled ? 30000 : 10000
+  resolved.maxTimeout = Math.max(resolved.testTimeout, resolved.hookTimeout)
 
   return resolved
 }

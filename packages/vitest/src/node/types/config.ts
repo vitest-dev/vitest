@@ -1097,6 +1097,8 @@ export interface ResolvedConfig
 
   maxWorkers: number
   minWorkers: number
+
+  maxTimeout: number
 }
 
 type NonProjectOptions =

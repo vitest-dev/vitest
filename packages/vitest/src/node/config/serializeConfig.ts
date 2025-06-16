@@ -28,6 +28,7 @@ export function serializeConfig(
     testTimeout: config.testTimeout,
     testNamePattern: config.testNamePattern,
     hookTimeout: config.hookTimeout,
+    maxTimeout: config.maxTimeout,
     clearMocks: config.clearMocks,
     mockReset: config.mockReset,
     restoreMocks: config.restoreMocks,

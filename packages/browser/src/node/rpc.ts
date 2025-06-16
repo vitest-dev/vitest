@@ -335,8 +335,8 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject, defaultMocke
         on: fn => ws.on('message', fn),
         eventNames: ['onCancel', 'cdpEvent'],
         serialize: (data: any) => stringify(data, stringifyReplace),
-        timeout: -1, // createTesters can take a long time
         deserialize: parse,
+        timeout: -1, // createTesters can take a long time
         onTimeoutError(functionName) {
           throw new Error(`[vitest-api]: Timeout calling "${functionName}"`)
         },

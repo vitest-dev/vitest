@@ -71,7 +71,7 @@ async function execute(method: 'run' | 'collect', ctx: ContextRPC) {
     }
 
     // RPC is used to communicate between worker (be it a thread worker or child process or a custom implementation) and the main thread
-    const { rpc, onCancel } = createRuntimeRpc(worker.getRpcOptions(ctx))
+    const { rpc, onCancel } = createRuntimeRpc(worker.getRpcOptions(ctx), ctx.config.maxTimeout, ctx.files)
 
     const beforeEnvironmentTime = performance.now()
     const environment = await loadEnvironment(ctx, rpc)

@@ -26,6 +26,7 @@ export interface SerializedConfig {
   allowOnly: boolean
   testTimeout: number
   hookTimeout: number
+  maxTimeout: number
   clearMocks: boolean
   mockReset: boolean
   restoreMocks: boolean

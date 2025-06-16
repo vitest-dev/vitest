@@ -1,5 +1,4 @@
 import type { File, TaskEventPack, TaskResultPack, TestAnnotation } from '@vitest/runner'
-
 import type { IncomingMessage } from 'node:http'
 import type { ViteDevServer } from 'vite'
 import type { WebSocket } from 'ws'
@@ -16,7 +15,7 @@ import type {
 } from './types'
 import { existsSync, promises as fs } from 'node:fs'
 import { isPrimitive, noop } from '@vitest/utils'
-import { createBirpc } from 'birpc'
+import { DEFAULT_TIMEOUT as BIRPC_DEFAULT_TIMEOUT, createBirpc } from 'birpc'
 import { parse, stringify } from 'flatted'
 import { WebSocketServer } from 'ws'
 import { API_PATH } from '../constants'
@@ -145,6 +144,7 @@ export function setup(ctx: Vitest, _server?: ViteDevServer): void {
         ],
         serialize: (data: any) => stringify(data, stringifyReplace),
         deserialize: parse,
+        timeout: Math.max(BIRPC_DEFAULT_TIMEOUT, ctx.config.maxTimeout),
         onTimeoutError(functionName) {
           throw new Error(`[vitest-api]: Timeout calling "${functionName}"`)
         },
