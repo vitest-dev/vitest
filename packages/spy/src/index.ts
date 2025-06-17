@@ -467,14 +467,32 @@ export function spyOn<T, K extends keyof T>(
     state = fn.mock._state()
   }
 
-  const stub = tinyspy.internalSpyOn(obj, objMethod as any)
-  const spy = enhanceSpy(stub) as MockInstance
+  try {
+    const stub = tinyspy.internalSpyOn(obj, objMethod as any)
 
-  if (state) {
-    spy.mock._state(state)
+    const spy = enhanceSpy(stub) as MockInstance
+
+    if (state) {
+      spy.mock._state(state)
+    }
+
+    return spy
   }
+  catch (error) {
+    if (
+      error instanceof TypeError
+      && error.message.includes('Cannot redefine property')
+      && Symbol.toStringTag
+      && (obj as any)[Symbol.toStringTag] === 'Module'
+    ) {
+      throw new TypeError(
+        `Cannot spy on export "${String(objMethod)}". Module namespace is not configurable in ESM. See: https://vitest.dev/guide/browser/#limitations`,
+        { cause: error },
+      )
+    }
 
-  return spy
+    throw error
+  }
 }
 
 let callOrder = 0
