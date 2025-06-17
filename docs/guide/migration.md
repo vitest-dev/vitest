@@ -56,7 +56,7 @@ With the new `browser.instances` field you can also specify multiple browser con
 
 ### `spy.mockReset` Now Restores the Original Implementation
 
-There was no good way to reset the spy to the original implementation without reaplying the spy. Now, `spy.mockReset` will reset the implementation function to the original one instead of a fake noop.
+There was no good way to reset the spy to the original implementation without reapplying the spy. Now, `spy.mockReset` will reset the implementation function to the original one instead of a fake noop.
 
 ```ts
 const foo = {

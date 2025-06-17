@@ -434,7 +434,7 @@ test('types are defined correctly', ({ todos, archive }) => {
 })
 ```
 
-::: info Type Infering
+::: info Type Inferring
 Note that Vitest doesn't support infering the types when the `use` function is called. It is always preferable to pass down the whole context type as the generic type when `test.extend` is called:
 
 ```ts
