@@ -265,4 +265,52 @@ describe('.toMatchScreenshot', () => {
       `)
     },
   )
+
+  test(
+    'creates correct automatic screenshot names',
+    async ({ onTestFinished }) => {
+      const basename = 'toMatchScreenshot-creates-correct-automatic-screenshot-names'
+      const path = join(
+        import.meta.dirname,
+        '__screenshots__',
+        'toMatchScreenshot.test.ts',
+      )
+
+      const firstPath = join(
+        path,
+        `${basename}-1-${server.browser}-${server.platform}.png`
+      )
+      const secondPath = join(
+        path,
+        `${basename}-2-${server.browser}-${server.platform}.png`
+      )
+
+      onTestFinished(async () => {
+        await Promise.all([
+          server.commands.removeFile(firstPath),
+          server.commands.removeFile(secondPath),
+        ])
+      })
+
+      renderTestCase([
+        'oklch(39.6% 0.141 25.723)',
+        'oklch(40.5% 0.101 131.063)',
+        'oklch(37.9% 0.146 265.522)',
+      ])
+
+      const locator = page.getByTestId(dataTestId)
+
+      await locator.screenshot({
+        save: true,
+        path: firstPath,
+      })
+      await locator.screenshot({
+        save: true,
+        path: secondPath,
+      })
+
+      await expect(locator).toMatchScreenshot()
+      await expect(locator).toMatchScreenshot()
+    },
+  )
 })
