@@ -54,6 +54,11 @@ export async function collectTests(
 
       await runner.importFile(filepath, 'collect')
 
+      const durations = runner.getImportDurations?.()
+      if (durations) {
+        file.importDurations = durations
+      }
+
       const defaultTasks = await getDefaultSuite().collect(file)
 
       const fileHooks = createSuiteHooks()
@@ -85,17 +90,14 @@ export async function collectTests(
         state: 'fail',
         errors: [error],
       }
+
+      const durations = runner.getImportDurations?.()
+      if (durations) {
+        file.importDurations = durations
+      }
     }
 
     calculateSuiteHash(file)
-
-    file.tasks.forEach((task) => {
-      // task.suite refers to the internal default suite object
-      // it should not be reported
-      if (task.suite?.id === '') {
-        delete task.suite
-      }
-    })
 
     const hasOnlyTasks = someTasksAreOnly(file)
     interpretTaskModes(

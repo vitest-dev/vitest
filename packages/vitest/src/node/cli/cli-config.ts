@@ -7,6 +7,7 @@ import type {
 } from '../types/pool-options'
 import type { CliOptions } from './cli-api'
 import { defaultBrowserPort, defaultPort } from '../../constants'
+import { ReportersMap } from '../reporters'
 
 type NestedOption<T, V = Extract<T, Record<string, any>>> = V extends
   | never
@@ -152,14 +153,28 @@ export const cliOptionsConfig: VitestCLIOptions = {
     subcommands: apiConfig(defaultPort),
   },
   silent: {
-    description: 'Silent console output from tests',
+    description: 'Silent console output from tests. Use `\'passed-only\'` to see logs from failing tests only.',
+    argument: '[value]',
+    transform(value) {
+      if (value === 'true' || value === 'yes' || value === true) {
+        return true
+      }
+      if (value === 'false' || value === 'no' || value === false) {
+        return false
+      }
+      if (value === 'passed-only') {
+        return value
+      }
+
+      throw new TypeError(`Unexpected value "--silent=${value}". Use "--silent=true ${value}" instead.`)
+    },
   },
   hideSkippedTests: {
     description: 'Hide logs for skipped tests',
   },
   reporters: {
     alias: 'reporter',
-    description: 'Specify reporters',
+    description: `Specify reporters (${Object.keys(ReportersMap).join(', ')})`,
     argument: '<name>',
     subcommands: null, // don't support custom objects
     array: true,
@@ -331,7 +346,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
     argument: '<name>',
   },
   workspace: {
-    description: 'Path to a workspace configuration file',
+    description: '[deprecated] Path to a workspace configuration file',
     argument: '<path>',
     normalize: true,
   },
@@ -360,7 +375,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
         return { enabled: browser === 'yes' }
       }
       if (typeof browser === 'string') {
-        return { enabled: true, name: browser }
+        return { name: browser }
       }
       return browser
     },
@@ -386,7 +401,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
       },
       provider: {
         description:
-          'Provider used to run browser tests. Some browsers are only available for specific providers. Can be "webdriverio", "playwright", "preview", or the path to a custom provider. Visit [`browser.provider`](https://vitest.dev/config/#browser-provider) for more information (default: `"preview"`)',
+          'Provider used to run browser tests. Some browsers are only available for specific providers. Can be "webdriverio", "playwright", "preview", or the path to a custom provider. Visit [`browser.provider`](https://vitest.dev/guide/browser/config.html#browser-provider) for more information (default: `"preview"`)',
         argument: '<name>',
         subcommands: null, // don't support custom objects
       },
@@ -547,6 +562,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
           'Changes the order in which setup files are executed. Accepted values are: "list" and "parallel". If set to "list", will run setup files in the order they are defined. If set to "parallel", will run setup files in parallel (default: `"parallel"`)',
         argument: '<order>',
       },
+      groupOrder: null,
     },
   },
   inspect: {
@@ -647,6 +663,10 @@ export const cliOptionsConfig: VitestCLIOptions = {
       printBasicPrototype: {
         description: 'Print basic prototype Object and Array (default: `true`)',
       },
+      maxDepth: {
+        description: 'Limit the depth to recurse when printing nested objects (default: `20`)',
+        argument: '<maxDepth>',
+      },
       truncateThreshold: {
         description: 'Number of lines to show before and after each change (default: `0`)',
         argument: '<threshold>',
@@ -698,6 +718,10 @@ export const cliOptionsConfig: VitestCLIOptions = {
         description: 'Path to a custom tsconfig file',
         argument: '<path>',
         normalize: true,
+      },
+      spawnTimeout: {
+        description: 'Minimum time in milliseconds it takes to spawn the typechecker',
+        argument: '<time>',
       },
       include: null,
       exclude: null,
@@ -788,6 +812,10 @@ export const cliOptionsConfig: VitestCLIOptions = {
   includeTaskLocation: {
     description: 'Collect test and suite locations in the `location` property',
   },
+  attachmentsDir: {
+    description: 'The directory where attachments from `context.annotate` are stored in (default: `.vitest-attachments`)',
+    argument: '<dir>',
+  },
 
   // CLI only options
   run: {
@@ -800,6 +828,11 @@ export const cliOptionsConfig: VitestCLIOptions = {
   clearScreen: {
     description:
       'Clear terminal screen when re-running tests during watch mode (default: `true`)',
+  },
+  configLoader: {
+    description:
+      'Use `bundle` to bundle the config with esbuild or `runner` (experimental) to process it on the fly. This is only available in vite version 6.1.0 and above. (default: `bundle`)',
+    argument: '<loader>',
   },
   standalone: {
     description:
@@ -853,6 +886,8 @@ export const cliOptionsConfig: VitestCLIOptions = {
   json: null,
   provide: null,
   filesOnly: null,
+  projects: null,
+  watchTriggerPatterns: null,
 }
 
 export const benchCliOptionsConfig: Pick<

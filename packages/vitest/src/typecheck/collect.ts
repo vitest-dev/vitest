@@ -202,10 +202,12 @@ export async function collectTests(
         suite: latestSuite,
         file,
         mode,
+        timeout: 0,
         context: {} as any, // not used in typecheck
         name: definition.name,
         end: definition.end,
         start: definition.start,
+        annotations: [],
         meta: {
           typecheck: true,
         },

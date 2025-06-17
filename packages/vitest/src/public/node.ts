@@ -1,5 +1,5 @@
 import type { ModuleDiagnostic as _FileDiagnostic } from '../node/reporters/reported-tasks'
-import { createServer as _createServer } from 'vite'
+import * as vite from 'vite'
 import { Vitest } from '../node/core'
 import { TestModule as _TestFile } from '../node/reporters/reported-tasks'
 
@@ -66,6 +66,7 @@ export type {
   BrowserCommandContext,
   BrowserConfigOptions,
   BrowserInstanceOption,
+  BrowserModuleMocker,
   BrowserOrchestrator,
   BrowserProvider,
   BrowserProviderInitializationOptions,
@@ -80,8 +81,8 @@ export type {
   ResolvedBrowserOptions,
 } from '../node/types/browser'
 /** @deprecated use `createViteServer` instead */
-export const createServer: typeof _createServer = _createServer
-export const createViteServer: typeof _createServer = _createServer
+export const createServer: typeof vite.createServer = vite.createServer
+export const createViteServer: typeof vite.createServer = vite.createServer
 export type {
   ApiConfig,
   BuiltinEnvironment,
@@ -121,6 +122,7 @@ export type {
   ResolvedCoverageOptions,
 } from '../node/types/coverage'
 
+export type { VitestPluginContext } from '../node/types/plugin'
 export type { TestRunResult } from '../node/types/tests'
 /**
  * @deprecated Use `TestModule` instead
@@ -128,6 +130,7 @@ export type { TestRunResult } from '../node/types/tests'
 export const TestFile: typeof _TestFile = _TestFile
 export type { WorkerContext } from '../node/types/worker'
 export { createViteLogger } from '../node/viteLogger'
+export type { WatcherTriggerPattern } from '../node/watcher'
 
 /**
  * @deprecated Use `ModuleDiagnostic` instead
@@ -145,8 +148,8 @@ export type {
   RootAndTarget as TypeCheckRootAndTarget,
 } from '../typecheck/types'
 
+export type { TestExecutionMethod as TestExecutionType } from '../types/worker'
 export { createDebugger } from '../utils/debugger'
-
 export type {
   RunnerTask,
   RunnerTaskResult,
@@ -165,11 +168,15 @@ export type { SerializedError } from '@vitest/utils'
 
 export {
   esbuildVersion,
+  isCSSRequest,
   isFileServingAllowed,
   parseAst,
   parseAstAsync,
   rollupVersion,
   version as viteVersion,
 } from 'vite'
+
+// rolldownVersion is exported only by rolldown-vite
+export const rolldownVersion: string | undefined = (vite as any).rolldownVersion
 
 export type * as Vite from 'vite'

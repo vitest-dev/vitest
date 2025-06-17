@@ -5,7 +5,7 @@ export default defineConfig({
   test: {
     watch: false,
 
-    workspace: [
+    projects: [
       {
         test: {
           name: "Browser in workspace",

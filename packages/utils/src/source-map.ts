@@ -229,6 +229,10 @@ export function parseStacktrace(
         ? new URL(map.sourceRoot, fileUrl)
         : fileUrl
       file = new URL(source, sourceRootUrl).pathname
+      // if the file path is on windows, we need to remove the leading slash
+      if (file.match(/\/\w:\//)) {
+        file = file.slice(1)
+      }
     }
 
     if (shouldFilter(ignoreStackEntries, file)) {
@@ -277,8 +281,22 @@ export function parseErrorStacktrace(
     return e.stacks
   }
 
-  const stackStr = e.stack || e.stackStr || ''
-  let stackFrames = parseStacktrace(stackStr, options)
+  const stackStr = e.stack || ''
+  // if "stack" property was overwritten at runtime to be something else,
+  // ignore the value because we don't know how to process it
+  let stackFrames = typeof stackStr === 'string'
+    ? parseStacktrace(stackStr, options)
+    : []
+
+  if (!stackFrames.length) {
+    const e_ = e as any
+    if (e_.fileName != null && e_.lineNumber != null && e_.columnNumber != null) {
+      stackFrames = parseStacktrace(`${e_.fileName}:${e_.lineNumber}:${e_.columnNumber}`, options)
+    }
+    if (e_.sourceURL != null && e_.line != null && e_._column != null) {
+      stackFrames = parseStacktrace(`${e_.sourceURL}:${e_.line}:${e_.column}`, options)
+    }
+  }
 
   if (options.frameFilter) {
     stackFrames = stackFrames.filter(

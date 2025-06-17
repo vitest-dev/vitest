@@ -1,9 +1,11 @@
 import type {
+  ImportDuration,
   Task as RunnerTask,
   Test as RunnerTestCase,
   File as RunnerTestFile,
   Suite as RunnerTestSuite,
   TaskMeta,
+  TestAnnotation,
 } from '@vitest/runner'
 import type { SerializedError, TestError } from '@vitest/utils'
 import type { TestProject } from '../project'
@@ -50,6 +52,13 @@ class ReportedTaskImplementation {
   public ok(): boolean {
     const result = this.task.result
     return !result || result.state !== 'fail'
+  }
+
+  /**
+   * Custom metadata that was attached to the test during its execution.
+   */
+  public meta(): TaskMeta {
+    return this.task.meta
   }
 
   /**
@@ -171,10 +180,10 @@ export class TestCase extends ReportedTaskImplementation {
   }
 
   /**
-   * Custom metadata that was attached to the test during its execution.
+   * Test annotations added via the `task.annotate` API during the test execution.
    */
-  public meta(): TaskMeta {
-    return this.task.meta
+  public annotations(): ReadonlyArray<TestAnnotation> {
+    return [...this.task.annotations]
   }
 
   /**
@@ -237,10 +246,10 @@ class TestCollection {
   /**
    * Filters all tests that are part of this collection and its children.
    */
-  *allTests(state?: TestState): Generator<TestCase, undefined, void> {
+  * allTests(state?: TestState): Generator<TestCase, undefined, void> {
     for (const child of this) {
       if (child.type === 'suite') {
-        yield * child.children.allTests(state)
+        yield* child.children.allTests(state)
       }
       else if (state) {
         const testState = child.result().state
@@ -257,7 +266,7 @@ class TestCollection {
   /**
    * Filters only the tests that are part of this collection.
    */
-  *tests(state?: TestState): Generator<TestCase, undefined, void> {
+  * tests(state?: TestState): Generator<TestCase, undefined, void> {
     for (const child of this) {
       if (child.type !== 'test') {
         continue
@@ -278,7 +287,7 @@ class TestCollection {
   /**
    * Filters only the suites that are part of this collection.
    */
-  *suites(): Generator<TestSuite, undefined, void> {
+  * suites(): Generator<TestSuite, undefined, void> {
     for (const child of this) {
       if (child.type === 'suite') {
         yield child
@@ -289,16 +298,16 @@ class TestCollection {
   /**
    * Filters all suites that are part of this collection and its children.
    */
-  *allSuites(): Generator<TestSuite, undefined, void> {
+  * allSuites(): Generator<TestSuite, undefined, void> {
     for (const child of this) {
       if (child.type === 'suite') {
         yield child
-        yield * child.children.allSuites()
+        yield* child.children.allSuites()
       }
     }
   }
 
-  *[Symbol.iterator](): Generator<TestSuite | TestCase, undefined, void> {
+  * [Symbol.iterator](): Generator<TestSuite | TestCase, undefined, void> {
     for (const task of this.#task.tasks) {
       yield getReportedTask(this.#project, task) as TestSuite | TestCase
     }
@@ -388,6 +397,11 @@ export class TestSuite extends SuiteImplementation {
   declare public ok: () => boolean
 
   /**
+   * The meta information attached to the suite during its collection or execution.
+   */
+  declare public meta: () => TaskMeta
+
+  /**
    * Checks the running state of the suite.
    */
   public state(): TestSuiteState {
@@ -447,6 +461,11 @@ export class TestModule extends SuiteImplementation {
   declare public ok: () => boolean
 
   /**
+   * The meta information attached to the module during its collection or execution.
+   */
+  declare public meta: () => TaskMeta
+
+  /**
    * Useful information about the module like duration, memory usage, etc.
    * If the module was not executed yet, all diagnostic values will return `0`.
    */
@@ -456,12 +475,16 @@ export class TestModule extends SuiteImplementation {
     const prepareDuration = this.task.prepareDuration || 0
     const environmentSetupDuration = this.task.environmentLoad || 0
     const duration = this.task.result?.duration || 0
+    const heap = this.task.result?.heap
+    const importDurations = this.task.importDurations ?? {}
     return {
       environmentSetupDuration,
       prepareDuration,
       collectDuration,
       setupDuration,
       duration,
+      heap,
+      importDurations,
     }
   }
 }
@@ -609,6 +632,15 @@ export interface ModuleDiagnostic {
    * Accumulated duration of all tests and hooks in the module.
    */
   readonly duration: number
+  /**
+   * The amount of memory used by the test module in bytes.
+   * This value is only available if the test was executed with `logHeapUsage` flag.
+   */
+  readonly heap: number | undefined
+  /**
+   * The time spent importing every non-externalized dependency that Vitest has processed.
+   */
+  readonly importDurations: Record<string, ImportDuration>
 }
 
 function storeTask(

@@ -1,4 +1,5 @@
 import type { File, Suite, Task, TaskResult } from 'vitest'
+import { createFileTask } from '@vitest/runner/utils'
 import { resolve } from 'pathe'
 import { expect, test } from 'vitest'
 import { getDuration } from '../../../packages/vitest/src/node/reporters/junit'
@@ -8,18 +9,7 @@ const root = resolve(__dirname, '../fixtures')
 
 test('calc the duration used by junit', () => {
   const result: TaskResult = { state: 'pass', duration: 0 }
-  const file: File = {
-    id: '1',
-    filepath: 'test.ts',
-    file: null!,
-    projectName: '',
-    type: 'suite',
-    tasks: [],
-    name: 'test.ts',
-    mode: 'run',
-    meta: {},
-  }
-  file.file = file
+  const file: File = createFileTask('/test.ts', '/', 'test')
   const suite: Suite = {
     id: '1_0',
     type: 'suite',
@@ -35,7 +25,9 @@ test('calc the duration used by junit', () => {
     name: 'timeout',
     mode: 'run',
     result,
+    annotations: [],
     file,
+    timeout: 0,
     context: null as any,
     suite,
     meta: {},
@@ -119,8 +111,8 @@ test('options.classname changes classname property', async () => {
 
   // All classname attributes should have the custom value
   expect(xml.match(/<testcase classname="a\.test\.ts"/g)).toBeNull()
-  expect(xml.match(/<testcase classname="/g)).toHaveLength(13)
-  expect(xml.match(/<testcase classname="some-custom-classname"/g)).toHaveLength(13)
+  expect(xml.match(/<testcase classname="/g)).toHaveLength(16)
+  expect(xml.match(/<testcase classname="some-custom-classname"/g)).toHaveLength(16)
 })
 
 test('options.suiteName changes name property', async () => {

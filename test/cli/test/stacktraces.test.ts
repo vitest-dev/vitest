@@ -3,8 +3,6 @@ import { glob } from 'tinyglobby'
 import { describe, expect, it } from 'vitest'
 import { runVitest } from '../../test-utils'
 
-const [major] = process.version.slice(1).split('.').map(num => Number(num))
-
 // To prevent the warning coming up in snapshots
 process.setMaxListeners(20)
 
@@ -68,7 +66,31 @@ describe('stacktrace filtering', async () => {
   })
 })
 
-it.runIf(major < 22)('stacktrace in vmThreads', async () => {
+describe('stacktrace in dependency package', () => {
+  const root = resolve(__dirname, '../fixtures/stacktraces')
+  const testFile = resolve(root, './error-in-package.test.js')
+
+  it('external', async () => {
+    const { stderr } = await runVitest({
+      root,
+    }, [testFile])
+    expect(removeNodeModules(removeLines(stderr))).toMatchSnapshot()
+  })
+
+  it('inline', async () => {
+    const { stderr } = await runVitest({
+      root,
+      server: {
+        deps: {
+          inline: [/@vitest\/test-dep-error/],
+        },
+      },
+    }, [testFile])
+    expect(removeNodeModules(removeLines(stderr))).toMatchSnapshot()
+  })
+})
+
+it('stacktrace in vmThreads', async () => {
   const root = resolve(__dirname, '../fixtures/stacktraces')
   const testFile = resolve(root, './error-with-stack.test.js')
   const { stderr } = await runVitest({
@@ -81,4 +103,8 @@ it.runIf(major < 22)('stacktrace in vmThreads', async () => {
 
 function removeLines(log: string) {
   return log.replace(/⎯{2,}/g, '⎯⎯')
+}
+
+function removeNodeModules(log: string) {
+  return log.replace(/[^ ]*\/node_modules\//g, '(NODE_MODULES)/')
 }

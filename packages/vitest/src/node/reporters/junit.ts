@@ -8,7 +8,7 @@ import { stripVTControlCharacters } from 'node:util'
 import { getSuites } from '@vitest/runner/utils'
 import { dirname, relative, resolve } from 'pathe'
 import { getOutputFile } from '../../utils/config-helpers'
-import { capturePrintError } from '../error'
+import { capturePrintError } from '../printError'
 import { IndentedLogger } from './renderers/indented-logger'
 
 interface ClassnameTemplateVariables {
@@ -243,6 +243,21 @@ export class JUnitReporter implements Reporter {
             await this.logger.log('<skipped/>')
           }
 
+          if (task.type === 'test' && task.annotations.length) {
+            await this.logger.log('<properties>')
+            this.logger.indent()
+
+            for (const annotation of task.annotations) {
+              await this.logger.log(
+                `<property name="${escapeXML(annotation.type)}" value="${escapeXML(annotation.message)}">`,
+              )
+              await this.logger.log('</property>')
+            }
+
+            this.logger.unindent()
+            await this.logger.log('</properties>')
+          }
+
           if (task.result?.state === 'fail') {
             const errors = task.result.errors || []
             for (const error of errors) {
@@ -250,7 +265,7 @@ export class JUnitReporter implements Reporter {
                 'failure',
                 {
                   message: error?.message,
-                  type: error?.name ?? error?.nameStr,
+                  type: error?.name,
                 },
                 async () => {
                   if (!error) {
@@ -317,10 +332,12 @@ export class JUnitReporter implements Reporter {
           mode: 'run',
           result: file.result,
           meta: {},
+          timeout: 0,
           // NOTE: not used in JUnitReporter
           context: null as any,
           suite: null as any,
           file: null as any,
+          annotations: [],
         } satisfies Task)
       }
 

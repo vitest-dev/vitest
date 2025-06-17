@@ -1,20 +1,16 @@
 import type {
   DepOptimizationOptions,
-  ResolvedConfig,
   UserConfig as ViteConfig,
 } from 'vite'
-import type { DepsOptimizationOptions, InlineConfig } from '../types/config'
+import type { DepsOptimizationOptions } from '../types/config'
 import { dirname } from 'pathe'
 import { searchForWorkspaceRoot, version as viteVersion } from 'vite'
 import * as vite from 'vite'
 import { rootDir } from '../../paths'
-import { VitestCache } from '../cache'
 
 export function resolveOptimizerConfig(
   _testOptions: DepsOptimizationOptions | undefined,
   viteOptions: DepOptimizationOptions | undefined,
-  testConfig: InlineConfig,
-  viteCacheDir: string | undefined,
 ): { cacheDir?: string; optimizeDeps: DepOptimizationOptions } {
   const testOptions = _testOptions || {}
   const newConfig: { cacheDir?: string; optimizeDeps: DepOptimizationOptions }
@@ -42,7 +38,6 @@ export function resolveOptimizerConfig(
     }
   }
   else {
-    const root = testConfig.root ?? process.cwd()
     const currentInclude = testOptions.include || viteOptions?.include || []
     const exclude = [
       'vitest',
@@ -60,7 +55,6 @@ export function resolveOptimizerConfig(
       (n: string) => !exclude.includes(n),
     )
 
-    newConfig.cacheDir = (testConfig.cache !== false && testConfig.cache?.dir) || VitestCache.resolveCacheDir(root, viteCacheDir, testConfig.name)
     newConfig.optimizeDeps = {
       ...viteOptions,
       ...testOptions,
@@ -120,19 +114,6 @@ export function deleteDefineConfig(viteConfig: ViteConfig): Record<string, any> 
     }
   }
   return defines
-}
-
-export function hijackVitePluginInject(viteConfig: ResolvedConfig): void {
-  // disable replacing `process.env.NODE_ENV` with static string
-  const processEnvPlugin = viteConfig.plugins.find(
-    p => p.name === 'vite:client-inject',
-  )
-  if (processEnvPlugin) {
-    const originalTransform = processEnvPlugin.transform as any
-    processEnvPlugin.transform = function transform(code, id, options) {
-      return originalTransform.call(this, code, id, { ...options, ssr: true })
-    }
-  }
 }
 
 export function resolveFsAllow(

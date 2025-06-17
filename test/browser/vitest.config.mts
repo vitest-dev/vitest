@@ -58,7 +58,7 @@ export default defineConfig({
           ? playwrightInstances
           : webdriverioInstances,
       provider,
-      isolate: false,
+      // isolate: false,
       testerScripts: [
         {
           content: 'globalThis.__injected = []',
@@ -93,6 +93,12 @@ export default defineConfig({
       commands: {
         myCustomCommand,
         stripVTControlCharacters,
+        async startTrace(ctx) {
+          await ctx.page.context().tracing.start({ screenshots: true, snapshots: true })
+        },
+        async stopTrace(ctx) {
+          await ctx.page.context().tracing.stop({ path: 'trace.zip' })
+        },
       },
     },
     alias: {
@@ -107,6 +113,11 @@ export default defineConfig({
     env: {
       BROWSER: browser,
     },
+    onConsoleLog(log) {
+      if (log.includes('MESSAGE ADDED')) {
+        return false
+      }
+    },
   },
   plugins: [
     {
@@ -115,6 +126,12 @@ export default defineConfig({
         if (id.includes('/__vitest__/')) {
           throw new Error(`Unexpected transform: ${id}`)
         }
+      },
+    },
+    {
+      name: 'test-early-transform',
+      async configureServer(server) {
+        await server.ssrLoadModule('/package.json')
       },
     },
   ],

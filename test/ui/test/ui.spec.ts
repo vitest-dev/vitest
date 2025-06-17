@@ -1,6 +1,7 @@
+import type { Vitest } from 'vitest/node'
 import { Writable } from 'node:stream'
 import { expect, test } from '@playwright/test'
-import { startVitest, type Vitest } from 'vitest/node'
+import { startVitest } from 'vitest/node'
 
 const port = 9000
 const pageUrl = `http://localhost:${port}/__vitest__/`
@@ -67,7 +68,7 @@ test.describe('ui', () => {
     await page.goto(pageUrl)
 
     // dashboard
-    await expect(page.locator('[aria-labelledby=tests]')).toContainText('8 Pass 1 Fail 9 Total')
+    await expect(page.locator('[aria-labelledby=tests]')).toContainText('13 Pass 1 Fail 14 Total')
 
     // unhandled errors
     await expect(page.getByTestId('unhandled-errors')).toContainText(
@@ -113,6 +114,89 @@ test.describe('ui', () => {
     expect(await page.getByText('afterAll').all()).toHaveLength(6)
   })
 
+  test('annotations in the report tab', async ({ page }) => {
+    await page.goto(pageUrl)
+
+    await test.step('annotated test', async () => {
+      const item = page.getByLabel('annotated test')
+      await item.click({ force: true })
+      await page.getByTestId('btn-report').click({ force: true })
+
+      const annotations = page.getByRole('note')
+      await expect(annotations).toHaveCount(2)
+
+      await expect(annotations.first()).toContainText('hello world')
+      await expect(annotations.first()).toContainText('notice')
+      await expect(annotations.first()).toContainText('fixtures/annotated.test.ts:4:9')
+
+      await expect(annotations.last()).toContainText('second annotation')
+      await expect(annotations.last()).toContainText('notice')
+      await expect(annotations.last()).toContainText('fixtures/annotated.test.ts:5:9')
+    })
+
+    await test.step('annotated typed test', async () => {
+      const item = page.getByLabel('annotated typed test')
+      await item.click({ force: true })
+      await page.getByTestId('btn-report').click({ force: true })
+
+      const annotation = page.getByRole('note')
+      await expect(annotation).toHaveCount(1)
+
+      await expect(annotation).toContainText('beware!')
+      await expect(annotation).toContainText('warning')
+      await expect(annotation).toContainText('fixtures/annotated.test.ts:9:9')
+    })
+
+    await test.step('annotated file test', async () => {
+      const item = page.getByLabel('annotated file test')
+      await item.click({ force: true })
+      await page.getByTestId('btn-report').click({ force: true })
+
+      const annotation = page.getByRole('note')
+      await expect(annotation).toHaveCount(1)
+
+      await expect(annotation).toContainText('file annotation')
+      await expect(annotation).toContainText('notice')
+      await expect(annotation).toContainText('fixtures/annotated.test.ts:13:9')
+      await expect(annotation.getByRole('link')).toHaveAttribute('href', /__vitest_attachment__\?path=/)
+    })
+
+    await test.step('annotated image test', async () => {
+      const item = page.getByLabel('annotated image test')
+      await item.click({ force: true })
+      await page.getByTestId('btn-report').click({ force: true })
+
+      const annotation = page.getByRole('note')
+      await expect(annotation).toHaveCount(1)
+
+      await expect(annotation).toContainText('image annotation')
+      await expect(annotation).toContainText('notice')
+      await expect(annotation).toContainText('fixtures/annotated.test.ts:19:9')
+      await expect(annotation.getByRole('link')).toHaveAttribute('href', /__vitest_attachment__\?path=/)
+      await expect(annotation.getByRole('img')).toHaveAttribute('src', /__vitest_attachment__\?path=/)
+    })
+  })
+
+  test('annotations in the editor tab', async ({ page }) => {
+    await page.goto(pageUrl)
+    const item = page.getByLabel('fixtures/annotated.test.ts')
+    await item.hover()
+    await item.getByTestId('btn-open-details').click({ force: true })
+    await page.getByTestId('btn-code').click({ force: true })
+
+    const annotations = page.getByRole('note')
+    await expect(annotations).toHaveCount(5)
+
+    await expect(annotations.first()).toHaveText('notice: hello world')
+    await expect(annotations.nth(1)).toHaveText('notice: second annotation')
+    await expect(annotations.nth(2)).toHaveText('warning: beware!')
+    await expect(annotations.nth(3)).toHaveText(/notice: file annotation/)
+    await expect(annotations.nth(4)).toHaveText('notice: image annotation')
+
+    await expect(annotations.last().getByRole('link')).toHaveAttribute('href', /__vitest_attachment__\?path=/)
+    await expect(annotations.nth(3).getByRole('link')).toHaveAttribute('href', /__vitest_attachment__\?path=/)
+  })
+
   test('error', async ({ page }) => {
     await page.goto(pageUrl)
     const item = page.getByLabel('fixtures/error.test.ts')
@@ -126,7 +210,7 @@ test.describe('ui', () => {
 
     // match all files when no filter
     await page.getByPlaceholder('Search...').fill('')
-    await page.getByText('PASS (4)').click()
+    await page.getByText('PASS (5)').click()
     await expect(page.getByTestId('details-panel').getByText('fixtures/sample.test.ts', { exact: true })).toBeVisible()
 
     // match nothing
@@ -166,6 +250,13 @@ test.describe('ui', () => {
     await page.getByPlaceholder('Search...').fill('<>\'"')
     await expect(page.getByText('<>\'"')).toBeVisible()
     await expect(page.getByTestId('details-panel').getByText('fixtures/task-name.test.ts', { exact: true })).toBeVisible()
+
+    // pass files with special chars
+    await page.getByPlaceholder('Search...').fill('char () - Square root of nine (9)')
+    await expect(page.getByText('char () - Square root of nine (9)')).toBeVisible()
+    await page.getByText('char () - Square root of nine (9)').hover()
+    await page.getByLabel('Run current test').click()
+    await expect(page.getByText('All tests passed in this file')).toBeVisible()
   })
 })
 

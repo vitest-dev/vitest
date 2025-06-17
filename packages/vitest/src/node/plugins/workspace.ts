@@ -1,6 +1,6 @@
 import type { UserConfig as ViteConfig, Plugin as VitePlugin } from 'vite'
 import type { TestProject } from '../project'
-import type { ResolvedConfig, UserWorkspaceConfig } from '../types/config'
+import type { ResolvedConfig, TestProjectInlineConfiguration } from '../types/config'
 import { existsSync, readFileSync } from 'node:fs'
 import { deepMerge } from '@vitest/utils'
 import { basename, dirname, relative, resolve } from 'pathe'
@@ -17,12 +17,11 @@ import { SsrReplacerPlugin } from './ssrReplacer'
 import {
   deleteDefineConfig,
   getDefaultResolveOptions,
-  hijackVitePluginInject,
   resolveFsAllow,
 } from './utils'
 import { VitestProjectResolver } from './vitestResolver'
 
-interface WorkspaceOptions extends UserWorkspaceConfig {
+interface WorkspaceOptions extends TestProjectInlineConfiguration {
   root?: string
   workspacePath: string | number
 }
@@ -33,18 +32,15 @@ export function WorkspaceVitestPlugin(
 ) {
   return <VitePlugin[]>[
     {
-      name: 'vitest:project',
-      enforce: 'pre',
-      options() {
-        this.meta.watchMode = false
-      },
+      name: 'vitest:project:name',
+      enforce: 'post',
       config(viteConfig) {
-        const defines: Record<string, any> = deleteDefineConfig(viteConfig)
-
         const testConfig = viteConfig.test || {}
 
-        const root = testConfig.root || viteConfig.root || options.root
-        let name = testConfig.name
+        let { label: name, color } = typeof testConfig.name === 'string'
+          ? { label: testConfig.name }
+          : { label: '', ...testConfig.name }
+
         if (!name) {
           if (typeof options.workspacePath === 'string') {
             // if there is a package.json, read the name from it
@@ -64,21 +60,23 @@ export function WorkspaceVitestPlugin(
           }
         }
 
+        const isUserBrowserEnabled = viteConfig.test?.browser?.enabled
+        const isBrowserEnabled = isUserBrowserEnabled ?? (viteConfig.test?.browser && project.vitest._cliOptions.browser?.enabled)
         // keep project names to potentially filter it out
         const workspaceNames = [name]
-        if (viteConfig.test?.browser?.enabled) {
-          if (viteConfig.test.browser.name) {
-            const browser = viteConfig.test.browser.name
-            // vitest injects `instances` in this case later on
-            workspaceNames.push(name ? `${name} (${browser})` : browser)
-          }
-
-          viteConfig.test.browser.instances?.forEach((instance) => {
-            // every instance is a potential project
-            instance.name ??= name ? `${name} (${instance.browser})` : instance.browser
-            workspaceNames.push(instance.name)
-          })
+        const browser = viteConfig.test!.browser || {}
+        if (isBrowserEnabled && browser.name && !browser.instances?.length) {
+          // vitest injects `instances` in this case later on
+          workspaceNames.push(name ? `${name} (${browser.name})` : browser.name)
         }
+
+        viteConfig.test?.browser?.instances?.forEach((instance) => {
+          // every instance is a potential project
+          instance.name ??= name ? `${name} (${instance.browser})` : instance.browser
+          if (isBrowserEnabled) {
+            workspaceNames.push(instance.name)
+          }
+        })
 
         const filters = project.vitest.config.project
         // if there is `--project=...` filter, check if any of the potential projects match
@@ -86,16 +84,39 @@ export function WorkspaceVitestPlugin(
         // if some of them match, they will later be filtered again by `resolveWorkspace`
         if (filters.length) {
           const hasProject = workspaceNames.some((name) => {
-            return project.vitest._matchesProjectFilter(name)
+            return project.vitest.matchesProjectFilter(name)
           })
           if (!hasProject) {
             throw new VitestFilteredOutProjectError()
           }
         }
 
+        return {
+          test: {
+            name: { label: name, color },
+          },
+        }
+      },
+    },
+    {
+      name: 'vitest:project',
+      enforce: 'pre',
+      options() {
+        this.meta.watchMode = false
+      },
+      config(viteConfig) {
+        const defines: Record<string, any> = deleteDefineConfig(viteConfig)
+
+        const testConfig = viteConfig.test || {}
+        const root = testConfig.root || viteConfig.root || options.root
+
         const resolveOptions = getDefaultResolveOptions()
         const config: ViteConfig = {
           root,
+          define: {
+            // disable replacing `process.env.NODE_ENV` with static string by vite:client-inject
+            'process.env.NODE_ENV': 'process.env.NODE_ENV',
+          },
           resolve: {
             ...resolveOptions,
             alias: testConfig.alias,
@@ -132,12 +153,10 @@ export function WorkspaceVitestPlugin(
               resolve: resolveOptions,
             },
           },
-          test: {
-            name,
-          },
-        };
+          test: {},
+        }
 
-        (config.test as ResolvedConfig).defines = defines
+        ;(config.test as ResolvedConfig).defines = defines
 
         const classNameStrategy
           = (typeof testConfig.css !== 'boolean'
@@ -172,9 +191,10 @@ export function WorkspaceVitestPlugin(
 
         return config
       },
-      configResolved(viteConfig) {
-        hijackVitePluginInject(viteConfig)
-      },
+    },
+    {
+      name: 'vitest:project:server',
+      enforce: 'post',
       async configureServer(server) {
         const options = deepMerge({}, configDefaults, server.config.test || {})
         await project._configureServer(options, server)
@@ -184,9 +204,9 @@ export function WorkspaceVitestPlugin(
     },
     SsrReplacerPlugin(),
     ...CSSEnablerPlugin(project),
-    CoverageTransform(project.ctx),
+    CoverageTransform(project.vitest),
     ...MocksPlugins(),
-    VitestProjectResolver(project.ctx),
+    VitestProjectResolver(project.vitest),
     VitestOptimizer(),
     NormalizeURLPlugin(),
   ]

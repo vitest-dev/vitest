@@ -133,7 +133,7 @@ export default defineConfig({
 })
 ```
 
-The `<reference types="vitest" />` will stop working in Vitest 3, but you can start migrating to `vitest/config` in Vitest 2.1:
+The `<reference types="vitest" />` will stop working in the next major update, but you can start migrating to `vitest/config` in Vitest 2.1:
 
 ```ts [vite.config.ts]
 /// <reference types="vitest/config" />
@@ -175,38 +175,42 @@ export default defineConfig({
 However, we recommend using the same file for both Vite and Vitest, instead of creating two separate files.
 :::
 
-## Workspaces Support
+## Projects Support
 
-Run different project configurations inside the same project with [Vitest Workspaces](/guide/workspace). You can define a list of files and folders that define your workspace in `vitest.workspace` file. The file supports `js`/`ts`/`json` extensions. This feature works great with monorepo setups.
+Run different project configurations inside the same project with [Test Projects](/guide/projects). You can define a list of files and folders that define your projects in `vitest.config` file.
 
-```ts [vitest.workspace.ts]
-import { defineWorkspace } from 'vitest/config'
+```ts [vitest.config.ts]
+import { defineConfig } from 'vitest/config'
 
-export default defineWorkspace([
-  // you can use a list of glob patterns to define your workspaces
-  // Vitest expects a list of config files
-  // or directories where there is a config file
-  'packages/*',
-  'tests/*/vitest.config.{e2e,unit}.ts',
-  // you can even run the same tests,
-  // but with different configs in the same "vitest" process
-  {
-    test: {
-      name: 'happy-dom',
-      root: './shared_tests',
-      environment: 'happy-dom',
-      setupFiles: ['./setup.happy-dom.ts'],
-    },
+export default defineConfig({
+  test: {
+    projects: [
+      // you can use a list of glob patterns to define your projects
+      // Vitest expects a list of config files
+      // or directories where there is a config file
+      'packages/*',
+      'tests/*/vitest.config.{e2e,unit}.ts',
+      // you can even run the same tests,
+      // but with different configs in the same "vitest" process
+      {
+        test: {
+          name: 'happy-dom',
+          root: './shared_tests',
+          environment: 'happy-dom',
+          setupFiles: ['./setup.happy-dom.ts'],
+        },
+      },
+      {
+        test: {
+          name: 'node',
+          root: './shared_tests',
+          environment: 'node',
+          setupFiles: ['./setup.node.ts'],
+        },
+      },
+    ],
   },
-  {
-    test: {
-      name: 'node',
-      root: './shared_tests',
-      environment: 'node',
-      setupFiles: ['./setup.node.ts'],
-    },
-  },
-])
+})
 ```
 
 ## Command Line Interface
@@ -257,7 +261,7 @@ Learn more about [IDE Integrations](/guide/ide)
 | `sveltekit` | [GitHub](https://github.com/vitest-dev/vitest/tree/main/examples/sveltekit) | [Play Online](https://stackblitz.com/fork/github/vitest-dev/vitest/tree/main/examples/sveltekit?initialPath=__vitest__/) |
 | `profiling` | [GitHub](https://github.com/vitest-dev/vitest/tree/main/examples/profiling) | Not Available |
 | `typecheck` | [GitHub](https://github.com/vitest-dev/vitest/tree/main/examples/typecheck) | [Play Online](https://stackblitz.com/fork/github/vitest-dev/vitest/tree/main/examples/typecheck?initialPath=__vitest__/) |
-| `workspace` | [GitHub](https://github.com/vitest-dev/vitest/tree/main/examples/workspace) | [Play Online](https://stackblitz.com/fork/github/vitest-dev/vitest/tree/main/examples/workspace?initialPath=__vitest__/) |
+| `projects` | [GitHub](https://github.com/vitest-dev/vitest/tree/main/examples/projects) | [Play Online](https://stackblitz.com/fork/github/vitest-dev/vitest/tree/main/examples/projects?initialPath=__vitest__/) |
 
 ## Projects using Vitest
 

@@ -64,3 +64,19 @@ it('buildStart', async () => {
   const result = await runViteNodeCli('--root', root, resolve(root, 'test.ts'))
   await result.viteNode.waitForStdout('["buildStart:in","buildStart:out"]')
 })
+
+it('buildStart with all ssr', async () => {
+  const root = resolve(__dirname, '../src/buildStart')
+  const result = await runViteNodeCli(
+    `--root=${root}`,
+    '--options.transformMode.ssr=.*',
+    resolve(root, 'test.ts'),
+  )
+  await result.viteNode.waitForStdout('["buildStart:in","buildStart:out"]')
+})
+
+it('empty mappings', async () => {
+  const root = resolve(__dirname, '../src/empty-mappings')
+  const result = await runViteNodeCli('--root', root, resolve(root, 'main.ts'))
+  await result.viteNode.waitForStdout('[ok]')
+})

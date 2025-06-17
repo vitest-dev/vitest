@@ -1,6 +1,7 @@
-import { format, stringify } from 'vitest/utils'
+import { format, stringify } from 'vitest/internal/browser'
 import { getConfig } from '../utils'
 import { rpc } from './rpc'
+import { getBrowserRunner } from './runner'
 
 const { Date, console, performance } = globalThis
 
@@ -141,7 +142,8 @@ function sendLog(
     = getConfig().printConsoleTrace && !disableStack
       ? new Error('STACK_TRACE').stack?.split('\n').slice(1).join('\n')
       : undefined
-  rpc().sendLog({
+  const runner = getBrowserRunner()
+  rpc().sendLog(runner?.method || 'run', {
     origin,
     content,
     browser: true,

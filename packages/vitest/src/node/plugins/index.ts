@@ -1,6 +1,7 @@
 import type { UserConfig as ViteConfig, Plugin as VitePlugin } from 'vite'
 import type { ResolvedConfig, UserConfig } from '../types/config'
 import {
+  deepClone,
   deepMerge,
   notNullish,
   toArray,
@@ -21,20 +22,19 @@ import { SsrReplacerPlugin } from './ssrReplacer'
 import {
   deleteDefineConfig,
   getDefaultResolveOptions,
-  hijackVitePluginInject,
   resolveFsAllow,
 } from './utils'
 import { VitestCoreResolver } from './vitestResolver'
 
 export async function VitestPlugin(
   options: UserConfig = {},
-  ctx: Vitest = new Vitest('test'),
+  vitest: Vitest = new Vitest('test', deepClone(options)),
 ): Promise<VitePlugin[]> {
   const userConfig = deepMerge({}, options) as UserConfig
 
   async function UIPlugin() {
-    await ctx.packageInstaller.ensureInstalled('@vitest/ui', options.root || process.cwd(), ctx.version)
-    return (await import('@vitest/ui')).default(ctx)
+    await vitest.packageInstaller.ensureInstalled('@vitest/ui', options.root || process.cwd(), vitest.version)
+    return (await import('@vitest/ui')).default(vitest)
   }
 
   return [
@@ -78,6 +78,10 @@ export async function VitestPlugin(
 
         const config: ViteConfig = {
           root: viteConfig.test?.root || options.root,
+          define: {
+            // disable replacing `process.env.NODE_ENV` with static string by vite:client-inject
+            'process.env.NODE_ENV': 'process.env.NODE_ENV',
+          },
           esbuild:
             viteConfig.esbuild === false
               ? false
@@ -140,13 +144,19 @@ export async function VitestPlugin(
           },
         }
 
-        if (ctx.configOverride.project) {
+        // inherit so it's available in VitestOptimizer
+        // I cannot wait to rewrite all of this in Vitest 4
+        if (options.cache != null) {
+          config.test!.cache = options.cache
+        }
+
+        if (vitest.configOverride.project) {
           // project filter was set by the user, so we need to filter the project
-          options.project = ctx.configOverride.project
+          options.project = vitest.configOverride.project
         }
 
         config.customLogger = createViteLogger(
-          ctx.logger,
+          vitest.logger,
           viteConfig.logLevel || 'warn',
           {
             allowClearScreen: false,
@@ -204,7 +214,7 @@ export async function VitestPlugin(
               name: string,
               filename: string,
             ) => {
-              const root = ctx.config.root || options.root || process.cwd()
+              const root = vitest.config.root || options.root || process.cwd()
               return generateScopedClassName(
                 classNameStrategy,
                 name,
@@ -248,7 +258,10 @@ export async function VitestPlugin(
           viteConfig.server.watch = null
         }
 
-        hijackVitePluginInject(viteConfig)
+        if (options.ui) {
+          // @ts-expect-error mutate readonly
+          viteConfig.plugins.push(await UIPlugin())
+        }
 
         Object.defineProperty(viteConfig, '_vitest', {
           value: options,
@@ -257,7 +270,7 @@ export async function VitestPlugin(
         })
 
         const originalName = options.name
-        if (options.browser?.enabled && options.browser?.instances) {
+        if (options.browser?.instances) {
           options.browser.instances.forEach((instance) => {
             instance.name ??= originalName ? `${originalName} (${instance.browser})` : instance.browser
           })
@@ -273,9 +286,9 @@ export async function VitestPlugin(
               console.log('[debug] watcher is ready')
             })
           }
-          await ctx._setServer(options, server, userConfig)
+          await vitest._setServer(options, server)
           if (options.api && options.watch) {
-            (await import('../../api/setup')).setup(ctx)
+            (await import('../../api/setup')).setup(vitest)
           }
 
           // #415, in run mode we don't need the watcher, close it would improve the performance
@@ -286,10 +299,9 @@ export async function VitestPlugin(
       },
     },
     SsrReplacerPlugin(),
-    ...CSSEnablerPlugin(ctx),
-    CoverageTransform(ctx),
-    VitestCoreResolver(ctx),
-    options.ui ? await UIPlugin() : null,
+    ...CSSEnablerPlugin(vitest),
+    CoverageTransform(vitest),
+    VitestCoreResolver(vitest),
     ...MocksPlugins(),
     VitestOptimizer(),
     NormalizeURLPlugin(),

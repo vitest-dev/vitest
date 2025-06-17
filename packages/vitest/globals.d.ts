@@ -1,6 +1,7 @@
 declare global {
   const suite: typeof import('vitest')['suite']
   const test: typeof import('vitest')['test']
+  const chai: typeof import("vitest")["chai"]
   const describe: typeof import('vitest')['describe']
   const it: typeof import('vitest')['it']
   const expectTypeOf: typeof import('vitest')['expectTypeOf']

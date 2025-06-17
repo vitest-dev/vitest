@@ -20,6 +20,8 @@ export interface ContextTestEnvironment {
   options: Record<string, any> | null
 }
 
+export type TestExecutionMethod = 'run' | 'collect'
+
 export interface ContextRPC {
   pool: string
   worker: string
@@ -43,6 +45,7 @@ export interface WorkerGlobalState {
   onCancel: Promise<CancelReason>
   moduleCache: ModuleCacheMap
   moduleExecutionInfo?: ModuleExecutionInfo
+  onCleanup: (listener: () => unknown) => void
   providedContext: Record<string, any>
   durations: {
     environment: number

@@ -97,7 +97,7 @@ This is because the TypeScript compiler needs to infer the typearg for the `.toE
 const one = valueFromFunctionOne({ some: { complex: inputs } })
 const two = valueFromFunctionTwo({ some: { other: inputs } })
 
-expectTypeOf(one).toEqualTypeof<typeof two>()
+expectTypeOf(one).toEqualTypeOf<typeof two>()
 ```
 
 If you find it hard working with `expectTypeOf` API and figuring out errors, you can always use more simple `assertType` API:

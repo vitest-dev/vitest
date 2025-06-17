@@ -1,12 +1,12 @@
-import type { UserConfig as ViteUserConfig } from 'vite'
+import type { InlineConfig as ViteInlineConfig, UserConfig as ViteUserConfig } from 'vite'
 import type { environments } from '../../integrations/env'
 import type { Vitest, VitestOptions } from '../core'
 import type { TestModule, TestSuite } from '../reporters/reported-tasks'
 import type { TestSpecification } from '../spec'
 import type { UserConfig, VitestEnvironment, VitestRunMode } from '../types/config'
 import { mkdirSync, writeFileSync } from 'node:fs'
-import { dirname, relative, resolve } from 'pathe'
-import { CoverageProviderMap } from '../../integrations/coverage'
+import { dirname, isAbsolute, relative, resolve } from 'pathe'
+import { CoverageProviderMap } from '../../utils/coverage'
 import { createVitest } from '../create'
 import { FilesNotFoundError, GitNotFoundError, IncludeTaskLocationDisabledError, LocationFilterFileNotFoundError, RangeLocationFilterProvidedError } from '../errors'
 import { registerConsoleShortcuts } from '../stdin'
@@ -28,6 +28,14 @@ export interface CliOptions extends UserConfig {
    * Output collected test files only
    */
   filesOnly?: boolean
+
+  /**
+   * Override vite config's configLoader from cli.
+   * Use `bundle` to bundle the config with esbuild or `runner` (experimental) to process it on the fly (default: `bundle`).
+   * This is only available with **vite version 6.1.0** and above.
+   * @experimental
+   */
+  configLoader?: ViteInlineConfig extends { configLoader?: infer T } ? T : never
 }
 
 /**
@@ -309,7 +317,7 @@ function getEnvPackageName(env: VitestEnvironment) {
   if (env in envPackageNames) {
     return (envPackageNames as any)[env]
   }
-  if (env[0] === '.' || env[0] === '/') {
+  if (env[0] === '.' || isAbsolute(env)) {
     return null
   }
   return `vitest-environment-${env}`

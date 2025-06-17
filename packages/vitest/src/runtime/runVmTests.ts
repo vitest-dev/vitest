@@ -77,9 +77,11 @@ export async function run(
 
   config.snapshotOptions.snapshotEnvironment = snapshotEnvironment
 
+  runner.getWorkerContext = undefined
+
   workerState.onCancel.then((reason) => {
     closeInspector(config)
-    runner.onCancel?.(reason)
+    runner.cancel?.(reason)
   })
 
   workerState.durations.prepare

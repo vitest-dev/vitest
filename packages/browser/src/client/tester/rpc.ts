@@ -1,5 +1,5 @@
 import type { VitestBrowserClient } from '@vitest/browser/client'
-import { getSafeTimers } from 'vitest/utils'
+import { getSafeTimers } from 'vitest/internal/browser'
 
 const { get } = Reflect
 

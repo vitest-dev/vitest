@@ -1,8 +1,9 @@
+import type { CAC, Command } from 'cac'
 import type { VitestRunMode } from '../types/config'
 import type { CliOptions } from './cli-api'
 import type { CLIOption, CLIOptions as CLIOptionsConfig } from './cli-config'
 import { toArray } from '@vitest/utils'
-import cac, { type CAC, type Command } from 'cac'
+import cac from 'cac'
 import { normalize } from 'pathe'
 import c from 'tinyrainbow'
 import { version } from '../../../package.json' with { type: 'json' }
@@ -238,7 +239,7 @@ export function parseCLI(argv: string | string[], config: CliParseOptions = {}):
   if (arrayArgs[2] === 'watch' || arrayArgs[2] === 'dev') {
     options.watch = true
   }
-  if (arrayArgs[2] === 'run') {
+  if (arrayArgs[2] === 'run' && !options.watch) {
     options.run = true
   }
   if (arrayArgs[2] === 'related') {
@@ -264,7 +265,9 @@ async function watch(cliFilters: string[], options: CliOptions): Promise<void> {
 }
 
 async function run(cliFilters: string[], options: CliOptions): Promise<void> {
-  options.run = true
+  // "vitest run --watch" should still be watch mode
+  options.run = !options.watch
+
   await start('test', cliFilters, options)
 }
 
@@ -282,10 +285,6 @@ function normalizeCliOptions(cliFilters: string[], argv: CliOptions): CliOptions
     argv.includeTaskLocation ??= true
   }
 
-  // running "vitest --browser.headless"
-  if (typeof argv.browser === 'object' && !('enabled' in argv.browser)) {
-    argv.browser.enabled = true
-  }
   if (typeof argv.typecheck?.only === 'boolean') {
     argv.typecheck.enabled ??= true
   }
@@ -307,8 +306,8 @@ async function start(mode: VitestRunMode, cliFilters: string[], options: CliOpti
     }
   }
   catch (e) {
-    const { divider } = await import('../reporters/renderers/utils')
-    console.error(`\n${c.red(divider(c.bold(c.inverse(' Startup Error '))))}`)
+    const { errorBanner } = await import('../reporters/renderers/utils')
+    console.error(`\n${errorBanner('Startup Error')}`)
     console.error(e)
     console.error('\n\n')
 
@@ -364,8 +363,8 @@ async function collect(mode: VitestRunMode, cliFilters: string[], options: CliOp
     await ctx.close()
   }
   catch (e) {
-    const { divider } = await import('../reporters/renderers/utils')
-    console.error(`\n${c.red(divider(c.bold(c.inverse(' Collect Error '))))}`)
+    const { errorBanner } = await import('../reporters/renderers/utils')
+    console.error(`\n${errorBanner('Collect Error')}`)
     console.error(e)
     console.error('\n\n')
 

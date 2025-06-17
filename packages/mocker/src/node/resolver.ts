@@ -1,5 +1,4 @@
-import type { PartialResolvedId } from 'rollup'
-import type { ResolvedConfig as ViteConfig, ViteDevServer } from 'vite'
+import type { Rollup, ResolvedConfig as ViteConfig, ViteDevServer } from 'vite'
 import { existsSync, readFileSync } from 'node:fs'
 import { isAbsolute, join, resolve } from 'pathe'
 import { cleanUrl } from '../utils'
@@ -53,7 +52,7 @@ export class ServerMockResolver {
       const moduleGraph = this.server.moduleGraph
       const module = moduleGraph.getModuleById(id)
       if (module) {
-        moduleGraph.invalidateModule(module, new Set(), Date.now(), true)
+        module.transformResult = null
       }
     })
   }
@@ -104,7 +103,10 @@ export class ServerMockResolver {
   }
 
   private async resolveMockId(rawId: string, importer: string) {
-    if (!importer.startsWith(this.server.config.root)) {
+    if (
+      !this.server.moduleGraph.getModuleById(importer)
+      && !importer.startsWith(this.server.config.root)
+    ) {
       importer = join(this.server.config.root, importer)
     }
     const resolved = await this.server.pluginContainer.resolveId(
@@ -117,7 +119,7 @@ export class ServerMockResolver {
     return this.resolveModule(rawId, resolved)
   }
 
-  private resolveModule(rawId: string, resolved: PartialResolvedId | null) {
+  private resolveModule(rawId: string, resolved: Rollup.PartialResolvedId | null) {
     const id = resolved?.id || rawId
     const external
       = !isAbsolute(id) || isModuleDirectory(this.options, id) ? rawId : null

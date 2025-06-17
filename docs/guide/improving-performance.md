@@ -75,7 +75,7 @@ export default defineConfig({
 
 ## Sharding
 
-Test sharding means running a small subset of test cases at a time. It can be useful when you have multiple machines that could be used to run tests simultaneously.
+Test sharding is a process of splitting your test suite into groups, or shards. This can be useful when you have a large test suite and multiple matchines that could run subsets of that suite simultaneously.
 
 To split Vitest tests on multiple different runs, use [`--shard`](/guide/cli#shard) option with [`--reporter=blob`](/guide/reporters#blob-reporter) option:
 
@@ -85,10 +85,12 @@ vitest run --reporter=blob --shard=2/3 # 2nd machine
 vitest run --reporter=blob --shard=3/3 # 3rd machine
 ```
 
+> Vitest splits your _test files_, not your test cases, into shards. If you've got 1000 test files, the `--shard=1/4` option will run 250 test files, no matter how many test cases individual files have.
+
 Collect the results stored in `.vitest-reports` directory from each machine and merge them with [`--merge-reports`](/guide/cli#merge-reports) option:
 
 ```sh
-vitest --merge-reports
+vitest run --merge-reports
 ```
 
 ::: details Github action example
@@ -115,7 +117,7 @@ jobs:
           node-version: 20
 
       - name: Install pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@a7487c7e89a18df4991f7f222e4898a00d66ddda # v4.1.0
 
       - name: Install dependencies
         run: pnpm i
@@ -144,7 +146,7 @@ jobs:
           node-version: 20
 
       - name: Install pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@a7487c7e89a18df4991f7f222e4898a00d66ddda # v4.1.0
 
       - name: Install dependencies
         run: pnpm i
@@ -180,7 +182,7 @@ VITEST_MAX_THREADS=7 vitest run --reporter=blob --shard=3/4 & \
 VITEST_MAX_THREADS=7 vitest run --reporter=blob --shard=4/4 & \
 wait # https://man7.org/linux/man-pages/man2/waitpid.2.html
 
-vitest --merge-reports
+vitest run --merge-reports
 ```
 
 :::

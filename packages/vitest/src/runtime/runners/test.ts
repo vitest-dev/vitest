@@ -2,8 +2,10 @@ import type { ExpectStatic } from '@vitest/expect'
 import type {
   CancelReason,
   File,
+  ImportDuration,
   Suite,
   Task,
+  Test,
   TestContext,
   VitestRunner,
   VitestRunnerImportSource,
@@ -12,12 +14,16 @@ import type { SerializedConfig } from '../config'
 import type { VitestExecutor } from '../execute'
 import { getState, GLOBAL_EXPECT, setState } from '@vitest/expect'
 import { getNames, getTestName, getTests } from '@vitest/runner/utils'
+import { normalize } from 'pathe'
 import { createExpect } from '../../integrations/chai/index'
 import { inject } from '../../integrations/inject'
 import { getSnapshotClient } from '../../integrations/snapshot/chai'
 import { vi } from '../../integrations/vi'
 import { rpc } from '../rpc'
 import { getWorkerState } from '../utils'
+
+// worker context is shared between all tests
+const workerContext = Object.create(null)
 
 export class VitestTestRunner implements VitestRunner {
   private snapshotClient = getSnapshotClient()
@@ -42,9 +48,17 @@ export class VitestTestRunner implements VitestRunner {
     this.workerState.current = file
   }
 
+  onCleanupWorkerContext(listener: () => unknown): void {
+    this.workerState.onCleanup(listener)
+  }
+
   onAfterRunFiles(): void {
     this.snapshotClient.clear()
     this.workerState.current = undefined
+  }
+
+  getWorkerContext(): Record<string, unknown> {
+    return workerContext
   }
 
   async onAfterRunSuite(suite: Suite): Promise<void> {
@@ -76,7 +90,7 @@ export class VitestTestRunner implements VitestRunner {
     this.workerState.current = test.suite || test.file
   }
 
-  onCancel(_reason: CancelReason): void {
+  cancel(_reason: CancelReason): void {
     this.cancelRun = true
   }
 
@@ -94,8 +108,6 @@ export class VitestTestRunner implements VitestRunner {
     if (test.mode !== 'run' && test.mode !== 'queued') {
       return
     }
-
-    clearModuleMocks(this.config)
 
     this.workerState.current = test
   }
@@ -117,6 +129,7 @@ export class VitestTestRunner implements VitestRunner {
   }
 
   onBeforeTryTask(test: Task): void {
+    clearModuleMocks(this.config)
     this.snapshotClient.clearTest(test.file.filepath, test.id)
     setState(
       {
@@ -125,7 +138,6 @@ export class VitestTestRunner implements VitestRunner {
         isExpectingAssertionsError: null,
         expectedAssertionsNumber: null,
         expectedAssertionsNumberErrorGen: null,
-        testPath: test.file.filepath,
         currentTestName: getTestName(test),
         snapshotState: this.snapshotClient.getSnapshotState(test.file.filepath),
       },
@@ -133,7 +145,7 @@ export class VitestTestRunner implements VitestRunner {
     )
   }
 
-  onAfterTryTask(test: Task): void {
+  onAfterTryTask(test: Test): void {
     const {
       assertionCalls,
       expectedAssertionsNumber,
@@ -141,8 +153,7 @@ export class VitestTestRunner implements VitestRunner {
       isExpectingAssertions,
       isExpectingAssertionsError,
     }
-      // @ts-expect-error _local is untyped
-      = 'context' in test && test.context._local
+      = test.context._local
         ? test.context.expect.getState()
         : getState((globalThis as any)[GLOBAL_EXPECT])
     if (
@@ -182,6 +193,17 @@ export class VitestTestRunner implements VitestRunner {
       },
     })
     return context
+  }
+
+  getImportDurations(): Record<string, ImportDuration> {
+    const entries = [...(this.workerState.moduleExecutionInfo?.entries() ?? [])]
+    return Object.fromEntries(entries.map(([filepath, { duration, selfTime }]) => [
+      normalize(filepath),
+      {
+        selfTime,
+        totalTime: duration,
+      },
+    ]))
   }
 }
 

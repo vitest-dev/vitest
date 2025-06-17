@@ -21,7 +21,7 @@ interface Options {
   stylize: (value: string, styleType: string) => string
 }
 
-type LoupeOptions = Partial<Options>
+export type LoupeOptions = Partial<Options>
 
 const {
   AsymmetricMatcher,
@@ -110,6 +110,9 @@ export function format(...args: unknown[]): string {
           return '-0'
         }
         if (typeof value === 'object' && value !== null) {
+          if (typeof value.toString === 'function' && value.toString !== Object.prototype.toString) {
+            return value.toString()
+          }
           return inspect(value, { depth: 0, colors: false })
         }
         return String(value)

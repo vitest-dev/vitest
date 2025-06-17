@@ -1,3 +1,4 @@
+import type { UserConsoleLog } from 'vitest'
 import type {
   ReportedHookContext,
   Reporter,
@@ -8,6 +9,7 @@ import type {
   TestSpecification,
   TestSuite,
   UserConfig,
+  Vitest,
 } from 'vitest/node'
 import { rmSync } from 'node:fs'
 import { resolve, sep } from 'node:path'
@@ -158,7 +160,10 @@ describe('TestCase', () => {
   test('single test case', async () => {
     const report = await run({
       'example.test.ts': ts`
-        test('single test case', () => {});
+        test('single test case', async () => {
+          await new Promise(resolve => setTimeout(resolve, 300))
+          console.log("Test running!")
+        });
       `,
     })
 
@@ -168,6 +173,7 @@ describe('TestCase', () => {
       onTestModuleCollected (example.test.ts)
       onTestModuleStart     (example.test.ts)
         onTestCaseReady     (example.test.ts) |single test case|
+        onUserConsoleLog    (example.test.ts) |single test case| > Test running!
         onTestCaseResult    (example.test.ts) |single test case|
       onTestModuleEnd       (example.test.ts)"
     `)
@@ -259,6 +265,52 @@ describe('TestCase', () => {
         onTestCaseResult    (example.test.ts) |running|
         onTestCaseReady     (example.test.ts) |skipped|
         onTestCaseResult    (example.test.ts) |skipped|
+      onTestModuleEnd       (example.test.ts)"
+    `)
+  })
+
+  test('skipped test case in a different order', async () => {
+    const report = await run({
+      'example.test.ts': ts`
+        test.skip('skipped', () => {});
+        test('running', () => {});
+      `,
+    })
+
+    expect(report).toMatchInlineSnapshot(`
+      "
+      onTestModuleQueued    (example.test.ts)
+      onTestModuleCollected (example.test.ts)
+      onTestModuleStart     (example.test.ts)
+        onTestCaseReady     (example.test.ts) |skipped|
+        onTestCaseResult    (example.test.ts) |skipped|
+        onTestCaseReady     (example.test.ts) |running|
+        onTestCaseResult    (example.test.ts) |running|
+      onTestModuleEnd       (example.test.ts)"
+    `)
+  })
+
+  test('skipped test case in a suite with a different order', async () => {
+    const report = await run({
+      'example.test.ts': ts`
+        describe('suite', () => {
+          test.skip('skipped', () => {});
+          test('running', () => {});
+        })
+      `,
+    })
+
+    expect(report).toMatchInlineSnapshot(`
+      "
+      onTestModuleQueued    (example.test.ts)
+      onTestModuleCollected (example.test.ts)
+      onTestModuleStart     (example.test.ts)
+        onTestSuiteReady    (example.test.ts) |suite|
+          onTestCaseReady   (example.test.ts) |skipped|
+          onTestCaseResult  (example.test.ts) |skipped|
+          onTestCaseReady   (example.test.ts) |running|
+          onTestCaseResult  (example.test.ts) |running|
+        onTestSuiteResult   (example.test.ts) |suite|
       onTestModuleEnd       (example.test.ts)"
     `)
   })
@@ -840,6 +892,7 @@ describe('merge reports', () => {
     }, {
       globals: true,
       reporters: [['blob', { outputFile: blobOutputFile1 }]],
+      watch: false,
     })
 
     const { root: root2 } = await runInlineTests({
@@ -855,10 +908,12 @@ describe('merge reports', () => {
     }, {
       globals: true,
       reporters: [['blob', { outputFile: blobOutputFile2 }]],
+      watch: false,
     })
 
     const report = await run({}, {
       mergeReports: blobsOutputDirectory,
+      watch: false,
     }, {
       roots: [root1, root2],
     })
@@ -887,17 +942,17 @@ describe('merge reports', () => {
           onTestCaseReady   (example-2.test.ts) |third|
           onTestCaseResult  (example-2.test.ts) |third|
         onTestSuiteResult   (example-2.test.ts) |suite|
-        onTestCaseReady     (example-2.test.ts) |fifth|
-        onTestCaseResult    (example-2.test.ts) |fifth|
         onTestCaseReady     (example-2.test.ts) |fourth|
         onTestCaseResult    (example-2.test.ts) |fourth|
+        onTestCaseReady     (example-2.test.ts) |fifth|
+        onTestCaseResult    (example-2.test.ts) |fifth|
       onTestModuleEnd       (example-2.test.ts)"
     `)
   })
 })
 
 describe('type checking', () => {
-  test('typechking is reported correctly', async () => {
+  test('typechecking is reported correctly', async () => {
     const report = await run({
       'example-1.test-d.ts': ts`
         test('first', () => {});
@@ -954,14 +1009,96 @@ describe('type checking', () => {
           onTestCaseReady   (example-2.test-d.ts) |third|
           onTestCaseResult  (example-2.test-d.ts) |third|
         onTestSuiteResult   (example-2.test-d.ts) |suite|
-        onTestCaseReady     (example-2.test-d.ts) |fifth|
-        onTestCaseResult    (example-2.test-d.ts) |fifth|
         onTestCaseReady     (example-2.test-d.ts) |fourth|
         onTestCaseResult    (example-2.test-d.ts) |fourth|
+        onTestCaseReady     (example-2.test-d.ts) |fifth|
+        onTestCaseResult    (example-2.test-d.ts) |fifth|
       onTestModuleEnd       (example-2.test-d.ts)
 
       onTestRunEnd   (failed, 2 modules, 0 errors)"
     `)
+  })
+})
+
+describe('test run result', () => {
+  test('test run is interrupted', async () => {
+    let vitest: Vitest
+    let reason: TestRunEndReason | undefined
+
+    await runInlineTests({
+      'example.test.js': `
+        test('basic', () => new Promise(() => {}))
+      `,
+    }, {
+      globals: true,
+      reporters: [
+        {
+          onInit(ctx) {
+            vitest = ctx
+          },
+          async onTestModuleCollected() {
+            await vitest.cancelCurrentRun('keyboard-input')
+          },
+          onTestRunEnd(_, __, reason_) {
+            reason = reason_
+          },
+        },
+      ],
+    })
+
+    expect(reason).toBe('interrupted')
+  })
+
+  test('test run failed, but passed afterwards', async () => {
+    let reason: TestRunEndReason | undefined
+
+    const { fs } = await runInlineTests({
+      'example.test.js': `
+        test('basic', () => {
+          expect(1).toBe(2)
+        })
+      `,
+    }, {
+      globals: true,
+      watch: true,
+      reporters: [
+        {
+          onTestRunEnd(_, __, reason_) {
+            reason = reason_
+          },
+        },
+      ],
+    })
+
+    expect(reason).toBe('failed')
+
+    fs.editFile('./example.test.js', c => c.replace('toBe(2)', 'toBe(1)'))
+
+    await expect.poll(() => reason).toBe('passed')
+  })
+
+  test('test run passed', async () => {
+    let reason: TestRunEndReason | undefined
+
+    await runInlineTests({
+      'example.test.js': `
+        test('basic', () => {
+          expect(1).toBe(1)
+        })
+      `,
+    }, {
+      globals: true,
+      watch: true,
+      reporters: [
+        {
+          onTestRunEnd(_, __, reason_) {
+            reason = reason_
+          },
+        },
+      ],
+    })
+
+    expect(reason).toBe('passed')
   })
 })
 
@@ -1009,8 +1146,13 @@ async function run(
 
 class CustomReporter implements Reporter {
   calls: string[] = []
+  ctx!: Vitest
 
   constructor(private options: ReporterOptions = {}) {}
+
+  onInit(ctx: Vitest) {
+    this.ctx = ctx
+  }
 
   onTestRunStart(specifications: ReadonlyArray<TestSpecification>) {
     if (this.options.printTestRunEvents) {
@@ -1054,6 +1196,13 @@ class CustomReporter implements Reporter {
 
   onTestCaseResult(test: TestCase) {
     this.calls.push(`${padded(test, 'onTestCaseResult')} (${this.normalizeFilename(test.module)}) |${test.name}|`)
+  }
+
+  onUserConsoleLog(log: UserConsoleLog) {
+    const task = this.ctx.state.idMap.get(log.taskId!)
+    const test = task && this.ctx.state.getReportedEntity(task) as TestCase
+
+    this.calls.push(`${padded(test!, 'onUserConsoleLog')} (${this.normalizeFilename(test!.module)}) |${test!.name}| > ${log.content.replaceAll('\n', '')}`)
   }
 
   onHookStart(hook: ReportedHookContext) {

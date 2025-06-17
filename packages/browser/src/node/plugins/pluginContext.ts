@@ -1,4 +1,4 @@
-import type { PluginContext } from 'rollup'
+import type { Rollup } from 'vite'
 import type { Plugin } from 'vitest/config'
 import type { ParentBrowserProject } from '../projectParent'
 import { fileURLToPath } from 'node:url'
@@ -28,7 +28,7 @@ export default function BrowserContext(globalServer: ParentBrowserProject): Plug
 }
 
 async function generateContextFile(
-  this: PluginContext,
+  this: Rollup.PluginContext,
   globalServer: ParentBrowserProject,
 ) {
   const commands = Object.keys(globalServer.commands)
@@ -49,7 +49,7 @@ async function generateContextFile(
   const distContextPath = slash(`/@fs/${resolve(__dirname, 'context.js')}`)
 
   return `
-import { page, createUserEvent, cdp } from '${distContextPath}'
+import { page, createUserEvent, cdp, locators } from '${distContextPath}'
 ${userEventNonProviderImport}
 
 export const server = {
@@ -64,7 +64,7 @@ export const server = {
 }
 export const commands = server.commands
 export const userEvent = createUserEvent(_userEventSetup)
-export { page, cdp }
+export { page, cdp, locators }
 `
 }
 

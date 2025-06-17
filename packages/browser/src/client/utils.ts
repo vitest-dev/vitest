@@ -1,5 +1,7 @@
+import type { VitestRunner } from '@vitest/runner'
 import type { SerializedConfig, WorkerGlobalState } from 'vitest'
-import type { BrowserRPC } from './client'
+import type { IframeOrchestrator } from './orchestrator'
+import type { CommandsManager } from './tester/utils'
 
 export async function importId(id: string): Promise<any> {
   const name = `/@id/${id}`.replace(/\\/g, '/')
@@ -26,7 +28,7 @@ export function getConfig(): SerializedConfig {
   return getBrowserState().config
 }
 
-export function ensureAwaited<T>(promise: () => Promise<T>): Promise<T> {
+export function ensureAwaited<T>(promise: (error?: Error) => Promise<T>): Promise<T> {
   const test = getWorkerState().current
   if (!test || test.type !== 'test') {
     return promise()
@@ -48,13 +50,13 @@ export function ensureAwaited<T>(promise: () => Promise<T>): Promise<T> {
   return {
     then(onFulfilled, onRejected) {
       awaited = true
-      return (promiseResult ||= promise()).then(onFulfilled, onRejected)
+      return (promiseResult ||= promise(sourceError)).then(onFulfilled, onRejected)
     },
     catch(onRejected) {
-      return (promiseResult ||= promise()).catch(onRejected)
+      return (promiseResult ||= promise(sourceError)).catch(onRejected)
     },
     finally(onFinally) {
-      return (promiseResult ||= promise()).finally(onFinally)
+      return (promiseResult ||= promise(sourceError)).finally(onFinally)
     },
     [Symbol.toStringTag]: 'Promise',
   } satisfies Promise<T>
@@ -66,6 +68,7 @@ export interface BrowserRunnerState {
   moduleCache: WorkerGlobalState['moduleCache']
   config: SerializedConfig
   provider: string
+  runner: VitestRunner
   viteConfig: {
     root: string
   }
@@ -76,9 +79,9 @@ export interface BrowserRunnerState {
   sessionId: string
   testerId: string
   method: 'run' | 'collect'
-  runTests?: (tests: string[]) => Promise<void>
-  createTesters?: (files: string[]) => Promise<void>
+  orchestrator?: IframeOrchestrator
   commands: CommandsManager
+  cleanups: Array<() => unknown>
   cdp?: {
     on: (event: string, listener: (payload: any) => void) => void
     once: (event: string, listener: (payload: any) => void) => void
@@ -102,116 +105,4 @@ export function getWorkerState(): WorkerGlobalState {
     throw new Error('Worker state is not found. This is an issue with Vitest. Please, open an issue.')
   }
   return state
-}
-
-/* @__NO_SIDE_EFFECTS__ */
-export function convertElementToCssSelector(element: Element): string {
-  if (!element || !(element instanceof Element)) {
-    throw new Error(
-      `Expected DOM element to be an instance of Element, received ${typeof element}`,
-    )
-  }
-
-  return getUniqueCssSelector(element)
-}
-
-function escapeIdForCSSSelector(id: string) {
-  return id
-    .split('')
-    .map((char) => {
-      const code = char.charCodeAt(0)
-
-      if (char === ' ' || char === '#' || char === '.' || char === ':' || char === '[' || char === ']' || char === '>' || char === '+' || char === '~' || char === '\\') {
-        // Escape common special characters with backslashes
-        return `\\${char}`
-      }
-      else if (code >= 0x10000) {
-        // Unicode escape for characters outside the BMP
-        return `\\${code.toString(16).toUpperCase().padStart(6, '0')} `
-      }
-      else if (code < 0x20 || code === 0x7F) {
-        // Non-printable ASCII characters (0x00-0x1F and 0x7F) are escaped
-        return `\\${code.toString(16).toUpperCase().padStart(2, '0')} `
-      }
-      else if (code >= 0x80) {
-        // Non-ASCII characters (0x80 and above) are escaped
-        return `\\${code.toString(16).toUpperCase().padStart(2, '0')} `
-      }
-      else {
-        // Allowable characters are used directly
-        return char
-      }
-    })
-    .join('')
-}
-
-function getUniqueCssSelector(el: Element) {
-  const path = []
-  let parent: null | ParentNode
-  let hasShadowRoot = false
-  // eslint-disable-next-line no-cond-assign
-  while (parent = getParent(el)) {
-    if ((parent as Element).shadowRoot) {
-      hasShadowRoot = true
-    }
-
-    const tag = el.tagName
-    if (el.id) {
-      path.push(`#${escapeIdForCSSSelector(el.id)}`)
-    }
-    else if (!el.nextElementSibling && !el.previousElementSibling) {
-      path.push(tag.toLowerCase())
-    }
-    else {
-      let index = 0
-      let sameTagSiblings = 0
-      let elementIndex = 0
-
-      for (const sibling of parent.children) {
-        index++
-        if (sibling.tagName === tag) {
-          sameTagSiblings++
-        }
-        if (sibling === el) {
-          elementIndex = index
-        }
-      }
-
-      if (sameTagSiblings > 1) {
-        path.push(`${tag.toLowerCase()}:nth-child(${elementIndex})`)
-      }
-      else {
-        path.push(tag.toLowerCase())
-      }
-    }
-    el = parent as Element
-  };
-  return `${getBrowserState().provider === 'webdriverio' && hasShadowRoot ? '>>>' : ''}${path.reverse().join(' > ')}`
-}
-
-function getParent(el: Element) {
-  const parent = el.parentNode
-  if (parent instanceof ShadowRoot) {
-    return parent.host
-  }
-  return parent
-}
-
-export class CommandsManager {
-  private _listeners: ((command: string, args: any[]) => void)[] = []
-
-  public onCommand(listener: (command: string, args: any[]) => void): void {
-    this._listeners.push(listener)
-  }
-
-  public async triggerCommand<T>(command: string, args: any[]): Promise<T> {
-    const state = getWorkerState()
-    const rpc = state.rpc as any as BrowserRPC
-    const { sessionId } = getBrowserState()
-    const filepath = state.filepath || state.current?.file?.filepath
-    if (this._listeners.length) {
-      await Promise.all(this._listeners.map(listener => listener(command, args)))
-    }
-    return rpc.triggerCommand<T>(sessionId, command, filepath, args)
-  }
 }

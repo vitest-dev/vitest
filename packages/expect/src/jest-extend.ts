@@ -80,16 +80,17 @@ function JestExtendPlugin(
           if (
             result
             && typeof result === 'object'
-            && result instanceof Promise
+            && typeof (result as any).then === 'function'
           ) {
-            return result.then(({ pass, message, actual, expected }) => {
+            const thenable = result as PromiseLike<SyncExpectationResult>
+            return thenable.then(({ pass, message, actual, expected }) => {
               if ((pass && isNot) || (!pass && !isNot)) {
                 throw new JestExtendError(message(), actual, expected)
               }
             })
           }
 
-          const { pass, message, actual, expected } = result
+          const { pass, message, actual, expected } = result as SyncExpectationResult
 
           if ((pass && isNot) || (!pass && !isNot)) {
             throw new JestExtendError(message(), actual, expected)

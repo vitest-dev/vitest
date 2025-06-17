@@ -4,7 +4,7 @@ export {
   objDisplay,
   stringify,
 } from './display'
-export type { StringifyOptions } from './display'
+export type { LoupeOptions, StringifyOptions } from './display'
 
 export {
   assertTypes,

@@ -6,7 +6,6 @@ import { createBirpc } from 'birpc'
 import { parse, stringify } from 'flatted'
 import { StateManager } from './state'
 
-export * from '../../vitest/src/utils/tasks'
 export * from '@vitest/runner/utils'
 
 export interface VitestClientOptions {
@@ -52,6 +51,9 @@ export function createClient(url: string, options: VitestClientOptions = {}): Vi
 
   let onMessage: (data: any) => void
   const functions: WebSocketEvents = {
+    onTestAnnotate(testId, annotation) {
+      handlers.onTestAnnotate?.(testId, annotation)
+    },
     onSpecsCollected(specs) {
       specs?.forEach(([config, file]) => {
         ctx.state.clearFiles({ config }, [file])
@@ -66,9 +68,9 @@ export function createClient(url: string, options: VitestClientOptions = {}): Vi
       ctx.state.collectFiles(files)
       handlers.onCollected?.(files)
     },
-    onTaskUpdate(packs) {
+    onTaskUpdate(packs, events) {
       ctx.state.updateTasks(packs)
-      handlers.onTaskUpdate?.(packs)
+      handlers.onTaskUpdate?.(packs, events)
     },
     onUserConsoleLog(log) {
       ctx.state.updateUserLog(log)

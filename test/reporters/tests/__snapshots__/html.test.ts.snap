@@ -10,11 +10,13 @@ exports[`html reporter > resolves to "failing" status for test file "json-fail" 
       "file": [Circular],
       "filepath": "<rootDir>/test/reporters/fixtures/json-fail.test.ts",
       "id": 0,
+      "importDurations": {},
       "meta": {},
       "mode": "run",
       "name": "json-fail.test.ts",
       "pool": "forks",
       "prepareDuration": 0,
+      "projectName": "",
       "result": {
         "duration": 0,
         "startTime": 0,
@@ -23,6 +25,7 @@ exports[`html reporter > resolves to "failing" status for test file "json-fail" 
       "setupDuration": 0,
       "tasks": [
         {
+          "annotations": [],
           "file": [Circular],
           "id": 0,
           "location": {
@@ -55,12 +58,10 @@ exports[`html reporter > resolves to "failing" status for test file "json-fail" 
                 "expected": "1",
                 "message": "expected 2 to deeply equal 1",
                 "name": "AssertionError",
-                "nameStr": "AssertionError",
                 "ok": false,
                 "operator": "strictEqual",
                 "showDiff": true,
                 "stack": "AssertionError: expected 2 to deeply equal 1",
-                "stackStr": "AssertionError: expected 2 to deeply equal 1",
               },
             ],
             "repeatCount": 0,
@@ -68,6 +69,7 @@ exports[`html reporter > resolves to "failing" status for test file "json-fail" 
             "startTime": 0,
             "state": "fail",
           },
+          "timeout": 5000,
           "type": "test",
         },
       ],
@@ -119,11 +121,13 @@ exports[`html reporter > resolves to "passing" status for test file "all-passing
       "file": [Circular],
       "filepath": "<rootDir>/test/reporters/fixtures/all-passing-or-skipped.test.ts",
       "id": 0,
+      "importDurations": {},
       "meta": {},
       "mode": "run",
       "name": "all-passing-or-skipped.test.ts",
       "pool": "forks",
       "prepareDuration": 0,
+      "projectName": "",
       "result": {
         "duration": 0,
         "startTime": 0,
@@ -132,6 +136,7 @@ exports[`html reporter > resolves to "passing" status for test file "all-passing
       "setupDuration": 0,
       "tasks": [
         {
+          "annotations": [],
           "file": [Circular],
           "id": 0,
           "location": {
@@ -148,9 +153,11 @@ exports[`html reporter > resolves to "passing" status for test file "all-passing
             "startTime": 0,
             "state": "pass",
           },
+          "timeout": 5000,
           "type": "test",
         },
         {
+          "annotations": [],
           "file": [Circular],
           "id": "1111755131_1",
           "location": {
@@ -160,6 +167,7 @@ exports[`html reporter > resolves to "passing" status for test file "all-passing
           "meta": {},
           "mode": "skip",
           "name": "3 + 3 = 6",
+          "timeout": 5000,
           "type": "test",
         },
       ],

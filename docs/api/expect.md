@@ -6,7 +6,19 @@ The following types are used in the type signatures below
 type Awaitable<T> = T | PromiseLike<T>
 ```
 
-`expect` is used to create assertions. In this context `assertions` are functions that can be called to assert a statement. Vitest provides `chai` assertions by default and also `Jest` compatible assertions built on top of `chai`.
+`expect` is used to create assertions. In this context `assertions` are functions that can be called to assert a statement. Vitest provides `chai` assertions by default and also `Jest` compatible assertions built on top of `chai`. Unlike `Jest`, Vitest supports a message as the second argument - if the assertion fails, the error message will be equal to it.
+
+```ts
+export interface ExpectStatic extends Chai.ExpectStatic, AsymmetricMatchersContaining {
+  <T>(actual: T, message?: string): Assertion<T>
+  extend: (expects: MatchersObject) => void
+  anything: () => any
+  any: (constructor: unknown) => any
+  getState: () => MatcherState
+  setState: (state: Partial<MatcherState>) => void
+  not: AsymmetricMatchersContaining
+}
+```
 
 For example, this code asserts that an `input` value is equal to `2`. If it's not, the assertion will throw an error, and the test will fail.
 
@@ -759,7 +771,7 @@ test('throws on pineapples', async () => {
 
 ## toMatchSnapshot
 
-- **Type:** `<T>(shape?: Partial<T> | string, message?: string) => void`
+- **Type:** `<T>(shape?: Partial<T> | string, hint?: string) => void`
 
 This ensures that a value matches the most recent snapshot.
 
@@ -791,7 +803,7 @@ test('matches snapshot', () => {
 
 ## toMatchInlineSnapshot
 
-- **Type:** `<T>(shape?: Partial<T> | string, snapshot?: string, message?: string) => void`
+- **Type:** `<T>(shape?: Partial<T> | string, snapshot?: string, hint?: string) => void`
 
 This ensures that a value matches the most recent snapshot.
 
@@ -834,7 +846,7 @@ test('matches snapshot', () => {
 
 ## toMatchFileSnapshot {#tomatchfilesnapshot}
 
-- **Type:** `<T>(filepath: string, message?: string) => Promise<void>`
+- **Type:** `<T>(filepath: string, hint?: string) => Promise<void>`
 
 Compare or update the snapshot with the content of a file explicitly specified (instead of the `.snap` file).
 
@@ -851,13 +863,13 @@ Note that since file system operation is async, you need to use `await` with `to
 
 ## toThrowErrorMatchingSnapshot
 
-- **Type:** `(message?: string) => void`
+- **Type:** `(hint?: string) => void`
 
 The same as [`toMatchSnapshot`](#tomatchsnapshot), but expects the same value as [`toThrowError`](#tothrowerror).
 
 ## toThrowErrorMatchingInlineSnapshot
 
-- **Type:** `(snapshot?: string, message?: string) => void`
+- **Type:** `(snapshot?: string, hint?: string) => void`
 
 The same as [`toMatchInlineSnapshot`](#tomatchinlinesnapshot), but expects the same value as [`toThrowError`](#tothrowerror).
 

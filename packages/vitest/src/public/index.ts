@@ -107,9 +107,7 @@ export type {
 } from '../api/types'
 export { assert, chai, createExpect, expect, should } from '../integrations/chai'
 export { inject } from '../integrations/inject'
-export { isFirstRun, runOnce } from '../integrations/run-once'
 
-export { getRunningMode, isWatchMode } from '../integrations/utils'
 export { vi, vitest } from '../integrations/vi'
 export type { VitestUtils } from '../integrations/vi'
 export { bench } from '../runtime/benchmark'
@@ -179,9 +177,11 @@ export type WorkerContext = WorkerContext_
 /** @deprecated import from `vitest/node` instead */
 export type WorkerRPC = WorkerRPC_
 
+export type { BrowserTesterOptions } from '../types/browser'
 export type {
   AfterSuiteRunMeta,
   ErrorWithDiff,
+  LabelColor,
   ModuleCache,
   ModuleGraphData,
   ParsedStack,
@@ -243,14 +243,17 @@ export type {
   ContextRPC,
   ContextTestEnvironment,
   ResolveIdFunction,
+  TestExecutionMethod,
   WorkerGlobalState,
 } from '../types/worker'
 export type {
   Assertion,
   AsymmetricMatchersContaining,
+  DeeplyAllowMatchers,
   ExpectPollOptions,
   ExpectStatic,
   JestAssertion,
+  Matchers,
 } from '@vitest/expect'
 export {
   afterAll,
@@ -268,12 +271,14 @@ export type {
   ExtendedContext,
   HookCleanupCallback,
   HookListener,
+  ImportDuration,
   OnTestFailedHandler,
   OnTestFinishedHandler,
   RunMode,
   Custom as RunnerCustomCase,
   Task as RunnerTask,
   TaskBase as RunnerTaskBase,
+  TaskEventPack as RunnerTaskEventPack,
   TaskResult as RunnerTaskResult,
   TaskResultPack as RunnerTaskResultPack,
   Test as RunnerTestCase,
@@ -286,6 +291,7 @@ export type {
   TaskCustomOptions,
   TaskMeta,
   TaskState,
+  TestAnnotation,
   TestAPI,
   TestContext,
   TestFunction,
