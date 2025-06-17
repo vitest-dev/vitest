@@ -70,7 +70,7 @@ export class IframeOrchestrator {
   public async cleanupTesters(): Promise<void> {
     const config = getConfig()
     if (config.browser.isolate) {
-      // isolated mode assignes filepaths as ids
+      // isolated mode assigns filepaths as ids
       const files = Array.from(this.iframes.keys())
       // when the run is completed, show the last file in the UI
       const ui = getUiAPI()
