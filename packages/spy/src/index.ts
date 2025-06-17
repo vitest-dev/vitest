@@ -481,9 +481,11 @@ export function spyOn<T, K extends keyof T>(
   catch (error) {
     if (
       error instanceof TypeError
-      && error.message.includes('Cannot redefine property')
       && Symbol.toStringTag
       && (obj as any)[Symbol.toStringTag] === 'Module'
+      && (error.message.includes('Cannot redefine property')
+        || error.message.includes('Cannot replace module namespace')
+        || error.message.includes('can\'t redefine non-configurable property'))
     ) {
       throw new TypeError(
         `Cannot spy on export "${String(objMethod)}". Module namespace is not configurable in ESM. See: https://vitest.dev/guide/browser/#limitations`,
