@@ -143,9 +143,6 @@ patchedDependencies:
   cac@6.7.14:
     hash: a8f0f3517a47ce716ed90c0cfe6ae382ab763b021a664ada2a608477d0621588
     path: patches/cac@6.7.14.patch
-  v8-to-istanbul@9.3.0:
-    hash: fc8eccce7f8e7c27b0d0b1c63e93ff3adaa8c05c33d5603bacf58ea6d12951f3
-    path: patches/v8-to-istanbul@9.3.0.patch
 
 importers:
 
@@ -633,9 +630,6 @@ importers:
       pathe:
         specifier: 'catalog:'
         version: 2.0.3
-      v8-to-istanbul:
-        specifier: ^9.3.0
-        version: 9.3.0(patch_hash=fc8eccce7f8e7c27b0d0b1c63e93ff3adaa8c05c33d5603bacf58ea6d12951f3)
       vite-node:
         specifier: workspace:*
         version: link:../vite-node
@@ -8433,10 +8427,6 @@ packages:
   utils-merge@1.0.1:
     resolution: {integrity: sha512-pMZTvIkT1d+TFGvDOqodOclx0QWkkgi6Tdoa8gC8ffGAAqz9pzPTZWAybbsHHoED/ztMtkv/VoYTYyShUn81hA==}
     engines: {node: '>= 0.4.0'}
-
-  v8-to-istanbul@9.3.0:
-    resolution: {integrity: sha512-kiGUalWN+rgBJ/1OHZsBtU4rXZOfj/7rKQxULKlIzwzQSvMJUUNgPwJEEh7gU6xEVxC0ahoOBvN2YI8GH6FNgA==}
-    engines: {node: '>=10.12.0'}
 
   varint@6.0.0:
     resolution: {integrity: sha512-cXEIW6cfr15lFv563k4GuVuW/fiwjknytD37jIOLSdSWuOI6WnO/oKwmP2FQTU2l01LP8/M5TSAJpzUaGe3uWg==}
@@ -16595,12 +16585,6 @@ snapshots:
   util-deprecate@1.0.2: {}
 
   utils-merge@1.0.1: {}
-
-  v8-to-istanbul@9.3.0(patch_hash=fc8eccce7f8e7c27b0d0b1c63e93ff3adaa8c05c33d5603bacf58ea6d12951f3):
-    dependencies:
-      '@jridgewell/trace-mapping': 0.3.25
-      '@types/istanbul-lib-coverage': 2.0.6
-      convert-source-map: 2.0.0
 
   varint@6.0.0: {}
 

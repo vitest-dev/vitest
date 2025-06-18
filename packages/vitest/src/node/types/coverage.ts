@@ -248,9 +248,7 @@ export interface BaseCoverageOptions {
    * Defaults to `Math.min(20, os.availableParallelism?.() ?? os.cpus().length)`
    */
   processingConcurrency?: number
-}
 
-export interface CoverageIstanbulOptions extends BaseCoverageOptions {
   /**
    * Set to array of class method names to ignore for coverage
    *
@@ -259,27 +257,9 @@ export interface CoverageIstanbulOptions extends BaseCoverageOptions {
   ignoreClassMethods?: string[]
 }
 
-export interface CoverageV8Options extends BaseCoverageOptions {
-  /**
-   * Ignore empty lines, comments and other non-runtime code, e.g. Typescript types
-   * - Requires `experimentalAstAwareRemapping: false`
-   */
-  ignoreEmptyLines?: boolean
+export interface CoverageIstanbulOptions extends BaseCoverageOptions {}
 
-  /**
-   * Remap coverage with experimental AST based analysis
-   * - Provides more accurate results compared to default mode
-   */
-  experimentalAstAwareRemapping?: boolean
-
-  /**
-   * Set to array of class method names to ignore for coverage.
-   * - Requires `experimentalAstAwareRemapping: true`
-   *
-   * @default []
-   */
-  ignoreClassMethods?: string[]
-}
+export interface CoverageV8Options extends BaseCoverageOptions {}
 
 export interface CustomProviderOptions
   extends Pick<BaseCoverageOptions, FieldsWithDefaultValues> {
