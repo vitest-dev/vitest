@@ -17,7 +17,7 @@ const keys = [
   ['p', 'filter by a filename'],
   ['t', 'filter by a test name regex pattern'],
   ['w', 'filter by a project name'],
-  ['b', 'start the browser server if not started yet'],
+  ['b', 'restart all browser servers'],
   ['q', 'quit'],
 ]
 const cancelKeys = ['space', 'c', 'h', ...keys.map(key => key[0]).flat()]
@@ -119,6 +119,12 @@ export function registerConsoleShortcuts(
       return inputFilePattern()
     }
     if (name === 'b') {
+      await Promise.all(ctx.projects.map(async (project) => {
+        if (project.browser) {
+          await project.browser.close()
+          delete project.browser
+        }
+      }))
       await ctx._initBrowserServers()
       ctx.projects.forEach((project) => {
         ctx.logger.log()
