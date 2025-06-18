@@ -6,7 +6,6 @@ import type { AfterSuiteRunMeta } from 'vitest'
 import type { CoverageProvider, ReportContext, ResolvedCoverageOptions, TestProject, Vitest } from 'vitest/node'
 import { promises as fs } from 'node:fs'
 import { fileURLToPath, pathToFileURL } from 'node:url'
-import remapping from '@ampproject/remapping'
 // @ts-expect-error -- untyped
 import { mergeProcessCovs } from '@bcoe/v8-coverage'
 import astV8ToIstanbul from 'ast-v8-to-istanbul'
@@ -15,13 +14,10 @@ import libCoverage from 'istanbul-lib-coverage'
 import libReport from 'istanbul-lib-report'
 import libSourceMaps from 'istanbul-lib-source-maps'
 import reports from 'istanbul-reports'
-import MagicString from 'magic-string'
 import { parseModule } from 'magicast'
-import { normalize, resolve } from 'pathe'
+import { normalize } from 'pathe'
 import { provider } from 'std-env'
-import TestExclude from 'test-exclude'
 import c from 'tinyrainbow'
-import v8ToIstanbul from 'v8-to-istanbul'
 import { cleanUrl } from 'vite-node/utils'
 
 import { BaseCoverageProvider } from 'vitest/coverage'
@@ -35,11 +31,6 @@ export interface ScriptCoverageWithOffset extends Profiler.ScriptCoverage {
 type TransformResults = Map<string, FetchResult>
 interface RawCoverage { result: ScriptCoverageWithOffset[] }
 
-// Note that this needs to match the line ending as well
-const VITE_EXPORTS_LINE_PATTERN
-  = /Object\.defineProperty\(__vite_ssr_exports__.*\n/g
-const DECORATOR_METADATA_PATTERN
-  = /_ts_metadata\("design:paramtypes", \[[^\]]*\]\),*/g
 const FILE_PROTOCOL = 'file://'
 
 const debug = createDebug('vitest:coverage')
@@ -47,19 +38,9 @@ const debug = createDebug('vitest:coverage')
 export class V8CoverageProvider extends BaseCoverageProvider<ResolvedCoverageOptions<'v8'>> implements CoverageProvider {
   name = 'v8' as const
   version: string = version
-  testExclude!: InstanceType<typeof TestExclude>
 
   initialize(ctx: Vitest): void {
     this._initialize(ctx)
-
-    this.testExclude = new TestExclude({
-      cwd: ctx.config.root,
-      include: this.options.include,
-      exclude: this.options.exclude,
-      excludeNodeModules: true,
-      extension: this.options.extension,
-      relativePath: !this.options.allowExternal,
-    })
   }
 
   createCoverageMap(): CoverageMap {
@@ -103,15 +84,15 @@ export class V8CoverageProvider extends BaseCoverageProvider<ResolvedCoverageOpt
 
     // Include untested files when all tests were run (not a single file re-run)
     // or if previous results are preserved by "cleanOnRerun: false"
-    if (this.options.all && (allTestsRun || !this.options.cleanOnRerun)) {
+    if (this.options.include != null && (allTestsRun || !this.options.cleanOnRerun)) {
       const coveredFiles = coverageMap.files()
-      const untestedCoverage = await this.getUntestedFiles(coveredFiles)
+      const untestedCoverage = await this.getCoverageMapForUncoveredFiles(coveredFiles)
 
       coverageMap.merge(await transformCoverage(untestedCoverage))
     }
 
     if (this.options.excludeAfterRemap) {
-      coverageMap.filter(filename => this.testExclude.shouldInstrument(filename))
+      coverageMap.filter(filename => this.isIncluded(filename))
     }
 
     if (debug.enabled) {
@@ -165,26 +146,13 @@ export class V8CoverageProvider extends BaseCoverageProvider<ResolvedCoverageOpt
     )
   }
 
-  private async getUntestedFiles(testedFiles: string[]): Promise<CoverageMap> {
+  private async getCoverageMapForUncoveredFiles(testedFiles: string[]): Promise<CoverageMap> {
     const transformResults = normalizeTransformResults(
       this.ctx.vitenode.fetchCache,
     )
     const transform = this.createUncoveredFileTransformer(this.ctx)
 
-    const allFiles = await this.testExclude.glob(this.ctx.config.root)
-    let includedFiles = allFiles.map(file =>
-      resolve(this.ctx.config.root, file),
-    )
-
-    if (this.ctx.config.changed) {
-      includedFiles = (this.ctx.config.related || []).filter(file =>
-        includedFiles.includes(file),
-      )
-    }
-
-    const uncoveredFiles = includedFiles
-      .map(file => pathToFileURL(file))
-      .filter(file => !testedFiles.includes(file.pathname))
+    const uncoveredFiles = await this.getUntestedFiles(testedFiles)
 
     let index = 0
 
@@ -202,31 +170,21 @@ export class V8CoverageProvider extends BaseCoverageProvider<ResolvedCoverageOpt
 
         if (debug.enabled) {
           start = performance.now()
-          timeout = setTimeout(() => debug(c.bgRed(`File "${filename.pathname}" is taking longer than 3s`)), 3_000)
+          timeout = setTimeout(() => debug(c.bgRed(`File "${filename}" is taking longer than 3s`)), 3_000)
         }
 
+        const url = pathToFileURL(filename)
         const sources = await this.getSources(
-          filename.href,
+          url.href,
           transformResults,
           transform,
         )
 
-        coverageMap.merge(await this.v8ToIstanbul(
-          filename.href,
+        coverageMap.merge(await this.remapCoverage(
+          url.href,
           0,
           sources,
-          [{
-            ranges: [
-              {
-                startOffset: 0,
-                endOffset: sources.originalSource.length,
-                count: 0,
-              },
-            ],
-            isBlockCoverage: true,
-            // This is magical value that indicates an empty report: https://github.com/istanbuljs/v8-to-istanbul/blob/fca5e6a9e6ef38a9cdc3a178d5a6cf9ef82e6cab/lib/v8-to-istanbul.js#LL131C40-L131C40
-            functionName: '(empty-report)',
-          }],
+          [],
         ))
 
         if (debug.enabled) {
@@ -234,7 +192,7 @@ export class V8CoverageProvider extends BaseCoverageProvider<ResolvedCoverageOpt
 
           const diff = performance.now() - start!
           const color = diff > 500 ? c.bgRed : c.bgGreen
-          debug(`${color(` ${diff.toFixed()} ms `)} ${filename.pathname}`)
+          debug(`${color(` ${diff.toFixed()} ms `)} ${filename}`)
         }
       }))
     }
@@ -242,118 +200,109 @@ export class V8CoverageProvider extends BaseCoverageProvider<ResolvedCoverageOpt
     return coverageMap
   }
 
-  private async v8ToIstanbul(filename: string, wrapperLength: number, sources: Awaited<ReturnType<typeof this.getSources>>, functions: Profiler.FunctionCoverage[]) {
-    if (this.options.experimentalAstAwareRemapping) {
-      let ast
-      try {
-        ast = await parseAstAsync(sources.source)
-      }
-      catch (error) {
-        this.ctx.logger.error(`Failed to parse ${filename}. Excluding it from coverage.\n`, error)
-        return {}
-      }
-
-      return await astV8ToIstanbul({
-        code: sources.source,
-        sourceMap: sources.sourceMap?.sourcemap,
-        ast,
-        coverage: { functions, url: filename },
-        ignoreClassMethods: this.options.ignoreClassMethods,
-        wrapperLength,
-        ignoreNode: (node, type) => {
-          // SSR transformed imports
-          if (
-            type === 'statement'
-            && node.type === 'VariableDeclarator'
-            && node.id.type === 'Identifier'
-            && node.id.name.startsWith('__vite_ssr_import_')
-          ) {
-            return true
-          }
-
-          // SSR transformed exports vite@>6.3.5
-          if (
-            type === 'statement'
-            && node.type === 'ExpressionStatement'
-            && node.expression.type === 'AssignmentExpression'
-            && node.expression.left.type === 'MemberExpression'
-            && node.expression.left.object.type === 'Identifier'
-            && node.expression.left.object.name === '__vite_ssr_exports__'
-          ) {
-            return true
-          }
-
-          // SSR transformed exports vite@^6.3.5
-          if (
-            type === 'statement'
-            && node.type === 'VariableDeclarator'
-            && node.id.type === 'Identifier'
-            && node.id.name === '__vite_ssr_export_default__'
-          ) {
-            return true
-          }
-
-          // in-source test with "if (import.meta.vitest)"
-          if (
-            (type === 'branch' || type === 'statement')
-            && node.type === 'IfStatement'
-            && node.test.type === 'MemberExpression'
-            && node.test.property.type === 'Identifier'
-            && node.test.property.name === 'vitest'
-          ) {
-            // SSR
-            if (
-              node.test.object.type === 'Identifier'
-              && node.test.object.name === '__vite_ssr_import_meta__'
-            ) {
-              return 'ignore-this-and-nested-nodes'
-            }
-
-            // Web
-            if (
-              node.test.object.type === 'MetaProperty'
-              && node.test.object.meta.name === 'import'
-              && node.test.object.property.name === 'meta'
-            ) {
-              return 'ignore-this-and-nested-nodes'
-            }
-          }
-
-          // Browser mode's "import.meta.env ="
-          if (
-            type === 'statement'
-            && node.type === 'ExpressionStatement'
-            && node.expression.type === 'AssignmentExpression'
-            && node.expression.left.type === 'MemberExpression'
-            && node.expression.left.object.type === 'MetaProperty'
-            && node.expression.left.object.meta.name === 'import'
-            && node.expression.left.object.property.name === 'meta'
-            && node.expression.left.property.type === 'Identifier'
-            && node.expression.left.property.name === 'env') {
-            return true
-          }
-        },
-      },
-      )
-    }
-
-    const converter = v8ToIstanbul(
-      filename,
-      wrapperLength,
-      sources,
-      undefined,
-      this.options.ignoreEmptyLines,
-    )
-    await converter.load()
+  private async remapCoverage(filename: string, wrapperLength: number, result: Awaited<ReturnType<typeof this.getSources>>, functions: Profiler.FunctionCoverage[]) {
+    let ast
 
     try {
-      converter.applyCoverage(functions)
+      ast = await parseAstAsync(result.code)
     }
     catch (error) {
-      this.ctx.logger.error(`Failed to convert coverage for ${filename}.\n`, error)
+      this.ctx.logger.error(`Failed to parse ${filename}. Excluding it from coverage.\n`, error)
+      return {}
     }
 
-    return converter.toIstanbul()
+    return await astV8ToIstanbul({
+      code: result.code,
+      sourceMap: result.map,
+      ast,
+      coverage: { functions, url: filename },
+      ignoreClassMethods: this.options.ignoreClassMethods,
+      wrapperLength,
+      ignoreNode: (node, type) => {
+        // SSR transformed imports
+        if (
+          type === 'statement'
+          && node.type === 'VariableDeclarator'
+          && node.id.type === 'Identifier'
+          && node.id.name.startsWith('__vite_ssr_import_')
+        ) {
+          return true
+        }
+
+        // SSR transformed exports vite@>6.3.5
+        if (
+          type === 'statement'
+          && node.type === 'ExpressionStatement'
+          && node.expression.type === 'AssignmentExpression'
+          && node.expression.left.type === 'MemberExpression'
+          && node.expression.left.object.type === 'Identifier'
+          && node.expression.left.object.name === '__vite_ssr_exports__'
+        ) {
+          return true
+        }
+
+        // SSR transformed exports vite@^6.3.5
+        if (
+          type === 'statement'
+          && node.type === 'VariableDeclarator'
+          && node.id.type === 'Identifier'
+          && node.id.name === '__vite_ssr_export_default__'
+        ) {
+          return true
+        }
+
+        // in-source test with "if (import.meta.vitest)"
+        if (
+          (type === 'branch' || type === 'statement')
+          && node.type === 'IfStatement'
+          && node.test.type === 'MemberExpression'
+          && node.test.property.type === 'Identifier'
+          && node.test.property.name === 'vitest'
+        ) {
+          // SSR
+          if (
+            node.test.object.type === 'Identifier'
+            && node.test.object.name === '__vite_ssr_import_meta__'
+          ) {
+            return 'ignore-this-and-nested-nodes'
+          }
+
+          // Web
+          if (
+            node.test.object.type === 'MetaProperty'
+            && node.test.object.meta.name === 'import'
+            && node.test.object.property.name === 'meta'
+          ) {
+            return 'ignore-this-and-nested-nodes'
+          }
+        }
+
+        // Browser mode's "import.meta.env ="
+        if (
+          type === 'statement'
+          && node.type === 'ExpressionStatement'
+          && node.expression.type === 'AssignmentExpression'
+          && node.expression.left.type === 'MemberExpression'
+          && node.expression.left.object.type === 'MetaProperty'
+          && node.expression.left.object.meta.name === 'import'
+          && node.expression.left.object.property.name === 'meta'
+          && node.expression.left.property.type === 'Identifier'
+          && node.expression.left.property.name === 'env') {
+          return true
+        }
+
+        // SWC's decorators
+        if (
+          type === 'statement'
+          && node.type === 'ExpressionStatement'
+          && node.expression.type === 'CallExpression'
+          && node.expression.callee.type === 'Identifier'
+          && node.expression.callee.name === '_ts_decorate') {
+          return 'ignore-this-and-nested-nodes'
+        }
+      },
+    },
+    )
   }
 
   private async getSources<TransformResult extends (FetchResult | Awaited<ReturnType<typeof this.ctx.vitenode.transformRequest>>)>(
@@ -362,9 +311,8 @@ export class V8CoverageProvider extends BaseCoverageProvider<ResolvedCoverageOpt
     onTransform: (filepath: string) => Promise<TransformResult>,
     functions: Profiler.FunctionCoverage[] = [],
   ): Promise<{
-      source: string
-      originalSource: string
-      sourceMap?: { sourcemap: EncodedSourceMap }
+      code: string
+      map?: EncodedSourceMap
     }> {
     const filePath = normalize(fileURLToPath(url))
 
@@ -376,45 +324,32 @@ export class V8CoverageProvider extends BaseCoverageProvider<ResolvedCoverageOpt
 
     const map = transformResult?.map as EncodedSourceMap | undefined
     const code = transformResult?.code
-    const sourcesContent = map?.sourcesContent || []
 
-    if (!sourcesContent[0]) {
-      sourcesContent[0] = await fs.readFile(filePath, 'utf-8').catch(() => {
+    if (!code) {
+      const original = await fs.readFile(filePath, 'utf-8').catch(() => {
         // If file does not exist construct a dummy source for it.
         // These can be files that were generated dynamically during the test run and were removed after it.
         const length = findLongestFunctionLength(functions)
         return '/'.repeat(length)
       })
+
+      return { code: original }
     }
 
-    // These can be uncovered files included by "all: true" or files that are loaded outside vite-node
-    if (!map) {
-      return {
-        source: code || sourcesContent[0],
-        originalSource: sourcesContent[0],
+    // Vue needs special handling for "map.sources"
+    if (map) {
+      map.sources ||= []
+
+      map.sources = map.sources
+        .filter(source => source != null)
+        .map(source => new URL(source, url).href)
+
+      if (map.sources.length === 0) {
+        map.sources.push(url)
       }
     }
 
-    const sources = (map.sources || [])
-      .filter(source => source != null)
-      .map(source => new URL(source, url).href)
-
-    if (sources.length === 0) {
-      sources.push(url)
-    }
-
-    return {
-      originalSource: sourcesContent[0],
-      source: code || sourcesContent[0],
-      sourceMap: {
-        sourcemap: excludeGeneratedCode(code, {
-          ...map,
-          version: 3,
-          sources,
-          sourcesContent,
-        }),
-      },
-    }
+    return { code, map }
   }
 
   private async convertCoverage(
@@ -456,7 +391,7 @@ export class V8CoverageProvider extends BaseCoverageProvider<ResolvedCoverageOpt
         }
       }
 
-      if (this.testExclude.shouldInstrument(fileURLToPath(result.url))) {
+      if (this.isIncluded(fileURLToPath(result.url))) {
         scriptCoverages.push(result)
       }
     }
@@ -487,7 +422,7 @@ export class V8CoverageProvider extends BaseCoverageProvider<ResolvedCoverageOpt
             functions,
           )
 
-          coverageMap.merge(await this.v8ToIstanbul(
+          coverageMap.merge(await this.remapCoverage(
             url,
             startOffset,
             sources,
@@ -512,42 +447,6 @@ export class V8CoverageProvider extends BaseCoverageProvider<ResolvedCoverageOpt
 async function transformCoverage(coverageMap: CoverageMap) {
   const sourceMapStore = libSourceMaps.createSourceMapStore()
   return await sourceMapStore.transformCoverage(coverageMap)
-}
-
-/**
- * Remove generated code from the source maps:
- * - Vite's export helpers: e.g. `Object.defineProperty(__vite_ssr_exports__, "sum", { enumerable: true, configurable: true, get(){ return sum }});`
- * - SWC's decorator metadata: e.g. `_ts_metadata("design:paramtypes", [\ntypeof Request === "undefined" ? Object : Request\n]),`
- */
-function excludeGeneratedCode(
-  source: string | undefined,
-  map: EncodedSourceMap,
-) {
-  if (!source) {
-    return map
-  }
-
-  if (
-    !source.match(VITE_EXPORTS_LINE_PATTERN)
-    && !source.match(DECORATOR_METADATA_PATTERN)
-  ) {
-    return map
-  }
-
-  const trimmed = new MagicString(source)
-  trimmed.replaceAll(VITE_EXPORTS_LINE_PATTERN, '\n')
-  trimmed.replaceAll(DECORATOR_METADATA_PATTERN, match =>
-    '\n'.repeat(match.split('\n').length - 1))
-
-  const trimmedMap = trimmed.generateMap({ hires: 'boundary' })
-
-  // A merged source map where the first one excludes generated parts
-  const combinedMap = remapping(
-    [{ ...trimmedMap, version: 3 }, map],
-    () => null,
-  )
-
-  return combinedMap as EncodedSourceMap
 }
 
 /**

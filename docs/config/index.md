@@ -1310,12 +1310,12 @@ Make sure that your files are not excluded by [`server.watch.ignored`](https://v
 
 ### coverage<NonProjectOption />
 
-You can use [`v8`](https://v8.dev/blog/javascript-code-coverage), [`istanbul`](https://istanbul.js.org/) or [a custom coverage solution](/guide/coverage#custom-coverage-provider) for coverage collection.
+You can use [`v8`](/guide/coverage.html#v8-provider), [`istanbul`](/guide/coverage.html#istanbul-provider) or [a custom coverage solution](/guide/coverage#custom-coverage-provider) for coverage collection.
 
 You can provide coverage options to CLI with dot notation:
 
 ```sh
-npx vitest --coverage.enabled --coverage.provider=istanbul --coverage.all
+npx vitest --coverage.enabled --coverage.provider=istanbul
 ```
 
 ::: warning
@@ -1342,76 +1342,26 @@ Enables coverage collection. Can be overridden using `--coverage` CLI option.
 #### coverage.include
 
 - **Type:** `string[]`
-- **Default:** `['**']`
+- **Default:** Files that were imported during test run
 - **Available for providers:** `'v8' | 'istanbul'`
-- **CLI:** `--coverage.include=<path>`, `--coverage.include=<path1> --coverage.include=<path2>`
+- **CLI:** `--coverage.include=<pattern>`, `--coverage.include=<pattern1> --coverage.include=<pattern2>`
 
-List of files included in coverage as glob patterns
+List of files included in coverage as glob patterns. By default only files covered by tests are included.
 
-#### coverage.extension
+It is recommended to pass file extensions in the pattern.
 
-- **Type:** `string | string[]`
-- **Default:** `['.js', '.cjs', '.mjs', '.ts', '.mts', '.tsx', '.jsx', '.vue', '.svelte', '.marko', '.astro']`
-- **Available for providers:** `'v8' | 'istanbul'`
-- **CLI:** `--coverage.extension=<extension>`, `--coverage.extension=<extension1> --coverage.extension=<extension2>`
+See [Including and excluding files from coverage report](/guide/coverage.html#including-and-excluding-files-from-coverage-report) for examples.
 
 #### coverage.exclude
 
 - **Type:** `string[]`
-- **Default:**
-```js
-[
-  'coverage/**',
-  'dist/**',
-  '**/node_modules/**',
-  '**/[.]**',
-  'packages/*/test?(s)/**',
-  '**/*.d.ts',
-  '**/virtual:*',
-  '**/__x00__*',
-  '**/\x00*',
-  'cypress/**',
-  'test?(s)/**',
-  'test?(-*).?(c|m)[jt]s?(x)',
-  '**/*{.,-}{test,spec,bench,benchmark}?(-d).?(c|m)[jt]s?(x)',
-  '**/__tests__/**',
-  '**/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress,tsup,build,eslint,prettier}.config.*',
-  '**/vitest.{workspace,projects}.[jt]s?(on)',
-  '**/.{eslint,mocha,prettier}rc.{?(c|m)js,yml}',
-]
-```
+- **Default:** : `[]`
 - **Available for providers:** `'v8' | 'istanbul'`
 - **CLI:** `--coverage.exclude=<path>`, `--coverage.exclude=<path1> --coverage.exclude=<path2>`
 
 List of files excluded from coverage as glob patterns.
 
-This option overrides all default options. Extend the default options when adding new patterns to ignore:
-
-```ts
-import { coverageConfigDefaults, defineConfig } from 'vitest/config'
-
-export default defineConfig({
-  test: {
-    coverage: {
-      exclude: ['**/custom-pattern/**', ...coverageConfigDefaults.exclude]
-    },
-  },
-})
-```
-
-::: tip NOTE
-Vitest automatically adds test files `include` patterns to the `coverage.exclude`.
-It's not possible to show coverage of test files.
-:::
-
-#### coverage.all
-
-- **Type:** `boolean`
-- **Default:** `true`
-- **Available for providers:** `'v8' | 'istanbul'`
-- **CLI:** `--coverage.all`, `--coverage.all=false`
-
-Whether to include all files, including the untested ones into report.
+See [Including and excluding files from coverage report](/guide/coverage.html#including-and-excluding-files-from-coverage-report) for examples.
 
 #### coverage.clean
 
@@ -1678,51 +1628,11 @@ Sets thresholds to 100 for files matching the glob pattern.
 }
 ```
 
-#### coverage.ignoreEmptyLines
-
-- **Type:** `boolean`
-- **Default:** `true` (`false` in v1)
-- **Available for providers:** `'v8'`
-- **CLI:** `--coverage.ignoreEmptyLines=<boolean>`
-
-Ignore empty lines, comments and other non-runtime code, e.g. Typescript types. Requires `experimentalAstAwareRemapping: false`.
-
-This option works only if the used compiler removes comments and other non-runtime code from the transpiled code.
-By default Vite uses ESBuild which removes comments and Typescript types from `.ts`, `.tsx` and `.jsx` files.
-
-If you want to apply ESBuild to other files as well, define them in [`esbuild` options](https://vitejs.dev/config/shared-options.html#esbuild):
-
-```ts
-import { defineConfig } from 'vitest/config'
-
-export default defineConfig({
-  esbuild: {
-    // Transpile all files with ESBuild to remove comments from code coverage.
-    // Required for `test.coverage.ignoreEmptyLines` to work:
-    include: ['**/*.js', '**/*.jsx', '**/*.mjs', '**/*.ts', '**/*.tsx'],
-  },
-  test: {
-    coverage: {
-      provider: 'v8',
-      ignoreEmptyLines: true,
-    },
-  },
-})
-```
-#### coverage.experimentalAstAwareRemapping
-
-- **Type:** `boolean`
-- **Default:** `false`
-- **Available for providers:** `'v8'`
-- **CLI:** `--coverage.experimentalAstAwareRemapping=<boolean>`
-
-Remap coverage with experimental AST based analysis. Provides more accurate results compared to default mode.
-
 #### coverage.ignoreClassMethods
 
 - **Type:** `string[]`
 - **Default:** `[]`
-- **Available for providers:** `'istanbul'`
+- **Available for providers:** `'v8' | 'istanbul'`
 - **CLI:** `--coverage.ignoreClassMethods=<method>`
 
 Set to array of class method names to ignore for coverage.

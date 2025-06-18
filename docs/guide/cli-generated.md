@@ -89,7 +89,7 @@ Hide logs for skipped tests
 - **CLI:** `--reporter <name>`
 - **Config:** [reporters](/config/#reporters)
 
-Specify reporters (default, basic, blob, verbose, dot, json, tap, tap-flat, junit, hanging-process, github-actions)
+Specify reporters (default, blob, verbose, dot, json, tap, tap-flat, junit, hanging-process, github-actions)
 
 ### outputFile
 
@@ -97,13 +97,6 @@ Specify reporters (default, basic, blob, verbose, dot, json, tap, tap-flat, juni
 - **Config:** [outputFile](/config/#outputfile)
 
 Write test results to a file when supporter reporter is also specified, use cac's dot notation for individual outputs of multiple reporters (example: `--outputFile.tap=./tap.txt`)
-
-### coverage.all
-
-- **CLI:** `--coverage.all`
-- **Config:** [coverage.all](/config/#coverage-all)
-
-Whether to include all files, including the untested ones into report
 
 ### coverage.provider
 
@@ -132,13 +125,6 @@ Files included in coverage as glob patterns. May be specified more than once whe
 - **Config:** [coverage.exclude](/config/#coverage-exclude)
 
 Files to be excluded in coverage. May be specified more than once when using multiple extensions (default: Visit [`coverage.exclude`](https://vitest.dev/config/#coverage-exclude))
-
-### coverage.extension
-
-- **CLI:** `--coverage.extension <extension>`
-- **Config:** [coverage.extension](/config/#coverage-extension)
-
-Extension to be included in coverage. May be specified more than once when using multiple extensions (default: `[".js", ".cjs", ".mjs", ".ts", ".mts", ".tsx", ".jsx", ".vue", ".svelte"]`)
 
 ### coverage.clean
 

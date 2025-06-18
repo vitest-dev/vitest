@@ -5,6 +5,86 @@ outline: deep
 
 # Migration Guide
 
+## Migrating to Vitest 4.0 {#vitest-4}
+
+### Removed `reporters: 'basic'`
+
+Basic reporter is removed as it is equal to:
+
+```ts
+export default defineConfig({
+  test: {
+    reporters: [
+      ['default', { summary: false }]
+    ]
+  }
+})
+```
+
+### V8 Code Coverage Major Changes
+
+Vitest's V8 code coverage provider is now using more accurate coverage result remapping logic.
+It is expected for users to see changes in their coverage reports when updating from Vitest v3.
+
+In the past Vitest used [`v8-to-istanbul`](https://github.com/istanbuljs/v8-to-istanbul) for remapping V8 coverage results into your source files.
+This method wasn't very accurate and provided plenty of false positives in the coverage reports.
+We've now developed a new package that utilizes AST based analysis for the V8 coverage.
+This allows V8 reports to be as accurate as `@vitest/coverage-istanbul` reports.
+
+- Coverage ignore hints have updated. See [Coverage | Ignoring Code](/guide/coverage.html#ignoring-code).
+- `coverage.ignoreEmptyLines` is removed. Lines without runtime code are no longer included in reports.
+- `coverage.experimentalAstAwareRemapping` is removed. This option is now enabled by default, and is the only supported remapping method.
+- `coverage.ignoreClassMethods` is now supported by V8 provider too.
+
+### Removed options `coverage.all` and `coverage.extensions`
+
+In previous versions Vitest included all uncovered files in coverage report by default.
+This was due to `coverage.all` defaulting to `true`, and `coverage.include` defaulting to `**`.
+These default values were chosen for a good reason - it is impossible for testing tools to guess where users are storing their source files.
+
+This ended up having Vitest's coverage providers processing unexpected files, like minified Javascript, leading to slow/stuck coverage report generations.
+In Vitest v4 we have removed `coverage.all` completely and <ins>**defaulted to include only covered files in the report**</ins>.
+
+When upgrading to v4 it is recommended to define `coverage.include` in your configuration, and then start applying simple `coverage.exclusion` patterns if needed.
+
+```ts [vitest.config.ts]
+export default defineConfig({
+  test: {
+    coverage: {
+      // Include covered and uncovered files matching this pattern:
+      include: ['packages/**/src/**.{js,jsx,ts,tsx}'], // [!code ++]
+
+      // Exclusion is applied for the files that match include pattern above
+      // No need to define root level *.config.ts files or node_modules, as we didn't add those in include
+      exclude: ['**/some-pattern/**'], // [!code ++]
+
+      // These options are removed now
+      all: true, // [!code --]
+      extensions: ['js', 'ts'], // [!code --]
+    }
+  }
+})
+```
+
+If `coverage.include` is not defined, coverage report will include only files that were loaded during test run:
+```ts [vitest.config.ts]
+export default defineConfig({
+  test: {
+    coverage: {
+      // Include not set, include only files that are loaded during test run
+      include: undefined, // [!code ++]
+
+      // Loaded files that match this pattern will be excluded:
+      exclude: ['**/some-pattern/**'], // [!code ++]
+    }
+  }
+})
+```
+
+See also new guides:
+- [Including and excluding files from coverage report](/guide/coverage.html#including-and-excluding-files-from-coverage-report) for examples
+- [Profiling Test Performance | Code coverage](/guide/profiling-test-performance.html#code-coverage) for tips about debugging coverage generation
+
 ## Migrating to Vitest 3.0 {#vitest-3}
 
 ### Test Options as a Third Argument
@@ -56,7 +136,7 @@ With the new `browser.instances` field you can also specify multiple browser con
 
 ### `spy.mockReset` Now Restores the Original Implementation
 
-There was no good way to reset the spy to the original implementation without reaplying the spy. Now, `spy.mockReset` will reset the implementation function to the original one instead of a fake noop.
+There was no good way to reset the spy to the original implementation without reapplying the spy. Now, `spy.mockReset` will reset the implementation function to the original one instead of a fake noop.
 
 ```ts
 const foo = {

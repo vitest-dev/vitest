@@ -113,6 +113,7 @@ export default antfu(
       'unused-imports/no-unused-imports': 'off',
       'ts/method-signature-style': 'off',
       'no-self-compare': 'off',
+      'import/no-mutable-exports': 'off',
     },
   },
   {

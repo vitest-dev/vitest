@@ -51,6 +51,18 @@ test('shard index must be smaller than count', async () => {
   expect(stderr).toMatch('Error: --shard <index> must be a positive number less then <count>')
 })
 
+test('shard count must be smaller than count of test files', async () => {
+  const { stderr } = await runVitest({ root: './fixtures/shard', shard: '1/4', include: ['**/*.test.js'] })
+
+  expect(stderr).toMatch('Error: --shard <count> must be a smaller than count of test files. Resolved 3 test files for --shard=1/4.')
+})
+
+test('shard count can be smaller than count of test files when passWithNoTests', async () => {
+  const { stderr } = await runVitest({ root: './fixtures/shard', shard: '1/4', passWithNoTests: true, include: ['**/*.test.js'] })
+
+  expect(stderr).toMatch('')
+})
+
 test('inspect requires changing pool and singleThread/singleFork', async () => {
   const { stderr } = await runVitest({ inspect: true })
 
@@ -382,7 +394,7 @@ test('coverage.autoUpdate cannot update thresholds when configuration file doesn
 })
 
 test('boolean flag 100 should not crash CLI', async () => {
-  let { stderr } = await runVitestCli('--coverage.enabled', '--coverage.thresholds.100')
+  let { stderr } = await runVitestCli('--coverage.enabled', '--coverage.thresholds.100', '--coverage.include=fixtures/coverage-test', '--passWithNoTests')
   // non-zero coverage shows up, which is non-deterministic, so strip it.
   stderr = stderr.replace(/\([0-9.]+%\) does/g, '(0%) does')
 

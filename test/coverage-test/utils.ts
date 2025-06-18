@@ -46,8 +46,7 @@ export async function runVitest(config: UserConfig, options = { throwOnError: tr
         enabled: true,
         reporter: [],
         ...config.coverage,
-        provider: provider === 'v8-ast-aware' ? 'v8' : provider,
-        experimentalAstAwareRemapping: provider === 'v8-ast-aware',
+        provider,
         customProviderModule: provider === 'custom' ? 'fixtures/custom-provider' : undefined,
       },
       browser: {
@@ -108,10 +107,6 @@ export function normalizeFilename(filename: string) {
 
 export function isV8Provider() {
   return process.env.COVERAGE_PROVIDER === 'v8'
-}
-
-export function isExperimentalV8Provider() {
-  return process.env.COVERAGE_PROVIDER === 'v8-ast-aware'
 }
 
 export function isBrowser() {

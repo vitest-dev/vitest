@@ -121,7 +121,6 @@ it('exports snapshot', async ({ skip, task }) => {
           "viteVersion": "string",
         },
         "./reporters": {
-          "BasicReporter": "function",
           "BenchmarkReporter": "function",
           "BenchmarkReportsMap": "object",
           "DefaultReporter": "function",
@@ -278,7 +277,6 @@ it('exports snapshot', async ({ skip, task }) => {
             "viteVersion": "string",
           },
           "./reporters": {
-            "BasicReporter": "function",
             "BenchmarkReporter": "function",
             "BenchmarkReportsMap": "object",
             "DefaultReporter": "function",
