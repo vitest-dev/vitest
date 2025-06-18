@@ -1,3 +1,3 @@
-export function uncovered() {
-  return 0
+export function uncovered(condition: boolean) {
+  return condition ? 1 : 0
 }

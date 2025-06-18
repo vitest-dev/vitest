@@ -21,6 +21,21 @@ export default defineConfig({
 })
 ```
 
+### V8 Code Coverage Major Changes
+
+Vitest's V8 code coverage provider is now using more accurate coverage result remapping logic.
+It is expected for users to see changes in their coverage reports when updating from Vitest v3.
+
+In the past Vitest used [`v8-to-istanbul`](https://github.com/istanbuljs/v8-to-istanbul) for remapping V8 coverage results into your source files.
+This method wasn't very accurate and provided plenty of false positives in the coverage reports.
+We've now developed a new package that utilizes AST based analysis for the V8 coverage.
+This allows V8 reports to be as accurate as `@vitest/coverage-istanbul` reports.
+
+- Coverage ignore hints have updated. See [Coverage | Ignoring Code](/guide/coverage.html#ignoring-code).
+- `coverage.ignoreEmptyLines` is removed. Lines without runtime code are no longer included in reports.
+- `coverage.experimentalAstAwareRemapping` is removed. This option is now enabled by default, and is the only supported remapping method.
+- `coverage.ignoreClassMethods` is now supported by V8 provider too.
+
 ### Removed options `coverage.all` and `coverage.extensions`
 
 In previous versions Vitest included all uncovered files in coverage report by default.

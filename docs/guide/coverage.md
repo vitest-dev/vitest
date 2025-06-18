@@ -336,9 +336,8 @@ Please refer to the type definition for more details.
 
 Both coverage providers have their own ways how to ignore code from coverage reports:
 
-- [`v8`](https://github.com/istanbuljs/v8-to-istanbul#ignoring-uncovered-lines)
+- [`v8`](https://github.com/AriPerkkio/ast-v8-to-istanbul?tab=readme-ov-file#ignoring-code)
 - [`istanbul`](https://github.com/istanbuljs/nyc#parsing-hints-ignoring-lines)
-- `v8` with [`experimentalAstAwareRemapping: true`](https://vitest.dev/config/#coverage-experimentalAstAwareRemapping) see [ast-v8-to-istanbul | Ignoring code](https://github.com/AriPerkkio/ast-v8-to-istanbul?tab=readme-ov-file#ignoring-code)
 
 When using TypeScript the source codes are transpiled using `esbuild`, which strips all comments from the source codes ([esbuild#516](https://github.com/evanw/esbuild/issues/516)).
 Comments which are considered as [legal comments](https://esbuild.github.io/api/#legal-comments) are preserved.

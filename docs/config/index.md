@@ -1628,51 +1628,11 @@ Sets thresholds to 100 for files matching the glob pattern.
 }
 ```
 
-#### coverage.ignoreEmptyLines
-
-- **Type:** `boolean`
-- **Default:** `true` (`false` in v1)
-- **Available for providers:** `'v8'`
-- **CLI:** `--coverage.ignoreEmptyLines=<boolean>`
-
-Ignore empty lines, comments and other non-runtime code, e.g. Typescript types. Requires `experimentalAstAwareRemapping: false`.
-
-This option works only if the used compiler removes comments and other non-runtime code from the transpiled code.
-By default Vite uses ESBuild which removes comments and Typescript types from `.ts`, `.tsx` and `.jsx` files.
-
-If you want to apply ESBuild to other files as well, define them in [`esbuild` options](https://vitejs.dev/config/shared-options.html#esbuild):
-
-```ts
-import { defineConfig } from 'vitest/config'
-
-export default defineConfig({
-  esbuild: {
-    // Transpile all files with ESBuild to remove comments from code coverage.
-    // Required for `test.coverage.ignoreEmptyLines` to work:
-    include: ['**/*.js', '**/*.jsx', '**/*.mjs', '**/*.ts', '**/*.tsx'],
-  },
-  test: {
-    coverage: {
-      provider: 'v8',
-      ignoreEmptyLines: true,
-    },
-  },
-})
-```
-#### coverage.experimentalAstAwareRemapping
-
-- **Type:** `boolean`
-- **Default:** `false`
-- **Available for providers:** `'v8'`
-- **CLI:** `--coverage.experimentalAstAwareRemapping=<boolean>`
-
-Remap coverage with experimental AST based analysis. Provides more accurate results compared to default mode.
-
 #### coverage.ignoreClassMethods
 
 - **Type:** `string[]`
 - **Default:** `[]`
-- **Available for providers:** `'istanbul'`
+- **Available for providers:** `'v8' | 'istanbul'`
 - **CLI:** `--coverage.ignoreClassMethods=<method>`
 
 Set to array of class method names to ignore for coverage.
