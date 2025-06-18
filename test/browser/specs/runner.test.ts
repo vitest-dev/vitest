@@ -1,5 +1,6 @@
 import type { Vitest } from 'vitest/node'
 import type { JsonTestResults } from 'vitest/reporters'
+import { readdirSync } from 'node:fs'
 import { readFile } from 'node:fs/promises'
 import { beforeAll, describe, expect, onTestFailed, test } from 'vitest'
 import { rolldownVersion } from 'vitest/node'
@@ -68,10 +69,11 @@ describe('running browser tests', async () => {
     expect(vitest.projects.map(p => p.browser?.vite.config.optimizeDeps.entries))
       .toEqual(vitest.projects.map(() => expect.arrayContaining(testFiles)))
 
-    // This should match the number of actual tests from browser.json
-    // if you added new tests, these assertion will fail and you should
-    // update the numbers
-    expect(browserResultJson.testResults).toHaveLength(16 * instances.length)
+    const testFilesCount = readdirSync('./test')
+      .filter(n => n.includes('.test.'))
+      .length + 1 // 1 is in-source-test
+
+    expect(browserResultJson.testResults).toHaveLength(testFilesCount * instances.length)
     expect(passedTests).toHaveLength(browserResultJson.testResults.length)
     expect(failedTests).toHaveLength(0)
   })
