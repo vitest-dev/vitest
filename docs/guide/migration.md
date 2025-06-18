@@ -7,7 +7,7 @@ outline: deep
 
 ## Migrating to Vitest 4.0 {#vitest-4}
 
-## Removed `reporters: 'basic'`
+### Removed `reporters: 'basic'`
 
 Basic reporter is removed as it is equal to:
 
