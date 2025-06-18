@@ -7,7 +7,7 @@ import { isV8Provider, readCoverageMap, runVitest, test } from '../utils'
 beforeAll(async () => {
   await runVitest({
     include: ['fixtures/test/vue-fixture.test.ts'],
-    coverage: { reporter: ['json', 'html'], all: false },
+    coverage: { reporter: ['json', 'html'] },
   })
 })
 

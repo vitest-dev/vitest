@@ -5,7 +5,7 @@ test('in-source tests work', async () => {
   const { stdout } = await runVitest({
     include: [],
     includeSource: ['fixtures/src/in-source.ts'],
-    coverage: { all: false, reporter: 'json' },
+    coverage: { reporter: 'json' },
   })
 
   expect(stdout).toContain('in source test running add function')
