@@ -5,6 +5,22 @@ outline: deep
 
 # Migration Guide
 
+## Migrating to Vitest 4.0 {#vitest-4}
+
+### Removed `reporters: 'basic'`
+
+Basic reporter is removed as it is equal to:
+
+```ts
+export default defineConfig({
+  test: {
+    reporters: [
+      ['default', { summary: false }]
+    ]
+  }
+})
+```
+
 ## Migrating to Vitest 3.0 {#vitest-3}
 
 ### Test Options as a Third Argument
