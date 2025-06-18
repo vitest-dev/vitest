@@ -121,7 +121,6 @@ test('provider module', () => {
             cleanOnRerun: true,
             enabled: true,
             exclude: ['string'],
-            extension: ['string'],
             reporter: [['html', {}], ['json', { file: 'string' }]],
             reportsDirectory: 'string',
             reportOnFailure: true,

@@ -17,9 +17,8 @@ import libSourceMaps from 'istanbul-lib-source-maps'
 import reports from 'istanbul-reports'
 import MagicString from 'magic-string'
 import { parseModule } from 'magicast'
-import { normalize, resolve } from 'pathe'
+import { normalize } from 'pathe'
 import { provider } from 'std-env'
-import TestExclude from 'test-exclude'
 import c from 'tinyrainbow'
 import v8ToIstanbul from 'v8-to-istanbul'
 import { cleanUrl } from 'vite-node/utils'
@@ -47,19 +46,9 @@ const debug = createDebug('vitest:coverage')
 export class V8CoverageProvider extends BaseCoverageProvider<ResolvedCoverageOptions<'v8'>> implements CoverageProvider {
   name = 'v8' as const
   version: string = version
-  testExclude!: InstanceType<typeof TestExclude>
 
   initialize(ctx: Vitest): void {
     this._initialize(ctx)
-
-    this.testExclude = new TestExclude({
-      cwd: ctx.config.root,
-      include: this.options.include,
-      exclude: this.options.exclude,
-      excludeNodeModules: true,
-      extension: this.options.extension,
-      relativePath: !this.options.allowExternal,
-    })
   }
 
   createCoverageMap(): CoverageMap {
@@ -103,15 +92,15 @@ export class V8CoverageProvider extends BaseCoverageProvider<ResolvedCoverageOpt
 
     // Include untested files when all tests were run (not a single file re-run)
     // or if previous results are preserved by "cleanOnRerun: false"
-    if (this.options.all && (allTestsRun || !this.options.cleanOnRerun)) {
+    if (this.options.include != null && (allTestsRun || !this.options.cleanOnRerun)) {
       const coveredFiles = coverageMap.files()
-      const untestedCoverage = await this.getUntestedFiles(coveredFiles)
+      const untestedCoverage = await this.getCoverageMapForUncoveredFiles(coveredFiles)
 
       coverageMap.merge(await transformCoverage(untestedCoverage))
     }
 
     if (this.options.excludeAfterRemap) {
-      coverageMap.filter(filename => this.testExclude.shouldInstrument(filename))
+      coverageMap.filter(filename => this.isIncluded(filename))
     }
 
     if (debug.enabled) {
@@ -165,26 +154,13 @@ export class V8CoverageProvider extends BaseCoverageProvider<ResolvedCoverageOpt
     )
   }
 
-  private async getUntestedFiles(testedFiles: string[]): Promise<CoverageMap> {
+  private async getCoverageMapForUncoveredFiles(testedFiles: string[]): Promise<CoverageMap> {
     const transformResults = normalizeTransformResults(
       this.ctx.vitenode.fetchCache,
     )
     const transform = this.createUncoveredFileTransformer(this.ctx)
 
-    const allFiles = await this.testExclude.glob(this.ctx.config.root)
-    let includedFiles = allFiles.map(file =>
-      resolve(this.ctx.config.root, file),
-    )
-
-    if (this.ctx.config.changed) {
-      includedFiles = (this.ctx.config.related || []).filter(file =>
-        includedFiles.includes(file),
-      )
-    }
-
-    const uncoveredFiles = includedFiles
-      .map(file => pathToFileURL(file))
-      .filter(file => !testedFiles.includes(file.pathname))
+    const uncoveredFiles = await this.getUntestedFiles(testedFiles)
 
     let index = 0
 
@@ -202,17 +178,18 @@ export class V8CoverageProvider extends BaseCoverageProvider<ResolvedCoverageOpt
 
         if (debug.enabled) {
           start = performance.now()
-          timeout = setTimeout(() => debug(c.bgRed(`File "${filename.pathname}" is taking longer than 3s`)), 3_000)
+          timeout = setTimeout(() => debug(c.bgRed(`File "${filename}" is taking longer than 3s`)), 3_000)
         }
 
+        const url = pathToFileURL(filename)
         const sources = await this.getSources(
-          filename.href,
+          url.href,
           transformResults,
           transform,
         )
 
         coverageMap.merge(await this.v8ToIstanbul(
-          filename.href,
+          url.href,
           0,
           sources,
           [{
@@ -234,7 +211,7 @@ export class V8CoverageProvider extends BaseCoverageProvider<ResolvedCoverageOpt
 
           const diff = performance.now() - start!
           const color = diff > 500 ? c.bgRed : c.bgGreen
-          debug(`${color(` ${diff.toFixed()} ms `)} ${filename.pathname}`)
+          debug(`${color(` ${diff.toFixed()} ms `)} ${filename}`)
         }
       }))
     }
@@ -387,7 +364,7 @@ export class V8CoverageProvider extends BaseCoverageProvider<ResolvedCoverageOpt
       })
     }
 
-    // These can be uncovered files included by "all: true" or files that are loaded outside vite-node
+    // These can be uncovered files picked by "coverage.include" or files that are loaded outside vite-node
     if (!map) {
       return {
         source: code || sourcesContent[0],
@@ -456,7 +433,7 @@ export class V8CoverageProvider extends BaseCoverageProvider<ResolvedCoverageOpt
         }
       }
 
-      if (this.testExclude.shouldInstrument(fileURLToPath(result.url))) {
+      if (this.isIncluded(fileURLToPath(result.url))) {
         scriptCoverages.push(result)
       }
     }

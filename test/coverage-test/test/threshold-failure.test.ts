@@ -6,7 +6,6 @@ test('failing percentage thresholds', async () => {
   const { exitCode, stderr } = await runVitest({
     include: [normalizeURL(import.meta.url)],
     coverage: {
-      all: false,
       include: ['**/fixtures/src/math.ts'],
       thresholds: {
         '**/fixtures/src/math.ts': {
@@ -32,7 +31,6 @@ test('failing absolute thresholds', async () => {
   const { exitCode, stderr } = await runVitest({
     include: [normalizeURL(import.meta.url)],
     coverage: {
-      all: false,
       include: ['**/fixtures/src/math.ts'],
       thresholds: {
         '**/fixtures/src/math.ts': {

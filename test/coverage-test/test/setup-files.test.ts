@@ -12,7 +12,6 @@ test('tests with multiple suites are covered (#3514)', async () => {
       'fixtures/src/another-setup.ts',
     ],
     coverage: {
-      include: ['fixtures/**'],
       reporter: 'json',
     },
   })

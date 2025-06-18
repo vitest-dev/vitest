@@ -141,35 +141,6 @@ Final output after tests have finished:
    Duration  1.26s (transform 35ms, setup 1ms, collect 90ms, tests 1.47s, environment 0ms, prepare 267ms)
 ```
 
-### Basic Reporter
-
-The `basic` reporter is equivalent to `default` reporter without `summary`.
-
-:::code-group
-```bash [CLI]
-npx vitest --reporter=basic
-```
-
-```ts [vitest.config.ts]
-export default defineConfig({
-  test: {
-    reporters: ['basic']
-  },
-})
-```
-:::
-
-Example output using basic reporter:
-```bash
-✓ __tests__/file1.test.ts (2) 725ms
-✓ __tests__/file2.test.ts (2) 746ms
-
- Test Files  2 passed (2)
-      Tests  4 passed (4)
-   Start at  12:34:32
-   Duration  1.26s (transform 35ms, setup 1ms, collect 90ms, tests 1.47s, environment 0ms, prepare 267ms)
-```
-
 ### Verbose Reporter
 
 Verbose reporter is same as `default` reporter, but it also displays each individual test after the suite has finished. It also displays currently running tests that are taking longer than [`slowTestThreshold`](/config/#slowtestthreshold). Similar to `default` reporter, you can disable the summary by configuring the reporter.
@@ -228,7 +199,7 @@ Example of final terminal output for a passing test suite:
 
 ### Dot Reporter
 
-Prints a single dot for each completed test to provide minimal output while still showing all tests that have run. Details are only provided for failed tests, along with the `basic` reporter summary for the suite.
+Prints a single dot for each completed test to provide minimal output while still showing all tests that have run. Details are only provided for failed tests, along with the summary for the suite.
 
 :::code-group
 ```bash [CLI]

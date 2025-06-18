@@ -8,7 +8,6 @@ test('report is not generated when tests fail', async () => {
   const { exitCode } = await runVitest({
     include: [normalizeURL(import.meta.url)],
     coverage: {
-      all: false,
       include: ['**/fixtures/src/math.ts'],
       reporter: 'text',
     },
@@ -24,7 +23,6 @@ test('report is generated when tests fail and { reportOnFailure: true }', async 
   const { exitCode } = await runVitest({
     include: [normalizeURL(import.meta.url)],
     coverage: {
-      all: false,
       include: ['**/fixtures/src/math.ts'],
       reporter: 'text',
       reportOnFailure: true,
