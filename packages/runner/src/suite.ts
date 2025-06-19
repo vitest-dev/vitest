@@ -857,7 +857,8 @@ function formatTitle(template: string, items: any[], idx: number) {
     /\$([$\w.]+)/g,
     (_, key: string) => {
       const isArrayKey = /^\d+$/.test(key)
-      if (!isObjectItem && !isArrayKey) {
+
+      if (!isObjectItem || !isArrayKey) {
         return `$${key}`
       }
       const arrayElement = isArrayKey ? objectAttr(items, key) : undefined
@@ -867,6 +868,7 @@ function formatTitle(template: string, items: any[], idx: number) {
       }) as unknown as string
     },
   )
+
   return formatted
 }
 
