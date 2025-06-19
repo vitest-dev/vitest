@@ -238,3 +238,7 @@ ${{ val: 1 }} | ${{ val: 2 }}} | ${3}
 `('($a && $b) -> $expected', ({ a, b, expected }) => {
   expect(a.val + b.val).toBe(expected)
 })
+
+test.each([[343434, '$343,434.00']])('handles whole numbers: %s as %s', (input, expected) => {
+  expect(new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(input)).toBe(expected)
+})

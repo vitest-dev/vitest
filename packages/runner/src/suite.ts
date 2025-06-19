@@ -853,14 +853,20 @@ function formatTitle(template: string, items: any[], idx: number) {
 
   let formatted = format(template, ...items.slice(0, count))
   const isObjectItem = isObject(items[0])
+
+  if (!isObjectItem) {
+    return formatted
+  }
+
   formatted = formatted.replace(
     /\$([$\w.]+)/g,
     (_, key: string) => {
       const isArrayKey = /^\d+$/.test(key)
 
-      if (!isObjectItem || !isArrayKey) {
+      if (!isObjectItem && !isArrayKey) {
         return `$${key}`
       }
+
       const arrayElement = isArrayKey ? objectAttr(items, key) : undefined
       const value = isObjectItem ? objectAttr(items[0], key, arrayElement) : arrayElement
       return objDisplay(value, {
