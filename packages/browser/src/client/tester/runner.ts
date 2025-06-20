@@ -1,6 +1,5 @@
 import type { CancelReason, File, Suite, Task, TaskEventPack, TaskResultPack, Test, TestAnnotation, VitestRunner } from '@vitest/runner'
 import type { SerializedConfig, TestExecutionMethod, WorkerGlobalState } from 'vitest'
-import type { VitestExecutor } from 'vitest/execute'
 import type { VitestBrowserClientMocker } from './mocker'
 import { globalChannel, onCancel } from '@vitest/browser/client'
 import { page, userEvent } from '@vitest/browser/context'
@@ -77,7 +76,7 @@ export function createBrowserRunner(
       if (this.config.browser.screenshotFailures && document.body.clientHeight > 0 && task.result?.state === 'fail') {
         const screenshot = await page.screenshot({
           timeout: this.config.browser.providerOptions?.actionTimeout ?? 5_000,
-        }).catch((err) => {
+        } as any /** TODO */).catch((err) => {
           console.error('[vitest] Failed to take a screenshot', err)
         })
         if (screenshot) {
@@ -239,8 +238,8 @@ export async function initiateRunner(
   })
 
   const [diffOptions] = await Promise.all([
-    loadDiffConfig(config, executor as unknown as VitestExecutor),
-    loadSnapshotSerializers(config, executor as unknown as VitestExecutor),
+    loadDiffConfig(config, executor as any),
+    loadSnapshotSerializers(config, executor as any),
   ])
   runner.config.diffOptions = diffOptions
   getWorkerState().onFilterStackTrace = (stack: string) => {

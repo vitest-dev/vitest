@@ -2,7 +2,7 @@
 
 import type { TestAPI } from 'vitest'
 import type { ViteUserConfig } from 'vitest/config'
-import type { TestSpecification, UserConfig } from 'vitest/node'
+import type { TestSpecification, TestUserConfig } from 'vitest/node'
 import type { TestFsStructure } from '../../test-utils'
 import { runInlineTests } from '../../test-utils'
 
@@ -702,7 +702,7 @@ describe('browser tests', () => {
 async function runFixtureTests<T>(
   extendedTest: ({ log }: { log: typeof console.log }) => TestAPI<T>,
   fs: Record<string, ((context: { extendedTest: TestAPI<T> }) => unknown) | ViteUserConfig>,
-  config?: UserConfig,
+  config?: TestUserConfig,
 ) {
   if (typeof fs['vitest.config.js'] === 'object') {
     fs['vitest.config.js'].test!.globals = true

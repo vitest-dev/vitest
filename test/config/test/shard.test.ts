@@ -1,10 +1,10 @@
-import type { UserConfig } from 'vitest/node'
+import type { TestUserConfig } from 'vitest/node'
 import { basename } from 'pathe'
 
 import { expect, test } from 'vitest'
 import * as testUtils from '../../test-utils'
 
-function runVitest(config: UserConfig) {
+function runVitest(config: TestUserConfig) {
   return testUtils.runVitest({ ...config, root: './fixtures/shard' })
 }
 

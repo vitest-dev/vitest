@@ -64,6 +64,8 @@
     "providers"
   ],
   "scripts": {
+    "typecheck": "tsc -p ./src/client/tsconfig.json --noEmit",
+    "typecheck:why": "tsc -p ./src/client/tsconfig.json --noEmit --explainFiles > explainTypes.txt",
     "build": "rimraf dist && pnpm build:node && pnpm build:client",
     "build:client": "vite build src/client",
     "build:node": "rollup -c",

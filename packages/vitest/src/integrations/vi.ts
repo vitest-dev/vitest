@@ -724,7 +724,7 @@ function createVitest(): VitestUtils {
     },
 
     resetModules() {
-      resetModules(workerState.moduleCache)
+      resetModules(workerState.moduleCache as any)
       return utils
     },
 

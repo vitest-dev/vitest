@@ -17,10 +17,6 @@ export type DeepMerge<F, S> = MergeInsertions<{
         : never;
 }>
 
-export type MutableArray<T extends readonly any[]> = {
-  -readonly [k in keyof T]: T[k];
-}
-
 export interface Constructable {
   new (...args: any[]): any
 }
