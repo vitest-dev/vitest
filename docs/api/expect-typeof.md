@@ -27,18 +27,32 @@ expectTypeOf({ a: 1 }).toEqualTypeOf({ a: 2 })
 expectTypeOf({ a: 1, b: 1 }).not.toEqualTypeOf<{ a: number }>()
 ```
 
-## toMatchTypeOf
+## toExtend
 
 - **Type:** `<T>(expected: T) => void`
 
-This matcher checks if expect type extends provided type. It is different from `toEqual` and is more similar to [expect's](/api/expect) `toMatchObject()`. With this matcher, you can check if an object “matches” a type.
+This matcher checks if expect type extends provided type - it is more lenient than `.toEqualTypeOf`. With this matcher, you can check if an object “matches” a type.
 
 ```ts
 import { expectTypeOf } from 'vitest'
 
-expectTypeOf({ a: 1, b: 1 }).toMatchTypeOf({ a: 1 })
-expectTypeOf<number>().toMatchTypeOf<string | number>()
-expectTypeOf<string | number>().not.toMatchTypeOf<number>()
+expectTypeOf({ a: 1, b: 1 }).toExtend<{ a?: number }>()
+expectTypeOf<number>().toExtend<string | number>()
+expectTypeOf<string | number>().not.toExtend<number>()
+```
+
+## toMatchObjectType
+
+- **Type:** `<T>(expected: T) => void`
+
+This matcher checks if expect type extends provided type. It is slightly stricter than `toExtend` - it only operates on object types, and it ensures all properties on the expected type are present and match precisely. It is more similar to [expect's](/api/expect) `toMatchObject()`. With this matcher, you can check if an object “matches” a type.
+
+```ts
+import { expectTypeOf } from 'vitest'
+
+expectTypeOf({ a: 1, b: 1 }).toMatchObjectType<{ a: number }>()
+expectTypeOf({ a: 1, b: 1 }).not.toMatchObjectType<{ a?: number }>() // required vs optional property - mismatch
+expectTypeOf({ a: 1, b: 1 }).not.toMatchObjectType<{ readonly a: 1 }>() // readonly vs writable property - mismatch
 ```
 
 ## extract
