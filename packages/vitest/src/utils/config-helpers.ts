@@ -1,8 +1,8 @@
-import type { ResolvedConfig } from '../types/config'
 import type {
   BenchmarkBuiltinReporters,
   BuiltinReporters,
 } from '../node/reporters'
+import type { SerializedConfig } from '../node/types/config'
 
 const REGEXP_WRAP_PREFIX = '$$vitest:'
 
@@ -13,7 +13,7 @@ interface PotentialConfig {
 export function getOutputFile(
   config: PotentialConfig | undefined,
   reporter: BuiltinReporters | BenchmarkBuiltinReporters | 'html',
-) {
+): string | undefined {
   if (!config?.outputFile) {
     return
   }
@@ -26,9 +26,9 @@ export function getOutputFile(
 }
 
 /**
- * Prepares `ResolvedConfig` for serialization, e.g. `node:v8.serialize`
+ * Prepares `SerializedConfig` for serialization, e.g. `node:v8.serialize`
  */
-export function wrapSerializableConfig(config: ResolvedConfig) {
+export function wrapSerializableConfig(config: SerializedConfig) {
   let testNamePattern = config.testNamePattern
   let defines = config.defines
 
@@ -47,5 +47,5 @@ export function wrapSerializableConfig(config: ResolvedConfig) {
     ...config,
     testNamePattern,
     defines,
-  } as ResolvedConfig
+  } as SerializedConfig
 }

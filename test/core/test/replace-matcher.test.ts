@@ -1,4 +1,4 @@
-import { replaceAsymmetricMatcher } from '@vitest/utils/error'
+import { replaceAsymmetricMatcher } from '@vitest/utils/diff'
 import { describe, expect, it } from 'vitest'
 
 describe('replace asymmetric matcher', () => {

@@ -1,6 +1,6 @@
 import util from 'node:util'
-import { describe, expect, test } from 'vitest'
 import { format } from '@vitest/utils'
+import { describe, expect, test } from 'vitest'
 
 describe('format', () => {
   const obj = {} as any
@@ -18,6 +18,15 @@ describe('format', () => {
     ['%s', -0],
     ['%s', null],
     ['%s', null, 'next'],
+    [
+      '%s',
+      new (class {
+        constructor(public value: string) {}
+        toString() {
+          return this.value
+        }
+      })('string value'),
+    ],
     ['%d', 100],
     ['%d', 100n],
     ['%d', null],

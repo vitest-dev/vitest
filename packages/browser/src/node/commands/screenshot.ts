@@ -1,13 +1,11 @@
-import { mkdir } from 'node:fs/promises'
-import { normalize } from 'node:path'
-import type { BrowserCommand } from 'vitest/node'
-import { basename, dirname, relative, resolve } from 'pathe'
-import type { ResolvedConfig } from 'vitest'
+import type { BrowserCommand, ResolvedConfig } from 'vitest/node'
 import type { ScreenshotOptions } from '../../../context'
+import { mkdir, rm } from 'node:fs/promises'
+import { normalize } from 'node:path'
+import { basename, dirname, relative, resolve } from 'pathe'
 import { PlaywrightBrowserProvider } from '../providers/playwright'
 import { WebdriverBrowserProvider } from '../providers/webdriver'
 
-// TODO: expose provider specific options in types
 export const screenshot: BrowserCommand<[string, ScreenshotOptions]> = async (
   context,
   name: string,
@@ -17,43 +15,50 @@ export const screenshot: BrowserCommand<[string, ScreenshotOptions]> = async (
     throw new Error(`Cannot take a screenshot without a test path`)
   }
 
-  const path = resolveScreenshotPath(
-    context.testPath,
-    name,
-    context.project.config,
-  )
+  options.save ??= true
+
+  if (!options.save) {
+    options.base64 = true
+  }
+
+  const path = options.path
+    ? resolve(dirname(context.testPath), options.path)
+    : resolveScreenshotPath(
+        context.testPath,
+        name,
+        context.project.config,
+      )
   const savePath = normalize(path)
   await mkdir(dirname(path), { recursive: true })
 
   if (context.provider instanceof PlaywrightBrowserProvider) {
     if (options.element) {
-      const { element: css, ...config } = options
-      const element = context.iframe.locator(`css=${css}`)
+      const { element: selector, ...config } = options
+      const element = context.iframe.locator(`${selector}`)
       const buffer = await element.screenshot({
-        timeout: 1000,
         ...config,
-        path: savePath,
+        path: options.save ? savePath : undefined,
       })
       return returnResult(options, path, buffer)
     }
 
     const buffer = await context.iframe.locator('body').screenshot({
       ...options,
-      path: savePath,
+      path: options.save ? savePath : undefined,
     })
     return returnResult(options, path, buffer)
   }
 
   if (context.provider instanceof WebdriverBrowserProvider) {
     const page = context.provider.browser!
-    if (!options.element) {
-      const body = await page.$('body')
-      const buffer = await body.saveScreenshot(savePath)
-      return returnResult(options, path, buffer)
-    }
+    const element = !options.element
+      ? await page.$('body')
+      : await page.$(`${options.element}`)
 
-    const element = await page.$(`${options.element}`)
     const buffer = await element.saveScreenshot(savePath)
+    if (!options.save) {
+      await rm(savePath, { force: true })
+    }
     return returnResult(options, path, buffer)
   }
 
@@ -85,6 +90,9 @@ function returnResult(
   path: string,
   buffer: Buffer,
 ) {
+  if (!options.save) {
+    return buffer.toString('base64')
+  }
   if (options.base64) {
     return { path, base64: buffer.toString('base64') }
   }

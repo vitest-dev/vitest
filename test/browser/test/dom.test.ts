@@ -1,12 +1,25 @@
-import { beforeEach, describe, expect, test } from 'vitest'
-import { page } from '@vitest/browser/context'
 import { createNode } from '#src/createNode'
+import { page } from '@vitest/browser/context'
+import { afterAll, beforeEach, describe, expect, test } from 'vitest'
 import '../src/button.css'
+
+afterAll(() => {
+  document.body.removeAttribute('style')
+})
 
 describe('dom related activity', () => {
   beforeEach(() => {
-    document.body.style.background = '#f3f3f3'
     document.body.replaceChildren()
+  })
+
+  test('viewport works correctly', async () => {
+    await page.viewport(800, 600)
+    expect(window.innerWidth).toBe(800)
+    expect(window.innerHeight).toBe(600)
+  })
+
+  test('element doesn\'t exist', async () => {
+    await expect.element(page.getByText('empty')).not.toBeInTheDocument()
   })
 
   test('renders div', async () => {
@@ -21,6 +34,20 @@ describe('dom related activity', () => {
     expect(screenshotPath).toMatch(
       /__screenshots__\/dom.test.ts\/dom-related-activity-renders-div-1.png/,
     )
+
+    // test typing
+    if (0) {
+      await expect.element(div).toHaveClass('x', { exact: true })
+      await expect.element(div).toHaveClass('x', 'y')
+      await expect.element(div).toHaveClass('x', /y/)
+      await expect.element(div).toHaveClass(/x/, 'y')
+      await expect.element(div).toHaveClass('x', /y/, 'z')
+      await expect.element(div).toHaveClass(/x/, 'y', /z/)
+      // @ts-expect-error error
+      await expect.element(div).toHaveClass('x', { exact: 1234 })
+      // @ts-expect-error error
+      await expect.element(div).toHaveClass('x', 1234)
+    }
   })
 
   test('resolves base64 screenshot', async () => {
@@ -36,6 +63,20 @@ describe('dom related activity', () => {
       /__screenshots__\/dom.test.ts\/dom-related-activity-resolves-base64-screenshot-1.png/,
     )
     expect(base64).toBeTypeOf('string')
+  })
+
+  test('doesn\'t save base64', async () => {
+    const wrapper = createWrapper()
+    const div = createNode()
+    wrapper.appendChild(div)
+
+    const base64 = await page.screenshot({
+      element: wrapper,
+      save: false,
+    })
+    expect(base64).toBeTypeOf('string')
+    expect(base64).not.toContain('__screenshots__')
+    expect(base64).not.toContain('dom.test.ts')
   })
 
   test('shadow dom screenshot', async () => {
@@ -77,9 +118,10 @@ describe('dom related activity', () => {
 })
 
 function createWrapper() {
-  document.body.style.background = '#f3f3f3'
   const wrapper = document.createElement('div')
   wrapper.className = 'wrapper'
   document.body.appendChild(wrapper)
+  wrapper.style.height = '200px'
+  wrapper.style.width = '200px'
   return wrapper
 }

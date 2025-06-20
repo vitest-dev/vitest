@@ -24,7 +24,7 @@ test('compare', { timeout: 60_000 }, async () => {
       reporters: ['default'],
     }, [], 'benchmark')
     expect(result.exitCode).toBe(0)
-    const lines = result.stdout.split('\n').slice(3).slice(0, 6)
+    const lines = result.stdout.split('\n').slice(4).slice(0, 6)
     const expected = `
 ✓ basic.bench.ts > suite
     name
@@ -33,6 +33,9 @@ test('compare', { timeout: 60_000 }, async () => {
   · sleep100
              (baseline)
   `
-    expect(lines).toMatchObject(expected.trim().split('\n').map(s => expect.stringContaining(s.trim())))
+
+    for (const [index, line] of expected.trim().split('\n').entries()) {
+      expect(lines[index]).toMatch(line.trim())
+    }
   }
 })

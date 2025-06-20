@@ -1,7 +1,6 @@
 import type {
   CloneOption,
   DefineWorkerOptions,
-  InlineWorkerContext,
   Procedure,
 } from './types'
 import { InlineWorkerRunner } from './runner'
@@ -18,8 +17,8 @@ export function createWorkerConstructor(
   const runnerOptions = getRunnerOptions()
   const cloneType = () =>
     (options?.clone
-    ?? process.env.VITEST_WEB_WORKER_CLONE
-    ?? 'native') as CloneOption
+      ?? process.env.VITEST_WEB_WORKER_CLONE
+      ?? 'native') as CloneOption
 
   return class Worker extends EventTarget {
     static __VITEST_WEB_WORKER__ = true
@@ -45,22 +44,41 @@ export function createWorkerConstructor(
     constructor(url: URL | string, options?: WorkerOptions) {
       super()
 
-      // should be equal to DedicatedWorkerGlobalScope
-      const context: InlineWorkerContext = {
-        onmessage: null,
-        name: options?.name,
+      let selfProxy: typeof globalThis
+
+      // should be in sync with DedicatedWorkerGlobalScope, but without globalThis
+      const context = {
+        onmessage: null as null | ((e: MessageEvent) => void),
+        onmessageerror: null,
+        onerror: null,
+        onlanguagechange: null,
+        onoffline: null,
+        ononline: null,
+        onrejectionhandled: null,
+        onrtctransform: null,
+        onunhandledrejection: null,
+        origin: typeof location !== 'undefined' ? location.origin : 'http://localhost:3000',
+        importScripts: () => {
+          throw new Error(
+            '[vitest] `importScripts` is not supported in Vite workers. Please, consider using `import` instead.',
+          )
+        },
+        crossOriginIsolated: false,
+        name: options?.name || '',
         close: () => this.terminate(),
         dispatchEvent: (event: Event) => {
           return this._vw_workerTarget.dispatchEvent(event)
         },
-        addEventListener: (...args) => {
+        addEventListener: (...args: any[]) => {
           if (args[1]) {
             this._vw_insideListeners.set(args[0], args[1])
           }
-          return this._vw_workerTarget.addEventListener(...args)
+          return this._vw_workerTarget.addEventListener(...args as [any, any])
         },
-        removeEventListener: this._vw_workerTarget.removeEventListener,
-        postMessage: (...args) => {
+        removeEventListener: (...args: any[]) => {
+          return this._vw_workerTarget.removeEventListener(...args as [any, any])
+        },
+        postMessage: (...args: any[]) => {
           if (!args.length) {
             throw new SyntaxError(
               '"postMessage" requires at least one argument.',
@@ -76,15 +94,21 @@ export function createWorkerConstructor(
           this.dispatchEvent(event)
         },
         get self() {
-          return context
-        },
-        get global() {
-          return context
+          return selfProxy
         },
       }
 
+      selfProxy = new Proxy(context, {
+        get(target, prop, receiver) {
+          if (Reflect.has(target, prop)) {
+            return Reflect.get(target, prop, receiver)
+          }
+          return globalThis[prop as 'crypto']
+        },
+      }) as any
+
       this._vw_workerTarget.addEventListener('message', (e) => {
-        context.onmessage?.(e)
+        context.onmessage?.(e as MessageEvent)
       })
 
       this.addEventListener('message', (e) => {

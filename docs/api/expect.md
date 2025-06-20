@@ -6,7 +6,19 @@ The following types are used in the type signatures below
 type Awaitable<T> = T | PromiseLike<T>
 ```
 
-`expect` is used to create assertions. In this context `assertions` are functions that can be called to assert a statement. Vitest provides `chai` assertions by default and also `Jest` compatible assertions build on top of `chai`.
+`expect` is used to create assertions. In this context `assertions` are functions that can be called to assert a statement. Vitest provides `chai` assertions by default and also `Jest` compatible assertions built on top of `chai`. Unlike `Jest`, Vitest supports a message as the second argument - if the assertion fails, the error message will be equal to it.
+
+```ts
+export interface ExpectStatic extends Chai.ExpectStatic, AsymmetricMatchersContaining {
+  <T>(actual: T, message?: string): Assertion<T>
+  extend: (expects: MatchersObject) => void
+  anything: () => any
+  any: (constructor: unknown) => any
+  getState: () => MatcherState
+  setState: (state: Partial<MatcherState>) => void
+  not: AsymmetricMatchersContaining
+}
+```
 
 For example, this code asserts that an `input` value is equal to `2`. If it's not, the assertion will throw an error, and the test will fail.
 
@@ -33,19 +45,19 @@ Also, `expect` can be used statically to access matcher functions, described lat
 
 `expect.soft` functions similarly to `expect`, but instead of terminating the test execution upon a failed assertion, it continues running and marks the failure as a test failure. All errors encountered during the test will be displayed until the test is completed.
 
-```ts twoslash
+```ts
 import { expect, test } from 'vitest'
 
 test('expect.soft test', () => {
   expect.soft(1 + 1).toBe(3) // mark the test as fail and continue
   expect.soft(1 + 2).toBe(4) // mark the test as fail and continue
 })
-// At the end of the test, the above errors will be output.
+// reporter will report both errors at the end of the run
 ```
 
 It can also be used with `expect`. if `expect` assertion fails, the test will be terminated and all errors will be displayed.
 
-```ts twoslash
+```ts
 import { expect, test } from 'vitest'
 
 test('expect.soft test', () => {
@@ -61,18 +73,17 @@ test('expect.soft test', () => {
 
 ## poll
 
-- **Type:** `ExpectStatic & (actual: () => any, options: { interval, timeout, message }) => Assertions`
+```ts
+interface ExpectPoll extends ExpectStatic {
+  (actual: () => T, options: { interval; timeout; message }): Promise<Assertions<T>>
+}
+```
 
 `expect.poll` reruns the _assertion_ until it is succeeded. You can configure how many times Vitest should rerun the `expect.poll` callback by setting `interval` and `timeout` options.
 
 If an error is thrown inside the `expect.poll` callback, Vitest will retry again until the timeout runs out.
 
-```ts twoslash
-function asyncInjectElement() {
-  // example function
-}
-
-// ---cut---
+```ts
 import { expect, test } from 'vitest'
 
 test('element exists', async () => {
@@ -83,7 +94,7 @@ test('element exists', async () => {
 ```
 
 ::: warning
-`expect.poll` makes every assertion asynchronous, so do not forget to await it otherwise you might get unhandled promise rejections.
+`expect.poll` makes every assertion asynchronous, so you need to await it. Since Vitest 3, if you forget to await it, the test will fail with a warning to do so.
 
 `expect.poll` doesn't work with several matchers:
 
@@ -104,7 +115,7 @@ expect(flakyValue).toMatchSnapshot()
 
 Using `not` will negate the assertion. For example, this code asserts that an `input` value is not equal to `2`. If it's equal, the assertion will throw an error, and the test will fail.
 
-```ts twoslash
+```ts
 import { expect, test } from 'vitest'
 
 const input = Math.sqrt(16)
@@ -121,7 +132,7 @@ expect(input).not.toBe(2) // jest API
 
 For example, the code below checks if the trader has 13 apples.
 
-```ts twoslash
+```ts
 import { expect, test } from 'vitest'
 
 const stock = {
@@ -149,7 +160,7 @@ Try not to use `toBe` with floating-point numbers. Since JavaScript rounds them,
 
 Use `toBeCloseTo` to compare floating-point numbers. The optional `numDigits` argument limits the number of digits to check _after_ the decimal point. For example:
 
-```ts twoslash
+```ts
 import { expect, test } from 'vitest'
 
 test.fails('decimals are not equal in javascript', () => {
@@ -170,7 +181,7 @@ test('decimals are rounded to 5 after the point', () => {
 
 `toBeDefined` asserts that the value is not equal to `undefined`. Useful use case would be to check if function _returned_ anything.
 
-```ts twoslash
+```ts
 import { expect, test } from 'vitest'
 
 function getApples() {
@@ -188,7 +199,7 @@ test('function returned something', () => {
 
 Opposite of `toBeDefined`, `toBeUndefined` asserts that the value _is_ equal to `undefined`. Useful use case would be to check if function hasn't _returned_ anything.
 
-```ts twoslash
+```ts
 import { expect, test } from 'vitest'
 
 function getApplesFromStock(stock: string) {
@@ -276,7 +287,7 @@ Everything in JavaScript is truthy, except `false`, `null`, `undefined`, `NaN`, 
 
 `toBeNull` simply asserts if something is `null`. Alias for `.toBe(null)`.
 
-```ts twoslash
+```ts
 import { expect, test } from 'vitest'
 
 function apples() {
@@ -294,7 +305,7 @@ test('we don\'t have apples', () => {
 
 `toBeNaN` simply asserts if something is `NaN`. Alias for `.toBe(NaN)`.
 
-```ts twoslash
+```ts
 import { expect, test } from 'vitest'
 
 let i = 0
@@ -310,13 +321,49 @@ test('getApplesCount has some unusual side effects...', () => {
 })
 ```
 
+## toBeOneOf
+
+- **Type:** `(sample: Array<any>) => any`
+
+`toBeOneOf` asserts if a value matches any of the values in the provided array.
+
+```ts
+import { expect, test } from 'vitest'
+
+test('fruit is one of the allowed values', () => {
+  expect(fruit).toBeOneOf(['apple', 'banana', 'orange'])
+})
+```
+
+The asymmetric matcher is particularly useful when testing optional properties that could be either `null` or `undefined`:
+
+```ts
+test('optional properties can be null or undefined', () => {
+  const user = {
+    firstName: 'John',
+    middleName: undefined,
+    lastName: 'Doe'
+  }
+
+  expect(user).toEqual({
+    firstName: expect.any(String),
+    middleName: expect.toBeOneOf([expect.any(String), undefined]),
+    lastName: expect.any(String),
+  })
+})
+```
+
+:::tip
+You can use `expect.not` with this matcher to ensure a value does NOT match any of the provided options.
+:::
+
 ## toBeTypeOf
 
 - **Type:** `(c: 'bigint' | 'boolean' | 'function' | 'number' | 'object' | 'string' | 'symbol' | 'undefined') => Awaitable<void>`
 
 `toBeTypeOf` asserts if an actual value is of type of received type.
 
-```ts twoslash
+```ts
 import { expect, test } from 'vitest'
 
 const actual = 'stock'
@@ -409,7 +456,7 @@ test('have 11 apples or less', () => {
 
 `toEqual` asserts if actual value is equal to received one or has the same structure, if it is an object (compares them recursively). You can see the difference between `toEqual` and [`toBe`](#tobe) in this example:
 
-```ts twoslash
+```ts
 import { expect, test } from 'vitest'
 
 const stockBill = {
@@ -432,7 +479,17 @@ test('stocks are not the same', () => {
 ```
 
 :::warning
-A _deep equality_ will not be performed for `Error` objects. Only the `message` property of an Error is considered for equality. To customize equality to check properties other than `message`, use [`expect.addEqualityTesters`](#expect-addequalitytesters). To test if something was thrown, use [`toThrowError`](#tothrowerror) assertion.
+For `Error` objects, non-enumerable properties such as `name`, `message`, `cause` and `AggregateError.errors` are also compared. For `Error.cause`, the comparison is done asymmetrically:
+
+```ts
+// success
+expect(new Error('hi', { cause: 'x' })).toEqual(new Error('hi'))
+
+// fail
+expect(new Error('hi')).toEqual(new Error('hi', { cause: 'x' }))
+```
+
+To test if something was thrown, use [`toThrowError`](#tothrowerror) assertion.
 :::
 
 ## toStrictEqual
@@ -466,7 +523,7 @@ test('structurally the same, but semantically different', () => {
 
 - **Type:** `(received: string) => Awaitable<void>`
 
-`toContain` asserts if the actual value is in an array. `toContain` can also check whether a string is a substring of another string. Since Vitest 1.0, if you are running tests in a browser-like environment, this assertion can also check if class is contained in a `classList`, or an element is inside another one.
+`toContain` asserts if the actual value is in an array. `toContain` can also check whether a string is a substring of another string. If you are running tests in a browser-like environment, this assertion can also check if class is contained in a `classList`, or an element is inside another one.
 
 ```ts
 import { expect, test } from 'vitest'
@@ -505,7 +562,7 @@ test('apple available', () => {
 
 `toHaveLength` asserts if an object has a `.length` property and it is set to a certain numeric value.
 
-```ts twoslash
+```ts
 import { expect, test } from 'vitest'
 
 test('toHaveLength', () => {
@@ -525,7 +582,7 @@ test('toHaveLength', () => {
 
 You can provide an optional value argument also known as deep equality, like the `toEqual` matcher to compare the received property value.
 
-```ts twoslash
+```ts
 import { expect, test } from 'vitest'
 
 const invoice = {
@@ -579,7 +636,7 @@ test('John Doe Invoice', () => {
 
 `toMatch` asserts if a string matches a regular expression or a string.
 
-```ts twoslash
+```ts
 import { expect, test } from 'vitest'
 
 test('top fruits', () => {
@@ -596,7 +653,7 @@ test('top fruits', () => {
 
 You can also pass an array of objects. This is useful if you want to check that two arrays match in their number of elements, as opposed to `arrayContaining`, which allows for extra elements in the received array.
 
-```ts twoslash
+```ts
 import { expect, test } from 'vitest'
 
 const johnInvoice = {
@@ -650,16 +707,25 @@ test('the number of elements must match exactly', () => {
 
 You can provide an optional argument to test that a specific error is thrown:
 
-- regular expression: error message matches the pattern
-- string: error message includes the substring
+- `RegExp`: error message matches the pattern
+- `string`: error message includes the substring
+- `Error`, `AsymmetricMatcher`: compare with a received object similar to `toEqual(received)`
 
 :::tip
 You must wrap the code in a function, otherwise the error will not be caught, and test will fail.
+
+This does not apply for async calls as [rejects](#rejects) correctly unwraps the promise:
+```ts
+test('expect rejects toThrow', async ({ expect }) => {
+  const promise = Promise.reject(new Error('Test'))
+  await expect(promise).rejects.toThrowError()
+})
+```
 :::
 
 For example, if we want to test that `getFruitStock('pineapples')` throws, we could write:
 
-```ts twoslash
+```ts
 import { expect, test } from 'vitest'
 
 function getFruitStock(type: string) {
@@ -679,13 +745,20 @@ test('throws on pineapples', () => {
   expect(() => getFruitStock('pineapples')).toThrowError(
     /^Pineapples are not in stock$/,
   )
+
+  expect(() => getFruitStock('pineapples')).toThrowError(
+    new Error('Pineapples are not in stock'),
+  )
+  expect(() => getFruitStock('pineapples')).toThrowError(expect.objectContaining({
+    message: 'Pineapples are not in stock',
+  }))
 })
 ```
 
 :::tip
 To test async functions, use in combination with [rejects](#rejects).
 
-```js twoslash
+```js
 function getAsyncFruitStock() {
   return Promise.reject(new Error('empty'))
 }
@@ -698,17 +771,17 @@ test('throws on pineapples', async () => {
 
 ## toMatchSnapshot
 
-- **Type:** `<T>(shape?: Partial<T> | string, message?: string) => void`
+- **Type:** `<T>(shape?: Partial<T> | string, hint?: string) => void`
 
 This ensures that a value matches the most recent snapshot.
 
 You can provide an optional `hint` string argument that is appended to the test name. Although Vitest always appends a number at the end of a snapshot name, short descriptive hints might be more useful than numbers to differentiate multiple snapshots in a single it or test block. Vitest sorts snapshots by name in the corresponding `.snap` file.
 
 :::tip
-  When snapshot mismatch and causing the test failing, if the mismatch is expected, you can press `u` key to update the snapshot for once. Or you can pass `-u` or `--update` CLI options to make Vitest always update the tests.
+  When a snapshot mismatches and causes the test to fail, if the mismatch is expected, you can press `u` key to update the snapshot once. Or you can pass `-u` or `--update` CLI options to make Vitest always update the tests.
 :::
 
-```ts twoslash
+```ts
 import { expect, test } from 'vitest'
 
 test('matches snapshot', () => {
@@ -719,7 +792,7 @@ test('matches snapshot', () => {
 
 You can also provide a shape of an object, if you are testing just a shape of an object, and don't need it to be 100% compatible:
 
-```ts twoslash
+```ts
 import { expect, test } from 'vitest'
 
 test('matches snapshot', () => {
@@ -730,13 +803,13 @@ test('matches snapshot', () => {
 
 ## toMatchInlineSnapshot
 
-- **Type:** `<T>(shape?: Partial<T> | string, snapshot?: string, message?: string) => void`
+- **Type:** `<T>(shape?: Partial<T> | string, snapshot?: string, hint?: string) => void`
 
 This ensures that a value matches the most recent snapshot.
 
 Vitest adds and updates the inlineSnapshot string argument to the matcher in the test file (instead of an external `.snap` file).
 
-```ts twoslash
+```ts
 import { expect, test } from 'vitest'
 
 test('matches inline snapshot', () => {
@@ -755,7 +828,7 @@ test('matches inline snapshot', () => {
 
 You can also provide a shape of an object, if you are testing just a shape of an object, and don't need it to be 100% compatible:
 
-```ts twoslash
+```ts
 import { expect, test } from 'vitest'
 
 test('matches snapshot', () => {
@@ -773,7 +846,7 @@ test('matches snapshot', () => {
 
 ## toMatchFileSnapshot {#tomatchfilesnapshot}
 
-- **Type:** `<T>(filepath: string, message?: string) => Promise<void>`
+- **Type:** `<T>(filepath: string, hint?: string) => Promise<void>`
 
 Compare or update the snapshot with the content of a file explicitly specified (instead of the `.snap` file).
 
@@ -786,17 +859,17 @@ it('render basic', async () => {
 })
 ```
 
-Note that since file system operation is async, you need to use `await` with `toMatchFileSnapshot()`.
+Note that since file system operation is async, you need to use `await` with `toMatchFileSnapshot()`. If `await` is not used, Vitest treats it like `expect.soft`, meaning the code after the statement will continue to run even if the snapshot mismatches. After the test finishes, Vitest will check the snapshot and fail if there is a mismatch.
 
 ## toThrowErrorMatchingSnapshot
 
-- **Type:** `(message?: string) => void`
+- **Type:** `(hint?: string) => void`
 
 The same as [`toMatchSnapshot`](#tomatchsnapshot), but expects the same value as [`toThrowError`](#tothrowerror).
 
 ## toThrowErrorMatchingInlineSnapshot
 
-- **Type:** `(snapshot?: string, message?: string) => void`
+- **Type:** `(snapshot?: string, hint?: string) => void`
 
 The same as [`toMatchInlineSnapshot`](#tomatchinlinesnapshot), but expects the same value as [`toThrowError`](#tothrowerror).
 
@@ -806,7 +879,7 @@ The same as [`toMatchInlineSnapshot`](#tomatchinlinesnapshot), but expects the s
 
 This assertion is useful for testing that a function has been called. Requires a spy function to be passed to `expect`.
 
-```ts twoslash
+```ts
 import { expect, test, vi } from 'vitest'
 
 const market = {
@@ -832,7 +905,7 @@ test('spy function', () => {
 
 This assertion checks if a function was called a certain amount of times. Requires a spy function to be passed to `expect`.
 
-```ts twoslash
+```ts
 import { expect, test, vi } from 'vitest'
 
 const market = {
@@ -857,7 +930,7 @@ test('spy function called two times', () => {
 
 This assertion checks if a function was called at least once with certain parameters. Requires a spy function to be passed to `expect`.
 
-```ts twoslash
+```ts
 import { expect, test, vi } from 'vitest'
 
 const market = {
@@ -877,13 +950,75 @@ test('spy function', () => {
 })
 ```
 
+## toHaveBeenCalledBefore <Version>3.0.0</Version> {#tohavebeencalledbefore}
+
+- **Type**: `(mock: MockInstance, failIfNoFirstInvocation?: boolean) => Awaitable<void>`
+
+This assertion checks if a `Mock` was called before another `Mock`.
+
+```ts
+test('calls mock1 before mock2', () => {
+  const mock1 = vi.fn()
+  const mock2 = vi.fn()
+
+  mock1()
+  mock2()
+  mock1()
+
+  expect(mock1).toHaveBeenCalledBefore(mock2)
+})
+```
+
+## toHaveBeenCalledAfter <Version>3.0.0</Version> {#tohavebeencalledafter}
+
+- **Type**: `(mock: MockInstance, failIfNoFirstInvocation?: boolean) => Awaitable<void>`
+
+This assertion checks if a `Mock` was called after another `Mock`.
+
+```ts
+test('calls mock1 after mock2', () => {
+  const mock1 = vi.fn()
+  const mock2 = vi.fn()
+
+  mock2()
+  mock1()
+  mock2()
+
+  expect(mock1).toHaveBeenCalledAfter(mock2)
+})
+```
+
+## toHaveBeenCalledExactlyOnceWith <Version>3.0.0</Version> {#tohavebeencalledexactlyoncewith}
+
+- **Type**: `(...args: any[]) => Awaitable<void>`
+
+This assertion checks if a function was called exactly once and with certain parameters. Requires a spy function to be passed to `expect`.
+
+```ts
+import { expect, test, vi } from 'vitest'
+
+const market = {
+  buy(subject: string, amount: number) {
+    // ...
+  },
+}
+
+test('spy function', () => {
+  const buySpy = vi.spyOn(market, 'buy')
+
+  market.buy('apples', 10)
+
+  expect(buySpy).toHaveBeenCalledExactlyOnceWith('apples', 10)
+})
+```
+
 ## toHaveBeenLastCalledWith
 
 - **Type**: `(...args: any[]) => Awaitable<void>`
 
 This assertion checks if a function was called with certain parameters at its last invocation. Requires a spy function to be passed to `expect`.
 
-```ts twoslash
+```ts
 import { expect, test, vi } from 'vitest'
 
 const market = {
@@ -911,7 +1046,7 @@ This assertion checks if a function was called with certain parameters at the ce
 
 Requires a spy function to be passed to `expect`.
 
-```ts twoslash
+```ts
 import { expect, test, vi } from 'vitest'
 
 const market = {
@@ -936,7 +1071,7 @@ test('first call of spy function called with right params', () => {
 
 This assertion checks if a function has successfully returned a value at least once (i.e., did not throw an error). Requires a spy function to be passed to `expect`.
 
-```ts twoslash
+```ts
 import { expect, test, vi } from 'vitest'
 
 function getApplesPrice(amount: number) {
@@ -960,7 +1095,7 @@ test('spy function returned a value', () => {
 
 This assertion checks if a function has successfully returned a value an exact amount of times (i.e., did not throw an error). Requires a spy function to be passed to `expect`.
 
-```ts twoslash
+```ts
 import { expect, test, vi } from 'vitest'
 
 test('spy function returns a value two times', () => {
@@ -979,7 +1114,7 @@ test('spy function returns a value two times', () => {
 
 You can call this assertion to check if a function has successfully returned a value with certain parameters at least once. Requires a spy function to be passed to `expect`.
 
-```ts twoslash
+```ts
 import { expect, test, vi } from 'vitest'
 
 test('spy function returns a product', () => {
@@ -997,7 +1132,7 @@ test('spy function returns a product', () => {
 
 You can call this assertion to check if a function has successfully returned a certain value when it was last invoked. Requires a spy function to be passed to `expect`.
 
-```ts twoslash
+```ts
 import { expect, test, vi } from 'vitest'
 
 test('spy function returns bananas on a last call', () => {
@@ -1016,7 +1151,7 @@ test('spy function returns bananas on a last call', () => {
 
 You can call this assertion to check if a function has successfully returned a value with certain parameters on a certain call. Requires a spy function to be passed to `expect`.
 
-```ts twoslash
+```ts
 import { expect, test, vi } from 'vitest'
 
 test('spy function returns bananas on second call', () => {
@@ -1037,13 +1172,7 @@ This assertion checks if a function has successfully resolved a value at least o
 
 If the function returned a promise, but it was not resolved yet, this will fail.
 
-```ts twoslash
-// @filename: db/apples.js
-/** @type {any} */
-const db = {}
-export default db
-// @filename: test.ts
-// ---cut---
+```ts
 import { expect, test, vi } from 'vitest'
 import db from './db/apples.js'
 
@@ -1069,7 +1198,7 @@ This assertion checks if a function has successfully resolved a value an exact a
 
 This will only count resolved promises. If the function returned a promise, but it was not resolved yet, it will not be counted.
 
-```ts twoslash
+```ts
 import { expect, test, vi } from 'vitest'
 
 test('spy function resolved a value two times', async () => {
@@ -1090,7 +1219,7 @@ You can call this assertion to check if a function has successfully resolved a c
 
 If the function returned a promise, but it was not resolved yet, this will fail.
 
-```ts twoslash
+```ts
 import { expect, test, vi } from 'vitest'
 
 test('spy function resolved a product', async () => {
@@ -1110,7 +1239,7 @@ You can call this assertion to check if a function has successfully resolved a c
 
 If the function returned a promise, but it was not resolved yet, this will fail.
 
-```ts twoslash
+```ts
 import { expect, test, vi } from 'vitest'
 
 test('spy function resolves bananas on a last call', async () => {
@@ -1127,11 +1256,11 @@ test('spy function resolves bananas on a last call', async () => {
 
 - **Type**: `(time: number, returnValue: any) => Awaitable<void>`
 
-You can call this assertion to check if a function has successfully resolved a certain value on a specific invokation. Requires a spy function to be passed to `expect`.
+You can call this assertion to check if a function has successfully resolved a certain value on a specific invocation. Requires a spy function to be passed to `expect`.
 
 If the function returned a promise, but it was not resolved yet, this will fail.
 
-```ts twoslash
+```ts
 import { expect, test, vi } from 'vitest'
 
 test('spy function returns bananas on second call', async () => {
@@ -1150,11 +1279,12 @@ test('spy function returns bananas on second call', async () => {
 
 This assertion checks if a value satisfies a certain predicate.
 
-```ts twoslash
+```ts
 import { describe, expect, it } from 'vitest'
-describe('toSatisfy()', () => {
-  const isOdd = (value: number) => value % 2 !== 0
 
+const isOdd = (value: number) => value % 2 !== 0
+
+describe('toSatisfy()', () => {
   it('pass with 0', () => {
     expect(1).toSatisfy(isOdd)
   })
@@ -1191,6 +1321,8 @@ test('buyApples returns new stock id', async () => {
 
 :::warning
 If the assertion is not awaited, then you will have a false-positive test that will pass every time. To make sure that assertions are actually called, you may use [`expect.assertions(number)`](#expect-assertions).
+
+Since Vitest 3, if a method is not awaited, Vitest will show a warning at the end of the test. In Vitest 4, the test will be marked as "failed" if the assertion is not awaited.
 :::
 
 ## rejects
@@ -1220,6 +1352,8 @@ test('buyApples throws an error when no id provided', async () => {
 
 :::warning
 If the assertion is not awaited, then you will have a false-positive test that will pass every time. To make sure that assertions were actually called, you can use [`expect.assertions(number)`](#expect-assertions).
+
+Since Vitest 3, if a method is not awaited, Vitest will show a warning at the end of the test. In Vitest 4, the test will be marked as "failed" if the assertion is not awaited.
 :::
 
 ## expect.assertions
@@ -1298,7 +1432,7 @@ test('callback was called', async () => {
 
 - **Type:** `(message?: string) => never`
 
-This method is used to asserting that a line should never be reached.
+This method is used to assert that a line should never be reached.
 
 For example, if we want to test that `build()` throws due to receiving directories having no `src` folder, and also handle each error separately, we could do this:
 
@@ -1373,7 +1507,7 @@ test('"id" is a number', () => {
 
 `expect.closeTo` is useful when comparing floating point numbers in object properties or array item. If you need to compare a number, please use `.toBeCloseTo` instead.
 
-The optional `numDigits` argument limits the number of digits to check **after** the decimal point. For the default value `2`, the test criterion is `Math.abs(expected - received) < 0.005 (that is, 10 ** -2 / 2)`.
+The optional `precision` argument limits the number of digits to check **after** the decimal point. For the default value `2`, the test criterion is `Math.abs(expected - received) < 0.005 (that is, 10 ** -2 / 2)`.
 
 For example, this test passes with a precision of 5 digits:
 
@@ -1395,7 +1529,7 @@ test('compare float in object properties', () => {
 
 When used with an equality check, this asymmetric matcher will return `true` if the value is an array and contains specified items.
 
-```ts twoslash
+```ts
 import { expect, test } from 'vitest'
 
 test('basket includes fuji', () => {
@@ -1424,7 +1558,7 @@ You can use `expect.not` with this matcher to negate the expected value.
 
 When used with an equality check, this asymmetric matcher will return `true` if the value has a similar shape.
 
-```ts twoslash
+```ts
 import { expect, test } from 'vitest'
 
 test('basket has empire apples', () => {
@@ -1454,7 +1588,7 @@ You can use `expect.not` with this matcher to negate the expected value.
 
 When used with an equality check, this asymmetric matcher will return `true` if the value is a string and contains a specified substring.
 
-```ts twoslash
+```ts
 import { expect, test } from 'vitest'
 
 test('variety has "Emp" in its name', () => {
@@ -1479,7 +1613,7 @@ You can use `expect.not` with this matcher to negate the expected value.
 
 When used with an equality check, this asymmetric matcher will return `true` if the value is a string and contains a specified substring or if the string matches a regular expression.
 
-```ts twoslash
+```ts
 import { expect, test } from 'vitest'
 
 test('variety ends with "re"', () => {
@@ -1571,7 +1705,7 @@ If you want to know more, checkout [guide on extending matchers](/guide/extendin
 
 You can use this method to define custom testers, which are methods used by matchers, to test if two objects are equal. It is compatible with Jest's `expect.addEqualityTesters`.
 
-```ts twoslash
+```ts
 import { expect, test } from 'vitest'
 
 class AnagramComparator {

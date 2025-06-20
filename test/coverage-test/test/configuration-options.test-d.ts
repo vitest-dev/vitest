@@ -1,6 +1,6 @@
-import { assertType, test } from 'vitest'
-import type { CoverageProviderModule, ResolvedCoverageOptions, Vitest } from 'vitest'
 import type { defineConfig } from 'vitest/config'
+import type { CoverageProviderModule, ResolvedCoverageOptions, Vitest } from 'vitest/node'
+import { assertType, test } from 'vitest'
 
 type NarrowToTestConfig<T> = T extends { test?: any } ? NonNullable<T['test']> : never
 type Configuration = NarrowToTestConfig<(Parameters<typeof defineConfig>[0])>
@@ -38,6 +38,7 @@ test('provider options, generic', () => {
       'statements': 100,
 
       '**/some-file.ts': {
+        100: true,
         lines: 12,
         branches: 12,
         functions: 12,
@@ -54,30 +55,20 @@ test('provider options, generic', () => {
       statements: [80, 95],
     },
     thresholds: {
-      '100': true,
+      '100': false,
+      'lines': 1,
+      'autoUpdate': true,
+      'perFile': true,
+      'statements': 100,
 
       '**/some-file.ts': {
+        100: false,
         lines: 12,
         branches: 12,
         functions: 12,
         statements: 12,
       },
     },
-  })
-})
-
-test('provider specific options, v8', () => {
-  assertType<Coverage>({
-    provider: 'v8',
-    // @ts-expect-error -- Istanbul-only option is not allowed
-    ignoreClassMethods: ['string'],
-  })
-})
-
-test('provider specific options, istanbul', () => {
-  assertType<Coverage>({
-    provider: 'istanbul',
-    ignoreClassMethods: ['string'],
   })
 })
 
@@ -113,7 +104,6 @@ test('provider module', () => {
             cleanOnRerun: true,
             enabled: true,
             exclude: ['string'],
-            extension: ['string'],
             reporter: [['html', {}], ['json', { file: 'string' }]],
             reportsDirectory: 'string',
             reportOnFailure: true,

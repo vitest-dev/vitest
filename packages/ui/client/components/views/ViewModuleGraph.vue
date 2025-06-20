@@ -1,13 +1,6 @@
 <script setup lang="ts">
 import type { ResizeContext } from 'd3-graph-controller'
-import {
-  GraphController,
-  Markers,
-  PositionInitializers,
-  defineGraphConfig,
-} from 'd3-graph-controller'
 import type { Selection } from 'd3-selection'
-import { isReport } from '~/composables/client'
 import type {
   ModuleGraph,
   ModuleGraphController,
@@ -15,11 +8,20 @@ import type {
   ModuleNode,
   ModuleType,
 } from '~/composables/module-graph'
+import {
+  defineGraphConfig,
+  GraphController,
+  Markers,
+  PositionInitializers,
+} from 'd3-graph-controller'
+import { isReport } from '~/composables/client'
 
 const props = defineProps<{
   graph: ModuleGraph
   projectName: string
 }>()
+
+const hideNodeModules = defineModel<boolean>({ required: true })
 
 const { graph } = toRefs(props)
 
@@ -46,7 +48,7 @@ onUnmounted(() => {
   controller.value?.shutdown()
 })
 
-watch(graph, resetGraphController)
+watch(graph, () => resetGraphController())
 
 function setFilter(name: ModuleType, value: boolean) {
   controller.value?.filterNodesByType(value, name)
@@ -57,8 +59,16 @@ function setSelectedModule(id: string) {
   modalShow.value = true
 }
 
-function resetGraphController() {
+function resetGraphController(reset = false) {
   controller.value?.shutdown()
+
+  // Force reload the module graph only when node_modules are shown.
+  // The module graph doesn't contain node_modules entries.
+  if (reset && !hideNodeModules.value) {
+    hideNodeModules.value = true
+    return
+  }
+
   if (!graph.value || !el.value) {
     return
   }
@@ -106,6 +116,8 @@ function resetGraphController() {
   )
 }
 
+const isValidClick = (event: PointerEvent) => event.button === 0
+
 function bindOnClick(
   selection: Selection<SVGCircleElement, ModuleNode, SVGGElement, undefined>,
 ) {
@@ -113,8 +125,6 @@ function bindOnClick(
     return
   }
   // Only trigger on left-click and primary touch
-  const isValidClick = (event: PointerEvent) => event.button === 0
-
   let px = 0
   let py = 0
   let pt = 0
@@ -155,6 +165,28 @@ function bindOnClick(
     <div>
       <div flex items-center gap-4 px-3 py-2>
         <div
+          flex="~ gap-1"
+          items-center
+          select-none
+        >
+          <input
+            id="hide-node-modules"
+            v-model="hideNodeModules"
+            type="checkbox"
+          >
+          <label
+            font-light
+            text-sm
+            ws-nowrap
+            overflow-hidden
+            select-none
+            truncate
+            for="hide-node-modules"
+            border-b-2
+            border="$cm-namespace"
+          >Hide node_modules</label>
+        </div>
+        <div
           v-for="node of controller?.nodeTypes.sort()"
           :key="node"
           flex="~ gap-1"
@@ -173,6 +205,7 @@ function bindOnClick(
             ws-nowrap
             overflow-hidden
             capitalize
+            select-none
             truncate
             :for="`type-${node}`"
             border-b-2
@@ -184,7 +217,7 @@ function bindOnClick(
           <IconButton
             v-tooltip.bottom="'Reset'"
             icon="i-carbon-reset"
-            @click="resetGraphController"
+            @click="resetGraphController(true)"
           />
         </div>
       </div>

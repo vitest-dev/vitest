@@ -1,20 +1,11 @@
+import type { MessagePort as NodeMessagePort } from 'node:worker_threads'
+import type { Procedure } from './types'
 import {
   MessageChannel,
-  type MessagePort as NodeMessagePort,
+
 } from 'node:worker_threads'
-import type { InlineWorkerContext, Procedure } from './types'
 import { InlineWorkerRunner } from './runner'
 import { debug, getFileIdFromUrl, getRunnerOptions } from './utils'
-
-interface SharedInlineWorkerContext
-  extends Omit<
-    InlineWorkerContext,
-    'onmessage' | 'postMessage' | 'self' | 'global'
-  > {
-  onconnect: Procedure | null
-  self: SharedInlineWorkerContext
-  global: SharedInlineWorkerContext
-}
 
 function convertNodePortToWebPort(port: NodeMessagePort): MessagePort {
   if (!('addEventListener' in port)) {
@@ -79,33 +70,57 @@ export function createSharedWorkerConstructor(): typeof SharedWorker {
       super()
 
       const name = typeof options === 'string' ? options : options?.name
+      let selfProxy: typeof globalThis
 
-      // should be equal to SharedWorkerGlobalScope
-      const context: SharedInlineWorkerContext = {
-        onconnect: null,
-        name,
+      const context = {
+        onmessage: null,
+        onmessageerror: null,
+        onerror: null,
+        onlanguagechange: null,
+        onoffline: null,
+        ononline: null,
+        onrejectionhandled: null,
+        onrtctransform: null,
+        onunhandledrejection: null,
+        origin: typeof location !== 'undefined' ? location.origin : 'http://localhost:3000',
+        importScripts: () => {
+          throw new Error(
+            '[vitest] `importScripts` is not supported in Vite workers. Please, consider using `import` instead.',
+          )
+        },
+        crossOriginIsolated: false,
+        onconnect: null as ((e: MessageEvent) => void) | null,
+        name: name || '',
         close: () => this.port.close(),
         dispatchEvent: (event: Event) => {
           return this._vw_workerTarget.dispatchEvent(event)
         },
-        addEventListener: (...args) => {
-          return this._vw_workerTarget.addEventListener(...args)
+        addEventListener: (...args: any[]) => {
+          return this._vw_workerTarget.addEventListener(...args as [any, any])
         },
-        removeEventListener: this._vw_workerTarget.removeEventListener,
+        removeEventListener: (...args: any[]) => {
+          return this._vw_workerTarget.removeEventListener(...args as [any, any])
+        },
         get self() {
-          return context
-        },
-        get global() {
-          return context
+          return selfProxy
         },
       }
+
+      selfProxy = new Proxy(context, {
+        get(target, prop, receiver) {
+          if (Reflect.has(target, prop)) {
+            return Reflect.get(target, prop, receiver)
+          }
+          return Reflect.get(globalThis, prop, receiver)
+        },
+      }) as any
 
       const channel = new MessageChannel()
       this.port = convertNodePortToWebPort(channel.port1)
       this._vw_workerPort = convertNodePortToWebPort(channel.port2)
 
       this._vw_workerTarget.addEventListener('connect', (e) => {
-        context.onconnect?.(e)
+        context.onconnect?.(e as MessageEvent)
       })
 
       const runner = new InlineWorkerRunner(runnerOptions, context)

@@ -1,44 +1,40 @@
-import type { FetchResult, RawSourceMap, ViteNodeResolveId } from 'vite-node'
-import type { CancelReason } from '@vitest/runner'
-import type {
-  EnvironmentOptions,
-  Pool,
-  ResolvedConfig,
-  VitestEnvironment,
-} from './config'
-import type { Environment, UserConsoleLog } from './general'
-import type { SnapshotResult } from './snapshot'
-import type { File, TaskResultPack } from './tasks'
-import type { AfterSuiteRunMeta } from './worker'
-
-type TransformMode = 'web' | 'ssr'
+import type { CancelReason, File, TaskEventPack, TaskResultPack, TestAnnotation } from '@vitest/runner'
+import type { SnapshotResult } from '@vitest/snapshot'
+import type { AfterSuiteRunMeta, TransformMode, UserConsoleLog } from './general'
 
 export interface RuntimeRPC {
   fetch: (
     id: string,
-    environment: TransformMode
+    transformMode: TransformMode
   ) => Promise<{
     externalize?: string
     id?: string
   }>
-  transform: (id: string, environment: TransformMode) => Promise<FetchResult>
+  transform: (id: string, transformMode: TransformMode) => Promise<{
+    code?: string
+  }>
   resolveId: (
     id: string,
     importer: string | undefined,
-    environment: TransformMode
-  ) => Promise<ViteNodeResolveId | null>
-  getSourceMap: (
-    id: string,
-    force?: boolean
-  ) => Promise<RawSourceMap | undefined>
+    transformMode: TransformMode
+  ) => Promise<{
+    external?: boolean | 'absolute' | 'relative'
+    id: string
+    /** @deprecated */
+    meta?: Record<string, any> | null
+    /** @deprecated */
+    moduleSideEffects?: boolean | 'no-treeshake' | null
+    /** @deprecated */
+    syntheticNamedExports?: boolean | string | null
+  } | null>
 
-  onFinished: (files: File[], errors?: unknown[]) => void
-  onPathsCollected: (paths: string[]) => void
   onUserConsoleLog: (log: UserConsoleLog) => void
   onUnhandledError: (err: unknown, type: string) => void
+  onQueued: (file: File) => void
   onCollected: (files: File[]) => Promise<void>
   onAfterSuiteRun: (meta: AfterSuiteRunMeta) => void
-  onTaskUpdate: (pack: TaskResultPack[]) => Promise<void>
+  onTaskAnnotate: (testId: string, annotation: TestAnnotation) => Promise<TestAnnotation>
+  onTaskUpdate: (pack: TaskResultPack[], events: TaskEventPack[]) => Promise<void>
   onCancel: (reason: CancelReason) => void
   getCountOfFailedTests: () => number
 
@@ -48,27 +44,4 @@ export interface RuntimeRPC {
 
 export interface RunnerRPC {
   onCancel: (reason: CancelReason) => void
-}
-
-export interface ContextTestEnvironment {
-  name: VitestEnvironment
-  transformMode?: TransformMode
-  options: EnvironmentOptions | null
-}
-
-export interface ResolvedTestEnvironment {
-  environment: Environment
-  options: EnvironmentOptions | null
-}
-
-export interface ContextRPC {
-  pool: Pool
-  worker: string
-  workerId: number
-  config: ResolvedConfig
-  projectName: string
-  files: string[]
-  environment: ContextTestEnvironment
-  providedContext: Record<string, any>
-  invalidates?: string[]
 }

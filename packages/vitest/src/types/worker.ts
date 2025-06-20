@@ -1,43 +1,48 @@
-import type { MessagePort } from 'node:worker_threads'
-import type { CancelReason, Task } from '@vitest/runner'
-import type { ModuleCacheMap, ViteNodeResolveId } from 'vite-node'
+import type { CancelReason, FileSpecification, Task } from '@vitest/runner'
 import type { BirpcReturn } from 'birpc'
-import type { MockMap } from './mocker'
-import type { ResolvedConfig } from './config'
-import type { ContextRPC, RunnerRPC, RuntimeRPC } from './rpc'
-import type { Environment } from './general'
-
-export interface WorkerContext extends ContextRPC {
-  port: MessagePort
-}
-
-export type ResolveIdFunction = (
-  id: string,
-  importer?: string
-) => Promise<ViteNodeResolveId | null>
-
-export interface AfterSuiteRunMeta {
-  coverage?: unknown
-  transformMode: Environment['transformMode']
-  projectName?: string
-}
+import type { SerializedConfig } from '../runtime/config'
+import type { Environment } from './environment'
+import type { TransformMode } from './general'
+import type { RunnerRPC, RuntimeRPC } from './rpc'
 
 export type WorkerRPC = BirpcReturn<RuntimeRPC, RunnerRPC>
 
+export interface ContextTestEnvironment {
+  name: string
+  transformMode?: TransformMode
+  options: Record<string, any> | null
+}
+
+export type TestExecutionMethod = 'run' | 'collect'
+
+export interface ContextRPC {
+  pool: string
+  worker: string
+  workerId: number
+  config: SerializedConfig
+  projectName: string
+  files: string[] | FileSpecification[]
+  environment: ContextTestEnvironment
+  providedContext: Record<string, any>
+  invalidates?: string[]
+}
+
 export interface WorkerGlobalState {
   ctx: ContextRPC
-  config: ResolvedConfig
+  config: SerializedConfig
   rpc: WorkerRPC
   current?: Task
   filepath?: string
   environment: Environment
   environmentTeardownRun?: boolean
   onCancel: Promise<CancelReason>
-  moduleCache: ModuleCacheMap
-  mockMap: MockMap
+  moduleCache: Map<string, any>
+  moduleExecutionInfo: Map<string, any>
+  onCleanup: (listener: () => unknown) => void
   providedContext: Record<string, any>
   durations: {
     environment: number
     prepare: number
   }
+  onFilterStackTrace?: (trace: string) => string
 }

@@ -1,11 +1,12 @@
-import { normalize } from 'pathe'
-import cac, { type CAC, type Command } from 'cac'
-import c from 'tinyrainbow'
-import { version } from '../../../package.json' with { type: 'json' }
-import { toArray } from '../../utils/base'
-import type { VitestRunMode } from '../../types'
+import type { CAC, Command } from 'cac'
+import type { VitestRunMode } from '../types/config'
 import type { CliOptions } from './cli-api'
 import type { CLIOption, CLIOptions as CLIOptionsConfig } from './cli-config'
+import { toArray } from '@vitest/utils'
+import cac from 'cac'
+import { normalize } from 'pathe'
+import c from 'tinyrainbow'
+import { version } from '../../../package.json' with { type: 'json' }
 import { benchCliOptionsConfig, cliOptionsConfig, collectCliOptionsConfig } from './cli-config'
 
 function addCommand(cli: CAC | Command, name: string, option: CLIOption<any>) {
@@ -22,6 +23,7 @@ function addCommand(cli: CAC | Command, name: string, option: CLIOption<any>) {
         `Expected a single value for option "${command}", received [${received}]`,
       )
     }
+    value = removeQuotes(value)
     if (option.transform) {
       return option.transform(value)
     }
@@ -58,7 +60,7 @@ function addCommand(cli: CAC | Command, name: string, option: CLIOption<any>) {
   }
 }
 
-interface CLIOptions {
+export interface CliParseOptions {
   allowUnknownOptions?: boolean
 }
 
@@ -70,7 +72,7 @@ function addCliOptions(cli: CAC | Command, options: CLIOptionsConfig<any>) {
   }
 }
 
-export function createCLI(options: CLIOptions = {}) {
+export function createCLI(options: CliParseOptions = {}): CAC {
   const cli = cac('vitest')
 
   cli.version(version)
@@ -196,11 +198,36 @@ export function createCLI(options: CLIOptions = {}) {
   return cli
 }
 
-export function parseCLI(argv: string | string[], config: CLIOptions = {}): {
+function removeQuotes<T>(str: T): T {
+  if (typeof str !== 'string') {
+    if (Array.isArray(str)) {
+      return str.map(removeQuotes) as unknown as T
+    }
+    return str
+  }
+  if (str.startsWith('"') && str.endsWith('"')) {
+    return str.slice(1, -1) as unknown as T
+  }
+  if (str.startsWith(`'`) && str.endsWith(`'`)) {
+    return str.slice(1, -1) as unknown as T
+  }
+  return str
+}
+
+function splitArgv(argv: string): string[] {
+  const reg = /(['"])(?:(?!\1).)+\1/g
+  argv = argv.replace(reg, match => match.replace(/\s/g, '\x00'))
+  return argv.split(' ').map((arg: string) => {
+    arg = arg.replace(/\0/g, ' ')
+    return removeQuotes(arg)
+  })
+}
+
+export function parseCLI(argv: string | string[], config: CliParseOptions = {}): {
   filter: string[]
   options: CliOptions
 } {
-  const arrayArgs = typeof argv === 'string' ? argv.split(' ') : argv
+  const arrayArgs = typeof argv === 'string' ? splitArgv(argv) : argv
   if (arrayArgs[0] !== 'vitest') {
     throw new Error(`Expected "vitest" as the first argument, received "${arrayArgs[0]}"`)
   }
@@ -212,7 +239,7 @@ export function parseCLI(argv: string | string[], config: CLIOptions = {}): {
   if (arrayArgs[2] === 'watch' || arrayArgs[2] === 'dev') {
     options.watch = true
   }
-  if (arrayArgs[2] === 'run') {
+  if (arrayArgs[2] === 'run' && !options.watch) {
     options.run = true
   }
   if (arrayArgs[2] === 'related') {
@@ -238,7 +265,9 @@ async function watch(cliFilters: string[], options: CliOptions): Promise<void> {
 }
 
 async function run(cliFilters: string[], options: CliOptions): Promise<void> {
-  options.run = true
+  // "vitest run --watch" should still be watch mode
+  options.run = !options.watch
+
   await start('test', cliFilters, options)
 }
 
@@ -247,10 +276,17 @@ async function benchmark(cliFilters: string[], options: CliOptions): Promise<voi
   await start('benchmark', cliFilters, options)
 }
 
-function normalizeCliOptions(argv: CliOptions): CliOptions {
+function normalizeCliOptions(cliFilters: string[], argv: CliOptions): CliOptions {
   if (argv.exclude) {
     argv.cliExclude = toArray(argv.exclude)
     delete argv.exclude
+  }
+  if (cliFilters.some(filter => filter.includes(':'))) {
+    argv.includeTaskLocation ??= true
+  }
+
+  if (typeof argv.typecheck?.only === 'boolean') {
+    argv.typecheck.enabled ??= true
   }
 
   return argv
@@ -264,14 +300,14 @@ async function start(mode: VitestRunMode, cliFilters: string[], options: CliOpti
 
   try {
     const { startVitest } = await import('./cli-api')
-    const ctx = await startVitest(mode, cliFilters.map(normalize), normalizeCliOptions(options))
-    if (!ctx?.shouldKeepServer()) {
-      await ctx?.exit()
+    const ctx = await startVitest(mode, cliFilters.map(normalize), normalizeCliOptions(cliFilters, options))
+    if (!ctx.shouldKeepServer()) {
+      await ctx.exit()
     }
   }
   catch (e) {
-    const { divider } = await import('../reporters/renderers/utils')
-    console.error(`\n${c.red(divider(c.bold(c.inverse(' Startup Error '))))}`)
+    const { errorBanner } = await import('../reporters/renderers/utils')
+    console.error(`\n${errorBanner('Startup Error')}`)
     console.error(e)
     console.error('\n\n')
 
@@ -300,29 +336,35 @@ async function collect(mode: VitestRunMode, cliFilters: string[], options: CliOp
   catch {}
 
   try {
-    const { prepareVitest, processCollected } = await import('./cli-api')
+    const { prepareVitest, processCollected, outputFileList } = await import('./cli-api')
     const ctx = await prepareVitest(mode, {
-      ...normalizeCliOptions(options),
+      ...normalizeCliOptions(cliFilters, options),
       watch: false,
       run: true,
     })
+    if (!options.filesOnly) {
+      const { testModules: tests, unhandledErrors: errors } = await ctx.collect(cliFilters.map(normalize))
 
-    const { tests, errors } = await ctx.collect(cliFilters.map(normalize))
+      if (errors.length) {
+        console.error('\nThere were unhandled errors during test collection')
+        errors.forEach(e => console.error(e))
+        console.error('\n\n')
+        await ctx.close()
+        return
+      }
 
-    if (errors.length) {
-      console.error('\nThere were unhandled errors during test collection')
-      errors.forEach(e => console.error(e))
-      console.error('\n\n')
-      await ctx.close()
-      return
+      processCollected(ctx, tests, options)
+    }
+    else {
+      const files = await ctx.getRelevantTestSpecifications(cliFilters.map(normalize))
+      outputFileList(files, options)
     }
 
-    processCollected(ctx, tests, options)
     await ctx.close()
   }
   catch (e) {
-    const { divider } = await import('../reporters/renderers/utils')
-    console.error(`\n${c.red(divider(c.bold(c.inverse(' Collect Error '))))}`)
+    const { errorBanner } = await import('../reporters/renderers/utils')
+    console.error(`\n${errorBanner('Collect Error')}`)
     console.error(e)
     console.error('\n\n')
 

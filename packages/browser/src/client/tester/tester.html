@@ -4,33 +4,9 @@
     <meta charset="UTF-8" />
     <link rel="icon" href="{__VITEST_FAVICON__}" type="image/svg+xml">
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>{__VITEST_TITLE__}</title>
-    <style>
-      html {
-        padding: 0;
-        margin: 0;
-      }
-      body {
-        padding: 0;
-        margin: 0;
-        min-height: 100vh;
-      }
-    </style>
-    {__VITEST_INJECTOR__}
-    <script>{__VITEST_STATE__}</script>
-    {__VITEST_ERROR_CATCHER__}
-    {__VITEST_SCRIPTS__}
+    <title>Vitest Browser Tester</title>
   </head>
-  <body
-    data-vitest-body
-    style="
-      width: 100%;
-      height: 100%;
-      transform: scale(1);
-      transform-origin: left top;
-    "
-  >
+  <body>
     <script type="module" src="./tester.ts"></script>
-    {__VITEST_APPEND__}
   </body>
 </html>

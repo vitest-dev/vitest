@@ -1,17 +1,18 @@
-import { defaultBrowserPort, defaultPort } from '../../constants'
-import type { ApiConfig } from '../../types/config'
+import type { ApiConfig } from '../types/config'
 import type {
   ForksOptions,
   ThreadsOptions,
   VmOptions,
   WorkerContextOptions,
-} from '../../types/pool-options'
+} from '../types/pool-options'
 import type { CliOptions } from './cli-api'
+import { defaultBrowserPort, defaultPort } from '../../constants'
+import { ReportersMap } from '../reporters'
 
 type NestedOption<T, V = Extract<T, Record<string, any>>> = V extends
-| never
-| RegExp
-| unknown[]
+  | never
+  | RegExp
+  | unknown[]
   ? never
   : V
 
@@ -152,14 +153,28 @@ export const cliOptionsConfig: VitestCLIOptions = {
     subcommands: apiConfig(defaultPort),
   },
   silent: {
-    description: 'Silent console output from tests',
+    description: 'Silent console output from tests. Use `\'passed-only\'` to see logs from failing tests only.',
+    argument: '[value]',
+    transform(value) {
+      if (value === 'true' || value === 'yes' || value === true) {
+        return true
+      }
+      if (value === 'false' || value === 'no' || value === false) {
+        return false
+      }
+      if (value === 'passed-only') {
+        return value
+      }
+
+      throw new TypeError(`Unexpected value "--silent=${value}". Use "--silent=true ${value}" instead.`)
+    },
   },
   hideSkippedTests: {
     description: 'Hide logs for skipped tests',
   },
   reporters: {
     alias: 'reporter',
-    description: 'Specify reporters',
+    description: `Specify reporters (${Object.keys(ReportersMap).join(', ')})`,
     argument: '<name>',
     subcommands: null, // don't support custom objects
     array: true,
@@ -167,7 +182,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
   outputFile: {
     argument: '<filename/-s>',
     description:
-      'Write test results to a file when supporter reporter is also specified, use cac\'s dot notation for individual outputs of multiple reporters (example: --outputFile.tap=./tap.txt)',
+      'Write test results to a file when supporter reporter is also specified, use cac\'s dot notation for individual outputs of multiple reporters (example: `--outputFile.tap=./tap.txt`)',
     subcommands: null,
   },
   coverage: {
@@ -175,11 +190,6 @@ export const cliOptionsConfig: VitestCLIOptions = {
     argument: '', // empty string means boolean
     transform: transformNestedBoolean,
     subcommands: {
-      all: {
-        description:
-          'Whether to include all files, including the untested ones into report',
-        default: true,
-      },
       provider: {
         description:
           'Select the tool for coverage collection, available values are: "v8", "istanbul" and "custom"',
@@ -191,20 +201,14 @@ export const cliOptionsConfig: VitestCLIOptions = {
       },
       include: {
         description:
-          'Files included in coverage as glob patterns. May be specified more than once when using multiple patterns (default: `**`)',
+          'Files included in coverage as glob patterns. May be specified more than once when using multiple patterns. By default only files covered by tests are included.',
         argument: '<pattern>',
         array: true,
       },
       exclude: {
         description:
-          'Files to be excluded in coverage. May be specified more than once when using multiple extensions (default: Visit [`coverage.exclude`](https://vitest.dev/config/#coverage-exclude))',
+          'Files to be excluded in coverage. May be specified more than once when using multiple extensions.',
         argument: '<pattern>',
-        array: true,
-      },
-      extension: {
-        description:
-          'Extension to be included in coverage. May be specified more than once when using multiple extensions (default: `[".js", ".cjs", ".mjs", ".ts", ".mts", ".cts", ".tsx", ".jsx", ".vue", ".svelte"]`)',
-        argument: '<extension>',
         array: true,
       },
       clean: {
@@ -331,7 +335,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
     argument: '<name>',
   },
   workspace: {
-    description: 'Path to a workspace configuration file',
+    description: '[deprecated] Path to a workspace configuration file',
     argument: '<path>',
     normalize: true,
   },
@@ -360,7 +364,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
         return { enabled: browser === 'yes' }
       }
       if (typeof browser === 'string') {
-        return { enabled: true, name: browser }
+        return { name: browser }
       }
       return browser
     },
@@ -371,7 +375,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
       },
       name: {
         description:
-          'Run all tests in a specific browser. Some browsers are only available for specific providers (see `--browser.provider`). Visit [`browser.name`](https://vitest.dev/config/#browser-name) for more information',
+          'Run all tests in a specific browser. Some browsers are only available for specific providers (see `--browser.provider`). Visit [`browser.name`](https://vitest.dev/guide/browser/config/#browser-name) for more information',
         argument: '<name>',
       },
       headless: {
@@ -386,7 +390,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
       },
       provider: {
         description:
-          'Provider used to run browser tests. Some browsers are only available for specific providers. Can be "webdriverio", "playwright", "preview", or the path to a custom provider. Visit [`browser.provider`](https://vitest.dev/config/#browser-provider) for more information (default: `"preview"`)',
+          'Provider used to run browser tests. Some browsers are only available for specific providers. Can be "webdriverio", "playwright", "preview", or the path to a custom provider. Visit [`browser.provider`](https://vitest.dev/guide/browser/config.html#browser-provider) for more information (default: `"preview"`)',
         argument: '<name>',
         subcommands: null, // don't support custom objects
       },
@@ -408,17 +412,24 @@ export const cliOptionsConfig: VitestCLIOptions = {
         description:
           'Should browser test files run in parallel. Use `--browser.fileParallelism=false` to disable (default: `true`)',
       },
+      connectTimeout: {
+        description: 'If connection to the browser takes longer, the test suite will fail (default: `60_000`)',
+        argument: '<timeout>',
+      },
       orchestratorScripts: null,
       testerScripts: null,
       commands: null,
       viewport: null,
       screenshotDirectory: null,
       screenshotFailures: null,
+      locators: null,
+      testerHtmlPath: null,
+      instances: null,
     },
   },
   pool: {
     description:
-      'Specify pool, if not running in the browser (default: `threads`)',
+      'Specify pool, if not running in the browser (default: `forks`)',
     argument: '<pool>',
     subcommands: null, // don't support custom objects
   },
@@ -527,7 +538,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
       },
       seed: {
         description:
-          'Set the randomization seed. This option will have no effect if --sequence.shuffle is falsy. Visit ["Random Seed" page](https://en.wikipedia.org/wiki/Random_seed) for more information',
+          'Set the randomization seed. This option will have no effect if `--sequence.shuffle` is falsy. Visit ["Random Seed" page](https://en.wikipedia.org/wiki/Random_seed) for more information',
         argument: '<seed>',
       },
       hooks: {
@@ -540,6 +551,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
           'Changes the order in which setup files are executed. Accepted values are: "list" and "parallel". If set to "list", will run setup files in the order they are defined. If set to "parallel", will run setup files in parallel (default: `"parallel"`)',
         argument: '<order>',
       },
+      groupOrder: null,
     },
   },
   inspect: {
@@ -578,11 +590,11 @@ export const cliOptionsConfig: VitestCLIOptions = {
   },
   inspector: null,
   testTimeout: {
-    description: 'Default timeout of a test in milliseconds (default: `5000`)',
+    description: 'Default timeout of a test in milliseconds (default: `5000`). Use `0` to disable timeout completely.',
     argument: '<timeout>',
   },
   hookTimeout: {
-    description: 'Default hook timeout in milliseconds (default: `10000`)',
+    description: 'Default hook timeout in milliseconds (default: `10000`). Use `0` to disable timeout completely.',
     argument: '<timeout>',
   },
   bail: {
@@ -597,9 +609,62 @@ export const cliOptionsConfig: VitestCLIOptions = {
   },
   diff: {
     description:
-      'Path to a diff config that will be used to generate diff interface',
+      'DiffOptions object or a path to a module which exports DiffOptions object',
     argument: '<path>',
-    normalize: true,
+    subcommands: {
+      aAnnotation: {
+        description: 'Annotation for expected lines (default: `Expected`)',
+        argument: '<annotation>',
+      },
+      aIndicator: {
+        description: 'Indicator for expected lines (default: `-`)',
+        argument: '<indicator>',
+      },
+      bAnnotation: {
+        description: 'Annotation for received lines (default: `Received`)',
+        argument: '<annotation>',
+      },
+      bIndicator: {
+        description: 'Indicator for received lines (default: `+`)',
+        argument: '<indicator>',
+      },
+      commonIndicator: {
+        description: 'Indicator for common lines (default: ` `)',
+        argument: '<indicator>',
+      },
+      contextLines: {
+        description: 'Number of lines of context to show around each change (default: `5`)',
+        argument: '<lines>',
+      },
+      emptyFirstOrLastLinePlaceholder: {
+        description: 'Placeholder for an empty first or last line (default: `""`)',
+        argument: '<placeholder>',
+      },
+      expand: {
+        description: 'Expand all common lines (default: `true`)',
+      },
+      includeChangeCounts: {
+        description: 'Include comparison counts in diff output (default: `false`)',
+      },
+      omitAnnotationLines: {
+        description: 'Omit annotation lines from the output (default: `false`)',
+      },
+      printBasicPrototype: {
+        description: 'Print basic prototype Object and Array (default: `true`)',
+      },
+      maxDepth: {
+        description: 'Limit the depth to recurse when printing nested objects (default: `20`)',
+        argument: '<maxDepth>',
+      },
+      truncateThreshold: {
+        description: 'Number of lines to show before and after each change (default: `0`)',
+        argument: '<threshold>',
+      },
+      truncateAnnotation: {
+        description: 'Annotation for truncated lines (default: `... Diff result is truncated`)',
+        argument: '<annotation>',
+      },
+    },
   },
   exclude: {
     description: 'Additional file globs to be excluded from test',
@@ -643,19 +708,23 @@ export const cliOptionsConfig: VitestCLIOptions = {
         argument: '<path>',
         normalize: true,
       },
+      spawnTimeout: {
+        description: 'Minimum time in milliseconds it takes to spawn the typechecker',
+        argument: '<time>',
+      },
       include: null,
       exclude: null,
     },
   },
   project: {
     description:
-      'The name of the project to run if you are using Vitest workspace feature. This can be repeated for multiple projects: `--project=1 --project=2`. You can also filter projects using wildcards like `--project=packages*`',
+      'The name of the project to run if you are using Vitest workspace feature. This can be repeated for multiple projects: `--project=1 --project=2`. You can also filter projects using wildcards like `--project=packages*`, and exclude projects with `--project=!pattern`.',
     argument: '<name>',
     array: true,
   },
   slowTestThreshold: {
     description:
-      'Threshold in milliseconds for a test to be considered slow (default: `300`)',
+      'Threshold in milliseconds for a test or suite to be considered slow (default: `300`)',
     argument: '<threshold>',
   },
   teardownTimeout: {
@@ -729,6 +798,13 @@ export const cliOptionsConfig: VitestCLIOptions = {
   printConsoleTrace: {
     description: 'Always print console stack traces',
   },
+  includeTaskLocation: {
+    description: 'Collect test and suite locations in the `location` property',
+  },
+  attachmentsDir: {
+    description: 'The directory where attachments from `context.annotate` are stored in (default: `.vitest-attachments`)',
+    argument: '<dir>',
+  },
 
   // CLI only options
   run: {
@@ -742,13 +818,18 @@ export const cliOptionsConfig: VitestCLIOptions = {
     description:
       'Clear terminal screen when re-running tests during watch mode (default: `true`)',
   },
+  configLoader: {
+    description:
+      'Use `bundle` to bundle the config with esbuild or `runner` (experimental) to process it on the fly. This is only available in vite version 6.1.0 and above. (default: `bundle`)',
+    argument: '<loader>',
+  },
   standalone: {
     description:
       'Start Vitest without running tests. File filters will be ignored, tests will be running only on change (default: `false`)',
   },
   mergeReports: {
     description:
-      'Paths to blob reports directory. If this options is used, Vitest won\'t run any tests, it will only report previously recorded tests',
+      'Path to a blob reports directory. If this options is used, Vitest won\'t run any tests, it will only report previously recorded tests',
     argument: '[path]',
     transform(value) {
       if (!value || typeof value === 'boolean') {
@@ -788,11 +869,14 @@ export const cliOptionsConfig: VitestCLIOptions = {
   poolMatchGlobs: null,
   deps: null,
   name: null,
-  includeTaskLocation: null,
   snapshotEnvironment: null,
   compare: null,
   outputJson: null,
   json: null,
+  provide: null,
+  filesOnly: null,
+  projects: null,
+  watchTriggerPatterns: null,
 }
 
 export const benchCliOptionsConfig: Pick<
@@ -811,10 +895,13 @@ export const benchCliOptionsConfig: Pick<
 
 export const collectCliOptionsConfig: Pick<
   VitestCLIOptions,
-  'json'
+  'json' | 'filesOnly'
 > = {
   json: {
     description: 'Print collected tests as JSON or write to a file (Default: false)',
     argument: '[true/path]',
+  },
+  filesOnly: {
+    description: 'Print only test files with out the test cases',
   },
 }

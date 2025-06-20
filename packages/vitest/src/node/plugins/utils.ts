@@ -1,27 +1,25 @@
-import { searchForWorkspaceRoot, version as viteVersion } from 'vite'
 import type {
   DepOptimizationOptions,
-  ResolvedConfig,
   UserConfig as ViteConfig,
 } from 'vite'
+import type { DepsOptimizationOptions } from '../types/config'
 import { dirname } from 'pathe'
-import type { DepsOptimizationOptions, InlineConfig } from '../../types'
-import { VitestCache } from '../cache'
+import { searchForWorkspaceRoot, version as viteVersion } from 'vite'
+import * as vite from 'vite'
 import { rootDir } from '../../paths'
 
 export function resolveOptimizerConfig(
   _testOptions: DepsOptimizationOptions | undefined,
   viteOptions: DepOptimizationOptions | undefined,
-  testConfig: InlineConfig,
-) {
+): { cacheDir?: string; optimizeDeps: DepOptimizationOptions } {
   const testOptions = _testOptions || {}
   const newConfig: { cacheDir?: string; optimizeDeps: DepOptimizationOptions }
     = {} as any
   const [major, minor, fix] = viteVersion.split('.').map(Number)
   const allowed
     = major >= 5
-    || (major === 4 && minor >= 4)
-    || (major === 4 && minor === 3 && fix >= 2)
+      || (major === 4 && minor >= 4)
+      || (major === 4 && minor === 3 && fix >= 2)
   if (!allowed && testOptions?.enabled === true) {
     console.warn(
       `Vitest: "deps.optimizer" is only available in Vite >= 4.3.2, current Vite version: ${viteVersion}`,
@@ -40,9 +38,6 @@ export function resolveOptimizerConfig(
     }
   }
   else {
-    const root = testConfig.root ?? process.cwd()
-    const cacheDir
-      = testConfig.cache !== false ? testConfig.cache?.dir : undefined
     const currentInclude = testOptions.include || viteOptions?.include || []
     const exclude = [
       'vitest',
@@ -60,8 +55,6 @@ export function resolveOptimizerConfig(
       (n: string) => !exclude.includes(n),
     )
 
-    newConfig.cacheDir
-      = cacheDir ?? VitestCache.resolveCacheDir(root, cacheDir, testConfig.name)
     newConfig.optimizeDeps = {
       ...viteOptions,
       ...testOptions,
@@ -75,7 +68,7 @@ export function resolveOptimizerConfig(
 
   // `optimizeDeps.disabled` is deprecated since v5.1.0-beta.1
   // https://github.com/vitejs/vite/pull/15184
-  if (major >= 5 && minor >= 1) {
+  if ((major >= 5 && minor >= 1) || major >= 6) {
     if (newConfig.optimizeDeps.disabled) {
       newConfig.optimizeDeps.noDiscovery = true
       newConfig.optimizeDeps.include = []
@@ -86,7 +79,7 @@ export function resolveOptimizerConfig(
   return newConfig
 }
 
-export function deleteDefineConfig(viteConfig: ViteConfig) {
+export function deleteDefineConfig(viteConfig: ViteConfig): Record<string, any> {
   const defines: Record<string, any> = {}
   if (viteConfig.define) {
     delete viteConfig.define['import.meta.vitest']
@@ -123,23 +116,10 @@ export function deleteDefineConfig(viteConfig: ViteConfig) {
   return defines
 }
 
-export function hijackVitePluginInject(viteConfig: ResolvedConfig) {
-  // disable replacing `process.env.NODE_ENV` with static string
-  const processEnvPlugin = viteConfig.plugins.find(
-    p => p.name === 'vite:client-inject',
-  )
-  if (processEnvPlugin) {
-    const originalTransform = processEnvPlugin.transform as any
-    processEnvPlugin.transform = function transform(code, id, options) {
-      return originalTransform.call(this, code, id, { ...options, ssr: true })
-    }
-  }
-}
-
 export function resolveFsAllow(
   projectRoot: string,
   rootConfigFile: string | false | undefined,
-) {
+): string[] {
   if (!rootConfigFile) {
     return [searchForWorkspaceRoot(projectRoot), rootDir]
   }
@@ -148,4 +128,24 @@ export function resolveFsAllow(
     searchForWorkspaceRoot(projectRoot),
     rootDir,
   ]
+}
+
+export function getDefaultResolveOptions(): vite.ResolveOptions {
+  return {
+    // by default Vite resolves `module` field, which is not always a native ESM module
+    // setting this option can bypass that and fallback to cjs version
+    mainFields: [],
+    // same for `module` condition and Vite 5 doesn't even allow excluding it,
+    // but now it's possible since Vite 6.
+    conditions: getDefaultServerConditions(),
+  }
+}
+
+function getDefaultServerConditions(): string[] {
+  const viteMajor = Number(viteVersion.split('.')[0])
+  if (viteMajor >= 6) {
+    const conditions: string[] = (vite as any).defaultServerConditions
+    return conditions.filter(c => c !== 'module')
+  }
+  return ['node']
 }

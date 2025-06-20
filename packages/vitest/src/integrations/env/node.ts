@@ -1,5 +1,5 @@
+import type { Environment } from '../../types/environment'
 import { Console } from 'node:console'
-import type { Environment } from '../../types'
 
 // some globals we do not want, either because deprecated or we set it ourselves
 const denyList = new Set([

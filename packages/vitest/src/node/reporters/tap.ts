@@ -1,11 +1,14 @@
-import type { Task } from '@vitest/runner'
-import type { ErrorWithDiff, ParsedStack } from '@vitest/utils'
-import type { Vitest } from '../../node'
-import type { Reporter } from '../../types/reporter'
+import type { File, Task } from '@vitest/runner'
+import type { ParsedStack, TestError } from '@vitest/utils'
+import type { Vitest } from '../core'
+import type { Reporter } from '../types/reporter'
 import { parseErrorStacktrace } from '../../utils/source-map'
 import { IndentedLogger } from './renderers/indented-logger'
 
-function yamlString(str: string): string {
+function yamlString(str: string | undefined): string {
+  if (!str) {
+    return ''
+  }
   return `"${str.replace(/"/g, '\\"')}"`
 }
 
@@ -40,8 +43,8 @@ export class TapReporter implements Reporter {
     }
   }
 
-  private logErrorDetails(error: ErrorWithDiff, stack?: ParsedStack) {
-    const errorName = error.name || error.nameStr || 'Unknown Error'
+  private logErrorDetails(error: TestError, stack?: ParsedStack) {
+    const errorName = error.name || 'Unknown Error'
     this.logger.log(`name: ${yamlString(String(errorName))}`)
     this.logger.log(`message: ${yamlString(String(error.message))}`)
 
@@ -53,7 +56,7 @@ export class TapReporter implements Reporter {
     }
   }
 
-  protected logTasks(tasks: Task[]) {
+  protected logTasks(tasks: Task[]): void {
     this.logger.log(`1..${tasks.length}`)
 
     for (const [i, task] of tasks.entries()) {
@@ -61,8 +64,8 @@ export class TapReporter implements Reporter {
 
       const ok
         = task.result?.state === 'pass'
-        || task.mode === 'skip'
-        || task.mode === 'todo'
+          || task.mode === 'skip'
+          || task.mode === 'todo'
           ? 'ok'
           : 'not ok'
 
@@ -80,7 +83,15 @@ export class TapReporter implements Reporter {
       else {
         this.logger.log(`${ok} ${id} - ${tapString(task.name)}${comment}`)
 
-        const project = this.ctx.getProjectByTaskId(task.id)
+        const project = this.ctx.getProjectByName(task.file.projectName || '')
+
+        if (task.type === 'test' && task.annotations) {
+          this.logger.indent()
+          task.annotations.forEach(({ type, message }) => {
+            this.logger.log(`# ${type}: ${message}`)
+          })
+          this.logger.unindent()
+        }
 
         if (task.result?.state === 'fail' && task.result.errors) {
           this.logger.indent()
@@ -89,8 +100,8 @@ export class TapReporter implements Reporter {
             const stacks = task.file.pool === 'browser'
               ? (project.browser?.parseErrorStacktrace(error) || [])
               : parseErrorStacktrace(error, {
-                frameFilter: this.ctx.config.onStackTrace,
-              })
+                  frameFilter: this.ctx.config.onStackTrace,
+                })
             const stack = stacks[0]
 
             this.logger.log('---')
@@ -121,7 +132,7 @@ export class TapReporter implements Reporter {
     }
   }
 
-  onFinished(files = this.ctx.state.getFiles()) {
+  onFinished(files: File[] = this.ctx.state.getFiles()): void {
     this.logger.log('TAP version 13')
 
     this.logTasks(files)

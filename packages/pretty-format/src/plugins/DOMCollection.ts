@@ -5,8 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { printListItems, printObjectProperties } from '../collections'
 import type { Config, NewPlugin, Printer, Refs } from '../types'
+import { printListItems, printObjectProperties } from '../collections'
 
 const SPACE = ' '
 
@@ -44,29 +44,29 @@ export const serialize: NewPlugin['serialize'] = (
     (config.min ? '' : name + SPACE)
     + (OBJECT_NAMES.has(name)
       ? `{${printObjectProperties(
-          isNamedNodeMap(collection)
-            ? [...collection].reduce<Record<string, string>>(
-                (props, attribute) => {
-                  props[attribute.name] = attribute.value
-                  return props
-                },
-                {},
-              )
-            : { ...collection },
-          config,
-          indentation,
-          depth,
-          refs,
-          printer,
-        )}}`
+        isNamedNodeMap(collection)
+          ? [...collection].reduce<Record<string, string>>(
+              (props, attribute) => {
+                props[attribute.name] = attribute.value
+                return props
+              },
+              {},
+            )
+          : { ...collection },
+        config,
+        indentation,
+        depth,
+        refs,
+        printer,
+      )}}`
       : `[${printListItems(
-          [...collection],
-          config,
-          indentation,
-          depth,
-          refs,
-          printer,
-        )}]`)
+        [...collection],
+        config,
+        indentation,
+        depth,
+        refs,
+        printer,
+      )}]`)
   )
 }
 

@@ -1,6 +1,7 @@
-import { type DiffOptions, diff } from './diff'
+import type { DiffOptions } from './diff'
+import type { TestError } from './types'
+import { printDiffOrStringify } from './diff'
 import { format, stringify } from './display'
-import { deepClone, getOwnProperties, getType } from './helpers'
 
 // utils is bundled for any environment and might not support `Element`
 declare class Element {
@@ -27,9 +28,28 @@ function getUnserializableMessage(err: unknown) {
 }
 
 // https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Structured_clone_algorithm
-export function serializeError(val: any, seen: WeakMap<WeakKey, any> = new WeakMap()): any {
+export function serializeValue(val: any, seen: WeakMap<WeakKey, any> = new WeakMap()): any {
   if (!val || typeof val === 'string') {
     return val
+  }
+  if (val instanceof Error && 'toJSON' in val && typeof val.toJSON === 'function') {
+    const jsonValue = val.toJSON()
+
+    if (jsonValue && jsonValue !== val && typeof jsonValue === 'object') {
+      if (typeof val.message === 'string') {
+        safe(() => jsonValue.message ??= val.message)
+      }
+      if (typeof val.stack === 'string') {
+        safe(() => jsonValue.stack ??= val.stack)
+      }
+      if (typeof val.name === 'string') {
+        safe(() => jsonValue.name ??= val.name)
+      }
+      if (val.cause != null) {
+        safe(() => jsonValue.cause ??= serializeValue(val.cause, seen))
+      }
+    }
+    return serializeValue(jsonValue, seen)
   }
   if (typeof val === 'function') {
     return `Function<${val.name || 'anonymous'}>`
@@ -40,9 +60,15 @@ export function serializeError(val: any, seen: WeakMap<WeakKey, any> = new WeakM
   if (typeof val !== 'object') {
     return val
   }
+  if (typeof Buffer !== 'undefined' && val instanceof Buffer) {
+    return `<Buffer(${val.length}) ...>`
+  }
+  if (typeof Uint8Array !== 'undefined' && val instanceof Uint8Array) {
+    return `<Uint8Array(${val.length}) ...>`
+  }
   // cannot serialize immutables as immutables
   if (isImmutable(val)) {
-    return serializeError(val.toJSON(), seen)
+    return serializeValue(val.toJSON(), seen)
   }
   if (
     val instanceof Promise
@@ -57,7 +83,7 @@ export function serializeError(val: any, seen: WeakMap<WeakKey, any> = new WeakM
     return `${val.toString()} ${format(val.sample)}`
   }
   if (typeof val.toJSON === 'function') {
-    return serializeError(val.toJSON(), seen)
+    return serializeValue(val.toJSON(), seen)
   }
 
   if (seen.has(val)) {
@@ -65,12 +91,12 @@ export function serializeError(val: any, seen: WeakMap<WeakKey, any> = new WeakM
   }
 
   if (Array.isArray(val)) {
-    // eslint-disable-next-line unicorn/no-new-array -- we need to keep sparce arrays ([1,,3])
+    // eslint-disable-next-line unicorn/no-new-array -- we need to keep sparse arrays ([1,,3])
     const clone: any[] = new Array(val.length)
     seen.set(val, clone)
     val.forEach((e, i) => {
       try {
-        clone[i] = serializeError(e, seen)
+        clone[i] = serializeValue(e, seen)
       }
       catch (err) {
         clone[i] = getUnserializableMessage(err)
@@ -91,7 +117,7 @@ export function serializeError(val: any, seen: WeakMap<WeakKey, any> = new WeakM
           return
         }
         try {
-          clone[key] = serializeError(val[key], seen)
+          clone[key] = serializeValue(val[key], seen)
         }
         catch (err) {
           // delete in case it has a setter from prototype that might throw
@@ -105,50 +131,47 @@ export function serializeError(val: any, seen: WeakMap<WeakKey, any> = new WeakM
   }
 }
 
+function safe(fn: () => void) {
+  try {
+    return fn()
+  }
+  catch {
+    // ignore
+  }
+}
+
+export { serializeValue as serializeError }
+
 function normalizeErrorMessage(message: string) {
   return message.replace(/__(vite_ssr_import|vi_import)_\d+__\./g, '')
 }
 
 export function processError(
-  err: any,
+  _err: any,
   diffOptions?: DiffOptions,
   seen: WeakSet<WeakKey> = new WeakSet(),
 ): any {
-  if (!err || typeof err !== 'object') {
-    return { message: err }
+  if (!_err || typeof _err !== 'object') {
+    return { message: String(_err) }
   }
-  // stack is not serialized in worker communication
-  // we stringify it first
-  if (err.stack) {
-    err.stackStr = String(err.stack)
-  }
-  if (err.name) {
-    err.nameStr = String(err.name)
-  }
+  const err = _err as TestError
 
   if (
     err.showDiff
     || (err.showDiff === undefined
-    && err.expected !== undefined
-    && err.actual !== undefined)
+      && err.expected !== undefined
+      && err.actual !== undefined)
   ) {
-    const clonedActual = deepClone(err.actual, { forceWritable: true })
-    const clonedExpected = deepClone(err.expected, { forceWritable: true })
-
-    const { replacedActual, replacedExpected } = replaceAsymmetricMatcher(
-      clonedActual,
-      clonedExpected,
-    )
-    err.diff = diff(replacedExpected, replacedActual, {
+    err.diff = printDiffOrStringify(err.actual, err.expected, {
       ...diffOptions,
-      ...err.diffOptions,
+      ...err.diffOptions as DiffOptions,
     })
   }
 
-  if (typeof err.expected !== 'string') {
+  if ('expected' in err && typeof err.expected !== 'string') {
     err.expected = stringify(err.expected, 10)
   }
-  if (typeof err.actual !== 'string') {
+  if ('actual' in err && typeof err.actual !== 'string') {
     err.actual = stringify(err.actual, 10)
   }
 
@@ -171,73 +194,13 @@ export function processError(
   catch {}
 
   try {
-    return serializeError(err)
+    return serializeValue(err)
   }
   catch (e: any) {
-    return serializeError(
+    return serializeValue(
       new Error(
         `Failed to fully serialize error: ${e?.message}\nInner error message: ${err?.message}`,
       ),
     )
-  }
-}
-
-function isAsymmetricMatcher(data: any) {
-  const type = getType(data)
-  return type === 'Object' && typeof data.asymmetricMatch === 'function'
-}
-
-function isReplaceable(obj1: any, obj2: any) {
-  const obj1Type = getType(obj1)
-  const obj2Type = getType(obj2)
-  return (
-    obj1Type === obj2Type && (obj1Type === 'Object' || obj1Type === 'Array')
-  )
-}
-
-export function replaceAsymmetricMatcher(
-  actual: any,
-  expected: any,
-  actualReplaced: WeakSet<WeakKey> = new WeakSet(),
-  expectedReplaced: WeakSet<WeakKey> = new WeakSet(),
-): {
-    replacedActual: any
-    replacedExpected: any
-  } {
-  if (!isReplaceable(actual, expected)) {
-    return { replacedActual: actual, replacedExpected: expected }
-  }
-  if (actualReplaced.has(actual) || expectedReplaced.has(expected)) {
-    return { replacedActual: actual, replacedExpected: expected }
-  }
-  actualReplaced.add(actual)
-  expectedReplaced.add(expected)
-  getOwnProperties(expected).forEach((key) => {
-    const expectedValue = expected[key]
-    const actualValue = actual[key]
-    if (isAsymmetricMatcher(expectedValue)) {
-      if (expectedValue.asymmetricMatch(actualValue)) {
-        actual[key] = expectedValue
-      }
-    }
-    else if (isAsymmetricMatcher(actualValue)) {
-      if (actualValue.asymmetricMatch(expectedValue)) {
-        expected[key] = actualValue
-      }
-    }
-    else if (isReplaceable(actualValue, expectedValue)) {
-      const replaced = replaceAsymmetricMatcher(
-        actualValue,
-        expectedValue,
-        actualReplaced,
-        expectedReplaced,
-      )
-      actual[key] = replaced.replacedActual
-      expected[key] = replaced.replacedExpected
-    }
-  })
-  return {
-    replacedActual: actual,
-    replacedExpected: expected,
   }
 }

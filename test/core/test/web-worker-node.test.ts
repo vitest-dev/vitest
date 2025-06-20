@@ -1,15 +1,16 @@
 // @vitest-environment node
 
-import '@vitest/web-worker'
-
 import { version } from 'node:process'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import MyWorker from '../src/web-worker/worker?worker'
-import MyObjectWorker from '../src/web-worker/objectWorker?worker'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import MyEventListenerWorker from '../src/web-worker/eventListenerWorker?worker'
+
+import MyObjectWorker from '../src/web-worker/objectWorker?worker'
 import MySelfWorker from '../src/web-worker/selfWorker?worker'
 import MySharedWorker from '../src/web-worker/sharedWorker?sharedworker'
+import GlobalsWorker from '../src/web-worker/worker-globals?worker'
+import MyWorker from '../src/web-worker/worker?worker'
+import '@vitest/web-worker'
 
 const major = Number(version.split('.')[0].slice(1))
 
@@ -267,5 +268,27 @@ it('doesn\'t trigger events, if closed', async () => {
     })
     worker.port.postMessage('event')
     setTimeout(resolve, 100)
+  })
+})
+
+it('returns globals on self correctly', async () => {
+  const worker = new GlobalsWorker()
+  await new Promise<void>((resolve, reject) => {
+    worker.onmessage = (e) => {
+      try {
+        expect(e.data).toEqual({
+          crypto: !!globalThis.crypto,
+          location: !!globalThis.location,
+          caches: !!globalThis.caches,
+          origin: 'http://localhost:3000',
+        })
+        resolve()
+      }
+      catch (err) {
+        reject(err)
+      }
+    }
+    worker.onerror = reject
+    worker.postMessage(null)
   })
 })

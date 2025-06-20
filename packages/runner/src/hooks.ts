@@ -7,14 +7,43 @@ import type {
   OnTestFinishedHandler,
   TaskHook,
   TaskPopulated,
+  TestContext,
 } from './types/tasks'
+import { assertTypes } from '@vitest/utils'
+import { abortContextSignal, abortIfTimeout, withTimeout } from './context'
+import { withFixtures } from './fixture'
 import { getCurrentSuite, getRunner } from './suite'
 import { getCurrentTest } from './test-state'
-import { withTimeout } from './context'
-import { withFixtures } from './fixture'
 
 function getDefaultHookTimeout() {
   return getRunner().config.hookTimeout
+}
+
+const CLEANUP_TIMEOUT_KEY = Symbol.for('VITEST_CLEANUP_TIMEOUT')
+const CLEANUP_STACK_TRACE_KEY = Symbol.for('VITEST_CLEANUP_STACK_TRACE')
+
+export function getBeforeHookCleanupCallback(hook: Function, result: any, context?: TestContext): Function | undefined {
+  if (typeof result === 'function') {
+    const timeout
+      = CLEANUP_TIMEOUT_KEY in hook && typeof hook[CLEANUP_TIMEOUT_KEY] === 'number'
+        ? hook[CLEANUP_TIMEOUT_KEY]
+        : getDefaultHookTimeout()
+    const stackTraceError
+      = CLEANUP_STACK_TRACE_KEY in hook && hook[CLEANUP_STACK_TRACE_KEY] instanceof Error
+        ? hook[CLEANUP_STACK_TRACE_KEY]
+        : undefined
+    return withTimeout(
+      result,
+      timeout,
+      true,
+      stackTraceError,
+      (_, error) => {
+        if (context) {
+          abortContextSignal(context, error)
+        }
+      },
+    )
+  }
 }
 
 /**
@@ -26,17 +55,34 @@ function getDefaultHookTimeout() {
  * @param {Function} fn - The callback function to be executed before all tests.
  * @param {number} [timeout] - Optional timeout in milliseconds for the hook. If not provided, the default hook timeout from the runner's configuration is used.
  * @returns {void}
- *
  * @example
+ * ```ts
  * // Example of using beforeAll to set up a database connection
  * beforeAll(async () => {
  *   await database.connect();
  * });
+ * ```
  */
-export function beforeAll(fn: BeforeAllListener, timeout?: number): void {
+export function beforeAll(
+  fn: BeforeAllListener,
+  timeout: number = getDefaultHookTimeout(),
+): void {
+  assertTypes(fn, '"beforeAll" callback', ['function'])
+  const stackTraceError = new Error('STACK_TRACE_ERROR')
   return getCurrentSuite().on(
     'beforeAll',
-    withTimeout(fn, timeout ?? getDefaultHookTimeout(), true),
+    Object.assign(
+      withTimeout(
+        fn,
+        timeout,
+        true,
+        stackTraceError,
+      ),
+      {
+        [CLEANUP_TIMEOUT_KEY]: timeout,
+        [CLEANUP_STACK_TRACE_KEY]: stackTraceError,
+      },
+    ),
   )
 }
 
@@ -49,17 +95,24 @@ export function beforeAll(fn: BeforeAllListener, timeout?: number): void {
  * @param {Function} fn - The callback function to be executed after all tests.
  * @param {number} [timeout] - Optional timeout in milliseconds for the hook. If not provided, the default hook timeout from the runner's configuration is used.
  * @returns {void}
- *
  * @example
+ * ```ts
  * // Example of using afterAll to close a database connection
  * afterAll(async () => {
  *   await database.disconnect();
  * });
+ * ```
  */
 export function afterAll(fn: AfterAllListener, timeout?: number): void {
+  assertTypes(fn, '"afterAll" callback', ['function'])
   return getCurrentSuite().on(
     'afterAll',
-    withTimeout(fn, timeout ?? getDefaultHookTimeout(), true),
+    withTimeout(
+      fn,
+      timeout ?? getDefaultHookTimeout(),
+      true,
+      new Error('STACK_TRACE_ERROR'),
+    ),
   )
 }
 
@@ -72,20 +125,36 @@ export function afterAll(fn: AfterAllListener, timeout?: number): void {
  * @param {Function} fn - The callback function to be executed before each test. This function receives an `TestContext` parameter if additional test context is needed.
  * @param {number} [timeout] - Optional timeout in milliseconds for the hook. If not provided, the default hook timeout from the runner's configuration is used.
  * @returns {void}
- *
  * @example
+ * ```ts
  * // Example of using beforeEach to reset a database state
  * beforeEach(async () => {
  *   await database.reset();
  * });
+ * ```
  */
 export function beforeEach<ExtraContext = object>(
   fn: BeforeEachListener<ExtraContext>,
-  timeout?: number,
+  timeout: number = getDefaultHookTimeout(),
 ): void {
+  assertTypes(fn, '"beforeEach" callback', ['function'])
+  const stackTraceError = new Error('STACK_TRACE_ERROR')
+  const runner = getRunner()
   return getCurrentSuite<ExtraContext>().on(
     'beforeEach',
-    withTimeout(withFixtures(fn), timeout ?? getDefaultHookTimeout(), true),
+    Object.assign(
+      withTimeout(
+        withFixtures(runner, fn),
+        timeout ?? getDefaultHookTimeout(),
+        true,
+        stackTraceError,
+        abortIfTimeout,
+      ),
+      {
+        [CLEANUP_TIMEOUT_KEY]: timeout,
+        [CLEANUP_STACK_TRACE_KEY]: stackTraceError,
+      },
+    ),
   )
 }
 
@@ -98,20 +167,29 @@ export function beforeEach<ExtraContext = object>(
  * @param {Function} fn - The callback function to be executed after each test. This function receives an `TestContext` parameter if additional test context is needed.
  * @param {number} [timeout] - Optional timeout in milliseconds for the hook. If not provided, the default hook timeout from the runner's configuration is used.
  * @returns {void}
- *
  * @example
+ * ```ts
  * // Example of using afterEach to delete temporary files created during a test
  * afterEach(async () => {
  *   await fileSystem.deleteTempFiles();
  * });
+ * ```
  */
 export function afterEach<ExtraContext = object>(
   fn: AfterEachListener<ExtraContext>,
   timeout?: number,
 ): void {
+  assertTypes(fn, '"afterEach" callback', ['function'])
+  const runner = getRunner()
   return getCurrentSuite<ExtraContext>().on(
     'afterEach',
-    withTimeout(withFixtures(fn), timeout ?? getDefaultHookTimeout(), true),
+    withTimeout(
+      withFixtures(runner, fn),
+      timeout ?? getDefaultHookTimeout(),
+      true,
+      new Error('STACK_TRACE_ERROR'),
+      abortIfTimeout,
+    ),
   )
 }
 
@@ -125,19 +203,26 @@ export function afterEach<ExtraContext = object>(
  * @param {number} [timeout] - Optional timeout in milliseconds for the hook. If not provided, the default hook timeout from the runner's configuration is used.
  * @throws {Error} Throws an error if the function is not called within a test.
  * @returns {void}
- *
  * @example
+ * ```ts
  * // Example of using onTestFailed to log failure details
  * onTestFailed(({ errors }) => {
  *   console.log(`Test failed: ${test.name}`, errors);
  * });
+ * ```
  */
 export const onTestFailed: TaskHook<OnTestFailedHandler> = createTestHook(
   'onTestFailed',
   (test, handler, timeout) => {
     test.onFailed ||= []
     test.onFailed.push(
-      withTimeout(handler, timeout ?? getDefaultHookTimeout(), true),
+      withTimeout(
+        handler,
+        timeout ?? getDefaultHookTimeout(),
+        true,
+        new Error('STACK_TRACE_ERROR'),
+        abortIfTimeout,
+      ),
     )
   },
 )
@@ -150,24 +235,33 @@ export const onTestFailed: TaskHook<OnTestFailedHandler> = createTestHook(
  *
  * **Note:** The `onTestFinished` hooks are running in reverse order of their registration. You can configure this by changing the `sequence.hooks` option in the config file.
  *
+ * **Note:** The `onTestFinished` hook is not called if the test is canceled with a dynamic `ctx.skip()` call.
+ *
  * @param {Function} fn - The callback function to be executed after a test finishes. The function can receive parameters providing details about the completed test, including its success or failure status.
  * @param {number} [timeout] - Optional timeout in milliseconds for the hook. If not provided, the default hook timeout from the runner's configuration is used.
  * @throws {Error} Throws an error if the function is not called within a test.
  * @returns {void}
- *
  * @example
+ * ```ts
  * // Example of using onTestFinished for cleanup
  * const db = await connectToDatabase();
  * onTestFinished(async () => {
  *   await db.disconnect();
  * });
+ * ```
  */
 export const onTestFinished: TaskHook<OnTestFinishedHandler> = createTestHook(
   'onTestFinished',
   (test, handler, timeout) => {
     test.onFinished ||= []
     test.onFinished.push(
-      withTimeout(handler, timeout ?? getDefaultHookTimeout(), true),
+      withTimeout(
+        handler,
+        timeout ?? getDefaultHookTimeout(),
+        true,
+        new Error('STACK_TRACE_ERROR'),
+        abortIfTimeout,
+      ),
     )
   },
 )
@@ -177,6 +271,8 @@ function createTestHook<T>(
   handler: (test: TaskPopulated, handler: T, timeout?: number) => void,
 ): TaskHook<T> {
   return (fn: T, timeout?: number) => {
+    assertTypes(fn, `"${name}" callback`, ['function'])
+
     const current = getCurrentTest()
 
     if (!current) {

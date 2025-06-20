@@ -4,13 +4,13 @@ title: Mocking | Guide
 
 # Mocking
 
-When writing tests it's only a matter of time before you need to create a "fake" version of an internal — or external — service. This is commonly referred to as **mocking**. Vitest provides utility functions to help you out through its **vi** helper. You can `import { vi } from 'vitest'` or access it **globally** (when [global configuration](/config/#globals) is **enabled**).
+When writing tests it's only a matter of time before you need to create a "fake" version of an internal — or external — service. This is commonly referred to as **mocking**. Vitest provides utility functions to help you out through its `vi` helper. You can import it from `vitest` or access it globally if [`global` configuration](/config/#globals) is enabled.
 
 ::: warning
 Always remember to clear or restore mocks before or after each test run to undo mock state changes between runs! See [`mockReset`](/api/mock#mockreset) docs for more info.
 :::
 
-If you wanna dive in head first, check out the [API section](/api/vi) otherwise keep reading to take a deeper dive into the world of mocking.
+If you are not familiar with `vi.fn`, `vi.mock` or `vi.spyOn` methods, check the [API section](/api/vi) first.
 
 ## Dates
 
@@ -18,7 +18,7 @@ Sometimes you need to be in control of the date to ensure consistency when testi
 
 ### Example
 
-```js twoslash
+```js
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 const businessHours = [9, 17]
@@ -77,7 +77,7 @@ We use [Tinyspy](https://github.com/tinylibs/tinyspy) as a base for mocking func
 
 ### Example
 
-```js twoslash
+```js
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 const messages = {
@@ -138,7 +138,7 @@ describe('reading messages', () => {
 
 You can mock global variables that are not present with `jsdom` or `node` by using [`vi.stubGlobal`](/api/vi#vi-stubglobal) helper. It will put the value of the global variable into a `globalThis` object.
 
-```ts twoslash
+```ts
 import { vi } from 'vitest'
 
 const IntersectionObserverMock = vi.fn(() => ({
@@ -175,22 +175,23 @@ Vitest supports mocking Vite [virtual modules](https://vitejs.dev/guide/api-plug
 
 1. Provide an alias
 
-```ts
-// vitest.config.js
-export default {
+```ts [vitest.config.js]
+import { defineConfig } from 'vitest/config'
+import { resolve } from 'node:path'
+export default defineConfig({
   test: {
     alias: {
-      '$app/forms': resolve('./mocks/forms.js')
-    }
-  }
-}
+      '$app/forms': resolve('./mocks/forms.js'),
+    },
+  },
+})
 ```
 
 2. Provide a plugin that resolves a virtual module
 
-```ts
-// vitest.config.js
-export default {
+```ts [vitest.config.js]
+import { defineConfig } from 'vitest/config'
+export default defineConfig({
   plugins: [
     {
       name: 'virtual-modules',
@@ -198,10 +199,10 @@ export default {
         if (id === '$app/forms') {
           return 'virtual:$app/forms'
         }
-      }
-    }
-  ]
-}
+      },
+    },
+  ],
+})
 ```
 
 The benefit of the second approach is that you can dynamically create different virtual entrypoints. If you redirect several virtual modules into a single file, then all of them will be affected by `vi.mock`, so make sure to use unique identifiers.
@@ -210,7 +211,7 @@ The benefit of the second approach is that you can dynamically create different 
 
 Beware that it is not possible to mock calls to methods that are called inside other methods of the same file. For example, in this code:
 
-```ts
+```ts [foobar.js]
 export function foo() {
   return 'foo'
 }
@@ -222,7 +223,7 @@ export function foobar() {
 
 It is not possible to mock the `foo` method from the outside because it is referenced directly. So this code will have no effect on the `foo` call inside `foobar` (but it will affect the `foo` call in other modules):
 
-```ts
+```ts [foobar.test.ts]
 import { vi } from 'vitest'
 import * as mod from './foobar.js'
 
@@ -239,8 +240,7 @@ vi.mock('./foobar.js', async (importOriginal) => {
 
 You can confirm this behaviour by providing the implementation to the `foobar` method directly:
 
-```ts
-// foobar.test.js
+```ts [foobar.test.js]
 import * as mod from './foobar.js'
 
 vi.spyOn(mod, 'foo')
@@ -249,14 +249,13 @@ vi.spyOn(mod, 'foo')
 mod.foobar(mod.foo)
 ```
 
-```ts
-// foobar.js
+```ts [foobar.js]
 export function foo() {
   return 'foo'
 }
 
 export function foobar(injectedFoo) {
-  return injectedFoo !== foo // false
+  return injectedFoo === foo // false
 }
 ```
 
@@ -362,7 +361,7 @@ Vitest doesn't provide any file system mocking API out of the box. You can use `
 
 ### Example
 
-To automatially redirect every `fs` call to `memfs`, you can create `__mocks__/fs.cjs` and `__mocks__/fs/promises.cjs` files at the root of your project:
+To automatically redirect every `fs` call to `memfs`, you can create `__mocks__/fs.cjs` and `__mocks__/fs/promises.cjs` files at the root of your project:
 
 ::: code-group
 ```ts [__mocks__/fs.cjs]
@@ -382,20 +381,18 @@ module.exports = fs.promises
 ```
 :::
 
-```ts
-// hello-world.js
+```ts [read-hello-world.js]
 import { readFileSync } from 'node:fs'
 
 export function readHelloWorld(path) {
-  return readFileSync('./hello-world.txt')
+  return readFileSync(path, 'utf-8')
 }
 ```
 
-```ts
-// hello-world.test.js
+```ts [hello-world.test.js]
 import { beforeEach, expect, it, vi } from 'vitest'
 import { fs, vol } from 'memfs'
-import { readHelloWorld } from './hello-world.js'
+import { readHelloWorld } from './read-hello-world.js'
 
 // tell vitest to use fs mock from __mocks__ folder
 // this can be done in a setup file if fs should always be mocked
@@ -408,7 +405,7 @@ beforeEach(() => {
 })
 
 it('should return correct text', () => {
-  const path = './hello-world.txt'
+  const path = '/hello-world.txt'
   fs.writeFileSync(path, 'hello world')
 
   const text = readHelloWorld(path)
@@ -423,7 +420,7 @@ it('can return a value multiple times', () => {
       './dir2/hw.txt': 'hello dir2',
     },
     // default cwd
-    '/tmp'
+    '/tmp',
   )
 
   expect(readHelloWorld('/tmp/dir1/hw.txt')).toBe('hello dir1')
@@ -433,17 +430,20 @@ it('can return a value multiple times', () => {
 
 ## Requests
 
-Because Vitest runs in Node, mocking network requests is tricky; web APIs are not available, so we need something that will mimic network behavior for us. We recommend [Mock Service Worker](https://mswjs.io/) to accomplish this. It will let you mock both `REST` and `GraphQL` network requests, and is framework agnostic.
+Because Vitest runs in Node, mocking network requests is tricky; web APIs are not available, so we need something that will mimic network behavior for us. We recommend [Mock Service Worker](https://mswjs.io/) to accomplish this. It allows you to mock `http`, `WebSocket` and `GraphQL` network requests, and is framework agnostic.
 
 Mock Service Worker (MSW) works by intercepting the requests your tests make, allowing you to use it without changing any of your application code. In-browser, this uses the [Service Worker API](https://developer.mozilla.org/en-US/docs/Web/API/Service_Worker_API). In Node.js, and for Vitest, it uses the [`@mswjs/interceptors`](https://github.com/mswjs/interceptors) library. To learn more about MSW, read their [introduction](https://mswjs.io/docs/)
 
 ### Configuration
 
 You can use it like below in your [setup file](/config/#setupfiles)
-```js twoslash
+
+::: code-group
+
+```js [HTTP Setup]
 import { afterAll, afterEach, beforeAll } from 'vitest'
 import { setupServer } from 'msw/node'
-import { HttpResponse, graphql, http } from 'msw'
+import { http, HttpResponse } from 'msw'
 
 const posts = [
   {
@@ -461,29 +461,84 @@ export const restHandlers = [
   }),
 ]
 
-const graphqlHandlers = [
-  graphql.query('ListPosts', () => {
-    return HttpResponse.json(
-      {
-        data: { posts },
-      },
-    )
-  }),
-]
-
-const server = setupServer(...restHandlers, ...graphqlHandlers)
+const server = setupServer(...restHandlers)
 
 // Start server before all tests
 beforeAll(() => server.listen({ onUnhandledRequest: 'error' }))
 
-//  Close server after all tests
+// Close server after all tests
 afterAll(() => server.close())
 
-// Reset handlers after each test `important for test isolation`
+// Reset handlers after each test for test isolation
 afterEach(() => server.resetHandlers())
 ```
 
-> Configuring the server with `onUnhandleRequest: 'error'` ensures that an error is thrown whenever there is a request that does not have a corresponding request handler.
+```js [GraphQL Setup]
+import { afterAll, afterEach, beforeAll } from 'vitest'
+import { setupServer } from 'msw/node'
+import { graphql, HttpResponse } from 'msw'
+
+const posts = [
+  {
+    userId: 1,
+    id: 1,
+    title: 'first post title',
+    body: 'first post body',
+  },
+  // ...
+]
+
+const graphqlHandlers = [
+  graphql.query('ListPosts', () => {
+    return HttpResponse.json({
+      data: { posts },
+    })
+  }),
+]
+
+const server = setupServer(...graphqlHandlers)
+
+// Start server before all tests
+beforeAll(() => server.listen({ onUnhandledRequest: 'error' }))
+
+// Close server after all tests
+afterAll(() => server.close())
+
+// Reset handlers after each test for test isolation
+afterEach(() => server.resetHandlers())
+```
+
+```js [WebSocket Setup]
+import { afterAll, afterEach, beforeAll } from 'vitest'
+import { setupServer } from 'msw/node'
+import { ws } from 'msw'
+
+const chat = ws.link('wss://chat.example.com')
+
+const wsHandlers = [
+  chat.addEventListener('connection', ({ client }) => {
+    client.addEventListener('message', (event) => {
+      console.log('Received message from client:', event.data)
+      // Echo the received message back to the client
+      client.send(`Server received: ${event.data}`)
+    })
+  }),
+]
+
+const server = setupServer(...wsHandlers)
+
+// Start server before all tests
+beforeAll(() => server.listen({ onUnhandledRequest: 'error' }))
+
+// Close server after all tests
+afterAll(() => server.close())
+
+// Reset handlers after each test for test isolation
+afterEach(() => server.resetHandlers())
+```
+:::
+
+> Configuring the server with `onUnhandledRequest: 'error'` ensures that an error is thrown whenever there is a request that does not have a corresponding request handler.
 
 ### More
 There is much more to MSW. You can access cookies and query parameters, define mock error responses, and much more! To see all you can do with MSW, read [their documentation](https://mswjs.io/docs).
@@ -496,7 +551,7 @@ See the [`vi.useFakeTimers` API section](/api/vi#vi-usefaketimers) for a more in
 
 ### Example
 
-```js twoslash
+```js
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 function executeAfterTwoHours(func) {
@@ -537,6 +592,160 @@ describe('delayed execution', () => {
 })
 ```
 
+## Classes
+
+You can mock an entire class with a single `vi.fn` call - since all classes are also functions, this works out of the box. Beware that currently Vitest doesn't respect the `new` keyword so the `new.target` is always `undefined` in the body of a function.
+
+```ts
+class Dog {
+  name: string
+
+  constructor(name: string) {
+    this.name = name
+  }
+
+  static getType(): string {
+    return 'animal'
+  }
+
+  greet = (): string => {
+    return `Hi! My name is ${this.name}!`
+  }
+
+  speak(): string {
+    return 'bark!'
+  }
+
+  isHungry() {}
+  feed() {}
+}
+```
+
+We can re-create this class with ES5 functions:
+
+```ts
+const Dog = vi.fn(function (name) {
+  this.name = name
+  // mock instance methods in the constructor, each instance will have its own spy
+  this.greet = vi.fn(() => `Hi! My name is ${this.name}!`)
+})
+
+// notice that static methods are mocked directly on the function,
+// not on the instance of the class
+Dog.getType = vi.fn(() => 'mocked animal')
+
+// mock the "speak" and "feed" methods on every instance of a class
+// all `new Dog()` instances will inherit and share these spies
+Dog.prototype.speak = vi.fn(() => 'loud bark!')
+Dog.prototype.feed = vi.fn()
+```
+
+::: warning
+If a non-primitive is returned from the constructor function, that value will become the result of the new expression. In this case the `[[Prototype]]` may not be correctly bound:
+
+```ts
+const CorrectDogClass = vi.fn(function (name) {
+  this.name = name
+})
+
+const IncorrectDogClass = vi.fn(name => ({
+  name
+}))
+
+const Marti = new CorrectDogClass('Marti')
+const Newt = new IncorrectDogClass('Newt')
+
+Marti instanceof CorrectDogClass // ✅ true
+Newt instanceof IncorrectDogClass // ❌ false!
+```
+:::
+
+::: tip WHEN TO USE?
+Generally speaking, you would re-create a class like this inside the module factory if the class is re-exported from another module:
+
+```ts
+import { Dog } from './dog.js'
+
+vi.mock(import('./dog.js'), () => {
+  const Dog = vi.fn()
+  Dog.prototype.feed = vi.fn()
+  // ... other mocks
+  return { Dog }
+})
+```
+
+This method can also be used to pass an instance of a class to a function that accepts the same interface:
+
+```ts [src/feed.ts]
+function feed(dog: Dog) {
+  // ...
+}
+```
+```ts [tests/dog.test.ts]
+import { expect, test, vi } from 'vitest'
+import { feed } from '../src/feed.js'
+
+const Dog = vi.fn()
+Dog.prototype.feed = vi.fn()
+
+test('can feed dogs', () => {
+  const dogMax = new Dog('Max')
+
+  feed(dogMax)
+
+  expect(dogMax.feed).toHaveBeenCalled()
+  expect(dogMax.isHungry()).toBe(false)
+})
+```
+:::
+
+Now, when we create a new instance of the `Dog` class its `speak` method (alongside `feed` and `greet`) is already mocked:
+
+```ts
+const Cooper = new Dog('Cooper')
+Cooper.speak() // loud bark!
+Cooper.greet() // Hi! My name is Cooper!
+
+// you can use built-in assertions to check the validity of the call
+expect(Cooper.speak).toHaveBeenCalled()
+expect(Cooper.greet).toHaveBeenCalled()
+
+const Max = new Dog('Max')
+
+// methods assigned to the prototype are shared between instances
+expect(Max.speak).toHaveBeenCalled()
+expect(Max.greet).not.toHaveBeenCalled()
+```
+
+We can reassign the return value for a specific instance:
+
+```ts
+const dog = new Dog('Cooper')
+
+// "vi.mocked" is a type helper, since
+// TypeScript doesn't know that Dog is a mocked class,
+// it wraps any function in a MockInstance<T> type
+// without validating if the function is a mock
+vi.mocked(dog.speak).mockReturnValue('woof woof')
+
+dog.speak() // woof woof
+```
+
+To mock the property, we can use the `vi.spyOn(dog, 'name', 'get')` method. This makes it possible to use spy assertions on the mocked property:
+
+```ts
+const dog = new Dog('Cooper')
+
+const nameSpy = vi.spyOn(dog, 'name', 'get').mockReturnValue('Max')
+
+expect(dog.name).toBe('Max')
+expect(nameSpy).toHaveBeenCalledTimes(1)
+```
+
+::: tip
+You can also spy on getters and setters using the same method.
+:::
+
 ## Cheat Sheet
 
 :::info
@@ -545,21 +754,12 @@ describe('delayed execution', () => {
 
 I want to…
 
-### Spy on a `method`
-
-```ts
-const instance = new SomeClass()
-vi.spyOn(instance, 'method')
-```
-
 ### Mock exported variables
-```js
-// some-path.js
+```js [example.js]
 export const getter = 'variable'
 ```
-```ts
-// some-path.test.ts
-import * as exports from './some-path.js'
+```ts [example.test.ts]
+import * as exports from './example.js'
 
 vi.spyOn(exports, 'getter', 'get').mockReturnValue('mocked')
 ```
@@ -572,21 +772,20 @@ vi.spyOn(exports, 'getter', 'get').mockReturnValue('mocked')
 Don't forget that a `vi.mock` call is hoisted to top of the file. It will always be executed before all imports.
 :::
 
-```ts
-// ./some-path.js
+```ts [example.js]
 export function method() {}
 ```
 ```ts
-import { method } from './some-path.js'
+import { method } from './example.js'
 
-vi.mock('./some-path.js', () => ({
+vi.mock('./example.js', () => ({
   method: vi.fn()
 }))
 ```
 
 2. Example with `vi.spyOn`:
 ```ts
-import * as exports from './some-path.js'
+import * as exports from './example.js'
 
 vi.spyOn(exports, 'method').mockImplementation(() => {})
 ```
@@ -594,14 +793,13 @@ vi.spyOn(exports, 'method').mockImplementation(() => {})
 ### Mock an exported class implementation
 
 1. Example with `vi.mock` and `.prototype`:
-```ts
-// some-path.ts
+```ts [example.js]
 export class SomeClass {}
 ```
 ```ts
-import { SomeClass } from './some-path.js'
+import { SomeClass } from './example.js'
 
-vi.mock('./some-path.js', () => {
+vi.mock(import('./example.js'), () => {
   const SomeClass = vi.fn()
   SomeClass.prototype.someMethod = vi.fn()
   return { SomeClass }
@@ -609,53 +807,38 @@ vi.mock('./some-path.js', () => {
 // SomeClass.mock.instances will have SomeClass
 ```
 
-2. Example with `vi.mock` and a return value:
-```ts
-import { SomeClass } from './some-path.js'
-
-vi.mock('./some-path.js', () => {
-  const SomeClass = vi.fn(() => ({
-    someMethod: vi.fn()
-  }))
-  return { SomeClass }
-})
-// SomeClass.mock.returns will have returned object
-```
-
-3. Example with `vi.spyOn`:
+2. Example with `vi.spyOn`:
 
 ```ts
-import * as exports from './some-path.js'
+import * as mod from './example.js'
 
-vi.spyOn(exports, 'SomeClass').mockImplementation(() => {
-  // whatever suites you from first two examples
-})
+const SomeClass = vi.fn()
+SomeClass.prototype.someMethod = vi.fn()
+
+vi.spyOn(mod, 'SomeClass').mockImplementation(SomeClass)
 ```
 
 ### Spy on an object returned from a function
 
 1. Example using cache:
 
-```ts
-// some-path.ts
+```ts [example.js]
 export function useObject() {
   return { method: () => true }
 }
 ```
 
-```ts
-// useObject.js
-import { useObject } from './some-path.js'
+```ts [useObject.js]
+import { useObject } from './example.js'
 
 const obj = useObject()
 obj.method()
 ```
 
-```ts
-// useObject.test.js
-import { useObject } from './some-path.js'
+```ts [useObject.test.js]
+import { useObject } from './example.js'
 
-vi.mock('./some-path.js', () => {
+vi.mock(import('./example.js'), () => {
   let _cache
   const useObject = () => {
     if (!_cache) {
@@ -680,8 +863,8 @@ expect(obj.method).toHaveBeenCalled()
 ```ts
 import { mocked, original } from './some-path.js'
 
-vi.mock('./some-path.js', async (importOriginal) => {
-  const mod = await importOriginal<typeof import('./some-path.js')>()
+vi.mock(import('./some-path.js'), async (importOriginal) => {
+  const mod = await importOriginal()
   return {
     ...mod,
     mocked: vi.fn()
@@ -690,6 +873,10 @@ vi.mock('./some-path.js', async (importOriginal) => {
 original() // has original behaviour
 mocked() // is a spy function
 ```
+
+::: warning
+Don't forget that this only [mocks _external_ access](#mocking-pitfalls). In this example, if `original` calls `mocked` internally, it will always call the function defined in the module, not in the mock factory.
+:::
 
 ### Mock the current date
 
@@ -757,11 +944,10 @@ it('the value is restored before running an other test', () => {
 })
 ```
 
-```ts
-// vitest.config.ts
-export default {
+```ts [vitest.config.ts]
+export default defineConfig({
   test: {
-    unstubAllEnvs: true,
-  }
-}
+    unstubEnvs: true,
+  },
+})
 ```

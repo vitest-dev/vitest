@@ -7,9 +7,9 @@ interface Sponsor {
 const vitestSponsors = {
   special: [
     {
-      name: 'Vite',
-      url: 'https://vitejs.dev',
-      img: '/vite.svg',
+      name: 'VoidZero',
+      url: 'https://voidzero.dev',
+      img: '/voidzero.svg',
     },
     {
       name: 'NuxtLabs',
@@ -17,9 +17,9 @@ const vitestSponsors = {
       img: '/nuxtlabs.svg',
     },
     {
-      name: 'Stackblitz',
-      url: 'https://stackblitz.com',
-      img: '/stackblitz.svg',
+      name: 'Bolt',
+      url: 'https://bolt.new',
+      img: '/bolt.svg',
     },
     {
       name: 'Zammad',
@@ -34,7 +34,13 @@ const vitestSponsors = {
       img: '/bit.svg',
     },
   ],
-  // gold: [],
+  gold: [
+    {
+      name: 'vital',
+      url: 'https://vital.io/',
+      img: '/vital.svg',
+    },
+  ],
 } satisfies Record<string, Sponsor[]>
 
 export const sponsors = [
@@ -48,9 +54,9 @@ export const sponsors = [
     size: 'big',
     items: vitestSponsors.platinum,
   },
-  // {
-  //   tier: 'Gold Sponsors',
-  //   size: 'medium',
-  //   items: vitestSponsors.gold,
-  // },
+  {
+    tier: 'Gold Sponsors',
+    size: 'medium',
+    items: vitestSponsors.gold,
+  },
 ]

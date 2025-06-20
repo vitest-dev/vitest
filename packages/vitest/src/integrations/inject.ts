@@ -1,5 +1,5 @@
 import type { ProvidedContext } from '../types/general'
-import { getWorkerState } from '../utils/global'
+import { getWorkerState } from '../runtime/utils'
 
 /**
  * Gives access to injected context provided from the main thread.

@@ -1,7 +1,7 @@
-import type { BirpcOptions } from 'birpc'
 import type { Awaitable } from '@vitest/utils'
-import type { ContextRPC, RuntimeRPC } from '../../types/rpc'
-import type { WorkerGlobalState } from '../../types/worker'
+import type { BirpcOptions } from 'birpc'
+import type { RuntimeRPC } from '../../types/rpc'
+import type { ContextRPC, WorkerGlobalState } from '../../types/worker'
 
 export type WorkerRpcOptions = Pick<
   BirpcOptions<RuntimeRPC>,

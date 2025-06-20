@@ -42,6 +42,7 @@ export interface MockContext<T extends Procedure> {
   /**
    * This is an array containing all arguments for each call. One item of the array is the arguments of that call.
    *
+   * @see https://vitest.dev/api/mock#mock-calls
    * @example
    * const fn = vi.fn()
    *
@@ -56,15 +57,18 @@ export interface MockContext<T extends Procedure> {
   calls: Parameters<T>[]
   /**
    * This is an array containing all instances that were instantiated when mock was called with a `new` keyword. Note that this is an actual context (`this`) of the function, not a return value.
+   * @see https://vitest.dev/api/mock#mock-instances
    */
   instances: ReturnType<T>[]
   /**
    * An array of `this` values that were used during each call to the mock function.
+   * @see https://vitest.dev/api/mock#mock-contexts
    */
   contexts: ThisParameterType<T>[]
   /**
    * The order of mock's execution. This returns an array of numbers which are shared between all defined mocks.
    *
+   * @see https://vitest.dev/api/mock#mock-invocationcallorder
    * @example
    * const fn1 = vi.fn()
    * const fn2 = vi.fn()
@@ -82,6 +86,7 @@ export interface MockContext<T extends Procedure> {
    *
    * The `value` property contains the returned value or thrown error. If the function returned a `Promise`, then `result` will always be `'return'` even if the promise was rejected.
    *
+   * @see https://vitest.dev/api/mock#mock-results
    * @example
    * const fn = vi.fn()
    *   .mockReturnValueOnce('result')
@@ -111,6 +116,7 @@ export interface MockContext<T extends Procedure> {
    *
    * This array will be empty if the function was never resolved or rejected.
    *
+   * @see https://vitest.dev/api/mock#mock-settledresults
    * @example
    * const fn = vi.fn().mockResolvedValueOnce('result')
    *
@@ -136,11 +142,22 @@ export interface MockContext<T extends Procedure> {
   settledResults: MockSettledResult<Awaited<ReturnType<T>>>[]
   /**
    * This contains the arguments of the last call. If spy wasn't called, will return `undefined`.
+   * @see https://vitest.dev/api/mock#mock-lastcall
    */
   lastCall: Parameters<T> | undefined
+  /** @internal */
+  _state: (state?: InternalState) => InternalState
+}
+
+interface InternalState {
+  implementation: Procedure | undefined
+  onceImplementations: Procedure[]
+  implementationChangedTemporarily: boolean
 }
 
 type Procedure = (...args: any[]) => any
+// pick a single function type from function overloads, unions, etc...
+type NormalizedProcedure<T extends Procedure> = (...args: Parameters<T>) => ReturnType<T>
 
 type Methods<T> = keyof {
   [K in keyof T as T[K] extends Procedure ? K : never]: T[K];
@@ -166,62 +183,77 @@ Jest uses the latter for `MockInstance.mockImplementation` etc... and it allows 
   const boolFn: Jest.Mock<() => boolean> = jest.fn<() => true>(() => true)
 */
 /* eslint-disable ts/method-signature-style */
-export interface MockInstance<T extends Procedure = Procedure> {
+export interface MockInstance<T extends Procedure = Procedure> extends Disposable {
   /**
-   * Use it to return the name given to mock with method `.mockName(name)`.
+   * Use it to return the name assigned to the mock with the `.mockName(name)` method. By default, it will return `vi.fn()`.
+   * @see https://vitest.dev/api/mock#getmockname
    */
   getMockName(): string
   /**
-   * Sets internal mock name. Useful to see the name of the mock if an assertion fails.
+   * Sets the internal mock name. This is useful for identifying the mock when an assertion fails.
+   * @see https://vitest.dev/api/mock#mockname
    */
-  mockName(n: string): this
+  mockName(name: string): this
   /**
    * Current context of the mock. It stores information about all invocation calls, instances, and results.
    */
   mock: MockContext<T>
   /**
-   * Clears all information about every call. After calling it, all properties on `.mock` will return an empty state. This method does not reset implementations.
+   * Clears all information about every call. After calling it, all properties on `.mock` will return to their initial state. This method does not reset implementations. It is useful for cleaning up mocks between different assertions.
    *
-   * It is useful if you need to clean up mock between different assertions.
+   * To automatically call this method before each test, enable the [`clearMocks`](https://vitest.dev/config/#clearmocks) setting in the configuration.
+   * @see https://vitest.dev/api/mock#mockclear
    */
   mockClear(): this
   /**
-   * Does what `mockClear` does and makes inner implementation an empty function (returning `undefined` when invoked). This also resets all "once" implementations.
+   * Does what `mockClear` does and resets inner implementation to the original function. This also resets all "once" implementations.
    *
-   * This is useful when you want to completely reset a mock to the default state.
+   * Note that resetting a mock from `vi.fn()` will set implementation to an empty function that returns `undefined`.
+   * Resetting a mock from `vi.fn(impl)` will set implementation to `impl`. It is useful for completely resetting a mock to its default state.
+   *
+   * To automatically call this method before each test, enable the [`mockReset`](https://vitest.dev/config/#mockreset) setting in the configuration.
+   * @see https://vitest.dev/api/mock#mockreset
    */
   mockReset(): this
   /**
-   * Does what `mockReset` does and restores inner implementation to the original function.
+   * Does what `mockReset` does and restores original descriptors of spied-on objects.
    *
    * Note that restoring mock from `vi.fn()` will set implementation to an empty function that returns `undefined`. Restoring a `vi.fn(impl)` will restore implementation to `impl`.
+   * @see https://vitest.dev/api/mock#mockrestore
    */
   mockRestore(): void
   /**
-   * Returns current mock implementation if there is one.
+   * Returns current permanent mock implementation if there is one.
    *
    * If mock was created with `vi.fn`, it will consider passed down method as a mock implementation.
    *
    * If mock was created with `vi.spyOn`, it will return `undefined` unless a custom implementation was provided.
    */
-  getMockImplementation(): T | undefined
+  getMockImplementation(): NormalizedProcedure<T> | undefined
   /**
-   * Accepts a function that will be used as an implementation of the mock.
+   * Accepts a function to be used as the mock implementation. TypeScript expects the arguments and return type to match those of the original function.
+   * @see https://vitest.dev/api/mock#mockimplementation
    * @example
    * const increment = vi.fn().mockImplementation(count => count + 1);
    * expect(increment(3)).toBe(4);
    */
-  mockImplementation(fn: T): this
+  mockImplementation(fn: NormalizedProcedure<T>): this
   /**
-   * Accepts a function that will be used as a mock implementation during the next call. Can be chained so that multiple function calls produce different results.
+   * Accepts a function to be used as the mock implementation. TypeScript expects the arguments and return type to match those of the original function. This method can be chained to produce different results for multiple function calls.
+   *
+   * When the mocked function runs out of implementations, it will invoke the default implementation set with `vi.fn(() => defaultValue)` or `.mockImplementation(() => defaultValue)` if they were called.
+   * @see https://vitest.dev/api/mock#mockimplementationonce
    * @example
    * const fn = vi.fn(count => count).mockImplementationOnce(count => count + 1);
    * expect(fn(3)).toBe(4);
    * expect(fn(3)).toBe(3);
    */
-  mockImplementationOnce(fn: T): this
+  mockImplementationOnce(fn: NormalizedProcedure<T>): this
   /**
    * Overrides the original mock implementation temporarily while the callback is being executed.
+   *
+   * Note that this method takes precedence over the [`mockImplementationOnce`](https://vitest.dev/api/mock#mockimplementationonce).
+   * @see https://vitest.dev/api/mock#withimplementation
    * @example
    * const myMockFn = vi.fn(() => 'original')
    *
@@ -231,20 +263,28 @@ export interface MockInstance<T extends Procedure = Procedure> {
    *
    * myMockFn() // 'original'
    */
-  withImplementation<T2>(fn: T, cb: () => T2): T2 extends Promise<unknown> ? Promise<this> : this
+  withImplementation<T2>(fn: NormalizedProcedure<T>, cb: () => T2): T2 extends Promise<unknown> ? Promise<this> : this
 
   /**
-   * Use this if you need to return `this` context from the method without invoking actual implementation.
+   * Use this if you need to return the `this` context from the method without invoking the actual implementation.
+   * @see https://vitest.dev/api/mock#mockreturnthis
    */
   mockReturnThis(): this
   /**
-   * Accepts a value that will be returned whenever the mock function is called.
+   * Accepts a value that will be returned whenever the mock function is called. TypeScript will only accept values that match the return type of the original function.
+   * @see https://vitest.dev/api/mock#mockreturnvalue
+   * @example
+   * const mock = vi.fn()
+   * mock.mockReturnValue(42)
+   * mock() // 42
+   * mock.mockReturnValue(43)
+   * mock() // 43
    */
-  mockReturnValue(obj: ReturnType<T>): this
+  mockReturnValue(value: ReturnType<T>): this
   /**
-   * Accepts a value that will be returned during the next function call. If chained, every consecutive call will return the specified value.
+   * Accepts a value that will be returned whenever the mock function is called. TypeScript will only accept values that match the return type of the original function.
    *
-   * When there are no more `mockReturnValueOnce` values to use, mock will fallback to the previously defined implementation if there is one.
+   * When the mocked function runs out of implementations, it will invoke the default implementation set with `vi.fn(() => defaultValue)` or `.mockImplementation(() => defaultValue)` if they were called.
    * @example
    * const myMockFn = vi
    *   .fn()
@@ -255,16 +295,16 @@ export interface MockInstance<T extends Procedure = Procedure> {
    * // 'first call', 'second call', 'default'
    * console.log(myMockFn(), myMockFn(), myMockFn())
    */
-  mockReturnValueOnce(obj: ReturnType<T>): this
+  mockReturnValueOnce(value: ReturnType<T>): this
   /**
-   * Accepts a value that will be resolved when async function is called.
+   * Accepts a value that will be resolved when the async function is called. TypeScript will only accept values that match the return type of the original function.
    * @example
    * const asyncMock = vi.fn().mockResolvedValue(42)
    * asyncMock() // Promise<42>
    */
-  mockResolvedValue(obj: Awaited<ReturnType<T>>): this
+  mockResolvedValue(value: Awaited<ReturnType<T>>): this
   /**
-   * Accepts a value that will be resolved during the next function call. If chained, every consecutive call will resolve specified value.
+   * Accepts a value that will be resolved during the next function call. TypeScript will only accept values that match the return type of the original function. If chained, each consecutive call will resolve the specified value.
    * @example
    * const myMockFn = vi
    *   .fn()
@@ -275,16 +315,16 @@ export interface MockInstance<T extends Procedure = Procedure> {
    * // Promise<'first call'>, Promise<'second call'>, Promise<'default'>
    * console.log(myMockFn(), myMockFn(), myMockFn())
    */
-  mockResolvedValueOnce(obj: Awaited<ReturnType<T>>): this
+  mockResolvedValueOnce(value: Awaited<ReturnType<T>>): this
   /**
    * Accepts an error that will be rejected when async function is called.
    * @example
    * const asyncMock = vi.fn().mockRejectedValue(new Error('Async error'))
-   * await asyncMock() // throws 'Async error'
+   * await asyncMock() // throws Error<'Async error'>
    */
-  mockRejectedValue(obj: any): this
+  mockRejectedValue(error: unknown): this
   /**
-   * Accepts a value that will be rejected during the next function call. If chained, every consecutive call will reject specified value.
+   * Accepts a value that will be rejected during the next function call. If chained, each consecutive call will reject the specified value.
    * @example
    * const asyncMock = vi
    *   .fn()
@@ -292,9 +332,9 @@ export interface MockInstance<T extends Procedure = Procedure> {
    *   .mockRejectedValueOnce(new Error('Async error'))
    *
    * await asyncMock() // first call
-   * await asyncMock() // throws "Async error"
+   * await asyncMock() // throws Error<'Async error'>
    */
-  mockRejectedValueOnce(obj: any): this
+  mockRejectedValueOnce(error: unknown): this
 }
 /* eslint-enable ts/method-signature-style */
 
@@ -380,7 +420,7 @@ export type Mocked<T> = {
       : T[P];
 } & T
 
-export const mocks: Set<MockInstance> = new Set()
+export const mocks: Set<MockInstance<any>> = new Set()
 
 export function isMockFunction(fn: any): fn is MockInstance {
   return (
@@ -417,9 +457,44 @@ export function spyOn<T, K extends keyof T>(
   } as const
   const objMethod = accessType ? { [dictionary[accessType]]: method } : method
 
-  const stub = tinyspy.internalSpyOn(obj, objMethod as any)
+  let state: InternalState | undefined
 
-  return enhanceSpy(stub) as MockInstance
+  const descriptor = getDescriptor(obj, method)
+  const fn = descriptor && descriptor[accessType || 'value']
+
+  // inherit implementations if it was already mocked
+  if (isMockFunction(fn)) {
+    state = fn.mock._state()
+  }
+
+  try {
+    const stub = tinyspy.internalSpyOn(obj, objMethod as any)
+
+    const spy = enhanceSpy(stub) as MockInstance
+
+    if (state) {
+      spy.mock._state(state)
+    }
+
+    return spy
+  }
+  catch (error) {
+    if (
+      error instanceof TypeError
+      && Symbol.toStringTag
+      && (obj as any)[Symbol.toStringTag] === 'Module'
+      && (error.message.includes('Cannot redefine property')
+        || error.message.includes('Cannot replace module namespace')
+        || error.message.includes('can\'t redefine non-configurable property'))
+    ) {
+      throw new TypeError(
+        `Cannot spy on export "${String(objMethod)}". Module namespace is not configurable in ESM. See: https://vitest.dev/guide/browser/#limitations`,
+        { cause: error },
+      )
+    }
+
+    throw error
+  }
 }
 
 let callOrder = 0
@@ -427,12 +502,14 @@ let callOrder = 0
 function enhanceSpy<T extends Procedure>(
   spy: SpyInternalImpl<Parameters<T>, ReturnType<T>>,
 ): MockInstance<T> {
-  type TArgs = Parameters<T>
   type TReturns = ReturnType<T>
 
   const stub = spy as unknown as MockInstance<T>
 
   let implementation: T | undefined
+
+  let onceImplementations: T[] = []
+  let implementationChangedTemporarily = false
 
   let instances: any[] = []
   let contexts: any[] = []
@@ -470,10 +547,19 @@ function enhanceSpy<T extends Procedure>(
     get lastCall() {
       return state.calls[state.calls.length - 1]
     },
+    _state(state) {
+      if (state) {
+        implementation = state.implementation as T
+        onceImplementations = state.onceImplementations as T[]
+        implementationChangedTemporarily = state.implementationChangedTemporarily
+      }
+      return {
+        implementation,
+        onceImplementations,
+        implementationChangedTemporarily,
+      }
+    },
   }
-
-  let onceImplementations: ((...args: TArgs) => TReturns)[] = []
-  let implementationChangedTemporarily = false
 
   function mockCall(this: unknown, ...args: any) {
     if (!new.target) {
@@ -484,9 +570,9 @@ function enhanceSpy<T extends Procedure>(
     const impl = implementationChangedTemporarily
       ? implementation!
       : onceImplementations.shift()
-      || implementation
-      || state.getOriginal()
-      || function () {}
+        || implementation
+        || state.getOriginal()
+        || function () {}
     if (new.target) {
       try {
         const result = Reflect.construct(impl, args, state.getOriginal())
@@ -521,7 +607,7 @@ function enhanceSpy<T extends Procedure>(
 
   stub.mockReset = () => {
     stub.mockClear()
-    implementation = (() => undefined) as T
+    implementation = undefined
     onceImplementations = []
     return stub
   }
@@ -529,11 +615,15 @@ function enhanceSpy<T extends Procedure>(
   stub.mockRestore = () => {
     stub.mockReset()
     state.restore()
-    implementation = undefined
     return stub
   }
 
-  stub.getMockImplementation = () => implementation
+  if (Symbol.dispose) {
+    stub[Symbol.dispose] = () => stub.mockRestore()
+  }
+
+  stub.getMockImplementation = () =>
+    implementationChangedTemporarily ? implementation : (onceImplementations.at(0) || implementation)
   stub.mockImplementation = (fn: T) => {
     implementation = fn
     state.willCall(mockCall)
@@ -561,7 +651,7 @@ function enhanceSpy<T extends Procedure>(
 
     const result = cb()
 
-    if (result instanceof Promise) {
+    if (typeof result === 'object' && result && typeof result.then === 'function') {
       return result.then(() => {
         reset()
         return stub
@@ -618,4 +708,22 @@ export function fn<T extends Procedure = Procedure>(
   }
 
   return enhancedSpy as any
+}
+
+function getDescriptor(
+  obj: any,
+  method: string | symbol | number,
+): PropertyDescriptor | undefined {
+  const objDescriptor = Object.getOwnPropertyDescriptor(obj, method)
+  if (objDescriptor) {
+    return objDescriptor
+  }
+  let currentProto = Object.getPrototypeOf(obj)
+  while (currentProto !== null) {
+    const descriptor = Object.getOwnPropertyDescriptor(currentProto, method)
+    if (descriptor) {
+      return descriptor
+    }
+    currentProto = Object.getPrototypeOf(currentProto)
+  }
 }

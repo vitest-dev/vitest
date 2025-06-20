@@ -1,35 +1,65 @@
-import { getTasks } from '@vitest/runner/utils'
-import stripAnsi from 'strip-ansi'
-import type { File, Reporter, Vitest } from '../../types'
-import { getFullName } from '../../utils'
-import { capturePrintError } from '../error'
-import type { WorkspaceProject } from '../workspace'
+import type { File, TestAnnotation } from '@vitest/runner'
+import type { Vitest } from '../core'
+import type { TestProject } from '../project'
+import type { Reporter } from '../types/reporter'
+import type { TestCase } from './reported-tasks'
+import { stripVTControlCharacters } from 'node:util'
+import { getFullName, getTasks } from '@vitest/runner/utils'
+import { capturePrintError } from '../printError'
+
+export interface GithubActionsReporterOptions {
+  onWritePath?: (path: string) => string
+}
 
 export class GithubActionsReporter implements Reporter {
   ctx: Vitest = undefined!
+  options: GithubActionsReporterOptions
 
-  onInit(ctx: Vitest) {
+  constructor(options: GithubActionsReporterOptions = {}) {
+    this.options = options
+  }
+
+  onInit(ctx: Vitest): void {
     this.ctx = ctx
   }
 
-  onFinished(files: File[] = [], errors: unknown[] = []) {
+  onTestCaseAnnotate(testCase: TestCase, annotation: TestAnnotation): void {
+    if (!annotation.location) {
+      return
+    }
+
+    const type = getTitle(annotation.type)
+    const formatted = formatMessage({
+      command: getType(annotation.type),
+      properties: {
+        file: annotation.location.file,
+        line: String(annotation.location.line),
+        column: String(annotation.location.column),
+        ...(type && { title: type }),
+      },
+      message: stripVTControlCharacters(annotation.message),
+    })
+    this.ctx.logger.log(`\n${formatted}`)
+  }
+
+  onFinished(files: File[] = [], errors: unknown[] = []): void {
     // collect all errors and associate them with projects
     const projectErrors = new Array<{
-      project: WorkspaceProject
+      project: TestProject
       title: string
       error: unknown
       file?: File
     }>()
     for (const error of errors) {
       projectErrors.push({
-        project: this.ctx.getCoreWorkspaceProject(),
+        project: this.ctx.getRootProject(),
         title: 'Unhandled error',
         error,
       })
     }
     for (const file of files) {
       const tasks = getTasks(file)
-      const project = this.ctx.getProjectByTaskId(file.id)
+      const project = this.ctx.getProjectByName(file.projectName || '')
       for (const task of tasks) {
         if (task.result?.state !== 'fail') {
           continue
@@ -47,6 +77,8 @@ export class GithubActionsReporter implements Reporter {
       }
     }
 
+    const onWritePath = this.options.onWritePath ?? defaultOnWritePath
+
     // format errors via `printError`
     for (const { project, title, error, file } of projectErrors) {
       const result = capturePrintError(error, this.ctx, { project, task: file })
@@ -57,16 +89,36 @@ export class GithubActionsReporter implements Reporter {
       const formatted = formatMessage({
         command: 'error',
         properties: {
-          file: stack.file,
+          file: onWritePath(stack.file),
           title,
           line: String(stack.line),
           column: String(stack.column),
         },
-        message: stripAnsi(result.output),
+        message: stripVTControlCharacters(result.output),
       })
       this.ctx.logger.log(`\n${formatted}`)
     }
   }
+}
+
+const BUILT_IN_TYPES = ['notice', 'error', 'warning']
+
+function getTitle(type: string) {
+  if (BUILT_IN_TYPES.includes(type)) {
+    return undefined
+  }
+  return type
+}
+
+function getType(type: string) {
+  if (BUILT_IN_TYPES.includes(type)) {
+    return type
+  }
+  return 'notice'
+}
+
+function defaultOnWritePath(path: string): string {
+  return path
 }
 
 // workflow command formatting based on

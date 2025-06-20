@@ -1,6 +1,6 @@
+import type { Environment } from 'vitest/environments'
 import vm from 'node:vm'
 import debug from 'debug'
-import type { Environment } from 'vitest'
 
 // test that external packages (debug) are loaded correctly
 const log = debug('test:env')
@@ -14,6 +14,7 @@ export default <Environment>{
       option: custom.option,
       setTimeout,
       clearTimeout,
+      AbortController,
     })
     return {
       getVmContext() {

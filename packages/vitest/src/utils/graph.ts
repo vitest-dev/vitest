@@ -1,5 +1,6 @@
 import type { ModuleNode } from 'vite'
-import type { ModuleGraphData, Vitest } from '../types'
+import type { Vitest } from '../node/core'
+import type { ModuleGraphData } from '../types/general'
 
 export async function getModuleGraph(
   ctx: Vitest,
@@ -13,9 +14,6 @@ export async function getModuleGraph(
 
   const project = ctx.getProjectByName(projectName)
 
-  function clearId(id?: string | null) {
-    return id?.replace(/\?v=\w+$/, '') || ''
-  }
   async function get(mod?: ModuleNode, seen = new Map<ModuleNode, string>()) {
     if (!mod || !mod.id) {
       return
@@ -53,7 +51,7 @@ export async function getModuleGraph(
     await get(project.browser.vite.moduleGraph.getModuleById(id))
   }
   else {
-    await get(project.server.moduleGraph.getModuleById(id))
+    await get(project.vite.moduleGraph.getModuleById(id))
   }
 
   return {
@@ -61,4 +59,8 @@ export async function getModuleGraph(
     externalized: Array.from(externalized),
     inlined: Array.from(inlined),
   }
+}
+
+function clearId(id?: string | null) {
+  return id?.replace(/\?v=\w+$/, '') || ''
 }

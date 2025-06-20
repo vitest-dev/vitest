@@ -1,18 +1,27 @@
-import { createClient, getTasks } from '@vitest/ws-client'
 import type { WebSocketStatus } from '@vueuse/core'
-import type { File, ResolvedConfig, TaskResultPack } from 'vitest'
-import { reactive as reactiveVue } from 'vue'
-import { createFileTask } from '@vitest/runner/utils'
+import type {
+  RunnerTask,
+  RunnerTaskEventPack,
+  RunnerTaskResultPack,
+  RunnerTestFile,
+  SerializedConfig,
+  TestAnnotation,
+} from 'vitest'
 import type { BrowserRunnerState } from '../../../types'
+import { createFileTask } from '@vitest/runner/utils'
+import { createClient, getTasks } from '@vitest/ws-client'
+import { reactive as reactiveVue } from 'vue'
+import { explorerTree } from '~/composables/explorer'
+import { isFileNode } from '~/composables/explorer/utils'
+import { isSuite as isTaskSuite } from '~/utils/task'
+import { ui } from '../../composables/api'
 import { ENTRY_URL, isReport } from '../../constants'
 import { parseError } from '../error'
 import { activeFileId } from '../params'
-import { createStaticClient } from './static'
 import { testRunState, unhandledErrors } from './state'
-import { explorerTree } from '~/composables/explorer'
-import { isFileNode } from '~/composables/explorer/utils'
+import { createStaticClient } from './static'
 
-export { ENTRY_URL, PORT, HOST, isReport } from '../../constants'
+export { ENTRY_URL, HOST, isReport, PORT } from '../../constants'
 
 export const client = (function createVitestClient() {
   if (isReport) {
@@ -24,13 +33,20 @@ export const client = (function createVitestClient() {
         return ctxKey === 'state' ? reactiveVue(data as any) as any : shallowRef(data)
       },
       handlers: {
-        onTaskUpdate(packs: TaskResultPack[]) {
-          explorerTree.resumeRun(packs)
+        onTestAnnotate(testId: string, annotation: TestAnnotation) {
+          explorerTree.annotateTest(testId, annotation)
+        },
+        onTaskUpdate(packs: RunnerTaskResultPack[], events: RunnerTaskEventPack[]) {
+          explorerTree.resumeRun(packs, events)
           testRunState.value = 'running'
         },
         onFinished(_files, errors) {
           explorerTree.endRun()
-          testRunState.value = 'idle'
+          // don't change the testRunState.value here:
+          // - when saving the file in the codemirror requires explorer tree endRun to finish (multiple microtasks)
+          // - if we change here the state before the tasks states are updated, the cursor position will be lost
+          // - line moved to composables/explorer/collector.ts::refreshExplorer after calling updateRunningTodoTests
+          // testRunState.value = 'idle'
           unhandledErrors.value = (errors || []).map(parseError)
         },
         onFinishedReportCoverage() {
@@ -45,7 +61,7 @@ export const client = (function createVitestClient() {
   }
 })()
 
-export const config = shallowRef<ResolvedConfig>({} as any)
+export const config = shallowRef<SerializedConfig>({} as any)
 export const status = ref<WebSocketStatus>('CONNECTING')
 
 export const current = computed(() => {
@@ -56,7 +72,7 @@ export const currentLogs = computed(() => getTasks(current.value).map(i => i?.lo
 
 export function findById(id: string) {
   const file = client.state.idMap.get(id)
-  return file ? file as File : undefined
+  return file ? file as RunnerTestFile : undefined
 }
 
 export const isConnected = computed(() => status.value === 'OPEN')
@@ -64,10 +80,24 @@ export const isConnecting = computed(() => status.value === 'CONNECTING')
 export const isDisconnected = computed(() => status.value === 'CLOSED')
 
 export function runAll() {
-  return runFiles(client.state.getFiles()/* , true */)
+  return runFiles(client.state.getFiles())
 }
 
-function clearResults(useFiles: File[]) {
+function clearTaskResult(task: RunnerTask) {
+  delete task.result
+  const node = explorerTree.nodes.get(task.id)
+  if (node) {
+    node.state = undefined
+    node.duration = undefined
+    if (isTaskSuite(task)) {
+      for (const t of task.tasks) {
+        clearTaskResult(t)
+      }
+    }
+  }
+}
+
+function clearResults(useFiles: RunnerTestFile[]) {
   const map = explorerTree.nodes
   useFiles.forEach((f) => {
     delete f.result
@@ -92,12 +122,20 @@ function clearResults(useFiles: File[]) {
   })
 }
 
-export function runFiles(useFiles: File[]) {
+export function runFiles(useFiles: RunnerTestFile[]) {
   clearResults(useFiles)
 
   explorerTree.startRun()
 
-  return client.rpc.rerun(useFiles.map(i => i.filepath))
+  return client.rpc.rerun(useFiles.map(i => i.filepath), true)
+}
+
+export function runTask(task: RunnerTask) {
+  clearTaskResult(task)
+
+  explorerTree.startRun()
+
+  return client.rpc.rerunTask(task.id)
 }
 
 export function runCurrent() {
@@ -111,6 +149,9 @@ export const browserState = window.__vitest_browser_runner__ as
   | BrowserRunnerState
   | undefined
 
+// @ts-expect-error not typed global
+window.__vitest_ui_api__ = ui
+
 watch(
   () => client.ws,
   (ws) => {
@@ -119,23 +160,23 @@ watch(
     ws.addEventListener('open', async () => {
       status.value = 'OPEN'
       client.state.filesMap.clear()
-      const [remoteFiles, _config, errors] = await Promise.all([
+      let [files, _config, errors, projects] = await Promise.all([
         client.rpc.getFiles(),
         client.rpc.getConfig(),
         client.rpc.getUnhandledErrors(),
+        client.rpc.getResolvedProjectLabels(),
       ])
       if (_config.standalone) {
         const filenames = await client.rpc.getTestFiles()
-        const files = filenames.map<File>(([{ name, root }, filepath]) => {
-          return /* #__PURE__ */ createFileTask(filepath, root, name)
+        files = filenames.map(([{ name, root }, filepath]) => {
+          const file = createFileTask(filepath, root, name)
+          file.mode = 'skip'
+          return file
         })
-        client.state.collectFiles(files)
       }
-      else {
-        explorerTree.loadFiles(remoteFiles)
-        client.state.collectFiles(remoteFiles)
-        explorerTree.startRun()
-      }
+      explorerTree.loadFiles(files, projects)
+      client.state.collectFiles(files)
+      explorerTree.startRun()
       unhandledErrors.value = (errors || []).map(parseError)
       config.value = _config
     })

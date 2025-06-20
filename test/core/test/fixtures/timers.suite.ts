@@ -38,14 +38,14 @@ describe('FakeTimers', () => {
     })
 
     it('installs setInterval mock', () => {
-      const global = { Date: FakeDate, clearTimeout, process, setTimeout }
+      const global = { Date: FakeDate, clearTimeout, clearInterval, process, setTimeout, setInterval }
       const timers = new FakeTimers({ global })
       timers.useFakeTimers()
       expect(global.setInterval).not.toBe(undefined)
     })
 
     it('installs clearInterval mock', () => {
-      const global = { Date: FakeDate, clearTimeout, process, setTimeout }
+      const global = { Date: FakeDate, clearTimeout, clearInterval, process, setTimeout, setInterval }
       const timers = new FakeTimers({ global })
       timers.useFakeTimers()
       expect(global.clearInterval).not.toBe(undefined)
@@ -82,7 +82,7 @@ describe('FakeTimers', () => {
     })
 
     it.runIf(isChildProcess)('throws when is child_process and tries to mock nextTick', () => {
-      const global = { process, setTimeout, clearTimeout }
+      const global = { Date: FakeDate, process, setTimeout, clearTimeout }
       const timers = new FakeTimers({ global, config: { toFake: ['nextTick'] } })
 
       expect(() => timers.useFakeTimers()).toThrow(
@@ -120,11 +120,12 @@ describe('FakeTimers', () => {
       expect(global.clearImmediate).not.toBe(origClearImmediate)
     })
 
-    it('mocks requestIdleCallback even if not on global', () => {
-      const global = { Date: FakeDate, clearTimeout, setTimeout };
-      const timers = new FakeTimers({ global, config: { toFake: ["requestIdleCallback"] }})
+    it('mocks requestIdleCallback if it exists on global', () => {
+      const origRequestIdleCallback = () => {}
+      const global = { Date: FakeDate, clearTimeout, setTimeout, requestIdleCallback: origRequestIdleCallback }
+      const timers = new FakeTimers({ global })
       timers.useFakeTimers()
-      expect(global.requestIdleCallback).toBeDefined();
+      expect(global.requestIdleCallback).not.toBe(origRequestIdleCallback)
     })
 
     it('cannot mock setImmediate and clearImmediate if not on global', () => {
@@ -237,7 +238,7 @@ describe('FakeTimers', () => {
 
   describe('runAllTimers', () => {
     it('runs all timers in order', () => {
-      const global = { Date: FakeDate, clearTimeout, process, setTimeout }
+      const global = { Date: FakeDate, clearTimeout, clearInterval, process, setTimeout, setInterval }
       const timers = new FakeTimers({ global })
       timers.useFakeTimers()
 
@@ -381,7 +382,7 @@ describe('FakeTimers', () => {
 
   describe('runAllTimersAsync', () => {
     it('runs all timers in order', async () => {
-      const global = { Date: FakeDate, clearTimeout, process, setTimeout, Promise }
+      const global = { Date: FakeDate, clearTimeout, clearInterval, process, setTimeout, setInterval, Promise }
       const timers = new FakeTimers({ global })
       timers.useFakeTimers()
 
@@ -511,7 +512,7 @@ describe('FakeTimers', () => {
 
   describe('advanceTimersByTime', () => {
     it('runs timers in order', () => {
-      const global = { Date: FakeDate, clearTimeout, process, setTimeout }
+      const global = { Date: FakeDate, clearTimeout, process, setTimeout, setInterval }
       const timers = new FakeTimers({ global })
       timers.useFakeTimers()
 
@@ -609,7 +610,7 @@ describe('FakeTimers', () => {
 
   describe('advanceTimersToNextTimer', () => {
     it('runs timers in order', () => {
-      const global = { Date: FakeDate, clearTimeout, process, setTimeout }
+      const global = { Date: FakeDate, clearTimeout, process, setTimeout, setInterval }
       const timers = new FakeTimers({ global })
       timers.useFakeTimers()
 
@@ -644,7 +645,7 @@ describe('FakeTimers', () => {
     })
 
     it('run correct amount of steps', () => {
-      const global = { Date: FakeDate, clearTimeout, process, setTimeout }
+      const global = { Date: FakeDate, clearTimeout, process, setTimeout, setInterval }
       const timers = new FakeTimers({ global })
       timers.useFakeTimers()
 
@@ -711,7 +712,7 @@ describe('FakeTimers', () => {
 
   describe('advanceTimersToNextTimerAsync', () => {
     it('runs timers in order', async () => {
-      const global = { Date: FakeDate, clearTimeout, process, setTimeout, Promise }
+      const global = { Date: FakeDate, clearTimeout, process, setTimeout, setInterval, Promise }
       const timers = new FakeTimers({ global })
       timers.useFakeTimers()
 
@@ -746,7 +747,7 @@ describe('FakeTimers', () => {
     })
 
     it('run correct amount of steps', async () => {
-      const global = { Date: FakeDate, clearTimeout, process, setTimeout, Promise }
+      const global = { Date: FakeDate, clearTimeout, process, setTimeout, setInterval, Promise }
       const timers = new FakeTimers({ global })
       timers.useFakeTimers()
 
@@ -811,6 +812,202 @@ describe('FakeTimers', () => {
     })
   })
 
+  describe('advanceTimersToNextFrame', () => {
+    it('runs scheduled animation frame callbacks in order', () => {
+      const global = {
+        Date,
+        clearTimeout,
+        process,
+        requestAnimationFrame: () => -1,
+        setTimeout,
+      } as unknown as typeof globalThis
+
+      const timers = new FakeTimers({ global })
+      timers.useFakeTimers()
+
+      const runOrder: Array<string> = []
+      const mock1 = vi.fn(() => runOrder.push('mock1'))
+      const mock2 = vi.fn(() => runOrder.push('mock2'))
+      const mock3 = vi.fn(() => runOrder.push('mock3'))
+
+      global.requestAnimationFrame(mock1)
+      global.requestAnimationFrame(mock2)
+      global.requestAnimationFrame(mock3)
+
+      timers.advanceTimersToNextFrame()
+
+      expect(runOrder).toEqual(['mock1', 'mock2', 'mock3'])
+    })
+
+    it('should only run currently scheduled animation frame callbacks', () => {
+      const global = {
+        Date,
+        clearTimeout,
+        process,
+        requestAnimationFrame: () => -1,
+        setTimeout,
+      } as unknown as typeof globalThis
+
+      const timers = new FakeTimers({ global })
+      timers.useFakeTimers()
+
+      const runOrder: Array<string> = []
+      function run() {
+        runOrder.push('first-frame')
+
+        // scheduling another animation frame in the first frame
+        global.requestAnimationFrame(() => runOrder.push('second-frame'))
+      }
+
+      global.requestAnimationFrame(run)
+
+      // only the first frame should be executed
+      timers.advanceTimersToNextFrame()
+
+      expect(runOrder).toEqual(['first-frame'])
+
+      timers.advanceTimersToNextFrame()
+
+      expect(runOrder).toEqual(['first-frame', 'second-frame'])
+    })
+
+    it('should allow cancelling of scheduled animation frame callbacks', () => {
+      const global = {
+        Date,
+        cancelAnimationFrame: () => {},
+        clearTimeout,
+        process,
+        requestAnimationFrame: () => -1,
+        setTimeout,
+      } as unknown as typeof globalThis
+
+      const timers = new FakeTimers({ global })
+      const callback = vi.fn()
+      timers.useFakeTimers()
+
+      const timerId = global.requestAnimationFrame(callback)
+      global.cancelAnimationFrame(timerId)
+
+      timers.advanceTimersToNextFrame()
+
+      expect(callback).not.toHaveBeenCalled()
+    })
+
+    it('should only advance as much time is needed to get to the next frame', () => {
+      const global = {
+        Date,
+        cancelAnimationFrame: () => {},
+        clearTimeout,
+        process,
+        requestAnimationFrame: () => -1,
+        setTimeout,
+      } as unknown as typeof globalThis
+
+      const timers = new FakeTimers({ global })
+      timers.useFakeTimers()
+
+      const runOrder: Array<string> = []
+      const start = global.Date.now()
+
+      const callback = () => runOrder.push('frame')
+      global.requestAnimationFrame(callback)
+
+      // Advancing timers less than a frame (which is 16ms)
+      timers.advanceTimersByTime(6)
+      expect(global.Date.now()).toEqual(start + 6)
+
+      // frame not yet executed
+      expect(runOrder).toEqual([])
+
+      // move timers forward to execute frame
+      timers.advanceTimersToNextFrame()
+
+      // frame has executed as time has moved forward 10ms to get to the 16ms frame time
+      expect(runOrder).toEqual(['frame'])
+      expect(global.Date.now()).toEqual(start + 16)
+    })
+
+    it('should execute any timers on the way to the animation frame', () => {
+      const global = {
+        Date,
+        cancelAnimationFrame: () => {},
+        clearTimeout,
+        process,
+        requestAnimationFrame: () => -1,
+        setTimeout,
+      } as unknown as typeof globalThis
+
+      const timers = new FakeTimers({ global })
+      timers.useFakeTimers()
+
+      const runOrder: Array<string> = []
+
+      global.requestAnimationFrame(() => runOrder.push('frame'))
+
+      // scheduling a timeout that will be executed on the way to the frame
+      global.setTimeout(() => runOrder.push('timeout'), 10)
+
+      // move timers forward to execute frame
+      timers.advanceTimersToNextFrame()
+
+      expect(runOrder).toEqual(['timeout', 'frame'])
+    })
+
+    it('should not execute any timers scheduled inside of an animation frame callback', () => {
+      const global = {
+        Date,
+        cancelAnimationFrame: () => {},
+        clearTimeout,
+        process,
+        requestAnimationFrame: () => -1,
+        setTimeout,
+      } as unknown as typeof globalThis
+
+      const timers = new FakeTimers({ global })
+      timers.useFakeTimers()
+
+      const runOrder: Array<string> = []
+
+      global.requestAnimationFrame(() => {
+        runOrder.push('frame')
+        // scheduling a timer inside of a frame
+        global.setTimeout(() => runOrder.push('timeout'), 1)
+      })
+
+      timers.advanceTimersToNextFrame()
+
+      // timeout not yet executed
+      expect(runOrder).toEqual(['frame'])
+
+      // validating that the timer will still be executed
+      timers.advanceTimersByTime(1)
+      expect(runOrder).toEqual(['frame', 'timeout'])
+    })
+
+    it('should call animation frame callbacks with the latest system time', () => {
+      const global = {
+        Date,
+        clearTimeout,
+        performance,
+        process,
+        requestAnimationFrame: () => -1,
+        setTimeout,
+      } as unknown as typeof globalThis
+
+      const timers = new FakeTimers({ global })
+      timers.useFakeTimers()
+
+      const callback = vi.fn()
+
+      global.requestAnimationFrame(callback)
+
+      timers.advanceTimersToNextFrame()
+
+      // `requestAnimationFrame` callbacks are called with a `DOMHighResTimeStamp`
+      expect(callback).toHaveBeenCalledWith(global.performance.now())
+    })
+  })
+
   describe('reset', () => {
     it('resets all pending setTimeouts', () => {
       const global = { Date: FakeDate, clearTimeout, process, setTimeout }
@@ -826,7 +1023,7 @@ describe('FakeTimers', () => {
     })
 
     it('resets all pending setIntervals', () => {
-      const global = { Date: FakeDate, clearTimeout, process, setTimeout }
+      const global = { Date: FakeDate, clearTimeout, process, setTimeout, setInterval }
       const timers = new FakeTimers({ global })
       timers.useFakeTimers()
 
@@ -887,6 +1084,7 @@ describe('FakeTimers', () => {
         process,
         setImmediate: nativeSetImmediate,
         setTimeout,
+        setInterval,
       }
 
       const timers = new FakeTimers({ global })
@@ -993,6 +1191,7 @@ describe('FakeTimers', () => {
         process,
         setImmediate,
         setTimeout,
+        setInterval,
         Promise,
       }
 

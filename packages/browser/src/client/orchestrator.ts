@@ -1,28 +1,20 @@
-import type { ResolvedConfig } from 'vitest'
-import { channel, client } from '@vitest/browser/client'
+import type { GlobalChannelIncomingEvent, IframeChannelIncomingEvent, IframeChannelOutgoingEvent, IframeViewportDoneEvent, IframeViewportFailEvent } from '@vitest/browser/client'
+import type { BrowserTesterOptions, SerializedConfig } from 'vitest'
+import { channel, client, globalChannel } from '@vitest/browser/client'
 import { generateHash } from '@vitest/runner/utils'
-import { type GlobalChannelIncomingEvent, type IframeChannelEvent, type IframeChannelIncomingEvent, globalChannel } from '@vitest/browser/client'
 import { relative } from 'pathe'
-import { getBrowserState, getConfig } from './utils'
 import { getUiAPI } from './ui'
-import { createModuleMocker } from './tester/msw'
+import { getBrowserState, getConfig } from './utils'
 
-const url = new URL(location.href)
 const ID_ALL = '__vitest_all__'
 
-class IframeOrchestrator {
+export class IframeOrchestrator {
   private cancelled = false
-  private runningFiles = new Set<string>()
-  private mocker = createModuleMocker()
+  private recreateNonIsolatedIframe = false
   private iframes = new Map<string, HTMLIFrameElement>()
 
-  public async init() {
-    const testFiles = getBrowserState().files
-
-    debug('test files', testFiles.join(', '))
-
-    this.runningFiles.clear()
-    testFiles.forEach(file => this.runningFiles.add(file))
+  constructor() {
+    debug('init orchestrator', getBrowserState().sessionId)
 
     channel.addEventListener(
       'message',
@@ -34,81 +26,177 @@ class IframeOrchestrator {
     )
   }
 
-  public async createTesters(testFiles: string[]) {
+  public async createTesters(options: BrowserTesterOptions): Promise<void> {
     this.cancelled = false
-    this.runningFiles.clear()
-    testFiles.forEach(file => this.runningFiles.add(file))
 
     const config = getConfig()
+    debug('create testers', options.files.join(', '))
     const container = await getContainer(config)
 
     if (config.browser.ui) {
-      container.className = 'scrolls'
-      container.textContent = ''
+      container.className = 'absolute origin-top mt-[8px]'
+      container.parentElement!.setAttribute('data-ready', 'true')
+      // in non-isolated mode this will also remove the iframe,
+      // so we only do this once
+      if (container.textContent) {
+        container.textContent = ''
+      }
     }
-    const { width, height } = config.browser.viewport
+
+    if (config.browser.isolate === false) {
+      await this.runNonIsolatedTests(container, options)
+      return
+    }
 
     this.iframes.forEach(iframe => iframe.remove())
     this.iframes.clear()
 
-    if (config.isolate === false) {
-      const iframe = this.createIframe(container, ID_ALL)
-
-      await setIframeViewport(iframe, width, height)
-      return
-    }
-
-    for (const file of testFiles) {
+    for (let i = 0; i < options.files.length; i++) {
       if (this.cancelled) {
-        done()
         return
       }
 
-      const iframe = this.createIframe(container, file)
+      const file = options.files[i]
+      debug('create iframe', file)
 
-      await setIframeViewport(iframe, width, height)
-
-      await new Promise<void>((resolve) => {
-        channel.addEventListener(
-          'message',
-          function handler(e: MessageEvent<IframeChannelEvent>) {
-            // done and error can only be triggered by the previous iframe
-            if (e.data.type === 'done' || e.data.type === 'error') {
-              channel.removeEventListener('message', handler)
-              resolve()
-            }
-          },
-        )
-      })
+      await this.runIsolatedTestInIframe(
+        container,
+        file,
+        options,
+      )
     }
   }
 
-  private createIframe(container: HTMLDivElement, file: string) {
+  public async cleanupTesters(): Promise<void> {
+    const config = getConfig()
+    if (config.browser.isolate) {
+      // isolated mode assignes filepaths as ids
+      const files = Array.from(this.iframes.keys())
+      // when the run is completed, show the last file in the UI
+      const ui = getUiAPI()
+      if (ui && files[0]) {
+        const id = generateFileId(files[0])
+        ui.setCurrentFileId(id)
+      }
+      return
+    }
+    // we only cleanup non-isolated iframe because
+    // in isolated mode every iframe is cleaned up after the test
+    const iframe = this.iframes.get(ID_ALL)
+    if (!iframe) {
+      return
+    }
+    await sendEventToIframe({
+      event: 'cleanup',
+      iframeId: ID_ALL,
+    })
+    this.recreateNonIsolatedIframe = true
+  }
+
+  private async runNonIsolatedTests(container: HTMLDivElement, options: BrowserTesterOptions) {
+    if (this.recreateNonIsolatedIframe) {
+      // recreate a new non-isolated iframe during watcher reruns
+      // because we called "cleanup" in the previous run
+      // the iframe is not removed immediately to let the user see the last test
+      this.recreateNonIsolatedIframe = false
+      this.iframes.get(ID_ALL)!.remove()
+      this.iframes.delete(ID_ALL)
+      debug('recreate non-isolated iframe')
+    }
+
+    if (!this.iframes.has(ID_ALL)) {
+      debug('preparing non-isolated iframe')
+      await this.prepareIframe(container, ID_ALL, options.startTime)
+    }
+
+    const config = getConfig()
+    const { width, height } = config.browser.viewport
+    const iframe = this.iframes.get(ID_ALL)!
+
+    await setIframeViewport(iframe, width, height)
+    debug('run non-isolated tests', options.files.join(', '))
+    await sendEventToIframe({
+      event: 'execute',
+      iframeId: ID_ALL,
+      files: options.files,
+      method: options.method,
+      context: options.providedContext,
+    })
+    // we don't cleanup here because in non-isolated mode
+    // it is done after all tests finished running
+  }
+
+  private async runIsolatedTestInIframe(
+    container: HTMLDivElement,
+    file: string,
+    options: BrowserTesterOptions,
+  ) {
+    const config = getConfig()
+    const { width, height } = config.browser.viewport
+
     if (this.iframes.has(file)) {
       this.iframes.get(file)!.remove()
       this.iframes.delete(file)
     }
 
+    const iframe = await this.prepareIframe(container, file, options.startTime)
+    await setIframeViewport(iframe, width, height)
+    // running tests after the "prepare" event
+    await sendEventToIframe({
+      event: 'execute',
+      files: [file],
+      method: options.method,
+      iframeId: file,
+      context: options.providedContext,
+    })
+    // perform "cleanup" to cleanup resources and calculate the coverage
+    await sendEventToIframe({
+      event: 'cleanup',
+      iframeId: file,
+    })
+  }
+
+  private async prepareIframe(container: HTMLDivElement, iframeId: string, startTime: number) {
+    const iframe = this.createTestIframe(iframeId)
+    container.appendChild(iframe)
+
+    await new Promise<void>((resolve, reject) => {
+      iframe.onload = () => {
+        this.iframes.set(iframeId, iframe)
+        sendEventToIframe({
+          event: 'prepare',
+          iframeId,
+          startTime,
+        }).then(resolve, reject)
+      }
+      iframe.onerror = (e) => {
+        if (typeof e === 'string') {
+          reject(new Error(e))
+        }
+        else if (e instanceof ErrorEvent) {
+          reject(e.error)
+        }
+        else {
+          reject(new Error(`Cannot load the iframe ${iframeId}.`))
+        }
+      }
+    })
+    return iframe
+  }
+
+  private createTestIframe(iframeId: string) {
     const iframe = document.createElement('iframe')
+    const src = `/?sessionId=${getBrowserState().sessionId}&iframeId=${iframeId}`
     iframe.setAttribute('loading', 'eager')
-    iframe.setAttribute(
-      'src',
-      `${url.pathname}__vitest_test__/__test__/${
-        getBrowserState().contextId
-      }/${encodeURIComponent(file)}`,
-    )
+    iframe.setAttribute('src', src)
     iframe.setAttribute('data-vitest', 'true')
 
-    iframe.style.display = 'block'
     iframe.style.border = 'none'
-    iframe.style.zIndex = '1'
-    iframe.style.position = 'relative'
+    iframe.style.width = '100%'
+    iframe.style.height = '100%'
     iframe.setAttribute('allowfullscreen', 'true')
     iframe.setAttribute('allow', 'clipboard-write;')
     iframe.setAttribute('name', 'vitest-iframe')
-
-    this.iframes.set(file, iframe)
-    container.appendChild(iframe)
     return iframe
   }
 
@@ -124,120 +212,61 @@ class IframeOrchestrator {
 
   private async onIframeEvent(e: MessageEvent<IframeChannelIncomingEvent>) {
     debug('iframe event', JSON.stringify(e.data))
-    switch (e.data.type) {
+    switch (e.data.event) {
       case 'viewport': {
-        const { width, height, id } = e.data
+        const { width, height, iframeId: id } = e.data
         const iframe = this.iframes.get(id)
         if (!iframe) {
-          const error = new Error(`Cannot find iframe with id ${id}`)
+          const error = `Cannot find iframe with id ${id}`
           channel.postMessage({
-            type: 'viewport:fail',
-            id,
-            error: error.message,
-          })
+            event: 'viewport:fail',
+            iframeId: id,
+            error,
+          } satisfies IframeViewportFailEvent)
           await client.rpc.onUnhandledError(
             {
               name: 'Teardown Error',
-              message: error.message,
+              message: error,
             },
             'Teardown Error',
           )
-          return
+          break
         }
         await setIframeViewport(iframe, width, height)
-        channel.postMessage({ type: 'viewport:done', id })
+        channel.postMessage({ event: 'viewport:done', iframeId: id } satisfies IframeViewportDoneEvent)
         break
       }
-      case 'done': {
-        const filenames = e.data.filenames
-        filenames.forEach(filename => this.runningFiles.delete(filename))
-
-        if (!this.runningFiles.size) {
-          const ui = getUiAPI()
-          // in isolated mode we don't change UI because it will slow down tests,
-          // so we only select it when the run is done
-          if (ui && filenames.length > 1) {
-            const id = generateFileId(filenames[filenames.length - 1])
-            ui.setCurrentFileId(id)
-          }
-          await done()
-        }
-        else {
-          // keep the last iframe
-          const iframeId = e.data.id
-          this.iframes.get(iframeId)?.remove()
-          this.iframes.delete(iframeId)
-        }
-        break
-      }
-      // error happened at the top level, this should never happen in user code, but it can trigger during development
-      case 'error': {
-        const iframeId = e.data.id
-        this.iframes.delete(iframeId)
-        await client.rpc.onUnhandledError(e.data.error, e.data.errorType)
-        if (iframeId === ID_ALL) {
-          this.runningFiles.clear()
-        }
-        else {
-          this.runningFiles.delete(iframeId)
-        }
-        if (!this.runningFiles.size) {
-          await done()
-        }
-        break
-      }
-      case 'mock:invalidate':
-        this.mocker.invalidate()
-        break
-      case 'unmock':
-        await this.mocker.unmock(e.data)
-        break
-      case 'mock':
-        await this.mocker.mock(e.data)
-        break
-      case 'mock-factory:error':
-      case 'mock-factory:response':
-        // handled manually
-        break
       default: {
-          e.data satisfies never
+        // ignore responses
+        if (
+          typeof e.data.event === 'string'
+          && (e.data.event as string).startsWith('response:')
+        ) {
+          break
+        }
 
-          await client.rpc.onUnhandledError(
-            {
-              name: 'Unexpected Event',
-              message: `Unexpected event: ${(e.data as any).type}`,
-            },
-            'Unexpected Event',
-          )
-          await done()
+        await client.rpc.onUnhandledError(
+          {
+            name: 'Unexpected Event',
+            message: `Unexpected event: ${(e.data as any).event}`,
+          },
+          'Unexpected Event',
+        )
       }
     }
   }
 }
 
-const orchestrator = new IframeOrchestrator()
+getBrowserState().orchestrator = new IframeOrchestrator()
 
-let promiseTesters: Promise<void> | undefined
-getBrowserState().createTesters = async (files) => {
-  await promiseTesters
-  promiseTesters = orchestrator.createTesters(files).finally(() => {
-    promiseTesters = undefined
-  })
-  await promiseTesters
-}
-
-async function done() {
-  await client.rpc.finishBrowserTests(getBrowserState().contextId)
-}
-
-async function getContainer(config: ResolvedConfig): Promise<HTMLDivElement> {
+async function getContainer(config: SerializedConfig): Promise<HTMLDivElement> {
   if (config.browser.ui) {
     const element = document.querySelector('#tester-ui')
     if (!element) {
       return new Promise<HTMLDivElement>((resolve) => {
-        setTimeout(() => {
+        queueMicrotask(() => {
           resolve(getContainer(config))
-        }, 30)
+        })
       })
     }
     return element as HTMLDivElement
@@ -245,17 +274,20 @@ async function getContainer(config: ResolvedConfig): Promise<HTMLDivElement> {
   return document.querySelector('#vitest-tester') as HTMLDivElement
 }
 
-client.waitForConnection().then(async () => {
-  const testFiles = getBrowserState().files
-
-  await orchestrator.init()
-
-  // if page was refreshed, there will be no test files
-  // createTesters will be called again when tests are running in the UI
-  if (testFiles.length) {
-    await orchestrator.createTesters(testFiles)
-  }
-})
+async function sendEventToIframe(event: IframeChannelOutgoingEvent) {
+  channel.postMessage(event)
+  return new Promise<void>((resolve) => {
+    channel.addEventListener(
+      'message',
+      function handler(e) {
+        if (e.data.iframeId === event.iframeId && e.data.event === `response:${event.event}`) {
+          resolve()
+          channel.removeEventListener('message', handler)
+        }
+      },
+    )
+  })
+}
 
 function generateFileId(file: string) {
   const config = getConfig()
@@ -273,9 +305,29 @@ async function setIframeViewport(
   if (ui) {
     await ui.setIframeViewport(width, height)
   }
+  else if (getBrowserState().provider === 'webdriverio') {
+    iframe.parentElement?.setAttribute('data-scale', '1')
+    await client.rpc.triggerCommand(
+      getBrowserState().sessionId,
+      '__vitest_viewport',
+      undefined,
+      [{ width, height }],
+    )
+  }
   else {
-    iframe.style.width = `${width}px`
-    iframe.style.height = `${height}px`
+    const scale = Math.min(
+      1,
+      iframe.parentElement!.parentElement!.clientWidth / width,
+      iframe.parentElement!.parentElement!.clientHeight / height,
+    )
+    iframe.parentElement!.style.cssText = `
+      width: ${width}px;
+      height: ${height}px;
+      transform: scale(${scale});
+      transform-origin: left top;
+    `
+    iframe.parentElement?.setAttribute('data-scale', String(scale))
+    await new Promise(r => requestAnimationFrame(r))
   }
 }
 

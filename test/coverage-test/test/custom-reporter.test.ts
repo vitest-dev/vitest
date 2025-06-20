@@ -1,8 +1,8 @@
-import { readFileSync, readdirSync } from 'node:fs'
+import { readdirSync, readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { expect } from 'vitest'
-import { coverageTest, normalizeURL, runVitest, test } from '../utils'
 import { sum } from '../fixtures/src/math'
+import { coverageTest, normalizeURL, runVitest, test } from '../utils'
 
 test('custom reporter', async () => {
   await runVitest({

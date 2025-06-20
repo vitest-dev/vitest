@@ -21,16 +21,16 @@ describe('process only css, not module css', () => {
   test('module is not processed', async () => {
     const { default: styles } = await import('../App.module.css')
 
-    expect(styles.module).toBe('_module_c70a46')
-    expect(styles.someRandomValue).toBe('_someRandomValue_c70a46')
+    expect(styles.module).toBe('_module_cdbed7')
+    expect(styles.someRandomValue).toBe('_someRandomValue_cdbed7')
     const element = document.createElement('div')
-    element.className = '_module_c70a46'
+    element.className = '_module_cdbed7'
     const computed = window.getComputedStyle(element)
     expect(computed.display).toBe('block')
     expect(computed.width).toBe('')
     expect(element).toMatchInlineSnapshot(`
       <div
-        class="_module_c70a46"
+        class="_module_cdbed7"
       />
     `)
   })

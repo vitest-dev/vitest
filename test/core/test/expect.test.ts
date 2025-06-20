@@ -1,7 +1,7 @@
-import nodeAssert from 'node:assert'
 import type { Tester } from '@vitest/expect'
 import { getCurrentTest } from '@vitest/runner'
-import { assert, describe, expect, expectTypeOf, test, vi } from 'vitest'
+import { Temporal } from 'temporal-polyfill'
+import { describe, expect, expectTypeOf, test, vi } from 'vitest'
 
 describe('expect.soft', () => {
   test('types', () => {
@@ -156,6 +156,28 @@ describe('expect.addEqualityTesters', () => {
   })
 })
 
+describe('recursive custom equality tester for numeric values', () => {
+  const areNumbersEqual: Tester = (a, b) => typeof b === 'number' ? a === b : undefined
+
+  expect.addEqualityTesters([areNumbersEqual])
+
+  test('within objects', () => {
+    expect({ foo: -0, bar: 0, baz: 0 }).toStrictEqual({ foo: 0, bar: -0, baz: 0 })
+  })
+
+  test('within arrays', () => {
+    expect([-0, 0, 0]).toStrictEqual([0, -0, 0])
+  })
+
+  test('within typed arrays', () => {
+    expect(Float64Array.of(-0, 0, 0)).toStrictEqual(Float64Array.of(0, -0, 0))
+  })
+
+  test('within deeply nested structures', () => {
+    expect({ foo: { bar: [1, [2, 0, [3, -0, 4]]] }, baz: 0 }).toStrictEqual({ foo: { bar: [1, [2, -0, [3, 0, 4]]] }, baz: -0 })
+  })
+})
+
 describe('recursive custom equality tester', () => {
   let personId = 0
 
@@ -281,125 +303,6 @@ describe('recursive custom equality tester', () => {
   })
 })
 
-describe('Error equality', () => {
-  class MyError extends Error {
-    constructor(message: string, public custom: string) {
-      super(message)
-    }
-  }
-
-  class YourError extends Error {
-    constructor(message: string, public custom: string) {
-      super(message)
-    }
-  }
-
-  test('basic', () => {
-    //
-    // default behavior
-    //
-
-    {
-      // different custom property
-      const e1 = new MyError('hi', 'a')
-      const e2 = new MyError('hi', 'b')
-      expect(e1).toEqual(e2)
-      expect(e1).toStrictEqual(e2)
-      assert.deepEqual(e1, e2)
-      nodeAssert.notDeepStrictEqual(e1, e2)
-    }
-
-    {
-      // different message
-      const e1 = new MyError('hi', 'a')
-      const e2 = new MyError('hello', 'a')
-      expect(e1).not.toEqual(e2)
-      expect(e1).not.toStrictEqual(e2)
-      assert.notDeepEqual(e1, e2)
-      nodeAssert.notDeepStrictEqual(e1, e2)
-    }
-
-    {
-      // different class
-      const e1 = new MyError('hello', 'a')
-      const e2 = new YourError('hello', 'a')
-      expect(e1).toEqual(e2)
-      expect(e1).not.toStrictEqual(e2) // toStrictEqual checks constructor already
-      assert.deepEqual(e1, e2)
-      nodeAssert.notDeepStrictEqual(e1, e2)
-    }
-
-    {
-      // same
-      const e1 = new MyError('hi', 'a')
-      const e2 = new MyError('hi', 'a')
-      expect(e1).toEqual(e2)
-      expect(e1).toStrictEqual(e2)
-      assert.deepEqual(e1, e2)
-      nodeAssert.deepStrictEqual(e1, e2)
-    }
-
-    //
-    // stricter behavior with custom equality tester
-    //
-
-    expect.addEqualityTesters(
-      [
-        function tester(a, b, customTesters) {
-          const aOk = a instanceof Error
-          const bOk = b instanceof Error
-          if (aOk && bOk) {
-            // cf. assert.deepStrictEqual https://nodejs.org/api/assert.html#comparison-details_1
-            // > [[Prototype]] of objects are compared using the === operator.
-            // > Only enumerable "own" properties are considered.
-            // > Error names and messages are always compared, even if these are not enumerable properties.
-            return (
-              Object.getPrototypeOf(a) === Object.getPrototypeOf(b)
-              && a.name === b.name
-              && a.message === b.message
-              && this.equals({ ...a }, { ...b }, customTesters)
-            )
-          }
-          return aOk !== bOk ? false : undefined
-        },
-      ],
-    )
-
-    {
-      // different custom property
-      const e1 = new MyError('hi', 'a')
-      const e2 = new MyError('hi', 'b')
-      expect(e1).not.toEqual(e2) // changed
-      expect(e1).not.toStrictEqual(e2) // changed
-      assert.deepEqual(e1, e2) // chai assert is still same
-    }
-
-    {
-      // different message
-      const e1 = new MyError('hi', 'a')
-      const e2 = new MyError('hello', 'a')
-      expect(e1).not.toEqual(e2)
-      expect(e1).not.toStrictEqual(e2)
-    }
-
-    {
-      // different class
-      const e1 = new MyError('hello', 'a')
-      const e2 = new YourError('hello', 'a')
-      expect(e1).not.toEqual(e2) // changed
-      expect(e1).not.toStrictEqual(e2)
-    }
-
-    {
-      // same
-      const e1 = new MyError('hi', 'a')
-      const e2 = new MyError('hi', 'a')
-      expect(e1).toEqual(e2)
-      expect(e1).toStrictEqual(e2)
-    }
-  })
-})
-
 describe('iterator', () => {
   test('returns true when given iterator within equal objects', () => {
     const a = {
@@ -442,5 +345,47 @@ describe('iterator', () => {
     }
 
     expect(a).not.toStrictEqual(b)
+  })
+})
+
+describe('Temporal equality', () => {
+  describe.each([
+    ['Instant', ['2025-01-01T00:00:00.000Z', '2026-01-01T00:00:00.000Z']],
+    ['ZonedDateTime', ['2025-01-01T00:00:00+01:00[Europe/Amsterdam]', '2025-01-01T00:00:00+01:00[Europe/Paris]']],
+    ['PlainDateTime', ['2025-01-01T00:00:00.000', '2026-01-01T00:00:00.000']],
+    ['PlainDate', ['2025-01-01', '2026-01-01']],
+    ['PlainTime', ['15:00:00.000', '16:00:00.000']],
+    ['PlainYearMonth', ['2025-01', '2026-01']],
+    ['PlainMonthDay', ['01-01', '02-01']],
+  ] as const)('of $className', (className, [first, second]) => {
+    test('returns true when equal', () => {
+      const a = Temporal[className].from(first)
+      const b = Temporal[className].from(first)
+
+      expect(a).toStrictEqual(b)
+    })
+
+    test('returns false when not equal', () => {
+      const a = Temporal[className].from(first)
+      const b = Temporal[className].from(second)
+
+      expect(a).not.toStrictEqual(b)
+    })
+  })
+
+  describe('of Duration', () => {
+    test('returns true when .toString() is equal', () => {
+      const a = Temporal.Duration.from('P1M')
+      const b = Temporal.Duration.from('P1M')
+
+      expect(a).toStrictEqual(b)
+    })
+
+    test('returns true when .toString() is not equal', () => {
+      const a = Temporal.Duration.from('PT1M')
+      const b = Temporal.Duration.from('PT60S')
+
+      expect(a).not.toStrictEqual(b)
+    })
   })
 })

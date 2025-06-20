@@ -1,9 +1,9 @@
-import type { Vitest } from 'vitest'
+import type { Vitest, WorkspaceProject } from 'vitest/node'
+import type { WorkspaceSpec as DeprecatedWorkspaceSpec } from '../../../packages/vitest/src/node/pool'
 import { describe, expect, test, vi } from 'vitest'
-import type { WorkspaceProject } from 'vitest/node'
-import { RandomSequencer } from '../../../packages/vitest/src/node/sequencers/RandomSequencer'
 import { BaseSequencer } from '../../../packages/vitest/src/node/sequencers/BaseSequencer'
-import type { WorkspaceSpec } from '../../../packages/vitest/src/node/pool'
+import { RandomSequencer } from '../../../packages/vitest/src/node/sequencers/RandomSequencer'
+import { TestSpecification } from '../../../packages/vitest/src/node/spec'
 
 function buildCtx() {
   return {
@@ -19,14 +19,17 @@ function buildCtx() {
 
 function buildWorkspace() {
   return {
-    getName: () => 'test',
+    name: 'test',
+    config: {
+      root: import.meta.dirname,
+    },
   } as any as WorkspaceProject
 }
 
 const workspace = buildWorkspace()
 
 function workspaced(files: string[]) {
-  return files.map(file => [workspace, file] as WorkspaceSpec)
+  return files.map(file => new TestSpecification(workspace, file, 'forks')) as DeprecatedWorkspaceSpec[]
 }
 
 describe('base sequencer', () => {

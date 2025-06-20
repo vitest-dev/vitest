@@ -1,11 +1,10 @@
-import { toArray } from '@vitest/utils'
 import type { VitestRunner, VitestRunnerConfig } from './types/runner'
 
 export async function runSetupFiles(
   config: VitestRunnerConfig,
+  files: string[],
   runner: VitestRunner,
 ): Promise<void> {
-  const files = toArray(config.setupFiles)
   if (config.sequence.setupFiles === 'parallel') {
     await Promise.all(
       files.map(async (fsPath) => {

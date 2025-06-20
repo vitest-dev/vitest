@@ -1,7 +1,7 @@
 import type { UserEvent } from '../../../context'
+import type { UserEventCommand } from './utils'
 import { PlaywrightBrowserProvider } from '../providers/playwright'
 import { WebdriverBrowserProvider } from '../providers/webdriver'
-import type { UserEventCommand } from './utils'
 
 export const click: UserEventCommand<UserEvent['click']> = async (
   context,
@@ -11,10 +11,7 @@ export const click: UserEventCommand<UserEvent['click']> = async (
   const provider = context.provider
   if (provider instanceof PlaywrightBrowserProvider) {
     const tester = context.iframe
-    await tester.locator(`css=${selector}`).click({
-      timeout: 1000,
-      ...options,
-    })
+    await tester.locator(selector).click(options)
   }
   else if (provider instanceof WebdriverBrowserProvider) {
     const browser = context.browser
@@ -33,7 +30,7 @@ export const dblClick: UserEventCommand<UserEvent['dblClick']> = async (
   const provider = context.provider
   if (provider instanceof PlaywrightBrowserProvider) {
     const tester = context.iframe
-    await tester.locator(`css=${selector}`).dblclick(options)
+    await tester.locator(selector).dblclick(options)
   }
   else if (provider instanceof WebdriverBrowserProvider) {
     const browser = context.browser
@@ -52,8 +49,7 @@ export const tripleClick: UserEventCommand<UserEvent['tripleClick']> = async (
   const provider = context.provider
   if (provider instanceof PlaywrightBrowserProvider) {
     const tester = context.iframe
-    await tester.locator(`css=${selector}`).click({
-      timeout: 1000,
+    await tester.locator(selector).click({
       ...options,
       clickCount: 3,
     })
@@ -63,7 +59,7 @@ export const tripleClick: UserEventCommand<UserEvent['tripleClick']> = async (
     await browser
       .action('pointer', { parameters: { pointerType: 'mouse' } })
       // move the pointer over the button
-      .move({ origin: await browser.$(selector) })
+      .move({ origin: browser.$(selector) })
       // simulate 3 clicks
       .down()
       .up()

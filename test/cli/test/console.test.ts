@@ -1,7 +1,7 @@
+import { relative, resolve } from 'pathe'
 import { expect, test } from 'vitest'
 import { DefaultReporter } from 'vitest/reporters'
-import { resolve } from 'pathe'
-import { runVitest } from '../../test-utils'
+import { runInlineTests, runVitest } from '../../test-utils'
 
 test('can run custom pools with Vitest', async () => {
   const reporter = new DefaultReporter()
@@ -64,21 +64,85 @@ test('can run custom pools with Vitest', async () => {
   expect(stackStderr).not.toMatch('❯ ')
   if (process.platform !== 'win32') {
     const root = resolve(process.cwd(), '../..')
-    expect(stackStderr.replace(new RegExp(root, 'g'), '<root>').replace(/\d+:\d+/g, 'ln:cl').replace(/\.\w+\.js:/g, '.<chunk>.js:')).toMatchInlineSnapshot(`
+    const trace = stackStderr.replace(new RegExp(root, 'g'), '<root>').replace(/\d+:\d+/g, 'ln:cl').split('\n').slice(0, 3).join('\n')
+    expect(trace).toMatchInlineSnapshot(`
       "stderr | trace.test.ts > logging to stdout
       Trace: trace with trace
-          at <root>/test/cli/fixtures/console/trace.test.ts:ln:cl
-          at file://<root>/packages/runner/dist/index.js:ln:cl
-          at file://<root>/packages/runner/dist/index.js:ln:cl
-          at runTest (file://<root>/packages/runner/dist/index.js:ln:cl)
-          at processTicksAndRejections (node:internal/process/task_queues:ln:cl)
-          at runSuite (file://<root>/packages/runner/dist/index.js:ln:cl)
-          at runFiles (file://<root>/packages/runner/dist/index.js:ln:cl)
-          at startTests (file://<root>/packages/runner/dist/index.js:ln:cl)
-          at file://<root>/packages/vitest/dist/chunks/runtime-runBaseTests.<chunk>.js:ln:cl
-          at withEnv (file://<root>/packages/vitest/dist/chunks/runtime-runBaseTests.<chunk>.js:ln:cl)
-
-      "
+          at <root>/test/cli/fixtures/console/trace.test.ts:ln:cl"
     `)
   }
+})
+
+test('onConsoleLog receives the entity', async () => {
+  const logs: {
+    log: string
+    type: 'stderr' | 'stdout'
+    entity: { type: string; name: string } | undefined
+  }[] = []
+  const { stderr } = await runInlineTests(
+    {
+      'basic.test.ts': `
+    console.log('module')
+
+    describe('suite', () => {
+      beforeAll(() => {
+        console.log('suite')
+      })
+
+      test('test', () => {
+        console.log('test')
+      })
+    })
+    `,
+    },
+    {
+      globals: true,
+      onConsoleLog(log, type, entity) {
+        logs.push({
+          log,
+          type,
+          entity: entity
+            ? {
+                type: entity.type,
+                name: entity.type === 'module'
+                  ? relative(entity.project.config.root, entity.moduleId)
+                  : entity.name,
+              }
+            : undefined,
+        })
+      },
+    },
+  )
+  expect(stderr).toBe('')
+  expect(logs).toMatchInlineSnapshot(`
+    [
+      {
+        "entity": {
+          "name": "basic.test.ts",
+          "type": "module",
+        },
+        "log": "module
+    ",
+        "type": "stdout",
+      },
+      {
+        "entity": {
+          "name": "suite",
+          "type": "suite",
+        },
+        "log": "suite
+    ",
+        "type": "stdout",
+      },
+      {
+        "entity": {
+          "name": "test",
+          "type": "test",
+        },
+        "log": "test
+    ",
+        "type": "stdout",
+      },
+    ]
+  `)
 })

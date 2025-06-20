@@ -1,4 +1,5 @@
-import type { Environment } from '../../types'
+import type { Environment } from '../../types/environment'
+import type { JSDOMOptions } from '../../types/jsdom-options'
 import { populateGlobal } from './utils'
 
 function catchWindowErrors(window: Window) {
@@ -12,7 +13,7 @@ function catchWindowErrors(window: Window) {
   const removeEventListener = window.removeEventListener.bind(window)
   window.addEventListener('error', throwUnhandlerError)
   window.addEventListener = function (
-    ...args: Parameters<typeof addEventListener>
+    ...args: [any, any, any]
   ) {
     if (args[0] === 'error') {
       userErrorListenerCount++
@@ -20,7 +21,7 @@ function catchWindowErrors(window: Window) {
     return addEventListener.apply(this, args)
   }
   window.removeEventListener = function (
-    ...args: Parameters<typeof removeEventListener>
+    ...args: [any, any, any]
   ) {
     if (args[0] === 'error' && userErrorListenerCount) {
       userErrorListenerCount--
@@ -51,7 +52,7 @@ export default <Environment>{
       console = false,
       cookieJar = false,
       ...restOptions
-    } = jsdom as any
+    } = jsdom as JSDOMOptions
     let dom = new JSDOM(html, {
       pretendToBeVisual,
       resources:

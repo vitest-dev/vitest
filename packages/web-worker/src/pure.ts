@@ -1,9 +1,9 @@
-import { createWorkerConstructor } from './worker'
 import type { DefineWorkerOptions } from './types'
-import { assertGlobalExists } from './utils'
 import { createSharedWorkerConstructor } from './shared-worker'
+import { assertGlobalExists } from './utils'
+import { createWorkerConstructor } from './worker'
 
-export function defineWebWorkers(options?: DefineWorkerOptions) {
+export function defineWebWorkers(options?: DefineWorkerOptions): void {
   if (
     typeof Worker === 'undefined'
     || !('__VITEST_WEB_WORKER__' in globalThis.Worker)

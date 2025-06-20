@@ -1,4 +1,5 @@
-import { readdirSync } from 'node:fs'
+import { existsSync, readdirSync } from 'node:fs'
+import { rm } from 'node:fs/promises'
 import { expect } from 'vitest'
 import { runVitest, test } from '../utils'
 
@@ -9,7 +10,6 @@ test('reporter as string', async () => {
     include,
     coverage: {
       reporter: 'json',
-      all: false,
     },
   })
 
@@ -17,12 +17,27 @@ test('reporter as string', async () => {
   expect(files).toContain('coverage-final.json')
 })
 
+test('reporter as string when coverage is disabled', async () => {
+  if (existsSync('./coverage')) {
+    await rm('./coverage', { recursive: true, force: true })
+  }
+
+  await runVitest({
+    include,
+    coverage: {
+      enabled: false,
+      reporter: 'json',
+    },
+  })
+
+  expect(existsSync('./coverage')).toBe(false)
+})
+
 test('reporter as list of strings', async () => {
   await runVitest({
     include,
     coverage: {
       reporter: ['json', 'lcov'],
-      all: false,
     },
   })
 
@@ -37,7 +52,6 @@ test('reporter as list of lists', async () => {
     include,
     coverage: {
       reporter: [['json'], ['text', { file: 'custom-text-report' }]],
-      all: false,
     },
   })
 
@@ -55,7 +69,6 @@ test('all reporter variants mixed', async () => {
         ['lcov'],
         ['text', { file: 'custom-text-report' }],
       ],
-      all: false,
     },
   })
 

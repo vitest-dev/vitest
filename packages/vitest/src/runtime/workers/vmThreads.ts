@@ -1,5 +1,5 @@
-import type { ContextRPC } from '../../types/rpc'
-import type { WorkerContext, WorkerGlobalState } from '../../types/worker'
+import type { WorkerContext } from '../../node/types/worker'
+import type { ContextRPC, WorkerGlobalState } from '../../types/worker'
 import type { VitestWorker, WorkerRpcOptions } from './types'
 import { createThreadsRpcOptions } from './utils'
 import { runVmTests } from './vm'
@@ -18,4 +18,5 @@ class ThreadsVmWorker implements VitestWorker {
   }
 }
 
-export default new ThreadsVmWorker()
+const worker: ThreadsVmWorker = new ThreadsVmWorker()
+export default worker

@@ -1,15 +1,13 @@
-import { use, util } from 'chai'
 import type {
   ChaiPlugin,
   ExpectStatic,
-  MatcherState,
   MatchersObject,
+  MatcherState,
   SyncExpectationResult,
 } from './types'
+import { use, util } from 'chai'
 import { ASYMMETRIC_MATCHERS_OBJECT, JEST_MATCHERS_OBJECT } from './constants'
 import { AsymmetricMatcher } from './jest-asymmetric-matchers'
-import { getState } from './state'
-
 import {
   diff,
   getCustomEqualityTesters,
@@ -18,7 +16,9 @@ import {
 } from './jest-matcher-utils'
 
 import { equals, iterableEquality, subsetEquality } from './jest-utils'
-import { wrapSoft } from './utils'
+
+import { getState } from './state'
+import { wrapAssertion } from './utils'
 
 function getMatcherState(
   assertion: Chai.AssertionStatic & Chai.Assertion,
@@ -75,29 +75,29 @@ function JestExtendPlugin(
         ) {
           const { state, isNot, obj } = getMatcherState(this, expect)
 
-          // @ts-expect-error args wanting tuple
           const result = expectAssertion.call(state, obj, ...args)
 
           if (
             result
             && typeof result === 'object'
-            && result instanceof Promise
+            && typeof (result as any).then === 'function'
           ) {
-            return result.then(({ pass, message, actual, expected }) => {
+            const thenable = result as PromiseLike<SyncExpectationResult>
+            return thenable.then(({ pass, message, actual, expected }) => {
               if ((pass && isNot) || (!pass && !isNot)) {
                 throw new JestExtendError(message(), actual, expected)
               }
             })
           }
 
-          const { pass, message, actual, expected } = result
+          const { pass, message, actual, expected } = result as SyncExpectationResult
 
           if ((pass && isNot) || (!pass && !isNot)) {
             throw new JestExtendError(message(), actual, expected)
           }
         }
 
-        const softWrapper = wrapSoft(utils, expectWrapper)
+        const softWrapper = wrapAssertion(utils, expectAssertionName, expectWrapper)
         utils.addMethod(
           (globalThis as any)[JEST_MATCHERS_OBJECT].matchers,
           expectAssertionName,
@@ -133,7 +133,7 @@ function JestExtendPlugin(
           }
 
           toAsymmetricMatcher() {
-            return `${this.toString()}<${this.sample.map(String).join(', ')}>`
+            return `${this.toString()}<${this.sample.map(item => stringify(item)).join(', ')}>`
           }
         }
 

@@ -7,36 +7,61 @@ import {
   coverageVisible,
   detailSizes,
   initializeNavigation,
+  mainSizes,
+  panels,
 } from '~/composables/navigation'
-import { onBrowserPanelResizing } from '~/composables/browser'
 
 const dashboardVisible = initializeNavigation()
 
-const mainSizes = useLocalStorage<[left: number, right: number]>(
-  'vitest-ui_splitpanes-mainSizes',
-  [33, 67],
-  {
-    initOnMounted: true,
-  },
-)
+const onBrowserPanelResizing = useDebounceFn((event: { size: number }[]) => {
+  // don't trigger events in the iframe while resizing
+  preventBrowserEvents()
+  recordDetailsResize(event)
+}, 0)
 
 const onMainResized = useDebounceFn((event: { size: number }[]) => {
   event.forEach((e, i) => {
     mainSizes.value[i] = e.size
   })
+  recordMainResize(event)
+  allowBrowserEvents()
 }, 0)
+
 const onModuleResized = useDebounceFn((event: { size: number }[]) => {
   event.forEach((e, i) => {
     detailSizes.value[i] = e.size
   })
-  onBrowserPanelResizing(false)
+  recordDetailsResize(event)
+  allowBrowserEvents()
 }, 0)
 
-function resizeMain() {
-  const width = window.innerWidth
-  const panelWidth = Math.min(width / 3, 300)
-  mainSizes.value[0] = (100 * panelWidth) / width
-  mainSizes.value[1] = 100 - mainSizes.value[0]
+const resizingMain = useDebounceFn((event: { size: number }[]) => {
+  recordMainResize(event)
+  preventBrowserEvents()
+}, 0)
+
+function recordMainResize(event: { size: number }[]) {
+  panels.navigation = event[0].size
+  panels.details.size = event[1].size
+}
+
+function recordDetailsResize(event: { size: number }[]) {
+  panels.details.browser = event[0].size
+  panels.details.main = event[1].size
+}
+
+function preventBrowserEvents() {
+  const tester = document.querySelector<HTMLDivElement>('#tester-ui')
+  if (tester) {
+    tester.style.pointerEvents = 'none'
+  }
+}
+
+function allowBrowserEvents() {
+  const tester = document.querySelector<HTMLDivElement>('#tester-ui')
+  if (tester) {
+    tester.style.pointerEvents = ''
+  }
 }
 </script>
 
@@ -46,8 +71,7 @@ function resizeMain() {
     <Splitpanes
       class="pt-4px"
       @resized="onMainResized"
-      @resize="onBrowserPanelResizing(true)"
-      @ready="resizeMain"
+      @resize="resizingMain"
     >
       <Pane :size="mainSizes[0]">
         <Navigation />
@@ -66,13 +90,13 @@ function resizeMain() {
           v-else
           id="details-splitpanes"
           key="browser-detail"
-          @resize="onBrowserPanelResizing(true)"
+          @resize="onBrowserPanelResizing"
           @resized="onModuleResized"
         >
           <Pane :size="detailSizes[0]" min-size="10">
             <BrowserIframe v-once />
           </Pane>
-          <Pane :size="detailSizes[1]" min-size="5">
+          <Pane :size="detailSizes[1]">
             <Dashboard v-if="dashboardVisible" key="summary" />
             <Coverage
               v-else-if="coverageVisible"

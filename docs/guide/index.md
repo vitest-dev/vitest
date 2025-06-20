@@ -6,7 +6,9 @@ title: Getting Started | Guide
 
 ## Overview
 
-Vitest is a next generation testing framework powered by Vite.
+Vitest (pronounced as _"veetest"_) is a next generation testing framework
+powered by
+Vite.
 
 You can learn more about the rationale behind the project in the [Why Vitest](/guide/why) section.
 
@@ -34,28 +36,26 @@ bun add -D vitest
 :::
 
 :::tip
-Vitest 1.0 requires Vite >=v5.0.0 and Node >=v18.0.0
+Vitest requires Vite >=v5.0.0 and Node >=v18.0.0
 :::
 
 It is recommended that you install a copy of `vitest` in your `package.json`, using one of the methods listed above. However, if you would prefer to run `vitest` directly, you can use `npx vitest` (the `npx` tool comes with npm and Node.js).
 
-The `npx` tool will execute the specified command. By default, `npx` will first check if the command exists in the local project's binaries. If it is not found there, `npx` will look in the system's $PATH and execute it if found. If the command is not found in either location, `npx` will install it in a temporary location prior to execution.
+The `npx` tool will execute the specified command. By default, `npx` will first check if the command exists in the local project's binaries. If it is not found there, `npx` will look in the system's `$PATH` and execute it if found. If the command is not found in either location, `npx` will install it in a temporary location prior to execution.
 
 ## Writing Tests
 
 As an example, we will write a simple test that verifies the output of a function that adds two numbers.
 
-``` js
-// sum.js
+``` js [sum.js]
 export function sum(a, b) {
   return a + b
 }
 ```
 
-``` js
-// sum.test.js
+``` js [sum.test.js]
 import { expect, test } from 'vitest'
-import { sum } from './sum'
+import { sum } from './sum.js'
 
 test('adds 1 + 2 to equal 3', () => {
   expect(sum(1, 2)).toBe(3)
@@ -63,12 +63,12 @@ test('adds 1 + 2 to equal 3', () => {
 ```
 
 ::: tip
-By default, tests must contain ".test." or ".spec." in their file name.
+By default, tests must contain `.test.` or `.spec.` in their file name.
 :::
 
 Next, in order to execute the test, add the following section to your `package.json`:
 
-```json
+```json [package.json]
 {
   "scripts": {
     "test": "vitest"
@@ -76,17 +76,21 @@ Next, in order to execute the test, add the following section to your `package.j
 }
 ```
 
-Finally, run `npm run test`, `yarn test`, or `pnpm test`, depending on your package manager, and Vitest will print this message:
+Finally, run `npm run test`, `yarn test` or `pnpm test`, depending on your package manager, and Vitest will print this message:
 
 ```txt
 ✓ sum.test.js (1)
   ✓ adds 1 + 2 to equal 3
 
 Test Files  1 passed (1)
-    Tests  1 passed (1)
+     Tests  1 passed (1)
   Start at  02:15:44
   Duration  311ms
 ```
+
+::: warning
+If you are using Bun as your package manager, make sure to use `bun run test` command instead of `bun test`, otherwise Bun will run its own test runner.
+:::
 
 Learn more about the usage of Vitest, see the [API](https://vitest.dev/api/) section.
 
@@ -102,7 +106,7 @@ Vitest supports the same extensions for your configuration file as Vite does: `.
 
 If you are not using Vite as your build tool, you can configure Vitest using the `test` property in your config file:
 
-```ts twoslash
+```ts [vitest.config.ts]
 import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
@@ -118,13 +122,26 @@ Even if you do not use Vite yourself, Vitest relies heavily on it for its transf
 
 If you are already using Vite, add `test` property in your Vite config. You'll also need to add a reference to Vitest types using a [triple slash directive](https://www.typescriptlang.org/docs/handbook/triple-slash-directives.html#-reference-types-) at the top of your config file.
 
-```ts
+```ts [vite.config.ts]
 /// <reference types="vitest" />
 import { defineConfig } from 'vite'
 
 export default defineConfig({
   test: {
     // ...
+  },
+})
+```
+
+The `<reference types="vitest" />` will stop working in the next major update, but you can start migrating to `vitest/config` in Vitest 2.1:
+
+```ts [vite.config.ts]
+/// <reference types="vitest/config" />
+import { defineConfig } from 'vite'
+
+export default defineConfig({
+  test: {
+    // ... Specify options here.
   },
 })
 ```
@@ -142,7 +159,7 @@ import viteConfig from './vite.config.mjs'
 export default mergeConfig(viteConfig, defineConfig({
   test: {
     // ...
-  }
+  },
 }))
 ```
 
@@ -155,41 +172,45 @@ export default defineConfig({
 })
 ```
 
-But we recommend to use the same file for both Vite and Vitest instead of creating two separate files.
+However, we recommend using the same file for both Vite and Vitest, instead of creating two separate files.
 :::
 
-## Workspaces Support
+## Projects Support
 
-Run different project configurations inside the same project with [Vitest Workspaces](/guide/workspace). You can define a list of files and folders that define your workspace in `vitest.workspace` file. The file supports `js`/`ts`/`json` extensions. This feature works great with monorepo setups.
+Run different project configurations inside the same project with [Test Projects](/guide/projects). You can define a list of files and folders that define your projects in `vitest.config` file.
 
-```ts twoslash
-import { defineWorkspace } from 'vitest/config'
+```ts [vitest.config.ts]
+import { defineConfig } from 'vitest/config'
 
-export default defineWorkspace([
-  // you can use a list of glob patterns to define your workspaces
-  // Vitest expects a list of config files
-  // or directories where there is a config file
-  'packages/*',
-  'tests/*/vitest.config.{e2e,unit}.ts',
-  // you can even run the same tests,
-  // but with different configs in the same "vitest" process
-  {
-    test: {
-      name: 'happy-dom',
-      root: './shared_tests',
-      environment: 'happy-dom',
-      setupFiles: ['./setup.happy-dom.ts'],
-    },
+export default defineConfig({
+  test: {
+    projects: [
+      // you can use a list of glob patterns to define your projects
+      // Vitest expects a list of config files
+      // or directories where there is a config file
+      'packages/*',
+      'tests/*/vitest.config.{e2e,unit}.ts',
+      // you can even run the same tests,
+      // but with different configs in the same "vitest" process
+      {
+        test: {
+          name: 'happy-dom',
+          root: './shared_tests',
+          environment: 'happy-dom',
+          setupFiles: ['./setup.happy-dom.ts'],
+        },
+      },
+      {
+        test: {
+          name: 'node',
+          root: './shared_tests',
+          environment: 'node',
+          setupFiles: ['./setup.node.ts'],
+        },
+      },
+    ],
   },
-  {
-    test: {
-      name: 'node',
-      root: './shared_tests',
-      environment: 'node',
-      setupFiles: ['./setup.node.ts'],
-    },
-  },
-])
+})
 ```
 
 ## Command Line Interface
@@ -197,7 +218,7 @@ export default defineWorkspace([
 In a project where Vitest is installed, you can use the `vitest` binary in your npm scripts, or run it directly with `npx vitest`. Here are the default npm scripts in a scaffolded Vitest project:
 
 <!-- prettier-ignore -->
-```json
+```json [package.json]
 {
   "scripts": {
     "test": "vitest",
@@ -211,9 +232,13 @@ You can specify additional CLI options like `--port` or `--https`. For a full li
 
 Learn more about the [Command Line Interface](/guide/cli)
 
+## Automatic Dependency Installation
+
+Vitest will prompt you to install certain dependencies if they are not already installed. You can disable this behavior by setting the `VITEST_SKIP_INSTALL_CHECKS=1` environment variable.
+
 ## IDE Integrations
 
-We also provided a official extension for Visual Studio Code to enhance your testing experience with Vitest.
+We also provided an official extension for Visual Studio Code to enhance your testing experience with Vitest.
 
 [Install from VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=vitest.explorer)
 
@@ -225,14 +250,18 @@ Learn more about [IDE Integrations](/guide/ide)
 |---|---|---|
 | `basic` | [GitHub](https://github.com/vitest-dev/vitest/tree/main/examples/basic) | [Play Online](https://stackblitz.com/fork/github/vitest-dev/vitest/tree/main/examples/basic?initialPath=__vitest__/) |
 | `fastify` | [GitHub](https://github.com/vitest-dev/vitest/tree/main/examples/fastify) | [Play Online](https://stackblitz.com/fork/github/vitest-dev/vitest/tree/main/examples/fastify?initialPath=__vitest__/) |
+| `in-source-test` | [GitHub](https://github.com/vitest-dev/vitest/tree/main/examples/in-source-test) | [Play Online](https://stackblitz.com/fork/github/vitest-dev/vitest/tree/main/examples/in-source-test?initialPath=__vitest__/) |
 | `lit` | [GitHub](https://github.com/vitest-dev/vitest/tree/main/examples/lit) | [Play Online](https://stackblitz.com/fork/github/vitest-dev/vitest/tree/main/examples/lit?initialPath=__vitest__/) |
+| `vue` | [GitHub](https://github.com/vitest-tests/browser-examples/tree/main/examples/vue) | [Play Online](https://stackblitz.com/fork/github/vitest-tests/browser-examples/tree/main/examples/vue?initialPath=__vitest__/) |
 | `marko` | [GitHub](https://github.com/marko-js/examples/tree/master/examples/library-ts) | [Play Online](https://stackblitz.com/fork/github/marko-js/examples/tree/master/examples/library-ts/) |
-| `preact` | [GitHub](https://github.com/vitest-dev/vitest/tree/main/examples/preact) | [Play Online](https://stackblitz.com/fork/github/vitest-dev/vitest/tree/main/examples/preact?initialPath=__vitest__/) |
-| `react` | [GitHub](https://github.com/vitest-dev/vitest/tree/main/examples/react) | [Play Online](https://stackblitz.com/fork/github/vitest-dev/vitest/tree/main/examples/react?initialPath=__vitest__/) |
-| `solid` | [GitHub](https://github.com/vitest-dev/vitest/tree/main/examples/solid) | [Play Online](https://stackblitz.com/fork/github/vitest-dev/vitest/tree/main/examples/solid?initialPath=__vitest__/) |
+| `preact` | [GitHub](https://github.com/vitest-tests/browser-examples/tree/main/examples/preact) | [Play Online](https://stackblitz.com/fork/github/vitest-tests/browser-examples/tree/main/examples/preact?initialPath=__vitest__/) |
+| `react` | [GitHub](https://github.com/vitest-tests/browser-examples/tree/main/examples/react) | [Play Online](https://stackblitz.com/fork/github/vitest-tests/browser-examples/tree/main/examples/react?initialPath=__vitest__/) |
+| `solid` | [GitHub](https://github.com/vitest-tests/browser-examples/tree/main/examples/solid) | [Play Online](https://stackblitz.com/fork/github/vitest-tests/browser-examples/tree/main/examples/solid?initialPath=__vitest__/) |
+| `svelte` | [GitHub](https://github.com/vitest-tests/browser-examples/tree/main/examples/svelte) | [Play Online](https://stackblitz.com/fork/github/vitest-tests/browser-examples/tree/main/examples/svelte?initialPath=__vitest__/) |
 | `sveltekit` | [GitHub](https://github.com/vitest-dev/vitest/tree/main/examples/sveltekit) | [Play Online](https://stackblitz.com/fork/github/vitest-dev/vitest/tree/main/examples/sveltekit?initialPath=__vitest__/) |
+| `profiling` | [GitHub](https://github.com/vitest-dev/vitest/tree/main/examples/profiling) | Not Available |
 | `typecheck` | [GitHub](https://github.com/vitest-dev/vitest/tree/main/examples/typecheck) | [Play Online](https://stackblitz.com/fork/github/vitest-dev/vitest/tree/main/examples/typecheck?initialPath=__vitest__/) |
-| `workspace` | [GitHub](https://github.com/vitest-dev/vitest/tree/main/examples/workspace) | [Play Online](https://stackblitz.com/fork/github/vitest-dev/vitest/tree/main/examples/workspace?initialPath=__vitest__/) |
+| `projects` | [GitHub](https://github.com/vitest-dev/vitest/tree/main/examples/projects) | [Play Online](https://stackblitz.com/fork/github/vitest-dev/vitest/tree/main/examples/projects?initialPath=__vitest__/) |
 
 ## Projects using Vitest
 
@@ -266,7 +295,9 @@ Thanks for choosing Vitest!
 
 ## Using Unreleased Commits
 
-If you can't wait for a new release to test the latest features, you will need to clone the [vitest repo](https://github.com/vitest-dev/vitest) to your local machine and then build and link it yourself ([pnpm](https://pnpm.io/) is required):
+Each commit on main branch and a PR with a `cr-tracked` label are published to [pkg.pr.new](https://github.com/stackblitz-labs/pkg.pr.new). You can install it by `npm i https://pkg.pr.new/vitest@{commit}`.
+
+If you want to test your own modification locally, you can build and link it yourself ([pnpm](https://pnpm.io/) is required):
 
 ```bash
 git clone https://github.com/vitest-dev/vitest.git

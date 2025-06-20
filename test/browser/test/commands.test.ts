@@ -13,10 +13,10 @@ it('can manipulate files', async () => {
   catch (err) {
     expect(err.message).toMatch(`ENOENT: no such file or directory, open`)
     if (server.platform === 'win32') {
-      expect(err.message).toMatch('test\\browser\\test\\test.txt')
+      expect(err.message).toMatch('test\\browser\\test.txt')
     }
     else {
-      expect(err.message).toMatch('test/browser/test/test.txt')
+      expect(err.message).toMatch('test/browser/test.txt')
     }
   }
 
@@ -34,10 +34,10 @@ it('can manipulate files', async () => {
   catch (err) {
     expect(err.message).toMatch(`ENOENT: no such file or directory, open`)
     if (server.platform === 'win32') {
-      expect(err.message).toMatch('test\\browser\\test\\test.txt')
+      expect(err.message).toMatch('test\\browser\\test.txt')
     }
     else {
-      expect(err.message).toMatch('test/browser/test/test.txt')
+      expect(err.message).toMatch('test/browser/test.txt')
     }
   }
 })
@@ -58,5 +58,9 @@ declare module '@vitest/browser/context' {
       arg1: string
       arg2: string
     }>
+
+    stripVTControlCharacters: (text: string) => Promise<string>
+    startTrace: () => Promise<void>
+    stopTrace: () => Promise<void>
   }
 }

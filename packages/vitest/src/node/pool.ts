@@ -1,18 +1,38 @@
-import mm from 'micromatch'
 import type { Awaitable } from '@vitest/utils'
-import type { BuiltinPool, Pool } from '../types/pool-options'
-import { isWindows } from '../utils/env'
 import type { Vitest } from './core'
+import type { TestProject } from './project'
+import type { TestSpecification } from './spec'
+import type { BuiltinPool, Pool } from './types/pool-options'
+import { isatty } from 'node:tty'
+import pm from 'picomatch'
+import { version as viteVersion } from 'vite'
+import { isWindows } from '../utils/env'
 import { createForksPool } from './pools/forks'
 import { createThreadsPool } from './pools/threads'
-import { createVmThreadsPool } from './pools/vmThreads'
-import type { WorkspaceProject } from './workspace'
 import { createTypecheckPool } from './pools/typecheck'
 import { createVmForksPool } from './pools/vmForks'
+import { createVmThreadsPool } from './pools/vmThreads'
 
-export type WorkspaceSpec = [project: WorkspaceProject, testFile: string]
+/**
+ * @deprecated use TestSpecification instead
+ */
+export type WorkspaceSpec = TestSpecification & [
+  /**
+   * @deprecated use spec.project instead
+   */
+  project: TestProject,
+  /**
+   * @deprecated use spec.moduleId instead
+   */
+  file: string,
+  /**
+   * @deprecated use spec.pool instead
+   */
+  options: { pool: Pool },
+]
+
 export type RunWithFiles = (
-  files: WorkspaceSpec[],
+  files: TestSpecification[],
   invalidates?: string[]
 ) => Awaitable<void>
 
@@ -39,32 +59,25 @@ export const builtinPools: BuiltinPool[] = [
   'typescript',
 ]
 
-function getDefaultPoolName(project: WorkspaceProject, file: string): Pool {
-  if (project.config.typecheck.enabled) {
-    for (const glob of project.config.typecheck.include) {
-      if (mm.isMatch(file, glob, { cwd: project.config.root })) {
-        return 'typescript'
-      }
-    }
-  }
+function getDefaultPoolName(project: TestProject): Pool {
   if (project.config.browser.enabled) {
     return 'browser'
   }
   return project.config.pool
 }
 
-export function getFilePoolName(project: WorkspaceProject, file: string) {
+export function getFilePoolName(project: TestProject, file: string): Pool {
   for (const [glob, pool] of project.config.poolMatchGlobs) {
     if ((pool as Pool) === 'browser') {
       throw new Error(
-        'Since Vitest 0.31.0 "browser" pool is not supported in "poolMatchGlobs". You can create a workspace to run some of your tests in browser in parallel. Read more: https://vitest.dev/guide/workspace',
+        'Since Vitest 0.31.0 "browser" pool is not supported in `poolMatchGlobs`. You can create a project to run some of your tests in browser in parallel. Read more: https://vitest.dev/guide/projects',
       )
     }
-    if (mm.isMatch(file, glob, { cwd: project.config.root })) {
+    if (pm.isMatch(file, glob, { cwd: project.config.root })) {
       return pool as Pool
     }
   }
-  return getDefaultPoolName(project, file)
+  return getDefaultPoolName(project)
 }
 
 export function createPool(ctx: Vitest): ProcessPool {
@@ -79,20 +92,29 @@ export function createPool(ctx: Vitest): ProcessPool {
 
   // in addition to resolve.conditions Vite also adds production/development,
   // see: https://github.com/vitejs/vite/blob/af2aa09575229462635b7cbb6d248ca853057ba2/packages/vite/src/node/plugins/resolve.ts#L1056-L1080
-  const potentialConditions = new Set([
-    'production',
-    'development',
-    ...ctx.server.config.resolve.conditions,
-  ])
+  const viteMajor = Number(viteVersion.split('.')[0])
+  const potentialConditions = new Set(viteMajor >= 6
+    ? (ctx.vite.config.ssr.resolve?.conditions ?? [])
+    : [
+        'production',
+        'development',
+        ...ctx.vite.config.resolve.conditions,
+      ])
   const conditions = [...potentialConditions]
     .filter((condition) => {
       if (condition === 'production') {
-        return ctx.server.config.isProduction
+        return ctx.vite.config.isProduction
       }
       if (condition === 'development') {
-        return !ctx.server.config.isProduction
+        return !ctx.vite.config.isProduction
       }
       return true
+    })
+    .map((condition) => {
+      if (viteMajor >= 6 && condition === 'development|production') {
+        return ctx.vite.config.isProduction ? 'production' : 'development'
+      }
+      return condition
     })
     .flatMap(c => ['--conditions', c])
 
@@ -105,7 +127,7 @@ export function createPool(ctx: Vitest): ProcessPool {
       || execArg.startsWith('--diagnostic-dir'),
   )
 
-  async function executeTests(method: 'runTests' | 'collectTests', files: WorkspaceSpec[], invalidate?: string[]) {
+  async function executeTests(method: 'runTests' | 'collectTests', files: TestSpecification[], invalidate?: string[]) {
     const options: PoolProcessOptions = {
       execArgv: [...execArgv, ...conditions],
       env: {
@@ -113,6 +135,7 @@ export function createPool(ctx: Vitest): ProcessPool {
         VITEST: 'true',
         NODE_ENV: process.env.NODE_ENV || 'test',
         VITEST_MODE: ctx.config.watch ? 'WATCH' : 'RUN',
+        FORCE_TTY: isatty(1) ? 'true' : '',
         ...process.env,
         ...ctx.config.env,
       },
@@ -125,6 +148,7 @@ export function createPool(ctx: Vitest): ProcessPool {
       }
     }
 
+    const poolConcurrentPromises = new Map<string, Promise<ProcessPool>>()
     const customPools = new Map<string, ProcessPool>()
     async function resolveCustomPool(filepath: string) {
       if (customPools.has(filepath)) {
@@ -155,69 +179,112 @@ export function createPool(ctx: Vitest): ProcessPool {
       return poolInstance as ProcessPool
     }
 
-    const filesByPool: Record<LocalPool, WorkspaceSpec[]> = {
-      forks: [],
-      threads: [],
-      // browser: [],
-      vmThreads: [],
-      vmForks: [],
-      typescript: [],
+    function getConcurrentPool(pool: string, fn: () => Promise<ProcessPool>) {
+      if (poolConcurrentPromises.has(pool)) {
+        return poolConcurrentPromises.get(pool)!
+      }
+      const promise = fn().finally(() => {
+        poolConcurrentPromises.delete(pool)
+      })
+      poolConcurrentPromises.set(pool, promise)
+      return promise
     }
 
+    function getCustomPool(pool: string) {
+      return getConcurrentPool(pool, () => resolveCustomPool(pool))
+    }
+
+    function getBrowserPool() {
+      return getConcurrentPool('browser', async () => {
+        const { createBrowserPool } = await import('@vitest/browser')
+        return createBrowserPool(ctx)
+      })
+    }
+
+    const groupedSpecifications: Record<string, TestSpecification[]> = {}
+    const groups = new Set<number>()
+
     const factories: Record<LocalPool, () => ProcessPool> = {
-      // browser: () => createBrowserPool(ctx),
       vmThreads: () => createVmThreadsPool(ctx, options),
+      vmForks: () => createVmForksPool(ctx, options),
       threads: () => createThreadsPool(ctx, options),
       forks: () => createForksPool(ctx, options),
-      vmForks: () => createVmForksPool(ctx, options),
       typescript: () => createTypecheckPool(ctx),
     }
 
     for (const spec of files) {
-      const pool = getFilePoolName(spec[0], spec[1])
-      filesByPool[pool] ??= []
-      filesByPool[pool].push(spec)
+      const group = spec[0].config.sequence.groupOrder ?? 0
+      groups.add(group)
+      groupedSpecifications[group] ??= []
+      groupedSpecifications[group].push(spec)
     }
 
     const Sequencer = ctx.config.sequence.sequencer
     const sequencer = new Sequencer(ctx)
 
-    async function sortSpecs(specs: WorkspaceSpec[]) {
+    async function sortSpecs(specs: TestSpecification[]) {
       if (ctx.config.shard) {
+        if (!ctx.config.passWithNoTests && ctx.config.shard.count > specs.length) {
+          throw new Error(
+            '--shard <count> must be a smaller than count of test files. '
+            + `Resolved ${specs.length} test files for --shard=${ctx.config.shard.index}/${ctx.config.shard.count}.`,
+          )
+        }
+
         specs = await sequencer.shard(specs)
       }
       return sequencer.sort(specs)
     }
 
-    await Promise.all(
-      Object.entries(filesByPool).map(async (entry) => {
-        const [pool, files] = entry as [Pool, WorkspaceSpec[]]
+    const sortedGroups = Array.from(groups).sort()
+    for (const group of sortedGroups) {
+      const specifications = groupedSpecifications[group]
 
-        if (!files.length) {
-          return null
-        }
+      if (!specifications?.length) {
+        continue
+      }
 
-        const specs = await sortSpecs(files)
+      const filesByPool: Record<LocalPool, TestSpecification[]> = {
+        forks: [],
+        threads: [],
+        vmThreads: [],
+        vmForks: [],
+        typescript: [],
+      }
 
-        if (pool in factories) {
-          const factory = factories[pool]
-          pools[pool] ??= factory()
-          return pools[pool]![method](specs, invalidate)
-        }
+      specifications.forEach((specification) => {
+        const pool = specification[2].pool
+        filesByPool[pool] ??= []
+        filesByPool[pool].push(specification)
+      })
 
-        if (pool === 'browser') {
-          pools[pool] ??= await (async () => {
-            const { createBrowserPool } = await import('@vitest/browser')
-            return createBrowserPool(ctx)
-          })()
-          return pools[pool]![method](specs, invalidate)
-        }
+      await Promise.all(
+        Object.entries(filesByPool).map(async (entry) => {
+          const [pool, files] = entry as [Pool, TestSpecification[]]
 
-        const poolHandler = await resolveCustomPool(pool)
-        pools[poolHandler.name] ??= poolHandler
-        return poolHandler[method](specs, invalidate)
-      }),
-    )
+          if (!files.length) {
+            return null
+          }
+
+          const specs = await sortSpecs(files)
+
+          if (pool in factories) {
+            const factory = factories[pool]
+            pools[pool] ??= factory()
+            return pools[pool]![method](specs, invalidate)
+          }
+
+          if (pool === 'browser') {
+            pools.browser ??= await getBrowserPool()
+            return pools.browser[method](specs, invalidate)
+          }
+
+          const poolHandler = await getCustomPool(pool)
+          pools[poolHandler.name] ??= poolHandler
+          return poolHandler[method](specs, invalidate)
+        }),
+      )
+    }
   }
 
   return {

@@ -1,7 +1,7 @@
 {
   "name": "vitest",
   "type": "module",
-  "version": "2.0.3",
+  "version": "3.2.4",
   "description": "Next generation testing framework powered by Vite",
   "author": "Anthony Fu <anthonyfu117@hotmail.com>",
   "license": "MIT",
@@ -17,7 +17,6 @@
   },
   "keywords": [
     "vite",
-    "vite-node",
     "vitest",
     "test",
     "jest"
@@ -59,7 +58,7 @@
       "types": "./dist/workers.d.ts",
       "import": "./dist/workers.js"
     },
-    "./browser": {
+    "./internal/browser": {
       "types": "./dist/browser.d.ts",
       "default": "./dist/browser.js"
     },
@@ -74,10 +73,6 @@
     "./environments": {
       "types": "./dist/environments.d.ts",
       "default": "./dist/environments.js"
-    },
-    "./utils": {
-      "types": "./dist/utils.d.ts",
-      "default": "./dist/utils.js"
     },
     "./config": {
       "types": "./config.d.ts",
@@ -95,6 +90,10 @@
     "./snapshot": {
       "types": "./dist/snapshot.d.ts",
       "default": "./dist/snapshot.js"
+    },
+    "./mocker": {
+      "types": "./dist/mocker.d.ts",
+      "default": "./dist/mocker.js"
     }
   },
   "main": "./dist/index.js",
@@ -112,7 +111,7 @@
     "dist"
   ],
   "engines": {
-    "node": "^18.0.0 || >=20.0.0"
+    "node": "^18.0.0 || ^20.0.0 || >=22.0.0"
   },
   "scripts": {
     "build": "rimraf dist && rollup -c",
@@ -120,7 +119,8 @@
   },
   "peerDependencies": {
     "@edge-runtime/vm": "*",
-    "@types/node": "^18.0.0 || >=20.0.0",
+    "@types/debug": "^4.1.12",
+    "@types/node": "^18.0.0 || ^20.0.0 || >=22.0.0",
     "@vitest/browser": "workspace:*",
     "@vitest/ui": "workspace:*",
     "happy-dom": "*",
@@ -128,6 +128,9 @@
   },
   "peerDependenciesMeta": {
     "@edge-runtime/vm": {
+      "optional": true
+    },
+    "@types/debug": {
       "optional": true
     },
     "@types/node": {
@@ -147,58 +150,58 @@
     }
   },
   "dependencies": {
-    "@ampproject/remapping": "^2.3.0",
+    "@types/chai": "catalog:",
     "@vitest/expect": "workspace:*",
+    "@vitest/mocker": "workspace:*",
     "@vitest/pretty-format": "workspace:^",
     "@vitest/runner": "workspace:*",
     "@vitest/snapshot": "workspace:*",
     "@vitest/spy": "workspace:*",
     "@vitest/utils": "workspace:*",
-    "chai": "^5.1.1",
-    "debug": "^4.3.5",
-    "execa": "^8.0.1",
-    "magic-string": "^0.30.10",
-    "pathe": "^1.1.2",
-    "std-env": "^3.7.0",
-    "tinybench": "^2.8.0",
-    "tinypool": "^1.0.0",
-    "tinyrainbow": "^1.2.0",
-    "vite": "^5.0.0",
+    "chai": "catalog:",
+    "debug": "catalog:",
+    "expect-type": "^1.2.1",
+    "magic-string": "catalog:",
+    "pathe": "catalog:",
+    "picomatch": "^4.0.2",
+    "std-env": "catalog:",
+    "tinybench": "^2.9.0",
+    "tinyexec": "^0.3.2",
+    "tinyglobby": "catalog:",
+    "tinypool": "^1.1.1",
+    "tinyrainbow": "catalog:",
+    "vite": "^5.0.0 || ^6.0.0 || ^7.0.0-0",
     "vite-node": "workspace:*",
     "why-is-node-running": "^2.3.0"
   },
   "devDependencies": {
-    "@antfu/install-pkg": "0.3.1",
-    "@edge-runtime/vm": "^4.0.1",
-    "@sinonjs/fake-timers": "11.1.0",
-    "@types/debug": "^4.1.12",
-    "@types/estree": "^1.0.5",
-    "@types/istanbul-lib-coverage": "^2.0.6",
-    "@types/istanbul-reports": "^3.0.4",
+    "@ampproject/remapping": "catalog:",
+    "@antfu/install-pkg": "^1.1.0",
+    "@edge-runtime/vm": "^5.0.0",
+    "@sinonjs/fake-timers": "14.0.0",
+    "@types/debug": "catalog:",
+    "@types/estree": "catalog:",
+    "@types/istanbul-lib-coverage": "catalog:",
+    "@types/istanbul-reports": "catalog:",
     "@types/jsdom": "^21.1.7",
-    "@types/micromatch": "^4.0.9",
-    "@types/node": "^20.14.10",
+    "@types/mime": "^4.0.0",
+    "@types/node": "^22.15.32",
+    "@types/picomatch": "^4.0.0",
     "@types/prompts": "^2.4.9",
     "@types/sinonjs__fake-timers": "^8.1.5",
-    "acorn-walk": "^8.3.3",
-    "birpc": "0.2.17",
-    "cac": "^6.7.14",
+    "acorn-walk": "catalog:",
+    "birpc": "catalog:",
+    "cac": "catalog:",
     "chai-subset": "^1.6.0",
-    "cli-truncate": "^4.0.0",
-    "expect-type": "^0.19.0",
-    "fast-glob": "^3.3.2",
     "find-up": "^6.3.0",
-    "flatted": "^3.3.1",
-    "get-tsconfig": "^4.7.5",
-    "happy-dom": "^14.12.3",
-    "jsdom": "^24.1.0",
-    "local-pkg": "^0.5.0",
-    "log-update": "^5.0.1",
-    "micromatch": "^4.0.7",
+    "flatted": "catalog:",
+    "happy-dom": "^17.6.3",
+    "jsdom": "^26.1.0",
+    "local-pkg": "^1.1.1",
+    "mime": "^4.0.7",
     "pretty-format": "^29.7.0",
     "prompts": "^2.4.2",
-    "strip-ansi": "^7.1.0",
-    "strip-literal": "^2.1.0",
-    "ws": "^8.18.0"
+    "strip-literal": "catalog:",
+    "ws": "catalog:"
   }
 }

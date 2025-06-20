@@ -1,13 +1,13 @@
 /* eslint-disable no-console */
 
-import type { HMRPayload, Update } from 'vite/types/hmrPayload.js'
 import type { CustomEventMap } from 'vite/types/customEvent.js'
-import c from 'tinyrainbow'
-import createDebug from 'debug'
+import type { HMRPayload, Update } from 'vite/types/hmrPayload.js'
 import type { ViteNodeRunner } from '../client'
 import type { HotContext } from '../types'
-import { normalizeRequestId } from '../utils'
 import type { HMREmitter } from './emitter'
+import createDebug from 'debug'
+import c from 'tinyrainbow'
+import { normalizeRequestId } from '../utils'
 
 export type ModuleNamespace = Record<string, any> & {
   [Symbol.toStringTag]: 'Module'
@@ -62,13 +62,13 @@ export function getCache(runner: ViteNodeRunner): CacheData {
   return cache.get(runner) as CacheData
 }
 
-export function sendMessageBuffer(runner: ViteNodeRunner, emitter: HMREmitter) {
+export function sendMessageBuffer(runner: ViteNodeRunner, emitter: HMREmitter): void {
   const maps = getCache(runner)
   maps.messageBuffer.forEach(msg => emitter.emit('custom', msg))
   maps.messageBuffer.length = 0
 }
 
-export async function reload(runner: ViteNodeRunner, files: string[]) {
+export async function reload(runner: ViteNodeRunner, files: string[]): Promise<any[]> {
   // invalidate module cache but not node_modules
   Array.from(runner.moduleCache.keys()).forEach((fsPath) => {
     if (!fsPath.includes('node_modules')) {
@@ -160,8 +160,8 @@ async function fetchUpdate(
   }
 }
 
-function warnFailedFetch(err: Error, path: string | string[]) {
-  if (!err.message.match('fetch')) {
+function warnFailedFetch(err: unknown, path: string | string[]) {
+  if (!(err instanceof Error) || !err.message.match('fetch')) {
     console.error(err)
   }
 
@@ -177,7 +177,7 @@ export async function handleMessage(
   emitter: HMREmitter,
   files: string[],
   payload: HMRPayload,
-) {
+): Promise<void> {
   const maps = getCache(runner)
   switch (payload.type) {
     case 'connected':
@@ -300,6 +300,7 @@ export function createHotContext(
       notifyListeners(runner, 'vite:invalidate', {
         path: ownerPath,
         message: undefined,
+        firstInvalidatedBy: ownerPath,
       })
       return reload(runner, files)
     },

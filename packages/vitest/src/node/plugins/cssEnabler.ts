@@ -1,8 +1,8 @@
-import { relative } from 'pathe'
 import type { Plugin as VitePlugin } from 'vite'
+import type { CSSModuleScopeStrategy, ResolvedConfig } from '../types/config'
+import { toArray } from '@vitest/utils'
+import { relative } from 'pathe'
 import { generateCssFilenameHash } from '../../integrations/css/css-modules'
-import type { CSSModuleScopeStrategy, ResolvedConfig } from '../../types'
-import { toArray } from '../../utils'
 
 const cssLangs = '\\.(?:css|less|sass|scss|styl|stylus|pcss|postcss)(?:$|\\?)'
 const cssLangRE = new RegExp(cssLangs)
@@ -80,7 +80,7 @@ export function CSSEnablerPlugin(ctx: {
           // we don't use code content to generate hash for "scoped", because it's empty
           const scopeStrategy
             = (typeof ctx.config.css !== 'boolean'
-            && ctx.config.css.modules?.classNameStrategy)
+              && ctx.config.css.modules?.classNameStrategy)
             || 'stable'
           const proxyReturn = getCSSModuleProxyReturn(
             scopeStrategy,

@@ -1,22 +1,17 @@
-import { getSafeTimers } from 'vitest/utils'
 import type { VitestBrowserClient } from '@vitest/browser/client'
+import { getSafeTimers } from 'vitest/internal/browser'
 
 const { get } = Reflect
 
 function withSafeTimers(getTimers: typeof getSafeTimers, fn: () => void) {
-  const { setTimeout, clearTimeout, setImmediate, clearImmediate }
-    = getTimers()
+  const { setTimeout, clearTimeout } = getTimers()
 
   const currentSetTimeout = globalThis.setTimeout
   const currentClearTimeout = globalThis.clearTimeout
-  const currentSetImmediate = globalThis.setImmediate
-  const currentClearImmediate = globalThis.clearImmediate
 
   try {
     globalThis.setTimeout = setTimeout
     globalThis.clearTimeout = clearTimeout
-    globalThis.setImmediate = setImmediate
-    globalThis.clearImmediate = clearImmediate
 
     const result = fn()
     return result
@@ -24,14 +19,12 @@ function withSafeTimers(getTimers: typeof getSafeTimers, fn: () => void) {
   finally {
     globalThis.setTimeout = currentSetTimeout
     globalThis.clearTimeout = currentClearTimeout
-    globalThis.setImmediate = currentSetImmediate
-    globalThis.clearImmediate = currentClearImmediate
   }
 }
 
 const promises = new Set<Promise<unknown>>()
 
-export async function rpcDone() {
+export async function rpcDone(): Promise<unknown[] | undefined> {
   if (!promises.size) {
     return
   }

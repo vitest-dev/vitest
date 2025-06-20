@@ -5,11 +5,12 @@ import { hideAllPoppers } from 'floating-vue'
 // @ts-expect-error missing types
 import { RecycleScroller } from 'vue-virtual-scroller'
 
-import { activeFileId } from '~/composables/params'
+import { config } from '~/composables/client'
 import { useSearch } from '~/composables/explorer/search'
 
+import { activeFileId } from '~/composables/params'
+
 import 'vue-virtual-scroller/dist/vue-virtual-scroller.css'
-import { config } from '~/composables/client'
 
 defineOptions({ inheritAttrs: false })
 
@@ -44,11 +45,10 @@ const {
 
 const filterClass = ref<string>('grid-cols-2')
 const filterHeaderClass = ref<string>('grid-col-span-2')
-const testExplorerRef = ref<HTMLInputElement | undefined>()
 
-useResizeObserver(testExplorerRef, (entries) => {
-  const { width } = entries[0].contentRect
-  if (width < 420) {
+const testExplorerRef = ref<HTMLElement | undefined>()
+useResizeObserver(() => testExplorerRef.value, ([{ contentRect }]) => {
+  if (contentRect.width < 420) {
     filterClass.value = 'grid-cols-2'
     filterHeaderClass.value = 'grid-col-span-2'
   }

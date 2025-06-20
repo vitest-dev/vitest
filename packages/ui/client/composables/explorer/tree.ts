@@ -1,23 +1,26 @@
-import type { File, TaskResultPack } from '@vitest/runner'
-import {
-  filter,
-  search,
-} from '~/composables/explorer/state'
+import type { File, TaskResultPack, TestAnnotation } from '@vitest/runner'
+import type { RunnerTaskEventPack } from 'vitest'
 import type {
   CollectorInfo,
   FilteredTests,
   RootTreeNode,
   UITaskTreeNode,
 } from '~/composables/explorer/types'
-import { collectTestsTotalData, preparePendingTasks, runCollect, runLoadFiles } from '~/composables/explorer/collector'
 import { runCollapseAllTask, runCollapseNode } from '~/composables/explorer/collapse'
+import { annotateTest, collectTestsTotalData, preparePendingTasks, runCollect, runLoadFiles } from '~/composables/explorer/collector'
 import { runExpandAll, runExpandNode } from '~/composables/explorer/expand'
 import { runFilter } from '~/composables/explorer/filter'
+import {
+  filter,
+  search,
+} from '~/composables/explorer/state'
 
 export class ExplorerTree {
   private rafCollector: ReturnType<typeof useRafFn>
   private resumeEndRunId: ReturnType<typeof setTimeout> | undefined
   constructor(
+    public projects: string[] = [],
+    public colors = new Map<string, string | undefined>(),
     private onTaskUpdateCalled: boolean = false,
     private resumeEndTimeout = 500,
     public root = <RootTreeNode>{
@@ -53,7 +56,10 @@ export class ExplorerTree {
     this.rafCollector = useRafFn(this.runCollect.bind(this), { fpsLimit: 10, immediate: false })
   }
 
-  loadFiles(remoteFiles: File[]) {
+  loadFiles(remoteFiles: File[], projects: { name: string; color?: string }[]) {
+    this.projects.splice(0, this.projects.length, ...projects.map(p => p.name))
+    this.colors = new Map(projects.map(p => [p.name, p.color]))
+
     runLoadFiles(
       remoteFiles,
       true,
@@ -72,7 +78,17 @@ export class ExplorerTree {
     this.collect(true, false)
   }
 
-  resumeRun(packs: TaskResultPack[]) {
+  annotateTest(testId: string, annotation: TestAnnotation) {
+    annotateTest(testId, annotation)
+    if (!this.onTaskUpdateCalled) {
+      clearTimeout(this.resumeEndRunId)
+      this.onTaskUpdateCalled = true
+      this.collect(true, false, false)
+      this.rafCollector.resume()
+    }
+  }
+
+  resumeRun(packs: TaskResultPack[], _events: RunnerTaskEventPack[]) {
     preparePendingTasks(packs)
     if (!this.onTaskUpdateCalled) {
       clearTimeout(this.resumeEndRunId)

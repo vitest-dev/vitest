@@ -1,0 +1,12 @@
+{
+  "extends": "../../tsconfig.build.json",
+  "compilerOptions": {
+    "types": []
+  },
+  "include": [
+    "./failing/*"
+  ],
+  "exclude": [
+    "**/dist/**"
+  ]
+}

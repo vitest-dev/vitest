@@ -1,12 +1,9 @@
-import type { WorkerGlobalState } from 'vitest'
-import { parse } from 'flatted'
 import type { BrowserRPC } from '@vitest/browser/client'
+import type { WorkerGlobalState } from 'vitest'
 import { getBrowserState } from '../utils'
 
 const config = getBrowserState().config
-const contextId = getBrowserState().contextId
-
-const providedContext = parse(getBrowserState().providedContext)
+const sessionId = getBrowserState().sessionId
 
 const state: WorkerGlobalState = {
   ctx: {
@@ -20,11 +17,11 @@ const state: WorkerGlobalState = {
       name: 'browser',
       options: null,
     },
-    providedContext,
+    // this is populated before tests run
+    providedContext: {},
     invalidates: [],
   },
   onCancel: null as any,
-  mockMap: new Map(),
   config,
   environment: {
     name: 'browser',
@@ -33,13 +30,15 @@ const state: WorkerGlobalState = {
       throw new Error('Not called in the browser')
     },
   },
+  onCleanup: fn => getBrowserState().cleanups.push(fn),
   moduleCache: getBrowserState().moduleCache,
+  moduleExecutionInfo: new Map(),
   rpc: null as any,
   durations: {
     environment: 0,
     prepare: performance.now(),
   },
-  providedContext,
+  providedContext: {},
 }
 
 // @ts-expect-error not typed global
@@ -64,19 +63,15 @@ function createCdp() {
 
   const listeners: Record<string, Function[]> = {}
 
-  const error = (err: unknown) => {
-    window.dispatchEvent(new ErrorEvent('error', { error: err }))
-  }
-
   const cdp = {
     send(method: string, params?: Record<string, any>) {
-      return rpc().sendCdpEvent(contextId, method, params)
+      return rpc().sendCdpEvent(sessionId, method, params)
     },
     on(event: string, listener: (payload: any) => void) {
       const listenerId = getId(listener)
       listeners[event] = listeners[event] || []
       listeners[event].push(listener)
-      rpc().trackCdpEvent(contextId, 'on', event, listenerId).catch(error)
+      rpc().trackCdpEvent(sessionId, 'on', event, listenerId).catch(error)
       return cdp
     },
     once(event: string, listener: (payload: any) => void) {
@@ -87,7 +82,7 @@ function createCdp() {
       }
       listeners[event] = listeners[event] || []
       listeners[event].push(handler)
-      rpc().trackCdpEvent(contextId, 'once', event, listenerId).catch(error)
+      rpc().trackCdpEvent(sessionId, 'once', event, listenerId).catch(error)
       return cdp
     },
     off(event: string, listener: (payload: any) => void) {
@@ -95,7 +90,7 @@ function createCdp() {
       if (listeners[event]) {
         listeners[event] = listeners[event].filter(l => l !== listener)
       }
-      rpc().trackCdpEvent(contextId, 'off', event, listenerId).catch(error)
+      rpc().trackCdpEvent(sessionId, 'off', event, listenerId).catch(error)
       return cdp
     },
     emit(event: string, payload: unknown) {
@@ -113,4 +108,8 @@ function createCdp() {
   }
 
   return cdp
+}
+
+function error(err: unknown) {
+  window.dispatchEvent(new ErrorEvent('error', { error: err }))
 }

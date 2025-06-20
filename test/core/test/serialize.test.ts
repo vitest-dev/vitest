@@ -1,15 +1,15 @@
 // @vitest-environment jsdom
 
-import { serializeError } from '@vitest/utils/error'
+import { serializeValue } from '@vitest/utils/error'
 import { describe, expect, it } from 'vitest'
 
 describe('error serialize', () => {
   it('works', () => {
-    expect(serializeError(undefined)).toEqual(undefined)
-    expect(serializeError(null)).toEqual(null)
-    expect(serializeError('hi')).toEqual('hi')
+    expect(serializeValue(undefined)).toEqual(undefined)
+    expect(serializeValue(null)).toEqual(null)
+    expect(serializeValue('hi')).toEqual('hi')
 
-    expect(serializeError({
+    expect(serializeValue({
       foo: 'hi',
       promise: new Promise(() => {}),
       fn: () => {},
@@ -35,7 +35,7 @@ describe('error serialize', () => {
     error.whateverArray = [error, error]
     error.whateverArrayClone = error.whateverArray
 
-    expect(serializeError(error)).toMatchSnapshot()
+    expect(serializeValue(error)).toMatchSnapshot()
   })
 
   it('Should handle object with getter/setter correctly', () => {
@@ -51,7 +51,7 @@ describe('error serialize', () => {
       },
     }
 
-    expect(serializeError(user)).toEqual({
+    expect(serializeValue(user)).toEqual({
       name: 'John',
       surname: 'Smith',
       fullName: 'John Smith',
@@ -70,7 +70,7 @@ describe('error serialize', () => {
 
     Object.defineProperty(user, 'fullName', { enumerable: false, value: 'John Smith' })
 
-    const serialized = serializeError(user)
+    const serialized = serializeValue(user)
     expect(serialized).not.toBe(user)
     expect(serialized).toEqual({
       name: 'John',
@@ -86,7 +86,7 @@ describe('error serialize', () => {
     // `MessagePort`, so the serialized error object should have been recreated as plain object.
     const error = new Error('test')
 
-    const serialized = serializeError(error)
+    const serialized = serializeValue(error)
     expect(Object.getPrototypeOf(serialized)).toBe(null)
     expect(serialized).toEqual({
       constructor: 'Function<Error>',
@@ -114,7 +114,7 @@ describe('error serialize', () => {
         },
       }],
     })
-    expect(serializeError(error)).toEqual({
+    expect(serializeValue(error)).toEqual({
       array: [
         {
           name: '<unserializable>: name cannot be accessed',
@@ -131,7 +131,7 @@ describe('error serialize', () => {
 
   it('can serialize DOMException', () => {
     const err = new DOMException('You failed', 'InvalidStateError')
-    expect(serializeError(err)).toMatchObject({
+    expect(serializeValue(err)).toMatchObject({
       NETWORK_ERR: 19,
       name: 'InvalidStateError',
       message: 'You failed',
@@ -160,7 +160,7 @@ describe('error serialize', () => {
       immutableRecord,
     })
 
-    expect(serializeError(error)).toMatchObject({
+    expect(serializeValue(error)).toMatchObject({
       stack: expect.stringContaining('Error: test'),
       immutableList: ['foo'],
       immutableRecord: { foo: 'bar' },
@@ -186,7 +186,7 @@ describe('error serialize', () => {
       },
     }
 
-    const serialized = serializeError(error)
+    const serialized = serializeValue(error)
 
     expect(serialized).toEqual({
       key: 'value',

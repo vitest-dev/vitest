@@ -1,8 +1,8 @@
-import esbuild from 'rollup-plugin-esbuild'
-import dts from 'rollup-plugin-dts'
-import resolve from '@rollup/plugin-node-resolve'
 import commonjs from '@rollup/plugin-commonjs'
 import json from '@rollup/plugin-json'
+import resolve from '@rollup/plugin-node-resolve'
+import oxc from 'unplugin-oxc/rollup'
+import { createDtsUtils } from '../../scripts/build-utils.js'
 
 const entry = ['src/index.ts']
 
@@ -19,6 +19,8 @@ const external = [
   '@vitest/snapshot/manager',
 ]
 
+const dtsUtils = createDtsUtils()
+
 export default () => [
   {
     input: entry,
@@ -28,23 +30,26 @@ export default () => [
     },
     external,
     plugins: [
+      ...dtsUtils.isolatedDecl(),
       resolve({
         preferBuiltins: true,
       }),
       json(),
       commonjs(),
-      esbuild({
-        target: 'node18',
+      oxc({
+        transform: { target: 'node18' },
       }),
     ],
   },
   {
-    input: ['src/index.ts'],
+    input: dtsUtils.dtsInput('src/index.ts'),
     output: {
-      file: 'dist/index.d.ts',
+      dir: 'dist',
+      entryFileNames: '[name].d.ts',
       format: 'esm',
     },
+    watch: false,
     external,
-    plugins: [dts()],
+    plugins: dtsUtils.dts(),
   },
 ]

@@ -1,6 +1,6 @@
+import type { Output } from 'tinyexec'
 import { resolve } from 'pathe'
-import { execa } from 'execa'
-import type { ExecaReturnValue } from 'execa'
+import { x } from 'tinyexec'
 
 export interface GitOptions {
   changedSince?: string | boolean
@@ -12,10 +12,10 @@ export class VitestGit {
   constructor(private cwd: string) {}
 
   private async resolveFilesWithGitCommand(args: string[]): Promise<string[]> {
-    let result: ExecaReturnValue
+    let result: Output
 
     try {
-      result = await execa('git', args, { cwd: this.root })
+      result = await x('git', args, { nodeOptions: { cwd: this.root } })
     }
     catch (e: any) {
       e.message = e.stderr
@@ -29,7 +29,7 @@ export class VitestGit {
       .map(changedPath => resolve(this.root, changedPath))
   }
 
-  async findChangedFiles(options: GitOptions) {
+  async findChangedFiles(options: GitOptions): Promise<string[] | null> {
     const root = await this.getRoot(this.cwd)
     if (!root) {
       return null
@@ -74,13 +74,13 @@ export class VitestGit {
     ])
   }
 
-  async getRoot(cwd: string) {
-    const options = ['rev-parse', '--show-cdup']
+  async getRoot(cwd: string): Promise<string | null> {
+    const args = ['rev-parse', '--show-cdup']
 
     try {
-      const result = await execa('git', options, { cwd })
+      const result = await x('git', args, { nodeOptions: { cwd } })
 
-      return resolve(cwd, result.stdout)
+      return resolve(cwd, result.stdout.trim())
     }
     catch {
       return null

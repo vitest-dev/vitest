@@ -1,4 +1,4 @@
-/// <reference types="vitest" />
+/// <reference types="vitest/config" />
 
 import { defineConfig } from 'vite'
 
@@ -9,8 +9,10 @@ export default defineConfig({
     // https://lit.dev/docs/tools/testing/#testing-in-the-browser
     browser: {
       enabled: true,
-      name: 'chrome',
-      provider: 'webdriverio',
+      provider: 'playwright',
+      instances: [
+        { browser: 'chromium' },
+      ],
     },
   },
 })

@@ -17,7 +17,10 @@ const config = {
   api: 9602,
 }
 
-it.each([
+const [major] = process.version.slice(1).split('.')
+
+// --experimental-network-imports was removed in Node 22 in favor of module loaders
+it.runIf(Number(major) <= 20).each([
   'threads',
   'forks',
   'vmThreads',

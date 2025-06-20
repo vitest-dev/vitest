@@ -2,9 +2,9 @@
  * @vitest-environment jsdom
  */
 
-import type { Mock, MockInstance, MockedFunction, MockedObject } from 'vitest'
+import type { Mock, MockedFunction, MockedObject, MockInstance } from 'vitest'
 import { describe, expect, expectTypeOf, test, vi } from 'vitest'
-import { getWorkerState } from '../../../packages/vitest/src/utils'
+import { getWorkerState } from '../../../packages/vitest/src/runtime/utils'
 
 function expectType<T>(obj: T) {
   return obj
@@ -83,12 +83,21 @@ describe('testing vi utils', () => {
     vi.mocked(mockFactoryAsync, { partial: true, deep: true }).mockResolvedValue({
       baz: 'baz',
     })
+
+    function fetchSomething(): Promise<Response> {
+      return fetch('https://vitest.dev/')
+    };
+    if (0) {
+      // type check only
+      vi.mocked(fetchSomething).mockResolvedValue(new Response(null))
+      vi.mocked(fetchSomething, { partial: true }).mockResolvedValue({ ok: false })
+    }
   })
 
   test('vi.fn and Mock type', () => {
     // use case from https://github.com/vitest-dev/vitest/issues/4723#issuecomment-1851034249
 
-    // hypotetical library to be tested
+    // hypothetical library to be tested
     type SomeFn = (v: string) => number
     function acceptSomeFn(f: SomeFn) {
       f('hi')
@@ -98,7 +107,7 @@ describe('testing vi utils', () => {
     // no args are allowed even though it's not type safe
     const someFn1: Mock<SomeFn> = vi.fn()
 
-    // argument types are infered
+    // argument types are inferred
     const someFn2: Mock<SomeFn> = vi.fn((v) => {
       expectTypeOf(v).toEqualTypeOf<string>()
       return 0
@@ -152,6 +161,22 @@ describe('testing vi utils', () => {
     expectTypeOf(gSpy.mock.contexts).toEqualTypeOf<unknown[]>()
   })
 
+  test('mockImplementation types', async () => {
+    // overload
+    const fs = { readFileSync() {} } as any as typeof import('node:fs')
+    vi.spyOn(fs, 'readFileSync').mockImplementation(() => 'str')
+    vi.spyOn(fs, 'readFileSync').mockImplementation(() => Buffer.from('buf'))
+    vi.fn(fs.readFileSync).mockImplementation(() => 'str')
+    vi.fn(fs.readFileSync).mockImplementation(() => Buffer.from('buf'))
+
+    // union
+    interface Handler {
+      (v: number): number
+      other: (v: number) => number
+    }
+    vi.fn<Handler>().mockImplementation(v => v + 1)
+  })
+
   test('can change config', () => {
     const state = getWorkerState()
     expect(state.config.hookTimeout).toBe(10000)
@@ -174,5 +199,39 @@ describe('testing vi utils', () => {
 
     expect(mod).toBeDefined()
     expect(mod.timeout).toBe(100)
+  })
+
+  test('mockObject', () => {
+    const original = {
+      simple: () => 'value',
+      nested: {
+        method: () => 'real',
+      },
+      prop: 'foo',
+    }
+
+    const mocked = vi.mockObject(original)
+    expect(mocked.simple()).toBe(undefined)
+    expect(mocked.nested.method()).toBe(undefined)
+    expect(mocked.prop).toBe('foo')
+    mocked.simple.mockReturnValue('mocked')
+    mocked.nested.method.mockReturnValue('mocked nested')
+    expect(mocked.simple()).toBe('mocked')
+    expect(mocked.nested.method()).toBe('mocked nested')
+
+    class OriginalClass {
+      constructor() {
+        throw new Error('should be mocked!')
+      }
+
+      someFn() {
+        return 'value'
+      }
+    }
+    const MockedClass = vi.mockObject(OriginalClass)
+    const mockedInstance = new MockedClass()
+    expect(MockedClass).toHaveBeenCalled()
+    vi.mocked(mockedInstance).someFn.mockImplementation(() => 'mocked')
+    expect(mockedInstance.someFn()).toBe('mocked')
   })
 })

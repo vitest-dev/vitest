@@ -36,11 +36,11 @@ function testNode(val: any) {
   const { nodeType, tagName } = val
   const isCustomElement
     = (typeof tagName === 'string' && tagName.includes('-'))
-    || testHasAttribute(val)
+      || testHasAttribute(val)
 
   return (
     (nodeType === ELEMENT_NODE
-    && (ELEMENT_REGEXP.test(constructorName) || isCustomElement))
+      && (ELEMENT_REGEXP.test(constructorName) || isCustomElement))
     || (nodeType === TEXT_NODE && constructorName === 'Text')
     || (nodeType === COMMENT_NODE && constructorName === 'Comment')
     || (nodeType === FRAGMENT_NODE && constructorName === 'DocumentFragment')

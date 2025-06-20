@@ -1,5 +1,6 @@
 ---
 title: Command Line Interface | Guide
+outline: deep
 ---
 
 # Command Line Interface
@@ -8,7 +9,7 @@ title: Command Line Interface | Guide
 
 ### `vitest`
 
-Start Vitest in the current directory. Will enter the watch mode in development environment and run mode in CI automatically.
+Start Vitest in the current directory. Will enter the watch mode in development environment and run mode in CI (or non-interactive terminal) automatically.
 
 You can pass an additional argument as the filter of the test files to run. For example:
 
@@ -18,13 +19,38 @@ vitest foobar
 
 Will run only the test file that contains `foobar` in their paths. This filter only checks inclusion and doesn't support regexp or glob patterns (unless your terminal processes it before Vitest receives the filter).
 
+Since Vitest 3, you can also specify the test by filename and line number:
+
+```bash
+$ vitest basic/foo.test.ts:10
+```
+
+::: warning
+Note that Vitest requires the full filename for this feature to work. It can be relative to the current working directory or an absolute file path.
+
+```bash
+$ vitest basic/foo.js:10 # ✅
+$ vitest ./basic/foo.js:10 # ✅
+$ vitest /users/project/basic/foo.js:10 # ✅
+$ vitest foo:10 # ❌
+$ vitest ./basic/foo:10 # ❌
+```
+
+At the moment Vitest also doesn't support ranges:
+
+```bash
+$ vitest basic/foo.test.ts:10, basic/foo.test.ts:25 # ✅
+$ vitest basic/foo.test.ts:10-25 # ❌
+```
+:::
+
 ### `vitest run`
 
 Perform a single run without watch mode.
 
 ### `vitest watch`
 
-Run all test suites but watch for changes and rerun tests when they change. Same as calling `vitest` without an argument. Will fallback to `vitest run` in CI.
+Run all test suites but watch for changes and rerun tests when they change. Same as calling `vitest` without an argument. Will fallback to `vitest run` in CI or when stdin is not a TTY (non-interactive environment).
 
 ### `vitest dev`
 
@@ -43,8 +69,7 @@ vitest related /src/index.ts /src/hello-world.js
 ::: tip
 Don't forget that Vitest runs with enabled watch mode by default. If you are using tools like `lint-staged`, you  should also pass `--run` option, so that command can exit normally.
 
-```js
-// .lintstagedrc.js
+```js [.lintstagedrc.js]
 export default {
   '*.{js,ts}': 'vitest related --run',
 }
@@ -53,7 +78,7 @@ export default {
 
 ### `vitest bench`
 
-Run only [benchmark](https://vitest.dev/guide/features.html#benchmarking-experimental) tests, which compare performance results.
+Run only [benchmark](/guide/features.html#benchmarking) tests, which compare performance results.
 
 ### `vitest init`
 
@@ -85,9 +110,18 @@ vitest list filename.spec.ts -t="some-test" --json=./file.json
 
 If `--json` flag doesn't receive a value, it will output the JSON into stdout.
 
-## Options
+You also can pass down `--filesOnly` flag to print the test files only:
 
-<!--@include: ./cli-table.md-->
+```bash
+vitest list --filesOnly
+```
+
+```txt
+tests/test1.test.ts
+tests/test2.test.ts
+```
+
+## Options
 
 ::: tip
 Vitest supports both camel case and kebab case for CLI arguments. For example, `--passWithNoTests` and `--pass-with-no-tests` will both work (`--no-color` and `--inspect-brk` are the exceptions).
@@ -108,36 +142,38 @@ vitest --api=false
 ```
 :::
 
+<!--@include: ./cli-generated.md-->
+
 ### changed
 
 - **Type**: `boolean | string`
 - **Default**: false
 
-  Run tests only against changed files. If no value is provided, it will run tests against uncommitted changes (including staged and unstaged).
+Run tests only against changed files. If no value is provided, it will run tests against uncommitted changes (including staged and unstaged).
 
-  To run tests against changes made in the last commit, you can use `--changed HEAD~1`. You can also pass commit hash (e.g. `--changed 09a9920`) or branch name (e.g. `--changed origin/develop`).
+To run tests against changes made in the last commit, you can use `--changed HEAD~1`. You can also pass commit hash (e.g. `--changed 09a9920`) or branch name (e.g. `--changed origin/develop`).
 
-  When used with code coverage the report will contain only the files that were related to the changes.
+When used with code coverage the report will contain only the files that were related to the changes.
 
-  If paired with the [`forceRerunTriggers`](/config/#forcereruntriggers) config option it will run the whole test suite if at least one of the files listed in the `forceRerunTriggers` list changes. By default, changes to the Vitest config file and `package.json` will always rerun the whole suite.
+If paired with the [`forceRerunTriggers`](/config/#forcereruntriggers) config option it will run the whole test suite if at least one of the files listed in the `forceRerunTriggers` list changes. By default, changes to the Vitest config file and `package.json` will always rerun the whole suite.
 
 ### shard
 
 - **Type**: `string`
 - **Default**: disabled
 
-  Test suite shard to execute in a format of `<index>`/`<count>`, where
+Test suite shard to execute in a format of `<index>`/`<count>`, where
 
-  - `count` is a positive integer, count of divided parts
-  - `index` is a positive integer, index of divided part
+- `count` is a positive integer, count of divided parts
+- `index` is a positive integer, index of divided part
 
-  This command will divide all tests into `count` equal parts, and will run only those that happen to be in an `index` part. For example, to split your tests suite into three parts, use this:
+This command will divide all tests into `count` equal parts, and will run only those that happen to be in an `index` part. For example, to split your tests suite into three parts, use this:
 
-  ```sh
-  vitest run --shard=1/3
-  vitest run --shard=2/3
-  vitest run --shard=3/3
-  ```
+```sh
+vitest run --shard=1/3
+vitest run --shard=2/3
+vitest run --shard=3/3
+```
 
 :::warning
 You cannot use this option with `--watch` enabled (enabled in dev by default).

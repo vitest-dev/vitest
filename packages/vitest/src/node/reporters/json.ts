@@ -1,15 +1,11 @@
+import type { File, Suite, TaskMeta, TaskState } from '@vitest/runner'
+import type { SnapshotSummary } from '@vitest/snapshot'
+import type { CoverageMap } from 'istanbul-lib-coverage'
+import type { Vitest } from '../core'
+import type { Reporter } from '../types/reporter'
 import { existsSync, promises as fs } from 'node:fs'
+import { getSuites, getTests } from '@vitest/runner/utils'
 import { dirname, resolve } from 'pathe'
-import type { Vitest } from '../../node'
-import type {
-  File,
-  Reporter,
-  SnapshotSummary,
-  Suite,
-  TaskMeta,
-  TaskState,
-} from '../../types'
-import { getSuites, getTests } from '../../utils'
 import { getOutputFile } from '../../utils/config-helpers'
 
 // for compatibility reasons, the reporter produces a JSON similar to the one produced by the Jest JSON reporter
@@ -30,6 +26,7 @@ const StatusMap: Record<TaskState, Status> = {
   run: 'pending',
   skip: 'skipped',
   todo: 'todo',
+  queued: 'pending',
 }
 
 export interface JsonAssertionResult {
@@ -68,7 +65,7 @@ export interface JsonTestResults {
   success: boolean
   testResults: Array<JsonTestResult>
   snapshot: SnapshotSummary
-  // coverageMap?: CoverageMap | null | undefined
+  coverageMap?: CoverageMap | null | undefined
   // numRuntimeErrorTestSuites: number
   // wasInterrupted: boolean
 }
@@ -91,27 +88,29 @@ export class JsonReporter implements Reporter {
     this.start = Date.now()
   }
 
-  protected async logTasks(files: File[]) {
+  protected async logTasks(files: File[], coverageMap?: CoverageMap | null): Promise<void> {
     const suites = getSuites(files)
     const numTotalTestSuites = suites.length
     const tests = getTests(files)
     const numTotalTests = tests.length
-    const numFailedTestSuites = suites.filter(s => s.result?.errors).length
-    const numPassedTestSuites = numTotalTestSuites - numFailedTestSuites
+
+    const numFailedTestSuites = suites.filter(s => s.result?.state === 'fail').length
     const numPendingTestSuites = suites.filter(
-      s => s.result?.state === 'run',
+      s => s.result?.state === 'run' || s.result?.state === 'queued' || s.mode === 'todo',
     ).length
+    const numPassedTestSuites = numTotalTestSuites - numFailedTestSuites - numPendingTestSuites
+
     const numFailedTests = tests.filter(
       t => t.result?.state === 'fail',
     ).length
-    const numPassedTests = numTotalTests - numFailedTests
+    const numPassedTests = tests.filter(t => t.result?.state === 'pass').length
     const numPendingTests = tests.filter(
-      t => t.result?.state === 'run',
+      t => t.result?.state === 'run' || t.result?.state === 'queued' || t.mode === 'skip' || t.result?.state === 'skip',
     ).length
     const numTodoTests = tests.filter(t => t.mode === 'todo').length
     const testResults: Array<JsonTestResult> = []
 
-    const success = numFailedTestSuites === 0 && numFailedTests === 0
+    const success = !!(files.length > 0 || this.ctx.config.passWithNoTests) && numFailedTestSuites === 0 && numFailedTests === 0
 
     for (const file of files) {
       const tests = getTests([file])
@@ -156,7 +155,7 @@ export class JsonReporter implements Reporter {
         } satisfies JsonAssertionResult
       })
 
-      if (tests.some(t => t.result?.state === 'run')) {
+      if (tests.some(t => t.result?.state === 'run' || t.result?.state === 'queued')) {
         this.ctx.logger.warn(
           'WARNING: Some tests are still running when generating the JSON report.'
           + 'This is likely an internal bug in Vitest.'
@@ -191,13 +190,14 @@ export class JsonReporter implements Reporter {
       startTime: this.start,
       success,
       testResults,
+      coverageMap,
     }
 
     await this.writeReport(JSON.stringify(result))
   }
 
-  async onFinished(files = this.ctx.state.getFiles()) {
-    await this.logTasks(files)
+  async onFinished(files: File[] = this.ctx.state.getFiles(), _errors: unknown[] = [], coverageMap?: unknown): Promise<void> {
+    await this.logTasks(files, coverageMap as CoverageMap)
   }
 
   /**
@@ -205,7 +205,7 @@ export class JsonReporter implements Reporter {
    * or logs it to the console otherwise.
    * @param report
    */
-  async writeReport(report: string) {
+  async writeReport(report: string): Promise<void> {
     const outputFile
       = this.options.outputFile ?? getOutputFile(this.ctx.config, 'json')
 

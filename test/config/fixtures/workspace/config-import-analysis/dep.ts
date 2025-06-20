@@ -1,0 +1,1 @@
+export default [] satisfies string[];

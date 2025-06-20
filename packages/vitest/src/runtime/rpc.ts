@@ -1,10 +1,10 @@
-import { getSafeTimers } from '@vitest/utils'
 import type { CancelReason } from '@vitest/runner'
-import { createBirpc } from 'birpc'
 import type { BirpcOptions, BirpcReturn } from 'birpc'
-import { getWorkerState } from '../utils/global'
 import type { RunnerRPC, RuntimeRPC } from '../types/rpc'
-import type { WorkerRPC } from '../types'
+import type { WorkerRPC } from '../types/worker'
+import { getSafeTimers } from '@vitest/utils'
+import { createBirpc } from 'birpc'
+import { getWorkerState } from './utils'
 
 const { get } = Reflect
 
@@ -22,10 +22,15 @@ function withSafeTimers(fn: () => void) {
   try {
     globalThis.setTimeout = setTimeout
     globalThis.clearTimeout = clearTimeout
-    globalThis.setImmediate = setImmediate
-    globalThis.clearImmediate = clearImmediate
 
-    if (globalThis.process) {
+    if (setImmediate) {
+      globalThis.setImmediate = setImmediate
+    }
+    if (clearImmediate) {
+      globalThis.clearImmediate = clearImmediate
+    }
+
+    if (globalThis.process && nextTick) {
       globalThis.process.nextTick = nextTick
     }
 
@@ -38,7 +43,7 @@ function withSafeTimers(fn: () => void) {
     globalThis.setImmediate = currentSetImmediate
     globalThis.clearImmediate = currentClearImmediate
 
-    if (globalThis.process) {
+    if (globalThis.process && nextTick) {
       nextTick(() => {
         globalThis.process.nextTick = currentNextTick
       })
@@ -48,7 +53,7 @@ function withSafeTimers(fn: () => void) {
 
 const promises = new Set<Promise<unknown>>()
 
-export async function rpcDone() {
+export async function rpcDone(): Promise<unknown[] | undefined> {
   if (!promises.size) {
     return
   }
@@ -61,7 +66,7 @@ export function createRuntimeRpc(
     BirpcOptions<RuntimeRPC>,
     'on' | 'post' | 'serialize' | 'deserialize'
   >,
-) {
+): { rpc: WorkerRPC; onCancel: Promise<CancelReason> } {
   let setCancel = (_reason: CancelReason) => {}
   const onCancel = new Promise<CancelReason>((resolve) => {
     setCancel = resolve
@@ -75,7 +80,6 @@ export function createRuntimeRpc(
       {
         eventNames: [
           'onUserConsoleLog',
-          'onFinished',
           'onCollected',
           'onCancel',
         ],
@@ -108,7 +112,7 @@ export function createRuntimeRpc(
   }
 }
 
-export function createSafeRpc(rpc: WorkerRPC) {
+export function createSafeRpc(rpc: WorkerRPC): WorkerRPC {
   return new Proxy(rpc, {
     get(target, p, handler) {
       const sendCall = get(target, p, handler)

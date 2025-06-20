@@ -1,8 +1,8 @@
 // @vitest-environment jsdom
 
+import { stripVTControlCharacters } from 'node:util'
 import { processError } from '@vitest/utils/error'
 import { expect, test } from 'vitest'
-import stripAnsi from 'strip-ansi'
 
 const nodeMajor = Number(process.version.slice(1).split('.')[0])
 
@@ -70,12 +70,9 @@ test('toContain correctly handles DOM nodes', () => {
     expect.unreachable()
   }
   catch (err: any) {
-    expect(stripAnsi(processError(err).diff)).toMatchInlineSnapshot(`
-      "- Expected
-      + Received
-
-      - flex flex-col flex-row
-      + flex flex-col"
+    expect(stripVTControlCharacters(processError(err).diff)).toMatchInlineSnapshot(`
+      "Expected: "flex flex-col flex-row"
+      Received: "flex flex-col""
     `)
   }
 
@@ -84,12 +81,9 @@ test('toContain correctly handles DOM nodes', () => {
     expect.unreachable()
   }
   catch (err: any) {
-    expect(stripAnsi(processError(err).diff)).toMatchInlineSnapshot(`
-      "- Expected
-      + Received
-
-      - flex-col
-      + flex flex-col"
+    expect(stripVTControlCharacters(processError(err).diff)).toMatchInlineSnapshot(`
+      "Expected: "flex-col"
+      Received: "flex flex-col""
     `)
   }
 })
@@ -106,4 +100,8 @@ test('jsdom global is exposed', () => {
   expect(dom).toBeDefined()
   dom.reconfigure({ url: 'https://examples.new.com' })
   expect(location.href).toBe('https://examples.new.com/')
+})
+
+test('ssr is disabled', () => {
+  expect(import.meta.env.SSR).toBe(false)
 })

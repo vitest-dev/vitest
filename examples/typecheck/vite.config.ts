@@ -1,4 +1,4 @@
-/// <reference types="vitest" />
+/// <reference types="vitest/config" />
 
 // Configure Vitest (https://vitest.dev/config/)
 

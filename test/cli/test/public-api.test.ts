@@ -1,6 +1,8 @@
-import { expect, it } from 'vitest'
-import type { File, TaskResultPack, UserConfig } from 'vitest'
+import type { RunnerTaskResultPack, RunnerTestFile } from 'vitest'
+import type { TestUserConfig } from 'vitest/node'
 import { resolve } from 'pathe'
+import { expect, it } from 'vitest'
+import { rolldownVersion } from 'vitest/node'
 import { runVitest } from '../../test-utils'
 
 it.each([
@@ -10,20 +12,17 @@ it.each([
     name: 'running in the browser',
     browser: {
       enabled: true,
-      provider: 'playwright',
-      name: 'chromium',
-      headless: true,
     },
   },
-] as UserConfig[])('passes down metadata when $name', { timeout: 60_000, retry: 3 }, async (config) => {
-  const taskUpdate: TaskResultPack[] = []
-  const finishedFiles: File[] = []
-  const collectedFiles: File[] = []
+] as TestUserConfig[])('passes down metadata when $name', { timeout: 60_000, retry: 1 }, async (config) => {
+  const taskUpdate: RunnerTaskResultPack[] = []
+  const finishedFiles: RunnerTestFile[] = []
+  const collectedFiles: RunnerTestFile[] = []
   const { ctx, stdout, stderr } = await runVitest({
     root: resolve(__dirname, '..', 'fixtures', 'public-api'),
     include: ['**/*.spec.ts'],
     reporters: [
-      'verbose',
+      ['verbose', { isTTY: false }],
       {
         onTaskUpdate(packs) {
           taskUpdate.push(...packs.filter(i => i[1]?.state === 'pass'))
@@ -93,7 +92,9 @@ it.each([
     expect(files[0].tasks[index + 1].name).toBe(`custom ${name}`)
     expect(files[0].tasks[index + 1].location).toEqual({
       line: 18,
-      column: 18,
+      // TODO: rolldown is more correct, but regular vite's source map is
+      // a little bit wrong with the boundaries (maybe because of the SSR transform?)
+      column: rolldownVersion || config.browser?.enabled ? 18 : 17,
     })
   })
 })

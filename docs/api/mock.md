@@ -20,45 +20,72 @@ getApplesSpy.mock.calls.length === 1
 
 You should use mock assertions (e.g., [`toHaveBeenCalled`](/api/expect#tohavebeencalled)) on [`expect`](/api/expect) to assert mock result. This API reference describes available properties and methods to manipulate mock behavior.
 
+::: tip
+The custom function implementation in the types below is marked with a generic `<T>`.
+:::
+
 ## getMockImplementation
 
-- **Type:** `(...args: any) => any`
+```ts
+function getMockImplementation(): T | undefined
+```
 
 Returns current mock implementation if there is one.
 
-If mock was created with [`vi.fn`](/api/vi#vi-fn), it will consider passed down method as a mock implementation.
+If the mock was created with [`vi.fn`](/api/vi#vi-fn), it will use the provided method as the mock implementation.
 
-If mock was created with [`vi.spyOn`](/api/vi#vi-spyon), it will return `undefined` unless a custom implementation was provided.
+If the mock was created with [`vi.spyOn`](/api/vi#vi-spyon), it will return `undefined` unless a custom implementation is provided.
 
 ## getMockName
 
-- **Type:** `() => string`
+```ts
+function getMockName(): string
+```
 
-Use it to return the name given to mock with method `.mockName(name)`.
+Use it to return the name assigned to the mock with the `.mockName(name)` method. By default, it will return `vi.fn()`.
 
 ## mockClear
 
-- **Type:** `() => MockInstance`
+```ts
+function mockClear(): MockInstance<T>
+```
 
-Clears all information about every call. After calling it, all properties on `.mock` will return empty state. This method does not reset implementations. It is useful if you need to clean up mock between different assertions.
+Clears all information about every call. After calling it, all properties on `.mock` will return to their initial state. This method does not reset implementations. It is useful for cleaning up mocks between different assertions.
 
-If you want this method to be called before each test automatically, you can enable [`clearMocks`](/config/#clearmocks) setting in config.
+```ts
+const person = {
+  greet: (name: string) => `Hello ${name}`,
+}
+const spy = vi.spyOn(person, 'greet').mockImplementation(() => 'mocked')
+expect(person.greet('Alice')).toBe('mocked')
+expect(spy.mock.calls).toEqual([['Alice']])
+
+// clear call history but keep mock implementation
+spy.mockClear()
+expect(spy.mock.calls).toEqual([])
+expect(person.greet('Bob')).toBe('mocked')
+expect(spy.mock.calls).toEqual([['Bob']])
+```
+
+To automatically call this method before each test, enable the [`clearMocks`](/config/#clearmocks) setting in the configuration.
 
 ## mockName
 
-- **Type:** `(name: string) => MockInstance`
+```ts
+function mockName(name: string): MockInstance<T>
+```
 
-Sets internal mock name. Useful to see the name of the mock if assertion fails.
+Sets the internal mock name. This is useful for identifying the mock when an assertion fails.
 
 ## mockImplementation
 
-- **Type:** `(fn: Function) => MockInstance`
+```ts
+function mockImplementation(fn: T): MockInstance<T>
+```
 
-Accepts a function that will be used as an implementation of the mock.
+Accepts a function to be used as the mock implementation. TypeScript expects the arguments and return type to match those of the original function.
 
-```ts twoslash
-import { vi } from 'vitest'
-// ---cut---
+```ts
 const mockFn = vi.fn().mockImplementation((apples: number) => apples + 1)
 // or: vi.fn(apples => apples + 1);
 
@@ -74,27 +101,25 @@ mockFn.mock.calls[1][0] === 1 // true
 
 ## mockImplementationOnce
 
-- **Type:** `(fn: Function) => MockInstance`
-
-Accepts a function that will be used as mock's implementation during the next call. Can be chained so that multiple function calls produce different results.
-
-```ts twoslash
-import { vi } from 'vitest'
-// ---cut---
-const myMockFn = vi
-  .fn()
-  .mockImplementationOnce(() => true)
-  .mockImplementationOnce(() => false)
-
-myMockFn() // true
-myMockFn() // false
+```ts
+function mockImplementationOnce(fn: T): MockInstance<T>
 ```
 
-When the mocked function runs out of implementations, it will invoke the default implementation that was set with `vi.fn(() => defaultValue)` or `.mockImplementation(() => defaultValue)` if they were called:
+Accepts a function to be used as the mock implementation. TypeScript expects the arguments and return type to match those of the original function. This method can be chained to produce different results for multiple function calls.
 
-```ts twoslash
-import { vi } from 'vitest'
-// ---cut---
+```ts
+const myMockFn = vi
+  .fn()
+  .mockImplementationOnce(() => true) // 1st call
+  .mockImplementationOnce(() => false) // 2nd call
+
+myMockFn() // 1st call: true
+myMockFn() // 2nd call: false
+```
+
+When the mocked function runs out of implementations, it will invoke the default implementation set with `vi.fn(() => defaultValue)` or `.mockImplementation(() => defaultValue)` if they were called:
+
+```ts
 const myMockFn = vi
   .fn(() => 'default')
   .mockImplementationOnce(() => 'first call')
@@ -106,14 +131,20 @@ console.log(myMockFn(), myMockFn(), myMockFn(), myMockFn())
 
 ## withImplementation
 
-- **Type:** `(fn: Function, callback: () => void) => MockInstance`
-- **Type:** `(fn: Function, callback: () => Promise<unknown>) => Promise<MockInstance>`
+```ts
+function withImplementation(
+  fn: T,
+  cb: () => void
+): MockInstance<T>
+function withImplementation(
+  fn: T,
+  cb: () => Promise<void>
+): Promise<MockInstance<T>>
+```
 
 Overrides the original mock implementation temporarily while the callback is being executed.
 
-```js twoslash
-import { vi } from 'vitest'
-// ---cut---
+```js
 const myMockFn = vi.fn(() => 'original')
 
 myMockFn.withImplementation(() => 'temp', () => {
@@ -145,63 +176,106 @@ Note that this method takes precedence over the [`mockImplementationOnce`](#mock
 
 ## mockRejectedValue
 
-- **Type:** `(value: any) => MockInstance`
+```ts
+function mockRejectedValue(value: unknown): MockInstance<T>
+```
 
 Accepts an error that will be rejected when async function is called.
 
-```ts twoslash
-import { vi } from 'vitest'
-// ---cut---
+```ts
 const asyncMock = vi.fn().mockRejectedValue(new Error('Async error'))
 
-await asyncMock() // throws "Async error"
+await asyncMock() // throws Error<'Async error'>
 ```
 
 ## mockRejectedValueOnce
 
-- **Type:** `(value: any) => MockInstance`
+```ts
+function mockRejectedValueOnce(value: unknown): MockInstance<T>
+```
 
-Accepts a value that will be rejected during the next function call. If chained, every consecutive call will reject specified value.
+Accepts a value that will be rejected during the next function call. If chained, each consecutive call will reject the specified value.
 
-```ts twoslash
-import { vi } from 'vitest'
-// ---cut---
+```ts
 const asyncMock = vi
   .fn()
   .mockResolvedValueOnce('first call')
   .mockRejectedValueOnce(new Error('Async error'))
 
-await asyncMock() // first call
-await asyncMock() // throws "Async error"
+await asyncMock() // 'first call'
+await asyncMock() // throws Error<'Async error'>
 ```
 
 ## mockReset
 
-- **Type:** `() => MockInstance`
+```ts
+function mockReset(): MockInstance<T>
+```
 
-Does what `mockClear` does and makes inner implementation an empty function (returning `undefined` when invoked). This also resets all "once" implementations. This is useful when you want to completely reset a mock to the default state.
+Does what [`mockClear`](#mockClear) does and resets inner implementation to the original function.
+This also resets all "once" implementations.
 
-If you want this method to be called before each test automatically, you can enable [`mockReset`](/config/#mockreset) setting in config.
+Note that resetting a mock from `vi.fn()` will set implementation to an empty function that returns `undefined`.
+resetting a mock from `vi.fn(impl)` will restore implementation to `impl`.
+
+This is useful when you want to reset a mock to its original state.
+
+```ts
+const person = {
+  greet: (name: string) => `Hello ${name}`,
+}
+const spy = vi.spyOn(person, 'greet').mockImplementation(() => 'mocked')
+expect(person.greet('Alice')).toBe('mocked')
+expect(spy.mock.calls).toEqual([['Alice']])
+
+// clear call history and reset implementation, but method is still spied
+spy.mockReset()
+expect(spy.mock.calls).toEqual([])
+expect(person.greet).toBe(spy)
+expect(person.greet('Bob')).toBe('Hello Bob')
+expect(spy.mock.calls).toEqual([['Bob']])
+```
+
+To automatically call this method before each test, enable the [`mockReset`](/config/#mockreset) setting in the configuration.
 
 ## mockRestore
 
-- **Type:** `() => MockInstance`
+```ts
+function mockRestore(): MockInstance<T>
+```
 
-Does what `mockReset` does and restores inner implementation to the original function.
+Does what [`mockReset`](#mockReset) does and restores original descriptors of spied-on objects.
 
-Note that restoring mock from `vi.fn()` will set implementation to an empty function that returns `undefined`. Restoring a `vi.fn(impl)` will restore implementation to `impl`.
+Note that restoring a mock from `vi.fn()` will set implementation to an empty function that returns `undefined`.
+Restoring a mock from `vi.fn(impl)` will restore implementation to `impl`.
 
-If you want this method to be called before each test automatically, you can enable [`restoreMocks`](/config/#restoremocks) setting in config.
+```ts
+const person = {
+  greet: (name: string) => `Hello ${name}`,
+}
+const spy = vi.spyOn(person, 'greet').mockImplementation(() => 'mocked')
+expect(person.greet('Alice')).toBe('mocked')
+expect(spy.mock.calls).toEqual([['Alice']])
+
+// clear call history and restore spied object method
+spy.mockRestore()
+expect(spy.mock.calls).toEqual([])
+expect(person.greet).not.toBe(spy)
+expect(person.greet('Bob')).toBe('Hello Bob')
+expect(spy.mock.calls).toEqual([])
+```
+
+To automatically call this method before each test, enable the [`restoreMocks`](/config/#restoremocks) setting in the configuration.
 
 ## mockResolvedValue
 
-- **Type:** `(value: any) => MockInstance`
+```ts
+function mockResolvedValue(value: Awaited<ReturnType<T>>): MockInstance<T>
+```
 
-Accepts a value that will be resolved when async function is called.
+Accepts a value that will be resolved when the async function is called. TypeScript will only accept values that match the return type of the original function.
 
-```ts twoslash
-import { vi } from 'vitest'
-// ---cut---
+```ts
 const asyncMock = vi.fn().mockResolvedValue(42)
 
 await asyncMock() // 42
@@ -209,13 +283,13 @@ await asyncMock() // 42
 
 ## mockResolvedValueOnce
 
-- **Type:** `(value: any) => MockInstance`
+```ts
+function mockResolvedValueOnce(value: Awaited<ReturnType<T>>): MockInstance<T>
+```
 
-Accepts a value that will be resolved during the next function call. If chained, every consecutive call will resolve specified value.
+Accepts a value that will be resolved during the next function call. TypeScript will only accept values that match the return type of the original function. If chained, each consecutive call will resolve the specified value.
 
-```ts twoslash
-import { vi } from 'vitest'
-// ---cut---
+```ts
 const asyncMock = vi
   .fn()
   .mockResolvedValue('default')
@@ -230,9 +304,11 @@ await asyncMock() // default
 
 ## mockReturnThis
 
-- **Type:** `() => MockInstance`
+```ts
+function mockReturnThis(): MockInstance<T>
+```
 
-Use this if you need to return `this` context from the method without invoking actual implementation. This is a shorthand for:
+Use this if you need to return the `this` context from the method without invoking the actual implementation. This is a shorthand for:
 
 ```ts
 spy.mockImplementation(function () {
@@ -242,13 +318,13 @@ spy.mockImplementation(function () {
 
 ## mockReturnValue
 
-- **Type:** `(value: any) => MockInstance`
+```ts
+function mockReturnValue(value: ReturnType<T>): MockInstance<T>
+```
 
-Accepts a value that will be returned whenever the mock function is called.
+Accepts a value that will be returned whenever the mock function is called. TypeScript will only accept values that match the return type of the original function.
 
-```ts twoslash
-import { vi } from 'vitest'
-// ---cut---
+```ts
 const mock = vi.fn()
 mock.mockReturnValue(42)
 mock() // 42
@@ -258,15 +334,15 @@ mock() // 43
 
 ## mockReturnValueOnce
 
-- **Type:** `(value: any) => MockInstance`
+```ts
+function mockReturnValueOnce(value: ReturnType<T>): MockInstance<T>
+```
 
-Accepts a value that will be returned during the next function call. If chained, every consecutive call will return the specified value.
+Accepts a value that will be returned whenever the mock function is called. TypeScript will only accept values that match the return type of the original function.
 
-When there are no more `mockReturnValueOnce` values to use, mock will fallback to previously defined implementation if there is one.
+When the mocked function runs out of implementations, it will invoke the default implementation set with `vi.fn(() => defaultValue)` or `.mockImplementation(() => defaultValue)` if they were called:
 
-```ts twoslash
-import { vi } from 'vitest'
-// ---cut---
+```ts
 const myMockFn = vi
   .fn()
   .mockReturnValue('default')
@@ -278,6 +354,10 @@ console.log(myMockFn(), myMockFn(), myMockFn(), myMockFn())
 ```
 
 ## mock.calls
+
+```ts
+const calls: Parameters<T>[]
+```
 
 This is an array containing all arguments for each call. One item of the array is the arguments of that call.
 
@@ -295,9 +375,44 @@ fn.mock.calls === [
 
 ## mock.lastCall
 
-This contains the arguments of the last call. If mock wasn't called, will return `undefined`.
+```ts
+const lastCall: Parameters<T> | undefined
+```
+
+This contains the arguments of the last call. If mock wasn't called, it will return `undefined`.
 
 ## mock.results
+
+```ts
+interface MockResultReturn<T> {
+  type: 'return'
+  /**
+   * The value that was returned from the function.
+   * If function returned a Promise, then this will be a resolved value.
+   */
+  value: T
+}
+
+interface MockResultIncomplete {
+  type: 'incomplete'
+  value: undefined
+}
+
+interface MockResultThrow {
+  type: 'throw'
+  /**
+   * An error that was thrown during function execution.
+   */
+  value: any
+}
+
+type MockResult<T> =
+  | MockResultReturn<T>
+  | MockResultThrow
+  | MockResultIncomplete
+
+const results: MockResult<ReturnType<T>>[]
+```
 
 This is an array containing all values that were `returned` from the function. One item of the array is an object with properties `type` and `value`. Available types are:
 
@@ -334,6 +449,24 @@ fn.mock.results === [
 
 ## mock.settledResults
 
+```ts
+interface MockSettledResultFulfilled<T> {
+  type: 'fulfilled'
+  value: T
+}
+
+interface MockSettledResultRejected {
+  type: 'rejected'
+  value: any
+}
+
+export type MockSettledResult<T> =
+  | MockSettledResultFulfilled<T>
+  | MockSettledResultRejected
+
+const settledResults: MockSettledResult<Awaited<ReturnType<T>>>[]
+```
+
 An array containing all values that were `resolved` or `rejected` from the function.
 
 This array will be empty if the function was never resolved or rejected.
@@ -357,6 +490,10 @@ fn.mock.settledResults === [
 
 ## mock.invocationCallOrder
 
+```ts
+const invocationCallOrder: number[]
+```
+
 This property returns the order of the mock function's execution. It is an array of numbers that are shared between all defined mocks.
 
 ```js
@@ -373,6 +510,10 @@ fn2.mock.invocationCallOrder === [2]
 
 ## mock.contexts
 
+```ts
+const contexts: ThisParameterType<T>[]
+```
+
 This property is an array of `this` values used during each call to the mock function.
 
 ```js
@@ -387,6 +528,10 @@ fn.mock.contexts[1] === context
 ```
 
 ## mock.instances
+
+```ts
+const instances: ReturnType<T>[]
+```
 
 This property is an array containing all instances that were created when the mock was called with the `new` keyword. Note that this is an actual context (`this`) of the function, not a return value.
 

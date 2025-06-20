@@ -1,9 +1,9 @@
 import type { SnapshotEnvironment } from '@vitest/snapshot/environment'
+import type { SerializedConfig } from '../../../runtime/config'
 import type { VitestExecutor } from '../../../runtime/execute'
-import type { ResolvedConfig } from '../../../types'
 
 export async function resolveSnapshotEnvironment(
-  config: ResolvedConfig,
+  config: SerializedConfig,
   executor: VitestExecutor,
 ): Promise<SnapshotEnvironment> {
   if (!config.snapshotEnvironment) {

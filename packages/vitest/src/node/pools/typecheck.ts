@@ -1,28 +1,30 @@
 import type { DeferPromise } from '@vitest/utils'
-import { createDefer } from '@vitest/utils'
 import type { TypecheckResults } from '../../typecheck/typechecker'
+import type { Vitest } from '../core'
+import type { ProcessPool } from '../pool'
+import type { TestProject } from '../project'
+import type { TestSpecification } from '../spec'
+import { hasFailed } from '@vitest/runner/utils'
+import { createDefer } from '@vitest/utils'
 import { Typechecker } from '../../typecheck/typechecker'
 import { groupBy } from '../../utils/base'
-import { hasFailed } from '../../utils/tasks'
-import type { Vitest } from '../core'
-import type { ProcessPool, WorkspaceSpec } from '../pool'
-import type { WorkspaceProject } from '../workspace'
 
-export function createTypecheckPool(ctx: Vitest): ProcessPool {
-  const promisesMap = new WeakMap<WorkspaceProject, DeferPromise<void>>()
-  const rerunTriggered = new WeakMap<WorkspaceProject, boolean>()
+export function createTypecheckPool(vitest: Vitest): ProcessPool {
+  const promisesMap = new WeakMap<TestProject, DeferPromise<void>>()
+  const rerunTriggered = new WeakSet<TestProject>()
 
   async function onParseEnd(
-    project: WorkspaceProject,
+    project: TestProject,
     { files, sourceErrors }: TypecheckResults,
   ) {
     const checker = project.typechecker!
 
-    await ctx.report('onTaskUpdate', checker.getTestPacks())
+    const { packs, events } = checker.getTestPacksAndEvents()
+    await vitest._testRun.updated(packs, events)
 
     if (!project.config.typecheck.ignoreSourceErrors) {
       sourceErrors.forEach(error =>
-        ctx.state.catchError(error, 'Unhandled Source Error'),
+        vitest.state.catchError(error, 'Unhandled Source Error'),
       )
     }
 
@@ -31,25 +33,25 @@ export function createTypecheckPool(ctx: Vitest): ProcessPool {
     if (processError) {
       const error = new Error(checker.getOutput())
       error.stack = ''
-      ctx.state.catchError(error, 'Typecheck Error')
+      vitest.state.catchError(error, 'Typecheck Error')
     }
 
     promisesMap.get(project)?.resolve()
 
-    rerunTriggered.set(project, false)
+    rerunTriggered.delete(project)
 
     // triggered by TSC watcher, not Vitest watcher, so we need to emulate what Vitest does in this case
-    if (ctx.config.watch && !ctx.runningPromise) {
-      await ctx.report('onFinished', files, [])
-      await ctx.report('onWatcherStart', files, [
+    if (vitest.config.watch && !vitest.runningPromise) {
+      await vitest.report('onFinished', files, [])
+      await vitest.report('onWatcherStart', files, [
         ...(project.config.typecheck.ignoreSourceErrors ? [] : sourceErrors),
-        ...ctx.state.getUnhandledErrors(),
+        ...vitest.state.getUnhandledErrors(),
       ])
     }
   }
 
   async function createWorkspaceTypechecker(
-    project: WorkspaceProject,
+    project: TestProject,
     files: string[],
   ) {
     const checker = project.typechecker ?? new Typechecker(project)
@@ -61,18 +63,21 @@ export function createTypecheckPool(ctx: Vitest): ProcessPool {
     checker.setFiles(files)
 
     checker.onParseStart(async () => {
-      ctx.state.collectFiles(checker.getTestFiles())
-      await ctx.report('onCollected')
+      const files = checker.getTestFiles()
+      for (const file of files) {
+        await vitest._testRun.enqueued(project, file)
+      }
+      await vitest._testRun.collected(project, files)
     })
 
     checker.onParseEnd(result => onParseEnd(project, result))
 
     checker.onWatcherRerun(async () => {
-      rerunTriggered.set(project, true)
+      rerunTriggered.add(project)
 
-      if (!ctx.runningPromise) {
-        ctx.state.clearErrors()
-        await ctx.report(
+      if (!vitest.runningPromise) {
+        vitest.state.clearErrors()
+        await vitest.report(
           'onWatcherRerun',
           files,
           'File change detected. Triggering rerun.',
@@ -80,50 +85,54 @@ export function createTypecheckPool(ctx: Vitest): ProcessPool {
       }
 
       await checker.collectTests()
-      ctx.state.collectFiles(checker.getTestFiles())
 
-      await ctx.report('onTaskUpdate', checker.getTestPacks())
-      await ctx.report('onCollected')
+      const testFiles = checker.getTestFiles()
+      for (const file of testFiles) {
+        await vitest._testRun.enqueued(project, file)
+      }
+      await vitest._testRun.collected(project, testFiles)
+
+      const { packs, events } = checker.getTestPacksAndEvents()
+      await vitest._testRun.updated(packs, events)
     })
 
-    await checker.prepare()
     return checker
   }
 
-  async function startTypechecker(project: WorkspaceProject, files: string[]) {
+  async function startTypechecker(project: TestProject, files: string[]) {
     if (project.typechecker) {
-      return project.typechecker
+      return
     }
     const checker = await createWorkspaceTypechecker(project, files)
     await checker.collectTests()
     await checker.start()
   }
 
-  async function collectTests(specs: WorkspaceSpec[]) {
-    const specsByProject = groupBy(specs, ([project]) => project.getName())
+  async function collectTests(specs: TestSpecification[]) {
+    const specsByProject = groupBy(specs, spec => spec.project.name)
     for (const name in specsByProject) {
-      const project = specsByProject[name][0][0]
-      const files = specsByProject[name].map(([_, file]) => file)
+      const project = specsByProject[name][0].project
+      const files = specsByProject[name].map(spec => spec.moduleId)
       const checker = await createWorkspaceTypechecker(project, files)
       checker.setFiles(files)
       await checker.collectTests()
-      ctx.state.collectFiles(checker.getTestFiles())
-      await ctx.report('onCollected')
+      const testFiles = checker.getTestFiles()
+      vitest.state.collectFiles(project, testFiles)
     }
   }
 
-  async function runTests(specs: WorkspaceSpec[]) {
-    const specsByProject = groupBy(specs, ([project]) => project.getName())
+  async function runTests(specs: TestSpecification[]) {
+    const specsByProject = groupBy(specs, spec => spec.project.name)
     const promises: Promise<void>[] = []
 
     for (const name in specsByProject) {
-      const project = specsByProject[name][0][0]
-      const files = specsByProject[name].map(([_, file]) => file)
+      const project = specsByProject[name][0].project
+      const files = specsByProject[name].map(spec => spec.moduleId)
       const promise = createDefer<void>()
       // check that watcher actually triggered rerun
       const _p = new Promise<boolean>((resolve) => {
         const _i = setInterval(() => {
-          if (!project.typechecker || rerunTriggered.get(project)) {
+          if (!project.typechecker || rerunTriggered.has(project)) {
             resolve(true)
             clearInterval(_i)
           }
@@ -135,14 +144,17 @@ export function createTypecheckPool(ctx: Vitest): ProcessPool {
       })
       const triggered = await _p
       if (project.typechecker && !triggered) {
-        ctx.state.collectFiles(project.typechecker.getTestFiles())
-        await ctx.report('onCollected')
+        const testFiles = project.typechecker.getTestFiles()
+        for (const file of testFiles) {
+          await vitest._testRun.enqueued(project, file)
+        }
+        await vitest._testRun.collected(project, testFiles)
         await onParseEnd(project, project.typechecker.getResult())
         continue
       }
       promises.push(promise)
       promisesMap.set(project, promise)
-      startTypechecker(project, files)
+      promises.push(startTypechecker(project, files))
     }
 
     await Promise.all(promises)
@@ -153,7 +165,7 @@ export function createTypecheckPool(ctx: Vitest): ProcessPool {
     runTests,
     collectTests,
     async close() {
-      const promises = ctx.projects.map(project =>
+      const promises = vitest.projects.map(project =>
         project.typechecker?.stop(),
       )
       await Promise.all(promises)

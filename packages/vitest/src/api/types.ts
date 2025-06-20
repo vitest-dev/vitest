@@ -1,24 +1,41 @@
-import type { TransformResult } from 'vite'
+import type { File, TaskEventPack, TaskResultPack, TestAnnotation } from '@vitest/runner'
 import type { BirpcReturn } from 'birpc'
-import type {
-  File,
-  ModuleGraphData,
-  Reporter,
-  ResolvedConfig,
-  TaskResultPack,
-} from '../types'
+import type { SerializedConfig } from '../runtime/config'
+import type { SerializedTestSpecification } from '../runtime/types/utils'
+import type { Awaitable, LabelColor, ModuleGraphData, UserConsoleLog } from '../types/general'
 
-export interface TransformResultWithSource extends TransformResult {
+interface SourceMap {
+  file: string
+  mappings: string
+  names: string[]
+  sources: string[]
+  sourcesContent?: string[]
+  version: number
+  toString: () => string
+  toUrl: () => string
+}
+
+export interface TransformResultWithSource {
+  code: string
+  map: SourceMap | {
+    mappings: ''
+  } | null
+  etag?: string
+  deps?: string[]
+  dynamicDeps?: string[]
   source?: string
 }
 
 export interface WebSocketHandlers {
-  onCollected: (files?: File[]) => Promise<void>
-  onTaskUpdate: (packs: TaskResultPack[]) => void
+  onTaskUpdate: (packs: TaskResultPack[], events: TaskEventPack[]) => void
   getFiles: () => File[]
-  getTestFiles: () => Promise<[{ name: string; root: string }, file: string][]>
+  getTestFiles: () => Promise<SerializedTestSpecification[]>
   getPaths: () => string[]
-  getConfig: () => ResolvedConfig
+  getConfig: () => SerializedConfig
+  // TODO: Remove in v4
+  /** @deprecated -- Use `getResolvedProjectLabels` instead */
+  getResolvedProjectNames: () => string[]
+  getResolvedProjectLabels: () => { name: string; color?: LabelColor }[]
   getModuleGraph: (
     projectName: string,
     id: string,
@@ -31,21 +48,24 @@ export interface WebSocketHandlers {
   ) => Promise<TransformResultWithSource | undefined>
   readTestFile: (id: string) => Promise<string | null>
   saveTestFile: (id: string, content: string) => Promise<void>
-  rerun: (files: string[]) => Promise<void>
+  rerun: (files: string[], resetTestNamePattern?: boolean) => Promise<void>
+  rerunTask: (id: string) => Promise<void>
   updateSnapshot: (file?: File) => Promise<void>
   getUnhandledErrors: () => unknown[]
 }
 
-export interface WebSocketEvents
-  extends Pick<
-    Reporter,
-    | 'onCollected'
-    | 'onFinished'
-    | 'onTaskUpdate'
-    | 'onUserConsoleLog'
-    | 'onPathsCollected'
-    | 'onSpecsCollected'
-  > {
+export interface WebSocketEvents {
+  onCollected?: (files?: File[]) => Awaitable<void>
+  onFinished?: (
+    files: File[],
+    errors: unknown[],
+    coverage?: unknown
+  ) => Awaitable<void>
+  onTestAnnotate?: (testId: string, annotation: TestAnnotation) => Awaitable<void>
+  onTaskUpdate?: (packs: TaskResultPack[], events: TaskEventPack[]) => Awaitable<void>
+  onUserConsoleLog?: (log: UserConsoleLog) => Awaitable<void>
+  onPathsCollected?: (paths?: string[]) => Awaitable<void>
+  onSpecsCollected?: (specs?: SerializedTestSpecification[]) => Awaitable<void>
   onFinishedReportCoverage: () => void
 }
 

@@ -1,14 +1,17 @@
-import { channel, client } from '@vitest/browser/client'
-
-function on(event, listener) {
-  window.addEventListener(event, listener)
-  return () => window.removeEventListener(event, listener)
-}
+import { client } from '@vitest/browser/client'
 
 function serializeError(unhandledError) {
+  const state = globalThis.__vitest_worker__
+  const VITEST_TEST_NAME = state && state.current && state.current.type === 'test'
+    ? state.current.name
+    : undefined
+  const VITEST_TEST_PATH = state && state.filepath ? state.filepath : undefined
+
   if (typeof unhandledError !== 'object' || !unhandledError) {
     return {
       message: String(unhandledError),
+      VITEST_TEST_NAME,
+      VITEST_TEST_PATH,
     }
   }
 
@@ -16,44 +19,45 @@ function serializeError(unhandledError) {
     name: unhandledError.name,
     message: unhandledError.message,
     stack: String(unhandledError.stack),
+    VITEST_TEST_NAME,
+    VITEST_TEST_PATH,
   }
 }
 
-function catchWindowErrors(cb) {
+function catchWindowErrors(errorEvent, prop, cb) {
   let userErrorListenerCount = 0
   function throwUnhandlerError(e) {
-    if (userErrorListenerCount === 0 && e.error != null) {
+    if (userErrorListenerCount === 0 && e[prop] != null) {
       cb(e)
     }
     else {
-      console.error(e.error)
+      console.error(e[prop])
     }
   }
   const addEventListener = window.addEventListener.bind(window)
   const removeEventListener = window.removeEventListener.bind(window)
-  window.addEventListener('error', throwUnhandlerError)
+  window.addEventListener(errorEvent, throwUnhandlerError)
   window.addEventListener = function (...args) {
-    if (args[0] === 'error') {
+    if (args[0] === errorEvent) {
       userErrorListenerCount++
     }
     return addEventListener.apply(this, args)
   }
   window.removeEventListener = function (...args) {
-    if (args[0] === 'error' && userErrorListenerCount) {
+    if (args[0] === errorEvent && userErrorListenerCount) {
       userErrorListenerCount--
     }
     return removeEventListener.apply(this, args)
   }
   return function clearErrorHandlers() {
-    window.removeEventListener('error', throwUnhandlerError)
+    window.removeEventListener(errorEvent, throwUnhandlerError)
   }
 }
 
 function registerUnexpectedErrors() {
-  catchWindowErrors(event =>
-    reportUnexpectedError('Error', event.error),
-  )
-  on('unhandledrejection', event =>
+  catchWindowErrors('error', 'error', event =>
+    reportUnexpectedError('Error', event.error))
+  catchWindowErrors('unhandledrejection', 'reason', event =>
     reportUnexpectedError('Unhandled Rejection', event.reason))
 }
 
@@ -62,20 +66,9 @@ async function reportUnexpectedError(
   error,
 ) {
   const processedError = serializeError(error)
-  await client.rpc.onUnhandledError(processedError, type)
-  const state = __vitest_browser_runner__
-
-  if (state.type === 'orchestrator') {
-    return
-  }
-
-  if (!state.runTests || !__vitest_worker__.current) {
-    channel.postMessage({
-      type: 'done',
-      filenames: state.files,
-      id: state.iframeId,
-    })
-  }
+  await client.waitForConnection().then(() => {
+    return client.rpc.onUnhandledError(processedError, type)
+  }).catch(console.error)
 }
 
 registerUnexpectedErrors()

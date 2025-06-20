@@ -8,23 +8,26 @@
 // This is a fork of Jest's jest-diff package, but it doesn't depend on Node environment (like chalk).
 
 import type { PrettyFormatOptions } from '@vitest/pretty-format'
+import type { DiffOptions } from './types'
 import {
   format as prettyFormat,
   plugins as prettyFormatPlugins,
 } from '@vitest/pretty-format'
-import { getType } from './getType'
-import { DIFF_DELETE, DIFF_EQUAL, DIFF_INSERT, Diff } from './cleanupSemantic'
+import c from 'tinyrainbow'
+import { stringify } from '../display'
+import { deepClone, getOwnProperties, getType as getSimpleType } from '../helpers'
+import { Diff, DIFF_DELETE, DIFF_EQUAL, DIFF_INSERT } from './cleanupSemantic'
 import { NO_DIFF_MESSAGE, SIMILAR_MESSAGE } from './constants'
 import { diffLinesRaw, diffLinesUnified, diffLinesUnified2 } from './diffLines'
+import { getType } from './getType'
 import { normalizeDiffOptions } from './normalizeDiffOptions'
 import { diffStringsRaw, diffStringsUnified } from './printDiffs'
-import type { DiffOptions } from './types'
 
-export type { DiffOptions, DiffOptionsColor } from './types'
+export type { DiffOptions, DiffOptionsColor, SerializedDiffOptions } from './types'
 
 export { diffLinesRaw, diffLinesUnified, diffLinesUnified2 }
 export { diffStringsRaw, diffStringsUnified }
-export { DIFF_DELETE, DIFF_EQUAL, DIFF_INSERT, Diff }
+export { Diff, DIFF_DELETE, DIFF_EQUAL, DIFF_INSERT }
 
 function getCommonMessage(message: string, options?: DiffOptions) {
   const { commonColor } = normalizeDiffOptions(options)
@@ -47,15 +50,17 @@ const PLUGINS = [
   DOMCollection,
   Immutable,
   AsymmetricMatcher,
+  prettyFormatPlugins.Error,
 ]
 const FORMAT_OPTIONS = {
+  maxDepth: 20,
   plugins: PLUGINS,
-}
+} satisfies PrettyFormatOptions
 const FALLBACK_FORMAT_OPTIONS = {
   callToJSON: false,
-  maxDepth: 10,
+  maxDepth: 8,
   plugins: PLUGINS,
-}
+} satisfies PrettyFormatOptions
 
 // Generate a string that will highlight the difference between two values
 // with green and red. (similar to how github does code diffing)
@@ -66,7 +71,7 @@ const FALLBACK_FORMAT_OPTIONS = {
  * @param options Diff options
  * @returns {string | null} a string diff
  */
-export function diff(a: any, b: any, options?: DiffOptions): string | null {
+export function diff(a: any, b: any, options?: DiffOptions): string | undefined {
   if (Object.is(a, b)) {
     return ''
   }
@@ -77,11 +82,11 @@ export function diff(a: any, b: any, options?: DiffOptions): string | null {
   if (aType === 'object' && typeof a.asymmetricMatch === 'function') {
     if (a.$$typeof !== Symbol.for('jest.asymmetricMatcher')) {
       // Do not know expected type of user-defined asymmetric matcher.
-      return null
+      return undefined
     }
     if (typeof a.getExpectedType !== 'function') {
       // For example, expect.anything() matches either null or undefined
-      return null
+      return undefined
     }
     expectedType = a.getExpectedType()
     // Primitive types boolean and number omit difference below.
@@ -93,15 +98,25 @@ export function diff(a: any, b: any, options?: DiffOptions): string | null {
     const { aAnnotation, aColor, aIndicator, bAnnotation, bColor, bIndicator }
       = normalizeDiffOptions(options)
     const formatOptions = getFormatOptions(FALLBACK_FORMAT_OPTIONS, options)
-    const aDisplay = prettyFormat(a, formatOptions)
-    const bDisplay = prettyFormat(b, formatOptions)
+    let aDisplay = prettyFormat(a, formatOptions)
+    let bDisplay = prettyFormat(b, formatOptions)
+    // even if prettyFormat prints successfully big objects,
+    // large string can choke later on (concatenation? RPC?),
+    // so truncate it to a reasonable length here.
+    // (For example, playwright's ElementHandle can become about 200_000_000 length string)
+    const MAX_LENGTH = 100_000
+    function truncate(s: string) {
+      return s.length <= MAX_LENGTH ? s : (`${s.slice(0, MAX_LENGTH)}...`)
+    }
+    aDisplay = truncate(aDisplay)
+    bDisplay = truncate(bDisplay)
     const aDiff = `${aColor(`${aIndicator} ${aAnnotation}:`)} \n${aDisplay}`
     const bDiff = `${bColor(`${bIndicator} ${bAnnotation}:`)} \n${bDisplay}`
     return `${aDiff}\n\n${bDiff}`
   }
 
   if (omitDifference) {
-    return null
+    return undefined
   }
 
   switch (aType) {
@@ -177,11 +192,13 @@ function getFormatOptions(
   formatOptions: PrettyFormatOptions,
   options?: DiffOptions,
 ): PrettyFormatOptions {
-  const { compareKeys } = normalizeDiffOptions(options)
+  const { compareKeys, printBasicPrototype, maxDepth } = normalizeDiffOptions(options)
 
   return {
     ...formatOptions,
     compareKeys,
+    printBasicPrototype,
+    maxDepth: maxDepth ?? formatOptions.maxDepth,
   }
 }
 
@@ -210,4 +227,174 @@ function getObjectsDifference(
       options,
     )
   }
+}
+
+const MAX_DIFF_STRING_LENGTH = 20_000
+
+function isAsymmetricMatcher(data: any) {
+  const type = getSimpleType(data)
+  return type === 'Object' && typeof data.asymmetricMatch === 'function'
+}
+
+function isReplaceable(obj1: any, obj2: any) {
+  const obj1Type = getSimpleType(obj1)
+  const obj2Type = getSimpleType(obj2)
+  return (
+    obj1Type === obj2Type && (obj1Type === 'Object' || obj1Type === 'Array')
+  )
+}
+
+export function printDiffOrStringify(
+  received: unknown,
+  expected: unknown,
+  options?: DiffOptions,
+): string | undefined {
+  const { aAnnotation, bAnnotation } = normalizeDiffOptions(options)
+
+  if (
+    typeof expected === 'string'
+    && typeof received === 'string'
+    && expected.length > 0
+    && received.length > 0
+    && expected.length <= MAX_DIFF_STRING_LENGTH
+    && received.length <= MAX_DIFF_STRING_LENGTH
+    && expected !== received
+  ) {
+    if (expected.includes('\n') || received.includes('\n')) {
+      return diffStringsUnified(expected, received, options)
+    }
+
+    const [diffs] = diffStringsRaw(expected, received, true)
+    const hasCommonDiff = diffs.some(diff => diff[0] === DIFF_EQUAL)
+
+    const printLabel = getLabelPrinter(aAnnotation, bAnnotation)
+    const expectedLine
+      = printLabel(aAnnotation)
+        + printExpected(
+          getCommonAndChangedSubstrings(diffs, DIFF_DELETE, hasCommonDiff),
+        )
+    const receivedLine
+      = printLabel(bAnnotation)
+        + printReceived(
+          getCommonAndChangedSubstrings(diffs, DIFF_INSERT, hasCommonDiff),
+        )
+
+    return `${expectedLine}\n${receivedLine}`
+  }
+
+  // if (isLineDiffable(expected, received)) {
+  const clonedExpected = deepClone(expected, { forceWritable: true })
+  const clonedReceived = deepClone(received, { forceWritable: true })
+  const { replacedExpected, replacedActual } = replaceAsymmetricMatcher(clonedReceived, clonedExpected)
+  const difference = diff(replacedExpected, replacedActual, options)
+
+  return difference
+  // }
+
+  // const printLabel = getLabelPrinter(aAnnotation, bAnnotation)
+  // const expectedLine = printLabel(aAnnotation) + printExpected(expected)
+  // const receivedLine
+  //   = printLabel(bAnnotation)
+  //   + (stringify(expected) === stringify(received)
+  //     ? 'serializes to the same string'
+  //     : printReceived(received))
+
+  // return `${expectedLine}\n${receivedLine}`
+}
+
+export function replaceAsymmetricMatcher(
+  actual: any,
+  expected: any,
+  actualReplaced: WeakSet<WeakKey> = new WeakSet(),
+  expectedReplaced: WeakSet<WeakKey> = new WeakSet(),
+): {
+    replacedActual: any
+    replacedExpected: any
+  } {
+  // handle asymmetric Error.cause diff
+  if (
+    actual instanceof Error
+    && expected instanceof Error
+    && typeof actual.cause !== 'undefined'
+    && typeof expected.cause === 'undefined'
+  ) {
+    delete actual.cause
+    return {
+      replacedActual: actual,
+      replacedExpected: expected,
+    }
+  }
+  if (!isReplaceable(actual, expected)) {
+    return { replacedActual: actual, replacedExpected: expected }
+  }
+  if (actualReplaced.has(actual) || expectedReplaced.has(expected)) {
+    return { replacedActual: actual, replacedExpected: expected }
+  }
+  actualReplaced.add(actual)
+  expectedReplaced.add(expected)
+  getOwnProperties(expected).forEach((key) => {
+    const expectedValue = expected[key]
+    const actualValue = actual[key]
+    if (isAsymmetricMatcher(expectedValue)) {
+      if (expectedValue.asymmetricMatch(actualValue)) {
+        actual[key] = expectedValue
+      }
+    }
+    else if (isAsymmetricMatcher(actualValue)) {
+      if (actualValue.asymmetricMatch(expectedValue)) {
+        expected[key] = actualValue
+      }
+    }
+    else if (isReplaceable(actualValue, expectedValue)) {
+      const replaced = replaceAsymmetricMatcher(
+        actualValue,
+        expectedValue,
+        actualReplaced,
+        expectedReplaced,
+      )
+      actual[key] = replaced.replacedActual
+      expected[key] = replaced.replacedExpected
+    }
+  })
+  return {
+    replacedActual: actual,
+    replacedExpected: expected,
+  }
+}
+
+type PrintLabel = (string: string) => string
+export function getLabelPrinter(...strings: Array<string>): PrintLabel {
+  const maxLength = strings.reduce(
+    (max, string) => (string.length > max ? string.length : max),
+    0,
+  )
+  return (string: string): string =>
+    `${string}: ${' '.repeat(maxLength - string.length)}`
+}
+
+const SPACE_SYMBOL = '\u{00B7}' // middle dot
+function replaceTrailingSpaces(text: string): string {
+  return text.replace(/\s+$/gm, spaces => SPACE_SYMBOL.repeat(spaces.length))
+}
+
+function printReceived(object: unknown): string {
+  return c.red(replaceTrailingSpaces(stringify(object)))
+}
+function printExpected(value: unknown): string {
+  return c.green(replaceTrailingSpaces(stringify(value)))
+}
+
+function getCommonAndChangedSubstrings(diffs: Array<Diff>, op: number, hasCommonDiff: boolean): string {
+  return diffs.reduce(
+    (reduced: string, diff: Diff): string =>
+      reduced
+      + (diff[0] === DIFF_EQUAL
+        ? diff[1]
+        : diff[0] === op
+          ? hasCommonDiff
+            ? c.inverse(diff[1])
+            : diff[1]
+          : ''),
+    '',
+  )
 }

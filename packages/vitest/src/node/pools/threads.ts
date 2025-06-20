@@ -1,29 +1,27 @@
-import { MessageChannel } from 'node:worker_threads'
-import * as nodeos from 'node:os'
-import { createBirpc } from 'birpc'
+import type { FileSpecification } from '@vitest/runner/types/runner'
 import type { Options as TinypoolOptions } from 'tinypool'
-import Tinypool from 'tinypool'
-import { resolve } from 'pathe'
-import type {
-  ContextTestEnvironment,
-  ResolvedConfig,
-  RunnerRPC,
-  RuntimeRPC,
-  Vitest,
-  WorkerContext,
-} from '../../types'
+import type { RunnerRPC, RuntimeRPC } from '../../types/rpc'
+import type { ContextTestEnvironment } from '../../types/worker'
+import type { Vitest } from '../core'
 import type { PoolProcessOptions, ProcessPool, RunWithFiles } from '../pool'
+import type { TestProject } from '../project'
+import type { SerializedConfig } from '../types/config'
+import type { WorkerContext } from '../types/worker'
+import * as nodeos from 'node:os'
+import { resolve } from 'node:path'
+import { MessageChannel } from 'node:worker_threads'
+import { createBirpc } from 'birpc'
+import Tinypool from 'tinypool'
+import { groupBy } from '../../utils/base'
 import { envsOrder, groupFilesByEnv } from '../../utils/test-helpers'
-import { AggregateError, groupBy } from '../../utils/base'
-import type { WorkspaceProject } from '../workspace'
 import { createMethodsRPC } from './rpc'
 
-function createWorkerChannel(project: WorkspaceProject) {
+function createWorkerChannel(project: TestProject, collect: boolean) {
   const channel = new MessageChannel()
   const port = channel.port2
   const workerPort = channel.port1
 
-  const rpc = createBirpc<RunnerRPC, RuntimeRPC>(createMethodsRPC(project), {
+  const rpc = createBirpc<RunnerRPC, RuntimeRPC>(createMethodsRPC(project, { collect }), {
     eventNames: ['onCancel'],
     post(v) {
       port.postMessage(v)
@@ -36,13 +34,13 @@ function createWorkerChannel(project: WorkspaceProject) {
     },
   })
 
-  project.ctx.onCancel(reason => rpc.onCancel(reason))
+  project.vitest.onCancel(reason => rpc.onCancel(reason))
 
   return { workerPort, port }
 }
 
 export function createThreadsPool(
-  ctx: Vitest,
+  vitest: Vitest,
   { execArgv, env }: PoolProcessOptions,
 ): ProcessPool {
   const numCpus
@@ -50,21 +48,22 @@ export function createThreadsPool(
       ? nodeos.availableParallelism()
       : nodeos.cpus().length
 
-  const threadsCount = ctx.config.watch
+  const threadsCount = vitest.config.watch
     ? Math.max(Math.floor(numCpus / 2), 1)
     : Math.max(numCpus - 1, 1)
 
-  const poolOptions = ctx.config.poolOptions?.threads ?? {}
+  const poolOptions = vitest.config.poolOptions?.threads ?? {}
 
   const maxThreads
-    = poolOptions.maxThreads ?? ctx.config.maxWorkers ?? threadsCount
+    = poolOptions.maxThreads ?? vitest.config.maxWorkers ?? threadsCount
   const minThreads
-    = poolOptions.minThreads ?? ctx.config.minWorkers ?? threadsCount
+    = poolOptions.minThreads ?? vitest.config.minWorkers ?? Math.min(threadsCount, maxThreads)
 
-  const worker = resolve(ctx.distPath, 'workers/threads.js')
+  const worker = resolve(vitest.distPath, 'workers/threads.js')
 
   const options: TinypoolOptions = {
-    filename: resolve(ctx.distPath, 'worker.js'),
+    filename: resolve(vitest.distPath, 'worker.js'),
+    teardown: 'teardown',
     // TODO: investigate further
     // It seems atomics introduced V8 Fatal Error https://github.com/vitest-dev/vitest/issues/1191
     useAtomics: poolOptions.useAtomics ?? false,
@@ -75,7 +74,7 @@ export function createThreadsPool(
     env,
     execArgv: [...(poolOptions.execArgv ?? []), ...execArgv],
 
-    terminateTimeout: ctx.config.teardownTimeout,
+    terminateTimeout: vitest.config.teardownTimeout,
     concurrentTasksPerWorker: 1,
   }
 
@@ -85,7 +84,7 @@ export function createThreadsPool(
     options.isolateWorkers = true
   }
 
-  if (poolOptions.singleThread || !ctx.config.fileParallelism) {
+  if (poolOptions.singleThread || !vitest.config.fileParallelism) {
     options.maxThreads = 1
     options.minThreads = 1
   }
@@ -96,14 +95,21 @@ export function createThreadsPool(
     let id = 0
 
     async function runFiles(
-      project: WorkspaceProject,
-      config: ResolvedConfig,
-      files: string[],
+      project: TestProject,
+      config: SerializedConfig,
+      files: FileSpecification[],
       environment: ContextTestEnvironment,
       invalidates: string[] = [],
     ) {
-      ctx.state.clearFiles(project, files)
-      const { workerPort, port } = createWorkerChannel(project)
+      const paths = files.map(f => f.filepath)
+      vitest.state.clearFiles(project, paths)
+
+      const { workerPort, port } = createWorkerChannel(project, name === 'collect')
+      const onClose = () => {
+        port.close()
+        workerPort.close()
+      }
+
       const workerId = ++id
       const data: WorkerContext = {
         pool: 'threads',
@@ -114,11 +120,11 @@ export function createThreadsPool(
         invalidates,
         environment,
         workerId,
-        projectName: project.getName(),
+        projectName: project.name,
         providedContext: project.getProvidedContext(),
       }
       try {
-        await pool.run(data, { transferList: [workerPort], name })
+        await pool.run(data, { transferList: [workerPort], name, channel: { onClose } })
       }
       catch (error) {
         // Worker got stuck and won't terminate - this may cause process to hang
@@ -126,57 +132,46 @@ export function createThreadsPool(
           error instanceof Error
           && /Failed to terminate worker/.test(error.message)
         ) {
-          ctx.state.addProcessTimeoutCause(
-            `Failed to terminate worker while running ${files.join(
+          vitest.state.addProcessTimeoutCause(
+            `Failed to terminate worker while running ${paths.join(
               ', ',
             )}. \nSee https://vitest.dev/guide/common-errors.html#failed-to-terminate-worker for troubleshooting.`,
           )
         }
         // Intentionally cancelled
         else if (
-          ctx.isCancelling
+          vitest.isCancelling
           && error instanceof Error
           && /The task has been cancelled/.test(error.message)
         ) {
-          ctx.state.cancelFiles(files, ctx.config.root, project.config.name)
+          vitest.state.cancelFiles(paths, project)
         }
         else {
           throw error
         }
       }
-      finally {
-        port.close()
-        workerPort.close()
-      }
     }
 
     return async (specs, invalidates) => {
       // Cancel pending tasks from pool when possible
-      ctx.onCancel(() => pool.cancelPendingTasks())
+      vitest.onCancel(() => pool.cancelPendingTasks())
 
-      const configs = new Map<WorkspaceProject, ResolvedConfig>()
-      const getConfig = (project: WorkspaceProject): ResolvedConfig => {
+      const configs = new WeakMap<TestProject, SerializedConfig>()
+      const getConfig = (project: TestProject): SerializedConfig => {
         if (configs.has(project)) {
           return configs.get(project)!
         }
 
-        const config = project.getSerializableConfig()
+        const config = project.serializedConfig
         configs.set(project, config)
         return config
       }
 
-      const workspaceMap = new Map<string, WorkspaceProject[]>()
-      for (const [project, file] of specs) {
-        const workspaceFiles = workspaceMap.get(file) ?? []
-        workspaceFiles.push(project)
-        workspaceMap.set(file, workspaceFiles)
-      }
-
       const singleThreads = specs.filter(
-        ([project]) => project.config.poolOptions?.threads?.singleThread,
+        spec => spec.project.config.poolOptions?.threads?.singleThread,
       )
       const multipleThreads = specs.filter(
-        ([project]) => !project.config.poolOptions?.threads?.singleThread,
+        spec => !spec.project.config.poolOptions?.threads?.singleThread,
       )
 
       if (multipleThreads.length) {
@@ -205,7 +200,7 @@ export function createThreadsPool(
           const grouped = groupBy(
             files,
             ({ project, environment }) =>
-              project.getName()
+              project.name
               + environment.name
               + JSON.stringify(environment.options),
           )
@@ -262,7 +257,7 @@ export function createThreadsPool(
           const filesByOptions = groupBy(
             files,
             ({ project, environment }) =>
-              project.getName() + JSON.stringify(environment.options),
+              project.name + JSON.stringify(environment.options),
           )
 
           for (const files of Object.values(filesByOptions)) {
