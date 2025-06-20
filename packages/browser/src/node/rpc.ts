@@ -1,6 +1,6 @@
 import type { MockerRegistry } from '@vitest/mocker'
 import type { Duplex } from 'node:stream'
-import type { ErrorWithDiff } from 'vitest'
+import type { TestError } from 'vitest'
 import type { BrowserCommandContext, ResolveSnapshotPathHandlerContext, TestProject } from 'vitest/node'
 import type { WebSocket } from 'ws'
 import type { ParentBrowserProject } from './projectParent'
@@ -128,7 +128,7 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject, defaultMocke
       {
         async onUnhandledError(error, type) {
           if (error && typeof error === 'object') {
-            const _error = error as ErrorWithDiff
+            const _error = error as TestError
             _error.stacks = globalServer.parseErrorStacktrace(_error)
           }
           vitest.state.catchError(error, type)

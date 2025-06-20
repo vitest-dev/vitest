@@ -180,12 +180,12 @@ export type WorkerRPC = WorkerRPC_
 export type { BrowserTesterOptions } from '../types/browser'
 export type {
   AfterSuiteRunMeta,
-  ErrorWithDiff,
   LabelColor,
   ModuleCache,
   ModuleGraphData,
   ParsedStack,
   ProvidedContext,
+  TestError,
   UserConsoleLog,
 } from '../types/general'
 
@@ -371,7 +371,7 @@ export type ProjectConfig = ProjectConfig_
 /** @deprecated import from `vitest/node` instead */
 export type UserWorkspaceConfig = UserWorkspaceConfig_
 
-export type { SerializedError, TestError } from '@vitest/utils'
+export type { SerializedError } from '@vitest/utils'
 
 /** @deprecated use `SerializedTestSpecification` instead */
 export type SerializableSpec = SerializedTestSpecification

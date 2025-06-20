@@ -1,4 +1,4 @@
-import type { ErrorWithDiff, Suite, Task } from 'vitest'
+import type { Suite, Task, TestError } from 'vitest'
 import { createFileTask } from '@vitest/runner/utils'
 
 const file = createFileTask(
@@ -48,7 +48,7 @@ passedFile.tasks.push({
   context: null as any,
 })
 
-const error: ErrorWithDiff = {
+const error: TestError = {
   name: 'AssertionError',
   message: 'expected 2.23606797749979 to equal 2',
   actual: '2.23606797749979',
