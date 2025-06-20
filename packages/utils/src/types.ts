@@ -47,22 +47,3 @@ export interface TestError extends SerializedError {
   actual?: string
   expected?: string
 }
-
-/**
- * @deprecated Use `TestError` instead
- */
-export interface ErrorWithDiff {
-  message: string
-  name?: string
-  cause?: unknown
-  stack?: string
-  stacks?: ParsedStack[]
-  showDiff?: boolean
-  actual?: any
-  expected?: any
-  operator?: string
-  type?: string
-  frame?: string
-  diff?: string
-  codeFrame?: string
-}

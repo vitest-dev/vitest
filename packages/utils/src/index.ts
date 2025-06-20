@@ -46,7 +46,6 @@ export type {
   Awaitable,
   Constructable,
   DeepMerge,
-  ErrorWithDiff,
   MergeInsertions,
   MutableArray,
   Nullable,
