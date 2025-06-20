@@ -10,8 +10,4 @@ export type { InterceptorPluginOptions } from './interceptorPlugin'
 export { mockerPlugin } from './mockerPlugin'
 export { findMockRedirect } from './redirect'
 export { ServerMockResolver } from './resolver'
-export type {
-  ServerIdResolution,
-  ServerMockResolution,
-  ServerResolverOptions,
-} from './resolver'
+export type { ServerResolverOptions } from './resolver'

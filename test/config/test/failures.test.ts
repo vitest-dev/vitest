@@ -1,5 +1,5 @@
 import type { UserConfig as ViteUserConfig } from 'vite'
-import type { UserConfig } from 'vitest/node'
+import type { TestUserConfig } from 'vitest/node'
 import type { VitestRunnerCLIOptions } from '../../test-utils'
 import { cpus } from 'node:os'
 import { normalize, resolve } from 'pathe'
@@ -11,7 +11,7 @@ const providers = ['playwright', 'webdriverio', 'preview'] as const
 const names = ['edge', 'chromium', 'webkit', 'chrome', 'firefox', 'safari'] as const
 const browsers = providers.map(provider => names.map(name => ({ name, provider }))).flat()
 
-function runVitest(config: NonNullable<UserConfig> & { shard?: any }, viteOverrides: ViteUserConfig = {}, runnerOptions?: VitestRunnerCLIOptions) {
+function runVitest(config: NonNullable<TestUserConfig> & { shard?: any }, viteOverrides: ViteUserConfig = {}, runnerOptions?: VitestRunnerCLIOptions) {
   return testUtils.runVitest({ root: './fixtures/test', include: ['example.test.ts'], ...config }, [], undefined, viteOverrides, runnerOptions)
 }
 

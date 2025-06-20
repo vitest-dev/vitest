@@ -1,11 +1,11 @@
-import type { UserConfig } from 'vitest'
+import type { TestUserConfig } from 'vitest/node'
 import { resolve } from 'node:path'
 import { describe, expect, test } from 'vitest'
 import { getCurrentTest } from 'vitest/suite'
 import { runVitest } from '../../test-utils'
 
 describe('expect.soft', () => {
-  const run = (config?: UserConfig) => runVitest({
+  const run = (config?: TestUserConfig) => runVitest({
     root: resolve('./fixtures/expect-soft'),
     include: ['expects/soft.test.ts'],
     setupFiles: [],

@@ -1,0 +1,21 @@
+{
+  "extends": "../../../../tsconfig.base.json",
+  "compilerOptions": {
+    "lib": [
+      "dom",
+      "esnext",
+      "DOM.Iterable"
+    ],
+    "types": ["vite/client"],
+    "noEmit": true
+  },
+  "include": [
+    "./**/*.ts",
+    "../types.ts",
+    "../../matchers.d.ts",
+    "../../../vitest/src/integrations/chai/chai-subset.d.ts"
+  ],
+  "exclude": [
+    "./vite.config.ts"
+  ]
+}
