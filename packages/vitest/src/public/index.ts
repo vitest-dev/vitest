@@ -1,15 +1,4 @@
 import type {
-  Custom as Custom_,
-  DoneCallback as DoneCallback_,
-  File as File_,
-  Suite as Suite_,
-  Task as Task_,
-  TaskBase as TaskBase_,
-  TaskResult as TaskResult_,
-  TaskResultPack as TaskResultPack_,
-  Test as Test_,
-} from '@vitest/runner'
-import type {
   /** @deprecated import from `vitest/node` instead */
   Vitest as Vitest_,
 } from '../node/core'
@@ -54,14 +43,6 @@ import type {
 import type { SerializedTestSpecification } from '../runtime/types/utils'
 
 import type {
-  CollectLineNumbers as CollectLineNumbers_,
-  CollectLines as CollectLines_,
-  Context as Context_,
-  RawErrsMap as RawErrsMap_,
-  RootAndTarget as RootAndTarget_,
-  TscErrorInfo as TscErrorInfo_,
-} from '../typecheck/types'
-import type {
   WorkerRPC as WorkerRPC_,
 } from '../types/worker'
 
@@ -99,39 +80,6 @@ export type {
   BenchTaskResult,
 } from '../runtime/types/benchmark'
 export { assertType } from '../typecheck/assertType'
-
-/** @deprecated import `TypeCheckRawErrorsMap` from `vitest/node` instead */
-export type RawErrsMap = RawErrsMap_
-/** @deprecated import `TypeCheckErrorInfo` from `vitest/node` instead */
-export type TscErrorInfo = TscErrorInfo_
-/** @deprecated import `TypeCheckCollectLineNumbers` from `vitest/node` instead */
-export type CollectLineNumbers = CollectLineNumbers_
-/** @deprecated import `TypeCheckCollectLines` from `vitest/node` instead */
-export type CollectLines = CollectLines_
-/** @deprecated import `TypeCheckRootAndTarget` from `vitest/node` instead */
-export type RootAndTarget = RootAndTarget_
-/** @deprecated import `TypeCheckContext` from `vitest/node` instead */
-export type Context = Context_
-
-/** @deprecated use `RunnerTestSuite` instead */
-export type Suite = Suite_
-/** @deprecated use `RunnerTestFile` instead */
-export type File = File_
-/** @deprecated use `RunnerTestCase` instead */
-export type Test = Test_
-/** @deprecated do not use `Custom`, use `RunnerTestCase` instead */
-export type Custom = Custom_
-/** @deprecated use `RunnerTask` instead */
-export type Task = Task_
-/** @deprecated use `RunnerTaskBase` instead */
-export type TaskBase = TaskBase_
-/** @deprecated use `RunnerTaskResult` instead */
-export type TaskResult = TaskResult_
-/** @deprecated use `RunnerTaskResultPack` instead */
-export type TaskResultPack = TaskResultPack_
-
-/** @deprecated don't use `DoneCallback` since it's not supported */
-export type DoneCallback = DoneCallback_
 
 export type { AssertType } from '../typecheck/assertType'
 export { expectTypeOf } from '../typecheck/expectTypeOf'
