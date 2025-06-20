@@ -7,7 +7,6 @@ import type { AliasOptions, ConfigEnv, DepOptimizationConfig, ServerOptions, Use
 import type { ViteNodeServerOptions } from 'vite-node'
 import type { ChaiConfig } from '../../integrations/chai/config'
 import type { SerializedConfig } from '../../runtime/config'
-import type { EnvironmentOptions } from '../../types/environment'
 import type { Arrayable, LabelColor, ParsedStack, ProvidedContext, TestError } from '../../types/general'
 import type { HappyDOMOptions } from '../../types/happy-dom-options'
 import type { JSDOMOptions } from '../../types/jsdom-options'
@@ -47,7 +46,16 @@ export type ApiConfig = Pick<
   'port' | 'strictPort' | 'host' | 'middlewareMode'
 >
 
-export type { EnvironmentOptions, HappyDOMOptions, JSDOMOptions }
+export interface EnvironmentOptions {
+  /**
+   * jsdom options.
+   */
+  jsdom?: JSDOMOptions
+  happyDOM?: HappyDOMOptions
+  [x: string]: unknown
+}
+
+export type { HappyDOMOptions, JSDOMOptions }
 
 export type VitestRunMode = 'test' | 'benchmark'
 
