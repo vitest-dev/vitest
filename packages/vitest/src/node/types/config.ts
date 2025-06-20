@@ -1161,6 +1161,7 @@ export interface UserWorkspaceConfig extends ViteUserConfig {
   test?: ProjectConfig
 }
 
+// TODO: remove types when "workspace" support is removed
 export type UserProjectConfigFn = (
   env: ConfigEnv
 ) => UserWorkspaceConfig | Promise<UserWorkspaceConfig>
@@ -1183,6 +1184,3 @@ export type TestProjectConfiguration =
   | TestProjectInlineConfiguration
   | Promise<UserWorkspaceConfig>
   | UserProjectConfigFn
-
-/** @deprecated use `TestProjectConfiguration` instead */
-export type WorkspaceProjectConfiguration = TestProjectConfiguration

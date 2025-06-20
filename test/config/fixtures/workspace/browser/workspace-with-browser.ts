@@ -1,6 +1,5 @@
-import { defineWorkspace } from "vitest/config";
-
-export default defineWorkspace([
+// TODO: remove when --workspace is removed
+export default [
   {
     test: {
       name: "Browser project",
@@ -11,4 +10,4 @@ export default defineWorkspace([
       },
     }
   }
-])
+]

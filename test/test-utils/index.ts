@@ -1,7 +1,7 @@
 import type { Options } from 'tinyexec'
 import type { UserConfig as ViteUserConfig } from 'vite'
 import type { WorkerGlobalState } from 'vitest'
-import type { WorkspaceProjectConfiguration } from 'vitest/config'
+import type { TestProjectConfiguration } from 'vitest/config'
 import type { TestModule, UserConfig, Vitest, VitestRunMode } from 'vitest/node'
 import { webcrypto as crypto } from 'node:crypto'
 import fs from 'node:fs'
@@ -277,7 +277,7 @@ export type TestFsStructure = Record<
   string,
   | string
   | ViteUserConfig
-  | WorkspaceProjectConfiguration[]
+  | TestProjectConfiguration[]
   | ((...args: any[]) => unknown)
   | [(...args: any[]) => unknown, { exports?: string[]; imports?: Record<string, string[]> }]
 >
