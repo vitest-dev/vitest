@@ -575,7 +575,7 @@ function enhanceSpy<T extends Procedure>(
         || function () {}
     if (new.target) {
       try {
-        const result = Reflect.construct(impl, args, state.getOriginal())
+        const result = Reflect.construct(impl, args, new.target)
         instances.push(result)
         contexts.push(result)
         return result
