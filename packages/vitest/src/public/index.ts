@@ -2,9 +2,7 @@ import type {
   Custom as Custom_,
   DoneCallback as DoneCallback_,
   File as File_,
-  RuntimeContext as RuntimeContext_,
   Suite as Suite_,
-  SuiteHooks as SuiteHooks_,
   Task as Task_,
   TaskBase as TaskBase_,
   TaskResult as TaskResult_,
@@ -63,20 +61,6 @@ import type {
   RootAndTarget as RootAndTarget_,
   TscErrorInfo as TscErrorInfo_,
 } from '../typecheck/types'
-import type {
-  Environment as Environment_,
-  EnvironmentReturn as EnvironmentReturn_,
-  ResolvedTestEnvironment as ResolvedTestEnvironment_,
-  VmEnvironmentReturn as VmEnvironmentReturn_,
-} from '../types/environment'
-import type {
-  ArgumentsType as ArgumentsType_,
-  Arrayable as Arrayable_,
-  Awaitable as Awaitable_,
-  Constructable as Constructable_,
-  MutableArray as MutableArray_,
-  Nullable as Nullable_,
-} from '../types/general'
 import type {
   WorkerRPC as WorkerRPC_,
 } from '../types/worker'
@@ -149,11 +133,6 @@ export type TaskResultPack = TaskResultPack_
 /** @deprecated don't use `DoneCallback` since it's not supported */
 export type DoneCallback = DoneCallback_
 
-/** @deprecated internal type, don't use it */
-export type RuntimeContext = RuntimeContext_
-/** @deprecated internal type, don't use it */
-export type SuiteHooks = SuiteHooks_
-
 export type { AssertType } from '../typecheck/assertType'
 export { expectTypeOf } from '../typecheck/expectTypeOf'
 export type { ExpectTypeOf } from '../typecheck/expectTypeOf'
@@ -175,34 +154,12 @@ export type {
   UserConsoleLog,
 } from '../types/general'
 
-/** @deprecated do not use, internal helper */
-export type Awaitable<T> = Awaitable_<T>
-/** @deprecated do not use, internal helper */
-export type Nullable<T> = Nullable_<T>
-/** @deprecated do not use, internal helper */
-export type Arrayable<T> = Arrayable_<T>
-/** @deprecated do not use, internal helper */
-export type ArgumentsType<T> = ArgumentsType_<T>
-/** @deprecated do not use, internal helper */
-export type MutableArray<T extends readonly any[]> = MutableArray_<T>
-/** @deprecated do not use, internal helper */
-export type Constructable = Constructable_
-
 export type {
   RunnerRPC,
   RuntimeRPC,
 } from '../types/rpc'
 
 export type { BrowserUI } from '../types/ui'
-
-/** @deprecated import from `vitest/environments` instead */
-export type EnvironmentReturn = EnvironmentReturn_
-/** @deprecated import from `vitest/environments` instead */
-export type VmEnvironmentReturn = VmEnvironmentReturn_
-/** @deprecated import from `vitest/environments` instead */
-export type Environment = Environment_
-/** @deprecated do not use it */
-export type ResolvedTestEnvironment = ResolvedTestEnvironment_
 
 export type {
   ContextRPC,
