@@ -14,6 +14,7 @@ import type {
   BuiltinReporterOptions,
   BuiltinReporters,
 } from '../reporters'
+import type { TestCase, TestModule, TestSuite } from '../reporters/reported-tasks'
 import type { TestSequencerConstructor } from '../sequencers/types'
 import type { WatcherTriggerPattern } from '../watcher'
 import type { BenchmarkUserOptions } from './benchmark'
@@ -661,7 +662,7 @@ export interface InlineConfig {
    *
    * Return `false` to ignore the log.
    */
-  onConsoleLog?: (log: string, type: 'stdout' | 'stderr') => boolean | void
+  onConsoleLog?: (log: string, type: 'stdout' | 'stderr', entity: TestModule | TestCase | TestSuite | undefined) => boolean | void
 
   /**
    * Enable stack trace filtering. If absent, all stack trace frames
