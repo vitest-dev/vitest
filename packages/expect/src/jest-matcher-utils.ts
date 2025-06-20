@@ -1,7 +1,8 @@
-import { getType, stringify } from '@vitest/utils'
-import c from 'tinyrainbow'
-import { diff, printDiffOrStringify } from '@vitest/utils/diff'
+import type { Formatter } from 'tinyrainbow'
 import type { MatcherHintOptions, Tester } from './types'
+import { getType, stringify } from '@vitest/utils'
+import { diff, printDiffOrStringify } from '@vitest/utils/diff'
+import c from 'tinyrainbow'
 import { JEST_MATCHERS_OBJECT } from './constants'
 
 export { diff } from '@vitest/utils/diff'
@@ -18,7 +19,7 @@ function matcherHint(
   received = 'received',
   expected = 'expected',
   options: MatcherHintOptions = {},
-) {
+): string {
   const {
     comment = '',
     isDirectExpectCall = false, // seems redundant with received === ''
@@ -95,7 +96,19 @@ function printExpected(value: unknown): string {
   return EXPECTED_COLOR(replaceTrailingSpaces(stringify(value)))
 }
 
-export function getMatcherUtils() {
+export function getMatcherUtils(): {
+  EXPECTED_COLOR: Formatter
+  RECEIVED_COLOR: Formatter
+  INVERTED_COLOR: Formatter
+  BOLD_WEIGHT: Formatter
+  DIM_COLOR: Formatter
+  diff: typeof diff
+  matcherHint: typeof matcherHint
+  printReceived: typeof printReceived
+  printExpected: typeof printExpected
+  printDiffOrStringify: typeof printDiffOrStringify
+  printWithType: typeof printWithType
+} {
   return {
     EXPECTED_COLOR,
     RECEIVED_COLOR,
@@ -108,7 +121,22 @@ export function getMatcherUtils() {
     printReceived,
     printExpected,
     printDiffOrStringify,
+    printWithType,
   }
+}
+
+export function printWithType<T>(
+  name: string,
+  value: T,
+  print: (value: T) => string,
+): string {
+  const type = getType(value)
+  const hasType
+    = type !== 'null' && type !== 'undefined'
+      ? `${name} has type:  ${type}\n`
+      : ''
+  const hasValue = `${name} has value: ${print(value)}`
+  return hasType + hasValue
 }
 
 export function addCustomEqualityTesters(newTesters: Array<Tester>): void {

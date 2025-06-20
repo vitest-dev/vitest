@@ -1,13 +1,13 @@
-import { dirname, relative, resolve } from 'node:path'
+import type { Agent } from '@antfu/install-pkg'
+import type { BrowserBuiltinProvider } from '../../node/types/browser'
 import { existsSync, readFileSync } from 'node:fs'
 import { writeFile } from 'node:fs/promises'
-import prompt from 'prompts'
-import c from 'tinyrainbow'
-import type { Agent } from '@antfu/install-pkg'
+import { dirname, relative, resolve } from 'node:path'
 import { detectPackageManager, installPackage } from '@antfu/install-pkg'
 import { findUp } from 'find-up'
-import { execa } from 'execa'
-import type { BrowserBuiltinProvider } from '../../node/types/browser'
+import prompt from 'prompts'
+import { x } from 'tinyexec'
+import c from 'tinyrainbow'
 import { configFiles } from '../../constants'
 import { generateExampleFiles } from './examples'
 
@@ -85,6 +85,11 @@ function getFramework(): prompt.Choice[] {
       description: '"The library for web and native user interfaces"',
     },
     {
+      title: 'lit',
+      value: 'lit',
+      description: '"A simple library for building fast, lightweight web components."',
+    },
+    {
       title: 'preact',
       value: 'preact',
       description: '"Fast 3kB alternative to React with the same modern API"',
@@ -105,17 +110,19 @@ function getFramework(): prompt.Choice[] {
 function getFrameworkTestPackage(framework: string) {
   switch (framework) {
     case 'vanilla':
-      return '@testing-library/dom'
+      return null
     case 'vue':
-      return '@testing-library/vue'
+      return 'vitest-browser-vue'
     case 'svelte':
-      return '@testing-library/svelte'
+      return 'vitest-browser-svelte'
     case 'react':
-      return '@testing-library/react'
+      return 'vitest-browser-react'
+    case 'lit':
+      return 'vitest-browser-lit'
     case 'preact':
-      return '@testing-library/preact'
+      return 'vitest-browser-preact'
     case 'solid':
-      return 'solid-testing-library'
+      return '@solidjs/testing-library'
     case 'marko':
       return '@marko/testing-library'
   }
@@ -205,6 +212,9 @@ function getPossibleFramework(dependencies: Record<string, string>) {
   if (dependencies.svelte || dependencies['@sveltejs/kit']) {
     return 'svelte'
   }
+  if (dependencies.lit || dependencies['lit-html']) {
+    return 'lit'
+  }
   if (dependencies.preact) {
     return 'preact'
   }
@@ -228,9 +238,9 @@ function getPossibleProvider(dependencies: Record<string, string>) {
 function getProviderDocsLink(provider: string) {
   switch (provider) {
     case 'playwright':
-      return 'https://playwright.dev'
+      return 'https://vitest.dev/guide/browser/playwright'
     case 'webdriverio':
-      return 'https://webdriver.io'
+      return 'https://vitest.dev/guide/browser/webdriverio'
   }
 }
 
@@ -247,46 +257,12 @@ function fail() {
   process.exitCode = 1
 }
 
-async function generateWorkspaceFile(options: {
-  configPath: string
-  rootConfig: string
-  provider: string
-  browser: string
-}) {
-  const relativeRoot = relative(dirname(options.configPath), options.rootConfig)
-  const workspaceContent = [
-    `import { defineWorkspace } from 'vitest/config'`,
-    '',
-    'export default defineWorkspace([',
-    '  // This will keep running your existing tests.',
-    '  // If you don\'t need to run those in Node.js anymore,',
-    '  // You can safely remove it from the workspace file',
-    '  // Or move the browser test configuration to the config file.',
-    `  '${relativeRoot}',`,
-    `  {`,
-    `    extends: '${relativeRoot}',`,
-    `    test: {`,
-    `      browser: {`,
-    `        enabled: true,`,
-    `        name: '${options.browser}',`,
-    `        provider: '${options.provider}',`,
-    options.provider !== 'preview' && `        // ${getProviderDocsLink(options.provider)}`,
-    options.provider !== 'preview' && `        providerOptions: {},`,
-    `      },`,
-    `    },`,
-    `  },`,
-    `])`,
-    '',
-  ].filter(c => c != null).join('\n')
-  await writeFile(options.configPath, workspaceContent)
-}
-
 async function generateFrameworkConfigFile(options: {
   configPath: string
   framework: string
   frameworkPlugin: string | null
   provider: string
-  browser: string
+  browsers: string[]
 }) {
   const frameworkImport = options.framework === 'svelte'
     ? `import { svelte } from '${options.frameworkPlugin}'`
@@ -300,16 +276,16 @@ async function generateFrameworkConfigFile(options: {
     `  test: {`,
     `    browser: {`,
     `      enabled: true,`,
-    `      name: '${options.browser}',`,
     `      provider: '${options.provider}',`,
     options.provider !== 'preview' && `      // ${getProviderDocsLink(options.provider)}`,
-    options.provider !== 'preview' && `      providerOptions: {},`,
+    `      instances: [`,
+    ...options.browsers.map(browser => `      { browser: '${browser}' },`),
+    `      ],`,
     `    },`,
     `  },`,
     `})`,
     '',
-  ].join('\n')
-  // this file is only generated if there is already NO root config which is an edge case
+  ].filter(t => typeof t === 'string').join('\n')
   await writeFile(options.configPath, configContent)
 }
 
@@ -361,7 +337,7 @@ function getPlaywrightRunArgs(pkgManager: Agent | null) {
   }
 }
 
-export async function create() {
+export async function create(): Promise<void> {
   log(c.cyan('◼'), 'This utility will help you set up a browser testing environment.\n')
 
   const pkgJsonPath = resolve(process.cwd(), 'package.json')
@@ -394,9 +370,9 @@ export async function create() {
     return fail()
   }
 
-  const { browser } = await prompt({
-    type: 'select',
-    name: 'browser',
+  const { browsers } = await prompt({
+    type: 'multiselect',
+    name: 'browsers',
     message: 'Choose a browser',
     choices: getBrowserNames(provider).map(browser => ({
       title: browser,
@@ -431,8 +407,12 @@ export async function create() {
 
   const dependenciesToInstall = [
     '@vitest/browser',
-    getFrameworkTestPackage(framework),
   ]
+
+  const frameworkPackage = getFrameworkTestPackage(framework)
+  if (frameworkPackage) {
+    dependenciesToInstall.push(frameworkPackage)
+  }
 
   const providerPkg = getProviderPackageNames(provider)
   if (providerPkg.pkg) {
@@ -460,19 +440,24 @@ export async function create() {
   log()
 
   if (rootConfig) {
-    let browserWorkspaceFile = resolve(dirname(rootConfig), `vitest.workspace.${lang}`)
-    if (existsSync(browserWorkspaceFile)) {
-      log(c.yellow('⚠'), c.yellow('A workspace file already exists. Creating a new one for the browser tests - you can merge them manually if needed.'))
-      browserWorkspaceFile = resolve(process.cwd(), `vitest.workspace.browser.${lang}`)
-    }
-    scriptCommand = `vitest --workspace=${relative(process.cwd(), browserWorkspaceFile)}`
-    await generateWorkspaceFile({
-      configPath: browserWorkspaceFile,
-      rootConfig,
+    const configPath = resolve(dirname(rootConfig), `vitest.browser.config.${lang}`)
+    scriptCommand = `vitest --config=${relative(process.cwd(), configPath)}`
+    await generateFrameworkConfigFile({
+      configPath,
+      framework,
+      frameworkPlugin,
       provider,
-      browser,
+      browsers,
     })
-    log(c.green('✔'), 'Created a workspace file for browser tests:', c.bold(relative(process.cwd(), browserWorkspaceFile)))
+    log(
+      c.green('✔'),
+      'Created a new config file for browser tests:',
+      c.bold(relative(process.cwd(), configPath)),
+      // TODO: Can we modify the config ourselves?
+      '\nSince you already have a Vitest config file, it is recommended to copy the contents of the new file ',
+      'into your existing config located at ',
+      c.bold(relative(process.cwd(), rootConfig)),
+    )
   }
   else {
     const configPath = resolve(process.cwd(), `vitest.config.${lang}`)
@@ -481,9 +466,9 @@ export async function create() {
       framework,
       frameworkPlugin,
       provider,
-      browser,
+      browsers,
     })
-    log(c.green('✔'), 'Created a config file for browser tests', c.bold(relative(process.cwd(), configPath)))
+    log(c.green('✔'), 'Created a config file for browser tests:', c.bold(relative(process.cwd(), configPath)))
   }
 
   log()
@@ -495,13 +480,14 @@ export async function create() {
     const allArgs = [...args, 'playwright', 'install', '--with-deps']
     log(c.cyan('◼'), `Installing Playwright dependencies with \`${c.bold(command)} ${c.bold(allArgs.join(' '))}\`...`)
     log()
-    await execa(command, allArgs, {
-      stdout: 'inherit',
-      stderr: 'inherit',
+    await x(command, allArgs, {
+      nodeOptions: {
+        stdio: ['pipe', 'inherit', 'inherit'],
+      },
     })
   }
 
-  // TODO: can we do this ourselved?
+  // TODO: can we do this ourselves?
   if (lang === 'ts') {
     await updateTsConfig(providerPkg?.types)
   }

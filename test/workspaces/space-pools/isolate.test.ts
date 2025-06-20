@@ -1,5 +1,5 @@
-import { expect, test } from 'vitest'
 import type { UserConfig } from 'vitest/config'
+import { expect, test } from 'vitest'
 
 test('is isolated', () => {
   // @ts-expect-error -- internal

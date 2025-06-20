@@ -1,7 +1,7 @@
 import type { UserEvent } from '../../../context'
+import type { UserEventCommand } from './utils'
 import { PlaywrightBrowserProvider } from '../providers/playwright'
 import { WebdriverBrowserProvider } from '../providers/webdriver'
-import type { UserEventCommand } from './utils'
 import { keyboardImplementation } from './keyboard'
 
 export const type: UserEventCommand<UserEvent['type']> = async (
@@ -15,7 +15,7 @@ export const type: UserEventCommand<UserEvent['type']> = async (
 
   if (context.provider instanceof PlaywrightBrowserProvider) {
     const { iframe } = context
-    const element = iframe.locator(`css=${selector}`)
+    const element = iframe.locator(selector)
 
     if (!skipClick) {
       await element.focus()
@@ -24,7 +24,7 @@ export const type: UserEventCommand<UserEvent['type']> = async (
     await keyboardImplementation(
       unreleased,
       context.provider,
-      context.contextId,
+      context.sessionId,
       text,
       () => element.selectText(),
       skipAutoClose,
@@ -41,11 +41,11 @@ export const type: UserEventCommand<UserEvent['type']> = async (
     await keyboardImplementation(
       unreleased,
       context.provider,
-      context.contextId,
+      context.sessionId,
       text,
       () => browser.execute(() => {
         const element = document.activeElement as HTMLInputElement
-        if (element) {
+        if (element && typeof element.select === 'function') {
           element.select()
         }
       }),

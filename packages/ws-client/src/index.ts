@@ -1,12 +1,12 @@
 import type { BirpcOptions, BirpcReturn } from 'birpc'
-import { createBirpc } from 'birpc'
-import { parse, stringify } from 'flatted'
-
 // eslint-disable-next-line no-restricted-imports
 import type { WebSocketEvents, WebSocketHandlers } from 'vitest'
+import { createBirpc } from 'birpc'
+
+import { parse, stringify } from 'flatted'
 import { StateManager } from './state'
 
-export * from '../../vitest/src/utils/tasks'
+export * from '@vitest/runner/utils'
 
 export interface VitestClientOptions {
   handlers?: Partial<WebSocketEvents>
@@ -27,7 +27,7 @@ export interface VitestClient {
   reconnect: () => Promise<void>
 }
 
-export function createClient(url: string, options: VitestClientOptions = {}) {
+export function createClient(url: string, options: VitestClientOptions = {}): VitestClient {
   const {
     handlers = {},
     autoReconnect = true,
@@ -51,6 +51,9 @@ export function createClient(url: string, options: VitestClientOptions = {}) {
 
   let onMessage: (data: any) => void
   const functions: WebSocketEvents = {
+    onTestAnnotate(testId, annotation) {
+      handlers.onTestAnnotate?.(testId, annotation)
+    },
     onSpecsCollected(specs) {
       specs?.forEach(([config, file]) => {
         ctx.state.clearFiles({ config }, [file])
@@ -65,9 +68,9 @@ export function createClient(url: string, options: VitestClientOptions = {}) {
       ctx.state.collectFiles(files)
       handlers.onCollected?.(files)
     },
-    onTaskUpdate(packs) {
+    onTaskUpdate(packs, events) {
       ctx.state.updateTasks(packs)
-      handlers.onTaskUpdate?.(packs)
+      handlers.onTaskUpdate?.(packs, events)
     },
     onUserConsoleLog(log) {
       ctx.state.updateUserLog(log)

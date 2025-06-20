@@ -1,7 +1,7 @@
 {
   "name": "@vitest/browser",
   "type": "module",
-  "version": "2.0.5",
+  "version": "3.2.4",
   "description": "Browser running for Vitest",
   "license": "MIT",
   "funding": "https://opencollective.com/vitest",
@@ -32,13 +32,24 @@
       "default": "./dist/client.js"
     },
     "./matchers": {
-      "types": "./matchers.d.ts"
+      "types": "./matchers.d.ts",
+      "default": "./dummy.js"
     },
     "./providers/webdriverio": {
-      "types": "./providers/webdriverio.d.ts"
+      "types": "./providers/webdriverio.d.ts",
+      "default": "./dummy.js"
     },
     "./providers/playwright": {
-      "types": "./providers/playwright.d.ts"
+      "types": "./providers/playwright.d.ts",
+      "default": "./dummy.js"
+    },
+    "./locator": {
+      "types": "./dist/locators/index.d.ts",
+      "default": "./dist/locators/index.js"
+    },
+    "./utils": {
+      "types": "./utils.d.ts",
+      "default": "./dist/utils.js"
     },
     "./*": "./*"
   },
@@ -49,6 +60,7 @@
     "*.d.ts",
     "context.js",
     "dist",
+    "dummy.js",
     "providers"
   ],
   "scripts": {
@@ -56,13 +68,13 @@
     "build:client": "vite build src/client",
     "build:node": "rollup -c",
     "dev:client": "vite build src/client --watch",
-    "dev:node": "rollup -c --watch --watch.include 'src/node/**'",
+    "dev:node": "rollup -c --watch --watch.include 'src/**'",
     "dev": "rimraf dist && pnpm run --stream '/^dev:/'"
   },
   "peerDependencies": {
     "playwright": "*",
     "vitest": "workspace:*",
-    "webdriverio": "*"
+    "webdriverio": "^7.0.0 || ^8.0.0 || ^9.0.0"
   },
   "peerDependenciesMeta": {
     "playwright": {
@@ -77,28 +89,31 @@
   },
   "dependencies": {
     "@testing-library/dom": "^10.4.0",
-    "@testing-library/user-event": "^14.5.2",
+    "@testing-library/user-event": "^14.6.1",
+    "@vitest/mocker": "workspace:*",
     "@vitest/utils": "workspace:*",
-    "magic-string": "^0.30.11",
-    "msw": "^2.3.5",
-    "sirv": "^2.0.4",
-    "ws": "^8.18.0"
+    "magic-string": "catalog:",
+    "sirv": "catalog:",
+    "tinyrainbow": "catalog:",
+    "ws": "catalog:"
   },
   "devDependencies": {
-    "@testing-library/jest-dom": "^6.4.8",
-    "@types/ws": "^8.5.12",
+    "@types/ws": "catalog:",
     "@vitest/runner": "workspace:*",
     "@vitest/ui": "workspace:*",
     "@vitest/ws-client": "workspace:*",
-    "@wdio/protocols": "^8.38.0",
-    "birpc": "0.2.17",
-    "flatted": "^3.3.1",
-    "pathe": "^1.1.2",
+    "@wdio/protocols": "^9.15.0",
+    "@wdio/types": "^9.15.0",
+    "birpc": "catalog:",
+    "flatted": "catalog:",
+    "ivya": "^1.7.0",
+    "mime": "^4.0.7",
+    "pathe": "catalog:",
     "periscopic": "^4.0.2",
-    "playwright": "^1.45.3",
-    "playwright-core": "^1.45.3",
-    "safaridriver": "^0.1.2",
+    "playwright": "^1.53.0",
+    "playwright-core": "^1.53.0",
+    "safaridriver": "^1.0.0",
     "vitest": "workspace:*",
-    "webdriverio": "^8.39.1"
+    "webdriverio": "^9.15.0"
   }
 }

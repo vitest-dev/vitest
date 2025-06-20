@@ -1,11 +1,11 @@
 import type { File, Task, TaskResultPack } from '@vitest/runner'
-import { createFileTask } from '@vitest/runner/utils'
-import type { AggregateError as AggregateErrorPonyfill } from '../utils/base'
 import type { UserConsoleLog } from '../types/general'
-import type { WorkspaceProject } from './workspace'
-import { TestCase, TestFile, TestSuite } from './reporters/reported-tasks'
+import type { TestProject } from './project'
+import type { MergedBlobs } from './reporters/blob'
+import { createFileTask } from '@vitest/runner/utils'
+import { TestCase, TestModule, TestSuite } from './reporters/reported-tasks'
 
-export function isAggregateError(err: unknown): err is AggregateErrorPonyfill {
+function isAggregateError(err: unknown): err is AggregateError {
   if (typeof AggregateError !== 'undefined' && err instanceof AggregateError) {
     return true
   }
@@ -14,13 +14,14 @@ export function isAggregateError(err: unknown): err is AggregateErrorPonyfill {
 }
 
 export class StateManager {
-  filesMap = new Map<string, File[]>()
+  filesMap: Map<string, File[]> = new Map()
   pathsSet: Set<string> = new Set()
-  idMap = new Map<string, Task>()
-  taskFileMap = new WeakMap<Task, File>()
-  errorsSet = new Set<unknown>()
-  processTimeoutCauses = new Set<string>()
-  reportedTasksMap = new WeakMap<Task, TestCase | TestFile | TestSuite>()
+  idMap: Map<string, Task> = new Map()
+  taskFileMap: WeakMap<Task, File> = new WeakMap()
+  errorsSet: Set<unknown> = new Set()
+  processTimeoutCauses: Set<string> = new Set()
+  reportedTasksMap: WeakMap<Task, TestModule | TestCase | TestSuite> = new WeakMap()
+  blobs?: MergedBlobs
 
   catchError(err: unknown, type: string): void {
     if (isAggregateError(err)) {
@@ -41,6 +42,7 @@ export class StateManager {
         task.mode = 'skip'
         task.result ??= { state: 'skip' }
         task.result.state = 'skip'
+        task.result.note = _err.note
       }
       return
     }
@@ -48,23 +50,23 @@ export class StateManager {
     this.errorsSet.add(err)
   }
 
-  clearErrors() {
+  clearErrors(): void {
     this.errorsSet.clear()
   }
 
-  getUnhandledErrors() {
+  getUnhandledErrors(): unknown[] {
     return Array.from(this.errorsSet.values())
   }
 
-  addProcessTimeoutCause(cause: string) {
+  addProcessTimeoutCause(cause: string): void {
     this.processTimeoutCauses.add(cause)
   }
 
-  getProcessTimeoutCauses() {
+  getProcessTimeoutCauses(): string[] {
     return Array.from(this.processTimeoutCauses.values())
   }
 
-  getPaths() {
+  getPaths(): string[] {
     return Array.from(this.pathsSet)
   }
 
@@ -78,30 +80,43 @@ export class StateManager {
         .flat()
         .filter(file => file && !file.local)
     }
-    return Array.from(this.filesMap.values()).flat().filter(file => !file.local)
+    return Array.from(this.filesMap.values()).flat().filter(file => !file.local).sort((f1, f2) => {
+      // print typecheck files first
+      if (f1.meta?.typecheck && f2.meta?.typecheck) {
+        return 0
+      }
+      if (f1.meta?.typecheck) {
+        return -1
+      }
+      return 1
+    })
+  }
+
+  getTestModules(keys?: string[]): TestModule[] {
+    return this.getFiles(keys).map(file => this.getReportedEntity(file) as TestModule)
   }
 
   getFilepaths(): string[] {
     return Array.from(this.filesMap.keys())
   }
 
-  getFailedFilepaths() {
+  getFailedFilepaths(): string[] {
     return this.getFiles()
       .filter(i => i.result?.state === 'fail')
       .map(i => i.filepath)
   }
 
-  collectPaths(paths: string[] = []) {
+  collectPaths(paths: string[] = []): void {
     paths.forEach((path) => {
       this.pathsSet.add(path)
     })
   }
 
-  collectFiles(project: WorkspaceProject, files: File[] = []) {
+  collectFiles(project: TestProject, files: File[] = []): void {
     files.forEach((file) => {
       const existing = this.filesMap.get(file.filepath) || []
-      const otherProject = existing.filter(
-        i => i.projectName !== file.projectName,
+      const otherFiles = existing.filter(
+        i => i.projectName !== file.projectName || i.meta.typecheck !== file.meta.typecheck,
       )
       const currentFile = existing.find(
         i => i.projectName === file.projectName,
@@ -111,16 +126,16 @@ export class StateManager {
       if (currentFile) {
         file.logs = currentFile.logs
       }
-      otherProject.push(file)
-      this.filesMap.set(file.filepath, otherProject)
+      otherFiles.push(file)
+      this.filesMap.set(file.filepath, otherFiles)
       this.updateId(file, project)
     })
   }
 
   clearFiles(
-    project: WorkspaceProject,
+    project: TestProject,
     paths: string[] = [],
-  ) {
+  ): void {
     paths.forEach((path) => {
       const files = this.filesMap.get(path)
       const fileTask = createFileTask(
@@ -129,7 +144,7 @@ export class StateManager {
         project.config.name,
       )
       fileTask.local = true
-      TestFile.register(fileTask, project)
+      TestModule.register(fileTask, project)
       this.idMap.set(fileTask.id, fileTask)
       if (!files) {
         this.filesMap.set(path, [fileTask])
@@ -148,13 +163,13 @@ export class StateManager {
     })
   }
 
-  updateId(task: Task, project: WorkspaceProject) {
+  updateId(task: Task, project: TestProject): void {
     if (this.idMap.get(task.id) === task) {
       return
     }
 
     if (task.type === 'suite' && 'filepath' in task) {
-      TestFile.register(task, project)
+      TestModule.register(task, project)
     }
     else if (task.type === 'suite') {
       TestSuite.register(task, project)
@@ -171,11 +186,11 @@ export class StateManager {
     }
   }
 
-  getReportedEntity(task: Task) {
+  getReportedEntity(task: Task): TestModule | TestCase | TestSuite | undefined {
     return this.reportedTasksMap.get(task)
   }
 
-  updateTasks(packs: TaskResultPack[]) {
+  updateTasks(packs: TaskResultPack[]): void {
     for (const [id, result, meta] of packs) {
       const task = this.idMap.get(id)
       if (task) {
@@ -189,7 +204,7 @@ export class StateManager {
     }
   }
 
-  updateUserLog(log: UserConsoleLog) {
+  updateUserLog(log: UserConsoleLog): void {
     const task = log.taskId && this.idMap.get(log.taskId)
     if (task) {
       if (!task.logs) {
@@ -199,13 +214,13 @@ export class StateManager {
     }
   }
 
-  getCountOfFailedTests() {
+  getCountOfFailedTests(): number {
     return Array.from(this.idMap.values()).filter(
       t => t.result?.state === 'fail',
     ).length
   }
 
-  cancelFiles(files: string[], project: WorkspaceProject) {
+  cancelFiles(files: string[], project: TestProject): void {
     this.collectFiles(
       project,
       files.map(filepath =>

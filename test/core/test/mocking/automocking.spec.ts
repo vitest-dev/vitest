@@ -1,5 +1,5 @@
-import { expect, test, vi } from 'vitest'
 import type * as exampleModule from '../../src/mocks/example'
+import { expect, test, vi } from 'vitest'
 import log from '../../src/mocks/log'
 import { A } from '../../src/mocks/moduleA'
 import { methodSymbol, moduleWithSymbol } from '../../src/mocks/moduleWithSymbol'

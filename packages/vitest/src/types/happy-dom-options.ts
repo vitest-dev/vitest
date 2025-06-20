@@ -1,23 +1,6 @@
-/**
- * Happy DOM options.
- */
-export interface HappyDOMOptions {
-  width?: number
-  height?: number
-  url?: string
-  settings?: {
-    disableJavaScriptEvaluation?: boolean
-    disableJavaScriptFileLoading?: boolean
-    disableCSSFileLoading?: boolean
-    disableIframePageLoading?: boolean
-    disableComputedStyleRendering?: boolean
-    enableFileSystemHttpRequests?: boolean
-    navigator?: {
-      userAgent?: string
-    }
-    device?: {
-      prefersColorScheme?: string
-      mediaType?: string
-    }
-  }
-}
+import type { happyDomTypes } from 'vitest/optional-types.js'
+
+export type HappyDOMOptions = Omit<
+  NonNullable<ConstructorParameters<typeof happyDomTypes.Window>[0]>,
+  'console'
+>

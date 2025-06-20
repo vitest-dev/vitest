@@ -1,7 +1,7 @@
 import type { UserEvent } from '../../../context'
+import type { UserEventCommand } from './utils'
 import { PlaywrightBrowserProvider } from '../providers/playwright'
 import { WebdriverBrowserProvider } from '../providers/webdriver'
-import type { UserEventCommand } from './utils'
 
 export const dragAndDrop: UserEventCommand<UserEvent['dragAndDrop']> = async (
   context,
@@ -12,12 +12,9 @@ export const dragAndDrop: UserEventCommand<UserEvent['dragAndDrop']> = async (
   if (context.provider instanceof PlaywrightBrowserProvider) {
     const frame = await context.frame()
     await frame.dragAndDrop(
-      `css=${source}`,
-      `css=${target}`,
-      {
-        timeout: 1000,
-        ...options_,
-      },
+      source,
+      target,
+      options_,
     )
   }
   else if (context.provider instanceof WebdriverBrowserProvider) {

@@ -1,15 +1,15 @@
 // adapted from https://github.com/evanw/node-source-map-support/blob/master/source-map-support.js
 // we need this because "--enable-source-maps" flag doesn't support VM
-// we make a custom implementatin because we don't need some features from source-map-support,
+// we make a custom implementation because we don't need some features from source-map-support,
 // like polyfilled Buffer, browser support, etc.
 
-import path from 'node:path'
-import fs from 'node:fs'
 import type {
   OriginalMapping,
   SourceMapInput,
 } from '@jridgewell/trace-mapping'
-import { TraceMap, originalPositionFor } from '@jridgewell/trace-mapping'
+import fs from 'node:fs'
+import path from 'node:path'
+import { originalPositionFor, TraceMap } from '@jridgewell/trace-mapping'
 
 // Only install once if called multiple times
 let errorFormatterInstalled = false
@@ -177,10 +177,11 @@ function mapSourcePosition(position: OriginalMapping) {
   if (!sourceMap) {
     // Call the (overridable) retrieveSourceMap function to get the source map.
     const urlAndMap = retrieveSourceMap(position.source)
-    if (urlAndMap && urlAndMap.map) {
+    const map = urlAndMap && urlAndMap.map
+    if (map && !(typeof map === 'object' && 'mappings' in map && map.mappings === '')) {
       sourceMap = sourceMapCache[position.source] = {
         url: urlAndMap.url,
-        map: new TraceMap(urlAndMap.map),
+        map: new TraceMap(map),
       }
 
       // Load all sources stored inline with the source map into the file cache
@@ -410,7 +411,7 @@ function wrapCallSite(frame: CallSite, state: State) {
       return state.nextPosition.name || originalFunctionName()
     }
     frame.getFileName = function () {
-      return position.source ?? undefined
+      return position.source ?? null
     }
     frame.getLineNumber = function () {
       return position.line
@@ -467,7 +468,7 @@ interface Options {
   retrieveSourceMap?: RetrieveMapHandler
 }
 
-export const install = function (options: Options) {
+export function install(options: Options): void {
   options = options || {}
 
   // Allow sources to be found by methods other than reading the files
@@ -498,7 +499,7 @@ export const install = function (options: Options) {
   }
 }
 
-export const resetRetrieveHandlers = function () {
+export function resetRetrieveHandlers(): void {
   retrieveFileHandlers.length = 0
   retrieveMapHandlers.length = 0
 

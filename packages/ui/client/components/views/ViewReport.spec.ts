@@ -1,9 +1,9 @@
-import { faker } from '@faker-js/faker'
 import type { File } from 'vitest'
+import { faker } from '@faker-js/faker'
 import { beforeEach, describe, expect, it } from 'vitest'
-import ViewReport from './ViewReport.vue'
-import { render, screen, within } from '~/test'
 import { config } from '~/composables/client'
+import { render, screen, within } from '~/test'
+import ViewReport from './ViewReport.vue'
 
 config.value.root = ''
 

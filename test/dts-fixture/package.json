@@ -1,0 +1,13 @@
+{
+  "name": "@vitest/test-dts-fixture",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "build": "rimraf dist && tsc -p tsconfig.json",
+    "check": "tsc -p tsconfig.check.json",
+    "test": "pnpm build && pnpm check"
+  },
+  "devDependencies": {
+    "vitest": "workspace:*"
+  }
+}

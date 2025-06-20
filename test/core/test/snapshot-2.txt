@@ -1,0 +1,10 @@
+example: |
+  {
+    echo "hello"
+  }
+some:
+  nesting:
+    - "hello world"
+even:
+  more:
+    nesting: true

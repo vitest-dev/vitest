@@ -1,13 +1,24 @@
-export { startTests, collectTests, processError } from '@vitest/runner'
 export {
-  setupCommonEnv,
+  startCoverageInsideWorker,
+  stopCoverageInsideWorker,
+  takeCoverageInsideWorker,
+} from '../integrations/coverage'
+
+export {
   loadDiffConfig,
   loadSnapshotSerializers,
+  setupCommonEnv,
 } from '../runtime/setup-common'
+export { collectTests, processError, startTests } from '@vitest/runner'
+export * as SpyModule from '@vitest/spy'
 export {
-  takeCoverageInsideWorker,
-  stopCoverageInsideWorker,
-  getCoverageProvider,
-  startCoverageInsideWorker,
-} from '../integrations/coverage'
-export * as SpyModule from '../integrations/spy'
+  format,
+  getSafeTimers,
+  inspect,
+  stringify,
+} from '@vitest/utils'
+export type { LoupeOptions, ParsedStack, StringifyOptions } from '@vitest/utils'
+export {
+  originalPositionFor,
+  TraceMap,
+} from '@vitest/utils/source-map'

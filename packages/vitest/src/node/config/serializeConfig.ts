@@ -37,6 +37,7 @@ export function serializeConfig(
     pool: config.pool,
     expect: config.expect,
     snapshotSerializers: config.snapshotSerializers,
+    // TODO: non serializable function?
     diff: config.diff,
     retry: config.retry,
     disableConsoleIntercept: config.disableConsoleIntercept,
@@ -152,10 +153,21 @@ export function serializeConfig(
         ui: browser.ui,
         viewport: browser.viewport,
         screenshotFailures: browser.screenshotFailures,
+        locators: {
+          testIdAttribute: browser.locators.testIdAttribute,
+        },
+        providerOptions: browser.provider === 'playwright'
+          ? {
+              actionTimeout: (browser.providerOptions as any)?.context?.actionTimeout,
+            }
+          : {},
       }
     })(config.browser),
     standalone: config.standalone,
     printConsoleTrace:
       config.printConsoleTrace ?? coreConfig.printConsoleTrace,
+    benchmark: config.benchmark && {
+      includeSamples: config.benchmark.includeSamples,
+    },
   }
 }

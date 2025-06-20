@@ -3,6 +3,8 @@ logs
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+*.cpuprofile
+*.heapprofile
 lib-cov
 coverage
 !**/integrations/coverage
@@ -24,4 +26,10 @@ docs/.vitepress/cache/
 !test/cli/fixtures/dotted-files/**/.cache
 test/**/__screenshots__/**/*
 test/browser/fixtures/update-snapshot/basic.test.ts
+test/cli/fixtures/browser-multiple/basic-*
 .vitest-reports
+*.tsbuildinfo
+# exclude static html reporter folder
+test/browser/html/
+test/core/html/
+.vitest-attachments

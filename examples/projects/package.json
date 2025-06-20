@@ -1,0 +1,32 @@
+{
+  "name": "@vitest/example-projects",
+  "type": "module",
+  "private": true,
+  "license": "MIT",
+  "scripts": {
+    "test": "vitest",
+    "test:ui": "vitest --ui",
+    "test:run": "vitest run"
+  },
+  "devDependencies": {
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/react": "^13.4.0",
+    "@testing-library/user-event": "^14.6.1",
+    "@types/react": "^19.1.8",
+    "@vitejs/plugin-react": "^4.5.2",
+    "@vitest/ui": "latest",
+    "fastify": "^4.29.1",
+    "jsdom": "^26.1.0",
+    "react": "^19.1.0",
+    "supertest": "^6.3.4",
+    "tsx": "^4.20.3",
+    "vite": "latest",
+    "vitest": "latest"
+  },
+  "workspaces": [
+    "packages/*"
+  ],
+  "stackblitz": {
+    "startCommand": "npm run test:ui"
+  }
+}

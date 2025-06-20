@@ -17,8 +17,8 @@ export function createWorkerConstructor(
   const runnerOptions = getRunnerOptions()
   const cloneType = () =>
     (options?.clone
-    ?? process.env.VITEST_WEB_WORKER_CLONE
-    ?? 'native') as CloneOption
+      ?? process.env.VITEST_WEB_WORKER_CLONE
+      ?? 'native') as CloneOption
 
   return class Worker extends EventTarget {
     static __VITEST_WEB_WORKER__ = true
@@ -75,7 +75,9 @@ export function createWorkerConstructor(
           }
           return this._vw_workerTarget.addEventListener(...args as [any, any])
         },
-        removeEventListener: this._vw_workerTarget.removeEventListener,
+        removeEventListener: (...args: any[]) => {
+          return this._vw_workerTarget.removeEventListener(...args as [any, any])
+        },
         postMessage: (...args: any[]) => {
           if (!args.length) {
             throw new SyntaxError(

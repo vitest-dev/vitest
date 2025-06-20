@@ -1,21 +1,24 @@
-import { rm } from 'node:fs/promises'
-import { performance } from 'node:perf_hooks'
-import type { ExecaChildProcess } from 'execa'
-import { execa } from 'execa'
-import { basename, extname, resolve } from 'pathe'
-import { TraceMap, generatedPositionFor } from '@vitest/utils/source-map'
 import type { RawSourceMap } from '@ampproject/remapping'
+import type { File, Task, TaskEventPack, TaskResultPack, TaskState } from '@vitest/runner'
 import type { ParsedStack } from '@vitest/utils'
-import type { File, Task, TaskResultPack, TaskState } from '@vitest/runner'
-import { getTasks } from '../utils'
-import type { WorkspaceProject } from '../node/workspace'
-import type { Awaitable } from '../types/general'
+import type { EachMapping } from '@vitest/utils/source-map'
+import type { ChildProcess } from 'node:child_process'
+import type { Result } from 'tinyexec'
 import type { Vitest } from '../node/core'
-import { getRawErrsMapFromTsCompile, getTsconfig } from './parse'
-import { createIndexMap } from './utils'
+import type { TestProject } from '../node/project'
+import type { Awaitable } from '../types/general'
 import type { FileInformation } from './collect'
-import { collectTests } from './collect'
 import type { TscErrorInfo } from './types'
+import os from 'node:os'
+import { performance } from 'node:perf_hooks'
+import { eachMapping, generatedPositionFor, TraceMap } from '@vitest/utils/source-map'
+import { basename, join, resolve } from 'pathe'
+import { x } from 'tinyexec'
+import { distDir } from '../paths'
+import { convertTasksToEvents } from '../utils/tasks'
+import { collectTests } from './collect'
+import { getRawErrsMapFromTsCompile } from './parse'
+import { createIndexMap } from './utils'
 
 export class TypeCheckError extends Error {
   name = 'TypeCheckError'
@@ -48,44 +51,39 @@ export class Typechecker {
   private _startTime = 0
   private _output = ''
   private _tests: Record<string, FileInformation> | null = {}
-  private tempConfigPath?: string
-  private allowJs?: boolean
-  private process?: ExecaChildProcess
+  private process?: ChildProcess
 
   protected files: string[] = []
 
-  constructor(protected ctx: WorkspaceProject) {}
+  constructor(protected project: TestProject) {}
 
-  public setFiles(files: string[]) {
+  public setFiles(files: string[]): void {
     this.files = files
   }
 
-  public onParseStart(fn: Callback) {
+  public onParseStart(fn: Callback): void {
     this._onParseStart = fn
   }
 
-  public onParseEnd(fn: Callback<[TypecheckResults]>) {
+  public onParseEnd(fn: Callback<[TypecheckResults]>): void {
     this._onParseEnd = fn
   }
 
-  public onWatcherRerun(fn: Callback) {
+  public onWatcherRerun(fn: Callback): void {
     this._onWatcherRerun = fn
   }
 
   protected async collectFileTests(
     filepath: string,
   ): Promise<FileInformation | null> {
-    return collectTests(this.ctx, filepath)
+    return collectTests(this.project, filepath)
   }
 
-  protected getFiles() {
-    return this.files.filter((filename) => {
-      const extension = extname(filename)
-      return extension !== '.js' || this.allowJs
-    })
+  protected getFiles(): string[] {
+    return this.files
   }
 
-  public async collectTests() {
+  public async collectTests(): Promise<Record<string, FileInformation>> {
     const tests = (
       await Promise.all(
         this.getFiles().map(filepath => this.collectFileTests(filepath)),
@@ -101,7 +99,7 @@ export class Typechecker {
     return tests
   }
 
-  protected markPassed(file: File) {
+  protected markPassed(file: File): void {
     if (!file.result?.state) {
       file.result = {
         state: 'pass',
@@ -112,7 +110,7 @@ export class Typechecker {
         if ('tasks' in task) {
           markTasks(task.tasks)
         }
-        if (!task.result?.state && task.mode === 'run') {
+        if (!task.result?.state && (task.mode === 'run' || task.mode === 'queued')) {
           task.result = {
             state: 'pass',
           }
@@ -122,7 +120,11 @@ export class Typechecker {
     markTasks(file.tasks)
   }
 
-  protected async prepareResults(output: string) {
+  protected async prepareResults(output: string): Promise<{
+    files: File[]
+    sourceErrors: TypeCheckError[]
+    time: number
+  }> {
     const typeErrors = await this.parseTscLikeOutput(output)
     const testFiles = new Set(this.getFiles())
 
@@ -145,7 +147,7 @@ export class Typechecker {
         ...definitions.sort((a, b) => b.start - a.start),
       ]
       // has no map for ".js" files that use // @ts-check
-      const traceMap = map && new TraceMap(map as unknown as RawSourceMap)
+      const traceMap = (map && new TraceMap(map as unknown as RawSourceMap))
       const indexMap = createIndexMap(parsed)
       const markState = (task: Task, state: TaskState) => {
         task.result = {
@@ -161,20 +163,20 @@ export class Typechecker {
       }
       errors.forEach(({ error, originalError }) => {
         const processedPos = traceMap
-          ? generatedPositionFor(traceMap, {
-            line: originalError.line,
-            column: originalError.column,
-            source: basename(path),
-          })
+          ? findGeneratedPosition(traceMap, {
+              line: originalError.line,
+              column: originalError.column,
+              source: basename(path),
+            })
           : originalError
         const line = processedPos.line ?? originalError.line
         const column = processedPos.column ?? originalError.column
         const index = indexMap.get(`${line}:${column}`)
         const definition
           = index != null
-          && sortedDefinitions.find(
-            def => def.start <= index && def.end >= index,
-          )
+            && sortedDefinitions.find(
+              def => def.start <= index && def.end >= index,
+            )
         const suite = definition ? definition.task : file
         const state: TaskState
           = suite.mode === 'run' || suite.mode === 'only' ? 'fail' : suite.mode
@@ -210,14 +212,17 @@ export class Typechecker {
     }
   }
 
-  protected async parseTscLikeOutput(output: string) {
+  protected async parseTscLikeOutput(output: string): Promise<Map<string, {
+    error: TypeCheckError
+    originalError: TscErrorInfo
+  }[]>> {
     const errorsMap = await getRawErrsMapFromTsCompile(output)
     const typesErrors = new Map<
       string,
       { error: TypeCheckError; originalError: TscErrorInfo }[]
     >()
     errorsMap.forEach((errors, path) => {
-      const filepath = resolve(this.ctx.config.root, path)
+      const filepath = resolve(this.project.config.root, path)
       const suiteErrors = errors.map((info) => {
         const limit = Error.stackTraceLimit
         Error.stackTraceLimit = 0
@@ -239,11 +244,9 @@ export class Typechecker {
           originalError: info,
           error: {
             name: error.name,
-            nameStr: String(error.name),
             message: errMsg,
             stacks: error.stacks,
             stack: '',
-            stackStr: '',
           },
         }
       })
@@ -252,19 +255,12 @@ export class Typechecker {
     return typesErrors
   }
 
-  public async clear() {
-    if (this.tempConfigPath) {
-      await rm(this.tempConfigPath, { force: true })
-    }
-  }
-
-  public async stop() {
-    await this.clear()
+  public async stop(): Promise<void> {
     this.process?.kill()
     this.process = undefined
   }
 
-  protected async ensurePackageInstalled(ctx: Vitest, checker: string) {
+  protected async ensurePackageInstalled(ctx: Vitest, checker: string): Promise<void> {
     if (checker !== 'tsc' && checker !== 'vue-tsc') {
       return
     }
@@ -272,74 +268,129 @@ export class Typechecker {
     await ctx.packageInstaller.ensureInstalled(packageName, ctx.config.root)
   }
 
-  public async prepare() {
-    const { root, typecheck } = this.ctx.config
-
-    const { config, path } = await getTsconfig(root, typecheck)
-
-    this.tempConfigPath = path
-    this.allowJs = typecheck.allowJs || config.allowJs || false
-  }
-
-  public getExitCode() {
+  public getExitCode(): number | false {
     return this.process?.exitCode != null && this.process.exitCode
   }
 
-  public getOutput() {
+  public getOutput(): string {
     return this._output
   }
 
-  public async start() {
-    if (this.process) {
-      return
-    }
+  private async spawn() {
+    const { root, watch, typecheck } = this.project.config
 
-    if (!this.tempConfigPath) {
-      throw new Error('tsconfig was not initialized')
-    }
-
-    const { root, watch, typecheck } = this.ctx.config
-
-    const args = ['--noEmit', '--pretty', 'false', '-p', this.tempConfigPath]
-    // use builtin watcher, because it's faster
+    const args = [
+      '--noEmit',
+      '--pretty',
+      'false',
+      '--incremental',
+      '--tsBuildInfoFile',
+      join(
+        process.versions.pnp ? join(os.tmpdir(), this.project.hash) : distDir,
+        'tsconfig.tmp.tsbuildinfo',
+      ),
+    ]
+    // use builtin watcher because it's faster
     if (watch) {
       args.push('--watch')
     }
     if (typecheck.allowJs) {
       args.push('--allowJs', '--checkJs')
     }
+    if (typecheck.tsconfig) {
+      args.push('-p', resolve(root, typecheck.tsconfig))
+    }
     this._output = ''
     this._startTime = performance.now()
-    const child = execa(typecheck.checker, args, {
-      cwd: root,
-      stdout: 'pipe',
-      reject: false,
+    const child = x(typecheck.checker, args, {
+      nodeOptions: {
+        cwd: root,
+        stdio: 'pipe',
+      },
+      throwOnError: false,
     })
-    this.process = child
-    await this._onParseStart?.()
+
+    this.process = child.process
+
     let rerunTriggered = false
-    child.stdout?.on('data', (chunk) => {
-      this._output += chunk
-      if (!watch) {
+    let dataReceived = false
+
+    return new Promise<{ result: Result }>((resolve, reject) => {
+      if (!child.process || !child.process.stdout) {
+        reject(new Error(`Failed to initialize ${typecheck.checker}. This is a bug in Vitest - please, open an issue with reproduction.`))
         return
       }
-      if (this._output.includes('File change detected') && !rerunTriggered) {
-        this._onWatcherRerun?.()
-        this._startTime = performance.now()
-        this._result.sourceErrors = []
-        this._result.files = []
-        this._tests = null // test structure might've changed
-        rerunTriggered = true
+
+      child.process.stdout.on('data', (chunk) => {
+        dataReceived = true
+        this._output += chunk
+        if (!watch) {
+          return
+        }
+        if (this._output.includes('File change detected') && !rerunTriggered) {
+          this._onWatcherRerun?.()
+          this._startTime = performance.now()
+          this._result.sourceErrors = []
+          this._result.files = []
+          this._tests = null // test structure might've changed
+          rerunTriggered = true
+        }
+        if (/Found \w+ errors*. Watching for/.test(this._output)) {
+          rerunTriggered = false
+          this.prepareResults(this._output).then((result) => {
+            this._result = result
+            this._onParseEnd?.(result)
+          })
+          this._output = ''
+        }
+      })
+
+      const timeout = setTimeout(
+        () => reject(new Error(`${typecheck.checker} spawn timed out`)),
+        this.project.config.typecheck.spawnTimeout,
+      )
+
+      function onError(cause: Error) {
+        clearTimeout(timeout)
+        reject(new Error('Spawning typechecker failed - is typescript installed?', { cause }))
       }
-      if (/Found \w+ errors*. Watching for/.test(this._output)) {
-        rerunTriggered = false
-        this.prepareResults(this._output).then((result) => {
-          this._result = result
-          this._onParseEnd?.(result)
+
+      child.process.once('spawn', () => {
+        this._onParseStart?.()
+        child.process?.off('error', onError)
+        clearTimeout(timeout)
+        if (process.platform === 'win32') {
+          // on Windows, the process might be spawned but fail to start
+          // we wait for a potential error here. if "close" event didn't trigger,
+          // we resolve the promise
+          setTimeout(() => {
+            resolve({ result: child })
+          }, 200)
+        }
+        else {
+          resolve({ result: child })
+        }
+      })
+
+      if (process.platform === 'win32') {
+        child.process.once('close', (code) => {
+          if (code != null && code !== 0 && !dataReceived) {
+            onError(new Error(`The ${typecheck.checker} command exited with code ${code}.`))
+          }
         })
-        this._output = ''
       }
+      child.process.once('error', onError)
     })
+  }
+
+  public async start(): Promise<void> {
+    if (this.process) {
+      return
+    }
+
+    const { watch } = this.project.config
+    const { result: child } = await this.spawn()
+
     if (!watch) {
       await child
       this._result = await this.prepareResults(this._output)
@@ -347,18 +398,64 @@ export class Typechecker {
     }
   }
 
-  public getResult() {
+  public getResult(): TypecheckResults {
     return this._result
   }
 
-  public getTestFiles() {
+  public getTestFiles(): File[] {
     return Object.values(this._tests || {}).map(i => i.file)
   }
 
-  public getTestPacks() {
-    return Object.values(this._tests || {})
-      .map(({ file }) => getTasks(file))
-      .flat()
-      .map<TaskResultPack>(i => [i.id, i.result, { typecheck: true }])
+  public getTestPacksAndEvents(): {
+    packs: TaskResultPack[]
+    events: TaskEventPack[]
+  } {
+    const packs: TaskResultPack[] = []
+    const events: TaskEventPack[] = []
+
+    for (const { file } of Object.values(this._tests || {})) {
+      const result = convertTasksToEvents(file)
+      packs.push(...result.packs)
+      events.push(...result.events)
+    }
+
+    return { packs, events }
   }
+}
+
+function findGeneratedPosition(traceMap: TraceMap, { line, column, source }: { line: number; column: number; source: string }) {
+  const found = generatedPositionFor(traceMap, {
+    line,
+    column,
+    source,
+  })
+  if (found.line !== null) {
+    return found
+  }
+  // find the next source token position when the exact error position doesn't exist in source map.
+  // this can happen, for example, when the type error is in the comment "// @ts-expect-error"
+  // and comments are stripped away in the generated code.
+  const mappings: (EachMapping & { originalLine: number })[] = []
+  eachMapping(traceMap, (m) => {
+    if (
+      m.source === source
+      && m.originalLine !== null
+      && m.originalColumn !== null
+      && (line === m.originalLine ? column < m.originalColumn : line < m.originalLine)
+    ) {
+      mappings.push(m)
+    }
+  })
+  const next = mappings
+    .sort((a, b) =>
+      a.originalLine === b.originalLine ? a.originalColumn - b.originalColumn : a.originalLine - b.originalLine,
+    )
+    .at(0)
+  if (next) {
+    return {
+      line: next.generatedLine,
+      column: next.generatedColumn,
+    }
+  }
+  return { line: null, column: null }
 }

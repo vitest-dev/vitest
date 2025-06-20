@@ -1,10 +1,11 @@
-import { format, stringify } from 'vitest/utils'
+import { format, stringify } from 'vitest/internal/browser'
 import { getConfig } from '../utils'
 import { rpc } from './rpc'
+import { getBrowserRunner } from './runner'
 
-const { Date, console } = globalThis
+const { Date, console, performance } = globalThis
 
-export function setupConsoleLogSpy() {
+export function setupConsoleLogSpy(): void {
   const {
     log,
     info,
@@ -20,49 +21,6 @@ export function setupConsoleLogSpy() {
     count,
     countReset,
   } = console
-  const formatInput = (input: unknown) => {
-    if (typeof input === 'object') {
-      return stringify(input, undefined, {
-        printBasicPrototype: false,
-        escapeString: false,
-      })
-    }
-    return format(input)
-  }
-  const processLog = (args: unknown[]) => args.map(formatInput).join(' ')
-  const sendLog = (
-    type: 'stdout' | 'stderr',
-    content: string,
-    disableStack?: boolean,
-  ) => {
-    if (content.startsWith('[vite]')) {
-      return
-    }
-    const unknownTestId = '__vitest__unknown_test__'
-    // @ts-expect-error untyped global
-    const taskId = globalThis.__vitest_worker__?.current?.id ?? unknownTestId
-    const origin
-      = getConfig().printConsoleTrace && !disableStack
-        ? new Error('STACK_TRACE').stack?.split('\n').slice(1).join('\n')
-        : undefined
-    rpc().sendLog({
-      origin,
-      content,
-      browser: true,
-      time: Date.now(),
-      taskId,
-      type,
-      size: content.length,
-    })
-  }
-  const stdout = (base: (...args: unknown[]) => void) => (...args: unknown[]) => {
-    base(...args)
-    sendLog('stdout', processLog(args))
-  }
-  const stderr = (base: (...args: unknown[]) => void) => (...args: unknown[]) => {
-    base(...args)
-    sendLog('stderr', processLog(args))
-  }
   console.log = stdout(log)
   console.debug = stdout(debug)
   console.info = stdout(info)
@@ -84,10 +42,8 @@ export function setupConsoleLogSpy() {
     trace(...args)
     const content = processLog(args)
     const error = new Error('$$Trace')
-    const stack = (error.stack || '')
-      .split('\n')
-      .slice(error.stack?.includes('$$Trace') ? 2 : 1)
-      .join('\n')
+    const processor = (globalThis as any).__vitest_worker__?.onFilterStackTrace || ((s: string) => s || '')
+    const stack = processor(error.stack || '')
     sendLog('stderr', `${content}\n${stack}`, true)
   }
 
@@ -116,7 +72,7 @@ export function setupConsoleLogSpy() {
     if (!(label in timeLabels)) {
       sendLog('stderr', `Timer "${label}" does not exist`)
     }
-    else if (start) {
+    else if (typeof start !== 'undefined') {
       const duration = end - start
       sendLog('stdout', `${label}: ${duration} ms`)
     }
@@ -135,4 +91,65 @@ export function setupConsoleLogSpy() {
     countReset(label)
     countLabels[label] = 0
   }
+}
+
+function stdout(base: (...args: unknown[]) => void) {
+  return (...args: unknown[]) => {
+    base(...args)
+    // ignore shadow root logs from wdio
+    // https://github.com/webdriverio/webdriverio/discussions/14221
+    if (args[0] === '[WDIO]') {
+      if (args[1] === 'newShadowRoot' || args[1] === 'removeShadowRoot') {
+        return
+      }
+    }
+    sendLog('stdout', processLog(args))
+  }
+}
+function stderr(base: (...args: unknown[]) => void) {
+  return (...args: unknown[]) => {
+    base(...args)
+    sendLog('stderr', processLog(args))
+  }
+}
+
+function formatInput(input: unknown) {
+  if (typeof input === 'object') {
+    return stringify(input, undefined, {
+      printBasicPrototype: false,
+      escapeString: false,
+    })
+  }
+  return format(input)
+}
+
+function processLog(args: unknown[]) {
+  return args.map(formatInput).join(' ')
+}
+
+function sendLog(
+  type: 'stdout' | 'stderr',
+  content: string,
+  disableStack?: boolean,
+) {
+  if (content.startsWith('[vite]')) {
+    return
+  }
+  const unknownTestId = '__vitest__unknown_test__'
+  // @ts-expect-error untyped global
+  const taskId = globalThis.__vitest_worker__?.current?.id ?? unknownTestId
+  const origin
+    = getConfig().printConsoleTrace && !disableStack
+      ? new Error('STACK_TRACE').stack?.split('\n').slice(1).join('\n')
+      : undefined
+  const runner = getBrowserRunner()
+  rpc().sendLog(runner?.method || 'run', {
+    origin,
+    content,
+    browser: true,
+    time: Date.now(),
+    taskId,
+    type,
+    size: content.length,
+  })
 }

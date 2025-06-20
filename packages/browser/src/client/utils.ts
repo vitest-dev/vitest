@@ -1,17 +1,65 @@
+import type { VitestRunner } from '@vitest/runner'
 import type { SerializedConfig, WorkerGlobalState } from 'vitest'
+import type { IframeOrchestrator } from './orchestrator'
+import type { CommandsManager } from './tester/utils'
 
-export async function importId(id: string) {
+export async function importId(id: string): Promise<any> {
   const name = `/@id/${id}`.replace(/\\/g, '/')
   return getBrowserState().wrapModule(() => import(/* @vite-ignore */ name))
 }
 
-export async function importFs(id: string) {
+export async function importFs(id: string): Promise<any> {
   const name = `/@fs/${id}`.replace(/\\/g, '/')
   return getBrowserState().wrapModule(() => import(/* @vite-ignore */ name))
 }
 
+export const executor = {
+  isBrowser: true,
+
+  executeId: (id: string): Promise<any> => {
+    if (id[0] === '/' || id[1] === ':') {
+      return importFs(id)
+    }
+    return importId(id)
+  },
+}
+
 export function getConfig(): SerializedConfig {
   return getBrowserState().config
+}
+
+export function ensureAwaited<T>(promise: (error?: Error) => Promise<T>): Promise<T> {
+  const test = getWorkerState().current
+  if (!test || test.type !== 'test') {
+    return promise()
+  }
+  let awaited = false
+  const sourceError = new Error('STACK_TRACE_ERROR')
+  test.onFinished ??= []
+  test.onFinished.push(() => {
+    if (!awaited) {
+      const error = new Error(
+        `The call was not awaited. This method is asynchronous and must be awaited; otherwise, the call will not start to avoid unhandled rejections.`,
+      )
+      error.stack = sourceError.stack?.replace(sourceError.message, error.message)
+      throw error
+    }
+  })
+  // don't even start the promise if it's not awaited to not cause any unhanded promise rejections
+  let promiseResult: Promise<T> | undefined
+  return {
+    then(onFulfilled, onRejected) {
+      awaited = true
+      return (promiseResult ||= promise(sourceError)).then(onFulfilled, onRejected)
+    },
+    catch(onRejected) {
+      return (promiseResult ||= promise(sourceError)).catch(onRejected)
+    },
+    finally(onFinally) {
+      return (promiseResult ||= promise(sourceError)).finally(onFinally)
+    },
+    [Symbol.toStringTag]: 'Promise',
+  } satisfies Promise<T>
 }
 
 export interface BrowserRunnerState {
@@ -20,6 +68,7 @@ export interface BrowserRunnerState {
   moduleCache: WorkerGlobalState['moduleCache']
   config: SerializedConfig
   provider: string
+  runner: VitestRunner
   viteConfig: {
     root: string
   }
@@ -27,10 +76,12 @@ export interface BrowserRunnerState {
   type: 'tester' | 'orchestrator'
   wrapModule: <T>(module: () => T) => T
   iframeId?: string
-  contextId: string
+  sessionId: string
   testerId: string
-  runTests?: (tests: string[]) => Promise<void>
-  createTesters?: (files: string[]) => Promise<void>
+  method: 'run' | 'collect'
+  orchestrator?: IframeOrchestrator
+  commands: CommandsManager
+  cleanups: Array<() => unknown>
   cdp?: {
     on: (event: string, listener: (payload: any) => void) => void
     once: (event: string, listener: (payload: any) => void) => void

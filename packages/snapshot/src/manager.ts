@@ -1,13 +1,13 @@
-import { basename, dirname, isAbsolute, join, resolve } from 'pathe'
 import type {
   SnapshotResult,
   SnapshotStateOptions,
   SnapshotSummary,
 } from './types'
+import { basename, dirname, isAbsolute, join, resolve } from 'pathe'
 
 export class SnapshotManager {
-  summary: SnapshotSummary = undefined!
-  extension = '.snap'
+  public summary!: SnapshotSummary
+  public extension = '.snap'
 
   constructor(
     public options: Omit<SnapshotStateOptions, 'snapshotEnvironment'>,
@@ -23,7 +23,7 @@ export class SnapshotManager {
     addSnapshotResult(this.summary, result)
   }
 
-  resolvePath(testPath: string): string {
+  resolvePath<T = any>(testPath: string, context?: T): string {
     const resolver
       = this.options.resolveSnapshotPath || (() => {
         return join(
@@ -32,7 +32,7 @@ export class SnapshotManager {
         )
       })
 
-    const path = resolver(testPath, this.extension)
+    const path = resolver(testPath, this.extension, context)
     return path
   }
 

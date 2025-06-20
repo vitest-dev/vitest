@@ -1,5 +1,5 @@
-import { ref } from 'vue'
 import { vi } from 'vitest'
+import { ref } from 'vue'
 
 export const useJwt = vi.fn(() => ({
   payload: ref({

@@ -1,42 +1,46 @@
-import vm from 'node:vm'
+import type { FileMap } from './file-map'
+import type { ImportModuleDynamically, VMSyntheticModule } from './types'
 import { Module as _Module, createRequire } from 'node:module'
+import vm from 'node:vm'
 import { basename, dirname, extname } from 'pathe'
 import { isNodeBuiltin } from 'vite-node/utils'
-import type { ImportModuleDynamically, VMModule } from './types'
-import type { FileMap } from './file-map'
+import { interopCommonJsModule, SyntheticModule } from './utils'
 
 interface CommonjsExecutorOptions {
   fileMap: FileMap
+  interopDefault?: boolean
   context: vm.Context
   importModuleDynamically: ImportModuleDynamically
 }
 
 const _require = createRequire(import.meta.url)
 
-interface PrivateNodeModule extends NodeModule {
+interface PrivateNodeModule extends NodeJS.Module {
   _compile: (code: string, filename: string) => void
 }
 
-const requiresCache = new WeakMap<NodeModule, NodeRequire>()
+const requiresCache = new WeakMap<NodeJS.Module, NodeJS.Require>()
 
 export class CommonjsExecutor {
   private context: vm.Context
-  private requireCache = new Map<string, NodeModule>()
+  private requireCache = new Map<string, NodeJS.Module>()
   private publicRequireCache = this.createProxyCache()
 
-  private moduleCache = new Map<string, VMModule | Promise<VMModule>>()
-  private builtinCache: Record<string, NodeModule> = Object.create(null)
+  private moduleCache = new Map<string, VMSyntheticModule>()
+  private builtinCache: Record<string, NodeJS.Module> = Object.create(null)
   private extensions: Record<
     string,
-    (m: NodeModule, filename: string) => unknown
+    (m: NodeJS.Module, filename: string) => unknown
   > = Object.create(null)
 
   private fs: FileMap
   private Module: typeof _Module
+  private interopDefault: boolean | undefined
 
   constructor(options: CommonjsExecutorOptions) {
     this.context = options.context
     this.fs = options.fileMap
+    this.interopDefault = options.interopDefault
 
     const primitives = vm.runInContext(
       '({ Object, Array, Error })',
@@ -88,6 +92,12 @@ export class CommonjsExecutor {
         )
       }
 
+      static registerHooks = () => {
+        throw new Error(
+          `[vitest] "registerHooks" is not available when running in Vitest.`,
+        )
+      }
+
       _compile(code: string, filename: string) {
         const cjsModule = Module.wrap(code)
         const script = new vm.Script(cjsModule, {
@@ -132,10 +142,10 @@ export class CommonjsExecutor {
       static SourceMap = _Module.SourceMap
       static syncBuiltinESMExports = _Module.syncBuiltinESMExports
 
-      static _cache = executor.moduleCache
+      static _cache = executor.publicRequireCache
       static _extensions = executor.extensions
 
-      static createRequire = (filename: string) => {
+      static createRequire = (filename: string | URL) => {
         return executor.createRequire(filename)
       }
 
@@ -157,6 +167,13 @@ export class CommonjsExecutor {
       static globalPaths = _Module.globalPaths
       static isBuiltin = _Module.isBuiltin
 
+      static constants = _Module.constants
+      static enableCompileCache = _Module.enableCompileCache
+      static getCompileCacheDir = _Module.getCompileCacheDir
+      static flushCompileCache = _Module.flushCompileCache
+      static stripTypeScriptTypes = _Module.stripTypeScriptTypes
+      static findPackageJSON = _Module.findPackageJSON
+
       static Module = Module
     }
 
@@ -164,17 +181,17 @@ export class CommonjsExecutor {
     this.extensions['.json'] = this.requireJson
   }
 
-  private requireJs = (m: NodeModule, filename: string) => {
+  private requireJs = (m: NodeJS.Module, filename: string) => {
     const content = this.fs.readFile(filename);
     (m as PrivateNodeModule)._compile(content, filename)
   }
 
-  private requireJson = (m: NodeModule, filename: string) => {
+  private requireJson = (m: NodeJS.Module, filename: string) => {
     const code = this.fs.readFile(filename)
     m.exports = JSON.parse(code)
   }
 
-  public createRequire = (filename: string) => {
+  public createRequire = (filename: string | URL): NodeJS.Require => {
     const _require = createRequire(filename)
     const require = ((id: string) => {
       const resolved = _require.resolve(id)
@@ -184,7 +201,7 @@ export class CommonjsExecutor {
       }
       const module = new this.Module(resolved)
       return this.loadCommonJSModule(module, resolved)
-    }) as NodeRequire
+    }) as NodeJS.Require
     require.resolve = _require.resolve
     Object.defineProperty(require, 'extensions', {
       get: () => this.extensions,
@@ -215,7 +232,7 @@ export class CommonjsExecutor {
 
   // very naive implementation for Node.js require
   private loadCommonJSModule(
-    module: NodeModule,
+    module: NodeJS.Module,
     filename: string,
   ): Record<string, unknown> {
     const cached = this.requireCache.get(filename)
@@ -249,7 +266,87 @@ export class CommonjsExecutor {
     return '.js'
   }
 
-  public require(identifier: string) {
+  public getCoreSyntheticModule(identifier: string): VMSyntheticModule {
+    if (this.moduleCache.has(identifier)) {
+      return this.moduleCache.get(identifier)!
+    }
+    const exports = this.require(identifier)
+    const keys = Object.keys(exports)
+    const module = new SyntheticModule([...keys, 'default'], () => {
+      for (const key of keys) {
+        module.setExport(key, exports[key])
+      }
+      module.setExport('default', exports)
+    }, { context: this.context, identifier })
+    this.moduleCache.set(identifier, module)
+    return module
+  }
+
+  public getCjsSyntheticModule(path: string, identifier: string): VMSyntheticModule {
+    if (this.moduleCache.has(identifier)) {
+      return this.moduleCache.get(identifier)!
+    }
+    const exports = this.require(path)
+    // TODO: technically module should be parsed to find static exports, implement for strict mode in #2854
+    const { keys, moduleExports, defaultExport } = interopCommonJsModule(
+      this.interopDefault,
+      exports,
+    )
+    const module = new SyntheticModule([...keys, 'default'], function () {
+      for (const key of keys) {
+        this.setExport(key, moduleExports[key])
+      }
+      this.setExport('default', defaultExport)
+    }, { context: this.context, identifier })
+    this.moduleCache.set(identifier, module)
+    return module
+  }
+
+  // TODO: use this in strict mode, when available in #2854
+  // private _getNamedCjsExports(path: string): Set<string> {
+  //   const cachedNamedExports = this.cjsNamedExportsMap.get(path)
+
+  //   if (cachedNamedExports) {
+  //     return cachedNamedExports
+  //   }
+
+  //   if (extname(path) === '.node') {
+  //     const moduleExports = this.require(path)
+  //     const namedExports = new Set(Object.keys(moduleExports))
+  //     this.cjsNamedExportsMap.set(path, namedExports)
+  //     return namedExports
+  //   }
+
+  //   const code = this.fs.readFile(path)
+  //   const { exports, reexports } = parseCjs(code, path)
+  //   const namedExports = new Set(exports)
+  //   this.cjsNamedExportsMap.set(path, namedExports)
+
+  //   for (const reexport of reexports) {
+  //     if (isNodeBuiltin(reexport)) {
+  //       const exports = this.require(reexport)
+  //       if (exports !== null && typeof exports === 'object') {
+  //         for (const e of Object.keys(exports)) {
+  //           namedExports.add(e)
+  //         }
+  //       }
+  //     }
+  //     else {
+  //       const require = this.createRequire(path)
+  //       const resolved = require.resolve(reexport)
+
+  //       const exports = this._getNamedCjsExports(resolved)
+
+  //       for (const e of exports) {
+  //         namedExports.add(e)
+  //       }
+  //     }
+  //   }
+
+  //   return namedExports
+  // }
+
+  public require(identifier: string): any {
     const ext = extname(identifier)
     if (ext === '.node' || isNodeBuiltin(identifier)) {
       return this.requireCoreModule(identifier)
@@ -271,7 +368,7 @@ export class CommonjsExecutor {
       return module.exports
     }
     this.builtinCache[normalized] = _require.cache[normalized]!
-    // TODO: should we wrapp module to rethrow context errors?
+    // TODO: should we wrap module to rethrow context errors?
     return moduleExports
   }
 }

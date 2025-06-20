@@ -1,4 +1,4 @@
-import { expect, it, onTestFinished } from 'vitest'
+import { describe, expect, it, onTestFailed, onTestFinished } from 'vitest'
 
 const collected: any[] = []
 const multiple: any[] = []
@@ -11,9 +11,9 @@ it('on-finished regular', () => {
   collected.push(2)
 })
 
-it('on-finished context', (t) => {
+it('on-finished context', ({ onTestFinished }) => {
   collected.push(4)
-  t.onTestFinished(() => {
+  onTestFinished(() => {
     collected.push(6)
   })
   collected.push(5)
@@ -29,9 +29,9 @@ it.fails('failed finish', () => {
   collected.push(null)
 })
 
-it.fails('failed finish context', (t) => {
+it.fails('failed finish context', ({ onTestFinished }) => {
   collected.push(10)
-  t.onTestFinished(() => {
+  onTestFinished(() => {
     collected.push(12)
   })
   collected.push(11)
@@ -58,4 +58,142 @@ it('multiple on-finished', () => {
 it('after', () => {
   expect(collected).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12])
   expect(multiple).toEqual([4, 3, 2, 1])
+})
+
+describe('repeats pass', () => {
+  const state: string[] = []
+
+  it('run', { repeats: 2 }, (t) => {
+    const tag = `(${t.task.result?.retryCount}, ${t.task.result?.repeatCount}) `
+    state.push(`${tag}run`)
+
+    onTestFinished(() => {
+      state.push(`${tag}finish`)
+    })
+
+    onTestFailed(() => {
+      state.push(`${tag}fail`)
+    })
+  })
+
+  it('assert', () => {
+    expect(state).toMatchInlineSnapshot(`
+      [
+        "(0, 0) run",
+        "(0, 0) finish",
+        "(0, 1) run",
+        "(0, 1) finish",
+        "(0, 2) run",
+        "(0, 2) finish",
+      ]
+    `)
+  })
+})
+
+describe('repeats fail', () => {
+  const state: string[] = []
+
+  it.fails('run', { repeats: 2 }, (t) => {
+    const tag = `(${t.task.result?.retryCount}, ${t.task.result?.repeatCount}) `
+    state.push(`${tag}run`)
+
+    onTestFinished(() => {
+      state.push(`${tag}finish`)
+    })
+
+    onTestFailed(() => {
+      state.push(`${tag}fail`)
+    })
+
+    if (t.task.result?.repeatCount === 1) {
+      throw new Error('fail')
+    }
+  })
+
+  it('assert', () => {
+    expect(state).toMatchInlineSnapshot(`
+      [
+        "(0, 0) run",
+        "(0, 0) finish",
+        "(0, 1) run",
+        "(0, 1) finish",
+        "(0, 1) fail",
+        "(0, 2) run",
+        "(0, 2) finish",
+        "(0, 2) fail",
+      ]
+    `)
+  })
+})
+
+describe('retry pass', () => {
+  const state: string[] = []
+
+  it('run', { retry: 2 }, (t) => {
+    const tag = `(${t.task.result?.retryCount}, ${t.task.result?.repeatCount}) `
+    state.push(`${tag}run`)
+
+    onTestFinished(() => {
+      state.push(`${tag}finish`)
+    })
+
+    onTestFailed(() => {
+      state.push(`${tag}fail`)
+    })
+
+    if (t.task.result?.retryCount && t.task.result?.retryCount > 1) {
+      return
+    }
+    throw new Error('fail')
+  })
+
+  it('assert', () => {
+    expect(state).toMatchInlineSnapshot(`
+      [
+        "(0, 0) run",
+        "(0, 0) finish",
+        "(0, 0) fail",
+        "(1, 0) run",
+        "(1, 0) finish",
+        "(1, 0) fail",
+        "(2, 0) run",
+        "(2, 0) finish",
+      ]
+    `)
+  })
+})
+
+describe('retry fail', () => {
+  const state: string[] = []
+
+  it.fails('run', { retry: 2 }, (t) => {
+    const tag = `(${t.task.result?.retryCount}, ${t.task.result?.repeatCount}) `
+    state.push(`${tag}run`)
+
+    onTestFinished(() => {
+      state.push(`${tag}finish`)
+    })
+
+    onTestFailed(() => {
+      state.push(`${tag}fail`)
+    })
+
+    throw new Error('fail')
+  })
+
+  it('assert', () => {
+    expect(state).toMatchInlineSnapshot(`
+      [
+        "(0, 0) run",
+        "(0, 0) finish",
+        "(0, 0) fail",
+        "(1, 0) run",
+        "(1, 0) finish",
+        "(1, 0) fail",
+        "(2, 0) run",
+        "(2, 0) finish",
+        "(2, 0) fail",
+      ]
+    `)
+  })
 })

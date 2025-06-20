@@ -1,5 +1,5 @@
 import { NodeSnapshotEnvironment } from '@vitest/snapshot/environment'
-import { getWorkerState } from '../../../utils'
+import { getWorkerState } from '../../../runtime/utils'
 
 export class VitestNodeSnapshotEnvironment extends NodeSnapshotEnvironment {
   getHeader(): string {

@@ -1,24 +1,29 @@
+import type { ExpectStatic } from '@vitest/expect'
 import type {
   CancelReason,
-  Custom,
-  ExtendedContext,
   File,
+  ImportDuration,
   Suite,
   Task,
-  TaskContext,
   Test,
+  TestContext,
   VitestRunner,
   VitestRunnerImportSource,
 } from '@vitest/runner'
-import type { ExpectStatic } from '@vitest/expect'
-import { GLOBAL_EXPECT, getState, setState } from '@vitest/expect'
-import { getSnapshotClient } from '../../integrations/snapshot/chai'
-import { vi } from '../../integrations/vi'
-import { getNames, getTestName, getTests, getWorkerState } from '../../utils'
-import { createExpect } from '../../integrations/chai/index'
 import type { SerializedConfig } from '../config'
 import type { VitestExecutor } from '../execute'
+import { getState, GLOBAL_EXPECT, setState } from '@vitest/expect'
+import { getNames, getTestName, getTests } from '@vitest/runner/utils'
+import { normalize } from 'pathe'
+import { createExpect } from '../../integrations/chai/index'
+import { inject } from '../../integrations/inject'
+import { getSnapshotClient } from '../../integrations/snapshot/chai'
+import { vi } from '../../integrations/vi'
 import { rpc } from '../rpc'
+import { getWorkerState } from '../utils'
+
+// worker context is shared between all tests
+const workerContext = Object.create(null)
 
 export class VitestTestRunner implements VitestRunner {
   private snapshotClient = getSnapshotClient()
@@ -28,7 +33,7 @@ export class VitestTestRunner implements VitestRunner {
 
   private assertionsErrors = new WeakMap<Readonly<Task>, Error>()
 
-  public pool = this.workerState.ctx.pool
+  public pool: string = this.workerState.ctx.pool
 
   constructor(public config: SerializedConfig) {}
 
@@ -39,19 +44,24 @@ export class VitestTestRunner implements VitestRunner {
     return this.__vitest_executor.executeId(filepath)
   }
 
-  onCollectStart(file: File) {
+  onCollectStart(file: File): void {
     this.workerState.current = file
   }
 
-  onBeforeRunFiles() {
-    this.snapshotClient.clear()
+  onCleanupWorkerContext(listener: () => unknown): void {
+    this.workerState.onCleanup(listener)
   }
 
-  onAfterRunFiles() {
+  onAfterRunFiles(): void {
+    this.snapshotClient.clear()
     this.workerState.current = undefined
   }
 
-  async onAfterRunSuite(suite: Suite) {
+  getWorkerContext(): Record<string, unknown> {
+    return workerContext
+  }
+
+  async onAfterRunSuite(suite: Suite): Promise<void> {
     if (this.config.logHeapUsage && typeof process !== 'undefined') {
       suite.result!.heap = process.memoryUsage().heapUsed
     }
@@ -61,22 +71,18 @@ export class VitestTestRunner implements VitestRunner {
       for (const test of getTests(suite)) {
         if (test.mode === 'skip') {
           const name = getNames(test).slice(1).join(' > ')
-          this.snapshotClient.skipTestSnapshots(name)
+          this.snapshotClient.skipTest(suite.file.filepath, name)
         }
       }
 
-      const result = await this.snapshotClient.finishCurrentRun()
-      if (result) {
-        await rpc().snapshotSaved(result)
-      }
+      const result = await this.snapshotClient.finish(suite.file.filepath)
+      await rpc().snapshotSaved(result)
     }
 
     this.workerState.current = suite.suite || suite.file
   }
 
-  onAfterRunTask(test: Task) {
-    this.snapshotClient.clearTest()
-
+  onAfterRunTask(test: Task): void {
     if (this.config.logHeapUsage && typeof process !== 'undefined') {
       test.result!.heap = process.memoryUsage().heapUsed
     }
@@ -84,36 +90,37 @@ export class VitestTestRunner implements VitestRunner {
     this.workerState.current = test.suite || test.file
   }
 
-  onCancel(_reason: CancelReason) {
+  cancel(_reason: CancelReason): void {
     this.cancelRun = true
   }
 
-  async onBeforeRunTask(test: Task) {
+  injectValue(key: string): any {
+    // inject has a very limiting type controlled by ProvidedContext
+    // some tests override it which causes the build to fail
+    return (inject as any)(key)
+  }
+
+  async onBeforeRunTask(test: Task): Promise<void> {
     if (this.cancelRun) {
       test.mode = 'skip'
     }
 
-    if (test.mode !== 'run') {
+    if (test.mode !== 'run' && test.mode !== 'queued') {
       return
     }
-
-    clearModuleMocks(this.config)
 
     this.workerState.current = test
   }
 
-  async onBeforeRunSuite(suite: Suite) {
+  async onBeforeRunSuite(suite: Suite): Promise<void> {
     if (this.cancelRun) {
       suite.mode = 'skip'
     }
 
     // initialize snapshot state before running file suite
     if (suite.mode !== 'skip' && 'filepath' in suite) {
-      // default "name" is irrelevant for Vitest since each snapshot assertion
-      // (e.g. `toMatchSnapshot`) specifies "filepath" / "name" pair explicitly
-      await this.snapshotClient.startCurrentRun(
-        (suite as File).filepath,
-        '__default_name_',
+      await this.snapshotClient.setup(
+        suite.file.filepath,
         this.workerState.config.snapshotOptions,
       )
     }
@@ -121,7 +128,9 @@ export class VitestTestRunner implements VitestRunner {
     this.workerState.current = suite
   }
 
-  onBeforeTryTask(test: Task) {
+  onBeforeTryTask(test: Task): void {
+    clearModuleMocks(this.config)
+    this.snapshotClient.clearTest(test.file.filepath, test.id)
     setState(
       {
         assertionCalls: 0,
@@ -129,15 +138,14 @@ export class VitestTestRunner implements VitestRunner {
         isExpectingAssertionsError: null,
         expectedAssertionsNumber: null,
         expectedAssertionsNumberErrorGen: null,
-        testPath: test.file.filepath,
         currentTestName: getTestName(test),
-        snapshotState: this.snapshotClient.snapshotState,
+        snapshotState: this.snapshotClient.getSnapshotState(test.file.filepath),
       },
       (globalThis as any)[GLOBAL_EXPECT],
     )
   }
 
-  onAfterTryTask(test: Task) {
+  onAfterTryTask(test: Test): void {
     const {
       assertionCalls,
       expectedAssertionsNumber,
@@ -145,8 +153,7 @@ export class VitestTestRunner implements VitestRunner {
       isExpectingAssertions,
       isExpectingAssertionsError,
     }
-      // @ts-expect-error _local is untyped
-      = 'context' in test && test.context._local
+      = test.context._local
         ? test.context.expect.getState()
         : getState((globalThis as any)[GLOBAL_EXPECT])
     if (
@@ -163,9 +170,7 @@ export class VitestTestRunner implements VitestRunner {
     }
   }
 
-  extendTaskContext<T extends Test | Custom>(
-    context: TaskContext<T>,
-  ): ExtendedContext<T> {
+  extendTaskContext(context: TestContext): TestContext {
     // create error during the test initialization so we have a nice stack trace
     if (this.config.expect.requireAssertions) {
       this.assertionsErrors.set(
@@ -187,7 +192,18 @@ export class VitestTestRunner implements VitestRunner {
         return _expect != null
       },
     })
-    return context as ExtendedContext<T>
+    return context
+  }
+
+  getImportDurations(): Record<string, ImportDuration> {
+    const entries = [...(this.workerState.moduleExecutionInfo?.entries() ?? [])]
+    return Object.fromEntries(entries.map(([filepath, { duration, selfTime }]) => [
+      normalize(filepath),
+      {
+        selfTime,
+        totalTime: duration,
+      },
+    ]))
   }
 }
 

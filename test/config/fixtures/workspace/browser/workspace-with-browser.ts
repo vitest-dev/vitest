@@ -6,7 +6,8 @@ export default defineWorkspace([
       name: "Browser project",
       browser: {
          enabled: true,
-         name: 'chrome'
+         provider: 'webdriverio',
+         instances: [{ browser: 'chrome' }]
       },
     }
   }

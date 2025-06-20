@@ -24,7 +24,8 @@ export interface ModuleCache {
 
 export interface AfterSuiteRunMeta {
   coverage?: unknown
-  transformMode: TransformMode
+  testFiles: string[]
+  transformMode: TransformMode | 'browser'
   projectName?: string
 }
 
@@ -44,6 +45,7 @@ export interface ModuleGraphData {
   inlined: string[]
 }
 
-export type OnServerRestartHandler = (reason?: string) => Promise<void> | void
-
 export interface ProvidedContext {}
+
+// These need to be compatible with Tinyrainbow's bg-colors, and CSS's background-color
+export type LabelColor = 'black' | 'red' | 'green' | 'yellow' | 'blue' | 'magenta' | 'cyan' | 'white'

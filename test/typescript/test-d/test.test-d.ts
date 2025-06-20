@@ -1,7 +1,5 @@
-/* eslint-disable ts/prefer-ts-expect-error */
 /* eslint-disable ts/ban-ts-comment */
 
-import { google, type sheets_v4 } from 'googleapis'
 import { describe, expectTypeOf, test, vi } from 'vitest'
 
 describe('test', () => {
@@ -37,14 +35,14 @@ describe('test', () => {
   })
 
   test('spyOn googleapis compiles', () => {
-    vi.spyOn(google, 'sheets').mockReturnValue({
-      spreadsheets: {
-        values: {
-          get: vi.fn().mockResolvedValue({ data: { values: [['', '']] } }),
-          update: vi.fn().mockResolvedValue({}),
-        } as Partial<sheets_v4.Resource$Spreadsheets$Values> as sheets_v4.Resource$Spreadsheets$Values,
-      } as sheets_v4.Resource$Spreadsheets,
-    } as sheets_v4.Sheets)
+    // googleapis-like typing to reproduce https://github.com/vitest-dev/vitest/issues/3141
+    let google!: {
+      [key: string]: unknown
+      sheets: () => { foo: string }
+    }
+    vi.spyOn(google, 'sheets').mockReturnValue({ foo: 'bar' })
+    // @ts-expect-error
+    vi.spyOn(google, 'sheets').mockReturnValue({ foo: 1234 })
   })
 })
 

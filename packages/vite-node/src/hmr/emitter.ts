@@ -1,5 +1,5 @@
-import { EventEmitter } from 'node:events'
 import type { HMRPayload, Plugin } from 'vite'
+import { EventEmitter } from 'node:events'
 
 export type EventType = string | symbol
 export type Handler<T = unknown> = (event: T) => void
@@ -13,9 +13,9 @@ export interface Emitter<Events extends Record<EventType, unknown>> {
     handler?: Handler<Events[Key]>
   ) => void
   emit: (<Key extends keyof Events>(type: Key, event: Events[Key]) => void) &
-  (<Key extends keyof Events>(
-    type: undefined extends Events[Key] ? Key : never
-  ) => void)
+    (<Key extends keyof Events>(
+      type: undefined extends Events[Key] ? Key : never
+    ) => void)
 }
 
 export type HMREmitter = Emitter<{
@@ -62,6 +62,15 @@ export function viteNodeHmrPlugin(): Plugin {
       server.ws.send = function (payload: any) {
         _send(payload)
         emitter.emit('message', payload)
+      }
+      // eslint-disable-next-line ts/ban-ts-comment
+      // @ts-ignore Vite 6 compat
+      const environments = server.environments
+      if (environments) {
+        environments.ssr.hot.send = function (payload: any) {
+          _send(payload)
+          emitter.emit('message', payload)
+        }
       }
     },
   }

@@ -1,0 +1,47 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`prints default document 1`] = `"<body />"`;
+
+exports[`prints default document 2`] = `
+"<body>
+  <div>
+    <span>
+      hello
+    </span>
+  </div>
+</body>"
+`;
+
+exports[`prints the element 1`] = `
+"<body>
+  <div>
+    <span>
+      hello
+    </span>
+  </div>
+</body>"
+`;
+
+exports[`prints the element with attributes 1`] = `
+"<body>
+  <div>
+    <span
+      class="some-name"
+      data-test-id="33"
+      id="5"
+    >
+      hello
+    </span>
+  </div>
+</body>"
+`;
+
+exports[`should handle DOM content bigger than maxLength 1`] = `
+"<body>
+  <div>
+    <div>
+      <div … />
+    </div>
+  </div>
+</body>..."
+`;

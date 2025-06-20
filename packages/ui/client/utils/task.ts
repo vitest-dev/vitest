@@ -25,6 +25,23 @@ export function getProjectNameColor(name: string | undefined) {
   const index = name
     .split('')
     .reduce((acc, v, idx) => acc + v.charCodeAt(0) + idx, 0)
-  const colors = ['blue', 'yellow', 'cyan', 'green', 'magenta']
+  const colors = ['yellow', 'cyan', 'green', 'magenta']
   return colors[index % colors.length]
+}
+
+export function getProjectTextColor(color: string) {
+  switch (color) {
+    case 'blue':
+    case 'green':
+    case 'magenta':
+    case 'black':
+    case 'red':
+      return 'white'
+
+    case 'yellow':
+    case 'cyan':
+    case 'white':
+    default:
+      return 'black'
+  }
 }

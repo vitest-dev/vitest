@@ -1,4 +1,6 @@
 import type { Plugin } from 'vite'
+import { resolve } from 'pathe'
+import { VitestCache } from '../cache'
 import { resolveOptimizerConfig } from './utils'
 
 export function VitestOptimizer(): Plugin {
@@ -11,16 +13,23 @@ export function VitestOptimizer(): Plugin {
         const webOptimizer = resolveOptimizerConfig(
           testConfig.deps?.optimizer?.web,
           viteConfig.optimizeDeps,
-          testConfig,
         )
         const ssrOptimizer = resolveOptimizerConfig(
           testConfig.deps?.optimizer?.ssr,
           viteConfig.ssr?.optimizeDeps,
-          testConfig,
         )
 
-        viteConfig.cacheDir
-          = webOptimizer.cacheDir || ssrOptimizer.cacheDir || viteConfig.cacheDir
+        const root = resolve(viteConfig.root || process.cwd())
+        const name = viteConfig.test?.name
+        const label = typeof name === 'string' ? name : (name?.label || '')
+
+        viteConfig.cacheDir = VitestCache.resolveCacheDir(
+          resolve(root || process.cwd()),
+          testConfig.cache != null && testConfig.cache !== false
+            ? testConfig.cache.dir
+            : viteConfig.cacheDir,
+          label,
+        )
         viteConfig.optimizeDeps = webOptimizer.optimizeDeps
         viteConfig.ssr ??= {}
         viteConfig.ssr.optimizeDeps = ssrOptimizer.optimizeDeps

@@ -16,8 +16,8 @@ This section describes the API that you can use when [mocking a module](/guide/m
 
 ### vi.mock
 
-- **Type**: `(path: string, factory?: (importOriginal: () => unknown) => unknown) => void`
-- **Type**: `<T>(path: Promise<T>, factory?: (importOriginal: () => T) => unknown) => void`
+- **Type**: `(path: string, factory?: MockOptions | ((importOriginal: () => unknown) => unknown)) => void`
+- **Type**: `<T>(path: Promise<T>, factory?: MockOptions | ((importOriginal: () => T) => T | Promise<T>)) => void`
 
 Substitutes all imported modules from provided `path` with another module. You can use configured Vite aliases inside a path. The call to `vi.mock` is hoisted, so it doesn't matter where you call it. It will always be executed before all imports. If you need to reference some variables outside of its scope, you can define them inside [`vi.hoisted`](#vi-hoisted) and reference them inside `vi.mock`.
 
@@ -29,9 +29,27 @@ In order to hoist `vi.mock`, Vitest statically analyzes your files. It indicates
 Vitest will not mock modules that were imported inside a [setup file](/config/#setupfiles) because they are cached by the time a test file is running. You can call [`vi.resetModules()`](#vi-resetmodules) inside [`vi.hoisted`](#vi-hoisted) to clear all module caches before running a test file.
 :::
 
-If `factory` is defined, all imports will return its result. Vitest calls factory only once and caches results for all subsequent imports until [`vi.unmock`](#vi-unmock) or [`vi.doUnmock`](#vi-dounmock) is called.
+If the `factory` function is defined, all imports will return its result. Vitest calls factory only once and caches results for all subsequent imports until [`vi.unmock`](#vi-unmock) or [`vi.doUnmock`](#vi-dounmock) is called.
 
-Unlike in `jest`, the factory can be asynchronous. You can use [`vi.importActual`](#vi-importactual) or a helper with the factory passed in as the first argument, and get the original module inside. Vitest also supports a module promise instead of a string in `vi.mock` method for better IDE support (when file is moved, path will be updated, `importOriginal` also inherits the type automatically).
+Unlike in `jest`, the factory can be asynchronous. You can use [`vi.importActual`](#vi-importactual) or a helper with the factory passed in as the first argument, and get the original module inside.
+
+You can also provide an object with a `spy` property instead of a factory function. If `spy` is `true`, then Vitest will automock the module as usual, but it won't override the implementation of exports. This is useful if you just want to assert that the exported method was called correctly by another method.
+
+```ts
+import { calculator } from './src/calculator.ts'
+
+vi.mock('./src/calculator.ts', { spy: true })
+
+// calls the original implementation,
+// but allows asserting the behaviour later
+const result = calculator(1, 2)
+
+expect(result).toBe(3)
+expect(calculator).toHaveBeenCalledWith(1, 2)
+expect(calculator).toHaveReturned(3)
+```
+
+Vitest also supports a module promise instead of a string in the `vi.mock` and `vi.doMock` methods for better IDE support. When the file is moved, the path will be updated, and `importOriginal` inherits the type automatically. Using this signature will also enforce factory return type to be compatible with the original module (keeping exports optional).
 
 ```ts twoslash
 // @filename: ./path/to/module.js
@@ -51,6 +69,10 @@ vi.mock(import('./path/to/module.js'), async (importOriginal) => {
 ```
 
 Under the hood, Vitest still operates on a string and not a module object.
+
+If you are using TypeScript with `paths` aliases configured in `tsconfig.json` however, the compiler won't be able to correctly resolve import types.
+In order to make it work, make sure to replace all aliased imports, with their corresponding relative paths.
+Eg. use `import('./path/to/module.js')` instead of `import('@/module')`.
 
 ::: warning
 `vi.mock` is hoisted (in other words, _moved_) to **top of the file**. It means that whenever you write it (be it inside `beforeEach` or `test`), it will actually be called before that.
@@ -97,7 +119,7 @@ vi.mock('./path/to/module.js', () => {
 ```
 :::
 
-If there is a `__mocks__` folder alongside a file that you are mocking, and the factory is not provided, Vitest will try to find a file with the same name in the `__mocks__` subfolder and use it as an actual module. If you are mocking a dependency, Vitest will try to find a `__mocks__` folder in the [root](/config/#root) of the project (default is `process.cwd()`). You can tell Vitest where the dependencies are located through the [deps.moduleDirectories](/config/#deps-moduledirectories) config option.
+If there is a `__mocks__` folder alongside a file that you are mocking, and the factory is not provided, Vitest will try to find a file with the same name in the `__mocks__` subfolder and use it as an actual module. If you are mocking a dependency, Vitest will try to find a `__mocks__` folder in the [root](/config/#root) of the project (default is `process.cwd()`). You can tell Vitest where the dependencies are located through the [`deps.moduleDirectories`](/config/#deps-moduledirectories) config option.
 
 For example, you have this file structure:
 
@@ -112,10 +134,9 @@ For example, you have this file structure:
   - increment.test.js
 ```
 
-If you call `vi.mock` in a test file without a factory provided, it will find a file in the `__mocks__` folder to use as a module:
+If you call `vi.mock` in a test file without a factory or options provided, it will find a file in the `__mocks__` folder to use as a module:
 
-```ts
-// increment.test.js
+```ts [increment.test.js]
 import { vi } from 'vitest'
 
 // axios is a default export from `__mocks__/axios.js`
@@ -138,8 +159,8 @@ If there is no `__mocks__` folder or a factory provided, Vitest will import the 
 
 ### vi.doMock
 
-- **Type**: `(path: string, factory?: (importOriginal: () => unknown) => unknown) => void`
-- **Type**: `<T>(path: Promise<T>, factory?: (importOriginal: () => T) => unknown) => void`
+- **Type**: `(path: string, factory?: MockOptions | ((importOriginal: () => unknown) => unknown)) => void`
+- **Type**: `<T>(path: Promise<T>, factory?: MockOptions | ((importOriginal: () => T) => T | Promise<T>)) => void`
 
 The same as [`vi.mock`](#vi-mock), but it's not hoisted to the top of the file, so you can reference variables in the global file scope. The next [dynamic import](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/import) of the module will be mocked.
 
@@ -153,14 +174,13 @@ import { increment } from './increment.js'
 ```
 :::
 
-```ts
-// ./increment.js
+```ts [increment.js]
 export function increment(number) {
   return number + 1
 }
 ```
 
-```ts
+```ts [increment.test.js]
 import { beforeEach, test } from 'vitest'
 import { increment } from './increment.js'
 
@@ -194,14 +214,30 @@ Type helper for TypeScript. Just returns the object that was passed.
 
 When `partial` is `true` it will expect a `Partial<T>` as a return value. By default, this will only make TypeScript believe that the first level values are mocked. You can pass down `{ deep: true }` as a second argument to tell TypeScript that the whole object is mocked, if it actually is.
 
-```ts
-import example from './example.js'
+```ts [example.ts]
+export function add(x: number, y: number): number {
+  return x + y
+}
 
-vi.mock('./example.js')
+export function fetchSomething(): Promise<Response> {
+  return fetch('https://vitest.dev/')
+}
+```
+
+```ts [example.test.ts]
+import * as example from './example'
+
+vi.mock('./example')
 
 test('1 + 1 equals 10', async () => {
-  vi.mocked(example.calc).mockReturnValue(10)
-  expect(example.calc(1, '+', 1)).toBe(10)
+  vi.mocked(example.add).mockReturnValue(10)
+  expect(example.add(1, 1)).toBe(10)
+})
+
+test('mock return value with only partially correct typing', async () => {
+  vi.mocked(example.fetchSomething).mockResolvedValue(new Response('hello'))
+  vi.mocked(example.fetchSomething, { partial: true }).mockResolvedValue({ ok: false })
+  // vi.mocked(example.someFn).mockResolvedValue({ ok: false }) // this is a type error
 })
 ```
 
@@ -213,9 +249,9 @@ Imports module, bypassing all checks if it should be mocked. Can be useful if yo
 
 ```ts
 vi.mock('./example.js', async () => {
-  const axios = await vi.importActual('./example.js')
+  const originalModule = await vi.importActual('./example.js')
 
-  return { ...axios, get: vi.fn() }
+  return { ...originalModule, get: vi.fn() }
 })
 ```
 
@@ -237,14 +273,13 @@ Removes module from the mocked registry. All calls to import will return the ori
 
 The same as [`vi.unmock`](#vi-unmock), but is not hoisted to the top of the file. The next import of the module will import the original module instead of the mock. This will not unmock previously imported modules.
 
-```ts
-// ./increment.js
+```ts [increment.js]
 export function increment(number) {
   return number + 1
 }
 ```
 
-```ts
+```ts [increment.test.js]
 import { increment } from './increment.js'
 
 // increment is already mocked, because vi.mock is hoisted
@@ -355,6 +390,33 @@ expect(res).toBe(5)
 expect(getApples).toHaveNthReturnedWith(2, 5)
 ```
 
+### vi.mockObject <Version>3.2.0</Version>
+
+- **Type:** `<T>(value: T) => MaybeMockedDeep<T>`
+
+Deeply mocks properties and methods of a given object in the same way as `vi.mock()` mocks module exports. See [automocking](/guide/mocking.html#automocking-algorithm) for the detail.
+
+```ts
+const original = {
+  simple: () => 'value',
+  nested: {
+    method: () => 'real'
+  },
+  prop: 'foo',
+}
+
+const mocked = vi.mockObject(original)
+expect(mocked.simple()).toBe(undefined)
+expect(mocked.nested.method()).toBe(undefined)
+expect(mocked.prop).toBe('foo')
+
+mocked.simple.mockReturnValue('mocked')
+mocked.nested.method.mockReturnValue('mocked nested')
+
+expect(mocked.simple()).toBe('mocked')
+expect(mocked.nested.method()).toBe('mocked nested')
+```
+
 ### vi.isMockFunction
 
 - **Type:** `(fn: Function) => boolean`
@@ -363,15 +425,18 @@ Checks that a given parameter is a mock function. If you are using TypeScript, i
 
 ### vi.clearAllMocks
 
-Will call [`.mockClear()`](/api/mock#mockclear) on all spies. This will clear mock history, but not reset its implementation to the default one.
+Calls [`.mockClear()`](/api/mock#mockclear) on all spies.
+This will clear mock history without affecting mock implementations.
 
 ### vi.resetAllMocks
 
-Will call [`.mockReset()`](/api/mock#mockreset) on all spies. This will clear mock history and reset its implementation to an empty function (will return `undefined`).
+Calls [`.mockReset()`](/api/mock#mockreset) on all spies.
+This will clear mock history and reset each mock's implementation to its original.
 
 ### vi.restoreAllMocks
 
-Will call [`.mockRestore()`](/api/mock#mockrestore) on all spies. This will clear mock history and reset its implementation to the original one.
+Calls [`.mockRestore()`](/api/mock#mockrestore) on all spies.
+This will clear mock history, restore all original mock implementations, and restore original descriptors of spied-on objects.
 
 ### vi.spyOn
 
@@ -395,6 +460,19 @@ expect(spy).toHaveReturnedWith(1)
 ```
 
 ::: tip
+In environments that support [Explicit Resource Management](https://github.com/tc39/proposal-explicit-resource-management), you can use `using` instead of `const` to automatically call `mockRestore` on any mocked function when the containing block is exited. This is especially useful for spied methods:
+
+```ts
+it('calls console.log', () => {
+  using spy = vi.spyOn(console, 'log').mockImplementation(() => {})
+  debug('message')
+  expect(spy).toHaveBeenCalled()
+})
+// console.log is restored here
+```
+:::
+
+::: tip
 You can call [`vi.restoreAllMocks`](#vi-restoreallmocks) inside [`afterEach`](/api/#aftereach) (or enable [`test.restoreMocks`](/config/#restoreMocks)) to restore all methods to their original implementations. This will restore the original [object descriptor](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/defineProperty), so you won't be able to change method's implementation:
 
 ```ts
@@ -412,9 +490,26 @@ console.log(cart.getApples()) // still 42!
 ```
 :::
 
+::: tip
+It is not possible to spy on exported methods in [Browser Mode](/guide/browser/). Instead, you can spy on every exported method by calling `vi.mock("./file-path.js", { spy: true })`. This will mock every export but keep its implementation intact, allowing you to assert if the method was called correctly.
+
+```ts
+import { calculator } from './src/calculator.ts'
+
+vi.mock('./src/calculator.ts', { spy: true })
+
+calculator(1, 2)
+
+expect(calculator).toHaveBeenCalledWith(1, 2)
+expect(calculator).toHaveReturned(3)
+```
+
+And while it is possible to spy on exports in `jsdom` or other Node.js environments, this might change in the future.
+:::
+
 ### vi.stubEnv {#vi-stubenv}
 
-- **Type:** `(name: string, value: string) => Vitest`
+- **Type:** `<T extends string>(name: T, value: T extends "PROD" | "DEV" | "SSR" ? boolean : string | undefined) => Vitest`
 
 Changes the value of environmental variable on `process.env` and `import.meta.env`. You can restore its value by calling `vi.unstubAllEnvs`.
 
@@ -428,6 +523,12 @@ vi.stubEnv('NODE_ENV', 'production')
 
 process.env.NODE_ENV === 'production'
 import.meta.env.NODE_ENV === 'production'
+
+vi.stubEnv('NODE_ENV', undefined)
+
+process.env.NODE_ENV === undefined
+import.meta.env.NODE_ENV === undefined
+
 // doesn't change other envs
 import.meta.env.MODE === 'development'
 ```
@@ -529,7 +630,7 @@ IntersectionObserver === undefined
 
 ## Fake Timers
 
-This sections descibes how to work with [fake timers](/guide/mocking#timers).
+This sections describes how to work with [fake timers](/guide/mocking#timers).
 
 ### vi.advanceTimersByTime
 
@@ -597,6 +698,24 @@ await vi.advanceTimersToNextTimerAsync() // log: 2
 await vi.advanceTimersToNextTimerAsync() // log: 3
 ```
 
+### vi.advanceTimersToNextFrame <Version>2.1.0</Version> {#vi-advancetimerstonextframe}
+
+- **Type:** `() => Vitest`
+
+Similar to [`vi.advanceTimersByTime`](https://vitest.dev/api/vi#vi-advancetimersbytime), but will advance timers by the milliseconds needed to execute callbacks currently scheduled with `requestAnimationFrame`.
+
+```ts
+let frameRendered = false
+
+requestAnimationFrame(() => {
+  frameRendered = true
+})
+
+vi.advanceTimersToNextFrame()
+
+expect(frameRendered).toBe(true)
+```
+
 ### vi.getTimerCount
 
 - **Type:** `() => number`
@@ -611,7 +730,7 @@ Removes all timers that are scheduled to run. These timers will never run in the
 
 - **Type**: `() => Date | null`
 
-Returns mocked current date that was set using `setSystemTime`. If date is not mocked the method will return `null`.
+Returns mocked current date. If date is not mocked the method will return `null`.
 
 ### vi.getRealSystemTime
 
@@ -715,6 +834,8 @@ If fake timers are enabled, this method simulates a user changing the system clo
 
 Useful if you need to test anything that depends on the current date - for example [Luxon](https://github.com/moment/luxon/) calls inside your code.
 
+Accepts the same string and number arguments as the `Date`.
+
 ```ts
 const date = new Date(1998, 11, 19)
 
@@ -737,8 +858,8 @@ Mocking `nextTick` is not supported when running Vitest inside `node:child_proce
 The implementation is based internally on [`@sinonjs/fake-timers`](https://github.com/sinonjs/fake-timers).
 
 ::: tip
-`vi.useFakeTimers()` does not automatically mock `process.nextTick`.
-But you can enable it by specifying the option in `toFake` argument: `vi.useFakeTimers({ toFake: ['nextTick'] })`.
+`vi.useFakeTimers()` does not automatically mock `process.nextTick` and `queueMicrotask`.
+But you can enable it by specifying the option in `toFake` argument: `vi.useFakeTimers({ toFake: ['nextTick', 'queueMicrotask'] })`.
 :::
 
 ### vi.isFakeTimers {#vi-isfaketimers}
@@ -751,7 +872,7 @@ Returns `true` if fake timers are enabled.
 
 - **Type:** `() => Vitest`
 
-When timers are run out, you may call this method to return mocked timers to its original implementations. All timers that were scheduled before will be discarded.
+When timers have run out, you may call this method to return mocked timers to its original implementations. All timers that were scheduled before will be discarded.
 
 ## Miscellaneous
 
@@ -762,6 +883,8 @@ A set of useful helper functions that Vitest provides.
 - **Type:** `<T>(callback: WaitForCallback<T>, options?: number | WaitForOptions) => Promise<T>`
 
 Wait for the callback to execute successfully. If the callback throws an error or returns a rejected promise it will continue to wait until it succeeds or times out.
+
+If options is set to a number, the effect is equivalent to setting `{ timeout: options }`.
 
 This is very useful when you need to wait for some asynchronous action to complete, for example, when you start a server and need to wait for it to start.
 
@@ -858,13 +981,39 @@ callFunctionWithSideEffect()
 + const { value } = await import('./some/module.js')
 ```
 
-When running `vitest`, you can do this automatically by using `vi.hoisted` method.
+When running `vitest`, you can do this automatically by using `vi.hoisted` method. Under the hood, Vitest will convert static imports into dynamic ones with preserved live-bindings.
 
 ```diff
 - callFunctionWithSideEffect()
 import { value } from './some/module.js'
 + vi.hoisted(() => callFunctionWithSideEffect())
 ```
+
+::: warning IMPORTS ARE NOT AVAILABLE
+Running code before the imports means that you cannot access imported variables because they are not defined yet:
+
+```ts
+import { value } from './some/module.js'
+
+vi.hoisted(() => { value }) // throws an error // [!code warning]
+```
+
+This code will produce an error:
+
+```
+Cannot access '__vi_import_0__' before initialization
+```
+
+If you need to access a variable from another module inside of `vi.hoisted`, use dynamic import:
+
+```ts
+await vi.hoisted(async () => {
+  const { value } = await import('./some/module.js')
+})
+```
+
+However, it is discourage to import anything inside of `vi.hoisted` because imports are already hoisted - if you need to execute something before the tests are running, just execute it in the imported module itself.
+:::
 
 This method returns the value that was returned from the factory. You can use that value in your `vi.mock` factories if you need easy access to locally defined variables:
 
@@ -887,7 +1036,7 @@ expect(originalMethod()).toBe(100)
 Note that this method can also be called asynchronously even if your environment doesn't support top-level await:
 
 ```ts
-const promised = await vi.hoisted(async () => {
+const json = await vi.hoisted(async () => {
   const response = await fetch('https://jsonplaceholder.typicode.com/posts')
   return response.json()
 })

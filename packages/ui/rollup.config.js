@@ -1,9 +1,10 @@
 import { builtinModules, createRequire } from 'node:module'
-import esbuild from 'rollup-plugin-esbuild'
-import dts from 'rollup-plugin-dts'
-import resolve from '@rollup/plugin-node-resolve'
 import commonjs from '@rollup/plugin-commonjs'
 import json from '@rollup/plugin-json'
+import resolve from '@rollup/plugin-node-resolve'
+import { defineConfig } from 'rollup'
+import oxc from 'unplugin-oxc/rollup'
+import { createDtsUtils } from '../../scripts/build-utils.js'
 
 const require = createRequire(import.meta.url)
 const pkg = require('./package.json')
@@ -18,42 +19,51 @@ const external = [
   'vite',
 ]
 
-const entries = ['index', 'reporter']
+const dtsUtils = createDtsUtils()
 
 export default () => {
-  const options = entries.flatMap(entry => [
+  return defineConfig([
     {
-      input: `./node/${entry}.ts`,
+      input: {
+        index: `./node/index.ts`,
+        reporter: `./node/reporter.ts`,
+      },
       output: {
         dir: 'dist',
         format: 'esm',
       },
+      moduleContext: (id) => {
+        // mime has `this.__classPrivateFieldGet` check which should be ignored in esm
+        if (id.includes('mime/dist/src') || id.includes('mime\\dist\\src')) {
+          return '{}'
+        }
+      },
       external,
       plugins: [
+        ...dtsUtils.isolatedDecl(),
         resolve({
           preferBuiltins: true,
         }),
         json(),
         commonjs(),
-        esbuild({
-          target: 'node18',
+        oxc({
+          transform: { target: 'node18' },
         }),
       ],
       onwarn,
     },
-  ])
-  return [
-    ...options,
     {
-      input: `./node/index.ts`,
+      input: 'dist/.types/index.d.ts',
       output: {
-        file: `dist/index.d.ts`,
+        dir: 'dist',
+        entryFileNames: '[name].ts',
         format: 'esm',
       },
+      watch: false,
       external,
-      plugins: [dts()],
+      plugins: dtsUtils.dts(),
     },
-  ]
+  ])
 }
 
 function onwarn(message) {

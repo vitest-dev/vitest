@@ -1,22 +1,23 @@
-// CI failes only for this file, but it works locally
+// CI fails only for this file, but it works locally
 
-import * as chai from 'chai'
-import './setup'
+import type { Assertion, ExpectStatic, MatcherState } from '@vitest/expect'
 import type { TaskPopulated, Test } from '@vitest/runner'
-import { getCurrentTest } from '@vitest/runner'
 import {
-  ASYMMETRIC_MATCHERS_OBJECT,
-  GLOBAL_EXPECT,
   addCustomEqualityTesters,
+  ASYMMETRIC_MATCHERS_OBJECT,
+  customMatchers,
   getState,
+  GLOBAL_EXPECT,
   setState,
 } from '@vitest/expect'
-import type { Assertion, ExpectStatic, MatcherState } from '@vitest/expect'
-import { getTestName } from '../../utils/tasks'
+import { getCurrentTest } from '@vitest/runner'
+import { getTestName } from '@vitest/runner/utils'
+import * as chai from 'chai'
 import { getCurrentEnvironment, getWorkerState } from '../../runtime/utils'
 import { createExpectPoll } from './poll'
+import './setup'
 
-export function createExpect(test?: TaskPopulated) {
+export function createExpect(test?: TaskPopulated): ExpectStatic {
   const expect = ((value: any, message?: string): Assertion => {
     const { assertionCalls } = getState(expect)
     setState({ assertionCalls: assertionCalls + 1 }, expect)
@@ -39,7 +40,6 @@ export function createExpect(test?: TaskPopulated) {
   // @ts-expect-error global is not typed
   const globalState = getState(globalThis[GLOBAL_EXPECT]) || {}
 
-  const testPath = getTestFile(test)
   setState<MatcherState>(
     {
       // this should also add "snapshotState" that is added conditionally
@@ -50,7 +50,9 @@ export function createExpect(test?: TaskPopulated) {
       expectedAssertionsNumber: null,
       expectedAssertionsNumberErrorGen: null,
       environment: getCurrentEnvironment(),
-      testPath,
+      get testPath() {
+        return getWorkerState().filepath
+      },
       currentTestName: test
         ? getTestName(test as Test)
         : globalState.currentTestName,
@@ -108,18 +110,12 @@ export function createExpect(test?: TaskPopulated) {
   chai.util.addMethod(expect, 'assertions', assertions)
   chai.util.addMethod(expect, 'hasAssertions', hasAssertions)
 
+  expect.extend(customMatchers)
+
   return expect
 }
 
-function getTestFile(test?: TaskPopulated) {
-  if (test) {
-    return test.file.filepath
-  }
-  const state = getWorkerState()
-  return state.filepath
-}
-
-const globalExpect = createExpect()
+const globalExpect: ExpectStatic = createExpect()
 
 Object.defineProperty(globalThis, GLOBAL_EXPECT, {
   value: globalExpect,

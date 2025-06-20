@@ -52,3 +52,31 @@ it.each(['index.js', 'index.cjs', 'index.mjs'])('correctly runs --watch %s', asy
   editFile(entryPath, c => c.replace('test 1', 'test 2'))
   await viteNode.waitForStdout('test 2')
 })
+
+it('error stack', async () => {
+  const entryPath = resolve(__dirname, '../src/watch/source-map.ts')
+  const { viteNode } = await runViteNodeCli('--watch', entryPath)
+  await viteNode.waitForStdout('source-map.ts:7:11')
+})
+
+it('buildStart', async () => {
+  const root = resolve(__dirname, '../src/buildStart')
+  const result = await runViteNodeCli('--root', root, resolve(root, 'test.ts'))
+  await result.viteNode.waitForStdout('["buildStart:in","buildStart:out"]')
+})
+
+it('buildStart with all ssr', async () => {
+  const root = resolve(__dirname, '../src/buildStart')
+  const result = await runViteNodeCli(
+    `--root=${root}`,
+    '--options.transformMode.ssr=.*',
+    resolve(root, 'test.ts'),
+  )
+  await result.viteNode.waitForStdout('["buildStart:in","buildStart:out"]')
+})
+
+it('empty mappings', async () => {
+  const root = resolve(__dirname, '../src/empty-mappings')
+  const result = await runViteNodeCli('--root', root, resolve(root, 'main.ts'))
+  await result.viteNode.waitForStdout('[ok]')
+})

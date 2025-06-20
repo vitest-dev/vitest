@@ -5,8 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { printIteratorEntries, printIteratorValues } from '../collections'
 import type { Config, NewPlugin, Printer, Refs } from '../types'
+import { printIteratorEntries, printIteratorValues } from '../collections'
 
 // SENTINEL constants are from https://github.com/facebook/immutable-js
 const IS_ITERABLE_SENTINEL = '@@__IMMUTABLE_ITERABLE__@@'
@@ -36,13 +36,13 @@ function printImmutableEntries(
   return ++depth > config.maxDepth
     ? printAsLeaf(getImmutableName(type))
     : `${getImmutableName(type) + SPACE}{${printIteratorEntries(
-        val.entries(),
-        config,
-        indentation,
-        depth,
-        refs,
-        printer,
-      )}}`
+      val.entries(),
+      config,
+      indentation,
+      depth,
+      refs,
+      printer,
+    )}}`
 }
 
 // Record has an entries method because it is a collection in immutable v3.
@@ -67,13 +67,13 @@ function printImmutableRecord(val: any, config: Config, indentation: string, dep
   return ++depth > config.maxDepth
     ? printAsLeaf(name)
     : `${name + SPACE}{${printIteratorEntries(
-        getRecordEntries(val),
-        config,
-        indentation,
-        depth,
-        refs,
-        printer,
-      )}}`
+      getRecordEntries(val),
+      config,
+      indentation,
+      depth,
+      refs,
+      printer,
+    )}}`
 }
 
 function printImmutableSeq(val: any, config: Config, indentation: string, depth: number, refs: Refs, printer: Printer): string {
@@ -120,13 +120,13 @@ function printImmutableValues(val: any, config: Config, indentation: string, dep
   return ++depth > config.maxDepth
     ? printAsLeaf(getImmutableName(type))
     : `${getImmutableName(type) + SPACE}[${printIteratorValues(
-        val.values(),
-        config,
-        indentation,
-        depth,
-        refs,
-        printer,
-      )}]`
+      val.values(),
+      config,
+      indentation,
+      depth,
+      refs,
+      printer,
+    )}]`
 }
 
 export const serialize: NewPlugin['serialize'] = (

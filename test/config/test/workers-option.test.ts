@@ -1,9 +1,11 @@
-import { type UserConfig, describe, expect, test, vi } from 'vitest'
+import type { UserConfig } from 'vitest/node'
+import { describe, expect, test, vi } from 'vitest'
 
 import { getWorkersCountByPercentage } from 'vitest/src/utils/workers.js'
 import * as testUtils from '../../test-utils'
 
 vi.mock(import('node:os'), async importOriginal => ({
+  ...(await importOriginal()),
   default: {
     ...(await importOriginal()).default,
     availableParallelism: () => 10,

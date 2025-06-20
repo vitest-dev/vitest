@@ -6,7 +6,19 @@ The following types are used in the type signatures below
 type Awaitable<T> = T | PromiseLike<T>
 ```
 
-`expect` is used to create assertions. In this context `assertions` are functions that can be called to assert a statement. Vitest provides `chai` assertions by default and also `Jest` compatible assertions built on top of `chai`.
+`expect` is used to create assertions. In this context `assertions` are functions that can be called to assert a statement. Vitest provides `chai` assertions by default and also `Jest` compatible assertions built on top of `chai`. Unlike `Jest`, Vitest supports a message as the second argument - if the assertion fails, the error message will be equal to it.
+
+```ts
+export interface ExpectStatic extends Chai.ExpectStatic, AsymmetricMatchersContaining {
+  <T>(actual: T, message?: string): Assertion<T>
+  extend: (expects: MatchersObject) => void
+  anything: () => any
+  any: (constructor: unknown) => any
+  getState: () => MatcherState
+  setState: (state: Partial<MatcherState>) => void
+  not: AsymmetricMatchersContaining
+}
+```
 
 For example, this code asserts that an `input` value is equal to `2`. If it's not, the assertion will throw an error, and the test will fail.
 
@@ -61,7 +73,11 @@ test('expect.soft test', () => {
 
 ## poll
 
-- **Type:** `ExpectStatic & (actual: () => any, options: { interval, timeout, message }) => Assertions`
+```ts
+interface ExpectPoll extends ExpectStatic {
+  (actual: () => T, options: { interval; timeout; message }): Promise<Assertions<T>>
+}
+```
 
 `expect.poll` reruns the _assertion_ until it is succeeded. You can configure how many times Vitest should rerun the `expect.poll` callback by setting `interval` and `timeout` options.
 
@@ -78,7 +94,7 @@ test('element exists', async () => {
 ```
 
 ::: warning
-`expect.poll` makes every assertion asynchronous, so do not forget to await it otherwise you might get unhandled promise rejections.
+`expect.poll` makes every assertion asynchronous, so you need to await it. Since Vitest 3, if you forget to await it, the test will fail with a warning to do so.
 
 `expect.poll` doesn't work with several matchers:
 
@@ -305,6 +321,42 @@ test('getApplesCount has some unusual side effects...', () => {
 })
 ```
 
+## toBeOneOf
+
+- **Type:** `(sample: Array<any>) => any`
+
+`toBeOneOf` asserts if a value matches any of the values in the provided array.
+
+```ts
+import { expect, test } from 'vitest'
+
+test('fruit is one of the allowed values', () => {
+  expect(fruit).toBeOneOf(['apple', 'banana', 'orange'])
+})
+```
+
+The asymmetric matcher is particularly useful when testing optional properties that could be either `null` or `undefined`:
+
+```ts
+test('optional properties can be null or undefined', () => {
+  const user = {
+    firstName: 'John',
+    middleName: undefined,
+    lastName: 'Doe'
+  }
+
+  expect(user).toEqual({
+    firstName: expect.any(String),
+    middleName: expect.toBeOneOf([expect.any(String), undefined]),
+    lastName: expect.any(String),
+  })
+})
+```
+
+:::tip
+You can use `expect.not` with this matcher to ensure a value does NOT match any of the provided options.
+:::
+
 ## toBeTypeOf
 
 - **Type:** `(c: 'bigint' | 'boolean' | 'function' | 'number' | 'object' | 'string' | 'symbol' | 'undefined') => Awaitable<void>`
@@ -427,7 +479,17 @@ test('stocks are not the same', () => {
 ```
 
 :::warning
-A _deep equality_ will not be performed for `Error` objects. Only the `message` property of an Error is considered for equality. To customize equality to check properties other than `message`, use [`expect.addEqualityTesters`](#expect-addequalitytesters). To test if something was thrown, use [`toThrowError`](#tothrowerror) assertion.
+For `Error` objects, non-enumerable properties such as `name`, `message`, `cause` and `AggregateError.errors` are also compared. For `Error.cause`, the comparison is done asymmetrically:
+
+```ts
+// success
+expect(new Error('hi', { cause: 'x' })).toEqual(new Error('hi'))
+
+// fail
+expect(new Error('hi')).toEqual(new Error('hi', { cause: 'x' }))
+```
+
+To test if something was thrown, use [`toThrowError`](#tothrowerror) assertion.
 :::
 
 ## toStrictEqual
@@ -461,7 +523,7 @@ test('structurally the same, but semantically different', () => {
 
 - **Type:** `(received: string) => Awaitable<void>`
 
-`toContain` asserts if the actual value is in an array. `toContain` can also check whether a string is a substring of another string. Since Vitest 1.0, if you are running tests in a browser-like environment, this assertion can also check if class is contained in a `classList`, or an element is inside another one.
+`toContain` asserts if the actual value is in an array. `toContain` can also check whether a string is a substring of another string. If you are running tests in a browser-like environment, this assertion can also check if class is contained in a `classList`, or an element is inside another one.
 
 ```ts
 import { expect, test } from 'vitest'
@@ -645,11 +707,20 @@ test('the number of elements must match exactly', () => {
 
 You can provide an optional argument to test that a specific error is thrown:
 
-- regular expression: error message matches the pattern
-- string: error message includes the substring
+- `RegExp`: error message matches the pattern
+- `string`: error message includes the substring
+- `Error`, `AsymmetricMatcher`: compare with a received object similar to `toEqual(received)`
 
 :::tip
 You must wrap the code in a function, otherwise the error will not be caught, and test will fail.
+
+This does not apply for async calls as [rejects](#rejects) correctly unwraps the promise:
+```ts
+test('expect rejects toThrow', async ({ expect }) => {
+  const promise = Promise.reject(new Error('Test'))
+  await expect(promise).rejects.toThrowError()
+})
+```
 :::
 
 For example, if we want to test that `getFruitStock('pineapples')` throws, we could write:
@@ -674,6 +745,13 @@ test('throws on pineapples', () => {
   expect(() => getFruitStock('pineapples')).toThrowError(
     /^Pineapples are not in stock$/,
   )
+
+  expect(() => getFruitStock('pineapples')).toThrowError(
+    new Error('Pineapples are not in stock'),
+  )
+  expect(() => getFruitStock('pineapples')).toThrowError(expect.objectContaining({
+    message: 'Pineapples are not in stock',
+  }))
 })
 ```
 
@@ -693,14 +771,14 @@ test('throws on pineapples', async () => {
 
 ## toMatchSnapshot
 
-- **Type:** `<T>(shape?: Partial<T> | string, message?: string) => void`
+- **Type:** `<T>(shape?: Partial<T> | string, hint?: string) => void`
 
 This ensures that a value matches the most recent snapshot.
 
 You can provide an optional `hint` string argument that is appended to the test name. Although Vitest always appends a number at the end of a snapshot name, short descriptive hints might be more useful than numbers to differentiate multiple snapshots in a single it or test block. Vitest sorts snapshots by name in the corresponding `.snap` file.
 
 :::tip
-  When snapshot mismatch and causing the test failing, if the mismatch is expected, you can press `u` key to update the snapshot for once. Or you can pass `-u` or `--update` CLI options to make Vitest always update the tests.
+  When a snapshot mismatches and causes the test to fail, if the mismatch is expected, you can press `u` key to update the snapshot once. Or you can pass `-u` or `--update` CLI options to make Vitest always update the tests.
 :::
 
 ```ts
@@ -725,7 +803,7 @@ test('matches snapshot', () => {
 
 ## toMatchInlineSnapshot
 
-- **Type:** `<T>(shape?: Partial<T> | string, snapshot?: string, message?: string) => void`
+- **Type:** `<T>(shape?: Partial<T> | string, snapshot?: string, hint?: string) => void`
 
 This ensures that a value matches the most recent snapshot.
 
@@ -768,7 +846,7 @@ test('matches snapshot', () => {
 
 ## toMatchFileSnapshot {#tomatchfilesnapshot}
 
-- **Type:** `<T>(filepath: string, message?: string) => Promise<void>`
+- **Type:** `<T>(filepath: string, hint?: string) => Promise<void>`
 
 Compare or update the snapshot with the content of a file explicitly specified (instead of the `.snap` file).
 
@@ -781,17 +859,17 @@ it('render basic', async () => {
 })
 ```
 
-Note that since file system operation is async, you need to use `await` with `toMatchFileSnapshot()`.
+Note that since file system operation is async, you need to use `await` with `toMatchFileSnapshot()`. If `await` is not used, Vitest treats it like `expect.soft`, meaning the code after the statement will continue to run even if the snapshot mismatches. After the test finishes, Vitest will check the snapshot and fail if there is a mismatch.
 
 ## toThrowErrorMatchingSnapshot
 
-- **Type:** `(message?: string) => void`
+- **Type:** `(hint?: string) => void`
 
 The same as [`toMatchSnapshot`](#tomatchsnapshot), but expects the same value as [`toThrowError`](#tothrowerror).
 
 ## toThrowErrorMatchingInlineSnapshot
 
-- **Type:** `(snapshot?: string, message?: string) => void`
+- **Type:** `(snapshot?: string, hint?: string) => void`
 
 The same as [`toMatchInlineSnapshot`](#tomatchinlinesnapshot), but expects the same value as [`toThrowError`](#tothrowerror).
 
@@ -869,6 +947,68 @@ test('spy function', () => {
 
   expect(buySpy).toHaveBeenCalledWith('apples', 10)
   expect(buySpy).toHaveBeenCalledWith('apples', 20)
+})
+```
+
+## toHaveBeenCalledBefore <Version>3.0.0</Version> {#tohavebeencalledbefore}
+
+- **Type**: `(mock: MockInstance, failIfNoFirstInvocation?: boolean) => Awaitable<void>`
+
+This assertion checks if a `Mock` was called before another `Mock`.
+
+```ts
+test('calls mock1 before mock2', () => {
+  const mock1 = vi.fn()
+  const mock2 = vi.fn()
+
+  mock1()
+  mock2()
+  mock1()
+
+  expect(mock1).toHaveBeenCalledBefore(mock2)
+})
+```
+
+## toHaveBeenCalledAfter <Version>3.0.0</Version> {#tohavebeencalledafter}
+
+- **Type**: `(mock: MockInstance, failIfNoFirstInvocation?: boolean) => Awaitable<void>`
+
+This assertion checks if a `Mock` was called after another `Mock`.
+
+```ts
+test('calls mock1 after mock2', () => {
+  const mock1 = vi.fn()
+  const mock2 = vi.fn()
+
+  mock2()
+  mock1()
+  mock2()
+
+  expect(mock1).toHaveBeenCalledAfter(mock2)
+})
+```
+
+## toHaveBeenCalledExactlyOnceWith <Version>3.0.0</Version> {#tohavebeencalledexactlyoncewith}
+
+- **Type**: `(...args: any[]) => Awaitable<void>`
+
+This assertion checks if a function was called exactly once and with certain parameters. Requires a spy function to be passed to `expect`.
+
+```ts
+import { expect, test, vi } from 'vitest'
+
+const market = {
+  buy(subject: string, amount: number) {
+    // ...
+  },
+}
+
+test('spy function', () => {
+  const buySpy = vi.spyOn(market, 'buy')
+
+  market.buy('apples', 10)
+
+  expect(buySpy).toHaveBeenCalledExactlyOnceWith('apples', 10)
 })
 ```
 
@@ -1116,7 +1256,7 @@ test('spy function resolves bananas on a last call', async () => {
 
 - **Type**: `(time: number, returnValue: any) => Awaitable<void>`
 
-You can call this assertion to check if a function has successfully resolved a certain value on a specific invokation. Requires a spy function to be passed to `expect`.
+You can call this assertion to check if a function has successfully resolved a certain value on a specific invocation. Requires a spy function to be passed to `expect`.
 
 If the function returned a promise, but it was not resolved yet, this will fail.
 
@@ -1141,9 +1281,10 @@ This assertion checks if a value satisfies a certain predicate.
 
 ```ts
 import { describe, expect, it } from 'vitest'
-describe('toSatisfy()', () => {
-  const isOdd = (value: number) => value % 2 !== 0
 
+const isOdd = (value: number) => value % 2 !== 0
+
+describe('toSatisfy()', () => {
   it('pass with 0', () => {
     expect(1).toSatisfy(isOdd)
   })
@@ -1180,6 +1321,8 @@ test('buyApples returns new stock id', async () => {
 
 :::warning
 If the assertion is not awaited, then you will have a false-positive test that will pass every time. To make sure that assertions are actually called, you may use [`expect.assertions(number)`](#expect-assertions).
+
+Since Vitest 3, if a method is not awaited, Vitest will show a warning at the end of the test. In Vitest 4, the test will be marked as "failed" if the assertion is not awaited.
 :::
 
 ## rejects
@@ -1209,6 +1352,8 @@ test('buyApples throws an error when no id provided', async () => {
 
 :::warning
 If the assertion is not awaited, then you will have a false-positive test that will pass every time. To make sure that assertions were actually called, you can use [`expect.assertions(number)`](#expect-assertions).
+
+Since Vitest 3, if a method is not awaited, Vitest will show a warning at the end of the test. In Vitest 4, the test will be marked as "failed" if the assertion is not awaited.
 :::
 
 ## expect.assertions
@@ -1287,7 +1432,7 @@ test('callback was called', async () => {
 
 - **Type:** `(message?: string) => never`
 
-This method is used to asserting that a line should never be reached.
+This method is used to assert that a line should never be reached.
 
 For example, if we want to test that `build()` throws due to receiving directories having no `src` folder, and also handle each error separately, we could do this:
 

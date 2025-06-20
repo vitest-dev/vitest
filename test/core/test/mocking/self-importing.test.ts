@@ -1,5 +1,5 @@
-import zustand from 'zustand'
 import { describe, expect, test, vi } from 'vitest'
+import zustand from 'zustand'
 import { magic } from '../../src/mocks/zustand-magic'
 
 vi.mock('zustand')

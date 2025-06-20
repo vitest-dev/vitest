@@ -1,0 +1,8 @@
+{
+  "name": "vitest",
+  "type": "commonjs",
+  "exports": {
+    ".": "./index.js",
+    "./config": "./config.js"
+  }
+}

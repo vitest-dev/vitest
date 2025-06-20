@@ -1,12 +1,4 @@
 {
-  "cSpell.words": [
-    "birpc",
-    "unmock"
-  ],
-
-  // Enable the ESlint flat config support
-  "eslint.experimental.useFlatConfig": true,
-
   // Disable the default formatter, use eslint instead
   "prettier.enable": false,
   "editor.formatOnSave": false,
@@ -30,6 +22,10 @@
   //   { "rule": "*semi", "severity": "off" }
   // ],
 
+  "vitest.ignoreWorkspace": true,
+  "vitest.configSearchPatternInclude": "test/{core,cli,config}/{vitest,vite}.config.ts",
+  "testing.automaticallyOpenTestResults": "neverOpen",
+
   // Enable eslint for all supported languages
   "eslint.validate": [
     "javascript",
@@ -42,5 +38,7 @@
     "json",
     "jsonc",
     "yaml"
-  ]
+  ],
+  // Use the project's typescript version
+  "typescript.tsdk": "node_modules/typescript/lib"
 }

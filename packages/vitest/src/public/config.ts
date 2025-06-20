@@ -1,25 +1,41 @@
+import type { ConfigEnv, UserConfig as ViteUserConfig } from 'vite'
+
+import type {
+  TestProjectConfiguration,
+  TestProjectInlineConfiguration,
+  UserProjectConfigExport,
+  UserProjectConfigFn,
+  UserWorkspaceConfig,
+  WorkspaceProjectConfiguration,
+} from '../node/types/config'
 import '../node/types/vite'
 
-import type { ConfigEnv, UserConfig as ViteUserConfig } from 'vite'
-import type { ProjectConfig } from '../node/types/config'
-
-export interface UserWorkspaceConfig extends ViteUserConfig {
-  test?: ProjectConfig
-}
-
+export { extraInlineDeps } from '../constants'
 // will import vitest declare test in module 'vite'
 export {
-  defaultBrowserPort,
   configDefaults,
-  defaultInclude,
-  defaultExclude,
   coverageConfigDefaults,
+  defaultBrowserPort,
+  defaultExclude,
+  defaultInclude,
 } from '../defaults'
+export type { WatcherTriggerPattern } from '../node/watcher'
 export { mergeConfig } from 'vite'
-export { extraInlineDeps } from '../constants'
 export type { Plugin } from 'vite'
 
-export type { ConfigEnv, ViteUserConfig as UserConfig }
+export type { ConfigEnv, ViteUserConfig }
+/**
+ * @deprecated Use `ViteUserConfig` instead
+ */
+export type UserConfig = ViteUserConfig
+export type {
+  TestProjectConfiguration,
+  TestProjectInlineConfiguration,
+  UserProjectConfigExport,
+  UserProjectConfigFn,
+  UserWorkspaceConfig,
+  WorkspaceProjectConfiguration,
+}
 export type UserConfigFnObject = (env: ConfigEnv) => ViteUserConfig
 export type UserConfigFnPromise = (env: ConfigEnv) => Promise<ViteUserConfig>
 export type UserConfigFn = (
@@ -31,14 +47,6 @@ export type UserConfigExport =
   | UserConfigFnObject
   | UserConfigFnPromise
   | UserConfigFn
-
-export type UserProjectConfigFn = (
-  env: ConfigEnv
-) => UserWorkspaceConfig | Promise<UserWorkspaceConfig>
-export type UserProjectConfigExport =
-  | UserWorkspaceConfig
-  | Promise<UserWorkspaceConfig>
-  | UserProjectConfigFn
 
 export function defineConfig(config: ViteUserConfig): ViteUserConfig
 export function defineConfig(
@@ -58,14 +66,9 @@ export function defineProject(config: UserProjectConfigExport): UserProjectConfi
   return config
 }
 
-type WorkspaceProjectConfiguration = string | (UserProjectConfigExport & {
-  /**
-   * Relative path to the extendable config. All other options will be merged with this config.
-   * @example '../vite.config.ts'
-   */
-  extends?: string
-})
-
-export function defineWorkspace(config: WorkspaceProjectConfiguration[]): WorkspaceProjectConfiguration[] {
+/**
+ * @deprecated use the `projects` field in the root config instead
+ */
+export function defineWorkspace(config: TestProjectConfiguration[]): TestProjectConfiguration[] {
   return config
 }

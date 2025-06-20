@@ -1,19 +1,13 @@
-import { toArray } from '@vitest/utils'
 import type { ViteNodeRunner } from 'vite-node/client'
-import type { ProvidedContext } from '../types/general'
-import type { ResolvedConfig } from './types/config'
+import type { TestProject } from './project'
+import { toArray } from '@vitest/utils'
 
-export interface GlobalSetupContext {
-  config: ResolvedConfig
-  provide: <T extends keyof ProvidedContext & string>(
-    key: T,
-    value: ProvidedContext[T]
-  ) => void
-}
+/** @deprecated use `TestProject` instead */
+export type GlobalSetupContext = TestProject
 
 export interface GlobalSetupFile {
   file: string
-  setup?: (context: GlobalSetupContext) => Promise<Function | void> | void
+  setup?: (context: TestProject) => Promise<Function | void> | void
   teardown?: Function
 }
 

@@ -1,4 +1,5 @@
 import type { Ref } from 'vue'
+import { explorerTree } from '~/composables/explorer'
 import {
   filter,
   filteredFiles,
@@ -11,7 +12,6 @@ import {
   treeFilter,
   uiEntries,
 } from './state'
-import { explorerTree } from '~/composables/explorer'
 
 export function useSearch(searchBox: Ref<HTMLDivElement | undefined>) {
   const disableFilter = computed(() => {
@@ -24,7 +24,7 @@ export function useSearch(searchBox: Ref<HTMLDivElement | undefined>) {
   const disableClearSearch = computed(() => search.value === '')
   const debouncedSearch = ref(search.value)
 
-  debouncedWatch(search, (value) => {
+  debouncedWatch(() => search.value, (value) => {
     debouncedSearch.value = value?.trim() ?? ''
   }, { debounce: 256 })
 

@@ -1,6 +1,7 @@
-import type { TransformResult as ViteTransformResult } from 'vite'
 import type { ReportOptions } from 'istanbul-reports'
+import type { TransformResult as ViteTransformResult } from 'vite'
 import type { AfterSuiteRunMeta, Arrayable } from '../../types/general'
+import type { RuntimeCoverageModuleLoader, RuntimeCoverageProviderModule } from '../../utils/coverage'
 import type { Vitest } from '../core'
 
 type TransformResult =
@@ -25,6 +26,9 @@ export interface CoverageProvider {
 
   /** Called with coverage results after a single test file has been run */
   onAfterSuiteRun: (meta: AfterSuiteRunMeta) => void | Promise<void>
+
+  /** Callback called when test run fails */
+  onTestFailure?: () => void | Promise<void>
 
   /** Callback to generate final coverage results */
   generateCoverage: (
@@ -54,26 +58,15 @@ export interface ReportContext {
   allTestsRun?: boolean
 }
 
-export interface CoverageProviderModule {
+export interface CoverageModuleLoader extends RuntimeCoverageModuleLoader {
+  executeId: (id: string) => Promise<{ default: CoverageProviderModule }>
+}
+
+export interface CoverageProviderModule extends RuntimeCoverageProviderModule {
   /**
    * Factory for creating a new coverage provider
    */
   getProvider: () => CoverageProvider | Promise<CoverageProvider>
-
-  /**
-   * Executed before tests are run in the worker thread.
-   */
-  startCoverage?: () => unknown | Promise<unknown>
-
-  /**
-   * Executed on after each run in the worker thread. Possible to return a payload passed to the provider
-   */
-  takeCoverage?: () => unknown | Promise<unknown>
-
-  /**
-   * Executed after all tests have been run in the worker thread.
-   */
-  stopCoverage?: () => unknown | Promise<unknown>
 }
 
 export type CoverageReporter = keyof ReportOptions | (string & {})
@@ -110,7 +103,6 @@ type FieldsWithDefaultValues =
   | 'cleanOnRerun'
   | 'reportsDirectory'
   | 'exclude'
-  | 'extension'
   | 'reportOnFailure'
   | 'allowExternal'
   | 'processingConcurrency'
@@ -130,32 +122,20 @@ export interface BaseCoverageOptions {
   enabled?: boolean
 
   /**
-   * List of files included in coverage as glob patterns
+   * List of files included in coverage as glob patterns.
+   * By default only files covered by tests are included.
    *
-   * @default ['**']
+   * See [Including and excluding files from coverage report](https://vitest.dev/guide/coverage.html#including-and-excluding-files-from-coverage-report) for examples.
    */
   include?: string[]
 
   /**
-   * Extensions for files to be included in coverage
+   * List of files excluded from coverage as glob patterns.
+   * Files are first checked against `coverage.include`.
    *
-   * @default ['.js', '.cjs', '.mjs', '.ts', '.tsx', '.jsx', '.vue', '.svelte', '.marko']
-   */
-  extension?: string | string[]
-
-  /**
-   * List of files excluded from coverage as glob patterns
-   *
-   * @default ['coverage/**', 'dist/**', '**\/[.]**', 'packages/*\/test?(s)/**', '**\/*.d.ts', '**\/virtual:*', '**\/__x00__*', '**\/\x00*', 'cypress/**', 'test?(s)/**', 'test?(-*).?(c|m)[jt]s?(x)', '**\/*{.,-}{test,spec}?(-d).?(c|m)[jt]s?(x)', '**\/__tests__/**', '**\/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress,tsup,build}.config.*', '**\/vitest.{workspace,projects}.[jt]s?(on)', '**\/.{eslint,mocha,prettier}rc.{?(c|m)js,yml}']
+   * See [Including and excluding files from coverage report](https://vitest.dev/guide/coverage.html#including-and-excluding-files-from-coverage-report) for examples.
    */
   exclude?: string[]
-
-  /**
-   * Whether to include all files, including the untested ones into report
-   *
-   * @default true
-   */
-  all?: boolean
 
   /**
    * Clean coverage results before running tests
@@ -252,13 +232,23 @@ export interface BaseCoverageOptions {
   allowExternal?: boolean
 
   /**
+   * Apply exclusions again after coverage has been remapped to original sources.
+   * This is useful when your source files are transpiled and may contain source maps
+   * of non-source files.
+   *
+   * Use this option when you are seeing files that show up in report even if they
+   * match your `coverage.exclude` patterns.
+   *
+   * @default false
+   */
+  excludeAfterRemap?: boolean
+
+  /**
    * Concurrency limit used when processing the coverage results.
    * Defaults to `Math.min(20, os.availableParallelism?.() ?? os.cpus().length)`
    */
   processingConcurrency?: number
-}
 
-export interface CoverageIstanbulOptions extends BaseCoverageOptions {
   /**
    * Set to array of class method names to ignore for coverage
    *
@@ -267,12 +257,9 @@ export interface CoverageIstanbulOptions extends BaseCoverageOptions {
   ignoreClassMethods?: string[]
 }
 
-export interface CoverageV8Options extends BaseCoverageOptions {
-  /**
-   * Ignore empty lines, comments and other non-runtime code, e.g. Typescript types
-   */
-  ignoreEmptyLines?: boolean
-}
+export interface CoverageIstanbulOptions extends BaseCoverageOptions {}
+
+export interface CoverageV8Options extends BaseCoverageOptions {}
 
 export interface CustomProviderOptions
   extends Pick<BaseCoverageOptions, FieldsWithDefaultValues> {

@@ -25,7 +25,7 @@ export interface RootTreeNode extends TaskTreeNode {
   tasks: FileTreeNode[]
 }
 
-export type TaskTreeNodeType = 'file' | 'suite' | 'test' | 'custom'
+export type TaskTreeNodeType = 'file' | 'suite' | 'test'
 
 export interface UITaskTreeNode extends TaskTreeNode {
   type: TaskTreeNodeType
@@ -42,11 +42,6 @@ export interface TestTreeNode extends UITaskTreeNode {
   type: 'test'
 }
 
-export interface CustomTestTreeNode extends UITaskTreeNode {
-  fileId: string
-  type: 'custom'
-}
-
 export interface ParentTreeNode extends UITaskTreeNode {
   children: Set<string>
   tasks: UITaskTreeNode[]
@@ -55,12 +50,12 @@ export interface ParentTreeNode extends UITaskTreeNode {
 export interface SuiteTreeNode extends ParentTreeNode {
   fileId: string
   type: 'suite'
-  typecheck?: boolean
 }
 
 export interface FileTreeNode extends ParentTreeNode {
   type: 'file'
   filepath: string
+  typecheck: boolean | undefined
   projectName?: string
   projectNameColor: string
   collectDuration?: number

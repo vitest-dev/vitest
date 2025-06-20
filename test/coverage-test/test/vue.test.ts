@@ -1,12 +1,12 @@
-import { resolve } from 'node:path'
 import { readdirSync } from 'node:fs'
+import { resolve } from 'node:path'
 import { beforeAll, expect } from 'vitest'
-import { isV8Provider, readCoverageMap, runVitest, test } from '../utils'
+import { readCoverageMap, runVitest, test } from '../utils'
 
 beforeAll(async () => {
   await runVitest({
     include: ['fixtures/test/vue-fixture.test.ts'],
-    coverage: { reporter: ['json', 'html'], all: false },
+    coverage: { reporter: ['json', 'html'] },
   })
 })
 
@@ -22,78 +22,13 @@ test('files should not contain query parameters', () => {
 
 test('coverage results matches snapshot', async () => {
   const coverageMap = await readCoverageMap()
-  const summary = coverageMap.getCoverageSummary()
 
-  if (isV8Provider()) {
-    expect(summary).toMatchInlineSnapshot(`
-      {
-        "branches": {
-          "covered": 5,
-          "pct": 83.33,
-          "skipped": 0,
-          "total": 6,
-        },
-        "branchesTrue": {
-          "covered": 0,
-          "pct": "Unknown",
-          "skipped": 0,
-          "total": 0,
-        },
-        "functions": {
-          "covered": 3,
-          "pct": 60,
-          "skipped": 0,
-          "total": 5,
-        },
-        "lines": {
-          "covered": 36,
-          "pct": 81.81,
-          "skipped": 0,
-          "total": 44,
-        },
-        "statements": {
-          "covered": 36,
-          "pct": 81.81,
-          "skipped": 0,
-          "total": 44,
-        },
-      }
-    `)
-  }
-  else {
-    expect(summary).toMatchInlineSnapshot(`
-      {
-        "branches": {
-          "covered": 5,
-          "pct": 83.33,
-          "skipped": 0,
-          "total": 6,
-        },
-        "branchesTrue": {
-          "covered": 0,
-          "pct": "Unknown",
-          "skipped": 0,
-          "total": 0,
-        },
-        "functions": {
-          "covered": 5,
-          "pct": 71.42,
-          "skipped": 0,
-          "total": 7,
-        },
-        "lines": {
-          "covered": 13,
-          "pct": 81.25,
-          "skipped": 0,
-          "total": 16,
-        },
-        "statements": {
-          "covered": 14,
-          "pct": 82.35,
-          "skipped": 0,
-          "total": 17,
-        },
-      }
-    `)
-  }
+  expect(coverageMap).toMatchInlineSnapshot(`
+    {
+      "branches": "6/8 (75%)",
+      "functions": "5/7 (71.42%)",
+      "lines": "13/16 (81.25%)",
+      "statements": "14/17 (82.35%)",
+    }
+  `)
 })

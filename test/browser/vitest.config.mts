@@ -1,11 +1,10 @@
+import type { BrowserCommand, BrowserInstanceOption } from 'vitest/node'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import * as util from 'node:util'
 import { defineConfig } from 'vitest/config'
-import type { BrowserCommand } from 'vitest/node'
 
 const dir = dirname(fileURLToPath(import.meta.url))
-
-function noop() {}
 
 const provider = process.env.PROVIDER || 'playwright'
 const browser = process.env.BROWSER || (provider === 'playwright' ? 'chromium' : 'chrome')
@@ -13,6 +12,25 @@ const browser = process.env.BROWSER || (provider === 'playwright' ? 'chromium' :
 const myCustomCommand: BrowserCommand<[arg1: string, arg2: string]> = ({ testPath }, arg1, arg2) => {
   return { testPath, arg1, arg2 }
 }
+
+const stripVTControlCharacters: BrowserCommand<[text: string]> = (_, text) => {
+  return util.stripVTControlCharacters(text)
+}
+
+const devInstances: BrowserInstanceOption[] = [
+  { browser },
+]
+
+const playwrightInstances: BrowserInstanceOption[] = [
+  { browser: 'chromium' },
+  { browser: 'firefox' },
+  { browser: 'webkit' },
+]
+
+const webdriverioInstances: BrowserInstanceOption[] = [
+  { browser: 'chrome' },
+  { browser: 'firefox' },
+]
 
 export default defineConfig({
   server: {
@@ -24,18 +42,23 @@ export default defineConfig({
     },
   },
   optimizeDeps: {
-    include: ['@vitest/cjs-lib'],
+    include: ['@vitest/cjs-lib', '@vitest/bundled-lib', 'react/jsx-dev-runtime'],
   },
   test: {
-    include: ['test/**.test.{ts,js}'],
+    include: ['test/**.test.{ts,js,tsx}'],
+    includeSource: ['src/*.ts'],
     // having a snapshot environment doesn't affect browser tests
     snapshotEnvironment: './custom-snapshot-env.ts',
     browser: {
       enabled: true,
-      name: browser,
       headless: false,
+      instances: process.env.BROWSER
+        ? devInstances
+        : provider === 'playwright'
+          ? playwrightInstances
+          : webdriverioInstances,
       provider,
-      isolate: false,
+      // isolate: false,
       testerScripts: [
         {
           content: 'globalThis.__injected = []',
@@ -69,6 +92,13 @@ export default defineConfig({
       ],
       commands: {
         myCustomCommand,
+        stripVTControlCharacters,
+        async startTrace(ctx) {
+          await ctx.page.context().tracing.start({ screenshots: true, snapshots: true })
+        },
+        async stopTrace(ctx) {
+          await ctx.page.context().tracing.stop({ path: 'trace.zip' })
+        },
       },
     },
     alias: {
@@ -76,21 +106,33 @@ export default defineConfig({
     },
     open: false,
     diff: './custom-diff-config.ts',
-    outputFile: './browser.json',
-    reporters: ['json', {
-      onInit: noop,
-      onPathsCollected: noop,
-      onCollected: noop,
-      onFinished: noop,
-      onTaskUpdate: noop,
-      onTestRemoved: noop,
-      onWatcherStart: noop,
-      onWatcherRerun: noop,
-      onServerRestart: noop,
-      onUserConsoleLog: noop,
-    }, 'default'],
+    outputFile: {
+      html: './html/index.html',
+      json: './browser.json',
+    },
     env: {
       BROWSER: browser,
     },
+    onConsoleLog(log) {
+      if (log.includes('MESSAGE ADDED')) {
+        return false
+      }
+    },
   },
+  plugins: [
+    {
+      name: 'test-no-transform-ui',
+      transform(_code, id, _options) {
+        if (id.includes('/__vitest__/')) {
+          throw new Error(`Unexpected transform: ${id}`)
+        }
+      },
+    },
+    {
+      name: 'test-early-transform',
+      async configureServer(server) {
+        await server.ssrLoadModule('/package.json')
+      },
+    },
+  ],
 })

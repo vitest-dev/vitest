@@ -4,7 +4,7 @@ title: Interactivity API | Browser Mode
 
 # Interactivity API
 
-Vitest implements a subset of [`@testing-library/user-event`](https://testing-library.com/docs/user-event) APIs using [Chrome DevTools Protocol](https://chromedevtools.github.io/devtools-protocol/) or [webdriver](https://www.w3.org/TR/webdriver/) instead of faking events which makes the browser behaviour more reliable and consistent with how users interact with a page.
+Vitest implements a subset of [`@testing-library/user-event`](https://testing-library.com/docs/user-event/intro) APIs using [Chrome DevTools Protocol](https://chromedevtools.github.io/devtools-protocol/) or [webdriver](https://www.w3.org/TR/webdriver/) instead of faking events which makes the browser behaviour more reliable and consistent with how users interact with a page.
 
 ```ts
 import { userEvent } from '@vitest/browser/context'
@@ -12,36 +12,22 @@ import { userEvent } from '@vitest/browser/context'
 await userEvent.click(document.querySelector('.button'))
 ```
 
-Almost every `userEvent` method inherits its provider options. To see all available options in your IDE, add `webdriver` or `playwright` types (depending on your provider) to your `tsconfig.json` file:
+Almost every `userEvent` method inherits its provider options. To see all available options in your IDE, add `webdriver` or `playwright` types (depending on your provider) to your [setup file](/config/#setupfile) or a [config file](/config/) (depending on what is in `included` in your `tsconfig.json`):
 
 ::: code-group
-```json [playwright]
-{
-  "compilerOptions": {
-    "types": [
-      "@vitest/browser/providers/playwright"
-    ]
-  }
-}
+```ts [playwright]
+/// <reference types="@vitest/browser/providers/playwright" />
 ```
-```json [webdriverio]
-{
-  "compilerOptions": {
-    "types": [
-      "@vitest/browser/providers/webdriverio"
-    ]
-  }
-}
+```ts [webdriverio]
+/// <reference types="@vitest/browser/providers/webdriverio" />
 ```
-:::
-
-::: warning
-This page uses `@testing-library/dom` in examples to query elements. If you are using a framework like Vue, React or any other, use `@testing-library/{framework-name}` instead. Simple examples are available on the [Browser Mode page](/guide/browser/#examples).
 :::
 
 ## userEvent.setup
 
-- **Type:** `() => UserEvent`
+```ts
+function setup(): UserEvent
+```
 
 Creates a new user event instance. This is useful if you need to keep the state of keyboard to press and release buttons correctly.
 
@@ -64,18 +50,24 @@ This behaviour is more useful because we do not emulate the keyboard, we actuall
 
 ## userEvent.click
 
-- **Type:** `(element: Element, options?: UserEventClickOptions) => Promise<void>`
+```ts
+function click(
+  element: Element | Locator,
+  options?: UserEventClickOptions,
+): Promise<void>
+```
 
 Click on an element. Inherits provider's options. Please refer to your provider's documentation for detailed explanation about how this method works.
 
 ```ts
-import { userEvent } from '@vitest/browser/context'
-import { screen } from '@testing-library/dom'
+import { page, userEvent } from '@vitest/browser/context'
 
 test('clicks on an element', async () => {
-  const logo = screen.getByRole('img', { name: /logo/ })
+  const logo = page.getByRole('img', { name: /logo/ })
 
   await userEvent.click(logo)
+  // or you can access it directly on the locator
+  await logo.click()
 })
 ```
 
@@ -87,20 +79,26 @@ References:
 
 ## userEvent.dblClick
 
-- **Type:** `(element: Element, options?: UserEventDoubleClickOptions) => Promise<void>`
+```ts
+function dblClick(
+  element: Element | Locator,
+  options?: UserEventDoubleClickOptions,
+): Promise<void>
+```
 
 Triggers a double click event on an element.
 
 Please refer to your provider's documentation for detailed explanation about how this method works.
 
 ```ts
-import { userEvent } from '@vitest/browser/context'
-import { screen } from '@testing-library/dom'
+import { page, userEvent } from '@vitest/browser/context'
 
 test('triggers a double click on an element', async () => {
-  const logo = screen.getByRole('img', { name: /logo/ })
+  const logo = page.getByRole('img', { name: /logo/ })
 
   await userEvent.dblClick(logo)
+  // or you can access it directly on the locator
+  await logo.dblClick()
 })
 ```
 
@@ -112,18 +110,22 @@ References:
 
 ## userEvent.tripleClick
 
-- **Type:** `(element: Element, options?: UserEventTripleClickOptions) => Promise<void>`
+```ts
+function tripleClick(
+  element: Element | Locator,
+  options?: UserEventTripleClickOptions,
+): Promise<void>
+```
 
 Triggers a triple click event on an element. Since there is no `tripleclick` in browser api, this method will fire three click events in a row, and so you must check [click event detail](https://developer.mozilla.org/en-US/docs/Web/API/Element/click_event#usage_notes) to filter the event: `evt.detail === 3`.
 
 Please refer to your provider's documentation for detailed explanation about how this method works.
 
 ```ts
-import { userEvent } from '@vitest/browser/context'
-import { screen } from '@testing-library/dom'
+import { page, userEvent } from '@vitest/browser/context'
 
 test('triggers a triple click on an element', async () => {
-  const logo = screen.getByRole('img', { name: /logo/ })
+  const logo = page.getByRole('img', { name: /logo/ })
   let tripleClickFired = false
   logo.addEventListener('click', (evt) => {
     if (evt.detail === 3) {
@@ -132,6 +134,9 @@ test('triggers a triple click on an element', async () => {
   })
 
   await userEvent.tripleClick(logo)
+  // or you can access it directly on the locator
+  await logo.tripleClick()
+
   expect(tripleClickFired).toBe(true)
 })
 ```
@@ -144,20 +149,27 @@ References:
 
 ## userEvent.fill
 
-- **Type:** `(element: Element, text: string) => Promise<void>`
+```ts
+function fill(
+  element: Element | Locator,
+  text: string,
+): Promise<void>
+```
 
-Set a value to the `input/textarea/conteneditable` field. This will remove any existing text in the input before setting the new value.
+Set a value to the `input`/`textarea`/`contenteditable` field. This will remove any existing text in the input before setting the new value.
 
 ```ts
-import { userEvent } from '@vitest/browser/context'
-import { screen } from '@testing-library/dom'
+import { page, userEvent } from '@vitest/browser/context'
 
 test('update input', async () => {
-  const input = screen.getByRole('input')
+  const input = page.getByRole('input')
 
   await userEvent.fill(input, 'foo') // input.value == foo
   await userEvent.fill(input, '{{a[[') // input.value == {{a[[
   await userEvent.fill(input, '{Shift}') // input.value == {Shift}
+
+  // or you can access it directly on the locator
+  await input.fill('foo') // input.value == foo
 })
 ```
 
@@ -177,7 +189,9 @@ References:
 
 ## userEvent.keyboard
 
-- **Type:** `(text: string) => Promise<void>`
+```ts
+function keyboard(text: string): Promise<void>
+```
 
 The `userEvent.keyboard` allows you to trigger keyboard strokes. If any input has a focus, it will type characters into that input. Otherwise, it will trigger keyboard events on the currently focused element (`document.body` if there are no focused elements).
 
@@ -203,16 +217,17 @@ References:
 
 ## userEvent.tab
 
-- **Type:** `(options?: UserEventTabOptions) => Promise<void>`
+```ts
+function tab(options?: UserEventTabOptions): Promise<void>
+```
 
 Sends a `Tab` key event. This is a shorthand for `userEvent.keyboard('{tab}')`.
 
 ```ts
-import { userEvent } from '@vitest/browser/context'
-import { screen } from '@testing-library/dom'
+import { page, userEvent } from '@vitest/browser/context'
 
 test('tab works', async () => {
-  const [input1, input2] = screen.getAllByRole('input')
+  const [input1, input2] = page.getByRole('input').elements()
 
   expect(input1).toHaveFocus()
 
@@ -234,30 +249,39 @@ References:
 
 ## userEvent.type
 
-- **Type:** `(element: Element, text: string, options?: UserEventTypeOptions) => Promise<void>`
+```ts
+function type(
+  element: Element | Locator,
+  text: string,
+  options?: UserEventTypeOptions,
+): Promise<void>
+```
 
 ::: warning
-If you don't rely on [special characters](https://testing-library.com/docs/user-event/keyboard) (e.g., `{shift}` or `{selectall}`), it is recommended to use [`userEvent.fill`](#userevent-fill) instead.
+If you don't rely on [special characters](https://testing-library.com/docs/user-event/keyboard) (e.g., `{shift}` or `{selectall}`), it is recommended to use [`userEvent.fill`](#userevent-fill) instead for better performance.
 :::
 
 The `type` method implements `@testing-library/user-event`'s [`type`](https://testing-library.com/docs/user-event/utility/#type) utility built on top of [`keyboard`](https://testing-library.com/docs/user-event/keyboard) API.
 
-This function allows you to type characters into an input/textarea/conteneditable element. It supports [user-event `keyboard` syntax](https://testing-library.com/docs/user-event/keyboard).
+This function allows you to type characters into an `input`/`textarea`/`contenteditable` element. It supports [user-event `keyboard` syntax](https://testing-library.com/docs/user-event/keyboard).
 
 If you just need to press characters without an input, use [`userEvent.keyboard`](#userevent-keyboard) API.
 
 ```ts
-import { userEvent } from '@vitest/browser/context'
-import { screen } from '@testing-library/dom'
+import { page, userEvent } from '@vitest/browser/context'
 
 test('update input', async () => {
-  const input = screen.getByRole('input')
+  const input = page.getByRole('input')
 
   await userEvent.type(input, 'foo') // input.value == foo
   await userEvent.type(input, '{{a[[') // input.value == foo{a[
   await userEvent.type(input, '{Shift}') // input.value == foo{a[
 })
 ```
+
+::: info
+Vitest doesn't expose `.type` method on the locator like `input.type` because it exists only for compatibility with the `userEvent` library. Consider using `.fill` instead as it is faster.
+:::
 
 References:
 
@@ -267,21 +291,25 @@ References:
 
 ## userEvent.clear
 
-- **Type:** `(element: Element) => Promise<void>`
+```ts
+function clear(element: Element | Locator, options?: UserEventClearOptions): Promise<void>
+```
 
 This method clears the input element content.
 
 ```ts
-import { userEvent } from '@vitest/browser/context'
-import { screen } from '@testing-library/dom'
+import { page, userEvent } from '@vitest/browser/context'
 
 test('clears input', async () => {
-  const input = screen.getByRole('input')
+  const input = page.getByRole('input')
 
   await userEvent.fill(input, 'foo')
   expect(input).toHaveValue('foo')
 
   await userEvent.clear(input)
+  // or you can access it directly on the locator
+  await input.clear()
+
   expect(input).toHaveValue('')
 })
 ```
@@ -294,7 +322,19 @@ References:
 
 ## userEvent.selectOptions
 
-- **Type:** `(element: Element, values: HTMLElement | HTMLElement[] | string | string[], options?: UserEventSelectOptions) => Promise<void>`
+```ts
+function selectOptions(
+  element: Element | Locator,
+  values:
+    | HTMLElement
+    | HTMLElement[]
+    | Locator
+    | Locator[]
+    | string
+    | string[],
+  options?: UserEventSelectOptions,
+): Promise<void>
+```
 
 The `userEvent.selectOptions` allows selecting a value in a `<select>` element.
 
@@ -305,21 +345,23 @@ Unlike `@testing-library`, Vitest doesn't support [listbox](https://developer.mo
 :::
 
 ```ts
-import { userEvent } from '@vitest/browser/context'
-import { screen } from '@testing-library/dom'
+import { page, userEvent } from '@vitest/browser/context'
 
 test('clears input', async () => {
-  const select = screen.getByRole('select')
+  const select = page.getByRole('select')
 
   await userEvent.selectOptions(select, 'Option 1')
+  // or you can access it directly on the locator
+  await select.selectOptions('Option 1')
+
   expect(select).toHaveValue('option-1')
 
   await userEvent.selectOptions(select, 'option-1')
   expect(select).toHaveValue('option-1')
 
   await userEvent.selectOptions(select, [
-    screen.getByRole('option', { name: 'Option 1' }),
-    screen.getByRole('option', { name: 'Option 2' }),
+    page.getByRole('option', { name: 'Option 1' }),
+    page.getByRole('option', { name: 'Option 2' }),
   ])
   expect(select).toHaveValue(['option-1', 'option-2'])
 })
@@ -337,7 +379,12 @@ References:
 
 ## userEvent.hover
 
-- **Type:** `(element: Element, options?: UserEventHoverOptions) => Promise<void>`
+```ts
+function hover(
+  element: Element | Locator,
+  options?: UserEventHoverOptions,
+): Promise<void>
+```
 
 This method moves the cursor position to the selected element. Please refer to your provider's documentation for detailed explanation about how this method works.
 
@@ -348,13 +395,14 @@ If you are using `playwright` provider, the cursor moves to "some" visible point
 :::
 
 ```ts
-import { userEvent } from '@vitest/browser/context'
-import { screen } from '@testing-library/dom'
+import { page, userEvent } from '@vitest/browser/context'
 
 test('hovers logo element', async () => {
-  const logo = screen.getByRole('img', { name: /logo/ })
+  const logo = page.getByRole('img', { name: /logo/ })
 
   await userEvent.hover(logo)
+  // or you can access it directly on the locator
+  await logo.hover()
 })
 ```
 
@@ -366,7 +414,12 @@ References:
 
 ## userEvent.unhover
 
-- **Type:** `(element: Element, options?: UserEventHoverOptions) => Promise<void>`
+```ts
+function unhover(
+  element: Element | Locator,
+  options?: UserEventHoverOptions,
+): Promise<void>
+```
 
 This works the same as [`userEvent.hover`](#userevent-hover), but moves the cursor to the `document.body` element instead.
 
@@ -375,13 +428,14 @@ By default, the cursor position is in "some" visible place (in `playwright` prov
 :::
 
 ```ts
-import { userEvent } from '@vitest/browser/context'
-import { screen } from '@testing-library/dom'
+import { page, userEvent } from '@vitest/browser/context'
 
 test('unhover logo element', async () => {
-  const logo = screen.getByRole('img', { name: /logo/ })
+  const logo = page.getByRole('img', { name: /logo/ })
 
   await userEvent.unhover(logo)
+  // or you can access it directly on the locator
+  await logo.unhover()
 })
 ```
 
@@ -391,21 +445,67 @@ References:
 - [WebdriverIO `element.moveTo` API](https://webdriver.io/docs/api/element/moveTo/)
 - [testing-library `hover` API](https://testing-library.com/docs/user-event/convenience/#hover)
 
+## userEvent.upload
+
+```ts
+function upload(
+  element: Element | Locator,
+  files: string[] | string | File[] | File,
+  options?: UserEventUploadOptions,
+): Promise<void>
+```
+
+Change a file input element to have the specified files.
+
+```ts
+import { page, userEvent } from '@vitest/browser/context'
+
+test('can upload a file', async () => {
+  const input = page.getByRole('button', { name: /Upload files/ })
+
+  const file = new File(['file'], 'file.png', { type: 'image/png' })
+
+  await userEvent.upload(input, file)
+  // or you can access it directly on the locator
+  await input.upload(file)
+
+  // you can also use file paths relative to the root of the project
+  await userEvent.upload(input, './fixtures/file.png')
+})
+```
+
+::: warning
+`webdriverio` provider supports this command only in `chrome` and `edge` browsers. It also only supports string types at the moment.
+:::
+
+References:
+
+- [Playwright `locator.setInputFiles` API](https://playwright.dev/docs/api/class-locator#locator-set-input-files)
+- [WebdriverIO `browser.uploadFile` API](https://webdriver.io/docs/api/browser/uploadFile)
+- [testing-library `upload` API](https://testing-library.com/docs/user-event/utility/#upload)
+
 ## userEvent.dragAndDrop
 
-- **Type:** `(source: Element, target: Element, options?: UserEventDragAndDropOptions) => Promise<void>`
+```ts
+function dragAndDrop(
+  source: Element | Locator,
+  target: Element | Locator,
+  options?: UserEventDragAndDropOptions,
+): Promise<void>
+```
 
 Drags the source element on top of the target element. Don't forget that the `source` element has to have the `draggable` attribute set to `true`.
 
 ```ts
-import { userEvent } from '@vitest/browser/context'
-import { screen } from '@testing-library/dom'
+import { page, userEvent } from '@vitest/browser/context'
 
 test('drag and drop works', async () => {
-  const source = screen.getByRole('img', { name: /logo/ })
-  const target = screen.getByTestId('logo-target')
+  const source = page.getByRole('img', { name: /logo/ })
+  const target = page.getByTestId('logo-target')
 
   await userEvent.dragAndDrop(source, target)
+  // or you can access it directly on the locator
+  await source.dropTo(target)
 
   await expect.element(target).toHaveTextContent('Logo is processed')
 })
@@ -419,3 +519,81 @@ References:
 
 - [Playwright `frame.dragAndDrop` API](https://playwright.dev/docs/api/class-frame#frame-drag-and-drop)
 - [WebdriverIO `element.dragAndDrop` API](https://webdriver.io/docs/api/element/dragAndDrop/)
+
+## userEvent.copy
+
+```ts
+function copy(): Promise<void>
+```
+
+Copy the selected text to the clipboard.
+
+```js
+import { page, userEvent } from '@vitest/browser/context'
+
+test('copy and paste', async () => {
+  // write to 'source'
+  await userEvent.click(page.getByPlaceholder('source'))
+  await userEvent.keyboard('hello')
+
+  // select and copy 'source'
+  await userEvent.dblClick(page.getByPlaceholder('source'))
+  await userEvent.copy()
+
+  // paste to 'target'
+  await userEvent.click(page.getByPlaceholder('target'))
+  await userEvent.paste()
+
+  await expect.element(page.getByPlaceholder('source')).toHaveTextContent('hello')
+  await expect.element(page.getByPlaceholder('target')).toHaveTextContent('hello')
+})
+```
+
+References:
+
+- [testing-library `copy` API](https://testing-library.com/docs/user-event/convenience/#copy)
+
+## userEvent.cut
+
+```ts
+function cut(): Promise<void>
+```
+
+Cut the selected text to the clipboard.
+
+```js
+import { page, userEvent } from '@vitest/browser/context'
+
+test('copy and paste', async () => {
+  // write to 'source'
+  await userEvent.click(page.getByPlaceholder('source'))
+  await userEvent.keyboard('hello')
+
+  // select and cut 'source'
+  await userEvent.dblClick(page.getByPlaceholder('source'))
+  await userEvent.cut()
+
+  // paste to 'target'
+  await userEvent.click(page.getByPlaceholder('target'))
+  await userEvent.paste()
+
+  await expect.element(page.getByPlaceholder('source')).toHaveTextContent('')
+  await expect.element(page.getByPlaceholder('target')).toHaveTextContent('hello')
+})
+```
+
+References:
+
+- [testing-library `cut` API](https://testing-library.com/docs/user-event/clipboard#cut)
+
+## userEvent.paste
+
+```ts
+function paste(): Promise<void>
+```
+
+Paste the text from the clipboard. See [`userEvent.copy`](#userevent-copy) and [`userEvent.cut`](#userevent-cut) for usage examples.
+
+References:
+
+- [testing-library `paste` API](https://testing-library.com/docs/user-event/clipboard#paste)

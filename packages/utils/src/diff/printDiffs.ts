@@ -6,12 +6,12 @@
  */
 
 import type { Diff } from './cleanupSemantic'
-import { DIFF_EQUAL, cleanupSemantic } from './cleanupSemantic'
+import type { DiffOptions } from './types'
+import { cleanupSemantic, DIFF_EQUAL } from './cleanupSemantic'
 import { diffLinesUnified, printDiffLines } from './diffLines'
 import diffStrings from './diffStrings'
 import getAlignedDiffs from './getAlignedDiffs'
 import { normalizeDiffOptions } from './normalizeDiffOptions'
-import type { DiffOptions } from './types'
 
 function hasCommonDiff(diffs: Array<Diff>, isMultiline: boolean): boolean {
   if (isMultiline) {

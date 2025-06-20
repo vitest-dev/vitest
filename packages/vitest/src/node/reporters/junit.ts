@@ -1,19 +1,30 @@
-import { existsSync, promises as fs } from 'node:fs'
-import { hostname } from 'node:os'
-import { dirname, relative, resolve } from 'pathe'
-
-import type { Task } from '@vitest/runner'
-import { getSuites } from '@vitest/runner/utils'
-import stripAnsi from 'strip-ansi'
+import type { File, Task } from '@vitest/runner'
 import type { Vitest } from '../core'
 import type { Reporter } from '../types/reporter'
+import { existsSync, promises as fs } from 'node:fs'
+
+import { hostname } from 'node:os'
+import { stripVTControlCharacters } from 'node:util'
+import { getSuites } from '@vitest/runner/utils'
+import { dirname, relative, resolve } from 'pathe'
 import { getOutputFile } from '../../utils/config-helpers'
-import { capturePrintError } from '../error'
+import { capturePrintError } from '../printError'
 import { IndentedLogger } from './renderers/indented-logger'
+
+interface ClassnameTemplateVariables {
+  filename: string
+  filepath: string
+}
 
 export interface JUnitOptions {
   outputFile?: string
+  /** @deprecated Use `classnameTemplate` instead. */
   classname?: string
+
+  /**
+   * Template for the classname attribute. Can be either a string or a function. The string can contain placeholders {filename} and {filepath}.
+   */
+  classnameTemplate?: string | ((classnameVariables: ClassnameTemplateVariables) => string)
   suiteName?: string
   /**
    * Write <system-out> and <system-err> for console output
@@ -153,7 +164,7 @@ export class JUnitReporter implements Reporter {
     name: string,
     attrs: Record<string, any>,
     children: () => Promise<void>,
-  ) {
+  ): Promise<void> {
     const pairs: string[] = []
     for (const key in attrs) {
       const attr = attrs[key]
@@ -195,10 +206,29 @@ export class JUnitReporter implements Reporter {
 
   async writeTasks(tasks: Task[], filename: string): Promise<void> {
     for (const task of tasks) {
+      let classname = filename
+
+      const templateVars: ClassnameTemplateVariables = {
+        filename: task.file.name,
+        filepath: task.file.filepath,
+      }
+
+      if (typeof this.options.classnameTemplate === 'function') {
+        classname = this.options.classnameTemplate(templateVars)
+      }
+      else if (typeof this.options.classnameTemplate === 'string') {
+        classname = this.options.classnameTemplate
+          .replace(/\{filename\}/g, templateVars.filename)
+          .replace(/\{filepath\}/g, templateVars.filepath)
+      }
+      else if (typeof this.options.classname === 'string') {
+        classname = this.options.classname
+      }
+
       await this.writeElement(
         'testcase',
         {
-          classname: this.options.classname ?? filename,
+          classname,
           file: this.options.addFileAttribute ? filename : undefined,
           name: task.name,
           time: getDuration(task),
@@ -213,6 +243,21 @@ export class JUnitReporter implements Reporter {
             await this.logger.log('<skipped/>')
           }
 
+          if (task.type === 'test' && task.annotations.length) {
+            await this.logger.log('<properties>')
+            this.logger.indent()
+
+            for (const annotation of task.annotations) {
+              await this.logger.log(
+                `<property name="${escapeXML(annotation.type)}" value="${escapeXML(annotation.message)}">`,
+              )
+              await this.logger.log('</property>')
+            }
+
+            this.logger.unindent()
+            await this.logger.log('</properties>')
+          }
+
           if (task.result?.state === 'fail') {
             const errors = task.result.errors || []
             for (const error of errors) {
@@ -220,7 +265,7 @@ export class JUnitReporter implements Reporter {
                 'failure',
                 {
                   message: error?.message,
-                  type: error?.name ?? error?.nameStr,
+                  type: error?.name,
                 },
                 async () => {
                   if (!error) {
@@ -230,10 +275,10 @@ export class JUnitReporter implements Reporter {
                   const result = capturePrintError(
                     error,
                     this.ctx,
-                    { project: this.ctx.getProjectByTaskId(task.id), task },
+                    { project: this.ctx.getProjectByName(task.file.projectName || ''), task },
                   )
                   await this.baseLog(
-                    escapeXML(stripAnsi(result.output.trim())),
+                    escapeXML(stripVTControlCharacters(result.output.trim())),
                   )
                 },
               )
@@ -244,7 +289,7 @@ export class JUnitReporter implements Reporter {
     }
   }
 
-  async onFinished(files = this.ctx.state.getFiles()) {
+  async onFinished(files: File[] = this.ctx.state.getFiles()): Promise<void> {
     await this.logger.log('<?xml version="1.0" encoding="UTF-8" ?>')
 
     const transformed = files.map((file) => {
@@ -287,10 +332,12 @@ export class JUnitReporter implements Reporter {
           mode: 'run',
           result: file.result,
           meta: {},
+          timeout: 0,
           // NOTE: not used in JUnitReporter
           context: null as any,
           suite: null as any,
           file: null as any,
+          annotations: [],
         } satisfies Task)
       }
 
@@ -305,6 +352,7 @@ export class JUnitReporter implements Reporter {
       (stats, file) => {
         stats.tests += file.tasks.length
         stats.failures += file.stats.failures
+        stats.time += file.result?.duration || 0
         return stats
       },
       {
@@ -312,11 +360,11 @@ export class JUnitReporter implements Reporter {
         tests: 0,
         failures: 0,
         errors: 0, // we cannot detect those
-        time: executionTime(new Date().getTime() - this._timeStart.getTime()),
+        time: 0,
       },
     )
 
-    await this.writeElement('testsuites', stats, async () => {
+    await this.writeElement('testsuites', { ...stats, time: executionTime(stats.time) }, async () => {
       for (const file of transformed) {
         const filename = relative(this.ctx.config.root, file.filepath)
         await this.writeElement(

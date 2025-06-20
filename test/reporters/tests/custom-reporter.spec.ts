@@ -1,8 +1,8 @@
 import { resolve } from 'pathe'
 import { describe, expect, test } from 'vitest'
 
-import TestReporter from '../src/custom-reporter'
 import { runVitest, runVitestCli } from '../../test-utils'
+import TestReporter from '../src/custom-reporter'
 
 const customTsReporterPath = resolve(__dirname, '../src/custom-reporter.ts')
 const customJSReporterPath = resolve(__dirname, '../src/custom-reporter.js')
@@ -13,7 +13,7 @@ async function runWithRetry(...runOptions: string[]) {
 
   for (let i = count; i >= 0; i--) {
     try {
-      const vitest = await runVitestCli({ cwd: root, windowsHide: false }, 'run', ...runOptions)
+      const vitest = await runVitestCli({ nodeOptions: { cwd: root, windowsHide: false } }, 'run', ...runOptions)
       return vitest.stdout
     }
     catch (e) {

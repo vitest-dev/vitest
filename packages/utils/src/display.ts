@@ -1,10 +1,10 @@
-// since this is already part of Vitest via Chai, we can just reuse it without increasing the size of bundle
-import * as loupe from 'loupe'
 import type { PrettyFormatOptions } from '@vitest/pretty-format'
 import {
   format as prettyFormat,
   plugins as prettyFormatPlugins,
 } from '@vitest/pretty-format'
+// since this is already part of Vitest via Chai, we can just reuse it without increasing the size of bundle
+import * as loupe from 'loupe'
 
 type Inspect = (value: unknown, options: Options) => string
 interface Options {
@@ -21,7 +21,7 @@ interface Options {
   stylize: (value: string, styleType: string) => string
 }
 
-type LoupeOptions = Partial<Options>
+export type LoupeOptions = Partial<Options>
 
 const {
   AsymmetricMatcher,
@@ -41,10 +41,14 @@ const PLUGINS = [
   AsymmetricMatcher,
 ]
 
+export interface StringifyOptions extends PrettyFormatOptions {
+  maxLength?: number
+}
+
 export function stringify(
   object: unknown,
   maxDepth = 10,
-  { maxLength, ...options }: PrettyFormatOptions & { maxLength?: number } = {},
+  { maxLength, ...options }: StringifyOptions = {},
 ): string {
   const MAX_LENGTH = maxLength ?? 10000
   let result
@@ -69,8 +73,9 @@ export function stringify(
     })
   }
 
+  // Prevents infinite loop https://github.com/vitest-dev/vitest/issues/7249
   return result.length >= MAX_LENGTH && maxDepth > 1
-    ? stringify(object, Math.floor(maxDepth / 2))
+    ? stringify(object, Math.floor(Math.min(maxDepth, Number.MAX_SAFE_INTEGER) / 2), { maxLength, ...options })
     : result
 }
 
@@ -105,6 +110,9 @@ export function format(...args: unknown[]): string {
           return '-0'
         }
         if (typeof value === 'object' && value !== null) {
+          if (typeof value.toString === 'function' && value.toString !== Object.prototype.toString) {
+            return value.toString()
+          }
           return inspect(value, { depth: 0, colors: false })
         }
         return String(value)

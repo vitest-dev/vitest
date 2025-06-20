@@ -1,25 +1,24 @@
 <script setup lang="ts">
-import type { ErrorWithDiff, File, Suite, Task } from 'vitest'
-import type Convert from 'ansi-to-html'
-import { isDark } from '~/composables/dark'
-import { createAnsiToHtmlFilter } from '~/composables/error'
+import type { RunnerTask, RunnerTestFile, RunnerTestSuite } from 'vitest'
 import { browserState, config } from '~/composables/client'
-import { escapeHtml } from '~/utils/escape'
+import { isDark } from '~/composables/dark'
+import { mapLeveledTaskStacks } from '~/composables/error'
+import { openScreenshot, useScreenshot } from '~/composables/screenshot'
 
 const props = defineProps<{
-  file?: File
+  file: RunnerTestFile
 }>()
 
-type LeveledTask = Task & {
+type LeveledTask = RunnerTask & {
   level: number
 }
 
-function collectFailed(task: Task, level: number): LeveledTask[] {
+function collectFailed(task: RunnerTask, level: number): LeveledTask[] {
   if (task.result?.state !== 'fail') {
     return []
   }
 
-  if (task.type === 'test' || task.type === 'custom') {
+  if (task.type === 'test') {
     return [{ ...task, level }]
   }
   else {
@@ -30,63 +29,15 @@ function collectFailed(task: Task, level: number): LeveledTask[] {
   }
 }
 
-function createHtmlError(filter: Convert, error: ErrorWithDiff) {
-  let htmlError = ''
-  if (error.message?.includes('\x1B')) {
-    htmlError = `<b>${error.nameStr || error.name}</b>: ${filter.toHtml(
-      escapeHtml(error.message),
-    )}`
-  }
-
-  const startStrWithX1B = error.stackStr?.includes('\x1B')
-  if (startStrWithX1B || error.stack?.includes('\x1B')) {
-    if (htmlError.length > 0) {
-      htmlError += filter.toHtml(
-        escapeHtml((startStrWithX1B ? error.stackStr : error.stack) as string),
-      )
-    }
-    else {
-      htmlError = `<b>${error.nameStr || error.name}</b>: ${
-        error.message
-      }${filter.toHtml(
-        escapeHtml((startStrWithX1B ? error.stackStr : error.stack) as string),
-      )}`
-    }
-  }
-
-  if (htmlError.length > 0) {
-    return htmlError
-  }
-  return null
-}
-
-function mapLeveledTaskStacks(dark: boolean, tasks: LeveledTask[]) {
-  const filter = createAnsiToHtmlFilter(dark)
-  return tasks.map((t) => {
-    const result = t.result
-    if (!result) {
-      return t
-    }
-    const errors = result.errors
-      ?.map(error => createHtmlError(filter, error))
-      .filter(error => error != null)
-      .join('<br><br>')
-    if (errors?.length) {
-      result.htmlError = errors
-    }
-    return t
-  })
-}
-
 const failed = computed(() => {
   const file = props.file
-  const failedFlatMap = file?.tasks?.flatMap(t => collectFailed(t, 0)) ?? []
-  const result = file?.result
+  const failedFlatMap = file.tasks?.flatMap(t => collectFailed(t, 0)) ?? []
+  const result = file.result
   const fileError = result?.errors?.[0]
   // we must check also if the test cannot compile
   if (fileError) {
     // create a dummy one
-    const fileErrorTask: Suite & { level: number } = {
+    const fileErrorTask: RunnerTestSuite & { level: number } = {
       id: file!.id,
       file: file!,
       name: file!.name,
@@ -104,35 +55,18 @@ const failed = computed(() => {
     : failedFlatMap
 })
 
-function open(task: Task) {
-  const filePath = task.meta?.failScreenshotPath
-  if (filePath) {
-    fetch(`/__open-in-editor?file=${encodeURIComponent(filePath)}`)
-  }
-}
-
-const showScreenshot = ref(false)
-const timestamp = ref(Date.now())
-const currentTask = ref<Task | undefined>()
-const currentScreenshotUrl = computed(() => {
-  const file = currentTask.value?.meta.failScreenshotPath
-  // force refresh
-  const t = timestamp.value
-  // browser plugin using /, change this if base can be modified
-  return file ? `/__screenshot-error?file=${encodeURIComponent(file)}&t=${t}` : undefined
-})
-
-function showScreenshotModal(task: Task) {
-  currentTask.value = task
-  timestamp.value = Date.now()
-  showScreenshot.value = true
-}
+const {
+  currentTask,
+  showScreenshot,
+  showScreenshotModal,
+  currentScreenshotUrl,
+} = useScreenshot()
 </script>
 
 <template>
   <div h-full class="scrolls">
     <template v-if="failed.length">
-      <div v-for="task of failed" :key="task.id">
+      <div v-for="task of failed" :id="task.id" :key="task.id">
         <div
           bg="red-500/10"
           text="red-500 sm"
@@ -141,7 +75,7 @@ function showScreenshotModal(task: Task) {
           rounded
           :style="{
             'margin-left': `${
-              task.result?.htmlError ? 0.5 : 2 * task.level + 0.5
+              task.result?.htmlError ? 0.5 : 2 * (task as LeveledTask).level + 0.5
             }rem`,
           }"
         >
@@ -160,7 +94,7 @@ function showScreenshotModal(task: Task) {
                 class="!op-100"
                 icon="i-carbon:image-reference"
                 title="Open screenshot error in editor"
-                @click="open(task)"
+                @click="openScreenshot(task)"
               />
             </template>
           </div>
@@ -176,8 +110,9 @@ function showScreenshotModal(task: Task) {
               v-for="(error, idx) of task.result.errors"
               :key="idx"
               :error="error"
-              :filename="file?.name"
+              :filename="file.name"
               :root="config.root"
+              :file-id="file.id"
             />
           </template>
         </div>

@@ -1,13 +1,15 @@
 name: CI
 
+# Remove default permissions of GITHUB_TOKEN for security
+# https://docs.github.com/en/actions/using-jobs/assigning-permissions-to-jobs
+permissions: {}
+
 on:
   push:
     branches:
       - main
 
   pull_request:
-    branches:
-      - main
 
   workflow_dispatch:
 
@@ -17,10 +19,13 @@ concurrency:
 
 env:
   PLAYWRIGHT_BROWSERS_PATH: ${{ github.workspace }}/.cache/ms-playwright
+  VITEST_GENERATE_UI_TOKEN: 'true'
 
 jobs:
   lint:
+    timeout-minutes: 10
     runs-on: ubuntu-latest
+    name: 'Lint: node-latest, ubuntu-latest'
     steps:
       - uses: actions/checkout@v4
 
@@ -29,10 +34,48 @@ jobs:
       - name: Install
         run: pnpm i
 
+      - name: Build
+        run: pnpm run build
+
+      # check uncommited LICENSE.md, auto-imports.d.ts, etc...
+      - name: Check stale build artifacts
+        run: git diff --exit-code
+
       - name: Lint
         run: pnpm run lint
 
+      - name: Typecheck
+        run: pnpm run typecheck
+
+      # From https://github.com/rhysd/actionlint/blob/main/docs/usage.md#use-actionlint-on-github-actions
+      - name: Check workflow files
+        run: |
+          bash <(curl https://raw.githubusercontent.com/rhysd/actionlint/main/scripts/download-actionlint.bash)
+          ./actionlint -color -shellcheck=""
+
+  changed:
+    runs-on: ubuntu-latest
+    name: 'Diff: node-latest, ubuntu-latest'
+    outputs:
+      should_skip: ${{ steps.changed-files.outputs.only_changed == 'true' }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Get changed files
+        id: changed-files
+        uses: tj-actions/changed-files@a284dc1814e3fd07f2e34267fc8f81227ed29fb8 # v45.0.9
+        with:
+          files: |
+            docs/**
+            .github/**
+            !.github/workflows/ci.yml
+            **.md
+
   test:
+    needs: changed
+    name: 'Build&Test: node-${{ matrix.node_version }}, ${{ matrix.os }}'
+    if: needs.changed.outputs.should_skip != 'true'
     runs-on: ${{ matrix.os }}
 
     timeout-minutes: 30
@@ -40,72 +83,52 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest]
-        # Reset back to 20 after https://github.com/nodejs/node/issues/53648
-        node_version: [18, 20.14]
-        # node_version: [18, 20, 22] 22 when LTS is close enough
+        node_version: [18, 20, 22, 24]
         include:
-          - os: macos-14
-            node_version: 20.14
+          - os: macos-latest
+            node_version: 20
           - os: windows-latest
-            node_version: 20.14
+            node_version: 20
       fail-fast: false
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Get changed files
-        id: changed-files
-        uses: tj-actions/changed-files@c65cd883420fd2eb864698a825fc4162dd94482c # v44.5.7
-        with:
-          files: |
-            docs/**
-            .github/**
-            !.github/workflows/ci.yml
-            **.md
-
       - uses: ./.github/actions/setup-and-cache
-        if: steps.changed-files.outputs.only_changed != 'true'
         with:
           node-version: ${{ matrix.node_version }}
 
-      - uses: browser-actions/setup-chrome@v1
-        if: steps.changed-files.outputs.only_changed != 'true'
+      - uses: browser-actions/setup-chrome@c785b87e244131f27c9f19c1a33e2ead956ab7ce # v1.7.3
 
       - name: Install
-        if: steps.changed-files.outputs.only_changed != 'true'
         run: pnpm i
 
       - name: Install Playwright Dependencies
-        if: steps.changed-files.outputs.only_changed != 'true'
-        run: pnpm exec playwright install chromium --with-deps
+        run: pnpm exec playwright install chromium --with-deps --only-shell
 
       - name: Build
-        if: steps.changed-files.outputs.only_changed != 'true'
         run: pnpm run build
 
       - name: Test
-        if: steps.changed-files.outputs.only_changed != 'true'
         run: pnpm run test:ci
 
       - name: Test Examples
-        if: steps.changed-files.outputs.only_changed != 'true'
         run: pnpm run test:examples
 
       - name: Unit Test UI
-        if: steps.changed-files.outputs.only_changed != 'true'
         run: pnpm run -C packages/ui test:ui
 
   test-browser:
+    needs: changed
+    name: 'Browsers: node-20, ${{ matrix.os }}'
+    if: needs.changed.outputs.should_skip != 'true'
+
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         os:
-          - macos-14
+          - macos-latest
           - windows-latest
-        browser:
-          - [chromium, chrome]
-          - [firefox, firefox]
-          - [webkit]
       fail-fast: false
 
     timeout-minutes: 30
@@ -113,46 +136,60 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Get changed files
-        id: changed-files
-        uses: tj-actions/changed-files@c65cd883420fd2eb864698a825fc4162dd94482c # v44.5.7
-        with:
-          files: |
-            docs/**
-            .github/**
-            !.github/workflows/ci.yml
-            **.md
-
       - uses: ./.github/actions/setup-and-cache
-        if: steps.changed-files.outputs.only_changed != 'true'
         with:
           node-version: 20
 
-      - uses: browser-actions/setup-chrome@v1
-        if: ${{ steps.changed-files.outputs.only_changed != 'true' && matrix.browser[0] == 'chromium' }}
-      - uses: browser-actions/setup-firefox@v1
-        if: ${{ steps.changed-files.outputs.only_changed != 'true' && matrix.browser[0] == 'firefox' }}
+      - uses: browser-actions/setup-chrome@c785b87e244131f27c9f19c1a33e2ead956ab7ce # v1.7.3
+      - uses: browser-actions/setup-firefox@634a60ccd6599686158cf5a570481b4cd30455a2 # v1.5.4
 
       - name: Install
-        if: steps.changed-files.outputs.only_changed != 'true'
         run: pnpm i
 
       - name: Install Playwright Dependencies
-        if: steps.changed-files.outputs.only_changed != 'true'
-        run: pnpm exec playwright install ${{ matrix.browser[0] }} --with-deps
+        run: pnpm exec playwright install --with-deps --only-shell
 
       - name: Build
-        if: steps.changed-files.outputs.only_changed != 'true'
         run: pnpm run build
 
       - name: Test Browser (playwright)
-        if: steps.changed-files.outputs.only_changed != 'true'
         run: pnpm run test:browser:playwright
-        env:
-          BROWSER: ${{ matrix.browser[0] }}
 
       - name: Test Browser (webdriverio)
         run: pnpm run test:browser:webdriverio
-        if: ${{ steps.changed-files.outputs.only_changed != 'true' && matrix.browser[1] }}
-        env:
-          BROWSER: ${{ matrix.browser[1] }}
+
+  test-rolldown:
+    needs: changed
+    # macos-latest is the fastes one
+    name: 'Rolldown&Test: node-20, macos-latest'
+    if: needs.changed.outputs.should_skip != 'true'
+    runs-on: macos-latest
+
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ./.github/actions/setup-and-cache
+        with:
+          node-version: 20
+
+      - uses: browser-actions/setup-chrome@c785b87e244131f27c9f19c1a33e2ead956ab7ce # v1.7.3
+
+      - name: Install
+        run: pnpm add vite@npm:rolldown-vite && git add . && git commit -m "ci" && pnpm i --prefer-offline --no-frozen-lockfile
+
+      - name: Install Playwright Dependencies
+        run: pnpm exec playwright install --with-deps --only-shell
+
+      - name: Build
+        run: pnpm run build
+
+      - name: Test
+        run: pnpm run test:ci
+
+      - name: Test Examples
+        run: pnpm run test:examples
+
+      - name: Test Browser (playwright)
+        run: pnpm run test:browser:playwright

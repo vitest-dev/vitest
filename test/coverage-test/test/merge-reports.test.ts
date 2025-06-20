@@ -4,21 +4,17 @@ import { readCoverageMap, runVitest, test } from '../utils'
 test('--merge-reports', async () => {
   for (const index of [1, 2, 3]) {
     await runVitest({
-      name: `generate #${index} blob report`,
       include: ['fixtures/test/merge-fixture-*.test.ts'],
       reporters: 'blob',
       shard: `${index}/3`,
-      coverage: { all: false },
     })
   }
 
   await runVitest({
-    name: 'merge blob reports',
     // Pass default value - this option is publicly only available via CLI so it's a bit hacky usage here
     mergeReports: '.vitest-reports',
     coverage: {
       reporter: 'json',
-      all: false,
     },
   })
 

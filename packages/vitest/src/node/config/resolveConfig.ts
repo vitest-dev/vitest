@@ -1,30 +1,34 @@
-import { resolveModule } from 'local-pkg'
-import { normalize, relative, resolve } from 'pathe'
-import c from 'tinyrainbow'
 import type { ResolvedConfig as ResolvedViteConfig } from 'vite'
+import type { Vitest } from '../core'
+import type { BenchmarkBuiltinReporters } from '../reporters'
+import type { ResolvedBrowserOptions } from '../types/browser'
 import type {
   ApiConfig,
   ResolvedConfig,
   UserConfig,
-  VitestRunMode,
 } from '../types/config'
+import type { BaseCoverageOptions, CoverageReporterWithOptions } from '../types/coverage'
+import type { BuiltinPool, ForksOptions, PoolOptions, ThreadsOptions } from '../types/pool-options'
+import crypto from 'node:crypto'
+import { slash, toArray } from '@vitest/utils'
+import { resolveModule } from 'local-pkg'
+import { normalize, relative, resolve } from 'pathe'
+import c from 'tinyrainbow'
+import { mergeConfig } from 'vite'
 import {
+  configFiles,
   defaultBrowserPort,
   defaultInspectPort,
   defaultPort,
   extraInlineDeps,
+  workspacesFiles,
 } from '../../constants'
 import { benchmarkConfigDefaults, configDefaults } from '../../defaults'
-import { isCI, stdProvider, toArray } from '../../utils'
-import type { BuiltinPool, ForksOptions, PoolOptions, ThreadsOptions } from '../types/pool-options'
+import { isCI, stdProvider } from '../../utils/env'
 import { getWorkersCountByPercentage } from '../../utils/workers'
-import { VitestCache } from '../cache'
+import { builtinPools } from '../pool'
 import { BaseSequencer } from '../sequencers/BaseSequencer'
 import { RandomSequencer } from '../sequencers/RandomSequencer'
-import type { BenchmarkBuiltinReporters } from '../reporters'
-import { builtinPools } from '../pool'
-import type { Logger } from '../logger'
-import type { BaseCoverageOptions, CoverageReporterWithOptions } from '../types/coverage'
 
 function resolvePath(path: string, root: string) {
   return normalize(
@@ -109,11 +113,12 @@ function resolveInlineWorkerOption(value: string | number): number {
 }
 
 export function resolveConfig(
-  mode: VitestRunMode,
+  vitest: Vitest,
   options: UserConfig,
   viteConfig: ResolvedViteConfig,
-  logger: Logger,
 ): ResolvedConfig {
+  const mode = vitest.mode
+  const logger = vitest.logger
   if (options.dom) {
     if (
       viteConfig.test?.environment != null
@@ -139,6 +144,15 @@ export function resolveConfig(
     root: viteConfig.root,
     mode,
   } as any as ResolvedConfig
+
+  resolved.project = toArray(resolved.project)
+  resolved.provide ??= {}
+
+  resolved.name = typeof options.name === 'string'
+    ? options.name
+    : (options.name?.label || '')
+
+  resolved.color = typeof options.name !== 'string' ? options.name?.color : undefined
 
   const inspector = resolved.inspect || resolved.inspectBrk
 
@@ -194,8 +208,6 @@ export function resolveConfig(
     resolved.minWorkers = resolveInlineWorkerOption(resolved.minWorkers)
   }
 
-  resolved.browser ??= {} as any
-
   // run benchmark sequentially by default
   resolved.fileParallelism ??= mode !== 'benchmark'
 
@@ -205,10 +217,17 @@ export function resolveConfig(
     resolved.minWorkers = 1
   }
 
+  if (resolved.maxConcurrency === 0) {
+    logger.console.warn(
+      c.yellow(`The option "maxConcurrency" cannot be set to 0. Using default value ${configDefaults.maxConcurrency} instead.`),
+    )
+    resolved.maxConcurrency = configDefaults.maxConcurrency
+  }
+
   if (resolved.inspect || resolved.inspectBrk) {
     const isSingleThread
       = resolved.pool === 'threads'
-      && resolved.poolOptions?.threads?.singleThread
+        && resolved.poolOptions?.threads?.singleThread
     const isSingleFork
       = resolved.pool === 'forks' && resolved.poolOptions?.forks?.singleFork
 
@@ -220,14 +239,70 @@ export function resolveConfig(
     }
   }
 
+  // apply browser CLI options only if the config already has the browser config and not disabled manually
   if (
-    resolved.coverage.provider === 'v8'
-    && resolved.coverage.enabled
-    && isBrowserEnabled(resolved)
+    vitest._cliOptions.browser
+    && resolved.browser
+    // if enabled is set to `false`, but CLI overrides it, then always override it
+    && (resolved.browser.enabled !== false || vitest._cliOptions.browser.enabled)
   ) {
-    throw new Error(
-      '@vitest/coverage-v8 does not work with --browser. Use @vitest/coverage-istanbul instead',
-    )
+    resolved.browser = mergeConfig(
+      resolved.browser,
+      vitest._cliOptions.browser,
+    ) as ResolvedBrowserOptions
+  }
+
+  resolved.browser ??= {} as any
+  const browser = resolved.browser
+
+  if (browser.enabled) {
+    if (!browser.name && !browser.instances) {
+      throw new Error(`Vitest Browser Mode requires "browser.name" (deprecated) or "browser.instances" options, none were set.`)
+    }
+
+    const instances = browser.instances
+    if (browser.name && browser.instances) {
+      // --browser=chromium filters configs to a single one
+      browser.instances = browser.instances.filter(instance => instance.browser === browser.name)
+    }
+
+    if (browser.instances && !browser.instances.length) {
+      throw new Error([
+        `"browser.instances" was set in the config, but the array is empty. Define at least one browser config.`,
+        browser.name && instances?.length ? ` The "browser.name" was set to "${browser.name}" which filtered all configs (${instances.map(c => c.browser).join(', ')}). Did you mean to use another name?` : '',
+      ].join(''))
+    }
+  }
+
+  const playwrightChromiumOnly = isPlaywrightChromiumOnly(vitest, resolved)
+
+  // Browser-mode "Playwright + Chromium" only features:
+  if (browser.enabled && !playwrightChromiumOnly) {
+    const browserConfig = {
+      browser: {
+        provider: browser.provider,
+        name: browser.name,
+        instances: browser.instances?.map(i => ({ browser: i.browser })),
+      },
+    }
+
+    if (resolved.coverage.enabled && resolved.coverage.provider === 'v8') {
+      throw new Error(
+        `@vitest/coverage-v8 does not work with\n${JSON.stringify(browserConfig, null, 2)}\n`
+        + `\nUse either:\n${JSON.stringify({ browser: { provider: 'playwright', instances: [{ browser: 'chromium' }] } }, null, 2)}`
+        + `\n\n...or change your coverage provider to:\n${JSON.stringify({ coverage: { provider: 'istanbul' } }, null, 2)}\n`,
+      )
+    }
+
+    if (resolved.inspect || resolved.inspectBrk) {
+      const inspectOption = `--inspect${resolved.inspectBrk ? '-brk' : ''}`
+
+      throw new Error(
+        `${inspectOption} does not work with\n${JSON.stringify(browserConfig, null, 2)}\n`
+        + `\nUse either:\n${JSON.stringify({ browser: { provider: 'playwright', instances: [{ browser: 'chromium' }] } }, null, 2)}`
+        + `\n\n...or disable ${inspectOption}\n`,
+      )
+    }
   }
 
   resolved.coverage.reporter = resolveCoverageReporters(resolved.coverage.reporter)
@@ -284,6 +359,47 @@ export function resolveConfig(
   resolved.deps.web.transformAssets ??= true
   resolved.deps.web.transformCss ??= true
   resolved.deps.web.transformGlobPattern ??= []
+
+  resolved.setupFiles = toArray(resolved.setupFiles || []).map(file =>
+    resolvePath(file, resolved.root),
+  )
+  resolved.globalSetup = toArray(resolved.globalSetup || []).map(file =>
+    resolvePath(file, resolved.root),
+  )
+
+  // Add hard-coded default coverage exclusions. These cannot be overidden by user config.
+  // Override original exclude array for cases where user re-uses same object in test.exclude.
+  resolved.coverage.exclude = [
+    ...resolved.coverage.exclude,
+
+    // Exclude setup files
+    ...resolved.setupFiles.map(
+      file =>
+        `${resolved.coverage.allowExternal ? '**/' : ''}${relative(
+          resolved.root,
+          file,
+        )}`,
+    ),
+
+    // Exclude test files
+    ...resolved.include,
+
+    // Configs
+    resolved.config && slash(resolved.config),
+    ...configFiles,
+    ...workspacesFiles,
+
+    // Vite internal
+    '**\/virtual:*',
+    '**\/__x00__*',
+
+    '**/node_modules/**',
+  ].filter(pattern => pattern != null)
+
+  resolved.forceRerunTriggers = [
+    ...resolved.forceRerunTriggers,
+    ...resolved.setupFiles,
+  ]
 
   resolved.server ??= {}
   resolved.server.deps ??= {}
@@ -344,6 +460,8 @@ export function resolveConfig(
     }
   }
 
+  resolved.server.deps.inlineFiles ??= []
+  resolved.server.deps.inlineFiles.push(...resolved.setupFiles)
   resolved.server.deps.moduleDirectories ??= []
   resolved.server.deps.moduleDirectories.push(
     ...resolved.deps.moduleDirectories,
@@ -352,6 +470,11 @@ export function resolveConfig(
   if (resolved.runner) {
     resolved.runner = resolvePath(resolved.runner, resolved.root)
   }
+
+  resolved.attachmentsDir = resolve(
+    resolved.root,
+    resolved.attachmentsDir ?? '.vitest-attachments',
+  )
 
   if (resolved.snapshotEnvironment) {
     resolved.snapshotEnvironment = resolvePath(
@@ -388,7 +511,7 @@ export function resolveConfig(
   resolved.forceRerunTriggers.push(...resolved.snapshotSerializers)
 
   if (options.resolveSnapshotPath) {
-    delete (resolved as UserConfig).resolveSnapshotPath
+    delete (resolved as any).resolveSnapshotPath
   }
 
   resolved.pool ??= 'threads'
@@ -475,16 +598,19 @@ export function resolveConfig(
     }
   }
 
-  if (resolved.workspace) {
+  if (typeof resolved.workspace === 'string') {
     // if passed down from the CLI and it's relative, resolve relative to CWD
     resolved.workspace
-      = options.workspace && options.workspace[0] === '.'
+      = typeof options.workspace === 'string' && options.workspace[0] === '.'
         ? resolve(process.cwd(), options.workspace)
         : resolvePath(resolved.workspace, resolved.root)
   }
 
   if (!builtinPools.includes(resolved.pool as BuiltinPool)) {
     resolved.pool = resolvePath(resolved.pool, resolved.root)
+  }
+  if (resolved.poolMatchGlobs) {
+    logger.deprecate('`poolMatchGlobs` is deprecated. Use `test.projects` to define different configurations instead.')
   }
   resolved.poolMatchGlobs = (resolved.poolMatchGlobs || []).map(
     ([glob, pool]) => {
@@ -502,6 +628,7 @@ export function resolveConfig(
     }
     // override test config
     resolved.coverage.enabled = false
+    resolved.typecheck.enabled = false
     resolved.include = resolved.benchmark.include
     resolved.exclude = resolved.benchmark.exclude
     resolved.includeSource = resolved.benchmark.includeSource
@@ -532,34 +659,14 @@ export function resolveConfig(
     }
   }
 
-  resolved.setupFiles = toArray(resolved.setupFiles || []).map(file =>
-    resolvePath(file, resolved.root),
-  )
-  resolved.globalSetup = toArray(resolved.globalSetup || []).map(file =>
-    resolvePath(file, resolved.root),
-  )
-  resolved.coverage.exclude.push(
-    ...resolved.setupFiles.map(
-      file =>
-        `${resolved.coverage.allowExternal ? '**/' : ''}${relative(
-          resolved.root,
-          file,
-        )}`,
-    ),
-  )
-
-  resolved.forceRerunTriggers = [
-    ...resolved.forceRerunTriggers,
-    ...resolved.setupFiles,
-  ]
-
-  if (resolved.diff) {
+  if (typeof resolved.diff === 'string') {
     resolved.diff = resolvePath(resolved.diff, resolved.root)
     resolved.forceRerunTriggers.push(resolved.diff)
   }
 
   // the server has been created, we don't need to override vite.server options
-  resolved.api = resolveApiServerConfig(options, defaultPort)
+  const api = resolveApiServerConfig(options, defaultPort)
+  resolved.api = { ...api, token: __VITEST_GENERATE_UI_TOKEN__ ? crypto.randomUUID() : '0' }
 
   if (options.related) {
     resolved.related = toArray(options.related).map(file =>
@@ -650,29 +757,13 @@ export function resolveConfig(
   }
 
   if (resolved.cache !== false) {
-    let cacheDir = VitestCache.resolveCacheDir(
-      '',
-      resolve(viteConfig.cacheDir, 'vitest'),
-      resolved.name,
-    )
-
-    if (resolved.cache && resolved.cache.dir) {
-      logger.console.warn(
-        c.yellow(
-          `${c.inverse(
-            c.yellow(' Vitest '),
-          )} "cache.dir" is deprecated, use Vite's "cacheDir" instead if you want to change the cache director. Note caches will be written to "cacheDir\/vitest"`,
-        ),
-      )
-
-      cacheDir = VitestCache.resolveCacheDir(
-        resolved.root,
-        resolved.cache.dir,
-        resolved.name,
+    if (resolved.cache && typeof resolved.cache.dir === 'string') {
+      vitest.logger.deprecate(
+        `"cache.dir" is deprecated, use Vite's "cacheDir" instead if you want to change the cache director. Note caches will be written to "cacheDir\/vitest"`,
       )
     }
 
-    resolved.cache = { dir: cacheDir }
+    resolved.cache = { dir: viteConfig.cacheDir }
   }
 
   resolved.sequence ??= {} as any
@@ -690,6 +781,7 @@ export function resolveConfig(
       ? RandomSequencer
       : BaseSequencer
   }
+  resolved.sequence.groupOrder ??= 0
   resolved.sequence.hooks ??= 'stack'
   if (resolved.sequence.sequencer === RandomSequencer) {
     resolved.sequence.seed ??= Date.now()
@@ -700,6 +792,9 @@ export function resolveConfig(
     ...resolved.typecheck,
   }
 
+  if (resolved.environmentMatchGlobs) {
+    logger.deprecate('"environmentMatchGlobs" is deprecated. Use `test.projects` to define different configurations instead.')
+  }
   resolved.environmentMatchGlobs = (resolved.environmentMatchGlobs || []).map(
     i => [resolve(resolved.root, i[0]), i[1]],
   )
@@ -715,7 +810,6 @@ export function resolveConfig(
     )
   }
 
-  resolved.browser ??= {} as any
   resolved.browser.enabled ??= false
   resolved.browser.headless ??= isCI
   resolved.browser.isolate ??= true
@@ -747,6 +841,9 @@ export function resolveConfig(
   resolved.browser.viewport ??= {} as any
   resolved.browser.viewport.width ??= 414
   resolved.browser.viewport.height ??= 896
+
+  resolved.browser.locators ??= {} as any
+  resolved.browser.locators.testIdAttribute ??= 'data-testid'
 
   if (resolved.browser.enabled && stdProvider === 'stackblitz') {
     resolved.browser.provider = 'preview'
@@ -813,4 +910,28 @@ export function resolveCoverageReporters(configReporters: NonNullable<BaseCovera
   }
 
   return resolvedReporters
+}
+
+function isPlaywrightChromiumOnly(vitest: Vitest, config: ResolvedConfig) {
+  const browser = config.browser
+  if (!browser || browser.provider !== 'playwright' || !browser.enabled) {
+    return false
+  }
+  if (browser.name) {
+    return browser.name === 'chromium'
+  }
+  if (!browser.instances) {
+    return false
+  }
+  for (const instance of browser.instances) {
+    const name = instance.name || (config.name ? `${config.name} (${instance.browser})` : instance.browser)
+    // browser config is filtered out
+    if (!vitest.matchesProjectFilter(name)) {
+      continue
+    }
+    if (instance.browser !== 'chromium') {
+      return false
+    }
+  }
+  return true
 }

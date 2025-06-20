@@ -1,10 +1,10 @@
 import { createRequire } from 'node:module'
-import esbuild from 'rollup-plugin-esbuild'
-import dts from 'rollup-plugin-dts'
-import resolve from '@rollup/plugin-node-resolve'
 import commonjs from '@rollup/plugin-commonjs'
 import json from '@rollup/plugin-json'
+import resolve from '@rollup/plugin-node-resolve'
 import { defineConfig } from 'rollup'
+import oxc from 'unplugin-oxc/rollup'
+import { createDtsUtils } from '../../scripts/build-utils.js'
 
 const require = createRequire(import.meta.url)
 const pkg = require('./package.json')
@@ -13,10 +13,18 @@ const external = [
   ...Object.keys(pkg.dependencies),
   ...Object.keys(pkg.peerDependencies || {}),
   /^@?vitest(\/|$)/,
+  '@vitest/browser/utils',
   'worker_threads',
   'node:worker_threads',
   'vite',
 ]
+
+const dtsUtils = createDtsUtils()
+const dtsUtilsClient = createDtsUtils({
+  // need extra depth to avoid output conflict
+  isolatedDeclDir: '.types-client/tester',
+  cleanupDir: '.types-client',
+})
 
 const plugins = [
   resolve({
@@ -24,8 +32,8 @@ const plugins = [
   }),
   json(),
   commonjs(),
-  esbuild({
-    target: 'node18',
+  oxc({
+    transform: { target: 'node18' },
   }),
 ]
 
@@ -43,6 +51,7 @@ export default () =>
         format: 'esm',
       },
       external,
+      context: 'null',
       plugins: [
         {
           name: 'no-side-effects',
@@ -57,7 +66,31 @@ export default () =>
             }
           },
         },
+        ...dtsUtils.isolatedDecl(),
         ...plugins,
+      ],
+    },
+    {
+      input: {
+        'locators/playwright': './src/client/tester/locators/playwright.ts',
+        'locators/webdriverio': './src/client/tester/locators/webdriverio.ts',
+        'locators/preview': './src/client/tester/locators/preview.ts',
+        'locators/index': './src/client/tester/locators/index.ts',
+        'expect-element': './src/client/tester/expect-element.ts',
+        'utils': './src/client/tester/public-utils.ts',
+      },
+      output: {
+        dir: 'dist',
+        format: 'esm',
+      },
+      external,
+      plugins: [
+        ...dtsUtilsClient.isolatedDecl(),
+        ...plugins.filter(p => p.name !== 'unplugin-oxc'),
+        oxc({
+          transform: { target: 'node18' },
+          minify: true,
+        }),
       ],
     },
     {
@@ -66,9 +99,10 @@ export default () =>
         file: 'dist/context.js',
         format: 'esm',
       },
+      external: ['@vitest/browser/utils'],
       plugins: [
-        esbuild({
-          target: 'node18',
+        oxc({
+          transform: { target: 'node18' },
         }),
       ],
     },
@@ -82,8 +116,8 @@ export default () =>
         resolve({
           preferBuiltins: true,
         }),
-        esbuild({
-          target: 'node18',
+        oxc({
+          transform: { target: 'node18' },
         }),
       ],
     },
@@ -91,40 +125,50 @@ export default () =>
       input: './src/client/tester/state.ts',
       output: {
         file: 'dist/state.js',
-        format: 'esm',
+        format: 'iife',
       },
       plugins: [
-        esbuild({
-          target: 'node18',
-          minifyWhitespace: true,
+        oxc({
+          transform: { target: 'node18' },
         }),
         resolve(),
       ],
     },
     {
-      input: input.index,
+      input: dtsUtils.dtsInput(input.index),
       output: {
-        file: 'dist/index.d.ts',
+        dir: 'dist',
+        entryFileNames: '[name].d.ts',
         format: 'esm',
       },
+      watch: false,
       external,
-      plugins: [
-        dts({
-          respectExternal: true,
-        }),
-      ],
+      plugins: dtsUtils.dts(),
     },
     {
-      input: './src/client/tester/jest-dom.ts',
+      input: dtsUtilsClient.dtsInput({
+        'locators/index': './src/client/tester/locators/index.ts',
+      }),
       output: {
-        file: './jest-dom.d.ts',
+        dir: 'dist',
+        entryFileNames: '[name].d.ts',
         format: 'esm',
       },
-      external: [],
-      plugins: [
-        dts({
-          respectExternal: true,
-        }),
-      ],
+      watch: false,
+      external,
+      plugins: dtsUtilsClient.dts(),
     },
+    // {
+    //   input: './src/client/tester/jest-dom.ts',
+    //   output: {
+    //     file: './jest-dom.d.ts',
+    //     format: 'esm',
+    //   },
+    //   external: [],
+    //   plugins: [
+    //     dts({
+    //       respectExternal: true,
+    //     }),
+    //   ],
+    // },
   ])

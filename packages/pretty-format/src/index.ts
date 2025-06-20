@@ -5,6 +5,17 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import type {
+  Colors,
+  Config,
+  NewPlugin,
+  Options,
+  OptionsReceived,
+  Plugin,
+  Plugins,
+  Refs,
+  Theme,
+} from './types'
 import styles from 'tinyrainbow'
 import {
   printIteratorEntries,
@@ -18,26 +29,15 @@ import DOMElement from './plugins/DOMElement'
 import Immutable from './plugins/Immutable'
 import ReactElement from './plugins/ReactElement'
 import ReactTestComponent from './plugins/ReactTestComponent'
-import type {
-  Colors,
-  Config,
-  NewPlugin,
-  Options,
-  OptionsReceived,
-  Plugin,
-  Plugins,
-  Refs,
-  Theme,
-} from './types'
 
 export type {
   Colors,
   CompareKeys,
   Config,
+  NewPlugin,
+  OldPlugin,
   Options,
   OptionsReceived,
-  OldPlugin,
-  NewPlugin,
   Plugin,
   Plugins,
   PrettyFormatOptions,
@@ -231,49 +231,49 @@ function printComplexValue(
     return hitMaxDepth
       ? '[Arguments]'
       : `${min ? '' : 'Arguments '}[${printListItems(
-          val,
-          config,
-          indentation,
-          depth,
-          refs,
-          printer,
-        )}]`
+        val,
+        config,
+        indentation,
+        depth,
+        refs,
+        printer,
+      )}]`
   }
   if (isToStringedArrayType(toStringed)) {
     return hitMaxDepth
       ? `[${val.constructor.name}]`
       : `${
-          min
-            ? ''
-            : !config.printBasicPrototype && val.constructor.name === 'Array'
+        min
+          ? ''
+          : !config.printBasicPrototype && val.constructor.name === 'Array'
               ? ''
               : `${val.constructor.name} `
-        }[${printListItems(val, config, indentation, depth, refs, printer)}]`
+      }[${printListItems(val, config, indentation, depth, refs, printer)}]`
   }
   if (toStringed === '[object Map]') {
     return hitMaxDepth
       ? '[Map]'
       : `Map {${printIteratorEntries(
-          val.entries(),
-          config,
-          indentation,
-          depth,
-          refs,
-          printer,
-          ' => ',
-        )}}`
+        val.entries(),
+        config,
+        indentation,
+        depth,
+        refs,
+        printer,
+        ' => ',
+      )}}`
   }
   if (toStringed === '[object Set]') {
     return hitMaxDepth
       ? '[Set]'
       : `Set {${printIteratorValues(
-          val.values(),
-          config,
-          indentation,
-          depth,
-          refs,
-          printer,
-        )}}`
+        val.values(),
+        config,
+        indentation,
+        depth,
+        refs,
+        printer,
+      )}}`
   }
 
   // Avoid failure to serialize global window object in jsdom test environment.
@@ -281,19 +281,48 @@ function printComplexValue(
   return hitMaxDepth || isWindow(val)
     ? `[${getConstructorName(val)}]`
     : `${
-        min
-          ? ''
-          : !config.printBasicPrototype && getConstructorName(val) === 'Object'
+      min
+        ? ''
+        : !config.printBasicPrototype && getConstructorName(val) === 'Object'
             ? ''
             : `${getConstructorName(val)} `
-      }{${printObjectProperties(
-        val,
+    }{${printObjectProperties(
+      val,
+      config,
+      indentation,
+      depth,
+      refs,
+      printer,
+    )}}`
+}
+
+const ErrorPlugin: NewPlugin = {
+  test: val => val && val instanceof Error,
+  serialize(val: Error, config, indentation, depth, refs, printer) {
+    if (refs.includes(val)) {
+      return '[Circular]'
+    }
+    refs = [...refs, val]
+    const hitMaxDepth = ++depth > config.maxDepth
+    const { message, cause, ...rest } = val
+    const entries = {
+      message,
+      ...typeof cause !== 'undefined' ? { cause } : {},
+      ...val instanceof AggregateError ? { errors: val.errors } : {},
+      ...rest,
+    }
+    const name = val.name !== 'Error' ? val.name : getConstructorName(val as any)
+    return hitMaxDepth
+      ? `[${name}]`
+      : `${name} {${printIteratorEntries(
+        Object.entries(entries).values(),
         config,
         indentation,
         depth,
         refs,
         printer,
       )}}`
+  },
 }
 
 function isNewPlugin(plugin: Plugin): plugin is NewPlugin {
@@ -314,22 +343,22 @@ function printPlugin(
     printed = isNewPlugin(plugin)
       ? plugin.serialize(val, config, indentation, depth, refs, printer)
       : plugin.print(
-        val,
-        valChild => printer(valChild, config, indentation, depth, refs),
-        (str) => {
-          const indentationNext = indentation + config.indent
-          return (
-            indentationNext
-            + str.replaceAll(NEWLINE_REGEXP, `\n${indentationNext}`)
-          )
-        },
-        {
-          edgeSpacing: config.spacingOuter,
-          min: config.min,
-          spacing: config.spacingInner,
-        },
-        config.colors,
-      )
+          val,
+          valChild => printer(valChild, config, indentation, depth, refs),
+          (str) => {
+            const indentationNext = indentation + config.indent
+            return (
+              indentationNext
+              + str.replaceAll(NEWLINE_REGEXP, `\n${indentationNext}`)
+            )
+          },
+          {
+            edgeSpacing: config.spacingOuter,
+            min: config.min,
+            spacing: config.spacingInner,
+          },
+          config.colors,
+        )
   }
   catch (error: any) {
     throw new PrettyFormatPluginError(error.message, error.stack)
@@ -535,6 +564,7 @@ export const plugins: {
   Immutable: NewPlugin
   ReactElement: NewPlugin
   ReactTestComponent: NewPlugin
+  Error: NewPlugin
 } = {
   AsymmetricMatcher,
   DOMCollection,
@@ -542,4 +572,5 @@ export const plugins: {
   Immutable,
   ReactElement,
   ReactTestComponent,
+  Error: ErrorPlugin,
 }

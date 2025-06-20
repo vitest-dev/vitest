@@ -1,16 +1,18 @@
-import { readFile } from 'node:fs/promises'
 import type { UserConfig as ViteUserConfig } from 'vite'
-import type { UserConfig } from 'vitest'
+import type { UserConfig } from 'vitest/node'
+import type { VitestRunnerCLIOptions } from '../../test-utils'
 import { runVitest } from '../../test-utils'
+import { browser } from '../settings'
 
-export const browser = process.env.BROWSER || (process.env.PROVIDER !== 'playwright' ? 'chromium' : 'chrome')
+export { browser, instances, provider } from '../settings'
 
 export async function runBrowserTests(
   config?: Omit<UserConfig, 'browser'> & { browser?: Partial<UserConfig['browser']> },
   include?: string[],
   viteOverrides?: Partial<ViteUserConfig>,
+  runnerOptions?: VitestRunnerCLIOptions,
 ) {
-  const result = await runVitest({
+  return runVitest({
     watch: false,
     reporters: 'none',
     ...config,
@@ -18,16 +20,5 @@ export async function runBrowserTests(
       headless: browser !== 'safari',
       ...config?.browser,
     } as UserConfig['browser'],
-  }, include, 'test', viteOverrides)
-
-  const browserResult = await readFile('./browser.json', 'utf-8')
-  const browserResultJson = JSON.parse(browserResult)
-
-  const getPassed = results => results.filter(result => result.status === 'passed' && !result.mesage)
-  const getFailed = results => results.filter(result => result.status === 'failed')
-
-  const passedTests = getPassed(browserResultJson.testResults)
-  const failedTests = getFailed(browserResultJson.testResults)
-
-  return { ...result, browserResultJson, passedTests, failedTests, browser }
+  }, include, 'test', viteOverrides, runnerOptions)
 }

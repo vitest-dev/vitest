@@ -20,6 +20,7 @@ The `userEvent` API is explained in detail at [Interactivity API](/guide/browser
  */
 export const userEvent: {
   setup: () => UserEvent
+  cleanup: () => Promise<void>
   click: (element: Element, options?: UserEventClickOptions) => Promise<void>
   dblClick: (element: Element, options?: UserEventDoubleClickOptions) => Promise<void>
   tripleClick: (element: Element, options?: UserEventTripleClickOptions) => Promise<void>
@@ -78,8 +79,36 @@ export const page: {
     base64: string
   }>
   screenshot(options?: ScreenshotOptions): Promise<string>
+  /**
+   * Extend default `page` object with custom methods.
+   */
+  extend(methods: Partial<BrowserPage>): BrowserPage
+  /**
+   * Wrap an HTML element in a `Locator`. When querying for elements, the search will always return this element.
+   */
+  elementLocator(element: Element): Locator
+
+  /**
+   * Locator APIs. See its documentation for more details.
+   */
+  getByRole(role: ARIARole | string, options?: LocatorByRoleOptions): Locator
+  getByLabelText(text: string | RegExp, options?: LocatorOptions): Locator
+  getByTestId(text: string | RegExp): Locator
+  getByAltText(text: string | RegExp, options?: LocatorOptions): Locator
+  getByPlaceholder(text: string | RegExp, options?: LocatorOptions): Locator
+  getByText(text: string | RegExp, options?: LocatorOptions): Locator
+  getByTitle(text: string | RegExp, options?: LocatorOptions): Locator
 }
 ```
+
+::: tip
+The `getBy*` API is explained at [Locators API](/guide/browser/locators).
+:::
+
+::: warning WARNING <Version>3.2.0</Version>
+Note that `screenshot` will always return a base64 string if `save` is set to `false`.
+The `path` is also ignored in that case.
+:::
 
 ## `cdp`
 

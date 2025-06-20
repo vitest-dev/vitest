@@ -1,24 +1,23 @@
 import type { File, Task } from '@vitest/runner'
-import { isAtomTest } from '@vitest/runner/utils'
 import type {
-  CustomTestTreeNode,
   FileTreeNode,
   ParentTreeNode,
   SuiteTreeNode,
   TestTreeNode,
   UITaskTreeNode,
 } from '~/composables/explorer/types'
+import { isAtomTest } from '@vitest/runner/utils'
 import { client } from '~/composables/client'
-import { getProjectNameColor, isSuite as isTaskSuite } from '~/utils/task'
 import { explorerTree } from '~/composables/explorer/index'
 import { openedTreeItemsSet } from '~/composables/explorer/state'
+import { getProjectNameColor, isSuite as isTaskSuite } from '~/utils/task'
 
-export function isTestNode(node: UITaskTreeNode): node is TestTreeNode | CustomTestTreeNode {
-  return node.type === 'test' || node.type === 'custom'
+export function isTestNode(node: UITaskTreeNode): node is TestTreeNode {
+  return node.type === 'test'
 }
 
-export function isRunningTestNode(node: UITaskTreeNode): node is TestTreeNode | CustomTestTreeNode {
-  return node.mode === 'run' && (node.type === 'test' || node.type === 'custom')
+export function isRunningTestNode(node: UITaskTreeNode): node is TestTreeNode {
+  return node.mode === 'run' && (node.type === 'test')
 }
 
 export function isFileNode(node: UITaskTreeNode): node is FileTreeNode {
@@ -46,6 +45,7 @@ export function createOrUpdateFileNode(
   let fileNode = explorerTree.nodes.get(file.id) as FileTreeNode | undefined
 
   if (fileNode) {
+    fileNode.typecheck = !!file.meta && 'typecheck' in file.meta
     fileNode.state = file.result?.state
     fileNode.mode = file.mode
     fileNode.duration = file.result?.duration
@@ -66,11 +66,12 @@ export function createOrUpdateFileNode(
       type: 'file',
       children: new Set(),
       tasks: [],
+      typecheck: !!file.meta && 'typecheck' in file.meta,
       indent: 0,
-      duration: file.result?.duration,
+      duration: file.result?.duration != null ? Math.round(file.result?.duration) : undefined,
       filepath: file.filepath,
       projectName: file.projectName || '',
-      projectNameColor: getProjectNameColor(file.projectName),
+      projectNameColor: explorerTree.colors.get(file.projectName || '') || getProjectNameColor(file.projectName),
       collectDuration: file.collectDuration,
       setupDuration: file.setupDuration,
       environmentLoad: file.environmentLoad,
@@ -130,6 +131,9 @@ export function createOrUpdateNode(
 ) {
   const node = explorerTree.nodes.get(parentId) as ParentTreeNode | undefined
   let taskNode: UITaskTreeNode | undefined
+  const duration = task.result?.duration != null
+    ? Math.round(task.result?.duration)
+    : undefined
   if (node) {
     taskNode = explorerTree.nodes.get(task.id)
     if (taskNode) {
@@ -138,12 +142,10 @@ export function createOrUpdateNode(
         node.children.add(task.id)
       }
 
+      taskNode.name = task.name
       taskNode.mode = task.mode
-      taskNode.duration = task.result?.duration
+      taskNode.duration = duration
       taskNode.state = task.result?.state
-      if (isSuiteNode(taskNode)) {
-        taskNode.typecheck = !!task.meta && 'typecheck' in task.meta
-      }
     }
     else {
       if (isAtomTest(task)) {
@@ -157,9 +159,9 @@ export function createOrUpdateNode(
           expandable: false,
           expanded: false,
           indent: node.indent + 1,
-          duration: task.result?.duration,
+          duration,
           state: task.result?.state,
-        } as TestTreeNode | CustomTestTreeNode
+        } as TestTreeNode
       }
       else {
         taskNode = {
@@ -168,7 +170,6 @@ export function createOrUpdateNode(
           parentId,
           name: task.name,
           mode: task.mode,
-          typecheck: !!task.meta && 'typecheck' in task.meta,
           type: 'suite',
           expandable: true,
           // When the current run finish, we will expand all nodes when required, here we expand only the opened nodes
@@ -176,7 +177,7 @@ export function createOrUpdateNode(
           children: new Set(),
           tasks: [],
           indent: node.indent + 1,
-          duration: task.result?.duration,
+          duration,
           state: task.result?.state,
         } as SuiteTreeNode
       }

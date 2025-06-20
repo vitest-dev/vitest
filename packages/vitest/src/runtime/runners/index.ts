@@ -1,12 +1,12 @@
 import type { VitestRunner, VitestRunnerConstructor } from '@vitest/runner'
-import { resolve } from 'pathe'
-import type { VitestExecutor } from '../execute'
-import { distDir } from '../../paths'
-import { getWorkerState } from '../utils'
-import { rpc } from '../rpc'
-import { takeCoverageInsideWorker } from '../../integrations/coverage'
-import { loadDiffConfig, loadSnapshotSerializers } from '../setup-common'
 import type { SerializedConfig } from '../config'
+import type { VitestExecutor } from '../execute'
+import { resolve } from 'node:path'
+import { takeCoverageInsideWorker } from '../../integrations/coverage'
+import { distDir } from '../../paths'
+import { rpc } from '../rpc'
+import { loadDiffConfig, loadSnapshotSerializers } from '../setup-common'
+import { getWorkerState } from '../utils'
 
 const runnersFile = resolve(distDir, 'runners.js')
 
@@ -62,10 +62,25 @@ export async function resolveTestRunner(
 
   // patch some methods, so custom runners don't need to call RPC
   const originalOnTaskUpdate = testRunner.onTaskUpdate
-  testRunner.onTaskUpdate = async (task) => {
-    const p = rpc().onTaskUpdate(task)
-    await originalOnTaskUpdate?.call(testRunner, task)
+  testRunner.onTaskUpdate = async (task, events) => {
+    const p = rpc().onTaskUpdate(task, events)
+    await originalOnTaskUpdate?.call(testRunner, task, events)
     return p
+  }
+
+  // patch some methods, so custom runners don't need to call RPC
+  const originalOnTestAnnotate = testRunner.onTestAnnotate
+  testRunner.onTestAnnotate = async (test, annotation) => {
+    const p = rpc().onTaskAnnotate(test.id, annotation)
+    const overridenResult = await originalOnTestAnnotate?.call(testRunner, test, annotation)
+    const vitestResult = await p
+    return overridenResult || vitestResult
+  }
+
+  const originalOnCollectStart = testRunner.onCollectStart
+  testRunner.onCollectStart = async (file) => {
+    await rpc().onQueued(file)
+    await originalOnCollectStart?.call(testRunner, file)
   }
 
   const originalOnCollected = testRunner.onCollected
@@ -90,6 +105,7 @@ export async function resolveTestRunner(
     if (coverage) {
       rpc().onAfterSuiteRun({
         coverage,
+        testFiles: files.map(file => file.name).sort(),
         transformMode: state.environment.transformMode,
         projectName: state.ctx.projectName,
       })
@@ -106,7 +122,7 @@ export async function resolveTestRunner(
 
       if (currentFailures >= config.bail) {
         rpc().onCancel('test-failure')
-        testRunner.onCancel?.('test-failure')
+        testRunner.cancel?.('test-failure')
       }
     }
     await originalOnAfterRunTask?.call(testRunner, test)

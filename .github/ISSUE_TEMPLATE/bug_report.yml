@@ -1,6 +1,7 @@
 name: 🐞 Bug report
 description: Report an issue with Vitest
 labels: [pending triage]
+type: Bug
 body:
   - type: markdown
     attributes:
@@ -26,7 +27,7 @@ body:
     id: system-info
     attributes:
       label: System Info
-      description: Output of `npx envinfo --system --npmPackages '{vitest,@vitest/*,vite,@vitejs/*}' --binaries --browsers`
+      description: Output of `npx envinfo --system --npmPackages '{vitest*,@vitest/*,vite,@vitejs/*,playwright,webdriverio}' --binaries --browsers`
       render: shell
       placeholder: System, Binaries, Browsers
     validations:

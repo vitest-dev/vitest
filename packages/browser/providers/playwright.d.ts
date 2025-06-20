@@ -5,18 +5,30 @@ import type {
   FrameLocator,
   LaunchOptions,
   Page,
-  CDPSession
+  CDPSession,
+  ConnectOptions
 } from 'playwright'
 import { Protocol } from 'playwright-core/types/protocol'
 import '../matchers.js'
+import type {} from "vitest/node"
 
 declare module 'vitest/node' {
-  interface BrowserProviderOptions {
+  export interface BrowserProviderOptions {
     launch?: LaunchOptions
+    connect?: {
+      wsEndpoint: string
+      options?: ConnectOptions
+    }
     context?: Omit<
       BrowserContextOptions,
       'ignoreHTTPSErrors' | 'serviceWorkers'
-    >
+    > & {
+      /**
+       * The maximum time in milliseconds to wait for `userEvent` action to complete.
+       * @default 0 (no timeout)
+       */
+      actionTimeout?: number
+    }
   }
 
   export interface BrowserCommandContext {
@@ -27,21 +39,24 @@ declare module 'vitest/node' {
   }
 }
 
-type PWHoverOptions = Parameters<Page['hover']>[1]
-type PWClickOptions = Parameters<Page['click']>[1]
-type PWDoubleClickOptions = Parameters<Page['dblclick']>[1]
-type PWFillOptions = Parameters<Page['fill']>[2]
-type PWScreenshotOptions = Parameters<Page['screenshot']>[0]
-type PWSelectOptions = Parameters<Page['selectOption']>[2]
-type PWDragAndDropOptions = Parameters<Page['dragAndDrop']>[2]
+type PWHoverOptions = NonNullable<Parameters<Page['hover']>[1]>
+type PWClickOptions = NonNullable<Parameters<Page['click']>[1]>
+type PWDoubleClickOptions = NonNullable<Parameters<Page['dblclick']>[1]>
+type PWFillOptions = NonNullable<Parameters<Page['fill']>[2]>
+type PWScreenshotOptions = NonNullable<Parameters<Page['screenshot']>[0]>
+type PWSelectOptions = NonNullable<Parameters<Page['selectOption']>[2]>
+type PWDragAndDropOptions = NonNullable<Parameters<Page['dragAndDrop']>[2]>
+type PWSetInputFiles = NonNullable<Parameters<Page['setInputFiles']>[2]>
 
 declare module '@vitest/browser/context' {
   export interface UserEventHoverOptions extends PWHoverOptions {}
   export interface UserEventClickOptions extends PWClickOptions {}
   export interface UserEventDoubleClickOptions extends PWDoubleClickOptions {}
+  export interface UserEventTripleClickOptions extends PWClickOptions {}
   export interface UserEventFillOptions extends PWFillOptions {}
   export interface UserEventSelectOptions extends PWSelectOptions {}
-  export interface UserEventDragOptions extends UserEventDragAndDropOptions {}
+  export interface UserEventDragAndDropOptions extends PWDragAndDropOptions {}
+  export interface UserEventUploadOptions extends PWSetInputFiles {}
 
   export interface ScreenshotOptions extends PWScreenshotOptions {}
 

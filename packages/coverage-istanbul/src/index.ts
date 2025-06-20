@@ -1,33 +1,50 @@
-import { COVERAGE_STORE_KEY } from './constants'
+import type { CoverageMapData } from 'istanbul-lib-coverage'
+import type { CoverageProviderModule } from 'vitest/node'
 import type { IstanbulCoverageProvider } from './provider'
+import { COVERAGE_STORE_KEY } from './constants'
 
-export async function getProvider(): Promise<IstanbulCoverageProvider> {
-  // to not bundle the provider
-  const providerPath = './provider.js'
-  const { IstanbulCoverageProvider } = (await import(
-    /* @vite-ignore */
-    providerPath
-  )) as typeof import('./provider')
-  return new IstanbulCoverageProvider()
-}
-
-export function takeCoverage(): any {
-  // @ts-expect-error -- untyped global
-  const coverage = globalThis[COVERAGE_STORE_KEY]
+const mod: CoverageProviderModule = {
+  takeCoverage() {
+    // @ts-expect-error -- untyped global
+    return globalThis[COVERAGE_STORE_KEY]
+  },
 
   // Reset coverage map to prevent duplicate results if this is called twice in row
-  // @ts-expect-error -- untyped global
-  globalThis[COVERAGE_STORE_KEY] = {}
+  startCoverage() {
+    // @ts-expect-error -- untyped global
+    const coverageMap = globalThis[COVERAGE_STORE_KEY] as CoverageMapData
 
-  return coverage
+    // When isolated, there are no previous results
+    if (!coverageMap) {
+      return
+    }
+
+    for (const filename in coverageMap) {
+      const branches = coverageMap[filename].b
+
+      for (const key in branches) {
+        branches[key] = branches[key].map(() => 0)
+      }
+
+      for (const metric of ['f', 's'] as const) {
+        const entry = coverageMap[filename][metric]
+
+        for (const key in entry) {
+          entry[key] = 0
+        }
+      }
+    }
+  },
+
+  async getProvider(): Promise<IstanbulCoverageProvider> {
+    // to not bundle the provider
+    const providerPath = './provider.js'
+    const { IstanbulCoverageProvider } = (await import(
+      /* @vite-ignore */
+      providerPath
+    )) as typeof import('./provider')
+
+    return new IstanbulCoverageProvider()
+  },
 }
-
-const _default: {
-  getProvider: () => Promise<IstanbulCoverageProvider>
-  takeCoverage: () => any
-} = {
-  getProvider,
-  takeCoverage,
-}
-
-export default _default
+export default mod

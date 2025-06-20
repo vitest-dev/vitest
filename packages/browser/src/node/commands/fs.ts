@@ -1,13 +1,14 @@
-import fs, { promises as fsp } from 'node:fs'
-import { dirname, resolve } from 'node:path'
-import { isFileServingAllowed } from 'vitest/node'
-import type { BrowserCommand, WorkspaceProject } from 'vitest/node'
+import type { BrowserCommand, TestProject } from 'vitest/node'
 import type { BrowserCommands } from '../../../context'
+import fs, { promises as fsp } from 'node:fs'
+import { basename, dirname, resolve } from 'node:path'
+import mime from 'mime/lite'
+import { isFileServingAllowed } from 'vitest/node'
 
-function assertFileAccess(path: string, project: WorkspaceProject) {
+function assertFileAccess(path: string, project: TestProject) {
   if (
-    !isFileServingAllowed(path, project.server)
-    && !isFileServingAllowed(path, project.ctx.server)
+    !isFileServingAllowed(path, project.vite)
+    && !isFileServingAllowed(path, project.vitest.server)
   ) {
     throw new Error(
       `Access denied to "${path}". See Vite config documentation for "server.fs": https://vitejs.dev/config/server-options.html#server-fs-strict.`,
@@ -17,8 +18,8 @@ function assertFileAccess(path: string, project: WorkspaceProject) {
 
 export const readFile: BrowserCommand<
   Parameters<BrowserCommands['readFile']>
-> = async ({ project, testPath = process.cwd() }, path, options = {}) => {
-  const filepath = resolve(dirname(testPath), path)
+> = async ({ project }, path, options = {}) => {
+  const filepath = resolve(project.config.root, path)
   assertFileAccess(filepath, project)
   // never return a Buffer
   if (typeof options === 'object' && !options.encoding) {
@@ -29,8 +30,8 @@ export const readFile: BrowserCommand<
 
 export const writeFile: BrowserCommand<
   Parameters<BrowserCommands['writeFile']>
-> = async ({ project, testPath = process.cwd() }, path, data, options) => {
-  const filepath = resolve(dirname(testPath), path)
+> = async ({ project }, path, data, options) => {
+  const filepath = resolve(project.config.root, path)
   assertFileAccess(filepath, project)
   const dir = dirname(filepath)
   if (!fs.existsSync(dir)) {
@@ -41,8 +42,19 @@ export const writeFile: BrowserCommand<
 
 export const removeFile: BrowserCommand<
   Parameters<BrowserCommands['removeFile']>
-> = async ({ project, testPath = process.cwd() }, path) => {
-  const filepath = resolve(dirname(testPath), path)
+> = async ({ project }, path) => {
+  const filepath = resolve(project.config.root, path)
   assertFileAccess(filepath, project)
   await fsp.rm(filepath)
+}
+
+export const _fileInfo: BrowserCommand<[path: string, encoding: BufferEncoding]> = async ({ project }, path, encoding) => {
+  const filepath = resolve(project.config.root, path)
+  assertFileAccess(filepath, project)
+  const content = await fsp.readFile(filepath, encoding || 'base64')
+  return {
+    content,
+    basename: basename(filepath),
+    mime: mime.getType(filepath),
+  }
 }

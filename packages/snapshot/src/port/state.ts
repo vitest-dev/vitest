@@ -6,8 +6,7 @@
  */
 
 import type { OptionsReceived as PrettyFormatOptions } from '@vitest/pretty-format'
-import type { ParsedStack } from '../../../utils/src/index'
-import { parseErrorStacktrace } from '../../../utils/src/source-map'
+import type { ParsedStack } from '@vitest/utils'
 import type {
   SnapshotData,
   SnapshotEnvironment,
@@ -17,16 +16,18 @@ import type {
   SnapshotUpdateState,
 } from '../types'
 import type { InlineSnapshot } from './inlineSnapshot'
-import { saveInlineSnapshots } from './inlineSnapshot'
 import type { RawSnapshot, RawSnapshotInfo } from './rawSnapshot'
+import { parseErrorStacktrace } from '../../../utils/src/source-map'
+import { saveInlineSnapshots } from './inlineSnapshot'
 import { saveRawSnapshots } from './rawSnapshot'
 
 import {
   addExtraLineBreaks,
+  CounterMap,
+  DefaultMap,
   getSnapshotData,
   keyToTestName,
   normalizeNewlines,
-  prepareExpected,
   removeExtraLineBreaks,
   saveSnapshotFile,
   serialize,
@@ -46,24 +47,42 @@ interface SaveStatus {
   saved: boolean
 }
 
+type ParsedStackPosition = Pick<ParsedStack, 'file' | 'line' | 'column'>
+
+function isSameStackPosition(x: ParsedStackPosition, y: ParsedStackPosition) {
+  return x.file === y.file && x.column === y.column && x.line === y.line
+}
+
 export default class SnapshotState {
-  private _counters: Map<string, number>
+  private _counters = new CounterMap<string>()
   private _dirty: boolean
   private _updateSnapshot: SnapshotUpdateState
   private _snapshotData: SnapshotData
   private _initialData: SnapshotData
   private _inlineSnapshots: Array<InlineSnapshot>
+  private _inlineSnapshotStacks: Array<ParsedStack & { testId: string; snapshot: string }>
+  private _testIdToKeys = new DefaultMap<string, string[]>(() => [])
   private _rawSnapshots: Array<RawSnapshot>
   private _uncheckedKeys: Set<string>
   private _snapshotFormat: PrettyFormatOptions
   private _environment: SnapshotEnvironment
   private _fileExists: boolean
-
-  added: number
   expand: boolean
-  matched: number
-  unmatched: number
-  updated: number
+
+  // getter/setter for jest-image-snapshot compat
+  // https://github.com/vitest-dev/vitest/issues/7322
+  private _added = new CounterMap<string>()
+  private _matched = new CounterMap<string>()
+  private _unmatched = new CounterMap<string>()
+  private _updated = new CounterMap<string>()
+  get added(): CounterMap<string> { return this._added }
+  set added(value: number) { this._added._total = value }
+  get matched(): CounterMap<string> { return this._matched }
+  set matched(value: number) { this._matched._total = value }
+  get unmatched(): CounterMap<string> { return this._unmatched }
+  set unmatched(value: number) { this._unmatched._total = value }
+  get updated(): CounterMap<string> { return this._updated }
+  set updated(value: number) { this._updated._total = value }
 
   private constructor(
     public testFilePath: string,
@@ -73,19 +92,15 @@ export default class SnapshotState {
   ) {
     const { data, dirty } = getSnapshotData(snapshotContent, options)
     this._fileExists = snapshotContent != null // TODO: update on watch?
-    this._initialData = data
-    this._snapshotData = data
+    this._initialData = { ...data }
+    this._snapshotData = { ...data }
     this._dirty = dirty
     this._inlineSnapshots = []
+    this._inlineSnapshotStacks = []
     this._rawSnapshots = []
     this._uncheckedKeys = new Set(Object.keys(this._snapshotData))
-    this._counters = new Map()
     this.expand = options.expand || false
-    this.added = 0
-    this.matched = 0
-    this.unmatched = 0
     this._updateSnapshot = options.updateSnapshot
-    this.updated = 0
     this._snapshotFormat = {
       printBasicPrototype: false,
       escapeString: false,
@@ -110,10 +125,38 @@ export default class SnapshotState {
 
   markSnapshotsAsCheckedForTest(testName: string): void {
     this._uncheckedKeys.forEach((uncheckedKey) => {
-      if (keyToTestName(uncheckedKey) === testName) {
+      // skip snapshots with following keys
+      //   testName n
+      //   testName > xxx n (this is for toMatchSnapshot("xxx") API)
+      if (/ \d+$| > /.test(uncheckedKey.slice(testName.length))) {
         this._uncheckedKeys.delete(uncheckedKey)
       }
     })
+  }
+
+  clearTest(testId: string): void {
+    // clear inline
+    this._inlineSnapshots = this._inlineSnapshots.filter(s => s.testId !== testId)
+    this._inlineSnapshotStacks = this._inlineSnapshotStacks.filter(s => s.testId !== testId)
+
+    // clear file
+    for (const key of this._testIdToKeys.get(testId)) {
+      const name = keyToTestName(key)
+      const count = this._counters.get(name)
+      if (count > 0) {
+        if (key in this._snapshotData || key in this._initialData) {
+          this._snapshotData[key] = this._initialData[key]
+        }
+        this._counters.set(name, count - 1)
+      }
+    }
+    this._testIdToKeys.delete(testId)
+
+    // clear stats
+    this.added.delete(testId)
+    this.updated.delete(testId)
+    this.matched.delete(testId)
+    this.unmatched.delete(testId)
   }
 
   protected _inferInlineSnapshotStack(stacks: ParsedStack[]): ParsedStack | null {
@@ -136,31 +179,14 @@ export default class SnapshotState {
   private _addSnapshot(
     key: string,
     receivedSerialized: string,
-    options: { isInline: boolean; rawSnapshot?: RawSnapshotInfo; error?: Error },
+    options: { rawSnapshot?: RawSnapshotInfo; stack?: ParsedStack; testId: string },
   ): void {
     this._dirty = true
-    if (options.isInline) {
-      const error = options.error || new Error('snapshot')
-      const stacks = parseErrorStacktrace(
-        error,
-        { ignoreStackEntries: [] },
-      )
-      const _stack = this._inferInlineSnapshotStack(stacks)
-      if (!_stack) {
-        throw new Error(
-          `@vitest/snapshot: Couldn't infer stack frame for inline snapshot.\n${JSON.stringify(
-            stacks,
-          )}`,
-        )
-      }
-      const stack = this.environment.processStackTrace?.(_stack) || _stack
-      // removing 1 column, because source map points to the wrong
-      // location for js files, but `column-1` points to the same in both js/ts
-      // https://github.com/vitejs/vite/issues/8657
-      stack.column--
+    if (options.stack) {
       this._inlineSnapshots.push({
         snapshot: receivedSerialized,
-        ...stack,
+        testId: options.testId,
+        ...options.stack,
       })
     }
     else if (options.rawSnapshot) {
@@ -172,17 +198,6 @@ export default class SnapshotState {
     else {
       this._snapshotData[key] = receivedSerialized
     }
-  }
-
-  clear(): void {
-    this._snapshotData = this._initialData
-    // this._inlineSnapshots = []
-    this._counters = new Map()
-    this.added = 0
-    this.matched = 0
-    this.unmatched = 0
-    this.updated = 0
-    this._dirty = false
   }
 
   async save(): Promise<SaveStatus> {
@@ -244,6 +259,7 @@ export default class SnapshotState {
   }
 
   match({
+    testId,
     testName,
     received,
     key,
@@ -252,12 +268,14 @@ export default class SnapshotState {
     error,
     rawSnapshot,
   }: SnapshotMatchOptions): SnapshotReturnOptions {
-    this._counters.set(testName, (this._counters.get(testName) || 0) + 1)
-    const count = Number(this._counters.get(testName))
+    // this also increments counter for inline snapshots. maybe we shouldn't?
+    this._counters.increment(testName)
+    const count = this._counters.get(testName)
 
     if (!key) {
       key = testNameToKey(testName, count)
     }
+    this._testIdToKeys.get(testId).push(key)
 
     // Do not mark the snapshot as "checked" if the snapshot is inline and
     // there's an external snapshot. This way the external snapshot can be
@@ -291,13 +309,13 @@ export default class SnapshotState {
       : rawSnapshot
         ? rawSnapshot.content
         : this._snapshotData[key]
-    const expectedTrimmed = prepareExpected(expected)
-    const pass = expectedTrimmed === prepareExpected(receivedSerialized)
+    const expectedTrimmed = rawSnapshot ? expected : expected?.trim()
+    const pass = expectedTrimmed === (rawSnapshot ? receivedSerialized : receivedSerialized.trim())
     const hasSnapshot = expected !== undefined
     const snapshotIsPersisted
       = isInline
-      || this._fileExists
-      || (rawSnapshot && rawSnapshot.content != null)
+        || this._fileExists
+        || (rawSnapshot && rawSnapshot.content != null)
 
     if (pass && !isInline && !rawSnapshot) {
       // Executing a snapshot file as JavaScript and writing the strings back
@@ -307,6 +325,49 @@ export default class SnapshotState {
       // Note that this is only relevant when a snapshot is added and the dirty
       // flag is set.
       this._snapshotData[key] = receivedSerialized
+    }
+
+    // find call site of toMatchInlineSnapshot
+    let stack: ParsedStack | undefined
+    if (isInline) {
+      const stacks = parseErrorStacktrace(
+        error || new Error('snapshot'),
+        { ignoreStackEntries: [] },
+      )
+      const _stack = this._inferInlineSnapshotStack(stacks)
+      if (!_stack) {
+        throw new Error(
+          `@vitest/snapshot: Couldn't infer stack frame for inline snapshot.\n${JSON.stringify(
+            stacks,
+          )}`,
+        )
+      }
+      stack = this.environment.processStackTrace?.(_stack) || _stack
+      // removing 1 column, because source map points to the wrong
+      // location for js files, but `column-1` points to the same in both js/ts
+      // https://github.com/vitejs/vite/issues/8657
+      stack.column--
+
+      // reject multiple inline snapshots at the same location if snapshot is different
+      const snapshotsWithSameStack = this._inlineSnapshotStacks.filter(s => isSameStackPosition(s, stack!))
+      if (snapshotsWithSameStack.length > 0) {
+        // ensure only one snapshot will be written at the same location
+        this._inlineSnapshots = this._inlineSnapshots.filter(s => !isSameStackPosition(s, stack!))
+
+        const differentSnapshot = snapshotsWithSameStack.find(s => s.snapshot !== receivedSerialized)
+        if (differentSnapshot) {
+          throw Object.assign(
+            new Error(
+              'toMatchInlineSnapshot with different snapshots cannot be called at the same location',
+            ),
+            {
+              actual: receivedSerialized,
+              expected: differentSnapshot.snapshot,
+            },
+          )
+        }
+      }
+      this._inlineSnapshotStacks.push({ ...stack, testId, snapshot: receivedSerialized })
     }
 
     // These are the conditions on when to write snapshots:
@@ -319,34 +380,34 @@ export default class SnapshotState {
     if (
       (hasSnapshot && this._updateSnapshot === 'all')
       || ((!hasSnapshot || !snapshotIsPersisted)
-      && (this._updateSnapshot === 'new' || this._updateSnapshot === 'all'))
+        && (this._updateSnapshot === 'new' || this._updateSnapshot === 'all'))
     ) {
       if (this._updateSnapshot === 'all') {
         if (!pass) {
           if (hasSnapshot) {
-            this.updated++
+            this.updated.increment(testId)
           }
           else {
-            this.added++
+            this.added.increment(testId)
           }
 
           this._addSnapshot(key, receivedSerialized, {
-            error,
-            isInline,
+            stack,
+            testId,
             rawSnapshot,
           })
         }
         else {
-          this.matched++
+          this.matched.increment(testId)
         }
       }
       else {
         this._addSnapshot(key, receivedSerialized, {
-          error,
-          isInline,
+          stack,
+          testId,
           rawSnapshot,
         })
-        this.added++
+        this.added.increment(testId)
       }
 
       return {
@@ -359,20 +420,20 @@ export default class SnapshotState {
     }
     else {
       if (!pass) {
-        this.unmatched++
+        this.unmatched.increment(testId)
         return {
-          actual: removeExtraLineBreaks(receivedSerialized),
+          actual: rawSnapshot ? receivedSerialized : removeExtraLineBreaks(receivedSerialized),
           count,
           expected:
             expectedTrimmed !== undefined
-              ? removeExtraLineBreaks(expectedTrimmed)
+              ? rawSnapshot ? expectedTrimmed : removeExtraLineBreaks(expectedTrimmed)
               : undefined,
           key,
           pass: false,
         }
       }
       else {
-        this.matched++
+        this.matched.increment(testId)
         return {
           actual: '',
           count,
@@ -403,10 +464,10 @@ export default class SnapshotState {
 
     const status = await this.save()
     snapshot.fileDeleted = status.deleted
-    snapshot.added = this.added
-    snapshot.matched = this.matched
-    snapshot.unmatched = this.unmatched
-    snapshot.updated = this.updated
+    snapshot.added = this.added.total()
+    snapshot.matched = this.matched.total()
+    snapshot.unmatched = this.unmatched.total()
+    snapshot.updated = this.updated.total()
     snapshot.unchecked = !status.deleted ? uncheckedCount : 0
     snapshot.uncheckedKeys = Array.from(uncheckedKeys)
 

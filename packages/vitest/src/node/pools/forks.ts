@@ -1,34 +1,50 @@
-import v8 from 'node:v8'
-import * as nodeos from 'node:os'
-import EventEmitter from 'node:events'
-import { Tinypool } from 'tinypool'
+import type { FileSpecification } from '@vitest/runner'
 import type { TinypoolChannel, Options as TinypoolOptions } from 'tinypool'
-import { createBirpc } from 'birpc'
-import type { PoolProcessOptions, ProcessPool, RunWithFiles } from '../pool'
-import type { WorkspaceProject } from '../workspace'
-import { envsOrder, groupFilesByEnv } from '../../utils/test-helpers'
-import { wrapSerializableConfig } from '../../utils/config-helpers'
-import { groupBy, resolve } from '../../utils'
-import type { SerializedConfig } from '../types/config'
 import type { RunnerRPC, RuntimeRPC } from '../../types/rpc'
-import type { Vitest } from '../core'
 import type { ContextRPC, ContextTestEnvironment } from '../../types/worker'
+import type { Vitest } from '../core'
+import type { PoolProcessOptions, ProcessPool, RunWithFiles } from '../pool'
+import type { TestProject } from '../project'
+import type { SerializedConfig } from '../types/config'
+import EventEmitter from 'node:events'
+import * as nodeos from 'node:os'
+import { resolve } from 'node:path'
+import v8 from 'node:v8'
+import { createBirpc } from 'birpc'
+import { Tinypool } from 'tinypool'
+import { groupBy } from '../../utils/base'
+import { wrapSerializableConfig } from '../../utils/config-helpers'
+import { envsOrder, groupFilesByEnv } from '../../utils/test-helpers'
 import { createMethodsRPC } from './rpc'
 
-function createChildProcessChannel(project: WorkspaceProject) {
+function createChildProcessChannel(project: TestProject, collect = false) {
   const emitter = new EventEmitter()
-  const cleanup = () => emitter.removeAllListeners()
 
   const events = { message: 'message', response: 'response' }
   const channel: TinypoolChannel = {
     onMessage: callback => emitter.on(events.message, callback),
     postMessage: message => emitter.emit(events.response, message),
+    onClose: () => emitter.removeAllListeners(),
   }
 
-  const rpc = createBirpc<RunnerRPC, RuntimeRPC>(createMethodsRPC(project, { cacheFs: true }), {
+  const rpc = createBirpc<RunnerRPC, RuntimeRPC>(createMethodsRPC(project, { cacheFs: true, collect }), {
     eventNames: ['onCancel'],
     serialize: v8.serialize,
-    deserialize: v => v8.deserialize(Buffer.from(v)),
+    deserialize: (v) => {
+      try {
+        return v8.deserialize(Buffer.from(v))
+      }
+      catch (error) {
+        let stringified = ''
+
+        try {
+          stringified = `\nReceived value: ${JSON.stringify(v)}`
+        }
+        catch {}
+
+        throw new Error(`[vitest-pool]: Unexpected call to process.send(). Make sure your test cases are not interfering with process's channel.${stringified}`, { cause: error })
+      }
+    },
     post(v) {
       emitter.emit(events.message, v)
     },
@@ -40,13 +56,13 @@ function createChildProcessChannel(project: WorkspaceProject) {
     },
   })
 
-  project.ctx.onCancel(reason => rpc.onCancel(reason))
+  project.vitest.onCancel(reason => rpc.onCancel(reason))
 
-  return { channel, cleanup }
+  return channel
 }
 
 export function createForksPool(
-  ctx: Vitest,
+  vitest: Vitest,
   { execArgv, env }: PoolProcessOptions,
 ): ProcessPool {
   const numCpus
@@ -54,22 +70,23 @@ export function createForksPool(
       ? nodeos.availableParallelism()
       : nodeos.cpus().length
 
-  const threadsCount = ctx.config.watch
+  const threadsCount = vitest.config.watch
     ? Math.max(Math.floor(numCpus / 2), 1)
     : Math.max(numCpus - 1, 1)
 
-  const poolOptions = ctx.config.poolOptions?.forks ?? {}
+  const poolOptions = vitest.config.poolOptions?.forks ?? {}
 
   const maxThreads
-    = poolOptions.maxForks ?? ctx.config.maxWorkers ?? threadsCount
+    = poolOptions.maxForks ?? vitest.config.maxWorkers ?? threadsCount
   const minThreads
-    = poolOptions.minForks ?? ctx.config.minWorkers ?? threadsCount
+    = poolOptions.minForks ?? vitest.config.minWorkers ?? Math.min(threadsCount, maxThreads)
 
-  const worker = resolve(ctx.distPath, 'workers/forks.js')
+  const worker = resolve(vitest.distPath, 'workers/forks.js')
 
   const options: TinypoolOptions = {
     runtime: 'child_process',
-    filename: resolve(ctx.distPath, 'worker.js'),
+    filename: resolve(vitest.distPath, 'worker.js'),
+    teardown: 'teardown',
 
     maxThreads,
     minThreads,
@@ -77,7 +94,7 @@ export function createForksPool(
     env,
     execArgv: [...(poolOptions.execArgv ?? []), ...execArgv],
 
-    terminateTimeout: ctx.config.teardownTimeout,
+    terminateTimeout: vitest.config.teardownTimeout,
     concurrentTasksPerWorker: 1,
   }
 
@@ -87,7 +104,7 @@ export function createForksPool(
     options.isolateWorkers = true
   }
 
-  if (poolOptions.singleFork || !ctx.config.fileParallelism) {
+  if (poolOptions.singleFork || !vitest.config.fileParallelism) {
     options.maxThreads = 1
     options.minThreads = 1
   }
@@ -98,14 +115,16 @@ export function createForksPool(
     let id = 0
 
     async function runFiles(
-      project: WorkspaceProject,
+      project: TestProject,
       config: SerializedConfig,
-      files: string[],
+      files: FileSpecification[],
       environment: ContextTestEnvironment,
       invalidates: string[] = [],
     ) {
-      ctx.state.clearFiles(project, files)
-      const { channel, cleanup } = createChildProcessChannel(project)
+      const paths = files.map(f => f.filepath)
+      vitest.state.clearFiles(project, paths)
+
+      const channel = createChildProcessChannel(project, name === 'collect')
       const workerId = ++id
       const data: ContextRPC = {
         pool: 'forks',
@@ -115,7 +134,7 @@ export function createForksPool(
         invalidates,
         environment,
         workerId,
-        projectName: project.getName(),
+        projectName: project.name,
         providedContext: project.getProvidedContext(),
       }
       try {
@@ -127,33 +146,30 @@ export function createForksPool(
           error instanceof Error
           && /Failed to terminate worker/.test(error.message)
         ) {
-          ctx.state.addProcessTimeoutCause(
-            `Failed to terminate worker while running ${files.join(', ')}.`,
+          vitest.state.addProcessTimeoutCause(
+            `Failed to terminate worker while running ${paths.join(', ')}.`,
           )
         }
         // Intentionally cancelled
         else if (
-          ctx.isCancelling
+          vitest.isCancelling
           && error instanceof Error
           && /The task has been cancelled/.test(error.message)
         ) {
-          ctx.state.cancelFiles(files, project)
+          vitest.state.cancelFiles(paths, project)
         }
         else {
           throw error
         }
       }
-      finally {
-        cleanup()
-      }
     }
 
     return async (specs, invalidates) => {
       // Cancel pending tasks from pool when possible
-      ctx.onCancel(() => pool.cancelPendingTasks())
+      vitest.onCancel(() => pool.cancelPendingTasks())
 
-      const configs = new Map<WorkspaceProject, SerializedConfig>()
-      const getConfig = (project: WorkspaceProject): SerializedConfig => {
+      const configs = new WeakMap<TestProject, SerializedConfig>()
+      const getConfig = (project: TestProject): SerializedConfig => {
         if (configs.has(project)) {
           return configs.get(project)!
         }
@@ -165,18 +181,11 @@ export function createForksPool(
         return config
       }
 
-      const workspaceMap = new Map<string, WorkspaceProject[]>()
-      for (const [project, file] of specs) {
-        const workspaceFiles = workspaceMap.get(file) ?? []
-        workspaceFiles.push(project)
-        workspaceMap.set(file, workspaceFiles)
-      }
-
       const singleFork = specs.filter(
-        ([project]) => project.config.poolOptions?.forks?.singleFork,
+        spec => spec.project.config.poolOptions?.forks?.singleFork,
       )
       const multipleForks = specs.filter(
-        ([project]) => !project.config.poolOptions?.forks?.singleFork,
+        spec => !spec.project.config.poolOptions?.forks?.singleFork,
       )
 
       if (multipleForks.length) {
@@ -205,7 +214,7 @@ export function createForksPool(
           const grouped = groupBy(
             files,
             ({ project, environment }) =>
-              project.getName()
+              project.name
               + environment.name
               + JSON.stringify(environment.options),
           )
@@ -262,7 +271,7 @@ export function createForksPool(
           const filesByOptions = groupBy(
             files,
             ({ project, environment }) =>
-              project.getName() + JSON.stringify(environment.options),
+              project.name + JSON.stringify(environment.options),
           )
 
           for (const files of Object.values(filesByOptions)) {

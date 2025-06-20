@@ -14,11 +14,17 @@ Vitest allows you to write tests for your types, using `expectTypeOf` or `assert
 
 Under the hood Vitest calls `tsc` or `vue-tsc`, depending on your config, and parses results. Vitest will also print out type errors in your source code, if it finds any. You can disable it with [`typecheck.ignoreSourceErrors`](/config/#typecheck-ignoresourceerrors) config option.
 
-Keep in mind that Vitest doesn't run or compile these files, they are only statically analyzed by the compiler, and because of that you cannot use any dynamic statements. Meaning, you cannot use dynamic test names, and `test.each`, `test.runIf`, `test.skipIf`, `test.concurrent` APIs. But you can use other APIs, like `test`, `describe`, `.only`, `.skip` and `.todo`.
+Keep in mind that Vitest doesn't run these files, they are only statically analyzed by the compiler. Meaning, that if you use a dynamic name or `test.each` or `test.for`, the test name will not be evaluated - it will be displayed as is.
+
+::: warning
+Before Vitest 2.1, your `typecheck.include` overrode the `include` pattern, so your runtime tests did not actually run; they were only type-checked.
+
+Since Vitest 2.1, if your `include` and `typecheck.include` overlap, Vitest will report type tests and runtime tests as separate entries.
+:::
 
 Using CLI flags, like `--allowOnly` and `-t` are also supported for type checking.
 
-```ts
+```ts [mount.test-d.ts]
 import { assertType, expectTypeOf } from 'vitest'
 import { mount } from './mount.js'
 
@@ -91,7 +97,7 @@ This is because the TypeScript compiler needs to infer the typearg for the `.toE
 const one = valueFromFunctionOne({ some: { complex: inputs } })
 const two = valueFromFunctionTwo({ some: { other: inputs } })
 
-expectTypeOf(one).toEqualTypeof<typeof two>()
+expectTypeOf(one).toEqualTypeOf<typeof two>()
 ```
 
 If you find it hard working with `expectTypeOf` API and figuring out errors, you can always use more simple `assertType` API:
@@ -111,7 +117,7 @@ This will pass, because it expects an error, but the word “answer” has a typ
 
 ```ts
 // @ts-expect-error answer is not a string
-assertType<string>(answr) //
+assertType<string>(answr)
 ```
 :::
 
@@ -119,7 +125,7 @@ assertType<string>(answr) //
 
 To enable typechecking, just add [`--typecheck`](/config/#typecheck) flag to your Vitest command in `package.json`:
 
-```json
+```json [package.json]
 {
   "scripts": {
     "test": "vitest --typecheck"

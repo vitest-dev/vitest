@@ -10,7 +10,7 @@ if (!Object.prototype.hasOwnProperty.call(globalThis, MATCHERS_OBJECT)) {
   const globalState = new WeakMap<ExpectStatic, MatcherState>()
   const matchers = Object.create(null)
   const customEqualityTesters: Array<Tester> = []
-  const assymetricMatchers = Object.create(null)
+  const asymmetricMatchers = Object.create(null)
   Object.defineProperty(globalThis, MATCHERS_OBJECT, {
     get: () => globalState,
   })
@@ -23,7 +23,7 @@ if (!Object.prototype.hasOwnProperty.call(globalThis, MATCHERS_OBJECT)) {
     }),
   })
   Object.defineProperty(globalThis, ASYMMETRIC_MATCHERS_OBJECT, {
-    get: () => assymetricMatchers,
+    get: () => asymmetricMatchers,
   })
 }
 
@@ -39,6 +39,10 @@ export function setState<State extends MatcherState = MatcherState>(
 ): void {
   const map = (globalThis as any)[MATCHERS_OBJECT]
   const current = map.get(expect) || {}
-  Object.assign(current, state)
-  map.set(expect, current)
+  // so it keeps getters from `testPath`
+  const results = Object.defineProperties(current, {
+    ...Object.getOwnPropertyDescriptors(current),
+    ...Object.getOwnPropertyDescriptors(state),
+  })
+  map.set(expect, results)
 }
