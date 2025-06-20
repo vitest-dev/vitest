@@ -45,20 +45,6 @@ import type {
 } from '../node/types/config'
 
 import type {
-  BaseCoverageOptions as BaseCoverageOptions_,
-  CoverageIstanbulOptions as CoverageIstanbulOptions_,
-  CoverageOptions as CoverageOptions_,
-  CoverageProvider as CoverageProvider_,
-  CoverageProviderModule as CoverageProviderModule_,
-  CoverageProviderName,
-  CoverageReporter as CoverageReporter_,
-  CoverageV8Options as CoverageV8Options_,
-  CustomProviderOptions as CustomProviderOptions_,
-  ReportContext as ReportContext_,
-  ResolvedCoverageOptions as ResolvedCoverageOptions_,
-} from '../node/types/coverage'
-
-import type {
   /** @deprecated import from `vitest/node` instead */
   Reporter as Reporter_,
 } from '../node/types/reporter'
@@ -217,27 +203,6 @@ export type VmEnvironmentReturn = VmEnvironmentReturn_
 export type Environment = Environment_
 /** @deprecated do not use it */
 export type ResolvedTestEnvironment = ResolvedTestEnvironment_
-
-/** @deprecated import from `vitest/node` instead */
-export type CoverageProvider = CoverageProvider_
-/** @deprecated import from `vitest/node` instead */
-export type ReportContext = ReportContext_
-/** @deprecated import from `vitest/node` instead */
-export type CoverageProviderModule = CoverageProviderModule_
-/** @deprecated import from `vitest/node` instead */
-export type CoverageReporter = CoverageReporter_
-/** @deprecated import from `vitest/node` instead */
-export type CoverageOptions<T extends CoverageProviderName = CoverageProviderName> = CoverageOptions_<T>
-/** @deprecated import from `vitest/node` instead */
-export type ResolvedCoverageOptions<T extends CoverageProviderName = CoverageProviderName> = ResolvedCoverageOptions_<T>
-/** @deprecated import from `vitest/node` instead */
-export type BaseCoverageOptions = BaseCoverageOptions_
-/** @deprecated import from `vitest/node` instead */
-export type CoverageIstanbulOptions = CoverageIstanbulOptions_
-/** @deprecated import from `vitest/node` instead */
-export type CoverageV8Options = CoverageV8Options_
-/** @deprecated import from `vitest/node` instead */
-export type CustomProviderOptions = CustomProviderOptions_
 
 export type {
   ContextRPC,
