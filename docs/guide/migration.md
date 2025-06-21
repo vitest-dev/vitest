@@ -114,7 +114,7 @@ const Spy = vi.spyOn(cart, 'Apples')
 const mock = new Spy()
 ```
 
-If you povided an arrow function before, you would get [`<anonymous> is not a constructor` error](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Errors/Not_a_constructor) when the mock is called.
+Note that if you provide an arrow function, you will get [`<anonymous> is not a constructor` error](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Errors/Not_a_constructor) when the mock is called.
 
 ## Migrating to Vitest 3.0 {#vitest-3}
 
