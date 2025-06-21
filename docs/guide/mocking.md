@@ -764,6 +764,10 @@ import * as exports from './example.js'
 vi.spyOn(exports, 'getter', 'get').mockReturnValue('mocked')
 ```
 
+::: warning
+This will not work in the Browser Mode. For a workaround, see [Limitations](/guide/browser/#spying-on-module-exports).
+:::
+
 ### Mock an exported function
 
 1. Example with `vi.mock`:
@@ -790,9 +794,29 @@ import * as exports from './example.js'
 vi.spyOn(exports, 'method').mockImplementation(() => {})
 ```
 
+::: warning
+`vi.spyOn` example will not work in the Browser Mode. For a workaround, see [Limitations](/guide/browser/#spying-on-module-exports).
+:::
+
 ### Mock an exported class implementation
 
-1. Example with `vi.mock` and `.prototype`:
+1. Example with a fake `class`:
+```ts [example.js]
+export class SomeClass {}
+```
+```ts
+import { SomeClass } from './example.js'
+
+vi.mock(import('./example.js'), () => {
+  const SomeClass = vi.fn(class FakeClass {
+    someMethod = vi.fn()
+  })
+  return { SomeClass }
+})
+// SomeClass.mock.instances will have SomeClass
+```
+
+2. Example with `vi.mock` and `.prototype`:
 ```ts [example.js]
 export class SomeClass {}
 ```
@@ -807,7 +831,7 @@ vi.mock(import('./example.js'), () => {
 // SomeClass.mock.instances will have SomeClass
 ```
 
-2. Example with `vi.spyOn`:
+3. Example with `vi.spyOn`:
 
 ```ts
 import * as mod from './example.js'
@@ -817,6 +841,10 @@ SomeClass.prototype.someMethod = vi.fn()
 
 vi.spyOn(mod, 'SomeClass').mockImplementation(SomeClass)
 ```
+
+::: warning
+`vi.spyOn` example will not work in the Browser Mode. For a workaround, see [Limitations](/guide/browser/#spying-on-module-exports).
+:::
 
 ### Spy on an object returned from a function
 

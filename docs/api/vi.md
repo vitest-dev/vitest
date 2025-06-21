@@ -459,6 +459,33 @@ expect(spy).toHaveBeenCalled()
 expect(spy).toHaveReturnedWith(1)
 ```
 
+If the spying method is a class definition, the mock implementations have to use the `function` or the `class` keyword:
+
+```ts {12-14,16-20}
+const cart = {
+  Apples: class Apples {
+    getApples() {
+      return 42
+    }
+  }
+}
+
+const spy = vi.spyOn(cart, 'Apples')
+  .mockImplementation(() => ({ getApples: () => 0 })) // [!code --]
+  // with a function keyword
+  .mockImplementation(function () {
+    this.getApples = () => 0
+  })
+  // with a custom class
+  .mockImplementation(class MockApples {
+    getApples() {
+      return 0
+    }
+  })
+```
+
+If you provide an arrow function, you will get [`<anonymous> is not a constructor` error](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Errors/Not_a_constructor) when the mock is called.
+
 ::: tip
 In environments that support [Explicit Resource Management](https://github.com/tc39/proposal-explicit-resource-management), you can use `using` instead of `const` to automatically call `mockRestore` on any mocked function when the containing block is exited. This is especially useful for spied methods:
 
