@@ -576,9 +576,9 @@ export async function runSuite(suite: Suite, runner: VitestRunner): Promise<void
 
     suite.result.duration = now() - start
 
-    updateTask('suite-finished', suite, runner)
-
     await runner.onAfterRunSuite?.(suite)
+
+    updateTask('suite-finished', suite, runner)
   }
 }
 
