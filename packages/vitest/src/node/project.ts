@@ -157,7 +157,7 @@ export class TestProject {
     return new TestSpecification(
       this,
       moduleId,
-      pool || getFilePoolName(this, moduleId),
+      pool || getFilePoolName(this),
       locations,
     )
   }
