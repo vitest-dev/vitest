@@ -584,7 +584,6 @@ describe('jest mock compat layer', () => {
     Spy.mockImplementation(function () {
       expectTypeOf(this.test).toEqualTypeOf<() => void>()
       this.test = () => {}
-      // ...
     })
 
     expect(new Spy()).toBeInstanceOf(Spy)
