@@ -391,7 +391,7 @@ export default (parentServer: ParentBrowserProject, base = '/'): Plugin[] => {
         }
         const s = new MagicString(code, { filename })
         s.prepend(
-          `import.meta.vitest = __vitest_index__;\n`,
+          `Object.defineProperty(import.meta, 'vitest', { get() { return typeof __vitest_worker__ !== 'undefined' && __vitest_worker__.filepath === "${filename}" ? __vitest_index__ : undefined } });\n`,
         )
         return {
           code: s.toString(),
