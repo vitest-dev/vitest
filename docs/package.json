@@ -30,7 +30,7 @@
     "tinyglobby": "catalog:",
     "unocss": "catalog:",
     "unplugin-vue-components": "catalog:",
-    "vite": "^5.2.8",
+    "vite": "^6.3.5",
     "vite-plugin-pwa": "^0.21.2",
     "vitepress": "2.0.0-alpha.6",
     "vitepress-plugin-group-icons": "^1.6.0",
