@@ -765,7 +765,7 @@ vi.spyOn(exports, 'getter', 'get').mockReturnValue('mocked')
 ```
 
 ::: warning
-This will not work in the Browser Mode. For a workaround, see [Limitations](/guide/browser#spying-on-module-exports).
+This will not work in the Browser Mode. For a workaround, see [Limitations](/guide/browser/#spying-on-module-exports).
 :::
 
 ### Mock an exported function
@@ -795,7 +795,7 @@ vi.spyOn(exports, 'method').mockImplementation(() => {})
 ```
 
 ::: warning
-`vi.spyOn` example will not work in the Browser Mode. For a workaround, see [Limitations](/guide/browser#spying-on-module-exports).
+`vi.spyOn` example will not work in the Browser Mode. For a workaround, see [Limitations](/guide/browser/#spying-on-module-exports).
 :::
 
 ### Mock an exported class implementation
@@ -843,7 +843,7 @@ vi.spyOn(mod, 'SomeClass').mockImplementation(SomeClass)
 ```
 
 ::: warning
-`vi.spyOn` example will not work in the Browser Mode. For a workaround, see [Limitations](/guide/browser#spying-on-module-exports).
+`vi.spyOn` example will not work in the Browser Mode. For a workaround, see [Limitations](/guide/browser/#spying-on-module-exports).
 :::
 
 ### Spy on an object returned from a function
