@@ -2,7 +2,7 @@ import type { DiffOptions } from '@vitest/expect'
 import type { SnapshotSerializer } from '@vitest/snapshot'
 import type { SerializedDiffOptions } from '@vitest/utils/diff'
 import type { SerializedConfig } from './config'
-import type { VitestExecutor } from './execute'
+import type { VitestModuleRunner } from './execute-new'
 import { addSerializer } from '@vitest/snapshot'
 import { setSafeTimers } from '@vitest/utils'
 
@@ -44,7 +44,7 @@ function setupEnv(env: Record<string, any>) {
 
 export async function loadDiffConfig(
   config: SerializedConfig,
-  executor: VitestExecutor,
+  moduleRunner: VitestModuleRunner,
 ): Promise<SerializedDiffOptions | undefined> {
   if (typeof config.diff === 'object') {
     return config.diff
@@ -53,7 +53,7 @@ export async function loadDiffConfig(
     return
   }
 
-  const diffModule = await executor.executeId(config.diff)
+  const diffModule = await moduleRunner.import(config.diff)
 
   if (
     diffModule
@@ -71,13 +71,13 @@ export async function loadDiffConfig(
 
 export async function loadSnapshotSerializers(
   config: SerializedConfig,
-  executor: VitestExecutor,
+  moduleRunner: VitestModuleRunner,
 ): Promise<void> {
   const files = config.snapshotSerializers
 
   const snapshotSerializers = await Promise.all(
     files.map(async (file) => {
-      const mo = await executor.executeId(file)
+      const mo = await moduleRunner.import(file)
       if (!mo || typeof mo.default !== 'object' || mo.default === null) {
         throw new Error(
           `invalid snapshot serializer file ${file}. Must export a default object`,

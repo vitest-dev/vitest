@@ -1,3 +1,4 @@
+import type { FetchResult } from 'vite'
 import type { RuntimeRPC } from '../../types/rpc'
 import type { TestProject } from '../project'
 import type { ResolveSnapshotPathHandlerContext } from '../types/config'
@@ -18,7 +19,70 @@ interface MethodsOptions {
 export function createMethodsRPC(project: TestProject, options: MethodsOptions = {}): RuntimeRPC {
   const ctx = project.vitest
   const cacheFs = options.cacheFs ?? false
+  const cachedFsResults = new Map<string, string>()
   return {
+    async fetch_(
+      id,
+      importer,
+      environmentName,
+      options,
+    ) {
+      const environment = project.vite.environments[environmentName]
+      if (!environment) {
+        throw new Error(`The environment ${environmentName} was not defined in the Vite config.`)
+      }
+      const result = await environment.fetchModule(id, importer, options).catch(handleRollupError)
+
+      if (!cacheFs || !('code' in result)) {
+        return result
+      }
+      const code = result.code
+      // to avoid serialising large chunks of code,
+      // we store them in a tmp file and read in the test thread
+      if (cachedFsResults.has(result.id)) {
+        return getCachedResult(result, cachedFsResults)
+      }
+      const dir = join(project.tmpDir, environmentName)
+      const name = hash('sha1', id, 'hex')
+      const tmp = join(dir, name)
+      if (!created.has(dir)) {
+        mkdirSync(dir, { recursive: true })
+        created.add(dir)
+      }
+      if (promises.has(tmp)) {
+        await promises.get(tmp)
+        return getCachedResult(result, cachedFsResults)
+      }
+      promises.set(
+        tmp,
+
+        atomicWriteFile(tmp, code)
+        // Fallback to non-atomic write for windows case where file already exists:
+          .catch(() => writeFile(tmp, code, 'utf-8'))
+          .finally(() => promises.delete(tmp)),
+      )
+      await promises.get(tmp)
+      cachedFsResults.set(id, tmp)
+      return getCachedResult(result, cachedFsResults)
+    },
+    async resolve_(id, importer, environmentName) {
+      const environment = project.vite.environments[environmentName]
+      if (!environment) {
+        throw new Error(`The environment ${environmentName} was not defined in the Vite config.`)
+      }
+      const resolved = await environment.pluginContainer.resolveId(id, importer)
+      if (!resolved) {
+        return null
+      }
+      return {
+        file: cleanUrl(resolved.id),
+        // TODO: this is incorrect, there are edge cases
+        id: resolved.id.startsWith(environment.config.root)
+          ? resolved.id.slice(environment.config.root.length)
+          : resolved.id,
+      }
+    },
+
     snapshotSaved(snapshot) {
       ctx.snapshot.add(snapshot)
     },
@@ -120,6 +184,16 @@ export function createMethodsRPC(project: TestProject, options: MethodsOptions =
   }
 }
 
+function getCachedResult(result: Extract<FetchResult, { code: string }>, cachedFsResults: Map<string, string>) {
+  return {
+    cached: true as const,
+    file: result.file,
+    id: cachedFsResults.get(result.id)!,
+    url: result.url,
+    invalidate: result.invalidate,
+  }
+}
+
 // serialize rollup error on server to preserve details as a test error
 function handleRollupError(e: unknown): never {
   if (
@@ -173,4 +247,9 @@ async function atomicWriteFile(realFilePath: string, data: string): Promise<void
     }
     catch {}
   }
+}
+
+const postfixRE = /[?#].*$/
+function cleanUrl(url: string): string {
+  return url.replace(postfixRE, '')
 }

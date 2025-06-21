@@ -2,7 +2,7 @@ import type { FileSpecification } from '@vitest/runner'
 import type { ModuleCacheMap } from 'vite-node'
 import type { ResolvedTestEnvironment } from '../types/environment'
 import type { SerializedConfig } from './config'
-import type { VitestExecutor } from './execute'
+import type { VitestModuleRunner } from './execute-new'
 import { performance } from 'node:perf_hooks'
 import { collectTests, startTests } from '@vitest/runner'
 import { setupChaiConfig } from '../integrations/chai/config'
@@ -22,7 +22,7 @@ export async function run(
   files: FileSpecification[],
   config: SerializedConfig,
   environment: ResolvedTestEnvironment,
-  executor: VitestExecutor,
+  moduleRunner: VitestModuleRunner,
 ): Promise<void> {
   const workerState = getWorkerState()
 
@@ -30,14 +30,14 @@ export async function run(
   const isIsolatedForks = config.pool === 'forks' && (config.poolOptions?.forks?.isolate ?? true)
   const isolate = isIsolatedThreads || isIsolatedForks
 
-  await setupGlobalEnv(config, environment, executor)
-  await startCoverageInsideWorker(config.coverage, executor, { isolate })
+  await setupGlobalEnv(config, environment, moduleRunner)
+  await startCoverageInsideWorker(config.coverage, moduleRunner, { isolate })
 
   if (config.chaiConfig) {
     setupChaiConfig(config.chaiConfig)
   }
 
-  const runner = await resolveTestRunner(config, executor)
+  const runner = await resolveTestRunner(config, moduleRunner)
 
   workerState.onCancel.then((reason) => {
     closeInspector(config)
@@ -56,7 +56,7 @@ export async function run(
 
       for (const file of files) {
         if (isolate) {
-          executor.mocker.reset()
+          moduleRunner.mocker.reset()
           resetModules(workerState.moduleCache as ModuleCacheMap, true)
         }
 
@@ -75,7 +75,7 @@ export async function run(
         vi.restoreAllMocks()
       }
 
-      await stopCoverageInsideWorker(config.coverage, executor, { isolate })
+      await stopCoverageInsideWorker(config.coverage, moduleRunner, { isolate })
     },
   )
 

@@ -1,8 +1,22 @@
 import type { CancelReason, File, TaskEventPack, TaskResultPack, TestAnnotation } from '@vitest/runner'
 import type { SnapshotResult } from '@vitest/snapshot'
+import type { FetchResult } from 'vite'
+import type { FetchFunctionOptions } from 'vite/module-runner'
 import type { AfterSuiteRunMeta, TransformMode, UserConsoleLog } from './general'
 
 export interface RuntimeRPC {
+  fetch_: (id: string, importer: string | undefined, environment: string, options?: FetchFunctionOptions) => Promise<FetchResult | {
+    cached: true
+    id: string
+    file: string | null
+    url: string
+    invalidate: boolean
+  }>
+  resolve_: (id: string, importer: string | undefined, environment: string) => Promise<{
+    id: string
+    file: string
+  } | null>
+
   fetch: (
     id: string,
     transformMode: TransformMode

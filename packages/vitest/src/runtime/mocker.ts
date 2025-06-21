@@ -1,7 +1,9 @@
 import type { ManualMockedModule, MockedModule, MockedModuleType } from '@vitest/mocker'
 import type { MockFactory, MockOptions, PendingSuiteMock } from '../types/mocker'
-import type { VitestExecutor } from './execute'
+// import type { VitestExecutor } from './execute'
+import type { VitestModuleRunner } from './execute-new'
 import { isAbsolute, resolve } from 'node:path'
+import { pathToFileURL } from 'node:url'
 import vm from 'node:vm'
 import { AutomockedModule, MockerRegistry, mockObject, RedirectedModule } from '@vitest/mocker'
 import { findMockRedirect } from '@vitest/mocker/redirect'
@@ -15,6 +17,18 @@ interface MockContext {
    * When mocking with a factory, this refers to the module that imported the mock.
    */
   callstack: null | string[]
+}
+
+export interface VitestMockerOptions {
+  context?: vm.Context
+
+  root: string
+  moduleDirectories: string[]
+  resolveId: (id: string, importer?: string) => Promise<{
+    id: string
+    file: string
+  } | null>
+  getCurrentTestFilepath: () => string | undefined
 }
 
 export class VitestMocker {
@@ -38,8 +52,8 @@ export class VitestMocker {
     callstack: null,
   }
 
-  constructor(public executor: VitestExecutor) {
-    const context = this.executor.options.context
+  constructor(public moduleRunner: VitestModuleRunner, private options: VitestMockerOptions) {
+    const context = this.options.context
     if (context) {
       this.primitives = vm.runInContext(
         '({ Object, Error, Function, RegExp, Symbol, Array, Map })',
@@ -79,19 +93,19 @@ export class VitestMocker {
   }
 
   private get root() {
-    return this.executor.options.root
+    return this.options.root
   }
 
   private get moduleCache() {
-    return this.executor.moduleCache
+    return this.moduleRunner.moduleCache
   }
 
   private get moduleDirectories() {
-    return this.executor.options.moduleDirectories || []
+    return this.options.moduleDirectories || []
   }
 
   public async initializeSpyModule(): Promise<void> {
-    this.spyModule = await this.executor.executeId(spyModulePath)
+    this.spyModule = await this.moduleRunner.import(spyModulePath)
   }
 
   private getMockerRegistry() {
@@ -118,7 +132,7 @@ export class VitestMocker {
   }
 
   public getSuiteFilepath(): string {
-    return this.executor.state.filepath || 'global'
+    return this.options.getCurrentTestFilepath() || 'global'
   }
 
   private createError(message: string, codeFrame?: string) {
@@ -132,7 +146,9 @@ export class VitestMocker {
     let id: string
     let fsPath: string
     try {
-      [id, fsPath] = await this.executor.originalResolveUrl(rawId, importer)
+      ({ id, file: fsPath } = await this.options.resolveId(rawId, importer) || (() => {
+        throw new Error('Cant resolve') // TODO
+      })())
     }
     catch (error: any) {
       // it's allowed to mock unresolved modules
@@ -315,12 +331,9 @@ export class VitestMocker {
     importer: string,
     callstack?: string[] | null,
   ): Promise<T> {
-    const { id, fsPath } = await this.resolvePath(rawId, importer)
-    const result = await this.executor.cachedRequest(
-      id,
-      fsPath,
-      callstack || [importer],
-    )
+    const { id } = await this.resolvePath(rawId, importer)
+    // TODO: find how to pass down callstack to vite module runner
+    const result = await this.moduleRunner.directImport(id, callstack || [importer])
     return result as T
   }
 
@@ -341,14 +354,14 @@ export class VitestMocker {
     }
 
     if (mock.type === 'automock' || mock.type === 'autospy') {
-      const mod = await this.executor.cachedRequest(id, fsPath, [importee])
+      const mod = await this.moduleRunner.directImport(id, [importee])
       return this.mockObject(mod, {}, mock.type)
     }
 
     if (mock.type === 'manual') {
       return this.callFunctionMock(fsPath, mock)
     }
-    return this.executor.dependencyRequest(mock.redirect, mock.redirect, [importee])
+    return this.moduleRunner.import(mock.redirect)
   }
 
   public async requestWithMock(url: string, callstack: string[]): Promise<any> {
@@ -369,7 +382,7 @@ export class VitestMocker {
       const exports = {}
       // Assign the empty exports object early to allow for cycles to work. The object will be filled by mockObject()
       this.moduleCache.set(mockPath, { exports })
-      const mod = await this.executor.directRequest(url, url, callstack)
+      const mod = await this.moduleRunner.directImport(url, callstack)
       this.mockObject(mod, exports, mock.type)
       return exports
     }

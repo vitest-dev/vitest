@@ -1,3 +1,3 @@
-import { vi } from 'vitest'
+// import { vi } from 'vitest'
 
-vi.mock('../src/global-mock', () => ({ mocked: true }))
+// vi.mock('../src/global-mock', () => ({ mocked: true }))
