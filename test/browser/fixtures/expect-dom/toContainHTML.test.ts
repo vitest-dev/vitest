@@ -98,7 +98,7 @@ describe('.toContainHTML', () => {
   test('throws with an expected text', async () => {
     const {queryByTestId} = render('<span data-testid="child"></span>')
     const htmlElement = queryByTestId('child')
-    const nonExistantString = '<div> non-existant element </div>'
+    const nonExistantString = '<div> non-existent element </div>'
 
     let errorMessage
     try {
@@ -110,7 +110,7 @@ describe('.toContainHTML', () => {
     expect(errorMessage).toMatchInlineSnapshot(`
       expect(element).toContainHTML()
       Expected:
-        <div> non-existant element </div>
+        <div> non-existent element </div>
       Received:
         <span
         data-testid="child"
