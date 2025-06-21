@@ -54,7 +54,6 @@
     }
   },
   "dependencies": {
-    "@ampproject/remapping": "catalog:",
     "@bcoe/v8-coverage": "^1.0.2",
     "ast-v8-to-istanbul": "^0.3.3",
     "debug": "catalog:",
@@ -62,7 +61,6 @@
     "istanbul-lib-report": "catalog:",
     "istanbul-lib-source-maps": "catalog:",
     "istanbul-reports": "catalog:",
-    "magic-string": "catalog:",
     "magicast": "catalog:",
     "std-env": "catalog:",
     "tinyrainbow": "catalog:"
