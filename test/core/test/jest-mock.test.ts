@@ -566,6 +566,38 @@ describe('jest mock compat layer', () => {
     expect(dogMax.speak()).toBe('woof woof')
   })
 
+  it('spies on classes', () => {
+    class Example {
+      test() {}
+    }
+
+    const obj = {
+      Example,
+    }
+
+    const Spy = vi.spyOn(obj, 'Example')
+
+    Spy.mockImplementation(() => {})
+
+    expect(() => new Spy()).toThrowError(TypeError)
+
+    Spy.mockImplementation(function () {
+      expectTypeOf(this.test).toEqualTypeOf<() => void>()
+      this.test = () => {}
+      // ...
+    })
+
+    expect(new Spy()).toBeInstanceOf(Spy)
+
+    class MockExample {
+      test() {}
+    }
+    Spy.mockImplementation(MockExample)
+
+    expect(new Spy()).toBeInstanceOf(Spy)
+    expect(new Spy()).not.toBeInstanceOf(MockExample)
+  })
+
   it('returns temporary implementations from getMockImplementation()', () => {
     const fn = vi.fn()
 

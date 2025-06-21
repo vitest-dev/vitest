@@ -1,5 +1,3 @@
-/* eslint-disable prefer-arrow-callback */
-
 import type { SpyInternalImpl } from 'tinyspy'
 import * as tinyspy from 'tinyspy'
 
@@ -40,7 +38,21 @@ export type MockSettledResult<T> =
   | MockSettledResultFulfilled<T>
   | MockSettledResultRejected
 
-export interface MockContext<T extends Procedure> {
+type MockParameters<T extends Procedure | Constructable> = T extends Constructable
+  ? ConstructorParameters<T>
+  : T extends Procedure
+    ? Parameters<T> : never
+
+type MockReturnType<T extends Procedure | Constructable> = T extends Constructable
+  ? void
+  : T extends Procedure
+    ? ReturnType<T> : never
+
+type MockFnContext<T extends Procedure | Constructable> = T extends Constructable
+  ? InstanceType<T>
+  : ThisParameterType<T>
+
+export interface MockContext<T extends Procedure | Constructable> {
   /**
    * This is an array containing all arguments for each call. One item of the array is the arguments of that call.
    *
@@ -56,17 +68,17 @@ export interface MockContext<T extends Procedure> {
    *   ['arg3'], // second call
    * ]
    */
-  calls: Parameters<T>[]
+  calls: MockParameters<T>[]
   /**
    * This is an array containing all instances that were instantiated when mock was called with a `new` keyword. Note that this is an actual context (`this`) of the function, not a return value.
    * @see https://vitest.dev/api/mock#mock-instances
    */
-  instances: ReturnType<T>[]
+  instances: MockResultReturn<T>[]
   /**
    * An array of `this` values that were used during each call to the mock function.
    * @see https://vitest.dev/api/mock#mock-contexts
    */
-  contexts: ThisParameterType<T>[]
+  contexts: MockFnContext<T>[]
   /**
    * The order of mock's execution. This returns an array of numbers which are shared between all defined mocks.
    *
@@ -112,7 +124,7 @@ export interface MockContext<T extends Procedure> {
    *   },
    * ]
    */
-  results: MockResult<ReturnType<T>>[]
+  results: MockResult<MockReturnType<T>>[]
   /**
    * An array containing all values that were `resolved` or `rejected` from the function.
    *
@@ -141,25 +153,35 @@ export interface MockContext<T extends Procedure> {
    *   },
    * ]
    */
-  settledResults: MockSettledResult<Awaited<ReturnType<T>>>[]
+  settledResults: MockSettledResult<Awaited<MockReturnType<T>>>[]
   /**
    * This contains the arguments of the last call. If spy wasn't called, will return `undefined`.
    * @see https://vitest.dev/api/mock#mock-lastcall
    */
-  lastCall: Parameters<T> | undefined
+  lastCall: MockParameters<T> | undefined
   /** @internal */
   _state: (state?: InternalState) => InternalState
 }
 
 interface InternalState {
-  implementation: Procedure | undefined
-  onceImplementations: Procedure[]
+  implementation: Procedure | Constructable | undefined
+  onceImplementations: (Procedure | Constructable)[]
   implementationChangedTemporarily: boolean
 }
 
 type Procedure = (...args: any[]) => any
 // pick a single function type from function overloads, unions, etc...
-type NormalizedProcedure<T extends Procedure> = (...args: Parameters<T>) => ReturnType<T>
+type NormalizedProcedure<T extends Procedure | Constructable> = T extends Constructable ?
+    ({
+      new (...args: ConstructorParameters<T>): InstanceType<T>
+    })
+    |
+    ({
+      (this: InstanceType<T>, ...args: ConstructorParameters<T>): void
+    })
+  : T extends Procedure
+    ? (...args: Parameters<T>) => ReturnType<T>
+    : never
 
 type Methods<T> = keyof {
   [K in keyof T as T[K] extends Procedure ? K : never]: T[K];
@@ -185,7 +207,7 @@ Jest uses the latter for `MockInstance.mockImplementation` etc... and it allows 
   const boolFn: Jest.Mock<() => boolean> = jest.fn<() => true>(() => true)
 */
 /* eslint-disable ts/method-signature-style */
-export interface MockInstance<T extends Procedure = Procedure> extends Disposable {
+export interface MockInstance<T extends Procedure | Constructable = Procedure> extends Disposable {
   /**
    * Use it to return the name assigned to the mock with the `.mockName(name)` method. By default, it will return `vi.fn()`.
    * @see https://vitest.dev/api/mock#getmockname
@@ -282,7 +304,7 @@ export interface MockInstance<T extends Procedure = Procedure> extends Disposabl
    * mock.mockReturnValue(43)
    * mock() // 43
    */
-  mockReturnValue(value: ReturnType<T>): this
+  mockReturnValue(value: MockReturnType<T>): this
   /**
    * Accepts a value that will be returned whenever the mock function is called. TypeScript will only accept values that match the return type of the original function.
    *
@@ -297,14 +319,14 @@ export interface MockInstance<T extends Procedure = Procedure> extends Disposabl
    * // 'first call', 'second call', 'default'
    * console.log(myMockFn(), myMockFn(), myMockFn())
    */
-  mockReturnValueOnce(value: ReturnType<T>): this
+  mockReturnValueOnce(value: MockReturnType<T>): this
   /**
    * Accepts a value that will be resolved when the async function is called. TypeScript will only accept values that match the return type of the original function.
    * @example
    * const asyncMock = vi.fn().mockResolvedValue(42)
    * asyncMock() // Promise<42>
    */
-  mockResolvedValue(value: Awaited<ReturnType<T>>): this
+  mockResolvedValue(value: Awaited<MockReturnType<T>>): this
   /**
    * Accepts a value that will be resolved during the next function call. TypeScript will only accept values that match the return type of the original function. If chained, each consecutive call will resolve the specified value.
    * @example
@@ -317,7 +339,7 @@ export interface MockInstance<T extends Procedure = Procedure> extends Disposabl
    * // Promise<'first call'>, Promise<'second call'>, Promise<'default'>
    * console.log(myMockFn(), myMockFn(), myMockFn())
    */
-  mockResolvedValueOnce(value: Awaited<ReturnType<T>>): this
+  mockResolvedValueOnce(value: Awaited<MockReturnType<T>>): this
   /**
    * Accepts an error that will be rejected when async function is called.
    * @example
@@ -340,10 +362,9 @@ export interface MockInstance<T extends Procedure = Procedure> extends Disposabl
 }
 /* eslint-enable ts/method-signature-style */
 
-export interface Mock<T extends Procedure = Procedure>
-  extends MockInstance<T> {
-  new (...args: Parameters<T>): ReturnType<T>
-  (...args: Parameters<T>): ReturnType<T>
+export interface Mock<T extends Procedure | Constructable = Procedure> extends MockInstance<T> {
+  new (...args: MockParameters<T>): MockReturnType<T>
+  (...args: MockParameters<T>): MockReturnType<T>
 }
 
 type PartialMaybePromise<T> = T extends Promise<Awaited<T>>
@@ -444,7 +465,7 @@ export function spyOn<T, M extends Classes<Required<T>> | Methods<Required<T>>>(
   obj: T,
   methodName: M
 ): Required<T>[M] extends { new (...args: infer A): infer R }
-  ? Mock<(this: R, ...args: A) => R | void>
+  ? Mock<{ new (...args: A): R }>
   : T[M] extends Procedure
     ? Mock<T[M]>
     : never
@@ -501,16 +522,16 @@ export function spyOn<T, K extends keyof T>(
 
 let callOrder = 0
 
-function enhanceSpy<T extends Procedure>(
-  spy: SpyInternalImpl<Parameters<T>, ReturnType<T>>,
+function enhanceSpy<T extends Procedure | Constructable>(
+  spy: SpyInternalImpl<MockParameters<T>, MockReturnType<T>>,
 ): MockInstance<T> {
-  type TReturns = ReturnType<T>
+  type TReturns = MockReturnType<T>
 
   const stub = spy as unknown as MockInstance<T>
 
-  let implementation: T | undefined
+  let implementation: NormalizedProcedure<T> | undefined
 
-  let onceImplementations: T[] = []
+  let onceImplementations: NormalizedProcedure<T>[] = []
   let implementationChangedTemporarily = false
 
   let instances: any[] = []
@@ -521,7 +542,7 @@ function enhanceSpy<T extends Procedure>(
 
   const mockContext: MockContext<T> = {
     get calls() {
-      return state.calls
+      return state.calls as MockParameters<T>[]
     },
     get contexts() {
       return contexts
@@ -547,12 +568,12 @@ function enhanceSpy<T extends Procedure>(
       })
     },
     get lastCall() {
-      return state.calls[state.calls.length - 1]
+      return state.calls[state.calls.length - 1] as MockParameters<T>
     },
     _state(state) {
       if (state) {
-        implementation = state.implementation as T
-        onceImplementations = state.onceImplementations as T[]
+        implementation = state.implementation as NormalizedProcedure<T>
+        onceImplementations = state.onceImplementations as NormalizedProcedure<T>[]
         implementationChangedTemporarily = state.implementationChangedTemporarily
       }
       return {
@@ -588,7 +609,7 @@ function enhanceSpy<T extends Procedure>(
         throw e
       }
     }
-    return impl.apply(this, args)
+    return (impl as Procedure).apply(this, args)
   }
 
   let name: string = (stub as any).name
@@ -626,20 +647,20 @@ function enhanceSpy<T extends Procedure>(
 
   stub.getMockImplementation = () =>
     implementationChangedTemporarily ? implementation : (onceImplementations.at(0) || implementation)
-  stub.mockImplementation = (fn: T) => {
+  stub.mockImplementation = (fn: NormalizedProcedure<T>) => {
     implementation = fn
     state.willCall(mockCall)
     return stub
   }
 
-  stub.mockImplementationOnce = (fn: T) => {
+  stub.mockImplementationOnce = (fn: NormalizedProcedure<T>) => {
     onceImplementations.push(fn)
     return stub
   }
 
-  function withImplementation(fn: T, cb: () => void): MockInstance<T>
-  function withImplementation(fn: T, cb: () => Promise<void>): Promise<MockInstance<T>>
-  function withImplementation(fn: T, cb: () => void | Promise<void>): MockInstance<T> | Promise<MockInstance<T>> {
+  function withImplementation(fn: NormalizedProcedure<T>, cb: () => void): MockInstance<T>
+  function withImplementation(fn: NormalizedProcedure<T>, cb: () => Promise<void>): Promise<MockInstance<T>>
+  function withImplementation(fn: NormalizedProcedure<T>, cb: () => void | Promise<void>): MockInstance<T> | Promise<MockInstance<T>> {
     const originalImplementation = implementation
 
     implementation = fn
@@ -668,36 +689,36 @@ function enhanceSpy<T extends Procedure>(
   stub.withImplementation = withImplementation
 
   stub.mockReturnThis = () =>
-    stub.mockImplementation(function (this: TReturns) {
+    stub.mockImplementation(function (this: MockFnContext<T>) {
       return this
-    })
+    } as NormalizedProcedure<T>)
 
   stub.mockReturnValue = (val: TReturns) => stub.mockImplementation(function () {
     return val
-  })
+  } as NormalizedProcedure<T>)
   stub.mockReturnValueOnce = (val: TReturns) => stub.mockImplementationOnce(function () {
     return val
-  })
+  } as NormalizedProcedure<T>)
 
   stub.mockResolvedValue = (val: Awaited<TReturns>) =>
     stub.mockImplementation(function () {
-      return Promise.resolve(val) as TReturns
-    })
+      return Promise.resolve(val)
+    } as NormalizedProcedure<T>)
 
   stub.mockResolvedValueOnce = (val: Awaited<TReturns>) =>
     stub.mockImplementationOnce(function () {
-      return Promise.resolve(val) as TReturns
-    })
+      return Promise.resolve(val)
+    } as NormalizedProcedure<T>)
 
   stub.mockRejectedValue = (val: unknown) =>
     stub.mockImplementation(function () {
-      return Promise.reject(val) as TReturns
-    })
+      return Promise.reject(val)
+    } as NormalizedProcedure<T>)
 
   stub.mockRejectedValueOnce = (val: unknown) =>
     stub.mockImplementationOnce(function () {
-      return Promise.reject(val) as TReturns
-    })
+      return Promise.reject(val)
+    } as NormalizedProcedure<T>)
 
   Object.defineProperty(stub, 'mock', {
     get: () => mockContext,
