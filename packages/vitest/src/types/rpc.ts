@@ -20,12 +20,6 @@ export interface RuntimeRPC {
   ) => Promise<{
     external?: boolean | 'absolute' | 'relative'
     id: string
-    /** @deprecated */
-    meta?: Record<string, any> | null
-    /** @deprecated */
-    moduleSideEffects?: boolean | 'no-treeshake' | null
-    /** @deprecated */
-    syntheticNamedExports?: boolean | string | null
   } | null>
 
   onUserConsoleLog: (log: UserConsoleLog) => void
