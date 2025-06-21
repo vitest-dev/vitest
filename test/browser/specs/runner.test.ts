@@ -248,7 +248,7 @@ test('in-source tests don\'t run when the module is imported by the test', async
   expect(stderr).toBe('')
 
   instances.forEach(({ browser }) => {
-    expect(stdout).toReportPassedTest('mocking.test.ts', browser)
+    expect(stdout).toReportPassedTest('test/mocking.test.ts', browser)
   })
 
   // there is only one file with one test inside

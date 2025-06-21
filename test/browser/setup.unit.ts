@@ -22,7 +22,7 @@ expect.extend({
       pass,
       message: () => {
         const includePattern = checks?.length
-          ? checks.map(check => `✓ |${check}| ${testName}`).join('\n')
+          ? checks.map(check => `✓ |${check.browser}| ${testName}`).join('\n')
           : `✓ ${testName}`
         return `expected ${pass ? 'not ' : ''}to have "${includePattern}" in the report.\n\nstdout:\n${stdout}`
       },
