@@ -546,7 +546,7 @@ describe('jest mock compat layer', () => {
     abstract feed(): void
   }
 
-  it('mocks classes', () => {
+  it('mocks constructors', () => {
     const Dog = vi.fn<(name: string) => Dog_>(function Dog_(name: string) {
       this.name = name
     } as (this: any, name: string) => Dog_)
@@ -555,6 +555,27 @@ describe('jest mock compat layer', () => {
 
     Dog.prototype.speak = vi.fn(() => 'loud bark!')
     Dog.prototype.feed = vi.fn()
+
+    const dogMax = new Dog('Max')
+    expect(dogMax.name).toBe('Max')
+
+    expect(dogMax.speak()).toBe('loud bark!')
+    expect(dogMax.speak).toHaveBeenCalled()
+
+    vi.mocked(dogMax.speak).mockReturnValue('woof woof')
+    expect(dogMax.speak()).toBe('woof woof')
+  })
+
+  it('mock classes', () => {
+    const Dog = vi.fn(class Dog {
+      constructor(public name: string) {
+        this.name = name
+      }
+
+      static getType: () => string = vi.fn(() => 'mocked animal')
+      speak = vi.fn(() => 'loud bark!')
+      feed = vi.fn()
+    })
 
     const dogMax = new Dog('Max')
     expect(dogMax.name).toBe('Max')
@@ -595,6 +616,9 @@ describe('jest mock compat layer', () => {
 
     expect(new Spy()).toBeInstanceOf(Spy)
     expect(new Spy()).not.toBeInstanceOf(MockExample)
+
+    const instance = new Spy()
+    expectTypeOf(instance).toEqualTypeOf<Example>()
   })
 
   it('returns temporary implementations from getMockImplementation()', () => {

@@ -363,7 +363,7 @@ export interface MockInstance<T extends Procedure | Constructable = Procedure> e
 /* eslint-enable ts/method-signature-style */
 
 export interface Mock<T extends Procedure | Constructable = Procedure> extends MockInstance<T> {
-  new (...args: MockParameters<T>): MockReturnType<T>
+  new (...args: MockParameters<T>): T extends Constructable ? InstanceType<T> : MockReturnType<T>
   (...args: MockParameters<T>): MockReturnType<T>
 }
 
@@ -731,7 +731,7 @@ function enhanceSpy<T extends Procedure | Constructable>(
   return stub as any
 }
 
-export function fn<T extends Procedure = Procedure>(
+export function fn<T extends Procedure | Constructable = Procedure>(
   implementation?: T,
 ): Mock<T> {
   const inernalSpy = tinyspy.internalSpyOn({
