@@ -1,3 +1,5 @@
+/* eslint-disable prefer-arrow-callback */
+
 import type { SpyInternalImpl } from 'tinyspy'
 import * as tinyspy from 'tinyspy'
 
@@ -432,25 +434,25 @@ export function spyOn<T, S extends Properties<Required<T>>>(
   obj: T,
   methodName: S,
   accessType: 'get'
-): MockInstance<() => T[S]>
+): Mock<() => T[S]>
 export function spyOn<T, G extends Properties<Required<T>>>(
   obj: T,
   methodName: G,
   accessType: 'set'
-): MockInstance<(arg: T[G]) => void>
+): Mock<(arg: T[G]) => void>
 export function spyOn<T, M extends Classes<Required<T>> | Methods<Required<T>>>(
   obj: T,
   methodName: M
 ): Required<T>[M] extends { new (...args: infer A): infer R }
-  ? MockInstance<(this: R, ...args: A) => R>
+  ? Mock<(this: R, ...args: A) => R>
   : T[M] extends Procedure
-    ? MockInstance<T[M]>
+    ? Mock<T[M]>
     : never
 export function spyOn<T, K extends keyof T>(
   obj: T,
   method: K,
   accessType?: 'get' | 'set',
-): MockInstance {
+): Mock {
   const dictionary = {
     get: 'getter',
     set: 'setter',
@@ -470,7 +472,7 @@ export function spyOn<T, K extends keyof T>(
   try {
     const stub = tinyspy.internalSpyOn(obj, objMethod as any)
 
-    const spy = enhanceSpy(stub) as MockInstance
+    const spy = enhanceSpy(stub) as Mock
 
     if (state) {
       spy.mock._state(state)
@@ -666,24 +668,36 @@ function enhanceSpy<T extends Procedure>(
   stub.withImplementation = withImplementation
 
   stub.mockReturnThis = () =>
-    stub.mockImplementation((function (this: TReturns) {
+    stub.mockImplementation(function (this: TReturns) {
       return this
-    }) as any)
+    })
 
-  stub.mockReturnValue = (val: TReturns) => stub.mockImplementation((() => val) as any)
-  stub.mockReturnValueOnce = (val: TReturns) => stub.mockImplementationOnce((() => val) as any)
+  stub.mockReturnValue = (val: TReturns) => stub.mockImplementation(function () {
+    return val
+  })
+  stub.mockReturnValueOnce = (val: TReturns) => stub.mockImplementationOnce(function () {
+    return val
+  })
 
   stub.mockResolvedValue = (val: Awaited<TReturns>) =>
-    stub.mockImplementation((() => Promise.resolve(val as TReturns)) as any)
+    stub.mockImplementation(function () {
+      return Promise.resolve(val) as TReturns
+    })
 
   stub.mockResolvedValueOnce = (val: Awaited<TReturns>) =>
-    stub.mockImplementationOnce((() => Promise.resolve(val as TReturns)) as any)
+    stub.mockImplementationOnce(function () {
+      return Promise.resolve(val) as TReturns
+    })
 
   stub.mockRejectedValue = (val: unknown) =>
-    stub.mockImplementation((() => Promise.reject(val)) as any)
+    stub.mockImplementation(function () {
+      return Promise.reject(val) as TReturns
+    })
 
   stub.mockRejectedValueOnce = (val: unknown) =>
-    stub.mockImplementationOnce((() => Promise.reject(val)) as any)
+    stub.mockImplementationOnce(function () {
+      return Promise.reject(val) as TReturns
+    })
 
   Object.defineProperty(stub, 'mock', {
     get: () => mockContext,
