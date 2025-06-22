@@ -16,6 +16,7 @@ import { createViteLogger, silenceImportViteIgnoreWarning } from '../viteLogger'
 import { CoverageTransform } from './coverageTransform'
 import { CSSEnablerPlugin } from './cssEnabler'
 import { MocksPlugins } from './mocks'
+import { ModuleRunnerTransform } from './moduleRunner'
 import { NormalizeURLPlugin } from './normalizeURL'
 import { VitestOptimizer } from './optimizer'
 import { SsrReplacerPlugin } from './ssrReplacer'
@@ -305,6 +306,7 @@ export async function VitestPlugin(
     ...MocksPlugins(),
     VitestOptimizer(),
     NormalizeURLPlugin(),
+    ModuleRunnerTransform(),
   ].filter(notNullish)
 }
 function removeUndefinedValues<T extends Record<string, any>>(

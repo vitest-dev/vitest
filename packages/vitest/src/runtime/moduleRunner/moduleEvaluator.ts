@@ -170,10 +170,7 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
 
     const initModule = this.vm
       ? vm.runInContext(wrappedCode, this.vm.context, options)
-      : vm.runInThisContext(
-          wrappedCode,
-          options,
-        )
+      : vm.runInThisContext(wrappedCode, options)
 
     await initModule(
       context[ssrModuleExportsKey],
