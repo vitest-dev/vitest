@@ -85,6 +85,13 @@ See also new guides:
 - [Including and excluding files from coverage report](/guide/coverage.html#including-and-excluding-files-from-coverage-report) for examples
 - [Profiling Test Performance | Code coverage](/guide/profiling-test-performance.html#code-coverage) for tips about debugging coverage generation
 
+### Deprecated APIs are Removed
+
+Vitest 4.0 removes some deprecated APIs, including:
+
+- `poolMatchGlobs` config option. Use [`projects`](/guide/projects) instead.
+- `environmentMatchGlobs` config option. Use [`projects`](/guide/projects) instead.
+
 ## Migrating to Vitest 3.0 {#vitest-3}
 
 ### Test Options as a Third Argument

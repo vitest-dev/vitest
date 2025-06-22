@@ -609,17 +609,6 @@ export function resolveConfig(
   if (!builtinPools.includes(resolved.pool as BuiltinPool)) {
     resolved.pool = resolvePath(resolved.pool, resolved.root)
   }
-  if (resolved.poolMatchGlobs) {
-    logger.deprecate('`poolMatchGlobs` is deprecated. Use `test.projects` to define different configurations instead.')
-  }
-  resolved.poolMatchGlobs = (resolved.poolMatchGlobs || []).map(
-    ([glob, pool]) => {
-      if (!builtinPools.includes(pool as BuiltinPool)) {
-        pool = resolvePath(pool, resolved.root)
-      }
-      return [glob, pool]
-    },
-  )
 
   if (mode === 'benchmark') {
     resolved.benchmark = {
@@ -791,13 +780,6 @@ export function resolveConfig(
     ...configDefaults.typecheck,
     ...resolved.typecheck,
   }
-
-  if (resolved.environmentMatchGlobs) {
-    logger.deprecate('"environmentMatchGlobs" is deprecated. Use `test.projects` to define different configurations instead.')
-  }
-  resolved.environmentMatchGlobs = (resolved.environmentMatchGlobs || []).map(
-    i => [resolve(resolved.root, i[0]), i[1]],
-  )
 
   resolved.typecheck ??= {} as any
   resolved.typecheck.enabled ??= false
