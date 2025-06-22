@@ -14,10 +14,13 @@ export class VitestModuleRunner extends ModuleRunner {
     super(
       {
         transport: new VitestTransport(options.transport),
-        sourcemapInterceptor: false,
         hmr: false,
       },
-      new VitestModuleEvaluator(options.vm),
+      new VitestModuleEvaluator(options.vm, {
+        get interopDefault() {
+          return options.getWorkerState().config.deps.interopDefault
+        },
+      }),
     )
     this.mocker = new VitestMocker(this, {
       resolveId: options.transport.resolveId,

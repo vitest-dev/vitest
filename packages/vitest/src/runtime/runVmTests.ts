@@ -1,5 +1,4 @@
 import type { FileSpecification } from '@vitest/runner'
-import type { ModuleCacheMap } from 'vite-node'
 import type { SerializedConfig } from './config'
 import type { VitestModuleRunner } from './moduleRunner/moduleRunner'
 import { createRequire } from 'node:module'
@@ -9,7 +8,6 @@ import timersPromises from 'node:timers/promises'
 import util from 'node:util'
 import { collectTests, startTests } from '@vitest/runner'
 import { KNOWN_ASSET_TYPES } from 'vite-node/constants'
-import { installSourcemapsSupport } from 'vite-node/source-map'
 import { setupChaiConfig } from '../integrations/chai/config'
 import {
   startCoverageInsideWorker,
@@ -60,10 +58,6 @@ export async function run(
     timers,
     timersPromises,
   }
-
-  installSourcemapsSupport({
-    getSourceMap: source => (workerState.moduleCache as ModuleCacheMap).getSourceMap(source),
-  })
 
   await startCoverageInsideWorker(config.coverage, moduleRunner, { isolate: false })
 

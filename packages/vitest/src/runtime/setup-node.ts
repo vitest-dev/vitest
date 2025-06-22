@@ -1,4 +1,3 @@
-import type { ModuleCacheMap } from 'vite-node'
 import type { ResolvedTestEnvironment } from '../types/environment'
 import type { SerializedConfig } from './config'
 import type { VitestModuleRunner } from './moduleRunner/moduleRunner'
@@ -8,7 +7,6 @@ import timersPromises from 'node:timers/promises'
 import util from 'node:util'
 import { getSafeTimers } from '@vitest/utils'
 import { KNOWN_ASSET_TYPES } from 'vite-node/constants'
-import { installSourcemapsSupport } from 'vite-node/source-map'
 import { expect } from '../integrations/chai'
 import { resolveSnapshotEnvironment } from '../integrations/snapshot/environments/resolveSnapshotEnvironment'
 import * as VitestIndex from '../public/index'
@@ -65,10 +63,6 @@ export async function setupGlobalEnv(
     timers,
     timersPromises,
   }
-
-  installSourcemapsSupport({
-    getSourceMap: source => (state.moduleCache as ModuleCacheMap).getSourceMap(source),
-  })
 
   if (!config.disableConsoleIntercept) {
     await setupConsoleLogSpy()

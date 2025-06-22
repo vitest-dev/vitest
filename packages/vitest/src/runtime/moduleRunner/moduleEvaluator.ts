@@ -6,7 +6,13 @@ import type {
 } from 'vite/module-runner'
 import type { VitestVmOptions } from './moduleRunner'
 import vm from 'node:vm'
-import { ESModulesEvaluator } from 'vite/module-runner'
+import { ESModulesEvaluator, ssrDynamicImportKey, ssrExportAllKey, ssrImportKey, ssrImportMetaKey, ssrModuleExportsKey } from 'vite/module-runner'
+
+export const AsyncFunction = async function () {}.constructor as typeof Function
+
+export interface VitestModuleEvaluatorOptions {
+  interopDefault: boolean | undefined
+}
 
 export class VitestModuleEvaluator implements ModuleEvaluator {
   private defaultEvaluator = new ESModulesEvaluator()
@@ -16,6 +22,7 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
 
   constructor(
     private vm: VitestVmOptions | undefined,
+    private options: VitestModuleEvaluatorOptions,
   ) {
     this.startOffset = this.defaultEvaluator.startOffset
     this.stubs = getDefaultRequestStubs(vm?.context)
@@ -43,8 +50,112 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
     if (this.vm) {
       return this.runVmModule(context, code, module)
     }
-    // TODO: support mocker
-    return this.defaultEvaluator.runInlinedModule(context, code)
+
+    const exports = context[ssrModuleExportsKey]
+    const SYMBOL_NOT_DEFINED = Symbol('not defined')
+    let moduleExports: unknown = SYMBOL_NOT_DEFINED
+    // this proxy is triggered only on exports.{name} and module.exports access
+    // inside the module itself. imported module is always "exports"
+    const cjsExports = new Proxy(exports, {
+      get: (target, p, receiver) => {
+        if (Reflect.has(target, p)) {
+          return Reflect.get(target, p, receiver)
+        }
+        return Reflect.get(Object.prototype, p, receiver)
+      },
+      getPrototypeOf: () => Object.prototype,
+      set: (_, p, value) => {
+        // treat "module.exports =" the same as "exports.default =" to not have nested "default.default",
+        // so "exports.default" becomes the actual module
+        if (
+          p === 'default'
+          && this.shouldInterop(module.file, { default: value })
+          && cjsExports !== value
+        ) {
+          exportAll(cjsExports, value)
+          exports.default = value
+          return true
+        }
+
+        if (!Reflect.has(exports, 'default')) {
+          exports.default = {}
+        }
+
+        // returns undefined, when accessing named exports, if default is not an object
+        // but is still present inside hasOwnKeys, this is Node behaviour for CJS
+        if (
+          moduleExports !== SYMBOL_NOT_DEFINED
+          && isPrimitive(moduleExports)
+        ) {
+          defineExport(exports, p, () => undefined)
+          return true
+        }
+
+        if (!isPrimitive(exports.default)) {
+          exports.default[p] = value
+        }
+
+        if (p !== 'default') {
+          defineExport(exports, p, () => value)
+        }
+
+        return true
+      },
+    })
+
+    const moduleProxy = {
+      set exports(value) {
+        exportAll(cjsExports, value)
+        exports.default = value
+        moduleExports = value
+      },
+      get exports() {
+        return cjsExports
+      },
+    }
+
+    const meta = context[ssrImportMetaKey]
+    const filename = meta.filename
+    const dirname = meta.dirname
+
+    // use AsyncFunction instead of vm module to support broader array of environments out of the box
+    const initModule = new AsyncFunction(
+      ssrModuleExportsKey,
+      ssrImportMetaKey,
+      ssrImportKey,
+      ssrDynamicImportKey,
+      ssrExportAllKey,
+      // vite 7 support
+      '__vite_ssr_exportName__',
+
+      // backwards compat for vite-node
+      '__filename',
+      '__dirname',
+      'module',
+      'exports',
+
+      // source map should already be inlined by Vite
+      `"use strict";${code}`,
+    )
+
+    await initModule(
+      context[ssrModuleExportsKey],
+      context[ssrImportMetaKey],
+      context[ssrImportKey],
+      context[ssrDynamicImportKey],
+      context[ssrExportAllKey],
+      // vite 7 support
+      (name: string, getter: () => unknown) => Object.defineProperty(exports, name, {
+        enumerable: true,
+        configurable: true,
+        get: getter,
+      }),
+
+      filename,
+      dirname,
+      moduleProxy,
+      cjsExports,
+    )
   }
 
   private async runVmModule(
@@ -82,6 +193,15 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
     finally {
       // this.options.moduleExecutionInfo?.set(options.filename, finishModuleExecutionInfo())
     }
+  }
+
+  private shouldInterop(path: string, mod: any): boolean {
+    if (this.options.interopDefault === false) {
+      return false
+    }
+    // never interop ESM modules
+    // TODO: should also skip for `.js` with `type="module"`
+    return !path.endsWith('.mjs') && 'default' in mod
   }
 }
 
@@ -179,4 +299,43 @@ export function getDefaultRequestStubs(context?: vm.Context): Record<string, any
   return {
     '/@vite/client': clientStub,
   }
+}
+
+function exportAll(exports: any, sourceModule: any) {
+  // #1120 when a module exports itself it causes
+  // call stack error
+  if (exports === sourceModule) {
+    return
+  }
+
+  if (
+    isPrimitive(sourceModule)
+    || Array.isArray(sourceModule)
+    || sourceModule instanceof Promise
+  ) {
+    return
+  }
+
+  for (const key in sourceModule) {
+    if (key !== 'default' && !(key in exports)) {
+      try {
+        defineExport(exports, key, () => sourceModule[key])
+      }
+      catch {}
+    }
+  }
+}
+
+// keep consistency with Vite on how exports are defined
+function defineExport(exports: any, key: string | symbol, value: () => any) {
+  Object.defineProperty(exports, key, {
+    enumerable: true,
+    configurable: true,
+    get: value,
+  })
+}
+
+export function isPrimitive(v: any): boolean {
+  const isObject = typeof v === 'object' || typeof v === 'function'
+  return !isObject || v == null
 }
