@@ -5,13 +5,22 @@ import type {
   ModuleRunnerImportMeta,
 } from 'vite/module-runner'
 import type { VitestVmOptions } from './moduleRunner'
+import { createRequire } from 'node:module'
 import vm from 'node:vm'
-import { ESModulesEvaluator, ssrDynamicImportKey, ssrExportAllKey, ssrImportKey, ssrImportMetaKey, ssrModuleExportsKey } from 'vite/module-runner'
+import {
+  ESModulesEvaluator,
+  ssrDynamicImportKey,
+  ssrExportAllKey,
+  ssrImportKey,
+  ssrImportMetaKey,
+  ssrModuleExportsKey,
+} from 'vite/module-runner'
 
 export const AsyncFunction = async function () {}.constructor as typeof Function
 
 export interface VitestModuleEvaluatorOptions {
   interopDefault: boolean | undefined
+  getCurrentTestFilepath: () => string | undefined
 }
 
 export class VitestModuleEvaluator implements ModuleEvaluator {
@@ -46,10 +55,6 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
     module: Readonly<EvaluatedModuleNode>,
   ): Promise<any> {
     context.__vite_ssr_import_meta__.env = this.env
-
-    if (this.vm) {
-      return this.runVmModule(context, code, module)
-    }
 
     const exports = context[ssrModuleExportsKey]
     const SYMBOL_NOT_DEFINED = Symbol('not defined')
@@ -115,8 +120,45 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
     }
 
     const meta = context[ssrImportMetaKey]
+
+    const testFilepath = this.options.getCurrentTestFilepath()
+    if (testFilepath === meta.filename) {
+      const globalNamespace = this.vm?.context || globalThis
+      Object.defineProperty(meta, 'vitest', {
+        // @ts-expect-error injected untyped global
+        get: () => globalNamespace.__vitest_index__,
+      })
+    }
+
+    if (this.vm) {
+      return this.runVmModule(
+        context,
+        code,
+        cjsExports,
+        moduleProxy,
+      )
+    }
+
+    await this.runFunctionModule(
+      context,
+      code,
+      cjsExports,
+      moduleProxy,
+    )
+  }
+
+  private async runFunctionModule(
+    context: ModuleRunnerContext,
+    code: string,
+    cjsExports: Record<string, any>,
+    moduleProxy: Record<string, any>,
+  ) {
+    const exports = context[ssrModuleExportsKey]
+    const meta = context[ssrImportMetaKey]
     const filename = meta.filename
     const dirname = meta.dirname
+
+    const require = createRequire(filename)
 
     // use AsyncFunction instead of vm module to support broader array of environments out of the box
     const initModule = new AsyncFunction(
@@ -133,6 +175,7 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
       '__dirname',
       'module',
       'exports',
+      'require',
 
       // source map should already be inlined by Vite
       `"use strict";${code}`,
@@ -155,28 +198,53 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
       dirname,
       moduleProxy,
       cjsExports,
+      require,
     )
   }
 
   private async runVmModule(
     context: ModuleRunnerContext,
     code: string,
-    module: Readonly<EvaluatedModuleNode>,
+    cjsExports: Record<string, any>,
+    moduleProxy: Record<string, any>,
   ) {
     if (!this.vm) {
       throw new Error(`"runVmModule" requires this.vm to be set.`)
     }
 
+    const exports = context[ssrModuleExportsKey]
+    const meta = context[ssrImportMetaKey]
+    const filename = meta.filename
+    const dirname = meta.dirname
+
+    const argumentsList = [
+      ssrModuleExportsKey,
+      ssrImportMetaKey,
+      ssrImportKey,
+      ssrDynamicImportKey,
+      ssrExportAllKey,
+      // vite 7 support
+      '__vite_ssr_exportName__',
+
+      // backwards compat for vite-node
+      '__filename',
+      '__dirname',
+      'module',
+      'exports',
+      'require',
+    ]
+
     // add 'use strict' since ESM enables it by default
-    const codeDefinition = `'use strict';async (${Object.keys(context).join(
+    const codeDefinition = `'use strict';async (${argumentsList.join(
       ',',
     )})=>{{`
     const wrappedCode = `${codeDefinition}${code}\n}}`
     const options = {
-      filename: module.file,
+      filename,
       lineOffset: 0,
       columnOffset: -codeDefinition.length,
     }
+    const require = this.vm.externalModulesExecutor.createRequire(filename)
 
     // TODO
     // const finishModuleExecutionInfo = this.startCalculateModuleExecutionInfo(options.filename, codeDefinition.length)
@@ -188,7 +256,26 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
         importModuleDynamically: this.vm.externalModulesExecutor
           .importModuleDynamically,
       } as any)
-      await fn(...Object.values(context))
+      await fn(
+        context[ssrModuleExportsKey],
+        context[ssrImportMetaKey],
+        context[ssrImportKey],
+        context[ssrDynamicImportKey],
+        context[ssrExportAllKey],
+        // vite 7 support
+        (name: string, getter: () => unknown) => Object.defineProperty(exports, name, {
+          enumerable: true,
+          configurable: true,
+          get: getter,
+        }),
+
+        // backwards compat for vite-node
+        filename,
+        dirname,
+        moduleProxy,
+        cjsExports,
+        require,
+      )
     }
     finally {
       // this.options.moduleExecutionInfo?.set(options.filename, finishModuleExecutionInfo())

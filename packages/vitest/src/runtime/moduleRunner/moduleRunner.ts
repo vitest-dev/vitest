@@ -20,6 +20,9 @@ export class VitestModuleRunner extends ModuleRunner {
         get interopDefault() {
           return options.getWorkerState().config.deps.interopDefault
         },
+        getCurrentTestFilepath() {
+          return options.getWorkerState().filepath
+        },
       }),
     )
     this.mocker = new VitestMocker(this, {

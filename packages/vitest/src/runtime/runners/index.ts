@@ -20,7 +20,7 @@ async function getTestRunnerConstructor(
       config.mode === 'test' ? VitestTestRunner : NodeBenchmarkRunner
     ) as VitestRunnerConstructor
   }
-  const mod = await moduleRunner.executeId(config.runner)
+  const mod = await moduleRunner.import(config.runner)
   if (!mod.default && typeof mod.default !== 'function') {
     throw new Error(
       `Runner must export a default function, but got ${typeof mod.default} imported from ${
