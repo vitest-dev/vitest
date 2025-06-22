@@ -66,8 +66,6 @@ type UnsupportedProperties =
   | 'api'
   | 'deps'
   | 'testTransformMode'
-  | 'poolMatchGlobs'
-  | 'environmentMatchGlobs'
   | 'environment'
   | 'environmentOptions'
   | 'server'
