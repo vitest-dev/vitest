@@ -1,7 +1,7 @@
 import type { ModuleCacheMap } from 'vite-node'
 import type { ResolvedTestEnvironment } from '../types/environment'
 import type { SerializedConfig } from './config'
-import type { VitestExecutor } from './execute'
+import type { VitestModuleRunner } from './moduleRunner/moduleRunner'
 import { createRequire } from 'node:module'
 import timers from 'node:timers'
 import timersPromises from 'node:timers/promises'
@@ -20,7 +20,7 @@ let globalSetup = false
 export async function setupGlobalEnv(
   config: SerializedConfig,
   { environment }: ResolvedTestEnvironment,
-  executor: VitestExecutor,
+  moduleRunner: VitestModuleRunner,
 ): Promise<void> {
   await setupCommonEnv(config)
 
@@ -33,7 +33,7 @@ export async function setupGlobalEnv(
 
   if (!state.config.snapshotOptions.snapshotEnvironment) {
     state.config.snapshotOptions.snapshotEnvironment
-      = await resolveSnapshotEnvironment(config, executor)
+      = await resolveSnapshotEnvironment(config, moduleRunner)
   }
 
   if (globalSetup) {

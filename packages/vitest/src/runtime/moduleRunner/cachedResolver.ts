@@ -1,7 +1,7 @@
-import type { WorkerGlobalState } from '../types/worker'
+import type { WorkerGlobalState } from '../../types/worker'
 import { pathToFileURL } from 'node:url'
 import { join, normalize } from 'pathe'
-import { distDir } from '../paths'
+import { distDir } from '../../paths'
 
 const bareVitestRegexp = /^@?vitest(?:\/|$)/
 const normalizedDistDir = normalize(distDir)

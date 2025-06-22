@@ -1,6 +1,6 @@
 import type { VitestRunner, VitestRunnerConstructor } from '@vitest/runner'
 import type { SerializedConfig } from '../config'
-import type { VitestModuleRunner } from '../moduleRunner'
+import type { VitestModuleRunner } from '../moduleRunner/moduleRunner'
 import { resolve } from 'node:path'
 import { takeCoverageInsideWorker } from '../../integrations/coverage'
 import { distDir } from '../../paths'

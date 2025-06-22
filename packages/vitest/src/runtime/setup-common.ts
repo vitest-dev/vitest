@@ -2,7 +2,7 @@ import type { DiffOptions } from '@vitest/expect'
 import type { SnapshotSerializer } from '@vitest/snapshot'
 import type { SerializedDiffOptions } from '@vitest/utils/diff'
 import type { SerializedConfig } from './config'
-import type { VitestModuleRunner } from './moduleRunner'
+import type { VitestModuleRunner } from './moduleRunner/moduleRunner'
 import { addSerializer } from '@vitest/snapshot'
 import { setSafeTimers } from '@vitest/utils'
 

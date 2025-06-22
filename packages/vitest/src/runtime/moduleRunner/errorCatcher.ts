@@ -1,4 +1,4 @@
-import type { WorkerGlobalState } from '../types/worker'
+import type { WorkerGlobalState } from '../../types/worker'
 import { processError } from '@vitest/utils/error'
 
 const dispose: (() => void)[] = []

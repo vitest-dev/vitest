@@ -1,11 +1,11 @@
 import type vm from 'node:vm'
 import type { HotPayload } from 'vite'
 import type { FetchFunction } from 'vite/module-runner'
-import type { WorkerGlobalState } from '../types/worker'
-import type { ExternalModulesExecutor } from './external-executor'
+import type { WorkerGlobalState } from '../../types/worker'
+import type { ExternalModulesExecutor } from '../external-executor'
 import { ModuleRunner } from 'vite/module-runner'
-import { VitestMocker } from './mocker'
 import { VitestModuleEvaluator } from './moduleEvaluator'
+import { VitestMocker } from './moduleMocker'
 
 export class VitestModuleRunner extends ModuleRunner {
   public mocker: VitestMocker
