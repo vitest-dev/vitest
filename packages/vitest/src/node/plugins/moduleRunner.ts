@@ -7,19 +7,12 @@ export function ModuleRunnerTransform(): VitePlugin {
     config: {
       order: 'post',
       handler(config) {
-        if (!config.environments) {
-          config.environments = {
-            client: {
-              dev: {
-                moduleRunnerTransform: true,
-                preTransformRequests: false,
-              },
-            },
-          }
-          return
-        }
+        config.environments ??= {}
+
         const names = new Set(Object.keys(config.environments))
         names.add('client')
+        names.add('ssr')
+
         for (const name of names) {
           config.environments[name] ??= {}
 
