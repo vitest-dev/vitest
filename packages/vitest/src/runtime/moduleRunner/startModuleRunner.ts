@@ -17,7 +17,7 @@ export interface ExecuteOptions {
   externalModulesExecutor?: ExternalModulesExecutor
 }
 
-export async function createVitestModuleRunner(options: VitestModuleRunnerOptions): Promise<VitestModuleRunner> {
+async function createVitestModuleRunner(options: VitestModuleRunnerOptions): Promise<VitestModuleRunner> {
   const moduleRunner = new VitestModuleRunner(options)
 
   await moduleRunner.import('/@vite/env')

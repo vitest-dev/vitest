@@ -6,7 +6,7 @@ import { resolve } from 'pathe'
 import { distDir } from '../../paths'
 import { createCustomConsole } from '../console'
 import { ExternalModulesExecutor } from '../external-executor'
-import { startVitestModuleRunner } from '../moduleRunner/execute'
+import { startVitestModuleRunner } from '../moduleRunner/startModuleRunner'
 import { provideWorkerState } from '../utils'
 import { FileMap } from '../vm/file-map'
 
