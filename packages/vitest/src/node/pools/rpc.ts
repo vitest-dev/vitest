@@ -32,7 +32,7 @@ export function createMethodsRPC(project: TestProject, options: MethodsOptions =
         throw new Error(`The environment ${environmentName} was not defined in the Vite config.`)
       }
 
-      if (id === '/@vite/client') {
+      if (id === '/@vite/client' || id === '@vite/client') {
         // this will be stubbed
         return { externalize: '/@vite/client', type: 'module' }
       }
