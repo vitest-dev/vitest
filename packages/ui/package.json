@@ -63,7 +63,6 @@
     "@types/codemirror": "^5.60.16",
     "@types/d3-force": "^3.0.10",
     "@types/d3-selection": "^3.0.11",
-    "@types/mime": "^4.0.0",
     "@types/ws": "catalog:",
     "@unocss/reset": "catalog:",
     "@vitejs/plugin-vue": "catalog:",
