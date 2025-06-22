@@ -1,4 +1,9 @@
-import type { EvaluatedModuleNode, ModuleEvaluator, ModuleRunnerContext, ModuleRunnerImportMeta } from 'vite/module-runner'
+import type {
+  EvaluatedModuleNode,
+  ModuleEvaluator,
+  ModuleRunnerContext,
+  ModuleRunnerImportMeta,
+} from 'vite/module-runner'
 import type { VitestVmOptions } from './moduleRunner'
 import vm from 'node:vm'
 import { ESModulesEvaluator } from 'vite/module-runner'
@@ -24,10 +29,15 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
     if (this.vm) {
       return this.vm.externalModulesExecutor.import(file)
     }
+
     return this.defaultEvaluator.runExternalModule(file)
   }
 
-  async runInlinedModule(context: ModuleRunnerContext, code: string, module: Readonly<EvaluatedModuleNode>): Promise<any> {
+  async runInlinedModule(
+    context: ModuleRunnerContext,
+    code: string,
+    module: Readonly<EvaluatedModuleNode>,
+  ): Promise<any> {
     context.__vite_ssr_import_meta__.env = this.env
 
     if (this.vm) {
@@ -37,7 +47,11 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
     return this.defaultEvaluator.runInlinedModule(context, code)
   }
 
-  private async runVmModule(context: ModuleRunnerContext, code: string, module: Readonly<EvaluatedModuleNode>) {
+  private async runVmModule(
+    context: ModuleRunnerContext,
+    code: string,
+    module: Readonly<EvaluatedModuleNode>,
+  ) {
     if (!this.vm) {
       throw new Error(`"runVmModule" requires this.vm to be set.`)
     }
@@ -147,7 +161,7 @@ const defaultClientStub = {
   removeStyle: () => {},
 }
 
-function getDefaultRequestStubs(context?: vm.Context) {
+export function getDefaultRequestStubs(context?: vm.Context): Record<string, any> {
   if (!context) {
     const clientStub = {
       ...defaultClientStub,

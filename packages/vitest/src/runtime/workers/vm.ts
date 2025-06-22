@@ -6,6 +6,7 @@ import { resolve } from 'pathe'
 import { distDir } from '../../paths'
 import { createCustomConsole } from '../console'
 import { ExternalModulesExecutor } from '../external-executor'
+import { getDefaultRequestStubs } from '../moduleRunner/moduleEvaluator'
 import { startVitestModuleRunner } from '../moduleRunner/startModuleRunner'
 import { provideWorkerState } from '../utils'
 import { FileMap } from '../vm/file-map'
@@ -64,14 +65,14 @@ export async function runVmTests(method: 'run' | 'collect', state: WorkerGlobalS
   context.setImmediate = setImmediate
   context.clearImmediate = clearImmediate
 
+  const stubs = getDefaultRequestStubs(context)
+
   const externalModulesExecutor = new ExternalModulesExecutor({
     context,
     fileMap,
     packageCache,
     transform: rpc.transform,
-    // TODO: order of stubs creation
-    viteClientModule: {},
-    // viteClientModule: stubs['/@vite/client'],
+    viteClientModule: stubs['/@vite/client'],
   })
 
   const executor = await startVitestModuleRunner({
