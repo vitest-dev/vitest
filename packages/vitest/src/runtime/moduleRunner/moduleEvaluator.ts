@@ -56,12 +56,12 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
   ): Promise<any> {
     context.__vite_ssr_import_meta__.env = this.env
 
-    const exports = context[ssrModuleExportsKey]
+    const exportsObject = context[ssrModuleExportsKey]
     const SYMBOL_NOT_DEFINED = Symbol('not defined')
     let moduleExports: unknown = SYMBOL_NOT_DEFINED
     // this proxy is triggered only on exports.{name} and module.exports access
     // inside the module itself. imported module is always "exports"
-    const cjsExports = new Proxy(exports, {
+    const cjsExports = new Proxy(exportsObject, {
       get: (target, p, receiver) => {
         if (Reflect.has(target, p)) {
           return Reflect.get(target, p, receiver)
@@ -78,12 +78,12 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
           && cjsExports !== value
         ) {
           exportAll(cjsExports, value)
-          exports.default = value
+          exportsObject.default = value
           return true
         }
 
-        if (!Reflect.has(exports, 'default')) {
-          exports.default = {}
+        if (!Reflect.has(exportsObject, 'default')) {
+          exportsObject.default = {}
         }
 
         // returns undefined, when accessing named exports, if default is not an object
@@ -92,16 +92,16 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
           moduleExports !== SYMBOL_NOT_DEFINED
           && isPrimitive(moduleExports)
         ) {
-          defineExport(exports, p, () => undefined)
+          defineExport(exportsObject, p, () => undefined)
           return true
         }
 
-        if (!isPrimitive(exports.default)) {
-          exports.default[p] = value
+        if (!isPrimitive(exportsObject.default)) {
+          exportsObject.default[p] = value
         }
 
         if (p !== 'default') {
-          defineExport(exports, p, () => value)
+          defineExport(exportsObject, p, () => value)
         }
 
         return true
@@ -111,7 +111,7 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
     const moduleProxy = {
       set exports(value) {
         exportAll(cjsExports, value)
-        exports.default = value
+        exportsObject.default = value
         moduleExports = value
       },
       get exports() {
@@ -130,92 +130,12 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
       })
     }
 
-    if (this.vm) {
-      return this.runVmModule(
-        context,
-        code,
-        cjsExports,
-        moduleProxy,
-      )
-    }
-
-    await this.runFunctionModule(
-      context,
-      code,
-      cjsExports,
-      moduleProxy,
-    )
-  }
-
-  private async runFunctionModule(
-    context: ModuleRunnerContext,
-    code: string,
-    cjsExports: Record<string, any>,
-    moduleProxy: Record<string, any>,
-  ) {
-    const exports = context[ssrModuleExportsKey]
-    const meta = context[ssrImportMetaKey]
     const filename = meta.filename
     const dirname = meta.dirname
 
-    const require = createRequire(filename)
-
-    // use AsyncFunction instead of vm module to support broader array of environments out of the box
-    const initModule = new AsyncFunction(
-      ssrModuleExportsKey,
-      ssrImportMetaKey,
-      ssrImportKey,
-      ssrDynamicImportKey,
-      ssrExportAllKey,
-      // vite 7 support
-      '__vite_ssr_exportName__',
-
-      // backwards compat for vite-node
-      '__filename',
-      '__dirname',
-      'module',
-      'exports',
-      'require',
-
-      // source map should already be inlined by Vite
-      `"use strict";${code}`,
-    )
-
-    await initModule(
-      context[ssrModuleExportsKey],
-      context[ssrImportMetaKey],
-      context[ssrImportKey],
-      context[ssrDynamicImportKey],
-      context[ssrExportAllKey],
-      // vite 7 support
-      (name: string, getter: () => unknown) => Object.defineProperty(exports, name, {
-        enumerable: true,
-        configurable: true,
-        get: getter,
-      }),
-
-      filename,
-      dirname,
-      moduleProxy,
-      cjsExports,
-      require,
-    )
-  }
-
-  private async runVmModule(
-    context: ModuleRunnerContext,
-    code: string,
-    cjsExports: Record<string, any>,
-    moduleProxy: Record<string, any>,
-  ) {
-    if (!this.vm) {
-      throw new Error(`"runVmModule" requires this.vm to be set.`)
-    }
-
-    const exports = context[ssrModuleExportsKey]
-    const meta = context[ssrImportMetaKey]
-    const filename = meta.filename
-    const dirname = meta.dirname
+    const require = this.vm
+      ? this.vm.externalModulesExecutor.createRequire(filename)
+      : createRequire(filename)
 
     const argumentsList = [
       ssrModuleExportsKey,
@@ -244,42 +164,36 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
       lineOffset: 0,
       columnOffset: -codeDefinition.length,
     }
-    const require = this.vm.externalModulesExecutor.createRequire(filename)
 
     // TODO
     // const finishModuleExecutionInfo = this.startCalculateModuleExecutionInfo(options.filename, codeDefinition.length)
 
-    try {
-      const fn = vm.runInContext(wrappedCode, this.vm.context, {
-        ...options,
-        // if we encountered an import, it's not inlined
-        importModuleDynamically: this.vm.externalModulesExecutor
-          .importModuleDynamically,
-      } as any)
-      await fn(
-        context[ssrModuleExportsKey],
-        context[ssrImportMetaKey],
-        context[ssrImportKey],
-        context[ssrDynamicImportKey],
-        context[ssrExportAllKey],
-        // vite 7 support
-        (name: string, getter: () => unknown) => Object.defineProperty(exports, name, {
-          enumerable: true,
-          configurable: true,
-          get: getter,
-        }),
+    const initModule = this.vm
+      ? vm.runInContext(wrappedCode, this.vm.context, options)
+      : vm.runInThisContext(
+          wrappedCode,
+          options,
+        )
 
-        // backwards compat for vite-node
-        filename,
-        dirname,
-        moduleProxy,
-        cjsExports,
-        require,
-      )
-    }
-    finally {
-      // this.options.moduleExecutionInfo?.set(options.filename, finishModuleExecutionInfo())
-    }
+    await initModule(
+      context[ssrModuleExportsKey],
+      context[ssrImportMetaKey],
+      context[ssrImportKey],
+      context[ssrDynamicImportKey],
+      context[ssrExportAllKey],
+      // vite 7 support
+      (name: string, getter: () => unknown) => Object.defineProperty(moduleExports, name, {
+        enumerable: true,
+        configurable: true,
+        get: getter,
+      }),
+
+      filename,
+      dirname,
+      moduleProxy,
+      cjsExports,
+      require,
+    )
   }
 
   private shouldInterop(path: string, mod: any): boolean {
