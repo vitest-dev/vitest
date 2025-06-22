@@ -135,57 +135,53 @@ describe('.toMatchScreenshot', () => {
     `)
   })
 
-  test('throws when creating a screenshot for the first time', async ({
-    onTestFinished,
-    task,
-  }) => {
-    // if running with updates enabled, this test will not work
-    if (server.config.snapshotOptions.updateSnapshot === 'all') {
-      return
-    }
+  test.runIf(server.config.snapshotOptions.updateSnapshot !== 'all')(
+    'throws when creating a screenshot for the first time',
+    async ({
+      onTestFinished,
+      task,
+    }) => {
+      const { queryByTestId } = renderTestCase([
+        'oklch(37.9% 0.146 265.522)',
+        'oklch(40.5% 0.101 131.063)',
+        'oklch(39.6% 0.141 25.723)',
+      ])
 
-    const { queryByTestId } = renderTestCase([
-      'oklch(37.9% 0.146 265.522)',
-      'oklch(40.5% 0.101 131.063)',
-      'oklch(39.6% 0.141 25.723)',
-    ])
+      let errorMessage: string
 
-    let errorMessage: string
+      const filename = globalThis.crypto.randomUUID()
 
-    const filename = globalThis.crypto.randomUUID()
-
-    try {
-      await expect(queryByTestId(dataTestId)).toMatchScreenshot(filename)
-    } catch (error) {
-      errorMessage = error.message
-    }
-
-    const [referencePath] = extractPaths(errorMessage, filename)
-
-    expect(typeof referencePath).toBe('string')
-
-    onTestFinished(async () => {
-      await server.commands.removeFile(referencePath)
-    })
-
-    expect(errorMessage).toMatchInlineSnapshot(`
-      expect(element).toMatchScreenshot()
-
-      No existing reference screenshot found${
-        server.config.snapshotOptions.updateSnapshot === 'none'
-          ? '.'
-          : '; a new one was created. Review it before running tests again.'
+      try {
+        await expect(queryByTestId(dataTestId)).toMatchScreenshot(filename)
+      } catch (error) {
+        errorMessage = error.message
       }
 
-      Reference screenshot:
-        ${referencePath}
-    `)
-  })
+      const [referencePath] = extractPaths(errorMessage, filename)
+
+      expect(typeof referencePath).toBe('string')
+
+      onTestFinished(async () => {
+        await server.commands.removeFile(referencePath)
+      })
+
+      expect(errorMessage).toMatchInlineSnapshot(`
+        expect(element).toMatchScreenshot()
+
+        No existing reference screenshot found${
+          server.config.snapshotOptions.updateSnapshot === 'none'
+            ? '.'
+            : '; a new one was created. Review it before running tests again.'
+        }
+
+        Reference screenshot:
+          ${referencePath}
+      `)
+    },
+  )
 
   test(
     'throws when not able to capture a stable screenshot',
-    // this test un not stable
-    { retry: 5 },
     async ({ onTestFailed }) => {
       const filename = globalThis.crypto.randomUUID()
 
