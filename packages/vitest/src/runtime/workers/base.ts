@@ -1,6 +1,6 @@
 import type { WorkerGlobalState } from '../../types/worker'
 import type { ContextExecutorOptions } from '../execute'
-import type { VitestModuleRunner } from '../execute-new'
+import type { VitestModuleRunner } from '../moduleRunner'
 import { EvaluatedModules } from 'vite/module-runner'
 import { startVitestModuleRunner } from '../execute'
 import { provideWorkerState } from '../utils'

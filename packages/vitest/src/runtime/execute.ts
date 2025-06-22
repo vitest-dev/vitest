@@ -1,12 +1,12 @@
 import type vm from 'node:vm'
 import type { EvaluatedModules } from 'vite/module-runner'
 import type { WorkerGlobalState } from '../types/worker'
-import type { VitestModuleRunnerOptions } from './execute-new'
 import type { ExternalModulesExecutor } from './external-executor'
+import type { VitestModuleRunnerOptions } from './moduleRunner'
 import fs from 'node:fs'
 import { getCachedVitestImport } from './cachedResolver'
 import { listenForErrors } from './errorCatcher'
-import { VitestModuleRunner } from './execute-new'
+import { VitestModuleRunner } from './moduleRunner'
 
 const { readFileSync } = fs
 

@@ -1,5 +1,5 @@
 import type { EvaluatedModuleNode, ModuleEvaluator, ModuleRunnerContext } from 'vite/module-runner'
-import type { VitestVmOptions } from './execute-new'
+import type { VitestVmOptions } from './moduleRunner'
 import vm from 'node:vm'
 import { ESModulesEvaluator } from 'vite/module-runner'
 

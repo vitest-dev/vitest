@@ -1,7 +1,7 @@
 import type { ManualMockedModule, MockedModule, MockedModuleType } from '@vitest/mocker'
 import type { MockFactory, MockOptions, PendingSuiteMock } from '../types/mocker'
 // import type { VitestExecutor } from './execute'
-import type { VitestModuleRunner } from './execute-new'
+import type { VitestModuleRunner } from './moduleRunner'
 import { isAbsolute, resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import vm from 'node:vm'

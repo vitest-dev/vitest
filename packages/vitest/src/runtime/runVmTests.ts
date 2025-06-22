@@ -1,7 +1,7 @@
 import type { FileSpecification } from '@vitest/runner'
 import type { ModuleCacheMap } from 'vite-node'
 import type { SerializedConfig } from './config'
-import type { VitestModuleRunner } from './execute-new'
+import type { VitestModuleRunner } from './moduleRunner'
 import { createRequire } from 'node:module'
 import { performance } from 'node:perf_hooks'
 import timers from 'node:timers'
