@@ -7,11 +7,17 @@ import type { UserConsoleLog } from './general'
 declare global {
   // eslint-disable-next-line ts/no-namespace
   namespace Chai {
-    interface Assertion {
-      containSubset: (expected: any) => Assertion
+    interface ContainSubset {
+      (expected: any): Assertion
     }
+
+    interface Assertion {
+      containSubset: ContainSubset
+    }
+
     interface Assert {
-      containSubset: (val: any, exp: any, msg?: string) => void
+      // eslint-disable-next-line ts/method-signature-style
+      containSubset(val: any, exp: any, msg?: string): void
     }
   }
 }

@@ -1,5 +1,5 @@
 import { resolve } from 'pathe';
-import { defineConfig, defineWorkspace } from 'vitest/config';
+import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
   test: {

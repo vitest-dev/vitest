@@ -1,5 +1,5 @@
 import type { ViteUserConfig } from 'vitest/config'
-import type { UserConfig, VitestOptions } from 'vitest/node'
+import type { TestUserConfig, VitestOptions } from 'vitest/node'
 import type { TestFsStructure } from '../../test-utils'
 import crypto from 'node:crypto'
 import { resolve } from 'pathe'
@@ -7,7 +7,7 @@ import { describe, expect, onTestFinished, test } from 'vitest'
 import { createVitest } from 'vitest/node'
 import { runVitestCli, useFS } from '../../test-utils'
 
-async function vitest(cliOptions: UserConfig, configValue: UserConfig = {}, viteConfig: ViteUserConfig = {}, vitestOptions: VitestOptions = {}) {
+async function vitest(cliOptions: TestUserConfig, configValue: TestUserConfig = {}, viteConfig: ViteUserConfig = {}, vitestOptions: VitestOptions = {}) {
   const vitest = await createVitest('test', { ...cliOptions, watch: false }, { ...viteConfig, test: configValue as any }, vitestOptions)
   onTestFinished(() => vitest.close())
   return vitest
@@ -308,7 +308,7 @@ test('can enable browser-cli options for multi-project workspace', async () => {
   expect(projects[1].config.browser.headless).toBe(true)
 })
 
-function getCliConfig(options: UserConfig, cli: string[], fs: TestFsStructure = {}) {
+function getCliConfig(options: TestUserConfig, cli: string[], fs: TestFsStructure = {}) {
   const root = resolve(process.cwd(), `vitest-test-${crypto.randomUUID()}`)
   useFS(root, {
     ...fs,

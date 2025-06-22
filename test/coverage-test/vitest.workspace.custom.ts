@@ -1,4 +1,5 @@
-import { defineConfig, defineWorkspace } from 'vitest/config'
+import type { UserWorkspaceConfig } from 'vitest/config'
+import { defineConfig } from 'vitest/config'
 
 const GENERIC_TESTS = 'test/**.test.ts'
 const V8_TESTS = 'test/**.v8.test.ts'
@@ -13,6 +14,11 @@ const config = defineConfig({
     setupFiles: ['./setup.ts'],
   },
 })
+
+// TODO: move when --workspace is removed
+function defineWorkspace(config: UserWorkspaceConfig[]) {
+  return config
+}
 
 export default defineWorkspace([
   // Test cases for v8-provider

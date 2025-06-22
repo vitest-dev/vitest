@@ -1,4 +1,4 @@
-import type { GlobalSetupContext } from 'vitest/node'
+import type { TestProject } from 'vitest/node'
 import assert from 'node:assert/strict'
 import { readFile } from 'node:fs/promises'
 
@@ -14,7 +14,7 @@ declare module 'vitest' {
   }
 }
 
-export function setup({ provide }: GlobalSetupContext) {
+export function setup({ provide }: TestProject) {
   provide('globalSetup', true)
   provide('globalSetupOverridden', false)
   try {

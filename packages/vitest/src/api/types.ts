@@ -32,9 +32,6 @@ export interface WebSocketHandlers {
   getTestFiles: () => Promise<SerializedTestSpecification[]>
   getPaths: () => string[]
   getConfig: () => SerializedConfig
-  // TODO: Remove in v4
-  /** @deprecated -- Use `getResolvedProjectLabels` instead */
-  getResolvedProjectNames: () => string[]
   getResolvedProjectLabels: () => { name: string; color?: LabelColor }[]
   getModuleGraph: (
     projectName: string,

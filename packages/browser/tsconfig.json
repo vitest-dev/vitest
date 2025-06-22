@@ -4,5 +4,10 @@
     "types": ["node", "vite/client"],
     "isolatedDeclarations": true
   },
-  "exclude": ["dist", "node_modules", "**/vite.config.ts"]
+  "exclude": [
+    "dist",
+    "node_modules",
+    "**/vite.config.ts",
+    "src/client/**/*.ts"
+  ]
 }

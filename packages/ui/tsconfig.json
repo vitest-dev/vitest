@@ -2,6 +2,7 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "jsx": "preserve",
+    "lib": ["dom", "esnext", "DOM.Iterable"],
     "skipLibCheck": true
   },
   "include": ["./client/**/*"],

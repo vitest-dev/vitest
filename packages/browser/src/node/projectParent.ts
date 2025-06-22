@@ -1,6 +1,6 @@
 import type { StackTraceParserOptions } from '@vitest/utils/source-map'
 import type { HtmlTagDescriptor } from 'vite'
-import type { ErrorWithDiff, ParsedStack } from 'vitest'
+import type { ParsedStack, TestError } from 'vitest'
 import type {
   BrowserCommand,
   BrowserScript,
@@ -159,7 +159,7 @@ export class ParentBrowserProject {
   }
 
   public parseErrorStacktrace(
-    e: ErrorWithDiff,
+    e: TestError,
     options: StackTraceParserOptions = {},
   ): ParsedStack[] {
     return parseErrorStacktrace(e, {

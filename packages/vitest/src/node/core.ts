@@ -2,7 +2,6 @@ import type { CancelReason, File } from '@vitest/runner'
 import type { Awaitable } from '@vitest/utils'
 import type { Writable } from 'node:stream'
 import type { ViteDevServer } from 'vite'
-import type { defineWorkspace } from 'vitest/config'
 import type { SerializedCoverageConfig } from '../runtime/config'
 import type { ArgumentsType, ProvidedContext, UserConsoleLog } from '../types/general'
 import type { CliOptions } from './cli/cli-api'
@@ -481,7 +480,7 @@ export class Vitest {
     )
 
     const workspaceModule = await this.import<{
-      default: ReturnType<typeof defineWorkspace>
+      default: TestProjectConfiguration[]
     }>(workspaceConfigPath)
 
     if (!workspaceModule.default || !Array.isArray(workspaceModule.default)) {

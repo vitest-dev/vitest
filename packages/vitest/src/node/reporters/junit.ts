@@ -18,8 +18,6 @@ interface ClassnameTemplateVariables {
 
 export interface JUnitOptions {
   outputFile?: string
-  /** @deprecated Use `classnameTemplate` instead. */
-  classname?: string
 
   /**
    * Template for the classname attribute. Can be either a string or a function. The string can contain placeholders {filename} and {filepath}.
@@ -220,9 +218,6 @@ export class JUnitReporter implements Reporter {
         classname = this.options.classnameTemplate
           .replace(/\{filename\}/g, templateVars.filename)
           .replace(/\{filepath\}/g, templateVars.filepath)
-      }
-      else if (typeof this.options.classname === 'string') {
-        classname = this.options.classname
       }
 
       await this.writeElement(

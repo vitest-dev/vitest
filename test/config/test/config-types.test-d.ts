@@ -1,5 +1,6 @@
+import type { TestUserConfig } from 'vitest/config'
 import { assertType, describe, expectTypeOf, test } from 'vitest'
-import { defineConfig, defineProject, defineWorkspace, mergeConfig } from 'vitest/config'
+import { defineConfig, defineProject, mergeConfig } from 'vitest/config'
 
 const expectMainTestConfig = expectTypeOf(defineConfig).parameter(0).resolves.toHaveProperty('test').exclude<undefined>()
 const expectProjectTestConfig = expectTypeOf(defineProject).parameter(0).resolves.toHaveProperty('test').exclude<undefined>()
@@ -32,7 +33,7 @@ describe('merge config helper', () => {
 })
 
 describe('define workspace helper', () => {
-  type DefineWorkspaceParameter = Parameters<typeof defineWorkspace>[0]
+  type DefineWorkspaceParameter = TestUserConfig['projects']
 
   test('allows string', () => {
     assertType<DefineWorkspaceParameter>(['./path/to/workspace'])
@@ -74,33 +75,5 @@ describe('define workspace helper', () => {
         },
       },
     ])
-  })
-
-  test('return type matches parameters', () => {
-    expectTypeOf(defineWorkspace).returns.toMatchTypeOf<DefineWorkspaceParameter>()
-
-    expectTypeOf(defineWorkspace([
-      './path/to/project',
-      {
-        test: {
-          name: 'Workspace Project #1',
-          include: ['string'],
-
-          // @ts-expect-error -- Not allowed here
-          coverage: {},
-        },
-      },
-      './path/to/another/project',
-      {
-        extends: 'workspace custom field',
-        test: {
-          name: 'Workspace Project #2',
-          include: ['string'],
-
-          // @ts-expect-error -- Not allowed here
-          coverage: {},
-        },
-      },
-    ])).items.toMatchTypeOf<DefineWorkspaceParameter[number]>()
   })
 })

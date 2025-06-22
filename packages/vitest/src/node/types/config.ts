@@ -7,14 +7,14 @@ import type { AliasOptions, ConfigEnv, DepOptimizationConfig, ServerOptions, Use
 import type { ViteNodeServerOptions } from 'vite-node'
 import type { ChaiConfig } from '../../integrations/chai/config'
 import type { SerializedConfig } from '../../runtime/config'
-import type { EnvironmentOptions } from '../../types/environment'
-import type { Arrayable, ErrorWithDiff, LabelColor, ParsedStack, ProvidedContext } from '../../types/general'
+import type { Arrayable, LabelColor, ParsedStack, ProvidedContext, TestError } from '../../types/general'
 import type { HappyDOMOptions } from '../../types/happy-dom-options'
 import type { JSDOMOptions } from '../../types/jsdom-options'
 import type {
   BuiltinReporterOptions,
   BuiltinReporters,
 } from '../reporters'
+import type { TestCase, TestModule, TestSuite } from '../reporters/reported-tasks'
 import type { TestSequencerConstructor } from '../sequencers/types'
 import type { WatcherTriggerPattern } from '../watcher'
 import type { BenchmarkUserOptions } from './benchmark'
@@ -47,7 +47,16 @@ export type ApiConfig = Pick<
   'port' | 'strictPort' | 'host' | 'middlewareMode'
 >
 
-export type { EnvironmentOptions, HappyDOMOptions, JSDOMOptions }
+export interface EnvironmentOptions {
+  /**
+   * jsdom options.
+   */
+  jsdom?: JSDOMOptions
+  happyDOM?: HappyDOMOptions
+  [x: string]: unknown
+}
+
+export type { HappyDOMOptions, JSDOMOptions }
 
 export type VitestRunMode = 'test' | 'benchmark'
 
@@ -271,7 +280,7 @@ export interface InlineConfig {
 
   /**
    * Exclude globs for test files
-   * @default ['**\/node_modules/**', '**\/dist/**', '**\/cypress/**', '**\/.{idea,git,cache,output,temp}/**', '**\/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress,tsup,build,eslint,prettier}.config.*']
+   * @default ['**\/node_modules/**', '**\/.git/**']
    */
   exclude?: string[]
 
@@ -653,7 +662,7 @@ export interface InlineConfig {
    *
    * Return `false` to ignore the log.
    */
-  onConsoleLog?: (log: string, type: 'stdout' | 'stderr') => boolean | void
+  onConsoleLog?: (log: string, type: 'stdout' | 'stderr', entity: TestModule | TestCase | TestSuite | undefined) => boolean | void
 
   /**
    * Enable stack trace filtering. If absent, all stack trace frames
@@ -661,7 +670,7 @@ export interface InlineConfig {
    *
    * Return `false` to omit the frame.
    */
-  onStackTrace?: (error: ErrorWithDiff, frame: ParsedStack) => boolean | void
+  onStackTrace?: (error: TestError, frame: ParsedStack) => boolean | void
 
   /**
    * Indicates if CSS files should be processed.
@@ -1161,6 +1170,7 @@ export interface UserWorkspaceConfig extends ViteUserConfig {
   test?: ProjectConfig
 }
 
+// TODO: remove types when "workspace" support is removed
 export type UserProjectConfigFn = (
   env: ConfigEnv
 ) => UserWorkspaceConfig | Promise<UserWorkspaceConfig>
@@ -1183,6 +1193,3 @@ export type TestProjectConfiguration =
   | TestProjectInlineConfiguration
   | Promise<UserWorkspaceConfig>
   | UserProjectConfigFn
-
-/** @deprecated use `TestProjectConfiguration` instead */
-export type WorkspaceProjectConfiguration = TestProjectConfiguration

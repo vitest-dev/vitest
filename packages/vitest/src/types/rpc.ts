@@ -20,20 +20,7 @@ export interface RuntimeRPC {
   ) => Promise<{
     external?: boolean | 'absolute' | 'relative'
     id: string
-    /** @deprecated */
-    meta?: Record<string, any> | null
-    /** @deprecated */
-    moduleSideEffects?: boolean | 'no-treeshake' | null
-    /** @deprecated */
-    syntheticNamedExports?: boolean | string | null
   } | null>
-  /**
-   * @deprecated unused
-   */
-  getSourceMap: (
-    id: string,
-    force?: boolean
-  ) => Promise<any>
 
   onUserConsoleLog: (log: UserConsoleLog) => void
   onUnhandledError: (err: unknown, type: string) => void

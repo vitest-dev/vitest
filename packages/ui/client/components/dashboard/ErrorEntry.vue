@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import type { ErrorWithDiff } from '@vitest/utils'
+import type { TestError } from '@vitest/utils'
 
 defineProps<{
-  error: ErrorWithDiff
+  error: TestError
 }>()
 </script>
 

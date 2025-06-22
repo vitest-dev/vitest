@@ -1,13 +1,12 @@
-import type { MockedModuleSerialized } from '@vitest/mocker'
-import type { ServerIdResolution, ServerMockResolution } from '@vitest/mocker/node'
+import type { MockedModuleSerialized, ServerIdResolution, ServerMockResolution } from '@vitest/mocker'
 import type { TaskEventPack, TaskResultPack, TestAnnotation } from '@vitest/runner'
 import type { BirpcReturn } from 'birpc'
 import type {
   AfterSuiteRunMeta,
   BrowserTesterOptions,
   CancelReason,
-  Reporter,
   RunnerTestFile,
+  SerializedTestSpecification,
   SnapshotResult,
   TestExecutionMethod,
   UserConsoleLog,
@@ -60,16 +59,19 @@ export interface WebSocketBrowserHandlers {
   trackCdpEvent: (sessionId: string, type: 'on' | 'once' | 'off', event: string, listenerId: string) => void
 }
 
-export interface WebSocketEvents
-  extends Pick<
-    Reporter,
-    | 'onCollected'
-    | 'onFinished'
-    | 'onTaskUpdate'
-    | 'onUserConsoleLog'
-    | 'onPathsCollected'
-    | 'onSpecsCollected'
-  > {
+export type Awaitable<T> = T | PromiseLike<T>
+
+export interface WebSocketEvents {
+  onCollected?: (files: RunnerTestFile[]) => Awaitable<void>
+  onFinished?: (
+    files: File[],
+    errors: unknown[],
+    coverage?: unknown
+  ) => Awaitable<void>
+  onTaskUpdate?: (packs: TaskResultPack[]) => Awaitable<void>
+  onUserConsoleLog?: (log: UserConsoleLog) => Awaitable<void>
+  onPathsCollected?: (paths?: string[]) => Awaitable<void>
+  onSpecsCollected?: (specs?: SerializedTestSpecification[]) => Awaitable<void>
   onFinishedReportCoverage: () => void
 }
 

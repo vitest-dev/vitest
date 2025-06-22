@@ -1,4 +1,5 @@
 import type { Context } from 'node:vm'
+import type { ModuleCacheMap } from 'vite-node'
 import type { WorkerGlobalState } from '../../types/worker'
 import { pathToFileURL } from 'node:url'
 import { isContext } from 'node:vm'
@@ -76,7 +77,7 @@ export async function runVmTests(method: 'run' | 'collect', state: WorkerGlobalS
 
   const executor = await startVitestExecutor({
     context,
-    moduleCache: state.moduleCache,
+    moduleCache: state.moduleCache as ModuleCacheMap,
     state,
     externalModulesExecutor,
     requestStubs: stubs,

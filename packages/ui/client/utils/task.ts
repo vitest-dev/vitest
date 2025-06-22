@@ -1,10 +1,10 @@
-import type { Suite, Task } from 'vitest'
+import type { RunnerTask, RunnerTestSuite } from 'vitest'
 
-export function isSuite(task: Task): task is Suite {
+export function isSuite(task: RunnerTask): task is RunnerTestSuite {
   return Object.hasOwnProperty.call(task, 'tasks')
 }
 
-export function isTaskDone(task: Task) {
+export function isTaskDone(task: RunnerTask) {
   const state = task.result?.state
   const mode = task.mode
 

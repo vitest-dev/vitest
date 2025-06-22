@@ -6,6 +6,7 @@ export { default as SnapshotState } from './port/state'
 
 export type {
   SnapshotData,
+  SnapshotEnvironment,
   SnapshotMatchOptions,
   SnapshotResult,
   SnapshotSerializer,
