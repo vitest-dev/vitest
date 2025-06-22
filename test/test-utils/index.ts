@@ -8,7 +8,7 @@ import fs from 'node:fs'
 import { Readable, Writable } from 'node:stream'
 import { fileURLToPath } from 'node:url'
 import { inspect } from 'node:util'
-import { dirname, resolve } from 'pathe'
+import { dirname, relative, resolve } from 'pathe'
 import { x } from 'tinyexec'
 import * as tinyrainbow from 'tinyrainbow'
 import { afterEach, onTestFinished } from 'vitest'
@@ -336,6 +336,15 @@ export function useFS<T extends TestFsStructure>(root: string, structure: T) {
         throw new Error(`file ${file} already exists in the test file system`)
       }
       createFile(filepath, content)
+    },
+    statFile: (file: string): fs.Stats => {
+      const filepath = resolve(root, file)
+
+      if (relative(root, filepath).startsWith('..')) {
+        throw new Error(`file ${file} is outside of the test file system`)
+      }
+
+      return fs.statSync(filepath)
     },
   }
 }

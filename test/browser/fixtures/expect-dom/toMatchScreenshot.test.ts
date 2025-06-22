@@ -1,20 +1,11 @@
 import { afterEach, describe, expect, test } from 'vitest'
-import { render } from './utils'
+import { extractToMatchScreenshotPaths, render } from './utils'
 import { page, server } from '@vitest/browser/context'
 import { join } from 'pathe'
 
 const blockSize = 19
 const blocks = 5
 const dataTestId = 'colors-box'
-
-const extractPaths = (errorMessage: string, filename: string): string[] =>
-  // `map` on `Iterator` is only available in Node >= 22
-  Array.from(
-    errorMessage.matchAll(
-      new RegExp(`^.*?((?:[A-Z]:)?/.*?${filename}-[\\w-]+\\.png)`, 'gm'),
-    ),
-    ([_, path]) => path,
-  )
 
 const renderTestCase = (colors: readonly [string, string, string]) =>
   render(`
@@ -95,7 +86,7 @@ describe('.toMatchScreenshot', () => {
       errorMessage = error.message
     }
 
-    const [referencePath, actualPath, diffPath] = extractPaths(
+    const [referencePath, actualPath, diffPath] = extractToMatchScreenshotPaths(
       errorMessage,
       filename,
     )
@@ -157,7 +148,7 @@ describe('.toMatchScreenshot', () => {
         errorMessage = error.message
       }
 
-      const [referencePath] = extractPaths(errorMessage, filename)
+      const [referencePath] = extractToMatchScreenshotPaths(errorMessage, filename)
 
       expect(typeof referencePath).toBe('string')
 
@@ -247,7 +238,7 @@ describe('.toMatchScreenshot', () => {
       }
 
       onTestFailed(async () => {
-        const [referencePath] = extractPaths(errorMessage, filename)
+        const [referencePath] = extractToMatchScreenshotPaths(errorMessage, filename)
 
         if (typeof referencePath === 'string') {
           await server.commands.removeFile(referencePath)
