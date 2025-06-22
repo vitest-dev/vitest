@@ -1,4 +1,4 @@
-import type { EvaluatedModuleNode, ModuleEvaluator, ModuleRunnerContext } from 'vite/module-runner'
+import type { EvaluatedModuleNode, ModuleEvaluator, ModuleRunnerContext, ModuleRunnerImportMeta } from 'vite/module-runner'
 import type { VitestVmOptions } from './moduleRunner'
 import vm from 'node:vm'
 import { ESModulesEvaluator } from 'vite/module-runner'
@@ -7,7 +7,7 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
   private defaultEvaluator = new ESModulesEvaluator()
   public readonly startOffset: number
   public stubs: Record<string, any> = {}
-  public env: NodeJS.ProcessEnv = createImportMetaEnvProxy()
+  public env: ModuleRunnerImportMeta['env'] = createImportMetaEnvProxy()
 
   constructor(
     private vm: VitestVmOptions | undefined,
@@ -24,13 +24,13 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
   }
 
   async runInlinedModule(context: ModuleRunnerContext, code: string, module: Readonly<EvaluatedModuleNode>): Promise<any> {
-    // TODO: check
-    if (module.id in this.stubs) {
-      const exports = this.stubs[module.id]
+    context.__vite_ssr_import_meta__.env = this.env
+
+    if (module.url in this.stubs) {
+      const exports = this.stubs[module.url]
       context.__vite_ssr_exportAll__(exports)
       return
     }
-    context.__vite_ssr_import_meta__.env = this.env as any // TODO: type
 
     if (this.vm) {
       return this.runVmModule(context, code, module)
@@ -73,7 +73,7 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
   }
 }
 
-export function createImportMetaEnvProxy(): NodeJS.ProcessEnv {
+export function createImportMetaEnvProxy(): ModuleRunnerImportMeta['env'] {
   // packages/vitest/src/node/plugins/index.ts:146
   const booleanKeys = ['DEV', 'PROD', 'SSR']
   return new Proxy(process.env, {
@@ -100,7 +100,7 @@ export function createImportMetaEnvProxy(): NodeJS.ProcessEnv {
 
       return true
     },
-  })
+  }) as ModuleRunnerImportMeta['env']
 }
 
 function updateStyle(id: string, css: string) {
@@ -152,13 +152,12 @@ const defaultClientStub = {
 function getDefaultRequestStubs(context?: vm.Context) {
   if (!context) {
     const clientStub = {
-      defaultClientStub,
+      ...defaultClientStub,
       updateStyle,
       removeStyle,
     }
     return {
-      '/@vite/client': clientStub,
-      '@vite/client': clientStub,
+      '/@vite/client.mjs': clientStub,
     }
   }
   const clientStub = vm.runInContext(
@@ -166,7 +165,6 @@ function getDefaultRequestStubs(context?: vm.Context) {
     context,
   )(defaultClientStub)
   return {
-    '/@vite/client': clientStub,
-    '@vite/client': clientStub,
+    '/@vite/client.mjs': clientStub,
   }
 }
