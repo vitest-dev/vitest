@@ -31,6 +31,12 @@ export function createMethodsRPC(project: TestProject, options: MethodsOptions =
       if (!environment) {
         throw new Error(`The environment ${environmentName} was not defined in the Vite config.`)
       }
+
+      if (id === '/@vite/client') {
+        // this will be stubbed
+        return { externalize: '/@vite/client', type: 'module' }
+      }
+
       const result = await environment.fetchModule(id, importer, options).catch(handleRollupError)
 
       if (!cacheFs || !('code' in result)) {

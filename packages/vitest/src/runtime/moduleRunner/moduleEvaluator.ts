@@ -17,6 +17,10 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
   }
 
   runExternalModule(file: string): Promise<any> {
+    if (file in this.stubs) {
+      return this.stubs[file]
+    }
+
     if (this.vm) {
       return this.vm.externalModulesExecutor.import(file)
     }
@@ -25,12 +29,6 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
 
   async runInlinedModule(context: ModuleRunnerContext, code: string, module: Readonly<EvaluatedModuleNode>): Promise<any> {
     context.__vite_ssr_import_meta__.env = this.env
-
-    if (module.url in this.stubs) {
-      const exports = this.stubs[module.url]
-      context.__vite_ssr_exportAll__(exports)
-      return
-    }
 
     if (this.vm) {
       return this.runVmModule(context, code, module)
@@ -157,7 +155,7 @@ function getDefaultRequestStubs(context?: vm.Context) {
       removeStyle,
     }
     return {
-      '/@vite/client.mjs': clientStub,
+      '/@vite/client': clientStub,
     }
   }
   const clientStub = vm.runInContext(
@@ -165,6 +163,6 @@ function getDefaultRequestStubs(context?: vm.Context) {
     context,
   )(defaultClientStub)
   return {
-    '/@vite/client.mjs': clientStub,
+    '/@vite/client': clientStub,
   }
 }
