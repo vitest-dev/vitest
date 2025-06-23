@@ -159,6 +159,16 @@ function eq(
     // RegExps are compared by their source patterns and flags.
     case '[object RegExp]':
       return a.source === b.source && a.flags === b.flags
+    case '[object Temporal.Instant]':
+    case '[object Temporal.ZonedDateTime]':
+    case '[object Temporal.PlainDateTime]':
+    case '[object Temporal.PlainDate]':
+    case '[object Temporal.PlainTime]':
+    case '[object Temporal.PlainYearMonth]':
+    case '[object Temporal.PlainMonthDay]':
+      return a.equals(b)
+    case '[object Temporal.Duration]':
+      return a.toString() === b.toString()
   }
   if (typeof a !== 'object' || typeof b !== 'object') {
     return false
@@ -538,7 +548,7 @@ export function iterableEquality(
   ) {
     const aEntries = Object.entries(a)
     const bEntries = Object.entries(b)
-    if (!equals(aEntries, bEntries)) {
+    if (!equals(aEntries, bEntries, filteredCustomTesters)) {
       return false
     }
   }

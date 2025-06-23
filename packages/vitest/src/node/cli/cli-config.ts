@@ -7,6 +7,7 @@ import type {
 } from '../types/pool-options'
 import type { CliOptions } from './cli-api'
 import { defaultBrowserPort, defaultPort } from '../../constants'
+import { ReportersMap } from '../reporters'
 
 type NestedOption<T, V = Extract<T, Record<string, any>>> = V extends
   | never
@@ -154,13 +155,26 @@ export const cliOptionsConfig: VitestCLIOptions = {
   silent: {
     description: 'Silent console output from tests. Use `\'passed-only\'` to see logs from failing tests only.',
     argument: '[value]',
+    transform(value) {
+      if (value === 'true' || value === 'yes' || value === true) {
+        return true
+      }
+      if (value === 'false' || value === 'no' || value === false) {
+        return false
+      }
+      if (value === 'passed-only') {
+        return value
+      }
+
+      throw new TypeError(`Unexpected value "--silent=${value}". Use "--silent=true ${value}" instead.`)
+    },
   },
   hideSkippedTests: {
     description: 'Hide logs for skipped tests',
   },
   reporters: {
     alias: 'reporter',
-    description: 'Specify reporters',
+    description: `Specify reporters (${Object.keys(ReportersMap).join(', ')})`,
     argument: '<name>',
     subcommands: null, // don't support custom objects
     array: true,
@@ -176,11 +190,6 @@ export const cliOptionsConfig: VitestCLIOptions = {
     argument: '', // empty string means boolean
     transform: transformNestedBoolean,
     subcommands: {
-      all: {
-        description:
-          'Whether to include all files, including the untested ones into report',
-        default: true,
-      },
       provider: {
         description:
           'Select the tool for coverage collection, available values are: "v8", "istanbul" and "custom"',
@@ -192,20 +201,14 @@ export const cliOptionsConfig: VitestCLIOptions = {
       },
       include: {
         description:
-          'Files included in coverage as glob patterns. May be specified more than once when using multiple patterns (default: `**`)',
+          'Files included in coverage as glob patterns. May be specified more than once when using multiple patterns. By default only files covered by tests are included.',
         argument: '<pattern>',
         array: true,
       },
       exclude: {
         description:
-          'Files to be excluded in coverage. May be specified more than once when using multiple extensions (default: Visit [`coverage.exclude`](https://vitest.dev/config/#coverage-exclude))',
+          'Files to be excluded in coverage. May be specified more than once when using multiple extensions.',
         argument: '<pattern>',
-        array: true,
-      },
-      extension: {
-        description:
-          'Extension to be included in coverage. May be specified more than once when using multiple extensions (default: `[".js", ".cjs", ".mjs", ".ts", ".mts", ".tsx", ".jsx", ".vue", ".svelte"]`)',
-        argument: '<extension>',
         array: true,
       },
       clean: {
@@ -332,7 +335,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
     argument: '<name>',
   },
   workspace: {
-    description: 'Path to a workspace configuration file',
+    description: '[deprecated] Path to a workspace configuration file',
     argument: '<path>',
     normalize: true,
   },
@@ -361,7 +364,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
         return { enabled: browser === 'yes' }
       }
       if (typeof browser === 'string') {
-        return { enabled: true, name: browser }
+        return { name: browser }
       }
       return browser
     },
@@ -548,6 +551,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
           'Changes the order in which setup files are executed. Accepted values are: "list" and "parallel". If set to "list", will run setup files in the order they are defined. If set to "parallel", will run setup files in parallel (default: `"parallel"`)',
         argument: '<order>',
       },
+      groupOrder: null,
     },
   },
   inspect: {
@@ -704,6 +708,10 @@ export const cliOptionsConfig: VitestCLIOptions = {
         argument: '<path>',
         normalize: true,
       },
+      spawnTimeout: {
+        description: 'Minimum time in milliseconds it takes to spawn the typechecker',
+        argument: '<time>',
+      },
       include: null,
       exclude: null,
     },
@@ -793,6 +801,10 @@ export const cliOptionsConfig: VitestCLIOptions = {
   includeTaskLocation: {
     description: 'Collect test and suite locations in the `location` property',
   },
+  attachmentsDir: {
+    description: 'The directory where attachments from `context.annotate` are stored in (default: `.vitest-attachments`)',
+    argument: '<dir>',
+  },
 
   // CLI only options
   run: {
@@ -837,7 +849,6 @@ export const cliOptionsConfig: VitestCLIOptions = {
   includeSource: null,
   alias: null,
   env: null,
-  environmentMatchGlobs: null,
   environmentOptions: null,
   unstubEnvs: null,
   related: null,
@@ -854,7 +865,6 @@ export const cliOptionsConfig: VitestCLIOptions = {
   chaiConfig: null,
   clearMocks: null,
   css: null,
-  poolMatchGlobs: null,
   deps: null,
   name: null,
   snapshotEnvironment: null,
@@ -863,6 +873,8 @@ export const cliOptionsConfig: VitestCLIOptions = {
   json: null,
   provide: null,
   filesOnly: null,
+  projects: null,
+  watchTriggerPatterns: null,
 }
 
 export const benchCliOptionsConfig: Pick<

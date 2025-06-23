@@ -1,4 +1,4 @@
-import type { Environment } from 'vitest'
+import type { Environment } from 'vitest/environments'
 import vm from 'node:vm'
 import debug from 'debug'
 
@@ -14,6 +14,7 @@ export default <Environment>{
       option: custom.option,
       setTimeout,
       clearTimeout,
+      AbortController,
     })
     return {
       getVmContext() {

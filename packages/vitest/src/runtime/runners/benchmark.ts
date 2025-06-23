@@ -6,7 +6,7 @@ import type {
   VitestRunnerImportSource,
 } from '@vitest/runner'
 import type { SerializedConfig } from '../config'
-import type { VitestExecutor } from '../execute'
+// import type { VitestExecutor } from '../execute'
 import type {
   Benchmark,
   BenchmarkResult,
@@ -150,7 +150,7 @@ async function runBenchmarkSuite(suite: Suite, runner: NodeBenchmarkRunner) {
 }
 
 export class NodeBenchmarkRunner implements VitestRunner {
-  private __vitest_executor!: VitestExecutor
+  private __vitest_executor!: any
 
   constructor(public config: SerializedConfig) {}
 

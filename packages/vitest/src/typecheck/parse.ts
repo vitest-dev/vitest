@@ -1,12 +1,5 @@
-import type { TypecheckConfig } from '../node/types/config'
 import type { RawErrsMap, TscErrorInfo } from './types'
-import { writeFile } from 'node:fs/promises'
-import os from 'node:os'
-import url from 'node:url'
-import { getTsconfig as getTsconfigContent } from 'get-tsconfig'
-import { basename, dirname, join, resolve } from 'pathe'
 
-const __dirname = url.fileURLToPath(new URL('.', import.meta.url))
 const newLineRegExp = /\r?\n/
 const errCodeRegExp = /error TS(?<errCode>\d+)/
 
@@ -61,50 +54,6 @@ export async function makeTscErrorInfo(
       errMsg: errMsgRaw.slice(`error TS${errCode} `.length),
     },
   ]
-}
-
-export async function getTsconfig(root: string, config: TypecheckConfig): Promise<{
-  path: string
-  config: Record<string, any>
-}> {
-  const configName = config.tsconfig ? basename(config.tsconfig) : undefined
-  const configSearchPath = config.tsconfig
-    ? dirname(resolve(root, config.tsconfig))
-    : root
-
-  const tsconfig = getTsconfigContent(configSearchPath, configName)
-
-  if (!tsconfig) {
-    throw new Error('no tsconfig.json found')
-  }
-
-  const tsconfigName = basename(tsconfig.path, '.json')
-  const tempTsConfigName = `${tsconfigName}.vitest-temp.json`
-  const tempTsbuildinfoName = `${tsconfigName}.tmp.tsbuildinfo`
-
-  const tempConfigPath = join(
-    dirname(tsconfig.path),
-    tempTsConfigName,
-  )
-
-  try {
-    const tmpTsConfig: Record<string, any> = { ...tsconfig.config }
-
-    tmpTsConfig.compilerOptions = tmpTsConfig.compilerOptions || {}
-    tmpTsConfig.compilerOptions.emitDeclarationOnly = false
-    tmpTsConfig.compilerOptions.incremental = true
-    tmpTsConfig.compilerOptions.tsBuildInfoFile = join(
-      process.versions.pnp ? join(os.tmpdir(), 'vitest') : __dirname,
-      tempTsbuildinfoName,
-    )
-
-    const tsconfigFinalContent = JSON.stringify(tmpTsConfig, null, 2)
-    await writeFile(tempConfigPath, tsconfigFinalContent)
-    return { path: tempConfigPath, config: tmpTsConfig }
-  }
-  catch (err) {
-    throw new Error(`failed to write ${tempTsConfigName}`, { cause: err })
-  }
 }
 
 export async function getRawErrsMapFromTsCompile(tscErrorStdout: string): Promise<RawErrsMap> {

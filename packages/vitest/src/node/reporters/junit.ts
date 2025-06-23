@@ -8,7 +8,7 @@ import { stripVTControlCharacters } from 'node:util'
 import { getSuites } from '@vitest/runner/utils'
 import { dirname, relative, resolve } from 'pathe'
 import { getOutputFile } from '../../utils/config-helpers'
-import { capturePrintError } from '../error'
+import { capturePrintError } from '../printError'
 import { IndentedLogger } from './renderers/indented-logger'
 
 interface ClassnameTemplateVariables {
@@ -18,8 +18,6 @@ interface ClassnameTemplateVariables {
 
 export interface JUnitOptions {
   outputFile?: string
-  /** @deprecated Use `classnameTemplate` instead. */
-  classname?: string
 
   /**
    * Template for the classname attribute. Can be either a string or a function. The string can contain placeholders {filename} and {filepath}.
@@ -221,9 +219,6 @@ export class JUnitReporter implements Reporter {
           .replace(/\{filename\}/g, templateVars.filename)
           .replace(/\{filepath\}/g, templateVars.filepath)
       }
-      else if (typeof this.options.classname === 'string') {
-        classname = this.options.classname
-      }
 
       await this.writeElement(
         'testcase',
@@ -243,6 +238,21 @@ export class JUnitReporter implements Reporter {
             await this.logger.log('<skipped/>')
           }
 
+          if (task.type === 'test' && task.annotations.length) {
+            await this.logger.log('<properties>')
+            this.logger.indent()
+
+            for (const annotation of task.annotations) {
+              await this.logger.log(
+                `<property name="${escapeXML(annotation.type)}" value="${escapeXML(annotation.message)}">`,
+              )
+              await this.logger.log('</property>')
+            }
+
+            this.logger.unindent()
+            await this.logger.log('</properties>')
+          }
+
           if (task.result?.state === 'fail') {
             const errors = task.result.errors || []
             for (const error of errors) {
@@ -250,7 +260,7 @@ export class JUnitReporter implements Reporter {
                 'failure',
                 {
                   message: error?.message,
-                  type: error?.name ?? error?.nameStr,
+                  type: error?.name,
                 },
                 async () => {
                   if (!error) {
@@ -322,6 +332,7 @@ export class JUnitReporter implements Reporter {
           context: null as any,
           suite: null as any,
           file: null as any,
+          annotations: [],
         } satisfies Task)
       }
 

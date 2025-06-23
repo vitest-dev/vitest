@@ -1,9 +1,9 @@
 import type { ViteUserConfig } from 'vitest/config'
-import type { TestProject, UserConfig, VitestOptions } from 'vitest/node'
+import type { TestProject, TestUserConfig, VitestOptions } from 'vitest/node'
 import { expect, onTestFinished, test } from 'vitest'
 import { createVitest } from 'vitest/node'
 
-async function vitest(cliOptions: UserConfig, configValue: UserConfig = {}, viteConfig: ViteUserConfig = {}, vitestOptions: VitestOptions = {}) {
+async function vitest(cliOptions: TestUserConfig, configValue: TestUserConfig = {}, viteConfig: ViteUserConfig = {}, vitestOptions: VitestOptions = {}) {
   const vitest = await createVitest('test', { ...cliOptions, watch: false }, { ...viteConfig, test: configValue as any }, vitestOptions)
   onTestFinished(() => vitest.close())
   return vitest
@@ -30,7 +30,7 @@ test('can change global configuration', async () => {
 
 test('can change the project and the global configurations', async () => {
   const v = await vitest({}, {
-    workspace: [
+    projects: [
       {
         plugins: [
           {
@@ -59,7 +59,7 @@ test('plugin is not called if the project is filtered out', async () => {
   const { projects } = await vitest({
     project: 'project-2',
   }, {
-    workspace: [
+    projects: [
       {
         test: {
           name: 'project-1',
@@ -113,7 +113,7 @@ test('injected plugin is filtered by the --project filter', async () => {
   let newWorkspace: TestProject[] = []
   const { projects } = await vitest({
     project: 'project-1',
-    workspace: [
+    projects: [
       {
         test: {
           name: 'project-1',
@@ -143,7 +143,7 @@ test('injected plugin is not filtered by the --project filter when it\'s overrid
   let newWorkspace: TestProject[] = []
   const { projects } = await vitest({
     project: 'project-1',
-    workspace: [
+    projects: [
       {
         test: {
           name: 'project-1',
@@ -174,7 +174,7 @@ test('injected plugin is not filtered by the --project filter when it\'s overrid
 
 test('adding a plugin with existing name throws and error', async () => {
   await expect(() => vitest({
-    workspace: [
+    projects: [
       {
         test: {
           name: 'project-1',
@@ -194,10 +194,10 @@ test('adding a plugin with existing name throws and error', async () => {
       },
     ],
   }),
-  ).rejects.toThrowError('Project name "project-1" is not unique. All projects in a workspace should have unique names. Make sure your configuration is correct.')
+  ).rejects.toThrowError('Project name "project-1" is not unique. All projects should have unique names. Make sure your configuration is correct.')
 
   await expect(() => vitest({
-    workspace: [
+    projects: [
       {
         plugins: [
           {
@@ -219,10 +219,10 @@ test('adding a plugin with existing name throws and error', async () => {
       },
     ],
   }),
-  ).rejects.toThrowError('Project name "project-1" is not unique. All projects in a workspace should have unique names. Make sure your configuration is correct.')
+  ).rejects.toThrowError('Project name "project-1" is not unique. All projects should have unique names. Make sure your configuration is correct.')
 
   await expect(() => vitest({
-    workspace: [
+    projects: [
       {
         plugins: [
           {
@@ -246,5 +246,5 @@ test('adding a plugin with existing name throws and error', async () => {
       },
     ],
   }),
-  ).rejects.toThrowError('Project name "project-1" is not unique. All projects in a workspace should have unique names. Make sure your configuration is correct.')
+  ).rejects.toThrowError('Project name "project-1" is not unique. All projects should have unique names. Make sure your configuration is correct.')
 })

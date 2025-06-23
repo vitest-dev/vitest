@@ -95,5 +95,18 @@ interface ModuleDiagnostic {
    * This value is only available if the test was executed with `logHeapUsage` flag.
    */
   readonly heap: number | undefined
+  /**
+   * The time spent importing every non-externalized dependency that Vitest has processed.
+   */
+  readonly importDurations: Record<string, ImportDuration>
+}
+
+/** The time spent importing & executing a non-externalized file. */
+interface ImportDuration {
+  /** The time spent importing & executing the file itself, not counting all non-externalized imports that the file does. */
+  selfTime: number
+
+  /** The time spent importing & executing the file and all its imports. */
+  totalTime: number
 }
 ```

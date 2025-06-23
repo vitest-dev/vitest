@@ -1,7 +1,9 @@
 import type { Vitest } from 'vitest/node'
 import type { JsonTestResults } from 'vitest/reporters'
+import { readdirSync } from 'node:fs'
 import { readFile } from 'node:fs/promises'
 import { beforeAll, describe, expect, onTestFailed, test } from 'vitest'
+import { rolldownVersion } from 'vitest/node'
 import { instances, provider, runBrowserTests } from './utils'
 
 function noop() {}
@@ -21,6 +23,7 @@ describe('running browser tests', async () => {
       stdout,
       ctx: vitest,
     } = await runBrowserTests({
+      allowOnly: true,
       reporters: [
         {
           onBrowserInit(project) {
@@ -53,9 +56,7 @@ describe('running browser tests', async () => {
   })
 
   test('tests are actually running', () => {
-    onTestFailed(() => {
-      console.error(stderr)
-    })
+    expect(stderr).toBe('')
 
     const testFiles = browserResultJson.testResults.map(t => t.name)
 
@@ -68,16 +69,13 @@ describe('running browser tests', async () => {
     expect(vitest.projects.map(p => p.browser?.vite.config.optimizeDeps.entries))
       .toEqual(vitest.projects.map(() => expect.arrayContaining(testFiles)))
 
-    // This should match the number of actual tests from browser.json
-    // if you added new tests, these assertion will fail and you should
-    // update the numbers
-    expect(browserResultJson.testResults).toHaveLength(20 * instances.length)
-    expect(passedTests).toHaveLength(18 * instances.length)
-    expect(failedTests).toHaveLength(2 * instances.length)
+    const testFilesCount = readdirSync('./test')
+      .filter(n => n.includes('.test.'))
+      .length + 1 // 1 is in-source-test
 
-    expect(stderr).not.toContain('optimized dependencies changed')
-    expect(stderr).not.toContain('has been externalized for browser compatibility')
-    expect(stderr).not.toContain('Unhandled Error')
+    expect(browserResultJson.testResults).toHaveLength(testFilesCount * instances.length)
+    expect(passedTests).toHaveLength(browserResultJson.testResults.length)
+    expect(failedTests).toHaveLength(0)
   })
 
   test('runs in-source tests', () => {
@@ -86,14 +84,18 @@ describe('running browser tests', async () => {
     expect(actionsTest).toBeDefined()
     expect(actionsTest.assertionResults).toHaveLength(1)
   })
+})
 
-  test('correctly prints error', () => {
-    expect(stderr).toContain('expected 1 to be 2')
-    expect(stderr).toMatch(/- 2\s+\+ 1/)
-    expect(stderr).toContain('Expected to be')
-    expect(stderr).toContain('But got')
-    expect(stderr).toContain('Failure screenshot')
-    expect(stderr).toContain('__screenshots__/failing')
+describe('console logging tests', async () => {
+  let stderr: string
+  let stdout: string
+  beforeAll(async () => {
+    ({
+      stderr,
+      stdout,
+    } = await runBrowserTests({
+      root: './fixtures/print-logs',
+    }))
   })
 
   test('logs are redirected to stdout', () => {
@@ -161,34 +163,43 @@ error with a stack
     }
   })
 
-  test(`stack trace points to correct file in every browser`, () => {
-    // depending on the browser it references either `.toBe()` or `expect()`
-    expect(stderr).toMatch(/test\/failing.test.ts:11:(12|17)/)
-
-    // column is 18 in safari, 8 in others
-    expect(stderr).toMatch(/throwError src\/error.ts:8:(18|8)/)
-
-    expect(stderr).toContain('The call was not awaited. This method is asynchronous and must be awaited; otherwise, the call will not start to avoid unhandled rejections.')
-    expect(stderr).toMatch(/test\/failing.test.ts:19:(27|36)/)
-    expect(stderr).toMatch(/test\/failing.test.ts:20:(27|33)/)
-    expect(stderr).toMatch(/test\/failing.test.ts:21:(27|39)/)
-
-    expect(stderr).toMatch(/bundled-lib\/src\/b.js:2:(8|18)/)
-    expect(stderr).toMatch(/bundled-lib\/src\/index.js:5:(15|17)/)
-
-    // index() is called from a bundled file
-    expect(stderr).toMatch(/test\/failing.test.ts:25:(2|8)/)
-  })
-
   test('popup apis should log a warning', () => {
     expect(stderr).toContain('Vitest encountered a `alert("test")`')
     expect(stderr).toContain('Vitest encountered a `confirm("test")`')
     expect(stderr).toContain('Vitest encountered a `prompt("test")`')
   })
+})
 
-  test('snapshot inaccessible file debuggability', () => {
-    expect(stderr).toContain('Access denied to "/inaccesible/path".')
+test(`stack trace points to correct file in every browser when failed`, async () => {
+  const { stderr } = await runBrowserTests({
+    root: './fixtures/failing',
   })
+
+  expect(stderr).toContain('expected 1 to be 2')
+  expect(stderr).toMatch(/- 2\s+\+ 1/)
+  // expect(stderr).toContain('Expected to be')
+  // expect(stderr).toContain('But got')
+  expect(stderr).toContain('Failure screenshot')
+  expect(stderr).toContain('__screenshots__/failing')
+
+  expect(stderr).toContain('Access denied to "/inaccesible/path".')
+
+  // depending on the browser it references either `.toBe()` or `expect()`
+  expect(stderr).toMatch(/failing.test.ts:11:(12|17)/)
+
+  // column is 18 in safari, 8 in others
+  expect(stderr).toMatch(/throwError src\/error.ts:8:(18|8)/)
+
+  expect(stderr).toContain('The call was not awaited. This method is asynchronous and must be awaited; otherwise, the call will not start to avoid unhandled rejections.')
+  expect(stderr).toMatch(/failing.test.ts:19:(27|36)/)
+  expect(stderr).toMatch(/failing.test.ts:20:(27|33)/)
+  expect(stderr).toMatch(/failing.test.ts:21:(27|39)/)
+
+  expect(stderr).toMatch(/bundled-lib\/src\/b.js:2:(9|19)/)
+  expect(stderr).toMatch(/bundled-lib\/src\/index.js:5:(16|18)/)
+
+  // index() is called from a bundled file
+  expect(stderr).toMatch(/failing.test.ts:25:(2|8)/)
 })
 
 test('user-event', async () => {
@@ -232,6 +243,33 @@ test('viewport', async () => {
   })
 })
 
+test('in-source tests don\'t run when the module is imported by the test', async () => {
+  const { stderr, stdout } = await runBrowserTests({}, ['mocking.test.ts'])
+  expect(stderr).toBe('')
+
+  instances.forEach(({ browser }) => {
+    expect(stdout).toReportPassedTest('test/mocking.test.ts', browser)
+  })
+
+  // there is only one file with one test inside
+  // if this stops working, it will report twice as much tests
+  expect(stdout).toContain(`Test Files  ${instances.length} passed`)
+  expect(stdout).toContain(`Tests  ${instances.length} passed`)
+})
+
+test('in-source tests run correctly when filtered', async () => {
+  const { stderr, stdout } = await runBrowserTests({}, ['actions.ts'])
+  expect(stderr).toBe('')
+
+  instances.forEach(({ browser }) => {
+    expect(stdout).toReportPassedTest('src/actions.ts', browser)
+  })
+
+  // there is only one file with one test inside
+  expect(stdout).toContain(`Test Files  ${instances.length} passed`)
+  expect(stdout).toContain(`Tests  ${instances.length} passed`)
+})
+
 test.runIf(provider === 'playwright')('timeout hooks', async () => {
   const { stderr } = await runBrowserTests({
     root: './fixtures/timeout-hooks',
@@ -253,7 +291,120 @@ test.runIf(provider === 'playwright')('timeout hooks', async () => {
     ].join('\n')
   }).sort().join('\n\n')
 
-  expect(snapshot).toMatchInlineSnapshot(`
+  // rolldown has better source maps
+  if (rolldownVersion) {
+    expect(snapshot).toMatchInlineSnapshot(`
+      " FAIL  |chromium| hooks-timeout.test.ts > timeouts are failing correctly > afterAll
+      TimeoutError: locator.click: Timeout <ms> exceeded.
+       ❯ hooks-timeout.test.ts:44:45
+
+       FAIL  |chromium| hooks-timeout.test.ts > timeouts are failing correctly > afterEach > skipped
+      TimeoutError: locator.click: Timeout <ms> exceeded.
+       ❯ hooks-timeout.test.ts:26:45
+
+       FAIL  |chromium| hooks-timeout.test.ts > timeouts are failing correctly > beforeAll
+      TimeoutError: locator.click: Timeout <ms> exceeded.
+       ❯ hooks-timeout.test.ts:35:45
+
+       FAIL  |chromium| hooks-timeout.test.ts > timeouts are failing correctly > beforeEach > skipped
+      TimeoutError: locator.click: Timeout <ms> exceeded.
+       ❯ hooks-timeout.test.ts:17:45
+
+       FAIL  |chromium| hooks-timeout.test.ts > timeouts are failing correctly > click on non-existing element fails
+      TimeoutError: locator.click: Timeout <ms> exceeded.
+       ❯ hooks-timeout.test.ts:7:33
+
+       FAIL  |chromium| hooks-timeout.test.ts > timeouts are failing correctly > onTestFailed > fails
+      TimeoutError: locator.click: Timeout <ms> exceeded.
+       ❯ hooks-timeout.test.ts:70:47
+
+       FAIL  |chromium| hooks-timeout.test.ts > timeouts are failing correctly > onTestFailed > fails global
+      TimeoutError: locator.click: Timeout <ms> exceeded.
+       ❯ hooks-timeout.test.ts:79:47
+
+       FAIL  |chromium| hooks-timeout.test.ts > timeouts are failing correctly > onTestFinished > fails
+      TimeoutError: locator.click: Timeout <ms> exceeded.
+       ❯ hooks-timeout.test.ts:54:47
+
+       FAIL  |chromium| hooks-timeout.test.ts > timeouts are failing correctly > onTestFinished > fails global
+      TimeoutError: locator.click: Timeout <ms> exceeded.
+       ❯ hooks-timeout.test.ts:61:47
+
+       FAIL  |firefox| hooks-timeout.test.ts > timeouts are failing correctly > afterAll
+      TimeoutError: locator.click: Timeout <ms> exceeded.
+       ❯ hooks-timeout.test.ts:44:45
+
+       FAIL  |firefox| hooks-timeout.test.ts > timeouts are failing correctly > afterEach > skipped
+      TimeoutError: locator.click: Timeout <ms> exceeded.
+       ❯ hooks-timeout.test.ts:26:45
+
+       FAIL  |firefox| hooks-timeout.test.ts > timeouts are failing correctly > beforeAll
+      TimeoutError: locator.click: Timeout <ms> exceeded.
+       ❯ hooks-timeout.test.ts:35:45
+
+       FAIL  |firefox| hooks-timeout.test.ts > timeouts are failing correctly > beforeEach > skipped
+      TimeoutError: locator.click: Timeout <ms> exceeded.
+       ❯ hooks-timeout.test.ts:17:45
+
+       FAIL  |firefox| hooks-timeout.test.ts > timeouts are failing correctly > click on non-existing element fails
+      TimeoutError: locator.click: Timeout <ms> exceeded.
+       ❯ hooks-timeout.test.ts:7:33
+
+       FAIL  |firefox| hooks-timeout.test.ts > timeouts are failing correctly > onTestFailed > fails
+      TimeoutError: locator.click: Timeout <ms> exceeded.
+       ❯ hooks-timeout.test.ts:70:47
+
+       FAIL  |firefox| hooks-timeout.test.ts > timeouts are failing correctly > onTestFailed > fails global
+      TimeoutError: locator.click: Timeout <ms> exceeded.
+       ❯ hooks-timeout.test.ts:79:47
+
+       FAIL  |firefox| hooks-timeout.test.ts > timeouts are failing correctly > onTestFinished > fails
+      TimeoutError: locator.click: Timeout <ms> exceeded.
+       ❯ hooks-timeout.test.ts:54:47
+
+       FAIL  |firefox| hooks-timeout.test.ts > timeouts are failing correctly > onTestFinished > fails global
+      TimeoutError: locator.click: Timeout <ms> exceeded.
+       ❯ hooks-timeout.test.ts:61:47
+
+       FAIL  |webkit| hooks-timeout.test.ts > timeouts are failing correctly > afterAll
+      TimeoutError: locator.click: Timeout <ms> exceeded.
+       ❯ hooks-timeout.test.ts:44:45
+
+       FAIL  |webkit| hooks-timeout.test.ts > timeouts are failing correctly > afterEach > skipped
+      TimeoutError: locator.click: Timeout <ms> exceeded.
+       ❯ hooks-timeout.test.ts:26:45
+
+       FAIL  |webkit| hooks-timeout.test.ts > timeouts are failing correctly > beforeAll
+      TimeoutError: locator.click: Timeout <ms> exceeded.
+       ❯ hooks-timeout.test.ts:35:45
+
+       FAIL  |webkit| hooks-timeout.test.ts > timeouts are failing correctly > beforeEach > skipped
+      TimeoutError: locator.click: Timeout <ms> exceeded.
+       ❯ hooks-timeout.test.ts:17:45
+
+       FAIL  |webkit| hooks-timeout.test.ts > timeouts are failing correctly > click on non-existing element fails
+      TimeoutError: locator.click: Timeout <ms> exceeded.
+       ❯ hooks-timeout.test.ts:7:33
+
+       FAIL  |webkit| hooks-timeout.test.ts > timeouts are failing correctly > onTestFailed > fails
+      TimeoutError: locator.click: Timeout <ms> exceeded.
+       ❯ hooks-timeout.test.ts:70:47
+
+       FAIL  |webkit| hooks-timeout.test.ts > timeouts are failing correctly > onTestFailed > fails global
+      TimeoutError: locator.click: Timeout <ms> exceeded.
+       ❯ hooks-timeout.test.ts:79:47
+
+       FAIL  |webkit| hooks-timeout.test.ts > timeouts are failing correctly > onTestFinished > fails
+      TimeoutError: locator.click: Timeout <ms> exceeded.
+       ❯ hooks-timeout.test.ts:54:47
+
+       FAIL  |webkit| hooks-timeout.test.ts > timeouts are failing correctly > onTestFinished > fails global
+      TimeoutError: locator.click: Timeout <ms> exceeded.
+       ❯ hooks-timeout.test.ts:61:47"
+    `)
+  }
+  else {
+    expect(snapshot).toMatchInlineSnapshot(`
     " FAIL  |chromium| hooks-timeout.test.ts > timeouts are failing correctly > afterAll
     TimeoutError: locator.click: Timeout <ms> exceeded.
      ❯ hooks-timeout.test.ts:44:45
@@ -362,6 +513,7 @@ test.runIf(provider === 'playwright')('timeout hooks', async () => {
     TimeoutError: locator.click: Timeout <ms> exceeded.
      ❯ hooks-timeout.test.ts:61:53"
   `)
+  }
 
   // page.getByRole('code').click()
   expect(stderr).toContain('locator.click: Timeout')

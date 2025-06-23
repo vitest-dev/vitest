@@ -2,7 +2,7 @@ import type { Plugin } from 'vite'
 import { automockPlugin, hoistMocksPlugin } from '@vitest/mocker/node'
 import { normalize } from 'pathe'
 import { distDir } from '../../paths'
-import { generateCodeFrame } from '../error'
+import { generateCodeFrame } from '../printError'
 
 export interface MocksPluginOptions {
   filter?: (id: string) => boolean

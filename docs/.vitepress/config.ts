@@ -477,8 +477,8 @@ function guide(): DefaultTheme.SidebarItem[] {
       link: '/guide/filtering',
     },
     {
-      text: 'Workspace',
-      link: '/guide/workspace',
+      text: 'Test Projects',
+      link: '/guide/projects',
     },
     {
       text: 'Reporters',
@@ -497,6 +497,10 @@ function guide(): DefaultTheme.SidebarItem[] {
       link: '/guide/mocking',
     },
     {
+      text: 'Parallelism',
+      link: '/guide/parallelism',
+    },
+    {
       text: 'Testing Types',
       link: '/guide/testing-types',
     },
@@ -511,6 +515,10 @@ function guide(): DefaultTheme.SidebarItem[] {
     {
       text: 'Test Context',
       link: '/guide/test-context',
+    },
+    {
+      text: 'Test Annotations',
+      link: '/guide/test-annotations',
     },
     {
       text: 'Environment',

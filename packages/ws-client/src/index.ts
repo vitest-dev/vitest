@@ -51,6 +51,9 @@ export function createClient(url: string, options: VitestClientOptions = {}): Vi
 
   let onMessage: (data: any) => void
   const functions: WebSocketEvents = {
+    onTestAnnotate(testId, annotation) {
+      handlers.onTestAnnotate?.(testId, annotation)
+    },
     onSpecsCollected(specs) {
       specs?.forEach(([config, file]) => {
         ctx.state.clearFiles({ config }, [file])
@@ -65,9 +68,9 @@ export function createClient(url: string, options: VitestClientOptions = {}): Vi
       ctx.state.collectFiles(files)
       handlers.onCollected?.(files)
     },
-    onTaskUpdate(packs) {
+    onTaskUpdate(packs, events) {
       ctx.state.updateTasks(packs)
-      handlers.onTaskUpdate?.(packs)
+      handlers.onTaskUpdate?.(packs, events)
     },
     onUserConsoleLog(log) {
       ctx.state.updateUserLog(log)

@@ -141,35 +141,6 @@ Final output after tests have finished:
    Duration  1.26s (transform 35ms, setup 1ms, collect 90ms, tests 1.47s, environment 0ms, prepare 267ms)
 ```
 
-### Basic Reporter
-
-The `basic` reporter is equivalent to `default` reporter without `summary`.
-
-:::code-group
-```bash [CLI]
-npx vitest --reporter=basic
-```
-
-```ts [vitest.config.ts]
-export default defineConfig({
-  test: {
-    reporters: ['basic']
-  },
-})
-```
-:::
-
-Example output using basic reporter:
-```bash
-✓ __tests__/file1.test.ts (2) 725ms
-✓ __tests__/file2.test.ts (2) 746ms
-
- Test Files  2 passed (2)
-      Tests  4 passed (4)
-   Start at  12:34:32
-   Duration  1.26s (transform 35ms, setup 1ms, collect 90ms, tests 1.47s, environment 0ms, prepare 267ms)
-```
-
 ### Verbose Reporter
 
 Verbose reporter is same as `default` reporter, but it also displays each individual test after the suite has finished. It also displays currently running tests that are taking longer than [`slowTestThreshold`](/config/#slowtestthreshold). Similar to `default` reporter, you can disable the summary by configuring the reporter.
@@ -228,7 +199,7 @@ Example of final terminal output for a passing test suite:
 
 ### Dot Reporter
 
-Prints a single dot for each completed test to provide minimal output while still showing all tests that have run. Details are only provided for failed tests, along with the `basic` reporter summary for the suite.
+Prints a single dot for each completed test to provide minimal output while still showing all tests that have run. Details are only provided for failed tests, along with the summary for the suite.
 
 :::code-group
 ```bash [CLI]
@@ -497,6 +468,9 @@ export default defineConfig({
 Output [workflow commands](https://docs.github.com/en/actions/using-workflows/workflow-commands-for-github-actions#setting-an-error-message)
 to provide annotations for test failures. This reporter is automatically enabled with a [`default`](#default-reporter) reporter when `process.env.GITHUB_ACTIONS === 'true'`.
 
+<img alt="Github Actions" img-dark src="https://github.com/vitest-dev/vitest/assets/4232207/336cddc2-df6b-4b8a-8e72-4d00010e37f5">
+<img alt="Github Actions" img-light src="https://github.com/vitest-dev/vitest/assets/4232207/ce8447c1-0eab-4fe1-abef-d0d322290dca">
+
 If you configure non-default reporters, you need to explicitly add `github-actions`.
 
 ```ts
@@ -507,8 +481,22 @@ export default defineConfig({
 })
 ```
 
-<img alt="Github Actions" img-dark src="https://github.com/vitest-dev/vitest/assets/4232207/336cddc2-df6b-4b8a-8e72-4d00010e37f5">
-<img alt="Github Actions" img-light src="https://github.com/vitest-dev/vitest/assets/4232207/ce8447c1-0eab-4fe1-abef-d0d322290dca">
+You can customize the file paths that are printed in [GitHub's annotation command format](https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/workflow-commands-for-github-actions) by using the `onWritePath` option. This is useful when running Vitest in a containerized environment, such as Docker, where the file paths may not match the paths in the GitHub Actions environment.
+
+```ts
+export default defineConfig({
+  test: {
+    reporters: process.env.GITHUB_ACTIONS
+      ? [
+          'default',
+          ['github-actions', { onWritePath(path) {
+            return path.replace(/^\/app\//, `${process.env.GITHUB_WORKSPACE}/`)
+          } }],
+        ]
+      : ['default'],
+  },
+})
+```
 
 ### Blob Reporter
 

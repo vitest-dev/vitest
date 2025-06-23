@@ -52,6 +52,10 @@ export default defineConfig({
 ```
 :::
 
+## Limiting directory search
+
+You can limit the working directory when Vitest searches for files using [`test.dir`](/config/#test-dir) option. This should make the search faster if you have unrelated folders and files in the root directory.
+
 ## Pool
 
 By default Vitest runs tests in `pool: 'forks'`. While `'forks'` pool is better for compatibility issues ([hanging process](/guide/common-errors.html#failed-to-terminate-worker) and [segfaults](/guide/common-errors.html#segfaults-and-native-code-errors)), it may be slightly slower than `pool: 'threads'` in larger projects.
@@ -75,7 +79,7 @@ export default defineConfig({
 
 ## Sharding
 
-Test sharding means running a small subset of test cases at a time. It can be useful when you have multiple machines that could be used to run tests simultaneously.
+Test sharding is a process of splitting your test suite into groups, or shards. This can be useful when you have a large test suite and multiple matchines that could run subsets of that suite simultaneously.
 
 To split Vitest tests on multiple different runs, use [`--shard`](/guide/cli#shard) option with [`--reporter=blob`](/guide/reporters#blob-reporter) option:
 
@@ -84,6 +88,8 @@ vitest run --reporter=blob --shard=1/3 # 1st machine
 vitest run --reporter=blob --shard=2/3 # 2nd machine
 vitest run --reporter=blob --shard=3/3 # 3rd machine
 ```
+
+> Vitest splits your _test files_, not your test cases, into shards. If you've got 1000 test files, the `--shard=1/4` option will run 250 test files, no matter how many test cases individual files have.
 
 Collect the results stored in `.vitest-reports` directory from each machine and merge them with [`--merge-reports`](/guide/cli#merge-reports) option:
 

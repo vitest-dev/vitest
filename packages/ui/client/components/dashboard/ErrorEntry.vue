@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import type { ErrorWithDiff } from '@vitest/utils'
+import type { TestError } from '@vitest/utils'
 
 defineProps<{
-  error: ErrorWithDiff
+  error: TestError
 }>()
 </script>
 
@@ -19,7 +19,7 @@ defineProps<{
   <p v-if="error.VITEST_TEST_PATH" text="sm" mb-2>
     This error originated in <span font-bold>{{ error.VITEST_TEST_PATH }}</span> test file. It doesn't mean the error was thrown inside the file itself, but while it was running.
   </p>
-  <p v-if="error.VITEST_TEST_NAME" text="sm" mb-2>
+  <div v-if="error.VITEST_TEST_NAME" text="sm" mb-2>
     The latest test that might've caused the error is <span font-bold>{{ error.VITEST_TEST_NAME }}</span>. It might mean one of the following:<br>
     <ul>
       <li>
@@ -29,8 +29,8 @@ defineProps<{
         If the error occurred after the test had been completed, this was the last documented test before it was thrown.
       </li>
     </ul>
-  </p>
-  <p v-if="error.VITEST_AFTER_ENV_TEARDOWN" text="sm" font-thin>
+  </div>
+  <div v-if="error.VITEST_AFTER_ENV_TEARDOWN" text="sm" font-thin>
     This error was caught after test environment was torn down. Make sure to cancel any running tasks before test finishes:<br>
     <ul>
       <li>
@@ -40,5 +40,5 @@ defineProps<{
         Wait for promises to resolve using the await keyword.
       </li>
     </ul>
-  </p>
+  </div>
 </template>

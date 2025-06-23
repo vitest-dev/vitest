@@ -1,10 +1,11 @@
-import type { Task } from '@vitest/runner'
+import type { Task, TestAnnotation } from '@vitest/runner'
+import type { RunnerTestCase } from 'vitest'
 import type { Ref, WritableComputedRef } from 'vue'
 import CodeMirror from 'codemirror'
+
 import { watch } from 'vue'
 
 import { navigateTo } from '~/composables/navigation'
-
 import 'codemirror/mode/javascript/javascript'
 // import 'codemirror/mode/css/css'
 import 'codemirror/mode/xml/xml'
@@ -61,11 +62,39 @@ export function useCodeMirror(
   return markRaw(cm)
 }
 
-export async function showSource(task: Task) {
+export async function showTaskSource(task: Task) {
   navigateTo({
     file: task.file.id,
     line: task.location?.line ?? 0,
     view: 'editor',
     test: null,
+    column: null,
+  })
+}
+
+export function showLocationSource(fileId: string, location: { line: number; column: number }) {
+  navigateTo({
+    file: fileId,
+    column: location.column - 1,
+    line: location.line,
+    view: 'editor',
+    test: selectedTest.value,
+  })
+}
+
+export function showAnnotationSource(task: RunnerTestCase, annotation: TestAnnotation) {
+  if (!annotation.location) {
+    return
+  }
+  const { line, column, file } = annotation.location
+  if (task.file.filepath !== file) {
+    return openInEditor(file, line, column)
+  }
+  navigateTo({
+    file: task.file.id,
+    column: column - 1,
+    line,
+    view: 'editor',
+    test: selectedTest.value,
   })
 }

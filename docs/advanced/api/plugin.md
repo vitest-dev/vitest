@@ -53,7 +53,7 @@ Vitest re-exports all Vite type-only imports via a `Vite` namespace, which you c
 ```
 :::
 
-Unlike [`reporter.onInit`](/advanced/api/reporters#oninit), this hooks runs early in Vitest lifecycle allowing you to make changes to configuration like `coverage` and `reporters`. A more notable change is that you can manipulate the global config from a [workspace project](/guide/workspace) if your plugin is defined in the project and not in the global config.
+Unlike [`reporter.onInit`](/advanced/api/reporters#oninit), this hooks runs early in Vitest lifecycle allowing you to make changes to configuration like `coverage` and `reporters`. A more notable change is that you can manipulate the global config from a [test project](/guide/projects) if your plugin is defined in the project and not in the global config.
 
 ## Context
 
@@ -93,10 +93,10 @@ This methods accepts a config glob pattern, a filepath to the config or an inlin
 ```ts
 // inject a single project with a custom alias
 const newProjects = await injectTestProjects({
-  // you can inherit the current project config by referencing `configFile`
+  // you can inherit the current project config by referencing `extends`
   // note that you cannot have a project with the name that already exists,
   // so it's a good practice to define a custom name
-  configFile: project.vite.config.configFile,
+  extends: project.vite.config.configFile,
   test: {
     name: 'my-custom-alias',
     alias: {
@@ -107,7 +107,7 @@ const newProjects = await injectTestProjects({
 ```
 
 ::: warning Projects are Filtered
-Vitest filters projects during the config resolution, so if the user defined a filter, injected project might not be resolved unless it [matches the filter](./vitest#matchesprojectfilter). You can update the filter via the `vitest.config.project` option to always include your workspace project:
+Vitest filters projects during the config resolution, so if the user defined a filter, injected project might not be resolved unless it [matches the filter](./vitest#matchesprojectfilter). You can update the filter via the `vitest.config.project` option to always include your test project:
 
 ```ts
 vitest.config.project.push('my-project-name')
@@ -117,7 +117,7 @@ Note that this will only affect projects injected with [`injectTestProjects`](#i
 :::
 
 ::: tip Referencing the Current Config
-If you want to keep the user configuration, you can specify the `configFile` property. All other properties will be merged with the user defined config.
+If you want to keep the user configuration, you can specify the `extends` property. All other properties will be merged with the user defined config.
 
 The project's `configFile` can be accessed in Vite's config: `project.vite.config.configFile`.
 

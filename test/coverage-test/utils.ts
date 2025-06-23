@@ -1,6 +1,6 @@
 import type { CoverageSummary, FileCoverageData } from 'istanbul-lib-coverage'
 import type { TestFunction } from 'vitest'
-import type { UserConfig } from 'vitest/node'
+import type { TestUserConfig } from 'vitest/node'
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -28,30 +28,33 @@ export function coverageTest(name: string, fn: TestFunction) {
   }
 }
 
-export async function runVitest(config: UserConfig, options = { throwOnError: true }) {
+export async function runVitest(config: TestUserConfig, options = { throwOnError: true }) {
   const provider = process.env.COVERAGE_PROVIDER as any
 
   const result = await testUtils.runVitest({
     config: 'fixtures/configs/vitest.config.ts',
     pool: 'threads',
     ...config,
-    env: {
-      COVERAGE_TEST: 'true',
-      ...config.env,
-    },
-    coverage: {
-      enabled: true,
-      reporter: [],
-      ...config.coverage,
-      provider,
-      customProviderModule: provider === 'custom' ? 'fixtures/custom-provider' : undefined,
-    },
-    browser: {
-      enabled: process.env.COVERAGE_BROWSER === 'true',
-      headless: true,
-      instances: [{ browser: 'chromium' }],
-      provider: 'playwright',
-      ...config.browser,
+    browser: config.browser,
+  }, [], 'test', {
+    test: {
+      env: {
+        COVERAGE_TEST: 'true',
+        ...config.env,
+      },
+      coverage: {
+        enabled: true,
+        reporter: [],
+        ...config.coverage,
+        provider,
+        customProviderModule: provider === 'custom' ? 'fixtures/custom-provider' : undefined,
+      },
+      browser: {
+        enabled: process.env.COVERAGE_BROWSER === 'true',
+        headless: true,
+        instances: [{ browser: 'chromium' }],
+        provider: 'playwright',
+      },
     },
   })
 

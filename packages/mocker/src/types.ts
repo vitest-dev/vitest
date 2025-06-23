@@ -7,3 +7,17 @@ export type ModuleMockFactory = () => any
 export interface ModuleMockOptions {
   spy?: boolean
 }
+
+export interface ServerMockResolution {
+  mockType: 'manual' | 'redirect' | 'automock' | 'autospy'
+  resolvedId: string
+  resolvedUrl: string
+  needsInterop?: boolean
+  redirectUrl?: string | null
+}
+
+export interface ServerIdResolution {
+  id: string
+  url: string
+  optimized: boolean
+}

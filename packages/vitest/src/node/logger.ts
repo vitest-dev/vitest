@@ -1,5 +1,4 @@
 import type { Task } from '@vitest/runner'
-import type { ErrorWithDiff } from '@vitest/utils'
 import type { Writable } from 'node:stream'
 import type { TypeCheckError } from '../typecheck/typechecker'
 import type { Vitest } from './core'
@@ -8,7 +7,7 @@ import { Console } from 'node:console'
 import { toArray } from '@vitest/utils'
 import c from 'tinyrainbow'
 import { highlightCode } from '../utils/colors'
-import { printError } from './error'
+import { printError } from './printError'
 import { divider, errorBanner, formatProjectName, withLabel } from './reporters/renderers/utils'
 import { RandomSequencer } from './sequencers/RandomSequencer'
 
@@ -110,6 +109,10 @@ export class Logger {
     printError(err, this.ctx, this, options)
   }
 
+  deprecate(message: string): void {
+    this.error(c.bold(c.bgYellow(' DEPRECATED ')), c.yellow(message))
+  }
+
   clearHighlightCache(filename?: string): void {
     if (filename) {
       this._highlights.delete(filename)
@@ -164,7 +167,7 @@ export class Logger {
       const config = project.config
       const printConfig = !project.isRootProject() && project.name
       if (printConfig) {
-        this.console.error(`\n${formatProjectName(project.name)}\n`)
+        this.console.error(`\n${formatProjectName(project)}\n`)
       }
       if (config.include) {
         this.console.error(
@@ -243,12 +246,12 @@ export class Logger {
 
     const output = project.isRootProject()
       ? ''
-      : formatProjectName(project.name)
+      : formatProjectName(project)
     const provider = project.browser.provider.name
     const providerString = provider === 'preview' ? '' : ` by ${c.reset(c.bold(provider))}`
     this.log(
       c.dim(
-        `${output}Browser runner started${providerString} ${c.dim('at')} ${c.blue(new URL('/', origin))}\n`,
+        `${output}Browser runner started${providerString} ${c.dim('at')} ${c.blue(new URL('/__vitest_test__/', origin))}\n`,
       ),
     )
   }
@@ -267,7 +270,7 @@ export class Logger {
     errors.forEach((err) => {
       this.printError(err, {
         fullStack: true,
-        type: (err as ErrorWithDiff).type || 'Unhandled Error',
+        type: (err as any).type || 'Unhandled Error',
       })
     })
     this.error(c.red(divider()))

@@ -9,7 +9,7 @@ export function createTesterMiddleware(browserServer: ParentBrowserProject): Con
       return next()
     }
     const url = new URL(req.url, 'http://localhost')
-    if (!url.pathname.startsWith(browserServer.prefixTesterUrl) || !url.searchParams.has('sessionId')) {
+    if (url.pathname !== browserServer.prefixTesterUrl || !url.searchParams.has('sessionId')) {
       return next()
     }
 

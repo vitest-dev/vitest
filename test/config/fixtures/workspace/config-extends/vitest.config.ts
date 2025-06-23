@@ -17,7 +17,7 @@ export default defineConfig({
     },
   ],
   test: {
-    workspace: [
+    projects: [
       {
         extends: true,
         test: {

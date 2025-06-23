@@ -1,11 +1,14 @@
 import type { File, Task } from '@vitest/runner'
-import type { ErrorWithDiff, ParsedStack } from '@vitest/utils'
+import type { ParsedStack, TestError } from '@vitest/utils'
 import type { Vitest } from '../core'
 import type { Reporter } from '../types/reporter'
 import { parseErrorStacktrace } from '../../utils/source-map'
 import { IndentedLogger } from './renderers/indented-logger'
 
-function yamlString(str: string): string {
+function yamlString(str: string | undefined): string {
+  if (!str) {
+    return ''
+  }
   return `"${str.replace(/"/g, '\\"')}"`
 }
 
@@ -40,8 +43,8 @@ export class TapReporter implements Reporter {
     }
   }
 
-  private logErrorDetails(error: ErrorWithDiff, stack?: ParsedStack) {
-    const errorName = error.name || error.nameStr || 'Unknown Error'
+  private logErrorDetails(error: TestError, stack?: ParsedStack) {
+    const errorName = error.name || 'Unknown Error'
     this.logger.log(`name: ${yamlString(String(errorName))}`)
     this.logger.log(`message: ${yamlString(String(error.message))}`)
 
@@ -81,6 +84,14 @@ export class TapReporter implements Reporter {
         this.logger.log(`${ok} ${id} - ${tapString(task.name)}${comment}`)
 
         const project = this.ctx.getProjectByName(task.file.projectName || '')
+
+        if (task.type === 'test' && task.annotations) {
+          this.logger.indent()
+          task.annotations.forEach(({ type, message }) => {
+            this.logger.log(`# ${type}: ${message}`)
+          })
+          this.logger.unindent()
+        }
 
         if (task.result?.state === 'fail' && task.result.errors) {
           this.logger.indent()

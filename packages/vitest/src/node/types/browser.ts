@@ -1,6 +1,6 @@
 import type { MockedModule } from '@vitest/mocker'
 import type { CancelReason } from '@vitest/runner'
-import type { Awaitable, ErrorWithDiff, ParsedStack } from '@vitest/utils'
+import type { Awaitable, ParsedStack, TestError } from '@vitest/utils'
 import type { StackTraceParserOptions } from '@vitest/utils/source-map'
 import type { ViteDevServer } from 'vite'
 import type { BrowserTesterOptions } from '../../types/browser'
@@ -66,12 +66,11 @@ type UnsupportedProperties =
   | 'api'
   | 'deps'
   | 'testTransformMode'
-  | 'poolMatchGlobs'
-  | 'environmentMatchGlobs'
   | 'environment'
   | 'environmentOptions'
   | 'server'
   | 'benchmark'
+  | 'name'
 
 export interface BrowserInstanceOption extends BrowserProviderOptions,
   Omit<ProjectConfig, UnsupportedProperties>,
@@ -88,6 +87,8 @@ export interface BrowserInstanceOption extends BrowserProviderOptions,
    * Name of the browser
    */
   browser: string
+
+  name?: string
 }
 
 export interface BrowserConfigOptions {
@@ -239,8 +240,6 @@ export interface BrowserCommandContext {
   testPath: string | undefined
   provider: BrowserProvider
   project: TestProject
-  /** @deprecated use `sessionId` instead */
-  contextId: string
   sessionId: string
 }
 
@@ -272,7 +271,7 @@ export interface ProjectBrowser {
   close: () => Promise<void>
   initBrowserProvider: (project: TestProject) => Promise<void>
   parseStacktrace: (stack: string) => ParsedStack[]
-  parseErrorStacktrace: (error: ErrorWithDiff, options?: StackTraceParserOptions) => ParsedStack[]
+  parseErrorStacktrace: (error: TestError, options?: StackTraceParserOptions) => ParsedStack[]
 }
 
 export interface BrowserCommand<Payload extends unknown[]> {

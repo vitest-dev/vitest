@@ -1,8 +1,8 @@
-import type { File, TaskEventPack, TaskResultPack } from '@vitest/runner'
+import type { File, TaskEventPack, TaskResultPack, TestAnnotation } from '@vitest/runner'
 import type { BirpcReturn } from 'birpc'
 import type { SerializedConfig } from '../runtime/config'
 import type { SerializedTestSpecification } from '../runtime/types/utils'
-import type { Awaitable, ModuleGraphData, UserConsoleLog } from '../types/general'
+import type { Awaitable, LabelColor, ModuleGraphData, UserConsoleLog } from '../types/general'
 
 interface SourceMap {
   file: string
@@ -32,7 +32,7 @@ export interface WebSocketHandlers {
   getTestFiles: () => Promise<SerializedTestSpecification[]>
   getPaths: () => string[]
   getConfig: () => SerializedConfig
-  getResolvedProjectNames: () => string[]
+  getResolvedProjectLabels: () => { name: string; color?: LabelColor }[]
   getModuleGraph: (
     projectName: string,
     id: string,
@@ -58,7 +58,8 @@ export interface WebSocketEvents {
     errors: unknown[],
     coverage?: unknown
   ) => Awaitable<void>
-  onTaskUpdate?: (packs: TaskResultPack[]) => Awaitable<void>
+  onTestAnnotate?: (testId: string, annotation: TestAnnotation) => Awaitable<void>
+  onTaskUpdate?: (packs: TaskResultPack[], events: TaskEventPack[]) => Awaitable<void>
   onUserConsoleLog?: (log: UserConsoleLog) => Awaitable<void>
   onPathsCollected?: (paths?: string[]) => Awaitable<void>
   onSpecsCollected?: (specs?: SerializedTestSpecification[]) => Awaitable<void>

@@ -1,21 +1,19 @@
-import type { ErrorWithDiff, File, Suite, Task } from 'vitest'
+import type { RunnerTestCase, RunnerTestSuite, TestError } from 'vitest'
+import { createFileTask } from '@vitest/runner/utils'
 
-const file: File = {
-  id: '1223128da3',
-  name: 'test/core/test/basic.test.ts',
-  type: 'suite',
-  meta: {},
-  mode: 'run',
-  filepath: '/vitest/test/core/test/basic.test.ts',
-  result: { state: 'fail', duration: 145.99284195899963 },
-  tasks: [],
-  projectName: '',
-  file: null!,
+const file = createFileTask(
+  '/vitest/test/core/test/basic.test.ts',
+  '/vitest/test/core/test',
+  '',
+)
+file.mode = 'run'
+file.result = {
+  state: 'fail',
+  duration: 145.99284195899963,
 }
-file.file = file
 
-const suite: Suite = {
-  id: '1223128da3_0',
+const suite: RunnerTestSuite = {
+  id: `${file.id}_0`,
   type: 'suite',
   name: 'suite',
   mode: 'run',
@@ -25,23 +23,15 @@ const suite: Suite = {
   tasks: [],
 }
 
-const passedFile: File = {
-  id: '1223128da3',
-  name: 'basic.test.ts',
-  type: 'suite',
-  suite,
-  meta: {},
-  mode: 'run',
-  filepath: '/vitest/test/core/test/basic.test.ts',
-  result: { state: 'pass', duration: 145.99284195899963 },
-  tasks: [
-  ],
-  projectName: '',
-  file: null!,
-}
-passedFile.file = passedFile
+const passedFile = createFileTask(
+  '/vitest/test/core/test/basic.test.ts',
+  '/vitest/test/core/test',
+  '',
+)
+passedFile.mode = 'run'
+passedFile.result = { state: 'pass', duration: 145.99284195899963 }
 passedFile.tasks.push({
-  id: '1223128da3_0_0',
+  id: `${file.id}_1`,
   type: 'test',
   name: 'Math.sqrt()',
   mode: 'run',
@@ -50,6 +40,7 @@ passedFile.tasks.push({
   meta: {},
   file: passedFile,
   timeout: 0,
+  annotations: [],
   result: {
     state: 'pass',
     duration: 1.4422860145568848,
@@ -57,7 +48,7 @@ passedFile.tasks.push({
   context: null as any,
 })
 
-const error: ErrorWithDiff = {
+const error: TestError = {
   name: 'AssertionError',
   message: 'expected 2.23606797749979 to equal 2',
   actual: '2.23606797749979',
@@ -77,9 +68,9 @@ error.stack = 'AssertionError: expected 2.23606797749979 to equal 2\n'
   + '    at async run (/vitest/packages/vitest/dist/entry.js:1797:5)\n'
   + '    at async file:///vitest/node_modules/.pnpm/tinypool@0.1.1/node_modules/tinypool/dist/esm/worker.js:96:20'
 
-const tasks: Task[] = [
+const tasks: RunnerTestCase[] = [
   {
-    id: '1223128da3_0_0',
+    id: `${suite.id}_0`,
     type: 'test',
     name: 'Math.sqrt()',
     mode: 'run',
@@ -87,6 +78,7 @@ const tasks: Task[] = [
     meta: {},
     file,
     suite,
+    annotations: [],
     result: {
       state: 'fail',
       errors: [error],
@@ -100,10 +92,11 @@ const tasks: Task[] = [
     context: null as any,
   },
   {
-    id: '1223128da3_0_1',
+    id: `${suite.id}_1`,
     type: 'test',
     name: 'JSON',
     mode: 'run',
+    annotations: [],
     suite,
     fails: undefined,
     timeout: 0,
@@ -113,7 +106,7 @@ const tasks: Task[] = [
     context: null as any,
   },
   {
-    id: '1223128da3_0_3',
+    id: `${suite.id}_3`,
     type: 'test',
     name: 'async with timeout',
     mode: 'skip',
@@ -122,13 +115,15 @@ const tasks: Task[] = [
     meta: {},
     timeout: 0,
     file,
+    annotations: [],
     result: undefined,
     context: null as any,
   },
   {
-    id: '1223128da3_0_4',
+    id: `${suite.id}_4`,
     type: 'test',
     name: 'timeout',
+    annotations: [],
     mode: 'run',
     suite,
     fails: undefined,
@@ -139,12 +134,13 @@ const tasks: Task[] = [
     context: null as any,
   },
   {
-    id: '1223128da3_0_5',
+    id: `${suite.id}_5`,
     type: 'test',
     name: 'callback setup success ',
     mode: 'run',
     suite,
     fails: undefined,
+    annotations: [],
     meta: {},
     timeout: 0,
     file,
@@ -152,7 +148,7 @@ const tasks: Task[] = [
     context: null as any,
   },
   {
-    id: '1223128da3_0_6',
+    id: `${suite.id}_6`,
     type: 'test',
     name: 'callback test success ',
     mode: 'run',
@@ -160,17 +156,19 @@ const tasks: Task[] = [
     fails: undefined,
     meta: {},
     timeout: 0,
+    annotations: [],
     file,
     result: { state: 'pass', duration: 0.33245420455932617 },
     context: null as any,
   },
   {
-    id: '1223128da3_0_7',
+    id: `${suite.id}_7`,
     type: 'test',
     name: 'callback setup success done(false)',
     mode: 'run',
     suite,
     fails: undefined,
+    annotations: [],
     meta: {},
     timeout: 0,
     file,
@@ -178,12 +176,13 @@ const tasks: Task[] = [
     context: null as any,
   },
   {
-    id: '1223128da3_0_8',
+    id: `${suite.id}_8`,
     type: 'test',
     name: 'callback test success done(false)',
     mode: 'run',
     suite,
     fails: undefined,
+    annotations: [],
     meta: {},
     timeout: 0,
     file,
@@ -199,13 +198,14 @@ const tasks: Task[] = [
     ],
   },
   {
-    id: '1223128da3_0_9',
+    id: `${suite.id}_9`,
     type: 'test',
     name: 'todo test',
     mode: 'todo',
     suite,
     timeout: 0,
     fails: undefined,
+    annotations: [],
     meta: {},
     file,
     result: undefined,

@@ -72,7 +72,7 @@ You can follow the design process in [#7069](https://github.com/vitest-dev/vites
 
 ## Inline Workspace
 
-Rejoice! No more separate files to define your [workspace](/guide/workspace) - specify an array of projects using the `workspace` field in your `vitest.config` file:
+Rejoice! No more separate files to define your [workspace](/guide/projects) - specify an array of projects using the `workspace` field in your `vitest.config` file:
 
 ```jsx
 import { defineConfig } from 'vitest/config'
