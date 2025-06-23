@@ -3,8 +3,7 @@ import { readCoverageMap, runVitest, test } from '../utils'
 
 test('coverage files include all projects', async () => {
   await runVitest({
-    config: '../../configs/vitest.config.ts',
-    workspace: './fixtures/configs/vitest.config.workspace.ts',
+    config: '../../configs/vitest.config.workspace.ts',
     coverage: {
       reporter: ['json', 'html'],
       include: ['**/*.ts'],
@@ -28,8 +27,7 @@ test('coverage files include all projects', async () => {
 
 test('coverage files limited to specified project', async () => {
   await runVitest({
-    config: '../../configs/vitest.config.ts',
-    workspace: './fixtures/configs/vitest.config.workspace.ts',
+    config: '../../configs/vitest.config.workspace.ts',
     coverage: {
       reporter: ['json', 'html'],
       include: ['**/*.ts'],

@@ -1,16 +1,20 @@
-import { defineWorkspace } from "vitest/config";
+import { defineConfig } from "vitest/config";
 
-export default defineWorkspace([
-  {
-    test: {
-      name: "project1",
-      root: "fixtures/workspaces/project/project1",
-    },
-  },
-  {
-    test: {
-      name: "project2",
-      root: "fixtures/workspaces/project/project2",
-    },
-  },
-]);
+export default defineConfig({
+  test: {
+    projects: [
+      {
+        test: {
+          name: "project1",
+          root: "fixtures/workspaces/project/project1",
+        },
+      },
+      {
+        test: {
+          name: "project2",
+          root: "fixtures/workspaces/project/project2",
+        },
+      },
+    ]
+  }
+});
