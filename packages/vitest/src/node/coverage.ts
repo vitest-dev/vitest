@@ -81,7 +81,6 @@ export class BaseCoverageProvider<Options extends ResolvedCoverageOptions<'istan
   coverageFiles: CoverageFiles = new Map()
   pendingPromises: Promise<void>[] = []
   coverageFilesDirectory!: string
-  roots: string[] = []
 
   _initialize(ctx: Vitest): void {
     this.ctx = ctx
@@ -131,10 +130,6 @@ export class BaseCoverageProvider<Options extends ResolvedCoverageOptions<'istan
       this.options.reportsDirectory,
       tempDirectory,
     )
-
-    this.roots = ctx.config.project.length
-      ? ctx.projects.map(project => project.config.root)
-      : [ctx.config.root]
   }
 
   /**
@@ -200,9 +195,13 @@ export class BaseCoverageProvider<Options extends ResolvedCoverageOptions<'istan
       return []
     }
 
+    const roots = this.ctx.config.project.length
+      ? this.ctx.projects.map(project => project.config.root)
+      : [this.ctx.config.root]
+
     const rootMapper = this.getUntestedFilesByRoot.bind(this, testedFiles, this.options.include)
 
-    const matrix = await Promise.all(this.roots.map(rootMapper))
+    const matrix = await Promise.all(roots.map(rootMapper))
 
     return matrix.flatMap(files => files)
   }
