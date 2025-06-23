@@ -3,7 +3,7 @@ import type { ProxifiedModule } from 'magicast'
 import type { Profiler } from 'node:inspector'
 import type { EncodedSourceMap, FetchResult } from 'vite-node'
 import type { AfterSuiteRunMeta } from 'vitest'
-import type { BaseCoverageOptions, CoverageProvider, ReportContext, ResolvedConfig, ResolvedCoverageOptions, TestProject, Vitest } from 'vitest/node'
+import type { CoverageProvider, ReportContext, ResolvedCoverageOptions, TestProject, Vitest } from 'vitest/node'
 import { promises as fs } from 'node:fs'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import remapping from '@ampproject/remapping'
@@ -45,26 +45,19 @@ const debug = createDebug('vitest:coverage')
 export class V8CoverageProvider extends BaseCoverageProvider<ResolvedCoverageOptions<'v8'>> implements CoverageProvider {
   name = 'v8' as const
   version: string = version
-  testExcludes!: Array<{ root: string; exclude: InstanceType<typeof TestExclude> }>
+  testExclude!: InstanceType<typeof TestExclude>
 
   initialize(ctx: Vitest): void {
     this._initialize(ctx)
 
-    const roots = ctx.config.project.length
-      ? ctx.projects.map(p => p.config.root)
-      : [ctx.config.root]
-
-    this.testExcludes = roots.map(root => ({
-      root,
-      exclude: new TestExclude({
-        cwd: root,
-        include: this.options.include,
-        exclude: this.options.exclude,
-        excludeNodeModules: true,
-        extension: this.options.extension,
-        relativePath: !this.options.allowExternal,
-      }),
-    }))
+    this.testExclude = new TestExclude({
+      cwd: ctx.config.root,
+      include: this.options.include,
+      exclude: this.options.exclude,
+      excludeNodeModules: true,
+      extension: this.options.extension,
+      relativePath: !this.options.allowExternal,
+    })
   }
 
   createCoverageMap(): CoverageMap {
@@ -116,9 +109,7 @@ export class V8CoverageProvider extends BaseCoverageProvider<ResolvedCoverageOpt
     }
 
     if (this.options.excludeAfterRemap) {
-      coverageMap.filter(filename =>
-        this.testExcludes.some(e => e.exclude.shouldInstrument(filename)),
-      )
+      coverageMap.filter(filename => this.testExclude.shouldInstrument(filename))
     }
 
     if (debug.enabled) {
@@ -172,21 +163,16 @@ export class V8CoverageProvider extends BaseCoverageProvider<ResolvedCoverageOpt
     )
   }
 
-  private async resolveIncludedFiles(): Promise<string[]> {
-    const matrix = await Promise.all(this.testExcludes.map(async (e) => {
-      const files = await e.exclude.glob(e.root)
-      return files.map(file => resolve(e.root, file))
-    }))
-    return matrix.flatMap(files => files)
-  }
-
   private async getUntestedFiles(testedFiles: string[]): Promise<CoverageMap> {
     const transformResults = normalizeTransformResults(
       this.ctx.vitenode.fetchCache,
     )
     const transform = this.createUncoveredFileTransformer(this.ctx)
 
-    let includedFiles = await this.resolveIncludedFiles()
+    const allFiles = await this.testExclude.glob(this.ctx.config.root)
+    let includedFiles = allFiles.map(file =>
+      resolve(this.ctx.config.root, file),
+    )
 
     if (this.ctx.config.changed) {
       includedFiles = (this.ctx.config.related || []).filter(file =>
@@ -364,7 +350,7 @@ export class V8CoverageProvider extends BaseCoverageProvider<ResolvedCoverageOpt
         }
       }
 
-      if (this.testExcludes.some(e => e.exclude.shouldInstrument(fileURLToPath(result.url)))) {
+      if (this.testExclude.shouldInstrument(fileURLToPath(result.url))) {
         scriptCoverages.push(result)
       }
     }
