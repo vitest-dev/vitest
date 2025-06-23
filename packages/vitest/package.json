@@ -1,7 +1,7 @@
 {
   "name": "vitest",
   "type": "module",
-  "version": "3.2.4",
+  "version": "4.0.0-beta.1",
   "description": "Next generation testing framework powered by Vite",
   "author": "Anthony Fu <anthonyfu117@hotmail.com>",
   "license": "MIT",
@@ -170,7 +170,7 @@
     "tinyglobby": "catalog:",
     "tinypool": "^1.1.1",
     "tinyrainbow": "catalog:",
-    "vite": "^5.0.0 || ^6.0.0 || ^7.0.0-0",
+    "vite": "^6.0.0 || ^7.0.0-0",
     "vite-node": "workspace:*",
     "why-is-node-running": "^2.3.0"
   },

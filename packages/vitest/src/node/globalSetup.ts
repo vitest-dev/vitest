@@ -2,9 +2,6 @@ import type { ViteNodeRunner } from 'vite-node/client'
 import type { TestProject } from './project'
 import { toArray } from '@vitest/utils'
 
-/** @deprecated use `TestProject` instead */
-export type GlobalSetupContext = TestProject
-
 export interface GlobalSetupFile {
   file: string
   setup?: (context: TestProject) => Promise<Function | void> | void

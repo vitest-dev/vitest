@@ -12,10 +12,7 @@ export { defaultBrowserPort } from './constants'
 export const defaultInclude: string[] = ['**/*.{test,spec}.?(c|m)[jt]s?(x)']
 export const defaultExclude: string[] = [
   '**/node_modules/**',
-  '**/dist/**',
-  '**/cypress/**',
-  '**/.{idea,git,cache,output,temp}/**',
-  '**/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress,tsup,build,eslint,prettier}.config.*',
+  '**/.git/**',
 ]
 export const benchmarkConfigDefaults: Required<
   Omit<BenchmarkUserOptions, 'outputFile' | 'compare' | 'outputJson'>

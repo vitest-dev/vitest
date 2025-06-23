@@ -1,4 +1,4 @@
-import type { UserConfig } from 'vitest/node'
+import type { TestUserConfig } from 'vitest/node'
 import { describe, expect, test, vi } from 'vitest'
 
 import { getWorkersCountByPercentage } from 'vitest/src/utils/workers.js'
@@ -26,7 +26,7 @@ describe('workers util', () => {
   })
 })
 
-function runVitest(config: UserConfig) {
+function runVitest(config: TestUserConfig) {
   return testUtils.runVitest({ ...config, root: './fixtures/workers-option' })
 }
 

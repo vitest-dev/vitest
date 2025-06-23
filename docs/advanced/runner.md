@@ -238,7 +238,7 @@ export interface TaskResult {
    * Errors that occurred during the task execution. It is possible to have several errors
    * if `expect.soft()` failed multiple times.
    */
-  errors?: ErrorWithDiff[]
+  errors?: TestError[]
   /**
    * How long in milliseconds the task took to run.
    */

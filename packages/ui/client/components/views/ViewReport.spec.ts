@@ -1,4 +1,4 @@
-import type { File } from 'vitest'
+import type { RunnerTestFile } from 'vitest'
 import { faker } from '@faker-js/faker'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { config } from '~/composables/client'
@@ -42,7 +42,7 @@ const error = {
   diff,
 }
 
-const fileWithTextStacks: File = {
+const fileWithTextStacks: RunnerTestFile = {
   id: 'f-1',
   name: 'test/plain-stack-trace.ts',
   type: 'suite',
@@ -60,7 +60,7 @@ const fileWithTextStacks: File = {
 fileWithTextStacks.file = fileWithTextStacks
 
 describe('ViewReport', () => {
-  describe('File where stacks are in text', () => {
+  describe('RunnerTestFile where stacks are in text', () => {
     beforeEach(() => {
       render(ViewReport, {
         props: {
@@ -92,7 +92,7 @@ describe('ViewReport', () => {
   })
 
   it('test html stack trace without html message', () => {
-    const file: File = {
+    const file: RunnerTestFile = {
       id: 'f-1',
       name: 'test/plain-stack-trace.ts',
       type: 'suite',
@@ -150,7 +150,7 @@ describe('ViewReport', () => {
   })
 
   it('test html stack trace and message', () => {
-    const file: File = {
+    const file: RunnerTestFile = {
       id: 'f-1',
       name: 'test/plain-stack-trace.ts',
       type: 'suite',

@@ -1,4 +1,4 @@
-import type { Awaitable, ErrorWithDiff } from '@vitest/utils'
+import type { Awaitable, TestError } from '@vitest/utils'
 import type { FixtureItem } from '../fixture'
 import type { ChainableFunction } from '../utils/chain'
 
@@ -118,7 +118,7 @@ export interface TaskResult {
    * Errors that occurred during the task execution. It is possible to have several errors
    * if `expect.soft()` failed multiple times or `retry` was triggered.
    */
-  errors?: ErrorWithDiff[]
+  errors?: TestError[]
   /**
    * How long in milliseconds the task took to run.
    */
@@ -297,17 +297,8 @@ export interface TestAnnotation {
   attachment?: TestAttachment
 }
 
-/**
- * @deprecated Use `Test` instead. `type: 'custom'` is not used since 2.2
- */
-export type Custom<ExtraContext = object> = Test<ExtraContext>
-
 export type Task = Test | Suite | File
 
-/**
- * @deprecated Vitest doesn't provide `done()` anymore
- */
-export type DoneCallback = (error?: any) => void
 export type TestFunction<ExtraContext = object> = (
   context: TestContext & ExtraContext
 ) => Awaitable<any> | void
@@ -516,9 +507,6 @@ export type TestAPI<ExtraContext = object> = ChainableTestAPI<ExtraContext> &
       fixtures: Fixtures<Partial<ExtraContext>>
     ) => void
   }
-
-/** @deprecated use `TestAPI` instead */
-export type { TestAPI as CustomAPI }
 
 export interface FixtureOptions {
   /**
@@ -742,15 +730,6 @@ export interface TestContext {
     (message: string, attachment?: TestAttachment): Promise<TestAnnotation>
   }
 }
-
-/**
- * Context that's always available in the test function.
- * @deprecated use `TestContext` instead
- */
-export interface TaskContext extends TestContext {}
-
-/** @deprecated use `TestContext` instead */
-export type ExtendedContext = TaskContext & TestContext
 
 export type OnTestFailedHandler = (context: TestContext) => Awaitable<void>
 export type OnTestFinishedHandler = (context: TestContext) => Awaitable<void>
