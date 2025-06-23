@@ -16,9 +16,9 @@ import { createViteLogger, silenceImportViteIgnoreWarning } from '../viteLogger'
 import { CoverageTransform } from './coverageTransform'
 import { CSSEnablerPlugin } from './cssEnabler'
 import { MocksPlugins } from './mocks'
-import { ModuleRunnerTransform } from './moduleRunner'
 import { NormalizeURLPlugin } from './normalizeURL'
 import { VitestOptimizer } from './optimizer'
+import { ModuleRunnerTransform } from './runnerTransform'
 import { SsrReplacerPlugin } from './ssrReplacer'
 import {
   deleteDefineConfig,
