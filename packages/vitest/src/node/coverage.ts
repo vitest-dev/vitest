@@ -81,6 +81,7 @@ export class BaseCoverageProvider<Options extends ResolvedCoverageOptions<'istan
   coverageFiles: CoverageFiles = new Map()
   pendingPromises: Promise<void>[] = []
   coverageFilesDirectory!: string
+  roots: string[] = []
 
   _initialize(ctx: Vitest): void {
     this.ctx = ctx
@@ -130,6 +131,10 @@ export class BaseCoverageProvider<Options extends ResolvedCoverageOptions<'istan
       this.options.reportsDirectory,
       tempDirectory,
     )
+
+    this.roots = ctx.config.project.length
+      ? ctx.projects.map(project => project.config.root)
+      : [ctx.config.root]
   }
 
   /**
@@ -167,13 +172,13 @@ export class BaseCoverageProvider<Options extends ResolvedCoverageOptions<'istan
     return included
   }
 
-  async getUntestedFiles(testedFiles: string[]): Promise<string[]> {
-    if (this.options.include == null) {
-      return []
-    }
-
-    let includedFiles = await glob(this.options.include, {
-      cwd: this.ctx.config.root,
+  private async getUntestedFilesByRoot(
+    testedFiles: string[],
+    include: string[],
+    root: string,
+  ): Promise<string[]> {
+    let includedFiles = await glob(include, {
+      cwd: root,
       ignore: [...this.options.exclude, ...testedFiles.map(file => slash(file))],
       absolute: true,
       dot: true,
@@ -187,7 +192,19 @@ export class BaseCoverageProvider<Options extends ResolvedCoverageOptions<'istan
       includedFiles = (this.ctx.config.related || []).filter(file => includedFiles.includes(file))
     }
 
-    return includedFiles.map(file => slash(path.resolve(this.ctx.config.root, file)))
+    return includedFiles.map(file => slash(path.resolve(root, file)))
+  }
+
+  async getUntestedFiles(testedFiles: string[]): Promise<string[]> {
+    if (this.options.include == null) {
+      return []
+    }
+
+    const rootMapper = this.getUntestedFilesByRoot.bind(this, testedFiles, this.options.include)
+
+    const matrix = await Promise.all(this.roots.map(rootMapper))
+
+    return matrix.flatMap(files => files)
   }
 
   createCoverageMap(): CoverageMap {
