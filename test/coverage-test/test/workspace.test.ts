@@ -6,7 +6,7 @@ test('coverage files include all projects', async () => {
     config: '../../configs/vitest.config.workspace.ts',
     coverage: {
       reporter: ['json', 'html'],
-      include: ['**/*.ts'],
+      include: ['**/src/**'],
     },
     root: 'fixtures/workspaces/project',
   })
@@ -30,7 +30,7 @@ test('coverage files limited to specified project', async () => {
     config: '../../configs/vitest.config.workspace.ts',
     coverage: {
       reporter: ['json', 'html'],
-      include: ['**/*.ts'],
+      include: ['**/src/**'],
     },
     project: 'project2',
     root: 'fixtures/workspaces/project',
