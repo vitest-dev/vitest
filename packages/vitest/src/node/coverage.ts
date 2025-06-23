@@ -232,11 +232,25 @@ export class BaseCoverageProvider<Options extends ResolvedCoverageOptions<'istan
 
   async clean(clean = true): Promise<void> {
     if (clean && existsSync(this.options.reportsDirectory)) {
-      await fs.rm(this.options.reportsDirectory, {
-        recursive: true,
-        force: true,
-        maxRetries: 10,
-      })
+      try {
+        await fs.rm(this.options.reportsDirectory, {
+          recursive: true,
+          force: true,
+          maxRetries: 10,
+        })
+      }
+      catch (error) {
+        // If the directory is empty or cannot be deleted (e.g., mounted), allow it
+        try {
+          if (readdirSync(this.options.reportsDirectory).length !== 0) {
+            throw error
+          }
+        }
+        catch {
+          // If readdirSync fails, rethrow the original error
+          throw error
+        }
+      }
     }
 
     if (existsSync(this.coverageFilesDirectory)) {
@@ -326,7 +340,11 @@ export class BaseCoverageProvider<Options extends ResolvedCoverageOptions<'istan
 
     // Remove empty reports directory, e.g. when only text-reporter is used
     if (readdirSync(this.options.reportsDirectory).length === 0) {
-      await fs.rm(this.options.reportsDirectory, { recursive: true })
+      try {
+        await fs.rm(this.options.reportsDirectory, { recursive: true })
+      }
+      catch {
+      }
     }
   }
 

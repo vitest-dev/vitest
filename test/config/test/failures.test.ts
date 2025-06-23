@@ -1,9 +1,10 @@
 import type { UserConfig as ViteUserConfig } from 'vite'
 import type { TestUserConfig } from 'vitest/node'
 import type { VitestRunnerCLIOptions } from '../../test-utils'
+import fs, { promises as fsp } from 'node:fs'
 import { cpus } from 'node:os'
 import { normalize, resolve } from 'pathe'
-import { beforeEach, expect, test } from 'vitest'
+import { beforeEach, expect, test, vi } from 'vitest'
 import { version } from 'vitest/package.json'
 import * as testUtils from '../../test-utils'
 
@@ -603,4 +604,50 @@ test('cannot set the `workspace` options', async () => {
     workspace: 'some-options',
   })
   expect(stderr).toContain('The `test.workspace` option was removed in Vitest 4. Please, migrate to `test.projects` instead. See https://vitest.dev/guide/projects for examples.')
+})
+
+test('coverage.clean does not throw if reportsDirectory cannot be deleted but is empty', async () => {
+  const tmpRoot = await fsp.mkdtemp(resolve('./vitest-coverage-clean-test-'))
+  const reportsDir = resolve(tmpRoot, 'reports')
+  await fsp.mkdir(reportsDir, { recursive: true })
+  // Create a file inside reportsDir to ensure contents can be deleted
+  const filePath = resolve(reportsDir, 'dummy.txt')
+  await fsp.writeFile(filePath, 'dummy')
+
+  // Mock fs.rmdir to throw only when called on empty reportsDir
+  const originalRmdir = fs.rmdir
+  vi.spyOn(fs, 'rmdir').mockImplementation((target, opts, callback) => {
+    if (target === reportsDir && fs.existsSync(reportsDir) && fs.readdirSync(reportsDir).length === 0) {
+      const err: NodeJS.ErrnoException = new Error('EBUSY: resource busy or locked')
+      err.code = 'EBUSY'
+      if (typeof opts === 'function') {
+        callback = opts
+      }
+      callback(err)
+      return
+    }
+    return originalRmdir(target, opts, callback)
+  })
+
+  let result
+  try {
+    result = await runVitest({
+      coverage: {
+        enabled: true,
+        clean: true,
+        reportsDirectory: reportsDir,
+      },
+    })
+  }
+  finally {
+    // Restore and clean up
+    vi.restoreAllMocks()
+    try {
+      await fsp.rmdir(tmpRoot, { recursive: true })
+    }
+    catch {}
+  }
+
+  // Should not crash or throw, and should not print a permission error
+  expect(result.stderr).not.toMatch(/EBUSY|resource busy/i)
 })
