@@ -81,6 +81,7 @@ export class BaseCoverageProvider<Options extends ResolvedCoverageOptions<'istan
   coverageFiles: CoverageFiles = new Map()
   pendingPromises: Promise<void>[] = []
   coverageFilesDirectory!: string
+  roots: string[] = []
 
   _initialize(ctx: Vitest): void {
     this.ctx = ctx
@@ -130,12 +131,18 @@ export class BaseCoverageProvider<Options extends ResolvedCoverageOptions<'istan
       this.options.reportsDirectory,
       tempDirectory,
     )
+
+    this.roots = ctx.config.project?.length
+      ? ctx.projects.map(project => project.config.root)
+      : [ctx.config.root]
   }
 
   /**
    * Check if file matches `coverage.include` but not `coverage.exclude`
    */
-  isIncluded(_filename: string): boolean {
+  isIncluded(_filename: string, root?: string): boolean {
+    const roots = root ? [root] : this.roots
+
     const filename = slash(_filename)
     const cacheHit = this.globCache.get(filename)
 
@@ -144,23 +151,25 @@ export class BaseCoverageProvider<Options extends ResolvedCoverageOptions<'istan
     }
 
     // File outside project root with default allowExternal
-    if (this.options.allowExternal === false && !filename.startsWith(this.ctx.config.root)) {
+    if (this.options.allowExternal === false && roots.every(root => !filename.startsWith(root))) {
       this.globCache.set(filename, false)
 
       return false
     }
 
-    const options: pm.PicomatchOptions = {
-      contains: true,
-      dot: true,
-      cwd: this.ctx.config.root,
-      ignore: this.options.exclude,
-    }
-
     // By default `coverage.include` matches all files, except "coverage.exclude"
     const glob = this.options.include || '**'
 
-    const included = pm.isMatch(filename, glob, options) && existsSync(cleanUrl(filename))
+    const included = roots.some((root) => {
+      const options: pm.PicomatchOptions = {
+        contains: true,
+        dot: true,
+        cwd: root,
+        ignore: this.options.exclude,
+      }
+
+      return pm.isMatch(filename, glob, options)
+    }) && existsSync(cleanUrl(filename))
 
     this.globCache.set(filename, included)
 
@@ -181,7 +190,7 @@ export class BaseCoverageProvider<Options extends ResolvedCoverageOptions<'istan
     })
 
     // Run again through picomatch as tinyglobby's exclude pattern is different ({ "exclude": ["math"] } should ignore "src/math.ts")
-    includedFiles = includedFiles.filter(file => this.isIncluded(file))
+    includedFiles = includedFiles.filter(file => this.isIncluded(file, root))
 
     if (this.ctx.config.changed) {
       includedFiles = (this.ctx.config.related || []).filter(file => includedFiles.includes(file))
@@ -195,13 +204,9 @@ export class BaseCoverageProvider<Options extends ResolvedCoverageOptions<'istan
       return []
     }
 
-    const roots = this.ctx.config.project.length
-      ? this.ctx.projects.map(project => project.config.root)
-      : [this.ctx.config.root]
-
     const rootMapper = this.getUntestedFilesByRoot.bind(this, testedFiles, this.options.include)
 
-    const matrix = await Promise.all(roots.map(rootMapper))
+    const matrix = await Promise.all(this.roots.map(rootMapper))
 
     return matrix.flatMap(files => files)
   }
