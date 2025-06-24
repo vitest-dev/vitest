@@ -2191,6 +2191,30 @@ export default defineConfig({
 })
 ```
 
+### onUnhandledError<NonProjectOption /> {#onunhandlederror}
+
+- **Type:** `(error: (TestError | Error) & { type: string }) => boolean | void`
+
+A custom handler to filter out unhandled errors that should not be reported. If an error is filtered out, it will no longer affect the test results.
+
+If you want unhandled errors to be reported without impacting the test outcome, consider using the [`dangerouslyIgnoreUnhandledErrors`](#dangerouslyIgnoreUnhandledErrors) option
+
+```ts
+import type { ParsedStack } from 'vitest'
+import { defineConfig } from 'vitest/config'
+
+export default defineConfig({
+  test: {
+    onUnhandledError(error): boolean | void {
+      // Ignore all errors with the name "MySpecialError".
+      if (error.name === 'MySpecialError') {
+        return false
+      }
+    },
+  },
+})
+```
+
 ### diff
 
 - **Type:** `string`

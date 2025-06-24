@@ -735,7 +735,7 @@ function getSuccessTests(stdout: string) {
   return stdout
     .split('\n')
     .filter(f => f.startsWith(' ✓ '))
-    .map(f => f.replace(/\dms/, '<time>'))
+    .map(f => f.replace(/\d+ms/, '<time>'))
     .join('\n')
 }
 

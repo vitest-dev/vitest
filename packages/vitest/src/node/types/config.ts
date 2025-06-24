@@ -639,6 +639,11 @@ export interface InlineConfig {
   onStackTrace?: (error: TestError, frame: ParsedStack) => boolean | void
 
   /**
+   * A callback that can return `false` to ignore an unhandled error
+   */
+  onUnhandledError?: OnUnhandledErrorCallback
+
+  /**
    * Indicates if CSS files should be processed.
    *
    * When excluded, the CSS files will be replaced with empty strings to bypass the subsequent processing.
@@ -977,6 +982,8 @@ export interface UserConfig extends InlineConfig {
    */
   mergeReports?: string
 }
+
+export type OnUnhandledErrorCallback = (error: (TestError | Error) & { type: string }) => boolean | void
 
 export interface ResolvedConfig
   extends Omit<
