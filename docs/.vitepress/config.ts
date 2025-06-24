@@ -70,7 +70,6 @@ export default ({ mode }: { mode: string }) => {
           customIcon: {
             'CLI': 'vscode-icons:file-type-shell',
             'vitest.shims': 'vscode-icons:file-type-vitest',
-            'vitest.workspace': 'vscode-icons:file-type-vitest',
             'vitest.config': 'vscode-icons:file-type-vitest',
             '.spec.ts': 'vscode-icons:file-type-testts',
             '.test.ts': 'vscode-icons:file-type-testts',
