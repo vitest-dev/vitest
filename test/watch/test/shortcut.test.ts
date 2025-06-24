@@ -1,56 +1,49 @@
+import type { TestProject } from 'vitest/node'
 import { resolve } from 'pathe'
-import { it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { runVitest } from '../../test-utils'
 
-const _options = { root: 'fixtures', watch: true }
+describe('restart browser servers with watch', () => {
+  it('should restart multiple browser servers', async () => {
+    const root = resolve(import.meta.dirname, '../fixtures/browser-multiple')
+    const projects: TestProject[] = []
+    const { vitest, ctx } = await runVitest({ root, watch: true, browser: {
+      enabled: true,
+      provider: 'playwright',
+    }, reporters: [{
+      onBrowserInit(project) {
+        projects.push(project)
+      },
+    }] })
+    const RESTART_COUNT = 5
 
-it('should restart browser server', async () => {
-  const { vitest, ctx } = await runVitest(_options, ['math'])
-  const ctx2 = ctx as any
+    const initSpies = projects.map(project => vi.spyOn(project, '_initBrowserServer'))
+    initSpies.forEach(spy => expect(spy).toHaveBeenCalledTimes(0))
 
-  ctx2._initBrowserServers = async () => {
-    ctx2.projects.forEach((project: any) => {
-      project.browser = {
-        close: async () => {},
-        vite: {
-          resolvedUrls: {
-            local: ['http://localhost:3000'],
-            network: ['http://localhost:3000'],
-          },
-        } as any,
-        provider: { name: 'chromium' } as any,
-      }
-    })
-  }
+    for (let i = 0; i < RESTART_COUNT; i++) {
+      const closeSpies = ctx?.projects.map(project => vi.spyOn(project.browser!, 'close'))
+      closeSpies!.forEach(spy => expect(spy).toHaveBeenCalledTimes(0))
 
-  vitest.write('r')
-  await vitest.waitForStdout('RERUN')
-  vitest.write('b')
-  await vitest.waitForStdout('Browser runner started')
-})
+      vitest.write('b')
+      await new Promise(resolve => setTimeout(resolve, 10))
 
-it('should restart multiple browser servers', async () => {
-  const root = resolve(import.meta.dirname, '../fixtures/browser-multiple')
-  const { vitest, ctx } = await runVitest({ root, watch: true })
-  const ctx2 = ctx as any
+      closeSpies!.forEach(spy => expect(spy).toHaveBeenCalledTimes(1))
+      initSpies.forEach(spy => expect(spy).toHaveBeenCalledTimes(i + 1))
+    }
+  })
 
-  ctx2._initBrowserServers = async () => {
-    ctx2.projects.forEach((project: any) => {
-      project.browser = {
-        close: async () => {},
-        vite: {
-          resolvedUrls: {
-            local: ['http://localhost:3000'],
-            network: ['http://localhost:3000'],
-          },
-        } as any,
-        provider: { name: 'chromium' } as any,
-      }
-    })
-  }
+  it('should replace new browser server', async () => {
+    const root = resolve(import.meta.dirname, '../fixtures/browser-multiple')
+    const { vitest, ctx } = await runVitest({ root, watch: true, browser: {
+      enabled: true,
+      provider: 'playwright',
+    } })
+    const originalBrowsers = ctx?.projects.map(p => p.browser)
+    await vitest.waitForStdout('Waiting for file changes')
 
-  vitest.write('b')
-  for (let i = 0; i < ctx2.projects.length; i++) {
-    await vitest.waitForStdout('Browser runner started')
-  }
+    vitest.write('b')
+    await new Promise(resolve => setTimeout(resolve, 10))
+
+    expect(ctx?.projects.map(p => p.browser)).not.toBe(originalBrowsers)
+  })
 })
