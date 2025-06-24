@@ -603,10 +603,17 @@ function enhanceSpy<T extends Procedure | Constructable>(
         contexts.push(result)
         return result
       }
-      catch (e) {
+      catch (error) {
         instances.push(undefined)
         contexts.push(undefined)
-        throw e
+
+        if (error instanceof TypeError && error.message.includes('is not a constructor')) {
+          throw new TypeError(`The spy implementation did not use 'function' or 'class', see https://vitest.dev/api/vi#vi-spyon for examples.`, {
+            cause: error,
+          })
+        }
+
+        throw error
       }
     }
     return (impl as Procedure).apply(this, args)

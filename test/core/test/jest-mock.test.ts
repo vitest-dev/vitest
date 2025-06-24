@@ -87,6 +87,49 @@ describe('jest mock compat layer', () => {
     expect(spy.mock.contexts).toEqual([instance])
   })
 
+  it('throws an error when constructing a class with an arrow function', () => {
+    const arrow = () => {}
+    const Fn = vi.fn(arrow)
+    expect(() => new Fn()).toThrow(new TypeError(
+      `The spy implementation did not use 'function' or 'class', see https://vitest.dev/api/vi#vi-spyon for examples.`,
+      {
+        cause: new TypeError(`() => {
+    } is not a constructor`),
+      },
+    ))
+
+    const obj = {
+      Spy: arrow,
+    }
+
+    vi.spyOn(obj, 'Spy')
+
+    expect(
+      // @ts-expect-error typescript knows you can't do that
+      () => new obj.Spy(),
+    ).toThrow(new TypeError(
+      `The spy implementation did not use 'function' or 'class', see https://vitest.dev/api/vi#vi-spyon for examples.`,
+      {
+        cause: new TypeError(`() => {
+    } is not a constructor`),
+      },
+    ))
+
+    const properClass = {
+      Spy: class {},
+    }
+
+    vi.spyOn(properClass, 'Spy').mockImplementation(() => {})
+
+    expect(() => new properClass.Spy()).toThrow(new TypeError(
+      `The spy implementation did not use 'function' or 'class', see https://vitest.dev/api/vi#vi-spyon for examples.`,
+      {
+        cause: new TypeError(`() => {
+    } is not a constructor`),
+      },
+    ))
+  })
+
   it('implementation is set correctly on init', () => {
     const impl = () => 1
     const mock1 = vi.fn(impl)
