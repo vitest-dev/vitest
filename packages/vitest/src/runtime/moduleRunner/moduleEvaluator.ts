@@ -8,7 +8,6 @@ import type { VitestVmOptions } from './moduleRunner'
 import { createRequire } from 'node:module'
 import vm from 'node:vm'
 import {
-  ESModulesEvaluator,
   ssrDynamicImportKey,
   ssrExportAllKey,
   ssrImportKey,
@@ -24,8 +23,6 @@ export interface VitestModuleEvaluatorOptions {
 }
 
 export class VitestModuleEvaluator implements ModuleEvaluator {
-  private defaultEvaluator = new ESModulesEvaluator()
-  public readonly startOffset: number
   public stubs: Record<string, any> = {}
   public env: ModuleRunnerImportMeta['env'] = createImportMetaEnvProxy()
 
@@ -33,20 +30,52 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
     private vm: VitestVmOptions | undefined,
     private options: VitestModuleEvaluatorOptions,
   ) {
-    this.startOffset = this.defaultEvaluator.startOffset
     this.stubs = getDefaultRequestStubs(vm?.context)
   }
 
-  runExternalModule(file: string): Promise<any> {
+  async runExternalModule(file: string): Promise<any> {
     if (file in this.stubs) {
       return this.stubs[file]
     }
 
-    if (this.vm) {
-      return this.vm.externalModulesExecutor.import(file)
+    const namespace = this.vm
+      ? await this.vm.externalModulesExecutor.import(file)
+      : await import(file)
+
+    if (!this.shouldInterop(file, namespace)) {
+      return namespace
     }
 
-    return this.defaultEvaluator.runExternalModule(file)
+    const { mod, defaultExport } = interopModule(namespace)
+
+    const proxy = new Proxy(mod, {
+      get(mod, prop) {
+        if (prop === 'default') {
+          return defaultExport
+        }
+        return mod[prop] ?? defaultExport?.[prop]
+      },
+      has(mod, prop) {
+        if (prop === 'default') {
+          return defaultExport !== undefined
+        }
+        return prop in mod || (defaultExport && prop in defaultExport)
+      },
+      getOwnPropertyDescriptor(mod, prop) {
+        const descriptor = Reflect.getOwnPropertyDescriptor(mod, prop)
+        if (descriptor) {
+          return descriptor
+        }
+        if (prop === 'default' && defaultExport !== undefined) {
+          return {
+            value: defaultExport,
+            enumerable: true,
+            configurable: true,
+          }
+        }
+      },
+    })
+    return proxy
   }
 
   async runInlinedModule(
@@ -133,9 +162,7 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
     const filename = meta.filename
     const dirname = meta.dirname
 
-    const require = this.vm
-      ? this.vm.externalModulesExecutor.createRequire(filename)
-      : createRequire(filename)
+    const require = this.createRequire(filename)
 
     const argumentsList = [
       ssrModuleExportsKey,
@@ -172,11 +199,21 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
       ? vm.runInContext(wrappedCode, this.vm.context, options)
       : vm.runInThisContext(wrappedCode, options)
 
+    const dynamicRequest = (dep: string, options: ImportCallOptions) => {
+      dep = String(dep)
+      // TODO: support more edge cases?
+      // vite doesn't support dynamic modules by design, but we have to
+      if (dep[0] === '#') {
+        return context[ssrDynamicImportKey](wrapId(dep), options)
+      }
+      return context[ssrDynamicImportKey](dep, options)
+    }
+
     await initModule(
       context[ssrModuleExportsKey],
       context[ssrImportMetaKey],
       context[ssrImportKey],
-      context[ssrDynamicImportKey],
+      dynamicRequest,
       context[ssrExportAllKey],
       // vite 7 support
       (name: string, getter: () => unknown) => Object.defineProperty(moduleExports, name, {
@@ -191,6 +228,15 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
       cjsExports,
       require,
     )
+  }
+
+  private createRequire(filename: string) {
+    if (filename.startsWith('\x00')) {
+      return () => ({})
+    }
+    return this.vm
+      ? this.vm.externalModulesExecutor.createRequire(filename)
+      : createRequire(filename)
   }
 
   private shouldInterop(path: string, mod: any): boolean {
@@ -336,4 +382,33 @@ function defineExport(exports: any, key: string | symbol, value: () => any) {
 export function isPrimitive(v: any): boolean {
   const isObject = typeof v === 'object' || typeof v === 'function'
   return !isObject || v == null
+}
+
+function interopModule(mod: any) {
+  if (isPrimitive(mod)) {
+    return {
+      mod: { default: mod },
+      defaultExport: mod,
+    }
+  }
+
+  let defaultExport = 'default' in mod ? mod.default : mod
+
+  if (!isPrimitive(defaultExport) && '__esModule' in defaultExport) {
+    mod = defaultExport
+    if ('default' in defaultExport) {
+      defaultExport = defaultExport.default
+    }
+  }
+
+  return { mod, defaultExport }
+}
+
+const VALID_ID_PREFIX = `/@id/`
+const NULL_BYTE_PLACEHOLDER = `__x00__`
+
+export function wrapId(id: string): string {
+  return id.startsWith(VALID_ID_PREFIX)
+    ? id
+    : VALID_ID_PREFIX + id.replace('\0', NULL_BYTE_PLACEHOLDER)
 }

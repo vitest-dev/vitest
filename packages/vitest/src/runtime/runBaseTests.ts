@@ -1,5 +1,4 @@
 import type { FileSpecification } from '@vitest/runner'
-import type { ModuleCacheMap } from 'vite-node'
 import type { ResolvedTestEnvironment } from '../types/environment'
 import type { SerializedConfig } from './config'
 import type { VitestModuleRunner } from './moduleRunner/moduleRunner'
@@ -57,7 +56,7 @@ export async function run(
       for (const file of files) {
         if (isolate) {
           moduleRunner.mocker.reset()
-          resetModules(workerState.moduleCache as ModuleCacheMap, true)
+          resetModules(workerState.evaluatedModules, true)
         }
 
         workerState.filepath = file.filepath

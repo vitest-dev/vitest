@@ -83,9 +83,10 @@ export function createMethodsRPC(project: TestProject, options: MethodsOptions =
       return {
         file: cleanUrl(resolved.id),
         // TODO: this is incorrect, there are edge cases
-        id: resolved.id.startsWith(environment.config.root)
+        url: resolved.id.startsWith(environment.config.root)
           ? resolved.id.slice(environment.config.root.length)
           : resolved.id,
+        id: resolved.id,
       }
     },
 

@@ -1,5 +1,5 @@
-import { mockedA } from './mockedA'
+import * as m from './mockedA'
 
 export function mockedB() {
-  return mockedA()
+  return m.mockedA()
 }

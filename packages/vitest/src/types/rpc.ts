@@ -15,6 +15,7 @@ export interface RuntimeRPC {
   resolve_: (id: string, importer: string | undefined, environment: string) => Promise<{
     id: string
     file: string
+    url: string
   } | null>
 
   fetch: (

@@ -21,7 +21,9 @@ export function mockObject(
       container[key] = value
       return true
     }
+    // catch {
     catch {
+      // console.log('err', err)
       return false
     }
   }

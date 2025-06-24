@@ -8,7 +8,10 @@ const normalizedDistDir = normalize(distDir)
 const relativeIds: Record<string, string> = {}
 const externalizeMap = new Map<string, string>()
 
-export function getCachedVitestImport(id: string, state: () => WorkerGlobalState): null | { externalize: string } {
+export function getCachedVitestImport(
+  id: string,
+  state: () => WorkerGlobalState,
+): null | { externalize: string } {
   if (id.startsWith('/@fs/')) {
     id = id.slice(process.platform === 'win32' ? 5 : 4)
   }

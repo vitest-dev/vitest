@@ -27,7 +27,7 @@ async function createVitestModuleRunner(options: VitestModuleRunnerOptions): Pro
 }
 
 export interface ContextExecutorOptions {
-  evaluatedModules?: EvaluatedModules
+  evaluatedModules: EvaluatedModules
   context?: vm.Context
   externalModulesExecutor?: ExternalModulesExecutor
   state: WorkerGlobalState
@@ -50,6 +50,7 @@ export async function startVitestModuleRunner(options: ContextExecutorOptions): 
   }
 
   return await createVitestModuleRunner({
+    evaluatedModules: options.evaluatedModules,
     transport: {
       async fetchModule(id, importer, options) {
         const vitest = getCachedVitestImport(id, state)
