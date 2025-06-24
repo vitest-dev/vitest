@@ -21,6 +21,7 @@ test('coverage files include all projects', async () => {
       "<process-cwd>/fixtures/workspaces/project/project1/src/untested.ts",
       "<process-cwd>/fixtures/workspaces/project/project2/src/konst.ts",
       "<process-cwd>/fixtures/workspaces/project/project2/src/untested.ts",
+      "<process-cwd>/fixtures/workspaces/project/shared/src/utils.ts",
     ]
   `)
 })

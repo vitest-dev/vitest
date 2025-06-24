@@ -15,6 +15,12 @@ export default defineConfig({
           root: "fixtures/workspaces/project/project2",
         },
       },
+      {
+        test: {
+          name: 'project-shared',
+          root: 'fixtures/workspaces/project/shared',
+        }
+      }
     ]
   }
 });
