@@ -378,12 +378,6 @@ export interface InlineConfig {
   projects?: TestProjectConfiguration[]
 
   /**
-   * Path to a workspace configuration file
-   * @deprecated use `projects` instead
-   */
-  workspace?: string | TestProjectConfiguration[]
-
-  /**
    * Update snapshot
    *
    * @default false
@@ -1110,7 +1104,6 @@ type NonProjectOptions =
   | 'maxWorkers'
   | 'minWorkers'
   | 'fileParallelism'
-  | 'workspace'
   | 'watchTriggerPatterns'
 
 export type ProjectConfig = Omit<

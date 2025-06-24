@@ -334,11 +334,6 @@ export const cliOptionsConfig: VitestCLIOptions = {
     description: 'Override Vite mode (default: `test` or `benchmark`)',
     argument: '<name>',
   },
-  workspace: {
-    description: '[deprecated] Path to a workspace configuration file',
-    argument: '<path>',
-    normalize: true,
-  },
   isolate: {
     description:
       'Run every test file in isolation. To disable isolation, use `--no-isolate` (default: `true`)',

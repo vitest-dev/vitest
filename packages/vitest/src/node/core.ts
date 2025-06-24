@@ -11,16 +11,15 @@ import type { ResolvedConfig, TestProjectConfiguration, UserConfig, VitestRunMod
 import type { CoverageProvider } from './types/coverage'
 import type { Reporter } from './types/reporter'
 import type { TestRunResult } from './types/tests'
-import { promises as fs } from 'node:fs'
 import { getTasks, hasFailed } from '@vitest/runner/utils'
 import { SnapshotManager } from '@vitest/snapshot/manager'
 import { noop, toArray } from '@vitest/utils'
-import { dirname, join, normalize, relative, resolve } from 'pathe'
+import { normalize, relative } from 'pathe'
 import { ViteNodeRunner } from 'vite-node/client'
 import { ViteNodeServer } from 'vite-node/server'
 import { version } from '../../package.json' with { type: 'json' }
 import { WebSocketReporter } from '../api/setup'
-import { defaultBrowserPort, workspacesFiles as workspaceFiles } from '../constants'
+import { defaultBrowserPort } from '../constants'
 import { distDir } from '../paths'
 import { wildcardPatternToRegExp } from '../utils/base'
 import { convertTasksToEvents } from '../utils/tasks'
@@ -90,11 +89,6 @@ export class Vitest {
   /** @internal */ closingPromise?: Promise<void>
   /** @internal */ isCancelling = false
   /** @internal */ coreWorkspaceProject: TestProject | undefined
-  /**
-   * @internal
-   * @deprecated
-   */
-  resolvedProjects: TestProject[] = []
   /** @internal */ _browserLastPort = defaultBrowserPort
   /** @internal */ _browserSessions = new BrowserSessions()
   /** @internal */ _cliOptions: CliOptions = {}
@@ -114,7 +108,6 @@ export class Vitest {
   private _state?: StateManager
   private _cache?: VitestCache
   private _snapshot?: SnapshotManager
-  private _workspaceConfigPath?: string
 
   constructor(
     public readonly mode: VitestRunMode,
@@ -208,8 +201,6 @@ export class Vitest {
     this.pool = undefined
     this.closingPromise = undefined
     this.projects = []
-    this.resolvedProjects = []
-    this._workspaceConfigPath = undefined
     this.coverageProvider = undefined
     this.runningPromise = undefined
     this.coreWorkspaceProject = undefined
@@ -261,7 +252,6 @@ export class Vitest {
         file = normalize(file)
         const isConfig = file === server.config.configFile
           || this.projects.some(p => p.vite.config.configFile === file)
-          || file === this._workspaceConfigPath
         if (isConfig) {
           await Promise.all(this._onRestartListeners.map(fn => fn('config')))
           this.report('onServerRestart', 'config')
@@ -278,7 +268,6 @@ export class Vitest {
     catch { }
 
     const projects = await this.resolveProjects(this._cliOptions)
-    this.resolvedProjects = projects
     this.projects = projects
 
     await Promise.all(projects.flatMap((project) => {
@@ -404,38 +393,10 @@ export class Vitest {
     return this.runner.executeId(moduleId)
   }
 
-  private async resolveWorkspaceConfigPath(): Promise<string | undefined> {
-    if (typeof this.config.workspace === 'string') {
-      return this.config.workspace
-    }
-
-    const configDir = this.vite.config.configFile
-      ? dirname(this.vite.config.configFile)
-      : this.config.root
-
-    const rootFiles = await fs.readdir(configDir)
-
-    const workspaceConfigName = workspaceFiles.find((configFile) => {
-      return rootFiles.includes(configFile)
-    })
-
-    if (!workspaceConfigName) {
-      return undefined
-    }
-
-    return join(configDir, workspaceConfigName)
-  }
-
   private async resolveProjects(cliOptions: UserConfig): Promise<TestProject[]> {
     const names = new Set<string>()
 
     if (this.config.projects) {
-      if (typeof this.config.workspace !== 'undefined') {
-        this.logger.warn(
-          'Both `test.projects` and `test.workspace` are defined. Ignoring the `test.workspace` option.',
-        )
-      }
-
       return resolveProjects(
         this,
         cliOptions,
@@ -445,57 +406,17 @@ export class Vitest {
       )
     }
 
-    if (Array.isArray(this.config.workspace)) {
-      this.logger.deprecate(
-        'The `test.workspace` option is deprecated and will be removed in the next major. To hide this warning, rename `test.workspace` option to `test.projects`.',
-      )
-      return resolveProjects(
-        this,
-        cliOptions,
-        undefined,
-        this.config.workspace,
-        names,
-      )
+    if ('workspace' in this.config) {
+      throw new Error('The `test.workspace` option was removed in Vitest 4. Please, migrate to `test.projects` instead. See https://vitest.dev/guide/projects for examples.')
     }
 
-    const workspaceConfigPath = await this.resolveWorkspaceConfigPath()
-
-    this._workspaceConfigPath = workspaceConfigPath
-
-    // user doesn't have a workspace config, return default project
-    if (!workspaceConfigPath) {
-      // user can filter projects with --project flag, `getDefaultTestProject`
-      // returns the project only if it matches the filter
-      const project = getDefaultTestProject(this)
-      if (!project) {
-        return []
-      }
-      return resolveBrowserProjects(this, new Set([project.name]), [project])
+    // user can filter projects with --project flag, `getDefaultTestProject`
+    // returns the project only if it matches the filter
+    const project = getDefaultTestProject(this)
+    if (!project) {
+      return []
     }
-
-    const configFile = this.vite.config.configFile
-      ? resolve(this.vite.config.root, this.vite.config.configFile)
-      : 'the root config file'
-
-    this.logger.deprecate(
-      `The workspace file is deprecated and will be removed in the next major. Please, use the \`test.projects\` field in ${configFile} instead.`,
-    )
-
-    const workspaceModule = await this.import<{
-      default: TestProjectConfiguration[]
-    }>(workspaceConfigPath)
-
-    if (!workspaceModule.default || !Array.isArray(workspaceModule.default)) {
-      throw new TypeError(`Workspace config file "${workspaceConfigPath}" must export a default array of project paths.`)
-    }
-
-    return resolveProjects(
-      this,
-      cliOptions,
-      workspaceConfigPath,
-      workspaceModule.default,
-      names,
-    )
+    return resolveBrowserProjects(this, new Set([project.name]), [project])
   }
 
   /**
