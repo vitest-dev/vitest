@@ -770,7 +770,8 @@ export function createTaskCollector(
       runner,
     )
 
-    return createTest(function fn(
+    const originalWrapper = fn
+    return createTest(function (
       name: string | Function,
       optionsOrFn?: TestOptions | TestFunction,
       optionsOrTest?: number | TestOptions | TestFunction,
@@ -784,12 +785,9 @@ export function createTaskCollector(
           scopedFixtures,
         )
       }
-      collector.test.fn.call(
-        context,
-        formatName(name),
-        optionsOrFn as TestOptions,
-        optionsOrTest as TestFunction,
-      )
+      const { handler, options } = parseArguments(optionsOrFn, optionsOrTest)
+      const timeout = options.timeout ?? runner?.config.testTimeout
+      originalWrapper.call(context, formatName(name), handler, timeout)
     }, _context)
   }
 

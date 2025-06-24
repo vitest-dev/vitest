@@ -1,7 +1,7 @@
 import type { ModuleMocker } from '@vitest/mocker/browser'
 import type { CancelReason } from '@vitest/runner'
 import type { BirpcReturn } from 'birpc'
-import type { WebSocketBrowserEvents, WebSocketBrowserHandlers } from '../node/types'
+import type { WebSocketBrowserEvents, WebSocketBrowserHandlers } from '../types'
 import type { IframeOrchestrator } from './orchestrator'
 import { createBirpc } from 'birpc'
 import { parse, stringify } from 'flatted'

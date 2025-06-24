@@ -1,7 +1,5 @@
-import type { ModuleDiagnostic as _FileDiagnostic } from '../node/reporters/reported-tasks'
 import * as vite from 'vite'
 import { Vitest } from '../node/core'
-import { TestModule as _TestFile } from '../node/reporters/reported-tasks'
 
 export const version: string = Vitest.version
 
@@ -18,7 +16,6 @@ export type {
 } from '../node/core'
 export { createVitest } from '../node/create'
 export { GitNotFoundError, FilesNotFoundError as TestsNotFoundError } from '../node/errors'
-export type { GlobalSetupContext } from '../node/globalSetup'
 export { VitestPackageInstaller } from '../node/packageInstaller'
 export { VitestPlugin } from '../node/plugins'
 export { resolveConfig } from '../node/plugins/publicConfig'
@@ -80,8 +77,6 @@ export type {
   ProjectBrowser,
   ResolvedBrowserOptions,
 } from '../node/types/browser'
-/** @deprecated use `createViteServer` instead */
-export const createServer: typeof vite.createServer = vite.createServer
 export const createViteServer: typeof vite.createServer = vite.createServer
 export type {
   ApiConfig,
@@ -89,9 +84,7 @@ export type {
   CSSModuleScopeStrategy,
   DepsOptimizationOptions,
   EnvironmentOptions,
-  HappyDOMOptions,
   InlineConfig,
-  JSDOMOptions,
   Pool,
   PoolOptions,
   ProjectConfig,
@@ -102,9 +95,9 @@ export type {
   RuntimeConfig,
   SequenceHooks,
   SequenceSetupFiles,
+  UserConfig as TestUserConfig,
   TransformModePatterns,
   TypecheckConfig,
-  UserConfig,
   UserWorkspaceConfig,
   VitestEnvironment,
   VitestRunMode,
@@ -124,18 +117,9 @@ export type {
 
 export type { VitestPluginContext } from '../node/types/plugin'
 export type { TestRunResult } from '../node/types/tests'
-/**
- * @deprecated Use `TestModule` instead
- */
-export const TestFile: typeof _TestFile = _TestFile
 export type { WorkerContext } from '../node/types/worker'
 export { createViteLogger } from '../node/viteLogger'
 export type { WatcherTriggerPattern } from '../node/watcher'
-
-/**
- * @deprecated Use `ModuleDiagnostic` instead
- */
-export type FileDiagnostic = _FileDiagnostic
 
 export { distDir, rootDir } from '../paths'
 
@@ -168,6 +152,7 @@ export type { SerializedError } from '@vitest/utils'
 
 export {
   esbuildVersion,
+  isCSSRequest,
   isFileServingAllowed,
   parseAst,
   parseAstAsync,

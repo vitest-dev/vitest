@@ -1,5 +1,5 @@
 import type { RunnerTaskResultPack, RunnerTestFile } from 'vitest'
-import type { UserConfig } from 'vitest/node'
+import type { TestUserConfig } from 'vitest/node'
 import { resolve } from 'pathe'
 import { expect, it } from 'vitest'
 import { rolldownVersion } from 'vitest/node'
@@ -14,7 +14,7 @@ it.each([
       enabled: true,
     },
   },
-] as UserConfig[])('passes down metadata when $name', { timeout: 60_000, retry: 1 }, async (config) => {
+] as TestUserConfig[])('passes down metadata when $name', { timeout: 60_000, retry: 1 }, async (config) => {
   const taskUpdate: RunnerTaskResultPack[] = []
   const finishedFiles: RunnerTestFile[] = []
   const collectedFiles: RunnerTestFile[] = []

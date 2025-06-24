@@ -22,8 +22,9 @@
   //   { "rule": "*semi", "severity": "off" }
   // ],
 
-  "vitest.workspaceConfig": "./vitest.workspace.vscode.ts",
-  "testing.openTesting": "neverOpen",
+  "vitest.ignoreWorkspace": true,
+  "vitest.configSearchPatternInclude": "test/{core,cli,config}/{vitest,vite}.config.ts",
+  "testing.automaticallyOpenTestResults": "neverOpen",
 
   // Enable eslint for all supported languages
   "eslint.validate": [
@@ -38,7 +39,6 @@
     "jsonc",
     "yaml"
   ],
-  "testing.automaticallyOpenTestResults": "neverOpen",
   // Use the project's typescript version
   "typescript.tsdk": "node_modules/typescript/lib"
 }

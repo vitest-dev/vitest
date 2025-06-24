@@ -1,5 +1,5 @@
 import type { File, Task } from '@vitest/runner'
-import type { ErrorWithDiff, UserConsoleLog } from '../../types/general'
+import type { TestError, UserConsoleLog } from '../../types/general'
 import type { Vitest } from '../core'
 import type { Reporter } from '../types/reporter'
 import type { TestCase, TestCollection, TestModule, TestModuleState, TestResult, TestSuite, TestSuiteState } from './reported-tasks'
@@ -253,7 +253,7 @@ export abstract class BaseReporter implements Reporter {
     return getFullName(test, separator)
   }
 
-  protected formatShortError(error: ErrorWithDiff): string {
+  protected formatShortError(error: TestError): string {
     return `${F_RIGHT} ${error.message}`
   }
 
@@ -433,9 +433,13 @@ export abstract class BaseReporter implements Reporter {
       return false
     }
 
-    const shouldLog = this.ctx.config.onConsoleLog?.(log.content, log.type)
-    if (shouldLog === false) {
-      return shouldLog
+    if (this.ctx.config.onConsoleLog) {
+      const task = log.taskId ? this.ctx.state.idMap.get(log.taskId) : undefined
+      const entity = task && this.ctx.state.getReportedEntity(task)
+      const shouldLog = this.ctx.config.onConsoleLog(log.content, log.type, entity)
+      if (shouldLog === false) {
+        return shouldLog
+      }
     }
     return true
   }
@@ -602,7 +606,7 @@ export abstract class BaseReporter implements Reporter {
   }
 
   private printTaskErrors(tasks: Task[], errorDivider: () => void) {
-    const errorsQueue: [error: ErrorWithDiff | undefined, tests: Task[]][] = []
+    const errorsQueue: [error: TestError | undefined, tests: Task[]][] = []
 
     for (const task of tasks) {
       // Merge identical errors

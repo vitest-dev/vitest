@@ -58,5 +58,7 @@ test('default value changes of coverage.exclude do not reflect to test.exclude',
 
   expect(vitestConfig.include).toStrictEqual(['**/example.test.ts'])
   expect(vitestConfig.exclude).toStrictEqual(['**/custom-exclude/**'])
-  expect(vitestConfig.coverage.exclude).toStrictEqual(['**/custom-exclude/**', '**/example.test.ts'])
+
+  expect(vitestConfig.coverage.exclude).toContain('**/custom-exclude/**')
+  expect(vitestConfig.coverage.exclude).toContain('**/example.test.ts')
 })

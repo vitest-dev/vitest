@@ -7,7 +7,6 @@ test('--merge-reports', async () => {
       include: ['fixtures/test/merge-fixture-*.test.ts'],
       reporters: 'blob',
       shard: `${index}/3`,
-      coverage: { all: false },
     })
   }
 
@@ -16,7 +15,6 @@ test('--merge-reports', async () => {
     mergeReports: '.vitest-reports',
     coverage: {
       reporter: 'json',
-      all: false,
     },
   })
 

@@ -22,10 +22,15 @@ function withSafeTimers(fn: () => void) {
   try {
     globalThis.setTimeout = setTimeout
     globalThis.clearTimeout = clearTimeout
-    globalThis.setImmediate = setImmediate
-    globalThis.clearImmediate = clearImmediate
 
-    if (globalThis.process) {
+    if (setImmediate) {
+      globalThis.setImmediate = setImmediate
+    }
+    if (clearImmediate) {
+      globalThis.clearImmediate = clearImmediate
+    }
+
+    if (globalThis.process && nextTick) {
       globalThis.process.nextTick = nextTick
     }
 
@@ -38,7 +43,7 @@ function withSafeTimers(fn: () => void) {
     globalThis.setImmediate = currentSetImmediate
     globalThis.clearImmediate = currentClearImmediate
 
-    if (globalThis.process) {
+    if (globalThis.process && nextTick) {
       nextTick(() => {
         globalThis.process.nextTick = currentNextTick
       })

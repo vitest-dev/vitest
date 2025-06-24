@@ -8,7 +8,7 @@ import type {
   TestRunEndReason,
   TestSpecification,
   TestSuite,
-  UserConfig,
+  TestUserConfig,
   Vitest,
 } from 'vitest/node'
 import { rmSync } from 'node:fs'
@@ -1110,12 +1110,12 @@ interface ReporterOptions {
 
 async function run(
   structure: Parameters<typeof runInlineTests>[0],
-  customConfig?: UserConfig,
+  customConfig?: TestUserConfig,
   reporterOptions?: ReporterOptions,
 ) {
   const reporter = new CustomReporter(reporterOptions)
 
-  const config: UserConfig = {
+  const config: TestUserConfig = {
     config: false,
     fileParallelism: false,
     globals: true,

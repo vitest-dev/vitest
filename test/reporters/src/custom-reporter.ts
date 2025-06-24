@@ -1,4 +1,4 @@
-import type { Reporter, Vitest } from 'vitest'
+import type { Reporter, Vitest } from 'vitest/node'
 
 export default class TestReporter implements Reporter {
   ctx!: Vitest

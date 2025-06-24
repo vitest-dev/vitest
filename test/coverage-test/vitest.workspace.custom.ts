@@ -1,4 +1,5 @@
-import { defineConfig, defineWorkspace } from 'vitest/config'
+import type { UserWorkspaceConfig } from 'vitest/config'
+import { defineConfig } from 'vitest/config'
 
 const GENERIC_TESTS = 'test/**.test.ts'
 const V8_TESTS = 'test/**.v8.test.ts'
@@ -14,6 +15,11 @@ const config = defineConfig({
   },
 })
 
+// TODO: move when --workspace is removed
+function defineWorkspace(config: UserWorkspaceConfig[]) {
+  return config
+}
+
 export default defineWorkspace([
   // Test cases for v8-provider
   {
@@ -27,25 +33,6 @@ export default defineWorkspace([
         UNIT_TESTS,
         CUSTOM_TESTS,
         BROWSER_TESTS,
-      ],
-    },
-  },
-
-  // Test cases for experimental AST aware v8-provider
-  {
-    test: {
-      ...config.test,
-      name: 'v8-ast-aware',
-      env: { COVERAGE_PROVIDER: 'v8-ast-aware' },
-
-      // Intentionally run Istanbul tests too
-      include: [GENERIC_TESTS, ISTANBUL_TESTS, V8_TESTS],
-      exclude: [
-        UNIT_TESTS,
-        CUSTOM_TESTS,
-        BROWSER_TESTS,
-        // Not using original v8-to-istanbul that has patch applied: github.com/istanbuljs/v8-to-istanbul/pull/244
-        'test/empty-lines.v8.test.ts',
       ],
     },
   },
@@ -108,7 +95,7 @@ export default defineWorkspace([
     test: {
       ...config.test,
       name: { label: 'v8-browser', color: 'red' },
-      env: { COVERAGE_PROVIDER: 'v8-ast-aware', COVERAGE_BROWSER: 'true' },
+      env: { COVERAGE_PROVIDER: 'v8', COVERAGE_BROWSER: 'true' },
       include: [
         BROWSER_TESTS,
 

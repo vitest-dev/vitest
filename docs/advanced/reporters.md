@@ -93,7 +93,6 @@ class MyReporter implements Reporter {
 
 ### Built-in reporters:
 
-1. `BasicReporter`
 1. `DefaultReporter`
 2. `DotReporter`
 3. `JsonReporter`

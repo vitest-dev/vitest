@@ -152,7 +152,7 @@ export async function startVitestExecutor(options: ContextExecutorOptions): Prom
       return rpc().resolveId(id, importer, getTransformMode())
     },
     get moduleCache() {
-      return state().moduleCache
+      return state().moduleCache as ModuleCacheMap
     },
     get moduleExecutionInfo() {
       return state().moduleExecutionInfo
