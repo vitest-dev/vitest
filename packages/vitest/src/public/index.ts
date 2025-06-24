@@ -83,14 +83,12 @@ export {
   test,
 } from '@vitest/runner'
 export type {
-  ExtendedContext,
   HookCleanupCallback,
   HookListener,
   ImportDuration,
   OnTestFailedHandler,
   OnTestFinishedHandler,
   RunMode,
-  Custom as RunnerCustomCase,
   Task as RunnerTask,
   TaskBase as RunnerTaskBase,
   TaskEventPack as RunnerTaskEventPack,
@@ -102,7 +100,6 @@ export type {
   SuiteAPI,
   SuiteCollector,
   SuiteFactory,
-  TaskContext,
   TaskCustomOptions,
   TaskMeta,
   TaskState,

@@ -100,21 +100,6 @@ test('write testsuite name relative to root config', async () => {
   expect(xml).toContain('<testsuite name="space-2/test/base.test.ts" timestamp="..." hostname="..." tests="1" failures="0" errors="0" skipped="0" time="...">')
 })
 
-test('options.classname changes classname property', async () => {
-  const { stdout } = await runVitest({
-    reporters: [['junit', { classname: 'some-custom-classname' }]],
-    root: './fixtures/default',
-    include: ['a.test.ts'],
-  })
-
-  const xml = stabilizeReport(stdout)
-
-  // All classname attributes should have the custom value
-  expect(xml.match(/<testcase classname="a\.test\.ts"/g)).toBeNull()
-  expect(xml.match(/<testcase classname="/g)).toHaveLength(16)
-  expect(xml.match(/<testcase classname="some-custom-classname"/g)).toHaveLength(16)
-})
-
 test('options.suiteName changes name property', async () => {
   const { stdout } = await runVitest({
     reporters: [['junit', { suiteName: 'some-custom-suiteName' }]],

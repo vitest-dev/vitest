@@ -116,6 +116,13 @@ const mock = new Spy()
 
 Note that now if you provide an arrow function, you will get [`<anonymous> is not a constructor` error](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Errors/Not_a_constructor) when the mock is called.
 
+### Deprecated APIs are Removed
+
+Vitest 4.0 removes some deprecated APIs, including:
+
+- `poolMatchGlobs` config option. Use [`projects`](/guide/projects) instead.
+- `environmentMatchGlobs` config option. Use [`projects`](/guide/projects) instead.
+
 ## Migrating to Vitest 3.0 {#vitest-3}
 
 ### Test Options as a Third Argument

@@ -66,8 +66,6 @@ type UnsupportedProperties =
   | 'api'
   | 'deps'
   | 'testTransformMode'
-  | 'poolMatchGlobs'
-  | 'environmentMatchGlobs'
   | 'environment'
   | 'environmentOptions'
   | 'server'
@@ -242,8 +240,6 @@ export interface BrowserCommandContext {
   testPath: string | undefined
   provider: BrowserProvider
   project: TestProject
-  /** @deprecated use `sessionId` instead */
-  contextId: string
   sessionId: string
 }
 
