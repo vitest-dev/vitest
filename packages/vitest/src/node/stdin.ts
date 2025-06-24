@@ -119,12 +119,11 @@ export function registerConsoleShortcuts(
       return inputFilePattern()
     }
     if (name === 'b') {
-      for (const id of ctx._browserSessions.sessionIds) {
-        ctx._browserSessions.destroySession(id)
-      }
       await Promise.all(ctx.projects.map(async (project) => {
         if (project.browser) {
-          project.browser.state.orchestrators.forEach(orchestrator => {
+          ctx._browserSessions.sessionIds.clear()
+          project.browser.provider.close()
+          project.browser.state.orchestrators.forEach((orchestrator) => {
             orchestrator.cleanupTesters()
             orchestrator.$close()
           })
