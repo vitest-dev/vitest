@@ -1,4 +1,5 @@
 import { describe, expect, expectTypeOf, it, vi } from 'vitest'
+import { rolldownVersion } from 'vitest/node'
 
 describe('jest mock compat layer', () => {
   const returnFactory = (type: string) => (value: any) => ({ type, value })
@@ -87,14 +88,19 @@ describe('jest mock compat layer', () => {
     expect(spy.mock.contexts).toEqual([instance])
   })
 
-  it('throws an error when constructing a class with an arrow function', () => {
+  it.only('throws an error when constructing a class with an arrow function', () => {
+    function getTypeError() {
+      // esbuild transforms it into () => {\n}, but rolldown keeps it
+      return new TypeError(rolldownVersion ? '() => {} is not a constructor' : `() => {
+    } is not a constructor`)
+    }
+
     const arrow = () => {}
     const Fn = vi.fn(arrow)
     expect(() => new Fn()).toThrow(new TypeError(
       `The spy implementation did not use 'function' or 'class', see https://vitest.dev/api/vi#vi-spyon for examples.`,
       {
-        cause: new TypeError(`() => {
-    } is not a constructor`),
+        cause: getTypeError(),
       },
     ))
 
@@ -110,8 +116,7 @@ describe('jest mock compat layer', () => {
     ).toThrow(new TypeError(
       `The spy implementation did not use 'function' or 'class', see https://vitest.dev/api/vi#vi-spyon for examples.`,
       {
-        cause: new TypeError(`() => {
-    } is not a constructor`),
+        cause: getTypeError(),
       },
     ))
 
@@ -124,8 +129,7 @@ describe('jest mock compat layer', () => {
     expect(() => new properClass.Spy()).toThrow(new TypeError(
       `The spy implementation did not use 'function' or 'class', see https://vitest.dev/api/vi#vi-spyon for examples.`,
       {
-        cause: new TypeError(`() => {
-    } is not a constructor`),
+        cause: getTypeError(),
       },
     ))
   })
