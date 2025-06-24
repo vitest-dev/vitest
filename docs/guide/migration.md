@@ -85,6 +85,37 @@ See also new guides:
 - [Including and excluding files from coverage report](/guide/coverage.html#including-and-excluding-files-from-coverage-report) for examples
 - [Profiling Test Performance | Code coverage](/guide/profiling-test-performance.html#code-coverage) for tips about debugging coverage generation
 
+### `spyOn` Supports Constructors
+
+Previously, if you tried to spy on a constructor with `vi.spyOn`, you would get an error like `Constructor <name> requires 'new'`. Since Vitest 4, all mocks called with a `new` keyword construct the instance instead of callying `mock.apply`. This means that the mock implementation has to use either the `function` or the `class` keyword in these cases:
+
+```ts {12-14,16-20}
+const cart = {
+  Apples: class Apples {
+    getApples() {
+      return 42
+    }
+  }
+}
+
+const Spy = vi.spyOn(cart, 'Apples')
+  .mockImplementation(() => ({ getApples: () => 0 })) // [!code --]
+  // with a function keyword
+  .mockImplementation(function () {
+    this.getApples = () => 0
+  })
+  // with a custom class
+  .mockImplementation(class MockApples {
+    getApples() {
+      return 0
+    }
+  })
+
+const mock = new Spy()
+```
+
+Note that now if you provide an arrow function, you will get [`<anonymous> is not a constructor` error](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Errors/Not_a_constructor) when the mock is called.
+
 ### Deprecated APIs are Removed
 
 Vitest 4.0 removes some deprecated APIs, including:
