@@ -88,10 +88,12 @@ describe('jest mock compat layer', () => {
     expect(spy.mock.contexts).toEqual([instance])
   })
 
-  it.only('throws an error when constructing a class with an arrow function', () => {
+  it('throws an error when constructing a class with an arrow function', () => {
     function getTypeError() {
       // esbuild transforms it into () => {\n}, but rolldown keeps it
-      return new TypeError(rolldownVersion ? '() => {} is not a constructor' : `() => {
+      return new TypeError(rolldownVersion
+        ? '() => {} is not a constructor'
+        : `() => {
     } is not a constructor`)
     }
 
