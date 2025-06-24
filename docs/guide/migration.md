@@ -92,6 +92,8 @@ Vitest 4.0 removes some deprecated APIs, including:
 - `poolMatchGlobs` config option. Use [`projects`](/guide/projects) instead.
 - `environmentMatchGlobs` config option. Use [`projects`](/guide/projects) instead.
 
+This release also removes all deprecated types. This finally fixes an issue where Vitest accidentally pulled in `node` types.
+
 ## Migrating to Vitest 3.0 {#vitest-3}
 
 ### Test Options as a Third Argument
