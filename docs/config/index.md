@@ -2362,20 +2362,6 @@ Relevant only when using with `shouldAdvanceTime: true`. increment mocked time b
 
 Tells fake timers to clear "native" (i.e. not fake) timers by delegating to their respective handlers. When disabled, it can lead to potentially unexpected behavior if timers existed prior to starting fake timers session.
 
-### workspace<NonProjectOption /> {#workspace}
-
-::: danger DEPRECATED
-This options is deprecated and will be removed in the next major. Please, use [`projects`](#projects) instead.
-:::
-
-- **Type:** `string | TestProjectConfiguration[]`
-- **CLI:** `--workspace=./file.js`
-- **Default:** `vitest.{workspace,projects}.{js,ts,json}` close to the config file or root
-
-Path to a [workspace](/guide/projects) config file relative to [root](#root).
-
-Since Vitest 3, you can also define the workspace array in the root config. If the `workspace` is defined in the config manually, Vitest will ignore the `vitest.workspace` file in the root.
-
 ### projects<NonProjectOption /> {#projects}
 
 - **Type:** `TestProjectConfiguration[]`

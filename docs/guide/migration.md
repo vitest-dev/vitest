@@ -122,6 +122,7 @@ Vitest 4.0 removes some deprecated APIs, including:
 
 - `poolMatchGlobs` config option. Use [`projects`](/guide/projects) instead.
 - `environmentMatchGlobs` config option. Use [`projects`](/guide/projects) instead.
+- `workspace` config option. Use [`projects`](/guide/projects) instead.
 
 ## Migrating from Jest {#jest}
 

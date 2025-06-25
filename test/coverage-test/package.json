@@ -3,8 +3,7 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "test": "vitest --workspace=vitest.workspace.custom.ts",
-    "vitest": "vitest"
+    "test": "vitest"
   },
   "devDependencies": {
     "@ampproject/remapping": "^2.3.0",
