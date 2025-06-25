@@ -1,5 +1,5 @@
 import type { RunnerTaskResultPack, RunnerTestFile } from 'vitest'
-import type { TestUserConfig } from 'vitest/node'
+import type { TestModule, TestUserConfig } from 'vitest/node'
 import { resolve } from 'pathe'
 import { expect, it } from 'vitest'
 import { rolldownVersion } from 'vitest/node'
@@ -16,7 +16,7 @@ it.each([
   },
 ] as TestUserConfig[])('passes down metadata when $name', { timeout: 60_000, retry: 1 }, async (config) => {
   const taskUpdate: RunnerTaskResultPack[] = []
-  const finishedFiles: RunnerTestFile[] = []
+  const finishedTestModules: TestModule[] = []
   const collectedFiles: RunnerTestFile[] = []
   const { ctx, stdout, stderr } = await runVitest({
     root: resolve(__dirname, '..', 'fixtures', 'public-api'),
@@ -27,8 +27,8 @@ it.each([
         onTaskUpdate(packs) {
           taskUpdate.push(...packs.filter(i => i[1]?.state === 'pass'))
         },
-        onFinished(files) {
-          finishedFiles.push(...files || [])
+        onTestRunEnd(testModules) {
+          finishedTestModules.push(...testModules)
         },
         onCollected(files) {
           collectedFiles.push(...files || [])
@@ -47,7 +47,7 @@ it.each([
   const testMeta = { custom: 'some-custom-hanlder' }
 
   expect(taskUpdate).toHaveLength(4)
-  expect(finishedFiles).toHaveLength(1)
+  expect(finishedTestModules).toHaveLength(1)
 
   const files = ctx?.state.getFiles() || []
   expect(files).toHaveLength(1)
@@ -68,13 +68,15 @@ it.each([
     ],
   )
 
-  expect(finishedFiles[0].meta).toEqual(suiteMeta)
-  expect(finishedFiles[0].tasks[0].meta).toEqual(testMeta)
+  const test = finishedTestModules[0].children.tests().next().value!
+
+  expect(finishedTestModules[0].meta()).toEqual(suiteMeta)
+  expect(test.meta()).toEqual(testMeta)
 
   expect(files[0].meta).toEqual(suiteMeta)
   expect(files[0].tasks[0].meta).toEqual(testMeta)
 
-  expect(finishedFiles[0].tasks[0].location).toEqual({
+  expect(test.location).toEqual({
     line: 14,
     column: 1,
   })

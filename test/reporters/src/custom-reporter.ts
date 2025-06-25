@@ -12,7 +12,7 @@ export default class TestReporter implements Reporter {
     this.ctx = ctx
   }
 
-  onFinished() {
+  onTestRunEnd() {
     this.ctx.logger.log('hello from custom reporter')
 
     if (this.options) {

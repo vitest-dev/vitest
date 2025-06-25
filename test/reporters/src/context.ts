@@ -44,6 +44,7 @@ export function getContext(): Context {
   context.logger = {
     ctx: context as Vitest,
     log: (text: string) => output += `${text}\n`,
+    highlight: () => {},
   } as unknown as Logger
 
   return {

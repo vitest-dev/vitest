@@ -706,7 +706,6 @@ export class Vitest {
         }
       }
       finally {
-        // TODO: wait for coverage only if `onFinished` is defined
         const coverage = await this.coverageProvider?.generateCoverage({ allTestsRun })
 
         const errors = this.state.getUnhandledErrors()

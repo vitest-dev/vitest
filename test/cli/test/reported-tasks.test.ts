@@ -7,7 +7,6 @@ import { beforeAll, expect, it } from 'vitest'
 import { runVitest } from '../../test-utils'
 
 const now = new Date()
-// const finishedFiles: File[] = []
 const collectedFiles: RunnerTestFile[] = []
 let state: StateManager
 let project: WorkspaceProject
@@ -23,9 +22,6 @@ beforeAll(async () => {
     reporters: [
       'verbose',
       {
-        // onFinished(files) {
-        //   finishedFiles.push(...files || [])
-        // },
         onCollected(files) {
           collectedFiles.push(...files || [])
         },

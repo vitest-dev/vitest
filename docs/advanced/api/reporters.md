@@ -25,6 +25,7 @@ Vitest has its own test run lifecycle. These are represented by reporter's metho
       - [`onHookEnd(afterAll)`](#onhookend)
     - [`onTestSuiteResult`](#ontestsuiteresult)
   - [`onTestModuleEnd`](#ontestmoduleend)
+  - [`onCoverage`](#oncoverage)
 - [`onTestRunEnd`](#ontestrunend)
 
 Tests and suites within a single module will be reported in order unless they were skipped. All skipped tests are reported at the end of suite/module.

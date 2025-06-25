@@ -30,14 +30,6 @@ export interface Reporter {
    */
   onCollected?: (files: File[]) => Awaitable<void>
   /**
-   * @deprecated use `onTestRunEnd` instead
-   */
-  onFinished?: (
-    files: File[],
-    errors: unknown[],
-    coverage?: unknown
-  ) => Awaitable<void>
-  /**
    * @deprecated use `onTestModuleQueued`, `onTestModuleStart`, `onTestModuleEnd`, `onTestCaseReady`, `onTestCaseResult` instead
    */
   onTaskUpdate?: (packs: TaskResultPack[], events: TaskEventPack[]) => Awaitable<void>

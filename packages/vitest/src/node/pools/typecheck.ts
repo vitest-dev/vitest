@@ -4,6 +4,7 @@ import type { Vitest } from '../core'
 import type { ProcessPool } from '../pool'
 import type { TestProject } from '../project'
 import type { TestSpecification } from '../spec'
+import type { TestRunEndReason } from '../types/reporter'
 import { hasFailed } from '@vitest/runner/utils'
 import { createDefer } from '@vitest/utils'
 import { Typechecker } from '../../typecheck/typechecker'
@@ -42,7 +43,15 @@ export function createTypecheckPool(vitest: Vitest): ProcessPool {
 
     // triggered by TSC watcher, not Vitest watcher, so we need to emulate what Vitest does in this case
     if (vitest.config.watch && !vitest.runningPromise) {
-      await vitest.report('onFinished', files, [])
+      const modules = files.map(file => vitest.state.getReportedEntity(file)).filter(e => e?.type === 'module')
+
+      const state: TestRunEndReason = vitest.isCancelling
+        ? 'interrupted'
+        : modules.some(m => !m.ok())
+          ? 'failed'
+          : 'passed'
+
+      await vitest.report('onTestRunEnd', modules, [], state)
       await vitest.report('onWatcherStart', files, [
         ...(project.config.typecheck.ignoreSourceErrors ? [] : sourceErrors),
         ...vitest.state.getUnhandledErrors(),
