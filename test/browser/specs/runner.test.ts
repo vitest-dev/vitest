@@ -33,7 +33,7 @@ describe('running browser tests', async () => {
         'json',
         {
           onInit: noop,
-          onPathsCollected: noop,
+          onTestRunStart: noop,
           onCollected: noop,
           onTestRunEnd: noop,
           onTaskUpdate: noop,

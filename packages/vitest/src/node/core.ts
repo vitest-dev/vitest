@@ -454,7 +454,6 @@ export class Vitest {
     this.state.blobs = { files, errors, coverages, executionTimes }
 
     await this.report('onInit', this)
-    await this.report('onPathsCollected', files.flatMap(f => f.filepath))
 
     const specifications: TestSpecification[] = []
     for (const file of files) {

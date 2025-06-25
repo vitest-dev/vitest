@@ -20,10 +20,6 @@ export interface Reporter {
   /**
    * @deprecated use `onTestRunStart` instead
    */
-  onPathsCollected?: (paths?: string[]) => Awaitable<void>
-  /**
-   * @deprecated use `onTestRunStart` instead
-   */
   onSpecsCollected?: (specs?: SerializedTestSpecification[]) => Awaitable<void>
   /**
    * @deprecated use `onTestModuleCollected` instead
