@@ -165,12 +165,13 @@ export class WebSocketReporter implements Reporter {
     public clients: Map<WebSocket, WebSocketRPC>,
   ) {}
 
-  onCollected(files?: File[]): void {
+  onTestModuleCollected(testModule: TestModule): void {
     if (this.clients.size === 0) {
       return
     }
+
     this.clients.forEach((client) => {
-      client.onCollected?.(files)?.catch?.(noop)
+      client.onCollected?.([testModule.task])?.catch?.(noop)
     })
   }
 

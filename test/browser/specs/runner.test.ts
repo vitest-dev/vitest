@@ -34,7 +34,7 @@ describe('running browser tests', async () => {
         {
           onInit: noop,
           onTestRunStart: noop,
-          onCollected: noop,
+          onTestModuleCollected: noop,
           onTestRunEnd: noop,
           onTaskUpdate: noop,
           onTestRemoved: noop,

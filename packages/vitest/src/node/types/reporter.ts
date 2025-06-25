@@ -17,10 +17,6 @@ export interface Reporter {
    */
   onBrowserInit?: (project: TestProject) => Awaitable<void>
   /**
-   * @deprecated use `onTestModuleCollected` instead
-   */
-  onCollected?: (files: File[]) => Awaitable<void>
-  /**
    * @deprecated use `onTestModuleQueued`, `onTestModuleStart`, `onTestModuleEnd`, `onTestCaseReady`, `onTestCaseResult` instead
    */
   onTaskUpdate?: (packs: TaskResultPack[], events: TaskEventPack[]) => Awaitable<void>

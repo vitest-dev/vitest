@@ -26,7 +26,7 @@ And here is an example of a custom reporter:
 import { BaseReporter } from 'vitest/reporters'
 
 export default class CustomReporter extends BaseReporter {
-  onCollected() {
+  onTestModuleCollected() {
     const files = this.ctx.state.getFiles(this.watchFilters)
     this.reportTestSummary(files)
   }
@@ -39,7 +39,7 @@ Or implement the `Reporter` interface:
 import type { Reporter } from 'vitest/node'
 
 export default class CustomReporter implements Reporter {
-  onCollected() {
+  onTestModuleCollected() {
     // print something
   }
 }

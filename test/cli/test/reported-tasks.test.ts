@@ -7,7 +7,7 @@ import { beforeAll, expect, it } from 'vitest'
 import { runVitest } from '../../test-utils'
 
 const now = new Date()
-const collectedFiles: RunnerTestFile[] = []
+const collectedTestModules: TestModule[] = []
 let state: StateManager
 let project: WorkspaceProject
 let files: RunnerTestFile[]
@@ -22,8 +22,8 @@ beforeAll(async () => {
     reporters: [
       'verbose',
       {
-        onCollected(files) {
-          collectedFiles.push(...files || [])
+        onTestModuleCollected(testModule) {
+          collectedTestModules.push(testModule)
         },
       },
     ],
@@ -36,6 +36,7 @@ beforeAll(async () => {
   expect(files).toHaveLength(1)
   testModule = state.getReportedEntity(files[0])! as TestModule
   expect(testModule).toBeDefined()
+  expect(testModule).toBe(collectedTestModules[0])
 })
 
 it('correctly reports a file', () => {

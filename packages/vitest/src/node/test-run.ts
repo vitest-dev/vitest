@@ -39,13 +39,12 @@ export class TestRun {
 
   async collected(project: TestProject, files: RunnerTestFile[]): Promise<void> {
     this.vitest.state.collectFiles(project, files)
-    await Promise.all([
-      this.vitest.report('onCollected', files),
-      ...files.map((file) => {
+    await Promise.all(
+      files.map((file) => {
         const testModule = this.vitest.state.getReportedEntity(file) as TestModule
         return this.vitest.report('onTestModuleCollected', testModule)
       }),
-    ])
+    )
   }
 
   async log(log: UserConsoleLog): Promise<void> {
