@@ -14,18 +14,10 @@ export const extraInlineDeps: RegExp[] = [
 
 export const CONFIG_NAMES: string[] = ['vitest.config', 'vite.config']
 
-const WORKSPACES_NAMES = ['vitest.workspace', 'vitest.projects']
-
 export const CONFIG_EXTENSIONS: string[] = ['.ts', '.mts', '.cts', '.js', '.mjs', '.cjs']
 
 export const configFiles: string[] = CONFIG_NAMES.flatMap(name =>
   CONFIG_EXTENSIONS.map(ext => name + ext),
-)
-
-const WORKSPACES_EXTENSIONS = [...CONFIG_EXTENSIONS, '.json']
-
-export const workspacesFiles: string[] = WORKSPACES_NAMES.flatMap(name =>
-  WORKSPACES_EXTENSIONS.map(ext => name + ext),
 )
 
 export const globalApis: string[] = [
