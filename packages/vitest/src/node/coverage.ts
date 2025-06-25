@@ -134,7 +134,7 @@ export class BaseCoverageProvider<Options extends ResolvedCoverageOptions<'istan
 
     // If --project filter is set pick only roots of resolved projects
     this.roots = ctx.config.project?.length
-      ? ctx.projects.map(project => project.config.root)
+      ? [...new Set(ctx.projects.map(project => project.config.root))]
       : [ctx.config.root]
   }
 
