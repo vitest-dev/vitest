@@ -124,6 +124,8 @@ Vitest 4.0 removes some deprecated APIs, including:
 - `environmentMatchGlobs` config option. Use [`projects`](/guide/projects) instead.
 - `workspace` config option. Use [`projects`](/guide/projects) instead.
 
+This release also removes all deprecated types. This finally fixes an issue where Vitest accidentally pulled in `node` types (see [#5481](https://github.com/vitest-dev/vitest/issues/5481) and [#6141](https://github.com/vitest-dev/vitest/issues/6141)).
+
 ## Migrating from Jest {#jest}
 
 Vitest has been designed with a Jest compatible API, in order to make the migration from Jest as simple as possible. Despite those efforts, you may still run into the following differences:
