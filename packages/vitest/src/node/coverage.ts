@@ -161,7 +161,7 @@ export class BaseCoverageProvider<Options extends ResolvedCoverageOptions<'istan
     // By default `coverage.include` matches all files, except "coverage.exclude"
     const glob = this.options.include || '**'
 
-    const included = roots.some((root) => {
+    let included = roots.some((root) => {
       const options: pm.PicomatchOptions = {
         contains: true,
         dot: true,
@@ -170,7 +170,9 @@ export class BaseCoverageProvider<Options extends ResolvedCoverageOptions<'istan
       }
 
       return pm.isMatch(filename, glob, options)
-    }) && existsSync(cleanUrl(filename))
+    })
+
+    included &&= existsSync(cleanUrl(filename))
 
     this.globCache.set(filename, included)
 
