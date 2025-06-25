@@ -1,6 +1,5 @@
 import type { File, TaskEventPack, TaskResultPack, TestAnnotation } from '@vitest/runner'
 import type { SerializedError } from '@vitest/utils'
-import type { SerializedTestSpecification } from '../../runtime/types/utils'
 import type { Awaitable, UserConsoleLog } from '../../types/general'
 import type { Vitest } from '../core'
 import type { TestProject } from '../project'
@@ -17,10 +16,6 @@ export interface Reporter {
    * @experimental
    */
   onBrowserInit?: (project: TestProject) => Awaitable<void>
-  /**
-   * @deprecated use `onTestRunStart` instead
-   */
-  onSpecsCollected?: (specs?: SerializedTestSpecification[]) => Awaitable<void>
   /**
    * @deprecated use `onTestModuleCollected` instead
    */

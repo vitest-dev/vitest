@@ -462,7 +462,6 @@ export class Vitest {
       specifications.push(specification)
     }
 
-    await this.report('onSpecsCollected', specifications.map(spec => spec.toJSON()))
     await this._testRun.start(specifications).catch(noop)
 
     for (const file of files) {

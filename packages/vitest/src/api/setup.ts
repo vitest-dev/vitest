@@ -1,14 +1,13 @@
 import type { File, TaskEventPack, TaskResultPack, TestAnnotation } from '@vitest/runner'
-
 import type { SerializedError } from '@vitest/utils'
 import type { IncomingMessage } from 'node:http'
 import type { ViteDevServer } from 'vite'
 import type { WebSocket } from 'ws'
 import type { Vitest } from '../node/core'
 import type { TestCase, TestModule } from '../node/reporters/reported-tasks'
+import type { TestSpecification } from '../node/spec'
 import type { Reporter } from '../node/types/reporter'
-import type { SerializedTestSpecification } from '../runtime/types/utils'
-import type { Awaitable, LabelColor, ModuleGraphData, UserConsoleLog } from '../types/general'
+import type { LabelColor, ModuleGraphData, UserConsoleLog } from '../types/general'
 import type {
   TransformResultWithSource,
   WebSocketEvents,
@@ -175,12 +174,15 @@ export class WebSocketReporter implements Reporter {
     })
   }
 
-  onSpecsCollected(specs?: SerializedTestSpecification[] | undefined): Awaitable<void> {
+  onTestRunStart(specifications: ReadonlyArray<TestSpecification>): void {
     if (this.clients.size === 0) {
       return
     }
+
+    const serializedSpecs = specifications.map(spec => spec.toJSON())
+
     this.clients.forEach((client) => {
-      client.onSpecsCollected?.(specs)?.catch?.(noop)
+      client.onSpecsCollected?.(serializedSpecs)?.catch?.(noop)
     })
   }
 

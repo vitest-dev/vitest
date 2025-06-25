@@ -28,7 +28,6 @@ export class TestRun {
     const filepaths = specifications.map(spec => spec.moduleId)
     this.vitest.state.collectPaths(filepaths)
 
-    await this.vitest.report('onSpecsCollected', specifications.map(spec => spec.toJSON()))
     await this.vitest.report('onTestRunStart', [...specifications])
   }
 
