@@ -1,4 +1,4 @@
-import type { RunnerTaskResultPack } from 'vitest'
+import type { TaskMeta } from '@vitest/runner'
 import type { TestModule, TestUserConfig } from 'vitest/node'
 import { resolve } from 'pathe'
 import { expect, it } from 'vitest'
@@ -15,7 +15,9 @@ it.each([
     },
   },
 ] as TestUserConfig[])('passes down metadata when $name', { timeout: 60_000, retry: 1 }, async (config) => {
-  const taskUpdate: RunnerTaskResultPack[] = []
+  const finishedTestCaseMetas: TaskMeta[] = []
+  const finishedTestModuleMetas: TaskMeta[] = []
+
   const finishedTestModules: TestModule[] = []
   const collectedTestModules: TestModule[] = []
   const { ctx, stdout, stderr } = await runVitest({
@@ -24,8 +26,11 @@ it.each([
     reporters: [
       ['verbose', { isTTY: false }],
       {
-        onTaskUpdate(packs) {
-          taskUpdate.push(...packs.filter(i => i[1]?.state === 'pass'))
+        onTestCaseResult(testCase) {
+          finishedTestCaseMetas.push(testCase.meta())
+        },
+        onTestModuleEnd(testModule) {
+          finishedTestModuleMetas.push(testModule.meta())
         },
         onTestRunEnd(testModules) {
           finishedTestModules.push(...testModules)
@@ -46,27 +51,16 @@ it.each([
   const suiteMeta = { done: true }
   const testMeta = { custom: 'some-custom-hanlder' }
 
-  expect(taskUpdate).toHaveLength(4)
+  expect(finishedTestCaseMetas).toHaveLength(3)
+  expect(finishedTestModuleMetas).toHaveLength(1)
   expect(finishedTestModules).toHaveLength(1)
 
   const files = ctx?.state.getFiles() || []
   expect(files).toHaveLength(1)
 
-  expect(taskUpdate).toContainEqual(
-    [
-      expect.any(String),
-      expect.anything(),
-      suiteMeta,
-    ],
-  )
+  expect(finishedTestModuleMetas).toContainEqual(suiteMeta)
 
-  expect(taskUpdate).toContainEqual(
-    [
-      expect.any(String),
-      expect.anything(),
-      testMeta,
-    ],
-  )
+  expect(finishedTestCaseMetas).toContainEqual(testMeta)
 
   const test = finishedTestModules[0].children.tests().next().value!
 

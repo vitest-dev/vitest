@@ -16,9 +16,7 @@ export interface Reporter {
    * @experimental
    */
   onBrowserInit?: (project: TestProject) => Awaitable<void>
-  /**
-   * @deprecated use `onTestModuleQueued`, `onTestModuleStart`, `onTestModuleEnd`, `onTestCaseReady`, `onTestCaseResult` instead
-   */
+  /** @internal   */
   onTaskUpdate?: (packs: TaskResultPack[], events: TaskEventPack[]) => Awaitable<void>
   onTestRemoved?: (trigger?: string) => Awaitable<void>
   onWatcherStart?: (files?: File[], errors?: unknown[]) => Awaitable<void>
