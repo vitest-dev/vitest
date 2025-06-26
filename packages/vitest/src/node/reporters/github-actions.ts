@@ -1,8 +1,9 @@
 import type { File, TestAnnotation } from '@vitest/runner'
+import type { SerializedError } from '@vitest/utils'
 import type { Vitest } from '../core'
 import type { TestProject } from '../project'
 import type { Reporter } from '../types/reporter'
-import type { TestCase } from './reported-tasks'
+import type { TestCase, TestModule } from './reported-tasks'
 import { stripVTControlCharacters } from 'node:util'
 import { getFullName, getTasks } from '@vitest/runner/utils'
 import { capturePrintError } from '../printError'
@@ -42,7 +43,13 @@ export class GithubActionsReporter implements Reporter {
     this.ctx.logger.log(`\n${formatted}`)
   }
 
-  onFinished(files: File[] = [], errors: unknown[] = []): void {
+  onTestRunEnd(
+    testModules: ReadonlyArray<TestModule>,
+    unhandledErrors: ReadonlyArray<SerializedError>,
+  ): void {
+    const files = testModules.map(testModule => testModule.task)
+    const errors = [...unhandledErrors]
+
     // collect all errors and associate them with projects
     const projectErrors = new Array<{
       project: TestProject

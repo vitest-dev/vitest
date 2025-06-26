@@ -28,8 +28,6 @@ export class TestRun {
     const filepaths = specifications.map(spec => spec.moduleId)
     this.vitest.state.collectPaths(filepaths)
 
-    await this.vitest.report('onPathsCollected', Array.from(new Set(filepaths)))
-    await this.vitest.report('onSpecsCollected', specifications.map(spec => spec.toJSON()))
     await this.vitest.report('onTestRunStart', [...specifications])
   }
 
@@ -41,13 +39,12 @@ export class TestRun {
 
   async collected(project: TestProject, files: RunnerTestFile[]): Promise<void> {
     this.vitest.state.collectFiles(project, files)
-    await Promise.all([
-      this.vitest.report('onCollected', files),
-      ...files.map((file) => {
+    await Promise.all(
+      files.map((file) => {
         const testModule = this.vitest.state.getReportedEntity(file) as TestModule
         return this.vitest.report('onTestModuleCollected', testModule)
       }),
-    ])
+    )
   }
 
   async log(log: UserConsoleLog): Promise<void> {
@@ -86,9 +83,12 @@ export class TestRun {
   }
 
   async end(specifications: TestSpecification[], errors: unknown[], coverage?: unknown): Promise<void> {
+    if (coverage) {
+      await this.vitest.report('onCoverage', coverage)
+    }
+
     // specification won't have the File task if they were filtered by the --shard command
     const modules = specifications.map(spec => spec.testModule).filter(s => s != null)
-    const files = modules.map(m => m.task)
 
     const state: TestRunEndReason = this.vitest.isCancelling
       ? 'interrupted'
@@ -102,18 +102,7 @@ export class TestRun {
       process.exitCode = 1
     }
 
-    try {
-      await Promise.all([
-        this.vitest.report('onTestRunEnd', modules, [...errors] as SerializedError[], state),
-        // TODO: in a perfect world, the coverage should be done in parallel to `onFinished`
-        this.vitest.report('onFinished', files, errors, coverage),
-      ])
-    }
-    finally {
-      if (coverage) {
-        await this.vitest.report('onCoverage', coverage)
-      }
-    }
+    this.vitest.report('onTestRunEnd', modules, [...errors] as SerializedError[], state)
   }
 
   private hasFailed(modules: TestModule[]) {

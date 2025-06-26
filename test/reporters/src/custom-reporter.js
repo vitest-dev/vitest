@@ -3,7 +3,7 @@ export default class TestReporter {
     this.ctx = ctx
   }
 
-  onFinished() {
+  onTestRunEnd() {
     this.ctx.logger.log('hello from custom reporter')
   }
 }

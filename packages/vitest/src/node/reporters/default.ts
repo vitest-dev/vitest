@@ -1,5 +1,7 @@
+import type { SerializedError } from '@vitest/utils'
 import type { Vitest } from '../core'
 import type { TestSpecification } from '../spec'
+import type { TestRunEndReason } from '../types/reporter'
 import type { BaseOptions } from './base'
 import type { ReportedHookContext, TestCase, TestModule } from './reported-tasks'
 import { BaseReporter } from './base'
@@ -43,6 +45,15 @@ export class DefaultReporter extends BaseReporter {
     this.summary?.onTestRunStart(specifications)
   }
 
+  onTestRunEnd(
+    testModules: ReadonlyArray<TestModule>,
+    unhandledErrors: ReadonlyArray<SerializedError>,
+    reason: TestRunEndReason,
+  ): void {
+    super.onTestRunEnd(testModules, unhandledErrors, reason)
+    this.summary?.onTestRunEnd()
+  }
+
   onTestModuleQueued(file: TestModule): void {
     this.summary?.onTestModuleQueued(file)
   }
@@ -76,9 +87,5 @@ export class DefaultReporter extends BaseReporter {
   onInit(ctx: Vitest): void {
     super.onInit(ctx)
     this.summary?.onInit(ctx, { verbose: this.verbose })
-  }
-
-  onTestRunEnd(): void {
-    this.summary?.onTestRunEnd()
   }
 }
