@@ -18,6 +18,7 @@ import { CSSEnablerPlugin } from './cssEnabler'
 import { MocksPlugins } from './mocks'
 import { NormalizeURLPlugin } from './normalizeURL'
 import { VitestOptimizer } from './optimizer'
+import { ModuleRunnerTransform } from './runnerTransform'
 import { SsrReplacerPlugin } from './ssrReplacer'
 import {
   deleteDefineConfig,
@@ -305,6 +306,7 @@ export async function VitestPlugin(
     ...MocksPlugins(),
     VitestOptimizer(),
     NormalizeURLPlugin(),
+    ModuleRunnerTransform(),
   ].filter(notNullish)
 }
 function removeUndefinedValues<T extends Record<string, any>>(

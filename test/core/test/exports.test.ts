@@ -56,9 +56,6 @@ it('exports snapshot', async ({ skip, task }) => {
           "builtinEnvironments": "object",
           "populateGlobal": "function",
         },
-        "./execute": {
-          "VitestExecutor": "function",
-        },
         "./internal/browser": {
           "SpyModule": "object",
           "TraceMap": "function",
@@ -208,9 +205,6 @@ it('exports snapshot', async ({ skip, task }) => {
           "./environments": {
             "builtinEnvironments": "object",
             "populateGlobal": "function",
-          },
-          "./execute": {
-            "VitestExecutor": "function",
           },
           "./internal/browser": {
             "SpyModule": "object",

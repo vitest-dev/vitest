@@ -13,6 +13,7 @@ import { CSSEnablerPlugin } from './cssEnabler'
 import { MocksPlugins } from './mocks'
 import { NormalizeURLPlugin } from './normalizeURL'
 import { VitestOptimizer } from './optimizer'
+import { ModuleRunnerTransform } from './runnerTransform'
 import { SsrReplacerPlugin } from './ssrReplacer'
 import {
   deleteDefineConfig,
@@ -209,5 +210,6 @@ export function WorkspaceVitestPlugin(
     VitestProjectResolver(project.vitest),
     VitestOptimizer(),
     NormalizeURLPlugin(),
+    ModuleRunnerTransform(),
   ]
 }

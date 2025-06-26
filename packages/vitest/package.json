@@ -50,10 +50,6 @@
       "types": "./dist/node.d.ts",
       "default": "./dist/node.js"
     },
-    "./execute": {
-      "types": "./dist/execute.d.ts",
-      "default": "./dist/execute.js"
-    },
     "./workers": {
       "types": "./dist/workers.d.ts",
       "import": "./dist/workers.js"

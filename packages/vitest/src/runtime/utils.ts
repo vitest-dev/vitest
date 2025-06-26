@@ -1,5 +1,4 @@
-import type { ModuleCacheMap } from 'vite-node/client'
-
+import type { EvaluatedModules } from 'vite/module-runner'
 import type { WorkerGlobalState } from '../types/worker'
 import { getSafeTimers } from '@vitest/utils'
 
@@ -48,7 +47,7 @@ export function setProcessTitle(title: string): void {
   catch {}
 }
 
-export function resetModules(modules: ModuleCacheMap, resetMocks = false): void {
+export function resetModules(modules: EvaluatedModules, resetMocks = false): void {
   const skipPaths = [
     // Vitest
     /\/vitest\/dist\//,
@@ -60,7 +59,7 @@ export function resetModules(modules: ModuleCacheMap, resetMocks = false): void 
     // don't clear mocks
     ...(!resetMocks ? [/^mock:/] : []),
   ]
-  modules.forEach((mod, path) => {
+  modules.idToModuleMap.forEach((mod, path) => {
     if (skipPaths.some(re => re.test(path))) {
       return
     }

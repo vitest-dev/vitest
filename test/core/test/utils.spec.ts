@@ -1,8 +1,7 @@
-import type { EncodedSourceMap } from '../../../packages/vite-node/src/types'
 import { assertTypes, deepClone, deepMerge, isNegativeNaN, objDisplay, objectAttr, toArray } from '@vitest/utils'
+import { EvaluatedModuleNode, EvaluatedModules } from 'vite/module-runner'
 import { beforeAll, describe, expect, test } from 'vitest'
 import { deepMergeSnapshot } from '../../../packages/snapshot/src/port/utils'
-import { ModuleCacheMap } from '../../../packages/vite-node/src/client'
 import { resetModules } from '../../../packages/vitest/src/runtime/utils'
 
 describe('assertTypes', () => {
@@ -206,9 +205,7 @@ describe('deepClone', () => {
 })
 
 describe('resetModules doesn\'t resets only user modules', () => {
-  const mod = () => ({ evaluated: true, promise: Promise.resolve({}), resolving: false, exports: {}, map: {} as EncodedSourceMap })
-
-  const moduleCache = new ModuleCacheMap()
+  const moduleCache = new EvaluatedModules()
   const modules = [
     ['/some-module.ts', true],
     ['/@fs/some-path.ts', true],
@@ -222,13 +219,13 @@ describe('resetModules doesn\'t resets only user modules', () => {
 
   beforeAll(() => {
     modules.forEach(([path]) => {
-      moduleCache.set(path, mod())
+      moduleCache.idToModuleMap.set(path, new EvaluatedModuleNode(path, path))
     })
     resetModules(moduleCache)
   })
 
   test.each(modules)('Cache for %s is reset (%s)', (path, reset) => {
-    const cached = moduleCache.get(path)
+    const cached = moduleCache.idToModuleMap.get(path)
 
     if (reset) {
       expect(cached).not.toHaveProperty('evaluated')

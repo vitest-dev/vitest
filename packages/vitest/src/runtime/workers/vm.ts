@@ -1,13 +1,13 @@
 import type { Context } from 'node:vm'
-import type { ModuleCacheMap } from 'vite-node'
 import type { WorkerGlobalState } from '../../types/worker'
 import { pathToFileURL } from 'node:url'
 import { isContext } from 'node:vm'
 import { resolve } from 'pathe'
 import { distDir } from '../../paths'
 import { createCustomConsole } from '../console'
-import { getDefaultRequestStubs, startVitestExecutor } from '../execute'
 import { ExternalModulesExecutor } from '../external-executor'
+import { getDefaultRequestStubs } from '../moduleRunner/moduleEvaluator'
+import { startVitestModuleRunner } from '../moduleRunner/startModuleRunner'
 import { provideWorkerState } from '../utils'
 import { FileMap } from '../vm/file-map'
 
@@ -75,17 +75,16 @@ export async function runVmTests(method: 'run' | 'collect', state: WorkerGlobalS
     viteClientModule: stubs['/@vite/client'],
   })
 
-  const executor = await startVitestExecutor({
+  const executor = await startVitestModuleRunner({
     context,
-    moduleCache: state.moduleCache as ModuleCacheMap,
+    evaluatedModules: state.evaluatedModules,
     state,
     externalModulesExecutor,
-    requestStubs: stubs,
   })
 
   context.__vitest_mocker__ = executor.mocker
 
-  const { run } = (await executor.importExternalModule(
+  const { run } = (await executor.import(
     entryFile,
   )) as typeof import('../runVmTests')
   const fileSpecs = ctx.files.map(f =>
