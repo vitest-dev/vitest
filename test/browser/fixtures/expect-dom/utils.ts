@@ -1,3 +1,13 @@
+function extractToMatchScreenshotPaths (errorMessage: string, filename: string): string[] {
+  // `map` on `Iterator` is only available in Node >= 22
+  return Array.from(
+    errorMessage.matchAll(
+      new RegExp(`^.*?((?:[A-Z]:)?/.*?${filename}-[\\w-]+\\.png)`, 'gm'),
+    ),
+    ([_, path]) => path,
+  )
+}
+
 function render(html: string) {
   const container = document.createElement('div')
   container.innerHTML = html
@@ -16,4 +26,4 @@ function render(html: string) {
   return { container, queryByTestId, asFragment, getInputByTestId }
 }
 
-export { render }
+export { extractToMatchScreenshotPaths, render }
