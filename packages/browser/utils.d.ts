@@ -1,5 +1,5 @@
 // should be in sync with tester/public-utils.ts
-// we cannot bundle it because vitest depend on the @vitest/browser and vise versa
+// we cannot bundle it because vitest depend on the @vitest/browser and vice versa
 // fortunately, the file is quite small
 
 import { LocatorSelectors, Locator } from '@vitest/browser/context'
