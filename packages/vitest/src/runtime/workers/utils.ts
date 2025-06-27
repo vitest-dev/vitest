@@ -37,6 +37,7 @@ export function disposeInternalListeners(): void {
 
 export function createForksRpcOptions(
   nodeV8: typeof import('v8'),
+  timeout?: number,
 ): WorkerRpcOptions {
   return {
     serialize: nodeV8.serialize,
@@ -56,6 +57,7 @@ export function createForksRpcOptions(
       processOn('message', handler)
       dispose.push(() => processOff('message', handler))
     },
+    timeout,
   }
 }
 
