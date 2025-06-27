@@ -1,12 +1,12 @@
-import type { WorkerGlobalState } from '../../types/worker'
+import type { ContextRPC, WorkerGlobalState } from '../../types/worker'
 import type { VitestWorker, WorkerRpcOptions } from './types'
 import v8 from 'node:v8'
 import { runBaseTests } from './base'
 import { createForksRpcOptions, unwrapSerializableConfig } from './utils'
 
 class ForksBaseWorker implements VitestWorker {
-  getRpcOptions(): WorkerRpcOptions {
-    return createForksRpcOptions(v8)
+  getRpcOptions(ctx?: ContextRPC): WorkerRpcOptions {
+    return createForksRpcOptions(v8, ctx?.config?.testTimeout)
   }
 
   async executeTests(method: 'run' | 'collect', state: WorkerGlobalState): Promise<void> {
