@@ -4,7 +4,7 @@ import type { ScreenshotMatcherArguments, ScreenshotMatcherOutput } from '../../
 import type { AnyCodec } from './codecs'
 import type { AnyComparator } from './comparators'
 import type { TypedArray } from './types'
-import { access, mkdir, readFile, writeFile } from 'node:fs/promises'
+import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { dirname } from 'pathe'
 import { asyncTimeout, resolveOptions, takeDecodedScreenshot } from './utils'
 
@@ -24,10 +24,8 @@ export const screenshotMatcher: BrowserCommand<
     resolvedOptions: { comparatorOptions, screenshotOptions, timeout },
   } = resolveOptions({ context, name, testName, options })
 
-  const hasReference = await access(paths.reference).then(() => true).catch(() => false)
-  const reference = hasReference
-    ? await codec.decode(await readFile(paths.reference), {})
-    : null
+  const referenceFile = await readFile(paths.reference).catch(() => null)
+  const reference = referenceFile && await codec.decode(await readFile(paths.reference), {})
 
   const abortController = new AbortController()
   const stableScreenshot = getStableScreenshots({
@@ -57,7 +55,7 @@ export const screenshotMatcher: BrowserCommand<
   if (value === null || value.actual === null) {
     return {
       pass: false,
-      reference: hasReference ? paths.reference : null,
+      reference: referenceFile && paths.reference,
       actual: null,
       diff: null,
       message: `Could not capture a stable screenshot within ${timeout}ms.`,
@@ -104,7 +102,7 @@ export const screenshotMatcher: BrowserCommand<
   // case #04
   //  - got a stable screenshot with no retries and there's a reference
   //  - pass
-  if (hasReference && value.retries === 0) {
+  if (referenceFile && value.retries === 0) {
     return {
       pass: true,
     }
