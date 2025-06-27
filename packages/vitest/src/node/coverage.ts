@@ -81,6 +81,7 @@ export class BaseCoverageProvider<Options extends ResolvedCoverageOptions<'istan
   coverageFiles: CoverageFiles = new Map()
   pendingPromises: Promise<void>[] = []
   coverageFilesDirectory!: string
+  roots: string[] = []
 
   _initialize(ctx: Vitest): void {
     this.ctx = ctx
@@ -130,12 +131,19 @@ export class BaseCoverageProvider<Options extends ResolvedCoverageOptions<'istan
       this.options.reportsDirectory,
       tempDirectory,
     )
+
+    // If --project filter is set pick only roots of resolved projects
+    this.roots = ctx.config.project?.length
+      ? [...new Set(ctx.projects.map(project => project.config.root))]
+      : [ctx.config.root]
   }
 
   /**
    * Check if file matches `coverage.include` but not `coverage.exclude`
    */
-  isIncluded(_filename: string): boolean {
+  isIncluded(_filename: string, root?: string): boolean {
+    const roots = root ? [root] : this.roots
+
     const filename = slash(_filename)
     const cacheHit = this.globCache.get(filename)
 
@@ -144,36 +152,40 @@ export class BaseCoverageProvider<Options extends ResolvedCoverageOptions<'istan
     }
 
     // File outside project root with default allowExternal
-    if (this.options.allowExternal === false && !filename.startsWith(this.ctx.config.root)) {
+    if (this.options.allowExternal === false && roots.every(root => !filename.startsWith(root))) {
       this.globCache.set(filename, false)
 
       return false
     }
 
-    const options: pm.PicomatchOptions = {
-      contains: true,
-      dot: true,
-      cwd: this.ctx.config.root,
-      ignore: this.options.exclude,
-    }
-
     // By default `coverage.include` matches all files, except "coverage.exclude"
     const glob = this.options.include || '**'
 
-    const included = pm.isMatch(filename, glob, options) && existsSync(cleanUrl(filename))
+    let included = roots.some((root) => {
+      const options: pm.PicomatchOptions = {
+        contains: true,
+        dot: true,
+        cwd: root,
+        ignore: this.options.exclude,
+      }
+
+      return pm.isMatch(filename, glob, options)
+    })
+
+    included &&= existsSync(cleanUrl(filename))
 
     this.globCache.set(filename, included)
 
     return included
   }
 
-  async getUntestedFiles(testedFiles: string[]): Promise<string[]> {
-    if (this.options.include == null) {
-      return []
-    }
-
-    let includedFiles = await glob(this.options.include, {
-      cwd: this.ctx.config.root,
+  private async getUntestedFilesByRoot(
+    testedFiles: string[],
+    include: string[],
+    root: string,
+  ): Promise<string[]> {
+    let includedFiles = await glob(include, {
+      cwd: root,
       ignore: [...this.options.exclude, ...testedFiles.map(file => slash(file))],
       absolute: true,
       dot: true,
@@ -181,13 +193,25 @@ export class BaseCoverageProvider<Options extends ResolvedCoverageOptions<'istan
     })
 
     // Run again through picomatch as tinyglobby's exclude pattern is different ({ "exclude": ["math"] } should ignore "src/math.ts")
-    includedFiles = includedFiles.filter(file => this.isIncluded(file))
+    includedFiles = includedFiles.filter(file => this.isIncluded(file, root))
 
     if (this.ctx.config.changed) {
       includedFiles = (this.ctx.config.related || []).filter(file => includedFiles.includes(file))
     }
 
-    return includedFiles.map(file => slash(path.resolve(this.ctx.config.root, file)))
+    return includedFiles.map(file => slash(path.resolve(root, file)))
+  }
+
+  async getUntestedFiles(testedFiles: string[]): Promise<string[]> {
+    if (this.options.include == null) {
+      return []
+    }
+
+    const rootMapper = this.getUntestedFilesByRoot.bind(this, testedFiles, this.options.include)
+
+    const matrix = await Promise.all(this.roots.map(rootMapper))
+
+    return matrix.flatMap(files => files)
   }
 
   createCoverageMap(): CoverageMap {

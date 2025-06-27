@@ -310,7 +310,18 @@ Use either:
 test('v8 coverage provider cannot be used in workspace without playwright + chromium', async () => {
   const { stderr } = await runVitest({
     coverage: { enabled: true },
-    workspace: './fixtures/workspace/browser/workspace-with-browser.ts',
+    projects: [
+      {
+        test: {
+          name: 'Browser project',
+          browser: {
+            enabled: true,
+            provider: 'webdriverio',
+            instances: [{ browser: 'chrome' }],
+          },
+        },
+      },
+    ],
   }, {}, { fails: true })
   expect(stderr).toMatch(
     `Error: @vitest/coverage-v8 does not work with
@@ -584,4 +595,12 @@ test('minWorkers higher than maxWorkers does not crash', async ({ skip }) => {
 
   expect(stdout).toMatch('✓ example.test.ts > it works')
   expect(stderr).toBe('')
+})
+
+test('cannot set the `workspace` options', async () => {
+  const { stderr } = await runVitest({
+    // @ts-expect-error workspace was removed in Vitest 4, but we show an error
+    workspace: 'some-options',
+  })
+  expect(stderr).toContain('The `test.workspace` option was removed in Vitest 4. Please, migrate to `test.projects` instead. See https://vitest.dev/guide/projects for examples.')
 })

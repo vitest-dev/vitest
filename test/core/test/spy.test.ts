@@ -14,7 +14,8 @@ describe('spyOn', () => {
   })
 
   test('infers a class correctly', () => {
-    vi.spyOn(mock, 'HelloWorld').mockImplementationOnce(() => {
+    // eslint-disable-next-line prefer-arrow-callback
+    vi.spyOn(mock, 'HelloWorld').mockImplementationOnce(function () {
       const Mock = vi.fn()
       Mock.prototype.hello = vi.fn(() => 'hello world')
       return new Mock()

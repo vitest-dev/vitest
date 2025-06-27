@@ -2191,6 +2191,30 @@ export default defineConfig({
 })
 ```
 
+### onUnhandledError<NonProjectOption /> {#onunhandlederror}
+
+- **Type:** `(error: (TestError | Error) & { type: string }) => boolean | void`
+
+A custom handler to filter out unhandled errors that should not be reported. If an error is filtered out, it will no longer affect the test results.
+
+If you want unhandled errors to be reported without impacting the test outcome, consider using the [`dangerouslyIgnoreUnhandledErrors`](#dangerouslyIgnoreUnhandledErrors) option
+
+```ts
+import type { ParsedStack } from 'vitest'
+import { defineConfig } from 'vitest/config'
+
+export default defineConfig({
+  test: {
+    onUnhandledError(error): boolean | void {
+      // Ignore all errors with the name "MySpecialError".
+      if (error.name === 'MySpecialError') {
+        return false
+      }
+    },
+  },
+})
+```
+
 ### diff
 
 - **Type:** `string`
@@ -2337,20 +2361,6 @@ Relevant only when using with `shouldAdvanceTime: true`. increment mocked time b
 - **Default:** `true`
 
 Tells fake timers to clear "native" (i.e. not fake) timers by delegating to their respective handlers. When disabled, it can lead to potentially unexpected behavior if timers existed prior to starting fake timers session.
-
-### workspace<NonProjectOption /> {#workspace}
-
-::: danger DEPRECATED
-This options is deprecated and will be removed in the next major. Please, use [`projects`](#projects) instead.
-:::
-
-- **Type:** `string | TestProjectConfiguration[]`
-- **CLI:** `--workspace=./file.js`
-- **Default:** `vitest.{workspace,projects}.{js,ts,json}` close to the config file or root
-
-Path to a [workspace](/guide/projects) config file relative to [root](#root).
-
-Since Vitest 3, you can also define the workspace array in the root config. If the `workspace` is defined in the config manually, Vitest will ignore the `vitest.workspace` file in the root.
 
 ### projects<NonProjectOption /> {#projects}
 
