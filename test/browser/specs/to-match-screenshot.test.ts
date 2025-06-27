@@ -1,5 +1,4 @@
 import type { ViteUserConfig } from 'vitest/config.js'
-import type { UserConfig } from 'vitest/node'
 import type { TestFsStructure } from '../../test-utils'
 import { platform } from 'node:os'
 import { resolve } from 'node:path'
@@ -26,31 +25,26 @@ test('${testName}', async ({ expect }) => {
 })
 `
 
-const vitestConfig = {
-  test: {
-    browser: {
-      enabled: true,
-      screenshotFailures: false,
-      provider: 'playwright',
-      headless: true,
-      instances: [{ browser: 'chromium' }],
-    },
-    reporters: ['verbose'],
-  },
-} as const satisfies ViteUserConfig
+const browser = 'chromium'
 
 export async function runInlineTests(
   structure: TestFsStructure,
-  config?: UserConfig,
+  config?: ViteUserConfig['test'],
 ) {
   const root = resolve(process.cwd(), `vitest-test-${crypto.randomUUID()}`)
 
   const fs = useFS(root, {
     ...structure,
     'vitest.config.ts': {
-      ...vitestConfig,
       test: {
-        ...vitestConfig.test,
+        browser: {
+          enabled: true,
+          screenshotFailures: false,
+          provider: 'playwright',
+          headless: true,
+          instances: [{ browser }],
+        },
+        reporters: ['verbose'],
         ...config,
       },
     },
@@ -118,7 +112,7 @@ describe('--watch', () => {
 
       expect(stderr).toMatchInlineSnapshot(`""`)
 
-      const referencePath = `__screenshots__/${testFilename}/${testName}-1-${vitestConfig.test.browser.instances[0].browser}-${platform()}.png`
+      const referencePath = `__screenshots__/${testFilename}/${testName}-1-${browser}-${platform()}.png`
       const referenceStat = fs.statFile(referencePath)
 
       fs.editFile(testFilename, content => `${content}\n`)
