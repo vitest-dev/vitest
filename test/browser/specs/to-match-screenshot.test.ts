@@ -1,7 +1,10 @@
 import type { ViteUserConfig } from 'vitest/config.js'
+import type { UserConfig } from 'vitest/node'
+import type { TestFsStructure } from '../../test-utils'
 import { platform } from 'node:os'
+import { resolve } from 'node:path'
 import { describe, expect, test } from 'vitest'
-import { runInlineTests } from '../../test-utils'
+import { runVitestCli, useFS } from '../../test-utils'
 import { extractToMatchScreenshotPaths } from '../fixtures/expect-dom/utils'
 import utilsContent from '../fixtures/expect-dom/utils?raw'
 
@@ -10,7 +13,7 @@ const testName = 'screenshot-snapshot'
 const bgColor = '#fff'
 
 const testContent = /* ts */`
-import { page } from '@vitest/browser/context'
+import { page, server } from '@vitest/browser/context'
 import { describe, test } from 'vitest'
 import { render } from './utils'
 
@@ -32,8 +35,43 @@ const vitestConfig = {
       headless: true,
       instances: [{ browser: 'chromium' }],
     },
+    reporters: ['verbose'],
   },
 } as const satisfies ViteUserConfig
+
+export async function runInlineTests(
+  structure: TestFsStructure,
+  config?: UserConfig,
+) {
+  const root = resolve(process.cwd(), `vitest-test-${crypto.randomUUID()}`)
+
+  const fs = useFS(root, {
+    ...structure,
+    'vitest.config.ts': {
+      ...vitestConfig,
+      test: {
+        ...vitestConfig.test,
+        ...config,
+      },
+    },
+  })
+
+  const vitest = await runVitestCli({
+    nodeOptions: {
+      env: {
+        CI: 'false',
+        GITHUB_ACTIONS: undefined,
+        NO_COLOR: 'true',
+      },
+    },
+  }, '--root', root, '--watch')
+
+  return {
+    fs,
+    root,
+    ...vitest,
+  }
+}
 
 describe('--watch', () => {
   test(
@@ -43,9 +81,7 @@ describe('--watch', () => {
         {
           [testFilename]: testContent,
           'utils.ts': utilsContent,
-          'vitest.config.ts': vitestConfig,
         },
-        { watch: true },
       )
 
       const [referencePath] = extractToMatchScreenshotPaths(stderr, testName)
@@ -74,11 +110,9 @@ describe('--watch', () => {
         {
           [testFilename]: testContent,
           'utils.ts': utilsContent,
-          'vitest.config.ts': vitestConfig,
         },
         {
           update: true,
-          watch: true,
         },
       )
 
@@ -123,9 +157,7 @@ describe('--watch', () => {
         {
           [testFilename]: testContent,
           'utils.ts': utilsContent,
-          'vitest.config.ts': vitestConfig,
         },
-        { watch: true },
       )
 
       expect(stderr).toContain(`No existing reference screenshot found; a new one was created. Review it before running tests again.\n\nReference screenshot:`)
