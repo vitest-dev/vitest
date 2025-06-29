@@ -272,13 +272,6 @@ High and low watermarks for functions in the format of `<high>,<low>`
 
 Override Vite mode (default: `test` or `benchmark`)
 
-### workspace
-
-- **CLI:** `--workspace <path>`
-- **Config:** [workspace](/config/#workspace)
-
-[deprecated] Path to a workspace configuration file
-
 ### isolate
 
 - **CLI:** `--isolate`

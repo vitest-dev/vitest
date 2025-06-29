@@ -40,6 +40,11 @@ const vitestSponsors = {
       url: 'https://vital.io/',
       img: '/vital.svg',
     },
+    {
+      name: 'OOMOL',
+      url: 'https://oomol.com/',
+      img: '/oomol.svg',
+    },
   ],
 } satisfies Record<string, Sponsor[]>
 

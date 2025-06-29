@@ -13,7 +13,7 @@
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^14.6.1",
     "@types/react": "^19.1.8",
-    "@vitejs/plugin-react": "^4.5.2",
+    "@vitejs/plugin-react": "^4.6.0",
     "@vitest/ui": "latest",
     "fastify": "^4.29.1",
     "jsdom": "^26.1.0",

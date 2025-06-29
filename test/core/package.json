@@ -23,7 +23,7 @@
     "@vitest/utils": "workspace:*",
     "@vitest/web-worker": "workspace:^",
     "@vueuse/integrations": "^10.11.1",
-    "axios": "^0.30.0",
+    "axios": "^1.10.0",
     "debug": "^4.4.1",
     "immutable": "5.1.3",
     "memfs": "^4.17.2",

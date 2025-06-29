@@ -333,24 +333,6 @@ export interface InlineConfig {
   environmentOptions?: EnvironmentOptions
 
   /**
-   * Automatically assign environment based on globs. The first match will be used.
-   * This has effect only when running tests inside Node.js.
-   *
-   * Format: [glob, environment-name]
-   *
-   * @deprecated use [`projects`](https://vitest.dev/config/#projects) instead
-   * @default []
-   * @example [
-   *   // all tests in tests/dom will run in jsdom
-   *   ['tests/dom/**', 'jsdom'],
-   *   // all tests in tests/ with .edge.test.ts will run in edge-runtime
-   *   ['**\/*.edge.test.ts', 'edge-runtime'],
-   *   // ...
-   * ]
-   */
-  environmentMatchGlobs?: [string, VitestEnvironment][]
-
-  /**
    * Run tests in an isolated environment. This option has no effect on vmThreads pool.
    *
    * Disabling this option might improve performance if your code doesn't rely on side effects.
@@ -391,31 +373,9 @@ export interface InlineConfig {
   fileParallelism?: boolean
 
   /**
-   * Automatically assign pool based on globs. The first match will be used.
-   *
-   * Format: [glob, pool-name]
-   *
-   * @deprecated use [`projects`](https://vitest.dev/config/#projects) instead
-   * @default []
-   * @example [
-   *   // all tests in "forks" directory will run using "poolOptions.forks" API
-   *   ['tests/forks/**', 'forks'],
-   *   // all other tests will run based on "poolOptions.threads" option, if you didn't specify other globs
-   *   // ...
-   * ]
-   */
-  poolMatchGlobs?: [string, Exclude<Pool, 'browser'>][]
-
-  /**
    * Options for projects
    */
   projects?: TestProjectConfiguration[]
-
-  /**
-   * Path to a workspace configuration file
-   * @deprecated use `projects` instead
-   */
-  workspace?: string | TestProjectConfiguration[]
 
   /**
    * Update snapshot
@@ -671,6 +631,11 @@ export interface InlineConfig {
    * Return `false` to omit the frame.
    */
   onStackTrace?: (error: TestError, frame: ParsedStack) => boolean | void
+
+  /**
+   * A callback that can return `false` to ignore an unhandled error
+   */
+  onUnhandledError?: OnUnhandledErrorCallback
 
   /**
    * Indicates if CSS files should be processed.
@@ -1012,6 +977,8 @@ export interface UserConfig extends InlineConfig {
   mergeReports?: string
 }
 
+export type OnUnhandledErrorCallback = (error: (TestError | Error) & { type: string }) => boolean | void
+
 export interface ResolvedConfig
   extends Omit<
     Required<UserConfig>,
@@ -1137,7 +1104,6 @@ type NonProjectOptions =
   | 'maxWorkers'
   | 'minWorkers'
   | 'fileParallelism'
-  | 'workspace'
   | 'watchTriggerPatterns'
 
 export type ProjectConfig = Omit<

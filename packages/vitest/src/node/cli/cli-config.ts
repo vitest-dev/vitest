@@ -334,11 +334,6 @@ export const cliOptionsConfig: VitestCLIOptions = {
     description: 'Override Vite mode (default: `test` or `benchmark`)',
     argument: '<name>',
   },
-  workspace: {
-    description: '[deprecated] Path to a workspace configuration file',
-    argument: '<path>',
-    normalize: true,
-  },
   isolate: {
     description:
       'Run every test file in isolation. To disable isolation, use `--no-isolate` (default: `true`)',
@@ -849,7 +844,6 @@ export const cliOptionsConfig: VitestCLIOptions = {
   includeSource: null,
   alias: null,
   env: null,
-  environmentMatchGlobs: null,
   environmentOptions: null,
   unstubEnvs: null,
   related: null,
@@ -866,7 +860,6 @@ export const cliOptionsConfig: VitestCLIOptions = {
   chaiConfig: null,
   clearMocks: null,
   css: null,
-  poolMatchGlobs: null,
   deps: null,
   name: null,
   snapshotEnvironment: null,
