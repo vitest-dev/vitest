@@ -16,6 +16,35 @@ export interface TestingLibraryMatchers<E, R> {
   toBeInTheDocument(): R
   /**
    * @description
+   * Assert whether an element is within the viewport or not.
+   *
+   * An element is considered to be in the viewport if any part of it is visible within the current viewport bounds.
+   * This matcher checks the element's position relative to the viewport, not just its CSS visibility.
+   *
+   * The element must be in the document, have visible dimensions, and not be hidden by CSS properties like 
+   * display: none, visibility: hidden, or opacity: 0.
+   * @example
+   * <div
+   *   data-testid="visible-element"
+   *   style="position: absolute; top: 10px; left: 10px; width: 50px; height: 50px;"
+   * >
+   *   Visible Element
+   * </div>
+   *
+   * <div
+   *   data-testid="hidden-element"
+   *   style="position: fixed; top: -100px; left: 10px; width: 50px; height: 50px;"
+   * >
+   *   Hidden Element
+   * </div>
+   *
+   * await expect.element(page.getByTestId('visible-element')).toBeInViewport()
+   * await expect.element(page.getByTestId('hidden-element')).not.toBeInViewport()
+   * @see https://vitest.dev/guide/browser/assertion-api#tobeinviewport
+   */
+  toBeInViewport(): R
+  /**
+   * @description
    * This allows you to check if an element is currently visible to the user.
    *
    * An element is visible if **all** the following conditions are met:

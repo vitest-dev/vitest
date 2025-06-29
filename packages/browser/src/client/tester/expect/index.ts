@@ -4,6 +4,7 @@ import toBeEmptyDOMElement from './toBeEmptyDOMElement'
 import { toBeDisabled, toBeEnabled } from './toBeEnabled'
 import toBeInTheDocument from './toBeInTheDocument'
 import { toBeInvalid, toBeValid } from './toBeInvalid'
+import toBeInViewport from './toBeInViewport'
 import toBePartiallyChecked from './toBePartiallyChecked'
 import toBeRequired from './toBeRequired'
 import toBeVisible from './toBeVisible'
@@ -28,6 +29,7 @@ export const matchers: MatchersObject = {
   toBeEnabled,
   toBeEmptyDOMElement,
   toBeInTheDocument,
+  toBeInViewport,
   toBeInvalid,
   toBeRequired,
   toBeValid,
