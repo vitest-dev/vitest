@@ -45,6 +45,17 @@ it('exposes .env variables', async () => {
   expect(env.MY_TEST_ENV).toBe('hello')
 })
 
+it('nested script options get passed (and as boolean, when necessary)', async () => {
+  const cliNoConfig = await runViteNodeCli(entryPath)
+  expect(cliNoConfig.stdout).not.toContain(`dump modules to`)
+
+  const cliDefault = await runViteNodeCli('--options.debug.dumpModules=true', entryPath)
+  await cliDefault.viteNode.waitForStdout(/\[vite-node\] \[debug\] dump modules to.*\.vite-node\/dump/)
+
+  const cliSpecific = await runViteNodeCli('--options.debug.dumpModules=.vite-node/test-dump', entryPath)
+  await cliSpecific.viteNode.waitForStdout(/\[vite-node\] \[debug\] dump modules to.*\.vite-node\/test-dump/)
+})
+
 it.each(['index.js', 'index.cjs', 'index.mjs'])('correctly runs --watch %s', async (file) => {
   const entryPath = resolve(__dirname, '../src/watch', file)
   const { viteNode } = await runViteNodeCli('--watch', entryPath)
