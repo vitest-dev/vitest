@@ -3,7 +3,6 @@ import type { VitestWorker } from './workers/types'
 import { pathToFileURL } from 'node:url'
 import { createStackString, parseStacktrace } from '@vitest/utils/source-map'
 import { workerId as poolId } from 'tinypool'
-import { ModuleCacheMap } from 'vite-node/client'
 import { EvaluatedModules } from 'vite/module-runner'
 import { loadEnvironment } from '../integrations/env/loader'
 import { addCleanupListener, cleanup as cleanupWorker } from './cleanup'
@@ -82,8 +81,8 @@ async function execute(method: 'run' | 'collect', ctx: ContextRPC) {
 
     const state = {
       ctx,
+      moduleCache: new Map(),
       // here we create a new one, workers can reassign this if they need to keep it non-isolated
-      moduleCache: new ModuleCacheMap(),
       evaluatedModules: new EvaluatedModules(),
       moduleExecutionInfo: new Map(),
       config: ctx.config,

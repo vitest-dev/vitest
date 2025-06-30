@@ -6,11 +6,11 @@ import type { SerializedCoverageConfig } from '../runtime/config'
 import type { AfterSuiteRunMeta } from '../types/general'
 import { existsSync, promises as fs, readdirSync, writeFileSync } from 'node:fs'
 import path from 'node:path'
+import { cleanUrl, slash } from '@vitest/utils'
 import { relative, resolve } from 'pathe'
 import pm from 'picomatch'
 import { glob } from 'tinyglobby'
 import c from 'tinyrainbow'
-import { cleanUrl, slash } from 'vite-node/utils'
 import { coverageConfigDefaults } from '../defaults'
 import { resolveCoverageReporters } from '../node/config/resolveConfig'
 import { resolveCoverageProviderModule } from '../utils/coverage'
@@ -640,23 +640,23 @@ export class BaseCoverageProvider<Options extends ResolvedCoverageOptions<'istan
       ...ctx.projects.map(project => ({
         root: project.config.root,
         isBrowserEnabled: project.isBrowserEnabled(),
-        vitenode: project.vitenode,
+        vite: project.vite,
       })),
       // Check core last as it will match all files anyway
-      { root: ctx.config.root, vitenode: ctx.vitenode, isBrowserEnabled: ctx.getRootProject().isBrowserEnabled() },
+      { root: ctx.config.root, vite: ctx.vite, isBrowserEnabled: ctx.getRootProject().isBrowserEnabled() },
     ]
 
     return async function transformFile(filename: string): Promise<TransformResult | null | undefined> {
       let lastError
 
-      for (const { root, vitenode, isBrowserEnabled } of servers) {
+      for (const { root, vite, isBrowserEnabled } of servers) {
         // On Windows root doesn't start with "/" while filenames do
         if (!filename.startsWith(root) && !filename.startsWith(`/${root}`)) {
           continue
         }
 
         if (isBrowserEnabled) {
-          const result = await vitenode.transformRequest(filename, undefined, 'web').catch(() => null)
+          const result = await vite.transformRequest(filename).catch(() => null)
 
           if (result) {
             return result
@@ -664,7 +664,7 @@ export class BaseCoverageProvider<Options extends ResolvedCoverageOptions<'istan
         }
 
         try {
-          return await vitenode.transformRequest(filename)
+          return await vite.transformRequest(filename)
         }
         catch (error) {
           lastError = error

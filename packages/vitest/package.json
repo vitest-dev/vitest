@@ -167,7 +167,6 @@
     "tinypool": "^1.1.1",
     "tinyrainbow": "catalog:",
     "vite": "^6.0.0 || ^7.0.0-0",
-    "vite-node": "workspace:*",
     "why-is-node-running": "^2.3.0"
   },
   "devDependencies": {

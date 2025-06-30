@@ -8,6 +8,7 @@ export type { LoupeOptions, StringifyOptions } from './display'
 
 export {
   assertTypes,
+  cleanUrl,
   clone,
   createDefer,
   createSimpleStackTrace,
@@ -16,6 +17,7 @@ export {
   getCallLastIndex,
   getOwnProperties,
   getType,
+  isBareImport,
   isNegativeNaN,
   isObject,
   isPrimitive,

@@ -4,7 +4,6 @@ import type { SequenceHooks, SequenceSetupFiles } from '@vitest/runner'
 import type { SnapshotStateOptions } from '@vitest/snapshot'
 import type { SerializedDiffOptions } from '@vitest/utils/diff'
 import type { AliasOptions, ConfigEnv, DepOptimizationConfig, ServerOptions, UserConfig as ViteUserConfig } from 'vite'
-import type { ViteNodeServerOptions } from 'vite-node'
 import type { ChaiConfig } from '../../integrations/chai/config'
 import type { SerializedConfig } from '../../runtime/config'
 import type { Arrayable, LabelColor, ParsedStack, ProvidedContext, TestError } from '../../types/general'
@@ -193,27 +192,6 @@ interface DepsOptions {
      */
     transformGlobPattern?: RegExp | RegExp[]
   }
-  /**
-   * Externalize means that Vite will bypass the package to native Node.
-   *
-   * Externalized dependencies will not be applied Vite's transformers and resolvers.
-   * And does not support HMR on reload.
-   *
-   * Typically, packages under `node_modules` are externalized.
-   *
-   * @deprecated If you rely on vite-node directly, use `server.deps.external` instead. Otherwise, consider using `deps.optimizer.{web,ssr}.exclude`.
-   */
-  external?: (string | RegExp)[]
-  /**
-   * Vite will process inlined modules.
-   *
-   * This could be helpful to handle packages that ship `.js` in ESM format (that Node can't handle).
-   *
-   * If `true`, every dependency will be inlined
-   *
-   * @deprecated If you rely on vite-node directly, use `server.deps.inline` instead. Otherwise, consider using `deps.optimizer.{web,ssr}.include`.
-   */
-  inline?: (string | RegExp)[] | true
 
   /**
    * Interpret CJS module's default as named exports
@@ -221,17 +199,6 @@ interface DepsOptions {
    * @default true
    */
   interopDefault?: boolean
-
-  /**
-   * When a dependency is a valid ESM package, try to guess the cjs version based on the path.
-   * This will significantly improve the performance in huge repo, but might potentially
-   * cause some misalignment if a package have different logic in ESM and CJS mode.
-   *
-   * @default false
-   *
-   * @deprecated Use `server.deps.fallbackCJS` instead.
-   */
-  fallbackCJS?: boolean
 
   /**
    * A list of directories relative to the config file that should be treated as module directories.
@@ -296,11 +263,6 @@ export interface InlineConfig {
    *
    */
   deps?: DepsOptions
-
-  /**
-   * Vite-node server options
-   */
-  server?: Omit<ViteNodeServerOptions, 'transformMode'>
 
   /**
    * Base directory to scan for the test files

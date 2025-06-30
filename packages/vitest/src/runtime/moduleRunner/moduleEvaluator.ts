@@ -173,6 +173,7 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
       // vite 7 support
       '__vite_ssr_exportName__',
 
+      // TODO@discuss deprecate in Vitest 5, remove in Vitest 6(?)
       // backwards compat for vite-node
       '__filename',
       '__dirname',

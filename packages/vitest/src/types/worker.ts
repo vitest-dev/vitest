@@ -37,6 +37,9 @@ export interface WorkerGlobalState {
   environment: Environment
   environmentTeardownRun?: boolean
   onCancel: Promise<CancelReason>
+  /**
+   * @deprecated use `evaluatedModules` instead
+   */
   moduleCache: Map<string, any>
   evaluatedModules: EvaluatedModules
   moduleExecutionInfo: Map<string, any>

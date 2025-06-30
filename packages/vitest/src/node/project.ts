@@ -1,10 +1,6 @@
 import type { GlobOptions } from 'tinyglobby'
-import type {
-  ModuleNode,
-  TransformResult,
-  ViteDevServer,
-  InlineConfig as ViteInlineConfig,
-} from 'vite'
+import type { ModuleNode, TransformResult, ViteDevServer, InlineConfig as ViteInlineConfig } from 'vite'
+import type { ModuleRunner } from 'vite/module-runner'
 import type { Typechecker } from '../typecheck/typechecker'
 import type { ProvidedContext } from '../types/general'
 import type { OnTestsRerunHandler, Vitest } from './core'
@@ -28,8 +24,7 @@ import { deepMerge, nanoid, slash } from '@vitest/utils'
 import { isAbsolute, join, relative } from 'pathe'
 import pm from 'picomatch'
 import { glob } from 'tinyglobby'
-import { ViteNodeRunner } from 'vite-node/client'
-import { ViteNodeServer } from 'vite-node/server'
+import { createServerModuleRunner } from 'vite'
 import { setup } from '../api/setup'
 import { isBrowserEnabled, resolveConfig } from './config/resolveConfig'
 import { serializeConfig } from './config/serializeConfig'
@@ -66,13 +61,12 @@ export class TestProject {
    */
   public readonly tmpDir: string = join(tmpdir(), nanoid())
 
-  /** @internal */ vitenode!: ViteNodeServer
   /** @internal */ typechecker?: Typechecker
   /** @internal */ _config?: ResolvedConfig
   /** @internal */ _vite?: ViteDevServer
   /** @internal */ _hash?: string
 
-  private runner!: ViteNodeRunner
+  private runner!: ModuleRunner
 
   private closingPromise: Promise<void> | undefined
 
@@ -601,7 +595,7 @@ export class TestProject {
    * @param moduleId The ID of the module in Vite module graph
    */
   public import<T>(moduleId: string): Promise<T> {
-    return this.runner.executeId(moduleId)
+    return this.runner.import(moduleId)
   }
 
   /** @deprecated use `name` instead */
@@ -644,17 +638,9 @@ export class TestProject {
 
     this._vite = server
 
-    this.vitenode = new ViteNodeServer(server, this.config.server)
-    const node = this.vitenode
-    this.runner = new ViteNodeRunner({
-      root: server.config.root,
-      base: server.config.base,
-      fetchModule(id: string) {
-        return node.fetchModule(id)
-      },
-      resolveId(id: string, importer?: string) {
-        return node.resolveId(id, importer)
-      },
+    this.runner = createServerModuleRunner(server.environments.__vitest__, {
+      hmr: false,
+      sourcemapInterceptor: 'node',
     })
   }
 
@@ -715,7 +701,6 @@ export class TestProject {
       vitest.config.name || vitest.config.root,
       vitest,
     )
-    project.vitenode = vitest.vitenode
     project.runner = vitest.runner
     project._vite = vitest.server
     project._config = vitest.config
@@ -730,7 +715,6 @@ export class TestProject {
       parent.path,
       parent.vitest,
     )
-    clone.vitenode = parent.vitenode
     clone.runner = parent.runner
     clone._vite = parent._vite
     clone._config = config

@@ -56,6 +56,17 @@ export function slash(path: string): string {
   return path.replace(/\\/g, '/')
 }
 
+const postfixRE = /[?#].*$/
+export function cleanUrl(url: string): string {
+  return url.replace(postfixRE, '')
+}
+
+const bareImportRE = /^(?![a-z]:)[\w@](?!.*:\/\/)/i
+
+export function isBareImport(id: string): boolean {
+  return bareImportRE.test(id)
+}
+
 // convert RegExp.toString to RegExp
 export function parseRegexp(input: string): RegExp {
   // Parse input

@@ -1,9 +1,8 @@
 import type { FileMap } from './file-map'
 import type { ImportModuleDynamically, VMSyntheticModule } from './types'
-import { Module as _Module, createRequire } from 'node:module'
+import { Module as _Module, createRequire, isBuiltin } from 'node:module'
 import vm from 'node:vm'
 import { basename, dirname, extname } from 'pathe'
-import { isNodeBuiltin } from 'vite-node/utils'
 import { interopCommonJsModule, SyntheticModule } from './utils'
 
 interface CommonjsExecutorOptions {
@@ -196,7 +195,7 @@ export class CommonjsExecutor {
     const require = ((id: string) => {
       const resolved = _require.resolve(id)
       const ext = extname(resolved)
-      if (ext === '.node' || isNodeBuiltin(resolved)) {
+      if (ext === '.node' || isBuiltin(resolved)) {
         return this.requireCoreModule(resolved)
       }
       const module = new this.Module(resolved)
@@ -348,7 +347,7 @@ export class CommonjsExecutor {
 
   public require(identifier: string): any {
     const ext = extname(identifier)
-    if (ext === '.node' || isNodeBuiltin(identifier)) {
+    if (ext === '.node' || isBuiltin(identifier)) {
       return this.requireCoreModule(identifier)
     }
     const module = new this.Module(identifier)

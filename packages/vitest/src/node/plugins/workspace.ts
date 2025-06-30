@@ -93,6 +93,11 @@ export function WorkspaceVitestPlugin(
         }
 
         return {
+          environments: {
+            __vitest__: {
+              dev: {},
+            },
+          },
           test: {
             name: { label: name, color },
           },

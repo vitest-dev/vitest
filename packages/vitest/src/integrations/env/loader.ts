@@ -1,27 +1,13 @@
-import type { ViteNodeRunnerOptions } from 'vite-node'
 import type { BuiltinEnvironment, VitestEnvironment } from '../../node/types/config'
 import type { Environment } from '../../types/environment'
 import type { ContextRPC, WorkerRPC } from '../../types/worker'
-import { readFileSync } from 'node:fs'
 import { normalize, resolve } from 'pathe'
-import { ViteNodeRunner } from 'vite-node/client'
 import { environments } from './index'
 
 function isBuiltinEnvironment(
   env: VitestEnvironment,
 ): env is BuiltinEnvironment {
   return env in environments
-}
-
-const _loaders = new Map<string, ViteNodeRunner>()
-
-export async function createEnvironmentLoader(options: ViteNodeRunnerOptions): Promise<ViteNodeRunner> {
-  if (!_loaders.has(options.root)) {
-    const loader = new ViteNodeRunner(options)
-    await loader.executeId('/@vite/env')
-    _loaders.set(options.root, loader)
-  }
-  return _loaders.get(options.root)!
 }
 
 export async function loadEnvironment(
@@ -32,24 +18,13 @@ export async function loadEnvironment(
   if (isBuiltinEnvironment(name)) {
     return environments[name]
   }
-  const loader = await createEnvironmentLoader({
-    root: ctx.config.root,
-    fetchModule: async (id) => {
-      const result = await rpc.fetch(id, 'ssr')
-      if (result.id) {
-        return { code: readFileSync(result.id, 'utf-8') }
-      }
-      return result
-    },
-    resolveId: (id, importer) => rpc.resolveId(id, importer, 'ssr'),
-  })
-  const root = loader.root
+  const root = ctx.config.root
   const packageId
     = name[0] === '.' || name[0] === '/'
       ? resolve(root, name)
       : (await rpc.resolveId(`vitest-environment-${name}`, undefined, 'ssr'))
           ?.id ?? resolve(root, name)
-  const pkg = await loader.executeId(normalize(packageId))
+  const pkg = await import(normalize(packageId))
   if (!pkg || !pkg.default || typeof pkg.default !== 'object') {
     throw new TypeError(
       `Environment "${name}" is not a valid environment. `
