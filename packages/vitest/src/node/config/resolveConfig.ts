@@ -21,7 +21,6 @@ import {
   defaultInspectPort,
   defaultPort,
   extraInlineDeps,
-  workspacesFiles,
 } from '../../constants'
 import { benchmarkConfigDefaults, configDefaults } from '../../defaults'
 import { isCI, stdProvider } from '../../utils/env'
@@ -387,7 +386,6 @@ export function resolveConfig(
     // Configs
     resolved.config && slash(resolved.config),
     ...configFiles,
-    ...workspacesFiles,
 
     // Vite internal
     '**\/virtual:*',
@@ -596,14 +594,6 @@ export function resolveConfig(
     if (resolved.poolOptions?.[poolOptionKey]?.[workerOptionKey]) {
       resolved.poolOptions[poolOptionKey]![workerOptionKey] = resolveInlineWorkerOption(resolved.poolOptions[poolOptionKey]![workerOptionKey]!)
     }
-  }
-
-  if (typeof resolved.workspace === 'string') {
-    // if passed down from the CLI and it's relative, resolve relative to CWD
-    resolved.workspace
-      = typeof options.workspace === 'string' && options.workspace[0] === '.'
-        ? resolve(process.cwd(), options.workspace)
-        : resolvePath(resolved.workspace, resolved.root)
   }
 
   if (!builtinPools.includes(resolved.pool as BuiltinPool)) {

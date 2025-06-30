@@ -378,12 +378,6 @@ export interface InlineConfig {
   projects?: TestProjectConfiguration[]
 
   /**
-   * Path to a workspace configuration file
-   * @deprecated use `projects` instead
-   */
-  workspace?: string | TestProjectConfiguration[]
-
-  /**
    * Update snapshot
    *
    * @default false
@@ -637,6 +631,11 @@ export interface InlineConfig {
    * Return `false` to omit the frame.
    */
   onStackTrace?: (error: TestError, frame: ParsedStack) => boolean | void
+
+  /**
+   * A callback that can return `false` to ignore an unhandled error
+   */
+  onUnhandledError?: OnUnhandledErrorCallback
 
   /**
    * Indicates if CSS files should be processed.
@@ -978,6 +977,8 @@ export interface UserConfig extends InlineConfig {
   mergeReports?: string
 }
 
+export type OnUnhandledErrorCallback = (error: (TestError | Error) & { type: string }) => boolean | void
+
 export interface ResolvedConfig
   extends Omit<
     Required<UserConfig>,
@@ -1103,7 +1104,6 @@ type NonProjectOptions =
   | 'maxWorkers'
   | 'minWorkers'
   | 'fileParallelism'
-  | 'workspace'
   | 'watchTriggerPatterns'
 
 export type ProjectConfig = Omit<

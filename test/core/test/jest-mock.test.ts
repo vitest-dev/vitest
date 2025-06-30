@@ -1,4 +1,5 @@
 import { describe, expect, expectTypeOf, it, vi } from 'vitest'
+import { rolldownVersion } from 'vitest/node'
 
 describe('jest mock compat layer', () => {
   const returnFactory = (type: string) => (value: any) => ({ type, value })
@@ -31,11 +32,10 @@ describe('jest mock compat layer', () => {
   })
 
   it('clearing instances', () => {
-    const Spy = vi.fn(() => ({}))
+    const Spy = vi.fn()
 
     expect(Spy.mock.instances).toHaveLength(0)
-    // eslint-disable-next-line no-new
-    new Spy()
+    const _result = new Spy()
     expect(Spy.mock.instances).toHaveLength(1)
 
     Spy.mockReset() // same as mockClear()
@@ -86,6 +86,54 @@ describe('jest mock compat layer', () => {
     expectTypeOf(spy.mock.contexts[0]).toEqualTypeOf<SpyClass>()
     expect(spy.mock.instances).toEqual([instance])
     expect(spy.mock.contexts).toEqual([instance])
+  })
+
+  it('throws an error when constructing a class with an arrow function', () => {
+    function getTypeError() {
+      // esbuild transforms it into () => {\n}, but rolldown keeps it
+      return new TypeError(rolldownVersion
+        ? '() => {} is not a constructor'
+        : `() => {
+    } is not a constructor`)
+    }
+
+    const arrow = () => {}
+    const Fn = vi.fn(arrow)
+    expect(() => new Fn()).toThrow(new TypeError(
+      `The spy implementation did not use 'function' or 'class', see https://vitest.dev/api/vi#vi-spyon for examples.`,
+      {
+        cause: getTypeError(),
+      },
+    ))
+
+    const obj = {
+      Spy: arrow,
+    }
+
+    vi.spyOn(obj, 'Spy')
+
+    expect(
+      // @ts-expect-error typescript knows you can't do that
+      () => new obj.Spy(),
+    ).toThrow(new TypeError(
+      `The spy implementation did not use 'function' or 'class', see https://vitest.dev/api/vi#vi-spyon for examples.`,
+      {
+        cause: getTypeError(),
+      },
+    ))
+
+    const properClass = {
+      Spy: class {},
+    }
+
+    vi.spyOn(properClass, 'Spy').mockImplementation(() => {})
+
+    expect(() => new properClass.Spy()).toThrow(new TypeError(
+      `The spy implementation did not use 'function' or 'class', see https://vitest.dev/api/vi#vi-spyon for examples.`,
+      {
+        cause: getTypeError(),
+      },
+    ))
   })
 
   it('implementation is set correctly on init', () => {
@@ -547,7 +595,7 @@ describe('jest mock compat layer', () => {
     abstract feed(): void
   }
 
-  it('mocks classes', () => {
+  it('mocks constructors', () => {
     const Dog = vi.fn<(name: string) => Dog_>(function Dog_(name: string) {
       this.name = name
     } as (this: any, name: string) => Dog_)
@@ -565,6 +613,61 @@ describe('jest mock compat layer', () => {
 
     vi.mocked(dogMax.speak).mockReturnValue('woof woof')
     expect(dogMax.speak()).toBe('woof woof')
+  })
+
+  it('mock classes', () => {
+    const Dog = vi.fn(class Dog {
+      constructor(public name: string) {
+        this.name = name
+      }
+
+      static getType: () => string = vi.fn(() => 'mocked animal')
+      speak = vi.fn(() => 'loud bark!')
+      feed = vi.fn()
+    })
+
+    const dogMax = new Dog('Max')
+    expect(dogMax.name).toBe('Max')
+
+    expect(dogMax.speak()).toBe('loud bark!')
+    expect(dogMax.speak).toHaveBeenCalled()
+
+    vi.mocked(dogMax.speak).mockReturnValue('woof woof')
+    expect(dogMax.speak()).toBe('woof woof')
+  })
+
+  it('spies on classes', () => {
+    class Example {
+      test() {}
+    }
+
+    const obj = {
+      Example,
+    }
+
+    const Spy = vi.spyOn(obj, 'Example')
+
+    Spy.mockImplementation(() => {})
+
+    expect(() => new Spy()).toThrowError(TypeError)
+
+    Spy.mockImplementation(function () {
+      expectTypeOf(this.test).toEqualTypeOf<() => void>()
+      this.test = () => {}
+    })
+
+    expect(new Spy()).toBeInstanceOf(Spy)
+
+    class MockExample {
+      test() {}
+    }
+    Spy.mockImplementation(MockExample)
+
+    expect(new Spy()).toBeInstanceOf(Spy)
+    expect(new Spy()).not.toBeInstanceOf(MockExample)
+
+    const instance = new Spy()
+    expectTypeOf(instance).toEqualTypeOf<Example>()
   })
 
   it('returns temporary implementations from getMockImplementation()', () => {

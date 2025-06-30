@@ -8,7 +8,7 @@ describe('waitFor', () => {
           return new Promise((resolve) => {
             setTimeout(() => {
               resolve(true)
-            }, 100)
+            }, 1000)
           })
         }, 50)
       }).rejects.toThrow('Timed out in waitFor!')
@@ -130,7 +130,7 @@ describe('waitUntil', () => {
           return new Promise((resolve) => {
             setTimeout(() => {
               resolve(true)
-            }, 100)
+            }, 1000)
           })
         }, 50)
       }).rejects.toThrow('Timed out in waitUntil!')
