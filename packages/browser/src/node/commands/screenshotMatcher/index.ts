@@ -5,7 +5,7 @@ import type { AnyCodec } from './codecs'
 import type { AnyComparator } from './comparators'
 import type { TypedArray } from './types'
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
-import { dirname } from 'pathe'
+import { basename, dirname } from 'pathe'
 import { asyncTimeout, resolveOptions, takeDecodedScreenshot } from './utils'
 
 export const screenshotMatcher: BrowserCommand<
@@ -34,7 +34,7 @@ export const screenshotMatcher: BrowserCommand<
     comparatorOptions,
     context,
     element,
-    name,
+    name: `${Date.now()}-${basename(paths.reference)}`,
     reference,
     screenshotOptions,
     signal: abortController.signal,
