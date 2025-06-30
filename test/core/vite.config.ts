@@ -43,8 +43,6 @@ export default defineConfig({
     'import.meta.vitest': false,
   },
   resolve: {
-    // TODO: always inline it?
-    external: ['@vitest/runner'],
     alias: [
       { find: '#', replacement: resolve(__dirname, 'src') },
       { find: /^custom-lib$/, replacement: resolve(__dirname, 'projects', 'custom-lib') },

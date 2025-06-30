@@ -7,7 +7,6 @@ vi.mock('../src/mockedE')
 // this behavior looks odd but jest also doesn't seem to support this use case properly
 test(`mocked class methods are not restorable by explicit mockRestore calls`, () => {
   const instance1 = new MockedE()
-  // console.dir(__vitest_worker__.evaluatedModules, { depth: 5 })
 
   expect(instance1.testFn('a')).toMatchInlineSnapshot(`undefined`)
   expect(vi.mocked(instance1.testFn).mock.calls).toMatchInlineSnapshot(`

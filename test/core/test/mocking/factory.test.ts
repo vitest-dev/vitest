@@ -89,7 +89,7 @@ describe('mocking with factory', () => {
     expect((moduleB as any).C).toBe('addedC')
   })
 
-  test.only('mocks node_modules', () => {
+  test('mocks node_modules', () => {
     axios.get('./path')
 
     expect(axios.get).toHaveBeenCalledTimes(1)
