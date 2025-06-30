@@ -25,59 +25,53 @@ export default function toBeInViewport(
   const htmlElement = getElementFromUserInput(actual, toBeInViewport, this)
 
   const expectedRatio = options?.ratio ?? 0
-  const { pass, ratio } = getViewportIntersection(htmlElement, expectedRatio)
-
-  return {
-    pass,
-    message: () => {
-      const is = pass ? 'is' : 'is not'
-      const ratioText = expectedRatio > 0 ? ` with ratio ${expectedRatio}` : ''
-      const actualRatioText = ratio !== undefined ? ` (actual ratio: ${ratio.toFixed(3)})` : ''
-      return [
-        this.utils.matcherHint(
-          `${this.isNot ? '.not' : ''}.toBeInViewport`,
-          'element',
+  return getViewportIntersection(htmlElement, expectedRatio).then(({ pass, ratio }) => {
+    return {
+      pass,
+      message: () => {
+        const is = pass ? 'is' : 'is not'
+        const ratioText = expectedRatio > 0 ? ` with ratio ${expectedRatio}` : ''
+        const actualRatioText = ratio !== undefined ? ` (actual ratio: ${ratio.toFixed(3)})` : ''
+        return [
+          this.utils.matcherHint(
+            `${this.isNot ? '.not' : ''}.toBeInViewport`,
+            'element',
+            '',
+          ),
           '',
-        ),
-        '',
-        `Received element ${is} in viewport${ratioText}${actualRatioText}:`,
-        `  ${this.utils.printReceived(htmlElement.cloneNode(false))}`,
-      ].join('\n')
-    },
-  }
+          `Received element ${is} in viewport${ratioText}${actualRatioText}:`,
+          `  ${this.utils.printReceived(htmlElement.cloneNode(false))}`,
+        ].join('\n')
+      },
+    }
+  })
 }
 
 /**
  * Get viewport intersection ratio using IntersectionObserver API
  * This implementation follows Playwright's approach using IntersectionObserver as the primary mechanism
  */
-function getViewportIntersection(element: HTMLElement | SVGElement, expectedRatio: number): { pass: boolean; ratio?: number } {
+async function getViewportIntersection(element: HTMLElement | SVGElement, expectedRatio: number): Promise<{ pass: boolean; ratio?: number }> {
   // Use IntersectionObserver API to get the intersection ratio
   // Following Playwright's exact pattern from viewportRatio function
-  let intersectionRatio = 0
+  const intersectionRatio = await new Promise<number>((resolve) => {
+    // This mimics Playwright's Promise-based implementation in a synchronous context
+    const observer = new IntersectionObserver((entries) => {
+      if (entries.length > 0) {
+        resolve(entries[0].intersectionRatio)
+      }
+      else {
+        resolve(0)
+      }
+      observer.disconnect()
+    })
 
-  // This mimics Playwright's Promise-based implementation in a synchronous context
-  const observer = new IntersectionObserver((entries) => {
-    if (entries.length > 0) {
-      intersectionRatio = entries[0].intersectionRatio
-    }
-    observer.disconnect()
+    observer.observe(element)
+
+    // Firefox workaround: requestAnimationFrame to ensure observer callback fires
+    // This is exactly how Playwright handles it
+    requestAnimationFrame(() => {})
   })
-
-  observer.observe(element)
-
-  // Firefox workaround: requestAnimationFrame to ensure observer callback fires
-  // This is exactly how Playwright handles it
-  requestAnimationFrame(() => {})
-
-  // For synchronous testing, we need to allow the observer callback to execute
-  // Use a short synchronous delay to let the callback fire
-  const start = performance.now()
-  while (performance.now() - start < 1) {
-    // Short busy wait to allow observer callback to execute
-  }
-
-  observer.disconnect()
 
   // Apply the same logic as Playwright:
   // ratio > 0 && ratio > (expectedRatio - 1e-9)
