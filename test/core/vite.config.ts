@@ -44,9 +44,9 @@ export default defineConfig({
   },
   resolve: {
     alias: [
-      { find: '#', replacement: resolve(__dirname, 'src') },
-      { find: /^custom-lib$/, replacement: resolve(__dirname, 'projects', 'custom-lib') },
-      { find: /^inline-lib$/, replacement: resolve(__dirname, 'projects', 'inline-lib') },
+      { find: /^#/, replacement: resolve(import.meta.dirname, 'src') },
+      { find: /^custom-lib$/, replacement: resolve(import.meta.dirname, 'projects', 'custom-lib') },
+      { find: /^inline-lib$/, replacement: resolve(import.meta.dirname, 'projects', 'inline-lib') },
     ],
   },
   server: {
@@ -114,25 +114,12 @@ export default defineConfig({
     deps: {
       moduleDirectories: ['node_modules', 'projects', 'packages'],
     },
-    server: {
-      deps: {
-        external: [
-          'tinyspy',
-          /src\/external/,
-          /esm\/esm/,
-          /packages\/web-worker/,
-          /\.wasm$/,
-          /\/wasm-bindgen-no-cyclic\/index_bg.js/,
-        ],
-        inline: ['inline-lib'],
-      },
-    },
     alias: [
       {
         find: 'test-alias',
         replacement: '',
         // vitest doesn't crash because function is defined
-        customResolver: () => resolve(__dirname, 'src', 'aliased-mod.ts'),
+        customResolver: () => resolve(import.meta.dirname, 'src', 'aliased-mod.ts'),
       },
     ],
     onConsoleLog(log) {

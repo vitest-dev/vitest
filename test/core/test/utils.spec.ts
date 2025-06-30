@@ -1,5 +1,5 @@
 import { assertTypes, deepClone, deepMerge, isNegativeNaN, objDisplay, objectAttr, toArray } from '@vitest/utils'
-import { EvaluatedModuleNode, EvaluatedModules } from 'vite/module-runner'
+import { EvaluatedModules } from 'vite/module-runner'
 import { beforeAll, describe, expect, test } from 'vitest'
 import { deepMergeSnapshot } from '../../../packages/snapshot/src/port/utils'
 import { resetModules } from '../../../packages/vitest/src/runtime/utils'
@@ -219,7 +219,19 @@ describe('resetModules doesn\'t resets only user modules', () => {
 
   beforeAll(() => {
     modules.forEach(([path]) => {
-      moduleCache.idToModuleMap.set(path, new EvaluatedModuleNode(path, path))
+      const exports = {}
+      moduleCache.idToModuleMap.set(path, {
+        id: path,
+        url: path,
+        file: path,
+        importers: new Set(),
+        imports: new Set(),
+        evaluated: true,
+        meta: undefined,
+        exports,
+        promise: Promise.resolve(exports),
+        map: undefined,
+      })
     })
     resetModules(moduleCache)
   })
@@ -228,14 +240,10 @@ describe('resetModules doesn\'t resets only user modules', () => {
     const cached = moduleCache.idToModuleMap.get(path)
 
     if (reset) {
-      expect(cached).not.toHaveProperty('evaluated')
-      expect(cached).not.toHaveProperty('resolving')
-      expect(cached).not.toHaveProperty('exports')
-      expect(cached).not.toHaveProperty('promise')
+      expect(cached).toHaveProperty('exports', undefined)
+      expect(cached).toHaveProperty('promise', undefined)
     }
     else {
-      expect(cached).toHaveProperty('evaluated')
-      expect(cached).toHaveProperty('resolving')
       expect(cached).toHaveProperty('exports')
       expect(cached).toHaveProperty('promise')
     }

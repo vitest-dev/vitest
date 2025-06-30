@@ -5,14 +5,14 @@ import type { FetchFunctionOptions } from 'vite/module-runner'
 import type { AfterSuiteRunMeta, TransformMode, UserConsoleLog } from './general'
 
 export interface RuntimeRPC {
-  fetch_: (id: string, importer: string | undefined, environment: string, options?: FetchFunctionOptions) => Promise<FetchResult | {
+  fetch: (id: string, importer: string | undefined, environment: string, options?: FetchFunctionOptions) => Promise<FetchResult | {
     cached: true
     id: string
     file: string | null
     url: string
     invalidate: boolean
   }>
-  resolve_: (id: string, importer: string | undefined, environment: string) => Promise<{
+  resolve: (id: string, importer: string | undefined, environment: string) => Promise<{
     id: string
     file: string
     url: string

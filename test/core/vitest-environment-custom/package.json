@@ -1,8 +1,9 @@
 {
   "name": "vitest-environment-custom",
   "private": true,
+  "type": "module",
   "exports": {
-    ".": "./index.ts"
+    ".": "./index.js"
   },
-  "main": "index.ts"
+  "main": "index.js"
 }

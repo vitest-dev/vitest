@@ -58,7 +58,7 @@ export async function startVitestModuleRunner(options: ContextExecutorOptions): 
           return { ...vitest, type: 'module' }
         }
 
-        const result = await rpc().fetch_(
+        const result = await rpc().fetch(
           id,
           importer,
           getTransformMode() === 'ssr' ? 'ssr' : 'client',
@@ -71,7 +71,7 @@ export async function startVitestModuleRunner(options: ContextExecutorOptions): 
         return result
       },
       resolveId(id, importer) {
-        return rpc().resolve_(
+        return rpc().resolve(
           id,
           importer,
           getTransformMode() === 'ssr' ? 'ssr' : 'client',

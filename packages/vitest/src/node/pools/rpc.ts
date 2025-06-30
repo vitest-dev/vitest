@@ -21,7 +21,7 @@ export function createMethodsRPC(project: TestProject, options: MethodsOptions =
   const cacheFs = options.cacheFs ?? false
   const cachedFsResults = new Map<string, string>()
   return {
-    async fetch_(
+    async fetch(
       id,
       importer,
       environmentName,
@@ -71,7 +71,7 @@ export function createMethodsRPC(project: TestProject, options: MethodsOptions =
       cachedFsResults.set(id, tmp)
       return getCachedResult(result, cachedFsResults)
     },
-    async resolve_(id, importer, environmentName) {
+    async resolve(id, importer, environmentName) {
       const environment = project.vite.environments[environmentName]
       if (!environment) {
         throw new Error(`The environment ${environmentName} was not defined in the Vite config.`)
