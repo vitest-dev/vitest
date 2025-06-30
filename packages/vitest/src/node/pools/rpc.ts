@@ -98,48 +98,10 @@ export function createMethodsRPC(project: TestProject, options: MethodsOptions =
         config: project.serializedConfig,
       })
     },
-    async fetch(id, transformMode) {
-      const result = await project.vitenode.fetchResult(id, transformMode).catch(handleRollupError)
-      const code = result.code
-      if (!cacheFs || result.externalize) {
-        return result
-      }
-      if ('id' in result && typeof result.id === 'string') {
-        return { id: result.id }
-      }
-
-      if (code == null) {
-        throw new Error(`Failed to fetch module ${id}`)
-      }
-
-      const dir = join(project.tmpDir, transformMode)
-      const name = hash('sha1', id, 'hex')
-      const tmp = join(dir, name)
-      if (!created.has(dir)) {
-        mkdirSync(dir, { recursive: true })
-        created.add(dir)
-      }
-      if (promises.has(tmp)) {
-        await promises.get(tmp)
-        return { id: tmp }
-      }
-      promises.set(
-        tmp,
-
-        atomicWriteFile(tmp, code)
-        // Fallback to non-atomic write for windows case where file already exists:
-          .catch(() => writeFile(tmp, code, 'utf-8'))
-          .finally(() => promises.delete(tmp)),
-      )
-      await promises.get(tmp)
-      Object.assign(result, { id: tmp })
-      return { id: tmp }
-    },
-    resolveId(id, importer, transformMode) {
-      return project.vitenode.resolveId(id, importer, transformMode).catch(handleRollupError)
-    },
-    transform(id, environment) {
-      return project.vitenode.transformModule(id, environment).catch(handleRollupError)
+    async transform(id) {
+      const result = await project.vite.transformRequest(id).catch(handleRollupError)
+      // TODO: this code should not be processed with ssrTransform (how?)
+      return { code: result?.code }
     },
     async onQueued(file) {
       if (options.collect) {

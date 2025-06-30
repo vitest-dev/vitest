@@ -5,18 +5,18 @@ import { EvaluatedModules } from 'vite/module-runner'
 import { startVitestModuleRunner } from '../moduleRunner/startModuleRunner'
 import { provideWorkerState } from '../utils'
 
-let _viteNode: VitestModuleRunner
+let _moduleRunner: VitestModuleRunner
 
 const evaluatedModules = new EvaluatedModules()
 const moduleExecutionInfo = new Map()
 
 async function startModuleRunner(options: ContextExecutorOptions) {
-  if (_viteNode) {
-    return _viteNode
+  if (_moduleRunner) {
+    return _moduleRunner
   }
 
-  _viteNode = await startVitestModuleRunner(options)
-  return _viteNode
+  _moduleRunner = await startVitestModuleRunner(options)
+  return _moduleRunner
 }
 
 export async function runBaseTests(method: 'run' | 'collect', state: WorkerGlobalState): Promise<void> {
@@ -46,7 +46,7 @@ export async function runBaseTests(method: 'run' | 'collect', state: WorkerGloba
   })
 
   const [executor, { run }] = await Promise.all([
-    startModuleRunner({ state }),
+    startModuleRunner({ state, evaluatedModules: state.evaluatedModules }),
     import('../runBaseTests'),
   ])
   const fileSpecs = ctx.files.map(f =>

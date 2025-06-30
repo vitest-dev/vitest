@@ -18,24 +18,9 @@ export interface RuntimeRPC {
     url: string
   } | null>
 
-  fetch: (
-    id: string,
-    transformMode: TransformMode
-  ) => Promise<{
-    externalize?: string
-    id?: string
-  }>
   transform: (id: string, transformMode: TransformMode) => Promise<{
     code?: string
   }>
-  resolveId: (
-    id: string,
-    importer: string | undefined,
-    transformMode: TransformMode
-  ) => Promise<{
-    external?: boolean | 'absolute' | 'relative'
-    id: string
-  } | null>
 
   onUserConsoleLog: (log: UserConsoleLog) => void
   onUnhandledError: (err: unknown, type: string) => void
