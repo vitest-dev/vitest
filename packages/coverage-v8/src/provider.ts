@@ -5,7 +5,7 @@ import type { EncodedSourceMap, FetchResult } from 'vite-node'
 import type { AfterSuiteRunMeta } from 'vitest'
 import type { CoverageProvider, ReportContext, ResolvedCoverageOptions, TestProject, Vitest } from 'vitest/node'
 import { promises as fs } from 'node:fs'
-import { fileURLToPath, pathToFileURL } from 'node:url'
+import { fileURLToPath } from 'node:url'
 // @ts-expect-error -- untyped
 import { mergeProcessCovs } from '@bcoe/v8-coverage'
 import astV8ToIstanbul from 'ast-v8-to-istanbul'
@@ -173,15 +173,17 @@ export class V8CoverageProvider extends BaseCoverageProvider<ResolvedCoverageOpt
           timeout = setTimeout(() => debug(c.bgRed(`File "${filename}" is taking longer than 3s`)), 3_000)
         }
 
-        const url = pathToFileURL(filename)
+        // Do not use pathToFileURL to avoid encoding filename parts
+        const url = `file://${filename.startsWith('/') ? '' : '/'}${filename}`
+
         const sources = await this.getSources(
-          url.href,
+          url,
           transformResults,
           transform,
         )
 
         coverageMap.merge(await this.remapCoverage(
-          url.href,
+          url,
           0,
           sources,
           [],
