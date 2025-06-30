@@ -13,10 +13,10 @@ export async function importFs(id: string): Promise<any> {
   return getBrowserState().wrapModule(() => import(/* @vite-ignore */ name))
 }
 
-export const executor = {
+export const moduleRunner = {
   isBrowser: true,
 
-  executeId: (id: string): Promise<any> => {
+  import: (id: string): Promise<any> => {
     if (id[0] === '/' || id[1] === ':') {
       return importFs(id)
     }

@@ -61,12 +61,6 @@ export class VitestModuleRunner extends ModuleRunner {
     return module
   }
 
-  // TODO: remove before release
-  /** @deprecated use `import` instead */
-  executeId(id: string): Promise<any> {
-    return this.import(id)
-  }
-
   private _cachedRequest(
     url: string,
     mod: EvaluatedModuleNode,

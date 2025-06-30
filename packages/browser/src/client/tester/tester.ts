@@ -10,7 +10,7 @@ import {
   startTests,
   stopCoverageInsideWorker,
 } from 'vitest/internal/browser'
-import { executor, getBrowserState, getConfig, getWorkerState } from '../utils'
+import { moduleRunner, getBrowserState, getConfig, getWorkerState } from '../utils'
 import { setupDialogsSpy } from './dialog'
 import { setupConsoleLogSpy } from './logger'
 import { VitestBrowserClientMocker } from './mocker'
@@ -207,7 +207,7 @@ async function prepare(options: PrepareOptions) {
 
   await Promise.all([
     setupCommonEnv(config),
-    startCoverageInsideWorker(config.coverage, executor, { isolate: config.browser.isolate }),
+    startCoverageInsideWorker(config.coverage, moduleRunner, { isolate: config.browser.isolate }),
     (async () => {
       const VitestIndex = await import('vitest')
       Object.defineProperty(window, '__vitest_index__', {
@@ -249,7 +249,7 @@ async function cleanup() {
       .catch(error => unhandledError(error, 'Cleanup Error'))
   }
   state.environmentTeardownRun = true
-  await stopCoverageInsideWorker(config.coverage, executor, { isolate: config.browser.isolate }).catch((error) => {
+  await stopCoverageInsideWorker(config.coverage, moduleRunner, { isolate: config.browser.isolate }).catch((error) => {
     return unhandledError(error, 'Coverage Error')
   })
 }
