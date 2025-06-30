@@ -39,7 +39,7 @@ export async function resolveTestRunner(
   const testRunner = new TestRunner(config)
 
   // inject private executor to every runner
-  Object.defineProperty(testRunner, '__vitest_executor', {
+  Object.defineProperty(testRunner, 'moduleRunner', {
     value: moduleRunner,
     enumerable: false,
     configurable: false,
