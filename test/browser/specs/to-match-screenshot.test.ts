@@ -82,7 +82,7 @@ describe('--watch', () => {
 
       expect(stderr).toContain(`No existing reference screenshot found; a new one was created. Review it before running tests again.\n\nReference screenshot:\n  ${referencePath}`)
 
-      const referenceStat = fs.statFile(referencePath)
+      const { atime: _1, atimeMs: _2, ...referenceStat } = fs.statFile(referencePath)
 
       fs.editFile(testFilename, content => `${content}\n`)
 
@@ -91,7 +91,7 @@ describe('--watch', () => {
 
       expect(vitest.stdout).toContain('✓ |chromium| basic.test.ts > screenshot-snapshot')
 
-      const newReferenceStat = fs.statFile(referencePath)
+      const { atime: _3, atimeMs: _4, ...newReferenceStat } = fs.statFile(referencePath)
 
       expect(referenceStat).toEqual(newReferenceStat)
     },
