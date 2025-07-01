@@ -523,11 +523,6 @@ export interface InlineConfig {
   uiBase?: string
 
   /**
-   * Determine the transform method for all modules imported inside a test that matches the glob pattern.
-   */
-  testTransformMode?: TransformModePatterns
-
-  /**
    * Format options for snapshot testing.
    */
   snapshotFormat?: Omit<PrettyFormatOptions, 'plugins'>

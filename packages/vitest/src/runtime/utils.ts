@@ -75,16 +75,18 @@ export async function waitForImportsToResolve(): Promise<void> {
   await waitNextTick()
   const state = getWorkerState()
   const promises: Promise<unknown>[] = []
-  let resolvingCount = 0
-  for (const mod of state.moduleCache.values()) {
+  // let resolvingCount = 0
+  for (const [_, mod] of state.evaluatedModules.idToModuleMap) {
     if (mod.promise && !mod.evaluated) {
       promises.push(mod.promise)
     }
-    if (mod.resolving) {
-      resolvingCount++
-    }
+    // TODO: how?
+    // if (mod.resolving) {
+    //   resolvingCount++
+    // }
   }
-  if (!promises.length && !resolvingCount) {
+  if (!promises.length) {
+  // if (!promises.length && !resolvingCount) {
     return
   }
   await Promise.allSettled(promises)

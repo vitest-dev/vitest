@@ -24,7 +24,7 @@ export async function loadEnvironment(
       ? resolve(root, name)
       : (await rpc.resolve(`vitest-environment-${name}`, undefined, 'ssr'))
           ?.id ?? resolve(root, name)
-  const pkg = await import(normalize(packageId))
+  const pkg = await import(normalize(packageId)) as { default: Environment }
   if (!pkg || !pkg.default || typeof pkg.default !== 'object') {
     throw new TypeError(
       `Environment "${name}" is not a valid environment. `
@@ -33,12 +33,13 @@ export async function loadEnvironment(
   }
   const environment = pkg.default
   if (
-    environment.transformMode !== 'web'
+    environment.transformMode != null
+    && environment.transformMode !== 'web'
     && environment.transformMode !== 'ssr'
   ) {
     throw new TypeError(
       `Environment "${name}" is not a valid environment. `
-      + `Path "${packageId}" should export default object with a "transformMode" method equal to "ssr" or "web".`,
+      + `Path "${packageId}" should export default object with a "transformMode" method equal to "ssr" or "web", received "${environment.transformMode}".`,
     )
   }
   return environment

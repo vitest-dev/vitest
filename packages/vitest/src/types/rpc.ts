@@ -2,7 +2,7 @@ import type { CancelReason, File, TaskEventPack, TaskResultPack, TestAnnotation 
 import type { SnapshotResult } from '@vitest/snapshot'
 import type { FetchResult } from 'vite'
 import type { FetchFunctionOptions } from 'vite/module-runner'
-import type { AfterSuiteRunMeta, TransformMode, UserConsoleLog } from './general'
+import type { AfterSuiteRunMeta, UserConsoleLog } from './general'
 
 export interface RuntimeRPC {
   fetch: (id: string, importer: string | undefined, environment: string, options?: FetchFunctionOptions) => Promise<FetchResult | {
@@ -18,7 +18,7 @@ export interface RuntimeRPC {
     url: string
   } | null>
 
-  transform: (id: string, transformMode: TransformMode) => Promise<{
+  transform: (id: string, environment: string) => Promise<{
     code?: string
   }>
 

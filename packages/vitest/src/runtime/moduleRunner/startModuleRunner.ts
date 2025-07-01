@@ -45,11 +45,12 @@ export async function startVitestModuleRunner(options: ContextExecutorOptions): 
 
   listenForErrors(state)
 
-  const getTransformMode = () => {
-    return state().environment.transformMode ?? 'ssr'
+  const environment = () => {
+    const environment = state().environment
+    return environment.viteEnvironment || environment.name
   }
 
-  return await createVitestModuleRunner({
+  const moduleRunner = await createVitestModuleRunner({
     evaluatedModules: options.evaluatedModules,
     transport: {
       async fetchModule(id, importer, options) {
@@ -61,7 +62,7 @@ export async function startVitestModuleRunner(options: ContextExecutorOptions): 
         const result = await rpc().fetch(
           id,
           importer,
-          getTransformMode() === 'ssr' ? 'ssr' : 'client',
+          environment(),
           options,
         )
         if ('cached' in result) {
@@ -74,7 +75,7 @@ export async function startVitestModuleRunner(options: ContextExecutorOptions): 
         return rpc().resolve(
           id,
           importer,
-          getTransformMode() === 'ssr' ? 'ssr' : 'client',
+          environment(),
         )
       },
     },
@@ -86,4 +87,5 @@ export async function startVitestModuleRunner(options: ContextExecutorOptions): 
         }
       : undefined,
   })
+  return moduleRunner
 }

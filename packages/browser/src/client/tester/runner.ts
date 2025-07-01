@@ -12,7 +12,7 @@ import {
 } from 'vitest/internal/browser'
 import { NodeBenchmarkRunner, VitestTestRunner } from 'vitest/runners'
 import { createStackString, parseStacktrace } from '../../../../utils/src/source-map'
-import { moduleRunner, getWorkerState } from '../utils'
+import { getWorkerState, moduleRunner } from '../utils'
 import { rpc } from './rpc'
 import { VitestBrowserSnapshotEnvironment } from './snapshot'
 
@@ -117,7 +117,7 @@ export function createBrowserRunner(
         await rpc().onAfterSuiteRun({
           coverage,
           testFiles: files.map(file => file.name),
-          transformMode: 'browser',
+          environment: '__browser__',
           projectName: this.config.name,
         })
       }

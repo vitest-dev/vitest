@@ -1,5 +1,5 @@
 import type { VitestRunner } from '@vitest/runner'
-import type { SerializedConfig, WorkerGlobalState } from 'vitest'
+import type { EvaluatedModules, SerializedConfig, WorkerGlobalState } from 'vitest'
 import type { IframeOrchestrator } from './orchestrator'
 import type { CommandsManager } from './tester/utils'
 
@@ -65,7 +65,7 @@ export function ensureAwaited<T>(promise: (error?: Error) => Promise<T>): Promis
 export interface BrowserRunnerState {
   files: string[]
   runningFiles: string[]
-  moduleCache: Map<string, any>
+  evaluatedModules: EvaluatedModules
   config: SerializedConfig
   provider: string
   runner: VitestRunner

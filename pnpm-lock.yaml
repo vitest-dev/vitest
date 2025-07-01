@@ -575,6 +575,9 @@ importers:
       '@bcoe/v8-coverage':
         specifier: ^1.0.2
         version: 1.0.2
+      '@vitest/utils':
+        specifier: workspace:*
+        version: link:../utils
       ast-v8-to-istanbul:
         specifier: ^0.3.3
         version: 0.3.3
@@ -624,9 +627,6 @@ importers:
       pathe:
         specifier: 'catalog:'
         version: 2.0.3
-      vite-node:
-        specifier: workspace:*
-        version: link:../vite-node
       vitest:
         specifier: workspace:*
         version: link:../vitest
