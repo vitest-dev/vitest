@@ -1,3 +1,4 @@
+import type { MockedModule } from '@vitest/mocker'
 import type vm from 'node:vm'
 import type { HotPayload } from 'vite'
 import type { EvaluatedModuleNode, EvaluatedModules, FetchFunction, SSRImportMetadata } from 'vite/module-runner'
@@ -81,16 +82,22 @@ export class VitestModuleRunner extends ModuleRunner {
     metadata?: SSRImportMetadata,
     ignoreMock = false,
   ): Promise<any> {
-    // console.log('request', { url, ignoreMock })
     if (ignoreMock) {
       return this._cachedRequest(url, mod, callstack, metadata)
     }
 
-    if (VitestMocker.pendingIds.length) {
-      await this.mocker.resolveMocks()
+    let mocked: any
+    if (mod.meta && 'mockedModule' in mod.meta) {
+      mocked = await this.mocker.requestWithMockedModule(
+        url,
+        mod,
+        callstack,
+        mod.meta.mockedModule as MockedModule,
+      )
     }
-
-    const mocked = await this.mocker.requestWithMock(url, mod, callstack)
+    else {
+      mocked = await this.mocker.mockedRequest(url, mod, callstack)
+    }
 
     if (typeof mocked === 'string') {
       const node = await this.fetchModule(mocked)

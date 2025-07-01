@@ -2,28 +2,23 @@ import type vm from 'node:vm'
 import type { EvaluatedModules } from 'vite/module-runner'
 import type { WorkerGlobalState } from '../../types/worker'
 import type { ExternalModulesExecutor } from '../external-executor'
-import type { VitestModuleRunnerOptions } from './moduleRunner'
 import fs from 'node:fs'
-import { getCachedVitestImport } from './cachedResolver'
+import { isBuiltin } from 'node:module'
 import { listenForErrors } from './errorCatcher'
+import { unwrapId } from './moduleEvaluator'
+import { VitestMocker } from './moduleMocker'
 import { VitestModuleRunner } from './moduleRunner'
 
 const { readFileSync } = fs
+
+const browserExternalId = '__vite-browser-external'
+const browserExternalLength = browserExternalId.length + 1 // 1 is ":"
 
 export interface ExecuteOptions {
   moduleDirectories?: string[]
   state: WorkerGlobalState
   context?: vm.Context
   externalModulesExecutor?: ExternalModulesExecutor
-}
-
-async function createVitestModuleRunner(options: VitestModuleRunnerOptions): Promise<VitestModuleRunner> {
-  const moduleRunner = new VitestModuleRunner(options)
-
-  await moduleRunner.import('/@vite/env')
-  await moduleRunner.mocker.initializeSpyModule()
-
-  return moduleRunner
 }
 
 export interface ContextExecutorOptions {
@@ -50,13 +45,30 @@ export async function startVitestModuleRunner(options: ContextExecutorOptions): 
     return environment.viteEnvironment || environment.name
   }
 
-  const moduleRunner = await createVitestModuleRunner({
+  const moduleRunner: VitestModuleRunner = new VitestModuleRunner({
     evaluatedModules: options.evaluatedModules,
     transport: {
       async fetchModule(id, importer, options) {
-        const vitest = getCachedVitestImport(id, state)
-        if (vitest) {
-          return { ...vitest, type: 'module' }
+        const rawId = unwrapId(id)
+
+        if (isBuiltin(rawId) || rawId.startsWith(browserExternalId)) {
+          return { externalize: toBuiltin(rawId), type: 'builtin' }
+        }
+
+        if (VitestMocker.pendingIds.length) {
+          await moduleRunner.mocker.resolveMocks()
+        }
+
+        const resolvedMock = moduleRunner.mocker.getDependencyMock(rawId)
+        if (resolvedMock) {
+          return {
+            code: '',
+            file: null,
+            id,
+            url: id,
+            invalidate: false,
+            mockedModule: resolvedMock,
+          }
         }
 
         const result = await rpc().fetch(
@@ -87,5 +99,20 @@ export async function startVitestModuleRunner(options: ContextExecutorOptions): 
         }
       : undefined,
   })
+
+  await moduleRunner.import('/@vite/env')
+  await moduleRunner.mocker.initializeSpyModule()
+
   return moduleRunner
+}
+
+export function toBuiltin(id: string): string {
+  if (id.startsWith(browserExternalId)) {
+    id = id.slice(browserExternalLength)
+  }
+
+  if (!id.startsWith('node:')) {
+    id = `node:${id}`
+  }
+  return id
 }

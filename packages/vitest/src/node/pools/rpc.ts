@@ -6,6 +6,7 @@ import { mkdirSync } from 'node:fs'
 import { rename, stat, unlink, writeFile } from 'node:fs/promises'
 import { dirname, join } from 'pathe'
 import { hash } from '../hash'
+import { isBuiltin } from 'node:module'
 
 const created = new Set()
 const promises = new Map<string, Promise<void>>()

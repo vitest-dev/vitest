@@ -16,6 +16,7 @@ it('exports snapshot', async ({ skip, task }) => {
       .toMatchInlineSnapshot(`
       {
         ".": {
+          "EvaluatedModules": "function",
           "afterAll": "function",
           "afterEach": "function",
           "assert": "function",
@@ -166,6 +167,7 @@ it('exports snapshot', async ({ skip, task }) => {
       .toMatchInlineSnapshot(`
         {
           ".": {
+            "EvaluatedModules": "function",
             "afterAll": "function",
             "afterEach": "function",
             "assert": "function",

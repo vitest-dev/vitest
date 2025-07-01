@@ -125,6 +125,7 @@ export class VitestMocker {
     const node = this.evaluatedModules.getModuleById(mockId)
     if (node) {
       this.evaluatedModules.invalidateModule(node)
+      node.mockedExports = undefined
     }
   }
 
@@ -146,8 +147,12 @@ export class VitestMocker {
   private async resolveId(rawId: string, importer: string) {
     const result = await this.options.resolveId(rawId, importer)
     if (!result) {
-      // TODO: allow "virtual" (vscode) IDs to be registered
-      throw new Error(`Invalid ID`)
+      const id = normalizeModuleId(rawId)
+      return {
+        id,
+        url: rawId,
+        external: id,
+      }
     }
     // external is node_module or unresolved module
     // for example, some people mock "vscode" and don't have it installed
@@ -285,7 +290,7 @@ export class VitestMocker {
   public unmockPath(id: string): void {
     const registry = this.getMockerRegistry()
 
-    registry.delete(id)
+    registry.deleteById(id)
     this.invalidateModuleById(id)
   }
 
@@ -370,21 +375,20 @@ export class VitestMocker {
     )
   }
 
-  public async requestWithMock(url: string, evaluatedNode: EvaluatedModuleNode, callstack: string[]): Promise<any> {
-    const mock = this.getDependencyMock(evaluatedNode.id)
-
-    if (!mock) {
-      return
-    }
-
+  public async requestWithMockedModule(
+    url: string,
+    evaluatedNode: EvaluatedModuleNode,
+    callstack: string[],
+    mock: MockedModule,
+  ): Promise<any> {
     const mockId = this.getMockPath(evaluatedNode.id)
     // console.log(mock, evaluatedNode.id, callstack)
 
     if (mock.type === 'automock' || mock.type === 'autospy') {
       const cache = this.evaluatedModules.getModuleById(mockId)
       // console.log('mocked!', mockId, cache?.exports, callstack)
-      if (cache && cache.mocked) {
-        return cache.mocked
+      if (cache && cache.mockedExports) {
+        return cache.mockedExports
       }
       // we have to define a separate object that will copy all properties into itself
       // and can't just use the same `exports` define automatically by Vite before the evaluator
@@ -397,7 +401,7 @@ export class VitestMocker {
       const node = this.ensureModule(mockId, this.getMockPath(evaluatedNode.url))
       node.meta = evaluatedNode.meta
       node.file = evaluatedNode.file
-      node.mocked = exports
+      node.mockedExports = exports
 
       const mod = await this.moduleRunner.cachedRequest(
         url,
@@ -433,6 +437,16 @@ export class VitestMocker {
     }
   }
 
+  public async mockedRequest(url: string, evaluatedNode: EvaluatedModuleNode, callstack: string[]): Promise<any> {
+    const mock = this.getDependencyMock(evaluatedNode.id)
+
+    if (!mock) {
+      return
+    }
+
+    return this.requestWithMockedModule(url, evaluatedNode, callstack, mock)
+  }
+
   public queueMock(
     id: string,
     importer: string,
@@ -459,7 +473,7 @@ export class VitestMocker {
 
 declare module 'vite/module-runner' {
   interface EvaluatedModuleNode {
-    mocked?: Record<string, any>
+    mockedExports?: Record<string, any>
   }
 }
 

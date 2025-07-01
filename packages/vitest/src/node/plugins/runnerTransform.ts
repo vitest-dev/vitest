@@ -20,10 +20,6 @@ export function ModuleRunnerTransform(): VitePlugin {
           environment.dev ??= {}
           environment.dev.moduleRunnerTransform = true
           environment.dev.preTransformRequests = false
-
-          // TODO: not sure how good of an idea this is,
-          // maybe it should only be applied to the client, and not all?
-          environment.consumer = 'server'
         }
       },
     },
