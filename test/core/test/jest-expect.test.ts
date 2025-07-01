@@ -147,6 +147,10 @@ describe('jest-expect', () => {
     expect(undefined).not.toEqual(expect.anything())
     expect({ a: 0, b: 0 }).toEqual(expect.objectContaining({ a: 0 }))
     expect({ a: 0, b: 0 }).not.toEqual(expect.objectContaining({ z: 0 }))
+    // objectContaining with symbol key
+    const symbolForObjectContaining = Symbol('symbolForObjectContaining')
+    expect({ [symbolForObjectContaining]: 0 }).toEqual(expect.objectContaining({ [symbolForObjectContaining]: 0 }))
+    expect({ [symbolForObjectContaining]: 0 }).not.toEqual(expect.objectContaining({ [symbolForObjectContaining]: 1 }))
     expect(0).toEqual(expect.any(Number))
     expect('string').toEqual(expect.any(String))
     expect('string').not.toEqual(expect.any(Number))
