@@ -3,9 +3,11 @@ import { render } from './utils'
 
 describe('toBeInViewport', () => {
   it('should work', async () => {
+    // Apply margin and width to small element, and padding to body and html because firefox's rendering causes a bit space between the element and the viewport
     const { container } = render(`
+      <style>body, html { padding: 30px; }</style>
       <div id="big" style="height: 10000px;"></div>
-      <div id="small">foo</div>
+      <div id="small" style="width: 50px; margin: 30px;">foo</div>
     `)
 
     await expect(container.querySelector('#big')).toBeInViewport()
