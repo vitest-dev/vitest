@@ -4,9 +4,10 @@ import type { TestProject } from '../project'
 import type { ResolveSnapshotPathHandlerContext } from '../types/config'
 import { mkdirSync } from 'node:fs'
 import { rename, stat, unlink, writeFile } from 'node:fs/promises'
+import { pathToFileURL } from 'node:url'
 import { dirname, join } from 'pathe'
+import { isWindows } from '../../utils/env'
 import { hash } from '../hash'
-import { isBuiltin } from 'node:module'
 
 const created = new Set()
 const promises = new Map<string, Promise<void>>()
@@ -38,6 +39,12 @@ export function createMethodsRPC(project: TestProject, options: MethodsOptions =
         return { externalize: '/@vite/client', type: 'module' }
       }
 
+      // TODO: what if it is a raw id? "name = 'vitest';import(name)"
+      const externals = await project._resolveExternals(environment)
+      if (externals?.includes(id)) {
+        return { externalize: normalizeIdToFile(id), type: 'module' }
+      }
+
       const result = await environment.fetchModule(id, importer, options).catch(handleRollupError)
 
       if (!cacheFs || !('code' in result)) {
@@ -50,7 +57,7 @@ export function createMethodsRPC(project: TestProject, options: MethodsOptions =
         return getCachedResult(result, cachedFsResults)
       }
       const dir = join(project.tmpDir, environmentName)
-      const name = hash('sha1', id, 'hex')
+      const name = hash('sha1', result.id, 'hex')
       const tmp = join(dir, name)
       if (!created.has(dir)) {
         mkdirSync(dir, { recursive: true })
@@ -69,7 +76,7 @@ export function createMethodsRPC(project: TestProject, options: MethodsOptions =
           .finally(() => promises.delete(tmp)),
       )
       await promises.get(tmp)
-      cachedFsResults.set(id, tmp)
+      cachedFsResults.set(result.id, tmp)
       return getCachedResult(result, cachedFsResults)
     },
     async resolve(id, importer, environmentName) {
@@ -155,10 +162,14 @@ export function createMethodsRPC(project: TestProject, options: MethodsOptions =
 }
 
 function getCachedResult(result: Extract<FetchResult, { code: string }>, cachedFsResults: Map<string, string>) {
+  const id = cachedFsResults.get(result.id)
+  if (!id) {
+    throw new Error(`The cached result was returned too early for ${result.id}.`)
+  }
   return {
     cached: true as const,
     file: result.file,
-    id: cachedFsResults.get(result.id)!,
+    id,
     url: result.url,
     invalidate: result.invalidate,
   }
@@ -222,4 +233,11 @@ async function atomicWriteFile(realFilePath: string, data: string): Promise<void
 const postfixRE = /[?#].*$/
 function cleanUrl(url: string): string {
   return url.replace(postfixRE, '')
+}
+
+function normalizeIdToFile(id: string) {
+  if (id.startsWith('/@fs/')) {
+    id = id.slice(isWindows ? 5 : 4)
+  }
+  return pathToFileURL(id).toString()
 }

@@ -37,10 +37,17 @@ export async function loadEnvironment(
     && environment.transformMode !== 'web'
     && environment.transformMode !== 'ssr'
   ) {
+    console.warn(`The Vitest environment ${environment.name} defines the "transformMode". This options was deprecated in Vitest 4 and will be removed in the next major version.`)
     throw new TypeError(
       `Environment "${name}" is not a valid environment. `
       + `Path "${packageId}" should export default object with a "transformMode" method equal to "ssr" or "web", received "${environment.transformMode}".`,
     )
+  }
+  if (environment.transformMode) {
+    // keep for backwards compat
+    environment.viteEnvironment ??= environment.transformMode === 'ssr'
+      ? 'ssr'
+      : 'client'
   }
   return environment
 }

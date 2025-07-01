@@ -20,6 +20,7 @@ export function ModuleRunnerTransform(): VitePlugin {
           environment.dev ??= {}
           environment.dev.moduleRunnerTransform = true
           environment.dev.preTransformRequests = false
+          environment.keepProcessEnv = true
         }
       },
     },

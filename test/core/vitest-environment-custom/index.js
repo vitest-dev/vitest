@@ -6,7 +6,7 @@ const log = debug('test:env')
 
 export default {
   name: 'custom',
-  transformMode: 'ssr',
+  viteEnvironment: 'ssr',
   setupVM({ custom }) {
     const context = vm.createContext({
       testEnvironment: 'custom',

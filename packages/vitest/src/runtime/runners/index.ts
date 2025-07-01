@@ -1,7 +1,7 @@
 import type { VitestRunner, VitestRunnerConstructor } from '@vitest/runner'
 import type { SerializedConfig } from '../config'
 import type { VitestModuleRunner } from '../moduleRunner/moduleRunner'
-import { resolve } from 'node:path'
+import { join, resolve } from 'node:path'
 import { takeCoverageInsideWorker } from '../../integrations/coverage'
 import { distDir } from '../../paths'
 import { rpc } from '../rpc'
@@ -15,7 +15,9 @@ async function getTestRunnerConstructor(
   moduleRunner: VitestModuleRunner,
 ): Promise<VitestRunnerConstructor> {
   if (!config.runner) {
-    const { VitestTestRunner, NodeBenchmarkRunner } = await moduleRunner.import(runnersFile)
+    const { VitestTestRunner, NodeBenchmarkRunner } = await moduleRunner.import(
+      join('/@fs/', runnersFile),
+    )
     return (
       config.mode === 'test' ? VitestTestRunner : NodeBenchmarkRunner
     ) as VitestRunnerConstructor
@@ -105,7 +107,7 @@ export async function resolveTestRunner(
       rpc().onAfterSuiteRun({
         coverage,
         testFiles: files.map(file => file.name).sort(),
-        transformMode: state.environment.transformMode,
+        environment: state.environment.viteEnvironment || state.environment.name,
         projectName: state.ctx.projectName,
       })
     }

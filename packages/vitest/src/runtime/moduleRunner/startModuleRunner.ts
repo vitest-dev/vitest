@@ -51,10 +51,6 @@ export async function startVitestModuleRunner(options: ContextExecutorOptions): 
       async fetchModule(id, importer, options) {
         const rawId = unwrapId(id)
 
-        if (isBuiltin(rawId) || rawId.startsWith(browserExternalId)) {
-          return { externalize: toBuiltin(rawId), type: 'builtin' }
-        }
-
         if (VitestMocker.pendingIds.length) {
           await moduleRunner.mocker.resolveMocks()
         }
@@ -69,6 +65,10 @@ export async function startVitestModuleRunner(options: ContextExecutorOptions): 
             invalidate: false,
             mockedModule: resolvedMock,
           }
+        }
+
+        if (isBuiltin(rawId) || rawId.startsWith(browserExternalId)) {
+          return { externalize: toBuiltin(rawId), type: 'builtin' }
         }
 
         const result = await rpc().fetch(

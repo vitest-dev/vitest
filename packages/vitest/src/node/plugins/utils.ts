@@ -140,6 +140,13 @@ export function getDefaultResolveOptions(): vite.ResolveOptions {
     conditions: getDefaultServerConditions(),
     external: [
       'vitest',
+      'vitest/runners',
+      'vitest/environments',
+      'vitest/workers',
+      'vitest/node',
+      'vitest/suite',
+      'vitest/snapshot',
+      'vitest/mocker',
       '@vitest/runner',
       '@vitest/mocker',
       '@vitest/spy',
