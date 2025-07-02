@@ -1,6 +1,6 @@
 import type { WorkerGlobalState } from '../../types/worker'
 import type { VitestModuleRunner } from '../moduleRunner/moduleRunner'
-import type { ContextExecutorOptions } from '../moduleRunner/startModuleRunner'
+import type { ContextModuleRunnerOptions } from '../moduleRunner/startModuleRunner'
 import { EvaluatedModules } from 'vite/module-runner'
 import { startVitestModuleRunner } from '../moduleRunner/startModuleRunner'
 import { provideWorkerState } from '../utils'
@@ -10,7 +10,7 @@ let _moduleRunner: VitestModuleRunner
 const evaluatedModules = new EvaluatedModules()
 const moduleExecutionInfo = new Map()
 
-async function startModuleRunner(options: ContextExecutorOptions) {
+async function startModuleRunner(options: ContextModuleRunnerOptions) {
   if (_moduleRunner) {
     return _moduleRunner
   }

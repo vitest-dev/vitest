@@ -20,17 +20,28 @@ export const AsyncFunction = async function () {}.constructor as typeof Function
 export interface VitestModuleEvaluatorOptions {
   interopDefault: boolean | undefined
   getCurrentTestFilepath: () => string | undefined
+  compiledFunctionArgumentsNames?: string[]
+  compiledFunctionArgumentsValues?: unknown[]
 }
 
 export class VitestModuleEvaluator implements ModuleEvaluator {
   public stubs: Record<string, any> = {}
   public env: ModuleRunnerImportMeta['env'] = createImportMetaEnvProxy()
 
+  private compiledFunctionArgumentsNames?: string[]
+  private compiledFunctionArgumentsValues: unknown[] = []
+
   constructor(
     private vm: VitestVmOptions | undefined,
     private options: VitestModuleEvaluatorOptions,
   ) {
     this.stubs = getDefaultRequestStubs(vm?.context)
+    if (options.compiledFunctionArgumentsNames) {
+      this.compiledFunctionArgumentsNames = options.compiledFunctionArgumentsNames
+    }
+    if (options.compiledFunctionArgumentsValues) {
+      this.compiledFunctionArgumentsValues = options.compiledFunctionArgumentsValues
+    }
   }
 
   async runExternalModule(file: string): Promise<any> {
@@ -182,6 +193,10 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
       'require',
     ]
 
+    if (this.compiledFunctionArgumentsNames) {
+      argumentsList.push(...this.compiledFunctionArgumentsNames)
+    }
+
     // add 'use strict' since ESM enables it by default
     const codeDefinition = `'use strict';async (${argumentsList.join(
       ',',
@@ -228,10 +243,14 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
       moduleProxy,
       cjsExports,
       require,
+
+      ...this.compiledFunctionArgumentsValues,
     )
   }
 
   private createRequire(filename: string) {
+    // \x00 is a rollup convention for virtual files,
+    // it is not allowed in actual file names
     if (filename.startsWith('\x00')) {
       return () => ({})
     }

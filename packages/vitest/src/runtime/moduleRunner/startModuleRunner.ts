@@ -4,8 +4,9 @@ import type { WorkerGlobalState } from '../../types/worker'
 import type { ExternalModulesExecutor } from '../external-executor'
 import fs from 'node:fs'
 import { isBuiltin } from 'node:module'
+import { isBareImport } from '@vitest/utils'
 import { listenForErrors } from './errorCatcher'
-import { unwrapId } from './moduleEvaluator'
+import { unwrapId, VitestModuleEvaluator } from './moduleEvaluator'
 import { VitestMocker } from './moduleMocker'
 import { VitestModuleRunner } from './moduleRunner'
 
@@ -14,21 +15,18 @@ const { readFileSync } = fs
 const browserExternalId = '__vite-browser-external'
 const browserExternalLength = browserExternalId.length + 1 // 1 is ":"
 
-export interface ExecuteOptions {
-  moduleDirectories?: string[]
-  state: WorkerGlobalState
-  context?: vm.Context
-  externalModulesExecutor?: ExternalModulesExecutor
-}
+export const VITEST_VM_CONTEXT_SYMBOL: string = '__vitest_vm_context__'
 
-export interface ContextExecutorOptions {
+export interface ContextModuleRunnerOptions {
   evaluatedModules: EvaluatedModules
+  mocker?: VitestMocker
+  evaluator?: VitestModuleEvaluator
   context?: vm.Context
   externalModulesExecutor?: ExternalModulesExecutor
   state: WorkerGlobalState
 }
 
-export async function startVitestModuleRunner(options: ContextExecutorOptions): Promise<VitestModuleRunner> {
+export async function startVitestModuleRunner(options: ContextModuleRunnerOptions): Promise<VitestModuleRunner> {
   const state = (): WorkerGlobalState =>
     // @ts-expect-error injected untyped global
     globalThis.__vitest_worker__ || options.state
@@ -45,8 +43,27 @@ export async function startVitestModuleRunner(options: ContextExecutorOptions): 
     return environment.viteEnvironment || environment.name
   }
 
+  const vm = options.context && options.externalModulesExecutor
+    ? {
+        context: options.context,
+        externalModulesExecutor: options.externalModulesExecutor,
+      }
+    : undefined
+
+  const evaluator = options.evaluator || new VitestModuleEvaluator(
+    vm,
+    {
+      get interopDefault() {
+        return state().config.deps.interopDefault
+      },
+      getCurrentTestFilepath: () => state().filepath,
+    },
+  )
+
   const moduleRunner: VitestModuleRunner = new VitestModuleRunner({
     evaluatedModules: options.evaluatedModules,
+    evaluator,
+    mocker: options.mocker,
     transport: {
       async fetchModule(id, importer, options) {
         const rawId = unwrapId(id)
@@ -71,17 +88,35 @@ export async function startVitestModuleRunner(options: ContextExecutorOptions): 
           return { externalize: toBuiltin(rawId), type: 'builtin' }
         }
 
-        const result = await rpc().fetch(
-          id,
-          importer,
-          environment(),
-          options,
-        )
-        if ('cached' in result) {
-          const code = readFileSync(result.id, 'utf-8')
-          return { code, ...result }
+        try {
+          const result = await rpc().fetch(
+            id,
+            importer,
+            environment(),
+            options,
+          )
+          if ('cached' in result) {
+            const code = readFileSync(result.id, 'utf-8')
+            return { code, ...result }
+          }
+          return result
         }
-        return result
+        catch (cause: any) {
+          // rethrow vite error if it cannot load the module because it's not resolved
+          if (
+            (typeof cause === 'object' && cause.code === 'ERR_LOAD_URL')
+            || (typeof cause?.message === 'string' && cause.message.includes('Failed to load url'))
+          ) {
+            const error = new Error(
+              `Cannot find ${isBareImport(id) ? 'package' : 'module'} '${id}'${importer ? ` imported from '${importer}'` : ''}`,
+              { cause },
+            ) as Error & { code: string }
+            error.code = 'ERR_MODULE_NOT_FOUND'
+            throw error
+          }
+
+          throw cause
+        }
       },
       resolveId(id, importer) {
         return rpc().resolve(
@@ -92,12 +127,7 @@ export async function startVitestModuleRunner(options: ContextExecutorOptions): 
       },
     },
     getWorkerState: state,
-    vm: options.context && options.externalModulesExecutor
-      ? {
-          context: options.context,
-          externalModulesExecutor: options.externalModulesExecutor,
-        }
-      : undefined,
+    vm,
   })
 
   await moduleRunner.import('/@vite/env')

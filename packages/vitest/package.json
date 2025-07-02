@@ -58,6 +58,10 @@
       "types": "./dist/browser.d.ts",
       "default": "./dist/browser.js"
     },
+    "./internal/module-runner": {
+      "types": "./dist/module-runner.d.ts",
+      "default": "./dist/module-runner.js"
+    },
     "./runners": {
       "types": "./dist/runners.d.ts",
       "default": "./dist/runners.js"
@@ -156,6 +160,7 @@
     "@vitest/utils": "workspace:*",
     "chai": "catalog:",
     "debug": "catalog:",
+    "es-module-lexer": "^1.7.0",
     "expect-type": "^1.2.1",
     "magic-string": "catalog:",
     "pathe": "catalog:",

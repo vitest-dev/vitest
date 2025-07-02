@@ -72,6 +72,19 @@ export default defineConfig({
     setupFiles: [
       './test/setup.ts',
     ],
+    server: {
+      deps: {
+        external: [
+          'tinyspy',
+          /src\/external/,
+          /esm\/esm/,
+          /packages\/web-worker/,
+          /\.wasm$/,
+          /\/wasm-bindgen-no-cyclic\/index_bg.js/,
+        ],
+        inline: ['inline-lib'],
+      },
+    },
     includeTaskLocation: true,
     reporters: process.env.GITHUB_ACTIONS
       ? ['default', 'github-actions']

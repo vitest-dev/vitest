@@ -264,6 +264,10 @@ export interface InlineConfig {
    */
   deps?: DepsOptions
 
+  server?: {
+    deps?: ServerDepsOptions
+  }
+
   /**
    * Base directory to scan for the test files
    *
@@ -1062,6 +1066,31 @@ type NonProjectOptions =
   | 'minWorkers'
   | 'fileParallelism'
   | 'watchTriggerPatterns'
+
+export interface ServerDepsOptions {
+  /**
+   * Externalize means that Vite will bpass the package to native Node.
+   *
+   * Externalized dependencies will not be applied Vite's transformers and resolvers.
+   * And does not support HMR on reload.
+   *
+   * Typically, packages under `node_modules` are externalized.
+   */
+  external?: (string | RegExp)[]
+  /**
+   * Vite will process inlined modules.
+   *
+   * This could be helpful to handle packages that ship `.js` in ESM format (that Node can't handle).
+   *
+   * If `true`, every dependency will be inlined
+   */
+  inline?: (string | RegExp)[] | true
+  /**
+   * Try to guess the CJS version of a package when it's invalid ESM
+   * @default false
+   */
+  fallbackCJS?: boolean
+}
 
 export type ProjectConfig = Omit<
   InlineConfig,

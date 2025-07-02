@@ -1,5 +1,5 @@
 import type { GlobOptions } from 'tinyglobby'
-import type { DevEnvironment, ModuleNode, TransformResult, ViteDevServer, InlineConfig as ViteInlineConfig } from 'vite'
+import type { ModuleNode, TransformResult, ViteDevServer, InlineConfig as ViteInlineConfig } from 'vite'
 import type { ModuleRunner } from 'vite/module-runner'
 import type { Typechecker } from '../typecheck/typechecker'
 import type { ProvidedContext } from '../types/general'
@@ -16,11 +16,11 @@ import type {
   TestProjectInlineConfiguration,
   UserConfig,
 } from './types/config'
-import { existsSync, promises as fs, readFileSync } from 'node:fs'
+import { promises as fs, readFileSync } from 'node:fs'
 import { rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
-import { cleanUrl, deepMerge, nanoid, slash } from '@vitest/utils'
+import { deepMerge, nanoid, slash } from '@vitest/utils'
 import { isAbsolute, join, relative } from 'pathe'
 import pm from 'picomatch'
 import { glob } from 'tinyglobby'
@@ -33,6 +33,7 @@ import { CoverageTransform } from './plugins/coverageTransform'
 import { MocksPlugins } from './plugins/mocks'
 import { WorkspaceVitestPlugin } from './plugins/workspace'
 import { getFilePoolName } from './pool'
+import { VitestResolver } from './resolver'
 import { TestSpecification } from './spec'
 import { createViteServer } from './vite'
 
@@ -65,6 +66,7 @@ export class TestProject {
   /** @internal */ _config?: ResolvedConfig
   /** @internal */ _vite?: ViteDevServer
   /** @internal */ _hash?: string
+  /** @internal */ _resolver!: VitestResolver
 
   private runner!: ModuleRunner
 
@@ -76,10 +78,6 @@ export class TestProject {
   private _globalSetups?: GlobalSetupFile[]
   private _provided: ProvidedContext = {} as any
 
-  // TODO: have an abstraction
-  /** @internal */
-  _external: Record<string, string[]> = {}
-
   constructor(
     /** @deprecated */
     public path: string | number,
@@ -89,32 +87,6 @@ export class TestProject {
     this.vitest = vitest
     this.ctx = vitest
     this.globalConfig = vitest.config
-  }
-
-  // TODO: have an abstraction
-  /** @internal */
-  async _resolveExternals(environment: DevEnvironment): Promise<string[] | undefined> {
-    if (environment.config.consumer === 'server') {
-      return undefined
-    }
-    if (environment.name in this._external) {
-      return this._external[environment.name]
-    }
-    const external = environment.config.resolve.external
-    if (external === true) {
-      return undefined
-    }
-    // TODO: cache promise for environment
-    const externals = await Promise.all(
-      external.map(async (name) => {
-        const resolved = await environment.pluginContainer.resolveId(name)
-        if (resolved) {
-          return normalizeResolvedIdToUrl(environment, resolved.id)
-        }
-        return null
-      }),
-    )
-    return (this._external[environment.name] = externals.filter(n => n != null))
   }
 
   /**
@@ -666,6 +638,7 @@ export class TestProject {
 
     this.closingPromise = undefined
 
+    this._resolver = new VitestResolver(server.config.cacheDir, this._config)
     this._vite = server
 
     this.runner = createServerModuleRunner(server.environments.__vitest__, {
@@ -734,6 +707,10 @@ export class TestProject {
     project.runner = vitest.runner
     project._vite = vitest.server
     project._config = vitest.config
+    project._resolver = new VitestResolver(
+      vitest.vite.config.cacheDir,
+      vitest.config,
+    )
     project._setHash()
     project._provideObject(vitest.config.provide)
     return project
@@ -747,6 +724,7 @@ export class TestProject {
     )
     clone.runner = parent.runner
     clone._vite = parent._vite
+    clone._resolver = parent._resolver
     clone._config = config
     clone._setHash()
     clone._parent = parent
@@ -819,64 +797,4 @@ function generateHash(str: string): string {
     hash = hash & hash // Convert to 32bit integer
   }
   return `${hash}`
-}
-
-// TODO: have abstraction
-// this is copy pasted from vite
-function normalizeResolvedIdToUrl(
-  environment: DevEnvironment,
-  resolvedId: string,
-): string {
-  const root = environment.config.root
-  const depsOptimizer = environment.depsOptimizer
-
-  let url: string
-
-  // normalize all imports into resolved URLs
-  // e.g. `import 'foo'` -> `import '/@fs/.../node_modules/foo/index.js'`
-  if (resolvedId.startsWith(withTrailingSlash(root))) {
-    // in root: infer short absolute path from root
-    url = resolvedId.slice(root.length)
-  }
-  else if (
-    depsOptimizer?.isOptimizedDepFile(resolvedId)
-    // vite-plugin-react isn't following the leading \0 virtual module convention.
-    // This is a temporary hack to avoid expensive fs checks for React apps.
-    // We'll remove this as soon we're able to fix the react plugins.
-    || (resolvedId !== '/@react-refresh'
-      && path.isAbsolute(resolvedId)
-      && existsSync(cleanUrl(resolvedId)))
-  ) {
-    // an optimized deps may not yet exists in the filesystem, or
-    // a regular file exists but is out of root: rewrite to absolute /@fs/ paths
-    url = path.posix.join('/@fs/', resolvedId)
-  }
-  else {
-    url = resolvedId
-  }
-
-  // if the resolved id is not a valid browser import specifier,
-  // prefix it to make it valid. We will strip this before feeding it
-  // back into the transform pipeline
-  if (url[0] !== '.' && url[0] !== '/') {
-    url = wrapId(resolvedId)
-  }
-
-  return url
-}
-
-export function withTrailingSlash(path: string): string {
-  if (path[path.length - 1] !== '/') {
-    return `${path}/`
-  }
-  return path
-}
-
-export const VALID_ID_PREFIX = `/@id/`
-export const NULL_BYTE_PLACEHOLDER = `__x00__`
-
-export function wrapId(id: string): string {
-  return id.startsWith(VALID_ID_PREFIX)
-    ? id
-    : VALID_ID_PREFIX + id.replace('\0', NULL_BYTE_PLACEHOLDER)
 }

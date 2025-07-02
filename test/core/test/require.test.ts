@@ -1,6 +1,5 @@
 // @vitest-environment jsdom
 
-// import { KNOWN_ASSET_RE } from 'vite-node/constants'
 import { describe, expect, it } from 'vitest'
 
 const _require = require

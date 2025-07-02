@@ -82,10 +82,9 @@ test('dynamic import has null prototype', async () => {
 test('dynamic import throws an error', async () => {
   const path = './some-unknown-path'
   const imported = import(path)
-  // TODO: previously was "Cannot find module '\.\/some-unknown-path' imported" -- why?
-  await expect(imported).rejects.toThrowError(/Failed to load url/)
+  await expect(imported).rejects.toThrowError(`Cannot find module '${resolve(import.meta.dirname, './some-unknown-path')}' imported from '${resolve(import.meta.filename)}'`)
   // @ts-expect-error path does not exist
-  await expect(() => import('./some-unknown-path')).rejects.toThrowError(/Failed to load url/)
+  await expect(() => import('./some-unknown-path')).rejects.toThrowError(`Cannot find module '${resolve(import.meta.dirname, './some-unknown-path')}' imported from '${resolve(import.meta.filename)}'`)
 })
 
 test('can import @vite/client', async () => {

@@ -138,23 +138,6 @@ export function getDefaultResolveOptions(): vite.ResolveOptions {
     // same for `module` condition and Vite 5 doesn't even allow excluding it,
     // but now it's possible since Vite 6.
     conditions: getDefaultServerConditions(),
-    external: [
-      'vitest',
-      'vitest/runners',
-      'vitest/environments',
-      'vitest/workers',
-      'vitest/node',
-      'vitest/suite',
-      'vitest/snapshot',
-      'vitest/mocker',
-      '@vitest/runner',
-      '@vitest/mocker',
-      '@vitest/spy',
-      '@vitest/utils',
-      '@vitest/expect',
-      '@vitest/snapshot',
-      '@vitest/web-worker',
-    ],
   }
 }
 

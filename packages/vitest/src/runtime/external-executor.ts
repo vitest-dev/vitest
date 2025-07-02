@@ -4,15 +4,15 @@ import type { FileMap } from './vm/file-map'
 import type { VMModule } from './vm/types'
 import fs from 'node:fs'
 import { isBuiltin } from 'node:module'
-import { dirname } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { isBareImport } from '@vitest/utils'
-import { extname, join, normalize } from 'pathe'
+import { findNearestPackageData } from '@vitest/utils/resolver'
+import { extname, normalize } from 'pathe'
 import { CommonjsExecutor } from './vm/commonjs-executor'
 import { EsmExecutor } from './vm/esm-executor'
 import { ViteExecutor } from './vm/vite-executor'
 
-const { existsSync, statSync } = fs
+const { existsSync } = fs
 
 // always defined when we use vm pool
 const nativeResolve = import.meta.resolve!
@@ -120,41 +120,6 @@ export class ExternalModulesExecutor {
     return nativeResolve(specifier, parent)
   }
 
-  private findNearestPackageData(basedir: string): {
-    type?: 'module' | 'commonjs'
-  } {
-    const originalBasedir = basedir
-    const packageCache = this.options.packageCache
-    while (basedir) {
-      const cached = getCachedData(packageCache, basedir, originalBasedir)
-      if (cached) {
-        return cached
-      }
-
-      const pkgPath = join(basedir, 'package.json')
-      try {
-        if (statSync(pkgPath, { throwIfNoEntry: false })?.isFile()) {
-          const pkgData = JSON.parse(this.fs.readFile(pkgPath))
-
-          if (packageCache) {
-            setCacheData(packageCache, pkgData, basedir, originalBasedir)
-          }
-
-          return pkgData
-        }
-      }
-      catch {}
-
-      const nextBasedir = dirname(basedir)
-      if (nextBasedir === basedir) {
-        break
-      }
-      basedir = nextBasedir
-    }
-
-    return {}
-  }
-
   private getModuleInformation(identifier: string): ModuleInformation {
     if (identifier.startsWith('data:')) {
       return { type: 'data', url: identifier, path: identifier }
@@ -194,7 +159,7 @@ export class ExternalModulesExecutor {
       type = 'wasm'
     }
     else {
-      const pkgData = this.findNearestPackageData(normalize(pathUrl))
+      const pkgData = findNearestPackageData(normalize(pathUrl))
       type = pkgData.type === 'module' ? 'module' : 'commonjs'
     }
 
@@ -254,51 +219,5 @@ export class ExternalModulesExecutor {
       }
     }
     return this.#networkSupported
-  }
-}
-
-export function getCachedData<T>(
-  cache: Map<string, T>,
-  basedir: string,
-  originalBasedir: string,
-): NonNullable<T> | undefined {
-  const pkgData = cache.get(getFnpdCacheKey(basedir))
-  if (pkgData) {
-    traverseBetweenDirs(originalBasedir, basedir, (dir) => {
-      cache.set(getFnpdCacheKey(dir), pkgData)
-    })
-    return pkgData
-  }
-}
-
-export function setCacheData<T>(
-  cache: Map<string, T>,
-  data: T,
-  basedir: string,
-  originalBasedir: string,
-): void {
-  cache.set(getFnpdCacheKey(basedir), data)
-  traverseBetweenDirs(originalBasedir, basedir, (dir) => {
-    cache.set(getFnpdCacheKey(dir), data)
-  })
-}
-
-function getFnpdCacheKey(basedir: string) {
-  return `fnpd_${basedir}`
-}
-
-/**
- * Traverse between `longerDir` (inclusive) and `shorterDir` (exclusive) and call `cb` for each dir.
- * @param longerDir Longer dir path, e.g. `/User/foo/bar/baz`
- * @param shorterDir Shorter dir path, e.g. `/User/foo`
- */
-function traverseBetweenDirs(
-  longerDir: string,
-  shorterDir: string,
-  cb: (dir: string) => void,
-) {
-  while (longerDir !== shorterDir) {
-    cb(longerDir)
-    longerDir = dirname(longerDir)
   }
 }

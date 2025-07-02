@@ -7,6 +7,7 @@ import timers from 'node:timers'
 import timersPromises from 'node:timers/promises'
 import util from 'node:util'
 import { collectTests, startTests } from '@vitest/runner'
+import { KNOWN_ASSET_TYPES } from '@vitest/utils'
 import { setupChaiConfig } from '../integrations/chai/config'
 import {
   startCoverageInsideWorker,
@@ -14,7 +15,6 @@ import {
 } from '../integrations/coverage'
 import { resolveSnapshotEnvironment } from '../integrations/snapshot/environments/resolveSnapshotEnvironment'
 import * as VitestIndex from '../public/index'
-import { KNOWN_ASSET_TYPES } from './constants'
 import { closeInspector } from './inspector'
 import { resolveTestRunner } from './runners'
 import { setupCommonEnv } from './setup-common'

@@ -105,6 +105,10 @@ export class VitestMocker {
   }
 
   public async initializeSpyModule(): Promise<void> {
+    if (this.spyModule) {
+      return
+    }
+
     this.spyModule = await this.moduleRunner.import(spyModulePath)
   }
 
@@ -144,7 +148,11 @@ export class VitestMocker {
     return error
   }
 
-  private async resolveId(rawId: string, importer: string) {
+  public async resolveId(rawId: string, importer?: string): Promise<{
+    id: string
+    url: string
+    external: string | null
+  }> {
     const result = await this.options.resolveId(rawId, importer)
     if (!result) {
       const id = normalizeModuleId(rawId)

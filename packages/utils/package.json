@@ -28,6 +28,10 @@
       "types": "./dist/ast.d.ts",
       "default": "./dist/ast.js"
     },
+    "./resolver": {
+      "types": "./dist/resolver.d.ts",
+      "default": "./dist/resolver.js"
+    },
     "./error": {
       "types": "./dist/error.d.ts",
       "default": "./dist/error.js"

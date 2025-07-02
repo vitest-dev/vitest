@@ -1,12 +1,12 @@
-import type { FetchResult } from 'vite'
+import type { DevEnvironment, FetchResult } from 'vite'
 import type { RuntimeRPC } from '../../types/rpc'
 import type { TestProject } from '../project'
 import type { ResolveSnapshotPathHandlerContext } from '../types/config'
-import { mkdirSync } from 'node:fs'
+import { existsSync, mkdirSync } from 'node:fs'
 import { rename, stat, unlink, writeFile } from 'node:fs/promises'
-import { pathToFileURL } from 'node:url'
+import path from 'node:path'
+import { cleanUrl, isExternalUrl, unwrapId, withTrailingSlash, wrapId } from '@vitest/utils'
 import { dirname, join } from 'pathe'
-import { isWindows } from '../../utils/env'
 import { hash } from '../hash'
 
 const created = new Set()
@@ -24,7 +24,7 @@ export function createMethodsRPC(project: TestProject, options: MethodsOptions =
   const cachedFsResults = new Map<string, string>()
   return {
     async fetch(
-      id,
+      url,
       importer,
       environmentName,
       options,
@@ -34,18 +34,41 @@ export function createMethodsRPC(project: TestProject, options: MethodsOptions =
         throw new Error(`The environment ${environmentName} was not defined in the Vite config.`)
       }
 
-      if (id === '/@vite/client' || id === '@vite/client') {
+      if (url === '/@vite/client' || url === '@vite/client') {
         // this will be stubbed
         return { externalize: '/@vite/client', type: 'module' }
       }
 
-      // TODO: what if it is a raw id? "name = 'vitest';import(name)"
-      const externals = await project._resolveExternals(environment)
-      if (externals?.includes(id)) {
-        return { externalize: normalizeIdToFile(id), type: 'module' }
+      const isFileUrl = url.startsWith('file://')
+      const willBeExternalizedByVite
+        // is external fs module
+        = (!isFileUrl && importer && url[0] !== '.' && url[0] !== '/')
+        // data
+          || url.startsWith('data:')
+          || (isExternalUrl(url) && !isFileUrl)
+
+      // We don't want to create a new module node if it will be externalized,
+      // so we copy paste the Vite resolution logic.
+      // In a perfect world we can execute our own cache related code inside fetchModule
+      // or just NOT have our own externalization logic <-- pls
+      if (!willBeExternalizedByVite) {
+        const mod = await environment.moduleGraph.ensureEntryFromUrl(unwrapId(url))
+        const cached = !!mod.transformResult
+
+        // if url is already cached, we can just confirm it's also cached on the server
+        if (options?.cached && cached) {
+          return { cache: true }
+        }
+
+        if (mod.file) {
+          const externalize = await project._resolver.shouldExternalize(mod.file)
+          if (externalize) {
+            return { externalize, type: 'module' }
+          }
+        }
       }
 
-      const result = await environment.fetchModule(id, importer, options).catch(handleRollupError)
+      const result = await environment.fetchModule(url, importer, options).catch(handleRollupError)
 
       if (!cacheFs || !('code' in result)) {
         return result
@@ -90,10 +113,7 @@ export function createMethodsRPC(project: TestProject, options: MethodsOptions =
       }
       return {
         file: cleanUrl(resolved.id),
-        // TODO: this is incorrect, there are edge cases
-        url: resolved.id.startsWith(environment.config.root)
-          ? resolved.id.slice(environment.config.root.length)
-          : resolved.id,
+        url: normalizeResolvedIdToUrl(environment, resolved.id),
         id: resolved.id,
       }
     },
@@ -230,14 +250,46 @@ async function atomicWriteFile(realFilePath: string, data: string): Promise<void
   }
 }
 
-const postfixRE = /[?#].*$/
-function cleanUrl(url: string): string {
-  return url.replace(postfixRE, '')
-}
+// TODO: have abstraction
+// this is copy pasted from vite
+function normalizeResolvedIdToUrl(
+  environment: DevEnvironment,
+  resolvedId: string,
+): string {
+  const root = environment.config.root
+  const depsOptimizer = environment.depsOptimizer
 
-function normalizeIdToFile(id: string) {
-  if (id.startsWith('/@fs/')) {
-    id = id.slice(isWindows ? 5 : 4)
+  let url: string
+
+  // normalize all imports into resolved URLs
+  // e.g. `import 'foo'` -> `import '/@fs/.../node_modules/foo/index.js'`
+  if (resolvedId.startsWith(withTrailingSlash(root))) {
+    // in root: infer short absolute path from root
+    url = resolvedId.slice(root.length)
   }
-  return pathToFileURL(id).toString()
+  else if (
+    depsOptimizer?.isOptimizedDepFile(resolvedId)
+    // vite-plugin-react isn't following the leading \0 virtual module convention.
+    // This is a temporary hack to avoid expensive fs checks for React apps.
+    // We'll remove this as soon we're able to fix the react plugins.
+    || (resolvedId !== '/@react-refresh'
+      && path.isAbsolute(resolvedId)
+      && existsSync(cleanUrl(resolvedId)))
+  ) {
+    // an optimized deps may not yet exists in the filesystem, or
+    // a regular file exists but is out of root: rewrite to absolute /@fs/ paths
+    url = path.posix.join('/@fs/', resolvedId)
+  }
+  else {
+    url = resolvedId
+  }
+
+  // if the resolved id is not a valid browser import specifier,
+  // prefix it to make it valid. We will strip this before feeding it
+  // back into the transform pipeline
+  if (url[0] !== '.' && url[0] !== '/') {
+    url = wrapId(resolvedId)
+  }
+
+  return url
 }

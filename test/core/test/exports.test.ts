@@ -47,7 +47,6 @@ it('exports snapshot', async ({ skip, task }) => {
           "defaultInclude": "object",
           "defineConfig": "function",
           "defineProject": "function",
-          "extraInlineDeps": "object",
           "mergeConfig": "function",
         },
         "./coverage": {
@@ -74,6 +73,13 @@ it('exports snapshot', async ({ skip, task }) => {
           "stopCoverageInsideWorker": "function",
           "stringify": "function",
           "takeCoverageInsideWorker": "function",
+        },
+        "./internal/module-runner": {
+          "VITEST_VM_CONTEXT_SYMBOL": "string",
+          "VitestModuleEvaluator": "function",
+          "VitestModuleRunner": "function",
+          "getWorkerState": "function",
+          "startVitestModuleRunner": "function",
         },
         "./mocker": {
           "AutomockedModule": "function",
@@ -198,7 +204,6 @@ it('exports snapshot', async ({ skip, task }) => {
             "defaultInclude": "object",
             "defineConfig": "function",
             "defineProject": "function",
-            "extraInlineDeps": "object",
             "mergeConfig": "function",
           },
           "./coverage": {
@@ -225,6 +230,13 @@ it('exports snapshot', async ({ skip, task }) => {
             "stopCoverageInsideWorker": "function",
             "stringify": "function",
             "takeCoverageInsideWorker": "function",
+          },
+          "./internal/module-runner": {
+            "VITEST_VM_CONTEXT_SYMBOL": "string",
+            "VitestModuleEvaluator": "function",
+            "VitestModuleRunner": "function",
+            "getWorkerState": "function",
+            "startVitestModuleRunner": "function",
           },
           "./mocker": {
             "AutomockedModule": "function",

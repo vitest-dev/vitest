@@ -4,8 +4,8 @@ import type { HotPayload } from 'vite'
 import type { EvaluatedModuleNode, EvaluatedModules, FetchFunction, SSRImportMetadata } from 'vite/module-runner'
 import type { WorkerGlobalState } from '../../types/worker'
 import type { ExternalModulesExecutor } from '../external-executor'
+import type { VitestModuleEvaluator } from './moduleEvaluator'
 import { ModuleRunner } from 'vite/module-runner'
-import { VitestModuleEvaluator } from './moduleEvaluator'
 import { VitestMocker } from './moduleMocker'
 
 // @ts-expect-error overriding private method
@@ -18,21 +18,11 @@ export class VitestModuleRunner extends ModuleRunner {
       {
         transport,
         hmr: false,
-        evaluatedModules: options.getWorkerState().evaluatedModules,
+        evaluatedModules: options.evaluatedModules,
       },
-      new VitestModuleEvaluator(
-        options.vm,
-        {
-          get interopDefault() {
-            return options.getWorkerState().config.deps.interopDefault
-          },
-          getCurrentTestFilepath() {
-            return options.getWorkerState().filepath
-          },
-        },
-      ),
+      options.evaluator,
     )
-    this.mocker = new VitestMocker(this, {
+    this.mocker = options.mocker || new VitestMocker(this, {
       resolveId: options.transport.resolveId,
       get root() {
         return options.getWorkerState().config.root
@@ -109,15 +99,33 @@ export class VitestModuleRunner extends ModuleRunner {
     return this._cachedRequest(url, mod, callstack, metadata)
   }
 
-  // async directImport(url: string, callstack: string[] = []): Promise<any> {
-  //   const module = await (this as any).cachedModule(url) /** TODO: private method */
-  //   return this.directRequest(url, module, callstack)
-  // }
+  /** @internal */
+  public _invalidateSubTreeById(ids: string[], invalidated = new Set<string>()): void {
+    for (const id of ids) {
+      if (invalidated.has(id)) {
+        continue
+      }
+      const node = this.evaluatedModules.getModuleById(id)
+      if (!node) {
+        continue
+      }
+      invalidated.add(id)
+      const subIds = Array.from(this.evaluatedModules.idToModuleMap)
+        .filter(([, mod]) => mod.importers.has(id))
+        .map(([key]) => key)
+      if (subIds.length) {
+        this._invalidateSubTreeById(subIds, invalidated)
+      }
+      this.evaluatedModules.invalidateModule(node)
+    }
+  }
 }
 
 export interface VitestModuleRunnerOptions {
   transport: VitestTransportOptions
+  evaluator: VitestModuleEvaluator
   evaluatedModules: EvaluatedModules
+  mocker?: VitestMocker
   getWorkerState: () => WorkerGlobalState
   vm?: VitestVmOptions
 }
@@ -127,7 +135,7 @@ export interface VitestVmOptions {
   externalModulesExecutor: ExternalModulesExecutor
 }
 
-interface VitestTransportOptions {
+export interface VitestTransportOptions {
   fetchModule: FetchFunction
   resolveId: (id: string, importer?: string) => Promise<{
     id: string
