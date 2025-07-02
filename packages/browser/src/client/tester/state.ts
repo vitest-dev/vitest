@@ -32,6 +32,7 @@ const state: WorkerGlobalState = {
   },
   onCleanup: fn => getBrowserState().cleanups.push(fn),
   evaluatedModules: getBrowserState().evaluatedModules,
+  resolvingModules: getBrowserState().resolvingModules,
   moduleExecutionInfo: new Map(),
   rpc: null as any,
   durations: {

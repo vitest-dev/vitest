@@ -65,6 +65,7 @@ export function ensureAwaited<T>(promise: (error?: Error) => Promise<T>): Promis
 export interface BrowserRunnerState {
   files: string[]
   runningFiles: string[]
+  resolvingModules: Set<string>
   evaluatedModules: EvaluatedModules
   config: SerializedConfig
   provider: string

@@ -36,6 +36,7 @@ export interface WorkerGlobalState {
   environmentTeardownRun?: boolean
   onCancel: Promise<CancelReason>
   evaluatedModules: EvaluatedModules
+  resolvingModules: Set<string>
   moduleExecutionInfo: Map<string, any>
   onCleanup: (listener: () => unknown) => void
   providedContext: Record<string, any>

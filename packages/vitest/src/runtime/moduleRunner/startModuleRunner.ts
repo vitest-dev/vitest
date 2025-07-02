@@ -66,29 +66,32 @@ export async function startVitestModuleRunner(options: ContextModuleRunnerOption
     mocker: options.mocker,
     transport: {
       async fetchModule(id, importer, options) {
+        const resolvingModules = state().resolvingModules
+
         const rawId = unwrapId(id)
-
-        if (VitestMocker.pendingIds.length) {
-          await moduleRunner.mocker.resolveMocks()
-        }
-
-        const resolvedMock = moduleRunner.mocker.getDependencyMock(rawId)
-        if (resolvedMock) {
-          return {
-            code: '',
-            file: null,
-            id,
-            url: id,
-            invalidate: false,
-            mockedModule: resolvedMock,
-          }
-        }
-
-        if (isBuiltin(rawId) || rawId.startsWith(browserExternalId)) {
-          return { externalize: toBuiltin(rawId), type: 'builtin' }
-        }
+        resolvingModules.add(rawId)
 
         try {
+          if (VitestMocker.pendingIds.length) {
+            await moduleRunner.mocker.resolveMocks()
+          }
+
+          const resolvedMock = moduleRunner.mocker.getDependencyMock(rawId)
+          if (resolvedMock) {
+            return {
+              code: '',
+              file: null,
+              id,
+              url: id,
+              invalidate: false,
+              mockedModule: resolvedMock,
+            }
+          }
+
+          if (isBuiltin(rawId) || rawId.startsWith(browserExternalId)) {
+            return { externalize: toBuiltin(rawId), type: 'builtin' }
+          }
+
           const result = await rpc().fetch(
             id,
             importer,
@@ -104,8 +107,9 @@ export async function startVitestModuleRunner(options: ContextModuleRunnerOption
         catch (cause: any) {
           // rethrow vite error if it cannot load the module because it's not resolved
           if (
-            (typeof cause === 'object' && cause.code === 'ERR_LOAD_URL')
+            (typeof cause === 'object' && cause != null && cause.code === 'ERR_LOAD_URL')
             || (typeof cause?.message === 'string' && cause.message.includes('Failed to load url'))
+            || (typeof cause?.message === 'string' && cause.message.startsWith('Cannot find module \''))
           ) {
             const error = new Error(
               `Cannot find ${isBareImport(id) ? 'package' : 'module'} '${id}'${importer ? ` imported from '${importer}'` : ''}`,
@@ -116,6 +120,9 @@ export async function startVitestModuleRunner(options: ContextModuleRunnerOption
           }
 
           throw cause
+        }
+        finally {
+          resolvingModules.delete(rawId)
         }
       },
       resolveId(id, importer) {

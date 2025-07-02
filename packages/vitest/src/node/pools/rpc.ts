@@ -60,8 +60,8 @@ export function createMethodsRPC(project: TestProject, options: MethodsOptions =
           return { cache: true }
         }
 
-        if (mod.file) {
-          const externalize = await project._resolver.shouldExternalize(mod.file)
+        if (mod.id) {
+          const externalize = await project._resolver.shouldExternalize(mod.id)
           if (externalize) {
             return { externalize, type: 'module' }
           }

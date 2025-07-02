@@ -30,6 +30,8 @@ if (isChildProcess()) {
   }
 }
 
+const resolvingModules = new Set<string>()
+
 // this is what every pool executes when running tests
 async function execute(method: 'run' | 'collect', ctx: ContextRPC) {
   disposeInternalListeners()
@@ -75,14 +77,12 @@ async function execute(method: 'run' | 'collect', ctx: ContextRPC) {
 
     const beforeEnvironmentTime = performance.now()
     const environment = await loadEnvironment(ctx, rpc)
-    if (ctx.environment.transformMode) {
-      environment.transformMode = ctx.environment.transformMode
-    }
 
     const state = {
       ctx,
       // here we create a new one, workers can reassign this if they need to keep it non-isolated
       evaluatedModules: new EvaluatedModules(),
+      resolvingModules,
       moduleExecutionInfo: new Map(),
       config: ctx.config,
       onCancel,
