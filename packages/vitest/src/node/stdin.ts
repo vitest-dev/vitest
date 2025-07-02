@@ -121,12 +121,7 @@ export function registerConsoleShortcuts(
     if (name === 'b') {
       await Promise.all(ctx.projects.map(async (project) => {
         if (project.browser) {
-          ctx._browserSessions.sessionIds.clear()
-          project.browser.state.orchestrators.forEach((orchestrator) => {
-            orchestrator.cleanupTesters()
-            orchestrator.$close()
-          })
-          project.browser.state.orchestrators.clear()
+          await project.browser.provider?.close()
           await project.browser.close()
           delete project.browser
         }
