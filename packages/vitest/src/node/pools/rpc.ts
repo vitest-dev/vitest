@@ -88,6 +88,7 @@ export function createMethodsRPC(project: TestProject, options: MethodsOptions =
       }
       if (promises.has(tmp)) {
         await promises.get(tmp)
+        cachedFsResults.set(result.id, tmp)
         return getCachedResult(result, cachedFsResults)
       }
       promises.set(
@@ -182,14 +183,15 @@ export function createMethodsRPC(project: TestProject, options: MethodsOptions =
 }
 
 function getCachedResult(result: Extract<FetchResult, { code: string }>, cachedFsResults: Map<string, string>) {
-  const id = cachedFsResults.get(result.id)
-  if (!id) {
+  const tmp = cachedFsResults.get(result.id)
+  if (!tmp) {
     throw new Error(`The cached result was returned too early for ${result.id}.`)
   }
   return {
     cached: true as const,
     file: result.file,
-    id,
+    id: result.id,
+    tmp,
     url: result.url,
     invalidate: result.invalidate,
   }

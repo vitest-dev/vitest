@@ -7,6 +7,7 @@ import type { AfterSuiteRunMeta, UserConsoleLog } from './general'
 export interface RuntimeRPC {
   fetch: (id: string, importer: string | undefined, environment: string, options?: FetchFunctionOptions) => Promise<FetchResult | {
     cached: true
+    tmp: string
     id: string
     file: string | null
     url: string

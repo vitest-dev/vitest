@@ -99,7 +99,7 @@ export async function startVitestModuleRunner(options: ContextModuleRunnerOption
             options,
           )
           if ('cached' in result) {
-            const code = readFileSync(result.id, 'utf-8')
+            const code = readFileSync(result.tmp, 'utf-8')
             return { code, ...result }
           }
           return result
