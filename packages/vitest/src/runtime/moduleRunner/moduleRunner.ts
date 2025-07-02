@@ -23,6 +23,7 @@ export class VitestModuleRunner extends ModuleRunner {
       options.evaluator,
     )
     this.mocker = options.mocker || new VitestMocker(this, {
+      context: options.vm?.context,
       resolveId: options.transport.resolveId,
       get root() {
         return options.getWorkerState().config.root

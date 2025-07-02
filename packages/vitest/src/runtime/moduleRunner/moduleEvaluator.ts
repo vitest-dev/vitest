@@ -27,20 +27,41 @@ export interface VitestModuleEvaluatorOptions {
 export class VitestModuleEvaluator implements ModuleEvaluator {
   public stubs: Record<string, any> = {}
   public env: ModuleRunnerImportMeta['env'] = createImportMetaEnvProxy()
+  private vm: VitestVmOptions | undefined
 
   private compiledFunctionArgumentsNames?: string[]
   private compiledFunctionArgumentsValues: unknown[] = []
 
+  private primitives: {
+    Object: typeof Object
+    Proxy: typeof Proxy
+    Reflect: typeof Reflect
+  }
+
   constructor(
-    private vm: VitestVmOptions | undefined,
+    vmOptions: VitestVmOptions | undefined,
     private options: VitestModuleEvaluatorOptions,
   ) {
-    this.stubs = getDefaultRequestStubs(vm?.context)
+    this.vm = vmOptions
+    this.stubs = getDefaultRequestStubs(vmOptions?.context)
     if (options.compiledFunctionArgumentsNames) {
       this.compiledFunctionArgumentsNames = options.compiledFunctionArgumentsNames
     }
     if (options.compiledFunctionArgumentsValues) {
       this.compiledFunctionArgumentsValues = options.compiledFunctionArgumentsValues
+    }
+    if (vmOptions) {
+      this.primitives = vm.runInContext(
+        '({ Object, Proxy, Reflect })',
+        vmOptions.context,
+      )
+    }
+    else {
+      this.primitives = {
+        Object,
+        Proxy,
+        Reflect,
+      }
     }
   }
 
@@ -58,6 +79,7 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
     }
 
     const { mod, defaultExport } = interopModule(namespace)
+    const { Proxy, Reflect } = this.primitives
 
     const proxy = new Proxy(mod, {
       get(mod, prop) {
@@ -95,6 +117,8 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
     module: Readonly<EvaluatedModuleNode>,
   ): Promise<any> {
     context.__vite_ssr_import_meta__.env = this.env
+
+    const { Reflect, Proxy, Object } = this.primitives
 
     const exportsObject = context[ssrModuleExportsKey]
     const SYMBOL_NOT_DEFINED = Symbol('not defined')

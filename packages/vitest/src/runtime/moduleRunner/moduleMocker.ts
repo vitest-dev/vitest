@@ -367,7 +367,8 @@ export class VitestMocker {
     if (mock.type === 'automock' || mock.type === 'autospy') {
       const node = await this.moduleRunner.fetchModule(url, importer)
       const mod = await this.moduleRunner.cachedRequest(url, node, [importer], undefined, true)
-      return this.mockObject(mod, {}, mock.type)
+      const Object = this.primitives.Object
+      return this.mockObject(mod, Object.create(Object.prototype), mock.type)
     }
 
     if (mock.type === 'manual') {
@@ -398,6 +399,7 @@ export class VitestMocker {
       if (cache && cache.mockedExports) {
         return cache.mockedExports
       }
+      const Object = this.primitives.Object
       // we have to define a separate object that will copy all properties into itself
       // and can't just use the same `exports` define automatically by Vite before the evaluator
       const exports = Object.create(null)
