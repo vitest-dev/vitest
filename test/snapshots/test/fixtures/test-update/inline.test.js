@@ -4,17 +4,33 @@ import { describe, expect, test } from 'vitest'
 // please, don't commit generated snapshots
 describe('snapshots are generated in correct order', async () => {
   test('first snapshot', () => {
-    expect({ foo: ['bar'] }).toMatchInlineSnapshot()
+    expect({ foo: ['bar'] }).toMatchInlineSnapshot(`
+      {
+        "foo": [
+          "bar",
+        ],
+      }
+    `)
   })
 
   test('second snapshot', () => {
-    expect({ foo: ['zed'] }).toMatchInlineSnapshot()
+    expect({ foo: ['zed'] }).toMatchInlineSnapshot(`
+      {
+        "foo": [
+          "zed",
+        ],
+      }
+    `)
   })
 })
 
 describe('snapshots with properties', () => {
   test('without snapshot', () => {
-    expect({ foo: 'bar' }).toMatchInlineSnapshot({ foo: expect.any(String) })
+    expect({ foo: 'bar' }).toMatchInlineSnapshot({ foo: expect.any(String) }, `
+      {
+        "foo": Any<String>,
+      }
+    `)
   })
 
   test('with snapshot', () => {

@@ -1,8 +1,8 @@
 import { expect, test } from 'vitest'
 
 test('same title', () => {
-  expect('new').toMatchInlineSnapshot()
-  expect('new').toMatchInlineSnapshot()
+  expect('new').toMatchInlineSnapshot(`"new"`)
+  expect('new').toMatchInlineSnapshot(`"new"`)
 })
 
 test('same title', () => {
