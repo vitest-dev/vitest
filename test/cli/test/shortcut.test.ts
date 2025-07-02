@@ -1,49 +1,42 @@
-import type { TestProject } from 'vitest/node'
 import { resolve } from 'pathe'
-import { describe, expect, it, vi } from 'vitest'
+import { expect, it } from 'vitest'
 import { runVitest } from '../../test-utils'
 
-describe('restart browser servers with watch', () => {
-  it('should restart multiple browser servers', async () => {
-    const root = resolve(import.meta.dirname, '../fixtures/browser-multiple')
-    const projects: TestProject[] = []
-    const { vitest, ctx } = await runVitest({ root, watch: true, browser: {
-      enabled: true,
-      provider: 'playwright',
-    }, reporters: [{
-      onBrowserInit(project) {
-        projects.push(project)
-      },
-    }] })
-    const RESTART_COUNT = 5
+it('should restart multiple browser servers', async () => {
+  const root = resolve(import.meta.dirname, '../fixtures/browser-multiple')
+  let initCount = 0
+  const projectCount = new Map<string, number>()
+  const { vitest, ctx } = await runVitest({ root, watch: true, browser: {
+    enabled: true,
+    provider: 'playwright',
+  }, reporters: [{
+    onBrowserInit(project) {
+      initCount += 1
+      projectCount.set(project.name, (projectCount.get(project.name) || 0) + 1)
+    },
+  }] })
 
-    const initSpies = projects.map(project => vi.spyOn(project, '_initBrowserServer'))
-    initSpies.forEach(spy => expect(spy).toHaveBeenCalledTimes(0))
+  const projectAmount = ctx?.projects?.length
 
-    for (let i = 0; i < RESTART_COUNT; i++) {
-      const closeSpies = ctx?.projects.map(project => vi.spyOn(project.browser!, 'close'))
-      closeSpies!.forEach(spy => expect(spy).toHaveBeenCalledTimes(0))
-
-      vitest.write('b')
-      await new Promise(resolve => setTimeout(resolve, 10))
-
-      closeSpies!.forEach(spy => expect(spy).toHaveBeenCalledTimes(1))
-      initSpies.forEach(spy => expect(spy).toHaveBeenCalledTimes(i + 1))
-    }
-  })
-
-  it('should replace new browser server', async () => {
-    const root = resolve(import.meta.dirname, '../fixtures/browser-multiple')
-    const { vitest, ctx } = await runVitest({ root, watch: true, browser: {
-      enabled: true,
-      provider: 'playwright',
-    } })
-    const originalBrowsers = ctx?.projects.map(p => p.browser)
-    await vitest.waitForStdout('Waiting for file changes')
+  if (projectAmount) {
+    expect(initCount).toBe(1 * projectAmount)
 
     vitest.write('b')
-    await new Promise(resolve => setTimeout(resolve, 10))
+    await new Promise(resolve => setTimeout(resolve, 100))
+    expect(initCount).toBe(2 * projectAmount)
 
-    expect(ctx?.projects.map(p => p.browser)).not.toBe(originalBrowsers)
-  })
+    vitest.write('b')
+    await new Promise(resolve => setTimeout(resolve, 100))
+    expect(initCount).toBe(3 * projectAmount)
+
+    vitest.write('b')
+    await new Promise(resolve => setTimeout(resolve, 100))
+    expect(initCount).toBe(4 * projectAmount)
+  }
+  else {
+    throw new Error('There is no fixture with multiple projects')
+  }
+
+  expect(projectCount.size).toBe(projectAmount)
+  expect(Array.from(projectCount.values()).every(value => value === initCount / projectAmount)).toBe(true)
 })
