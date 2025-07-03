@@ -5,6 +5,7 @@ const __BASE_PATH__: string
 
 declare interface Window {
   METADATA_PATH?: string
+  METADATA_BASE64?: string
 }
 
 declare interface Error {

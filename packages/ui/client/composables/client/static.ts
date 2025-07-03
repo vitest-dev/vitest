@@ -95,18 +95,30 @@ export function createStaticClient(): VitestClient {
   }
 
   async function registerMetadata() {
-    const res = await fetch(window.METADATA_PATH!)
-    const contentType = res.headers.get('content-type')?.toLowerCase() || ''
-    if (
-      contentType.includes('application/gzip')
-      || contentType.includes('application/x-gzip')
-    ) {
-      const compressed = new Uint8Array(await res.arrayBuffer())
-      const decompressed = strFromU8(decompressSync(compressed))
+    if (window.METADATA_BASE64) {
+      // Handle embedded metadata for single HTML mode
+      const compressedData = Uint8Array.from(atob(window.METADATA_BASE64), c => c.charCodeAt(0))
+      const decompressed = strFromU8(decompressSync(compressedData))
       metadata = parse(decompressed) as HTMLReportMetadata
     }
+    else if (window.METADATA_PATH) {
+      // Handle external metadata file for multi-file mode
+      const res = await fetch(window.METADATA_PATH)
+      const contentType = res.headers.get('content-type')?.toLowerCase() || ''
+      if (
+        contentType.includes('application/gzip')
+        || contentType.includes('application/x-gzip')
+      ) {
+        const compressed = new Uint8Array(await res.arrayBuffer())
+        const decompressed = strFromU8(decompressSync(compressed))
+        metadata = parse(decompressed) as HTMLReportMetadata
+      }
+      else {
+        metadata = parse(await res.text()) as HTMLReportMetadata
+      }
+    }
     else {
-      metadata = parse(await res.text()) as HTMLReportMetadata
+      throw new Error('No metadata found. Expected either METADATA_PATH or METADATA_BASE64.')
     }
     const event = new Event('open')
     ctx.ws.dispatchEvent(event)
