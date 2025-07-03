@@ -57,12 +57,12 @@ test.skip('async with timeout', async () => {
   })
 }, 100)
 
-// it('timeout', () => new Promise(resolve => setTimeout(resolve, timeout)))
+it('timeout', () => new Promise(resolve => setTimeout(resolve, timeout)))
 
-// it.fails('deprecated done callback', (done) => {
-//   // @ts-expect-error deprecated done callback is not typed
-//   done()
-// })
+it.fails('deprecated done callback', (done) => {
+  // @ts-expect-error deprecated done callback is not typed
+  done()
+})
 
 test('escaping', () => {
   expect(['\\123']).toEqual(['\\123'])

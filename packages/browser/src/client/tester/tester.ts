@@ -10,7 +10,7 @@ import {
   startTests,
   stopCoverageInsideWorker,
 } from 'vitest/internal/browser'
-import { moduleRunner, getBrowserState, getConfig, getWorkerState } from '../utils'
+import { getBrowserState, getConfig, getWorkerState, moduleRunner } from '../utils'
 import { setupDialogsSpy } from './dialog'
 import { setupConsoleLogSpy } from './logger'
 import { VitestBrowserClientMocker } from './mocker'
