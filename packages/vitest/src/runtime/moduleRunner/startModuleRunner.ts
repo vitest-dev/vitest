@@ -5,6 +5,7 @@ import type { ExternalModulesExecutor } from '../external-executor'
 import fs from 'node:fs'
 import { isBuiltin } from 'node:module'
 import { isBareImport } from '@vitest/utils'
+import { getCachedVitestImport } from './cachedResolver'
 import { listenForErrors } from './errorCatcher'
 import { unwrapId, VitestModuleEvaluator } from './moduleEvaluator'
 import { VitestMocker } from './moduleMocker'
@@ -67,6 +68,11 @@ export async function startVitestModuleRunner(options: ContextModuleRunnerOption
     transport: {
       async fetchModule(id, importer, options) {
         const resolvingModules = state().resolvingModules
+
+        const vitest = getCachedVitestImport(id, state)
+        if (vitest) {
+          return vitest
+        }
 
         const rawId = unwrapId(id)
         resolvingModules.add(rawId)

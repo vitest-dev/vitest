@@ -126,8 +126,8 @@ export interface VitestModuleRunnerOptions {
   transport: VitestTransportOptions
   evaluator: VitestModuleEvaluator
   evaluatedModules: EvaluatedModules
-  mocker?: VitestMocker
   getWorkerState: () => WorkerGlobalState
+  mocker?: VitestMocker
   vm?: VitestVmOptions
 }
 
