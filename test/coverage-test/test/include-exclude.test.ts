@@ -332,3 +332,22 @@ test('files included and excluded in project\'s plugin\'s configureVitest are ex
     ]
   `)
 })
+
+test('includes covered and uncovered with ] in filenames', async () => {
+  await runVitest({
+    include: ['fixtures/test/sources-with-]-in-filenames.test.ts'],
+    coverage: {
+      reporter: 'json',
+      include: ['**/untested-with-*', '**/tested-with-*'],
+
+    },
+  })
+
+  const coverageMap = await readCoverageMap()
+  expect(coverageMap.files()).toMatchInlineSnapshot(`
+    [
+      "<process-cwd>/fixtures/src/tested-with-]-in-filename.ts",
+      "<process-cwd>/fixtures/src/untested-with-]-in-filename.ts",
+    ]
+  `)
+})

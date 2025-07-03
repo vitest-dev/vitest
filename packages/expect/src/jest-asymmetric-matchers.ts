@@ -108,7 +108,7 @@ export class Anything extends AsymmetricMatcher<void> {
 }
 
 export class ObjectContaining extends AsymmetricMatcher<
-  Record<string, unknown>
+  Record<string | symbol | number, unknown>
 > {
   constructor(sample: Record<string, unknown>, inverse = false) {
     super(sample, inverse)
@@ -126,16 +126,25 @@ export class ObjectContaining extends AsymmetricMatcher<
     return obj.constructor.prototype
   }
 
-  hasProperty(obj: object | null, property: string): boolean {
+  hasProperty(obj: object | null, property: string | symbol): boolean {
     if (!obj) {
       return false
     }
 
-    if (Object.prototype.hasOwnProperty.call(obj, property)) {
+    if (Object.hasOwn(obj, property)) {
       return true
     }
 
     return this.hasProperty(this.getPrototype(obj), property)
+  }
+
+  getProperties(obj: object): (string | symbol)[] {
+    return [
+      ...Object.keys(obj),
+      ...Object.getOwnPropertySymbols(obj).filter(
+        s => Object.getOwnPropertyDescriptor(obj, s)?.enumerable,
+      ),
+    ]
   }
 
   asymmetricMatch(other: any): boolean {
@@ -149,14 +158,21 @@ export class ObjectContaining extends AsymmetricMatcher<
     let result = true
 
     const matcherContext = this.getMatcherContext()
-    for (const property in this.sample) {
+    const properties = this.getProperties(this.sample)
+    for (const property of properties) {
       if (
         !this.hasProperty(other, property)
-        || !equals(
-          this.sample[property],
-          other[property],
-          matcherContext.customTesters,
-        )
+      ) {
+        result = false
+        break
+      }
+      const value = Object.getOwnPropertyDescriptor(this.sample, property)?.value ?? this.sample[property]
+      const otherValue = Object.getOwnPropertyDescriptor(other, property)?.value ?? other[property]
+      if (!equals(
+        value,
+        otherValue,
+        matcherContext.customTesters,
+      )
       ) {
         result = false
         break
