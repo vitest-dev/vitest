@@ -6,6 +6,7 @@ import { KNOWN_ASSET_RE, slash } from '@vitest/utils'
 import { findNearestPackageData } from '@vitest/utils/resolver'
 import * as esModuleLexer from 'es-module-lexer'
 import { dirname, extname, join, resolve } from 'pathe'
+import { isWindows } from '../utils/env'
 
 export class VitestResolver {
   private options: ExternalizeOptions
@@ -27,8 +28,15 @@ export class VitestResolver {
   }
 
   public shouldExternalize(file: string): Promise<string | false> {
-    return shouldExternalize(file, this.options)
+    return shouldExternalize(normalizeId(file), this.options)
   }
+}
+
+function normalizeId(id: string) {
+  if (id.startsWith('/@fs/')) {
+    id = id.slice(isWindows ? 5 : 4)
+  }
+  return id
 }
 
 interface ExternalizeOptions extends ServerDepsOptions {

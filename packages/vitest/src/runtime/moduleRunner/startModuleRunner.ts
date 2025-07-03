@@ -77,7 +77,7 @@ export async function startVitestModuleRunner(options: ContextModuleRunnerOption
           }
 
           const resolvedMock = moduleRunner.mocker.getDependencyMock(rawId)
-          if (resolvedMock) {
+          if (resolvedMock?.type === 'manual' || resolvedMock?.type === 'redirect') {
             return {
               code: '',
               file: null,
