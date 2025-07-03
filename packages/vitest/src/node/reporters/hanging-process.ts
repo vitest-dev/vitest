@@ -6,7 +6,7 @@ export class HangingProcessReporter implements Reporter {
 
   onInit(): void {
     const _require = createRequire(import.meta.url)
-    this.whyRunning = _require('why-is-node-running')
+    this.whyRunning = _require('why-is-node-running').default
   }
 
   onProcessTimeout(): void {
