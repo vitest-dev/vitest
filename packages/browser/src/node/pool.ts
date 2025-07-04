@@ -8,6 +8,7 @@ import type {
 } from 'vitest/node'
 import crypto from 'node:crypto'
 import * as nodeos from 'node:os'
+import { performance } from 'node:perf_hooks'
 import { createDefer } from '@vitest/utils'
 import { stringify } from 'flatted'
 import { createDebugger } from 'vitest/node'
@@ -247,9 +248,10 @@ class BrowserPool {
       this.project,
       this,
     )
-    const url = new URL('/', this.options.origin)
+    const browser = this.project.browser!
+    const url = new URL('/__vitest_test__/', this.options.origin)
     url.searchParams.set('sessionId', sessionId)
-    const pagePromise = this.project.browser!.provider.openPage(
+    const pagePromise = browser.provider.openPage(
       sessionId,
       url.toString(),
     )
@@ -307,6 +309,7 @@ class BrowserPool {
     if (!this._promise) {
       throw new Error(`Unexpected empty queue`)
     }
+    const startTime = performance.now()
 
     const orchestrator = this.getOrchestrator(sessionId)
     debug?.('[%s] run test %s', sessionId, file)
@@ -320,6 +323,7 @@ class BrowserPool {
           // this will be parsed by the test iframe, not the orchestrator
           // so we need to stringify it first to avoid double serialization
           providedContext: this._providedContext || '[{}]',
+          startTime,
         },
       )
         .then(() => {

@@ -103,7 +103,6 @@ type FieldsWithDefaultValues =
   | 'cleanOnRerun'
   | 'reportsDirectory'
   | 'exclude'
-  | 'extension'
   | 'reportOnFailure'
   | 'allowExternal'
   | 'processingConcurrency'
@@ -123,32 +122,20 @@ export interface BaseCoverageOptions {
   enabled?: boolean
 
   /**
-   * List of files included in coverage as glob patterns
+   * List of files included in coverage as glob patterns.
+   * By default only files covered by tests are included.
    *
-   * @default ['**']
+   * See [Including and excluding files from coverage report](https://vitest.dev/guide/coverage.html#including-and-excluding-files-from-coverage-report) for examples.
    */
   include?: string[]
 
   /**
-   * Extensions for files to be included in coverage
+   * List of files excluded from coverage as glob patterns.
+   * Files are first checked against `coverage.include`.
    *
-   * @default ['.js', '.cjs', '.mjs', '.ts', '.tsx', '.jsx', '.vue', '.svelte', '.marko']
-   */
-  extension?: string | string[]
-
-  /**
-   * List of files excluded from coverage as glob patterns
-   *
-   * @default ['coverage/**', 'dist/**', '**\/[.]**', 'packages/*\/test?(s)/**', '**\/*.d.ts', '**\/virtual:*', '**\/__x00__*', '**\/\x00*', 'cypress/**', 'test?(s)/**', 'test?(-*).?(c|m)[jt]s?(x)', '**\/*{.,-}{test,spec}?(-d).?(c|m)[jt]s?(x)', '**\/__tests__/**', '**\/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress,tsup,build}.config.*', '**\/vitest.{workspace,projects}.[jt]s?(on)', '**\/.{eslint,mocha,prettier}rc.{?(c|m)js,yml}']
+   * See [Including and excluding files from coverage report](https://vitest.dev/guide/coverage.html#including-and-excluding-files-from-coverage-report) for examples.
    */
   exclude?: string[]
-
-  /**
-   * Whether to include all files, including the untested ones into report
-   *
-   * @default true
-   */
-  all?: boolean
 
   /**
    * Clean coverage results before running tests
@@ -261,9 +248,7 @@ export interface BaseCoverageOptions {
    * Defaults to `Math.min(20, os.availableParallelism?.() ?? os.cpus().length)`
    */
   processingConcurrency?: number
-}
 
-export interface CoverageIstanbulOptions extends BaseCoverageOptions {
   /**
    * Set to array of class method names to ignore for coverage
    *
@@ -272,27 +257,9 @@ export interface CoverageIstanbulOptions extends BaseCoverageOptions {
   ignoreClassMethods?: string[]
 }
 
-export interface CoverageV8Options extends BaseCoverageOptions {
-  /**
-   * Ignore empty lines, comments and other non-runtime code, e.g. Typescript types
-   * - Requires `experimentalAstAwareRemapping: false`
-   */
-  ignoreEmptyLines?: boolean
+export interface CoverageIstanbulOptions extends BaseCoverageOptions {}
 
-  /**
-   * Remap coverage with experimental AST based analysis
-   * - Provides more accurate results compared to default mode
-   */
-  experimentalAstAwareRemapping?: boolean
-
-  /**
-   * Set to array of class method names to ignore for coverage.
-   * - Requires `experimentalAstAwareRemapping: true`
-   *
-   * @default []
-   */
-  ignoreClassMethods?: string[]
-}
+export interface CoverageV8Options extends BaseCoverageOptions {}
 
 export interface CustomProviderOptions
   extends Pick<BaseCoverageOptions, FieldsWithDefaultValues> {

@@ -41,11 +41,11 @@ test('assertion is callable', () => {
   expect(str).not.to.be.a('number')
 })
 
-const hi = suite('suite')
-
-hi.test('expect truthy', () => {
-  expect({}).toBeTruthy()
-  expect(null).not.toBeTruthy()
+suite('suite', () => {
+  test('expect truthy', () => {
+    expect({}).toBeTruthy()
+    expect(null).not.toBeTruthy()
+  })
 })
 
 // Remove .skip to test async fail by timeout

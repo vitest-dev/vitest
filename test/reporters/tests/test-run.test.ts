@@ -1,3 +1,4 @@
+import type { UserConsoleLog } from 'vitest'
 import type {
   ReportedHookContext,
   Reporter,
@@ -7,7 +8,7 @@ import type {
   TestRunEndReason,
   TestSpecification,
   TestSuite,
-  UserConfig,
+  TestUserConfig,
   Vitest,
 } from 'vitest/node'
 import { rmSync } from 'node:fs'
@@ -159,7 +160,10 @@ describe('TestCase', () => {
   test('single test case', async () => {
     const report = await run({
       'example.test.ts': ts`
-        test('single test case', () => {});
+        test('single test case', async () => {
+          await new Promise(resolve => setTimeout(resolve, 300))
+          console.log("Test running!")
+        });
       `,
     })
 
@@ -169,6 +173,7 @@ describe('TestCase', () => {
       onTestModuleCollected (example.test.ts)
       onTestModuleStart     (example.test.ts)
         onTestCaseReady     (example.test.ts) |single test case|
+        onUserConsoleLog    (example.test.ts) |single test case| > Test running!
         onTestCaseResult    (example.test.ts) |single test case|
       onTestModuleEnd       (example.test.ts)"
     `)
@@ -887,6 +892,7 @@ describe('merge reports', () => {
     }, {
       globals: true,
       reporters: [['blob', { outputFile: blobOutputFile1 }]],
+      watch: false,
     })
 
     const { root: root2 } = await runInlineTests({
@@ -902,10 +908,12 @@ describe('merge reports', () => {
     }, {
       globals: true,
       reporters: [['blob', { outputFile: blobOutputFile2 }]],
+      watch: false,
     })
 
     const report = await run({}, {
       mergeReports: blobsOutputDirectory,
+      watch: false,
     }, {
       roots: [root1, root2],
     })
@@ -1102,12 +1110,12 @@ interface ReporterOptions {
 
 async function run(
   structure: Parameters<typeof runInlineTests>[0],
-  customConfig?: UserConfig,
+  customConfig?: TestUserConfig,
   reporterOptions?: ReporterOptions,
 ) {
   const reporter = new CustomReporter(reporterOptions)
 
-  const config: UserConfig = {
+  const config: TestUserConfig = {
     config: false,
     fileParallelism: false,
     globals: true,
@@ -1138,8 +1146,13 @@ async function run(
 
 class CustomReporter implements Reporter {
   calls: string[] = []
+  ctx!: Vitest
 
   constructor(private options: ReporterOptions = {}) {}
+
+  onInit(ctx: Vitest) {
+    this.ctx = ctx
+  }
 
   onTestRunStart(specifications: ReadonlyArray<TestSpecification>) {
     if (this.options.printTestRunEvents) {
@@ -1183,6 +1196,13 @@ class CustomReporter implements Reporter {
 
   onTestCaseResult(test: TestCase) {
     this.calls.push(`${padded(test, 'onTestCaseResult')} (${this.normalizeFilename(test.module)}) |${test.name}|`)
+  }
+
+  onUserConsoleLog(log: UserConsoleLog) {
+    const task = this.ctx.state.idMap.get(log.taskId!)
+    const test = task && this.ctx.state.getReportedEntity(task) as TestCase
+
+    this.calls.push(`${padded(test!, 'onUserConsoleLog')} (${this.normalizeFilename(test!.module)}) |${test!.name}| > ${log.content.replaceAll('\n', '')}`)
   }
 
   onHookStart(hook: ReportedHookContext) {

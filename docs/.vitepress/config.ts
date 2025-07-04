@@ -71,7 +71,6 @@ export default ({ mode }: { mode: string }) => {
           customIcon: {
             'CLI': 'vscode-icons:file-type-shell',
             'vitest.shims': 'vscode-icons:file-type-vitest',
-            'vitest.workspace': 'vscode-icons:file-type-vitest',
             'vitest.config': 'vscode-icons:file-type-vitest',
             '.spec.ts': 'vscode-icons:file-type-testts',
             '.test.ts': 'vscode-icons:file-type-testts',
@@ -548,8 +547,8 @@ function guide(): DefaultTheme.SidebarItem[] {
       collapsed: false,
       items: [
         {
-          text: 'Migrating to Vitest 3.0',
-          link: '/guide/migration#vitest-3',
+          text: 'Migrating to Vitest 4.0',
+          link: '/guide/migration#vitest-4',
         },
         {
           text: 'Migrating from Jest',

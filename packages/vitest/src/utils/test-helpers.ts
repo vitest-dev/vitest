@@ -40,17 +40,7 @@ export async function groupFilesByEnv(
 
       // 1. Check for control comments in the file
       let env = code.match(/@(?:vitest|jest)-environment\s+([\w-]+)\b/)?.[1]
-      // 2. Check for globals
-      if (!env) {
-        for (const [glob, target] of project.config.environmentMatchGlobs
-          || []) {
-          if (pm.isMatch(filepath, glob, { cwd: project.config.root })) {
-            env = target
-            break
-          }
-        }
-      }
-      // 3. Fallback to global env
+      // 2. Fallback to global env
       env ||= project.config.environment || 'node'
 
       const transformMode = getTransformMode(

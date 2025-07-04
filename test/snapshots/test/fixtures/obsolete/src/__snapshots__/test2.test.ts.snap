@@ -1,0 +1,5 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`bar 1`] = `"bar"`;
+
+exports[`foo 1`] = `"foo"`;

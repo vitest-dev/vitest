@@ -1,9 +1,9 @@
 import type { ViteUserConfig } from 'vitest/config'
-import type { TestProject, UserConfig, VitestOptions } from 'vitest/node'
+import type { TestProject, TestUserConfig, VitestOptions } from 'vitest/node'
 import { expect, onTestFinished, test } from 'vitest'
 import { createVitest } from 'vitest/node'
 
-async function vitest(cliOptions: UserConfig, configValue: UserConfig = {}, viteConfig: ViteUserConfig = {}, vitestOptions: VitestOptions = {}) {
+async function vitest(cliOptions: TestUserConfig, configValue: TestUserConfig = {}, viteConfig: ViteUserConfig = {}, vitestOptions: VitestOptions = {}) {
   const vitest = await createVitest('test', { ...cliOptions, watch: false }, { ...viteConfig, test: configValue as any }, vitestOptions)
   onTestFinished(() => vitest.close())
   return vitest

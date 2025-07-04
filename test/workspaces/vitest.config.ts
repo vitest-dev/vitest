@@ -23,7 +23,6 @@ export default defineConfig({
       globalConfigValue: true,
     },
     projects: [
-
       'space_2',
       './space_*/vitest.config.ts',
       './space_1/*.config.ts',

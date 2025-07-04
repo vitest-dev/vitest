@@ -83,7 +83,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest]
-        node_version: [18, 20, 22]
+        node_version: [18, 20, 22, 24]
         include:
           - os: macos-latest
             node_version: 20
@@ -157,3 +157,39 @@ jobs:
 
       - name: Test Browser (webdriverio)
         run: pnpm run test:browser:webdriverio
+
+  test-rolldown:
+    needs: changed
+    # macos-latest is the fastes one
+    name: 'Rolldown&Test: node-20, macos-latest'
+    if: needs.changed.outputs.should_skip != 'true'
+    runs-on: macos-latest
+
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ./.github/actions/setup-and-cache
+        with:
+          node-version: 20
+
+      - uses: browser-actions/setup-chrome@c785b87e244131f27c9f19c1a33e2ead956ab7ce # v1.7.3
+
+      - name: Install
+        run: pnpm add vite@npm:rolldown-vite && git add . && git commit -m "ci" && pnpm i --prefer-offline --no-frozen-lockfile
+
+      - name: Install Playwright Dependencies
+        run: pnpm exec playwright install --with-deps --only-shell
+
+      - name: Build
+        run: pnpm run build
+
+      - name: Test
+        run: pnpm run test:ci
+
+      - name: Test Examples
+        run: pnpm run test:examples
+
+      - name: Test Browser (playwright)
+        run: pnpm run test:browser:playwright

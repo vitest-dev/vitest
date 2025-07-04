@@ -1,5 +1,5 @@
 import type { File, Task } from '@vitest/runner'
-import type { ErrorWithDiff, UserConsoleLog } from '../../types/general'
+import type { TestError, UserConsoleLog } from '../../types/general'
 import type { Vitest } from '../core'
 import type { Reporter } from '../types/reporter'
 import type { TestCase, TestCollection, TestModule, TestModuleState, TestResult, TestSuite, TestSuiteState } from './reported-tasks'
@@ -249,7 +249,11 @@ export abstract class BaseReporter implements Reporter {
     return getTestName(test, separator)
   }
 
-  protected formatShortError(error: ErrorWithDiff): string {
+  protected getFullName(test: Task, separator?: string): string {
+    return getFullName(test, separator)
+  }
+
+  protected formatShortError(error: TestError): string {
     return `${F_RIGHT} ${error.message}`
   }
 
@@ -374,7 +378,7 @@ export abstract class BaseReporter implements Reporter {
     const task = log.taskId ? this.ctx.state.idMap.get(log.taskId) : undefined
 
     if (task) {
-      headerText = getFullName(task, c.dim(' > '))
+      headerText = this.getFullName(task, c.dim(' > '))
     }
     else if (log.taskId && log.taskId !== '__vitest__unknown_test__') {
       headerText = log.taskId
@@ -429,9 +433,13 @@ export abstract class BaseReporter implements Reporter {
       return false
     }
 
-    const shouldLog = this.ctx.config.onConsoleLog?.(log.content, log.type)
-    if (shouldLog === false) {
-      return shouldLog
+    if (this.ctx.config.onConsoleLog) {
+      const task = log.taskId ? this.ctx.state.idMap.get(log.taskId) : undefined
+      const entity = task && this.ctx.state.getReportedEntity(task)
+      const shouldLog = this.ctx.config.onConsoleLog(log.content, log.type, entity)
+      if (shouldLog === false) {
+        return shouldLog
+      }
     }
     return true
   }
@@ -579,7 +587,7 @@ export abstract class BaseReporter implements Reporter {
         continue
       }
 
-      const groupName = getFullName(group, c.dim(' > '))
+      const groupName = this.getFullName(group, c.dim(' > '))
       const project = this.ctx.projects.find(p => p.name === bench.file.projectName)
 
       this.log(`  ${formatProjectName(project)}${bench.name}${c.dim(` - ${groupName}`)}`)
@@ -598,7 +606,7 @@ export abstract class BaseReporter implements Reporter {
   }
 
   private printTaskErrors(tasks: Task[], errorDivider: () => void) {
-    const errorsQueue: [error: ErrorWithDiff | undefined, tests: Task[]][] = []
+    const errorsQueue: [error: TestError | undefined, tests: Task[]][] = []
 
     for (const task of tasks) {
       // Merge identical errors
@@ -636,7 +644,7 @@ export abstract class BaseReporter implements Reporter {
         const projectName = (task as File)?.projectName || task.file?.projectName || ''
         const project = this.ctx.projects.find(p => p.name === projectName)
 
-        let name = getFullName(task, c.dim(' > '))
+        let name = this.getFullName(task, c.dim(' > '))
 
         if (filepath) {
           name += c.dim(` [ ${this.relative(filepath)} ]`)

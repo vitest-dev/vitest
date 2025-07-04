@@ -10,12 +10,13 @@ import type {
 import type { BaseCoverageOptions, CoverageReporterWithOptions } from '../types/coverage'
 import type { BuiltinPool, ForksOptions, PoolOptions, ThreadsOptions } from '../types/pool-options'
 import crypto from 'node:crypto'
-import { toArray } from '@vitest/utils'
+import { slash, toArray } from '@vitest/utils'
 import { resolveModule } from 'local-pkg'
 import { normalize, relative, resolve } from 'pathe'
 import c from 'tinyrainbow'
 import { mergeConfig } from 'vite'
 import {
+  configFiles,
   defaultBrowserPort,
   defaultInspectPort,
   defaultPort,
@@ -365,7 +366,8 @@ export function resolveConfig(
     resolvePath(file, resolved.root),
   )
 
-  // override original exclude array for cases where user re-uses same object in test.exclude
+  // Add hard-coded default coverage exclusions. These cannot be overidden by user config.
+  // Override original exclude array for cases where user re-uses same object in test.exclude.
   resolved.coverage.exclude = [
     ...resolved.coverage.exclude,
 
@@ -380,7 +382,17 @@ export function resolveConfig(
 
     // Exclude test files
     ...resolved.include,
-  ]
+
+    // Configs
+    resolved.config && slash(resolved.config),
+    ...configFiles,
+
+    // Vite internal
+    '**\/virtual:*',
+    '**\/__x00__*',
+
+    '**/node_modules/**',
+  ].filter(pattern => pattern != null)
 
   resolved.forceRerunTriggers = [
     ...resolved.forceRerunTriggers,
@@ -584,34 +596,9 @@ export function resolveConfig(
     }
   }
 
-  if (typeof resolved.workspace === 'string') {
-    // if passed down from the CLI and it's relative, resolve relative to CWD
-    resolved.workspace
-      = typeof options.workspace === 'string' && options.workspace[0] === '.'
-        ? resolve(process.cwd(), options.workspace)
-        : resolvePath(resolved.workspace, resolved.root)
-  }
-
   if (!builtinPools.includes(resolved.pool as BuiltinPool)) {
     resolved.pool = resolvePath(resolved.pool, resolved.root)
   }
-  if (resolved.poolMatchGlobs) {
-    logger.warn(
-      c.yellow(
-        `${c.inverse(
-          c.yellow(' Vitest '),
-        )} "poolMatchGlobs" is deprecated. Use "workspace" to define different configurations instead.`,
-      ),
-    )
-  }
-  resolved.poolMatchGlobs = (resolved.poolMatchGlobs || []).map(
-    ([glob, pool]) => {
-      if (!builtinPools.includes(pool as BuiltinPool)) {
-        pool = resolvePath(pool, resolved.root)
-      }
-      return [glob, pool]
-    },
-  )
 
   if (mode === 'benchmark') {
     resolved.benchmark = {
@@ -783,19 +770,6 @@ export function resolveConfig(
     ...configDefaults.typecheck,
     ...resolved.typecheck,
   }
-
-  if (resolved.environmentMatchGlobs) {
-    logger.warn(
-      c.yellow(
-        `${c.inverse(
-          c.yellow(' Vitest '),
-        )} "environmentMatchGlobs" is deprecated. Use "workspace" to define different configurations instead.`,
-      ),
-    )
-  }
-  resolved.environmentMatchGlobs = (resolved.environmentMatchGlobs || []).map(
-    i => [resolve(resolved.root, i[0]), i[1]],
-  )
 
   resolved.typecheck ??= {} as any
   resolved.typecheck.enabled ??= false

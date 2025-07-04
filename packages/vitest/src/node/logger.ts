@@ -1,5 +1,4 @@
 import type { Task } from '@vitest/runner'
-import type { ErrorWithDiff } from '@vitest/utils'
 import type { Writable } from 'node:stream'
 import type { TypeCheckError } from '../typecheck/typechecker'
 import type { Vitest } from './core'
@@ -252,7 +251,7 @@ export class Logger {
     const providerString = provider === 'preview' ? '' : ` by ${c.reset(c.bold(provider))}`
     this.log(
       c.dim(
-        `${output}Browser runner started${providerString} ${c.dim('at')} ${c.blue(new URL('/', origin))}\n`,
+        `${output}Browser runner started${providerString} ${c.dim('at')} ${c.blue(new URL('/__vitest_test__/', origin))}\n`,
       ),
     )
   }
@@ -271,7 +270,7 @@ export class Logger {
     errors.forEach((err) => {
       this.printError(err, {
         fullStack: true,
-        type: (err as ErrorWithDiff).type || 'Unhandled Error',
+        type: (err as any).type || 'Unhandled Error',
       })
     })
     this.error(c.red(divider()))

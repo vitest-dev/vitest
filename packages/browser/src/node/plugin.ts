@@ -12,7 +12,7 @@ import { basename, dirname, extname, resolve } from 'pathe'
 import sirv from 'sirv'
 import * as vite from 'vite'
 import { coverageConfigDefaults } from 'vitest/config'
-import { getFilePoolName, resolveApiServerConfig, resolveFsAllow, distDir as vitestDist } from 'vitest/node'
+import { resolveApiServerConfig, resolveFsAllow, distDir as vitestDist } from 'vitest/node'
 import { distRoot } from './constants'
 import { createOrchestratorMiddleware } from './middlewares/orchestratorMiddleware'
 import { createTesterMiddleware } from './middlewares/testerMiddleware'
@@ -165,10 +165,7 @@ export default (parentServer: ParentBrowserProject, base = '/'): Plugin[] => {
         // this plugin can be used in different projects, but all of them
         // have the same `include` pattern, so it doesn't matter which project we use
         const project = parentServer.project
-        const { testFiles: allTestFiles } = await project.globTestFiles()
-        const browserTestFiles = allTestFiles.filter(
-          file => getFilePoolName(project, file) === 'browser',
-        )
+        const { testFiles: browserTestFiles } = await project.globTestFiles()
         const setupFiles = toArray(project.config.setupFiles)
 
         // replace env values - cannot be reassign at runtime
@@ -241,6 +238,7 @@ export default (parentServer: ParentBrowserProject, base = '/'): Plugin[] => {
           'vitest > @vitest/snapshot > magic-string',
           'vitest > chai',
           'vitest > chai > loupe',
+          'vitest > @vitest/runner > strip-literal',
           'vitest > @vitest/utils > loupe',
           '@vitest/browser > @testing-library/user-event',
           '@vitest/browser > @testing-library/dom',
@@ -390,7 +388,7 @@ export default (parentServer: ParentBrowserProject, base = '/'): Plugin[] => {
         }
         const s = new MagicString(code, { filename })
         s.prepend(
-          `import.meta.vitest = __vitest_index__;\n`,
+          `Object.defineProperty(import.meta, 'vitest', { get() { return typeof __vitest_worker__ !== 'undefined' && __vitest_worker__.filepath === "${filename.replace(/"/g, '\\"')}" ? __vitest_index__ : undefined } });\n`,
         )
         return {
           code: s.toString(),

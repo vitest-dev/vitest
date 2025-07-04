@@ -108,8 +108,8 @@ export interface ExpectStatic
   AsymmetricMatchersContaining {
   <T>(actual: T, message?: string): Assertion<T>
   extend: (expects: MatchersObject) => void
-  anything: () => AsymmetricMatcher<unknown>
-  any: (constructor: unknown) => AsymmetricMatcher<unknown>
+  anything: () => any
+  any: (constructor: unknown) => any
   getState: () => MatcherState
   setState: (state: Partial<MatcherState>) => void
   not: AsymmetricMatchersContaining
@@ -186,13 +186,13 @@ export interface AsymmetricMatchersContaining extends CustomMatcher {
   closeTo: (expected: number, precision?: number) => any
 }
 
+type WithAsymmetricMatcher<T> = T | AsymmetricMatcher<unknown>
+
 export type DeeplyAllowMatchers<T> = T extends Array<infer Element>
-  ? (DeeplyAllowMatchers<Element> | Element)[]
+  ? WithAsymmetricMatcher<T> | DeeplyAllowMatchers<Element>[]
   : T extends object
-    ? {
-        [K in keyof T]: DeeplyAllowMatchers<T[K]> | AsymmetricMatcher<unknown>
-      }
-    : T
+    ? WithAsymmetricMatcher<T> | { [K in keyof T]: DeeplyAllowMatchers<T[K]> }
+    : WithAsymmetricMatcher<T>
 
 export interface JestAssertion<T = any> extends jest.Matchers<void, T>, CustomMatcher {
   /**
@@ -202,7 +202,7 @@ export interface JestAssertion<T = any> extends jest.Matchers<void, T>, CustomMa
    * @example
    * expect(user).toEqual({ name: 'Alice', age: 30 });
    */
-  toEqual: <E>(expected: DeeplyAllowMatchers<E>) => void
+  toEqual: <E>(expected: E) => void
 
   /**
    * Use to test that objects have the same types as well as structure.
@@ -210,7 +210,7 @@ export interface JestAssertion<T = any> extends jest.Matchers<void, T>, CustomMa
    * @example
    * expect(user).toStrictEqual({ name: 'Alice', age: 30 });
    */
-  toStrictEqual: <E>(expected: DeeplyAllowMatchers<E>) => void
+  toStrictEqual: <E>(expected: E) => void
 
   /**
    * Checks that a value is what you expect. It calls `Object.is` to compare values.
@@ -240,7 +240,7 @@ export interface JestAssertion<T = any> extends jest.Matchers<void, T>, CustomMa
    *   address: { city: 'Wonderland' }
    * });
    */
-  toMatchObject: <E extends object | any[]>(expected: DeeplyAllowMatchers<E>) => void
+  toMatchObject: <E extends object | any[]>(expected: E) => void
 
   /**
    * Used when you want to check that an item is in a list.

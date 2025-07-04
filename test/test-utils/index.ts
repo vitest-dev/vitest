@@ -1,8 +1,8 @@
 import type { Options } from 'tinyexec'
 import type { UserConfig as ViteUserConfig } from 'vite'
 import type { WorkerGlobalState } from 'vitest'
-import type { WorkspaceProjectConfiguration } from 'vitest/config'
-import type { TestModule, UserConfig, Vitest, VitestRunMode } from 'vitest/node'
+import type { TestProjectConfiguration } from 'vitest/config'
+import type { TestModule, TestUserConfig, Vitest, VitestRunMode } from 'vitest/node'
 import { webcrypto as crypto } from 'node:crypto'
 import fs from 'node:fs'
 import { Readable, Writable } from 'node:stream'
@@ -29,7 +29,7 @@ export interface VitestRunnerCLIOptions {
 }
 
 export async function runVitest(
-  cliOptions: UserConfig,
+  cliOptions: TestUserConfig,
   cliFilters: string[] = [],
   mode: VitestRunMode = 'test',
   viteOverrides: ViteUserConfig = {},
@@ -190,7 +190,7 @@ async function runCli(command: 'vitest' | 'vite-node', _options?: CliOptions | s
   }
 
   // Manually stop the processes so that each test don't have to do this themselves
-  afterEach(async () => {
+  onTestFinished(async () => {
     if (subprocess.exitCode === null) {
       subprocess.kill()
     }
@@ -206,7 +206,7 @@ async function runCli(command: 'vitest' | 'vite-node', _options?: CliOptions | s
     return output()
   }
 
-  if (args[0] !== 'list' && args.includes('--watch')) {
+  if (args[0] !== 'list' && (args.includes('--watch') || args[0] === 'watch')) {
     if (command === 'vitest') {
       // Wait for initial test run to complete
       await cli.waitForStdout('Waiting for file changes')
@@ -277,7 +277,7 @@ export type TestFsStructure = Record<
   string,
   | string
   | ViteUserConfig
-  | WorkspaceProjectConfiguration[]
+  | TestProjectConfiguration[]
   | ((...args: any[]) => unknown)
   | [(...args: any[]) => unknown, { exports?: string[]; imports?: Record<string, string[]> }]
 >
@@ -342,7 +342,7 @@ export function useFS<T extends TestFsStructure>(root: string, structure: T) {
 
 export async function runInlineTests(
   structure: TestFsStructure,
-  config?: UserConfig,
+  config?: TestUserConfig,
   options?: VitestRunnerCLIOptions,
   viteOverrides: ViteUserConfig = {},
 ) {

@@ -142,6 +142,7 @@ export function createOrUpdateNode(
         node.children.add(task.id)
       }
 
+      taskNode.name = task.name
       taskNode.mode = task.mode
       taskNode.duration = duration
       taskNode.state = task.result?.state

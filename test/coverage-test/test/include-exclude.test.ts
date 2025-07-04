@@ -1,27 +1,220 @@
 import assert from 'node:assert'
 import { expect } from 'vitest'
-import { coverageConfigDefaults } from 'vitest/config'
-import { readCoverageMap, runVitest, test } from '../utils'
+import { isBrowser, readCoverageMap, runVitest, test } from '../utils'
 
-test('default exclude should ignore test files', async () => {
+test('default include should show only covered files', async () => {
   await runVitest({
-    include: ['fixtures/test/math.test.ts'],
+    include: ['fixtures/test/math.test.ts', 'fixtures/test/even.test.ts'],
     coverage: {
-      all: true,
       reporter: 'json',
-      include: ['fixtures/test/math.test.ts'],
     },
   })
 
   const coverageMap = await readCoverageMap()
-  expect(coverageMap.files()).toMatchInlineSnapshot(`{}`)
+  expect(coverageMap.files()).toMatchInlineSnapshot(`
+    [
+      "<process-cwd>/fixtures/src/even.ts",
+      "<process-cwd>/fixtures/src/math.ts",
+    ]
+  `)
+})
+
+test('changed include picks uncovered files', async () => {
+  await runVitest({
+    include: ['fixtures/test/math.test.ts'],
+    coverage: {
+      reporter: 'json',
+      include: ['fixtures/src/math.ts', 'fixtures/src/untested-file.ts'],
+    },
+  })
+
+  const coverageMap = await readCoverageMap()
+  expect(coverageMap.files()).toMatchInlineSnapshot(`
+    [
+      "<process-cwd>/fixtures/src/math.ts",
+      "<process-cwd>/fixtures/src/untested-file.ts",
+    ]
+  `)
+})
+
+test('include as glob', async () => {
+  await runVitest({
+    include: ['fixtures/test/math.test.ts', 'fixtures/test/even.test.ts'],
+    coverage: {
+      reporter: 'json',
+      include: ['**/{math,even}.ts'],
+    },
+  })
+
+  const coverageMap = await readCoverageMap()
+  expect(coverageMap.files()).toMatchInlineSnapshot(`
+    [
+      "<process-cwd>/fixtures/src/even.ts",
+      "<process-cwd>/fixtures/src/math.ts",
+    ]
+  `)
+})
+
+test('changed include can exclude covered files', async () => {
+  await runVitest({
+    include: ['fixtures/test/math.test.ts', 'fixtures/test/even.test.ts'],
+    coverage: {
+      reporter: 'json',
+      include: ['fixtures/src/even.ts'],
+    },
+  })
+
+  const coverageMap = await readCoverageMap()
+  expect(coverageMap.files()).toMatchInlineSnapshot(`
+    [
+      "<process-cwd>/fixtures/src/even.ts",
+    ]
+  `)
+})
+
+test('exclude can exclude covered files', async () => {
+  await runVitest({
+    include: ['fixtures/test/math.test.ts', 'fixtures/test/even.test.ts'],
+    coverage: {
+      reporter: 'json',
+      exclude: ['fixtures/src/math.ts'],
+    },
+  })
+
+  const coverageMap = await readCoverageMap()
+  expect(coverageMap.files()).toMatchInlineSnapshot(`
+    [
+      "<process-cwd>/fixtures/src/even.ts",
+    ]
+  `)
+})
+
+test('exclude can exclude covered files #2', async () => {
+  await runVitest({
+    include: ['fixtures/test/math.test.ts', 'fixtures/test/even.test.ts'],
+    coverage: {
+      reporter: 'json',
+      include: ['fixtures/src/{math,even}.ts'],
+
+      // pattern that's recognized by picomatch but not by tinyglobby
+      exclude: ['math'],
+    },
+  })
+
+  const coverageMap = await readCoverageMap()
+  expect(coverageMap.files()).toMatchInlineSnapshot(`
+    [
+      "<process-cwd>/fixtures/src/even.ts",
+    ]
+  `)
+})
+
+test('uncovered files are included after watch-mode re-run', async () => {
+  const { vitest, ctx } = await runVitest({
+    watch: true,
+    include: ['fixtures/test/math.test.ts', 'fixtures/test/even.test.ts'],
+    coverage: {
+      include: ['fixtures/src/**.ts'],
+      reporter: 'json',
+    },
+  })
+
+  {
+    const coverageMap = await readCoverageMap()
+    const files = coverageMap.files()
+
+    expect(files).toContain('<process-cwd>/fixtures/src/untested-file.ts')
+    expect(files.length).toBeGreaterThanOrEqual(3)
+  }
+
+  vitest.write('a')
+
+  await vitest.waitForStdout('RERUN')
+  await vitest.waitForStdout('rerun all tests')
+  await vitest.waitForStdout('Waiting for file changes')
+  await ctx!.close()
+
+  {
+    const coverageMap = await readCoverageMap()
+    const files = coverageMap.files()
+
+    expect(files).toContain('<process-cwd>/fixtures/src/untested-file.ts')
+    expect(files.length).toBeGreaterThanOrEqual(3)
+  }
+})
+
+test('test, setup and configuration files should never be shown', async () => {
+  await runVitest({
+    include: ['fixtures/test/math.test.ts'],
+    setupFiles: ['fixtures/setup.ts'],
+    coverage: {
+      reporter: 'json',
+      include: [
+        'fixtures/src/math.ts',
+
+        // Should not appear on report even when defined
+        '**/fixtures/setup.ts',
+        '**/math.test.ts',
+        '**/vitest.config.ts',
+      ],
+    },
+  })
+
+  const coverageMap = await readCoverageMap()
+  expect(coverageMap.files()).toMatchInlineSnapshot(`
+    [
+      "<process-cwd>/fixtures/src/math.ts",
+    ]
+  `)
+})
+
+test('workspace projects test, setup and configuration files should never be shown', async () => {
+  await runVitest({
+    coverage: {
+      reporter: 'json',
+      include: [
+        'fixtures/src/math.ts',
+        'fixtures/src/even.ts',
+
+        // Should not appear on report even when defined
+        '**/fixtures/setup.ts',
+        '**/math.test.ts',
+        '**/vitest.config.ts',
+      ],
+    },
+    projects: [
+      {
+        test: {
+          name: 'First',
+          include: ['fixtures/test/math.test.ts'],
+          setupFiles: ['fixtures/setup.ts'],
+        },
+      },
+      {
+        test: {
+          name: 'Second',
+          include: ['fixtures/test/even.test.ts'],
+        },
+      },
+    ],
+  })
+
+  const coverageMap = await readCoverageMap()
+  expect(coverageMap.files()).toMatchInlineSnapshot(`
+    [
+      "<process-cwd>/fixtures/src/even.ts",
+      "<process-cwd>/fixtures/src/math.ts",
+    ]
+  `)
 })
 
 test('overridden exclude should still apply defaults', async () => {
   await runVitest({
-    include: ['fixtures/test/math.test.ts'],
+    include: [
+      'fixtures/test/math.test.ts',
+      'fixtures/src/test-that-looks-like-source-file.ts',
+    ],
     coverage: {
-      all: true,
       reporter: 'json',
       include: ['fixtures/test/math.test.ts'],
       exclude: ['dont-match-anything'],
@@ -32,33 +225,35 @@ test('overridden exclude should still apply defaults', async () => {
   expect(coverageMap.files()).toMatchInlineSnapshot(`{}`)
 })
 
-test('test file is excluded from report when excludes is not set', async () => {
+test('uncovered files are transformed correctly', async () => {
   await runVitest({
-    include: ['fixtures/src/test-that-looks-like-source-file.ts'],
+    config: 'fixtures/configs/vitest.config.conditional.ts',
+    include: ['fixtures/test/math.test.ts'],
     coverage: {
-      all: true,
+      include: ['fixtures/src/math.ts', 'fixtures/src/conditional/*'],
       reporter: 'json',
     },
   })
 
   const coverageMap = await readCoverageMap()
   const files = coverageMap.files()
-  expect(files.find(file => file.includes('test-that-looks-like-source-file'))).toBeFalsy()
-})
 
-test('test files are automatically excluded from report when excludes is set', async () => {
-  await runVitest({
-    include: ['fixtures/src/test-that-looks-like-source-file.ts'],
-    coverage: {
-      all: true,
-      reporter: 'json',
-      exclude: [...coverageConfigDefaults.exclude, '**/something-else/**'],
-    },
-  })
-
-  const coverageMap = await readCoverageMap()
-  const files = coverageMap.files()
-  expect(files.find(file => file.includes('test-that-looks-like-source-file'))).toBeFalsy()
+  if (isBrowser()) {
+    expect(files).toMatchInlineSnapshot(`
+      [
+        "<process-cwd>/fixtures/src/math.ts",
+        "<process-cwd>/fixtures/src/conditional/browser.ts",
+      ]
+    `)
+  }
+  else {
+    expect(files).toMatchInlineSnapshot(`
+      [
+        "<process-cwd>/fixtures/src/math.ts",
+        "<process-cwd>/fixtures/src/conditional/node.ts",
+      ]
+    `)
+  }
 })
 
 test('files included and excluded in plugin\'s configureVitest are excluded', async () => {
@@ -68,7 +263,6 @@ test('files included and excluded in plugin\'s configureVitest are excluded', as
     coverage: {
       // Include math.ts by default, exclude it in plugin config
       include: ['**/math.ts'],
-      all: true,
       reporter: 'json',
     },
   })
@@ -89,7 +283,6 @@ test('files included and excluded in project\'s plugin\'s configureVitest are ex
     coverage: {
       // Include math.ts by default, exclude it in plugin config
       include: ['**/math.ts'],
-      all: true,
       reporter: 'json',
     },
     projects: [
@@ -136,6 +329,25 @@ test('files included and excluded in project\'s plugin\'s configureVitest are ex
     [
       "<process-cwd>/fixtures/src/even.ts",
       "<process-cwd>/fixtures/src/untested-file.ts",
+    ]
+  `)
+})
+
+test('includes covered and uncovered with ] in filenames', async () => {
+  await runVitest({
+    include: ['fixtures/test/sources-with-]-in-filenames.test.ts'],
+    coverage: {
+      reporter: 'json',
+      include: ['**/untested-with-*', '**/tested-with-*'],
+
+    },
+  })
+
+  const coverageMap = await readCoverageMap()
+  expect(coverageMap.files()).toMatchInlineSnapshot(`
+    [
+      "<process-cwd>/fixtures/src/tested-with-]-in-filename.ts",
+      "<process-cwd>/fixtures/src/untested-with-]-in-filename.ts",
     ]
   `)
 })

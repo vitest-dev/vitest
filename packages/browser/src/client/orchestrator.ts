@@ -6,7 +6,6 @@ import { relative } from 'pathe'
 import { getUiAPI } from './ui'
 import { getBrowserState, getConfig } from './utils'
 
-const url = new URL(location.href)
 const ID_ALL = '__vitest_all__'
 
 export class IframeOrchestrator {
@@ -107,7 +106,7 @@ export class IframeOrchestrator {
 
     if (!this.iframes.has(ID_ALL)) {
       debug('preparing non-isolated iframe')
-      await this.prepareIframe(container, ID_ALL)
+      await this.prepareIframe(container, ID_ALL, options.startTime)
     }
 
     const config = getConfig()
@@ -140,7 +139,7 @@ export class IframeOrchestrator {
       this.iframes.delete(file)
     }
 
-    const iframe = await this.prepareIframe(container, file)
+    const iframe = await this.prepareIframe(container, file, options.startTime)
     await setIframeViewport(iframe, width, height)
     // running tests after the "prepare" event
     await sendEventToIframe({
@@ -157,7 +156,7 @@ export class IframeOrchestrator {
     })
   }
 
-  private async prepareIframe(container: HTMLDivElement, iframeId: string) {
+  private async prepareIframe(container: HTMLDivElement, iframeId: string, startTime: number) {
     const iframe = this.createTestIframe(iframeId)
     container.appendChild(iframe)
 
@@ -167,6 +166,7 @@ export class IframeOrchestrator {
         sendEventToIframe({
           event: 'prepare',
           iframeId,
+          startTime,
         }).then(resolve, reject)
       }
       iframe.onerror = (e) => {
@@ -186,7 +186,7 @@ export class IframeOrchestrator {
 
   private createTestIframe(iframeId: string) {
     const iframe = document.createElement('iframe')
-    const src = `${url.pathname}__vitest_test__/__test__/?sessionId=${getBrowserState().sessionId}&iframeId=${iframeId}`
+    const src = `/?sessionId=${getBrowserState().sessionId}&iframeId=${iframeId}`
     iframe.setAttribute('loading', 'eager')
     iframe.setAttribute('src', src)
     iframe.setAttribute('data-vitest', 'true')

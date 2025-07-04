@@ -1,7 +1,7 @@
 {
   "name": "@vitest/coverage-v8",
   "type": "module",
-  "version": "3.2.1",
+  "version": "4.0.0-beta.2",
   "description": "V8 coverage provider for Vitest",
   "author": "Anthony Fu <anthonyfu117@hotmail.com>",
   "license": "MIT",
@@ -54,7 +54,6 @@
     }
   },
   "dependencies": {
-    "@ampproject/remapping": "catalog:",
     "@bcoe/v8-coverage": "^1.0.2",
     "ast-v8-to-istanbul": "^0.3.3",
     "debug": "catalog:",
@@ -62,10 +61,8 @@
     "istanbul-lib-report": "catalog:",
     "istanbul-lib-source-maps": "catalog:",
     "istanbul-reports": "catalog:",
-    "magic-string": "catalog:",
     "magicast": "catalog:",
     "std-env": "catalog:",
-    "test-exclude": "catalog:",
     "tinyrainbow": "catalog:"
   },
   "devDependencies": {
@@ -74,10 +71,8 @@
     "@types/istanbul-lib-report": "catalog:",
     "@types/istanbul-lib-source-maps": "catalog:",
     "@types/istanbul-reports": "catalog:",
-    "@types/test-exclude": "catalog:",
     "@vitest/browser": "workspace:*",
     "pathe": "catalog:",
-    "v8-to-istanbul": "^9.3.0",
     "vite-node": "workspace:*",
     "vitest": "workspace:*"
   }
