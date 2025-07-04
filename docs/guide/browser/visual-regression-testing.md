@@ -128,7 +128,7 @@ intentional.
 Configure visual regression testing defaults in your
 [Vitest config](/guide/browser/config#browser-expect-tomatchscreenshot):
 
-```ts
+```ts [vitest.config.ts]
 import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
@@ -235,12 +235,10 @@ set a specific viewport size, either on the test or the instance
 configuration:
 
 ```ts
-// test.spec.ts
 await page.viewport(1280, 720)
 ```
 
-```ts
-// vitest.config.ts
+```ts [vitest.config.ts]
 export default defineConfig({
   browser: {
     enabled: true,
@@ -342,3 +340,211 @@ between runs:
 - Check for unintended animations or transitions
 - Increase test timeout for large screenshots
 - Use a cloud service or containerized environment
+
+## Running on GitHub Actions
+
+Remember when we mentioned visual tests need a stable environment? Well, here's
+the thing: your local machine isn't it. But GitHub Actions can be.
+
+The trick is splitting your workflow. You want tests that run on every PR (your
+unit tests) separate from visual tests that need special handling. Otherwise,
+you'll be fighting with screenshots that look different on every developer's
+machine.
+
+### Splitting Your Tests
+
+First, let's separate visual tests from everything else. In your `package.json`:
+
+```json [package.json]
+{
+  "scripts": {
+    "test:visual": "vitest tests/vrt/*.spec.ts",
+    "test:unit": "vitest --exclude tests/vrt/*.spec.ts"
+  }
+}
+```
+
+Now you can run `npm run test:unit` locally without visual tests getting in
+your way. Save the visual tests for CI where they belong.
+
+::: tip
+Not a fan of glob patterns? You could also use separate
+[Test Projects](/guide/projects) and run them using:
+
+- `vitest --project visual`
+- `vitest --project unit`
+:::
+
+### Setting Up the Test Runner
+
+Your CI needs browsers installed. How you do this depends on your provider:
+
+::: tabs key:provider
+== Playwright
+[Playwright](https://npmjs.com/package/playwright) makes this easy. Just pin
+your version and add this before running tests:
+
+```yaml [.github/workflows/ci.yml]
+# ...the rest of the workflow
+- name: Install Playwright Browsers
+  run: npx --no playwright install --with-deps --only-shell
+```
+
+== WebdriverIO
+
+[WebdriverIO](https://www.npmjs.com/package/webdriverio) expects you to bring
+your own browsers. The folks at
+[@browser-actions](https://github.com/browser-actions) have your back:
+
+```yaml [.github/workflows/ci.yml]
+# ...the rest of the workflow
+- uses: browser-actions/setup-chrome@v1
+  with:
+    chrome-version: 120
+```
+
+:::
+
+Then run your visual tests:
+
+```yaml [.github/workflows/ci.yml]
+# ...the rest of the workflow
+# ...browser setup
+- name: Visual Regression Testing
+  run: npm run test:visual
+```
+
+### Updating Screenshots with a Manual Workflow
+
+Here's where it gets interesting. You don't want to update screenshots on every
+PR automatically (*chaos!*). Instead, create a manually-triggered workflow that
+developers can run when they intentionally change the UI.
+
+::: tip
+This is just one approach. Adjust it to fit your team's workflow. The important
+part is having a controlled way to update baselines.
+:::
+
+```yaml [.github/workflows/update-screenshots.yml]
+name: Update Visual Regression Screenshots
+
+on:
+  workflow_dispatch: # manual trigger only
+
+env:
+  AUTHOR_NAME: 'github-actions[bot]'
+  AUTHOR_EMAIL: '41898282+github-actions[bot]@users.noreply.github.com'
+  COMMIT_MESSAGE: |
+    test: update visual regression screenshots
+
+    Co-authored-by: ${{ github.actor }} <${{ github.actor_id }}+${{ github.actor }}@users.noreply.github.com>
+
+jobs:
+  update-screenshots:
+    runs-on: ubuntu-24.04
+
+    # safety first: don't run on main
+    if: github.ref_name != github.event.repository.default_branch
+
+    # one at a time per branch
+    concurrency:
+      group: visual-regression-screenshots@${{ github.ref_name }}
+      cancel-in-progress: true
+
+    permissions:
+      contents: write # needs to push changes
+
+    steps:
+      - name: Checkout selected branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+          # use PAT if triggering other workflows
+          # token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Configure Git
+        run: |
+          git config --global user.name "${{ env.AUTHOR_NAME }}"
+          git config --global user.email "${{ env.AUTHOR_EMAIL }}"
+
+      # your setup steps here (node, pnpm, whatever)
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright Browsers
+        run: npx --no playwright install --with-deps --only-shell
+
+      # the magic happens below 🪄
+      - name: Update Visual Regression Screenshots
+        run: npm run test:visual --update
+
+      # check what changed
+      - name: Check for changes
+        id: check_changes
+        run: |
+          CHANGED_FILES=$(git status --porcelain | awk '{print $2}')
+          if [ "${CHANGED_FILES:+x}" ]; then
+            echo "changes=true" >> $GITHUB_OUTPUT
+            echo "Changes detected"
+
+            # save the list for the summary
+            echo "changed_files<<EOF" >> $GITHUB_OUTPUT
+            echo "$CHANGED_FILES" >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
+            echo "changed_count=$(echo "$CHANGED_FILES" | wc -l)" >> $GITHUB_OUTPUT
+          else
+            echo "changes=false" >> $GITHUB_OUTPUT
+            echo "No changes detected"
+          fi
+
+      # commit if there are changes
+      - name: Commit changes
+        if: steps.check_changes.outputs.changes == 'true'
+        run: |
+          git add -A
+          git commit -m "${{ env.COMMIT_MESSAGE }}"
+
+      - name: Push changes
+        if: steps.check_changes.outputs.changes == 'true'
+        run: git push origin ${{ github.ref_name }}
+
+      # pretty summary for humans
+      - name: Summary
+        run: |
+          if [[ "${{ steps.check_changes.outputs.changes }}" == "true" ]]; then
+            echo "### 📸 Visual Regression Screenshots Updated" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "Successfully updated **${{ steps.check_changes.outputs.changed_count }}** screenshot(s) on \`${{ github.ref_name }}\`" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "#### Changed Files:" >> $GITHUB_STEP_SUMMARY
+            echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+            echo "${{ steps.check_changes.outputs.changed_files }}" >> $GITHUB_STEP_SUMMARY
+            echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "✅ The updated screenshots have been committed and pushed. Your visual regression baseline is now up to date!" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "### ℹ️ No Screenshot Updates Required" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "The visual regression test command ran successfully but no screenshots needed updating." >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "All screenshots are already up to date! 🎉" >> $GITHUB_STEP_SUMMARY
+          fi
+```
+
+Whoever triggers the workflow gets co-author credit, plus you get a nice
+summary:
+
+- **When screenshots changed**, it lists what changed:
+
+  <img alt="Action summary after updates" img-light src="/vrt-gha-summary-update-light.png">
+  <img alt="Action summary after updates" img-dark src="/vrt-gha-summary-update-dark.png">
+
+- **When nothing changed**, well, it tells you that too:
+
+  <img alt="Action summary after no updates" img-light src="/vrt-gha-summary-no-update-light.png">
+  <img alt="Action summary after no updates" img-dark src="/vrt-gha-summary-no-update-dark.png">
