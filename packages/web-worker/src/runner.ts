@@ -19,6 +19,7 @@ export function startWebWorkerModuleRunner(context: Record<string, unknown>): Pr
 
   const evaluator = new VitestModuleEvaluator(vm, {
     interopDefault: state.config.deps.interopDefault,
+    moduleExecutionInfo: state.moduleExecutionInfo,
     getCurrentTestFilepath: () => state.filepath,
     compiledFunctionArgumentsNames,
     compiledFunctionArgumentsValues,

@@ -54,6 +54,9 @@ export async function startVitestModuleRunner(options: ContextModuleRunnerOption
   const evaluator = options.evaluator || new VitestModuleEvaluator(
     vm,
     {
+      get moduleExecutionInfo() {
+        return state().moduleExecutionInfo
+      },
       get interopDefault() {
         return state().config.deps.interopDefault
       },

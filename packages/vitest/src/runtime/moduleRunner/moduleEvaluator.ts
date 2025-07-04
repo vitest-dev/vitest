@@ -4,6 +4,7 @@ import type {
   ModuleRunnerContext,
   ModuleRunnerImportMeta,
 } from 'vite/module-runner'
+import type { ModuleExecutionInfo } from './moduleDebug'
 import type { VitestVmOptions } from './moduleRunner'
 import { createRequire } from 'node:module'
 import vm from 'node:vm'
@@ -14,11 +15,13 @@ import {
   ssrImportMetaKey,
   ssrModuleExportsKey,
 } from 'vite/module-runner'
+import { ModuleDebug } from './moduleDebug'
 
 export const AsyncFunction = async function () {}.constructor as typeof Function
 
 export interface VitestModuleEvaluatorOptions {
   interopDefault: boolean | undefined
+  moduleExecutionInfo: ModuleExecutionInfo
   getCurrentTestFilepath: () => string | undefined
   compiledFunctionArgumentsNames?: string[]
   compiledFunctionArgumentsValues?: unknown[]
@@ -37,6 +40,8 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
     Proxy: typeof Proxy
     Reflect: typeof Reflect
   }
+
+  private debug = new ModuleDebug()
 
   constructor(
     vmOptions: VitestVmOptions | undefined,
@@ -232,44 +237,48 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
       columnOffset: -codeDefinition.length,
     }
 
-    // TODO
-    // const finishModuleExecutionInfo = this.startCalculateModuleExecutionInfo(options.filename, codeDefinition.length)
+    const finishModuleExecutionInfo = this.debug.startCalculateModuleExecutionInfo(options.filename, codeDefinition.length)
 
-    const initModule = this.vm
-      ? vm.runInContext(wrappedCode, this.vm.context, options)
-      : vm.runInThisContext(wrappedCode, options)
+    try {
+      const initModule = this.vm
+        ? vm.runInContext(wrappedCode, this.vm.context, options)
+        : vm.runInThisContext(wrappedCode, options)
 
-    const dynamicRequest = (dep: string, options: ImportCallOptions) => {
-      dep = String(dep)
-      // TODO: support more edge cases?
-      // vite doesn't support dynamic modules by design, but we have to
-      if (dep[0] === '#') {
-        return context[ssrDynamicImportKey](wrapId(dep), options)
+      const dynamicRequest = (dep: string, options: ImportCallOptions) => {
+        dep = String(dep)
+        // TODO: support more edge cases?
+        // vite doesn't support dynamic modules by design, but we have to
+        if (dep[0] === '#') {
+          return context[ssrDynamicImportKey](wrapId(dep), options)
+        }
+        return context[ssrDynamicImportKey](dep, options)
       }
-      return context[ssrDynamicImportKey](dep, options)
+
+      await initModule(
+        context[ssrModuleExportsKey],
+        context[ssrImportMetaKey],
+        context[ssrImportKey],
+        dynamicRequest,
+        context[ssrExportAllKey],
+        // vite 7 support
+        (name: string, getter: () => unknown) => Object.defineProperty(moduleExports, name, {
+          enumerable: true,
+          configurable: true,
+          get: getter,
+        }),
+
+        filename,
+        dirname,
+        moduleProxy,
+        cjsExports,
+        require,
+
+        ...this.compiledFunctionArgumentsValues,
+      )
     }
-
-    await initModule(
-      context[ssrModuleExportsKey],
-      context[ssrImportMetaKey],
-      context[ssrImportKey],
-      dynamicRequest,
-      context[ssrExportAllKey],
-      // vite 7 support
-      (name: string, getter: () => unknown) => Object.defineProperty(moduleExports, name, {
-        enumerable: true,
-        configurable: true,
-        get: getter,
-      }),
-
-      filename,
-      dirname,
-      moduleProxy,
-      cjsExports,
-      require,
-
-      ...this.compiledFunctionArgumentsValues,
-    )
+    finally {
+      this.options.moduleExecutionInfo?.set(options.filename, finishModuleExecutionInfo())
+    }
   }
 
   private createRequire(filename: string) {

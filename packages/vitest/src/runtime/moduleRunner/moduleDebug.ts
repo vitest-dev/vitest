@@ -21,3 +21,41 @@ export type ExecutionStack = Array<{
   /** Accumulated time spent importing all sub-imports. */
   subImportTime: number
 }>
+
+const performanceNow = performance.now.bind(performance)
+
+export class ModuleDebug {
+  private executionStack: ExecutionStack = []
+
+  startCalculateModuleExecutionInfo(filename: string, startOffset: number): () => ModuleExecutionInfoEntry {
+    const startTime = performanceNow()
+
+    this.executionStack.push({
+      filename,
+      startTime,
+      subImportTime: 0,
+    })
+
+    return () => {
+      const duration = performanceNow() - startTime
+
+      const currentExecution = this.executionStack.pop()
+
+      if (currentExecution == null) {
+        throw new Error('Execution stack is empty, this should never happen')
+      }
+
+      const selfTime = duration - currentExecution.subImportTime
+
+      if (this.executionStack.length > 0) {
+        this.executionStack.at(-1)!.subImportTime += duration
+      }
+
+      return {
+        startOffset,
+        duration,
+        selfTime,
+      }
+    }
+  }
+}
