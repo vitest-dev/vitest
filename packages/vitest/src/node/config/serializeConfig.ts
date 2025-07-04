@@ -120,7 +120,6 @@ export function serializeConfig(
       updateSnapshot: coreConfig.snapshotOptions.updateSnapshot,
       snapshotFormat: {
         ...coreConfig.snapshotOptions.snapshotFormat,
-        compareKeys: undefined,
       },
       expand:
         config.snapshotOptions.expand
