@@ -80,7 +80,7 @@ export default ({ mode }: { mode: string }) => {
             'marko': 'vscode-icons:file-type-marko',
           },
         }),
-        llmstxt()
+        llmstxt(),
       ],
     },
     markdown: {
