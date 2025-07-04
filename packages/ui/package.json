@@ -35,7 +35,9 @@
   ],
   "scripts": {
     "build": "rimraf dist && pnpm build:node && pnpm build:client",
-    "build:client": "vite build",
+    "build:client": "pnpm build:client:single && pnpm build:client:normal",
+    "build:client:single": "vite build --config vite.config.bundle-as-single-html.ts",
+    "build:client:normal": "vite build --config vite.config.ts",
     "build:node": "rollup -c",
     "typecheck": "tsc --noEmit",
     "dev:client": "vite",
@@ -85,6 +87,7 @@
     "unplugin-vue-components": "catalog:",
     "vite": "^5.0.0",
     "vite-plugin-pages": "^0.33.0",
+    "vite-plugin-singlefile": "^2.3.0",
     "vue": "catalog:",
     "vue-router": "^4.5.1",
     "vue-virtual-scroller": "2.0.0-beta.8"
