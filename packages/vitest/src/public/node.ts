@@ -76,6 +76,8 @@ export type {
   ParentProjectBrowser,
   ProjectBrowser,
   ResolvedBrowserOptions,
+  ToMatchScreenshotComparators,
+  ToMatchScreenshotOptions,
 } from '../node/types/browser'
 export const createViteServer: typeof vite.createServer = vite.createServer
 export type {
