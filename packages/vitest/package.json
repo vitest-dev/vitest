@@ -172,7 +172,7 @@
     "tinyrainbow": "catalog:",
     "vite": "^6.0.0 || ^7.0.0-0",
     "vite-node": "workspace:*",
-    "why-is-node-running": "^2.3.0"
+    "why-is-node-running": "^3.2.2"
   },
   "devDependencies": {
     "@ampproject/remapping": "catalog:",
