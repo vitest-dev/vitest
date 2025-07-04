@@ -1,8 +1,7 @@
-import type { EncodedSourceMap } from '../../../packages/vite-node/src/types'
 import { assertTypes, deepClone, deepMerge, isNegativeNaN, objDisplay, objectAttr, toArray } from '@vitest/utils'
+import { EvaluatedModules } from 'vite/module-runner'
 import { beforeAll, describe, expect, test } from 'vitest'
 import { deepMergeSnapshot } from '../../../packages/snapshot/src/port/utils'
-import { ModuleCacheMap } from '../../../packages/vite-node/src/client'
 import { resetModules } from '../../../packages/vitest/src/runtime/utils'
 
 describe('assertTypes', () => {
@@ -206,9 +205,7 @@ describe('deepClone', () => {
 })
 
 describe('resetModules doesn\'t resets only user modules', () => {
-  const mod = () => ({ evaluated: true, promise: Promise.resolve({}), resolving: false, exports: {}, map: {} as EncodedSourceMap })
-
-  const moduleCache = new ModuleCacheMap()
+  const moduleCache = new EvaluatedModules()
   const modules = [
     ['/some-module.ts', true],
     ['/@fs/some-path.ts', true],
@@ -222,23 +219,31 @@ describe('resetModules doesn\'t resets only user modules', () => {
 
   beforeAll(() => {
     modules.forEach(([path]) => {
-      moduleCache.set(path, mod())
+      const exports = {}
+      moduleCache.idToModuleMap.set(path, {
+        id: path,
+        url: path,
+        file: path,
+        importers: new Set(),
+        imports: new Set(),
+        evaluated: true,
+        meta: undefined,
+        exports,
+        promise: Promise.resolve(exports),
+        map: undefined,
+      })
     })
     resetModules(moduleCache)
   })
 
   test.each(modules)('Cache for %s is reset (%s)', (path, reset) => {
-    const cached = moduleCache.get(path)
+    const cached = moduleCache.idToModuleMap.get(path)
 
     if (reset) {
-      expect(cached).not.toHaveProperty('evaluated')
-      expect(cached).not.toHaveProperty('resolving')
-      expect(cached).not.toHaveProperty('exports')
-      expect(cached).not.toHaveProperty('promise')
+      expect(cached).toHaveProperty('exports', undefined)
+      expect(cached).toHaveProperty('promise', undefined)
     }
     else {
-      expect(cached).toHaveProperty('evaluated')
-      expect(cached).toHaveProperty('resolving')
       expect(cached).toHaveProperty('exports')
       expect(cached).toHaveProperty('promise')
     }

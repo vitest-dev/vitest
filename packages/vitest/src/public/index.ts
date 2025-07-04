@@ -136,3 +136,5 @@ export type {
 export type { SerializedError } from '@vitest/utils'
 export type { SerializedTestSpecification }
 export type { DiffOptions } from '@vitest/utils/diff'
+
+export { EvaluatedModules } from 'vite/module-runner'

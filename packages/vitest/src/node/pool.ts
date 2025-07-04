@@ -144,7 +144,7 @@ export function createPool(ctx: Vitest): ProcessPool {
         return customPools.get(filepath)!
       }
 
-      const pool = await ctx.runner.executeId(filepath)
+      const pool = await ctx.runner.import(filepath)
       if (typeof pool.default !== 'function') {
         throw new TypeError(
           `Custom pool "${filepath}" must export a function as default export`,

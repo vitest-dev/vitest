@@ -4,7 +4,6 @@ import {
   deepClone,
   deepMerge,
   notNullish,
-  toArray,
 } from '@vitest/utils'
 import { relative } from 'pathe'
 import { defaultPort } from '../../constants'
@@ -18,6 +17,7 @@ import { CSSEnablerPlugin } from './cssEnabler'
 import { MocksPlugins } from './mocks'
 import { NormalizeURLPlugin } from './normalizeURL'
 import { VitestOptimizer } from './optimizer'
+import { ModuleRunnerTransform } from './runnerTransform'
 import { SsrReplacerPlugin } from './ssrReplacer'
 import {
   deleteDefineConfig,
@@ -121,6 +121,9 @@ export async function VitestPlugin(
             ssr: {
               resolve: resolveOptions,
             },
+            __vitest__: {
+              dev: {},
+            },
           },
           test: {
             poolOptions: {
@@ -163,29 +166,6 @@ export async function VitestPlugin(
           },
         )
         config.customLogger = silenceImportViteIgnoreWarning(config.customLogger)
-
-        // we want inline dependencies to be resolved by analyser plugin so module graph is populated correctly
-        if (viteConfig.ssr?.noExternal !== true) {
-          const inline = testConfig.server?.deps?.inline
-          if (inline === true) {
-            config.ssr = { noExternal: true }
-          }
-          else {
-            const noExternal = viteConfig.ssr?.noExternal
-            const noExternalArray
-              = typeof noExternal !== 'undefined'
-                ? toArray(noExternal)
-                : undefined
-            // filter the same packages
-            const uniqueInline
-              = inline && noExternalArray
-                ? inline.filter(dep => !noExternalArray.includes(dep))
-                : inline
-            config.ssr = {
-              noExternal: uniqueInline,
-            }
-          }
-        }
 
         // chokidar fsevents is unstable on macos when emitting "ready" event
         if (
@@ -305,6 +285,7 @@ export async function VitestPlugin(
     ...MocksPlugins(),
     VitestOptimizer(),
     NormalizeURLPlugin(),
+    ModuleRunnerTransform(),
   ].filter(notNullish)
 }
 function removeUndefinedValues<T extends Record<string, any>>(

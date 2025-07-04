@@ -135,6 +135,10 @@ export class MockerRegistry {
     this.registryByUrl.delete(id)
   }
 
+  public deleteById(id: string): void {
+    this.registryById.delete(id)
+  }
+
   public get(id: string): MockedModule | undefined {
     return this.registryByUrl.get(id)
   }

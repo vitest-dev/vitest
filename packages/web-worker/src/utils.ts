@@ -1,11 +1,7 @@
 import type { WorkerGlobalState } from 'vitest'
 import type { CloneOption } from './types'
-import { readFileSync as _readFileSync } from 'node:fs'
 import ponyfillStructuredClone from '@ungap/structured-clone'
 import createDebug from 'debug'
-
-// keep the reference in case it was mocked
-const readFileSync = _readFileSync
 
 export const debug: createDebug.Debugger = createDebug('vitest:web-worker')
 
@@ -76,32 +72,6 @@ export function createMessageEvent(
     return new MessageEvent('messageerror', {
       data: error,
     })
-  }
-}
-
-export function getRunnerOptions(): any {
-  const state = getWorkerState()
-  const { config, rpc, moduleCache, moduleExecutionInfo } = state
-
-  return {
-    async fetchModule(id: string) {
-      const result = await rpc.fetch(id, 'web')
-      if (result.id && !result.externalize) {
-        const code = readFileSync(result.id, 'utf-8')
-        return { code }
-      }
-      return result
-    },
-    resolveId(id: string, importer?: string) {
-      return rpc.resolveId(id, importer, 'web')
-    },
-    moduleCache,
-    moduleExecutionInfo,
-    interopDefault: config.deps.interopDefault ?? true,
-    moduleDirectories: config.deps.moduleDirectories,
-    root: config.root,
-    base: config.base,
-    state,
   }
 }
 

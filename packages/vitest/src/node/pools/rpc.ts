@@ -1,8 +1,11 @@
+import type { DevEnvironment, FetchResult } from 'vite'
 import type { RuntimeRPC } from '../../types/rpc'
 import type { TestProject } from '../project'
 import type { ResolveSnapshotPathHandlerContext } from '../types/config'
-import { mkdirSync } from 'node:fs'
+import { existsSync, mkdirSync } from 'node:fs'
 import { rename, stat, unlink, writeFile } from 'node:fs/promises'
+import path from 'node:path'
+import { cleanUrl, isExternalUrl, unwrapId, withTrailingSlash, wrapId } from '@vitest/utils'
 import { dirname, join } from 'pathe'
 import { hash } from '../hash'
 
@@ -18,31 +21,70 @@ interface MethodsOptions {
 export function createMethodsRPC(project: TestProject, options: MethodsOptions = {}): RuntimeRPC {
   const ctx = project.vitest
   const cacheFs = options.cacheFs ?? false
+  const cachedFsResults = new Map<string, string>()
   return {
-    snapshotSaved(snapshot) {
-      ctx.snapshot.add(snapshot)
-    },
-    resolveSnapshotPath(testPath: string) {
-      return ctx.snapshot.resolvePath<ResolveSnapshotPathHandlerContext>(testPath, {
-        config: project.serializedConfig,
-      })
-    },
-    async fetch(id, transformMode) {
-      const result = await project.vitenode.fetchResult(id, transformMode).catch(handleRollupError)
-      const code = result.code
-      if (!cacheFs || result.externalize) {
+    async fetch(
+      url,
+      importer,
+      environmentName,
+      options,
+    ) {
+      const environment = project.vite.environments[environmentName]
+      if (!environment) {
+        throw new Error(`The environment ${environmentName} was not defined in the Vite config.`)
+      }
+
+      // We are copy pasting Vite's externalization logic from `fetchModule` because
+      // we instead rely on our own `shouldExternalize` method because Vite
+      // doesn't support `resolve.external` in non SSR environments (jsdom/happy-dom)
+      if (url.startsWith('data:')) {
+        return { externalize: url, type: 'builtin' }
+      }
+
+      if (url === '/@vite/client' || url === '@vite/client') {
+        // this will be stubbed
+        return { externalize: '/@vite/client', type: 'module' }
+      }
+
+      const isFileUrl = url.startsWith('file://')
+
+      if (isExternalUrl(url) && !isFileUrl) {
+        return { externalize: url, type: 'network' }
+      }
+
+      // Vite does the same in `fetchModule`, but we want to externalize modules ourselves,
+      // so we do this first to resolve the module and check its `id`. The next call of
+      // `ensureEntryFromUrl` inside `fetchModule` is cached and should take no time
+      // This also makes it so externalized modules are inside the module graph.
+      const module = await environment.moduleGraph.ensureEntryFromUrl(unwrapId(url))
+      const cached = !!module.transformResult
+
+      // if url is already cached, we can just confirm it's also cached on the server
+      if (options?.cached && cached) {
+        return { cache: true }
+      }
+
+      if (module.id) {
+        const externalize = await project._resolver.shouldExternalize(module.id)
+        if (externalize) {
+          return { externalize, type: 'module' }
+        }
+      }
+
+      const result = await environment.fetchModule(url, importer, options).catch(handleRollupError)
+
+      if (!cacheFs || !('code' in result)) {
         return result
       }
-      if ('id' in result && typeof result.id === 'string') {
-        return { id: result.id }
-      }
 
-      if (code == null) {
-        throw new Error(`Failed to fetch module ${id}`)
+      const code = result.code
+      // to avoid serialising large chunks of code,
+      // we store them in a tmp file and read in the test thread
+      if (cachedFsResults.has(result.id)) {
+        return getCachedResult(result, cachedFsResults)
       }
-
-      const dir = join(project.tmpDir, transformMode)
-      const name = hash('sha1', id, 'hex')
+      const dir = join(project.tmpDir, environmentName)
+      const name = hash('sha1', result.id, 'hex')
       const tmp = join(dir, name)
       if (!created.has(dir)) {
         mkdirSync(dir, { recursive: true })
@@ -50,7 +92,8 @@ export function createMethodsRPC(project: TestProject, options: MethodsOptions =
       }
       if (promises.has(tmp)) {
         await promises.get(tmp)
-        return { id: tmp }
+        cachedFsResults.set(result.id, tmp)
+        return getCachedResult(result, cachedFsResults)
       }
       promises.set(
         tmp,
@@ -61,14 +104,37 @@ export function createMethodsRPC(project: TestProject, options: MethodsOptions =
           .finally(() => promises.delete(tmp)),
       )
       await promises.get(tmp)
-      Object.assign(result, { id: tmp })
-      return { id: tmp }
+      cachedFsResults.set(result.id, tmp)
+      return getCachedResult(result, cachedFsResults)
     },
-    resolveId(id, importer, transformMode) {
-      return project.vitenode.resolveId(id, importer, transformMode).catch(handleRollupError)
+    async resolve(id, importer, environmentName) {
+      const environment = project.vite.environments[environmentName]
+      if (!environment) {
+        throw new Error(`The environment ${environmentName} was not defined in the Vite config.`)
+      }
+      const resolved = await environment.pluginContainer.resolveId(id, importer)
+      if (!resolved) {
+        return null
+      }
+      return {
+        file: cleanUrl(resolved.id),
+        url: normalizeResolvedIdToUrl(environment, resolved.id),
+        id: resolved.id,
+      }
     },
-    transform(id, environment) {
-      return project.vitenode.transformModule(id, environment).catch(handleRollupError)
+
+    snapshotSaved(snapshot) {
+      ctx.snapshot.add(snapshot)
+    },
+    resolveSnapshotPath(testPath: string) {
+      return ctx.snapshot.resolvePath<ResolveSnapshotPathHandlerContext>(testPath, {
+        config: project.serializedConfig,
+      })
+    },
+    async transform(id) {
+      const result = await project.vite.transformRequest(id).catch(handleRollupError)
+      // TODO: this code should not be processed with ssrTransform (how?)
+      return { code: result?.code }
     },
     async onQueued(file) {
       if (options.collect) {
@@ -117,6 +183,21 @@ export function createMethodsRPC(project: TestProject, options: MethodsOptions =
     getCountOfFailedTests() {
       return ctx.state.getCountOfFailedTests()
     },
+  }
+}
+
+function getCachedResult(result: Extract<FetchResult, { code: string }>, cachedFsResults: Map<string, string>) {
+  const tmp = cachedFsResults.get(result.id)
+  if (!tmp) {
+    throw new Error(`The cached result was returned too early for ${result.id}.`)
+  }
+  return {
+    cached: true as const,
+    file: result.file,
+    id: result.id,
+    tmp,
+    url: result.url,
+    invalidate: result.invalidate,
   }
 }
 
@@ -173,4 +254,48 @@ async function atomicWriteFile(realFilePath: string, data: string): Promise<void
     }
     catch {}
   }
+}
+
+// TODO: have abstraction
+// this is copy pasted from vite
+function normalizeResolvedIdToUrl(
+  environment: DevEnvironment,
+  resolvedId: string,
+): string {
+  const root = environment.config.root
+  const depsOptimizer = environment.depsOptimizer
+
+  let url: string
+
+  // normalize all imports into resolved URLs
+  // e.g. `import 'foo'` -> `import '/@fs/.../node_modules/foo/index.js'`
+  if (resolvedId.startsWith(withTrailingSlash(root))) {
+    // in root: infer short absolute path from root
+    url = resolvedId.slice(root.length)
+  }
+  else if (
+    depsOptimizer?.isOptimizedDepFile(resolvedId)
+    // vite-plugin-react isn't following the leading \0 virtual module convention.
+    // This is a temporary hack to avoid expensive fs checks for React apps.
+    // We'll remove this as soon we're able to fix the react plugins.
+    || (resolvedId !== '/@react-refresh'
+      && path.isAbsolute(resolvedId)
+      && existsSync(cleanUrl(resolvedId)))
+  ) {
+    // an optimized deps may not yet exists in the filesystem, or
+    // a regular file exists but is out of root: rewrite to absolute /@fs/ paths
+    url = path.posix.join('/@fs/', resolvedId)
+  }
+  else {
+    url = resolvedId
+  }
+
+  // if the resolved id is not a valid browser import specifier,
+  // prefix it to make it valid. We will strip this before feeding it
+  // back into the transform pipeline
+  if (url[0] !== '.' && url[0] !== '/') {
+    url = wrapId(resolvedId)
+  }
+
+  return url
 }

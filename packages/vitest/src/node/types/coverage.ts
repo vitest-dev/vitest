@@ -59,7 +59,7 @@ export interface ReportContext {
 }
 
 export interface CoverageModuleLoader extends RuntimeCoverageModuleLoader {
-  executeId: (id: string) => Promise<{ default: CoverageProviderModule }>
+  import: (id: string) => Promise<{ default: CoverageProviderModule }>
 }
 
 export interface CoverageProviderModule extends RuntimeCoverageProviderModule {
