@@ -10,6 +10,7 @@ import { isWindows } from '../utils/env'
 
 export class VitestResolver {
   private options: ExternalizeOptions
+  private externalizeCache = new Map<string, Promise<string | false>>()
 
   constructor(cacheDir: string, config: ResolvedConfig) {
     this.options = {
@@ -28,7 +29,7 @@ export class VitestResolver {
   }
 
   public shouldExternalize(file: string): Promise<string | false> {
-    return shouldExternalize(normalizeId(file), this.options)
+    return shouldExternalize(normalizeId(file), this.options, this.externalizeCache)
   }
 }
 
@@ -132,11 +133,10 @@ async function isValidNodeImport(id: string) {
   }
 }
 
-const _defaultExternalizeCache = new Map<string, Promise<string | false>>()
 export async function shouldExternalize(
   id: string,
-  options?: ExternalizeOptions,
-  cache: Map<string, Promise<string | false>> = _defaultExternalizeCache,
+  options: ExternalizeOptions,
+  cache: Map<string, Promise<string | false>>,
 ): Promise<string | false> {
   if (!cache.has(id)) {
     cache.set(id, _shouldExternalize(id, options))

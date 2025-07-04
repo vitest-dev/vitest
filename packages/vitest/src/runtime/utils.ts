@@ -58,11 +58,15 @@ export function resetModules(modules: EvaluatedModules, resetMocks = false): voi
     // don't clear mocks
     ...(!resetMocks ? [/^mock:/] : []),
   ]
-  modules.idToModuleMap.forEach((mod, path) => {
+  modules.idToModuleMap.forEach((node, path) => {
     if (skipPaths.some(re => re.test(path))) {
       return
     }
-    modules.invalidateModule(mod)
+
+    node.promise = undefined
+    node.exports = undefined
+    node.evaluated = false
+    node.importers.clear()
   })
 }
 

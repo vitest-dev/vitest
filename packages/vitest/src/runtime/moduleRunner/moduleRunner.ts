@@ -19,6 +19,7 @@ export class VitestModuleRunner extends ModuleRunner {
         transport,
         hmr: false,
         evaluatedModules: options.evaluatedModules,
+        sourcemapInterceptor: 'prepareStackTrace',
       },
       options.evaluator,
     )

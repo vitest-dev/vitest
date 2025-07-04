@@ -21,6 +21,17 @@ export function ModuleRunnerTransform(): VitePlugin {
           environment.dev.moduleRunnerTransform = true
           environment.dev.preTransformRequests = false
           environment.keepProcessEnv = true
+
+          // remove Vite's externalization logic because we have our own (unfortunetly)
+          environment.resolve ??= {}
+
+          // TODO: make sure we copy user settings to server.deps.inline/server.deps.external
+          environment.resolve.external = []
+          // by setting `noExternal` to `true`, we make sure that
+          // Vite will never use its own externalization mechanism
+          // to externalize modules and always resolve static imports
+          // in both SSR and Client environments
+          environment.resolve.noExternal = true
         }
       },
     },

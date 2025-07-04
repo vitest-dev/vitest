@@ -34,37 +34,40 @@ export function createMethodsRPC(project: TestProject, options: MethodsOptions =
         throw new Error(`The environment ${environmentName} was not defined in the Vite config.`)
       }
 
+      // We are copy pasting Vite's externalization logic from `fetchModule` because
+      // we instead rely on our own `shouldExternalize` method because Vite
+      // doesn't support `resolve.external` in non SSR environments (jsdom/happy-dom)
+      if (url.startsWith('data:')) {
+        return { externalize: url, type: 'builtin' }
+      }
+
       if (url === '/@vite/client' || url === '@vite/client') {
         // this will be stubbed
         return { externalize: '/@vite/client', type: 'module' }
       }
 
       const isFileUrl = url.startsWith('file://')
-      const willBeExternalizedByVite
-        // is external fs module
-        = (!isFileUrl && importer && url[0] !== '.' && url[0] !== '/')
-        // data
-          || url.startsWith('data:')
-          || (isExternalUrl(url) && !isFileUrl)
 
-      // We don't want to create a new module node if it will be externalized,
-      // so we copy paste the Vite resolution logic.
-      // In a perfect world we can execute our own cache related code inside fetchModule
-      // or just NOT have our own externalization logic <-- pls
-      if (!willBeExternalizedByVite) {
-        const mod = await environment.moduleGraph.ensureEntryFromUrl(unwrapId(url))
-        const cached = !!mod.transformResult
+      if (isExternalUrl(url) && !isFileUrl) {
+        return { externalize: url, type: 'network' }
+      }
 
-        // if url is already cached, we can just confirm it's also cached on the server
-        if (options?.cached && cached) {
-          return { cache: true }
-        }
+      // Vite does the same in `fetchModule`, but we want to externalize modules ourselves,
+      // so we do this first to resolve the module and check its `id`. The next call of
+      // `ensureEntryFromUrl` inside `fetchModule` is cached and should take no time
+      // This also makes it so externalized modules are inside the module graph.
+      const module = await environment.moduleGraph.ensureEntryFromUrl(unwrapId(url))
+      const cached = !!module.transformResult
 
-        if (mod.id) {
-          const externalize = await project._resolver.shouldExternalize(mod.id)
-          if (externalize) {
-            return { externalize, type: 'module' }
-          }
+      // if url is already cached, we can just confirm it's also cached on the server
+      if (options?.cached && cached) {
+        return { cache: true }
+      }
+
+      if (module.id) {
+        const externalize = await project._resolver.shouldExternalize(module.id)
+        if (externalize) {
+          return { externalize, type: 'module' }
         }
       }
 
@@ -73,6 +76,7 @@ export function createMethodsRPC(project: TestProject, options: MethodsOptions =
       if (!cacheFs || !('code' in result)) {
         return result
       }
+
       const code = result.code
       // to avoid serialising large chunks of code,
       // we store them in a tmp file and read in the test thread

@@ -1171,6 +1171,12 @@ importers:
 
   test/cli:
     devDependencies:
+      '@test/test-dep-error':
+        specifier: file:./deps/error
+        version: file:test/cli/deps/error
+      '@test/test-dep-linked':
+        specifier: link:./deps/linked
+        version: link:deps/linked
       '@types/debug':
         specifier: 'catalog:'
         version: 4.1.12
@@ -1183,12 +1189,6 @@ importers:
       '@vitest/runner':
         specifier: workspace:^
         version: link:../../packages/runner
-      '@vitest/test-dep-error':
-        specifier: file:./deps/error
-        version: file:test/cli/deps/error
-      '@vitest/test-dep-linked':
-        specifier: link:./deps/linked
-        version: link:deps/linked
       '@vitest/utils':
         specifier: workspace:*
         version: link:../../packages/utils
@@ -3536,6 +3536,9 @@ packages:
   '@swc/types@0.1.12':
     resolution: {integrity: sha512-wBJA+SdtkbFhHjTMYH+dEH1y4VpfGdAc2Kw/LK09i9bXd/K6j6PkDcFCEzb6iVfZMkPRrl/q0e3toqTAJdkIVA==}
 
+  '@test/test-dep-error@file:test/cli/deps/error':
+    resolution: {directory: test/cli/deps/error, type: directory}
+
   '@testing-library/dom@10.4.0':
     resolution: {integrity: sha512-pemlzrSESWbdAloYml3bAJMEfNh1Z7EduzqPKprCH5S341frlpYnUEW0H72dLxa6IsYr+mPno20GiSm+h9dEdQ==}
     engines: {node: '>=18'}
@@ -4036,9 +4039,6 @@ packages:
 
   '@vitest/test-dep-conditions@file:test/config/deps/test-dep-conditions':
     resolution: {directory: test/config/deps/test-dep-conditions, type: directory}
-
-  '@vitest/test-dep-error@file:test/cli/deps/error':
-    resolution: {directory: test/cli/deps/error, type: directory}
 
   '@vitest/test-dep1@file:test/core/deps/dep1':
     resolution: {directory: test/core/deps/dep1, type: directory}
@@ -10949,6 +10949,8 @@ snapshots:
     dependencies:
       '@swc/counter': 0.1.3
 
+  '@test/test-dep-error@file:test/cli/deps/error': {}
+
   '@testing-library/dom@10.4.0':
     dependencies:
       '@babel/code-frame': 7.26.2
@@ -11555,8 +11557,6 @@ snapshots:
   '@vitest/test-dep-conditions@file:test/config/deps/test-dep-conditions':
     dependencies:
       '@vitest/test-dep-conditions-indirect': file:test/config/deps/test-dep-conditions-indirect
-
-  '@vitest/test-dep-error@file:test/cli/deps/error': {}
 
   '@vitest/test-dep1@file:test/core/deps/dep1': {}
 

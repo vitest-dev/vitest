@@ -82,7 +82,7 @@ describe('stacktrace in dependency package', () => {
       root,
       server: {
         deps: {
-          inline: [/@vitest\/test-dep-error/],
+          inline: [/@test\/test-dep-error/],
         },
       },
     }, [testFile])

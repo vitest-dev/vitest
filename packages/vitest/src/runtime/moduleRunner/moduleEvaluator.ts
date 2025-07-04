@@ -28,6 +28,7 @@ export interface VitestModuleEvaluatorOptions {
 }
 
 export class VitestModuleEvaluator implements ModuleEvaluator {
+  public startOffset = 1 // \n in codeDefinition
   public stubs: Record<string, any> = {}
   public env: ModuleRunnerImportMeta['env'] = createImportMetaEnvProxy()
   private vm: VitestVmOptions | undefined
@@ -229,7 +230,7 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
     // add 'use strict' since ESM enables it by default
     const codeDefinition = `'use strict';async (${argumentsList.join(
       ',',
-    )})=>{{`
+    )})=>{{\n`
     const wrappedCode = `${codeDefinition}${code}\n}}`
     const options = {
       filename,
