@@ -185,7 +185,7 @@
     "@types/istanbul-reports": "catalog:",
     "@types/jsdom": "^21.1.7",
     "@types/mime": "^4.0.0",
-    "@types/node": "^22.15.32",
+    "@types/node": "^22.16.0",
     "@types/picomatch": "^4.0.0",
     "@types/prompts": "^2.4.9",
     "@types/sinonjs__fake-timers": "^8.1.5",

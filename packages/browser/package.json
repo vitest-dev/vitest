@@ -104,18 +104,18 @@
     "@vitest/runner": "workspace:*",
     "@vitest/ui": "workspace:*",
     "@vitest/ws-client": "workspace:*",
-    "@wdio/protocols": "^9.15.0",
-    "@wdio/types": "^9.15.0",
+    "@wdio/protocols": "^9.16.2",
+    "@wdio/types": "^9.16.2",
     "birpc": "catalog:",
     "flatted": "catalog:",
     "ivya": "^1.7.0",
     "mime": "^4.0.7",
     "pathe": "catalog:",
     "periscopic": "^4.0.2",
-    "playwright": "^1.53.1",
-    "playwright-core": "^1.53.1",
+    "playwright": "^1.53.2",
+    "playwright-core": "^1.53.2",
     "safaridriver": "^1.0.0",
     "vitest": "workspace:*",
-    "webdriverio": "^9.15.0"
+    "webdriverio": "^9.16.2"
   }
 }

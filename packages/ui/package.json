@@ -56,7 +56,7 @@
     "tinyrainbow": "catalog:"
   },
   "devDependencies": {
-    "@faker-js/faker": "^9.8.0",
+    "@faker-js/faker": "^9.9.0",
     "@iconify-json/carbon": "catalog:",
     "@iconify-json/logos": "catalog:",
     "@testing-library/vue": "^8.1.0",
@@ -78,13 +78,13 @@
     "d3-graph-controller": "^3.1.1",
     "floating-vue": "^5.2.2",
     "mime": "^4.0.7",
-    "rollup": "^4.44.0",
+    "rollup": "^4.44.2",
     "splitpanes": "^3.2.0",
     "unocss": "catalog:",
     "unplugin-auto-import": "^0.19.0",
     "unplugin-vue-components": "catalog:",
     "vite": "^5.0.0",
-    "vite-plugin-pages": "^0.33.0",
+    "vite-plugin-pages": "^0.33.1",
     "vue": "catalog:",
     "vue-router": "^4.5.1",
     "vue-virtual-scroller": "2.0.0-beta.8"

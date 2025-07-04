@@ -3,7 +3,7 @@
   "type": "module",
   "version": "4.0.0-beta.2",
   "private": true,
-  "packageManager": "pnpm@10.12.2",
+  "packageManager": "pnpm@10.12.4",
   "description": "Next generation testing framework powered by Vite",
   "engines": {
     "node": "^18.0.0 || >=20.0.0"
@@ -39,11 +39,11 @@
   "devDependencies": {
     "@antfu/eslint-config": "^4.13.2",
     "@antfu/ni": "^25.0.0",
-    "@playwright/test": "^1.53.1",
+    "@playwright/test": "^1.53.2",
     "@rollup/plugin-commonjs": "^28.0.6",
     "@rollup/plugin-json": "^6.1.0",
     "@rollup/plugin-node-resolve": "^16.0.1",
-    "@types/node": "^22.15.32",
+    "@types/node": "^22.16.0",
     "@types/ws": "catalog:",
     "@vitest/browser": "workspace:*",
     "@vitest/coverage-istanbul": "workspace:*",
@@ -56,17 +56,17 @@
     "magic-string": "^0.30.17",
     "pathe": "^2.0.3",
     "rimraf": "^6.0.1",
-    "rollup": "^4.44.0",
+    "rollup": "^4.44.2",
     "rollup-plugin-dts": "^6.2.1",
     "rollup-plugin-license": "^3.6.0",
     "tinyglobby": "catalog:",
     "tsx": "^4.20.3",
     "typescript": "^5.8.3",
-    "unplugin-isolated-decl": "^0.14.3",
-    "unplugin-oxc": "^0.4.5",
+    "unplugin-isolated-decl": "^0.14.5",
+    "unplugin-oxc": "^0.4.6",
     "vite": "^6.3.5",
     "vitest": "workspace:*",
-    "zx": "^8.5.5"
+    "zx": "^8.6.1"
   },
   "pnpm": {
     "overrides": {
