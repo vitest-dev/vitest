@@ -629,18 +629,24 @@ export interface JestAssertion<T = any, R = void> extends jest.Matchers<void, T>
   nthReturnedWith: <E>(nthCall: number, value: E) => R
 }
 
-type VitestAssertion<A, T> = {
+type Promisify<O> = {
+  [K in keyof O]: O[K] extends (...args: infer A) => infer R
+    ? Promisify<O[K]> & ((...args: A) => Promise<R>)
+    : O[K];
+}
+
+type VitestAssertion<A, T, R = void> = {
   [K in keyof A]: A[K] extends Chai.Assertion
-    ? Assertion<T>
+    ? R extends Promise<void> ? Promisify<Assertion<T, R>> : Assertion<T, R>
     : A[K] extends (...args: any[]) => any
       ? A[K] // not converting function since they may contain overload
-      : VitestAssertion<A[K], T>;
-} & ((type: string, message?: string) => Assertion)
+      : VitestAssertion<A[K], T, R>;
+} & ((type: string, message?: string) => Assertion<T, R>)
 
 export type PromisifyAssertion<T> = Assertion<T, Promise<void>>
 
 export interface Assertion<T = any, R = void>
-  extends VitestAssertion<Chai.Assertion, T>,
+  extends VitestAssertion<Chai.Assertion, T, R>,
   JestAssertion<T, R>,
   Matchers<T, R> {
   /**
