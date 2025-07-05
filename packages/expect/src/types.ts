@@ -95,11 +95,11 @@ export interface RawMatcherFn<T extends MatcherState = MatcherState, E extends A
 // eslint-disable-next-line
 export interface Matchers<T = any, R = void> {}
 
-export type MatchersObject<T extends MatcherState = MatcherState> = Record<
+export type MatchersObject<T extends MatcherState = MatcherState, R = void> = Record<
   string,
   RawMatcherFn<T>
 > & ThisType<T> & {
-  [K in keyof Matchers<T>]?: RawMatcherFn<T, Parameters<Matchers<T>[K]>>
+  [K in keyof Matchers<T, R>]?: RawMatcherFn<T, Parameters<Matchers<T, R>[K]>>
 }
 
 export interface ExpectStatic
