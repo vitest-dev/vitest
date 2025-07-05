@@ -57,6 +57,7 @@ export async function startVitest(
     options,
     viteOverrides,
     vitestOptions,
+    cliFilters,
   )
 
   if (mode === 'test' && ctx.config.coverage.enabled) {
@@ -139,6 +140,7 @@ export async function prepareVitest(
   options: CliOptions = {},
   viteOverrides?: ViteUserConfig,
   vitestOptions?: VitestOptions,
+  cliFilters?: string[],
 ): Promise<Vitest> {
   process.env.TEST = 'true'
   process.env.VITEST = 'true'
@@ -146,6 +148,10 @@ export async function prepareVitest(
 
   if (options.run) {
     options.watch = false
+  }
+
+  if (options.standalone && (cliFilters?.length || 0) > 0) {
+    options.standalone = false
   }
 
   // this shouldn't affect _application root_ that can be changed inside config

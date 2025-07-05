@@ -910,7 +910,7 @@ export interface UserConfig extends InlineConfig {
    *
    * Vitest will only run tests if it's called programmatically or the test file changes.
    *
-   * CLI file filters will be ignored.
+   * If CLI file filters are passed, standalone mode is ignored.
    */
   standalone?: boolean
 
