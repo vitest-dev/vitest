@@ -639,7 +639,7 @@ type VitestAssertion<A, T, R = void> = {
 
 type Promisify<O> = {
   [K in keyof O]: O[K] extends (...args: infer A) => infer R
-    ? Promisify<O[K]> & ((...args: A) => Promise<R>)
+    ? Promisify<O[K]> & ((...args: A) => R extends Promise<any> ? R : Promise<R>)
     : O[K];
 }
 
