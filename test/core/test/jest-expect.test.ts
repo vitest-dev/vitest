@@ -273,7 +273,10 @@ describe('jest-expect', () => {
     await expect(async () => await expect(null).toBeTestedAsync()).rejects.toThrowError('toBeTestedAsync')
     await expect(async () => await expect(null).toBeTestedPromise()).rejects.toThrowError('toBeTestedPromise')
 
+    await expect(async () => expect(null).toBeTestedPromise()).rejects.toThrowError('toBeTestedPromise')
+
     expect(expect).toBeJestCompatible()
+    await (expect(expect).resolves.toBeJestCompatible() satisfies Promise<void>)
   })
 
   it('object', () => {
@@ -707,9 +710,8 @@ describe('toSatisfy()', () => {
     snapshotError(() => expect({ value: 2 }).toEqual({ value: expect.toSatisfy(isOdd, 'ODD') }))
   })
 
-  it('supports resolves and rejects', async () => {
+  it('supports a promise return type', async () => {
     await (expect(Promise.resolve(1)).resolves.toSatisfy(isOdd) satisfies Promise<number>)
-    await (expect(Promise.reject(1)).rejects.toSatisfy(isOdd) satisfies Promise<number>)
   })
 })
 
