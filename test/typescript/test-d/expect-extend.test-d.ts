@@ -27,7 +27,7 @@ test('infers matcher declaration type from a custom matcher type', async () => {
   })
 
   expect({ a: 1, b: '2' }).toMatchSchema({ a: '1' })
-  await (expect({a: '1'}).resolves.toMatchSchema({a: '1'}) satisfies Promise<{ a: string }>)
+  await (expect({ a: '1' }).resolves.toMatchSchema({ a: '1' }) satisfies Promise<{ a: string }>)
   expect('a').toEqualMultiple('a', 1)
 })
 
