@@ -199,7 +199,10 @@ export function registerConsoleShortcuts(
 
     const filter = await watchFilter.filter(async (str: string) => {
       const files = await ctx.globTestFiles([str])
-      return files.map(file => relative(ctx.config.root, file[1]))
+
+      return files
+        .map(file => relative(ctx.config.root, file[1]))
+        .filter((file, index, all) => all.indexOf(file) === index)
     })
 
     on()

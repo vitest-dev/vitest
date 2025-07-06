@@ -97,7 +97,7 @@ Collect the results stored in `.vitest-reports` directory from each machine and 
 vitest run --merge-reports
 ```
 
-::: details Github action example
+::: details GitHub Actions example
 This setup is also used at https://github.com/vitest-tests/test-sharding.
 
 ```yaml
