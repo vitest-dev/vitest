@@ -4,7 +4,7 @@ import type { Assertion, ExpectPollOptions } from 'vitest'
 
 declare module 'vitest' {
   interface JestAssertion<T = any, R = void> extends TestingLibraryMatchers<T, R> {}
-  interface AsymmetricMatchersContaining<T = any, R = void> extends TestingLibraryMatchers<T, R> {}
+  interface AsymmetricMatchersContaining extends TestingLibraryMatchers<void, void> {}
 
 
   type PromisifyDomAssertion<T> = Assertion<T, Promise<void>>
