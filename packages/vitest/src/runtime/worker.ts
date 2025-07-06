@@ -36,7 +36,7 @@ async function execute(method: 'run' | 'collect', ctx: ContextRPC) {
 
   const prepareStart = performance.now()
 
-  const inspectorCleanup = setupInspect(ctx)
+  const cleanups: (() => void)[] = [setupInspect(ctx)]
 
   process.env.VITEST_WORKER_ID = String(ctx.workerId)
   process.env.VITEST_POOL_ID = String(poolId)
@@ -72,6 +72,8 @@ async function execute(method: 'run' | 'collect', ctx: ContextRPC) {
 
     // RPC is used to communicate between worker (be it a thread worker or child process or a custom implementation) and the main thread
     const { rpc, onCancel } = createRuntimeRpc(worker.getRpcOptions(ctx))
+
+    cleanups.push(() => rpc.$close())
 
     const beforeEnvironmentTime = performance.now()
     const environment = await loadEnvironment(ctx, rpc)
@@ -111,7 +113,7 @@ async function execute(method: 'run' | 'collect', ctx: ContextRPC) {
   }
   finally {
     await rpcDone().catch(() => {})
-    inspectorCleanup()
+    cleanups.map(fn => fn())
   }
 }
 
