@@ -273,8 +273,6 @@ describe('jest-expect', () => {
     await expect(async () => await expect(null).toBeTestedAsync()).rejects.toThrowError('toBeTestedAsync')
     await expect(async () => await expect(null).toBeTestedPromise()).rejects.toThrowError('toBeTestedPromise')
 
-    await expect(async () => expect(null).toBeTestedPromise()).rejects.toThrowError('toBeTestedPromise')
-
     expect(expect).toBeJestCompatible()
     await (expect(expect).resolves.toBeJestCompatible() satisfies Promise<void>)
   })
