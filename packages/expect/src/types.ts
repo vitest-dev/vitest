@@ -115,7 +115,7 @@ export interface ExpectStatic
   not: AsymmetricMatchersContaining
 }
 
-interface CustomMatcher {
+interface CustomMatcher<R = any> {
   /**
    * Checks that a value satisfies a custom matcher function.
    *
@@ -126,7 +126,7 @@ interface CustomMatcher {
    * expect(age).toSatisfy(val => val >= 18, 'Age must be at least 18');
    * expect(age).toEqual(expect.toSatisfy(val => val >= 18, 'Age must be at least 18'));
    */
-  toSatisfy: (matcher: (value: any) => boolean, message?: string) => any
+  toSatisfy: (matcher: (value: any) => boolean, message?: string) => R
 
   /**
    * Matches if the received value is one of the values in the expected array.
@@ -136,7 +136,7 @@ interface CustomMatcher {
    * expect('foo').toBeOneOf([expect.any(String)])
    * expect({ a: 1 }).toEqual({ a: expect.toBeOneOf(['1', '2', '3']) })
    */
-  toBeOneOf: <T>(sample: Array<T>) => any
+  toBeOneOf: <T>(sample: Array<T>) => R
 }
 
 export interface AsymmetricMatchersContaining extends CustomMatcher {
@@ -194,7 +194,7 @@ export type DeeplyAllowMatchers<T> = T extends Array<infer Element>
     ? WithAsymmetricMatcher<T> | { [K in keyof T]: DeeplyAllowMatchers<T[K]> }
     : WithAsymmetricMatcher<T>
 
-export interface JestAssertion<T = any, R = void> extends jest.Matchers<R, T>, CustomMatcher {
+export interface JestAssertion<T = any, R = void> extends jest.Matchers<R, T>, CustomMatcher<T> {
   /**
    * Used when you want to check that two objects have the same value.
    * This matcher recursively checks the equality of all fields, rather than checking for object identity.
