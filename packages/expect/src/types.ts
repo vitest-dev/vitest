@@ -194,7 +194,7 @@ export type DeeplyAllowMatchers<T> = T extends Array<infer Element>
     ? WithAsymmetricMatcher<T> | { [K in keyof T]: DeeplyAllowMatchers<T[K]> }
     : WithAsymmetricMatcher<T>
 
-export interface JestAssertion<T = any, R = void> extends jest.Matchers<void, T>, CustomMatcher {
+export interface JestAssertion<T = any, R = void> extends jest.Matchers<R, T>, CustomMatcher {
   /**
    * Used when you want to check that two objects have the same value.
    * This matcher recursively checks the equality of all fields, rather than checking for object identity.
