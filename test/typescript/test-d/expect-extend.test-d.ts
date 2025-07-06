@@ -9,7 +9,7 @@ declare module 'vitest' {
   interface Matchers<T = any> extends CustomMatchers<T> {}
 }
 
-test('infers matcher declaration type from a custom matcher type', () => {
+test('infers matcher declaration type from a custom matcher type', async () => {
   expect.extend({
     toMatchSchema(received, expected) {
       expectTypeOf(received).toBeAny()
@@ -27,6 +27,7 @@ test('infers matcher declaration type from a custom matcher type', () => {
   })
 
   expect({ a: 1, b: '2' }).toMatchSchema({ a: '1' })
+  await (expect({a: '1'}).resolves.toMatchSchema({a: '1'}) satisfies Promise<{ a: string }>)
   expect('a').toEqualMultiple('a', 1)
 })
 

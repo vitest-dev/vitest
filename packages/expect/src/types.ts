@@ -93,13 +93,13 @@ export interface RawMatcherFn<T extends MatcherState = MatcherState, E extends A
 // Allow unused `T` to preserve its name for extensions.
 // Type parameter names must be identical when extending those types.
 // eslint-disable-next-line
-export interface Matchers<T = any, R = void> {}
+export interface Matchers<T = any> {}
 
-export type MatchersObject<T extends MatcherState = MatcherState, R = void> = Record<
+export type MatchersObject<T extends MatcherState = MatcherState> = Record<
   string,
   RawMatcherFn<T>
 > & ThisType<T> & {
-  [K in keyof Matchers<T, R>]?: RawMatcherFn<T, Parameters<Matchers<T, R>[K]>>
+  [K in keyof Matchers<T>]?: RawMatcherFn<T, Parameters<Matchers<T>[K]>>
 }
 
 export interface ExpectStatic
@@ -645,10 +645,12 @@ type Promisify<O> = {
 
 export type PromisifyAssertion<T> = Assertion<T, Promise<void>>
 
+type MaybePromisify<T, R> = R extends Promise<void> ? Promise<T> : T
+
 export interface Assertion<T = any, R = void>
   extends VitestAssertion<Chai.Assertion, T, R>,
   JestAssertion<T, R>,
-  Matchers<T, R> {
+  Matchers<MaybePromisify<T, R>> {
   /**
    * Ensures a value is of a specific type.
    *
