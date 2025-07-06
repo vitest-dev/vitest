@@ -3,18 +3,11 @@ import type { TestingLibraryMatchers } from './jest-dom.js'
 import type { Assertion, ExpectPollOptions } from 'vitest'
 
 declare module 'vitest' {
-  interface JestAssertion<T = any, R = void> extends TestingLibraryMatchers<void, T> {}
-  interface AsymmetricMatchersContaining extends TestingLibraryMatchers<void, void> {}
+  interface JestAssertion<T = any, R = void> extends TestingLibraryMatchers<T, R> {}
+  interface AsymmetricMatchersContaining<T = any, R = void> extends TestingLibraryMatchers<T, R> {}
 
-  type Promisify<O> = {
-    [K in keyof O]: O[K] extends (...args: infer A) => infer R
-      ? O extends R
-        ? Promisify<O[K]>
-        : (...args: A) => Promise<R>
-      : O[K];
-  }
 
-  type PromisifyDomAssertion<T> = Promisify<Assertion<T>>
+  type PromisifyDomAssertion<T> = Assertion<T, Promise<void>>
 
   interface ExpectStatic {
     /**
