@@ -645,7 +645,7 @@ type Promisify<O> = {
 
 export type PromisifyAssertion<T> = Assertion<T, Promise<void>>
 
-type MaybePromisify<T, R> = R extends Promise<void> ? Promise<T> : T
+type MaybePromisify<T, R> = R extends Promise<void> ?  Promise<T> : T
 
 export interface Assertion<T = any, R = void>
   extends VitestAssertion<Chai.Assertion, T, R>,

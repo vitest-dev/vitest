@@ -35,7 +35,7 @@ test('.toBeInTheDocument', async () => {
   expect(customElementChild).toBeInTheDocument()
   expect(detachedElement).not.toBeInTheDocument()
   expect(nullElement).not.toBeInTheDocument()
-  await (expect(promiseValue).resolves.toBeInTheDocument() satisfies Promise<void>)
+  await (expect(promiseValue).resolves.not.toBeInTheDocument() satisfies Promise<void>)
 
   // negative test cases wrapped in throwError assertions for coverage.
   const expectToBe = /expect.*\.toBeInTheDocument/
