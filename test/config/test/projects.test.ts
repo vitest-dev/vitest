@@ -138,3 +138,19 @@ it('fails if workspace is filtered by the project', async () => {
     "./vitest.config.js"
 ].`)
 })
+
+it('correctly excludes nested projects to avoid duplicate execution', async () => {
+  const { stderr, stdout } = await runVitest({
+    root: 'fixtures/workspace/nested-projects',
+  })
+  expect(stderr).toBe('')
+
+  // Should contain tests from both projects
+  expect(stdout).toContain('pkg1 test')
+  expect(stdout).toContain('business pkg1 test')
+  expect(stdout).toContain('business pkg2 test')
+
+  // But business pkg1 test should only appear once (not duplicated)
+  const matches = stdout.match(/business pkg1 test/g)
+  expect(matches).toHaveLength(1)
+})
