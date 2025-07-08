@@ -240,18 +240,17 @@ await page.viewport(1280, 720)
 
 ```ts [vitest.config.ts]
 export default defineConfig({
-  browser: {
-    enabled: true,
-    provider: 'playwright',
-    instances: [
-      {
-        browser: 'chromium',
-        viewport: {
-          width: 1280,
-          height: 720,
+  test: {
+    browser: {
+      enabled: true,
+      provider: 'playwright',
+      instances: [
+        {
+          browser: 'chromium',
+          viewport: { width: 1280, height: 720 },
         },
-      },
-    ],
+      ],
+    },
   },
 })
 ```
