@@ -1,6 +1,6 @@
 ---
 title: Visual Regression Testing
-outline: deep
+outline: [2, 3]
 ---
 
 # Visual Regression Testing
@@ -341,46 +341,66 @@ between runs:
 - Increase test timeout for large screenshots
 - Use a cloud service or containerized environment
 
-## Running on GitHub Actions
+## Visual Regression Testing for Teams
 
 Remember when we mentioned visual tests need a stable environment? Well, here's
-the thing: your local machine isn't it. But GitHub Actions can be.
+the thing: your local machine isn't it.
 
-The trick is splitting your workflow. You want tests that run on every PR (your
-unit tests) separate from visual tests that need special handling. Otherwise,
-you'll be fighting with screenshots that look different on every developer's
-machine.
+For teams, you've basically got three options:
 
-### Splitting Your Tests
+1. **Self-hosted runners**, complex to set up, painful to maintain
+1. **GitHub Actions**, free (for open source), works with any provider
+1. **Cloud services**, like
+[Microsoft Playwright Testing](https://azure.microsoft.com/en-us/products/playwright-testing),
+built for this exact problem
 
-First, let's separate visual tests from everything else. In your `package.json`:
+We'll focus on options 2 and 3 since they're the quickest to get running.
+
+To be upfront, the main trade-offs for each are:
+
+- **GitHub Actions**: visual tests only run in CI (developers can't run them
+locally)
+- **Microsoft's service**: works everywhere but costs money and only works
+with Playwright
+
+:::: tabs key:vrt-for-teams
+=== GitHub Actions
+
+The trick here is keeping visual tests separate from your regular tests,
+otherwise, you'll waste hours checking failing logs of screenshot mismatches.
+
+#### Organizing Your Tests
+
+First, isolate your visual tests. Stick them in a `visual` folder (or whatever
+makes sense for your project):
 
 ```json [package.json]
 {
   "scripts": {
-    "test:visual": "vitest tests/vrt/*.spec.ts",
-    "test:unit": "vitest --exclude tests/vrt/*.spec.ts"
+    "test:unit": "vitest --exclude tests/visual/*.test.ts",
+    "test:visual": "vitest tests/visual/*.test.ts"
   }
 }
 ```
 
-Now you can run `npm run test:unit` locally without visual tests getting in
-your way. Save the visual tests for CI where they belong.
+Now developers can run `npm run test:unit` locally without visual tests getting
+in the way. Visual tests stay in CI where the environment is consistent.
 
-::: tip
+::: tip Alternative
 Not a fan of glob patterns? You could also use separate
-[Test Projects](/guide/projects) and run them using:
+[Test Projects](/guide/projects) instead and run them using:
 
-- `vitest --project visual`
 - `vitest --project unit`
+- `vitest --project visual`
 :::
 
-### Setting Up the Test Runner
+#### CI Setup
 
 Your CI needs browsers installed. How you do this depends on your provider:
 
 ::: tabs key:provider
 == Playwright
+
 [Playwright](https://npmjs.com/package/playwright) makes this easy. Just pin
 your version and add this before running tests:
 
@@ -414,15 +434,33 @@ Then run your visual tests:
   run: npm run test:visual
 ```
 
-### Updating Screenshots with a Manual Workflow
+#### The Update Workflow
 
 Here's where it gets interesting. You don't want to update screenshots on every
-PR automatically (*chaos!*). Instead, create a manually-triggered workflow that
-developers can run when they intentionally change the UI.
+PR automatically <small>*(chaos!)*</small>. Instead, create a
+manually-triggered workflow that developers can run when they intentionally
+change the UI.
+
+The workflow below:
+- Only runs on feature branches (never on main)
+- Credits the person who triggered it as co-author
+- Prevents concurrent runs on the same branch
+- Shows a nice summary:
+  - **When screenshots changed**, it lists what changed
+
+    <img alt="Action summary after updates" img-light src="/vrt-gha-summary-update-light.png">
+    <img alt="Action summary after updates" img-dark src="/vrt-gha-summary-update-dark.png">
+
+  - **When nothing changed**, well, it tells you that too
+
+    <img alt="Action summary after no updates" img-light src="/vrt-gha-summary-no-update-light.png">
+    <img alt="Action summary after no updates" img-dark src="/vrt-gha-summary-no-update-dark.png">
 
 ::: tip
-This is just one approach. Adjust it to fit your team's workflow. The important
-part is having a controlled way to update baselines.
+This is just one approach. Some teams prefer PR comments (`/update-screenshots`),
+others use labels. Adjust it to fit your workflow!
+
+The important part is having a controlled way to update baselines.
 :::
 
 ```yaml [.github/workflows/update-screenshots.yml]
@@ -536,15 +574,144 @@ jobs:
           fi
 ```
 
-Whoever triggers the workflow gets co-author credit, plus you get a nice
-summary:
+=== Microsoft Playwright Testing
 
-- **When screenshots changed**, it lists what changed:
+Your tests stay local, only the browsers run in the cloud. It's Playwright's
+remote browser feature, but Microsoft handles all the infrastructure.
 
-  <img alt="Action summary after updates" img-light src="/vrt-gha-summary-update-light.png">
-  <img alt="Action summary after updates" img-dark src="/vrt-gha-summary-update-dark.png">
+#### Organizing Your Tests
 
-- **When nothing changed**, well, it tells you that too:
+Keep visual tests separate to control costs. Only tests that actually take
+screenshots should use the service.
 
-  <img alt="Action summary after no updates" img-light src="/vrt-gha-summary-no-update-light.png">
-  <img alt="Action summary after no updates" img-dark src="/vrt-gha-summary-no-update-dark.png">
+The cleanest approach is using [Test Projects](/guide/projects):
+
+```ts [vitest.config.ts]
+import { env } from 'node:process'
+import { defineConfig } from 'vitest/config'
+
+export default defineConfig({
+  // ...global Vite config
+  tests: {
+    // ...global Vitest config
+    projects: [
+      {
+        extends: true,
+        test: {
+          name: 'unit',
+          include: ['tests/**/*.test.ts'],
+          // regular config, can use local browsers
+        },
+      },
+      {
+        extends: true,
+        test: {
+          name: 'visual',
+          // or you could use a different suffix, e.g.,: `tests/**/*.visual.ts?(x)`
+          include: ['visual-regression-tests/**/*.test.ts?(x)'],
+          browser: {
+            enabled: true,
+            provider: 'playwright',
+            headless: true,
+            instances: [
+              {
+                browser: 'chromium',
+                viewport: { width: 2560, height: 1440 },
+                connect: {
+                  wsEndpoint: `${env.PLAYWRIGHT_SERVICE_URL}?cap=${JSON.stringify({
+                    os: 'linux', // always use Linux for consistency
+                    // helps identifying runs in the service's dashboard
+                    runId: `Vitest ${env.CI ? 'CI' : 'local'} run @${new Date().toISOString()}`,
+                  })}`,
+                  options: {
+                    exposeNetwork: '<loopback>',
+                    headers: {
+                      'x-mpt-access-key': env.PLAYWRIGHT_SERVICE_ACCESS_TOKEN,
+                    },
+                    timeout: 30_000,
+                  },
+                },
+              },
+            ],
+          },
+        },
+      },
+    ],
+  },
+})
+```
+
+The service gives you two environment variables:
+
+- `PLAYWRIGHT_SERVICE_URL` tells Playwright where to connect
+- `PLAYWRIGHT_SERVICE_ACCESS_TOKEN` is your auth token
+
+::: danger Keep that Token Secret!
+Never commit `PLAYWRIGHT_SERVICE_ACCESS_TOKEN` to your repository. Anyone with
+the token can rack up your bill. Use environment variables locally and secrets
+in CI.
+:::
+
+Then split your `test` script like this:
+
+```json [package.json]
+{
+  "scripts": {
+    "test:visual": "vitest --project visual",
+    "test:unit": "vitest --project unit"
+  }
+}
+```
+
+#### Running Tests
+
+```bash
+# Local development
+npm run test:unit    # free, runs locally
+npm run test:visual  # uses cloud browsers
+
+# Update screenshots
+npm run test:visual -- --update
+```
+
+The beauty of this approach? It just works:
+
+- **Consistent screenshots**, everyone uses the same cloud browsers
+- **Works locally**, developers can run and update visual tests on their machines
+- **Pay for what you use**, only visual tests consume service minutes
+- **No Docker or workflow setups needed**, nothing to manage or maintain
+
+#### CI Setup
+
+In your CI, add the secrets:
+
+```yaml
+env:
+  PLAYWRIGHT_SERVICE_URL: ${{ vars.PLAYWRIGHT_SERVICE_URL }}
+  PLAYWRIGHT_SERVICE_ACCESS_TOKEN: ${{ secrets.PLAYWRIGHT_SERVICE_ACCESS_TOKEN }}
+```
+
+Then run your tests like normal. The service handles the rest.
+
+::::
+
+### So Which One?
+
+Both approaches work. The real question is what pain points matter most to your
+team.
+
+If you're already deep in the GitHub ecosystem, GitHub Actions is hard to beat.
+Free for open source, works with any browser provider, and you control
+everything.
+
+The downside? That "works on my machine" conversation when someone generates
+screenshots locally and they don't match CI expectations anymore.
+
+Microsoft's service shines when you need developers to run visual tests locally.
+
+Maybe you've got designers who want to verify their changes, or developers who
+prefer catching issues before pushing. Yes, it costs money, but compared to the
+time you'll waste waiting for CI runs, it might be worth it.
+
+Still on the fence? Start with GitHub Actions. You can always add the cloud
+service later if local testing becomes a pain point.
