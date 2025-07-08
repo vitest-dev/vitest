@@ -162,7 +162,7 @@ describe('nested projects', () => {
 
   const matchPkg2RunWithSelfConfig = (stdout: string) => stdout.match(/\|business-config-pkg2\|.*?business pkg2 test/g)
 
-  it('correctly excludes nested projects to avoid duplicate execution', async () => {
+  it('the behavior of running a first level directory normally', async () => {
     const { stderr, stdout } = await runVitest({
       root: 'fixtures/workspace/nested-projects',
       config: 'vitest.config-normal.ts',
@@ -174,7 +174,7 @@ describe('nested projects', () => {
     expect(matches).toBeNull()
   })
 
-  it('correctly excludes nested projects to avoid duplicate execution', async () => {
+  it('avoids duplicate execution but uses nested project own config when explicitly specified', async () => {
     const { stderr, stdout } = await runVitest({
       root: 'fixtures/workspace/nested-projects',
       config: 'vitest.config-specify.ts',
@@ -186,7 +186,7 @@ describe('nested projects', () => {
     expect(matches).toHaveLength(1)
   })
 
-  it('correctly excludes nested projects to avoid duplicate execution', async () => {
+  it('avoids duplicate execution but uses nested project own config when matched by wildcard pattern', async () => {
     const { stderr, stdout } = await runVitest({
       root: 'fixtures/workspace/nested-projects',
       config: 'vitest.config-wildcard.ts',
