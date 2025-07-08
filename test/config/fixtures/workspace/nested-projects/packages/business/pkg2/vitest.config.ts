@@ -2,6 +2,6 @@ import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
   test: {
-    name: 'business-pkg1',
+    name: 'business-config-pkg2',
   },
 }) 
