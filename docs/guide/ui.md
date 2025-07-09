@@ -50,5 +50,5 @@ To preview your HTML report, you can use the [vite preview](https://vitejs.dev/g
 npx vite preview --outDir ./html
 ```
 
-You can configure output with [`outputFile`](/config/#outputfile) config option. You need to specify `.html` path there. For example, `./html/index.html` is the default value.
+You can configure output with [`outputFile`](/config/#outputfile) config option. You need to specify `./html` path there. For example, `./html/index.html` is the default value.
 :::
