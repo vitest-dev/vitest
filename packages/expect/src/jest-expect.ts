@@ -405,6 +405,16 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
       obj,
     )
   })
+  def('toBeNullable', function () {
+    const obj = utils.flag(this, 'object')
+    this.assert(
+      obj == null,
+      'expected #{this} to be nullish',
+      'expected #{this} not to be nullish',
+      null,
+      obj,
+    )
+  })
   def('toBeDefined', function () {
     const obj = utils.flag(this, 'object')
     this.assert(
