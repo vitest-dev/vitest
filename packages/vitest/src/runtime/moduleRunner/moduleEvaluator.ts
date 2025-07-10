@@ -245,8 +245,10 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
         ? vm.runInContext(wrappedCode, this.vm.context, options)
         : vm.runInThisContext(wrappedCode, options)
 
-      const dynamicRequest = (dep: string, options: ImportCallOptions) => {
+      const dynamicRequest = async (dep: string, options: ImportCallOptions) => {
         dep = String(dep)
+        console.error({ dep, filename })
+        await new Promise(r => setTimeout(r, 1000))
         // TODO: support more edge cases?
         // vite doesn't support dynamic modules by design, but we have to
         if (dep[0] === '#') {

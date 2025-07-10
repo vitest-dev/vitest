@@ -1,6 +1,5 @@
 import type { GlobOptions } from 'tinyglobby'
-import type { ModuleNode, TransformResult, ViteDevServer, InlineConfig as ViteInlineConfig } from 'vite'
-import type { ModuleRunner } from 'vite/module-runner'
+import type { FetchFunction, ModuleNode, TransformResult, ViteDevServer, InlineConfig as ViteInlineConfig } from 'vite'
 import type { Typechecker } from '../typecheck/typechecker'
 import type { ProvidedContext } from '../types/general'
 import type { OnTestsRerunHandler, Vitest } from './core'
@@ -25,6 +24,7 @@ import { isAbsolute, join, relative } from 'pathe'
 import pm from 'picomatch'
 import { glob } from 'tinyglobby'
 import { createServerModuleRunner } from 'vite'
+import { ModuleRunner } from 'vite/module-runner'
 import { setup } from '../api/setup'
 import { isBrowserEnabled, resolveConfig } from './config/resolveConfig'
 import { serializeConfig } from './config/serializeConfig'
@@ -33,6 +33,7 @@ import { CoverageTransform } from './plugins/coverageTransform'
 import { MocksPlugins } from './plugins/mocks'
 import { WorkspaceVitestPlugin } from './plugins/workspace'
 import { getFilePoolName } from './pool'
+import { createMethodsRPC } from './pools/rpc'
 import { VitestResolver } from './resolver'
 import { TestSpecification } from './spec'
 import { createViteServer } from './vite'
@@ -641,9 +642,26 @@ export class TestProject {
     this._resolver = new VitestResolver(server.config.cacheDir, this._config)
     this._vite = server
 
-    this.runner = createServerModuleRunner(server.environments.__vitest__, {
+    const rpc = createMethodsRPC(this, { cacheFs: false })
+    // TODO: Failed to load url /Users/vladimir/Projects/vitest/test/cli/@vitest/provider.js
+    this.runner = new ModuleRunner({
       hmr: false,
       sourcemapInterceptor: 'node',
+      transport: {
+        async invoke(event) {
+          if (event.type !== 'custom') {
+            throw new Error(`Vitest Module Runner doesn't support Vite HMR events.`)
+          }
+          const { data } = event.data
+          try {
+            const result = await rpc.fetch(data[0], data[1], '__vitest__', data[2])
+            return { result }
+          }
+          catch (error) {
+            return { error }
+          }
+        },
+      },
     })
   }
 

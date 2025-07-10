@@ -22,6 +22,12 @@ export function ModuleRunnerTransform(): VitePlugin {
           environment.dev.preTransformRequests = false
           environment.keepProcessEnv = true
 
+          // __vitest__ environment runs on the server and doesn't use the
+          // Vitest externalization
+          // if (name === '__vitest__') {
+          //   continue
+          // }
+
           // remove Vite's externalization logic because we have our own (unfortunetly)
           environment.resolve ??= {}
 
