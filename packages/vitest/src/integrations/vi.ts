@@ -643,7 +643,7 @@ function createVitest(): VitestUtils {
     },
 
     mockObject<T>(value: T, options?: MockOptions) {
-      return _mocker().mockObject({ value }, options).value
+      return _mocker().mockObject({ value }, undefined, options?.spy ? 'autospy' : 'automock').value
     },
 
     // this is typed in the interface so it's not necessary to type it here

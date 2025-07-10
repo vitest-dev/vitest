@@ -223,7 +223,7 @@ describe('testing vi utils', () => {
     expect(spied.simple()).toBe('value')
     expect(spied.simple).toHaveBeenCalled()
     expect(spied.simple.mock.results).toEqual([{ type: 'return', value: 'value' }])
-    mocked.simple.mockReturnValue('still mocked')
+    spied.simple.mockReturnValue('still mocked')
     expect(spied.simple()).toBe('still mocked')
 
     class OriginalClass {
