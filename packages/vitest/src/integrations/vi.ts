@@ -292,7 +292,7 @@ export interface VitestUtils {
    *
    * expect(mocked.simple()).toBe('mocked')
    * expect(mocked.nested.method()).toBe('mocked nested')
-   * 
+   *
    * const spied = vi.mockObject(original, { spy: true })
    * expect(spied.simple()).toBe('value')
    * expect(spied.simple).toHaveBeenCalled()
