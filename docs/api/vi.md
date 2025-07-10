@@ -417,6 +417,15 @@ expect(mocked.simple()).toBe('mocked')
 expect(mocked.nested.method()).toBe('mocked nested')
 ```
 
+Just like `vi.mock()`, you can pass `{ spy: true }` as a second argument to keep function implementations:
+
+```ts
+const spied = vi.mockObject(original, { spy: true })
+expect(spied.simple()).toBe('value')
+expect(spied.simple).toHaveBeenCalled()
+expect(spied.simple.mock.results[0]).toEqual({ type: 'return', value: 'value' })
+```
+
 ### vi.isMockFunction
 
 - **Type:** `(fn: Function) => boolean`
