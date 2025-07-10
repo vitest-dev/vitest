@@ -219,6 +219,13 @@ describe('testing vi utils', () => {
     expect(mocked.simple()).toBe('mocked')
     expect(mocked.nested.method()).toBe('mocked nested')
 
+    const spied = vi.mockObject(original, { spy: true })
+    expect(spied.simple()).toBe('value')
+    expect(spied.simple).toHaveBeenCalled()
+    expect(spied.simple.mock.results).toEqual([{ type: 'return', value: 'value' }])
+    mocked.simple.mockReturnValue('still mocked')
+    expect(spied.simple()).toBe('still mocked')
+
     class OriginalClass {
       constructor() {
         throw new Error('should be mocked!')
