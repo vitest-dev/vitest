@@ -292,12 +292,17 @@ export interface VitestUtils {
    *
    * expect(mocked.simple()).toBe('mocked')
    * expect(mocked.nested.method()).toBe('mocked nested')
+   * 
+   * const spied = vi.mockObject(original, { spy: true })
+   * expect(spied.simple()).toBe('value')
+   * expect(spied.simple).toHaveBeenCalled()
+   * expect(spied.simple.mock.results[0]).toEqual({ type: 'return', value: 'value' })
    * ```
    *
    * @param value - The object to be mocked
    * @returns A deeply mocked version of the input object
    */
-  mockObject: <T>(value: T) => MaybeMockedDeep<T>
+  mockObject: <T>(value: T, options?: MockOptions) => MaybeMockedDeep<T>
 
   /**
    * Type helper for TypeScript. Just returns the object that was passed.
@@ -637,8 +642,8 @@ function createVitest(): VitestUtils {
       return _mocker().importMock(path, getImporter('importMock'))
     },
 
-    mockObject<T>(value: T) {
-      return _mocker().mockObject({ value }).value
+    mockObject<T>(value: T, options?: MockOptions) {
+      return _mocker().mockObject({ value }, options).value
     },
 
     // this is typed in the interface so it's not necessary to type it here
