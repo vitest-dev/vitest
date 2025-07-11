@@ -1,5 +1,7 @@
-import type { File, TaskResultPack } from '@vitest/runner'
+import type { TaskResultPack } from '@vitest/runner'
+import type { SerializedError } from '@vitest/utils'
 import type { Vitest } from '../../core'
+import type { TestRunEndReason } from '../../types/reporter'
 import type { TestModule, TestSuite } from '../reported-tasks'
 import fs from 'node:fs'
 import { getFullName } from '@vitest/runner/utils'
@@ -84,8 +86,12 @@ export class BenchmarkReporter extends DefaultReporter {
     }
   }
 
-  async onFinished(files: File[] = this.ctx.state.getFiles(), errors: unknown[] = this.ctx.state.getUnhandledErrors()): Promise<void> {
-    super.onFinished(files, errors)
+  async onTestRunEnd(
+    testModules: ReadonlyArray<TestModule>,
+    unhandledErrors: ReadonlyArray<SerializedError>,
+    reason: TestRunEndReason,
+  ): Promise<void> {
+    super.onTestRunEnd(testModules, unhandledErrors, reason)
 
     // write output for future comparison
     let outputFile = this.ctx.config.benchmark?.outputJson
@@ -98,7 +104,9 @@ export class BenchmarkReporter extends DefaultReporter {
         await fs.promises.mkdir(outputDirectory, { recursive: true })
       }
 
+      const files = testModules.map(t => t.task.file)
       const output = createBenchmarkJsonReport(files)
+
       await fs.promises.writeFile(outputFile, JSON.stringify(output, null, 2))
       this.log(`Benchmark report written to ${outputFile}`)
     }

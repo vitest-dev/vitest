@@ -17,7 +17,7 @@ test('reporters, single', () => {
 
   assertType<Configuration>({ reporters: 'custom-reporter' })
   assertType<Configuration>({ reporters: './reporter.mjs' })
-  assertType<Configuration>({ reporters: { onFinished() {} } })
+  assertType<Configuration>({ reporters: { onTestRunEnd() {} } })
 })
 
 test('reporters, multiple', () => {
