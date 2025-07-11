@@ -32,6 +32,7 @@ export interface RuntimeCoverageProviderModule {
 export const CoverageProviderMap: Record<string, string> = {
   v8: '@vitest/coverage-v8',
   istanbul: '@vitest/coverage-istanbul',
+  swc: '@vitest/coverage-swc',
 }
 
 export async function resolveCoverageProviderModule(

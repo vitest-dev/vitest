@@ -71,9 +71,9 @@ export async function getCoverageProvider(
   return null
 }
 
-export class BaseCoverageProvider<Options extends ResolvedCoverageOptions<'istanbul' | 'v8'>> {
+export class BaseCoverageProvider<Options extends ResolvedCoverageOptions<'istanbul' | 'v8' | 'swc'>> {
   ctx!: Vitest
-  readonly name!: 'v8' | 'istanbul'
+  readonly name!: 'v8' | 'istanbul' | 'swc'
   version!: string
   options!: Options
   globCache: Map<string, boolean> = new Map()

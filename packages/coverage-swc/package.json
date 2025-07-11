@@ -1,0 +1,66 @@
+{
+  "name": "@vitest/coverage-swc",
+  "type": "module",
+  "version": "1.0.0-experimental.1",
+  "description": "SWC coverage provider for Vitest",
+  "author": "Travis Zhang<https://github.com/travzhang>",
+  "license": "MIT",
+  "funding": "https://opencollective.com/vitest",
+  "homepage": "https://github.com/vitest-dev/vitest/tree/main/packages/coverage-swc#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vitest-dev/vitest.git",
+    "directory": "packages/coverage-swc"
+  },
+  "bugs": {
+    "url": "https://github.com/vitest-dev/vitest/issues"
+  },
+  "keywords": [
+    "vite",
+    "vitest",
+    "test",
+    "coverage",
+    "swc"
+  ],
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./*": "./*"
+  },
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "rimraf dist && rollup -c",
+    "dev": "rollup -c --watch --watch.include 'src/**'"
+  },
+  "peerDependencies": {
+    "vitest": "workspace:*"
+  },
+  "dependencies": {
+    "@swc/core": "1.11.31",
+    "debug": "catalog:",
+    "istanbul-lib-coverage": "catalog:",
+    "istanbul-lib-report": "catalog:",
+    "istanbul-lib-source-maps": "catalog:",
+    "istanbul-reports": "catalog:",
+    "magicast": "catalog:",
+    "tinyrainbow": "catalog:",
+    "swc-plugin-coverage-instrument": "^0.0.27"
+  },
+  "devDependencies": {
+    "@types/debug": "catalog:",
+    "@types/istanbul-lib-coverage": "catalog:",
+    "@types/istanbul-lib-report": "catalog:",
+    "@types/istanbul-lib-source-maps": "catalog:",
+    "@types/istanbul-reports": "catalog:",
+    "pathe": "catalog:",
+    "vitest": "workspace:*"
+  }
+}
