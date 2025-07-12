@@ -786,7 +786,7 @@ export function createTaskCollector(
         )
       }
       const { handler, options } = parseArguments(optionsOrFn, optionsOrTest)
-      const timeout = options.timeout ?? runner?.config.testTimeout
+      const timeout = options.timeout ?? collector.options?.timeout ?? runner?.config.testTimeout
       originalWrapper.call(context, formatName(name), handler, timeout)
     }, _context)
   }
