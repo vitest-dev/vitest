@@ -234,6 +234,60 @@ test('coverage provider v8 works correctly in workspaced browser mode if instanc
   ])
 })
 
+test('browser instances with include option override parent include patterns', async () => {
+  const { projects } = await vitest({}, {
+    include: ['**/*.global.test.{js,ts}', '**/*.shared.test.{js,ts}'],
+    browser: {
+      enabled: true,
+      headless: true,
+      instances: [
+        { browser: 'chromium' },
+        { browser: 'firefox', include: ['test/firefox-specific.test.ts'] },
+        { browser: 'webkit', include: ['test/webkit-only.test.ts', 'test/webkit-extra.test.ts'] },
+      ],
+    },
+  })
+
+  // Chromium should inherit parent include patterns (plus default test pattern)
+  expect(projects[0].name).toEqual('chromium')
+  expect(projects[0].config.include).toEqual([
+    'test/**.test.ts',
+    '**/*.global.test.{js,ts}',
+    '**/*.shared.test.{js,ts}',
+  ])
+
+  // Firefox should only have its specific include pattern (not parent patterns)
+  expect(projects[1].name).toEqual('firefox')
+  expect(projects[1].config.include).toEqual([
+    'test/firefox-specific.test.ts',
+  ])
+
+  // Webkit should only have its specific include patterns (not parent patterns)
+  expect(projects[2].name).toEqual('webkit')
+  expect(projects[2].config.include).toEqual([
+    'test/webkit-only.test.ts',
+    'test/webkit-extra.test.ts',
+  ])
+})
+
+test('browser instances with empty include array should get parent include patterns', async () => {
+  const { projects } = await vitest({}, {
+    include: ['**/*.test.{js,ts}'],
+    browser: {
+      enabled: true,
+      headless: true,
+      instances: [
+        { browser: 'chromium', include: [] },
+        { browser: 'firefox' },
+      ],
+    },
+  })
+
+  // Both instances should inherit parent include patterns when include is empty or not specified
+  expect(projects[0].config.include).toEqual(['test/**.test.ts', '**/*.test.{js,ts}'])
+  expect(projects[1].config.include).toEqual(['test/**.test.ts', '**/*.test.{js,ts}'])
+})
+
 test('filter for the global browser project includes all browser instances', async () => {
   const { projects } = await vitest({ project: 'myproject' }, {
     projects: [
