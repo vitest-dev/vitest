@@ -67,7 +67,7 @@ test('--shard=3/3 should distribute files evenly', async () => {
   expect(paths).toEqual(['3.test.js'])
 })
 
-test('4 files with 3 shards should distribute as [2,1,1] not [2,2,0]', async () => {
+test('4 files with 3 shards should distribute evenly', async () => {
   const { stdout: stdout1 } = await runVitest({ shard: '1/3' }, './fixtures/shard-4-files')
   const { stdout: stdout2 } = await runVitest({ shard: '2/3' }, './fixtures/shard-4-files')
   const { stdout: stdout3 } = await runVitest({ shard: '3/3' }, './fixtures/shard-4-files')
