@@ -1,7 +1,7 @@
 import type { Plugin } from 'vite'
+import { cleanUrl } from '@vitest/utils'
 import MagicString from 'magic-string'
 import { stripLiteral } from 'strip-literal'
-import { cleanUrl } from 'vite-node/utils'
 
 // so people can reassign envs at runtime
 // import.meta.env.VITE_NAME = 'app' -> process.env.VITE_NAME = 'app'

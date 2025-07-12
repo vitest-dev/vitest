@@ -28,10 +28,10 @@ const entries = {
   'mocker': 'src/public/mocker.ts',
   'spy': 'src/integrations/spy.ts',
   'coverage': 'src/public/coverage.ts',
-  'execute': 'src/public/execute.ts',
   'reporters': 'src/public/reporters.ts',
   // TODO: advanced docs
   'workers': 'src/public/workers.ts',
+  'module-runner': 'src/public/module-runner.ts',
 
   // for performance reasons we bundle them separately so we don't import everything at once
   'worker': 'src/runtime/worker.ts',
@@ -54,7 +54,6 @@ const dtsEntries = {
   suite: 'src/public/suite.ts',
   config: 'src/public/config.ts',
   coverage: 'src/public/coverage.ts',
-  execute: 'src/public/execute.ts',
   reporters: 'src/public/reporters.ts',
   mocker: 'src/public/mocker.ts',
   workers: 'src/public/workers.ts',
@@ -75,11 +74,7 @@ const external = [
   'node:console',
   'inspector',
   'vitest/optional-types.js',
-  'vite-node/source-map',
-  'vite-node/client',
-  'vite-node/server',
-  'vite-node/constants',
-  'vite-node/utils',
+  'vite/module-runner',
   '@vitest/mocker',
   '@vitest/mocker/node',
   '@vitest/utils/diff',

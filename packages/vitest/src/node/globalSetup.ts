@@ -1,4 +1,4 @@
-import type { ViteNodeRunner } from 'vite-node/client'
+import type { ModuleRunner } from 'vite/module-runner'
 import type { TestProject } from './project'
 import { toArray } from '@vitest/utils'
 
@@ -9,7 +9,7 @@ export interface GlobalSetupFile {
 }
 
 export async function loadGlobalSetupFiles(
-  runner: ViteNodeRunner,
+  runner: ModuleRunner,
   globalSetup: string | string[],
 ): Promise<GlobalSetupFile[]> {
   const globalSetupFiles = toArray(globalSetup)
@@ -20,9 +20,9 @@ export async function loadGlobalSetupFiles(
 
 async function loadGlobalSetupFile(
   file: string,
-  runner: ViteNodeRunner,
+  runner: ModuleRunner,
 ): Promise<GlobalSetupFile> {
-  const m = await runner.executeFile(file)
+  const m = await runner.import(file)
   for (const exp of ['default', 'setup', 'teardown']) {
     if (m[exp] != null && typeof m[exp] !== 'function') {
       throw new Error(
