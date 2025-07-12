@@ -300,6 +300,27 @@ await expect.element(
 ).toBeVisible()
 ```
 
+## toBeInViewport
+
+```ts
+function toBeInViewport(options: { ratio?: number }): Promise<void>
+```
+
+This allows you to check if an element is currently in viewport with [IntersectionObserver API](https://developer.mozilla.org/en-US/docs/Web/API/Intersection_Observer_API).
+
+You can pass `ratio` argument as option, which means the minimal ratio of the element should be in viewport. `ratio` should be in 0~1.
+
+```ts
+// A specific element is in viewport.
+await expect.element(page.getByText('Welcome')).toBeInViewport()
+
+// 50% of a specific element should be in viewport
+await expect.element(page.getByText('To')).toBeInViewport({ ratio: 0.5 })
+
+// Full of a specific element should be in viewport
+await expect.element(page.getByText('Vitest')).toBeInViewport({ ratio: 1 })
+```
+
 ## toContainElement
 
 ```ts
