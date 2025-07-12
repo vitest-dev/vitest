@@ -420,6 +420,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
       locators: null,
       testerHtmlPath: null,
       instances: null,
+      expect: null,
     },
   },
   pool: {
