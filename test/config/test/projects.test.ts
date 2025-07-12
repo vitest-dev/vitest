@@ -1,3 +1,4 @@
+import { describe } from 'node:test'
 import { resolve } from 'pathe'
 import { expect, it } from 'vitest'
 import { runVitest } from '../../test-utils'
@@ -137,4 +138,63 @@ it('fails if workspace is filtered by the project', async () => {
   expect(stderr).toContain(`No projects were found. Make sure your configuration is correct. The filter matched no projects: non-existing. The projects definition: [
     "./vitest.config.js"
 ].`)
+})
+
+describe('nested projects', () => {
+  const normalMatches = (stderr: string, stdout: string) => {
+    expect(stderr).toBe('')
+
+    // Should contain tests from both projects
+    expect(stdout).toContain('pkg1 test')
+    expect(stdout).toContain('business pkg2 test')
+    expect(stdout).toContain('business pkg3 test')
+
+    // should only appear once (not duplicated)
+    const pkg1Matches = stdout.match(/pkg1 test/g)
+    expect(pkg1Matches).toHaveLength(1)
+
+    const pkg2Matches = stdout.match(/business pkg2 test/g)
+    expect(pkg2Matches).toHaveLength(1)
+
+    const pkg3Matches = stdout.match(/business pkg3 test/g)
+    expect(pkg3Matches).toHaveLength(1)
+  }
+
+  const matchPkg2RunWithSelfConfig = (stdout: string) => stdout.match(/\|business-config-pkg2\|.*?business pkg2 test/g)
+
+  it('the behavior of running a first level directory normally', async () => {
+    const { stderr, stdout } = await runVitest({
+      root: 'fixtures/workspace/nested-projects',
+      config: 'vitest.config-normal.ts',
+    })
+
+    normalMatches(stderr, stdout)
+
+    const matches = matchPkg2RunWithSelfConfig(stdout)
+    expect(matches).toBeNull()
+  })
+
+  it('avoids duplicate execution but uses nested project own config when explicitly specified', async () => {
+    const { stderr, stdout } = await runVitest({
+      root: 'fixtures/workspace/nested-projects',
+      config: 'vitest.config-specify.ts',
+    })
+
+    normalMatches(stderr, stdout)
+
+    const matches = matchPkg2RunWithSelfConfig(stdout)
+    expect(matches).toHaveLength(1)
+  })
+
+  it('avoids duplicate execution but uses nested project own config when matched by wildcard pattern', async () => {
+    const { stderr, stdout } = await runVitest({
+      root: 'fixtures/workspace/nested-projects',
+      config: 'vitest.config-wildcard.ts',
+    })
+
+    normalMatches(stderr, stdout)
+
+    const matches = matchPkg2RunWithSelfConfig(stdout)
+    expect(matches).toHaveLength(1)
+  })
 })
