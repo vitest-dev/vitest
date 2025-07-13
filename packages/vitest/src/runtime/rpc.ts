@@ -98,6 +98,11 @@ export function createRuntimeRpc(
 export function createSafeRpc(rpc: WorkerRPC): WorkerRPC {
   return new Proxy(rpc, {
     get(target, p, handler) {
+      // keep $rejectPendingCalls as sync function
+      if (p === '$rejectPendingCalls') {
+        return rpc.$rejectPendingCalls
+      }
+
       const sendCall = get(target, p, handler)
       const safeSendCall = (...args: any[]) =>
         withSafeTimers(async () => {
