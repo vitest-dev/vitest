@@ -42,7 +42,7 @@ interface ResolvedThreshold {
 type CoverageFiles = Map<
   NonNullable<AfterSuiteRunMeta['projectName']> | symbol,
   Record<
-    AfterSuiteRunMeta['environment'],
+    AfterSuiteRunMeta['transformMode'],
     { [TestFilenames: string]: string }
   >
 >
@@ -253,15 +253,19 @@ export class BaseCoverageProvider<Options extends ResolvedCoverageOptions<'istan
     this.pendingPromises = []
   }
 
-  onAfterSuiteRun({ coverage, environment, projectName, testFiles }: AfterSuiteRunMeta): void {
+  onAfterSuiteRun({ coverage, transformMode, projectName, testFiles }: AfterSuiteRunMeta): void {
     if (!coverage) {
       return
+    }
+
+    if (transformMode !== 'web' && transformMode !== 'ssr' && transformMode !== 'browser') {
+      throw new Error(`Invalid transform mode: ${transformMode}`)
     }
 
     let entry = this.coverageFiles.get(projectName || DEFAULT_PROJECT)
 
     if (!entry) {
-      entry = {}
+      entry = { web: {}, ssr: {}, browser: {} }
       this.coverageFiles.set(projectName || DEFAULT_PROJECT, entry)
     }
 
@@ -271,9 +275,8 @@ export class BaseCoverageProvider<Options extends ResolvedCoverageOptions<'istan
       `coverage-${uniqueId++}.json`,
     )
 
-    entry[environment] ??= {}
     // If there's a result from previous run, overwrite it
-    entry[environment][testFilenames] = filename
+    entry[transformMode][testFilenames] = filename
 
     const promise = fs.writeFile(filename, JSON.stringify(coverage), 'utf-8')
     this.pendingPromises.push(promise)
@@ -283,7 +286,7 @@ export class BaseCoverageProvider<Options extends ResolvedCoverageOptions<'istan
     /** Callback invoked with a single coverage result */
     onFileRead: (data: CoverageType) => void
     /** Callback invoked once all results of a project for specific transform mode are read */
-    onFinished: (project: Vitest['projects'][number], environment: AfterSuiteRunMeta['environment']) => Promise<void>
+    onFinished: (project: Vitest['projects'][number], transformMode: AfterSuiteRunMeta['transformMode']) => Promise<void>
     onDebug: ((...logs: any[]) => void) & { enabled: boolean }
   }): Promise<void> {
     let index = 0
@@ -293,7 +296,7 @@ export class BaseCoverageProvider<Options extends ResolvedCoverageOptions<'istan
     this.pendingPromises = []
 
     for (const [projectName, coveragePerProject] of this.coverageFiles.entries()) {
-      for (const [environment, coverageByTestfiles] of Object.entries(coveragePerProject) as Entries<typeof coveragePerProject>) {
+      for (const [transformMode, coverageByTestfiles] of Object.entries(coveragePerProject) as Entries<typeof coveragePerProject>) {
         const filenames = Object.values(coverageByTestfiles)
         const project = this.ctx.getProjectByName(projectName as string)
 
@@ -312,7 +315,7 @@ export class BaseCoverageProvider<Options extends ResolvedCoverageOptions<'istan
           )
         }
 
-        await onFinished(project, environment)
+        await onFinished(project, transformMode)
       }
     }
   }
@@ -637,23 +640,23 @@ export class BaseCoverageProvider<Options extends ResolvedCoverageOptions<'istan
       ...ctx.projects.map(project => ({
         root: project.config.root,
         isBrowserEnabled: project.isBrowserEnabled(),
-        vite: project.vite,
+        vitenode: project.vitenode,
       })),
       // Check core last as it will match all files anyway
-      { root: ctx.config.root, vite: ctx.vite, isBrowserEnabled: ctx.getRootProject().isBrowserEnabled() },
+      { root: ctx.config.root, vitenode: ctx.vitenode, isBrowserEnabled: ctx.getRootProject().isBrowserEnabled() },
     ]
 
     return async function transformFile(filename: string): Promise<TransformResult | null | undefined> {
       let lastError
 
-      for (const { root, vite, isBrowserEnabled } of servers) {
+      for (const { root, vitenode, isBrowserEnabled } of servers) {
         // On Windows root doesn't start with "/" while filenames do
         if (!filename.startsWith(root) && !filename.startsWith(`/${root}`)) {
           continue
         }
 
         if (isBrowserEnabled) {
-          const result = await vite.transformRequest(filename).catch(() => null)
+          const result = await vitenode.transformRequest(filename, undefined, 'web').catch(() => null)
 
           if (result) {
             return result
@@ -661,7 +664,7 @@ export class BaseCoverageProvider<Options extends ResolvedCoverageOptions<'istan
         }
 
         try {
-          return await vite.transformRequest(filename)
+          return await vitenode.transformRequest(filename)
         }
         catch (error) {
           lastError = error

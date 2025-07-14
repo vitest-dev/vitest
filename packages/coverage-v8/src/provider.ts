@@ -1,12 +1,13 @@
 import type { CoverageMap } from 'istanbul-lib-coverage'
 import type { ProxifiedModule } from 'magicast'
 import type { Profiler } from 'node:inspector'
-import type { CoverageProvider, ReportContext, ResolvedCoverageOptions, TestProject, Vite, Vitest } from 'vitest/node'
+import type { EncodedSourceMap, FetchResult } from 'vite-node'
+import type { AfterSuiteRunMeta } from 'vitest'
+import type { CoverageProvider, ReportContext, ResolvedCoverageOptions, TestProject, Vitest } from 'vitest/node'
 import { promises as fs } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 // @ts-expect-error -- untyped
 import { mergeProcessCovs } from '@bcoe/v8-coverage'
-import { cleanUrl } from '@vitest/utils'
 import astV8ToIstanbul from 'ast-v8-to-istanbul'
 import createDebug from 'debug'
 import libCoverage from 'istanbul-lib-coverage'
@@ -17,6 +18,7 @@ import { parseModule } from 'magicast'
 import { normalize } from 'pathe'
 import { provider } from 'std-env'
 import c from 'tinyrainbow'
+import { cleanUrl } from 'vite-node/utils'
 
 import { BaseCoverageProvider } from 'vitest/coverage'
 import { parseAstAsync } from 'vitest/node'
@@ -26,7 +28,7 @@ export interface ScriptCoverageWithOffset extends Profiler.ScriptCoverage {
   startOffset: number
 }
 
-type TransformResults = Map<string, Vite.TransformResult>
+type TransformResults = Map<string, FetchResult>
 interface RawCoverage { result: ScriptCoverageWithOffset[] }
 
 const FILE_PROTOCOL = 'file://'
@@ -146,7 +148,7 @@ export class V8CoverageProvider extends BaseCoverageProvider<ResolvedCoverageOpt
 
   private async getCoverageMapForUncoveredFiles(testedFiles: string[]): Promise<CoverageMap> {
     const transformResults = normalizeTransformResults(
-      this.ctx.vite.environments.ssr.moduleGraph,
+      this.ctx.vitenode.fetchCache,
     )
     const transform = this.createUncoveredFileTransformer(this.ctx)
 
@@ -305,24 +307,24 @@ export class V8CoverageProvider extends BaseCoverageProvider<ResolvedCoverageOpt
     )
   }
 
-  private async getSources(
+  private async getSources<TransformResult extends (FetchResult | Awaited<ReturnType<typeof this.ctx.vitenode.transformRequest>>)>(
     url: string,
     transformResults: TransformResults,
-    onTransform: (filepath: string) => Promise<Vite.TransformResult | undefined | null>,
+    onTransform: (filepath: string) => Promise<TransformResult>,
     functions: Profiler.FunctionCoverage[] = [],
   ): Promise<{
     code: string
-    map?: Vite.Rollup.SourceMap
+    map?: EncodedSourceMap
   }> {
     const filePath = normalize(fileURLToPath(url))
 
-    let transformResult: Vite.TransformResult | undefined | null = transformResults.get(filePath)
+    let transformResult: FetchResult | TransformResult | undefined = transformResults.get(filePath)
 
     if (!transformResult) {
       transformResult = await onTransform(removeStartsWith(url, FILE_PROTOCOL)).catch(() => undefined)
     }
 
-    const map = transformResult?.map as Vite.Rollup.SourceMap | undefined
+    const map = transformResult?.map as EncodedSourceMap | undefined
     const code = transformResult?.code
 
     if (!code) {
@@ -355,37 +357,31 @@ export class V8CoverageProvider extends BaseCoverageProvider<ResolvedCoverageOpt
   private async convertCoverage(
     coverage: RawCoverage,
     project: TestProject = this.ctx.getRootProject(),
-    environment: string,
+    transformMode?: AfterSuiteRunMeta['transformMode'],
   ): Promise<CoverageMap> {
-    if (environment === '__browser__' && !project.browser) {
-      throw new Error(`Cannot access browser module graph because it was torn down.`)
+    let fetchCache = project.vitenode.fetchCache
+
+    if (transformMode) {
+      fetchCache = transformMode === 'browser' ? new Map() : project.vitenode.fetchCaches[transformMode]
     }
 
-    const moduleGraph = environment === '__browser__'
-      ? project.browser!.vite.environments.client.moduleGraph
-      : project.vite.environments[environment]?.moduleGraph
-
-    if (!moduleGraph) {
-      throw new Error(`Module graph for environment ${environment} was not defined.`)
-    }
-
-    const transformResults = normalizeTransformResults(moduleGraph)
+    const transformResults = normalizeTransformResults(fetchCache)
 
     async function onTransform(filepath: string) {
-      if (environment === '__browser__' && project.browser) {
+      if (transformMode === 'browser' && project.browser) {
         const result = await project.browser.vite.transformRequest(removeStartsWith(filepath, project.config.root))
 
         if (result) {
           return { ...result, code: `${result.code}// <inline-source-map>` }
         }
       }
-      return project.vite.environments[environment].transformRequest(filepath)
+      return project.vitenode.transformRequest(filepath)
     }
 
     const scriptCoverages = []
 
     for (const result of coverage.result) {
-      if (environment === '__browser__') {
+      if (transformMode === 'browser') {
         if (result.url.startsWith('/@fs')) {
           result.url = `${FILE_PROTOCOL}${removeStartsWith(result.url, '/@fs')}`
         }
@@ -470,15 +466,15 @@ function findLongestFunctionLength(functions: Profiler.FunctionCoverage[]) {
 }
 
 function normalizeTransformResults(
-  moduleGraph: Vite.EnvironmentModuleGraph,
+  fetchCache: Map<string, { result: FetchResult }>,
 ) {
   const normalized: TransformResults = new Map()
 
-  for (const [key, value] of moduleGraph.idToModuleMap) {
+  for (const [key, value] of fetchCache.entries()) {
     const cleanEntry = cleanUrl(key)
 
-    if (value.transformResult && !normalized.has(cleanEntry)) {
-      normalized.set(cleanEntry, value.transformResult)
+    if (!normalized.has(cleanEntry)) {
+      normalized.set(cleanEntry, value.result)
     }
   }
 

@@ -8,7 +8,6 @@ export type { LoupeOptions, StringifyOptions } from './display'
 
 export {
   assertTypes,
-  cleanUrl,
   clone,
   createDefer,
   createSimpleStackTrace,
