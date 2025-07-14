@@ -67,8 +67,10 @@ export default class HTMLReporter implements Reporter {
     this.reporterDir = dirname(htmlFilePath)
     this.htmlFilePath = htmlFilePath
 
-    await fs.mkdir(resolve(this.reporterDir, 'data'), { recursive: true })
-    await fs.mkdir(resolve(this.reporterDir, 'assets'), { recursive: true })
+    if (!this.options.bundleSingleHtml) {
+      await fs.mkdir(resolve(this.reporterDir, 'data'), { recursive: true })
+      await fs.mkdir(resolve(this.reporterDir, 'assets'), { recursive: true })
+    }
   }
 
   async onFinished(): Promise<void> {
@@ -126,42 +128,118 @@ export default class HTMLReporter implements Reporter {
   }
 
   async processAttachment(attachment: TestAttachment): Promise<void> {
-    if (attachment.path) {
-      // keep external resource as is, but remove body if it's set somehow
-      if (
-        attachment.path.startsWith('http://')
-        || attachment.path.startsWith('https://')
-      ) {
+    if (this.options.bundleSingleHtml) {
+      // For single HTML mode, convert attachments to data URIs
+      if (attachment.path && !attachment.path.startsWith('http://') && !attachment.path.startsWith('https://')) {
+        const buffer = await readFile(attachment.path)
+        const contentType = mime.getType(attachment.path) || 'application/octet-stream'
+        attachment.path = `data:${contentType};base64,${buffer.toString('base64')}`
         attachment.body = undefined
         return
       }
 
-      const buffer = await readFile(attachment.path)
-      const hash = crypto.createHash('sha1').update(buffer).digest('hex')
-      const filename = hash + extname(attachment.path)
-      // move the file into an html directory to make access/publishing UI easier
-      await writeFile(resolve(this.reporterDir, 'data', filename), buffer)
-      attachment.path = filename
-      attachment.body = undefined
-      return
+      if (attachment.body) {
+        const buffer = typeof attachment.body === 'string'
+          ? Buffer.from(attachment.body, 'base64')
+          : Buffer.from(attachment.body)
+        const contentType = attachment.contentType || 'application/octet-stream'
+        attachment.path = `data:${contentType};base64,${buffer.toString('base64')}`
+        attachment.body = undefined
+        return
+      }
+
+      // Keep external URLs as-is
+      if (attachment.path && (attachment.path.startsWith('http://') || attachment.path.startsWith('https://'))) {
+        attachment.body = undefined
+      }
     }
+    else {
+      // Original logic for multi-file mode
+      if (attachment.path) {
+        // keep external resource as is, but remove body if it's set somehow
+        if (
+          attachment.path.startsWith('http://')
+          || attachment.path.startsWith('https://')
+        ) {
+          attachment.body = undefined
+          return
+        }
 
-    if (attachment.body) {
-      const buffer = typeof attachment.body === 'string'
-        ? Buffer.from(attachment.body, 'base64')
-        : Buffer.from(attachment.body)
+        const buffer = await readFile(attachment.path)
+        const hash = crypto.createHash('sha1').update(buffer).digest('hex')
+        const filename = hash + extname(attachment.path)
+        // move the file into an html directory to make access/publishing UI easier
+        await writeFile(resolve(this.reporterDir, 'data', filename), buffer)
+        attachment.path = filename
+        attachment.body = undefined
+        return
+      }
 
-      const hash = crypto.createHash('sha1').update(buffer).digest('hex')
-      const extension = mime.getExtension(attachment.contentType || 'application/octet-stream') || 'dat'
-      const filename = `${hash}.${extension}`
-      // store the file in html directory instead of passing down as a body
-      await writeFile(resolve(this.reporterDir, 'data', filename), buffer)
-      attachment.path = filename
-      attachment.body = undefined
+      if (attachment.body) {
+        const buffer = typeof attachment.body === 'string'
+          ? Buffer.from(attachment.body, 'base64')
+          : Buffer.from(attachment.body)
+
+        const hash = crypto.createHash('sha1').update(buffer).digest('hex')
+        const extension = mime.getExtension(attachment.contentType || 'application/octet-stream') || 'dat'
+        const filename = `${hash}.${extension}`
+        // store the file in html directory instead of passing down as a body
+        await writeFile(resolve(this.reporterDir, 'data', filename), buffer)
+        attachment.path = filename
+        attachment.body = undefined
+      }
     }
   }
 
   async writeReport(report: string): Promise<void> {
+    if (this.options.bundleSingleHtml) {
+      await this.writeSingleHtmlReport(report)
+    }
+    else {
+      await this.writeMultiFileReport(report)
+    }
+
+    this.ctx.logger.log(
+      `${c.bold(c.inverse(c.magenta(' HTML ')))} ${c.magenta(
+        'Report is generated',
+      )}`,
+    )
+    if (this.options.bundleSingleHtml) {
+      this.ctx.logger.log(
+        `${c.dim('       Self-contained HTML report: ')}${c.bold(
+          relative(this.ctx.config.root, this.htmlFilePath),
+        )}`,
+      )
+    }
+    else {
+      this.ctx.logger.log(
+        `${c.dim('       You can run ')}${c.bold(
+          `npx vite preview --outDir ${relative(this.ctx.config.root, this.reporterDir)}`,
+        )}${c.dim(' to see the test results.')}`,
+      )
+    }
+  }
+
+  private async writeSingleHtmlReport(report: string): Promise<void> {
+    const ui = resolve(distDir, 'client-for-single-html')
+    const html = await fs.readFile(resolve(ui, 'index.html'), 'utf-8')
+
+    // Compress and embed metadata directly in HTML
+    const promiseGzip = promisify(gzip)
+    const compressedData = await promiseGzip(report, {
+      level: zlibConstants.Z_BEST_COMPRESSION,
+    })
+    const metadataBase64 = compressedData.toString('base64')
+
+    const singleHtml = html.replace(
+      '<!-- !LOAD_METADATA! -->',
+      `<script>window.METADATA_BASE64="${metadataBase64}"</script>`,
+    )
+
+    await fs.writeFile(this.htmlFilePath, singleHtml)
+  }
+
+  private async writeMultiFileReport(report: string): Promise<void> {
     const metaFile = resolve(this.reporterDir, 'html.meta.json.gz')
 
     const promiseGzip = promisify(gzip)
@@ -169,7 +247,7 @@ export default class HTMLReporter implements Reporter {
       level: zlibConstants.Z_BEST_COMPRESSION,
     })
     await fs.writeFile(metaFile, data, 'base64')
-    const ui = resolve(distDir, 'client')
+    const ui = this.options.bundleSingleHtml ? resolve(distDir, 'client-for-single-html') : resolve(distDir, 'client')
     // copy ui
     const files = globSync(['**/*'], { cwd: ui, expandDirectories: false })
     await Promise.all(
@@ -189,17 +267,6 @@ export default class HTMLReporter implements Reporter {
           await fs.copyFile(resolve(ui, f), resolve(this.reporterDir, f))
         }
       }),
-    )
-
-    this.ctx.logger.log(
-      `${c.bold(c.inverse(c.magenta(' HTML ')))} ${c.magenta(
-        'Report is generated',
-      )}`,
-    )
-    this.ctx.logger.log(
-      `${c.dim('       You can run ')}${c.bold(
-        `npx vite preview --outDir ${relative(this.ctx.config.root, this.reporterDir)}`,
-      )}${c.dim(' to see the test results.')}`,
     )
   }
 }
