@@ -299,6 +299,32 @@ test('we don\'t have apples', () => {
 })
 ```
 
+## toBeNullable
+
+- **Type:** `() => Awaitable<void>`
+
+`toBeNullable` simply asserts if something is nullable (`null` or `undefined`).
+
+```ts
+import { expect, test } from 'vitest'
+
+function apples() {
+  return null
+}
+
+function bananas() {
+  return null
+}
+
+test('we don\'t have apples', () => {
+  expect(apples()).toBeNullable()
+})
+
+test('we don\'t have bananas', () => {
+  expect(bananas()).toBeNullable()
+})
+```
+
 ## toBeNaN
 
 - **Type:** `() => Awaitable<void>`
