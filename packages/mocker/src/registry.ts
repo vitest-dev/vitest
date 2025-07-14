@@ -148,18 +148,18 @@ export class MockerRegistry {
   }
 }
 
-export type MockedModule =
-  | AutomockedModule
-  | AutospiedModule
-  | ManualMockedModule
-  | RedirectedModule
+export type MockedModule
+  = | AutomockedModule
+    | AutospiedModule
+    | ManualMockedModule
+    | RedirectedModule
 export type MockedModuleType = 'automock' | 'autospy' | 'manual' | 'redirect'
 
-export type MockedModuleSerialized =
-  | AutomockedModuleSerialized
-  | AutospiedModuleSerialized
-  | ManualMockedModuleSerialized
-  | RedirectedModuleSerialized
+export type MockedModuleSerialized
+  = | AutomockedModuleSerialized
+    | AutospiedModuleSerialized
+    | ManualMockedModuleSerialized
+    | RedirectedModuleSerialized
 
 export class AutomockedModule {
   public readonly type = 'automock'

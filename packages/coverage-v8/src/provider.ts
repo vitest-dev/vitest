@@ -313,9 +313,9 @@ export class V8CoverageProvider extends BaseCoverageProvider<ResolvedCoverageOpt
     onTransform: (filepath: string) => Promise<TransformResult>,
     functions: Profiler.FunctionCoverage[] = [],
   ): Promise<{
-      code: string
-      map?: EncodedSourceMap
-    }> {
+    code: string
+    map?: EncodedSourceMap
+  }> {
     const filePath = normalize(fileURLToPath(url))
 
     let transformResult: FetchResult | TransformResult | undefined = transformResults.get(filePath)

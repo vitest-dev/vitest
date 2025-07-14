@@ -318,25 +318,25 @@ export interface VitestUtils {
    * @param deep If the object is deeply mocked
    * @param options If the object is partially or deeply mocked
    */
-  mocked: (<T>(item: T, deep?: false) => MaybeMocked<T>) &
-    (<T>(item: T, deep: true) => MaybeMockedDeep<T>) &
-    (<T>(
+  mocked: (<T>(item: T, deep?: false) => MaybeMocked<T>)
+    & (<T>(item: T, deep: true) => MaybeMockedDeep<T>)
+    & (<T>(
       item: T,
       options: { partial?: false; deep?: false }
-    ) => MaybeMocked<T>) &
-    (<T>(
+    ) => MaybeMocked<T>)
+    & (<T>(
       item: T,
       options: { partial?: false; deep: true }
-    ) => MaybeMockedDeep<T>) &
-    (<T>(
+    ) => MaybeMockedDeep<T>)
+    & (<T>(
       item: T,
       options: { partial: true; deep?: false }
-    ) => MaybePartiallyMocked<T>) &
-    (<T>(
+    ) => MaybePartiallyMocked<T>)
+    & (<T>(
       item: T,
       options: { partial: true; deep: true }
-    ) => MaybePartiallyMockedDeep<T>) &
-    (<T>(item: T) => MaybeMocked<T>)
+    ) => MaybePartiallyMockedDeep<T>)
+    & (<T>(item: T) => MaybeMocked<T>)
 
   /**
    * Checks that a given parameter is a mock function. If you are using TypeScript, it will also narrow down its type.

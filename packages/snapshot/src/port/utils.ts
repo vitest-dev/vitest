@@ -31,9 +31,9 @@ export function getSnapshotData(
   content: string | null,
   options: SnapshotStateOptions,
 ): {
-    data: SnapshotData
-    dirty: boolean
-  } {
+  data: SnapshotData
+  dirty: boolean
+} {
   const update = options.updateSnapshot
   const data = Object.create(null)
   let snapshotContents = ''
