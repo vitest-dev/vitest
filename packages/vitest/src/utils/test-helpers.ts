@@ -30,10 +30,10 @@ function getTransformMode(
 export async function groupFilesByEnv(
   files: Array<TestSpecification>,
 ): Promise<Record<string, {
-    file: { filepath: string; testLocations: number[] | undefined }
-    project: TestProject
-    environment: ContextTestEnvironment
-  }[]>> {
+  file: { filepath: string; testLocations: number[] | undefined }
+  project: TestProject
+  environment: ContextTestEnvironment
+}[]>> {
   const filesWithEnv = await Promise.all(
     files.map(async ({ moduleId: filepath, project, testLines }) => {
       const code = await fs.readFile(filepath, 'utf-8')
