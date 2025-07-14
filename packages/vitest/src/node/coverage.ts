@@ -653,7 +653,7 @@ export class BaseCoverageProvider<Options extends ResolvedCoverageOptions<'istan
         }
 
         if (isBrowserEnabled) {
-          const result = await vite.transformRequest(filename).catch(() => null)
+          const result = await vite.environments.client.transformRequest(filename).catch(() => null)
 
           if (result) {
             return result
@@ -661,7 +661,7 @@ export class BaseCoverageProvider<Options extends ResolvedCoverageOptions<'istan
         }
 
         try {
-          return await vite.transformRequest(filename)
+          return await vite.environments.ssr.transformRequest(filename)
         }
         catch (error) {
           lastError = error
