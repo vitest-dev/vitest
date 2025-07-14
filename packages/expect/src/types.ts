@@ -633,15 +633,17 @@ type VitestAssertion<A, T, R = void> = {
   [K in keyof A]: A[K] extends Chai.Assertion
     ? R extends Promise<void> ? Promisify<Assertion<T, R>> : Assertion<T, R>
     : A[K] extends (...args: any[]) => any
-      ? A[K] // not converting function since they may contain overload
+      ? R extends Promise<void> ? PromisifyFunction<A[K]> : A[K]
       : VitestAssertion<A[K], T, R>;
 } & ((type: string, message?: string) => Assertion<T, R>)
 
 type Promisify<O> = {
-  [K in keyof O]: O[K] extends (...args: infer A) => infer R
-    ? Promisify<O[K]> & ((...args: A) => R extends Promise<any> ? R : Promise<R>)
-    : O[K];
+  [K in keyof O]: PromisifyFunction<O[K]>
 }
+
+type PromisifyFunction<T> = T extends (...args: infer A) => infer R
+  ? Promisify<T> & ((...args: A) => R extends Promise<any> ? R : Promise<R>)
+  : T
 
 export type PromisifyAssertion<T> = Assertion<T, Promise<void>>
 
