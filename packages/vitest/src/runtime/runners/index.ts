@@ -106,7 +106,7 @@ export async function resolveTestRunner(
       rpc().onAfterSuiteRun({
         coverage,
         testFiles: files.map(file => file.name).sort(),
-        transformMode: state.environment.transformMode,
+        environment: state.environment.transformMode === 'ssr' ? 'ssr' : 'client',
         projectName: state.ctx.projectName,
       })
     }
