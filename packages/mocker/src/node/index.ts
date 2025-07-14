@@ -1,7 +1,7 @@
 export { createManualModuleSource } from '../utils'
 export { automockModule } from './automock'
 export type { AutomockPluginOptions } from './automockPlugin'
-export type { automockPlugin } from './automockPlugin'
+export { automockPlugin } from './automockPlugin'
 export { dynamicImportPlugin } from './dynamicImportPlugin'
 export { hoistMocks, hoistMocksPlugin } from './hoistMocksPlugin'
 export type { HoistMocksPluginOptions, HoistMocksResult } from './hoistMocksPlugin'
