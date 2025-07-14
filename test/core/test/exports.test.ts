@@ -1,6 +1,7 @@
 import { resolve } from 'node:path'
 import { expect, it } from 'vitest'
 import { getPackageExportsManifest } from 'vitest-package-exports'
+import { rolldownVersion } from 'vitest/node'
 
 it('exports snapshot', async ({ skip, task }) => {
   skip(task.file.pool !== 'threads', 'run only once inside threads')
@@ -10,8 +11,9 @@ it('exports snapshot', async ({ skip, task }) => {
     cwd: resolve(import.meta.dirname, '../../../packages/vitest'),
   })
 
-  expect(manifest.exports)
-    .toMatchInlineSnapshot(`
+  if (rolldownVersion) {
+    expect(manifest.exports)
+      .toMatchInlineSnapshot(`
       {
         ".": {
           "afterAll": "function",
@@ -44,7 +46,6 @@ it('exports snapshot', async ({ skip, task }) => {
           "defaultInclude": "object",
           "defineConfig": "function",
           "defineProject": "function",
-          "defineWorkspace": "function",
           "extraInlineDeps": "object",
           "mergeConfig": "function",
         },
@@ -87,13 +88,11 @@ it('exports snapshot', async ({ skip, task }) => {
         "./node": {
           "BaseSequencer": "function",
           "GitNotFoundError": "function",
-          "TestFile": "function",
           "TestsNotFoundError": "function",
           "VitestPackageInstaller": "function",
           "VitestPlugin": "function",
           "createDebugger": "function",
           "createMethodsRPC": "function",
-          "createServer": "function",
           "createViteLogger": "function",
           "createViteServer": "function",
           "createVitest": "function",
@@ -101,6 +100,7 @@ it('exports snapshot', async ({ skip, task }) => {
           "esbuildVersion": "string",
           "generateFileHash": "function",
           "getFilePoolName": "function",
+          "isCSSRequest": "function",
           "isFileServingAllowed": "function",
           "isValidApiRequest": "function",
           "parseAst": "function",
@@ -110,6 +110,7 @@ it('exports snapshot', async ({ skip, task }) => {
           "resolveApiServerConfig": "function",
           "resolveConfig": "function",
           "resolveFsAllow": "function",
+          "rolldownVersion": "string",
           "rollupVersion": "string",
           "rootDir": "string",
           "startVitest": "function",
@@ -117,7 +118,6 @@ it('exports snapshot', async ({ skip, task }) => {
           "viteVersion": "string",
         },
         "./reporters": {
-          "BasicReporter": "function",
           "BenchmarkReporter": "function",
           "BenchmarkReportsMap": "object",
           "DefaultReporter": "function",
@@ -163,4 +163,158 @@ it('exports snapshot', async ({ skip, task }) => {
         },
       }
     `)
+  }
+  else {
+    expect(manifest.exports)
+      .toMatchInlineSnapshot(`
+        {
+          ".": {
+            "afterAll": "function",
+            "afterEach": "function",
+            "assert": "function",
+            "assertType": "function",
+            "beforeAll": "function",
+            "beforeEach": "function",
+            "bench": "function",
+            "chai": "object",
+            "createExpect": "function",
+            "describe": "function",
+            "expect": "function",
+            "expectTypeOf": "function",
+            "inject": "function",
+            "it": "function",
+            "onTestFailed": "function",
+            "onTestFinished": "function",
+            "should": "function",
+            "suite": "function",
+            "test": "function",
+            "vi": "object",
+            "vitest": "object",
+          },
+          "./config": {
+            "configDefaults": "object",
+            "coverageConfigDefaults": "object",
+            "defaultBrowserPort": "number",
+            "defaultExclude": "object",
+            "defaultInclude": "object",
+            "defineConfig": "function",
+            "defineProject": "function",
+            "extraInlineDeps": "object",
+            "mergeConfig": "function",
+          },
+          "./coverage": {
+            "BaseCoverageProvider": "function",
+          },
+          "./environments": {
+            "builtinEnvironments": "object",
+            "populateGlobal": "function",
+          },
+          "./execute": {
+            "VitestExecutor": "function",
+          },
+          "./internal/browser": {
+            "SpyModule": "object",
+            "TraceMap": "function",
+            "collectTests": "function",
+            "format": "function",
+            "getSafeTimers": "function",
+            "inspect": "function",
+            "loadDiffConfig": "function",
+            "loadSnapshotSerializers": "function",
+            "originalPositionFor": "function",
+            "processError": "function",
+            "setupCommonEnv": "function",
+            "startCoverageInsideWorker": "function",
+            "startTests": "function",
+            "stopCoverageInsideWorker": "function",
+            "stringify": "function",
+            "takeCoverageInsideWorker": "function",
+          },
+          "./mocker": {
+            "AutomockedModule": "function",
+            "AutospiedModule": "function",
+            "ManualMockedModule": "function",
+            "MockerRegistry": "function",
+            "RedirectedModule": "function",
+            "mockObject": "function",
+          },
+          "./node": {
+            "BaseSequencer": "function",
+            "GitNotFoundError": "function",
+            "TestsNotFoundError": "function",
+            "VitestPackageInstaller": "function",
+            "VitestPlugin": "function",
+            "createDebugger": "function",
+            "createMethodsRPC": "function",
+            "createViteLogger": "function",
+            "createViteServer": "function",
+            "createVitest": "function",
+            "distDir": "string",
+            "esbuildVersion": "string",
+            "generateFileHash": "function",
+            "getFilePoolName": "function",
+            "isCSSRequest": "function",
+            "isFileServingAllowed": "function",
+            "isValidApiRequest": "function",
+            "parseAst": "function",
+            "parseAstAsync": "function",
+            "parseCLI": "function",
+            "registerConsoleShortcuts": "function",
+            "resolveApiServerConfig": "function",
+            "resolveConfig": "function",
+            "resolveFsAllow": "function",
+            "rolldownVersion": "undefined",
+            "rollupVersion": "string",
+            "rootDir": "string",
+            "startVitest": "function",
+            "version": "string",
+            "viteVersion": "string",
+          },
+          "./reporters": {
+            "BenchmarkReporter": "function",
+            "BenchmarkReportsMap": "object",
+            "DefaultReporter": "function",
+            "DotReporter": "function",
+            "GithubActionsReporter": "function",
+            "HangingProcessReporter": "function",
+            "JUnitReporter": "function",
+            "JsonReporter": "function",
+            "ReportersMap": "object",
+            "TapFlatReporter": "function",
+            "TapReporter": "function",
+            "VerboseBenchmarkReporter": "function",
+            "VerboseReporter": "function",
+          },
+          "./runners": {
+            "NodeBenchmarkRunner": "function",
+            "VitestTestRunner": "function",
+          },
+          "./snapshot": {
+            "VitestSnapshotEnvironment": "function",
+          },
+          "./suite": {
+            "createChainable": "function",
+            "createTaskCollector": "function",
+            "getBenchFn": "function",
+            "getBenchOptions": "function",
+            "getCurrentSuite": "function",
+            "getCurrentTest": "function",
+            "getFn": "function",
+            "getHooks": "function",
+            "setFn": "function",
+            "setHooks": "function",
+          },
+          "./workers": {
+            "collectVitestWorkerTests": "function",
+            "createForksRpcOptions": "function",
+            "createThreadsRpcOptions": "function",
+            "provideWorkerState": "function",
+            "runBaseTests": "function",
+            "runVitestWorker": "function",
+            "runVmTests": "function",
+            "unwrapSerializableConfig": "function",
+          },
+        }
+      `)
+  }
 })

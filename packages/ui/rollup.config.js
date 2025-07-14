@@ -32,6 +32,12 @@ export default () => {
         dir: 'dist',
         format: 'esm',
       },
+      moduleContext: (id) => {
+        // mime has `this.__classPrivateFieldGet` check which should be ignored in esm
+        if (id.includes('mime/dist/src') || id.includes('mime\\dist\\src')) {
+          return '{}'
+        }
+      },
       external,
       plugins: [
         ...dtsUtils.isolatedDecl(),
@@ -53,6 +59,7 @@ export default () => {
         entryFileNames: '[name].ts',
         format: 'esm',
       },
+      watch: false,
       external,
       plugins: dtsUtils.dts(),
     },

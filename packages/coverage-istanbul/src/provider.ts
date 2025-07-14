@@ -12,10 +12,9 @@ import libReport from 'istanbul-lib-report'
 import libSourceMaps from 'istanbul-lib-source-maps'
 import reports from 'istanbul-reports'
 import { parseModule } from 'magicast'
-import { resolve } from 'pathe'
-import TestExclude from 'test-exclude'
 import c from 'tinyrainbow'
 import { BaseCoverageProvider } from 'vitest/coverage'
+import { isCSSRequest } from 'vitest/node'
 
 import { version } from '../package.json' with { type: 'json' }
 import { COVERAGE_STORE_KEY } from './constants'
@@ -26,19 +25,9 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider<ResolvedCover
   name = 'istanbul' as const
   version: string = version
   instrumenter!: Instrumenter
-  testExclude!: InstanceType<typeof TestExclude>
 
   initialize(ctx: Vitest): void {
     this._initialize(ctx)
-
-    this.testExclude = new TestExclude({
-      cwd: ctx.config.root,
-      include: this.options.include,
-      exclude: this.options.exclude,
-      excludeNodeModules: true,
-      extension: this.options.extension,
-      relativePath: !this.options.allowExternal,
-    })
 
     this.instrumenter = createInstrumenter({
       produceSourceMap: true,
@@ -64,22 +53,23 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider<ResolvedCover
     // Istanbul/babel cannot instrument CSS - e.g. Vue imports end up here.
     // File extension itself is .vue, but it contains CSS.
     // e.g. "Example.vue?vue&type=style&index=0&scoped=f7f04e08&lang.css"
-    if (id.endsWith('.css')) {
+    if (isCSSRequest(id)) {
       return
     }
 
-    if (!this.testExclude.shouldInstrument(removeQueryParameters(id))) {
+    if (!this.isIncluded(removeQueryParameters(id))) {
       return
     }
 
     const sourceMap = pluginCtx.getCombinedSourcemap()
     sourceMap.sources = sourceMap.sources.map(removeQueryParameters)
 
-    // Exclude SWC's decorators that are left in source maps
-    sourceCode = sourceCode.replaceAll(
-      '_ts_decorate',
-      '/* istanbul ignore next */_ts_decorate',
-    )
+    sourceCode = sourceCode
+      // Exclude SWC's decorators that are left in source maps
+      .replaceAll('_ts_decorate', '/* istanbul ignore next */_ts_decorate')
+
+      // Exclude in-source test's test cases
+      .replaceAll(/(if +\(import\.meta\.vitest\))/g, '/* istanbul ignore next */ $1')
 
     const code = this.instrumenter.instrumentSync(
       sourceCode,
@@ -118,7 +108,7 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider<ResolvedCover
 
     // Include untested files when all tests were run (not a single file re-run)
     // or if previous results are preserved by "cleanOnRerun: false"
-    if (this.options.all && (allTestsRun || !this.options.cleanOnRerun)) {
+    if (this.options.include != null && (allTestsRun || !this.options.cleanOnRerun)) {
       const coveredFiles = coverageMap.files()
       const uncoveredCoverage = await this.getCoverageMapForUncoveredFiles(coveredFiles)
 
@@ -126,7 +116,7 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider<ResolvedCover
     }
 
     if (this.options.excludeAfterRemap) {
-      coverageMap.filter(filename => this.testExclude.shouldInstrument(filename))
+      coverageMap.filter(filename => this.isIncluded(filename))
     }
 
     if (debug.enabled) {
@@ -172,20 +162,7 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider<ResolvedCover
   }
 
   private async getCoverageMapForUncoveredFiles(coveredFiles: string[]) {
-    const allFiles = await this.testExclude.glob(this.ctx.config.root)
-    let includedFiles = allFiles.map(file =>
-      resolve(this.ctx.config.root, file),
-    )
-
-    if (this.ctx.config.changed) {
-      includedFiles = (this.ctx.config.related || []).filter(file =>
-        includedFiles.includes(file),
-      )
-    }
-
-    const uncoveredFiles = includedFiles
-      .filter(file => !coveredFiles.includes(file))
-      .sort()
+    const uncoveredFiles = await this.getUntestedFiles(coveredFiles)
 
     const cacheKey = new Date().getTime()
     const coverageMap = this.createCoverageMap()

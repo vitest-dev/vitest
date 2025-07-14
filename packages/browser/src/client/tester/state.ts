@@ -30,7 +30,9 @@ const state: WorkerGlobalState = {
       throw new Error('Not called in the browser')
     },
   },
+  onCleanup: fn => getBrowserState().cleanups.push(fn),
   moduleCache: getBrowserState().moduleCache,
+  moduleExecutionInfo: new Map(),
   rpc: null as any,
   durations: {
     environment: 0,

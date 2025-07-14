@@ -308,9 +308,9 @@ export function replaceAsymmetricMatcher(
   actualReplaced: WeakSet<WeakKey> = new WeakSet(),
   expectedReplaced: WeakSet<WeakKey> = new WeakSet(),
 ): {
-    replacedActual: any
-    replacedExpected: any
-  } {
+  replacedActual: any
+  replacedExpected: any
+} {
   // handle asymmetric Error.cause diff
   if (
     actual instanceof Error

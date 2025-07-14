@@ -20,7 +20,7 @@ import type {
 } from 'vitest/node'
 import { createManualModuleSource } from '@vitest/mocker/node'
 import c from 'tinyrainbow'
-import { createDebugger } from 'vitest/node'
+import { createDebugger, isCSSRequest } from 'vitest/node'
 
 const debug = createDebugger('vitest:browser:playwright')
 
@@ -179,8 +179,12 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
       const ids = sessionIds.get(sessionId) || []
       ids.push(moduleUrl.href)
       sessionIds.set(sessionId, ids)
-      idPreficates.set(moduleUrl.href, predicate)
+      idPreficates.set(predicateKey(sessionId, moduleUrl.href), predicate)
       return predicate
+    }
+
+    function predicateKey(sessionId: string, url: string) {
+      return `${sessionId}:${url}`
     }
 
     return {
@@ -200,17 +204,17 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
           // https://github.com/microsoft/playwright/issues/18318
           const isWebkit = this.browserName === 'webkit'
           if (isWebkit) {
-            const url = module.type === 'redirect'
-              ? (() => {
-                  // url has http:// which vite.trasnformRequest doesn't understand
-                  const url = new URL(module.redirect)
-                  return url.href.slice(url.origin.length)
-                })()
-              : (() => {
-                  const url = new URL(route.request().url())
-                  url.searchParams.set('mock', module.type)
-                  return url.href.slice(url.origin.length)
-                })()
+            let url: string
+            if (module.type === 'redirect') {
+              const redirect = new URL(module.redirect)
+              url = redirect.href.slice(redirect.origin.length)
+            }
+            else {
+              const request = new URL(route.request().url())
+              request.searchParams.set('mock', module.type)
+              url = request.href.slice(request.origin.length)
+            }
+
             const result = await this.project.browser!.vite.transformRequest(url).catch(() => null)
             if (!result) {
               return route.continue()
@@ -252,18 +256,20 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
       },
       delete: async (sessionId: string, id: string): Promise<void> => {
         const page = this.getPage(sessionId)
-        const predicate = idPreficates.get(id)
+        const key = predicateKey(sessionId, id)
+        const predicate = idPreficates.get(key)
         if (predicate) {
-          await page.unroute(predicate).finally(() => idPreficates.delete(id))
+          await page.unroute(predicate).finally(() => idPreficates.delete(key))
         }
       },
       clear: async (sessionId: string): Promise<void> => {
         const page = this.getPage(sessionId)
         const ids = sessionIds.get(sessionId) || []
         const promises = ids.map((id) => {
-          const predicate = idPreficates.get(id)
+          const key = predicateKey(sessionId, id)
+          const predicate = idPreficates.get(key)
           if (predicate) {
-            return page.unroute(predicate).finally(() => idPreficates.delete(id))
+            return page.unroute(predicate).finally(() => idPreficates.delete(key))
           }
           return null
         })
@@ -465,10 +471,8 @@ function genSourceMapUrl(map: SourceMap | string): string {
   return `data:application/json;base64,${Buffer.from(map).toString('base64')}`
 }
 
-const CSS_LANGS_RE
-  = /\.(?:css|less|sass|scss|styl|stylus|pcss|postcss|sss)(?:$|\?)/
 const directRequestRE = /[?&]direct\b/
 
 function isDirectCSSRequest(request: string): boolean {
-  return CSS_LANGS_RE.test(request) && directRequestRE.test(request)
+  return isCSSRequest(request) && directRequestRE.test(request)
 }

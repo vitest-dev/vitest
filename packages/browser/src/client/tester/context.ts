@@ -1,11 +1,14 @@
-import type { Options as TestingLibraryOptions, UserEvent as TestingLibraryUserEvent } from '@testing-library/user-event'
-import type { RunnerTask } from 'vitest'
+import type {
+  Options as TestingLibraryOptions,
+  UserEvent as TestingLibraryUserEvent,
+} from '@testing-library/user-event'
 import type {
   BrowserLocators,
   BrowserPage,
   Locator,
   UserEvent,
-} from '../../../context'
+} from '@vitest/browser/context'
+import type { RunnerTask } from 'vitest'
 import type { IframeViewportEvent } from '../client'
 import type { BrowserRunnerState } from '../utils'
 import type { Locator as LocatorAPI } from './locators/index'
@@ -289,12 +292,19 @@ export const page: BrowserPage = {
     const name
       = options.path || `${taskName.replace(/[^a-z0-9]/gi, '-')}-${number}.png`
 
-    return ensureAwaited(error => triggerCommand('__vitest_screenshot', [name, processTimeoutOptions({
-      ...options,
-      element: options.element
-        ? convertToSelector(options.element)
-        : undefined,
-    })], error))
+    return ensureAwaited(error => triggerCommand(
+      '__vitest_screenshot',
+      [
+        name,
+        processTimeoutOptions({
+          ...options,
+          element: options.element
+            ? convertToSelector(options.element)
+            : undefined,
+        } as any /** TODO */),
+      ],
+      error,
+    ))
   },
   getByRole() {
     throw new Error(`Method "getByRole" is not implemented in the "${provider}" provider.`)
@@ -360,6 +370,7 @@ export const locators: BrowserLocators = {
   extend(methods) {
     const Locator = page._createLocator('css=body').constructor as typeof LocatorAPI
     for (const method in methods) {
+      locators._extendedMethods.add(method)
       const cb = (methods as any)[method] as (...args: any[]) => string | Locator
       // @ts-expect-error types are hard to make work
       Locator.prototype[method] = function (...args: any[]) {
@@ -378,11 +389,17 @@ export const locators: BrowserLocators = {
       }
     }
   },
+  _extendedMethods: new Set<string>(),
 }
 
 declare module '@vitest/browser/context' {
   interface BrowserPage {
     /** @internal */
     _createLocator: (selector: string) => Locator
+  }
+
+  interface BrowserLocators {
+    /** @internal */
+    _extendedMethods: Set<string>
   }
 }

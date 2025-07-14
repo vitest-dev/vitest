@@ -1,4 +1,5 @@
 import type { FileSpecification } from '@vitest/runner'
+import type { ModuleCacheMap } from 'vite-node'
 import type { SerializedConfig } from './config'
 import type { VitestExecutor } from './execute'
 import { createRequire } from 'node:module'
@@ -61,7 +62,7 @@ export async function run(
   }
 
   installSourcemapsSupport({
-    getSourceMap: source => workerState.moduleCache.getSourceMap(source),
+    getSourceMap: source => (workerState.moduleCache as ModuleCacheMap).getSourceMap(source),
   })
 
   await startCoverageInsideWorker(config.coverage, executor, { isolate: false })
@@ -76,6 +77,8 @@ export async function run(
   ])
 
   config.snapshotOptions.snapshotEnvironment = snapshotEnvironment
+
+  runner.getWorkerContext = undefined
 
   workerState.onCancel.then((reason) => {
     closeInspector(config)

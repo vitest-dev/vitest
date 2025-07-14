@@ -139,7 +139,7 @@ If you don't have a custom runner or didn't define `runTest` method, Vitest will
 :::
 
 ::: tip
-Snapshot support and some other features depend on the runner. If you don't want to lose it, you can extend your runner from `VitestTestRunner` imported from `vitest/runners`. It also exposes `BenchmarkNodeRunner`, if you want to extend benchmark functionality.
+Snapshot support and some other features depend on the runner. If you don't want to lose it, you can extend your runner from `VitestTestRunner` imported from `vitest/runners`. It also exposes `NodeBenchmarkRunner`, if you want to extend benchmark functionality.
 :::
 
 ## Tasks
@@ -238,7 +238,7 @@ export interface TaskResult {
    * Errors that occurred during the task execution. It is possible to have several errors
    * if `expect.soft()` failed multiple times.
    */
-  errors?: ErrorWithDiff[]
+  errors?: TestError[]
   /**
    * How long in milliseconds the task took to run.
    */

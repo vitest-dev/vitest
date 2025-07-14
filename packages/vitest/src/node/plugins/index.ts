@@ -144,6 +144,12 @@ export async function VitestPlugin(
           },
         }
 
+        // inherit so it's available in VitestOptimizer
+        // I cannot wait to rewrite all of this in Vitest 4
+        if (options.cache != null) {
+          config.test!.cache = options.cache
+        }
+
         if (vitest.configOverride.project) {
           // project filter was set by the user, so we need to filter the project
           options.project = vitest.configOverride.project
@@ -252,6 +258,11 @@ export async function VitestPlugin(
           viteConfig.server.watch = null
         }
 
+        if (options.ui) {
+          // @ts-expect-error mutate readonly
+          viteConfig.plugins.push(await UIPlugin())
+        }
+
         Object.defineProperty(viteConfig, '_vitest', {
           value: options,
           enumerable: false,
@@ -291,7 +302,6 @@ export async function VitestPlugin(
     ...CSSEnablerPlugin(vitest),
     CoverageTransform(vitest),
     VitestCoreResolver(vitest),
-    options.ui ? await UIPlugin() : null,
     ...MocksPlugins(),
     VitestOptimizer(),
     NormalizeURLPlugin(),

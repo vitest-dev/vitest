@@ -1,8 +1,8 @@
 import type { UserConfig as ViteUserConfig } from 'vite'
-import type { UserConfig } from 'vitest/node'
+import type { TestUserConfig } from 'vitest/node'
 import type { VitestRunnerCLIOptions } from '../../test-utils'
+import { cpus } from 'node:os'
 import { normalize, resolve } from 'pathe'
-
 import { beforeEach, expect, test } from 'vitest'
 import { version } from 'vitest/package.json'
 import * as testUtils from '../../test-utils'
@@ -11,8 +11,8 @@ const providers = ['playwright', 'webdriverio', 'preview'] as const
 const names = ['edge', 'chromium', 'webkit', 'chrome', 'firefox', 'safari'] as const
 const browsers = providers.map(provider => names.map(name => ({ name, provider }))).flat()
 
-function runVitest(config: NonNullable<UserConfig> & { shard?: any }, viteOverrides: ViteUserConfig = {}, runnerOptions?: VitestRunnerCLIOptions) {
-  return testUtils.runVitest({ root: './fixtures/test', ...config }, [], undefined, viteOverrides, runnerOptions)
+function runVitest(config: NonNullable<TestUserConfig> & { shard?: any }, viteOverrides: ViteUserConfig = {}, runnerOptions?: VitestRunnerCLIOptions) {
+  return testUtils.runVitest({ root: './fixtures/test', include: ['example.test.ts'], ...config }, [], undefined, viteOverrides, runnerOptions)
 }
 
 function runVitestCli(...cliArgs: string[]) {
@@ -49,6 +49,18 @@ test('shard index must be smaller than count', async () => {
   const { stderr } = await runVitest({ shard: '2/1' })
 
   expect(stderr).toMatch('Error: --shard <index> must be a positive number less then <count>')
+})
+
+test('shard count must be smaller than count of test files', async () => {
+  const { stderr } = await runVitest({ root: './fixtures/shard', shard: '1/4', include: ['**/*.test.js'] })
+
+  expect(stderr).toMatch('Error: --shard <count> must be a smaller than count of test files. Resolved 3 test files for --shard=1/4.')
+})
+
+test('shard count can be smaller than count of test files when passWithNoTests', async () => {
+  const { stderr } = await runVitest({ root: './fixtures/shard', shard: '1/4', passWithNoTests: true, include: ['**/*.test.js'] })
+
+  expect(stderr).toMatch('')
 })
 
 test('inspect requires changing pool and singleThread/singleFork', async () => {
@@ -298,7 +310,18 @@ Use either:
 test('v8 coverage provider cannot be used in workspace without playwright + chromium', async () => {
   const { stderr } = await runVitest({
     coverage: { enabled: true },
-    workspace: './fixtures/workspace/browser/workspace-with-browser.ts',
+    projects: [
+      {
+        test: {
+          name: 'Browser project',
+          browser: {
+            enabled: true,
+            provider: 'webdriverio',
+            instances: [{ browser: 'chrome' }],
+          },
+        },
+      },
+    ],
   }, {}, { fails: true })
   expect(stderr).toMatch(
     `Error: @vitest/coverage-v8 does not work with
@@ -382,7 +405,7 @@ test('coverage.autoUpdate cannot update thresholds when configuration file doesn
 })
 
 test('boolean flag 100 should not crash CLI', async () => {
-  let { stderr } = await runVitestCli('--coverage.enabled', '--coverage.thresholds.100')
+  let { stderr } = await runVitestCli('--coverage.enabled', '--coverage.thresholds.100', '--coverage.include=fixtures/coverage-test', '--passWithNoTests')
   // non-zero coverage shows up, which is non-deterministic, so strip it.
   stderr = stderr.replace(/\([0-9.]+%\) does/g, '(0%) does')
 
@@ -552,4 +575,32 @@ test('non existing project name will throw', async () => {
 test('non existing project name array will throw', async () => {
   const { stderr } = await runVitest({ project: ['non-existing-project', 'also-non-existing'] })
   expect(stderr).toMatch('No projects matched the filter "non-existing-project", "also-non-existing".')
+})
+
+test('minWorkers must be smaller than maxWorkers', async () => {
+  const { stderr } = await runVitest({ minWorkers: 2, maxWorkers: 1 })
+
+  expect(stderr).toMatch('RangeError: options.minThreads and options.maxThreads must not conflict')
+})
+
+test('minWorkers higher than maxWorkers does not crash', async ({ skip }) => {
+  skip(cpus().length < 2, 'Test requires +2 CPUs')
+
+  const { stdout, stderr } = await runVitest({
+    maxWorkers: 1,
+
+    // Overrides defaults of "runVitest" of "test-utils"
+    minWorkers: undefined,
+  })
+
+  expect(stdout).toMatch('✓ example.test.ts > it works')
+  expect(stderr).toBe('')
+})
+
+test('cannot set the `workspace` options', async () => {
+  const { stderr } = await runVitest({
+    // @ts-expect-error workspace was removed in Vitest 4, but we show an error
+    workspace: 'some-options',
+  })
+  expect(stderr).toContain('The `test.workspace` option was removed in Vitest 4. Please, migrate to `test.projects` instead. See https://vitest.dev/guide/projects for examples.')
 })

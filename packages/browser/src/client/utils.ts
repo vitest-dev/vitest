@@ -65,7 +65,7 @@ export function ensureAwaited<T>(promise: (error?: Error) => Promise<T>): Promis
 export interface BrowserRunnerState {
   files: string[]
   runningFiles: string[]
-  moduleCache: WorkerGlobalState['moduleCache']
+  moduleCache: Map<string, any>
   config: SerializedConfig
   provider: string
   runner: VitestRunner
@@ -81,6 +81,7 @@ export interface BrowserRunnerState {
   method: 'run' | 'collect'
   orchestrator?: IframeOrchestrator
   commands: CommandsManager
+  cleanups: Array<() => unknown>
   cdp?: {
     on: (event: string, listener: (payload: any) => void) => void
     once: (event: string, listener: (payload: any) => void) => void

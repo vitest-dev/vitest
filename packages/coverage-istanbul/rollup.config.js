@@ -50,6 +50,7 @@ export default () => [
       entryFileNames: '[name].d.ts',
       format: 'esm',
     },
+    watch: false,
     external,
     plugins: dtsUtils.dts(),
   },

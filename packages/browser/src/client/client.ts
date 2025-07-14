@@ -1,7 +1,7 @@
 import type { ModuleMocker } from '@vitest/mocker/browser'
 import type { CancelReason } from '@vitest/runner'
 import type { BirpcReturn } from 'birpc'
-import type { WebSocketBrowserEvents, WebSocketBrowserHandlers } from '../node/types'
+import type { WebSocketBrowserEvents, WebSocketBrowserHandlers } from '../types'
 import type { IframeOrchestrator } from './orchestrator'
 import { createBirpc } from 'birpc'
 import { parse, stringify } from 'flatted'
@@ -18,7 +18,7 @@ export const RPC_ID: string
 const METHOD = getBrowserState().method
 export const ENTRY_URL: string = `${
   location.protocol === 'https:' ? 'wss:' : 'ws:'
-}//${HOST}/__vitest_browser_api__?type=${PAGE_TYPE}&rpcId=${RPC_ID}&sessionId=${getBrowserState().sessionId}&projectName=${getBrowserState().config.name || ''}&method=${METHOD}&token=${(window as any).VITEST_API_TOKEN}`
+}//${HOST}/__vitest_browser_api__?type=${PAGE_TYPE}&rpcId=${RPC_ID}&sessionId=${getBrowserState().sessionId}&projectName=${getBrowserState().config.name || ''}&method=${METHOD}&token=${(window as any).VITEST_API_TOKEN || '0'}`
 
 let setCancel = (_: CancelReason) => {}
 export const onCancel: Promise<CancelReason> = new Promise((resolve) => {

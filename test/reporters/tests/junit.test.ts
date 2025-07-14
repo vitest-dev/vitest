@@ -1,4 +1,5 @@
-import type { File, Suite, Task, TaskResult } from 'vitest'
+import type { RunnerTaskResult, RunnerTestCase, RunnerTestFile, RunnerTestSuite } from 'vitest'
+import { createFileTask } from '@vitest/runner/utils'
 import { resolve } from 'pathe'
 import { expect, test } from 'vitest'
 import { getDuration } from '../../../packages/vitest/src/node/reporters/junit'
@@ -7,20 +8,9 @@ import { runVitest, runVitestCli } from '../../test-utils'
 const root = resolve(__dirname, '../fixtures')
 
 test('calc the duration used by junit', () => {
-  const result: TaskResult = { state: 'pass', duration: 0 }
-  const file: File = {
-    id: '1',
-    filepath: 'test.ts',
-    file: null!,
-    projectName: '',
-    type: 'suite',
-    tasks: [],
-    name: 'test.ts',
-    mode: 'run',
-    meta: {},
-  }
-  file.file = file
-  const suite: Suite = {
+  const result: RunnerTaskResult = { state: 'pass', duration: 0 }
+  const file: RunnerTestFile = createFileTask('/test.ts', '/', 'test')
+  const suite: RunnerTestSuite = {
     id: '1_0',
     type: 'suite',
     name: 'suite',
@@ -29,12 +19,13 @@ test('calc the duration used by junit', () => {
     file,
     meta: {},
   }
-  const task: Task = {
+  const task: RunnerTestCase = {
     id: '1_0_0',
     type: 'test',
     name: 'timeout',
     mode: 'run',
     result,
+    annotations: [],
     file,
     timeout: 0,
     context: null as any,
@@ -107,21 +98,6 @@ test('write testsuite name relative to root config', async () => {
 
   expect(xml).toContain('<testsuite name="space-1/test/base.test.ts" timestamp="..." hostname="..." tests="1" failures="0" errors="0" skipped="0" time="...">')
   expect(xml).toContain('<testsuite name="space-2/test/base.test.ts" timestamp="..." hostname="..." tests="1" failures="0" errors="0" skipped="0" time="...">')
-})
-
-test('options.classname changes classname property', async () => {
-  const { stdout } = await runVitest({
-    reporters: [['junit', { classname: 'some-custom-classname' }]],
-    root: './fixtures/default',
-    include: ['a.test.ts'],
-  })
-
-  const xml = stabilizeReport(stdout)
-
-  // All classname attributes should have the custom value
-  expect(xml.match(/<testcase classname="a\.test\.ts"/g)).toBeNull()
-  expect(xml.match(/<testcase classname="/g)).toHaveLength(16)
-  expect(xml.match(/<testcase classname="some-custom-classname"/g)).toHaveLength(16)
 })
 
 test('options.suiteName changes name property', async () => {

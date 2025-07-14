@@ -1,6 +1,5 @@
-import type { CancelReason, File, Suite, Task, TaskEventPack, TaskResultPack, VitestRunner } from '@vitest/runner'
+import type { CancelReason, File, Suite, Task, TaskEventPack, TaskResultPack, Test, TestAnnotation, VitestRunner } from '@vitest/runner'
 import type { SerializedConfig, TestExecutionMethod, WorkerGlobalState } from 'vitest'
-import type { VitestExecutor } from 'vitest/execute'
 import type { VitestBrowserClientMocker } from './mocker'
 import { globalChannel, onCancel } from '@vitest/browser/client'
 import { page, userEvent } from '@vitest/browser/context'
@@ -59,7 +58,7 @@ export function createBrowserRunner(
       await super.onBeforeTryTask?.(...args)
     }
 
-    onAfterRunTask = async (task: Task) => {
+    onAfterRunTask = async (task: Test) => {
       await super.onAfterRunTask?.(task)
 
       if (this.config.bail && task.result?.state === 'fail') {
@@ -77,7 +76,7 @@ export function createBrowserRunner(
       if (this.config.browser.screenshotFailures && document.body.clientHeight > 0 && task.result?.state === 'fail') {
         const screenshot = await page.screenshot({
           timeout: this.config.browser.providerOptions?.actionTimeout ?? 5_000,
-        }).catch((err) => {
+        } as any /** TODO */).catch((err) => {
           console.error('[vitest] Failed to take a screenshot', err)
         })
         if (screenshot) {
@@ -146,6 +145,40 @@ export function createBrowserRunner(
       return rpc().onCollected(this.method, files)
     }
 
+    onTestAnnotate = (test: Test, annotation: TestAnnotation): Promise<TestAnnotation> => {
+      if (annotation.location) {
+        // the file should be the test file
+        // tests from other files are not supported
+        const map = this.sourceMapCache.get(annotation.location.file)
+        if (!map) {
+          return rpc().onTaskAnnotate(test.id, annotation)
+        }
+
+        const traceMap = new TraceMap(map as any)
+        const { line, column, source } = originalPositionFor(traceMap, annotation.location)
+        if (line != null && column != null && source != null) {
+          let file: string = annotation.location.file
+          if (source) {
+            const fileUrl = annotation.location.file.startsWith('file://')
+              ? annotation.location.file
+              : `file://${annotation.location.file}`
+            const sourceRootUrl = map.sourceRoot
+              ? new URL(map.sourceRoot, fileUrl)
+              : fileUrl
+            file = new URL(source, sourceRootUrl).pathname
+          }
+
+          annotation.location = {
+            line,
+            column: column + 1,
+            // if the file path is on windows, we need to remove the starting slash
+            file: file.match(/\/\w:\//) ? file.slice(1) : file,
+          }
+        }
+      }
+      return rpc().onTaskAnnotate(test.id, annotation)
+    }
+
     onTaskUpdate = (task: TaskResultPack[], events: TaskEventPack[]): Promise<void> => {
       return rpc().onTaskUpdate(this.method, task, events)
     }
@@ -205,8 +238,8 @@ export async function initiateRunner(
   })
 
   const [diffOptions] = await Promise.all([
-    loadDiffConfig(config, executor as unknown as VitestExecutor),
-    loadSnapshotSerializers(config, executor as unknown as VitestExecutor),
+    loadDiffConfig(config, executor as any),
+    loadSnapshotSerializers(config, executor as any),
   ])
   runner.config.diffOptions = diffOptions
   getWorkerState().onFilterStackTrace = (stack: string) => {
@@ -220,14 +253,24 @@ export async function initiateRunner(
   return runner
 }
 
+async function getTraceMap(file: string, sourceMaps: Map<string, any>) {
+  const result = sourceMaps.get(file) || await rpc().getBrowserFileSourceMap(file).then((map) => {
+    sourceMaps.set(file, map)
+    return map
+  })
+  if (!result) {
+    return null
+  }
+  return new TraceMap(result as any)
+}
+
 async function updateTestFilesLocations(files: File[], sourceMaps: Map<string, any>) {
   const promises = files.map(async (file) => {
-    const result = sourceMaps.get(file.filepath) || await rpc().getBrowserFileSourceMap(file.filepath)
-    if (!result) {
+    const traceMap = await getTraceMap(file.filepath, sourceMaps)
+    if (!traceMap) {
       return null
     }
-    const traceMap = new TraceMap(result as any)
-    function updateLocation(task: Task) {
+    const updateLocation = (task: Task) => {
       if (task.location) {
         const { line, column } = originalPositionFor(traceMap, task.location)
         if (line != null && column != null) {

@@ -34,6 +34,41 @@ describe.each([true, false])('standalone mode is %s', (standalone) => {
     await vitest.waitForStdout('1 passed')
   })
 
+  test('filter by filename when multiple projects match same file', async () => {
+    const { vitest } = await runVitest({
+      ...options,
+      projects: [
+        {
+          test: {
+            name: 'First',
+            root: options.root,
+          },
+        },
+        {
+          test: {
+            name: 'Second',
+            root: options.root,
+          },
+        },
+      ],
+    })
+
+    vitest.write('p')
+
+    await vitest.waitForStdout('Input filename pattern')
+
+    vitest.write('math')
+
+    await vitest.waitForStdout('Pattern matches 1 result')
+    await vitest.waitForStdout('› math.test.ts')
+
+    vitest.write('\n')
+
+    // 2 due to count of projects
+    await vitest.waitForStdout('2 passed')
+    await vitest.waitForStdout('Filename pattern: math')
+  })
+
   test('filter by test name', async () => {
     const { vitest } = await runVitest(options)
 

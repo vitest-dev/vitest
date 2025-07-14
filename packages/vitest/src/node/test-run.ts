@@ -1,12 +1,25 @@
-import type { File as RunnerTestFile, TaskEventPack, TaskResultPack, TaskUpdateEvent } from '@vitest/runner'
+import type {
+  File as RunnerTestFile,
+  TaskEventPack,
+  TaskResultPack,
+  TaskUpdateEvent,
+  TestAnnotation,
+  TestAttachment,
+} from '@vitest/runner'
+import type { TaskEventData } from '@vitest/runner/types/tasks'
 import type { SerializedError } from '@vitest/utils'
 import type { UserConsoleLog } from '../types/general'
 import type { Vitest } from './core'
 import type { TestProject } from './project'
-import type { ReportedHookContext, TestCollection, TestModule } from './reporters/reported-tasks'
+import type { ReportedHookContext, TestCase, TestCollection, TestModule } from './reporters/reported-tasks'
 import type { TestSpecification } from './spec'
+import type { TestRunEndReason } from './types/reporter'
 import assert from 'node:assert'
+import { createHash } from 'node:crypto'
+import { copyFile, mkdir } from 'node:fs/promises'
 import { serializeError } from '@vitest/utils/error'
+import mime from 'mime/lite'
+import { basename, dirname, extname, resolve } from 'pathe'
 
 export class TestRun {
   constructor(private vitest: Vitest) {}
@@ -42,19 +55,34 @@ export class TestRun {
     await this.vitest.report('onUserConsoleLog', log)
   }
 
+  async annotate(testId: string, annotation: TestAnnotation): Promise<TestAnnotation> {
+    const task = this.vitest.state.idMap.get(testId)
+    const entity = task && this.vitest.state.getReportedEntity(task)
+
+    assert(task && entity, `Entity must be found for task ${task?.name || testId}`)
+    assert(entity.type === 'test', `Annotation can only be added to a test, instead got ${entity.type}`)
+
+    await this.resolveTestAttachment(entity, annotation)
+
+    entity.task.annotations.push(annotation)
+
+    await this.vitest.report('onTestCaseAnnotate', entity, annotation)
+    return annotation
+  }
+
   async updated(update: TaskResultPack[], events: TaskEventPack[]): Promise<void> {
     this.vitest.state.updateTasks(update)
+
+    for (const [id, event, data] of events) {
+      await this.reportEvent(id, event, data).catch((error) => {
+        this.vitest.state.catchError(serializeError(error), 'Unhandled Reporter Error')
+      })
+    }
 
     // TODO: what is the order or reports here?
     // "onTaskUpdate" in parallel with others or before all or after all?
     // TODO: error handling - what happens if custom reporter throws an error?
-    await this.vitest.report('onTaskUpdate', update)
-
-    for (const [id, event] of events) {
-      await this.reportEvent(id, event).catch((error) => {
-        this.vitest.state.catchError(serializeError(error), 'Unhandled Reporter Error')
-      })
-    }
+    await this.vitest.report('onTaskUpdate', update, events)
   }
 
   async end(specifications: TestSpecification[], errors: unknown[], coverage?: unknown): Promise<void> {
@@ -62,13 +90,17 @@ export class TestRun {
     const modules = specifications.map(spec => spec.testModule).filter(s => s != null)
     const files = modules.map(m => m.task)
 
-    const state = this.vitest.isCancelling
+    const state: TestRunEndReason = this.vitest.isCancelling
       ? 'interrupted'
       // by this point, the run will be marked as failed if there are any errors,
       // should it be done by testRun.end?
-      : process.exitCode
+      : this.hasFailed(modules)
         ? 'failed'
         : 'passed'
+
+    if (state !== 'passed') {
+      process.exitCode = 1
+    }
 
     try {
       await Promise.all([
@@ -84,7 +116,15 @@ export class TestRun {
     }
   }
 
-  private async reportEvent(id: string, event: TaskUpdateEvent) {
+  private hasFailed(modules: TestModule[]) {
+    if (!modules.length) {
+      return !this.vitest.config.passWithNoTests
+    }
+
+    return modules.some(m => !m.ok())
+  }
+
+  private async reportEvent(id: string, event: TaskUpdateEvent, data: TaskEventData | undefined) {
     const task = this.vitest.state.idMap.get(id)
     const entity = task && this.vitest.state.getReportedEntity(task)
 
@@ -145,7 +185,38 @@ export class TestRun {
       else {
         await this.vitest.report('onHookEnd', hook)
       }
+
+      // this can only happen in --merge-reports, and annotation is already resolved
+      if (event === 'test-annotation') {
+        const annotation = data?.annotation
+        assert(annotation && entity.type === 'test')
+        await this.vitest.report('onTestCaseAnnotate', entity, annotation)
+      }
     }
+  }
+
+  private async resolveTestAttachment(test: TestCase, annotation: TestAnnotation): Promise<TestAttachment | undefined> {
+    const project = test.project
+    const attachment = annotation.attachment
+    if (!attachment) {
+      return attachment
+    }
+    const path = attachment.path
+    if (path && !path.startsWith('http://') && !path.startsWith('https://')) {
+      const currentPath = resolve(project.config.root, path)
+      const hash = createHash('sha1').update(currentPath).digest('hex')
+      const newPath = resolve(
+        project.config.attachmentsDir,
+        `${sanitizeFilePath(annotation.message)}-${hash}${extname(currentPath)}`,
+      )
+      await mkdir(dirname(newPath), { recursive: true })
+      await copyFile(currentPath, newPath)
+
+      attachment.path = newPath
+      const contentType = attachment.contentType ?? mime.getType(basename(currentPath))
+      attachment.contentType = contentType || undefined
+    }
+    return attachment
   }
 
   private async reportChildren(children: TestCollection) {
@@ -161,4 +232,9 @@ export class TestRun {
       }
     }
   }
+}
+
+function sanitizeFilePath(s: string): string {
+  // eslint-disable-next-line no-control-regex
+  return s.replace(/[\x00-\x2C\x2E\x2F\x3A-\x40\x5B-\x60\x7B-\x7F]+/g, '-')
 }

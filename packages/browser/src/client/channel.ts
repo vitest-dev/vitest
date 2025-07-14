@@ -40,23 +40,24 @@ export interface IframeCleanupEvent {
 export interface IframePrepareEvent {
   event: 'prepare'
   iframeId: string
+  startTime: number
 }
 
 export type GlobalChannelIncomingEvent = GlobalChannelTestRunCanceledEvent
 
-export type IframeChannelIncomingEvent =
-  | IframeViewportEvent
+export type IframeChannelIncomingEvent
+  = | IframeViewportEvent
 
-export type IframeChannelOutgoingEvent =
-  | IframeExecuteEvent
-  | IframeCleanupEvent
-  | IframePrepareEvent
-  | IframeViewportFailEvent
-  | IframeViewportDoneEvent
+export type IframeChannelOutgoingEvent
+  = | IframeExecuteEvent
+    | IframeCleanupEvent
+    | IframePrepareEvent
+    | IframeViewportFailEvent
+    | IframeViewportDoneEvent
 
-export type IframeChannelEvent =
-  | IframeChannelIncomingEvent
-  | IframeChannelOutgoingEvent
+export type IframeChannelEvent
+  = | IframeChannelIncomingEvent
+    | IframeChannelOutgoingEvent
 
 export const channel: BroadcastChannel = new BroadcastChannel(
   `vitest:${getBrowserState().sessionId}`,

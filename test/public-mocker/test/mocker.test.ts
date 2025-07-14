@@ -49,6 +49,7 @@ it('redirect works correctly', async () => {
 async function createTestServer(config: UserConfig) {
   const server = await createServer({
     ...config,
+    cacheDir: '.cache',
     plugins: [
       mockerPlugin({
         globalThisAccessor: 'Symbol.for("vitest.mocker")',

@@ -30,27 +30,17 @@ function getTransformMode(
 export async function groupFilesByEnv(
   files: Array<TestSpecification>,
 ): Promise<Record<string, {
-    file: { filepath: string; testLocations: number[] | undefined }
-    project: TestProject
-    environment: ContextTestEnvironment
-  }[]>> {
+  file: { filepath: string; testLocations: number[] | undefined }
+  project: TestProject
+  environment: ContextTestEnvironment
+}[]>> {
   const filesWithEnv = await Promise.all(
     files.map(async ({ moduleId: filepath, project, testLines }) => {
       const code = await fs.readFile(filepath, 'utf-8')
 
       // 1. Check for control comments in the file
       let env = code.match(/@(?:vitest|jest)-environment\s+([\w-]+)\b/)?.[1]
-      // 2. Check for globals
-      if (!env) {
-        for (const [glob, target] of project.config.environmentMatchGlobs
-          || []) {
-          if (pm.isMatch(filepath, glob, { cwd: project.config.root })) {
-            env = target
-            break
-          }
-        }
-      }
-      // 3. Fallback to global env
+      // 2. Fallback to global env
       env ||= project.config.environment || 'node'
 
       const transformMode = getTransformMode(

@@ -5,7 +5,7 @@ import { coverageTest, normalizeURL, readCoverageMap, runVitest, test } from '..
 test('implicit else is included in branch count', async () => {
   await runVitest({
     include: [normalizeURL(import.meta.url)],
-    coverage: { reporter: 'json', all: false },
+    coverage: { reporter: 'json' },
   })
 
   const coverageMap = await readCoverageMap()

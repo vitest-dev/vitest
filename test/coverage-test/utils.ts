@@ -1,6 +1,6 @@
 import type { CoverageSummary, FileCoverageData } from 'istanbul-lib-coverage'
 import type { TestFunction } from 'vitest'
-import type { UserConfig } from 'vitest/node'
+import type { TestUserConfig } from 'vitest/node'
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -28,7 +28,7 @@ export function coverageTest(name: string, fn: TestFunction) {
   }
 }
 
-export async function runVitest(config: UserConfig, options = { throwOnError: true }) {
+export async function runVitest(config: TestUserConfig, options = { throwOnError: true }) {
   const provider = process.env.COVERAGE_PROVIDER as any
 
   const result = await testUtils.runVitest({
@@ -46,8 +46,7 @@ export async function runVitest(config: UserConfig, options = { throwOnError: tr
         enabled: true,
         reporter: [],
         ...config.coverage,
-        provider: provider === 'v8-ast-aware' ? 'v8' : provider,
-        experimentalAstAwareRemapping: provider === 'v8-ast-aware',
+        provider,
         customProviderModule: provider === 'custom' ? 'fixtures/custom-provider' : undefined,
       },
       browser: {
@@ -108,10 +107,6 @@ export function normalizeFilename(filename: string) {
 
 export function isV8Provider() {
   return process.env.COVERAGE_PROVIDER === 'v8'
-}
-
-export function isExperimentalV8Provider() {
-  return process.env.COVERAGE_PROVIDER === 'v8-ast-aware'
 }
 
 export function isBrowser() {

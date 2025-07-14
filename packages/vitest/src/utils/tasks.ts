@@ -30,7 +30,7 @@ export function convertTasksToEvents(file: File, onTask?: (task: Task) => void):
     onTask?.(suite)
 
     packs.push([suite.id, suite.result, suite.meta])
-    events.push([suite.id, 'suite-prepare'])
+    events.push([suite.id, 'suite-prepare', undefined])
     suite.tasks.forEach((task) => {
       if (task.type === 'suite') {
         visit(task)
@@ -39,11 +39,15 @@ export function convertTasksToEvents(file: File, onTask?: (task: Task) => void):
         onTask?.(task)
         if (suite.mode !== 'skip' && suite.mode !== 'todo') {
           packs.push([task.id, task.result, task.meta])
-          events.push([task.id, 'test-prepare'], [task.id, 'test-finished'])
+          events.push([task.id, 'test-prepare', undefined])
+          task.annotations.forEach((annotation) => {
+            events.push([task.id, 'test-annotation', { annotation }])
+          })
+          events.push([task.id, 'test-finished', undefined])
         }
       }
     })
-    events.push([suite.id, 'suite-finished'])
+    events.push([suite.id, 'suite-finished', undefined])
   }
 
   visit(file)

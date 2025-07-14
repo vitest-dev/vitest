@@ -19,18 +19,32 @@ import { createMethodsRPC } from './rpc'
 
 function createChildProcessChannel(project: TestProject, collect = false) {
   const emitter = new EventEmitter()
-  const cleanup = () => emitter.removeAllListeners()
 
   const events = { message: 'message', response: 'response' }
   const channel: TinypoolChannel = {
     onMessage: callback => emitter.on(events.message, callback),
     postMessage: message => emitter.emit(events.response, message),
+    onClose: () => emitter.removeAllListeners(),
   }
 
   const rpc = createBirpc<RunnerRPC, RuntimeRPC>(createMethodsRPC(project, { cacheFs: true, collect }), {
     eventNames: ['onCancel'],
     serialize: v8.serialize,
-    deserialize: v => v8.deserialize(Buffer.from(v)),
+    deserialize: (v) => {
+      try {
+        return v8.deserialize(Buffer.from(v))
+      }
+      catch (error) {
+        let stringified = ''
+
+        try {
+          stringified = `\nReceived value: ${JSON.stringify(v)}`
+        }
+        catch {}
+
+        throw new Error(`[vitest-pool]: Unexpected call to process.send(). Make sure your test cases are not interfering with process's channel.${stringified}`, { cause: error })
+      }
+    },
     post(v) {
       emitter.emit(events.message, v)
     },
@@ -42,13 +56,13 @@ function createChildProcessChannel(project: TestProject, collect = false) {
     },
   })
 
-  project.ctx.onCancel(reason => rpc.onCancel(reason))
+  project.vitest.onCancel(reason => rpc.onCancel(reason))
 
-  return { channel, cleanup }
+  return channel
 }
 
 export function createForksPool(
-  ctx: Vitest,
+  vitest: Vitest,
   { execArgv, env }: PoolProcessOptions,
 ): ProcessPool {
   const numCpus
@@ -56,22 +70,23 @@ export function createForksPool(
       ? nodeos.availableParallelism()
       : nodeos.cpus().length
 
-  const threadsCount = ctx.config.watch
+  const threadsCount = vitest.config.watch
     ? Math.max(Math.floor(numCpus / 2), 1)
     : Math.max(numCpus - 1, 1)
 
-  const poolOptions = ctx.config.poolOptions?.forks ?? {}
+  const poolOptions = vitest.config.poolOptions?.forks ?? {}
 
   const maxThreads
-    = poolOptions.maxForks ?? ctx.config.maxWorkers ?? threadsCount
+    = poolOptions.maxForks ?? vitest.config.maxWorkers ?? threadsCount
   const minThreads
-    = poolOptions.minForks ?? ctx.config.minWorkers ?? threadsCount
+    = poolOptions.minForks ?? vitest.config.minWorkers ?? Math.min(threadsCount, maxThreads)
 
-  const worker = resolve(ctx.distPath, 'workers/forks.js')
+  const worker = resolve(vitest.distPath, 'workers/forks.js')
 
   const options: TinypoolOptions = {
     runtime: 'child_process',
-    filename: resolve(ctx.distPath, 'worker.js'),
+    filename: resolve(vitest.distPath, 'worker.js'),
+    teardown: 'teardown',
 
     maxThreads,
     minThreads,
@@ -79,7 +94,7 @@ export function createForksPool(
     env,
     execArgv: [...(poolOptions.execArgv ?? []), ...execArgv],
 
-    terminateTimeout: ctx.config.teardownTimeout,
+    terminateTimeout: vitest.config.teardownTimeout,
     concurrentTasksPerWorker: 1,
   }
 
@@ -89,7 +104,7 @@ export function createForksPool(
     options.isolateWorkers = true
   }
 
-  if (poolOptions.singleFork || !ctx.config.fileParallelism) {
+  if (poolOptions.singleFork || !vitest.config.fileParallelism) {
     options.maxThreads = 1
     options.minThreads = 1
   }
@@ -107,9 +122,9 @@ export function createForksPool(
       invalidates: string[] = [],
     ) {
       const paths = files.map(f => f.filepath)
-      ctx.state.clearFiles(project, paths)
+      vitest.state.clearFiles(project, paths)
 
-      const { channel, cleanup } = createChildProcessChannel(project, name === 'collect')
+      const channel = createChildProcessChannel(project, name === 'collect')
       const workerId = ++id
       const data: ContextRPC = {
         pool: 'forks',
@@ -131,30 +146,27 @@ export function createForksPool(
           error instanceof Error
           && /Failed to terminate worker/.test(error.message)
         ) {
-          ctx.state.addProcessTimeoutCause(
+          vitest.state.addProcessTimeoutCause(
             `Failed to terminate worker while running ${paths.join(', ')}.`,
           )
         }
         // Intentionally cancelled
         else if (
-          ctx.isCancelling
+          vitest.isCancelling
           && error instanceof Error
           && /The task has been cancelled/.test(error.message)
         ) {
-          ctx.state.cancelFiles(paths, project)
+          vitest.state.cancelFiles(paths, project)
         }
         else {
           throw error
         }
       }
-      finally {
-        cleanup()
-      }
     }
 
     return async (specs, invalidates) => {
       // Cancel pending tasks from pool when possible
-      ctx.onCancel(() => pool.cancelPendingTasks())
+      vitest.onCancel(() => pool.cancelPendingTasks())
 
       const configs = new WeakMap<TestProject, SerializedConfig>()
       const getConfig = (project: TestProject): SerializedConfig => {

@@ -1,5 +1,5 @@
 /* eslint-disable prefer-template */
-import type { ErrorWithDiff, ParsedStack } from '@vitest/utils'
+import type { ParsedStack, TestError } from '@vitest/utils'
 import type { Vitest } from './core'
 import type { ErrorOptions, Logger } from './logger'
 import type { TestProject } from './project'
@@ -27,7 +27,7 @@ interface PrintErrorOptions {
   showCodeFrame?: boolean
   printProperties?: boolean
   screenshotPaths?: string[]
-  parseErrorStacktrace: (error: ErrorWithDiff) => ParsedStack[]
+  parseErrorStacktrace: (error: TestError) => ParsedStack[]
 }
 
 interface PrintErrorResult {
@@ -99,7 +99,7 @@ function printErrorInner(
 ): PrintErrorResult | undefined {
   const { showCodeFrame = true, type, printProperties = true } = options
   const logger = options.logger
-  let e = error as ErrorWithDiff
+  let e = error as TestError
 
   if (isPrimitive(e)) {
     e = {
@@ -130,7 +130,7 @@ function printErrorInner(
       : stacks.find((stack) => {
           try {
             return (
-              project.server
+              project._vite
               && project.getModuleById(stack.file)
               && existsSync(stack.file)
             )
@@ -240,7 +240,7 @@ function printErrorInner(
     })
   }
 
-  handleImportOutsideModuleError(e.stack || e.stackStr || '', logger)
+  handleImportOutsideModuleError(e.stack || '', logger)
 
   return { nearest }
 }
@@ -250,10 +250,8 @@ function printErrorType(type: string, ctx: Vitest) {
 }
 
 const skipErrorProperties = new Set([
-  'nameStr',
   'cause',
   'stacks',
-  'stackStr',
   'type',
   'showDiff',
   'ok',
@@ -274,11 +272,12 @@ const skipErrorProperties = new Set([
   'VITEST_TEST_NAME',
   'VITEST_TEST_PATH',
   'VITEST_AFTER_ENV_TEARDOWN',
+  '__vitest_rollup_error__',
   ...Object.getOwnPropertyNames(Error.prototype),
   ...Object.getOwnPropertyNames(Object.prototype),
 ])
 
-function getErrorProperties(e: ErrorWithDiff) {
+function getErrorProperties(e: TestError) {
   const errorObject = Object.create(null)
   if (e.name === 'AssertionError') {
     return errorObject
@@ -290,7 +289,7 @@ function getErrorProperties(e: ErrorWithDiff) {
       errorObject[key] = e[key]
     }
     else if (key !== 'stack' && !skipErrorProperties.has(key)) {
-      errorObject[key] = e[key as keyof ErrorWithDiff]
+      errorObject[key] = e[key as keyof TestError]
     }
   }
 
@@ -365,8 +364,8 @@ function printModuleWarningForSourceCode(logger: ErrorLogger, path: string) {
   )
 }
 
-function printErrorMessage(error: ErrorWithDiff, logger: ErrorLogger) {
-  const errorName = error.name || error.nameStr || 'Unknown Error'
+function printErrorMessage(error: TestError, logger: ErrorLogger) {
+  const errorName = error.name || 'Unknown Error'
   if (!error.message) {
     logger.error(error)
     return

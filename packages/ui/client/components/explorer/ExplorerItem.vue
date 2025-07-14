@@ -4,11 +4,12 @@ import type { TaskTreeNodeType } from '~/composables/explorer/types'
 import { Tooltip as VueTooltip } from 'floating-vue'
 import { nextTick } from 'vue'
 import { client, isReport, runFiles, runTask } from '~/composables/client'
-import { showSource } from '~/composables/codemirror'
+import { showTaskSource } from '~/composables/codemirror'
 import { explorerTree } from '~/composables/explorer'
 import { hasFailedSnapshot } from '~/composables/explorer/collector'
 import { escapeHtml, highlightRegex } from '~/composables/explorer/state'
 import { coverageEnabled } from '~/composables/navigation'
+import { getProjectTextColor } from '~/utils/task'
 
 // TODO: better handling of "opened" - it means to forcefully open the tree item and set in TasksList right now
 const {
@@ -149,26 +150,11 @@ function showDetails() {
     onItemClick?.(t)
   }
   else {
-    showSource(t)
+    showTaskSource(t)
   }
 }
 
-const projectNameTextColor = computed(() => {
-  switch (projectNameColor) {
-    case 'blue':
-    case 'green':
-    case 'magenta':
-    case 'black':
-    case 'red':
-      return 'white'
-
-    case 'yellow':
-    case 'cyan':
-    case 'white':
-    default:
-      return 'black'
-  }
-})
+const projectNameTextColor = computed(() => getProjectTextColor(projectNameColor))
 </script>
 
 <template>
@@ -198,7 +184,7 @@ const projectNameTextColor = computed(() => {
     <div flex items-end gap-2 overflow-hidden>
       <div v-if="type === 'file' && typecheck" v-tooltip.bottom="'This is a typecheck test. It won\'t report results of the runtime tests'" class="i-logos:typescript-icon" flex-shrink-0 />
       <span text-sm truncate font-light>
-        <span v-if="type === 'file' && projectName" class="rounded-full py-0.5 px-1 mr-1 text-xs" :style="{ backgroundColor: projectNameColor, color: projectNameTextColor }">
+        <span v-if="type === 'file' && projectName" class="rounded-full py-0.5 px-2 mr-1 text-xs" :style="{ backgroundColor: projectNameColor, color: projectNameTextColor }">
           {{ projectName }}
         </span>
         <span :text="state === 'fail' ? 'red-500' : ''" v-html="highlighted" />
@@ -223,7 +209,7 @@ const projectNameTextColor = computed(() => {
       >
         <IconButton
           data-testid="btn-open-details"
-          icon="i-carbon:intrusion-prevention"
+          :icon="type === 'file' ? 'i-carbon:intrusion-prevention' : 'i-carbon:code-reference'"
           @click.prevent.stop="showDetails"
         />
         <template #popper>

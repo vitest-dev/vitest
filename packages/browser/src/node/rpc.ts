@@ -1,12 +1,12 @@
 import type { MockerRegistry } from '@vitest/mocker'
 import type { Duplex } from 'node:stream'
-import type { ErrorWithDiff } from 'vitest'
+import type { TestError } from 'vitest'
 import type { BrowserCommandContext, ResolveSnapshotPathHandlerContext, TestProject } from 'vitest/node'
 import type { WebSocket } from 'ws'
+import type { WebSocketBrowserEvents, WebSocketBrowserHandlers } from '../types'
 import type { ParentBrowserProject } from './projectParent'
 import type { WebdriverBrowserProvider } from './providers/webdriver'
 import type { BrowserServerState } from './state'
-import type { WebSocketBrowserEvents, WebSocketBrowserHandlers } from './types'
 import { existsSync, promises as fs } from 'node:fs'
 import { AutomockedModule, AutospiedModule, ManualMockedModule, RedirectedModule } from '@vitest/mocker'
 import { ServerMockResolver } from '@vitest/mocker/node'
@@ -128,7 +128,7 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject, defaultMocke
       {
         async onUnhandledError(error, type) {
           if (error && typeof error === 'object') {
-            const _error = error as ErrorWithDiff
+            const _error = error as TestError
             _error.stacks = globalServer.parseErrorStacktrace(_error)
           }
           vitest.state.catchError(error, type)
@@ -148,6 +148,9 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject, defaultMocke
           else {
             await vitest._testRun.collected(project, files)
           }
+        },
+        async onTaskAnnotate(id, annotation) {
+          return vitest._testRun.annotate(id, annotation)
         },
         async onTaskUpdate(method, packs, events) {
           if (method === 'collect') {

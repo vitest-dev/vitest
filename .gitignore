@@ -32,3 +32,5 @@ test/cli/fixtures/browser-multiple/basic-*
 # exclude static html reporter folder
 test/browser/html/
 test/core/html/
+.vitest-attachments
+explainFiles.txt

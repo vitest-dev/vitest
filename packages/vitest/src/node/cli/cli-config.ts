@@ -26,9 +26,9 @@ export type CLIOption<Value> = {
   normalize?: boolean
 } & (NestedOption<Value> extends never // require subcommands for nested options
   ? object
-  : { subcommands: CLIOptions<NestedOption<Value>> | null }) &
+  : { subcommands: CLIOptions<NestedOption<Value>> | null })
   // require argument for non-boolean options
-  (NonNullable<Value> extends boolean ? object : { argument: string })
+& (NonNullable<Value> extends boolean ? object : { argument: string })
 
 export type CLIOptions<Config extends object> = {
   [Key in keyof Config as NonNullable<Config[Key]> extends Function
@@ -155,6 +155,19 @@ export const cliOptionsConfig: VitestCLIOptions = {
   silent: {
     description: 'Silent console output from tests. Use `\'passed-only\'` to see logs from failing tests only.',
     argument: '[value]',
+    transform(value) {
+      if (value === 'true' || value === 'yes' || value === true) {
+        return true
+      }
+      if (value === 'false' || value === 'no' || value === false) {
+        return false
+      }
+      if (value === 'passed-only') {
+        return value
+      }
+
+      throw new TypeError(`Unexpected value "--silent=${value}". Use "--silent=true ${value}" instead.`)
+    },
   },
   hideSkippedTests: {
     description: 'Hide logs for skipped tests',
@@ -177,11 +190,6 @@ export const cliOptionsConfig: VitestCLIOptions = {
     argument: '', // empty string means boolean
     transform: transformNestedBoolean,
     subcommands: {
-      all: {
-        description:
-          'Whether to include all files, including the untested ones into report',
-        default: true,
-      },
       provider: {
         description:
           'Select the tool for coverage collection, available values are: "v8", "istanbul" and "custom"',
@@ -193,20 +201,14 @@ export const cliOptionsConfig: VitestCLIOptions = {
       },
       include: {
         description:
-          'Files included in coverage as glob patterns. May be specified more than once when using multiple patterns (default: `**`)',
+          'Files included in coverage as glob patterns. May be specified more than once when using multiple patterns. By default only files covered by tests are included.',
         argument: '<pattern>',
         array: true,
       },
       exclude: {
         description:
-          'Files to be excluded in coverage. May be specified more than once when using multiple extensions (default: Visit [`coverage.exclude`](https://vitest.dev/config/#coverage-exclude))',
+          'Files to be excluded in coverage. May be specified more than once when using multiple extensions.',
         argument: '<pattern>',
-        array: true,
-      },
-      extension: {
-        description:
-          'Extension to be included in coverage. May be specified more than once when using multiple extensions (default: `[".js", ".cjs", ".mjs", ".ts", ".mts", ".tsx", ".jsx", ".vue", ".svelte"]`)',
-        argument: '<extension>',
         array: true,
       },
       clean: {
@@ -331,11 +333,6 @@ export const cliOptionsConfig: VitestCLIOptions = {
   mode: {
     description: 'Override Vite mode (default: `test` or `benchmark`)',
     argument: '<name>',
-  },
-  workspace: {
-    description: '[deprecated] Path to a workspace configuration file',
-    argument: '<path>',
-    normalize: true,
   },
   isolate: {
     description:
@@ -799,6 +796,10 @@ export const cliOptionsConfig: VitestCLIOptions = {
   includeTaskLocation: {
     description: 'Collect test and suite locations in the `location` property',
   },
+  attachmentsDir: {
+    description: 'The directory where attachments from `context.annotate` are stored in (default: `.vitest-attachments`)',
+    argument: '<dir>',
+  },
 
   // CLI only options
   run: {
@@ -843,7 +844,6 @@ export const cliOptionsConfig: VitestCLIOptions = {
   includeSource: null,
   alias: null,
   env: null,
-  environmentMatchGlobs: null,
   environmentOptions: null,
   unstubEnvs: null,
   related: null,
@@ -860,7 +860,6 @@ export const cliOptionsConfig: VitestCLIOptions = {
   chaiConfig: null,
   clearMocks: null,
   css: null,
-  poolMatchGlobs: null,
   deps: null,
   name: null,
   snapshotEnvironment: null,

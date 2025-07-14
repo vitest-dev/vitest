@@ -410,6 +410,7 @@ However, Vitest also provides packages to render components for several popular 
 Community packages are available for other frameworks:
 
 - [`vitest-browser-lit`](https://github.com/EskiMojo14/vitest-browser-lit) to render [lit](https://lit.dev) components
+- [`vitest-browser-preact`](https://github.com/JoviDeCroock/vitest-browser-preact) to render [preact](https://preactjs.com) components
 
 If your framework is not represented, feel free to create your own package - it is a simple wrapper around the framework renderer and `page.elementLocator` API. We will add a link to it on this page. Make sure it has a name starting with `vitest-browser-`.
 
@@ -500,13 +501,27 @@ test('greeting appears on click', async () => {
   await expect.element(greeting).toBeInTheDocument()
 })
 ```
+```tsx [preact]
+import { render } from 'vitest-browser-preact'
+import { createElement } from 'preact'
+import Greeting from '.Greeting'
+
+test('greeting appears on click', async () => {
+  const screen = render(<Greeting />)
+
+  const button = screen.getByRole('button')
+  await button.click()
+  const greeting = screen.getByText(/hello world/iu)
+
+  await expect.element(greeting).toBeInTheDocument()
+})
+```
 :::
 
 Vitest doesn't support all frameworks out of the box, but you can use external tools to run tests with these frameworks. We also encourage the community to create their own `vitest-browser` wrappers - if you have one, feel free to add it to the examples above.
 
 For unsupported frameworks, we recommend using `testing-library` packages:
 
-- [`@testing-library/preact`](https://testing-library.com/docs/preact-testing-library/intro) to render [preact](https://preactjs.com) components
 - [`@solidjs/testing-library`](https://testing-library.com/docs/solid-testing-library/intro) to render [solid](https://www.solidjs.com) components
 - [`@marko/testing-library`](https://testing-library.com/docs/marko-testing-library/intro) to render [marko](https://markojs.com) components
 
@@ -517,36 +532,6 @@ You can also see more examples in [`browser-examples`](https://github.com/vitest
 :::
 
 ::: code-group
-```tsx [preact]
-// based on @testing-library/preact example
-// https://testing-library.com/docs/preact-testing-library/example
-
-import { h } from 'preact'
-import { page } from '@vitest/browser/context'
-import { render } from '@testing-library/preact'
-
-import HiddenMessage from '../hidden-message'
-
-test('shows the children when the checkbox is checked', async () => {
-  const testMessage = 'Test Message'
-
-  const { baseElement } = render(
-    <HiddenMessage>{testMessage}</HiddenMessage>,
-  )
-
-  const screen = page.elementLocator(baseElement)
-
-  // .query() will return the element or null if it cannot be found.
-  // .element() will return the element or throw an error if it cannot be found.
-  expect(screen.getByText(testMessage).query()).not.toBeInTheDocument()
-
-  // The queries can accept a regex to make your selectors more
-  // resilient to content tweaks and changes.
-  await screen.getByLabelText(/show/i).click()
-
-  await expect.element(screen.getByText(testMessage)).toBeInTheDocument()
-})
-```
 ```tsx [solid]
 // based on @testing-library/solid API
 // https://testing-library.com/docs/solid-testing-library/api
@@ -599,3 +584,45 @@ test('renders a message', async () => {
 When using Vitest Browser, it's important to note that thread blocking dialogs like `alert` or `confirm` cannot be used natively. This is because they block the web page, which means Vitest cannot continue communicating with the page, causing the execution to hang.
 
 In such situations, Vitest provides default mocks with default returned values for these APIs. This ensures that if the user accidentally uses synchronous popup web APIs, the execution would not hang. However, it's still recommended for the user to mock these web APIs for better experience. Read more in [Mocking](/guide/mocking).
+
+### Spying on Module Exports
+
+Browser Mode uses the browser's native ESM support to serve modules. The module namespace object is sealed and can't be reconfigured, unlike in Node.js tests where Vitest can patch the Module Runner. This means you can't call `vi.spyOn` on an imported object:
+
+```ts
+import { vi } from 'vitest'
+import * as module from './module.js'
+
+vi.spyOn(module, 'method') // ❌ throws an error
+```
+
+To bypass this limitation, Vitest supports `{ spy: true }` option in `vi.mock('./module.js')`. This will automatically spy on every export in the module without replacing them with fake ones.
+
+```ts
+import { vi } from 'vitest'
+import * as module from './module.js'
+
+vi.mock('./module.js', { spy: true })
+
+vi.mocked(module.method).mockImplementation(() => {
+  // ...
+})
+```
+
+However, the only way to mock exported _variables_ is to export a method that will change the internal value:
+
+::: code-group
+```js [module.js]
+export let MODE = 'test'
+export function changeMode(newMode) {
+  MODE = newMode
+}
+```
+```js [module.test.ts]
+import { expect } from 'vitest'
+import { changeMode, MODE } from './module.js'
+
+changeMode('production')
+expect(MODE).toBe('production')
+```
+:::

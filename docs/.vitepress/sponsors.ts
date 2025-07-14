@@ -17,9 +17,9 @@ const vitestSponsors = {
       img: '/nuxtlabs.svg',
     },
     {
-      name: 'Stackblitz',
-      url: 'https://stackblitz.com',
-      img: '/stackblitz.svg',
+      name: 'Bolt',
+      url: 'https://bolt.new',
+      img: '/bolt.svg',
     },
     {
       name: 'Zammad',
@@ -39,6 +39,11 @@ const vitestSponsors = {
       name: 'vital',
       url: 'https://vital.io/',
       img: '/vital.svg',
+    },
+    {
+      name: 'OOMOL',
+      url: 'https://oomol.com/',
+      img: '/oomol.svg',
     },
   ],
 } satisfies Record<string, Sponsor[]>

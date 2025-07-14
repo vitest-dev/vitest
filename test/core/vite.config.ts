@@ -2,6 +2,7 @@ import type { LabelColor } from 'vitest'
 import type { Pool } from 'vitest/node'
 import { basename, dirname, join, resolve } from 'pathe'
 import { defaultExclude, defineConfig } from 'vitest/config'
+import { rolldownVersion } from 'vitest/node'
 
 export default defineConfig({
   plugins: [
@@ -59,13 +60,22 @@ export default defineConfig({
     includeSource: [
       'src/in-source/*.ts',
     ],
-    exclude: ['**/fixtures/**', ...defaultExclude],
+    exclude: [
+      '**/fixtures/**',
+      ...defaultExclude,
+      // FIXME: wait for ecma decorator support in rolldown/oxc
+      // https://github.com/oxc-project/oxc/issues/9170
+      ...(rolldownVersion ? ['**/esnext.test.ts'] : []),
+    ],
     slowTestThreshold: 1000,
     testTimeout: process.env.CI ? 10_000 : 5_000,
     setupFiles: [
       './test/setup.ts',
     ],
-    reporters: [['default', { summary: true }], 'hanging-process'],
+    includeTaskLocation: true,
+    reporters: process.env.GITHUB_ACTIONS
+      ? ['default', 'github-actions']
+      : [['default', { summary: true }], 'hanging-process'],
     testNamePattern: '^((?!does not include test that).)*$',
     coverage: {
       provider: 'istanbul',
@@ -75,14 +85,6 @@ export default defineConfig({
       enabled: true,
       tsconfig: './tsconfig.typecheck.json',
     },
-    environmentMatchGlobs: [
-      ['**/*.dom.test.ts', 'happy-dom'],
-      ['test/env-glob-dom/**', 'jsdom'],
-    ],
-    poolMatchGlobs: [
-      ['**/test/*.child_process.test.ts', 'forks'],
-      ['**/test/*.threads.test.ts', 'threads'],
-    ],
     environmentOptions: {
       custom: {
         option: 'config-option',
@@ -138,6 +140,9 @@ export default defineConfig({
         return false
       }
       if (log.includes('Importing WebAssembly ')) {
+        return false
+      }
+      if (log.includes('run [...filters]')) {
         return false
       }
     },
