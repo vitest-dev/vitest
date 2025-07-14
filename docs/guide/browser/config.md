@@ -330,7 +330,7 @@ This is the time it should take for the browser to establish the WebSocket conne
 
 - **Type:** `ExpectOptions`
 
-### browser.expect.toMatchScreenshot <Version>3.3.0</Version> {#browser-expect-tomatchscreenshot}
+### browser.expect.toMatchScreenshot
 
 Default options for the
 [`toMatchScreenshot` assertion](/guide/browser/assertion-api.html#tomatchscreenshot).

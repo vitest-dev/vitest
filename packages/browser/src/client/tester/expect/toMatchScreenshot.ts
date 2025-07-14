@@ -2,8 +2,7 @@ import type { AsyncExpectationResult, MatcherState } from '@vitest/expect'
 import type { ScreenshotMatcherOptions } from '../../../../context'
 import type { ScreenshotMatcherArguments, ScreenshotMatcherOutput } from '../../../shared/screenshotMatcher/types'
 import type { Locator } from '../locators'
-import { getCurrentTest } from '@vitest/runner'
-import { getBrowserState } from '../../utils'
+import { getBrowserState, getWorkerState } from '../../utils'
 import { convertElementToCssSelector } from '../utils'
 import { getElementFromUserInput } from './utils'
 
@@ -21,7 +20,7 @@ export default async function toMatchScreenshot(
     throw new Error('\'toMatchScreenshot\' cannot be used with "not"')
   }
 
-  const currentTest = getCurrentTest()
+  const currentTest = getWorkerState().current
 
   if (currentTest === undefined || this.currentTestName === undefined) {
     throw new Error('\'toMatchScreenshot\' cannot be used without test context')
@@ -57,7 +56,7 @@ export default async function toMatchScreenshot(
     ] satisfies ScreenshotMatcherArguments,
   )
 
-  if (result.pass === false) {
+  if (result.pass === false && 'context' in currentTest) {
     const { annotate } = currentTest.context
 
     const annotations: ReturnType<typeof annotate>[] = []

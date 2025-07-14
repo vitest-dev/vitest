@@ -20,7 +20,6 @@ describe('.toMatchScreenshot', () => {
   test('compares screenshots correctly', async ({ onTestFinished }) => {
     const filename = globalThis.crypto.randomUUID()
     const path = join(
-      import.meta.dirname,
       '__screenshots__',
       'toMatchScreenshot.test.ts',
       `${filename}-${server.browser}-${server.platform}.png`,
@@ -49,7 +48,6 @@ describe('.toMatchScreenshot', () => {
   test("throws when screenshots don't match", async ({ onTestFinished }) => {
     const filename = globalThis.crypto.randomUUID()
     const path = join(
-      import.meta.dirname,
       '__screenshots__',
       'toMatchScreenshot.test.ts',
       `${filename}-${server.browser}-${server.platform}.png`,
@@ -130,7 +128,6 @@ describe('.toMatchScreenshot', () => {
     'throws when creating a screenshot for the first time',
     async ({
       onTestFinished,
-      task,
     }) => {
       const { queryByTestId } = renderTestCase([
         'oklch(37.9% 0.146 265.522)',
@@ -258,7 +255,6 @@ describe('.toMatchScreenshot', () => {
     async ({ onTestFinished }) => {
       const basename = 'toMatchScreenshot-creates-correct-automatic-screenshot-names'
       const path = join(
-        import.meta.dirname,
         '__screenshots__',
         'toMatchScreenshot.test.ts',
       )

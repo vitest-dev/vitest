@@ -160,9 +160,7 @@ export function resolveOptions(
           }),
         }
 
-        // @ts-expect-error we set the value back right beneath
-        delete this.diffs
-        this.diffs = diffs
+        Object.defineProperty(this, 'diffs', { value: diffs })
 
         return diffs
       },

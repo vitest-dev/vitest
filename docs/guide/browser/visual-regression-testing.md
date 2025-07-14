@@ -5,9 +5,9 @@ outline: [2, 3]
 
 # Visual Regression Testing
 
-Since version 3.3, Vitest can run visual regression tests out of the box. It
-captures screenshots of your UI components and pages, then compares them
-against reference images to detect unintended visual changes.
+Vitest can run visual regression tests out of the box. It captures screenshots
+of your UI components and pages, then compares them against reference images to
+detect unintended visual changes.
 
 Unlike functional tests that verify behavior, visual tests catch styling issues,
 layout shifts, and rendering problems that might otherwise go unnoticed without
@@ -673,7 +673,7 @@ npm run test:visual  # uses cloud browsers
 npm run test:visual -- --update
 ```
 
-The beauty of this approach? It just works:
+The best part of this approach is that it just works:
 
 - **Consistent screenshots**, everyone uses the same cloud browsers
 - **Works locally**, developers can run and update visual tests on their machines
@@ -706,11 +706,10 @@ everything.
 The downside? That "works on my machine" conversation when someone generates
 screenshots locally and they don't match CI expectations anymore.
 
-Microsoft's service shines when you need developers to run visual tests locally.
+The cloud service makes sense if developers need to run visual tests locally.
 
-Maybe you've got designers who want to verify their changes, or developers who
-prefer catching issues before pushing. Yes, it costs money, but compared to the
-time you'll waste waiting for CI runs, it might be worth it.
+Some teams have designers checking their work or developers who prefer catching
+issues before pushing. It allows skipping the push-wait-check-fix-push cycle.
 
 Still on the fence? Start with GitHub Actions. You can always add the cloud
 service later if local testing becomes a pain point.
