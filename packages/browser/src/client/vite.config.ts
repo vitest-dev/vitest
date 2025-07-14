@@ -18,6 +18,9 @@ export default defineConfig({
     assetsDir: '__vitest_browser__',
     manifest: true,
     rollupOptions: {
+      output: {
+        minify: false,
+      },
       input: {
         orchestrator: resolve(__dirname, './orchestrator.html'),
         tester: resolve(__dirname, './tester/tester.html'),
