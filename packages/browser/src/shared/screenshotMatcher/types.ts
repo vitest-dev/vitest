@@ -15,8 +15,8 @@ export type ScreenshotMatcherOutput = Promise<
     actual: string | null
     diff: string | null
     message: string
-  } |
-  {
+  }
+  | {
     pass: true
   }
 >

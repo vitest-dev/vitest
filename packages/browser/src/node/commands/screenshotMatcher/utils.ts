@@ -77,18 +77,18 @@ export function resolveOptions(
     options: ScreenshotMatcherOptions
   },
 ): {
-    codec: ReturnType<typeof getCodec>
-    comparator: ReturnType<typeof getComparator>
-    resolvedOptions: GlobalOptions
-    paths: {
+  codec: ReturnType<typeof getCodec>
+  comparator: ReturnType<typeof getComparator>
+  resolvedOptions: GlobalOptions
+  paths: {
+    reference: string
+    diffs: {
       reference: string
-      diffs: {
-        reference: string
-        actual: string
-        diff: string
-      }
+      actual: string
+      diff: string
     }
-  } {
+  }
+} {
   if (context.testPath === undefined) {
     throw new Error('`resolveOptions` has to be used in a test file')
   }

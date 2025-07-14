@@ -1,8 +1,8 @@
 interface BaseMetadata { height: number; width: number }
-export type TypedArray =
-  | Buffer<ArrayBufferLike>
-  | Uint8Array<ArrayBufferLike>
-  | Uint8ClampedArray<ArrayBufferLike>
+export type TypedArray
+  = | Buffer<ArrayBufferLike>
+    | Uint8Array<ArrayBufferLike>
+    | Uint8ClampedArray<ArrayBufferLike>
 export type Promisable<T> = T | Promise<T>
 
 export interface Codec<
