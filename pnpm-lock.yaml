@@ -624,9 +624,6 @@ importers:
       pathe:
         specifier: 'catalog:'
         version: 2.0.3
-      vite-node:
-        specifier: workspace:*
-        version: link:../vite-node
       vitest:
         specifier: workspace:*
         version: link:../vitest

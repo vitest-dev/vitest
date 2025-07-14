@@ -9,7 +9,7 @@ export type TransformMode = 'web' | 'ssr'
 export interface AfterSuiteRunMeta {
   coverage?: unknown
   testFiles: string[]
-  transformMode: TransformMode | 'browser'
+  environment: string
   projectName?: string
 }
 
