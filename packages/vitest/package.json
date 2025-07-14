@@ -195,7 +195,7 @@
     "chai-subset": "^1.6.0",
     "find-up": "^6.3.0",
     "flatted": "catalog:",
-    "happy-dom": "^17.6.3",
+    "happy-dom": "^18.0.1",
     "jsdom": "^26.1.0",
     "local-pkg": "^1.1.1",
     "mime": "^4.0.7",
