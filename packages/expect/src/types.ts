@@ -339,7 +339,7 @@ export interface JestAssertion<T = any> extends jest.Matchers<void, T>, CustomMa
   toBeNull: () => void
 
   /**
-   * Used to check that a variable is nullable(null or undefined).
+   * Used to check that a variable is nullable (null or undefined).
    *
    * @example
    * expect(value).toBeNullable();
