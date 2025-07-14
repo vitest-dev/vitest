@@ -20,8 +20,8 @@
   "devDependencies": {
     "@iconify-json/carbon": "catalog:",
     "@iconify-json/logos": "catalog:",
-    "@shikijs/transformers": "^3.7.0",
-    "@shikijs/vitepress-twoslash": "^3.7.0",
+    "@shikijs/transformers": "^3.8.0",
+    "@shikijs/vitepress-twoslash": "^3.8.0",
     "@unocss/reset": "catalog:",
     "@vite-pwa/assets-generator": "^1.0.0",
     "@vite-pwa/vitepress": "^1.0.0",
@@ -32,8 +32,8 @@
     "unplugin-vue-components": "catalog:",
     "vite": "^6.3.5",
     "vite-plugin-pwa": "^0.21.2",
-    "vitepress": "2.0.0-alpha.6",
-    "vitepress-plugin-group-icons": "^1.6.0",
+    "vitepress": "2.0.0-alpha.8",
+    "vitepress-plugin-group-icons": "^1.6.1",
     "vitepress-plugin-tabs": "^0.7.1",
     "workbox-window": "^7.3.0"
   }
