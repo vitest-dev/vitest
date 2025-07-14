@@ -8,7 +8,7 @@
   "devDependencies": {
     "@types/debug": "catalog:",
     "@types/ws": "catalog:",
-    "@vitejs/plugin-basic-ssl": "^2.0.0",
+    "@vitejs/plugin-basic-ssl": "^2.1.0",
     "@vitest/runner": "workspace:^",
     "@vitest/test-dep-error": "file:./deps/error",
     "@vitest/test-dep-linked": "link:./deps/linked",
