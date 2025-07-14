@@ -73,7 +73,6 @@
     "@types/istanbul-reports": "catalog:",
     "@vitest/browser": "workspace:*",
     "pathe": "catalog:",
-    "vite-node": "workspace:*",
     "vitest": "workspace:*"
   }
 }
