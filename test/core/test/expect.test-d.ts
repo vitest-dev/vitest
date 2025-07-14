@@ -163,6 +163,6 @@ test('expect.* allows asymmetrict mattchers with different types', async () => {
   expectMany({ enabled: true, data: 'ok' })
 })
 
-test('chai matchers', async () => {
+test('chai assertion', async () => {
   await (expect(Promise.resolve('a')).resolves.eq('a') satisfies Promise<(type: string, message?: string) => Chai.Assertion>)
 })
