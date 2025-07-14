@@ -54,10 +54,10 @@ export interface VitestRunnerConstructor {
   new (config: VitestRunnerConfig): VitestRunner
 }
 
-export type CancelReason =
-  | 'keyboard-input'
-  | 'test-failure'
-  | (string & Record<string, never>)
+export type CancelReason
+  = | 'keyboard-input'
+    | 'test-failure'
+    | (string & Record<string, never>)
 
 export interface VitestRunner {
   /**

@@ -36,12 +36,12 @@ export type ViteUserConfigFnPromise = (env: ConfigEnv) => Promise<ViteUserConfig
 export type ViteUserConfigFn = (
   env: ConfigEnv
 ) => ViteUserConfig | Promise<ViteUserConfig>
-export type ViteUserConfigExport =
-  | ViteUserConfig
-  | Promise<ViteUserConfig>
-  | ViteUserConfigFnObject
-  | ViteUserConfigFnPromise
-  | ViteUserConfigFn
+export type ViteUserConfigExport
+  = | ViteUserConfig
+    | Promise<ViteUserConfig>
+    | ViteUserConfigFnObject
+    | ViteUserConfigFnPromise
+    | ViteUserConfigFn
 
 export function defineConfig(config: ViteUserConfig): ViteUserConfig
 export function defineConfig(
