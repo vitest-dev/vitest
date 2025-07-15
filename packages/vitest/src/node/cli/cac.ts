@@ -341,7 +341,7 @@ async function collect(mode: VitestRunMode, cliFilters: string[], options: CliOp
       ...normalizeCliOptions(cliFilters, options),
       watch: false,
       run: true,
-    })
+    }, undefined, undefined, cliFilters)
     if (!options.filesOnly) {
       const { testModules: tests, unhandledErrors: errors } = await ctx.collect(cliFilters.map(normalize))
 
