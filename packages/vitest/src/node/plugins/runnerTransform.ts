@@ -13,12 +13,24 @@ export function ModuleRunnerTransform(): VitePlugin {
         names.add('client')
         names.add('ssr')
 
+        // TODO: is it possible to define a pool after the hook? is it passed down if the config is inline project?
+        const pool = config.test?.pool
+        if (pool === 'vmForks' || pool === 'vmThreads') {
+          names.add('__vm__')
+        }
+
         for (const name of names) {
           config.environments[name] ??= {}
 
           const environment = config.environments[name]
           environment.dev ??= {}
-          environment.dev.moduleRunnerTransform = true
+          // vm tests run using the native import mechanism
+          if (name === '__vm__') {
+            environment.dev.moduleRunnerTransform = false
+            environment.consumer = 'client'
+          } else {
+            environment.dev.moduleRunnerTransform = true
+          }
           environment.dev.preTransformRequests = false
           environment.keepProcessEnv = true
 

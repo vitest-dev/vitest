@@ -4,6 +4,7 @@ import type { ResolveSnapshotPathHandlerContext } from '../types/config'
 import { cleanUrl } from '@vitest/utils'
 import { createFetchModuleFunction, handleRollupError } from '../environments/fetchModule'
 import { normalizeResolvedIdToUrl } from '../environments/normalizeUrl'
+import { fileURLToPath } from 'node:url'
 
 interface MethodsOptions {
   cacheFs?: boolean
@@ -54,8 +55,13 @@ export function createMethodsRPC(project: TestProject, options: MethodsOptions =
       })
     },
     async transform(id) {
-      const result = await project.vite.transformRequest(id).catch(handleRollupError)
-      // TODO: this code should not be processed with ssrTransform (how?)
+      const environment = project.vite.environments.__vm__
+      if (!environment) {
+        throw new Error(`The VM environment was not defined in the Vite config. This is a bug in Vitest. Please, open a new issue with reproduction.`)
+      }
+
+      const url = normalizeResolvedIdToUrl(environment, fileURLToPath(id))
+      const result = await environment.transformRequest(url).catch(handleRollupError)
       return { code: result?.code }
     },
     async onQueued(file) {

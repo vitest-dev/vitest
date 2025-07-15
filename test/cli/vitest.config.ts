@@ -7,7 +7,6 @@ export default defineConfig({
     reporters: ['verbose'],
     testTimeout: 60_000,
     globals: true,
-    printConsoleTrace: true,
     poolOptions: {
       forks: {
         singleFork: true,
