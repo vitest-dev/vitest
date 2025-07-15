@@ -3,7 +3,7 @@ import { resolve } from 'pathe'
 import { describe, expect, test } from 'vitest'
 import { runVitest } from '../../test-utils'
 
-const root = resolve(__dirname, '../fixtures/cache')
+const root = resolve(import.meta.dirname, '../fixtures/cache')
 
 test('default', async () => {
   const { ctx, stdout, stderr } = await runVitest({

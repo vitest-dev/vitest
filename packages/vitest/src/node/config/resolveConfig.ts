@@ -489,6 +489,10 @@ export function resolveConfig(
 
   if (resolved.snapshotFormat && 'plugins' in resolved.snapshotFormat) {
     (resolved.snapshotFormat as any).plugins = []
+    // TODO: support it via separate config (like DiffOptions) or via `Function.toString()`
+    if (typeof resolved.snapshotFormat.compareKeys === 'function') {
+      throw new TypeError(`"snapshotFormat.compareKeys" function is not supported.`)
+    }
   }
 
   const UPDATE_SNAPSHOT = resolved.update || process.env.UPDATE_SNAPSHOT
