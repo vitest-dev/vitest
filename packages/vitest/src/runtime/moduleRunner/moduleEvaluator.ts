@@ -17,12 +17,10 @@ import {
 } from 'vite/module-runner'
 import { ModuleDebug } from './moduleDebug'
 
-export const AsyncFunction = async function () {}.constructor as typeof Function
-
 export interface VitestModuleEvaluatorOptions {
-  interopDefault: boolean | undefined
-  moduleExecutionInfo: ModuleExecutionInfo
-  getCurrentTestFilepath: () => string | undefined
+  interopDefault?: boolean | undefined
+  moduleExecutionInfo?: ModuleExecutionInfo
+  getCurrentTestFilepath?: () => string | undefined
   compiledFunctionArgumentsNames?: string[]
   compiledFunctionArgumentsValues?: unknown[]
 }
@@ -45,8 +43,8 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
   private debug = new ModuleDebug()
 
   constructor(
-    vmOptions: VitestVmOptions | undefined,
-    private options: VitestModuleEvaluatorOptions,
+    vmOptions?: VitestVmOptions | undefined,
+    private options: VitestModuleEvaluatorOptions = {},
   ) {
     this.vm = vmOptions
     this.stubs = getDefaultRequestStubs(vmOptions?.context)
@@ -191,7 +189,7 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
 
     const meta = context[ssrImportMetaKey]
 
-    const testFilepath = this.options.getCurrentTestFilepath()
+    const testFilepath = this.options.getCurrentTestFilepath?.()
     if (testFilepath === meta.filename) {
       const globalNamespace = this.vm?.context || globalThis
       Object.defineProperty(meta, 'vitest', {

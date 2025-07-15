@@ -32,6 +32,7 @@ const entries = {
   // TODO: advanced docs
   'workers': 'src/public/workers.ts',
   'module-runner': 'src/public/module-runner.ts',
+  'module-evaluator': 'src/runtime/moduleRunner/moduleEvaluator.ts',
 
   // for performance reasons we bundle them separately so we don't import everything at once
   'worker': 'src/runtime/worker.ts',
@@ -46,18 +47,19 @@ const entries = {
 }
 
 const dtsEntries = {
-  index: 'src/public/index.ts',
-  node: 'src/public/node.ts',
-  environments: 'src/public/environments.ts',
-  browser: 'src/public/browser.ts',
-  runners: 'src/public/runners.ts',
-  suite: 'src/public/suite.ts',
-  config: 'src/public/config.ts',
-  coverage: 'src/public/coverage.ts',
-  reporters: 'src/public/reporters.ts',
-  mocker: 'src/public/mocker.ts',
-  workers: 'src/public/workers.ts',
-  snapshot: 'src/public/snapshot.ts',
+  'index': 'src/public/index.ts',
+  'node': 'src/public/node.ts',
+  'environments': 'src/public/environments.ts',
+  'browser': 'src/public/browser.ts',
+  'runners': 'src/public/runners.ts',
+  'suite': 'src/public/suite.ts',
+  'config': 'src/public/config.ts',
+  'coverage': 'src/public/coverage.ts',
+  'reporters': 'src/public/reporters.ts',
+  'mocker': 'src/public/mocker.ts',
+  'workers': 'src/public/workers.ts',
+  'snapshot': 'src/public/snapshot.ts',
+  'module-evaluator': 'src/runtime/moduleRunner/moduleEvaluator.ts',
 }
 
 const external = [
@@ -85,6 +87,8 @@ const external = [
   '@vitest/runner/types',
   '@vitest/snapshot/environment',
   '@vitest/snapshot/manager',
+
+  '#module-evaluator',
 ]
 
 const dir = dirname(fileURLToPath(import.meta.url))

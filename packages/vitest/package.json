@@ -22,6 +22,12 @@
     "jest"
   ],
   "sideEffects": false,
+  "imports": {
+    "#module-evaluator": {
+      "types": "./dist/module-evaluator.d.ts",
+      "default": "./dist/module-evaluator.js"
+    }
+  },
   "exports": {
     ".": {
       "import": {

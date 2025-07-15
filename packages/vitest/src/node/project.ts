@@ -1,5 +1,5 @@
 import type { GlobOptions } from 'tinyglobby'
-import type { FetchFunction, ModuleNode, TransformResult, ViteDevServer, InlineConfig as ViteInlineConfig } from 'vite'
+import type { ModuleNode, TransformResult, ViteDevServer, InlineConfig as ViteInlineConfig } from 'vite'
 import type { Typechecker } from '../typecheck/typechecker'
 import type { ProvidedContext } from '../types/general'
 import type { OnTestsRerunHandler, Vitest } from './core'
@@ -19,21 +19,21 @@ import { promises as fs, readFileSync } from 'node:fs'
 import { rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
+import { VitestModuleEvaluator } from '#module-evaluator'
 import { deepMerge, nanoid, slash } from '@vitest/utils'
 import { isAbsolute, join, relative } from 'pathe'
 import pm from 'picomatch'
 import { glob } from 'tinyglobby'
-import { createServerModuleRunner } from 'vite'
 import { ModuleRunner } from 'vite/module-runner'
 import { setup } from '../api/setup'
 import { isBrowserEnabled, resolveConfig } from './config/resolveConfig'
 import { serializeConfig } from './config/serializeConfig'
+import { createFetchModuleFunction } from './environments/fetchModule'
 import { loadGlobalSetupFiles } from './globalSetup'
 import { CoverageTransform } from './plugins/coverageTransform'
 import { MocksPlugins } from './plugins/mocks'
 import { WorkspaceVitestPlugin } from './plugins/workspace'
 import { getFilePoolName } from './pool'
-import { createMethodsRPC } from './pools/rpc'
 import { VitestResolver } from './resolver'
 import { TestSpecification } from './spec'
 import { createViteServer } from './vite'
@@ -642,27 +642,30 @@ export class TestProject {
     this._resolver = new VitestResolver(server.config.cacheDir, this._config)
     this._vite = server
 
-    const rpc = createMethodsRPC(this, { cacheFs: false })
-    // TODO: Failed to load url /Users/vladimir/Projects/vitest/test/cli/@vitest/provider.js
-    this.runner = new ModuleRunner({
-      hmr: false,
-      sourcemapInterceptor: 'node',
-      transport: {
-        async invoke(event) {
-          if (event.type !== 'custom') {
-            throw new Error(`Vitest Module Runner doesn't support Vite HMR events.`)
-          }
-          const { data } = event.data
-          try {
-            const result = await rpc.fetch(data[0], data[1], '__vitest__', data[2])
-            return { result }
-          }
-          catch (error) {
-            return { error }
-          }
+    const fetchModule = createFetchModuleFunction(this._resolver, false, this.tmpDir)
+    const environment = server.environments.__vitest__
+    this.runner = new ModuleRunner(
+      {
+        hmr: false,
+        sourcemapInterceptor: 'node',
+        transport: {
+          async invoke(event) {
+            if (event.type !== 'custom') {
+              throw new Error(`Vitest Module Runner doesn't support Vite HMR events.`)
+            }
+            const { data } = event.data
+            try {
+              const result = await fetchModule(data[0], data[1], environment, data[2])
+              return { result }
+            }
+            catch (error) {
+              return { error }
+            }
+          },
         },
       },
-    })
+      new VitestModuleEvaluator(),
+    )
   }
 
   private _serializeOverriddenConfig(): SerializedConfig {

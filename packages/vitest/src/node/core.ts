@@ -2,7 +2,6 @@ import type { CancelReason, File } from '@vitest/runner'
 import type { Awaitable } from '@vitest/utils'
 import type { Writable } from 'node:stream'
 import type { ViteDevServer } from 'vite'
-import type { ModuleRunner } from 'vite/module-runner'
 import type { SerializedCoverageConfig } from '../runtime/config'
 import type { ArgumentsType, ProvidedContext, UserConsoleLog } from '../types/general'
 import type { CliOptions } from './cli/cli-api'
@@ -12,11 +11,12 @@ import type { ResolvedConfig, TestProjectConfiguration, UserConfig, VitestRunMod
 import type { CoverageProvider } from './types/coverage'
 import type { Reporter } from './types/reporter'
 import type { TestRunResult } from './types/tests'
+import { VitestModuleEvaluator } from '#module-evaluator'
 import { getTasks, hasFailed } from '@vitest/runner/utils'
 import { SnapshotManager } from '@vitest/snapshot/manager'
 import { noop, toArray } from '@vitest/utils'
 import { normalize, relative } from 'pathe'
-import { createServerModuleRunner } from 'vite'
+import { ModuleRunner } from 'vite/module-runner'
 import { version } from '../../package.json' with { type: 'json' }
 import { WebSocketReporter } from '../api/setup'
 import { defaultBrowserPort } from '../constants'
@@ -27,6 +27,7 @@ import { BrowserSessions } from './browser/sessions'
 import { VitestCache } from './cache'
 import { resolveConfig } from './config/resolveConfig'
 import { getCoverageProvider } from './coverage'
+import { createFetchModuleFunction } from './environments/fetchModule'
 import { FilesNotFoundError } from './errors'
 import { Logger } from './logger'
 import { VitestPackageInstaller } from './packageInstaller'
@@ -36,6 +37,7 @@ import { getDefaultTestProject, resolveBrowserProjects, resolveProjects } from '
 import { BlobReporter, readBlobs } from './reporters/blob'
 import { HangingProcessReporter } from './reporters/hanging-process'
 import { createBenchmarkReporters, createReporters } from './reporters/utils'
+import { VitestResolver } from './resolver'
 import { VitestSpecifications } from './specifications'
 import { StateManager } from './state'
 import { TestRun } from './test-run'
@@ -222,10 +224,30 @@ export class Vitest {
       this.watcher.registerWatcher()
     }
 
-    this.runner = createServerModuleRunner(server.environments.__vitest__, {
-      hmr: false,
-      sourcemapInterceptor: 'node',
-    })
+    const fetchModule = createFetchModuleFunction(new VitestResolver(server.config.cacheDir, resolved), false)
+    const environment = server.environments.__vitest__
+    this.runner = new ModuleRunner(
+      {
+        hmr: false,
+        sourcemapInterceptor: 'node',
+        transport: {
+          async invoke(event) {
+            if (event.type !== 'custom') {
+              throw new Error(`Vitest Module Runner doesn't support Vite HMR events.`)
+            }
+            const { data } = event.data
+            try {
+              const result = await fetchModule(data[0], data[1], environment, data[2])
+              return { result }
+            }
+            catch (error) {
+              return { error }
+            }
+          },
+        },
+      },
+      new VitestModuleEvaluator(),
+    )
 
     if (this.config.watch) {
       // hijack server restart

@@ -22,7 +22,7 @@ it.each(files)('should fail %s', async (file) => {
   expect(msg).toMatchSnapshot()
 }, 30_000)
 
-it.only('should report coverage when "coverage.reportOnFailure: true" and tests fail', async () => {
+it('should report coverage when "coverage.reportOnFailure: true" and tests fail', async () => {
   const { stdout, stderr } = await runVitest({
     root,
     coverage: {
