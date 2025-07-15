@@ -1,10 +1,10 @@
 import type { RuntimeRPC } from '../../types/rpc'
 import type { TestProject } from '../project'
 import type { ResolveSnapshotPathHandlerContext } from '../types/config'
+import { fileURLToPath } from 'node:url'
 import { cleanUrl } from '@vitest/utils'
 import { createFetchModuleFunction, handleRollupError } from '../environments/fetchModule'
 import { normalizeResolvedIdToUrl } from '../environments/normalizeUrl'
-import { fileURLToPath } from 'node:url'
 
 interface MethodsOptions {
   cacheFs?: boolean

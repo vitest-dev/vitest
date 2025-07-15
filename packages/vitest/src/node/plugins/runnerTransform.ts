@@ -28,7 +28,8 @@ export function ModuleRunnerTransform(): VitePlugin {
           if (name === '__vm__') {
             environment.dev.moduleRunnerTransform = false
             environment.consumer = 'client'
-          } else {
+          }
+          else {
             environment.dev.moduleRunnerTransform = true
           }
           environment.dev.preTransformRequests = false
