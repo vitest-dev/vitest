@@ -821,7 +821,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
   },
   standalone: {
     description:
-      'Start Vitest without running tests. File filters will be ignored, tests will be running only on change (default: `false`)',
+      'Start Vitest without running tests. Tests will be running only on change. This option is ignored when CLI file filters are passed. (default: `false`)',
   },
   mergeReports: {
     description:
