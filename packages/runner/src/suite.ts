@@ -368,7 +368,10 @@ function createSuiteCollector(
       const error = stackTraceError.stack!
       const stack = findTestFileStackTrace(currentTestFilepath, error)
       if (stack) {
-        task.location = stack
+        task.location = {
+          line: stack.line,
+          column: stack.column,
+        }
       }
     }
 
@@ -462,7 +465,10 @@ function createSuiteCollector(
       Error.stackTraceLimit = limit
       const stack = findTestFileStackTrace(currentTestFilepath, error)
       if (stack) {
-        suite.location = stack
+        suite.location = {
+          line: stack.line,
+          column: stack.column,
+        }
       }
     }
 
