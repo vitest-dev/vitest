@@ -1,5 +1,6 @@
 import type { GlobOptions } from 'tinyglobby'
 import type { ModuleNode, TransformResult, ViteDevServer, InlineConfig as ViteInlineConfig } from 'vite'
+import type { ModuleRunner } from 'vite/module-runner'
 import type { Typechecker } from '../typecheck/typechecker'
 import type { ProvidedContext } from '../types/general'
 import type { OnTestsRerunHandler, Vitest } from './core'
@@ -19,16 +20,14 @@ import { promises as fs, readFileSync } from 'node:fs'
 import { rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
-import { VitestModuleEvaluator } from '#module-evaluator'
 import { deepMerge, nanoid, slash } from '@vitest/utils'
 import { isAbsolute, join, relative } from 'pathe'
 import pm from 'picomatch'
 import { glob } from 'tinyglobby'
-import { ModuleRunner } from 'vite/module-runner'
 import { setup } from '../api/setup'
 import { isBrowserEnabled, resolveConfig } from './config/resolveConfig'
 import { serializeConfig } from './config/serializeConfig'
-import { createFetchModuleFunction } from './environments/fetchModule'
+import { ServerModuleRunner } from './environments/serverRunner'
 import { loadGlobalSetupFiles } from './globalSetup'
 import { CoverageTransform } from './plugins/coverageTransform'
 import { MocksPlugins } from './plugins/mocks'
@@ -642,29 +641,11 @@ export class TestProject {
     this._resolver = new VitestResolver(server.config.cacheDir, this._config)
     this._vite = server
 
-    const fetchModule = createFetchModuleFunction(this._resolver, false, this.tmpDir)
     const environment = server.environments.__vitest__
-    this.runner = new ModuleRunner(
-      {
-        hmr: false,
-        sourcemapInterceptor: 'node',
-        transport: {
-          async invoke(event) {
-            if (event.type !== 'custom') {
-              throw new Error(`Vitest Module Runner doesn't support Vite HMR events.`)
-            }
-            const { data } = event.data
-            try {
-              const result = await fetchModule(data[0], data[1], environment, data[2])
-              return { result }
-            }
-            catch (error) {
-              return { error }
-            }
-          },
-        },
-      },
-      new VitestModuleEvaluator(),
+    this.runner = new ServerModuleRunner(
+      environment,
+      this._resolver,
+      this._config,
     )
   }
 
@@ -728,10 +709,7 @@ export class TestProject {
     project.runner = vitest.runner
     project._vite = vitest.server
     project._config = vitest.config
-    project._resolver = new VitestResolver(
-      vitest.vite.config.cacheDir,
-      vitest.config,
-    )
+    project._resolver = vitest._resolver
     project._setHash()
     project._provideObject(vitest.config.provide)
     return project
