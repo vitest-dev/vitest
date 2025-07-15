@@ -1,12 +1,12 @@
 import { resolve } from 'pathe'
 import { defineConfig } from 'vitest/config'
 
-const customReporter = resolve(__dirname, '../src/custom-reporter.ts')
+const customReporter = resolve(import.meta.dirname, '../src/custom-reporter.ts')
 
 export default defineConfig({
-  root: __dirname,
+  root: import.meta.dirname,
   test: {
-    root: __dirname,
+    root: import.meta.dirname,
     include: ['../tests/reporters.spec.ts'],
     reporters: [customReporter],
   },

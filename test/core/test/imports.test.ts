@@ -94,7 +94,7 @@ test('can import @vite/client', async () => {
 })
 
 describe('importing special files from node_modules', async () => {
-  const dir = resolve(__dirname, '../src/node_modules')
+  const dir = resolve(import.meta.dirname, '../src/node_modules')
   const wasm = resolve(dir, 'file.wasm')
   const css = resolve(dir, 'file.css')
   const mp3 = resolve(dir, 'file.mp3')

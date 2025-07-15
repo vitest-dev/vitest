@@ -52,25 +52,25 @@ export interface BrowserProviderOptions {}
 
 export type BrowserBuiltinProvider = 'webdriverio' | 'playwright' | 'preview'
 
-type UnsupportedProperties =
-  | 'browser'
-  | 'typecheck'
-  | 'alias'
-  | 'sequence'
-  | 'root'
-  | 'pool'
-  | 'poolOptions'
+type UnsupportedProperties
+  = | 'browser'
+    | 'typecheck'
+    | 'alias'
+    | 'sequence'
+    | 'root'
+    | 'pool'
+    | 'poolOptions'
   // browser mode doesn't support a custom runner
-  | 'runner'
+    | 'runner'
   // non-browser options
-  | 'api'
-  | 'deps'
-  | 'testTransformMode'
-  | 'environment'
-  | 'environmentOptions'
-  | 'server'
-  | 'benchmark'
-  | 'name'
+    | 'api'
+    | 'deps'
+    | 'testTransformMode'
+    | 'environment'
+    | 'environmentOptions'
+    | 'server'
+    | 'benchmark'
+    | 'name'
 
 export interface BrowserInstanceOption extends BrowserProviderOptions,
   Omit<ProjectConfig, UnsupportedProperties>,

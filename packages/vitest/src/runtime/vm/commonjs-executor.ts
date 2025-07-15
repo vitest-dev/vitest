@@ -85,6 +85,16 @@ export class CommonjsExecutor {
         return _require
       }
 
+      static getSourceMapsSupport = () => ({
+        enabled: false,
+        nodeModules: false,
+        generatedCode: false,
+      })
+
+      static setSourceMapsSupport = () => {
+        // noop
+      }
+
       static register = () => {
         throw new Error(
           `[vitest] "register" is not available when running in Vitest.`,

@@ -5,7 +5,7 @@ import { expect, test } from 'vitest'
 import { getDuration } from '../../../packages/vitest/src/node/reporters/junit'
 import { runVitest, runVitestCli } from '../../test-utils'
 
-const root = resolve(__dirname, '../fixtures')
+const root = resolve(import.meta.dirname, '../fixtures')
 
 test('calc the duration used by junit', () => {
   const result: RunnerTaskResult = { state: 'pass', duration: 0 }

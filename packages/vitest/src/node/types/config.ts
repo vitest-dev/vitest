@@ -29,15 +29,15 @@ export type { BrowserConfigOptions, BrowserInstanceOption, BrowserScript } from 
 export type { CoverageIstanbulOptions, CoverageV8Options } from './coverage'
 export type { SequenceHooks, SequenceSetupFiles } from '@vitest/runner'
 
-export type BuiltinEnvironment =
-  | 'node'
-  | 'jsdom'
-  | 'happy-dom'
-  | 'edge-runtime'
+export type BuiltinEnvironment
+  = | 'node'
+    | 'jsdom'
+    | 'happy-dom'
+    | 'edge-runtime'
 // Record is used, so user can get intellisense for builtin environments, but still allow custom environments
-export type VitestEnvironment =
-  | BuiltinEnvironment
-  | (string & Record<never, never>)
+export type VitestEnvironment
+  = | BuiltinEnvironment
+    | (string & Record<never, never>)
 export type { Pool, PoolOptions }
 export type CSSModuleScopeStrategy = 'stable' | 'scoped' | 'non-scoped'
 
@@ -210,8 +210,8 @@ interface DepsOptions {
 
 type InlineReporter = Reporter
 type ReporterName = BuiltinReporters | 'html' | (string & {})
-type ReporterWithOptions<Name extends ReporterName = ReporterName> =
-  Name extends keyof BuiltinReporterOptions
+type ReporterWithOptions<Name extends ReporterName = ReporterName>
+  = Name extends keyof BuiltinReporterOptions
     ? BuiltinReporterOptions[Name] extends never
       ? [Name, object]
       : [Name, Partial<BuiltinReporterOptions[Name]>]
@@ -529,7 +529,9 @@ export interface InlineConfig {
   /**
    * Format options for snapshot testing.
    */
-  snapshotFormat?: Omit<PrettyFormatOptions, 'plugins'>
+  snapshotFormat?: Omit<PrettyFormatOptions, 'plugins' | 'compareKeys'> & {
+    compareKeys?: null | undefined
+  }
 
   /**
    * Path to a module which has a default export of diff config.
@@ -871,7 +873,7 @@ export interface UserConfig extends InlineConfig {
    *
    * Vitest will only run tests if it's called programmatically or the test file changes.
    *
-   * CLI file filters will be ignored.
+   * If CLI file filters are passed, standalone mode is ignored.
    */
   standalone?: boolean
 
@@ -1001,8 +1003,8 @@ export interface ResolvedConfig
   project: string[]
   benchmark?: Required<
     Omit<BenchmarkUserOptions, 'outputFile' | 'compare' | 'outputJson'>
-  > &
-  Pick<BenchmarkUserOptions, 'outputFile' | 'compare' | 'outputJson'>
+  >
+  & Pick<BenchmarkUserOptions, 'outputFile' | 'compare' | 'outputJson'>
   shard?: {
     index: number
     count: number
@@ -1036,36 +1038,36 @@ export interface ResolvedConfig
   minWorkers: number
 }
 
-type NonProjectOptions =
-  | 'shard'
-  | 'watch'
-  | 'run'
-  | 'cache'
-  | 'update'
-  | 'reporters'
-  | 'outputFile'
-  | 'teardownTimeout'
-  | 'silent'
-  | 'forceRerunTriggers'
-  | 'testNamePattern'
-  | 'ui'
-  | 'open'
-  | 'uiBase'
+type NonProjectOptions
+  = | 'shard'
+    | 'watch'
+    | 'run'
+    | 'cache'
+    | 'update'
+    | 'reporters'
+    | 'outputFile'
+    | 'teardownTimeout'
+    | 'silent'
+    | 'forceRerunTriggers'
+    | 'testNamePattern'
+    | 'ui'
+    | 'open'
+    | 'uiBase'
   // TODO: allow snapshot options
-  | 'snapshotFormat'
-  | 'resolveSnapshotPath'
-  | 'passWithNoTests'
-  | 'onConsoleLog'
-  | 'onStackTrace'
-  | 'dangerouslyIgnoreUnhandledErrors'
-  | 'slowTestThreshold'
-  | 'inspect'
-  | 'inspectBrk'
-  | 'coverage'
-  | 'maxWorkers'
-  | 'minWorkers'
-  | 'fileParallelism'
-  | 'watchTriggerPatterns'
+    | 'snapshotFormat'
+    | 'resolveSnapshotPath'
+    | 'passWithNoTests'
+    | 'onConsoleLog'
+    | 'onStackTrace'
+    | 'dangerouslyIgnoreUnhandledErrors'
+    | 'slowTestThreshold'
+    | 'inspect'
+    | 'inspectBrk'
+    | 'coverage'
+    | 'maxWorkers'
+    | 'minWorkers'
+    | 'fileParallelism'
+    | 'watchTriggerPatterns'
 
 export interface ServerDepsOptions {
   /**
@@ -1126,10 +1128,10 @@ export interface UserWorkspaceConfig extends ViteUserConfig {
 export type UserProjectConfigFn = (
   env: ConfigEnv
 ) => UserWorkspaceConfig | Promise<UserWorkspaceConfig>
-export type UserProjectConfigExport =
-  | UserWorkspaceConfig
-  | Promise<UserWorkspaceConfig>
-  | UserProjectConfigFn
+export type UserProjectConfigExport
+  = | UserWorkspaceConfig
+    | Promise<UserWorkspaceConfig>
+    | UserProjectConfigFn
 
 export type TestProjectInlineConfiguration = (UserWorkspaceConfig & {
   /**
@@ -1140,8 +1142,8 @@ export type TestProjectInlineConfiguration = (UserWorkspaceConfig & {
   extends?: string | true
 })
 
-export type TestProjectConfiguration =
-  string
-  | TestProjectInlineConfiguration
-  | Promise<UserWorkspaceConfig>
-  | UserProjectConfigFn
+export type TestProjectConfiguration
+  = string
+    | TestProjectInlineConfiguration
+    | Promise<UserWorkspaceConfig>
+    | UserProjectConfigFn

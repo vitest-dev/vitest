@@ -1,7 +1,6 @@
 export type { ParsedStack, TestError } from '@vitest/utils'
 
 export type Awaitable<T> = T | PromiseLike<T>
-export type Nullable<T> = T | null | undefined
 export type Arrayable<T> = T | Array<T>
 export type ArgumentsType<T> = T extends (...args: infer U) => any ? U : never
 

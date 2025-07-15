@@ -311,9 +311,9 @@ export class V8CoverageProvider extends BaseCoverageProvider<ResolvedCoverageOpt
     onTransform: (filepath: string) => Promise<Vite.TransformResult | undefined | null>,
     functions: Profiler.FunctionCoverage[] = [],
   ): Promise<{
-      code: string
-      map?: Vite.Rollup.SourceMap
-    }> {
+    code: string
+    map?: Vite.Rollup.SourceMap
+  }> {
     const filePath = normalize(fileURLToPath(url))
 
     let transformResult: Vite.TransformResult | null | undefined = transformResults.get(filePath)

@@ -30,13 +30,13 @@ interface MockSettledResultRejected {
   value: any
 }
 
-export type MockResult<T> =
-  | MockResultReturn<T>
-  | MockResultThrow
-  | MockResultIncomplete
-export type MockSettledResult<T> =
-  | MockSettledResultFulfilled<T>
-  | MockSettledResultRejected
+export type MockResult<T>
+  = | MockResultReturn<T>
+    | MockResultThrow
+    | MockResultIncomplete
+export type MockSettledResult<T>
+  = | MockSettledResultFulfilled<T>
+    | MockSettledResultRejected
 
 type MockParameters<T extends Procedure | Constructable> = T extends Constructable
   ? ConstructorParameters<T>
@@ -171,14 +171,13 @@ interface InternalState {
 
 type Procedure = (...args: any[]) => any
 // pick a single function type from function overloads, unions, etc...
-type NormalizedProcedure<T extends Procedure | Constructable> = T extends Constructable ?
-    ({
-      new (...args: ConstructorParameters<T>): InstanceType<T>
-    })
-    |
-    ({
-      (this: InstanceType<T>, ...args: ConstructorParameters<T>): void
-    })
+type NormalizedProcedure<T extends Procedure | Constructable> = T extends Constructable
+  ? ({
+    new (...args: ConstructorParameters<T>): InstanceType<T>
+  })
+  | ({
+    (this: InstanceType<T>, ...args: ConstructorParameters<T>): void
+  })
   : T extends Procedure
     ? (...args: Parameters<T>) => ReturnType<T>
     : never
@@ -188,12 +187,12 @@ type Methods<T> = keyof {
 }
 type Properties<T> = {
   [K in keyof T]: T[K] extends Procedure ? never : K;
-}[keyof T] &
-(string | symbol)
+}[keyof T]
+& (string | symbol)
 type Classes<T> = {
   [K in keyof T]: T[K] extends new (...args: any[]) => any ? K : never;
-}[keyof T] &
-(string | symbol)
+}[keyof T]
+& (string | symbol)
 
 /*
 cf. https://typescript-eslint.io/rules/method-signature-style/
@@ -390,10 +389,10 @@ export type MockedFunction<T extends Procedure> = Mock<T> & {
 export type PartiallyMockedFunction<T extends Procedure> = PartialMock<T> & {
   [K in keyof T]: T[K];
 }
-export type MockedFunctionDeep<T extends Procedure> = Mock<T> &
-  MockedObjectDeep<T>
-export type PartiallyMockedFunctionDeep<T extends Procedure> = PartialMock<T> &
-  MockedObjectDeep<T>
+export type MockedFunctionDeep<T extends Procedure> = Mock<T>
+  & MockedObjectDeep<T>
+export type PartiallyMockedFunctionDeep<T extends Procedure> = PartialMock<T>
+  & MockedObjectDeep<T>
 export type MockedObject<T> = MaybeMockedConstructor<T> & {
   [K in Methods<T>]: T[K] extends Procedure ? MockedFunction<T[K]> : T[K];
 } & { [K in Properties<T>]: T[K] }

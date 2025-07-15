@@ -5,10 +5,10 @@ export function interopCommonJsModule(
   interopDefault: boolean | undefined,
   mod: any,
 ): {
-    keys: string[]
-    moduleExports: any
-    defaultExport: any
-  } {
+  keys: string[]
+  moduleExports: any
+  defaultExport: any
+} {
   if (isPrimitive(mod) || Array.isArray(mod) || mod instanceof Promise) {
     return {
       keys: [],

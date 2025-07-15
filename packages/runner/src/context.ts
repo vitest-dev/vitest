@@ -12,10 +12,10 @@ import type {
   WriteableTestContext,
 } from './types/tasks'
 import { getSafeTimers } from '@vitest/utils'
-import { parseSingleStack } from '@vitest/utils/source-map'
 import { PendingError } from './errors'
 import { finishSendTasksUpdate } from './run'
 import { getRunner } from './suite'
+import { findTestFileStackTrace } from './utils'
 
 const now = Date.now
 
@@ -200,17 +200,18 @@ export function createTestContext(
       throw new Error(`Cannot annotate tests outside of the test run. The test "${test.name}" finished running with the "${test.result.state}" state already.`)
     }
 
+    const stack = findTestFileStackTrace(
+      test.file.filepath,
+      new Error('STACK_TRACE').stack!,
+    )
+
     let location: undefined | TestAnnotationLocation
 
-    const stack = new Error('STACK_TRACE').stack!
-    const index = stack.includes('STACK_TRACE') ? 2 : 1
-    const stackLine = stack.split('\n')[index]
-    const parsed = parseSingleStack(stackLine)
-    if (parsed) {
+    if (stack) {
       location = {
-        file: parsed.file,
-        line: parsed.line,
-        column: parsed.column,
+        file: stack.file,
+        line: stack.line,
+        column: stack.column,
       }
     }
 
