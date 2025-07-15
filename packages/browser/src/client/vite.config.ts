@@ -21,7 +21,7 @@ export default vite.defineConfig({
       output: 'rolldownVersion' in vite
         ? {
             minify: false,
-          }
+          } as any
         : {},
       input: {
         orchestrator: resolve(__dirname, './orchestrator.html'),
