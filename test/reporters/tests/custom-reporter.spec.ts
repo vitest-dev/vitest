@@ -4,9 +4,9 @@ import { describe, expect, test } from 'vitest'
 import { runVitest, runVitestCli } from '../../test-utils'
 import TestReporter from '../src/custom-reporter'
 
-const customTsReporterPath = resolve(__dirname, '../src/custom-reporter.ts')
-const customJSReporterPath = resolve(__dirname, '../src/custom-reporter.js')
-const root = resolve(__dirname, '..')
+const customTsReporterPath = resolve(import.meta.dirname, '../src/custom-reporter.ts')
+const customJSReporterPath = resolve(import.meta.dirname, '../src/custom-reporter.js')
+const root = resolve(import.meta.dirname, '..')
 
 async function runWithRetry(...runOptions: string[]) {
   const count = 3

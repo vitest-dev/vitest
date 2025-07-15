@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest'
 import { runVitest } from '../../test-utils'
 
 describe('import durations', () => {
-  const root = resolve(__dirname, '..', 'fixtures')
+  const root = resolve(import.meta.dirname, '..', 'fixtures')
 
   it('should populate importDurations on File with import durations during execution', async () => {
     const { exitCode, ctx } = await runVitest({
