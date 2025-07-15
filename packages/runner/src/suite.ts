@@ -25,7 +25,6 @@ import {
   objectAttr,
   toArray,
 } from '@vitest/utils'
-import { parseSingleStack } from '@vitest/utils/source-map'
 import {
   abortIfTimeout,
   collectorContext,
@@ -37,6 +36,7 @@ import {
 import { mergeContextFixtures, mergeScopedFixtures, withFixtures } from './fixture'
 import { getHooks, setFn, setHooks, setTestFixture } from './map'
 import { getCurrentTest } from './test-state'
+import { findTestFileStackTrace } from './utils'
 import { createChainable } from './utils/chain'
 
 /**
@@ -366,7 +366,7 @@ function createSuiteCollector(
 
     if (runner.config.includeTaskLocation) {
       const error = stackTraceError.stack!
-      const stack = findTestFileStackTrace(error)
+      const stack = findTestFileStackTrace(currentTestFilepath, error)
       if (stack) {
         task.location = stack
       }
@@ -460,7 +460,7 @@ function createSuiteCollector(
       Error.stackTraceLimit = 15
       const error = new Error('stacktrace').stack!
       Error.stackTraceLimit = limit
-      const stack = findTestFileStackTrace(error)
+      const stack = findTestFileStackTrace(currentTestFilepath, error)
       if (stack) {
         suite.location = stack
       }
@@ -886,19 +886,4 @@ function formatTemplateString(cases: any[], args: any[]): any[] {
     res.push(oneCase)
   }
   return res
-}
-
-function findTestFileStackTrace(error: string) {
-  const testFilePath = getTestFilepath()
-  // first line is the error message
-  const lines = error.split('\n').slice(1)
-  for (const line of lines) {
-    const stack = parseSingleStack(line)
-    if (stack && stack.file === testFilePath) {
-      return {
-        line: stack.line,
-        column: stack.column,
-      }
-    }
-  }
 }
