@@ -208,10 +208,10 @@ async function runCli(command: 'vitest' | 'vite-node', _options?: CliOptions | s
 
   if (args[0] !== 'list' && (args.includes('--watch') || args[0] === 'watch')) {
     if (command === 'vitest') {
-      // Wait for initial test run to complete
+      // Waiting for either success or failure
       await Promise.race([
         cli.waitForStdout('Waiting for file changes'),
-        cli.waitForStdout('Watching for file changes'),
+        cli.waitForStdout('Tests failed. Watching for file changes'),
       ])
     }
     // make sure watcher is ready
