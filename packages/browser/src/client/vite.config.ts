@@ -19,8 +19,8 @@ export default defineConfig({
     manifest: true,
     rollupOptions: {
       input: {
-        orchestrator: resolve(__dirname, './orchestrator.html'),
-        tester: resolve(__dirname, './tester/tester.html'),
+        orchestrator: resolve(import.meta.dirname, './orchestrator.html'),
+        tester: resolve(import.meta.dirname, './tester/tester.html'),
       },
       external: [
         /^vitest\//,
