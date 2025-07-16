@@ -1,4 +1,5 @@
 import type { Plugin as VitePlugin } from 'vite'
+import { builtinModules } from 'node:module'
 
 export function ModuleRunnerTransform(): VitePlugin {
   // make sure Vite always applies the module runner transform
@@ -45,7 +46,10 @@ export function ModuleRunnerTransform(): VitePlugin {
           environment.resolve ??= {}
 
           // TODO: make sure we copy user settings to server.deps.inline/server.deps.external
-          environment.resolve.external = []
+          environment.resolve.external = [
+            ...builtinModules,
+            ...builtinModules.map(m => `node:${m}`),
+          ]
           // by setting `noExternal` to `true`, we make sure that
           // Vite will never use its own externalization mechanism
           // to externalize modules and always resolve static imports
