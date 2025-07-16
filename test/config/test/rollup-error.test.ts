@@ -10,7 +10,7 @@ test('rollup error node', async () => {
   })
   expect(stdout).toContain(`Error: Missing &quot;./no-such-export&quot; specifier in &quot;${rolldownVersion ? 'rolldown-vite' : 'vite'}&quot; package`)
   expect(stdout).toContain(`Plugin: vite:import-analysis`)
-  expect(stdout).toContain(`Error: Failed to load url @vitejs/no-such-package`)
+  expect(stdout).toContain(`Error: Cannot find module &apos;@vitejs/no-such-package&apos;`)
 })
 
 test('rollup error web', async () => {
