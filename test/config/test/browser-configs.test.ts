@@ -234,39 +234,60 @@ test('coverage provider v8 works correctly in workspaced browser mode if instanc
   ])
 })
 
-test('browser instances with include option override parent include patterns', async () => {
+test('browser instances with include/exclude/includeSource option override parent that patterns', async () => {
   const { projects } = await vitest({}, {
     include: ['**/*.global.test.{js,ts}', '**/*.shared.test.{js,ts}'],
+    exclude: ['**/*.skip.test.{js,ts}'],
+    includeSource: ['src/**/*.{js,ts}'],
     browser: {
       enabled: true,
       headless: true,
       instances: [
         { browser: 'chromium' },
-        { browser: 'firefox', include: ['test/firefox-specific.test.ts'] },
-        { browser: 'webkit', include: ['test/webkit-only.test.ts', 'test/webkit-extra.test.ts'] },
+        { browser: 'firefox', include: ['test/firefox-specific.test.ts'], exclude: ['test/webkit-only.test.ts', 'test/webkit-extra.test.ts'], includeSource: ['src/firefox-compat.ts'] },
+        { browser: 'webkit', include: ['test/webkit-only.test.ts', 'test/webkit-extra.test.ts'], exclude: ['test/firefox-specific.test.ts'], includeSource: ['src/webkit-compat.ts'] },
       ],
     },
   })
 
-  // Chromium should inherit parent include patterns (plus default test pattern)
+  // Chromium should inherit parent include/exclude/includeSource patterns (plus default test pattern)
   expect(projects[0].name).toEqual('chromium')
   expect(projects[0].config.include).toEqual([
     'test/**.test.ts',
     '**/*.global.test.{js,ts}',
     '**/*.shared.test.{js,ts}',
   ])
+  expect(projects[0].config.exclude).toEqual([
+    '**/*.skip.test.{js,ts}',
+  ])
+  expect(projects[0].config.includeSource).toEqual([
+    'src/**/*.{js,ts}',
+  ])
 
-  // Firefox should only have its specific include pattern (not parent patterns)
+  // Firefox should only have its specific include/exclude/includeSource pattern (not parent patterns)
   expect(projects[1].name).toEqual('firefox')
   expect(projects[1].config.include).toEqual([
     'test/firefox-specific.test.ts',
   ])
+  expect(projects[1].config.exclude).toEqual([
+    'test/webkit-only.test.ts',
+    'test/webkit-extra.test.ts',
+  ])
+  expect(projects[1].config.includeSource).toEqual([
+    'src/firefox-compat.ts',
+  ])
 
-  // Webkit should only have its specific include patterns (not parent patterns)
+  // Webkit should only have its specific include/exclude/includeSource patterns (not parent patterns)
   expect(projects[2].name).toEqual('webkit')
   expect(projects[2].config.include).toEqual([
     'test/webkit-only.test.ts',
     'test/webkit-extra.test.ts',
+  ])
+  expect(projects[2].config.exclude).toEqual([
+    'test/firefox-specific.test.ts',
+  ])
+  expect(projects[2].config.includeSource).toEqual([
+    'src/webkit-compat.ts',
   ])
 })
 

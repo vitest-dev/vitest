@@ -322,8 +322,10 @@ function cloneConfig(project: TestProject, { browser, ...config }: BrowserInstan
       providerOptions: config,
       instances: undefined, // projects cannot spawn more configs
     },
-    // If there is no include pattern in browser.instances[], we should use the include pattern from the parent project
+    // If there is no include or exclude or includeSource pattern in browser.instances[], we should use the that's pattern from the parent project
     include: (overrideConfig.include && overrideConfig.include.length > 0) ? [] : clonedConfig.include,
+    exclude: (overrideConfig.exclude && overrideConfig.exclude.length > 0) ? [] : clonedConfig.exclude,
+    includeSource: (overrideConfig.includeSource && overrideConfig.includeSource.length > 0) ? [] : clonedConfig.includeSource,
     // TODO: should resolve, not merge/override
   } satisfies ResolvedConfig, overrideConfig) as ResolvedConfig
 }
