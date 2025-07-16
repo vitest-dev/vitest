@@ -7,9 +7,7 @@ import { runVitestCli } from '../../test-utils'
 
 type Message = Partial<InspectorNotification<any>>
 
-// TODO: make sure source maps have the first line
-// github.com/vitest-dev/vitest/pull/5355/files#diff-2e5976c3b475dbec1b95a09f2802be49b72c999e68465b0d1ae61452f0334798R53
-test.skip('--inspect-brk stops at test file', async () => {
+test('--inspect-brk stops at test file', async () => {
   const { vitest, waitForClose } = await runVitestCli(
     '--root',
     'fixtures/inspect',
@@ -30,7 +28,6 @@ test.skip('--inspect-brk stops at test file', async () => {
   const paused = receive('Debugger.paused')
   send({ method: 'Runtime.runIfWaitingForDebugger' })
 
-  // TODO: this is never resolved
   const { params } = await paused
   const scriptId = params.callFrames[0].functionLocation.scriptId
 

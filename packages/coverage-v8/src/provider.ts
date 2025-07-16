@@ -146,7 +146,7 @@ export class V8CoverageProvider extends BaseCoverageProvider<ResolvedCoverageOpt
 
   private async getCoverageMapForUncoveredFiles(testedFiles: string[]): Promise<CoverageMap> {
     const transformResults = normalizeTransformResults(
-      this.ctx.vite.environments.ssr.moduleGraph,
+      this.ctx.vite.environments,
     )
     const transform = this.createUncoveredFileTransformer(this.ctx)
 
@@ -325,7 +325,7 @@ export class V8CoverageProvider extends BaseCoverageProvider<ResolvedCoverageOpt
     const map = transformResult?.map as Vite.Rollup.SourceMap | undefined
     const code = transformResult?.code
 
-    if (!code) {
+    if (code == null) {
       const original = await fs.readFile(filePath, 'utf-8').catch(() => {
         // If file does not exist construct a dummy source for it.
         // These can be files that were generated dynamically during the test run and were removed after it.
@@ -369,7 +369,7 @@ export class V8CoverageProvider extends BaseCoverageProvider<ResolvedCoverageOpt
       throw new Error(`Module graph for environment ${environment} was not defined.`)
     }
 
-    const transformResults = normalizeTransformResults(moduleGraph)
+    const transformResults = normalizeTransformResults({ [environment]: { moduleGraph } })
 
     async function onTransform(filepath: string) {
       if (environment === '__browser__' && project.browser) {
@@ -470,15 +470,17 @@ function findLongestFunctionLength(functions: Profiler.FunctionCoverage[]) {
 }
 
 function normalizeTransformResults(
-  moduleGraph: Vite.EnvironmentModuleGraph,
+  environments: Record<string, { moduleGraph: Vite.EnvironmentModuleGraph }>,
 ) {
   const normalized: TransformResults = new Map()
 
-  for (const [key, value] of moduleGraph.idToModuleMap) {
-    const cleanEntry = cleanUrl(key)
-
-    if (value.transformResult && !normalized.has(cleanEntry)) {
-      normalized.set(cleanEntry, value.transformResult)
+  for (const environmentName in environments) {
+    const moduleGraph = environments[environmentName].moduleGraph
+    for (const [key, value] of moduleGraph.idToModuleMap) {
+      const cleanEntry = cleanUrl(key)
+      if (value.transformResult && !normalized.has(cleanEntry)) {
+        normalized.set(cleanEntry, value.transformResult)
+      }
     }
   }
 

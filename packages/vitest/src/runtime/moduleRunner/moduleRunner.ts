@@ -4,6 +4,7 @@ import type { HotPayload } from 'vite'
 import type { EvaluatedModuleNode, EvaluatedModules, FetchFunction, SSRImportMetadata } from 'vite/module-runner'
 import type { WorkerGlobalState } from '../../types/worker'
 import type { ExternalModulesExecutor } from '../external-executor'
+import type { ModuleExecutionInfo } from './moduleDebug'
 import type { VitestModuleEvaluator } from './moduleEvaluator'
 import { ModuleRunner } from 'vite/module-runner'
 import { VitestMocker } from './moduleMocker'
@@ -11,6 +12,7 @@ import { VitestMocker } from './moduleMocker'
 // @ts-expect-error overriding private method
 export class VitestModuleRunner extends ModuleRunner {
   public mocker: VitestMocker
+  public moduleExecutionInfo: ModuleExecutionInfo
 
   constructor(options: VitestModuleRunnerOptions) {
     const transport = new VitestTransport(options.transport)
@@ -23,6 +25,7 @@ export class VitestModuleRunner extends ModuleRunner {
       },
       options.evaluator,
     )
+    this.moduleExecutionInfo = options.getWorkerState().moduleExecutionInfo
     this.mocker = options.mocker || new VitestMocker(this, {
       context: options.vm?.context,
       resolveId: options.transport.resolveId,

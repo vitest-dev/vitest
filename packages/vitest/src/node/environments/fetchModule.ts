@@ -1,4 +1,4 @@
-import type { DevEnvironment, FetchResult } from 'vite'
+import type { DevEnvironment, FetchResult, Rollup, TransformResult } from 'vite'
 import type { FetchFunctionOptions } from 'vite/module-runner'
 import type { VitestResolver } from '../resolver'
 import { mkdirSync } from 'node:fs'
@@ -6,6 +6,7 @@ import { rename, stat, unlink, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { isExternalUrl, nanoid, unwrapId } from '@vitest/utils'
 import { dirname, join } from 'pathe'
+import { fetchModule } from 'vite'
 import { hash } from '../hash'
 
 const created = new Set()
@@ -46,22 +47,32 @@ export function createFetchModuleFunction(
     // so we do this first to resolve the module and check its `id`. The next call of
     // `ensureEntryFromUrl` inside `fetchModule` is cached and should take no time
     // This also makes it so externalized modules are inside the module graph.
-    const module = await environment.moduleGraph.ensureEntryFromUrl(unwrapId(url))
-    const cached = !!module.transformResult
+    const moduleGraphModule = await environment.moduleGraph.ensureEntryFromUrl(unwrapId(url))
+    const cached = !!moduleGraphModule.transformResult
 
     // if url is already cached, we can just confirm it's also cached on the server
     if (options?.cached && cached) {
       return { cache: true }
     }
 
-    if (module.id) {
-      const externalize = await resolver.shouldExternalize(module.id)
+    if (moduleGraphModule.id) {
+      const externalize = await resolver.shouldExternalize(moduleGraphModule.id)
       if (externalize) {
         return { externalize, type: 'module' }
       }
     }
 
-    const result = await environment.fetchModule(url, importer, options).catch(handleRollupError)
+    const moduleRunnerModule = await fetchModule(
+      environment,
+      url,
+      importer,
+      {
+        ...options,
+        inlineSourceMap: false,
+      },
+    ).catch(handleRollupError)
+
+    const result = processResultSource(environment, moduleRunnerModule)
 
     if (!cacheFs || !('code' in result)) {
       return result
@@ -97,6 +108,73 @@ export function createFetchModuleFunction(
     cachedFsResults.set(result.id, tmp)
     return getCachedResult(result, cachedFsResults)
   }
+}
+
+let SOURCEMAPPING_URL = 'sourceMa'
+SOURCEMAPPING_URL += 'ppingURL'
+
+const MODULE_RUNNER_SOURCEMAPPING_SOURCE = '//# sourceMappingSource=vite-generated'
+
+function processResultSource(environment: DevEnvironment, result: FetchResult): FetchResult {
+  if (!('code' in result)) {
+    return result
+  }
+
+  const node = environment.moduleGraph.getModuleById(result.id)
+  if (node?.transformResult) {
+    // this also overrides node.transformResult.code which is also what the module
+    // runner does under the hood by default (we disable source maps inlining)
+    inlineSourceMap(node.transformResult)
+  }
+
+  return result
+}
+
+const OTHER_SOURCE_MAP_REGEXP = new RegExp(
+  `//# ${SOURCEMAPPING_URL}=data:application/json[^,]+base64,([A-Za-z0-9+/=]+)$`,
+  'gm',
+)
+
+// we have to inline the source map ourselves, because
+// - we don't need //# sourceURL since we are running code in VM
+//   - important in stack traces and the V8 coverage
+// - we need to inject an empty line for --inspect-brk
+function inlineSourceMap(result: TransformResult) {
+  const map = result.map
+  let code = result.code
+
+  if (
+    !map
+    || !('version' in map)
+    || code.includes(MODULE_RUNNER_SOURCEMAPPING_SOURCE)
+  ) {
+    return result
+  }
+
+  // to reduce the payload size, we only inline vite node source map, because it's also the only one we use
+  OTHER_SOURCE_MAP_REGEXP.lastIndex = 0
+  if (OTHER_SOURCE_MAP_REGEXP.test(code)) {
+    code = code.replace(OTHER_SOURCE_MAP_REGEXP, '')
+  }
+
+  // If the first line is not present on source maps, add simple 1:1 mapping ([0,0,0,0], [1,0,0,0])
+  // so that debuggers can be set to break on first line
+  if (map.mappings.startsWith(';')) {
+    map.mappings = `AAAA,CAAA${map.mappings}`
+  }
+
+  result.code = `${code.trimEnd()}\n${
+    MODULE_RUNNER_SOURCEMAPPING_SOURCE
+  }\n//# ${SOURCEMAPPING_URL}=${genSourceMapUrl(map)}\n`
+
+  return result
+}
+
+function genSourceMapUrl(map: Rollup.SourceMap | string): string {
+  if (typeof map !== 'string') {
+    map = JSON.stringify(map)
+  }
+  return `data:application/json;base64,${Buffer.from(map).toString('base64')}`
 }
 
 function getCachedResult(result: Extract<FetchResult, { code: string }>, cachedFsResults: Map<string, string>) {
