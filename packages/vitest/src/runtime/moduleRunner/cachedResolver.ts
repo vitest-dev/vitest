@@ -13,7 +13,7 @@ export function getCachedVitestImport(
   id: string,
   state: () => WorkerGlobalState,
 ): null | { externalize: string; type: 'module' } {
-  if (id.startsWith('/@fs/')) {
+  if (id.startsWith('/@fs/') || id.startsWith('\\@fs\\')) {
     id = id.slice(process.platform === 'win32' ? 5 : 4)
   }
 
@@ -25,8 +25,11 @@ export function getCachedVitestImport(
   const root = state().config.root
   const relativeRoot = relativeIds[root] ?? (relativeIds[root] = normalizedDistDir.slice(root.length))
   if (id.includes(distDir) || id.includes(normalizedDistDir)) {
-    externalizeMap.set(id, id)
-    return { externalize: id, type: 'module' }
+    const externalize = id.startsWith('file://')
+      ? id
+      : pathToFileURL(id).toString()
+    externalizeMap.set(id, externalize)
+    return { externalize, type: 'module' }
   }
   if (
     // "relative" to root path:
