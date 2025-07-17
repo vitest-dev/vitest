@@ -197,7 +197,7 @@ export type TaskEventPack = [
    */
   event: TaskUpdateEvent,
   /**
-   * Data assosiated with the event
+   * Data associated with the event
    */
   data: TaskEventData | undefined,
 ]

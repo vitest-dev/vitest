@@ -139,7 +139,7 @@ test('injected plugin is filtered by the --project filter', async () => {
   expect(newWorkspace).toHaveLength(0)
 })
 
-test('injected plugin is not filtered by the --project filter when it\'s overriden', async () => {
+test('injected plugin is not filtered by the --project filter when it\'s overridden', async () => {
   let newWorkspace: TestProject[] = []
   const { projects } = await vitest({
     project: 'project-1',
