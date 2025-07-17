@@ -4,6 +4,7 @@ import type { TestProject } from './project'
 import type { MergedBlobs } from './reporters/blob'
 import type { OnUnhandledErrorCallback } from './types/config'
 import { createFileTask } from '@vitest/runner/utils'
+import { defaultBrowserPort } from '../constants'
 import { TestCase, TestModule, TestSuite } from './reporters/reported-tasks'
 
 function isAggregateError(err: unknown): err is AggregateError {
@@ -25,6 +26,12 @@ export class StateManager {
   blobs?: MergedBlobs
 
   onUnhandledError?: OnUnhandledErrorCallback
+
+  /** @internal */
+  _data = {
+    browserLastPort: defaultBrowserPort,
+    timeoutIncreased: false,
+  }
 
   constructor(
     options: {
