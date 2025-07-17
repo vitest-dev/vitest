@@ -71,7 +71,7 @@ export default class HTMLReporter implements Reporter {
     await fs.mkdir(resolve(this.reporterDir, 'assets'), { recursive: true })
   }
 
-  async onFinished(): Promise<void> {
+  async onTestRunEnd(): Promise<void> {
     const result: HTMLReportData = {
       paths: this.ctx.state.getPaths(),
       files: this.ctx.state.getFiles(),

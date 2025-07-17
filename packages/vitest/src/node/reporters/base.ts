@@ -1,7 +1,8 @@
 import type { File, Task } from '@vitest/runner'
+import type { SerializedError } from '@vitest/utils'
 import type { TestError, UserConsoleLog } from '../../types/general'
 import type { Vitest } from '../core'
-import type { Reporter } from '../types/reporter'
+import type { Reporter, TestRunEndReason } from '../types/reporter'
 import type { TestCase, TestCollection, TestModule, TestModuleState, TestResult, TestSuite, TestSuiteState } from './reported-tasks'
 import { performance } from 'node:perf_hooks'
 import { getFullName, getSuites, getTestName, getTests, hasFailed } from '@vitest/runner/utils'
@@ -57,7 +58,14 @@ export abstract class BaseReporter implements Reporter {
     return relative(this.ctx.config.root, path)
   }
 
-  onFinished(files: File[] = this.ctx.state.getFiles(), errors: unknown[] = this.ctx.state.getUnhandledErrors()): void {
+  onTestRunEnd(
+    testModules: ReadonlyArray<TestModule>,
+    unhandledErrors: ReadonlyArray<SerializedError>,
+    _reason: TestRunEndReason,
+  ): void {
+    const files = testModules.map(testModule => testModule.task)
+    const errors = [...unhandledErrors]
+
     this.end = performance.now()
     if (!files.length && !errors.length) {
       this.ctx.logger.printNoTestFound(this.ctx.filenamePattern)

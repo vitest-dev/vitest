@@ -101,5 +101,4 @@ Log from failed suite`,
 
 class LogReporter extends DefaultReporter {
   isTTY = true
-  onTaskUpdate() {}
 }
