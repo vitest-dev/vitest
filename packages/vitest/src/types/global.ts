@@ -22,21 +22,21 @@ declare global {
   }
 }
 
-interface SnapshotMatcher<T> {
+interface SnapshotMatcher<T, R = void> {
   <U extends { [P in keyof T]: any }>(
     snapshot: Partial<U>,
     hint?: string
-  ): void
-  (hint?: string): void
+  ): R
+  (hint?: string): R
 }
 
-interface InlineSnapshotMatcher<T> {
+interface InlineSnapshotMatcher<T, R = void> {
   <U extends { [P in keyof T]: any }>(
     properties: Partial<U>,
     snapshot?: string,
     hint?: string
-  ): void
-  (hint?: string): void
+  ): R
+  (hint?: string): R
 }
 
 declare module '@vitest/expect' {
@@ -64,11 +64,11 @@ declare module '@vitest/expect' {
     addSnapshotSerializer: (plugin: PrettyFormatPlugin) => void
   }
 
-  interface Assertion<T> {
+  interface Assertion<T, R = void> {
     // Snapshots are extended in @vitest/snapshot and are not part of @vitest/expect
-    matchSnapshot: SnapshotMatcher<T>
-    toMatchSnapshot: SnapshotMatcher<T>
-    toMatchInlineSnapshot: InlineSnapshotMatcher<T>
+    matchSnapshot: SnapshotMatcher<T, R>
+    toMatchSnapshot: SnapshotMatcher<T, R>
+    toMatchInlineSnapshot: InlineSnapshotMatcher<T, R>
 
     /**
      * Checks that an error thrown by a function matches a previously recorded snapshot.
@@ -78,7 +78,7 @@ declare module '@vitest/expect' {
      * @example
      * expect(functionWithError).toThrowErrorMatchingSnapshot();
      */
-    toThrowErrorMatchingSnapshot: (hint?: string) => void
+    toThrowErrorMatchingSnapshot: (hint?: string) => R
 
     /**
      * Checks that an error thrown by a function matches an inline snapshot within the test file.
@@ -94,7 +94,7 @@ declare module '@vitest/expect' {
     toThrowErrorMatchingInlineSnapshot: (
       snapshot?: string,
       hint?: string
-    ) => void
+    ) => R
 
     /**
      * Compares the received value to a snapshot saved in a specified file.
