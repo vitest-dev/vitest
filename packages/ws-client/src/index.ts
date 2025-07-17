@@ -99,9 +99,7 @@ export function createClient(url: string, options: VitestClientOptions = {}): Vi
         return v
       }),
     deserialize: parse,
-    onTimeoutError(functionName) {
-      throw new Error(`[vitest-ws-client]: Timeout calling "${functionName}"`)
-    },
+    timeout: -1,
   }
 
   ctx.rpc = createBirpc<WebSocketHandlers, WebSocketEvents>(

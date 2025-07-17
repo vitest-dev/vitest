@@ -32,14 +32,18 @@ function createWorkerChannel(project: TestProject, collect: boolean) {
     on(fn) {
       port.on('message', fn)
     },
-    onTimeoutError(functionName) {
-      throw new Error(`[vitest-pool]: Timeout calling "${functionName}"`)
-    },
+    timeout: -1,
   })
 
   project.vitest.onCancel(reason => rpc.onCancel(reason))
 
-  return { workerPort, port }
+  function onClose() {
+    workerPort.close()
+    port.close()
+    rpc.$close(new Error('[vitest-pool]: Pending methods while closing rpc'))
+  }
+
+  return { workerPort, onClose }
 }
 
 export function createVmThreadsPool(
@@ -108,7 +112,7 @@ export function createVmThreadsPool(
       const paths = files.map(f => f.filepath)
       vitest.state.clearFiles(project, paths)
 
-      const { workerPort, port } = createWorkerChannel(project, name === 'collect')
+      const { workerPort, onClose } = createWorkerChannel(project, name === 'collect')
       const workerId = ++id
       const data: WorkerContext = {
         pool: 'vmThreads',
@@ -150,8 +154,7 @@ export function createVmThreadsPool(
         }
       }
       finally {
-        port.close()
-        workerPort.close()
+        onClose()
       }
     }
 

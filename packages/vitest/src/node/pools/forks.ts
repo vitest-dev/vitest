@@ -19,13 +19,7 @@ import { createMethodsRPC } from './rpc'
 
 function createChildProcessChannel(project: TestProject, collect = false) {
   const emitter = new EventEmitter()
-
   const events = { message: 'message', response: 'response' }
-  const channel: TinypoolChannel = {
-    onMessage: callback => emitter.on(events.message, callback),
-    postMessage: message => emitter.emit(events.response, message),
-    onClose: () => emitter.removeAllListeners(),
-  }
 
   const rpc = createBirpc<RunnerRPC, RuntimeRPC>(createMethodsRPC(project, { cacheFs: true, collect }), {
     eventNames: ['onCancel'],
@@ -51,12 +45,19 @@ function createChildProcessChannel(project: TestProject, collect = false) {
     on(fn) {
       emitter.on(events.response, fn)
     },
-    onTimeoutError(functionName) {
-      throw new Error(`[vitest-pool]: Timeout calling "${functionName}"`)
-    },
+    timeout: -1,
   })
 
   project.vitest.onCancel(reason => rpc.onCancel(reason))
+
+  const channel: TinypoolChannel = {
+    onMessage: callback => emitter.on(events.message, callback),
+    postMessage: message => emitter.emit(events.response, message),
+    onClose: () => {
+      emitter.removeAllListeners()
+      rpc.$close(new Error('[vitest-pool]: Pending methods while closing rpc'))
+    },
+  }
 
   return channel
 }
