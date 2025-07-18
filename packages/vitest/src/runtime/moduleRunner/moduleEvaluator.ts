@@ -8,6 +8,7 @@ import type { ModuleExecutionInfo } from './moduleDebug'
 import type { VitestVmOptions } from './moduleRunner'
 import { createRequire } from 'node:module'
 import vm from 'node:vm'
+import { isAbsolute } from 'pathe'
 import {
   ssrDynamicImportKey,
   ssrExportAllKey,
@@ -282,7 +283,7 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
   private createRequire(filename: string) {
     // \x00 is a rollup convention for virtual files,
     // it is not allowed in actual file names
-    if (filename.startsWith('\x00')) {
+    if (filename.startsWith('\x00') || !isAbsolute(filename)) {
       return () => ({})
     }
     return this.vm
