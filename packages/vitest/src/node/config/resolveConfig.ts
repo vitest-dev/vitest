@@ -332,6 +332,15 @@ export function resolveConfig(
 
   resolved.deps ??= {}
   resolved.deps.moduleDirectories ??= []
+
+  const envModuleDirectories
+    = process.env.VITEST_MODULE_DIRECTORIES
+      || process.env.npm_config_VITEST_MODULE_DIRECTORIES
+
+  if (envModuleDirectories) {
+    resolved.deps.moduleDirectories.push(...envModuleDirectories.split(','))
+  }
+
   resolved.deps.moduleDirectories = resolved.deps.moduleDirectories.map(
     (dir) => {
       if (!dir.startsWith('/')) {

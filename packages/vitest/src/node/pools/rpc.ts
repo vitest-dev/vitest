@@ -35,7 +35,7 @@ export function createMethodsRPC(project: TestProject, options: MethodsOptions =
       if (!environment) {
         throw new Error(`The environment ${environmentName} was not defined in the Vite config.`)
       }
-      const resolved = await environment.pluginContainer.resolveId(id, importer || environment.config.root)
+      const resolved = await environment.pluginContainer.resolveId(id, importer)
       if (!resolved) {
         return null
       }

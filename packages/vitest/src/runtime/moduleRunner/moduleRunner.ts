@@ -67,12 +67,12 @@ export class VitestModuleRunner extends ModuleRunner {
 
   private _cachedRequest(
     url: string,
-    mod: EvaluatedModuleNode,
+    module: EvaluatedModuleNode,
     callstack: string[] = [],
     metadata?: SSRImportMetadata,
   ) {
     // @ts-expect-error "cachedRequest" is private
-    return super.cachedRequest(url, mod, callstack, metadata)
+    return super.cachedRequest(url, module, callstack, metadata)
   }
 
   /**
