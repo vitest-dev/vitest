@@ -14,7 +14,7 @@ export class VitestModuleRunner extends ModuleRunner {
   public mocker: VitestMocker
   public moduleExecutionInfo: ModuleExecutionInfo
 
-  constructor(options: VitestModuleRunnerOptions) {
+  constructor(private options: VitestModuleRunnerOptions) {
     const transport = new VitestTransport(options.transport)
     super(
       {
@@ -50,6 +50,14 @@ export class VitestModuleRunner extends ModuleRunner {
         value: this.mocker,
       })
     }
+  }
+
+  public async import(rawId: string): Promise<any> {
+    const resolved = await this.options.transport.resolveId(rawId)
+    if (!resolved) {
+      return super.import(rawId)
+    }
+    return super.import(resolved.url)
   }
 
   public async fetchModule(url: string, importer?: string): Promise<EvaluatedModuleNode> {
