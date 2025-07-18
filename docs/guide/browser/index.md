@@ -215,7 +215,7 @@ import { qwikVite } from '@builder.io/qwik/optimizer'
 import { testSSR } from 'vitest-browser-qwik/ssr-plugin'
 
 export default defineConfig({
-  plugins: [qwikVite(), testSSR()],
+  plugins: [testSSR(), qwikVite()],
   test: {
     browser: {
       enabled: true,
