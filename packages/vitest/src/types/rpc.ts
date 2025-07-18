@@ -1,6 +1,6 @@
 import type { CancelReason, File, TaskEventPack, TaskResultPack, TestAnnotation } from '@vitest/runner'
 import type { SnapshotResult } from '@vitest/snapshot'
-import type { FetchResult } from 'vite'
+import type { FetchResult } from 'vite/module-runner'
 import type { FetchFunctionOptions } from 'vite/module-runner'
 import type { AfterSuiteRunMeta, UserConsoleLog } from './general'
 
