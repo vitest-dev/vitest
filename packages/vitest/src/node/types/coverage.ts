@@ -255,6 +255,26 @@ export interface BaseCoverageOptions {
    * @default []
    */
   ignoreClassMethods?: string[]
+
+  /**
+   * Function that returns source code given a file path and is able to modify the content or path.
+   * Defaults to filesystem lookups based on path.
+   *
+   * @example
+   *
+   * ```ts
+   * sourceFinder: (path: string): string => {
+   *   try {
+   *       const content = fs.readFileSync(path, 'utf8');
+   *       // If you need to transform the content, do it here
+   *       return content;
+   *   } catch (ex: Error) {
+   *       throw new Error(`Unable to lookup source: ${path} (${ex.message})`);
+   *   }
+   * }
+   * ```
+   */
+  sourceFinder?: (path: string) => string
 }
 
 export interface CoverageIstanbulOptions extends BaseCoverageOptions {}

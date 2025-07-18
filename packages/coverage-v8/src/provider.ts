@@ -116,6 +116,7 @@ export class V8CoverageProvider extends BaseCoverageProvider<ResolvedCoverageOpt
       dir: this.options.reportsDirectory,
       coverageMap,
       watermarks: this.options.watermarks,
+      sourceFinder: this.options.sourceFinder,
     })
 
     if (this.hasTerminalReporter(this.options.reporter)) {
