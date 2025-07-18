@@ -28,7 +28,14 @@ export function createMethodsRPC(project: TestProject, options: MethodsOptions =
         throw new Error(`The environment ${environmentName} was not defined in the Vite config.`)
       }
 
-      return fetch(url, importer, environment, options)
+      const start = performance.now()
+
+      try {
+        return await fetch(url, importer, environment, options)
+      }
+      finally {
+        project.vitest.state.transformTime += (performance.now() - start)
+      }
     },
     async resolve(id, importer, environmentName) {
       const environment = project.vite.environments[environmentName]
