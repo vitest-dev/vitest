@@ -23,6 +23,7 @@ export class StateManager {
   processTimeoutCauses: Set<string> = new Set()
   reportedTasksMap: WeakMap<Task, TestModule | TestCase | TestSuite> = new WeakMap()
   blobs?: MergedBlobs
+  transformTime = 0
 
   onUnhandledError?: OnUnhandledErrorCallback
 

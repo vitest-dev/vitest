@@ -129,9 +129,9 @@ function printErrorInner(
       ? error.stacks[0]
       : stacks.find((stack) => {
           try {
+            const module = project._vite && project.getModuleById(stack.file)
             return (
-              project._vite
-              && project.getModuleById(stack.file)
+              (module?.transformResult || module?.ssrTransformResult)
               && existsSync(stack.file)
             )
           }
@@ -448,9 +448,14 @@ export function generateCodeFrame(
         }
 
         const lineLength = lines[j].length
+        const strippedContent = stripVTControlCharacters(lines[j])
+
+        if (strippedContent.startsWith('//# sourceMappingURL')) {
+          continue
+        }
 
         // too long, maybe it's a minified file, skip for codeframe
-        if (stripVTControlCharacters(lines[j]).length > 200) {
+        if (strippedContent.length > 200) {
           return ''
         }
 

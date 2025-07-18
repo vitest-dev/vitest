@@ -4,12 +4,10 @@ export type Awaitable<T> = T | PromiseLike<T>
 export type Arrayable<T> = T | Array<T>
 export type ArgumentsType<T> = T extends (...args: infer U) => any ? U : never
 
-export type TransformMode = 'web' | 'ssr'
-
 export interface AfterSuiteRunMeta {
   coverage?: unknown
   testFiles: string[]
-  transformMode: TransformMode | 'browser'
+  environment: string
   projectName?: string
 }
 

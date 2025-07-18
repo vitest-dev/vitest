@@ -23,7 +23,7 @@ it.each(files)('should fail %s', async (file) => {
 }, 30_000)
 
 it('should report coverage when "coverage.reportOnFailure: true" and tests fail', async () => {
-  const { stdout } = await runVitest({
+  const { stdout, stderr } = await runVitest({
     root,
     coverage: {
       enabled: true,
@@ -32,6 +32,7 @@ it('should report coverage when "coverage.reportOnFailure: true" and tests fail'
       reporter: ['text'],
     },
   }, [files[0]])
+  console.log(stderr)
 
   expect(stdout).toMatch('Coverage report from istanbul')
 })

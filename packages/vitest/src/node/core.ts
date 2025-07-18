@@ -2,6 +2,7 @@ import type { CancelReason, File } from '@vitest/runner'
 import type { Awaitable } from '@vitest/utils'
 import type { Writable } from 'node:stream'
 import type { ViteDevServer } from 'vite'
+import type { ModuleRunner } from 'vite/module-runner'
 import type { SerializedCoverageConfig } from '../runtime/config'
 import type { ArgumentsType, ProvidedContext, UserConsoleLog } from '../types/general'
 import type { CliOptions } from './cli/cli-api'
@@ -15,8 +16,6 @@ import { getTasks, hasFailed } from '@vitest/runner/utils'
 import { SnapshotManager } from '@vitest/snapshot/manager'
 import { noop, toArray } from '@vitest/utils'
 import { normalize, relative } from 'pathe'
-import { ViteNodeRunner } from 'vite-node/client'
-import { ViteNodeServer } from 'vite-node/server'
 import { version } from '../../package.json' with { type: 'json' }
 import { WebSocketReporter } from '../api/setup'
 import { defaultBrowserPort } from '../constants'
@@ -27,6 +26,7 @@ import { BrowserSessions } from './browser/sessions'
 import { VitestCache } from './cache'
 import { resolveConfig } from './config/resolveConfig'
 import { getCoverageProvider } from './coverage'
+import { ServerModuleRunner } from './environments/serverRunner'
 import { FilesNotFoundError } from './errors'
 import { Logger } from './logger'
 import { VitestPackageInstaller } from './packageInstaller'
@@ -36,6 +36,7 @@ import { getDefaultTestProject, resolveBrowserProjects, resolveProjects } from '
 import { BlobReporter, readBlobs } from './reporters/blob'
 import { HangingProcessReporter } from './reporters/hanging-process'
 import { createBenchmarkReporters, createReporters } from './reporters/utils'
+import { VitestResolver } from './resolver'
 import { VitestSpecifications } from './specifications'
 import { StateManager } from './state'
 import { TestRun } from './test-run'
@@ -93,9 +94,9 @@ export class Vitest {
   /** @internal */ _browserSessions = new BrowserSessions()
   /** @internal */ _cliOptions: CliOptions = {}
   /** @internal */ reporters: Reporter[] = []
-  /** @internal */ vitenode: ViteNodeServer = undefined!
-  /** @internal */ runner: ViteNodeRunner = undefined!
+  /** @internal */ runner!: ModuleRunner
   /** @internal */ _testRun: TestRun = undefined!
+  /** @internal */ _resolver!: VitestResolver
 
   private isFirstRun = true
   private restartsCount = 0
@@ -223,19 +224,13 @@ export class Vitest {
       this.watcher.registerWatcher()
     }
 
-    this.vitenode = new ViteNodeServer(server, this.config.server)
-
-    const node = this.vitenode
-    this.runner = new ViteNodeRunner({
-      root: server.config.root,
-      base: server.config.base,
-      fetchModule(id: string) {
-        return node.fetchModule(id)
-      },
-      resolveId(id: string, importer?: string) {
-        return node.resolveId(id, importer)
-      },
-    })
+    this._resolver = new VitestResolver(server.config.cacheDir, resolved)
+    const environment = server.environments.__vitest__
+    this.runner = new ServerModuleRunner(
+      environment,
+      this._resolver,
+      resolved,
+    )
 
     if (this.config.watch) {
       // hijack server restart
@@ -390,7 +385,7 @@ export class Vitest {
    * @param moduleId The ID of the module in Vite module graph
    */
   public import<T>(moduleId: string): Promise<T> {
-    return this.runner.executeId(moduleId)
+    return this.runner.import(moduleId)
   }
 
   private async resolveProjects(cliOptions: UserConfig): Promise<TestProject[]> {

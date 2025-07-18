@@ -1,20 +1,18 @@
-import type { Environment } from 'vitest/environments'
 import vm from 'node:vm'
 import debug from 'debug'
 
 // test that external packages (debug) are loaded correctly
 const log = debug('test:env')
 
-export default <Environment>{
+export default {
   name: 'custom',
-  transformMode: 'ssr',
+  viteEnvironment: 'ssr',
   setupVM({ custom }) {
     const context = vm.createContext({
       testEnvironment: 'custom',
       option: custom.option,
       setTimeout,
       clearTimeout,
-      AbortController,
     })
     return {
       getVmContext() {

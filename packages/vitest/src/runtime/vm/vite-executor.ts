@@ -4,9 +4,8 @@ import type { WorkerGlobalState } from '../../types/worker'
 import type { EsmExecutor } from './esm-executor'
 import type { VMModule } from './types'
 import { pathToFileURL } from 'node:url'
+import { CSS_LANGS_RE, KNOWN_ASSET_RE, toArray } from '@vitest/utils'
 import { normalize } from 'pathe'
-import { CSS_LANGS_RE, KNOWN_ASSET_RE } from 'vite-node/constants'
-import { toArray } from 'vite-node/utils'
 import { SyntheticModule } from './utils'
 
 interface ViteExecutorOptions {
@@ -55,7 +54,7 @@ export class ViteExecutor {
   }
 
   public async createViteModule(fileUrl: string): Promise<VMModule> {
-    if (fileUrl === CLIENT_FILE) {
+    if (fileUrl === CLIENT_FILE || fileUrl === CLIENT_ID) {
       return this.createViteClientModule()
     }
     const cached = this.esm.resolveCachedModule(fileUrl)

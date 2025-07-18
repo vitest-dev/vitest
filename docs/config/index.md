@@ -1676,28 +1676,6 @@ Will call [`vi.unstubAllEnvs`](/api/vi#vi-unstuballenvs) before each test.
 
 Will call [`vi.unstubAllGlobals`](/api/vi#vi-unstuballglobals) before each test.
 
-### testTransformMode {#testtransformmode}
-
- - **Type:** `{ web?, ssr? }`
-
- Determine the transform method for all modules imported inside a test that matches the glob pattern. By default, relies on the environment. For example, tests with JSDOM environment will process all files with `ssr: false` flag and tests with Node environment process all modules with `ssr: true`.
-
- #### testTransformMode.ssr
-
- - **Type:** `string[]`
- - **Default:** `[]`
-
- Use SSR transform pipeline for all modules inside specified tests.<br>
- Vite plugins will receive `ssr: true` flag when processing those files.
-
- #### testTransformMode&#46;web
-
- - **Type:** `string[]`
- - **Default:** `[]`
-
- First do a normal transform pipeline (targeting browser), then do a SSR rewrite to run the code in Node.<br>
- Vite plugins will receive `ssr: false` flag when processing those files.
-
 ### snapshotFormat<NonProjectOption />
 
 - **Type:** `PrettyFormatOptions`

@@ -120,7 +120,7 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject, defaultMocke
 
   function setupClient(project: TestProject, rpcId: string, ws: WebSocket) {
     const mockResolver = new ServerMockResolver(globalServer.vite, {
-      moduleDirectories: project.config.server?.deps?.moduleDirectories,
+      moduleDirectories: project.config?.deps?.moduleDirectories,
     })
     const mocker = project.browser?.provider.mocker
 
