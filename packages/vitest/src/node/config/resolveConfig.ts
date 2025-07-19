@@ -57,7 +57,7 @@ function parseInspector(inspect: string | undefined | boolean | number) {
   return { host, port: Number(port) || defaultInspectPort }
 }
 
-export function resolveApiServerConfig<Options extends ApiConfig & UserConfig>(
+export function resolveApiServerConfig<Options extends ApiConfig & Omit<UserConfig, 'expect'>>(
   options: Options,
   defaultPort: number,
 ): ApiConfig | undefined {
