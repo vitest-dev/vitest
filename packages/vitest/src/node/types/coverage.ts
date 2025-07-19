@@ -266,7 +266,7 @@ export interface BaseCoverageOptions {
    * sourceFinder: (path: string): string => {
    *   try {
    *       const content = fs.readFileSync(path, 'utf8');
-   *       // If you need to transform the content, do it here
+   *       // Transform the content here.
    *       return content;
    *   } catch (ex: Error) {
    *       throw new Error(`Unable to lookup source: ${path} (${ex.message})`);
