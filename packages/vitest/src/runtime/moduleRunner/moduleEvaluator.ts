@@ -80,7 +80,10 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
       return id
     }
     const [filepath, query] = id.split('?')
-    return `${pathToFileURL(filepath).toString()}?${query}`
+    if (query) {
+      return `${pathToFileURL(filepath).toString()}?${query}`
+    }
+    return pathToFileURL(filepath).toString()
   }
 
   async runExternalModule(id: string): Promise<any> {
