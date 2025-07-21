@@ -3,7 +3,7 @@
   "type": "module",
   "private": true,
   "exports": {
-    ".": "./index.js"
+    ".": "./index.ts"
   },
-  "main": "index.js"
+  "main": "index.ts"
 }

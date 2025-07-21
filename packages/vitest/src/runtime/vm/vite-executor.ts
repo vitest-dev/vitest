@@ -111,8 +111,9 @@ export class ViteExecutor {
   }
 
   public canResolve = (fileUrl: string): boolean => {
-    const transformMode = this.workerState.environment.transformMode
-    if (transformMode !== 'web') {
+    const environment = this.workerState.environment
+    const viteEnvironment = environment.viteEnvironment || environment.name
+    if (viteEnvironment !== 'client') {
       return false
     }
     if (fileUrl === CLIENT_FILE) {

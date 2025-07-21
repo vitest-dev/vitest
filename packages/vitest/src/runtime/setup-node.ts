@@ -39,7 +39,8 @@ export async function setupGlobalEnv(
 
   globalSetup = true
 
-  if (environment.transformMode === 'web') {
+  const viteEnvironment = environment.viteEnvironment || environment.name
+  if (viteEnvironment === 'client') {
     const _require = createRequire(import.meta.url)
     // always mock "required" `css` files, because we cannot process them
     _require.extensions['.css'] = resolveCss

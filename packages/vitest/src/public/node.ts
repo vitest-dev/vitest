@@ -96,7 +96,6 @@ export type {
   SequenceHooks,
   SequenceSetupFiles,
   UserConfig as TestUserConfig,
-  TransformModePatterns,
   TypecheckConfig,
   UserWorkspaceConfig,
   VitestEnvironment,

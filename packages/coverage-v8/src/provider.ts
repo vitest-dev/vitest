@@ -63,11 +63,11 @@ export class V8CoverageProvider extends BaseCoverageProvider<ResolvedCoverageOpt
           }
         })
       },
-      onFinished: async (project, transformMode) => {
+      onFinished: async (project, environment) => {
         const converted = await this.convertCoverage(
           merged,
           project,
-          transformMode,
+          environment,
         )
 
         // Source maps can change based on projectName and transform mode.

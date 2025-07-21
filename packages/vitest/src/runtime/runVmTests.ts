@@ -35,7 +35,8 @@ export async function run(
     enumerable: false,
   })
 
-  if (workerState.environment.transformMode === 'web') {
+  const viteEnvironment = workerState.environment.viteEnvironment || workerState.environment.name
+  if (viteEnvironment === 'client') {
     const _require = createRequire(import.meta.url)
     // always mock "required" `css` files, because we cannot process them
     _require.extensions['.css'] = resolveCss

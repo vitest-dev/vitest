@@ -50,7 +50,6 @@ export class ServerModuleRunner extends ModuleRunner {
     }
     // Vite will make "@vitest/coverage-v8" into "@vitest/coverage-v8.js" url
     // instead of using an actual file path-like URL, so we resolve it here first
-    // In tests there is no problem because we control the first entry import
     const url = normalizeResolvedIdToUrl(this.environment, resolved.id)
     return super.import(url)
   }
