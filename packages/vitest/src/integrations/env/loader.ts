@@ -1,7 +1,8 @@
 import type { BuiltinEnvironment, VitestEnvironment } from '../../node/types/config'
 import type { Environment } from '../../types/environment'
 import type { ContextRPC, WorkerRPC } from '../../types/worker'
-import { normalize, resolve } from 'pathe'
+import { pathToFileURL } from 'node:url'
+import { resolve } from 'pathe'
 import { environments } from './index'
 
 function isBuiltinEnvironment(
@@ -24,7 +25,7 @@ export async function loadEnvironment(
       ? resolve(root, name)
       : (await rpc.resolve(`vitest-environment-${name}`, undefined, 'ssr'))
           ?.id ?? resolve(root, name)
-  const pkg = await import(normalize(packageId)) as { default: Environment }
+  const pkg = await import(pathToFileURL(packageId).toString()) as { default: Environment }
   if (!pkg || !pkg.default || typeof pkg.default !== 'object') {
     throw new TypeError(
       `Environment "${name}" is not a valid environment. `
