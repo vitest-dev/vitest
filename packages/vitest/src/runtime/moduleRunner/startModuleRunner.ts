@@ -27,6 +27,9 @@ export interface ContextModuleRunnerOptions {
   state: WorkerGlobalState
 }
 
+const cwd = process.cwd()
+const isWindows = process.platform === 'win32'
+
 export async function startVitestModuleRunner(options: ContextModuleRunnerOptions): Promise<VitestModuleRunner> {
   const state = (): WorkerGlobalState =>
     // @ts-expect-error injected untyped global
@@ -71,6 +74,18 @@ export async function startVitestModuleRunner(options: ContextModuleRunnerOption
     transport: {
       async fetchModule(id, importer, options) {
         const resolvingModules = state().resolvingModules
+
+        if (isWindows) {
+          if (id[1] === ':') {
+            // The drive letter is different for whatever reason, we need to normalize it to CWD
+            if (id[0] !== cwd[0] && id[0].toUpperCase() === cwd[0].toUpperCase()) {
+              const isUpperCase = cwd[0].toUpperCase() === cwd[0]
+              id = (isUpperCase ? id[0].toUpperCase() : id[0].toLowerCase()) + id.slice(1)
+            }
+            // always mark absolute windows paths, otherwise Vite will externalize it
+            id = `/@fs/${id}`
+          }
+        }
 
         const vitest = getCachedVitestImport(id, state)
         if (vitest) {
