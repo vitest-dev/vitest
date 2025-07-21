@@ -2,6 +2,8 @@ import type { BuiltinEnvironment, VitestEnvironment } from '../../node/types/con
 import type { Environment } from '../../types/environment'
 import type { ContextRPC, WorkerRPC } from '../../types/worker'
 import { readFileSync } from 'node:fs'
+import { isBuiltin } from 'node:module'
+import { pathToFileURL } from 'node:url'
 import { resolve } from 'pathe'
 import { ModuleRunner } from 'vite/module-runner'
 import { VitestTransport } from '../../runtime/moduleRunner/moduleTransport'
@@ -13,6 +15,7 @@ function isBuiltinEnvironment(
   return env in environments
 }
 
+const isWindows = process.platform === 'win32'
 const _loaders = new Map<string, ModuleRunner>()
 
 export async function createEnvironmentLoader(root: string, rpc: WorkerRPC): Promise<ModuleRunner> {
@@ -29,6 +32,13 @@ export async function createEnvironmentLoader(root: string, rpc: WorkerRPC): Pro
           if ('cached' in result) {
             const code = readFileSync(result.tmp, 'utf-8')
             return { code, ...result }
+          }
+          if (isWindows && 'externalize' in result) {
+            // TODO: vitest returns paths for external modules, but Vite returns file://
+            // https://github.com/vitejs/vite/pull/20449
+            result.externalize = isBuiltin(id) || /^(?:node:|data:|http:|https:|file:)/.test(id)
+              ? result.externalize
+              : pathToFileURL(result.externalize).toString()
           }
           return result
         },

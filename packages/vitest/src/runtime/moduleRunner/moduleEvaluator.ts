@@ -77,6 +77,9 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
       return this.stubs[id]
     }
 
+    // TODO: vitest returns paths for external modules, but Vite returns file://
+    // unfortunetly, there is a bug in Vite where ID is resolved incorrectly, so we can't return files until the fix is merged
+    // https://github.com/vitejs/vite/pull/20449
     const file = !isWindows || isBuiltin(id) || /^(?:node:|data:|http:|https:|file:)/.test(id)
       ? id
       : pathToFileURL(id).toString()
