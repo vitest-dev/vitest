@@ -2,7 +2,7 @@ import type { ResolvedConfig, ServerDepsOptions } from './types/config'
 import { existsSync, promises as fsp } from 'node:fs'
 import { isBuiltin } from 'node:module'
 import { pathToFileURL } from 'node:url'
-import { KNOWN_ASSET_RE, slash } from '@vitest/utils'
+import { KNOWN_ASSET_RE } from '@vitest/utils'
 import { findNearestPackageData } from '@vitest/utils/resolver'
 import * as esModuleLexer from 'es-module-lexer'
 import { dirname, extname, join, resolve } from 'pathe'
@@ -159,8 +159,6 @@ async function _shouldExternalize(
     return id
   }
 
-  id = patchWindowsImportPath(id)
-
   const moduleDirectories = options?.moduleDirectories || ['/node_modules/']
 
   if (matchExternalizePattern(id, moduleDirectories, options?.inline)) {
@@ -221,16 +219,4 @@ function matchExternalizePattern(
     }
   }
   return false
-}
-
-function patchWindowsImportPath(path: string) {
-  if (path.match(/^\w:\\/)) {
-    return `file:///${slash(path)}`
-  }
-  else if (path.match(/^\w:\//)) {
-    return `file:///${path}`
-  }
-  else {
-    return path
-  }
 }

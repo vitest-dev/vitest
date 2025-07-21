@@ -6,7 +6,8 @@ import type {
 } from 'vite/module-runner'
 import type { ModuleExecutionInfo } from './moduleDebug'
 import type { VitestVmOptions } from './moduleRunner'
-import { createRequire } from 'node:module'
+import { createRequire, isBuiltin } from 'node:module'
+import { pathToFileURL } from 'node:url'
 import vm from 'node:vm'
 import { isAbsolute } from 'pathe'
 import {
@@ -17,6 +18,8 @@ import {
   ssrModuleExportsKey,
 } from 'vite/module-runner'
 import { ModuleDebug } from './moduleDebug'
+
+const isWindows = process.platform === 'win32'
 
 export interface VitestModuleEvaluatorOptions {
   interopDefault?: boolean | undefined
@@ -69,10 +72,14 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
     }
   }
 
-  async runExternalModule(file: string): Promise<any> {
-    if (file in this.stubs) {
-      return this.stubs[file]
+  async runExternalModule(id: string): Promise<any> {
+    if (id in this.stubs) {
+      return this.stubs[id]
     }
+
+    const file = !isWindows || isBuiltin(id) || /^(?:node:|data:|http:|https:|file:)/.test(id)
+      ? id
+      : pathToFileURL(id).toString()
 
     const namespace = this.vm
       ? await this.vm.externalModulesExecutor.import(file)

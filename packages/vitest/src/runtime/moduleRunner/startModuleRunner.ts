@@ -83,7 +83,7 @@ export async function startVitestModuleRunner(options: ContextModuleRunnerOption
               id = (isUpperCase ? id[0].toUpperCase() : id[0].toLowerCase()) + id.slice(1)
             }
             // always mark absolute windows paths, otherwise Vite will externalize it
-            id = `/@fs/${id}`
+            id = `/@id/${id}`
           }
         }
 

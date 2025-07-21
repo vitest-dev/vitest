@@ -391,11 +391,9 @@ export class VitestMocker {
     mock: MockedModule,
   ): Promise<any> {
     const mockId = this.getMockPath(evaluatedNode.id)
-    // console.log(mock, evaluatedNode.id, callstack)
 
     if (mock.type === 'automock' || mock.type === 'autospy') {
       const cache = this.evaluatedModules.getModuleById(mockId)
-      // console.log('mocked!', mockId, cache?.exports, callstack)
       if (cache && cache.mockedExports) {
         return cache.mockedExports
       }
