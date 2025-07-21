@@ -886,10 +886,8 @@ export const benchCliOptionsConfig: Pick<
   },
 }
 
-export const collectCliOptionsConfig: Pick<
-  VitestCLIOptions,
-  'json' | 'filesOnly' | 'changed'
-> = {
+export const collectCliOptionsConfig: VitestCLIOptions = {
+  ...cliOptionsConfig,
   json: {
     description: 'Print collected tests as JSON or write to a file (Default: false)',
     argument: '[true/path]',
@@ -898,8 +896,7 @@ export const collectCliOptionsConfig: Pick<
     description: 'Print only test files with out the test cases',
   },
   changed: {
-    description:
-      'Run tests that are affected by the changed files (default: `false`)',
+    description: 'Print only tests that are affected by the changed files (default: `false`)',
     argument: '[since]',
   },
 }
