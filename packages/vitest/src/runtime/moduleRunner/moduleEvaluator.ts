@@ -231,7 +231,7 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
     )})=>{{`
     const wrappedCode = `${codeDefinition}${code}\n}}`
     const options = {
-      filename,
+      filename: module.file || filename,
       lineOffset: 0,
       columnOffset: -codeDefinition.length,
     }
