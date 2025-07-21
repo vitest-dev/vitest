@@ -207,6 +207,24 @@ export default defineConfig({
   }
 })
 ```
+```ts [qwik]
+import { defineConfig } from 'vitest/config'
+import { qwikVite } from '@builder.io/qwik/optimizer'
+
+// optional, run the tests in SSR mode
+import { testSSR } from 'vitest-browser-qwik/ssr-plugin'
+
+export default defineConfig({
+  plugins: [testSSR(), qwikVite()],
+  test: {
+    browser: {
+      enabled: true,
+      provider: 'playwright',
+      instances: [{ browser: 'chromium' }]
+    },
+  },
+})
+```
 :::
 
 If you need to run some tests using Node-based runner, you can define a [`projects`](/guide/projects) option with separate configurations for different testing strategies:
@@ -411,6 +429,7 @@ Community packages are available for other frameworks:
 
 - [`vitest-browser-lit`](https://github.com/EskiMojo14/vitest-browser-lit) to render [lit](https://lit.dev) components
 - [`vitest-browser-preact`](https://github.com/JoviDeCroock/vitest-browser-preact) to render [preact](https://preactjs.com) components
+- [`vitest-browser-qwik`](https://github.com/kunai-consulting/vitest-browser-qwik) to render [qwik](https://qwik.dev) components
 
 If your framework is not represented, feel free to create your own package - it is a simple wrapper around the framework renderer and `page.elementLocator` API. We will add a link to it on this page. Make sure it has a name starting with `vitest-browser-`.
 
@@ -507,6 +526,21 @@ import { createElement } from 'preact'
 import Greeting from '.Greeting'
 
 test('greeting appears on click', async () => {
+  const screen = render(<Greeting />)
+
+  const button = screen.getByRole('button')
+  await button.click()
+  const greeting = screen.getByText(/hello world/iu)
+
+  await expect.element(greeting).toBeInTheDocument()
+})
+```
+```tsx [qwik]
+import { render } from 'vitest-browser-qwik'
+import Greeting from './greeting'
+
+test('greeting appears on click', async () => {
+  // renderSSR and renderHook are also available
   const screen = render(<Greeting />)
 
   const button = screen.getByRole('button')
