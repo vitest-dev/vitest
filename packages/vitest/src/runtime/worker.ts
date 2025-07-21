@@ -1,3 +1,4 @@
+import type { ModuleRunner } from 'vite/module-runner'
 import type { ContextRPC, WorkerGlobalState } from '../types/worker'
 import type { VitestWorker } from './workers/types'
 import { pathToFileURL } from 'node:url'
@@ -43,6 +44,8 @@ async function execute(method: 'run' | 'collect', ctx: ContextRPC) {
   process.env.VITEST_WORKER_ID = String(ctx.workerId)
   process.env.VITEST_POOL_ID = String(poolId)
 
+  let environmentLoader: ModuleRunner | undefined
+
   try {
     // worker is a filepath or URL to a file that exposes a default export with "getRpcOptions" and "runTests" methods
     if (ctx.worker[0] === '.') {
@@ -76,7 +79,8 @@ async function execute(method: 'run' | 'collect', ctx: ContextRPC) {
     const { rpc, onCancel } = createRuntimeRpc(worker.getRpcOptions(ctx))
 
     const beforeEnvironmentTime = performance.now()
-    const environment = await loadEnvironment(ctx, rpc)
+    const { environment, loader } = await loadEnvironment(ctx, rpc)
+    environmentLoader = loader
 
     const state = {
       ctx,
@@ -112,6 +116,7 @@ async function execute(method: 'run' | 'collect', ctx: ContextRPC) {
   finally {
     await rpcDone().catch(() => {})
     inspectorCleanup()
+    environmentLoader?.close()
   }
 }
 

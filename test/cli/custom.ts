@@ -1,10 +1,11 @@
+import type { Environment } from 'vitest/environments'
 import vm from 'node:vm'
 import debug from 'debug'
 
 // test that external packages (debug) are loaded correctly
 const log = debug('test:env')
 
-export default {
+export default <Environment>{
   name: 'custom',
   viteEnvironment: 'ssr',
   setupVM({ custom }) {

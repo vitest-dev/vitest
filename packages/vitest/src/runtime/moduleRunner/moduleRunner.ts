@@ -1,13 +1,14 @@
 import type { MockedModule } from '@vitest/mocker'
 import type vm from 'node:vm'
-import type { HotPayload } from 'vite'
-import type { EvaluatedModuleNode, EvaluatedModules, FetchFunction, SSRImportMetadata } from 'vite/module-runner'
+import type { EvaluatedModuleNode, EvaluatedModules, SSRImportMetadata } from 'vite/module-runner'
 import type { WorkerGlobalState } from '../../types/worker'
 import type { ExternalModulesExecutor } from '../external-executor'
 import type { ModuleExecutionInfo } from './moduleDebug'
 import type { VitestModuleEvaluator } from './moduleEvaluator'
+import type { VitestTransportOptions } from './moduleTransport'
 import { ModuleRunner } from 'vite/module-runner'
 import { VitestMocker } from './moduleMocker'
+import { VitestTransport } from './moduleTransport'
 
 // @ts-expect-error overriding private method
 export class VitestModuleRunner extends ModuleRunner {
@@ -147,32 +148,4 @@ export interface VitestModuleRunnerOptions {
 export interface VitestVmOptions {
   context: vm.Context
   externalModulesExecutor: ExternalModulesExecutor
-}
-
-export interface VitestTransportOptions {
-  fetchModule: FetchFunction
-  resolveId: (id: string, importer?: string) => Promise<{
-    id: string
-    file: string
-    url: string
-  } | null>
-}
-
-class VitestTransport {
-  constructor(private options: VitestTransportOptions) {}
-
-  async invoke(event: HotPayload) {
-    if (event.type !== 'custom') {
-      throw new Error(`Vitest Module Runner doesn't support Vite HMR events.`)
-    }
-    if (event.event !== 'vite:invoke') {
-      throw new Error(`Vitest Module Runner doesn't support ${event.event} event.`)
-    }
-    const { name, data } = event.data
-    if (name !== 'fetchModule') {
-      throw new Error(`Unknown method: ${name}. Expected "fetchModule".`)
-    }
-    const result = await this.options.fetchModule(...data as Parameters<FetchFunction>)
-    return { result }
-  }
 }
