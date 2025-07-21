@@ -259,12 +259,13 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
         context[ssrImportKey],
         dynamicRequest,
         context[ssrExportAllKey],
-        // vite 7 support
-        (name: string, getter: () => unknown) => Object.defineProperty(moduleExports, name, {
+        // vite 7 support, remove when vite 7+ is supported
+        (context as any).__vite_ssr_exportName__
+        || ((name: string, getter: () => unknown) => Object.defineProperty(exportsObject, name, {
           enumerable: true,
           configurable: true,
           get: getter,
-        }),
+        })),
 
         filename,
         dirname,
