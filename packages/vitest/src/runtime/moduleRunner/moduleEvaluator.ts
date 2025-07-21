@@ -200,7 +200,7 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
     const meta = context[ssrImportMetaKey]
 
     const testFilepath = this.options.getCurrentTestFilepath?.()
-    if (testFilepath === meta.filename) {
+    if (testFilepath === module.file) {
       const globalNamespace = this.vm?.context || globalThis
       Object.defineProperty(meta, 'vitest', {
         // @ts-expect-error injected untyped global
