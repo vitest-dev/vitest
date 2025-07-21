@@ -35,6 +35,7 @@ const stackIgnorePatterns = [
   '/node_modules/tinypool/',
   '/node_modules/tinyspy/',
   '/vite/dist/node/module-runner',
+  '/rolldown-vite/dist/node/module-runner',
   // browser related deps
   '/deps/chunk-',
   '/deps/@vitest',
