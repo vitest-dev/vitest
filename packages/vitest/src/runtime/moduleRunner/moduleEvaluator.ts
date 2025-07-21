@@ -241,12 +241,14 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
     )})=>{{`
     const wrappedCode = `${codeDefinition}${code}\n}}`
     const options = {
+      // we are using a normalized file name by default because this is what
+      // Vite expects in the source maps handler
       filename: module.file || filename,
       lineOffset: 0,
       columnOffset: -codeDefinition.length,
     }
 
-    const finishModuleExecutionInfo = this.debug.startCalculateModuleExecutionInfo(options.filename, codeDefinition.length)
+    const finishModuleExecutionInfo = this.debug.startCalculateModuleExecutionInfo(filename, codeDefinition.length)
 
     try {
       const initModule = this.vm
@@ -287,7 +289,9 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
       )
     }
     finally {
-      this.options.moduleExecutionInfo?.set(options.filename, finishModuleExecutionInfo())
+      // moduleExecutionInfo needs to use Node filename instead of the normalized one
+      // because we rely on this behaviour in coverage-v8, for example
+      this.options.moduleExecutionInfo?.set(filename, finishModuleExecutionInfo())
     }
   }
 
