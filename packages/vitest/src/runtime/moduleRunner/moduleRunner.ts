@@ -6,6 +6,7 @@ import type { WorkerGlobalState } from '../../types/worker'
 import type { ExternalModulesExecutor } from '../external-executor'
 import type { ModuleExecutionInfo } from './moduleDebug'
 import type { VitestModuleEvaluator } from './moduleEvaluator'
+import { slash } from '@vitest/utils'
 import { ModuleRunner } from 'vite/module-runner'
 import { VitestMocker } from './moduleMocker'
 
@@ -16,12 +17,28 @@ export class VitestModuleRunner extends ModuleRunner {
 
   constructor(private options: VitestModuleRunnerOptions) {
     const transport = new VitestTransport(options.transport)
+    const evaluatedModules = options.evaluatedModules
     super(
       {
         transport,
         hmr: false,
-        evaluatedModules: options.evaluatedModules,
-        sourcemapInterceptor: 'prepareStackTrace',
+        evaluatedModules,
+        sourcemapInterceptor: {
+          // Vite has a bug on Windows where it cannot find source maps
+          // https://github.com/vitejs/vite/pull/20448
+          // TODO: remove this when the PR is merged and we have a higher min version
+          retrieveSourceMap(path) {
+            const sourceMap = evaluatedModules.getModuleSourceMapById(slash(path))
+            if (!sourceMap) {
+              return null
+            }
+            return {
+              map: sourceMap.map,
+              url: path,
+              vite: true,
+            }
+          },
+        },
       },
       options.evaluator,
     )
