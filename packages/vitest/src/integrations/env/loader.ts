@@ -66,7 +66,7 @@ export async function loadEnvironment(
   const packageId
     = name[0] === '.' || name[0] === '/'
       ? resolve(root, name)
-      : (await rpc.resolve(`vitest-environment-${name}`, undefined, 'ssr'))
+      : (await rpc.resolve(`vitest-environment-${name}`, undefined, '__vitest__'))
           ?.id ?? resolve(root, name)
   const pkg = await loader.import(packageId) as { default: Environment }
   if (!pkg || !pkg.default || typeof pkg.default !== 'object') {

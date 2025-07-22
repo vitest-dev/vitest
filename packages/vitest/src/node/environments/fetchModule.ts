@@ -1,5 +1,6 @@
 import type { DevEnvironment, FetchResult, Rollup, TransformResult } from 'vite'
 import type { FetchFunctionOptions } from 'vite/module-runner'
+import type { FetchCachedFileSystemResult } from '../../types/general'
 import type { VitestResolver } from '../resolver'
 import { mkdirSync } from 'node:fs'
 import { rename, stat, unlink, writeFile } from 'node:fs/promises'
@@ -16,8 +17,12 @@ export function createFetchModuleFunction(
   resolver: VitestResolver,
   cacheFs: boolean = false,
   tmpDir: string = join(tmpdir(), nanoid()),
-  // TODO: TYPES
-): (url: string, importer: string | undefined, environment: DevEnvironment, options?: FetchFunctionOptions) => Promise<any> {
+): (
+  url: string,
+  importer: string | undefined,
+  environment: DevEnvironment,
+  options?: FetchFunctionOptions
+) => Promise<FetchResult | FetchCachedFileSystemResult> {
   const cachedFsResults = new Map<string, string>()
   return async (
     url,
@@ -182,7 +187,7 @@ function genSourceMapUrl(map: Rollup.SourceMap | string): string {
   return `data:application/json;base64,${Buffer.from(map).toString('base64')}`
 }
 
-function getCachedResult(result: Extract<FetchResult, { code: string }>, cachedFsResults: Map<string, string>) {
+function getCachedResult(result: Extract<FetchResult, { code: string }>, cachedFsResults: Map<string, string>): FetchCachedFileSystemResult {
   const tmp = cachedFsResults.get(result.id)
   if (!tmp) {
     throw new Error(`The cached result was returned too early for ${result.id}.`)

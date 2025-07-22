@@ -44,7 +44,7 @@ export class ViteExecutor {
     }
     return this.esm.createEsModule(fileUrl, async () => {
       try {
-        const result = await this.options.transform(fileUrl, 'web')
+        const result = await this.options.transform(fileUrl)
         if (result.code) {
           return result.code
         }

@@ -29,5 +29,20 @@ export interface ModuleGraphData {
 
 export interface ProvidedContext {}
 
+export interface ResolveFunctionResult {
+  id: string
+  file: string
+  url: string
+}
+
+export interface FetchCachedFileSystemResult {
+  cached: true
+  tmp: string
+  id: string
+  file: string | null
+  url: string
+  invalidate: boolean
+}
+
 // These need to be compatible with Tinyrainbow's bg-colors, and CSS's background-color
 export type LabelColor = 'black' | 'red' | 'green' | 'yellow' | 'blue' | 'magenta' | 'cyan' | 'white'

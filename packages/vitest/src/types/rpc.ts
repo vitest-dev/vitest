@@ -1,26 +1,12 @@
 import type { CancelReason, File, TaskEventPack, TaskResultPack, TestAnnotation } from '@vitest/runner'
 import type { SnapshotResult } from '@vitest/snapshot'
 import type { FetchFunctionOptions, FetchResult } from 'vite/module-runner'
-import type { AfterSuiteRunMeta, UserConsoleLog } from './general'
+import type { AfterSuiteRunMeta, FetchCachedFileSystemResult, ResolveFunctionResult, UserConsoleLog } from './general'
 
 export interface RuntimeRPC {
-  fetch: (id: string, importer: string | undefined, environment: string, options?: FetchFunctionOptions) => Promise<FetchResult | {
-    cached: true
-    tmp: string
-    id: string
-    file: string | null
-    url: string
-    invalidate: boolean
-  }>
-  resolve: (id: string, importer: string | undefined, environment: string) => Promise<{
-    id: string
-    file: string
-    url: string
-  } | null>
-
-  transform: (id: string, environment: string) => Promise<{
-    code?: string
-  }>
+  fetch: (id: string, importer: string | undefined, environment: string, options?: FetchFunctionOptions) => Promise<FetchResult | FetchCachedFileSystemResult>
+  resolve: (id: string, importer: string | undefined, environment: string) => Promise<ResolveFunctionResult | null>
+  transform: (id: string) => Promise<{ code?: string }>
 
   onUserConsoleLog: (log: UserConsoleLog) => void
   onUnhandledError: (err: unknown, type: string) => void
