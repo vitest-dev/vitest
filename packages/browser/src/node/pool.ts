@@ -332,7 +332,7 @@ class BrowserPool {
           this.runNextTest(method, sessionId)
         })
         .catch((error) => {
-          // if user cancells the test run manually, ignore the error and exit gracefully
+          // if user cancels the test run manually, ignore the error and exit gracefully
           if (
             this.project.vitest.isCancelling
             && error instanceof Error
