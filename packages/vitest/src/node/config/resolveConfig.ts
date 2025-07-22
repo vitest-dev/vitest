@@ -153,6 +153,10 @@ export function resolveConfig(
 
   resolved.color = typeof options.name !== 'string' ? options.name?.color : undefined
 
+  if (resolved.environment === 'browser') {
+    throw new Error(`Looks like you set "test.environment" to "browser". To enabled Browser Mode, use "test.browser.enabled" instead.`)
+  }
+
   const inspector = resolved.inspect || resolved.inspectBrk
 
   resolved.inspector = {
