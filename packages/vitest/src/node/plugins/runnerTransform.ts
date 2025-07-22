@@ -1,5 +1,6 @@
 import type { Plugin as VitePlugin } from 'vite'
 import { builtinModules } from 'node:module'
+import { resolveOptimizerConfig } from './utils'
 
 export function ModuleRunnerTransform(): VitePlugin {
   // make sure Vite always applies the module runner transform
@@ -8,6 +9,8 @@ export function ModuleRunnerTransform(): VitePlugin {
     config: {
       order: 'post',
       handler(config) {
+        const testConfig = config.test || {}
+
         config.environments ??= {}
 
         const names = new Set(Object.keys(config.environments))
@@ -36,11 +39,19 @@ export function ModuleRunnerTransform(): VitePlugin {
           environment.dev.preTransformRequests = false
           environment.keepProcessEnv = true
 
-          // __vitest__ environment runs on the server and doesn't use the
-          // Vitest externalization
-          // if (name === '__vitest__') {
-          //   continue
-          // }
+          const currentOptimizeDeps = environment.optimizeDeps || (
+            name === 'client'
+              ? config.optimizeDeps
+              : name === 'ssr'
+                ? config.ssr?.optimizeDeps
+                : undefined
+          )
+
+          const optimizeDeps = resolveOptimizerConfig(
+            testConfig.deps?.optimizer?.[name],
+            currentOptimizeDeps,
+          )
+          environment.optimizeDeps = optimizeDeps
 
           // remove Vite's externalization logic because we have our own (unfortunetly)
           environment.resolve ??= {}

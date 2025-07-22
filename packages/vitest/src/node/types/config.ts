@@ -138,10 +138,7 @@ interface DepsOptions {
   /**
    * Enable dependency optimization. This can improve the performance of your tests.
    */
-  optimizer?: {
-    web?: DepsOptimizationOptions
-    ssr?: DepsOptimizationOptions
-  }
+  optimizer?: Partial<Record<'client' | 'ssr' | ({} & string), DepsOptimizationOptions>>
   web?: {
     /**
      * Should Vitest process assets (.png, .svg, .jpg, etc) files and resolve them like Vite does in the browser.

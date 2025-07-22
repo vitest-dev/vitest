@@ -359,8 +359,8 @@ export function resolveConfig(
   resolved.deps.optimizer ??= {}
   resolved.deps.optimizer.ssr ??= {}
   resolved.deps.optimizer.ssr.enabled ??= true
-  resolved.deps.optimizer.web ??= {}
-  resolved.deps.optimizer.web.enabled ??= true
+  resolved.deps.optimizer.client ??= {}
+  resolved.deps.optimizer.client.enabled ??= true
 
   resolved.deps.web ??= {}
   resolved.deps.web.transformAssets ??= true

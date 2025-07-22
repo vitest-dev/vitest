@@ -21,7 +21,7 @@ export interface Environment {
    *
    * By default, fallbacks to `name`.
    */
-  viteEnvironment?: string
+  viteEnvironment?: 'client' | 'ssr' | ({} & string)
   setupVM?: (options: Record<string, any>) => Awaitable<VmEnvironmentReturn>
   setup: (
     global: any,
