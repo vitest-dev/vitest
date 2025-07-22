@@ -22,7 +22,7 @@ catalog:
   '@vitejs/plugin-vue': ^6.0.0
   '@vueuse/core': ^12.8.2
   acorn-walk: ^8.3.4
-  birpc: 2.5.0
+  birpc: ^2.5.0
   cac: ^6.7.14
   chai: ^5.2.1
   debug: ^4.4.1

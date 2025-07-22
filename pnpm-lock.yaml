@@ -55,7 +55,7 @@ catalogs:
       specifier: ^8.3.4
       version: 8.3.4
     birpc:
-      specifier: 2.5.0
+      specifier: ^2.5.0
       version: 2.5.0
     cac:
       specifier: ^6.7.14
