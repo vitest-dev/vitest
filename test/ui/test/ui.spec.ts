@@ -31,8 +31,10 @@ test.describe('ui', () => {
     await vitest?.close()
   })
 
-  test('security', async ({ page }) => {
-    await page.goto('https://example.com/')
+  test('security', async ({ page }, testInfo) => {
+    const response = await page.goto('https://example.com/').catch(() => null)
+
+    testInfo.skip(!response, 'External resource is not available')
 
     // request html
     const htmlResult = await page.evaluate(async (pageUrl) => {
