@@ -62,7 +62,7 @@ export function createMethodsRPC(project: TestProject, options: MethodsOptions =
       })
     },
     async transform(id) {
-      const environment = project.vite.environments.__vm__
+      const environment = project.vite.environments.__vitest_vm__
       if (!environment) {
         throw new Error(`The VM environment was not defined in the Vite config. This is a bug in Vitest. Please, open a new issue with reproduction.`)
       }

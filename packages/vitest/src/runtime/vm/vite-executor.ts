@@ -5,7 +5,6 @@ import type { EsmExecutor } from './esm-executor'
 import type { VMModule } from './types'
 import { pathToFileURL } from 'node:url'
 import { CSS_LANGS_RE, KNOWN_ASSET_RE, toArray } from '@vitest/utils'
-import { normalize } from 'pathe'
 import { SyntheticModule } from './utils'
 
 interface ViteExecutorOptions {
@@ -25,32 +24,14 @@ export class ViteExecutor {
     this.esm = options.esmExecutor
   }
 
-  public resolve = (identifier: string, parent: string): string | undefined => {
+  public resolve = (identifier: string): string | undefined => {
     if (identifier === CLIENT_ID) {
-      if (this.workerState.environment.transformMode === 'web') {
-        return identifier
-      }
-      const packageName = this.getPackageName(parent)
-      throw new Error(
-        `[vitest] Vitest cannot handle ${CLIENT_ID} imported in ${parent} when running in SSR environment. Add "${packageName}" to "ssr.noExternal" if you are using Vite SSR, or to "server.deps.inline" if you are using Vite Node.`,
-      )
+      return identifier
     }
   }
 
   get workerState(): WorkerGlobalState {
     return this.options.context.__vitest_worker__
-  }
-
-  private getPackageName(modulePath: string) {
-    const path = normalize(modulePath)
-    let name = path.split('/node_modules/').pop() || ''
-    if (name?.startsWith('@')) {
-      name = name.split('/').slice(0, 2).join('/')
-    }
-    else {
-      name = name.split('/')[0]
-    }
-    return name
   }
 
   public async createViteModule(fileUrl: string): Promise<VMModule> {
@@ -111,11 +92,6 @@ export class ViteExecutor {
   }
 
   public canResolve = (fileUrl: string): boolean => {
-    const environment = this.workerState.environment
-    const viteEnvironment = environment.viteEnvironment || environment.name
-    if (viteEnvironment !== 'client') {
-      return false
-    }
     if (fileUrl === CLIENT_FILE) {
       return true
     }
