@@ -5,7 +5,7 @@ let teardownHappened = false
 
 export async function setup() {
   const server = await createServer({
-    root: resolve(__dirname, '..'),
+    root: resolve(import.meta.dirname, '..'),
     server: {
       port: 9988,
     },

@@ -44,6 +44,129 @@ export interface ScreenshotOptions {
   save?: boolean
 }
 
+export interface ScreenshotComparatorRegistry {
+  pixelmatch: {
+    /**
+     * The maximum number of pixels that are allowed to differ between the captured
+     * screenshot and the stored reference image.
+     *
+     * If set to `undefined`, any non-zero difference will cause the test to fail.
+     *
+     * For example, `allowedMismatchedPixels: 10` means the test will pass if 10
+     * or fewer pixels differ, but fail if 11 or more differ.
+     *
+     * If both this and `allowedMismatchedPixelRatio` are set, the more restrictive
+     * value (i.e., fewer allowed mismatches) will be used.
+     *
+     * @default undefined
+     */
+    allowedMismatchedPixels?: number | undefined
+    /**
+     * The maximum allowed ratio of differing pixels between the captured screenshot
+     * and the reference image.
+     *
+     * Must be a value between `0` and `1`.
+     *
+     * For example, `allowedMismatchedPixelRatio: 0.02` means the test will pass
+     * if up to 2% of pixels differ, but fail if more than 2% differ.
+     *
+     * If both this and `allowedMismatchedPixels` are set, the more restrictive
+     * value (i.e., fewer allowed mismatches) will be used.
+     *
+     * @default undefined
+     */
+    allowedMismatchedPixelRatio?: number | undefined
+    /**
+     * Acceptable perceived color difference between the same pixel in two images.
+     *
+     * Value ranges from `0` (strict) to `1` (very lenient). Lower values mean
+     * small differences will be detected.
+     *
+     * The comparison uses the {@link https://en.wikipedia.org/wiki/YIQ | YIQ color space}.
+     *
+     * @default 0.1
+     */
+    threshold?: number | undefined
+    /**
+     * If `true`, disables detection and ignoring of anti-aliased pixels.
+     *
+     * @default false
+     */
+    includeAA?: boolean | undefined
+    /**
+     * Blending level of unchanged pixels in the diff image.
+     *
+     * Ranges from `0` (white) to `1` (original brightness).
+     *
+     * @default 0.1
+     */
+    alpha?: number | undefined
+    /**
+     * Color used for anti-aliased pixels in the diff image.
+     *
+     * Format: `[R, G, B]`
+     *
+     * @default [255, 255, 0]
+     */
+    aaColor?: [r: number, g: number, b: number] | undefined
+    /**
+     * Color used for differing pixels in the diff image.
+     *
+     * Format: `[R, G, B]`
+     *
+     * @default [255, 0, 0]
+     */
+    diffColor?: [r: number, g: number, b: number] | undefined
+    /**
+     * Optional alternative color for dark-on-light differences, to help show
+     * what's added vs. removed.
+     *
+     * If not set, `diffColor` is used for all differences.
+     *
+     * Format: `[R, G, B]`
+     *
+     * @default undefined
+     */
+    diffColorAlt?: [r: number, g: number, b: number] | undefined
+    /**
+     * If `true`, shows only the diff as a mask on a transparent background,
+     * instead of overlaying it on the original image.
+     *
+     * Anti-aliased pixels won't be shown (if detected).
+     *
+     * @default false
+     */
+    diffMask?: boolean | undefined
+  }
+}
+
+export interface ScreenshotMatcherOptions<
+  ComparatorName extends keyof ScreenshotComparatorRegistry = keyof ScreenshotComparatorRegistry
+> {
+  /**
+   * The name of the comparator to use for visual diffing.
+   *
+   * Must be one of the keys from {@linkcode ScreenshotComparatorRegistry}.
+   *
+   * @defaultValue `'pixelmatch'`
+   */
+  comparatorName?: ComparatorName
+  comparatorOptions?: ScreenshotComparatorRegistry[ComparatorName]
+  screenshotOptions?: Omit<
+    ScreenshotOptions,
+    'element' | 'base64' | 'path' | 'save' | 'type'
+  >
+  /**
+   * Time to wait until a stable screenshot is found.
+   *
+   * Setting this value to `0` disables the timeout, but if a stable screenshot
+   * can't be determined the process will not end.
+   *
+   * @default 5000
+   */
+  timeout?: number
+}
+
 export interface BrowserCommands {
   readFile: (
     path: string,

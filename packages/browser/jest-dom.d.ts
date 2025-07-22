@@ -1,6 +1,7 @@
 // Disable automatic exports.
 
 import { ARIARole } from './aria-role.ts'
+import { ScreenshotComparatorRegistry, ScreenshotMatcherOptions } from './context.js'
 
 export interface TestingLibraryMatchers<E, R> {
   /**
@@ -14,6 +15,52 @@ export interface TestingLibraryMatchers<E, R> {
    * @see https://vitest.dev/guide/browser/assertion-api#tobeinthedocument
    */
   toBeInTheDocument(): R
+  /**
+   * @description
+   * Assert whether an element is within the viewport or not.
+   *
+   * An element is considered to be in the viewport if any part of it intersects with the current viewport bounds.
+   * This matcher calculates the intersection ratio between the element and the viewport, similar to the
+   * IntersectionObserver API.
+   *
+   * The element must be in the document and have visible dimensions. Elements with display: none or 
+   * visibility: hidden are considered not in viewport.
+   * @example
+   * <div
+   *   data-testid="visible-element"
+   *   style="position: absolute; top: 10px; left: 10px; width: 50px; height: 50px;"
+   * >
+   *   Visible Element
+   * </div>
+   *
+   * <div
+   *   data-testid="hidden-element" 
+   *   style="position: fixed; top: -100px; left: 10px; width: 50px; height: 50px;"
+   * >
+   *   Hidden Element
+   * </div>
+   *
+   * <div
+   *   data-testid="large-element"
+   *   style="height: 400vh;"
+   * >
+   *   Large Element
+   * </div>
+   *
+   * // Check if any part of element is in viewport
+   * await expect.element(page.getByTestId('visible-element')).toBeInViewport()
+   * 
+   * // Check if element is outside viewport
+   * await expect.element(page.getByTestId('hidden-element')).not.toBeInViewport()
+   * 
+   * // Check if at least 50% of element is visible
+   * await expect.element(page.getByTestId('large-element')).toBeInViewport({ ratio: 0.5 })
+   * 
+   * // Check if element is completely visible
+   * await expect.element(page.getByTestId('visible-element')).toBeInViewport({ ratio: 1 })
+   * @see https://vitest.dev/guide/browser/assertion-api#tobeinviewport
+   */
+  toBeInViewport(options?: { ratio?: number }): R
   /**
    * @description
    * This allows you to check if an element is currently visible to the user.
@@ -627,4 +674,51 @@ export interface TestingLibraryMatchers<E, R> {
    * @see https://vitest.dev/guide/browser/assertion-api#tohaveselection
    */
   toHaveSelection(selection?: string): R
+
+  /**
+   * @description
+   * This assertion allows you to perform visual regression testing by comparing
+   * screenshots of elements or pages against stored reference images.
+   *
+   * When differences are detected beyond the configured threshold, the test fails.
+   * To help identify the changes, the assertion generates:
+   *
+   * - The actual screenshot captured during the test
+   * - The expected reference screenshot
+   * - A diff image highlighting the differences (when possible)
+   *
+   * @example
+   * <button data-testid="button">Fancy Button</button>
+   *
+   * // basic usage, auto-generates screenshot name
+   * await expect.element(getByTestId('button')).toMatchScreenshot()
+   *
+   * // with custom name
+   * await expect.element(getByTestId('button')).toMatchScreenshot('fancy-button')
+   *
+   * // with options
+   * await expect.element(getByTestId('button')).toMatchScreenshot({
+   *   comparatorName: 'pixelmatch',
+   *   comparatorOptions: {
+   *     allowedMismatchedPixelRatio: 0.01,
+   *   },
+   * })
+   *
+   * // with both name and options
+   * await expect.element(getByTestId('button')).toMatchScreenshot('fancy-button', {
+   *   comparatorName: 'pixelmatch',
+   *   comparatorOptions: {
+   *     allowedMismatchedPixelRatio: 0.01,
+   *   },
+   * })
+   *
+   * @see https://vitest.dev/guide/browser/assertion-api#tomatchscreenshot
+   */
+  toMatchScreenshot<ComparatorName extends keyof ScreenshotComparatorRegistry>(
+    options?: ScreenshotMatcherOptions<ComparatorName>,
+  ): Promise<R>
+  toMatchScreenshot<ComparatorName extends keyof ScreenshotComparatorRegistry>(
+    name?: string,
+    options?: ScreenshotMatcherOptions<ComparatorName>,
+  ): Promise<R>
 }
