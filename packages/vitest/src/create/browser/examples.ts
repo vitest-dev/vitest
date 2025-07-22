@@ -191,6 +191,42 @@ test('renders name', async () => {
 `,
 }
 
+const qwikExample = {
+  name: 'HelloWorld.jsx',
+  js: `
+import { component$ } from '@builder.io/qwik'
+
+export default component$(({ name }) => {
+  return (
+    <div>
+      <h1>Hello {name}!</h1>
+    </div>
+  )
+})
+`,
+  ts: `
+import { component$ } from '@builder.io/qwik'
+
+export default component$(({ name }: { name: string }) => {
+  return (
+    <div>
+      <h1>Hello {name}!</h1>
+    </div>
+  )
+})
+`,
+  test: `
+import { expect, test } from 'vitest'
+import { render } from 'vitest-browser-qwik'
+import HelloWorld from './HelloWorld.tsx'
+
+test('renders name', async () => {
+  const { getByText } = render(<HelloWorld name="Vitest" />)
+  await expect.element(getByText('Hello Vitest!')).toBeInTheDocument()
+})
+`,
+}
+
 const vanillaExample = {
   name: 'HelloWorld.js',
   js: `
@@ -251,6 +287,8 @@ function getExampleTest(framework: string) {
       return litExample
     case 'marko':
       return markoExample
+    case 'qwik':
+      return qwikExample
     default:
       return vanillaExample
   }
