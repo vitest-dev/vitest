@@ -4,7 +4,7 @@ import { expect, it } from 'vitest'
 import { runVitest } from '../../test-utils'
 
 it('should fail', async () => {
-  const root = resolve(__dirname, '../fixtures/global-setup-fail')
+  const root = resolve(import.meta.dirname, '../fixtures/global-setup-fail')
   const { stderr } = await runVitest({ root })
 
   expect(stderr).toBeTruthy()

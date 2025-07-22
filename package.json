@@ -1,7 +1,7 @@
 {
   "name": "@vitest/monorepo",
   "type": "module",
-  "version": "4.0.0-beta.2",
+  "version": "4.0.0-beta.3",
   "private": true,
   "packageManager": "pnpm@10.13.1",
   "description": "Next generation testing framework powered by Vite",
@@ -37,13 +37,13 @@
     "test:browser:playwright": "pnpm -C test/browser run test:playwright"
   },
   "devDependencies": {
-    "@antfu/eslint-config": "^4.16.2",
+    "@antfu/eslint-config": "^4.17.0",
     "@antfu/ni": "^25.0.0",
     "@playwright/test": "^1.54.1",
     "@rollup/plugin-commonjs": "^28.0.6",
     "@rollup/plugin-json": "^6.1.0",
     "@rollup/plugin-node-resolve": "^16.0.1",
-    "@types/node": "^22.16.3",
+    "@types/node": "^22.16.5",
     "@types/ws": "catalog:",
     "@vitest/browser": "workspace:*",
     "@vitest/coverage-istanbul": "workspace:*",
@@ -51,12 +51,12 @@
     "@vitest/ui": "workspace:*",
     "bumpp": "^10.2.0",
     "changelogithub": "^13.16.0",
-    "esbuild": "^0.25.6",
+    "esbuild": "^0.25.8",
     "eslint": "^9.31.0",
     "magic-string": "^0.30.17",
     "pathe": "^2.0.3",
     "rimraf": "^6.0.1",
-    "rollup": "^4.45.0",
+    "rollup": "^4.45.1",
     "rollup-plugin-dts": "^6.2.1",
     "rollup-plugin-license": "^3.6.0",
     "tinyglobby": "catalog:",
@@ -66,7 +66,7 @@
     "unplugin-oxc": "^0.4.6",
     "vite": "^6.3.5",
     "vitest": "workspace:*",
-    "zx": "^8.7.0"
+    "zx": "^8.7.1"
   },
   "pnpm": {
     "overrides": {

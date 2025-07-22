@@ -1,7 +1,7 @@
 {
   "name": "@vitest/ui",
   "type": "module",
-  "version": "4.0.0-beta.2",
+  "version": "4.0.0-beta.3",
   "description": "UI for Vitest",
   "license": "MIT",
   "funding": "https://opencollective.com/vitest",
@@ -78,7 +78,7 @@
     "d3-graph-controller": "^3.1.1",
     "floating-vue": "^5.2.2",
     "mime": "^4.0.7",
-    "rollup": "^4.45.0",
+    "rollup": "^4.45.1",
     "splitpanes": "^3.2.0",
     "unocss": "catalog:",
     "unplugin-auto-import": "^0.19.0",

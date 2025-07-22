@@ -11,6 +11,10 @@ import type {
 import { Protocol } from 'playwright-core/types/protocol'
 import '../matchers.js'
 import type {} from "vitest/node"
+import type {
+  ScreenshotComparatorRegistry,
+  ScreenshotMatcherOptions,
+} from "@vitest/browser/context"
 
 declare module 'vitest/node' {
   export interface BrowserProviderOptions {
@@ -37,6 +41,15 @@ declare module 'vitest/node' {
     iframe: FrameLocator
     context: BrowserContext
   }
+
+  export interface ToMatchScreenshotOptions
+    extends Omit<
+      ScreenshotMatcherOptions,
+      "comparatorName" | "comparatorOptions"
+    > {}
+
+  export interface ToMatchScreenshotComparators
+    extends ScreenshotComparatorRegistry {}
 }
 
 type PWHoverOptions = NonNullable<Parameters<Page['hover']>[1]>

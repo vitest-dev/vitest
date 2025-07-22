@@ -4,8 +4,8 @@ import { describe, expect, it } from 'vitest'
 import { runVitest } from '../../test-utils'
 
 describe('json reporter', async () => {
-  const root = resolve(__dirname, '..', 'fixtures')
-  const projectRoot = resolve(__dirname, '..', '..', '..')
+  const root = resolve(import.meta.dirname, '..', 'fixtures')
+  const projectRoot = resolve(import.meta.dirname, '..', '..', '..')
 
   it('generates correct report', async () => {
     const { stdout } = await runVitest({
