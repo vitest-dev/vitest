@@ -39,7 +39,7 @@ async function execute(method: 'run' | 'collect', ctx: ContextRPC) {
 
   const prepareStart = performance.now()
 
-  const inspectorCleanup = setupInspect(ctx)
+  const cleanups: (() => void | Promise<void>)[] = [setupInspect(ctx)]
 
   process.env.VITEST_WORKER_ID = String(ctx.workerId)
   process.env.VITEST_POOL_ID = String(poolId)
@@ -78,6 +78,13 @@ async function execute(method: 'run' | 'collect', ctx: ContextRPC) {
     // RPC is used to communicate between worker (be it a thread worker or child process or a custom implementation) and the main thread
     const { rpc, onCancel } = createRuntimeRpc(worker.getRpcOptions(ctx))
 
+    // do not close the RPC channel so that we can get the error messages sent to the main thread
+    cleanups.push(async () => {
+      await Promise.all(rpc.$rejectPendingCalls(({ method, reject }) => {
+        reject(new Error(`[vitest-worker]: Closing rpc while "${method}" was pending`))
+      }))
+    })
+
     const beforeEnvironmentTime = performance.now()
     const { environment, loader } = await loadEnvironment(ctx, rpc)
     environmentLoader = loader
@@ -114,8 +121,9 @@ async function execute(method: 'run' | 'collect', ctx: ContextRPC) {
     await worker[methodName](state)
   }
   finally {
+    await Promise.all(cleanups.map(fn => fn()))
+
     await rpcDone().catch(() => {})
-    inspectorCleanup()
     environmentLoader?.close()
   }
 }

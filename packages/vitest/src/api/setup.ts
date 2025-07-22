@@ -1,5 +1,4 @@
 import type { File, TaskEventPack, TaskResultPack, TestAnnotation } from '@vitest/runner'
-
 import type { IncomingMessage } from 'node:http'
 import type { ViteDevServer } from 'vite'
 import type { WebSocket } from 'ws'
@@ -142,9 +141,7 @@ export function setup(ctx: Vitest, _server?: ViteDevServer): void {
         ],
         serialize: (data: any) => stringify(data, stringifyReplace),
         deserialize: parse,
-        onTimeoutError(functionName) {
-          throw new Error(`[vitest-api]: Timeout calling "${functionName}"`)
-        },
+        timeout: -1,
       },
     )
 
@@ -152,6 +149,7 @@ export function setup(ctx: Vitest, _server?: ViteDevServer): void {
 
     ws.on('close', () => {
       clients.delete(ws)
+      rpc.$close(new Error('[vitest-api]: Pending methods while closing rpc'))
     })
   }
 
