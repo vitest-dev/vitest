@@ -385,7 +385,7 @@ export default (parentServer: ParentBrowserProject, base = '/'): Plugin[] => {
           viteConfig.esbuild.legalComments = 'inline'
         }
 
-        const defaultPort = parentServer.vitest._browserLastPort++
+        const defaultPort = parentServer.vitest.state._data.browserLastPort++
 
         const api = resolveApiServerConfig(
           viteConfig.test?.browser || {},
