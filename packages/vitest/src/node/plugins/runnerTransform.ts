@@ -39,20 +39,6 @@ export function ModuleRunnerTransform(): VitePlugin {
           environment.dev.preTransformRequests = false
           environment.keepProcessEnv = true
 
-          const currentOptimizeDeps = environment.optimizeDeps || (
-            name === 'client'
-              ? config.optimizeDeps
-              : name === 'ssr'
-                ? config.ssr?.optimizeDeps
-                : undefined
-          )
-
-          const optimizeDeps = resolveOptimizerConfig(
-            testConfig.deps?.optimizer?.[name],
-            currentOptimizeDeps,
-          )
-          environment.optimizeDeps = optimizeDeps
-
           // remove Vite's externalization logic because we have our own (unfortunetly)
           environment.resolve ??= {}
 
@@ -66,6 +52,37 @@ export function ModuleRunnerTransform(): VitePlugin {
           // to externalize modules and always resolve static imports
           // in both SSR and Client environments
           environment.resolve.noExternal = true
+
+          if (name === '__vitest_vm__' || name === '__vitest__') {
+            continue
+          }
+
+          const currentOptimizeDeps = environment.optimizeDeps || (
+            name === 'client'
+              ? config.optimizeDeps
+              : name === 'ssr'
+                ? config.ssr?.optimizeDeps
+                : undefined
+          )
+
+          const optimizeDeps = resolveOptimizerConfig(
+            testConfig.deps?.optimizer?.[name],
+            currentOptimizeDeps,
+          )
+
+          // Vite respects the root level optimize deps, so we override it instead
+          if (name === 'client') {
+            config.optimizeDeps = optimizeDeps
+            environment.optimizeDeps = undefined
+          }
+          else if (name === 'ssr') {
+            config.ssr ??= {}
+            config.ssr.optimizeDeps = optimizeDeps
+            environment.optimizeDeps = undefined
+          }
+          else {
+            environment.optimizeDeps = optimizeDeps
+          }
         }
       },
     },

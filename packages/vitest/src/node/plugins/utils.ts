@@ -14,21 +14,9 @@ export function resolveOptimizerConfig(
 ): DepOptimizationOptions {
   const testOptions = _testOptions || {}
   let optimizeDeps: DepOptimizationOptions
-  const [major, minor, fix] = viteVersion.split('.').map(Number)
-  const allowed
-    = major >= 5
-      || (major === 4 && minor >= 4)
-      || (major === 4 && minor === 3 && fix >= 2)
-  if (!allowed && testOptions?.enabled === true) {
-    console.warn(
-      `Vitest: "deps.optimizer" is only available in Vite >= 4.3.2, current Vite version: ${viteVersion}`,
-    )
-  }
-  // disabled by default
-  else {
+  if (testOptions.enabled !== true) {
     testOptions.enabled ??= false
-  }
-  if (!allowed || testOptions?.enabled !== true) {
+
     optimizeDeps = {
       // experimental in Vite >2.9.2, entries remains to help with older versions
       disabled: true,
@@ -66,13 +54,11 @@ export function resolveOptimizerConfig(
 
   // `optimizeDeps.disabled` is deprecated since v5.1.0-beta.1
   // https://github.com/vitejs/vite/pull/15184
-  if ((major >= 5 && minor >= 1) || major >= 6) {
-    if (optimizeDeps.disabled) {
-      optimizeDeps.noDiscovery = true
-      optimizeDeps.include = []
-    }
-    delete optimizeDeps.disabled
+  if (optimizeDeps.disabled) {
+    optimizeDeps.noDiscovery = true
+    optimizeDeps.include = []
   }
+  delete optimizeDeps.disabled
 
   return optimizeDeps
 }
