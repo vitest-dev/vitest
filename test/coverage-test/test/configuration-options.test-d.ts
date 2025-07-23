@@ -216,3 +216,11 @@ test('reporters, mixed variations', () => {
     ],
   })
 })
+
+test('rewriting file content with sourceFinder', () => {
+  assertType<Coverage>({
+    sourceFinder: (path: string) => {
+      return `New file content for ${path}`
+    },
+  })
+})
