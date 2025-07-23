@@ -1,3 +1,4 @@
+import type { ModuleCacheMap } from 'vite-node'
 import type { ResolvedTestEnvironment } from '../types/environment'
 import type { SerializedConfig } from './config'
 import type { VitestExecutor } from './execute'
@@ -66,7 +67,7 @@ export async function setupGlobalEnv(
   }
 
   installSourcemapsSupport({
-    getSourceMap: source => state.moduleCache.getSourceMap(source),
+    getSourceMap: source => (state.moduleCache as ModuleCacheMap).getSourceMap(source),
   })
 
   if (!config.disableConsoleIntercept) {

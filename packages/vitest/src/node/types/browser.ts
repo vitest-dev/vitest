@@ -1,6 +1,6 @@
 import type { MockedModule } from '@vitest/mocker'
 import type { CancelReason } from '@vitest/runner'
-import type { Awaitable, ErrorWithDiff, ParsedStack } from '@vitest/utils'
+import type { Awaitable, ParsedStack, TestError } from '@vitest/utils'
 import type { StackTraceParserOptions } from '@vitest/utils/source-map'
 import type { ViteDevServer } from 'vite'
 import type { BrowserTesterOptions } from '../../types/browser'
@@ -52,27 +52,25 @@ export interface BrowserProviderOptions {}
 
 export type BrowserBuiltinProvider = 'webdriverio' | 'playwright' | 'preview'
 
-type UnsupportedProperties =
-  | 'browser'
-  | 'typecheck'
-  | 'alias'
-  | 'sequence'
-  | 'root'
-  | 'pool'
-  | 'poolOptions'
+type UnsupportedProperties
+  = | 'browser'
+    | 'typecheck'
+    | 'alias'
+    | 'sequence'
+    | 'root'
+    | 'pool'
+    | 'poolOptions'
   // browser mode doesn't support a custom runner
-  | 'runner'
+    | 'runner'
   // non-browser options
-  | 'api'
-  | 'deps'
-  | 'testTransformMode'
-  | 'poolMatchGlobs'
-  | 'environmentMatchGlobs'
-  | 'environment'
-  | 'environmentOptions'
-  | 'server'
-  | 'benchmark'
-  | 'name'
+    | 'api'
+    | 'deps'
+    | 'testTransformMode'
+    | 'environment'
+    | 'environmentOptions'
+    | 'server'
+    | 'benchmark'
+    | 'name'
 
 export interface BrowserInstanceOption extends BrowserProviderOptions,
   Omit<ProjectConfig, UnsupportedProperties>,
@@ -236,14 +234,27 @@ export interface BrowserConfigOptions {
    * @default 30000
    */
   connectTimeout?: number
+
+  expect?: {
+    toMatchScreenshot?: {
+      [ComparatorName in keyof ToMatchScreenshotComparators]:
+      {
+        /**
+         * The name of the comparator to use for visual diffing.
+         *
+         * @defaultValue `'pixelmatch'`
+         */
+        comparatorName?: ComparatorName
+        comparatorOptions?: ToMatchScreenshotComparators[ComparatorName]
+      }
+    }[keyof ToMatchScreenshotComparators] & ToMatchScreenshotOptions
+  }
 }
 
 export interface BrowserCommandContext {
   testPath: string | undefined
   provider: BrowserProvider
   project: TestProject
-  /** @deprecated use `sessionId` instead */
-  contextId: string
   sessionId: string
 }
 
@@ -275,7 +286,7 @@ export interface ProjectBrowser {
   close: () => Promise<void>
   initBrowserProvider: (project: TestProject) => Promise<void>
   parseStacktrace: (stack: string) => ParsedStack[]
-  parseErrorStacktrace: (error: ErrorWithDiff, options?: StackTraceParserOptions) => ParsedStack[]
+  parseErrorStacktrace: (error: TestError, options?: StackTraceParserOptions) => ParsedStack[]
 }
 
 export interface BrowserCommand<Payload extends unknown[]> {
@@ -329,3 +340,90 @@ export interface ResolvedBrowserOptions extends BrowserConfigOptions {
     testIdAttribute: string
   }
 }
+
+type ToMatchScreenshotResolvePath = (data: {
+  /**
+   * Path **without** extension, sanitized and relative to the test file.
+   *
+   * This comes from the arguments passed to `toMatchScreenshot`; if called
+   * without arguments this will be the auto-generated name.
+   *
+   * @example
+   * test('calls `onClick`', () => {
+   *   expect(locator).toMatchScreenshot()
+   *   // arg = "calls-onclick-1"
+   * })
+   *
+   * @example
+   * expect(locator).toMatchScreenshot('foo/bar/baz.png')
+   * // arg = "foo/bar/baz"
+   *
+   * @example
+   * expect(locator).toMatchScreenshot('../foo/bar/baz.png')
+   * // arg = "foo/bar/baz"
+   */
+  arg: string
+  /**
+   * Screenshot extension, with leading dot.
+   *
+   * This can be set through the arguments passed to `toMatchScreenshot`, but
+   * the value will fall back to `'.png'` if an unsupported extension is used.
+   */
+  ext: string
+  /**
+   * The instance's browser name.
+   */
+  browserName: string
+  /**
+   * The value of {@linkcode process.platform}.
+   */
+  platform: NodeJS.Platform
+  /**
+   * The value provided to
+   * {@linkcode https://vitest.dev/guide/browser/config#browser-screenshotdirectory|browser.screenshotDirectory},
+   * if none is provided, its default value.
+   */
+  screenshotDirectory: string
+  /**
+   * Absolute path to the project's
+   * {@linkcode https://vitest.dev/config/#root|root}.
+   */
+  root: string
+  /**
+   * Path to the test file, relative to the project's
+   * {@linkcode https://vitest.dev/config/#root|root}.
+   */
+  testFileDirectory: string
+  /**
+   * The test's filename.
+   */
+  testFileName: string
+  /**
+   * The {@linkcode https://vitest.dev/api/#test|test}'s name, including
+   * parent {@linkcode https://vitest.dev/api/#describe|describe}, sanitized.
+   */
+  testName: string
+  /**
+   * The value provided to
+   * {@linkcode https://vitest.dev/config/#attachmentsdir|attachmentsDir},
+   * if none is provided, its default value.
+   */
+  attachmentsDir: string
+}) => string
+
+export interface ToMatchScreenshotOptions {
+  /**
+   * Overrides default reference screenshot path.
+   *
+   * @default `${root}/${testFileDirectory}/${screenshotDirectory}/${testFileName}/${arg}-${browserName}-${platform}${ext}`
+   */
+  resolveScreenshotPath?: ToMatchScreenshotResolvePath
+  /**
+   * Overrides default screenshot path used for diffs.
+   *
+   * @default `${root}/${attachmentsDir}/${testFileDirectory}/${testFileName}/${arg}-${browserName}-${platform}${ext}`
+   */
+  resolveDiffPath?: ToMatchScreenshotResolvePath
+}
+
+export interface ToMatchScreenshotComparators {}

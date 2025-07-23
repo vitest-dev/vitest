@@ -325,7 +325,7 @@ describe('use scoped values', () => {
   test.scoped({ dependency: 'new' })
 
   test('uses scoped value', ({ dependant }) => {
-    // `dependant` uses the new overriden value that is scoped
+    // `dependant` uses the new overridden value that is scoped
     // to all tests in this suite
     expect(dependant).toEqual({ dependency: 'new' })
   })

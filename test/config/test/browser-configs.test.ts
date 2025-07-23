@@ -1,5 +1,5 @@
 import type { ViteUserConfig } from 'vitest/config'
-import type { UserConfig, VitestOptions } from 'vitest/node'
+import type { TestUserConfig, VitestOptions } from 'vitest/node'
 import type { TestFsStructure } from '../../test-utils'
 import crypto from 'node:crypto'
 import { resolve } from 'pathe'
@@ -7,7 +7,7 @@ import { describe, expect, onTestFinished, test } from 'vitest'
 import { createVitest } from 'vitest/node'
 import { runVitestCli, useFS } from '../../test-utils'
 
-async function vitest(cliOptions: UserConfig, configValue: UserConfig = {}, viteConfig: ViteUserConfig = {}, vitestOptions: VitestOptions = {}) {
+async function vitest(cliOptions: TestUserConfig, configValue: TestUserConfig = {}, viteConfig: ViteUserConfig = {}, vitestOptions: VitestOptions = {}) {
   const vitest = await createVitest('test', { ...cliOptions, watch: false }, { ...viteConfig, test: configValue as any }, vitestOptions)
   onTestFinished(() => vitest.close())
   return vitest
@@ -64,7 +64,7 @@ test('filters projects with a wildcard', async () => {
   ])
 })
 
-test('assignes names as browsers in a custom project', async () => {
+test('assigns names as browsers in a custom project', async () => {
   const { projects } = await vitest({}, {
     projects: [
       {
@@ -127,8 +127,8 @@ test('inherits browser options', async () => {
             width: 900,
             height: 300,
           },
-          testerHtmlPath: '/custom-overriden-path.html',
-          screenshotDirectory: '/custom-overriden-directory',
+          testerHtmlPath: '/custom-overridden-path.html',
+          screenshotDirectory: '/custom-overridden-directory',
         },
       ],
     },
@@ -170,11 +170,11 @@ test('inherits browser options', async () => {
           width: 900,
           height: 300,
         },
-        screenshotDirectory: '/custom-overriden-directory',
+        screenshotDirectory: '/custom-overridden-directory',
         locators: {
           testIdAttribute: 'data-custom',
         },
-        testerHtmlPath: '/custom-overriden-path.html',
+        testerHtmlPath: '/custom-overridden-path.html',
       },
     },
   ])
@@ -308,7 +308,7 @@ test('can enable browser-cli options for multi-project workspace', async () => {
   expect(projects[1].config.browser.headless).toBe(true)
 })
 
-function getCliConfig(options: UserConfig, cli: string[], fs: TestFsStructure = {}) {
+function getCliConfig(options: TestUserConfig, cli: string[], fs: TestFsStructure = {}) {
   const root = resolve(process.cwd(), `vitest-test-${crypto.randomUUID()}`)
   useFS(root, {
     ...fs,
@@ -463,7 +463,7 @@ describe('[e2e] workspace configs are affected by the CLI options', () => {
 
     expect(config.workspace[1]).toEqual({
       name: 'browser (chromium)',
-      // headless was overriden by CLI options
+      // headless was overridden by CLI options
       headless: false,
       browser: true,
       // UI should be true because we always set CI to false,

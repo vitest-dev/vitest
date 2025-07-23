@@ -33,3 +33,4 @@ test/cli/fixtures/browser-multiple/basic-*
 test/browser/html/
 test/core/html/
 .vitest-attachments
+explainFiles.txt

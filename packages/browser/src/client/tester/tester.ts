@@ -32,7 +32,7 @@ channel.addEventListener('message', async (e) => {
 
   if (!isEvent(data)) {
     const error = new Error(`Unknown message: ${JSON.stringify(e.data)}`)
-    unhandledError(error, 'Uknown Iframe Message')
+    unhandledError(error, 'Unknown Iframe Message')
     return
   }
 
@@ -73,7 +73,7 @@ channel.addEventListener('message', async (e) => {
     }
     default: {
       const error = new Error(`Unknown event: ${(data as any).event}`)
-      unhandledError(error, 'Uknown Event')
+      unhandledError(error, 'Unknown Event')
     }
   }
 

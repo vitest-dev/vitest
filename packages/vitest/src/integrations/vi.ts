@@ -292,12 +292,17 @@ export interface VitestUtils {
    *
    * expect(mocked.simple()).toBe('mocked')
    * expect(mocked.nested.method()).toBe('mocked nested')
+   *
+   * const spied = vi.mockObject(original, { spy: true })
+   * expect(spied.simple()).toBe('value')
+   * expect(spied.simple).toHaveBeenCalled()
+   * expect(spied.simple.mock.results[0]).toEqual({ type: 'return', value: 'value' })
    * ```
    *
    * @param value - The object to be mocked
    * @returns A deeply mocked version of the input object
    */
-  mockObject: <T>(value: T) => MaybeMockedDeep<T>
+  mockObject: <T>(value: T, options?: MockOptions) => MaybeMockedDeep<T>
 
   /**
    * Type helper for TypeScript. Just returns the object that was passed.
@@ -318,25 +323,25 @@ export interface VitestUtils {
    * @param deep If the object is deeply mocked
    * @param options If the object is partially or deeply mocked
    */
-  mocked: (<T>(item: T, deep?: false) => MaybeMocked<T>) &
-    (<T>(item: T, deep: true) => MaybeMockedDeep<T>) &
-    (<T>(
+  mocked: (<T>(item: T, deep?: false) => MaybeMocked<T>)
+    & (<T>(item: T, deep: true) => MaybeMockedDeep<T>)
+    & (<T>(
       item: T,
       options: { partial?: false; deep?: false }
-    ) => MaybeMocked<T>) &
-    (<T>(
+    ) => MaybeMocked<T>)
+    & (<T>(
       item: T,
       options: { partial?: false; deep: true }
-    ) => MaybeMockedDeep<T>) &
-    (<T>(
+    ) => MaybeMockedDeep<T>)
+    & (<T>(
       item: T,
       options: { partial: true; deep?: false }
-    ) => MaybePartiallyMocked<T>) &
-    (<T>(
+    ) => MaybePartiallyMocked<T>)
+    & (<T>(
       item: T,
       options: { partial: true; deep: true }
-    ) => MaybePartiallyMockedDeep<T>) &
-    (<T>(item: T) => MaybeMocked<T>)
+    ) => MaybePartiallyMockedDeep<T>)
+    & (<T>(item: T) => MaybeMocked<T>)
 
   /**
    * Checks that a given parameter is a mock function. If you are using TypeScript, it will also narrow down its type.
@@ -637,8 +642,8 @@ function createVitest(): VitestUtils {
       return _mocker().importMock(path, getImporter('importMock'))
     },
 
-    mockObject<T>(value: T) {
-      return _mocker().mockObject({ value }).value
+    mockObject<T>(value: T, options?: MockOptions) {
+      return _mocker().mockObject({ value }, undefined, options?.spy ? 'autospy' : 'automock').value
     },
 
     // this is typed in the interface so it's not necessary to type it here
@@ -724,7 +729,7 @@ function createVitest(): VitestUtils {
     },
 
     resetModules() {
-      resetModules(workerState.moduleCache)
+      resetModules(workerState.moduleCache as any)
       return utils
     },
 

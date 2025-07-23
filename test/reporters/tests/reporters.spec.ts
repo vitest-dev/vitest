@@ -76,7 +76,7 @@ test('JUnit reporter without classname', async () => {
 
 test('JUnit reporter with custom string classname', async () => {
   // Arrange
-  const reporter = new JUnitReporter({ classname: 'my-custom-classname' })
+  const reporter = new JUnitReporter({ classnameTemplate: 'my-custom-classname' })
   const context = getContext()
 
   // Act

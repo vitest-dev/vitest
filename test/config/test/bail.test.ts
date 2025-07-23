@@ -1,10 +1,10 @@
-import type { UserConfig } from 'vitest/node'
+import type { TestUserConfig } from 'vitest/node'
 
 import { expect, test } from 'vitest'
 import { runVitest } from '../../test-utils'
 
-const configs: UserConfig[] = []
-const pools: UserConfig[] = [
+const configs: TestUserConfig[] = []
+const pools: TestUserConfig[] = [
   { pool: 'threads' },
   { pool: 'forks' },
   { pool: 'threads', poolOptions: { threads: { singleThread: true } } },

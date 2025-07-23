@@ -22,13 +22,8 @@ const suppressWarningsPath = resolve(rootDir, './suppress-warnings.cjs')
 
 function createChildProcessChannel(project: TestProject, collect: boolean) {
   const emitter = new EventEmitter()
-  const cleanup = () => emitter.removeAllListeners()
 
   const events = { message: 'message', response: 'response' }
-  const channel: TinypoolChannel = {
-    onMessage: callback => emitter.on(events.message, callback),
-    postMessage: message => emitter.emit(events.response, message),
-  }
 
   const rpc = createBirpc<RunnerRPC, RuntimeRPC>(
     createMethodsRPC(project, { cacheFs: true, collect }),
@@ -56,15 +51,22 @@ function createChildProcessChannel(project: TestProject, collect: boolean) {
       on(fn) {
         emitter.on(events.response, fn)
       },
-      onTimeoutError(functionName) {
-        throw new Error(`[vitest-pool]: Timeout calling "${functionName}"`)
-      },
+      timeout: -1,
     },
   )
 
   project.vitest.onCancel(reason => rpc.onCancel(reason))
 
-  return { channel, cleanup }
+  const channel = {
+    onMessage: callback => emitter.on(events.message, callback),
+    postMessage: message => emitter.emit(events.response, message),
+    onClose: () => {
+      emitter.removeAllListeners()
+      rpc.$close(new Error('[vitest-pool]: Pending methods while closing rpc'))
+    },
+  } satisfies TinypoolChannel
+
+  return { channel }
 }
 
 export function createVmForksPool(
@@ -131,7 +133,7 @@ export function createVmForksPool(
       const paths = files.map(f => f.filepath)
       vitest.state.clearFiles(project, paths)
 
-      const { channel, cleanup } = createChildProcessChannel(project, name === 'collect')
+      const { channel } = createChildProcessChannel(project, name === 'collect')
       const workerId = ++id
       const data: ContextRPC = {
         pool: 'forks',
@@ -170,7 +172,7 @@ export function createVmForksPool(
         }
       }
       finally {
-        cleanup()
+        channel.onClose()
       }
     }
 

@@ -1,5 +1,5 @@
 import type { UserConfig as ViteUserConfig } from 'vite'
-import type { UserConfig } from 'vitest/node'
+import type { TestUserConfig } from 'vitest/node'
 import type { VitestRunnerCLIOptions } from '../../test-utils'
 import { cpus } from 'node:os'
 import { normalize, resolve } from 'pathe'
@@ -11,7 +11,7 @@ const providers = ['playwright', 'webdriverio', 'preview'] as const
 const names = ['edge', 'chromium', 'webkit', 'chrome', 'firefox', 'safari'] as const
 const browsers = providers.map(provider => names.map(name => ({ name, provider }))).flat()
 
-function runVitest(config: NonNullable<UserConfig> & { shard?: any }, viteOverrides: ViteUserConfig = {}, runnerOptions?: VitestRunnerCLIOptions) {
+function runVitest(config: NonNullable<TestUserConfig> & { shard?: any }, viteOverrides: ViteUserConfig = {}, runnerOptions?: VitestRunnerCLIOptions) {
   return testUtils.runVitest({ root: './fixtures/test', include: ['example.test.ts'], ...config }, [], undefined, viteOverrides, runnerOptions)
 }
 
@@ -310,7 +310,18 @@ Use either:
 test('v8 coverage provider cannot be used in workspace without playwright + chromium', async () => {
   const { stderr } = await runVitest({
     coverage: { enabled: true },
-    workspace: './fixtures/workspace/browser/workspace-with-browser.ts',
+    projects: [
+      {
+        test: {
+          name: 'Browser project',
+          browser: {
+            enabled: true,
+            provider: 'webdriverio',
+            instances: [{ browser: 'chrome' }],
+          },
+        },
+      },
+    ],
   }, {}, { fails: true })
   expect(stderr).toMatch(
     `Error: @vitest/coverage-v8 does not work with
@@ -584,4 +595,19 @@ test('minWorkers higher than maxWorkers does not crash', async ({ skip }) => {
 
   expect(stdout).toMatch('✓ example.test.ts > it works')
   expect(stderr).toBe('')
+})
+
+test('cannot set the `workspace` options', async () => {
+  const { stderr } = await runVitest({
+    // @ts-expect-error workspace was removed in Vitest 4, but we show an error
+    workspace: 'some-options',
+  })
+  expect(stderr).toContain('The `test.workspace` option was removed in Vitest 4. Please, migrate to `test.projects` instead. See https://vitest.dev/guide/projects for examples.')
+})
+
+test('cannot set environment: browser', async () => {
+  const { stderr } = await runVitest({
+    environment: 'browser',
+  })
+  expect(stderr).toContain('Looks like you set "test.environment" to "browser". To enabled Browser Mode, use "test.browser.enabled" instead.')
 })

@@ -87,8 +87,8 @@ export class ModuleCacheMap extends Map<string, ModuleCache> {
         importers: new Set(),
       })
     }
-    return mod as ModuleCache &
-      Required<Pick<ModuleCache, 'imports' | 'importers'>>
+    return mod as ModuleCache
+      & Required<Pick<ModuleCache, 'imports' | 'importers'>>
   }
 
   get(fsPath: string): ModuleCache & Required<Pick<ModuleCache, 'importers' | 'imports'>> {

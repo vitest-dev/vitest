@@ -8,6 +8,7 @@ import {
   groupIconMdPlugin,
   groupIconVitePlugin,
 } from 'vitepress-plugin-group-icons'
+import llmstxt from 'vitepress-plugin-llms'
 import { version } from '../../package.json'
 import { teamMembers } from './contributors'
 import {
@@ -70,15 +71,16 @@ export default ({ mode }: { mode: string }) => {
           customIcon: {
             'CLI': 'vscode-icons:file-type-shell',
             'vitest.shims': 'vscode-icons:file-type-vitest',
-            'vitest.workspace': 'vscode-icons:file-type-vitest',
             'vitest.config': 'vscode-icons:file-type-vitest',
             '.spec.ts': 'vscode-icons:file-type-testts',
             '.test.ts': 'vscode-icons:file-type-testts',
             '.spec.js': 'vscode-icons:file-type-testjs',
             '.test.js': 'vscode-icons:file-type-testjs',
             'marko': 'vscode-icons:file-type-marko',
+            'qwik': 'logos:qwik-icon',
           },
         }),
+        llmstxt(),
       ],
     },
     markdown: {
@@ -290,6 +292,11 @@ export default ({ mode }: { mode: string }) => {
                 text: 'Multiple Setups',
                 link: '/guide/browser/multiple-setups',
                 docFooterText: 'Multiple Setups | Browser Mode',
+              },
+              {
+                text: 'Visual Regression Testing',
+                link: '/guide/browser/visual-regression-testing',
+                docFooterText: 'Visual Regression Testing | Browser Mode',
               },
             ],
           },
@@ -546,8 +553,8 @@ function guide(): DefaultTheme.SidebarItem[] {
       collapsed: false,
       items: [
         {
-          text: 'Migrating to Vitest 3.0',
-          link: '/guide/migration#vitest-3',
+          text: 'Migrating to Vitest 4.0',
+          link: '/guide/migration#vitest-4',
         },
         {
           text: 'Migrating from Jest',

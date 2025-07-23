@@ -1,6 +1,12 @@
 import type { GlobOptions } from 'tinyglobby'
 import type { Vitest } from '../core'
-import type { BrowserInstanceOption, ResolvedConfig, TestProjectConfiguration, UserConfig, UserWorkspaceConfig } from '../types/config'
+import type {
+  BrowserInstanceOption,
+  ResolvedConfig,
+  TestProjectConfiguration,
+  UserConfig,
+  UserWorkspaceConfig,
+} from '../types/config'
 import { existsSync, promises as fs } from 'node:fs'
 import os from 'node:os'
 import { limitConcurrency } from '@vitest/runner/utils'

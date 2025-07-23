@@ -124,8 +124,8 @@ When using coverage, Vitest automatically adds test files `include` patterns to 
 ### exclude
 
 - **Type:** `string[]`
-- **Default:** `['**/node_modules/**', '**/dist/**', '**/cypress/**', '**/.{idea,git,cache,output,temp}/**', '**/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress,tsup,build,eslint,prettier}.config.*']`
-- **CLI:** `vitest --exclude "**/excluded-file"`
+- **Default:** `['**/node_modules/**', '**/.git/**']`
+- **CLI:** `vitest --exclude "**/excluded-file" --exclude "*/other-files/*.js"`
 
 A list of glob patterns that should be excluded from your test files.
 
@@ -593,101 +593,6 @@ jsdom environment exposes `jsdom` global variable equal to the current [JSDOM](h
 
 These options are passed down to `setup` method of current [`environment`](#environment). By default, you can configure only JSDOM options, if you are using it as your test environment.
 
-### environmentMatchGlobs
-
-- **Type:** `[string, EnvironmentName][]`
-- **Default:** `[]`
-
-::: danger DEPRECATED
-This API was deprecated in Vitest 3. Use [projects](/guide/projects) to define different configurations instead.
-
-```ts
-export default defineConfig({
-  test: {
-    environmentMatchGlobs: [ // [!code --]
-      ['./*.jsdom.test.ts', 'jsdom'], // [!code --]
-    ], // [!code --]
-    projects: [ // [!code ++]
-      { // [!code ++]
-        extends: true, // [!code ++]
-        test: { // [!code ++]
-          environment: 'jsdom', // [!code ++]
-        }, // [!code ++]
-      }, // [!code ++]
-    ], // [!code ++]
-  },
-})
-```
-:::
-
-Automatically assign environment based on globs. The first match will be used.
-
-For example:
-
-```ts
-import { defineConfig } from 'vitest/config'
-
-export default defineConfig({
-  test: {
-    environmentMatchGlobs: [
-      // all tests in tests/dom will run in jsdom
-      ['tests/dom/**', 'jsdom'],
-      // all tests in tests/ with .edge.test.ts will run in edge-runtime
-      ['**\/*.edge.test.ts', 'edge-runtime'],
-      // ...
-    ]
-  }
-})
-```
-
-### poolMatchGlobs {#poolmatchglobs}
-
-- **Type:** `[string, 'threads' | 'forks' | 'vmThreads' | 'vmForks' | 'typescript'][]`
-- **Default:** `[]`
-
-::: danger DEPRECATED
-This API was deprecated in Vitest 3. Use [projects](/guide/projects) to define different configurations instead:
-
-```ts
-export default defineConfig({
-  test: {
-    poolMatchGlobs: [ // [!code --]
-      ['./*.threads.test.ts', 'threads'], // [!code --]
-    ], // [!code --]
-    projects: [ // [!code ++]
-      { // [!code ++]
-        test: { // [!code ++]
-          extends: true, // [!code ++]
-          pool: 'threads', // [!code ++]
-        }, // [!code ++]
-      }, // [!code ++]
-    ], // [!code ++]
-  },
-})
-```
-:::
-
-Automatically assign pool in which tests will run based on globs. The first match will be used.
-
-For example:
-
-```ts
-import { defineConfig } from 'vitest/config'
-
-export default defineConfig({
-  test: {
-    poolMatchGlobs: [
-      // all tests in "worker-specific" directory will run inside a worker as if you enabled `--pool=threads` for them,
-      ['**/tests/worker-specific/**', 'threads'],
-      // run all tests in "browser" directory in an actual browser
-      ['**/tests/browser/**', 'browser'],
-      // all other tests will run based on "browser.enabled" and "threads" options, if you didn't specify other globs
-      // ...
-    ]
-  }
-})
-```
-
 ### update<NonProjectOption />
 
 - **Type:** `boolean`
@@ -714,7 +619,7 @@ In CI, or when run from a non-interactive shell, "watch" mode is not the default
 
 Vitest reruns tests based on the module graph which is populated by static and dynamic `import` statements. However, if you are reading from the file system or fetching from a proxy, then Vitest cannot detect those dependencies.
 
-To correctly rerun those tests, you can define a regex pattern and a function that retuns a list of test files to run.
+To correctly rerun those tests, you can define a regex pattern and a function that returns a list of test files to run.
 
 ```ts
 import { defineConfig } from 'vitest/config'
@@ -2233,9 +2138,15 @@ Retry the test specific number of times if it fails.
 
 ### onConsoleLog<NonProjectOption />
 
-- **Type**: `(log: string, type: 'stdout' | 'stderr') => boolean | void`
+```ts
+function onConsoleLog(
+  log: string,
+  type: 'stdout' | 'stderr',
+  entity: TestModule | TestSuite | TestCase | undefined,
+): boolean | void
+```
 
-Custom handler for `console.log` in tests. If you return `false`, Vitest will not print the log to the console.
+Custom handler for `console` methods in tests. If you return `false`, Vitest will not print the log to the console. Note that Vitest ignores all other falsy values.
 
 Can be useful for filtering out logs from third-party libraries.
 
@@ -2273,6 +2184,30 @@ export default defineConfig({
 
       // Reject all frames from third party libraries.
       if (file.includes('node_modules')) {
+        return false
+      }
+    },
+  },
+})
+```
+
+### onUnhandledError<NonProjectOption /> {#onunhandlederror}
+
+- **Type:** `(error: (TestError | Error) & { type: string }) => boolean | void`
+
+A custom handler to filter out unhandled errors that should not be reported. If an error is filtered out, it will no longer affect the test results.
+
+If you want unhandled errors to be reported without impacting the test outcome, consider using the [`dangerouslyIgnoreUnhandledErrors`](#dangerouslyIgnoreUnhandledErrors) option
+
+```ts
+import type { ParsedStack } from 'vitest'
+import { defineConfig } from 'vitest/config'
+
+export default defineConfig({
+  test: {
+    onUnhandledError(error): boolean | void {
+      // Ignore all errors with the name "MySpecialError".
+      if (error.name === 'MySpecialError') {
         return false
       }
     },
@@ -2426,20 +2361,6 @@ Relevant only when using with `shouldAdvanceTime: true`. increment mocked time b
 - **Default:** `true`
 
 Tells fake timers to clear "native" (i.e. not fake) timers by delegating to their respective handlers. When disabled, it can lead to potentially unexpected behavior if timers existed prior to starting fake timers session.
-
-### workspace<NonProjectOption /> {#workspace}
-
-::: danger DEPRECATED
-This options is deprecated and will be removed in the next major. Please, use [`projects`](#projects) instead.
-:::
-
-- **Type:** `string | TestProjectConfiguration[]`
-- **CLI:** `--workspace=./file.js`
-- **Default:** `vitest.{workspace,projects}.{js,ts,json}` close to the config file or root
-
-Path to a [workspace](/guide/projects) config file relative to [root](#root).
-
-Since Vitest 3, you can also define the workspace array in the root config. If the `workspace` is defined in the config manually, Vitest will ignore the `vitest.workspace` file in the root.
 
 ### projects<NonProjectOption /> {#projects}
 
