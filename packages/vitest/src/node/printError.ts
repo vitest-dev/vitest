@@ -261,6 +261,7 @@ const skipErrorProperties = new Set([
   'actual',
   'expected',
   'diffOptions',
+  'runnerError',
   // webkit props
   'sourceURL',
   'column',
