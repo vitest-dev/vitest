@@ -27,7 +27,7 @@ export function MetaEnvReplacerPlugin(): Plugin {
         s.overwrite(
           startIndex,
           endIndex,
-          `Object.assign(globalThis.__vitest_worker__?.metaEnv ?? import.meta.env)`,
+          `Object.assign(/* istanbul ignore next */ globalThis.__vitest_worker__?.metaEnv ?? import.meta.env)`,
         )
       }
 

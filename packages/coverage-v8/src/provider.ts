@@ -291,6 +291,17 @@ export class V8CoverageProvider extends BaseCoverageProvider<ResolvedCoverageOpt
           return true
         }
 
+        // SSR mode's "import.meta.env ="
+        if (
+          type === 'statement'
+          && node.type === 'ExpressionStatement'
+          && node.expression.type === 'AssignmentExpression'
+          && node.expression.left.type === 'MemberExpression'
+          && node.expression.left.object.type === 'Identifier'
+          && node.expression.left.object.name === '__vite_ssr_import_meta__') {
+          return true
+        }
+
         // SWC's decorators
         if (
           type === 'statement'
