@@ -34,6 +34,7 @@ const state: WorkerGlobalState = {
   evaluatedModules: getBrowserState().evaluatedModules,
   resolvingModules: getBrowserState().resolvingModules,
   moduleExecutionInfo: new Map(),
+  metaEnv: null as any,
   rpc: null as any,
   durations: {
     environment: 0,
