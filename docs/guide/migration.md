@@ -147,7 +147,7 @@ $ pnpm run test:dev math.test.ts
 
 ### `restoreAllMocks` no longer resets automocks
 
-Previously, all automocks created by `vi.mock('./path')` would reset their state if `vi.restoreAllMocks` was called or if [`restoreMocks`](/config/#restoreMocks) was set in the config.
+Previously, all automocks created by `vi.mock('./path')` would reset their state if `vi.restoreAllMocks` was called or if [`restoreMocks`](/config/#restoreMocks) was set in the config. Now they don't affect automocked mocks at all.
 
 ### Deprecated APIs are Removed
 
