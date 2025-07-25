@@ -411,7 +411,7 @@ describe('scoping variables to suite', () => {
       })
     })
 
-    describe('override nested overriden scope', () => {
+    describe('override nested overridden scope', () => {
       testAPI.scoped({ dependency: 'override' })
 
       testAPI('keeps using new values', ({ pkg }) => {

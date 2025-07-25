@@ -413,7 +413,7 @@ export interface InlineConfig {
   globalSetup?: string | string[]
 
   /**
-   * Glob patter of file paths that will trigger the whole suite rerun
+   * Glob pattern of file paths that will trigger the whole suite rerun
    *
    * Useful if you are testing calling CLI commands
    *

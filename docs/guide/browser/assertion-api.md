@@ -1018,7 +1018,7 @@ other element that contains text, such as a paragraph, span, div etc.
 
 ::: warning
 The expected selection is a string, it does not allow to check for
-selection range indeces.
+selection range indices.
 :::
 
 ```html

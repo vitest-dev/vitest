@@ -73,9 +73,9 @@ export async function resolveTestRunner(
   const originalOnTestAnnotate = testRunner.onTestAnnotate
   testRunner.onTestAnnotate = async (test, annotation) => {
     const p = rpc().onTaskAnnotate(test.id, annotation)
-    const overridenResult = await originalOnTestAnnotate?.call(testRunner, test, annotation)
+    const overriddenResult = await originalOnTestAnnotate?.call(testRunner, test, annotation)
     const vitestResult = await p
-    return overridenResult || vitestResult
+    return overriddenResult || vitestResult
   }
 
   const originalOnCollectStart = testRunner.onCollectStart

@@ -619,7 +619,7 @@ In CI, or when run from a non-interactive shell, "watch" mode is not the default
 
 Vitest reruns tests based on the module graph which is populated by static and dynamic `import` statements. However, if you are reading from the file system or fetching from a proxy, then Vitest cannot detect those dependencies.
 
-To correctly rerun those tests, you can define a regex pattern and a function that retuns a list of test files to run.
+To correctly rerun those tests, you can define a regex pattern and a function that returns a list of test files to run.
 
 ```ts
 import { defineConfig } from 'vitest/config'
