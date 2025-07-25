@@ -1,13 +1,13 @@
 import type { Plugin } from 'vite'
+import { cleanUrl } from '@vitest/utils'
 import MagicString from 'magic-string'
 import { stripLiteral } from 'strip-literal'
-import { cleanUrl } from 'vite-node/utils'
 
 // so people can reassign envs at runtime
 // import.meta.env.VITE_NAME = 'app' -> process.env.VITE_NAME = 'app'
-export function SsrReplacerPlugin(): Plugin {
+export function MetaEnvReplacerPlugin(): Plugin {
   return {
-    name: 'vitest:ssr-replacer',
+    name: 'vitest:meta-env-replacer',
     enforce: 'pre',
     transform(code, id) {
       if (!/\bimport\.meta\.env\b/.test(code)) {
@@ -24,7 +24,11 @@ export function SsrReplacerPlugin(): Plugin {
         const startIndex = env.index!
         const endIndex = startIndex + env[0].length
 
-        s.overwrite(startIndex, endIndex, '__vite_ssr_import_meta__.env')
+        s.overwrite(
+          startIndex,
+          endIndex,
+          `Object.assign(/* istanbul ignore next */ globalThis.__vitest_worker__?.metaEnv ?? import.meta.env)`,
+        )
       }
 
       if (s) {

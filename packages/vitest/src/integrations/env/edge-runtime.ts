@@ -4,7 +4,7 @@ import { populateGlobal } from './utils'
 
 export default <Environment>{
   name: 'edge-runtime',
-  transformMode: 'ssr',
+  viteEnvironment: 'ssr',
   async setupVM() {
     const { EdgeVM } = await import('@edge-runtime/vm')
     const vm = new EdgeVM({

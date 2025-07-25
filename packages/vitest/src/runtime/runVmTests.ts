@@ -1,15 +1,13 @@
 import type { FileSpecification } from '@vitest/runner'
-import type { ModuleCacheMap } from 'vite-node'
 import type { SerializedConfig } from './config'
-import type { VitestExecutor } from './execute'
+import type { VitestModuleRunner } from './moduleRunner/moduleRunner'
 import { createRequire } from 'node:module'
 import { performance } from 'node:perf_hooks'
 import timers from 'node:timers'
 import timersPromises from 'node:timers/promises'
 import util from 'node:util'
 import { collectTests, startTests } from '@vitest/runner'
-import { KNOWN_ASSET_TYPES } from 'vite-node/constants'
-import { installSourcemapsSupport } from 'vite-node/source-map'
+import { KNOWN_ASSET_TYPES } from '@vitest/utils'
 import { setupChaiConfig } from '../integrations/chai/config'
 import {
   startCoverageInsideWorker,
@@ -26,7 +24,7 @@ export async function run(
   method: 'run' | 'collect',
   files: FileSpecification[],
   config: SerializedConfig,
-  executor: VitestExecutor,
+  moduleRunner: VitestModuleRunner,
 ): Promise<void> {
   const workerState = getWorkerState()
 
@@ -37,7 +35,8 @@ export async function run(
     enumerable: false,
   })
 
-  if (workerState.environment.transformMode === 'web') {
+  const viteEnvironment = workerState.environment.viteEnvironment || workerState.environment.name
+  if (viteEnvironment === 'client') {
     const _require = createRequire(import.meta.url)
     // always mock "required" `css` files, because we cannot process them
     _require.extensions['.css'] = resolveCss
@@ -61,19 +60,15 @@ export async function run(
     timersPromises,
   }
 
-  installSourcemapsSupport({
-    getSourceMap: source => (workerState.moduleCache as ModuleCacheMap).getSourceMap(source),
-  })
-
-  await startCoverageInsideWorker(config.coverage, executor, { isolate: false })
+  await startCoverageInsideWorker(config.coverage, moduleRunner, { isolate: false })
 
   if (config.chaiConfig) {
     setupChaiConfig(config.chaiConfig)
   }
 
   const [runner, snapshotEnvironment] = await Promise.all([
-    resolveTestRunner(config, executor),
-    resolveSnapshotEnvironment(config, executor),
+    resolveTestRunner(config, moduleRunner),
+    resolveSnapshotEnvironment(config, moduleRunner),
   ])
 
   config.snapshotOptions.snapshotEnvironment = snapshotEnvironment
@@ -106,7 +101,7 @@ export async function run(
     vi.restoreAllMocks()
   }
 
-  await stopCoverageInsideWorker(config.coverage, executor, { isolate: false })
+  await stopCoverageInsideWorker(config.coverage, moduleRunner, { isolate: false })
 }
 
 function resolveCss(mod: NodeJS.Module) {

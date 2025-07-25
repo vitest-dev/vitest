@@ -20,7 +20,6 @@ import {
   defaultBrowserPort,
   defaultInspectPort,
   defaultPort,
-  extraInlineDeps,
 } from '../../constants'
 import { benchmarkConfigDefaults, configDefaults } from '../../defaults'
 import { isCI, stdProvider } from '../../utils/env'
@@ -337,6 +336,15 @@ export function resolveConfig(
 
   resolved.deps ??= {}
   resolved.deps.moduleDirectories ??= []
+
+  const envModuleDirectories
+    = process.env.VITEST_MODULE_DIRECTORIES
+      || process.env.npm_config_VITEST_MODULE_DIRECTORIES
+
+  if (envModuleDirectories) {
+    resolved.deps.moduleDirectories.push(...envModuleDirectories.split(','))
+  }
+
   resolved.deps.moduleDirectories = resolved.deps.moduleDirectories.map(
     (dir) => {
       if (!dir.startsWith('/')) {
@@ -354,9 +362,9 @@ export function resolveConfig(
 
   resolved.deps.optimizer ??= {}
   resolved.deps.optimizer.ssr ??= {}
-  resolved.deps.optimizer.ssr.enabled ??= true
-  resolved.deps.optimizer.web ??= {}
-  resolved.deps.optimizer.web.enabled ??= true
+  resolved.deps.optimizer.ssr.enabled ??= false
+  resolved.deps.optimizer.client ??= {}
+  resolved.deps.optimizer.client.enabled ??= false
 
   resolved.deps.web ??= {}
   resolved.deps.web.transformAssets ??= true
@@ -403,71 +411,9 @@ export function resolveConfig(
     ...resolved.setupFiles,
   ]
 
-  resolved.server ??= {}
-  resolved.server.deps ??= {}
-
-  const deprecatedDepsOptions = ['inline', 'external', 'fallbackCJS'] as const
-  deprecatedDepsOptions.forEach((option) => {
-    if (resolved.deps[option] === undefined) {
-      return
-    }
-
-    if (option === 'fallbackCJS') {
-      logger.console.warn(
-        c.yellow(
-          `${c.inverse(
-            c.yellow(' Vitest '),
-          )} "deps.${option}" is deprecated. Use "server.deps.${option}" instead`,
-        ),
-      )
-    }
-    else {
-      const transformMode
-        = resolved.environment === 'happy-dom' || resolved.environment === 'jsdom'
-          ? 'web'
-          : 'ssr'
-      logger.console.warn(
-        c.yellow(
-          `${c.inverse(
-            c.yellow(' Vitest '),
-          )} "deps.${option}" is deprecated. If you rely on vite-node directly, use "server.deps.${option}" instead. Otherwise, consider using "deps.optimizer.${transformMode}.${
-            option === 'external' ? 'exclude' : 'include'
-          }"`,
-        ),
-      )
-    }
-
-    if (resolved.server.deps![option] === undefined) {
-      resolved.server.deps![option] = resolved.deps[option] as any
-    }
-  })
-
   if (resolved.cliExclude) {
     resolved.exclude.push(...resolved.cliExclude)
   }
-
-  // vitenode will try to import such file with native node,
-  // but then our mocker will not work properly
-  if (resolved.server.deps.inline !== true) {
-    const ssrOptions = viteConfig.ssr
-    if (
-      ssrOptions?.noExternal === true
-      && resolved.server.deps.inline == null
-    ) {
-      resolved.server.deps.inline = true
-    }
-    else {
-      resolved.server.deps.inline ??= []
-      resolved.server.deps.inline.push(...extraInlineDeps)
-    }
-  }
-
-  resolved.server.deps.inlineFiles ??= []
-  resolved.server.deps.inlineFiles.push(...resolved.setupFiles)
-  resolved.server.deps.moduleDirectories ??= []
-  resolved.server.deps.moduleDirectories.push(
-    ...resolved.deps.moduleDirectories,
-  )
 
   if (resolved.runner) {
     resolved.runner = resolvePath(resolved.runner, resolved.root)
@@ -858,7 +804,8 @@ export function resolveConfig(
     resolved.includeTaskLocation ??= true
   }
 
-  resolved.testTransformMode ??= {}
+  resolved.server ??= {}
+  resolved.server.deps ??= {}
 
   resolved.testTimeout ??= resolved.browser.enabled ? 15000 : 5000
   resolved.hookTimeout ??= resolved.browser.enabled ? 30000 : 10000

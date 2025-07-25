@@ -1,10 +1,6 @@
 import type { GlobOptions } from 'tinyglobby'
-import type {
-  ModuleNode,
-  TransformResult,
-  ViteDevServer,
-  InlineConfig as ViteInlineConfig,
-} from 'vite'
+import type { ModuleNode, TransformResult, ViteDevServer, InlineConfig as ViteInlineConfig } from 'vite'
+import type { ModuleRunner } from 'vite/module-runner'
 import type { Typechecker } from '../typecheck/typechecker'
 import type { ProvidedContext } from '../types/general'
 import type { OnTestsRerunHandler, Vitest } from './core'
@@ -28,16 +24,17 @@ import { deepMerge, nanoid, slash } from '@vitest/utils'
 import { isAbsolute, join, relative } from 'pathe'
 import pm from 'picomatch'
 import { glob } from 'tinyglobby'
-import { ViteNodeRunner } from 'vite-node/client'
-import { ViteNodeServer } from 'vite-node/server'
 import { setup } from '../api/setup'
 import { isBrowserEnabled, resolveConfig } from './config/resolveConfig'
 import { serializeConfig } from './config/serializeConfig'
+import { ServerModuleRunner } from './environments/serverRunner'
 import { loadGlobalSetupFiles } from './globalSetup'
 import { CoverageTransform } from './plugins/coverageTransform'
+import { MetaEnvReplacerPlugin } from './plugins/metaEnvReplacer'
 import { MocksPlugins } from './plugins/mocks'
 import { WorkspaceVitestPlugin } from './plugins/workspace'
 import { getFilePoolName } from './pool'
+import { VitestResolver } from './resolver'
 import { TestSpecification } from './spec'
 import { createViteServer } from './vite'
 
@@ -66,13 +63,13 @@ export class TestProject {
    */
   public readonly tmpDir: string = join(tmpdir(), nanoid())
 
-  /** @internal */ vitenode!: ViteNodeServer
   /** @internal */ typechecker?: Typechecker
   /** @internal */ _config?: ResolvedConfig
   /** @internal */ _vite?: ViteDevServer
   /** @internal */ _hash?: string
+  /** @internal */ _resolver!: VitestResolver
 
-  private runner!: ViteNodeRunner
+  private runner!: ModuleRunner
 
   private closingPromise: Promise<void> | undefined
 
@@ -556,6 +553,7 @@ export class TestProject {
             return true
           },
         }),
+        MetaEnvReplacerPlugin(),
       ],
       [CoverageTransform(this.vitest)],
     )
@@ -601,7 +599,7 @@ export class TestProject {
    * @param moduleId The ID of the module in Vite module graph
    */
   public import<T>(moduleId: string): Promise<T> {
-    return this.runner.executeId(moduleId)
+    return this.runner.import(moduleId)
   }
 
   /** @deprecated use `name` instead */
@@ -642,20 +640,15 @@ export class TestProject {
 
     this.closingPromise = undefined
 
+    this._resolver = new VitestResolver(server.config.cacheDir, this._config)
     this._vite = server
 
-    this.vitenode = new ViteNodeServer(server, this.config.server)
-    const node = this.vitenode
-    this.runner = new ViteNodeRunner({
-      root: server.config.root,
-      base: server.config.base,
-      fetchModule(id: string) {
-        return node.fetchModule(id)
-      },
-      resolveId(id: string, importer?: string) {
-        return node.resolveId(id, importer)
-      },
-    })
+    const environment = server.environments.__vitest__
+    this.runner = new ServerModuleRunner(
+      environment,
+      this._resolver,
+      this._config,
+    )
   }
 
   private _serializeOverriddenConfig(): SerializedConfig {
@@ -715,10 +708,10 @@ export class TestProject {
       vitest.config.name || vitest.config.root,
       vitest,
     )
-    project.vitenode = vitest.vitenode
     project.runner = vitest.runner
     project._vite = vitest.server
     project._config = vitest.config
+    project._resolver = vitest._resolver
     project._setHash()
     project._provideObject(vitest.config.provide)
     return project
@@ -730,9 +723,9 @@ export class TestProject {
       parent.path,
       parent.vitest,
     )
-    clone.vitenode = parent.vitenode
     clone.runner = parent.runner
     clone._vite = parent._vite
+    clone._resolver = parent._resolver
     clone._config = config
     clone._setHash()
     clone._parent = parent

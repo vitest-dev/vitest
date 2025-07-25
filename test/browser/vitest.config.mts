@@ -49,6 +49,9 @@ export default defineConfig({
     includeSource: ['src/*.ts'],
     // having a snapshot environment doesn't affect browser tests
     snapshotEnvironment: './custom-snapshot-env.ts',
+    env: {
+      CUSTOM_ENV: 'foo',
+    },
     browser: {
       enabled: true,
       headless: false,
@@ -109,9 +112,6 @@ export default defineConfig({
     outputFile: {
       html: './html/index.html',
       json: './browser.json',
-    },
-    env: {
-      BROWSER: browser,
     },
     onConsoleLog(log) {
       if (log.includes('MESSAGE ADDED')) {

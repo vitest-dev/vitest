@@ -22,6 +22,12 @@
     "jest"
   ],
   "sideEffects": false,
+  "imports": {
+    "#module-evaluator": {
+      "types": "./dist/module-evaluator.d.ts",
+      "default": "./dist/module-evaluator.js"
+    }
+  },
   "exports": {
     ".": {
       "import": {
@@ -50,10 +56,6 @@
       "types": "./dist/node.d.ts",
       "default": "./dist/node.js"
     },
-    "./execute": {
-      "types": "./dist/execute.d.ts",
-      "default": "./dist/execute.js"
-    },
     "./workers": {
       "types": "./dist/workers.d.ts",
       "import": "./dist/workers.js"
@@ -61,6 +63,10 @@
     "./internal/browser": {
       "types": "./dist/browser.d.ts",
       "default": "./dist/browser.js"
+    },
+    "./internal/module-runner": {
+      "types": "./dist/module-runner.d.ts",
+      "default": "./dist/module-runner.js"
     },
     "./runners": {
       "types": "./dist/runners.d.ts",
@@ -160,6 +166,7 @@
     "@vitest/utils": "workspace:*",
     "chai": "catalog:",
     "debug": "catalog:",
+    "es-module-lexer": "^1.7.0",
     "expect-type": "^1.2.2",
     "magic-string": "catalog:",
     "pathe": "catalog:",
@@ -171,7 +178,6 @@
     "tinypool": "^1.1.1",
     "tinyrainbow": "catalog:",
     "vite": "^6.0.0 || ^7.0.0-0",
-    "vite-node": "workspace:*",
     "why-is-node-running": "^2.3.0"
   },
   "devDependencies": {

@@ -35,7 +35,7 @@ function catchWindowErrors(window: Window) {
 
 export default <Environment>{
   name: 'jsdom',
-  transformMode: 'web',
+  viteEnvironment: 'client',
   async setupVM({ jsdom = {} }) {
     const { CookieJar, JSDOM, ResourceLoader, VirtualConsole } = await import(
       'jsdom'
