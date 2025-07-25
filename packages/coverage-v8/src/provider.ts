@@ -19,7 +19,7 @@ import { provider } from 'std-env'
 
 import c from 'tinyrainbow'
 import { BaseCoverageProvider } from 'vitest/coverage'
-import { parseAstAsync } from 'vitest/node'
+import { isCSSRequest, parseAstAsync } from 'vitest/node'
 import { version } from '../package.json' with { type: 'json' }
 
 export interface ScriptCoverageWithOffset extends Profiler.ScriptCoverage {
@@ -397,7 +397,10 @@ export class V8CoverageProvider extends BaseCoverageProvider<ResolvedCoverageOpt
         }
       }
 
-      if (this.isIncluded(fileURLToPath(result.url))) {
+      // Ignore all CSS requests, so we don't override the actual code coverage
+      // In cases where CSS and JS are in the same file (.vue, .svelte)
+      // The file has a `.vue` extension, but the URL has `lang.css` query
+      if (!isCSSRequest(result.url) && this.isIncluded(fileURLToPath(result.url))) {
         scriptCoverages.push(result)
       }
     }
