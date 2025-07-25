@@ -30,6 +30,7 @@ import { serializeConfig } from './config/serializeConfig'
 import { ServerModuleRunner } from './environments/serverRunner'
 import { loadGlobalSetupFiles } from './globalSetup'
 import { CoverageTransform } from './plugins/coverageTransform'
+import { MetaEnvReplacerPlugin } from './plugins/metaEnvReplacer'
 import { MocksPlugins } from './plugins/mocks'
 import { WorkspaceVitestPlugin } from './plugins/workspace'
 import { getFilePoolName } from './pool'
@@ -552,6 +553,7 @@ export class TestProject {
             return true
           },
         }),
+        MetaEnvReplacerPlugin(),
       ],
       [CoverageTransform(this.vitest)],
     )

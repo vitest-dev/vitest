@@ -5,6 +5,7 @@ import type { SerializedConfig } from './config'
 import type { VitestModuleRunner } from './moduleRunner/moduleRunner'
 import { addSerializer } from '@vitest/snapshot'
 import { setSafeTimers } from '@vitest/utils'
+import { getWorkerState } from './utils'
 
 let globalSetup = false
 export async function setupCommonEnv(config: SerializedConfig): Promise<void> {
@@ -30,15 +31,13 @@ function setupDefines(defines: Record<string, any>) {
 }
 
 function setupEnv(env: Record<string, any>) {
-  if (typeof process === 'undefined') {
-    return
-  }
+  const state = getWorkerState()
   // same boolean-to-string assignment as VitestPlugin.configResolved
   const { PROD, DEV, ...restEnvs } = env
-  process.env.PROD = PROD ? '1' : ''
-  process.env.DEV = DEV ? '1' : ''
+  state.metaEnv.PROD = PROD
+  state.metaEnv.DEV = DEV
   for (const key in restEnvs) {
-    process.env[key] = env[key]
+    state.metaEnv[key] = env[key]
   }
 }
 

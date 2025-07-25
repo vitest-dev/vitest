@@ -108,6 +108,7 @@ async function execute(method: 'run' | 'collect', ctx: ContextRPC) {
       onFilterStackTrace(stack) {
         return createStackString(parseStacktrace(stack))
       },
+      metaEnv: createImportMetaEnvProxy(),
     } satisfies WorkerGlobalState
 
     const methodName = method === 'collect' ? 'collectTests' : 'runTests'
@@ -138,4 +139,34 @@ export function collect(ctx: ContextRPC): Promise<void> {
 
 export async function teardown(): Promise<void> {
   return cleanupWorker()
+}
+
+function createImportMetaEnvProxy(): WorkerGlobalState['metaEnv'] {
+  // packages/vitest/src/node/plugins/index.ts:146
+  const booleanKeys = ['DEV', 'PROD', 'SSR']
+  return new Proxy(process.env, {
+    get(_, key) {
+      if (typeof key !== 'string') {
+        return undefined
+      }
+      if (booleanKeys.includes(key)) {
+        return !!process.env[key]
+      }
+      return process.env[key]
+    },
+    set(_, key, value) {
+      if (typeof key !== 'string') {
+        return true
+      }
+
+      if (booleanKeys.includes(key)) {
+        process.env[key] = value ? '1' : ''
+      }
+      else {
+        process.env[key] = value
+      }
+
+      return true
+    },
+  }) as WorkerGlobalState['metaEnv']
 }

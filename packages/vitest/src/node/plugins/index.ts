@@ -14,11 +14,11 @@ import { Vitest } from '../core'
 import { createViteLogger, silenceImportViteIgnoreWarning } from '../viteLogger'
 import { CoverageTransform } from './coverageTransform'
 import { CSSEnablerPlugin } from './cssEnabler'
+import { MetaEnvReplacerPlugin } from './metaEnvReplacer'
 import { MocksPlugins } from './mocks'
 import { NormalizeURLPlugin } from './normalizeURL'
 import { VitestOptimizer } from './optimizer'
 import { ModuleRunnerTransform } from './runnerTransform'
-import { SsrReplacerPlugin } from './ssrReplacer'
 import {
   deleteDefineConfig,
   getDefaultResolveOptions,
@@ -278,7 +278,7 @@ export async function VitestPlugin(
         },
       },
     },
-    SsrReplacerPlugin(),
+    MetaEnvReplacerPlugin(),
     ...CSSEnablerPlugin(vitest),
     CoverageTransform(vitest),
     VitestCoreResolver(vitest),

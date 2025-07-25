@@ -101,6 +101,7 @@ async function prepareTestEnvironment(options: PrepareOptions) {
 
   const state = getWorkerState()
 
+  state.metaEnv = import.meta.env
   state.onCancel = onCancel
   state.rpc = rpc as any
 

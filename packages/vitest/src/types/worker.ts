@@ -32,6 +32,14 @@ export interface WorkerGlobalState {
   rpc: WorkerRPC
   current?: Task
   filepath?: string
+  metaEnv: {
+    [key: string]: any
+    BASE_URL: string
+    MODE: string
+    DEV: boolean
+    PROD: boolean
+    SSR: boolean
+  }
   environment: Environment
   environmentTeardownRun?: boolean
   onCancel: Promise<CancelReason>

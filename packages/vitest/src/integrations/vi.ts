@@ -687,17 +687,19 @@ function createVitest(): VitestUtils {
     },
 
     stubEnv(name: string, value: string | boolean | undefined) {
+      const state = getWorkerState()
+      const env = state.metaEnv
       if (!_stubsEnv.has(name)) {
-        _stubsEnv.set(name, process.env[name])
+        _stubsEnv.set(name, env[name])
       }
       if (_envBooleans.includes(name)) {
-        process.env[name] = value ? '1' : ''
+        env[name] = value ? '1' : ''
       }
       else if (value === undefined) {
-        delete process.env[name]
+        delete env[name]
       }
       else {
-        process.env[name] = String(value)
+        env[name] = String(value)
       }
       return utils
     },
@@ -716,12 +718,14 @@ function createVitest(): VitestUtils {
     },
 
     unstubAllEnvs() {
+      const state = getWorkerState()
+      const env = state.metaEnv
       _stubsEnv.forEach((original, name) => {
         if (original === undefined) {
-          delete process.env[name]
+          delete env[name]
         }
         else {
-          process.env[name] = original
+          env[name] = original
         }
       })
       _stubsEnv.clear()
