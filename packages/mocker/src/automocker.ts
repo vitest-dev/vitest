@@ -8,6 +8,9 @@ export interface MockObjectOptions {
   spyOn: (obj: any, prop: Key) => any
 }
 
+// not definined the Spy type to avoid recursive definition
+export const moduleSpies: Set<any> = new Set()
+
 export function mockObject(
   options: MockObjectOptions,
   object: Record<Key, any>,
@@ -120,6 +123,7 @@ export function mockObject(
                 const original = this[key]
                 const mock = spyOn(this, key as string)
                   .mockImplementation(original)
+                moduleSpies.add(mock)
                 const origMockReset = mock.mockReset
                 mock.mockRestore = mock.mockReset = () => {
                   origMockReset.call(mock)
@@ -131,6 +135,7 @@ export function mockObject(
           }
         }
         const mock = spyOn(newContainer, property)
+        moduleSpies.add(mock)
         if (options.type === 'automock') {
           mock.mockImplementation(mockFunction)
           const origMockReset = mock.mockReset

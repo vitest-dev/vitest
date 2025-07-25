@@ -1,9 +1,10 @@
 import type { ManualMockedModule, MockedModule, MockedModuleType } from '@vitest/mocker'
+import type { MockInstance } from '../integrations/spy'
 import type { MockFactory, MockOptions, PendingSuiteMock } from '../types/mocker'
 import type { VitestExecutor } from './execute'
 import { isAbsolute, resolve } from 'node:path'
 import vm from 'node:vm'
-import { AutomockedModule, MockerRegistry, mockObject, RedirectedModule } from '@vitest/mocker'
+import { AutomockedModule, MockerRegistry, mockObject, moduleSpies, RedirectedModule } from '@vitest/mocker'
 import { findMockRedirect } from '@vitest/mocker/redirect'
 import { highlight } from '@vitest/utils'
 import { distDir } from '../paths'
@@ -252,6 +253,10 @@ export class VitestMocker {
 
   public resolveMockPath(mockPath: string, external: string | null): string | null {
     return findMockRedirect(this.root, mockPath, external)
+  }
+
+  public moduleSpies(): Set<MockInstance> {
+    return moduleSpies
   }
 
   public mockObject(

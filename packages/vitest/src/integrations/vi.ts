@@ -666,7 +666,8 @@ function createVitest(): VitestUtils {
     },
 
     restoreAllMocks() {
-      [...mocks].reverse().forEach(spy => spy.mockRestore())
+      const moduleSpies = _mocker().moduleSpies();
+      [...mocks].reverse().forEach(spy => !moduleSpies.has(spy) && spy.mockRestore())
       return utils
     },
 
