@@ -90,10 +90,6 @@
     "./snapshot": {
       "types": "./dist/snapshot.d.ts",
       "default": "./dist/snapshot.js"
-    },
-    "./mocker": {
-      "types": "./dist/mocker.d.ts",
-      "default": "./dist/mocker.js"
     }
   },
   "main": "./dist/index.js",

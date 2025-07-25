@@ -2,7 +2,7 @@ import type { MockedModule, MockedModuleType } from '../registry'
 import type { ModuleMockOptions } from '../types'
 import type { ModuleMockerInterceptor } from './interceptor'
 import { extname, join } from 'pathe'
-import { mockObject } from '../automocker'
+import { mockObject, moduleSpies } from '../automocker'
 import { AutomockedModule, MockerRegistry, RedirectedModule } from '../registry'
 
 const { now } = Date
@@ -113,6 +113,10 @@ export class ModuleMocker {
     }
 
     return import(/* @vite-ignore */ mock.redirect)
+  }
+
+  public moduleSpies(): Set<any> {
+    return moduleSpies
   }
 
   public mockObject(

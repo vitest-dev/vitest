@@ -25,7 +25,6 @@ const entries = {
   'browser': 'src/public/browser.ts',
   'runners': 'src/public/runners.ts',
   'environments': 'src/public/environments.ts',
-  'mocker': 'src/public/mocker.ts',
   'spy': 'src/integrations/spy.ts',
   'coverage': 'src/public/coverage.ts',
   'execute': 'src/public/execute.ts',
@@ -56,7 +55,6 @@ const dtsEntries = {
   coverage: 'src/public/coverage.ts',
   execute: 'src/public/execute.ts',
   reporters: 'src/public/reporters.ts',
-  mocker: 'src/public/mocker.ts',
   workers: 'src/public/workers.ts',
   snapshot: 'src/public/snapshot.ts',
 }
