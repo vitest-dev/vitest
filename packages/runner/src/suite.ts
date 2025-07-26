@@ -247,7 +247,7 @@ function parseArguments<T extends (...args: any[]) => any>(
   optionsOrTest: object | T | number | undefined,
 ) {
   let options: TestOptions = {}
-  let fn: T = (() => {}) as T
+  let fn: T | undefined
 
   // it('', () => {}, { retry: 2 })
   if (typeof optionsOrTest === 'object') {
@@ -329,6 +329,9 @@ function createSuiteCollector(
       annotations: [],
     }
     const handler = options.handler
+    if (task.mode === 'run' && !handler) {
+      task.mode = 'todo'
+    }
     if (
       options.concurrent
       || (!options.sequential && runner.config.sequence.concurrent)
@@ -533,7 +536,7 @@ function createSuite() {
     factoryOrOptions?: SuiteFactory | TestOptions,
     optionsOrFactory?: number | TestOptions | SuiteFactory,
   ) {
-    const mode: RunMode = this.only
+    let mode: RunMode = this.only
       ? 'only'
       : this.skip
         ? 'skip'
@@ -546,6 +549,10 @@ function createSuite() {
       factoryOrOptions,
       optionsOrFactory,
     )
+
+    if (mode === 'run' && !factory) {
+      mode = 'todo'
+    }
 
     const isConcurrentSpecified = options.concurrent || this.concurrent || options.sequential === false
     const isSequentialSpecified = options.sequential || this.sequential || options.concurrent === false
@@ -606,20 +613,20 @@ function createSuite() {
           if (arrayOnlyCases) {
             suite(
               formatTitle(_name, items, idx),
-              () => handler(...items),
+              handler ? () => handler(...items) : undefined,
               options,
             )
           }
           else {
-            suite(formatTitle(_name, items, idx), () => handler(i), options)
+            suite(formatTitle(_name, items, idx), handler ? () => handler(i) : undefined, options)
           }
         }
         else {
           if (arrayOnlyCases) {
-            suite(formatTitle(_name, items, idx), options, () => handler(...items))
+            suite(formatTitle(_name, items, idx), options, handler ? () => handler(...items) : undefined)
           }
           else {
-            suite(formatTitle(_name, items, idx), options, () => handler(i))
+            suite(formatTitle(_name, items, idx), options, handler ? () => handler(i) : undefined)
           }
         }
       })
@@ -648,7 +655,7 @@ function createSuite() {
       const name_ = formatName(name)
       const { options, handler } = parseArguments(optionsOrFn, fnOrOptions)
       cases.forEach((item, idx) => {
-        suite(formatTitle(name_, toArray(item), idx), options, () => handler(item))
+        suite(formatTitle(name_, toArray(item), idx), options, handler ? () => handler(item) : undefined)
       })
     }
   }
@@ -704,20 +711,20 @@ export function createTaskCollector(
           if (arrayOnlyCases) {
             test(
               formatTitle(_name, items, idx),
-              () => handler(...items),
+              handler ? () => handler(...items) : undefined,
               options,
             )
           }
           else {
-            test(formatTitle(_name, items, idx), () => handler(i), options)
+            test(formatTitle(_name, items, idx), handler ? () => handler(i) : undefined, options)
           }
         }
         else {
           if (arrayOnlyCases) {
-            test(formatTitle(_name, items, idx), options, () => handler(...items))
+            test(formatTitle(_name, items, idx), options, handler ? () => handler(...items) : undefined)
           }
           else {
-            test(formatTitle(_name, items, idx), options, () => handler(i))
+            test(formatTitle(_name, items, idx), options, handler ? () => handler(i) : undefined)
           }
         }
       })
@@ -749,9 +756,11 @@ export function createTaskCollector(
       const { options, handler } = parseArguments(optionsOrFn, fnOrOptions)
       cases.forEach((item, idx) => {
         // monkey-patch handler to allow parsing fixture
-        const handlerWrapper = (ctx: any) => handler(item, ctx);
-        (handlerWrapper as any).__VITEST_FIXTURE_INDEX__ = 1;
-        (handlerWrapper as any).toString = () => handler.toString()
+        const handlerWrapper = handler ? (ctx: any) => handler(item, ctx) : undefined
+        if (handlerWrapper) {
+          (handlerWrapper as any).__VITEST_FIXTURE_INDEX__ = 1;
+          (handlerWrapper as any).toString = () => handler!.toString()
+        }
         test(formatTitle(_name, toArray(item), idx), options, handlerWrapper)
       })
     }
