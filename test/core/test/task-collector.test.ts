@@ -1,3 +1,4 @@
+import type { RunnerTestCase, RunnerTestSuite } from 'vitest'
 import { assert, describe, expect, test, vi } from 'vitest'
 import { createTaskCollector, getCurrentSuite } from 'vitest/suite'
 
@@ -47,5 +48,21 @@ describe('collector.extend should preserve handler wrapping', () => {
   flagTest('should pass when flag is set', () => {
     flag = true
     expect(flag).toBe(true)
+  })
+})
+
+describe('empty tests and suites are todos', () => {
+  describe('suite should be todo')
+  test('test should be todo')
+
+  test('this suite has correct modes', ({ task }) => {
+    const todoSuite = task.suite!.tasks[0] as RunnerTestSuite
+    const todoTest = task.suite!.tasks[0] as RunnerTestCase
+
+    expect(todoSuite.name).toBe('suite should be todo')
+    expect(todoSuite.mode).toBe('todo')
+
+    expect(todoTest.name).toBe('suite should be todo')
+    expect(todoTest.mode).toBe('todo')
   })
 })
