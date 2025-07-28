@@ -3,10 +3,10 @@ import { runInlineTests } from '../../test-utils'
 
 test('tests run according to the group order', async () => {
   const { stdout, stderr } = await runInlineTests({
-    'example.1.test.ts': `test('1')`,
-    'example.2.test.ts': `test('2')`,
-    'example.2-2.test.ts': `test('2-2')`,
-    'example.3.test.ts': `test('3')`,
+    'example.1.test.ts': `test('1', () => {})`,
+    'example.2.test.ts': `test('2', () => {})`,
+    'example.2-2.test.ts': `test('2-2', () => {})`,
+    'example.3.test.ts': `test('3', () => {})`,
   }, {
     globals: true,
     // run projects in the opposite order!
