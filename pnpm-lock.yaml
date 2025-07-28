@@ -30,6 +30,12 @@ catalogs:
     '@types/istanbul-lib-coverage':
       specifier: ^2.0.6
       version: 2.0.6
+    '@types/istanbul-lib-report':
+      specifier: ^3.0.3
+      version: 3.0.3
+    '@types/istanbul-lib-source-maps':
+      specifier: ^4.0.4
+      version: 4.0.4
     '@types/istanbul-reports':
       specifier: ^3.0.4
       version: 3.0.4
@@ -63,6 +69,18 @@ catalogs:
     flatted:
       specifier: ^3.3.3
       version: 3.3.3
+    istanbul-lib-coverage:
+      specifier: ^3.2.2
+      version: 3.2.2
+    istanbul-lib-report:
+      specifier: ^3.0.1
+      version: 3.0.1
+    istanbul-lib-source-maps:
+      specifier: ^5.0.6
+      version: 5.0.6
+    istanbul-reports:
+      specifier: ^3.1.7
+      version: 3.1.7
     magic-string:
       specifier: ^0.30.17
       version: 0.30.17
@@ -75,6 +93,9 @@ catalogs:
     pathe:
       specifier: ^2.0.3
       version: 2.0.3
+    sirv:
+      specifier: ^3.0.1
+      version: 3.0.1
     std-env:
       specifier: ^3.9.0
       version: 3.9.0
@@ -1216,6 +1237,12 @@ importers:
 
   test/core:
     devDependencies:
+      '@test/vite-environment-external':
+        specifier: link:./projects/vite-environment-external
+        version: link:projects/vite-environment-external
+      '@test/vite-external':
+        specifier: link:./projects/vite-external
+        version: link:projects/vite-external
       '@types/debug':
         specifier: 'catalog:'
         version: 4.1.12
@@ -9554,7 +9581,7 @@ snapshots:
       '@babel/parser': 7.27.5
       '@babel/types': 7.27.1
       '@jridgewell/gen-mapping': 0.3.5
-      '@jridgewell/trace-mapping': 0.3.25
+      '@jridgewell/trace-mapping': 0.3.29
       jsesc: 3.1.0
 
   '@babel/generator@7.27.5':
@@ -9562,7 +9589,7 @@ snapshots:
       '@babel/parser': 7.27.5
       '@babel/types': 7.27.6
       '@jridgewell/gen-mapping': 0.3.5
-      '@jridgewell/trace-mapping': 0.3.25
+      '@jridgewell/trace-mapping': 0.3.29
       jsesc: 3.1.0
 
   '@babel/generator@7.28.0':
@@ -14752,7 +14779,7 @@ snapshots:
 
   istanbul-lib-source-maps@5.0.6:
     dependencies:
-      '@jridgewell/trace-mapping': 0.3.25
+      '@jridgewell/trace-mapping': 0.3.29
       debug: 4.4.1
       istanbul-lib-coverage: 3.2.2
     transitivePeerDependencies:

@@ -48,6 +48,14 @@ export default defineConfig({
       { find: /^custom-lib$/, replacement: resolve(import.meta.dirname, 'projects', 'custom-lib') },
       { find: /^inline-lib$/, replacement: resolve(import.meta.dirname, 'projects', 'inline-lib') },
     ],
+    noExternal: [/projects\/vite-external/],
+  },
+  environments: {
+    ssr: {
+      resolve: {
+        noExternal: [/projects\/vite-environment-external/],
+      },
+    },
   },
   server: {
     port: 3022,

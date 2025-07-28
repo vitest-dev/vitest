@@ -1,5 +1,6 @@
-import type { Plugin as VitePlugin } from 'vite'
+import type { ResolvedConfig, UserConfig, Plugin as VitePlugin } from 'vite'
 import { builtinModules } from 'node:module'
+import { mergeConfig } from 'vite'
 import { resolveOptimizerConfig } from './utils'
 
 export function ModuleRunnerTransform(): VitePlugin {
@@ -17,11 +18,15 @@ export function ModuleRunnerTransform(): VitePlugin {
         names.add('client')
         names.add('ssr')
 
-        // TODO: is it possible to define a pool after the hook? is it passed down if the config is inline project?
         const pool = config.test?.pool
         if (pool === 'vmForks' || pool === 'vmThreads') {
           names.add('__vitest_vm__')
         }
+
+        const external: (string | RegExp)[] = []
+        const noExternal: (string | RegExp)[] = []
+
+        let noExternalAll: true | undefined
 
         for (const name of names) {
           config.environments[name] ??= {}
@@ -39,10 +44,42 @@ export function ModuleRunnerTransform(): VitePlugin {
           environment.dev.preTransformRequests = false
           environment.keepProcessEnv = true
 
+          const resolveExternal = name === 'client'
+            ? config.resolve?.external
+            : []
+          const resolveNoExternal = name === 'client'
+            ? config.resolve?.noExternal
+            : []
+
+          const topLevelResolveOptions: UserConfig['resolve'] = {}
+          if (resolveExternal != null) {
+            topLevelResolveOptions.external = resolveExternal
+          }
+          if (resolveNoExternal != null) {
+            topLevelResolveOptions.noExternal = resolveNoExternal
+          }
+
+          const currentResolveOptions = mergeConfig(
+            topLevelResolveOptions,
+            environment.resolve || {},
+          ) as ResolvedConfig['resolve']
+
+          const envNoExternal = resolveViteResolveOptions('noExternal', currentResolveOptions)
+          if (envNoExternal === true) {
+            noExternalAll = true
+          }
+          else {
+            noExternal.push(...envNoExternal)
+          }
+
+          const envExternal = resolveViteResolveOptions('external', currentResolveOptions)
+          if (envExternal !== true) {
+            external.push(...envExternal)
+          }
+
           // remove Vite's externalization logic because we have our own (unfortunetly)
           environment.resolve ??= {}
 
-          // TODO: make sure we copy user settings to server.deps.inline/server.deps.external
           environment.resolve.external = [
             ...builtinModules,
             ...builtinModules.map(m => `node:${m}`),
@@ -84,7 +121,43 @@ export function ModuleRunnerTransform(): VitePlugin {
             environment.optimizeDeps = optimizeDeps
           }
         }
+
+        testConfig.server ??= {}
+        testConfig.server.deps ??= {}
+
+        if (testConfig.server.deps.inline !== true) {
+          if (noExternalAll) {
+            testConfig.server.deps.inline = true
+          }
+          else if (noExternal.length) {
+            testConfig.server.deps.inline ??= []
+            testConfig.server.deps.inline.push(...noExternal)
+          }
+        }
+        if (external.length) {
+          testConfig.server.deps.external ??= []
+          testConfig.server.deps.external.push(...external)
+        }
       },
     },
   }
+}
+
+function resolveViteResolveOptions(
+  key: 'noExternal' | 'external',
+  options: ResolvedConfig['resolve'],
+): true | (string | RegExp)[] {
+  if (Array.isArray(options[key])) {
+    return options[key]
+  }
+  else if (
+    typeof options[key] === 'string'
+    || options[key] instanceof RegExp
+  ) {
+    return [options[key]]
+  }
+  else if (typeof options[key] === 'boolean') {
+    return true
+  }
+  return []
 }
