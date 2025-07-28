@@ -131,7 +131,7 @@ describe('dom related activity', () => {
 
     expect(
       page.getByRole('tab').selector,
-      'there is only a single >>> in the selector'
+      'there is only a single >>> in the selector',
     ).toBe('>>>html > body > div > div > div, html > body > div > div > div')
   })
 })
