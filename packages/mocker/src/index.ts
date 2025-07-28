@@ -1,4 +1,4 @@
-export { mockObject } from './automocker'
+export { mockObject, moduleSpies } from './automocker'
 export type { GlobalConstructors, MockObjectOptions } from './automocker'
 
 export {

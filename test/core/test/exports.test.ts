@@ -77,14 +77,6 @@ it('exports snapshot', async ({ skip, task }) => {
           "stringify": "function",
           "takeCoverageInsideWorker": "function",
         },
-        "./mocker": {
-          "AutomockedModule": "function",
-          "AutospiedModule": "function",
-          "ManualMockedModule": "function",
-          "MockerRegistry": "function",
-          "RedirectedModule": "function",
-          "mockObject": "function",
-        },
         "./node": {
           "BaseSequencer": "function",
           "GitNotFoundError": "function",
@@ -229,14 +221,6 @@ it('exports snapshot', async ({ skip, task }) => {
             "stopCoverageInsideWorker": "function",
             "stringify": "function",
             "takeCoverageInsideWorker": "function",
-          },
-          "./mocker": {
-            "AutomockedModule": "function",
-            "AutospiedModule": "function",
-            "ManualMockedModule": "function",
-            "MockerRegistry": "function",
-            "RedirectedModule": "function",
-            "mockObject": "function",
           },
           "./node": {
             "BaseSequencer": "function",
