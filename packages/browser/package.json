@@ -98,6 +98,7 @@
     "pixelmatch": "7.1.0",
     "pngjs": "^7.0.0",
     "sirv": "catalog:",
+    "tinyglobby": "catalog:",
     "tinyrainbow": "catalog:",
     "ws": "catalog:"
   },
