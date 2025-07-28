@@ -26,11 +26,12 @@ export async function getModuleGraph(
     }
     let id = clearId(mod.id)
     seen.set(mod, id)
+    // TODO: how to know if it was rewritten(?) - what is rewritten?
     const rewrote = browser
       ? mod.file?.includes(project.browser!.vite.config.cacheDir)
         ? mod.id
         : false
-      : await project.vitenode.shouldExternalize(id)
+      : false
     if (rewrote) {
       id = rewrote
       externalized.add(id)

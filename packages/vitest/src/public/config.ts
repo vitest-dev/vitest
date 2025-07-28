@@ -10,7 +10,6 @@ import type {
 } from '../node/types/config'
 import '../node/types/vite'
 
-export { extraInlineDeps } from '../constants'
 // will import vitest declare test in module 'vite'
 export {
   configDefaults,

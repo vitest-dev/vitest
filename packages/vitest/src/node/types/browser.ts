@@ -65,7 +65,6 @@ type UnsupportedProperties
   // non-browser options
     | 'api'
     | 'deps'
-    | 'testTransformMode'
     | 'environment'
     | 'environmentOptions'
     | 'server'

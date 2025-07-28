@@ -856,7 +856,6 @@ export const cliOptionsConfig: VitestCLIOptions = {
   uiBase: null,
   benchmark: null,
   include: null,
-  testTransformMode: null,
   fakeTimers: null,
   chaiConfig: null,
   clearMocks: null,

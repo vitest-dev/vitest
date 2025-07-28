@@ -48,7 +48,7 @@ import type { Environment } from 'vitest/environments'
 
 export default <Environment>{
   name: 'custom',
-  transformMode: 'ssr',
+  viteEnvironment: 'ssr',
   // optional - only if you support "experimental-vm" pool
   async setupVM() {
     const vm = await import('node:vm')
@@ -74,7 +74,7 @@ export default <Environment>{
 ```
 
 ::: warning
-Vitest requires `transformMode` option on environment object. It should be equal to `ssr` or `web`. This value determines how plugins will transform source code. If it's set to `ssr`, plugin hooks will receive `ssr: true` when transforming or resolving files. Otherwise, `ssr` is set to `false`.
+Vitest requires `viteEnvironment` option on environment object (fallbacks to the Vitest environment name by default). It should be equal to `ssr`, `client` or any custom [Vite environment](https://vite.dev/guide/api-environment) name. This value determines which environment is used to process file.
 :::
 
 You also have access to default Vitest environments through `vitest/environments` entry:

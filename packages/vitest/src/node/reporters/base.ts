@@ -524,7 +524,7 @@ export abstract class BaseReporter implements Reporter {
 
       const environmentTime = sum(files, file => file.environmentLoad)
       const prepareTime = sum(files, file => file.prepareDuration)
-      const transformTime = sum(this.ctx.projects, project => project.vitenode.getTotalDuration())
+      const transformTime = this.ctx.state.transformTime
       const typecheck = sum(this.ctx.projects, project => project.typechecker?.getResult().time)
 
       const timers = [

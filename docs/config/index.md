@@ -233,7 +233,7 @@ Handling for dependencies resolution.
 
 #### deps.optimizer {#deps-optimizer}
 
-- **Type:** `{ ssr?, web? }`
+- **Type:** `{ ssr?, client? }`
 - **See also:** [Dep Optimization Options](https://vitejs.dev/config/dep-optimization-options.html)
 
 Enable dependency optimization. If you have a lot of tests, this might improve their performance.
@@ -245,7 +245,7 @@ When Vitest encounters the external library listed in `include`, it will be bund
 - Your `alias` configuration is now respected inside bundled packages
 - Code in your tests is running closer to how it's running in the browser
 
-Be aware that only packages in `deps.optimizer?.[mode].include` option are bundled (some plugins populate this automatically, like Svelte). You can read more about available options in [Vite](https://vitejs.dev/config/dep-optimization-options.html) docs (Vitest doesn't support `disable` and `noDiscovery` options). By default, Vitest uses `optimizer.web` for `jsdom` and `happy-dom` environments, and `optimizer.ssr` for `node` and `edge` environments, but it is configurable by [`transformMode`](#testtransformmode).
+Be aware that only packages in `deps.optimizer?.[mode].include` option are bundled (some plugins populate this automatically, like Svelte). You can read more about available options in [Vite](https://vitejs.dev/config/dep-optimization-options.html) docs (Vitest doesn't support `disable` and `noDiscovery` options). By default, Vitest uses `optimizer.client` for `jsdom` and `happy-dom` environments, and `optimizer.ssr` for `node` and `edge` environments.
 
 This options also inherits your `optimizeDeps` configuration (for web Vitest will extend `optimizeDeps`, for ssr - `ssr.optimizeDeps`). If you redefine `include`/`exclude` option in `deps.optimizer` it will extend your `optimizeDeps` when running tests. Vitest automatically removes the same options from `include`, if they are listed in `exclude`.
 
@@ -260,15 +260,15 @@ You will not be able to edit your `node_modules` code for debugging, since the c
 
 Enable dependency optimization.
 
-#### deps.web  {#deps-web}
+#### deps.client  {#deps-client}
 
 - **Type:** `{ transformAssets?, ... }`
 
-Options that are applied to external files when transform mode is set to `web`. By default, `jsdom` and `happy-dom` use `web` mode, while `node` and `edge` environments use `ssr` transform mode, so these options will have no affect on files inside those environments.
+Options that are applied to external files when the environment is set to `client`. By default, `jsdom` and `happy-dom` use `client` environment, while `node` and `edge` environments use `ssr`, so these options will have no affect on files inside those environments.
 
 Usually, files inside `node_modules` are externalized, but these options also affect files in [`server.deps.external`](#server-deps-external).
 
-#### deps.web.transformAssets
+#### deps.client.transformAssets
 
 - **Type:** `boolean`
 - **Default:** `true`
@@ -281,7 +281,7 @@ This module will have a default export equal to the path to the asset, if no que
 At the moment, this option only works with [`vmThreads`](#vmthreads) and [`vmForks`](#vmforks) pools.
 :::
 
-#### deps.web.transformCss
+#### deps.client.transformCss
 
 - **Type:** `boolean`
 - **Default:** `true`
@@ -294,7 +294,7 @@ If CSS files are disabled with [`css`](#css) options, this option will just sile
 At the moment, this option only works with [`vmThreads`](#vmthreads) and [`vmForks`](#vmforks) pools.
 :::
 
-#### deps.web.transformGlobPattern
+#### deps.client.transformGlobPattern
 
 - **Type:** `RegExp | RegExp[]`
 - **Default:** `[]`
@@ -560,7 +560,7 @@ import type { Environment } from 'vitest'
 
 export default <Environment>{
   name: 'custom',
-  transformMode: 'ssr',
+  viteEnvironment: 'ssr',
   setup() {
     // custom setup
     return {
@@ -1675,28 +1675,6 @@ Will call [`vi.unstubAllEnvs`](/api/vi#vi-unstuballenvs) before each test.
 - **Default:** `false`
 
 Will call [`vi.unstubAllGlobals`](/api/vi#vi-unstuballglobals) before each test.
-
-### testTransformMode {#testtransformmode}
-
- - **Type:** `{ web?, ssr? }`
-
- Determine the transform method for all modules imported inside a test that matches the glob pattern. By default, relies on the environment. For example, tests with JSDOM environment will process all files with `ssr: false` flag and tests with Node environment process all modules with `ssr: true`.
-
- #### testTransformMode.ssr
-
- - **Type:** `string[]`
- - **Default:** `[]`
-
- Use SSR transform pipeline for all modules inside specified tests.<br>
- Vite plugins will receive `ssr: true` flag when processing those files.
-
- #### testTransformMode&#46;web
-
- - **Type:** `string[]`
- - **Default:** `[]`
-
- First do a normal transform pipeline (targeting browser), then do a SSR rewrite to run the code in Node.<br>
- Vite plugins will receive `ssr: false` flag when processing those files.
 
 ### snapshotFormat<NonProjectOption />
 

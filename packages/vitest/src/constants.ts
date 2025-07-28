@@ -5,13 +5,6 @@ export const defaultInspectPort = 9229
 
 export const API_PATH = '/__vitest_api__'
 
-export const extraInlineDeps: RegExp[] = [
-  /^(?!.*node_modules).*\.mjs$/,
-  /^(?!.*node_modules).*\.cjs\.js$/,
-  // Vite client
-  /vite\w*\/dist\/client\/env.mjs/,
-]
-
 export const CONFIG_NAMES: string[] = ['vitest.config', 'vite.config']
 
 export const CONFIG_EXTENSIONS: string[] = ['.ts', '.mts', '.cts', '.js', '.mjs', '.cjs']

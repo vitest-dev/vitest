@@ -16,6 +16,7 @@ const entries = {
   'error': 'src/error.ts',
   'source-map': 'src/source-map.ts',
   'types': 'src/types.ts',
+  'resolver': 'src/resolver.ts',
 }
 
 const external = [

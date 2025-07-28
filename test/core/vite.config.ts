@@ -44,10 +44,18 @@ export default defineConfig({
   },
   resolve: {
     alias: [
-      { find: '#', replacement: resolve(import.meta.dirname, 'src') },
+      { find: /^#/, replacement: resolve(import.meta.dirname, 'src') },
       { find: /^custom-lib$/, replacement: resolve(import.meta.dirname, 'projects', 'custom-lib') },
       { find: /^inline-lib$/, replacement: resolve(import.meta.dirname, 'projects', 'inline-lib') },
     ],
+    noExternal: [/projects\/vite-external/],
+  },
+  environments: {
+    ssr: {
+      resolve: {
+        noExternal: [/projects\/vite-environment-external/],
+      },
+    },
   },
   server: {
     port: 3022,
@@ -72,6 +80,19 @@ export default defineConfig({
     setupFiles: [
       './test/setup.ts',
     ],
+    server: {
+      deps: {
+        external: [
+          'tinyspy',
+          /src\/external/,
+          /esm\/esm/,
+          /packages\/web-worker/,
+          /\.wasm$/,
+          /\/wasm-bindgen-no-cyclic\/index_bg.js/,
+        ],
+        inline: ['inline-lib'],
+      },
+    },
     includeTaskLocation: true,
     reporters: process.env.GITHUB_ACTIONS
       ? ['default', 'github-actions']
@@ -113,19 +134,6 @@ export default defineConfig({
     allowOnly: true,
     deps: {
       moduleDirectories: ['node_modules', 'projects', 'packages'],
-    },
-    server: {
-      deps: {
-        external: [
-          'tinyspy',
-          /src\/external/,
-          /esm\/esm/,
-          /packages\/web-worker/,
-          /\.wasm$/,
-          /\/wasm-bindgen-no-cyclic\/index_bg.js/,
-        ],
-        inline: ['inline-lib'],
-      },
     },
     alias: [
       {

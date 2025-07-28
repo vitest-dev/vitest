@@ -1,8 +1,8 @@
 import type { Vitest } from '../core'
 import type { TestSpecification } from '../spec'
 import type { TestSequencer } from './types'
+import { slash } from '@vitest/utils'
 import { relative, resolve } from 'pathe'
-import { slash } from 'vite-node/utils'
 import { hash } from '../hash'
 
 export class BaseSequencer implements TestSequencer {
