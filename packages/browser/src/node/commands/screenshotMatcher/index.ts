@@ -199,7 +199,7 @@ async function getStableScreenshots({
   element: string
   name: string
   reference: ReturnType<AnyCodec['decode']> | null
-  screenshotOptions: ScreenshotMatcherOptions['screenshotOptions']
+  screenshotOptions: ScreenshotMatcherArguments[2]['screenshotOptions']
   signal: AbortSignal
 }) {
   const screenshotArgument = {

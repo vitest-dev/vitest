@@ -6,8 +6,9 @@ import { basename, dirname, relative, resolve } from 'pathe'
 import { PlaywrightBrowserProvider } from '../providers/playwright'
 import { WebdriverBrowserProvider } from '../providers/webdriver'
 
-interface ScreenshotCommandOptions extends Omit<ScreenshotOptions, 'element'> {
+interface ScreenshotCommandOptions extends Omit<ScreenshotOptions, 'element' | 'mask'> {
   element?: string
+  mask?: readonly string[]
 }
 
 export const screenshot: BrowserCommand<[string, ScreenshotCommandOptions]> = async (
@@ -53,11 +54,11 @@ export async function takeScreenshot(
   await mkdir(dirname(path), { recursive: true })
 
   if (context.provider instanceof PlaywrightBrowserProvider) {
-    const mask = options.mask?.map(selector => context.iframe.locator(`${selector}`))
+    const mask = options.mask?.map(selector => context.iframe.locator(selector))
 
     if (options.element) {
       const { element: selector, ...config } = options
-      const element = context.iframe.locator(`${selector}`)
+      const element = context.iframe.locator(selector)
       const buffer = await element.screenshot({
         ...config,
         mask,

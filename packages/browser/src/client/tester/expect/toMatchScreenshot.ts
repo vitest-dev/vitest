@@ -40,16 +40,19 @@ export default async function toMatchScreenshot(
     ? nameOrOptions
     : `${this.currentTestName} ${counter.current}`
 
-  const normalizedOptions = options.screenshotOptions && 'mask' in options.screenshotOptions
-    ? {
-        ...options,
-        screenshotOptions: {
-          ...options.screenshotOptions,
-          mask: (options.screenshotOptions.mask as Array<Element | Locator>)
-            .map(convertToSelector),
-        },
-      }
-    : options
+  const normalizedOptions: Omit<ScreenshotMatcherArguments[2], 'element'> = (
+    options.screenshotOptions && 'mask' in options.screenshotOptions
+      ? {
+          ...options,
+          screenshotOptions: {
+            ...options.screenshotOptions,
+            mask: (options.screenshotOptions.mask as Array<Element | Locator>)
+              .map(convertToSelector),
+          },
+        }
+      // TS believes `mask` to still be defined as `ReadonlyArray<Element | Locator>`
+      : options as any
+  )
 
   const result = await getBrowserState().commands.triggerCommand<ScreenshotMatcherOutput>(
     '__vitest_screenshotMatcher',
