@@ -1024,13 +1024,15 @@ export class Vitest {
    */
   public invalidateFile(filepath: string): void {
     this.projects.forEach(({ vite, browser }) => {
-      const serverMods = vite.moduleGraph.getModulesByFile(filepath)
-      serverMods?.forEach(mod => vite.moduleGraph.invalidateModule(mod))
+      const environments = [
+        ...Object.values(vite.environments),
+        ...Object.values(browser?.vite.environments || {}),
+      ]
 
-      if (browser) {
-        const browserMods = browser.vite.moduleGraph.getModulesByFile(filepath)
-        browserMods?.forEach(mod => browser.vite.moduleGraph.invalidateModule(mod))
-      }
+      environments.forEach(({ moduleGraph }) => {
+        const modules = moduleGraph.getModulesByFile(filepath)
+        modules?.forEach(module => moduleGraph.invalidateModule(module))
+      })
     })
   }
 
