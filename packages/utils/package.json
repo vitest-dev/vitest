@@ -69,7 +69,7 @@
   },
   "dependencies": {
     "@vitest/pretty-format": "workspace:*",
-    "loupe": "^3.1.4",
+    "loupe": "^3.2.0",
     "tinyrainbow": "catalog:"
   },
   "devDependencies": {
