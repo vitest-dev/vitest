@@ -114,8 +114,9 @@ Thanks to:
 - [@patak-dev](https://github.com/patak-dev) for the awesome package name!
 
 ## Contribution
+
 See [Contributing Guide](https://github.com/vitest-dev/vitest/blob/main/CONTRIBUTING.md).
 
 ## License
 
-[MIT](./LICENSE) License © 2021-Present [Anthony Fu](https://github.com/antfu), [Matias Capeletto](https://github.com/patak-dev)
+[MIT](./LICENSE) License © 2021-Present VoidZero Inc. and Vitest contributors
