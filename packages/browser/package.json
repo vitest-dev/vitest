@@ -90,7 +90,7 @@
     }
   },
   "dependencies": {
-    "@testing-library/dom": "^10.4.0",
+    "@testing-library/dom": "^10.4.1",
     "@testing-library/user-event": "^14.6.1",
     "@vitest/mocker": "workspace:*",
     "@vitest/utils": "workspace:*",
@@ -119,6 +119,6 @@
     "playwright-core": "^1.54.1",
     "safaridriver": "^1.0.0",
     "vitest": "workspace:*",
-    "webdriverio": "^9.18.1"
+    "webdriverio": "^9.18.4"
   }
 }

@@ -32,9 +32,9 @@
     "unplugin-vue-components": "catalog:",
     "vite": "^6.3.5",
     "vite-plugin-pwa": "^0.21.2",
-    "vitepress": "2.0.0-alpha.8",
+    "vitepress": "2.0.0-alpha.9",
     "vitepress-plugin-group-icons": "^1.6.1",
-    "vitepress-plugin-llms": "^1.3.4",
+    "vitepress-plugin-llms": "^1.7.2",
     "vitepress-plugin-tabs": "^0.7.1",
     "workbox-window": "^7.3.0"
   }

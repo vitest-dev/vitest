@@ -191,7 +191,7 @@
     "@types/istanbul-reports": "catalog:",
     "@types/jsdom": "^21.1.7",
     "@types/node": "^22.16.5",
-    "@types/picomatch": "^4.0.1",
+    "@types/picomatch": "^4.0.2",
     "@types/prompts": "^2.4.9",
     "@types/sinonjs__fake-timers": "^8.1.5",
     "acorn-walk": "catalog:",
