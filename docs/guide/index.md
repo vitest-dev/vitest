@@ -100,8 +100,7 @@ One of the main advantages of Vitest is its unified configuration with Vite. If 
 
 - Create `vitest.config.ts`, which will have the higher priority
 - Pass `--config` option to CLI, e.g. `vitest --config ./path/to/vitest.config.ts`
-- Use `process.env.VITEST` or `mode` property on `defineConfig` (will be set to `test` if not overridden) to conditionally apply different configuration in `vite.config.ts`
-- Besides using `mode` and `process.env.VITEST` to adjust Vite configuration, you can also use them in your application runtime to conditionally disable features such as "Debug logging". This is especially useful to eliminate noise during running tests, making test output cleaner and more stable.
+- Use `process.env.VITEST` or `mode` property on `defineConfig` (will be set to `test` if not overridden) to conditionally apply different configuration in `vite.config.ts`. You can also use them in your application runtime to conditionally disable features such as "Debug logging" to make test output cleaner and more stable
 
 Vitest supports the same extensions for your configuration file as Vite does: `.js`, `.mjs`, `.cjs`, `.ts`, `.cts`, `.mts`. Vitest does not support `.json` extension.
 
