@@ -45,14 +45,19 @@ export function mockObject(
       // Modules define their exports as getters. We want to process those.
       if (!isModule && descriptor.get) {
         try {
-          Object.defineProperty(newContainer, property, {
-            configurable: descriptor.configurable,
-            enumerable: descriptor.enumerable,
-            // automatically mock getters and setters
-            // https://github.com/vitest-dev/vitest/issues/8345
-            get: () => {},
-            set: descriptor.set ? () => {} : undefined,
-          })
+          if (options.type === 'autospy') {
+            Object.defineProperty(newContainer, property, descriptor)
+          }
+          else {
+            Object.defineProperty(newContainer, property, {
+              configurable: descriptor.configurable,
+              enumerable: descriptor.enumerable,
+              // automatically mock getters and setters
+              // https://github.com/vitest-dev/vitest/issues/8345
+              get: () => {},
+              set: descriptor.set ? () => {} : undefined,
+            })
+          }
         }
         catch {
           // Ignore errors, just move on to the next prop.
