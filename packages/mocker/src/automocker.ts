@@ -45,7 +45,14 @@ export function mockObject(
       // Modules define their exports as getters. We want to process those.
       if (!isModule && descriptor.get) {
         try {
-          Object.defineProperty(newContainer, property, descriptor)
+          Object.defineProperty(newContainer, property, {
+            configurable: descriptor.configurable,
+            enumerable: descriptor.enumerable,
+            // automatically mock getters and setters
+            // https://github.com/vitest-dev/vitest/issues/8345
+            get: () => {},
+            set: descriptor.set ? () => {} : undefined,
+          })
         }
         catch {
           // Ignore errors, just move on to the next prop.
@@ -101,13 +108,14 @@ export function mockObject(
           )
         }
         const createMockInstance = options.createMockInstance
-        const prototypeMembers = newContainer[property].prototype
-          ? collectFunctionProperties(newContainer[property].prototype)
+        const currentValue = newContainer[property]
+        const prototypeMembers = currentValue.prototype
+          ? collectFunctionProperties(currentValue.prototype)
           : []
         const mock = createMockInstance({
-          name: newContainer[property].name,
+          name: currentValue.name,
           prototypeMembers,
-          originalImplementation: options.type === 'autospy' ? newContainer[property] : undefined,
+          originalImplementation: options.type === 'autospy' ? currentValue : undefined,
           keepMembersImplementation: options.type === 'autospy',
         })
         newContainer[property] = mock
@@ -245,8 +253,12 @@ function collectOwnProperties(
 function collectFunctionProperties(prototype: any) {
   const properties = new Set<string | symbol>()
   collectOwnProperties(prototype, (prop) => {
-    const type = getType(prototype[prop])
-    if (type.includes('Function') && !isReadonlyProp(prototype[prop], prop)) {
+    const descriptor = Object.getOwnPropertyDescriptor(prototype, prop)
+    if (!descriptor || descriptor.get) {
+      return
+    }
+    const type = getType(descriptor.value)
+    if (type.includes('Function') && !isReadonlyProp(descriptor.value, prop)) {
       properties.add(prop)
     }
   })
