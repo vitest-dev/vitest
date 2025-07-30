@@ -109,7 +109,7 @@ async function prepareTestEnvironment(options: PrepareOptions) {
   const mocker = new VitestBrowserClientMocker(
     interceptor,
     rpc,
-    SpyModule.spyOn,
+    SpyModule.createMockInstance,
     {
       root: getBrowserState().viteConfig.root,
     },

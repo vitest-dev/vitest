@@ -276,7 +276,7 @@ export class VitestMocker {
   public mockObject(
     object: Record<string | symbol, any>,
     mockExports: Record<string | symbol, any> = {},
-    behavior: MockedModuleType = 'automock',
+    behavior: 'automock' | 'autospy' = 'automock',
   ): Record<string | symbol, any> {
     const createMockInstance = this.spyModule?.createMockInstance
     if (!createMockInstance) {
