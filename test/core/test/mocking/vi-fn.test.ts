@@ -234,7 +234,7 @@ describe('vi.fn() configuration', () => {
     const mock = vi.fn(() => 42)
     expect(mock()).toBe(42)
     mock.mockReset()
-    expect(mock()).toBe(undefined)
+    expect(mock()).toBe(42)
   })
 
   test('vi.fn() resets the mock implementation', () => {
@@ -306,7 +306,7 @@ describe('vi.fn() restoration', () => {
     const mock = vi.fn(() => 'hello')
     expect(mock()).toBe('hello')
     mock.mockRestore()
-    expect(mock()).toBe(undefined)
+    expect(mock()).toBe('hello')
   })
 
   test('vi.fn() doesn\'t resets the added implementation in mock.mockRestore()', () => {
@@ -387,7 +387,7 @@ describe('vi.fn() implementations', () => {
     expect(mock()).toBe(100)
     expect(mock()).toBe(100)
     mock.mockReset()
-    expect(mock()).toBe(undefined)
+    expect(mock()).toBe(42)
   })
 
   test('vi.fn() with mockReturnValue overriding another mock', () => {
@@ -418,7 +418,7 @@ describe('vi.fn() implementations', () => {
     expect(mock()).toBe(42)
     expect(mock()).toBe(42)
     mock.mockReset()
-    expect(mock()).toBe(undefined)
+    expect(mock()).toBe(42)
   })
 
   test('vi.fn() with mockReturnValueOnce overriding another mock', () => {
@@ -458,7 +458,7 @@ describe('vi.fn() implementations', () => {
       { type: 'fulfilled', value: 100 },
     ])
     mock.mockReset()
-    expect(mock()).toBe(undefined)
+    await expect(mock()).resolves.toBe(42)
   })
 
   test('vi.fn() with mockResolvedValue overriding another mock', async () => {
@@ -494,7 +494,7 @@ describe('vi.fn() implementations', () => {
     await expect(mock()).resolves.toBe(42)
     await expect(mock()).resolves.toBe(42)
     mock.mockReset()
-    expect(mock()).toBe(undefined)
+    await expect(mock()).resolves.toBe(42)
   })
 
   test('vi.fn() with mockResolvedValueOnce overriding another mock', async () => {
@@ -534,7 +534,7 @@ describe('vi.fn() implementations', () => {
       { type: 'rejected', value: 100 },
     ])
     mock.mockReset()
-    expect(mock()).toBe(undefined)
+    await expect(mock()).resolves.toBe(42)
   })
 
   test('vi.fn() with mockRejectedValue overriding another mock', async () => {
@@ -570,7 +570,7 @@ describe('vi.fn() implementations', () => {
     await expect(mock()).resolves.toBe(42)
     await expect(mock()).resolves.toBe(42)
     mock.mockReset()
-    expect(mock()).toBe(undefined)
+    await expect(mock()).resolves.toBe(42)
   })
 
   test('vi.fn() with mockRejectedValueOnce overriding another mock', async () => {

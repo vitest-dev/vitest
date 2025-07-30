@@ -442,7 +442,7 @@ export type Mocked<T> = {
 } & T
 
 export interface MockConfig {
-  mockImplementation: Procedure | undefined
+  mockImplementation: Procedure | Constructable | undefined
   mockOriginal: Procedure | Constructable | undefined
   mockName: string
   onceMockImplementations: Array<Procedure>

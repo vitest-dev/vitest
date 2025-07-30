@@ -36,9 +36,11 @@ export function createMockInstance(
     prototypeConfig,
     keepMembersImplementation,
     name,
+    resetToMockImplementation,
   }: {
     originalImplementation?: Procedure | Constructable
     mockImplementation?: Procedure | Constructable
+    resetToMockImplementation?: boolean
     restore?: () => void
     prototypeMembers?: (string | symbol)[]
     keepMembersImplementation?: boolean
@@ -56,9 +58,10 @@ export function createMockInstance(
 
   const mock = createMock(
     { config, state, name, prototypeState, prototypeConfig, keepMembersImplementation },
-    originalImplementation,
     prototypeMembers,
   )
+  // inherit the default name so it appears in snapshots and logs
+  // config.mockName = mock.name || 'vi.fn()'
   MOCK_CONFIGS.set(mock, config)
   REGISTERED_MOCKS.add(mock)
 
@@ -163,7 +166,9 @@ export function createMockInstance(
 
   mock.mockReset = function mockReset() {
     mock.mockClear()
-    config.mockImplementation = undefined
+    config.mockImplementation = resetToMockImplementation
+      ? mockImplementation
+      : undefined
     config.mockName = 'vi.fn()'
     config.onceMockImplementations = []
     return mock
@@ -186,7 +191,7 @@ export function createMockInstance(
   }
 
   if (Symbol.dispose) {
-    mock[Symbol.dispose] = mock.mockRestore
+    mock[Symbol.dispose] = () => mock.mockRestore()
   }
 
   if (mockImplementation) {
@@ -197,9 +202,15 @@ export function createMockInstance(
 }
 
 export function fn<T extends Procedure | Constructable = Procedure>(
-  mockImplementation?: T,
+  originalImplementation?: T,
 ): Mock<T> {
-  return createMockInstance({ mockImplementation }) as Mock<T>
+  return createMockInstance({
+    // so getMockImplementation() returns the value
+    mockImplementation: originalImplementation,
+    // special case so that .mockReset() resets the value to
+    // the the originalImplementation instead of () => undefined
+    resetToMockImplementation: true,
+  }) as Mock<T>
 }
 
 export function spyOn<T extends object, S extends Properties<Required<T>>>(
@@ -298,7 +309,7 @@ export function spyOn<T extends object, K extends keyof T>(
 
   const mock = createMockInstance({
     restore,
-    originalImplementation: original,
+    originalImplementation: ssr && original ? original() : original,
   })
 
   try {
@@ -400,9 +411,9 @@ function createMock(
     name?: string | symbol
     keepMembersImplementation?: boolean
   },
-  original?: Procedure | Constructable,
   prototypeMethods: (string | symbol)[] = [],
 ) {
+  const original = config.mockOriginal
   const name = (mockName || original?.name || 'Mock') as string
   const namedObject: Record<string, Mock> = {
     // to keep the name of the function intact
@@ -457,7 +468,7 @@ function createMock(
           }
         }
         else {
-          returnValue = (implementation as Procedure).call(this, args)
+          returnValue = (implementation as Procedure).apply(this, args)
         }
       }
       catch (error: any) {
@@ -511,7 +522,60 @@ function createMock(
       return returnValue
     }) as Mock,
   }
+  if (original) {
+    copyOriginalStaticProperties(namedObject[name], original)
+  }
   return namedObject[name]
+}
+
+function copyOriginalStaticProperties(mock: Mock, original: Procedure | Constructable) {
+  const { properties, descriptors } = getAllProperties(original)
+
+  for (const key of properties) {
+    const descriptor = descriptors[key]!
+    const mockDescriptor = getDescriptor(mock, key)
+    if (mockDescriptor) {
+      continue
+    }
+
+    Object.defineProperty(mock, key, descriptor)
+  }
+  return mock
+}
+
+const ignoreProperties = new Set<string | symbol>([
+  'length',
+  'name',
+  'prototype',
+  Symbol.for('nodejs.util.promisify.custom'),
+])
+
+function getAllProperties(original: Procedure | Constructable) {
+  const properties = new Set<string | symbol>()
+  const descriptors: Record<string | symbol, PropertyDescriptor | undefined>
+    = {}
+  while (
+    original
+    && original !== Object.prototype
+    && original !== Function.prototype
+  ) {
+    const ownProperties = [
+      ...Object.getOwnPropertyNames(original),
+      ...Object.getOwnPropertySymbols(original),
+    ]
+    for (const prop of ownProperties) {
+      if (descriptors[prop] || ignoreProperties.has(prop)) {
+        continue
+      }
+      properties.add(prop)
+      descriptors[prop] = Object.getOwnPropertyDescriptor(original, prop)
+    }
+    original = Object.getPrototypeOf(original)
+  }
+  return {
+    properties,
+    descriptors,
+  }
 }
 
 function getDefaultConfig(original?: Procedure | Constructable): MockConfig {

@@ -1,16 +1,16 @@
-import type { MockedModuleType } from './registry'
-
 type Key = string | symbol
 
+export type CreateMockInstanceProcedure = (options?: {
+  prototypeMembers?: (string | symbol)[]
+  name?: string | symbol
+  originalImplementation?: (...args: any[]) => any
+  keepMembersImplementation?: boolean
+}) => any
+
 export interface MockObjectOptions {
-  type: MockedModuleType
+  type: 'automock' | 'autospy'
   globalConstructors: GlobalConstructors
-  createMockInstance: (options?: {
-    prototypeMembers?: (string | symbol)[]
-    name?: string | symbol
-    originalImplementation?: (...args: any[]) => any
-    keepMembersImplementation?: boolean
-  }) => any
+  createMockInstance: CreateMockInstanceProcedure
 }
 
 export function mockObject(
@@ -54,7 +54,7 @@ export function mockObject(
       }
 
       // Skip special read-only props, we don't want to mess with those.
-      if (isReadonlyProp(property, containerType)) {
+      if (isReadonlyProp(container[property], property)) {
         continue
       }
 
@@ -105,7 +105,7 @@ export function mockObject(
           ? collectFunctionProperties(newContainer[property].prototype)
           : []
         const mock = createMockInstance({
-          name: property,
+          name: newContainer[property].name,
           prototypeMembers,
           originalImplementation: options.type === 'autospy' ? newContainer[property] : undefined,
           keepMembersImplementation: options.type === 'autospy',
@@ -153,7 +153,7 @@ function getType(value: unknown): string {
   return Object.prototype.toString.apply(value).slice(8, -1)
 }
 
-function isReadonlyProp(object: unknown, prop: string) {
+function isReadonlyProp(object: unknown, prop: string | symbol) {
   if (
     prop === 'arguments'
     || prop === 'caller'
@@ -244,10 +244,10 @@ function collectOwnProperties(
 
 function collectFunctionProperties(prototype: any) {
   const properties = new Set<string | symbol>()
-  collectOwnProperties(prototype, (key) => {
-    const type = getType(prototype[key])
-    if (type.includes('Function') && !isReadonlyProp(prototype[key], type)) {
-      properties.add(key)
+  collectOwnProperties(prototype, (prop) => {
+    const type = getType(prototype[prop])
+    if (type.includes('Function') && !isReadonlyProp(prototype[prop], prop)) {
+      properties.add(prop)
     }
   })
   return Array.from(properties)
