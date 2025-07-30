@@ -663,7 +663,7 @@ describe('jest mock compat layer', () => {
       "f": {
         "configurable": true,
         "enumerable": false,
-        "value": [MockFunction] {
+        "value": [MockFunction f] {
           "calls": [
             [],
           ],

@@ -37,6 +37,7 @@ export function createMockInstance(
     keepMembersImplementation,
     name,
     resetToMockImplementation,
+    resetToMockName,
   }: {
     originalImplementation?: Procedure | Constructable
     mockImplementation?: Procedure | Constructable
@@ -46,6 +47,7 @@ export function createMockInstance(
     keepMembersImplementation?: boolean
     prototypeState?: MockContext
     prototypeConfig?: MockConfig
+    resetToMockName?: boolean
     name?: string | symbol
   } = {},
 ): Mock {
@@ -61,7 +63,9 @@ export function createMockInstance(
     prototypeMembers,
   )
   // inherit the default name so it appears in snapshots and logs
-  // config.mockName = mock.name || 'vi.fn()'
+  if (resetToMockName) {
+    config.mockName = mock.name || 'vi.fn()'
+  }
   MOCK_CONFIGS.set(mock, config)
   REGISTERED_MOCKS.add(mock)
 
@@ -169,7 +173,7 @@ export function createMockInstance(
     config.mockImplementation = resetToMockImplementation
       ? mockImplementation
       : undefined
-    config.mockName = 'vi.fn()'
+    config.mockName = resetToMockName ? (mock.name || 'vi.fn()') : 'vi.fn()'
     config.onceMockImplementations = []
     return mock
   }
@@ -310,6 +314,7 @@ export function spyOn<T extends object, K extends keyof T>(
   const mock = createMockInstance({
     restore,
     originalImplementation: ssr && original ? original() : original,
+    resetToMockName: true,
   })
 
   try {

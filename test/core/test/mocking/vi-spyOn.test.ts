@@ -418,15 +418,15 @@ describe('vi.spyOn() settings', () => {
   test('vi.spyOn() has a name', () => {
     const object = createObject()
     const spy = vi.spyOn(object, 'method')
-    expect(spy.getMockName()).toBe('vi.fn()')
+    expect(spy.getMockName()).toBe('method')
     spy.mockName('test')
     expect(spy.getMockName()).toBe('test')
     spy.mockReset()
-    expect(spy.getMockName()).toBe('vi.fn()')
+    expect(spy.getMockName()).toBe('method')
     spy.mockName('test')
     expect(spy.getMockName()).toBe('test')
     vi.resetAllMocks()
-    expect(spy.getMockName()).toBe('vi.fn()')
+    expect(spy.getMockName()).toBe('method')
   })
 })
 
