@@ -45,6 +45,11 @@ const vitestSponsors = {
       url: 'https://oomol.com/',
       img: '/oomol.svg',
     },
+    {
+      name: 'Mailmeteor',
+      url: 'https://mailmeteor.com/',
+      img: '/mailmeteor.svg',
+    },
   ],
 } satisfies Record<string, Sponsor[]>
 
