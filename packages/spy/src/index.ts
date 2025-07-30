@@ -75,21 +75,10 @@ export function createMockInstance(
   }
 
   Object.defineProperty(mock, 'mock', {
-    configurable: true,
+    configurable: false,
     enumerable: true,
-    get: () => state,
-    set: (newState: MockContext<Procedure>) => {
-      if (!newState || typeof newState !== 'object') {
-        return
-      }
-
-      state.calls = newState.calls
-      state.contexts = newState.contexts
-      state.instances = newState.instances
-      state.invocationCallOrder = newState.invocationCallOrder
-      state.results = newState.results
-      state.settledResults = newState.settledResults
-    },
+    writable: false,
+    value: state,
   })
 
   mock.mockImplementation = function mockImplementation(implementation) {
@@ -218,18 +207,18 @@ export function fn<T extends Procedure | Constructable = Procedure>(
 }
 
 export function spyOn<T extends object, S extends Properties<Required<T>>>(
-  obj: T,
-  methodName: S,
+  object: T,
+  key: S,
   accessor: 'get'
 ): Mock<() => T[S]>
 export function spyOn<T extends object, G extends Properties<Required<T>>>(
-  obj: T,
-  methodName: G,
+  object: T,
+  key: G,
   accessor: 'set'
 ): Mock<(arg: T[G]) => void>
 export function spyOn<T extends object, M extends Classes<Required<T>> | Methods<Required<T>>>(
-  obj: T,
-  methodName: M
+  object: T,
+  key: M
 ): Required<T>[M] extends { new (...args: infer A): infer R }
   ? Mock<{ new (...args: A): R }>
   : T[M] extends Procedure
@@ -281,7 +270,8 @@ export function spyOn<T extends object, K extends keyof T>(
     original = object[key] as unknown as Procedure
   }
 
-  if (typeof original === 'function' && '_isMockFunction' in original && original._isMockFunction) {
+  // TODO: does it work with getters/setters?
+  if (isMockFunction(original)) {
     return original as any as Mock
   }
 
@@ -497,6 +487,7 @@ function createMock(
             state.contexts[contextIndex - 1] = returnValue
             state.instances[instanceIndex - 1] = returnValue
 
+            // TODO: test this is correct
             if (contextPrototypeIndex != null && prototypeState) {
               prototypeState.contexts[contextPrototypeIndex - 1] = returnValue
             }
@@ -594,6 +585,7 @@ function getDefaultConfig(original?: Procedure | Constructable): MockConfig {
 
 function getDefaultState(): MockContext<Procedure> {
   const state = {
+    // TODO: tests with arguments
     calls: [],
     contexts: [],
     instances: [],

@@ -11,6 +11,15 @@ test('vi.fn() calls implementation if it was passed down', () => {
   expect(mock()).toBe(3)
 })
 
+test('vi.fn().mock cannot be overriden', () => {
+  const mock = vi.fn()
+  expect(() => mock.mock = {} as any).toThrowError()
+  expect(() => {
+    // @ts-expect-error mock is not optional
+    delete mock.mock
+  }).toThrowError()
+})
+
 describe('vi.fn() state', () => {
   // TODO: test when calls is not empty
   test('vi.fn() clears calls without a custom implementation', () => {
