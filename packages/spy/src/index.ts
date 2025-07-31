@@ -5,7 +5,8 @@ import type {
   Mock,
   MockConfig,
   MockContext,
-  MockFnContext,
+  MockInstanceOption,
+  MockProcedureContext,
   MockResult,
   MockReturnType,
   MockSettledResult,
@@ -26,31 +27,15 @@ const MOCK_RESTORE = new Set<() => void>()
 const REGISTERED_MOCKS = new Set<Mock>()
 const MOCK_CONFIGS = new WeakMap<Mock, MockConfig>()
 
-export function createMockInstance(
-  {
+export function createMockInstance(options: MockInstanceOption = {}): Mock {
+  const {
     originalImplementation,
     restore,
     mockImplementation,
-    prototypeMembers,
-    prototypeState,
-    prototypeConfig,
-    keepMembersImplementation,
-    name,
     resetToMockImplementation,
     resetToMockName,
-  }: {
-    originalImplementation?: Procedure | Constructable
-    mockImplementation?: Procedure | Constructable
-    resetToMockImplementation?: boolean
-    restore?: () => void
-    prototypeMembers?: (string | symbol)[]
-    keepMembersImplementation?: boolean
-    prototypeState?: MockContext
-    prototypeConfig?: MockConfig
-    resetToMockName?: boolean
-    name?: string | symbol
-  } = {},
-): Mock {
+  } = options
+
   if (restore) {
     MOCK_RESTORE.add(restore)
   }
@@ -58,11 +43,14 @@ export function createMockInstance(
   const config = getDefaultConfig(originalImplementation)
   const state = getDefaultState()
 
-  const mock = createMock(
-    { config, state, name, prototypeState, prototypeConfig, keepMembersImplementation },
-    prototypeMembers,
-  )
+  const mock = createMock({
+    config,
+    state,
+    ...options,
+  })
   // inherit the default name so it appears in snapshots and logs
+  // this is used by `vi.spyOn()` for better debugging.
+  // when `vi.fn()` is called, we just use the default string
   if (resetToMockName) {
     config.mockName = mock.name || 'vi.fn()'
   }
@@ -71,6 +59,8 @@ export function createMockInstance(
 
   mock._isMockFunction = true
   mock.getMockImplementation = () => {
+    // Jest only returns `config.mockImplementation` here,
+    // but we think it makes sense to return what the next function will be called
     return config.onceMockImplementations[0] || config.mockImplementation
   }
 
@@ -188,7 +178,7 @@ export function createMockInstance(
   }
 
   if (mockImplementation) {
-    mock.mockImplementation(mockImplementation as any) // TODO: typess
+    mock.mockImplementation(mockImplementation)
   }
 
   return mock
@@ -198,7 +188,7 @@ export function fn<T extends Procedure | Constructable = Procedure>(
   originalImplementation?: T,
 ): Mock<T> {
   return createMockInstance({
-    // so getMockImplementation() returns the value
+    // we pass this down so getMockImplementation() always returns the value
     mockImplementation: originalImplementation,
     // special case so that .mockReset() resets the value to
     // the the originalImplementation instead of () => undefined
@@ -270,9 +260,8 @@ export function spyOn<T extends object, K extends keyof T>(
     original = object[key] as unknown as Procedure
   }
 
-  // TODO: does it work with getters/setters?
   if (isMockFunction(original)) {
-    return original as any as Mock
+    return original
   }
 
   const reassign = (cb: any) => {
@@ -358,38 +347,6 @@ function assert(condition: any, message: string): asserts condition {
 
 let invocationCallCounter = 1
 
-function addCalls(args: unknown[], state: MockContext, prototypeState?: MockContext) {
-  state.calls.push(args)
-  prototypeState?.calls.push(args)
-}
-
-function increaseInvocationOrder(order: number, state: MockContext, prototypeState?: MockContext) {
-  state.invocationCallOrder.push(order)
-  prototypeState?.invocationCallOrder.push(order)
-}
-
-function addResult(result: MockResult<Procedure>, state: MockContext, prototypeState?: MockContext) {
-  state.results.push(result)
-  prototypeState?.results.push(result)
-}
-
-function addSettledResult(result: MockSettledResult<Procedure>, state: MockContext, prototypeState?: MockContext) {
-  state.settledResults.push(result)
-  prototypeState?.settledResults.push(result)
-}
-
-function addInstance(instance: MockReturnType<Procedure>, state: MockContext, prototypeState?: MockContext) {
-  const instanceIndex = state.instances.push(instance)
-  const instancePrototypeIndex = prototypeState?.instances.push(instance)
-  return [instanceIndex, instancePrototypeIndex] as const
-}
-
-function addContext(context: MockFnContext<Procedure>, state: MockContext, prototypeState?: MockContext) {
-  const contextIndex = state.contexts.push(context)
-  const contextPrototypeIndex = prototypeState?.contexts.push(context)
-  return [contextIndex, contextPrototypeIndex] as const
-}
-
 function createMock(
   {
     state,
@@ -398,23 +355,19 @@ function createMock(
     prototypeState,
     prototypeConfig,
     keepMembersImplementation,
-  }: {
-    prototypeState?: MockContext
-    prototypeConfig?: MockConfig
-    state: MockContext<Procedure>
+    prototypeMembers = [],
+  }: MockInstanceOption & {
+    state: MockContext
     config: MockConfig
-    name?: string | symbol
-    keepMembersImplementation?: boolean
   },
-  prototypeMethods: (string | symbol)[] = [],
 ) {
   const original = config.mockOriginal
   const name = (mockName || original?.name || 'Mock') as string
-  const namedObject: Record<string, Mock> = {
+  const namedObject: Record<string, Mock<Procedure | Constructable>> = {
     // to keep the name of the function intact
     [name]: (function (this: any, ...args: any[]) {
-      addCalls(args, state, prototypeState)
-      increaseInvocationOrder(invocationCallCounter++, state, prototypeState)
+      registerCalls(args, state, prototypeState)
+      registerInvocationOrder(invocationCallCounter++, state, prototypeState)
 
       const result = {
         type: 'incomplete',
@@ -426,18 +379,20 @@ function createMock(
         value: undefined,
       } as MockSettledResult<Procedure>
 
-      addResult(result, state, prototypeState)
-      addSettledResult(settledResult, state, prototypeState)
+      registerResult(result, state, prototypeState)
+      registerSettledResult(settledResult, state, prototypeState)
 
-      const [instanceIndex, instancePrototypeIndex] = addInstance(new.target ? undefined : this, state, prototypeState)
-      const [contextIndex, contextPrototypeIndex] = addContext(new.target ? undefined : this, state, prototypeState)
+      const context = new.target ? undefined : this
+      const [instanceIndex, instancePrototypeIndex] = registerInstance(context, state, prototypeState)
+      const [contextIndex, contextPrototypeIndex] = registerContext(context, state, prototypeState)
 
-      const implementation: Procedure | Constructable = config.onceMockImplementations.shift()
-        || config.mockImplementation
-        || prototypeConfig?.onceMockImplementations.shift()
-        || prototypeConfig?.mockImplementation
-        || original
-        || function () {}
+      const implementation: Procedure | Constructable
+        = config.onceMockImplementations.shift()
+          || config.mockImplementation
+          || prototypeConfig?.onceMockImplementations.shift()
+          || prototypeConfig?.mockImplementation
+          || original
+          || function () {}
 
       let returnValue
       let thrownValue
@@ -447,7 +402,11 @@ function createMock(
         if (new.target) {
           returnValue = Reflect.construct(implementation, args, new.target)
 
-          for (const prop of prototypeMethods) {
+          // jest calls this before the implementation, but we have to resolve this _after_
+          // because we cannot do it before the `Reflect.construct` called the custom implementation.
+          // fortunetly, the constructor is always an empty functon because `prototypeMethods`
+          // are only used by the automocker, so this doesn't matter
+          for (const prop of prototypeMembers) {
             const prototypeMock = returnValue[prop]
             const isMock = isMockFunction(prototypeMock)
             const prototypeState = isMock ? prototypeMock.mock : undefined
@@ -516,12 +475,44 @@ function createMock(
       }
 
       return returnValue
-    }) as Mock,
+    }) as Mock<Procedure | Constructable>,
   }
   if (original) {
     copyOriginalStaticProperties(namedObject[name], original)
   }
   return namedObject[name]
+}
+
+function registerCalls(args: unknown[], state: MockContext, prototypeState?: MockContext) {
+  state.calls.push(args)
+  prototypeState?.calls.push(args)
+}
+
+function registerInvocationOrder(order: number, state: MockContext, prototypeState?: MockContext) {
+  state.invocationCallOrder.push(order)
+  prototypeState?.invocationCallOrder.push(order)
+}
+
+function registerResult(result: MockResult<Procedure>, state: MockContext, prototypeState?: MockContext) {
+  state.results.push(result)
+  prototypeState?.results.push(result)
+}
+
+function registerSettledResult(result: MockSettledResult<Procedure>, state: MockContext, prototypeState?: MockContext) {
+  state.settledResults.push(result)
+  prototypeState?.settledResults.push(result)
+}
+
+function registerInstance(instance: MockReturnType<Procedure>, state: MockContext, prototypeState?: MockContext) {
+  const instanceIndex = state.instances.push(instance)
+  const instancePrototypeIndex = prototypeState?.instances.push(instance)
+  return [instanceIndex, instancePrototypeIndex] as const
+}
+
+function registerContext(context: MockProcedureContext<Procedure>, state: MockContext, prototypeState?: MockContext) {
+  const contextIndex = state.contexts.push(context)
+  const contextPrototypeIndex = prototypeState?.contexts.push(context)
+  return [contextIndex, contextPrototypeIndex] as const
 }
 
 function copyOriginalStaticProperties(mock: Mock, original: Procedure | Constructable) {
@@ -585,7 +576,6 @@ function getDefaultConfig(original?: Procedure | Constructable): MockConfig {
 
 function getDefaultState(): MockContext<Procedure> {
   const state = {
-    // TODO: tests with arguments
     calls: [],
     contexts: [],
     instances: [],
@@ -629,8 +619,18 @@ export type {
   MockedObject,
   MockedObjectDeep,
   MockInstance,
+  MockInstanceOption,
+  MockParameters,
+  MockProcedureContext,
   MockResult,
+  MockResultIncomplete,
+  MockResultReturn,
+  MockResultThrow,
+  MockReturnType,
   MockSettledResult,
+  MockSettledResultFulfilled,
+  MockSettledResultIncomplete,
+  MockSettledResultRejected,
   PartiallyMockedFunction,
   PartiallyMockedFunctionDeep,
   PartialMock,

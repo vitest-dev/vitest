@@ -264,8 +264,10 @@ describe('vi.spyOn() settings', () => {
     const spy2 = vi.spyOn(object, 'getter', 'get')
     expect(spy1).toBe(spy2)
 
-    object.method()
-    expect(spy2.mock.calls).toEqual(spy2.mock.calls)
+    const _example = object.getter
+    expect(spy2).toHaveBeenCalledTimes(1)
+    expect(spy1).toHaveBeenCalledTimes(1)
+    expect(spy2.mock.calls).toEqual(spy1.mock.calls)
   })
 
   test('vi.spyOn() when spying on a setter spy returns the same spy', () => {
@@ -274,8 +276,10 @@ describe('vi.spyOn() settings', () => {
     const spy2 = vi.spyOn(object, 'getter', 'set')
     expect(spy1).toBe(spy2)
 
-    object.method()
-    expect(spy2.mock.calls).toEqual(spy2.mock.calls)
+    object.getter = 33
+    expect(spy2).toHaveBeenCalledTimes(1)
+    expect(spy1).toHaveBeenCalledTimes(1)
+    expect(spy2.mock.calls).toEqual(spy1.mock.calls)
   })
 
   test('vi.spyOn() can spy on multiple class instances without intervention', () => {

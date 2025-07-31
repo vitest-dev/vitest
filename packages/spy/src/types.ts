@@ -1,15 +1,15 @@
-interface MockResultReturn<T> {
+export interface MockResultReturn<T> {
   type: 'return'
   /**
    * The value that was returned from the function. If function returned a Promise, then this will be a resolved value.
    */
   value: T
 }
-interface MockResultIncomplete {
+export interface MockResultIncomplete {
   type: 'incomplete'
   value: undefined
 }
-interface MockResultThrow {
+export interface MockResultThrow {
   type: 'throw'
   /**
    * An error that was thrown during function execution.
@@ -17,17 +17,17 @@ interface MockResultThrow {
   value: any
 }
 
-interface MockSettledResultIncomplete {
+export interface MockSettledResultIncomplete {
   type: 'incomplete'
   value: undefined
 }
 
-interface MockSettledResultFulfilled<T> {
+export interface MockSettledResultFulfilled<T> {
   type: 'fulfilled'
   value: T
 }
 
-interface MockSettledResultRejected {
+export interface MockSettledResultRejected {
   type: 'rejected'
   value: any
 }
@@ -51,7 +51,7 @@ export type MockReturnType<T extends Procedure | Constructable> = T extends Cons
   : T extends Procedure
     ? ReturnType<T> : never
 
-export type MockFnContext<T extends Procedure | Constructable> = T extends Constructable
+export type MockProcedureContext<T extends Procedure | Constructable> = T extends Constructable
   ? InstanceType<T>
   : ThisParameterType<T>
 
@@ -81,7 +81,7 @@ export interface MockContext<T extends Procedure | Constructable = Procedure> {
    * An array of `this` values that were used during each call to the mock function.
    * @see https://vitest.dev/api/mock#mock-contexts
    */
-  contexts: MockFnContext<T>[]
+  contexts: MockProcedureContext<T>[]
   /**
    * The order of mock's execution. This returns an array of numbers which are shared between all defined mocks.
    *
@@ -139,7 +139,12 @@ export interface MockContext<T extends Procedure | Constructable = Procedure> {
    *
    * const result = fn()
    *
-   * fn.mock.settledResults === []
+   * fn.mock.settledResults === [
+   *   {
+   *     type: 'incomplete',
+   *     value: undefined,
+   *   }
+   * ]
    * fn.mock.results === [
    *   {
    *     type: 'return',
@@ -361,8 +366,6 @@ export interface Mock<T extends Procedure | Constructable = Procedure> extends M
   (...args: MockParameters<T>): MockReturnType<T>
   /** @internal */
   _isMockFunction: true
-  /** @internal */
-  _protoImplementation?: Procedure | Constructable
 }
 
 type PartialMaybePromise<T> = T extends Promise<Awaited<T>>
@@ -445,5 +448,18 @@ export interface MockConfig {
   mockImplementation: Procedure | Constructable | undefined
   mockOriginal: Procedure | Constructable | undefined
   mockName: string
-  onceMockImplementations: Array<Procedure>
+  onceMockImplementations: Array<Procedure | Constructable>
+}
+
+export interface MockInstanceOption {
+  originalImplementation?: Procedure | Constructable
+  mockImplementation?: Procedure | Constructable
+  resetToMockImplementation?: boolean
+  restore?: () => void
+  prototypeMembers?: (string | symbol)[]
+  keepMembersImplementation?: boolean
+  prototypeState?: MockContext
+  prototypeConfig?: MockConfig
+  resetToMockName?: boolean
+  name?: string | symbol
 }
