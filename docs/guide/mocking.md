@@ -155,7 +155,7 @@ vi.stubGlobal('IntersectionObserver', IntersectionObserverMock)
 
 ## Modules
 
-See ["Mocking Modules" guide](/guide/mocking-modules).
+See ["Mocking Modules" guide](/guide/module-mocking).
 
 ## File System
 

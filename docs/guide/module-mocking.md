@@ -115,7 +115,7 @@ expect(example.answer).toHaveBeenCalled()
 ```
 
 ::: danger Browser Mode Support
-This will not work in the [Browser Mode](/guide/browser) because it uses the browser's native ESM support to serve modules. The module namespace object is sealed and can't be reconfigured. To bypass this limitation, Vitest supports `{ spy: true }` option in `vi.mock('./example.js')`. This will automatically spy on every export in the module without replacing them with fake ones.
+This will not work in the [Browser Mode](/guide/browser/) because it uses the browser's native ESM support to serve modules. The module namespace object is sealed and can't be reconfigured. To bypass this limitation, Vitest supports `{ spy: true }` option in `vi.mock('./example.js')`. This will automatically spy on every export in the module without replacing them with fake ones.
 
 ```ts
 import { vi } from 'vitest'
