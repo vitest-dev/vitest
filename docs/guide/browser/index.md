@@ -511,7 +511,7 @@ import { html } from 'lit'
 import './greeter-button'
 
 test('greeting appears on click', async () => {
-  const screen = await render(html`<greeter-button name="World"></greeter-button>`)
+  const screen = render(html`<greeter-button name="World"></greeter-button>`)
 
   const button = screen.getByRole('button')
   await button.click()
