@@ -10,9 +10,9 @@ const dataTestId = 'colors-box'
 const renderTestCase = (colors: readonly [string, string, string]) =>
   render(`
     <div style="--size: ${blockSize}px; display: flex; justify-content: center; height: var(--size); width: calc(var(--size) * ${blocks});" data-testid="${dataTestId}">
-      <div style="background-color: ${colors[0]}; width: var(--size);"></div>
-      <div style="background-color: ${colors[1]}; width: var(--size);"></div>
-      <div style="background-color: ${colors[2]}; width: var(--size);"></div>
+      <div data-testid="${dataTestId}-1" style="background-color: ${colors[0]}; width: var(--size);"></div>
+      <div data-testid="${dataTestId}-2" style="background-color: ${colors[1]}; width: var(--size);"></div>
+      <div data-testid="${dataTestId}-3" style="background-color: ${colors[2]}; width: var(--size);"></div>
     </div>
   `)
 
@@ -314,6 +314,60 @@ describe('.toMatchScreenshot', () => {
 
       await expect(locator).toMatchScreenshot()
       await expect(locator).toMatchScreenshot()
+    },
+  )
+
+  // `mask` is a Playwright-only screenshot feature
+  test.runIf(server.provider === 'playwright')(
+    "works with masks",
+    async ({ onTestFinished }) => {
+      const filename = globalThis.crypto.randomUUID()
+      const path = join(
+        '__screenshots__',
+        'toMatchScreenshot.test.ts',
+        `${filename}-${server.browser}-${server.platform}.png`,
+      )
+
+      onTestFinished(async () => {
+        await server.commands.removeFile(path)
+      })
+
+      renderTestCase([
+        'oklch(39.6% 0.141 25.723)',
+        'oklch(40.5% 0.101 131.063)',
+        'oklch(37.9% 0.146 265.522)',
+      ])
+
+      const locator = page.getByTestId(dataTestId)
+
+      const maskColor = 'oklch(84.1% 0.238 128.85)'
+      const mask = [page.getByTestId(`${dataTestId}-3`)]
+
+      // Create reference with the third box masked
+      await locator.screenshot({
+        save: true,
+        path,
+        maskColor,
+        mask,
+      })
+
+      // Change the last box's color so we're sure `mask` works
+      // The test would otherwise fail as the screenshots wouldn't match
+      renderTestCase([
+        'oklch(39.6% 0.141 25.723)',
+        'oklch(40.5% 0.101 131.063)',
+        'oklch(39.6% 0.141 25.723)',
+      ])
+
+      await expect(locator).toMatchScreenshot(
+        filename,
+        {
+          screenshotOptions: {
+            maskColor,
+            mask,
+          },
+        },
+      )
     },
   )
 })

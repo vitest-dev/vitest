@@ -12,6 +12,7 @@ import { Protocol } from 'playwright-core/types/protocol'
 import '../matchers.js'
 import type {} from "vitest/node"
 import type {
+  Locator,
   ScreenshotComparatorRegistry,
   ScreenshotMatcherOptions,
 } from "@vitest/browser/context"
@@ -71,7 +72,9 @@ declare module '@vitest/browser/context' {
   export interface UserEventDragAndDropOptions extends PWDragAndDropOptions {}
   export interface UserEventUploadOptions extends PWSetInputFiles {}
 
-  export interface ScreenshotOptions extends PWScreenshotOptions {}
+  export interface ScreenshotOptions extends Omit<PWScreenshotOptions, 'mask'> {
+    mask?: ReadonlyArray<Element | Locator> | undefined
+  }
 
   export interface CDPSession {
     send<T extends keyof Protocol.CommandParameters>(
