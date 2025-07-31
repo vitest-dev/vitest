@@ -18,6 +18,14 @@ test('when properties are spied, they keep the implementation', () => {
   expect(instance.method()).toBe(42)
   expect(instance.method).toHaveBeenCalled()
   expect(module.Class.prototype.method).toHaveBeenCalledTimes(1)
+
+  vi.mocked(instance.method).mockReturnValue(100)
+  expect(instance.method()).toBe(100)
+  expect(module.Class.prototype.method).toHaveBeenCalledTimes(2)
+
+  vi.mocked(instance.method).mockReset()
+  expect(instance.method()).toBe(42)
+  expect(module.Class.prototype.method).toHaveBeenCalledTimes(3)
 })
 
 test('vi.restoreAllMocks() does not affect mocks', () => {
@@ -75,6 +83,41 @@ test('instance mocks are independently tracked, but prototype shares the state',
   expect(t1.method).toHaveBeenCalledTimes(2)
   // tracks methods even when t1.method implementation is overriden
   expect(Class.prototype.method).toHaveBeenCalledTimes(3)
+})
+
+test('instance methods and prototype method share the state', () => {
+  const { Class } = mockModule()
+  const t1 = vi.mocked(new Class())
+
+  expect(t1.method.mock).toEqual(Class.prototype.method.mock)
+
+  t1.method('hello world', Symbol.for('example'))
+
+  expect(t1.method.mock.calls[0][0]).toBe('hello world')
+  expect(t1.method.mock.calls[0][1]).toBe(Symbol.for('example'))
+
+  expect(t1.method.mock.instances[0]).toBe(t1)
+  expect(t1.method.mock.contexts[0]).toBe(t1)
+  expect(t1.method.mock.results[0]).toEqual({
+    type: 'return',
+    value: undefined,
+  })
+
+  expect(Class.prototype.method.mock.calls[0][0]).toBe('hello world')
+  expect(Class.prototype.method.mock.calls[0][1]).toBe(Symbol.for('example'))
+
+  expect(t1.method.mock).toEqual(Class.prototype.method.mock)
+
+  const t2 = vi.mocked(new Class())
+
+  t2.method('bye world')
+
+  expect(t1.method).toHaveBeenCalledTimes(1)
+  expect(t2.method).toHaveBeenCalledTimes(1)
+
+  expect(t2.method.mock.calls[0][0]).toBe('bye world')
+  // note that Class.prototype.method keeps accumulating state
+  expect(Class.prototype.method.mock.calls[1][0]).toBe('bye world')
 })
 
 test('instance methods inherit the implementation, but can override the local ones', () => {
@@ -144,11 +187,11 @@ function mockModule(type: 'automock' | 'autospy' = 'automock') {
   return vi.mockObject({
     [Symbol.toStringTag]: 'Module',
     __esModule: true,
-    method() {
+    method(..._args: any[]) {
       return 42
     },
     Class: class {
-      method() {
+      method(..._args: any[]) {
         return 42
       }
     },
