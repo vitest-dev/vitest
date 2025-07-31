@@ -518,7 +518,7 @@ function guide(): DefaultTheme.SidebarItem[] {
         },
         {
           text: 'Mocking Modules',
-          link: '/guide/module-mocking',
+          link: '/guide/mocking-modules',
         },
         {
           text: 'Mocking File System',
