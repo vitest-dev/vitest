@@ -31,6 +31,24 @@ export function mockObject(
     }
   }
 
+  const createMock = (currentValue: (...args: any[]) => any) => {
+    if (!options.createMockInstance) {
+      throw new Error(
+        '[@vitest/mocker] `createMockInstance` is not defined. This is a Vitest error. Please open a new issue with reproduction.',
+      )
+    }
+    const createMockInstance = options.createMockInstance
+    const prototypeMembers = currentValue.prototype
+      ? collectFunctionProperties(currentValue.prototype)
+      : []
+    return createMockInstance({
+      name: currentValue.name,
+      prototypeMembers,
+      originalImplementation: options.type === 'autospy' ? currentValue : undefined,
+      keepMembersImplementation: options.type === 'autospy',
+    })
+  }
+
   const mockPropertiesOf = (
     container: Record<Key, any>,
     newContainer: Record<Key, any>,
@@ -85,7 +103,23 @@ export function mockObject(
       const type = getType(value)
 
       if (Array.isArray(value)) {
-        define(newContainer, property, [])
+        if (options.type === 'automock') {
+          define(newContainer, property, [])
+        }
+        else {
+          const array = value.map((value) => {
+            if (value && typeof value === 'object') {
+              const newObject = {}
+              mockPropertiesOf(value, newObject)
+              return newObject
+            }
+            if (typeof value === 'function') {
+              return createMock(value)
+            }
+            return value
+          })
+          define(newContainer, property, array)
+        }
         continue
       }
 
@@ -102,27 +136,12 @@ export function mockObject(
 
       // Sometimes this assignment fails for some unknown reason. If it does,
       // just move along.
-      if (!define(newContainer, property, isFunction ? value : {})) {
+      if (!define(newContainer, property, isFunction || options.type === 'autospy' ? value : {})) {
         continue
       }
 
       if (isFunction) {
-        if (!options.createMockInstance) {
-          throw new Error(
-            '[@vitest/mocker] `createMockInstance` is not defined. This is a Vitest error. Please open a new issue with reproduction.',
-          )
-        }
-        const createMockInstance = options.createMockInstance
-        const currentValue = newContainer[property]
-        const prototypeMembers = currentValue.prototype
-          ? collectFunctionProperties(currentValue.prototype)
-          : []
-        const mock = createMockInstance({
-          name: currentValue.name,
-          prototypeMembers,
-          originalImplementation: options.type === 'autospy' ? currentValue : undefined,
-          keepMembersImplementation: options.type === 'autospy',
-        })
+        const mock = createMock(newContainer[property])
         newContainer[property] = mock
       }
 

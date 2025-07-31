@@ -183,6 +183,43 @@ test('vi.mockReset() does not break inherited properties', () => {
   expect(instance3.method).toHaveBeenCalledTimes(0)
 })
 
+test('the array is empty by default', () => {
+  const { array } = vi.mockObject({
+    array: [1, 2, 3],
+  })
+  expect(array).toEqual([])
+})
+
+test('the array is not empty when spying', () => {
+  const { array } = vi.mockObject(
+    {
+      array: [
+        1,
+        'text',
+        () => 42,
+        {
+          property: 'static',
+          answer() {
+            return 42
+          },
+          array: [1],
+        },
+      ] as const,
+    },
+    { spy: true },
+  )
+
+  expect(array).toHaveLength(4)
+  expect(array[0]).toBe(1)
+  expect(array[1]).toBe('text')
+  expect(vi.isMockFunction(array[2])).toBe(true)
+  expect(array[2]()).toBe(42)
+  expect(array[3].property).toBe('static')
+  expect(array[3].answer()).toBe(42)
+  expect(array[3].answer).toHaveBeenCalled()
+  expect(array[3].array).toEqual([1])
+})
+
 function mockModule(type: 'automock' | 'autospy' = 'automock') {
   return vi.mockObject({
     [Symbol.toStringTag]: 'Module',
