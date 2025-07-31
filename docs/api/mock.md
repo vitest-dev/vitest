@@ -47,7 +47,7 @@ Use it to return the name assigned to the mock with the `.mockName(name)` method
 ## mockClear
 
 ```ts
-function mockClear(): MockInstance<T>
+function mockClear(): Mock<T>
 ```
 
 Clears all information about every call. After calling it, all properties on `.mock` will return to their initial state. This method does not reset implementations. It is useful for cleaning up mocks between different assertions.
@@ -72,7 +72,7 @@ To automatically call this method before each test, enable the [`clearMocks`](/c
 ## mockName
 
 ```ts
-function mockName(name: string): MockInstance<T>
+function mockName(name: string): Mock<T>
 ```
 
 Sets the internal mock name. This is useful for identifying the mock when an assertion fails.
@@ -80,7 +80,7 @@ Sets the internal mock name. This is useful for identifying the mock when an ass
 ## mockImplementation
 
 ```ts
-function mockImplementation(fn: T): MockInstance<T>
+function mockImplementation(fn: T): Mock<T>
 ```
 
 Accepts a function to be used as the mock implementation. TypeScript expects the arguments and return type to match those of the original function.
@@ -102,7 +102,7 @@ mockFn.mock.calls[1][0] === 1 // true
 ## mockImplementationOnce
 
 ```ts
-function mockImplementationOnce(fn: T): MockInstance<T>
+function mockImplementationOnce(fn: T): Mock<T>
 ```
 
 Accepts a function to be used as the mock implementation. TypeScript expects the arguments and return type to match those of the original function. This method can be chained to produce different results for multiple function calls.
@@ -135,11 +135,11 @@ console.log(myMockFn(), myMockFn(), myMockFn(), myMockFn())
 function withImplementation(
   fn: T,
   cb: () => void
-): MockInstance<T>
+): Mock<T>
 function withImplementation(
   fn: T,
   cb: () => Promise<void>
-): Promise<MockInstance<T>>
+): Promise<Mock<T>>
 ```
 
 Overrides the original mock implementation temporarily while the callback is being executed.
@@ -177,7 +177,7 @@ Note that this method takes precedence over the [`mockImplementationOnce`](#mock
 ## mockRejectedValue
 
 ```ts
-function mockRejectedValue(value: unknown): MockInstance<T>
+function mockRejectedValue(value: unknown): Mock<T>
 ```
 
 Accepts an error that will be rejected when async function is called.
@@ -191,7 +191,7 @@ await asyncMock() // throws Error<'Async error'>
 ## mockRejectedValueOnce
 
 ```ts
-function mockRejectedValueOnce(value: unknown): MockInstance<T>
+function mockRejectedValueOnce(value: unknown): Mock<T>
 ```
 
 Accepts a value that will be rejected during the next function call. If chained, each consecutive call will reject the specified value.
@@ -209,7 +209,7 @@ await asyncMock() // throws Error<'Async error'>
 ## mockReset
 
 ```ts
-function mockReset(): MockInstance<T>
+function mockReset(): Mock<T>
 ```
 
 Does what [`mockClear`](#mockClear) does and resets inner implementation to the original function.
@@ -241,7 +241,7 @@ To automatically call this method before each test, enable the [`mockReset`](/co
 ## mockRestore
 
 ```ts
-function mockRestore(): MockInstance<T>
+function mockRestore(): Mock<T>
 ```
 
 Does what [`mockReset`](#mockReset) does and restores original descriptors of spied-on objects.
@@ -270,7 +270,7 @@ To automatically call this method before each test, enable the [`restoreMocks`](
 ## mockResolvedValue
 
 ```ts
-function mockResolvedValue(value: Awaited<ReturnType<T>>): MockInstance<T>
+function mockResolvedValue(value: Awaited<ReturnType<T>>): Mock<T>
 ```
 
 Accepts a value that will be resolved when the async function is called. TypeScript will only accept values that match the return type of the original function.
@@ -284,7 +284,7 @@ await asyncMock() // 42
 ## mockResolvedValueOnce
 
 ```ts
-function mockResolvedValueOnce(value: Awaited<ReturnType<T>>): MockInstance<T>
+function mockResolvedValueOnce(value: Awaited<ReturnType<T>>): Mock<T>
 ```
 
 Accepts a value that will be resolved during the next function call. TypeScript will only accept values that match the return type of the original function. If chained, each consecutive call will resolve the specified value.
@@ -305,7 +305,7 @@ await asyncMock() // default
 ## mockReturnThis
 
 ```ts
-function mockReturnThis(): MockInstance<T>
+function mockReturnThis(): Mock<T>
 ```
 
 Use this if you need to return the `this` context from the method without invoking the actual implementation. This is a shorthand for:
@@ -319,7 +319,7 @@ spy.mockImplementation(function () {
 ## mockReturnValue
 
 ```ts
-function mockReturnValue(value: ReturnType<T>): MockInstance<T>
+function mockReturnValue(value: ReturnType<T>): Mock<T>
 ```
 
 Accepts a value that will be returned whenever the mock function is called. TypeScript will only accept values that match the return type of the original function.
@@ -335,7 +335,7 @@ mock() // 43
 ## mockReturnValueOnce
 
 ```ts
-function mockReturnValueOnce(value: ReturnType<T>): MockInstance<T>
+function mockReturnValueOnce(value: ReturnType<T>): Mock<T>
 ```
 
 Accepts a value that will be returned whenever the mock function is called. TypeScript will only accept values that match the return type of the original function.
@@ -450,6 +450,11 @@ fn.mock.results === [
 ## mock.settledResults
 
 ```ts
+interface MockSettledResultIncomplete {
+  type: 'incomplete'
+  value: undefined
+}
+
 interface MockSettledResultFulfilled<T> {
   type: 'fulfilled'
   value: T
@@ -463,6 +468,7 @@ interface MockSettledResultRejected {
 export type MockSettledResult<T>
   = | MockSettledResultFulfilled<T>
     | MockSettledResultRejected
+    | MockSettledResultIncomplete
 
 const settledResults: MockSettledResult<Awaited<ReturnType<T>>>[]
 ```
@@ -476,7 +482,12 @@ const fn = vi.fn().mockResolvedValueOnce('result')
 
 const result = fn()
 
-fn.mock.settledResults === []
+fn.mock.settledResults === [
+  {
+    type: 'incomplete',
+    value: undefined,
+  },
+]
 
 await result
 

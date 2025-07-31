@@ -147,6 +147,7 @@ expect(AutoMockedClass.prototype.method).toHaveBeenCalledTimes(4)
 - Automocked methods can no longer be restored, even with a manual `.mockRestore`. Automocked modules with `spy: true` will keep working as before
 - Automocked getters no longer call the original getter. By default, automocked getters now return `undefined`. You can keep using `vi.spyOn(object, name, 'get')` to spy on a getter and change its implementation
 - The mock `vi.fn(implementation).mockReset()` now correctly returns the mock implementation in `.getMockImplementation()`
+- `vi.fn().mock.invocationCallOrder` now starts with `1`, like Jest does, instead of `0`
 
 ### Standalone mode with filename filter
 
