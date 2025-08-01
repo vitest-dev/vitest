@@ -526,7 +526,7 @@ After the mock was restored, you can spy on it again.
 ::: warning
 This method also does not affect mocks created during [automocking](/guide/mocking-modules#mocking-a-module).
 
-Note that unlike [`mock.mockRestore`](/api/mock/#mockrestore), `vi.restoreAllMocks` will not clear mock history or reset the mock implementation
+Note that unlike [`mock.mockRestore`](/api/mock#mockrestore), `vi.restoreAllMocks` will not clear mock history or reset the mock implementation
 :::
 
 ### vi.spyOn
