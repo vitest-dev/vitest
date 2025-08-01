@@ -228,6 +228,61 @@ test('instance inherits the state', () => {
 
 This can be very useful to track calls to instances that are never exposed.
 
+## Mocking Non-existing Module
+
+Vitest supports mocking virtual modules. These modules don't exist on the file system, but your code imports them. For example, this can happen when your development environment is different from production. One common example is mocking `vscode` APIs in your unit tests.
+
+By default, Vitest will fail transforming files if it cannot find the source of the import. To bypass this, you need to specify it in your config. You can either always redirect the import to a file, or just signal Vite to ignore it and use the `vi.mock` factory to define its exports.
+
+To redirect the import, use [`test.alias`](/config/#alias) config option:
+
+```ts [vitest.config.ts]
+import { defineConfig } from 'vitest/config'
+import { resolve } from 'node:path'
+
+export default defineConfig({
+  test: {
+    alias: {
+      vscode: resolve(import.meta.dirname, './mock/vscode.js'),
+    },
+  },
+})
+```
+
+To mark the module as always resolved, return the same string from `resolveId` hook of a plugin:
+
+```ts [vitest.config.ts]
+import { defineConfig } from 'vitest/config'
+import { resolve } from 'node:path'
+
+export default defineConfig({
+  plugins: [
+    {
+      name: 'virtual-vscode',
+      resolveId(id) {
+        if (id === 'vscode') {
+          return 'vscode'
+        }
+      }
+    }
+  ]
+})
+```
+
+Now you can use `vi.mock` as usual in your tests:
+
+```ts
+import { vi } from 'vitest'
+
+vi.mock(import('vscode'), () => {
+  return {
+    window: {
+      createOutputChannel: vi.fn(),
+    }
+  }
+})
+```
+
 ## How it Works
 
 Vitest implements different module mocking mechanisms depending on the environment. The only feature they share is the plugin transformer. When Vitest sees that a file has `vi.mock` inside, it will transform every static import into a dynamic one and move the `vi.mock` call to the top of the file. This allows Vitest to register the mock before the import happens without breaking the ESM rule of hoisted imports.
@@ -258,7 +313,7 @@ The module mocking plugins are available in the [`@vitest/mocker` package](https
 
 ### JSDOM, happy-dom, Node
 
-When you run your tests in an emulated environment, Vitest creates a [module runner](https://vite.dev/guide/api-environment-runtimes.html#modulerunner) that can consume Vite code. The module runner is designed in such a way that Vitest can hook into the module evaluation and replace it with the mock, if it was registered. This means that Vitest runs your code in an ESM-like environment, but it doesn't use native ESM mechanism directly. This allows the test runner to bend the rules around ES Modules mutability, allowing users to call `vi.spyOn` on a seemingly ES Module.
+When you run your tests in an emulated environment, Vitest creates a [module runner](https://vite.dev/guide/api-environment-runtimes.html#modulerunner) that can consume Vite code. The module runner is designed in such a way that Vitest can hook into the module evaluation and replace it with the mock, if it was registered. This means that Vitest runs your code in an ESM-like environment, but it doesn't use native ESM mechanism directly. This allows the test runner to bend the rules around ES Modules immutability, allowing users to call `vi.spyOn` on a seemingly ES Module.
 
 ### Browser Mode
 
