@@ -3,8 +3,7 @@ import type { ScreenshotMatcherOptions } from '../../../../context'
 import type { ScreenshotMatcherArguments, ScreenshotMatcherOutput } from '../../../shared/screenshotMatcher/types'
 import type { Locator } from '../locators'
 import { getBrowserState, getWorkerState } from '../../utils'
-import { convertElementToCssSelector } from '../utils'
-import { getElementFromUserInput } from './utils'
+import { convertToSelector } from '../utils'
 
 const counters = new Map<string, { current: number }>([])
 
@@ -41,17 +40,28 @@ export default async function toMatchScreenshot(
     ? nameOrOptions
     : `${this.currentTestName} ${counter.current}`
 
-  const result = await
-  getBrowserState().commands.triggerCommand<ScreenshotMatcherOutput>(
+  const normalizedOptions: Omit<ScreenshotMatcherArguments[2], 'element'> = (
+    options.screenshotOptions && 'mask' in options.screenshotOptions
+      ? {
+          ...options,
+          screenshotOptions: {
+            ...options.screenshotOptions,
+            mask: (options.screenshotOptions.mask as Array<Element | Locator>)
+              .map(convertToSelector),
+          },
+        }
+      // TS believes `mask` to still be defined as `ReadonlyArray<Element | Locator>`
+      : options as any
+  )
+
+  const result = await getBrowserState().commands.triggerCommand<ScreenshotMatcherOutput>(
     '__vitest_screenshotMatcher',
     [
       name,
       this.currentTestName,
       {
-        element: convertElementToCssSelector(
-          getElementFromUserInput(actual, toMatchScreenshot, this),
-        ),
-        ...options,
+        element: convertToSelector(actual),
+        ...normalizedOptions,
       },
     ] satisfies ScreenshotMatcherArguments,
   )

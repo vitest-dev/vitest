@@ -1,5 +1,6 @@
 import type { BrowserCommandContext, BrowserConfigOptions } from 'vitest/node'
 import type { ScreenshotMatcherOptions } from '../../../../context'
+import type { ScreenshotMatcherArguments } from '../../../shared/screenshotMatcher/types'
 import type { AnyCodec } from './codecs'
 import { platform } from 'node:os'
 import { deepMerge } from '@vitest/utils'
@@ -11,6 +12,7 @@ import { getComparator } from './comparators'
 type GlobalOptions = Required<
   NonNullable<
     NonNullable<BrowserConfigOptions['expect']>['toMatchScreenshot']
+    & NonNullable<Pick<ScreenshotMatcherArguments[2], 'screenshotOptions'>>
   >
 >
 
@@ -234,7 +236,7 @@ export function takeDecodedScreenshot({
   context: BrowserCommandContext
   element: string
   name: string
-  screenshotOptions: ScreenshotMatcherOptions['screenshotOptions']
+  screenshotOptions: ScreenshotMatcherArguments[2]['screenshotOptions']
 }): ReturnType<AnyCodec['decode']> {
   return takeScreenshot(
     context,
