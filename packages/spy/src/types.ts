@@ -240,8 +240,6 @@ export interface MockInstance<T extends Procedure | Constructable = Procedure> e
   mockReset(): this
   /**
    * Does what `mockReset` does and restores original descriptors of spied-on objects.
-   *
-   * Note that restoring mock from `vi.fn()` will set implementation to an empty function that returns `undefined`. Restoring a `vi.fn(impl)` will restore implementation to `impl`.
    * @see https://vitest.dev/api/mock#mockrestore
    */
   mockRestore(): void
