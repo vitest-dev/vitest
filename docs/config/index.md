@@ -1643,7 +1643,7 @@ This is an experimental feature. Breaking changes might not follow SemVer, pleas
 - **Type:** `boolean`
 - **Default:** `false`
 
-Will call [`.mockClear()`](/api/mock#mockclear) on all spies before each test.
+Will call [`vi.clearAllMocks()`](/api/vi#vi-clearallmocks) before each test.
 This will clear mock history without affecting mock implementations.
 
 ### mockReset
@@ -1651,16 +1651,17 @@ This will clear mock history without affecting mock implementations.
 - **Type:** `boolean`
 - **Default:** `false`
 
-Will call [`.mockReset()`](/api/mock#mockreset) on all spies before each test.
-This will clear mock history and reset each implementation to its original.
+Will call [`vi.resetAllMocks()`](/api/vi#vi-resetallmocks) before each test.
+This will clear mock history and reset each implementation.
 
 ### restoreMocks
 
 - **Type:** `boolean`
 - **Default:** `false`
 
-Will call [`.mockRestore()`](/api/mock#mockrestore) on all spies before each test.
-This will clear mock history, restore each implementation to its original, and restore original descriptors of spied-on objects..
+Will call [`vi.restoreAllMocks()`](/api/vi#vi-restoreallmocks) before each test.
+
+This restores all original implementations on spies created with [`vi.spyOn`](#vi-spyon).
 
 ### unstubEnvs {#unstubenvs}
 

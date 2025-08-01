@@ -1,6 +1,6 @@
-# Mock Functions
+# Mocks
 
-You can create a mock function to track its execution with `vi.fn` method. If you want to track a method on an already created object, you can use `vi.spyOn` method:
+You can create a mock function or a class to track its execution with the `vi.fn` method. If you want to track a property on an already created object, you can use the `vi.spyOn` method:
 
 ```js
 import { vi } from 'vitest'
@@ -18,7 +18,7 @@ market.getApples()
 getApplesSpy.mock.calls.length === 1
 ```
 
-You should use mock assertions (e.g., [`toHaveBeenCalled`](/api/expect#tohavebeencalled)) on [`expect`](/api/expect) to assert mock result. This API reference describes available properties and methods to manipulate mock behavior.
+You should use mock assertions (e.g., [`toHaveBeenCalled`](/api/expect#tohavebeencalled)) on [`expect`](/api/expect) to assert mock results. This API reference describes available properties and methods to manipulate mock behavior.
 
 ::: tip
 The custom function implementation in the types below is marked with a generic `<T>`.
@@ -30,7 +30,7 @@ The custom function implementation in the types below is marked with a generic `
 function getMockImplementation(): T | undefined
 ```
 
-Returns current mock implementation if there is one.
+Returns the current mock implementation if there is one.
 
 If the mock was created with [`vi.fn`](/api/vi#vi-fn), it will use the provided method as the mock implementation.
 
@@ -42,7 +42,7 @@ If the mock was created with [`vi.spyOn`](/api/vi#vi-spyon), it will return `und
 function getMockName(): string
 ```
 
-Use it to return the name assigned to the mock with the `.mockName(name)` method. By default, it will return `vi.fn()`.
+Use it to return the name assigned to the mock with the `.mockName(name)` method. By default, `vi.fn()` mocks will return `'vi.fn()'`, while spies created with `vi.spyOn` will keep the original name.
 
 ## mockClear
 
@@ -180,7 +180,7 @@ Note that this method takes precedence over the [`mockImplementationOnce`](#mock
 function mockRejectedValue(value: unknown): Mock<T>
 ```
 
-Accepts an error that will be rejected when async function is called.
+Accepts an error that will be rejected when an async function is called.
 
 ```ts
 const asyncMock = vi.fn().mockRejectedValue(new Error('Async error'))
@@ -212,11 +212,10 @@ await asyncMock() // throws Error<'Async error'>
 function mockReset(): Mock<T>
 ```
 
-Does what [`mockClear`](#mockClear) does and resets inner implementation to the original function.
-This also resets all "once" implementations.
+Does what [`mockClear`](#mockClear) does and resets the mock implementation. This also resets all "once" implementations.
 
-Note that resetting a mock from `vi.fn()` will set implementation to an empty function that returns `undefined`.
-resetting a mock from `vi.fn(impl)` will restore implementation to `impl`.
+Note that resetting a mock from `vi.fn()` will set the implementation to an empty function that returns `undefined`.
+Resetting a mock from `vi.fn(impl)` will reset the implementation to `impl`.
 
 This is useful when you want to reset a mock to its original state.
 
@@ -244,10 +243,9 @@ To automatically call this method before each test, enable the [`mockReset`](/co
 function mockRestore(): Mock<T>
 ```
 
-Does what [`mockReset`](#mockReset) does and restores original descriptors of spied-on objects.
+Does what [`mockReset`](#mockreset) does and restores the original descriptors of spied-on objects, if the mock was created with [`vi.spyOn`](/api/vi#vi-spyon).
 
-Note that restoring a mock from `vi.fn()` will set implementation to an empty function that returns `undefined`.
-Restoring a mock from `vi.fn(impl)` will restore implementation to `impl`.
+`mockRestore` on a `vi.fn()` mock is identical to [`mockReset`](#mockreset).
 
 ```ts
 const person = {
@@ -379,7 +377,7 @@ fn.mock.calls === [
 const lastCall: Parameters<T> | undefined
 ```
 
-This contains the arguments of the last call. If mock wasn't called, it will return `undefined`.
+This contains the arguments of the last call. If the mock wasn't called, it will return `undefined`.
 
 ## mock.results
 
@@ -388,7 +386,7 @@ interface MockResultReturn<T> {
   type: 'return'
   /**
    * The value that was returned from the function.
-   * If function returned a Promise, then this will be a resolved value.
+   * If the function returned a Promise, then this will be a resolved value.
    */
   value: T
 }
@@ -418,6 +416,7 @@ This is an array containing all values that were `returned` from the function. O
 
 - `'return'` - function returned without throwing.
 - `'throw'` - function threw a value.
+- `'incomplete'` - the function did not finish running yet.
 
 The `value` property contains the returned value or thrown error. If the function returned a `Promise`, then `result` will always be `'return'` even if the promise was rejected.
 
@@ -473,9 +472,11 @@ export type MockSettledResult<T>
 const settledResults: MockSettledResult<Awaited<ReturnType<T>>>[]
 ```
 
-An array containing all values that were `resolved` or `rejected` from the function.
+An array containing all values that were resolved or rejected by the function.
 
-This array will be empty if the function was never resolved or rejected.
+If the function returned non-promise values, the `value` will be kept as is, but the `type` will still says `fulfilled` or `rejected`.
+
+Until the value is resolved or rejected, the `settledResult` type will be `incomplete`.
 
 ```js
 const fn = vi.fn().mockResolvedValueOnce('result')
@@ -544,10 +545,10 @@ fn.mock.contexts[1] === context
 const instances: ReturnType<T>[]
 ```
 
-This property is an array containing all instances that were created when the mock was called with the `new` keyword. Note that this is an actual context (`this`) of the function, not a return value.
+This property is an array containing all instances that were created when the mock was called with the `new` keyword. Note that this is the actual context (`this`) of the function, not a return value.
 
 ::: warning
-If mock was instantiated with `new MyClass()`, then `mock.instances` will be an array with one value:
+If the mock was instantiated with `new MyClass()`, then `mock.instances` will be an array with one value:
 
 ```js
 const MyClass = vi.fn()
@@ -556,7 +557,7 @@ const a = new MyClass()
 MyClass.mock.instances[0] === a
 ```
 
-If you return a value from constructor, it will not be in `instances` array, but instead inside `results`:
+If you return a value from the constructor, it will not be in the `instances` array, but instead inside `results`:
 
 ```js
 const Spy = vi.fn(() => ({ method: vi.fn() }))

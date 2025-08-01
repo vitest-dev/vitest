@@ -621,7 +621,7 @@ function api(): DefaultTheme.SidebarItem[] {
       link: '/api/',
     },
     {
-      text: 'Mock Functions',
+      text: 'Mocks',
       link: '/api/mock',
     },
     {
