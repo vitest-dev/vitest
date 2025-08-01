@@ -116,6 +116,39 @@ const mock = new Spy()
 
 Note that now if you provide an arrow function, you will get [`<anonymous> is not a constructor` error](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Errors/Not_a_constructor) when the mock is called.
 
+### Changes to Mocking
+
+Alongside new features like supporting constructors, Vitest 4 creates mocks differently to address several module mocking issues that we received over the years. This release attemts to make module spies less confusing, especially when working with classes.
+
+- `vi.fn().getMockName()` now returns `vi.fn()` by default instead of `spy`. This can affect snapshots with mocks - the name will be changed from `[MockFunction spy]` to `[MockFunction]`. Spies created with `vi.spyOn` will keep using the original name by default for better debugging experience
+- `vi.restoreAllMocks` no longer resets the state of spies and only restores spies created manually with `vi.spyOn`, automocks are no longer affected by this function (this also affects the config option [`restoreMocks`](/config/#restoremocks)). Note that `.mockRestore` will still reset the mock implementation and clear the state
+- Calling `vi.spyOn` on a mock now returns the same mock
+- Automocked instance methods are now properly isolated, but share a state with the prototype. Overriding the prototype implementation will always affect instance methods unless the methods have a custom mock implementation of their own. Calling `.mockReset` on the mock also no longer breaks that inheritance.
+```ts
+import { AutoMockedClass } from './example.js'
+const instance1 = new AutoMockedClass()
+const instance2 = new AutoMockedClass()
+
+instance1.method.mockReturnValue(42)
+
+expect(instance1.method()).toBe(42)
+expect(instance2.method()).toBe(undefined)
+
+expect(AutoMockedClass.prototype.method).toHaveBeenCalledTimes(2)
+
+instance1.method.mockReset()
+AutoMockedClass.prototype.method.mockReturnValue(100)
+
+expect(instance1.method()).toBe(100)
+expect(instance2.method()).toBe(100)
+
+expect(AutoMockedClass.prototype.method).toHaveBeenCalledTimes(4)
+```
+- Automocked methods can no longer be restored, even with a manual `.mockRestore`. Automocked modules with `spy: true` will keep working as before
+- Automocked getters no longer call the original getter. By default, automocked getters now return `undefined`. You can keep using `vi.spyOn(object, name, 'get')` to spy on a getter and change its implementation
+- The mock `vi.fn(implementation).mockReset()` now correctly returns the mock implementation in `.getMockImplementation()`
+- `vi.fn().mock.invocationCallOrder` now starts with `1`, like Jest does, instead of `0`
+
 ### Standalone mode with filename filter
 
 To improve user experience, Vitest will now start running the matched files when [`--standalone`](/guide/cli#standalone) is used with filename filter.
@@ -181,13 +214,25 @@ Jest has their [globals API](https://jestjs.io/docs/api) enabled by default. Vit
 
 If you decide to keep globals disabled, be aware that common libraries like [`testing-library`](https://testing-library.com/) will not run auto DOM [cleanup](https://testing-library.com/docs/svelte-testing-library/api/#cleanup).
 
-### `spy.mockReset`
+### `mock.mockReset`
 
 Jest's [`mockReset`](https://jestjs.io/docs/mock-function-api#mockfnmockreset) replaces the mock implementation with an
 empty function that returns `undefined`.
 
 Vitest's [`mockReset`](/api/mock#mockreset) resets the mock implementation to its original.
 That is, resetting a mock created by `vi.fn(impl)` will reset the mock implementation to `impl`.
+
+### `mock.mock` is Persistent
+
+Jest will recreate the mock state when `.mockClear` is called, meaning you always need to access it as a getter. Vitest, on the other hand, holds a persistent reference to the state, meaning you can reuse it:
+
+```ts
+const mock = vi.fn()
+const state = mock.mock
+mock.mockClear()
+
+expect(state).toBe(mock.mock) // fails in Jest
+```
 
 ### Module Mocks
 
