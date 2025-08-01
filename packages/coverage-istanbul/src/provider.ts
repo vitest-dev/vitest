@@ -131,6 +131,7 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider<ResolvedCover
       dir: this.options.reportsDirectory,
       coverageMap,
       watermarks: this.options.watermarks,
+      sourceFinder: this.options.sourceFinder,
     })
 
     if (this.hasTerminalReporter(this.options.reporter)) {
