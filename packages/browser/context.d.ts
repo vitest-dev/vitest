@@ -701,6 +701,7 @@ export interface BrowserPage extends LocatorSelectors {
    * @see {@link https://vitest.dev/guide/browser/locators}
    */
   elementLocator(element: Element): Locator
+  frameLocator(locator: Locator): Locator
 }
 
 export interface BrowserLocators {
