@@ -13,7 +13,7 @@ import type {
   BenchmarkResult,
   BenchTask,
 } from '../types/benchmark'
-import { updateTask as updateRunnerTask } from '@vitest/runner'
+import { callCleanupHooks, callSuiteHook, updateTask as updateRunnerTask } from '@vitest/runner'
 import { createDefer, getSafeTimers } from '@vitest/utils'
 import { getBenchFn, getBenchOptions } from '../benchmark'
 import { getWorkerState } from '../utils'
@@ -27,16 +27,11 @@ function createBenchmarkResult(name: string): BenchmarkResult {
   } as BenchmarkResult
 }
 
-const benchmarkTasks = new WeakMap<Benchmark, import('tinybench').Task>()
-
-async function runBenchmarkSuite(suite: Suite, runner: NodeBenchmarkRunner) {
-  const { Task, Bench } = await runner.importTinybench()
-
-  const start = performance.now()
-
+function partitionTasksIntoBenchmarksAndSubSuites(tasks: Task[]) {
   const benchmarkGroup: Benchmark[] = []
   const benchmarkSuiteGroup = []
-  for (const task of suite.tasks) {
+
+  for (const task of tasks) {
     if (task.mode !== 'run' && task.mode !== 'queued') {
       continue
     }
@@ -48,6 +43,20 @@ async function runBenchmarkSuite(suite: Suite, runner: NodeBenchmarkRunner) {
       benchmarkSuiteGroup.push(task)
     }
   }
+
+  return [benchmarkGroup, benchmarkSuiteGroup] as const
+}
+
+const benchmarkTasks = new WeakMap<Benchmark, BenchTask>()
+
+async function runBenchmarkSuite(suite: Suite, runner: NodeBenchmarkRunner) {
+  const { Task: BenchTask, Bench: BenchFactory } = await runner.importTinybench()
+
+  const start = performance.now()
+
+  const [benchmarkGroup, benchmarkSuiteGroup] = partitionTasksIntoBenchmarksAndSubSuites(suite.tasks)
+
+  const beforeAllCleanups = await callSuiteHook(suite, suite, 'beforeAll', runner, [suite])
 
   // run sub suites sequentially
   for (const subSuite of benchmarkSuiteGroup) {
@@ -64,7 +73,7 @@ async function runBenchmarkSuite(suite: Suite, runner: NodeBenchmarkRunner) {
     updateTask('suite-prepare', suite)
 
     const addBenchTaskListener = (
-      task: InstanceType<typeof Task>,
+      task: BenchTask,
       benchmark: Benchmark,
     ) => {
       task.addEventListener(
@@ -104,7 +113,7 @@ async function runBenchmarkSuite(suite: Suite, runner: NodeBenchmarkRunner) {
 
     benchmarkGroup.forEach((benchmark) => {
       const options = getBenchOptions(benchmark)
-      const benchmarkInstance = new Bench(options)
+      const benchmarkInstance = new BenchFactory(options)
 
       const benchmarkFn = getBenchFn(benchmark)
 
@@ -114,26 +123,33 @@ async function runBenchmarkSuite(suite: Suite, runner: NodeBenchmarkRunner) {
         benchmark: createBenchmarkResult(benchmark.name),
       }
 
-      const task = new Task(benchmarkInstance, benchmark.name, benchmarkFn)
+      const task = new BenchTask(benchmarkInstance, benchmark.name, benchmarkFn)
       benchmarkTasks.set(benchmark, task)
       addBenchTaskListener(task, benchmark)
     })
 
-    const { setTimeout } = getSafeTimers()
     const tasks: [BenchTask, Benchmark][] = []
 
     for (const benchmark of benchmarkGroup) {
       const task = benchmarkTasks.get(benchmark)!
       updateTask('test-prepare', benchmark)
+
+      let beforeEachCleanups = [] as unknown[]
+
+      if (benchmark.suite) {
+        beforeEachCleanups = await callSuiteHook(benchmark.suite, benchmark, 'beforeEach', runner, [benchmark.context, benchmark.suite])
+      }
+
       await task.warmup()
-      tasks.push([
-        await new Promise<BenchTask>(resolve =>
-          setTimeout(async () => {
-            resolve(await task.run())
-          }),
-        ),
-        benchmark,
-      ])
+      await macro()
+      await task.run()
+
+      if (benchmark.suite) {
+        await callSuiteHook(benchmark.suite, benchmark, 'afterEach', runner, [benchmark.context, benchmark.suite])
+        await callCleanupHooks(runner, beforeEachCleanups)
+      }
+
+      tasks.push([task, benchmark])
     }
 
     suite.result!.duration = performance.now() - start
@@ -145,15 +161,23 @@ async function runBenchmarkSuite(suite: Suite, runner: NodeBenchmarkRunner) {
     await defer
   }
 
+  await callSuiteHook(suite, suite, 'afterAll', runner, [suite])
+  await callCleanupHooks(runner, beforeAllCleanups)
+
   function updateTask(event: TaskUpdateEvent, task: Task) {
     updateRunnerTask(event, task, runner)
   }
 }
 
+async function macro(): Promise<void> {
+  const { setTimeout } = getSafeTimers()
+  return new Promise(resolve => setTimeout(async () => resolve(await Promise.resolve())))
+}
+
 export class NodeBenchmarkRunner implements VitestRunner {
   private moduleRunner!: ModuleRunner
 
-  constructor(public config: SerializedConfig) {}
+  constructor(public config: SerializedConfig) { }
 
   async importTinybench(): Promise<typeof import('tinybench')> {
     return await import('tinybench')
