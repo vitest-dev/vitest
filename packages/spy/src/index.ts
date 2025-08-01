@@ -449,7 +449,6 @@ function createMock(
             state.contexts[contextIndex - 1] = returnValue
             state.instances[instanceIndex - 1] = returnValue
 
-            // TODO: test this is correct
             if (contextPrototypeIndex != null && prototypeState) {
               prototypeState.contexts[contextPrototypeIndex - 1] = returnValue
             }
@@ -478,7 +477,7 @@ function createMock(
       }
 
       return returnValue
-    }) as Mock<Procedure | Constructable>,
+    }) as Mock,
   }
   if (original) {
     copyOriginalStaticProperties(namedObject[name], original)
@@ -530,7 +529,6 @@ function copyOriginalStaticProperties(mock: Mock, original: Procedure | Construc
 
     Object.defineProperty(mock, key, descriptor)
   }
-  return mock
 }
 
 const ignoreProperties = new Set<string | symbol>([
@@ -577,7 +575,7 @@ function getDefaultConfig(original?: Procedure | Constructable): MockConfig {
   }
 }
 
-function getDefaultState(): MockContext<Procedure> {
+function getDefaultState(): MockContext {
   const state = {
     calls: [],
     contexts: [],
