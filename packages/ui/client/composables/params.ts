@@ -1,6 +1,6 @@
 export interface Params {
   file: string
-  view: null | 'graph' | 'editor' | 'console'
+  view: null | 'graph' | 'editor' | 'console' | 'snapshots'
   line: null | number
   test: null | string
   column: null | number

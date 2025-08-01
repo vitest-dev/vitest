@@ -4,6 +4,32 @@ import type { SerializedConfig } from '../runtime/config'
 import type { SerializedTestSpecification } from '../runtime/types/utils'
 import type { Awaitable, LabelColor, ModuleGraphData, UserConsoleLog } from '../types/general'
 
+export interface SnapshotData {
+  filepath: string
+  snapshots: {
+    added: Array<{
+      name: string
+      content: string
+      testName?: string
+    }>
+    matched: Array<{
+      name: string
+      content: string
+      testName?: string
+    }>
+    unmatched: Array<{
+      name: string
+      content: string
+      testName?: string
+    }>
+    unchecked: Array<{
+      name: string
+      content: string
+      testName?: string
+    }>
+  }
+}
+
 interface SourceMap {
   file: string
   mappings: string
@@ -45,6 +71,7 @@ export interface WebSocketHandlers {
   ) => Promise<TransformResultWithSource | undefined>
   readTestFile: (id: string) => Promise<string | null>
   saveTestFile: (id: string, content: string) => Promise<void>
+  getSnapshotData: (testFilepath: string) => Promise<SnapshotData | void>
   rerun: (files: string[], resetTestNamePattern?: boolean) => Promise<void>
   rerunTask: (id: string) => Promise<void>
   updateSnapshot: (file?: File) => Promise<void>

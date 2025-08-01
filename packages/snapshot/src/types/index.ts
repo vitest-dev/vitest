@@ -36,13 +36,18 @@ export interface SnapshotMatchOptions {
 
 export interface SnapshotResult {
   filepath: string
+  snapshot: Record<string, string>
   added: number
+  addedKeys: Array<string>
   fileDeleted: boolean
   matched: number
+  matchedKeys: Array<string>
   unchecked: number
   uncheckedKeys: Array<string>
   unmatched: number
+  unmatchedKeys: Array<string>
   updated: number
+  updatedKeys: Array<string>
 }
 
 export interface UncheckedSnapshot {
