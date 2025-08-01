@@ -592,8 +592,9 @@ describe('vi.fn() implementations', () => {
     expect(mock()).toBe(undefined)
   })
 
-  test('vi.fn() throws an error if new is called on arrow function', () => {
-    using log = vi.spyOn(console, 'warn')
+  test('vi.fn() throws an error if new is called on arrow function', ({ onTestFinished }) => {
+    const log = vi.spyOn(console, 'warn')
+    onTestFinished(() => log.mockRestore())
     const Mock = vi.fn(() => {})
     expect(() => new Mock()).toThrowError()
     expect(log).toHaveBeenCalledWith(
