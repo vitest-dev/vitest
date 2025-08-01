@@ -593,8 +593,12 @@ describe('vi.fn() implementations', () => {
   })
 
   test('vi.fn() throws an error if new is called on arrow function', () => {
+    using log = vi.spyOn(console, 'warn')
     const Mock = vi.fn(() => {})
     expect(() => new Mock()).toThrowError()
+    expect(log).toHaveBeenCalledWith(
+      `[vitest] The vi.fn() mock did not use 'function' or 'class' in its implementation, see https://vitest.dev/api/vi#vi-spyon for examples.`,
+    )
   })
 
   test('vi.fn() throws an error if new is not called on a class', () => {

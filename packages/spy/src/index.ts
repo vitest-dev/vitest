@@ -428,6 +428,9 @@ function createMock(
       catch (error: any) {
         thrownValue = error
         didThrow = true
+        if (error instanceof TypeError && error.message.includes('is not a constructor')) {
+          console.warn(`[vitest] The ${namedObject[name].getMockName()} mock did not use 'function' or 'class' in its implementation, see https://vitest.dev/api/vi#vi-spyon for examples.`)
+        }
         throw error
       }
       finally {
