@@ -30,7 +30,7 @@ function mock(
   factory?: MockOptions | MockFactory<unknown>
 ): void
 function mock<T>(
-  path: Promise<T>,
+  module: Promise<T>,
   factory?: MockOptions | MockFactory<T>
 ): void
 ```
@@ -181,7 +181,7 @@ function doMock(
   factory?: MockOptions | MockFactory<unknown>
 ): void
 function doMock<T>(
-  path: Promise<T>,
+  module: Promise<T>,
   factory?: MockOptions | MockFactory<T>
 ): void
 ```
