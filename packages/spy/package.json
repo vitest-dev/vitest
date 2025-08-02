@@ -31,8 +31,5 @@
   "scripts": {
     "build": "rimraf dist && rollup -c",
     "dev": "rollup -c --watch"
-  },
-  "dependencies": {
-    "tinyspy": "^4.0.3"
   }
 }

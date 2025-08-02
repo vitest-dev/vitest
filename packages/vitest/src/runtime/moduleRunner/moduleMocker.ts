@@ -276,10 +276,10 @@ export class VitestMocker {
   public mockObject(
     object: Record<string | symbol, any>,
     mockExports: Record<string | symbol, any> = {},
-    behavior: MockedModuleType = 'automock',
+    behavior: 'automock' | 'autospy' = 'automock',
   ): Record<string | symbol, any> {
-    const spyOn = this.spyModule?.spyOn
-    if (!spyOn) {
+    const createMockInstance = this.spyModule?.createMockInstance
+    if (!createMockInstance) {
       throw this.createError(
         '[vitest] `spyModule` is not defined. This is a Vitest error. Please open a new issue with reproduction.',
       )
@@ -287,7 +287,7 @@ export class VitestMocker {
     return mockObject(
       {
         globalConstructors: this.primitives,
-        spyOn,
+        createMockInstance,
         type: behavior,
       },
       object,

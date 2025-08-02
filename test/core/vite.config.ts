@@ -153,6 +153,9 @@ export default defineConfig({
       if (log.includes('run [...filters]')) {
         return false
       }
+      if (log.startsWith(`[vitest]`) && log.includes(`did not use 'function' or 'class' in its implementation`)) {
+        return false
+      }
     },
     projects: [
       project('threads', 'red'),

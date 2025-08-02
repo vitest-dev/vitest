@@ -5,7 +5,11 @@ export type ScreenshotMatcherArguments<
 > = [
   name: string,
   testName: string,
-  options: ScreenshotMatcherOptions<ComparatorName> & { element: string },
+  options: ScreenshotMatcherOptions<ComparatorName>
+    & {
+      element: string
+      screenshotOptions?: ScreenshotMatcherOptions<ComparatorName>['screenshotOptions'] & { mask?: readonly string[] }
+    },
 ]
 
 export type ScreenshotMatcherOutput = Promise<

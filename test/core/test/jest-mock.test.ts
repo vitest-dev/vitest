@@ -1,5 +1,4 @@
 import { describe, expect, expectTypeOf, it, vi } from 'vitest'
-import { rolldownVersion } from 'vitest/node'
 
 describe('jest mock compat layer', () => {
   const returnFactory = (type: string) => (value: any) => ({ type, value })
@@ -86,54 +85,6 @@ describe('jest mock compat layer', () => {
     expectTypeOf(spy.mock.contexts[0]).toEqualTypeOf<SpyClass>()
     expect(spy.mock.instances).toEqual([instance])
     expect(spy.mock.contexts).toEqual([instance])
-  })
-
-  it('throws an error when constructing a class with an arrow function', () => {
-    function getTypeError() {
-      // esbuild transforms it into () => {\n}, but rolldown keeps it
-      return new TypeError(rolldownVersion
-        ? '() => {} is not a constructor'
-        : `() => {
-    } is not a constructor`)
-    }
-
-    const arrow = () => {}
-    const Fn = vi.fn(arrow)
-    expect(() => new Fn()).toThrow(new TypeError(
-      `The spy implementation did not use 'function' or 'class', see https://vitest.dev/api/vi#vi-spyon for examples.`,
-      {
-        cause: getTypeError(),
-      },
-    ))
-
-    const obj = {
-      Spy: arrow,
-    }
-
-    vi.spyOn(obj, 'Spy')
-
-    expect(
-      // @ts-expect-error typescript knows you can't do that
-      () => new obj.Spy(),
-    ).toThrow(new TypeError(
-      `The spy implementation did not use 'function' or 'class', see https://vitest.dev/api/vi#vi-spyon for examples.`,
-      {
-        cause: getTypeError(),
-      },
-    ))
-
-    const properClass = {
-      Spy: class {},
-    }
-
-    vi.spyOn(properClass, 'Spy').mockImplementation(() => {})
-
-    expect(() => new properClass.Spy()).toThrow(new TypeError(
-      `The spy implementation did not use 'function' or 'class', see https://vitest.dev/api/vi#vi-spyon for examples.`,
-      {
-        cause: getTypeError(),
-      },
-    ))
   })
 
   it('implementation is set correctly on init', () => {
@@ -224,7 +175,9 @@ describe('jest mock compat layer', () => {
 
     spy.mockRestore()
 
-    expect(spy.getMockImplementation()).toBe(undefined)
+    // Sicne Vitest 4 this is a special case where
+    // vi.fn(impl) will always return impl, unless overriden
+    expect(spy.getMockImplementation()).toBe(originalFn)
 
     expect(spy.mock.results).toEqual([])
   })
@@ -422,7 +375,7 @@ describe('jest mock compat layer', () => {
     expect(obj.method).toHaveBeenCalledTimes(1)
     vi.spyOn(obj, 'method')
     obj.method()
-    expect(obj.method).toHaveBeenCalledTimes(1)
+    expect(obj.method).toHaveBeenCalledTimes(2)
   })
 
   it('spyOn on the getter multiple times', () => {
@@ -450,7 +403,7 @@ describe('jest mock compat layer', () => {
 
     expect(vi.isMockFunction(obj.method)).toBe(true)
     expect(obj.method()).toBe('mocked')
-    expect(spy1).not.toBe(spy2)
+    expect(spy1).toBe(spy2)
 
     spy2.mockImplementation(() => 'mocked2')
 

@@ -14,7 +14,7 @@ import type { BrowserRunnerState } from '../utils'
 import type { Locator as LocatorAPI } from './locators/index'
 import { getElementLocatorSelectors } from '@vitest/browser/utils'
 import { ensureAwaited, getBrowserState, getWorkerState } from '../utils'
-import { convertElementToCssSelector, processTimeoutOptions } from './utils'
+import { convertToSelector, processTimeoutOptions } from './utils'
 
 // this file should not import anything directly, only types and utils
 
@@ -292,12 +292,19 @@ export const page: BrowserPage = {
     const name
       = options.path || `${taskName.replace(/[^a-z0-9]/gi, '-')}-${number}.png`
 
+    const normalizedOptions = 'mask' in options
+      ? {
+          ...options,
+          mask: (options.mask as Array<Element | Locator>).map(convertToSelector),
+        }
+      : options
+
     return ensureAwaited(error => triggerCommand(
       '__vitest_screenshot',
       [
         name,
         processTimeoutOptions({
-          ...options,
+          ...normalizedOptions,
           element: options.element
             ? convertToSelector(options.element)
             : undefined,
@@ -346,19 +353,6 @@ function convertToLocator(element: Element | Locator): Locator {
     return page.elementLocator(element)
   }
   return element
-}
-
-function convertToSelector(elementOrLocator: Element | Locator): string {
-  if (!elementOrLocator) {
-    throw new Error('Expected element or locator to be defined.')
-  }
-  if (elementOrLocator instanceof Element) {
-    return convertElementToCssSelector(elementOrLocator)
-  }
-  if ('selector' in elementOrLocator) {
-    return (elementOrLocator as any).selector
-  }
-  throw new Error('Expected element or locator to be an instance of Element or Locator.')
 }
 
 function getTaskFullName(task: RunnerTask): string {
