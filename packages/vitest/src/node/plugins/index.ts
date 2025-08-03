@@ -141,9 +141,13 @@ export async function VitestPlugin(
         if ('rolldownVersion' in vite) {
           config = {
             ...config,
+            // eslint-disable-next-line ts/ban-ts-comment
+            // @ts-ignore rolldown-vite only
             oxc: viteConfig.oxc === false
               ? false
               : {
+                  // eslint-disable-next-line ts/ban-ts-comment
+                  // @ts-ignore rolldown-vite only
                   target: viteConfig.oxc?.target || 'node18',
                 },
           }

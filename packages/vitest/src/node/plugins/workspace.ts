@@ -157,9 +157,11 @@ export function WorkspaceVitestPlugin(
         if ('rolldownVersion' in vite) {
           config = {
             ...config,
+            // @ts-ignore
             oxc: viteConfig.oxc === false
               ? false
               : {
+                  // @ts-ignore
                   target: viteConfig.oxc?.target || 'node18',
                 },
           }
