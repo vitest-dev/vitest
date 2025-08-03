@@ -157,11 +157,13 @@ export function WorkspaceVitestPlugin(
         if ('rolldownVersion' in vite) {
           config = {
             ...config,
-            // @ts-ignore
+            // eslint-disable-next-line ts/ban-ts-comment
+            // @ts-ignore rolldown-vite only
             oxc: viteConfig.oxc === false
               ? false
               : {
-                  // @ts-ignore
+                  // eslint-disable-next-line ts/ban-ts-comment
+                  // @ts-ignore rolldown-vite only
                   target: viteConfig.oxc?.target || 'node18',
                 },
           }
