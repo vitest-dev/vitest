@@ -4,6 +4,7 @@ import type { ResolvedConfig, TestProjectInlineConfiguration } from '../types/co
 import { existsSync, readFileSync } from 'node:fs'
 import { deepMerge } from '@vitest/utils'
 import { basename, dirname, relative, resolve } from 'pathe'
+import * as vite from 'vite'
 import { configDefaults } from '../../defaults'
 import { generateScopedClassName } from '../../integrations/css/css-modules'
 import { VitestFilteredOutProjectError } from '../errors'
@@ -21,7 +22,6 @@ import {
   resolveFsAllow,
 } from './utils'
 import { VitestProjectResolver } from './vitestResolver'
-import * as vite from "vite";
 
 interface WorkspaceOptions extends TestProjectInlineConfiguration {
   root?: string
@@ -162,8 +162,9 @@ export function WorkspaceVitestPlugin(
               : {
                   target: viteConfig.oxc?.target || 'node18',
                 },
-          };
-        } else {
+          }
+        }
+        else {
           config = {
             ...config,
             esbuild: viteConfig.esbuild === false

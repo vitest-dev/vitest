@@ -6,6 +6,7 @@ import {
   notNullish,
 } from '@vitest/utils'
 import { relative } from 'pathe'
+import * as vite from 'vite'
 import { defaultPort } from '../../constants'
 import { configDefaults } from '../../defaults'
 import { generateScopedClassName } from '../../integrations/css/css-modules'
@@ -25,7 +26,6 @@ import {
   resolveFsAllow,
 } from './utils'
 import { VitestCoreResolver } from './vitestResolver'
-import * as vite from "vite"
 
 export async function VitestPlugin(
   options: UserConfig = {},
@@ -146,8 +146,9 @@ export async function VitestPlugin(
               : {
                   target: viteConfig.oxc?.target || 'node18',
                 },
-          };
-        } else {
+          }
+        }
+        else {
           config = {
             ...config,
             esbuild: viteConfig.esbuild === false
