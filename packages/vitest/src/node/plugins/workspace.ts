@@ -21,6 +21,7 @@ import {
   resolveFsAllow,
 } from './utils'
 import { VitestProjectResolver } from './vitestResolver'
+import * as vite from "vite";
 
 interface WorkspaceOptions extends TestProjectInlineConfiguration {
   root?: string
@@ -117,7 +118,7 @@ export function WorkspaceVitestPlugin(
         const root = testConfig.root || viteConfig.root || options.root
 
         const resolveOptions = getDefaultResolveOptions()
-        const config: ViteConfig = {
+        let config: ViteConfig = {
           root,
           define: {
             // disable replacing `process.env.NODE_ENV` with static string by vite:client-inject
@@ -127,15 +128,6 @@ export function WorkspaceVitestPlugin(
             ...resolveOptions,
             alias: testConfig.alias,
           },
-          esbuild: viteConfig.esbuild === false
-            ? false
-            : {
-                // Lowest target Vitest supports is Node18
-                target: viteConfig.esbuild?.target || 'node18',
-                sourcemap: 'external',
-                // Enables using ignore hint for coverage providers with @preserve keyword
-                legalComments: 'inline',
-              },
           server: {
             // disable watch mode in workspaces,
             // because it is handled by the top-level watcher
@@ -160,6 +152,30 @@ export function WorkspaceVitestPlugin(
             },
           },
           test: {},
+        }
+
+        if ('rolldownVersion' in vite) {
+          config = {
+            ...config,
+            oxc: viteConfig.oxc === false
+              ? false
+              : {
+                  target: viteConfig.oxc?.target || 'node18',
+                },
+          };
+        } else {
+          config = {
+            ...config,
+            esbuild: viteConfig.esbuild === false
+              ? false
+              : {
+                  // Lowest target Vitest supports is Node18
+                  target: viteConfig.esbuild?.target || 'node18',
+                  sourcemap: 'external',
+                  // Enables using ignore hint for coverage providers with @preserve keyword
+                  legalComments: 'inline',
+                },
+          }
         }
 
         ;(config.test as ResolvedConfig).defines = defines

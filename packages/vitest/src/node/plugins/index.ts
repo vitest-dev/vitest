@@ -25,6 +25,7 @@ import {
   resolveFsAllow,
 } from './utils'
 import { VitestCoreResolver } from './vitestResolver'
+import * as vite from "vite"
 
 export async function VitestPlugin(
   options: UserConfig = {},
@@ -76,22 +77,12 @@ export async function VitestPlugin(
 
         const resolveOptions = getDefaultResolveOptions()
 
-        const config: ViteConfig = {
+        let config: ViteConfig = {
           root: viteConfig.test?.root || options.root,
           define: {
             // disable replacing `process.env.NODE_ENV` with static string by vite:client-inject
             'process.env.NODE_ENV': 'process.env.NODE_ENV',
           },
-          esbuild:
-            viteConfig.esbuild === false
-              ? false
-              : {
-                  // Lowest target Vitest supports is Node18
-                  target: viteConfig.esbuild?.target || 'node18',
-                  sourcemap: 'external',
-                  // Enables using ignore hint for coverage providers with @preserve keyword
-                  legalComments: 'inline',
-                },
           resolve: {
             ...resolveOptions,
             alias: testConfig.alias,
@@ -145,6 +136,30 @@ export async function VitestPlugin(
             root: testConfig.root ?? viteConfig.test?.root,
             deps: testConfig.deps ?? viteConfig.test?.deps,
           },
+        }
+
+        if ('rolldownVersion' in vite) {
+          config = {
+            ...config,
+            oxc: viteConfig.oxc === false
+              ? false
+              : {
+                  target: viteConfig.oxc?.target || 'node18',
+                },
+          };
+        } else {
+          config = {
+            ...config,
+            esbuild: viteConfig.esbuild === false
+              ? false
+              : {
+                  // Lowest target Vitest supports is Node18
+                  target: viteConfig.esbuild?.target || 'node18',
+                  sourcemap: 'external',
+                  // Enables using ignore hint for coverage providers with @preserve keyword
+                  legalComments: 'inline',
+                },
+          }
         }
 
         // inherit so it's available in VitestOptimizer
