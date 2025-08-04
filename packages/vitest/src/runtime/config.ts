@@ -122,6 +122,7 @@ export interface SerializedConfig {
       // for playwright
       actionTimeout?: number
     }
+    trackUnhandledErrors: boolean
   }
   standalone: boolean
   logHeapUsage: boolean | undefined

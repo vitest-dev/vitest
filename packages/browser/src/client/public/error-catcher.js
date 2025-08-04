@@ -55,10 +55,14 @@ function catchWindowErrors(errorEvent, prop, cb) {
 }
 
 function registerUnexpectedErrors() {
-  catchWindowErrors('error', 'error', event =>
+  const offError = catchWindowErrors('error', 'error', event =>
     reportUnexpectedError('Error', event.error))
-  catchWindowErrors('unhandledrejection', 'reason', event =>
+  const offRejection = catchWindowErrors('unhandledrejection', 'reason', event =>
     reportUnexpectedError('Unhandled Rejection', event.reason))
+  return () => {
+    offError()
+    offRejection()
+  }
 }
 
 async function reportUnexpectedError(
@@ -71,4 +75,4 @@ async function reportUnexpectedError(
   }).catch(console.error)
 }
 
-registerUnexpectedErrors()
+globalThis.__vitest_browser_runner__.disposeExceptionTracker = registerUnexpectedErrors()

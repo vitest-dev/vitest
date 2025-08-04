@@ -19,6 +19,7 @@
   window.__vitest_browser_runner__ = {
     wrapModule,
     wrapDynamicImport: wrapModule,
+    disposeExceptionTracker: () => {},
     moduleCache,
     cleanups: [],
     config: { __VITEST_CONFIG__ },

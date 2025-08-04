@@ -217,6 +217,10 @@ async function prepare(options: PrepareOptions) {
       })
     })(),
   ])
+
+  if (!config.browser.trackUnhandledErrors) {
+    getBrowserState().disposeExceptionTracker()
+  }
 }
 
 async function cleanup() {
