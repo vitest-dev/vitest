@@ -124,6 +124,8 @@ async function callTestHooks(
   context.onTestFinished = onTestFinished
 }
 
+let limitMaxConcurrency: ReturnType<typeof limitConcurrency>
+
 export async function callSuiteHook<T extends keyof SuiteHooks>(
   suite: Suite,
   currentTask: Task,
@@ -150,11 +152,11 @@ export async function callSuiteHook<T extends keyof SuiteHooks>(
   }
 
   async function runHook(hook: Function) {
-    return getBeforeHookCleanupCallback(
+    return limitMaxConcurrency(async () => getBeforeHookCleanupCallback(
       hook,
       await hook(...args),
       name === 'beforeEach' ? args[0] : undefined,
-    )
+    ))
   }
 
   if (sequence === 'parallel') {
@@ -581,8 +583,6 @@ export async function runSuite(suite: Suite, runner: VitestRunner): Promise<void
     updateTask('suite-finished', suite, runner)
   }
 }
-
-let limitMaxConcurrency: ReturnType<typeof limitConcurrency>
 
 async function runSuiteChild(c: Task, runner: VitestRunner) {
   if (c.type === 'test') {
