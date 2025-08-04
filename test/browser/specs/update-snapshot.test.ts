@@ -46,7 +46,7 @@ test('update snapshot', async () => {
   expect(snapshotData).toContain('`1`')
 
   const testFile = readFileSync(testPath, 'utf-8')
-  expect(testFile).toContain('expect(fn).toMatchInlineSnapshot(`[MockFunction spy]`)')
+  expect(testFile).toContain('expect(fn).toMatchInlineSnapshot(`[MockFunction]`)')
   expect(testFile).toMatchSnapshot()
 
   // test passes

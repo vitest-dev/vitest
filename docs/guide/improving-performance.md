@@ -79,7 +79,7 @@ export default defineConfig({
 
 ## Sharding
 
-Test sharding is a process of splitting your test suite into groups, or shards. This can be useful when you have a large test suite and multiple matchines that could run subsets of that suite simultaneously.
+Test sharding is a process of splitting your test suite into groups, or shards. This can be useful when you have a large test suite and multiple machines that could run subsets of that suite simultaneously.
 
 To split Vitest tests on multiple different runs, use [`--shard`](/guide/cli#shard) option with [`--reporter=blob`](/guide/reporters#blob-reporter) option:
 
@@ -97,7 +97,7 @@ Collect the results stored in `.vitest-reports` directory from each machine and 
 vitest run --merge-reports
 ```
 
-::: details Github action example
+::: details GitHub Actions example
 This setup is also used at https://github.com/vitest-tests/test-sharding.
 
 ```yaml

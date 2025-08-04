@@ -2,9 +2,9 @@ import fs from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { resolve } from 'pathe'
 import { globSync } from 'tinyglobby'
-import { defineConfig } from 'vite'
+import * as vite from 'vite'
 
-export default defineConfig({
+export default vite.defineConfig({
   server: {
     watch: { ignored: ['**/**'] },
   },
@@ -18,9 +18,14 @@ export default defineConfig({
     assetsDir: '__vitest_browser__',
     manifest: true,
     rollupOptions: {
+      output: 'rolldownVersion' in vite
+        ? {
+            minify: false,
+          } as any
+        : {},
       input: {
-        orchestrator: resolve(__dirname, './orchestrator.html'),
-        tester: resolve(__dirname, './tester/tester.html'),
+        orchestrator: resolve(import.meta.dirname, './orchestrator.html'),
+        tester: resolve(import.meta.dirname, './tester/tester.html'),
       },
       external: [
         /^vitest\//,

@@ -2,14 +2,22 @@ import type { TestAnnotation } from 'vitest'
 import { describe, expect, test } from 'vitest'
 import { runInlineTests } from '../../test-utils'
 
+const test3Content = /* ts */`
+export async function externalAnnotate(annotate) {
+  await annotate('external')
+}
+`
+
 const annotationTest = /* ts */`
 import { test, describe } from 'vitest'
+import { externalAnnotate } from './test-3.js'
 
 test('simple', async ({ annotate }) => {
   await annotate('1')
   await annotate('2', 'warning')
   await annotate('3', { path: './test-3.js' })
   await annotate('4', 'warning', { path: './test-4.js' })
+  await externalAnnotate(annotate)
 })
 
 describe('suite', () => {
@@ -42,7 +50,7 @@ describe('API', () => {
     const { stderr } = await runInlineTests(
       {
         'basic.test.ts': annotationTest,
-        'test-3.js': '',
+        'test-3.js': test3Content,
         'test-4.js': '',
       },
       {
@@ -92,6 +100,7 @@ describe('API', () => {
         "[annotate] simple 2 warning undefined",
         "[annotate] simple 3 notice <root>/.vitest-attachments/3-<hash>.js",
         "[annotate] simple 4 warning <root>/.vitest-attachments/4-<hash>.js",
+        "[annotate] simple external notice undefined",
         "[result] simple",
         "[ready] second",
         "[annotate] second 5 notice undefined",
@@ -107,7 +116,7 @@ describe('API', () => {
             "location": {
               "column": 11,
               "file": "<root>/basic.test.ts",
-              "line": 13,
+              "line": 15,
             },
             "message": "5",
             "type": "notice",
@@ -119,7 +128,7 @@ describe('API', () => {
             "location": {
               "column": 11,
               "file": "<root>/basic.test.ts",
-              "line": 14,
+              "line": 16,
             },
             "message": "6",
             "type": "notice",
@@ -130,7 +139,7 @@ describe('API', () => {
             "location": {
               "column": 9,
               "file": "<root>/basic.test.ts",
-              "line": 5,
+              "line": 6,
             },
             "message": "1",
             "type": "notice",
@@ -139,7 +148,7 @@ describe('API', () => {
             "location": {
               "column": 9,
               "file": "<root>/basic.test.ts",
-              "line": 6,
+              "line": 7,
             },
             "message": "2",
             "type": "warning",
@@ -152,7 +161,7 @@ describe('API', () => {
             "location": {
               "column": 9,
               "file": "<root>/basic.test.ts",
-              "line": 7,
+              "line": 8,
             },
             "message": "3",
             "type": "notice",
@@ -165,10 +174,19 @@ describe('API', () => {
             "location": {
               "column": 9,
               "file": "<root>/basic.test.ts",
-              "line": 8,
+              "line": 9,
             },
             "message": "4",
             "type": "warning",
+          },
+          {
+            "location": {
+              "column": 9,
+              "file": "<root>/basic.test.ts",
+              "line": 10,
+            },
+            "message": "external",
+            "type": "notice",
           },
         ],
       }
@@ -198,7 +216,7 @@ describe('reporters', () => {
     const { stdout } = await runInlineTests(
       {
         'basic.test.ts': annotationTest,
-        'test-3.js': '',
+        'test-3.js': test3Content,
         'test-4.js': '',
       },
       { reporters: ['tap'] },
@@ -214,6 +232,7 @@ describe('reporters', () => {
               # warning: 2
               # notice: 3
               # warning: 4
+              # notice: external
           ok 2 - suite # time=<time> {
               1..1
               ok 1 - second # time=<time>
@@ -229,7 +248,7 @@ describe('reporters', () => {
     const { stdout } = await runInlineTests(
       {
         'basic.test.ts': annotationTest,
-        'test-3.js': '',
+        'test-3.js': test3Content,
         'test-4.js': '',
       },
       { reporters: ['tap-flat'] },
@@ -243,6 +262,7 @@ describe('reporters', () => {
           # warning: 2
           # notice: 3
           # warning: 4
+          # notice: external
       ok 2 - basic.test.ts > suite > second # time=<time>
           # notice: 5
           # notice: 6
@@ -254,7 +274,7 @@ describe('reporters', () => {
     const { stdout } = await runInlineTests(
       {
         'basic.test.ts': annotationTest,
-        'test-3.js': '',
+        'test-3.js': test3Content,
         'test-4.js': '',
       },
       { reporters: ['junit'] },
@@ -279,6 +299,8 @@ describe('reporters', () => {
                       </property>
                       <property name="warning" value="4">
                       </property>
+                      <property name="notice" value="external">
+                      </property>
                   </properties>
               </testcase>
               <testcase classname="basic.test.ts" name="suite &gt; second" time="0">
@@ -299,7 +321,7 @@ describe('reporters', () => {
     const { stdout, ctx } = await runInlineTests(
       {
         'basic.test.ts': annotationTest,
-        'test-3.js': '',
+        'test-3.js': test3Content,
         'test-4.js': '',
       },
       { reporters: ['github-actions'] },
@@ -313,17 +335,19 @@ describe('reporters', () => {
       .replace(new RegExp(ctx!.config.root, 'g'), '<root>')
     expect(result).toMatchInlineSnapshot(`
       "
-      ::notice file=<root>/basic.test.ts,line=5,column=9::1
+      ::notice file=<root>/basic.test.ts,line=6,column=9::1
 
-      ::warning file=<root>/basic.test.ts,line=6,column=9::2
+      ::warning file=<root>/basic.test.ts,line=7,column=9::2
 
-      ::notice file=<root>/basic.test.ts,line=7,column=9::3
+      ::notice file=<root>/basic.test.ts,line=8,column=9::3
 
-      ::warning file=<root>/basic.test.ts,line=8,column=9::4
+      ::warning file=<root>/basic.test.ts,line=9,column=9::4
 
-      ::notice file=<root>/basic.test.ts,line=13,column=11::5
+      ::notice file=<root>/basic.test.ts,line=10,column=9::external
 
-      ::notice file=<root>/basic.test.ts,line=14,column=11::6
+      ::notice file=<root>/basic.test.ts,line=15,column=11::5
+
+      ::notice file=<root>/basic.test.ts,line=16,column=11::6
       "
     `)
   })
@@ -332,7 +356,7 @@ describe('reporters', () => {
     const { stdout } = await runInlineTests(
       {
         'basic.test.ts': annotationTest,
-        'test-3.js': '',
+        'test-3.js': test3Content,
         'test-4.js': '',
       },
       { reporters: [['verbose', { isTTY: false }]] },
@@ -348,20 +372,22 @@ describe('reporters', () => {
     expect(result).toMatchInlineSnapshot(`
       " ✓ basic.test.ts > simple <time>
 
-         ❯ basic.test.ts:5:9 notice
+         ❯ basic.test.ts:6:9 notice
            ↳ 1
-         ❯ basic.test.ts:6:9 warning
+         ❯ basic.test.ts:7:9 warning
            ↳ 2
-         ❯ basic.test.ts:7:9 notice
+         ❯ basic.test.ts:8:9 notice
            ↳ 3
-         ❯ basic.test.ts:8:9 warning
+         ❯ basic.test.ts:9:9 warning
            ↳ 4
+         ❯ basic.test.ts:10:9 notice
+           ↳ external
 
        ✓ basic.test.ts > suite > second <time>
 
-         ❯ basic.test.ts:13:11 notice
+         ❯ basic.test.ts:15:11 notice
            ↳ 5
-         ❯ basic.test.ts:14:11 notice
+         ❯ basic.test.ts:16:11 notice
            ↳ 6
 
       "

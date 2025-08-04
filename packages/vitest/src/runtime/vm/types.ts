@@ -13,13 +13,13 @@ type ModuleLinker = (
   referencingModule: VMModule,
   extra: { assert: object }
 ) => VMModule | Promise<VMModule>
-type ModuleStatus =
-  | 'unlinked'
-  | 'linking'
-  | 'linked'
-  | 'evaluating'
-  | 'evaluated'
-  | 'errored'
+type ModuleStatus
+  = | 'unlinked'
+    | 'linking'
+    | 'linked'
+    | 'evaluating'
+    | 'evaluated'
+    | 'errored'
 export declare class VMModule {
   dependencySpecifiers: readonly string[]
   error: any

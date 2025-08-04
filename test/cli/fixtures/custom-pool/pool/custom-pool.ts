@@ -1,14 +1,7 @@
-import type {
-  RunnerTestFile,
-  RunnerTestCase,
-  RunnerTestSuite,
-  RunnerTaskResultPack,
-  RunnerTaskEventPack,
-  RunnerTask
-} from 'vitest'
+import type { RunnerTestCase } from 'vitest'
 import type { ProcessPool, Vitest } from 'vitest/node'
-import { createFileTask, generateFileHash } from '@vitest/runner/utils'
-import { normalize, relative } from 'pathe'
+import { createFileTask } from '@vitest/runner/utils'
+import { normalize } from 'pathe'
 
 export default (vitest: Vitest): ProcessPool => {
   const options = vitest.config.poolOptions?.custom as any

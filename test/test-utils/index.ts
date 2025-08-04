@@ -8,7 +8,7 @@ import fs from 'node:fs'
 import { Readable, Writable } from 'node:stream'
 import { fileURLToPath } from 'node:url'
 import { inspect } from 'node:util'
-import { dirname, resolve } from 'pathe'
+import { dirname, relative, resolve } from 'pathe'
 import { x } from 'tinyexec'
 import * as tinyrainbow from 'tinyrainbow'
 import { afterEach, onTestFinished } from 'vitest'
@@ -208,8 +208,11 @@ async function runCli(command: 'vitest' | 'vite-node', _options?: CliOptions | s
 
   if (args[0] !== 'list' && (args.includes('--watch') || args[0] === 'watch')) {
     if (command === 'vitest') {
-      // Wait for initial test run to complete
-      await cli.waitForStdout('Waiting for file changes')
+      // Waiting for either success or failure
+      await Promise.race([
+        cli.waitForStdout('Waiting for file changes'),
+        cli.waitForStdout('Tests failed. Watching for file changes'),
+      ])
     }
     // make sure watcher is ready
     await cli.waitForStdout('[debug] watcher is ready')
@@ -336,6 +339,15 @@ export function useFS<T extends TestFsStructure>(root: string, structure: T) {
         throw new Error(`file ${file} already exists in the test file system`)
       }
       createFile(filepath, content)
+    },
+    statFile: (file: string): fs.Stats => {
+      const filepath = resolve(root, file)
+
+      if (relative(root, filepath).startsWith('..')) {
+        throw new Error(`file ${file} is outside of the test file system`)
+      }
+
+      return fs.statSync(filepath)
     },
   }
 }

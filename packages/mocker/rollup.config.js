@@ -13,6 +13,7 @@ const entries = {
   'index': 'src/index.ts',
   'node': 'src/node/index.ts',
   'redirect': 'src/node/redirect.ts',
+  'automock': 'src/node/automock.ts',
   'browser': 'src/browser/index.ts',
   'register': 'src/browser/register.ts',
   'auto-register': 'src/browser/auto-register.ts',

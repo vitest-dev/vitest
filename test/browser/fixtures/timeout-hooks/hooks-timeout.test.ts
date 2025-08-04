@@ -17,7 +17,7 @@ describe.runIf(server.provider === 'playwright')('timeouts are failing correctly
       await page.getByTestId('non-existing').click()
     }, 500)
 
-    it('skipped')
+    it('skipped', () => {})
   })
 
   describe('afterEach', () => {
@@ -26,7 +26,7 @@ describe.runIf(server.provider === 'playwright')('timeouts are failing correctly
       await page.getByTestId('non-existing').click()
     }, 500)
 
-    it('skipped')
+    it('skipped', () => {})
   })
 
   describe('beforeAll', () => {
@@ -35,7 +35,7 @@ describe.runIf(server.provider === 'playwright')('timeouts are failing correctly
       await page.getByTestId('non-existing').click()
     }, 500)
 
-    it('skipped')
+    it('skipped', () => {})
   })
 
   describe('afterAll', () => {
@@ -44,7 +44,7 @@ describe.runIf(server.provider === 'playwright')('timeouts are failing correctly
       await page.getByTestId('non-existing').click()
     }, 500)
 
-    it('skipped')
+    it('skipped', () => {})
   })
 
   describe('onTestFinished', () => {

@@ -1,3 +1,4 @@
+import type { Locator } from '@vitest/browser/context'
 import type { BrowserRPC } from '../client'
 import { getBrowserState, getWorkerState } from '../utils'
 
@@ -196,4 +197,17 @@ export function escapeForTextSelector(text: string | RegExp, exact: boolean): st
     return escapeRegexForSelector(text)
   }
   return `${JSON.stringify(text)}${exact ? 's' : 'i'}`
+}
+
+export function convertToSelector(elementOrLocator: Element | Locator): string {
+  if (!elementOrLocator) {
+    throw new Error('Expected element or locator to be defined.')
+  }
+  if (elementOrLocator instanceof Element) {
+    return convertElementToCssSelector(elementOrLocator)
+  }
+  if ('selector' in elementOrLocator) {
+    return (elementOrLocator as any).selector
+  }
+  throw new Error('Expected element or locator to be an instance of Element or Locator.')
 }

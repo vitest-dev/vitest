@@ -6,11 +6,11 @@ import type { SerializedCoverageConfig } from '../runtime/config'
 import type { AfterSuiteRunMeta } from '../types/general'
 import { existsSync, promises as fs, readdirSync, writeFileSync } from 'node:fs'
 import path from 'node:path'
+import { cleanUrl, slash } from '@vitest/utils'
 import { relative, resolve } from 'pathe'
 import pm from 'picomatch'
 import { glob } from 'tinyglobby'
 import c from 'tinyrainbow'
-import { cleanUrl, slash } from 'vite-node/utils'
 import { coverageConfigDefaults } from '../defaults'
 import { resolveCoverageReporters } from '../node/config/resolveConfig'
 import { resolveCoverageProviderModule } from '../utils/coverage'
@@ -42,7 +42,7 @@ interface ResolvedThreshold {
 type CoverageFiles = Map<
   NonNullable<AfterSuiteRunMeta['projectName']> | symbol,
   Record<
-    AfterSuiteRunMeta['transformMode'],
+    AfterSuiteRunMeta['environment'],
     { [TestFilenames: string]: string }
   >
 >
@@ -81,6 +81,7 @@ export class BaseCoverageProvider<Options extends ResolvedCoverageOptions<'istan
   coverageFiles: CoverageFiles = new Map()
   pendingPromises: Promise<void>[] = []
   coverageFilesDirectory!: string
+  roots: string[] = []
 
   _initialize(ctx: Vitest): void {
     this.ctx = ctx
@@ -130,12 +131,19 @@ export class BaseCoverageProvider<Options extends ResolvedCoverageOptions<'istan
       this.options.reportsDirectory,
       tempDirectory,
     )
+
+    // If --project filter is set pick only roots of resolved projects
+    this.roots = ctx.config.project?.length
+      ? [...new Set(ctx.projects.map(project => project.config.root))]
+      : [ctx.config.root]
   }
 
   /**
    * Check if file matches `coverage.include` but not `coverage.exclude`
    */
-  isIncluded(_filename: string): boolean {
+  isIncluded(_filename: string, root?: string): boolean {
+    const roots = root ? [root] : this.roots
+
     const filename = slash(_filename)
     const cacheHit = this.globCache.get(filename)
 
@@ -144,36 +152,40 @@ export class BaseCoverageProvider<Options extends ResolvedCoverageOptions<'istan
     }
 
     // File outside project root with default allowExternal
-    if (this.options.allowExternal === false && !filename.startsWith(this.ctx.config.root)) {
+    if (this.options.allowExternal === false && roots.every(root => !filename.startsWith(root))) {
       this.globCache.set(filename, false)
 
       return false
     }
 
-    const options: pm.PicomatchOptions = {
-      contains: true,
-      dot: true,
-      cwd: this.ctx.config.root,
-      ignore: this.options.exclude,
-    }
-
     // By default `coverage.include` matches all files, except "coverage.exclude"
     const glob = this.options.include || '**'
 
-    const included = pm.isMatch(filename, glob, options) && existsSync(cleanUrl(filename))
+    let included = roots.some((root) => {
+      const options: pm.PicomatchOptions = {
+        contains: true,
+        dot: true,
+        cwd: root,
+        ignore: this.options.exclude,
+      }
+
+      return pm.isMatch(filename, glob, options)
+    })
+
+    included &&= existsSync(cleanUrl(filename))
 
     this.globCache.set(filename, included)
 
     return included
   }
 
-  async getUntestedFiles(testedFiles: string[]): Promise<string[]> {
-    if (this.options.include == null) {
-      return []
-    }
-
-    let includedFiles = await glob(this.options.include, {
-      cwd: this.ctx.config.root,
+  private async getUntestedFilesByRoot(
+    testedFiles: string[],
+    include: string[],
+    root: string,
+  ): Promise<string[]> {
+    let includedFiles = await glob(include, {
+      cwd: root,
       ignore: [...this.options.exclude, ...testedFiles.map(file => slash(file))],
       absolute: true,
       dot: true,
@@ -181,13 +193,25 @@ export class BaseCoverageProvider<Options extends ResolvedCoverageOptions<'istan
     })
 
     // Run again through picomatch as tinyglobby's exclude pattern is different ({ "exclude": ["math"] } should ignore "src/math.ts")
-    includedFiles = includedFiles.filter(file => this.isIncluded(file))
+    includedFiles = includedFiles.filter(file => this.isIncluded(file, root))
 
     if (this.ctx.config.changed) {
       includedFiles = (this.ctx.config.related || []).filter(file => includedFiles.includes(file))
     }
 
-    return includedFiles.map(file => slash(path.resolve(this.ctx.config.root, file)))
+    return includedFiles.map(file => slash(path.resolve(root, file)))
+  }
+
+  async getUntestedFiles(testedFiles: string[]): Promise<string[]> {
+    if (this.options.include == null) {
+      return []
+    }
+
+    const rootMapper = this.getUntestedFilesByRoot.bind(this, testedFiles, this.options.include)
+
+    const matrix = await Promise.all(this.roots.map(rootMapper))
+
+    return matrix.flatMap(files => files)
   }
 
   createCoverageMap(): CoverageMap {
@@ -229,19 +253,15 @@ export class BaseCoverageProvider<Options extends ResolvedCoverageOptions<'istan
     this.pendingPromises = []
   }
 
-  onAfterSuiteRun({ coverage, transformMode, projectName, testFiles }: AfterSuiteRunMeta): void {
+  onAfterSuiteRun({ coverage, environment, projectName, testFiles }: AfterSuiteRunMeta): void {
     if (!coverage) {
       return
-    }
-
-    if (transformMode !== 'web' && transformMode !== 'ssr' && transformMode !== 'browser') {
-      throw new Error(`Invalid transform mode: ${transformMode}`)
     }
 
     let entry = this.coverageFiles.get(projectName || DEFAULT_PROJECT)
 
     if (!entry) {
-      entry = { web: {}, ssr: {}, browser: {} }
+      entry = {}
       this.coverageFiles.set(projectName || DEFAULT_PROJECT, entry)
     }
 
@@ -251,8 +271,9 @@ export class BaseCoverageProvider<Options extends ResolvedCoverageOptions<'istan
       `coverage-${uniqueId++}.json`,
     )
 
+    entry[environment] ??= {}
     // If there's a result from previous run, overwrite it
-    entry[transformMode][testFilenames] = filename
+    entry[environment][testFilenames] = filename
 
     const promise = fs.writeFile(filename, JSON.stringify(coverage), 'utf-8')
     this.pendingPromises.push(promise)
@@ -262,7 +283,7 @@ export class BaseCoverageProvider<Options extends ResolvedCoverageOptions<'istan
     /** Callback invoked with a single coverage result */
     onFileRead: (data: CoverageType) => void
     /** Callback invoked once all results of a project for specific transform mode are read */
-    onFinished: (project: Vitest['projects'][number], transformMode: AfterSuiteRunMeta['transformMode']) => Promise<void>
+    onFinished: (project: Vitest['projects'][number], environment: string) => Promise<void>
     onDebug: ((...logs: any[]) => void) & { enabled: boolean }
   }): Promise<void> {
     let index = 0
@@ -272,7 +293,7 @@ export class BaseCoverageProvider<Options extends ResolvedCoverageOptions<'istan
     this.pendingPromises = []
 
     for (const [projectName, coveragePerProject] of this.coverageFiles.entries()) {
-      for (const [transformMode, coverageByTestfiles] of Object.entries(coveragePerProject) as Entries<typeof coveragePerProject>) {
+      for (const [environment, coverageByTestfiles] of Object.entries(coveragePerProject) as Entries<typeof coveragePerProject>) {
         const filenames = Object.values(coverageByTestfiles)
         const project = this.ctx.getProjectByName(projectName as string)
 
@@ -291,7 +312,7 @@ export class BaseCoverageProvider<Options extends ResolvedCoverageOptions<'istan
           )
         }
 
-        await onFinished(project, transformMode)
+        await onFinished(project, environment)
       }
     }
   }
@@ -616,23 +637,23 @@ export class BaseCoverageProvider<Options extends ResolvedCoverageOptions<'istan
       ...ctx.projects.map(project => ({
         root: project.config.root,
         isBrowserEnabled: project.isBrowserEnabled(),
-        vitenode: project.vitenode,
+        vite: project.vite,
       })),
       // Check core last as it will match all files anyway
-      { root: ctx.config.root, vitenode: ctx.vitenode, isBrowserEnabled: ctx.getRootProject().isBrowserEnabled() },
+      { root: ctx.config.root, vite: ctx.vite, isBrowserEnabled: ctx.getRootProject().isBrowserEnabled() },
     ]
 
     return async function transformFile(filename: string): Promise<TransformResult | null | undefined> {
       let lastError
 
-      for (const { root, vitenode, isBrowserEnabled } of servers) {
+      for (const { root, vite, isBrowserEnabled } of servers) {
         // On Windows root doesn't start with "/" while filenames do
         if (!filename.startsWith(root) && !filename.startsWith(`/${root}`)) {
           continue
         }
 
         if (isBrowserEnabled) {
-          const result = await vitenode.transformRequest(filename, undefined, 'web').catch(() => null)
+          const result = await vite.environments.client.transformRequest(filename).catch(() => null)
 
           if (result) {
             return result
@@ -640,7 +661,7 @@ export class BaseCoverageProvider<Options extends ResolvedCoverageOptions<'istan
         }
 
         try {
-          return await vitenode.transformRequest(filename)
+          return await vite.environments.ssr.transformRequest(filename)
         }
         catch (error) {
           lastError = error

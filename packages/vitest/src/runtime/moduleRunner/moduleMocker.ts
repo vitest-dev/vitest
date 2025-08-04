@@ -1,12 +1,13 @@
 import type { ManualMockedModule, MockedModule, MockedModuleType } from '@vitest/mocker'
-import type { MockFactory, MockOptions, PendingSuiteMock } from '../types/mocker'
-import type { VitestExecutor } from './execute'
+import type { EvaluatedModuleNode } from 'vite/module-runner'
+import type { MockFactory, MockOptions, PendingSuiteMock } from '../../types/mocker'
+import type { VitestModuleRunner } from './moduleRunner'
 import { isAbsolute, resolve } from 'node:path'
 import vm from 'node:vm'
 import { AutomockedModule, MockerRegistry, mockObject, RedirectedModule } from '@vitest/mocker'
 import { findMockRedirect } from '@vitest/mocker/redirect'
 import { highlight } from '@vitest/utils'
-import { distDir } from '../paths'
+import { distDir } from '../../paths'
 
 const spyModulePath = resolve(distDir, 'spy.js')
 
@@ -15,6 +16,19 @@ interface MockContext {
    * When mocking with a factory, this refers to the module that imported the mock.
    */
   callstack: null | string[]
+}
+
+export interface VitestMockerOptions {
+  context?: vm.Context
+
+  root: string
+  moduleDirectories: string[]
+  resolveId: (id: string, importer?: string) => Promise<{
+    id: string
+    file: string
+    url: string
+  } | null>
+  getCurrentTestFilepath: () => string | undefined
 }
 
 export class VitestMocker {
@@ -38,8 +52,8 @@ export class VitestMocker {
     callstack: null,
   }
 
-  constructor(public executor: VitestExecutor) {
-    const context = this.executor.options.context
+  constructor(public moduleRunner: VitestModuleRunner, private options: VitestMockerOptions) {
+    const context = this.options.context
     if (context) {
       this.primitives = vm.runInContext(
         '({ Object, Error, Function, RegExp, Symbol, Array, Map })',
@@ -79,19 +93,23 @@ export class VitestMocker {
   }
 
   private get root() {
-    return this.executor.options.root
+    return this.options.root
   }
 
-  private get moduleCache() {
-    return this.executor.moduleCache
+  private get evaluatedModules() {
+    return this.moduleRunner.evaluatedModules
   }
 
   private get moduleDirectories() {
-    return this.executor.options.moduleDirectories || []
+    return this.options.moduleDirectories || []
   }
 
   public async initializeSpyModule(): Promise<void> {
-    this.spyModule = await this.executor.executeId(spyModulePath)
+    if (this.spyModule) {
+      return
+    }
+
+    this.spyModule = await this.moduleRunner.import(spyModulePath)
   }
 
   private getMockerRegistry() {
@@ -106,10 +124,12 @@ export class VitestMocker {
     this.registries.clear()
   }
 
-  private deleteCachedItem(id: string) {
+  private invalidateModuleById(id: string) {
     const mockId = this.getMockPath(id)
-    if (this.moduleCache.has(mockId)) {
-      this.moduleCache.delete(mockId)
+    const node = this.evaluatedModules.getModuleById(mockId)
+    if (node) {
+      this.evaluatedModules.invalidateModule(node)
+      node.mockedExports = undefined
     }
   }
 
@@ -118,7 +138,7 @@ export class VitestMocker {
   }
 
   public getSuiteFilepath(): string {
-    return this.executor.state.filepath || 'global'
+    return this.options.getCurrentTestFilepath() || 'global'
   }
 
   private createError(message: string, codeFrame?: string) {
@@ -128,33 +148,28 @@ export class VitestMocker {
     return error
   }
 
-  private async resolvePath(rawId: string, importer: string) {
-    let id: string
-    let fsPath: string
-    try {
-      [id, fsPath] = await this.executor.originalResolveUrl(rawId, importer)
-    }
-    catch (error: any) {
-      // it's allowed to mock unresolved modules
-      if (error.code === 'ERR_MODULE_NOT_FOUND') {
-        const { id: unresolvedId }
-          = error[Symbol.for('vitest.error.not_found.data')]
-        id = unresolvedId
-        fsPath = unresolvedId
-      }
-      else {
-        throw error
+  public async resolveId(rawId: string, importer?: string): Promise<{
+    id: string
+    url: string
+    external: string | null
+  }> {
+    const result = await this.options.resolveId(rawId, importer)
+    if (!result) {
+      const id = normalizeModuleId(rawId)
+      return {
+        id,
+        url: rawId,
+        external: id,
       }
     }
     // external is node_module or unresolved module
     // for example, some people mock "vscode" and don't have it installed
     const external
-      = !isAbsolute(fsPath) || this.isModuleDirectory(fsPath) ? rawId : null
-
+      = !isAbsolute(result.file) || this.isModuleDirectory(result.file) ? normalizeModuleId(rawId) : null
     return {
-      id,
-      fsPath,
-      external: external ? this.normalizePath(external) : external,
+      ...result,
+      id: normalizeModuleId(result.id),
+      external,
     }
   }
 
@@ -165,17 +180,18 @@ export class VitestMocker {
 
     await Promise.all(
       VitestMocker.pendingIds.map(async (mock) => {
-        const { fsPath, external } = await this.resolvePath(
+        const { id, url, external } = await this.resolveId(
           mock.id,
           mock.importer,
         )
         if (mock.action === 'unmock') {
-          this.unmockPath(fsPath)
+          this.unmockPath(id)
         }
         if (mock.action === 'mock') {
           this.mockPath(
             mock.id,
-            fsPath,
+            id,
+            url,
             external,
             mock.type,
             mock.factory,
@@ -187,10 +203,17 @@ export class VitestMocker {
     VitestMocker.pendingIds = []
   }
 
-  private async callFunctionMock(dep: string, mock: ManualMockedModule) {
-    const cached = this.moduleCache.get(dep)?.exports
-    if (cached) {
-      return cached
+  private ensureModule(id: string, url: string) {
+    const node = this.evaluatedModules.ensureModule(id, url)
+    // TODO
+    node.meta = { id, url, code: '', file: null, invalidate: false }
+    return node
+  }
+
+  private async callFunctionMock(id: string, url: string, mock: ManualMockedModule) {
+    const node = this.ensureModule(id, url)
+    if (node.exports) {
+      return node.exports
     }
     const exports = await mock.resolve()
 
@@ -226,7 +249,7 @@ export class VitestMocker {
       },
     })
 
-    this.moduleCache.set(dep, { exports: moduleExports })
+    node.exports = moduleExports
 
     return moduleExports
   }
@@ -243,71 +266,70 @@ export class VitestMocker {
 
   public getDependencyMock(id: string): MockedModule | undefined {
     const registry = this.getMockerRegistry()
-    return registry.get(id)
+    return registry.getById(fixLeadingSlashes(id))
   }
 
-  public normalizePath(path: string): string {
-    return this.moduleCache.normalizePath(path)
-  }
-
-  public resolveMockPath(mockPath: string, external: string | null): string | null {
+  public findMockRedirect(mockPath: string, external: string | null): string | null {
     return findMockRedirect(this.root, mockPath, external)
   }
 
   public mockObject(
     object: Record<string | symbol, any>,
     mockExports: Record<string | symbol, any> = {},
-    behavior: MockedModuleType = 'automock',
+    behavior: 'automock' | 'autospy' = 'automock',
   ): Record<string | symbol, any> {
-    const spyOn = this.spyModule?.spyOn
-    if (!spyOn) {
+    const createMockInstance = this.spyModule?.createMockInstance
+    if (!createMockInstance) {
       throw this.createError(
         '[vitest] `spyModule` is not defined. This is a Vitest error. Please open a new issue with reproduction.',
       )
     }
-    return mockObject({
-      globalConstructors: this.primitives,
-      spyOn,
-      type: behavior,
-    }, object, mockExports)
+    return mockObject(
+      {
+        globalConstructors: this.primitives,
+        createMockInstance,
+        type: behavior,
+      },
+      object,
+      mockExports,
+    )
   }
 
-  public unmockPath(path: string): void {
+  public unmockPath(id: string): void {
     const registry = this.getMockerRegistry()
-    const id = this.normalizePath(path)
 
-    registry.delete(id)
-    this.deleteCachedItem(id)
+    registry.deleteById(id)
+    this.invalidateModuleById(id)
   }
 
   public mockPath(
     originalId: string,
-    path: string,
+    id: string,
+    url: string,
     external: string | null,
     mockType: MockedModuleType | undefined,
     factory: MockFactory | undefined,
   ): void {
     const registry = this.getMockerRegistry()
-    const id = this.normalizePath(path)
 
     if (mockType === 'manual') {
-      registry.register('manual', originalId, id, id, factory!)
+      registry.register('manual', originalId, id, url, factory!)
     }
     else if (mockType === 'autospy') {
-      registry.register('autospy', originalId, id, id)
+      registry.register('autospy', originalId, id, url)
     }
     else {
-      const redirect = this.resolveMockPath(id, external)
+      const redirect = this.findMockRedirect(id, external)
       if (redirect) {
-        registry.register('redirect', originalId, id, id, redirect)
+        registry.register('redirect', originalId, id, url, redirect)
       }
       else {
-        registry.register('automock', originalId, id, id)
+        registry.register('automock', originalId, id, url)
       }
     }
 
     // every time the mock is registered, we remove the previous one from the cache
-    this.deleteCachedItem(id)
+    this.invalidateModuleById(id)
   }
 
   public async importActual<T>(
@@ -315,86 +337,122 @@ export class VitestMocker {
     importer: string,
     callstack?: string[] | null,
   ): Promise<T> {
-    const { id, fsPath } = await this.resolvePath(rawId, importer)
-    const result = await this.executor.cachedRequest(
-      id,
-      fsPath,
+    const { url } = await this.resolveId(rawId, importer)
+    const node = await this.moduleRunner.fetchModule(url, importer)
+    const result = await this.moduleRunner.cachedRequest(
+      node.url,
+      node,
       callstack || [importer],
+      undefined,
+      true,
     )
     return result as T
   }
 
-  public async importMock(rawId: string, importee: string): Promise<any> {
-    const { id, fsPath, external } = await this.resolvePath(rawId, importee)
+  public async importMock(rawId: string, importer: string): Promise<any> {
+    const { id, url, external } = await this.resolveId(rawId, importer)
 
-    const normalizedId = this.normalizePath(fsPath)
-    let mock = this.getDependencyMock(normalizedId)
+    let mock = this.getDependencyMock(id)
 
     if (!mock) {
-      const redirect = this.resolveMockPath(normalizedId, external)
+      const redirect = this.findMockRedirect(id, external)
       if (redirect) {
-        mock = new RedirectedModule(rawId, normalizedId, normalizedId, redirect)
+        mock = new RedirectedModule(rawId, id, rawId, redirect)
       }
       else {
-        mock = new AutomockedModule(rawId, normalizedId, normalizedId)
+        mock = new AutomockedModule(rawId, id, rawId)
       }
     }
 
     if (mock.type === 'automock' || mock.type === 'autospy') {
-      const mod = await this.executor.cachedRequest(id, fsPath, [importee])
-      return this.mockObject(mod, {}, mock.type)
+      const node = await this.moduleRunner.fetchModule(url, importer)
+      const mod = await this.moduleRunner.cachedRequest(url, node, [importer], undefined, true)
+      const Object = this.primitives.Object
+      return this.mockObject(mod, Object.create(Object.prototype), mock.type)
     }
 
     if (mock.type === 'manual') {
-      return this.callFunctionMock(fsPath, mock)
+      return this.callFunctionMock(id, url, mock)
     }
-    return this.executor.dependencyRequest(mock.redirect, mock.redirect, [importee])
+    const node = await this.moduleRunner.fetchModule(mock.redirect)
+    return this.moduleRunner.cachedRequest(
+      mock.redirect,
+      node,
+      [importer],
+      undefined,
+      true,
+    )
   }
 
-  public async requestWithMock(url: string, callstack: string[]): Promise<any> {
-    const id = this.normalizePath(url)
-    const mock = this.getDependencyMock(id)
-
-    if (!mock) {
-      return
-    }
-
-    const mockPath = this.getMockPath(id)
+  public async requestWithMockedModule(
+    url: string,
+    evaluatedNode: EvaluatedModuleNode,
+    callstack: string[],
+    mock: MockedModule,
+  ): Promise<any> {
+    const mockId = this.getMockPath(evaluatedNode.id)
 
     if (mock.type === 'automock' || mock.type === 'autospy') {
-      const cache = this.moduleCache.get(mockPath)
-      if (cache.exports) {
-        return cache.exports
+      const cache = this.evaluatedModules.getModuleById(mockId)
+      if (cache && cache.mockedExports) {
+        return cache.mockedExports
       }
-      const exports = {}
-      // Assign the empty exports object early to allow for cycles to work. The object will be filled by mockObject()
-      this.moduleCache.set(mockPath, { exports })
-      const mod = await this.executor.directRequest(url, url, callstack)
+      const Object = this.primitives.Object
+      // we have to define a separate object that will copy all properties into itself
+      // and can't just use the same `exports` define automatically by Vite before the evaluator
+      const exports = Object.create(null)
+      Object.defineProperty(exports, Symbol.toStringTag, {
+        value: 'Module',
+        configurable: true,
+        writable: true,
+      })
+      const node = this.ensureModule(mockId, this.getMockPath(evaluatedNode.url))
+      node.meta = evaluatedNode.meta
+      node.file = evaluatedNode.file
+      node.mockedExports = exports
+
+      const mod = await this.moduleRunner.cachedRequest(
+        url,
+        node,
+        callstack,
+        undefined,
+        true,
+      )
       this.mockObject(mod, exports, mock.type)
       return exports
     }
     if (
       mock.type === 'manual'
-      && !callstack.includes(mockPath)
+      && !callstack.includes(mockId)
       && !callstack.includes(url)
     ) {
       try {
-        callstack.push(mockPath)
+        callstack.push(mockId)
         // this will not work if user does Promise.all(import(), import())
         // we can also use AsyncLocalStorage to store callstack, but this won't work in the browser
         // maybe we should improve mock API in the future?
         this.mockContext.callstack = callstack
-        return await this.callFunctionMock(mockPath, mock)
+        return await this.callFunctionMock(mockId, this.getMockPath(url), mock)
       }
       finally {
         this.mockContext.callstack = null
-        const indexMock = callstack.indexOf(mockPath)
+        const indexMock = callstack.indexOf(mockId)
         callstack.splice(indexMock, 1)
       }
     }
     else if (mock.type === 'redirect' && !callstack.includes(mock.redirect)) {
       return mock.redirect
     }
+  }
+
+  public async mockedRequest(url: string, evaluatedNode: EvaluatedModuleNode, callstack: string[]): Promise<any> {
+    const mock = this.getDependencyMock(evaluatedNode.id)
+
+    if (!mock) {
+      return
+    }
+
+    return this.requestWithMockedModule(url, evaluatedNode, callstack, mock)
   }
 
   public queueMock(
@@ -421,6 +479,12 @@ export class VitestMocker {
   }
 }
 
+declare module 'vite/module-runner' {
+  interface EvaluatedModuleNode {
+    mockedExports?: Record<string, any>
+  }
+}
+
 function getMockType(factoryOrOptions?: MockFactory | MockOptions): MockedModuleType {
   if (!factoryOrOptions) {
     return 'automock'
@@ -429,4 +493,52 @@ function getMockType(factoryOrOptions?: MockFactory | MockOptions): MockedModule
     return 'manual'
   }
   return factoryOrOptions.spy ? 'autospy' : 'automock'
+}
+
+// unique id that is not available as "$bare_import" like "test"
+// https://nodejs.org/api/modules.html#built-in-modules-with-mandatory-node-prefix
+const prefixedBuiltins = new Set([
+  'node:sea',
+  'node:sqlite',
+  'node:test',
+  'node:test/reporters',
+])
+
+const isWindows = process.platform === 'win32'
+
+// transform file url to id
+// virtual:custom -> virtual:custom
+// \0custom -> \0custom
+// /root/id -> /id
+// /root/id.js -> /id.js
+// C:/root/id.js -> /id.js
+// C:\root\id.js -> /id.js
+// TODO: expose this in vite/module-runner
+function normalizeModuleId(file: string): string {
+  if (prefixedBuiltins.has(file)) {
+    return file
+  }
+
+  // unix style, but Windows path still starts with the drive letter to check the root
+  const unixFile = slash(file)
+    .replace(/^\/@fs\//, isWindows ? '' : '/')
+    .replace(/^node:/, '')
+    .replace(/^\/+/, '/')
+
+  // if it's not in the root, keep it as a path, not a URL
+  return unixFile.replace(/^file:\//, '/')
+}
+
+const windowsSlashRE = /\\/g
+function slash(p: string): string {
+  return p.replace(windowsSlashRE, '/')
+}
+
+const multipleSlashRe = /^\/+/
+// module-runner incorrectly replaces file:///path with `///path`
+function fixLeadingSlashes(id: string): string {
+  if (id.startsWith('//')) {
+    return id.replace(multipleSlashRe, '/')
+  }
+  return id
 }

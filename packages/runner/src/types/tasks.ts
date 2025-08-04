@@ -197,24 +197,24 @@ export type TaskEventPack = [
    */
   event: TaskUpdateEvent,
   /**
-   * Data assosiated with the event
+   * Data associated with the event
    */
   data: TaskEventData | undefined,
 ]
 
-export type TaskUpdateEvent =
-  | 'test-failed-early'
-  | 'suite-failed-early'
-  | 'test-prepare'
-  | 'test-finished'
-  | 'test-retried'
-  | 'suite-prepare'
-  | 'suite-finished'
-  | 'before-hook-start'
-  | 'before-hook-end'
-  | 'after-hook-start'
-  | 'after-hook-end'
-  | 'test-annotation'
+export type TaskUpdateEvent
+  = | 'test-failed-early'
+    | 'suite-failed-early'
+    | 'test-prepare'
+    | 'test-finished'
+    | 'test-retried'
+    | 'suite-prepare'
+    | 'suite-finished'
+    | 'before-hook-start'
+    | 'before-hook-end'
+    | 'after-hook-start'
+    | 'after-hook-end'
+    | 'test-annotation'
 
 export interface Suite extends TaskBase {
   type: 'suite'
@@ -492,8 +492,8 @@ interface ExtendedAPI<ExtraContext> {
   runIf: (condition: any) => ChainableTestAPI<ExtraContext>
 }
 
-export type TestAPI<ExtraContext = object> = ChainableTestAPI<ExtraContext> &
-  ExtendedAPI<ExtraContext> & {
+export type TestAPI<ExtraContext = object> = ChainableTestAPI<ExtraContext>
+  & ExtendedAPI<ExtraContext> & {
     extend: <T extends Record<string, any> = object>(
       fixtures: Fixtures<T, ExtraContext>
     ) => TestAPI<{
@@ -541,8 +541,7 @@ export type Fixture<T, K extends keyof T, ExtraContext = object> = ((
   ? T[K] extends any
     ? FixtureFn<T, K, Omit<ExtraContext, Exclude<keyof T, K>>>
     : never
-  :
-    | T[K]
+  : | T[K]
     | (T[K] extends any
       ? FixtureFn<T, K, Omit<ExtraContext, Exclude<keyof T, K>>>
       : never)

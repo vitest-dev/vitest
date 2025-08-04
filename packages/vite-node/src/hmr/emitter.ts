@@ -12,16 +12,16 @@ export interface Emitter<Events extends Record<EventType, unknown>> {
     type: Key,
     handler?: Handler<Events[Key]>
   ) => void
-  emit: (<Key extends keyof Events>(type: Key, event: Events[Key]) => void) &
-    (<Key extends keyof Events>(
+  emit: (<Key extends keyof Events>(type: Key, event: Events[Key]) => void)
+    & (<Key extends keyof Events>(
       type: undefined extends Events[Key] ? Key : never
     ) => void)
 }
 
 export type HMREmitter = Emitter<{
   message: HMRPayload
-}> &
-EventEmitter
+}>
+& EventEmitter
 
 declare module 'vite' {
   interface ViteDevServer {

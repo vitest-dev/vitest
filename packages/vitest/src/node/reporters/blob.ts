@@ -158,6 +158,11 @@ export async function readBlobs(
         const moduleNode = project.vite.moduleGraph.createFileOnlyEntry(file)
         moduleNode.url = url
         moduleNode.id = moduleId
+        moduleNode.transformResult = {
+          // print error checks that transformResult is set
+          code: ' ',
+          map: null,
+        }
         project.vite.moduleGraph.idToModuleMap.set(moduleId, moduleNode)
       })
     })

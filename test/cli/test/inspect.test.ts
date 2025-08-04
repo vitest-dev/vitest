@@ -51,7 +51,7 @@ test('--inspect-brk stops at test file', async () => {
 
   await vitest.waitForStdout('Test Files  1 passed (1)')
   await waitForClose()
-})
+}, 5_000)
 
 async function createChannel(url: string) {
   const ws = new WebSocket(url, { allowSynchronousEvents: false })

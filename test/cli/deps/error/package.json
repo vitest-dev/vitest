@@ -1,5 +1,5 @@
 {
-  "name": "@vitest/test-dep-error",
+  "name": "@test/test-dep-error",
   "type": "module",
   "private": true,
   "exports": {

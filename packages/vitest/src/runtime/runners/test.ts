@@ -10,6 +10,7 @@ import type {
   VitestRunner,
   VitestRunnerImportSource,
 } from '@vitest/runner'
+import type { ModuleRunner } from 'vite/module-runner'
 import type { SerializedConfig } from '../config'
 // import type { VitestExecutor } from '../execute'
 import { getState, GLOBAL_EXPECT, setState } from '@vitest/expect'
@@ -29,7 +30,7 @@ const workerContext = Object.create(null)
 export class VitestTestRunner implements VitestRunner {
   private snapshotClient = getSnapshotClient()
   private workerState = getWorkerState()
-  private __vitest_executor!: any
+  private moduleRunner!: ModuleRunner
   private cancelRun = false
 
   private assertionsErrors = new WeakMap<Readonly<Task>, Error>()
@@ -40,9 +41,12 @@ export class VitestTestRunner implements VitestRunner {
 
   importFile(filepath: string, source: VitestRunnerImportSource): unknown {
     if (source === 'setup') {
-      this.workerState.moduleCache.delete(filepath)
+      const moduleNode = this.workerState.evaluatedModules.getModuleById(filepath)
+      if (moduleNode) {
+        this.workerState.evaluatedModules.invalidateModule(moduleNode)
+      }
     }
-    return this.__vitest_executor.executeId(filepath)
+    return this.moduleRunner.import(filepath)
   }
 
   onCollectStart(file: File): void {
