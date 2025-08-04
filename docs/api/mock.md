@@ -371,6 +371,37 @@ fn.mock.calls === [
 ]
 ```
 
+:::warning Objects are Stored by Reference
+Note that Vitest always stores objects by reference in all properies of the `mock` state. This means that if the properties were changed by your code, then some assertions like [`.toHaveBeenCalledWith`](/api/expect#tohavebeencalledwith) will not pass:
+
+```ts
+const argument = {
+  value: 0,
+}
+const fn = vi.fn()
+fn(argument) // { value: 0 }
+
+argument.value = 10
+
+expect(fn).toHaveBeenCalledWith({ value: 0 }) // [!code --]
+
+// The equality check is done against the original argument,
+// but its property was changed between the call and assertion
+expect(fn).toHaveBeenCalledWith({ value: 10 }) // [!code ++]
+```
+
+In this case you can clone the argument yourself:
+
+```ts{6}
+const calledArguments = []
+const fn = vi.fn((arg) => {
+  calledArguments.push(structuredClone(arg))
+})
+
+expect(calledArguments[0]).toEqual({ value: 0 })
+```
+:::
+
 ## mock.lastCall
 
 ```ts
