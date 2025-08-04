@@ -63,11 +63,6 @@ export type Awaitable<T> = T | PromiseLike<T>
 
 export interface WebSocketEvents {
   onCollected?: (files: RunnerTestFile[]) => Awaitable<void>
-  onFinished?: (
-    files: File[],
-    errors: unknown[],
-    coverage?: unknown
-  ) => Awaitable<void>
   onTaskUpdate?: (packs: TaskResultPack[]) => Awaitable<void>
   onUserConsoleLog?: (log: UserConsoleLog) => Awaitable<void>
   onPathsCollected?: (paths?: string[]) => Awaitable<void>

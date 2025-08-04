@@ -1,7 +1,8 @@
-import type { File, Task } from '@vitest/runner'
+import type { Task } from '@vitest/runner'
 import type { ParsedStack, TestError } from '@vitest/utils'
 import type { Vitest } from '../core'
 import type { Reporter } from '../types/reporter'
+import type { TestModule } from './reported-tasks'
 import { parseErrorStacktrace } from '../../utils/source-map'
 import { IndentedLogger } from './renderers/indented-logger'
 
@@ -132,7 +133,9 @@ export class TapReporter implements Reporter {
     }
   }
 
-  onFinished(files: File[] = this.ctx.state.getFiles()): void {
+  onTestRunEnd(testModules: ReadonlyArray<TestModule>): void {
+    const files = testModules.map(testModule => testModule.task)
+
     this.logger.log('TAP version 13')
 
     this.logTasks(files)

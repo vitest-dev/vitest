@@ -67,7 +67,7 @@ The function is called only once (unless the server config was updated), and it'
 
 Vitest calls `runTest` when new tests are scheduled to run. It will not call it if `files` is empty. The first argument is an array of [TestSpecifications](/advanced/api/test-specification). Files are sorted using [`sequencer`](/config/#sequence-sequencer) before `runTests` is called. It's possible (but unlikely) to have the same file twice, but it will always have a different project - this is implemented via [`projects`](/guide/projects) configuration.
 
-Vitest will wait until `runTests` is executed before finishing a run (i.e., it will emit [`onFinished`](/advanced/reporters) only after `runTests` is resolved).
+Vitest will wait until `runTests` is executed before finishing a run (i.e., it will emit [`onTestRunEnd`](/advanced/reporters) only after `runTests` is resolved).
 
 If you are using a custom pool, you will have to provide test files and their results yourself - you can reference [`vitest.state`](https://github.com/vitest-dev/vitest/blob/main/packages/vitest/src/node/state.ts) for that (most important are `collectFiles` and `updateTasks`). Vitest uses `startTests` function from `@vitest/runner` package to do that.
 

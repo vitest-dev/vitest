@@ -200,6 +200,7 @@ Vitest 4.0 removes some deprecated APIs, including:
 - `poolMatchGlobs` config option. Use [`projects`](/guide/projects) instead.
 - `environmentMatchGlobs` config option. Use [`projects`](/guide/projects) instead.
 - `workspace` config option. Use [`projects`](/guide/projects) instead.
+- Reporter APIs `onCollected`, `onSpecsCollected`, `onPathsCollected`, `onTaskUpdate` and `onFinished`. See [`Reporters API`](/advanced/api/reporters) for new alternatives. These APIs were introduced in Vitest `v3.0.0`.
 - `deps.external`, `deps.inline`, `deps.fallbackCJS` config options. Use `server.deps.external`, `server.deps.inline`, or `server.deps.fallbackCJS` instead.
 
 This release also removes all deprecated types. This finally fixes an issue where Vitest accidentally pulled in `@types/node` (see [#5481](https://github.com/vitest-dev/vitest/issues/5481) and [#6141](https://github.com/vitest-dev/vitest/issues/6141)).

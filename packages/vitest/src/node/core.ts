@@ -446,7 +446,6 @@ export class Vitest {
     this.state.blobs = { files, errors, coverages, executionTimes }
 
     await this.report('onInit', this)
-    await this.report('onPathsCollected', files.flatMap(f => f.filepath))
 
     const specifications: TestSpecification[] = []
     for (const file of files) {
@@ -455,7 +454,6 @@ export class Vitest {
       specifications.push(specification)
     }
 
-    await this.report('onSpecsCollected', specifications.map(spec => spec.toJSON()))
     await this._testRun.start(specifications).catch(noop)
 
     for (const file of files) {
@@ -698,7 +696,6 @@ export class Vitest {
         }
       }
       finally {
-        // TODO: wait for coverage only if `onFinished` is defined
         const coverage = await this.coverageProvider?.generateCoverage({ allTestsRun })
 
         const errors = this.state.getUnhandledErrors()

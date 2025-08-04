@@ -1,6 +1,8 @@
-import type { File, Test } from '@vitest/runner'
+import type { Test } from '@vitest/runner'
+import type { SerializedError } from '@vitest/utils'
 import type { Writable } from 'node:stream'
 import type { Vitest } from '../core'
+import type { TestRunEndReason } from '../types/reporter'
 import type { TestCase, TestModule } from './reported-tasks'
 import c from 'tinyrainbow'
 import { BaseReporter } from './base'
@@ -40,7 +42,11 @@ export class DotReporter extends BaseReporter {
     super.onWatcherRerun(files, trigger)
   }
 
-  onFinished(files?: File[], errors?: unknown[]): void {
+  onTestRunEnd(
+    testModules: ReadonlyArray<TestModule>,
+    unhandledErrors: ReadonlyArray<SerializedError>,
+    reason: TestRunEndReason,
+  ): void {
     if (this.isTTY) {
       const finalLog = formatTests(Array.from(this.tests.values()))
       this.ctx.logger.log(finalLog)
@@ -52,7 +58,7 @@ export class DotReporter extends BaseReporter {
     this.tests.clear()
     this.renderer?.finish()
 
-    super.onFinished(files, errors)
+    super.onTestRunEnd(testModules, unhandledErrors, reason)
   }
 
   onTestModuleCollected(module: TestModule): void {
