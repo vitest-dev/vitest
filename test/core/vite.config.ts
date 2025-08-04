@@ -73,7 +73,7 @@ export default defineConfig({
       ...defaultExclude,
       // FIXME: wait for ecma decorator support in rolldown/oxc
       // https://github.com/oxc-project/oxc/issues/9170
-      ...(rolldownVersion ? ['**/esnext.test.ts'] : []),
+      ...(rolldownVersion ? ['**/esnext-decorator.test.ts'] : []),
     ],
     slowTestThreshold: 1000,
     testTimeout: process.env.CI ? 10_000 : 5_000,
