@@ -37,10 +37,10 @@ exports[`properties snapshot 1`] = `
 }
 `;
 
-exports[`renders mock snapshot 1`] = `[MockFunction spy]`;
+exports[`renders mock snapshot 1`] = `[MockFunction]`;
 
 exports[`renders mock snapshot 2`] = `
-[MockFunction spy] {
+[MockFunction] {
   "calls": [
     [
       "hello",

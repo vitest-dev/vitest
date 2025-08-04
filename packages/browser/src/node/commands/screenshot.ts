@@ -1,4 +1,4 @@
-import type { BrowserCommand, ResolvedConfig } from 'vitest/node'
+import type { BrowserCommand, BrowserCommandContext, ResolvedConfig } from 'vitest/node'
 import type { ScreenshotOptions } from '../../../context'
 import { mkdir, rm } from 'node:fs/promises'
 import { normalize } from 'node:path'
@@ -6,47 +6,73 @@ import { basename, dirname, relative, resolve } from 'pathe'
 import { PlaywrightBrowserProvider } from '../providers/playwright'
 import { WebdriverBrowserProvider } from '../providers/webdriver'
 
-export const screenshot: BrowserCommand<[string, ScreenshotOptions]> = async (
+interface ScreenshotCommandOptions extends Omit<ScreenshotOptions, 'element' | 'mask'> {
+  element?: string
+  mask?: readonly string[]
+}
+
+export const screenshot: BrowserCommand<[string, ScreenshotCommandOptions]> = async (
   context,
   name: string,
   options = {},
 ) => {
-  if (!context.testPath) {
-    throw new Error(`Cannot take a screenshot without a test path`)
-  }
-
   options.save ??= true
 
   if (!options.save) {
     options.base64 = true
   }
 
-  const path = options.path
-    ? resolve(dirname(context.testPath), options.path)
-    : resolveScreenshotPath(
-        context.testPath,
-        name,
-        context.project.config,
-      )
+  const { buffer, path } = await takeScreenshot(context, name, options)
+
+  return returnResult(options, path, buffer)
+}
+
+/**
+ * Takes a screenshot using the provided browser context and returns a buffer and the expected screenshot path.
+ *
+ * **Note**: the returned `path` indicates where the screenshot *might* be found.
+ * It is not guaranteed to exist, especially if `options.save` is `false`.
+ *
+ * @throws {Error} If the function is not called within a test or if the browser provider does not support screenshots.
+ */
+export async function takeScreenshot(
+  context: BrowserCommandContext,
+  name: string,
+  options: Omit<ScreenshotCommandOptions, 'base64'>,
+): Promise<{ buffer: Buffer<ArrayBufferLike>; path: string }> {
+  if (!context.testPath) {
+    throw new Error(`Cannot take a screenshot without a test path`)
+  }
+
+  const path = resolveScreenshotPath(
+    context.testPath,
+    name,
+    context.project.config,
+    options.path,
+  )
   const savePath = normalize(path)
   await mkdir(dirname(path), { recursive: true })
 
   if (context.provider instanceof PlaywrightBrowserProvider) {
+    const mask = options.mask?.map(selector => context.iframe.locator(selector))
+
     if (options.element) {
       const { element: selector, ...config } = options
-      const element = context.iframe.locator(`${selector}`)
+      const element = context.iframe.locator(selector)
       const buffer = await element.screenshot({
         ...config,
+        mask,
         path: options.save ? savePath : undefined,
       })
-      return returnResult(options, path, buffer)
+      return { buffer, path }
     }
 
     const buffer = await context.iframe.locator('body').screenshot({
       ...options,
+      mask,
       path: options.save ? savePath : undefined,
     })
-    return returnResult(options, path, buffer)
+    return { buffer, path }
   }
 
   if (context.provider instanceof WebdriverBrowserProvider) {
@@ -55,11 +81,16 @@ export const screenshot: BrowserCommand<[string, ScreenshotOptions]> = async (
       ? await page.$('body')
       : await page.$(`${options.element}`)
 
-    const buffer = await element.saveScreenshot(savePath)
+    // webdriverio expects the path to contain the extension and only works with PNG files
+    const savePathWithExtension = savePath.endsWith('.png') ? savePath : `${savePath}.png`
+
+    const buffer = await element.saveScreenshot(
+      savePathWithExtension,
+    )
     if (!options.save) {
-      await rm(savePath, { force: true })
+      await rm(savePathWithExtension, { force: true })
     }
-    return returnResult(options, path, buffer)
+    return { buffer, path }
   }
 
   throw new Error(
@@ -71,7 +102,11 @@ function resolveScreenshotPath(
   testPath: string,
   name: string,
   config: ResolvedConfig,
-) {
+  customPath: string | undefined,
+): string {
+  if (customPath) {
+    return resolve(dirname(testPath), customPath)
+  }
   const dir = dirname(testPath)
   const base = basename(testPath)
   if (config.browser.screenshotDirectory) {
@@ -86,7 +121,7 @@ function resolveScreenshotPath(
 }
 
 function returnResult(
-  options: ScreenshotOptions,
+  options: ScreenshotCommandOptions,
   path: string,
   buffer: Buffer,
 ) {

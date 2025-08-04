@@ -12,7 +12,8 @@ test('getAuthToken is spied', async () => {
   expect(token).toBe('123')
   expect(getAuthToken).toHaveBeenCalledTimes(1)
   vi.mocked(getAuthToken).mockRestore()
-  expect(vi.isMockFunction(getAuthToken)).toBe(false)
+  // module mocks cannot be restored
+  expect(vi.isMockFunction(getAuthToken)).toBe(true)
 })
 
 test('package in __mocks__ has lower priority', async () => {

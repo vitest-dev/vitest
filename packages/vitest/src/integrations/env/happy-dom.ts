@@ -16,7 +16,7 @@ async function teardownWindow(win: {
 
 export default <Environment>{
   name: 'happy-dom',
-  transformMode: 'web',
+  viteEnvironment: 'client',
   async setupVM({ happyDOM = {} }) {
     const { Window } = await import('happy-dom')
     let win = new Window({

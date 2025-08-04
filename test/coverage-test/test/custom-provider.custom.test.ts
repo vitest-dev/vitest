@@ -19,8 +19,8 @@ test('custom provider', async () => {
         "reportCoverage with {\\"allTestsRun\\":true}"
       ],
       "coverageReports": [
-        "{\\"coverage\\":{\\"customCoverage\\":\\"Coverage report passed from workers to main thread\\"},\\"testFiles\\":[\\"fixtures/test/even.test.ts\\"],\\"transformMode\\":\\"ssr\\",\\"projectName\\":\\"\\"}",
-        "{\\"coverage\\":{\\"customCoverage\\":\\"Coverage report passed from workers to main thread\\"},\\"testFiles\\":[\\"fixtures/test/math.test.ts\\"],\\"transformMode\\":\\"ssr\\",\\"projectName\\":\\"\\"}"
+        "{\\"coverage\\":{\\"customCoverage\\":\\"Coverage report passed from workers to main thread\\"},\\"testFiles\\":[\\"fixtures/test/even.test.ts\\"],\\"environment\\":\\"ssr\\",\\"projectName\\":\\"\\"}",
+        "{\\"coverage\\":{\\"customCoverage\\":\\"Coverage report passed from workers to main thread\\"},\\"testFiles\\":[\\"fixtures/test/math.test.ts\\"],\\"environment\\":\\"ssr\\",\\"projectName\\":\\"\\"}"
       ],
       "transformedFiles": [
         "<process-cwd>/fixtures/src/even.ts",

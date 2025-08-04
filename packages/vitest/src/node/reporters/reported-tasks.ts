@@ -520,11 +520,11 @@ export type TestSuiteState = 'skipped' | 'pending' | 'failed' | 'passed'
 export type TestModuleState = TestSuiteState | 'queued'
 export type TestState = TestResult['state']
 
-export type TestResult =
-  | TestResultPassed
-  | TestResultFailed
-  | TestResultSkipped
-  | TestResultPending
+export type TestResult
+  = | TestResultPassed
+    | TestResultFailed
+    | TestResultSkipped
+    | TestResultPending
 
 export interface TestResultPending {
   /**

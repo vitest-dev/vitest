@@ -5,10 +5,11 @@ import { BaseSequencer } from '../../../packages/vitest/src/node/sequencers/Base
 import { RandomSequencer } from '../../../packages/vitest/src/node/sequencers/RandomSequencer'
 import { TestSpecification } from '../../../packages/vitest/src/node/spec'
 
-function buildCtx() {
+function buildCtx(config?: Partial<Vitest['config']>) {
   return {
     config: {
       sequence: {},
+      ...config,
     },
     cache: {
       getFileTestResults: vi.fn(),
@@ -127,6 +128,28 @@ describe('base sequencer', () => {
     const files = workspaced(['b', 'a', 'c'])
     const sorted = await sequencer.sort(files)
     expect(sorted).toStrictEqual(workspaced(['c', 'b', 'a']))
+  })
+
+  test.each([
+    { files: 4, count: 3, expected: [2, 1, 1] },
+    { files: 5, count: 4, expected: [2, 1, 1, 1] },
+    { files: 9, count: 4, expected: [3, 2, 2, 2] },
+  ])('shard x/$count distributes $files files as $expected', async ({ count, files, expected }) => {
+    const specs = Array.from({ length: files }, (_, id) => ({ moduleId: `file-${id}.test.ts` } as TestSpecification))
+    const slices = []
+
+    for (const index of Array.from({ length: count }).keys()) {
+      const ctx = buildCtx({ root: '/example/root', shard: { index: 1 + index, count } })
+      const sequencer = new BaseSequencer(ctx)
+      const shard = await sequencer.shard(specs)
+
+      slices.push(shard.length)
+    }
+
+    expect(slices).toEqual(expected)
+
+    const sum = slices.reduce((total, current) => total + current, 0)
+    expect(sum).toBe(files)
   })
 })
 

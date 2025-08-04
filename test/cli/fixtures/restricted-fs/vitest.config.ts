@@ -11,7 +11,7 @@ export default defineConfig({
           server: {
             fs: {
               allow: [
-                resolve(__dirname, 'src'),
+                resolve(import.meta.dirname, 'src'),
               ],
             },
           },

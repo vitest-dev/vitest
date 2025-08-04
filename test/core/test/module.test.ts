@@ -1,3 +1,6 @@
+import { external as viteEnvironmentExternal } from '@test/vite-environment-external'
+import { external as viteExternal } from '@test/vite-external'
+
 import { describe, expect, it } from 'vitest'
 
 // @ts-expect-error is not typed with imports
@@ -37,9 +40,14 @@ import * as moduleDefaultCjs from '../src/external/default-cjs'
 
 // @ts-expect-error is not typed with imports
 import * as nestedDefaultExternalCjs from '../src/external/nested-default-cjs'
-
 import c, { d } from '../src/module-esm'
+
 import * as timeout from '../src/timeout'
+
+it('extect vite.noExternal to be respected', () => {
+  expect(viteExternal).toBe(false)
+  expect(viteEnvironmentExternal).toBe(false)
+})
 
 it('doesn\'t when extending module', () => {
   expect(() => Object.assign(globalThis, timeout)).not.toThrow()

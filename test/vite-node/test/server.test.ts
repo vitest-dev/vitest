@@ -49,7 +49,7 @@ describe('server correctly caches data', () => {
     webFiles: async ({}, use) => {
       await use([])
     },
-    root: resolve(__dirname, '../'),
+    root: resolve(import.meta.dirname, '../'),
     plugin: async ({ ssrFiles, webFiles }, use) => {
       const plugin: Plugin = {
         name: 'test',

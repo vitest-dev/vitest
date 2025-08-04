@@ -4,7 +4,7 @@ import { readFile } from 'node:fs/promises'
 import { join } from 'node:path/posix'
 import { ManualMockedModule, MockerRegistry } from '../registry'
 import { cleanUrl, createManualModuleSource } from '../utils'
-import { automockModule } from './automockPlugin'
+import { automockModule } from './automock'
 
 export interface InterceptorPluginOptions {
   /**

@@ -32,7 +32,7 @@ const nodeGlobals = new Map(
 
 export default <Environment>{
   name: 'node',
-  transformMode: 'ssr',
+  viteEnvironment: 'ssr',
   // this is largely copied from jest's node environment
   async setupVM() {
     const vm = await import('node:vm')

@@ -58,15 +58,17 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject, defaultMocke
       )
     }
 
-    if (!vitest._browserSessions.sessionIds.has(sessionId)) {
-      const ids = [...vitest._browserSessions.sessionIds].join(', ')
+    const sessions = vitest._browserSessions
+
+    if (!sessions.sessionIds.has(sessionId)) {
+      const ids = [...sessions.sessionIds].join(', ')
       return error(
         new Error(`[vitest] Unknown session id "${sessionId}". Expected one of ${ids}.`),
       )
     }
 
     if (type === 'orchestrator') {
-      const session = vitest._browserSessions.getSession(sessionId)
+      const session = sessions.getSession(sessionId)
       // it's possible the session was already resolved by the preview provider
       session?.connected()
     }
@@ -94,7 +96,7 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject, defaultMocke
         clients.delete(rpcId)
         globalServer.removeCDPHandler(rpcId)
         if (type === 'orchestrator') {
-          vitest._browserSessions.destroySession(sessionId)
+          sessions.destroySession(sessionId)
         }
         // this will reject any hanging methods if there are any
         rpc.$close(
@@ -120,7 +122,7 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject, defaultMocke
 
   function setupClient(project: TestProject, rpcId: string, ws: WebSocket) {
     const mockResolver = new ServerMockResolver(globalServer.vite, {
-      moduleDirectories: project.config.server?.deps?.moduleDirectories,
+      moduleDirectories: project.config?.deps?.moduleDirectories,
     })
     const mocker = project.browser?.provider.mocker
 
@@ -335,11 +337,8 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject, defaultMocke
         on: fn => ws.on('message', fn),
         eventNames: ['onCancel', 'cdpEvent'],
         serialize: (data: any) => stringify(data, stringifyReplace),
-        timeout: -1, // createTesters can take a long time
         deserialize: parse,
-        onTimeoutError(functionName) {
-          throw new Error(`[vitest-api]: Timeout calling "${functionName}"`)
-        },
+        timeout: -1, // createTesters can take a long time
       },
     )
 

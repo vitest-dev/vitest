@@ -1,5 +1,4 @@
 import type { File, TaskEventPack, TaskResultPack, TestAnnotation } from '@vitest/runner'
-
 import type { IncomingMessage } from 'node:http'
 import type { ViteDevServer } from 'vite'
 import type { WebSocket } from 'ws'
@@ -95,7 +94,7 @@ export function setup(ctx: Vitest, _server?: ViteDevServer): void {
           const project = ctx.getProjectByName(projectName)
           const result: TransformResultWithSource | null | undefined = browser
             ? await project.browser!.vite.transformRequest(id)
-            : await project.vitenode.transformRequest(id)
+            : await project.vite.transformRequest(id)
           if (result) {
             try {
               result.source = result.source || (await fs.readFile(id, 'utf-8'))
@@ -142,9 +141,7 @@ export function setup(ctx: Vitest, _server?: ViteDevServer): void {
         ],
         serialize: (data: any) => stringify(data, stringifyReplace),
         deserialize: parse,
-        onTimeoutError(functionName) {
-          throw new Error(`[vitest-api]: Timeout calling "${functionName}"`)
-        },
+        timeout: -1,
       },
     )
 
@@ -152,6 +149,7 @@ export function setup(ctx: Vitest, _server?: ViteDevServer): void {
 
     ws.on('close', () => {
       clients.delete(ws)
+      rpc.$close(new Error('[vitest-api]: Pending methods while closing rpc'))
     })
   }
 

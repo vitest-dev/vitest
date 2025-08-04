@@ -114,10 +114,10 @@ test('renders mock snapshot', () => {
 
 test('renders inline mock snapshot', () => {
   const fn = vi.fn()
-  expect(fn).toMatchInlineSnapshot('[MockFunction spy]')
+  expect(fn).toMatchInlineSnapshot('[MockFunction]')
   fn('hello', 'world', 2)
   expect(fn).toMatchInlineSnapshot(`
-    [MockFunction spy] {
+    [MockFunction] {
       "calls": [
         [
           "hello",

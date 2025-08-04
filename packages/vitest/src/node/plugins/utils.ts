@@ -11,27 +11,13 @@ import { rootDir } from '../../paths'
 export function resolveOptimizerConfig(
   _testOptions: DepsOptimizationOptions | undefined,
   viteOptions: DepOptimizationOptions | undefined,
-): { cacheDir?: string; optimizeDeps: DepOptimizationOptions } {
+): DepOptimizationOptions {
   const testOptions = _testOptions || {}
-  const newConfig: { cacheDir?: string; optimizeDeps: DepOptimizationOptions }
-    = {} as any
-  const [major, minor, fix] = viteVersion.split('.').map(Number)
-  const allowed
-    = major >= 5
-      || (major === 4 && minor >= 4)
-      || (major === 4 && minor === 3 && fix >= 2)
-  if (!allowed && testOptions?.enabled === true) {
-    console.warn(
-      `Vitest: "deps.optimizer" is only available in Vite >= 4.3.2, current Vite version: ${viteVersion}`,
-    )
-  }
-  // disabled by default
-  else {
+  let optimizeDeps: DepOptimizationOptions
+  if (testOptions.enabled !== true) {
     testOptions.enabled ??= false
-  }
-  if (!allowed || testOptions?.enabled !== true) {
-    newConfig.cacheDir = undefined
-    newConfig.optimizeDeps = {
+
+    optimizeDeps = {
       // experimental in Vite >2.9.2, entries remains to help with older versions
       disabled: true,
       entries: [],
@@ -55,7 +41,7 @@ export function resolveOptimizerConfig(
       (n: string) => !exclude.includes(n),
     )
 
-    newConfig.optimizeDeps = {
+    optimizeDeps = {
       ...viteOptions,
       ...testOptions,
       noDiscovery: true,
@@ -68,15 +54,13 @@ export function resolveOptimizerConfig(
 
   // `optimizeDeps.disabled` is deprecated since v5.1.0-beta.1
   // https://github.com/vitejs/vite/pull/15184
-  if ((major >= 5 && minor >= 1) || major >= 6) {
-    if (newConfig.optimizeDeps.disabled) {
-      newConfig.optimizeDeps.noDiscovery = true
-      newConfig.optimizeDeps.include = []
-    }
-    delete newConfig.optimizeDeps.disabled
+  if (optimizeDeps.disabled) {
+    optimizeDeps.noDiscovery = true
+    optimizeDeps.include = []
   }
+  delete optimizeDeps.disabled
 
-  return newConfig
+  return optimizeDeps
 }
 
 export function deleteDefineConfig(viteConfig: ViteConfig): Record<string, any> {

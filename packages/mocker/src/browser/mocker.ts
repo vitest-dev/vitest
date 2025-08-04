@@ -1,3 +1,4 @@
+import type { CreateMockInstanceProcedure } from '../automocker'
 import type { MockedModule, MockedModuleType } from '../registry'
 import type { ModuleMockOptions } from '../types'
 import type { ModuleMockerInterceptor } from './interceptor'
@@ -16,7 +17,7 @@ export class ModuleMocker {
   constructor(
     private interceptor: ModuleMockerInterceptor,
     private rpc: ModuleMockerRPC,
-    private spyOn: (obj: any, method: string | symbol) => any,
+    private createMockInstance: CreateMockInstanceProcedure,
     private config: ModuleMockerConfig,
   ) {}
 
@@ -117,7 +118,7 @@ export class ModuleMocker {
 
   public mockObject(
     object: Record<string | symbol, any>,
-    moduleType: MockedModuleType = 'automock',
+    moduleType: 'automock' | 'autospy' = 'automock',
   ): Record<string | symbol, any> {
     return mockObject({
       globalConstructors: {
@@ -127,7 +128,7 @@ export class ModuleMocker {
         Map,
         RegExp,
       },
-      spyOn: this.spyOn,
+      createMockInstance: this.createMockInstance,
       type: moduleType,
     }, object)
   }

@@ -37,10 +37,12 @@ const mod: CoverageProviderModule = {
         try {
           const result = coverage.result
             .filter(filterResult)
-            .map(res => ({
-              ...res,
-              startOffset: options?.moduleExecutionInfo?.get(fileURLToPath(res.url))?.startOffset || 0,
-            }))
+            .map((res) => {
+              return {
+                ...res,
+                startOffset: options?.moduleExecutionInfo?.get(fileURLToPath(res.url))?.startOffset || 0,
+              }
+            })
 
           resolve({ result })
         }

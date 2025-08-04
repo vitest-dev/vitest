@@ -53,4 +53,14 @@ describe('spyOn', () => {
     expect(obj.A.HELLO_WORLD).toBe(true)
     expect((spy as any).HELLO_WORLD).toBe(true)
   })
+
+  test('ignores node.js.promisify symbol', () => {
+    const promisifySymbol = Symbol.for('nodejs.util.promisify.custom')
+    class Example {
+      static [promisifySymbol] = () => Promise.resolve(42)
+    }
+    const obj = { Example }
+    const spy = vi.spyOn(obj, 'Example')
+    expect((spy as any)[promisifySymbol]).toBe(undefined)
+  })
 })

@@ -604,3 +604,10 @@ test('cannot set the `workspace` options', async () => {
   })
   expect(stderr).toContain('The `test.workspace` option was removed in Vitest 4. Please, migrate to `test.projects` instead. See https://vitest.dev/guide/projects for examples.')
 })
+
+test('cannot set environment: browser', async () => {
+  const { stderr } = await runVitest({
+    environment: 'browser',
+  })
+  expect(stderr).toContain('Looks like you set "test.environment" to "browser". To enabled Browser Mode, use "test.browser.enabled" instead.')
+})

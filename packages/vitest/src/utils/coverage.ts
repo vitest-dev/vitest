@@ -1,10 +1,9 @@
-import type { ModuleExecutionInfo } from 'vite-node/client'
 import type { SerializedCoverageConfig } from '../runtime/config'
 
 export interface RuntimeCoverageModuleLoader {
-  executeId: (id: string) => Promise<{ default: RuntimeCoverageProviderModule }>
+  import: (id: string) => Promise<{ default: RuntimeCoverageProviderModule }>
   isBrowser?: boolean
-  moduleExecutionInfo?: ModuleExecutionInfo
+  moduleExecutionInfo?: Map<string, { startOffset: number }>
 }
 
 export interface RuntimeCoverageProviderModule {
@@ -21,7 +20,7 @@ export interface RuntimeCoverageProviderModule {
   /**
    * Executed on after each run in the worker thread. Possible to return a payload passed to the provider
    */
-  takeCoverage?: (runtimeOptions?: { moduleExecutionInfo?: ModuleExecutionInfo }) => unknown | Promise<unknown>
+  takeCoverage?: (runtimeOptions?: { moduleExecutionInfo?: Map<string, { startOffset: number }> }) => unknown | Promise<unknown>
 
   /**
    * Executed after all tests have been run in the worker thread.
@@ -51,7 +50,7 @@ export async function resolveCoverageProviderModule(
       builtInModule += '/browser'
     }
 
-    const { default: coverageModule } = await loader.executeId(builtInModule)
+    const { default: coverageModule } = await loader.import(builtInModule)
 
     if (!coverageModule) {
       throw new Error(
@@ -65,7 +64,7 @@ export async function resolveCoverageProviderModule(
   let customProviderModule
 
   try {
-    customProviderModule = await loader.executeId(options.customProviderModule!)
+    customProviderModule = await loader.import(options.customProviderModule!)
   }
   catch (error) {
     throw new Error(

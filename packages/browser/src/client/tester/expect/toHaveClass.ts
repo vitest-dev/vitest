@@ -104,9 +104,9 @@ export default function toHaveClass(
 function getExpectedClassNamesAndOptions(
   params: (string | RegExp)[] | [string, options?: { exact: boolean }],
 ): {
-    expectedClassNames: (string | RegExp)[]
-    options: { exact: boolean }
-  } {
+  expectedClassNames: (string | RegExp)[]
+  options: { exact: boolean }
+} {
   const lastParam = params.pop()
   let expectedClassNames, options
 

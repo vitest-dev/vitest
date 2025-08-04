@@ -71,14 +71,7 @@ export interface SerializedConfig {
       transformCss?: boolean
       transformGlobPattern?: RegExp | RegExp[]
     }
-    optimizer: {
-      web: {
-        enabled: boolean
-      }
-      ssr: {
-        enabled: boolean
-      }
-    }
+    optimizer: Record<string, { enabled: boolean }>
     interopDefault: boolean | undefined
     moduleDirectories: string[] | undefined
   }

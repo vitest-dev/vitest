@@ -91,10 +91,12 @@ import { installSourcemapsSupport } from 'vite-node/source-map'
 const server = await createServer({
   optimizeDeps: {
     // It's recommended to disable deps optimization
-    disabled: true,
+    noDiscovery: true,
+    include: undefined,
   },
 })
-// For old Vite, this is need to initialize the plugins.
+
+// For old Vite, this is needed to initialize the plugins.
 if (Number(viteVersion.split('.')[0]) < 6) {
   await server.pluginContainer.buildStart({})
 }

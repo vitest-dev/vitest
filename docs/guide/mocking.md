@@ -155,203 +155,7 @@ vi.stubGlobal('IntersectionObserver', IntersectionObserverMock)
 
 ## Modules
 
-Mock modules observe third-party-libraries, that are invoked in some other code, allowing you to test arguments, output or even redeclare its implementation.
-
-See the [`vi.mock()` API section](/api/vi#vi-mock) for a more in-depth detailed API description.
-
-### Automocking Algorithm
-
-If your code is importing a mocked module, without any associated `__mocks__` file or `factory` for this module, Vitest will mock the module itself by invoking it and mocking every export.
-
-The following principles apply
-* All arrays will be emptied
-* All primitives and collections will stay the same
-* All objects will be deeply cloned
-* All instances of classes and their prototypes will be deeply cloned
-
-### Virtual Modules
-
-Vitest supports mocking Vite [virtual modules](https://vitejs.dev/guide/api-plugin.html#virtual-modules-convention). It works differently from how virtual modules are treated in Jest. Instead of passing down `virtual: true` to a `vi.mock` function, you need to tell Vite that module exists otherwise it will fail during parsing. You can do that in several ways:
-
-1. Provide an alias
-
-```ts [vitest.config.js]
-import { defineConfig } from 'vitest/config'
-import { resolve } from 'node:path'
-export default defineConfig({
-  test: {
-    alias: {
-      '$app/forms': resolve('./mocks/forms.js'),
-    },
-  },
-})
-```
-
-2. Provide a plugin that resolves a virtual module
-
-```ts [vitest.config.js]
-import { defineConfig } from 'vitest/config'
-export default defineConfig({
-  plugins: [
-    {
-      name: 'virtual-modules',
-      resolveId(id) {
-        if (id === '$app/forms') {
-          return 'virtual:$app/forms'
-        }
-      },
-    },
-  ],
-})
-```
-
-The benefit of the second approach is that you can dynamically create different virtual entrypoints. If you redirect several virtual modules into a single file, then all of them will be affected by `vi.mock`, so make sure to use unique identifiers.
-
-### Mocking Pitfalls
-
-Beware that it is not possible to mock calls to methods that are called inside other methods of the same file. For example, in this code:
-
-```ts [foobar.js]
-export function foo() {
-  return 'foo'
-}
-
-export function foobar() {
-  return `${foo()}bar`
-}
-```
-
-It is not possible to mock the `foo` method from the outside because it is referenced directly. So this code will have no effect on the `foo` call inside `foobar` (but it will affect the `foo` call in other modules):
-
-```ts [foobar.test.ts]
-import { vi } from 'vitest'
-import * as mod from './foobar.js'
-
-// this will only affect "foo" outside of the original module
-vi.spyOn(mod, 'foo')
-vi.mock('./foobar.js', async (importOriginal) => {
-  return {
-    ...await importOriginal<typeof import('./foobar.js')>(),
-    // this will only affect "foo" outside of the original module
-    foo: () => 'mocked'
-  }
-})
-```
-
-You can confirm this behaviour by providing the implementation to the `foobar` method directly:
-
-```ts [foobar.test.js]
-import * as mod from './foobar.js'
-
-vi.spyOn(mod, 'foo')
-
-// exported foo references mocked method
-mod.foobar(mod.foo)
-```
-
-```ts [foobar.js]
-export function foo() {
-  return 'foo'
-}
-
-export function foobar(injectedFoo) {
-  return injectedFoo === foo // false
-}
-```
-
-This is the intended behaviour. It is usually a sign of bad code when mocking is involved in such a manner. Consider refactoring your code into multiple files or improving your application architecture by using techniques such as [dependency injection](https://en.wikipedia.org/wiki/Dependency_injection).
-
-### Example
-
-```js
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { Client } from 'pg'
-import { failure, success } from './handlers.js'
-
-// get todos
-export async function getTodos(event, context) {
-  const client = new Client({
-    // ...clientOptions
-  })
-
-  await client.connect()
-
-  try {
-    const result = await client.query('SELECT * FROM todos;')
-
-    client.end()
-
-    return success({
-      message: `${result.rowCount} item(s) returned`,
-      data: result.rows,
-      status: true,
-    })
-  }
-  catch (e) {
-    console.error(e.stack)
-
-    client.end()
-
-    return failure({ message: e, status: false })
-  }
-}
-
-vi.mock('pg', () => {
-  const Client = vi.fn()
-  Client.prototype.connect = vi.fn()
-  Client.prototype.query = vi.fn()
-  Client.prototype.end = vi.fn()
-
-  return { Client }
-})
-
-vi.mock('./handlers.js', () => {
-  return {
-    success: vi.fn(),
-    failure: vi.fn(),
-  }
-})
-
-describe('get a list of todo items', () => {
-  let client
-
-  beforeEach(() => {
-    client = new Client()
-  })
-
-  afterEach(() => {
-    vi.clearAllMocks()
-  })
-
-  it('should return items successfully', async () => {
-    client.query.mockResolvedValueOnce({ rows: [], rowCount: 0 })
-
-    await getTodos()
-
-    expect(client.connect).toBeCalledTimes(1)
-    expect(client.query).toBeCalledWith('SELECT * FROM todos;')
-    expect(client.end).toBeCalledTimes(1)
-
-    expect(success).toBeCalledWith({
-      message: '0 item(s) returned',
-      data: [],
-      status: true,
-    })
-  })
-
-  it('should throw an error', async () => {
-    const mError = new Error('Unable to retrieve rows')
-    client.query.mockRejectedValueOnce(mError)
-
-    await getTodos()
-
-    expect(client.connect).toBeCalledTimes(1)
-    expect(client.query).toBeCalledWith('SELECT * FROM todos;')
-    expect(client.end).toBeCalledTimes(1)
-    expect(failure).toBeCalledWith({ message: mError, status: false })
-  })
-})
-```
+See ["Mocking Modules" guide](/guide/mocking-modules).
 
 ## File System
 
@@ -594,7 +398,7 @@ describe('delayed execution', () => {
 
 ## Classes
 
-You can mock an entire class with a single `vi.fn` call - since all classes are also functions, this works out of the box. Beware that currently Vitest doesn't respect the `new` keyword so the `new.target` is always `undefined` in the body of a function.
+You can mock an entire class with a single `vi.fn` call.
 
 ```ts
 class Dog {
@@ -621,23 +425,20 @@ class Dog {
 }
 ```
 
-We can re-create this class with ES5 functions:
+We can re-create this class with `vi.fn` (or `vi.spyOn().mockImplementation()`):
 
 ```ts
-const Dog = vi.fn(function (name) {
-  this.name = name
-  // mock instance methods in the constructor, each instance will have its own spy
-  this.greet = vi.fn(() => `Hi! My name is ${this.name}!`)
+const Dog = vi.fn(class {
+  static getType = vi.fn(() => 'mocked animal')
+
+  constructor(name) {
+    this.name = name
+  }
+
+  greet = vi.fn(() => `Hi! My name is ${this.name}!`)
+  speak = vi.fn(() => 'loud bark!')
+  feed = vi.fn()
 })
-
-// notice that static methods are mocked directly on the function,
-// not on the instance of the class
-Dog.getType = vi.fn(() => 'mocked animal')
-
-// mock the "speak" and "feed" methods on every instance of a class
-// all `new Dog()` instances will inherit and share these spies
-Dog.prototype.speak = vi.fn(() => 'loud bark!')
-Dog.prototype.feed = vi.fn()
 ```
 
 ::: warning
@@ -658,6 +459,8 @@ const Newt = new IncorrectDogClass('Newt')
 Marti instanceof CorrectDogClass // ✅ true
 Newt instanceof IncorrectDogClass // ❌ false!
 ```
+
+If you are mocking classes, prefer the class syntax over the function.
 :::
 
 ::: tip WHEN TO USE?
@@ -667,9 +470,10 @@ Generally speaking, you would re-create a class like this inside the module fact
 import { Dog } from './dog.js'
 
 vi.mock(import('./dog.js'), () => {
-  const Dog = vi.fn()
-  Dog.prototype.feed = vi.fn()
-  // ... other mocks
+  const Dog = vi.fn(class {
+    feed = vi.fn()
+    // ... other mocks
+  })
   return { Dog }
 })
 ```
@@ -685,8 +489,9 @@ function feed(dog: Dog) {
 import { expect, test, vi } from 'vitest'
 import { feed } from '../src/feed.js'
 
-const Dog = vi.fn()
-Dog.prototype.feed = vi.fn()
+const Dog = vi.fn(class {
+  feed = vi.fn()
+})
 
 test('can feed dogs', () => {
   const dogMax = new Dog('Max')
@@ -712,8 +517,8 @@ expect(Cooper.greet).toHaveBeenCalled()
 
 const Max = new Dog('Max')
 
-// methods assigned to the prototype are shared between instances
-expect(Max.speak).toHaveBeenCalled()
+// methods are not shared between instances if you assigned them directly
+expect(Max.speak).not.toHaveBeenCalled()
 expect(Max.greet).not.toHaveBeenCalled()
 ```
 
@@ -724,7 +529,7 @@ const dog = new Dog('Cooper')
 
 // "vi.mocked" is a type helper, since
 // TypeScript doesn't know that Dog is a mocked class,
-// it wraps any function in a MockInstance<T> type
+// it wraps any function in a Mock<T> type
 // without validating if the function is a mock
 vi.mocked(dog.speak).mockReturnValue('woof woof')
 
@@ -744,6 +549,10 @@ expect(nameSpy).toHaveBeenCalledTimes(1)
 
 ::: tip
 You can also spy on getters and setters using the same method.
+:::
+
+::: danger
+Using classes with `vi.fn()` was introduced in Vitest 4. Previously, you had to use `function` and `prototype` inheritence directly. See [v3 guide](https://v3.vitest.dev/guide/mocking.html#classes).
 :::
 
 ## Cheat Sheet

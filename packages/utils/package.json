@@ -1,7 +1,7 @@
 {
   "name": "@vitest/utils",
   "type": "module",
-  "version": "4.0.0-beta.2",
+  "version": "4.0.0-beta.5",
   "description": "Shared Vitest utility functions",
   "license": "MIT",
   "funding": "https://opencollective.com/vitest",
@@ -27,6 +27,10 @@
     "./ast": {
       "types": "./dist/ast.d.ts",
       "default": "./dist/ast.js"
+    },
+    "./resolver": {
+      "types": "./dist/resolver.d.ts",
+      "default": "./dist/resolver.js"
     },
     "./error": {
       "types": "./dist/error.d.ts",
@@ -65,7 +69,7 @@
   },
   "dependencies": {
     "@vitest/pretty-format": "workspace:*",
-    "loupe": "^3.1.4",
+    "loupe": "^3.2.0",
     "tinyrainbow": "catalog:"
   },
   "devDependencies": {

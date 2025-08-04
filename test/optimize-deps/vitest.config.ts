@@ -15,7 +15,7 @@ export default defineConfig({
     },
     deps: {
       optimizer: {
-        web: {
+        client: {
           enabled: true,
         },
         ssr: {

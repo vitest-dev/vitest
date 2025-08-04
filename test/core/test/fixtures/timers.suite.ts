@@ -274,7 +274,7 @@ describe('FakeTimers', () => {
     it('warns when trying to advance timers while real timers are used', () => {
       const timers = new FakeTimers({
         config: {
-          rootDir: __dirname,
+          rootDir: import.meta.dirname,
         },
         global,
       })
@@ -418,7 +418,7 @@ describe('FakeTimers', () => {
     it('warns when trying to advance timers while real timers are used', async () => {
       const timers = new FakeTimers({
         config: {
-          rootDir: __dirname,
+          rootDir: import.meta.dirname,
         },
         global,
       })

@@ -43,10 +43,10 @@ export function populateGlobal(
   win: any,
   options: PopulateOptions = {},
 ): {
-    keys: Set<string>
-    skipKeys: string[]
-    originals: Map<string | symbol, any>
-  } {
+  keys: Set<string>
+  skipKeys: string[]
+  originals: Map<string | symbol, any>
+} {
   const { bindFunctions = false } = options
   const keys = getWindowKeys(global, win, options.additionalKeys)
 

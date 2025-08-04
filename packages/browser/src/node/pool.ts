@@ -101,16 +101,17 @@ export function createBrowserPool(vitest: Vitest): ProcessPool {
     const parallelPools: (() => Promise<void>)[] = []
     const nonParallelPools: (() => Promise<void>)[] = []
 
-    for (const result of initialisedPools) {
-      if (!result) {
+    for (const pool of initialisedPools) {
+      if (!pool) {
+        // this means it was cancelled
         return
       }
 
-      if (result.provider.mocker && result.provider.supportsParallelism) {
-        parallelPools.push(result.runTests)
+      if (pool.provider.mocker && pool.provider.supportsParallelism) {
+        parallelPools.push(pool.runTests)
       }
       else {
-        nonParallelPools.push(result.runTests)
+        nonParallelPools.push(pool.runTests)
       }
     }
 
@@ -331,7 +332,7 @@ class BrowserPool {
           this.runNextTest(method, sessionId)
         })
         .catch((error) => {
-          // if user cancells the test run manually, ignore the error and exit gracefully
+          // if user cancels the test run manually, ignore the error and exit gracefully
           if (
             this.project.vitest.isCancelling
             && error instanceof Error

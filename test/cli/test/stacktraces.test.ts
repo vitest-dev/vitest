@@ -7,7 +7,7 @@ import { runVitest } from '../../test-utils'
 process.setMaxListeners(20)
 
 describe('stacktraces should respect sourcemaps', async () => {
-  const root = resolve(__dirname, '../fixtures/stacktraces')
+  const root = resolve(import.meta.dirname, '../fixtures/stacktraces')
   const files = await glob(['*.test.*'], { cwd: root, expandDirectories: false })
 
   for (const file of files) {
@@ -24,7 +24,7 @@ describe('stacktraces should respect sourcemaps', async () => {
 })
 
 describe('stacktraces should pick error frame if present', async () => {
-  const root = resolve(__dirname, '../fixtures/stacktraces')
+  const root = resolve(import.meta.dirname, '../fixtures/stacktraces')
   const files = ['frame.spec.imba']
 
   for (const file of files) {
@@ -41,7 +41,7 @@ describe('stacktraces should pick error frame if present', async () => {
 })
 
 describe('stacktrace should print error frame source file correctly', async () => {
-  const root = resolve(__dirname, '../fixtures/stacktraces')
+  const root = resolve(import.meta.dirname, '../fixtures/stacktraces')
   const testFile = resolve(root, './error-in-deps.test.js')
 
   it('error-in-deps', async () => {
@@ -53,7 +53,7 @@ describe('stacktrace should print error frame source file correctly', async () =
 })
 
 describe('stacktrace filtering', async () => {
-  const root = resolve(__dirname, '../fixtures/stacktraces')
+  const root = resolve(import.meta.dirname, '../fixtures/stacktraces')
   const testFile = resolve(root, './error-with-stack.test.js')
 
   it('filters stacktraces', async () => {
@@ -67,7 +67,7 @@ describe('stacktrace filtering', async () => {
 })
 
 describe('stacktrace in dependency package', () => {
-  const root = resolve(__dirname, '../fixtures/stacktraces')
+  const root = resolve(import.meta.dirname, '../fixtures/stacktraces')
   const testFile = resolve(root, './error-in-package.test.js')
 
   it('external', async () => {
@@ -82,7 +82,7 @@ describe('stacktrace in dependency package', () => {
       root,
       server: {
         deps: {
-          inline: [/@vitest\/test-dep-error/],
+          inline: [/@test\/test-dep-error/],
         },
       },
     }, [testFile])
@@ -91,7 +91,7 @@ describe('stacktrace in dependency package', () => {
 })
 
 it('stacktrace in vmThreads', async () => {
-  const root = resolve(__dirname, '../fixtures/stacktraces')
+  const root = resolve(import.meta.dirname, '../fixtures/stacktraces')
   const testFile = resolve(root, './error-with-stack.test.js')
   const { stderr } = await runVitest({
     root,

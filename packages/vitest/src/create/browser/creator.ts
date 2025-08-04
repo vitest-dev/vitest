@@ -104,6 +104,11 @@ function getFramework(): prompt.Choice[] {
       value: 'marko',
       description: '"A declarative, HTML-based language that makes building web apps fun"',
     },
+    {
+      title: 'qwik',
+      value: 'qwik',
+      description: '"Instantly interactive web apps at scale"',
+    },
   ]
 }
 
@@ -125,6 +130,8 @@ function getFrameworkTestPackage(framework: string) {
       return '@solidjs/testing-library'
     case 'marko':
       return '@marko/testing-library'
+    case 'qwik':
+      return 'vitest-browser-qwik'
   }
   throw new Error(`Unsupported framework: ${framework}`)
 }
@@ -143,6 +150,8 @@ function getFrameworkPluginPackage(framework: string) {
       return 'vite-plugin-solid'
     case 'marko':
       return '@marko/vite'
+    case 'qwik':
+      return '@builder.io/qwik/optimizer'
   }
   return null
 }
@@ -224,6 +233,9 @@ function getPossibleFramework(dependencies: Record<string, string>) {
   if (dependencies.marko) {
     return 'marko'
   }
+  if (dependencies['@builder.io/qwik'] || dependencies['@qwik.dev/core']) {
+    return 'qwik'
+  }
   return 'vanilla'
 }
 
@@ -257,6 +269,17 @@ function fail() {
   process.exitCode = 1
 }
 
+function getFrameworkImportInfo(framework: string) {
+  switch (framework) {
+    case 'svelte':
+      return { importName: 'svelte', isNamedExport: true }
+    case 'qwik':
+      return { importName: 'qwikVite', isNamedExport: true }
+    default:
+      return { importName: framework, isNamedExport: false }
+  }
+}
+
 async function generateFrameworkConfigFile(options: {
   configPath: string
   framework: string
@@ -264,15 +287,18 @@ async function generateFrameworkConfigFile(options: {
   provider: string
   browsers: string[]
 }) {
-  const frameworkImport = options.framework === 'svelte'
-    ? `import { svelte } from '${options.frameworkPlugin}'`
-    : `import ${options.framework} from '${options.frameworkPlugin}'`
+  const { importName, isNamedExport } = getFrameworkImportInfo(options.framework)
+
+  const frameworkImport = isNamedExport
+    ? `import { ${importName} } from '${options.frameworkPlugin}'`
+    : `import ${importName} from '${options.frameworkPlugin}'`
+
   const configContent = [
     `import { defineConfig } from 'vitest/config'`,
     options.frameworkPlugin ? frameworkImport : null,
     ``,
     'export default defineConfig({',
-    options.frameworkPlugin ? `  plugins: [${options.framework}()],` : null,
+    options.frameworkPlugin ? `  plugins: [${importName}()],` : null,
     `  test: {`,
     `    browser: {`,
     `      enabled: true,`,
