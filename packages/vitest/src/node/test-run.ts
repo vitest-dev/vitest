@@ -17,7 +17,9 @@ import type { TestRunEndReason } from './types/reporter'
 import assert from 'node:assert'
 import { createHash } from 'node:crypto'
 import { copyFile, mkdir } from 'node:fs/promises'
+import { isPrimitive } from '@vitest/utils'
 import { serializeError } from '@vitest/utils/error'
+import { parseErrorStacktrace } from '@vitest/utils/source-map'
 import mime from 'mime/lite'
 import { basename, dirname, extname, resolve } from 'pathe'
 
@@ -68,6 +70,7 @@ export class TestRun {
   }
 
   async updated(update: TaskResultPack[], events: TaskEventPack[]): Promise<void> {
+    this.syncUpdateStacks(update)
     this.vitest.state.updateTasks(update)
 
     for (const [id, event, data] of events) {
@@ -111,6 +114,27 @@ export class TestRun {
     }
 
     return modules.some(m => !m.ok())
+  }
+
+  private syncUpdateStacks(update: TaskResultPack[]): void {
+    update.forEach(([taskId, result]) => {
+      const task = this.vitest.state.idMap.get(taskId)
+      const isBrowser = task && task.file.pool === 'browser'
+
+      result?.errors?.forEach((error) => {
+        if (isPrimitive(error)) {
+          return
+        }
+
+        if (isBrowser) {
+          const project = this.vitest.getProjectByName(task!.file.projectName || '')
+          error.stacks = project.browser?.parseErrorStacktrace(error) || []
+        }
+        else {
+          error.stacks = parseErrorStacktrace(error)
+        }
+      })
+    })
   }
 
   private async reportEvent(id: string, event: TaskUpdateEvent, data: TaskEventData | undefined) {
