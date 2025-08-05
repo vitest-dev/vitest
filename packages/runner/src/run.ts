@@ -152,14 +152,17 @@ export async function callSuiteHook<T extends keyof SuiteHooks>(
   }
 
   async function runHook(hook: Function) {
-    return limitMaxConcurrency(async () => getBeforeHookCleanupCallback(
+    return getBeforeHookCleanupCallback(
       hook,
       await hook(...args),
       name === 'beforeEach' ? args[0] : undefined,
-    ))
+    )
   }
 
-  if (sequence === 'parallel') {
+  if (name === 'beforeEach' || name === 'afterAll') {
+    callbacks.push(hooks.map(hook => limitMaxConcurrency(() => runHook(hook))))
+  }
+  else if (sequence === 'parallel') {
     callbacks.push(
       ...(await Promise.all(hooks.map(hook => runHook(hook)))),
     )
