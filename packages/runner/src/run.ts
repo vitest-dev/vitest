@@ -159,7 +159,7 @@ export async function callSuiteHook<T extends keyof SuiteHooks>(
     )
   }
 
-  if (name === 'beforeEach' || name === 'afterAll') {
+  if (name === 'beforeAll' || name === 'afterAll') {
     callbacks.push(hooks.map(hook => limitMaxConcurrency(() => runHook(hook))))
   }
   else if (sequence === 'parallel') {
