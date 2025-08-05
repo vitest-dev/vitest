@@ -99,6 +99,20 @@ export default <Environment>{
       }
     }
 
+    // since we are providing Node.js's Fetch API,
+    // we also should override other APIs they use
+    const overrideGlobals = [
+      'Headers',
+      'AbortController',
+      'AbortSignal',
+    ] as const
+    for (const name of overrideGlobals) {
+      const value = globalThis[name]
+      if (typeof value !== 'undefined') {
+        dom.window[name] = value as any
+      }
+    }
+
     return {
       getVmContext() {
         return dom.getInternalVMContext()

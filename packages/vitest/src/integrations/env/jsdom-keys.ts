@@ -160,9 +160,6 @@ const LIVING_KEYS = [
   'ShadowRoot',
   'MutationObserver',
   'MutationRecord',
-  'Headers',
-  'AbortController',
-  'AbortSignal',
 
   'Uint8Array',
   'Uint16Array',
@@ -183,6 +180,11 @@ const LIVING_KEYS = [
   'Option',
 
   'CSS',
+
+  // Conflict with Node.js values
+  // 'Headers',
+  // 'AbortController',
+  // 'AbortSignal',
 ]
 
 const OTHER_KEYS = [
