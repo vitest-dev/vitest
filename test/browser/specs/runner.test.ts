@@ -170,8 +170,29 @@ error with a stack
 })
 
 test(`stack trace points to correct file in every browser when failed`, async () => {
+  expect.assertions(15)
   const { stderr } = await runBrowserTests({
     root: './fixtures/failing',
+    reporters: [
+      'default',
+      {
+        onTestCaseReady(testCase) {
+          if (testCase.name !== 'correctly fails and prints a diff') {
+            return
+          }
+          if (testCase.project.name === 'chromium' || testCase.project.name === 'chrome') {
+            expect(testCase.result().errors[0].stacks).toEqual([
+              {
+                line: 11,
+                column: 12,
+                file: testCase.module.moduleId,
+                method: '',
+              },
+            ])
+          }
+        },
+      },
+    ],
   })
 
   expect(stderr).toContain('expected 1 to be 2')
