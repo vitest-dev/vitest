@@ -1,5 +1,8 @@
-import { expect, test } from 'vitest'
+import { test as baseTest, expect } from 'vitest'
 import { editFile, resolvePath, runVitestCli } from '../../test-utils'
+
+// ecosystem-ci updated package.json and make this test fail
+const test = baseTest.skipIf(!!process.env.ECOSYSTEM_CI)
 
 test('list command with --changed flag shows only changed tests', async () => {
   const sourceFile = resolvePath(import.meta.url, '../fixtures/git-changed/related/src/sourceA.ts')
