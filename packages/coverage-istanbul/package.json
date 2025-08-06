@@ -57,7 +57,7 @@
   "devDependencies": {
     "@types/debug": "catalog:",
     "@types/istanbul-lib-coverage": "catalog:",
-    "@types/istanbul-lib-instrument": "^1.7.7",
+    "@types/istanbul-lib-instrument": "^1.7.8",
     "@types/istanbul-lib-report": "catalog:",
     "@types/istanbul-lib-source-maps": "catalog:",
     "@types/istanbul-reports": "catalog:",

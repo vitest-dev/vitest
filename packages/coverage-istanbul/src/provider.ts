@@ -35,7 +35,6 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider<ResolvedCover
       esModules: true,
       compact: false,
       coverageVariable: COVERAGE_STORE_KEY,
-      // @ts-expect-error missing type
       coverageGlobalScope: 'globalThis',
       coverageGlobalScopeFunc: false,
       ignoreClassMethods: this.options.ignoreClassMethods,
@@ -44,6 +43,7 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider<ResolvedCover
         ['importAttributes', { deprecatedAssertSyntax: true }],
       ],
       generatorOpts: {
+        // @ts-expect-error missing type
         importAttributesKeyword: 'with',
       },
     })
