@@ -77,15 +77,11 @@ export function printError(
     printProperties: options.verbose,
     parseErrorStacktrace(error) {
       if (error.stacks) {
-        const stacks = [...error.stacks.filter(stack =>
-          project.config.onStackTrace?.(error, stack) !== false,
-        )]
-
         if (options.fullStack) {
-          return stacks
+          return error.stacks
         }
         else {
-          return stacks.filter((stack) => {
+          return error.stacks.filter((stack) => {
             return !defaultStackIgnorePatterns.some(p => stack.file.match(p))
           })
         }

@@ -128,10 +128,14 @@ export class TestRun {
 
         const project = this.vitest.getProjectByName(task!.file.projectName || '')
         if (isBrowser) {
-          error.stacks = project.browser?.parseErrorStacktrace(error, { frameFilter: project.config.onStackTrace }) || []
+          error.stacks = project.browser?.parseErrorStacktrace(error, {
+            frameFilter: project.config.onStackTrace,
+          }) || []
         }
         else {
-          error.stacks = parseErrorStacktrace(error, { frameFilter: project.config.onStackTrace })
+          error.stacks = parseErrorStacktrace(error, {
+            frameFilter: project.config.onStackTrace,
+          })
         }
       })
     })
