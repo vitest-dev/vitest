@@ -256,7 +256,7 @@ export class Logger {
     )
   }
 
-  printUnhandledErrors(errors: unknown[]): void {
+  printUnhandledErrors(errors: ReadonlyArray<unknown>): void {
     const errorMessage = c.red(
       c.bold(
         `\nVitest caught ${errors.length} unhandled error${
