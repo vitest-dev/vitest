@@ -677,7 +677,7 @@ test('top fruits', () => {
 
 `toMatchObject` asserts if an object matches a subset of the properties of an object.
 
-You can also pass an array of objects. This is useful if you want to check that two arrays match in their number of elements, as opposed to `arrayContaining`, which allows for extra elements in the received array.
+You can also pass an array of objects. This is useful if you want to check that two arrays match in their number and order of elements, as opposed to `arrayContaining`, which allows for extra elements in the received array.
 
 ```ts
 import { expect, test } from 'vitest'
