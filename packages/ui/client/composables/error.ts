@@ -40,6 +40,7 @@ export function parseError(e: unknown) {
       message: String(error).split(/\n/g)[0],
       stack: String(error),
       name: '',
+      stacks: [],
     }
   }
 
@@ -49,6 +50,7 @@ export function parseError(e: unknown) {
       message: err.message,
       stack: err.stack,
       name: '',
+      stacks: [],
     }
   }
 

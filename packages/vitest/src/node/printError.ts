@@ -12,6 +12,7 @@ import { normalize, relative } from 'pathe'
 import c from 'tinyrainbow'
 import { TypeCheckError } from '../typecheck/typechecker'
 import {
+  defaultStackIgnorePatterns,
   lineSplitRE,
   parseErrorStacktrace,
   positionToOffset,
@@ -75,10 +76,26 @@ export function printError(
     screenshotPaths: options.screenshotPaths,
     printProperties: options.verbose,
     parseErrorStacktrace(error) {
+      if (error.stacks) {
+        const stacks = [...error.stacks.filter(stack =>
+          project.config.onStackTrace?.(error, stack) !== false,
+        )]
+
+        if (options.fullStack) {
+          return stacks
+        }
+        else {
+          return stacks.filter((stack) => {
+            return !defaultStackIgnorePatterns.some(p => stack.file.match(p))
+          })
+        }
+      }
+
       // browser stack trace needs to be processed differently,
       // so there is a separate method for that
       if (options.task?.file.pool === 'browser' && project.browser) {
         return project.browser.parseErrorStacktrace(error, {
+          frameFilter: project.config.onStackTrace,
           ignoreStackEntries: options.fullStack ? [] : undefined,
         })
       }

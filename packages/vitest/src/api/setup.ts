@@ -15,14 +15,13 @@ import type {
   WebSocketRPC,
 } from './types'
 import { existsSync, promises as fs } from 'node:fs'
-import { isPrimitive, noop } from '@vitest/utils'
+import { noop } from '@vitest/utils'
 import { createBirpc } from 'birpc'
 import { parse, stringify } from 'flatted'
 import { WebSocketServer } from 'ws'
 import { API_PATH } from '../constants'
 import { getModuleGraph } from '../utils/graph'
 import { stringifyReplace } from '../utils/serialization'
-import { parseErrorStacktrace } from '../utils/source-map'
 import { isValidApiRequest } from './check'
 
 export function setup(ctx: Vitest, _server?: ViteDevServer): void {
@@ -200,25 +199,6 @@ export class WebSocketReporter implements Reporter {
     if (this.clients.size === 0) {
       return
     }
-
-    packs.forEach(([taskId, result]) => {
-      const task = this.ctx.state.idMap.get(taskId)
-      const isBrowser = task && task.file.pool === 'browser'
-
-      result?.errors?.forEach((error) => {
-        if (isPrimitive(error)) {
-          return
-        }
-
-        if (isBrowser) {
-          const project = this.ctx.getProjectByName(task!.file.projectName || '')
-          error.stacks = project.browser?.parseErrorStacktrace(error)
-        }
-        else {
-          error.stacks = parseErrorStacktrace(error)
-        }
-      })
-    })
 
     this.clients.forEach((client) => {
       client.onTaskUpdate?.(packs, events)?.catch?.(noop)

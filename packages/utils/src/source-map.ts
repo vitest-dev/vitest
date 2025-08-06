@@ -23,7 +23,7 @@ export interface StackTraceParserOptions {
 const CHROME_IE_STACK_REGEXP = /^\s*at .*(?:\S:\d+|\(native\))/m
 const SAFARI_NATIVE_CODE_REGEXP = /^(?:eval@)?(?:\[native code\])?$/
 
-const stackIgnorePatterns = [
+const stackIgnorePatterns: (string | RegExp)[] = [
   'node:internal',
   /\/packages\/\w+\/dist\//,
   /\/@vitest\/\w+\/dist\//,
@@ -46,6 +46,8 @@ const stackIgnorePatterns = [
   /__vitest_browser__/,
   /\/deps\/vitest_/,
 ]
+
+export { stackIgnorePatterns as defaultStackIgnorePatterns }
 
 function extractLocation(urlLike: string) {
   // Fail-fast but return locations like "(native)"

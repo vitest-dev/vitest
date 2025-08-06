@@ -54,6 +54,7 @@ const error: TestError = {
   actual: '2.23606797749979',
   expected: '2',
   operator: 'strictEqual',
+  stacks: undefined!,
 }
 error.showDiff = true
 error.stack = 'AssertionError: expected 2.23606797749979 to equal 2\n'

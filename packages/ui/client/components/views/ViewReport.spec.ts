@@ -104,6 +104,7 @@ describe('ViewReport', () => {
         errors: [
           {
             name: 'Do some test',
+            stacks: [],
             stack: '\x1B[33mtest/plain-stack-trace.ts\x1B[0m',
             message: 'Error: Transform failed with 1 error:',
             diff,
@@ -163,6 +164,7 @@ describe('ViewReport', () => {
           {
             name: 'Do some test',
             stack: '\x1B[33mtest/plain-stack-trace.ts\x1B[0m',
+            stacks: [],
             message: '\x1B[44mError: Transform failed with 1 error:\x1B[0m',
             diff,
           },
