@@ -126,12 +126,12 @@ export class TestRun {
           return
         }
 
+        const project = this.vitest.getProjectByName(task!.file.projectName || '')
         if (isBrowser) {
-          const project = this.vitest.getProjectByName(task!.file.projectName || '')
-          error.stacks = project.browser?.parseErrorStacktrace(error) || []
+          error.stacks = project.browser?.parseErrorStacktrace(error, { frameFilter: project.config.onStackTrace }) || []
         }
         else {
-          error.stacks = parseErrorStacktrace(error)
+          error.stacks = parseErrorStacktrace(error, { frameFilter: project.config.onStackTrace })
         }
       })
     })
