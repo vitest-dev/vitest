@@ -2,8 +2,6 @@
 
 const LIVING_KEYS = [
   'DOMException',
-  'URL',
-  'URLSearchParams',
   'EventTarget',
   'NamedNodeMap',
   'Node',
@@ -185,6 +183,8 @@ const LIVING_KEYS = [
   // 'Headers',
   // 'AbortController',
   // 'AbortSignal',
+  // 'URL',
+  // 'URLSearchParams',
 ]
 
 const OTHER_KEYS = [
