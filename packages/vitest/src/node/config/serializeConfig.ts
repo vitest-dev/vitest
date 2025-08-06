@@ -156,6 +156,7 @@ export function serializeConfig(
               actionTimeout: (browser.providerOptions as any)?.context?.actionTimeout,
             }
           : {},
+        trackUnhandledErrors: browser.trackUnhandledErrors ?? true,
       }
     })(config.browser),
     standalone: config.standalone,

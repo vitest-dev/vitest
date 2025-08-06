@@ -27,3 +27,13 @@ test('ignores unhandled errors', async () => {
 
   expect(stderr).toBe('')
 })
+
+test('disables tracking', async () => {
+  const { stderr } = await runBrowserTests({
+    root: './fixtures/unhandled',
+    browser: {
+      trackUnhandledErrors: false,
+    },
+  })
+  expect(stderr).toBe('')
+})
