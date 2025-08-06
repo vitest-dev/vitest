@@ -31,6 +31,9 @@ expectTypeOf({ a: 1, b: 1 }).not.toEqualTypeOf<{ a: number }>()
 
 - **Type:** `<T>(expected: T) => void`
 
+::: warning DEPRECATED
+This matcher has been deprecated since expect-type v1.2.0. Use [`toExtend`](#toextend) instead.
+:::
 This matcher checks if expect type extends provided type. It is different from `toEqual` and is more similar to [expect's](/api/expect) `toMatchObject()`. With this matcher, you can check if an object “matches” a type.
 
 ```ts
@@ -39,6 +42,20 @@ import { expectTypeOf } from 'vitest'
 expectTypeOf({ a: 1, b: 1 }).toMatchTypeOf({ a: 1 })
 expectTypeOf<number>().toMatchTypeOf<string | number>()
 expectTypeOf<string | number>().not.toMatchTypeOf<number>()
+```
+
+## toExtend
+
+- **Type:** `<T>(expected: T) => void`
+
+This matcher checks if expect type extends provided type. It is different from `toEqual` and is more similar to [expect's](/api/expect) `toMatchObject()`. With this matcher, you can check if an object "matches" a type.
+
+```ts
+import { expectTypeOf } from 'vitest'
+
+expectTypeOf({ a: 1, b: 1 }).toExtend({ a: 1 })
+expectTypeOf<number>().toExtend<string | number>()
+expectTypeOf<string | number>().not.toExtend<number>()
 ```
 
 ## extract

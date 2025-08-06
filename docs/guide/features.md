@@ -224,7 +224,7 @@ import { mount } from './mount.js'
 
 test('my types work properly', () => {
   expectTypeOf(mount).toBeFunction()
-  expectTypeOf(mount).parameter(0).toMatchTypeOf<{ name: string }>()
+  expectTypeOf(mount).parameter(0).toExtend<{ name: string }>()
 
   // @ts-expect-error name is a string
   assertType(mount({ name: 42 }))

@@ -28,7 +28,7 @@ describe('merge config helper', () => {
     expectTypeOf(mergeConfig(
       defineConfig({}),
       defineProject({ test: { name: 'test' } }),
-    )).toMatchTypeOf<Record<string, unknown>>()
+    )).toExtend<Record<string, unknown>>()
   })
 })
 
