@@ -32,7 +32,7 @@ test('disables tracking', async () => {
   const { stderr } = await runBrowserTests({
     root: './fixtures/unhandled',
     browser: {
-      trackUncaughtExceptions: false,
+      trackUnhandledErrors: false,
     },
   })
   expect(stderr).toBe('')
