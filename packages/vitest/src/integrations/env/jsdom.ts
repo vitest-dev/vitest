@@ -80,9 +80,6 @@ export default <Environment>{
     // https://nodejs.org/dist/latest/docs/api/globals.html
     const globalNames = [
       'structuredClone',
-      'fetch',
-      'Request',
-      'Response',
       'BroadcastChannel',
       'MessageChannel',
       'MessagePort',
@@ -96,6 +93,25 @@ export default <Environment>{
         && typeof dom.window[name] === 'undefined'
       ) {
         dom.window[name] = value
+      }
+    }
+
+    // since we are providing Node.js's Fetch API,
+    // we also should override other APIs they use
+    const overrideGlobals = [
+      'fetch',
+      'Request',
+      'Response',
+      'Headers',
+      'AbortController',
+      'AbortSignal',
+      'URL',
+      'URLSearchParams',
+    ] as const
+    for (const name of overrideGlobals) {
+      const value = globalThis[name]
+      if (typeof value !== 'undefined') {
+        dom.window[name] = value as any
       }
     }
 
