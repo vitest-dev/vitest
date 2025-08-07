@@ -74,6 +74,7 @@ export interface TaskBase {
   /**
    * If the test was collected by parsing the file AST, and the name
    * is not a static string, this property will be set to `true`.
+   * @experimental
    */
   dynamic?: boolean
 }
