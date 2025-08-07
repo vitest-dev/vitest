@@ -1,4 +1,4 @@
-import type { File, Suite, TaskBase, Test } from '@vitest/runner'
+import type { File, Suite, Task, Test } from '@vitest/runner'
 import type { SourceMap } from 'node:module'
 import type { TestError } from '../types/general'
 import type { TestProject } from './project'
@@ -435,13 +435,13 @@ function createIndexMap(source: string) {
   return map
 }
 
-function markDynamicTests(tasks: TaskBase[]) {
+function markDynamicTests(tasks: Task[]) {
   for (const task of tasks) {
-    if ((task as any).dynamic) {
+    if (task.dynamic) {
       task.id += '-dynamic'
     }
     if ('tasks' in task) {
-      markDynamicTests(task.tasks as TaskBase[])
+      markDynamicTests(task.tasks)
     }
   }
 }

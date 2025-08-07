@@ -540,7 +540,7 @@ function experimental_parseSpecification(
 This function will collect all tests inside the file without running it. It uses rollup's `parseAst` function on top of Vite's `ssrTransform` to statically analyse the file and collect all tests that it can.
 
 ::: warning
-If Vitest could not analyse the name of the test, it will inject a hidden `dynamic: true` property to the test or a suite.
+If Vitest could not analyse the name of the test, it will inject a hidden `dynamic: true` property to the test or a suite. The `id` will also have a postfix with `-dynamic` to not break tests that were collected properly.
 
 Vitest always injects this property in tests with `for` or `each` modifier or tests with a dynamic name (like, `hello ${property}` or `'hello' + ${property}`). Vitest will still assign a name to the test, but it cannot be used to filter the tests.
 
