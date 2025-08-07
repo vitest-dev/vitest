@@ -4,6 +4,7 @@ import { Vitest } from '../node/core'
 export const version: string = Vitest.version
 
 export { isValidApiRequest } from '../api/check'
+export { escapeTestName } from '../node/ast-collect'
 export { parseCLI } from '../node/cli/cac'
 export type { CliParseOptions } from '../node/cli/cac'
 export { startVitest } from '../node/cli/cli-api'
@@ -47,6 +48,7 @@ export type {
   TestSuite,
   TestSuiteState,
 } from '../node/reporters/reported-tasks'
+export { experimental_getRunnerTask } from '../node/reporters/reported-tasks'
 export { BaseSequencer } from '../node/sequencers/BaseSequencer'
 
 export type {

@@ -528,3 +528,47 @@ function matchesProjectFilter(name: string): boolean
 Check if the name matches the current [project filter](/guide/cli#project). If there is no project filter, this will always return `true`.
 
 It is not possible to programmatically change the `--project` CLI option.
+
+## experimental_parseSpecification <Badge type="warning">experimental</Badge> {#parsespecification}
+
+```ts
+function experimental_parseSpecification(
+  specification: TestSpecification
+): Promise<TestModule>
+```
+
+This function will collect all tests inside the file without running it. It uses rollup's `parseAst` function on top of Vite's `ssrTransform` to statically analyse the file and collect all tests that it can.
+
+::: warning
+If Vitest could not analyse the name of the test, it will inject a hidden `dynamic: true` property to the test or a suite.
+
+Vitest always injects this property in tests with `for` or `each` modifier or tests with a dynamic name (like, `hello ${property}` or `'hello' + ${property}`). Vitest will still assign a name to the test, but it cannot be used to filter the tests.
+
+There is nothing Vitest can do to make it possible to filter dynamic tests, but you can turn a test with `for` or `each` modifier into a name pattern with `escapeTestName` function:
+
+```ts
+import { escapeTestName } from 'vitest/node'
+
+// turns into /hello, .+?/
+const escapedPattern = new RegExp(escapeTestName('hello, %s', true))
+```
+:::
+
+::: warning
+Vitest will only collect tests defined in the file. It will never follow imports to other files.
+
+Vitest collects all `it`, `test`, `suite` and `describe` definitions even if they were not imported from the `vitest` entry point.
+:::
+
+## experimental_parseSpecifications <Badge type="warning">experimental</Badge> {#parsespecifications}
+
+```ts
+function experimental_parseSpecifications(
+  specifications: TestSpecification[],
+  options?: {
+    concurrency?: number
+  }
+): Promise<TestModule[]>
+```
+
+This method will [collect tests](#parsespecification) from an array of specifications. By default, Vitest will run only `os.availableParallelism()` number of specifications at a time to reduce the potential performance degradation. You can specify a different number in a second argument.

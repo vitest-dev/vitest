@@ -68,12 +68,12 @@ export class TestProject {
   /** @internal */ _vite?: ViteDevServer
   /** @internal */ _hash?: string
   /** @internal */ _resolver!: VitestResolver
+  /** @inetrnal */ testFilesList: string[] | null = null
 
   private runner!: ModuleRunner
 
   private closingPromise: Promise<void> | undefined
 
-  private testFilesList: string[] | null = null
   private typecheckFilesList: string[] | null = null
 
   private _globalSetups?: GlobalSetupFile[]
