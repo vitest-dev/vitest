@@ -743,7 +743,7 @@ export class Vitest {
 
   public async experimental_parseSpecification(specification: TestSpecification): Promise<TestModule> {
     if (this.mode !== 'test') {
-      throw new Error(`The \`experimental_parseSpecifications\` does not support "${this.mode}" mode.`)
+      throw new Error(`The \`experimental_parseSpecification\` does not support "${this.mode}" mode.`)
     }
     const file = await astCollectTests(specification.project, specification.moduleId).catch((error) => {
       return createFailedFileTask(specification.project, specification.moduleId, error)
