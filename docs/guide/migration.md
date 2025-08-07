@@ -193,6 +193,42 @@ Vite has its own externalization mechanism, but we decided to keep using the old
 
 This update should not be noticeable unless you rely on advanced features mentioned above.
 
+### `workspace` is Replaced with `projects`
+
+The `workspace` configuration option was renamed to [`projects`](/guide/projects) in Vitest 3.2. They are functionally the same, except you cannot specify another file as the source of your workspace (previously you could specify a file that would export an array of projects). Migrating to `projects` is easy, just move the code from `vitest.workspace.js` to `vitest.config.ts`:
+
+::: code-group
+```ts [vitest.config.js]
+import { defineConfig } from 'vitest/config'
+
+export default defineConfig({
+  test: {
+    workspace: './vitest.workspace.js', // [!code --]
+    projects: [ // [!code ++]
+      './packages/*', // [!code ++]
+      { // [!code ++]
+        test: { // [!code ++]
+          name: 'unit', // [!code ++]
+        }, // [!code ++]
+      }, // [!code ++]
+    ] // [!code ++]
+  }
+})
+```
+```ts [vitest.workspace.js]
+import { defineWorkspace } from 'vitest/config' // [!code --]
+
+export default defineWorkspace([ // [!code --]
+  './packages/*', // [!code --]
+  { // [!code --]
+    test: { // [!code --]
+      name: 'unit', // [!code --]
+    }, // [!code --]
+  } // [!code --]
+]) // [!code --]
+```
+:::
+
 ### Deprecated APIs are Removed
 
 Vitest 4.0 removes some deprecated APIs, including:
