@@ -325,7 +325,11 @@ function createSuiteCollector(
           : options.todo
             ? 'todo'
             : 'run',
-      meta: options.meta ?? Object.create(null),
+      meta: {
+        ...Object.create(null),
+        ...(suiteOptions?.meta || {}),
+        ...(options.meta || {}),
+      },
       annotations: [],
     }
     const handler = options.handler

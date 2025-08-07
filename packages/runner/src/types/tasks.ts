@@ -485,6 +485,10 @@ export interface TestOptions {
    * Whether the test is expected to fail. If it does, the test will pass, otherwise it will fail.
    */
   fails?: boolean
+  /**
+   * Custom metadata for the task. This will be merged with any meta property defined in the test.
+   */
+  meta?: Record<string, unknown>
 }
 
 interface ExtendedAPI<ExtraContext> {
