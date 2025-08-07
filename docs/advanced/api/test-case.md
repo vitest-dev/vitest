@@ -125,8 +125,17 @@ Checks if the test did not fail the suite. If the test is not finished yet or wa
 function meta(): TaskMeta
 ```
 
-Custom [metadata](/advanced/metadata) that was attached to the test during its execution. The meta can be attached by assigning a property to the `ctx.task.meta` object during a test run:
+Custom [metadata](/advanced/metadata) that was attached to the test during its execution or defined in test options. The meta can be defined in multiple ways:
 
+**Using test options** (available since Vitest 4.0):
+```ts {1}
+test('the validation works correctly', { meta: { component: 'auth', priority: 'high' } }, ({ task }) => {
+  console.log(task.meta.component) // 'auth'
+  console.log(task.meta.priority)  // 'high'
+})
+```
+
+**Runtime assignment during test execution**:
 ```ts {3,6}
 import { test } from 'vitest'
 
@@ -137,7 +146,9 @@ test('the validation works correctly', ({ task }) => {
 })
 ```
 
-If the test did not finish running yet, the meta will be an empty object.
+Metadata from test options is merged with suite options and runtime assignments. See the [metadata documentation](/advanced/metadata) for details on merging behavior.
+
+If the test did not finish running yet, the meta will contain only the metadata from options (if any).
 
 ## result
 

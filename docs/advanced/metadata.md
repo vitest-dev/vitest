@@ -20,6 +20,35 @@ test('custom', ({ task }) => {
 })
 ```
 
+## Defining Metadata in Test Options
+
+Since Vitest 4.0, you can also define metadata directly in the test options, which will be merged with any metadata from parent suites:
+
+```ts
+describe('suite', { meta: { suiteLevel: 'parent', priority: 'medium' } }, () => {
+  test('with meta options', { meta: { testLevel: 'child', priority: 'high' } }, ({ task }) => {
+    // task.meta contains merged metadata:
+    // { suiteLevel: 'parent', testLevel: 'child', priority: 'high' }
+    // Note: test meta overrides suite meta when there are conflicts
+    console.log(task.meta.suiteLevel) // 'parent'
+    console.log(task.meta.testLevel) // 'child'
+    console.log(task.meta.priority)  // 'high' (test overrides suite)
+  })
+
+  test('inherits suite meta', ({ task }) => {
+    // task.meta only contains suite metadata:
+    // { suiteLevel: 'parent', priority: 'medium' }
+    console.log(task.meta.suiteLevel) // 'parent'
+    console.log(task.meta.priority)  // 'medium'
+  })
+})
+```
+
+The metadata merging follows this priority order (lowest to highest):
+1. Suite-level `meta` options
+2. Test-level `meta` options
+3. Runtime modifications via `task.meta`
+
 Once a test is completed, Vitest will send a task including the result and `meta` to the Node.js process using RPC, and then report it in `onTestCaseResult` and other hooks that have access to tasks. To process this test case, you can utilize the `onTestCaseResult` method available in your reporter implementation:
 
 ```ts [custom-reporter.js]

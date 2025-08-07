@@ -29,6 +29,13 @@ interface TestOptions {
    * @default 0
    */
   repeats?: number
+  /**
+   * Custom metadata for the task. This will be merged with any meta property defined in the test.
+   * Values must be JSON serializable.
+   *
+   * @default undefined
+   */
+  meta?: TaskMeta
 }
 ```
 
@@ -732,6 +739,18 @@ bench.todo('unimplemented test')
 ## describe
 
 When you use `test` or `bench` in the top level of file, they are collected as part of the implicit suite for it. Using `describe` you can define a new suite in the current context, as a set of related tests or benchmarks and other nested suites. A suite lets you organize your tests and benchmarks so reports are more clear.
+
+Like `test`, you can also provide options as a second argument to configure the suite behavior:
+
+```ts
+import { describe, test } from 'vitest'
+
+describe('suite with options', { meta: { component: 'auth' } }, () => {
+  test('inherits suite metadata', ({ task }) => {
+    console.log(task.meta.component) // 'auth'
+  })
+})
+```
 
 ```ts
 // basic.spec.ts
