@@ -489,6 +489,10 @@ function guide(): DefaultTheme.SidebarItem[] {
       link: '/guide/projects',
     },
     {
+      text: 'Component Testing',
+      link: '/guide/component-testing',
+    },
+    {
       text: 'Reporters',
       link: '/guide/reporters',
     },
