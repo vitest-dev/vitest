@@ -58,6 +58,30 @@ expectTypeOf<number>().toExtend<string | number>()
 expectTypeOf<string | number>().not.toExtend<number>()
 ```
 
+## toMatchObjectType
+
+- **Type:** `() => void`
+
+This matcher performs a strict check on object types, ensuring that the expected type matches the provided object type. It's stricter than [`toExtend`](#toextend) and is the recommended choice when working with object types as it's more likely to catch issues like readonly properties.
+
+```ts
+import { expectTypeOf } from 'vitest'
+
+expectTypeOf({ a: 1, b: 2 }).toMatchObjectType<{ a: number }>() // preferred
+expectTypeOf({ a: 1, b: 2 }).toExtend<{ a: number }>()         // works but less strict
+
+// Supports nested object checking
+const user = {
+  name: 'John',
+  address: { city: 'New York', zip: '10001' }
+}
+expectTypeOf(user).toMatchObjectType<{ name: string; address: { city: string } }>()
+```
+
+::: warning
+This matcher only works with plain object types. It will fail for union types and other complex types. For those cases, use [`toExtend`](#toextend) instead.
+:::
+
 ## extract
 
 - **Type:** `ExpectTypeOf<ExtractedUnion>`
