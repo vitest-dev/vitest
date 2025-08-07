@@ -204,10 +204,10 @@ Custom [metadata](/advanced/metadata) that was attached to the suite during its 
 describe('the validation works correctly', { meta: { component: 'auth', area: 'validation' } }, () => {
   test('some test', ({ task }) => {
     console.log(task.suite.meta.component) // 'auth'
-    console.log(task.suite.meta.area)      // 'validation'
+    console.log(task.suite.meta.area) // 'validation'
     // Tests inherit suite metadata automatically
-    console.log(task.meta.component)       // 'auth'
-    console.log(task.meta.area)            // 'validation'
+    console.log(task.meta.component) // 'auth'
+    console.log(task.meta.area) // 'validation'
   })
 })
 ```

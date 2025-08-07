@@ -32,14 +32,14 @@ describe('suite', { meta: { suiteLevel: 'parent', priority: 'medium' } }, () => 
     // Note: test meta overrides suite meta when there are conflicts
     console.log(task.meta.suiteLevel) // 'parent'
     console.log(task.meta.testLevel) // 'child'
-    console.log(task.meta.priority)  // 'high' (test overrides suite)
+    console.log(task.meta.priority) // 'high' (test overrides suite)
   })
 
   test('inherits suite meta', ({ task }) => {
     // task.meta only contains suite metadata:
     // { suiteLevel: 'parent', priority: 'medium' }
     console.log(task.meta.suiteLevel) // 'parent'
-    console.log(task.meta.priority)  // 'medium'
+    console.log(task.meta.priority) // 'medium'
   })
 })
 ```
@@ -48,6 +48,32 @@ The metadata merging follows this priority order (lowest to highest):
 1. Suite-level `meta` options
 2. Test-level `meta` options
 3. Runtime modifications via `task.meta`
+
+## Accessing Suite vs Test Metadata
+
+While tests get merged metadata in `task.meta`, the original suite metadata is preserved separately:
+
+```ts
+describe('suite', { meta: { component: 'auth', area: 'validation' } }, () => {
+  test('example', { meta: { testType: 'integration' } }, ({ task }) => {
+    // Merged metadata (suite + test)
+    console.log(task.meta)
+    // { component: 'auth', area: 'validation', testType: 'integration' }
+
+    // Original suite metadata only
+    console.log(task.suite.meta)
+    // { component: 'auth', area: 'validation' }
+
+    // They are different objects
+    console.log(task.meta !== task.suite.meta) // true
+  })
+})
+```
+
+This separation allows you to:
+- Access the test's complete merged metadata via `task.meta`
+- Access the suite's original metadata via `task.suite.meta`
+- Distinguish between suite-level and test-level metadata in reporters and custom logic
 
 Once a test is completed, Vitest will send a task including the result and `meta` to the Node.js process using RPC, and then report it in `onTestCaseResult` and other hooks that have access to tasks. To process this test case, you can utilize the `onTestCaseResult` method available in your reporter implementation:
 

@@ -488,7 +488,7 @@ export interface TestOptions {
   /**
    * Custom metadata for the task. This will be merged with any meta property defined in the test.
    */
-  meta?: TaskMeta
+  meta?: Record<string, unknown>
 }
 
 interface ExtendedAPI<ExtraContext> {

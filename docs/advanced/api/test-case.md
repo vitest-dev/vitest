@@ -131,7 +131,7 @@ Custom [metadata](/advanced/metadata) that was attached to the test during its e
 ```ts {1}
 test('the validation works correctly', { meta: { component: 'auth', priority: 'high' } }, ({ task }) => {
   console.log(task.meta.component) // 'auth'
-  console.log(task.meta.priority)  // 'high'
+  console.log(task.meta.priority) // 'high'
 })
 ```
 

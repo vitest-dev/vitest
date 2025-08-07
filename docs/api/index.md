@@ -35,7 +35,7 @@ interface TestOptions {
    *
    * @default undefined
    */
-  meta?: TaskMeta
+  meta?: Record<string, unknown>
 }
 ```
 

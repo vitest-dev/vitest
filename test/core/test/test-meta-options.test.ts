@@ -48,6 +48,27 @@ describe('TestOptions meta property functionality', { meta: { suiteLevel: 'test-
       runtimeAdded: 'added-during-test',
     })
   })
+
+  test('should differentiate between task.meta and task.suite.meta', { meta: { testLevel: 'child-test', priority: 'high' } }, ({ task }) => {
+    // task.meta should contain merged metadata (suite + test)
+    expect(task.meta).toMatchObject({
+      suiteLevel: 'test-suite',
+      testLevel: 'child-test',
+      priority: 'high', // test overrides suite
+    })
+
+    // task.suite.meta should contain only suite's own metadata
+    expect(task.suite?.meta).toMatchObject({
+      suiteLevel: 'test-suite',
+      priority: 'medium', // original suite priority
+    })
+
+    // They should be different objects
+    expect(task.meta).not.toBe(task.suite?.meta)
+
+    // task.suite.meta should NOT have test-specific metadata
+    expect(task.suite?.meta).not.toHaveProperty('testLevel')
+  })
 })
 
 describe('Suite without meta', () => {

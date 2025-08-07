@@ -461,7 +461,10 @@ function createSuiteCollector(
       file: undefined!,
       shuffle: suiteOptions?.shuffle,
       tasks: [],
-      meta: Object.create(null),
+      meta: {
+        ...Object.create(null),
+        ...(suiteOptions?.meta || {}),
+      },
       concurrent: suiteOptions?.concurrent,
     }
 
