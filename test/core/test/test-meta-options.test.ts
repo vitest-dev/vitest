@@ -88,3 +88,38 @@ describe('Suite without meta', () => {
     })
   })
 })
+
+describe('Nested describes metadata cascading', { meta: { grandparent: 'top-level', priority: 'low' } }, () => {
+  describe('Middle suite', { meta: { parent: 'middle-level', priority: 'medium' } }, () => {
+    test('should cascade metadata from all ancestor suites', ({ task }) => {
+      // Should now get metadata from all ancestors: grandparent + parent
+      expect(task.meta).toMatchObject({
+        grandparent: 'top-level', // from grandparent suite
+        parent: 'middle-level', // from parent suite
+        priority: 'medium', // parent overrides grandparent
+      })
+
+      // Original suite metadata should be preserved
+      expect(task.suite?.meta).toMatchObject({
+        parent: 'middle-level',
+        priority: 'medium',
+      })
+
+      // Grandparent suite metadata should also be preserved
+      expect(task.suite?.suite?.meta).toMatchObject({
+        grandparent: 'top-level',
+        priority: 'low',
+      })
+    })
+
+    test('test metadata should override cascaded suite metadata', { meta: { testLevel: 'child', priority: 'highest' } }, ({ task }) => {
+      // Should get metadata from all ancestors plus test metadata
+      expect(task.meta).toMatchObject({
+        grandparent: 'top-level', // from grandparent suite
+        parent: 'middle-level', // from parent suite
+        testLevel: 'child', // from test
+        priority: 'highest', // test overrides all ancestors
+      })
+    })
+  })
+})

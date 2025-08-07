@@ -22,7 +22,7 @@ test('custom', ({ task }) => {
 
 ## Defining Metadata in Test Options
 
-Since Vitest 4.0, you can also define metadata directly in the test options, which will be merged with any metadata from parent suites:
+Since Vitest 4.0, you can also define metadata directly in the test options, which will be merged with metadata from all ancestor suites in the hierarchy:
 
 ```ts
 describe('suite', { meta: { suiteLevel: 'parent', priority: 'medium' } }, () => {
@@ -44,10 +44,27 @@ describe('suite', { meta: { suiteLevel: 'parent', priority: 'medium' } }, () => 
 })
 ```
 
+For nested describe blocks, metadata cascades through all levels of the hierarchy:
+
+```ts
+describe('Grandparent Suite', { meta: { level: 'root', priority: 'low' } }, () => {
+  describe('Parent Suite', { meta: { level: 'middle', priority: 'medium' } }, () => {
+    test('deeply nested test', ({ task }) => {
+      // task.meta contains metadata from all ancestor suites:
+      // { level: 'middle', priority: 'medium' }
+      // Note: closer ancestors override distant ancestors
+      console.log(task.meta.level) // 'middle' (parent overrides grandparent)
+      console.log(task.meta.priority) // 'medium' (parent overrides grandparent)
+    })
+  })
+})
+```
+
 The metadata merging follows this priority order (lowest to highest):
-1. Suite-level `meta` options
-2. Test-level `meta` options
-3. Runtime modifications via `task.meta`
+1. Distant ancestor suite `meta` options (e.g., grandparent suites)
+2. Closer ancestor suite `meta` options (e.g., parent suites)
+3. Test-level `meta` options
+4. Runtime modifications via `task.meta`
 
 ## Accessing Suite vs Test Metadata
 

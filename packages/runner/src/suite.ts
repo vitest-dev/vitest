@@ -190,6 +190,28 @@ function assert(condition: any, message: string) {
   }
 }
 
+function collectAncestorMeta(suite: Suite | undefined): Record<string, unknown> {
+  const ancestorMeta = Object.create(null)
+  let current = suite
+
+  // Walk up the suite hierarchy and collect metadata
+  // We'll collect from root to child so that closer ancestors override distant ones
+  const suites: Suite[] = []
+  while (current) {
+    if (current.meta) {
+      suites.unshift(current) // Add to beginning so we process from root to child
+    }
+    current = current.suite
+  }
+
+  // Merge metadata with closer ancestors having higher priority
+  for (const s of suites) {
+    Object.assign(ancestorMeta, s.meta)
+  }
+
+  return ancestorMeta
+}
+
 export function getDefaultSuite(): SuiteCollector<object> {
   assert(defaultSuite, 'the default suite')
   return defaultSuite
@@ -327,7 +349,7 @@ function createSuiteCollector(
             : 'run',
       meta: {
         ...Object.create(null),
-        ...(suiteOptions?.meta || {}),
+        ...collectAncestorMeta(collectorContext.currentSuite?.suite),
         ...(options.meta || {}),
       },
       annotations: [],
