@@ -1,5 +1,4 @@
 import type { File, Suite, Task, Test } from '@vitest/runner'
-import type { SourceMap } from 'node:module'
 import type { TestError } from '../types/general'
 import type { TestProject } from './project'
 import {
@@ -39,14 +38,6 @@ interface LocalCallDefinition {
   mode: 'run' | 'skip' | 'only' | 'todo' | 'queued'
   task: ParsedSuite | ParsedFile | ParsedTest
   dynamic: boolean
-}
-
-export interface FileInformation {
-  file: File
-  filepath: string
-  parsed: string | null
-  map: SourceMap | { mappings: string } | null
-  definitions: LocalCallDefinition[]
 }
 
 const debug = createDebugger('vitest:ast-collect-info')
