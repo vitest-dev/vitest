@@ -227,14 +227,14 @@ import LoginForm from './LoginForm'
 
 test('handles form submission', async () => {
   const { getByLabelText, getByRole } = render(<LoginForm />)
-  
+
   // Fill form fields
   await userEvent.fill(getByLabelText(/username/i), 'john_doe')
   await userEvent.fill(getByLabelText(/password/i), 'secret123')
-  
+
   // Submit form
   await userEvent.click(getByRole('button', { name: /submit/i }))
-  
+
   // Assert results
   await expect.element(getByText('Login successful')).toBeInTheDocument()
 })
@@ -278,7 +278,7 @@ import { page } from '@vitest/browser/context'
 test('solid component test', async () => {
   const { baseElement } = render(() => <MyComponent />)
   const screen = page.elementLocator(baseElement)
-  
+
   await expect.element(screen.getByText('Hello')).toBeInTheDocument()
 })
 ```
@@ -317,9 +317,9 @@ Node.js testing with DOM simulation may not catch all browser-specific issues. U
 test('emits events on user interaction', async () => {
   const mockHandler = vi.fn()
   const { getByRole } = render(<Button onClick={mockHandler}>Click me</Button>)
-  
+
   await userEvent.click(getByRole('button'))
-  
+
   expect(mockHandler).toHaveBeenCalledOnce()
 })
 ```
@@ -329,11 +329,11 @@ test('emits events on user interaction', async () => {
 ```ts
 test('shows loading state', async () => {
   const { getByText, rerender } = render(<DataComponent loading={true} />)
-  
+
   await expect.element(getByText('Loading...')).toBeInTheDocument()
-  
+
   rerender(<DataComponent loading={false} data="content" />)
-  
+
   await expect.element(getByText('content')).toBeInTheDocument()
 })
 ```
@@ -343,12 +343,12 @@ test('shows loading state', async () => {
 ```ts
 test('validates form input', async () => {
   const { getByLabelText, getByText } = render(<ContactForm />)
-  
+
   const emailInput = getByLabelText(/email/i)
-  
+
   await userEvent.fill(emailInput, 'invalid-email')
   await userEvent.blur(emailInput)
-  
+
   await expect.element(getByText('Please enter a valid email')).toBeInTheDocument()
 })
 ```
