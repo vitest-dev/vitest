@@ -324,6 +324,7 @@ export class Vitest {
     this.configOverride.coverage = {} as any
     this.configOverride.coverage!.enabled = true
     await this.createCoverageProvider()
+    await this.coverageProvider?.onEnabled?.()
   }
 
   public disableCoverage(): void {
