@@ -1543,6 +1543,26 @@ Sets thresholds to 100 for files matching the glob pattern.
 Set to array of class method names to ignore for coverage.
 See [istanbul documentation](https://github.com/istanbuljs/nyc#ignoring-methods) for more information.
 
+#### coverage.sourceFinder
+
+- **Type:** `(path: string) => string`
+- **Available for providers:** `'v8' | 'istanbul'`
+
+<!-- eslint-skip -->
+```ts
+sourceFinder: (path: string): string => {
+  try {
+      const content = fs.readFileSync(path, 'utf8');
+      // If you need to transform the content, do it here
+      return content;
+  } catch (ex: Error) {
+      throw new Error(`Unable to lookup source: ${path} (${ex.message})`);
+  }
+}
+```
+
+The sourceFinder function is responsible for taking a file path and finding the corresponding actual source file given the path as parameter
+
 #### coverage.watermarks
 
 - **Type:**
