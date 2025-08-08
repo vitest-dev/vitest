@@ -84,6 +84,14 @@ export class Vitest {
    * If projects were filtered with `--project` flag, they won't appear here.
    */
   public projects: TestProject[] = []
+  /**
+   * A watcher handler. This is not the file system watcher. The handler only
+   * exposes methods to handle changed files.
+   *
+   * If you have your own watcher, you can use these methods to replicate
+   * Vitest behaviour.
+   */
+  public readonly watcher: VitestWatcher
 
   /** @internal */ configOverride: Partial<ResolvedConfig> = {}
   /** @internal */ coverageProvider: CoverageProvider | null | undefined
@@ -103,7 +111,6 @@ export class Vitest {
   private restartsCount = 0
 
   private readonly specifications: VitestSpecifications
-  private readonly watcher: VitestWatcher
   private pool: ProcessPool | undefined
   private _config?: ResolvedConfig
   private _vite?: ViteDevServer
@@ -121,7 +128,7 @@ export class Vitest {
     this.packageInstaller = options.packageInstaller || new VitestPackageInstaller()
     this.specifications = new VitestSpecifications(this)
     this.watcher = new VitestWatcher(this).onWatcherRerun(file =>
-      this.scheduleRerun([file]), // TODO: error handling
+      this.scheduleRerun(file), // TODO: error handling
     )
   }
 
@@ -1013,8 +1020,7 @@ export class Vitest {
   }
 
   private _rerunTimer: any
-  // we can't use a single `triggerId` yet because vscode extension relies on this
-  private async scheduleRerun(triggerId: string[]): Promise<void> {
+  private async scheduleRerun(triggerId: string): Promise<void> {
     const currentCount = this.restartsCount
     clearTimeout(this._rerunTimer)
     await this.runningPromise
@@ -1053,8 +1059,7 @@ export class Vitest {
 
       this.watcher.changedTests.clear()
 
-      const triggerIds = new Set(triggerId.map(id => relative(this.config.root, id)))
-      const triggerLabel = Array.from(triggerIds).join(', ')
+      const triggerLabel = relative(this.config.root, triggerId)
       // get file specifications and filter them if needed
       const specifications = files.flatMap(file => this.getModuleSpecifications(file)).filter((specification) => {
         if (this._onFilterWatchedSpecification.length === 0) {
