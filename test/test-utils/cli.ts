@@ -61,30 +61,33 @@ export class Cli {
     this.stderr = ''
   }
 
-  waitForStdout(expected: string) {
+  waitForStdout(expected: string | RegExp) {
     return this.waitForOutput(expected, 'stdout', this.waitForStdout)
   }
 
-  waitForStderr(expected: string) {
+  waitForStderr(expected: string | RegExp) {
     return this.waitForOutput(expected, 'stderr', this.waitForStderr)
   }
 
-  private waitForOutput(expected: string, source: Source, caller: Parameters<typeof Error.captureStackTrace>[1]) {
+  private waitForOutput(expected: string | RegExp, source: Source, caller: Parameters<typeof Error.captureStackTrace>[1]) {
     const error = new Error('Timeout')
     Error.captureStackTrace(error, caller)
 
+    const containsExpected = (value: string) =>
+      typeof expected === 'string' ? value.includes(expected) : expected.test(value)
+
     return new Promise<void>((resolve, reject) => {
-      if (this[source].includes(expected)) {
+      if (containsExpected(this[source])) {
         return resolve()
       }
 
       const timeout = setTimeout(() => {
-        error.message = `Timeout when waiting for error "${expected}".\nReceived:\nstdout: ${this.stdout}\nstderr: ${this.stderr}`
+        error.message = `Timeout when waiting for output "${expected}".\nReceived:\nstdout: ${this.stdout}\nstderr: ${this.stderr}`
         reject(error)
       }, process.env.CI ? 20_000 : 4_000)
 
       const listener = () => {
-        if (this[source].includes(expected)) {
+        if (containsExpected(this[source])) {
           if (timeout) {
             clearTimeout(timeout)
           }
