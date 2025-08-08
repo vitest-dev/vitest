@@ -85,7 +85,7 @@ See also new guides:
 - [Including and excluding files from coverage report](/guide/coverage.html#including-and-excluding-files-from-coverage-report) for examples
 - [Profiling Test Performance | Code coverage](/guide/profiling-test-performance.html#code-coverage) for tips about debugging coverage generation
 
-### `spyOn` Supports Constructors
+### `spyOn` and `fn` Support Constructors
 
 Previously, if you tried to spy on a constructor with `vi.spyOn`, you would get an error like `Constructor <name> requires 'new'`. Since Vitest 4, all mocks called with a `new` keyword construct the instance instead of callying `mock.apply`. This means that the mock implementation has to use either the `function` or the `class` keyword in these cases:
 
@@ -288,7 +288,7 @@ If you want to modify the object, you will use [replaceProperty API](https://jes
 
 ### Done Callback
 
-From Vitest v0.10.0, the callback style of declaring tests is deprecated. You can rewrite them to use `async`/`await` functions, or use Promise to mimic the callback style.
+Vitest does not support the callback style of declaring tests. You can rewrite them to use `async`/`await` functions, or use Promise to mimic the callback style.
 
 <!--@include: ./examples/promise-done.md-->
 
@@ -301,7 +301,7 @@ beforeEach(() => setActivePinia(createTestingPinia())) // [!code --]
 beforeEach(() => { setActivePinia(createTestingPinia()) }) // [!code ++]
 ```
 
-In Jest hooks are called sequentially (one after another). By default, Vitest runs hooks in parallel. To use Jest's behavior, update [`sequence.hooks`](/config/#sequence-hooks) option:
+In Jest hooks are called sequentially (one after another). By default, Vitest runs hooks in a stack. To use Jest's behavior, update [`sequence.hooks`](/config/#sequence-hooks) option:
 
 ```ts
 export default defineConfig({
@@ -338,23 +338,16 @@ vi.setConfig({ testTimeout: 5_000 }) // [!code ++]
 
 ### Vue Snapshots
 
-This is not a Jest-specific feature, but if you previously were using Jest with vue-cli preset, you will need to install [`jest-serializer-vue`](https://github.com/eddyerburgh/jest-serializer-vue) package, and use it inside [setupFiles](/config/#setupfiles):
+This is not a Jest-specific feature, but if you previously were using Jest with vue-cli preset, you will need to install [`jest-serializer-vue`](https://github.com/eddyerburgh/jest-serializer-vue) package, and specify it in [`snapshotSerializers`](/config/#snapshotserializers):
 
-:::code-group
-```js [vite.config.js]
-import { defineConfig } from 'vite'
+```js [vitest.config.js]
+import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
   test: {
-    setupFiles: ['./tests/unit/setup.js']
+    snapshotSerializers: ['jest-serializer-vue']
   }
 })
 ```
-```js [tests/unit/setup.js]
-import vueSnapshotSerializer from 'jest-serializer-vue'
-
-expect.addSnapshotSerializer(vueSnapshotSerializer)
-```
-:::
 
 Otherwise your snapshots will have a lot of escaped `"` characters.
