@@ -156,6 +156,10 @@ export function resolveConfig(
     throw new Error(`Looks like you set "test.environment" to "browser". To enabled Browser Mode, use "test.browser.enabled" instead.`)
   }
 
+  if ('workspace' in resolved) {
+    throw new Error(`The "workspace" option is no longer supported. Use "projects" instead: https://vitest.dev/guide/projects`)
+  }
+
   const inspector = resolved.inspect || resolved.inspectBrk
 
   resolved.inspector = {
