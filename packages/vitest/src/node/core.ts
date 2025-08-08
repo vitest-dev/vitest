@@ -1020,7 +1020,6 @@ export class Vitest {
   }
 
   private _rerunTimer: any
-  // we can't use a single `triggerId` yet because vscode extension relies on this
   private async scheduleRerun(triggerId: string): Promise<void> {
     const currentCount = this.restartsCount
     clearTimeout(this._rerunTimer)
