@@ -313,8 +313,8 @@ export class Vitest {
     return this._coverageProvider
   }
 
-  public async enableCoverage(options?: Partial<ResolvedCoverageOptions>): Promise<void> {
-    this.configOverride.coverage = { ...options } as any
+  public async enableCoverage(): Promise<void> {
+    this.configOverride.coverage = {} as any
     this.configOverride.coverage!.enabled = true
     await this.createCoverageProvider()
   }
