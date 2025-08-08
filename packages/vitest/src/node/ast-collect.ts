@@ -208,7 +208,7 @@ export function createFailedFileTask(project: TestProject, filepath: string, err
     end: 0,
     projectName: project.getName(),
     meta: {},
-    pool: 'browser',
+    pool: project.browser ? 'browser' : project.config.pool,
     file: null!,
     result: {
       state: 'fail',
@@ -245,6 +245,7 @@ interface ParseOptions {
   name: string
   filepath: string
   allowOnly: boolean
+  pool: string
   testNamePattern?: RegExp | undefined
 }
 
@@ -406,6 +407,7 @@ export async function astCollectTests(
     filepath,
     allowOnly: project.config.allowOnly,
     testNamePattern: project.config.testNamePattern,
+    pool: project.browser ? 'browser' : project.config.pool,
   })
 }
 
