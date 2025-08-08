@@ -157,14 +157,24 @@ export async function callSuiteHook<T extends keyof SuiteHooks>(
     )
   }
 
+  // Get shared concurrency limiter
+  const limitHookConcurrency = getLimitMaxConcurrency(runner)
+
   if (sequence === 'parallel') {
-    callbacks.push(
-      ...(await Promise.all(hooks.map(hook => runHook(hook)))),
+    // CRITICAL FOR ORDER PRESERVATION:
+    // 1. Map creates all promises immediately (preserves declaration order)
+    // 2. Each promise is wrapped with concurrency limiter
+    // 3. Promise.all maintains result order regardless of completion order
+    const hookPromises = hooks.map(hook => 
+      limitHookConcurrency(() => runHook(hook))
     )
+    // Result order matches hook declaration order, even if execution was throttled
+    callbacks.push(...(await Promise.all(hookPromises)))
   }
   else {
+    // Sequential hooks: each waits for previous + respects concurrency limit
     for (const hook of hooks) {
-      callbacks.push(await runHook(hook))
+      callbacks.push(await limitHookConcurrency(() => runHook(hook)))
     }
   }
 
@@ -584,9 +594,17 @@ export async function runSuite(suite: Suite, runner: VitestRunner): Promise<void
 
 let limitMaxConcurrency: ReturnType<typeof limitConcurrency>
 
+// NEW: Expose limiter for both test and hook execution
+function getLimitMaxConcurrency(runner: VitestRunner): ReturnType<typeof limitConcurrency> {
+  // Initialize on first access with runner's maxConcurrency config
+  limitMaxConcurrency ??= limitConcurrency(runner.config.maxConcurrency)
+  return limitMaxConcurrency
+}
+
 async function runSuiteChild(c: Task, runner: VitestRunner) {
   if (c.type === 'test') {
-    return limitMaxConcurrency(() => runTest(c, runner))
+    // Use helper function instead of direct variable access
+    return getLimitMaxConcurrency(runner)(() => runTest(c, runner))
   }
   else if (c.type === 'suite') {
     return runSuite(c, runner)
@@ -594,7 +612,8 @@ async function runSuiteChild(c: Task, runner: VitestRunner) {
 }
 
 export async function runFiles(files: File[], runner: VitestRunner): Promise<void> {
-  limitMaxConcurrency ??= limitConcurrency(runner.config.maxConcurrency)
+  // Initialize limiter via helper function
+  getLimitMaxConcurrency(runner)
 
   for (const file of files) {
     if (!file.tasks.length && !runner.config.passWithNoTests) {
