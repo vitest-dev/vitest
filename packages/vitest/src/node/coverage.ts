@@ -96,7 +96,7 @@ export class BaseCoverageProvider<Options extends ResolvedCoverageOptions<'istan
       )
     }
 
-    const config = ctx.config.coverage as Options
+    const config = ctx._coverageOptions as Options
 
     this.options = {
       ...coverageConfigDefaults,

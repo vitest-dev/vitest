@@ -60,8 +60,8 @@ export async function startVitest(
     cliFilters,
   )
 
-  if (mode === 'test' && ctx.config.coverage.enabled) {
-    const provider = ctx.config.coverage.provider || 'v8'
+  if (mode === 'test' && ctx._coverageOptions.enabled) {
+    const provider = ctx._coverageOptions.provider || 'v8'
     const requiredPackages = CoverageProviderMap[provider]
 
     if (requiredPackages) {

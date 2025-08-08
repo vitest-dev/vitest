@@ -151,6 +151,7 @@ async function updateThresholds(configurationFile: ReturnType<typeof parseModule
     provider._initialize({
       config: { coverage: { } },
       logger: { log: () => {} },
+      _coverageOptions: {},
     } as any)
 
     provider.updateThresholds({

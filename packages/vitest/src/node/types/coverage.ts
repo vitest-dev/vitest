@@ -51,6 +51,9 @@ export interface CoverageProvider {
     // TODO: when upgrading vite, import Rollup from vite
     pluginCtx: any
   ) => TransformResult | Promise<TransformResult>
+
+  /** Callback that's called when the coverage is enabled via a programmatic `enableCoverage` API. */
+  onEnabled?: () => void | Promise<void>
 }
 
 export interface ReportContext {

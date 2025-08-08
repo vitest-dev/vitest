@@ -251,7 +251,7 @@ export default (parentServer: ParentBrowserProject, base = '/'): Plugin[] => {
         }
 
         if (parentServer.vitest.coverageProvider) {
-          const coverage = parentServer.vitest.config.coverage
+          const coverage = parentServer.vitest._coverageOptions
           const provider = coverage.provider
           if (provider === 'v8') {
             const path = tryResolve('@vitest/coverage-v8', [parentServer.config.root])
@@ -630,7 +630,8 @@ function getRequire() {
 
 function resolveCoverageFolder(vitest: Vitest) {
   const options = vitest.config
-  const htmlReporter = options.coverage?.enabled
+  const coverageOptions = vitest._coverageOptions
+  const htmlReporter = coverageOptions?.enabled
     ? toArray(options.coverage.reporter).find((reporter) => {
         if (typeof reporter === 'string') {
           return reporter === 'html'
@@ -647,7 +648,7 @@ function resolveCoverageFolder(vitest: Vitest) {
   // reportsDirectory not resolved yet
   const root = resolve(
     options.root || process.cwd(),
-    options.coverage.reportsDirectory || coverageConfigDefaults.reportsDirectory,
+    coverageOptions.reportsDirectory || coverageConfigDefaults.reportsDirectory,
   )
 
   const subdir
