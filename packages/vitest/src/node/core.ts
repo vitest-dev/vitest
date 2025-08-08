@@ -388,6 +388,20 @@ export class Vitest {
     return this.runner.import(moduleId)
   }
 
+  /**
+   * Creates a coverage provider if `coverage` is enabled in the config.
+   */
+  public async createCoverageProvider(): Promise<CoverageProvider | null> {
+    if (this.coverageProvider) {
+      return this.coverageProvider
+    }
+    const coverageProvider = await this.initCoverageProvider()
+    if (coverageProvider) {
+      await coverageProvider.clean(this.config.coverage.clean)
+    }
+    return coverageProvider || null
+  }
+
   private async resolveProjects(cliOptions: UserConfig): Promise<TestProject[]> {
     const names = new Set<string>()
 
@@ -605,6 +619,17 @@ export class Vitest {
   /** @deprecated */
   getFileWorkspaceSpecs(file: string): WorkspaceSpec[] {
     return this.getModuleSpecifications(file) as WorkspaceSpec[]
+  }
+
+  /**
+   * If there is a test run happening, returns a promise that will
+   * resolve when the test run is finished.
+   */
+  public async waitForTestRunEnd(): Promise<void> {
+    if (!this.runningPromise) {
+      return
+    }
+    await this.runningPromise
   }
 
   /**

@@ -529,7 +529,27 @@ Check if the name matches the current [project filter](/guide/cli#project). If t
 
 It is not possible to programmatically change the `--project` CLI option.
 
-## experimental_parseSpecification <Badge type="warning">experimental</Badge> {#parsespecification}
+## waitForTestRunEnd <Version>4.0.0</Version> {#waitfortestrunend}
+
+```ts
+function waitForTestRunEnd(): Promise<void>
+```
+
+If there is a test run happening, returns a promise that will resolve when the test run is finished.
+
+## createCoverageProvider <Version>4.0.0</Version> {#createcoverageprovider}
+
+```ts
+function createCoverageProvider(): Promise<CoverageProvider | null>
+```
+
+Creates a coverage provider if `coverage` is enabled in the config. This is done automatically if you are running tests with [`start`](#start) or [`init`](#init) methods.
+
+::: warning
+This method will also clean all previous reports if [`coverage.clean`](/config/#coverage-clean) is not set to `false`.
+:::
+
+## experimental_parseSpecification <Version>4.0.0</Version> <Badge type="warning">experimental</Badge> {#parsespecification}
 
 ```ts
 function experimental_parseSpecification(
@@ -560,7 +580,7 @@ Vitest will only collect tests defined in the file. It will never follow imports
 Vitest collects all `it`, `test`, `suite` and `describe` definitions even if they were not imported from the `vitest` entry point.
 :::
 
-## experimental_parseSpecifications <Badge type="warning">experimental</Badge> {#parsespecifications}
+## experimental_parseSpecifications <Version>4.0.0</Version> <Badge type="warning">experimental</Badge> {#parsespecifications}
 
 ```ts
 function experimental_parseSpecifications(
