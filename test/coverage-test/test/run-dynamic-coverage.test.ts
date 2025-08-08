@@ -11,14 +11,10 @@ test('enableCoverage() collects coverage after being called', async () => {
       // start disabled and turn on dynamically
       enabled: false,
       reporter: 'json',
-      include: [
-        'fixtures/src/math.ts',
-        'fixtures/src/untested-file.ts',
-      ],
     },
   })
 
-  await expect(readCoverageMap(), 'coverage map is not on the disk').rejects.toThrowError(/no such file/)
+  await expect(readCoverageMap(), 'coverage map should not be on the disk').rejects.toThrowError(/no such file/)
 
   await ctx!.enableCoverage()
   expect(ctx!.coverageProvider).toBeTruthy()
@@ -35,12 +31,6 @@ test('disableCoverage() stops collecting coverage going forward', async () => {
     coverage: {
       enabled: true,
       reporter: 'json',
-      include: [
-        'fixtures/src/math.ts',
-        'fixtures/src/untested-file.ts',
-      ],
-      // try to clean on rerun when provider is enabled
-      cleanOnRerun: true,
     },
   })
 
@@ -57,6 +47,6 @@ test('disableCoverage() stops collecting coverage going forward', async () => {
 
   await ctx!.rerunFiles()
 
-  await expect(readCoverageMap(), 'coverage map is not on the disk').rejects.toThrowError(/no such file/)
+  await expect(readCoverageMap(), 'coverage map should not be on the disk').rejects.toThrowError(/no such file/)
   expect(ctx!.coverageProvider).toBeNull()
 })

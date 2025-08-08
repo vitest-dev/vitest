@@ -333,7 +333,7 @@ export class Vitest {
     }
     if (!this._coverageOverrideCache.has(this.configOverride.coverage)) {
       const coverage = deepClone(this.config.coverage)
-      const options = deepMerge(coverage, this.configOverride)
+      const options = deepMerge(coverage, this.configOverride.coverage)
       this._coverageOverrideCache.set(
         this.configOverride.coverage,
         options,
@@ -710,7 +710,6 @@ export class Vitest {
    * @param allTestsRun Indicates whether all tests were run. This only matters for coverage.
    */
   public async rerunTestSpecifications(specifications: TestSpecification[], allTestsRun = false): Promise<TestRunResult> {
-    this.configOverride.testNamePattern = undefined
     const files = specifications.map(spec => spec.moduleId)
     await Promise.all([
       this.report('onWatcherRerun', files, 'rerun test'),
