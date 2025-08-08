@@ -331,7 +331,7 @@ export class Vitest {
     if (!this.configOverride.coverage) {
       return this.config.coverage
     }
-    if (this._coverageOverrideCache.has(this.configOverride.coverage)) {
+    if (!this._coverageOverrideCache.has(this.configOverride.coverage)) {
       const coverage = deepClone(this.config.coverage)
       const options = deepMerge(coverage, this.configOverride)
       this._coverageOverrideCache.set(
@@ -474,7 +474,7 @@ export class Vitest {
   }
 
   private async initCoverageProvider(): Promise<CoverageProvider | null | undefined> {
-    if (this._coverageProvider !== undefined) {
+    if (this._coverageProvider != null) {
       return
     }
     const coverageConfig = (this.configOverride.coverage
