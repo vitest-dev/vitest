@@ -99,6 +99,10 @@ You can get the latest summary of snapshots via the `vitest.snapshot.summary` pr
 
 Cache manager that stores information about latest test results and test file stats. In Vitest itself this is only used by the default sequencer to sort tests.
 
+## watcher <Version>4.0.0</Version> {#watcher}
+
+The instance of a Vitest watcher with useful methods to track file changes and rerun tests. You can use `onFileChange`, `onFileDelete` or `onFileCreate` with your own watcher, if the built-in watcher is disabled.
+
 ## projects
 
 An array of [test projects](/advanced/api/test-project) that belong to user's projects. If the user did not specify a them, this array will only contain a [root project](#getrootproject).
