@@ -219,14 +219,14 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider<ResolvedCover
     })
   }
 
-  private invalidateTree(mod: Vite.EnvironmentModuleNode, moduleGraph: Vite.EnvironmentModuleGraph, seen = new Set<Vite.EnvironmentModuleNode>()) {
-    if (seen.has(mod)) {
+  private invalidateTree(node: Vite.EnvironmentModuleNode, moduleGraph: Vite.EnvironmentModuleGraph, seen = new Set<Vite.EnvironmentModuleNode>()) {
+    if (seen.has(node)) {
       return
     }
-    if (mod.id && !this.transformedModuleIds.has(mod.id)) {
-      moduleGraph.invalidateModule(mod, seen)
+    if (node.id && !this.transformedModuleIds.has(node.id)) {
+      moduleGraph.invalidateModule(node, seen)
     }
-    mod.importedModules.forEach((mod: any) => {
+    node.importedModules.forEach((mod) => {
       this.invalidateTree(mod, moduleGraph, seen)
     })
   }
