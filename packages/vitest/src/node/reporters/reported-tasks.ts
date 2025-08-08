@@ -681,3 +681,11 @@ function getSuiteState(task: RunnerTestSuite | RunnerTestFile): TestSuiteState {
   }
   throw new Error(`Unknown suite state: ${state}`)
 }
+
+export function experimental_getRunnerTask(entity: TestCase): RunnerTestCase
+export function experimental_getRunnerTask(entity: TestSuite): RunnerTestSuite
+export function experimental_getRunnerTask(entity: TestModule): RunnerTestFile
+export function experimental_getRunnerTask(entity: TestCase | TestSuite | TestModule): RunnerTestSuite | RunnerTestFile | RunnerTestCase
+export function experimental_getRunnerTask(entity: TestCase | TestSuite | TestModule): RunnerTestSuite | RunnerTestFile | RunnerTestCase {
+  return entity.task
+}
