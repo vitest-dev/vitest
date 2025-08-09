@@ -31,6 +31,9 @@ expectTypeOf({ a: 1, b: 1 }).not.toEqualTypeOf<{ a: number }>()
 
 - **Type:** `<T>(expected: T) => void`
 
+::: warning DEPRECATED
+This matcher has been deprecated since expect-type v1.2.0. Use [`toExtend`](#toextend) instead.
+:::
 This matcher checks if expect type extends provided type. It is different from `toEqual` and is more similar to [expect's](/api/expect) `toMatchObject()`. With this matcher, you can check if an object “matches” a type.
 
 ```ts
@@ -40,6 +43,44 @@ expectTypeOf({ a: 1, b: 1 }).toMatchTypeOf({ a: 1 })
 expectTypeOf<number>().toMatchTypeOf<string | number>()
 expectTypeOf<string | number>().not.toMatchTypeOf<number>()
 ```
+
+## toExtend
+
+- **Type:** `<T>(expected: T) => void`
+
+This matcher checks if expect type extends provided type. It is different from `toEqual` and is more similar to [expect's](/api/expect) `toMatchObject()`. With this matcher, you can check if an object "matches" a type.
+
+```ts
+import { expectTypeOf } from 'vitest'
+
+expectTypeOf({ a: 1, b: 1 }).toExtend({ a: 1 })
+expectTypeOf<number>().toExtend<string | number>()
+expectTypeOf<string | number>().not.toExtend<number>()
+```
+
+## toMatchObjectType
+
+- **Type:** `() => void`
+
+This matcher performs a strict check on object types, ensuring that the expected type matches the provided object type. It's stricter than [`toExtend`](#toextend) and is the recommended choice when working with object types as it's more likely to catch issues like readonly properties.
+
+```ts
+import { expectTypeOf } from 'vitest'
+
+expectTypeOf({ a: 1, b: 2 }).toMatchObjectType<{ a: number }>() // preferred
+expectTypeOf({ a: 1, b: 2 }).toExtend<{ a: number }>() // works but less strict
+
+// Supports nested object checking
+const user = {
+  name: 'John',
+  address: { city: 'New York', zip: '10001' }
+}
+expectTypeOf(user).toMatchObjectType<{ name: string; address: { city: string } }>()
+```
+
+::: warning
+This matcher only works with plain object types. It will fail for union types and other complex types. For those cases, use [`toExtend`](#toextend) instead.
+:::
 
 ## extract
 
