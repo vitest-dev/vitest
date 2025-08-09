@@ -181,9 +181,9 @@
     "why-is-node-running": "^2.3.0"
   },
   "devDependencies": {
-    "@jridgewell/remapping": "catalog:",
     "@antfu/install-pkg": "^1.1.0",
     "@edge-runtime/vm": "^5.0.0",
+    "@jridgewell/remapping": "catalog:",
     "@sinonjs/fake-timers": "14.0.0",
     "@types/debug": "catalog:",
     "@types/estree": "catalog:",

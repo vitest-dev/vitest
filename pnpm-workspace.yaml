@@ -5,9 +5,9 @@ packages:
   - test/*
   - test/config/fixtures/conditions-pkg
 catalog:
-  '@jridgewell/remapping': ^2.3.0
   '@iconify-json/carbon': ^1.2.11
   '@iconify-json/logos': ^1.2.5
+  '@jridgewell/remapping': ^2.3.0
   '@jridgewell/trace-mapping': ^0.3.29
   '@types/chai': ^5.2.2
   '@types/debug': ^4.1.12
