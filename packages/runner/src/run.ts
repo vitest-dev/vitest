@@ -165,8 +165,8 @@ export async function callSuiteHook<T extends keyof SuiteHooks>(
     // 1. Map creates all promises immediately (preserves declaration order)
     // 2. Each promise is wrapped with concurrency limiter
     // 3. Promise.all maintains result order regardless of completion order
-    const hookPromises = hooks.map(hook => 
-      limitHookConcurrency(() => runHook(hook))
+    const hookPromises = hooks.map(hook =>
+      limitHookConcurrency(() => runHook(hook)),
     )
     // Result order matches hook declaration order, even if execution was throttled
     callbacks.push(...(await Promise.all(hookPromises)))
