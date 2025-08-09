@@ -18,7 +18,7 @@ describe('maxConcurrency hook enforcement', () => {
         const match = line.match(/beforeAll start: (\w+) at (\d+)ms/)
         return match ? { name: match[1], time: Number.parseInt(match[2]) } : null
       })
-      .filter(Boolean)
+      .filter(Boolean) as { name: string; time: number }[]
 
     expect(hookStarts).toHaveLength(2) // Should have hooks for 'a' and 'b'
 
@@ -47,7 +47,7 @@ describe('maxConcurrency hook enforcement', () => {
         const match = line.match(/beforeAll start: (\w+) at (\d+)ms/)
         return match ? { name: match[1], time: Number.parseInt(match[2]) } : null
       })
-      .filter(Boolean)
+      .filter(Boolean) as { name: string; time: number }[]
 
     // With maxConcurrency=2 and only 2 hooks, both should start nearly simultaneously
     const timeDiff = hookStarts[1].time - hookStarts[0].time
