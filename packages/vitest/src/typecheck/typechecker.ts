@@ -1,4 +1,4 @@
-import type { RawSourceMap } from '@ampproject/remapping'
+import type { RawSourceMap } from '@jridgewell/remapping'
 import type { File, Task, TaskEventPack, TaskResultPack, TaskState } from '@vitest/runner'
 import type { ParsedStack, TestError } from '@vitest/utils'
 import type { EachMapping } from '@vitest/utils/source-map'

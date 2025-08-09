@@ -5,7 +5,7 @@ packages:
   - test/*
   - test/config/fixtures/conditions-pkg
 catalog:
-  '@ampproject/remapping': ^2.3.0
+  '@jridgewell/remapping': ^2.3.0
   '@iconify-json/carbon': ^1.2.11
   '@iconify-json/logos': ^1.2.5
   '@jridgewell/trace-mapping': ^0.3.29

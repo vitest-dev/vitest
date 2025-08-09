@@ -6,15 +6,15 @@ settings:
 
 catalogs:
   default:
-    '@ampproject/remapping':
-      specifier: ^2.3.0
-      version: 2.3.0
     '@iconify-json/carbon':
       specifier: ^1.2.11
       version: 1.2.11
     '@iconify-json/logos':
       specifier: ^1.2.5
       version: 1.2.5
+    '@jridgewell/remapping':
+      specifier: ^2.3.0
+      version: 2.3.4
     '@jridgewell/trace-mapping':
       specifier: ^0.3.29
       version: 0.3.29
@@ -1003,15 +1003,15 @@ importers:
         specifier: ^2.3.0
         version: 2.3.0
     devDependencies:
-      '@ampproject/remapping':
-        specifier: 'catalog:'
-        version: 2.3.0
       '@antfu/install-pkg':
         specifier: ^1.1.0
         version: 1.1.0
       '@edge-runtime/vm':
         specifier: ^5.0.0
         version: 5.0.0
+      '@jridgewell/remapping':
+        specifier: 'catalog:'
+        version: 2.3.4
       '@sinonjs/fake-timers':
         specifier: 14.0.0
         version: 14.0.0(patch_hash=6f7091fcf11165157b4bfb8dde6b5b6b7697e3efd6e9b53bb4bdef442f60a278)
@@ -1323,9 +1323,9 @@ importers:
 
   test/coverage-test:
     devDependencies:
-      '@ampproject/remapping':
+      '@jridgewell/remapping':
         specifier: ^2.3.0
-        version: 2.3.0
+        version: 2.3.4
       '@types/istanbul-lib-coverage':
         specifier: 'catalog:'
         version: 2.0.6
@@ -1532,9 +1532,9 @@ importers:
 
   test/workspaces:
     devDependencies:
-      '@ampproject/remapping':
+      '@jridgewell/remapping':
         specifier: ^2.3.0
-        version: 2.3.0
+        version: 2.3.4
       '@types/istanbul-lib-coverage':
         specifier: 'catalog:'
         version: 2.0.6
@@ -3033,16 +3033,11 @@ packages:
   '@jridgewell/gen-mapping@0.3.12':
     resolution: {integrity: sha512-OuLGC46TjB5BbN1dH8JULVVZY4WTdkF7tV9Ys6wLL1rubZnCMstOhNHueU5bLCrnRuDhKPDM4g6sw4Bel5Gzqg==}
 
-  '@jridgewell/gen-mapping@0.3.5':
-    resolution: {integrity: sha512-IzL8ZoEDIBRWEzlCcRhOaCupYyN5gdIK+Q6fbFdPDg6HqX6jpkItn7DFIpW9LQzXG6Df9sA7+OKnq0qlz/GaQg==}
-    engines: {node: '>=6.0.0'}
+  '@jridgewell/remapping@2.3.4':
+    resolution: {integrity: sha512-aG+WvAz17rhbzhKNkSeMLgbkPPK82ovXdONvmucbGhUqcroRFLLVhoGAk4xEI17gHpXgNX3sr0/B1ybRUsbEWw==}
 
   '@jridgewell/resolve-uri@3.1.1':
     resolution: {integrity: sha512-dSYZh7HhCDtCKm4QakX0xFpsRDqjjtZf/kjI/v3T3Nwt5r8/qz/M19F9ySyOqU94SXBmeG9ttTul+YnR4LOxFA==}
-    engines: {node: '>=6.0.0'}
-
-  '@jridgewell/set-array@1.2.1':
-    resolution: {integrity: sha512-R8gLRTZeyp03ymzP/6Lil/28tGeGEzhx1q2k703KGWRAI1VdvPIXdG70VJc2pAMw3NA6JKL5hhFu1sJX0Mnn/A==}
     engines: {node: '>=6.0.0'}
 
   '@jridgewell/source-map@0.3.6':
@@ -9311,8 +9306,8 @@ snapshots:
 
   '@ampproject/remapping@2.3.0':
     dependencies:
-      '@jridgewell/gen-mapping': 0.3.5
-      '@jridgewell/trace-mapping': 0.3.25
+      '@jridgewell/gen-mapping': 0.3.12
+      '@jridgewell/trace-mapping': 0.3.29
 
   '@antfu/eslint-config@5.1.0(@vue/compiler-sfc@3.5.18)(eslint@9.32.0(jiti@2.4.2))(typescript@5.8.3)(vitest@packages+vitest)':
     dependencies:
@@ -9451,7 +9446,7 @@ snapshots:
     dependencies:
       '@babel/parser': 7.28.0
       '@babel/types': 7.27.1
-      '@jridgewell/gen-mapping': 0.3.5
+      '@jridgewell/gen-mapping': 0.3.12
       '@jridgewell/trace-mapping': 0.3.29
       jsesc: 3.1.0
 
@@ -9459,7 +9454,7 @@ snapshots:
     dependencies:
       '@babel/parser': 7.28.0
       '@babel/types': 7.28.1
-      '@jridgewell/gen-mapping': 0.3.5
+      '@jridgewell/gen-mapping': 0.3.12
       '@jridgewell/trace-mapping': 0.3.29
       jsesc: 3.1.0
 
@@ -10833,15 +10828,12 @@ snapshots:
       '@jridgewell/sourcemap-codec': 1.5.0
       '@jridgewell/trace-mapping': 0.3.29
 
-  '@jridgewell/gen-mapping@0.3.5':
+  '@jridgewell/remapping@2.3.4':
     dependencies:
-      '@jridgewell/set-array': 1.2.1
-      '@jridgewell/sourcemap-codec': 1.5.0
-      '@jridgewell/trace-mapping': 0.3.25
+      '@jridgewell/gen-mapping': 0.3.12
+      '@jridgewell/trace-mapping': 0.3.29
 
   '@jridgewell/resolve-uri@3.1.1': {}
-
-  '@jridgewell/set-array@1.2.1': {}
 
   '@jridgewell/source-map@0.3.6':
     dependencies:
