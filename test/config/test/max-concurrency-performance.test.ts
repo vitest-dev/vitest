@@ -24,8 +24,9 @@ test.skip('performance regression is acceptable', async () => {
   // Calculate performance impact
   const degradation = ((limitedDuration - unlimitedDuration) / unlimitedDuration) * 100
 
-  console.log(`Performance impact: ${degradation.toFixed(1)}%`)
-  console.log(`Unlimited: ${unlimitedDuration}ms, Limited: ${limitedDuration}ms`)
+  // Commented out for CI - uncomment for debugging
+  // console.log(`Performance impact: ${degradation.toFixed(1)}%`)
+  // console.log(`Unlimited: ${unlimitedDuration}ms, Limited: ${limitedDuration}ms`)
 
   // Accept up to 20% degradation for correctness
   // Note: In practice, limited concurrency might actually be faster in some cases
@@ -49,7 +50,7 @@ test('prevents resource exhaustion with many concurrent hooks', async () => {
 // TODO: Re-enable once edge case fixtures are stabilized
 test.skip('handles edge concurrency values', async () => {
   // maxConcurrency: 0 should default to 5
-  const { exitCode: zeroExit, stdout: zeroStdout } = await runVitest({
+  const { exitCode: zeroExit } = await runVitest({
     root: './fixtures/issue-8367',
     config: false,
     maxConcurrency: 0,
