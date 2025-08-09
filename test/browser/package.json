@@ -34,7 +34,7 @@
     "@vitest/bundled-lib": "link:./bundled-lib",
     "@vitest/cjs-lib": "link:./cjs-lib",
     "@vitest/injected-lib": "link:./injected-lib",
-    "playwright": "^1.54.1",
+    "playwright": "^1.54.2",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
     "url": "^0.11.4",
