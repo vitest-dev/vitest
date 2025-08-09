@@ -181,7 +181,6 @@
     "why-is-node-running": "^2.3.0"
   },
   "devDependencies": {
-    "@ampproject/remapping": "catalog:",
     "@antfu/install-pkg": "^1.1.0",
     "@edge-runtime/vm": "^5.0.0",
     "@sinonjs/fake-timers": "14.0.0",
