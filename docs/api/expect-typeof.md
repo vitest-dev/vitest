@@ -68,7 +68,7 @@ This matcher performs a strict check on object types, ensuring that the expected
 import { expectTypeOf } from 'vitest'
 
 expectTypeOf({ a: 1, b: 2 }).toMatchObjectType<{ a: number }>() // preferred
-expectTypeOf({ a: 1, b: 2 }).toExtend<{ a: number }>()         // works but less strict
+expectTypeOf({ a: 1, b: 2 }).toExtend<{ a: number }>() // works but less strict
 
 // Supports nested object checking
 const user = {
