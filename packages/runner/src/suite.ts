@@ -842,55 +842,79 @@ function formatName(name: string | Function) {
 }
 
 function formatTitle(template: string, items: any[], idx: number) {
-  if (template.includes('%#') || template.includes('%$')) {
-    // '%#' match index of the test case
-    template = template
-      .replace(/%%/g, '__vitest_escaped_%__')
-      .replace(/%#/g, `${idx}`)
-      .replace(/%\$/g, `${idx + 1}`)
-      .replace(/__vitest_escaped_%__/g, '%%')
-  }
-  const count = template.split('%').length - 1
-
-  if (template.includes('%f')) {
-    const placeholders = template.match(/%f/g) || []
-    placeholders.forEach((_, i) => {
-      if (isNegativeNaN(items[i]) || Object.is(items[i], -0)) {
-        // Replace the i-th occurrence of '%f' with '-%f'
-        let occurrence = 0
-        template = template.replace(/%f/g, (match) => {
-          occurrence++
-          return occurrence === i + 1 ? '-%f' : match
-        })
-      }
-    })
-  }
-
-  let formatted = format(template, ...items.slice(0, count))
   const isObjectItem = isObject(items[0])
+  const truncate = runner?.config?.chaiConfig?.truncateThreshold
+  let itemIdx = 0
+  let result = ''
+  const getPercentValue = (specifier: string) => {
+    if (specifier === '%#') {
+      return String(idx)
+    }
+    if (specifier === '%$') {
+      return String(idx + 1)
+    }
+    if (specifier === '%%') {
+      return '%'
+    }
+    if (specifier === '%f') {
+      const v = items[itemIdx++]
+      if (isNegativeNaN(v) || Object.is(v, -0)) {
+        return `-${String(v)}`
+      }
+      return String(v)
+    }
 
-  if (!isObjectItem) {
-    return formatted
+    if (/^%[sdifoO]$/.test(specifier)) {
+      const v = items[itemIdx++]
+      return format(specifier, v)
+    }
+    return specifier
   }
-
-  formatted = formatted.replace(
-    /\$([$\w.]+)/g,
-    (_, key: string) => {
-      const isArrayKey = /^\d+$/.test(key)
-
-      if (!isObjectItem && !isArrayKey) {
-        return `$${key}`
+  for (let i = 0; i < template.length;) {
+    if (template[i] === '%') {
+      const next2 = template.slice(i, i + 2)
+      if (['%#', '%$', '%%', '%f'].includes(next2)) {
+        result += getPercentValue(next2)
+        i += 2
+        continue
       }
 
-      const arrayElement = isArrayKey ? objectAttr(items, key) : undefined
-      const value = isObjectItem ? objectAttr(items[0], key, arrayElement) : arrayElement
-      return objDisplay(value, {
-        truncate: runner?.config?.chaiConfig?.truncateThreshold,
-      }) as unknown as string
-    },
-  )
+      const next3 = template.slice(i, i + 2)
+      if (/^%[sdifoO]$/.test(next3)) {
+        result += getPercentValue(next3)
+        i += 2
+        continue
+      }
 
-  return formatted
+      result += template[i]
+      i++
+      continue
+    }
+    if (template[i] === '$' && template[i + 1] && /[\w$.]/.test(template[i + 1])) {
+      const match = template.slice(i).match(/^\$([\w.]+)/)
+      if (match) {
+        const key = match[1]
+        const isArrayKey = /^\d+$/.test(key)
+        let value
+        if (isObjectItem && !isArrayKey) {
+          value = objectAttr(items[0], key)
+        }
+        else if (isArrayKey) {
+          value = objectAttr(items, key)
+        }
+        else {
+          value = undefined
+        }
+        result += objDisplay(value, { truncate }) as unknown as string
+        i += 1 + key.length
+        continue
+      }
+    }
+
+    result += template[i]
+    i++
+  }
+  return result
 }
 
 function formatTemplateString(cases: any[], args: any[]): any[] {
