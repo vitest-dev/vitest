@@ -146,7 +146,7 @@ export class Typechecker {
         ...definitions.sort((a, b) => b.start - a.start),
       ]
       // has no map for ".js" files that use // @ts-check
-      const traceMap = map ? new TraceMap(JSON.stringify(map)) : null
+      const traceMap = (map && new TraceMap(map as any))
       const indexMap = createIndexMap(parsed)
       const markState = (task: Task, state: TaskState) => {
         task.result = {
