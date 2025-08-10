@@ -6,7 +6,6 @@ import { promises as fs } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 // @ts-expect-error -- untyped
 import { mergeProcessCovs } from '@bcoe/v8-coverage'
-import { cleanUrl } from '@vitest/utils'
 import astV8ToIstanbul from 'ast-v8-to-istanbul'
 import createDebug from 'debug'
 import libCoverage from 'istanbul-lib-coverage'
@@ -16,17 +15,15 @@ import reports from 'istanbul-reports'
 import { parseModule } from 'magicast'
 import { normalize } from 'pathe'
 import { provider } from 'std-env'
-
 import c from 'tinyrainbow'
 import { BaseCoverageProvider } from 'vitest/coverage'
-import { isCSSRequest, parseAstAsync } from 'vitest/node'
+import { parseAstAsync } from 'vitest/node'
 import { version } from '../package.json' with { type: 'json' }
 
 export interface ScriptCoverageWithOffset extends Profiler.ScriptCoverage {
   startOffset: number
 }
 
-type TransformResults = Map<string, Vite.TransformResult>
 interface RawCoverage { result: ScriptCoverageWithOffset[] }
 
 const FILE_PROTOCOL = 'file://'
@@ -145,9 +142,6 @@ export class V8CoverageProvider extends BaseCoverageProvider<ResolvedCoverageOpt
   }
 
   private async getCoverageMapForUncoveredFiles(testedFiles: string[]): Promise<CoverageMap> {
-    const transformResults = normalizeTransformResults(
-      this.ctx.vite.environments,
-    )
     const transform = this.createUncoveredFileTransformer(this.ctx)
 
     const uncoveredFiles = await this.getUntestedFiles(testedFiles)
@@ -176,7 +170,6 @@ export class V8CoverageProvider extends BaseCoverageProvider<ResolvedCoverageOpt
 
         const sources = await this.getSources(
           url,
-          transformResults,
           transform,
         )
 
@@ -318,25 +311,20 @@ export class V8CoverageProvider extends BaseCoverageProvider<ResolvedCoverageOpt
 
   private async getSources(
     url: string,
-    transformResults: TransformResults,
     onTransform: (filepath: string) => Promise<Vite.TransformResult | undefined | null>,
     functions: Profiler.FunctionCoverage[] = [],
   ): Promise<{
     code: string
     map?: Vite.Rollup.SourceMap
   }> {
-    const filePath = normalize(fileURLToPath(url))
-
-    let transformResult: Vite.TransformResult | null | undefined = transformResults.get(filePath)
-
-    if (!transformResult) {
-      transformResult = await onTransform(removeStartsWith(url, FILE_PROTOCOL)).catch(() => undefined)
-    }
+    const transformResult = await onTransform(removeStartsWith(url, FILE_PROTOCOL)).catch(() => undefined)
 
     const map = transformResult?.map as Vite.Rollup.SourceMap | undefined
     const code = transformResult?.code
 
     if (code == null) {
+      const filePath = normalize(fileURLToPath(url))
+
       const original = await fs.readFile(filePath, 'utf-8').catch(() => {
         // If file does not exist construct a dummy source for it.
         // These can be files that were generated dynamically during the test run and were removed after it.
@@ -372,16 +360,6 @@ export class V8CoverageProvider extends BaseCoverageProvider<ResolvedCoverageOpt
       throw new Error(`Cannot access browser module graph because it was torn down.`)
     }
 
-    const moduleGraph = environment === '__browser__'
-      ? project.browser!.vite.environments.client.moduleGraph
-      : project.vite.environments[environment]?.moduleGraph
-
-    if (!moduleGraph) {
-      throw new Error(`Module graph for environment ${environment} was not defined.`)
-    }
-
-    const transformResults = normalizeTransformResults({ [environment]: { moduleGraph } })
-
     async function onTransform(filepath: string) {
       if (environment === '__browser__' && project.browser) {
         const result = await project.browser.vite.transformRequest(removeStartsWith(filepath, project.config.root))
@@ -408,11 +386,8 @@ export class V8CoverageProvider extends BaseCoverageProvider<ResolvedCoverageOpt
         }
       }
 
-      // Ignore all CSS requests, so we don't override the actual code coverage
-      // In cases where CSS and JS are in the same file (.vue, .svelte)
-      // The file has a `.vue` extension, but the URL has `lang.css` query
-      if (!isCSSRequest(result.url) && this.isIncluded(fileURLToPath(result.url))) {
-        scriptCoverages.push(result)
+      if (this.isIncluded(fileURLToPath(result.url))) {
+        scriptCoverages.push({ ...result, url: decodeURIComponent(result.url) })
       }
     }
 
@@ -437,7 +412,6 @@ export class V8CoverageProvider extends BaseCoverageProvider<ResolvedCoverageOpt
 
           const sources = await this.getSources(
             url,
-            transformResults,
             onTransform,
             functions,
           )
@@ -481,24 +455,6 @@ function findLongestFunctionLength(functions: Profiler.FunctionCoverage[]) {
 
     return Math.max(previous, maxEndOffset)
   }, 0)
-}
-
-function normalizeTransformResults(
-  environments: Record<string, { moduleGraph: Vite.EnvironmentModuleGraph }>,
-) {
-  const normalized: TransformResults = new Map()
-
-  for (const environmentName in environments) {
-    const moduleGraph = environments[environmentName].moduleGraph
-    for (const [key, value] of moduleGraph.idToModuleMap) {
-      const cleanEntry = cleanUrl(key)
-      if (value.transformResult && !normalized.has(cleanEntry)) {
-        normalized.set(cleanEntry, value.transformResult)
-      }
-    }
-  }
-
-  return normalized
 }
 
 function removeStartsWith(filepath: string, start: string) {
