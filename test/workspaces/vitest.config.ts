@@ -1,5 +1,5 @@
 import type { Vite } from 'vitest/node'
-import remapping from '@ampproject/remapping'
+import remapping from '@jridgewell/remapping'
 import MagicString from 'magic-string'
 import { defineConfig } from 'vitest/config'
 import { cwdPlugin } from './cwdPlugin.js'
