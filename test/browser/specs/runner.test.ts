@@ -33,10 +33,9 @@ describe('running browser tests', async () => {
         'json',
         {
           onInit: noop,
-          onPathsCollected: noop,
-          onCollected: noop,
-          onFinished: noop,
-          onTaskUpdate: noop,
+          onTestRunStart: noop,
+          onTestModuleCollected: noop,
+          onTestRunEnd: noop,
           onTestRemoved: noop,
           onWatcherStart: noop,
           onWatcherRerun: noop,
@@ -49,7 +48,7 @@ describe('running browser tests', async () => {
 
     const browserResult = await readFile('./browser.json', 'utf-8')
     browserResultJson = JSON.parse(browserResult)
-    const getPassed = results => results.filter(result => result.status === 'passed' && !result.mesage)
+    const getPassed = results => results.filter(result => result.status === 'passed' && !result.message)
     const getFailed = results => results.filter(result => result.status === 'failed')
     passedTests = getPassed(browserResultJson.testResults)
     failedTests = getFailed(browserResultJson.testResults)
@@ -171,8 +170,29 @@ error with a stack
 })
 
 test(`stack trace points to correct file in every browser when failed`, async () => {
+  expect.assertions(15)
   const { stderr } = await runBrowserTests({
     root: './fixtures/failing',
+    reporters: [
+      'default',
+      {
+        onTestCaseReady(testCase) {
+          if (testCase.name !== 'correctly fails and prints a diff') {
+            return
+          }
+          if (testCase.project.name === 'chromium' || testCase.project.name === 'chrome') {
+            expect(testCase.result().errors[0].stacks).toEqual([
+              {
+                line: 11,
+                column: 12,
+                file: testCase.module.moduleId,
+                method: '',
+              },
+            ])
+          }
+        },
+      },
+    ],
   })
 
   expect(stderr).toContain('expected 1 to be 2')
@@ -241,6 +261,33 @@ test('viewport', async () => {
   instances.forEach(({ browser }) => {
     expect(stdout).toReportPassedTest('basic.test.ts', browser)
   })
+})
+
+test('in-source tests don\'t run when the module is imported by the test', async () => {
+  const { stderr, stdout } = await runBrowserTests({}, ['mocking.test.ts'])
+  expect(stderr).toBe('')
+
+  instances.forEach(({ browser }) => {
+    expect(stdout).toReportPassedTest('test/mocking.test.ts', browser)
+  })
+
+  // there is only one file with one test inside
+  // if this stops working, it will report twice as much tests
+  expect(stdout).toContain(`Test Files  ${instances.length} passed`)
+  expect(stdout).toContain(`Tests  ${instances.length} passed`)
+})
+
+test('in-source tests run correctly when filtered', async () => {
+  const { stderr, stdout } = await runBrowserTests({}, ['actions.ts'])
+  expect(stderr).toBe('')
+
+  instances.forEach(({ browser }) => {
+    expect(stdout).toReportPassedTest('src/actions.ts', browser)
+  })
+
+  // there is only one file with one test inside
+  expect(stdout).toContain(`Test Files  ${instances.length} passed`)
+  expect(stdout).toContain(`Tests  ${instances.length} passed`)
 })
 
 test.runIf(provider === 'playwright')('timeout hooks', async () => {

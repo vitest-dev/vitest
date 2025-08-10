@@ -1,5 +1,4 @@
 import type { Task } from '@vitest/runner'
-import type { ErrorWithDiff } from '@vitest/utils'
 import type { Writable } from 'node:stream'
 import type { TypeCheckError } from '../typecheck/typechecker'
 import type { Vitest } from './core'
@@ -257,7 +256,7 @@ export class Logger {
     )
   }
 
-  printUnhandledErrors(errors: unknown[]): void {
+  printUnhandledErrors(errors: ReadonlyArray<unknown>): void {
     const errorMessage = c.red(
       c.bold(
         `\nVitest caught ${errors.length} unhandled error${
@@ -271,7 +270,7 @@ export class Logger {
     errors.forEach((err) => {
       this.printError(err, {
         fullStack: true,
-        type: (err as ErrorWithDiff).type || 'Unhandled Error',
+        type: (err as any).type || 'Unhandled Error',
       })
     })
     this.error(c.red(divider()))

@@ -14,7 +14,8 @@ describe('spyOn', () => {
   })
 
   test('infers a class correctly', () => {
-    vi.spyOn(mock, 'HelloWorld').mockImplementationOnce(() => {
+    // eslint-disable-next-line prefer-arrow-callback
+    vi.spyOn(mock, 'HelloWorld').mockImplementationOnce(function () {
       const Mock = vi.fn()
       Mock.prototype.hello = vi.fn(() => 'hello world')
       return new Mock()
@@ -51,5 +52,15 @@ describe('spyOn', () => {
     const spy = vi.spyOn(obj, 'A')
     expect(obj.A.HELLO_WORLD).toBe(true)
     expect((spy as any).HELLO_WORLD).toBe(true)
+  })
+
+  test('ignores node.js.promisify symbol', () => {
+    const promisifySymbol = Symbol.for('nodejs.util.promisify.custom')
+    class Example {
+      static [promisifySymbol] = () => Promise.resolve(42)
+    }
+    const obj = { Example }
+    const spy = vi.spyOn(obj, 'Example')
+    expect((spy as any)[promisifySymbol]).toBe(undefined)
   })
 })

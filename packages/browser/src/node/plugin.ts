@@ -3,7 +3,7 @@ import type { HtmlTagDescriptor } from 'vite'
 import type { Plugin } from 'vitest/config'
 import type { Vitest } from 'vitest/node'
 import type { ParentBrowserProject } from './projectParent'
-import { lstatSync, readFileSync } from 'node:fs'
+import { createReadStream, lstatSync, readFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import { dynamicImportPlugin } from '@vitest/mocker/node'
 import { toArray } from '@vitest/utils'
@@ -12,7 +12,7 @@ import { basename, dirname, extname, resolve } from 'pathe'
 import sirv from 'sirv'
 import * as vite from 'vite'
 import { coverageConfigDefaults } from 'vitest/config'
-import { getFilePoolName, resolveApiServerConfig, resolveFsAllow, distDir as vitestDist } from 'vitest/node'
+import { isFileServingAllowed, isValidApiRequest, resolveApiServerConfig, resolveFsAllow, distDir as vitestDist } from 'vitest/node'
 import { distRoot } from './constants'
 import { createOrchestratorMiddleware } from './middlewares/orchestratorMiddleware'
 import { createTesterMiddleware } from './middlewares/testerMiddleware'
@@ -156,6 +156,45 @@ export default (parentServer: ParentBrowserProject, base = '/'): Plugin[] => {
           }
           next()
         })
+        // handle attachments the same way as in packages/ui/node/index.ts
+        server.middlewares.use((req, res, next) => {
+          if (!req.url) {
+            return next()
+          }
+
+          const url = new URL(req.url, 'http://localhost')
+
+          if (url.pathname !== '/__vitest_attachment__') {
+            return next()
+          }
+
+          const path = url.searchParams.get('path')
+          const contentType = url.searchParams.get('contentType')
+
+          if (!isValidApiRequest(parentServer.config, req) || !contentType || !path) {
+            return next()
+          }
+
+          const fsPath = decodeURIComponent(path)
+
+          if (!isFileServingAllowed(parentServer.vite.config, fsPath)) {
+            return next()
+          }
+
+          try {
+            res.setHeader(
+              'content-type',
+              contentType,
+            )
+
+            return createReadStream(fsPath)
+              .pipe(res)
+              .on('close', () => res.end())
+          }
+          catch (err) {
+            return next(err)
+          }
+        })
       },
     },
     {
@@ -165,10 +204,7 @@ export default (parentServer: ParentBrowserProject, base = '/'): Plugin[] => {
         // this plugin can be used in different projects, but all of them
         // have the same `include` pattern, so it doesn't matter which project we use
         const project = parentServer.project
-        const { testFiles: allTestFiles } = await project.globTestFiles()
-        const browserTestFiles = allTestFiles.filter(
-          file => getFilePoolName(project, file) === 'browser',
-        )
+        const { testFiles: browserTestFiles } = await project.globTestFiles()
         const setupFiles = toArray(project.config.setupFiles)
 
         // replace env values - cannot be reassign at runtime
@@ -349,7 +385,7 @@ export default (parentServer: ParentBrowserProject, base = '/'): Plugin[] => {
           viteConfig.esbuild.legalComments = 'inline'
         }
 
-        const defaultPort = parentServer.vitest._browserLastPort++
+        const defaultPort = parentServer.vitest.state._data.browserLastPort++
 
         const api = resolveApiServerConfig(
           viteConfig.test?.browser || {},
@@ -391,7 +427,7 @@ export default (parentServer: ParentBrowserProject, base = '/'): Plugin[] => {
         }
         const s = new MagicString(code, { filename })
         s.prepend(
-          `import.meta.vitest = __vitest_index__;\n`,
+          `Object.defineProperty(import.meta, 'vitest', { get() { return typeof __vitest_worker__ !== 'undefined' && __vitest_worker__.filepath === "${filename.replace(/"/g, '\\"')}" ? __vitest_index__ : undefined } });\n`,
         )
         return {
           code: s.toString(),

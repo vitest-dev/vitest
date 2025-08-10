@@ -1,5 +1,5 @@
 import type { ViteUserConfig } from 'vitest/config'
-import type { UserConfig, VitestOptions } from 'vitest/node'
+import type { TestUserConfig, VitestOptions } from 'vitest/node'
 import type { TestFsStructure } from '../../test-utils'
 import crypto from 'node:crypto'
 import { resolve } from 'pathe'
@@ -7,7 +7,7 @@ import { describe, expect, onTestFinished, test } from 'vitest'
 import { createVitest } from 'vitest/node'
 import { runVitestCli, useFS } from '../../test-utils'
 
-async function vitest(cliOptions: UserConfig, configValue: UserConfig = {}, viteConfig: ViteUserConfig = {}, vitestOptions: VitestOptions = {}) {
+async function vitest(cliOptions: TestUserConfig, configValue: TestUserConfig = {}, viteConfig: ViteUserConfig = {}, vitestOptions: VitestOptions = {}) {
   const vitest = await createVitest('test', { ...cliOptions, watch: false }, { ...viteConfig, test: configValue as any }, vitestOptions)
   onTestFinished(() => vitest.close())
   return vitest
@@ -64,7 +64,7 @@ test('filters projects with a wildcard', async () => {
   ])
 })
 
-test('assignes names as browsers in a custom project', async () => {
+test('assigns names as browsers in a custom project', async () => {
   const { projects } = await vitest({}, {
     projects: [
       {
@@ -127,8 +127,8 @@ test('inherits browser options', async () => {
             width: 900,
             height: 300,
           },
-          testerHtmlPath: '/custom-overriden-path.html',
-          screenshotDirectory: '/custom-overriden-directory',
+          testerHtmlPath: '/custom-overridden-path.html',
+          screenshotDirectory: '/custom-overridden-directory',
         },
       ],
     },
@@ -170,11 +170,11 @@ test('inherits browser options', async () => {
           width: 900,
           height: 300,
         },
-        screenshotDirectory: '/custom-overriden-directory',
+        screenshotDirectory: '/custom-overridden-directory',
         locators: {
           testIdAttribute: 'data-custom',
         },
-        testerHtmlPath: '/custom-overriden-path.html',
+        testerHtmlPath: '/custom-overridden-path.html',
       },
     },
   ])
@@ -232,6 +232,81 @@ test('coverage provider v8 works correctly in workspaced browser mode if instanc
   expect(projects.map(p => p.name)).toEqual([
     'browser (chromium)',
   ])
+})
+
+test('browser instances with include/exclude/includeSource option override parent that patterns', async () => {
+  const { projects } = await vitest({}, {
+    include: ['**/*.global.test.{js,ts}', '**/*.shared.test.{js,ts}'],
+    exclude: ['**/*.skip.test.{js,ts}'],
+    includeSource: ['src/**/*.{js,ts}'],
+    browser: {
+      enabled: true,
+      headless: true,
+      instances: [
+        { browser: 'chromium' },
+        { browser: 'firefox', include: ['test/firefox-specific.test.ts'], exclude: ['test/webkit-only.test.ts', 'test/webkit-extra.test.ts'], includeSource: ['src/firefox-compat.ts'] },
+        { browser: 'webkit', include: ['test/webkit-only.test.ts', 'test/webkit-extra.test.ts'], exclude: ['test/firefox-specific.test.ts'], includeSource: ['src/webkit-compat.ts'] },
+      ],
+    },
+  })
+
+  // Chromium should inherit parent include/exclude/includeSource patterns (plus default test pattern)
+  expect(projects[0].name).toEqual('chromium')
+  expect(projects[0].config.include).toEqual([
+    'test/**.test.ts',
+    '**/*.global.test.{js,ts}',
+    '**/*.shared.test.{js,ts}',
+  ])
+  expect(projects[0].config.exclude).toEqual([
+    '**/*.skip.test.{js,ts}',
+  ])
+  expect(projects[0].config.includeSource).toEqual([
+    'src/**/*.{js,ts}',
+  ])
+
+  // Firefox should only have its specific include/exclude/includeSource pattern (not parent patterns)
+  expect(projects[1].name).toEqual('firefox')
+  expect(projects[1].config.include).toEqual([
+    'test/firefox-specific.test.ts',
+  ])
+  expect(projects[1].config.exclude).toEqual([
+    'test/webkit-only.test.ts',
+    'test/webkit-extra.test.ts',
+  ])
+  expect(projects[1].config.includeSource).toEqual([
+    'src/firefox-compat.ts',
+  ])
+
+  // Webkit should only have its specific include/exclude/includeSource patterns (not parent patterns)
+  expect(projects[2].name).toEqual('webkit')
+  expect(projects[2].config.include).toEqual([
+    'test/webkit-only.test.ts',
+    'test/webkit-extra.test.ts',
+  ])
+  expect(projects[2].config.exclude).toEqual([
+    'test/firefox-specific.test.ts',
+  ])
+  expect(projects[2].config.includeSource).toEqual([
+    'src/webkit-compat.ts',
+  ])
+})
+
+test('browser instances with empty include array should get parent include patterns', async () => {
+  const { projects } = await vitest({}, {
+    include: ['**/*.test.{js,ts}'],
+    browser: {
+      enabled: true,
+      headless: true,
+      instances: [
+        { browser: 'chromium', include: [] },
+        { browser: 'firefox' },
+      ],
+    },
+  })
+
+  // Both instances should inherit parent include patterns when include is empty or not specified
+  expect(projects[0].config.include).toEqual(['test/**.test.ts', '**/*.test.{js,ts}'])
+  expect(projects[1].config.include).toEqual(['test/**.test.ts', '**/*.test.{js,ts}'])
 })
 
 test('filter for the global browser project includes all browser instances', async () => {
@@ -308,7 +383,7 @@ test('can enable browser-cli options for multi-project workspace', async () => {
   expect(projects[1].config.browser.headless).toBe(true)
 })
 
-function getCliConfig(options: UserConfig, cli: string[], fs: TestFsStructure = {}) {
+function getCliConfig(options: TestUserConfig, cli: string[], fs: TestFsStructure = {}) {
   const root = resolve(process.cwd(), `vitest-test-${crypto.randomUUID()}`)
   useFS(root, {
     ...fs,
@@ -463,7 +538,7 @@ describe('[e2e] workspace configs are affected by the CLI options', () => {
 
     expect(config.workspace[1]).toEqual({
       name: 'browser (chromium)',
-      // headless was overriden by CLI options
+      // headless was overridden by CLI options
       headless: false,
       browser: true,
       // UI should be true because we always set CI to false,

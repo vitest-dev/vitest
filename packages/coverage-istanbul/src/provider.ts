@@ -35,7 +35,6 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider<ResolvedCover
       esModules: true,
       compact: false,
       coverageVariable: COVERAGE_STORE_KEY,
-      // @ts-expect-error missing type
       coverageGlobalScope: 'globalThis',
       coverageGlobalScopeFunc: false,
       ignoreClassMethods: this.options.ignoreClassMethods,
@@ -44,6 +43,7 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider<ResolvedCover
         ['importAttributes', { deprecatedAssertSyntax: true }],
       ],
       generatorOpts: {
+        // @ts-expect-error missing type
         importAttributesKeyword: 'with',
       },
     })
@@ -89,19 +89,19 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider<ResolvedCover
     const start = debug.enabled ? performance.now() : 0
 
     const coverageMap = this.createCoverageMap()
-    let coverageMapByTransformMode = this.createCoverageMap()
+    let coverageMapByEnvironment = this.createCoverageMap()
 
     await this.readCoverageFiles<CoverageMap>({
       onFileRead(coverage) {
-        coverageMapByTransformMode.merge(coverage)
+        coverageMapByEnvironment.merge(coverage)
       },
       onFinished: async () => {
         // Source maps can change based on projectName and transform mode.
         // Coverage transform re-uses source maps so we need to separate transforms from each other.
-        const transformedCoverage = await transformCoverage(coverageMapByTransformMode)
+        const transformedCoverage = await transformCoverage(coverageMapByEnvironment)
         coverageMap.merge(transformedCoverage)
 
-        coverageMapByTransformMode = this.createCoverageMap()
+        coverageMapByEnvironment = this.createCoverageMap()
       },
       onDebug: debug,
     })

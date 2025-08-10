@@ -6,7 +6,7 @@ export function serializeConfig(
   coreConfig: ResolvedConfig,
   viteConfig: ViteConfig | undefined,
 ): SerializedConfig {
-  const optimizer = config.deps?.optimizer
+  const optimizer = config.deps?.optimizer || {}
   const poolOptions = config.poolOptions
 
   // Resolve from server.config to avoid comparing against default value
@@ -103,14 +103,10 @@ export function serializeConfig(
     },
     deps: {
       web: config.deps.web || {},
-      optimizer: {
-        web: {
-          enabled: optimizer?.web?.enabled ?? true,
-        },
-        ssr: {
-          enabled: optimizer?.ssr?.enabled ?? true,
-        },
-      },
+      optimizer: Object.entries(optimizer).reduce((acc, [name, option]) => {
+        acc[name] = { enabled: option?.enabled ?? false }
+        return acc
+      }, {} as Record<string, { enabled: boolean }>),
       interopDefault: config.deps.interopDefault,
       moduleDirectories: config.deps.moduleDirectories,
     },
@@ -120,7 +116,6 @@ export function serializeConfig(
       updateSnapshot: coreConfig.snapshotOptions.updateSnapshot,
       snapshotFormat: {
         ...coreConfig.snapshotOptions.snapshotFormat,
-        compareKeys: undefined,
       },
       expand:
         config.snapshotOptions.expand
@@ -161,6 +156,7 @@ export function serializeConfig(
               actionTimeout: (browser.providerOptions as any)?.context?.actionTimeout,
             }
           : {},
+        trackUnhandledErrors: browser.trackUnhandledErrors ?? true,
       }
     })(config.browser),
     standalone: config.standalone,

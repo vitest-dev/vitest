@@ -1,7 +1,7 @@
 import type { ModuleMocker } from '@vitest/mocker/browser'
 import type { CancelReason } from '@vitest/runner'
 import type { BirpcReturn } from 'birpc'
-import type { WebSocketBrowserEvents, WebSocketBrowserHandlers } from '../node/types'
+import type { WebSocketBrowserEvents, WebSocketBrowserHandlers } from '../types'
 import type { IframeOrchestrator } from './orchestrator'
 import { createBirpc } from 'birpc'
 import { parse, stringify } from 'flatted'
@@ -109,7 +109,6 @@ function createClient() {
     {
       post: msg => ctx.ws.send(msg),
       on: fn => (onMessage = fn),
-      timeout: -1, // createTesters can take a while
       serialize: e =>
         stringify(e, (_, v) => {
           if (v instanceof Error) {
@@ -122,9 +121,7 @@ function createClient() {
           return v
         }),
       deserialize: parse,
-      onTimeoutError(functionName) {
-        throw new Error(`[vitest-browser]: Timeout calling "${functionName}"`)
-      },
+      timeout: -1, // createTesters can take a while
     },
   )
 

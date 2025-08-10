@@ -8,6 +8,7 @@ import {
   groupIconMdPlugin,
   groupIconVitePlugin,
 } from 'vitepress-plugin-group-icons'
+import llmstxt from 'vitepress-plugin-llms'
 import { version } from '../../package.json'
 import { teamMembers } from './contributors'
 import {
@@ -70,15 +71,17 @@ export default ({ mode }: { mode: string }) => {
           customIcon: {
             'CLI': 'vscode-icons:file-type-shell',
             'vitest.shims': 'vscode-icons:file-type-vitest',
-            'vitest.workspace': 'vscode-icons:file-type-vitest',
             'vitest.config': 'vscode-icons:file-type-vitest',
             '.spec.ts': 'vscode-icons:file-type-testts',
             '.test.ts': 'vscode-icons:file-type-testts',
             '.spec.js': 'vscode-icons:file-type-testjs',
             '.test.js': 'vscode-icons:file-type-testjs',
             'marko': 'vscode-icons:file-type-marko',
+            'qwik': 'logos:qwik-icon',
+            'next': '',
           },
         }),
+        llmstxt(),
       ],
     },
     markdown: {
@@ -140,7 +143,7 @@ export default ({ mode }: { mode: string }) => {
 
       footer: {
         message: 'Released under the MIT License.',
-        copyright: 'Copyright © 2021-PRESENT Anthony Fu, Matías Capeletto and Vitest contributors',
+        copyright: 'Copyright © 2021-PRESENT VoidZero Inc. and Vitest contributors',
       },
 
       nav: [
@@ -290,6 +293,11 @@ export default ({ mode }: { mode: string }) => {
                 text: 'Multiple Setups',
                 link: '/guide/browser/multiple-setups',
                 docFooterText: 'Multiple Setups | Browser Mode',
+              },
+              {
+                text: 'Visual Regression Testing',
+                link: '/guide/browser/visual-regression-testing',
+                docFooterText: 'Visual Regression Testing | Browser Mode',
               },
             ],
           },
@@ -495,6 +503,41 @@ function guide(): DefaultTheme.SidebarItem[] {
     {
       text: 'Mocking',
       link: '/guide/mocking',
+      collapsed: true,
+      items: [
+        {
+          text: 'Mocking Dates',
+          link: '/guide/mocking#dates',
+        },
+        {
+          text: 'Mocking Functions',
+          link: '/guide/mocking#functions',
+        },
+        {
+          text: 'Mocking Globals',
+          link: '/guide/mocking#globals',
+        },
+        {
+          text: 'Mocking Modules',
+          link: '/guide/mocking-modules',
+        },
+        {
+          text: 'Mocking File System',
+          link: '/guide/mocking#file-system',
+        },
+        {
+          text: 'Mocking Requests',
+          link: '/guide/mocking#requests',
+        },
+        {
+          text: 'Mocking Timers',
+          link: '/guide/mocking#timers',
+        },
+        {
+          text: 'Mocking Classes',
+          link: '/guide/mocking#classes',
+        },
+      ],
     },
     {
       text: 'Parallelism',
@@ -546,8 +589,8 @@ function guide(): DefaultTheme.SidebarItem[] {
       collapsed: false,
       items: [
         {
-          text: 'Migrating to Vitest 3.0',
-          link: '/guide/migration#vitest-3',
+          text: 'Migrating to Vitest 4.0',
+          link: '/guide/migration#vitest-4',
         },
         {
           text: 'Migrating from Jest',
@@ -579,7 +622,7 @@ function api(): DefaultTheme.SidebarItem[] {
       link: '/api/',
     },
     {
-      text: 'Mock Functions',
+      text: 'Mocks',
       link: '/api/mock',
     },
     {

@@ -136,7 +136,7 @@ export function hideRightPanel() {
 
 function calculateBrowserPanel() {
   // we don't scale webdriverio provider because it doesn't support scaling
-  // TODO: find a way to make this universal - maybe show browser separetly(?)
+  // TODO: find a way to make this universal - maybe show browser separately(?)
   if (browserState?.provider === 'webdriverio') {
     const parentWindow = window.outerWidth * (panels.details.size / 100)
     // 40 is 20px padding for each sice

@@ -1,4 +1,4 @@
-import type { Environment } from 'vitest'
+import type { Environment } from 'vitest/environments'
 import vm from 'node:vm'
 import debug from 'debug'
 
@@ -7,7 +7,7 @@ const log = debug('test:env')
 
 export default <Environment>{
   name: 'custom',
-  transformMode: 'ssr',
+  viteEnvironment: 'ssr',
   setupVM({ custom }) {
     const context = vm.createContext({
       testEnvironment: 'custom',

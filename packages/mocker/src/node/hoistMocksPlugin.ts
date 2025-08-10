@@ -68,7 +68,7 @@ export function hoistMocksPlugin(options: HoistMocksPluginOptions = {}): Plugin 
   ])
 
   const regexpHoistable = new RegExp(
-    `\\b(?:${utilsObjectNames.join('|')})\\s*\.\\s*(?:${Array.from(methods).join('|')})\\(`,
+    `\\b(?:${utilsObjectNames.join('|')})\\s*\.\\s*(?:${Array.from(methods).join('|')})\\s*\\(`,
   )
 
   return {
@@ -120,7 +120,7 @@ function getNodeTail(code: string, node: Node) {
 }
 
 const regexpHoistable
-  = /\b(?:vi|vitest)\s*\.\s*(?:mock|unmock|hoisted|doMock|doUnmock)\(/
+  = /\b(?:vi|vitest)\s*\.\s*(?:mock|unmock|hoisted|doMock|doUnmock)\s*\(/
 const hashbangRE = /^#!.*\n/
 
 export interface HoistMocksResult {

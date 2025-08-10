@@ -26,9 +26,9 @@ export type CLIOption<Value> = {
   normalize?: boolean
 } & (NestedOption<Value> extends never // require subcommands for nested options
   ? object
-  : { subcommands: CLIOptions<NestedOption<Value>> | null }) &
+  : { subcommands: CLIOptions<NestedOption<Value>> | null })
   // require argument for non-boolean options
-  (NonNullable<Value> extends boolean ? object : { argument: string })
+& (NonNullable<Value> extends boolean ? object : { argument: string })
 
 export type CLIOptions<Config extends object> = {
   [Key in keyof Config as NonNullable<Config[Key]> extends Function
@@ -334,11 +334,6 @@ export const cliOptionsConfig: VitestCLIOptions = {
     description: 'Override Vite mode (default: `test` or `benchmark`)',
     argument: '<name>',
   },
-  workspace: {
-    description: '[deprecated] Path to a workspace configuration file',
-    argument: '<path>',
-    normalize: true,
-  },
   isolate: {
     description:
       'Run every test file in isolation. To disable isolation, use `--no-isolate` (default: `true`)',
@@ -416,6 +411,9 @@ export const cliOptionsConfig: VitestCLIOptions = {
         description: 'If connection to the browser takes longer, the test suite will fail (default: `60_000`)',
         argument: '<timeout>',
       },
+      trackUnhandledErrors: {
+        description: 'Control if Vitest catches uncaught exceptions so they can be reported (default: `true`)',
+      },
       orchestratorScripts: null,
       testerScripts: null,
       commands: null,
@@ -425,6 +423,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
       locators: null,
       testerHtmlPath: null,
       instances: null,
+      expect: null,
     },
   },
   pool: {
@@ -825,7 +824,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
   },
   standalone: {
     description:
-      'Start Vitest without running tests. File filters will be ignored, tests will be running only on change (default: `false`)',
+      'Start Vitest without running tests. Tests will be running only on change. This option is ignored when CLI file filters are passed. (default: `false`)',
   },
   mergeReports: {
     description:
@@ -849,7 +848,6 @@ export const cliOptionsConfig: VitestCLIOptions = {
   includeSource: null,
   alias: null,
   env: null,
-  environmentMatchGlobs: null,
   environmentOptions: null,
   unstubEnvs: null,
   related: null,
@@ -861,12 +859,10 @@ export const cliOptionsConfig: VitestCLIOptions = {
   uiBase: null,
   benchmark: null,
   include: null,
-  testTransformMode: null,
   fakeTimers: null,
   chaiConfig: null,
   clearMocks: null,
   css: null,
-  poolMatchGlobs: null,
   deps: null,
   name: null,
   snapshotEnvironment: null,
@@ -893,15 +889,17 @@ export const benchCliOptionsConfig: Pick<
   },
 }
 
-export const collectCliOptionsConfig: Pick<
-  VitestCLIOptions,
-  'json' | 'filesOnly'
-> = {
+export const collectCliOptionsConfig: VitestCLIOptions = {
+  ...cliOptionsConfig,
   json: {
     description: 'Print collected tests as JSON or write to a file (Default: false)',
     argument: '[true/path]',
   },
   filesOnly: {
     description: 'Print only test files with out the test cases',
+  },
+  changed: {
+    description: 'Print only tests that are affected by the changed files (default: `false`)',
+    argument: '[since]',
   },
 }

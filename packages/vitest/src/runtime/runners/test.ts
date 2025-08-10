@@ -10,10 +10,12 @@ import type {
   VitestRunner,
   VitestRunnerImportSource,
 } from '@vitest/runner'
+import type { ModuleRunner } from 'vite/module-runner'
 import type { SerializedConfig } from '../config'
-import type { VitestExecutor } from '../execute'
+// import type { VitestExecutor } from '../execute'
 import { getState, GLOBAL_EXPECT, setState } from '@vitest/expect'
 import { getNames, getTestName, getTests } from '@vitest/runner/utils'
+import { processError } from '@vitest/utils/error'
 import { normalize } from 'pathe'
 import { createExpect } from '../../integrations/chai/index'
 import { inject } from '../../integrations/inject'
@@ -28,7 +30,7 @@ const workerContext = Object.create(null)
 export class VitestTestRunner implements VitestRunner {
   private snapshotClient = getSnapshotClient()
   private workerState = getWorkerState()
-  private __vitest_executor!: VitestExecutor
+  private moduleRunner!: ModuleRunner
   private cancelRun = false
 
   private assertionsErrors = new WeakMap<Readonly<Task>, Error>()
@@ -39,9 +41,12 @@ export class VitestTestRunner implements VitestRunner {
 
   importFile(filepath: string, source: VitestRunnerImportSource): unknown {
     if (source === 'setup') {
-      this.workerState.moduleCache.delete(filepath)
+      const moduleNode = this.workerState.evaluatedModules.getModuleById(filepath)
+      if (moduleNode) {
+        this.workerState.evaluatedModules.invalidateModule(moduleNode)
+      }
     }
-    return this.__vitest_executor.executeId(filepath)
+    return this.moduleRunner.import(filepath)
   }
 
   onCollectStart(file: File): void {
@@ -76,6 +81,18 @@ export class VitestTestRunner implements VitestRunner {
       }
 
       const result = await this.snapshotClient.finish(suite.file.filepath)
+      if (
+        this.workerState.config.snapshotOptions.updateSnapshot === 'none'
+        && result.unchecked
+      ) {
+        let message = `Obsolete snapshots found when no snapshot update is expected.\n`
+        for (const key of result.uncheckedKeys) {
+          message += `· ${key}\n`
+        }
+        suite.result!.errors ??= []
+        suite.result!.errors.push(processError(new Error(message)))
+        suite.result!.state = 'fail'
+      }
       await rpc().snapshotSaved(result)
     }
 

@@ -4,7 +4,6 @@ import type { TestProject } from './project'
 import type { TestSpecification } from './spec'
 import type { BuiltinPool, Pool } from './types/pool-options'
 import { isatty } from 'node:tty'
-import pm from 'picomatch'
 import { version as viteVersion } from 'vite'
 import { isWindows } from '../utils/env'
 import { createForksPool } from './pools/forks'
@@ -66,17 +65,7 @@ function getDefaultPoolName(project: TestProject): Pool {
   return project.config.pool
 }
 
-export function getFilePoolName(project: TestProject, file: string): Pool {
-  for (const [glob, pool] of project.config.poolMatchGlobs) {
-    if ((pool as Pool) === 'browser') {
-      throw new Error(
-        'Since Vitest 0.31.0 "browser" pool is not supported in `poolMatchGlobs`. You can create a project to run some of your tests in browser in parallel. Read more: https://vitest.dev/guide/projects',
-      )
-    }
-    if (pm.isMatch(file, glob, { cwd: project.config.root })) {
-      return pool as Pool
-    }
-  }
+export function getFilePoolName(project: TestProject): Pool {
   return getDefaultPoolName(project)
 }
 
@@ -155,7 +144,7 @@ export function createPool(ctx: Vitest): ProcessPool {
         return customPools.get(filepath)!
       }
 
-      const pool = await ctx.runner.executeId(filepath)
+      const pool = await ctx.runner.import(filepath)
       if (typeof pool.default !== 'function') {
         throw new TypeError(
           `Custom pool "${filepath}" must export a function as default export`,

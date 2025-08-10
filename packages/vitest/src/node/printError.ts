@@ -1,5 +1,5 @@
 /* eslint-disable prefer-template */
-import type { ErrorWithDiff, ParsedStack } from '@vitest/utils'
+import type { ParsedStack, TestError } from '@vitest/utils'
 import type { Vitest } from './core'
 import type { ErrorOptions, Logger } from './logger'
 import type { TestProject } from './project'
@@ -12,6 +12,7 @@ import { normalize, relative } from 'pathe'
 import c from 'tinyrainbow'
 import { TypeCheckError } from '../typecheck/typechecker'
 import {
+  defaultStackIgnorePatterns,
   lineSplitRE,
   parseErrorStacktrace,
   positionToOffset,
@@ -27,7 +28,7 @@ interface PrintErrorOptions {
   showCodeFrame?: boolean
   printProperties?: boolean
   screenshotPaths?: string[]
-  parseErrorStacktrace: (error: ErrorWithDiff) => ParsedStack[]
+  parseErrorStacktrace: (error: TestError) => ParsedStack[]
 }
 
 interface PrintErrorResult {
@@ -75,10 +76,22 @@ export function printError(
     screenshotPaths: options.screenshotPaths,
     printProperties: options.verbose,
     parseErrorStacktrace(error) {
+      if (error.stacks) {
+        if (options.fullStack) {
+          return error.stacks
+        }
+        else {
+          return error.stacks.filter((stack) => {
+            return !defaultStackIgnorePatterns.some(p => stack.file.match(p))
+          })
+        }
+      }
+
       // browser stack trace needs to be processed differently,
       // so there is a separate method for that
       if (options.task?.file.pool === 'browser' && project.browser) {
         return project.browser.parseErrorStacktrace(error, {
+          frameFilter: project.config.onStackTrace,
           ignoreStackEntries: options.fullStack ? [] : undefined,
         })
       }
@@ -99,7 +112,7 @@ function printErrorInner(
 ): PrintErrorResult | undefined {
   const { showCodeFrame = true, type, printProperties = true } = options
   const logger = options.logger
-  let e = error as ErrorWithDiff
+  let e = error as TestError
 
   if (isPrimitive(e)) {
     e = {
@@ -129,9 +142,9 @@ function printErrorInner(
       ? error.stacks[0]
       : stacks.find((stack) => {
           try {
+            const module = project._vite && project.getModuleById(stack.file)
             return (
-              project._vite
-              && project.getModuleById(stack.file)
+              (module?.transformResult || module?.ssrTransformResult)
               && existsSync(stack.file)
             )
           }
@@ -261,6 +274,7 @@ const skipErrorProperties = new Set([
   'actual',
   'expected',
   'diffOptions',
+  'runnerError',
   // webkit props
   'sourceURL',
   'column',
@@ -277,7 +291,7 @@ const skipErrorProperties = new Set([
   ...Object.getOwnPropertyNames(Object.prototype),
 ])
 
-function getErrorProperties(e: ErrorWithDiff) {
+function getErrorProperties(e: TestError) {
   const errorObject = Object.create(null)
   if (e.name === 'AssertionError') {
     return errorObject
@@ -289,7 +303,7 @@ function getErrorProperties(e: ErrorWithDiff) {
       errorObject[key] = e[key]
     }
     else if (key !== 'stack' && !skipErrorProperties.has(key)) {
-      errorObject[key] = e[key as keyof ErrorWithDiff]
+      errorObject[key] = e[key as keyof TestError]
     }
   }
 
@@ -364,7 +378,7 @@ function printModuleWarningForSourceCode(logger: ErrorLogger, path: string) {
   )
 }
 
-function printErrorMessage(error: ErrorWithDiff, logger: ErrorLogger) {
+function printErrorMessage(error: TestError, logger: ErrorLogger) {
   const errorName = error.name || 'Unknown Error'
   if (!error.message) {
     logger.error(error)
@@ -448,9 +462,14 @@ export function generateCodeFrame(
         }
 
         const lineLength = lines[j].length
+        const strippedContent = stripVTControlCharacters(lines[j])
+
+        if (strippedContent.startsWith('//# sourceMappingURL')) {
+          continue
+        }
 
         // too long, maybe it's a minified file, skip for codeframe
-        if (stripVTControlCharacters(lines[j]).length > 200) {
+        if (strippedContent.length > 200) {
           return ''
         }
 

@@ -117,14 +117,14 @@ Enables coverage collection. Can be overridden using the `--coverage` CLI option
 - **CLI:** `--coverage.include <pattern>`
 - **Config:** [coverage.include](/config/#coverage-include)
 
-Files included in coverage as glob patterns. May be specified more than once when using multiple patterns (default: `**`)
+Files included in coverage as glob patterns. May be specified more than once when using multiple patterns. By default only files covered by tests are included.
 
 ### coverage.exclude
 
 - **CLI:** `--coverage.exclude <pattern>`
 - **Config:** [coverage.exclude](/config/#coverage-exclude)
 
-Files to be excluded in coverage. May be specified more than once when using multiple extensions (default: Visit [`coverage.exclude`](https://vitest.dev/config/#coverage-exclude))
+Files to be excluded in coverage. May be specified more than once when using multiple extensions.
 
 ### coverage.clean
 
@@ -272,13 +272,6 @@ High and low watermarks for functions in the format of `<high>,<low>`
 
 Override Vite mode (default: `test` or `benchmark`)
 
-### workspace
-
-- **CLI:** `--workspace <path>`
-- **Config:** [workspace](/config/#workspace)
-
-[deprecated] Path to a workspace configuration file
-
 ### isolate
 
 - **CLI:** `--isolate`
@@ -382,6 +375,13 @@ Should browser test files run in parallel. Use `--browser.fileParallelism=false`
 - **Config:** [browser.connectTimeout](/guide/browser/config#browser-connecttimeout)
 
 If connection to the browser takes longer, the test suite will fail (default: `60_000`)
+
+### browser.trackUnhandledErrors
+
+- **CLI:** `--browser.trackUnhandledErrors`
+- **Config:** [browser.trackUnhandledErrors](/guide/browser/config#browser-trackunhandlederrors)
+
+Control if Vitest catches uncaught exceptions so they can be reported (default: `true`)
 
 ### pool
 
@@ -936,4 +936,4 @@ Use `bundle` to bundle the config with esbuild or `runner` (experimental) to pro
 
 - **CLI:** `--standalone`
 
-Start Vitest without running tests. File filters will be ignored, tests will be running only on change (default: `false`)
+Start Vitest without running tests. Tests will be running only on change. This option is ignored when CLI file filters are passed. (default: `false`)

@@ -1,7 +1,8 @@
 import type { File, Task } from '@vitest/runner'
-import type { ErrorWithDiff, UserConsoleLog } from '../../types/general'
+import type { SerializedError } from '@vitest/utils'
+import type { TestError, UserConsoleLog } from '../../types/general'
 import type { Vitest } from '../core'
-import type { Reporter } from '../types/reporter'
+import type { Reporter, TestRunEndReason } from '../types/reporter'
 import type { TestCase, TestCollection, TestModule, TestModuleState, TestResult, TestSuite, TestSuiteState } from './reported-tasks'
 import { performance } from 'node:perf_hooks'
 import { getFullName, getSuites, getTestName, getTests, hasFailed } from '@vitest/runner/utils'
@@ -57,7 +58,14 @@ export abstract class BaseReporter implements Reporter {
     return relative(this.ctx.config.root, path)
   }
 
-  onFinished(files: File[] = this.ctx.state.getFiles(), errors: unknown[] = this.ctx.state.getUnhandledErrors()): void {
+  onTestRunEnd(
+    testModules: ReadonlyArray<TestModule>,
+    unhandledErrors: ReadonlyArray<SerializedError>,
+    _reason: TestRunEndReason,
+  ): void {
+    const files = testModules.map(testModule => testModule.task)
+    const errors = [...unhandledErrors]
+
     this.end = performance.now()
     if (!files.length && !errors.length) {
       this.ctx.logger.printNoTestFound(this.ctx.filenamePattern)
@@ -253,7 +261,7 @@ export abstract class BaseReporter implements Reporter {
     return getFullName(test, separator)
   }
 
-  protected formatShortError(error: ErrorWithDiff): string {
+  protected formatShortError(error: TestError): string {
     return `${F_RIGHT} ${error.message}`
   }
 
@@ -433,9 +441,13 @@ export abstract class BaseReporter implements Reporter {
       return false
     }
 
-    const shouldLog = this.ctx.config.onConsoleLog?.(log.content, log.type)
-    if (shouldLog === false) {
-      return shouldLog
+    if (this.ctx.config.onConsoleLog) {
+      const task = log.taskId ? this.ctx.state.idMap.get(log.taskId) : undefined
+      const entity = task && this.ctx.state.getReportedEntity(task)
+      const shouldLog = this.ctx.config.onConsoleLog(log.content, log.type, entity)
+      if (shouldLog === false) {
+        return shouldLog
+      }
     }
     return true
   }
@@ -520,7 +532,7 @@ export abstract class BaseReporter implements Reporter {
 
       const environmentTime = sum(files, file => file.environmentLoad)
       const prepareTime = sum(files, file => file.prepareDuration)
-      const transformTime = sum(this.ctx.projects, project => project.vitenode.getTotalDuration())
+      const transformTime = this.ctx.state.transformTime
       const typecheck = sum(this.ctx.projects, project => project.typechecker?.getResult().time)
 
       const timers = [
@@ -602,7 +614,7 @@ export abstract class BaseReporter implements Reporter {
   }
 
   private printTaskErrors(tasks: Task[], errorDivider: () => void) {
-    const errorsQueue: [error: ErrorWithDiff | undefined, tests: Task[]][] = []
+    const errorsQueue: [error: TestError | undefined, tests: Task[]][] = []
 
     for (const task of tasks) {
       // Merge identical errors

@@ -4,6 +4,7 @@ export {
   positionToOffset,
 } from '@vitest/utils'
 export {
+  defaultStackIgnorePatterns,
   parseErrorStacktrace,
   parseSingleStack,
   parseStacktrace,

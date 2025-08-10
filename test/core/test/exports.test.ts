@@ -16,6 +16,7 @@ it('exports snapshot', async ({ skip, task }) => {
       .toMatchInlineSnapshot(`
       {
         ".": {
+          "EvaluatedModules": "function",
           "afterAll": "function",
           "afterEach": "function",
           "assert": "function",
@@ -46,8 +47,6 @@ it('exports snapshot', async ({ skip, task }) => {
           "defaultInclude": "object",
           "defineConfig": "function",
           "defineProject": "function",
-          "defineWorkspace": "function",
-          "extraInlineDeps": "object",
           "mergeConfig": "function",
         },
         "./coverage": {
@@ -56,9 +55,6 @@ it('exports snapshot', async ({ skip, task }) => {
         "./environments": {
           "builtinEnvironments": "object",
           "populateGlobal": "function",
-        },
-        "./execute": {
-          "VitestExecutor": "function",
         },
         "./internal/browser": {
           "SpyModule": "object",
@@ -78,6 +74,13 @@ it('exports snapshot', async ({ skip, task }) => {
           "stringify": "function",
           "takeCoverageInsideWorker": "function",
         },
+        "./internal/module-runner": {
+          "VITEST_VM_CONTEXT_SYMBOL": "string",
+          "VitestModuleEvaluator": "function",
+          "VitestModuleRunner": "function",
+          "getWorkerState": "function",
+          "startVitestModuleRunner": "function",
+        },
         "./mocker": {
           "AutomockedModule": "function",
           "AutospiedModule": "function",
@@ -89,18 +92,18 @@ it('exports snapshot', async ({ skip, task }) => {
         "./node": {
           "BaseSequencer": "function",
           "GitNotFoundError": "function",
-          "TestFile": "function",
           "TestsNotFoundError": "function",
           "VitestPackageInstaller": "function",
           "VitestPlugin": "function",
           "createDebugger": "function",
           "createMethodsRPC": "function",
-          "createServer": "function",
           "createViteLogger": "function",
           "createViteServer": "function",
           "createVitest": "function",
           "distDir": "string",
           "esbuildVersion": "string",
+          "escapeTestName": "function",
+          "experimental_getRunnerTask": "function",
           "generateFileHash": "function",
           "getFilePoolName": "function",
           "isCSSRequest": "function",
@@ -172,6 +175,7 @@ it('exports snapshot', async ({ skip, task }) => {
       .toMatchInlineSnapshot(`
         {
           ".": {
+            "EvaluatedModules": "function",
             "afterAll": "function",
             "afterEach": "function",
             "assert": "function",
@@ -202,8 +206,6 @@ it('exports snapshot', async ({ skip, task }) => {
             "defaultInclude": "object",
             "defineConfig": "function",
             "defineProject": "function",
-            "defineWorkspace": "function",
-            "extraInlineDeps": "object",
             "mergeConfig": "function",
           },
           "./coverage": {
@@ -212,9 +214,6 @@ it('exports snapshot', async ({ skip, task }) => {
           "./environments": {
             "builtinEnvironments": "object",
             "populateGlobal": "function",
-          },
-          "./execute": {
-            "VitestExecutor": "function",
           },
           "./internal/browser": {
             "SpyModule": "object",
@@ -234,6 +233,13 @@ it('exports snapshot', async ({ skip, task }) => {
             "stringify": "function",
             "takeCoverageInsideWorker": "function",
           },
+          "./internal/module-runner": {
+            "VITEST_VM_CONTEXT_SYMBOL": "string",
+            "VitestModuleEvaluator": "function",
+            "VitestModuleRunner": "function",
+            "getWorkerState": "function",
+            "startVitestModuleRunner": "function",
+          },
           "./mocker": {
             "AutomockedModule": "function",
             "AutospiedModule": "function",
@@ -245,18 +251,18 @@ it('exports snapshot', async ({ skip, task }) => {
           "./node": {
             "BaseSequencer": "function",
             "GitNotFoundError": "function",
-            "TestFile": "function",
             "TestsNotFoundError": "function",
             "VitestPackageInstaller": "function",
             "VitestPlugin": "function",
             "createDebugger": "function",
             "createMethodsRPC": "function",
-            "createServer": "function",
             "createViteLogger": "function",
             "createViteServer": "function",
             "createVitest": "function",
             "distDir": "string",
             "esbuildVersion": "string",
+            "escapeTestName": "function",
+            "experimental_getRunnerTask": "function",
             "generateFileHash": "function",
             "getFilePoolName": "function",
             "isCSSRequest": "function",

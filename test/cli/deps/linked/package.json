@@ -1,5 +1,5 @@
 {
-  "name": "@vitest/test-dep-linked",
+  "name": "@test/test-dep-linked",
   "type": "module",
   "private": true,
   "exports": {

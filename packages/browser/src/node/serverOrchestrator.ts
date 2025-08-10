@@ -26,7 +26,7 @@ export async function resolveOrchestrator(
     return
   }
 
-  // ignore uknown pages
+  // ignore unknown pages
   if (sessionId && sessionId !== 'none' && !globalServer.vitest._browserSessions.sessionIds.has(sessionId)) {
     return
   }

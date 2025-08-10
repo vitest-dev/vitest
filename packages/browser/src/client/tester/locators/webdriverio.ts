@@ -1,4 +1,9 @@
-import type { UserEventClickOptions, UserEventDragAndDropOptions, UserEventHoverOptions, UserEventSelectOptions } from '@vitest/browser/context'
+import type {
+  UserEventClickOptions,
+  UserEventDragAndDropOptions,
+  UserEventHoverOptions,
+  UserEventSelectOptions,
+} from '@vitest/browser/context'
 import { page, server } from '@vitest/browser/context'
 import {
   getByAltTextSelector,
@@ -55,7 +60,15 @@ class WebdriverIOLocator extends Locator {
     if (!selectors.length) {
       throw getElementError(this._pwSelector, this._container || document.body)
     }
-    return selectors.join(', ')
+    let hasShadowRoot = false
+    const newSelectors = selectors.map((selector) => {
+      if (selector.startsWith('>>>')) {
+        hasShadowRoot = true
+        return selector.slice(3)
+      }
+      return selector
+    })
+    return (hasShadowRoot ? '>>>' : '') + newSelectors.join(', ')
   }
 
   public override click(options?: UserEventClickOptions): Promise<void> {

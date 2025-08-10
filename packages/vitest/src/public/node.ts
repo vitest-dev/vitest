@@ -1,11 +1,10 @@
-import type { ModuleDiagnostic as _FileDiagnostic } from '../node/reporters/reported-tasks'
 import * as vite from 'vite'
 import { Vitest } from '../node/core'
-import { TestModule as _TestFile } from '../node/reporters/reported-tasks'
 
 export const version: string = Vitest.version
 
 export { isValidApiRequest } from '../api/check'
+export { escapeTestName } from '../node/ast-collect'
 export { parseCLI } from '../node/cli/cac'
 export type { CliParseOptions } from '../node/cli/cac'
 export { startVitest } from '../node/cli/cli-api'
@@ -18,7 +17,6 @@ export type {
 } from '../node/core'
 export { createVitest } from '../node/create'
 export { GitNotFoundError, FilesNotFoundError as TestsNotFoundError } from '../node/errors'
-export type { GlobalSetupContext } from '../node/globalSetup'
 export { VitestPackageInstaller } from '../node/packageInstaller'
 export { VitestPlugin } from '../node/plugins'
 export { resolveConfig } from '../node/plugins/publicConfig'
@@ -50,6 +48,7 @@ export type {
   TestSuite,
   TestSuiteState,
 } from '../node/reporters/reported-tasks'
+export { experimental_getRunnerTask } from '../node/reporters/reported-tasks'
 export { BaseSequencer } from '../node/sequencers/BaseSequencer'
 
 export type {
@@ -79,9 +78,9 @@ export type {
   ParentProjectBrowser,
   ProjectBrowser,
   ResolvedBrowserOptions,
+  ToMatchScreenshotComparators,
+  ToMatchScreenshotOptions,
 } from '../node/types/browser'
-/** @deprecated use `createViteServer` instead */
-export const createServer: typeof vite.createServer = vite.createServer
 export const createViteServer: typeof vite.createServer = vite.createServer
 export type {
   ApiConfig,
@@ -89,9 +88,7 @@ export type {
   CSSModuleScopeStrategy,
   DepsOptimizationOptions,
   EnvironmentOptions,
-  HappyDOMOptions,
   InlineConfig,
-  JSDOMOptions,
   Pool,
   PoolOptions,
   ProjectConfig,
@@ -102,9 +99,8 @@ export type {
   RuntimeConfig,
   SequenceHooks,
   SequenceSetupFiles,
-  TransformModePatterns,
+  UserConfig as TestUserConfig,
   TypecheckConfig,
-  UserConfig,
   UserWorkspaceConfig,
   VitestEnvironment,
   VitestRunMode,
@@ -124,18 +120,9 @@ export type {
 
 export type { VitestPluginContext } from '../node/types/plugin'
 export type { TestRunResult } from '../node/types/tests'
-/**
- * @deprecated Use `TestModule` instead
- */
-export const TestFile: typeof _TestFile = _TestFile
 export type { WorkerContext } from '../node/types/worker'
 export { createViteLogger } from '../node/viteLogger'
 export type { WatcherTriggerPattern } from '../node/watcher'
-
-/**
- * @deprecated Use `ModuleDiagnostic` instead
- */
-export type FileDiagnostic = _FileDiagnostic
 
 export { distDir, rootDir } from '../paths'
 

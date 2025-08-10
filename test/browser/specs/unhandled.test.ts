@@ -14,3 +14,26 @@ test('prints correct unhandled error stack', async () => {
     expect(stderr).toContain('throw-unhandled-error.test.ts:9:20')
   }
 })
+
+test('ignores unhandled errors', async () => {
+  const { stderr } = await runBrowserTests({
+    root: './fixtures/unhandled',
+    onUnhandledError(error) {
+      if (error.message.includes('custom_unhandled_error')) {
+        return false
+      }
+    },
+  })
+
+  expect(stderr).toBe('')
+})
+
+test('disables tracking', async () => {
+  const { stderr } = await runBrowserTests({
+    root: './fixtures/unhandled',
+    browser: {
+      trackUnhandledErrors: false,
+    },
+  })
+  expect(stderr).toBe('')
+})

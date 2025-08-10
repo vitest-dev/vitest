@@ -1,7 +1,7 @@
 import type { VitestRunner, VitestRunnerConstructor } from '@vitest/runner'
 import type { SerializedConfig } from '../config'
-import type { VitestExecutor } from '../execute'
-import { resolve } from 'node:path'
+import type { VitestModuleRunner } from '../moduleRunner/moduleRunner'
+import { join, resolve } from 'node:path'
 import { takeCoverageInsideWorker } from '../../integrations/coverage'
 import { distDir } from '../../paths'
 import { rpc } from '../rpc'
@@ -12,16 +12,17 @@ const runnersFile = resolve(distDir, 'runners.js')
 
 async function getTestRunnerConstructor(
   config: SerializedConfig,
-  executor: VitestExecutor,
+  moduleRunner: VitestModuleRunner,
 ): Promise<VitestRunnerConstructor> {
   if (!config.runner) {
-    const { VitestTestRunner, NodeBenchmarkRunner }
-      = await executor.executeFile(runnersFile)
+    const { VitestTestRunner, NodeBenchmarkRunner } = await moduleRunner.import(
+      join('/@fs/', runnersFile),
+    )
     return (
       config.mode === 'test' ? VitestTestRunner : NodeBenchmarkRunner
     ) as VitestRunnerConstructor
   }
-  const mod = await executor.executeId(config.runner)
+  const mod = await moduleRunner.import(config.runner)
   if (!mod.default && typeof mod.default !== 'function') {
     throw new Error(
       `Runner must export a default function, but got ${typeof mod.default} imported from ${
@@ -34,14 +35,14 @@ async function getTestRunnerConstructor(
 
 export async function resolveTestRunner(
   config: SerializedConfig,
-  executor: VitestExecutor,
+  moduleRunner: VitestModuleRunner,
 ): Promise<VitestRunner> {
-  const TestRunner = await getTestRunnerConstructor(config, executor)
+  const TestRunner = await getTestRunnerConstructor(config, moduleRunner)
   const testRunner = new TestRunner(config)
 
   // inject private executor to every runner
-  Object.defineProperty(testRunner, '__vitest_executor', {
-    value: executor,
+  Object.defineProperty(testRunner, 'moduleRunner', {
+    value: moduleRunner,
     enumerable: false,
     configurable: false,
   })
@@ -55,8 +56,8 @@ export async function resolveTestRunner(
   }
 
   const [diffOptions] = await Promise.all([
-    loadDiffConfig(config, executor),
-    loadSnapshotSerializers(config, executor),
+    loadDiffConfig(config, moduleRunner),
+    loadSnapshotSerializers(config, moduleRunner),
   ])
   testRunner.config.diffOptions = diffOptions
 
@@ -72,9 +73,9 @@ export async function resolveTestRunner(
   const originalOnTestAnnotate = testRunner.onTestAnnotate
   testRunner.onTestAnnotate = async (test, annotation) => {
     const p = rpc().onTaskAnnotate(test.id, annotation)
-    const overridenResult = await originalOnTestAnnotate?.call(testRunner, test, annotation)
+    const overriddenResult = await originalOnTestAnnotate?.call(testRunner, test, annotation)
     const vitestResult = await p
-    return overridenResult || vitestResult
+    return overriddenResult || vitestResult
   }
 
   const originalOnCollectStart = testRunner.onCollectStart
@@ -100,13 +101,13 @@ export async function resolveTestRunner(
   const originalOnAfterRun = testRunner.onAfterRunFiles
   testRunner.onAfterRunFiles = async (files) => {
     const state = getWorkerState()
-    const coverage = await takeCoverageInsideWorker(config.coverage, executor)
+    const coverage = await takeCoverageInsideWorker(config.coverage, moduleRunner)
 
     if (coverage) {
       rpc().onAfterSuiteRun({
         coverage,
         testFiles: files.map(file => file.name).sort(),
-        transformMode: state.environment.transformMode,
+        environment: state.environment.viteEnvironment || state.environment.name,
         projectName: state.ctx.projectName,
       })
     }

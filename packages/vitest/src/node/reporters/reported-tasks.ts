@@ -520,11 +520,11 @@ export type TestSuiteState = 'skipped' | 'pending' | 'failed' | 'passed'
 export type TestModuleState = TestSuiteState | 'queued'
 export type TestState = TestResult['state']
 
-export type TestResult =
-  | TestResultPassed
-  | TestResultFailed
-  | TestResultSkipped
-  | TestResultPending
+export type TestResult
+  = | TestResultPassed
+    | TestResultFailed
+    | TestResultSkipped
+    | TestResultPending
 
 export interface TestResultPending {
   /**
@@ -680,4 +680,12 @@ function getSuiteState(task: RunnerTestSuite | RunnerTestFile): TestSuiteState {
     return 'passed'
   }
   throw new Error(`Unknown suite state: ${state}`)
+}
+
+export function experimental_getRunnerTask(entity: TestCase): RunnerTestCase
+export function experimental_getRunnerTask(entity: TestSuite): RunnerTestSuite
+export function experimental_getRunnerTask(entity: TestModule): RunnerTestFile
+export function experimental_getRunnerTask(entity: TestCase | TestSuite | TestModule): RunnerTestSuite | RunnerTestFile | RunnerTestCase
+export function experimental_getRunnerTask(entity: TestCase | TestSuite | TestModule): RunnerTestSuite | RunnerTestFile | RunnerTestCase {
+  return entity.task
 }

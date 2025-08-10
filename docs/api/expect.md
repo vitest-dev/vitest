@@ -75,7 +75,7 @@ test('expect.soft test', () => {
 
 ```ts
 interface ExpectPoll extends ExpectStatic {
-  (actual: () => T, options: { interval; timeout; message }): Promise<Assertions<T>>
+  (actual: () => T, options?: { interval?: number; timeout?: number; message?: string }): Promise<Assertions<T>>
 }
 ```
 
@@ -296,6 +296,32 @@ function apples() {
 
 test('we don\'t have apples', () => {
   expect(apples()).toBeNull()
+})
+```
+
+## toBeNullable
+
+- **Type:** `() => Awaitable<void>`
+
+`toBeNullable` simply asserts if something is nullable (`null` or `undefined`).
+
+```ts
+import { expect, test } from 'vitest'
+
+function apples() {
+  return null
+}
+
+function bananas() {
+  return null
+}
+
+test('we don\'t have apples', () => {
+  expect(apples()).toBeNullable()
+})
+
+test('we don\'t have bananas', () => {
+  expect(bananas()).toBeNullable()
 })
 ```
 
@@ -651,7 +677,7 @@ test('top fruits', () => {
 
 `toMatchObject` asserts if an object matches a subset of the properties of an object.
 
-You can also pass an array of objects. This is useful if you want to check that two arrays match in their number of elements, as opposed to `arrayContaining`, which allows for extra elements in the received array.
+You can also pass an array of objects. This is useful if you want to check that two arrays match in their number and order of elements, as opposed to `arrayContaining`, which allows for extra elements in the received array.
 
 ```ts
 import { expect, test } from 'vitest'
@@ -1476,7 +1502,7 @@ test.each(errorDirs)('build fails with "%s"', async (dir) => {
 
 - **Type:** `() => any`
 
-This asymmetric matcher, when used with equality check, will always return `true`. Useful, if you just want to be sure that the property exist.
+This asymmetric matcher matches anything except `null` or `undefined`. Useful if you just want to be sure that a property exists with any value that's not either `null` or `undefined`.
 
 ```ts
 import { expect, test } from 'vitest'

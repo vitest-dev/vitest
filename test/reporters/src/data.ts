@@ -1,4 +1,4 @@
-import type { ErrorWithDiff, Suite, Task } from 'vitest'
+import type { RunnerTestCase, RunnerTestSuite, TestError } from 'vitest'
 import { createFileTask } from '@vitest/runner/utils'
 
 const file = createFileTask(
@@ -12,7 +12,7 @@ file.result = {
   duration: 145.99284195899963,
 }
 
-const suite: Suite = {
+const suite: RunnerTestSuite = {
   id: `${file.id}_0`,
   type: 'suite',
   name: 'suite',
@@ -48,12 +48,13 @@ passedFile.tasks.push({
   context: null as any,
 })
 
-const error: ErrorWithDiff = {
+const error: TestError = {
   name: 'AssertionError',
   message: 'expected 2.23606797749979 to equal 2',
   actual: '2.23606797749979',
   expected: '2',
   operator: 'strictEqual',
+  stacks: undefined!,
 }
 error.showDiff = true
 error.stack = 'AssertionError: expected 2.23606797749979 to equal 2\n'
@@ -68,7 +69,7 @@ error.stack = 'AssertionError: expected 2.23606797749979 to equal 2\n'
   + '    at async run (/vitest/packages/vitest/dist/entry.js:1797:5)\n'
   + '    at async file:///vitest/node_modules/.pnpm/tinypool@0.1.1/node_modules/tinypool/dist/esm/worker.js:96:20'
 
-const tasks: Task[] = [
+const tasks: RunnerTestCase[] = [
   {
     id: `${suite.id}_0`,
     type: 'test',

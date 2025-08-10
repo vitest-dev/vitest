@@ -3,7 +3,7 @@ export default class PackageReporter {
     this.ctx = ctx
   }
 
-  onFinished() {
+  onTestRunEnd() {
     this.ctx.logger.log('hello from package reporter')
   }
 }

@@ -62,6 +62,14 @@ exports[`html reporter > resolves to "failing" status for test file "json-fail" 
                 "operator": "strictEqual",
                 "showDiff": true,
                 "stack": "AssertionError: expected 2 to deeply equal 1",
+                "stacks": [
+                  {
+                    "column": 13,
+                    "file": "<rootDir>/test/reporters/fixtures/json-fail.test.ts",
+                    "line": 8,
+                    "method": "",
+                  },
+                ],
               },
             ],
             "repeatCount": 0,

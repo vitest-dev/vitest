@@ -1,14 +1,14 @@
 import type { Options } from 'tinyexec'
 import type { UserConfig as ViteUserConfig } from 'vite'
 import type { WorkerGlobalState } from 'vitest'
-import type { WorkspaceProjectConfiguration } from 'vitest/config'
-import type { TestModule, UserConfig, Vitest, VitestRunMode } from 'vitest/node'
+import type { TestProjectConfiguration } from 'vitest/config'
+import type { TestModule, TestUserConfig, Vitest, VitestRunMode } from 'vitest/node'
 import { webcrypto as crypto } from 'node:crypto'
 import fs from 'node:fs'
 import { Readable, Writable } from 'node:stream'
 import { fileURLToPath } from 'node:url'
 import { inspect } from 'node:util'
-import { dirname, resolve } from 'pathe'
+import { dirname, relative, resolve } from 'pathe'
 import { x } from 'tinyexec'
 import * as tinyrainbow from 'tinyrainbow'
 import { afterEach, onTestFinished } from 'vitest'
@@ -29,7 +29,7 @@ export interface VitestRunnerCLIOptions {
 }
 
 export async function runVitest(
-  cliOptions: UserConfig,
+  cliOptions: TestUserConfig,
   cliFilters: string[] = [],
   mode: VitestRunMode = 'test',
   viteOverrides: ViteUserConfig = {},
@@ -208,8 +208,11 @@ async function runCli(command: 'vitest' | 'vite-node', _options?: CliOptions | s
 
   if (args[0] !== 'list' && (args.includes('--watch') || args[0] === 'watch')) {
     if (command === 'vitest') {
-      // Wait for initial test run to complete
-      await cli.waitForStdout('Waiting for file changes')
+      // Waiting for either success or failure
+      await Promise.race([
+        cli.waitForStdout('Waiting for file changes'),
+        cli.waitForStdout('Tests failed. Watching for file changes'),
+      ])
     }
     // make sure watcher is ready
     await cli.waitForStdout('[debug] watcher is ready')
@@ -277,7 +280,7 @@ export type TestFsStructure = Record<
   string,
   | string
   | ViteUserConfig
-  | WorkspaceProjectConfiguration[]
+  | TestProjectConfiguration[]
   | ((...args: any[]) => unknown)
   | [(...args: any[]) => unknown, { exports?: string[]; imports?: Record<string, string[]> }]
 >
@@ -337,12 +340,21 @@ export function useFS<T extends TestFsStructure>(root: string, structure: T) {
       }
       createFile(filepath, content)
     },
+    statFile: (file: string): fs.Stats => {
+      const filepath = resolve(root, file)
+
+      if (relative(root, filepath).startsWith('..')) {
+        throw new Error(`file ${file} is outside of the test file system`)
+      }
+
+      return fs.statSync(filepath)
+    },
   }
 }
 
 export async function runInlineTests(
   structure: TestFsStructure,
-  config?: UserConfig,
+  config?: TestUserConfig,
   options?: VitestRunnerCLIOptions,
   viteOverrides: ViteUserConfig = {},
 ) {

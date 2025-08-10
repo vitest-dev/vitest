@@ -1,4 +1,4 @@
-import type { Awaitable, ErrorWithDiff } from '@vitest/utils'
+import type { Awaitable, TestError } from '@vitest/utils'
 import type { FixtureItem } from '../fixture'
 import type { ChainableFunction } from '../utils/chain'
 
@@ -71,6 +71,12 @@ export interface TaskBase {
     line: number
     column: number
   }
+  /**
+   * If the test was collected by parsing the file AST, and the name
+   * is not a static string, this property will be set to `true`.
+   * @experimental
+   */
+  dynamic?: boolean
 }
 
 export interface TaskPopulated extends TaskBase {
@@ -118,7 +124,7 @@ export interface TaskResult {
    * Errors that occurred during the task execution. It is possible to have several errors
    * if `expect.soft()` failed multiple times or `retry` was triggered.
    */
-  errors?: ErrorWithDiff[]
+  errors?: TestError[]
   /**
    * How long in milliseconds the task took to run.
    */
@@ -197,24 +203,24 @@ export type TaskEventPack = [
    */
   event: TaskUpdateEvent,
   /**
-   * Data assosiated with the event
+   * Data associated with the event
    */
   data: TaskEventData | undefined,
 ]
 
-export type TaskUpdateEvent =
-  | 'test-failed-early'
-  | 'suite-failed-early'
-  | 'test-prepare'
-  | 'test-finished'
-  | 'test-retried'
-  | 'suite-prepare'
-  | 'suite-finished'
-  | 'before-hook-start'
-  | 'before-hook-end'
-  | 'after-hook-start'
-  | 'after-hook-end'
-  | 'test-annotation'
+export type TaskUpdateEvent
+  = | 'test-failed-early'
+    | 'suite-failed-early'
+    | 'test-prepare'
+    | 'test-finished'
+    | 'test-retried'
+    | 'suite-prepare'
+    | 'suite-finished'
+    | 'before-hook-start'
+    | 'before-hook-end'
+    | 'after-hook-start'
+    | 'after-hook-end'
+    | 'test-annotation'
 
 export interface Suite extends TaskBase {
   type: 'suite'
@@ -297,17 +303,8 @@ export interface TestAnnotation {
   attachment?: TestAttachment
 }
 
-/**
- * @deprecated Use `Test` instead. `type: 'custom'` is not used since 2.2
- */
-export type Custom<ExtraContext = object> = Test<ExtraContext>
-
 export type Task = Test | Suite | File
 
-/**
- * @deprecated Vitest doesn't provide `done()` anymore
- */
-export type DoneCallback = (error?: any) => void
 export type TestFunction<ExtraContext = object> = (
   context: TestContext & ExtraContext
 ) => Awaitable<any> | void
@@ -501,8 +498,8 @@ interface ExtendedAPI<ExtraContext> {
   runIf: (condition: any) => ChainableTestAPI<ExtraContext>
 }
 
-export type TestAPI<ExtraContext = object> = ChainableTestAPI<ExtraContext> &
-  ExtendedAPI<ExtraContext> & {
+export type TestAPI<ExtraContext = object> = ChainableTestAPI<ExtraContext>
+  & ExtendedAPI<ExtraContext> & {
     extend: <T extends Record<string, any> = object>(
       fixtures: Fixtures<T, ExtraContext>
     ) => TestAPI<{
@@ -516,9 +513,6 @@ export type TestAPI<ExtraContext = object> = ChainableTestAPI<ExtraContext> &
       fixtures: Fixtures<Partial<ExtraContext>>
     ) => void
   }
-
-/** @deprecated use `TestAPI` instead */
-export type { TestAPI as CustomAPI }
 
 export interface FixtureOptions {
   /**
@@ -553,8 +547,7 @@ export type Fixture<T, K extends keyof T, ExtraContext = object> = ((
   ? T[K] extends any
     ? FixtureFn<T, K, Omit<ExtraContext, Exclude<keyof T, K>>>
     : never
-  :
-    | T[K]
+  : | T[K]
     | (T[K] extends any
       ? FixtureFn<T, K, Omit<ExtraContext, Exclude<keyof T, K>>>
       : never)
@@ -742,15 +735,6 @@ export interface TestContext {
     (message: string, attachment?: TestAttachment): Promise<TestAnnotation>
   }
 }
-
-/**
- * Context that's always available in the test function.
- * @deprecated use `TestContext` instead
- */
-export interface TaskContext extends TestContext {}
-
-/** @deprecated use `TestContext` instead */
-export type ExtendedContext = TaskContext & TestContext
 
 export type OnTestFailedHandler = (context: TestContext) => Awaitable<void>
 export type OnTestFinishedHandler = (context: TestContext) => Awaitable<void>
