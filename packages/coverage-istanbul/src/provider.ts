@@ -219,7 +219,7 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider<ResolvedCover
     })
   }
 
-  private invalidateTree(node: Vite.EnvironmentModuleNode, moduleGraph: Vite.EnvironmentModuleGraph, seen: Set<Vite.EnvironmentModuleNode>()) {
+  private invalidateTree(node: Vite.EnvironmentModuleNode, moduleGraph: Vite.EnvironmentModuleGraph, seen: Set<Vite.EnvironmentModuleNode>) {
     if (seen.has(node)) {
       return
     }
