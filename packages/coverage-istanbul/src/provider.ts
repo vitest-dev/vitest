@@ -1,7 +1,7 @@
 import type { CoverageMap } from 'istanbul-lib-coverage'
 import type { Instrumenter } from 'istanbul-lib-instrument'
 import type { ProxifiedModule } from 'magicast'
-import type { CoverageProvider, ReportContext, ResolvedCoverageOptions, Vitest } from 'vitest/node'
+import type { CoverageProvider, ReportContext, ResolvedCoverageOptions, Vite, Vitest } from 'vitest/node'
 import { promises as fs } from 'node:fs'
 // @ts-expect-error missing types
 import { defaults as istanbulDefaults } from '@istanbuljs/schema'
@@ -25,6 +25,8 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider<ResolvedCover
   name = 'istanbul' as const
   version: string = version
   instrumenter!: Instrumenter
+
+  private transformedModuleIds = new Set<string>()
 
   initialize(ctx: Vitest): void {
     this._initialize(ctx)
@@ -77,6 +79,7 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider<ResolvedCover
       sourceMap as any,
     )
     const map = this.instrumenter.lastSourceMap() as any
+    this.transformedModuleIds.add(id)
 
     return { code, map }
   }
@@ -197,6 +200,35 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider<ResolvedCover
     }
 
     return coverageMap
+  }
+
+  // the coverage can be enabled after the tests are run
+  // this means the coverage will not be injected because the modules are cached,
+  // so we are invalidating all modules that don't have the istanbul coverage injected
+  onEnabled(): void {
+    const environments = this.ctx.projects.flatMap(project => [
+      ...Object.values(project.vite.environments),
+      ...Object.values(project.browser?.vite.environments || {}),
+    ])
+
+    const seen = new Set<Vite.EnvironmentModuleNode>()
+    environments.forEach((environment) => {
+      environment.moduleGraph.idToModuleMap.forEach((node) => {
+        this.invalidateTree(node, environment.moduleGraph, seen)
+      })
+    })
+  }
+
+  private invalidateTree(node: Vite.EnvironmentModuleNode, moduleGraph: Vite.EnvironmentModuleGraph, seen: Set<Vite.EnvironmentModuleNode>) {
+    if (seen.has(node)) {
+      return
+    }
+    if (node.id && !this.transformedModuleIds.has(node.id)) {
+      moduleGraph.invalidateModule(node, seen)
+    }
+    node.importedModules.forEach((mod) => {
+      this.invalidateTree(mod, moduleGraph, seen)
+    })
   }
 }
 

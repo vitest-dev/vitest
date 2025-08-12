@@ -10,13 +10,13 @@ import type { ProcessPool, WorkspaceSpec } from './pool'
 import type { TestModule } from './reporters/reported-tasks'
 import type { TestSpecification } from './spec'
 import type { ResolvedConfig, TestProjectConfiguration, UserConfig, VitestRunMode } from './types/config'
-import type { CoverageProvider } from './types/coverage'
+import type { CoverageProvider, ResolvedCoverageOptions } from './types/coverage'
 import type { Reporter } from './types/reporter'
 import type { TestRunResult } from './types/tests'
 import os from 'node:os'
 import { getTasks, hasFailed, limitConcurrency } from '@vitest/runner/utils'
 import { SnapshotManager } from '@vitest/snapshot/manager'
-import { noop, toArray } from '@vitest/utils'
+import { deepClone, deepMerge, noop, toArray } from '@vitest/utils'
 import { normalize, relative } from 'pathe'
 import { version } from '../../package.json' with { type: 'json' }
 import { WebSocketReporter } from '../api/setup'
@@ -94,7 +94,6 @@ export class Vitest {
   public readonly watcher: VitestWatcher
 
   /** @internal */ configOverride: Partial<ResolvedConfig> = {}
-  /** @internal */ coverageProvider: CoverageProvider | null | undefined
   /** @internal */ filenamePattern?: string[]
   /** @internal */ runningPromise?: Promise<TestRunResult>
   /** @internal */ closingPromise?: Promise<void>
@@ -117,6 +116,7 @@ export class Vitest {
   private _state?: StateManager
   private _cache?: VitestCache
   private _snapshot?: SnapshotManager
+  private _coverageProvider?: CoverageProvider | null | undefined
 
   constructor(
     public readonly mode: VitestRunMode,
@@ -209,10 +209,10 @@ export class Vitest {
     this.pool = undefined
     this.closingPromise = undefined
     this.projects = []
-    this.coverageProvider = undefined
     this.runningPromise = undefined
     this.coreWorkspaceProject = undefined
     this.specifications.clearCache()
+    this._coverageProvider = undefined
     this._onUserTestsRerun = []
 
     this._vite = server
@@ -312,6 +312,44 @@ export class Vitest {
     await Promise.all(this._onSetServer.map(fn => fn()))
   }
 
+  /** @internal */
+  get coverageProvider(): CoverageProvider | null | undefined {
+    if (this.configOverride.coverage?.enabled === false) {
+      return null
+    }
+    return this._coverageProvider
+  }
+
+  public async enableCoverage(): Promise<void> {
+    this.configOverride.coverage = {} as any
+    this.configOverride.coverage!.enabled = true
+    await this.createCoverageProvider()
+    await this.coverageProvider?.onEnabled?.()
+  }
+
+  public disableCoverage(): void {
+    this.configOverride.coverage ??= {} as any
+    this.configOverride.coverage!.enabled = false
+  }
+
+  private _coverageOverrideCache = new WeakMap<ResolvedCoverageOptions, ResolvedCoverageOptions>()
+
+  /** @internal */
+  get _coverageOptions(): ResolvedCoverageOptions {
+    if (!this.configOverride.coverage) {
+      return this.config.coverage
+    }
+    if (!this._coverageOverrideCache.has(this.configOverride.coverage)) {
+      const coverage = deepClone(this.config.coverage)
+      const options = deepMerge(coverage, this.configOverride.coverage)
+      this._coverageOverrideCache.set(
+        this.configOverride.coverage,
+        options,
+      )
+    }
+    return this._coverageOverrideCache.get(this.configOverride.coverage)!
+  }
+
   /**
    * Inject new test projects into the workspace.
    * @param config Glob, config path or a custom config options.
@@ -399,12 +437,12 @@ export class Vitest {
    * Creates a coverage provider if `coverage` is enabled in the config.
    */
   public async createCoverageProvider(): Promise<CoverageProvider | null> {
-    if (this.coverageProvider) {
-      return this.coverageProvider
+    if (this._coverageProvider) {
+      return this._coverageProvider
     }
     const coverageProvider = await this.initCoverageProvider()
     if (coverageProvider) {
-      await coverageProvider.clean(this.config.coverage.clean)
+      await coverageProvider.clean(this._coverageOptions.clean)
     }
     return coverageProvider || null
   }
@@ -444,18 +482,21 @@ export class Vitest {
   }
 
   private async initCoverageProvider(): Promise<CoverageProvider | null | undefined> {
-    if (this.coverageProvider !== undefined) {
+    if (this._coverageProvider != null) {
       return
     }
-    this.coverageProvider = await getCoverageProvider(
-      this.config.coverage as unknown as SerializedCoverageConfig,
+    const coverageConfig = (this.configOverride.coverage
+      ? this.getRootProject().serializedConfig.coverage
+      : this.config.coverage) as unknown as SerializedCoverageConfig
+    this._coverageProvider = await getCoverageProvider(
+      coverageConfig,
       this.runner,
     )
-    if (this.coverageProvider) {
-      await this.coverageProvider.initialize(this)
-      this.config.coverage = this.coverageProvider.resolveOptions()
+    if (this._coverageProvider) {
+      await this._coverageProvider.initialize(this)
+      this.config.coverage = this._coverageProvider.resolveOptions()
     }
-    return this.coverageProvider
+    return this._coverageProvider
   }
 
   /**
@@ -553,7 +594,7 @@ export class Vitest {
   async start(filters?: string[]): Promise<TestRunResult> {
     try {
       await this.initCoverageProvider()
-      await this.coverageProvider?.clean(this.config.coverage.clean)
+      await this.coverageProvider?.clean(this._coverageOptions.clean)
     }
     finally {
       await this.report('onInit', this)
@@ -602,7 +643,7 @@ export class Vitest {
   async init(): Promise<void> {
     try {
       await this.initCoverageProvider()
-      await this.coverageProvider?.clean(this.config.coverage.clean)
+      await this.coverageProvider?.clean(this._coverageOptions.clean)
     }
     finally {
       await this.report('onInit', this)
@@ -677,7 +718,6 @@ export class Vitest {
    * @param allTestsRun Indicates whether all tests were run. This only matters for coverage.
    */
   public async rerunTestSpecifications(specifications: TestSpecification[], allTestsRun = false): Promise<TestRunResult> {
-    this.configOverride.testNamePattern = undefined
     const files = specifications.map(spec => spec.moduleId)
     await Promise.all([
       this.report('onWatcherRerun', files, 'rerun test'),
@@ -709,7 +749,7 @@ export class Vitest {
         this.snapshot.clear()
         this.state.clearErrors()
 
-        if (!this.isFirstRun && this.config.coverage.cleanOnRerun) {
+        if (!this.isFirstRun && this._coverageOptions.cleanOnRerun) {
           await this.coverageProvider?.clean()
         }
 
@@ -1111,7 +1151,7 @@ export class Vitest {
     if (this.state.getCountOfFailedTests() > 0) {
       await this.coverageProvider?.onTestFailure?.()
 
-      if (!this.config.coverage.reportOnFailure) {
+      if (!this._coverageOptions.reportOnFailure) {
         return
       }
     }
