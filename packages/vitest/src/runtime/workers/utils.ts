@@ -1,3 +1,4 @@
+import type { FileSpecification } from '@vitest/runner'
 import type { TinypoolWorkerMessage } from 'tinypool'
 import type { ResolvedConfig, SerializedConfig } from '../../node/types/config'
 import type { WorkerContext } from '../../node/types/worker'
@@ -59,18 +60,35 @@ export function createForksRpcOptions(
   }
 }
 
+export function unwrapFileSpecifications(files: FileSpecification[] | string[]): FileSpecification[] | string[] {
+  return files.map((spec) => {
+    if (typeof spec === 'string') {
+      return spec
+    }
+    const { filepath, testLocations, testNamePattern } = spec
+    return ({
+      filepath,
+      testLocations,
+      testNamePattern: testNamePattern ? unwrapRegExp(testNamePattern) : undefined,
+    })
+  }) as string[] | FileSpecification[]
+}
+
+function unwrapRegExp(regexp: RegExp | string): RegExp {
+  if (typeof regexp === 'string' && regexp.startsWith(REGEXP_WRAP_PREFIX)) {
+    return parseRegexp(
+      regexp.slice(REGEXP_WRAP_PREFIX.length),
+    )
+  }
+  return regexp as RegExp
+}
+
 /**
  * Reverts the wrapping done by `utils/config-helpers.ts`'s `wrapSerializableConfig`
  */
 export function unwrapSerializableConfig(config: SerializedConfig): SerializedConfig {
   if (config.testNamePattern && typeof config.testNamePattern === 'string') {
-    const testNamePattern = config.testNamePattern as string
-
-    if (testNamePattern.startsWith(REGEXP_WRAP_PREFIX)) {
-      config.testNamePattern = parseRegexp(
-        testNamePattern.slice(REGEXP_WRAP_PREFIX.length),
-      )
-    }
+    config.testNamePattern = unwrapRegExp(config.testNamePattern)
   }
 
   if (

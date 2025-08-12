@@ -46,6 +46,7 @@ export interface VitestRunnerConfig {
 export interface FileSpecification {
   filepath: string
   testLocations: number[] | undefined
+  testNamePattern: RegExp | undefined
 }
 
 export type VitestRunnerImportSource = 'collect' | 'setup'

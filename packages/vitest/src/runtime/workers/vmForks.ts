@@ -1,7 +1,7 @@
 import type { WorkerGlobalState } from '../../types/worker'
 import type { VitestWorker, WorkerRpcOptions } from './types'
 import v8 from 'node:v8'
-import { createForksRpcOptions, unwrapSerializableConfig } from './utils'
+import { createForksRpcOptions, unwrapFileSpecifications, unwrapSerializableConfig } from './utils'
 import { runVmTests } from './vm'
 
 class ForksVmWorker implements VitestWorker {
@@ -11,6 +11,7 @@ class ForksVmWorker implements VitestWorker {
 
   async executeTests(method: 'run' | 'collect', state: WorkerGlobalState): Promise<void> {
     const exit = process.exit
+    state.ctx.files = unwrapFileSpecifications(state.ctx.files)
     state.ctx.config = unwrapSerializableConfig(state.ctx.config)
 
     try {

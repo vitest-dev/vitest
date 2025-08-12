@@ -5,6 +5,11 @@ import type { Pool } from './types/pool-options'
 import { generateFileHash } from '@vitest/runner/utils'
 import { relative } from 'pathe'
 
+export interface TestSpecificationOptions {
+  testLines?: number[]
+  testNamePattern?: RegExp
+}
+
 export class TestSpecification {
   /**
    * The task ID associated with the test module.
@@ -27,12 +32,16 @@ export class TestSpecification {
    * Line numbers of the test locations to run.
    */
   public readonly testLines: number[] | undefined
+  /**
+   * The pattern used to match test names in the module.
+   */
+  public readonly testNamePattern: RegExp | undefined
 
   constructor(
     project: TestProject,
     moduleId: string,
     pool: Pool,
-    testLines?: number[] | undefined,
+    options: TestSpecificationOptions = {},
   ) {
     const name = project.config.name
     const hashName = pool !== 'typescript'
@@ -48,7 +57,8 @@ export class TestSpecification {
     this.project = project
     this.moduleId = moduleId
     this.pool = pool
-    this.testLines = testLines
+    this.testLines = options.testLines
+    this.testNamePattern = options.testNamePattern
   }
 
   /**
