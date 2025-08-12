@@ -460,12 +460,6 @@ export default (parentServer: ParentBrowserProject, base = '/'): Plugin[] => {
           return
         }
 
-        if (!parentServer.testerScripts) {
-          const testerScripts = await parentServer.formatScripts(
-            parentServer.config.browser.testerScripts,
-          )
-          parentServer.testerScripts = testerScripts
-        }
         const stateJs = typeof parentServer.stateJs === 'string'
           ? parentServer.stateJs
           : await parentServer.stateJs
@@ -562,7 +556,6 @@ body {
                 injectTo: 'head',
               } as const
             : null,
-          ...parentServer.testerScripts,
           ...testerTags,
         ].filter(s => s != null)
       },

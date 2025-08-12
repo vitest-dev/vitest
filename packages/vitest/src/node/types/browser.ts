@@ -207,11 +207,6 @@ export interface BrowserConfigOptions {
   screenshotFailures?: boolean
 
   /**
-   * Scripts injected into the tester iframe.
-   * @deprecated Will be removed in the future, use `testerHtmlPath` instead.
-   */
-  testerScripts?: BrowserScript[]
-  /**
    * Path to the index.html file that will be used to run tests.
    */
   testerHtmlPath?: string

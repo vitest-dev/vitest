@@ -352,13 +352,13 @@ export class BaseCoverageProvider<Options extends ResolvedCoverageOptions<'istan
     this.checkThresholds(resolvedThresholds)
 
     if (this.options.thresholds?.autoUpdate && allTestsRun) {
-      if (!this.ctx.server.config.configFile) {
+      if (!this.ctx.vite.config.configFile) {
         throw new Error(
           'Missing configurationFile. The "coverage.thresholds.autoUpdate" can only be enabled when configuration file is used.',
         )
       }
 
-      const configFilePath = this.ctx.server.config.configFile
+      const configFilePath = this.ctx.vite.config.configFile
       const configModule = await this.parseConfigModule(configFilePath)
 
       await this.updateThresholds({

@@ -11,7 +11,7 @@ export function VitestProjectResolver(ctx: Vitest): Plugin {
       if (id === 'vitest' || id.startsWith('@vitest/') || id.startsWith('vitest/')) {
         // always redirect the request to the root vitest plugin since
         // it will be the one used to run Vitest
-        const resolved = await ctx.server.pluginContainer.resolveId(id, undefined, {
+        const resolved = await ctx.vite.pluginContainer.resolveId(id, undefined, {
           skip: new Set([plugin]),
           ssr,
         })

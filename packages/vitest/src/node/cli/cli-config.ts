@@ -415,7 +415,6 @@ export const cliOptionsConfig: VitestCLIOptions = {
         description: 'Control if Vitest catches uncaught exceptions so they can be reported (default: `true`)',
       },
       orchestratorScripts: null,
-      testerScripts: null,
       commands: null,
       viewport: null,
       screenshotDirectory: null,

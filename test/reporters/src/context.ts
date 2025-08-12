@@ -21,7 +21,7 @@ export function getContext(): Context {
     getModuleById: () => undefined,
   }
 
-  const server: Partial<ViteDevServer> = {
+  const vite: Partial<ViteDevServer> = {
     moduleGraph: moduleGraph as ModuleGraph,
   }
 
@@ -32,8 +32,7 @@ export function getContext(): Context {
   const context: Partial<Vitest> = {
     state: state as StateManager,
     config: config as ResolvedConfig,
-    server: server as ViteDevServer,
-    getProjectByTaskId: () => ({ getBrowserSourceMapModuleById: () => undefined }) as any,
+    vite: vite as ViteDevServer,
     getProjectByName: () => ({ getBrowserSourceMapModuleById: () => undefined }) as any,
     snapshot: {
       summary: { added: 100, _test: true },

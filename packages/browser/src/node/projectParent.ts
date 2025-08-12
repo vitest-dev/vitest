@@ -23,7 +23,6 @@ import { slash } from './utils'
 
 export class ParentBrowserProject {
   public orchestratorScripts: string | undefined
-  public testerScripts: HtmlTagDescriptor[] | undefined
 
   public faviconUrl: string
   public prefixOrchestratorUrl: string
