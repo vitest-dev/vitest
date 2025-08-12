@@ -175,7 +175,7 @@ export function createForksPool(
           return configs.get(project)!
         }
 
-        const _config = project.getSerializableConfig()
+        const _config = project.serializedConfig
         const config = wrapSerializableConfig(_config)
 
         configs.set(project, config)

@@ -197,7 +197,7 @@ export function createFailedFileTask(project: TestProject, filepath: string, err
     tasks: [],
     start: 0,
     end: 0,
-    projectName: project.getName(),
+    projectName: project.name,
     meta: {},
     pool: project.browser ? 'browser' : project.config.pool,
     file: null!,

@@ -6,7 +6,7 @@ import type { ModuleRunner } from 'vite/module-runner'
 import type { SerializedCoverageConfig } from '../runtime/config'
 import type { ArgumentsType, ProvidedContext, UserConsoleLog } from '../types/general'
 import type { CliOptions } from './cli/cli-api'
-import type { ProcessPool, WorkspaceSpec } from './pool'
+import type { ProcessPool } from './pool'
 import type { TestModule } from './reporters/reported-tasks'
 import type { TestSpecification } from './spec'
 import type { ResolvedConfig, TestProjectConfiguration, UserConfig, VitestRunMode } from './types/config'
@@ -139,27 +139,12 @@ export class Vitest {
   private _onUserTestsRerun: OnTestsRerunHandler[] = []
   private _onFilterWatchedSpecification: ((spec: TestSpecification) => boolean)[] = []
 
-  /** @deprecated will be removed in 4.0, use `onFilterWatchedSpecification` instead */
-  public get invalidates(): Set<string> {
-    return this.watcher.invalidates
-  }
-
-  /** @deprecated will be removed in 4.0, use `onFilterWatchedSpecification` instead */
-  public get changedTests(): Set<string> {
-    return this.watcher.changedTests
-  }
-
   /**
    * The global config.
    */
   get config(): ResolvedConfig {
     assert(this._config, 'config')
     return this._config
-  }
-
-  /** @deprecated use `vitest.vite` instead */
-  get server(): ViteDevServer {
-    return this._vite!
   }
 
   /**
@@ -193,11 +178,6 @@ export class Vitest {
   get cache(): VitestCache {
     assert(this._cache, 'cache')
     return this._cache
-  }
-
-  /** @deprecated internal */
-  setServer(options: UserConfig, server: ViteDevServer): Promise<void> {
-    return this._setServer(options, server)
   }
 
   /** @internal */
@@ -391,11 +371,6 @@ export class Vitest {
     return this.coreWorkspaceProject
   }
 
-  /** @deprecated use `getRootProject` instead */
-  public getCoreWorkspaceProject(): TestProject {
-    return this.getRootProject()
-  }
-
   /**
    * Return project that has the root (or "global") config.
    */
@@ -404,15 +379,6 @@ export class Vitest {
       throw new Error(`Root project is not initialized. This means that the Vite server was not established yet and the the workspace config is not resolved.`)
     }
     return this.coreWorkspaceProject
-  }
-
-  /**
-   * @deprecated use Reported Task API instead
-   */
-  public getProjectByTaskId(taskId: string): TestProject {
-    const task = this.state.idMap.get(taskId)
-    const projectName = (task as File).projectName || task?.file?.projectName || ''
-    return this.getProjectByName(projectName)
   }
 
   public getProjectByName(name: string): TestProject {
@@ -570,11 +536,6 @@ export class Vitest {
     return this.collectTests(files)
   }
 
-  /** @deprecated use `getRelevantTestSpecifications` instead */
-  public listFiles(filters?: string[]): Promise<TestSpecification[]> {
-    return this.getRelevantTestSpecifications(filters)
-  }
-
   /**
    * Returns the list of test files that match the config and filters.
    * @param filters String filters to match the test files
@@ -655,18 +616,6 @@ export class Vitest {
     if (this.config.watch) {
       await this.report('onWatcherStart')
     }
-  }
-
-  /**
-   * @deprecated remove when vscode extension supports "getModuleSpecifications"
-   */
-  getProjectsByTestFile(file: string): WorkspaceSpec[] {
-    return this.getModuleSpecifications(file) as WorkspaceSpec[]
-  }
-
-  /** @deprecated */
-  getFileWorkspaceSpecs(file: string): WorkspaceSpec[] {
-    return this.getModuleSpecifications(file) as WorkspaceSpec[]
   }
 
   /**
@@ -1135,11 +1084,6 @@ export class Vitest {
     })
   }
 
-  /** @deprecated use `invalidateFile` */
-  updateLastChanged(filepath: string): void {
-    this.invalidateFile(filepath)
-  }
-
   /** @internal */
   public _checkUnhandledErrors(errors: unknown[]): void {
     if (errors.length && !this.config.dangerouslyIgnoreUnhandledErrors) {
@@ -1262,28 +1206,6 @@ export class Vitest {
   public async _globTestFilepaths() {
     const specifications = await this.globTestSpecifications()
     return Array.from(new Set(specifications.map(spec => spec.moduleId)))
-  }
-
-  /**
-   * @deprecated use `globTestSpecifications` instead
-   */
-  public async globTestSpecs(filters: string[] = []): Promise<TestSpecification[]> {
-    return this.globTestSpecifications(filters)
-  }
-
-  /**
-   * @deprecated use `globTestSpecifications` instead
-   */
-  public async globTestFiles(filters: string[] = []): Promise<TestSpecification[]> {
-    return this.globTestSpecifications(filters)
-  }
-
-  /** @deprecated filter by `this.projects` yourself */
-  public getModuleProjects(filepath: string): TestProject[] {
-    return this.projects.filter((project) => {
-      return project.getModulesByFilepath(filepath).size
-      // TODO: reevaluate || project.browser?.moduleGraph.getModulesByFile(id)?.size
-    })
   }
 
   /**

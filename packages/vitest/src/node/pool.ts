@@ -12,24 +12,6 @@ import { createTypecheckPool } from './pools/typecheck'
 import { createVmForksPool } from './pools/vmForks'
 import { createVmThreadsPool } from './pools/vmThreads'
 
-/**
- * @deprecated use TestSpecification instead
- */
-export type WorkspaceSpec = TestSpecification & [
-  /**
-   * @deprecated use spec.project instead
-   */
-  project: TestProject,
-  /**
-   * @deprecated use spec.moduleId instead
-   */
-  file: string,
-  /**
-   * @deprecated use spec.pool instead
-   */
-  options: { pool: Pool },
-]
-
 export type RunWithFiles = (
   files: TestSpecification[],
   invalidates?: string[]
@@ -202,7 +184,7 @@ export function createPool(ctx: Vitest): ProcessPool {
     }
 
     for (const spec of files) {
-      const group = spec[0].config.sequence.groupOrder ?? 0
+      const group = spec.project.config.sequence.groupOrder ?? 0
       groups.add(group)
       groupedSpecifications[group] ??= []
       groupedSpecifications[group].push(spec)
@@ -242,7 +224,7 @@ export function createPool(ctx: Vitest): ProcessPool {
       }
 
       specifications.forEach((specification) => {
-        const pool = specification[2].pool
+        const pool = specification.pool
         filesByPool[pool] ??= []
         filesByPool[pool].push(specification)
       })

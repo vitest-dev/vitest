@@ -13,11 +13,11 @@ export default (vitest: Vitest): ProcessPool => {
     async runTests(specs) {
       vitest.logger.console.warn('[pool] printing:', options.print)
       vitest.logger.console.warn('[pool] array option', options.array)
-      for (const [project, file] of specs) {
+      for (const { project, moduleId } of specs) {
         vitest.state.clearFiles(project)
-        vitest.logger.console.warn('[pool] running tests for', project.name, 'in', normalize(file).toLowerCase().replace(normalize(process.cwd()).toLowerCase(), ''))
+        vitest.logger.console.warn('[pool] running tests for', project.name, 'in', normalize(moduleId).toLowerCase().replace(normalize(process.cwd()).toLowerCase(), ''))
         const taskFile = createFileTask(
-          file,
+          moduleId,
           project.config.root,
           project.name,
           'custom'

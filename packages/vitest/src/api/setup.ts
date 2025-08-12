@@ -29,7 +29,7 @@ export function setup(ctx: Vitest, _server?: ViteDevServer): void {
 
   const clients = new Map<WebSocket, WebSocketRPC>()
 
-  const server = _server || ctx.server
+  const server = _server || ctx.vite
 
   server.httpServer?.on('upgrade', (request: IncomingMessage, socket, head) => {
     if (!request.url) {

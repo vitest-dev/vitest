@@ -63,6 +63,7 @@ export default defineConfig({
       provider,
       // isolate: false,
       testerScripts: [
+        // TODO: testerHtmlFile
         {
           content: 'globalThis.__injected = []',
           type: 'text/javascript',
