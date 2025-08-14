@@ -146,7 +146,7 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
       const isInsideEach = test.each || test.suite?.each
       if (isInsideEach) {
         throw new Error(
-          'InlineSnapshot cannot be used inside of test.each or describe.each. Use `toMatchSnapshot` instead',
+          'InlineSnapshot cannot be used inside of test.each or describe.each. Use toMatchSnapshot instead',
         )
       }
       const expected = utils.flag(this, 'object')
