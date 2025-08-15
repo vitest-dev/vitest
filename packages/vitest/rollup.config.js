@@ -80,7 +80,6 @@ const external = [
   '@vitest/mocker',
   '@vitest/mocker/node',
   '@vitest/utils/diff',
-  '@vitest/utils/ast',
   '@vitest/utils/error',
   '@vitest/utils/source-map',
   '@vitest/runner/utils',
