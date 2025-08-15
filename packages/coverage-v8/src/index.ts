@@ -3,6 +3,7 @@ import type { CoverageProviderModule } from 'vitest/node'
 import type { ScriptCoverageWithOffset, V8CoverageProvider } from './provider'
 import inspector from 'node:inspector/promises'
 import { fileURLToPath } from 'node:url'
+import { normalize } from 'pathe'
 import { provider } from 'std-env'
 import { loadProvider } from './load-provider'
 
@@ -35,7 +36,7 @@ const mod: CoverageProviderModule = {
       if (filterResult(entry)) {
         result.push({
           ...entry,
-          startOffset: options?.moduleExecutionInfo?.get(fileURLToPath(entry.url))?.startOffset || 0,
+          startOffset: options?.moduleExecutionInfo?.get(normalize(fileURLToPath(entry.url)))?.startOffset || 0,
         })
       }
     }
