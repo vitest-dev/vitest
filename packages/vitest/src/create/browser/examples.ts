@@ -28,7 +28,7 @@ import { render } from '@testing-library/jsx'
 import HelloWorld from './HelloWorld.jsx'
 
 test('renders name', async () => {
-  const { getByText } = render(<HelloWorld name="Vitest" />)
+  const { getByText } = await render(<HelloWorld name="Vitest" />)
   await expect.element(getByText('Hello Vitest!')).toBeInTheDocument()
 })
 `,
