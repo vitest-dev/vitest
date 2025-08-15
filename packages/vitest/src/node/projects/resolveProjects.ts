@@ -15,6 +15,7 @@ import { dirname, relative, resolve } from 'pathe'
 import { glob, isDynamicPattern } from 'tinyglobby'
 import { mergeConfig } from 'vite'
 import { configFiles as defaultConfigFiles } from '../../constants'
+import { defaultExclude } from '../../defaults'
 import { isTTY } from '../../utils/env'
 import { VitestFilteredOutProjectError } from '../errors'
 import { initializeProject, TestProject } from '../project'
@@ -100,11 +101,46 @@ export async function resolveProjects(
     const configFile = path.endsWith('/') ? false : path
     const root = path.endsWith('/') ? path : dirname(path)
 
+    // For directories without config files, add exclude patterns to avoid duplicating
+    // tests from subdirectories that have their own config files or are independent projects
+    const testOverrides = { ...cliOverrides }
+    if (path.endsWith('/') && !configFile) {
+      // This is a directory without config file, check if it has subdirectories with config files
+      const subdirectoriesWithConfigs = configFiles.filter((configPath) => {
+        const configDir = dirname(configPath)
+        return configDir.startsWith(path) && configDir !== path.slice(0, -1)
+      })
+
+      // Also check if it has subdirectories that are independent projects without config files
+      const subdirectoriesWithoutConfigs = nonConfigDirectories.filter((nonConfigPath) => {
+        const nonConfigDir = nonConfigPath.endsWith('/') ? nonConfigPath.slice(0, -1) : nonConfigPath
+        return nonConfigDir.startsWith(path) && nonConfigDir !== path.slice(0, -1)
+      })
+
+      const allExcludedSubdirectories = [
+        ...subdirectoriesWithConfigs.map(configPath => dirname(configPath)),
+        ...subdirectoriesWithoutConfigs.map(nonConfigPath => nonConfigPath.endsWith('/') ? nonConfigPath.slice(0, -1) : nonConfigPath),
+      ]
+
+      if (allExcludedSubdirectories.length > 0) {
+        // Add exclude patterns for subdirectories that have their own config files or are independent projects
+        const excludePatterns = allExcludedSubdirectories.map((subdir) => {
+          return `${relative(root, subdir)}/**`
+        })
+
+        testOverrides.exclude = [
+          ...(testOverrides.exclude || []),
+          ...excludePatterns,
+          ...defaultExclude,
+        ]
+      }
+    }
+
     projectPromises.push(
       concurrent(() => initializeProject(
         path,
         vitest,
-        { root, configFile, test: cliOverrides },
+        { root, configFile, test: testOverrides },
       )),
     )
   }
