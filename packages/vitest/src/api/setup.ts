@@ -9,6 +9,7 @@ import type { TestSpecification } from '../node/spec'
 import type { Reporter } from '../node/types/reporter'
 import type { LabelColor, ModuleGraphData, UserConsoleLog } from '../types/general'
 import type {
+  SnapshotData,
   TransformResultWithSource,
   WebSocketEvents,
   WebSocketHandlers,
@@ -77,6 +78,37 @@ export function setup(ctx: Vitest, _server?: ViteDevServer): void {
             )
           }
           return fs.writeFile(id, content, 'utf-8')
+        },
+        async getSnapshotData(): Promise<SnapshotData | void> {
+          try {
+            // Get snapshot result from the Vitest context
+            const snapshotResult = ctx.snapshot.result
+
+            if (!snapshotResult) {
+              return
+            }
+
+            // Helper function to create snapshot entries
+            const createSnapshotEntry = (key: string) => ({
+              name: key,
+              content: String(snapshotResult.snapshot[key] || ''),
+              testName: key.replace(/ \d+$/, ''),
+            })
+
+            // Categorize snapshots using the data from the actual test execution
+            const categorizedSnapshots = {
+              added: snapshotResult.addedKeys.map(createSnapshotEntry),
+              matched: snapshotResult.matchedKeys.map(createSnapshotEntry),
+              unmatched: snapshotResult.unmatchedKeys.map(createSnapshotEntry),
+              unchecked: snapshotResult.uncheckedKeys.map(createSnapshotEntry),
+            }
+
+            return {
+              filepath: snapshotResult.filepath,
+              snapshots: categorizedSnapshots,
+            }
+          }
+          catch {}
         },
         async rerun(files, resetTestNamePattern) {
           await ctx.rerunFiles(files, undefined, true, resetTestNamePattern)
