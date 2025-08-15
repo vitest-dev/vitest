@@ -348,7 +348,6 @@ function createSuiteCollector(
             ? 'todo'
             : 'run',
       meta: {
-        ...Object.create(null),
         ...collectAncestorMeta(collectorContext.currentSuite?.suite),
         ...(options.meta || {}),
       },
@@ -484,7 +483,6 @@ function createSuiteCollector(
       shuffle: suiteOptions?.shuffle,
       tasks: [],
       meta: {
-        ...Object.create(null),
         ...(suiteOptions?.meta || {}),
       },
       concurrent: suiteOptions?.concurrent,

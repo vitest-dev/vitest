@@ -39,7 +39,7 @@ describe('TestOptions meta property functionality', { meta: { suiteLevel: 'test-
 
   test('should allow adding meta at runtime', { meta: { testLevel: 'runtime-test' } }, ({ task }) => {
     // Add meta at runtime
-    (task.meta as any).runtimeAdded = 'added-during-test'
+    task.meta.runtimeAdded = 'added-during-test'
 
     expect(task.meta).toMatchObject({
       suiteLevel: 'test-suite',
