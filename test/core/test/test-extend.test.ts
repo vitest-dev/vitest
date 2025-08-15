@@ -489,15 +489,11 @@ describe('test.scoped repro #7813', () => {
 })
 
 describe('suite with timeout', () => {
-  test.extend({}).fails('should timeout', async () => {
-    await new Promise(resolve => setTimeout(resolve, 1_000))
+  test.extend({})('timeout is inherited from suite', ({ task }) => {
+    expect(task.timeout).toBe(100)
   })
 
-  test.extend({})('should pass', { timeout: 1_000 }, async () => {
-    await new Promise(resolve => setTimeout(resolve, 200))
-  })
-
-  test.extend({})('should also pass', async () => {
-    await new Promise(resolve => setTimeout(resolve, 1))
+  test.extend({})('timeout is inherited from options', { timeout: 1_000 }, ({ task }) => {
+    expect(task.timeout).toBe(1_000)
   })
 }, 100)
