@@ -22,7 +22,15 @@ Browser Mode is the recommended approach for component testing as it provides th
 
 ### Setup
 
-First, install the browser mode dependencies:
+The easiest way to get started with browser mode is using Vitest's init command:
+
+```bash
+vitest init browser
+```
+
+This will automatically install the necessary dependencies and configure your project for browser testing.
+
+Alternatively, you can set it up manually:
 
 ::: code-group
 ```bash [npm]
@@ -38,7 +46,7 @@ pnpm add -D @vitest/browser playwright
 ```
 :::
 
-Configure browser mode in your `vitest.config.ts`:
+Then configure browser mode in your `vitest.config.ts`:
 
 ```ts
 import { defineConfig } from 'vitest/config'
@@ -68,9 +76,9 @@ Community packages are also available:
 
 | Framework | Package | Maintainer |
 |-----------|---------|------------|
-| Lit | `vitest-browser-lit` | Community |
-| Preact | `vitest-browser-preact` | Community |
-| Qwik | `vitest-browser-qwik` | Community |
+| Lit | [`vitest-browser-lit`](https://www.npmjs.com/package/vitest-browser-lit) | Community |
+| Preact | [`vitest-browser-preact`](https://www.npmjs.com/package/vitest-browser-preact) | Community |
+| Qwik | [`vitest-browser-qwik`](https://www.npmjs.com/package/vitest-browser-qwik) | Community |
 
 ### Examples by Framework
 
@@ -124,7 +132,12 @@ npm install --save-dev vitest-browser-react
 export default function HelloWorld({ name }: { name: string }) {
   return (
     <div>
-      <h1>Hello {name}!</h1>
+      <h1>
+        Hello
+        {' '}
+        {name}
+        !
+      </h1>
     </div>
   )
 }
@@ -217,26 +230,26 @@ test('renders name', async () => {
 
 ## User Interactions
 
-Test user interactions using Vitest's built-in interactivity API:
+Test user interactions using Vitest's locator methods:
 
-```ts
+```js
 import { expect, test } from 'vitest'
 import { render } from 'vitest-browser-react'
-import { userEvent } from '@vitest/browser/context'
+import { page } from '@vitest/browser/context'
 import LoginForm from './LoginForm'
 
 test('handles form submission', async () => {
-  const { getByLabelText, getByRole } = render(<LoginForm />)
-  
+  render(<LoginForm />)
+
   // Fill form fields
-  await userEvent.fill(getByLabelText(/username/i), 'john_doe')
-  await userEvent.fill(getByLabelText(/password/i), 'secret123')
-  
+  await page.getByLabelText(/username/i).fill('john_doe')
+  await page.getByLabelText(/password/i).fill('secret123')
+
   // Submit form
-  await userEvent.click(getByRole('button', { name: /submit/i }))
-  
+  await page.getByRole('button', { name: /submit/i }).click()
+
   // Assert results
-  await expect.element(getByText('Login successful')).toBeInTheDocument()
+  await expect.element(page.getByText('Login successful')).toBeInTheDocument()
 })
 ```
 
@@ -270,7 +283,7 @@ await expect.element(getByTestId('box')).toHaveStyle({ color: 'red' })
 
 For frameworks not officially supported by Vitest, you can use Testing Library packages:
 
-```ts
+```jsx
 // For Solid.js components
 import { render } from '@testing-library/solid'
 import { page } from '@vitest/browser/context'
@@ -278,7 +291,7 @@ import { page } from '@vitest/browser/context'
 test('solid component test', async () => {
   const { baseElement } = render(() => <MyComponent />)
   const screen = page.elementLocator(baseElement)
-  
+
   await expect.element(screen.getByText('Hello')).toBeInTheDocument()
 })
 ```
@@ -313,43 +326,44 @@ Node.js testing with DOM simulation may not catch all browser-specific issues. U
 
 ### Testing Props and Events
 
-```ts
+```js
 test('emits events on user interaction', async () => {
   const mockHandler = vi.fn()
-  const { getByRole } = render(<Button onClick={mockHandler}>Click me</Button>)
-  
-  await userEvent.click(getByRole('button'))
-  
+  render(<Button onClick={mockHandler}>Click me</Button>)
+
+  await page.getByRole('button').click()
+
   expect(mockHandler).toHaveBeenCalledOnce()
 })
 ```
 
 ### Testing Conditional Rendering
 
-```ts
+```jsx
 test('shows loading state', async () => {
   const { getByText, rerender } = render(<DataComponent loading={true} />)
-  
+
   await expect.element(getByText('Loading...')).toBeInTheDocument()
-  
+
   rerender(<DataComponent loading={false} data="content" />)
-  
+
   await expect.element(getByText('content')).toBeInTheDocument()
 })
 ```
 
 ### Testing Forms
 
-```ts
+```jsx
 test('validates form input', async () => {
-  const { getByLabelText, getByText } = render(<ContactForm />)
-  
-  const emailInput = getByLabelText(/email/i)
-  
-  await userEvent.fill(emailInput, 'invalid-email')
-  await userEvent.blur(emailInput)
-  
-  await expect.element(getByText('Please enter a valid email')).toBeInTheDocument()
+  render(<ContactForm />)
+
+  const emailInput = page.getByLabelText(/email/i)
+
+  await emailInput.fill('invalid-email')
+  // Trigger validation by focusing away from the input
+  await page.getByRole('button', { name: /submit/i }).focus()
+
+  await expect.element(page.getByText('Please enter a valid email')).toBeInTheDocument()
 })
 ```
 
