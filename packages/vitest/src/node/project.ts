@@ -5,6 +5,7 @@ import type { Typechecker } from '../typecheck/typechecker'
 import type { ProvidedContext } from '../types/general'
 import type { OnTestsRerunHandler, Vitest } from './core'
 import type { GlobalSetupFile } from './globalSetup'
+import type { TestSpecificationOptions } from './spec'
 import type { ParentProjectBrowser, ProjectBrowser } from './types/browser'
 import type {
   ProjectName,
@@ -138,7 +139,7 @@ export class TestProject {
    */
   public createSpecification(
     moduleId: string,
-    locations?: number[] | undefined,
+    options?: TestSpecificationOptions,
     /** @internal */
     pool?: string,
   ): TestSpecification {
@@ -146,7 +147,7 @@ export class TestProject {
       this,
       moduleId,
       pool || getFilePoolName(this),
-      locations,
+      options,
     )
   }
 

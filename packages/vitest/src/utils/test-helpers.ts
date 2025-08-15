@@ -1,3 +1,4 @@
+import type { FileSpecification } from '@vitest/runner'
 import type { TestProject } from '../node/project'
 import type { TestSpecification } from '../node/spec'
 import type { EnvironmentOptions, VitestEnvironment } from '../node/types/config'
@@ -16,12 +17,12 @@ export interface FileByEnv {
 export async function groupFilesByEnv(
   files: Array<TestSpecification>,
 ): Promise<Record<string, {
-  file: { filepath: string; testLocations: number[] | undefined }
+  file: FileSpecification
   project: TestProject
   environment: ContextTestEnvironment
 }[]>> {
   const filesWithEnv = await Promise.all(
-    files.map(async ({ moduleId: filepath, project, testLines }) => {
+    files.map(async ({ moduleId: filepath, project, testLines, testNamePattern }) => {
       const code = await fs.readFile(filepath, 'utf-8')
 
       // 1. Check for control comments in the file
@@ -47,6 +48,7 @@ export async function groupFilesByEnv(
         file: {
           filepath,
           testLocations: testLines,
+          testNamePattern,
         },
         project,
         environment,
