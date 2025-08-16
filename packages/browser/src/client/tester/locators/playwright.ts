@@ -52,6 +52,11 @@ page.extend({
       element,
     )
   },
+  frameLocator(locator: Locator) {
+    return new PlaywrightLocator(
+      `${locator.selector} >> internal:control=enter-frame`,
+    )
+  },
 })
 
 class PlaywrightLocator extends Locator {
