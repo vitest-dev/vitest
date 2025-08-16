@@ -375,6 +375,14 @@ This methods overrides the global [test name pattern](/config/#testnamepattern).
 This method doesn't start running any tests. To run tests with updated pattern, call [`runTestSpecifications`](#runtestspecifications).
 :::
 
+## getGlobalTestNamePattern
+
+```ts
+function getGlobalTestNamePattern(): RegExp | undefined
+```
+
+Returns the regexp used for the global test name pattern.
+
 ## resetGlobalTestNamePattern
 
 ```ts
@@ -552,6 +560,24 @@ Creates a coverage provider if `coverage` is enabled in the config. This is done
 ::: warning
 This method will also clean all previous reports if [`coverage.clean`](/config/#coverage-clean) is not set to `false`.
 :::
+
+## enableCoverage <Version>4.0.0</Version> {#enablecoverage}
+
+```ts
+function enableCoverage(): Promise<void>
+```
+
+This method enables coverage for tests that run after this call. `enableCoverage` doesn't run any tests; it only sets up Vitest to collect coverage.
+
+It creates a new coverage provider if one doesn't already exist.
+
+## disableCoverage <Version>4.0.0</Version> {#disablecoverage}
+
+```ts
+function disableCoverage(): void
+```
+
+This method disables coverage collection for tests that run afterwards.
 
 ## experimental_parseSpecification <Version>4.0.0</Version> <Badge type="warning">experimental</Badge> {#parsespecification}
 

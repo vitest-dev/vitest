@@ -1,7 +1,8 @@
 import type { CoverageSummary, FileCoverageData } from 'istanbul-lib-coverage'
 import type { TestFunction } from 'vitest'
 import type { TestUserConfig } from 'vitest/node'
-import { readFileSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
+import { unlink } from 'node:fs/promises'
 import { resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { stripVTControlCharacters } from 'node:util'
@@ -65,6 +66,12 @@ export async function runVitest(config: TestUserConfig, options = { throwOnError
   }
 
   return result
+}
+
+export async function cleanupCoverageJson(name = './coverage/coverage-final.json') {
+  if (existsSync(name)) {
+    await unlink(name)
+  }
 }
 
 /**

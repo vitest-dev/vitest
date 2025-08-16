@@ -204,12 +204,12 @@ export abstract class Locator {
     return this.locator(`internal:or=${JSON.stringify(locator._pwSelector || locator.selector)}`)
   }
 
-  public query(): Element | null {
+  public query(): HTMLElement | SVGElement | null {
     const parsedSelector = this._parsedSelector || (this._parsedSelector = selectorEngine.parseSelector(this._pwSelector || this.selector))
-    return selectorEngine.querySelector(parsedSelector, document.documentElement, true)
+    return selectorEngine.querySelector(parsedSelector, document.documentElement, true) as HTMLElement | SVGElement
   }
 
-  public element(): Element {
+  public element(): HTMLElement | SVGElement {
     const element = this.query()
     if (!element) {
       throw getElementError(this._pwSelector || this.selector, this._container || document.body)
@@ -217,9 +217,9 @@ export abstract class Locator {
     return element
   }
 
-  public elements(): Element[] {
+  public elements(): (HTMLElement | SVGElement)[] {
     const parsedSelector = this._parsedSelector || (this._parsedSelector = selectorEngine.parseSelector(this._pwSelector || this.selector))
-    return selectorEngine.querySelectorAll(parsedSelector, document.documentElement)
+    return selectorEngine.querySelectorAll(parsedSelector, document.documentElement) as (HTMLElement | SVGElement)[]
   }
 
   public all(): Locator[] {

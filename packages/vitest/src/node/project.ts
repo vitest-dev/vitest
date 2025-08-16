@@ -1,13 +1,10 @@
 import type { GlobOptions } from 'tinyglobby'
-import type { ModuleNode, TransformResult, ViteDevServer, InlineConfig as ViteInlineConfig } from 'vite'
+import type { ViteDevServer, InlineConfig as ViteInlineConfig } from 'vite'
 import type { ModuleRunner } from 'vite/module-runner'
 import type { Typechecker } from '../typecheck/typechecker'
 import type { ProvidedContext } from '../types/general'
 import type { OnTestsRerunHandler, Vitest } from './core'
 import type { GlobalSetupFile } from './globalSetup'
-import type { Logger } from './logger'
-import type { WorkspaceSpec as DeprecatedWorkspaceSpec } from './pool'
-import type { Reporter } from './reporters'
 import type { ParentProjectBrowser, ProjectBrowser } from './types/browser'
 import type {
   ProjectName,
@@ -55,9 +52,6 @@ export class TestProject {
    */
   public browser?: ProjectBrowser
 
-  /** @deprecated use `vitest` instead */
-  public ctx: Vitest
-
   /**
    * Temporary directory for the project. This is unique for each project. Vitest stores transformed content here.
    */
@@ -80,13 +74,10 @@ export class TestProject {
   private _provided: ProvidedContext = {} as any
 
   constructor(
-    /** @deprecated */
-    public path: string | number,
     vitest: Vitest,
     public options?: InitializeProjectOptions | undefined,
   ) {
     this.vitest = vitest
-    this.ctx = vitest
     this.globalConfig = vitest.config
   }
 
@@ -220,31 +211,11 @@ export class TestProject {
     return this._serializeOverriddenConfig()
   }
 
-  /** @deprecated use `vite` instead */
-  public get server(): ViteDevServer {
-    return this._vite!
-  }
-
   /**
    * Check if this is the root project. The root project is the one that has the root config.
    */
   public isRootProject(): boolean {
     return this.vitest.getRootProject() === this
-  }
-
-  /** @deprecated use `isRootProject` instead */
-  public isCore(): boolean {
-    return this.isRootProject()
-  }
-
-  /** @deprecated use `createSpecification` instead */
-  public createSpec(moduleId: string, pool: string): DeprecatedWorkspaceSpec {
-    return new TestSpecification(this, moduleId, pool) as DeprecatedWorkspaceSpec
-  }
-
-  /** @deprecated */
-  initializeGlobalSetup(): Promise<void> {
-    return this._initializeGlobalSetup()
   }
 
   /** @internal */
@@ -276,11 +247,6 @@ export class TestProject {
     this.vitest.onTestsRerun(cb)
   }
 
-  /** @deprecated */
-  teardownGlobalSetup(): Promise<void> {
-    return this._teardownGlobalSetup()
-  }
-
   /** @internal */
   async _teardownGlobalSetup(): Promise<void> {
     if (!this._globalSetups) {
@@ -289,39 +255,6 @@ export class TestProject {
     for (const globalSetupFile of [...this._globalSetups].reverse()) {
       await globalSetupFile.teardown?.()
     }
-  }
-
-  /** @deprecated use `vitest.logger` instead */
-  get logger(): Logger {
-    return this.vitest.logger
-  }
-
-  // it's possible that file path was imported with different queries (?raw, ?url, etc)
-  /** @deprecated use `.vite` or `.browser.vite` directly */
-  getModulesByFilepath(file: string): Set<ModuleNode> {
-    const set
-      = this.server.moduleGraph.getModulesByFile(file)
-        || this.browser?.vite.moduleGraph.getModulesByFile(file)
-    return set || new Set()
-  }
-
-  /** @deprecated use `.vite` or `.browser.vite` directly */
-  getModuleById(id: string): ModuleNode | undefined {
-    return (
-      this.server.moduleGraph.getModuleById(id)
-      || this.browser?.vite.moduleGraph.getModuleById(id)
-    )
-  }
-
-  /** @deprecated use `.vite` or `.browser.vite` directly */
-  getSourceMapModuleById(id: string): TransformResult['map'] | undefined {
-    const mod = this.server.moduleGraph.getModuleById(id)
-    return mod?.ssrTransformResult?.map || mod?.transformResult?.map
-  }
-
-  /** @deprecated use `vitest.reporters` instead */
-  get reporters(): Reporter[] {
-    return this.ctx.reporters
   }
 
   /**
@@ -434,11 +367,6 @@ export class TestProject {
     return !!this.typecheckFilesList && this.typecheckFilesList.includes(testPath)
   }
 
-  /** @deprecated use `serializedConfig` instead */
-  getSerializableConfig(): SerializedConfig {
-    return this._serializeOverriddenConfig()
-  }
-
   /** @internal */
   async globFiles(include: string[], exclude: string[], cwd: string) {
     const globOptions: GlobOptions = {
@@ -481,11 +409,6 @@ export class TestProject {
       }
     }
     return false
-  }
-
-  /** @deprecated use `matchesTestGlob` instead */
-  async isTargetFile(id: string, source?: string): Promise<boolean> {
-    return this.matchesTestGlob(id, source ? () => source : undefined)
   }
 
   private isInSourceTestCode(code: string): boolean {
@@ -602,16 +525,6 @@ export class TestProject {
     return this.runner.import(moduleId)
   }
 
-  /** @deprecated use `name` instead */
-  public getName(): string {
-    return this.config.name || ''
-  }
-
-  /** @deprecated internal */
-  public setServer(options: UserConfig, server: ViteDevServer): Promise<void> {
-    return this._configureServer(options, server)
-  }
-
   private _setHash() {
     this._hash = generateHash(
       this._config!.root + this._config!.name,
@@ -674,11 +587,6 @@ export class TestProject {
     catch {}
   }
 
-  /** @deprecated */
-  public initBrowserProvider(): Promise<void> {
-    return this._initBrowserProvider()
-  }
-
   /** @internal */
   _initBrowserProvider = deduped(async (): Promise<void> => {
     if (!this.isBrowserEnabled() || this.browser?.provider) {
@@ -705,11 +613,10 @@ export class TestProject {
   /** @internal */
   static _createBasicProject(vitest: Vitest): TestProject {
     const project = new TestProject(
-      vitest.config.name || vitest.config.root,
       vitest,
     )
     project.runner = vitest.runner
-    project._vite = vitest.server
+    project._vite = vitest.vite
     project._config = vitest.config
     project._resolver = vitest._resolver
     project._setHash()
@@ -719,10 +626,7 @@ export class TestProject {
 
   /** @internal */
   static _cloneBrowserProject(parent: TestProject, config: ResolvedConfig): TestProject {
-    const clone = new TestProject(
-      parent.path,
-      parent.vitest,
-    )
+    const clone = new TestProject(parent.vitest)
     clone.runner = parent.runner
     clone._vite = parent._vite
     clone._resolver = parent._resolver
@@ -746,11 +650,6 @@ function deduped<T extends (...args: any[]) => Promise<void>>(cb: T): T {
   }) as T
 }
 
-export {
-  /** @deprecated use `TestProject` instead */
-  TestProject as WorkspaceProject,
-}
-
 export interface SerializedTestProject {
   name: string
   serializedConfig: SerializedConfig
@@ -766,7 +665,7 @@ export async function initializeProject(
   ctx: Vitest,
   options: InitializeProjectOptions,
 ): Promise<TestProject> {
-  const project = new TestProject(workspacePath, ctx, options)
+  const project = new TestProject(ctx, options)
 
   const { configFile, ...restOptions } = options
 

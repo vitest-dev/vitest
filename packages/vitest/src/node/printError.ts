@@ -141,12 +141,17 @@ function printErrorInner(
     = error instanceof TypeCheckError
       ? error.stacks[0]
       : stacks.find((stack) => {
+          // we are checking that this module was processed by us at one point
           try {
-            const module = project._vite && project.getModuleById(stack.file)
-            return (
-              (module?.transformResult || module?.ssrTransformResult)
-              && existsSync(stack.file)
-            )
+            const environments = [
+              ...Object.values(project._vite?.environments || {}),
+              ...Object.values(project.browser?.vite.environments || {}),
+            ]
+            const hasResult = environments.some((environment) => {
+              const modules = environment.moduleGraph.getModulesByFile(stack.file)
+              return [...modules?.values() || []].some(module => !!module.transformResult)
+            })
+            return hasResult && existsSync(stack.file)
           }
           catch {
             return false

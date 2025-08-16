@@ -295,19 +295,6 @@ export interface BrowserScript {
 }
 ```
 
-## browser.testerScripts
-
-- **Type:** `BrowserScript[]`
-- **Default:** `[]`
-
-::: danger DEPRECATED
-This API is deprecated an will be removed in Vitest 4. Please, use [`browser.testerHtmlPath`](#browser-testerhtmlpath) field instead.
-:::
-
-Custom scripts that should be injected into the tester HTML before the tests environment is initiated. This is useful to inject polyfills required for Vitest browser implementation. It is recommended to use [`setupFiles`](#setupfiles) in almost all cases instead of this.
-
-The script `src` and `content` will be processed by Vite plugins.
-
 ## browser.commands
 
 - **Type:** `Record<string, BrowserCommand>`

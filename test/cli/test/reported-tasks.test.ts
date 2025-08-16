@@ -1,5 +1,5 @@
 import type { RunnerTestFile } from 'vitest'
-import type { WorkspaceProject } from 'vitest/node'
+import type { TestProject } from 'vitest/node'
 import type { StateManager } from 'vitest/src/node/state.js'
 import type { TestCase, TestCollection, TestModule } from '../../../packages/vitest/src/node/reporters/reported-tasks'
 import { resolve } from 'pathe'
@@ -9,7 +9,7 @@ import { runVitest } from '../../test-utils'
 const now = new Date()
 const collectedTestModules: TestModule[] = []
 let state: StateManager
-let project: WorkspaceProject
+let project: TestProject
 let files: RunnerTestFile[]
 let testModule: TestModule
 

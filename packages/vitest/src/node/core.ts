@@ -6,17 +6,17 @@ import type { ModuleRunner } from 'vite/module-runner'
 import type { SerializedCoverageConfig } from '../runtime/config'
 import type { ArgumentsType, ProvidedContext, UserConsoleLog } from '../types/general'
 import type { CliOptions } from './cli/cli-api'
-import type { ProcessPool, WorkspaceSpec } from './pool'
+import type { ProcessPool } from './pool'
 import type { TestModule } from './reporters/reported-tasks'
 import type { TestSpecification } from './spec'
 import type { ResolvedConfig, TestProjectConfiguration, UserConfig, VitestRunMode } from './types/config'
-import type { CoverageProvider } from './types/coverage'
+import type { CoverageProvider, ResolvedCoverageOptions } from './types/coverage'
 import type { Reporter } from './types/reporter'
 import type { TestRunResult } from './types/tests'
 import os from 'node:os'
 import { getTasks, hasFailed, limitConcurrency } from '@vitest/runner/utils'
 import { SnapshotManager } from '@vitest/snapshot/manager'
-import { noop, toArray } from '@vitest/utils'
+import { deepClone, deepMerge, noop, toArray } from '@vitest/utils'
 import { normalize, relative } from 'pathe'
 import { version } from '../../package.json' with { type: 'json' }
 import { WebSocketReporter } from '../api/setup'
@@ -94,7 +94,6 @@ export class Vitest {
   public readonly watcher: VitestWatcher
 
   /** @internal */ configOverride: Partial<ResolvedConfig> = {}
-  /** @internal */ coverageProvider: CoverageProvider | null | undefined
   /** @internal */ filenamePattern?: string[]
   /** @internal */ runningPromise?: Promise<TestRunResult>
   /** @internal */ closingPromise?: Promise<void>
@@ -117,6 +116,7 @@ export class Vitest {
   private _state?: StateManager
   private _cache?: VitestCache
   private _snapshot?: SnapshotManager
+  private _coverageProvider?: CoverageProvider | null | undefined
 
   constructor(
     public readonly mode: VitestRunMode,
@@ -139,27 +139,12 @@ export class Vitest {
   private _onUserTestsRerun: OnTestsRerunHandler[] = []
   private _onFilterWatchedSpecification: ((spec: TestSpecification) => boolean)[] = []
 
-  /** @deprecated will be removed in 4.0, use `onFilterWatchedSpecification` instead */
-  public get invalidates(): Set<string> {
-    return this.watcher.invalidates
-  }
-
-  /** @deprecated will be removed in 4.0, use `onFilterWatchedSpecification` instead */
-  public get changedTests(): Set<string> {
-    return this.watcher.changedTests
-  }
-
   /**
    * The global config.
    */
   get config(): ResolvedConfig {
     assert(this._config, 'config')
     return this._config
-  }
-
-  /** @deprecated use `vitest.vite` instead */
-  get server(): ViteDevServer {
-    return this._vite!
   }
 
   /**
@@ -195,11 +180,6 @@ export class Vitest {
     return this._cache
   }
 
-  /** @deprecated internal */
-  setServer(options: UserConfig, server: ViteDevServer): Promise<void> {
-    return this._setServer(options, server)
-  }
-
   /** @internal */
   async _setServer(options: UserConfig, server: ViteDevServer) {
     this.watcher.unregisterWatcher()
@@ -209,10 +189,10 @@ export class Vitest {
     this.pool = undefined
     this.closingPromise = undefined
     this.projects = []
-    this.coverageProvider = undefined
     this.runningPromise = undefined
     this.coreWorkspaceProject = undefined
     this.specifications.clearCache()
+    this._coverageProvider = undefined
     this._onUserTestsRerun = []
 
     this._vite = server
@@ -312,6 +292,44 @@ export class Vitest {
     await Promise.all(this._onSetServer.map(fn => fn()))
   }
 
+  /** @internal */
+  get coverageProvider(): CoverageProvider | null | undefined {
+    if (this.configOverride.coverage?.enabled === false) {
+      return null
+    }
+    return this._coverageProvider
+  }
+
+  public async enableCoverage(): Promise<void> {
+    this.configOverride.coverage = {} as any
+    this.configOverride.coverage!.enabled = true
+    await this.createCoverageProvider()
+    await this.coverageProvider?.onEnabled?.()
+  }
+
+  public disableCoverage(): void {
+    this.configOverride.coverage ??= {} as any
+    this.configOverride.coverage!.enabled = false
+  }
+
+  private _coverageOverrideCache = new WeakMap<ResolvedCoverageOptions, ResolvedCoverageOptions>()
+
+  /** @internal */
+  get _coverageOptions(): ResolvedCoverageOptions {
+    if (!this.configOverride.coverage) {
+      return this.config.coverage
+    }
+    if (!this._coverageOverrideCache.has(this.configOverride.coverage)) {
+      const coverage = deepClone(this.config.coverage)
+      const options = deepMerge(coverage, this.configOverride.coverage)
+      this._coverageOverrideCache.set(
+        this.configOverride.coverage,
+        options,
+      )
+    }
+    return this._coverageOverrideCache.get(this.configOverride.coverage)!
+  }
+
   /**
    * Inject new test projects into the workspace.
    * @param config Glob, config path or a custom config options.
@@ -353,11 +371,6 @@ export class Vitest {
     return this.coreWorkspaceProject
   }
 
-  /** @deprecated use `getRootProject` instead */
-  public getCoreWorkspaceProject(): TestProject {
-    return this.getRootProject()
-  }
-
   /**
    * Return project that has the root (or "global") config.
    */
@@ -366,15 +379,6 @@ export class Vitest {
       throw new Error(`Root project is not initialized. This means that the Vite server was not established yet and the the workspace config is not resolved.`)
     }
     return this.coreWorkspaceProject
-  }
-
-  /**
-   * @deprecated use Reported Task API instead
-   */
-  public getProjectByTaskId(taskId: string): TestProject {
-    const task = this.state.idMap.get(taskId)
-    const projectName = (task as File).projectName || task?.file?.projectName || ''
-    return this.getProjectByName(projectName)
   }
 
   public getProjectByName(name: string): TestProject {
@@ -399,12 +403,12 @@ export class Vitest {
    * Creates a coverage provider if `coverage` is enabled in the config.
    */
   public async createCoverageProvider(): Promise<CoverageProvider | null> {
-    if (this.coverageProvider) {
-      return this.coverageProvider
+    if (this._coverageProvider) {
+      return this._coverageProvider
     }
     const coverageProvider = await this.initCoverageProvider()
     if (coverageProvider) {
-      await coverageProvider.clean(this.config.coverage.clean)
+      await coverageProvider.clean(this._coverageOptions.clean)
     }
     return coverageProvider || null
   }
@@ -444,18 +448,21 @@ export class Vitest {
   }
 
   private async initCoverageProvider(): Promise<CoverageProvider | null | undefined> {
-    if (this.coverageProvider !== undefined) {
+    if (this._coverageProvider != null) {
       return
     }
-    this.coverageProvider = await getCoverageProvider(
-      this.config.coverage as unknown as SerializedCoverageConfig,
+    const coverageConfig = (this.configOverride.coverage
+      ? this.getRootProject().serializedConfig.coverage
+      : this.config.coverage) as unknown as SerializedCoverageConfig
+    this._coverageProvider = await getCoverageProvider(
+      coverageConfig,
       this.runner,
     )
-    if (this.coverageProvider) {
-      await this.coverageProvider.initialize(this)
-      this.config.coverage = this.coverageProvider.resolveOptions()
+    if (this._coverageProvider) {
+      await this._coverageProvider.initialize(this)
+      this.config.coverage = this._coverageProvider.resolveOptions()
     }
-    return this.coverageProvider
+    return this._coverageProvider
   }
 
   /**
@@ -529,11 +536,6 @@ export class Vitest {
     return this.collectTests(files)
   }
 
-  /** @deprecated use `getRelevantTestSpecifications` instead */
-  public listFiles(filters?: string[]): Promise<TestSpecification[]> {
-    return this.getRelevantTestSpecifications(filters)
-  }
-
   /**
    * Returns the list of test files that match the config and filters.
    * @param filters String filters to match the test files
@@ -553,7 +555,7 @@ export class Vitest {
   async start(filters?: string[]): Promise<TestRunResult> {
     try {
       await this.initCoverageProvider()
-      await this.coverageProvider?.clean(this.config.coverage.clean)
+      await this.coverageProvider?.clean(this._coverageOptions.clean)
     }
     finally {
       await this.report('onInit', this)
@@ -602,7 +604,7 @@ export class Vitest {
   async init(): Promise<void> {
     try {
       await this.initCoverageProvider()
-      await this.coverageProvider?.clean(this.config.coverage.clean)
+      await this.coverageProvider?.clean(this._coverageOptions.clean)
     }
     finally {
       await this.report('onInit', this)
@@ -614,18 +616,6 @@ export class Vitest {
     if (this.config.watch) {
       await this.report('onWatcherStart')
     }
-  }
-
-  /**
-   * @deprecated remove when vscode extension supports "getModuleSpecifications"
-   */
-  getProjectsByTestFile(file: string): WorkspaceSpec[] {
-    return this.getModuleSpecifications(file) as WorkspaceSpec[]
-  }
-
-  /** @deprecated */
-  getFileWorkspaceSpecs(file: string): WorkspaceSpec[] {
-    return this.getModuleSpecifications(file) as WorkspaceSpec[]
   }
 
   /**
@@ -677,7 +667,6 @@ export class Vitest {
    * @param allTestsRun Indicates whether all tests were run. This only matters for coverage.
    */
   public async rerunTestSpecifications(specifications: TestSpecification[], allTestsRun = false): Promise<TestRunResult> {
-    this.configOverride.testNamePattern = undefined
     const files = specifications.map(spec => spec.moduleId)
     await Promise.all([
       this.report('onWatcherRerun', files, 'rerun test'),
@@ -709,7 +698,7 @@ export class Vitest {
         this.snapshot.clear()
         this.state.clearErrors()
 
-        if (!this.isFirstRun && this.config.coverage.cleanOnRerun) {
+        if (!this.isFirstRun && this._coverageOptions.cleanOnRerun) {
           await this.coverageProvider?.clean()
         }
 
@@ -1013,6 +1002,16 @@ export class Vitest {
   }
 
   /**
+   * Returns the regexp used for the global test name pattern.
+   */
+  public getGlobalTestNamePattern(): RegExp | undefined {
+    if (this.configOverride.testNamePattern != null) {
+      return this.configOverride.testNamePattern
+    }
+    return this.config.testNamePattern
+  }
+
+  /**
    * Resets the global test name pattern. This method doesn't run any tests.
    */
   public resetGlobalTestNamePattern(): void {
@@ -1095,11 +1094,6 @@ export class Vitest {
     })
   }
 
-  /** @deprecated use `invalidateFile` */
-  updateLastChanged(filepath: string): void {
-    this.invalidateFile(filepath)
-  }
-
   /** @internal */
   public _checkUnhandledErrors(errors: unknown[]): void {
     if (errors.length && !this.config.dangerouslyIgnoreUnhandledErrors) {
@@ -1111,7 +1105,7 @@ export class Vitest {
     if (this.state.getCountOfFailedTests() > 0) {
       await this.coverageProvider?.onTestFailure?.()
 
-      if (!this.config.coverage.reportOnFailure) {
+      if (!this._coverageOptions.reportOnFailure) {
         return
       }
     }
@@ -1222,28 +1216,6 @@ export class Vitest {
   public async _globTestFilepaths() {
     const specifications = await this.globTestSpecifications()
     return Array.from(new Set(specifications.map(spec => spec.moduleId)))
-  }
-
-  /**
-   * @deprecated use `globTestSpecifications` instead
-   */
-  public async globTestSpecs(filters: string[] = []): Promise<TestSpecification[]> {
-    return this.globTestSpecifications(filters)
-  }
-
-  /**
-   * @deprecated use `globTestSpecifications` instead
-   */
-  public async globTestFiles(filters: string[] = []): Promise<TestSpecification[]> {
-    return this.globTestSpecifications(filters)
-  }
-
-  /** @deprecated filter by `this.projects` yourself */
-  public getModuleProjects(filepath: string): TestProject[] {
-    return this.projects.filter((project) => {
-      return project.getModulesByFilepath(filepath).size
-      // TODO: reevaluate || project.browser?.moduleGraph.getModulesByFile(id)?.size
-    })
   }
 
   /**

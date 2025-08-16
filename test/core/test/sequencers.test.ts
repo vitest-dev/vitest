@@ -1,5 +1,4 @@
-import type { Vitest, WorkspaceProject } from 'vitest/node'
-import type { WorkspaceSpec as DeprecatedWorkspaceSpec } from '../../../packages/vitest/src/node/pool'
+import type { TestProject, Vitest } from 'vitest/node'
 import { describe, expect, test, vi } from 'vitest'
 import { BaseSequencer } from '../../../packages/vitest/src/node/sequencers/BaseSequencer'
 import { RandomSequencer } from '../../../packages/vitest/src/node/sequencers/RandomSequencer'
@@ -24,13 +23,13 @@ function buildWorkspace() {
     config: {
       root: import.meta.dirname,
     },
-  } as any as WorkspaceProject
+  } as any as TestProject
 }
 
 const workspace = buildWorkspace()
 
 function workspaced(files: string[]) {
-  return files.map(file => new TestSpecification(workspace, file, 'forks')) as DeprecatedWorkspaceSpec[]
+  return files.map(file => new TestSpecification(workspace, file, 'forks'))
 }
 
 describe('base sequencer', () => {

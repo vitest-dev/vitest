@@ -207,13 +207,13 @@ export class Logger {
 
     if (this.ctx.config.ui) {
       const host = this.ctx.config.api?.host || 'localhost'
-      const port = this.ctx.server.config.server.port
+      const port = this.ctx.vite.config.server.port
       const base = this.ctx.config.uiBase
 
       this.log(PAD + c.dim(c.green(`UI started at http://${host}:${c.bold(port)}${base}`)))
     }
     else if (this.ctx.config.api?.port) {
-      const resolvedUrls = this.ctx.server.resolvedUrls
+      const resolvedUrls = this.ctx.vite.resolvedUrls
       // workaround for https://github.com/vitejs/vite/issues/15438, it was fixed in vite 5.1
       const fallbackUrl = `http://${this.ctx.config.api.host || 'localhost'}:${this.ctx.config.api.port}`
       const origin = resolvedUrls?.local[0] ?? resolvedUrls?.network[0] ?? fallbackUrl
