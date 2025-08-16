@@ -8,7 +8,7 @@
     "test:coverage": "vitest run --root coverage-report-tests"
   },
   "devDependencies": {
-    "@jridgewell/remapping": "^2.3.0",
+    "@jridgewell/remapping": "^2.3.5",
     "@types/istanbul-lib-coverage": "catalog:",
     "istanbul-lib-coverage": "^3.2.2",
     "jsdom": "latest",
