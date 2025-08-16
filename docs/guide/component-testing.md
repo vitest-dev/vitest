@@ -361,7 +361,7 @@ test('validates form input', async () => {
 
   await emailInput.fill('invalid-email')
   // Trigger validation by focusing away from the input
-  await page.getByRole('button', { name: /submit/i }).focus()
+  await page.getByRole('button', { name: /submit/i }).click()
 
   await expect.element(page.getByText('Please enter a valid email')).toBeInTheDocument()
 })
