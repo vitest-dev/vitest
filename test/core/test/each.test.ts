@@ -242,3 +242,5 @@ ${{ val: 1 }} | ${{ val: 2 }}} | ${3}
 test.each([[343434, '$343,434.00']])('handles whole numbers: %s as %s', (input, expected) => {
   expect(new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(input)).toBe(expected)
 })
+
+test.each([{ a: '$b', b: 'yay' }])('%o', () => {})
