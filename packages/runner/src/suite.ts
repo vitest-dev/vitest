@@ -850,25 +850,9 @@ function formatTitle(template: string, items: any[], idx: number) {
       .replace(/%\$/g, `${idx + 1}`)
       .replace(/__vitest_escaped_%__/g, '%%')
   }
-  const count = template.split('%').length - 1
-
-  if (template.includes('%f')) {
-    const placeholders = template.match(/%f/g) || []
-    placeholders.forEach((_, i) => {
-      if (isNegativeNaN(items[i]) || Object.is(items[i], -0)) {
-        // Replace the i-th occurrence of '%f' with '-%f'
-        let occurrence = 0
-        template = template.replace(/%f/g, (match) => {
-          occurrence++
-          return occurrence === i + 1 ? '-%f' : match
-        })
-      }
-    })
-  }
-
-  let formatted = format(template, ...items.slice(0, count))
   const isObjectItem = isObject(items[0])
-  formatted = formatted.replace(
+
+  const processedTemplate = template.replace(
     /\$([$\w.]+)/g,
     (_, key: string) => {
       const isArrayKey = /^\d+$/.test(key)
@@ -882,7 +866,25 @@ function formatTitle(template: string, items: any[], idx: number) {
       }) as unknown as string
     },
   )
-  return formatted
+
+  const count = processedTemplate.split('%').length - 1
+
+  if (processedTemplate.includes('%f')) {
+    const placeholders = processedTemplate.match(/%f/g) || []
+    let temporaryTemplate = processedTemplate
+    placeholders.forEach((_, i) => {
+      if (isNegativeNaN(items[i]) || Object.is(items[i], -0)) {
+        let occurrence = 0
+        temporaryTemplate = temporaryTemplate.replace(/%f/g, (match) => {
+          occurrence++
+          return occurrence === i + 1 ? '-%f' : match
+        })
+      }
+    })
+    return format(temporaryTemplate, ...items.slice(0, count))
+  }
+
+  return format(processedTemplate, ...items.slice(0, count))
 }
 
 function formatTemplateString(cases: any[], args: any[]): any[] {
