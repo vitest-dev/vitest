@@ -50,6 +50,11 @@ const vitestSponsors = {
       url: 'https://mailmeteor.com/',
       img: '/mailmeteor.svg',
     },
+    {
+      name: 'Liminity',
+      url: 'https://www.liminity.se/',
+      img: '/liminity.svg',
+    },
   ],
 } satisfies Record<string, Sponsor[]>
 
