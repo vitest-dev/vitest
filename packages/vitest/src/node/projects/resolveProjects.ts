@@ -294,6 +294,7 @@ function cloneConfig(project: TestProject, { browser, ...config }: BrowserInstan
     // @ts-expect-error remove just in case
     browser: _browser,
     name,
+    provider,
     ...overrideConfig
   } = config
   const currentConfig = project.config.browser
@@ -312,8 +313,9 @@ function cloneConfig(project: TestProject, { browser, ...config }: BrowserInstan
       screenshotDirectory: screenshotDirectory ?? currentConfig.screenshotDirectory,
       screenshotFailures: screenshotFailures ?? currentConfig.screenshotFailures,
       headless: headless ?? currentConfig.headless,
+      provider: provider ?? currentConfig.provider,
       name: browser,
-      instances: undefined, // projects cannot spawn more configs
+      instances: [], // projects cannot spawn more configs
     },
     // If there is no include or exclude or includeSource pattern in browser.instances[], we should use the that's pattern from the parent project
     include: (overrideConfig.include && overrideConfig.include.length > 0) ? [] : clonedConfig.include,

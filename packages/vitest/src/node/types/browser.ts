@@ -34,7 +34,7 @@ export interface BrowserProvider {
    */
   supportsParallelism: boolean
   getCommandsContext: (sessionId: string) => Record<string, unknown>
-  openPage: (sessionId: string, url: string, beforeNavigate?: () => Promise<void>) => Promise<void>
+  openPage: (sessionId: string, url: string) => Promise<void>
   getCDPSession?: (sessionId: string) => Promise<CDPSession>
   close: () => Awaitable<void>
 }
@@ -91,31 +91,19 @@ export interface BrowserConfigOptions {
   /**
    * Name of the browser
    * @deprecated use `instances` instead. if both are defined, this will filter `instances` by name.
+   * @internal
    */
   name?: string
 
   /**
    * Configurations for different browser setups
    */
-  instances?: BrowserInstanceOption[]
+  instances: BrowserInstanceOption[]
 
   /**
    * Browser provider
    */
   provider?: BrowserProviderOption
-
-  /**
-   * Options that are passed down to a browser provider.
-   * To support type hinting, add one of the types to your tsconfig.json "compilerOptions.types" field:
-   *
-   * - for webdriverio: `@vitest/browser/providers/webdriverio`
-   * - for playwright: `@vitest/browser/providers/playwright`
-   *
-   * @example
-   * { playwright: { launch: { devtools: true } }
-   * @deprecated use `instances` instead
-   */
-  // providerOptions?: BrowserProviderOptions
 
   /**
    * enable headless mode

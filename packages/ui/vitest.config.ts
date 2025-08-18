@@ -10,6 +10,7 @@ export default mergeConfig(
       browser: {
         name: 'chromium',
         provider: playwright(),
+        instances: [{ browser: 'crhomium' }],
       },
     },
   }),

@@ -116,7 +116,7 @@ test('inspect and --inspect-brk cannot be used when not playwright + chromium', 
           browser: {
             enabled: true,
             provider,
-            name,
+            instances: [{ browser: name }],
           },
         },
       })
@@ -163,7 +163,7 @@ test('v8 coverage provider throws when not playwright + chromium (browser.name)'
         browser: {
           enabled: true,
           provider,
-          name,
+          instances: [{ browser: name }],
         },
       },
     })

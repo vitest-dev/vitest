@@ -42,13 +42,12 @@ export interface PlaywrightProviderOptions {
   contextOptions?: Omit<
     BrowserContextOptions,
     'ignoreHTTPSErrors' | 'serviceWorkers'
-  > & {
-    /**
-     * The maximum time in milliseconds to wait for `userEvent` action to complete.
-     * @default 0 (no timeout)
-     */
-    actionTimeout?: number
-  }
+  >
+  /**
+   * The maximum time in milliseconds to wait for `userEvent` action to complete.
+   * @default 0 (no timeout)
+   */
+  actionTimeout?: number
 }
 
 export function playwright(options: PlaywrightProviderOptions = {}): BrowserProviderOption {
@@ -300,7 +299,8 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
 
     const browser = await this.openBrowser()
     await this._throwIfClosing(browser)
-    const { actionTimeout, ...contextOptions } = this.options?.contextOptions ?? {}
+    const actionTimeout = this.options?.actionTimeout
+    const contextOptions = this.options?.contextOptions ?? {}
     const options = {
       ...contextOptions,
       ignoreHTTPSErrors: true,

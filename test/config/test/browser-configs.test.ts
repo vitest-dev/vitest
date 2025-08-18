@@ -348,6 +348,7 @@ test('can enable browser-cli options for multi-project workspace', async () => {
       browser: {
         enabled: true,
         headless: true,
+        instances: [],
       },
     },
     {
@@ -633,6 +634,7 @@ describe('[e2e] workspace configs are affected by the CLI options', () => {
             name: 'browser',
             browser: {
               enabled: true,
+              instances: [],
             },
           },
         },
@@ -686,6 +688,7 @@ describe('[e2e] workspace configs are affected by the CLI options', () => {
             name: 'browser',
             browser: {
               enabled: true,
+              instances: [],
             },
           },
         },
