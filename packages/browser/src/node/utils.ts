@@ -1,45 +1,37 @@
-import type { BrowserProviderModule, ResolvedBrowserOptions, TestProject } from 'vitest/node'
+import type { BrowserProvider, ResolvedBrowserOptions, TestProject } from 'vitest/node'
 
 export function replacer(code: string, values: Record<string, string>): string {
   return code.replace(/\{\s*(\w+)\s*\}/g, (_, key) => values[key] ?? _)
 }
 
-const builtinProviders = ['webdriverio', 'playwright', 'preview']
-
 export async function getBrowserProvider(
   options: ResolvedBrowserOptions,
   project: TestProject,
-): Promise<BrowserProviderModule> {
-  if (options.provider == null || builtinProviders.includes(options.provider)) {
-    const providers = await import('./providers')
-    const provider = (options.provider || 'preview') as
-      | 'webdriverio'
-      | 'playwright'
-      | 'preview'
-    return providers[provider]
-  }
-
-  let customProviderModule
-
-  try {
-    customProviderModule = (await project.import<{ default: BrowserProviderModule }>(
-      options.provider,
-    ))
-  }
-  catch (error) {
+): Promise<BrowserProvider> {
+  const browser = project.config.browser.name
+  const name = project.name ? `[${project.name}] ` : ''
+  if (!browser) {
     throw new Error(
-      `Failed to load custom BrowserProvider from ${options.provider}`,
-      { cause: error },
+      `${name}Browser name is required. Please, set \`test.browser.instances[].browser\` option manually.`,
     )
   }
-
-  if (customProviderModule.default == null) {
+  if (options.provider == null || '_cli' in options.provider) {
+    const providers = await import('./providers/index')
+    const name = (options.provider?.name || 'preview') as 'preview' | 'webdriverio' | 'playwright'
+    if (!(name in providers)) {
+      throw new Error(`Unknown browser provider "${name}". Available providers: ${Object.keys(providers).join(', ')}.`)
+    }
+    return providers[name]().factory(project)
+  }
+  const supportedBrowsers = options.provider.supportedBrowser || []
+  if (supportedBrowsers.length && !supportedBrowsers.includes(browser)) {
     throw new Error(
-      `Custom BrowserProvider loaded from ${options.provider} was not the default export`,
+      `${name}Browser "${browser}" is not supported by the browser provider "${
+        options.provider.name
+      }". Supported browsers: ${supportedBrowsers.join(', ')}.`,
     )
   }
-
-  return customProviderModule.default
+  return options.provider.factory(project)
 }
 
 export function slash(path: string): string {

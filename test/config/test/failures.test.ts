@@ -2,12 +2,19 @@ import type { UserConfig as ViteUserConfig } from 'vite'
 import type { TestUserConfig } from 'vitest/node'
 import type { VitestRunnerCLIOptions } from '../../test-utils'
 import { cpus } from 'node:os'
+import { playwright } from '@vitest/browser/providers/playwright'
+import { preview } from '@vitest/browser/providers/preview'
+import { webdriverio } from '@vitest/browser/providers/webdriverio'
 import { normalize, resolve } from 'pathe'
 import { beforeEach, expect, test } from 'vitest'
 import { version } from 'vitest/package.json'
 import * as testUtils from '../../test-utils'
 
-const providers = ['playwright', 'webdriverio', 'preview'] as const
+const providers = [
+  playwright(),
+  webdriverio(),
+  preview(),
+] as const
 const names = ['edge', 'chromium', 'webkit', 'chrome', 'firefox', 'safari'] as const
 const browsers = providers.map(provider => names.map(name => ({ name, provider }))).flat()
 
@@ -76,7 +83,7 @@ test('inspect cannot be used with multi-threading', async () => {
 })
 
 test('inspect in browser mode requires no-file-parallelism', async () => {
-  const { stderr } = await runVitest({ inspect: true, browser: { enabled: true, instances: [{ browser: 'chromium' }], provider: 'playwright' } })
+  const { stderr } = await runVitest({ inspect: true, browser: { enabled: true, instances: [{ browser: 'chromium' }], provider: playwright() } })
 
   expect(stderr).toMatch('Error: You cannot use --inspect without "--no-file-parallelism", "poolOptions.threads.singleThread" or "poolOptions.forks.singleFork"')
 })
@@ -88,7 +95,7 @@ test('inspect-brk cannot be used with multi processing', async () => {
 })
 
 test('inspect-brk in browser mode requires no-file-parallelism', async () => {
-  const { stderr } = await runVitest({ inspectBrk: true, browser: { enabled: true, instances: [{ browser: 'chromium' }], provider: 'playwright' } })
+  const { stderr } = await runVitest({ inspectBrk: true, browser: { enabled: true, instances: [{ browser: 'chromium' }], provider: playwright() } })
 
   expect(stderr).toMatch('Error: You cannot use --inspect-brk without "--no-file-parallelism", "poolOptions.threads.singleThread" or "poolOptions.forks.singleFork"')
 })
@@ -98,7 +105,7 @@ test('inspect and --inspect-brk cannot be used when not playwright + chromium', 
     const cli = `--inspect${option === 'inspectBrk' ? '-brk' : ''}`
 
     for (const { provider, name } of browsers) {
-      if (provider === 'playwright' && name === 'chromium') {
+      if (provider.name === 'playwright' && name === 'chromium') {
         continue
       }
 
@@ -144,7 +151,7 @@ Use either:
 
 test('v8 coverage provider throws when not playwright + chromium (browser.name)', async () => {
   for (const { provider, name } of browsers) {
-    if (provider === 'playwright' && name === 'chromium') {
+    if (provider.name === 'playwright' && name === 'chromium') {
       continue
     }
 
@@ -195,7 +202,7 @@ Use either:
 
 test('v8 coverage provider throws when not playwright + chromium (browser.instances)', async () => {
   for (const { provider, name } of browsers) {
-    if (provider === 'playwright' && name === 'chromium') {
+    if (provider.name === 'playwright' && name === 'chromium') {
       continue
     }
 
@@ -257,7 +264,7 @@ test('v8 coverage provider throws when using chromium and other non-chromium bro
       browser: {
         enabled: true,
         headless: true,
-        provider: 'playwright',
+        provider: playwright(),
         instances: [
           { browser: 'chromium' },
           { browser: 'firefox' },
@@ -316,7 +323,7 @@ test('v8 coverage provider cannot be used in workspace without playwright + chro
           name: 'Browser project',
           browser: {
             enabled: true,
-            provider: 'webdriverio',
+            provider: webdriverio(),
             instances: [{ browser: 'chrome' }],
           },
         },
@@ -452,7 +459,7 @@ test('browser.instances is empty', async () => {
     test: {
       browser: {
         enabled: true,
-        provider: 'playwright',
+        provider: playwright(),
         instances: [],
       },
     },
@@ -484,7 +491,7 @@ test('browser.name filters all browser.instances are required', async () => {
       browser: {
         enabled: true,
         name: 'chromium',
-        provider: 'playwright',
+        provider: playwright(),
         instances: [
           { browser: 'firefox' },
         ],
@@ -499,7 +506,7 @@ test('browser.instances throws an error if no custom name is provided', async ()
     test: {
       browser: {
         enabled: true,
-        provider: 'playwright',
+        provider: playwright(),
         instances: [
           { browser: 'firefox' },
           { browser: 'firefox' },
@@ -516,7 +523,7 @@ test('browser.instances throws an error if no custom name is provided, but the c
       name: 'custom',
       browser: {
         enabled: true,
-        provider: 'playwright',
+        provider: playwright(),
         instances: [
           { browser: 'firefox' },
           { browser: 'firefox' },
@@ -536,7 +543,7 @@ test('throws an error if name conflicts with a workspace name', async () => {
           test: {
             browser: {
               enabled: true,
-              provider: 'playwright',
+              provider: playwright(),
               instances: [
                 { browser: 'firefox' },
               ],
@@ -554,7 +561,7 @@ test('throws an error if several browsers are headed in nonTTY mode', async () =
     test: {
       browser: {
         enabled: true,
-        provider: 'playwright',
+        provider: playwright(),
         headless: false,
         instances: [
           { browser: 'chromium' },

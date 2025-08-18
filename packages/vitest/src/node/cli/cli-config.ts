@@ -389,12 +389,6 @@ export const cliOptionsConfig: VitestCLIOptions = {
         argument: '<name>',
         subcommands: null, // don't support custom objects
       },
-      providerOptions: {
-        description:
-          'Options that are passed down to a browser provider. Visit [`browser.providerOptions`](https://vitest.dev/config/#browser-provideroptions) for more information',
-        argument: '<options>',
-        subcommands: null, // don't support custom objects
-      },
       isolate: {
         description:
           'Run every browser test file in isolation. To disable isolation, use `--browser.isolate=false` (default: `true`)',

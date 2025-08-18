@@ -2,6 +2,7 @@ import type { ViteUserConfig } from 'vitest/config'
 import type { TestUserConfig, VitestOptions } from 'vitest/node'
 import type { TestFsStructure } from '../../test-utils'
 import crypto from 'node:crypto'
+import { playwright } from '@vitest/browser/providers/playwright'
 import { resolve } from 'pathe'
 import { describe, expect, onTestFinished, test } from 'vitest'
 import { createVitest } from 'vitest/node'
@@ -192,7 +193,7 @@ test('coverage provider v8 works correctly in browser mode if instances are filt
       },
       browser: {
         enabled: true,
-        provider: 'playwright',
+        provider: playwright(),
         instances: [
           { browser: 'chromium' },
           { browser: 'firefox' },
@@ -214,7 +215,7 @@ test('coverage provider v8 works correctly in workspaced browser mode if instanc
           name: 'browser',
           browser: {
             enabled: true,
-            provider: 'playwright',
+            provider: playwright(),
             instances: [
               { browser: 'chromium' },
               { browser: 'firefox' },
@@ -317,7 +318,7 @@ test('filter for the global browser project includes all browser instances', asy
           name: 'myproject',
           browser: {
             enabled: true,
-            provider: 'playwright',
+            provider: playwright(),
             headless: true,
             instances: [
               { browser: 'chromium' },
@@ -360,7 +361,7 @@ test('can enable browser-cli options for multi-project workspace', async () => {
           test: {
             browser: {
               enabled: true,
-              provider: 'playwright',
+              provider: playwright(),
               instances: [
                 { browser: 'chromium', name: 'browser' },
               ],
@@ -460,7 +461,7 @@ describe('[e2e] workspace configs are affected by the CLI options', () => {
             browser: {
               enabled: true,
               headless: true,
-              provider: 'playwright',
+              provider: playwright(),
               instances: [
                 {
                   browser: 'chromium',
@@ -513,7 +514,7 @@ describe('[e2e] workspace configs are affected by the CLI options', () => {
             browser: {
               enabled: true,
               headless: true,
-              provider: 'playwright',
+              provider: playwright(),
               instances: [
                 {
                   browser: 'chromium',
@@ -573,7 +574,7 @@ describe('[e2e] workspace configs are affected by the CLI options', () => {
             browser: {
               enabled: true,
               headless: true,
-              provider: 'playwright',
+              provider: playwright(),
               instances: [
                 {
                   browser: 'chromium',
@@ -613,7 +614,7 @@ describe('[e2e] workspace configs are affected by the CLI options', () => {
   test('correctly resolves extended project', async () => {
     const { stdout } = await getCliConfig({
       browser: {
-        provider: 'playwright',
+        provider: playwright(),
         headless: true,
         instances: [
           { browser: 'chromium' },
@@ -666,7 +667,7 @@ describe('[e2e] workspace configs are affected by the CLI options', () => {
   test('correctly overrides extended project', async () => {
     const { stdout } = await getCliConfig({
       browser: {
-        provider: 'playwright',
+        provider: playwright(),
         headless: true,
         instances: [
           { browser: 'chromium' },
@@ -720,7 +721,7 @@ describe('[e2e] workspace configs are affected by the CLI options', () => {
     const { stdout } = await getCliConfig({
       browser: {
         enabled: false,
-        provider: 'playwright',
+        provider: playwright(),
         headless: true,
         instances: [
           { browser: 'chromium' },

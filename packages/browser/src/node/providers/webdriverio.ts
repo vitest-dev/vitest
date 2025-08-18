@@ -1,9 +1,15 @@
+import type {
+  ScreenshotComparatorRegistry,
+  ScreenshotMatcherOptions,
+} from '@vitest/browser/context'
 import type { Capabilities } from '@wdio/types'
 import type {
   BrowserProvider,
-  BrowserProviderInitializationOptions,
+  BrowserProviderOption,
   TestProject,
 } from 'vitest/node'
+import type { ClickOptions, DragAndDropOptions, remote } from 'webdriverio'
+
 import { createDebugger } from 'vitest/node'
 
 const debug = createDebugger('vitest:browser:wdio')
@@ -11,9 +17,18 @@ const debug = createDebugger('vitest:browser:wdio')
 const webdriverBrowsers = ['firefox', 'chrome', 'edge', 'safari'] as const
 type WebdriverBrowser = (typeof webdriverBrowsers)[number]
 
-interface WebdriverProviderOptions
-  extends BrowserProviderInitializationOptions {
-  browser: WebdriverBrowser
+interface WebdriverProviderOptions extends Partial<
+    Parameters<typeof remote>[0]
+  > {}
+
+export function webdriverio(options: WebdriverProviderOptions = {}): BrowserProviderOption {
+  return {
+    name: 'webdriverio',
+    supportedBrowser: webdriverBrowsers,
+    factory(project) {
+      return new WebdriverBrowserProvider(project, options)
+    },
+  }
 }
 
 export class WebdriverBrowserProvider implements BrowserProvider {
@@ -35,10 +50,10 @@ export class WebdriverBrowserProvider implements BrowserProvider {
     return webdriverBrowsers
   }
 
-  async initialize(
+  constructor(
     project: TestProject,
-    { browser, options }: WebdriverProviderOptions,
-  ): Promise<void> {
+    options: WebdriverProviderOptions,
+  ) {
     // increase shutdown timeout because WDIO takes some extra time to kill the driver
     if (!project.vitest.state._data.timeoutIncreased) {
       project.vitest.state._data.timeoutIncreased = true
@@ -47,7 +62,7 @@ export class WebdriverBrowserProvider implements BrowserProvider {
 
     this.closing = false
     this.project = project
-    this.browserName = browser
+    this.browserName = project.config.browser.name as WebdriverBrowser
     this.options = options as Capabilities.WebdriverIOConfig
   }
 
@@ -207,4 +222,28 @@ export class WebdriverBrowserProvider implements BrowserProvider {
     browser.sessionId = undefined as unknown as string
     this.browser = null
   }
+}
+
+declare module 'vitest/node' {
+  export interface UserEventClickOptions extends ClickOptions {}
+
+  export interface UserEventDragOptions extends DragAndDropOptions {
+    sourceX?: number
+    sourceY?: number
+    targetX?: number
+    targetY?: number
+  }
+
+  export interface BrowserCommandContext {
+    browser: WebdriverIO.Browser
+  }
+
+  export interface ToMatchScreenshotOptions
+    extends Omit<
+      ScreenshotMatcherOptions,
+      'comparatorName' | 'comparatorOptions'
+    > {}
+
+  export interface ToMatchScreenshotComparators
+    extends ScreenshotComparatorRegistry {}
 }

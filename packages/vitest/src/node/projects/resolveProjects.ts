@@ -219,12 +219,6 @@ export async function resolveBrowserProjects(
       return
     }
 
-    if (project.config.browser.providerOptions) {
-      vitest.logger.warn(
-        withLabel('yellow', 'Vitest', `"providerOptions"${originalName ? ` in "${originalName}" project` : ''} is ignored because it's overridden by the configs. To hide this warning, remove the "providerOptions" property from the browser configuration.`),
-      )
-    }
-
     filteredInstances.forEach((config, index) => {
       const browser = config.browser
       if (!browser) {
@@ -319,7 +313,6 @@ function cloneConfig(project: TestProject, { browser, ...config }: BrowserInstan
       screenshotFailures: screenshotFailures ?? currentConfig.screenshotFailures,
       headless: headless ?? currentConfig.headless,
       name: browser,
-      providerOptions: config,
       instances: undefined, // projects cannot spawn more configs
     },
     // If there is no include or exclude or includeSource pattern in browser.instances[], we should use the that's pattern from the parent project

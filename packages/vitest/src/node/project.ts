@@ -566,11 +566,7 @@ export class TestProject {
 
   private _serializeOverriddenConfig(): SerializedConfig {
     // TODO: serialize the config _once_ or when needed
-    const config = serializeConfig(
-      this.config,
-      this.vitest.config,
-      this.vite.config,
-    )
+    const config = serializeConfig(this)
     if (!this.vitest.configOverride) {
       return config
     }

@@ -20,9 +20,9 @@
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     },
-    "./providers": {
-      "types": "./providers.d.ts",
-      "default": "./dist/providers.js"
+    "./providers/*": {
+      "types": "./dist/providers/*.d.ts",
+      "default": "./dist/providers/*.js"
     },
     "./context": {
       "types": "./context.d.ts",
@@ -33,14 +33,6 @@
     },
     "./matchers": {
       "types": "./matchers.d.ts",
-      "default": "./dummy.js"
-    },
-    "./providers/webdriverio": {
-      "types": "./providers/webdriverio.d.ts",
-      "default": "./dummy.js"
-    },
-    "./providers/playwright": {
-      "types": "./providers/playwright.d.ts",
       "default": "./dummy.js"
     },
     "./locator": {

@@ -1,11 +1,11 @@
-import type { ResolvedConfig as ViteConfig } from 'vite'
-import type { ResolvedConfig, SerializedConfig } from '../types/config'
+import type { TestProject } from '../project'
+import type { SerializedConfig } from '../types/config'
 
-export function serializeConfig(
-  config: ResolvedConfig,
-  coreConfig: ResolvedConfig,
-  viteConfig: ViteConfig | undefined,
-): SerializedConfig {
+export function serializeConfig(project: TestProject): SerializedConfig {
+  const config = project.config
+  const coreConfig = project.vitest.config
+  const viteConfig = project.vite?.config
+
   const optimizer = config.deps?.optimizer || {}
   const poolOptions = config.poolOptions
 
@@ -140,6 +140,7 @@ export function serializeConfig(
       ...config.env,
     },
     browser: ((browser) => {
+      const provider = project.browser?.provider
       return {
         name: browser.name,
         headless: browser.headless,
@@ -151,9 +152,9 @@ export function serializeConfig(
         locators: {
           testIdAttribute: browser.locators.testIdAttribute,
         },
-        providerOptions: browser.provider === 'playwright'
+        providerOptions: provider?.name === 'playwright'
           ? {
-              actionTimeout: (browser.providerOptions as any)?.context?.actionTimeout,
+              actionTimeout: (provider as any)?.options?.contextOptions?.actionTimeout,
             }
           : {},
         trackUnhandledErrors: browser.trackUnhandledErrors ?? true,
