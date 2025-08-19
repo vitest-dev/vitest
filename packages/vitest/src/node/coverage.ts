@@ -578,13 +578,16 @@ export class BaseCoverageProvider<Options extends ResolvedCoverageOptions<'istan
 
       updatedThresholds = true
 
+      const thresholdFormatter = typeof this.options.thresholds?.autoUpdate === 'function' ? this.options.thresholds?.autoUpdate : (value: number | undefined) => value
+
       for (const [threshold, newValue] of thresholdsToUpdate) {
+        const formattedValue = thresholdFormatter(newValue)
         if (name === GLOBAL_THRESHOLDS_KEY) {
-          config.test.coverage.thresholds[threshold] = newValue
+          config.test.coverage.thresholds[threshold] = formattedValue
         }
         else {
           const glob = config.test.coverage.thresholds[name as Threshold] as ResolvedThreshold['thresholds']
-          glob[threshold] = newValue
+          glob[threshold] = formattedValue
         }
       }
     }

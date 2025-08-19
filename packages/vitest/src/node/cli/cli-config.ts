@@ -109,6 +109,16 @@ function transformNestedBoolean(value: unknown) {
   return value
 }
 
+function transformBoolean(value: unknown) {
+  if (value === 'true' || value === 'yes' || value === true) {
+    return true
+  }
+  if (value === 'false' || value === 'no' || value === false) {
+    return false
+  }
+  return value
+}
+
 export const cliOptionsConfig: VitestCLIOptions = {
   root: {
     description: 'Root path',
@@ -254,6 +264,9 @@ export const cliOptionsConfig: VitestCLIOptions = {
           autoUpdate: {
             description:
               'Update threshold values: "lines", "functions", "branches" and "statements" to configuration file when current coverage is above the configured thresholds (default: `false`)',
+            argument: '<boolean|function>',
+            subcommands: null,
+            transform: transformBoolean,
           },
           lines: {
             description:
