@@ -206,17 +206,12 @@ export function resolveConfig(
     resolved.maxWorkers = resolveInlineWorkerOption(resolved.maxWorkers)
   }
 
-  if (resolved.minWorkers) {
-    resolved.minWorkers = resolveInlineWorkerOption(resolved.minWorkers)
-  }
-
   // run benchmark sequentially by default
   resolved.fileParallelism ??= mode !== 'benchmark'
 
   if (!resolved.fileParallelism) {
     // ignore user config, parallelism cannot be implemented without limiting workers
     resolved.maxWorkers = 1
-    resolved.minWorkers = 1
   }
 
   if (resolved.maxConcurrency === 0) {
@@ -482,20 +477,6 @@ export function resolveConfig(
     }
   }
 
-  if (process.env.VITEST_MIN_THREADS) {
-    resolved.poolOptions = {
-      ...resolved.poolOptions,
-      threads: {
-        ...resolved.poolOptions?.threads,
-        minThreads: Number.parseInt(process.env.VITEST_MIN_THREADS),
-      },
-      vmThreads: {
-        ...resolved.poolOptions?.vmThreads,
-        minThreads: Number.parseInt(process.env.VITEST_MIN_THREADS),
-      },
-    }
-  }
-
   if (process.env.VITEST_MAX_FORKS) {
     resolved.poolOptions = {
       ...resolved.poolOptions,
@@ -510,24 +491,8 @@ export function resolveConfig(
     }
   }
 
-  if (process.env.VITEST_MIN_FORKS) {
-    resolved.poolOptions = {
-      ...resolved.poolOptions,
-      forks: {
-        ...resolved.poolOptions?.forks,
-        minForks: Number.parseInt(process.env.VITEST_MIN_FORKS),
-      },
-      vmForks: {
-        ...resolved.poolOptions?.vmForks,
-        minForks: Number.parseInt(process.env.VITEST_MIN_FORKS),
-      },
-    }
-  }
-
   const poolThreadsOptions = [
-    ['threads', 'minThreads'],
     ['threads', 'maxThreads'],
-    ['vmThreads', 'minThreads'],
     ['vmThreads', 'maxThreads'],
   ] as const satisfies [keyof PoolOptions, keyof ThreadsOptions][]
 
@@ -538,9 +503,7 @@ export function resolveConfig(
   }
 
   const poolForksOptions = [
-    ['forks', 'minForks'],
     ['forks', 'maxForks'],
-    ['vmForks', 'minForks'],
     ['vmForks', 'maxForks'],
   ] as const satisfies [keyof PoolOptions, keyof ForksOptions][]
 

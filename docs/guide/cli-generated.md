@@ -544,13 +544,6 @@ Should all test files run in parallel. Use `--no-file-parallelism` to disable (d
 
 Maximum number or percentage of workers to run tests in
 
-### minWorkers
-
-- **CLI:** `--minWorkers <workers>`
-- **Config:** [minWorkers](/config/#minworkers)
-
-Minimum number or percentage of workers to run tests in
-
 ### environment
 
 - **CLI:** `--environment <name>`

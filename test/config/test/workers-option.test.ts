@@ -31,7 +31,7 @@ function runVitest(config: TestUserConfig) {
 }
 
 test('workers percent argument should not throw error', async () => {
-  const { stderr } = await runVitest({ maxWorkers: '100%', minWorkers: '10%' })
+  const { stderr } = await runVitest({ maxWorkers: '100%' })
 
   expect(stderr).toBe('')
 })

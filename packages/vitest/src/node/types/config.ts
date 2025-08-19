@@ -304,14 +304,10 @@ export interface InlineConfig {
    * Maximum number or percentage of workers to run tests in. `poolOptions.{threads,vmThreads}.maxThreads`/`poolOptions.forks.maxForks` has higher priority.
    */
   maxWorkers?: number | string
-  /**
-   * Minimum number or percentage of workers to run tests in. `poolOptions.{threads,vmThreads}.minThreads`/`poolOptions.forks.minForks` has higher priority.
-   */
-  minWorkers?: number | string
 
   /**
    * Should all test files run in parallel. Doesn't affect tests running in the same file.
-   * Setting this to `false` will override `maxWorkers` and `minWorkers` options to `1`.
+   * Setting this to `false` will override `maxWorkers` option to `1`.
    *
    * @default true
    */
@@ -1014,7 +1010,6 @@ export interface ResolvedConfig
   runner?: string
 
   maxWorkers: number
-  minWorkers: number
 }
 
 type NonProjectOptions
@@ -1044,7 +1039,6 @@ type NonProjectOptions
     | 'inspectBrk'
     | 'coverage'
     | 'maxWorkers'
-    | 'minWorkers'
     | 'fileParallelism'
     | 'watchTriggerPatterns'
 
