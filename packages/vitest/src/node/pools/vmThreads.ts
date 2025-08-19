@@ -5,6 +5,7 @@ import type { ContextTestEnvironment } from '../../types/worker'
 import type { Vitest } from '../core'
 import type { PoolProcessOptions, ProcessPool, RunWithFiles } from '../pool'
 import type { TestProject } from '../project'
+import type { TestSpecification } from '../spec'
 import type { ResolvedConfig, SerializedConfig } from '../types/config'
 import type { WorkerContext } from '../types/worker'
 import * as nodeos from 'node:os'
@@ -49,6 +50,7 @@ function createWorkerChannel(project: TestProject, collect: boolean) {
 export function createVmThreadsPool(
   vitest: Vitest,
   { execArgv, env }: PoolProcessOptions,
+  specifications: TestSpecification[],
 ): ProcessPool {
   const numCpus
     = typeof nodeos.availableParallelism === 'function'
@@ -59,12 +61,16 @@ export function createVmThreadsPool(
     ? Math.max(Math.floor(numCpus / 2), 1)
     : Math.max(numCpus - 1, 1)
 
+  const recommendedCount = vitest.config.watch
+    ? threadsCount
+    : Math.min(threadsCount, specifications.length)
+
   const poolOptions = vitest.config.poolOptions?.vmThreads ?? {}
 
   const maxThreads
-    = poolOptions.maxThreads ?? vitest.config.maxWorkers ?? threadsCount
+    = poolOptions.maxThreads ?? vitest.config.maxWorkers ?? recommendedCount
   const minThreads
-    = poolOptions.minThreads ?? vitest.config.minWorkers ?? Math.min(threadsCount, maxThreads)
+    = poolOptions.minThreads ?? vitest.config.minWorkers ?? Math.min(recommendedCount, maxThreads)
 
   const worker = resolve(vitest.distPath, 'workers/vmThreads.js')
 
