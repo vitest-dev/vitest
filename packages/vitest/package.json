@@ -203,7 +203,7 @@
     "jsdom": "^26.1.0",
     "local-pkg": "^1.1.1",
     "mime": "^4.0.7",
-    "pretty-format": "^29.7.0",
+    "pretty-format": "^30.0.5",
     "prompts": "^2.4.2",
     "strip-literal": "catalog:",
     "ws": "catalog:"
