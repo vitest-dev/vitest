@@ -88,11 +88,9 @@ export function createForksPool(
   const minThreads
     = poolOptions.minForks ?? vitest.config.minWorkers ?? Math.min(recommendedCount, maxThreads)
 
-  const worker = resolve(vitest.distPath, 'workers/forks.js')
-
   const options: TinypoolOptions = {
     runtime: 'child_process',
-    filename: resolve(vitest.distPath, 'worker.js'),
+    filename: resolve(vitest.distPath, 'worker-base.js'),
     teardown: 'teardown',
 
     maxThreads,
@@ -135,7 +133,6 @@ export function createForksPool(
       const workerId = ++id
       const data: ContextRPC = {
         pool: 'forks',
-        worker,
         config,
         files,
         invalidates,

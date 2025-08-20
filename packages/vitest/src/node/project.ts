@@ -22,6 +22,7 @@ import { isAbsolute, join, relative } from 'pathe'
 import pm from 'picomatch'
 import { glob } from 'tinyglobby'
 import { setup } from '../api/setup'
+import { createDefinesScript } from '../utils/config-helpers'
 import { isBrowserEnabled, resolveConfig } from './config/resolveConfig'
 import { serializeConfig } from './config/serializeConfig'
 import { ServerModuleRunner } from './environments/serverRunner'
@@ -62,6 +63,7 @@ export class TestProject {
   /** @internal */ _vite?: ViteDevServer
   /** @internal */ _hash?: string
   /** @internal */ _resolver!: VitestResolver
+  /** @internal */ _serializedDefines: string | undefined
   /** @inetrnal */ testFilesList: string[] | null = null
 
   private runner!: ModuleRunner
@@ -555,6 +557,7 @@ export class TestProject {
 
     this._resolver = new VitestResolver(server.config.cacheDir, this._config)
     this._vite = server
+    this._serializedDefines = createDefinesScript(server.config.define)
 
     const environment = server.environments.__vitest__
     this.runner = new ServerModuleRunner(
@@ -566,11 +569,7 @@ export class TestProject {
 
   private _serializeOverriddenConfig(): SerializedConfig {
     // TODO: serialize the config _once_ or when needed
-    const config = serializeConfig(
-      this.config,
-      this.vitest.config,
-      this.vite.config,
-    )
+    const config = serializeConfig(this)
     if (!this.vitest.configOverride) {
       return config
     }

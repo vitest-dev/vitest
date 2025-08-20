@@ -5,11 +5,13 @@ import type { SerializedConfig } from './config'
 import type { VitestModuleRunner } from './moduleRunner/moduleRunner'
 import { addSerializer } from '@vitest/snapshot'
 import { setSafeTimers } from '@vitest/utils'
+import { globalApis } from '../constants'
+import * as index from '../public/index'
 import { getWorkerState } from './utils'
 
 let globalSetup = false
 export async function setupCommonEnv(config: SerializedConfig): Promise<void> {
-  setupDefines(config.defines)
+  setupDefines(config)
   setupEnv(config.env)
 
   if (globalSetup) {
@@ -20,13 +22,19 @@ export async function setupCommonEnv(config: SerializedConfig): Promise<void> {
   setSafeTimers()
 
   if (config.globals) {
-    (await import('../integrations/globals')).registerApiGlobally()
+    globalApis.forEach((api) => {
+      // @ts-expect-error I know what I am doing :P
+      globalThis[api] = index[api]
+    })
   }
 }
 
-function setupDefines(defines: Record<string, any>) {
-  for (const key in defines) {
-    (globalThis as any)[key] = defines[key]
+function setupDefines(config: SerializedConfig) {
+  // eslint-disable-next-line no-new-func
+  new Function(config.serializedDefines)()
+
+  for (const key in config.defines) {
+    (globalThis as any)[key] = config.defines[key]
   }
 }
 
@@ -73,6 +81,9 @@ export async function loadSnapshotSerializers(
   moduleRunner: VitestModuleRunner,
 ): Promise<void> {
   const files = config.snapshotSerializers
+  if (!files.length) {
+    return
+  }
 
   const snapshotSerializers = await Promise.all(
     files.map(async (file) => {

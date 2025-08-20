@@ -1,7 +1,7 @@
 import type vm from 'node:vm'
 import type { EvaluatedModules } from 'vite/module-runner'
 import type { WorkerGlobalState } from '../../types/worker'
-import type { ExternalModulesExecutor } from '../external-executor'
+import type { ExternalModulesExecutor } from '../vm/external-executor'
 import fs from 'node:fs'
 import { isBuiltin } from 'node:module'
 import { isBareImport } from '@vitest/utils'
@@ -25,12 +25,13 @@ export interface ContextModuleRunnerOptions {
   context?: vm.Context
   externalModulesExecutor?: ExternalModulesExecutor
   state: WorkerGlobalState
+  spyModule?: typeof import('@vitest/spy')
 }
 
 const cwd = process.cwd()
 const isWindows = process.platform === 'win32'
 
-export async function startVitestModuleRunner(options: ContextModuleRunnerOptions): Promise<VitestModuleRunner> {
+export function startVitestModuleRunner(options: ContextModuleRunnerOptions): VitestModuleRunner {
   const state = (): WorkerGlobalState =>
     // @ts-expect-error injected untyped global
     globalThis.__vitest_worker__ || options.state
@@ -160,9 +161,6 @@ export async function startVitestModuleRunner(options: ContextModuleRunnerOption
     getWorkerState: state,
     vm,
   })
-
-  await moduleRunner.import('/@vite/env')
-  await moduleRunner.mocker.initializeSpyModule()
 
   return moduleRunner
 }

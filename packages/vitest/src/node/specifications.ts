@@ -7,6 +7,7 @@ import pm from 'picomatch'
 import { isWindows } from '../utils/env'
 import { groupFilters, parseFilter } from './cli/filter'
 import { GitNotFoundError, IncludeTaskLocationDisabledError, LocationFilterFileNotFoundError } from './errors'
+import { VitestGit } from './git'
 
 export class VitestSpecifications {
   private readonly _cachedSpecs = new Map<string, TestSpecification[]>()
@@ -121,7 +122,6 @@ export class VitestSpecifications {
 
   private async filterTestsBySource(specs: TestSpecification[]): Promise<TestSpecification[]> {
     if (this.vitest.config.changed && !this.vitest.config.related) {
-      const { VitestGit } = await import('./git')
       const vitestGit = new VitestGit(this.vitest.config.root)
       const related = await vitestGit.findChangedFiles({
         changedSince: this.vitest.config.changed,

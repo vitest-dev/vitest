@@ -15,7 +15,6 @@ import {
 } from '../integrations/coverage'
 import { resolveSnapshotEnvironment } from '../integrations/snapshot/environments/resolveSnapshotEnvironment'
 import * as VitestIndex from '../public/index'
-import { closeInspector } from './inspector'
 import { resolveTestRunner } from './runners'
 import { setupCommonEnv } from './setup-common'
 import { getWorkerState } from './utils'
@@ -76,7 +75,6 @@ export async function run(
   runner.getWorkerContext = undefined
 
   workerState.onCancel.then((reason) => {
-    closeInspector(config)
     runner.cancel?.(reason)
   })
 

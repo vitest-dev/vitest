@@ -1,16 +1,16 @@
 import type vm from 'node:vm'
-import type { RuntimeRPC } from '../types/rpc'
-import type { FileMap } from './vm/file-map'
-import type { VMModule } from './vm/types'
+import type { RuntimeRPC } from '../../types/rpc'
+import type { FileMap } from './file-map'
+import type { VMModule } from './types'
 import fs from 'node:fs'
 import { isBuiltin } from 'node:module'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { isBareImport } from '@vitest/utils'
 import { findNearestPackageData } from '@vitest/utils/resolver'
 import { extname, normalize } from 'pathe'
-import { CommonjsExecutor } from './vm/commonjs-executor'
-import { EsmExecutor } from './vm/esm-executor'
-import { ViteExecutor } from './vm/vite-executor'
+import { CommonjsExecutor } from './commonjs-executor'
+import { EsmExecutor } from './esm-executor'
+import { ViteExecutor } from './vite-executor'
 
 const { existsSync } = fs
 

@@ -13,8 +13,7 @@ import libSourceMaps from 'istanbul-lib-source-maps'
 import reports from 'istanbul-reports'
 import { parseModule } from 'magicast'
 import c from 'tinyrainbow'
-import { BaseCoverageProvider } from 'vitest/coverage'
-import { isCSSRequest } from 'vitest/node'
+import { BaseCoverageProvider, isCSSRequest } from 'vitest/node'
 
 import { version } from '../package.json' with { type: 'json' }
 import { COVERAGE_STORE_KEY } from './constants'

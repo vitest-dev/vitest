@@ -1,15 +1,34 @@
 import type { Context } from 'node:vm'
-import type { WorkerGlobalState } from '../../types/worker'
+import type { WorkerContext } from '../../node/types/worker'
+import type { ContextRPC, WorkerGlobalState } from '../../types/worker'
+import type { VitestWorker, WorkerRpcOptions } from './types'
 import { pathToFileURL } from 'node:url'
+import v8 from 'node:v8'
 import { isContext } from 'node:vm'
 import { resolve } from 'pathe'
 import { distDir } from '../../paths'
 import { createCustomConsole } from '../console'
-import { ExternalModulesExecutor } from '../external-executor'
 import { getDefaultRequestStubs } from '../moduleRunner/moduleEvaluator'
 import { startVitestModuleRunner, VITEST_VM_CONTEXT_SYMBOL } from '../moduleRunner/startModuleRunner'
 import { provideWorkerState } from '../utils'
+import { ExternalModulesExecutor } from '../vm/external-executor'
 import { FileMap } from '../vm/file-map'
+import * as entry from '../worker'
+import { createForksRpcOptions, createThreadsRpcOptions, unwrapSerializableConfig } from './utils'
+
+export async function run(ctx: ContextRPC): Promise<void> {
+  const worker = ctx.pool === 'vmForks' ? new ForksVmWorker() : new ThreadsVmWorker()
+  await entry.run(ctx, worker)
+}
+
+export async function collect(ctx: ContextRPC): Promise<void> {
+  const worker = ctx.pool === 'vmForks' ? new ForksVmWorker() : new ThreadsVmWorker()
+  await entry.collect(ctx, worker)
+}
+
+export async function teardown(): Promise<void> {
+  await entry.teardown()
+}
 
 const entryFile = pathToFileURL(resolve(distDir, 'workers/runVmTests.js')).href
 
@@ -75,12 +94,13 @@ export async function runVmTests(method: 'run' | 'collect', state: WorkerGlobalS
     viteClientModule: stubs['/@vite/client'],
   })
 
-  const moduleRunner = await startVitestModuleRunner({
+  const moduleRunner = startVitestModuleRunner({
     context,
     evaluatedModules: state.evaluatedModules,
     state,
     externalModulesExecutor,
   })
+  await moduleRunner.mocker.initializeSpyModule()
 
   Object.defineProperty(context, VITEST_VM_CONTEXT_SYMBOL, {
     value: {
@@ -113,5 +133,45 @@ export async function runVmTests(method: 'run' | 'collect', state: WorkerGlobalS
   finally {
     await vm.teardown?.()
     state.environmentTeardownRun = true
+  }
+}
+
+class ForksVmWorker implements VitestWorker {
+  getRpcOptions(): WorkerRpcOptions {
+    return createForksRpcOptions(v8)
+  }
+
+  async executeTests(method: 'run' | 'collect', state: WorkerGlobalState): Promise<void> {
+    const exit = process.exit
+    state.ctx.config = unwrapSerializableConfig(state.ctx.config)
+
+    try {
+      await runVmTests(method, state)
+    }
+    finally {
+      process.exit = exit
+    }
+  }
+
+  runTests(state: WorkerGlobalState): Promise<void> {
+    return this.executeTests('run', state)
+  }
+
+  collectTests(state: WorkerGlobalState): Promise<void> {
+    return this.executeTests('collect', state)
+  }
+}
+
+class ThreadsVmWorker implements VitestWorker {
+  getRpcOptions(ctx: ContextRPC): WorkerRpcOptions {
+    return createThreadsRpcOptions(ctx as WorkerContext)
+  }
+
+  runTests(state: WorkerGlobalState): unknown {
+    return runVmTests('run', state)
+  }
+
+  collectTests(state: WorkerGlobalState): unknown {
+    return runVmTests('collect', state)
   }
 }

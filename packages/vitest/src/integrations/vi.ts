@@ -428,17 +428,15 @@ export interface VitestUtils {
 }
 
 function createVitest(): VitestUtils {
-  let _mockedDate: Date | null = null
   let _config: null | SerializedConfig = null
-
-  const workerState = getWorkerState()
 
   let _timers: FakeTimers
 
+  const state = () => getWorkerState()
   const timers = () =>
     (_timers ||= new FakeTimers({
       global: globalThis,
-      config: workerState.config.fakeTimers,
+      config: state().config.fakeTimers,
     }))
 
   const _stubsGlobal = new Map<
@@ -454,7 +452,7 @@ function createVitest(): VitestUtils {
       if (isChildProcess()) {
         if (
           config?.toFake?.includes('nextTick')
-          || workerState.config?.fakeTimers?.toFake?.includes('nextTick')
+          || state().config?.fakeTimers?.toFake?.includes('nextTick')
         ) {
           throw new Error(
             'vi.useFakeTimers({ toFake: ["nextTick"] }) is not supported in node:child_process. Use --pool=threads if mocking nextTick is required.',
@@ -463,10 +461,10 @@ function createVitest(): VitestUtils {
       }
 
       if (config) {
-        timers().configure({ ...workerState.config.fakeTimers, ...config })
+        timers().configure({ ...state().config.fakeTimers, ...config })
       }
       else {
-        timers().configure(workerState.config.fakeTimers)
+        timers().configure(state().config.fakeTimers)
       }
 
       timers().useFakeTimers()
@@ -479,7 +477,6 @@ function createVitest(): VitestUtils {
 
     useRealTimers() {
       timers().useRealTimers()
-      _mockedDate = null
       return utils
     },
 
@@ -733,7 +730,7 @@ function createVitest(): VitestUtils {
     },
 
     resetModules() {
-      resetModules(workerState.evaluatedModules)
+      resetModules(state().evaluatedModules)
       return utils
     },
 
@@ -743,14 +740,14 @@ function createVitest(): VitestUtils {
 
     setConfig(config: RuntimeOptions) {
       if (!_config) {
-        _config = { ...workerState.config }
+        _config = { ...state().config }
       }
-      Object.assign(workerState.config, config)
+      Object.assign(state().config, config)
     },
 
     resetConfig() {
       if (_config) {
-        Object.assign(workerState.config, _config)
+        Object.assign(state().config, _config)
       }
     },
   }

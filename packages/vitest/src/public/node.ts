@@ -15,6 +15,7 @@ export type {
   Vitest,
   VitestOptions,
 } from '../node/core'
+export { BaseCoverageProvider } from '../node/coverage'
 export { createVitest } from '../node/create'
 export { GitNotFoundError, FilesNotFoundError as TestsNotFoundError } from '../node/errors'
 export { VitestPackageInstaller } from '../node/packageInstaller'

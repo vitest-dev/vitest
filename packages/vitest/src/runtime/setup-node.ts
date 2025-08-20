@@ -9,6 +9,7 @@ import { getSafeTimers, KNOWN_ASSET_TYPES } from '@vitest/utils'
 import { expect } from '../integrations/chai'
 import { resolveSnapshotEnvironment } from '../integrations/snapshot/environments/resolveSnapshotEnvironment'
 import * as VitestIndex from '../public/index'
+import { createCustomConsole } from './console'
 import { setupCommonEnv } from './setup-common'
 import { getWorkerState } from './utils'
 
@@ -65,7 +66,7 @@ export async function setupGlobalEnv(
   }
 
   if (!config.disableConsoleIntercept) {
-    await setupConsoleLogSpy()
+    globalThis.console = createCustomConsole()
   }
 }
 
@@ -75,12 +76,6 @@ function resolveCss(mod: NodeJS.Module) {
 
 function resolveAsset(mod: NodeJS.Module, url: string) {
   mod.exports = url
-}
-
-export async function setupConsoleLogSpy(): Promise<void> {
-  const { createCustomConsole } = await import('./console')
-
-  globalThis.console = createCustomConsole()
 }
 
 export async function withEnv(

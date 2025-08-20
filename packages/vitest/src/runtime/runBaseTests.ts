@@ -16,7 +16,7 @@ import { setupGlobalEnv, withEnv } from './setup-node'
 import { getWorkerState, resetModules } from './utils'
 
 // browser shouldn't call this!
-export async function run(
+export async function executeTests(
   method: 'run' | 'collect',
   files: FileSpecification[],
   config: SerializedConfig,

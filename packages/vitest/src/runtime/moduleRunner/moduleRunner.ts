@@ -2,7 +2,7 @@ import type { MockedModule } from '@vitest/mocker'
 import type vm from 'node:vm'
 import type { EvaluatedModuleNode, EvaluatedModules, SSRImportMetadata } from 'vite/module-runner'
 import type { WorkerGlobalState } from '../../types/worker'
-import type { ExternalModulesExecutor } from '../external-executor'
+import type { ExternalModulesExecutor } from '../vm/external-executor'
 import type { ModuleExecutionInfo } from './moduleDebug'
 import type { VitestModuleEvaluator } from './moduleEvaluator'
 import type { VitestTransportOptions } from './moduleTransport'
@@ -30,6 +30,7 @@ export class VitestModuleRunner extends ModuleRunner {
     this.moduleExecutionInfo = options.getWorkerState().moduleExecutionInfo
     this.mocker = options.mocker || new VitestMocker(this, {
       context: options.vm?.context,
+      spyModule: options.spyModule,
       resolveId: options.transport.resolveId,
       get root() {
         return options.getWorkerState().config.root
@@ -143,6 +144,7 @@ export interface VitestModuleRunnerOptions {
   getWorkerState: () => WorkerGlobalState
   mocker?: VitestMocker
   vm?: VitestVmOptions
+  spyModule?: typeof import('@vitest/spy')
 }
 
 export interface VitestVmOptions {

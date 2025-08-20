@@ -1,5 +1,5 @@
 import type vm from 'node:vm'
-import type { ExternalModulesExecutor } from '../external-executor'
+import type { ExternalModulesExecutor } from './external-executor'
 import type { VMModule } from './types'
 import { dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'

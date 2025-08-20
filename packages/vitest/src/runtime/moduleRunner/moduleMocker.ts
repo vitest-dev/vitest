@@ -29,10 +29,12 @@ export interface VitestMockerOptions {
     url: string
   } | null>
   getCurrentTestFilepath: () => string | undefined
+  spyModule?: typeof import('@vitest/spy')
 }
 
 export class VitestMocker {
   static pendingIds: PendingSuiteMock[] = []
+  private initModule = false
   private spyModule?: typeof import('@vitest/spy')
   private primitives: {
     Object: typeof Object
@@ -71,6 +73,9 @@ export class VitestMocker {
         Map,
       }
     }
+    if (options.spyModule) {
+      this.spyModule = options.spyModule
+    }
 
     const Symbol = this.primitives.Symbol
 
@@ -105,10 +110,11 @@ export class VitestMocker {
   }
 
   public async initializeSpyModule(): Promise<void> {
-    if (this.spyModule) {
+    if (this.spyModule || this.initModule) {
       return
     }
 
+    this.initModule = true
     this.spyModule = await this.moduleRunner.import(spyModulePath)
   }
 

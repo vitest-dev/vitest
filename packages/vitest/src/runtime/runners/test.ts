@@ -12,7 +12,6 @@ import type {
 } from '@vitest/runner'
 import type { ModuleRunner } from 'vite/module-runner'
 import type { SerializedConfig } from '../config'
-// import type { VitestExecutor } from '../execute'
 import { getState, GLOBAL_EXPECT, setState } from '@vitest/expect'
 import { getNames, getTestName, getTests } from '@vitest/runner/utils'
 import { processError } from '@vitest/utils/error'
@@ -21,8 +20,7 @@ import { createExpect } from '../../integrations/chai/index'
 import { inject } from '../../integrations/inject'
 import { getSnapshotClient } from '../../integrations/snapshot/chai'
 import { vi } from '../../integrations/vi'
-import { rpc } from '../rpc'
-import { getWorkerState } from '../utils'
+import { getWorkerState, rpc } from '../utils'
 
 // worker context is shared between all tests
 const workerContext = Object.create(null)
@@ -37,7 +35,14 @@ export class VitestTestRunner implements VitestRunner {
 
   public pool: string = this.workerState.ctx.pool
 
-  constructor(public config: SerializedConfig) {}
+  constructor(public config: SerializedConfig) {
+    setState(
+      {
+        environment: this.workerState.environment.name,
+      },
+      (globalThis as any)[GLOBAL_EXPECT],
+    )
+  }
 
   importFile(filepath: string, source: VitestRunnerImportSource): unknown {
     if (source === 'setup') {
@@ -157,6 +162,7 @@ export class VitestTestRunner implements VitestRunner {
         expectedAssertionsNumberErrorGen: null,
         currentTestName: getTestName(test),
         snapshotState: this.snapshotClient.getSnapshotState(test.file.filepath),
+        environment: this.workerState.environment.name,
       },
       (globalThis as any)[GLOBAL_EXPECT],
     )

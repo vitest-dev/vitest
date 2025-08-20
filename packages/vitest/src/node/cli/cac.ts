@@ -7,6 +7,8 @@ import cac from 'cac'
 import { normalize } from 'pathe'
 import c from 'tinyrainbow'
 import { version } from '../../../package.json' with { type: 'json' }
+import { errorBanner } from '../reporters/renderers/utils'
+import { outputFileList, prepareVitest, processCollected, startVitest } from './cli-api'
 import { benchCliOptionsConfig, cliOptionsConfig, collectCliOptionsConfig } from './cli-config'
 
 function addCommand(cli: CAC | Command, name: string, option: CLIOption<any>) {
@@ -294,19 +296,12 @@ function normalizeCliOptions(cliFilters: string[], argv: CliOptions): CliOptions
 
 async function start(mode: VitestRunMode, cliFilters: string[], options: CliOptions): Promise<void> {
   try {
-    process.title = 'node (vitest)'
-  }
-  catch {}
-
-  try {
-    const { startVitest } = await import('./cli-api')
     const ctx = await startVitest(mode, cliFilters.map(normalize), normalizeCliOptions(cliFilters, options))
     if (!ctx.shouldKeepServer()) {
       await ctx.exit()
     }
   }
   catch (e) {
-    const { errorBanner } = await import('../reporters/renderers/utils')
     console.error(`\n${errorBanner('Startup Error')}`)
     console.error(e)
     console.error('\n\n')
@@ -331,12 +326,6 @@ async function init(project: string) {
 
 async function collect(mode: VitestRunMode, cliFilters: string[], options: CliOptions): Promise<void> {
   try {
-    process.title = 'node (vitest)'
-  }
-  catch {}
-
-  try {
-    const { prepareVitest, processCollected, outputFileList } = await import('./cli-api')
     const ctx = await prepareVitest(mode, {
       ...normalizeCliOptions(cliFilters, options),
       watch: false,
@@ -363,7 +352,6 @@ async function collect(mode: VitestRunMode, cliFilters: string[], options: CliOp
     await ctx.close()
   }
   catch (e) {
-    const { errorBanner } = await import('../reporters/renderers/utils')
     console.error(`\n${errorBanner('Collect Error')}`)
     console.error(e)
     console.error('\n\n')
