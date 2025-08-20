@@ -75,7 +75,7 @@ export async function runVmTests(method: 'run' | 'collect', state: WorkerGlobalS
     viteClientModule: stubs['/@vite/client'],
   })
 
-  const moduleRunner = await startVitestModuleRunner({
+  const moduleRunner = startVitestModuleRunner({
     context,
     evaluatedModules: state.evaluatedModules,
     state,
@@ -92,6 +92,8 @@ export async function runVmTests(method: 'run' | 'collect', state: WorkerGlobalS
     writable: false,
   })
   context.__vitest_mocker__ = moduleRunner.mocker
+
+  await moduleRunner.mocker.initializeSpyModule()
 
   const { run } = (await moduleRunner.import(
     entryFile,

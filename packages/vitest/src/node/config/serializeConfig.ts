@@ -1,11 +1,9 @@
-import type { ResolvedConfig as ViteConfig } from 'vite'
-import type { ResolvedConfig, SerializedConfig } from '../types/config'
+import type { TestProject } from '../project'
+import type { SerializedConfig } from '../types/config'
 
-export function serializeConfig(
-  config: ResolvedConfig,
-  coreConfig: ResolvedConfig,
-  viteConfig: ViteConfig | undefined,
-): SerializedConfig {
+export function serializeConfig(project: TestProject): SerializedConfig {
+  const { config, globalConfig } = project
+  const viteConfig = project._vite?.config
   const optimizer = config.deps?.optimizer || {}
   const poolOptions = config.poolOptions
 
@@ -69,35 +67,35 @@ export function serializeConfig(
       forks: {
         singleFork:
           poolOptions?.forks?.singleFork
-          ?? coreConfig.poolOptions?.forks?.singleFork
+          ?? globalConfig.poolOptions?.forks?.singleFork
           ?? false,
         isolate:
           poolOptions?.forks?.isolate
           ?? isolate
-          ?? coreConfig.poolOptions?.forks?.isolate
+          ?? globalConfig.poolOptions?.forks?.isolate
           ?? true,
       },
       threads: {
         singleThread:
           poolOptions?.threads?.singleThread
-          ?? coreConfig.poolOptions?.threads?.singleThread
+          ?? globalConfig.poolOptions?.threads?.singleThread
           ?? false,
         isolate:
           poolOptions?.threads?.isolate
           ?? isolate
-          ?? coreConfig.poolOptions?.threads?.isolate
+          ?? globalConfig.poolOptions?.threads?.isolate
           ?? true,
       },
       vmThreads: {
         singleThread:
           poolOptions?.vmThreads?.singleThread
-          ?? coreConfig.poolOptions?.vmThreads?.singleThread
+          ?? globalConfig.poolOptions?.vmThreads?.singleThread
           ?? false,
       },
       vmForks: {
         singleFork:
           poolOptions?.vmForks?.singleFork
-          ?? coreConfig.poolOptions?.vmForks?.singleFork
+          ?? globalConfig.poolOptions?.vmForks?.singleFork
           ?? false,
       },
     },
@@ -113,28 +111,28 @@ export function serializeConfig(
     snapshotOptions: {
       // TODO: store it differently, not on the config
       snapshotEnvironment: undefined!,
-      updateSnapshot: coreConfig.snapshotOptions.updateSnapshot,
+      updateSnapshot: globalConfig.snapshotOptions.updateSnapshot,
       snapshotFormat: {
-        ...coreConfig.snapshotOptions.snapshotFormat,
+        ...globalConfig.snapshotOptions.snapshotFormat,
       },
       expand:
         config.snapshotOptions.expand
-        ?? coreConfig.snapshotOptions.expand,
+        ?? globalConfig.snapshotOptions.expand,
     },
     sequence: {
-      shuffle: coreConfig.sequence.shuffle,
-      concurrent: coreConfig.sequence.concurrent,
-      seed: coreConfig.sequence.seed,
-      hooks: coreConfig.sequence.hooks,
-      setupFiles: coreConfig.sequence.setupFiles,
+      shuffle: globalConfig.sequence.shuffle,
+      concurrent: globalConfig.sequence.concurrent,
+      seed: globalConfig.sequence.seed,
+      hooks: globalConfig.sequence.hooks,
+      setupFiles: globalConfig.sequence.setupFiles,
     },
-    inspect: coreConfig.inspect,
-    inspectBrk: coreConfig.inspectBrk,
-    inspector: coreConfig.inspector,
+    inspect: globalConfig.inspect,
+    inspectBrk: globalConfig.inspectBrk,
+    inspector: globalConfig.inspector,
     watch: config.watch,
     includeTaskLocation:
       config.includeTaskLocation
-      ?? coreConfig.includeTaskLocation,
+      ?? globalConfig.includeTaskLocation,
     env: {
       ...viteConfig?.env,
       ...config.env,
@@ -161,9 +159,10 @@ export function serializeConfig(
     })(config.browser),
     standalone: config.standalone,
     printConsoleTrace:
-      config.printConsoleTrace ?? coreConfig.printConsoleTrace,
+      config.printConsoleTrace ?? globalConfig.printConsoleTrace,
     benchmark: config.benchmark && {
       includeSamples: config.benchmark.includeSamples,
     },
+    serializedDefines: project._serializedDefines || '',
   }
 }

@@ -130,6 +130,7 @@ export interface SerializedConfig {
   benchmark: {
     includeSamples: boolean
   } | undefined
+  serializedDefines: string
 }
 
 export interface SerializedCoverageConfig {

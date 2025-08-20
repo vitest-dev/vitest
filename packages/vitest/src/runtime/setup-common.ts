@@ -9,7 +9,7 @@ import { getWorkerState } from './utils'
 
 let globalSetup = false
 export async function setupCommonEnv(config: SerializedConfig): Promise<void> {
-  setupDefines(config.defines)
+  setupDefines(config)
   setupEnv(config.env)
 
   if (globalSetup) {
@@ -24,9 +24,14 @@ export async function setupCommonEnv(config: SerializedConfig): Promise<void> {
   }
 }
 
-function setupDefines(defines: Record<string, any>) {
-  for (const key in defines) {
-    (globalThis as any)[key] = defines[key]
+function setupDefines(config: SerializedConfig) {
+  if (config.serializedDefines) {
+    // eslint-disable-next-line no-new-func
+    new Function(config.serializedDefines)()
+  }
+
+  for (const key in config.defines) {
+    (globalThis as any)[key] = config.defines[key]
   }
 }
 
