@@ -54,6 +54,10 @@ export function createDefinesScript(define: Record<string, any> | undefined): st
   if (!define) {
     return ''
   }
+  const serializedDefine = serializeDefine(define)
+  if (serializedDefine === '{}') {
+    return ''
+  }
   return `
 const defines = ${serializeDefine(define)}
 Object.keys(defines).forEach((key) => {
@@ -79,6 +83,9 @@ Object.keys(defines).forEach((key) => {
 function serializeDefine(define: Record<string, any>): string {
   const userDefine: Record<string, any> = {}
   for (const key in define) {
+    if (key === 'process.env.NODE_ENV' && define[key] === 'process.env.NODE_ENV') {
+      continue
+    }
     // import.meta.env.* is handled in `importAnalysis` plugin
     if (!key.startsWith('import.meta.env.')) {
       userDefine[key] = define[key]
