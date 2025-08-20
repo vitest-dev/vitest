@@ -24,7 +24,7 @@ catalog:
   acorn-walk: ^8.3.4
   birpc: ^2.5.0
   cac: ^6.7.14
-  chai: ^5.2.1
+  chai: ^5.3.1
   debug: ^4.4.1
   flatted: ^3.3.3
   istanbul-lib-coverage: ^3.2.2
