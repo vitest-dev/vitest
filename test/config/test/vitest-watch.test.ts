@@ -1,5 +1,4 @@
-import { expect, test, describe } from 'vitest'
-import { withEnv, mockTTY, mockCI } from '../../test-utils/vitest-watch-helpers'
+import { expect, test, describe, vi, beforeEach, afterEach } from 'vitest'
 
 // Import the resolveConfig function to test the actual configuration resolution
 import { resolveConfig } from '../../../packages/vitest/src/node/config/resolveConfig'
@@ -9,6 +8,24 @@ import { Vitest } from '../../../packages/vitest/src/node/core'
 globalThis.__VITEST_GENERATE_UI_TOKEN__ = true
 
 describe('VITEST_WATCH Environment Variable', () => {
+  let originalIsTTY: boolean | undefined
+
+  beforeEach(() => {
+    // Store original TTY state
+    originalIsTTY = process.stdin.isTTY
+    // Clean up any previous environment stubs
+    vi.unstubAllEnvs()
+  })
+
+  afterEach(() => {
+    // Restore TTY state
+    if (originalIsTTY !== undefined) {
+      process.stdin.isTTY = originalIsTTY
+    }
+    // Clean up environment stubs
+    vi.unstubAllEnvs()
+  })
+
   describe('Environment Variable Parsing', () => {
     test.each([
       { value: 'true', expected: true, description: 'VITEST_WATCH=true' },
@@ -22,175 +39,135 @@ describe('VITEST_WATCH Environment Variable', () => {
       { value: 'invalid', expected: false, description: 'VITEST_WATCH=invalid' },
       { value: '', expected: false, description: 'VITEST_WATCH= (empty)' },
     ])('$description should resolve to $expected', async ({ value, expected }) => {
-      const restoreTTY = mockTTY(true)
-      const restoreCI = mockCI(false)
+      // Set up test environment
+      process.stdin.isTTY = true
+      vi.stubEnv('CI', undefined)
+      vi.stubEnv('VITEST_WATCH', value)
 
-      try {
-        await withEnv({ VITEST_WATCH: value }, async () => {
-          const vitest = new Vitest('test', {})
-          const viteConfig = { root: process.cwd() } as any
+      const vitest = new Vitest('test', {})
+      const viteConfig = { root: process.cwd() } as any
 
-          const config = resolveConfig(vitest, {}, viteConfig)
-          expect(config.watch).toBe(expected)
+      const config = resolveConfig(vitest, {}, viteConfig)
+      expect(config.watch).toBe(expected)
 
-          await vitest.close()
-        })
-      } finally {
-        restoreTTY()
-        restoreCI()
-      }
+      await vitest.close()
     })
   })
 
   describe('Default Behavior & Backward Compatibility', () => {
     test('should use default detection when VITEST_WATCH is not set', async () => {
-      const restoreTTY = mockTTY(true)
-      const restoreCI = mockCI(false)
+      // Set up test environment
+      process.stdin.isTTY = true
+      vi.stubEnv('CI', undefined)
+      vi.stubEnv('VITEST_WATCH', undefined)
 
-      try {
-        await withEnv({ VITEST_WATCH: undefined }, async () => {
-          const vitest = new Vitest('test', {})
-          const viteConfig = { root: process.cwd() } as any
+      const vitest = new Vitest('test', {})
+      const viteConfig = { root: process.cwd() } as any
 
-          const config = resolveConfig(vitest, {}, viteConfig)
-          // Should be true because !isCI && isTTY = !false && true = true
-          expect(config.watch).toBe(true)
+      const config = resolveConfig(vitest, {}, viteConfig)
+      // Should be true because !isCI && isTTY = !false && true = true
+      expect(config.watch).toBe(true)
 
-          await vitest.close()
-        })
-      } finally {
-        restoreTTY()
-        restoreCI()
-      }
+      await vitest.close()
     })
 
     test('should respect CI environment when VITEST_WATCH is not set', async () => {
-      const restoreTTY = mockTTY(true)
-      const restoreCI = mockCI(true)
+      // Set up test environment
+      process.stdin.isTTY = true
+      vi.stubEnv('CI', '1')
+      vi.stubEnv('VITEST_WATCH', undefined)
 
-      try {
-        await withEnv({ VITEST_WATCH: undefined }, async () => {
-          const vitest = new Vitest('test', {})
-          const viteConfig = { root: process.cwd() } as any
+      const vitest = new Vitest('test', {})
+      const viteConfig = { root: process.cwd() } as any
 
-          const config = resolveConfig(vitest, {}, viteConfig)
-          // Should be false because CI is true
-          expect(config.watch).toBe(false)
+      const config = resolveConfig(vitest, {}, viteConfig)
+      // Should be false because CI is true
+      expect(config.watch).toBe(false)
 
-          await vitest.close()
-        })
-      } finally {
-        restoreTTY()
-        restoreCI()
-      }
+      await vitest.close()
     })
 
     test('should respect TTY when VITEST_WATCH is not set', async () => {
-      const restoreTTY = mockTTY(false)
-      const restoreCI = mockCI(false)
+      // Set up test environment
+      process.stdin.isTTY = false
+      vi.stubEnv('CI', undefined)
+      vi.stubEnv('VITEST_WATCH', undefined)
 
-      try {
-        await withEnv({ VITEST_WATCH: undefined }, async () => {
-          const vitest = new Vitest('test', {})
-          const viteConfig = { root: process.cwd() } as any
+      const vitest = new Vitest('test', {})
+      const viteConfig = { root: process.cwd() } as any
 
-          const config = resolveConfig(vitest, {}, viteConfig)
-          // Should be false because !isCI && isTTY = !false && false = false
-          expect(config.watch).toBe(false)
+      const config = resolveConfig(vitest, {}, viteConfig)
+      // Should be false because !isCI && isTTY = !false && false = false
+      expect(config.watch).toBe(false)
 
-          await vitest.close()
-        })
-      } finally {
-        restoreTTY()
-        restoreCI()
-      }
+      await vitest.close()
     })
   })
 
   describe('Precedence & Configuration Priority', () => {
     test('VITEST_WATCH should override CI environment', async () => {
-      const restoreTTY = mockTTY(true)
-      const restoreCI = mockCI(true)
+      // Set up test environment
+      process.stdin.isTTY = true
+      vi.stubEnv('CI', '1')
+      vi.stubEnv('VITEST_WATCH', 'true')
 
-      try {
-        await withEnv({ VITEST_WATCH: 'true' }, async () => {
-          const vitest = new Vitest('test', {})
-          const viteConfig = { root: process.cwd() } as any
+      const vitest = new Vitest('test', {})
+      const viteConfig = { root: process.cwd() } as any
 
-          const config = resolveConfig(vitest, {}, viteConfig)
-          // Should be true because VITEST_WATCH takes precedence over CI
-          expect(config.watch).toBe(true)
+      const config = resolveConfig(vitest, {}, viteConfig)
+      // Should be true because VITEST_WATCH takes precedence over CI
+      expect(config.watch).toBe(true)
 
-          await vitest.close()
-        })
-      } finally {
-        restoreTTY()
-        restoreCI()
-      }
+      await vitest.close()
     })
 
     test('VITEST_WATCH should override default detection', async () => {
-      const restoreTTY = mockTTY(true)
-      const restoreCI = mockCI(false)
+      // Set up test environment
+      process.stdin.isTTY = true
+      vi.stubEnv('CI', undefined)
+      vi.stubEnv('VITEST_WATCH', 'false')
 
-      try {
-        await withEnv({ VITEST_WATCH: 'false' }, async () => {
-          const vitest = new Vitest('test', {})
-          const viteConfig = { root: process.cwd() } as any
+      const vitest = new Vitest('test', {})
+      const viteConfig = { root: process.cwd() } as any
 
-          const config = resolveConfig(vitest, {}, viteConfig)
-          // Should be false because VITEST_WATCH takes precedence over default detection
-          expect(config.watch).toBe(false)
+      const config = resolveConfig(vitest, {}, viteConfig)
+      // Should be false because VITEST_WATCH takes precedence over default detection
+      expect(config.watch).toBe(false)
 
-          await vitest.close()
-        })
-      } finally {
-        restoreTTY()
-        restoreCI()
-      }
+      await vitest.close()
     })
 
     test('user config should take precedence over environment variable', async () => {
-      const restoreTTY = mockTTY(true)
-      const restoreCI = mockCI(false)
+      // Set up test environment
+      process.stdin.isTTY = true
+      vi.stubEnv('CI', undefined)
+      vi.stubEnv('VITEST_WATCH', 'false')
 
-      try {
-        await withEnv({ VITEST_WATCH: 'false' }, async () => {
-          const vitest = new Vitest('test', {})
-          const viteConfig = { root: process.cwd() } as any
+      const vitest = new Vitest('test', {})
+      const viteConfig = { root: process.cwd() } as any
 
-          // User config sets watch: true, environment variable should not override
-          const config = resolveConfig(vitest, { watch: true }, viteConfig)
-          expect(config.watch).toBe(true) // User config takes precedence over env var
+      // User config sets watch: true, environment variable should not override
+      const config = resolveConfig(vitest, { watch: true }, viteConfig)
+      expect(config.watch).toBe(true) // User config takes precedence over env var
 
-          await vitest.close()
-        })
-      } finally {
-        restoreTTY()
-        restoreCI()
-      }
+      await vitest.close()
     })
 
     test('CLI flags should still take precedence over environment variable', async () => {
-      const restoreTTY = mockTTY(true)
-      const restoreCI = mockCI(false)
+      // Set up test environment
+      process.stdin.isTTY = true
+      vi.stubEnv('CI', undefined)
+      vi.stubEnv('VITEST_WATCH', 'true')
 
-      try {
-        await withEnv({ VITEST_WATCH: 'true' }, async () => {
-          const vitest = new Vitest('test', {})
-          const viteConfig = { root: process.cwd() } as any
+      const vitest = new Vitest('test', {})
+      const viteConfig = { root: process.cwd() } as any
 
-          // Explicit CLI/user config should override environment variable
-          const config = resolveConfig(vitest, { watch: false }, viteConfig)
+      // Explicit CLI/user config should override environment variable
+      const config = resolveConfig(vitest, { watch: false }, viteConfig)
 
-          expect(config.watch).toBe(false)
+      expect(config.watch).toBe(false)
 
-          await vitest.close()
-        })
-      } finally {
-        restoreTTY()
-        restoreCI()
-      }
+      await vitest.close()
     })
   })
 })
