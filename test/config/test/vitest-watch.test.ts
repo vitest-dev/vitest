@@ -1,4 +1,4 @@
-import { expect, test, describe, vi, beforeEach, afterEach } from 'vitest'
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 
 // Import the resolveConfig function to test the actual configuration resolution
 import { resolveConfig } from '../../../packages/vitest/src/node/config/resolveConfig'
