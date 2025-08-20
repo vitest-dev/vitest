@@ -83,6 +83,7 @@ Object.keys(defines).forEach((key) => {
 function serializeDefine(define: Record<string, any>): string {
   const userDefine: Record<string, any> = {}
   for (const key in define) {
+    // vitest sets this to avoid vite:client-inject plugin
     if (key === 'process.env.NODE_ENV' && define[key] === 'process.env.NODE_ENV') {
       continue
     }
