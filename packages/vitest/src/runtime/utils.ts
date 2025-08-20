@@ -40,13 +40,6 @@ export function isChildProcess(): boolean {
   return typeof process !== 'undefined' && !!process.send
 }
 
-export function setProcessTitle(title: string): void {
-  try {
-    process.title = `node (${title})`
-  }
-  catch {}
-}
-
 export function resetModules(modules: EvaluatedModules, resetMocks = false): void {
   const skipPaths = [
     // Vitest

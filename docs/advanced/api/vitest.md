@@ -375,6 +375,14 @@ This methods overrides the global [test name pattern](/config/#testnamepattern).
 This method doesn't start running any tests. To run tests with updated pattern, call [`runTestSpecifications`](#runtestspecifications).
 :::
 
+## getGlobalTestNamePattern
+
+```ts
+function getGlobalTestNamePattern(): RegExp | undefined
+```
+
+Returns the regexp used for the global test name pattern.
+
 ## resetGlobalTestNamePattern
 
 ```ts

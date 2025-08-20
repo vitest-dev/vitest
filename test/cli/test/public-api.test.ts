@@ -94,3 +94,22 @@ it.each([
     })
   })
 })
+
+it('can modify the global test name pattern', async () => {
+  const { ctx } = await runVitest({
+    testNamePattern: 'custom',
+    include: ['non-existing'],
+  })
+
+  expect(ctx?.getGlobalTestNamePattern()).toEqual(/custom/)
+
+  // reset just removes the override, user config is not touched
+  ctx?.resetGlobalTestNamePattern()
+  expect(ctx?.getGlobalTestNamePattern()).toEqual(/custom/)
+
+  ctx?.setGlobalTestNamePattern(/new pattern/)
+  expect(ctx?.getGlobalTestNamePattern()).toEqual(/new pattern/)
+
+  ctx?.resetGlobalTestNamePattern()
+  expect(ctx?.getGlobalTestNamePattern()).toEqual(/custom/)
+})

@@ -1,9 +1,7 @@
 import { expect, test } from 'vitest'
 import { runVitestCli } from '../../test-utils'
 
-const [nvMajor, nvMinor] = process.versions.node.split('.').map(Number)
-const isTypeStrippingSupported
-  = (nvMajor === 23 && nvMinor >= 6) || nvMajor >= 24
+const isTypeStrippingSupported = !!process.features.typescript
 
 test('configLoader default', async () => {
   const { vitest, exitCode } = await runVitestCli(
