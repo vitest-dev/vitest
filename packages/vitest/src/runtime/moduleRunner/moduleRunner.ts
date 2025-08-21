@@ -29,6 +29,7 @@ export class VitestModuleRunner extends ModuleRunner {
     )
     this.moduleExecutionInfo = options.getWorkerState().moduleExecutionInfo
     this.mocker = options.mocker || new VitestMocker(this, {
+      spyModule: options.spyModule,
       context: options.vm?.context,
       resolveId: options.transport.resolveId,
       get root() {
