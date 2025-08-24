@@ -842,17 +842,20 @@ function formatName(name: string | Function) {
 }
 
 function formatTitle(template: string, items: any[], idx: number) {
+  template = template.replace(/%%/g, '__vitest_escaped_%__')
+
   if (template.includes('%#') || template.includes('%$')) {
-    // '%#' match index of the test case
     template = template
-      .replace(/%%/g, '__vitest_escaped_%__')
       .replace(/%#/g, `${idx}`)
       .replace(/%\$/g, `${idx + 1}`)
-      .replace(/__vitest_escaped_%__/g, '%%')
   }
-  const isObjectItem = isObject(items[0])
 
-  const processedTemplate = template.replace(
+  const percentRegex = /%[a-z]/gi
+  const percentMatches: RegExpMatchArray | null = template.match(percentRegex)
+  const percentCount = percentMatches ? percentMatches.length : 0
+
+  const isObjectItem = isObject(items[0])
+  template = template.replace(
     /\$([$\w.]+)/g,
     (_, key: string) => {
       const isArrayKey = /^\d+$/.test(key)
@@ -867,11 +870,11 @@ function formatTitle(template: string, items: any[], idx: number) {
     },
   )
 
-  const count = processedTemplate.split('%').length - 1
+  template = template.replace(/__vitest_escaped_%__/g, '%')
 
-  if (processedTemplate.includes('%f')) {
-    const placeholders = processedTemplate.match(/%f/g) || []
-    let temporaryTemplate = processedTemplate
+  if (template.includes('%f')) {
+    const placeholders = template.match(/%f/g) || []
+    let temporaryTemplate = template
     placeholders.forEach((_, i) => {
       if (isNegativeNaN(items[i]) || Object.is(items[i], -0)) {
         let occurrence = 0
@@ -881,10 +884,10 @@ function formatTitle(template: string, items: any[], idx: number) {
         })
       }
     })
-    return format(temporaryTemplate, ...items.slice(0, count))
+    return format(temporaryTemplate, ...items.slice(0, percentCount))
   }
 
-  return format(processedTemplate, ...items.slice(0, count))
+  return format(template, ...items.slice(0, percentCount))
 }
 
 function formatTemplateString(cases: any[], args: any[]): any[] {

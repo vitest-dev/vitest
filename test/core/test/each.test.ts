@@ -244,3 +244,7 @@ test.each([[343434, '$343,434.00']])('handles whole numbers: %s as %s', (input, 
 })
 
 test.each([{ a: '$b', b: 'yay' }])('%o', () => {})
+
+test.for([{ a: '%o' }])('$a', (_, ctx) => {
+  expect(ctx.task.name).toBe('\'%o\'')
+})
