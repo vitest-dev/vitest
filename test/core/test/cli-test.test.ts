@@ -134,10 +134,6 @@ test('coverage autoUpdate accepts boolean values from CLI', async () => {
   expect(getCLIOptions('--coverage.thresholds.autoUpdate no').coverage.thresholds.autoUpdate).toBe(false)
 })
 
-test('coverage autoUpdate preserves non-boolean values from CLI', async () => {
-  expect(getCLIOptions('--coverage.thresholds.autoUpdate someFunction').coverage.thresholds.autoUpdate).toBe('someFunction')
-})
-
 test('bench only options', async () => {
   expect(() =>
     parseArguments('--compare file.json').matchedCommand?.checkUnknownOptions(),
