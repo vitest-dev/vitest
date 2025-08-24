@@ -578,7 +578,7 @@ export class BaseCoverageProvider<Options extends ResolvedCoverageOptions<'istan
 
       updatedThresholds = true
 
-      const thresholdFormatter = typeof this.options.thresholds?.autoUpdate === 'function' ? this.options.thresholds?.autoUpdate : (value: number | undefined) => value
+      const thresholdFormatter = typeof this.options.thresholds?.autoUpdate === 'function' ? this.options.thresholds?.autoUpdate : (value: number) => value
 
       for (const [threshold, newValue] of thresholdsToUpdate) {
         const formattedValue = thresholdFormatter(newValue)

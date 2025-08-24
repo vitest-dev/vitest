@@ -283,7 +283,7 @@ interface Thresholds {
    *
    * @default false
    */
-  autoUpdate?: boolean | ((newThreshold: number | undefined) => number | undefined)
+  autoUpdate?: boolean | ((newThreshold: number) => number)
 
   /** Thresholds for statements */
   statements?: number
