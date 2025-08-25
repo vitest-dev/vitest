@@ -455,6 +455,8 @@ interface LocatorSelectors {
   getByTestId: (text: string | RegExp) => Locator
 }
 
+export interface FrameLocator extends LocatorSelectors {}
+
 export interface Locator extends LocatorSelectors {
   /**
    * Selector string that will be used to locate the element by the browser provider.
@@ -701,7 +703,25 @@ export interface BrowserPage extends LocatorSelectors {
    * @see {@link https://vitest.dev/guide/browser/locators}
    */
   elementLocator(element: Element): Locator
-  frameLocator(locator: Locator): Locator
+  /**
+   * The iframe locator. This is a document locator that enters the iframe body
+   * and works similarly to the `page` object.
+   *
+   * As the first argument, pass down the locator to the `<iframe>` element itself.
+   *
+   * **Warning:** At the moment, this is supported only by the `playwright` provider.
+   * @example
+   * ```ts
+   * const frame = page.frameLocator(
+   *   page.getByTestId('iframe')
+   * )
+   *
+   * await frame.getByText('Hello World').click()
+   * ```
+   * @param locator The locator object.
+   * @see {@link https://vitest.dev/guide/browser/locators}
+   */
+  frameLocator(locator: Locator): FrameLocator
 }
 
 export interface BrowserLocators {
