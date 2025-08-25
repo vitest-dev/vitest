@@ -294,11 +294,6 @@ function normalizeCliOptions(cliFilters: string[], argv: CliOptions): CliOptions
 
 async function start(mode: VitestRunMode, cliFilters: string[], options: CliOptions): Promise<void> {
   try {
-    process.title = 'node (vitest)'
-  }
-  catch {}
-
-  try {
     const { startVitest } = await import('./cli-api')
     const ctx = await startVitest(mode, cliFilters.map(normalize), normalizeCliOptions(cliFilters, options))
     if (!ctx.shouldKeepServer()) {
@@ -330,11 +325,6 @@ async function init(project: string) {
 }
 
 async function collect(mode: VitestRunMode, cliFilters: string[], options: CliOptions): Promise<void> {
-  try {
-    process.title = 'node (vitest)'
-  }
-  catch {}
-
   try {
     const { prepareVitest, processCollected, outputFileList } = await import('./cli-api')
     const ctx = await prepareVitest(mode, {

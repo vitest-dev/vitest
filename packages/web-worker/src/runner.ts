@@ -6,7 +6,7 @@ import {
   VitestModuleEvaluator,
 } from 'vitest/internal/module-runner'
 
-export function startWebWorkerModuleRunner(context: Record<string, unknown>): Promise<VitestModuleRunner> {
+export function startWebWorkerModuleRunner(context: Record<string, unknown>): VitestModuleRunner {
   const state = getWorkerState()
   const mocker = (globalThis as any).__vitest_mocker__
 

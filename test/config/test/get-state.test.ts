@@ -4,7 +4,7 @@ import { runVitest } from '../../test-utils'
 
 test.for([
   { isolate: true },
-  { isolate: false, minWorkers: 1, maxWorkers: 1 },
+  { isolate: false, maxWorkers: 1 },
   { isolate: false, fileParallelism: false },
   { isolate: false, poolOptions: { forks: { singleFork: true } } },
 ] satisfies TestUserConfig[])(`getState().testPath during collection %s`, async (config) => {

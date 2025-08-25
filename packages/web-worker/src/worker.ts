@@ -116,40 +116,37 @@ export function createWorkerConstructor(
 
       this._vw_name = fileId
 
-      startWebWorkerModuleRunner(context)
-        .then((runner) => {
-          return runner.mocker.resolveId(fileId).then(({ url, id: resolvedId }) => {
-            this._vw_name = options?.name ?? url
-            debug('initialize worker %s', this._vw_name)
+      const runner = startWebWorkerModuleRunner(context)
+      runner.mocker.resolveId(fileId).then(({ url, id: resolvedId }) => {
+        this._vw_name = options?.name ?? url
+        debug('initialize worker %s', this._vw_name)
 
-            return runner.import(url).then(() => {
-              runner._invalidateSubTreeById([
-                resolvedId,
-                runner.mocker.getMockPath(resolvedId),
-              ])
-              const q = this._vw_messageQueue
-              this._vw_messageQueue = null
-              if (q) {
-                q.forEach(
-                  ([data, transfer]) => this.postMessage(data, transfer),
-                  this,
-                )
-              }
-              debug('worker %s successfully initialized', this._vw_name)
-            })
-          })
+        return runner.import(url).then(() => {
+          runner._invalidateSubTreeById([
+            resolvedId,
+            runner.mocker.getMockPath(resolvedId),
+          ])
+          const q = this._vw_messageQueue
+          this._vw_messageQueue = null
+          if (q) {
+            q.forEach(
+              ([data, transfer]) => this.postMessage(data, transfer),
+              this,
+            )
+          }
+          debug('worker %s successfully initialized', this._vw_name)
         })
-        .catch((e) => {
-          debug('worker %s failed to initialize: %o', this._vw_name, e)
-          const EventConstructor = globalThis.ErrorEvent || globalThis.Event
-          const error = new EventConstructor('error', {
-            error: e,
-            message: e.message,
-          })
-          this.dispatchEvent(error)
-          this.onerror?.(error)
-          console.error(e)
+      }).catch((e) => {
+        debug('worker %s failed to initialize: %o', this._vw_name, e)
+        const EventConstructor = globalThis.ErrorEvent || globalThis.Event
+        const error = new EventConstructor('error', {
+          error: e,
+          message: e.message,
         })
+        this.dispatchEvent(error)
+        this.onerror?.(error)
+        console.error(e)
+      })
     }
 
     addEventListener(

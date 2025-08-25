@@ -1,8 +1,11 @@
 import type { WorkerGlobalState } from '../../types/worker'
 import type { VitestModuleRunner } from '../moduleRunner/moduleRunner'
 import type { ContextModuleRunnerOptions } from '../moduleRunner/startModuleRunner'
+import { runInThisContext } from 'node:vm'
+import * as spyModule from '@vitest/spy'
 import { EvaluatedModules } from 'vite/module-runner'
 import { startVitestModuleRunner } from '../moduleRunner/startModuleRunner'
+import { run } from '../runBaseTests'
 import { provideWorkerState } from '../utils'
 
 let _moduleRunner: VitestModuleRunner
@@ -10,12 +13,12 @@ let _moduleRunner: VitestModuleRunner
 const evaluatedModules = new EvaluatedModules()
 const moduleExecutionInfo = new Map()
 
-async function startModuleRunner(options: ContextModuleRunnerOptions) {
+function startModuleRunner(options: ContextModuleRunnerOptions) {
   if (_moduleRunner) {
     return _moduleRunner
   }
 
-  _moduleRunner = await startVitestModuleRunner(options)
+  _moduleRunner = startVitestModuleRunner(options)
   return _moduleRunner
 }
 
@@ -45,15 +48,27 @@ export async function runBaseTests(method: 'run' | 'collect', state: WorkerGloba
     })
   })
 
-  const [executor, { run }] = await Promise.all([
-    startModuleRunner({ state, evaluatedModules: state.evaluatedModules }),
-    import('../runBaseTests'),
-  ])
+  const executor = startModuleRunner({
+    state,
+    evaluatedModules: state.evaluatedModules,
+    spyModule,
+  })
   const fileSpecs = ctx.files.map(f =>
     typeof f === 'string'
       ? { filepath: f, testLocations: undefined }
       : f,
   )
+  if (ctx.config.serializedDefines) {
+    try {
+      runInThisContext(`(() =>{\n${ctx.config.serializedDefines}})()`, {
+        lineOffset: 1,
+        filename: 'virtual:load-defines.js',
+      })
+    }
+    catch (error: any) {
+      throw new Error(`Failed to load custom "defines": ${error.message}`)
+    }
+  }
 
   await run(
     method,

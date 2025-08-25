@@ -254,7 +254,6 @@ test('worker fixtures in isolated tests init and teardown twice', async () => {
   }, {
     globals: true,
     maxWorkers: 1,
-    minWorkers: 1,
     pool: 'vmThreads',
   })
 
@@ -292,7 +291,6 @@ test('worker fixture initiates and torn down in different workers', async () => 
     globals: true,
     isolate: false,
     maxWorkers: 2,
-    minWorkers: 2,
     pool: 'threads',
   })
 
@@ -330,7 +328,6 @@ test('worker fixture initiates and torn down in one non-isolated worker', async 
     globals: true,
     isolate: false,
     maxWorkers: 1,
-    minWorkers: 1,
     pool: 'threads',
   })
 

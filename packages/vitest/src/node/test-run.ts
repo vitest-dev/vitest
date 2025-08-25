@@ -105,7 +105,7 @@ export class TestRun {
       process.exitCode = 1
     }
 
-    this.vitest.report('onTestRunEnd', modules, [...errors] as SerializedError[], state)
+    await this.vitest.report('onTestRunEnd', modules, [...errors] as SerializedError[], state)
   }
 
   private hasFailed(modules: TestModule[]) {

@@ -66,10 +66,6 @@ const poolThreadsCommands: CLIOptions<ThreadsOptions & WorkerContextOptions> = {
     description: 'Maximum number or percentage of threads to run tests in',
     argument: '<workers>',
   },
-  minThreads: {
-    description: 'Minimum number or percentage of threads to run tests in',
-    argument: '<workers>',
-  },
   useAtomics: {
     description:
       'Use Atomics to synchronize threads. This can improve performance in some cases, but might cause segfault in older Node versions (default: `false`)',
@@ -86,10 +82,6 @@ const poolForksCommands: CLIOptions<ForksOptions & WorkerContextOptions> = {
   },
   maxForks: {
     description: 'Maximum number or percentage of processes to run tests in',
-    argument: '<workers>',
-  },
-  minForks: {
-    description: 'Minimum number or percentage of processes to run tests in',
     argument: '<workers>',
   },
   execArgv: null,
@@ -480,10 +472,6 @@ export const cliOptionsConfig: VitestCLIOptions = {
   },
   maxWorkers: {
     description: 'Maximum number or percentage of workers to run tests in',
-    argument: '<workers>',
-  },
-  minWorkers: {
-    description: 'Minimum number or percentage of workers to run tests in',
     argument: '<workers>',
   },
   environment: {

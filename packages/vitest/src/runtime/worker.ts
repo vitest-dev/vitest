@@ -9,12 +9,10 @@ import { loadEnvironment } from '../integrations/env/loader'
 import { addCleanupListener, cleanup as cleanupWorker } from './cleanup'
 import { setupInspect } from './inspector'
 import { createRuntimeRpc, rpcDone } from './rpc'
-import { isChildProcess, setProcessTitle } from './utils'
+import { isChildProcess } from './utils'
 import { disposeInternalListeners } from './workers/utils'
 
 if (isChildProcess()) {
-  setProcessTitle(`vitest ${poolId}`)
-
   const isProfiling = process.execArgv.some(
     execArg =>
       execArg.startsWith('--prof')

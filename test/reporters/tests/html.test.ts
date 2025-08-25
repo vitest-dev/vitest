@@ -31,6 +31,7 @@ describe('html reporter', async () => {
     const resultJson = parse(metaJson.replace(new RegExp(vitestRoot, 'g'), '<rootDir>'))
     resultJson.config = {} // doesn't matter for a test
     const file = resultJson.files[0]
+    // reset durations and id
     file.id = 0
     file.collectDuration = 0
     file.environmentLoad = 0
@@ -39,12 +40,15 @@ describe('html reporter', async () => {
     file.importDurations = {}
     file.result.duration = 0
     file.result.startTime = 0
+
     const task = file.tasks[0]
     task.id = 0
     task.result.duration = 0
     task.result.startTime = 0
+
     expect(task.result.errors).not.toBeDefined()
     expect(task.result.logs).not.toBeDefined()
+
     expect(resultJson).toMatchSnapshot(`tests are passing`)
     expect(indexHtml).toMatch('window.METADATA_PATH="html.meta.json.gz"')
   }, 120000)
@@ -70,6 +74,7 @@ describe('html reporter', async () => {
     const resultJson = parse(metaJson.replace(new RegExp(vitestRoot, 'g'), '<rootDir>'))
     resultJson.config = {} // doesn't matter for a test
     const file = resultJson.files[0]
+    // reset durations and id
     file.id = 0
     file.collectDuration = 0
     file.environmentLoad = 0
@@ -78,16 +83,19 @@ describe('html reporter', async () => {
     file.importDurations = {}
     file.result.duration = 0
     file.result.startTime = 0
+
     const task = file.tasks[0]
     task.id = 0
     task.result.duration = 0
     task.result.startTime = 0
+
     expect(task.result.errors).toBeDefined()
     task.result.errors[0].stack = task.result.errors[0].stack.split('\n')[0]
     expect(task.logs).toBeDefined()
     expect(task.logs).toHaveLength(1)
     task.logs[0].taskId = 0
     task.logs[0].time = 0
+
     expect(resultJson).toMatchSnapshot(`tests are failing`)
     expect(indexHtml).toMatch('window.METADATA_PATH="html.meta.json.gz"')
   }, 120000)

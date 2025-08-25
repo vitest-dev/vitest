@@ -1,7 +1,6 @@
 import type { UserConfig as ViteUserConfig } from 'vite'
 import type { TestUserConfig } from 'vitest/node'
 import type { VitestRunnerCLIOptions } from '../../test-utils'
-import { cpus } from 'node:os'
 import { playwright } from '@vitest/browser/providers/playwright'
 import { preview } from '@vitest/browser/providers/preview'
 import { webdriverio } from '@vitest/browser/providers/webdriverio'
@@ -582,26 +581,6 @@ test('non existing project name will throw', async () => {
 test('non existing project name array will throw', async () => {
   const { stderr } = await runVitest({ project: ['non-existing-project', 'also-non-existing'] })
   expect(stderr).toMatch('No projects matched the filter "non-existing-project", "also-non-existing".')
-})
-
-test('minWorkers must be smaller than maxWorkers', async () => {
-  const { stderr } = await runVitest({ minWorkers: 2, maxWorkers: 1 })
-
-  expect(stderr).toMatch('RangeError: options.minThreads and options.maxThreads must not conflict')
-})
-
-test('minWorkers higher than maxWorkers does not crash', async ({ skip }) => {
-  skip(cpus().length < 2, 'Test requires +2 CPUs')
-
-  const { stdout, stderr } = await runVitest({
-    maxWorkers: 1,
-
-    // Overrides defaults of "runVitest" of "test-utils"
-    minWorkers: undefined,
-  })
-
-  expect(stdout).toMatch('✓ example.test.ts > it works')
-  expect(stderr).toBe('')
 })
 
 test('cannot set the `workspace` options', async () => {

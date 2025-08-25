@@ -411,13 +411,6 @@ Run tests inside a single thread (default: `false`)
 
 Maximum number or percentage of threads to run tests in
 
-### poolOptions.threads.minThreads
-
-- **CLI:** `--poolOptions.threads.minThreads <workers>`
-- **Config:** [poolOptions.threads.minThreads](/config/#pooloptions-threads-minthreads)
-
-Minimum number or percentage of threads to run tests in
-
 ### poolOptions.threads.useAtomics
 
 - **CLI:** `--poolOptions.threads.useAtomics`
@@ -445,13 +438,6 @@ Run tests inside a single thread (default: `false`)
 - **Config:** [poolOptions.vmThreads.maxThreads](/config/#pooloptions-vmthreads-maxthreads)
 
 Maximum number or percentage of threads to run tests in
-
-### poolOptions.vmThreads.minThreads
-
-- **CLI:** `--poolOptions.vmThreads.minThreads <workers>`
-- **Config:** [poolOptions.vmThreads.minThreads](/config/#pooloptions-vmthreads-minthreads)
-
-Minimum number or percentage of threads to run tests in
 
 ### poolOptions.vmThreads.useAtomics
 
@@ -488,13 +474,6 @@ Run tests inside a single child_process (default: `false`)
 
 Maximum number or percentage of processes to run tests in
 
-### poolOptions.forks.minForks
-
-- **CLI:** `--poolOptions.forks.minForks <workers>`
-- **Config:** [poolOptions.forks.minForks](/config/#pooloptions-forks-minforks)
-
-Minimum number or percentage of processes to run tests in
-
 ### poolOptions.vmForks.isolate
 
 - **CLI:** `--poolOptions.vmForks.isolate`
@@ -516,13 +495,6 @@ Run tests inside a single child_process (default: `false`)
 
 Maximum number or percentage of processes to run tests in
 
-### poolOptions.vmForks.minForks
-
-- **CLI:** `--poolOptions.vmForks.minForks <workers>`
-- **Config:** [poolOptions.vmForks.minForks](/config/#pooloptions-vmforks-minforks)
-
-Minimum number or percentage of processes to run tests in
-
 ### poolOptions.vmForks.memoryLimit
 
 - **CLI:** `--poolOptions.vmForks.memoryLimit <limit>`
@@ -543,13 +515,6 @@ Should all test files run in parallel. Use `--no-file-parallelism` to disable (d
 - **Config:** [maxWorkers](/config/#maxworkers)
 
 Maximum number or percentage of workers to run tests in
-
-### minWorkers
-
-- **CLI:** `--minWorkers <workers>`
-- **Config:** [minWorkers](/config/#minworkers)
-
-Minimum number or percentage of workers to run tests in
 
 ### environment
 

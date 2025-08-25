@@ -750,13 +750,6 @@ export default defineConfig({
 
 Maximum number or percentage of threads. You can also use `VITEST_MAX_THREADS` environment variable.
 
-##### poolOptions.threads.minThreads<NonProjectOption />
-
-- **Type:** `number | string`
-- **Default:** _available CPUs_
-
-Minimum number or percentage of threads. You can also use `VITEST_MIN_THREADS` environment variable.
-
 ##### poolOptions.threads.singleThread
 
 - **Type:** `boolean`
@@ -822,13 +815,6 @@ export default defineConfig({
 
 Maximum number or percentage of forks. You can also use `VITEST_MAX_FORKS` environment variable.
 
-##### poolOptions.forks.minForks<NonProjectOption />
-
-- **Type:** `number | string`
-- **Default:** _available CPUs_
-
-Minimum number or percentage of forks. You can also use `VITEST_MIN_FORKS` environment variable.
-
 ##### poolOptions.forks.isolate
 
 - **Type:** `boolean`
@@ -884,13 +870,6 @@ export default defineConfig({
 - **Default:** _available CPUs_
 
 Maximum number or percentage of threads. You can also use `VITEST_MAX_THREADS` environment variable.
-
-##### poolOptions.vmThreads.minThreads<NonProjectOption />
-
-- **Type:** `number | string`
-- **Default:** _available CPUs_
-
-Minimum number or percentage of threads. You can also use `VITEST_MIN_THREADS` environment variable.
 
 ##### poolOptions.vmThreads.memoryLimit<NonProjectOption />
 
@@ -966,13 +945,6 @@ export default defineConfig({
 
 Maximum number or percentage of forks. You can also use `VITEST_MAX_FORKS` environment variable.
 
-##### poolOptions.vmForks.minForks<NonProjectOption />
-
-- **Type:** `number | string`
-- **Default:** _available CPUs_
-
-Minimum number or percentage of forks. You can also use `VITEST_MIN_FORKS` environment variable.
-
 ##### poolOptions.vmForks.memoryLimit<NonProjectOption />
 
 - **Type:** `string | number`
@@ -997,7 +969,7 @@ Be careful when using, it as some options may crash worker, e.g. --prof, --title
 - **Default:** `true`
 - **CLI:** `--no-file-parallelism`, `--fileParallelism=false`
 
-Should all test files run in parallel. Setting this to `false` will override `maxWorkers` and `minWorkers` options to `1`.
+Should all test files run in parallel. Setting this to `false` will override `maxWorkers` option to `1`.
 
 ::: tip
 This option doesn't affect tests running in the same file. If you want to run those in parallel, use `concurrent` option on [describe](/api/#describe-concurrent) or via [a config](#sequence-concurrent).
@@ -1008,12 +980,6 @@ This option doesn't affect tests running in the same file. If you want to run th
 - **Type:** `number | string`
 
 Maximum number or percentage of workers to run tests in. `poolOptions.{threads,vmThreads}.maxThreads`/`poolOptions.forks.maxForks` has higher priority.
-
-### minWorkers<NonProjectOption /> {#minworkers}
-
-- **Type:** `number | string`
-
-Minimum number or percentage of workers to run tests in. `poolOptions.{threads,vmThreads}.minThreads`/`poolOptions.forks.minForks` has higher priority.
 
 ### testTimeout
 
