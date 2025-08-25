@@ -1,3 +1,4 @@
+import type { FileSpecification } from '@vitest/runner'
 import type {
   BenchmarkBuiltinReporters,
   BuiltinReporters,
@@ -23,6 +24,15 @@ export function getOutputFile(
   }
 
   return config.outputFile[reporter]
+}
+
+export function wrapFileSpecifications(files: FileSpecification[]): FileSpecification[] {
+  return files.map((file) => {
+    if (file.testNamePattern) {
+      file.testNamePattern = `${REGEXP_WRAP_PREFIX}${file.testNamePattern.toString()}` as unknown as RegExp
+    }
+    return file
+  })
 }
 
 /**
