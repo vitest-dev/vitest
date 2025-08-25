@@ -111,4 +111,12 @@ test('expect.* allows asymmetrict mattchers with different types', () => {
   // https://github.com/DefinitelyTyped/DefinitelyTyped/pull/62831/files#diff-ff7b882e4a29e7fe0e348a6bdf8b11774d606eaa221009b166b01389576d921fR1237
   expect({ list: [1, 2, 3] }).toMatchObject({ list: expect.any(Array) })
   expect({ list: [1, 2, 3] }).toMatchObject<{ list: number[] }>({ list: expect.any(Array) })
+
+  // expect<T>
+  // https://github.com/vitest-dev/vitest/issues/8081
+  function expectMany<T>(value: ({ enabled: false } | { enabled: true; data: T })) {
+    expect(value).toEqual(value)
+    expect(value).toMatchObject(value)
+  }
+  expectMany({ enabled: true, data: 'ok' })
 })

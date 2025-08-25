@@ -10,21 +10,20 @@ import type {
 import type { BaseCoverageOptions, CoverageReporterWithOptions } from '../types/coverage'
 import type { BuiltinPool, ForksOptions, PoolOptions, ThreadsOptions } from '../types/pool-options'
 import crypto from 'node:crypto'
-import { toArray } from '@vitest/utils'
+import { slash, toArray } from '@vitest/utils'
 import { resolveModule } from 'local-pkg'
 import { normalize, relative, resolve } from 'pathe'
 import c from 'tinyrainbow'
 import { mergeConfig } from 'vite'
 import {
+  configFiles,
   defaultBrowserPort,
   defaultInspectPort,
   defaultPort,
-  extraInlineDeps,
 } from '../../constants'
 import { benchmarkConfigDefaults, configDefaults } from '../../defaults'
 import { isCI, stdProvider } from '../../utils/env'
 import { getWorkersCountByPercentage } from '../../utils/workers'
-import { VitestCache } from '../cache'
 import { builtinPools } from '../pool'
 import { BaseSequencer } from '../sequencers/BaseSequencer'
 import { RandomSequencer } from '../sequencers/RandomSequencer'
@@ -57,7 +56,7 @@ function parseInspector(inspect: string | undefined | boolean | number) {
   return { host, port: Number(port) || defaultInspectPort }
 }
 
-export function resolveApiServerConfig<Options extends ApiConfig & UserConfig>(
+export function resolveApiServerConfig<Options extends ApiConfig & Omit<UserConfig, 'expect'>>(
   options: Options,
   defaultPort: number,
 ): ApiConfig | undefined {
@@ -153,6 +152,10 @@ export function resolveConfig(
 
   resolved.color = typeof options.name !== 'string' ? options.name?.color : undefined
 
+  if (resolved.environment === 'browser') {
+    throw new Error(`Looks like you set "test.environment" to "browser". To enabled Browser Mode, use "test.browser.enabled" instead.`)
+  }
+
   const inspector = resolved.inspect || resolved.inspectBrk
 
   resolved.inspector = {
@@ -203,17 +206,12 @@ export function resolveConfig(
     resolved.maxWorkers = resolveInlineWorkerOption(resolved.maxWorkers)
   }
 
-  if (resolved.minWorkers) {
-    resolved.minWorkers = resolveInlineWorkerOption(resolved.minWorkers)
-  }
-
   // run benchmark sequentially by default
   resolved.fileParallelism ??= mode !== 'benchmark'
 
   if (!resolved.fileParallelism) {
     // ignore user config, parallelism cannot be implemented without limiting workers
     resolved.maxWorkers = 1
-    resolved.minWorkers = 1
   }
 
   if (resolved.maxConcurrency === 0) {
@@ -333,6 +331,15 @@ export function resolveConfig(
 
   resolved.deps ??= {}
   resolved.deps.moduleDirectories ??= []
+
+  const envModuleDirectories
+    = process.env.VITEST_MODULE_DIRECTORIES
+      || process.env.npm_config_VITEST_MODULE_DIRECTORIES
+
+  if (envModuleDirectories) {
+    resolved.deps.moduleDirectories.push(...envModuleDirectories.split(','))
+  }
+
   resolved.deps.moduleDirectories = resolved.deps.moduleDirectories.map(
     (dir) => {
       if (!dir.startsWith('/')) {
@@ -350,9 +357,9 @@ export function resolveConfig(
 
   resolved.deps.optimizer ??= {}
   resolved.deps.optimizer.ssr ??= {}
-  resolved.deps.optimizer.ssr.enabled ??= true
-  resolved.deps.optimizer.web ??= {}
-  resolved.deps.optimizer.web.enabled ??= true
+  resolved.deps.optimizer.ssr.enabled ??= false
+  resolved.deps.optimizer.client ??= {}
+  resolved.deps.optimizer.client.enabled ??= false
 
   resolved.deps.web ??= {}
   resolved.deps.web.transformAssets ??= true
@@ -366,7 +373,8 @@ export function resolveConfig(
     resolvePath(file, resolved.root),
   )
 
-  // override original exclude array for cases where user re-uses same object in test.exclude
+  // Add hard-coded default coverage exclusions. These cannot be overidden by user config.
+  // Override original exclude array for cases where user re-uses same object in test.exclude.
   resolved.coverage.exclude = [
     ...resolved.coverage.exclude,
 
@@ -381,82 +389,35 @@ export function resolveConfig(
 
     // Exclude test files
     ...resolved.include,
-  ]
+
+    // Configs
+    resolved.config && slash(resolved.config),
+    ...configFiles,
+
+    // Vite internal
+    '**\/virtual:*',
+    '**\/__x00__*',
+
+    '**/node_modules/**',
+  ].filter(pattern => pattern != null)
 
   resolved.forceRerunTriggers = [
     ...resolved.forceRerunTriggers,
     ...resolved.setupFiles,
   ]
 
-  resolved.server ??= {}
-  resolved.server.deps ??= {}
-
-  const deprecatedDepsOptions = ['inline', 'external', 'fallbackCJS'] as const
-  deprecatedDepsOptions.forEach((option) => {
-    if (resolved.deps[option] === undefined) {
-      return
-    }
-
-    if (option === 'fallbackCJS') {
-      logger.console.warn(
-        c.yellow(
-          `${c.inverse(
-            c.yellow(' Vitest '),
-          )} "deps.${option}" is deprecated. Use "server.deps.${option}" instead`,
-        ),
-      )
-    }
-    else {
-      const transformMode
-        = resolved.environment === 'happy-dom' || resolved.environment === 'jsdom'
-          ? 'web'
-          : 'ssr'
-      logger.console.warn(
-        c.yellow(
-          `${c.inverse(
-            c.yellow(' Vitest '),
-          )} "deps.${option}" is deprecated. If you rely on vite-node directly, use "server.deps.${option}" instead. Otherwise, consider using "deps.optimizer.${transformMode}.${
-            option === 'external' ? 'exclude' : 'include'
-          }"`,
-        ),
-      )
-    }
-
-    if (resolved.server.deps![option] === undefined) {
-      resolved.server.deps![option] = resolved.deps[option] as any
-    }
-  })
-
   if (resolved.cliExclude) {
     resolved.exclude.push(...resolved.cliExclude)
   }
 
-  // vitenode will try to import such file with native node,
-  // but then our mocker will not work properly
-  if (resolved.server.deps.inline !== true) {
-    const ssrOptions = viteConfig.ssr
-    if (
-      ssrOptions?.noExternal === true
-      && resolved.server.deps.inline == null
-    ) {
-      resolved.server.deps.inline = true
-    }
-    else {
-      resolved.server.deps.inline ??= []
-      resolved.server.deps.inline.push(...extraInlineDeps)
-    }
-  }
-
-  resolved.server.deps.inlineFiles ??= []
-  resolved.server.deps.inlineFiles.push(...resolved.setupFiles)
-  resolved.server.deps.moduleDirectories ??= []
-  resolved.server.deps.moduleDirectories.push(
-    ...resolved.deps.moduleDirectories,
-  )
-
   if (resolved.runner) {
     resolved.runner = resolvePath(resolved.runner, resolved.root)
   }
+
+  resolved.attachmentsDir = resolve(
+    resolved.root,
+    resolved.attachmentsDir ?? '.vitest-attachments',
+  )
 
   if (resolved.snapshotEnvironment) {
     resolved.snapshotEnvironment = resolvePath(
@@ -473,6 +434,10 @@ export function resolveConfig(
 
   if (resolved.snapshotFormat && 'plugins' in resolved.snapshotFormat) {
     (resolved.snapshotFormat as any).plugins = []
+    // TODO: support it via separate config (like DiffOptions) or via `Function.toString()`
+    if (typeof resolved.snapshotFormat.compareKeys === 'function') {
+      throw new TypeError(`"snapshotFormat.compareKeys" function is not supported.`)
+    }
   }
 
   const UPDATE_SNAPSHOT = resolved.update || process.env.UPDATE_SNAPSHOT
@@ -512,20 +477,6 @@ export function resolveConfig(
     }
   }
 
-  if (process.env.VITEST_MIN_THREADS) {
-    resolved.poolOptions = {
-      ...resolved.poolOptions,
-      threads: {
-        ...resolved.poolOptions?.threads,
-        minThreads: Number.parseInt(process.env.VITEST_MIN_THREADS),
-      },
-      vmThreads: {
-        ...resolved.poolOptions?.vmThreads,
-        minThreads: Number.parseInt(process.env.VITEST_MIN_THREADS),
-      },
-    }
-  }
-
   if (process.env.VITEST_MAX_FORKS) {
     resolved.poolOptions = {
       ...resolved.poolOptions,
@@ -540,24 +491,8 @@ export function resolveConfig(
     }
   }
 
-  if (process.env.VITEST_MIN_FORKS) {
-    resolved.poolOptions = {
-      ...resolved.poolOptions,
-      forks: {
-        ...resolved.poolOptions?.forks,
-        minForks: Number.parseInt(process.env.VITEST_MIN_FORKS),
-      },
-      vmForks: {
-        ...resolved.poolOptions?.vmForks,
-        minForks: Number.parseInt(process.env.VITEST_MIN_FORKS),
-      },
-    }
-  }
-
   const poolThreadsOptions = [
-    ['threads', 'minThreads'],
     ['threads', 'maxThreads'],
-    ['vmThreads', 'minThreads'],
     ['vmThreads', 'maxThreads'],
   ] as const satisfies [keyof PoolOptions, keyof ThreadsOptions][]
 
@@ -568,9 +503,7 @@ export function resolveConfig(
   }
 
   const poolForksOptions = [
-    ['forks', 'minForks'],
     ['forks', 'maxForks'],
-    ['vmForks', 'minForks'],
     ['vmForks', 'maxForks'],
   ] as const satisfies [keyof PoolOptions, keyof ForksOptions][]
 
@@ -580,34 +513,9 @@ export function resolveConfig(
     }
   }
 
-  if (typeof resolved.workspace === 'string') {
-    // if passed down from the CLI and it's relative, resolve relative to CWD
-    resolved.workspace
-      = typeof options.workspace === 'string' && options.workspace[0] === '.'
-        ? resolve(process.cwd(), options.workspace)
-        : resolvePath(resolved.workspace, resolved.root)
-  }
-
   if (!builtinPools.includes(resolved.pool as BuiltinPool)) {
     resolved.pool = resolvePath(resolved.pool, resolved.root)
   }
-  if (resolved.poolMatchGlobs) {
-    logger.warn(
-      c.yellow(
-        `${c.inverse(
-          c.yellow(' Vitest '),
-        )} "poolMatchGlobs" is deprecated. Use "workspace" to define different configurations instead.`,
-      ),
-    )
-  }
-  resolved.poolMatchGlobs = (resolved.poolMatchGlobs || []).map(
-    ([glob, pool]) => {
-      if (!builtinPools.includes(pool as BuiltinPool)) {
-        pool = resolvePath(pool, resolved.root)
-      }
-      return [glob, pool]
-    },
-  )
 
   if (mode === 'benchmark') {
     resolved.benchmark = {
@@ -654,7 +562,7 @@ export function resolveConfig(
 
   // the server has been created, we don't need to override vite.server options
   const api = resolveApiServerConfig(options, defaultPort)
-  resolved.api = { ...api, token: crypto.randomUUID() }
+  resolved.api = { ...api, token: __VITEST_GENERATE_UI_TOKEN__ ? crypto.randomUUID() : '0' }
 
   if (options.related) {
     resolved.related = toArray(options.related).map(file =>
@@ -745,29 +653,13 @@ export function resolveConfig(
   }
 
   if (resolved.cache !== false) {
-    let cacheDir = VitestCache.resolveCacheDir(
-      '',
-      viteConfig.cacheDir,
-      resolved.name,
-    )
-
-    if (resolved.cache && resolved.cache.dir) {
-      logger.console.warn(
-        c.yellow(
-          `${c.inverse(
-            c.yellow(' Vitest '),
-          )} "cache.dir" is deprecated, use Vite's "cacheDir" instead if you want to change the cache director. Note caches will be written to "cacheDir\/vitest"`,
-        ),
-      )
-
-      cacheDir = VitestCache.resolveCacheDir(
-        resolved.root,
-        resolved.cache.dir,
-        resolved.name,
+    if (resolved.cache && typeof resolved.cache.dir === 'string') {
+      vitest.logger.deprecate(
+        `"cache.dir" is deprecated, use Vite's "cacheDir" instead if you want to change the cache director. Note caches will be written to "cacheDir\/vitest"`,
       )
     }
 
-    resolved.cache = { dir: cacheDir }
+    resolved.cache = { dir: viteConfig.cacheDir }
   }
 
   resolved.sequence ??= {} as any
@@ -795,19 +687,6 @@ export function resolveConfig(
     ...configDefaults.typecheck,
     ...resolved.typecheck,
   }
-
-  if (resolved.environmentMatchGlobs) {
-    logger.warn(
-      c.yellow(
-        `${c.inverse(
-          c.yellow(' Vitest '),
-        )} "environmentMatchGlobs" is deprecated. Use "workspace" to define different configurations instead.`,
-      ),
-    )
-  }
-  resolved.environmentMatchGlobs = (resolved.environmentMatchGlobs || []).map(
-    i => [resolve(resolved.root, i[0]), i[1]],
-  )
 
   resolved.typecheck ??= {} as any
   resolved.typecheck.enabled ??= false
@@ -888,7 +767,8 @@ export function resolveConfig(
     resolved.includeTaskLocation ??= true
   }
 
-  resolved.testTransformMode ??= {}
+  resolved.server ??= {}
+  resolved.server.deps ??= {}
 
   resolved.testTimeout ??= resolved.browser.enabled ? 15000 : 5000
   resolved.hookTimeout ??= resolved.browser.enabled ? 30000 : 10000

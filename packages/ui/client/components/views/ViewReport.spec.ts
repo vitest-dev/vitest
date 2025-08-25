@@ -1,4 +1,4 @@
-import type { File } from 'vitest'
+import type { RunnerTestFile } from 'vitest'
 import { faker } from '@faker-js/faker'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { config } from '~/composables/client'
@@ -42,7 +42,7 @@ const error = {
   diff,
 }
 
-const fileWithTextStacks: File = {
+const fileWithTextStacks: RunnerTestFile = {
   id: 'f-1',
   name: 'test/plain-stack-trace.ts',
   type: 'suite',
@@ -60,7 +60,7 @@ const fileWithTextStacks: File = {
 fileWithTextStacks.file = fileWithTextStacks
 
 describe('ViewReport', () => {
-  describe('File where stacks are in text', () => {
+  describe('RunnerTestFile where stacks are in text', () => {
     beforeEach(() => {
       render(ViewReport, {
         props: {
@@ -92,7 +92,7 @@ describe('ViewReport', () => {
   })
 
   it('test html stack trace without html message', () => {
-    const file: File = {
+    const file: RunnerTestFile = {
       id: 'f-1',
       name: 'test/plain-stack-trace.ts',
       type: 'suite',
@@ -104,6 +104,7 @@ describe('ViewReport', () => {
         errors: [
           {
             name: 'Do some test',
+            stacks: [],
             stack: '\x1B[33mtest/plain-stack-trace.ts\x1B[0m',
             message: 'Error: Transform failed with 1 error:',
             diff,
@@ -150,7 +151,7 @@ describe('ViewReport', () => {
   })
 
   it('test html stack trace and message', () => {
-    const file: File = {
+    const file: RunnerTestFile = {
       id: 'f-1',
       name: 'test/plain-stack-trace.ts',
       type: 'suite',
@@ -163,6 +164,7 @@ describe('ViewReport', () => {
           {
             name: 'Do some test',
             stack: '\x1B[33mtest/plain-stack-trace.ts\x1B[0m',
+            stacks: [],
             message: '\x1B[44mError: Transform failed with 1 error:\x1B[0m',
             diff,
           },

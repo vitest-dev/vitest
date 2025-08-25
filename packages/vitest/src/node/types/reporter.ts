@@ -1,6 +1,5 @@
-import type { File, TaskResultPack } from '@vitest/runner'
+import type { File, TaskEventPack, TaskResultPack, TestAnnotation } from '@vitest/runner'
 import type { SerializedError } from '@vitest/utils'
-import type { SerializedTestSpecification } from '../../runtime/types/utils'
 import type { Awaitable, UserConsoleLog } from '../../types/general'
 import type { Vitest } from '../core'
 import type { TestProject } from '../project'
@@ -17,30 +16,8 @@ export interface Reporter {
    * @experimental
    */
   onBrowserInit?: (project: TestProject) => Awaitable<void>
-  /**
-   * @deprecated use `onTestRunStart` instead
-   */
-  onPathsCollected?: (paths?: string[]) => Awaitable<void>
-  /**
-   * @deprecated use `onTestRunStart` instead
-   */
-  onSpecsCollected?: (specs?: SerializedTestSpecification[]) => Awaitable<void>
-  /**
-   * @deprecated use `onTestModuleCollected` instead
-   */
-  onCollected?: (files: File[]) => Awaitable<void>
-  /**
-   * @deprecated use `onTestRunEnd` instead
-   */
-  onFinished?: (
-    files: File[],
-    errors: unknown[],
-    coverage?: unknown
-  ) => Awaitable<void>
-  /**
-   * @deprecated use `onTestModuleQueued`, `onTestModuleStart`, `onTestModuleEnd`, `onTestCaseReady`, `onTestCaseResult` instead
-   */
-  onTaskUpdate?: (packs: TaskResultPack[]) => Awaitable<void>
+  /** @internal   */
+  onTaskUpdate?: (packs: TaskResultPack[], events: TaskEventPack[]) => Awaitable<void>
   onTestRemoved?: (trigger?: string) => Awaitable<void>
   onWatcherStart?: (files?: File[], errors?: unknown[]) => Awaitable<void>
   onWatcherRerun?: (files: string[], trigger?: string) => Awaitable<void>
@@ -88,6 +65,11 @@ export interface Reporter {
    * The `result()` cannot be `pending`.
    */
   onTestCaseResult?: (testCase: TestCase) => Awaitable<void>
+
+  /**
+   * Called when annotation is added via the `task.annotate` API.
+   */
+  onTestCaseAnnotate?: (testCase: TestCase, annotation: TestAnnotation) => Awaitable<void>
 
   /**
    * Called when test suite is ready to run.

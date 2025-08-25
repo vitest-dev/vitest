@@ -4,9 +4,9 @@ import {
   deepClone,
   deepMerge,
   notNullish,
-  toArray,
 } from '@vitest/utils'
 import { relative } from 'pathe'
+import * as vite from 'vite'
 import { defaultPort } from '../../constants'
 import { configDefaults } from '../../defaults'
 import { generateScopedClassName } from '../../integrations/css/css-modules'
@@ -15,10 +15,11 @@ import { Vitest } from '../core'
 import { createViteLogger, silenceImportViteIgnoreWarning } from '../viteLogger'
 import { CoverageTransform } from './coverageTransform'
 import { CSSEnablerPlugin } from './cssEnabler'
+import { MetaEnvReplacerPlugin } from './metaEnvReplacer'
 import { MocksPlugins } from './mocks'
 import { NormalizeURLPlugin } from './normalizeURL'
 import { VitestOptimizer } from './optimizer'
-import { SsrReplacerPlugin } from './ssrReplacer'
+import { ModuleRunnerTransform } from './runnerTransform'
 import {
   deleteDefineConfig,
   getDefaultResolveOptions,
@@ -76,22 +77,12 @@ export async function VitestPlugin(
 
         const resolveOptions = getDefaultResolveOptions()
 
-        const config: ViteConfig = {
+        let config: ViteConfig = {
           root: viteConfig.test?.root || options.root,
           define: {
             // disable replacing `process.env.NODE_ENV` with static string by vite:client-inject
             'process.env.NODE_ENV': 'process.env.NODE_ENV',
           },
-          esbuild:
-            viteConfig.esbuild === false
-              ? false
-              : {
-                  // Lowest target Vitest supports is Node18
-                  target: viteConfig.esbuild?.target || 'node18',
-                  sourcemap: 'external',
-                  // Enables using ignore hint for coverage providers with @preserve keyword
-                  legalComments: 'inline',
-                },
           resolve: {
             ...resolveOptions,
             alias: testConfig.alias,
@@ -121,6 +112,9 @@ export async function VitestPlugin(
             ssr: {
               resolve: resolveOptions,
             },
+            __vitest__: {
+              dev: {},
+            },
           },
           test: {
             poolOptions: {
@@ -144,6 +138,41 @@ export async function VitestPlugin(
           },
         }
 
+        if ('rolldownVersion' in vite) {
+          config = {
+            ...config,
+            // eslint-disable-next-line ts/ban-ts-comment
+            // @ts-ignore rolldown-vite only
+            oxc: viteConfig.oxc === false
+              ? false
+              : {
+                  // eslint-disable-next-line ts/ban-ts-comment
+                  // @ts-ignore rolldown-vite only
+                  target: viteConfig.oxc?.target || 'node18',
+                },
+          }
+        }
+        else {
+          config = {
+            ...config,
+            esbuild: viteConfig.esbuild === false
+              ? false
+              : {
+                  // Lowest target Vitest supports is Node18
+                  target: viteConfig.esbuild?.target || 'node18',
+                  sourcemap: 'external',
+                  // Enables using ignore hint for coverage providers with @preserve keyword
+                  legalComments: 'inline',
+                },
+          }
+        }
+
+        // inherit so it's available in VitestOptimizer
+        // I cannot wait to rewrite all of this in Vitest 4
+        if (options.cache != null) {
+          config.test!.cache = options.cache
+        }
+
         if (vitest.configOverride.project) {
           // project filter was set by the user, so we need to filter the project
           options.project = vitest.configOverride.project
@@ -157,29 +186,6 @@ export async function VitestPlugin(
           },
         )
         config.customLogger = silenceImportViteIgnoreWarning(config.customLogger)
-
-        // we want inline dependencies to be resolved by analyser plugin so module graph is populated correctly
-        if (viteConfig.ssr?.noExternal !== true) {
-          const inline = testConfig.server?.deps?.inline
-          if (inline === true) {
-            config.ssr = { noExternal: true }
-          }
-          else {
-            const noExternal = viteConfig.ssr?.noExternal
-            const noExternalArray
-              = typeof noExternal !== 'undefined'
-                ? toArray(noExternal)
-                : undefined
-            // filter the same packages
-            const uniqueInline
-              = inline && noExternalArray
-                ? inline.filter(dep => !noExternalArray.includes(dep))
-                : inline
-            config.ssr = {
-              noExternal: uniqueInline,
-            }
-          }
-        }
 
         // chokidar fsevents is unstable on macos when emitting "ready" event
         if (
@@ -252,6 +258,11 @@ export async function VitestPlugin(
           viteConfig.server.watch = null
         }
 
+        if (options.ui) {
+          // @ts-expect-error mutate readonly
+          viteConfig.plugins.push(await UIPlugin())
+        }
+
         Object.defineProperty(viteConfig, '_vitest', {
           value: options,
           enumerable: false,
@@ -287,14 +298,14 @@ export async function VitestPlugin(
         },
       },
     },
-    SsrReplacerPlugin(),
+    MetaEnvReplacerPlugin(),
     ...CSSEnablerPlugin(vitest),
     CoverageTransform(vitest),
     VitestCoreResolver(vitest),
-    options.ui ? await UIPlugin() : null,
     ...MocksPlugins(),
     VitestOptimizer(),
     NormalizeURLPlugin(),
+    ModuleRunnerTransform(),
   ].filter(notNullish)
 }
 function removeUndefinedValues<T extends Record<string, any>>(

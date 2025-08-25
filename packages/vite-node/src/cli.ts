@@ -230,5 +230,5 @@ type ComputeViteNodeServerOptionsCLI<T extends Record<string, any>> = {
           : T[K];
 }
 
-export type ViteNodeServerOptionsCLI =
-  ComputeViteNodeServerOptionsCLI<ViteNodeServerOptions>
+export type ViteNodeServerOptionsCLI
+  = ComputeViteNodeServerOptionsCLI<ViteNodeServerOptions>

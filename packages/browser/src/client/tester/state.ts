@@ -25,12 +25,16 @@ const state: WorkerGlobalState = {
   config,
   environment: {
     name: 'browser',
-    transformMode: 'web',
+    viteEnvironment: 'client',
     setup() {
       throw new Error('Not called in the browser')
     },
   },
-  moduleCache: getBrowserState().moduleCache,
+  onCleanup: fn => getBrowserState().cleanups.push(fn),
+  evaluatedModules: getBrowserState().evaluatedModules,
+  resolvingModules: getBrowserState().resolvingModules,
+  moduleExecutionInfo: new Map(),
+  metaEnv: null as any,
   rpc: null as any,
   durations: {
     environment: 0,

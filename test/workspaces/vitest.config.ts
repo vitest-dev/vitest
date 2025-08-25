@@ -1,5 +1,5 @@
 import type { Vite } from 'vitest/node'
-import remapping from '@ampproject/remapping'
+import remapping from '@jridgewell/remapping'
 import MagicString from 'magic-string'
 import { defineConfig } from 'vitest/config'
 import { cwdPlugin } from './cwdPlugin.js'
@@ -23,7 +23,6 @@ export default defineConfig({
       globalConfigValue: true,
     },
     projects: [
-
       'space_2',
       './space_*/vitest.config.ts',
       './space_1/*.config.ts',

@@ -1,6 +1,9 @@
+import type { ParsedStack } from '@vitest/utils'
 import type { File, Suite, TaskBase } from '../types/tasks'
 import { processError } from '@vitest/utils/error'
+import { parseSingleStack } from '@vitest/utils/source-map'
 import { relative } from 'pathe'
+import { setFileContext } from '../context'
 
 /**
  * If any tasks been marked as `only`, mark all other tasks as `skip`.
@@ -194,6 +197,7 @@ export function createFileTask(
     pool,
   }
   file.file = file
+  setFileContext(file, Object.create(null))
   return file
 }
 
@@ -207,4 +211,15 @@ export function generateFileHash(
   projectName: string | undefined,
 ): string {
   return generateHash(`${file}${projectName || ''}`)
+}
+
+export function findTestFileStackTrace(testFilePath: string, error: string): ParsedStack | undefined {
+  // first line is the error message
+  const lines = error.split('\n').slice(1)
+  for (const line of lines) {
+    const stack = parseSingleStack(line)
+    if (stack && stack.file === testFilePath) {
+      return stack
+    }
+  }
 }

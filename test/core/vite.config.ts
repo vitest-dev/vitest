@@ -2,6 +2,7 @@ import type { LabelColor } from 'vitest'
 import type { Pool } from 'vitest/node'
 import { basename, dirname, join, resolve } from 'pathe'
 import { defaultExclude, defineConfig } from 'vitest/config'
+import { rolldownVersion } from 'vitest/node'
 
 export default defineConfig({
   plugins: [
@@ -43,10 +44,18 @@ export default defineConfig({
   },
   resolve: {
     alias: [
-      { find: '#', replacement: resolve(__dirname, 'src') },
-      { find: /^custom-lib$/, replacement: resolve(__dirname, 'projects', 'custom-lib') },
-      { find: /^inline-lib$/, replacement: resolve(__dirname, 'projects', 'inline-lib') },
+      { find: /^#/, replacement: resolve(import.meta.dirname, 'src') },
+      { find: /^custom-lib$/, replacement: resolve(import.meta.dirname, 'projects', 'custom-lib') },
+      { find: /^inline-lib$/, replacement: resolve(import.meta.dirname, 'projects', 'inline-lib') },
     ],
+    noExternal: [/projects\/vite-external/],
+  },
+  environments: {
+    ssr: {
+      resolve: {
+        noExternal: [/projects\/vite-environment-external/],
+      },
+    },
   },
   server: {
     port: 3022,
@@ -59,13 +68,35 @@ export default defineConfig({
     includeSource: [
       'src/in-source/*.ts',
     ],
-    exclude: ['**/fixtures/**', ...defaultExclude],
+    exclude: [
+      '**/fixtures/**',
+      ...defaultExclude,
+      // FIXME: wait for ecma decorator support in rolldown/oxc
+      // https://github.com/oxc-project/oxc/issues/9170
+      ...(rolldownVersion ? ['**/esnext-decorator.test.ts'] : []),
+    ],
     slowTestThreshold: 1000,
     testTimeout: process.env.CI ? 10_000 : 5_000,
     setupFiles: [
       './test/setup.ts',
     ],
-    reporters: [['default', { summary: true }], 'hanging-process'],
+    server: {
+      deps: {
+        external: [
+          'tinyspy',
+          /src\/external/,
+          /esm\/esm/,
+          /packages\/web-worker/,
+          /\.wasm$/,
+          /\/wasm-bindgen-no-cyclic\/index_bg.js/,
+        ],
+        inline: ['inline-lib'],
+      },
+    },
+    includeTaskLocation: true,
+    reporters: process.env.GITHUB_ACTIONS
+      ? ['default', 'github-actions']
+      : [['default', { summary: true }], 'hanging-process'],
     testNamePattern: '^((?!does not include test that).)*$',
     coverage: {
       provider: 'istanbul',
@@ -75,14 +106,6 @@ export default defineConfig({
       enabled: true,
       tsconfig: './tsconfig.typecheck.json',
     },
-    environmentMatchGlobs: [
-      ['**/*.dom.test.ts', 'happy-dom'],
-      ['test/env-glob-dom/**', 'jsdom'],
-    ],
-    poolMatchGlobs: [
-      ['**/test/*.child_process.test.ts', 'forks'],
-      ['**/test/*.threads.test.ts', 'threads'],
-    ],
     environmentOptions: {
       custom: {
         option: 'config-option',
@@ -112,25 +135,12 @@ export default defineConfig({
     deps: {
       moduleDirectories: ['node_modules', 'projects', 'packages'],
     },
-    server: {
-      deps: {
-        external: [
-          'tinyspy',
-          /src\/external/,
-          /esm\/esm/,
-          /packages\/web-worker/,
-          /\.wasm$/,
-          /\/wasm-bindgen-no-cyclic\/index_bg.js/,
-        ],
-        inline: ['inline-lib'],
-      },
-    },
     alias: [
       {
         find: 'test-alias',
         replacement: '',
         // vitest doesn't crash because function is defined
-        customResolver: () => resolve(__dirname, 'src', 'aliased-mod.ts'),
+        customResolver: () => resolve(import.meta.dirname, 'src', 'aliased-mod.ts'),
       },
     ],
     onConsoleLog(log) {
@@ -138,6 +148,12 @@ export default defineConfig({
         return false
       }
       if (log.includes('Importing WebAssembly ')) {
+        return false
+      }
+      if (log.includes('run [...filters]')) {
+        return false
+      }
+      if (log.startsWith(`[vitest]`) && log.includes(`did not use 'function' or 'class' in its implementation`)) {
         return false
       }
     },

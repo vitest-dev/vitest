@@ -1,6 +1,5 @@
-import type { RawSourceMap } from '@ampproject/remapping'
 import type { File, Task, TaskEventPack, TaskResultPack, TaskState } from '@vitest/runner'
-import type { ParsedStack } from '@vitest/utils'
+import type { ParsedStack, TestError } from '@vitest/utils'
 import type { EachMapping } from '@vitest/utils/source-map'
 import type { ChildProcess } from 'node:child_process'
 import type { Result } from 'tinyexec'
@@ -30,7 +29,7 @@ export class TypeCheckError extends Error {
 
 export interface TypecheckResults {
   files: File[]
-  sourceErrors: TypeCheckError[]
+  sourceErrors: TestError[]
   time: number
 }
 
@@ -122,7 +121,7 @@ export class Typechecker {
 
   protected async prepareResults(output: string): Promise<{
     files: File[]
-    sourceErrors: TypeCheckError[]
+    sourceErrors: TestError[]
     time: number
   }> {
     const typeErrors = await this.parseTscLikeOutput(output)
@@ -132,7 +131,7 @@ export class Typechecker {
       this._tests = await this.collectTests()
     }
 
-    const sourceErrors: TypeCheckError[] = []
+    const sourceErrors: TestError[] = []
     const files: File[] = []
 
     testFiles.forEach((path) => {
@@ -147,7 +146,7 @@ export class Typechecker {
         ...definitions.sort((a, b) => b.start - a.start),
       ]
       // has no map for ".js" files that use // @ts-check
-      const traceMap = (map && new TraceMap(map as unknown as RawSourceMap))
+      const traceMap = (map && new TraceMap(map as any))
       const indexMap = createIndexMap(parsed)
       const markState = (task: Task, state: TaskState) => {
         task.result = {
@@ -213,13 +212,13 @@ export class Typechecker {
   }
 
   protected async parseTscLikeOutput(output: string): Promise<Map<string, {
-    error: TypeCheckError
+    error: TestError
     originalError: TscErrorInfo
   }[]>> {
     const errorsMap = await getRawErrsMapFromTsCompile(output)
     const typesErrors = new Map<
       string,
-      { error: TypeCheckError; originalError: TscErrorInfo }[]
+      { error: TestError; originalError: TscErrorInfo }[]
     >()
     errorsMap.forEach((errors, path) => {
       const filepath = resolve(this.project.config.root, path)
@@ -244,12 +243,10 @@ export class Typechecker {
           originalError: info,
           error: {
             name: error.name,
-            nameStr: String(error.name),
             message: errMsg,
             stacks: error.stacks,
             stack: '',
-            stackStr: '',
-          },
+          } satisfies TestError,
         }
       })
       typesErrors.set(filepath, suiteErrors)

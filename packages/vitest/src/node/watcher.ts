@@ -38,14 +38,14 @@ export class VitestWatcher {
       watcher.add(this.vitest.config.forceRerunTriggers)
     }
 
-    watcher.on('change', this.onChange)
-    watcher.on('unlink', this.onUnlink)
-    watcher.on('add', this.onAdd)
+    watcher.on('change', this.onFileChange)
+    watcher.on('unlink', this.onFileDelete)
+    watcher.on('add', this.onFileCreate)
 
     this.unregisterWatcher = () => {
-      watcher.off('change', this.onChange)
-      watcher.off('unlink', this.onUnlink)
-      watcher.off('add', this.onAdd)
+      watcher.off('change', this.onFileChange)
+      watcher.off('unlink', this.onFileDelete)
+      watcher.off('add', this.onFileCreate)
       this.unregisterWatcher = noop
     }
     return this
@@ -77,7 +77,7 @@ export class VitestWatcher {
     return triggered
   }
 
-  private onChange = (id: string): void => {
+  public onFileChange = (id: string): void => {
     id = slash(id)
     this.vitest.logger.clearHighlightCache(id)
     this.vitest.invalidateFile(id)
@@ -93,7 +93,7 @@ export class VitestWatcher {
     }
   }
 
-  private onUnlink = (id: string): void => {
+  public onFileDelete = (id: string): void => {
     id = slash(id)
     this.vitest.logger.clearHighlightCache(id)
     this.invalidates.add(id)
@@ -108,7 +108,7 @@ export class VitestWatcher {
     }
   }
 
-  private onAdd = (id: string): void => {
+  public onFileCreate = (id: string): void => {
     id = slash(id)
     this.vitest.invalidateFile(id)
 
@@ -140,6 +140,27 @@ export class VitestWatcher {
     }
   }
 
+  private handleSetupFile(filepath: string) {
+    let isSetupFile: boolean = false
+
+    this.vitest.projects.forEach((project) => {
+      if (!project.config.setupFiles.includes(filepath)) {
+        return
+      }
+
+      this.vitest.state.filesMap.forEach((files) => {
+        files.forEach((file) => {
+          if (file.projectName === project.name) {
+            isSetupFile = true
+            this.changedTests.add(file.filepath)
+          }
+        })
+      })
+    })
+
+    return isSetupFile
+  }
+
   /**
    * @returns A value indicating whether rerun is needed (changedTests was mutated)
    */
@@ -150,6 +171,10 @@ export class VitestWatcher {
 
     if (pm.isMatch(filepath, this.vitest.config.forceRerunTriggers)) {
       this.vitest.state.getFilepaths().forEach(file => this.changedTests.add(file))
+      return true
+    }
+
+    if (this.handleSetupFile(filepath)) {
       return true
     }
 

@@ -1,7 +1,8 @@
 import type { CoverageSummary, FileCoverageData } from 'istanbul-lib-coverage'
 import type { TestFunction } from 'vitest'
-import type { UserConfig } from 'vitest/node'
-import { readFileSync } from 'node:fs'
+import type { TestUserConfig } from 'vitest/node'
+import { existsSync, readFileSync } from 'node:fs'
+import { unlink } from 'node:fs/promises'
 import { resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { stripVTControlCharacters } from 'node:util'
@@ -28,7 +29,7 @@ export function coverageTest(name: string, fn: TestFunction) {
   }
 }
 
-export async function runVitest(config: UserConfig, options = { throwOnError: true }) {
+export async function runVitest(config: TestUserConfig, options = { throwOnError: true }) {
   const provider = process.env.COVERAGE_PROVIDER as any
 
   const result = await testUtils.runVitest({
@@ -46,8 +47,7 @@ export async function runVitest(config: UserConfig, options = { throwOnError: tr
         enabled: true,
         reporter: [],
         ...config.coverage,
-        provider: provider === 'v8-ast-aware' ? 'v8' : provider,
-        experimentalAstAwareRemapping: provider === 'v8-ast-aware',
+        provider,
         customProviderModule: provider === 'custom' ? 'fixtures/custom-provider' : undefined,
       },
       browser: {
@@ -66,6 +66,12 @@ export async function runVitest(config: UserConfig, options = { throwOnError: tr
   }
 
   return result
+}
+
+export async function cleanupCoverageJson(name = './coverage/coverage-final.json') {
+  if (existsSync(name)) {
+    await unlink(name)
+  }
 }
 
 /**
@@ -108,10 +114,6 @@ export function normalizeFilename(filename: string) {
 
 export function isV8Provider() {
   return process.env.COVERAGE_PROVIDER === 'v8'
-}
-
-export function isExperimentalV8Provider() {
-  return process.env.COVERAGE_PROVIDER === 'v8-ast-aware'
 }
 
 export function isBrowser() {

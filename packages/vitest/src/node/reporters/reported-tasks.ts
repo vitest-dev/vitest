@@ -1,9 +1,11 @@
 import type {
+  ImportDuration,
   Task as RunnerTask,
   Test as RunnerTestCase,
   File as RunnerTestFile,
   Suite as RunnerTestSuite,
   TaskMeta,
+  TestAnnotation,
 } from '@vitest/runner'
 import type { SerializedError, TestError } from '@vitest/utils'
 import type { TestProject } from '../project'
@@ -175,6 +177,13 @@ export class TestCase extends ReportedTaskImplementation {
       state,
       errors: (result.errors || []) as TestError[],
     } satisfies TestResultFailed
+  }
+
+  /**
+   * Test annotations added via the `task.annotate` API during the test execution.
+   */
+  public annotations(): ReadonlyArray<TestAnnotation> {
+    return [...this.task.annotations]
   }
 
   /**
@@ -467,6 +476,7 @@ export class TestModule extends SuiteImplementation {
     const environmentSetupDuration = this.task.environmentLoad || 0
     const duration = this.task.result?.duration || 0
     const heap = this.task.result?.heap
+    const importDurations = this.task.importDurations ?? {}
     return {
       environmentSetupDuration,
       prepareDuration,
@@ -474,6 +484,7 @@ export class TestModule extends SuiteImplementation {
       setupDuration,
       duration,
       heap,
+      importDurations,
     }
   }
 }
@@ -509,11 +520,11 @@ export type TestSuiteState = 'skipped' | 'pending' | 'failed' | 'passed'
 export type TestModuleState = TestSuiteState | 'queued'
 export type TestState = TestResult['state']
 
-export type TestResult =
-  | TestResultPassed
-  | TestResultFailed
-  | TestResultSkipped
-  | TestResultPending
+export type TestResult
+  = | TestResultPassed
+    | TestResultFailed
+    | TestResultSkipped
+    | TestResultPending
 
 export interface TestResultPending {
   /**
@@ -626,6 +637,10 @@ export interface ModuleDiagnostic {
    * This value is only available if the test was executed with `logHeapUsage` flag.
    */
   readonly heap: number | undefined
+  /**
+   * The time spent importing every non-externalized dependency that Vitest has processed.
+   */
+  readonly importDurations: Record<string, ImportDuration>
 }
 
 function storeTask(
@@ -665,4 +680,12 @@ function getSuiteState(task: RunnerTestSuite | RunnerTestFile): TestSuiteState {
     return 'passed'
   }
   throw new Error(`Unknown suite state: ${state}`)
+}
+
+export function experimental_getRunnerTask(entity: TestCase): RunnerTestCase
+export function experimental_getRunnerTask(entity: TestSuite): RunnerTestSuite
+export function experimental_getRunnerTask(entity: TestModule): RunnerTestFile
+export function experimental_getRunnerTask(entity: TestCase | TestSuite | TestModule): RunnerTestSuite | RunnerTestFile | RunnerTestCase
+export function experimental_getRunnerTask(entity: TestCase | TestSuite | TestModule): RunnerTestSuite | RunnerTestFile | RunnerTestCase {
+  return entity.task
 }

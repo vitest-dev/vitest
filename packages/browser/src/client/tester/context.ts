@@ -1,17 +1,20 @@
-import type { Options as TestingLibraryOptions, UserEvent as TestingLibraryUserEvent } from '@testing-library/user-event'
-import type { RunnerTask } from 'vitest'
+import type {
+  Options as TestingLibraryOptions,
+  UserEvent as TestingLibraryUserEvent,
+} from '@testing-library/user-event'
 import type {
   BrowserLocators,
   BrowserPage,
   Locator,
   UserEvent,
-} from '../../../context'
+} from '@vitest/browser/context'
+import type { RunnerTask } from 'vitest'
 import type { IframeViewportEvent } from '../client'
 import type { BrowserRunnerState } from '../utils'
 import type { Locator as LocatorAPI } from './locators/index'
 import { getElementLocatorSelectors } from '@vitest/browser/utils'
 import { ensureAwaited, getBrowserState, getWorkerState } from '../utils'
-import { convertElementToCssSelector, processTimeoutOptions } from './utils'
+import { convertToSelector, processTimeoutOptions } from './utils'
 
 // this file should not import anything directly, only types and utils
 
@@ -289,12 +292,26 @@ export const page: BrowserPage = {
     const name
       = options.path || `${taskName.replace(/[^a-z0-9]/gi, '-')}-${number}.png`
 
-    return ensureAwaited(error => triggerCommand('__vitest_screenshot', [name, processTimeoutOptions({
-      ...options,
-      element: options.element
-        ? convertToSelector(options.element)
-        : undefined,
-    })], error))
+    const normalizedOptions = 'mask' in options
+      ? {
+          ...options,
+          mask: (options.mask as Array<Element | Locator>).map(convertToSelector),
+        }
+      : options
+
+    return ensureAwaited(error => triggerCommand(
+      '__vitest_screenshot',
+      [
+        name,
+        processTimeoutOptions({
+          ...normalizedOptions,
+          element: options.element
+            ? convertToSelector(options.element)
+            : undefined,
+        } as any /** TODO */),
+      ],
+      error,
+    ))
   },
   getByRole() {
     throw new Error(`Method "getByRole" is not supported by the "${provider}" provider.`)
@@ -341,19 +358,6 @@ function convertToLocator(element: Element | Locator): Locator {
   return element
 }
 
-function convertToSelector(elementOrLocator: Element | Locator): string {
-  if (!elementOrLocator) {
-    throw new Error('Expected element or locator to be defined.')
-  }
-  if (elementOrLocator instanceof Element) {
-    return convertElementToCssSelector(elementOrLocator)
-  }
-  if ('selector' in elementOrLocator) {
-    return (elementOrLocator as any).selector
-  }
-  throw new Error('Expected element or locator to be an instance of Element or Locator.')
-}
-
 function getTaskFullName(task: RunnerTask): string {
   return task.suite ? `${getTaskFullName(task.suite)} ${task.name}` : task.name
 }
@@ -363,6 +367,7 @@ export const locators: BrowserLocators = {
   extend(methods) {
     const Locator = page._createLocator('css=body').constructor as typeof LocatorAPI
     for (const method in methods) {
+      locators._extendedMethods.add(method)
       const cb = (methods as any)[method] as (...args: any[]) => string | Locator
       // @ts-expect-error types are hard to make work
       Locator.prototype[method] = function (...args: any[]) {
@@ -381,11 +386,17 @@ export const locators: BrowserLocators = {
       }
     }
   },
+  _extendedMethods: new Set<string>(),
 }
 
 declare module '@vitest/browser/context' {
   interface BrowserPage {
     /** @internal */
     _createLocator: (selector: string) => Locator
+  }
+
+  interface BrowserLocators {
+    /** @internal */
+    _extendedMethods: Set<string>
   }
 }

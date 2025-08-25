@@ -1,18 +1,18 @@
-import type { ViteNodeRunner } from 'vite-node/client'
+import type { ModuleRunner } from 'vite/module-runner'
 import type { Vitest } from '../core'
 import type { ResolvedConfig } from '../types/config'
 import type { Reporter } from '../types/reporter'
 import type { BlobReporter } from './blob'
-import type { BasicReporter, BenchmarkBuiltinReporters, BenchmarkReporter, BuiltinReporters, DefaultReporter, DotReporter, GithubActionsReporter, HangingProcessReporter, JsonReporter, JUnitReporter, TapReporter } from './index'
+import type { BenchmarkBuiltinReporters, BenchmarkReporter, BuiltinReporters, DefaultReporter, DotReporter, GithubActionsReporter, HangingProcessReporter, JsonReporter, JUnitReporter, TapReporter } from './index'
 import { BenchmarkReportsMap, ReportersMap } from './index'
 
 async function loadCustomReporterModule<C extends Reporter>(
   path: string,
-  runner: ViteNodeRunner,
+  runner: ModuleRunner,
 ): Promise<new (options?: unknown) => C> {
   let customReporterModule: { default: new () => C }
   try {
-    customReporterModule = await runner.executeId(path)
+    customReporterModule = await runner.import(path)
   }
   catch (customReporterModuleError) {
     throw new Error(`Failed to load custom Reporter from ${path}`, {
@@ -35,7 +35,7 @@ async function loadCustomReporterModule<C extends Reporter>(
 function createReporters(
   reporterReferences: ResolvedConfig['reporters'],
   ctx: Vitest,
-): Promise<Array<Reporter | DefaultReporter | BasicReporter | BlobReporter | DotReporter | JsonReporter | TapReporter | JUnitReporter | HangingProcessReporter | GithubActionsReporter>> {
+): Promise<Array<Reporter | DefaultReporter | BlobReporter | DotReporter | JsonReporter | TapReporter | JUnitReporter | HangingProcessReporter | GithubActionsReporter>> {
   const runner = ctx.runner
   const promisedReporters = reporterReferences.map(
     async (referenceOrInstance) => {
@@ -43,7 +43,7 @@ function createReporters(
         const [reporterName, reporterOptions] = referenceOrInstance
 
         if (reporterName === 'html') {
-          await ctx.packageInstaller.ensureInstalled('@vitest/ui', runner.root, ctx.version)
+          await ctx.packageInstaller.ensureInstalled('@vitest/ui', ctx.config.root, ctx.version)
           const CustomReporter = await loadCustomReporterModule(
             '@vitest/ui/reporter',
             runner,
@@ -72,7 +72,7 @@ function createReporters(
 
 function createBenchmarkReporters(
   reporterReferences: Array<string | Reporter | BenchmarkBuiltinReporters>,
-  runner: ViteNodeRunner,
+  runner: ModuleRunner,
 ): Promise<(Reporter | BenchmarkReporter)[]> {
   const promisedReporters = reporterReferences.map(
     async (referenceOrInstance) => {

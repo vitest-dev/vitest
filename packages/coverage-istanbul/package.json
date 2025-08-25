@@ -1,7 +1,7 @@
 {
   "name": "@vitest/coverage-istanbul",
   "type": "module",
-  "version": "3.2.0-beta.2",
+  "version": "4.0.0-beta.8",
   "description": "Istanbul coverage provider for Vitest",
   "author": "Anthony Fu <anthonyfu117@hotmail.com>",
   "license": "MIT",
@@ -52,17 +52,15 @@
     "istanbul-lib-source-maps": "catalog:",
     "istanbul-reports": "catalog:",
     "magicast": "catalog:",
-    "test-exclude": "catalog:",
     "tinyrainbow": "catalog:"
   },
   "devDependencies": {
     "@types/debug": "catalog:",
     "@types/istanbul-lib-coverage": "catalog:",
-    "@types/istanbul-lib-instrument": "^1.7.7",
+    "@types/istanbul-lib-instrument": "^1.7.8",
     "@types/istanbul-lib-report": "catalog:",
     "@types/istanbul-lib-source-maps": "catalog:",
     "@types/istanbul-reports": "catalog:",
-    "@types/test-exclude": "catalog:",
     "pathe": "catalog:",
     "vitest": "workspace:*"
   }

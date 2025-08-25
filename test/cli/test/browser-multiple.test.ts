@@ -19,7 +19,7 @@ it('automatically assigns the port', async () => {
         onInit(ctx_) {
           ctx = ctx_
         },
-        onFinished() {
+        onTestRunEnd() {
           urls = ctx.projects.map(p => p.browser?.vite.resolvedUrls?.local[0])
         },
       },

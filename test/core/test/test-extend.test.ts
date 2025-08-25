@@ -411,7 +411,7 @@ describe('scoping variables to suite', () => {
       })
     })
 
-    describe('override nested overriden scope', () => {
+    describe('override nested overridden scope', () => {
       testAPI.scoped({ dependency: 'override' })
 
       testAPI('keeps using new values', ({ pkg }) => {
@@ -487,3 +487,13 @@ describe('test.scoped repro #7813', () => {
     })
   })
 })
+
+describe('suite with timeout', () => {
+  test.extend({})('timeout is inherited from suite', ({ task }) => {
+    expect(task.timeout).toBe(100)
+  })
+
+  test.extend({})('timeout is inherited from options', { timeout: 1_000 }, ({ task }) => {
+    expect(task.timeout).toBe(1_000)
+  })
+}, 100)

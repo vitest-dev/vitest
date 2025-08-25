@@ -22,10 +22,15 @@ function withSafeTimers(fn: () => void) {
   try {
     globalThis.setTimeout = setTimeout
     globalThis.clearTimeout = clearTimeout
-    globalThis.setImmediate = setImmediate
-    globalThis.clearImmediate = clearImmediate
 
-    if (globalThis.process) {
+    if (setImmediate) {
+      globalThis.setImmediate = setImmediate
+    }
+    if (clearImmediate) {
+      globalThis.clearImmediate = clearImmediate
+    }
+
+    if (globalThis.process && nextTick) {
       globalThis.process.nextTick = nextTick
     }
 
@@ -38,7 +43,7 @@ function withSafeTimers(fn: () => void) {
     globalThis.setImmediate = currentSetImmediate
     globalThis.clearImmediate = currentClearImmediate
 
-    if (globalThis.process) {
+    if (globalThis.process && nextTick) {
       nextTick(() => {
         globalThis.process.nextTick = currentNextTick
       })
@@ -78,24 +83,7 @@ export function createRuntimeRpc(
           'onCollected',
           'onCancel',
         ],
-        onTimeoutError(functionName, args) {
-          let message = `[vitest-worker]: Timeout calling "${functionName}"`
-
-          if (
-            functionName === 'fetch'
-            || functionName === 'transform'
-            || functionName === 'resolveId'
-          ) {
-            message += ` with "${JSON.stringify(args)}"`
-          }
-
-          // JSON.stringify cannot serialize Error instances
-          if (functionName === 'onUnhandledError') {
-            message += ` with "${args[0]?.message || args[0]}"`
-          }
-
-          throw new Error(message)
-        },
+        timeout: -1,
         ...options,
       },
     ),
@@ -110,6 +98,11 @@ export function createRuntimeRpc(
 export function createSafeRpc(rpc: WorkerRPC): WorkerRPC {
   return new Proxy(rpc, {
     get(target, p, handler) {
+      // keep $rejectPendingCalls as sync function
+      if (p === '$rejectPendingCalls') {
+        return rpc.$rejectPendingCalls
+      }
+
       const sendCall = get(target, p, handler)
       const safeSendCall = (...args: any[]) =>
         withSafeTimers(async () => {

@@ -239,7 +239,7 @@ export function parseCLI(argv: string | string[], config: CliParseOptions = {}):
   if (arrayArgs[2] === 'watch' || arrayArgs[2] === 'dev') {
     options.watch = true
   }
-  if (arrayArgs[2] === 'run') {
+  if (arrayArgs[2] === 'run' && !options.watch) {
     options.run = true
   }
   if (arrayArgs[2] === 'related') {
@@ -265,7 +265,9 @@ async function watch(cliFilters: string[], options: CliOptions): Promise<void> {
 }
 
 async function run(cliFilters: string[], options: CliOptions): Promise<void> {
-  options.run = true
+  // "vitest run --watch" should still be watch mode
+  options.run = !options.watch
+
   await start('test', cliFilters, options)
 }
 
@@ -291,11 +293,6 @@ function normalizeCliOptions(cliFilters: string[], argv: CliOptions): CliOptions
 }
 
 async function start(mode: VitestRunMode, cliFilters: string[], options: CliOptions): Promise<void> {
-  try {
-    process.title = 'node (vitest)'
-  }
-  catch {}
-
   try {
     const { startVitest } = await import('./cli-api')
     const ctx = await startVitest(mode, cliFilters.map(normalize), normalizeCliOptions(cliFilters, options))
@@ -329,17 +326,12 @@ async function init(project: string) {
 
 async function collect(mode: VitestRunMode, cliFilters: string[], options: CliOptions): Promise<void> {
   try {
-    process.title = 'node (vitest)'
-  }
-  catch {}
-
-  try {
     const { prepareVitest, processCollected, outputFileList } = await import('./cli-api')
     const ctx = await prepareVitest(mode, {
       ...normalizeCliOptions(cliFilters, options),
       watch: false,
       run: true,
-    })
+    }, undefined, undefined, cliFilters)
     if (!options.filesOnly) {
       const { testModules: tests, unhandledErrors: errors } = await ctx.collect(cliFilters.map(normalize))
 

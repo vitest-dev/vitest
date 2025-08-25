@@ -1,5 +1,7 @@
+import type { SerializedError } from '@vitest/utils'
 import type { Vitest } from '../core'
 import type { TestSpecification } from '../spec'
+import type { TestRunEndReason } from '../types/reporter'
 import type { BaseOptions } from './base'
 import type { ReportedHookContext, TestCase, TestModule } from './reported-tasks'
 import { BaseReporter } from './base'
@@ -30,7 +32,26 @@ export class DefaultReporter extends BaseReporter {
   }
 
   onTestRunStart(specifications: ReadonlyArray<TestSpecification>): void {
+    if (this.isTTY) {
+      if (this.renderSucceed === undefined) {
+        this.renderSucceed = !!this.renderSucceed
+      }
+
+      if (this.renderSucceed !== true) {
+        this.renderSucceed = specifications.length <= 1
+      }
+    }
+
     this.summary?.onTestRunStart(specifications)
+  }
+
+  onTestRunEnd(
+    testModules: ReadonlyArray<TestModule>,
+    unhandledErrors: ReadonlyArray<SerializedError>,
+    reason: TestRunEndReason,
+  ): void {
+    super.onTestRunEnd(testModules, unhandledErrors, reason)
+    this.summary?.onTestRunEnd()
   }
 
   onTestModuleQueued(file: TestModule): void {
@@ -66,21 +87,5 @@ export class DefaultReporter extends BaseReporter {
   onInit(ctx: Vitest): void {
     super.onInit(ctx)
     this.summary?.onInit(ctx, { verbose: this.verbose })
-  }
-
-  onPathsCollected(paths: string[] = []): void {
-    if (this.isTTY) {
-      if (this.renderSucceed === undefined) {
-        this.renderSucceed = !!this.renderSucceed
-      }
-
-      if (this.renderSucceed !== true) {
-        this.renderSucceed = paths.length <= 1
-      }
-    }
-  }
-
-  onTestRunEnd(): void {
-    this.summary?.onTestRunEnd()
   }
 }

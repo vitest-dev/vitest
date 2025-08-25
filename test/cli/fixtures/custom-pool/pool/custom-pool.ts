@@ -1,15 +1,7 @@
-import type {
-  RunnerTestFile,
-  RunnerTestCase,
-  RunnerTestSuite,
-  RunnerTaskResultPack,
-  RunnerTaskEventPack,
-  RunnerTask
-} from 'vitest'
+import type { RunnerTestCase } from 'vitest'
 import type { ProcessPool, Vitest } from 'vitest/node'
-import { createMethodsRPC } from 'vitest/node'
-import { generateFileHash } from '@vitest/runner/utils'
-import { normalize, relative } from 'pathe'
+import { createFileTask } from '@vitest/runner/utils'
+import { normalize } from 'pathe'
 
 export default (vitest: Vitest): ProcessPool => {
   const options = vitest.config.poolOptions?.custom as any
@@ -21,33 +13,26 @@ export default (vitest: Vitest): ProcessPool => {
     async runTests(specs) {
       vitest.logger.console.warn('[pool] printing:', options.print)
       vitest.logger.console.warn('[pool] array option', options.array)
-      for (const [project, file] of specs) {
+      for (const { project, moduleId } of specs) {
         vitest.state.clearFiles(project)
-        vitest.logger.console.warn('[pool] running tests for', project.name, 'in', normalize(file).toLowerCase().replace(normalize(process.cwd()).toLowerCase(), ''))
-        const path = relative(project.config.root, file)
-        const taskFile: RunnerTestFile = {
-          id: generateFileHash(path, project.config.name),
-          name: path,
-          mode: 'run',
-          meta: {},
-          projectName: project.name,
-          filepath: file,
-          type: 'suite',
-          tasks: [],
-          result: {
-            state: 'pass',
-          },
-          file: null!,
-        }
-        taskFile.file = taskFile
+        vitest.logger.console.warn('[pool] running tests for', project.name, 'in', normalize(moduleId).toLowerCase().replace(normalize(process.cwd()).toLowerCase(), ''))
+        const taskFile = createFileTask(
+          moduleId,
+          project.config.root,
+          project.name,
+          'custom'
+        )
+        taskFile.mode = 'run'
+        taskFile.result = { state: 'pass' }
         const taskTest: RunnerTestCase = {
           type: 'test',
           name: 'custom test',
-          id: 'custom-test',
+          id: `${taskFile.id}_0`,
           context: {} as any,
           suite: taskFile,
           mode: 'run',
           meta: {},
+          annotations: [],
           timeout: 0,
           file: taskFile,
           result: {

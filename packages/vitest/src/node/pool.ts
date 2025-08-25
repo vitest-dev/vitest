@@ -4,7 +4,6 @@ import type { TestProject } from './project'
 import type { TestSpecification } from './spec'
 import type { BuiltinPool, Pool } from './types/pool-options'
 import { isatty } from 'node:tty'
-import pm from 'picomatch'
 import { version as viteVersion } from 'vite'
 import { isWindows } from '../utils/env'
 import { createForksPool } from './pools/forks'
@@ -12,24 +11,6 @@ import { createThreadsPool } from './pools/threads'
 import { createTypecheckPool } from './pools/typecheck'
 import { createVmForksPool } from './pools/vmForks'
 import { createVmThreadsPool } from './pools/vmThreads'
-
-/**
- * @deprecated use TestSpecification instead
- */
-export type WorkspaceSpec = TestSpecification & [
-  /**
-   * @deprecated use spec.project instead
-   */
-  project: TestProject,
-  /**
-   * @deprecated use spec.moduleId instead
-   */
-  file: string,
-  /**
-   * @deprecated use spec.pool instead
-   */
-  options: { pool: Pool },
-]
 
 export type RunWithFiles = (
   files: TestSpecification[],
@@ -66,17 +47,7 @@ function getDefaultPoolName(project: TestProject): Pool {
   return project.config.pool
 }
 
-export function getFilePoolName(project: TestProject, file: string): Pool {
-  for (const [glob, pool] of project.config.poolMatchGlobs) {
-    if ((pool as Pool) === 'browser') {
-      throw new Error(
-        'Since Vitest 0.31.0 "browser" pool is not supported in "poolMatchGlobs". You can create a project to run some of your tests in browser in parallel. Read more: https://vitest.dev/guide/projects',
-      )
-    }
-    if (pm.isMatch(file, glob, { cwd: project.config.root })) {
-      return pool as Pool
-    }
-  }
+export function getFilePoolName(project: TestProject): Pool {
   return getDefaultPoolName(project)
 }
 
@@ -155,7 +126,7 @@ export function createPool(ctx: Vitest): ProcessPool {
         return customPools.get(filepath)!
       }
 
-      const pool = await ctx.runner.executeId(filepath)
+      const pool = await ctx.runner.import(filepath)
       if (typeof pool.default !== 'function') {
         throw new TypeError(
           `Custom pool "${filepath}" must export a function as default export`,
@@ -204,16 +175,16 @@ export function createPool(ctx: Vitest): ProcessPool {
     const groupedSpecifications: Record<string, TestSpecification[]> = {}
     const groups = new Set<number>()
 
-    const factories: Record<LocalPool, () => ProcessPool> = {
-      vmThreads: () => createVmThreadsPool(ctx, options),
-      vmForks: () => createVmForksPool(ctx, options),
-      threads: () => createThreadsPool(ctx, options),
-      forks: () => createForksPool(ctx, options),
+    const factories: Record<LocalPool, (specs: TestSpecification[]) => ProcessPool> = {
+      vmThreads: specs => createVmThreadsPool(ctx, options, specs),
+      vmForks: specs => createVmForksPool(ctx, options, specs),
+      threads: specs => createThreadsPool(ctx, options, specs),
+      forks: specs => createForksPool(ctx, options, specs),
       typescript: () => createTypecheckPool(ctx),
     }
 
     for (const spec of files) {
-      const group = spec[0].config.sequence.groupOrder ?? 0
+      const group = spec.project.config.sequence.groupOrder ?? 0
       groups.add(group)
       groupedSpecifications[group] ??= []
       groupedSpecifications[group].push(spec)
@@ -224,6 +195,13 @@ export function createPool(ctx: Vitest): ProcessPool {
 
     async function sortSpecs(specs: TestSpecification[]) {
       if (ctx.config.shard) {
+        if (!ctx.config.passWithNoTests && ctx.config.shard.count > specs.length) {
+          throw new Error(
+            '--shard <count> must be a smaller than count of test files. '
+            + `Resolved ${specs.length} test files for --shard=${ctx.config.shard.index}/${ctx.config.shard.count}.`,
+          )
+        }
+
         specs = await sequencer.shard(specs)
       }
       return sequencer.sort(specs)
@@ -246,7 +224,7 @@ export function createPool(ctx: Vitest): ProcessPool {
       }
 
       specifications.forEach((specification) => {
-        const pool = specification[2].pool
+        const pool = specification.pool
         filesByPool[pool] ??= []
         filesByPool[pool].push(specification)
       })
@@ -263,7 +241,7 @@ export function createPool(ctx: Vitest): ProcessPool {
 
           if (pool in factories) {
             const factory = factories[pool]
-            pools[pool] ??= factory()
+            pools[pool] ??= factory(specs)
             return pools[pool]![method](specs, invalidate)
           }
 

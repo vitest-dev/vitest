@@ -1,8 +1,7 @@
 import type { FakeTimerInstallOpts } from '@sinonjs/fake-timers'
 import type { PrettyFormatOptions } from '@vitest/pretty-format'
 import type { SequenceHooks, SequenceSetupFiles } from '@vitest/runner'
-import type { SnapshotUpdateState } from '@vitest/snapshot'
-import type { SnapshotEnvironment } from '@vitest/snapshot/environment'
+import type { SnapshotEnvironment, SnapshotUpdateState } from '@vitest/snapshot'
 import type { SerializedDiffOptions } from '@vitest/utils/diff'
 
 /**
@@ -72,14 +71,7 @@ export interface SerializedConfig {
       transformCss?: boolean
       transformGlobPattern?: RegExp | RegExp[]
     }
-    optimizer: {
-      web: {
-        enabled: boolean
-      }
-      ssr: {
-        enabled: boolean
-      }
-    }
+    optimizer: Record<string, { enabled: boolean }>
     interopDefault: boolean | undefined
     moduleDirectories: string[] | undefined
   }
@@ -130,6 +122,7 @@ export interface SerializedConfig {
       // for playwright
       actionTimeout?: number
     }
+    trackUnhandledErrors: boolean
   }
   standalone: boolean
   logHeapUsage: boolean | undefined
@@ -137,6 +130,7 @@ export interface SerializedConfig {
   benchmark: {
     includeSamples: boolean
   } | undefined
+  serializedDefines: string
 }
 
 export interface SerializedCoverageConfig {

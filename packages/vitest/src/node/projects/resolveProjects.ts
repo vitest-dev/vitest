@@ -1,6 +1,12 @@
 import type { GlobOptions } from 'tinyglobby'
 import type { Vitest } from '../core'
-import type { BrowserInstanceOption, ResolvedConfig, TestProjectConfiguration, UserConfig, UserWorkspaceConfig } from '../types/config'
+import type {
+  BrowserInstanceOption,
+  ResolvedConfig,
+  TestProjectConfiguration,
+  UserConfig,
+  UserWorkspaceConfig,
+} from '../types/config'
 import { existsSync, promises as fs } from 'node:fs'
 import os from 'node:os'
 import { limitConcurrency } from '@vitest/runner/utils'
@@ -297,8 +303,9 @@ function cloneConfig(project: TestProject, { browser, ...config }: BrowserInstan
     ...overrideConfig
   } = config
   const currentConfig = project.config.browser
+  const clonedConfig = deepClone(project.config)
   return mergeConfig<any, any>({
-    ...deepClone(project.config),
+    ...clonedConfig,
     browser: {
       ...project.config.browser,
       locators: locators
@@ -315,6 +322,10 @@ function cloneConfig(project: TestProject, { browser, ...config }: BrowserInstan
       providerOptions: config,
       instances: undefined, // projects cannot spawn more configs
     },
+    // If there is no include or exclude or includeSource pattern in browser.instances[], we should use the that's pattern from the parent project
+    include: (overrideConfig.include && overrideConfig.include.length > 0) ? [] : clonedConfig.include,
+    exclude: (overrideConfig.exclude && overrideConfig.exclude.length > 0) ? [] : clonedConfig.exclude,
+    includeSource: (overrideConfig.includeSource && overrideConfig.includeSource.length > 0) ? [] : clonedConfig.includeSource,
     // TODO: should resolve, not merge/override
   } satisfies ResolvedConfig, overrideConfig) as ResolvedConfig
 }

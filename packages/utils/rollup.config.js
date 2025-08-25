@@ -16,6 +16,7 @@ const entries = {
   'error': 'src/error.ts',
   'source-map': 'src/source-map.ts',
   'types': 'src/types.ts',
+  'resolver': 'src/resolver.ts',
 }
 
 const external = [
@@ -58,6 +59,7 @@ export default defineConfig([
       entryFileNames: '[name].d.ts',
       format: 'esm',
     },
+    watch: false,
     external,
     plugins: dtsUtils.dts(),
     onwarn,

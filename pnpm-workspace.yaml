@@ -5,26 +5,26 @@ packages:
   - test/*
   - test/config/fixtures/conditions-pkg
 catalog:
-  '@ampproject/remapping': ^2.3.0
-  '@iconify-json/carbon': ^1.2.8
-  '@iconify-json/logos': ^1.2.4
-  '@jridgewell/trace-mapping': ^0.3.25
+  '@iconify-json/carbon': ^1.2.11
+  '@iconify-json/logos': ^1.2.5
+  '@jridgewell/remapping': ^2.3.0
+  '@jridgewell/trace-mapping': ^0.3.29
   '@types/chai': ^5.2.2
   '@types/debug': ^4.1.12
-  '@types/estree': ^1.0.7
+  '@types/estree': ^1.0.8
   '@types/istanbul-lib-coverage': ^2.0.6
   '@types/istanbul-lib-report': ^3.0.3
   '@types/istanbul-lib-source-maps': ^4.0.4
   '@types/istanbul-reports': ^3.0.4
   '@types/test-exclude': ^6.0.2
   '@types/ws': ^8.18.1
-  '@unocss/reset': ^0.65.4
-  '@vitejs/plugin-vue': ^5.2.4
+  '@unocss/reset': ^66.3.3
+  '@vitejs/plugin-vue': ^6.0.1
   '@vueuse/core': ^12.8.2
   acorn-walk: ^8.3.4
-  birpc: 2.3.0
+  birpc: ^2.5.0
   cac: ^6.7.14
-  chai: ^5.2.0
+  chai: ^6.0.1
   debug: ^4.4.1
   flatted: ^3.3.3
   istanbul-lib-coverage: ^3.2.2
@@ -33,14 +33,15 @@ catalog:
   istanbul-reports: ^3.1.7
   magic-string: ^0.30.17
   magicast: ^0.3.5
-  msw: ^2.8.4
+  msw: ^2.10.4
   pathe: ^2.0.3
   sirv: ^3.0.1
   std-env: ^3.9.0
+  strip-literal: ^3.0.0
   test-exclude: ^7.0.1
-  tinyglobby: ^0.2.13
+  tinyglobby: ^0.2.14
   tinyrainbow: ^2.0.0
-  unocss: ^0.65.4
+  unocss: ^66.3.3
   unplugin-vue-components: ^0.28.0
-  vue: ^3.5.14
-  ws: ^8.18.2
+  vue: ^3.5.18
+  ws: ^8.18.3

@@ -49,6 +49,9 @@ export default defineConfig({
     includeSource: ['src/*.ts'],
     // having a snapshot environment doesn't affect browser tests
     snapshotEnvironment: './custom-snapshot-env.ts',
+    env: {
+      CUSTOM_ENV: 'foo',
+    },
     browser: {
       enabled: true,
       headless: false,
@@ -59,25 +62,7 @@ export default defineConfig({
           : webdriverioInstances,
       provider,
       // isolate: false,
-      testerScripts: [
-        {
-          content: 'globalThis.__injected = []',
-          type: 'text/javascript',
-        },
-        {
-          content: '__injected.push(1)',
-        },
-        {
-          id: 'ts.ts',
-          content: '(__injected as string[]).push(2)',
-        },
-        {
-          src: './injected.ts',
-        },
-        {
-          src: '@vitest/injected-lib',
-        },
-      ],
+      testerHtmlPath: './custom-tester.html',
       orchestratorScripts: [
         {
           content: 'console.log("Hello, World");globalThis.__injected = []',
@@ -87,7 +72,7 @@ export default defineConfig({
           content: 'import "./injected.ts"',
         },
         {
-          content: 'if(__injected[0] !== 3) throw new Error("injected not working")',
+          content: 'if(__injected[0] !== 2) throw new Error("injected not working")',
         },
       ],
       commands: {
@@ -109,9 +94,6 @@ export default defineConfig({
     outputFile: {
       html: './html/index.html',
       json: './browser.json',
-    },
-    env: {
-      BROWSER: browser,
     },
     onConsoleLog(log) {
       if (log.includes('MESSAGE ADDED')) {

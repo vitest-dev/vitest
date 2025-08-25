@@ -12,10 +12,9 @@ export function NormalizeURLPlugin(): Plugin {
   return {
     name: 'vitest:normalize-url',
     enforce: 'post',
-    transform(code, id, options) {
-      const ssr = options?.ssr === true
+    transform(code) {
       if (
-        ssr
+        this.environment.name !== 'client'
         || !code.includes('new URL')
         || !code.includes('import.meta.url')
       ) {
@@ -26,7 +25,7 @@ export function NormalizeURLPlugin(): Plugin {
       const assetImportMetaUrlRE
       // vite injects new URL(path, import.meta.url) in the code
       // rolldown-vite injects new URL(path, '' + import.meta.url) in the code
-          = /\bnew\s+URL\s*\(\s*(?:'[^']+'|"[^"]+"|`[^`]+`)\s*,\s*(?:'' \+ )?import\.meta\.url\s*(?:,\s*)?\)/g
+        = /\bnew\s+URL\s*\(\s*(?:'[^']+'|"[^"]+"|`[^`]+`)\s*,\s*(?:'' \+ )?import\.meta\.url\s*(?:,\s*)?\)/g
 
       let updatedCode = code
       let match: RegExpExecArray | null

@@ -198,8 +198,11 @@ export function registerConsoleShortcuts(
     )
 
     const filter = await watchFilter.filter(async (str: string) => {
-      const files = await ctx.globTestFiles([str])
-      return files.map(file => relative(ctx.config.root, file[1]))
+      const specifications = await ctx.globTestSpecifications([str])
+
+      return specifications
+        .map(specification => relative(ctx.config.root, specification.moduleId))
+        .filter((file, index, all) => all.indexOf(file) === index)
     })
 
     on()

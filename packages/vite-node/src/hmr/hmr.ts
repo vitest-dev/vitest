@@ -15,8 +15,8 @@ export type ModuleNamespace = Record<string, any> & {
 
 const debugHmr = createDebug('vite-node:hmr')
 
-export type InferCustomEventPayload<T extends string> =
-  T extends keyof CustomEventMap ? CustomEventMap[T] : any
+export type InferCustomEventPayload<T extends string>
+  = T extends keyof CustomEventMap ? CustomEventMap[T] : any
 
 export interface HotModule {
   id: string
@@ -300,6 +300,7 @@ export function createHotContext(
       notifyListeners(runner, 'vite:invalidate', {
         path: ownerPath,
         message: undefined,
+        firstInvalidatedBy: ownerPath,
       })
       return reload(runner, files)
     },

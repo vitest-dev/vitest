@@ -6,7 +6,7 @@ import type {
   TestTreeNode,
   UITaskTreeNode,
 } from '~/composables/explorer/types'
-import { isAtomTest } from '@vitest/runner/utils'
+import { isTestCase } from '@vitest/runner/utils'
 import { client } from '~/composables/client'
 import { explorerTree } from '~/composables/explorer/index'
 import { openedTreeItemsSet } from '~/composables/explorer/state'
@@ -117,7 +117,7 @@ export function createOrUpdateNodeTask(id: string) {
 
   const task = client.state.idMap.get(id)
   // if it is not a test just return
-  if (!task || !isAtomTest(task)) {
+  if (!task || !isTestCase(task)) {
     return
   }
 
@@ -142,12 +142,13 @@ export function createOrUpdateNode(
         node.children.add(task.id)
       }
 
+      taskNode.name = task.name
       taskNode.mode = task.mode
       taskNode.duration = duration
       taskNode.state = task.result?.state
     }
     else {
-      if (isAtomTest(task)) {
+      if (isTestCase(task)) {
         taskNode = {
           id: task.id,
           fileId: task.file.id,

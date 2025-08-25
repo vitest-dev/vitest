@@ -28,34 +28,47 @@ export class WebdriverBrowserProvider implements BrowserProvider {
   private options?: Capabilities.WebdriverIOConfig
 
   private closing = false
+  private iframeSwitched = false
+  private topLevelContext: string | undefined
 
   getSupportedBrowsers(): readonly string[] {
     return webdriverBrowsers
   }
 
   async initialize(
-    ctx: TestProject,
+    project: TestProject,
     { browser, options }: WebdriverProviderOptions,
   ): Promise<void> {
+    // increase shutdown timeout because WDIO takes some extra time to kill the driver
+    if (!project.vitest.state._data.timeoutIncreased) {
+      project.vitest.state._data.timeoutIncreased = true
+      project.vitest.config.teardownTimeout += 10_000
+    }
+
     this.closing = false
-    this.project = ctx
+    this.project = project
     this.browserName = browser
     this.options = options as Capabilities.WebdriverIOConfig
   }
 
+  isIframeSwitched(): boolean {
+    return this.iframeSwitched
+  }
+
   async switchToTestFrame(): Promise<void> {
-    const page = this.browser!
+    const browser = this.browser!
     // support wdio@9
-    if (page.switchFrame) {
-      await page.switchFrame(page.$('iframe[data-vitest]'))
+    if (browser.switchFrame) {
+      await browser.switchFrame(browser.$('iframe[data-vitest]'))
     }
     else {
-      const iframe = await page.findElement(
+      const iframe = await browser.findElement(
         'css selector',
         'iframe[data-vitest]',
       )
-      await page.switchToFrame(iframe)
+      await browser.switchToFrame(iframe)
     }
+    this.iframeSwitched = true
   }
 
   async switchToMainFrame(): Promise<void> {
@@ -66,6 +79,21 @@ export class WebdriverBrowserProvider implements BrowserProvider {
     else {
       await page.switchToParentFrame()
     }
+    this.iframeSwitched = false
+  }
+
+  async setViewport(options: { width: number; height: number }): Promise<void> {
+    if (this.topLevelContext == null || !this.browser) {
+      throw new Error(`The browser has no open pages.`)
+    }
+    await this.browser.send({
+      method: 'browsingContext.setViewport',
+      params: {
+        context: this.topLevelContext,
+        devicePixelRatio: 1,
+        viewport: options,
+      },
+    })
   }
 
   getCommandsContext(): {
@@ -153,6 +181,7 @@ export class WebdriverBrowserProvider implements BrowserProvider {
     const browserInstance = await this.openBrowser()
     debug?.('[%s][%s] browser page is created, opening %s', sessionId, this.browserName, url)
     await browserInstance.url(url)
+    this.topLevelContext = await browserInstance.getWindowHandle()
     await this._throwIfClosing('opening the url')
   }
 
@@ -167,11 +196,15 @@ export class WebdriverBrowserProvider implements BrowserProvider {
   async close(): Promise<void> {
     debug?.('[%s] closing provider', this.browserName)
     this.closing = true
-    await Promise.all([
-      this.browser?.sessionId ? this.browser?.deleteSession?.() : null,
-    ])
-    // TODO: right now process can only exit with timeout, if we use browser
-    // needs investigating
-    process.exit()
+    const browser = this.browser
+    const sessionId = browser?.sessionId
+    if (!browser || !sessionId) {
+      return
+    }
+
+    // https://github.com/webdriverio/webdriverio/blob/ab1a2e82b13a9c7d0e275ae87e7357e1b047d8d3/packages/wdio-runner/src/index.ts#L486
+    await browser.deleteSession()
+    browser.sessionId = undefined as unknown as string
+    this.browser = null
   }
 }

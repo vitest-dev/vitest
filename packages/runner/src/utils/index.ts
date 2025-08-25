@@ -2,6 +2,7 @@ export { type ChainableFunction, createChainable } from './chain'
 export {
   calculateSuiteHash,
   createFileTask,
+  findTestFileStackTrace,
   generateFileHash,
   generateHash,
   interpretTaskModes,
@@ -18,6 +19,5 @@ export {
   getTests,
   hasFailed,
   hasTests,
-  isAtomTest,
   isTestCase,
 } from './tasks'

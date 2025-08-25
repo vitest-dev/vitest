@@ -3,11 +3,11 @@ import type { TestSpecification } from 'vitest/node'
 
 class TestNameSequencer {
   async sort(files: TestSpecification[]): Promise<TestSpecification[]> {
-    return [...files].sort(([, filenameA], [, filenameB]) => {
-      if (filenameA > filenameB)
+    return [...files].sort((a, b) => {
+      if (a.moduleId > b.moduleId)
         return 1
 
-      if (filenameA < filenameB)
+      if (a.moduleId < b.moduleId)
         return -1
 
       return 0

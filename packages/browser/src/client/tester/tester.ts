@@ -10,7 +10,7 @@ import {
   startTests,
   stopCoverageInsideWorker,
 } from 'vitest/internal/browser'
-import { executor, getBrowserState, getConfig, getWorkerState } from '../utils'
+import { getBrowserState, getConfig, getWorkerState, moduleRunner } from '../utils'
 import { setupDialogsSpy } from './dialog'
 import { setupConsoleLogSpy } from './logger'
 import { VitestBrowserClientMocker } from './mocker'
@@ -32,7 +32,7 @@ channel.addEventListener('message', async (e) => {
 
   if (!isEvent(data)) {
     const error = new Error(`Unknown message: ${JSON.stringify(e.data)}`)
-    unhandledError(error, 'Uknown Iframe Message')
+    unhandledError(error, 'Unknown Iframe Message')
     return
   }
 
@@ -63,7 +63,7 @@ channel.addEventListener('message', async (e) => {
       break
     }
     case 'prepare': {
-      await prepare().catch(err => unhandledError(err, 'Prepare Error'))
+      await prepare(data).catch(err => unhandledError(err, 'Prepare Error'))
       break
     }
     case 'viewport:done':
@@ -73,7 +73,7 @@ channel.addEventListener('message', async (e) => {
     }
     default: {
       const error = new Error(`Unknown event: ${(data as any).event}`)
-      unhandledError(error, 'Uknown Event')
+      unhandledError(error, 'Unknown Event')
     }
   }
 
@@ -93,7 +93,7 @@ getBrowserState().iframeId = iframeId
 
 let contextSwitched = false
 
-async function prepareTestEnvironment() {
+async function prepareTestEnvironment(options: PrepareOptions) {
   debug?.('trying to resolve runner', `${reloadStart}`)
   const config = getConfig()
 
@@ -101,6 +101,7 @@ async function prepareTestEnvironment() {
 
   const state = getWorkerState()
 
+  state.metaEnv = import.meta.env
   state.onCancel = onCancel
   state.rpc = rpc as any
 
@@ -108,7 +109,7 @@ async function prepareTestEnvironment() {
   const mocker = new VitestBrowserClientMocker(
     interceptor,
     rpc,
-    SpyModule.spyOn,
+    SpyModule.createMockInstance,
     {
       root: getBrowserState().viteConfig.root,
     },
@@ -142,7 +143,7 @@ async function prepareTestEnvironment() {
     })
   }
 
-  state.durations.prepare = performance.now() - state.durations.prepare
+  state.durations.prepare = performance.now() - options.startTime
 
   return {
     runner,
@@ -189,8 +190,12 @@ async function executeTests(method: 'run' | 'collect', files: string[]) {
   }
 }
 
-async function prepare() {
-  preparedData = await prepareTestEnvironment()
+interface PrepareOptions {
+  startTime: number
+}
+
+async function prepare(options: PrepareOptions) {
+  preparedData = await prepareTestEnvironment(options)
 
   // page is reloading
   debug?.('runner resolved successfully')
@@ -203,7 +208,7 @@ async function prepare() {
 
   await Promise.all([
     setupCommonEnv(config),
-    startCoverageInsideWorker(config.coverage, executor, { isolate: config.browser.isolate }),
+    startCoverageInsideWorker(config.coverage, moduleRunner, { isolate: config.browser.isolate }),
     (async () => {
       const VitestIndex = await import('vitest')
       Object.defineProperty(window, '__vitest_index__', {
@@ -212,6 +217,10 @@ async function prepare() {
       })
     })(),
   ])
+
+  if (!config.browser.trackUnhandledErrors) {
+    getBrowserState().disposeExceptionTracker()
+  }
 }
 
 async function cleanup() {
@@ -234,6 +243,10 @@ async function cleanup() {
   await userEvent.cleanup()
     .catch(error => unhandledError(error, 'Cleanup Error'))
 
+  await Promise.all(
+    getBrowserState().cleanups.map(fn => fn()),
+  ).catch(error => unhandledError(error, 'Cleanup Error'))
+
   // if isolation is disabled, Vitest reuses the same iframe and we
   // don't need to switch the context back at all
   if (contextSwitched) {
@@ -241,7 +254,7 @@ async function cleanup() {
       .catch(error => unhandledError(error, 'Cleanup Error'))
   }
   state.environmentTeardownRun = true
-  await stopCoverageInsideWorker(config.coverage, executor, { isolate: config.browser.isolate }).catch((error) => {
+  await stopCoverageInsideWorker(config.coverage, moduleRunner, { isolate: config.browser.isolate }).catch((error) => {
     return unhandledError(error, 'Coverage Error')
   })
 }

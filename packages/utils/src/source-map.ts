@@ -1,5 +1,5 @@
 import type { SourceMapInput } from '@jridgewell/trace-mapping'
-import type { ErrorWithDiff, ParsedStack } from './types'
+import type { ParsedStack, TestError } from './types'
 import { originalPositionFor, TraceMap } from '@jridgewell/trace-mapping'
 import { resolve } from 'pathe'
 import { isPrimitive, notNullish } from './helpers'
@@ -17,13 +17,13 @@ export interface StackTraceParserOptions {
   ignoreStackEntries?: (RegExp | string)[]
   getSourceMap?: (file: string) => unknown
   getUrlId?: (id: string) => string
-  frameFilter?: (error: ErrorWithDiff, frame: ParsedStack) => boolean | void
+  frameFilter?: (error: TestError, frame: ParsedStack) => boolean | void
 }
 
 const CHROME_IE_STACK_REGEXP = /^\s*at .*(?:\S:\d+|\(native\))/m
 const SAFARI_NATIVE_CODE_REGEXP = /^(?:eval@)?(?:\[native code\])?$/
 
-const stackIgnorePatterns = [
+const stackIgnorePatterns: (string | RegExp)[] = [
   'node:internal',
   /\/packages\/\w+\/dist\//,
   /\/@vitest\/\w+\/dist\//,
@@ -34,6 +34,8 @@ const stackIgnorePatterns = [
   '/node_modules/chai/',
   '/node_modules/tinypool/',
   '/node_modules/tinyspy/',
+  '/vite/dist/node/module-runner',
+  '/rolldown-vite/dist/node/module-runner',
   // browser related deps
   '/deps/chunk-',
   '/deps/@vitest',
@@ -44,6 +46,8 @@ const stackIgnorePatterns = [
   /__vitest_browser__/,
   /\/deps\/vitest_/,
 ]
+
+export { stackIgnorePatterns as defaultStackIgnorePatterns }
 
 function extractLocation(urlLike: string) {
   // Fail-fast but return locations like "(native)"
@@ -229,6 +233,10 @@ export function parseStacktrace(
         ? new URL(map.sourceRoot, fileUrl)
         : fileUrl
       file = new URL(source, sourceRootUrl).pathname
+      // if the file path is on windows, we need to remove the leading slash
+      if (file.match(/\/\w:\//)) {
+        file = file.slice(1)
+      }
     }
 
     if (shouldFilter(ignoreStackEntries, file)) {
@@ -266,18 +274,18 @@ function parseV8Stacktrace(stack: string): ParsedStack[] {
 }
 
 export function parseErrorStacktrace(
-  e: ErrorWithDiff,
+  e: TestError | Error,
   options: StackTraceParserOptions = {},
 ): ParsedStack[] {
   if (!e || isPrimitive(e)) {
     return []
   }
 
-  if (e.stacks) {
+  if ('stacks' in e && e.stacks) {
     return e.stacks
   }
 
-  const stackStr = e.stack || e.stackStr || ''
+  const stackStr = e.stack || ''
   // if "stack" property was overwritten at runtime to be something else,
   // ignore the value because we don't know how to process it
   let stackFrames = typeof stackStr === 'string'
@@ -296,10 +304,10 @@ export function parseErrorStacktrace(
 
   if (options.frameFilter) {
     stackFrames = stackFrames.filter(
-      f => options.frameFilter!(e, f) !== false,
+      f => options.frameFilter!(e as TestError, f) !== false,
     )
   }
 
-  e.stacks = stackFrames
+  ;(e as TestError).stacks = stackFrames
   return stackFrames
 }

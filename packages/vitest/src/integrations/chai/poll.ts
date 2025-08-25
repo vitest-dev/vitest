@@ -1,7 +1,7 @@
 import type { Assertion, ExpectStatic } from '@vitest/expect'
 import type { Test } from '@vitest/runner'
+import { chai } from '@vitest/expect'
 import { getSafeTimers } from '@vitest/utils'
-import * as chai from 'chai'
 import { getWorkerState } from '../../runtime/utils'
 
 // these matchers are not supported because they don't make sense with poll

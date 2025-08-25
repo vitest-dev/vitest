@@ -4,16 +4,18 @@ import type { ResolvedConfig, TestProjectInlineConfiguration } from '../types/co
 import { existsSync, readFileSync } from 'node:fs'
 import { deepMerge } from '@vitest/utils'
 import { basename, dirname, relative, resolve } from 'pathe'
+import * as vite from 'vite'
 import { configDefaults } from '../../defaults'
 import { generateScopedClassName } from '../../integrations/css/css-modules'
 import { VitestFilteredOutProjectError } from '../errors'
 import { createViteLogger, silenceImportViteIgnoreWarning } from '../viteLogger'
 import { CoverageTransform } from './coverageTransform'
 import { CSSEnablerPlugin } from './cssEnabler'
+import { MetaEnvReplacerPlugin } from './metaEnvReplacer'
 import { MocksPlugins } from './mocks'
 import { NormalizeURLPlugin } from './normalizeURL'
 import { VitestOptimizer } from './optimizer'
-import { SsrReplacerPlugin } from './ssrReplacer'
+import { ModuleRunnerTransform } from './runnerTransform'
 import {
   deleteDefineConfig,
   getDefaultResolveOptions,
@@ -32,17 +34,10 @@ export function WorkspaceVitestPlugin(
 ) {
   return <VitePlugin[]>[
     {
-      name: 'vitest:project',
-      enforce: 'pre',
-      options() {
-        this.meta.watchMode = false
-      },
+      name: 'vitest:project:name',
+      enforce: 'post',
       config(viteConfig) {
-        const defines: Record<string, any> = deleteDefineConfig(viteConfig)
-
         const testConfig = viteConfig.test || {}
-
-        const root = testConfig.root || viteConfig.root || options.root
 
         let { label: name, color } = typeof testConfig.name === 'string'
           ? { label: testConfig.name }
@@ -66,56 +61,6 @@ export function WorkspaceVitestPlugin(
             name = options.workspacePath.toString()
           }
         }
-
-        const resolveOptions = getDefaultResolveOptions()
-        const config: ViteConfig = {
-          root,
-          define: {
-            // disable replacing `process.env.NODE_ENV` with static string by vite:client-inject
-            'process.env.NODE_ENV': 'process.env.NODE_ENV',
-          },
-          resolve: {
-            ...resolveOptions,
-            alias: testConfig.alias,
-          },
-          esbuild: viteConfig.esbuild === false
-            ? false
-            : {
-                // Lowest target Vitest supports is Node18
-                target: viteConfig.esbuild?.target || 'node18',
-                sourcemap: 'external',
-                // Enables using ignore hint for coverage providers with @preserve keyword
-                legalComments: 'inline',
-              },
-          server: {
-            // disable watch mode in workspaces,
-            // because it is handled by the top-level watcher
-            watch: null,
-            open: false,
-            hmr: false,
-            ws: false,
-            preTransformRequests: false,
-            middlewareMode: true,
-            fs: {
-              allow: resolveFsAllow(
-                project.vitest.config.root,
-                project.vitest.vite.config.configFile,
-              ),
-            },
-          },
-          // eslint-disable-next-line ts/ban-ts-comment
-          // @ts-ignore Vite 6 compat
-          environments: {
-            ssr: {
-              resolve: resolveOptions,
-            },
-          },
-          test: {
-            name: { label: name, color },
-          },
-        }
-
-        ;(config.test as ResolvedConfig).defines = defines
 
         const isUserBrowserEnabled = viteConfig.test?.browser?.enabled
         const isBrowserEnabled = isUserBrowserEnabled ?? (viteConfig.test?.browser && project.vitest._cliOptions.browser?.enabled)
@@ -147,6 +92,98 @@ export function WorkspaceVitestPlugin(
             throw new VitestFilteredOutProjectError()
           }
         }
+
+        return {
+          environments: {
+            __vitest__: {
+              dev: {},
+            },
+          },
+          test: {
+            name: { label: name, color },
+          },
+        }
+      },
+    },
+    {
+      name: 'vitest:project',
+      enforce: 'pre',
+      options() {
+        this.meta.watchMode = false
+      },
+      config(viteConfig) {
+        const defines: Record<string, any> = deleteDefineConfig(viteConfig)
+
+        const testConfig = viteConfig.test || {}
+        const root = testConfig.root || viteConfig.root || options.root
+
+        const resolveOptions = getDefaultResolveOptions()
+        let config: ViteConfig = {
+          root,
+          define: {
+            // disable replacing `process.env.NODE_ENV` with static string by vite:client-inject
+            'process.env.NODE_ENV': 'process.env.NODE_ENV',
+          },
+          resolve: {
+            ...resolveOptions,
+            alias: testConfig.alias,
+          },
+          server: {
+            // disable watch mode in workspaces,
+            // because it is handled by the top-level watcher
+            watch: null,
+            open: false,
+            hmr: false,
+            ws: false,
+            preTransformRequests: false,
+            middlewareMode: true,
+            fs: {
+              allow: resolveFsAllow(
+                project.vitest.config.root,
+                project.vitest.vite.config.configFile,
+              ),
+            },
+          },
+          // eslint-disable-next-line ts/ban-ts-comment
+          // @ts-ignore Vite 6 compat
+          environments: {
+            ssr: {
+              resolve: resolveOptions,
+            },
+          },
+          test: {},
+        }
+
+        if ('rolldownVersion' in vite) {
+          config = {
+            ...config,
+            // eslint-disable-next-line ts/ban-ts-comment
+            // @ts-ignore rolldown-vite only
+            oxc: viteConfig.oxc === false
+              ? false
+              : {
+                  // eslint-disable-next-line ts/ban-ts-comment
+                  // @ts-ignore rolldown-vite only
+                  target: viteConfig.oxc?.target || 'node18',
+                },
+          }
+        }
+        else {
+          config = {
+            ...config,
+            esbuild: viteConfig.esbuild === false
+              ? false
+              : {
+                  // Lowest target Vitest supports is Node18
+                  target: viteConfig.esbuild?.target || 'node18',
+                  sourcemap: 'external',
+                  // Enables using ignore hint for coverage providers with @preserve keyword
+                  legalComments: 'inline',
+                },
+          }
+        }
+
+        ;(config.test as ResolvedConfig).defines = defines
 
         const classNameStrategy
           = (typeof testConfig.css !== 'boolean'
@@ -181,6 +218,10 @@ export function WorkspaceVitestPlugin(
 
         return config
       },
+    },
+    {
+      name: 'vitest:project:server',
+      enforce: 'post',
       async configureServer(server) {
         const options = deepMerge({}, configDefaults, server.config.test || {})
         await project._configureServer(options, server)
@@ -188,12 +229,13 @@ export function WorkspaceVitestPlugin(
         await server.watcher.close()
       },
     },
-    SsrReplacerPlugin(),
+    MetaEnvReplacerPlugin(),
     ...CSSEnablerPlugin(project),
-    CoverageTransform(project.ctx),
+    CoverageTransform(project.vitest),
     ...MocksPlugins(),
-    VitestProjectResolver(project.ctx),
+    VitestProjectResolver(project.vitest),
     VitestOptimizer(),
     NormalizeURLPlugin(),
+    ModuleRunnerTransform(),
   ]
 }

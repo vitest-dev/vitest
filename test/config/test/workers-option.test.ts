@@ -1,4 +1,4 @@
-import type { UserConfig } from 'vitest/node'
+import type { TestUserConfig } from 'vitest/node'
 import { describe, expect, test, vi } from 'vitest'
 
 import { getWorkersCountByPercentage } from 'vitest/src/utils/workers.js'
@@ -26,12 +26,12 @@ describe('workers util', () => {
   })
 })
 
-function runVitest(config: UserConfig) {
+function runVitest(config: TestUserConfig) {
   return testUtils.runVitest({ ...config, root: './fixtures/workers-option' })
 }
 
 test('workers percent argument should not throw error', async () => {
-  const { stderr } = await runVitest({ maxWorkers: '100%', minWorkers: '10%' })
+  const { stderr } = await runVitest({ maxWorkers: '100%' })
 
   expect(stderr).toBe('')
 })
@@ -45,11 +45,11 @@ test.each([
   let workerOptions = {}
 
   if (poolOption.toLowerCase().includes('threads')) {
-    workerOptions = { maxThreads: '100%', minThreads: '10%' }
+    workerOptions = { maxThreads: '100%' }
   }
 
   if (poolOption.toLowerCase().includes('forks')) {
-    workerOptions = { maxForks: '100%', minForks: '10%' }
+    workerOptions = { maxForks: '100%' }
   }
 
   const { stderr } = await runVitest({ poolOptions: { [poolOption]: workerOptions } })

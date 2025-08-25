@@ -99,6 +99,10 @@ You can get the latest summary of snapshots via the `vitest.snapshot.summary` pr
 
 Cache manager that stores information about latest test results and test file stats. In Vitest itself this is only used by the default sequencer to sort tests.
 
+## watcher <Version>4.0.0</Version> {#watcher}
+
+The instance of a Vitest watcher with useful methods to track file changes and rerun tests. You can use `onFileChange`, `onFileDelete` or `onFileCreate` with your own watcher, if the built-in watcher is disabled.
+
 ## projects
 
 An array of [test projects](/advanced/api/test-project) that belong to user's projects. If the user did not specify a them, this array will only contain a [root project](#getrootproject).
@@ -256,7 +260,7 @@ function start(filters?: string[]): Promise<TestRunResult>
 Initialize reporters, the coverage provider, and run tests. This method accepts string filters to match the test files - these are the same filters that [CLI supports](/guide/filtering#cli).
 
 ::: warning
-This method should not be called if [`vitest.init()`](#init) is also invoked. Use [`runTestSpecifications`](#runtestspecifications) or [`rerunTestSpecifications`](#reruntestspecifications) instead if you need to run tests after Vitest was inititalised.
+This method should not be called if [`vitest.init()`](#init) is also invoked. Use [`runTestSpecifications`](#runtestspecifications) or [`rerunTestSpecifications`](#reruntestspecifications) instead if you need to run tests after Vitest was initialised.
 :::
 
 This method is called automatically by [`startVitest`](/advanced/guide/tests) if `config.mergeReports` and `config.standalone` are not set.
@@ -308,7 +312,7 @@ function runTestSpecifications(
 ): Promise<TestRunResult>
 ```
 
-This method runs every test based on the received [specifications](/advanced/api/test-specification). The second argument, `allTestsRun`, is used by the coverage provider to determine if it needs to instrument coverage on _every_ file in the root (this only matters if coverage is enabled and `coverage.all` is set to `true`).
+This method runs every test based on the received [specifications](/advanced/api/test-specification). The second argument, `allTestsRun`, is used by the coverage provider to determine if it needs to include uncovered files in report.
 
 ::: warning
 This method doesn't trigger `onWatcherRerun`, `onWatcherStart` and `onTestsRerun` callbacks. If you are rerunning tests based on the file change, consider using [`rerunTestSpecifications`](#reruntestspecifications) instead.
@@ -370,6 +374,14 @@ This methods overrides the global [test name pattern](/config/#testnamepattern).
 ::: warning
 This method doesn't start running any tests. To run tests with updated pattern, call [`runTestSpecifications`](#runtestspecifications).
 :::
+
+## getGlobalTestNamePattern
+
+```ts
+function getGlobalTestNamePattern(): RegExp | undefined
+```
+
+Returns the regexp used for the global test name pattern.
 
 ## resetGlobalTestNamePattern
 
@@ -528,3 +540,85 @@ function matchesProjectFilter(name: string): boolean
 Check if the name matches the current [project filter](/guide/cli#project). If there is no project filter, this will always return `true`.
 
 It is not possible to programmatically change the `--project` CLI option.
+
+## waitForTestRunEnd <Version>4.0.0</Version> {#waitfortestrunend}
+
+```ts
+function waitForTestRunEnd(): Promise<void>
+```
+
+If there is a test run happening, returns a promise that will resolve when the test run is finished.
+
+## createCoverageProvider <Version>4.0.0</Version> {#createcoverageprovider}
+
+```ts
+function createCoverageProvider(): Promise<CoverageProvider | null>
+```
+
+Creates a coverage provider if `coverage` is enabled in the config. This is done automatically if you are running tests with [`start`](#start) or [`init`](#init) methods.
+
+::: warning
+This method will also clean all previous reports if [`coverage.clean`](/config/#coverage-clean) is not set to `false`.
+:::
+
+## enableCoverage <Version>4.0.0</Version> {#enablecoverage}
+
+```ts
+function enableCoverage(): Promise<void>
+```
+
+This method enables coverage for tests that run after this call. `enableCoverage` doesn't run any tests; it only sets up Vitest to collect coverage.
+
+It creates a new coverage provider if one doesn't already exist.
+
+## disableCoverage <Version>4.0.0</Version> {#disablecoverage}
+
+```ts
+function disableCoverage(): void
+```
+
+This method disables coverage collection for tests that run afterwards.
+
+## experimental_parseSpecification <Version>4.0.0</Version> <Badge type="warning">experimental</Badge> {#parsespecification}
+
+```ts
+function experimental_parseSpecification(
+  specification: TestSpecification
+): Promise<TestModule>
+```
+
+This function will collect all tests inside the file without running it. It uses rollup's `parseAst` function on top of Vite's `ssrTransform` to statically analyse the file and collect all tests that it can.
+
+::: warning
+If Vitest could not analyse the name of the test, it will inject a hidden `dynamic: true` property to the test or a suite. The `id` will also have a postfix with `-dynamic` to not break tests that were collected properly.
+
+Vitest always injects this property in tests with `for` or `each` modifier or tests with a dynamic name (like, `hello ${property}` or `'hello' + ${property}`). Vitest will still assign a name to the test, but it cannot be used to filter the tests.
+
+There is nothing Vitest can do to make it possible to filter dynamic tests, but you can turn a test with `for` or `each` modifier into a name pattern with `escapeTestName` function:
+
+```ts
+import { escapeTestName } from 'vitest/node'
+
+// turns into /hello, .+?/
+const escapedPattern = new RegExp(escapeTestName('hello, %s', true))
+```
+:::
+
+::: warning
+Vitest will only collect tests defined in the file. It will never follow imports to other files.
+
+Vitest collects all `it`, `test`, `suite` and `describe` definitions even if they were not imported from the `vitest` entry point.
+:::
+
+## experimental_parseSpecifications <Version>4.0.0</Version> <Badge type="warning">experimental</Badge> {#parsespecifications}
+
+```ts
+function experimental_parseSpecifications(
+  specifications: TestSpecification[],
+  options?: {
+    concurrency?: number
+  }
+): Promise<TestModule[]>
+```
+
+This method will [collect tests](#parsespecification) from an array of specifications. By default, Vitest will run only `os.availableParallelism()` number of specifications at a time to reduce the potential performance degradation. You can specify a different number in a second argument.

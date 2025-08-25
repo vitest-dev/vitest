@@ -25,7 +25,6 @@ import {
   objectAttr,
   toArray,
 } from '@vitest/utils'
-import { parseSingleStack } from '@vitest/utils/source-map'
 import {
   abortIfTimeout,
   collectorContext,
@@ -37,6 +36,7 @@ import {
 import { mergeContextFixtures, mergeScopedFixtures, withFixtures } from './fixture'
 import { getHooks, setFn, setHooks, setTestFixture } from './map'
 import { getCurrentTest } from './test-state'
+import { findTestFileStackTrace } from './utils'
 import { createChainable } from './utils/chain'
 
 /**
@@ -247,7 +247,7 @@ function parseArguments<T extends (...args: any[]) => any>(
   optionsOrTest: object | T | number | undefined,
 ) {
   let options: TestOptions = {}
-  let fn: T = (() => {}) as T
+  let fn: T | undefined
 
   // it('', () => {}, { retry: 2 })
   if (typeof optionsOrTest === 'object') {
@@ -326,8 +326,12 @@ function createSuiteCollector(
             ? 'todo'
             : 'run',
       meta: options.meta ?? Object.create(null),
+      annotations: [],
     }
     const handler = options.handler
+    if (task.mode === 'run' && !handler) {
+      task.mode = 'todo'
+    }
     if (
       options.concurrent
       || (!options.sequential && runner.config.sequence.concurrent)
@@ -354,7 +358,7 @@ function createSuiteCollector(
       setFn(
         task,
         withTimeout(
-          withAwaitAsyncAssertions(withFixtures(handler, context), task),
+          withAwaitAsyncAssertions(withFixtures(runner, handler, context), task),
           timeout,
           false,
           stackTraceError,
@@ -365,9 +369,12 @@ function createSuiteCollector(
 
     if (runner.config.includeTaskLocation) {
       const error = stackTraceError.stack!
-      const stack = findTestFileStackTrace(error, task.each ?? false)
+      const stack = findTestFileStackTrace(currentTestFilepath, error)
       if (stack) {
-        task.location = stack
+        task.location = {
+          line: stack.line,
+          column: stack.column,
+        }
       }
     }
 
@@ -423,7 +430,7 @@ function createSuiteCollector(
       const parsed = mergeContextFixtures(
         fixtures,
         { fixtures: collectorFixtures },
-        (key: string) => getRunner().injectValue?.(key),
+        runner,
       )
       if (parsed.fixtures) {
         collectorFixtures = parsed.fixtures
@@ -459,9 +466,12 @@ function createSuiteCollector(
       Error.stackTraceLimit = 15
       const error = new Error('stacktrace').stack!
       Error.stackTraceLimit = limit
-      const stack = findTestFileStackTrace(error, suite.each ?? false)
+      const stack = findTestFileStackTrace(currentTestFilepath, error)
       if (stack) {
-        suite.location = stack
+        suite.location = {
+          line: stack.line,
+          column: stack.column,
+        }
       }
     }
 
@@ -526,7 +536,7 @@ function createSuite() {
     factoryOrOptions?: SuiteFactory | TestOptions,
     optionsOrFactory?: number | TestOptions | SuiteFactory,
   ) {
-    const mode: RunMode = this.only
+    let mode: RunMode = this.only
       ? 'only'
       : this.skip
         ? 'skip'
@@ -539,6 +549,10 @@ function createSuite() {
       factoryOrOptions,
       optionsOrFactory,
     )
+
+    if (mode === 'run' && !factory) {
+      mode = 'todo'
+    }
 
     const isConcurrentSpecified = options.concurrent || this.concurrent || options.sequential === false
     const isSequentialSpecified = options.sequential || this.sequential || options.concurrent === false
@@ -599,20 +613,20 @@ function createSuite() {
           if (arrayOnlyCases) {
             suite(
               formatTitle(_name, items, idx),
-              () => handler(...items),
+              handler ? () => handler(...items) : undefined,
               options,
             )
           }
           else {
-            suite(formatTitle(_name, items, idx), () => handler(i), options)
+            suite(formatTitle(_name, items, idx), handler ? () => handler(i) : undefined, options)
           }
         }
         else {
           if (arrayOnlyCases) {
-            suite(formatTitle(_name, items, idx), options, () => handler(...items))
+            suite(formatTitle(_name, items, idx), options, handler ? () => handler(...items) : undefined)
           }
           else {
-            suite(formatTitle(_name, items, idx), options, () => handler(i))
+            suite(formatTitle(_name, items, idx), options, handler ? () => handler(i) : undefined)
           }
         }
       })
@@ -641,7 +655,7 @@ function createSuite() {
       const name_ = formatName(name)
       const { options, handler } = parseArguments(optionsOrFn, fnOrOptions)
       cases.forEach((item, idx) => {
-        suite(formatTitle(name_, toArray(item), idx), options, () => handler(item))
+        suite(formatTitle(name_, toArray(item), idx), options, handler ? () => handler(item) : undefined)
       })
     }
   }
@@ -697,20 +711,20 @@ export function createTaskCollector(
           if (arrayOnlyCases) {
             test(
               formatTitle(_name, items, idx),
-              () => handler(...items),
+              handler ? () => handler(...items) : undefined,
               options,
             )
           }
           else {
-            test(formatTitle(_name, items, idx), () => handler(i), options)
+            test(formatTitle(_name, items, idx), handler ? () => handler(i) : undefined, options)
           }
         }
         else {
           if (arrayOnlyCases) {
-            test(formatTitle(_name, items, idx), options, () => handler(...items))
+            test(formatTitle(_name, items, idx), options, handler ? () => handler(...items) : undefined)
           }
           else {
-            test(formatTitle(_name, items, idx), options, () => handler(i))
+            test(formatTitle(_name, items, idx), options, handler ? () => handler(i) : undefined)
           }
         }
       })
@@ -742,9 +756,11 @@ export function createTaskCollector(
       const { options, handler } = parseArguments(optionsOrFn, fnOrOptions)
       cases.forEach((item, idx) => {
         // monkey-patch handler to allow parsing fixture
-        const handlerWrapper = (ctx: any) => handler(item, ctx);
-        (handlerWrapper as any).__VITEST_FIXTURE_INDEX__ = 1;
-        (handlerWrapper as any).toString = () => handler.toString()
+        const handlerWrapper = handler ? (ctx: any) => handler(item, ctx) : undefined
+        if (handlerWrapper) {
+          (handlerWrapper as any).__VITEST_FIXTURE_INDEX__ = 1;
+          (handlerWrapper as any).toString = () => handler!.toString()
+        }
         test(formatTitle(_name, toArray(item), idx), options, handlerWrapper)
       })
     }
@@ -766,10 +782,11 @@ export function createTaskCollector(
     const _context = mergeContextFixtures(
       fixtures,
       context || {},
-      (key: string) => getRunner().injectValue?.(key),
+      runner,
     )
 
-    return createTest(function fn(
+    const originalWrapper = fn
+    return createTest(function (
       name: string | Function,
       optionsOrFn?: TestOptions | TestFunction,
       optionsOrTest?: number | TestOptions | TestFunction,
@@ -783,12 +800,9 @@ export function createTaskCollector(
           scopedFixtures,
         )
       }
-      collector.test.fn.call(
-        context,
-        formatName(name),
-        optionsOrFn as TestOptions,
-        optionsOrTest as TestFunction,
-      )
+      const { handler, options } = parseArguments(optionsOrFn, optionsOrTest)
+      const timeout = options.timeout ?? collector.options?.timeout ?? runner?.config.testTimeout
+      originalWrapper.call(context, formatName(name), handler, timeout)
     }, _context)
   }
 
@@ -887,24 +901,4 @@ function formatTemplateString(cases: any[], args: any[]): any[] {
     res.push(oneCase)
   }
   return res
-}
-
-function findTestFileStackTrace(error: string, each: boolean) {
-  // first line is the error message
-  const lines = error.split('\n').slice(1)
-  for (const line of lines) {
-    const stack = parseSingleStack(line)
-    if (stack && stack.file === getTestFilepath()) {
-      return {
-        line: stack.line,
-        /**
-         * test.each([1, 2])('name')
-         *                 ^ leads here, but should
-         *                  ^ lead here
-         * in source maps it's the same boundary, so it just points to the start of it
-         */
-        column: each ? stack.column + 1 : stack.column,
-      }
-    }
-  }
 }
