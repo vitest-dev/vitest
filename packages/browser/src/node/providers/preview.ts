@@ -6,6 +6,9 @@ export function preview(): BrowserProviderOption {
     factory(project) {
       return new PreviewBrowserProvider(project)
     },
+    // --browser.provider=preview
+    // @ts-expect-error hidden way to bypass importing preview
+    _cli: true,
   }
 }
 

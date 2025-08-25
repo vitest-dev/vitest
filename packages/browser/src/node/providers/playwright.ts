@@ -57,6 +57,9 @@ export function playwright(options: PlaywrightProviderOptions = {}): BrowserProv
     factory(project) {
       return new PlaywrightBrowserProvider(project, options)
     },
+    // --browser.provider=playwright
+    // @ts-expect-error hidden way to bypass importing playwright
+    _cli: true,
   }
 }
 

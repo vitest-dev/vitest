@@ -15,7 +15,13 @@ export async function getBrowserProvider(
       `${name}Browser name is required. Please, set \`test.browser.instances[].browser\` option manually.`,
     )
   }
-  if (options.provider == null || '_cli' in options.provider) {
+  if (
+    // nothing is provided by default
+    options.provider == null
+    // the provider is provided via `--browser.provider=playwright`
+    // or the config was serialized, but we can infer the factory by the name
+    || ('_cli' in options.provider && typeof options.provider.factory !== 'function')
+  ) {
     const providers = await import('./providers/index')
     const name = (options.provider?.name || 'preview') as 'preview' | 'webdriverio' | 'playwright'
     if (!(name in providers)) {
@@ -30,6 +36,9 @@ export async function getBrowserProvider(
         options.provider.name
       }". Supported browsers: ${supportedBrowsers.join(', ')}.`,
     )
+  }
+  if (typeof options.provider.factory !== 'function') {
+    throw new TypeError(`The "${name}" browser provider does not provide a "factory" function. Received ${typeof options.provider.factory}.`)
   }
   return options.provider.factory(project)
 }

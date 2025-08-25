@@ -28,6 +28,9 @@ export function webdriverio(options: WebdriverProviderOptions = {}): BrowserProv
     factory(project) {
       return new WebdriverBrowserProvider(project, options)
     },
+    // --browser.provider=webdriverio
+    // @ts-expect-error hidden way to bypass importing webdriverio
+    _cli: true,
   }
 }
 
