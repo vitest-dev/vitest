@@ -69,8 +69,10 @@ export function createVmThreadsPool(
 
   const maxThreads
     = poolOptions.maxThreads ?? vitest.config.maxWorkers ?? recommendedCount
-  const minThreads
-    = poolOptions.minThreads ?? vitest.config.minWorkers ?? Math.min(recommendedCount, maxThreads)
+  const minThreads = vitest.config.watch
+    ? Math.min(recommendedCount, maxThreads)
+    // avoid recreating threads when tests are finished
+    : 0
 
   const worker = resolve(vitest.distPath, 'workers/vmThreads.js')
 

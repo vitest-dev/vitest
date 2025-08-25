@@ -31,7 +31,7 @@ function runVitest(config: TestUserConfig) {
 }
 
 test('workers percent argument should not throw error', async () => {
-  const { stderr } = await runVitest({ maxWorkers: '100%', minWorkers: '10%' })
+  const { stderr } = await runVitest({ maxWorkers: '100%' })
 
   expect(stderr).toBe('')
 })
@@ -45,11 +45,11 @@ test.each([
   let workerOptions = {}
 
   if (poolOption.toLowerCase().includes('threads')) {
-    workerOptions = { maxThreads: '100%', minThreads: '10%' }
+    workerOptions = { maxThreads: '100%' }
   }
 
   if (poolOption.toLowerCase().includes('forks')) {
-    workerOptions = { maxForks: '100%', minForks: '10%' }
+    workerOptions = { maxForks: '100%' }
   }
 
   const { stderr } = await runVitest({ poolOptions: { [poolOption]: workerOptions } })

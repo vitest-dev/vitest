@@ -92,8 +92,10 @@ export function createVmForksPool(
 
   const maxThreads
     = poolOptions.maxForks ?? vitest.config.maxWorkers ?? recommendedCount
-  const minThreads
-    = poolOptions.maxForks ?? vitest.config.minWorkers ?? Math.min(recommendedCount, maxThreads)
+  const minThreads = vitest.config.watch
+    ? Math.min(recommendedCount, maxThreads)
+    // avoid recreating forks when tests are finished
+    : 0
 
   const worker = resolve(vitest.distPath, 'workers/vmForks.js')
 
