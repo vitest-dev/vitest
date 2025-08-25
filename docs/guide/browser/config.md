@@ -165,9 +165,7 @@ export default defineConfig({
           slowMo: 50,
           channel: 'chrome-beta',
         },
-        contextOptions: {
-          actionTimeout: 5_000,
-        },
+        actionTimeout: 5_000,
       }),
       instances: [
         { browser: 'chromium' },
