@@ -62,13 +62,13 @@
   },
   "dependencies": {
     "@vitest/pretty-format": "workspace:*",
+    "loupe": "^3.2.0",
     "tinyrainbow": "catalog:"
   },
   "devDependencies": {
     "@jridgewell/trace-mapping": "catalog:",
     "@types/estree": "catalog:",
     "diff-sequences": "^29.6.3",
-    "loupe": "^3.2.0",
     "tinyhighlight": "^0.3.2"
   }
 }

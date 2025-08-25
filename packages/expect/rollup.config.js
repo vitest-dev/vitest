@@ -1,5 +1,4 @@
 import { builtinModules, createRequire } from 'node:module'
-import nodeResolve from '@rollup/plugin-node-resolve'
 import { defineConfig } from 'rollup'
 import oxc from 'unplugin-oxc/rollup'
 import { createDtsUtils } from '../../scripts/build-utils.js'
@@ -18,18 +17,6 @@ const dtsUtils = createDtsUtils()
 
 const plugins = [
   ...dtsUtils.isolatedDecl(),
-  {
-    name: 'loupe-utils-redirect',
-    resolveId(id) {
-      // we are bundling `loupe` in @vitest/utils already
-      if (id === 'loupe') {
-        return '@vitest/utils'
-      }
-    },
-  },
-  nodeResolve({
-    preferBuiltins: true,
-  }),
   oxc({
     transform: { target: 'node14' },
   }),
@@ -56,10 +43,7 @@ export default defineConfig([
       format: 'esm',
     },
     watch: false,
-    external: [
-      ...external,
-      'chai',
-    ],
+    external,
     plugins: dtsUtils.dts(),
     onwarn,
   },

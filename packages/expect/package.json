@@ -36,10 +36,10 @@
     "@types/chai": "catalog:",
     "@vitest/spy": "workspace:*",
     "@vitest/utils": "workspace:*",
+    "chai": "catalog:",
     "tinyrainbow": "catalog:"
   },
   "devDependencies": {
-    "@vitest/runner": "workspace:*",
-    "chai": "catalog:"
+    "@vitest/runner": "workspace:*"
   }
 }
