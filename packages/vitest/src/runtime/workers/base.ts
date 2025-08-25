@@ -59,10 +59,15 @@ export async function runBaseTests(method: 'run' | 'collect', state: WorkerGloba
       : f,
   )
   if (ctx.config.serializedDefines) {
-    runInThisContext(`(() =>{\n${ctx.config.serializedDefines}})()`, {
-      lineOffset: 1,
-      filename: 'virtual:load-defines.js',
-    })
+    try {
+      runInThisContext(`(() =>{\n${ctx.config.serializedDefines}})()`, {
+        lineOffset: 1,
+        filename: 'virtual:load-defines.js',
+      })
+    }
+    catch (error: any) {
+      throw new Error(`Failed to load custom "defines": ${error.message}`)
+    }
   }
 
   await run(
