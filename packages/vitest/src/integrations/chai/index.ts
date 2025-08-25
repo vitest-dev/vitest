@@ -11,7 +11,7 @@ import {
 } from '@vitest/expect'
 import { getCurrentTest } from '@vitest/runner'
 import { getTestName } from '@vitest/runner/utils'
-import { getCurrentEnvironment, getWorkerState } from '../../runtime/utils'
+import { getWorkerState } from '../../runtime/utils'
 import { createExpectPoll } from './poll'
 import './setup'
 
@@ -47,7 +47,6 @@ export function createExpect(test?: TaskPopulated): ExpectStatic {
       isExpectingAssertionsError: null,
       expectedAssertionsNumber: null,
       expectedAssertionsNumberErrorGen: null,
-      environment: getCurrentEnvironment(),
       get testPath() {
         return getWorkerState().filepath
       },

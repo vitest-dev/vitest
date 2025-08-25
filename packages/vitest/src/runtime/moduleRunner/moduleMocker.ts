@@ -20,7 +20,7 @@ interface MockContext {
 
 export interface VitestMockerOptions {
   context?: vm.Context
-
+  spyModule?: typeof import('@vitest/spy')
   root: string
   moduleDirectories: string[]
   resolveId: (id: string, importer?: string) => Promise<{
@@ -70,6 +70,10 @@ export class VitestMocker {
         Array,
         Map,
       }
+    }
+
+    if (options.spyModule) {
+      this.spyModule = options.spyModule
     }
 
     const Symbol = this.primitives.Symbol

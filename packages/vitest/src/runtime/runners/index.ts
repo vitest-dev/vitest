@@ -1,26 +1,21 @@
 import type { VitestRunner, VitestRunnerConstructor } from '@vitest/runner'
 import type { SerializedConfig } from '../config'
 import type { VitestModuleRunner } from '../moduleRunner/moduleRunner'
-import { join, resolve } from 'node:path'
 import { takeCoverageInsideWorker } from '../../integrations/coverage'
-import { distDir } from '../../paths'
 import { rpc } from '../rpc'
 import { loadDiffConfig, loadSnapshotSerializers } from '../setup-common'
 import { getWorkerState } from '../utils'
-
-const runnersFile = resolve(distDir, 'runners.js')
+import { NodeBenchmarkRunner } from './benchmark'
+import { VitestTestRunner } from './test'
 
 async function getTestRunnerConstructor(
   config: SerializedConfig,
   moduleRunner: VitestModuleRunner,
 ): Promise<VitestRunnerConstructor> {
   if (!config.runner) {
-    const { VitestTestRunner, NodeBenchmarkRunner } = await moduleRunner.import(
-      join('/@fs/', runnersFile),
-    )
     return (
       config.mode === 'test' ? VitestTestRunner : NodeBenchmarkRunner
-    ) as VitestRunnerConstructor
+    ) as any as VitestRunnerConstructor
   }
   const mod = await moduleRunner.import(config.runner)
   if (!mod.default && typeof mod.default !== 'function') {
