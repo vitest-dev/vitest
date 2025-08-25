@@ -123,22 +123,22 @@ test('inspect and --inspect-brk cannot be used when not playwright + chromium', 
       expect(stderr).toMatch(
         `Error: ${cli} does not work with
 {
-  "browser": {
-    "provider": "${provider}",
-    "name": "${name}"
-  }
+  browser: {
+    provider: ${provider.name}(),
+    instances: [
+      { browser: '${name}' }
+    ],
+  },
 }
 
 Use either:
 {
-  "browser": {
-    "provider": "playwright",
-    "instances": [
-      {
-        "browser": "chromium"
-      }
-    ]
-  }
+  browser: {
+    provider: playwright(),
+    instances: [
+      { browser: 'chromium' }
+    ],
+  },
 }
 
 ...or disable ${cli}
@@ -148,7 +148,7 @@ Use either:
   }
 })
 
-test('v8 coverage provider throws when not playwright + chromium (browser.name)', async () => {
+test('v8 coverage provider throws when not playwright + chromium', async () => {
   for (const { provider, name } of browsers) {
     if (provider.name === 'playwright' && name === 'chromium') {
       continue
@@ -170,84 +170,29 @@ test('v8 coverage provider throws when not playwright + chromium (browser.name)'
     expect(stderr).toMatch(
       `Error: @vitest/coverage-v8 does not work with
 {
-  "browser": {
-    "provider": "${provider}",
-    "name": "${name}"
-  }
+  browser: {
+    provider: ${provider.name}(),
+    instances: [
+      { browser: '${name}' }
+    ],
+  },
 }
 
 Use either:
 {
-  "browser": {
-    "provider": "playwright",
-    "instances": [
-      {
-        "browser": "chromium"
-      }
-    ]
-  }
+  browser: {
+    provider: playwright(),
+    instances: [
+      { browser: 'chromium' }
+    ],
+  },
 }
 
 ...or change your coverage provider to:
 {
-  "coverage": {
-    "provider": "istanbul"
-  }
-}
-`,
-    )
-  }
-})
-
-test('v8 coverage provider throws when not playwright + chromium (browser.instances)', async () => {
-  for (const { provider, name } of browsers) {
-    if (provider.name === 'playwright' && name === 'chromium') {
-      continue
-    }
-
-    const { stderr } = await runVitest({}, {
-      test: {
-        coverage: {
-          enabled: true,
-        },
-        browser: {
-          enabled: true,
-          provider,
-          instances: [{ browser: name }],
-        },
-      },
-    })
-
-    expect(stderr).toMatch(
-      `Error: @vitest/coverage-v8 does not work with
-{
-  "browser": {
-    "provider": "${provider}",
-    "instances": [
-      {
-        "browser": "${name}"
-      }
-    ]
-  }
-}
-
-Use either:
-{
-  "browser": {
-    "provider": "playwright",
-    "instances": [
-      {
-        "browser": "chromium"
-      }
-    ]
-  }
-}
-
-...or change your coverage provider to:
-{
-  "coverage": {
-    "provider": "istanbul"
-  }
+  coverage: {
+    provider: 'istanbul',
+  },
 }
 `,
     )
@@ -276,39 +221,31 @@ test('v8 coverage provider throws when using chromium and other non-chromium bro
   expect(stderr).toMatch(
     `Error: @vitest/coverage-v8 does not work with
 {
-  "browser": {
-    "provider": "playwright",
-    "instances": [
-      {
-        "browser": "chromium"
-      },
-      {
-        "browser": "firefox"
-      },
-      {
-        "browser": "webkit"
-      }
-    ]
-  }
+  browser: {
+    provider: playwright(),
+    instances: [
+      { browser: 'chromium' },
+      { browser: 'firefox' },
+      { browser: 'webkit' }
+    ],
+  },
 }
 
 Use either:
 {
-  "browser": {
-    "provider": "playwright",
-    "instances": [
-      {
-        "browser": "chromium"
-      }
-    ]
-  }
+  browser: {
+    provider: playwright(),
+    instances: [
+      { browser: 'chromium' }
+    ],
+  },
 }
 
 ...or change your coverage provider to:
 {
-  "coverage": {
-    "provider": "istanbul"
-  }
+  coverage: {
+    provider: 'istanbul',
+  },
 }`,
   )
 })
@@ -332,14 +269,12 @@ test('v8 coverage provider cannot be used in workspace without playwright + chro
   expect(stderr).toMatch(
     `Error: @vitest/coverage-v8 does not work with
     {
-      "browser": {
-        "provider": "webdriverio",
-        "instances": [
-          {
-            "browser": "chrome"
-          }
-        ]
-      }
+      browser: {
+        provider: webdriverio(),
+        instances: [
+          { browser: 'chrome' }
+        ],
+      },
     }`,
   )
 })

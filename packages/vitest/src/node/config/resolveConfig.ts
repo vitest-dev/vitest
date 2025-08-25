@@ -275,19 +275,41 @@ export function resolveConfig(
 
   // Browser-mode "Playwright + Chromium" only features:
   if (browser.enabled && !playwrightChromiumOnly) {
-    const browserConfig = {
-      browser: {
-        provider: browser.provider,
-        name: browser.name,
-        instances: browser.instances?.map(i => ({ browser: i.browser })),
-      },
-    }
+    const browserConfig = `
+{
+  browser: {
+    provider: ${browser.provider?.name || 'preview'}(),
+    instances: [
+      ${(browser.instances || []).map(i => `{ browser: '${i.browser}' }`).join(',\n      ')}
+    ],
+  },
+}
+    `.trim()
+
+    const correctExample = `
+{
+  browser: {
+    provider: playwright(),
+    instances: [
+      { browser: 'chromium' }
+    ],
+  },
+}
+    `.trim()
 
     if (resolved.coverage.enabled && resolved.coverage.provider === 'v8') {
+      const coverageExample = `
+{
+  coverage: {
+    provider: 'istanbul',
+  },
+}
+      `.trim()
+
       throw new Error(
-        `@vitest/coverage-v8 does not work with\n${JSON.stringify(browserConfig, null, 2)}\n`
-        + `\nUse either:\n${JSON.stringify({ browser: { provider: 'playwright', instances: [{ browser: 'chromium' }] } }, null, 2)}`
-        + `\n\n...or change your coverage provider to:\n${JSON.stringify({ coverage: { provider: 'istanbul' } }, null, 2)}\n`,
+        `@vitest/coverage-v8 does not work with\n${browserConfig}\n`
+        + `\nUse either:\n${correctExample}`
+        + `\n\n...or change your coverage provider to:\n${coverageExample}\n`,
       )
     }
 
@@ -295,8 +317,8 @@ export function resolveConfig(
       const inspectOption = `--inspect${resolved.inspectBrk ? '-brk' : ''}`
 
       throw new Error(
-        `${inspectOption} does not work with\n${JSON.stringify(browserConfig, null, 2)}\n`
-        + `\nUse either:\n${JSON.stringify({ browser: { provider: 'playwright', instances: [{ browser: 'chromium' }] } }, null, 2)}`
+        `${inspectOption} does not work with\n${browserConfig}\n`
+        + `\nUse either:\n${correctExample}`
         + `\n\n...or disable ${inspectOption}\n`,
       )
     }
