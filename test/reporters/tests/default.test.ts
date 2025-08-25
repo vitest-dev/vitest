@@ -229,6 +229,88 @@ describe('default reporter', async () => {
     `)
   })
 
+  test('reporter handles for each.test core', async () => {
+    const { stdout } = await runVitest({
+      include: ['../core/test/each.test.ts'],
+      reporters: [['default', { isTTY: true, summary: false }]],
+      config: false,
+    })
+
+    expect(trimReporterOutput(stdout)).toMatchInlineSnapshot(`
+      "✓ ../core/test/each.test.ts (70 tests | 3 skipped) [...]ms
+         ✓ add(1, 1) -> 2 [...]ms
+         ✓ add(1, 2) -> 3 [...]ms
+         ✓ add(2, 1) -> 3 [...]ms
+         ✓ can be parsed [...]ms
+         ✓ can be parsed [...]ms
+         ✓ describe add(1, 1) > returns 2 [...]ms
+         ✓ describe add(1, 1) > returned value not be greater than 2 [...]ms
+         ✓ describe add(1, 1) > returned value not be less than 2 [...]ms
+         ✓ describe add(1, 2) > returns 3 [...]ms
+         ✓ describe add(1, 2) > returned value not be greater than 3 [...]ms
+         ✓ describe add(1, 2) > returned value not be less than 3 [...]ms
+         ✓ describe add(2, 1) > returns 3 [...]ms
+         ✓ describe add(2, 1) > returned value not be greater than 3 [...]ms
+         ✓ describe add(2, 1) > returned value not be less than 3 [...]ms
+         ✓ describe concatenate(1, a) > returns 1a [...]ms
+         ✓ describe concatenate(1, b) > returns 1b [...]ms
+         ✓ describe concatenate(2, c) > returns 2c [...]ms
+         ✓ describe object add(1, 1) > returns 2 [...]ms
+         ✓ describe object add(1, 1) > returned value not be greater than 2 [...]ms
+         ✓ describe object add(1, 1) > returned value not be less than 2 [...]ms
+         ✓ describe object add(1, 2) > returns 3 [...]ms
+         ✓ describe object add(1, 2) > returned value not be greater than 3 [...]ms
+         ✓ describe object add(1, 2) > returned value not be less than 3 [...]ms
+         ✓ describe object add(2, 1) > returns 3 [...]ms
+         ✓ describe object add(2, 1) > returned value not be greater than 3 [...]ms
+         ✓ describe object add(2, 1) > returned value not be less than 3 [...]ms
+         ✓ 1 (describe.each 1d) > 1 is a number (describe.each 1d) [...]ms
+         ✓ 2 (describe.each 1d) > 2 is a number (describe.each 1d) [...]ms
+         ✓ 0 (describe.each 1d) > 0 is a number (describe.each 1d) [...]ms
+         ✓ the index of the test case is 0 [...]ms
+         ✓ the index of the test case is 1 [...]ms
+         ✓ the index of the test case is 2 [...]ms
+         ✓ return a promise like result 0 [...]ms
+         ✓ return a promise like result 1 [...]ms
+         ✓ the number of the test case is 1 [...]ms
+         ✓ the number of the test case is 2 [...]ms
+         ✓ the number of the test case is 3 [...]ms
+         ✓ return a promise like result 1 [...]ms
+         ✓ return a promise like result 2 [...]ms
+         ↓ context on test and describe - todo/skip > todo describe > this is todo test
+         ↓ context on test and describe - todo/skip > todo describe > this is todo test
+         ↓ context on test and describe - todo/skip > todo test
+         ✓ context with each - concurrent > block > numbered test [...]ms
+         ✓ context with each - concurrent > block > numbered test [...]ms
+         ✓ context with each - concurrent > block > numbered test [...]ms
+         ✓ not all arguments are array describe.each > null is null > null is null [...]ms
+         ✓ not all arguments are array describe.each > null is null > null is null [...]ms
+         ✓ not all arguments are array test.each > matches results [...]ms
+         ✓ not all arguments are array test.each > matches results [...]ms
+         ✓ value is null [...]ms
+         ✓ if all cases are arrays of equal length, treats array elements as arguments [...]ms
+         ✓ if all cases are arrays of equal length, treats array elements as arguments [...]ms
+         ✓ describe template string add(1, 1) > returns 2 [...]ms
+         ✓ describe template string add('a', 'b') > returns ab [...]ms
+         ✓ describe template string add([], 'b') > returns b [...]ms
+         ✓ describe template string add({}, 'b') > returns [object Object]b [...]ms
+         ✓ describe template string add({ asd: 1 }, 'b') > returns [object Object]b [...]ms
+         ✓ returns 2 when 1 is added 1 [...]ms
+         ✓ returns 'ab' when 'a' is added 'b' [...]ms
+         ✓ returns 'b' when [] is added 'b' [...]ms
+         ✓ returns '[object Object]b' when {} is added 'b' [...]ms
+         ✓ returns '[object Object]b' when { asd: 1 } is added 'b' [...]ms
+         ✓ returns '1b' when 1 is added 'b' [...]ms
+         ✓ returns '2b' when 2 is added 'b' [...]ms
+         ✓ returns '3b' when 3 is added 'b' [...]ms
+         ✓ (true && true) -> true [...]ms
+         ✓ ({ val: 1 } && { val: 2 }) -> 3 [...]ms
+         ✓ handles whole numbers: 343434 as $343,434.00 [...]ms
+         ✓ { a: '$b', b: 'yay' } [...]ms
+         ✓ '%o' [...]ms"
+    `)
+  })
+
   test('project name color', async () => {
     const { stdout } = await runVitestCli(
       { preserveAnsi: true },
