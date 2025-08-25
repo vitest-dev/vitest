@@ -32,7 +32,7 @@ test.describe('ui', () => {
   })
 
   test('security', async ({ page }, testInfo) => {
-    const response = await page.goto('https://example.com/').catch(() => null)
+    const response = await page.goto('https://example.com/', { timeout: 5000 }).catch(() => null)
 
     testInfo.skip(!response, 'External resource is not available')
 
