@@ -5,12 +5,14 @@ interface Sponsor {
 }
 
 const vitestSponsors = {
-  special: [
+  provided: [
     {
       name: 'VoidZero',
       url: 'https://voidzero.dev',
       img: '/voidzero.svg',
     },
+  ],
+  special: [
     {
       name: 'NuxtLabs',
       url: 'https://nuxtlabs.com',
@@ -27,13 +29,7 @@ const vitestSponsors = {
       img: '/zammad.svg',
     },
   ],
-  platinum: [
-    {
-      name: 'Bit',
-      url: 'https://bit.dev',
-      img: '/bit.svg',
-    },
-  ],
+  // platinum: [],
   gold: [
     {
       name: 'vital',
@@ -50,20 +46,30 @@ const vitestSponsors = {
       url: 'https://mailmeteor.com/',
       img: '/mailmeteor.svg',
     },
+    {
+      name: 'Liminity',
+      url: 'https://www.liminity.se/',
+      img: '/liminity.svg',
+    },
   ],
 } satisfies Record<string, Sponsor[]>
 
 export const sponsors = [
   {
+    tier: 'Brought to you by',
+    size: 'big',
+    items: vitestSponsors.provided,
+  },
+  {
     tier: 'Special Sponsors',
     size: 'big',
     items: vitestSponsors.special,
   },
-  {
-    tier: 'Platinum Sponsors',
-    size: 'big',
-    items: vitestSponsors.platinum,
-  },
+  // {
+  //   tier: 'Platinum Sponsors',
+  //   size: 'big',
+  //   items: vitestSponsors.platinum,
+  // },
   {
     tier: 'Gold Sponsors',
     size: 'medium',

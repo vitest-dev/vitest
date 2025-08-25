@@ -544,7 +544,7 @@ export interface Locator extends LocatorSelectors {
    *
    * @see {@link https://vitest.dev/guide/browser/locators#element}
    */
-  element(): Element
+  element(): HTMLElement | SVGElement
   /**
    * Returns an array of elements matching the selector.
    *
@@ -552,7 +552,7 @@ export interface Locator extends LocatorSelectors {
    *
    * @see {@link https://vitest.dev/guide/browser/locators#elements}
    */
-  elements(): Element[]
+  elements(): (HTMLElement | SVGElement)[]
   /**
    * Returns an element matching the selector.
    *
@@ -561,7 +561,7 @@ export interface Locator extends LocatorSelectors {
    *
    * @see {@link https://vitest.dev/guide/browser/locators#query}
    */
-  query(): Element | null
+  query(): HTMLElement | SVGElement | null
   /**
    * Wraps an array of `.elements()` matching the selector in a new `Locator`.
    *

@@ -175,11 +175,11 @@ export function createPool(ctx: Vitest): ProcessPool {
     const groupedSpecifications: Record<string, TestSpecification[]> = {}
     const groups = new Set<number>()
 
-    const factories: Record<LocalPool, () => ProcessPool> = {
-      vmThreads: () => createVmThreadsPool(ctx, options),
-      vmForks: () => createVmForksPool(ctx, options),
-      threads: () => createThreadsPool(ctx, options),
-      forks: () => createForksPool(ctx, options),
+    const factories: Record<LocalPool, (specs: TestSpecification[]) => ProcessPool> = {
+      vmThreads: specs => createVmThreadsPool(ctx, options, specs),
+      vmForks: specs => createVmForksPool(ctx, options, specs),
+      threads: specs => createThreadsPool(ctx, options, specs),
+      forks: specs => createForksPool(ctx, options, specs),
       typescript: () => createTypecheckPool(ctx),
     }
 
@@ -241,7 +241,7 @@ export function createPool(ctx: Vitest): ProcessPool {
 
           if (pool in factories) {
             const factory = factories[pool]
-            pools[pool] ??= factory()
+            pools[pool] ??= factory(specs)
             return pools[pool]![method](specs, invalidate)
           }
 
