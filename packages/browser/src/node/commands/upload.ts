@@ -2,7 +2,7 @@ import type { UserEventUploadOptions } from '@vitest/browser/context'
 import type { UserEventCommand } from './utils'
 import { resolve } from 'pathe'
 import { PlaywrightBrowserProvider } from '../providers/playwright'
-import { WebdriverBrowserProvider } from '../providers/webdriver'
+import { WebdriverBrowserProvider } from '../providers/webdriverio'
 
 export const upload: UserEventCommand<(element: string, files: Array<string | {
   name: string

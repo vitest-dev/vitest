@@ -68,28 +68,7 @@ export class ProjectBrowser implements IProjectBrowser {
     if (this.provider) {
       return
     }
-    const Provider = await getBrowserProvider(project.config.browser, project)
-    this.provider = new Provider()
-    const browser = project.config.browser.name
-    const name = project.name ? `[${project.name}] ` : ''
-    if (!browser) {
-      throw new Error(
-        `${name}Browser name is required. Please, set \`test.browser.instances[].browser\` option manually.`,
-      )
-    }
-    const supportedBrowsers = this.provider.getSupportedBrowsers()
-    if (supportedBrowsers.length && !supportedBrowsers.includes(browser)) {
-      throw new Error(
-        `${name}Browser "${browser}" is not supported by the browser provider "${
-          this.provider.name
-        }". Supported browsers: ${supportedBrowsers.join(', ')}.`,
-      )
-    }
-    const providerOptions = project.config.browser.providerOptions
-    await this.provider.initialize(project, {
-      browser,
-      options: providerOptions,
-    })
+    this.provider = await getBrowserProvider(project.config.browser, project)
   }
 
   public parseErrorStacktrace(

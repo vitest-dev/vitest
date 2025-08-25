@@ -1,6 +1,7 @@
 import type { TestCase } from 'vitest/node'
-import { resolve } from 'pathe'
+import { playwright } from '@vitest/browser/providers/playwright'
 
+import { resolve } from 'pathe'
 import { glob } from 'tinyglobby'
 import { expect, it } from 'vitest'
 import { runInlineTests, runVitest, ts } from '../../test-utils'
@@ -113,7 +114,7 @@ it('prints a warning if the assertion is not awaited in the browser mode', async
         browser: {
           enabled: true,
           instances: [{ browser: 'chromium' }],
-          provider: 'playwright',
+          provider: playwright(),
           headless: true,
         },
       },

@@ -275,19 +275,41 @@ export function resolveConfig(
 
   // Browser-mode "Playwright + Chromium" only features:
   if (browser.enabled && !playwrightChromiumOnly) {
-    const browserConfig = {
-      browser: {
-        provider: browser.provider,
-        name: browser.name,
-        instances: browser.instances?.map(i => ({ browser: i.browser })),
-      },
-    }
+    const browserConfig = `
+{
+  browser: {
+    provider: ${browser.provider?.name || 'preview'}(),
+    instances: [
+      ${(browser.instances || []).map(i => `{ browser: '${i.browser}' }`).join(',\n      ')}
+    ],
+  },
+}
+    `.trim()
+
+    const correctExample = `
+{
+  browser: {
+    provider: playwright(),
+    instances: [
+      { browser: 'chromium' }
+    ],
+  },
+}
+    `.trim()
 
     if (resolved.coverage.enabled && resolved.coverage.provider === 'v8') {
+      const coverageExample = `
+{
+  coverage: {
+    provider: 'istanbul',
+  },
+}
+      `.trim()
+
       throw new Error(
-        `@vitest/coverage-v8 does not work with\n${JSON.stringify(browserConfig, null, 2)}\n`
-        + `\nUse either:\n${JSON.stringify({ browser: { provider: 'playwright', instances: [{ browser: 'chromium' }] } }, null, 2)}`
-        + `\n\n...or change your coverage provider to:\n${JSON.stringify({ coverage: { provider: 'istanbul' } }, null, 2)}\n`,
+        `@vitest/coverage-v8 does not work with\n${browserConfig}\n`
+        + `\nUse either:\n${correctExample}`
+        + `\n\n...or change your coverage provider to:\n${coverageExample}\n`,
       )
     }
 
@@ -295,8 +317,8 @@ export function resolveConfig(
       const inspectOption = `--inspect${resolved.inspectBrk ? '-brk' : ''}`
 
       throw new Error(
-        `${inspectOption} does not work with\n${JSON.stringify(browserConfig, null, 2)}\n`
-        + `\nUse either:\n${JSON.stringify({ browser: { provider: 'playwright', instances: [{ browser: 'chromium' }] } }, null, 2)}`
+        `${inspectOption} does not work with\n${browserConfig}\n`
+        + `\nUse either:\n${correctExample}`
         + `\n\n...or disable ${inspectOption}\n`,
       )
     }
@@ -712,7 +734,27 @@ export function resolveConfig(
       resolved.browser.screenshotDirectory,
     )
   }
-  const isPreview = resolved.browser.provider === 'preview'
+
+  resolved.browser.viewport ??= {} as any
+  resolved.browser.viewport.width ??= 414
+  resolved.browser.viewport.height ??= 896
+
+  resolved.browser.locators ??= {} as any
+  resolved.browser.locators.testIdAttribute ??= 'data-testid'
+
+  if (resolved.browser.enabled && stdProvider === 'stackblitz') {
+    resolved.browser.provider = undefined // reset to "preview"
+  }
+
+  if (typeof resolved.browser.provider === 'string') {
+    const source = `@vitest/browser/providers/${resolved.browser.provider}`
+    throw new TypeError(
+      'The `browser.provider` configuration was changed to accept a factory instead of a string. '
+      + `Add an import of "${resolved.browser.provider}" from "${source}" instead. See: https://vitest.dev/guide/browser/config#provider`,
+    )
+  }
+
+  const isPreview = resolved.browser.provider?.name === 'preview'
   if (isPreview && resolved.browser.screenshotFailures === true) {
     console.warn(c.yellow(
       [
@@ -725,17 +767,6 @@ export function resolveConfig(
   }
   else {
     resolved.browser.screenshotFailures ??= !isPreview && !resolved.browser.ui
-  }
-
-  resolved.browser.viewport ??= {} as any
-  resolved.browser.viewport.width ??= 414
-  resolved.browser.viewport.height ??= 896
-
-  resolved.browser.locators ??= {} as any
-  resolved.browser.locators.testIdAttribute ??= 'data-testid'
-
-  if (resolved.browser.enabled && stdProvider === 'stackblitz') {
-    resolved.browser.provider = 'preview'
   }
 
   resolved.browser.api = resolveApiServerConfig(
@@ -804,7 +835,7 @@ export function resolveCoverageReporters(configReporters: NonNullable<BaseCovera
 
 function isPlaywrightChromiumOnly(vitest: Vitest, config: ResolvedConfig) {
   const browser = config.browser
-  if (!browser || browser.provider !== 'playwright' || !browser.enabled) {
+  if (!browser || !browser.provider || browser.provider.name !== 'playwright' || !browser.enabled) {
     return false
   }
   if (browser.name) {

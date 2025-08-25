@@ -226,7 +226,7 @@ test('user-event', async () => {
   const { stdout, stderr } = await runBrowserTests({
     root: './fixtures/user-event',
   })
-  if (provider !== 'webdriverio') {
+  if (provider.name !== 'webdriverio') {
     expect(stderr).toBe('')
   }
   onTestFailed(() => console.error(stderr))
@@ -244,11 +244,11 @@ test('timeout settings', async () => {
     root: './fixtures/timeout',
   })
   expect(stderr).toContain('Matcher did not succeed in time.')
-  if (provider === 'playwright') {
+  if (provider.name === 'playwright') {
     expect(stderr).toContain('locator.click: Timeout 500ms exceeded.')
     expect(stderr).toContain('locator.click: Timeout 345ms exceeded.')
   }
-  if (provider === 'webdriverio') {
+  if (provider.name === 'webdriverio') {
     expect(stderr).toContain('Cannot find element with locator')
   }
 })
@@ -290,7 +290,7 @@ test('in-source tests run correctly when filtered', async () => {
   expect(stdout).toContain(`Tests  ${instances.length} passed`)
 })
 
-test.runIf(provider === 'playwright')('timeout hooks', async () => {
+test.runIf(provider.name === 'playwright')('timeout hooks', async () => {
   const { stderr } = await runBrowserTests({
     root: './fixtures/timeout-hooks',
   })

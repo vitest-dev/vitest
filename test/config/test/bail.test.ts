@@ -1,5 +1,6 @@
 import type { TestUserConfig } from 'vitest/node'
 
+import { playwright } from '@vitest/browser/providers/playwright'
 import { expect, test } from 'vitest'
 import { runVitest } from '../../test-utils'
 
@@ -15,7 +16,7 @@ if (process.platform !== 'win32') {
     {
       browser: {
         enabled: true,
-        provider: 'playwright',
+        provider: playwright(),
         headless: true,
         fileParallelism: false,
         instances: [
@@ -26,7 +27,7 @@ if (process.platform !== 'win32') {
     {
       browser: {
         enabled: true,
-        provider: 'playwright',
+        provider: playwright(),
         headless: true,
         fileParallelism: true,
         instances: [

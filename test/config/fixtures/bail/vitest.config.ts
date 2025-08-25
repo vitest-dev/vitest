@@ -29,6 +29,7 @@ export default defineConfig({
     },
     browser: {
       headless: true,
+      instances: [],
     },
   },
 })

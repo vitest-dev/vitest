@@ -1,7 +1,7 @@
 import type { UserEvent } from '../../../context'
 import type { UserEventCommand } from './utils'
 import { PlaywrightBrowserProvider } from '../providers/playwright'
-import { WebdriverBrowserProvider } from '../providers/webdriver'
+import { WebdriverBrowserProvider } from '../providers/webdriverio'
 
 export const fill: UserEventCommand<UserEvent['fill']> = async (
   context,

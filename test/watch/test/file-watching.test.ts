@@ -1,6 +1,7 @@
 import { existsSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs'
-import { afterEach, describe, expect, test } from 'vitest'
+import { webdriverio } from '@vitest/browser/providers/webdriverio'
 
+import { afterEach, describe, expect, test } from 'vitest'
 import * as testUtils from '../../test-utils'
 
 const sourceFile = 'fixtures/math.ts'
@@ -193,7 +194,7 @@ describe('browser', () => {
       ...options,
       browser: {
         instances: [{ browser: 'chromium' }],
-        provider: 'webdriverio',
+        provider: webdriverio(),
         enabled: true,
         headless: true,
       },

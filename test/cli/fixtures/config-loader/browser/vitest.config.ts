@@ -1,11 +1,12 @@
 import { defineConfig } from "vitest/config"
 import "@test/test-dep-linked/ts";
+import { playwright } from '@vitest/browser/providers/playwright';
 
 export default defineConfig({
   test: {
     browser: {
       enabled: true,
-      provider: 'playwright',
+      provider: playwright(),
       headless: true,
       instances: [
         {

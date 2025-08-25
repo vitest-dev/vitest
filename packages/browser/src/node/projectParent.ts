@@ -129,7 +129,7 @@ export class ParentBrowserProject {
     this.errorCatcherUrl = join('/@fs/', resolve(distRoot, 'client/error-catcher.js'))
 
     const builtinProviders = ['playwright', 'webdriverio', 'preview']
-    const providerName = project.config.browser.provider || 'preview'
+    const providerName = project.config.browser.provider?.name || 'preview'
     if (builtinProviders.includes(providerName)) {
       this.locatorsUrl = join('/@fs/', distRoot, 'locators', `${providerName}.js`)
     }

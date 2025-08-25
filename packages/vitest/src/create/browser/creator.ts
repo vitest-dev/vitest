@@ -295,6 +295,7 @@ async function generateFrameworkConfigFile(options: {
 
   const configContent = [
     `import { defineConfig } from 'vitest/config'`,
+    `import { ${options.provider} } from '@vitest/browser/providers/${options.provider}'`,
     options.frameworkPlugin ? frameworkImport : null,
     ``,
     'export default defineConfig({',
@@ -302,7 +303,7 @@ async function generateFrameworkConfigFile(options: {
     `  test: {`,
     `    browser: {`,
     `      enabled: true,`,
-    `      provider: '${options.provider}',`,
+    `      provider: ${options.provider}(),`,
     options.provider !== 'preview' && `      // ${getProviderDocsLink(options.provider)}`,
     `      instances: [`,
     ...options.browsers.map(browser => `      { browser: '${browser}' },`),

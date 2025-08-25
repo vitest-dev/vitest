@@ -5,7 +5,7 @@ import type { BrowserCommandContext, ResolveSnapshotPathHandlerContext, TestProj
 import type { WebSocket } from 'ws'
 import type { WebSocketBrowserEvents, WebSocketBrowserHandlers } from '../types'
 import type { ParentBrowserProject } from './projectParent'
-import type { WebdriverBrowserProvider } from './providers/webdriver'
+import type { WebdriverBrowserProvider } from './providers/webdriverio'
 import type { BrowserServerState } from './state'
 import { existsSync, promises as fs } from 'node:fs'
 import { AutomockedModule, AutospiedModule, ManualMockedModule, RedirectedModule } from '@vitest/mocker'

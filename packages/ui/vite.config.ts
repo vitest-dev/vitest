@@ -106,10 +106,4 @@ export default defineConfig({
   build: {
     outDir: './dist/client',
   },
-  test: {
-    browser: {
-      name: 'chromium',
-      provider: 'playwright',
-    },
-  },
 })

@@ -1,7 +1,17 @@
 import type { BrowserInstanceOption } from 'vitest/node'
+import { playwright } from '@vitest/browser/providers/playwright'
+import { preview } from '@vitest/browser/providers/preview'
+import { webdriverio } from '@vitest/browser/providers/webdriverio'
 
-export const provider = process.env.PROVIDER || 'playwright'
-export const browser = process.env.BROWSER || (provider !== 'playwright' ? 'chromium' : 'chrome')
+const providerName = (process.env.PROVIDER || 'playwright') as 'playwright' | 'webdriverio' | 'preview'
+export const providers = {
+  playwright,
+  preview,
+  webdriverio,
+}
+
+export const provider = providers[providerName]()
+export const browser = process.env.BROWSER || (provider.name !== 'playwright' ? 'chromium' : 'chrome')
 
 const devInstances: BrowserInstanceOption[] = [
   { browser },
@@ -20,6 +30,6 @@ const webdriverioInstances: BrowserInstanceOption[] = [
 
 export const instances = process.env.BROWSER
   ? devInstances
-  : provider === 'playwright'
+  : provider.name === 'playwright'
     ? playwrightInstances
     : webdriverioInstances

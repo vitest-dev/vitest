@@ -1,3 +1,4 @@
+import { playwright } from '@vitest/browser/providers/playwright'
 import { expect, test } from 'vitest'
 import { runInlineTests } from '../../test-utils'
 
@@ -15,7 +16,7 @@ test('rerun stops the previous browser server and restarts multiple times withou
         browser: {
           enabled: true,
           instances: [{ browser: 'chromium' }],
-          provider: 'playwright',
+          provider: playwright(),
           headless: true,
         },
       },
