@@ -94,7 +94,9 @@ export async function runVmTests(method: 'run' | 'collect', state: WorkerGlobalS
   context.__vitest_mocker__ = moduleRunner.mocker
 
   if (ctx.config.serializedDefines) {
-    runInContext(ctx.config.serializedDefines, context)
+    runInContext(ctx.config.serializedDefines, context, {
+      filename: 'virtual:load-defines.js',
+    })
   }
   await moduleRunner.mocker.initializeSpyModule()
 

@@ -38,6 +38,9 @@ export async function runVitest(config: TestUserConfig, options = { throwOnError
     ...config,
     browser: config.browser,
   }, [], 'test', {
+    define: {
+      'test-haha': 'not-exists',
+    },
     test: {
       env: {
         COVERAGE_TEST: 'true',

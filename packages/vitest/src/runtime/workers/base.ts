@@ -59,7 +59,10 @@ export async function runBaseTests(method: 'run' | 'collect', state: WorkerGloba
       : f,
   )
   if (ctx.config.serializedDefines) {
-    runInThisContext(ctx.config.serializedDefines)
+    runInThisContext(`(() =>{\n${ctx.config.serializedDefines}})()`, {
+      lineOffset: 1,
+      filename: 'virtual:load-defines.js',
+    })
   }
 
   await run(
