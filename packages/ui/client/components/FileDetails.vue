@@ -254,6 +254,19 @@ const testTitle = computed(() => {
           <span class="block w-1.4em h-1.4em i-carbon:terminal-3270" />
           Console ({{ consoleCount }})
         </button>
+        <button
+          tab-button
+          data-testid="btn-snapshots"
+          class="flex items-center gap-2"
+          :class="{
+            'tab-button-active': viewMode === 'snapshots',
+            'op20': viewMode !== 'snapshots' && !failedSnapshot,
+          }"
+          @click="changeViewMode('snapshots')"
+        >
+          <span class="block w-1.4em h-1.4em i-carbon:camera" />
+          Snapshots
+        </button>
       </div>
     </div>
 
@@ -278,6 +291,11 @@ const testTitle = computed(() => {
         v-else-if="viewMode === 'console'"
         :file="current"
         data-testid="console"
+      />
+      <ViewSnapshot
+        v-else-if="viewMode === 'snapshots'"
+        :file="current"
+        data-testid="snapshots"
       />
       <ViewReport v-else-if="!viewMode && !test && current" :file="current" data-testid="report" />
       <ViewTestReport v-else-if="!viewMode && test" :test="test" data-testid="report" />
