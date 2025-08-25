@@ -143,6 +143,23 @@ export function resolveConfig(
     mode,
   } as any as ResolvedConfig
 
+  // Handle watch mode with environment variable support
+  // Only apply environment variable if watch is not explicitly set by user config or CLI
+  if (resolved.watch === undefined) {
+    // Environment variable takes precedence over default detection
+    if (process.env.VITEST_WATCH !== undefined) {
+      const value = process.env.VITEST_WATCH.toLowerCase()
+      resolved.watch = value === 'true' || value === '1' || value === 'yes'
+    }
+    else {
+      // Default detection (current behavior)
+      // Use runtime CI detection instead of std-env's isCI which is evaluated at module load time
+      const runtimeIsCI = !!process.env.CI
+      const defaultWatch = !runtimeIsCI && process.stdin.isTTY
+      resolved.watch = defaultWatch
+    }
+  }
+
   resolved.project = toArray(resolved.project)
   resolved.provide ??= {}
 
