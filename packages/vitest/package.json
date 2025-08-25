@@ -156,7 +156,6 @@
     }
   },
   "dependencies": {
-    "@types/chai": "catalog:",
     "@vitest/expect": "workspace:*",
     "@vitest/mocker": "workspace:*",
     "@vitest/pretty-format": "workspace:^",
@@ -164,7 +163,6 @@
     "@vitest/snapshot": "workspace:*",
     "@vitest/spy": "workspace:*",
     "@vitest/utils": "workspace:*",
-    "chai": "catalog:",
     "debug": "catalog:",
     "es-module-lexer": "^1.7.0",
     "expect-type": "^1.2.2",
@@ -203,7 +201,6 @@
     "jsdom": "^26.1.0",
     "local-pkg": "^1.1.1",
     "mime": "^4.0.7",
-    "pretty-format": "^29.7.0",
     "prompts": "^2.4.2",
     "strip-literal": "catalog:",
     "ws": "catalog:"
