@@ -279,10 +279,11 @@ interface Thresholds {
 
   /**
    * Update threshold values automatically when current coverage is higher than earlier thresholds
+   * Also can accept a function to format the new threshold values
    *
    * @default false
    */
-  autoUpdate?: boolean
+  autoUpdate?: boolean | ((newThreshold: number) => number)
 
   /** Thresholds for statements */
   statements?: number
