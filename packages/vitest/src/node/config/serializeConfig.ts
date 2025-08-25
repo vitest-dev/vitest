@@ -163,6 +163,9 @@ export function serializeConfig(project: TestProject): SerializedConfig {
     benchmark: config.benchmark && {
       includeSamples: config.benchmark.includeSamples,
     },
-    serializedDefines: project._serializedDefines || '',
+    // the browser initialized them via `@vite/env` import
+    serializedDefines: config.browser.enabled
+      ? ''
+      : project._serializedDefines || '',
   }
 }

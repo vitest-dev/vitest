@@ -1,6 +1,7 @@
 import type { WorkerGlobalState } from '../../types/worker'
 import type { VitestModuleRunner } from '../moduleRunner/moduleRunner'
 import type { ContextModuleRunnerOptions } from '../moduleRunner/startModuleRunner'
+import { runInThisContext } from 'node:vm'
 import * as spyModule from '@vitest/spy'
 import { EvaluatedModules } from 'vite/module-runner'
 import { startVitestModuleRunner } from '../moduleRunner/startModuleRunner'
@@ -57,6 +58,9 @@ export async function runBaseTests(method: 'run' | 'collect', state: WorkerGloba
       ? { filepath: f, testLocations: undefined }
       : f,
   )
+  if (ctx.config.serializedDefines) {
+    runInThisContext(ctx.config.serializedDefines)
+  }
 
   await run(
     method,

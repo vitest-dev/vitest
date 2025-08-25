@@ -1,7 +1,7 @@
 import type { Context } from 'node:vm'
 import type { WorkerGlobalState } from '../../types/worker'
 import { pathToFileURL } from 'node:url'
-import { isContext } from 'node:vm'
+import { isContext, runInContext } from 'node:vm'
 import { resolve } from 'pathe'
 import { distDir } from '../../paths'
 import { createCustomConsole } from '../console'
@@ -93,6 +93,9 @@ export async function runVmTests(method: 'run' | 'collect', state: WorkerGlobalS
   })
   context.__vitest_mocker__ = moduleRunner.mocker
 
+  if (ctx.config.serializedDefines) {
+    runInContext(ctx.config.serializedDefines, context)
+  }
   await moduleRunner.mocker.initializeSpyModule()
 
   const { run } = (await moduleRunner.import(

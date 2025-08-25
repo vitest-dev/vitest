@@ -25,11 +25,6 @@ export async function setupCommonEnv(config: SerializedConfig): Promise<void> {
 }
 
 function setupDefines(config: SerializedConfig) {
-  if (config.serializedDefines) {
-    // eslint-disable-next-line no-new-func
-    new Function(config.serializedDefines)()
-  }
-
   for (const key in config.defines) {
     (globalThis as any)[key] = config.defines[key]
   }
