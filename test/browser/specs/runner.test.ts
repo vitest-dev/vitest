@@ -239,10 +239,10 @@ test('user-event', async () => {
   })
 })
 
-test.only('timeout settings', async () => {
+test('timeout settings', async () => {
   const { stderr } = await runBrowserTests({
     root: './fixtures/timeout',
-  }, [], {}, { std: 'inherit' })
+  })
   expect(stderr).toContain('Matcher did not succeed in time.')
   if (provider.name === 'playwright') {
     expect(stderr).toContain('locator.click: Timeout 500ms exceeded.')
