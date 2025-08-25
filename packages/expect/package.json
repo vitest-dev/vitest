@@ -40,7 +40,6 @@
     "tinyrainbow": "catalog:"
   },
   "devDependencies": {
-    "@vitest/runner": "workspace:*",
-    "rollup-plugin-copy": "^3.5.0"
+    "@vitest/runner": "workspace:*"
   }
 }

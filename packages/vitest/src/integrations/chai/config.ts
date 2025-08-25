@@ -1,4 +1,4 @@
-import * as chai from 'chai'
+import { chai } from '@vitest/expect'
 
 export function setupChaiConfig(config: ChaiConfig): void {
   Object.assign(chai.config, config)
