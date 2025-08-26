@@ -152,7 +152,7 @@ export function serializeConfig(project: TestProject): SerializedConfig {
         },
         providerOptions: provider?.name === 'playwright'
           ? {
-              actionTimeout: (provider as any)?.options?.contextOptions?.actionTimeout,
+              actionTimeout: (provider as any)?.options?.actionTimeout,
             }
           : {},
         trackUnhandledErrors: browser.trackUnhandledErrors ?? true,

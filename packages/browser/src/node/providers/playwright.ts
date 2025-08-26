@@ -106,7 +106,7 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
 
       const playwright = await import('playwright')
 
-      if (this.options?.connectOptions) {
+      if (this.options.connectOptions) {
         if (this.options.launchOptions) {
           this.project.vitest.logger.warn(
             c.yellow(`Found both ${c.bold(c.italic(c.yellow('connect')))} and ${c.bold(c.italic(c.yellow('launch')))} options in browser instance configuration.
@@ -121,7 +121,7 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
       }
 
       const launchOptions = {
-        ...this.options?.launchOptions,
+        ...this.options.launchOptions,
         headless: options.headless,
       } satisfies LaunchOptions
 
@@ -302,8 +302,8 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
 
     const browser = await this.openBrowser()
     await this._throwIfClosing(browser)
-    const actionTimeout = this.options?.actionTimeout
-    const contextOptions = this.options?.contextOptions ?? {}
+    const actionTimeout = this.options.actionTimeout
+    const contextOptions = this.options.contextOptions ?? {}
     const options = {
       ...contextOptions,
       ignoreHTTPSErrors: true,
@@ -313,7 +313,7 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
     }
     const context = await browser.newContext(options)
     await this._throwIfClosing(context)
-    if (actionTimeout) {
+    if (actionTimeout != null) {
       context.setDefaultTimeout(actionTimeout)
     }
     debug?.('[%s][%s] the context is ready', sessionId, this.browserName)
