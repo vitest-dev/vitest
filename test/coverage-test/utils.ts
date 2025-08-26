@@ -1,4 +1,5 @@
 import type { CoverageSummary, FileCoverageData } from 'istanbul-lib-coverage'
+import type { UserConfig as ViteUserConfig } from 'vite'
 import type { TestFunction } from 'vitest'
 import type { TestUserConfig } from 'vitest/node'
 import { existsSync, readFileSync } from 'node:fs'
@@ -29,7 +30,7 @@ export function coverageTest(name: string, fn: TestFunction) {
   }
 }
 
-export async function runVitest(config: TestUserConfig, options = { throwOnError: true }) {
+export async function runVitest(config: TestUserConfig, options = { throwOnError: true }, viteOverrides: ViteUserConfig = {}) {
   const provider = process.env.COVERAGE_PROVIDER as any
 
   const result = await testUtils.runVitest({
@@ -38,6 +39,7 @@ export async function runVitest(config: TestUserConfig, options = { throwOnError
     ...config,
     browser: config.browser,
   }, [], 'test', {
+    ...viteOverrides,
     test: {
       env: {
         COVERAGE_TEST: 'true',
