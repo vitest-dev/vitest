@@ -8,9 +8,8 @@ export default mergeConfig(
   defineConfig({
     test: {
       browser: {
-        name: 'chromium',
         provider: playwright(),
-        instances: [{ browser: 'crhomium' }],
+        instances: [{ browser: 'chromium' }],
       },
     },
   }),
