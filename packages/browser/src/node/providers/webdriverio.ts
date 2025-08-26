@@ -43,7 +43,7 @@ export class WebdriverBrowserProvider implements BrowserProvider {
   private browserName!: WebdriverBrowser
   private project!: TestProject
 
-  private options?: Capabilities.WebdriverIOConfig
+  private options?: WebdriverProviderOptions
 
   private closing = false
   private iframeSwitched = false
@@ -66,7 +66,7 @@ export class WebdriverBrowserProvider implements BrowserProvider {
     this.closing = false
     this.project = project
     this.browserName = project.config.browser.name as WebdriverBrowser
-    this.options = options as Capabilities.WebdriverIOConfig
+    this.options = options
   }
 
   isIframeSwitched(): boolean {
@@ -143,8 +143,8 @@ export class WebdriverBrowserProvider implements BrowserProvider {
     const { remote } = await import('webdriverio')
 
     const remoteOptions: Capabilities.WebdriverIOConfig = {
+      logLevel: 'silent',
       ...this.options,
-      logLevel: 'error',
       capabilities: this.buildCapabilities(),
     }
 
