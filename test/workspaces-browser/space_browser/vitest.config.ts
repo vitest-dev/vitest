@@ -1,3 +1,4 @@
+import { playwright } from '@vitest/browser/providers/playwright'
 import { defineProject } from 'vitest/config'
 
 export default defineProject({
@@ -6,7 +7,7 @@ export default defineProject({
       enabled: true,
       instances: [{ browser: process.env.BROWSER || 'chromium' }],
       headless: true,
-      provider: process.env.PROVIDER || 'playwright',
+      provider: playwright(),
     },
   },
 })

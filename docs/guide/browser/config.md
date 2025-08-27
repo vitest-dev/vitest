@@ -4,12 +4,13 @@ You can change the browser configuration by updating the `test.browser` field in
 
 ```ts [vitest.config.ts]
 import { defineConfig } from 'vitest/config'
+import { playwright } from '@vitest/browser/providers/playwright'
 
 export default defineConfig({
   test: {
     browser: {
       enabled: true,
-      provider: 'playwright',
+      provider: playwright(),
       instances: [
         {
           browser: 'chromium',
@@ -53,15 +54,6 @@ Defines multiple browser setups. Every config has to have at least a `browser` f
 - [Configuring Playwright](/guide/browser/playwright)
 - [Configuring WebdriverIO](/guide/browser/webdriverio)
 
-::: tip
-To have a better type safety when using built-in providers, you should reference one of these types (for provider that you are using) in your [config file](/config/):
-
-```ts
-/// <reference types="@vitest/browser/providers/playwright" />
-/// <reference types="@vitest/browser/providers/webdriverio" />
-```
-:::
-
 In addition to that, you can also specify most of the [project options](/config/) (not marked with a <NonProjectOption /> icon) and some of the `browser` options like `browser.testerHtmlPath`.
 
 ::: warning
@@ -100,25 +92,11 @@ List of available `browser` options:
 - [`browser.testerHtmlPath`](#browser-testerhtmlpath)
 - [`browser.screenshotDirectory`](#browser-screenshotdirectory)
 - [`browser.screenshotFailures`](#browser-screenshotfailures)
+- [`browser.provider`](#browser-provider)
 
 By default, Vitest creates an array with a single element which uses the [`browser.name`](#browser-name) field as a `browser`. Note that this behaviour will be removed with Vitest 4.
 
 Under the hood, Vitest transforms these instances into separate [test projects](/advanced/api/test-project) sharing a single Vite server for better caching performance.
-
-## browser&#46;name <Badge type="danger">deprecated</Badge> {#browser-name}
-
-- **Type:** `string`
-- **CLI:** `--browser=safari`
-
-::: danger DEPRECATED
-This API is deprecated an will be removed in Vitest 4. Please, use [`browser.instances`](#browser-instances) option instead.
-:::
-
-Run all tests in a specific browser. Possible options in different providers:
-
-- `webdriverio`: `firefox`, `chrome`, `edge`, `safari`
-- `playwright`: `firefox`, `webkit`, `chromium`
-- custom: any string that will be passed to the provider
 
 ## browser.headless
 
@@ -150,70 +128,86 @@ A path to the HTML entry point. Can be relative to the root of the project. This
 
 Configure options for Vite server that serves code in the browser. Does not affect [`test.api`](#api) option. By default, Vitest assigns port `63315` to avoid conflicts with the development server, allowing you to run both in parallel.
 
-## browser.provider {#browser-provider}
+## browser.provider <Badge type="danger">advanced</Badge> {#browser-provider}
 
-- **Type:** `'webdriverio' | 'playwright' | 'preview' | string`
+- **Type:** `BrowserProviderOption`
 - **Default:** `'preview'`
 - **CLI:** `--browser.provider=playwright`
 
-Path to a provider that will be used when running browser tests. Vitest provides three providers which are `preview` (default), `webdriverio` and `playwright`. Custom providers should be exported using `default` export and have this shape:
+The return value of the provider factory. You can import the factory from `@vitest/browser/providers/<provider-name>` or make your own provider:
 
-```ts
-export interface BrowserProvider {
-  name: string
-  supportsParallelism: boolean
-  getSupportedBrowsers: () => readonly string[]
-  beforeCommand?: (command: string, args: unknown[]) => Awaitable<void>
-  afterCommand?: (command: string, args: unknown[]) => Awaitable<void>
-  getCommandsContext: (sessionId: string) => Record<string, unknown>
-  openPage: (sessionId: string, url: string, beforeNavigate?: () => Promise<void>) => Promise<void>
-  getCDPSession?: (sessionId: string) => Promise<CDPSession>
-  close: () => Awaitable<void>
-  initialize(
-    ctx: TestProject,
-    options: BrowserProviderInitializationOptions
-  ): Awaitable<void>
-}
-```
-
-::: danger ADVANCED API
-The custom provider API is highly experimental and can change between patches. If you just need to run tests in a browser, use the [`browser.instances`](#browser-instances) option instead.
-:::
-
-## browser.providerOptions <Badge type="danger">deprecated</Badge> {#browser-provideroptions}
-
-- **Type:** `BrowserProviderOptions`
-
-::: danger DEPRECATED
-This API is deprecated an will be removed in Vitest 4. Please, use [`browser.instances`](#browser-instances) option instead.
-:::
-
-Options that will be passed down to provider when calling `provider.initialize`.
-
-```ts
-import { defineConfig } from 'vitest/config'
+```ts{8-10}
+import { playwright } from '@vitest/browser/providers/playwright'
+import { webdriverio } from '@vitest/browser/providers/webdriverio'
+import { preview } from '@vitest/browser/providers/preview'
 
 export default defineConfig({
   test: {
     browser: {
-      providerOptions: {
-        launch: {
-          devtools: true,
-        },
-      },
+      provider: playwright(),
+      provider: webdriverio(),
+      provider: preview(), // default
     },
   },
 })
 ```
 
-::: tip
-To have a better type safety when using built-in providers, you should reference one of these types (for provider that you are using) in your [config file](/config/):
+To configure how provider initializes the browser, you can pass down options to the factory function:
+
+```ts{7-15,22-27}
+import { playwright } from '@vitest/browser/providers/playwright'
+
+export default defineConfig({
+  test: {
+    browser: {
+      // shared provider options between all instances
+      provider: playwright({
+        launchOptions: {
+          slowMo: 50,
+          channel: 'chrome-beta',
+        },
+        actionTimeout: 5_000,
+      }),
+      instances: [
+        { browser: 'chromium' },
+        {
+          browser: 'firefox',
+          // overriding options only for a single instance
+          // this will NOT merge options with the parent one
+          provider: playwright({
+            launchOptions: {
+              firefoxUserPrefs: {
+                'browser.startup.homepage': 'https://example.com',
+              },
+            },
+          })
+        }
+      ],
+    },
+  },
+})
+```
+
+### Custom Provider
+
+::: danger ADVANCED API
+The custom provider API is highly experimental and can change between patches. If you just need to run tests in a browser, use the [`browser.instances`](#browser-instances) option instead.
+:::
 
 ```ts
-/// <reference types="@vitest/browser/providers/playwright" />
-/// <reference types="@vitest/browser/providers/webdriverio" />
+export interface BrowserProvider {
+  name: string
+  mocker?: BrowserModuleMocker
+  /**
+   * @experimental opt-in into file parallelisation
+   */
+  supportsParallelism: boolean
+  getCommandsContext: (sessionId: string) => Record<string, unknown>
+  openPage: (sessionId: string, url: string) => Promise<void>
+  getCDPSession?: (sessionId: string) => Promise<CDPSession>
+  close: () => Awaitable<void>
+}
 ```
-:::
 
 ## browser.ui
 

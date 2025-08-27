@@ -3,7 +3,7 @@ import type { UserEventCommand } from './utils'
 import { defaultKeyMap } from '@testing-library/user-event/dist/esm/keyboard/keyMap.js'
 import { parseKeyDef } from '@testing-library/user-event/dist/esm/keyboard/parseKeyDef.js'
 import { PlaywrightBrowserProvider } from '../providers/playwright'
-import { WebdriverBrowserProvider } from '../providers/webdriver'
+import { WebdriverBrowserProvider } from '../providers/webdriverio'
 
 export interface KeyboardState {
   unreleased: string[]

@@ -2,12 +2,20 @@ import type { BrowserCommand, BrowserInstanceOption } from 'vitest/node'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import * as util from 'node:util'
+import { playwright } from '@vitest/browser/providers/playwright'
+import { preview } from '@vitest/browser/providers/preview'
+import { webdriverio } from '@vitest/browser/providers/webdriverio'
 import { defineConfig } from 'vitest/config'
 
 const dir = dirname(fileURLToPath(import.meta.url))
 
-const provider = process.env.PROVIDER || 'playwright'
-const browser = process.env.BROWSER || (provider === 'playwright' ? 'chromium' : 'chrome')
+const providerName = process.env.PROVIDER || 'playwright'
+const browser = process.env.BROWSER || (providerName === 'playwright' ? 'chromium' : 'chrome')
+const provider = {
+  playwright,
+  preview,
+  webdriverio,
+}[providerName]
 
 const myCustomCommand: BrowserCommand<[arg1: string, arg2: string]> = ({ testPath }, arg1, arg2) => {
   return { testPath, arg1, arg2 }
@@ -57,10 +65,10 @@ export default defineConfig({
       headless: false,
       instances: process.env.BROWSER
         ? devInstances
-        : provider === 'playwright'
+        : providerName === 'playwright'
           ? playwrightInstances
           : webdriverioInstances,
-      provider,
+      provider: provider(),
       // isolate: false,
       testerHtmlPath: './custom-tester.html',
       orchestratorScripts: [

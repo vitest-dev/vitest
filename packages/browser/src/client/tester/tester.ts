@@ -84,7 +84,6 @@ channel.addEventListener('message', async (e) => {
 })
 
 const url = new URL(location.href)
-const reloadStart = url.searchParams.get('__reloadStart')
 const iframeId = url.searchParams.get('iframeId')!
 
 const commands = new CommandsManager()
@@ -94,7 +93,7 @@ getBrowserState().iframeId = iframeId
 let contextSwitched = false
 
 async function prepareTestEnvironment(options: PrepareOptions) {
-  debug?.('trying to resolve runner', `${reloadStart}`)
+  debug?.('trying to resolve the runner')
   const config = getConfig()
 
   const rpc = createSafeRpc(client)

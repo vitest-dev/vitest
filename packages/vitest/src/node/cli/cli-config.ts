@@ -380,12 +380,13 @@ export const cliOptionsConfig: VitestCLIOptions = {
           'Provider used to run browser tests. Some browsers are only available for specific providers. Can be "webdriverio", "playwright", "preview", or the path to a custom provider. Visit [`browser.provider`](https://vitest.dev/guide/browser/config.html#browser-provider) for more information (default: `"preview"`)',
         argument: '<name>',
         subcommands: null, // don't support custom objects
-      },
-      providerOptions: {
-        description:
-          'Options that are passed down to a browser provider. Visit [`browser.providerOptions`](https://vitest.dev/config/#browser-provideroptions) for more information',
-        argument: '<options>',
-        subcommands: null, // don't support custom objects
+        transform(value) {
+          const supported = ['playwright', 'webdriverio', 'preview']
+          if (typeof value !== 'string' || !supported.includes(value)) {
+            throw new Error(`Unsupported browser provider: ${value}. Supported providers are: ${supported.join(', ')}`)
+          }
+          return { name: value, _cli: true }
+        },
       },
       isolate: {
         description:
