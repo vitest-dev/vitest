@@ -90,7 +90,7 @@ export function createExpectPoll(expect: ExpectStatic): ExpectStatic['poll'] {
               chai.util.flag(assertion, '_isLastPollAttempt', true)
               const rejectWithCause = (error: any) => {
                 if (error.cause == null) {
-                  error.cause = new Error('Matcher did not succeed in time')
+                  error.cause = new Error('Matcher did not succeed in time.')
                 }
                 reject(
                   copyStackTrace(
