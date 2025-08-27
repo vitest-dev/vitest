@@ -26,9 +26,11 @@ export function getElementFromUserInput(
     elementOrLocator = elementOrLocator.element()
   }
 
+  const defaultView = elementOrLocator?.ownerDocument?.defaultView || window
+
   if (
-    elementOrLocator instanceof HTMLElement
-    || elementOrLocator instanceof SVGElement
+    elementOrLocator instanceof defaultView.HTMLElement
+    || elementOrLocator instanceof defaultView.SVGElement
   ) {
     return elementOrLocator
   }
@@ -49,8 +51,10 @@ export function getNodeFromUserInput(
     elementOrLocator = elementOrLocator.element()
   }
 
+  const defaultView = elementOrLocator.ownerDocument?.defaultView || window
+
   if (
-    elementOrLocator instanceof Node
+    elementOrLocator instanceof defaultView.Node
   ) {
     return elementOrLocator
   }

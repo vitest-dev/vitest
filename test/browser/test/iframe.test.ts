@@ -1,5 +1,5 @@
 import { page, server } from '@vitest/browser/context'
-import { test } from 'vitest'
+import { expect, test } from 'vitest'
 
 test.runIf(server.provider === 'playwright')('locates an iframe', async () => {
   const iframe = document.createElement('iframe')
@@ -11,4 +11,5 @@ test.runIf(server.provider === 'playwright')('locates an iframe', async () => {
   )
 
   await frame.getByText('Hello World').click()
+  await expect.element(frame.getByText('Hello World')).toHaveTextContent('Hello World')
 })
