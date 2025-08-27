@@ -1,7 +1,7 @@
-import { page } from '@vitest/browser/context'
+import { page, server } from '@vitest/browser/context'
 import { test } from 'vitest'
 
-test('locates an iframe', async () => {
+test.runIf(server.provider === 'playwright')('locates an iframe', async () => {
   const iframe = document.createElement('iframe')
   iframe.setAttribute('data-testid', 'iframe')
   iframe.srcdoc = '<div onclick="console.log">Hello World!</div>'
