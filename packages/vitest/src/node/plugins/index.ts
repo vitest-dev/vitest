@@ -308,10 +308,11 @@ export async function VitestPlugin(
     ModuleRunnerTransform(),
   ].filter(notNullish)
 }
+
 function removeUndefinedValues<T extends Record<string, any>>(
   obj: T,
 ): T {
-  for (const key in Object.keys(obj)) {
+  for (const key in obj) {
     if (obj[key] === undefined) {
       delete obj[key]
     }
