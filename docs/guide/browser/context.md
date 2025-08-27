@@ -87,6 +87,12 @@ export const page: {
    * Wrap an HTML element in a `Locator`. When querying for elements, the search will always return this element.
    */
   elementLocator(element: Element): Locator
+  /**
+   * The iframe locator. This is a document locator that enters the iframe body
+   * and works similarly to the `page` object.
+   * **Warning:** At the moment, this is supported only by the `playwright` provider.
+   */
+  frameLocator(iframeElement: Locator): FrameLocator
 
   /**
    * Locator APIs. See its documentation for more details.
@@ -110,7 +116,36 @@ Note that `screenshot` will always return a base64 string if `save` is set to `f
 The `path` is also ignored in that case.
 :::
 
+### frameLocator
+
+```ts
+function frameLocator(iframeElement: Locator): FrameLocator
+```
+
+The `frameLocator` method returns a `FrameLocator` instance that can be used to find elements inside the iframe.
+
+The frame locator is similar to `page`. It does not refer to the Iframe HTML element, but to the iframe's document.
+
+```ts
+const frame = page.frameLocator(
+  page.getByTestId('iframe')
+)
+
+await frame.getByText('Hello World').click() // ✅
+await frame.click() // ❌ Not available
+```
+
+::: danger IMPORTANT
+At the moment, the `frameLocator` method is only supported by the `playwright` provider.
+
+The interactive methods (like `click` or `fill`) are always available on elements within the iframe, but assertions with `expect.element` require the iframe to have the [same-origin policy](https://developer.mozilla.org/en-US/docs/Web/Security/Same-origin_policy).
+:::
+
 ## `cdp`
+
+```ts
+function cdp(): CDPSession
+```
 
 The `cdp` export returns the current Chrome DevTools Protocol session. It is mostly useful to library authors to build tools on top of it.
 
