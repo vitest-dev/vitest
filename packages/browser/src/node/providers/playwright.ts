@@ -35,10 +35,24 @@ const playwrightBrowsers = ['firefox', 'webkit', 'chromium'] as const
 type PlaywrightBrowser = (typeof playwrightBrowsers)[number]
 
 export interface PlaywrightProviderOptions {
+  /**
+   * The options passed down to [`playwright.connect`](https://playwright.dev/docs/api/class-browsertype#browser-type-launch) method.
+   * @see {@link https://playwright.dev/docs/api/class-browsertype#browser-type-launch}
+   */
   launchOptions?: LaunchOptions
+  /**
+   * The options passed down to [`playwright.connect`](https://playwright.dev/docs/api/class-browsertype#browser-type-connect) method.
+   *
+   * This is used only if you connect remotely to the playwright instance via a WebSocket connection.
+   * @see {@link https://playwright.dev/docs/api/class-browsertype#browser-type-connect}
+   */
   connectOptions?: ConnectOptions & {
     wsEndpoint: string
   }
+  /**
+   * The options passed down to [`browser.newContext`](https://playwright.dev/docs/api/class-browser#browser-new-context) method.
+   * @see {@link https://playwright.dev/docs/api/class-browser#browser-new-context}
+   */
   contextOptions?: Omit<
     BrowserContextOptions,
     'ignoreHTTPSErrors' | 'serviceWorkers'
@@ -69,15 +83,12 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
 
   public browser: Browser | null = null
 
-  private browserName!: PlaywrightBrowser
-
   public contexts: Map<string, BrowserContext> = new Map()
   public pages: Map<string, Page> = new Map()
+  public mocker: BrowserModuleMocker
+  public browserName: PlaywrightBrowser
 
   private browserPromise: Promise<Browser> | null = null
-
-  public mocker: BrowserModuleMocker
-
   private closing = false
 
   constructor(
@@ -438,12 +449,12 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
   async close(): Promise<void> {
     debug?.('[%s] closing provider', this.browserName)
     this.closing = true
-    const browser = this.browser
-    this.browser = null
     if (this.browserPromise) {
       await this.browserPromise
       this.browserPromise = null
     }
+    const browser = this.browser
+    this.browser = null
     await Promise.all([...this.pages.values()].map(p => p.close()))
     this.pages.clear()
     await Promise.all([...this.contexts.values()].map(c => c.close()))

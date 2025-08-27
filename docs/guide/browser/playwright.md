@@ -73,7 +73,7 @@ Since this command connects to an existing Playwright server, any `launch` optio
 
 ## contextOptions
 
-Vitest creates a new context for every test file by calling [`browser.newContext()`](https://playwright.dev/docs/api/class-browsercontext). You can configure this behaviour by specifying [custom arguments](https://playwright.dev/docs/api/class-apirequest#api-request-new-context).
+Vitest creates a new context for every test file by calling [`browser.newContext()`](https://playwright.dev/docs/api/class-browsercontext). You can configure this behaviour by specifying [custom arguments](https://playwright.dev/docs/api/class-browser#browser-new-context).
 
 ::: tip
 Note that the context is created for every _test file_, not every _test_ like in playwright test runner.
