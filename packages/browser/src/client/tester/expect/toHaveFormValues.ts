@@ -25,7 +25,9 @@ export default function toHaveFormValues(
 ): ExpectationResult {
   const formElement = getElementFromUserInput(actual, toHaveFormValues, this)
 
-  if (!(formElement instanceof HTMLFieldSetElement) && !(formElement instanceof HTMLFormElement)) {
+  const defaultView = formElement.ownerDocument.defaultView || window
+
+  if (!(formElement instanceof defaultView.HTMLFieldSetElement) && !(formElement instanceof defaultView.HTMLFormElement)) {
     throw new TypeError(`toHaveFormValues must be called on a form or a fieldset, instead got ${getTag(formElement)}`)
   }
 
