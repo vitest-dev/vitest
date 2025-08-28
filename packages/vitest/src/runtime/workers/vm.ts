@@ -3,7 +3,6 @@ import type { WorkerGlobalState } from '../../types/worker'
 import { pathToFileURL } from 'node:url'
 import { isContext, runInContext } from 'node:vm'
 import { resolve } from 'pathe'
-import { createNodeImportMeta } from 'vite/module-runner'
 import { distDir } from '../../paths'
 import { createCustomConsole } from '../console'
 import { ExternalModulesExecutor } from '../external-executor'
@@ -81,7 +80,6 @@ export async function runVmTests(method: 'run' | 'collect', state: WorkerGlobalS
     evaluatedModules: state.evaluatedModules,
     state,
     externalModulesExecutor,
-    createImportMeta: createNodeImportMeta,
   })
 
   Object.defineProperty(context, VITEST_VM_CONTEXT_SYMBOL, {

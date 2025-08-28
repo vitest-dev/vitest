@@ -10,10 +10,6 @@ import * as viteModuleRunner from 'vite/module-runner'
 import { VitestMocker } from './moduleMocker'
 import { VitestTransport } from './moduleTransport'
 
-// eslint-disable-next-line ts/ban-ts-comment
-// @ts-ignore available since Vite 7.1 https://github.com/vitejs/vite/pull/20260
-export type CreateImportMeta = typeof viteModuleRunner.createNodeImportMeta
-
 // @ts-expect-error overriding private method
 export class VitestModuleRunner extends viteModuleRunner.ModuleRunner {
   public mocker: VitestMocker
@@ -29,7 +25,9 @@ export class VitestModuleRunner extends viteModuleRunner.ModuleRunner {
         hmr: false,
         evaluatedModules,
         sourcemapInterceptor: 'prepareStackTrace',
-        createImportMeta: vitestOptions.createImportMeta,
+        // eslint-disable-next-line ts/ban-ts-comment
+        // @ts-ignore available since Vite 7.1 https://github.com/vitejs/vite/pull/20260
+        createImportMeta: vitestOptions.disableNodeImportMeta ? undefined : viteModuleRunner.createNodeImportMeta,
       },
       options.evaluator,
     )
@@ -151,7 +149,7 @@ export interface VitestModuleRunnerOptions {
   mocker?: VitestMocker
   vm?: VitestVmOptions
   spyModule?: typeof import('@vitest/spy')
-  createImportMeta?: CreateImportMeta
+  disableNodeImportMeta?: boolean
 }
 
 export interface VitestVmOptions {
