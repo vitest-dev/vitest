@@ -6,7 +6,7 @@ import type { ExternalModulesExecutor } from '../external-executor'
 import type { ModuleExecutionInfo } from './moduleDebug'
 import type { VitestModuleEvaluator } from './moduleEvaluator'
 import type { VitestTransportOptions } from './moduleTransport'
-import { ModuleRunner } from 'vite/module-runner'
+import { createNodeImportMeta, ModuleRunner } from 'vite/module-runner'
 import { VitestMocker } from './moduleMocker'
 import { VitestTransport } from './moduleTransport'
 
@@ -15,7 +15,8 @@ export class VitestModuleRunner extends ModuleRunner {
   public mocker: VitestMocker
   public moduleExecutionInfo: ModuleExecutionInfo
 
-  constructor(private options: VitestModuleRunnerOptions) {
+  constructor(private vitestOptions: VitestModuleRunnerOptions) {
+    const options = vitestOptions;
     const transport = new VitestTransport(options.transport)
     const evaluatedModules = options.evaluatedModules
     super(
@@ -24,6 +25,7 @@ export class VitestModuleRunner extends ModuleRunner {
         hmr: false,
         evaluatedModules,
         sourcemapInterceptor: 'prepareStackTrace',
+        createImportMeta: createNodeImportMeta,
       },
       options.evaluator,
     )
@@ -56,7 +58,7 @@ export class VitestModuleRunner extends ModuleRunner {
   }
 
   public async import(rawId: string): Promise<any> {
-    const resolved = await this.options.transport.resolveId(rawId)
+    const resolved = await this.vitestOptions.transport.resolveId(rawId)
     if (!resolved) {
       return super.import(rawId)
     }
