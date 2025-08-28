@@ -1,62 +1,59 @@
 # Configuring Playwright
 
-By default, TypeScript doesn't recognize providers options and extra `expect` properties. Make sure to reference `@vitest/browser/providers/playwright` so TypeScript can pick up definitions for custom options:
+To run tests using playwright, you need to specify it in the `test.browser.provider` property in your config:
 
-```ts [vitest.shims.d.ts]
-/// <reference types="@vitest/browser/providers/playwright" />
-```
-
-Alternatively, you can also add it to `compilerOptions.types` field in your `tsconfig.json` file. Note that specifying anything in this field will disable [auto loading](https://www.typescriptlang.org/tsconfig/#types) of `@types/*` packages.
-
-```json [tsconfig.json]
-{
-  "compilerOptions": {
-    "types": ["@vitest/browser/providers/playwright"]
-  }
-}
-```
-
-Vitest opens a single page to run all tests in the same file. You can configure the `launch`, `connect` and `context` properties in `instances`:
-
-```ts{9-11} [vitest.config.ts]
+```ts [vitest.config.js]
+import { playwright } from '@vitest/browser/providers/playwright'
 import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
   test: {
     browser: {
+      provider: playwright(),
+      instances: [{ browser: 'chromium' }]
+    },
+  },
+})
+```
+
+Vitest opens a single page to run all tests in the same file. You can configure the `launch`, `connect` and `context` when calling `playwright` at the top level or inside instances:
+
+```ts{7-15,22-27} [vitest.config.js]
+import { playwright } from '@vitest/browser/providers/playwright'
+import { defineConfig } from 'vitest/config'
+
+export default defineConfig({
+  test: {
+    browser: {
+      // shared provider options between all instances
+      provider: playwright({
+        launchOptions: {
+          slowMo: 50,
+          channel: 'chrome-beta',
+        },
+        actionTimeout: 5_000,
+      }),
       instances: [
+        { browser: 'chromium' },
         {
           browser: 'firefox',
-          launch: {},
-          connect: {},
-          context: {},
-        },
+          // overriding options only for a single instance
+          // this will NOT merge options with the parent one
+          provider: playwright({
+            launchOptions: {
+              firefoxUserPrefs: {
+                'browser.startup.homepage': 'https://example.com',
+              },
+            },
+          })
+        }
       ],
     },
   },
 })
 ```
 
-::: warning
-Before Vitest 3, these options were located on `test.browser.providerOptions` property:
-
-```ts [vitest.config.ts]
-export default defineConfig({
-  test: {
-    browser: {
-      providerOptions: {
-        launch: {},
-        context: {},
-      },
-    },
-  },
-})
-```
-
-`providerOptions` is deprecated in favour of `instances`.
-:::
-
-## launch
+## launchOptions
 
 These options are directly passed down to `playwright[browser].launch` command. You can read more about the command and available arguments in the [Playwright documentation](https://playwright.dev/docs/api/class-browsertype#browser-type-launch).
 
@@ -66,7 +63,7 @@ Vitest will ignore `launch.headless` option. Instead, use [`test.browser.headles
 Note that Vitest will push debugging flags to `launch.args` if [`--inspect`](/guide/cli#inspect) is enabled.
 :::
 
-## connect <Version>3.2.0</Version> {#connect}
+## connectOptions
 
 These options are directly passed down to `playwright[browser].connect` command. You can read more about the command and available arguments in the [Playwright documentation](https://playwright.dev/docs/api/class-browsertype#browser-type-connect).
 
@@ -74,9 +71,9 @@ These options are directly passed down to `playwright[browser].connect` command.
 Since this command connects to an existing Playwright server, any `launch` options will be ignored.
 :::
 
-## context
+## contextOptions
 
-Vitest creates a new context for every test file by calling [`browser.newContext()`](https://playwright.dev/docs/api/class-browsercontext). You can configure this behaviour by specifying [custom arguments](https://playwright.dev/docs/api/class-apirequest#api-request-new-context).
+Vitest creates a new context for every test file by calling [`browser.newContext()`](https://playwright.dev/docs/api/class-browsercontext). You can configure this behaviour by specifying [custom arguments](https://playwright.dev/docs/api/class-browser#browser-new-context).
 
 ::: tip
 Note that the context is created for every _test file_, not every _test_ like in playwright test runner.
@@ -88,9 +85,9 @@ Vitest always sets `ignoreHTTPSErrors` to `true` in case your server is served v
 It is also recommended to use [`test.browser.viewport`](/guide/browser/config#browser-headless) instead of specifying it here as it will be lost when tests are running in headless mode.
 :::
 
-## `actionTimeout` <Version>3.0.0</Version>
+## `actionTimeout`
 
-- **Default:** no timeout, 1 second before 3.0.0
+- **Default:** no timeout
 
 This value configures the default timeout it takes for Playwright to wait until all accessibility checks pass and [the action](/guide/browser/interactivity-api) is actually done.
 

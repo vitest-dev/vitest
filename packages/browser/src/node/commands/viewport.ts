@@ -1,5 +1,5 @@
 import type { UserEventCommand } from './utils'
-import { WebdriverBrowserProvider } from '../providers/webdriver'
+import { WebdriverBrowserProvider } from '../providers/webdriverio'
 
 export const viewport: UserEventCommand<(options: {
   width: number

@@ -2,6 +2,7 @@ import type { ViteUserConfig } from 'vitest/config.js'
 import type { TestFsStructure } from '../../test-utils'
 import { platform } from 'node:os'
 import { resolve } from 'node:path'
+import { playwright } from '@vitest/browser/providers/playwright'
 import { describe, expect, test } from 'vitest'
 import { runVitestCli, useFS } from '../../test-utils'
 import { extractToMatchScreenshotPaths } from '../fixtures/expect-dom/utils'
@@ -40,7 +41,7 @@ export async function runInlineTests(
         browser: {
           enabled: true,
           screenshotFailures: false,
-          provider: 'playwright',
+          provider: playwright(),
           headless: true,
           instances: [{ browser }],
         },

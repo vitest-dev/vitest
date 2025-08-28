@@ -239,11 +239,14 @@ await page.viewport(1280, 720)
 ```
 
 ```ts [vitest.config.ts]
+import { playwright } from '@vitest/browser/providers/playwright'
+import { defineConfig } from 'vitest/config'
+
 export default defineConfig({
   test: {
     browser: {
       enabled: true,
-      provider: 'playwright',
+      provider: playwright(),
       instances: [
         {
           browser: 'chromium',
@@ -588,6 +591,7 @@ The cleanest approach is using [Test Projects](/guide/projects):
 ```ts [vitest.config.ts]
 import { env } from 'node:process'
 import { defineConfig } from 'vitest/config'
+import { playwright } from '@vitest/browser/providers/playwright'
 
 export default defineConfig({
   // ...global Vite config
@@ -610,7 +614,7 @@ export default defineConfig({
           include: ['visual-regression-tests/**/*.test.ts?(x)'],
           browser: {
             enabled: true,
-            provider: 'playwright',
+            provider: playwright(),
             headless: true,
             instances: [
               {

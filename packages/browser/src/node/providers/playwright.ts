@@ -1,3 +1,9 @@
+/* eslint-disable ts/method-signature-style */
+
+import type {
+  ScreenshotComparatorRegistry,
+  ScreenshotMatcherOptions,
+} from '@vitest/browser/context'
 import type { MockedModule } from '@vitest/mocker'
 import type {
   Browser,
@@ -9,12 +15,13 @@ import type {
   LaunchOptions,
   Page,
 } from 'playwright'
+import type { Protocol } from 'playwright-core/types/protocol'
 import type { SourceMap } from 'rollup'
 import type { ResolvedConfig } from 'vite'
 import type {
   BrowserModuleMocker,
   BrowserProvider,
-  BrowserProviderInitializationOptions,
+  BrowserProviderOption,
   CDPSession,
   TestProject,
 } from 'vitest/node'
@@ -24,12 +31,50 @@ import { createDebugger, isCSSRequest } from 'vitest/node'
 
 const debug = createDebugger('vitest:browser:playwright')
 
-export const playwrightBrowsers = ['firefox', 'webkit', 'chromium'] as const
-export type PlaywrightBrowser = (typeof playwrightBrowsers)[number]
+const playwrightBrowsers = ['firefox', 'webkit', 'chromium'] as const
+type PlaywrightBrowser = (typeof playwrightBrowsers)[number]
 
-export interface PlaywrightProviderOptions
-  extends BrowserProviderInitializationOptions {
-  browser: PlaywrightBrowser
+export interface PlaywrightProviderOptions {
+  /**
+   * The options passed down to [`playwright.connect`](https://playwright.dev/docs/api/class-browsertype#browser-type-launch) method.
+   * @see {@link https://playwright.dev/docs/api/class-browsertype#browser-type-launch}
+   */
+  launchOptions?: LaunchOptions
+  /**
+   * The options passed down to [`playwright.connect`](https://playwright.dev/docs/api/class-browsertype#browser-type-connect) method.
+   *
+   * This is used only if you connect remotely to the playwright instance via a WebSocket connection.
+   * @see {@link https://playwright.dev/docs/api/class-browsertype#browser-type-connect}
+   */
+  connectOptions?: ConnectOptions & {
+    wsEndpoint: string
+  }
+  /**
+   * The options passed down to [`browser.newContext`](https://playwright.dev/docs/api/class-browser#browser-new-context) method.
+   * @see {@link https://playwright.dev/docs/api/class-browser#browser-new-context}
+   */
+  contextOptions?: Omit<
+    BrowserContextOptions,
+    'ignoreHTTPSErrors' | 'serviceWorkers'
+  >
+  /**
+   * The maximum time in milliseconds to wait for `userEvent` action to complete.
+   * @default 0 (no timeout)
+   */
+  actionTimeout?: number
+}
+
+export function playwright(options: PlaywrightProviderOptions = {}): BrowserProviderOption {
+  return {
+    name: 'playwright',
+    supportedBrowser: playwrightBrowsers,
+    factory(project) {
+      return new PlaywrightBrowserProvider(project, options)
+    },
+    // --browser.provider=playwright
+    // @ts-expect-error hidden way to bypass importing playwright
+    _cli: true,
+  }
 }
 
 export class PlaywrightBrowserProvider implements BrowserProvider {
@@ -38,39 +83,19 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
 
   public browser: Browser | null = null
 
-  private browserName!: PlaywrightBrowser
-  private project!: TestProject
-
-  private options?: {
-    launch?: LaunchOptions
-    connect?: {
-      wsEndpoint: string
-      options?: ConnectOptions
-    }
-    context?: BrowserContextOptions & { actionTimeout?: number }
-  }
-
   public contexts: Map<string, BrowserContext> = new Map()
   public pages: Map<string, Page> = new Map()
+  public mocker: BrowserModuleMocker
+  public browserName: PlaywrightBrowser
 
   private browserPromise: Promise<Browser> | null = null
-
-  public mocker: BrowserModuleMocker | undefined
-
   private closing = false
 
-  getSupportedBrowsers(): readonly string[] {
-    return playwrightBrowsers
-  }
-
-  initialize(
-    project: TestProject,
-    { browser, options }: PlaywrightProviderOptions,
-  ): void {
-    this.closing = false
-    this.project = project
-    this.browserName = browser
-    this.options = options as any
+  constructor(
+    private project: TestProject,
+    private options: PlaywrightProviderOptions,
+  ) {
+    this.browserName = project.config.browser.name as PlaywrightBrowser
     this.mocker = this.createMocker()
   }
 
@@ -92,22 +117,22 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
 
       const playwright = await import('playwright')
 
-      if (this.options?.connect) {
-        if (this.options.launch) {
+      if (this.options.connectOptions) {
+        if (this.options.launchOptions) {
           this.project.vitest.logger.warn(
             c.yellow(`Found both ${c.bold(c.italic(c.yellow('connect')))} and ${c.bold(c.italic(c.yellow('launch')))} options in browser instance configuration.
           Ignoring ${c.bold(c.italic(c.yellow('launch')))} options and using ${c.bold(c.italic(c.yellow('connect')))} mode.
           You probably want to remove one of the two options and keep only the one you want to use.`),
           )
         }
-        const browser = await playwright[this.browserName].connect(this.options.connect.wsEndpoint, this.options.connect.options)
+        const browser = await playwright[this.browserName].connect(this.options.connectOptions.wsEndpoint, this.options.connectOptions)
         this.browser = browser
         this.browserPromise = null
         return this.browser
       }
 
       const launchOptions = {
-        ...this.options?.launch,
+        ...this.options.launchOptions,
         headless: options.headless,
       } satisfies LaunchOptions
 
@@ -288,7 +313,8 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
 
     const browser = await this.openBrowser()
     await this._throwIfClosing(browser)
-    const { actionTimeout, ...contextOptions } = this.options?.context ?? {}
+    const actionTimeout = this.options.actionTimeout
+    const contextOptions = this.options.contextOptions ?? {}
     const options = {
       ...contextOptions,
       ignoreHTTPSErrors: true,
@@ -298,7 +324,7 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
     }
     const context = await browser.newContext(options)
     await this._throwIfClosing(context)
-    if (actionTimeout) {
+    if (actionTimeout != null) {
       context.setDefaultTimeout(actionTimeout)
     }
     debug?.('[%s][%s] the context is ready', sessionId, this.browserName)
@@ -423,12 +449,12 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
   async close(): Promise<void> {
     debug?.('[%s] closing provider', this.browserName)
     this.closing = true
-    const browser = this.browser
-    this.browser = null
     if (this.browserPromise) {
       await this.browserPromise
       this.browserPromise = null
     }
+    const browser = this.browser
+    this.browser = null
     await Promise.all([...this.pages.values()].map(p => p.close()))
     this.pages.clear()
     await Promise.all([...this.contexts.values()].map(c => c.close()))
@@ -475,4 +501,65 @@ const directRequestRE = /[?&]direct\b/
 
 function isDirectCSSRequest(request: string): boolean {
   return isCSSRequest(request) && directRequestRE.test(request)
+}
+
+declare module 'vitest/node' {
+  export interface BrowserCommandContext {
+    page: Page
+    frame(): Promise<Frame>
+    iframe: FrameLocator
+    context: BrowserContext
+  }
+
+  export interface ToMatchScreenshotOptions
+    extends Omit<
+      ScreenshotMatcherOptions,
+      'comparatorName' | 'comparatorOptions'
+    > {}
+
+  export interface ToMatchScreenshotComparators
+    extends ScreenshotComparatorRegistry {}
+}
+
+type PWHoverOptions = NonNullable<Parameters<Page['hover']>[1]>
+type PWClickOptions = NonNullable<Parameters<Page['click']>[1]>
+type PWDoubleClickOptions = NonNullable<Parameters<Page['dblclick']>[1]>
+type PWFillOptions = NonNullable<Parameters<Page['fill']>[2]>
+type PWScreenshotOptions = NonNullable<Parameters<Page['screenshot']>[0]>
+type PWSelectOptions = NonNullable<Parameters<Page['selectOption']>[2]>
+type PWDragAndDropOptions = NonNullable<Parameters<Page['dragAndDrop']>[2]>
+type PWSetInputFiles = NonNullable<Parameters<Page['setInputFiles']>[2]>
+
+declare module '@vitest/browser/context' {
+  export interface UserEventHoverOptions extends PWHoverOptions {}
+  export interface UserEventClickOptions extends PWClickOptions {}
+  export interface UserEventDoubleClickOptions extends PWDoubleClickOptions {}
+  export interface UserEventTripleClickOptions extends PWClickOptions {}
+  export interface UserEventFillOptions extends PWFillOptions {}
+  export interface UserEventSelectOptions extends PWSelectOptions {}
+  export interface UserEventDragAndDropOptions extends PWDragAndDropOptions {}
+  export interface UserEventUploadOptions extends PWSetInputFiles {}
+
+  export interface ScreenshotOptions extends Omit<PWScreenshotOptions, 'mask'> {
+    mask?: ReadonlyArray<Element | Locator> | undefined
+  }
+
+  export interface CDPSession {
+    send<T extends keyof Protocol.CommandParameters>(
+      method: T,
+      params?: Protocol.CommandParameters[T]
+    ): Promise<Protocol.CommandReturnValues[T]>
+    on<T extends keyof Protocol.Events>(
+      event: T,
+      listener: (payload: Protocol.Events[T]) => void
+    ): this
+    once<T extends keyof Protocol.Events>(
+      event: T,
+      listener: (payload: Protocol.Events[T]) => void
+    ): this
+    off<T extends keyof Protocol.Events>(
+      event: T,
+      listener: (payload: Protocol.Events[T]) => void
+    ): this
+  }
 }
