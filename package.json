@@ -64,7 +64,7 @@
     "typescript": "^5.8.3",
     "unplugin-isolated-decl": "^0.14.5",
     "unplugin-oxc": "^0.4.8",
-    "vite": "^6.3.5",
+    "vite": "^7.1.3",
     "vitest": "workspace:*",
     "zx": "^8.7.1"
   },
