@@ -449,7 +449,7 @@ export const DEFAULT_OPTIONS: Options = {
 
 function validateOptions(options: OptionsReceived) {
   for (const key of Object.keys(options)) {
-    if (!Object.prototype.hasOwnProperty.call(DEFAULT_OPTIONS, key)) {
+    if (!Object.hasOwn(DEFAULT_OPTIONS, key)) {
       throw new Error(`pretty-format: Unknown option "${key}".`)
     }
   }

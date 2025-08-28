@@ -128,7 +128,7 @@ export function toSentence(
   array: string[],
   { wordConnector = ', ', lastWordConnector = ' and ' }: ToSentenceOptions = {},
 ): string {
-  return [array.slice(0, -1).join(wordConnector), array[array.length - 1]].join(
+  return [array.slice(0, -1).join(wordConnector), array.at(-1)].join(
     array.length > 1 ? lastWordConnector : '',
   )
 }
