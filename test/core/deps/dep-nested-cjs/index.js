@@ -1,4 +1,4 @@
-if (typeof __vite_ssr_import_ !== 'undefined') {
+if (typeof __vite_ssr_import__ !== 'undefined') {
   throw new TypeError('The module should be external')
 }
 
