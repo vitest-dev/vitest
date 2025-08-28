@@ -762,6 +762,17 @@ describe('jest mock compat layer', () => {
     })
   })
 
+  it('can spy on a partial type', () => {
+    interface Person {
+      greet?: (name: string) => string
+    }
+    const person: Person = {
+      greet: (name: string) => `Hello ${name}`,
+    }
+    vi.spyOn(person, 'greet').mockImplementation(() => 'mocked')
+    expect(person.greet!('Alice')).toBe('mocked')
+  })
+
   describe('docs example', () => {
     it('mockClear', () => {
       const person = {
