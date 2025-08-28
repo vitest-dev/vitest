@@ -1233,6 +1233,9 @@ importers:
       '@vitest/test-dep-cjs':
         specifier: file:./deps/dep-cjs
         version: file:test/core/deps/dep-cjs
+      '@vitest/test-dep-nested-cjs':
+        specifier: file:./deps/dep-nested-cjs
+        version: file:test/core/deps/dep-nested-cjs
       '@vitest/test-dep1':
         specifier: file:./deps/dep1
         version: file:test/core/deps/dep1
@@ -1266,9 +1269,6 @@ importers:
       react-18:
         specifier: npm:react@18.3.1
         version: react@18.3.1
-      sweetalert2:
-        specifier: ^11.22.2
-        version: 11.22.2
       temporal-polyfill:
         specifier: ~0.3.0
         version: 0.3.0
@@ -4265,6 +4265,9 @@ packages:
 
   '@vitest/test-dep-conditions@file:test/config/deps/test-dep-conditions':
     resolution: {directory: test/config/deps/test-dep-conditions, type: directory}
+
+  '@vitest/test-dep-nested-cjs@file:test/core/deps/dep-nested-cjs':
+    resolution: {directory: test/core/deps/dep-nested-cjs, type: directory}
 
   '@vitest/test-dep1@file:test/core/deps/dep1':
     resolution: {directory: test/core/deps/dep1, type: directory}
@@ -8240,9 +8243,6 @@ packages:
     resolution: {integrity: sha512-ot0WnXS9fgdkgIcePe6RHNk1WA8+muPa6cSjeR3V8K27q9BB1rTE3R1p7Hv0z1ZyAc8s6Vvv8DIyWf681MAt0w==}
     engines: {node: '>= 0.4'}
 
-  sweetalert2@11.22.2:
-    resolution: {integrity: sha512-GFQGzw8ZXF23PO79WMAYXLl4zYmLiaKqYJwcp5eBF07wiI5BYPbZtKi2pcvVmfUQK+FqL1risJAMxugcPbGIyg==}
-
   symbol-tree@3.2.4:
     resolution: {integrity: sha512-9QNk5KwDF+Bvz+PyObkmSYjI5ksVUYtjW7AU22r2NKcfLJcXp96hkDWU3+XndOsUb+AQ9QhfzfCT2O+CNWT5Tw==}
 
@@ -11882,6 +11882,8 @@ snapshots:
   '@vitest/test-dep-conditions@file:test/config/deps/test-dep-conditions':
     dependencies:
       '@vitest/test-dep-conditions-indirect': file:test/config/deps/test-dep-conditions-indirect
+
+  '@vitest/test-dep-nested-cjs@file:test/core/deps/dep-nested-cjs': {}
 
   '@vitest/test-dep1@file:test/core/deps/dep1': {}
 
@@ -16541,8 +16543,6 @@ snapshots:
       has-flag: 4.0.0
 
   supports-preserve-symlinks-flag@1.0.0: {}
-
-  sweetalert2@11.22.2: {}
 
   symbol-tree@3.2.4: {}
 
