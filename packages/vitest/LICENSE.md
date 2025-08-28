@@ -329,7 +329,7 @@ Repository: lukeed/kleur
 ## local-pkg
 License: MIT
 By: Anthony Fu
-Repository: git+https://github.com/antfu/local-pkg.git
+Repository: git+https://github.com/antfu-collective/local-pkg.git
 
 > MIT License
 >
