@@ -10,14 +10,8 @@ export class VerboseReporter extends DefaultReporter {
   protected verbose = true
   renderSucceed = true
 
-  printTestModule(module: TestModule): void {
-    // still print the test module in TTY,
-    // but don't print it in the CLI because we
-    // print all the tests when they finish
-    // instead of printing them when the test file finishes
-    if (this.isTTY) {
-      return super.printTestModule(module)
-    }
+  printTestModule(_module: TestModule): void {
+    // don't print test module, only print tests
   }
 
   onTestCaseResult(test: TestCase): void {
@@ -25,9 +19,6 @@ export class VerboseReporter extends DefaultReporter {
 
     // don't print tests in TTY as they go, only print them
     // in the CLI when they finish
-    if (this.isTTY) {
-      return
-    }
 
     const testResult = test.result()
 
