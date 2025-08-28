@@ -2,7 +2,7 @@ import type { FileSpecification, VitestRunner } from './types/runner'
 import type { File, SuiteHooks } from './types/tasks'
 import { toArray } from '@vitest/utils'
 import { processError } from '@vitest/utils/error'
-import { collectorContext } from './context'
+import { collectorContext, setFileContext } from './context'
 import { getHooks, setHooks } from './map'
 import { runSetupFiles } from './setup'
 import {
@@ -32,6 +32,7 @@ export async function collectTests(
     const testLocations = typeof spec === 'string' ? undefined : spec.testLocations
 
     const file = createFileTask(filepath, config.root, config.name, runner.pool)
+    setFileContext(file, Object.create(null))
     file.shuffle = config.sequence.shuffle
 
     runner.onCollectStart?.(file)
