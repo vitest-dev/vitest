@@ -32,6 +32,8 @@ export class VitestModuleRunner extends viteModuleRunner.ModuleRunner {
         hmr: false,
         evaluatedModules,
         sourcemapInterceptor: 'prepareStackTrace',
+        // eslint-disable-next-line ts/ban-ts-comment
+        // @ts-ignore
         createImportMeta: vitestOptions.createImportMeta,
       },
       options.evaluator,
