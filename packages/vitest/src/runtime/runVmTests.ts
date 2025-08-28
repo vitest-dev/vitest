@@ -36,6 +36,9 @@ export async function run(
   })
 
   const viteEnvironment = workerState.environment.viteEnvironment || workerState.environment.name
+  VitestIndex.expect.setState({
+    environment: workerState.environment.name,
+  })
   if (viteEnvironment === 'client') {
     const _require = createRequire(import.meta.url)
     // always mock "required" `css` files, because we cannot process them

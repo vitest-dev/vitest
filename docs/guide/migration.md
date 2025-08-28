@@ -229,6 +229,37 @@ export default defineWorkspace([ // [!code --]
 ```
 :::
 
+### Browser Provider Accepts an Object
+
+In Vitest 4.0, the browser provider now accepts an object instead of a string (`'playwright'`, `'webdriverio'`). This makes it simpler to work with custom options and doesn't require adding `/// <reference` comments anymore.
+
+```ts
+import { playwright } from '@vitest/browser/providers/playwright' // [!code ++]
+
+export default defineConfig({
+  test: {
+    browser: {
+      provider: 'playwright', // [!code --]
+      provider: playwright({ // [!code ++]
+        launchOptions: { // [!code ++]
+          slowMo: 100, // [!code ++]
+        }, // [!code ++]
+      }), // [!code ++]
+      instances: [
+        {
+          browser: 'chromium',
+          launch: { // [!code --]
+            slowMo: 100, // [!code --]
+          }, // [!code --]
+        },
+      ],
+    },
+  },
+})
+```
+
+The naming of properties in `playwright` factory now also aligns with [Playwright documentation](https://playwright.dev/docs/api/class-testoptions#test-options-launch-options) making it easier to find.
+
 ### Deprecated APIs are Removed
 
 Vitest 4.0 removes some deprecated APIs, including:
@@ -238,6 +269,7 @@ Vitest 4.0 removes some deprecated APIs, including:
 - Reporter APIs `onCollected`, `onSpecsCollected`, `onPathsCollected`, `onTaskUpdate` and `onFinished`. See [`Reporters API`](/advanced/api/reporters) for new alternatives. These APIs were introduced in Vitest `v3.0.0`.
 - `deps.external`, `deps.inline`, `deps.fallbackCJS` config options. Use `server.deps.external`, `server.deps.inline`, or `server.deps.fallbackCJS` instead.
 - `browser.testerScripts` config option. Use [`browser.testerHtmlPath`](/guide/browser/config#browser-testerhtmlpath) instead.
+- `minWorkers` config option. Only `maxWorkers` has any effect on how tests are running, so we are removing this public option.
 
 This release also removes all deprecated types. This finally fixes an issue where Vitest accidentally pulled in `@types/node` (see [#5481](https://github.com/vitest-dev/vitest/issues/5481) and [#6141](https://github.com/vitest-dev/vitest/issues/6141)).
 

@@ -117,37 +117,34 @@ export function createSharedWorkerConstructor(): typeof SharedWorker {
 
       this._vw_name = fileId
 
-      startWebWorkerModuleRunner(context)
-        .then((runner) => {
-          return runner.mocker.resolveId(fileId).then(({ url, id: resolvedId }) => {
-            this._vw_name = name ?? url
-            debug('initialize shared worker %s', this._vw_name)
+      const runner = startWebWorkerModuleRunner(context)
+      runner.mocker.resolveId(fileId).then(({ url, id: resolvedId }) => {
+        this._vw_name = name ?? url
+        debug('initialize shared worker %s', this._vw_name)
 
-            return runner.import(url).then(() => {
-              runner._invalidateSubTreeById([
-                resolvedId,
-                runner.mocker.getMockPath(resolvedId),
-              ])
-              this._vw_workerTarget.dispatchEvent(
-                new MessageEvent('connect', {
-                  ports: [this._vw_workerPort],
-                }),
-              )
-              debug('shared worker %s successfully initialized', this._vw_name)
-            })
-          })
+        return runner.import(url).then(() => {
+          runner._invalidateSubTreeById([
+            resolvedId,
+            runner.mocker.getMockPath(resolvedId),
+          ])
+          this._vw_workerTarget.dispatchEvent(
+            new MessageEvent('connect', {
+              ports: [this._vw_workerPort],
+            }),
+          )
+          debug('shared worker %s successfully initialized', this._vw_name)
         })
-        .catch((e) => {
-          debug('shared worker %s failed to initialize: %o', this._vw_name, e)
-          const EventConstructor = globalThis.ErrorEvent || globalThis.Event
-          const error = new EventConstructor('error', {
-            error: e,
-            message: e.message,
-          })
-          this.dispatchEvent(error)
-          this.onerror?.(error)
-          console.error(e)
+      }).catch((e) => {
+        debug('shared worker %s failed to initialize: %o', this._vw_name, e)
+        const EventConstructor = globalThis.ErrorEvent || globalThis.Event
+        const error = new EventConstructor('error', {
+          error: e,
+          message: e.message,
         })
+        this.dispatchEvent(error)
+        this.onerror?.(error)
+        console.error(e)
+      })
     }
   }
 }

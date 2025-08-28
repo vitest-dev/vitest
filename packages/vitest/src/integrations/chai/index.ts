@@ -3,6 +3,7 @@ import type { TaskPopulated, Test } from '@vitest/runner'
 import {
   addCustomEqualityTesters,
   ASYMMETRIC_MATCHERS_OBJECT,
+  chai,
   customMatchers,
   getState,
   GLOBAL_EXPECT,
@@ -10,8 +11,7 @@ import {
 } from '@vitest/expect'
 import { getCurrentTest } from '@vitest/runner'
 import { getTestName } from '@vitest/runner/utils'
-import * as chai from 'chai'
-import { getCurrentEnvironment, getWorkerState } from '../../runtime/utils'
+import { getWorkerState } from '../../runtime/utils'
 import { createExpectPoll } from './poll'
 import './setup'
 
@@ -47,7 +47,6 @@ export function createExpect(test?: TaskPopulated): ExpectStatic {
       isExpectingAssertionsError: null,
       expectedAssertionsNumber: null,
       expectedAssertionsNumberErrorGen: null,
-      environment: getCurrentEnvironment(),
       get testPath() {
         return getWorkerState().filepath
       },
@@ -121,5 +120,6 @@ Object.defineProperty(globalThis, GLOBAL_EXPECT, {
   configurable: true,
 })
 
-export { assert, should } from 'chai'
+export const assert: Chai.Assert = chai.assert
+export const should: () => Chai.Should = chai.should
 export { chai, globalExpect as expect }

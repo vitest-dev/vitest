@@ -489,11 +489,11 @@ describe('test.scoped repro #7813', () => {
 })
 
 describe('suite with timeout', () => {
-  test.extend({})('timeout is inherited', async ({ task }) => {
+  test.extend({})('timeout is inherited from suite', ({ task }) => {
     expect(task.timeout).toBe(100)
   })
 
-  test.extend({})('timeout is overriden', { timeout: 1_000 }, async ({ task }) => {
-    expect(task.timeout).toBe(1000)
+  test.extend({})('timeout is inherited from options', { timeout: 1_000 }, ({ task }) => {
+    expect(task.timeout).toBe(1_000)
   })
 }, 100)

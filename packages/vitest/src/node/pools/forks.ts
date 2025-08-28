@@ -85,8 +85,10 @@ export function createForksPool(
 
   const maxThreads
     = poolOptions.maxForks ?? vitest.config.maxWorkers ?? recommendedCount
-  const minThreads
-    = poolOptions.minForks ?? vitest.config.minWorkers ?? Math.min(recommendedCount, maxThreads)
+  const minThreads = vitest.config.watch
+    ? Math.min(recommendedCount, maxThreads)
+    // avoid recreating threads when tests are finished
+    : 0
 
   const worker = resolve(vitest.distPath, 'workers/forks.js')
 

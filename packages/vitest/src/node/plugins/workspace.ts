@@ -1,6 +1,6 @@
 import type { UserConfig as ViteConfig, Plugin as VitePlugin } from 'vite'
 import type { TestProject } from '../project'
-import type { ResolvedConfig, TestProjectInlineConfiguration } from '../types/config'
+import type { BrowserConfigOptions, ResolvedConfig, TestProjectInlineConfiguration } from '../types/config'
 import { existsSync, readFileSync } from 'node:fs'
 import { deepMerge } from '@vitest/utils'
 import { basename, dirname, relative, resolve } from 'pathe'
@@ -66,7 +66,7 @@ export function WorkspaceVitestPlugin(
         const isBrowserEnabled = isUserBrowserEnabled ?? (viteConfig.test?.browser && project.vitest._cliOptions.browser?.enabled)
         // keep project names to potentially filter it out
         const workspaceNames = [name]
-        const browser = viteConfig.test!.browser || {}
+        const browser = (viteConfig.test!.browser || {}) as BrowserConfigOptions
         if (isBrowserEnabled && browser.name && !browser.instances?.length) {
           // vitest injects `instances` in this case later on
           workspaceNames.push(name ? `${name} (${browser.name})` : browser.name)

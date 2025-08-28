@@ -1,7 +1,7 @@
 import type { Context } from 'node:vm'
 import type { WorkerGlobalState } from '../../types/worker'
 import { pathToFileURL } from 'node:url'
-import { isContext } from 'node:vm'
+import { isContext, runInContext } from 'node:vm'
 import { resolve } from 'pathe'
 import { distDir } from '../../paths'
 import { createCustomConsole } from '../console'
@@ -75,7 +75,7 @@ export async function runVmTests(method: 'run' | 'collect', state: WorkerGlobalS
     viteClientModule: stubs['/@vite/client'],
   })
 
-  const moduleRunner = await startVitestModuleRunner({
+  const moduleRunner = startVitestModuleRunner({
     context,
     evaluatedModules: state.evaluatedModules,
     state,
@@ -92,6 +92,18 @@ export async function runVmTests(method: 'run' | 'collect', state: WorkerGlobalS
     writable: false,
   })
   context.__vitest_mocker__ = moduleRunner.mocker
+
+  if (ctx.config.serializedDefines) {
+    try {
+      runInContext(ctx.config.serializedDefines, context, {
+        filename: 'virtual:load-defines.js',
+      })
+    }
+    catch (error: any) {
+      throw new Error(`Failed to load custom "defines": ${error.message}`)
+    }
+  }
+  await moduleRunner.mocker.initializeSpyModule()
 
   const { run } = (await moduleRunner.import(
     entryFile,

@@ -79,7 +79,6 @@ export async function runVitest(
     ctx = await startVitest(mode, cliFilters, {
       // Test cases are already run with multiple forks/threads
       maxWorkers: 1,
-      minWorkers: 1,
 
       watch: false,
       // "none" can be used to disable passing "reporter" option so that default value is used (it's not same as reporters: ["default"])
@@ -164,7 +163,6 @@ async function runCli(command: 'vitest' | 'vite-node', _options?: CliOptions | s
 
   if (command === 'vitest') {
     args.push('--maxWorkers=1')
-    args.push('--minWorkers=1')
   }
 
   const subprocess = x(command, args, options as Options).process!

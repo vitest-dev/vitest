@@ -2,7 +2,7 @@ import { expect, test } from 'vitest'
 import { provider } from '../settings'
 import { runBrowserTests } from './utils'
 
-test.runIf(provider === 'playwright')('[playwright] runs multiple different configurations correctly', async () => {
+test.runIf(provider.name === 'playwright')('[playwright] runs multiple different configurations correctly', async () => {
   const { stdout, exitCode, stderr } = await runBrowserTests({
     root: './fixtures/multiple-different-configs',
   })
@@ -13,7 +13,7 @@ test.runIf(provider === 'playwright')('[playwright] runs multiple different conf
   expect(stdout).toContain('[firefox] HTML_INJECTED_VAR is undefined')
 })
 
-test.runIf(provider === 'webdriverio')('[webdriverio] runs multiple different configurations correctly', async () => {
+test.runIf(provider.name === 'webdriverio')('[webdriverio] runs multiple different configurations correctly', async () => {
   const { stdout, exitCode, stderr } = await runBrowserTests({
     root: './fixtures/multiple-different-configs',
   })

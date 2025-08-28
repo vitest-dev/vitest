@@ -1,7 +1,7 @@
 {
   "name": "@vitest/browser",
   "type": "module",
-  "version": "4.0.0-beta.8",
+  "version": "4.0.0-beta.9",
   "description": "Browser running for Vitest",
   "license": "MIT",
   "funding": "https://opencollective.com/vitest",
@@ -20,9 +20,9 @@
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     },
-    "./providers": {
-      "types": "./providers.d.ts",
-      "default": "./dist/providers.js"
+    "./providers/*": {
+      "types": "./dist/providers/*.d.ts",
+      "default": "./dist/providers/*.js"
     },
     "./context": {
       "types": "./context.d.ts",
@@ -33,14 +33,6 @@
     },
     "./matchers": {
       "types": "./matchers.d.ts",
-      "default": "./dummy.js"
-    },
-    "./providers/webdriverio": {
-      "types": "./providers/webdriverio.d.ts",
-      "default": "./dummy.js"
-    },
-    "./providers/playwright": {
-      "types": "./providers/playwright.d.ts",
       "default": "./dummy.js"
     },
     "./locator": {
@@ -105,19 +97,14 @@
     "@types/pngjs": "^6.0.5",
     "@types/ws": "catalog:",
     "@vitest/runner": "workspace:*",
-    "@vitest/ui": "workspace:*",
-    "@vitest/ws-client": "workspace:*",
-    "@wdio/protocols": "^9.16.2",
     "@wdio/types": "^9.16.2",
     "birpc": "catalog:",
     "flatted": "catalog:",
     "ivya": "^1.7.0",
     "mime": "^4.0.7",
     "pathe": "catalog:",
-    "periscopic": "^4.0.2",
     "playwright": "^1.54.1",
     "playwright-core": "^1.54.1",
-    "safaridriver": "^1.0.0",
     "vitest": "workspace:*",
     "webdriverio": "^9.18.4"
   }
