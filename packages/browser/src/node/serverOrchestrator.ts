@@ -36,7 +36,7 @@ export async function resolveOrchestrator(
     : await globalServer.injectorJs
 
   const injector = replacer(injectorJs, {
-    __VITEST_PROVIDER__: JSON.stringify(browserProject.config.browser.provider || 'preview'),
+    __VITEST_PROVIDER__: JSON.stringify(browserProject.config.browser.provider?.name || 'preview'),
     __VITEST_CONFIG__: JSON.stringify(browserProject.wrapSerializedConfig()),
     __VITEST_VITE_CONFIG__: JSON.stringify({
       root: browserProject.vite.config.root,

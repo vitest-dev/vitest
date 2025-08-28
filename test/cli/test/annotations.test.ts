@@ -1,4 +1,5 @@
 import type { TestAnnotation } from 'vitest'
+import { playwright } from '@vitest/browser/providers/playwright'
 import { describe, expect, test } from 'vitest'
 import { runInlineTests } from '../../test-utils'
 
@@ -36,7 +37,7 @@ describe('API', () => {
       name: 'browser',
       browser: {
         enabled: true,
-        provider: 'playwright',
+        provider: playwright(),
         headless: true,
         instances: [
           { browser: 'chromium' },

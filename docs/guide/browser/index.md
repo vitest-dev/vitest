@@ -99,10 +99,12 @@ To activate browser mode in your Vitest configuration, set the `browser.enabled`
 
 ```ts [vitest.config.ts]
 import { defineConfig } from 'vitest/config'
+import { playwright } from '@vitest/browser/providers/playwright'
+
 export default defineConfig({
   test: {
     browser: {
-      provider: 'playwright', // or 'webdriverio'
+      provider: playwright(),
       enabled: true,
       // at least one instance is required
       instances: [
@@ -125,13 +127,14 @@ If you have not used Vite before, make sure you have your framework's plugin ins
 ```ts [react]
 import { defineConfig } from 'vitest/config'
 import react from '@vitejs/plugin-react'
+import { playwright } from '@vitest/browser/providers/playwright'
 
 export default defineConfig({
   plugins: [react()],
   test: {
     browser: {
       enabled: true,
-      provider: 'playwright',
+      provider: playwright(),
       instances: [
         { browser: 'chromium' },
       ],
@@ -141,6 +144,7 @@ export default defineConfig({
 ```
 ```ts [vue]
 import { defineConfig } from 'vitest/config'
+import { playwright } from '@vitest/browser/providers/playwright'
 import vue from '@vitejs/plugin-vue'
 
 export default defineConfig({
@@ -148,7 +152,7 @@ export default defineConfig({
   test: {
     browser: {
       enabled: true,
-      provider: 'playwright',
+      provider: playwright(),
       instances: [
         { browser: 'chromium' },
       ],
@@ -159,13 +163,14 @@ export default defineConfig({
 ```ts [svelte]
 import { defineConfig } from 'vitest/config'
 import { svelte } from '@sveltejs/vite-plugin-svelte'
+import { playwright } from '@vitest/browser/providers/playwright'
 
 export default defineConfig({
   plugins: [svelte()],
   test: {
     browser: {
       enabled: true,
-      provider: 'playwright',
+      provider: playwright(),
       instances: [
         { browser: 'chromium' },
       ],
@@ -176,13 +181,14 @@ export default defineConfig({
 ```ts [solid]
 import { defineConfig } from 'vitest/config'
 import solidPlugin from 'vite-plugin-solid'
+import { playwright } from '@vitest/browser/providers/playwright'
 
 export default defineConfig({
   plugins: [solidPlugin()],
   test: {
     browser: {
       enabled: true,
-      provider: 'playwright',
+      provider: playwright(),
       instances: [
         { browser: 'chromium' },
       ],
@@ -193,13 +199,14 @@ export default defineConfig({
 ```ts [marko]
 import { defineConfig } from 'vitest/config'
 import marko from '@marko/vite'
+import { playwright } from '@vitest/browser/providers/playwright'
 
 export default defineConfig({
   plugins: [marko()],
   test: {
     browser: {
       enabled: true,
-      provider: 'playwright',
+      provider: playwright(),
       instances: [
         { browser: 'chromium' },
       ],
@@ -210,6 +217,7 @@ export default defineConfig({
 ```ts [qwik]
 import { defineConfig } from 'vitest/config'
 import { qwikVite } from '@builder.io/qwik/optimizer'
+import { playwright } from '@vitest/browser/providers/playwright'
 
 // optional, run the tests in SSR mode
 import { testSSR } from 'vitest-browser-qwik/ssr-plugin'
@@ -219,7 +227,7 @@ export default defineConfig({
   test: {
     browser: {
       enabled: true,
-      provider: 'playwright',
+      provider: playwright(),
       instances: [{ browser: 'chromium' }]
     },
   },
@@ -370,10 +378,12 @@ Here's an example configuration enabling headless mode:
 
 ```ts [vitest.config.ts]
 import { defineConfig } from 'vitest/config'
+import { playwright } from '@vitest/browser/providers/playwright'
+
 export default defineConfig({
   test: {
     browser: {
-      provider: 'playwright',
+      provider: playwright(),
       enabled: true,
       headless: true,
     },

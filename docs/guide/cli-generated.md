@@ -191,7 +191,7 @@ Check thresholds per file. See `--coverage.thresholds.lines`, `--coverage.thresh
 
 ### coverage.thresholds.autoUpdate
 
-- **CLI:** `--coverage.thresholds.autoUpdate`
+- **CLI:** `--coverage.thresholds.autoUpdate <boolean|function>`
 - **Config:** [coverage.thresholds.autoUpdate](/config/#coverage-thresholds-autoupdate)
 
 Update threshold values: "lines", "functions", "branches" and "statements" to configuration file when current coverage is above the configured thresholds (default: `false`)
