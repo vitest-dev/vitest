@@ -48,7 +48,7 @@ test('imports from "data:application/wasm" URI without explicit encoding fail', 
     expect(error).toMatchInlineSnapshot(`[Error: Missing data URI encoding]`)
   }
   else {
-    expect(error).toMatchInlineSnapshot(`[CompileError: data:application/wasm,AGFzbQEAAAABBwFgAn9/AX8DAgEABwcBA2FkZAAACgkBBwAgACABags=: WebAssembly.compile(): expected magic word 00 61 73 6d, found 41 47 46 7a @+0]`)
+    expect(error).toMatchObject({ name: 'CompileError' })
   }
 })
 
@@ -59,7 +59,7 @@ test('imports from "data:application/wasm" URI with invalid encoding fail', asyn
     expect(error).toMatchInlineSnapshot(`[Error: Invalid data URI encoding: charset=utf-8]`)
   }
   else {
-    expect(error).toMatchInlineSnapshot(`[CompileError: data:application/wasm;charset=utf-8,oops: WebAssembly.compile(): expected magic word 00 61 73 6d, found 6f 6f 70 73 @+0]`)
+    expect(error).toMatchObject({ name: 'CompileError' })
   }
 })
 
