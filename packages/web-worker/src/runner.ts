@@ -30,7 +30,6 @@ export function startWebWorkerModuleRunner(context: Record<string, unknown>): Vi
     evaluatedModules: state.evaluatedModules,
     mocker,
     state,
-    disableNodeImportMeta: true,
   })
 }
 

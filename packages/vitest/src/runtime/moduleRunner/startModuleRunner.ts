@@ -2,6 +2,7 @@ import type vm from 'node:vm'
 import type { EvaluatedModules } from 'vite/module-runner'
 import type { WorkerGlobalState } from '../../types/worker'
 import type { ExternalModulesExecutor } from '../external-executor'
+import type { CreateImportMeta } from './moduleRunner'
 import fs from 'node:fs'
 import { isBuiltin } from 'node:module'
 import { isBareImport } from '@vitest/utils'
@@ -26,7 +27,7 @@ export interface ContextModuleRunnerOptions {
   externalModulesExecutor?: ExternalModulesExecutor
   state: WorkerGlobalState
   spyModule?: typeof import('@vitest/spy')
-  disableNodeImportMeta?: boolean
+  createImportMeta?: CreateImportMeta
 }
 
 const cwd = process.cwd()
@@ -162,7 +163,7 @@ export function startVitestModuleRunner(options: ContextModuleRunnerOptions): Vi
     },
     getWorkerState: state,
     vm,
-    disableNodeImportMeta: options.disableNodeImportMeta,
+    createImportMeta: options.createImportMeta,
   })
 
   // await moduleRunner.import('/@vite/env')
