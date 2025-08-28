@@ -15,7 +15,7 @@ import { VitestTransport } from './moduleTransport'
 export type CreateImportMeta = NonNullable<viteModuleRunner.ModuleRunnerOptions['createImportMeta']>
 // eslint-disable-next-line ts/ban-ts-comment
 // @ts-ignore
-export const createNodeImportMeta: CreateImportMeta = viteModuleRunner.createDefaultImportMeta
+export const createNodeImportMeta: CreateImportMeta = viteModuleRunner.createNodeImportMeta
 
 // @ts-expect-error overriding private method
 export class VitestModuleRunner extends viteModuleRunner.ModuleRunner {
