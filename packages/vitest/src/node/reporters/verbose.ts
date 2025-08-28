@@ -33,9 +33,19 @@ export class VerboseReporter extends DefaultReporter {
     }
 
     title += getFullName(test.task, c.dim(' > '))
-    title += this.getDurationPrefix(test.task)
 
     const diagnostic = test.diagnostic()
+    const { retryCount, repeatCount } = diagnostic || {}
+    if (retryCount != null && retryCount > 0) {
+      title += c.yellow(` (retry x${retryCount})`)
+    }
+
+    if (repeatCount != null && repeatCount > 0) {
+      title += c.yellow(` (repeat x${repeatCount})`)
+    }
+
+    title += this.getDurationPrefix(test.task)
+
     if (diagnostic?.heap != null) {
       title += c.magenta(` ${Math.floor(diagnostic.heap / 1024 / 1024)} MB heap used`)
     }
