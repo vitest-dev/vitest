@@ -138,6 +138,7 @@ export function serializeConfig(project: TestProject): SerializedConfig {
       ...config.env,
     },
     browser: ((browser) => {
+      const provider = project.browser?.provider
       return {
         name: browser.name,
         headless: browser.headless,
@@ -149,9 +150,9 @@ export function serializeConfig(project: TestProject): SerializedConfig {
         locators: {
           testIdAttribute: browser.locators.testIdAttribute,
         },
-        providerOptions: browser.provider === 'playwright'
+        providerOptions: provider?.name === 'playwright'
           ? {
-              actionTimeout: (browser.providerOptions as any)?.context?.actionTimeout,
+              actionTimeout: (provider as any)?.options?.actionTimeout,
             }
           : {},
         trackUnhandledErrors: browser.trackUnhandledErrors ?? true,

@@ -478,15 +478,6 @@ importers:
       '@vitest/runner':
         specifier: workspace:*
         version: link:../runner
-      '@vitest/ui':
-        specifier: workspace:*
-        version: link:../ui
-      '@vitest/ws-client':
-        specifier: workspace:*
-        version: link:../ws-client
-      '@wdio/protocols':
-        specifier: ^9.16.2
-        version: 9.16.2
       '@wdio/types':
         specifier: ^9.16.2
         version: 9.16.2
@@ -505,18 +496,12 @@ importers:
       pathe:
         specifier: 'catalog:'
         version: 2.0.3
-      periscopic:
-        specifier: ^4.0.2
-        version: 4.0.2
       playwright:
         specifier: ^1.54.1
         version: 1.54.1
       playwright-core:
         specifier: ^1.54.1
         version: 1.54.1
-      safaridriver:
-        specifier: ^1.0.0
-        version: 1.0.0
       vitest:
         specifier: workspace:*
         version: link:../vitest
@@ -6343,9 +6328,6 @@ packages:
   is-reference@1.2.1:
     resolution: {integrity: sha512-U82MsXXiFIrjCK4otLT+o2NA2Cd2g5MLoOVXUZjIOhLurrRxpEXzI8O0KZHr3IjLvlAH1kTPYSuqer5T9ZVBKQ==}
 
-  is-reference@3.0.2:
-    resolution: {integrity: sha512-v3rht/LgVcsdZa3O2Nqs+NMowLOxeOm7Ay9+/ARQ2F+qEoANRcqrjAZKGN0v8ymUetZGgkp26LTnGT7H0Qo9Pg==}
-
   is-regex@1.1.4:
     resolution: {integrity: sha512-kvRdxDsxZjhzUX07ZnLydzS1TU/TJlTUHHY4YLL87e37oUA49DfkLqgy+VjFocowy29cKvcSiu+kIv728jTTVg==}
     engines: {node: '>= 0.4'}
@@ -7363,9 +7345,6 @@ packages:
 
   perfect-debounce@1.0.0:
     resolution: {integrity: sha512-xCy9V055GLEqoFaHoC1SoLIaLmWctgCUaBaWxDZ7/Zx4CTyX7cJQLJOok/orfjZAh9kEYpjJa4d0KcJmCbctZA==}
-
-  periscopic@4.0.2:
-    resolution: {integrity: sha512-sqpQDUy8vgB7ycLkendSKS6HnVz1Rneoc3Rc+ZBUCe2pbqlVuCC5vF52l0NJ1aiMg/r1qfYF9/myz8CZeI2rjA==}
 
   picocolors@1.1.1:
     resolution: {integrity: sha512-xceH2snhtb5M9liqDsmEw56le376mTZkEX/jEb/RxNFyegNul7eNslCXP9FDj/Lcu0X8KEyMceP2ntpaHrDEVA==}
@@ -9132,9 +9111,6 @@ packages:
   yoctocolors@2.1.1:
     resolution: {integrity: sha512-GQHQqAopRhwU8Kt1DDM8NjibDXHC8eoh1erhGAJPEyveY9qqVeXvVikNKrDz69sHowPMorbPUrH/mx8c50eiBQ==}
     engines: {node: '>=18'}
-
-  zimmerframe@1.1.0:
-    resolution: {integrity: sha512-+AmV37r9NPUy7KcuG0Fde9AAFSD88kN5pnqvD7Pkp5WLLK0jct7hAtIDXXFDCRk3l5Mc1r2Sth3gfP2ZLE+/Qw==}
 
   zip-stream@6.0.1:
     resolution: {integrity: sha512-zK7YHHz4ZXpW89AHXUPbQVGKI7uvkd3hzusTdotCg1UxyaVtg0zFJSTfW/Dq5f7OBBVnq6cZIaC8Ti4hb6dtCA==}
@@ -14314,10 +14290,6 @@ snapshots:
     dependencies:
       '@types/estree': 1.0.8
 
-  is-reference@3.0.2:
-    dependencies:
-      '@types/estree': 1.0.7
-
   is-regex@1.1.4:
     dependencies:
       call-bind: 1.0.7
@@ -15545,12 +15517,6 @@ snapshots:
   pend@1.2.0: {}
 
   perfect-debounce@1.0.0: {}
-
-  periscopic@4.0.2:
-    dependencies:
-      '@types/estree': 1.0.7
-      is-reference: 3.0.2
-      zimmerframe: 1.1.0
 
   picocolors@1.1.1: {}
 
@@ -17606,8 +17572,6 @@ snapshots:
   yoctocolors-cjs@2.1.2: {}
 
   yoctocolors@2.1.1: {}
-
-  zimmerframe@1.1.0: {}
 
   zip-stream@6.0.1:
     dependencies:

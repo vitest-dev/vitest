@@ -127,6 +127,13 @@ test('fails when an array is passed down for a single value', async () => {
     .toThrowErrorMatchingInlineSnapshot(`[Error: Expected a single value for option "--coverage.provider <name>", received ["v8", "istanbul"]]`)
 })
 
+test('coverage autoUpdate accepts boolean values from CLI', async () => {
+  expect(getCLIOptions('--coverage.thresholds.autoUpdate true').coverage.thresholds.autoUpdate).toBe(true)
+  expect(getCLIOptions('--coverage.thresholds.autoUpdate false').coverage.thresholds.autoUpdate).toBe(false)
+  expect(getCLIOptions('--coverage.thresholds.autoUpdate yes').coverage.thresholds.autoUpdate).toBe(true)
+  expect(getCLIOptions('--coverage.thresholds.autoUpdate no').coverage.thresholds.autoUpdate).toBe(false)
+})
+
 test('bench only options', async () => {
   expect(() =>
     parseArguments('--compare file.json').matchedCommand?.checkUnknownOptions(),

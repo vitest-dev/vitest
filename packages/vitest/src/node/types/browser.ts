@@ -7,11 +7,6 @@ import type { BrowserTesterOptions } from '../../types/browser'
 import type { TestProject } from '../project'
 import type { ApiConfig, ProjectConfig } from './config'
 
-export interface BrowserProviderInitializationOptions {
-  browser: string
-  options?: BrowserProviderOptions
-}
-
 export interface CDPSession {
   send: (method: string, params?: Record<string, unknown>) => Promise<unknown>
   on: (event: string, listener: (...args: unknown[]) => void) => void
@@ -25,6 +20,12 @@ export interface BrowserModuleMocker {
   clear: (sessionId: string) => Promise<void>
 }
 
+export interface BrowserProviderOption {
+  name: string
+  supportedBrowser?: ReadonlyArray<string>
+  factory: (project: TestProject) => BrowserProvider
+}
+
 export interface BrowserProvider {
   name: string
   mocker?: BrowserModuleMocker
@@ -32,23 +33,11 @@ export interface BrowserProvider {
    * @experimental opt-in into file parallelisation
    */
   supportsParallelism: boolean
-  getSupportedBrowsers: () => readonly string[]
   getCommandsContext: (sessionId: string) => Record<string, unknown>
-  openPage: (sessionId: string, url: string, beforeNavigate?: () => Promise<void>) => Promise<void>
+  openPage: (sessionId: string, url: string) => Promise<void>
   getCDPSession?: (sessionId: string) => Promise<CDPSession>
   close: () => Awaitable<void>
-  // eslint-disable-next-line ts/method-signature-style -- we want to allow extended options
-  initialize(
-    ctx: TestProject,
-    options: BrowserProviderInitializationOptions
-  ): Awaitable<void>
 }
-
-export interface BrowserProviderModule {
-  new (): BrowserProvider
-}
-
-export interface BrowserProviderOptions {}
 
 export type BrowserBuiltinProvider = 'webdriverio' | 'playwright' | 'preview'
 
@@ -71,7 +60,7 @@ type UnsupportedProperties
     | 'benchmark'
     | 'name'
 
-export interface BrowserInstanceOption extends BrowserProviderOptions,
+export interface BrowserInstanceOption extends
   Omit<ProjectConfig, UnsupportedProperties>,
   Pick<
     BrowserConfigOptions,
@@ -81,6 +70,7 @@ export interface BrowserInstanceOption extends BrowserProviderOptions,
     | 'testerHtmlPath'
     | 'screenshotDirectory'
     | 'screenshotFailures'
+    | 'provider'
   > {
   /**
    * Name of the browser
@@ -101,33 +91,19 @@ export interface BrowserConfigOptions {
   /**
    * Name of the browser
    * @deprecated use `instances` instead. if both are defined, this will filter `instances` by name.
+   * @internal
    */
   name?: string
 
   /**
    * Configurations for different browser setups
    */
-  instances?: BrowserInstanceOption[]
+  instances: BrowserInstanceOption[]
 
   /**
    * Browser provider
-   *
-   * @default 'preview'
    */
-  provider?: BrowserBuiltinProvider | (string & {})
-
-  /**
-   * Options that are passed down to a browser provider.
-   * To support type hinting, add one of the types to your tsconfig.json "compilerOptions.types" field:
-   *
-   * - for webdriverio: `@vitest/browser/providers/webdriverio`
-   * - for playwright: `@vitest/browser/providers/playwright`
-   *
-   * @example
-   * { playwright: { launch: { devtools: true } }
-   * @deprecated use `instances` instead
-   */
-  providerOptions?: BrowserProviderOptions
+  provider?: BrowserProviderOption
 
   /**
    * enable headless mode
@@ -328,7 +304,6 @@ export interface BrowserScript {
 
 export interface ResolvedBrowserOptions extends BrowserConfigOptions {
   name: string
-  providerOptions?: BrowserProviderOptions
   enabled: boolean
   headless: boolean
   isolate: boolean

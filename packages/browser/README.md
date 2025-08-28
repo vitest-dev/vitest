@@ -1,19 +1,7 @@
 # @vitest/browser
 
-[Browser runner](https://vitest.dev/guide/browser/) for Vitest.
+[![NPM version](https://img.shields.io/npm/v/@vitest/browser?color=a1b858&label=)](https://www.npmjs.com/package/@vitest/browser)
 
-> ⚠️ This package is **experimental**. While this package will be released along with other packages, it will not follow SemVer for breaking changes until we mark it as ready.
+Running Vitest tests in the real browser.
 
-## Development Setup
-
-At project root:
-
-```bash
-cd test/browser
-# runs relevant tests for the browser mode
-# useful to confirm everything works fine
-pnpm test
-# runs tests as the browser mode
-# useful during development
-pnpm test-fixtures
-```
+[GitHub](https://github.com/vitest-dev/vitest) | [Documentation](https://vitest.dev/guide/browser/)

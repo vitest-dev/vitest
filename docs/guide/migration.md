@@ -229,6 +229,37 @@ export default defineWorkspace([ // [!code --]
 ```
 :::
 
+### Browser Provider Accepts an Object
+
+In Vitest 4.0, the browser provider now accepts an object instead of a string (`'playwright'`, `'webdriverio'`). This makes it simpler to work with custom options and doesn't require adding `/// <reference` comments anymore.
+
+```ts
+import { playwright } from '@vitest/browser/providers/playwright' // [!code ++]
+
+export default defineConfig({
+  test: {
+    browser: {
+      provider: 'playwright', // [!code --]
+      provider: playwright({ // [!code ++]
+        launchOptions: { // [!code ++]
+          slowMo: 100, // [!code ++]
+        }, // [!code ++]
+      }), // [!code ++]
+      instances: [
+        {
+          browser: 'chromium',
+          launch: { // [!code --]
+            slowMo: 100, // [!code --]
+          }, // [!code --]
+        },
+      ],
+    },
+  },
+})
+```
+
+The naming of properties in `playwright` factory now also aligns with [Playwright documentation](https://playwright.dev/docs/api/class-testoptions#test-options-launch-options) making it easier to find.
+
 ### Deprecated APIs are Removed
 
 Vitest 4.0 removes some deprecated APIs, including:
