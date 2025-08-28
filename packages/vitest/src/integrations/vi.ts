@@ -625,19 +625,22 @@ function createVitest(): VitestUtils {
           `vi.doUnmock() expects a string path, but received a ${typeof path}`,
         )
       }
-      _mocker().queueUnmock(path, getImporter('doUnmock'))
+      const importer = getImporter('doUnmock')
+      _mocker().queueUnmock(path, importer)
     },
 
     async importActual<T = unknown>(path: string): Promise<T> {
+      const importer = getImporter('importActual')
       return _mocker().importActual<T>(
         path,
-        getImporter('importActual'),
+        importer,
         _mocker().getMockContext().callstack,
       )
     },
 
     async importMock<T>(path: string): Promise<MaybeMockedDeep<T>> {
-      return _mocker().importMock(path, getImporter('importMock'))
+      const importer = getImporter('importMock')
+      return _mocker().importMock(path, importer)
     },
 
     mockObject<T>(value: T, options?: MockOptions) {
@@ -779,7 +782,7 @@ function getImporter(name: string) {
   const stackTrace = createSimpleStackTrace({ stackTraceLimit: 5 })
   const stackArray = stackTrace.split('\n')
   // if there is no message in a stack trace, use the item - 1
-  const importerStackIndex = stackArray.findIndex((stack) => {
+  const importerStackIndex = stackArray.findLastIndex((stack) => {
     return stack.includes(` at Object.${name}`) || stack.includes(`${name}@`)
   })
   const stack = parseSingleStack(stackArray[importerStackIndex + 1])
