@@ -4,6 +4,7 @@ import type { ContextModuleRunnerOptions } from '../moduleRunner/startModuleRunn
 import { runInThisContext } from 'node:vm'
 import * as spyModule from '@vitest/spy'
 import { EvaluatedModules } from 'vite/module-runner'
+import { createNodeImportMeta } from '../moduleRunner/moduleRunner'
 import { startVitestModuleRunner } from '../moduleRunner/startModuleRunner'
 import { run } from '../runBaseTests'
 import { provideWorkerState } from '../utils'
@@ -52,6 +53,7 @@ export async function runBaseTests(method: 'run' | 'collect', state: WorkerGloba
     state,
     evaluatedModules: state.evaluatedModules,
     spyModule,
+    createImportMeta: createNodeImportMeta,
   })
   const fileSpecs = ctx.files.map(f =>
     typeof f === 'string'
