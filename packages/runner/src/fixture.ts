@@ -395,7 +395,7 @@ function splitByComma(s: string) {
     if (s[i] === '{' || s[i] === '[') {
       stack.push(s[i] === '{' ? '}' : ']')
     }
-    else if (s[i] === stack[stack.length - 1]) {
+    else if (s[i] === stack.at(-1)) {
       stack.pop()
     }
     else if (!stack.length && s[i] === ',') {

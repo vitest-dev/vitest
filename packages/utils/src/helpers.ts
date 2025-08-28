@@ -86,7 +86,7 @@ export function unwrapId(id: string): string {
 }
 
 export function withTrailingSlash(path: string): string {
-  if (path[path.length - 1] !== '/') {
+  if (path.at(-1) !== '/') {
     return `${path}/`
   }
   return path

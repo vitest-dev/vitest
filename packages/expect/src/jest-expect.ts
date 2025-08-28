@@ -467,7 +467,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
       const actual = this._obj as any
       const [propertyName, expected] = args
       const getValue = () => {
-        const hasOwn = Object.prototype.hasOwnProperty.call(
+        const hasOwn = Object.hasOwn(
           actual,
           propertyName,
         )
@@ -660,7 +660,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     function (...args: any[]) {
       const spy = getSpy(this)
       const spyName = spy.getMockName()
-      const lastCall = spy.mock.calls[spy.mock.calls.length - 1]
+      const lastCall = spy.mock.calls.at(-1)
 
       this.assert(
         lastCall && equalsArgumentArray(lastCall, args),
@@ -965,11 +965,11 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
         name: 'toHaveLastResolvedWith',
         condition: (spy, value) => {
           const result
-            = spy.mock.settledResults[spy.mock.settledResults.length - 1]
-          return (
+            = spy.mock.settledResults.at(-1)
+          return Boolean(
             result
             && result.type === 'fulfilled'
-            && jestEquals(result.value, value)
+            && jestEquals(result.value, value),
           )
         },
         action: 'resolve',
@@ -977,11 +977,11 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
       {
         name: ['toHaveLastReturnedWith', 'lastReturnedWith'],
         condition: (spy, value) => {
-          const result = spy.mock.results[spy.mock.results.length - 1]
-          return (
+          const result = spy.mock.results.at(-1)
+          return Boolean(
             result
             && result.type === 'return'
-            && jestEquals(result.value, value)
+            && jestEquals(result.value, value),
           )
         },
         action: 'return',
@@ -992,7 +992,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
       const spy = getSpy(this)
       const results
         = action === 'return' ? spy.mock.results : spy.mock.settledResults
-      const result = results[results.length - 1]
+      const result = results.at(-1)
       const spyName = spy.getMockName()
       this.assert(
         condition(spy, value),

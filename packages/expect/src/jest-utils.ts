@@ -294,7 +294,7 @@ function hasDefinedKey(obj: any, key: string) {
 }
 
 function hasKey(obj: any, key: string) {
-  return Object.prototype.hasOwnProperty.call(obj, key)
+  return Object.hasOwn(obj, key)
 }
 
 export function isA(typeName: string, value: unknown): boolean {
@@ -342,7 +342,7 @@ export function hasProperty(obj: object | null, property: string): boolean {
     return false
   }
 
-  if (Object.prototype.hasOwnProperty.call(obj, property)) {
+  if (Object.hasOwn(obj, property)) {
     return true
   }
 
@@ -571,7 +571,7 @@ function hasPropertyInObject(object: object, key: string | symbol): boolean {
   }
 
   return (
-    Object.prototype.hasOwnProperty.call(object, key)
+    Object.hasOwn(object, key)
     || hasPropertyInObject(Object.getPrototypeOf(object), key)
   )
 }

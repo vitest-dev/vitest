@@ -1,7 +1,7 @@
 import type { RunnerTask, RunnerTestSuite } from 'vitest'
 
 export function isSuite(task: RunnerTask): task is RunnerTestSuite {
-  return Object.hasOwnProperty.call(task, 'tasks')
+  return Object.hasOwn(task, 'tasks')
 }
 
 export function isTaskDone(task: RunnerTask) {
