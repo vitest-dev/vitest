@@ -12,7 +12,10 @@ import { VitestTransport } from './moduleTransport'
 
 // eslint-disable-next-line ts/ban-ts-comment
 // @ts-ignore available since Vite 7.1 https://github.com/vitejs/vite/pull/20260
-export type CreateImportMeta = typeof viteModuleRunner.createNodeImportMeta
+export type CreateImportMeta = NonNullable<viteModuleRunner.ModuleRunnerOptions['createImportMeta']>
+// eslint-disable-next-line ts/ban-ts-comment
+// @ts-ignore
+export const createNodeImportMeta: CreateImportMeta = viteModuleRunner.createDefaultImportMeta
 
 // @ts-expect-error overriding private method
 export class VitestModuleRunner extends viteModuleRunner.ModuleRunner {
