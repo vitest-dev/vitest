@@ -6,17 +6,17 @@ import type { ExternalModulesExecutor } from '../external-executor'
 import type { ModuleExecutionInfo } from './moduleDebug'
 import type { VitestModuleEvaluator } from './moduleEvaluator'
 import type { VitestTransportOptions } from './moduleTransport'
-import { createNodeImportMeta, ModuleRunner } from 'vite/module-runner'
+import * as viteModuleRunner from 'vite/module-runner'
 import { VitestMocker } from './moduleMocker'
 import { VitestTransport } from './moduleTransport'
 
 // @ts-expect-error overriding private method
-export class VitestModuleRunner extends ModuleRunner {
+export class VitestModuleRunner extends viteModuleRunner.ModuleRunner {
   public mocker: VitestMocker
   public moduleExecutionInfo: ModuleExecutionInfo
 
   constructor(private vitestOptions: VitestModuleRunnerOptions) {
-    const options = vitestOptions;
+    const options = vitestOptions
     const transport = new VitestTransport(options.transport)
     const evaluatedModules = options.evaluatedModules
     super(
@@ -25,7 +25,9 @@ export class VitestModuleRunner extends ModuleRunner {
         hmr: false,
         evaluatedModules,
         sourcemapInterceptor: 'prepareStackTrace',
-        createImportMeta: createNodeImportMeta,
+        // eslint-disable-next-line ts/ban-ts-comment
+        // @ts-ignore available since Vite 7.1 https://github.com/vitejs/vite/pull/20260
+        createImportMeta: viteModuleRunner.createNodeImportMeta,
       },
       options.evaluator,
     )
