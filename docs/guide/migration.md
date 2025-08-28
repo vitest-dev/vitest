@@ -267,6 +267,7 @@ Vitest 4.0 removes some deprecated APIs, including:
 - `poolMatchGlobs` config option. Use [`projects`](/guide/projects) instead.
 - `environmentMatchGlobs` config option. Use [`projects`](/guide/projects) instead.
 - Reporter APIs `onCollected`, `onSpecsCollected`, `onPathsCollected`, `onTaskUpdate` and `onFinished`. See [`Reporters API`](/advanced/api/reporters) for new alternatives. These APIs were introduced in Vitest `v3.0.0`.
+- The `verbose` reporter now always prints tests cases even if the terminal is TTY (previously, it would fallback to the `default` reporter in that case).
 - `deps.external`, `deps.inline`, `deps.fallbackCJS` config options. Use `server.deps.external`, `server.deps.inline`, or `server.deps.fallbackCJS` instead.
 - `browser.testerScripts` config option. Use [`browser.testerHtmlPath`](/guide/browser/config#browser-testerhtmlpath) instead.
 - `minWorkers` config option. Only `maxWorkers` has any effect on how tests are running, so we are removing this public option.
