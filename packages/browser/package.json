@@ -97,15 +97,15 @@
     "@types/pngjs": "^6.0.5",
     "@types/ws": "catalog:",
     "@vitest/runner": "workspace:*",
-    "@wdio/types": "^9.16.2",
+    "@wdio/types": "^9.19.2",
     "birpc": "catalog:",
     "flatted": "catalog:",
     "ivya": "^1.7.0",
     "mime": "^4.0.7",
     "pathe": "catalog:",
-    "playwright": "^1.54.1",
-    "playwright-core": "^1.54.1",
+    "playwright": "^1.55.0",
+    "playwright-core": "^1.55.0",
     "vitest": "workspace:*",
-    "webdriverio": "^9.18.4"
+    "webdriverio": "^9.19.2"
   }
 }
