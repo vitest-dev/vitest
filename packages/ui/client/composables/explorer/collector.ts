@@ -2,7 +2,7 @@ import type { File, Task, TaskResultPack, Test, TestAnnotation } from '@vitest/r
 import type { Arrayable } from '@vitest/utils'
 import type { CollectFilteredTests, CollectorInfo, Filter, FilteredTests } from '~/composables/explorer/types'
 import { isTestCase } from '@vitest/runner/utils'
-import { toArray } from '@vitest/utils'
+import { toArray } from '@vitest/utils/helpers'
 import { client, findById } from '~/composables/client'
 import { testRunState } from '~/composables/client/state'
 import { expandNodesOnEndRun } from '~/composables/explorer/expand'

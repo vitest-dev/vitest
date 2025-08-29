@@ -1,10 +1,6 @@
 import type { UserConfig as ViteConfig, Plugin as VitePlugin } from 'vite'
 import type { ResolvedConfig, UserConfig } from '../types/config'
-import {
-  deepClone,
-  deepMerge,
-  notNullish,
-} from '@vitest/utils'
+import { deepClone, deepMerge, notNullish } from '@vitest/utils/helpers'
 import { relative } from 'pathe'
 import * as vite from 'vite'
 import { defaultPort } from '../../constants'

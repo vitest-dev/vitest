@@ -10,7 +10,7 @@ import type {
 import { existsSync, promises as fs } from 'node:fs'
 import os from 'node:os'
 import { limitConcurrency } from '@vitest/runner/utils'
-import { deepClone } from '@vitest/utils'
+import { deepClone } from '@vitest/utils/helpers'
 import { dirname, relative, resolve } from 'pathe'
 import { glob, isDynamicPattern } from 'tinyglobby'
 import { mergeConfig } from 'vite'

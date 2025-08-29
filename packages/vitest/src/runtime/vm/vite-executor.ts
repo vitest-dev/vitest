@@ -4,7 +4,8 @@ import type { WorkerGlobalState } from '../../types/worker'
 import type { EsmExecutor } from './esm-executor'
 import type { VMModule } from './types'
 import { pathToFileURL } from 'node:url'
-import { CSS_LANGS_RE, KNOWN_ASSET_RE, toArray } from '@vitest/utils'
+import { CSS_LANGS_RE, KNOWN_ASSET_RE } from '@vitest/utils/constants'
+import { toArray } from '@vitest/utils/helpers'
 import { SyntheticModule } from './utils'
 
 interface ViteExecutorOptions {

@@ -6,7 +6,7 @@ import { isAbsolute, resolve } from 'node:path'
 import vm from 'node:vm'
 import { AutomockedModule, MockerRegistry, mockObject, RedirectedModule } from '@vitest/mocker'
 import { findMockRedirect } from '@vitest/mocker/redirect'
-import { highlight } from '@vitest/utils'
+// import { highlight } from '@vitest/utils/highlight'
 import { distDir } from '../../paths'
 
 const spyModulePath = resolve(distDir, 'spy.js')
@@ -239,13 +239,13 @@ export class VitestMocker {
             `[vitest] No "${String(prop)}" export is defined on the "${mock.raw}" mock. `
             + 'Did you forget to return it from "vi.mock"?'
             + '\nIf you need to partially mock a module, you can use "importOriginal" helper inside:\n',
-            highlight(`vi.mock(import("${mock.raw}"), async (importOriginal) => {
+            (`vi.mock(import("${mock.raw}"), async (importOriginal) => {
   const actual = await importOriginal()
   return {
     ...actual,
     // your mocked methods
   }
-})`),
+})`), // TODO: highlight on the server to save load time
           )
         }
 

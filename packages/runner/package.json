@@ -43,7 +43,6 @@
   },
   "dependencies": {
     "@vitest/utils": "workspace:*",
-    "pathe": "catalog:",
-    "strip-literal": "catalog:"
+    "pathe": "catalog:"
   }
 }

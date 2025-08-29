@@ -1,7 +1,7 @@
 import type { Vitest } from '../core'
 import type { TestSpecification } from '../spec'
 import type { TestSequencer } from './types'
-import { slash } from '@vitest/utils'
+import { slash } from '@vitest/utils/helpers'
 import { relative, resolve } from 'pathe'
 import { hash } from '../hash'
 
