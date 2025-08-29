@@ -30,9 +30,9 @@ describe('tree reporter', () => {
              ✓ nested a failed 2 test [...]ms
              ✓ nested a failed 3 test [...]ms
          ✓ a skipped (3)
-           ↓ skipped with note [reason]
-           ↓ condition
-           ↓ condition with note [note]"
+           ↓ skipped with note [...]ms [reason]
+           ↓ condition [...]ms
+           ↓ condition with note [...]ms [note]"
     `)
   })
 
