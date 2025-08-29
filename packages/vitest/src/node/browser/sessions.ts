@@ -1,6 +1,6 @@
 import type { TestProject } from '../project'
 import type { BrowserServerStateSession } from '../types/browser'
-import { createDefer } from '@vitest/utils'
+import { createDefer } from '@vitest/utils/helpers'
 
 export class BrowserSessions {
   private sessions = new Map<string, BrowserServerStateSession>()

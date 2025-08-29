@@ -90,11 +90,9 @@ export function createForksPool(
     // avoid recreating threads when tests are finished
     : 0
 
-  const worker = resolve(vitest.distPath, 'workers/forks.js')
-
   const options: TinypoolOptions = {
     runtime: 'child_process',
-    filename: resolve(vitest.distPath, 'worker.js'),
+    filename: resolve(vitest.distPath, 'worker-base.js'),
     teardown: 'teardown',
 
     maxThreads,
@@ -137,7 +135,6 @@ export function createForksPool(
       const workerId = ++id
       const data: ContextRPC = {
         pool: 'forks',
-        worker,
         config,
         files,
         invalidates,

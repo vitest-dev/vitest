@@ -6,7 +6,7 @@ import type { TestProject } from '../project'
 import type { TestSpecification } from '../spec'
 import type { TestRunEndReason } from '../types/reporter'
 import { hasFailed } from '@vitest/runner/utils'
-import { createDefer } from '@vitest/utils'
+import { createDefer } from '@vitest/utils/helpers'
 import { Typechecker } from '../../typecheck/typechecker'
 import { groupBy } from '../../utils/base'
 

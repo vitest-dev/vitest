@@ -1,4 +1,4 @@
-import { createDefer } from '@vitest/utils'
+import { createDefer } from '@vitest/utils/helpers'
 import { describe, test, vi, expect } from 'vitest'
 
 // 3 tests depend on each other,

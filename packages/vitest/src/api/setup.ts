@@ -15,7 +15,7 @@ import type {
   WebSocketRPC,
 } from './types'
 import { existsSync, promises as fs } from 'node:fs'
-import { noop } from '@vitest/utils'
+import { noop } from '@vitest/utils/helpers'
 import { createBirpc } from 'birpc'
 import { parse, stringify } from 'flatted'
 import { WebSocketServer } from 'ws'

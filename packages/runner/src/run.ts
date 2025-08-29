@@ -17,8 +17,9 @@ import type {
   TestContext,
   WriteableTestContext,
 } from './types/tasks'
-import { getSafeTimers, shuffle } from '@vitest/utils'
-import { processError } from '@vitest/utils/error'
+import { processError } from '@vitest/utils/error' // TODO: load dynamically
+import { shuffle } from '@vitest/utils/helpers'
+import { getSafeTimers } from '@vitest/utils/timers'
 import { collectTests } from './collect'
 import { abortContextSignal, getFileContext } from './context'
 import { PendingError, TestRunAbortError } from './errors'

@@ -1,7 +1,7 @@
 import type { DiffOptions } from '@vitest/utils/diff'
 import { stripVTControlCharacters } from 'node:util'
-import { processError } from '@vitest/runner'
 import { diff, diffStringsUnified, printDiffOrStringify } from '@vitest/utils/diff'
+import { processError } from '@vitest/utils/error'
 import { expect, test } from 'vitest'
 
 function wrapDiff(diff?: string) {

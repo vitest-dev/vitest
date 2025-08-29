@@ -1,4 +1,4 @@
-import type { DeferPromise } from '@vitest/utils'
+import type { DeferPromise } from '@vitest/utils/helpers'
 import type {
   BrowserProvider,
   ProcessPool,
@@ -9,7 +9,7 @@ import type {
 import crypto from 'node:crypto'
 import * as nodeos from 'node:os'
 import { performance } from 'node:perf_hooks'
-import { createDefer } from '@vitest/utils'
+import { createDefer } from '@vitest/utils/helpers'
 import { stringify } from 'flatted'
 import { createDebugger } from 'vitest/node'
 

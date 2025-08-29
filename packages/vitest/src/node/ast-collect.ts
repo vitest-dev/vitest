@@ -1,13 +1,13 @@
 import type { File, Suite, Task, Test } from '@vitest/runner'
 import type { TestError } from '../types/general'
 import type { TestProject } from './project'
+import { originalPositionFor, TraceMap } from '@jridgewell/trace-mapping'
 import {
   calculateSuiteHash,
   generateHash,
   interpretTaskModes,
   someTasksAreOnly,
 } from '@vitest/runner/utils'
-import { originalPositionFor, TraceMap } from '@vitest/utils/source-map'
 import { ancestor as walkAst } from 'acorn-walk'
 import { relative } from 'pathe'
 import { parseAst } from 'vite'

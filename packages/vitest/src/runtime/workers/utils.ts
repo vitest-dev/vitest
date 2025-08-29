@@ -2,7 +2,6 @@ import type { TinypoolWorkerMessage } from 'tinypool'
 import type { ResolvedConfig, SerializedConfig } from '../../node/types/config'
 import type { WorkerContext } from '../../node/types/worker'
 import type { WorkerRpcOptions } from './types'
-import { parseRegexp } from '@vitest/utils'
 
 const REGEXP_WRAP_PREFIX = '$$vitest:'
 
@@ -90,4 +89,24 @@ export function unwrapSerializableConfig(config: SerializedConfig): SerializedCo
   }
 
   return config
+}
+
+function parseRegexp(input: string): RegExp {
+  // Parse input
+  // eslint-disable-next-line regexp/no-misleading-capturing-group
+  const m = input.match(/(\/?)(.+)\1([a-z]*)/i)
+
+  // match nothing
+  if (!m) {
+    return /$^/
+  }
+
+  // Invalid flags
+  // eslint-disable-next-line regexp/optimal-quantifier-concatenation
+  if (m[3] && !/^(?!.*?(.).*?\1)[gmixXsuUAJ]+$/.test(m[3])) {
+    return new RegExp(input)
+  }
+
+  // Create the regular expression
+  return new RegExp(m[2], m[3])
 }

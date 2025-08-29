@@ -1,5 +1,5 @@
 import type { Plugin } from 'vite'
-import { cleanUrl } from '@vitest/utils'
+import { cleanUrl } from '@vitest/utils/helpers'
 import MagicString from 'magic-string'
 import { stripLiteral } from 'strip-literal'
 

@@ -1,7 +1,7 @@
 import type { Writable } from 'node:stream'
 import readline from 'node:readline'
 import { stripVTControlCharacters } from 'node:util'
-import { createDefer } from '@vitest/utils'
+import { createDefer } from '@vitest/utils/helpers'
 import c from 'tinyrainbow'
 import { stdout as getStdout } from '../utils/base'
 

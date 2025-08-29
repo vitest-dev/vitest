@@ -11,7 +11,7 @@ import type {
   TestContext,
   WriteableTestContext,
 } from './types/tasks'
-import { getSafeTimers } from '@vitest/utils'
+import { getSafeTimers } from '@vitest/utils/timers'
 import { PendingError } from './errors'
 import { finishSendTasksUpdate } from './run'
 import { getRunner } from './suite'

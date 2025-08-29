@@ -1,5 +1,5 @@
 import type { Colors } from 'tinyrainbow'
-import { highlight } from '@vitest/utils'
+import { highlight } from '@vitest/utils/highlight'
 import { extname } from 'pathe'
 import c from 'tinyrainbow'
 

@@ -17,14 +17,13 @@ import type {
   TestFunction,
   TestOptions,
 } from './types/tasks'
+import { format, objDisplay } from '@vitest/utils/display'
 import {
-  format,
   isNegativeNaN,
   isObject,
-  objDisplay,
   objectAttr,
   toArray,
-} from '@vitest/utils'
+} from '@vitest/utils/helpers'
 import {
   abortIfTimeout,
   collectorContext,

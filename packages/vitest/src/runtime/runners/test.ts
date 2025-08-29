@@ -12,7 +12,6 @@ import type {
 } from '@vitest/runner'
 import type { ModuleRunner } from 'vite/module-runner'
 import type { SerializedConfig } from '../config'
-// import type { VitestExecutor } from '../execute'
 import { getState, GLOBAL_EXPECT, setState } from '@vitest/expect'
 import { getNames, getTestName, getTests } from '@vitest/runner/utils'
 import { processError } from '@vitest/utils/error'

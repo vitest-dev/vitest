@@ -23,7 +23,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
 import type { Tester, TesterContext } from './types'
-import { isObject } from '@vitest/utils'
+import { isObject } from '@vitest/utils/helpers'
 
 // Extracted out of jasmine 2.5.2
 export function equals(

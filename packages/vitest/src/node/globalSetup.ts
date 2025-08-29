@@ -1,6 +1,6 @@
 import type { ModuleRunner } from 'vite/module-runner'
 import type { TestProject } from './project'
-import { toArray } from '@vitest/utils'
+import { toArray } from '@vitest/utils/helpers'
 
 export interface GlobalSetupFile {
   file: string

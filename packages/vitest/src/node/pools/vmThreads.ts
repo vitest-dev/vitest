@@ -74,10 +74,8 @@ export function createVmThreadsPool(
     // avoid recreating threads when tests are finished
     : 0
 
-  const worker = resolve(vitest.distPath, 'workers/vmThreads.js')
-
   const options: TinypoolOptions = {
-    filename: resolve(vitest.distPath, 'worker.js'),
+    filename: resolve(vitest.distPath, 'worker-vm.js'),
     // TODO: investigate further
     // It seems atomics introduced V8 Fatal Error https://github.com/vitest-dev/vitest/issues/1191
     useAtomics: poolOptions.useAtomics ?? false,
@@ -124,7 +122,6 @@ export function createVmThreadsPool(
       const workerId = ++id
       const data: WorkerContext = {
         pool: 'vmThreads',
-        worker,
         port: workerPort,
         config,
         files: paths,

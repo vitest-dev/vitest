@@ -7,7 +7,7 @@ import timers from 'node:timers'
 import timersPromises from 'node:timers/promises'
 import util from 'node:util'
 import { collectTests, startTests } from '@vitest/runner'
-import { KNOWN_ASSET_TYPES } from '@vitest/utils'
+import { KNOWN_ASSET_TYPES } from '@vitest/utils/constants'
 import { setupChaiConfig } from '../integrations/chai/config'
 import {
   startCoverageInsideWorker,

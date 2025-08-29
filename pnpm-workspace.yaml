@@ -4,11 +4,12 @@ packages:
   - examples/*
   - test/*
   - test/config/fixtures/conditions-pkg
+
 catalog:
   '@iconify-json/carbon': ^1.2.13
   '@iconify-json/logos': ^1.2.9
   '@jridgewell/remapping': ^2.3.5
-  '@jridgewell/trace-mapping': ^0.3.30
+  '@jridgewell/trace-mapping': 0.3.30
   '@types/chai': ^5.2.2
   '@types/debug': ^4.1.12
   '@types/estree': ^1.0.8
@@ -40,7 +41,7 @@ catalog:
   strip-literal: ^3.0.0
   test-exclude: ^7.0.1
   tinyglobby: ^0.2.14
-  tinyrainbow: ^2.0.0
+  tinyrainbow: ^3.0.2
   unocss: ^66.4.2
   unplugin-vue-components: ^0.28.0
   vue: ^3.5.20

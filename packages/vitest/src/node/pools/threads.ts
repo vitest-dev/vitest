@@ -71,10 +71,8 @@ export function createThreadsPool(
     // avoid recreating forks when tests are finished
     : 0
 
-  const worker = resolve(vitest.distPath, 'workers/threads.js')
-
   const options: TinypoolOptions = {
-    filename: resolve(vitest.distPath, 'worker.js'),
+    filename: resolve(vitest.distPath, 'worker-base.js'),
     teardown: 'teardown',
     // TODO: investigate further
     // It seems atomics introduced V8 Fatal Error https://github.com/vitest-dev/vitest/issues/1191
@@ -121,7 +119,6 @@ export function createThreadsPool(
       const workerId = ++id
       const data: WorkerContext = {
         pool: 'threads',
-        worker,
         port: workerPort,
         config,
         files,

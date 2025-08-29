@@ -29,17 +29,12 @@ const entries = {
   'spy': 'src/integrations/spy.ts',
   'coverage': 'src/public/coverage.ts',
   'reporters': 'src/public/reporters.ts',
-  // TODO: advanced docs
-  'workers': 'src/public/workers.ts',
   'module-runner': 'src/public/module-runner.ts',
   'module-evaluator': 'src/runtime/moduleRunner/moduleEvaluator.ts',
 
   // for performance reasons we bundle them separately so we don't import everything at once
-  'worker': 'src/runtime/worker.ts',
-  'workers/forks': 'src/runtime/workers/forks.ts',
-  'workers/threads': 'src/runtime/workers/threads.ts',
-  'workers/vmThreads': 'src/runtime/workers/vmThreads.ts',
-  'workers/vmForks': 'src/runtime/workers/vmForks.ts',
+  'worker-vm': 'src/runtime/worker-vm.ts',
+  'worker-base': 'src/runtime/worker-base.ts',
 
   'workers/runVmTests': 'src/runtime/runVmTests.ts',
 
@@ -57,7 +52,6 @@ const dtsEntries = {
   'coverage': 'src/public/coverage.ts',
   'reporters': 'src/public/reporters.ts',
   'mocker': 'src/public/mocker.ts',
-  'workers': 'src/public/workers.ts',
   'snapshot': 'src/public/snapshot.ts',
   'module-evaluator': 'src/runtime/moduleRunner/moduleEvaluator.ts',
 }
@@ -86,6 +80,7 @@ const external = [
   '@vitest/runner/types',
   '@vitest/snapshot/environment',
   '@vitest/snapshot/manager',
+  /@vitest\/utils\/\w+/,
 
   '#module-evaluator',
 ]
