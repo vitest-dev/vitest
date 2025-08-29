@@ -63,6 +63,7 @@ export interface BuiltinReporterOptions {
   'default': DefaultReporterOptions
   'verbose': DefaultReporterOptions
   'dot': BaseOptions
+  'tree': BaseOptions
   'json': JsonOptions
   'blob': BlobOptions
   'tap': never

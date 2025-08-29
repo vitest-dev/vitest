@@ -1,25 +1,18 @@
-import type { RunnerTask, TestSpecification } from 'vitest/node'
+import type { RunnerTask } from 'vitest/node'
 import { describe, expect, test } from 'vitest'
 import { DefaultReporter } from 'vitest/reporters'
-import { runVitest, runVitestCli } from '../../test-utils'
+import { runVitest, runVitestCli, StableTestFileOrderSorter } from '../../test-utils'
+import { trimReporterOutput } from './utils'
 
 describe('default reporter', async () => {
   test('normal', async () => {
     const { stdout } = await runVitest({
       include: ['b1.test.ts', 'b2.test.ts'],
       root: 'fixtures/default',
-      reporters: 'none',
+      reporters: ['default'],
       fileParallelism: false,
       sequence: {
-        sequencer: class StableTestFileOrderSorter {
-          sort(files: TestSpecification[]) {
-            return files.sort((a, b) => a.moduleId.localeCompare(b.moduleId))
-          }
-
-          shard(files: TestSpecification[]) {
-            return files
-          }
-        },
+        sequencer: StableTestFileOrderSorter,
       },
     })
 
@@ -55,6 +48,24 @@ describe('default reporter', async () => {
     `)
   })
 
+  test('normal without fails', async () => {
+    const { stdout } = await runVitest({
+      include: ['b1.test.ts', 'b2.test.ts'],
+      root: 'fixtures/default',
+      reporters: ['default'],
+      fileParallelism: false,
+      testNamePattern: 'passed',
+      sequence: {
+        sequencer: StableTestFileOrderSorter,
+      },
+    })
+
+    expect(trimReporterOutput(stdout)).toMatchInlineSnapshot(`
+      "✓ b1.test.ts (13 tests | 7 skipped) [...]ms
+       ✓ b2.test.ts (13 tests | 7 skipped) [...]ms"
+    `)
+  })
+
   test('show full test suite when only one file', async () => {
     const { stdout } = await runVitest({
       include: ['a.test.ts'],
@@ -62,15 +73,30 @@ describe('default reporter', async () => {
       reporters: 'none',
     })
 
-    expect(stdout).toContain('✓ a passed')
-    expect(stdout).toContain('✓ a1 test')
-    expect(stdout).toContain('✓ nested a')
-    expect(stdout).toContain('✓ nested a3 test')
-    expect(stdout).toContain('× a failed')
-    expect(stdout).toContain('× a failed test')
-    expect(stdout).toContain('nested a failed 1 test')
-    expect(stdout).toContain('[note]')
-    expect(stdout).toContain('[reason]')
+    expect(trimReporterOutput(stdout)).toMatchInlineSnapshot(`
+      "❯ a.test.ts (16 tests | 1 failed | 3 skipped) [...]ms
+         ✓ a passed (6)
+           ✓ a1 test [...]ms
+           ✓ a2 test [...]ms
+           ✓ a3 test [...]ms
+           ✓ nested a (3)
+             ✓ nested a1 test [...]ms
+             ✓ nested a2 test [...]ms
+             ✓ nested a3 test [...]ms
+         ❯ a failed (7)
+           ✓ a failed 1 test [...]ms
+           ✓ a failed 2 test [...]ms
+           ✓ a failed 3 test [...]ms
+           × a failed test [...]ms
+           ✓ nested a failed (3)
+             ✓ nested a failed 1 test [...]ms
+             ✓ nested a failed 2 test [...]ms
+             ✓ nested a failed 3 test [...]ms
+         ✓ a skipped (3)
+           ↓ skipped with note [reason]
+           ↓ condition
+           ↓ condition with note [note]"
+    `)
   })
 
   test('rerun should undo', async () => {
@@ -259,13 +285,3 @@ describe('default reporter', async () => {
     expect(stderr).toMatch('FAIL   > { name: fails, meta: Failing test added this } (Custom getFullName here')
   })
 }, 120000)
-
-function trimReporterOutput(report: string) {
-  const rows = report.replace(/\d+ms/g, '[...]ms').split('\n')
-
-  // Trim start and end, capture just rendered tree
-  rows.splice(0, 1 + rows.findIndex(row => row.includes('RUN  v')))
-  rows.splice(rows.findIndex(row => row.includes('Test Files')))
-
-  return rows.join('\n').trim()
-}
