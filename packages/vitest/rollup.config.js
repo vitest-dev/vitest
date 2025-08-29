@@ -52,7 +52,6 @@ const dtsEntries = {
   'coverage': 'src/public/coverage.ts',
   'reporters': 'src/public/reporters.ts',
   'mocker': 'src/public/mocker.ts',
-  'workers': 'src/public/workers.ts',
   'snapshot': 'src/public/snapshot.ts',
   'module-evaluator': 'src/runtime/moduleRunner/moduleEvaluator.ts',
 }

@@ -56,10 +56,6 @@
       "types": "./dist/node.d.ts",
       "default": "./dist/node.js"
     },
-    "./workers": {
-      "types": "./dist/workers.d.ts",
-      "import": "./dist/workers.js"
-    },
     "./internal/browser": {
       "types": "./dist/browser.d.ts",
       "default": "./dist/browser.js"
