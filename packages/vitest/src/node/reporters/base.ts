@@ -229,12 +229,12 @@ export abstract class BaseReporter implements Reporter {
 
     let title = this.getStateSymbol(testModule)
 
-    if (testModule.meta().typecheck) {
-      title += ` ${c.bgBlue(c.bold(' TS '))}`
-    }
-
     if (testModule.project.name) {
       title += ` ${formatProjectName(testModule.project, '')}`
+    }
+
+    if (testModule.meta().typecheck) {
+      title += ` ${c.bgBlue(c.bold(' TS '))}`
     }
 
     return ` ${title} ${testModule.task.name} ${suffix}`
@@ -314,7 +314,10 @@ export abstract class BaseReporter implements Reporter {
 
   private getDurationPrefix(task: Task): string {
     const duration = task.result?.duration && Math.round(task.result?.duration)
-    if (!duration) {
+    if (duration == null) {
+      return ''
+    }
+    if (!duration && task.mode === 'skip') {
       return ''
     }
 
@@ -470,7 +473,7 @@ export abstract class BaseReporter implements Reporter {
       const entity = task && this.ctx.state.getReportedEntity(task)
       const shouldLog = this.ctx.config.onConsoleLog(log.content, log.type, entity)
       if (shouldLog === false) {
-        return shouldLog
+        return false
       }
     }
     return true

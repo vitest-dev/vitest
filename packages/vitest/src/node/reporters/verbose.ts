@@ -28,6 +28,10 @@ export class VerboseReporter extends DefaultReporter {
       title += formatProjectName(test.project)
     }
 
+    if (test.task.meta.typecheck) {
+      title += `${c.bgBlue(c.bold(' TS '))} `
+    }
+
     title += getFullName(test.task, c.dim(' > '))
     title += this.getTestCaseSuffix(test)
 
