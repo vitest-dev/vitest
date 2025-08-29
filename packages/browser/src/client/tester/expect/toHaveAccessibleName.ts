@@ -26,6 +26,7 @@ export default function toHaveAccessibleName(
   const htmlElement = getElementFromUserInput(actual, toHaveAccessibleName, this)
   const actualAccessibleName = getElementAccessibleName(htmlElement, false)
   const missingExpectedValue = arguments.length === 1
+  const defaultView = htmlElement.ownerDocument.defaultView || window
 
   let pass = false
   if (missingExpectedValue) {
@@ -35,7 +36,7 @@ export default function toHaveAccessibleName(
   }
   else {
     pass
-      = expectedAccessibleName instanceof RegExp
+      = expectedAccessibleName instanceof defaultView.RegExp
         ? expectedAccessibleName.test(actualAccessibleName)
         : this.equals(actualAccessibleName, expectedAccessibleName, this.customTesters)
   }

@@ -20,9 +20,9 @@ export class FakeTimers {
   // | _fakingTime | _fakingDate |
   // +-------------+-------------+
   // | false       | falsy       | initial
-  // | false       | truthy     | vi.setSystemTime called first (for mocking only Date without fake timers)
+  // | false       | truthy      | vi.setSystemTime called first (for mocking only Date without fake timers)
   // | true        | falsy       | vi.useFakeTimers called first
-  // | true        | truthy     | unreachable
+  // | true        | truthy      | unreachable
   private _fakingTime: boolean
   private _fakingDate: Date | null
   private _fakeTimers: FakeTimerWithContext
@@ -145,34 +145,36 @@ export class FakeTimers {
   }
 
   useFakeTimers(): void {
+    const fakeDate = this._fakingDate || Date.now()
     if (this._fakingDate) {
+      resetDate()
+      this._fakingDate = null
+    }
+
+    if (this._fakingTime) {
+      this._clock.uninstall()
+    }
+
+    const toFake = Object.keys(this._fakeTimers.timers)
+    // Do not mock timers internally used by node by default. It can still be mocked through userConfig.
+      .filter(
+        timer => timer !== 'nextTick' && timer !== 'queueMicrotask',
+      ) as (keyof FakeTimerWithContext['timers'])[]
+
+    if (this._userConfig?.toFake?.includes('nextTick') && isChildProcess()) {
       throw new Error(
-        '"setSystemTime" was called already and date was mocked. Reset timers using `vi.useRealTimers()` if you want to use fake timers again.',
+        'process.nextTick cannot be mocked inside child_process',
       )
     }
 
-    if (!this._fakingTime) {
-      const toFake = Object.keys(this._fakeTimers.timers)
-        // Do not mock timers internally used by node by default. It can still be mocked through userConfig.
-        .filter(
-          timer => timer !== 'nextTick' && timer !== 'queueMicrotask',
-        ) as (keyof FakeTimerWithContext['timers'])[]
+    this._clock = this._fakeTimers.install({
+      now: fakeDate,
+      ...this._userConfig,
+      toFake: this._userConfig?.toFake || toFake,
+      ignoreMissingTimers: true,
+    })
 
-      if (this._userConfig?.toFake?.includes('nextTick') && isChildProcess()) {
-        throw new Error(
-          'process.nextTick cannot be mocked inside child_process',
-        )
-      }
-
-      this._clock = this._fakeTimers.install({
-        now: Date.now(),
-        ...this._userConfig,
-        toFake: this._userConfig?.toFake || toFake,
-        ignoreMissingTimers: true,
-      })
-
-      this._fakingTime = true
-    }
+    this._fakingTime = true
   }
 
   reset(): void {
@@ -221,7 +223,8 @@ export class FakeTimers {
   private _checkFakeTimers() {
     if (!this._fakingTime) {
       throw new Error(
-        'Timers are not mocked. Try calling "vi.useFakeTimers()" first.',
+        'A function to advance timers was called but the timers APIs are not mocked. '
+        + 'Call `vi.useFakeTimers()` in the test file first.',
       )
     }
 

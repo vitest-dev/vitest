@@ -1,7 +1,7 @@
 import type { GlobalChannelIncomingEvent, IframeChannelIncomingEvent, IframeChannelOutgoingEvent, IframeViewportDoneEvent, IframeViewportFailEvent } from '@vitest/browser/client'
 import type { BrowserTesterOptions, SerializedConfig } from 'vitest'
 import { channel, client, globalChannel } from '@vitest/browser/client'
-import { generateHash } from '@vitest/runner/utils'
+import { generateFileHash } from '@vitest/runner/utils'
 import { relative } from 'pathe'
 import { getUiAPI } from './ui'
 import { getBrowserState, getConfig } from './utils'
@@ -291,9 +291,8 @@ async function sendEventToIframe(event: IframeChannelOutgoingEvent) {
 
 function generateFileId(file: string) {
   const config = getConfig()
-  const project = config.name || ''
   const path = relative(config.root, file)
-  return generateHash(`${path}${project}`)
+  return generateFileHash(path, config.name)
 }
 
 async function setIframeViewport(

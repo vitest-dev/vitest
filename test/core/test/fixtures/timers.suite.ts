@@ -278,7 +278,7 @@ describe('FakeTimers', () => {
         },
         global,
       })
-      expect(() => timers.runAllTimers()).toThrow(/Timers are not mocked/)
+      expect(() => timers.runAllTimers()).toThrow(/A function to advance timers was called but the timers APIs are not mocked/)
     })
 
     it('does nothing when no timers have been scheduled', () => {
@@ -422,7 +422,7 @@ describe('FakeTimers', () => {
         },
         global,
       })
-      await expect(timers.runAllTimersAsync()).rejects.toThrow(/Timers are not mocked/)
+      await expect(timers.runAllTimersAsync()).rejects.toThrow(/A function to advance timers was called but the timers APIs are not mocked/)
     })
 
     it('only runs a setTimeout callback once (ever)', async () => {
@@ -1494,7 +1494,9 @@ describe('FakeTimers', () => {
 
       expect(Date.now()).toBe(timeStrMs)
 
-      expect(() => timers.useFakeTimers()).toThrowError(/date was mocked/)
+      expect(() => timers.useFakeTimers()).not.toThrowError()
+
+      expect(Date.now()).toBe(timeStrMs)
 
       // Some test
 

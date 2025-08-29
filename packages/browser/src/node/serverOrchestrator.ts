@@ -13,7 +13,7 @@ export async function resolveOrchestrator(
   // it's possible to open the page without a context
   if (!sessionId) {
     const contexts = [...globalServer.children].flatMap(p => [...p.state.orchestrators.keys()])
-    sessionId = contexts[contexts.length - 1] ?? 'none'
+    sessionId = contexts.at(-1) ?? 'none'
   }
 
   // it's ok to not have a session here, especially in the preview provider

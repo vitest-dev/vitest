@@ -211,8 +211,8 @@ export function spyOn<T extends object, M extends Classes<Required<T>> | Methods
   key: M
 ): Required<T>[M] extends { new (...args: infer A): infer R }
   ? Mock<{ new (...args: A): R }>
-  : T[M] extends Procedure
-    ? Mock<T[M]>
+  : Required<T>[M] extends Procedure
+    ? Mock<Required<T>[M]>
     : never
 export function spyOn<T extends object, K extends keyof T>(
   object: T,

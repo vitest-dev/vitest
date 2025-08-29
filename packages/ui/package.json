@@ -56,7 +56,7 @@
     "tinyrainbow": "catalog:"
   },
   "devDependencies": {
-    "@faker-js/faker": "^9.9.0",
+    "@faker-js/faker": "^10.0.0",
     "@iconify-json/carbon": "catalog:",
     "@iconify-json/logos": "catalog:",
     "@testing-library/vue": "^8.1.0",
@@ -74,10 +74,10 @@
     "birpc": "catalog:",
     "codemirror": "^5.65.18",
     "codemirror-theme-vars": "^0.1.2",
-    "d3-graph-controller": "^3.1.1",
+    "d3-graph-controller": "^3.1.2",
     "floating-vue": "^5.2.2",
     "mime": "^4.0.7",
-    "rollup": "^4.46.1",
+    "rollup": "^4.49.0",
     "splitpanes": "^3.2.0",
     "unocss": "catalog:",
     "unplugin-auto-import": "^0.19.0",

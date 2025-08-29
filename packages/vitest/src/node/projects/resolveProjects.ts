@@ -370,7 +370,7 @@ async function resolveTestProjectConfigs(
             projectsConfigFiles.push(configFile)
           }
           else {
-            const directory = file[file.length - 1] === '/' ? file : `${file}/`
+            const directory = file.at(-1) === '/' ? file : `${file}/`
             nonConfigProjectDirectories.push(directory)
           }
         }

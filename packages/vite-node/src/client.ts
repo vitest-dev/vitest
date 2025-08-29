@@ -254,7 +254,7 @@ export class ViteNodeRunner {
 
   /** @internal */
   async cachedRequest(id: string, fsPath: string, callstack: string[]) {
-    const importee = callstack[callstack.length - 1]
+    const importee = callstack.at(-1)
 
     const mod = this.moduleCache.get(fsPath)
     const { imports, importers } = mod

@@ -7,6 +7,7 @@ import { distDir } from '../../paths'
 import { createCustomConsole } from '../console'
 import { ExternalModulesExecutor } from '../external-executor'
 import { getDefaultRequestStubs } from '../moduleRunner/moduleEvaluator'
+import { createNodeImportMeta } from '../moduleRunner/moduleRunner'
 import { startVitestModuleRunner, VITEST_VM_CONTEXT_SYMBOL } from '../moduleRunner/startModuleRunner'
 import { provideWorkerState } from '../utils'
 import { FileMap } from '../vm/file-map'
@@ -80,6 +81,7 @@ export async function runVmTests(method: 'run' | 'collect', state: WorkerGlobalS
     evaluatedModules: state.evaluatedModules,
     state,
     externalModulesExecutor,
+    createImportMeta: createNodeImportMeta,
   })
 
   Object.defineProperty(context, VITEST_VM_CONTEXT_SYMBOL, {
