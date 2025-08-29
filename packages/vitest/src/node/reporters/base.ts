@@ -334,15 +334,12 @@ export abstract class BaseReporter implements Reporter {
     if (duration == null) {
       return ''
     }
-    if (!duration && task.mode === 'skip') {
-      return ''
-    }
 
     const color = duration > this.ctx.config.slowTestThreshold
       ? c.yellow
       : c.green
 
-    return color(` ${Math.round(duration)}${c.dim('ms')}`)
+    return color(` ${duration}${c.dim('ms')}`)
   }
 
   onWatcherStart(files: File[] = this.ctx.state.getFiles(), errors: unknown[] = this.ctx.state.getUnhandledErrors()): void {
