@@ -5,15 +5,28 @@ import type { Vitest } from '../core'
 import type { Reporter, TestRunEndReason } from '../types/reporter'
 import type { TestCase, TestCollection, TestModule, TestModuleState, TestResult, TestSuite, TestSuiteState } from './reported-tasks'
 import { performance } from 'node:perf_hooks'
-import { getFullName, getSuites, getTestName, getTests, hasFailed } from '@vitest/runner/utils'
+import { getFullName, getSuites, getTests, hasFailed } from '@vitest/runner/utils'
 import { toArray } from '@vitest/utils'
 import { parseStacktrace } from '@vitest/utils/source-map'
 import { relative } from 'pathe'
 import c from 'tinyrainbow'
 import { isTTY } from '../../utils/env'
 import { hasFailedSnapshot } from '../../utils/tasks'
-import { F_CHECK, F_DOWN_RIGHT, F_POINTER, F_RIGHT } from './renderers/figures'
-import { countTestErrors, divider, errorBanner, formatProjectName, formatTime, formatTimeString, getStateString, getStateSymbol, padSummaryTitle, renderSnapshotSummary, taskFail, withLabel } from './renderers/utils'
+import { F_CHECK, F_DOWN_RIGHT, F_POINTER } from './renderers/figures'
+import {
+  countTestErrors,
+  divider,
+  errorBanner,
+  formatProjectName,
+  formatTime,
+  formatTimeString,
+  getStateString,
+  getStateSymbol,
+  padSummaryTitle,
+  renderSnapshotSummary,
+  taskFail,
+  withLabel,
+} from './renderers/utils'
 
 const BADGE_PADDING = '       '
 
@@ -170,33 +183,16 @@ export abstract class BaseReporter implements Reporter {
   protected printTestCase(moduleState: TestModuleState, test: TestCase): void {
     const testResult = test.result()
 
-    const { duration, retryCount, repeatCount } = test.diagnostic() || {}
+    const { duration = 0 } = test.diagnostic() || {}
     const padding = this.getTestIndentation(test.task)
-    let suffix = this.getDurationPrefix(test.task)
-
-    if (retryCount != null && retryCount > 0) {
-      suffix += c.yellow(` (retry x${retryCount})`)
-    }
-
-    if (repeatCount != null && repeatCount > 0) {
-      suffix += c.yellow(` (repeat x${repeatCount})`)
-    }
+    const suffix = this.getTestCaseSuffix(test)
 
     if (testResult.state === 'failed') {
       this.log(c.red(` ${padding}${taskFail} ${this.getTestName(test.task, c.dim(' > '))}`) + suffix)
-
-      // print short errors, full errors will be at the end in summary
-      testResult.errors.forEach((error) => {
-        const message = this.formatShortError(error)
-
-        if (message) {
-          this.log(c.red(`   ${padding}${message}`))
-        }
-      })
     }
 
     // also print slow tests
-    else if (duration && duration > this.ctx.config.slowTestThreshold) {
+    else if (duration > this.ctx.config.slowTestThreshold) {
       this.log(` ${padding}${c.yellow(c.dim(F_CHECK))} ${this.getTestName(test.task, c.dim(' > '))} ${suffix}`)
     }
 
@@ -204,13 +200,8 @@ export abstract class BaseReporter implements Reporter {
       // Skipped tests are hidden when --hideSkippedTests
     }
 
-    // also print skipped tests that have notes
-    else if (testResult.state === 'skipped' && testResult.note) {
-      this.log(` ${padding}${getStateSymbol(test.task)} ${this.getTestName(test.task, c.dim(' > '))}${c.dim(c.gray(` [${testResult.note}]`))}`)
-    }
-
     else if (this.renderSucceed || moduleState === 'failed') {
-      this.log(` ${padding}${getStateSymbol(test.task)} ${this.getTestName(test.task, c.dim(' > '))}${suffix}`)
+      this.log(` ${padding}${this.getStateSymbol(test)} ${this.getTestName(test.task, c.dim(' > '))}${suffix}`)
     }
   }
 
@@ -236,7 +227,7 @@ export abstract class BaseReporter implements Reporter {
       suffix += c.magenta(` ${Math.floor(diagnostic.heap / 1024 / 1024)} MB heap used`)
     }
 
-    let title = getStateSymbol(testModule.task)
+    let title = this.getStateSymbol(testModule)
 
     if (testModule.meta().typecheck) {
       title += ` ${c.bgBlue(c.bold(' TS '))}`
@@ -249,24 +240,28 @@ export abstract class BaseReporter implements Reporter {
     return ` ${title} ${testModule.task.name} ${suffix}`
   }
 
-  protected printTestSuite(_suite: TestSuite): void {
-    // Suite name is included in getTestName by default
+  protected printTestSuite(testSuite: TestSuite): void {
+    if (!this.renderSucceed) {
+      return
+    }
+
+    const indentation = '  '.repeat(getIndentation(testSuite.task))
+    const tests = Array.from(testSuite.children.allTests())
+    const state = this.getStateSymbol(testSuite)
+
+    this.log(` ${indentation}${state} ${testSuite.name} ${c.dim(`(${tests.length})`)}`)
   }
 
-  protected getTestName(test: Task, separator?: string): string {
-    return getTestName(test, separator)
+  protected getTestName(test: Task, _separator?: string): string {
+    return test.name
   }
 
   protected getFullName(test: Task, separator?: string): string {
     return getFullName(test, separator)
   }
 
-  protected formatShortError(error: TestError): string {
-    return `${F_RIGHT} ${error.message}`
-  }
-
-  protected getTestIndentation(_test: Task) {
-    return '  '
+  protected getTestIndentation(test: Task): string {
+    return '  '.repeat(getIndentation(test))
   }
 
   protected printAnnotations(test: TestCase, console: 'log' | 'error', padding = 0): void {
@@ -289,16 +284,45 @@ export abstract class BaseReporter implements Reporter {
     })
   }
 
-  protected getDurationPrefix(task: Task): string {
-    if (!task.result?.duration) {
+  protected getTestCaseSuffix(testCase: TestCase): string {
+    const { heap, retryCount, repeatCount } = testCase.diagnostic() || {}
+    const testResult = testCase.result()
+    let suffix = this.getDurationPrefix(testCase.task)
+
+    if (retryCount != null && retryCount > 0) {
+      suffix += c.yellow(` (retry x${retryCount})`)
+    }
+
+    if (repeatCount != null && repeatCount > 0) {
+      suffix += c.yellow(` (repeat x${repeatCount})`)
+    }
+
+    if (heap != null) {
+      suffix += c.magenta(` ${Math.floor(heap / 1024 / 1024)} MB heap used`)
+    }
+
+    if (testResult.state === 'skipped') {
+      suffix += c.dim(c.gray(` [${testResult.note}]`))
+    }
+
+    return suffix
+  }
+
+  protected getStateSymbol(test: TestCase | TestModule | TestSuite): string {
+    return getStateSymbol(test.task)
+  }
+
+  private getDurationPrefix(task: Task): string {
+    const duration = task.result?.duration && Math.round(task.result?.duration)
+    if (!duration) {
       return ''
     }
 
-    const color = task.result.duration > this.ctx.config.slowTestThreshold
+    const color = duration > this.ctx.config.slowTestThreshold
       ? c.yellow
       : c.green
 
-    return color(` ${Math.round(task.result.duration)}${c.dim('ms')}`)
+    return color(` ${Math.round(duration)}${c.dim('ms')}`)
   }
 
   onWatcherStart(files: File[] = this.ctx.state.getFiles(), errors: unknown[] = this.ctx.state.getUnhandledErrors()): void {
@@ -709,4 +733,12 @@ function sum<T>(items: T[], cb: (_next: T) => number | undefined) {
   return items.reduce((total, next) => {
     return total + Math.max(cb(next) || 0, 0)
   }, 0)
+}
+
+function getIndentation(suite: Task, level = 1): number {
+  if (suite.suite && !('filepath' in suite.suite)) {
+    return getIndentation(suite.suite, level + 1)
+  }
+
+  return level
 }
