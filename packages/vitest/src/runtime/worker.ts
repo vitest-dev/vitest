@@ -3,7 +3,6 @@ import type { ContextRPC, WorkerGlobalState } from '../types/worker'
 import type { VitestWorker } from './workers/types'
 import { pathToFileURL } from 'node:url'
 import { createStackString, parseStacktrace } from '@vitest/utils/source-map'
-import { workerId as poolId } from 'tinypool'
 import { EvaluatedModules } from 'vite/module-runner'
 import { loadEnvironment } from '../integrations/env/loader'
 import { addCleanupListener, cleanup as cleanupWorker } from './cleanup'
@@ -40,6 +39,7 @@ async function execute(method: 'run' | 'collect', ctx: ContextRPC) {
   const cleanups: (() => void | Promise<void>)[] = [setupInspect(ctx)]
 
   process.env.VITEST_WORKER_ID = String(ctx.workerId)
+  const poolId = process.__tinypool_state__?.workerId
   process.env.VITEST_POOL_ID = String(poolId)
 
   let environmentLoader: ModuleRunner | undefined
