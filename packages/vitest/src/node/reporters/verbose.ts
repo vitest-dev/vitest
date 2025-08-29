@@ -1,5 +1,5 @@
 import type { TestCase, TestModule } from './reported-tasks'
-import { getFullName } from '@vitest/runner/utils'
+import { getTestName } from '@vitest/runner/utils'
 import c from 'tinyrainbow'
 import { DefaultReporter } from './default'
 import { F_RIGHT } from './renderers/figures'
@@ -24,7 +24,14 @@ export class VerboseReporter extends DefaultReporter {
 
     let title = ` ${this.getEntityPrefix(test)} `
 
-    title += getFullName(test.task, separator)
+    title += test.module.task.name
+    if (test.location) {
+      title += c.dim(`:${test.location.line}:${test.location.column}`)
+    }
+    title += separator
+
+    title += getTestName(test.task, separator)
+
     title += this.getTestCaseSuffix(test)
 
     this.log(title)

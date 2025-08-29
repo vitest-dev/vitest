@@ -308,7 +308,7 @@ export abstract class BaseReporter implements Reporter {
       suffix += c.magenta(` ${Math.floor(heap / 1024 / 1024)} MB heap used`)
     }
 
-    if (testResult.state === 'skipped') {
+    if (testResult.state === 'skipped' && testResult.note) {
       suffix += c.dim(c.gray(` [${testResult.note}]`))
     }
 
@@ -686,7 +686,13 @@ export abstract class BaseReporter implements Reporter {
         const projectName = (task as File)?.projectName || task.file?.projectName || ''
         const project = this.ctx.projects.find(p => p.name === projectName)
 
-        let name = this.getFullName(task, separator)
+        // let name = this.getFullName(task, separator)
+        let name = task.file.name
+        if (task.location) {
+          name += c.dim(`:${task.location.line}:${task.location.column}`)
+        }
+        name += separator
+        name += this.getTestName(task, separator)
 
         if (filepath) {
           name += c.dim(` [ ${this.relative(filepath)} ]`)
