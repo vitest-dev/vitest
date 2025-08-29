@@ -145,6 +145,7 @@ export class FakeTimers {
   }
 
   useFakeTimers(): void {
+    const fakeDate = this._fakingDate || Date.now()
     if (this._fakingDate) {
       resetDate()
       this._fakingDate = null
@@ -167,7 +168,7 @@ export class FakeTimers {
     }
 
     this._clock = this._fakeTimers.install({
-      now: this._fakingDate || Date.now(),
+      now: fakeDate,
       ...this._userConfig,
       toFake: this._userConfig?.toFake || toFake,
       ignoreMissingTimers: true,
