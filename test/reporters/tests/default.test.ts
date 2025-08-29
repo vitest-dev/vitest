@@ -25,35 +25,33 @@ describe('default reporter', async () => {
 
     expect(trimReporterOutput(stdout)).toMatchInlineSnapshot(`
       "❯ b1.test.ts (13 tests | 1 failed) [...]ms
-         ✓ b1 passed > b1 test [...]ms
-         ✓ b1 passed > b2 test [...]ms
-         ✓ b1 passed > b3 test [...]ms
-         ✓ b1 passed > nested b > nested b1 test [...]ms
-         ✓ b1 passed > nested b > nested b2 test [...]ms
-         ✓ b1 passed > nested b > nested b3 test [...]ms
-         ✓ b1 failed > b1 test [...]ms
-         ✓ b1 failed > b2 test [...]ms
-         ✓ b1 failed > b3 test [...]ms
-         × b1 failed > b failed test [...]ms
-           → expected 1 to be 2 // Object.is equality
-         ✓ b1 failed > nested b > nested b1 test [...]ms
-         ✓ b1 failed > nested b > nested b2 test [...]ms
-         ✓ b1 failed > nested b > nested b3 test [...]ms
+           ✓ b1 test [...]ms
+           ✓ b2 test [...]ms
+           ✓ b3 test [...]ms
+             ✓ nested b1 test [...]ms
+             ✓ nested b2 test [...]ms
+             ✓ nested b3 test [...]ms
+           ✓ b1 test [...]ms
+           ✓ b2 test [...]ms
+           ✓ b3 test [...]ms
+           × b failed test [...]ms
+             ✓ nested b1 test [...]ms
+             ✓ nested b2 test [...]ms
+             ✓ nested b3 test [...]ms
        ❯ b2.test.ts (13 tests | 1 failed) [...]ms
-         ✓ b2 passed > b1 test [...]ms
-         ✓ b2 passed > b2 test [...]ms
-         ✓ b2 passed > b3 test [...]ms
-         ✓ b2 passed > nested b > nested b1 test [...]ms
-         ✓ b2 passed > nested b > nested b2 test [...]ms
-         ✓ b2 passed > nested b > nested b3 test [...]ms
-         ✓ b2 failed > b1 test [...]ms
-         ✓ b2 failed > b2 test [...]ms
-         ✓ b2 failed > b3 test [...]ms
-         × b2 failed > b failed test [...]ms
-           → expected 1 to be 2 // Object.is equality
-         ✓ b2 failed > nested b > nested b1 test [...]ms
-         ✓ b2 failed > nested b > nested b2 test [...]ms
-         ✓ b2 failed > nested b > nested b3 test [...]ms"
+           ✓ b1 test [...]ms
+           ✓ b2 test [...]ms
+           ✓ b3 test [...]ms
+             ✓ nested b1 test [...]ms
+             ✓ nested b2 test [...]ms
+             ✓ nested b3 test [...]ms
+           ✓ b1 test [...]ms
+           ✓ b2 test [...]ms
+           ✓ b3 test [...]ms
+           × b failed test [...]ms
+             ✓ nested b1 test [...]ms
+             ✓ nested b2 test [...]ms
+             ✓ nested b3 test [...]ms"
     `)
   })
 
@@ -64,9 +62,12 @@ describe('default reporter', async () => {
       reporters: 'none',
     })
 
-    expect(stdout).toContain('✓ a passed > a1 test')
-    expect(stdout).toContain('✓ a passed > nested a > nested a3 test')
-    expect(stdout).toContain('× a failed > a failed test')
+    expect(stdout).toContain('✓ a passed')
+    expect(stdout).toContain('✓ a1 test')
+    expect(stdout).toContain('✓ nested a')
+    expect(stdout).toContain('✓ nested a3 test')
+    expect(stdout).toContain('× a failed')
+    expect(stdout).toContain('× a failed test')
     expect(stdout).toContain('nested a failed 1 test')
     expect(stdout).toContain('[note]')
     expect(stdout).toContain('[reason]')
@@ -89,8 +90,10 @@ describe('default reporter', async () => {
     await vitest.waitForStdout('Filename pattern: a')
     await vitest.waitForStdout('Waiting for file changes...')
 
-    expect(vitest.stdout).contain('✓ a passed > a1 test')
-    expect(vitest.stdout).contain('✓ a passed > nested a > nested a3 test')
+    expect(vitest.stdout).toContain('✓ a passed')
+    expect(vitest.stdout).toContain('✓ a1 test')
+    expect(vitest.stdout).toContain('✓ nested a')
+    expect(vitest.stdout).toContain('✓ nested a3 test')
 
     // rerun and two files
     vitest.write('p')
@@ -99,9 +102,7 @@ describe('default reporter', async () => {
     await vitest.waitForStdout('Waiting for file changes...')
     expect(vitest.stdout).toContain('✓ b1.test.ts')
     expect(vitest.stdout).toContain('✓ b2.test.ts')
-    expect(vitest.stdout).not.toContain('✓ nested b1 test')
-    expect(vitest.stdout).not.toContain('✓ b1 test')
-    expect(vitest.stdout).not.toContain('✓ b2 test')
+    expect(vitest.stdout).not.toContain('✓ b2 failed')
   })
 
   test('doesn\'t print error properties', async () => {
@@ -139,9 +140,11 @@ describe('default reporter', async () => {
     expect(trimReporterOutput(stdout)).toMatchInlineSnapshot(`
       "✓ fixtures/pass-and-skip-test-suites.test.ts (4 tests | 2 skipped) [...]ms
          ✓ passing test #1 [...]ms
-         ✓ passing suite > passing test #2 [...]ms
+         ✓ passing suite (1)
+           ✓ passing test #2 [...]ms
          ↓ skipped test #1
-         ↓ skipped suite > skipped test #2"
+         ↓ skipped suite (1)
+           ↓ skipped test #2"
     `)
   })
 
@@ -156,7 +159,8 @@ describe('default reporter', async () => {
     expect(trimReporterOutput(stdout)).toMatchInlineSnapshot(`
       "✓ fixtures/pass-and-skip-test-suites.test.ts (4 tests | 2 skipped) [...]ms
          ✓ passing test #1 [...]ms
-         ✓ passing suite > passing test #2 [...]ms"
+         ✓ passing suite (1)
+           ✓ passing test #2 [...]ms"
     `)
   })
 
@@ -190,13 +194,13 @@ describe('default reporter', async () => {
       reporters: 'none',
     })
 
-    expect(stdout).toContain('✓ passed > 0-based index of the test case is 0')
-    expect(stdout).toContain('✓ passed > 0-based index of the test case is 1')
-    expect(stdout).toContain('✓ passed > 0-based index of the test case is 2')
+    expect(stdout).toContain('✓ 0-based index of the test case is 0')
+    expect(stdout).toContain('✓ 0-based index of the test case is 1')
+    expect(stdout).toContain('✓ 0-based index of the test case is 2')
 
-    expect(stdout).toContain('✓ passed > 1-based index of the test case is 1')
-    expect(stdout).toContain('✓ passed > 1-based index of the test case is 2')
-    expect(stdout).toContain('✓ passed > 1-based index of the test case is 3')
+    expect(stdout).toContain('✓ 1-based index of the test case is 1')
+    expect(stdout).toContain('✓ 1-based index of the test case is 2')
+    expect(stdout).toContain('✓ 1-based index of the test case is 3')
   })
 
   test('test.each/for title format', async () => {

@@ -62,7 +62,7 @@ test('prints retry count', async () => {
     config: false,
   })
 
-  expect(trimReporterOutput(stdout)).toMatchInlineSnapshot(`"✓ fixtures/retry.test.ts > pass after retries (retry x3) [...]ms"`)
+  expect(trimReporterOutput(stdout)).toMatchInlineSnapshot(`"✓ fixtures/retry.test.ts > pass after retries [...]ms (retry x3)"`)
 })
 
 test('prints repeat count', async () => {
@@ -72,10 +72,10 @@ test('prints repeat count', async () => {
     config: false,
   })
 
-  expect(trimReporterOutput(stdout)).toMatchInlineSnapshot(`"✓ fixtures/repeats.test.ts > repeat couple of times (repeat x3) [...]ms"`)
+  expect(trimReporterOutput(stdout)).toMatchInlineSnapshot(`"✓ fixtures/repeats.test.ts > repeat couple of times [...]ms (repeat x3)"`)
 })
 
-test('does not render tree when in non-TTY', async () => {
+test('renders tests in a list', async () => {
   const { stdout } = await runVitest({
     include: ['fixtures/verbose/*.test.ts'],
     reporters: [['verbose', { isTTY: false, summary: false }]],
@@ -109,6 +109,44 @@ test('does not render tree when in non-TTY', async () => {
      ✓ fixtures/verbose/example-2.test.ts > test 0.1 [...]ms
      ↓ fixtures/verbose/example-2.test.ts > test 0.2
      ✓ fixtures/verbose/example-2.test.ts > suite 1.1 > test 1.1 [...]ms"
+  `)
+})
+
+test('renders lications if enabled', async () => {
+  const { stdout } = await runVitest({
+    include: ['fixtures/verbose/*.test.ts'],
+    reporters: [['verbose', { isTTY: false, summary: false }]],
+    config: false,
+    includeTaskLocation: true,
+    fileParallelism: false,
+    sequence: {
+      sequencer: class StableTestFileOrderSorter {
+        sort(files: TestSpecification[]) {
+          return files.sort((a, b) => a.moduleId.localeCompare(b.moduleId))
+        }
+
+        shard(files: TestSpecification[]) {
+          return files
+        }
+      },
+    },
+  })
+
+  expect(trimReporterOutput(stdout)).toMatchInlineSnapshot(`
+    "✓ fixtures/verbose/example-1.test.ts:3:1 > test pass in root [...]ms
+     ↓ fixtures/verbose/example-1.test.ts:5:6 > test skip in root
+     ✓ fixtures/verbose/example-1.test.ts:8:3 > suite in root > test pass in 1. suite #1 [...]ms
+     ✓ fixtures/verbose/example-1.test.ts:10:3 > suite in root > test pass in 1. suite #2 [...]ms
+     ✓ fixtures/verbose/example-1.test.ts:13:5 > suite in root > suite in suite > test pass in nested suite #1 [...]ms
+     ✓ fixtures/verbose/example-1.test.ts:15:5 > suite in root > suite in suite > test pass in nested suite #2 [...]ms
+     × fixtures/verbose/example-1.test.ts:18:7 > suite in root > suite in suite > suite in nested suite > test failure in 2x nested suite [...]ms
+       → expected 'should fail' to be 'as expected' // Object.is equality
+     ↓ fixtures/verbose/example-1.test.ts:26:3 > suite skip in root > test 1.3
+     ↓ fixtures/verbose/example-1.test.ts:29:5 > suite skip in root > suite in suite > test in nested suite
+     ↓ fixtures/verbose/example-1.test.ts:31:5 > suite skip in root > suite in suite > test failure in nested suite of skipped suite
+     ✓ fixtures/verbose/example-2.test.ts:3:1 > test 0.1 [...]ms
+     ↓ fixtures/verbose/example-2.test.ts:5:6 > test 0.2
+     ✓ fixtures/verbose/example-2.test.ts:8:3 > suite 1.1 > test 1.1 [...]ms"
   `)
 })
 

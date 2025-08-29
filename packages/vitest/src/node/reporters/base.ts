@@ -5,7 +5,7 @@ import type { Vitest } from '../core'
 import type { Reporter, TestRunEndReason } from '../types/reporter'
 import type { TestCase, TestCollection, TestModule, TestModuleState, TestResult, TestSuite, TestSuiteState } from './reported-tasks'
 import { performance } from 'node:perf_hooks'
-import { getFullName, getSuites, getTests, hasFailed } from '@vitest/runner/utils'
+import { getSuites, getTestName, getTests, hasFailed } from '@vitest/runner/utils'
 import { toArray } from '@vitest/utils'
 import { parseStacktrace } from '@vitest/utils/source-map'
 import { relative } from 'pathe'
@@ -250,7 +250,17 @@ export abstract class BaseReporter implements Reporter {
   }
 
   protected getFullName(test: Task, separator?: string): string {
-    return getFullName(test, separator)
+    if (test === test.file) {
+      return test.name
+    }
+
+    let name = test.file.name
+    if (test.location) {
+      name += c.dim(`:${test.location.line}:${test.location.column}`)
+    }
+    name += separator
+    name += getTestName(test, separator)
+    return name
   }
 
   protected getTestIndentation(test: Task): string {
@@ -686,13 +696,7 @@ export abstract class BaseReporter implements Reporter {
         const projectName = (task as File)?.projectName || task.file?.projectName || ''
         const project = this.ctx.projects.find(p => p.name === projectName)
 
-        // let name = this.getFullName(task, separator)
-        let name = task.file.name
-        if (task.location) {
-          name += c.dim(`:${task.location.line}:${task.location.column}`)
-        }
-        name += separator
-        name += this.getTestName(task, separator)
+        let name = this.getFullName(task, separator)
 
         if (filepath) {
           name += c.dim(` [ ${this.relative(filepath)} ]`)

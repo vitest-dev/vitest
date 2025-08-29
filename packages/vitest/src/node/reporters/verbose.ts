@@ -31,7 +31,6 @@ export class VerboseReporter extends DefaultReporter {
     title += separator
 
     title += getTestName(test.task, separator)
-
     title += this.getTestCaseSuffix(test)
 
     this.log(title)
