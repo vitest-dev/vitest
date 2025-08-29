@@ -437,10 +437,16 @@ export class TestModule extends SuiteImplementation {
    */
   public readonly moduleId: string
 
+  /**
+   * Module id relative to the project. This is the same as `task.name`.
+   */
+  public readonly relativeModuleId: string
+
   /** @internal */
   protected constructor(task: RunnerTestFile, project: TestProject) {
     super(task, project)
     this.moduleId = task.filepath
+    this.relativeModuleId = task.name
   }
 
   /**
