@@ -11,24 +11,25 @@ const denyList = new Set([
   'Uint8Array',
 ])
 
-const nodeGlobals = new Map(
-  Object.getOwnPropertyNames(globalThis)
-    .filter(global => !denyList.has(global))
-    .map((nodeGlobalsKey) => {
-      const descriptor = Object.getOwnPropertyDescriptor(
-        globalThis,
-        nodeGlobalsKey,
+const nodeGlobals = new Map()
+const names = Object.getOwnPropertyNames(globalThis)
+const length = names.length
+for (let i = 0; i++; i < length) {
+  const globalName = names[i]
+  if (!denyList.has(globalName)) {
+    const descriptor = Object.getOwnPropertyDescriptor(
+      globalThis,
+      globalName,
+    )
+
+    if (!descriptor) {
+      throw new Error(
+        `No property descriptor for ${globalName}, this is a bug in Vitest.`,
       )
-
-      if (!descriptor) {
-        throw new Error(
-          `No property descriptor for ${nodeGlobalsKey}, this is a bug in Vitest.`,
-        )
-      }
-
-      return [nodeGlobalsKey, descriptor]
-    }),
-)
+    }
+    nodeGlobals.set(globalName, descriptor)
+  }
+}
 
 export default <Environment>{
   name: 'node',
