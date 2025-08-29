@@ -24,6 +24,7 @@ import {
   getStateSymbol,
   padSummaryTitle,
   renderSnapshotSummary,
+  separator,
   taskFail,
   withLabel,
 } from './renderers/utils'
@@ -188,12 +189,12 @@ export abstract class BaseReporter implements Reporter {
     const suffix = this.getTestCaseSuffix(test)
 
     if (testResult.state === 'failed') {
-      this.log(c.red(` ${padding}${taskFail} ${this.getTestName(test.task, c.dim(' > '))}`) + suffix)
+      this.log(c.red(` ${padding}${taskFail} ${this.getTestName(test.task, separator)}`) + suffix)
     }
 
     // also print slow tests
     else if (duration > this.ctx.config.slowTestThreshold) {
-      this.log(` ${padding}${c.yellow(c.dim(F_CHECK))} ${this.getTestName(test.task, c.dim(' > '))} ${suffix}`)
+      this.log(` ${padding}${c.yellow(c.dim(F_CHECK))} ${this.getTestName(test.task, separator)} ${suffix}`)
     }
 
     else if (this.ctx.config.hideSkippedTests && (testResult.state === 'skipped')) {
@@ -201,7 +202,7 @@ export abstract class BaseReporter implements Reporter {
     }
 
     else if (this.renderSucceed || moduleState === 'failed') {
-      this.log(` ${padding}${this.getStateSymbol(test)} ${this.getTestName(test.task, c.dim(' > '))}${suffix}`)
+      this.log(` ${padding}${this.getStateSymbol(test)} ${this.getTestName(test.task, separator)}${suffix}`)
     }
   }
 
@@ -227,15 +228,7 @@ export abstract class BaseReporter implements Reporter {
       suffix += c.magenta(` ${Math.floor(diagnostic.heap / 1024 / 1024)} MB heap used`)
     }
 
-    let title = this.getStateSymbol(testModule)
-
-    if (testModule.project.name) {
-      title += ` ${formatProjectName(testModule.project, '')}`
-    }
-
-    if (testModule.meta().typecheck) {
-      title += ` ${c.bgBlue(c.bold(' TS '))}`
-    }
+    const title = this.getEntityPrefix(testModule)
 
     return ` ${title} ${testModule.task.name} ${suffix}`
   }
@@ -282,6 +275,20 @@ export abstract class BaseReporter implements Reporter {
       }
       this[console](`${PADDING}  ${c.blue(F_DOWN_RIGHT)} ${message}`)
     })
+  }
+
+  protected getEntityPrefix(entity: TestCase | TestModule | TestSuite): string {
+    let title = this.getStateSymbol(entity)
+
+    if (entity.project.name) {
+      title += ` ${formatProjectName(entity.project, '')}`
+    }
+
+    if (entity.meta().typecheck) {
+      title += ` ${c.bgBlue(c.bold(' TS '))}`
+    }
+
+    return title
   }
 
   protected getTestCaseSuffix(testCase: TestCase): string {
@@ -413,7 +420,7 @@ export abstract class BaseReporter implements Reporter {
     const task = log.taskId ? this.ctx.state.idMap.get(log.taskId) : undefined
 
     if (task) {
-      headerText = this.getFullName(task, c.dim(' > '))
+      headerText = this.getFullName(task, separator)
     }
     else if (log.taskId && log.taskId !== '__vitest__unknown_test__') {
       headerText = log.taskId
@@ -622,7 +629,7 @@ export abstract class BaseReporter implements Reporter {
         continue
       }
 
-      const groupName = this.getFullName(group, c.dim(' > '))
+      const groupName = this.getFullName(group, separator)
       const project = this.ctx.projects.find(p => p.name === bench.file.projectName)
 
       this.log(`  ${formatProjectName(project)}${bench.name}${c.dim(` - ${groupName}`)}`)
@@ -679,7 +686,7 @@ export abstract class BaseReporter implements Reporter {
         const projectName = (task as File)?.projectName || task.file?.projectName || ''
         const project = this.ctx.projects.find(p => p.name === projectName)
 
-        let name = this.getFullName(task, c.dim(' > '))
+        let name = this.getFullName(task, separator)
 
         if (filepath) {
           name += c.dim(` [ ${this.relative(filepath)} ]`)

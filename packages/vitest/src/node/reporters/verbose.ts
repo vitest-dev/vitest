@@ -3,7 +3,7 @@ import { getFullName } from '@vitest/runner/utils'
 import c from 'tinyrainbow'
 import { DefaultReporter } from './default'
 import { F_RIGHT } from './renderers/figures'
-import { formatProjectName } from './renderers/utils'
+import { separator } from './renderers/utils'
 
 export class VerboseReporter extends DefaultReporter {
   protected verbose = true
@@ -22,17 +22,9 @@ export class VerboseReporter extends DefaultReporter {
       return
     }
 
-    let title = ` ${this.getStateSymbol(test)} `
+    let title = ` ${this.getEntityPrefix(test)} `
 
-    if (test.project.name) {
-      title += formatProjectName(test.project)
-    }
-
-    if (test.task.meta.typecheck) {
-      title += `${c.bgBlue(c.bold(' TS '))} `
-    }
-
-    title += getFullName(test.task, c.dim(' > '))
+    title += getFullName(test.task, separator)
     title += this.getTestCaseSuffix(test)
 
     this.log(title)

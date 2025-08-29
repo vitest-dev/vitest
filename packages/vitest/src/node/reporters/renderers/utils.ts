@@ -23,6 +23,7 @@ export const testPass: string = c.green(F_CHECK)
 export const taskFail: string = c.red(F_CROSS)
 export const suiteFail: string = c.red(F_POINTER)
 export const pending: string = c.gray('·')
+export const separator: string = c.dim(' > ')
 
 const labelDefaultColors = [c.bgYellow, c.bgCyan, c.bgGreen, c.bgMagenta] as const
 
