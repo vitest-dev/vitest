@@ -222,6 +222,10 @@ export abstract class Locator {
     return selectorEngine.querySelectorAll(parsedSelector, document.documentElement) as (HTMLElement | SVGElement)[]
   }
 
+  public get length(): number {
+    return this.elements().length
+  }
+
   public all(): Locator[] {
     return this.elements().map(element => this.elementLocator(element))
   }
