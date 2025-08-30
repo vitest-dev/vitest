@@ -956,6 +956,25 @@ test('works correctly', async () => {
 ```
 :::
 
+### length
+
+This getter returns a number of elements that this locator is matching. It is equivalent to calling `locator.elements().length`.
+
+Consider the following DOM structure:
+
+```html
+<button>Click Me!</button>
+<button>Don't click me!</button>
+```
+
+This property will always succeed:
+
+```ts
+page.getByRole('button').length // ✅ 2
+page.getByRole('button', { title: 'Click Me!' }).length // ✅ 1
+page.getByRole('alert').length // ✅ 0
+```
+
 ## Custom Locators <Version>3.2.0</Version> <Badge type="danger">advanced</Badge> {#custom-locators}
 
 You can extend built-in locators API by defining an object of locator factories. These methods will exist as methods on the `page` object and any created locator.
