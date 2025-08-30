@@ -89,7 +89,7 @@ Hide logs for skipped tests
 - **CLI:** `--reporter <name>`
 - **Config:** [reporters](/config/#reporters)
 
-Specify reporters (default, blob, verbose, dot, json, tap, tap-flat, junit, hanging-process, github-actions)
+Specify reporters (default, blob, verbose, dot, json, tap, tap-flat, junit, tree, hanging-process, github-actions)
 
 ### outputFile
 
@@ -340,13 +340,6 @@ Set to true to exit if port is already in use, instead of automatically trying t
 - **Config:** [browser.provider](/guide/browser/config#browser-provider)
 
 Provider used to run browser tests. Some browsers are only available for specific providers. Can be "webdriverio", "playwright", "preview", or the path to a custom provider. Visit [`browser.provider`](https://vitest.dev/guide/browser/config.html#browser-provider) for more information (default: `"preview"`)
-
-### browser.providerOptions
-
-- **CLI:** `--browser.providerOptions <options>`
-- **Config:** [browser.providerOptions](/guide/browser/config#browser-provideroptions)
-
-Options that are passed down to a browser provider. Visit [`browser.providerOptions`](https://vitest.dev/config/#browser-provideroptions) for more information
 
 ### browser.isolate
 

@@ -93,6 +93,7 @@ class MyReporter implements Reporter {
 6. `JUnitReporter`
 7. `TapFlatReporter`
 8. `HangingProcessReporter`
+9. `TreeReporter`
 
 ### Base Abstract reporters:
 
