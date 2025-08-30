@@ -49,14 +49,14 @@ pnpm add -D @vitest/browser playwright
 Then configure browser mode in your `vitest.config.ts`:
 
 ```ts
+import { playwright } from '@vitest/browser/providers/playwright'
 import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
   test: {
     browser: {
-      enabled: true,
-      name: 'chromium',
-      provider: 'playwright',
+      provider: playwright(),
+      instances: [{ browser: 'chromium' }]
     },
   },
 })
@@ -68,9 +68,9 @@ Vitest provides official rendering packages for popular frameworks:
 
 | Framework | Package | Description |
 |-----------|---------|-------------|
-| Vue | `vitest-browser-vue` | For Vue.js components |
-| React | `vitest-browser-react` | For React components |
-| Svelte | `vitest-browser-svelte` | For Svelte components |
+| Vue | [`vitest-browser-vue`](https://www.npmjs.com/package/vitest-browser-vue) | For Vue.js components |
+| React | [`vitest-browser-react`](https://www.npmjs.com/package/vitest-browser-react) | For React components |
+| Svelte | [`vitest-browser-svelte`](https://www.npmjs.com/package/vitest-browser-svelte) | For Svelte components |
 
 Community packages are also available:
 
@@ -382,10 +382,10 @@ Most Jest + Testing Library tests work with minimal changes:
 
 ```ts
 // Before (Jest)
-import { render, screen } from '@testing-library/react'
+import { render, screen } from '@testing-library/react' // [!code --]
 
 // After (Vitest)
-import { render } from 'vitest-browser-react'
+import { render } from 'vitest-browser-react' // [!code ++]
 ```
 
 ### Key Differences
