@@ -842,33 +842,20 @@ function formatName(name: string | Function) {
 }
 
 function formatTitle(template: string, items: any[], idx: number) {
+  template = template.replace(/%%/g, '__vitest_escaped_%__')
+
   if (template.includes('%#') || template.includes('%$')) {
-    // '%#' match index of the test case
     template = template
-      .replace(/%%/g, '__vitest_escaped_%__')
       .replace(/%#/g, `${idx}`)
       .replace(/%\$/g, `${idx + 1}`)
-      .replace(/__vitest_escaped_%__/g, '%%')
-  }
-  const count = template.split('%').length - 1
-
-  if (template.includes('%f')) {
-    const placeholders = template.match(/%f/g) || []
-    placeholders.forEach((_, i) => {
-      if (isNegativeNaN(items[i]) || Object.is(items[i], -0)) {
-        // Replace the i-th occurrence of '%f' with '-%f'
-        let occurrence = 0
-        template = template.replace(/%f/g, (match) => {
-          occurrence++
-          return occurrence === i + 1 ? '-%f' : match
-        })
-      }
-    })
   }
 
-  let formatted = format(template, ...items.slice(0, count))
+  const percentRegex = /%[a-z]/gi
+  const percentMatches: RegExpMatchArray | null = template.match(percentRegex)
+  const percentCount = percentMatches ? percentMatches.length : 0
+
   const isObjectItem = isObject(items[0])
-  formatted = formatted.replace(
+  template = template.replace(
     /\$([$\w.]+)/g,
     (_, key: string) => {
       const isArrayKey = /^\d+$/.test(key)
@@ -882,7 +869,25 @@ function formatTitle(template: string, items: any[], idx: number) {
       }) as unknown as string
     },
   )
-  return formatted
+
+  template = template.replace(/__vitest_escaped_%__/g, '%')
+
+  if (template.includes('%f')) {
+    const placeholders = template.match(/%f/g) || []
+    let temporaryTemplate = template
+    placeholders.forEach((_, i) => {
+      if (isNegativeNaN(items[i]) || Object.is(items[i], -0)) {
+        let occurrence = 0
+        temporaryTemplate = temporaryTemplate.replace(/%f/g, (match) => {
+          occurrence++
+          return occurrence === i + 1 ? '-%f' : match
+        })
+      }
+    })
+    return format(temporaryTemplate, ...items.slice(0, percentCount))
+  }
+
+  return format(template, ...items.slice(0, percentCount))
 }
 
 function formatTemplateString(cases: any[], args: any[]): any[] {
