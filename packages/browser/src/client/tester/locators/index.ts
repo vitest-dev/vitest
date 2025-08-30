@@ -43,12 +43,23 @@ export const selectorEngine: Ivya = Ivya.create({
   testIdAttribute: server.config.browser.locators.testIdAttribute,
 })
 
+const kLocator = Symbol.for('$$vitest:locator')
+
 export abstract class Locator {
   public abstract selector: string
 
   private _parsedSelector: ParsedSelector | undefined
   protected _container?: Element | undefined
   protected _pwSelector?: string | undefined
+
+  constructor() {
+    Object.defineProperty(this, kLocator, {
+      enumerable: false,
+      writable: false,
+      configurable: false,
+      value: kLocator,
+    })
+  }
 
   public click(options: UserEventClickOptions = {}): Promise<void> {
     return this.triggerCommand<void>('__vitest_click', this.selector, options)

@@ -1,12 +1,15 @@
 import type { Locator } from '@vitest/browser/context'
 import type { ExpectPollOptions } from 'vitest'
 import { chai, expect } from 'vitest'
+import { getType } from 'vitest/internal/browser'
 import { matchers } from './expect'
 import { processTimeoutOptions } from './utils'
 
+const kLocator = Symbol.for('$$vitest:locator')
+
 function element<T extends HTMLElement | SVGElement | null | Locator>(elementOrLocator: T, options?: ExpectPollOptions): unknown {
-  if (elementOrLocator != null && !(elementOrLocator instanceof HTMLElement) && !(elementOrLocator instanceof SVGElement) && !('element' in elementOrLocator)) {
-    throw new Error(`Invalid element or locator: ${elementOrLocator}. Expected an instance of Element or Locator, received ${typeof elementOrLocator}`)
+  if (elementOrLocator != null && !(elementOrLocator instanceof HTMLElement) && !(elementOrLocator instanceof SVGElement) && !(kLocator in elementOrLocator)) {
+    throw new Error(`Invalid element or locator: ${elementOrLocator}. Expected an instance of HTMLElement, SVGElement or Locator, received ${getType(elementOrLocator)}`)
   }
 
   return expect.poll<HTMLElement | SVGElement | null>(function element(this: object) {
