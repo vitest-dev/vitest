@@ -39,6 +39,7 @@ declare module 'vue' {
     ViewModuleGraph: typeof import('./components/views/ViewModuleGraph.vue')['default']
     ViewReport: typeof import('./components/views/ViewReport.vue')['default']
     ViewReportError: typeof import('./components/views/ViewReportError.vue')['default']
+    ViewSnapshot: typeof import('./components/views/ViewSnapshot.vue')['default']
     ViewTestReport: typeof import('./components/views/ViewTestReport.vue')['default']
   }
 }

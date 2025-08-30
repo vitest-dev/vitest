@@ -75,6 +75,13 @@ export default class SnapshotState {
   private _matched = new CounterMap<string>()
   private _unmatched = new CounterMap<string>()
   private _updated = new CounterMap<string>()
+
+  // Track snapshot keys by category
+  private _addedKeys = new Set<string>()
+  private _matchedKeys = new Set<string>()
+  private _unmatchedKeys = new Set<string>()
+  private _updatedKeys = new Set<string>()
+
   get added(): CounterMap<string> { return this._added }
   set added(value: number) { this._added._total = value }
   get matched(): CounterMap<string> { return this._matched }
@@ -149,6 +156,11 @@ export default class SnapshotState {
         }
         this._counters.set(name, count - 1)
       }
+      // Remove from key tracking sets
+      this._addedKeys.delete(key)
+      this._updatedKeys.delete(key)
+      this._matchedKeys.delete(key)
+      this._unmatchedKeys.delete(key)
     }
     this._testIdToKeys.delete(testId)
 
@@ -248,6 +260,10 @@ export default class SnapshotState {
 
   getUncheckedKeys(): Array<string> {
     return Array.from(this._uncheckedKeys)
+  }
+
+  getSnapshotData(): SnapshotData {
+    return { ...this._snapshotData }
   }
 
   removeUncheckedKeys(): void {
@@ -386,9 +402,11 @@ export default class SnapshotState {
         if (!pass) {
           if (hasSnapshot) {
             this.updated.increment(testId)
+            this._updatedKeys.add(key)
           }
           else {
             this.added.increment(testId)
+            this._addedKeys.add(key)
           }
 
           this._addSnapshot(key, receivedSerialized, {
@@ -399,6 +417,7 @@ export default class SnapshotState {
         }
         else {
           this.matched.increment(testId)
+          this._matchedKeys.add(key)
         }
       }
       else {
@@ -408,6 +427,7 @@ export default class SnapshotState {
           rawSnapshot,
         })
         this.added.increment(testId)
+        this._addedKeys.add(key)
       }
 
       return {
@@ -421,6 +441,7 @@ export default class SnapshotState {
     else {
       if (!pass) {
         this.unmatched.increment(testId)
+        this._unmatchedKeys.add(key)
         return {
           actual: rawSnapshot ? receivedSerialized : removeExtraLineBreaks(receivedSerialized),
           count,
@@ -434,6 +455,7 @@ export default class SnapshotState {
       }
       else {
         this.matched.increment(testId)
+        this._matchedKeys.add(key)
         return {
           actual: '',
           count,
@@ -446,15 +468,33 @@ export default class SnapshotState {
   }
 
   async pack(): Promise<SnapshotResult> {
+    // Merge inline snapshots with external snapshots
+    const mergedSnapshots = { ...this._snapshotData }
+
+    for (const inline of [...this._inlineSnapshotStacks, ...this._inlineSnapshots]) {
+      // Use testId to key mapping to find the snapshot key
+      const keys = this._testIdToKeys.get(inline.testId)
+      if (keys.length > 0) {
+        // For inline snapshots, typically there's one key per testId
+        const key = keys[0]
+        mergedSnapshots[key] = inline.snapshot
+      }
+    }
+
     const snapshot: SnapshotResult = {
       filepath: this.testFilePath,
+      snapshot: mergedSnapshots,
       added: 0,
+      addedKeys: [],
       fileDeleted: false,
       matched: 0,
+      matchedKeys: [],
       unchecked: 0,
       uncheckedKeys: [],
       unmatched: 0,
+      unmatchedKeys: [],
       updated: 0,
+      updatedKeys: [],
     }
     const uncheckedCount = this.getUncheckedCount()
     const uncheckedKeys = this.getUncheckedKeys()
@@ -465,9 +505,13 @@ export default class SnapshotState {
     const status = await this.save()
     snapshot.fileDeleted = status.deleted
     snapshot.added = this.added.total()
+    snapshot.addedKeys = Array.from(this._addedKeys)
     snapshot.matched = this.matched.total()
+    snapshot.matchedKeys = Array.from(this._matchedKeys)
     snapshot.unmatched = this.unmatched.total()
+    snapshot.unmatchedKeys = Array.from(this._unmatchedKeys)
     snapshot.updated = this.updated.total()
+    snapshot.updatedKeys = Array.from(this._updatedKeys)
     snapshot.unchecked = !status.deleted ? uncheckedCount : 0
     snapshot.uncheckedKeys = Array.from(uncheckedKeys)
 
