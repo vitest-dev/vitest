@@ -241,6 +241,7 @@ If you need to run some tests using Node-based runner, you can define a [`projec
 
 ```ts [vitest.config.ts]
 import { defineConfig } from 'vitest/config'
+import { playwright } from '@vitest/browser/providers/playwright'
 
 export default defineConfig({
   test: {
@@ -268,6 +269,7 @@ export default defineConfig({
           name: 'browser',
           browser: {
             enabled: true,
+            provider: playwright(),
             instances: [
               { browser: 'chromium' },
             ],

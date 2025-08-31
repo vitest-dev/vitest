@@ -508,35 +508,35 @@ function guide(): DefaultTheme.SidebarItem[] {
       items: [
         {
           text: 'Mocking Dates',
-          link: '/guide/mocking#dates',
+          link: '/guide/mocking/dates',
         },
         {
           text: 'Mocking Functions',
-          link: '/guide/mocking#functions',
+          link: '/guide/mocking/functions',
         },
         {
           text: 'Mocking Globals',
-          link: '/guide/mocking#globals',
+          link: '/guide/mocking/globals',
         },
         {
           text: 'Mocking Modules',
-          link: '/guide/mocking-modules',
+          link: '/guide/mocking/modules',
         },
         {
-          text: 'Mocking File System',
-          link: '/guide/mocking#file-system',
+          text: 'Mocking the File System',
+          link: '/guide/mocking/file-system',
         },
         {
           text: 'Mocking Requests',
-          link: '/guide/mocking#requests',
+          link: '/guide/mocking/requests',
         },
         {
           text: 'Mocking Timers',
-          link: '/guide/mocking#timers',
+          link: '/guide/mocking/timers',
         },
         {
           text: 'Mocking Classes',
-          link: '/guide/mocking#classes',
+          link: '/guide/mocking/classes',
         },
       ],
     },
