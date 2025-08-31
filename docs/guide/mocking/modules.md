@@ -155,6 +155,8 @@ vi.mock(import('./example.js'))
 
 If the file `./__mocks__/example.js` exists, then Vitest will load it instead. Otherwise, Vitest will load the original module and replace everything recursively:
 
+{#automocking-algorithm}
+
 - All arrays will be empty
 - All primitives will stay untouched
 - All getters will return `undefined`
