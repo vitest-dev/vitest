@@ -26,7 +26,7 @@ export class CommonjsExecutor {
   private publicRequireCache = this.createProxyCache()
 
   private moduleCache = new Map<string, VMSyntheticModule>()
-  private builtinCache: Record<string, NodeJS.Module> = Object.create(null)
+  private builtinCache = new Map<string, NodeJS.Module>()
   private extensions: Record<
     string,
     (m: NodeJS.Module, filename: string) => unknown
@@ -366,17 +366,23 @@ export class CommonjsExecutor {
 
   private requireCoreModule(identifier: string) {
     const normalized = identifier.replace(/^node:/, '')
-    if (this.builtinCache[normalized]) {
-      return this.builtinCache[normalized].exports
+    const cached = this.builtinCache.get(normalized)
+    if (cached) {
+      return cached.exports
     }
     const moduleExports = _require(identifier)
     if (identifier === 'node:module' || identifier === 'module') {
       const module = new this.Module('/module.js') // path should not matter
       module.exports = this.Module
-      this.builtinCache[normalized] = module
+      this.builtinCache.set(normalized, module)
       return module.exports
     }
-    this.builtinCache[normalized] = _require.cache[normalized]!
+    const cacheEntry = _require.cache[normalized]
+    if (!cacheEntry) {
+      // This should not happen for builtin modules, but handle gracefully
+      throw new Error(`Missing cache entry for builtin module: ${identifier} (normalized: ${normalized})`)
+    }
+    this.builtinCache.set(normalized, cacheEntry)
     // TODO: should we wrap module to rethrow context errors?
     return moduleExports
   }
