@@ -493,7 +493,7 @@ test('debug rendering issues', async () => {
 
 **Use Vitest's browser UI:**
 - Run tests with browser mode enabled
-- Open the browser URL (usually http://localhost:63315) to see tests running
+- Open the browser URL shown in the terminal to see tests running
 - Visual inspection helps identify CSS issues, layout problems, or missing elements
 
 **Test element queries:**
