@@ -14,6 +14,7 @@ export * as SpyModule from '@vitest/spy'
 export {
   format,
   getSafeTimers,
+  getType,
   inspect,
   stringify,
 } from '@vitest/utils'
