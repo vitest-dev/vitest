@@ -444,6 +444,7 @@ export const DEFAULT_OPTIONS: Options = {
   plugins: [],
   printBasicPrototype: true,
   printFunctionName: true,
+  printShadowRoot: true,
   theme: DEFAULT_THEME,
 } satisfies Options
 
@@ -519,6 +520,7 @@ function getConfig(options?: OptionsReceived): Config {
     plugins: options?.plugins ?? DEFAULT_OPTIONS.plugins,
     printBasicPrototype: options?.printBasicPrototype ?? true,
     printFunctionName: getPrintFunctionName(options),
+    printShadowRoot: options?.printShadowRoot ?? true,
     spacingInner: options?.min ? ' ' : '\n',
     spacingOuter: options?.min ? '' : '\n',
   }
