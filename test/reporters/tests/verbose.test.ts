@@ -112,7 +112,7 @@ test('renders tests in a list', async () => {
   `)
 })
 
-test('renders lications if enabled', async () => {
+test('renders locations if enabled', async () => {
   const { stdout } = await runVitest({
     include: ['fixtures/verbose/*.test.ts'],
     reporters: [['verbose', { isTTY: false, summary: false }]],

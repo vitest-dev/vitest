@@ -53,7 +53,7 @@ Error: thrown error
 
 ### verbose
 
-The `verbose` reporter is the only terminal reporter that reports annotation when the test doesn't fail.
+The `verbose` reporter is the only terminal reporter that reports annotations when the test doesn't fail.
 
 ```
 ✓ example.test.js > an example of a test with annotation
