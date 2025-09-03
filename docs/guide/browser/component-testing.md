@@ -53,11 +53,11 @@ Good component tests focus on **behavior and user experience** rather than imple
 ### Component Testing Hierarchy
 
 ```
-1. Critical User Paths    → Always test these
-2. Error Handling        → Test failure scenarios
-3. Edge Cases           → Empty data, extreme values
-4. Accessibility        → Screen readers, keyboard nav
-5. Performance          → Large datasets, animations
+1. Critical User Paths → Always test these
+2. Error Handling      → Test failure scenarios
+3. Edge Cases          → Empty data, extreme values
+4. Accessibility       → Screen readers, keyboard nav
+5. Performance         → Large datasets, animations
 ```
 
 ## Component Testing Strategies
@@ -68,12 +68,12 @@ Test components in isolation by mocking dependencies:
 
 ```tsx
 // Mock external services
-vi.mock('../api/userService', () => ({
+vi.mock(import('../api/userService'), () => ({
   fetchUser: vi.fn().mockResolvedValue({ name: 'John' })
 }))
 
 // Mock child components to focus on parent logic
-vi.mock('../components/UserCard', () => ({
+vi.mock(import('../components/UserCard'), () => ({
   default: vi.fn(({ user }) => `<div>User: ${user.name}</div>`)
 }))
 
@@ -81,12 +81,10 @@ test('UserProfile handles loading and data states', async () => {
   const { getByText } = render(<UserProfile userId="123" />)
 
   // Test loading state
-  expect(getByText('Loading...')).toBeInTheDocument()
+  await expect.element(getByText('Loading...')).toBeInTheDocument()
 
-  // Wait for data to load
-  await waitFor(() => {
-    expect(getByText('User: John')).toBeInTheDocument()
-  })
+  // Test for data to load (expect.element auto-retries)
+  await expect.element(getByText('User: John')).toBeInTheDocument()
 })
 ```
 
@@ -106,8 +104,8 @@ test('ProductList filters and displays products correctly', async () => {
   )
 
   // Initially shows all products
-  expect(getByText('Laptop')).toBeInTheDocument()
-  expect(getByText('Book')).toBeInTheDocument()
+  await expect.element(getByText('Laptop')).toBeInTheDocument()
+  await expect.element(getByText('Book')).toBeInTheDocument()
 
   // Filter by category
   await userEvent.selectOptions(
@@ -116,8 +114,8 @@ test('ProductList filters and displays products correctly', async () => {
   )
 
   // Only electronics should remain
-  expect(getByText('Laptop')).toBeInTheDocument()
-  expect(queryByText('Book')).not.toBeInTheDocument()
+  await expect.element(getByText('Laptop')).toBeInTheDocument()
+  await expect.element(queryByText('Book')).not.toBeInTheDocument()
 })
 ```
 
@@ -149,14 +147,14 @@ test('Solid component handles user interaction', async () => {
   // Bridge to Vitest's browser mode for interactions and assertions
   const screen = page.elementLocator(baseElement)
 
-  // You can use either Testing Library queries or Vitest's page queries
-  const incrementButton = getByRole('button', { name: /increment/i })
+  // Use Vitest's page queries for finding elements
+  const incrementButton = screen.getByRole('button', { name: /increment/i })
 
   // Use Vitest's assertions and interactions
   await expect.element(screen.getByText('Count: 0')).toBeInTheDocument()
 
   // Trigger user interaction using Vitest's page API
-  await page.elementLocator(incrementButton).click()
+  await incrementButton.click()
 
   await expect.element(screen.getByText('Count: 1')).toBeInTheDocument()
 })
@@ -198,23 +196,22 @@ Ensure components work for all users by testing keyboard navigation, focus manag
 ```tsx
 // Test keyboard navigation
 await userEvent.keyboard('{Tab}')
-expect(document.activeElement).toBe(nextFocusableElement)
+await expect.element(document.activeElement).toBe(nextFocusableElement)
 
 // Test ARIA attributes
-expect(modal).toHaveAttribute('aria-modal', 'true')
+await expect.element(modal).toHaveAttribute('aria-modal', 'true')
 ```
 
 ### 4. Mock External Dependencies
 Focus tests on component logic by mocking APIs and external services. This makes tests faster and more reliable. See our [Isolation Strategy](#isolation-strategy) for examples:
 
 ```tsx
-// Mock API calls
-vi.mock('../api/userService', () => ({
-  fetchUser: vi.fn().mockResolvedValue({ name: 'John' })
-}))
+// For API requests, we recommend using MSW (Mock Service Worker)
+// See: https://vitest.dev/guide/mocking/requests
+// This provides more realistic request/response mocking
 
-// Mock child components when testing parent logic
-vi.mock('../components/UserCard', () => ({
+// For module mocking, use the import() syntax
+vi.mock(import('../components/UserCard'), () => ({
   default: vi.fn(() => <div>Mocked UserCard</div>)
 }))
 ```
@@ -260,34 +257,47 @@ test('ShoppingCart manages items correctly', async () => {
 ### Testing Async Components with Data Fetching
 
 ```tsx
-// Mock the API to test different scenarios
-const mockUserApi = vi.fn()
-vi.mock('../api/users', () => ({ getUser: mockUserApi }))
+// Option 1: Recommended - Use MSW (Mock Service Worker) for API mocking
+import { http, HttpResponse } from 'msw'
+import { setupServer } from 'msw/node'
+
+// Set up MSW server with API handlers
+const server = setupServer(
+  http.get('/api/users/:id', ({ params }) => {
+    const { id } = params
+    if (id === '123') {
+      return HttpResponse.json({ name: 'John Doe', email: 'john@example.com' })
+    }
+    return HttpResponse.json({ error: 'User not found' }, { status: 404 })
+  })
+)
+
+// Start server before all tests
+beforeAll(() => server.listen())
+afterEach(() => server.resetHandlers())
+afterAll(() => server.close())
 
 test('UserProfile handles loading, success, and error states', async () => {
-  // Test loading state
-  mockUserApi.mockImplementation(() => new Promise(() => {})) // Never resolves
-
-  const { getByText, rerender } = render(<UserProfile userId="123" />)
-  await expect.element(getByText('Loading user...')).toBeInTheDocument()
-
   // Test success state
-  mockUserApi.mockResolvedValue({ name: 'John Doe', email: 'john@example.com' })
-  rerender(<UserProfile userId="123" />)
+  const { getByText } = render(<UserProfile userId="123" />)
+  // expect.element auto-retries until elements are found
+  await expect.element(getByText('John Doe')).toBeInTheDocument()
+  await expect.element(getByText('john@example.com')).toBeInTheDocument()
 
-  await waitFor(() => {
-    expect(getByText('John Doe')).toBeInTheDocument()
-    expect(getByText('john@example.com')).toBeInTheDocument()
-  })
+  // Test error state by overriding the handler for this test
+  server.use(
+    http.get('/api/users/:id', () => {
+      return HttpResponse.json({ error: 'User not found' }, { status: 404 })
+    })
+  )
 
-  // Test error state
-  mockUserApi.mockRejectedValue(new Error('User not found'))
-  rerender(<UserProfile userId="999" />)
-
-  await waitFor(() => {
-    expect(getByText('Error: User not found')).toBeInTheDocument()
-  })
+  const { getByText: getErrorText } = render(<UserProfile userId="999" />)
+  await expect.element(getErrorText('Error: User not found')).toBeInTheDocument()
 })
+
+// Option 2: Module mocking (use only when MSW isn't suitable)
+// const mockUserApi = vi.fn()
+// vi.mock(import('../api/users'), () => ({ getUser: mockUserApi }))
 ```
 
 ### Testing Component Communication
@@ -313,10 +323,8 @@ test('parent and child components communicate correctly', async () => {
     filters: ['electronics']
   })
 
-  // Verify other child component updates
-  await waitFor(() => {
-    expect(getByText('Showing Electronics products')).toBeInTheDocument()
-  })
+  // Verify other child component updates (expect.element auto-retries)
+  await expect.element(getByText('Showing Electronics products')).toBeInTheDocument()
 })
 ```
 
@@ -355,7 +363,6 @@ test('ContactForm handles complex validation scenarios', async () => {
   await expect.element(getByText('Please enter a valid email')).toBeInTheDocument()
 
   // Test successful submission
-  await emailInput.clear()
   await emailInput.fill('john@example.com')
   await messageInput.fill('Hello, this is a test message.')
   await submitButton.click()
@@ -414,27 +421,27 @@ test('Modal component is accessible', async () => {
   // Test focus management - modal should receive focus when opened
   // This is crucial for screen reader users to know a modal opened
   const modal = getByRole('dialog')
-  expect(document.activeElement).toBe(modal)
+  await expect.element(document.activeElement).toBe(modal)
 
   // Test ARIA attributes - these provide semantic information to screen readers
-  expect(modal).toHaveAttribute('aria-labelledby') // Links to title element
-  expect(modal).toHaveAttribute('aria-modal', 'true') // Indicates modal behavior
+  await expect.element(modal).toHaveAttribute('aria-labelledby') // Links to title element
+  await expect.element(modal).toHaveAttribute('aria-modal', 'true') // Indicates modal behavior
 
   // Test keyboard navigation - Escape key should close modal
   // This is required by ARIA authoring practices
   await userEvent.keyboard('{Escape}')
-  await waitFor(() => {
-    expect(modal).not.toBeInTheDocument()
-  })
+  // expect.element auto-retries until modal is removed
+  await expect.element(modal).not.toBeInTheDocument()
 
   // Test focus trap - tab navigation should cycle within modal
   // This prevents users from tabbing to content behind the modal
   const firstInput = getByLabelText(/username/i)
   const lastButton = getByRole('button', { name: /save/i })
 
-  firstInput.focus()
+  // Use click to focus on the first input, then test tab navigation
+  await page.elementLocator(firstInput).click()
   await userEvent.keyboard('{Shift>}{Tab}{/Shift}') // Shift+Tab goes backwards
-  expect(document.activeElement).toBe(lastButton) // Should wrap to last element
+  await expect.element(document.activeElement).toBe(lastButton) // Should wrap to last element
 })
 ```
 
@@ -450,7 +457,7 @@ Browser Mode runs tests in real browsers, giving you access to full developer to
 - **Check console errors** for JavaScript errors or warnings
 - **Monitor network requests** to debug API calls
 
-For headless mode debugging, add `headless: false` to your browser config temporarily.
+For headful mode debugging, add `headless: false` to your browser config temporarily.
 
 ### 2. Add Debug Statements
 
@@ -468,7 +475,7 @@ test('debug form validation', async () => {
 
   // Debug: Check if element exists with different query
   const errorElement = page.getByText('Email is required')
-  console.log('Error element found:', await errorElement.count())
+  console.log('Error element found:', errorElement.elements().length)
 
   await expect.element(errorElement).toBeInTheDocument()
 })
@@ -500,12 +507,12 @@ test('debug rendering issues', async () => {
 ```tsx
 // Debug why elements can't be found
 const button = page.getByRole('button', { name: /submit/i })
-console.log('Button count:', await button.count()) // Should be 1
+console.log('Button count:', button.elements().length) // Should be 1
 
 // Try alternative queries if the first one fails
-if (await button.count() === 0) {
-  console.log('All buttons:', await page.getByRole('button').all())
-  console.log('By test ID:', await page.getByTestId('submit-btn').count())
+if (button.elements().length === 0) {
+  console.log('All buttons:', page.getByRole('button').all().length)
+  console.log('By test ID:', page.getByTestId('submit-btn').elements().length)
 }
 ```
 
@@ -516,22 +523,26 @@ Selector issues are common causes of test failures. Debug them systematically:
 **Check accessible names:**
 ```tsx
 // If getByRole fails, check what roles/names are available
-const buttons = await page.getByRole('button').all()
+const buttons = page.getByRole('button').all()
 for (const button of buttons) {
-  const accessibleName = await button.getAttribute('aria-label')
-    || await button.textContent()
+  // Use element() to get the DOM element and access native properties
+  const element = button.element()
+  const accessibleName = element.getAttribute('aria-label') || element.textContent
   console.log(`Button: "${accessibleName}"`)
 }
 ```
 
 **Test different query strategies:**
 ```tsx
-// Multiple ways to find the same element
-const submitButton
-  = page.getByRole('button', { name: /submit/i }) // By accessible name
-    || page.getByTestId('submit-button') // By test ID
-    || page.locator('button[type="submit"]') // By CSS selector
-    || page.getByText('Submit') // By exact text
+// Multiple ways to find the same element - try different Vitest locator methods
+let submitButton = page.getByRole('button', { name: /submit/i }) // By accessible name
+if (submitButton.elements().length === 0) {
+  submitButton = page.getByTestId('submit-button') // By test ID
+}
+if (submitButton.elements().length === 0) {
+  submitButton = page.getByText('Submit') // By exact text
+}
+// Note: Vitest doesn't have page.locator(), use specific getBy* methods instead
 ```
 
 **Common selector debugging patterns:**
@@ -541,18 +552,19 @@ test('debug element queries', async () => {
 
   // 1. Check if element exists at all
   const emailInput = page.getByLabelText(/email/i)
-  console.log('Email input exists:', await emailInput.count() > 0)
+  console.log('Email input exists:', emailInput.elements().length > 0)
 
-  // 2. If not found, check available labels
-  const labels = await page.locator('label').all()
+  // 2. If not found, check available labels (use DOM query as fallback)
+  const labels = document.querySelectorAll('label')
   for (const label of labels) {
-    console.log('Available label:', await label.textContent())
+    console.log('Available label:', label.textContent)
   }
 
-  // 3. Check if element is hidden or disabled
-  if (await emailInput.count() > 0) {
-    console.log('Email input visible:', await emailInput.isVisible())
-    console.log('Email input enabled:', await emailInput.isEnabled())
+  // 3. Check if element is visible/enabled using DOM element
+  if (emailInput.elements().length > 0) {
+    const element = emailInput.element()
+    console.log('Email input visible:', !element.hidden && element.offsetParent !== null)
+    console.log('Email input enabled:', !element.disabled)
   }
 })
 ```
@@ -566,7 +578,7 @@ test('debug async component behavior', async () => {
   render(<AsyncUserProfile userId="123" />)
 
   // Debug: Check loading state
-  console.log('Loading text exists:', await page.getByText('Loading...').count())
+  console.log('Loading text exists:', page.getByText('Loading...').elements().length)
 
   // Wait with timeout and debug if it fails
   try {
