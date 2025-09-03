@@ -260,8 +260,16 @@ export function spyOn<T extends object, K extends keyof T>(
     original = object[key] as unknown as Procedure
   }
 
-  if (isMockFunction(original)) {
-    return original
+  const originalImplementation = ssr && original ? original() : original
+  const originalType = typeof originalImplementation
+
+  assert(
+    originalType === 'function',
+    `vi.spyOn() can only spy on a function. Received ${originalType}.`,
+  )
+
+  if (isMockFunction(originalImplementation)) {
+    return originalImplementation
   }
 
   const reassign = (cb: any) => {
@@ -292,7 +300,7 @@ export function spyOn<T extends object, K extends keyof T>(
 
   const mock = createMockInstance({
     restore,
-    originalImplementation: ssr && original ? original() : original,
+    originalImplementation,
     resetToMockName: true,
   })
 
