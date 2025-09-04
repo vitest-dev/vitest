@@ -1,3 +1,4 @@
+import type { StandardSchemaV1 } from '@standard-schema/spec'
 import type { Tester } from '@vitest/expect'
 import { getCurrentTest } from '@vitest/runner'
 import { Temporal } from 'temporal-polyfill'
@@ -386,6 +387,124 @@ describe('Temporal equality', () => {
       const b = Temporal.Duration.from('PT60S')
 
       expect(a).not.toStrictEqual(b)
+    })
+  })
+})
+
+describe('Standard Schema', () => {
+  function createMockSchema(validate: StandardSchemaV1['~standard']['validate']): StandardSchemaV1 {
+    return {
+      '~standard': {
+        version: 1,
+        vendor: 'mock',
+        validate,
+      },
+    }
+  }
+
+  function createAsyncMockSchema(validate: StandardSchemaV1['~standard']['validate']): StandardSchemaV1 {
+    return {
+      '~standard': {
+        version: 1,
+        vendor: 'mock-async',
+        validate: value => Promise.resolve(validate(value)),
+      },
+    }
+  }
+
+  const stringSchema = createMockSchema(value =>
+    typeof value === 'string' ? { issues: undefined, value } : { issues: [{ message: 'Expected string' }] },
+  )
+  const numberSchema = createMockSchema(value =>
+    typeof value === 'number' ? { issues: undefined, value } : { issues: [{ message: 'Expected number' }] },
+  )
+
+  const objectSchema = createMockSchema(value =>
+    typeof value === 'object' && value !== null && 'name' in value && 'age' in value && typeof value.name === 'string' && typeof value.age === 'number' ? { issues: undefined, value } : { issues: [{ message: 'Expected object' }] },
+  )
+
+  const asyncStringSchema = createAsyncMockSchema(value =>
+    typeof value === 'string' ? { issues: undefined, value } : { issues: [{ message: 'Expected string' }] },
+  )
+
+  describe('toEqual(schema)', () => {
+    test('should validate data against schema', () => {
+      expect('hello').toEqual(stringSchema)
+      expect('42').toEqual(numberSchema)
+
+      expect({
+        name: 'John',
+        age: 30,
+      }).toEqual({
+        name: stringSchema,
+        age: numberSchema,
+      })
+      expect({
+        name: 'John',
+        age: 30,
+      }).toEqual(objectSchema)
+
+      expect(() => expect(123).toEqual(stringSchema)).toThrow()
+    })
+
+    test('should validate data against schema in asymmetric matchers', () => {
+      expect({
+        name: 'John',
+        age: '30',
+      }).toEqual(expect.objectContaining({
+        age: numberSchema,
+      }))
+      expect([{
+        name: 'John',
+        age: 30,
+      }]).toEqual(expect.arrayContaining([objectSchema]))
+    })
+
+    test('should work with negation', () => {
+      expect(123).not.toEqual(stringSchema)
+      expect(() => expect('hello').not.toEqual(stringSchema)).toThrow()
+    })
+
+    test('should throw error for async schemas', () => {
+      expect(() => expect('hello').toEqual(asyncStringSchema)).toThrow('Async schema validation is not supported')
+    })
+  })
+
+  describe('toEqualSchema(schema)', () => {
+    test('should validate data against schema', () => {
+      expect('hello').toEqualSchema(stringSchema)
+      expect('42').toEqualSchema(numberSchema)
+
+      expect(() => expect(123).toEqualSchema(stringSchema)).toThrow()
+      expect(() => expect('hello').toEqualSchema(numberSchema)).toThrow()
+    })
+
+    test('should validate data against schema in asymmetric matchers', () => {
+      expect({
+        name: 'John',
+        age: '30',
+      }).toEqual(expect.objectContaining({
+        age: expect.toEqualSchema(numberSchema),
+      }))
+      expect([{
+        name: 'John',
+        age: 30,
+      }]).toEqual(expect.arrayContaining([expect.toEqualSchema(objectSchema)]))
+    })
+
+    test('should work with negation', () => {
+      expect(123).not.toEqualSchema(stringSchema)
+      expect('hello').not.toEqualSchema(numberSchema)
+
+      expect(() => expect('hello').not.toEqualSchema(stringSchema)).toThrow()
+    })
+
+    test('should throw error for async schemas', () => {
+      expect(() => expect('hello').toEqual(asyncStringSchema)).toThrow('Async schema validation is not supported')
+    })
+
+    test('should throw error for non-schema argument', () => {
+      expect(() => expect('hello').toEqualSchema('not-a-schema')).toThrow()
     })
   })
 })
