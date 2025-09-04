@@ -295,7 +295,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
   def('toContainEqual', function (expected) {
     const obj = utils.flag(this, 'object')
     const index = Array.from(obj).findIndex((item) => {
-      return jestEquals(item, expected, [...customTesters, schemaEqualityTester])
+      return jestEquals(item, expected, customTesters)
     })
 
     this.assert(
@@ -481,7 +481,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
       const { value, exists } = getValue()
       const pass
         = exists
-          && (args.length === 1 || jestEquals(expected, value, [...customTesters, schemaEqualityTester]))
+          && (args.length === 1 || jestEquals(expected, value, customTesters))
 
       const valueString
         = args.length === 1 ? '' : ` with value ${utils.objDisplay(expected)}`
@@ -593,7 +593,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
   // apply asymmetric matcher to `undefined` array element.
   function equalsArgumentArray(a: unknown[], b: unknown[]) {
     return a.length === b.length && a.every((aItem, i) =>
-      jestEquals(aItem, b[i], [...customTesters, schemaEqualityTester, iterableEquality]),
+      jestEquals(aItem, b[i], [...customTesters, iterableEquality]),
     )
   }
 
@@ -813,7 +813,6 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
       if (expected instanceof Error) {
         const equal = jestEquals(thrown, expected, [
           ...customTesters,
-          schemaEqualityTester,
           iterableEquality,
         ])
         return this.assert(
