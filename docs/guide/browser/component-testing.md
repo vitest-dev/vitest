@@ -441,7 +441,7 @@ test('Modal component is accessible', async () => {
   // Use click to focus on the first input, then test tab navigation
   await page.elementLocator(firstInput).click()
   await userEvent.keyboard('{Shift>}{Tab}{/Shift}') // Shift+Tab goes backwards
-  await expect.element(document.activeElement).toBe(lastButton) // Should wrap to last element
+  await expect.element(lastButton).toBe(document.activeElement) // Should wrap to last element
 })
 ```
 
