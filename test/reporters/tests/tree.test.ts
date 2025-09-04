@@ -36,7 +36,7 @@ describe('tree reporter', () => {
     `)
   })
 
-  it('reports multiple tests when all passed as a tree', async () => {
+  it('reports multiple tests when all passed with testname filter as a tree', async () => {
     const { stdout } = await runVitest({
       include: ['b1.test.ts', 'b2.test.ts'],
       root: 'fixtures/default',
