@@ -439,7 +439,7 @@ test('Modal component is accessible', async () => {
   const lastButton = getByRole('button', { name: /save/i })
 
   // Use click to focus on the first input, then test tab navigation
-  await page.elementLocator(firstInput).click()
+  await firstInput.click()
   await userEvent.keyboard('{Shift>}{Tab}{/Shift}') // Shift+Tab goes backwards
   await expect.element(lastButton).toBe(document.activeElement) // Should wrap to last element
 })
@@ -470,9 +470,6 @@ test('debug form validation', async () => {
   const submitButton = page.getByRole('button', { name: /submit/i })
   await submitButton.click()
 
-  // Debug: Check what's actually rendered
-  console.log('Current DOM:', document.body.innerHTML)
-
   // Debug: Check if element exists with different query
   const errorElement = page.getByText('Email is required')
   console.log('Error element found:', errorElement.length)
@@ -484,19 +481,6 @@ test('debug form validation', async () => {
 ### 3. Inspect Rendered Output
 
 When components don't render as expected, investigate systematically:
-
-**Check the DOM structure:**
-```tsx
-test('debug rendering issues', async () => {
-  const { container } = render(<MyComponent />)
-
-  // Print the entire rendered HTML
-  console.log('Rendered HTML:', container.innerHTML)
-
-  // Or use Vitest's browser UI to visually inspect the component
-  // The component will be visible in the browser when tests run
-})
-```
 
 **Use Vitest's browser UI:**
 - Run tests with browser mode enabled
@@ -534,14 +518,10 @@ for (const button of buttons) {
 
 **Test different query strategies:**
 ```tsx
-// Multiple ways to find the same element - try different Vitest locator methods
-let submitButton = page.getByRole('button', { name: /submit/i }) // By accessible name
-if (submitButton.elements().length === 0) {
-  submitButton = page.getByTestId('submit-button') // By test ID
-}
-if (submitButton.elements().length === 0) {
-  submitButton = page.getByText('Submit') // By exact text
-}
+// Multiple ways to find the same element using .or for auto-retrying
+const submitButton = page.getByRole('button', { name: /submit/i }) // By accessible name
+  .or(page.getByTestId('submit-button')) // By test ID
+  .or(page.getByText('Submit')) // By exact text
 // Note: Vitest doesn't have page.locator(), use specific getBy* methods instead
 ```
 
@@ -550,22 +530,9 @@ if (submitButton.elements().length === 0) {
 test('debug element queries', async () => {
   render(<LoginForm />)
 
-  // 1. Check if element exists at all
+  // Check if element is visible and enabled
   const emailInput = page.getByLabelText(/email/i)
-  console.log('Email input exists:', emailInput.elements().length > 0)
-
-  // 2. If not found, check available labels (use DOM query as fallback)
-  const labels = document.querySelectorAll('label')
-  for (const label of labels) {
-    console.log('Available label:', label.textContent)
-  }
-
-  // 3. Check if element is visible/enabled using DOM element
-  if (emailInput.elements().length > 0) {
-    const element = emailInput.element()
-    console.log('Email input visible:', !element.hidden && element.offsetParent !== null)
-    console.log('Email input enabled:', !element.disabled)
-  }
+  await expect.element(emailInput).toBeVisible() // Will show if element is visible and print DOM if not
 })
 ```
 
@@ -577,18 +544,8 @@ Component tests often involve timing issues:
 test('debug async component behavior', async () => {
   render(<AsyncUserProfile userId="123" />)
 
-  // Debug: Check loading state
-  console.log('Loading text exists:', page.getByText('Loading...').elements().length)
-
-  // Wait with timeout and debug if it fails
-  try {
-    await expect.element(page.getByText('John Doe')).toBeInTheDocument()
-  }
-  catch (error) {
-    console.log('Timeout reached. Current DOM:', document.body.innerHTML)
-    console.log('API calls made:', /* check your mock calls */)
-    throw error
-  }
+  // expect.element will automatically retry and show helpful error messages
+  await expect.element(page.getByText('John Doe')).toBeInTheDocument()
 })
 ```
 
