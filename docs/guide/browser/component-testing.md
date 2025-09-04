@@ -510,7 +510,7 @@ const button = page.getByRole('button', { name: /submit/i })
 console.log('Button count:', button.length) // Should be 1
 
 // Try alternative queries if the first one fails
-if (button.elements().length === 0) {
+if (button.length === 0) {
   console.log('All buttons:', page.getByRole('button').all().length)
   console.log('By test ID:', page.getByTestId('submit-btn').elements().length)
 }
