@@ -475,7 +475,7 @@ test('debug form validation', async () => {
 
   // Debug: Check if element exists with different query
   const errorElement = page.getByText('Email is required')
-  console.log('Error element found:', errorElement.elements().length)
+  console.log('Error element found:', errorElement.length)
 
   await expect.element(errorElement).toBeInTheDocument()
 })
