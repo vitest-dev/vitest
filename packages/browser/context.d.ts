@@ -476,6 +476,12 @@ export interface Locator extends LocatorSelectors {
   readonly selector: string
 
   /**
+   * The number of elements that this locator is matching.
+   * @see {@link https://vitest.dev/guide/browser/locators#length}
+   */
+  readonly length: number
+
+  /**
    * Click on an element. You can use the options to set the cursor position.
    * @see {@link https://vitest.dev/guide/browser/interactivity-api#userevent-click}
    */
