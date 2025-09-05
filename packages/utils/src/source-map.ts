@@ -91,17 +91,46 @@ export function parseSingleFFOrSafariStack(raw: string): ParsedStack | null {
     )
   }
 
-  if (!line.includes('@') && !line.includes(':')) {
+  // Early return for lines that don't look like Firefox/Safari stack traces
+  // Firefox/Safari stack traces must contain '@' and should have location info after it
+  if (!line.includes('@')) {
     return null
   }
 
-  // eslint-disable-next-line regexp/no-super-linear-backtracking, regexp/optimal-quantifier-concatenation
-  const functionNameRegex = /((.*".+"[^@]*)?[^@]*)(@)/
+  // Additional validation: ensure there's something that looks like a file location after @
+  const atIndex = line.lastIndexOf('@')
+  const locationPart = line.slice(atIndex + 1)
+  if (!locationPart.includes(':') || locationPart.length < 3) {
+    return null
+  }
+
+  // Fixed regex to avoid catastrophic backtracking
+  // Instead of nested quantifiers, use a more specific pattern
+  const functionNameRegex = /^(.*?)@/
   const matches = line.match(functionNameRegex)
   const functionName = matches && matches[1] ? matches[1] : undefined
-  const [url, lineNumber, columnNumber] = extractLocation(
-    line.replace(functionNameRegex, ''),
-  )
+  const [url, lineNumber, columnNumber] = extractLocation(locationPart)
+
+  if (!url || !lineNumber || !columnNumber) {
+    return null
+  }
+
+  let file = url
+  if (file.startsWith('file://')) {
+    file = file.slice(7)
+  }
+
+  // normalize Windows path (\ -> /)
+  file = file.startsWith('node:') || file.startsWith('internal:')
+    ? file
+    : resolve(file)
+
+  return {
+    file,
+    method: functionName || '',
+    line: Number.parseInt(lineNumber),
+    column: Number.parseInt(columnNumber),
+  }
 
   if (!url || !lineNumber || !columnNumber) {
     return null
