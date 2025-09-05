@@ -115,27 +115,6 @@ export function parseSingleFFOrSafariStack(raw: string): ParsedStack | null {
     return null
   }
 
-  let file = url
-  if (file.startsWith('file://')) {
-    file = file.slice(7)
-  }
-
-  // normalize Windows path (\ -> /)
-  file = file.startsWith('node:') || file.startsWith('internal:')
-    ? file
-    : resolve(file)
-
-  return {
-    file,
-    method: functionName || '',
-    line: Number.parseInt(lineNumber),
-    column: Number.parseInt(columnNumber),
-  }
-
-  if (!url || !lineNumber || !columnNumber) {
-    return null
-  }
-
   return {
     file: url,
     method: functionName || '',
