@@ -308,14 +308,27 @@ describe('isNegativeNaN', () => {
   })
 })
 
-  test('should still parse valid Firefox/Safari stack traces correctly', () => {
-    // Ensure we didn't break valid stack trace parsing
+describe('parseSingleFFOrSafariStack', () => {
+  test('should parse valid Firefox/Safari stack traces with file protocol', () => {
     const validStackLine = 'functionName@file:///path/to/file.js:123:45'
 
     const result = parseSingleFFOrSafariStack(validStackLine)
 
     expect(result).toEqual({
       file: 'file:///path/to/file.js',
+      method: 'functionName',
+      line: 123,
+      column: 45,
+    })
+  })
+
+  test('should parse valid Firefox/Safari stack traces with https protocol', () => {
+    const validStackLine = 'functionName@https://example.com/path/to/file.js:123:45'
+
+    const result = parseSingleFFOrSafariStack(validStackLine)
+
+    expect(result).toEqual({
+      file: '/path/to/file.js',
       method: 'functionName',
       line: 123,
       column: 45,
