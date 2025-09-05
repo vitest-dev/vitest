@@ -1,5 +1,5 @@
 import { assertTypes, deepClone, deepMerge, isNegativeNaN, objDisplay, objectAttr, toArray } from '@vitest/utils'
-import { parseErrorStacktrace, parseSingleFFOrSafariStack } from '@vitest/utils/source-map'
+import { parseSingleFFOrSafariStack } from '@vitest/utils/source-map'
 import { EvaluatedModules } from 'vite/module-runner'
 import { beforeAll, describe, expect, test } from 'vitest'
 import { deepMergeSnapshot } from '../../../packages/snapshot/src/port/utils'
