@@ -311,18 +311,18 @@ describe('isNegativeNaN', () => {
 describe('parseErrorStacktrace performance with stackTraceLimit = 0', () => {
   test('should not hang when parsing errors with large messages and no stack trace', () => {
     // This test ensures the fix for https://github.com/vitest-dev/vitest/issues/6039
-    
+
     // Create a large error message (simulating the reported issue)
     const largeMessage = 'a'.repeat(10000)
     const error = new Error(`Large object: ${largeMessage}`)
-    
+
     // Simulate stackTraceLimit = 0 scenario
     error.stack = `Error: Large object: ${largeMessage}`
-    
+
     const startTime = Date.now()
     const result = parseErrorStacktrace(error)
     const endTime = Date.now()
-    
+
     // Should complete quickly (under 100ms for 10k chars)
     expect(endTime - startTime).toBeLessThan(100)
     // Should return empty result for invalid stack traces
@@ -332,11 +332,11 @@ describe('parseErrorStacktrace performance with stackTraceLimit = 0', () => {
   test('should early return for invalid Firefox/Safari stack trace lines', () => {
     // Test that parseSingleFFOrSafariStack handles large strings efficiently
     const largeString = 'a'.repeat(5000)
-    
+
     const startTime = Date.now()
     const result = parseSingleFFOrSafariStack(largeString)
     const endTime = Date.now()
-    
+
     // Should complete quickly (under 50ms for 5k chars)
     expect(endTime - startTime).toBeLessThan(50)
     // Should return null for invalid stack trace lines
@@ -346,9 +346,9 @@ describe('parseErrorStacktrace performance with stackTraceLimit = 0', () => {
   test('should still parse valid Firefox/Safari stack traces correctly', () => {
     // Ensure we didn't break valid stack trace parsing
     const validStackLine = 'functionName@file:///path/to/file.js:123:45'
-    
+
     const result = parseSingleFFOrSafariStack(validStackLine)
-    
+
     expect(result).toEqual({
       file: '/path/to/file.js',
       method: 'functionName',
@@ -359,9 +359,9 @@ describe('parseErrorStacktrace performance with stackTraceLimit = 0', () => {
 
   test('should handle stack lines without function names', () => {
     const stackLineWithoutFunction = '@file:///path/to/file.js:123:45'
-    
+
     const result = parseSingleFFOrSafariStack(stackLineWithoutFunction)
-    
+
     expect(result).toEqual({
       file: '/path/to/file.js',
       method: '',
