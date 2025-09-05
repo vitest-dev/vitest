@@ -23,7 +23,7 @@ expect.extend({
 })
 ```
 
-If you are using TypeScript, you can extend default `Assertion` interface in an ambient declaration file (e.g: `vitest.d.ts`) with the code below:
+If you are using TypeScript, you can extend default `Assertion` interface in an ambient declaration file (e.g: `/src/types/vitest.d.ts`) with the code below:
 
 ::: code-group
 ```ts [<Version>3.2.0</Version>]
