@@ -97,18 +97,29 @@ export function parseSingleFFOrSafariStack(raw: string): ParsedStack | null {
     return null
   }
 
-  // Additional validation: ensure there's something that looks like a file location after @
-  const atIndex = line.lastIndexOf('@')
-  const locationPart = line.slice(atIndex + 1)
-  if (!locationPart.includes(':') || locationPart.length < 3) {
-    return null
+  // Find the correct @ that separates function name from location
+  // For cases like '@https://@fs/path' or 'functionName@https://@fs/path'
+  // we need to find the first @ that precedes a valid location (containing :)
+  let atIndex = -1
+  let locationPart = ''
+  let functionName: string | undefined
+
+  // Try each @ from left to right to find the one that gives us a valid location
+  for (let i = 0; i < line.length; i++) {
+    if (line[i] === '@') {
+      const candidateLocation = line.slice(i + 1)
+      if (candidateLocation.includes(':') && candidateLocation.length >= 3) {
+        atIndex = i
+        locationPart = candidateLocation
+        functionName = i > 0 ? line.slice(0, i) : undefined
+        break
+      }
+    }
   }
 
-  // Fixed regex to avoid catastrophic backtracking
-  // Instead of nested quantifiers, use a more specific pattern
-  const functionNameRegex = /^(.*?)@/
-  const matches = line.match(functionNameRegex)
-  const functionName = matches && matches[1] ? matches[1] : undefined
+  if (atIndex === -1 || !locationPart.includes(':') || locationPart.length < 3) {
+    return null
+  }
   const [url, lineNumber, columnNumber] = extractLocation(locationPart)
 
   if (!url || !lineNumber || !columnNumber) {

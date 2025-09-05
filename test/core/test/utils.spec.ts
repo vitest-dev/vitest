@@ -347,4 +347,30 @@ describe('parseSingleFFOrSafariStack', () => {
       column: 45,
     })
   })
+
+  test('should parse https URLs with @fs prefix without function name', () => {
+    const stackLine = '@https://@fs/path/to/file.js:123:4'
+
+    const result = parseSingleFFOrSafariStack(stackLine)
+
+    expect(result).toEqual({
+      file: '/path/to/file.js',
+      method: '',
+      line: 123,
+      column: 4,
+    })
+  })
+
+  test('should parse https URLs with @fs prefix with function name', () => {
+    const stackLine = 'functionName@https://@fs/path/to/file.js:123:4'
+
+    const result = parseSingleFFOrSafariStack(stackLine)
+
+    expect(result).toEqual({
+      file: '/path/to/file.js',
+      method: 'functionName',
+      line: 123,
+      column: 4,
+    })
+  })
 })
