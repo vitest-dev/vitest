@@ -98,7 +98,7 @@ It will compare with the content of `./test/basic.output.html`. And can be writt
 
 ## Image Snapshots
 
-It's also possible to snapshot images using [`jest-image-snapshot`](https://github.com/americanexpress/jest-image-snapshot).
+It's also possible to snapshot images using [`jest-image-snapshot`](https://github.com/americanexpress/jest-image-snapshot). When using Typescript, you will need to [extend the `Assertion` interface](/guide/extending-matchers.html).
 
 ```bash
 npm i -D jest-image-snapshot
