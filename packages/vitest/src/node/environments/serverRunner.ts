@@ -19,7 +19,6 @@ export class ServerModuleRunner extends ModuleRunner {
     super(
       {
         hmr: false,
-        sourcemapInterceptor: 'node',
         transport: {
           async invoke(event) {
             if (event.type !== 'custom') {
