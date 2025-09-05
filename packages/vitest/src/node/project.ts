@@ -511,7 +511,11 @@ export class TestProject {
           this.browser?.close(),
           this.clearTmpDir(),
         ].filter(Boolean),
-      ).then(() => this.runner.close()).then(() => {
+      ).then(() => {
+        if (!this.runner.isClosed()) {
+          return this.runner.close()
+        }
+      }).then(() => {
         this._provided = {} as any
         this._vite = undefined
       })
