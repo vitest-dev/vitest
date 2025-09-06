@@ -43,7 +43,7 @@ const plugins = [
   commonjs(),
   oxc({
     transform: {
-      target: 'node14',
+      target: 'node18',
       define: process.env.VITE_TEST_WATCHER_DEBUG === 'false'
         ? { 'process.env.VITE_TEST_WATCHER_DEBUG': 'false' }
         : {},
