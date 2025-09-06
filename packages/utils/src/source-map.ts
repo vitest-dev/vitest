@@ -178,7 +178,9 @@ export function parseSingleV8Stack(raw: string): ParsedStack | null {
     : resolve(file)
 
   if (method) {
-    method = method.replace(/__vite_ssr_import_\d+__\./g, '')
+    method = method
+      .replace(/__vite_ssr_import_\d+__\./g, '')
+      .replace(/(Object\.)?__vite_ssr_export_default__\s?/g, '')
   }
 
   return {

@@ -1,6 +1,6 @@
 import type { Arrayable, Nullable } from './types'
 import { existsSync, promises as fsp } from 'node:fs'
-import { builtinModules } from 'node:module'
+import nodeModule from 'node:module'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { dirname, join, resolve } from 'pathe'
 
@@ -93,7 +93,7 @@ const prefixedBuiltins = new Set([
 ])
 
 const builtins = new Set([
-  ...builtinModules,
+  ...nodeModule.builtinModules,
   'assert/strict',
   'diagnostics_channel',
   'dns/promises',
@@ -168,6 +168,10 @@ export function toFilePath(
 
 const NODE_BUILTIN_NAMESPACE = 'node:'
 export function isNodeBuiltin(id: string): boolean {
+  // Added in v18.6.0
+  if (nodeModule.isBuiltin) {
+    return nodeModule.isBuiltin(id)
+  }
   if (prefixedBuiltins.has(id)) {
     return true
   }
