@@ -24,7 +24,7 @@ export function escapeRegExp(s: string): string {
 }
 
 export function wildcardPatternToRegExp(pattern: string): RegExp {
-  const negated = pattern.startsWith('!')
+  const negated = pattern[0] === '!'
 
   if (negated) {
     pattern = pattern.slice(1)
