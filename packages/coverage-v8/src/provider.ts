@@ -166,7 +166,7 @@ export class V8CoverageProvider extends BaseCoverageProvider<ResolvedCoverageOpt
         }
 
         // Do not use pathToFileURL to avoid encoding filename parts
-        const url = `file://${filename.startsWith('/') ? '' : '/'}${filename}`
+        const url = `file://${filename[0] === '/' ? '' : '/'}${filename}`
 
         const sources = await this.getSources(
           url,

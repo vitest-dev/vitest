@@ -41,7 +41,7 @@ export function withInlineSourcemap(
       if (isAbsolute(source)) {
         const actualPath
           = !source.startsWith(withTrailingSlash(options.root))
-            && source.startsWith('/')
+            && source[0] === '/'
             ? resolve(options.root, source.slice(1))
             : source
         return relative(dirname(options.filepath), actualPath)
@@ -63,7 +63,7 @@ export function withInlineSourcemap(
   // so that debuggers can be set to break on first line
   // Since Vite 6, import statements at the top of the file are preserved correctly,
   // so we don't need to add this mapping anymore.
-  if (!options.noFirstLineMapping && map.mappings.startsWith(';')) {
+  if (!options.noFirstLineMapping && map.mappings[0] === ';') {
     map.mappings = `AAAA,CAAA${map.mappings}`
   }
 

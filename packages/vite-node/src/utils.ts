@@ -137,7 +137,7 @@ export function toFilePath(
       return { absolute: id.slice(4), exists: true }
     }
     // check if /src/module.js -> <root>/src/module.js
-    if (!id.startsWith(withTrailingSlash(root)) && id.startsWith('/')) {
+    if (!id.startsWith(withTrailingSlash(root)) && id[0] === '/') {
       const resolved = resolve(root, id.slice(1))
       if (existsSync(cleanUrl(resolved))) {
         return { absolute: resolved, exists: true }
@@ -159,7 +159,7 @@ export function toFilePath(
   // disambiguate the `<UNIT>:/` on windows: see nodejs/node#31710
   return {
     path:
-      isWindows && absolute.startsWith('/')
+      isWindows && absolute[0] === '/'
         ? slash(fileURLToPath(pathToFileURL(absolute.slice(1)).href))
         : absolute,
     exists,

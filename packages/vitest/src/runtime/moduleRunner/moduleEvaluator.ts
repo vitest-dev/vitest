@@ -305,7 +305,7 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
   private createRequire(filename: string) {
     // \x00 is a rollup convention for virtual files,
     // it is not allowed in actual file names
-    if (filename.startsWith('\x00') || !isAbsolute(filename)) {
+    if (filename[0] === '\x00' || !isAbsolute(filename)) {
       return () => ({})
     }
     return this.vm

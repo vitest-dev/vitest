@@ -72,7 +72,7 @@ export function addExtraLineBreaks(string: string): string {
 // Instead of trim, which can remove additional newlines or spaces
 // at beginning or end of the content from a custom serializer.
 export function removeExtraLineBreaks(string: string): string {
-  return string.length > 2 && string.startsWith('\n') && string.endsWith('\n')
+  return string.length > 2 && string[0] === '\n' && string.endsWith('\n')
     ? string.slice(1, -1)
     : string
 }

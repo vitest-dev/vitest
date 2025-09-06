@@ -364,7 +364,7 @@ export function resolveConfig(
 
   resolved.deps.moduleDirectories = resolved.deps.moduleDirectories.map(
     (dir) => {
-      if (!dir.startsWith('/')) {
+      if (dir[0] !== '/') {
         dir = `/${dir}`
       }
       if (!dir.endsWith('/')) {

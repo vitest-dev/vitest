@@ -129,7 +129,7 @@ export class ViteNodeServer {
 
     options.deps.moduleDirectories = options.deps.moduleDirectories.map(
       (dir) => {
-        if (!dir.startsWith('/')) {
+        if (dir[0] !== '/') {
           dir = `/${dir}`
         }
         if (!dir.endsWith('/')) {
