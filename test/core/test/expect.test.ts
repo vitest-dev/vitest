@@ -507,4 +507,62 @@ describe('Standard Schema', () => {
       expect(() => expect('hello').toEqualSchema('not-a-schema')).toThrow()
     })
   })
+
+  describe('schemaMatching()', () => {
+    test('should validate data against schema', () => {
+      expect('hello').toEqual(expect.schemaMatching(stringSchema))
+      expect('42').toEqual(expect.schemaMatching(numberSchema))
+
+      expect(() => expect(123).toEqual(expect.schemaMatching(stringSchema))).toThrow()
+      expect(() => expect('hello').toEqual(expect.schemaMatching(numberSchema))).toThrow()
+    })
+
+    test('should work with objectContaining', () => {
+      expect({
+        name: 'John',
+        age: '30',
+      }).toEqual(expect.objectContaining({
+        age: expect.schemaMatching(numberSchema),
+      }))
+    })
+
+    test('should work with arrayContaining', () => {
+      expect([{
+        name: 'John',
+        age: 30,
+      }]).toEqual(expect.arrayContaining([expect.schemaMatching(objectSchema)]))
+    })
+
+    test('should work with negation', () => {
+      expect(123).not.toEqual(expect.schemaMatching(stringSchema))
+      expect('hello').not.toEqual(expect.schemaMatching(numberSchema))
+
+      expect(() => expect('hello').not.toEqual(expect.schemaMatching(stringSchema))).toThrow()
+    })
+
+    test('should throw error for async schemas', () => {
+      expect(() => expect('hello').toEqual(expect.schemaMatching(asyncStringSchema))).toThrow('Async schema validation is not supported')
+    })
+
+    test('should throw error for non-schema argument', () => {
+      expect(() => expect.schemaMatching('not-a-schema')).toThrow('SchemaMatching expected to receive a Standard Schema')
+    })
+
+    test('should work with toMatchObject', () => {
+      const data = {
+        user: {
+          name: 'John',
+          age: 30,
+        },
+        extra: 'data',
+      }
+
+      expect(data).toMatchObject({
+        user: {
+          name: expect.schemaMatching(stringSchema),
+          age: expect.schemaMatching(numberSchema),
+        },
+      })
+    })
+  })
 })

@@ -66,7 +66,7 @@ ${printReceived(actual)}`,
   },
 
   toEqualSchema(actual: unknown, expected: unknown) {
-    const { printReceived, printExpected, matcherHint, BOLD_WEIGHT } = this.utils
+    const { printReceived, matcherHint, BOLD_WEIGHT } = this.utils
 
     if (!isStandardSchema(expected)) {
       throw new TypeError(

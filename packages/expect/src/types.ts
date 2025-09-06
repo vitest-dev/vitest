@@ -195,6 +195,17 @@ export interface AsymmetricMatchersContaining extends CustomMatcher {
    * expect(5.11).toEqual(expect.closeTo(5.12)); // with default precision
    */
   closeTo: (expected: number, precision?: number) => any
+
+  /**
+   * Matches if the received value validates against a Standard Schema.
+   *
+   * @param schema - A Standard Schema V1 compatible schema object
+   *
+   * @example
+   * expect(user).toEqual(expect.schemaMatching(z.object({ name: z.string() })))
+   * expect(['hello', 'world']).toEqual([expect.schemaMatching(z.string()), expect.schemaMatching(z.string())])
+   */
+  schemaMatching: (schema: unknown) => any
 }
 
 type WithAsymmetricMatcher<T> = T | AsymmetricMatcher<unknown>
