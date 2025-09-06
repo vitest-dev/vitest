@@ -14,6 +14,7 @@ const dataURIRegex
 
 export class EsmExecutor {
   private moduleCache = new Map<string, VMModule | Promise<VMModule>>()
+  private pendingModules = new Map<string, Promise<VMModule>>()
 
   private esmLinkMap = new WeakMap<VMModule, Promise<void>>()
   private context: vm.Context
@@ -54,9 +55,24 @@ export class EsmExecutor {
     if (cached) {
       return cached
     }
+
+    // Prevent duplicate loading of the same module
+    const pending = this.pendingModules.get(fileURL)
+    if (pending) {
+      return pending
+    }
+
     const promise = this.loadEsModule(fileURL, getCode)
-    this.moduleCache.set(fileURL, promise)
-    return promise
+    this.pendingModules.set(fileURL, promise)
+
+    try {
+      const module = await promise
+      this.moduleCache.set(fileURL, module)
+      return module
+    }
+    finally {
+      this.pendingModules.delete(fileURL)
+    }
   }
 
   private async loadEsModule(
@@ -67,10 +83,17 @@ export class EsmExecutor {
     // TODO: should not be allowed in strict mode, implement in #2854
     if (fileURL.endsWith('.json')) {
       const m = new SyntheticModule(['default'], function () {
-        const result = JSON.parse(code)
-        this.setExport('default', result)
+        try {
+          const result = JSON.parse(code)
+          this.setExport('default', result)
+        }
+        catch (error: any) {
+          throw new Error(`Failed to parse JSON module ${fileURL}: ${error.message}`, { cause: error })
+        }
+      }, {
+        context: this.context,
+        identifier: fileURL,
       })
-      this.moduleCache.set(fileURL, m)
       return m
     }
     const m = new SourceTextModule(code, {
