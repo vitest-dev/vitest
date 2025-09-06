@@ -108,6 +108,7 @@ export function parseSingleFFOrSafariStack(raw: string): ParsedStack | null {
   for (let i = 0; i < line.length; i++) {
     if (line[i] === '@') {
       const candidateLocation = line.slice(i + 1)
+      // Minimum length 3 for valid location: 1 for filename + 1 for colon + 1 for line number (e.g., "a:1")
       if (candidateLocation.includes(':') && candidateLocation.length >= 3) {
         atIndex = i
         locationPart = candidateLocation
@@ -117,6 +118,7 @@ export function parseSingleFFOrSafariStack(raw: string): ParsedStack | null {
     }
   }
 
+  // Validate we found a valid location with minimum length (filename:line format)
   if (atIndex === -1 || !locationPart.includes(':') || locationPart.length < 3) {
     return null
   }
