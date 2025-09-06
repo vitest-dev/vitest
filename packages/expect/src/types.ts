@@ -137,6 +137,17 @@ interface CustomMatcher {
    * expect({ a: 1 }).toEqual({ a: expect.toBeOneOf(['1', '2', '3']) })
    */
   toBeOneOf: <T>(sample: Array<T>) => any
+
+  /**
+   * Validates that the received value matches a Standard Schema.
+   *
+   * @param schema - A Standard Schema V1 compatible schema object
+   *
+   * @example
+   * expect(user).toEqualSchema(z.object({ name: z.string() }))
+   * expect('hello').toEqualSchema(z.string())
+   */
+  toEqualSchema: (schema: unknown) => any
 }
 
 export interface AsymmetricMatchersContaining extends CustomMatcher {
@@ -184,6 +195,17 @@ export interface AsymmetricMatchersContaining extends CustomMatcher {
    * expect(5.11).toEqual(expect.closeTo(5.12)); // with default precision
    */
   closeTo: (expected: number, precision?: number) => any
+
+  /**
+   * Matches if the received value validates against a Standard Schema.
+   *
+   * @param schema - A Standard Schema V1 compatible schema object
+   *
+   * @example
+   * expect(user).toEqual(expect.schemaMatching(z.object({ name: z.string() })))
+   * expect(['hello', 'world']).toEqual([expect.schemaMatching(z.string()), expect.schemaMatching(z.string())])
+   */
+  schemaMatching: (schema: unknown) => any
 }
 
 type WithAsymmetricMatcher<T> = T | AsymmetricMatcher<unknown>

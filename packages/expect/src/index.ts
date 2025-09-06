@@ -13,6 +13,7 @@ export {
   AsymmetricMatcher,
   JestAsymmetricMatchers,
   ObjectContaining,
+  SchemaMatching,
   StringContaining,
   StringMatching,
 } from './jest-asymmetric-matchers'
