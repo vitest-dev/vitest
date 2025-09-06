@@ -42,7 +42,54 @@ export default defineConfig({
 })
 ```
 
-Vitest will treat every folder in `packages` as a separate project even if it doesn't have a config file inside. If this glob pattern matches _any file_, it will be considered a Vitest config even if it doesn't have a `vitest` in its name or has an obscure file extension.
+Vitest will treat every folder in `packages` as a separate project even if it doesn't have a config file inside. If the glob pattern matches a file, it will validate that the name starts with `vitest.config`/`vite.config` or matches `(vite|vitest).*.config.*` pattern to ensure it's a Vitest configuration file. For example, these config files are valid:
+
+- `vitest.config.ts`
+- `vite.config.js`
+- `vitest.unit.config.ts`
+- `vite.e2e.config.js`
+- `vitest.config.unit.js`
+- `vite.config.e2e.js`
+
+To exclude folders and files, you can use the negation pattern:
+
+```ts [vitest.config.ts]
+import { defineConfig } from 'vitest/config'
+
+export default defineConfig({
+  test: {
+    // include all folders inside "packages" except "excluded"
+    projects: [
+      'packages/*',
+      '!packages/excluded'
+    ],
+  },
+})
+```
+
+If you have a nested structure where some folders need to be projects, but other folders have their own subfolders, you have to use brackets to avoid matching the parent folder:
+
+```ts [vitest.config.ts]
+import { defineConfig } from 'vitest/config'
+
+// For example, this will create projects:
+// packages/a
+// packages/b
+// packages/business/c
+// packages/business/d
+// Notice that "packages/business" is not a project itself
+
+export default defineConfig({
+  test: {
+    projects: [
+      // matches every folder inside "packages" except "business"
+      'packages/!(business)',
+      // matches every folder inside "packages/business"
+      'packages/business/*',
+    ],
+  },
+})
+```
 
 ::: warning
 Vitest does not treat the root `vitest.config` file as a project unless it is explicitly specified in the configuration. Consequently, the root configuration will only influence global options such as `reporters` and `coverage`. Note that Vitest will always run certain plugin hooks, like `apply`, `config`, `configResolved` or `configureServer`, specified in the root config file. Vitest also uses the same plugins to execute global setups and custom coverage provider.
