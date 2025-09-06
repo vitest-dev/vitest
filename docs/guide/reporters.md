@@ -141,9 +141,27 @@ Final output after tests have finished:
    Duration  1.26s (transform 35ms, setup 1ms, collect 90ms, tests 1.47s, environment 0ms, prepare 267ms)
 ```
 
+If there is only one test file running, Vitest will output the full test tree of that file, simillar to the [`tree`](#tree-reporter) reporter. The default reporter will also print the test tree if there is at least one failed test in the file.
+
+```bash
+✓ __tests__/file1.test.ts (2) 725ms
+   ✓ first test file (2) 725ms
+     ✓ 2 + 2 should equal 4
+     ✓ 4 - 2 should equal 2
+
+ Test Files  1 passed (1)
+      Tests  2 passed (2)
+   Start at  12:34:32
+   Duration  1.26s (transform 35ms, setup 1ms, collect 90ms, tests 1.47s, environment 0ms, prepare 267ms)
+```
+
 ### Verbose Reporter
 
-Verbose reporter is same as `default` reporter, but it also displays each individual test after the suite has finished. It also displays currently running tests that are taking longer than [`slowTestThreshold`](/config/#slowtestthreshold). Similar to `default` reporter, you can disable the summary by configuring the reporter.
+The verbose reporter prints every test case once it is finished. It does not report suites or files separately. If `--includeTaskLocation` is enabled, it will also include the location of each test in the output. Similar to `default` reporter, you can disable the summary by configuring the reporter.
+
+In addition to this, the `verbose` reporter prints test error messages right away. The full test error is reported when the test run is finished.
+
+This is the only terminal reporter that reports [annotations](/guide/test-annotations) when the test doesn't fail.
 
 :::code-group
 ```bash [CLI]
@@ -155,6 +173,54 @@ export default defineConfig({
   test: {
     reporters: [
       ['verbose', { summary: false }]
+    ]
+  },
+})
+```
+:::
+
+Example output:
+
+```bash
+✓ __tests__/file1.test.ts > first test file > 2 + 2 should equal 4 1ms
+✓ __tests__/file1.test.ts > first test file > 4 - 2 should equal 2 1ms
+✓ __tests__/file2.test.ts > second test file > 1 + 1 should equal 2 1ms
+✓ __tests__/file2.test.ts > second test file > 2 - 1 should equal 1 1ms
+
+ Test Files  2 passed (2)
+      Tests  4 passed (4)
+   Start at  12:34:32
+   Duration  1.26s (transform 35ms, setup 1ms, collect 90ms, tests 1.47s, environment 0ms, prepare 267ms)
+```
+
+An example with `--includeTaskLocation`:
+
+```bash
+✓ __tests__/file1.test.ts:2:1 > first test file > 2 + 2 should equal 4 1ms
+✓ __tests__/file1.test.ts:3:1 > first test file > 4 - 2 should equal 2 1ms
+✓ __tests__/file2.test.ts:2:1 > second test file > 1 + 1 should equal 2 1ms
+✓ __tests__/file2.test.ts:3:1 > second test file > 2 - 1 should equal 1 1ms
+
+ Test Files  2 passed (2)
+      Tests  4 passed (4)
+   Start at  12:34:32
+   Duration  1.26s (transform 35ms, setup 1ms, collect 90ms, tests 1.47s, environment 0ms, prepare 267ms)
+```
+
+### Tree Reporter
+
+The tree reporter is same as `default` reporter, but it also displays each individual test after the suite has finished. Similar to `default` reporter, you can disable the summary by configuring the reporter.
+
+:::code-group
+```bash [CLI]
+npx vitest --reporter=tree
+```
+
+```ts [vitest.config.ts]
+export default defineConfig({
+  test: {
+    reporters: [
+      ['tree', { summary: false }]
     ]
   },
 })
