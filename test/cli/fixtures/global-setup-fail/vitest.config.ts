@@ -5,7 +5,7 @@ export default defineConfig({
   test: {
     globals: true,
     globalSetup: [
-      resolve(import.meta.dirname, './globalSetup/error.js'),
+      resolve(import.meta.dirname, './globalSetup/error.ts'),
     ],
   },
 })

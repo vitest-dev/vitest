@@ -592,6 +592,56 @@ describe('vi.spyOn() restoration', () => {
   })
 })
 
+describe('vi.spyOn() on Vite SSR', () => {
+  test('vi.spyOn() throws an error if a getter returns a non-function value in SSR', () => {
+    const module = {
+      get primitive() {
+        return 42
+      },
+    }
+    expect(() => {
+      // @ts-expect-error types recognize it's not a function
+      vi.spyOn(module, 'primitive')
+    }).toThrowError('vi.spyOn() can only spy on a function. Received number.')
+  })
+
+  test('vi.spyOn() assigns the method on a getter', () => {
+    const method = () => {}
+    const module = {
+      get method() {
+        return method
+      },
+    }
+    const spy = vi.spyOn(module, 'method')
+    expect(spy.getMockImplementation()).toBe(undefined)
+
+    module.method()
+    expect(spy.mock.calls).toEqual([[]])
+    expect(module.method).toBe(spy)
+
+    spy.mockRestore()
+    expect(module.method).toBe(method)
+  })
+
+  test('vi.spyOn() can reassign the SSR getter method', () => {
+    const method = () => {}
+    const module = {
+      get method() {
+        return method
+      },
+    }
+    const spy1 = vi.spyOn(module, 'method')
+    const spy2 = vi.spyOn(module, 'method')
+    expect(vi.isMockFunction(spy1)).toBe(true)
+    expect(vi.isMockFunction(spy2)).toBe(true)
+    expect(spy1).toBe(spy2)
+
+    module.method()
+    expect(spy1.mock.calls).toEqual([[]])
+    expect(spy2.mock.calls).toEqual([[]])
+  })
+})
+
 function assertStateEmpty(state: MockContext<any>) {
   expect(state.calls).toHaveLength(0)
   expect(state.results).toHaveLength(0)

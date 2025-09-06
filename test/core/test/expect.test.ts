@@ -391,6 +391,94 @@ describe('Temporal equality', () => {
   })
 })
 
+describe('expect with custom message', () => {
+  describe('built-in matchers', () => {
+    test('sync matcher throws custom message on failure', () => {
+      expect(() => expect(1, 'custom message').toBe(2)).toThrow('custom message')
+    })
+
+    test('async rejects matcher throws custom message on failure', async ({ expect }) => {
+      const asyncAssertion = expect(Promise.reject(new Error('test error')), 'custom async message').rejects.toBe(2)
+      await expect(asyncAssertion).rejects.toThrow('custom async message')
+    })
+
+    test('async resolves matcher throws custom message on failure', async ({ expect }) => {
+      const asyncAssertion = expect(Promise.resolve(1), 'custom async message').resolves.toBe(2)
+      await expect(asyncAssertion).rejects.toThrow('custom async message')
+    })
+
+    test('not matcher throws custom message on failure', () => {
+      expect(() => expect(1, 'custom message').not.toBe(1)).toThrow('custom message')
+    })
+  })
+
+  describe('custom matchers with expect.extend', () => {
+    test('sync custom matcher throws custom message on failure', ({ expect }) => {
+      expect.extend({
+        toBeFoo(actual) {
+          const { isNot } = this
+          return {
+            pass: actual === 'foo',
+            message: () => `${actual} is${isNot ? ' not' : ''} foo`,
+          }
+        },
+      })
+      expect(() => (expect('bar', 'custom message') as any).toBeFoo()).toThrow('custom message')
+    })
+
+    test('sync custom matcher passes with custom message when assertion succeeds', ({ expect }) => {
+      expect.extend({
+        toBeFoo(actual) {
+          const { isNot } = this
+          return {
+            pass: actual === 'foo',
+            message: () => `${actual} is${isNot ? ' not' : ''} foo`,
+          }
+        },
+      })
+      expect(() => (expect('foo', 'custom message') as any).toBeFoo()).not.toThrow()
+    })
+
+    test('async custom matcher throws custom message on failure', async ({ expect }) => {
+      expect.extend({
+        async toBeFoo(actual) {
+          const resolvedValue = await actual
+          return {
+            pass: resolvedValue === 'foo',
+            message: () => `${resolvedValue} is not foo`,
+          }
+        },
+      })
+      const asyncAssertion = (expect(Promise.resolve('bar'), 'custom async message') as any).toBeFoo()
+      await expect(asyncAssertion).rejects.toThrow('custom async message')
+    })
+
+    test('async custom matcher with not throws custom message on failure', async ({ expect }) => {
+      expect.extend({
+        async toBeFoo(actual) {
+          const resolvedValue = await actual
+          return {
+            pass: resolvedValue === 'foo',
+            message: () => `${resolvedValue} is not foo`,
+          }
+        },
+      })
+      const asyncAssertion = (expect(Promise.resolve('foo'), 'custom async message') as any).not.toBeFoo()
+      await expect(asyncAssertion).rejects.toThrow('custom async message')
+    })
+  })
+
+  describe('edge cases', () => {
+    test('empty custom message falls back to default matcher message', () => {
+      expect(() => expect(1, '').toBe(2)).toThrow('expected 1 to be 2 // Object.is equality')
+    })
+
+    test('undefined custom message falls back to default matcher message', () => {
+      expect(() => expect(1, undefined as any).toBe(2)).toThrow('expected 1 to be 2 // Object.is equality')
+    })
+  })
+})
+
 describe('Standard Schema', () => {
   function createMockSchema(validate: StandardSchemaV1['~standard']['validate']): StandardSchemaV1 {
     return {
