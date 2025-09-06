@@ -91,17 +91,38 @@ export function parseSingleFFOrSafariStack(raw: string): ParsedStack | null {
     )
   }
 
-  if (!line.includes('@') && !line.includes(':')) {
+  // Early return for lines that don't look like Firefox/Safari stack traces
+  // Firefox/Safari stack traces must contain '@' and should have location info after it
+  if (!line.includes('@')) {
     return null
   }
 
-  // eslint-disable-next-line regexp/no-super-linear-backtracking, regexp/optimal-quantifier-concatenation
-  const functionNameRegex = /((.*".+"[^@]*)?[^@]*)(@)/
-  const matches = line.match(functionNameRegex)
-  const functionName = matches && matches[1] ? matches[1] : undefined
-  const [url, lineNumber, columnNumber] = extractLocation(
-    line.replace(functionNameRegex, ''),
-  )
+  // Find the correct @ that separates function name from location
+  // For cases like '@https://@fs/path' or 'functionName@https://@fs/path'
+  // we need to find the first @ that precedes a valid location (containing :)
+  let atIndex = -1
+  let locationPart = ''
+  let functionName: string | undefined
+
+  // Try each @ from left to right to find the one that gives us a valid location
+  for (let i = 0; i < line.length; i++) {
+    if (line[i] === '@') {
+      const candidateLocation = line.slice(i + 1)
+      // Minimum length 3 for valid location: 1 for filename + 1 for colon + 1 for line number (e.g., "a:1")
+      if (candidateLocation.includes(':') && candidateLocation.length >= 3) {
+        atIndex = i
+        locationPart = candidateLocation
+        functionName = i > 0 ? line.slice(0, i) : undefined
+        break
+      }
+    }
+  }
+
+  // Validate we found a valid location with minimum length (filename:line format)
+  if (atIndex === -1 || !locationPart.includes(':') || locationPart.length < 3) {
+    return null
+  }
+  const [url, lineNumber, columnNumber] = extractLocation(locationPart)
 
   if (!url || !lineNumber || !columnNumber) {
     return null
