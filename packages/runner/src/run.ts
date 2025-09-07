@@ -19,6 +19,7 @@ import type {
 } from './types/tasks'
 import { getSafeTimers, shuffle } from '@vitest/utils'
 import { processError } from '@vitest/utils/error'
+import { calculateBackoffDelay, normalizeRetryConfig, shouldRetryOnError, sleep } from '../../vitest/src/utils/retry'
 import { collectTests } from './collect'
 import { abortContextSignal, getFileContext } from './context'
 import { PendingError, TestRunAbortError } from './errors'
@@ -298,9 +299,10 @@ export async function runTest(test: Test, runner: VitestRunner): Promise<void> {
   const suite = test.suite || test.file
 
   const repeats = test.repeats ?? 0
+  const retryConfig = normalizeRetryConfig(test.retry ?? runner.config.retry)
+
   for (let repeatCount = 0; repeatCount <= repeats; repeatCount++) {
-    const retry = test.retry ?? 0
-    for (let retryCount = 0; retryCount <= retry; retryCount++) {
+    for (let retryCount = 0; retryCount <= retryConfig.count; retryCount++) {
       let beforeEachCleanups: unknown[] = []
       try {
         await runner.onBeforeTryTask?.(test, {
@@ -340,13 +342,18 @@ export async function runTest(test: Test, runner: VitestRunner): Promise<void> {
           if (!test.repeats) {
             test.result.state = 'pass'
           }
-          else if (test.repeats && retry === retryCount) {
+          else if (test.repeats && retryConfig.count === retryCount) {
             test.result.state = 'pass'
           }
         }
       }
       catch (e) {
         failTask(test.result, e, runner.config.diffOptions)
+
+        const error = test.result.errors?.[0]?.error as Error
+        if (error && !shouldRetryOnError(error, retryConfig.condition)) {
+          break
+        }
       }
 
       try {
@@ -401,18 +408,20 @@ export async function runTest(test: Test, runner: VitestRunner): Promise<void> {
         break
       }
 
-      if (retryCount < retry) {
-        // reset state when retry test
+      if (retryCount < retryConfig.count) {
         test.result.state = 'run'
         test.result.retryCount = (test.result.retryCount ?? 0) + 1
+
+        if (retryConfig.delay > 0) {
+          const delayMs = calculateBackoffDelay(retryConfig.delay, retryCount, 'exponential')
+          await sleep(delayMs)
+        }
       }
 
-      // update retry info
       updateTask('test-retried', test, runner)
     }
   }
 
-  // if test is marked to be failed, flip the result
   if (test.fails) {
     if (test.result.state === 'pass') {
       const error = processError(new Error('Expect test to fail'))
