@@ -92,7 +92,12 @@ export interface SerializedConfig {
     truncateThreshold?: number
   } | undefined
   diff: string | SerializedDiffOptions | undefined
-  retry: number
+  retry: number | {
+    count?: number
+    strategy?: "immediate" | "test-file" | "deferred"
+    delay?: number
+    condition?: string | RegExp | ((error: Error) => boolean)
+  }
   includeTaskLocation: boolean | undefined
   inspect: boolean | string | undefined
   inspectBrk: boolean | string | undefined
