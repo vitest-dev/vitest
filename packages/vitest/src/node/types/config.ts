@@ -741,12 +741,12 @@ export interface InlineConfig {
    */
   bail?: number
 
-  /**
-   * Retry the test specific number of times if it fails.
-   *
-   * @default 0
-   */
-  retry?: number
+  retry?: number | {
+    count?: number
+    strategy?: 'immediate' | 'test-file' | 'deferred'
+    delay?: number
+    condition?: string | RegExp | ((error: Error) => boolean)
+  }
 
   /**
    * Show full diff when snapshot fails instead of a patch.
