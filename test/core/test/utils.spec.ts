@@ -373,4 +373,22 @@ describe('parseSingleFFOrSafariStack', () => {
       column: 4,
     })
   })
+
+  test('should not hang when `Error.stackTraceLimit = 0` (#6039)', { timeout: 5_000 }, async () => {
+    // 40 takes ~30s on M2 CPU when fix is reverted
+    const size = 40
+
+    const obj = Object.fromEntries(
+      [...Array.from({ length: size }).keys()].map(i => [`prop${i}`, i]),
+    )
+
+    class PrettyError extends globalThis.Error {
+      constructor(e: unknown) {
+        Error.stackTraceLimit = 0
+        super(JSON.stringify(e))
+      }
+    }
+
+    parseSingleFFOrSafariStack(new PrettyError(obj).stack!)
+  })
 })
