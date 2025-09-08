@@ -281,7 +281,6 @@ export default (parentServer: ParentBrowserProject, base = '/'): Plugin[] => {
         const include = [
           'vitest > expect-type',
           'vitest > @vitest/snapshot > magic-string',
-          'vitest > @vitest/runner > strip-literal',
           'vitest > @vitest/expect > chai',
           'vitest > @vitest/expect > chai > loupe',
           'vitest > @vitest/utils > loupe',
