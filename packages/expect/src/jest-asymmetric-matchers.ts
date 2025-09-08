@@ -196,7 +196,7 @@ export class ArrayContaining<T = unknown> extends AsymmetricMatcher<Array<T>> {
     super(sample, inverse)
   }
 
-  asymmetricMatch(other: Array<T>, customTesters?: Array<Tester>) {
+  asymmetricMatch(other: Array<T>, customTesters?: Array<Tester>): boolean {
     if (!Array.isArray(this.sample)) {
       throw new TypeError(
         `You must provide an array to ${this.toString()}, not '${typeof this
