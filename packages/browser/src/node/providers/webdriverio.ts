@@ -18,8 +18,8 @@ const webdriverBrowsers = ['firefox', 'chrome', 'edge', 'safari'] as const
 type WebdriverBrowser = (typeof webdriverBrowsers)[number]
 
 interface WebdriverProviderOptions extends Partial<
-    Parameters<typeof remote>[0]
-  > {}
+  Parameters<typeof remote>[0]
+> {}
 
 export function webdriverio(options: WebdriverProviderOptions = {}): BrowserProviderOption {
   return {

@@ -235,9 +235,9 @@ export class ParentBrowserProject {
         const transformId = srcLink || join(server.config.root, `virtual__${id || `injected-${index}.js`}`)
         await server.moduleGraph.ensureEntryFromUrl(transformId)
         const contentProcessed
-            = content && type === 'module'
-              ? (await server.pluginContainer.transform(content, transformId)).code
-              : content
+          = content && type === 'module'
+            ? (await server.pluginContainer.transform(content, transformId)).code
+            : content
         return {
           tag: 'script',
           attrs: {
