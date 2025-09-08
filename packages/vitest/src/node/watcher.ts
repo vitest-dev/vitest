@@ -1,7 +1,7 @@
 import type { Vitest } from './core'
 import type { TestProject } from './project'
 import { readFileSync } from 'node:fs'
-import { noop, slash } from '@vitest/utils'
+import { noop, slash } from '@vitest/utils/helpers'
 import { resolve } from 'pathe'
 import pm from 'picomatch'
 

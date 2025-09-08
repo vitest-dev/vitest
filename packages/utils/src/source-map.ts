@@ -1,17 +1,8 @@
-import type { SourceMapInput } from '@jridgewell/trace-mapping'
+import type { OriginalMapping } from '@jridgewell/trace-mapping'
 import type { ParsedStack, TestError } from './types'
-import { originalPositionFor, TraceMap } from '@jridgewell/trace-mapping'
+import { originalPositionFor } from '@jridgewell/trace-mapping'
 import { resolve } from 'pathe'
 import { isPrimitive, notNullish } from './helpers'
-
-export {
-  eachMapping,
-  type EachMapping,
-  generatedPositionFor,
-  originalPositionFor,
-  TraceMap,
-} from '@jridgewell/trace-mapping'
-export type { SourceMapInput } from '@jridgewell/trace-mapping'
 
 export interface StackTraceParserOptions {
   ignoreStackEntries?: (RegExp | string)[]
@@ -237,29 +228,23 @@ export function parseStacktrace(
     }
 
     const map = options.getSourceMap?.(stack.file) as
-      | SourceMapInput
+      | SourceMapLike
       | null
       | undefined
     if (!map || typeof map !== 'object' || !map.version) {
       return shouldFilter(ignoreStackEntries, stack.file) ? null : stack
     }
 
-    const traceMap = new TraceMap(map)
-    const { line, column, source, name } = originalPositionFor(traceMap, stack)
+    const traceMap = new DecodedMap(map, stack.file)
+    const position = getOriginalPosition(traceMap, stack)
+    if (!position) {
+      return stack
+    }
 
-    let file: string = stack.file
-    if (source) {
-      const fileUrl = stack.file.startsWith('file://')
-        ? stack.file
-        : `file://${stack.file}`
-      const sourceRootUrl = map.sourceRoot
-        ? new URL(map.sourceRoot, fileUrl)
-        : fileUrl
-      file = new URL(source, sourceRootUrl).pathname
-      // if the file path is on windows, we need to remove the leading slash
-      if (file.match(/\/\w:\//)) {
-        file = file.slice(1)
-      }
+    const { line, column, source, name } = position
+    let file = source || stack.file
+    if (file.match(/\/\w:\//)) {
+      file = file.slice(1)
     }
 
     if (shouldFilter(ignoreStackEntries, file)) {
@@ -333,4 +318,68 @@ export function parseErrorStacktrace(
 
   ;(e as TestError).stacks = stackFrames
   return stackFrames
+}
+
+interface SourceMapLike {
+  version: number
+  mappings?: string
+  names?: string[]
+  sources?: string[]
+  sourcesContent?: string[]
+  sourceRoot?: string
+}
+
+interface Needle {
+  line: number
+  column: number
+}
+
+export class DecodedMap {
+  _encoded: string
+  _decoded: undefined | number[][][]
+  _decodedMemo: Stats
+  url: string
+  version: number
+  names: string[] = []
+  resolvedSources: string[]
+
+  constructor(
+    public map: SourceMapLike,
+    from: string,
+  ) {
+    const { mappings, names, sources } = map
+    this.version = map.version
+    this.names = names || []
+    this._encoded = mappings || ''
+    this._decodedMemo = memoizedState()
+    this.url = from
+    this.resolvedSources = (sources || []).map(s =>
+      resolve(s || '', from),
+    )
+  }
+}
+
+interface Stats {
+  lastKey: number
+  lastNeedle: number
+  lastIndex: number
+}
+
+function memoizedState(): Stats {
+  return {
+    lastKey: -1,
+    lastNeedle: -1,
+    lastIndex: -1,
+  }
+}
+
+export function getOriginalPosition(
+  map: DecodedMap,
+  needle: Needle,
+): OriginalMapping | null {
+  const result = originalPositionFor(map as any, needle)
+  if (result.column == null) {
+    return null
+  }
+  return result
 }

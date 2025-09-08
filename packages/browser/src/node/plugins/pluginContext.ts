@@ -2,7 +2,7 @@ import type { Rollup } from 'vite'
 import type { Plugin } from 'vitest/config'
 import type { ParentBrowserProject } from '../projectParent'
 import { fileURLToPath } from 'node:url'
-import { slash } from '@vitest/utils'
+import { slash } from '@vitest/utils/helpers'
 import { dirname, resolve } from 'pathe'
 
 const VIRTUAL_ID_CONTEXT = '\0@vitest/browser/context'

@@ -13,7 +13,7 @@ catalogs:
       specifier: ^1.2.9
       version: 1.2.9
     '@jridgewell/trace-mapping':
-      specifier: ^0.3.30
+      specifier: 0.3.30
       version: 0.3.30
     '@types/chai':
       specifier: ^5.2.2
@@ -103,8 +103,8 @@ catalogs:
       specifier: ^0.2.15
       version: 0.2.15
     tinyrainbow:
-      specifier: ^2.0.0
-      version: 2.0.0
+      specifier: ^3.0.3
+      version: 3.0.3
     unocss:
       specifier: ^66.5.1
       version: 66.5.1
@@ -464,7 +464,7 @@ importers:
         version: 3.0.2
       tinyrainbow:
         specifier: 'catalog:'
-        version: 2.0.0
+        version: 3.0.3
       ws:
         specifier: 'catalog:'
         version: 8.18.3
@@ -537,7 +537,7 @@ importers:
         version: 0.3.5
       tinyrainbow:
         specifier: 'catalog:'
-        version: 2.0.0
+        version: 3.0.3
     devDependencies:
       '@types/debug':
         specifier: 'catalog:'
@@ -598,7 +598,7 @@ importers:
         version: 3.9.0
       tinyrainbow:
         specifier: 'catalog:'
-        version: 2.0.0
+        version: 3.0.3
     devDependencies:
       '@types/debug':
         specifier: 'catalog:'
@@ -641,7 +641,7 @@ importers:
         version: 6.0.1
       tinyrainbow:
         specifier: 'catalog:'
-        version: 2.0.0
+        version: 3.0.3
     devDependencies:
       '@vitest/runner':
         specifier: workspace:*
@@ -682,7 +682,7 @@ importers:
     dependencies:
       tinyrainbow:
         specifier: 'catalog:'
-        version: 2.0.0
+        version: 3.0.3
     devDependencies:
       '@types/react-is':
         specifier: ^19.0.0
@@ -702,9 +702,6 @@ importers:
       pathe:
         specifier: 'catalog:'
         version: 2.0.3
-      strip-literal:
-        specifier: 'catalog:'
-        version: 3.0.0
 
   packages/snapshot:
     dependencies:
@@ -752,7 +749,7 @@ importers:
         version: 0.2.15
       tinyrainbow:
         specifier: 'catalog:'
-        version: 2.0.0
+        version: 3.0.3
       vitest:
         specifier: workspace:*
         version: link:../vitest
@@ -856,12 +853,9 @@ importers:
       '@vitest/pretty-format':
         specifier: workspace:*
         version: link:../pretty-format
-      loupe:
-        specifier: ^3.2.1
-        version: 3.2.1
       tinyrainbow:
         specifier: 'catalog:'
-        version: 2.0.0
+        version: 3.0.3
     devDependencies:
       '@jridgewell/trace-mapping':
         specifier: 'catalog:'
@@ -872,6 +866,9 @@ importers:
       diff-sequences:
         specifier: ^29.6.3
         version: 29.6.3
+      loupe:
+        specifier: ^3.2.1
+        version: 3.2.1
       tinyhighlight:
         specifier: ^0.3.2
         version: 0.3.2(picocolors@1.1.1)
@@ -902,7 +899,7 @@ importers:
         version: 4.1.12
       tinyrainbow:
         specifier: 'catalog:'
-        version: 2.0.0
+        version: 3.0.3
 
   packages/vitest:
     dependencies:
@@ -968,7 +965,7 @@ importers:
         version: 2.0.0
       tinyrainbow:
         specifier: 'catalog:'
-        version: 2.0.0
+        version: 3.0.3
       vite:
         specifier: ^6.3.5
         version: 6.3.5(@types/node@22.18.1)(jiti@2.5.1)(lightningcss@1.30.1)(sass-embedded@1.92.1)(sass@1.92.1)(terser@5.36.0)(tsx@4.20.5)(yaml@2.8.1)
@@ -982,6 +979,9 @@ importers:
       '@edge-runtime/vm':
         specifier: ^5.0.0
         version: 5.0.0
+      '@jridgewell/trace-mapping':
+        specifier: 'catalog:'
+        version: 0.3.30
       '@sinonjs/fake-timers':
         specifier: 14.0.0
         version: 14.0.0(patch_hash=6f7091fcf11165157b4bfb8dde6b5b6b7697e3efd6e9b53bb4bdef442f60a278)
@@ -1259,7 +1259,7 @@ importers:
         version: 0.3.0
       tinyrainbow:
         specifier: 'catalog:'
-        version: 2.0.0
+        version: 3.0.3
       tinyspy:
         specifier: ^4.0.3
         version: 4.0.3
@@ -1431,7 +1431,7 @@ importers:
         version: 0.3.2
       tinyrainbow:
         specifier: 'catalog:'
-        version: 2.0.0
+        version: 3.0.3
       vite:
         specifier: ^6.3.5
         version: 6.3.5(@types/node@22.18.1)(jiti@2.5.1)(lightningcss@1.30.1)(sass-embedded@1.92.1)(sass@1.92.1)(terser@5.36.0)(tsx@4.20.5)(yaml@2.8.1)
@@ -2967,14 +2967,8 @@ packages:
   '@jridgewell/source-map@0.3.6':
     resolution: {integrity: sha512-1ZJTZebgqllO79ue2bm3rIGud/bOe0pP5BjSRCRxxYkEZS8STV7zN84UBbiYu7jy+eCKSnVIUgoWWE/tt+shMQ==}
 
-  '@jridgewell/sourcemap-codec@1.5.0':
-    resolution: {integrity: sha512-gv3ZRaISU3fjPAgNsriBRqGWQL6quFx04YMPW/zD8XMLsU32mhCCbfbO6KZFLjvYpCZ8zyDEgqsgf+PwPaM7GQ==}
-
   '@jridgewell/sourcemap-codec@1.5.5':
     resolution: {integrity: sha512-cYQ9310grqxueWbl+WuIUIaiUaDcj7WOq5fVhEljNVgRfOUhY9fy2zTvfoqWsnebh8Sl70VScFbICvJnLKB0Og==}
-
-  '@jridgewell/trace-mapping@0.3.29':
-    resolution: {integrity: sha512-uw6guiW/gcAGPDhLmd77/6lW8QLeiV5RUTsAX46Db6oLhGaVj4lhnPwb184s1bkc8kdVg/+h988dro8GRDpmYQ==}
 
   '@jridgewell/trace-mapping@0.3.30':
     resolution: {integrity: sha512-GQ7Nw5G2lTu/BtHTKfXhKHok2WGetd4XYcVKGx00SjAk8GMwgJM3zr6zORiPGuOE+/vkc90KtTosSSvaCjKb2Q==}
@@ -8332,7 +8326,7 @@ packages:
   superagent@8.1.2:
     resolution: {integrity: sha512-6WTxW1EB6yCxV5VFOIPQruWGHqc3yI7hEmZK6h+pyk69Lk/Ut7rLUY6W/ONF2MjBuGjvmMiIpsrVJ2vjrHlslA==}
     engines: {node: '>=6.4.0 <13 || >=14'}
-    deprecated: Please upgrade to superagent v10.2.2+, see release notes at https://github.com/forwardemail/superagent/releases/tag/v10.2.2 - maintenance is supported by Forward Email @ https://forwardemail.net
+    deprecated: Please upgrade to v9.0.0+ as we have fixed a public vulnerability with formidable dependency. Note that v9.0.0+ requires Node.js v14.18.0+. See https://github.com/ladjs/superagent/pull/1800 for insight. This project is supported and maintained by the team at Forward Email @ https://forwardemail.net
 
   superjson@2.2.2:
     resolution: {integrity: sha512-5JRxVqC8I8NuOUjzBbvVJAKNM8qoVuH0O77h4WInc/qC2q5IreqKxYwgkga3PfA22OayK2ikceb/B26dztPl+Q==}
@@ -8444,8 +8438,8 @@ packages:
     resolution: {integrity: sha512-/RX9RzeH2xU5ADE7n2Ykvmi9ED3FBGPAjw9u3zucrNNaEBIO0HPSYgL0NT7+3p147ojeSdaVu08F6hjpv31HJg==}
     engines: {node: ^20.0.0 || >=22.0.0}
 
-  tinyrainbow@2.0.0:
-    resolution: {integrity: sha512-op4nsTR47R6p0vMUUoYl/a+ljLFVtlfaXkLQmqfLR1qHma1h/ysYk4hEXZ880bf2CYgTskvTa/e196Vd5dDQXw==}
+  tinyrainbow@3.0.3:
+    resolution: {integrity: sha512-PSkbLUoxOFRzJYjjxHJt9xro7D+iilgMX/C9lawzVuYiIdcihh9DXmVibBe8lmcFrRi/VzlPjBxbN7rH24q8/Q==}
     engines: {node: '>=14.0.0'}
 
   tinyspy@4.0.3:
@@ -10767,7 +10761,7 @@ snapshots:
   '@jridgewell/remapping@2.3.5':
     dependencies:
       '@jridgewell/gen-mapping': 0.3.12
-      '@jridgewell/trace-mapping': 0.3.29
+      '@jridgewell/trace-mapping': 0.3.30
 
   '@jridgewell/resolve-uri@3.1.1': {}
 
@@ -10776,19 +10770,12 @@ snapshots:
       '@jridgewell/gen-mapping': 0.3.12
       '@jridgewell/trace-mapping': 0.3.30
 
-  '@jridgewell/sourcemap-codec@1.5.0': {}
-
   '@jridgewell/sourcemap-codec@1.5.5': {}
-
-  '@jridgewell/trace-mapping@0.3.29':
-    dependencies:
-      '@jridgewell/resolve-uri': 3.1.1
-      '@jridgewell/sourcemap-codec': 1.5.5
 
   '@jridgewell/trace-mapping@0.3.30':
     dependencies:
       '@jridgewell/resolve-uri': 3.1.1
-      '@jridgewell/sourcemap-codec': 1.5.0
+      '@jridgewell/sourcemap-codec': 1.5.5
 
   '@jsonjoy.com/base64@1.1.2(tslib@2.8.1)':
     dependencies:
@@ -14645,7 +14632,7 @@ snapshots:
 
   istanbul-lib-source-maps@5.0.6:
     dependencies:
-      '@jridgewell/trace-mapping': 0.3.29
+      '@jridgewell/trace-mapping': 0.3.30
       debug: 4.4.1
       istanbul-lib-coverage: 3.2.2
     transitivePeerDependencies:
@@ -14971,7 +14958,7 @@ snapshots:
 
   magic-string@0.30.17:
     dependencies:
-      '@jridgewell/sourcemap-codec': 1.5.0
+      '@jridgewell/sourcemap-codec': 1.5.5
 
   magic-string@0.30.19:
     dependencies:
@@ -16919,7 +16906,7 @@ snapshots:
 
   tinypool@2.0.0: {}
 
-  tinyrainbow@2.0.0: {}
+  tinyrainbow@3.0.3: {}
 
   tinyspy@4.0.3: {}
 

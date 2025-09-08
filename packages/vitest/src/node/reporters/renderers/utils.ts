@@ -3,7 +3,7 @@ import type { SnapshotSummary } from '@vitest/snapshot'
 import type { Formatter } from 'tinyrainbow'
 import type { TestProject } from '../../project'
 import { stripVTControlCharacters } from 'node:util'
-import { slash } from '@vitest/utils'
+import { slash } from '@vitest/utils/helpers'
 import { basename, dirname, isAbsolute, relative } from 'pathe'
 import c from 'tinyrainbow'
 import {
