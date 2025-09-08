@@ -1,4 +1,5 @@
 import type { WorkerGlobalState } from '../../types/worker'
+import { serializeValue } from '@vitest/utils/serialize'
 
 const dispose: (() => void)[] = []
 
@@ -16,7 +17,7 @@ export function listenForErrors(state: () => WorkerGlobalState): void {
       return
     }
 
-    const error = serializeError(err)
+    const error = serializeValue(err)
 
     if (typeof error === 'object' && error != null) {
       error.VITEST_TEST_NAME = worker.current?.type === 'test' ? worker.current.name : undefined
@@ -38,31 +39,4 @@ export function listenForErrors(state: () => WorkerGlobalState): void {
     process.off('uncaughtException', uncaughtException)
     process.off('unhandledRejection', unhandledRejection)
   })
-}
-
-function serializeError(err: unknown, seen = new Map()) {
-  if (seen.has(err)) {
-    return seen.get(err)
-  }
-  const serializedError: any = {}
-  seen.set(err, serializedError)
-
-  if (!err || typeof err !== 'object') {
-    serializedError.message = String(err)
-    return serializedError
-  }
-
-  if ('message' in err) {
-    serializedError.message = String(err.message)
-  }
-  if ('stack' in err) {
-    serializedError.stack = String(err.stack)
-  }
-  if ('name' in err) {
-    serializedError.name = String(err.name)
-  }
-  if ('cause' in err) {
-    serializedError.cause = serializeError(err.cause, seen)
-  }
-  return serializedError
 }

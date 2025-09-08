@@ -60,6 +60,10 @@
       "types": "./dist/source-map.d.ts",
       "default": "./dist/source-map.js"
     },
+    "./serialize": {
+      "types": "./dist/serialize.d.ts",
+      "default": "./dist/serialize.js"
+    },
     "./*": "./*"
   },
   "main": "./dist/index.js",

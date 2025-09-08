@@ -22,6 +22,7 @@ const entries = {
   'highlight': 'src/highlight.ts',
   'display': 'src/display.ts',
   'resolver': 'src/resolver.ts',
+  'serialize': 'src/serialize.ts',
 }
 
 const external = [
