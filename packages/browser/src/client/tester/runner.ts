@@ -158,17 +158,7 @@ export function createBrowserRunner(
         const position = getOriginalPosition(traceMap, annotation.location)
         if (position) {
           const { source, column, line } = position
-          let file: string = annotation.location.file
-          if (source) {
-            const fileUrl = annotation.location.file.startsWith('file://')
-              ? annotation.location.file
-              : `file://${annotation.location.file}`
-            const sourceRootUrl = map.sourceRoot
-              ? new URL(map.sourceRoot, fileUrl)
-              : fileUrl
-            file = new URL(source, sourceRootUrl).pathname
-          }
-
+          const file = source || annotation.location.file
           annotation.location = {
             line,
             column: column + 1,

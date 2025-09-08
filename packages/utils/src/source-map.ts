@@ -242,20 +242,9 @@ export function parseStacktrace(
     }
 
     const { line, column, source, name } = position
-
-    let file: string = stack.file
-    if (source) {
-      const fileUrl = stack.file.startsWith('file://')
-        ? stack.file
-        : `file://${stack.file}`
-      const sourceRootUrl = map.sourceRoot
-        ? new URL(map.sourceRoot, fileUrl)
-        : fileUrl
-      file = new URL(source, sourceRootUrl).pathname
-      // if the file path is on windows, we need to remove the leading slash
-      if (file.match(/\/\w:\//)) {
-        file = file.slice(1)
-      }
+    let file = source || stack.file
+    if (file.match(/\/\w:\//)) {
+      file = file.slice(1)
     }
 
     if (shouldFilter(ignoreStackEntries, file)) {
