@@ -56,13 +56,13 @@ function serializeError(err: unknown, seen = new Map()) {
     serializedError.message = String(err.message)
   }
   if ('stack' in err) {
-    serializedError.message = String(err.stack)
+    serializedError.stack = String(err.stack)
   }
   if ('name' in err) {
-    serializedError.message = String(err.name)
+    serializedError.name = String(err.name)
   }
   if ('cause' in err) {
-    serializedError.message = serializeError(err.cause, seen)
+    serializedError.cause = serializeError(err.cause, seen)
   }
   return serializedError
 }
