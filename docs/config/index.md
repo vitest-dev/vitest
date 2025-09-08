@@ -328,7 +328,7 @@ TypeError: createAsyncThunk is not a function
 TypeError: default is not a function
 ```
 
-By default, Vitest assumes you are using a bundler to bypass this and will not fail, but you can disable this behaviour manually, if you code is not processed.
+By default, Vitest assumes you are using a bundler to bypass this and will not fail, but you can disable this behaviour manually, if your code is not processed.
 
 #### deps.moduleDirectories
 
