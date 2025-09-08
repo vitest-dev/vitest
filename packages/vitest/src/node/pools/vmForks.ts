@@ -142,7 +142,7 @@ export function createVmForksPool(
       const { channel } = createChildProcessChannel(project, name === 'collect')
       const workerId = ++id
       const data: ContextRPC = {
-        pool: 'forks',
+        pool: 'vmForks',
         config,
         files,
         invalidates,
