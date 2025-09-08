@@ -157,7 +157,6 @@ export class ObjectContaining extends AsymmetricMatcher<
 
     let result = true
 
-    const matcherContext = this.getMatcherContext()
     const properties = this.getProperties(this.sample)
     for (const property of properties) {
       if (
@@ -206,12 +205,12 @@ export class ArrayContaining<T = unknown> extends AsymmetricMatcher<Array<T>> {
 
     const result
       = this.sample.length === 0
-      || (Array.isArray(other)
-        && this.sample.every(item =>
-          other.some(another =>
-            equals(item, another, customTesters),
-          ),
-        ))
+        || (Array.isArray(other)
+          && this.sample.every(item =>
+            other.some(another =>
+              equals(item, another, customTesters),
+            ),
+          ))
 
     return this.inverse ? !result : result
   }
