@@ -2,8 +2,8 @@
   "extends": "../../../../tsconfig.base.json",
   "compilerOptions": {
     "lib": [
-      "dom",
-      "esnext",
+      "DOM",
+      "ES2021",
       "DOM.Iterable"
     ],
     "types": ["vite/client"],

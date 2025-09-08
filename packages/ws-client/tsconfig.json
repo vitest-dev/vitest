@@ -1,7 +1,6 @@
 {
-  "extends": "../../tsconfig.base.json",
+  "extends": "../../tsconfig.browser.json",
   "compilerOptions": {
-    "lib": ["DOM"],
     "isolatedDeclarations": true
   },
   "exclude": ["./dist"]
