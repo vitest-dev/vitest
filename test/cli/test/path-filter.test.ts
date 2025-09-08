@@ -11,7 +11,6 @@ test('test path is shown when filtering', async () => {
   vitest.write('t')
   await vitest.waitForStdout(`? Input test name pattern (RegExp)`)
   vitest.write('foo')
-  await new Promise(resolve => setTimeout(resolve, 100))
   await vitest.waitForStdout('Pattern matches 1 result')
   await vitest.waitForStdout('basic.test.ts > basic path filter > foo')
 })
