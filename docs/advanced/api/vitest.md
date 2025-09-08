@@ -64,7 +64,7 @@ Benchmark mode calls `bench` functions and throws an error, when it encounters `
 
 ## config
 
-The root (or global) config. If workspace feature is enabled, projects will reference this as `globalConfig`.
+The root (or global) config. If projects are defined, they will reference this as `globalConfig`.
 
 ::: warning
 This is Vitest config, it doesn't extend _Vite_ config. It only has resolved values from the `test` property.
@@ -93,17 +93,21 @@ In the future, the old API won't be exposed anymore.
 
 The global snapshot manager. Vitest keeps track of all snapshots using the `snapshot.add` method.
 
-You can get the latest summary of snapshots via the `vitest.snapshot.summay` property.
+You can get the latest summary of snapshots via the `vitest.snapshot.summary` property.
 
 ## cache
 
 Cache manager that stores information about latest test results and test file stats. In Vitest itself this is only used by the default sequencer to sort tests.
 
+## watcher <Version>4.0.0</Version> {#watcher}
+
+The instance of a Vitest watcher with useful methods to track file changes and rerun tests. You can use `onFileChange`, `onFileDelete` or `onFileCreate` with your own watcher, if the built-in watcher is disabled.
+
 ## projects
 
-An array of [test projects](/advanced/api/test-project) that belong to the user's workspace. If the user did not specify a custom workspace, the workspace will only have a [root project](#getrootproject).
+An array of [test projects](/advanced/api/test-project) that belong to user's projects. If the user did not specify a them, this array will only contain a [root project](#getrootproject).
 
-Vitest will ensure that there is always at least one project in the workspace. If the user specifies a non-existent `--project` name, Vitest will throw an error.
+Vitest will ensure that there is always at least one project in this array. If the user specifies a non-existent `--project` name, Vitest will throw an error before this array is defined.
 
 ## getRootProject
 
@@ -111,7 +115,7 @@ Vitest will ensure that there is always at least one project in the workspace. I
 function getRootProject(): TestProject
 ```
 
-This returns the root test project. The root project generally doesn't run any tests and is not included in `vitest.projects` unless the user explicitly includes the root config in their workspace, or the workspace is not defined at all.
+This returns the root test project. The root project generally doesn't run any tests and is not included in `vitest.projects` unless the user explicitly includes the root config in their configuration, or projects are not defined at all.
 
 The primary goal of the root project is to setup the global config. In fact, `rootProject.config` references `rootProject.globalConfig` and `vitest.config` directly:
 
@@ -130,7 +134,7 @@ function provide<T extends keyof ProvidedContext & string>(
 
 Vitest exposes `provide` method which is a shorthand for `vitest.getRootProject().provide`. With this method you can pass down values from the main thread to tests. All values are checked with `structuredClone` before they are stored, but the values themselves are not cloned.
 
-To recieve the values in the test, you need to import `inject` method from `vitest` entrypont:
+To receive the values in the test, you need to import `inject` method from `vitest` entrypoint:
 
 ```ts
 import { inject } from 'vitest'
@@ -155,7 +159,7 @@ declare module 'vitest' {
 ```
 
 ::: warning
-Technically, `provide` is a method of [`TestProject`](/advanced/api/test-project), so it is limited to the specific project. However, all projects inherit the values from the core project which makes `vitest.provide` universal way of passing down values to tests.
+Technically, `provide` is a method of [`TestProject`](/advanced/api/test-project), so it is limited to the specific project. However, all projects inherit the values from the root project which makes `vitest.provide` universal way of passing down values to tests.
 :::
 
 ## getProvidedContext
@@ -172,7 +176,7 @@ This returns the root context object. This is a shorthand for `vitest.getRootPro
 function getProjectByName(name: string): TestProject
 ```
 
-This method returns the project by its name. Simillar to calling `vitest.projects.find`.
+This method returns the project by its name. Similar to calling `vitest.projects.find`.
 
 ::: warning
 In case the project doesn't exist, this method will return the root project - make sure to check the names again if the project you are looking for is the one returned.
@@ -256,7 +260,7 @@ function start(filters?: string[]): Promise<TestRunResult>
 Initialize reporters, the coverage provider, and run tests. This method accepts string filters to match the test files - these are the same filters that [CLI supports](/guide/filtering#cli).
 
 ::: warning
-This method should not be called if [`vitest.init()`](#init) is also invoked. Use [`runTestSpecifications`](#runtestspecifications) or [`rerunTestSpecifications`](#reruntestspecifications) instead if you need to run tests after Vitest was inititalised.
+This method should not be called if [`vitest.init()`](#init) is also invoked. Use [`runTestSpecifications`](#runtestspecifications) or [`rerunTestSpecifications`](#reruntestspecifications) instead if you need to run tests after Vitest was initialised.
 :::
 
 This method is called automatically by [`startVitest`](/advanced/guide/tests) if `config.mergeReports` and `config.standalone` are not set.
@@ -297,7 +301,7 @@ As of Vitest 3, this method uses a cache to check if the file is a test. To make
 function clearSpecificationsCache(moduleId?: string): void
 ```
 
-Vitest automatically caches test specifications for each file when [`globTestSpecifications`](#globtestspecifications) or [`runTestSpecifications`](#runtestspecifications) is called. This method clears the cache for the given file or the whole cache alltogether depending on the first argument.
+Vitest automatically caches test specifications for each file when [`globTestSpecifications`](#globtestspecifications) or [`runTestSpecifications`](#runtestspecifications) is called. This method clears the cache for the given file or the whole cache altogether depending on the first argument.
 
 ## runTestSpecifications
 
@@ -308,7 +312,7 @@ function runTestSpecifications(
 ): Promise<TestRunResult>
 ```
 
-This method runs every test based on the received [specifications](/advanced/api/test-specification). The second argument, `allTestsRun`, is used by the coverage provider to determine if it needs to instrument coverage on _every_ file in the root (this only matters if coverage is enabled and `coverage.all` is set to `true`).
+This method runs every test based on the received [specifications](/advanced/api/test-specification). The second argument, `allTestsRun`, is used by the coverage provider to determine if it needs to include uncovered files in report.
 
 ::: warning
 This method doesn't trigger `onWatcherRerun`, `onWatcherStart` and `onTestsRerun` callbacks. If you are rerunning tests based on the file change, consider using [`rerunTestSpecifications`](#reruntestspecifications) instead.
@@ -317,7 +321,7 @@ This method doesn't trigger `onWatcherRerun`, `onWatcherStart` and `onTestsRerun
 ## rerunTestSpecifications
 
 ```ts
-function runTestSpecifications(
+function rerunTestSpecifications(
   specifications: TestSpecification[],
   allTestsRun = false
 ): Promise<TestRunResult>
@@ -370,6 +374,14 @@ This methods overrides the global [test name pattern](/config/#testnamepattern).
 ::: warning
 This method doesn't start running any tests. To run tests with updated pattern, call [`runTestSpecifications`](#runtestspecifications).
 :::
+
+## getGlobalTestNamePattern
+
+```ts
+function getGlobalTestNamePattern(): RegExp | undefined
+```
+
+Returns the regexp used for the global test name pattern.
 
 ## resetGlobalTestNamePattern
 
@@ -433,7 +445,7 @@ dynamicExample !== staticExample // ✅
 :::
 
 ::: info
-Internally, Vitest uses this method to import global setups, custom coverage providers, workspace file, and custom reporters, meaning all of them share the same module graph as long as they belong to the same Vite server.
+Internally, Vitest uses this method to import global setups, custom coverage providers, and custom reporters, meaning all of them share the same module graph as long as they belong to the same Vite server.
 :::
 
 ## close
@@ -452,7 +464,7 @@ function exit(force = false): Promise<void>
 
 Closes all projects and exit the process. If `force` is set to `true`, the process will exit immediately after closing the projects.
 
-This method will also forcefuly call `process.exit()` if the process is still active after [`config.teardownTimeout`](/config/#teardowntimeout) milliseconds.
+This method will also forcefully call `process.exit()` if the process is still active after [`config.teardownTimeout`](/config/#teardowntimeout) milliseconds.
 
 ## shouldKeepServer
 
@@ -518,3 +530,95 @@ vitest.onFilterWatchedSpecification(specification =>
 ```
 
 Vitest can create different specifications for the same file depending on the `pool` or `locations` options, so do not rely on the reference. Vitest can also return cached specification from [`vitest.getModuleSpecifications`](#getmodulespecifications) - the cache is based on the `moduleId` and `pool`. Note that [`project.createSpecification`](/advanced/api/test-project#createspecification) always returns a new instance.
+
+## matchesProjectFilter <Version>3.1.0</Version> {#matchesprojectfilter}
+
+```ts
+function matchesProjectFilter(name: string): boolean
+```
+
+Check if the name matches the current [project filter](/guide/cli#project). If there is no project filter, this will always return `true`.
+
+It is not possible to programmatically change the `--project` CLI option.
+
+## waitForTestRunEnd <Version>4.0.0</Version> {#waitfortestrunend}
+
+```ts
+function waitForTestRunEnd(): Promise<void>
+```
+
+If there is a test run happening, returns a promise that will resolve when the test run is finished.
+
+## createCoverageProvider <Version>4.0.0</Version> {#createcoverageprovider}
+
+```ts
+function createCoverageProvider(): Promise<CoverageProvider | null>
+```
+
+Creates a coverage provider if `coverage` is enabled in the config. This is done automatically if you are running tests with [`start`](#start) or [`init`](#init) methods.
+
+::: warning
+This method will also clean all previous reports if [`coverage.clean`](/config/#coverage-clean) is not set to `false`.
+:::
+
+## enableCoverage <Version>4.0.0</Version> {#enablecoverage}
+
+```ts
+function enableCoverage(): Promise<void>
+```
+
+This method enables coverage for tests that run after this call. `enableCoverage` doesn't run any tests; it only sets up Vitest to collect coverage.
+
+It creates a new coverage provider if one doesn't already exist.
+
+## disableCoverage <Version>4.0.0</Version> {#disablecoverage}
+
+```ts
+function disableCoverage(): void
+```
+
+This method disables coverage collection for tests that run afterwards.
+
+## experimental_parseSpecification <Version>4.0.0</Version> <Badge type="warning">experimental</Badge> {#parsespecification}
+
+```ts
+function experimental_parseSpecification(
+  specification: TestSpecification
+): Promise<TestModule>
+```
+
+This function will collect all tests inside the file without running it. It uses rollup's `parseAst` function on top of Vite's `ssrTransform` to statically analyse the file and collect all tests that it can.
+
+::: warning
+If Vitest could not analyse the name of the test, it will inject a hidden `dynamic: true` property to the test or a suite. The `id` will also have a postfix with `-dynamic` to not break tests that were collected properly.
+
+Vitest always injects this property in tests with `for` or `each` modifier or tests with a dynamic name (like, `hello ${property}` or `'hello' + ${property}`). Vitest will still assign a name to the test, but it cannot be used to filter the tests.
+
+There is nothing Vitest can do to make it possible to filter dynamic tests, but you can turn a test with `for` or `each` modifier into a name pattern with `escapeTestName` function:
+
+```ts
+import { escapeTestName } from 'vitest/node'
+
+// turns into /hello, .+?/
+const escapedPattern = new RegExp(escapeTestName('hello, %s', true))
+```
+:::
+
+::: warning
+Vitest will only collect tests defined in the file. It will never follow imports to other files.
+
+Vitest collects all `it`, `test`, `suite` and `describe` definitions even if they were not imported from the `vitest` entry point.
+:::
+
+## experimental_parseSpecifications <Version>4.0.0</Version> <Badge type="warning">experimental</Badge> {#parsespecifications}
+
+```ts
+function experimental_parseSpecifications(
+  specifications: TestSpecification[],
+  options?: {
+    concurrency?: number
+  }
+): Promise<TestModule[]>
+```
+
+This method will [collect tests](#parsespecification) from an array of specifications. By default, Vitest will run only `os.availableParallelism()` number of specifications at a time to reduce the potential performance degradation. You can specify a different number in a second argument.

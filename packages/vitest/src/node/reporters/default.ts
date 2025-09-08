@@ -1,7 +1,9 @@
-import type { File, TaskResultPack } from '@vitest/runner'
+import type { SerializedError } from '@vitest/utils'
 import type { Vitest } from '../core'
+import type { TestSpecification } from '../spec'
+import type { TestRunEndReason } from '../types/reporter'
 import type { BaseOptions } from './base'
-import type { TestModule } from './reported-tasks'
+import type { ReportedHookContext, TestCase, TestModule } from './reported-tasks'
 import { BaseReporter } from './base'
 import { SummaryReporter } from './summary'
 
@@ -29,41 +31,61 @@ export class DefaultReporter extends BaseReporter {
     }
   }
 
-  onTestModuleQueued(file: TestModule) {
-    this.summary?.onTestModuleQueued(file)
-  }
-
-  onInit(ctx: Vitest) {
-    super.onInit(ctx)
-    this.summary?.onInit(ctx, { verbose: this.verbose })
-  }
-
-  onPathsCollected(paths: string[] = []) {
+  onTestRunStart(specifications: ReadonlyArray<TestSpecification>): void {
     if (this.isTTY) {
       if (this.renderSucceed === undefined) {
         this.renderSucceed = !!this.renderSucceed
       }
 
       if (this.renderSucceed !== true) {
-        this.renderSucceed = paths.length <= 1
+        this.renderSucceed = specifications.length <= 1
       }
     }
 
-    this.summary?.onPathsCollected(paths)
+    this.summary?.onTestRunStart(specifications)
   }
 
-  onTaskUpdate(packs: TaskResultPack[]) {
-    this.summary?.onTaskUpdate(packs)
-    super.onTaskUpdate(packs)
+  onTestRunEnd(
+    testModules: ReadonlyArray<TestModule>,
+    unhandledErrors: ReadonlyArray<SerializedError>,
+    reason: TestRunEndReason,
+  ): void {
+    super.onTestRunEnd(testModules, unhandledErrors, reason)
+    this.summary?.onTestRunEnd()
   }
 
-  onWatcherRerun(files: string[], trigger?: string) {
-    this.summary?.onWatcherRerun()
-    super.onWatcherRerun(files, trigger)
+  onTestModuleQueued(file: TestModule): void {
+    this.summary?.onTestModuleQueued(file)
   }
 
-  onFinished(files?: File[], errors?: unknown[]) {
-    this.summary?.onFinished()
-    super.onFinished(files, errors)
+  onTestModuleCollected(module: TestModule): void {
+    this.summary?.onTestModuleCollected(module)
+  }
+
+  onTestModuleEnd(module: TestModule): void {
+    super.onTestModuleEnd(module)
+    this.summary?.onTestModuleEnd(module)
+  }
+
+  onTestCaseReady(test: TestCase): void {
+    this.summary?.onTestCaseReady(test)
+  }
+
+  onTestCaseResult(test: TestCase): void {
+    super.onTestCaseResult(test)
+    this.summary?.onTestCaseResult(test)
+  }
+
+  onHookStart(hook: ReportedHookContext): void {
+    this.summary?.onHookStart(hook)
+  }
+
+  onHookEnd(hook: ReportedHookContext): void {
+    this.summary?.onHookEnd(hook)
+  }
+
+  onInit(ctx: Vitest): void {
+    super.onInit(ctx)
+    this.summary?.onInit(ctx, { verbose: this.verbose })
   }
 }

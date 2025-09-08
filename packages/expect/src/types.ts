@@ -9,6 +9,7 @@
 import type { MockInstance } from '@vitest/spy'
 import type { Constructable } from '@vitest/utils'
 import type { Formatter } from 'tinyrainbow'
+import type { AsymmetricMatcher } from './jest-asymmetric-matchers'
 import type { diff, getMatcherUtils, stringify } from './jest-matcher-utils'
 
 export type ChaiPlugin = Chai.ChaiPlugin
@@ -85,17 +86,25 @@ export type AsyncExpectationResult = Promise<SyncExpectationResult>
 
 export type ExpectationResult = SyncExpectationResult | AsyncExpectationResult
 
-export interface RawMatcherFn<T extends MatcherState = MatcherState> {
-  (this: T, received: any, ...expected: Array<any>): ExpectationResult
+export interface RawMatcherFn<T extends MatcherState = MatcherState, E extends Array<any> = Array<any>> {
+  (this: T, received: any, ...expected: E): ExpectationResult
 }
+
+// Allow unused `T` to preserve its name for extensions.
+// Type parameter names must be identical when extending those types.
+// eslint-disable-next-line
+export interface Matchers<T = any> {}
 
 export type MatchersObject<T extends MatcherState = MatcherState> = Record<
   string,
   RawMatcherFn<T>
->
+> & ThisType<T> & {
+  [K in keyof Matchers<T>]?: RawMatcherFn<T, Parameters<Matchers<T>[K]>>
+}
 
 export interface ExpectStatic
   extends Chai.ExpectStatic,
+  Matchers,
   AsymmetricMatchersContaining {
   <T>(actual: T, message?: string): Assertion<T>
   extend: (expects: MatchersObject) => void
@@ -118,6 +127,16 @@ interface CustomMatcher {
    * expect(age).toEqual(expect.toSatisfy(val => val >= 18, 'Age must be at least 18'));
    */
   toSatisfy: (matcher: (value: any) => boolean, message?: string) => any
+
+  /**
+   * Matches if the received value is one of the values in the expected array.
+   *
+   * @example
+   * expect(1).toBeOneOf([1, 2, 3])
+   * expect('foo').toBeOneOf([expect.any(String)])
+   * expect({ a: 1 }).toEqual({ a: expect.toBeOneOf(['1', '2', '3']) })
+   */
+  toBeOneOf: <T>(sample: Array<T>) => any
 }
 
 export interface AsymmetricMatchersContaining extends CustomMatcher {
@@ -136,7 +155,7 @@ export interface AsymmetricMatchersContaining extends CustomMatcher {
    * @example
    * expect({ a: '1', b: 2 }).toEqual(expect.objectContaining({ a: '1' }))
    */
-  objectContaining: <T = any>(expected: T) => any
+  objectContaining: <T = any>(expected: DeeplyAllowMatchers<T>) => any
 
   /**
    * Matches if the received array contains all elements in the expected array.
@@ -144,7 +163,7 @@ export interface AsymmetricMatchersContaining extends CustomMatcher {
    * @example
    * expect(['a', 'b', 'c']).toEqual(expect.arrayContaining(['b', 'a']));
    */
-  arrayContaining: <T = unknown>(expected: Array<T>) => any
+  arrayContaining: <T = unknown>(expected: Array<DeeplyAllowMatchers<T>>) => any
 
   /**
    * Matches if the received string or regex matches the expected pattern.
@@ -166,6 +185,14 @@ export interface AsymmetricMatchersContaining extends CustomMatcher {
    */
   closeTo: (expected: number, precision?: number) => any
 }
+
+type WithAsymmetricMatcher<T> = T | AsymmetricMatcher<unknown>
+
+export type DeeplyAllowMatchers<T> = T extends Array<infer Element>
+  ? WithAsymmetricMatcher<T> | DeeplyAllowMatchers<Element>[]
+  : T extends object
+    ? WithAsymmetricMatcher<T> | { [K in keyof T]: DeeplyAllowMatchers<T[K]> }
+    : WithAsymmetricMatcher<T>
 
 export interface JestAssertion<T = any> extends jest.Matchers<void, T>, CustomMatcher {
   /**
@@ -310,6 +337,14 @@ export interface JestAssertion<T = any> extends jest.Matchers<void, T>, CustomMa
    * expect(value).toBeNull();
    */
   toBeNull: () => void
+
+  /**
+   * Used to check that a variable is nullable (null or undefined).
+   *
+   * @example
+   * expect(value).toBeNullable();
+   */
+  toBeNullable: () => void
 
   /**
    * Ensure that a variable is not undefined.
@@ -612,9 +647,7 @@ type VitestAssertion<A, T> = {
 
 type Promisify<O> = {
   [K in keyof O]: O[K] extends (...args: infer A) => infer R
-    ? O extends R
-      ? Promisify<O[K]>
-      : (...args: A) => Promise<R>
+    ? Promisify<O[K]> & ((...args: A) => Promise<R>)
     : O[K];
 }
 
@@ -622,7 +655,8 @@ export type PromisifyAssertion<T> = Promisify<Assertion<T>>
 
 export interface Assertion<T = any>
   extends VitestAssertion<Chai.Assertion, T>,
-  JestAssertion<T> {
+  JestAssertion<T>,
+  Matchers<T> {
   /**
    * Ensures a value is of a specific type.
    *

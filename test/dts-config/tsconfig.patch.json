@@ -1,0 +1,7 @@
+{
+  "compilerOptions": {
+    "paths": {
+      "happy-dom": ["./happy-dom-patch.ts"]
+    }
+  }
+}

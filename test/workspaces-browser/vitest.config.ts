@@ -1,3 +1,4 @@
+import { playwright } from '@vitest/browser/providers/playwright'
 import { defineConfig } from 'vitest/config'
 
 if (process.env.TEST_WATCH) {
@@ -11,5 +12,29 @@ export default defineConfig({
     reporters: ['default', 'json'],
     outputFile: './results.json',
     globalSetup: './globalTest.ts',
+    projects: [
+      './space_*/*.config.ts',
+      {
+        cacheDir: '.cache/inline',
+        test: {
+          name: 'space_browser_inline',
+          root: './space_browser_inline',
+          browser: {
+            enabled: true,
+            instances: [{ browser: process.env.BROWSER || 'chromium' }],
+            headless: true,
+            provider: playwright(),
+          },
+          alias: {
+            'test-alias-from-vitest': new URL('./space_browser_inline/test-alias-to.ts', import.meta.url).pathname,
+          },
+        },
+        resolve: {
+          alias: {
+            'test-alias-from-vite': new URL('./space_browser_inline/test-alias-to.ts', import.meta.url).pathname,
+          },
+        },
+      },
+    ],
   },
 })

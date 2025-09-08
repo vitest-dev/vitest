@@ -38,14 +38,14 @@ describe('FakeTimers', () => {
     })
 
     it('installs setInterval mock', () => {
-      const global = { Date: FakeDate, clearTimeout, process, setTimeout }
+      const global = { Date: FakeDate, clearTimeout, clearInterval, process, setTimeout, setInterval }
       const timers = new FakeTimers({ global })
       timers.useFakeTimers()
       expect(global.setInterval).not.toBe(undefined)
     })
 
     it('installs clearInterval mock', () => {
-      const global = { Date: FakeDate, clearTimeout, process, setTimeout }
+      const global = { Date: FakeDate, clearTimeout, clearInterval, process, setTimeout, setInterval }
       const timers = new FakeTimers({ global })
       timers.useFakeTimers()
       expect(global.clearInterval).not.toBe(undefined)
@@ -82,7 +82,7 @@ describe('FakeTimers', () => {
     })
 
     it.runIf(isChildProcess)('throws when is child_process and tries to mock nextTick', () => {
-      const global = { process, setTimeout, clearTimeout }
+      const global = { Date: FakeDate, process, setTimeout, clearTimeout }
       const timers = new FakeTimers({ global, config: { toFake: ['nextTick'] } })
 
       expect(() => timers.useFakeTimers()).toThrow(
@@ -120,11 +120,12 @@ describe('FakeTimers', () => {
       expect(global.clearImmediate).not.toBe(origClearImmediate)
     })
 
-    it('mocks requestIdleCallback even if not on global', () => {
-      const global = { Date: FakeDate, clearTimeout, setTimeout };
-      const timers = new FakeTimers({ global, config: { toFake: ["requestIdleCallback"] }})
+    it('mocks requestIdleCallback if it exists on global', () => {
+      const origRequestIdleCallback = () => {}
+      const global = { Date: FakeDate, clearTimeout, setTimeout, requestIdleCallback: origRequestIdleCallback }
+      const timers = new FakeTimers({ global })
       timers.useFakeTimers()
-      expect(global.requestIdleCallback).toBeDefined();
+      expect(global.requestIdleCallback).not.toBe(origRequestIdleCallback)
     })
 
     it('cannot mock setImmediate and clearImmediate if not on global', () => {
@@ -237,7 +238,7 @@ describe('FakeTimers', () => {
 
   describe('runAllTimers', () => {
     it('runs all timers in order', () => {
-      const global = { Date: FakeDate, clearTimeout, process, setTimeout }
+      const global = { Date: FakeDate, clearTimeout, clearInterval, process, setTimeout, setInterval }
       const timers = new FakeTimers({ global })
       timers.useFakeTimers()
 
@@ -273,11 +274,11 @@ describe('FakeTimers', () => {
     it('warns when trying to advance timers while real timers are used', () => {
       const timers = new FakeTimers({
         config: {
-          rootDir: __dirname,
+          rootDir: import.meta.dirname,
         },
         global,
       })
-      expect(() => timers.runAllTimers()).toThrow(/Timers are not mocked/)
+      expect(() => timers.runAllTimers()).toThrow(/A function to advance timers was called but the timers APIs are not mocked/)
     })
 
     it('does nothing when no timers have been scheduled', () => {
@@ -381,7 +382,7 @@ describe('FakeTimers', () => {
 
   describe('runAllTimersAsync', () => {
     it('runs all timers in order', async () => {
-      const global = { Date: FakeDate, clearTimeout, process, setTimeout, Promise }
+      const global = { Date: FakeDate, clearTimeout, clearInterval, process, setTimeout, setInterval, Promise }
       const timers = new FakeTimers({ global })
       timers.useFakeTimers()
 
@@ -417,11 +418,11 @@ describe('FakeTimers', () => {
     it('warns when trying to advance timers while real timers are used', async () => {
       const timers = new FakeTimers({
         config: {
-          rootDir: __dirname,
+          rootDir: import.meta.dirname,
         },
         global,
       })
-      await expect(timers.runAllTimersAsync()).rejects.toThrow(/Timers are not mocked/)
+      await expect(timers.runAllTimersAsync()).rejects.toThrow(/A function to advance timers was called but the timers APIs are not mocked/)
     })
 
     it('only runs a setTimeout callback once (ever)', async () => {
@@ -511,7 +512,7 @@ describe('FakeTimers', () => {
 
   describe('advanceTimersByTime', () => {
     it('runs timers in order', () => {
-      const global = { Date: FakeDate, clearTimeout, process, setTimeout }
+      const global = { Date: FakeDate, clearTimeout, process, setTimeout, setInterval }
       const timers = new FakeTimers({ global })
       timers.useFakeTimers()
 
@@ -609,7 +610,7 @@ describe('FakeTimers', () => {
 
   describe('advanceTimersToNextTimer', () => {
     it('runs timers in order', () => {
-      const global = { Date: FakeDate, clearTimeout, process, setTimeout }
+      const global = { Date: FakeDate, clearTimeout, process, setTimeout, setInterval }
       const timers = new FakeTimers({ global })
       timers.useFakeTimers()
 
@@ -644,7 +645,7 @@ describe('FakeTimers', () => {
     })
 
     it('run correct amount of steps', () => {
-      const global = { Date: FakeDate, clearTimeout, process, setTimeout }
+      const global = { Date: FakeDate, clearTimeout, process, setTimeout, setInterval }
       const timers = new FakeTimers({ global })
       timers.useFakeTimers()
 
@@ -711,7 +712,7 @@ describe('FakeTimers', () => {
 
   describe('advanceTimersToNextTimerAsync', () => {
     it('runs timers in order', async () => {
-      const global = { Date: FakeDate, clearTimeout, process, setTimeout, Promise }
+      const global = { Date: FakeDate, clearTimeout, process, setTimeout, setInterval, Promise }
       const timers = new FakeTimers({ global })
       timers.useFakeTimers()
 
@@ -746,7 +747,7 @@ describe('FakeTimers', () => {
     })
 
     it('run correct amount of steps', async () => {
-      const global = { Date: FakeDate, clearTimeout, process, setTimeout, Promise }
+      const global = { Date: FakeDate, clearTimeout, process, setTimeout, setInterval, Promise }
       const timers = new FakeTimers({ global })
       timers.useFakeTimers()
 
@@ -1022,7 +1023,7 @@ describe('FakeTimers', () => {
     })
 
     it('resets all pending setIntervals', () => {
-      const global = { Date: FakeDate, clearTimeout, process, setTimeout }
+      const global = { Date: FakeDate, clearTimeout, process, setTimeout, setInterval }
       const timers = new FakeTimers({ global })
       timers.useFakeTimers()
 
@@ -1083,6 +1084,7 @@ describe('FakeTimers', () => {
         process,
         setImmediate: nativeSetImmediate,
         setTimeout,
+        setInterval,
       }
 
       const timers = new FakeTimers({ global })
@@ -1189,6 +1191,7 @@ describe('FakeTimers', () => {
         process,
         setImmediate,
         setTimeout,
+        setInterval,
         Promise,
       }
 
@@ -1491,7 +1494,9 @@ describe('FakeTimers', () => {
 
       expect(Date.now()).toBe(timeStrMs)
 
-      expect(() => timers.useFakeTimers()).toThrowError(/date was mocked/)
+      expect(() => timers.useFakeTimers()).not.toThrowError()
+
+      expect(Date.now()).toBe(timeStrMs)
 
       // Some test
 

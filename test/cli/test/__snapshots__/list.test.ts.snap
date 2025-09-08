@@ -1,13 +1,7 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
 exports[`basic output shows error 1`] = `
-"Error: top level error
- ❯ top-level-error.test.ts:1:7
-      1| throw new Error('top level error')
-       |       ^
-      2| 
-
-Error: describe error
+"Error: describe error
  ❯ describe-error.test.ts:4:9
       2| 
       3| describe('describe error', () => {
@@ -15,6 +9,12 @@ Error: describe error
        |         ^
       5| 
       6|   it('wont run', () => {
+
+Error: top level error
+ ❯ top-level-error.test.ts:1:7
+      1| throw new Error('top level error')
+       |       ^
+      2| 
 
 "
 `;
@@ -59,14 +59,24 @@ math.test.ts > failing test
 "
 `;
 
-exports[`json output shows error 1`] = `
-"Error: top level error
- ❯ top-level-error.test.ts:1:7
-      1| throw new Error('top level error')
-       |       ^
-      2| 
+exports[`correctly outputs all tests with args: "--typecheck" 1`] = `
+"type.test-d.ts > 1 plus 1
+basic.test.ts > basic suite > inner suite > some test
+basic.test.ts > basic suite > inner suite > another test
+basic.test.ts > basic suite > basic test
+basic.test.ts > outside test
+math.test.ts > 1 plus 1
+math.test.ts > failing test
+"
+`;
 
-Error: describe error
+exports[`correctly outputs all tests with args: "--typecheck.only" 1`] = `
+"type.test-d.ts > 1 plus 1
+"
+`;
+
+exports[`json output shows error 1`] = `
+"Error: describe error
  ❯ describe-error.test.ts:4:9
       2| 
       3| describe('describe error', () => {
@@ -74,18 +84,18 @@ Error: describe error
        |         ^
       5| 
       6|   it('wont run', () => {
+
+Error: top level error
+ ❯ top-level-error.test.ts:1:7
+      1| throw new Error('top level error')
+       |       ^
+      2| 
 
 "
 `;
 
 exports[`json with a file output shows error 1`] = `
-"Error: top level error
- ❯ top-level-error.test.ts:1:7
-      1| throw new Error('top level error')
-       |       ^
-      2| 
-
-Error: describe error
+"Error: describe error
  ❯ describe-error.test.ts:4:9
       2| 
       3| describe('describe error', () => {
@@ -93,6 +103,12 @@ Error: describe error
        |         ^
       5| 
       6|   it('wont run', () => {
+
+Error: top level error
+ ❯ top-level-error.test.ts:1:7
+      1| throw new Error('top level error')
+       |       ^
+      2| 
 
 "
 `;

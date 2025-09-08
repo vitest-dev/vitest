@@ -6,7 +6,19 @@ The following types are used in the type signatures below
 type Awaitable<T> = T | PromiseLike<T>
 ```
 
-`expect` is used to create assertions. In this context `assertions` are functions that can be called to assert a statement. Vitest provides `chai` assertions by default and also `Jest` compatible assertions built on top of `chai`.
+`expect` is used to create assertions. In this context `assertions` are functions that can be called to assert a statement. Vitest provides `chai` assertions by default and also `Jest` compatible assertions built on top of `chai`. Unlike `Jest`, Vitest supports a message as the second argument - if the assertion fails, the error message will be equal to it.
+
+```ts
+export interface ExpectStatic extends Chai.ExpectStatic, AsymmetricMatchersContaining {
+  <T>(actual: T, message?: string): Assertion<T>
+  extend: (expects: MatchersObject) => void
+  anything: () => any
+  any: (constructor: unknown) => any
+  getState: () => MatcherState
+  setState: (state: Partial<MatcherState>) => void
+  not: AsymmetricMatchersContaining
+}
+```
 
 For example, this code asserts that an `input` value is equal to `2`. If it's not, the assertion will throw an error, and the test will fail.
 
@@ -63,7 +75,7 @@ test('expect.soft test', () => {
 
 ```ts
 interface ExpectPoll extends ExpectStatic {
-  (actual: () => T, options: { interval; timeout; message }): Promise<Assertions<T>>
+  (actual: () => T, options?: { interval?: number; timeout?: number; message?: string }): Promise<Assertions<T>>
 }
 ```
 
@@ -287,6 +299,32 @@ test('we don\'t have apples', () => {
 })
 ```
 
+## toBeNullable
+
+- **Type:** `() => Awaitable<void>`
+
+`toBeNullable` simply asserts if something is nullable (`null` or `undefined`).
+
+```ts
+import { expect, test } from 'vitest'
+
+function apples() {
+  return null
+}
+
+function bananas() {
+  return null
+}
+
+test('we don\'t have apples', () => {
+  expect(apples()).toBeNullable()
+})
+
+test('we don\'t have bananas', () => {
+  expect(bananas()).toBeNullable()
+})
+```
+
 ## toBeNaN
 
 - **Type:** `() => Awaitable<void>`
@@ -308,6 +346,42 @@ test('getApplesCount has some unusual side effects...', () => {
   expect(getApplesCount()).toBeNaN()
 })
 ```
+
+## toBeOneOf
+
+- **Type:** `(sample: Array<any>) => any`
+
+`toBeOneOf` asserts if a value matches any of the values in the provided array.
+
+```ts
+import { expect, test } from 'vitest'
+
+test('fruit is one of the allowed values', () => {
+  expect(fruit).toBeOneOf(['apple', 'banana', 'orange'])
+})
+```
+
+The asymmetric matcher is particularly useful when testing optional properties that could be either `null` or `undefined`:
+
+```ts
+test('optional properties can be null or undefined', () => {
+  const user = {
+    firstName: 'John',
+    middleName: undefined,
+    lastName: 'Doe'
+  }
+
+  expect(user).toEqual({
+    firstName: expect.any(String),
+    middleName: expect.toBeOneOf([expect.any(String), undefined]),
+    lastName: expect.any(String),
+  })
+})
+```
+
+:::tip
+You can use `expect.not` with this matcher to ensure a value does NOT match any of the provided options.
+:::
 
 ## toBeTypeOf
 
@@ -454,7 +528,7 @@ Differences from [`.toEqual`](#toequal):
 
 -  Keys with `undefined` properties are checked. e.g. `{a: undefined, b: 2}` does not match `{b: 2}` when using `.toStrictEqual`.
 -  Array sparseness is checked. e.g. `[, 1]` does not match `[undefined, 1]` when using `.toStrictEqual`.
--  Object types are checked to be equal. e.g. A class instance with fields `a` and` b` will not equal a literal object with fields `a` and `b`.
+-  Object types are checked to be equal. e.g. A class instance with fields `a` and `b` will not equal a literal object with fields `a` and `b`.
 
 ```ts
 import { expect, test } from 'vitest'
@@ -603,7 +677,7 @@ test('top fruits', () => {
 
 `toMatchObject` asserts if an object matches a subset of the properties of an object.
 
-You can also pass an array of objects. This is useful if you want to check that two arrays match in their number of elements, as opposed to `arrayContaining`, which allows for extra elements in the received array.
+You can also pass an array of objects. This is useful if you want to check that two arrays match in their number and order of elements, as opposed to `arrayContaining`, which allows for extra elements in the received array.
 
 ```ts
 import { expect, test } from 'vitest'
@@ -665,6 +739,14 @@ You can provide an optional argument to test that a specific error is thrown:
 
 :::tip
 You must wrap the code in a function, otherwise the error will not be caught, and test will fail.
+
+This does not apply for async calls as [rejects](#rejects) correctly unwraps the promise:
+```ts
+test('expect rejects toThrow', async ({ expect }) => {
+  const promise = Promise.reject(new Error('Test'))
+  await expect(promise).rejects.toThrowError()
+})
+```
 :::
 
 For example, if we want to test that `getFruitStock('pineapples')` throws, we could write:
@@ -715,7 +797,7 @@ test('throws on pineapples', async () => {
 
 ## toMatchSnapshot
 
-- **Type:** `<T>(shape?: Partial<T> | string, message?: string) => void`
+- **Type:** `<T>(shape?: Partial<T> | string, hint?: string) => void`
 
 This ensures that a value matches the most recent snapshot.
 
@@ -747,7 +829,7 @@ test('matches snapshot', () => {
 
 ## toMatchInlineSnapshot
 
-- **Type:** `<T>(shape?: Partial<T> | string, snapshot?: string, message?: string) => void`
+- **Type:** `<T>(shape?: Partial<T> | string, snapshot?: string, hint?: string) => void`
 
 This ensures that a value matches the most recent snapshot.
 
@@ -790,7 +872,7 @@ test('matches snapshot', () => {
 
 ## toMatchFileSnapshot {#tomatchfilesnapshot}
 
-- **Type:** `<T>(filepath: string, message?: string) => Promise<void>`
+- **Type:** `<T>(filepath: string, hint?: string) => Promise<void>`
 
 Compare or update the snapshot with the content of a file explicitly specified (instead of the `.snap` file).
 
@@ -807,13 +889,13 @@ Note that since file system operation is async, you need to use `await` with `to
 
 ## toThrowErrorMatchingSnapshot
 
-- **Type:** `(message?: string) => void`
+- **Type:** `(hint?: string) => void`
 
 The same as [`toMatchSnapshot`](#tomatchsnapshot), but expects the same value as [`toThrowError`](#tothrowerror).
 
 ## toThrowErrorMatchingInlineSnapshot
 
-- **Type:** `(snapshot?: string, message?: string) => void`
+- **Type:** `(snapshot?: string, hint?: string) => void`
 
 The same as [`toMatchInlineSnapshot`](#tomatchinlinesnapshot), but expects the same value as [`toThrowError`](#tothrowerror).
 
@@ -1200,7 +1282,7 @@ test('spy function resolves bananas on a last call', async () => {
 
 - **Type**: `(time: number, returnValue: any) => Awaitable<void>`
 
-You can call this assertion to check if a function has successfully resolved a certain value on a specific invokation. Requires a spy function to be passed to `expect`.
+You can call this assertion to check if a function has successfully resolved a certain value on a specific invocation. Requires a spy function to be passed to `expect`.
 
 If the function returned a promise, but it was not resolved yet, this will fail.
 
@@ -1420,7 +1502,7 @@ test.each(errorDirs)('build fails with "%s"', async (dir) => {
 
 - **Type:** `() => any`
 
-This asymmetric matcher, when used with equality check, will always return `true`. Useful, if you just want to be sure that the property exist.
+This asymmetric matcher matches anything except `null` or `undefined`. Useful if you just want to be sure that a property exists with any value that's not either `null` or `undefined`.
 
 ```ts
 import { expect, test } from 'vitest'

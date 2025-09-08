@@ -1,14 +1,11 @@
+import type { MockedModule } from '@vitest/mocker'
 import type { CancelReason } from '@vitest/runner'
-import type { Awaitable, ErrorWithDiff, ParsedStack } from '@vitest/utils'
+import type { Awaitable, ParsedStack, TestError } from '@vitest/utils'
 import type { StackTraceParserOptions } from '@vitest/utils/source-map'
 import type { ViteDevServer } from 'vite'
+import type { BrowserTesterOptions } from '../../types/browser'
 import type { TestProject } from '../project'
 import type { ApiConfig, ProjectConfig } from './config'
-
-export interface BrowserProviderInitializationOptions {
-  browser: string
-  options?: BrowserProviderOptions
-}
 
 export interface CDPSession {
   send: (method: string, params?: Record<string, unknown>) => Promise<unknown>
@@ -17,56 +14,53 @@ export interface CDPSession {
   off: (event: string, listener: (...args: unknown[]) => void) => void
 }
 
+export interface BrowserModuleMocker {
+  register: (sessionId: string, module: MockedModule) => Promise<void>
+  delete: (sessionId: string, url: string) => Promise<void>
+  clear: (sessionId: string) => Promise<void>
+}
+
+export interface BrowserProviderOption {
+  name: string
+  supportedBrowser?: ReadonlyArray<string>
+  factory: (project: TestProject) => BrowserProvider
+}
+
 export interface BrowserProvider {
   name: string
+  mocker?: BrowserModuleMocker
   /**
    * @experimental opt-in into file parallelisation
    */
   supportsParallelism: boolean
-  getSupportedBrowsers: () => readonly string[]
-  beforeCommand?: (command: string, args: unknown[]) => Awaitable<void>
-  afterCommand?: (command: string, args: unknown[]) => Awaitable<void>
   getCommandsContext: (sessionId: string) => Record<string, unknown>
-  openPage: (sessionId: string, url: string, beforeNavigate?: () => Promise<void>) => Promise<void>
+  openPage: (sessionId: string, url: string) => Promise<void>
   getCDPSession?: (sessionId: string) => Promise<CDPSession>
   close: () => Awaitable<void>
-  // eslint-disable-next-line ts/method-signature-style -- we want to allow extended options
-  initialize(
-    ctx: TestProject,
-    options: BrowserProviderInitializationOptions
-  ): Awaitable<void>
 }
-
-export interface BrowserProviderModule {
-  new (): BrowserProvider
-}
-
-export interface BrowserProviderOptions {}
 
 export type BrowserBuiltinProvider = 'webdriverio' | 'playwright' | 'preview'
 
-type UnsupportedProperties =
-  | 'browser'
-  | 'typecheck'
-  | 'alias'
-  | 'sequence'
-  | 'root'
-  | 'pool'
-  | 'poolOptions'
+type UnsupportedProperties
+  = | 'browser'
+    | 'typecheck'
+    | 'alias'
+    | 'sequence'
+    | 'root'
+    | 'pool'
+    | 'poolOptions'
   // browser mode doesn't support a custom runner
-  | 'runner'
+    | 'runner'
   // non-browser options
-  | 'api'
-  | 'deps'
-  | 'testTransformMode'
-  | 'poolMatchGlobs'
-  | 'environmentMatchGlobs'
-  | 'environment'
-  | 'environmentOptions'
-  | 'server'
-  | 'benchmark'
+    | 'api'
+    | 'deps'
+    | 'environment'
+    | 'environmentOptions'
+    | 'server'
+    | 'benchmark'
+    | 'name'
 
-export interface BrowserInstanceOption extends BrowserProviderOptions,
+export interface BrowserInstanceOption extends
   Omit<ProjectConfig, UnsupportedProperties>,
   Pick<
     BrowserConfigOptions,
@@ -76,11 +70,14 @@ export interface BrowserInstanceOption extends BrowserProviderOptions,
     | 'testerHtmlPath'
     | 'screenshotDirectory'
     | 'screenshotFailures'
+    | 'provider'
   > {
   /**
    * Name of the browser
    */
   browser: string
+
+  name?: string
 }
 
 export interface BrowserConfigOptions {
@@ -93,34 +90,20 @@ export interface BrowserConfigOptions {
 
   /**
    * Name of the browser
-   * @deprecated use `configs` instead. if both are defined, this will filter `configs` by name.
+   * @deprecated use `instances` instead. if both are defined, this will filter `instances` by name.
+   * @internal
    */
   name?: string
 
   /**
    * Configurations for different browser setups
    */
-  instances?: BrowserInstanceOption[]
+  instances: BrowserInstanceOption[]
 
   /**
    * Browser provider
-   *
-   * @default 'preview'
    */
-  provider?: BrowserBuiltinProvider | (string & {})
-
-  /**
-   * Options that are passed down to a browser provider.
-   * To support type hinting, add one of the types to your tsconfig.json "compilerOptions.types" field:
-   *
-   * - for webdriverio: `@vitest/browser/providers/webdriverio`
-   * - for playwright: `@vitest/browser/providers/playwright`
-   *
-   * @example
-   * { playwright: { launch: { devtools: true } }
-   * @deprecated use `configs` instead
-   */
-  providerOptions?: BrowserProviderOptions
+  provider?: BrowserProviderOption
 
   /**
    * enable headless mode
@@ -200,11 +183,6 @@ export interface BrowserConfigOptions {
   screenshotFailures?: boolean
 
   /**
-   * Scripts injected into the tester iframe.
-   * @deprecated Will be removed in the future, use `testerHtmlPath` instead.
-   */
-  testerScripts?: BrowserScript[]
-  /**
    * Path to the index.html file that will be used to run tests.
    */
   testerHtmlPath?: string
@@ -226,28 +204,49 @@ export interface BrowserConfigOptions {
    * @default 30000
    */
   connectTimeout?: number
+
+  expect?: {
+    toMatchScreenshot?: {
+      [ComparatorName in keyof ToMatchScreenshotComparators]:
+      {
+        /**
+         * The name of the comparator to use for visual diffing.
+         *
+         * @defaultValue `'pixelmatch'`
+         */
+        comparatorName?: ComparatorName
+        comparatorOptions?: ToMatchScreenshotComparators[ComparatorName]
+      }
+    }[keyof ToMatchScreenshotComparators] & ToMatchScreenshotOptions
+  }
+
+  /**
+   * Enables tracking uncaught errors and exceptions so they can be reported by Vitest.
+   *
+   * If you need to hide certain errors, it is recommended to use [`onUnhandledError`](https://vitest.dev/config/#onunhandlederror) option instead.
+   *
+   * Disabling this will completely remove all Vitest error handlers, which can help debugging with the "Pause on exceptions" checkbox turned on.
+   * @default true
+   */
+  trackUnhandledErrors?: boolean
 }
 
 export interface BrowserCommandContext {
   testPath: string | undefined
   provider: BrowserProvider
   project: TestProject
-  /** @deprecated use `sessionId` instead */
-  contextId: string
   sessionId: string
 }
 
 export interface BrowserServerStateSession {
-  files: string[]
-  method: 'run' | 'collect'
   project: TestProject
   connected: () => void
-  resolve: () => void
-  reject: (v: unknown) => void
+  fail: (v: Error) => void
 }
 
 export interface BrowserOrchestrator {
-  createTesters: (files: string[]) => Promise<void>
+  cleanupTesters: () => Promise<void>
+  createTesters: (options: BrowserTesterOptions) => Promise<void>
   onCancel: (reason: CancelReason) => Promise<void>
   $close: () => void
 }
@@ -267,7 +266,7 @@ export interface ProjectBrowser {
   close: () => Promise<void>
   initBrowserProvider: (project: TestProject) => Promise<void>
   parseStacktrace: (stack: string) => ParsedStack[]
-  parseErrorStacktrace: (error: ErrorWithDiff, options?: StackTraceParserOptions) => ParsedStack[]
+  parseErrorStacktrace: (error: TestError, options?: StackTraceParserOptions) => ParsedStack[]
 }
 
 export interface BrowserCommand<Payload extends unknown[]> {
@@ -305,7 +304,6 @@ export interface BrowserScript {
 
 export interface ResolvedBrowserOptions extends BrowserConfigOptions {
   name: string
-  providerOptions?: BrowserProviderOptions
   enabled: boolean
   headless: boolean
   isolate: boolean
@@ -321,3 +319,90 @@ export interface ResolvedBrowserOptions extends BrowserConfigOptions {
     testIdAttribute: string
   }
 }
+
+type ToMatchScreenshotResolvePath = (data: {
+  /**
+   * Path **without** extension, sanitized and relative to the test file.
+   *
+   * This comes from the arguments passed to `toMatchScreenshot`; if called
+   * without arguments this will be the auto-generated name.
+   *
+   * @example
+   * test('calls `onClick`', () => {
+   *   expect(locator).toMatchScreenshot()
+   *   // arg = "calls-onclick-1"
+   * })
+   *
+   * @example
+   * expect(locator).toMatchScreenshot('foo/bar/baz.png')
+   * // arg = "foo/bar/baz"
+   *
+   * @example
+   * expect(locator).toMatchScreenshot('../foo/bar/baz.png')
+   * // arg = "foo/bar/baz"
+   */
+  arg: string
+  /**
+   * Screenshot extension, with leading dot.
+   *
+   * This can be set through the arguments passed to `toMatchScreenshot`, but
+   * the value will fall back to `'.png'` if an unsupported extension is used.
+   */
+  ext: string
+  /**
+   * The instance's browser name.
+   */
+  browserName: string
+  /**
+   * The value of {@linkcode process.platform}.
+   */
+  platform: NodeJS.Platform
+  /**
+   * The value provided to
+   * {@linkcode https://vitest.dev/guide/browser/config#browser-screenshotdirectory|browser.screenshotDirectory},
+   * if none is provided, its default value.
+   */
+  screenshotDirectory: string
+  /**
+   * Absolute path to the project's
+   * {@linkcode https://vitest.dev/config/#root|root}.
+   */
+  root: string
+  /**
+   * Path to the test file, relative to the project's
+   * {@linkcode https://vitest.dev/config/#root|root}.
+   */
+  testFileDirectory: string
+  /**
+   * The test's filename.
+   */
+  testFileName: string
+  /**
+   * The {@linkcode https://vitest.dev/api/#test|test}'s name, including
+   * parent {@linkcode https://vitest.dev/api/#describe|describe}, sanitized.
+   */
+  testName: string
+  /**
+   * The value provided to
+   * {@linkcode https://vitest.dev/config/#attachmentsdir|attachmentsDir},
+   * if none is provided, its default value.
+   */
+  attachmentsDir: string
+}) => string
+
+export interface ToMatchScreenshotOptions {
+  /**
+   * Overrides default reference screenshot path.
+   *
+   * @default `${root}/${testFileDirectory}/${screenshotDirectory}/${testFileName}/${arg}-${browserName}-${platform}${ext}`
+   */
+  resolveScreenshotPath?: ToMatchScreenshotResolvePath
+  /**
+   * Overrides default screenshot path used for diffs.
+   *
+   * @default `${root}/${attachmentsDir}/${testFileDirectory}/${testFileName}/${arg}-${browserName}-${platform}${ext}`
+   */
+  resolveDiffPath?: ToMatchScreenshotResolvePath
+}
+
+export interface ToMatchScreenshotComparators {}

@@ -3,11 +3,15 @@ title: Locators | Browser Mode
 outline: [2, 3]
 ---
 
-# Locators <Version>2.1.0</Version>
+# Locators
 
-A locator is a representation of an element or a number of elements. Every locator is defined by a string called a selector. Vitest abstracts this selector by providing convenient methods that generate those selectors behind the scenes.
+A locator is a representation of an element or a number of elements. Every locator is defined by a string called a selector. Vitest abstracts this selector by providing convenient methods that generate them behind the scenes.
 
-The locator API uses a fork of [Playwright's locators](https://playwright.dev/docs/api/class-locator) called [Ivya](https://npmjs.com/ivya). However, Vitest provides this API to every [provider](/guide/browser/#provider-configuration).
+The locator API uses a fork of [Playwright's locators](https://playwright.dev/docs/api/class-locator) called [Ivya](https://npmjs.com/ivya). However, Vitest provides this API to every [provider](/guide/browser/config.html#browser-provider), not just playwright.
+
+::: tip
+This page covers API usage. To better understand locators and their usage, read [Playwright's "Locators" documentation](https://playwright.dev/docs/locators).
+:::
 
 ## getByRole
 
@@ -65,7 +69,7 @@ Providing roles via `role` or `aria-*` attributes to built-in elements that alre
 
 - `exact: boolean`
 
-  Whether the `name` is matched exactly: case-sensetive and whole-string. Disabled by default. This option is ignored if `name` is a regular expression. Note that exact match still trims whitespace.
+  Whether the `name` is matched exactly: case-sensitive and whole-string. Disabled by default. This option is ignored if `name` is a regular expression. Note that exact match still trims whitespace.
 
   ```tsx
   <button>Hello World</button>
@@ -213,7 +217,7 @@ page.getByAltText('non existing alt text') // ❌
 
 - `exact: boolean`
 
-  Whether the `text` is matched exactly: case-sensetive and whole-string. Disabled by default. This option is ignored if `text` is a regular expression. Note that exact match still trims whitespace.
+  Whether the `text` is matched exactly: case-sensitive and whole-string. Disabled by default. This option is ignored if `text` is a regular expression. Note that exact match still trims whitespace.
 
 #### See also
 
@@ -228,9 +232,9 @@ function getByLabelText(
 ): Locator
 ```
 
-Creates a locator capable of finding an element that has an assosiated label.
+Creates a locator capable of finding an element that has an associated label.
 
-The `page.getByLabelText('Username')` locator will find every input in the example bellow:
+The `page.getByLabelText('Username')` locator will find every input in the example below:
 
 ```html
 // for/htmlFor relationship between label and form element id
@@ -260,7 +264,7 @@ The `page.getByLabelText('Username')` locator will find every input in the examp
 
 - `exact: boolean`
 
-  Whether the `text` is matched exactly: case-sensetive and whole-string. Disabled by default. This option is ignored if `text` is a regular expression. Note that exact match still trims whitespace.
+  Whether the `text` is matched exactly: case-sensitive and whole-string. Disabled by default. This option is ignored if `text` is a regular expression. Note that exact match still trims whitespace.
 
 #### See also
 
@@ -292,7 +296,7 @@ It is generally better to rely on a label using [`getByLabelText`](#getbylabelte
 
 - `exact: boolean`
 
-  Whether the `text` is matched exactly: case-sensetive and whole-string. Disabled by default. This option is ignored if `text` is a regular expression. Note that exact match still trims whitespace.
+  Whether the `text` is matched exactly: case-sensitive and whole-string. Disabled by default. This option is ignored if `text` is a regular expression. Note that exact match still trims whitespace.
 
 #### See also
 
@@ -324,7 +328,7 @@ This locator is useful for locating non-interactive elements. If you need to loc
 
 - `exact: boolean`
 
-  Whether the `text` is matched exactly: case-sensetive and whole-string. Disabled by default. This option is ignored if `text` is a regular expression. Note that exact match still trims whitespace.
+  Whether the `text` is matched exactly: case-sensitive and whole-string. Disabled by default. This option is ignored if `text` is a regular expression. Note that exact match still trims whitespace.
 
 #### See also
 
@@ -352,7 +356,7 @@ page.getByTitle('Create') // ❌
 
 - `exact: boolean`
 
-  Whether the `text` is matched exactly: case-sensetive and whole-string. Disabled by default. This option is ignored if `text` is a regular expression. Note that exact match still trims whitespace.
+  Whether the `text` is matched exactly: case-sensitive and whole-string. Disabled by default. This option is ignored if `text` is a regular expression. Note that exact match still trims whitespace.
 
 #### See also
 
@@ -381,11 +385,216 @@ It is recommended to use this only after the other locators don't work for your 
 
 - `exact: boolean`
 
-  Whether the `text` is matched exactly: case-sensetive and whole-string. Disabled by default. This option is ignored if `text` is a regular expression. Note that exact match still trims whitespace.
+  Whether the `text` is matched exactly: case-sensitive and whole-string. Disabled by default. This option is ignored if `text` is a regular expression. Note that exact match still trims whitespace.
 
 #### See also
 
 - [testing-library's `ByTestId`](https://testing-library.com/docs/queries/bytestid/)
+
+## nth
+
+```ts
+function nth(index: number): Locator
+```
+
+This method returns a new locator that matches only a specific index within a multi-element query result. It's zero based, `nth(0)` selects the first element. Unlike `elements()[n]`, the `nth` locator will be retried until the element is present.
+
+```html
+<div aria-label="one"><input/><input/><input/></div>
+<div aria-label="two"><input/></div>
+```
+
+```tsx
+page.getByRole('textbox').nth(0) // ✅
+page.getByRole('textbox').nth(4) // ❌
+```
+
+::: tip
+Before resorting to `nth`, you may find it useful to use chained locators to narrow down your search.
+Sometimes there is no better way to distinguish than by element position; although this can lead to flake, it's better than nothing.
+:::
+
+```tsx
+page.getByLabel('two').getByRole('input') // ✅ better alternative to page.getByRole('textbox').nth(3)
+page.getByLabel('one').getByRole('input') // ❌ too ambiguous
+page.getByLabel('one').getByRole('input').nth(1) // ✅ pragmatic compromise
+```
+
+## first
+
+```ts
+function first(): Locator
+```
+
+This method returns a new locator that matches only the first index of a multi-element query result.
+It is sugar for `nth(0)`.
+
+```html
+<input/> <input/> <input/>
+```
+
+```tsx
+page.getByRole('textbox').first() // ✅
+```
+
+## last
+
+```ts
+function last(): Locator
+```
+
+This method returns a new locator that matches only the last index of a multi-element query result.
+It is sugar for `nth(-1)`.
+
+```html
+<input/> <input/> <input/>
+```
+
+```tsx
+page.getByRole('textbox').last() // ✅
+```
+
+## and
+
+```ts
+function and(locator: Locator): Locator
+```
+
+This method creates a new locator that matches both the parent and provided locator. The following example finds a button with a specific title:
+
+```ts
+page.getByRole('button').and(page.getByTitle('Subscribe'))
+```
+
+## or
+
+```ts
+function or(locator: Locator): Locator
+```
+
+This method creates a new locator that matches either one or both locators.
+
+::: warning
+Note that if locator matches more than a single element, calling another method might throw an error if it expects a single element:
+
+```tsx
+<>
+  <button>Click me</button>
+  <a href="https://vitest.dev">Error happened!</a>
+</>
+
+page.getByRole('button')
+  .or(page.getByRole('link'))
+  .click() // ❌ matches multiple elements
+```
+:::
+
+## filter
+
+```ts
+function filter(options: LocatorOptions): Locator
+```
+
+This methods narrows down the locator according to the options, such as filtering by text. It can be chained to apply multiple filters.
+
+### has
+
+- **Type:** `Locator`
+
+This options narrows down the selector to match elements that contain other elements matching provided locator. For example, with this HTML:
+
+```html{1,3}
+<article>
+  <div>Vitest</div>
+</article>
+<article>
+  <div>Rolldown</div>
+</article>
+```
+
+We can narrow down the locator to only find the `article` with `Vitest` text inside:
+
+```ts
+page.getByRole('article').filter({ has: page.getByText('Vitest') }) // ✅
+```
+
+::: warning
+Provided locator (`page.getByText('Vitest')` in the example) must be relative to the parent locator (`page.getByRole('article')` in the example). It will be queried starting with the parent locator, not the document root.
+
+Meaning, you cannot pass down a locator that queries the element outside of the parent locator:
+
+```ts
+page.getByText('Vitest').filter({ has: page.getByRole('article') }) // ❌
+```
+
+This example will fail because the `article` element is outside the element with `Vitest` text.
+:::
+
+::: tip
+This method can be chained to narrow down the element even further:
+
+```ts
+page.getByRole('article')
+  .filter({ has: page.getByRole('button', { name: 'delete row' }) })
+  .filter({ has: page.getByText('Vitest') })
+```
+:::
+
+### hasNot
+
+- **Type:** `Locator`
+
+This option narrows down the selector to match elements that do not contain other elements matching provided locator. For example, with this HTML:
+
+```html{1,3}
+<article>
+  <div>Vitest</div>
+</article>
+<article>
+  <div>Rolldown</div>
+</article>
+```
+
+We can narrow down the locator to only find the `article` that doesn't have `Rolldown` inside.
+
+```ts
+page.getByRole('article')
+  .filter({ hasNot: page.getByText('Rolldown') }) // ✅
+page.getByRole('article')
+  .filter({ hasNot: page.getByText('Vitest') }) // ❌
+```
+
+::: warning
+Note that provided locator is queried against the parent, not the document root, just like [`has`](#has) option.
+:::
+
+### hasText
+
+- **Type:** `string | RegExp`
+
+This options narrows down the selector to only match elements that contain provided text somewhere inside. When the `string` is passed, matching is case-insensitive and searches for a substring.
+
+```html{1,3}
+<article>
+  <div>Vitest</div>
+</article>
+<article>
+  <div>Rolldown</div>
+</article>
+```
+
+Both locators will find the same element because the search is case-insensitive:
+
+```ts
+page.getByRole('article').filter({ hasText: 'Vitest' }) // ✅
+page.getByRole('article').filter({ hasText: 'Vite' }) // ✅
+```
+
+### hasNotText
+
+- **Type:** `string | RegExp`
+
+This options narrows down the selector to only match elements that do not contain provided text somewhere inside. When the `string` is passed, matching is case-insensitive and searches for a substring.
 
 ## Methods
 
@@ -442,7 +651,7 @@ await page.getByRole('img', { name: 'Rose' }).tripleClick()
 ### clear
 
 ```ts
-function clear(): Promise<void>
+function clear(options?: UserEventClearOptions): Promise<void>
 ```
 
 Clears the input element content.
@@ -493,7 +702,7 @@ await page.getByRole('img', { name: 'Rose' }).unhover()
 function fill(text: string, options?: UserEventFillOptions): Promise<void>
 ```
 
-Sets the value of the current `input`, `textarea` or `conteneditable` element.
+Sets the value of the current `input`, `textarea` or `contenteditable` element.
 
 ```ts
 import { page } from '@vitest/browser/context'
@@ -560,6 +769,7 @@ await languages.selectOptions([
 ### screenshot
 
 ```ts
+function screenshot(options: LocatorScreenshotOptions & { save: false }): Promise<string>
 function screenshot(options: LocatorScreenshotOptions & { base64: true }): Promise<{
   path: string
   base64: string
@@ -588,6 +798,11 @@ const { path, base64 } = await button.screenshot({
 // bas64 - base64 encoded string of the screenshot
 ```
 
+::: warning WARNING <Version>3.2.0</Version>
+Note that `screenshot` will always return a base64 string if `save` is set to `false`.
+The `path` is also ignored in that case.
+:::
+
 ### query
 
 ```ts
@@ -596,7 +811,7 @@ function query(): Element | null
 
 This method returns a single element matching the locator's selector or `null` if no element is found.
 
-If multilple elements match the selector, this method will throw an error.  Use [`.elements()`](#elements) when you need all matching DOM Elements or [`.all()`](#all) if you need an array of locators matching the selector.
+If multiple elements match the selector, this method will throw an error.  Use [`.elements()`](#elements) when you need all matching DOM Elements or [`.all()`](#all) if you need an array of locators matching the selector.
 
 Consider the following DOM structure:
 
@@ -740,3 +955,95 @@ test('works correctly', async () => {
 })
 ```
 :::
+
+### length
+
+This getter returns a number of elements that this locator is matching. It is equivalent to calling `locator.elements().length`.
+
+Consider the following DOM structure:
+
+```html
+<button>Click Me!</button>
+<button>Don't click me!</button>
+```
+
+This property will always succeed:
+
+```ts
+page.getByRole('button').length // ✅ 2
+page.getByRole('button', { title: 'Click Me!' }).length // ✅ 1
+page.getByRole('alert').length // ✅ 0
+```
+
+## Custom Locators <Version>3.2.0</Version> <Badge type="danger">advanced</Badge> {#custom-locators}
+
+You can extend built-in locators API by defining an object of locator factories. These methods will exist as methods on the `page` object and any created locator.
+
+These locators can be useful if built-in locators are not enough. For example, when you use a custom framework for your UI.
+
+The locator factory needs to return a selector string or a locator itself.
+
+::: tip
+The selector syntax is identical to Playwright locators. Please, read [their guide](https://playwright.dev/docs/other-locators) to better understand how to work with them.
+:::
+
+```ts
+import { locators } from '@vitest/browser/context'
+
+locators.extend({
+  getByArticleTitle(title) {
+    return `[data-title="${title}"]`
+  },
+  getByArticleCommentsCount(count) {
+    return `.comments :text("${count} comments")`
+  },
+  async previewComments() {
+    // you have access to the current locator via "this"
+    // beware that if the method was called on `page`, `this` will be `page`,
+    // not the locator!
+    if (this !== page) {
+      await this.click()
+    }
+    // ...
+  }
+})
+
+// if you are using typescript, you can extend LocatorSelectors interface
+// to have the autocompletion in locators.extend, page.* and locator.* methods
+declare module '@vitest/browser/context' {
+  interface LocatorSelectors {
+    // if the custom method returns a string, it will be converted into a locator
+    // if it returns anything else, then it will be returned as usual
+    getByArticleTitle(title: string): Locator
+    getByArticleCommentsCount(count: number): Locator
+
+    // Vitest will return a promise and won't try to convert it into a locator
+    previewComments(this: Locator): Promise<void>
+  }
+}
+```
+
+If the method is called on the global `page` object, then selector will be applied to the whole page. In the example below, `getByArticleTitle` will find all elements with an attribute `data-title` with the value of `title`. However, if the method is called on the locator, then it will be scoped to that locator.
+
+```html
+<article data-title="Hello, World!">
+  Hello, World!
+  <button id="comments">2 comments</button>
+</article>
+
+<article data-title="Hello, Vitest!">
+  Hello, Vitest!
+  <button id="comments">0 comments</button>
+</article>
+```
+
+```ts
+const articles = page.getByRole('article')
+const worldArticle = page.getByArticleTitle('Hello, World!') // ✅
+const commentsElement = worldArticle.getByArticleCommentsCount(2) // ✅
+const wrongCommentsElement = worldArticle.getByArticleCommentsCount(0) // ❌
+const wrongElement = page.getByArticleTitle('No Article!') // ❌
+
+await commentsElement.previewComments() // ✅
+await wrongCommentsElement.previewComments() // ❌
+```

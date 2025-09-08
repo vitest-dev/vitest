@@ -1,18 +1,13 @@
 import { resolve } from 'pathe'
 import { glob } from 'tinyglobby'
-import { version as viteVersion } from 'vite'
-import { describe, expect, it as vitestIt } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import { runVitest } from '../../test-utils'
 
-const [major] = process.version.slice(1).split('.').map(num => Number(num))
-
-const it = viteVersion[0] >= '6' ? (vitestIt.skip as typeof vitestIt) : vitestIt
-
-// To prevent the warnining coming up in snapshots
+// To prevent the warning coming up in snapshots
 process.setMaxListeners(20)
 
 describe('stacktraces should respect sourcemaps', async () => {
-  const root = resolve(__dirname, '../fixtures/stacktraces')
+  const root = resolve(import.meta.dirname, '../fixtures/stacktraces')
   const files = await glob(['*.test.*'], { cwd: root, expandDirectories: false })
 
   for (const file of files) {
@@ -23,13 +18,13 @@ describe('stacktraces should respect sourcemaps', async () => {
       const lines = String(stderr).split(/\n/g)
       const index = lines.findIndex(val => val.includes(`${file}:`))
       const msg = lines.slice(index, index + 8).join('\n')
-      expect(removeLines(msg)).toMatchSnapshot(file)
+      expect(removeLines(msg)).toMatchSnapshot()
     })
   }
 })
 
 describe('stacktraces should pick error frame if present', async () => {
-  const root = resolve(__dirname, '../fixtures/stacktraces')
+  const root = resolve(import.meta.dirname, '../fixtures/stacktraces')
   const files = ['frame.spec.imba']
 
   for (const file of files) {
@@ -40,25 +35,25 @@ describe('stacktraces should pick error frame if present', async () => {
       const lines = String(stderr).split(/\n/g)
       const index = lines.findIndex(val => val.includes('FAIL'))
       const msg = lines.slice(index, index + 8).join('\n')
-      expect(msg).toMatchSnapshot(file)
+      expect(msg).toMatchSnapshot()
     })
   }
 })
 
 describe('stacktrace should print error frame source file correctly', async () => {
-  const root = resolve(__dirname, '../fixtures/stacktraces')
+  const root = resolve(import.meta.dirname, '../fixtures/stacktraces')
   const testFile = resolve(root, './error-in-deps.test.js')
 
   it('error-in-deps', async () => {
     const { stderr } = await runVitest({ root }, [testFile])
 
     // expect to print framestack of foo.js
-    expect(removeLines(stderr)).toMatchSnapshot('error-in-deps')
+    expect(removeLines(stderr)).toMatchSnapshot()
   })
 })
 
 describe('stacktrace filtering', async () => {
-  const root = resolve(__dirname, '../fixtures/stacktraces')
+  const root = resolve(import.meta.dirname, '../fixtures/stacktraces')
   const testFile = resolve(root, './error-with-stack.test.js')
 
   it('filters stacktraces', async () => {
@@ -67,12 +62,36 @@ describe('stacktrace filtering', async () => {
       onStackTrace: (_error, { method }) => method !== 'b',
     }, [testFile])
 
-    expect(removeLines(stderr)).toMatchSnapshot('stacktrace-filtering')
+    expect(removeLines(stderr)).toMatchSnapshot()
   })
 })
 
-it.runIf(major < 22)('stacktrace in vmThreads', async () => {
-  const root = resolve(__dirname, '../fixtures/stacktraces')
+describe('stacktrace in dependency package', () => {
+  const root = resolve(import.meta.dirname, '../fixtures/stacktraces')
+  const testFile = resolve(root, './error-in-package.test.js')
+
+  it('external', async () => {
+    const { stderr } = await runVitest({
+      root,
+    }, [testFile])
+    expect(removeNodeModules(removeLines(stderr))).toMatchSnapshot()
+  })
+
+  it('inline', async () => {
+    const { stderr } = await runVitest({
+      root,
+      server: {
+        deps: {
+          inline: [/@test\/test-dep-error/],
+        },
+      },
+    }, [testFile])
+    expect(removeNodeModules(removeLines(stderr))).toMatchSnapshot()
+  })
+})
+
+it('stacktrace in vmThreads', async () => {
+  const root = resolve(import.meta.dirname, '../fixtures/stacktraces')
   const testFile = resolve(root, './error-with-stack.test.js')
   const { stderr } = await runVitest({
     root,
@@ -84,4 +103,8 @@ it.runIf(major < 22)('stacktrace in vmThreads', async () => {
 
 function removeLines(log: string) {
   return log.replace(/⎯{2,}/g, '⎯⎯')
+}
+
+function removeNodeModules(log: string) {
+  return log.replace(/[^ ]*\/node_modules\//g, '(NODE_MODULES)/')
 }

@@ -48,7 +48,7 @@ export function isAsymmetric(obj: any): obj is AsymmetricMatcher<any> {
   )
 }
 
-export function hasAsymmetric(obj: any, seen = new Set()): boolean {
+export function hasAsymmetric(obj: any, seen: Set<any> = new Set()): boolean {
   if (seen.has(obj)) {
     return false
   }
@@ -160,6 +160,16 @@ function eq(
     // RegExps are compared by their source patterns and flags.
     case '[object RegExp]':
       return a.source === b.source && a.flags === b.flags
+    case '[object Temporal.Instant]':
+    case '[object Temporal.ZonedDateTime]':
+    case '[object Temporal.PlainDateTime]':
+    case '[object Temporal.PlainDate]':
+    case '[object Temporal.PlainTime]':
+    case '[object Temporal.PlainYearMonth]':
+    case '[object Temporal.PlainMonthDay]':
+      return a.equals(b)
+    case '[object Temporal.Duration]':
+      return a.toString() === b.toString()
   }
   if (typeof a !== 'object' || typeof b !== 'object') {
     return false
@@ -219,7 +229,7 @@ function eq(
     // Deep compare each member
     result
       = hasKey(b, key)
-      && eq(a[key], b[key], aStack, bStack, customTesters, hasKey)
+        && eq(a[key], b[key], aStack, bStack, customTesters, hasKey)
 
     if (!result) {
       return false
@@ -285,10 +295,10 @@ function hasDefinedKey(obj: any, key: string) {
 }
 
 function hasKey(obj: any, key: string) {
-  return Object.prototype.hasOwnProperty.call(obj, key)
+  return Object.hasOwn(obj, key)
 }
 
-export function isA(typeName: string, value: unknown) {
+export function isA(typeName: string, value: unknown): boolean {
   return Object.prototype.toString.apply(value) === `[object ${typeName}]`
 }
 
@@ -305,7 +315,7 @@ function isDomNode(obj: any): boolean {
   )
 }
 
-export function fnNameFor(func: Function) {
+export function fnNameFor(func: Function): string {
   if (func.name) {
     return func.name
   }
@@ -333,7 +343,7 @@ export function hasProperty(obj: object | null, property: string): boolean {
     return false
   }
 
-  if (Object.prototype.hasOwnProperty.call(obj, property)) {
+  if (Object.hasOwn(obj, property)) {
     return true
   }
 
@@ -347,7 +357,7 @@ const IS_LIST_SENTINEL = '@@__IMMUTABLE_LIST__@@'
 const IS_ORDERED_SENTINEL = '@@__IMMUTABLE_ORDERED__@@'
 const IS_RECORD_SYMBOL = '@@__IMMUTABLE_RECORD__@@'
 
-export function isImmutableUnorderedKeyed(maybeKeyed: any) {
+export function isImmutableUnorderedKeyed(maybeKeyed: any): boolean {
   return !!(
     maybeKeyed
     && maybeKeyed[IS_KEYED_SENTINEL]
@@ -355,7 +365,7 @@ export function isImmutableUnorderedKeyed(maybeKeyed: any) {
   )
 }
 
-export function isImmutableUnorderedSet(maybeSet: any) {
+export function isImmutableUnorderedSet(maybeSet: any): boolean {
   return !!(
     maybeSet
     && maybeSet[IS_SET_SENTINEL]
@@ -539,7 +549,7 @@ export function iterableEquality(
   ) {
     const aEntries = Object.entries(a)
     const bEntries = Object.entries(b)
-    if (!equals(aEntries, bEntries)) {
+    if (!equals(aEntries, bEntries, filteredCustomTesters)) {
       return false
     }
   }
@@ -562,7 +572,7 @@ function hasPropertyInObject(object: object, key: string | symbol): boolean {
   }
 
   return (
-    Object.prototype.hasOwnProperty.call(object, key)
+    Object.hasOwn(object, key)
     || hasPropertyInObject(Object.getPrototypeOf(object), key)
   )
 }
@@ -604,11 +614,11 @@ export function subsetEquality(
           }
           const result
           = object != null
-          && hasPropertyInObject(object, key)
-          && equals(object[key], subset[key], [
-            ...filteredCustomTesters,
-            subsetEqualityWithContext(seenReferences),
-          ])
+            && hasPropertyInObject(object, key)
+            && equals(object[key], subset[key], [
+              ...filteredCustomTesters,
+              subsetEqualityWithContext(seenReferences),
+            ])
           // The main goal of using seenReference is to avoid circular node on tree.
           // It will only happen within a parent and its child, not a node and nodes next to it (same level)
           // We should keep the reference for a parent and its child only
@@ -688,7 +698,7 @@ export function generateToBeMessage(
   deepEqualityName: string,
   expected = '#{this}',
   actual = '#{exp}',
-) {
+): string {
   const toBeMessage = `expected ${expected} to be ${actual} // Object.is equality`
 
   if (['toStrictEqual', 'toEqual'].includes(deepEqualityName)) {
@@ -740,7 +750,7 @@ export function getObjectSubset(
               subsetEquality,
             ])
           ) {
-            // return "expected" subset to avoid showing irrelavant toMatchObject diff
+            // return "expected" subset to avoid showing irrelevant toMatchObject diff
             return subset
           }
 
@@ -760,9 +770,9 @@ export function getObjectSubset(
               trimmed[key] = seenReferences.has(object[key])
                 ? seenReferences.get(object[key])
                 : getObjectSubsetWithContext(seenReferences)(
-                  object[key],
-                  subset[key],
-                )
+                    object[key],
+                    subset[key],
+                  )
             }
             else {
               if (!seenReferences.has(object[key])) {

@@ -4,13 +4,13 @@ import { fileURLToPath } from 'node:url'
 import commonjs from '@rollup/plugin-commonjs'
 import json from '@rollup/plugin-json'
 import nodeResolve from '@rollup/plugin-node-resolve'
-import fg from 'fast-glob'
 import { dirname, join, normalize, resolve } from 'pathe'
 import { defineConfig } from 'rollup'
-import dts from 'rollup-plugin-dts'
-import esbuild from 'rollup-plugin-esbuild'
 import license from 'rollup-plugin-license'
+import { globSync } from 'tinyglobby'
 import c from 'tinyrainbow'
+import oxc from 'unplugin-oxc/rollup'
+import { createDtsUtils } from '../../scripts/build-utils.js'
 
 const require = createRequire(import.meta.url)
 const pkg = require('./package.json')
@@ -19,6 +19,7 @@ const entries = {
   'path': 'src/paths.ts',
   'index': 'src/public/index.ts',
   'cli': 'src/node/cli.ts',
+  'config': 'src/public/config.ts',
   'node': 'src/public/node.ts',
   'suite': 'src/public/suite.ts',
   'browser': 'src/public/browser.ts',
@@ -27,11 +28,11 @@ const entries = {
   'mocker': 'src/public/mocker.ts',
   'spy': 'src/integrations/spy.ts',
   'coverage': 'src/public/coverage.ts',
-  'utils': 'src/public/utils.ts',
-  'execute': 'src/public/execute.ts',
   'reporters': 'src/public/reporters.ts',
   // TODO: advanced docs
   'workers': 'src/public/workers.ts',
+  'module-runner': 'src/public/module-runner.ts',
+  'module-evaluator': 'src/runtime/moduleRunner/moduleEvaluator.ts',
 
   // for performance reasons we bundle them separately so we don't import everything at once
   'worker': 'src/runtime/worker.ts',
@@ -46,20 +47,19 @@ const entries = {
 }
 
 const dtsEntries = {
-  index: 'src/public/index.ts',
-  node: 'src/public/node.ts',
-  environments: 'src/public/environments.ts',
-  browser: 'src/public/browser.ts',
-  runners: 'src/public/runners.ts',
-  suite: 'src/public/suite.ts',
-  config: 'src/public/config.ts',
-  coverage: 'src/public/coverage.ts',
-  utils: 'src/public/utils.ts',
-  execute: 'src/public/execute.ts',
-  reporters: 'src/public/reporters.ts',
-  mocker: 'src/public/mocker.ts',
-  workers: 'src/public/workers.ts',
-  snapshot: 'src/public/snapshot.ts',
+  'index': 'src/public/index.ts',
+  'node': 'src/public/node.ts',
+  'environments': 'src/public/environments.ts',
+  'browser': 'src/public/browser.ts',
+  'runners': 'src/public/runners.ts',
+  'suite': 'src/public/suite.ts',
+  'config': 'src/public/config.ts',
+  'coverage': 'src/public/coverage.ts',
+  'reporters': 'src/public/reporters.ts',
+  'mocker': 'src/public/mocker.ts',
+  'workers': 'src/public/workers.ts',
+  'snapshot': 'src/public/snapshot.ts',
+  'module-evaluator': 'src/runtime/moduleRunner/moduleEvaluator.ts',
 }
 
 const external = [
@@ -72,25 +72,27 @@ const external = [
   'node:os',
   'node:stream',
   'node:vm',
+  'node:http',
+  'node:console',
   'inspector',
-  'vite-node/source-map',
-  'vite-node/client',
-  'vite-node/server',
-  'vite-node/constants',
-  'vite-node/utils',
+  'vitest/optional-types.js',
+  'vite/module-runner',
   '@vitest/mocker',
   '@vitest/mocker/node',
   '@vitest/utils/diff',
-  '@vitest/utils/ast',
   '@vitest/utils/error',
   '@vitest/utils/source-map',
   '@vitest/runner/utils',
   '@vitest/runner/types',
   '@vitest/snapshot/environment',
   '@vitest/snapshot/manager',
+
+  '#module-evaluator',
 ]
 
 const dir = dirname(fileURLToPath(import.meta.url))
+
+const dtsUtils = createDtsUtils()
 
 const plugins = [
   nodeResolve({
@@ -98,8 +100,21 @@ const plugins = [
   }),
   json(),
   commonjs(),
-  esbuild({
-    target: 'node18',
+  oxc({
+    transform: {
+      target: 'node18',
+      define: {
+        // __VITEST_GENERATE_UI_TOKEN__ is set as a global to catch accidental leaking,
+        // in the release version the "if" with this condition should not be present
+        __VITEST_GENERATE_UI_TOKEN__: process.env.VITEST_GENERATE_UI_TOKEN === 'true' ? 'true' : 'false',
+        ...(process.env.VITE_TEST_WATCHER_DEBUG === 'false'
+          ? {
+              'process.env.VITE_TEST_WATCHER_DEBUG': 'false',
+            }
+          : {}),
+      },
+    },
+    sourcemap: true,
   }),
 ]
 
@@ -114,7 +129,17 @@ export default ({ watch }) =>
         chunkFileNames: 'chunks/[name].[hash].js',
       },
       external,
-      plugins: [...plugins, !watch && licensePlugin()],
+      moduleContext: (id) => {
+        // mime has `this.__classPrivateFieldGet` check which should be ignored in esm
+        if (id.includes('mime/dist/src') || id.includes('mime\\dist\\src')) {
+          return '{}'
+        }
+      },
+      plugins: [
+        ...dtsUtils.isolatedDecl(),
+        ...plugins,
+        !watch && licensePlugin(),
+      ],
       onwarn,
     },
     {
@@ -124,16 +149,12 @@ export default ({ watch }) =>
           file: 'dist/config.cjs',
           format: 'cjs',
         },
-        {
-          file: 'dist/config.js',
-          format: 'esm',
-        },
       ],
       external,
       plugins,
     },
     {
-      input: dtsEntries,
+      input: dtsUtils.dtsInput(dtsEntries),
       output: {
         dir: 'dist',
         entryFileNames: chunk =>
@@ -141,8 +162,9 @@ export default ({ watch }) =>
         format: 'esm',
         chunkFileNames: 'chunks/[name].[hash].d.ts',
       },
+      watch: false,
       external,
-      plugins: [dts({ respectExternal: true })],
+      plugins: dtsUtils.dts(),
     },
   ])
 
@@ -198,8 +220,9 @@ function licensePlugin() {
                     preserveSymlinks: false,
                   }),
                 )
-                const [licenseFile] = fg.sync(`${pkgDir}/LICENSE*`, {
+                const [licenseFile] = globSync(`${pkgDir}/LICENSE*`, {
                   caseSensitiveMatch: false,
+                  expandDirectories: false,
                 })
                 if (licenseFile) {
                   licenseText = fs.readFileSync(licenseFile, 'utf-8')
@@ -222,10 +245,10 @@ function licensePlugin() {
         .join('\n---------------------------------------\n\n')
       const licenseText
         = '# Vitest core license\n'
-        + `Vitest is released under the MIT license:\n\n${coreLicense}\n# Licenses of bundled dependencies\n`
-        + 'The published Vitest artifact additionally contains code with the following licenses:\n'
-        + `${sortLicenses(licenses).join(', ')}\n\n`
-        + `# Bundled dependencies:\n${dependencyLicenseTexts}`
+          + `Vitest is released under the MIT license:\n\n${coreLicense}\n# Licenses of bundled dependencies\n`
+          + 'The published Vitest artifact additionally contains code with the following licenses:\n'
+          + `${sortLicenses(licenses).join(', ')}\n\n`
+          + `# Bundled dependencies:\n${dependencyLicenseTexts}`
       const existingLicenseText = fs.readFileSync('LICENSE.md', 'utf8')
       if (existingLicenseText !== licenseText) {
         fs.writeFileSync('LICENSE.md', licenseText)

@@ -3,7 +3,7 @@ import type { UserEventCommand } from './utils'
 import { defaultKeyMap } from '@testing-library/user-event/dist/esm/keyboard/keyMap.js'
 import { parseKeyDef } from '@testing-library/user-event/dist/esm/keyboard/parseKeyDef.js'
 import { PlaywrightBrowserProvider } from '../providers/playwright'
-import { WebdriverBrowserProvider } from '../providers/webdriver'
+import { WebdriverBrowserProvider } from '../providers/webdriverio'
 
 export interface KeyboardState {
   unreleased: string[]
@@ -54,6 +54,9 @@ export const keyboardCleanup: UserEventCommand<(state: KeyboardState) => Promise
   state,
 ) => {
   const { provider, sessionId } = context
+  if (!state.unreleased) {
+    return
+  }
   if (provider instanceof PlaywrightBrowserProvider) {
     const page = provider.getPage(sessionId)
     for (const key of state.unreleased) {
@@ -74,7 +77,7 @@ export const keyboardCleanup: UserEventCommand<(state: KeyboardState) => Promise
 
 // fallback to insertText for non US key
 // https://github.com/microsoft/playwright/blob/50775698ae13642742f2a1e8983d1d686d7f192d/packages/playwright-core/src/server/input.ts#L95
-const VALID_KEYS = new Set(['Escape', 'F1', 'F2', 'F3', 'F4', 'F5', 'F6', 'F7', 'F8', 'F9', 'F10', 'F11', 'F12', 'Backquote', '`', '~', 'Digit1', '1', '!', 'Digit2', '2', '@', 'Digit3', '3', '#', 'Digit4', '4', '$', 'Digit5', '5', '%', 'Digit6', '6', '^', 'Digit7', '7', '&', 'Digit8', '8', '*', 'Digit9', '9', '(', 'Digit0', '0', ')', 'Minus', '-', '_', 'Equal', '=', '+', 'Backslash', '\\', '|', 'Backspace', 'Tab', 'KeyQ', 'q', 'Q', 'KeyW', 'w', 'W', 'KeyE', 'e', 'E', 'KeyR', 'r', 'R', 'KeyT', 't', 'T', 'KeyY', 'y', 'Y', 'KeyU', 'u', 'U', 'KeyI', 'i', 'I', 'KeyO', 'o', 'O', 'KeyP', 'p', 'P', 'BracketLeft', '[', '{', 'BracketRight', ']', '}', 'CapsLock', 'KeyA', 'a', 'A', 'KeyS', 's', 'S', 'KeyD', 'd', 'D', 'KeyF', 'f', 'F', 'KeyG', 'g', 'G', 'KeyH', 'h', 'H', 'KeyJ', 'j', 'J', 'KeyK', 'k', 'K', 'KeyL', 'l', 'L', 'Semicolon', ';', ':', 'Quote', '\'', '"', 'Enter', '\n', '\r', 'ShiftLeft', 'Shift', 'KeyZ', 'z', 'Z', 'KeyX', 'x', 'X', 'KeyC', 'c', 'C', 'KeyV', 'v', 'V', 'KeyB', 'b', 'B', 'KeyN', 'n', 'N', 'KeyM', 'm', 'M', 'Comma', ',', '<', 'Period', '.', '>', 'Slash', '/', '?', 'ShiftRight', 'ControlLeft', 'Control', 'MetaLeft', 'Meta', 'AltLeft', 'Alt', 'Space', ' ', 'AltRight', 'AltGraph', 'MetaRight', 'ContextMenu', 'ControlRight', 'PrintScreen', 'ScrollLock', 'Pause', 'PageUp', 'PageDown', 'Insert', 'Delete', 'Home', 'End', 'ArrowLeft', 'ArrowUp', 'ArrowRight', 'ArrowDown', 'NumLock', 'NumpadDivide', 'NumpadMultiply', 'NumpadSubtract', 'Numpad7', 'Numpad8', 'Numpad9', 'Numpad4', 'Numpad5', 'Numpad6', 'NumpadAdd', 'Numpad1', 'Numpad2', 'Numpad3', 'Numpad0', 'NumpadDecimal', 'NumpadEnter'])
+const VALID_KEYS = new Set(['Escape', 'F1', 'F2', 'F3', 'F4', 'F5', 'F6', 'F7', 'F8', 'F9', 'F10', 'F11', 'F12', 'Backquote', '`', '~', 'Digit1', '1', '!', 'Digit2', '2', '@', 'Digit3', '3', '#', 'Digit4', '4', '$', 'Digit5', '5', '%', 'Digit6', '6', '^', 'Digit7', '7', '&', 'Digit8', '8', '*', 'Digit9', '9', '(', 'Digit0', '0', ')', 'Minus', '-', '_', 'Equal', '=', '+', 'Backslash', '\\', '|', 'Backspace', 'Tab', 'KeyQ', 'q', 'Q', 'KeyW', 'w', 'W', 'KeyE', 'e', 'E', 'KeyR', 'r', 'R', 'KeyT', 't', 'T', 'KeyY', 'y', 'Y', 'KeyU', 'u', 'U', 'KeyI', 'i', 'I', 'KeyO', 'o', 'O', 'KeyP', 'p', 'P', 'BracketLeft', '[', '{', 'BracketRight', ']', '}', 'CapsLock', 'KeyA', 'a', 'A', 'KeyS', 's', 'S', 'KeyD', 'd', 'D', 'KeyF', 'f', 'F', 'KeyG', 'g', 'G', 'KeyH', 'h', 'H', 'KeyJ', 'j', 'J', 'KeyK', 'k', 'K', 'KeyL', 'l', 'L', 'Semicolon', ';', ':', 'Quote', '\'', '"', 'Enter', '\n', '\r', 'ShiftLeft', 'Shift', 'KeyZ', 'z', 'Z', 'KeyX', 'x', 'X', 'KeyC', 'c', 'C', 'KeyV', 'v', 'V', 'KeyB', 'b', 'B', 'KeyN', 'n', 'N', 'KeyM', 'm', 'M', 'Comma', ',', '<', 'Period', '.', '>', 'Slash', '/', '?', 'ShiftRight', 'ControlLeft', 'Control', 'MetaLeft', 'Meta', 'AltLeft', 'Alt', 'Space', ' ', 'AltRight', 'AltGraph', 'MetaRight', 'ContextMenu', 'ControlRight', 'PrintScreen', 'ScrollLock', 'Pause', 'PageUp', 'PageDown', 'Insert', 'Delete', 'Home', 'End', 'ArrowLeft', 'ArrowUp', 'ArrowRight', 'ArrowDown', 'NumLock', 'NumpadDivide', 'NumpadMultiply', 'NumpadSubtract', 'Numpad7', 'Numpad8', 'Numpad9', 'Numpad4', 'Numpad5', 'Numpad6', 'NumpadAdd', 'Numpad1', 'Numpad2', 'Numpad3', 'Numpad0', 'NumpadDecimal', 'NumpadEnter', 'ControlOrMeta'])
 
 export async function keyboardImplementation(
   pressed: Set<string>,
@@ -83,7 +86,7 @@ export async function keyboardImplementation(
   text: string,
   selectAll: () => Promise<void>,
   skipRelease: boolean,
-) {
+): Promise<{ pressed: Set<string> }> {
   if (provider instanceof PlaywrightBrowserProvider) {
     const page = provider.getPage(sessionId)
     const actions = parseKeyDef(defaultKeyMap, text)
@@ -144,8 +147,7 @@ export async function keyboardImplementation(
 
     for (const { releasePrevious, releaseSelf, repeat, keyDef } of actions) {
       let key = keyDef.key!
-      const code = 'location' in keyDef ? keyDef.key! : keyDef.code!
-      const special = Key[code as 'Shift']
+      const special = Key[key as 'Shift']
 
       if (special) {
         key = special
@@ -200,7 +202,7 @@ function focusIframe() {
 
 function selectAll() {
   const element = document.activeElement as HTMLInputElement
-  if (element && element.select) {
+  if (element && typeof element.select === 'function') {
     element.select()
   }
 }

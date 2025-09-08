@@ -1,7 +1,7 @@
 {
   "name": "vitest",
   "type": "module",
-  "version": "3.0.0-beta.2",
+  "version": "4.0.0-beta.10",
   "description": "Next generation testing framework powered by Vite",
   "author": "Anthony Fu <anthonyfu117@hotmail.com>",
   "license": "MIT",
@@ -22,6 +22,12 @@
     "jest"
   ],
   "sideEffects": false,
+  "imports": {
+    "#module-evaluator": {
+      "types": "./dist/module-evaluator.d.ts",
+      "default": "./dist/module-evaluator.js"
+    }
+  },
   "exports": {
     ".": {
       "import": {
@@ -50,17 +56,17 @@
       "types": "./dist/node.d.ts",
       "default": "./dist/node.js"
     },
-    "./execute": {
-      "types": "./dist/execute.d.ts",
-      "default": "./dist/execute.js"
-    },
     "./workers": {
       "types": "./dist/workers.d.ts",
       "import": "./dist/workers.js"
     },
-    "./browser": {
+    "./internal/browser": {
       "types": "./dist/browser.d.ts",
       "default": "./dist/browser.js"
+    },
+    "./internal/module-runner": {
+      "types": "./dist/module-runner.d.ts",
+      "default": "./dist/module-runner.js"
     },
     "./runners": {
       "types": "./dist/runners.d.ts",
@@ -73,10 +79,6 @@
     "./environments": {
       "types": "./dist/environments.d.ts",
       "default": "./dist/environments.js"
-    },
-    "./utils": {
-      "types": "./dist/utils.d.ts",
-      "default": "./dist/utils.js"
     },
     "./config": {
       "types": "./config.d.ts",
@@ -123,6 +125,7 @@
   },
   "peerDependencies": {
     "@edge-runtime/vm": "*",
+    "@types/debug": "^4.1.12",
     "@types/node": "^18.0.0 || ^20.0.0 || >=22.0.0",
     "@vitest/browser": "workspace:*",
     "@vitest/ui": "workspace:*",
@@ -131,6 +134,9 @@
   },
   "peerDependenciesMeta": {
     "@edge-runtime/vm": {
+      "optional": true
+    },
+    "@types/debug": {
       "optional": true
     },
     "@types/node": {
@@ -157,51 +163,46 @@
     "@vitest/snapshot": "workspace:*",
     "@vitest/spy": "workspace:*",
     "@vitest/utils": "workspace:*",
-    "chai": "^5.1.2",
-    "debug": "^4.4.0",
-    "expect-type": "^1.1.0",
-    "magic-string": "^0.30.17",
-    "pathe": "^1.1.2",
-    "std-env": "^3.8.0",
+    "debug": "catalog:",
+    "es-module-lexer": "^1.7.0",
+    "expect-type": "^1.2.2",
+    "magic-string": "catalog:",
+    "pathe": "catalog:",
+    "picomatch": "^4.0.3",
+    "std-env": "catalog:",
     "tinybench": "^2.9.0",
-    "tinyexec": "^0.3.1",
-    "tinypool": "^1.0.2",
-    "tinyrainbow": "^1.2.0",
-    "vite": "^5.0.0 || ^6.0.0",
-    "vite-node": "workspace:*",
+    "tinyexec": "^0.3.2",
+    "tinyglobby": "catalog:",
+    "tinypool": "^2.0.0",
+    "tinyrainbow": "catalog:",
+    "vite": "^6.0.0 || ^7.0.0-0",
     "why-is-node-running": "^2.3.0"
   },
   "devDependencies": {
-    "@ampproject/remapping": "^2.3.0",
-    "@antfu/install-pkg": "^0.5.0",
+    "@antfu/install-pkg": "^1.1.0",
     "@edge-runtime/vm": "^5.0.0",
-    "@sinonjs/fake-timers": "11.1.0",
-    "@types/debug": "^4.1.12",
-    "@types/estree": "^1.0.6",
-    "@types/istanbul-lib-coverage": "^2.0.6",
-    "@types/istanbul-reports": "^3.0.4",
+    "@sinonjs/fake-timers": "14.0.0",
+    "@types/debug": "catalog:",
+    "@types/estree": "catalog:",
+    "@types/istanbul-lib-coverage": "catalog:",
+    "@types/istanbul-reports": "catalog:",
     "@types/jsdom": "^21.1.7",
-    "@types/micromatch": "^4.0.9",
-    "@types/node": "^22.10.2",
+    "@types/node": "^22.18.0",
+    "@types/picomatch": "^4.0.2",
     "@types/prompts": "^2.4.9",
     "@types/sinonjs__fake-timers": "^8.1.5",
-    "acorn-walk": "^8.3.4",
-    "birpc": "0.2.19",
-    "cac": "^6.7.14",
+    "acorn-walk": "catalog:",
+    "birpc": "catalog:",
+    "cac": "catalog:",
     "chai-subset": "^1.6.0",
-    "cli-truncate": "^4.0.0",
-    "fast-glob": "3.3.2",
     "find-up": "^6.3.0",
-    "flatted": "^3.3.2",
-    "get-tsconfig": "^4.8.1",
-    "happy-dom": "^15.11.7",
-    "jsdom": "^25.0.1",
-    "local-pkg": "^0.5.1",
-    "log-update": "^5.0.1",
-    "micromatch": "^4.0.8",
-    "pretty-format": "^29.7.0",
+    "flatted": "catalog:",
+    "happy-dom": "^18.0.1",
+    "jsdom": "^26.1.0",
+    "local-pkg": "^1.1.2",
+    "mime": "^4.0.7",
     "prompts": "^2.4.2",
-    "strip-literal": "^2.1.1",
-    "ws": "^8.18.0"
+    "strip-literal": "catalog:",
+    "ws": "catalog:"
   }
 }

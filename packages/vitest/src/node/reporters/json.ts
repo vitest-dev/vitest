@@ -1,8 +1,9 @@
-import type { File, Suite, TaskMeta, TaskState } from '@vitest/runner'
+import type { Suite, TaskMeta, TaskState } from '@vitest/runner'
 import type { SnapshotSummary } from '@vitest/snapshot'
 import type { CoverageMap } from 'istanbul-lib-coverage'
 import type { Vitest } from '../core'
 import type { Reporter } from '../types/reporter'
+import type { TestModule } from './reported-tasks'
 import { existsSync, promises as fs } from 'node:fs'
 import { getSuites, getTests } from '@vitest/runner/utils'
 import { dirname, resolve } from 'pathe'
@@ -78,6 +79,7 @@ export class JsonReporter implements Reporter {
   start = 0
   ctx!: Vitest
   options: JsonOptions
+  coverageMap?: CoverageMap
 
   constructor(options: JsonOptions) {
     this.options = options
@@ -86,9 +88,16 @@ export class JsonReporter implements Reporter {
   onInit(ctx: Vitest): void {
     this.ctx = ctx
     this.start = Date.now()
+    this.coverageMap = undefined
   }
 
-  protected async logTasks(files: File[], coverageMap?: CoverageMap | null) {
+  onCoverage(coverageMap: unknown): void {
+    this.coverageMap = coverageMap as CoverageMap
+  }
+
+  async onTestRunEnd(testModules: ReadonlyArray<TestModule>): Promise<void> {
+    const files = testModules.map(testModule => testModule.task)
+
     const suites = getSuites(files)
     const numTotalTestSuites = suites.length
     const tests = getTests(files)
@@ -110,7 +119,7 @@ export class JsonReporter implements Reporter {
     const numTodoTests = tests.filter(t => t.mode === 'todo').length
     const testResults: Array<JsonTestResult> = []
 
-    const success = numFailedTestSuites === 0 && numFailedTests === 0
+    const success = !!(files.length > 0 || this.ctx.config.passWithNoTests) && numFailedTestSuites === 0 && numFailedTests === 0
 
     for (const file of files) {
       const tests = getTests([file])
@@ -190,14 +199,10 @@ export class JsonReporter implements Reporter {
       startTime: this.start,
       success,
       testResults,
-      coverageMap,
+      coverageMap: this.coverageMap,
     }
 
     await this.writeReport(JSON.stringify(result))
-  }
-
-  async onFinished(files = this.ctx.state.getFiles(), _errors: unknown[] = [], coverageMap?: unknown) {
-    await this.logTasks(files, coverageMap as CoverageMap)
   }
 
   /**
@@ -205,7 +210,7 @@ export class JsonReporter implements Reporter {
    * or logs it to the console otherwise.
    * @param report
    */
-  async writeReport(report: string) {
+  async writeReport(report: string): Promise<void> {
     const outputFile
       = this.options.outputFile ?? getOutputFile(this.ctx.config, 'json')
 

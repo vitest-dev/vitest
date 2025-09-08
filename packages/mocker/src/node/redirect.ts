@@ -1,5 +1,5 @@
 import fs from 'node:fs'
-import { builtinModules } from 'node:module'
+import nodeModule from 'node:module'
 import { basename, dirname, extname, join, resolve } from 'pathe'
 
 const { existsSync, readdirSync, statSync } = fs
@@ -55,7 +55,7 @@ export function findMockRedirect(
 }
 
 const builtins = new Set([
-  ...builtinModules,
+  ...nodeModule.builtinModules,
   'assert/strict',
   'diagnostics_channel',
   'dns/promises',
@@ -71,9 +71,19 @@ const builtins = new Set([
   'wasi',
 ])
 
-const prefixedBuiltins = new Set(['node:test', 'node:sqlite'])
+// https://nodejs.org/api/modules.html#built-in-modules-with-mandatory-node-prefix
+const prefixedBuiltins = new Set([
+  'node:sea',
+  'node:sqlite',
+  'node:test',
+  'node:test/reporters',
+])
 const NODE_BUILTIN_NAMESPACE = 'node:'
 function isNodeBuiltin(id: string): boolean {
+  // Added in v18.6.0
+  if (nodeModule.isBuiltin) {
+    return nodeModule.isBuiltin(id)
+  }
   if (prefixedBuiltins.has(id)) {
     return true
   }

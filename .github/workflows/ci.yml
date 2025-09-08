@@ -10,8 +10,6 @@ on:
       - main
 
   pull_request:
-    branches:
-      - main
 
   workflow_dispatch:
 
@@ -21,6 +19,7 @@ concurrency:
 
 env:
   PLAYWRIGHT_BROWSERS_PATH: ${{ github.workspace }}/.cache/ms-playwright
+  VITEST_GENERATE_UI_TOKEN: 'true'
 
 jobs:
   lint:
@@ -28,7 +27,7 @@ jobs:
     runs-on: ubuntu-latest
     name: 'Lint: node-latest, ubuntu-latest'
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - uses: ./.github/actions/setup-and-cache
 
@@ -38,18 +37,15 @@ jobs:
       - name: Build
         run: pnpm run build
 
+      # check uncommited LICENSE.md, auto-imports.d.ts, etc...
+      - name: Check stale build artifacts
+        run: git diff --exit-code
+
       - name: Lint
         run: pnpm run lint
 
       - name: Typecheck
         run: pnpm run typecheck
-
-      - name: Diff LICENSE.md
-        run: |
-          if ! git diff --exit-code packages/vitest/LICENSE.md; then
-            echo "::error::LICENSE.md has changed. Please commit the updated LICENSE.md file after the build."
-            exit 1
-          fi
 
       # From https://github.com/rhysd/actionlint/blob/main/docs/usage.md#use-actionlint-on-github-actions
       - name: Check workflow files
@@ -64,11 +60,11 @@ jobs:
       should_skip: ${{ steps.changed-files.outputs.only_changed == 'true' }}
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Get changed files
         id: changed-files
-        uses: tj-actions/changed-files@bab30c2299617f6615ec02a68b9a40d10bd21366 # v45.0.5
+        uses: tj-actions/changed-files@a284dc1814e3fd07f2e34267fc8f81227ed29fb8 # v45.0.9
         with:
           files: |
             docs/**
@@ -87,7 +83,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest]
-        node_version: [18, 20, 22]
+        node_version: [20, 22, 24]
         include:
           - os: macos-latest
             node_version: 20
@@ -96,13 +92,13 @@ jobs:
       fail-fast: false
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - uses: ./.github/actions/setup-and-cache
         with:
           node-version: ${{ matrix.node_version }}
 
-      - uses: browser-actions/setup-chrome@v1
+      - uses: browser-actions/setup-chrome@b94431e051d1c52dcbe9a7092a4f10f827795416 # v2.1.0
 
       - name: Install
         run: pnpm i
@@ -122,6 +118,13 @@ jobs:
       - name: Unit Test UI
         run: pnpm run -C packages/ui test:ui
 
+      - uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          name: playwright-report
+          path: test/ui/test-results/
+          retention-days: 30
+
   test-browser:
     needs: changed
     name: 'Browsers: node-20, ${{ matrix.os }}'
@@ -138,14 +141,14 @@ jobs:
     timeout-minutes: 30
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - uses: ./.github/actions/setup-and-cache
         with:
           node-version: 20
 
-      - uses: browser-actions/setup-chrome@v1
-      - uses: browser-actions/setup-firefox@v1
+      - uses: browser-actions/setup-chrome@b94431e051d1c52dcbe9a7092a4f10f827795416 # v2.1.0
+      - uses: browser-actions/setup-firefox@5914774dda97099441f02628f8d46411fcfbd208 # v1.7.0
 
       - name: Install
         run: pnpm i
@@ -161,3 +164,46 @@ jobs:
 
       - name: Test Browser (webdriverio)
         run: pnpm run test:browser:webdriverio
+
+  test-rolldown:
+    needs: changed
+    # macos-latest is the fastes one
+    name: 'Rolldown&Test: node-22, macos-latest'
+    if: needs.changed.outputs.should_skip != 'true'
+    runs-on: macos-latest
+
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: ./.github/actions/setup-and-cache
+        with:
+          node-version: 22
+
+      - uses: browser-actions/setup-chrome@b94431e051d1c52dcbe9a7092a4f10f827795416 # v2.1.0
+
+      - name: Install
+        run: pnpm add vite@npm:rolldown-vite && git add . && git commit -m "ci" && pnpm i --prefer-offline --no-frozen-lockfile
+
+      - name: Install Playwright Dependencies
+        run: pnpm exec playwright install --with-deps --only-shell
+
+      - name: Build
+        run: pnpm run build
+
+      - name: Test
+        run: pnpm run test:ci
+
+      - name: Test Examples
+        run: pnpm run test:examples
+
+      - name: Test Browser (playwright)
+        run: pnpm run test:browser:playwright
+
+      - uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          name: playwright-report-rolldown
+          path: test/ui/test-results/
+          retention-days: 30

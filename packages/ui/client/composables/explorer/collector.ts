@@ -1,10 +1,10 @@
-import type { File, Task, TaskResultPack, Test } from '@vitest/runner'
+import type { File, Task, TaskResultPack, Test, TestAnnotation } from '@vitest/runner'
 import type { Arrayable } from '@vitest/utils'
 import type { CollectFilteredTests, CollectorInfo, Filter, FilteredTests } from '~/composables/explorer/types'
 import { isTestCase } from '@vitest/runner/utils'
 import { toArray } from '@vitest/utils'
-import { hasFailedSnapshot } from '@vitest/ws-client'
 import { client, findById } from '~/composables/client'
+import { testRunState } from '~/composables/client/state'
 import { expandNodesOnEndRun } from '~/composables/explorer/expand'
 import { runFilter, testMatcher } from '~/composables/explorer/filter'
 import { explorerTree } from '~/composables/explorer/index'
@@ -22,6 +22,9 @@ import {
   isRunningTestNode,
 } from '~/composables/explorer/utils'
 import { isSuite } from '~/utils/task'
+import { hasFailedSnapshot } from '../../../../vitest/src/utils/tasks'
+
+export { hasFailedSnapshot }
 
 export function runLoadFiles(
   remoteFiles: File[],
@@ -61,6 +64,24 @@ export function preparePendingTasks(packs: TaskResultPack[]) {
       }
     }
   })
+}
+
+export function annotateTest(
+  id: string,
+  annotation: TestAnnotation,
+) {
+  const pending = explorerTree.pendingTasks
+  const idMap = client.state.idMap
+  const test = idMap.get(id)
+  if (test?.type === 'test') {
+    let file = pending.get(test.file.id)
+    if (!file) {
+      file = new Set()
+      pending.set(test.file.id, file)
+    }
+    file.add(test.id)
+    test.annotations.push(annotation)
+  }
 }
 
 export function runCollect(
@@ -103,7 +124,7 @@ export function runCollect(
 }
 
 function* collectRunningTodoTests() {
-  yield * uiEntries.value.filter(isRunningTestNode)
+  yield* uiEntries.value.filter(isRunningTestNode)
 }
 
 function updateRunningTodoTests() {
@@ -234,6 +255,7 @@ function refreshExplorer(search: string, filter: Filter, end: boolean) {
   // update only at the end
   if (end) {
     updateRunningTodoTests()
+    testRunState.value = 'idle'
   }
 }
 
@@ -469,7 +491,7 @@ function* testsCollector(suite: Arrayable<Task>): Generator<Test> {
       yield s
     }
     else {
-      yield * testsCollector(s.tasks)
+      yield* testsCollector(s.tasks)
     }
   }
 }

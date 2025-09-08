@@ -3,7 +3,7 @@ import pkg from 'vite-node/package.json'
 import { expect, it } from 'vitest'
 import { editFile, runViteNodeCli } from '../../test-utils'
 
-const entryPath = resolve(__dirname, '../src/cli-parse-args.js')
+const entryPath = resolve(import.meta.dirname, '../src/cli-parse-args.js')
 
 const version = (pkg as any).version
 
@@ -40,13 +40,13 @@ it('script args in -- after', async () => {
 })
 
 it('exposes .env variables', async () => {
-  const { stdout } = await runViteNodeCli(resolve(__dirname, '../src/cli-print-env.js'))
+  const { stdout } = await runViteNodeCli(resolve(import.meta.dirname, '../src/cli-print-env.js'))
   const env = JSON.parse(stdout)
   expect(env.MY_TEST_ENV).toBe('hello')
 })
 
 it.each(['index.js', 'index.cjs', 'index.mjs'])('correctly runs --watch %s', async (file) => {
-  const entryPath = resolve(__dirname, '../src/watch', file)
+  const entryPath = resolve(import.meta.dirname, '../src/watch', file)
   const { viteNode } = await runViteNodeCli('--watch', entryPath)
   await viteNode.waitForStdout('test 1')
   editFile(entryPath, c => c.replace('test 1', 'test 2'))
@@ -54,7 +54,29 @@ it.each(['index.js', 'index.cjs', 'index.mjs'])('correctly runs --watch %s', asy
 })
 
 it('error stack', async () => {
-  const entryPath = resolve(__dirname, '../src/watch/source-map.ts')
+  const entryPath = resolve(import.meta.dirname, '../src/watch/source-map.ts')
   const { viteNode } = await runViteNodeCli('--watch', entryPath)
   await viteNode.waitForStdout('source-map.ts:7:11')
+})
+
+it('buildStart', async () => {
+  const root = resolve(import.meta.dirname, '../src/buildStart')
+  const result = await runViteNodeCli('--root', root, resolve(root, 'test.ts'))
+  await result.viteNode.waitForStdout('["buildStart:in","buildStart:out"]')
+})
+
+it('buildStart with all ssr', async () => {
+  const root = resolve(import.meta.dirname, '../src/buildStart')
+  const result = await runViteNodeCli(
+    `--root=${root}`,
+    '--options.transformMode.ssr=.*',
+    resolve(root, 'test.ts'),
+  )
+  await result.viteNode.waitForStdout('["buildStart:in","buildStart:out"]')
+})
+
+it('empty mappings', async () => {
+  const root = resolve(import.meta.dirname, '../src/empty-mappings')
+  const result = await runViteNodeCli('--root', root, resolve(root, 'main.ts'))
+  await result.viteNode.waitForStdout('[ok]')
 })

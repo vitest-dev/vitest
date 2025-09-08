@@ -5,6 +5,7 @@ import type { ContextTestEnvironment } from '../../types/worker'
 import type { Vitest } from '../core'
 import type { PoolProcessOptions, ProcessPool, RunWithFiles } from '../pool'
 import type { TestProject } from '../project'
+import type { TestSpecification } from '../spec'
 import type { ResolvedConfig, SerializedConfig } from '../types/config'
 import type { WorkerContext } from '../types/worker'
 import * as nodeos from 'node:os'
@@ -19,12 +20,12 @@ import { createMethodsRPC } from './rpc'
 
 const suppressWarningsPath = resolve(rootDir, './suppress-warnings.cjs')
 
-function createWorkerChannel(project: TestProject) {
+function createWorkerChannel(project: TestProject, collect: boolean) {
   const channel = new MessageChannel()
   const port = channel.port2
   const workerPort = channel.port1
 
-  const rpc = createBirpc<RunnerRPC, RuntimeRPC>(createMethodsRPC(project), {
+  const rpc = createBirpc<RunnerRPC, RuntimeRPC>(createMethodsRPC(project, { collect }), {
     eventNames: ['onCancel'],
     post(v) {
       port.postMessage(v)
@@ -32,40 +33,51 @@ function createWorkerChannel(project: TestProject) {
     on(fn) {
       port.on('message', fn)
     },
-    onTimeoutError(functionName) {
-      throw new Error(`[vitest-pool]: Timeout calling "${functionName}"`)
-    },
+    timeout: -1,
   })
 
-  project.ctx.onCancel(reason => rpc.onCancel(reason))
+  project.vitest.onCancel(reason => rpc.onCancel(reason))
 
-  return { workerPort, port }
+  function onClose() {
+    workerPort.close()
+    port.close()
+    rpc.$close(new Error('[vitest-pool]: Pending methods while closing rpc'))
+  }
+
+  return { workerPort, onClose }
 }
 
 export function createVmThreadsPool(
-  ctx: Vitest,
+  vitest: Vitest,
   { execArgv, env }: PoolProcessOptions,
+  specifications: TestSpecification[],
 ): ProcessPool {
   const numCpus
     = typeof nodeos.availableParallelism === 'function'
       ? nodeos.availableParallelism()
       : nodeos.cpus().length
 
-  const threadsCount = ctx.config.watch
+  const threadsCount = vitest.config.watch
     ? Math.max(Math.floor(numCpus / 2), 1)
     : Math.max(numCpus - 1, 1)
 
-  const poolOptions = ctx.config.poolOptions?.vmThreads ?? {}
+  const recommendedCount = vitest.config.watch
+    ? threadsCount
+    : Math.min(threadsCount, specifications.length)
+
+  const poolOptions = vitest.config.poolOptions?.vmThreads ?? {}
 
   const maxThreads
-    = poolOptions.maxThreads ?? ctx.config.maxWorkers ?? threadsCount
-  const minThreads
-    = poolOptions.minThreads ?? ctx.config.minWorkers ?? threadsCount
+    = poolOptions.maxThreads ?? vitest.config.maxWorkers ?? recommendedCount
+  const minThreads = vitest.config.watch
+    ? Math.min(recommendedCount, maxThreads)
+    // avoid recreating threads when tests are finished
+    : 0
 
-  const worker = resolve(ctx.distPath, 'workers/vmThreads.js')
+  const worker = resolve(vitest.distPath, 'workers/vmThreads.js')
 
   const options: TinypoolOptions = {
-    filename: resolve(ctx.distPath, 'worker.js'),
+    filename: resolve(vitest.distPath, 'worker.js'),
     // TODO: investigate further
     // It seems atomics introduced V8 Fatal Error https://github.com/vitest-dev/vitest/issues/1191
     useAtomics: poolOptions.useAtomics ?? false,
@@ -83,12 +95,12 @@ export function createVmThreadsPool(
       ...execArgv,
     ],
 
-    terminateTimeout: ctx.config.teardownTimeout,
+    terminateTimeout: vitest.config.teardownTimeout,
     concurrentTasksPerWorker: 1,
-    maxMemoryLimitBeforeRecycle: getMemoryLimit(ctx.config) || undefined,
+    maxMemoryLimitBeforeRecycle: getMemoryLimit(vitest.config) || undefined,
   }
 
-  if (poolOptions.singleThread || !ctx.config.fileParallelism) {
+  if (poolOptions.singleThread || !vitest.config.fileParallelism) {
     options.maxThreads = 1
     options.minThreads = 1
   }
@@ -106,9 +118,9 @@ export function createVmThreadsPool(
       invalidates: string[] = [],
     ) {
       const paths = files.map(f => f.filepath)
-      ctx.state.clearFiles(project, paths)
+      vitest.state.clearFiles(project, paths)
 
-      const { workerPort, port } = createWorkerChannel(project)
+      const { workerPort, onClose } = createWorkerChannel(project, name === 'collect')
       const workerId = ++id
       const data: WorkerContext = {
         pool: 'vmThreads',
@@ -131,7 +143,7 @@ export function createVmThreadsPool(
           error instanceof Error
           && /Failed to terminate worker/.test(error.message)
         ) {
-          ctx.state.addProcessTimeoutCause(
+          vitest.state.addProcessTimeoutCause(
             `Failed to terminate worker while running ${paths.join(
               ', ',
             )}. \nSee https://vitest.dev/guide/common-errors.html#failed-to-terminate-worker for troubleshooting.`,
@@ -139,25 +151,24 @@ export function createVmThreadsPool(
         }
         // Intentionally cancelled
         else if (
-          ctx.isCancelling
+          vitest.isCancelling
           && error instanceof Error
           && /The task has been cancelled/.test(error.message)
         ) {
-          ctx.state.cancelFiles(paths, project)
+          vitest.state.cancelFiles(paths, project)
         }
         else {
           throw error
         }
       }
       finally {
-        port.close()
-        workerPort.close()
+        onClose()
       }
     }
 
     return async (specs, invalidates) => {
       // Cancel pending tasks from pool when possible
-      ctx.onCancel(() => pool.cancelPendingTasks())
+      vitest.onCancel(() => pool.cancelPendingTasks())
 
       const configs = new Map<TestProject, SerializedConfig>()
       const getConfig = (project: TestProject): SerializedConfig => {
@@ -206,7 +217,7 @@ export function createVmThreadsPool(
 
 function getMemoryLimit(config: ResolvedConfig) {
   const memory = nodeos.totalmem()
-  const limit = getWorkerMemoryLimit(config)
+  const limit = getWorkerMemoryLimit(config, 'vmThreads')
 
   if (typeof memory === 'number') {
     return stringToBytes(limit, config.watch ? memory / 2 : memory)

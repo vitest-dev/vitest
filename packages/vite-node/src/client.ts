@@ -9,6 +9,7 @@ import { extractSourceMap } from './source-map'
 import {
   cleanUrl,
   createImportMetaEnvProxy,
+  isBareImport,
   isInternalRequest,
   isNodeBuiltin,
   isPrimitive,
@@ -48,14 +49,14 @@ export const DEFAULT_REQUEST_STUBS: Record<string, Record<string, unknown>> = {
 }
 
 export class ModuleCacheMap extends Map<string, ModuleCache> {
-  normalizePath(fsPath: string) {
+  normalizePath(fsPath: string): string {
     return normalizeModuleId(fsPath)
   }
 
   /**
    * Assign partial data to the map
    */
-  update(fsPath: string, mod: ModuleCache) {
+  update(fsPath: string, mod: ModuleCache): this {
     fsPath = this.normalizePath(fsPath)
     if (!super.has(fsPath)) {
       this.setByModuleId(fsPath, mod)
@@ -66,11 +67,11 @@ export class ModuleCacheMap extends Map<string, ModuleCache> {
     return this
   }
 
-  setByModuleId(modulePath: string, mod: ModuleCache) {
+  setByModuleId(modulePath: string, mod: ModuleCache): this {
     return super.set(modulePath, mod)
   }
 
-  set(fsPath: string, mod: ModuleCache) {
+  set(fsPath: string, mod: ModuleCache): this {
     return this.setByModuleId(this.normalizePath(fsPath), mod)
   }
 
@@ -86,11 +87,11 @@ export class ModuleCacheMap extends Map<string, ModuleCache> {
         importers: new Set(),
       })
     }
-    return mod as ModuleCache &
-      Required<Pick<ModuleCache, 'imports' | 'importers'>>
+    return mod as ModuleCache
+      & Required<Pick<ModuleCache, 'imports' | 'importers'>>
   }
 
-  get(fsPath: string) {
+  get(fsPath: string): ModuleCache & Required<Pick<ModuleCache, 'importers' | 'imports'>> {
     return this.getByModuleId(this.normalizePath(fsPath))
   }
 
@@ -98,7 +99,7 @@ export class ModuleCacheMap extends Map<string, ModuleCache> {
     return super.delete(modulePath)
   }
 
-  delete(fsPath: string) {
+  delete(fsPath: string): boolean {
     return this.deleteByModuleId(this.normalizePath(fsPath))
   }
 
@@ -117,8 +118,8 @@ export class ModuleCacheMap extends Map<string, ModuleCache> {
    */
   invalidateDepTree(
     ids: string[] | Set<string>,
-    invalidated = new Set<string>(),
-  ) {
+    invalidated: Set<string> = new Set<string>(),
+  ): Set<string> {
     for (const _id of ids) {
       const id = this.normalizePath(_id)
       if (invalidated.has(id)) {
@@ -139,8 +140,8 @@ export class ModuleCacheMap extends Map<string, ModuleCache> {
    */
   invalidateSubDepTree(
     ids: string[] | Set<string>,
-    invalidated = new Set<string>(),
-  ) {
+    invalidated: Set<string> = new Set<string>(),
+  ): Set<string> {
     for (const _id of ids) {
       const id = this.normalizePath(_id)
       if (invalidated.has(id)) {
@@ -161,7 +162,7 @@ export class ModuleCacheMap extends Map<string, ModuleCache> {
   /**
    * Return parsed source map based on inlined source map of the module
    */
-  getSourceMap(id: string) {
+  getSourceMap(id: string): import('@jridgewell/trace-mapping').EncodedSourceMap | null {
     const cache = this.get(id)
     if (cache.map) {
       return cache.map
@@ -175,6 +176,30 @@ export class ModuleCacheMap extends Map<string, ModuleCache> {
   }
 }
 
+export type ModuleExecutionInfo = Map<string, ModuleExecutionInfoEntry>
+
+export interface ModuleExecutionInfoEntry {
+  startOffset: number
+
+  /** The duration that was spent executing the module. */
+  duration: number
+
+  /** The time that was spent executing the module itself and externalized imports. */
+  selfTime: number
+}
+
+/** Stack to track nested module execution for self-time calculation. */
+type ExecutionStack = Array<{
+  /** The file that is being executed. */
+  filename: string
+
+  /** The start time of this module's execution. */
+  startTime: number
+
+  /** Accumulated time spent importing all sub-imports. */
+  subImportTime: number
+}>
+
 export class ViteNodeRunner {
   root: string
 
@@ -186,29 +211,50 @@ export class ViteNodeRunner {
    */
   moduleCache: ModuleCacheMap
 
+  /**
+   * Tracks the stack of modules being executed for the purpose of calculating import self-time.
+   *
+   * Note that while in most cases, imports are a linear stack of modules,
+   * this is occasionally not the case, for example when you have parallel top-level dynamic imports like so:
+   *
+   * ```ts
+   * await Promise.all([
+   *  import('./module1'),
+   *  import('./module2'),
+   * ]);
+   * ```
+   *
+   * In this case, the self time will be reported incorrectly for one of the modules (could go negative).
+   * As top-level awaits with dynamic imports like this are uncommon, we don't handle this case specifically.
+   */
+  private executionStack: ExecutionStack = []
+
+  // `performance` can be mocked, so make sure we're using the original function
+  private performanceNow = performance.now.bind(performance)
+
   constructor(public options: ViteNodeRunnerOptions) {
     this.root = options.root ?? process.cwd()
     this.moduleCache = options.moduleCache ?? new ModuleCacheMap()
     this.debug
       = options.debug
-      ?? (typeof process !== 'undefined'
-        ? !!process.env.VITE_NODE_DEBUG_RUNNER
-        : false)
+        ?? (typeof process !== 'undefined'
+          ? !!process.env.VITE_NODE_DEBUG_RUNNER
+          : false)
   }
 
-  async executeFile(file: string) {
+  async executeFile(file: string): Promise<any> {
     const url = `/@fs/${slash(resolve(file))}`
     return await this.cachedRequest(url, url, [])
   }
 
-  async executeId(rawId: string) {
+  async executeId(rawId: string): Promise<any> {
     const [id, url] = await this.resolveUrl(rawId)
     return await this.cachedRequest(id, url, [])
   }
 
   /** @internal */
   async cachedRequest(id: string, fsPath: string, callstack: string[]) {
-    const importee = callstack[callstack.length - 1]
+    const importee = callstack.at(-1)
 
     const mod = this.moduleCache.get(fsPath)
     const { imports, importers } = mod
@@ -262,7 +308,7 @@ export class ViteNodeRunner {
     }
   }
 
-  shouldResolveId(id: string, _importee?: string) {
+  shouldResolveId(id: string, _importee?: string): boolean {
     return (
       !isInternalRequest(id) && !isNodeBuiltin(id) && !id.startsWith('data:')
     )
@@ -306,7 +352,7 @@ export class ViteNodeRunner {
     return [resolvedId, resolvedId]
   }
 
-  async resolveUrl(id: string, importee?: string) {
+  async resolveUrl(id: string, importee?: string): Promise<[url: string, fsPath: string]> {
     const resolveKey = `resolve:${id}`
     // put info about new import as soon as possible, so we can start tracking it
     this.moduleCache.setByModuleId(resolveKey, { resolving: true })
@@ -321,6 +367,28 @@ export class ViteNodeRunner {
   /** @internal */
   async dependencyRequest(id: string, fsPath: string, callstack: string[]) {
     return await this.cachedRequest(id, fsPath, callstack)
+  }
+
+  private async _fetchModule(id: string, importer?: string) {
+    try {
+      return await this.options.fetchModule(id)
+    }
+    catch (cause: any) {
+      // rethrow vite error if it cannot load the module because it's not resolved
+      if (
+        (typeof cause === 'object' && cause.code === 'ERR_LOAD_URL')
+        || (typeof cause?.message === 'string' && cause.message.includes('Failed to load url'))
+      ) {
+        const error = new Error(
+          `Cannot find ${isBareImport(id) ? 'package' : 'module'} '${id}'${importer ? ` imported from '${importer}'` : ''}`,
+          { cause },
+        ) as Error & { code: string }
+        error.code = 'ERR_MODULE_NOT_FOUND'
+        throw error
+      }
+
+      throw cause
+    }
   }
 
   /** @internal */
@@ -343,7 +411,10 @@ export class ViteNodeRunner {
     if (id in requestStubs) {
       return requestStubs[id]
     }
-    let { code: transformed, externalize } = await this.options.fetchModule(id)
+    let { code: transformed, externalize } = await this._fetchModule(
+      id,
+      callstack[callstack.length - 2],
+    )
 
     if (externalize) {
       debugNative(externalize)
@@ -467,6 +538,11 @@ export class ViteNodeRunner {
       __vite_ssr_dynamic_import__: request,
       __vite_ssr_exports__: exports,
       __vite_ssr_exportAll__: (obj: any) => exportAll(exports, obj),
+      __vite_ssr_exportName__: (name: string, getter: () => unknown) => Object.defineProperty(exports, name, {
+        enumerable: true,
+        configurable: true,
+        get: getter,
+      }),
       __vite_ssr_import_meta__: meta,
 
       // cjs compact
@@ -489,11 +565,15 @@ export class ViteNodeRunner {
     return exports
   }
 
-  protected getContextPrimitives() {
+  protected getContextPrimitives(): {
+    Object: ObjectConstructor
+    Reflect: typeof Reflect
+    Symbol: SymbolConstructor
+  } {
     return { Object, Reflect, Symbol }
   }
 
-  protected async runModule(context: Record<string, any>, transformed: string) {
+  protected async runModule(context: Record<string, any>, transformed: string): Promise<void> {
     // add 'use strict' since ESM enables it by default
     const codeDefinition = `'use strict';async (${Object.keys(context).join(
       ',',
@@ -505,11 +585,54 @@ export class ViteNodeRunner {
       columnOffset: -codeDefinition.length,
     }
 
-    const fn = vm.runInThisContext(code, options)
-    await fn(...Object.values(context))
+    const finishModuleExecutionInfo = this.startCalculateModuleExecutionInfo(options.filename, codeDefinition.length)
+
+    try {
+      const fn = vm.runInThisContext(code, options)
+      await fn(...Object.values(context))
+    }
+    finally {
+      this.options.moduleExecutionInfo?.set(options.filename, finishModuleExecutionInfo())
+    }
   }
 
-  prepareContext(context: Record<string, any>) {
+  /**
+   * Starts calculating the module execution info such as the total duration and self time spent on executing the module.
+   * Returns a function to call once the module has finished executing.
+   */
+  protected startCalculateModuleExecutionInfo(filename: string, startOffset: number): () => ModuleExecutionInfoEntry {
+    const startTime = this.performanceNow()
+
+    this.executionStack.push({
+      filename,
+      startTime,
+      subImportTime: 0,
+    })
+
+    return () => {
+      const duration = this.performanceNow() - startTime
+
+      const currentExecution = this.executionStack.pop()
+
+      if (currentExecution == null) {
+        throw new Error('Execution stack is empty, this should never happen')
+      }
+
+      const selfTime = duration - currentExecution.subImportTime
+
+      if (this.executionStack.length > 0) {
+        this.executionStack.at(-1)!.subImportTime += duration
+      }
+
+      return {
+        startOffset,
+        duration,
+        selfTime,
+      }
+    }
+  }
+
+  prepareContext(context: Record<string, any>): Record<string, any> {
     return context
   }
 
@@ -517,7 +640,7 @@ export class ViteNodeRunner {
    * Define if a module should be interop-ed
    * This function mostly for the ability to override by subclass
    */
-  shouldInterop(path: string, mod: any) {
+  shouldInterop(path: string, mod: any): boolean {
     if (this.options.interopDefault === false) {
       return false
     }
@@ -526,14 +649,14 @@ export class ViteNodeRunner {
     return !path.endsWith('.mjs') && 'default' in mod
   }
 
-  protected importExternalModule(path: string) {
-    return import(path)
+  protected importExternalModule(path: string): Promise<any> {
+    return import(/* @vite-ignore */ path)
   }
 
   /**
    * Import a module and interop it
    */
-  async interopedImport(path: string) {
+  async interopedImport(path: string): Promise<any> {
     const importedModule = await this.importExternalModule(path)
 
     if (!this.shouldInterop(path, importedModule)) {
@@ -617,7 +740,7 @@ function exportAll(exports: any, sourceModule: any) {
   }
 
   for (const key in sourceModule) {
-    if (key !== 'default') {
+    if (key !== 'default' && !(key in exports)) {
       try {
         defineExport(exports, key, () => sourceModule[key])
       }

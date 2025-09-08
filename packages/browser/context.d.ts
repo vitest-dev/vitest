@@ -1,5 +1,6 @@
-import type { SerializedConfig } from 'vitest'
+import { SerializedConfig } from 'vitest'
 import { ARIARole } from './aria-role.js'
+import {} from './matchers.js'
 
 export type BufferEncoding =
   | 'ascii'
@@ -28,12 +29,142 @@ export interface ScreenshotOptions {
   element?: Element | Locator
   /**
    * Path relative to the current test file.
+   * @default `__screenshots__/${testFileName}/${testName}.png`
    */
   path?: string
   /**
    * Will also return the base64 encoded screenshot alongside the path.
    */
   base64?: boolean
+  /**
+   * Keep the screenshot on the file system. If file is not saved,
+   * `page.screenshot` always returns `base64` screenshot.
+   * @default true
+   */
+  save?: boolean
+}
+
+export interface ScreenshotComparatorRegistry {
+  pixelmatch: {
+    /**
+     * The maximum number of pixels that are allowed to differ between the captured
+     * screenshot and the stored reference image.
+     *
+     * If set to `undefined`, any non-zero difference will cause the test to fail.
+     *
+     * For example, `allowedMismatchedPixels: 10` means the test will pass if 10
+     * or fewer pixels differ, but fail if 11 or more differ.
+     *
+     * If both this and `allowedMismatchedPixelRatio` are set, the more restrictive
+     * value (i.e., fewer allowed mismatches) will be used.
+     *
+     * @default undefined
+     */
+    allowedMismatchedPixels?: number | undefined
+    /**
+     * The maximum allowed ratio of differing pixels between the captured screenshot
+     * and the reference image.
+     *
+     * Must be a value between `0` and `1`.
+     *
+     * For example, `allowedMismatchedPixelRatio: 0.02` means the test will pass
+     * if up to 2% of pixels differ, but fail if more than 2% differ.
+     *
+     * If both this and `allowedMismatchedPixels` are set, the more restrictive
+     * value (i.e., fewer allowed mismatches) will be used.
+     *
+     * @default undefined
+     */
+    allowedMismatchedPixelRatio?: number | undefined
+    /**
+     * Acceptable perceived color difference between the same pixel in two images.
+     *
+     * Value ranges from `0` (strict) to `1` (very lenient). Lower values mean
+     * small differences will be detected.
+     *
+     * The comparison uses the {@link https://en.wikipedia.org/wiki/YIQ | YIQ color space}.
+     *
+     * @default 0.1
+     */
+    threshold?: number | undefined
+    /**
+     * If `true`, disables detection and ignoring of anti-aliased pixels.
+     *
+     * @default false
+     */
+    includeAA?: boolean | undefined
+    /**
+     * Blending level of unchanged pixels in the diff image.
+     *
+     * Ranges from `0` (white) to `1` (original brightness).
+     *
+     * @default 0.1
+     */
+    alpha?: number | undefined
+    /**
+     * Color used for anti-aliased pixels in the diff image.
+     *
+     * Format: `[R, G, B]`
+     *
+     * @default [255, 255, 0]
+     */
+    aaColor?: [r: number, g: number, b: number] | undefined
+    /**
+     * Color used for differing pixels in the diff image.
+     *
+     * Format: `[R, G, B]`
+     *
+     * @default [255, 0, 0]
+     */
+    diffColor?: [r: number, g: number, b: number] | undefined
+    /**
+     * Optional alternative color for dark-on-light differences, to help show
+     * what's added vs. removed.
+     *
+     * If not set, `diffColor` is used for all differences.
+     *
+     * Format: `[R, G, B]`
+     *
+     * @default undefined
+     */
+    diffColorAlt?: [r: number, g: number, b: number] | undefined
+    /**
+     * If `true`, shows only the diff as a mask on a transparent background,
+     * instead of overlaying it on the original image.
+     *
+     * Anti-aliased pixels won't be shown (if detected).
+     *
+     * @default false
+     */
+    diffMask?: boolean | undefined
+  }
+}
+
+export interface ScreenshotMatcherOptions<
+  ComparatorName extends keyof ScreenshotComparatorRegistry = keyof ScreenshotComparatorRegistry
+> {
+  /**
+   * The name of the comparator to use for visual diffing.
+   *
+   * Must be one of the keys from {@linkcode ScreenshotComparatorRegistry}.
+   *
+   * @defaultValue `'pixelmatch'`
+   */
+  comparatorName?: ComparatorName
+  comparatorOptions?: ScreenshotComparatorRegistry[ComparatorName]
+  screenshotOptions?: Omit<
+    ScreenshotOptions,
+    'element' | 'base64' | 'path' | 'save' | 'type'
+  >
+  /**
+   * Time to wait until a stable screenshot is found.
+   *
+   * Setting this value to `0` disables the timeout, but if a stable screenshot
+   * can't be determined the process will not end.
+   *
+   * @default 5000
+   */
+  timeout?: number
 }
 
 export interface BrowserCommands {
@@ -142,7 +273,7 @@ export interface UserEvent {
    * @see {@link https://webdriver.io/docs/api/element/clearValue} WebdriverIO API
    * @see {@link https://testing-library.com/docs/user-event/utility/#clear} testing-library API
    */
-  clear: (element: Element | Locator) => Promise<void>
+  clear: (element: Element | Locator, options?: UserEventClearOptions) => Promise<void>
   /**
    * Sends a `Tab` key event. Uses provider's API under the hood.
    * @see {@link https://playwright.dev/docs/api/class-keyboard} Playwright API
@@ -171,7 +302,28 @@ export interface UserEvent {
    * @see {@link https://playwright.dev/docs/api/class-locator#locator-set-input-files} Playwright API
    * @see {@link https://testing-library.com/docs/user-event/utility#upload} testing-library API
    */
-  upload: (element: Element | Locator, files: File | File[] | string | string[]) => Promise<void>
+  upload: (element: Element | Locator, files: File | File[] | string | string[], options?: UserEventUploadOptions) => Promise<void>
+  /**
+   * Copies the selected content.
+   * @see {@link https://playwright.dev/docs/api/class-keyboard} Playwright API
+   * @see {@link https://webdriver.io/docs/api/browser/keys//} WebdriverIO API
+   * @see {@link https://testing-library.com/docs/user-event/clipboard#copy} testing-library API
+   */
+  copy: () => Promise<void>
+  /**
+   * Cuts the selected content.
+   * @see {@link https://playwright.dev/docs/api/class-keyboard} Playwright API
+   * @see {@link https://webdriver.io/docs/api/browser/keys//} WebdriverIO API
+   * @see {@link https://testing-library.com/docs/user-event/clipboard#cut} testing-library API
+   */
+  cut: () => Promise<void>
+  /**
+   * Pastes the copied or cut content.
+   * @see {@link https://playwright.dev/docs/api/class-keyboard} Playwright API
+   * @see {@link https://webdriver.io/docs/api/browser/keys//} WebdriverIO API
+   * @see {@link https://testing-library.com/docs/user-event/clipboard#paste} testing-library API
+   */
+  paste: () => Promise<void>
   /**
    * Fills an input element with text. This will remove any existing text in the input before typing the new text.
    * Uses provider's API under the hood.
@@ -197,9 +349,11 @@ export interface UserEventFillOptions {}
 export interface UserEventHoverOptions {}
 export interface UserEventSelectOptions {}
 export interface UserEventClickOptions {}
+export interface UserEventClearOptions {}
 export interface UserEventDoubleClickOptions {}
 export interface UserEventTripleClickOptions {}
 export interface UserEventDragAndDropOptions {}
+export interface UserEventUploadOptions {}
 
 export interface LocatorOptions {
   /**
@@ -267,39 +421,41 @@ interface LocatorSelectors {
    * Creates a way to locate an element by its [ARIA role](https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Roles), [ARIA attributes](https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Attributes) and [accessible name](https://developer.mozilla.org/en-US/docs/Glossary/Accessible_name).
    * @see {@link https://vitest.dev/guide/browser/locators#getbyrole}
    */
-  getByRole(role: ARIARole | ({} & string), options?: LocatorByRoleOptions): Locator
+  getByRole: (role: ARIARole | ({} & string), options?: LocatorByRoleOptions) => Locator
   /**
    * @see {@link https://vitest.dev/guide/browser/locators#getbylabeltext}
    */
-  getByLabelText(text: string | RegExp, options?: LocatorOptions): Locator
+  getByLabelText: (text: string | RegExp, options?: LocatorOptions) => Locator
   /**
    * Creates a locator capable of finding an element with an `alt` attribute that matches the text. Unlike testing-library's implementation, Vitest will match any element that has an `alt` attribute.
    * @see {@link https://vitest.dev/guide/browser/locators#getbyalttext}
    */
-  getByAltText(text: string | RegExp, options?: LocatorOptions): Locator
+  getByAltText: (text: string | RegExp, options?: LocatorOptions) => Locator
   /**
    * Creates a locator capable of finding an element that has the specified placeholder text. Vitest will match any element that has a matching `placeholder` attribute, not just `input`.
    * @see {@link https://vitest.dev/guide/browser/locators#getbyplaceholder}
    */
-  getByPlaceholder(text: string | RegExp, options?: LocatorOptions): Locator
+  getByPlaceholder: (text: string | RegExp, options?: LocatorOptions) => Locator
   /**
    * Creates a locator capable of finding an element that contains the specified text. The text will be matched against TextNode's [`nodeValue`](https://developer.mozilla.org/en-US/docs/Web/API/Node/nodeValue) or input's value if the type is `button` or `reset`.
    * Matching by text always normalizes whitespace, even with exact match.
    * For example, it turns multiple spaces into one, turns line breaks into spaces and ignores leading and trailing whitespace.
    * @see {@link https://vitest.dev/guide/browser/locators#getbytext}
    */
-  getByText(text: string | RegExp, options?: LocatorOptions): Locator
+  getByText: (text: string | RegExp, options?: LocatorOptions) => Locator
   /**
    * Creates a locator capable of finding an element that has the specified `title` attribute. Unlike testing-library's `getByTitle`, Vitest cannot find `title` elements within an SVG.
    * @see {@link https://vitest.dev/guide/browser/locators#getbytitle}
    */
-  getByTitle(text: string | RegExp, options?: LocatorOptions): Locator
+  getByTitle: (text: string | RegExp, options?: LocatorOptions) => Locator
   /**
    * Creates a locator capable of finding an element that matches the specified test id attribute. You can configure the attribute name with [`browser.locators.testIdAttribute`](/config/#browser-locators-testidattribute).
    * @see {@link https://vitest.dev/guide/browser/locators#getbytestid}
    */
-  getByTestId(text: string | RegExp): Locator
+  getByTestId: (text: string | RegExp) => Locator
 }
+
+export interface FrameLocator extends LocatorSelectors {}
 
 export interface Locator extends LocatorSelectors {
   /**
@@ -320,6 +476,12 @@ export interface Locator extends LocatorSelectors {
   readonly selector: string
 
   /**
+   * The number of elements that this locator is matching.
+   * @see {@link https://vitest.dev/guide/browser/locators#length}
+   */
+  readonly length: number
+
+  /**
    * Click on an element. You can use the options to set the cursor position.
    * @see {@link https://vitest.dev/guide/browser/interactivity-api#userevent-click}
    */
@@ -337,7 +499,7 @@ export interface Locator extends LocatorSelectors {
    * Clears the input element content
    * @see {@link https://vitest.dev/guide/browser/interactivity-api#userevent-clear}
    */
-  clear(): Promise<void>
+  clear(options?: UserEventClearOptions): Promise<void>
   /**
    * Moves the cursor position to the selected element
    * @see {@link https://vitest.dev/guide/browser/interactivity-api#userevent-hover}
@@ -349,7 +511,7 @@ export interface Locator extends LocatorSelectors {
    */
   unhover(options?: UserEventHoverOptions): Promise<void>
   /**
-   * Sets the value of the current `input`, `textarea` or `conteneditable` element.
+   * Sets the value of the current `input`, `textarea` or `contenteditable` element.
    * @see {@link https://vitest.dev/guide/browser/interactivity-api#userevent-fill}
    */
   fill(text: string, options?: UserEventFillOptions): Promise<void>
@@ -370,7 +532,7 @@ export interface Locator extends LocatorSelectors {
    * Change a file input element to have the specified files. Uses provider's API under the hood.
    * @see {@link https://vitest.dev/guide/browser/interactivity-api#userevent-upload}
    */
-  upload: (files: File | File[] | string | string[]) => Promise<void>
+  upload(files: File | File[] | string | string[], options?: UserEventUploadOptions): Promise<void>
 
   /**
    * Make a screenshot of an element matching the locator.
@@ -390,7 +552,7 @@ export interface Locator extends LocatorSelectors {
    *
    * @see {@link https://vitest.dev/guide/browser/locators#element}
    */
-  element(): Element
+  element(): HTMLElement | SVGElement
   /**
    * Returns an array of elements matching the selector.
    *
@@ -398,7 +560,7 @@ export interface Locator extends LocatorSelectors {
    *
    * @see {@link https://vitest.dev/guide/browser/locators#elements}
    */
-  elements(): Element[]
+  elements(): (HTMLElement | SVGElement)[]
   /**
    * Returns an element matching the selector.
    *
@@ -407,13 +569,43 @@ export interface Locator extends LocatorSelectors {
    *
    * @see {@link https://vitest.dev/guide/browser/locators#query}
    */
-  query(): Element | null
+  query(): HTMLElement | SVGElement | null
   /**
    * Wraps an array of `.elements()` matching the selector in a new `Locator`.
    *
    * @see {@link https://vitest.dev/guide/browser/locators#all}
    */
   all(): Locator[]
+  /**
+   * Returns a locator for the nth element matching the selector.
+   * @see {@link https://vitest.dev/guide/browser/locators#nth}
+   */
+  nth(index: number): Locator
+  /**
+   * Returns a locator for the first element matching the selector.
+   * @see {@link https://vitest.dev/guide/browser/locators#first}
+   */
+  first(): Locator
+  /**
+   * Returns a locator for the last element matching the selector.
+   * @see {@link https://vitest.dev/guide/browser/locators#last}
+   */
+  last(): Locator
+  /**
+   * Returns a locator that matches both the current locator and the provided locator.
+   * @see {@link https://vitest.dev/guide/browser/locators#and}
+   */
+  and(locator: Locator): Locator
+  /**
+   * Returns a locator that matches either the current locator or the provided locator.
+   * @see {@link https://vitest.dev/guide/browser/locators#or}
+   */
+  or(locator: Locator): Locator
+  /**
+   * Narrows existing locator according to the options.
+   * @see {@link https://vitest.dev/guide/browser/locators#filter}
+   */
+  filter(options: LocatorOptions): Locator
 }
 
 export interface UserEventTabOptions {
@@ -468,6 +660,13 @@ export const server: {
   config: SerializedConfig
 }
 
+export interface LocatorOptions {
+  hasText?: string | RegExp
+  hasNotText?: string | RegExp
+  has?: Locator
+  hasNot?: Locator
+}
+
 /**
  * Handler for user interactions. The support is provided by the browser provider (`playwright` or `webdriverio`).
  * If used with `preview` provider, fallbacks to simulated events via `@testing-library/user-event`.
@@ -491,11 +690,16 @@ export interface BrowserPage extends LocatorSelectors {
    * Make a screenshot of the test iframe or a specific element.
    * @returns Path to the screenshot file or path and base64.
    */
+  screenshot(options: Omit<ScreenshotOptions, 'save'> & { save: false }): Promise<string>
   screenshot(options: Omit<ScreenshotOptions, 'base64'> & { base64: true }): Promise<{
     path: string
     base64: string
   }>
-  screenshot(options?: ScreenshotOptions): Promise<string>
+  screenshot(options?: Omit<ScreenshotOptions, 'base64'>): Promise<string>
+  screenshot(options?: ScreenshotOptions): Promise<string | {
+    path: string
+    base64: string
+  }>
   /**
    * Extend default `page` object with custom methods.
    */
@@ -505,7 +709,35 @@ export interface BrowserPage extends LocatorSelectors {
    * @see {@link https://vitest.dev/guide/browser/locators}
    */
   elementLocator(element: Element): Locator
+  /**
+   * The iframe locator. This is a document locator that enters the iframe body
+   * and works similarly to the `page` object.
+   *
+   * As the first argument, pass down the locator to the `<iframe>` element itself.
+   *
+   * **Warning:** At the moment, this is supported only by the `playwright` provider.
+   * @example
+   * ```ts
+   * const frame = page.frameLocator(
+   *   page.getByTestId('iframe')
+   * )
+   *
+   * await frame.getByText('Hello World').click()
+   * ```
+   * @param locator The locator object.
+   * @see {@link https://vitest.dev/guide/browser/locators}
+   */
+  frameLocator(locator: Locator): FrameLocator
 }
+
+export interface BrowserLocators {
+  createElementLocators(element: Element): LocatorSelectors
+  extend(methods: {
+    [K in keyof LocatorSelectors]?: (this: BrowserPage | Locator, ...args: Parameters<LocatorSelectors[K]>) => ReturnType<LocatorSelectors[K]> | string
+  }): void
+}
+
+export const locators: BrowserLocators
 
 export const page: BrowserPage
 export const cdp: () => CDPSession

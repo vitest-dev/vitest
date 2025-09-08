@@ -2,8 +2,6 @@
 
 const LIVING_KEYS = [
   'DOMException',
-  'URL',
-  'URLSearchParams',
   'EventTarget',
   'NamedNodeMap',
   'Node',
@@ -160,9 +158,6 @@ const LIVING_KEYS = [
   'ShadowRoot',
   'MutationObserver',
   'MutationRecord',
-  'Headers',
-  'AbortController',
-  'AbortSignal',
 
   'Uint8Array',
   'Uint16Array',
@@ -183,6 +178,13 @@ const LIVING_KEYS = [
   'Option',
 
   'CSS',
+
+  // Conflict with Node.js values
+  // 'Headers',
+  // 'AbortController',
+  // 'AbortSignal',
+  // 'URL',
+  // 'URLSearchParams',
 ]
 
 const OTHER_KEYS = [
@@ -248,4 +250,4 @@ const OTHER_KEYS = [
   'window',
 ]
 
-export const KEYS = LIVING_KEYS.concat(OTHER_KEYS)
+export const KEYS: string[] = LIVING_KEYS.concat(OTHER_KEYS)

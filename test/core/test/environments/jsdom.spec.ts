@@ -4,24 +4,40 @@ import { stripVTControlCharacters } from 'node:util'
 import { processError } from '@vitest/utils/error'
 import { expect, test } from 'vitest'
 
-const nodeMajor = Number(process.version.slice(1).split('.')[0])
-
-test.runIf(nodeMajor >= 15)('MessageChannel and MessagePort are available', () => {
+test('MessageChannel and MessagePort are available', () => {
   expect(MessageChannel).toBeDefined()
   expect(MessagePort).toBeDefined()
 })
 
-test.runIf(nodeMajor >= 17)('structuredClone is available', () => {
+test('structuredClone is available', () => {
   expect(structuredClone).toBeDefined()
 })
 
-test.runIf(nodeMajor >= 18)('fetch, Request, Response, and BroadcastChannel are available', () => {
+test('fetch, Request, Response, and BroadcastChannel are available', () => {
   expect(fetch).toBeDefined()
   expect(Request).toBeDefined()
   expect(Response).toBeDefined()
   expect(TextEncoder).toBeDefined()
   expect(TextDecoder).toBeDefined()
   expect(BroadcastChannel).toBeDefined()
+})
+
+test('Fetch API accepts other APIs', () => {
+  expect.soft(() => new Request('http://localhost', { signal: new AbortController().signal })).not.toThrowError()
+  expect.soft(() => new Request('http://localhost', { method: 'POST', body: new FormData() })).not.toThrowError()
+  expect.soft(() => new Request('http://localhost', { method: 'POST', body: new Blob() })).not.toThrowError()
+  expect.soft(() => new Request(new URL('https://localhost'))).not.toThrowError()
+
+  const request = new Request('http://localhost')
+  expect.soft(request.headers).toBeInstanceOf(Headers)
+
+  expect.soft(
+    () => new Request('http://localhost', { method: 'POST', body: new URLSearchParams([['key', 'value']]) }),
+  ).not.toThrowError()
+
+  const searchParams = new URLSearchParams()
+  searchParams.set('key', 'value')
+  expect.soft(() => new Request('http://localhost', { method: 'POST', body: searchParams })).not.toThrowError()
 })
 
 test('atob and btoa are available', () => {

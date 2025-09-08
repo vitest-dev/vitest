@@ -1,16 +1,24 @@
 import type { Stats } from 'node:fs'
 import type { HtmlTagDescriptor } from 'vite'
+import type { Plugin } from 'vitest/config'
 import type { Vitest } from 'vitest/node'
 import type { ParentBrowserProject } from './projectParent'
-import { lstatSync, readFileSync } from 'node:fs'
+import { createReadStream, lstatSync, readFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import { dynamicImportPlugin } from '@vitest/mocker/node'
 import { toArray } from '@vitest/utils'
 import MagicString from 'magic-string'
 import { basename, dirname, extname, resolve } from 'pathe'
 import sirv from 'sirv'
-import { coverageConfigDefaults, type Plugin } from 'vitest/config'
-import { getFilePoolName, resolveApiServerConfig, resolveFsAllow, distDir as vitestDist } from 'vitest/node'
+import { coverageConfigDefaults } from 'vitest/config'
+import {
+  isFileServingAllowed,
+  isValidApiRequest,
+  resolveApiServerConfig,
+  resolveFsAllow,
+  rolldownVersion,
+  distDir as vitestDist,
+} from 'vitest/node'
 import { distRoot } from './constants'
 import { createOrchestratorMiddleware } from './middlewares/orchestratorMiddleware'
 import { createTesterMiddleware } from './middlewares/testerMiddleware'
@@ -93,7 +101,15 @@ export default (parentServer: ParentBrowserProject, base = '/'): Plugin[] => {
             }
 
             const url = new URL(req.url, 'http://localhost')
-            const file = url.searchParams.get('file')
+            const id = url.searchParams.get('id')
+            if (!id) {
+              res.statusCode = 404
+              res.end()
+              return
+            }
+
+            const task = parentServer.vitest.state.idMap.get(id)
+            const file = task?.meta.failScreenshotPath
             if (!file) {
               res.statusCode = 404
               res.end()
@@ -146,17 +162,55 @@ export default (parentServer: ParentBrowserProject, base = '/'): Plugin[] => {
           }
           next()
         })
+        // handle attachments the same way as in packages/ui/node/index.ts
+        server.middlewares.use((req, res, next) => {
+          if (!req.url) {
+            return next()
+          }
+
+          const url = new URL(req.url, 'http://localhost')
+
+          if (url.pathname !== '/__vitest_attachment__') {
+            return next()
+          }
+
+          const path = url.searchParams.get('path')
+          const contentType = url.searchParams.get('contentType')
+
+          if (!isValidApiRequest(parentServer.config, req) || !contentType || !path) {
+            return next()
+          }
+
+          const fsPath = decodeURIComponent(path)
+
+          if (!isFileServingAllowed(parentServer.vite.config, fsPath)) {
+            return next()
+          }
+
+          try {
+            res.setHeader(
+              'content-type',
+              contentType,
+            )
+
+            return createReadStream(fsPath)
+              .pipe(res)
+              .on('close', () => res.end())
+          }
+          catch (err) {
+            return next(err)
+          }
+        })
       },
     },
     {
       name: 'vitest:browser:tests',
       enforce: 'pre',
       async config() {
-        const project = parentServer.vitest.getProjectByName(parentServer.config.name)
-        const { testFiles: allTestFiles } = await project.globTestFiles()
-        const browserTestFiles = allTestFiles.filter(
-          file => getFilePoolName(project, file) === 'browser',
-        )
+        // this plugin can be used in different projects, but all of them
+        // have the same `include` pattern, so it doesn't matter which project we use
+        const project = parentServer.project
+        const { testFiles: browserTestFiles } = await project.globTestFiles()
         const setupFiles = toArray(project.config.setupFiles)
 
         // replace env values - cannot be reassign at runtime
@@ -178,8 +232,7 @@ export default (parentServer: ParentBrowserProject, base = '/'): Plugin[] => {
 
         const exclude = [
           'vitest',
-          'vitest/utils',
-          'vitest/browser',
+          'vitest/internal/browser',
           'vitest/runners',
           '@vitest/browser',
           '@vitest/browser/client',
@@ -204,7 +257,7 @@ export default (parentServer: ParentBrowserProject, base = '/'): Plugin[] => {
         }
 
         if (parentServer.vitest.coverageProvider) {
-          const coverage = parentServer.vitest.config.coverage
+          const coverage = parentServer.vitest._coverageOptions
           const provider = coverage.provider
           if (provider === 'v8') {
             const path = tryResolve('@vitest/coverage-v8', [parentServer.config.root])
@@ -228,8 +281,9 @@ export default (parentServer: ParentBrowserProject, base = '/'): Plugin[] => {
         const include = [
           'vitest > expect-type',
           'vitest > @vitest/snapshot > magic-string',
-          'vitest > chai',
-          'vitest > chai > loupe',
+          'vitest > @vitest/runner > strip-literal',
+          'vitest > @vitest/expect > chai',
+          'vitest > @vitest/expect > chai > loupe',
           'vitest > @vitest/utils > loupe',
           '@vitest/browser > @testing-library/user-event',
           '@vitest/browser > @testing-library/dom',
@@ -243,7 +297,15 @@ export default (parentServer: ParentBrowserProject, base = '/'): Plugin[] => {
         }
 
         // since we override the resolution in the esbuild plugin, Vite can no longer optimizer it
-        // have ?. until Vitest 3.0 for backwards compatibility
+        const vue = isPackageExists('vitest-browser-vue', fileRoot)
+        if (vue) {
+          // we override them in the esbuild plugin so optimizer can no longer intercept it
+          include.push(
+            'vitest-browser-vue',
+            'vitest-browser-vue > @vue/test-utils',
+            'vitest-browser-vue > @vue/test-utils > @vue/compiler-core',
+          )
+        }
         const vueTestUtils = isPackageExists('@vue/test-utils', fileRoot)
         if (vueTestUtils) {
           include.push('@vue/test-utils')
@@ -329,7 +391,7 @@ export default (parentServer: ParentBrowserProject, base = '/'): Plugin[] => {
           viteConfig.esbuild.legalComments = 'inline'
         }
 
-        const defaultPort = parentServer.vitest._browserLastPort++
+        const defaultPort = parentServer.vitest.state._data.browserLastPort++
 
         const api = resolveApiServerConfig(
           viteConfig.test?.browser || {},
@@ -363,13 +425,15 @@ export default (parentServer: ParentBrowserProject, base = '/'): Plugin[] => {
     {
       name: 'vitest:browser:in-source-tests',
       transform(code, id) {
+        const filename = cleanUrl(id)
         const project = parentServer.vitest.getProjectByName(parentServer.config.name)
-        if (!project.isCachedTestFile(id) || !code.includes('import.meta.vitest')) {
+
+        if (!project._isCachedTestFile(filename) || !code.includes('import.meta.vitest')) {
           return
         }
-        const s = new MagicString(code, { filename: cleanUrl(id) })
+        const s = new MagicString(code, { filename })
         s.prepend(
-          `import.meta.vitest = __vitest_index__;\n`,
+          `Object.defineProperty(import.meta, 'vitest', { get() { return typeof __vitest_worker__ !== 'undefined' && __vitest_worker__.filepath === "${filename.replace(/"/g, '\\"')}" ? __vitest_index__ : undefined } });\n`,
         )
         return {
           code: s.toString(),
@@ -402,12 +466,6 @@ export default (parentServer: ParentBrowserProject, base = '/'): Plugin[] => {
           return
         }
 
-        if (!parentServer.testerScripts) {
-          const testerScripts = await parentServer.formatScripts(
-            parentServer.config.browser.testerScripts,
-          )
-          parentServer.testerScripts = testerScripts
-        }
         const stateJs = typeof parentServer.stateJs === 'string'
           ? parentServer.stateJs
           : await parentServer.stateJs
@@ -486,6 +544,14 @@ body {
             },
             injectTo: 'head' as const,
           },
+          {
+            tag: 'script',
+            attrs: {
+              type: 'module',
+              src: parentServer.matchersUrl,
+            },
+            injectTo: 'head' as const,
+          },
           parentServer.locatorsUrl
             ? {
                 tag: 'script',
@@ -496,43 +562,47 @@ body {
                 injectTo: 'head',
               } as const
             : null,
-          ...parentServer.testerScripts,
           ...testerTags,
-          {
-            tag: 'script',
-            attrs: {
-              'type': 'module',
-              'data-vitest-append': '',
-            },
-            children: '{__VITEST_APPEND__}',
-            injectTo: 'body',
-          } as const,
         ].filter(s => s != null)
       },
     },
     {
       name: 'vitest:browser:support-testing-library',
       config() {
-        return {
-          optimizeDeps: {
-            esbuildOptions: {
-              plugins: [
-                {
-                  name: 'test-utils-rewrite',
-                  setup(build) {
-                    build.onResolve({ filter: /^@vue\/test-utils$/ }, (args) => {
-                      const _require = getRequire()
-                      // resolve to CJS instead of the browser because the browser version expects a global Vue object
-                      const resolved = _require.resolve(args.path, {
-                        paths: [args.importer],
-                      })
-                      return { path: resolved }
-                    })
-                  },
-                },
-              ],
+        const rolldownPlugin = {
+          name: 'vue-test-utils-rewrite',
+          resolveId: {
+            // test-utils: resolve to CJS instead of the browser because the browser version expects a global Vue object
+            // compiler-core: only CJS version allows slots as strings
+            filter: { id: /^@vue\/(test-utils|compiler-core)$/ },
+            handler(source: string, importer: string) {
+              const resolved = getRequire().resolve(source, {
+                paths: [importer!],
+              })
+              return resolved
             },
           },
+        }
+
+        const esbuildPlugin = {
+          name: 'test-utils-rewrite',
+          // "any" because vite doesn't expose any types for this
+          setup(build: any) {
+            // test-utils: resolve to CJS instead of the browser because the browser version expects a global Vue object
+            // compiler-core: only CJS version allows slots as strings
+            build.onResolve({ filter: /^@vue\/(test-utils|compiler-core)$/ }, (args: any) => {
+              const resolved = getRequire().resolve(args.path, {
+                paths: [args.importer],
+              })
+              return { path: resolved }
+            })
+          },
+        }
+
+        return {
+          optimizeDeps: rolldownVersion
+            ? { rollupOptions: { plugins: [rolldownPlugin] } }
+            : { esbuildOptions: { plugins: [esbuildPlugin] } },
         }
       },
     },
@@ -559,14 +629,15 @@ function getRequire() {
 
 function resolveCoverageFolder(vitest: Vitest) {
   const options = vitest.config
-  const htmlReporter = options.coverage?.enabled
+  const coverageOptions = vitest._coverageOptions
+  const htmlReporter = coverageOptions?.enabled
     ? toArray(options.coverage.reporter).find((reporter) => {
-      if (typeof reporter === 'string') {
-        return reporter === 'html'
-      }
+        if (typeof reporter === 'string') {
+          return reporter === 'html'
+        }
 
-      return reporter[0] === 'html'
-    })
+        return reporter[0] === 'html'
+      })
     : undefined
 
   if (!htmlReporter) {
@@ -576,13 +647,13 @@ function resolveCoverageFolder(vitest: Vitest) {
   // reportsDirectory not resolved yet
   const root = resolve(
     options.root || process.cwd(),
-    options.coverage.reportsDirectory || coverageConfigDefaults.reportsDirectory,
+    coverageOptions.reportsDirectory || coverageConfigDefaults.reportsDirectory,
   )
 
   const subdir
     = Array.isArray(htmlReporter)
-    && htmlReporter.length > 1
-    && 'subdir' in htmlReporter[1]
+      && htmlReporter.length > 1
+      && 'subdir' in htmlReporter[1]
       ? htmlReporter[1].subdir
       : undefined
 

@@ -1,7 +1,7 @@
 import type { UserEvent } from '../../../context'
 import type { UserEventCommand } from './utils'
 import { PlaywrightBrowserProvider } from '../providers/playwright'
-import { WebdriverBrowserProvider } from '../providers/webdriver'
+import { WebdriverBrowserProvider } from '../providers/webdriverio'
 
 export const click: UserEventCommand<UserEvent['click']> = async (
   context,
@@ -59,7 +59,7 @@ export const tripleClick: UserEventCommand<UserEvent['tripleClick']> = async (
     await browser
       .action('pointer', { parameters: { pointerType: 'mouse' } })
       // move the pointer over the button
-      .move({ origin: await browser.$(selector) })
+      .move({ origin: browser.$(selector) })
       // simulate 3 clicks
       .down()
       .up()

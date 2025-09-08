@@ -2,6 +2,7 @@
 
 exports[`should fail > typecheck files 1`] = `
 "TypeCheckError: Type 'string' does not satisfy the constraint '"Expected string, Actual number"'.
+TypeCheckError: Cannot find name 'Buffer'. Do you need to install type definitions for node? Try \`npm i --save-dev @types/node\` and then add 'node' to the types field in your tsconfig.
 TypeCheckError: This expression is not callable. Type 'ExpectArray<number>' has no call signatures.
 TypeCheckError: This expression is not callable. Type 'ExpectUndefined<number>' has no call signatures.
 TypeCheckError: This expression is not callable. Type 'ExpectVoid<number>' has no call signatures.
@@ -24,12 +25,12 @@ TypeCheckError: This expression is not callable. Type 'ExpectVoid<number>' has n
 exports[`should fail > typecheck files 3`] = `
 " FAIL  expect-error.test-d.ts > failing test with expect-error
 TypeCheckError: Unused '@ts-expect-error' directive.
- ❯ expect-error.test-d.ts:4:3
-      2| 
-      3| test('failing test with expect-error', () => {
-      4|   // @ts-expect-error expect nothing
+ ❯ expect-error.test-d.ts:5:3
+      3| //
+      4| test('failing test with expect-error', () => {
+      5|   // @ts-expect-error expect nothing
        |   ^
-      5|   expectTypeOf(1).toEqualTypeOf<number>()"
+      6|   expectTypeOf(1).toEqualTypeOf<number>()"
 `;
 
 exports[`should fail > typecheck files 4`] = `
@@ -77,6 +78,17 @@ TypeCheckError: This expression is not callable. Type 'ExpectArray<number>' has 
 `;
 
 exports[`should fail > typecheck files 8`] = `
+" FAIL  node-types.test-d.ts > buffer is not available
+TypeCheckError: Cannot find name 'Buffer'. Do you need to install type definitions for node? Try \`npm i --save-dev @types/node\` and then add 'node' to the types field in your tsconfig.
+ ❯ node-types.test-d.ts:4:3
+      2| 
+      3| test('buffer is not available', () => {
+      4|   Buffer.from([])
+       |   ^
+      5| })"
+`;
+
+exports[`should fail > typecheck files 9`] = `
 " FAIL  only.test-d.ts > failing test
 TypeCheckError: Type 'string' does not satisfy the constraint '"Expected string, Actual number"'.
  ❯ only.test-d.ts:4:33
@@ -96,14 +108,14 @@ Vitest caught 1 unhandled error during the test run.
 This might cause false positive tests. Resolve unhandled errors to make sure your tests are not affected.
 
 ⎯⎯⎯⎯⎯⎯ Typecheck Error ⎯⎯⎯⎯⎯⎯⎯
-Error: error TS18003: No inputs were found in config file '<root>/tsconfig.vitest-temp.json'. Specified 'include' paths were '["src"]' and 'exclude' paths were '["**/dist/**"]'.
+Error: error TS18003: No inputs were found in config file '<root>/tsconfig.empty.json'. Specified 'include' paths were '["src"]' and 'exclude' paths were '["**/dist/**"]'.
 
 ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
 
 "
 `;
 
-exports[`should fail > typecheks with custom tsconfig 1`] = `
+exports[`should fail > typechecks with custom tsconfig 1`] = `
 "TypeCheckError: This expression is not callable. Type 'ExpectUndefined<number>' has no call signatures.
 TypeCheckError: This expression is not callable. Type 'ExpectVoid<number>' has no call signatures.
 TypeCheckError: Type 'string' does not satisfy the constraint '"Expected string, Actual number"'.

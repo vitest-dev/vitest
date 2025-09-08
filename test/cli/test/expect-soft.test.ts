@@ -1,11 +1,11 @@
-import type { UserConfig } from 'vitest'
+import type { TestUserConfig } from 'vitest/node'
 import { resolve } from 'node:path'
 import { describe, expect, test } from 'vitest'
 import { getCurrentTest } from 'vitest/suite'
 import { runVitest } from '../../test-utils'
 
 describe('expect.soft', () => {
-  const run = (config?: UserConfig) => runVitest({
+  const run = (config?: TestUserConfig) => runVitest({
     root: resolve('./fixtures/expect-soft'),
     include: ['expects/soft.test.ts'],
     setupFiles: [],
@@ -38,6 +38,12 @@ describe('expect.soft', () => {
     expect.soft(stderr).toContain('AssertionError: expected 1 to deeply equal 2')
     expect.soft(stderr).toContain('Error: expected 3 to be divisible by 4')
     expect.soft(stderr).toContain('AssertionError: expected 5 to deeply equal 6')
+  })
+
+  test('promise with expect.extend', async () => {
+    const { stderr } = await run()
+    expect.soft(stderr).toContain('Error: expected 2 to be 3')
+    expect.soft(stderr).toContain('Error: expected 4 to be 3')
   })
 
   test('passed', async () => {

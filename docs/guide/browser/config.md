@@ -4,12 +4,13 @@ You can change the browser configuration by updating the `test.browser` field in
 
 ```ts [vitest.config.ts]
 import { defineConfig } from 'vitest/config'
+import { playwright } from '@vitest/browser/providers/playwright'
 
 export default defineConfig({
   test: {
     browser: {
       enabled: true,
-      provider: 'playwright',
+      provider: playwright(),
       instances: [
         {
           browser: 'chromium',
@@ -53,15 +54,6 @@ Defines multiple browser setups. Every config has to have at least a `browser` f
 - [Configuring Playwright](/guide/browser/playwright)
 - [Configuring WebdriverIO](/guide/browser/webdriverio)
 
-::: tip
-To have a better type safety when using built-in providers, you should reference one of these types (for provider that you are using) in your [config file](/config/):
-
-```ts
-/// <reference types="@vitest/browser/providers/playwright" />
-/// <reference types="@vitest/browser/providers/webdriverio" />
-```
-:::
-
 In addition to that, you can also specify most of the [project options](/config/) (not marked with a <NonProjectOption /> icon) and some of the `browser` options like `browser.testerHtmlPath`.
 
 ::: warning
@@ -100,25 +92,11 @@ List of available `browser` options:
 - [`browser.testerHtmlPath`](#browser-testerhtmlpath)
 - [`browser.screenshotDirectory`](#browser-screenshotdirectory)
 - [`browser.screenshotFailures`](#browser-screenshotfailures)
+- [`browser.provider`](#browser-provider)
 
-By default, Vitest creates an array with a single element which uses the [`browser.name`](#browser-name) field as a `browser`. Note that this behaviour will be removed with Vitets 4.
+By default, Vitest creates an array with a single element which uses the [`browser.name`](#browser-name) field as a `browser`. Note that this behaviour will be removed with Vitest 4.
 
 Under the hood, Vitest transforms these instances into separate [test projects](/advanced/api/test-project) sharing a single Vite server for better caching performance.
-
-## browser&#46;name <Badge type="danger">deprecated</Badge> {#browser-name}
-
-- **Type:** `string`
-- **CLI:** `--browser=safari`
-
-::: danger
-This API is deprecated an will be removed in Vitest 4. Please, use [`browser.instances`](#browser-instances) option instead.
-:::
-
-Run all tests in a specific browser. Possible options in different providers:
-
-- `webdriverio`: `firefox`, `chrome`, `edge`, `safari`
-- `playwright`: `firefox`, `webkit`, `chromium`
-- custom: any string that will be passed to the provider
 
 ## browser.headless
 
@@ -150,70 +128,86 @@ A path to the HTML entry point. Can be relative to the root of the project. This
 
 Configure options for Vite server that serves code in the browser. Does not affect [`test.api`](#api) option. By default, Vitest assigns port `63315` to avoid conflicts with the development server, allowing you to run both in parallel.
 
-## browser.provider <Badge type="warning">experimental</Badge> {#browser-provider}
+## browser.provider <Badge type="danger">advanced</Badge> {#browser-provider}
 
-- **Type:** `'webdriverio' | 'playwright' | 'preview' | string`
+- **Type:** `BrowserProviderOption`
 - **Default:** `'preview'`
 - **CLI:** `--browser.provider=playwright`
 
-::: danger ADVANCED API
-The provider API is highly experimental and can change between patches. If you just need to run tests in a browser, use the [`browser.instances`](#browser-instances) option instead.
-:::
+The return value of the provider factory. You can import the factory from `@vitest/browser/providers/<provider-name>` or make your own provider:
 
-Path to a provider that will be used when running browser tests. Vitest provides three providers which are `preview` (default), `webdriverio` and `playwright`. Custom providers should be exported using `default` export and have this shape:
-
-```ts
-export interface BrowserProvider {
-  name: string
-  supportsParallelism: boolean
-  getSupportedBrowsers: () => readonly string[]
-  beforeCommand?: (command: string, args: unknown[]) => Awaitable<void>
-  afterCommand?: (command: string, args: unknown[]) => Awaitable<void>
-  getCommandsContext: (sessionId: string) => Record<string, unknown>
-  openPage: (sessionId: string, url: string, beforeNavigate?: () => Promise<void>) => Promise<void>
-  getCDPSession?: (sessionId: string) => Promise<CDPSession>
-  close: () => Awaitable<void>
-  initialize(
-    ctx: TestProject,
-    options: BrowserProviderInitializationOptions
-  ): Awaitable<void>
-}
-```
-
-## browser.providerOptions <Badge type="danger">deprecated</Badge> {#browser-provideroptions}
-
-- **Type:** `BrowserProviderOptions`
-
-::: danger
-This API is deprecated an will be removed in Vitest 4. Please, use [`browser.instances`](#browser-instances) option instead.
-:::
-
-Options that will be passed down to provider when calling `provider.initialize`.
-
-```ts
-import { defineConfig } from 'vitest/config'
+```ts{8-10}
+import { playwright } from '@vitest/browser/providers/playwright'
+import { webdriverio } from '@vitest/browser/providers/webdriverio'
+import { preview } from '@vitest/browser/providers/preview'
 
 export default defineConfig({
   test: {
     browser: {
-      providerOptions: {
-        launch: {
-          devtools: true,
-        },
-      },
+      provider: playwright(),
+      provider: webdriverio(),
+      provider: preview(), // default
     },
   },
 })
 ```
 
-::: tip
-To have a better type safety when using built-in providers, you should reference one of these types (for provider that you are using) in your [config file](/config/):
+To configure how provider initializes the browser, you can pass down options to the factory function:
+
+```ts{7-15,22-27}
+import { playwright } from '@vitest/browser/providers/playwright'
+
+export default defineConfig({
+  test: {
+    browser: {
+      // shared provider options between all instances
+      provider: playwright({
+        launchOptions: {
+          slowMo: 50,
+          channel: 'chrome-beta',
+        },
+        actionTimeout: 5_000,
+      }),
+      instances: [
+        { browser: 'chromium' },
+        {
+          browser: 'firefox',
+          // overriding options only for a single instance
+          // this will NOT merge options with the parent one
+          provider: playwright({
+            launchOptions: {
+              firefoxUserPrefs: {
+                'browser.startup.homepage': 'https://example.com',
+              },
+            },
+          })
+        }
+      ],
+    },
+  },
+})
+```
+
+### Custom Provider
+
+::: danger ADVANCED API
+The custom provider API is highly experimental and can change between patches. If you just need to run tests in a browser, use the [`browser.instances`](#browser-instances) option instead.
+:::
 
 ```ts
-/// <reference types="@vitest/browser/providers/playwright" />
-/// <reference types="@vitest/browser/providers/webdriverio" />
+export interface BrowserProvider {
+  name: string
+  mocker?: BrowserModuleMocker
+  /**
+   * @experimental opt-in into file parallelisation
+   */
+  supportsParallelism: boolean
+  getCommandsContext: (sessionId: string) => Record<string, unknown>
+  openPage: (sessionId: string, url: string) => Promise<void>
+  getCDPSession?: (sessionId: string) => Promise<CDPSession>
+  close: () => Awaitable<void>
+}
 ```
-:::
 
 ## browser.ui
 
@@ -244,7 +238,7 @@ Attribute used to find elements with `getByTestId` locator.
 ## browser.screenshotDirectory
 
 - **Type:** `string`
-- **Default:** `__snapshots__` in the test file directory
+- **Default:** `__screenshots__` in the test file directory
 
 Path to the screenshots directory relative to the `root`.
 
@@ -295,19 +289,6 @@ export interface BrowserScript {
 }
 ```
 
-## browser.testerScripts
-
-- **Type:** `BrowserScript[]`
-- **Default:** `[]`
-
-::: danger
-This API is deprecated an will be removed in Vitest 4. Please, use [`browser.testerHtmlPath`](#browser-testerHtmlPath) field instead.
-:::
-
-Custom scripts that should be injected into the tester HTML before the tests environment is initiated. This is useful to inject polyfills required for Vitest browser implementation. It is recommended to use [`setupFiles`](#setupfiles) in almost all cases instead of this.
-
-The script `src` and `content` will be processed by Vite plugins.
-
 ## browser.commands
 
 - **Type:** `Record<string, BrowserCommand>`
@@ -325,3 +306,152 @@ The timeout in milliseconds. If connection to the browser takes longer, the test
 ::: info
 This is the time it should take for the browser to establish the WebSocket connection with the Vitest server. In normal circumstances, this timeout should never be reached.
 :::
+
+## browser.trackUnhandledErrors
+
+- **Type:** `boolean`
+- **Default:** `true`
+
+Enables tracking uncaught errors and exceptions so they can be reported by Vitest.
+
+If you need to hide certain errors, it is recommended to use [`onUnhandledError`](/config/#onunhandlederror) option instead.
+
+Disabling this will completely remove all Vitest error handlers, which can help debugging with the "Pause on exceptions" checkbox turned on.
+
+## browser.expect
+
+- **Type:** `ExpectOptions`
+
+### browser.expect.toMatchScreenshot
+
+Default options for the
+[`toMatchScreenshot` assertion](/guide/browser/assertion-api.html#tomatchscreenshot).
+These options will be applied to all screenshot assertions.
+
+::: tip
+Setting global defaults for screenshot assertions helps maintain consistency
+across your test suite and reduces repetition in individual tests. You can still
+override these defaults at the assertion level when needed for specific test cases.
+:::
+
+```ts
+import { defineConfig } from 'vitest/config'
+
+export default defineConfig({
+  test: {
+    browser: {
+      enabled: true,
+      expect: {
+        toMatchScreenshot: {
+          comparatorName: 'pixelmatch',
+          comparatorOptions: {
+            threshold: 0.2,
+            allowedMismatchedPixels: 100,
+          },
+          resolveScreenshotPath: ({ arg, browserName, ext, testFileName }) =>
+            `custom-screenshots/${testFileName}/${arg}-${browserName}${ext}`,
+        },
+      },
+    },
+  },
+})
+```
+
+[All options available in the `toMatchScreenshot` assertion](/guide/browser/assertion-api#options)
+can be configured here. Additionally, two path resolution functions are
+available: `resolveScreenshotPath` and `resolveDiffPath`.
+
+#### browser.expect.toMatchScreenshot.resolveScreenshotPath
+
+- **Type:** `(data: PathResolveData) => string`
+- **Default output:** `` `${root}/${testFileDirectory}/${screenshotDirectory}/${testFileName}/${arg}-${browserName}-${platform}${ext}` ``
+
+A function to customize where reference screenshots are stored. The function
+receives an object with the following properties:
+
+- `arg: string`
+
+  Path **without** extension, sanitized and relative to the test file.
+
+  This comes from the arguments passed to `toMatchScreenshot`; if called
+  without arguments this will be the auto-generated name.
+
+  ```ts
+  test('calls `onClick`', () => {
+    expect(locator).toMatchScreenshot()
+    // arg = "calls-onclick-1"
+  })
+
+  expect(locator).toMatchScreenshot('foo/bar/baz.png')
+  // arg = "foo/bar/baz"
+
+  expect(locator).toMatchScreenshot('../foo/bar/baz.png')
+  // arg = "foo/bar/baz"
+  ```
+
+- `ext: string`
+
+  Screenshot extension, with leading dot.
+
+  This can be set through the arguments passed to `toMatchScreenshot`, but
+  the value will fall back to `'.png'` if an unsupported extension is used.
+
+- `browserName: string`
+
+  The instance's browser name.
+
+- `platform: NodeJS.Platform`
+
+  The value of
+  [`process.platform`](https://nodejs.org/docs/v22.16.0/api/process.html#processplatform).
+
+- `screenshotDirectory: string`
+
+  The value provided to
+  [`browser.screenshotDirectory`](/guide/browser/config#browser-screenshotdirectory),
+  if none is provided, its default value.
+
+- `root: string`
+
+  Absolute path to the project's [`root`](/config/#root).
+
+- `testFileDirectory: string`
+
+  Path to the test file, relative to the project's [`root`](/config/#root).
+
+- `testFileName: string`
+
+  The test's filename.
+
+- `testName: string`
+
+  The [`test`](/api/#test)'s name, including parent
+  [`describe`](/api/#describe), sanitized.
+
+- `attachmentsDir: string`
+
+  The value provided to [`attachmentsDir`](/config/#attachmentsdir), if none is
+  provided, its default value.
+
+For example, to group screenshots by browser:
+
+```ts
+resolveScreenshotPath: ({ arg, browserName, ext, root, testFileName }) =>
+  `${root}/screenshots/${browserName}/${testFileName}/${arg}${ext}`
+```
+
+#### browser.expect.toMatchScreenshot.resolveDiffPath
+
+- **Type:** `(data: PathResolveData) => string`
+- **Default output:** `` `${root}/${attachmentsDir}/${testFileDirectory}/${testFileName}/${arg}-${browserName}-${platform}${ext}` ``
+
+A function to customize where diff images are stored when screenshot comparisons
+fail. Receives the same data object as
+[`resolveScreenshotPath`](#browser-expect-tomatchscreenshot-resolvescreenshotpath).
+
+For example, to store diffs in a subdirectory of attachments:
+
+```ts
+resolveDiffPath: ({ arg, attachmentsDir, browserName, ext, root, testFileName }) =>
+  `${root}/${attachmentsDir}/screenshot-diffs/${testFileName}/${arg}-${browserName}${ext}`
+```

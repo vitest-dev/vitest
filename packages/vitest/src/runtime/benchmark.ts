@@ -16,7 +16,7 @@ export function getBenchFn(key: Test): BenchFunction {
   return benchFns.get(key)!
 }
 
-export const bench = createBenchmark(function (
+export const bench: BenchmarkAPI = createBenchmark(function (
   name,
   fn: BenchFunction = noop,
   options: BenchOptions = {},
@@ -33,6 +33,11 @@ export const bench = createBenchmark(function (
   })
   benchFns.set(task, fn)
   benchOptsMap.set(task, options)
+  // vitest runner sets mode to `todo` if handler is not passed down
+  // but we store handler separetly
+  if (!this.todo && task.mode === 'todo') {
+    task.mode = 'run'
+  }
 })
 
 function createBenchmark(
@@ -59,7 +64,7 @@ function createBenchmark(
 function formatName(name: string | Function) {
   return typeof name === 'string'
     ? name
-    : name instanceof Function
+    : typeof name === 'function'
       ? name.name || '<anonymous>'
       : String(name)
 }

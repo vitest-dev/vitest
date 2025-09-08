@@ -4,12 +4,13 @@ import type { Vitest } from '../core'
 import type { ProcessPool } from '../pool'
 import type { TestProject } from '../project'
 import type { TestSpecification } from '../spec'
+import type { TestRunEndReason } from '../types/reporter'
 import { hasFailed } from '@vitest/runner/utils'
 import { createDefer } from '@vitest/utils'
 import { Typechecker } from '../../typecheck/typechecker'
 import { groupBy } from '../../utils/base'
 
-export function createTypecheckPool(ctx: Vitest): ProcessPool {
+export function createTypecheckPool(vitest: Vitest): ProcessPool {
   const promisesMap = new WeakMap<TestProject, DeferPromise<void>>()
   const rerunTriggered = new WeakSet<TestProject>()
 
@@ -19,11 +20,12 @@ export function createTypecheckPool(ctx: Vitest): ProcessPool {
   ) {
     const checker = project.typechecker!
 
-    await ctx.report('onTaskUpdate', checker.getTestPacks())
+    const { packs, events } = checker.getTestPacksAndEvents()
+    await vitest._testRun.updated(packs, events)
 
     if (!project.config.typecheck.ignoreSourceErrors) {
       sourceErrors.forEach(error =>
-        ctx.state.catchError(error, 'Unhandled Source Error'),
+        vitest.state.catchError(error, 'Unhandled Source Error'),
       )
     }
 
@@ -32,7 +34,7 @@ export function createTypecheckPool(ctx: Vitest): ProcessPool {
     if (processError) {
       const error = new Error(checker.getOutput())
       error.stack = ''
-      ctx.state.catchError(error, 'Typecheck Error')
+      vitest.state.catchError(error, 'Typecheck Error')
     }
 
     promisesMap.get(project)?.resolve()
@@ -40,11 +42,19 @@ export function createTypecheckPool(ctx: Vitest): ProcessPool {
     rerunTriggered.delete(project)
 
     // triggered by TSC watcher, not Vitest watcher, so we need to emulate what Vitest does in this case
-    if (ctx.config.watch && !ctx.runningPromise) {
-      await ctx.report('onFinished', files, [])
-      await ctx.report('onWatcherStart', files, [
+    if (vitest.config.watch && !vitest.runningPromise) {
+      const modules = files.map(file => vitest.state.getReportedEntity(file)).filter(e => e?.type === 'module')
+
+      const state: TestRunEndReason = vitest.isCancelling
+        ? 'interrupted'
+        : modules.some(m => !m.ok())
+          ? 'failed'
+          : 'passed'
+
+      await vitest.report('onTestRunEnd', modules, [], state)
+      await vitest.report('onWatcherStart', files, [
         ...(project.config.typecheck.ignoreSourceErrors ? [] : sourceErrors),
-        ...ctx.state.getUnhandledErrors(),
+        ...vitest.state.getUnhandledErrors(),
       ])
     }
   }
@@ -62,8 +72,11 @@ export function createTypecheckPool(ctx: Vitest): ProcessPool {
     checker.setFiles(files)
 
     checker.onParseStart(async () => {
-      ctx.state.collectFiles(project, checker.getTestFiles())
-      await ctx.report('onCollected')
+      const files = checker.getTestFiles()
+      for (const file of files) {
+        await vitest._testRun.enqueued(project, file)
+      }
+      await vitest._testRun.collected(project, files)
     })
 
     checker.onParseEnd(result => onParseEnd(project, result))
@@ -71,9 +84,9 @@ export function createTypecheckPool(ctx: Vitest): ProcessPool {
     checker.onWatcherRerun(async () => {
       rerunTriggered.add(project)
 
-      if (!ctx.runningPromise) {
-        ctx.state.clearErrors()
-        await ctx.report(
+      if (!vitest.runningPromise) {
+        vitest.state.clearErrors()
+        await vitest.report(
           'onWatcherRerun',
           files,
           'File change detected. Triggering rerun.',
@@ -81,19 +94,23 @@ export function createTypecheckPool(ctx: Vitest): ProcessPool {
       }
 
       await checker.collectTests()
-      ctx.state.collectFiles(project, checker.getTestFiles())
 
-      await ctx.report('onTaskUpdate', checker.getTestPacks())
-      await ctx.report('onCollected')
+      const testFiles = checker.getTestFiles()
+      for (const file of testFiles) {
+        await vitest._testRun.enqueued(project, file)
+      }
+      await vitest._testRun.collected(project, testFiles)
+
+      const { packs, events } = checker.getTestPacksAndEvents()
+      await vitest._testRun.updated(packs, events)
     })
 
-    await checker.prepare()
     return checker
   }
 
   async function startTypechecker(project: TestProject, files: string[]) {
     if (project.typechecker) {
-      return project.typechecker
+      return
     }
     const checker = await createWorkspaceTypechecker(project, files)
     await checker.collectTests()
@@ -108,8 +125,8 @@ export function createTypecheckPool(ctx: Vitest): ProcessPool {
       const checker = await createWorkspaceTypechecker(project, files)
       checker.setFiles(files)
       await checker.collectTests()
-      ctx.state.collectFiles(project, checker.getTestFiles())
-      await ctx.report('onCollected')
+      const testFiles = checker.getTestFiles()
+      vitest.state.collectFiles(project, testFiles)
     }
   }
 
@@ -136,14 +153,17 @@ export function createTypecheckPool(ctx: Vitest): ProcessPool {
       })
       const triggered = await _p
       if (project.typechecker && !triggered) {
-        ctx.state.collectFiles(project, project.typechecker.getTestFiles())
-        await ctx.report('onCollected')
+        const testFiles = project.typechecker.getTestFiles()
+        for (const file of testFiles) {
+          await vitest._testRun.enqueued(project, file)
+        }
+        await vitest._testRun.collected(project, testFiles)
         await onParseEnd(project, project.typechecker.getResult())
         continue
       }
       promises.push(promise)
       promisesMap.set(project, promise)
-      startTypechecker(project, files)
+      promises.push(startTypechecker(project, files))
     }
 
     await Promise.all(promises)
@@ -154,7 +174,7 @@ export function createTypecheckPool(ctx: Vitest): ProcessPool {
     runTests,
     collectTests,
     async close() {
-      const promises = ctx.projects.map(project =>
+      const promises = vitest.projects.map(project =>
         project.typechecker?.stop(),
       )
       await Promise.all(promises)

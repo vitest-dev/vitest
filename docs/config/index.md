@@ -8,7 +8,7 @@ If you are using Vite and have a `vite.config` file, Vitest will read it to matc
 
 - Create `vitest.config.ts`, which will have the higher priority and will **override** the configuration from `vite.config.ts` (Vitest supports all conventional JS and TS extensions, but doesn't support `json`) - it means all options in your `vite.config` will be **ignored**
 - Pass `--config` option to CLI, e.g. `vitest --config ./path/to/vitest.config.ts`
-- Use `process.env.VITEST` or `mode` property on `defineConfig` (will be set to `test`/`benchmark` if not overridden with `--mode`) to conditionally apply different configuration in `vite.config.ts`
+- Use `process.env.VITEST` or `mode` property on `defineConfig` (will be set to `test`/`benchmark` if not overridden with `--mode`) to conditionally apply different configuration in `vite.config.ts`. Note that like any other environment variable, `VITEST` is also exposed on `import.meta.env` in your tests
 
 To configure `vitest` itself, add `test` property in your Vite config. You'll also need to add a reference to Vitest types using a [triple slash command](https://www.typescriptlang.org/docs/handbook/triple-slash-directives.html#-reference-types-) at the top of your config file, if you are importing `defineConfig` from `vite` itself.
 
@@ -106,7 +106,7 @@ export default defineConfig({
 
 Since Vitest uses Vite config, you can also use any configuration option from [Vite](https://vitejs.dev/config/). For example, `define` to define global variables, or `resolve.alias` to define aliases - these options should be defined on the top level, _not_ within a `test` property.
 
-Configuration options that are not supported inside a [workspace](/guide/workspace) project config have <NonProjectOption /> sign next to them.
+Configuration options that are not supported inside a [project](/guide/projects) config have <NonProjectOption /> sign next to them. This means they can only be set in the root Vitest config.
 :::
 
 ### include
@@ -124,8 +124,8 @@ When using coverage, Vitest automatically adds test files `include` patterns to 
 ### exclude
 
 - **Type:** `string[]`
-- **Default:** `['**/node_modules/**', '**/dist/**', '**/cypress/**', '**/.{idea,git,cache,output,temp}/**', '**/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress,tsup,build}.config.*']`
-- **CLI:** `vitest --exclude "**/excluded-file"`
+- **Default:** `['**/node_modules/**', '**/.git/**']`
+- **CLI:** `vitest --exclude "**/excluded-file" --exclude "*/other-files/*.js"`
 
 A list of glob patterns that should be excluded from your test files.
 
@@ -146,9 +146,11 @@ When defined, Vitest will run all matched files with `import.meta.vitest` inside
 
 ### name
 
-- **Type:** `string`
+- **Type:** `string | { label: string, color?: LabelColor }`
 
-Assign a custom name to the test project or Vitest process. The name will be visible in the CLI and available in the Node.js API via [`project.name`](/advanced/api/test-project#name).
+Assign a custom name to the test project or Vitest process. The name will be visible in the CLI and UI, and available in the Node.js API via [`project.name`](/advanced/api/test-project#name).
+
+Color used by CLI and UI can be changed by providing an object with `color` property.
 
 ### server {#server}
 
@@ -231,7 +233,7 @@ Handling for dependencies resolution.
 
 #### deps.optimizer {#deps-optimizer}
 
-- **Type:** `{ ssr?, web? }`
+- **Type:** `{ ssr?, client? }`
 - **See also:** [Dep Optimization Options](https://vitejs.dev/config/dep-optimization-options.html)
 
 Enable dependency optimization. If you have a lot of tests, this might improve their performance.
@@ -243,7 +245,7 @@ When Vitest encounters the external library listed in `include`, it will be bund
 - Your `alias` configuration is now respected inside bundled packages
 - Code in your tests is running closer to how it's running in the browser
 
-Be aware that only packages in `deps.optimizer?.[mode].include` option are bundled (some plugins populate this automatically, like Svelte). You can read more about available options in [Vite](https://vitejs.dev/config/dep-optimization-options.html) docs (Vitest doesn't support `disable` and `noDiscovery` options). By default, Vitest uses `optimizer.web` for `jsdom` and `happy-dom` environments, and `optimizer.ssr` for `node` and `edge` environments, but it is configurable by [`transformMode`](#testtransformmode).
+Be aware that only packages in `deps.optimizer?.[mode].include` option are bundled (some plugins populate this automatically, like Svelte). You can read more about available options in [Vite](https://vitejs.dev/config/dep-optimization-options.html) docs (Vitest doesn't support `disable` and `noDiscovery` options). By default, Vitest uses `optimizer.client` for `jsdom` and `happy-dom` environments, and `optimizer.ssr` for `node` and `edge` environments.
 
 This options also inherits your `optimizeDeps` configuration (for web Vitest will extend `optimizeDeps`, for ssr - `ssr.optimizeDeps`). If you redefine `include`/`exclude` option in `deps.optimizer` it will extend your `optimizeDeps` when running tests. Vitest automatically removes the same options from `include`, if they are listed in `exclude`.
 
@@ -258,15 +260,15 @@ You will not be able to edit your `node_modules` code for debugging, since the c
 
 Enable dependency optimization.
 
-#### deps.web  {#deps-web}
+#### deps.client  {#deps-client}
 
 - **Type:** `{ transformAssets?, ... }`
 
-Options that are applied to external files when transform mode is set to `web`. By default, `jsdom` and `happy-dom` use `web` mode, while `node` and `edge` environments use `ssr` transform mode, so these options will have no affect on files inside those environments.
+Options that are applied to external files when the environment is set to `client`. By default, `jsdom` and `happy-dom` use `client` environment, while `node` and `edge` environments use `ssr`, so these options will have no affect on files inside those environments.
 
 Usually, files inside `node_modules` are externalized, but these options also affect files in [`server.deps.external`](#server-deps-external).
 
-#### deps.web.transformAssets
+#### deps.client.transformAssets
 
 - **Type:** `boolean`
 - **Default:** `true`
@@ -279,7 +281,7 @@ This module will have a default export equal to the path to the asset, if no que
 At the moment, this option only works with [`vmThreads`](#vmthreads) and [`vmForks`](#vmforks) pools.
 :::
 
-#### deps.web.transformCss
+#### deps.client.transformCss
 
 - **Type:** `boolean`
 - **Default:** `true`
@@ -292,7 +294,7 @@ If CSS files are disabled with [`css`](#css) options, this option will just sile
 At the moment, this option only works with [`vmThreads`](#vmthreads) and [`vmForks`](#vmforks) pools.
 :::
 
-#### deps.web.transformGlobPattern
+#### deps.client.transformGlobPattern
 
 - **Type:** `RegExp | RegExp[]`
 - **Default:** `[]`
@@ -466,6 +468,17 @@ To get TypeScript working with the global APIs, add `vitest/globals` to the `typ
 }
 ```
 
+If you have redefined your [`typeRoots`](https://www.typescriptlang.org/tsconfig/#typeRoots) to include more types in your compilation, you will have to add back the `node_modules` to make `vitest/globals` discoverable.
+
+```json [tsconfig.json]
+{
+  "compilerOptions": {
+    "typeRoots": ["./types", "./node_modules/@types", "./node_modules"],
+    "types": ["vitest/globals"]
+  }
+}
+```
+
 If you are already using [`unplugin-auto-import`](https://github.com/antfu/unplugin-auto-import) in your project, you can also use it directly for auto importing those APIs.
 
 ```ts [vitest.config.js]
@@ -547,7 +560,7 @@ import type { Environment } from 'vitest'
 
 export default <Environment>{
   name: 'custom',
-  transformMode: 'ssr',
+  viteEnvironment: 'ssr',
   setup() {
     // custom setup
     return {
@@ -580,101 +593,6 @@ jsdom environment exposes `jsdom` global variable equal to the current [JSDOM](h
 
 These options are passed down to `setup` method of current [`environment`](#environment). By default, you can configure only JSDOM options, if you are using it as your test environment.
 
-### environmentMatchGlobs
-
-- **Type:** `[string, EnvironmentName][]`
-- **Default:** `[]`
-
-::: danger DEPRECATED
-This API was deprecated in Vitest 3. Use [workspace](/guide/workspace) to define different configurations instead.
-
-```ts
-export default defineConfig({
-  test: {
-    environmentMatchGlobs: [ // [!code --]
-      ['./*.jsdom.test.ts', 'jsdom'], // [!code --]
-    ], // [!code --]
-    workspace: [ // [!code ++]
-      { // [!code ++]
-        extends: true, // [!code ++]
-        test: { // [!code ++]
-          environment: 'jsdom', // [!code ++]
-        }, // [!code ++]
-      }, // [!code ++]
-    ], // [!code ++]
-  },
-})
-```
-:::
-
-Automatically assign environment based on globs. The first match will be used.
-
-For example:
-
-```ts
-import { defineConfig } from 'vitest/config'
-
-export default defineConfig({
-  test: {
-    environmentMatchGlobs: [
-      // all tests in tests/dom will run in jsdom
-      ['tests/dom/**', 'jsdom'],
-      // all tests in tests/ with .edge.test.ts will run in edge-runtime
-      ['**\/*.edge.test.ts', 'edge-runtime'],
-      // ...
-    ]
-  }
-})
-```
-
-### poolMatchGlobs {#poolmatchglobs}
-
-- **Type:** `[string, 'threads' | 'forks' | 'vmThreads' | 'vmForks' | 'typescript'][]`
-- **Default:** `[]`
-
-::: danger DEPRECATED
-This API was deprecated in Vitest 3. Use [workspace](/guide/workspace) to define different configurations instead:
-
-```ts
-export default defineConfig({
-  test: {
-    poolMatchGlobs: [ // [!code --]
-      ['./*.threads.test.ts', 'threads'], // [!code --]
-    ], // [!code --]
-    workspace: [ // [!code ++]
-      { // [!code ++]
-        test: { // [!code ++]
-          extends: true, // [!code ++]
-          pool: 'threads', // [!code ++]
-        }, // [!code ++]
-      }, // [!code ++]
-    ], // [!code ++]
-  },
-})
-```
-:::
-
-Automatically assign pool in which tests will run based on globs. The first match will be used.
-
-For example:
-
-```ts
-import { defineConfig } from 'vitest/config'
-
-export default defineConfig({
-  test: {
-    poolMatchGlobs: [
-      // all tests in "worker-specific" directory will run inside a worker as if you enabled `--pool=threads` for them,
-      ['**/tests/worker-specific/**', 'threads'],
-      // run all tests in "browser" directory in an actual browser
-      ['**/tests/browser/**', 'browser'],
-      // all other tests will run based on "browser.enabled" and "threads" options, if you didn't specify other globs
-      // ...
-    ]
-  }
-})
-```
-
 ### update<NonProjectOption />
 
 - **Type:** `boolean`
@@ -686,10 +604,44 @@ Update snapshot files. This will update all changed snapshots and delete obsolet
 ### watch<NonProjectOption />
 
 - **Type:** `boolean`
-- **Default:** `!process.env.CI`
+- **Default:** `!process.env.CI && process.stdin.isTTY`
 - **CLI:** `-w`, `--watch`, `--watch=false`
 
 Enable watch mode
+
+In interactive environments, this is the default, unless `--run` is specified explicitly.
+
+In CI, or when run from a non-interactive shell, "watch" mode is not the default, but can be enabled explicitly with this flag.
+
+### watchTriggerPatterns <Version>3.2.0</Version><NonProjectOption /> {#watchtriggerpatterns}
+
+- **Type:** `WatcherTriggerPattern[]`
+
+Vitest reruns tests based on the module graph which is populated by static and dynamic `import` statements. However, if you are reading from the file system or fetching from a proxy, then Vitest cannot detect those dependencies.
+
+To correctly rerun those tests, you can define a regex pattern and a function that returns a list of test files to run.
+
+```ts
+import { defineConfig } from 'vitest/config'
+
+export default defineConfig({
+  test: {
+    watchTriggerPatterns: [
+      {
+        pattern: /^src\/(mailers|templates)\/(.*)\.(ts|html|txt)$/,
+        testsToRun: (id, match) => {
+          // relative to the root value
+          return `./api/tests/mailers/${match[2]}.test.ts`
+        },
+      },
+    ],
+  },
+})
+```
+
+::: warning
+Returned files should be either absolute or relative to the root. Note that this is a global option, and it cannot be used inside of [project](/guide/projects) configs.
+:::
 
 ### root
 
@@ -798,13 +750,6 @@ export default defineConfig({
 
 Maximum number or percentage of threads. You can also use `VITEST_MAX_THREADS` environment variable.
 
-##### poolOptions.threads.minThreads<NonProjectOption />
-
-- **Type:** `number | string`
-- **Default:** _available CPUs_
-
-Minimum number or percentage of threads. You can also use `VITEST_MIN_THREADS` environment variable.
-
 ##### poolOptions.threads.singleThread
 
 - **Type:** `boolean`
@@ -868,14 +813,7 @@ export default defineConfig({
 - **Type:** `number | string`
 - **Default:** _available CPUs_
 
-Maximum number or percentage of forks.
-
-##### poolOptions.forks.minForks<NonProjectOption />
-
-- **Type:** `number | string`
-- **Default:** _available CPUs_
-
-Minimum number or percentage of forks.
+Maximum number or percentage of forks. You can also use `VITEST_MAX_FORKS` environment variable.
 
 ##### poolOptions.forks.isolate
 
@@ -932,13 +870,6 @@ export default defineConfig({
 - **Default:** _available CPUs_
 
 Maximum number or percentage of threads. You can also use `VITEST_MAX_THREADS` environment variable.
-
-##### poolOptions.vmThreads.minThreads<NonProjectOption />
-
-- **Type:** `number | string`
-- **Default:** _available CPUs_
-
-Minimum number or percentage of threads. You can also use `VITEST_MIN_THREADS` environment variable.
 
 ##### poolOptions.vmThreads.memoryLimit<NonProjectOption />
 
@@ -1012,14 +943,7 @@ export default defineConfig({
 - **Type:** `number | string`
 - **Default:** _available CPUs_
 
-Maximum number or percentage of threads. You can also use `VITEST_MAX_FORKS` environment variable.
-
-##### poolOptions.vmForks.minForks<NonProjectOption />
-
-- **Type:** `number | string`
-- **Default:** _available CPUs_
-
-Minimum number or percentage of threads. You can also use `VITEST_MIN_FORKS` environment variable.
+Maximum number or percentage of forks. You can also use `VITEST_MAX_FORKS` environment variable.
 
 ##### poolOptions.vmForks.memoryLimit<NonProjectOption />
 
@@ -1045,7 +969,7 @@ Be careful when using, it as some options may crash worker, e.g. --prof, --title
 - **Default:** `true`
 - **CLI:** `--no-file-parallelism`, `--fileParallelism=false`
 
-Should all test files run in parallel. Setting this to `false` will override `maxWorkers` and `minWorkers` options to `1`.
+Should all test files run in parallel. Setting this to `false` will override `maxWorkers` option to `1`.
 
 ::: tip
 This option doesn't affect tests running in the same file. If you want to run those in parallel, use `concurrent` option on [describe](/api/#describe-concurrent) or via [a config](#sequence-concurrent).
@@ -1057,19 +981,13 @@ This option doesn't affect tests running in the same file. If you want to run th
 
 Maximum number or percentage of workers to run tests in. `poolOptions.{threads,vmThreads}.maxThreads`/`poolOptions.forks.maxForks` has higher priority.
 
-### minWorkers<NonProjectOption /> {#minworkers}
-
-- **Type:** `number | string`
-
-Minimum number or percentage of workers to run tests in. `poolOptions.{threads,vmThreads}.minThreads`/`poolOptions.forks.minForks` has higher priority.
-
 ### testTimeout
 
 - **Type:** `number`
 - **Default:** `5_000` in Node.js, `15_000` if `browser.enabled` is `true`
 - **CLI:** `--test-timeout=5000`, `--testTimeout=5000`
 
-Default timeout of a test in milliseconds
+Default timeout of a test in milliseconds. Use `0` to disable timeout completely.
 
 ### hookTimeout
 
@@ -1077,7 +995,7 @@ Default timeout of a test in milliseconds
 - **Default:** `10_000` in Node.js, `30_000` if `browser.enabled` is `true`
 - **CLI:** `--hook-timeout=10000`, `--hookTimeout=10000`
 
-Default timeout of a hook in milliseconds
+Default timeout of a hook in milliseconds. Use `0` to disable timeout completely.
 
 ### teardownTimeout<NonProjectOption />
 
@@ -1089,11 +1007,13 @@ Default timeout to wait for close when Vitest shuts down, in milliseconds
 
 ### silent<NonProjectOption />
 
-- **Type:** `boolean`
+- **Type:** `boolean | 'passed-only'`
 - **Default:** `false`
 - **CLI:** `--silent`, `--silent=false`
 
-Silent console output from tests
+Silent console output from tests.
+
+Use `'passed-only'` to see logs from failing tests only. Logs from failing tests are printed after a test has finished.
 
 ### setupFiles
 
@@ -1261,12 +1181,12 @@ Make sure that your files are not excluded by [`server.watch.ignored`](https://v
 
 ### coverage<NonProjectOption />
 
-You can use [`v8`](https://v8.dev/blog/javascript-code-coverage), [`istanbul`](https://istanbul.js.org/) or [a custom coverage solution](/guide/coverage#custom-coverage-provider) for coverage collection.
+You can use [`v8`](/guide/coverage.html#v8-provider), [`istanbul`](/guide/coverage.html#istanbul-provider) or [a custom coverage solution](/guide/coverage#custom-coverage-provider) for coverage collection.
 
 You can provide coverage options to CLI with dot notation:
 
 ```sh
-npx vitest --coverage.enabled --coverage.provider=istanbul --coverage.all
+npx vitest --coverage.enabled --coverage.provider=istanbul
 ```
 
 ::: warning
@@ -1293,75 +1213,26 @@ Enables coverage collection. Can be overridden using `--coverage` CLI option.
 #### coverage.include
 
 - **Type:** `string[]`
-- **Default:** `['**']`
+- **Default:** Files that were imported during test run
 - **Available for providers:** `'v8' | 'istanbul'`
-- **CLI:** `--coverage.include=<path>`, `--coverage.include=<path1> --coverage.include=<path2>`
+- **CLI:** `--coverage.include=<pattern>`, `--coverage.include=<pattern1> --coverage.include=<pattern2>`
 
-List of files included in coverage as glob patterns
+List of files included in coverage as glob patterns. By default only files covered by tests are included.
 
-#### coverage.extension
+It is recommended to pass file extensions in the pattern.
 
-- **Type:** `string | string[]`
-- **Default:** `['.js', '.cjs', '.mjs', '.ts', '.mts', '.tsx', '.jsx', '.vue', '.svelte', '.marko', '.astro']`
-- **Available for providers:** `'v8' | 'istanbul'`
-- **CLI:** `--coverage.extension=<extension>`, `--coverage.extension=<extension1> --coverage.extension=<extension2>`
+See [Including and excluding files from coverage report](/guide/coverage.html#including-and-excluding-files-from-coverage-report) for examples.
 
 #### coverage.exclude
 
 - **Type:** `string[]`
-- **Default:**
-```js
-[
-  'coverage/**',
-  'dist/**',
-  '**/node_modules/**',
-  '**/[.]**',
-  'packages/*/test?(s)/**',
-  '**/*.d.ts',
-  '**/virtual:*',
-  '**/__x00__*',
-  '**/\x00*',
-  'cypress/**',
-  'test?(s)/**',
-  'test?(-*).?(c|m)[jt]s?(x)',
-  '**/*{.,-}{test,spec,bench,benchmark}?(-d).?(c|m)[jt]s?(x)',
-  '**/__tests__/**',
-  '**/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress,tsup,build,eslint,prettier}.config.*',
-  '**/vitest.{workspace,projects}.[jt]s?(on)',
-  '**/.{eslint,mocha,prettier}rc.{?(c|m)js,yml}',
-]
-```
+- **Default:** : `[]`
 - **Available for providers:** `'v8' | 'istanbul'`
 - **CLI:** `--coverage.exclude=<path>`, `--coverage.exclude=<path1> --coverage.exclude=<path2>`
 
 List of files excluded from coverage as glob patterns.
 
-This option overrides all default options. Extend the default options when adding new patterns to ignore:
-
-```ts
-import { coverageConfigDefaults, defineConfig } from 'vitest/config'
-
-export default defineConfig({
-  test: {
-    coverage: {
-      exclude: ['**/custom-pattern/**', ...coverageConfigDefaults.exclude]
-    },
-  },
-})
-```
-
-::: tip NOTE
-Vitest automatically adds test files `include` patterns to the default value of `coverage.exclude`.
-:::
-
-#### coverage.all
-
-- **Type:** `boolean`
-- **Default:** `true`
-- **Available for providers:** `'v8' | 'istanbul'`
-- **CLI:** `--coverage.all`, `--coverage.all=false`
-
-Whether to include all files, including the untested ones into report.
+See [Including and excluding files from coverage report](/guide/coverage.html#including-and-excluding-files-from-coverage-report) for examples.
 
 #### coverage.clean
 
@@ -1545,13 +1416,30 @@ Check thresholds per file.
 
 ##### coverage.thresholds.autoUpdate
 
-- **Type:** `boolean`
+- **Type:** `boolean | function`
 - **Default:** `false`
 - **Available for providers:** `'v8' | 'istanbul'`
 - **CLI:** `--coverage.thresholds.autoUpdate=<boolean>`
 
 Update all threshold values `lines`, `functions`, `branches` and `statements` to configuration file when current coverage is better than the configured thresholds.
 This option helps to maintain thresholds when coverage is improved.
+
+You can also pass a function for formatting the updated threshold values:
+
+<!-- eslint-skip -->
+```ts
+{
+  coverage: {
+    thresholds: {
+      // Update thresholds without decimals
+      autoUpdate: (newThreshold) => Math.floor(newThreshold),
+
+      // 95.85 -> 95
+      functions: 95,
+    }
+  }
+}
+```
 
 ##### coverage.thresholds.100
 
@@ -1628,43 +1516,11 @@ Sets thresholds to 100 for files matching the glob pattern.
 }
 ```
 
-#### coverage.ignoreEmptyLines
-
-- **Type:** `boolean`
-- **Default:** `true` (`false` in v1)
-- **Available for providers:** `'v8'`
-- **CLI:** `--coverage.ignoreEmptyLines=<boolean>`
-
-Ignore empty lines, comments and other non-runtime code, e.g. Typescript types.
-
-This option works only if the used compiler removes comments and other non-runtime code from the transpiled code.
-By default Vite uses ESBuild which removes comments and Typescript types from `.ts`, `.tsx` and `.jsx` files.
-
-If you want to apply ESBuild to other files as well, define them in [`esbuild` options](https://vitejs.dev/config/shared-options.html#esbuild):
-
-```ts
-import { defineConfig } from 'vitest/config'
-
-export default defineConfig({
-  esbuild: {
-    // Transpile all files with ESBuild to remove comments from code coverage.
-    // Required for `test.coverage.ignoreEmptyLines` to work:
-    include: ['**/*.js', '**/*.jsx', '**/*.mjs', '**/*.ts', '**/*.tsx'],
-  },
-  test: {
-    coverage: {
-      provider: 'v8',
-      ignoreEmptyLines: true,
-    },
-  },
-})
-```
-
 #### coverage.ignoreClassMethods
 
 - **Type:** `string[]`
 - **Default:** `[]`
-- **Available for providers:** `'istanbul'`
+- **Available for providers:** `'v8' | 'istanbul'`
 - **CLI:** `--coverage.ignoreClassMethods=<method>`
 
 Set to array of class method names to ignore for coverage.
@@ -1770,7 +1626,7 @@ This is an experimental feature. Breaking changes might not follow SemVer, pleas
 - **Type:** `boolean`
 - **Default:** `false`
 
-Will call [`.mockClear()`](/api/mock#mockclear) on all spies before each test.
+Will call [`vi.clearAllMocks()`](/api/vi#vi-clearallmocks) before each test.
 This will clear mock history without affecting mock implementations.
 
 ### mockReset
@@ -1778,16 +1634,17 @@ This will clear mock history without affecting mock implementations.
 - **Type:** `boolean`
 - **Default:** `false`
 
-Will call [`.mockReset()`](/api/mock#mockreset) on all spies before each test.
-This will clear mock history and reset each implementation to its original.
+Will call [`vi.resetAllMocks()`](/api/vi#vi-resetallmocks) before each test.
+This will clear mock history and reset each implementation.
 
 ### restoreMocks
 
 - **Type:** `boolean`
 - **Default:** `false`
 
-Will call [`.mockRestore()`](/api/mock#mockrestore) on all spies before each test.
-This will clear mock history, restore each implementation to its original, and restore original descriptors of spied-on objects..
+Will call [`vi.restoreAllMocks()`](/api/vi#vi-restoreallmocks) before each test.
+
+This restores all original implementations on spies created with [`vi.spyOn`](#vi-spyon).
 
 ### unstubEnvs {#unstubenvs}
 
@@ -1802,28 +1659,6 @@ Will call [`vi.unstubAllEnvs`](/api/vi#vi-unstuballenvs) before each test.
 - **Default:** `false`
 
 Will call [`vi.unstubAllGlobals`](/api/vi#vi-unstuballglobals) before each test.
-
-### testTransformMode {#testtransformmode}
-
- - **Type:** `{ web?, ssr? }`
-
- Determine the transform method for all modules imported inside a test that matches the glob pattern. By default, relies on the environment. For example, tests with JSDOM environment will process all files with `ssr: false` flag and tests with Node environment process all modules with `ssr: true`.
-
- #### testTransformMode.ssr
-
- - **Type:** `string[]`
- - **Default:** `[]`
-
- Use SSR transform pipeline for all modules inside specified tests.<br>
- Vite plugins will receive `ssr: true` flag when processing those files.
-
- #### testTransformMode&#46;web
-
- - **Type:** `string[]`
- - **Default:** `[]`
-
- First do a normal transform pipeline (targeting browser), then do a SSR rewrite to run the code in Node.<br>
- Vite plugins will receive `ssr: false` flag when processing those files.
 
 ### snapshotFormat<NonProjectOption />
 
@@ -1976,7 +1811,7 @@ export default defineConfig({
 
 ### sequence
 
-- **Type**: `{ sequencer?, shuffle?, seed?, hooks?, setupFiles? }`
+- **Type**: `{ sequencer?, shuffle?, seed?, hooks?, setupFiles?, groupOrder }`
 
 Options for how tests should be sorted.
 
@@ -1994,6 +1829,71 @@ npx vitest --sequence.shuffle --sequence.seed=1000
 A custom class that defines methods for sharding and sorting. You can extend `BaseSequencer` from `vitest/node`, if you only need to redefine one of the `sort` and `shard` methods, but both should exist.
 
 Sharding is happening before sorting, and only if `--shard` option is provided.
+
+If [`sequencer.groupOrder`](#grouporder) is specified, the sequencer will be called once for each group and pool.
+
+#### groupOrder <Version>3.2.0</Version> {#grouporder}
+
+- **Type:** `number`
+- **Default:** `0`
+
+Controls the order in which this project runs its tests when using multiple [projects](/guide/projects).
+
+- Projects with the same group order number will run together, and groups are run from lowest to highest.
+- If you don’t set this option, all projects run in parallel.
+- If several projects use the same group order, they will run at the same time.
+
+This setting only affects the order in which projects run, not the order of tests within a project.
+To control test isolation or the order of tests inside a project, use the [`isolate`](#isolate) and [`sequence.sequencer`](#sequence-sequencer) options.
+
+::: details Example
+Consider this example:
+
+```ts
+import { defineConfig } from 'vitest/config'
+
+export default defineConfig({
+  test: {
+    projects: [
+      {
+        test: {
+          name: 'slow',
+          sequence: {
+            groupOrder: 0,
+          },
+        },
+      },
+      {
+        test: {
+          name: 'fast',
+          sequence: {
+            groupOrder: 0,
+          },
+        },
+      },
+      {
+        test: {
+          name: 'flaky',
+          sequence: {
+            groupOrder: 1,
+          },
+        },
+      },
+    ],
+  },
+})
+```
+
+Tests in these projects will run in this order:
+
+```
+ 0. slow  |
+          |> running together
+ 0. fast  |
+
+ 1. flaky |> runs after slow and fast alone
+```
+:::
 
 #### sequence.shuffle
 
@@ -2040,7 +1940,7 @@ Sets the randomization seed, if tests are running in random order.
 #### sequence.hooks
 
 - **Type**: `'stack' | 'list' | 'parallel'`
-- **Default**: `'parallel'`
+- **Default**: `'stack'`
 - **CLI**: `--sequence.hooks=<value>`
 
 Changes the order in which hooks are executed.
@@ -2135,6 +2035,13 @@ By default, if Vitest finds source error, it will fail test suite.
 
 Path to custom tsconfig, relative to the project root.
 
+#### typecheck.spawnTimeout
+
+- **Type**: `number`
+- **Default**: `10_000`
+
+Minimum time in milliseconds it takes to spawn the typechecker.
+
 ### slowTestThreshold<NonProjectOption />
 
 - **Type**: `number`
@@ -2193,9 +2100,15 @@ Retry the test specific number of times if it fails.
 
 ### onConsoleLog<NonProjectOption />
 
-- **Type**: `(log: string, type: 'stdout' | 'stderr') => boolean | void`
+```ts
+function onConsoleLog(
+  log: string,
+  type: 'stdout' | 'stderr',
+  entity: TestModule | TestSuite | TestCase | undefined,
+): boolean | void
+```
 
-Custom handler for `console.log` in tests. If you return `false`, Vitest will not print the log to the console.
+Custom handler for `console` methods in tests. If you return `false`, Vitest will not print the log to the console. Note that Vitest ignores all other falsy values.
 
 Can be useful for filtering out logs from third-party libraries.
 
@@ -2233,6 +2146,30 @@ export default defineConfig({
 
       // Reject all frames from third party libraries.
       if (file.includes('node_modules')) {
+        return false
+      }
+    },
+  },
+})
+```
+
+### onUnhandledError<NonProjectOption /> {#onunhandlederror}
+
+- **Type:** `(error: (TestError | Error) & { type: string }) => boolean | void`
+
+A custom handler to filter out unhandled errors that should not be reported. If an error is filtered out, it will no longer affect the test results.
+
+If you want unhandled errors to be reported without impacting the test outcome, consider using the [`dangerouslyIgnoreUnhandledErrors`](#dangerouslyIgnoreUnhandledErrors) option
+
+```ts
+import type { ParsedStack } from 'vitest'
+import { defineConfig } from 'vitest/config'
+
+export default defineConfig({
+  test: {
+    onUnhandledError(error): boolean | void {
+      // Ignore all errors with the name "MySpecialError".
+      if (error.name === 'MySpecialError') {
         return false
       }
     },
@@ -2328,6 +2265,13 @@ Color of truncate annotation, default is output with no color.
 
 Print basic prototype `Object` and `Array` in diff output
 
+#### diff.maxDepth
+
+- **Type**: `number`
+- **Default**: `20` (or `8` when comparing different types)
+
+Limit the depth to recurse when printing nested objects
+
 ### fakeTimers
 
 - **Type:** `FakeTimerInstallOpts`
@@ -2344,7 +2288,7 @@ Installs fake timers with the specified Unix epoch.
 #### fakeTimers.toFake
 
 - **Type:** `('setTimeout' | 'clearTimeout' | 'setImmediate' | 'clearImmediate' | 'setInterval' | 'clearInterval' | 'Date' | 'nextTick' | 'hrtime' | 'requestAnimationFrame' | 'cancelAnimationFrame' | 'requestIdleCallback' | 'cancelIdleCallback' | 'performance' | 'queueMicrotask')[]`
-- **Default:** everything available globally except `nextTick`
+- **Default:** everything available globally except `nextTick` and `queueMicrotask`
 
 An array with names of global methods and APIs to fake.
 
@@ -2380,15 +2324,12 @@ Relevant only when using with `shouldAdvanceTime: true`. increment mocked time b
 
 Tells fake timers to clear "native" (i.e. not fake) timers by delegating to their respective handlers. When disabled, it can lead to potentially unexpected behavior if timers existed prior to starting fake timers session.
 
-### workspace<NonProjectOption /> {#workspace}
+### projects<NonProjectOption /> {#projects}
 
-- **Type:** `string | TestProjectConfiguration`
-- **CLI:** `--workspace=./file.js`
-- **Default:** `vitest.{workspace,projects}.{js,ts,json}` close to the config file or root
+- **Type:** `TestProjectConfiguration[]`
+- **Default:** `[]`
 
-Path to a [workspace](/guide/workspace) config file relative to [root](#root).
-
-Since Vitest 3, you can also define the workspace array in the root config. If the `workspace` is defined in the config manually, Vitest will ignore the `vitest.workspace` file in the root.
+An array of [projects](/guide/projects).
 
 ### isolate
 
@@ -2497,3 +2438,10 @@ Polling timeout in milliseconds
 - **Default:** `false`
 
 Always print console traces when calling any `console` method. This is useful for debugging.
+
+### attachmentsDir <Version>3.2.0</Version>
+
+- **Type:** `string`
+- **Default:** `'.vitest-attachments'`
+
+Directory path for storing attachments created by [`context.annotate`](/guide/test-context#annotate) relative to the project root.

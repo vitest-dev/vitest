@@ -37,7 +37,7 @@ export function* filterAll(
   filter: Filter,
 ) {
   for (const node of sortedRootTasks()) {
-    yield * filterNode(node, search, filter)
+    yield* filterNode(node, search, filter)
   }
 }
 
@@ -113,7 +113,7 @@ export function* filterNode(
   )
 
   // collect files, and suites and tests whose parent is expanded
-  yield * entries.filter((node) => {
+  yield* entries.filter((node) => {
     // all file nodes or children of expanded parents
     return isFileNode(node) || (parents.has(node.parentId) && map.get(node.parentId)?.expanded)
   })
@@ -277,7 +277,7 @@ function* visitNode(
   yield [match, node]
   if (isParentNode(node)) {
     for (let i = 0; i < node.tasks.length; i++) {
-      yield * visitNode(node.tasks[i], treeNodes, matcher)
+      yield* visitNode(node.tasks[i], treeNodes, matcher)
     }
   }
 }

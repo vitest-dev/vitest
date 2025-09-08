@@ -10,7 +10,7 @@ jobs:
     steps:
       - name: needs reproduction
         if: github.event.label.name == 'needs reproduction'
-        uses: actions-cool/issues-helper@v3
+        uses: actions-cool/issues-helper@45d75b6cf72bf4f254be6230cb887ad002702491 # v3.6.3
         with:
           actions: create-comment
           token: ${{ secrets.GITHUB_TOKEN }}

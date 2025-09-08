@@ -222,9 +222,13 @@ it('throws syntax error if no arguments are provided', () => {
 
 function sendEventMessage(worker: SharedWorker, msg: any) {
   worker.port.postMessage(msg)
-  return new Promise<string>((resolve) => {
+  return new Promise<string>((resolve, reject) => {
+    const timeout = setTimeout(() => {
+      reject(new Error(`Failed to send the message ${msg} to the SharedWorker.`))
+    }, 5_000)
     worker.port.addEventListener('message', function onmessage(e) {
       worker.port.removeEventListener('message', onmessage)
+      clearTimeout(timeout)
       resolve(e.data as string)
     })
   })
@@ -232,9 +236,13 @@ function sendEventMessage(worker: SharedWorker, msg: any) {
 
 function sendOnMessage(worker: SharedWorker, msg: any) {
   worker.port.postMessage(msg)
-  return new Promise<string>((resolve) => {
+  return new Promise<string>((resolve, reject) => {
+    const timeout = setTimeout(() => {
+      reject(new Error(`Failed to send the message ${msg} to the SharedWorker.`))
+    }, 5_000)
     worker.port.onmessage = function onmessage(e) {
       worker.port.onmessage = null
+      clearTimeout(timeout)
       resolve(e.data as string)
     }
   })

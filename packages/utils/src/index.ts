@@ -1,13 +1,21 @@
 export {
+  CSS_LANGS_RE,
+  KNOWN_ASSET_RE,
+  KNOWN_ASSET_TYPES,
+  NULL_BYTE_PLACEHOLDER,
+  VALID_ID_PREFIX,
+} from './constants'
+export {
   format,
   inspect,
   objDisplay,
   stringify,
 } from './display'
-export type { StringifyOptions } from './display'
+export type { LoupeOptions, StringifyOptions } from './display'
 
 export {
   assertTypes,
+  cleanUrl,
   clone,
   createDefer,
   createSimpleStackTrace,
@@ -16,6 +24,8 @@ export {
   getCallLastIndex,
   getOwnProperties,
   getType,
+  isBareImport,
+  isExternalUrl,
   isNegativeNaN,
   isObject,
   isPrimitive,
@@ -25,6 +35,9 @@ export {
   parseRegexp,
   slash,
   toArray,
+  unwrapId,
+  withTrailingSlash,
+  wrapId,
 } from './helpers'
 export type { DeferPromise } from './helpers'
 
@@ -46,9 +59,7 @@ export type {
   Awaitable,
   Constructable,
   DeepMerge,
-  ErrorWithDiff,
   MergeInsertions,
-  MutableArray,
   Nullable,
   ParsedStack,
   SerializedError,

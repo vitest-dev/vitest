@@ -1,9 +1,9 @@
 import type { Vitest } from './core'
-import type { TestProject } from './reporters'
+import type { TestProject } from './project'
 import type { TestSpecification } from './spec'
 import { existsSync } from 'node:fs'
-import mm from 'micromatch'
 import { join, relative, resolve } from 'pathe'
+import pm from 'picomatch'
 import { isWindows } from '../utils/env'
 import { groupFilters, parseFilter } from './cli/filter'
 import { GitNotFoundError, IncludeTaskLocationDisabledError, LocationFilterFileNotFoundError } from './errors'
@@ -21,10 +21,10 @@ export class VitestSpecifications {
 
     const specs: TestSpecification[] = []
     for (const project of this.vitest.projects) {
-      if (project.isCachedTestFile(moduleId)) {
+      if (project._isCachedTestFile(moduleId)) {
         specs.push(project.createSpecification(moduleId))
       }
-      if (project.isCachedTypecheckFile(moduleId)) {
+      if (project._isCachedTypecheckFile(moduleId)) {
         specs.push(project.createSpecification(moduleId, [], 'typescript'))
       }
     }
@@ -38,7 +38,7 @@ export class VitestSpecifications {
     )
   }
 
-  public async globTestSpecifications(filters: string[] = []) {
+  public async globTestSpecifications(filters: string[] = []): Promise<TestSpecification[]> {
     const files: TestSpecification[] = []
     const dir = process.cwd()
     const parsedFilters = filters.map(f => parseFilter(f))
@@ -55,7 +55,7 @@ export class VitestSpecifications {
       f => ({ ...f, filename: resolve(dir, f.filename) }),
     ))
 
-    // Key is file and val sepcifies whether we have matched this file with testLocation
+    // Key is file and val specifies whether we have matched this file with testLocation
     const testLocHasMatch: { [f: string]: boolean } = {}
 
     await Promise.all(this.vitest.projects.map(async (project) => {
@@ -139,7 +139,8 @@ export class VitestSpecifications {
     }
 
     const forceRerunTriggers = this.vitest.config.forceRerunTriggers
-    if (forceRerunTriggers.length && mm(related, forceRerunTriggers).length) {
+    const matcher = forceRerunTriggers.length ? pm(forceRerunTriggers) : undefined
+    if (matcher && related.some(file => matcher(file))) {
       return specs
     }
 
@@ -175,8 +176,8 @@ export class VitestSpecifications {
       }
       deps.add(filepath)
 
-      const mod = project.vite.moduleGraph.getModuleById(filepath)
-      const transformed = mod?.ssrTransformResult || await project.vitenode.transformRequest(filepath)
+      const mod = project.vite.environments.ssr.moduleGraph.getModuleById(filepath)
+      const transformed = mod?.transformResult || await project.vite.environments.ssr.transformRequest(filepath)
       if (!transformed) {
         return
       }

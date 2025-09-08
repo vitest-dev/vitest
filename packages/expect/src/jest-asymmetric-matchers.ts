@@ -1,3 +1,5 @@
+/* eslint-disable unicorn/no-instanceof-builtins -- we check both */
+
 import type { ChaiPlugin, MatcherState, Tester } from './types'
 import { GLOBAL_EXPECT } from './constants'
 import {
@@ -28,7 +30,7 @@ export abstract class AsymmetricMatcher<
   State extends MatcherState = MatcherState,
 > implements AsymmetricMatcherInterface {
   // should have "jest" to be compatible with its ecosystem
-  $$typeof = Symbol.for('jest.asymmetricMatcher')
+  $$typeof: symbol = Symbol.for('jest.asymmetricMatcher')
 
   constructor(protected sample: T, protected inverse = false) {}
 
@@ -51,18 +53,20 @@ export abstract class AsymmetricMatcher<
   abstract asymmetricMatch(other: unknown, customTesters?: Array<Tester>): boolean
   abstract toString(): string
   getExpectedType?(): string
-  toAsymmetricMatcher?(): string;
+  toAsymmetricMatcher?(): string
+}
 
-  // implement custom chai/loupe inspect for better AssertionError.message formatting
-  // https://github.com/chaijs/loupe/blob/9b8a6deabcd50adc056a64fb705896194710c5c6/src/index.ts#L29
-  [Symbol.for('chai/inspect')](options: { depth: number; truncate: number }) {
-    // minimal pretty-format with simple manual truncation
-    const result = stringify(this, options.depth, { min: true })
-    if (result.length <= options.truncate) {
-      return result
-    }
-    return `${this.toString()}{…}`
+// implement custom chai/loupe inspect for better AssertionError.message formatting
+// https://github.com/chaijs/loupe/blob/9b8a6deabcd50adc056a64fb705896194710c5c6/src/index.ts#L29
+// @ts-expect-error computed properties is not supported when isolatedDeclarations is enabled
+// FIXME: https://github.com/microsoft/TypeScript/issues/61068
+AsymmetricMatcher.prototype[Symbol.for('chai/inspect')] = function (options: { depth: number; truncate: number }): string {
+  // minimal pretty-format with simple manual truncation
+  const result = stringify(this, options.depth, { min: true })
+  if (result.length <= options.truncate) {
+    return result
   }
+  return `${this.toString()}{…}`
 }
 
 export class StringContaining extends AsymmetricMatcher<string> {
@@ -74,7 +78,7 @@ export class StringContaining extends AsymmetricMatcher<string> {
     super(sample, inverse)
   }
 
-  asymmetricMatch(other: string) {
+  asymmetricMatch(other: string): boolean {
     const result = isA('String', other) && other.includes(this.sample)
 
     return this.inverse ? !result : result
@@ -90,7 +94,7 @@ export class StringContaining extends AsymmetricMatcher<string> {
 }
 
 export class Anything extends AsymmetricMatcher<void> {
-  asymmetricMatch(other: unknown) {
+  asymmetricMatch(other: unknown): boolean {
     return other != null
   }
 
@@ -104,13 +108,13 @@ export class Anything extends AsymmetricMatcher<void> {
 }
 
 export class ObjectContaining extends AsymmetricMatcher<
-  Record<string, unknown>
+  Record<string | symbol | number, unknown>
 > {
   constructor(sample: Record<string, unknown>, inverse = false) {
     super(sample, inverse)
   }
 
-  getPrototype(obj: object) {
+  getPrototype(obj: object): any {
     if (Object.getPrototypeOf) {
       return Object.getPrototypeOf(obj)
     }
@@ -122,19 +126,28 @@ export class ObjectContaining extends AsymmetricMatcher<
     return obj.constructor.prototype
   }
 
-  hasProperty(obj: object | null, property: string): boolean {
+  hasProperty(obj: object | null, property: string | symbol): boolean {
     if (!obj) {
       return false
     }
 
-    if (Object.prototype.hasOwnProperty.call(obj, property)) {
+    if (Object.hasOwn(obj, property)) {
       return true
     }
 
     return this.hasProperty(this.getPrototype(obj), property)
   }
 
-  asymmetricMatch(other: any, customTesters?: Array<Tester>) {
+  getProperties(obj: object): (string | symbol)[] {
+    return [
+      ...Object.keys(obj),
+      ...Object.getOwnPropertySymbols(obj).filter(
+        s => Object.getOwnPropertyDescriptor(obj, s)?.enumerable,
+      ),
+    ]
+  }
+
+  asymmetricMatch(other: any, customTesters?: Array<Tester>): boolean {
     if (typeof this.sample !== 'object') {
       throw new TypeError(
         `You must provide an object to ${this.toString()}, not '${typeof this
@@ -144,14 +157,22 @@ export class ObjectContaining extends AsymmetricMatcher<
 
     let result = true
 
-    for (const property in this.sample) {
+    const matcherContext = this.getMatcherContext()
+    const properties = this.getProperties(this.sample)
+    for (const property of properties) {
       if (
         !this.hasProperty(other, property)
-        || !equals(
-          this.sample[property],
-          other[property],
-          customTesters,
-        )
+      ) {
+        result = false
+        break
+      }
+      const value = Object.getOwnPropertyDescriptor(this.sample, property)?.value ?? this.sample[property]
+      const otherValue = Object.getOwnPropertyDescriptor(other, property)?.value ?? other[property]
+      if (!equals(
+        value,
+        otherValue,
+        customTesters,
+      )
       ) {
         result = false
         break
@@ -215,7 +236,7 @@ export class Any extends AsymmetricMatcher<any> {
     super(sample)
   }
 
-  fnNameFor(func: Function) {
+  fnNameFor(func: Function): string {
     if (func.name) {
       return func.name
     }
@@ -228,7 +249,7 @@ export class Any extends AsymmetricMatcher<any> {
     return matches ? matches[1] : '<anonymous>'
   }
 
-  asymmetricMatch(other: unknown) {
+  asymmetricMatch(other: unknown): boolean {
     if (this.sample === String) {
       return typeof other == 'string' || other instanceof String
     }
@@ -238,7 +259,7 @@ export class Any extends AsymmetricMatcher<any> {
     }
 
     if (this.sample === Function) {
-      return typeof other == 'function' || other instanceof Function
+      return typeof other == 'function' || typeof other === 'function'
     }
 
     if (this.sample === Boolean) {
@@ -264,7 +285,7 @@ export class Any extends AsymmetricMatcher<any> {
     return 'Any'
   }
 
-  getExpectedType() {
+  getExpectedType(): string {
     if (this.sample === String) {
       return 'string'
     }
@@ -302,7 +323,7 @@ export class StringMatching extends AsymmetricMatcher<RegExp> {
     super(new RegExp(sample), inverse)
   }
 
-  asymmetricMatch(other: string) {
+  asymmetricMatch(other: string): boolean {
     const result = isA('String', other) && this.sample.test(other)
 
     return this.inverse ? !result : result

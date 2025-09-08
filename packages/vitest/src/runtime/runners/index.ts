@@ -1,27 +1,23 @@
 import type { VitestRunner, VitestRunnerConstructor } from '@vitest/runner'
 import type { SerializedConfig } from '../config'
-import type { VitestExecutor } from '../execute'
-import { resolve } from 'node:path'
+import type { VitestModuleRunner } from '../moduleRunner/moduleRunner'
 import { takeCoverageInsideWorker } from '../../integrations/coverage'
-import { distDir } from '../../paths'
 import { rpc } from '../rpc'
 import { loadDiffConfig, loadSnapshotSerializers } from '../setup-common'
 import { getWorkerState } from '../utils'
-
-const runnersFile = resolve(distDir, 'runners.js')
+import { NodeBenchmarkRunner } from './benchmark'
+import { VitestTestRunner } from './test'
 
 async function getTestRunnerConstructor(
   config: SerializedConfig,
-  executor: VitestExecutor,
+  moduleRunner: VitestModuleRunner,
 ): Promise<VitestRunnerConstructor> {
   if (!config.runner) {
-    const { VitestTestRunner, NodeBenchmarkRunner }
-      = await executor.executeFile(runnersFile)
     return (
       config.mode === 'test' ? VitestTestRunner : NodeBenchmarkRunner
-    ) as VitestRunnerConstructor
+    ) as any as VitestRunnerConstructor
   }
-  const mod = await executor.executeId(config.runner)
+  const mod = await moduleRunner.import(config.runner)
   if (!mod.default && typeof mod.default !== 'function') {
     throw new Error(
       `Runner must export a default function, but got ${typeof mod.default} imported from ${
@@ -34,14 +30,14 @@ async function getTestRunnerConstructor(
 
 export async function resolveTestRunner(
   config: SerializedConfig,
-  executor: VitestExecutor,
+  moduleRunner: VitestModuleRunner,
 ): Promise<VitestRunner> {
-  const TestRunner = await getTestRunnerConstructor(config, executor)
+  const TestRunner = await getTestRunnerConstructor(config, moduleRunner)
   const testRunner = new TestRunner(config)
 
   // inject private executor to every runner
-  Object.defineProperty(testRunner, '__vitest_executor', {
-    value: executor,
+  Object.defineProperty(testRunner, 'moduleRunner', {
+    value: moduleRunner,
     enumerable: false,
     configurable: false,
   })
@@ -55,17 +51,26 @@ export async function resolveTestRunner(
   }
 
   const [diffOptions] = await Promise.all([
-    loadDiffConfig(config, executor),
-    loadSnapshotSerializers(config, executor),
+    loadDiffConfig(config, moduleRunner),
+    loadSnapshotSerializers(config, moduleRunner),
   ])
   testRunner.config.diffOptions = diffOptions
 
   // patch some methods, so custom runners don't need to call RPC
   const originalOnTaskUpdate = testRunner.onTaskUpdate
-  testRunner.onTaskUpdate = async (task) => {
-    const p = rpc().onTaskUpdate(task)
-    await originalOnTaskUpdate?.call(testRunner, task)
+  testRunner.onTaskUpdate = async (task, events) => {
+    const p = rpc().onTaskUpdate(task, events)
+    await originalOnTaskUpdate?.call(testRunner, task, events)
     return p
+  }
+
+  // patch some methods, so custom runners don't need to call RPC
+  const originalOnTestAnnotate = testRunner.onTestAnnotate
+  testRunner.onTestAnnotate = async (test, annotation) => {
+    const p = rpc().onTaskAnnotate(test.id, annotation)
+    const overriddenResult = await originalOnTestAnnotate?.call(testRunner, test, annotation)
+    const vitestResult = await p
+    return overriddenResult || vitestResult
   }
 
   const originalOnCollectStart = testRunner.onCollectStart
@@ -91,13 +96,13 @@ export async function resolveTestRunner(
   const originalOnAfterRun = testRunner.onAfterRunFiles
   testRunner.onAfterRunFiles = async (files) => {
     const state = getWorkerState()
-    const coverage = await takeCoverageInsideWorker(config.coverage, executor)
+    const coverage = await takeCoverageInsideWorker(config.coverage, moduleRunner)
 
     if (coverage) {
       rpc().onAfterSuiteRun({
         coverage,
         testFiles: files.map(file => file.name).sort(),
-        transformMode: state.environment.transformMode,
+        environment: state.environment.viteEnvironment || state.environment.name,
         projectName: state.ctx.projectName,
       })
     }
@@ -113,7 +118,7 @@ export async function resolveTestRunner(
 
       if (currentFailures >= config.bail) {
         rpc().onCancel('test-failure')
-        testRunner.onCancel?.('test-failure')
+        testRunner.cancel?.('test-failure')
       }
     }
     await originalOnAfterRunTask?.call(testRunner, test)

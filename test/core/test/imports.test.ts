@@ -82,9 +82,9 @@ test('dynamic import has null prototype', async () => {
 test('dynamic import throws an error', async () => {
   const path = './some-unknown-path'
   const imported = import(path)
-  await expect(imported).rejects.toThrowError(/Failed to load url \.\/some-unknown-path/)
+  await expect(imported).rejects.toThrowError(`Cannot find module '/test/some-unknown-path' imported from '${resolve(import.meta.filename)}'`)
   // @ts-expect-error path does not exist
-  await expect(() => import('./some-unknown-path')).rejects.toThrowError(/Failed to load/)
+  await expect(() => import('./some-unknown-path')).rejects.toThrowError(`Cannot find module '/test/some-unknown-path' imported from '${resolve(import.meta.filename)}'`)
 })
 
 test('can import @vite/client', async () => {
@@ -94,7 +94,7 @@ test('can import @vite/client', async () => {
 })
 
 describe('importing special files from node_modules', async () => {
-  const dir = resolve(__dirname, '../src/node_modules')
+  const dir = resolve(import.meta.dirname, '../src/node_modules')
   const wasm = resolve(dir, 'file.wasm')
   const css = resolve(dir, 'file.css')
   const mp3 = resolve(dir, 'file.mp3')

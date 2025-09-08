@@ -1,5 +1,6 @@
 import type { StackTraceParserOptions } from '@vitest/utils/source-map'
-import type { ErrorWithDiff, SerializedConfig } from 'vitest'
+import type { ViteDevServer } from 'vite'
+import type { ParsedStack, SerializedConfig, TestError } from 'vitest'
 import type {
   BrowserProvider,
   ProjectBrowser as IProjectBrowser,
@@ -18,16 +19,15 @@ import { getBrowserProvider } from './utils'
 export class ProjectBrowser implements IProjectBrowser {
   public testerHtml: Promise<string> | string
   public testerFilepath: string
-  public locatorsUrl: string | undefined
 
   public provider!: BrowserProvider
   public vitest: Vitest
   public config: ResolvedConfig
-  public children = new Set<ProjectBrowser>()
+  public children: Set<ProjectBrowser> = new Set<ProjectBrowser>()
 
   public parent!: ParentBrowserProject
 
-  public state = new BrowserServerState()
+  public state: BrowserServerState = new BrowserServerState()
 
   constructor(
     public project: TestProject,
@@ -53,60 +53,39 @@ export class ProjectBrowser implements IProjectBrowser {
     ).then(html => (this.testerHtml = html))
   }
 
-  get vite() {
+  get vite(): ViteDevServer {
     return this.parent.vite
   }
 
-  wrapSerializedConfig() {
+  wrapSerializedConfig(): SerializedConfig {
     const config = wrapConfig(this.project.serializedConfig)
     config.env ??= {}
     config.env.VITEST_BROWSER_DEBUG = process.env.VITEST_BROWSER_DEBUG || ''
     return config
   }
 
-  async initBrowserProvider(project: TestProject) {
+  async initBrowserProvider(project: TestProject): Promise<void> {
     if (this.provider) {
       return
     }
-    const Provider = await getBrowserProvider(project.config.browser, project)
-    this.provider = new Provider()
-    const browser = project.config.browser.name
-    const name = project.name ? `[${project.name}] ` : ''
-    if (!browser) {
-      throw new Error(
-        `${name}Browser name is required. Please, set \`test.browser.instances[].browser\` option manually.`,
-      )
-    }
-    const supportedBrowsers = this.provider.getSupportedBrowsers()
-    if (supportedBrowsers.length && !supportedBrowsers.includes(browser)) {
-      throw new Error(
-        `${name}Browser "${browser}" is not supported by the browser provider "${
-          this.provider.name
-        }". Supported browsers: ${supportedBrowsers.join(', ')}.`,
-      )
-    }
-    const providerOptions = project.config.browser.providerOptions
-    await this.provider.initialize(project, {
-      browser,
-      options: providerOptions,
-    })
+    this.provider = await getBrowserProvider(project.config.browser, project)
   }
 
   public parseErrorStacktrace(
-    e: ErrorWithDiff,
+    e: TestError,
     options: StackTraceParserOptions = {},
-  ) {
+  ): ParsedStack[] {
     return this.parent.parseErrorStacktrace(e, options)
   }
 
   public parseStacktrace(
     trace: string,
     options: StackTraceParserOptions = {},
-  ) {
+  ): ParsedStack[] {
     return this.parent.parseStacktrace(trace, options)
   }
 
-  async close() {
+  async close(): Promise<void> {
     await this.parent.vite.close()
   }
 }

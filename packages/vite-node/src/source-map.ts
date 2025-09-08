@@ -13,17 +13,15 @@ SOURCEMAPPING_URL += 'ppingURL'
 
 const VITE_NODE_SOURCEMAPPING_SOURCE = '//# sourceMappingSource=vite-node'
 const VITE_NODE_SOURCEMAPPING_URL = `${SOURCEMAPPING_URL}=data:application/json;charset=utf-8`
-const VITE_NODE_SOURCEMAPPING_REGEXP = new RegExp(
-  `//# ${VITE_NODE_SOURCEMAPPING_URL};base64,(.+)`,
-)
 
 export function withInlineSourcemap(
   result: TransformResult,
   options: {
     root: string // project root path of this resource
     filepath: string
+    noFirstLineMapping?: boolean
   },
-) {
+): TransformResult {
   const map = result.map
   let code = result.code
 
@@ -43,7 +41,7 @@ export function withInlineSourcemap(
       if (isAbsolute(source)) {
         const actualPath
           = !source.startsWith(withTrailingSlash(options.root))
-          && source.startsWith('/')
+            && source[0] === '/'
             ? resolve(options.root, source.slice(1))
             : source
         return relative(dirname(options.filepath), actualPath)
@@ -63,7 +61,9 @@ export function withInlineSourcemap(
 
   // If the first line is not present on source maps, add simple 1:1 mapping ([0,0,0,0], [1,0,0,0])
   // so that debuggers can be set to break on first line
-  if (map.mappings.startsWith(';')) {
+  // Since Vite 6, import statements at the top of the file are preserved correctly,
+  // so we don't need to add this mapping anymore.
+  if (!options.noFirstLineMapping && map.mappings[0] === ';') {
     map.mappings = `AAAA,CAAA${map.mappings}`
   }
 
@@ -76,16 +76,25 @@ export function withInlineSourcemap(
 }
 
 export function extractSourceMap(code: string): EncodedSourceMap | null {
-  const mapString = code.match(VITE_NODE_SOURCEMAPPING_REGEXP)?.[1]
-  if (mapString) {
-    return JSON.parse(Buffer.from(mapString, 'base64').toString('utf-8'))
+  const regexp = new RegExp(
+    `//# ${VITE_NODE_SOURCEMAPPING_URL};base64,(.+)`,
+    'gm',
+  )
+  let lastMatch!: RegExpExecArray | null, match!: RegExpExecArray | null
+  // eslint-disable-next-line no-cond-assign
+  while ((match = regexp.exec(code))) {
+    lastMatch = match
+  }
+  // pick only the last source map keeping user strings that look like maps
+  if (lastMatch) {
+    return JSON.parse(Buffer.from(lastMatch[1], 'base64').toString('utf-8'))
   }
   return null
 }
 
 export function installSourcemapsSupport(
   options: InstallSourceMapSupportOptions,
-) {
+): void {
   install({
     retrieveSourceMap(source) {
       const map = options.getSourceMap(source)

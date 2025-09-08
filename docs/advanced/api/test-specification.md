@@ -13,6 +13,10 @@ const specification = project.createSpecification(
 
 `createSpecification` expects resolved module ID. It doesn't auto-resolve the file or check that it exists on the file system.
 
+## taskId
+
+[Test module's](/advanced/api/test-suite#id) identifier.
+
 ## project
 
 This references the [`TestProject`](/advanced/api/test-project) that the test module belongs to.
@@ -26,6 +30,10 @@ The ID of the module in Vite's module graph. Usually, it's an absolute file path
 '/Users/mac/project/example.test.ts' // ✅
 'C:\\Users\\Documents\\project\\example.test.ts' // ❌
 ```
+
+## testModule
+
+Instance of [`TestModule`](/advanced/api/test-module) associated with the specification. If test wasn't queued yet, this will be `undefined`.
 
 ## pool <Badge type="warning">experimental</Badge> {#pool}
 

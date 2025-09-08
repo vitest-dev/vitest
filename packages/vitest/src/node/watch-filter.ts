@@ -158,11 +158,11 @@ export class WatchFilter {
         if (remainingResultCount > 0) {
           resultBody
             += '\n'
-            + `${c.dim(
-              `   ...and ${remainingResultCount} more ${
-                remainingResultCount === 1 ? 'result' : 'results'
-              }`,
-            )}`
+              + `${c.dim(
+                `   ...and ${remainingResultCount} more ${
+                  remainingResultCount === 1 ? 'result' : 'results'
+                }`,
+              )}`
         }
       }
       else {
@@ -225,11 +225,10 @@ export class WatchFilter {
   }
 
   private write(data: string) {
-    // @ts-expect-error -- write() method has different signature on the union type
     this.stdout.write(data)
   }
 
-  public getLastResults() {
+  public getLastResults(): string[] {
     return this.results
   }
 }

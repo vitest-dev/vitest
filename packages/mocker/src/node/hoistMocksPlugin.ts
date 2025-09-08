@@ -9,7 +9,6 @@ import type {
   VariableDeclaration,
 } from 'estree'
 import type { SourceMap } from 'magic-string'
-import type { RollupAstNode } from 'rollup'
 import type { Plugin, Rollup } from 'vite'
 import type { Node, Positioned } from './esmWalker'
 import { findNodeAround } from 'acorn-walk'
@@ -69,7 +68,7 @@ export function hoistMocksPlugin(options: HoistMocksPluginOptions = {}): Plugin 
   ])
 
   const regexpHoistable = new RegExp(
-    `\\b(?:${utilsObjectNames.join('|')})\\s*\.\\s*(?:${Array.from(methods).join('|')})\\(`,
+    `\\b(?:${utilsObjectNames.join('|')})\\s*\.\\s*(?:${Array.from(methods).join('|')})\\s*\\(`,
   )
 
   return {
@@ -121,11 +120,10 @@ function getNodeTail(code: string, node: Node) {
 }
 
 const regexpHoistable
-  = /\b(?:vi|vitest)\s*\.\s*(?:mock|unmock|hoisted|doMock|doUnmock)\(/
+  = /\b(?:vi|vitest)\s*\.\s*(?:mock|unmock|hoisted|doMock|doUnmock)\s*\(/
 const hashbangRE = /^#!.*\n/
 
 export interface HoistMocksResult {
-  ast: Rollup.ProgramNode
   code: string
   map: SourceMap
 }
@@ -134,7 +132,7 @@ interface CodeFrameGenerator {
   (node: Positioned<Node>, id: string, code: string): string
 }
 
-// this is a fork of Vite SSR trandform
+// this is a fork of Vite SSR transform
 export function hoistMocks(
   code: string,
   id: string,
@@ -149,7 +147,7 @@ export function hoistMocks(
 
   const s = new MagicString(code)
 
-  let ast: Rollup.ProgramNode
+  let ast: ReturnType<Rollup.PluginContext['parse']>
   try {
     ast = parse(code)
   }
@@ -175,7 +173,7 @@ export function hoistMocks(
   const idToImportMap = new Map<string, string>()
 
   const imports: {
-    node: RollupAstNode<ImportDeclaration>
+    node: Positioned<ImportDeclaration>
     id: string
   }[] = []
 
@@ -500,11 +498,11 @@ export function hoistMocks(
   // hoist vi.mock/vi.hoisted
   for (const node of hoistedNodes) {
     const end = getNodeTail(code, node)
-    if (hoistIndex === end) {
+    // don't hoist into itself if it's already at the top
+    if (hoistIndex === end || hoistIndex === node.start) {
       hoistIndex = end
     }
-    // don't hoist into itself if it's already at the top
-    else if (hoistIndex !== node.start) {
+    else {
       s.move(node.start, end, hoistIndex)
     }
   }
@@ -549,7 +547,6 @@ export function hoistMocks(
   }
 
   return {
-    ast,
     code: s.toString(),
     map: s.generateMap({ hires: 'boundary', source: id }),
   }

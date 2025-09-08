@@ -1,7 +1,7 @@
 import type { UserEvent } from '../../../context'
 import type { UserEventCommand } from './utils'
 import { PlaywrightBrowserProvider } from '../providers/playwright'
-import { WebdriverBrowserProvider } from '../providers/webdriver'
+import { WebdriverBrowserProvider } from '../providers/webdriverio'
 import { keyboardImplementation } from './keyboard'
 
 export const type: UserEventCommand<UserEvent['type']> = async (
@@ -45,7 +45,7 @@ export const type: UserEventCommand<UserEvent['type']> = async (
       text,
       () => browser.execute(() => {
         const element = document.activeElement as HTMLInputElement
-        if (element) {
+        if (element && typeof element.select === 'function') {
           element.select()
         }
       }),

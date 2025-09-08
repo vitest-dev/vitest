@@ -5,7 +5,11 @@ title: Debugging | Guide
 # Debugging
 
 :::tip
-When debugging tests you might want to use `--test-timeout` CLI argument to prevent tests from timing out when stopping at breakpoints.
+When debugging tests you might want to use following options:
+
+- [`--test-timeout=0`](/guide/cli#testtimeout) to prevent tests from timing out when stopping at breakpoints
+- [`--no-file-parallelism`](/guide/cli#fileparallelism) to prevent test files from running parallel
+
 :::
 
 ## VS Code
@@ -48,14 +52,15 @@ vitest --inspect-brk --browser --no-file-parallelism
 ```
 ```ts [vitest.config.js]
 import { defineConfig } from 'vitest/config'
+import { playwright } from '@vitest/browser/providers/playwright'
 
 export default defineConfig({
   test: {
     inspectBrk: true,
     fileParallelism: false,
     browser: {
-      name: 'chromium',
-      provider: 'playwright',
+      provider: playwright(),
+      instances: [{ browser: 'chromium' }]
     },
   },
 })

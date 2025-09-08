@@ -1,11 +1,11 @@
 import { expect, test } from 'vitest'
-import type { UserConfig } from 'vitest/config'
+import type { TestUserConfig } from 'vitest/config'
 
 const pool = process.env.TESTED_POOL as "forks" | "threads";
 
 test('is isolated', () => {
   // @ts-expect-error -- internal
-  const config: NonNullable<UserConfig['test']> = globalThis.__vitest_worker__.config
+  const config: TestUserConfig = globalThis.__vitest_worker__.config
 
   if (pool === 'forks') {
     expect(config.poolOptions?.forks?.isolate).toBe(true)

@@ -1,10 +1,10 @@
-export type BuiltinPool =
-  | 'browser'
-  | 'threads'
-  | 'forks'
-  | 'vmThreads'
-  | 'vmForks'
-  | 'typescript'
+export type BuiltinPool
+  = | 'browser'
+    | 'threads'
+    | 'forks'
+    | 'vmThreads'
+    | 'vmForks'
+    | 'typescript'
 export type Pool = BuiltinPool | (string & {})
 
 export interface PoolOptions extends Record<string, unknown> {
@@ -50,9 +50,6 @@ export interface ResolvedPoolOptions extends PoolOptions {
 }
 
 export interface ThreadsOptions {
-  /** Minimum amount of threads to use */
-  minThreads?: number | string
-
   /** Maximum amount of threads to use */
   maxThreads?: number | string
 
@@ -74,14 +71,10 @@ export interface ThreadsOptions {
 }
 
 export interface ResolvedThreadsOptions extends ThreadsOptions {
-  minThreads?: number
   maxThreads?: number
 }
 
 export interface ForksOptions {
-  /** Minimum amount of child processes to use */
-  minForks?: number | string
-
   /** Maximum amount of child processes to use */
   maxForks?: number | string
 
@@ -94,7 +87,6 @@ export interface ForksOptions {
 }
 
 export interface ResolvedForksOptions extends ForksOptions {
-  minForks?: number
   maxForks?: number
 }
 

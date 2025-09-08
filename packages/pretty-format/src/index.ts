@@ -343,22 +343,22 @@ function printPlugin(
     printed = isNewPlugin(plugin)
       ? plugin.serialize(val, config, indentation, depth, refs, printer)
       : plugin.print(
-        val,
-        valChild => printer(valChild, config, indentation, depth, refs),
-        (str) => {
-          const indentationNext = indentation + config.indent
-          return (
-            indentationNext
-            + str.replaceAll(NEWLINE_REGEXP, `\n${indentationNext}`)
-          )
-        },
-        {
-          edgeSpacing: config.spacingOuter,
-          min: config.min,
-          spacing: config.spacingInner,
-        },
-        config.colors,
-      )
+          val,
+          valChild => printer(valChild, config, indentation, depth, refs),
+          (str) => {
+            const indentationNext = indentation + config.indent
+            return (
+              indentationNext
+              + str.replaceAll(NEWLINE_REGEXP, `\n${indentationNext}`)
+            )
+          },
+          {
+            edgeSpacing: config.spacingOuter,
+            min: config.min,
+            spacing: config.spacingInner,
+          },
+          config.colors,
+        )
   }
   catch (error: any) {
     throw new PrettyFormatPluginError(error.message, error.stack)
@@ -449,7 +449,7 @@ export const DEFAULT_OPTIONS: Options = {
 
 function validateOptions(options: OptionsReceived) {
   for (const key of Object.keys(options)) {
-    if (!Object.prototype.hasOwnProperty.call(DEFAULT_OPTIONS, key)) {
+    if (!Object.hasOwn(DEFAULT_OPTIONS, key)) {
       throw new Error(`pretty-format: Unknown option "${key}".`)
     }
   }

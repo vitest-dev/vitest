@@ -6,7 +6,6 @@ import { createBirpc } from 'birpc'
 import { parse, stringify } from 'flatted'
 import { StateManager } from './state'
 
-export * from '../../vitest/src/utils/tasks'
 export * from '@vitest/runner/utils'
 
 export interface VitestClientOptions {
@@ -28,7 +27,7 @@ export interface VitestClient {
   reconnect: () => Promise<void>
 }
 
-export function createClient(url: string, options: VitestClientOptions = {}) {
+export function createClient(url: string, options: VitestClientOptions = {}): VitestClient {
   const {
     handlers = {},
     autoReconnect = true,
@@ -52,6 +51,9 @@ export function createClient(url: string, options: VitestClientOptions = {}) {
 
   let onMessage: (data: any) => void
   const functions: WebSocketEvents = {
+    onTestAnnotate(testId, annotation) {
+      handlers.onTestAnnotate?.(testId, annotation)
+    },
     onSpecsCollected(specs) {
       specs?.forEach(([config, file]) => {
         ctx.state.clearFiles({ config }, [file])
@@ -66,9 +68,9 @@ export function createClient(url: string, options: VitestClientOptions = {}) {
       ctx.state.collectFiles(files)
       handlers.onCollected?.(files)
     },
-    onTaskUpdate(packs) {
+    onTaskUpdate(packs, events) {
       ctx.state.updateTasks(packs)
-      handlers.onTaskUpdate?.(packs)
+      handlers.onTaskUpdate?.(packs, events)
     },
     onUserConsoleLog(log) {
       ctx.state.updateUserLog(log)
@@ -97,9 +99,7 @@ export function createClient(url: string, options: VitestClientOptions = {}) {
         return v
       }),
     deserialize: parse,
-    onTimeoutError(functionName) {
-      throw new Error(`[vitest-ws-client]: Timeout calling "${functionName}"`)
-    },
+    timeout: -1,
   }
 
   ctx.rpc = createBirpc<WebSocketHandlers, WebSocketEvents>(

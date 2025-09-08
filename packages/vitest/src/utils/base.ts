@@ -3,7 +3,7 @@ export { getCallLastIndex, nanoid, notNullish } from '@vitest/utils'
 export function groupBy<T, K extends string | number | symbol>(
   collection: T[],
   iteratee: (item: T) => K,
-) {
+): Record<K, T[]> {
   return collection.reduce((acc, item) => {
     const key = iteratee(item)
     acc[key] ||= []
@@ -18,13 +18,13 @@ export function stdout(): NodeJS.WriteStream {
   return console._stdout || process.stdout
 }
 
-export function escapeRegExp(s: string) {
+export function escapeRegExp(s: string): string {
   // From https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions#escaping
   return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') // $& means the whole matched string
 }
 
 export function wildcardPatternToRegExp(pattern: string): RegExp {
-  const negated = pattern.startsWith('!')
+  const negated = pattern[0] === '!'
 
   if (negated) {
     pattern = pattern.slice(1)

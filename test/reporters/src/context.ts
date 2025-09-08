@@ -3,7 +3,7 @@ import type { Vitest } from '../../../packages/vitest/src/node/core'
 import type { Logger } from '../../../packages/vitest/src/node/logger'
 import type { StateManager } from '../../../packages/vitest/src/node/state'
 import type { ResolvedConfig } from '../../../packages/vitest/src/node/types/config'
-import type { File } from '../../../packages/vitest/src/public/index'
+import type { RunnerTestFile } from '../../../packages/vitest/src/public/index'
 
 interface Context {
   vitest: Vitest
@@ -21,19 +21,18 @@ export function getContext(): Context {
     getModuleById: () => undefined,
   }
 
-  const server: Partial<ViteDevServer> = {
+  const vite: Partial<ViteDevServer> = {
     moduleGraph: moduleGraph as ModuleGraph,
   }
 
   const state: Partial<StateManager> = {
-    filesMap: new Map<string, File[]>(),
+    filesMap: new Map<string, RunnerTestFile[]>(),
   }
 
   const context: Partial<Vitest> = {
     state: state as StateManager,
     config: config as ResolvedConfig,
-    server: server as ViteDevServer,
-    getProjectByTaskId: () => ({ getBrowserSourceMapModuleById: () => undefined }) as any,
+    vite: vite as ViteDevServer,
     getProjectByName: () => ({ getBrowserSourceMapModuleById: () => undefined }) as any,
     snapshot: {
       summary: { added: 100, _test: true },
@@ -44,6 +43,7 @@ export function getContext(): Context {
   context.logger = {
     ctx: context as Vitest,
     log: (text: string) => output += `${text}\n`,
+    highlight: () => {},
   } as unknown as Logger
 
   return {

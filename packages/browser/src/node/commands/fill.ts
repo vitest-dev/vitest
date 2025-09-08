@@ -1,7 +1,7 @@
 import type { UserEvent } from '../../../context'
 import type { UserEventCommand } from './utils'
 import { PlaywrightBrowserProvider } from '../providers/playwright'
-import { WebdriverBrowserProvider } from '../providers/webdriver'
+import { WebdriverBrowserProvider } from '../providers/webdriverio'
 
 export const fill: UserEventCommand<UserEvent['fill']> = async (
   context,
@@ -19,6 +19,6 @@ export const fill: UserEventCommand<UserEvent['fill']> = async (
     await browser.$(selector).setValue(text)
   }
   else {
-    throw new TypeError(`Provider "${context.provider.name}" does not support clearing elements`)
+    throw new TypeError(`Provider "${context.provider.name}" does not support filling inputs`)
   }
 }

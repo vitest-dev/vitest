@@ -31,11 +31,10 @@ describe('jest mock compat layer', () => {
   })
 
   it('clearing instances', () => {
-    const Spy = vi.fn(() => ({}))
+    const Spy = vi.fn()
 
     expect(Spy.mock.instances).toHaveLength(0)
-    // eslint-disable-next-line no-new
-    new Spy()
+    const _result = new Spy()
     expect(Spy.mock.instances).toHaveLength(1)
 
     Spy.mockReset() // same as mockClear()
@@ -176,7 +175,9 @@ describe('jest mock compat layer', () => {
 
     spy.mockRestore()
 
-    expect(spy.getMockImplementation()).toBe(undefined)
+    // Sicne Vitest 4 this is a special case where
+    // vi.fn(impl) will always return impl, unless overriden
+    expect(spy.getMockImplementation()).toBe(originalFn)
 
     expect(spy.mock.results).toEqual([])
   })
@@ -363,7 +364,34 @@ describe('jest mock compat layer', () => {
     expect(obj.property).toBe(true)
   })
 
-  it('spyOn returns the same spy twice', () => {
+  it('respyin on a spy resets the counter', () => {
+    const obj = {
+      method() {
+        return 'original'
+      },
+    }
+    vi.spyOn(obj, 'method')
+    obj.method()
+    expect(obj.method).toHaveBeenCalledTimes(1)
+    vi.spyOn(obj, 'method')
+    obj.method()
+    expect(obj.method).toHaveBeenCalledTimes(2)
+  })
+
+  it('spyOn on the getter multiple times', () => {
+    const obj = {
+      get getter() {
+        return 'original'
+      },
+    }
+
+    vi.spyOn(obj, 'getter', 'get').mockImplementation(() => 'mocked')
+    vi.spyOn(obj, 'getter', 'get')
+
+    expect(obj.getter).toBe('mocked')
+  })
+
+  it('spyOn multiple times', () => {
     const obj = {
       method() {
         return 'original'
@@ -386,6 +414,27 @@ describe('jest mock compat layer', () => {
     expect(obj.method()).toBe('original')
     expect(vi.isMockFunction(obj.method)).toBe(false)
     expect(obj.method).not.toBe(spy1)
+
+    spy1.mockRestore()
+    expect(vi.isMockFunction(obj.method)).toBe(false)
+    expect(obj.method).not.toBe(spy1)
+  })
+
+  it('restoreAllMocks in stack order', () => {
+    const obj = { foo: () => 'foo' }
+
+    vi.spyOn(obj, 'foo').mockImplementation(() => 'mocked1')
+    expect(obj.foo()).toBe('mocked1')
+    expect(vi.isMockFunction(obj.foo)).toBe(true)
+
+    vi.spyOn(obj, 'foo').mockImplementation(() => 'mocked2')
+    expect(obj.foo()).toBe('mocked2')
+    expect(vi.isMockFunction(obj.foo)).toBe(true)
+
+    vi.restoreAllMocks()
+
+    expect(obj.foo()).toBe('foo')
+    expect(vi.isMockFunction(obj.foo)).toBe(false)
   })
 
   it('should spy on property setter (2), and mockReset should not restore original descriptor', () => {
@@ -499,7 +548,7 @@ describe('jest mock compat layer', () => {
     abstract feed(): void
   }
 
-  it('mocks classes', () => {
+  it('mocks constructors', () => {
     const Dog = vi.fn<(name: string) => Dog_>(function Dog_(name: string) {
       this.name = name
     } as (this: any, name: string) => Dog_)
@@ -517,5 +566,259 @@ describe('jest mock compat layer', () => {
 
     vi.mocked(dogMax.speak).mockReturnValue('woof woof')
     expect(dogMax.speak()).toBe('woof woof')
+  })
+
+  it('mock classes', () => {
+    const Dog = vi.fn(class Dog {
+      constructor(public name: string) {
+        this.name = name
+      }
+
+      static getType: () => string = vi.fn(() => 'mocked animal')
+      speak = vi.fn(() => 'loud bark!')
+      feed = vi.fn()
+    })
+
+    const dogMax = new Dog('Max')
+    expect(dogMax.name).toBe('Max')
+
+    expect(dogMax.speak()).toBe('loud bark!')
+    expect(dogMax.speak).toHaveBeenCalled()
+
+    vi.mocked(dogMax.speak).mockReturnValue('woof woof')
+    expect(dogMax.speak()).toBe('woof woof')
+  })
+
+  it('spies on classes', () => {
+    class Example {
+      test() {}
+    }
+
+    const obj = {
+      Example,
+    }
+
+    const Spy = vi.spyOn(obj, 'Example')
+
+    Spy.mockImplementation(() => {})
+
+    expect(() => new Spy()).toThrowError(TypeError)
+
+    Spy.mockImplementation(function () {
+      expectTypeOf(this.test).toEqualTypeOf<() => void>()
+      this.test = () => {}
+    })
+
+    expect(new Spy()).toBeInstanceOf(Spy)
+
+    class MockExample {
+      test() {}
+    }
+    Spy.mockImplementation(MockExample)
+
+    expect(new Spy()).toBeInstanceOf(Spy)
+    expect(new Spy()).not.toBeInstanceOf(MockExample)
+
+    const instance = new Spy()
+    expectTypeOf(instance).toEqualTypeOf<Example>()
+  })
+
+  it('returns temporary implementations from getMockImplementation()', () => {
+    const fn = vi.fn()
+
+    const temporaryMockImplementation = () => 'mocked value'
+    fn.mockImplementationOnce(temporaryMockImplementation)
+    expect(fn.getMockImplementation()).toBe(temporaryMockImplementation)
+
+    // After calling it, it should be back to undefined
+    fn()
+    expect(fn.getMockImplementation()).toBe(undefined)
+
+    const mockImplementation = () => 'other mocked value'
+    fn.mockImplementation(mockImplementation)
+    expect(fn.getMockImplementation()).toBe(mockImplementation)
+
+    // It should also overwrite permanent implementations
+    fn.mockImplementationOnce(temporaryMockImplementation)
+    expect(fn.getMockImplementation()).toBe(temporaryMockImplementation)
+  })
+
+  it('keeps the descriptor the same as the original one when restoring', () => {
+    class Foo {
+      f() {
+        return 'original'
+      }
+    }
+
+    // initially there's no own properties
+    const foo = new Foo()
+    expect(foo.f()).toMatchInlineSnapshot(`"original"`)
+    expect(Object.getOwnPropertyDescriptors(foo)).toMatchInlineSnapshot(`{}`)
+
+    // mocked function in own property
+    const spy = vi.spyOn(foo, 'f').mockImplementation(() => 'mocked')
+    expect(foo.f()).toMatchInlineSnapshot(`"mocked"`)
+    expect(Object.getOwnPropertyDescriptors(foo)).toMatchInlineSnapshot(`
+    {
+      "f": {
+        "configurable": true,
+        "enumerable": false,
+        "value": [MockFunction f] {
+          "calls": [
+            [],
+          ],
+          "results": [
+            {
+              "type": "return",
+              "value": "mocked",
+            },
+          ],
+        },
+        "writable": true,
+      },
+    }
+  `)
+
+    // probably original prototype method is not moved to own property
+    spy.mockRestore()
+    expect(foo.f()).toMatchInlineSnapshot(`"original"`)
+    expect(Object.getOwnPropertyDescriptors(foo)).toMatchInlineSnapshot(`{}`)
+  })
+
+  it('mocks inherited methods', () => {
+    class Bar {
+      _bar = 'bar'
+      get bar(): string {
+        return this._bar
+      }
+
+      set bar(bar: string) {
+        this._bar = bar
+      }
+    }
+    class Foo extends Bar {}
+    const foo = new Foo()
+    vi.spyOn(foo, 'bar', 'get').mockImplementation(() => 'foo')
+    expect(foo.bar).toEqual('foo')
+    // foo.bar setter is inherited from Bar, so we can set it
+    expect(() => {
+      foo.bar = 'baz'
+    }).not.toThrowError()
+    expect(foo.bar).toEqual('foo')
+  })
+
+  it('mocks inherited overridden methods', () => {
+    class Bar {
+      _bar = 'bar'
+      get bar(): string {
+        return this._bar
+      }
+
+      set bar(bar: string) {
+        this._bar = bar
+      }
+    }
+    class Foo extends Bar {
+      get bar(): string {
+        return `${super.bar}-foo`
+      }
+    }
+    const foo = new Foo()
+    expect(foo.bar).toEqual('bar-foo')
+    vi.spyOn(foo, 'bar', 'get').mockImplementation(() => 'foo')
+    expect(foo.bar).toEqual('foo')
+    // foo.bar setter is not inherited from Bar
+    expect(() => {
+      // @ts-expect-error bar is readonly
+      foo.bar = 'baz'
+    }).toThrowError()
+    expect(foo.bar).toEqual('foo')
+  })
+
+  describe('is disposable', () => {
+    describe.runIf(Symbol.dispose)('in environments supporting it', () => {
+      it('has dispose property', () => {
+        expect(vi.fn()[Symbol.dispose]).toBeTypeOf('function')
+      })
+
+      it('calls mockRestore when disposing', () => {
+        const fn = vi.fn()
+        const restoreSpy = vi.spyOn(fn, 'mockRestore')
+        {
+          using _fn2 = fn
+        }
+        expect(restoreSpy).toHaveBeenCalled()
+      })
+
+      it('allows disposal when using mockImplementation', () => {
+        expect(vi.fn().mockImplementation(() => {})[Symbol.dispose]).toBeTypeOf('function')
+      })
+    })
+
+    describe.skipIf(Symbol.dispose)('in environments not supporting it', () => {
+      it('does not have dispose property', () => {
+        expect(vi.fn()[Symbol.dispose]).toBeUndefined()
+      })
+    })
+  })
+
+  it('can spy on a partial type', () => {
+    interface Person {
+      greet?: (name: string) => string
+    }
+    const person: Person = {
+      greet: (name: string) => `Hello ${name}`,
+    }
+    vi.spyOn(person, 'greet').mockImplementation(() => 'mocked')
+    expect(person.greet!('Alice')).toBe('mocked')
+  })
+
+  describe('docs example', () => {
+    it('mockClear', () => {
+      const person = {
+        greet: (name: string) => `Hello ${name}`,
+      }
+      const spy = vi.spyOn(person, 'greet').mockImplementation(() => 'mocked')
+      expect(person.greet('Alice')).toBe('mocked')
+      expect(spy.mock.calls).toEqual([['Alice']])
+
+      // clear call history but keep mock implementation
+      spy.mockClear()
+      expect(spy.mock.calls).toEqual([])
+      expect(person.greet('Bob')).toBe('mocked')
+      expect(spy.mock.calls).toEqual([['Bob']])
+    })
+
+    it('mockReset', () => {
+      const person = {
+        greet: (name: string) => `Hello ${name}`,
+      }
+      const spy = vi.spyOn(person, 'greet').mockImplementation(() => 'mocked')
+      expect(person.greet('Alice')).toBe('mocked')
+      expect(spy.mock.calls).toEqual([['Alice']])
+
+      // clear call history and reset implementation, but method is still spied
+      spy.mockReset()
+      expect(spy.mock.calls).toEqual([])
+      expect(person.greet).toBe(spy)
+      expect(person.greet('Bob')).toBe('Hello Bob')
+      expect(spy.mock.calls).toEqual([['Bob']])
+    })
+
+    it('mockRestore', () => {
+      const person = {
+        greet: (name: string) => `Hello ${name}`,
+      }
+      const spy = vi.spyOn(person, 'greet').mockImplementation(() => 'mocked')
+      expect(person.greet('Alice')).toBe('mocked')
+      expect(spy.mock.calls).toEqual([['Alice']])
+
+      // clear call history and restore spied object method
+      spy.mockRestore()
+      expect(spy.mock.calls).toEqual([])
+      expect(person.greet).not.toBe(spy)
+      expect(person.greet('Bob')).toBe('Hello Bob')
+      expect(spy.mock.calls).toEqual([])
+    })
   })
 })

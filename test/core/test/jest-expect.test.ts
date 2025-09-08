@@ -34,6 +34,9 @@ describe('jest-expect', () => {
     expect(1).toBe(1)
     expect(null).toBeNull()
     expect(1).not.toBeNull()
+    expect(null).toBeNullable()
+    expect(undefined).toBeNullable()
+    expect(0).not.toBeNullable()
     expect(null).toBeDefined()
     expect(undefined).not.toBeDefined()
     expect(undefined).toBeUndefined()
@@ -147,6 +150,10 @@ describe('jest-expect', () => {
     expect(undefined).not.toEqual(expect.anything())
     expect({ a: 0, b: 0 }).toEqual(expect.objectContaining({ a: 0 }))
     expect({ a: 0, b: 0 }).not.toEqual(expect.objectContaining({ z: 0 }))
+    // objectContaining with symbol key
+    const symbolForObjectContaining = Symbol('symbolForObjectContaining')
+    expect({ [symbolForObjectContaining]: 0 }).toEqual(expect.objectContaining({ [symbolForObjectContaining]: 0 }))
+    expect({ [symbolForObjectContaining]: 0 }).not.toEqual(expect.objectContaining({ [symbolForObjectContaining]: 1 }))
     expect(0).toEqual(expect.any(Number))
     expect('string').toEqual(expect.any(String))
     expect('string').not.toEqual(expect.any(Number))
@@ -274,6 +281,15 @@ describe('jest-expect', () => {
         return {
           pass: true,
           message: () => '',
+        }
+      },
+      toBeTestedMatcherContext<T>(received: unknown, expected: T) {
+        if (typeof this.utils?.stringify !== 'function') {
+          throw new TypeError('this.utils.stringify is not available.')
+        }
+        return {
+          pass: received === expected,
+          message: () => 'toBeTestedMatcherContext',
         }
       },
     })
@@ -615,6 +631,53 @@ describe('toBeTypeOf()', () => {
   })
 })
 
+describe('toBeOneOf()', () => {
+  it('pass with assertion', () => {
+    expect(0).toBeOneOf([0, 1, 2])
+    expect(0).toBeOneOf([expect.any(Number)])
+    expect('apple').toBeOneOf(['apple', 'banana', 'orange'])
+    expect('apple').toBeOneOf([expect.any(String)])
+    expect(true).toBeOneOf([true, false])
+    expect(true).toBeOneOf([expect.any(Boolean)])
+    expect(null).toBeOneOf([expect.any(Object)])
+    expect(undefined).toBeOneOf([undefined])
+  })
+
+  it('pass with negotiation', () => {
+    expect(3).not.toBeOneOf([0, 1, 2])
+    expect(3).not.toBeOneOf([expect.any(String)])
+    expect('mango').not.toBeOneOf(['apple', 'banana', 'orange'])
+    expect('mango').not.toBeOneOf([expect.any(Number)])
+    expect(null).not.toBeOneOf([undefined])
+  })
+
+  it.fails('fail with missing negotiation', () => {
+    expect(3).toBeOneOf([0, 1, 2])
+    expect(3).toBeOneOf([expect.any(String)])
+    expect('mango').toBeOneOf(['apple', 'banana', 'orange'])
+    expect('mango').toBeOneOf([expect.any(Number)])
+    expect(null).toBeOneOf([undefined])
+  })
+
+  it('asymmetric matcher', () => {
+    expect({ a: 0 }).toEqual(expect.toBeOneOf([expect.objectContaining({ a: 0 }), null]))
+    expect({
+      name: 'apple',
+      count: 1,
+    }).toEqual({
+      name: expect.toBeOneOf(['apple', 'banana', 'orange']),
+      count: expect.toBeOneOf([expect.any(Number)]),
+    })
+  })
+
+  it('error message', () => {
+    snapshotError(() => expect(3).toBeOneOf([0, 1, 2]))
+    snapshotError(() => expect(3).toBeOneOf([expect.any(String)]))
+    snapshotError(() => expect({ a: 0 }).toEqual(expect.toBeOneOf([expect.objectContaining({ b: 0 }), null, undefined])))
+    snapshotError(() => expect({ name: 'mango' }).toEqual({ name: expect.toBeOneOf(['apple', 'banana', 'orange']) }))
+  })
+})
+
 describe('toSatisfy()', () => {
   const isOdd = (value: number) => value % 2 !== 0
 
@@ -666,7 +729,7 @@ describe('toSatisfy()', () => {
         }),
       )
     }).toThrowErrorMatchingInlineSnapshot(
-      `[AssertionError: expected Error: 2 to match object { message: toSatisfy{…} }]`,
+      `[AssertionError: expected Error: 2 to match object { Object (message) }]`,
     )
   })
 
@@ -681,7 +744,7 @@ describe('toSatisfy()', () => {
 describe('toHaveBeenCalled', () => {
   describe('negated', () => {
     it('fails if called', () => {
-      const mock = vi.fn()
+      const mock = vi.fn().mockName('spy')
       mock()
 
       expect(() => {
@@ -689,12 +752,38 @@ describe('toHaveBeenCalled', () => {
       }).toThrow(/^expected "spy" to not be called at all[^e]/)
     })
   })
+
+  it('undefined argument', () => {
+    const fn = vi.fn()
+    fn(undefined)
+    expect(fn).not.toHaveBeenCalledWith()
+    expect(fn).toHaveBeenCalledWith(undefined)
+    expect(fn).toHaveBeenCalledWith(expect.toSatisfy(() => true))
+    expect(fn).toHaveBeenCalledWith(expect.not.toSatisfy(() => false))
+    expect(fn).toHaveBeenCalledWith(expect.toBeOneOf([undefined, null]))
+  })
+
+  it('no argument', () => {
+    const fn = vi.fn()
+    fn()
+    expect(fn).toHaveBeenCalledWith()
+    expect(fn).not.toHaveBeenCalledWith(undefined)
+    expect(fn).not.toHaveBeenCalledWith(expect.toSatisfy(() => true))
+    expect(fn).not.toHaveBeenCalledWith(expect.not.toSatisfy(() => false))
+    expect(fn).not.toHaveBeenCalledWith(expect.toBeOneOf([undefined, null]))
+  })
+
+  it('no strict equal check for each argument', () => {
+    const fn = vi.fn()
+    fn({ x: undefined, z: 123 })
+    expect(fn).toHaveBeenCalledWith({ y: undefined, z: 123 })
+  })
 })
 
 describe('toHaveBeenCalledWith', () => {
   describe('negated', () => {
     it('fails if called', () => {
-      const mock = vi.fn()
+      const mock = vi.fn().mockName('spy')
       mock(3)
 
       expect(() => {
@@ -707,7 +796,7 @@ describe('toHaveBeenCalledWith', () => {
 describe('toHaveBeenCalledExactlyOnceWith', () => {
   describe('negated', () => {
     it('fails if called', () => {
-      const mock = vi.fn()
+      const mock = vi.fn().mockName('spy')
       mock(3)
 
       expect(() => {
@@ -737,7 +826,7 @@ describe('toHaveBeenCalledExactlyOnceWith', () => {
   })
 
   it('fails if not called or called too many times', () => {
-    const mock = vi.fn()
+    const mock = vi.fn().mockName('spy')
 
     expect(() => {
       expect(mock).toHaveBeenCalledExactlyOnceWith(3)
@@ -757,7 +846,7 @@ describe('toHaveBeenCalledExactlyOnceWith', () => {
 
     expect(() => {
       expect(mock).toHaveBeenCalledExactlyOnceWith(3)
-    }).toThrow(/^expected "spy" to be called once with arguments: \[ 3 \][^e]/)
+    }).toThrow(/^expected "vi\.fn\(\)" to be called once with arguments: \[ 3 \][^e]/)
   })
 
   it('passes if called exactly once with args', () => {
@@ -770,8 +859,8 @@ describe('toHaveBeenCalledExactlyOnceWith', () => {
 
 describe('toHaveBeenCalledBefore', () => {
   it('success if expect mock is called before result mock', () => {
-    const expectMock = vi.fn()
-    const resultMock = vi.fn()
+    const expectMock = vi.fn().mockName('expectMock')
+    const resultMock = vi.fn().mockName('resultMock')
 
     expectMock()
     resultMock()
@@ -800,7 +889,7 @@ describe('toHaveBeenCalledBefore', () => {
 
     expect(() => {
       expect(expectMock).toHaveBeenCalledBefore(resultMock)
-    }).toThrow(/^expected "spy" to have been called before "spy"/)
+    }).toThrow(/^expected "vi\.fn\(\)" to have been called before "vi\.fn\(\)"/)
   })
 
   it('throws with correct mock name if failed', () => {
@@ -816,13 +905,13 @@ describe('toHaveBeenCalledBefore', () => {
   })
 
   it('fails if expect mock is not called', () => {
-    const resultMock = vi.fn()
+    const resultMock = vi.fn().mockName('resultMock')
 
     resultMock()
 
     expect(() => {
       expect(vi.fn()).toHaveBeenCalledBefore(resultMock)
-    }).toThrow(/^expected "spy" to have been called before "spy"/)
+    }).toThrow(/^expected "vi\.fn\(\)" to have been called before "resultMock"/)
   })
 
   it('not fails if expect mock is not called with option `failIfNoFirstInvocation` set to false', () => {
@@ -834,13 +923,13 @@ describe('toHaveBeenCalledBefore', () => {
   })
 
   it('fails if result mock is not called', () => {
-    const expectMock = vi.fn()
+    const expectMock = vi.fn().mockName('expectMock')
 
     expectMock()
 
     expect(() => {
       expect(expectMock).toHaveBeenCalledBefore(vi.fn())
-    }).toThrow(/^expected "spy" to have been called before "spy"/)
+    }).toThrow(/^expected "expectMock" to have been called before "vi\.fn\(\)"/)
   })
 })
 
@@ -876,7 +965,7 @@ describe('toHaveBeenCalledAfter', () => {
 
     expect(() => {
       expect(expectMock).toHaveBeenCalledAfter(resultMock)
-    }).toThrow(/^expected "spy" to have been called after "spy"/)
+    }).toThrow(/^expected "vi\.fn\(\)" to have been called after "vi\.fn\(\)"/)
   })
 
   it('throws with correct mock name if failed', () => {
@@ -892,13 +981,13 @@ describe('toHaveBeenCalledAfter', () => {
   })
 
   it('fails if result mock is not called', () => {
-    const expectMock = vi.fn()
+    const expectMock = vi.fn().mockName('expectMock')
 
     expectMock()
 
     expect(() => {
       expect(expectMock).toHaveBeenCalledAfter(vi.fn())
-    }).toThrow(/^expected "spy" to have been called after "spy"/)
+    }).toThrow(/^expected "expectMock" to have been called after "vi\.fn\(\)"/)
   })
 
   it('not fails if result mock is not called with option `failIfNoFirstInvocation` set to false', () => {
@@ -910,13 +999,13 @@ describe('toHaveBeenCalledAfter', () => {
   })
 
   it('fails if expect mock is not called', () => {
-    const resultMock = vi.fn()
+    const resultMock = vi.fn().mockName('resultMock')
 
     resultMock()
 
     expect(() => {
       expect(vi.fn()).toHaveBeenCalledAfter(resultMock)
-    }).toThrow(/^expected "spy" to have been called after "spy"/)
+    }).toThrow(/^expected "vi\.fn\(\)" to have been called after "resultMock"/)
   })
 })
 
@@ -1154,6 +1243,19 @@ describe('async expect', () => {
     catch (error) {
       expect(error).toMatchObject({ message: 'promise rejected "+0" instead of resolving' })
     }
+  })
+
+  it('chainable types', async () => {
+    /* eslint-disable prefer-promise-reject-errors */
+    await expect(Promise.resolve(1)).resolves.toBeOneOf([1])
+    await expect(Promise.resolve(1)).resolves.not.toBeOneOf([2])
+    await expect(Promise.reject(1)).rejects.toBeOneOf([1])
+    await expect(Promise.reject(1)).rejects.not.toBeOneOf([2])
+    await expect(Promise.resolve(1)).resolves.toSatisfy(v => v === 1)
+    await expect(Promise.reject(2)).rejects.toSatisfy(v => v === 2)
+    await (expect(Promise.resolve(1)).resolves.to.equal(1) satisfies Promise<any>)
+    await (expect(Promise.resolve(1)).resolves.not.to.equal(2) satisfies Promise<any>)
+    /* eslint-enable prefer-promise-reject-errors */
   })
 })
 
@@ -1553,7 +1655,7 @@ function snapshotError(f: () => unknown) {
     f()
   }
   catch (error) {
-    const e = processError(error)
+    const e = processError(error, { expand: true })
     expect({
       message: stripVTControlCharacters(e.message),
       diff: e.diff ? stripVTControlCharacters(e.diff) : e.diff,
@@ -1608,6 +1710,9 @@ it('asymmetric matcher error', () => {
   snapshotError(() => expect(['a', 'b']).toEqual(expect.arrayContaining(['a', 'c'])))
   snapshotError(() => expect('hello').toEqual(expect.stringMatching(/xx/)))
   snapshotError(() => expect(2.5).toEqual(expect.closeTo(2, 1)))
+  snapshotError(() => expect('foo').toEqual(expect.toBeOneOf(['bar', 'baz'])))
+  snapshotError(() => expect(0).toEqual(expect.toBeOneOf([expect.any(String), null, undefined])))
+  snapshotError(() => expect({ k: 'v', k2: 'v2' }).toEqual(expect.toBeOneOf([expect.objectContaining({ k: 'v', k3: 'v3' }), null, undefined])))
 
   // simple truncation if pretty-format is too long
   snapshotError(() => expect('hello').toEqual(expect.stringContaining('a'.repeat(40))))

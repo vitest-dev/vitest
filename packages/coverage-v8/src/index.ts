@@ -1,14 +1,17 @@
+import type { Profiler } from 'node:inspector'
 import type { CoverageProviderModule } from 'vitest/node'
-import type { V8CoverageProvider } from './provider'
-import inspector, { type Profiler } from 'node:inspector'
+import type { ScriptCoverageWithOffset, V8CoverageProvider } from './provider'
+import inspector from 'node:inspector/promises'
+import { fileURLToPath } from 'node:url'
+import { normalize } from 'pathe'
 import { provider } from 'std-env'
 import { loadProvider } from './load-provider'
 
 const session = new inspector.Session()
 let enabled = false
 
-export default {
-  startCoverage({ isolate }) {
+const mod: CoverageProviderModule = {
+  async startCoverage({ isolate }) {
     if (isolate === false && enabled) {
       return
     }
@@ -16,46 +19,46 @@ export default {
     enabled = true
 
     session.connect()
-    session.post('Profiler.enable')
-    session.post('Profiler.startPreciseCoverage', {
-      callCount: true,
-      detailed: true,
-    })
+    await session.post('Profiler.enable')
+    await session.post('Profiler.startPreciseCoverage', { callCount: true, detailed: true })
   },
 
-  takeCoverage(): Promise<{ result: Profiler.ScriptCoverage[] }> {
-    return new Promise((resolve, reject) => {
-      session.post('Profiler.takePreciseCoverage', async (error, coverage) => {
-        if (error) {
-          return reject(error)
-        }
+  async takeCoverage(options): Promise<{ result: ScriptCoverageWithOffset[] }> {
+    if (provider === 'stackblitz') {
+      return { result: [] }
+    }
 
-        // Reduce amount of data sent over rpc by doing some early result filtering
-        const result = coverage.result.filter(filterResult)
+    const coverage = await session.post('Profiler.takePreciseCoverage')
+    const result: ScriptCoverageWithOffset[] = []
 
-        resolve({ result })
-      })
-
-      if (provider === 'stackblitz') {
-        resolve({ result: [] })
+    // Reduce amount of data sent over rpc by doing some early result filtering
+    for (const entry of coverage.result) {
+      if (filterResult(entry)) {
+        result.push({
+          ...entry,
+          startOffset: options?.moduleExecutionInfo?.get(normalize(fileURLToPath(entry.url)))?.startOffset || 0,
+        })
       }
-    })
+    }
+
+    return { result }
   },
 
-  stopCoverage({ isolate }) {
+  async stopCoverage({ isolate }) {
     if (isolate === false) {
       return
     }
 
-    session.post('Profiler.stopPreciseCoverage')
-    session.post('Profiler.disable')
+    await session.post('Profiler.stopPreciseCoverage')
+    await session.post('Profiler.disable')
     session.disconnect()
   },
 
   async getProvider(): Promise<V8CoverageProvider> {
     return loadProvider()
   },
-} satisfies CoverageProviderModule
+}
+export default mod
 
 function filterResult(coverage: Profiler.ScriptCoverage): boolean {
   if (!coverage.url.startsWith('file://')) {

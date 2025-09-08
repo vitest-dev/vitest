@@ -26,7 +26,7 @@ And here is an example of a custom reporter:
 import { BaseReporter } from 'vitest/reporters'
 
 export default class CustomReporter extends BaseReporter {
-  onCollected() {
+  onTestModuleCollected() {
     const files = this.ctx.state.getFiles(this.watchFilters)
     this.reportTestSummary(files)
   }
@@ -36,10 +36,10 @@ export default class CustomReporter extends BaseReporter {
 Or implement the `Reporter` interface:
 
 ```ts [custom-reporter.js]
-import { Reporter } from 'vitest/reporters'
+import type { Reporter } from 'vitest/node'
 
 export default class CustomReporter implements Reporter {
-  onCollected() {
+  onTestModuleCollected() {
     // print something
   }
 }
@@ -65,24 +65,14 @@ Instead of using the tasks that reporters receive, it is recommended to use the 
 You can get access to this API by calling `vitest.state.getReportedEntity(runnerTask)`:
 
 ```ts twoslash
-import type { Vitest } from 'vitest/node'
-import type { RunnerTestFile } from 'vitest'
-import type { Reporter, TestModule } from 'vitest/reporters'
+import type { Reporter, TestModule } from 'vitest/node'
 
 class MyReporter implements Reporter {
-  private vitest!: Vitest
-
-  onInit(vitest: Vitest) {
-    this.vitest = vitest
-  }
-
-  onFinished(files: RunnerTestFile[]) {
-    for (const file of files) {
-      // note that the old task implementation uses "file" instead of "module"
-      const testModule = this.vitest.state.getReportedEntity(file) as TestModule
+  onTestRunEnd(testModules: ReadonlyArray<TestModule>) {
+    for (const testModule of testModules) {
       for (const task of testModule.children) {
         //                          ^?
-        console.log('finished', task.type, task.fullName)
+        console.log('test run end', task.type, task.fullName)
       }
     }
   }
@@ -95,7 +85,6 @@ class MyReporter implements Reporter {
 
 ### Built-in reporters:
 
-1. `BasicReporter`
 1. `DefaultReporter`
 2. `DotReporter`
 3. `JsonReporter`

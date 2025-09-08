@@ -1,9 +1,9 @@
 {
   "name": "@vitest/monorepo",
   "type": "module",
-  "version": "3.0.0-beta.2",
+  "version": "4.0.0-beta.10",
   "private": true,
-  "packageManager": "pnpm@9.15.0",
+  "packageManager": "pnpm@10.15.0",
   "description": "Next generation testing framework powered by Vite",
   "engines": {
     "node": "^18.0.0 || >=20.0.0"
@@ -14,7 +14,7 @@
     "build": "pnpm -r --filter @vitest/ui --filter='./packages/**' run build",
     "dev": "NODE_OPTIONS=\"--max-old-space-size=8192\" pnpm -r --parallel --filter='./packages/**' run dev",
     "docs": "pnpm -C docs run dev",
-    "docs:build": "pnpm -C docs run build",
+    "docs:build": "ROLLDOWN_OPTIONS_VALIDATION=loose pnpm -C docs run build",
     "docs:serve": "pnpm -C docs run serve",
     "docs:https": "pnpm -C docs run preview-https",
     "docs:https-no-prefetch": "pnpm -C docs run preview-https-no-prefetch",
@@ -27,6 +27,7 @@
     "test:ci": "CI=true pnpm -r --reporter-hide-prefix --stream --sequential --filter '@vitest/test-*' --filter !test-browser run test",
     "test:examples": "CI=true pnpm -r --reporter-hide-prefix --stream --filter '@vitest/example-*' run test",
     "test:ecosystem-ci": "ECOSYSTEM_CI=true pnpm test:ci",
+    "typebuild": "tsx ./scripts/explain-types.ts",
     "typecheck": "tsc -p tsconfig.check.json --noEmit",
     "typecheck:why": "tsc -p tsconfig.check.json --noEmit --explainFiles > explainTypes.txt",
     "ui:build": "vite build packages/ui",
@@ -36,42 +37,43 @@
     "test:browser:playwright": "pnpm -C test/browser run test:playwright"
   },
   "devDependencies": {
-    "@antfu/eslint-config": "^3.11.2",
-    "@antfu/ni": "^0.23.1",
-    "@playwright/test": "^1.49.1",
-    "@rollup/plugin-commonjs": "^28.0.2",
+    "@antfu/eslint-config": "^5.2.1",
+    "@antfu/ni": "^25.0.0",
+    "@playwright/test": "^1.55.0",
+    "@rollup/plugin-commonjs": "^28.0.6",
     "@rollup/plugin-json": "^6.1.0",
-    "@rollup/plugin-node-resolve": "^15.3.1",
-    "@types/node": "^22.10.2",
-    "@types/ws": "^8.5.13",
+    "@rollup/plugin-node-resolve": "^16.0.1",
+    "@types/node": "^22.18.0",
+    "@types/ws": "catalog:",
     "@vitest/browser": "workspace:*",
     "@vitest/coverage-istanbul": "workspace:*",
     "@vitest/coverage-v8": "workspace:*",
     "@vitest/ui": "workspace:*",
-    "bumpp": "^9.9.1",
-    "changelogithub": "^0.13.11",
-    "esbuild": "^0.24.0",
-    "eslint": "^9.16.0",
-    "magic-string": "^0.30.17",
-    "pathe": "^1.1.2",
+    "bumpp": "^10.2.3",
+    "changelogithub": "^13.16.0",
+    "esbuild": "^0.25.9",
+    "eslint": "^9.34.0",
+    "magic-string": "^0.30.18",
+    "pathe": "^2.0.3",
     "rimraf": "^6.0.1",
-    "rollup": "^4.28.1",
-    "rollup-plugin-dts": "^6.1.1",
-    "rollup-plugin-esbuild": "^6.1.1",
-    "rollup-plugin-license": "^3.5.3",
-    "tinyglobby": "^0.2.10",
-    "tsx": "^4.19.2",
-    "typescript": "^5.7.2",
-    "vite": "^5.4.0",
+    "rollup": "^4.49.0",
+    "rollup-plugin-dts": "^6.2.3",
+    "rollup-plugin-license": "^3.6.0",
+    "tinyglobby": "catalog:",
+    "tsx": "^4.20.5",
+    "typescript": "^5.9.2",
+    "unplugin-isolated-decl": "^0.15.1",
+    "unplugin-oxc": "^0.5.1",
+    "vite": "^6.3.5",
     "vitest": "workspace:*",
-    "zx": "^8.2.4"
+    "zx": "^8.8.1"
   },
   "pnpm": {
     "overrides": {
       "@vitest/browser": "workspace:*",
       "@vitest/ui": "workspace:*",
       "acorn": "8.11.3",
-      "mlly": "^1.7.3",
+      "mlly": "^1.8.0",
       "rollup": "$rollup",
       "vite": "$vite",
       "vitest": "workspace:*"
@@ -82,12 +84,22 @@
       ]
     },
     "patchedDependencies": {
-      "@types/chai@4.3.6": "patches/@types__chai@4.3.6.patch",
-      "@sinonjs/fake-timers@11.1.0": "patches/@sinonjs__fake-timers@11.1.0.patch",
+      "@sinonjs/fake-timers@14.0.0": "patches/@sinonjs__fake-timers@14.0.0.patch",
       "cac@6.7.14": "patches/cac@6.7.14.patch",
       "@types/sinonjs__fake-timers@8.1.5": "patches/@types__sinonjs__fake-timers@8.1.5.patch",
-      "v8-to-istanbul@9.3.0": "patches/v8-to-istanbul@9.3.0.patch",
       "acorn@8.11.3": "patches/acorn@8.11.3.patch"
-    }
+    },
+    "onlyBuiltDependencies": [
+      "@sveltejs/kit",
+      "@swc/core",
+      "edgedriver",
+      "esbuild",
+      "geckodriver",
+      "msw",
+      "rolldown",
+      "sharp",
+      "svelte-preprocess",
+      "vue-demi"
+    ]
   }
 }

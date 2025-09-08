@@ -1,5 +1,5 @@
 import { expect } from 'vitest'
-import { isV8Provider, readCoverageJson, runVitest, test } from '../utils'
+import { readCoverageMap, runVitest, test } from '../utils'
 
 test('coverage results matches snapshot', async () => {
   await runVitest({
@@ -14,7 +14,29 @@ test('coverage results matches snapshot', async () => {
     },
   })
 
-  const coverageJson = await readCoverageJson()
+  const coverageMap = await readCoverageMap()
+  const fileCoverages = coverageMap.files().map(file => coverageMap.fileCoverageFor(file))
 
-  await expect(JSON.stringify(coverageJson, null, 2)).toMatchFileSnapshot(`__snapshots__/results-${isV8Provider() ? 'v8' : 'istanbul'}.snapshot.json`)
+  expect(fileCoverages).toMatchInlineSnapshot(`
+    {
+      "<process-cwd>/fixtures/src/even.ts": {
+        "branches": "0/0 (100%)",
+        "functions": "1/2 (50%)",
+        "lines": "1/2 (50%)",
+        "statements": "1/2 (50%)",
+      },
+      "<process-cwd>/fixtures/src/math.ts": {
+        "branches": "0/0 (100%)",
+        "functions": "1/4 (25%)",
+        "lines": "1/4 (25%)",
+        "statements": "1/4 (25%)",
+      },
+      "<process-cwd>/fixtures/src/untested-file.ts": {
+        "branches": "0/4 (0%)",
+        "functions": "0/4 (0%)",
+        "lines": "0/8 (0%)",
+        "statements": "0/8 (0%)",
+      },
+    }
+  `)
 })

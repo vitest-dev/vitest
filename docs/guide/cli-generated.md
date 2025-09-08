@@ -73,10 +73,10 @@ Set to true to exit if port is already in use, instead of automatically trying t
 
 ### silent
 
-- **CLI:** `--silent`
+- **CLI:** `--silent [value]`
 - **Config:** [silent](/config/#silent)
 
-Silent console output from tests
+Silent console output from tests. Use `'passed-only'` to see logs from failing tests only.
 
 ### hideSkippedTests
 
@@ -89,7 +89,7 @@ Hide logs for skipped tests
 - **CLI:** `--reporter <name>`
 - **Config:** [reporters](/config/#reporters)
 
-Specify reporters
+Specify reporters (default, blob, verbose, dot, json, tap, tap-flat, junit, hanging-process, github-actions)
 
 ### outputFile
 
@@ -97,13 +97,6 @@ Specify reporters
 - **Config:** [outputFile](/config/#outputfile)
 
 Write test results to a file when supporter reporter is also specified, use cac's dot notation for individual outputs of multiple reporters (example: `--outputFile.tap=./tap.txt`)
-
-### coverage.all
-
-- **CLI:** `--coverage.all`
-- **Config:** [coverage.all](/config/#coverage-all)
-
-Whether to include all files, including the untested ones into report
 
 ### coverage.provider
 
@@ -124,21 +117,14 @@ Enables coverage collection. Can be overridden using the `--coverage` CLI option
 - **CLI:** `--coverage.include <pattern>`
 - **Config:** [coverage.include](/config/#coverage-include)
 
-Files included in coverage as glob patterns. May be specified more than once when using multiple patterns (default: `**`)
+Files included in coverage as glob patterns. May be specified more than once when using multiple patterns. By default only files covered by tests are included.
 
 ### coverage.exclude
 
 - **CLI:** `--coverage.exclude <pattern>`
 - **Config:** [coverage.exclude](/config/#coverage-exclude)
 
-Files to be excluded in coverage. May be specified more than once when using multiple extensions (default: Visit [`coverage.exclude`](https://vitest.dev/config/#coverage-exclude))
-
-### coverage.extension
-
-- **CLI:** `--coverage.extension <extension>`
-- **Config:** [coverage.extension](/config/#coverage-extension)
-
-Extension to be included in coverage. May be specified more than once when using multiple extensions (default: `[".js", ".cjs", ".mjs", ".ts", ".mts", ".tsx", ".jsx", ".vue", ".svelte"]`)
+Files to be excluded in coverage. May be specified more than once when using multiple extensions.
 
 ### coverage.clean
 
@@ -205,7 +191,7 @@ Check thresholds per file. See `--coverage.thresholds.lines`, `--coverage.thresh
 
 ### coverage.thresholds.autoUpdate
 
-- **CLI:** `--coverage.thresholds.autoUpdate`
+- **CLI:** `--coverage.thresholds.autoUpdate <boolean|function>`
 - **Config:** [coverage.thresholds.autoUpdate](/config/#coverage-thresholds-autoupdate)
 
 Update threshold values: "lines", "functions", "branches" and "statements" to configuration file when current coverage is above the configured thresholds (default: `false`)
@@ -286,13 +272,6 @@ High and low watermarks for functions in the format of `<high>,<low>`
 
 Override Vite mode (default: `test` or `benchmark`)
 
-### workspace
-
-- **CLI:** `--workspace <path>`
-- **Config:** [workspace](/config/#workspace)
-
-Path to a workspace configuration file
-
 ### isolate
 
 - **CLI:** `--isolate`
@@ -360,14 +339,7 @@ Set to true to exit if port is already in use, instead of automatically trying t
 - **CLI:** `--browser.provider <name>`
 - **Config:** [browser.provider](/guide/browser/config#browser-provider)
 
-Provider used to run browser tests. Some browsers are only available for specific providers. Can be "webdriverio", "playwright", "preview", or the path to a custom provider. Visit [`browser.provider`](https://vitest.dev/config/#browser-provider) for more information (default: `"preview"`)
-
-### browser.providerOptions
-
-- **CLI:** `--browser.providerOptions <options>`
-- **Config:** [browser.providerOptions](/guide/browser/config#browser-provideroptions)
-
-Options that are passed down to a browser provider. Visit [`browser.providerOptions`](https://vitest.dev/config/#browser-provideroptions) for more information
+Provider used to run browser tests. Some browsers are only available for specific providers. Can be "webdriverio", "playwright", "preview", or the path to a custom provider. Visit [`browser.provider`](https://vitest.dev/guide/browser/config.html#browser-provider) for more information (default: `"preview"`)
 
 ### browser.isolate
 
@@ -389,6 +361,20 @@ Show Vitest UI when running tests (default: `!process.env.CI`)
 - **Config:** [browser.fileParallelism](/guide/browser/config#browser-fileparallelism)
 
 Should browser test files run in parallel. Use `--browser.fileParallelism=false` to disable (default: `true`)
+
+### browser.connectTimeout
+
+- **CLI:** `--browser.connectTimeout <timeout>`
+- **Config:** [browser.connectTimeout](/guide/browser/config#browser-connecttimeout)
+
+If connection to the browser takes longer, the test suite will fail (default: `60_000`)
+
+### browser.trackUnhandledErrors
+
+- **CLI:** `--browser.trackUnhandledErrors`
+- **Config:** [browser.trackUnhandledErrors](/guide/browser/config#browser-trackunhandlederrors)
+
+Control if Vitest catches uncaught exceptions so they can be reported (default: `true`)
 
 ### pool
 
@@ -418,13 +404,6 @@ Run tests inside a single thread (default: `false`)
 
 Maximum number or percentage of threads to run tests in
 
-### poolOptions.threads.minThreads
-
-- **CLI:** `--poolOptions.threads.minThreads <workers>`
-- **Config:** [poolOptions.threads.minThreads](/config/#pooloptions-threads-minthreads)
-
-Minimum number or percentage of threads to run tests in
-
 ### poolOptions.threads.useAtomics
 
 - **CLI:** `--poolOptions.threads.useAtomics`
@@ -452,13 +431,6 @@ Run tests inside a single thread (default: `false`)
 - **Config:** [poolOptions.vmThreads.maxThreads](/config/#pooloptions-vmthreads-maxthreads)
 
 Maximum number or percentage of threads to run tests in
-
-### poolOptions.vmThreads.minThreads
-
-- **CLI:** `--poolOptions.vmThreads.minThreads <workers>`
-- **Config:** [poolOptions.vmThreads.minThreads](/config/#pooloptions-vmthreads-minthreads)
-
-Minimum number or percentage of threads to run tests in
 
 ### poolOptions.vmThreads.useAtomics
 
@@ -495,13 +467,6 @@ Run tests inside a single child_process (default: `false`)
 
 Maximum number or percentage of processes to run tests in
 
-### poolOptions.forks.minForks
-
-- **CLI:** `--poolOptions.forks.minForks <workers>`
-- **Config:** [poolOptions.forks.minForks](/config/#pooloptions-forks-minforks)
-
-Minimum number or percentage of processes to run tests in
-
 ### poolOptions.vmForks.isolate
 
 - **CLI:** `--poolOptions.vmForks.isolate`
@@ -523,13 +488,6 @@ Run tests inside a single child_process (default: `false`)
 
 Maximum number or percentage of processes to run tests in
 
-### poolOptions.vmForks.minForks
-
-- **CLI:** `--poolOptions.vmForks.minForks <workers>`
-- **Config:** [poolOptions.vmForks.minForks](/config/#pooloptions-vmforks-minforks)
-
-Minimum number or percentage of processes to run tests in
-
 ### poolOptions.vmForks.memoryLimit
 
 - **CLI:** `--poolOptions.vmForks.memoryLimit <limit>`
@@ -550,13 +508,6 @@ Should all test files run in parallel. Use `--no-file-parallelism` to disable (d
 - **Config:** [maxWorkers](/config/#maxworkers)
 
 Maximum number or percentage of workers to run tests in
-
-### minWorkers
-
-- **CLI:** `--minWorkers <workers>`
-- **Config:** [minWorkers](/config/#minworkers)
-
-Minimum number or percentage of workers to run tests in
 
 ### environment
 
@@ -654,14 +605,14 @@ Enable Node.js inspector and break before the test starts
 - **CLI:** `--testTimeout <timeout>`
 - **Config:** [testTimeout](/config/#testtimeout)
 
-Default timeout of a test in milliseconds (default: `5000`)
+Default timeout of a test in milliseconds (default: `5000`). Use `0` to disable timeout completely.
 
 ### hookTimeout
 
 - **CLI:** `--hookTimeout <timeout>`
 - **Config:** [hookTimeout](/config/#hooktimeout)
 
-Default hook timeout in milliseconds (default: `10000`)
+Default hook timeout in milliseconds (default: `10000`). Use `0` to disable timeout completely.
 
 ### bail
 
@@ -754,6 +705,13 @@ Omit annotation lines from the output (default: `false`)
 
 Print basic prototype Object and Array (default: `true`)
 
+### diff.maxDepth
+
+- **CLI:** `--diff.maxDepth <maxDepth>`
+- **Config:** [diff.maxDepth](/config/#diff-maxdepth)
+
+Limit the depth to recurse when printing nested objects (default: `20`)
+
 ### diff.truncateThreshold
 
 - **CLI:** `--diff.truncateThreshold <threshold>`
@@ -831,6 +789,13 @@ Ignore type errors from source files
 
 Path to a custom tsconfig file
 
+### typecheck.spawnTimeout
+
+- **CLI:** `--typecheck.spawnTimeout <time>`
+- **Config:** [typecheck.spawnTimeout](/config/#typecheck-spawntimeout)
+
+Minimum time in milliseconds it takes to spawn the typechecker
+
 ### project
 
 - **CLI:** `--project <name>`
@@ -894,6 +859,13 @@ Always print console stack traces
 
 Collect test and suite locations in the `location` property
 
+### attachmentsDir
+
+- **CLI:** `--attachmentsDir <dir>`
+- **Config:** [attachmentsDir](/config/#attachmentsdir)
+
+The directory where attachments from `context.annotate` are stored in (default: `.vitest-attachments`)
+
 ### run
 
 - **CLI:** `--run`
@@ -912,8 +884,14 @@ Removes colors from the console output
 
 Clear terminal screen when re-running tests during watch mode (default: `true`)
 
+### configLoader
+
+- **CLI:** `--configLoader <loader>`
+
+Use `bundle` to bundle the config with esbuild or `runner` (experimental) to process it on the fly. This is only available in vite version 6.1.0 and above. (default: `bundle`)
+
 ### standalone
 
 - **CLI:** `--standalone`
 
-Start Vitest without running tests. File filters will be ignored, tests will be running only on change (default: `false`)
+Start Vitest without running tests. Tests will be running only on change. This option is ignored when CLI file filters are passed. (default: `false`)

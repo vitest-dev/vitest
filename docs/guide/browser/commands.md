@@ -11,7 +11,7 @@ Command is a function that invokes another function on the server and passes dow
 
 ### Files Handling
 
-You can use `readFile`, `writeFile` and `removeFile` API to handle files inside your browser tests. All paths are resolved relative to the test file even if they are called in a helper function located in another file.
+You can use the `readFile`, `writeFile`, and `removeFile` APIs to handle files in your browser tests. Since Vitest 3.2, all paths are resolved relative to the [project](/guide/projects) root (which is `process.cwd()`, unless overridden manually). Previously, paths were resolved relative to the test file.
 
 By default, Vitest uses `utf-8` encoding but you can override it with options.
 
@@ -127,7 +127,7 @@ Custom functions will override built-in ones if they have the same name.
 Vitest exposes several `playwright` specific properties on the command context.
 
 - `page` references the full page that contains the test iframe. This is the orchestrator HTML and you most likely shouldn't touch it to not break things.
-- `frame` is an async method that will resolve tester [`Frame`](https://playwright.dev/docs/api/class-frame). It has a simillar API to the `page`, but it doesn't support certain methods. If you need to query an element, you should prefer using `context.iframe` instead because it is more stable and faster.
+- `frame` is an async method that will resolve tester [`Frame`](https://playwright.dev/docs/api/class-frame). It has a similar API to the `page`, but it doesn't support certain methods. If you need to query an element, you should prefer using `context.iframe` instead because it is more stable and faster.
 - `iframe` is a [`FrameLocator`](https://playwright.dev/docs/api/class-framelocator) that should be used to query other elements on the page.
 - `context` refers to the unique [BrowserContext](https://playwright.dev/docs/api/class-browsercontext).
 
@@ -148,26 +148,10 @@ export const myCommand: BrowserCommand<[string, number]> = async (
 }
 ```
 
-::: tip
-If you are using TypeScript, don't forget to reference `@vitest/browser/providers/playwright` in your [setup file](/config/#setupfile) or a [config file](/config/) to get autocompletion in the config and in `userEvent` and `page` options:
-
-```ts
-/// <reference types="@vitest/browser/providers/playwright" />
-```
-:::
-
 ### Custom `webdriverio` commands
 
 Vitest exposes some `webdriverio` specific properties on the context object.
 
 - `browser` is the `WebdriverIO.Browser` API.
 
-Vitest automatically switches the `webdriver` context to the test iframe by calling `browser.switchToFrame` before the command is called, so `$` and `$$` methods refer to the elements inside the iframe, not in the orchestrator, but non-webdriver APIs will still refer to the parent frame context.
-
-::: tip
-If you are using TypeScript, don't forget to reference `@vitest/browser/providers/webdriverio` in your [setup file](/config/#setupfile) or a [config file](/config/) to get autocompletion:
-
-```ts
-/// <reference types="@vitest/browser/providers/webdriverio" />
-```
-:::
+Vitest automatically switches the `webdriver` context to the test iframe by calling `browser.switchFrame` before the command is called, so `$` and `$$` methods refer to the elements inside the iframe, not in the orchestrator, but non-webdriver APIs will still refer to the parent frame context.

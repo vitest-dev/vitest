@@ -3,7 +3,6 @@ import type { DiffOptions } from '@vitest/utils/diff'
 import type { FileSpecification, VitestRunner } from './types/runner'
 import type {
   File,
-  HookCleanupCallback,
   HookListener,
   SequenceHooks,
   Suite,
@@ -13,39 +12,55 @@ import type {
   TaskResult,
   TaskResultPack,
   TaskState,
+  TaskUpdateEvent,
   Test,
   TestContext,
+  WriteableTestContext,
 } from './types/tasks'
 import { getSafeTimers, shuffle } from '@vitest/utils'
 import { processError } from '@vitest/utils/error'
 import { collectTests } from './collect'
-import { PendingError } from './errors'
+import { abortContextSignal, getFileContext } from './context'
+import { PendingError, TestRunAbortError } from './errors'
 import { callFixtureCleanup } from './fixture'
+import { getBeforeHookCleanupCallback } from './hooks'
 import { getFn, getHooks } from './map'
-import { setCurrentTest } from './test-state'
+import { addRunningTest, getRunningTests, setCurrentTest } from './test-state'
 import { limitConcurrency } from './utils/limit-concurrency'
 import { partitionSuiteChildren } from './utils/suite'
 import { hasFailed, hasTests } from './utils/tasks'
 
 const now = globalThis.performance ? globalThis.performance.now.bind(globalThis.performance) : Date.now
 const unixNow = Date.now
+const { clearTimeout, setTimeout } = getSafeTimers()
 
 function updateSuiteHookState(
-  suite: Task,
+  task: Task,
   name: keyof SuiteHooks,
   state: TaskState,
   runner: VitestRunner,
 ) {
-  if (!suite.result) {
-    suite.result = { state: 'run' }
+  if (!task.result) {
+    task.result = { state: 'run' }
   }
-  if (!suite.result?.hooks) {
-    suite.result.hooks = {}
+  if (!task.result.hooks) {
+    task.result.hooks = {}
   }
-  const suiteHooks = suite.result.hooks
+  const suiteHooks = task.result.hooks
   if (suiteHooks) {
     suiteHooks[name] = state
-    updateTask(suite, runner)
+
+    let event: TaskUpdateEvent = state === 'run' ? 'before-hook-start' : 'before-hook-end'
+
+    if (name === 'afterAll' || name === 'afterEach') {
+      event = state === 'run' ? 'after-hook-start' : 'after-hook-end'
+    }
+
+    updateTask(
+      event,
+      task,
+      runner,
+    )
   }
 }
 
@@ -75,12 +90,14 @@ async function callTestHooks(
     return
   }
 
+  const context = test.context as WriteableTestContext
+
   const onTestFailed = test.context.onTestFailed
   const onTestFinished = test.context.onTestFinished
-  test.context.onTestFailed = () => {
+  context.onTestFailed = () => {
     throw new Error(`Cannot call "onTestFailed" inside a test hook.`)
   }
-  test.context.onTestFinished = () => {
+  context.onTestFinished = () => {
     throw new Error(`Cannot call "onTestFinished" inside a test hook.`)
   }
 
@@ -103,8 +120,8 @@ async function callTestHooks(
     }
   }
 
-  test.context.onTestFailed = onTestFailed
-  test.context.onTestFinished = onTestFinished
+  context.onTestFailed = onTestFailed
+  context.onTestFinished = onTestFinished
 }
 
 export async function callSuiteHook<T extends keyof SuiteHooks>(
@@ -113,10 +130,10 @@ export async function callSuiteHook<T extends keyof SuiteHooks>(
   name: T,
   runner: VitestRunner,
   args: SuiteHooks[T][0] extends HookListener<infer A, any> ? A : never,
-): Promise<HookCleanupCallback[]> {
+): Promise<unknown[]> {
   const sequence = runner.config.sequence.hooks
 
-  const callbacks: HookCleanupCallback[] = []
+  const callbacks: unknown[] = []
   // stop at file level
   const parentSuite: Suite | null = 'filepath' in suite ? null : suite.suite || suite.file
 
@@ -126,22 +143,34 @@ export async function callSuiteHook<T extends keyof SuiteHooks>(
     )
   }
 
-  updateSuiteHookState(currentTask, name, 'run', runner)
-
   const hooks = getSuiteHooks(suite, name, sequence)
+
+  if (hooks.length > 0) {
+    updateSuiteHookState(currentTask, name, 'run', runner)
+  }
+
+  async function runHook(hook: Function) {
+    return getBeforeHookCleanupCallback(
+      hook,
+      await hook(...args),
+      name === 'beforeEach' ? args[0] : undefined,
+    )
+  }
 
   if (sequence === 'parallel') {
     callbacks.push(
-      ...(await Promise.all(hooks.map(hook => (hook as any)(...args)))),
+      ...(await Promise.all(hooks.map(hook => runHook(hook)))),
     )
   }
   else {
     for (const hook of hooks) {
-      callbacks.push(await (hook as any)(...args))
+      callbacks.push(await runHook(hook))
     }
   }
 
-  updateSuiteHookState(currentTask, name, 'pass', runner)
+  if (hooks.length > 0) {
+    updateSuiteHookState(currentTask, name, 'pass', runner)
+  }
 
   if (name === 'afterEach' && parentSuite) {
     callbacks.push(
@@ -153,55 +182,104 @@ export async function callSuiteHook<T extends keyof SuiteHooks>(
 }
 
 const packs = new Map<string, [TaskResult | undefined, TaskMeta]>()
-let updateTimer: any
-let previousUpdate: Promise<void> | undefined
+const eventsPacks: [string, TaskUpdateEvent, undefined][] = []
+const pendingTasksUpdates: Promise<void>[] = []
 
-export function updateTask(task: Task, runner: VitestRunner): void {
-  packs.set(task.id, [task.result, task.meta])
-
-  const { clearTimeout, setTimeout } = getSafeTimers()
-
-  clearTimeout(updateTimer)
-  updateTimer = setTimeout(() => {
-    previousUpdate = sendTasksUpdate(runner)
-  }, 10)
-}
-
-async function sendTasksUpdate(runner: VitestRunner) {
-  const { clearTimeout } = getSafeTimers()
-  clearTimeout(updateTimer)
-  await previousUpdate
-
+function sendTasksUpdate(runner: VitestRunner): void {
   if (packs.size) {
     const taskPacks = Array.from(packs).map<TaskResultPack>(([id, task]) => {
       return [id, task[0], task[1]]
     })
-    const p = runner.onTaskUpdate?.(taskPacks)
+    const p = runner.onTaskUpdate?.(taskPacks, eventsPacks)
+    if (p) {
+      pendingTasksUpdates.push(p)
+      // remove successful promise to not grow array indefnitely,
+      // but keep rejections so finishSendTasksUpdate can handle them
+      p.then(
+        () => pendingTasksUpdates.splice(pendingTasksUpdates.indexOf(p), 1),
+        () => {},
+      )
+    }
+    eventsPacks.length = 0
     packs.clear()
-    return p
   }
 }
 
-async function callCleanupHooks(cleanups: HookCleanupCallback[]) {
-  await Promise.all(
-    cleanups.map(async (fn) => {
+export async function finishSendTasksUpdate(runner: VitestRunner): Promise<void> {
+  sendTasksUpdate(runner)
+  await Promise.all(pendingTasksUpdates)
+}
+
+function throttle<T extends (...args: any[]) => void>(fn: T, ms: number): T {
+  let last = 0
+  let pendingCall: ReturnType<typeof setTimeout> | undefined
+
+  return function call(this: any, ...args: any[]) {
+    const now = unixNow()
+    if (now - last > ms) {
+      last = now
+
+      clearTimeout(pendingCall)
+      pendingCall = undefined
+
+      return fn.apply(this, args)
+    }
+
+    // Make sure fn is still called even if there are no further calls
+    pendingCall ??= setTimeout(() => call.bind(this)(...args), ms)
+  } as any
+}
+
+// throttle based on summary reporter's DURATION_UPDATE_INTERVAL_MS
+const sendTasksUpdateThrottled = throttle(sendTasksUpdate, 100)
+
+export function updateTask(event: TaskUpdateEvent, task: Task, runner: VitestRunner): void {
+  eventsPacks.push([task.id, event, undefined])
+  packs.set(task.id, [task.result, task.meta])
+  sendTasksUpdateThrottled(runner)
+}
+
+async function callCleanupHooks(runner: VitestRunner, cleanups: unknown[]) {
+  const sequence = runner.config.sequence.hooks
+
+  if (sequence === 'stack') {
+    cleanups = cleanups.slice().reverse()
+  }
+
+  if (sequence === 'parallel') {
+    await Promise.all(
+      cleanups.map(async (fn) => {
+        if (typeof fn !== 'function') {
+          return
+        }
+        await fn()
+      }),
+    )
+  }
+  else {
+    for (const fn of cleanups) {
       if (typeof fn !== 'function') {
-        return
+        continue
       }
       await fn()
-    }),
-  )
+    }
+  }
 }
 
 export async function runTest(test: Test, runner: VitestRunner): Promise<void> {
   await runner.onBeforeRunTask?.(test)
 
   if (test.mode !== 'run' && test.mode !== 'queued') {
+    updateTask('test-prepare', test, runner)
+    updateTask('test-finished', test, runner)
     return
   }
 
   if (test.result?.state === 'fail') {
-    updateTask(test, runner)
+    // should not be possible to get here, I think this is just copy pasted from suite
+    // TODO: maybe someone fails tests in `beforeAll` hooks?
+    // https://github.com/vitest-dev/vitest/pull/7069
+    updateTask('test-failed-early', test, runner)
     return
   }
 
@@ -212,8 +290,9 @@ export async function runTest(test: Test, runner: VitestRunner): Promise<void> {
     startTime: unixNow(),
     retryCount: 0,
   }
-  updateTask(test, runner)
+  updateTask('test-prepare', test, runner)
 
+  const cleanupRunningTest = addRunningTest(test)
   setCurrentTest(test)
 
   const suite = test.suite || test.file
@@ -222,7 +301,7 @@ export async function runTest(test: Test, runner: VitestRunner): Promise<void> {
   for (let repeatCount = 0; repeatCount <= repeats; repeatCount++) {
     const retry = test.retry ?? 0
     for (let retryCount = 0; retryCount <= retry; retryCount++) {
-      let beforeEachCleanups: HookCleanupCallback[] = []
+      let beforeEachCleanups: unknown[] = []
       try {
         await runner.onBeforeTryTask?.(test, {
           retry: retryCount,
@@ -270,15 +349,6 @@ export async function runTest(test: Test, runner: VitestRunner): Promise<void> {
         failTask(test.result, e, runner.config.diffOptions)
       }
 
-      // skipped with new PendingError
-      if (test.pending || test.result?.state === 'skip') {
-        test.mode = 'skip'
-        test.result = { state: 'skip', note: test.result?.note }
-        updateTask(test, runner)
-        setCurrentTest(undefined)
-        return
-      }
-
       try {
         await runner.onTaskFinished?.(test)
       }
@@ -291,7 +361,7 @@ export async function runTest(test: Test, runner: VitestRunner): Promise<void> {
           test.context,
           suite,
         ])
-        await callCleanupHooks(beforeEachCleanups)
+        await callCleanupHooks(runner, beforeEachCleanups)
         await callFixtureCleanup(test.context)
       }
       catch (e) {
@@ -309,8 +379,23 @@ export async function runTest(test: Test, runner: VitestRunner): Promise<void> {
         )
       }
 
-      delete test.onFailed
-      delete test.onFinished
+      test.onFailed = undefined
+      test.onFinished = undefined
+
+      // skipped with new PendingError
+      if (test.result?.pending || test.result?.state === 'skip') {
+        test.mode = 'skip'
+        test.result = {
+          state: 'skip',
+          note: test.result?.note,
+          pending: true,
+          duration: now() - start,
+        }
+        updateTask('test-finished', test, runner)
+        setCurrentTest(undefined)
+        cleanupRunningTest()
+        return
+      }
 
       if (test.result.state === 'pass') {
         break
@@ -323,7 +408,7 @@ export async function runTest(test: Test, runner: VitestRunner): Promise<void> {
       }
 
       // update retry info
-      updateTask(test, runner)
+      updateTask('test-retried', test, runner)
     }
   }
 
@@ -340,19 +425,21 @@ export async function runTest(test: Test, runner: VitestRunner): Promise<void> {
     }
   }
 
+  cleanupRunningTest()
   setCurrentTest(undefined)
 
   test.result.duration = now() - start
 
   await runner.onAfterRunTask?.(test)
 
-  updateTask(test, runner)
+  updateTask('test-finished', test, runner)
 }
 
 function failTask(result: TaskResult, err: unknown, diffOptions: DiffOptions | undefined) {
   if (err instanceof PendingError) {
     result.state = 'skip'
     result.note = err.note
+    result.pending = true
     return
   }
 
@@ -369,7 +456,7 @@ function markTasksAsSkipped(suite: Suite, runner: VitestRunner) {
   suite.tasks.forEach((t) => {
     t.mode = 'skip'
     t.result = { ...t.result, state: 'skip' }
-    updateTask(t, runner)
+    updateTask('test-finished', t, runner)
     if (t.type === 'suite') {
       markTasksAsSkipped(t, runner)
     }
@@ -381,26 +468,33 @@ export async function runSuite(suite: Suite, runner: VitestRunner): Promise<void
 
   if (suite.result?.state === 'fail') {
     markTasksAsSkipped(suite, runner)
-    updateTask(suite, runner)
+    // failed during collection
+    updateTask('suite-failed-early', suite, runner)
     return
   }
 
   const start = now()
 
+  const mode = suite.mode
+
   suite.result = {
-    state: 'run',
+    state: mode === 'skip' || mode === 'todo' ? mode : 'run',
     startTime: unixNow(),
   }
 
-  updateTask(suite, runner)
+  updateTask('suite-prepare', suite, runner)
 
-  let beforeAllCleanups: HookCleanupCallback[] = []
+  let beforeAllCleanups: unknown[] = []
 
   if (suite.mode === 'skip') {
     suite.result.state = 'skip'
+
+    updateTask('suite-finished', suite, runner)
   }
   else if (suite.mode === 'todo') {
     suite.result.state = 'todo'
+
+    updateTask('suite-finished', suite, runner)
   }
   else {
     try {
@@ -452,7 +546,11 @@ export async function runSuite(suite: Suite, runner: VitestRunner): Promise<void
 
     try {
       await callSuiteHook(suite, suite, 'afterAll', runner, [suite])
-      await callCleanupHooks(beforeAllCleanups)
+      await callCleanupHooks(runner, beforeAllCleanups)
+      if (suite.file === suite) {
+        const context = getFileContext(suite as File)
+        await callFixtureCleanup(context)
+      }
     }
     catch (e) {
       failTask(suite.result, e, runner.config.diffOptions)
@@ -476,11 +574,11 @@ export async function runSuite(suite: Suite, runner: VitestRunner): Promise<void
       }
     }
 
-    updateTask(suite, runner)
-
     suite.result.duration = now() - start
 
     await runner.onAfterRunSuite?.(suite)
+
+    updateTask('suite-finished', suite, runner)
   }
 }
 
@@ -514,22 +612,51 @@ export async function runFiles(files: File[], runner: VitestRunner): Promise<voi
   }
 }
 
+const workerRunners = new WeakSet<VitestRunner>()
+
 export async function startTests(specs: string[] | FileSpecification[], runner: VitestRunner): Promise<File[]> {
-  const paths = specs.map(f => typeof f === 'string' ? f : f.filepath)
-  await runner.onBeforeCollect?.(paths)
+  const cancel = runner.cancel?.bind(runner)
+  // Ideally, we need to have an event listener for this, but only have a runner here.
+  // Adding another onCancel felt wrong (maybe it needs to be refactored)
+  runner.cancel = (reason) => {
+    // We intentionally create only one error since there is only one test run that can be cancelled
+    const error = new TestRunAbortError('The test run was aborted by the user.', reason)
+    getRunningTests().forEach(test =>
+      abortContextSignal(test.context, error),
+    )
+    return cancel?.(reason)
+  }
 
-  const files = await collectTests(specs, runner)
+  if (!workerRunners.has(runner)) {
+    runner.onCleanupWorkerContext?.(async () => {
+      const context = runner.getWorkerContext?.()
+      if (context) {
+        await callFixtureCleanup(context)
+      }
+    })
+    workerRunners.add(runner)
+  }
 
-  await runner.onCollected?.(files)
-  await runner.onBeforeRunFiles?.(files)
+  try {
+    const paths = specs.map(f => typeof f === 'string' ? f : f.filepath)
+    await runner.onBeforeCollect?.(paths)
 
-  await runFiles(files, runner)
+    const files = await collectTests(specs, runner)
 
-  await runner.onAfterRunFiles?.(files)
+    await runner.onCollected?.(files)
+    await runner.onBeforeRunFiles?.(files)
 
-  await sendTasksUpdate(runner)
+    await runFiles(files, runner)
 
-  return files
+    await runner.onAfterRunFiles?.(files)
+
+    await finishSendTasksUpdate(runner)
+
+    return files
+  }
+  finally {
+    runner.cancel = cancel
+  }
 }
 
 async function publicCollect(specs: string[] | FileSpecification[], runner: VitestRunner): Promise<File[]> {

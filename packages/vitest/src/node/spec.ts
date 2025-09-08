@@ -1,21 +1,15 @@
 import type { SerializedTestSpecification } from '../runtime/types/utils'
 import type { TestProject } from './project'
+import type { TestModule } from './reporters/reported-tasks'
 import type { Pool } from './types/pool-options'
+import { generateFileHash } from '@vitest/runner/utils'
+import { relative } from 'pathe'
 
 export class TestSpecification {
   /**
-   * @deprecated use `project` instead
+   * The task ID associated with the test module.
    */
-  public readonly 0: TestProject
-  /**
-   * @deprecated use `moduleId` instead
-   */
-  public readonly 1: string
-  /**
-   * @deprecated use `pool` instead
-   */
-  public readonly 2: { pool: Pool }
-
+  public readonly taskId: string
   /**
    * The test project that the module belongs to.
    */
@@ -40,13 +34,32 @@ export class TestSpecification {
     pool: Pool,
     testLines?: number[] | undefined,
   ) {
-    this[0] = project
-    this[1] = moduleId
-    this[2] = { pool }
+    const name = project.config.name
+    const hashName = pool !== 'typescript'
+      ? name
+      : name
+      // https://github.com/vitest-dev/vitest/blob/main/packages/vitest/src/typecheck/collect.ts#L58
+        ? `${name}:__typecheck__`
+        : '__typecheck__'
+    this.taskId = generateFileHash(
+      relative(project.config.root, moduleId),
+      hashName,
+    )
     this.project = project
     this.moduleId = moduleId
     this.pool = pool
     this.testLines = testLines
+  }
+
+  /**
+   * Test module associated with the specification.
+   */
+  get testModule(): TestModule | undefined {
+    const task = this.project.vitest.state.idMap.get(this.taskId)
+    if (!task) {
+      return undefined
+    }
+    return this.project.vitest.state.getReportedEntity(task) as TestModule | undefined
   }
 
   toJSON(): SerializedTestSpecification {
@@ -58,15 +71,5 @@ export class TestSpecification {
       this.moduleId,
       { pool: this.pool, testLines: this.testLines },
     ]
-  }
-
-  /**
-   * for backwards compatibility
-   * @deprecated
-   */
-  *[Symbol.iterator]() {
-    yield this.project
-    yield this.moduleId
-    yield this.pool
   }
 }

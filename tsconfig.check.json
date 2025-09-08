@@ -11,7 +11,6 @@
     "./packages/vitest/dist/**",
     "./packages/*/*.d.ts",
     "./packages/*/*.d.cts",
-    "./packages/ui/client/**",
     "./examples/**/*.*",
     "./bench/**",
     "./test/benchmark/fixtures/**",

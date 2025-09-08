@@ -1,29 +1,28 @@
+import type { TestModule } from 'vitest/node'
 import { expect, it, vi } from 'vitest'
 import { createVitest } from 'vitest/node'
 
 it(createVitest, async () => {
-  const onFinished = vi.fn()
+  const onTestRunEnd = vi.fn()
   const ctx = await createVitest('test', {
     watch: false,
     root: 'fixtures/create-vitest',
     reporters: [
       {
-        onFinished,
+        onTestRunEnd,
       },
     ],
   })
   const testFiles = await ctx.globTestSpecifications()
   await ctx.runTestSpecifications(testFiles, false)
-  expect(onFinished.mock.calls[0]).toMatchObject([
-    [
-      {
-        name: 'basic.test.ts',
-        result: {
-          state: 'pass',
-        },
-      },
-    ],
-    [],
-    undefined,
-  ])
+
+  const [testModules, errors, reason] = onTestRunEnd.mock.calls[0]
+  expect(testModules).toHaveLength(1)
+
+  const testModule = testModules[0]
+  expect((testModule as TestModule).task?.name).toBe('basic.test.ts')
+  expect((testModule as TestModule).state()).toBe('passed')
+
+  expect(errors).toHaveLength(0)
+  expect(reason).toBe('passed')
 })

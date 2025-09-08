@@ -1,4 +1,5 @@
 import type { Arrayable, Nullable } from './types'
+import { NULL_BYTE_PLACEHOLDER, VALID_ID_PREFIX } from './constants'
 
 interface CloneOptions {
   forceWritable?: boolean
@@ -54,6 +55,47 @@ export function isPrimitive(value: unknown): boolean {
 
 export function slash(path: string): string {
   return path.replace(/\\/g, '/')
+}
+
+const postfixRE = /[?#].*$/
+export function cleanUrl(url: string): string {
+  return url.replace(postfixRE, '')
+}
+
+const externalRE = /^(?:[a-z]+:)?\/\//
+export const isExternalUrl = (url: string): boolean => externalRE.test(url)
+
+/**
+ * Prepend `/@id/` and replace null byte so the id is URL-safe.
+ * This is prepended to resolved ids that are not valid browser
+ * import specifiers by the importAnalysis plugin.
+ */
+export function wrapId(id: string): string {
+  return id.startsWith(VALID_ID_PREFIX)
+    ? id
+    : VALID_ID_PREFIX + id.replace('\0', NULL_BYTE_PLACEHOLDER)
+}
+
+/**
+ * Undo {@link wrapId}'s `/@id/` and null byte replacements.
+ */
+export function unwrapId(id: string): string {
+  return id.startsWith(VALID_ID_PREFIX)
+    ? id.slice(VALID_ID_PREFIX.length).replace(NULL_BYTE_PLACEHOLDER, '\0')
+    : id
+}
+
+export function withTrailingSlash(path: string): string {
+  if (path.at(-1) !== '/') {
+    return `${path}/`
+  }
+  return path
+}
+
+const bareImportRE = /^(?![a-z]:)[\w@](?!.*:\/\/)/i
+
+export function isBareImport(id: string): boolean {
+  return bareImportRE.test(id)
 }
 
 // convert RegExp.toString to RegExp

@@ -1,12 +1,11 @@
 import type { ResolvedTestEnvironment } from '../types/environment'
 import type { SerializedConfig } from './config'
-import type { VitestExecutor } from './execute'
+import type { VitestModuleRunner } from './moduleRunner/moduleRunner'
 import { createRequire } from 'node:module'
 import timers from 'node:timers'
+import timersPromises from 'node:timers/promises'
 import util from 'node:util'
-import { getSafeTimers } from '@vitest/utils'
-import { KNOWN_ASSET_TYPES } from 'vite-node/constants'
-import { installSourcemapsSupport } from 'vite-node/source-map'
+import { getSafeTimers, KNOWN_ASSET_TYPES } from '@vitest/utils'
 import { expect } from '../integrations/chai'
 import { resolveSnapshotEnvironment } from '../integrations/snapshot/environments/resolveSnapshotEnvironment'
 import * as VitestIndex from '../public/index'
@@ -18,8 +17,8 @@ let globalSetup = false
 export async function setupGlobalEnv(
   config: SerializedConfig,
   { environment }: ResolvedTestEnvironment,
-  executor: VitestExecutor,
-) {
+  moduleRunner: VitestModuleRunner,
+): Promise<void> {
   await setupCommonEnv(config)
 
   Object.defineProperty(globalThis, '__vitest_index__', {
@@ -31,7 +30,7 @@ export async function setupGlobalEnv(
 
   if (!state.config.snapshotOptions.snapshotEnvironment) {
     state.config.snapshotOptions.snapshotEnvironment
-      = await resolveSnapshotEnvironment(config, executor)
+      = await resolveSnapshotEnvironment(config, moduleRunner)
   }
 
   if (globalSetup) {
@@ -40,7 +39,8 @@ export async function setupGlobalEnv(
 
   globalSetup = true
 
-  if (environment.transformMode === 'web') {
+  const viteEnvironment = environment.viteEnvironment || environment.name
+  if (viteEnvironment === 'client') {
     const _require = createRequire(import.meta.url)
     // always mock "required" `css` files, because we cannot process them
     _require.extensions['.css'] = resolveCss
@@ -61,11 +61,8 @@ export async function setupGlobalEnv(
   globalThis.__vitest_required__ = {
     util,
     timers,
+    timersPromises,
   }
-
-  installSourcemapsSupport({
-    getSourceMap: source => state.moduleCache.getSourceMap(source),
-  })
 
   if (!config.disableConsoleIntercept) {
     await setupConsoleLogSpy()
@@ -80,7 +77,7 @@ function resolveAsset(mod: NodeJS.Module, url: string) {
   mod.exports = url
 }
 
-export async function setupConsoleLogSpy() {
+export async function setupConsoleLogSpy(): Promise<void> {
   const { createCustomConsole } = await import('./console')
 
   globalThis.console = createCustomConsole()
@@ -90,7 +87,7 @@ export async function withEnv(
   { environment }: ResolvedTestEnvironment,
   options: Record<string, any>,
   fn: () => Promise<void>,
-) {
+): Promise<void> {
   // @ts-expect-error untyped global
   globalThis.__vitest_environment__ = environment.name
   expect.setState({

@@ -1,5 +1,6 @@
 import type { Tester } from '@vitest/expect'
 import { getCurrentTest } from '@vitest/runner'
+import { Temporal } from 'temporal-polyfill'
 import { describe, expect, expectTypeOf, test, vi } from 'vitest'
 
 describe('expect.soft', () => {
@@ -152,6 +153,28 @@ describe('expect.addEqualityTesters', () => {
     b.add(b)
 
     expect(a).toEqual(b)
+  })
+})
+
+describe('recursive custom equality tester for numeric values', () => {
+  const areNumbersEqual: Tester = (a, b) => typeof b === 'number' ? a === b : undefined
+
+  expect.addEqualityTesters([areNumbersEqual])
+
+  test('within objects', () => {
+    expect({ foo: -0, bar: 0, baz: 0 }).toStrictEqual({ foo: 0, bar: -0, baz: 0 })
+  })
+
+  test('within arrays', () => {
+    expect([-0, 0, 0]).toStrictEqual([0, -0, 0])
+  })
+
+  test('within typed arrays', () => {
+    expect(Float64Array.of(-0, 0, 0)).toStrictEqual(Float64Array.of(0, -0, 0))
+  })
+
+  test('within deeply nested structures', () => {
+    expect({ foo: { bar: [1, [2, 0, [3, -0, 4]]] }, baz: 0 }).toStrictEqual({ foo: { bar: [1, [2, -0, [3, 0, 4]]] }, baz: -0 })
   })
 })
 
@@ -322,5 +345,135 @@ describe('iterator', () => {
     }
 
     expect(a).not.toStrictEqual(b)
+  })
+})
+
+describe('Temporal equality', () => {
+  describe.each([
+    ['Instant', ['2025-01-01T00:00:00.000Z', '2026-01-01T00:00:00.000Z']],
+    ['ZonedDateTime', ['2025-01-01T00:00:00+01:00[Europe/Amsterdam]', '2025-01-01T00:00:00+01:00[Europe/Paris]']],
+    ['PlainDateTime', ['2025-01-01T00:00:00.000', '2026-01-01T00:00:00.000']],
+    ['PlainDate', ['2025-01-01', '2026-01-01']],
+    ['PlainTime', ['15:00:00.000', '16:00:00.000']],
+    ['PlainYearMonth', ['2025-01', '2026-01']],
+    ['PlainMonthDay', ['01-01', '02-01']],
+  ] as const)('of $className', (className, [first, second]) => {
+    test('returns true when equal', () => {
+      const a = Temporal[className].from(first)
+      const b = Temporal[className].from(first)
+
+      expect(a).toStrictEqual(b)
+    })
+
+    test('returns false when not equal', () => {
+      const a = Temporal[className].from(first)
+      const b = Temporal[className].from(second)
+
+      expect(a).not.toStrictEqual(b)
+    })
+  })
+
+  describe('of Duration', () => {
+    test('returns true when .toString() is equal', () => {
+      const a = Temporal.Duration.from('P1M')
+      const b = Temporal.Duration.from('P1M')
+
+      expect(a).toStrictEqual(b)
+    })
+
+    test('returns true when .toString() is not equal', () => {
+      const a = Temporal.Duration.from('PT1M')
+      const b = Temporal.Duration.from('PT60S')
+
+      expect(a).not.toStrictEqual(b)
+    })
+  })
+})
+
+describe('expect with custom message', () => {
+  describe('built-in matchers', () => {
+    test('sync matcher throws custom message on failure', () => {
+      expect(() => expect(1, 'custom message').toBe(2)).toThrow('custom message')
+    })
+
+    test('async rejects matcher throws custom message on failure', async ({ expect }) => {
+      const asyncAssertion = expect(Promise.reject(new Error('test error')), 'custom async message').rejects.toBe(2)
+      await expect(asyncAssertion).rejects.toThrow('custom async message')
+    })
+
+    test('async resolves matcher throws custom message on failure', async ({ expect }) => {
+      const asyncAssertion = expect(Promise.resolve(1), 'custom async message').resolves.toBe(2)
+      await expect(asyncAssertion).rejects.toThrow('custom async message')
+    })
+
+    test('not matcher throws custom message on failure', () => {
+      expect(() => expect(1, 'custom message').not.toBe(1)).toThrow('custom message')
+    })
+  })
+
+  describe('custom matchers with expect.extend', () => {
+    test('sync custom matcher throws custom message on failure', ({ expect }) => {
+      expect.extend({
+        toBeFoo(actual) {
+          const { isNot } = this
+          return {
+            pass: actual === 'foo',
+            message: () => `${actual} is${isNot ? ' not' : ''} foo`,
+          }
+        },
+      })
+      expect(() => (expect('bar', 'custom message') as any).toBeFoo()).toThrow('custom message')
+    })
+
+    test('sync custom matcher passes with custom message when assertion succeeds', ({ expect }) => {
+      expect.extend({
+        toBeFoo(actual) {
+          const { isNot } = this
+          return {
+            pass: actual === 'foo',
+            message: () => `${actual} is${isNot ? ' not' : ''} foo`,
+          }
+        },
+      })
+      expect(() => (expect('foo', 'custom message') as any).toBeFoo()).not.toThrow()
+    })
+
+    test('async custom matcher throws custom message on failure', async ({ expect }) => {
+      expect.extend({
+        async toBeFoo(actual) {
+          const resolvedValue = await actual
+          return {
+            pass: resolvedValue === 'foo',
+            message: () => `${resolvedValue} is not foo`,
+          }
+        },
+      })
+      const asyncAssertion = (expect(Promise.resolve('bar'), 'custom async message') as any).toBeFoo()
+      await expect(asyncAssertion).rejects.toThrow('custom async message')
+    })
+
+    test('async custom matcher with not throws custom message on failure', async ({ expect }) => {
+      expect.extend({
+        async toBeFoo(actual) {
+          const resolvedValue = await actual
+          return {
+            pass: resolvedValue === 'foo',
+            message: () => `${resolvedValue} is not foo`,
+          }
+        },
+      })
+      const asyncAssertion = (expect(Promise.resolve('foo'), 'custom async message') as any).not.toBeFoo()
+      await expect(asyncAssertion).rejects.toThrow('custom async message')
+    })
+  })
+
+  describe('edge cases', () => {
+    test('empty custom message falls back to default matcher message', () => {
+      expect(() => expect(1, '').toBe(2)).toThrow('expected 1 to be 2 // Object.is equality')
+    })
+
+    test('undefined custom message falls back to default matcher message', () => {
+      expect(() => expect(1, undefined as any).toBe(2)).toThrow('expected 1 to be 2 // Object.is equality')
+    })
   })
 })

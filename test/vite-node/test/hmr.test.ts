@@ -3,7 +3,7 @@ import { test } from 'vitest'
 import { editFile, runViteNodeCli } from '../../test-utils'
 
 test('hmr.accept works correctly', async () => {
-  const scriptFile = resolve(__dirname, '../src/hmr-script.js')
+  const scriptFile = resolve(import.meta.dirname, '../src/hmr-script.js')
 
   const { viteNode } = await runViteNodeCli('--watch', scriptFile)
 
@@ -17,7 +17,7 @@ test('hmr.accept works correctly', async () => {
 })
 
 test('can handle top-level throw in self-accepting module', async () => {
-  const scriptFile = resolve(__dirname, '../src/hmr-throw.js')
+  const scriptFile = resolve(import.meta.dirname, '../src/hmr-throw.js')
 
   const { viteNode } = await runViteNodeCli('--watch', scriptFile)
 
@@ -27,4 +27,9 @@ test('can handle top-level throw in self-accepting module', async () => {
 
   await viteNode.waitForStderr('some error')
   await viteNode.waitForStderr(`[hmr] Failed to reload ${scriptFile}. This could be due to syntax errors or importing non-existent modules. (see errors above)`)
+})
+
+test('basic', async () => {
+  const { viteNode } = await runViteNodeCli('--watch', resolve(import.meta.dirname, '../src/testMod.ts'))
+  await viteNode.waitForStdout('[deps.ts] imported')
 })

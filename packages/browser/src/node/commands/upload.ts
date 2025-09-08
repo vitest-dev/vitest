@@ -1,28 +1,30 @@
+import type { UserEventUploadOptions } from '@vitest/browser/context'
 import type { UserEventCommand } from './utils'
-import { dirname, resolve } from 'pathe'
+import { resolve } from 'pathe'
 import { PlaywrightBrowserProvider } from '../providers/playwright'
-import { WebdriverBrowserProvider } from '../providers/webdriver'
+import { WebdriverBrowserProvider } from '../providers/webdriverio'
 
 export const upload: UserEventCommand<(element: string, files: Array<string | {
   name: string
   mimeType: string
   base64: string
-}>) => void> = async (
+}>, options: UserEventUploadOptions) => void> = async (
   context,
   selector,
   files,
+  options,
 ) => {
   const testPath = context.testPath
   if (!testPath) {
     throw new Error(`Cannot upload files outside of a test`)
   }
-  const testDir = dirname(testPath)
+  const root = context.project.config.root
 
   if (context.provider instanceof PlaywrightBrowserProvider) {
     const { iframe } = context
     const playwrightFiles = files.map((file) => {
       if (typeof file === 'string') {
-        return resolve(testDir, file)
+        return resolve(root, file)
       }
       return {
         name: file.name,
@@ -30,7 +32,7 @@ export const upload: UserEventCommand<(element: string, files: Array<string | {
         buffer: Buffer.from(file.base64, 'base64'),
       }
     })
-    await iframe.locator(selector).setInputFiles(playwrightFiles as string[])
+    await iframe.locator(selector).setInputFiles(playwrightFiles as string[], options)
   }
   else if (context.provider instanceof WebdriverBrowserProvider) {
     for (const file of files) {
@@ -42,7 +44,7 @@ export const upload: UserEventCommand<(element: string, files: Array<string | {
     const element = context.browser.$(selector)
 
     for (const file of files) {
-      const filepath = resolve(testDir, file as string)
+      const filepath = resolve(root, file as string)
       const remoteFilePath = await context.browser.uploadFile(filepath)
       await element.addValue(remoteFilePath)
     }

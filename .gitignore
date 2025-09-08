@@ -29,3 +29,8 @@ test/browser/fixtures/update-snapshot/basic.test.ts
 test/cli/fixtures/browser-multiple/basic-*
 .vitest-reports
 *.tsbuildinfo
+# exclude static html reporter folder
+test/browser/html/
+test/core/html/
+.vitest-attachments
+explainFiles.txt

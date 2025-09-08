@@ -1,39 +1,41 @@
 import type { UserConfig as ViteConfig, Plugin as VitePlugin } from 'vite'
 import type { ResolvedConfig, UserConfig } from '../types/config'
 import {
+  deepClone,
   deepMerge,
   notNullish,
-  toArray,
 } from '@vitest/utils'
 import { relative } from 'pathe'
+import * as vite from 'vite'
 import { defaultPort } from '../../constants'
-import { configDefaults, coverageConfigDefaults } from '../../defaults'
+import { configDefaults } from '../../defaults'
 import { generateScopedClassName } from '../../integrations/css/css-modules'
 import { resolveApiServerConfig } from '../config/resolveConfig'
 import { Vitest } from '../core'
 import { createViteLogger, silenceImportViteIgnoreWarning } from '../viteLogger'
 import { CoverageTransform } from './coverageTransform'
 import { CSSEnablerPlugin } from './cssEnabler'
+import { MetaEnvReplacerPlugin } from './metaEnvReplacer'
 import { MocksPlugins } from './mocks'
 import { NormalizeURLPlugin } from './normalizeURL'
 import { VitestOptimizer } from './optimizer'
-import { SsrReplacerPlugin } from './ssrReplacer'
+import { ModuleRunnerTransform } from './runnerTransform'
 import {
   deleteDefineConfig,
-  hijackVitePluginInject,
+  getDefaultResolveOptions,
   resolveFsAllow,
 } from './utils'
 import { VitestCoreResolver } from './vitestResolver'
 
 export async function VitestPlugin(
   options: UserConfig = {},
-  ctx = new Vitest('test'),
+  vitest: Vitest = new Vitest('test', deepClone(options)),
 ): Promise<VitePlugin[]> {
   const userConfig = deepMerge({}, options) as UserConfig
 
   async function UIPlugin() {
-    await ctx.packageInstaller.ensureInstalled('@vitest/ui', options.root || process.cwd(), ctx.version)
-    return (await import('@vitest/ui')).default(ctx)
+    await vitest.packageInstaller.ensureInstalled('@vitest/ui', options.root || process.cwd(), vitest.version)
+    return (await import('@vitest/ui')).default(vitest)
   }
 
   return [
@@ -63,9 +65,9 @@ export async function VitestPlugin(
 
         // store defines for globalThis to make them
         // reassignable when running in worker in src/runtime/setup.ts
-        const defines: Record<string, any> = deleteDefineConfig(viteConfig);
+        const defines: Record<string, any> = deleteDefineConfig(viteConfig)
 
-        (options as ResolvedConfig).defines = defines
+        ;(options as unknown as ResolvedConfig).defines = defines
 
         let open: string | boolean | undefined = false
 
@@ -73,24 +75,17 @@ export async function VitestPlugin(
           open = testConfig.uiBase ?? '/__vitest__/'
         }
 
-        const config: ViteConfig = {
+        const resolveOptions = getDefaultResolveOptions()
+
+        let config: ViteConfig = {
           root: viteConfig.test?.root || options.root,
-          esbuild:
-            viteConfig.esbuild === false
-              ? false
-              : {
-                  // Lowest target Vitest supports is Node18
-                  target: viteConfig.esbuild?.target || 'node18',
-                  sourcemap: 'external',
-                  // Enables using ignore hint for coverage providers with @preserve keyword
-                  legalComments: 'inline',
-                },
+          define: {
+            // disable replacing `process.env.NODE_ENV` with static string by vite:client-inject
+            'process.env.NODE_ENV': 'process.env.NODE_ENV',
+          },
           resolve: {
-            // by default Vite resolves `module` field, which not always a native ESM module
-            // setting this option can bypass that and fallback to cjs version
-            mainFields: [],
+            ...resolveOptions,
             alias: testConfig.alias,
-            conditions: ['node'],
           },
           server: {
             ...testConfig.api,
@@ -115,12 +110,10 @@ export async function VitestPlugin(
           // @ts-ignore Vite 6 compat
           environments: {
             ssr: {
-              resolve: {
-                // by default Vite resolves `module` field, which not always a native ESM module
-                // setting this option can bypass that and fallback to cjs version
-                mainFields: [],
-                conditions: ['node'],
-              },
+              resolve: resolveOptions,
+            },
+            __vitest__: {
+              dev: {},
             },
           },
           test: {
@@ -145,44 +138,54 @@ export async function VitestPlugin(
           },
         }
 
+        if ('rolldownVersion' in vite) {
+          config = {
+            ...config,
+            // eslint-disable-next-line ts/ban-ts-comment
+            // @ts-ignore rolldown-vite only
+            oxc: viteConfig.oxc === false
+              ? false
+              : {
+                  // eslint-disable-next-line ts/ban-ts-comment
+                  // @ts-ignore rolldown-vite only
+                  target: viteConfig.oxc?.target || 'node18',
+                },
+          }
+        }
+        else {
+          config = {
+            ...config,
+            esbuild: viteConfig.esbuild === false
+              ? false
+              : {
+                  // Lowest target Vitest supports is Node18
+                  target: viteConfig.esbuild?.target || 'node18',
+                  sourcemap: 'external',
+                  // Enables using ignore hint for coverage providers with @preserve keyword
+                  legalComments: 'inline',
+                },
+          }
+        }
+
+        // inherit so it's available in VitestOptimizer
+        // I cannot wait to rewrite all of this in Vitest 4
+        if (options.cache != null) {
+          config.test!.cache = options.cache
+        }
+
+        if (vitest.configOverride.project) {
+          // project filter was set by the user, so we need to filter the project
+          options.project = vitest.configOverride.project
+        }
+
         config.customLogger = createViteLogger(
-          ctx.logger,
+          vitest.logger,
           viteConfig.logLevel || 'warn',
           {
             allowClearScreen: false,
           },
         )
         config.customLogger = silenceImportViteIgnoreWarning(config.customLogger)
-
-        // If "coverage.exclude" is not defined by user, add "test.include" to "coverage.exclude" automatically
-        if (userConfig.coverage?.enabled && !userConfig.coverage.exclude && userConfig.include && config.test) {
-          config.test.coverage = {
-            exclude: [...coverageConfigDefaults.exclude, ...userConfig.include],
-          }
-        }
-
-        // we want inline dependencies to be resolved by analyser plugin so module graph is populated correctly
-        if (viteConfig.ssr?.noExternal !== true) {
-          const inline = testConfig.server?.deps?.inline
-          if (inline === true) {
-            config.ssr = { noExternal: true }
-          }
-          else {
-            const noExternal = viteConfig.ssr?.noExternal
-            const noExternalArray
-              = typeof noExternal !== 'undefined'
-                ? toArray(noExternal)
-                : undefined
-            // filter the same packages
-            const uniqueInline
-              = inline && noExternalArray
-                ? inline.filter(dep => !noExternalArray.includes(dep))
-                : inline
-            config.ssr = {
-              noExternal: uniqueInline,
-            }
-          }
-        }
 
         // chokidar fsevents is unstable on macos when emitting "ready" event
         if (
@@ -211,7 +214,7 @@ export async function VitestPlugin(
               name: string,
               filename: string,
             ) => {
-              const root = ctx.config.root || options.root || process.cwd()
+              const root = vitest.config.root || options.root || process.cwd()
               return generateScopedClassName(
                 classNameStrategy,
                 name,
@@ -224,9 +227,9 @@ export async function VitestPlugin(
         return config
       },
       async configResolved(viteConfig) {
-        const viteConfigTest = (viteConfig.test as any) || {}
+        const viteConfigTest = (viteConfig.test as UserConfig) || {}
         if (viteConfigTest.watch === false) {
-          viteConfigTest.run = true
+          ;(viteConfigTest as any).run = true
         }
 
         if ('alias' in viteConfigTest) {
@@ -255,13 +258,23 @@ export async function VitestPlugin(
           viteConfig.server.watch = null
         }
 
-        hijackVitePluginInject(viteConfig)
+        if (options.ui) {
+          // @ts-expect-error mutate readonly
+          viteConfig.plugins.push(await UIPlugin())
+        }
 
         Object.defineProperty(viteConfig, '_vitest', {
           value: options,
           enumerable: false,
           configurable: true,
         })
+
+        const originalName = options.name
+        if (options.browser?.instances) {
+          options.browser.instances.forEach((instance) => {
+            instance.name ??= originalName ? `${originalName} (${instance.browser})` : instance.browser
+          })
+        }
       },
       configureServer: {
         // runs after vite:import-analysis as it relies on `server` instance on Vite 5
@@ -273,9 +286,9 @@ export async function VitestPlugin(
               console.log('[debug] watcher is ready')
             })
           }
-          await ctx._setServer(options, server, userConfig)
+          await vitest._setServer(options, server)
           if (options.api && options.watch) {
-            (await import('../../api/setup')).setup(ctx)
+            (await import('../../api/setup')).setup(vitest)
           }
 
           // #415, in run mode we don't need the watcher, close it would improve the performance
@@ -285,14 +298,14 @@ export async function VitestPlugin(
         },
       },
     },
-    SsrReplacerPlugin(),
-    ...CSSEnablerPlugin(ctx),
-    CoverageTransform(ctx),
-    VitestCoreResolver(ctx),
-    options.ui ? await UIPlugin() : null,
+    MetaEnvReplacerPlugin(),
+    ...CSSEnablerPlugin(vitest),
+    CoverageTransform(vitest),
+    VitestCoreResolver(vitest),
     ...MocksPlugins(),
     VitestOptimizer(),
     NormalizeURLPlugin(),
+    ModuleRunnerTransform(),
   ].filter(notNullish)
 }
 function removeUndefinedValues<T extends Record<string, any>>(

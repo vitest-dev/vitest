@@ -1,5 +1,6 @@
+import type { Plugin, ViteDevServer } from 'vite'
 import { join, resolve } from 'pathe'
-import { createServer, type Plugin, type ViteDevServer } from 'vite'
+import { createServer } from 'vite'
 import { ViteNodeServer } from 'vite-node/server'
 import { describe, expect, test, vi } from 'vitest'
 import { extractSourceMap } from '../../../packages/vite-node/src/source-map'
@@ -48,7 +49,7 @@ describe('server correctly caches data', () => {
     webFiles: async ({}, use) => {
       await use([])
     },
-    root: resolve(__dirname, '../'),
+    root: resolve(import.meta.dirname, '../'),
     plugin: async ({ ssrFiles, webFiles }, use) => {
       const plugin: Plugin = {
         name: 'test',

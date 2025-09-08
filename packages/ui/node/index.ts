@@ -1,11 +1,13 @@
 import type { Plugin } from 'vite'
 import type { Vitest } from 'vitest/node'
+import fs from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { toArray } from '@vitest/utils'
 import { basename, resolve } from 'pathe'
 import sirv from 'sirv'
 import c from 'tinyrainbow'
 import { coverageConfigDefaults } from 'vitest/config'
+import { isFileServingAllowed, isValidApiRequest } from 'vitest/node'
 import { version } from '../package.json'
 
 export default (ctx: Vitest): Plugin => {
@@ -52,6 +54,67 @@ export default (ctx: Vitest): Plugin => {
         }
 
         const clientDist = resolve(fileURLToPath(import.meta.url), '../client')
+        const clientIndexHtml = fs.readFileSync(resolve(clientDist, 'index.html'), 'utf-8')
+
+        // eslint-disable-next-line prefer-arrow-callback
+        server.middlewares.use(function vitestAttachment(req, res, next) {
+          if (!req.url) {
+            return next()
+          }
+
+          const url = new URL(req.url, 'http://localhost')
+          if (url.pathname === '/__vitest_attachment__') {
+            const path = url.searchParams.get('path')
+            const contentType = url.searchParams.get('contentType')
+
+            // ignore invalid requests
+            if (!isValidApiRequest(ctx.config, req) || !contentType || !path) {
+              return next()
+            }
+
+            const fsPath = decodeURIComponent(path)
+
+            if (!isFileServingAllowed(ctx.vite.config, fsPath)) {
+              return next()
+            }
+
+            try {
+              res.writeHead(200, {
+                'content-type': contentType,
+              })
+              fs.createReadStream(fsPath)
+                .pipe(res)
+                .on('close', () => res.end())
+            }
+            catch (err) {
+              next(err)
+            }
+          }
+          else {
+            next()
+          }
+        })
+
+        // serve index.html with api token
+        // eslint-disable-next-line prefer-arrow-callback
+        server.middlewares.use(function vitestUiHtmlMiddleware(req, res, next) {
+          if (req.url) {
+            const url = new URL(req.url, 'http://localhost')
+            if (url.pathname === base) {
+              const html = clientIndexHtml.replace(
+                '<!-- !LOAD_METADATA! -->',
+                `<script>window.VITEST_API_TOKEN = ${JSON.stringify(ctx.config.api.token)}</script>`,
+              )
+              res.setHeader('Cache-Control', 'no-cache, max-age=0, must-revalidate')
+              res.setHeader('Content-Type', 'text/html; charset=utf-8')
+              res.write(html)
+              res.end()
+              return
+            }
+          }
+          next()
+        })
+
         server.middlewares.use(
           base,
           sirv(clientDist, {
@@ -69,12 +132,12 @@ function resolveCoverageFolder(ctx: Vitest) {
   const htmlReporter
     = options.api?.port && options.coverage?.enabled
       ? toArray(options.coverage.reporter).find((reporter) => {
-        if (typeof reporter === 'string') {
-          return reporter === 'html'
-        }
+          if (typeof reporter === 'string') {
+            return reporter === 'html'
+          }
 
-        return reporter[0] === 'html'
-      })
+          return reporter[0] === 'html'
+        })
       : undefined
 
   if (!htmlReporter) {
@@ -89,8 +152,8 @@ function resolveCoverageFolder(ctx: Vitest) {
 
   const subdir
     = Array.isArray(htmlReporter)
-    && htmlReporter.length > 1
-    && 'subdir' in htmlReporter[1]
+      && htmlReporter.length > 1
+      && 'subdir' in htmlReporter[1]
       ? htmlReporter[1].subdir
       : undefined
 

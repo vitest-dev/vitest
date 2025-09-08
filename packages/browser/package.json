@@ -1,7 +1,7 @@
 {
   "name": "@vitest/browser",
   "type": "module",
-  "version": "3.0.0-beta.2",
+  "version": "4.0.0-beta.10",
   "description": "Browser running for Vitest",
   "license": "MIT",
   "funding": "https://opencollective.com/vitest",
@@ -20,9 +20,9 @@
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     },
-    "./providers": {
-      "types": "./providers.d.ts",
-      "default": "./dist/providers.js"
+    "./providers/*": {
+      "types": "./dist/providers/*.d.ts",
+      "default": "./dist/providers/*.js"
     },
     "./context": {
       "types": "./context.d.ts",
@@ -33,14 +33,6 @@
     },
     "./matchers": {
       "types": "./matchers.d.ts",
-      "default": "./dummy.js"
-    },
-    "./providers/webdriverio": {
-      "types": "./providers/webdriverio.d.ts",
-      "default": "./dummy.js"
-    },
-    "./providers/playwright": {
-      "types": "./providers/playwright.d.ts",
       "default": "./dummy.js"
     },
     "./locator": {
@@ -60,9 +52,12 @@
     "*.d.ts",
     "context.js",
     "dist",
+    "dummy.js",
     "providers"
   ],
   "scripts": {
+    "typecheck": "tsc -p ./src/client/tsconfig.json --noEmit",
+    "typecheck:why": "tsc -p ./src/client/tsconfig.json --noEmit --explainFiles > explainTypes.txt",
     "build": "rimraf dist && pnpm build:node && pnpm build:client",
     "build:client": "vite build src/client",
     "build:node": "rollup -c",
@@ -73,7 +68,7 @@
   "peerDependencies": {
     "playwright": "*",
     "vitest": "workspace:*",
-    "webdriverio": "*"
+    "webdriverio": "^7.0.0 || ^8.0.0 || ^9.0.0"
   },
   "peerDependenciesMeta": {
     "playwright": {
@@ -87,33 +82,30 @@
     }
   },
   "dependencies": {
-    "@testing-library/dom": "^10.4.0",
-    "@testing-library/user-event": "^14.5.2",
+    "@testing-library/dom": "^10.4.1",
+    "@testing-library/user-event": "^14.6.1",
     "@vitest/mocker": "workspace:*",
     "@vitest/utils": "workspace:*",
-    "magic-string": "^0.30.17",
-    "msw": "^2.7.0",
-    "sirv": "^3.0.0",
-    "tinyrainbow": "^1.2.0",
-    "ws": "^8.18.0"
+    "magic-string": "catalog:",
+    "pixelmatch": "7.1.0",
+    "pngjs": "^7.0.0",
+    "sirv": "catalog:",
+    "tinyrainbow": "catalog:",
+    "ws": "catalog:"
   },
   "devDependencies": {
-    "@testing-library/jest-dom": "^6.6.3",
-    "@types/ws": "^8.5.13",
+    "@types/pngjs": "^6.0.5",
+    "@types/ws": "catalog:",
     "@vitest/runner": "workspace:*",
-    "@vitest/ui": "workspace:*",
-    "@vitest/ws-client": "workspace:*",
-    "@wdio/protocols": "^8.40.3",
-    "birpc": "0.2.19",
-    "flatted": "^3.3.2",
-    "ivya": "^1.1.1",
-    "mime": "^4.0.6",
-    "pathe": "^1.1.2",
-    "periscopic": "^4.0.2",
-    "playwright": "^1.49.1",
-    "playwright-core": "^1.49.1",
-    "safaridriver": "^1.0.0",
+    "@wdio/types": "^9.19.2",
+    "birpc": "catalog:",
+    "flatted": "catalog:",
+    "ivya": "^1.7.0",
+    "mime": "^4.0.7",
+    "pathe": "catalog:",
+    "playwright": "^1.55.0",
+    "playwright-core": "^1.55.0",
     "vitest": "workspace:*",
-    "webdriverio": "^8.41.0"
+    "webdriverio": "^9.19.2"
   }
 }

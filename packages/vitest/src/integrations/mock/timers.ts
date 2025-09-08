@@ -17,8 +17,14 @@ import { mockDate, RealDate, resetDate } from './date'
 export class FakeTimers {
   private _global: typeof globalThis
   private _clock!: InstalledClock
+  // | _fakingTime | _fakingDate |
+  // +-------------+-------------+
+  // | false       | falsy       | initial
+  // | false       | truthy      | vi.setSystemTime called first (for mocking only Date without fake timers)
+  // | true        | falsy       | vi.useFakeTimers called first
+  // | true        | truthy      | unreachable
   private _fakingTime: boolean
-  private _fakingDate: boolean
+  private _fakingDate: Date | null
   private _fakeTimers: FakeTimerWithContext
   private _userConfig?: FakeTimerInstallOpts
   private _now = RealDate.now
@@ -32,7 +38,7 @@ export class FakeTimers {
   }) {
     this._userConfig = config
 
-    this._fakingDate = false
+    this._fakingDate = null
 
     this._fakingTime = false
     this._fakeTimers = withGlobal(global)
@@ -129,7 +135,7 @@ export class FakeTimers {
   useRealTimers(): void {
     if (this._fakingDate) {
       resetDate()
-      this._fakingDate = false
+      this._fakingDate = null
     }
 
     if (this._fakingTime) {
@@ -139,49 +145,36 @@ export class FakeTimers {
   }
 
   useFakeTimers(): void {
+    const fakeDate = this._fakingDate || Date.now()
     if (this._fakingDate) {
+      resetDate()
+      this._fakingDate = null
+    }
+
+    if (this._fakingTime) {
+      this._clock.uninstall()
+    }
+
+    const toFake = Object.keys(this._fakeTimers.timers)
+    // Do not mock timers internally used by node by default. It can still be mocked through userConfig.
+      .filter(
+        timer => timer !== 'nextTick' && timer !== 'queueMicrotask',
+      ) as (keyof FakeTimerWithContext['timers'])[]
+
+    if (this._userConfig?.toFake?.includes('nextTick') && isChildProcess()) {
       throw new Error(
-        '"setSystemTime" was called already and date was mocked. Reset timers using `vi.useRealTimers()` if you want to use fake timers again.',
+        'process.nextTick cannot be mocked inside child_process',
       )
     }
 
-    if (!this._fakingTime) {
-      const toFake = Object.keys(this._fakeTimers.timers)
-        // Do not mock nextTick by default. It can still be mocked through userConfig.
-        .filter(
-          timer => timer !== 'nextTick',
-        ) as (keyof FakeTimerWithContext['timers'])[]
+    this._clock = this._fakeTimers.install({
+      now: fakeDate,
+      ...this._userConfig,
+      toFake: this._userConfig?.toFake || toFake,
+      ignoreMissingTimers: true,
+    })
 
-      if (this._userConfig?.toFake?.includes('nextTick') && isChildProcess()) {
-        throw new Error(
-          'process.nextTick cannot be mocked inside child_process',
-        )
-      }
-
-      // setImmediate/clearImmediate is not possible to mock when it's not globally avaiable and it throws an internal error.
-      // this might be @sinonjs/fake-timers's bug and inconsistent behavior, but for now, we silently filter out these two beforehand for browser testing.
-      // https://github.com/sinonjs/fake-timers/issues/277
-      // https://github.com/sinonjs/sinon/issues/2085
-      const existingFakedMethods = (this._userConfig?.toFake || toFake).filter(
-        (method) => {
-          switch (method) {
-            case 'setImmediate':
-            case 'clearImmediate':
-              return method in this._global && this._global[method]
-            default:
-              return true
-          }
-        },
-      )
-
-      this._clock = this._fakeTimers.install({
-        now: Date.now(),
-        ...this._userConfig,
-        toFake: existingFakedMethods,
-      })
-
-      this._fakingTime = true
-    }
+    this._fakingTime = true
   }
 
   reset(): void {
@@ -192,14 +185,19 @@ export class FakeTimers {
     }
   }
 
-  setSystemTime(now?: number | Date): void {
+  setSystemTime(now?: string | number | Date): void {
+    const date = (typeof now === 'undefined' || now instanceof Date) ? now : new Date(now)
     if (this._fakingTime) {
-      this._clock.setSystemTime(now)
+      this._clock.setSystemTime(date)
     }
     else {
-      mockDate(now ?? this.getRealSystemTime())
-      this._fakingDate = true
+      this._fakingDate = date ?? new Date(this.getRealSystemTime())
+      mockDate(this._fakingDate)
     }
+  }
+
+  getMockedSystemTime(): Date | null {
+    return this._fakingTime ? new Date(this._clock.now) : this._fakingDate
   }
 
   getRealSystemTime(): number {
@@ -218,14 +216,15 @@ export class FakeTimers {
     this._userConfig = config
   }
 
-  isFakeTimers() {
+  isFakeTimers(): boolean {
     return this._fakingTime
   }
 
   private _checkFakeTimers() {
     if (!this._fakingTime) {
       throw new Error(
-        'Timers are not mocked. Try calling "vi.useFakeTimers()" first.',
+        'A function to advance timers was called but the timers APIs are not mocked. '
+        + 'Call `vi.useFakeTimers()` in the test file first.',
       )
     }
 

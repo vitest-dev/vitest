@@ -31,9 +31,9 @@ export function getSnapshotData(
   content: string | null,
   options: SnapshotStateOptions,
 ): {
-    data: SnapshotData
-    dirty: boolean
-  } {
+  data: SnapshotData
+  dirty: boolean
+} {
   const update = options.updateSnapshot
   const data = Object.create(null)
   let snapshotContents = ''
@@ -72,7 +72,7 @@ export function addExtraLineBreaks(string: string): string {
 // Instead of trim, which can remove additional newlines or spaces
 // at beginning or end of the content from a custom serializer.
 export function removeExtraLineBreaks(string: string): string {
-  return string.length > 2 && string.startsWith('\n') && string.endsWith('\n')
+  return string.length > 2 && string[0] === '\n' && string.endsWith('\n')
     ? string.slice(1, -1)
     : string
 }
@@ -175,36 +175,6 @@ export async function saveSnapshotFileRaw(
   await environment.saveSnapshotFile(snapshotPath, content)
 }
 
-export function prepareExpected(expected?: string): string | undefined {
-  function findStartIndent() {
-    // Attempts to find indentation for objects.
-    // Matches the ending tag of the object.
-    const matchObject = /^( +)\}\s+$/m.exec(expected || '')
-    const objectIndent = matchObject?.[1]?.length
-
-    if (objectIndent) {
-      return objectIndent
-    }
-
-    // Attempts to find indentation for texts.
-    // Matches the quote of first line.
-    const matchText = /^\n( +)"/.exec(expected || '')
-    return matchText?.[1]?.length || 0
-  }
-
-  const startIndent = findStartIndent()
-
-  let expectedTrimmed = expected?.trim()
-
-  if (startIndent) {
-    expectedTrimmed = expectedTrimmed
-      ?.replace(new RegExp(`^${' '.repeat(startIndent)}`, 'gm'), '')
-      .replace(/ +\}$/, '}')
-  }
-
-  return expectedTrimmed
-}
-
 function deepMergeArray(target: any[] = [], source: any[] = []) {
   const mergedOutput = Array.from(target)
 
@@ -287,11 +257,28 @@ export class CounterMap<K> extends DefaultMap<K, number> {
     super(() => 0)
   }
 
+  // compat for jest-image-snapshot https://github.com/vitest-dev/vitest/issues/7322
+  // `valueOf` and `Snapshot.added` setter allows
+  //   snapshotState.added = snapshotState.added + 1
+  // to function as
+  //   snapshotState.added.total_ = snapshotState.added.total() + 1
+  _total: number | undefined
+
+  valueOf(): number {
+    return this._total = this.total()
+  }
+
   increment(key: K): void {
+    if (typeof this._total !== 'undefined') {
+      this._total++
+    }
     this.set(key, this.get(key) + 1)
   }
 
   total(): number {
+    if (typeof this._total !== 'undefined') {
+      return this._total
+    }
     let total = 0
     for (const x of this.values()) {
       total += x

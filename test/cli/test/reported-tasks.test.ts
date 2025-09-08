@@ -1,5 +1,5 @@
 import type { RunnerTestFile } from 'vitest'
-import type { WorkspaceProject } from 'vitest/node'
+import type { TestProject } from 'vitest/node'
 import type { StateManager } from 'vitest/src/node/state.js'
 import type { TestCase, TestCollection, TestModule } from '../../../packages/vitest/src/node/reporters/reported-tasks'
 import { resolve } from 'pathe'
@@ -7,10 +7,9 @@ import { beforeAll, expect, it } from 'vitest'
 import { runVitest } from '../../test-utils'
 
 const now = new Date()
-// const finishedFiles: File[] = []
-const collectedFiles: RunnerTestFile[] = []
+const collectedTestModules: TestModule[] = []
 let state: StateManager
-let project: WorkspaceProject
+let project: TestProject
 let files: RunnerTestFile[]
 let testModule: TestModule
 
@@ -23,11 +22,8 @@ beforeAll(async () => {
     reporters: [
       'verbose',
       {
-        // onFinished(files) {
-        //   finishedFiles.push(...files || [])
-        // },
-        onCollected(files) {
-          collectedFiles.push(...files || [])
+        onTestModuleCollected(testModule) {
+          collectedTestModules.push(testModule)
         },
       },
     ],
@@ -40,6 +36,7 @@ beforeAll(async () => {
   expect(files).toHaveLength(1)
   testModule = state.getReportedEntity(files[0])! as TestModule
   expect(testModule).toBeDefined()
+  expect(testModule).toBe(collectedTestModules[0])
 })
 
 it('correctly reports a file', () => {
@@ -56,22 +53,22 @@ it('correctly reports a file', () => {
   expect(testModule.location).toBeUndefined()
   expect(testModule.moduleId).toBe(resolve(root, './1_first.test.ts'))
   expect(testModule.project).toBe(project)
-  expect(testModule.children.size).toBe(14)
+  expect(testModule.children.size).toBe(17)
 
   const tests = [...testModule.children.tests()]
-  expect(tests).toHaveLength(11)
+  expect(tests).toHaveLength(12)
   const deepTests = [...testModule.children.allTests()]
-  expect(deepTests).toHaveLength(19)
+  expect(deepTests).toHaveLength(22)
 
-  expect([...testModule.children.allTests('skipped')]).toHaveLength(5)
-  expect([...testModule.children.allTests('passed')]).toHaveLength(9)
-  expect([...testModule.children.allTests('failed')]).toHaveLength(5)
-  expect([...testModule.children.allTests('running')]).toHaveLength(0)
+  expect.soft([...testModule.children.allTests('skipped')]).toHaveLength(8)
+  expect.soft([...testModule.children.allTests('passed')]).toHaveLength(9)
+  expect.soft([...testModule.children.allTests('failed')]).toHaveLength(5)
+  expect.soft([...testModule.children.allTests('pending')]).toHaveLength(0)
 
   const suites = [...testModule.children.suites()]
-  expect(suites).toHaveLength(3)
+  expect(suites).toHaveLength(5)
   const deepSuites = [...testModule.children.allSuites()]
-  expect(deepSuites).toHaveLength(4)
+  expect(deepSuites).toHaveLength(6)
 
   const diagnostic = testModule.diagnostic()
   expect(diagnostic).toBeDefined()
@@ -163,6 +160,43 @@ it('correctly reports failed test', () => {
   expect(diagnostic.repeatCount).toBe(0)
 })
 
+it('correctly reports a skipped test', () => {
+  const optionTestCase = findTest(testModule.children, 'skips an option test')
+  expect(optionTestCase.result()).toEqual({
+    state: 'skipped',
+    note: undefined,
+    errors: undefined,
+  })
+
+  const modifierTestCase = findTest(testModule.children, 'skips a .modifier test')
+  expect(modifierTestCase.result()).toEqual({
+    state: 'skipped',
+    note: undefined,
+    errors: undefined,
+  })
+
+  const ctxSkippedTestCase = findTest(testModule.children, 'skips an ctx.skip() test')
+  expect(ctxSkippedTestCase.result()).toEqual({
+    state: 'skipped',
+    note: undefined,
+    errors: undefined,
+  })
+
+  const testOptionTodo = findTest(testModule.children, 'todos an option test')
+  expect(testOptionTodo.result()).toEqual({
+    state: 'skipped',
+    note: undefined,
+    errors: undefined,
+  })
+
+  const testModifierTodo = findTest(testModule.children, 'todos a .modifier test')
+  expect(testModifierTodo.result()).toEqual({
+    state: 'skipped',
+    note: undefined,
+    errors: undefined,
+  })
+})
+
 it('correctly reports multiple failures', () => {
   const testCase = findTest(testModule.children, 'fails multiple times')
   const result = testCase.result()!
@@ -187,6 +221,12 @@ it('correctly reports test assigned options', () => {
   expect(testOptionTodo.options.mode).toBe('todo')
   const testModifierTodo = findTest(testModule.children, 'todos a .modifier test')
   expect(testModifierTodo.options.mode).toBe('todo')
+
+  const testInsideTodoDescribe = findTest(testModule.children, 'test inside todo group')
+  expect(testInsideTodoDescribe.options.mode).toBe('todo')
+
+  const testInsideSkippedDescribe = findTest(testModule.children, 'test inside skipped group')
+  expect(testInsideSkippedDescribe.options.mode).toBe('skip')
 })
 
 it('correctly reports retried tests', () => {
@@ -231,6 +271,15 @@ it('correctly builds the full name', () => {
   expect(test.fullName).toBe('a group > a nested group > runs a test in a nested group')
   expect(suiteTopLevel.fullName).toBe('a group')
   expect(suiteSecondLevel.fullName).toBe('a group > a nested group')
+})
+
+it('correctly reports import durations', () => {
+  const diagnostic = testModule.diagnostic()
+
+  const filePath = resolve(root, './1_first.test.ts')
+  const importDuration = diagnostic.importDurations[filePath]
+  expect(importDuration.selfTime).toBeGreaterThan(0)
+  expect(importDuration.totalTime).toBeGreaterThan(0)
 })
 
 function date(time: Date) {

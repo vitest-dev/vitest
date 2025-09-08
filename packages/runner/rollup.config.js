@@ -1,8 +1,8 @@
 import { builtinModules, createRequire } from 'node:module'
 import json from '@rollup/plugin-json'
 import { defineConfig } from 'rollup'
-import dts from 'rollup-plugin-dts'
-import esbuild from 'rollup-plugin-esbuild'
+import oxc from 'unplugin-oxc/rollup'
+import { createDtsUtils } from '../../scripts/build-utils.js'
 
 const require = createRequire(import.meta.url)
 const pkg = require('./package.json')
@@ -20,9 +20,12 @@ const entries = {
   types: 'src/types.ts',
 }
 
+const dtsUtils = createDtsUtils()
+
 const plugins = [
-  esbuild({
-    target: 'node14',
+  ...dtsUtils.isolatedDecl(),
+  oxc({
+    transform: { target: 'node14' },
   }),
   json(),
 ]
@@ -41,14 +44,15 @@ export default defineConfig([
     onwarn,
   },
   {
-    input: entries,
+    input: dtsUtils.dtsInput(entries),
     output: {
       dir: 'dist',
       entryFileNames: '[name].d.ts',
       format: 'esm',
     },
+    watch: false,
     external,
-    plugins: [dts({ respectExternal: true })],
+    plugins: dtsUtils.dts(),
     onwarn,
   },
 ])

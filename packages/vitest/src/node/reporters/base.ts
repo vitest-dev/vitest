@@ -1,7 +1,9 @@
-import type { File, Task, TaskResultPack } from '@vitest/runner'
-import type { ErrorWithDiff, UserConsoleLog } from '../../types/general'
+import type { File, Task } from '@vitest/runner'
+import type { SerializedError } from '@vitest/utils'
+import type { TestError, UserConsoleLog } from '../../types/general'
 import type { Vitest } from '../core'
-import type { Reporter } from '../types/reporter'
+import type { Reporter, TestRunEndReason } from '../types/reporter'
+import type { TestCase, TestCollection, TestModule, TestModuleState, TestResult, TestSuite, TestSuiteState } from './reported-tasks'
 import { performance } from 'node:perf_hooks'
 import { getFullName, getSuites, getTestName, getTests, hasFailed } from '@vitest/runner/utils'
 import { toArray } from '@vitest/utils'
@@ -10,8 +12,8 @@ import { relative } from 'pathe'
 import c from 'tinyrainbow'
 import { isTTY } from '../../utils/env'
 import { hasFailedSnapshot } from '../../utils/tasks'
-import { F_CHECK, F_POINTER, F_RIGHT } from './renderers/figures'
-import { countTestErrors, divider, formatProjectName, formatTime, formatTimeString, getStateString, getStateSymbol, padSummaryTitle, renderSnapshotSummary, taskFail, withLabel } from './renderers/utils'
+import { F_CHECK, F_DOWN_RIGHT, F_POINTER, F_RIGHT } from './renderers/figures'
+import { countTestErrors, divider, errorBanner, formatProjectName, formatTime, formatTimeString, getStateString, getStateSymbol, padSummaryTitle, renderSnapshotSummary, taskFail, withLabel } from './renderers/utils'
 
 const BADGE_PADDING = '       '
 
@@ -23,7 +25,7 @@ export abstract class BaseReporter implements Reporter {
   start = 0
   end = 0
   watchFilters?: string[]
-  failedUnwatchedFiles: Task[] = []
+  failedUnwatchedFiles: TestModule[] = []
   isTTY: boolean
   ctx: Vitest = undefined!
   renderSucceed = false
@@ -37,140 +39,269 @@ export abstract class BaseReporter implements Reporter {
     this.isTTY = options.isTTY ?? isTTY
   }
 
-  onInit(ctx: Vitest) {
+  onInit(ctx: Vitest): void {
     this.ctx = ctx
 
     this.ctx.logger.printBanner()
     this.start = performance.now()
   }
 
-  log(...messages: any) {
+  log(...messages: any): void {
     this.ctx.logger.log(...messages)
   }
 
-  error(...messages: any) {
+  error(...messages: any): void {
     this.ctx.logger.error(...messages)
   }
 
-  relative(path: string) {
+  relative(path: string): string {
     return relative(this.ctx.config.root, path)
   }
 
-  onFinished(files = this.ctx.state.getFiles(), errors = this.ctx.state.getUnhandledErrors()) {
+  onTestRunEnd(
+    testModules: ReadonlyArray<TestModule>,
+    unhandledErrors: ReadonlyArray<SerializedError>,
+    _reason: TestRunEndReason,
+  ): void {
+    const files = testModules.map(testModule => testModule.task)
+    const errors = [...unhandledErrors]
+
     this.end = performance.now()
-    this.reportSummary(files, errors)
+    if (!files.length && !errors.length) {
+      this.ctx.logger.printNoTestFound(this.ctx.filenamePattern)
+    }
+    else {
+      this.reportSummary(files, errors)
+    }
   }
 
-  onTaskUpdate(packs: TaskResultPack[]) {
-    for (const pack of packs) {
-      const task = this.ctx.state.idMap.get(pack[0])
+  onTestCaseResult(testCase: TestCase): void {
+    if (testCase.result().state === 'failed') {
+      this.logFailedTask(testCase.task)
+    }
+  }
 
-      if (task) {
-        this.printTask(task)
+  onTestSuiteResult(testSuite: TestSuite): void {
+    if (testSuite.state() === 'failed') {
+      this.logFailedTask(testSuite.task)
+    }
+  }
+
+  onTestModuleEnd(testModule: TestModule): void {
+    if (testModule.state() === 'failed') {
+      this.logFailedTask(testModule.task)
+    }
+
+    this.printTestModule(testModule)
+  }
+
+  private logFailedTask(task: Task) {
+    if (this.ctx.config.silent === 'passed-only') {
+      for (const log of task.logs || []) {
+        this.onUserConsoleLog(log, 'failed')
       }
     }
   }
 
-  protected printTask(task: Task) {
-    if (
-      !('filepath' in task)
-      || !task.result?.state
-      || task.result?.state === 'run'
-      || task.result?.state === 'queued') {
+  protected printTestModule(testModule: TestModule): void {
+    const moduleState = testModule.state()
+    if (moduleState === 'queued' || moduleState === 'pending') {
       return
     }
 
-    const tests = getTests(task)
-    const failed = tests.filter(t => t.result?.state === 'fail')
-    const skipped = tests.filter(t => t.mode === 'skip' || t.mode === 'todo')
+    let testsCount = 0
+    let failedCount = 0
+    let skippedCount = 0
 
-    let state = c.dim(`${tests.length} test${tests.length > 1 ? 's' : ''}`)
+    // delaying logs to calculate the test stats first
+    // which minimizes the amount of for loops
+    const logs: string[] = []
+    const originalLog = this.log.bind(this)
+    this.log = (msg: string) => logs.push(msg)
 
-    if (failed.length) {
-      state += c.dim(' | ') + c.red(`${failed.length} failed`)
+    const visit = (suiteState: TestSuiteState, children: TestCollection) => {
+      for (const child of children) {
+        if (child.type === 'suite') {
+          const suiteState = child.state()
+
+          // Skipped suites are hidden when --hideSkippedTests, print otherwise
+          if (!this.ctx.config.hideSkippedTests || suiteState !== 'skipped') {
+            this.printTestSuite(child)
+          }
+
+          visit(suiteState, child.children)
+        }
+        else {
+          const testResult = child.result()
+
+          testsCount++
+          if (testResult.state === 'failed') {
+            failedCount++
+          }
+          else if (testResult.state === 'skipped') {
+            skippedCount++
+          }
+
+          if (this.ctx.config.hideSkippedTests && suiteState === 'skipped') {
+            // Skipped suites are hidden when --hideSkippedTests
+            continue
+          }
+
+          this.printTestCase(moduleState, child)
+        }
+      }
     }
 
-    if (skipped.length) {
-      state += c.dim(' | ') + c.yellow(`${skipped.length} skipped`)
+    try {
+      visit(moduleState, testModule.children)
+    }
+    finally {
+      this.log = originalLog
     }
 
-    let suffix = c.dim('(') + state + c.dim(')') + this.getDurationPrefix(task)
+    this.log(this.getModuleLog(testModule, {
+      tests: testsCount,
+      failed: failedCount,
+      skipped: skippedCount,
+    }))
+    logs.forEach(log => this.log(log))
+  }
 
-    if (this.ctx.config.logHeapUsage && task.result.heap != null) {
-      suffix += c.magenta(` ${Math.floor(task.result.heap / 1024 / 1024)} MB heap used`)
+  protected printTestCase(moduleState: TestModuleState, test: TestCase): void {
+    const testResult = test.result()
+
+    const { duration, retryCount, repeatCount } = test.diagnostic() || {}
+    const padding = this.getTestIndentation(test.task)
+    let suffix = this.getDurationPrefix(test.task)
+
+    if (retryCount != null && retryCount > 0) {
+      suffix += c.yellow(` (retry x${retryCount})`)
     }
 
-    let title = getStateSymbol(task)
-
-    if (task.meta.typecheck) {
-      title += ` ${c.bgBlue(c.bold(' TS '))}`
+    if (repeatCount != null && repeatCount > 0) {
+      suffix += c.yellow(` (repeat x${repeatCount})`)
     }
 
-    if (task.projectName) {
-      title += ` ${formatProjectName(task.projectName, '')}`
+    if (testResult.state === 'failed') {
+      this.log(c.red(` ${padding}${taskFail} ${this.getTestName(test.task, c.dim(' > '))}`) + suffix)
+
+      // print short errors, full errors will be at the end in summary
+      testResult.errors.forEach((error) => {
+        const message = this.formatShortError(error)
+
+        if (message) {
+          this.log(c.red(`   ${padding}${message}`))
+        }
+      })
     }
 
-    this.log(` ${title} ${task.name} ${suffix}`)
+    // also print slow tests
+    else if (duration && duration > this.ctx.config.slowTestThreshold) {
+      this.log(` ${padding}${c.yellow(c.dim(F_CHECK))} ${this.getTestName(test.task, c.dim(' > '))} ${suffix}`)
+    }
 
-    const anyFailed = tests.some(test => test.result?.state === 'fail')
+    else if (this.ctx.config.hideSkippedTests && (testResult.state === 'skipped')) {
+      // Skipped tests are hidden when --hideSkippedTests
+    }
 
-    for (const test of tests) {
-      const { duration, retryCount, repeatCount } = test.result || {}
-      let suffix = ''
+    // also print skipped tests that have notes
+    else if (testResult.state === 'skipped' && testResult.note) {
+      this.log(` ${padding}${getStateSymbol(test.task)} ${this.getTestName(test.task, c.dim(' > '))}${c.dim(c.gray(` [${testResult.note}]`))}`)
+    }
 
-      if (retryCount != null && retryCount > 0) {
-        suffix += c.yellow(` (retry x${retryCount})`)
-      }
-
-      if (repeatCount != null && repeatCount > 0) {
-        suffix += c.yellow(` (repeat x${repeatCount})`)
-      }
-
-      if (test.result?.state === 'fail') {
-        this.log(c.red(`   ${taskFail} ${getTestName(test, c.dim(' > '))}${this.getDurationPrefix(test)}`) + suffix)
-
-        test.result?.errors?.forEach((e) => {
-          // print short errors, full errors will be at the end in summary
-          this.log(c.red(`     ${F_RIGHT} ${e?.message}`))
-        })
-      }
-
-      // also print slow tests
-      else if (duration && duration > this.ctx.config.slowTestThreshold) {
-        this.log(
-          `   ${c.yellow(c.dim(F_CHECK))} ${getTestName(test, c.dim(' > '))}`
-          + ` ${c.yellow(Math.round(duration) + c.dim('ms'))}${suffix}`,
-        )
-      }
-
-      else if (this.ctx.config.hideSkippedTests && (test.mode === 'skip' || test.result?.state === 'skip')) {
-        // Skipped tests are hidden when --hideSkippedTests
-      }
-
-      // also print skipped tests that have notes
-      else if (test.result?.state === 'skip' && test.result.note) {
-        this.log(`   ${getStateSymbol(test)} ${getTestName(test)}${c.dim(c.gray(` [${test.result.note}]`))}`)
-      }
-
-      else if (this.renderSucceed || anyFailed) {
-        this.log(`   ${getStateSymbol(test)} ${getTestName(test, c.dim(' > '))}${suffix}`)
-      }
+    else if (this.renderSucceed || moduleState === 'failed') {
+      this.log(` ${padding}${getStateSymbol(test.task)} ${this.getTestName(test.task, c.dim(' > '))}${suffix}`)
     }
   }
 
-  private getDurationPrefix(task: Task) {
+  private getModuleLog(testModule: TestModule, counts: {
+    tests: number
+    failed: number
+    skipped: number
+  }): string {
+    let state = c.dim(`${counts.tests} test${counts.tests > 1 ? 's' : ''}`)
+
+    if (counts.failed) {
+      state += c.dim(' | ') + c.red(`${counts.failed} failed`)
+    }
+
+    if (counts.skipped) {
+      state += c.dim(' | ') + c.yellow(`${counts.skipped} skipped`)
+    }
+
+    let suffix = c.dim('(') + state + c.dim(')') + this.getDurationPrefix(testModule.task)
+
+    const diagnostic = testModule.diagnostic()
+    if (diagnostic.heap != null) {
+      suffix += c.magenta(` ${Math.floor(diagnostic.heap / 1024 / 1024)} MB heap used`)
+    }
+
+    let title = getStateSymbol(testModule.task)
+
+    if (testModule.meta().typecheck) {
+      title += ` ${c.bgBlue(c.bold(' TS '))}`
+    }
+
+    if (testModule.project.name) {
+      title += ` ${formatProjectName(testModule.project, '')}`
+    }
+
+    return ` ${title} ${testModule.task.name} ${suffix}`
+  }
+
+  protected printTestSuite(_suite: TestSuite): void {
+    // Suite name is included in getTestName by default
+  }
+
+  protected getTestName(test: Task, separator?: string): string {
+    return getTestName(test, separator)
+  }
+
+  protected getFullName(test: Task, separator?: string): string {
+    return getFullName(test, separator)
+  }
+
+  protected formatShortError(error: TestError): string {
+    return `${F_RIGHT} ${error.message}`
+  }
+
+  protected getTestIndentation(_test: Task) {
+    return '  '
+  }
+
+  protected printAnnotations(test: TestCase, console: 'log' | 'error', padding = 0): void {
+    const annotations = test.annotations()
+    if (!annotations.length) {
+      return
+    }
+
+    const PADDING = ' '.repeat(padding)
+
+    annotations.forEach(({ location, type, message }) => {
+      if (location) {
+        const file = relative(test.project.config.root, location.file)
+        this[console](`${PADDING}${c.blue(F_POINTER)} ${c.gray(`${file}:${location.line}:${location.column}`)} ${c.bold(type)}`)
+      }
+      else {
+        this[console](`${PADDING}${c.blue(F_POINTER)} ${c.bold(type)}`)
+      }
+      this[console](`${PADDING}  ${c.blue(F_DOWN_RIGHT)} ${message}`)
+    })
+  }
+
+  protected getDurationPrefix(task: Task): string {
     if (!task.result?.duration) {
       return ''
     }
 
     const color = task.result.duration > this.ctx.config.slowTestThreshold
       ? c.yellow
-      : c.gray
+      : c.green
 
     return color(` ${Math.round(task.result.duration)}${c.dim('ms')}`)
   }
 
-  onWatcherStart(files = this.ctx.state.getFiles(), errors = this.ctx.state.getUnhandledErrors()) {
+  onWatcherStart(files: File[] = this.ctx.state.getFiles(), errors: unknown[] = this.ctx.state.getUnhandledErrors()): void {
     const failed = errors.length > 0 || hasFailed(files)
 
     if (failed) {
@@ -195,10 +326,10 @@ export abstract class BaseReporter implements Reporter {
     this.log(BADGE_PADDING + hints.join(c.dim(', ')))
   }
 
-  onWatcherRerun(files: string[], trigger?: string) {
+  onWatcherRerun(files: string[], trigger?: string): void {
     this.watchFilters = files
-    this.failedUnwatchedFiles = this.ctx.state.getFiles().filter(file =>
-      !files.includes(file.filepath) && hasFailed(file),
+    this.failedUnwatchedFiles = this.ctx.state.getTestModules().filter(testModule =>
+      !files.includes(testModule.task.filepath) && testModule.state() === 'failed',
     )
 
     // Update re-run count for each file
@@ -231,16 +362,16 @@ export abstract class BaseReporter implements Reporter {
 
     this.log('')
 
-    for (const task of this.failedUnwatchedFiles) {
-      this.printTask(task)
+    for (const testModule of this.failedUnwatchedFiles) {
+      this.printTestModule(testModule)
     }
 
     this._timeStart = formatTimeString(new Date())
     this.start = performance.now()
   }
 
-  onUserConsoleLog(log: UserConsoleLog) {
-    if (!this.shouldLog(log)) {
+  onUserConsoleLog(log: UserConsoleLog, taskState?: TestResult['state']): void {
+    if (!this.shouldLog(log, taskState)) {
       return
     }
 
@@ -255,7 +386,7 @@ export abstract class BaseReporter implements Reporter {
     const task = log.taskId ? this.ctx.state.idMap.get(log.taskId) : undefined
 
     if (task) {
-      headerText = getFullName(task, c.dim(' > '))
+      headerText = this.getFullName(task, c.dim(' > '))
     }
     else if (log.taskId && log.taskId !== '__vitest__unknown_test__') {
       headerText = log.taskId
@@ -297,22 +428,31 @@ export abstract class BaseReporter implements Reporter {
     write('\n')
   }
 
-  onTestRemoved(trigger?: string) {
+  onTestRemoved(trigger?: string): void {
     this.log(c.yellow('Test removed...') + (trigger ? c.dim(` [ ${this.relative(trigger)} ]\n`) : ''))
   }
 
-  shouldLog(log: UserConsoleLog) {
-    if (this.ctx.config.silent) {
+  shouldLog(log: UserConsoleLog, taskState?: TestResult['state']): boolean {
+    if (this.ctx.config.silent === true) {
       return false
     }
-    const shouldLog = this.ctx.config.onConsoleLog?.(log.content, log.type)
-    if (shouldLog === false) {
-      return shouldLog
+
+    if (this.ctx.config.silent === 'passed-only' && taskState !== 'failed') {
+      return false
+    }
+
+    if (this.ctx.config.onConsoleLog) {
+      const task = log.taskId ? this.ctx.state.idMap.get(log.taskId) : undefined
+      const entity = task && this.ctx.state.getReportedEntity(task)
+      const shouldLog = this.ctx.config.onConsoleLog(log.content, log.type, entity)
+      if (shouldLog === false) {
+        return shouldLog
+      }
     }
     return true
   }
 
-  onServerRestart(reason?: string) {
+  onServerRestart(reason?: string): void {
     this.log(c.bold(c.magenta(
       reason === 'config'
         ? '\nRestarting due to config changes...'
@@ -320,7 +460,7 @@ export abstract class BaseReporter implements Reporter {
     )))
   }
 
-  reportSummary(files: File[], errors: unknown[]) {
+  reportSummary(files: File[], errors: unknown[]): void {
     this.printErrorsSummary(files, errors)
 
     if (this.ctx.config.mode === 'benchmark') {
@@ -331,11 +471,11 @@ export abstract class BaseReporter implements Reporter {
     }
   }
 
-  reportTestSummary(files: File[], errors: unknown[]) {
+  reportTestSummary(files: File[], errors: unknown[]): void {
     this.log()
 
     const affectedFiles = [
-      ...this.failedUnwatchedFiles,
+      ...this.failedUnwatchedFiles.map(m => m.task),
       ...files,
     ]
     const tests = getTests(affectedFiles)
@@ -385,10 +525,14 @@ export abstract class BaseReporter implements Reporter {
       this.log(padSummaryTitle('Duration'), formatTime(collectTime + testsTime + setupTime))
     }
     else {
-      const executionTime = this.end - this.start
+      const blobs = this.ctx.state.blobs
+
+      // Execution time is either sum of all runs of `--merge-reports` or the current run's time
+      const executionTime = blobs?.executionTimes ? sum(blobs.executionTimes, time => time) : this.end - this.start
+
       const environmentTime = sum(files, file => file.environmentLoad)
       const prepareTime = sum(files, file => file.prepareDuration)
-      const transformTime = sum(this.ctx.projects, project => project.vitenode.getTotalDuration())
+      const transformTime = this.ctx.state.transformTime
       const typecheck = sum(this.ctx.projects, project => project.typechecker?.getResult().time)
 
       const timers = [
@@ -402,6 +546,10 @@ export abstract class BaseReporter implements Reporter {
       ].filter(Boolean).join(', ')
 
       this.log(padSummaryTitle('Duration'), formatTime(executionTime) + c.dim(` (${timers})`))
+
+      if (blobs?.executionTimes) {
+        this.log(padSummaryTitle('Per blob') + blobs.executionTimes.map(time => ` ${formatTime(time)}`).join(''))
+      }
     }
 
     this.log()
@@ -434,11 +582,11 @@ export abstract class BaseReporter implements Reporter {
     }
   }
 
-  reportBenchmarkSummary(files: File[]) {
+  reportBenchmarkSummary(files: File[]): void {
     const benches = getTests(files)
     const topBenches = benches.filter(i => i.result?.benchmark?.rank === 1)
 
-    this.log(withLabel('cyan', 'BENCH', 'Summary\n'))
+    this.log(`\n${withLabel('cyan', 'BENCH', 'Summary\n')}`)
 
     for (const bench of topBenches) {
       const group = bench.suite || bench.file
@@ -447,8 +595,10 @@ export abstract class BaseReporter implements Reporter {
         continue
       }
 
-      const groupName = getFullName(group, c.dim(' > '))
-      this.log(`  ${bench.name}${c.dim(` - ${groupName}`)}`)
+      const groupName = this.getFullName(group, c.dim(' > '))
+      const project = this.ctx.projects.find(p => p.name === bench.file.projectName)
+
+      this.log(`  ${formatProjectName(project)}${bench.name}${c.dim(` - ${groupName}`)}`)
 
       const siblings = group.tasks
         .filter(i => i.meta.benchmark && i.result?.benchmark && i !== bench)
@@ -464,23 +614,26 @@ export abstract class BaseReporter implements Reporter {
   }
 
   private printTaskErrors(tasks: Task[], errorDivider: () => void) {
-    const errorsQueue: [error: ErrorWithDiff | undefined, tests: Task[]][] = []
+    const errorsQueue: [error: TestError | undefined, tests: Task[]][] = []
 
     for (const task of tasks) {
       // Merge identical errors
       task.result?.errors?.forEach((error) => {
         let previous
 
-        if (error?.stackStr) {
+        if (error?.stack) {
           previous = errorsQueue.find((i) => {
-            if (i[0]?.stackStr !== error.stackStr) {
+            if (i[0]?.stack !== error.stack) {
               return false
             }
 
             const currentProjectName = (task as File)?.projectName || task.file?.projectName || ''
             const projectName = (i[1][0] as File)?.projectName || i[1][0].file?.projectName || ''
 
-            return projectName === currentProjectName
+            const currentAnnotations = task.type === 'test' && task.annotations
+            const itemAnnotations = i[1][0].type === 'test' && i[1][0].annotations
+
+            return projectName === currentProjectName && deepEqual(currentAnnotations, itemAnnotations)
           })
         }
 
@@ -497,15 +650,16 @@ export abstract class BaseReporter implements Reporter {
       for (const task of tasks) {
         const filepath = (task as File)?.filepath || ''
         const projectName = (task as File)?.projectName || task.file?.projectName || ''
+        const project = this.ctx.projects.find(p => p.name === projectName)
 
-        let name = getFullName(task, c.dim(' > '))
+        let name = this.getFullName(task, c.dim(' > '))
 
         if (filepath) {
           name += c.dim(` [ ${this.relative(filepath)} ]`)
         }
 
         this.ctx.logger.error(
-          `${c.red(c.bold(c.inverse(' FAIL ')))} ${formatProjectName(projectName)}${name}`,
+          `${c.bgRed(c.bold(' FAIL '))} ${formatProjectName(project)}${name}`,
         )
       }
 
@@ -518,13 +672,37 @@ export abstract class BaseReporter implements Reporter {
         task: tasks[0],
       })
 
+      if (tasks[0].type === 'test' && tasks[0].annotations.length) {
+        const test = this.ctx.state.getReportedEntity(tasks[0]) as TestCase
+        this.printAnnotations(test, 'error', 1)
+        this.error()
+      }
+
       errorDivider()
     }
   }
 }
 
-function errorBanner(message: string) {
-  return c.red(divider(c.bold(c.inverse(` ${message} `))))
+function deepEqual(a: any, b: any): boolean {
+  if (a === b) {
+    return true
+  }
+  if (typeof a !== 'object' || typeof b !== 'object' || a === null || b === null) {
+    return false
+  }
+
+  const keysA = Object.keys(a)
+  const keysB = Object.keys(b)
+  if (keysA.length !== keysB.length) {
+    return false
+  }
+
+  for (const key of keysA) {
+    if (!keysB.includes(key) || !deepEqual(a[key], b[key])) {
+      return false
+    }
+  }
+  return true
 }
 
 function sum<T>(items: T[], cb: (_next: T) => number | undefined) {

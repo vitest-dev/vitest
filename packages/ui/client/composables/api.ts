@@ -1,6 +1,7 @@
 import type { BrowserUI } from 'vitest'
 import { viewport } from './browser'
-import { findById } from './client'
+import { browserState, findById } from './client'
+import { updateBrowserPanel } from './navigation'
 
 export const ui: BrowserUI = {
   setCurrentFileId(fileId: string) {
@@ -11,6 +12,9 @@ export const ui: BrowserUI = {
   async setIframeViewport(width: number, height: number) {
     // reset the button before setting a custom viewport
     viewport.value = [width, height]
+    if (browserState?.provider === 'webdriverio') {
+      updateBrowserPanel()
+    }
     await new Promise(r => requestAnimationFrame(r))
   },
 }

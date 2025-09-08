@@ -1,4 +1,16 @@
-import type { BrowserProvider, TestProject } from 'vitest/node'
+import type { BrowserProvider, BrowserProviderOption, TestProject } from 'vitest/node'
+
+export function preview(): BrowserProviderOption {
+  return {
+    name: 'preview',
+    factory(project) {
+      return new PreviewBrowserProvider(project)
+    },
+    // --browser.provider=preview
+    // @ts-expect-error hidden way to bypass importing preview
+    _cli: true,
+  }
+}
 
 export class PreviewBrowserProvider implements BrowserProvider {
   public name = 'preview' as const
@@ -6,20 +18,7 @@ export class PreviewBrowserProvider implements BrowserProvider {
   private project!: TestProject
   private open = false
 
-  getSupportedBrowsers() {
-    // `none` is not restricted to certain browsers.
-    return []
-  }
-
-  isOpen() {
-    return this.open
-  }
-
-  getCommandsContext() {
-    return {}
-  }
-
-  async initialize(project: TestProject) {
+  constructor(project: TestProject) {
     this.project = project
     this.open = false
     if (project.config.browser.headless) {
@@ -30,7 +29,15 @@ export class PreviewBrowserProvider implements BrowserProvider {
     project.vitest.logger.printBrowserBanner(project)
   }
 
-  async openPage(_sessionId: string, url: string) {
+  isOpen(): boolean {
+    return this.open
+  }
+
+  getCommandsContext() {
+    return {}
+  }
+
+  async openPage(_sessionId: string, url: string): Promise<void> {
     this.open = true
     if (!this.project.browser) {
       throw new Error('Browser is not initialized')
@@ -42,5 +49,5 @@ export class PreviewBrowserProvider implements BrowserProvider {
     options.open = _open
   }
 
-  async close() {}
+  async close(): Promise<void> {}
 }

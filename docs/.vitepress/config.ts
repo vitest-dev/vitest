@@ -8,6 +8,7 @@ import {
   groupIconMdPlugin,
   groupIconVitePlugin,
 } from 'vitepress-plugin-group-icons'
+import llmstxt from 'vitepress-plugin-llms'
 import { version } from '../../package.json'
 import { teamMembers } from './contributors'
 import {
@@ -31,6 +32,10 @@ export default ({ mode }: { mode: string }) => {
     lang: 'en-US',
     title: vitestName,
     description: vitestDescription,
+    srcExclude: [
+      '**/guide/examples/*',
+      '**/guide/cli-generated.md',
+    ],
     locales: {
       root: {
         label: 'English',
@@ -52,12 +57,10 @@ export default ({ mode }: { mode: string }) => {
       ['meta', { property: 'og:description', content: vitestDescription }],
       ['meta', { property: 'og:url', content: ogUrl }],
       ['meta', { property: 'og:image', content: ogImage }],
-      ['meta', { name: 'twitter:title', content: vitestName }],
-      ['meta', { name: 'twitter:description', content: vitestDescription }],
-      ['meta', { name: 'twitter:image', content: ogImage }],
       ['meta', { name: 'twitter:card', content: 'summary_large_image' }],
       ['link', { rel: 'preload', as: 'style', onload: 'this.onload=null;this.rel=\'stylesheet\'', href: font }],
       ['noscript', {}, `<link rel="stylesheet" crossorigin="anonymous" href="${font}" />`],
+      ['link', { rel: 'me', href: 'https://m.webtoo.ls/@vitest' }],
       ['link', { rel: 'mask-icon', href: '/logo.svg', color: '#ffffff' }],
       ['link', { rel: 'apple-touch-icon', href: '/apple-touch-icon.png', sizes: '180x180' }],
     ],
@@ -68,15 +71,18 @@ export default ({ mode }: { mode: string }) => {
           customIcon: {
             'CLI': 'vscode-icons:file-type-shell',
             'vitest.shims': 'vscode-icons:file-type-vitest',
-            'vitest.workspace': 'vscode-icons:file-type-vitest',
             'vitest.config': 'vscode-icons:file-type-vitest',
+            'vitest.workspace': 'vscode-icons:file-type-vitest',
             '.spec.ts': 'vscode-icons:file-type-testts',
             '.test.ts': 'vscode-icons:file-type-testts',
             '.spec.js': 'vscode-icons:file-type-testjs',
             '.test.js': 'vscode-icons:file-type-testjs',
             'marko': 'vscode-icons:file-type-marko',
+            'qwik': 'logos:qwik-icon',
+            'next': '',
           },
         }),
+        llmstxt(),
       ],
     },
     markdown: {
@@ -101,6 +107,7 @@ export default ({ mode }: { mode: string }) => {
               },
             }),
           ],
+      languages: ['js', 'jsx', 'ts', 'tsx'],
     },
     themeConfig: {
       logo: '/logo.svg',
@@ -137,7 +144,7 @@ export default ({ mode }: { mode: string }) => {
 
       footer: {
         message: 'Released under the MIT License.',
-        copyright: 'Copyright © 2021-PRESENT Anthony Fu, Matías Capeletto and Vitest contributors',
+        copyright: 'Copyright © 2021-PRESENT VoidZero Inc. and Vitest contributors',
       },
 
       nav: [
@@ -153,8 +160,16 @@ export default ({ mode }: { mode: string }) => {
               activeMatch: '^/advanced/',
             },
             {
-              text: 'Team',
-              link: '/team',
+              items: [
+                {
+                  text: 'Blog',
+                  link: '/blog',
+                },
+                {
+                  text: 'Team',
+                  link: '/team',
+                },
+              ],
             },
           ],
         },
@@ -190,6 +205,10 @@ export default ({ mode }: { mode: string }) => {
                 {
                   text: 'v1.x',
                   link: 'https://v1.vitest.dev/',
+                },
+                {
+                  text: 'v2.x',
+                  link: 'https://v2.vitest.dev/',
                 },
               ],
             },
@@ -276,6 +295,11 @@ export default ({ mode }: { mode: string }) => {
                 link: '/guide/browser/multiple-setups',
                 docFooterText: 'Multiple Setups | Browser Mode',
               },
+              {
+                text: 'Visual Regression Testing',
+                link: '/guide/browser/visual-regression-testing',
+                docFooterText: 'Visual Regression Testing | Browser Mode',
+              },
             ],
           },
           {
@@ -336,8 +360,16 @@ export default ({ mode }: { mode: string }) => {
                 ],
               },
               {
+                text: 'Plugin API',
+                link: '/advanced/api/plugin',
+              },
+              {
                 text: 'Runner API',
                 link: '/advanced/runner',
+              },
+              {
+                text: 'Reporters API',
+                link: '/advanced/api/reporters',
               },
               {
                 text: 'Task Metadata',
@@ -368,6 +400,7 @@ export default ({ mode }: { mode: string }) => {
           },
         ],
         '/team': [],
+        '/blog': [],
         '/': [
           {
             text: 'Introduction',
@@ -453,8 +486,8 @@ function guide(): DefaultTheme.SidebarItem[] {
       link: '/guide/filtering',
     },
     {
-      text: 'Workspace',
-      link: '/guide/workspace',
+      text: 'Test Projects',
+      link: '/guide/projects',
     },
     {
       text: 'Reporters',
@@ -471,6 +504,45 @@ function guide(): DefaultTheme.SidebarItem[] {
     {
       text: 'Mocking',
       link: '/guide/mocking',
+      collapsed: true,
+      items: [
+        {
+          text: 'Mocking Dates',
+          link: '/guide/mocking/dates',
+        },
+        {
+          text: 'Mocking Functions',
+          link: '/guide/mocking/functions',
+        },
+        {
+          text: 'Mocking Globals',
+          link: '/guide/mocking/globals',
+        },
+        {
+          text: 'Mocking Modules',
+          link: '/guide/mocking/modules',
+        },
+        {
+          text: 'Mocking the File System',
+          link: '/guide/mocking/file-system',
+        },
+        {
+          text: 'Mocking Requests',
+          link: '/guide/mocking/requests',
+        },
+        {
+          text: 'Mocking Timers',
+          link: '/guide/mocking/timers',
+        },
+        {
+          text: 'Mocking Classes',
+          link: '/guide/mocking/classes',
+        },
+      ],
+    },
+    {
+      text: 'Parallelism',
+      link: '/guide/parallelism',
     },
     {
       text: 'Testing Types',
@@ -487,6 +559,10 @@ function guide(): DefaultTheme.SidebarItem[] {
     {
       text: 'Test Context',
       link: '/guide/test-context',
+    },
+    {
+      text: 'Test Annotations',
+      link: '/guide/test-annotations',
     },
     {
       text: 'Environment',
@@ -514,8 +590,8 @@ function guide(): DefaultTheme.SidebarItem[] {
       collapsed: false,
       items: [
         {
-          text: 'Migrating to Vitest 3.0',
-          link: '/guide/migration#vitest-3',
+          text: 'Migrating to Vitest 4.0',
+          link: '/guide/migration#vitest-4',
         },
         {
           text: 'Migrating from Jest',
@@ -547,7 +623,7 @@ function api(): DefaultTheme.SidebarItem[] {
       link: '/api/',
     },
     {
-      text: 'Mock Functions',
+      text: 'Mocks',
       link: '/api/mock',
     },
     {

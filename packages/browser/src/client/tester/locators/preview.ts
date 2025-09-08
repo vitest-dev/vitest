@@ -8,8 +8,8 @@ import {
   getByTextSelector,
   getByTitleSelector,
 } from 'ivya'
-import { convertElementToCssSelector } from '../../utils'
 import { getElementError } from '../public-utils'
+import { convertElementToCssSelector } from '../utils'
 import { Locator, selectorEngine } from './index'
 
 page.extend({
@@ -35,6 +35,9 @@ page.extend({
     return new PreviewLocator(getByTitleSelector(title, options))
   },
 
+  _createLocator(selector: string) {
+    return new PreviewLocator(selector)
+  },
   elementLocator(element: Element) {
     return new PreviewLocator(
       selectorEngine.generateSelectorSimple(element),
@@ -84,8 +87,8 @@ class PreviewLocator extends Locator {
     return userEvent.upload(this.element(), file)
   }
 
-  selectOptions(options_: string | string[] | HTMLElement | HTMLElement[] | Locator | Locator[]): Promise<void> {
-    return userEvent.selectOptions(this.element(), options_)
+  selectOptions(options: string | string[] | HTMLElement | HTMLElement[] | Locator | Locator[]): Promise<void> {
+    return userEvent.selectOptions(this.element(), options)
   }
 
   clear(): Promise<void> {

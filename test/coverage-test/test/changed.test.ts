@@ -36,7 +36,6 @@ test('{ changed: "HEAD" }', async () => {
     coverage: {
       include: ['fixtures/src/**'],
       reporter: 'json',
-      all: true,
     },
   })
 
@@ -49,9 +48,23 @@ test('{ changed: "HEAD" }', async () => {
     ]
   `)
 
-  const uncoveredFile = coverageMap.fileCoverageFor('<process-cwd>/fixtures/src/new-uncovered-file.ts').toSummary()
-  expect(uncoveredFile.lines.pct).toBe(0)
+  const uncoveredFile = coverageMap.fileCoverageFor('<process-cwd>/fixtures/src/new-uncovered-file.ts')
+  const changedFile = coverageMap.fileCoverageFor('<process-cwd>/fixtures/src/file-to-change.ts')
 
-  const changedFile = coverageMap.fileCoverageFor('<process-cwd>/fixtures/src/file-to-change.ts').toSummary()
-  expect(changedFile.lines.pct).toBeGreaterThanOrEqual(50)
+  expect([uncoveredFile, changedFile]).toMatchInlineSnapshot(`
+    {
+      "<process-cwd>/fixtures/src/file-to-change.ts": {
+        "branches": "0/0 (100%)",
+        "functions": "1/2 (50%)",
+        "lines": "1/2 (50%)",
+        "statements": "1/2 (50%)",
+      },
+      "<process-cwd>/fixtures/src/new-uncovered-file.ts": {
+        "branches": "0/0 (100%)",
+        "functions": "0/1 (0%)",
+        "lines": "0/1 (0%)",
+        "statements": "0/1 (0%)",
+      },
+    }
+  `)
 }, SKIP)

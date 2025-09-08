@@ -1,11 +1,13 @@
-import type { File, TaskResultPack } from '@vitest/runner'
-
+import type { File, TaskEventPack, TaskResultPack, TestAnnotation } from '@vitest/runner'
+import type { SerializedError } from '@vitest/utils'
+import type { IncomingMessage } from 'node:http'
 import type { ViteDevServer } from 'vite'
 import type { WebSocket } from 'ws'
 import type { Vitest } from '../node/core'
+import type { TestCase, TestModule } from '../node/reporters/reported-tasks'
+import type { TestSpecification } from '../node/spec'
 import type { Reporter } from '../node/types/reporter'
-import type { SerializedTestSpecification } from '../runtime/types/utils'
-import type { Awaitable, ModuleGraphData, UserConsoleLog } from '../types/general'
+import type { LabelColor, ModuleGraphData, UserConsoleLog } from '../types/general'
 import type {
   TransformResultWithSource,
   WebSocketEvents,
@@ -13,29 +15,34 @@ import type {
   WebSocketRPC,
 } from './types'
 import { existsSync, promises as fs } from 'node:fs'
-import { isPrimitive, noop } from '@vitest/utils'
+import { noop } from '@vitest/utils'
 import { createBirpc } from 'birpc'
 import { parse, stringify } from 'flatted'
 import { WebSocketServer } from 'ws'
 import { API_PATH } from '../constants'
 import { getModuleGraph } from '../utils/graph'
 import { stringifyReplace } from '../utils/serialization'
-import { parseErrorStacktrace } from '../utils/source-map'
+import { isValidApiRequest } from './check'
 
-export function setup(ctx: Vitest, _server?: ViteDevServer) {
+export function setup(ctx: Vitest, _server?: ViteDevServer): void {
   const wss = new WebSocketServer({ noServer: true })
 
   const clients = new Map<WebSocket, WebSocketRPC>()
 
-  const server = _server || ctx.server
+  const server = _server || ctx.vite
 
-  server.httpServer?.on('upgrade', (request, socket, head) => {
+  server.httpServer?.on('upgrade', (request: IncomingMessage, socket, head) => {
     if (!request.url) {
       return
     }
 
     const { pathname } = new URL(request.url, 'http://localhost')
     if (pathname !== API_PATH) {
+      return
+    }
+
+    if (!isValidApiRequest(ctx.config, request)) {
+      socket.destroy()
       return
     }
 
@@ -48,9 +55,8 @@ export function setup(ctx: Vitest, _server?: ViteDevServer) {
   function setupClient(ws: WebSocket) {
     const rpc = createBirpc<WebSocketEvents, WebSocketHandlers>(
       {
-        async onTaskUpdate(packs) {
-          ctx.state.updateTasks(packs)
-          await ctx.report('onTaskUpdate', packs)
+        async onTaskUpdate(packs, events) {
+          await ctx._testRun.updated(packs, events)
         },
         getFiles() {
           return ctx.state.getFiles()
@@ -81,11 +87,14 @@ export function setup(ctx: Vitest, _server?: ViteDevServer) {
         getConfig() {
           return ctx.getRootProject().serializedConfig
         },
+        getResolvedProjectLabels(): { name: string; color?: LabelColor }[] {
+          return ctx.projects.map(p => ({ name: p.name, color: p.color }))
+        },
         async getTransformResult(projectName: string, id, browser = false) {
           const project = ctx.getProjectByName(projectName)
           const result: TransformResultWithSource | null | undefined = browser
             ? await project.browser!.vite.transformRequest(id)
-            : await project.vitenode.transformRequest(id)
+            : await project.vite.transformRequest(id)
           if (result) {
             try {
               result.source = result.source || (await fs.readFile(id, 'utf-8'))
@@ -132,9 +141,7 @@ export function setup(ctx: Vitest, _server?: ViteDevServer) {
         ],
         serialize: (data: any) => stringify(data, stringifyReplace),
         deserialize: parse,
-        onTimeoutError(functionName) {
-          throw new Error(`[vitest-api]: Timeout calling "${functionName}"`)
-        },
+        timeout: -1,
       },
     )
 
@@ -142,6 +149,7 @@ export function setup(ctx: Vitest, _server?: ViteDevServer) {
 
     ws.on('close', () => {
       clients.delete(ws)
+      rpc.$close(new Error('[vitest-api]: Pending methods while closing rpc'))
     })
   }
 
@@ -155,66 +163,68 @@ export class WebSocketReporter implements Reporter {
     public clients: Map<WebSocket, WebSocketRPC>,
   ) {}
 
-  onCollected(files?: File[]) {
-    if (this.clients.size === 0) {
-      return
-    }
-    this.clients.forEach((client) => {
-      client.onCollected?.(files)?.catch?.(noop)
-    })
-  }
-
-  onSpecsCollected(specs?: SerializedTestSpecification[] | undefined): Awaitable<void> {
-    if (this.clients.size === 0) {
-      return
-    }
-    this.clients.forEach((client) => {
-      client.onSpecsCollected?.(specs)?.catch?.(noop)
-    })
-  }
-
-  async onTaskUpdate(packs: TaskResultPack[]) {
+  onTestModuleCollected(testModule: TestModule): void {
     if (this.clients.size === 0) {
       return
     }
 
-    packs.forEach(([taskId, result]) => {
-      const task = this.ctx.state.idMap.get(taskId)
-      const isBrowser = task && task.file.pool === 'browser'
-
-      result?.errors?.forEach((error) => {
-        if (isPrimitive(error)) {
-          return
-        }
-
-        if (isBrowser) {
-          const project = this.ctx.getProjectByName(task!.file.projectName || '')
-          error.stacks = project.browser?.parseErrorStacktrace(error)
-        }
-        else {
-          error.stacks = parseErrorStacktrace(error)
-        }
-      })
-    })
-
     this.clients.forEach((client) => {
-      client.onTaskUpdate?.(packs)?.catch?.(noop)
+      client.onCollected?.([testModule.task])?.catch?.(noop)
     })
   }
 
-  onFinished(files: File[], errors: unknown[]) {
+  onTestRunStart(specifications: ReadonlyArray<TestSpecification>): void {
+    if (this.clients.size === 0) {
+      return
+    }
+
+    const serializedSpecs = specifications.map(spec => spec.toJSON())
+
+    this.clients.forEach((client) => {
+      client.onSpecsCollected?.(serializedSpecs)?.catch?.(noop)
+    })
+  }
+
+  async onTestCaseAnnotate(testCase: TestCase, annotation: TestAnnotation): Promise<void> {
+    if (this.clients.size === 0) {
+      return
+    }
+
+    this.clients.forEach((client) => {
+      client.onTestAnnotate?.(testCase.id, annotation)?.catch?.(noop)
+    })
+  }
+
+  async onTaskUpdate(packs: TaskResultPack[], events: TaskEventPack[]): Promise<void> {
+    if (this.clients.size === 0) {
+      return
+    }
+
+    this.clients.forEach((client) => {
+      client.onTaskUpdate?.(packs, events)?.catch?.(noop)
+    })
+  }
+
+  onTestRunEnd(testModules: ReadonlyArray<TestModule>, unhandledErrors: ReadonlyArray<SerializedError>): void {
+    if (!this.clients.size) {
+      return
+    }
+
+    const files = testModules.map(testModule => testModule.task)
+    const errors = [...unhandledErrors]
+
     this.clients.forEach((client) => {
       client.onFinished?.(files, errors)?.catch?.(noop)
     })
   }
 
-  onFinishedReportCoverage() {
+  onFinishedReportCoverage(): void {
     this.clients.forEach((client) => {
       client.onFinishedReportCoverage?.()?.catch?.(noop)
     })
   }
 
-  onUserConsoleLog(log: UserConsoleLog) {
+  onUserConsoleLog(log: UserConsoleLog): void {
     this.clients.forEach((client) => {
       client.onUserConsoleLog?.(log)?.catch?.(noop)
     })

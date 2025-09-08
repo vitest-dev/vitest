@@ -1,12 +1,6 @@
+import type { Arrayable } from '@vitest/utils'
 import type { Suite, Task, Test } from '../types/tasks'
-import { type Arrayable, toArray } from '@vitest/utils'
-
-/**
- * @deprecated use `isTestCase` instead
- */
-export function isAtomTest(s: Task): s is Test {
-  return isTestCase(s)
-}
+import { toArray } from '@vitest/utils'
 
 export function isTestCase(s: Task): s is Test {
   return s.type === 'test'

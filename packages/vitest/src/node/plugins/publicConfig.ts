@@ -3,7 +3,7 @@ import type {
   UserConfig as ViteUserConfig,
 } from 'vite'
 import type { ResolvedConfig, UserConfig } from '../types/config'
-import { slash } from '@vitest/utils'
+import { deepClone, slash } from '@vitest/utils'
 import { findUp } from 'find-up'
 import { resolve } from 'pathe'
 import { mergeConfig, resolveConfig as resolveViteConfig } from 'vite'
@@ -27,7 +27,7 @@ export async function resolveConfig(
         : await findUp(configFiles, { cwd: root } as any)
   options.config = configPath
 
-  const vitest = new Vitest('test')
+  const vitest = new Vitest('test', deepClone(options))
   const config = await resolveViteConfig(
     mergeConfig(
       {
@@ -45,11 +45,11 @@ export async function resolveConfig(
   // Reflect just to avoid type error
   const updatedOptions = Reflect.get(config, '_vitest') as UserConfig
   const vitestConfig = resolveVitestConfig(
-    'test',
+    vitest,
     updatedOptions,
     config,
-    vitest.logger,
   )
+  await vitest.close()
   return {
     viteConfig: config,
     vitestConfig,

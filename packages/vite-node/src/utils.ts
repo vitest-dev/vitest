@@ -1,10 +1,10 @@
 import type { Arrayable, Nullable } from './types'
 import { existsSync, promises as fsp } from 'node:fs'
-import { builtinModules } from 'node:module'
+import nodeModule from 'node:module'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { dirname, join, resolve } from 'pathe'
 
-export const isWindows = process.platform === 'win32'
+export const isWindows: boolean = process.platform === 'win32'
 
 const drive = isWindows ? process.cwd()[0] : null
 const driveOpposite = drive
@@ -17,8 +17,14 @@ const driveOppositeRegext = driveOpposite
   ? new RegExp(`(?:^|/@fs/)${driveOpposite}(\:[\\/])`)
   : null
 
-export function slash(str: string) {
+export function slash(str: string): string {
   return str.replace(/\\/g, '/')
+}
+
+const bareImportRE = /^(?![a-z]:)[\w@](?!.*:\/\/)/i
+
+export function isBareImport(id: string): boolean {
+  return bareImportRE.test(id)
 }
 
 export const VALID_ID_PREFIX = '/@id/'
@@ -35,11 +41,16 @@ export function normalizeRequestId(id: string, base?: string): string {
     id = id.replace(driveOppositeRegext, `${drive}$1`)
   }
 
+  if (id.startsWith('file://')) {
+    // preserve hash/query
+    const { file, postfix } = splitFileAndPostfix(id)
+    return fileURLToPath(file) + postfix
+  }
+
   return id
     .replace(/^\/@id\/__x00__/, '\0') // virtual modules start with `\0`
     .replace(/^\/@id\//, '')
     .replace(/^__vite-browser-external:/, '')
-    .replace(/^file:(\/+)/, isWindows ? '' : '/') // remove file protocol and duplicate leading slashes
     .replace(/\?v=\w+/, '?') // remove ?v= query
     .replace(/&v=\w+/, '') // remove &v= query
     .replace(/\?t=\w+/, '?') // remove ?t= query
@@ -55,6 +66,14 @@ export function cleanUrl(url: string): string {
   return url.replace(postfixRE, '')
 }
 
+function splitFileAndPostfix(path: string): {
+  file: string
+  postfix: string
+} {
+  const file = cleanUrl(path)
+  return { file, postfix: path.slice(file.length) }
+}
+
 const internalRequests = ['@vite/client', '@vite/env']
 
 const internalRequestRegexp = new RegExp(
@@ -65,10 +84,16 @@ export function isInternalRequest(id: string): boolean {
   return internalRequestRegexp.test(id)
 }
 
-const prefixedBuiltins = new Set(['node:test'])
+// https://nodejs.org/api/modules.html#built-in-modules-with-mandatory-node-prefix
+const prefixedBuiltins = new Set([
+  'node:sea',
+  'node:sqlite',
+  'node:test',
+  'node:test/reporters',
+])
 
 const builtins = new Set([
-  ...builtinModules,
+  ...nodeModule.builtinModules,
   'assert/strict',
   'diagnostics_channel',
   'dns/promises',
@@ -84,20 +109,22 @@ const builtins = new Set([
   'wasi',
 ])
 
-export function normalizeModuleId(id: string) {
+export function normalizeModuleId(id: string): string {
   // unique id that is not available as "test"
   if (prefixedBuiltins.has(id)) {
     return id
   }
+  if (id.startsWith('file://')) {
+    return fileURLToPath(id)
+  }
   return id
     .replace(/\\/g, '/')
     .replace(/^\/@fs\//, isWindows ? '' : '/')
-    .replace(/^file:\//, '/')
     .replace(/^node:/, '')
     .replace(/^\/+/, '/')
 }
 
-export function isPrimitive(v: any) {
+export function isPrimitive(v: any): boolean {
   return v !== Object(v)
 }
 
@@ -110,7 +137,7 @@ export function toFilePath(
       return { absolute: id.slice(4), exists: true }
     }
     // check if /src/module.js -> <root>/src/module.js
-    if (!id.startsWith(withTrailingSlash(root)) && id.startsWith('/')) {
+    if (!id.startsWith(withTrailingSlash(root)) && id[0] === '/') {
       const resolved = resolve(root, id.slice(1))
       if (existsSync(cleanUrl(resolved))) {
         return { absolute: resolved, exists: true }
@@ -132,7 +159,7 @@ export function toFilePath(
   // disambiguate the `<UNIT>:/` on windows: see nodejs/node#31710
   return {
     path:
-      isWindows && absolute.startsWith('/')
+      isWindows && absolute[0] === '/'
         ? slash(fileURLToPath(pathToFileURL(absolute.slice(1)).href))
         : absolute,
     exists,
@@ -141,6 +168,10 @@ export function toFilePath(
 
 const NODE_BUILTIN_NAMESPACE = 'node:'
 export function isNodeBuiltin(id: string): boolean {
+  // Added in v18.6.0
+  if (nodeModule.isBuiltin) {
+    return nodeModule.isBuiltin(id)
+  }
   if (prefixedBuiltins.has(id)) {
     return true
   }
@@ -172,7 +203,7 @@ export function getCachedData<T>(
   cache: Map<string, T>,
   basedir: string,
   originalBasedir: string,
-) {
+): NonNullable<T> | undefined {
   const pkgData = cache.get(getFnpdCacheKey(basedir))
   if (pkgData) {
     traverseBetweenDirs(originalBasedir, basedir, (dir) => {
@@ -187,7 +218,7 @@ export function setCacheData<T>(
   data: T,
   basedir: string,
   originalBasedir: string,
-) {
+): void {
   cache.set(getFnpdCacheKey(basedir), data)
   traverseBetweenDirs(originalBasedir, basedir, (dir) => {
     cache.set(getFnpdCacheKey(dir), data)
@@ -215,14 +246,14 @@ function traverseBetweenDirs(
 }
 
 export function withTrailingSlash(path: string): string {
-  if (path[path.length - 1] !== '/') {
+  if (path.at(-1) !== '/') {
     return `${path}/`
   }
 
   return path
 }
 
-export function createImportMetaEnvProxy() {
+export function createImportMetaEnvProxy(): NodeJS.ProcessEnv {
   // packages/vitest/src/node/plugins/index.ts:146
   const booleanKeys = ['DEV', 'PROD', 'SSR']
   return new Proxy(process.env, {

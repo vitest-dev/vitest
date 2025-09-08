@@ -42,3 +42,23 @@ test('respects custom config', async () => {
   expect(vitestConfig.name).toBe('custom config')
   expect(vitestConfig.reporters).toEqual([['default', {}]])
 })
+
+test('default value changes of coverage.exclude do not reflect to test.exclude', async () => {
+  const exclude = ['**/custom-exclude/**']
+
+  const { vitestConfig } = await resolveConfig({
+    include: ['**/example.test.ts'],
+    exclude,
+    coverage: {
+      exclude,
+    },
+  })
+
+  expect(exclude).toStrictEqual(['**/custom-exclude/**'])
+
+  expect(vitestConfig.include).toStrictEqual(['**/example.test.ts'])
+  expect(vitestConfig.exclude).toStrictEqual(['**/custom-exclude/**'])
+
+  expect(vitestConfig.coverage.exclude).toContain('**/custom-exclude/**')
+  expect(vitestConfig.coverage.exclude).toContain('**/example.test.ts')
+})

@@ -1,24 +1,19 @@
 import type { TestSpecification } from 'vitest/node'
 import { expect, test } from 'vitest'
-import { readCoverageMap, runVitest } from '../utils'
+import { formatSummary, readCoverageMap, runVitest } from '../utils'
 
 const pools = ['forks']
 
 if (!process.env.COVERAGE_BROWSER) {
   pools.push('threads')
-
-  const [major] = process.version.slice(1).split('.').map(num => Number(num))
-
-  if (major < 22) {
-    pools.push('vmForks', 'vmThreads')
-  }
+  pools.push('vmForks', 'vmThreads')
 }
 
 for (const isolate of [true, false]) {
   for (const pool of pools) {
     test(`{ isolate: ${isolate}, pool: "${pool}" }`, async () => {
       await runVitest({
-        include: ['fixtures/test/isolation-*'],
+        include: ['fixtures/test/isolation-*.test.ts'],
         setupFiles: ['fixtures/setup.isolation.ts'],
         sequence: { sequencer: Sorter },
 
@@ -27,28 +22,38 @@ for (const isolate of [true, false]) {
         fileParallelism: false,
 
         coverage: {
-          all: false,
-          reporter: ['json', 'html'],
+          reporter: 'json',
         },
 
         browser: {
           isolate,
+          instances: [],
         },
       })
 
       const coverageMap = await readCoverageMap()
-
       const branches = coverageMap.fileCoverageFor('<process-cwd>/fixtures/src/branch.ts')
-      expect(branches.toSummary().lines.pct).toBe(100)
-      expect(branches.toSummary().statements.pct).toBe(100)
-      expect(branches.toSummary().functions.pct).toBe(100)
-      expect(branches.toSummary().branches.pct).toBe(100)
-
       const math = coverageMap.fileCoverageFor('<process-cwd>/fixtures/src/math.ts')
-      expect(math.toSummary().lines.pct).toBe(100)
-      expect(math.toSummary().statements.pct).toBe(100)
-      expect(math.toSummary().functions.pct).toBe(100)
-      expect(math.toSummary().branches.pct).toBe(100)
+
+      const summary = {
+        [branches.path]: formatSummary(branches.toSummary()),
+        [math.path]: formatSummary(math.toSummary()),
+      }
+
+      expect(summary).toStrictEqual({
+        '<process-cwd>/fixtures/src/branch.ts': {
+          branches: '2/2 (100%)',
+          functions: '1/1 (100%)',
+          lines: '4/4 (100%)',
+          statements: '4/4 (100%)',
+        },
+        '<process-cwd>/fixtures/src/math.ts': {
+          branches: '0/0 (100%)',
+          functions: '4/4 (100%)',
+          lines: '4/4 (100%)',
+          statements: '4/4 (100%)',
+        },
+      })
     })
   }
 }

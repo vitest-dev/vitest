@@ -1,8 +1,9 @@
 import type { File, Task } from '@vitest/runner'
 import type { Params } from './params'
-import { client, config, findById } from './client'
+import { viewport } from './browser'
+import { browserState, client, config, findById } from './client'
 import { testRunState } from './client/state'
-import { activeFileId, lineNumber, selectedTest, viewMode } from './params'
+import { activeFileId, columnNumber, lineNumber, selectedTest, viewMode } from './params'
 
 export const currentModule = ref<File>()
 export const dashboardVisible = ref(true)
@@ -19,16 +20,16 @@ export const coverageEnabled = computed(() => {
 export const mainSizes = useLocalStorage<[left: number, right: number]>(
   'vitest-ui_splitpanes-mainSizes',
   [33, 67],
-  {
-    initOnMounted: true,
-  },
 )
 export const detailSizes = useLocalStorage<[left: number, right: number]>(
   'vitest-ui_splitpanes-detailSizes',
-  [33, 67],
-  {
-    initOnMounted: true,
-  },
+  [
+    // @ts-expect-error "browserState" is not initialised yet
+    window.__vitest_browser_runner__?.provider === 'webdriverio'
+      ? ((viewport.value[0] / window.outerWidth) * 100)
+      : 33,
+    67,
+  ],
 )
 
 // live sizes of panels in percentage
@@ -100,9 +101,10 @@ export function showDashboard(show: boolean) {
   }
 }
 
-export function navigateTo({ file, line, view, test }: Params) {
+export function navigateTo({ file, line, view, test, column }: Params) {
   activeFileId.value = file
   lineNumber.value = line
+  columnNumber.value = column
   viewMode.value = view
   selectedTest.value = test
   currentModule.value = findById(file)
@@ -115,6 +117,7 @@ export function showReport(task: Task) {
     test: task.type === 'test' ? task.id : null,
     line: null,
     view: null,
+    column: null,
   })
 }
 
@@ -131,14 +134,45 @@ export function hideRightPanel() {
   detailSizes.value = [100, 0]
 }
 
+function calculateBrowserPanel() {
+  // we don't scale webdriverio provider because it doesn't support scaling
+  // TODO: find a way to make this universal - maybe show browser separately(?)
+  if (browserState?.provider === 'webdriverio') {
+    const parentWindow = window.outerWidth * (panels.details.size / 100)
+    // 40 is 20px padding for each sice
+    const tabWidth = ((viewport.value[0] + 20) / parentWindow) * 100
+    return tabWidth
+  }
+  return 33
+}
+
 export function showRightPanel() {
-  panels.details.browser = 33
-  panels.details.main = 67
-  detailSizes.value = [33, 67]
+  panels.details.browser = calculateBrowserPanel()
+  panels.details.main = 100 - panels.details.browser
+  detailSizes.value = [
+    panels.details.browser,
+    panels.details.main,
+  ]
 }
 
 export function showNavigationPanel() {
   panels.navigation = 33
   panels.details.size = 67
   mainSizes.value = [33, 67]
+}
+
+export function updateBrowserPanel() {
+  // we don't need to change the size of the browser panel if the right
+  // panel is hidden
+  if (panels.details.main === 0) {
+    return
+  }
+
+  panels.details.browser = calculateBrowserPanel()
+  panels.details.main = 100 - panels.details.browser
+
+  detailSizes.value = [
+    panels.details.browser,
+    panels.details.main,
+  ]
 }

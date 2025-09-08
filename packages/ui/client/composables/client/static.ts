@@ -1,8 +1,8 @@
 import type { VitestClient } from '@vitest/ws-client'
 import type { BirpcReturn } from 'birpc'
 import type {
-  File,
   ModuleGraphData,
+  RunnerTestFile,
   SerializedConfig,
   WebSocketEvents,
   WebSocketHandlers,
@@ -13,8 +13,9 @@ import { StateManager } from '../../../../ws-client/src/state'
 
 interface HTMLReportMetadata {
   paths: string[]
-  files: File[]
+  files: RunnerTestFile[]
   config: SerializedConfig
+  projects: string[]
   moduleGraph: Record<string, Record<string, ModuleGraphData>>
   unhandledErrors: unknown[]
   // filename -> source
@@ -47,6 +48,12 @@ export function createStaticClient(): VitestClient {
     getConfig: () => {
       return metadata.config
     },
+    getResolvedProjectNames: () => {
+      return metadata.projects
+    },
+    getResolvedProjectLabels: () => {
+      return []
+    },
     getModuleGraph: async (projectName, id) => {
       return metadata.moduleGraph[projectName]?.[id]
     },
@@ -58,6 +65,7 @@ export function createStaticClient(): VitestClient {
     onTaskUpdate: noop,
     writeFile: asyncNoop,
     rerun: asyncNoop,
+    rerunTask: asyncNoop,
     updateSnapshot: asyncNoop,
     resolveSnapshotPath: asyncNoop,
     snapshotSaved: asyncNoop,
@@ -80,7 +88,7 @@ export function createStaticClient(): VitestClient {
 
   ctx.rpc = rpc as any as BirpcReturn<WebSocketHandlers, WebSocketEvents>
 
-  let openPromise: Promise<void>
+  const openPromise = Promise.resolve()
 
   function reconnect() {
     registerMetadata()

@@ -61,7 +61,7 @@ export function isNodeInPattern(node: _Node): node is Property {
  * Except this is using acorn AST
  */
 export function esmWalker(
-  root: Rollup.ProgramNode,
+  root: ReturnType<Rollup.PluginContext['parse']>,
   { onIdentifier, onImportMeta, onDynamicImport, onCallExpression }: Visitors,
 ): void {
   const parentStack: Node[] = []
@@ -246,9 +246,9 @@ export function esmWalker(
       const grandparent = stack[1]
       const hasBindingShortcut
         = isStaticProperty(parent)
-        && parent.shorthand
-        && (!isNodeInPattern(parent)
-          || isInDestructuringAssignment(parent, parentStack))
+          && parent.shorthand
+          && (!isNodeInPattern(parent)
+            || isInDestructuringAssignment(parent, parentStack))
 
       const classDeclaration
         = (parent.type === 'PropertyDefinition'

@@ -1,12 +1,12 @@
-import type { UserConfig as ViteUserConfig } from 'vite'
+import type { InlineConfig as ViteInlineConfig, UserConfig as ViteUserConfig } from 'vite'
 import type { environments } from '../../integrations/env'
 import type { Vitest, VitestOptions } from '../core'
-import type { TestModule, TestSuite } from '../reporters'
+import type { TestModule, TestSuite } from '../reporters/reported-tasks'
 import type { TestSpecification } from '../spec'
 import type { UserConfig, VitestEnvironment, VitestRunMode } from '../types/config'
 import { mkdirSync, writeFileSync } from 'node:fs'
-import { dirname, relative, resolve } from 'pathe'
-import { CoverageProviderMap } from '../../integrations/coverage'
+import { dirname, isAbsolute, relative, resolve } from 'pathe'
+import { CoverageProviderMap } from '../../utils/coverage'
 import { createVitest } from '../create'
 import { FilesNotFoundError, GitNotFoundError, IncludeTaskLocationDisabledError, LocationFilterFileNotFoundError, RangeLocationFilterProvidedError } from '../errors'
 import { registerConsoleShortcuts } from '../stdin'
@@ -28,6 +28,14 @@ export interface CliOptions extends UserConfig {
    * Output collected test files only
    */
   filesOnly?: boolean
+
+  /**
+   * Override vite config's configLoader from cli.
+   * Use `bundle` to bundle the config with esbuild or `runner` (experimental) to process it on the fly (default: `bundle`).
+   * This is only available with **vite version 6.1.0** and above.
+   * @experimental
+   */
+  configLoader?: ViteInlineConfig extends { configLoader?: infer T } ? T : never
 }
 
 /**
@@ -49,10 +57,11 @@ export async function startVitest(
     options,
     viteOverrides,
     vitestOptions,
+    cliFilters,
   )
 
-  if (mode === 'test' && ctx.config.coverage.enabled) {
-    const provider = ctx.config.coverage.provider || 'v8'
+  if (mode === 'test' && ctx._coverageOptions.enabled) {
+    const provider = ctx._coverageOptions.provider || 'v8'
     const requiredPackages = CoverageProviderMap[provider]
 
     if (requiredPackages) {
@@ -131,6 +140,7 @@ export async function prepareVitest(
   options: CliOptions = {},
   viteOverrides?: ViteUserConfig,
   vitestOptions?: VitestOptions,
+  cliFilters?: string[],
 ): Promise<Vitest> {
   process.env.TEST = 'true'
   process.env.VITEST = 'true'
@@ -138,6 +148,10 @@ export async function prepareVitest(
 
   if (options.run) {
     options.watch = false
+  }
+
+  if (options.standalone && (cliFilters?.length || 0) > 0) {
+    options.standalone = false
   }
 
   // this shouldn't affect _application root_ that can be changed inside config
@@ -158,7 +172,7 @@ export async function prepareVitest(
   return ctx
 }
 
-export function processCollected(ctx: Vitest, files: TestModule[], options: CliOptions) {
+export function processCollected(ctx: Vitest, files: TestModule[], options: CliOptions): void {
   let errorsPrinted = false
 
   forEachSuite(files, (suite) => {
@@ -181,12 +195,12 @@ export function processCollected(ctx: Vitest, files: TestModule[], options: CliO
   return formatCollectedAsString(files).forEach(test => console.log(test))
 }
 
-export function outputFileList(files: TestSpecification[], options: CliOptions) {
+export function outputFileList(files: TestSpecification[], options: CliOptions): void {
   if (typeof options.json !== 'undefined') {
     return outputJsonFileList(files, options)
   }
 
-  return formatFilesAsString(files, options).map(file => console.log(file))
+  formatFilesAsString(files, options).map(file => console.log(file))
 }
 
 function outputJsonFileList(files: TestSpecification[], options: CliOptions) {
@@ -251,12 +265,12 @@ export interface TestCollectJSONResult {
   location?: { line: number; column: number }
 }
 
-export function formatCollectedAsJSON(files: TestModule[]) {
+export function formatCollectedAsJSON(files: TestModule[]): TestCollectJSONResult[] {
   const results: TestCollectJSONResult[] = []
 
   files.forEach((file) => {
     for (const test of file.children.allTests()) {
-      if (test.skipped()) {
+      if (test.result().state === 'skipped') {
         continue
       }
       const result: TestCollectJSONResult = {
@@ -275,12 +289,12 @@ export function formatCollectedAsJSON(files: TestModule[]) {
   return results
 }
 
-export function formatCollectedAsString(testModules: TestModule[]) {
+export function formatCollectedAsString(testModules: TestModule[]): string[] {
   const results: string[] = []
 
   testModules.forEach((testModule) => {
     for (const test of testModule.children.allTests()) {
-      if (test.skipped()) {
+      if (test.result().state === 'skipped') {
         continue
       }
       const fullName = `${test.module.task.name} > ${test.fullName}`
@@ -309,7 +323,7 @@ function getEnvPackageName(env: VitestEnvironment) {
   if (env in envPackageNames) {
     return (envPackageNames as any)[env]
   }
-  if (env[0] === '.' || env[0] === '/') {
+  if (env[0] === '.' || isAbsolute(env)) {
     return null
   }
   return `vitest-environment-${env}`

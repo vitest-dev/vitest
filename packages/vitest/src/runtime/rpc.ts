@@ -22,10 +22,15 @@ function withSafeTimers(fn: () => void) {
   try {
     globalThis.setTimeout = setTimeout
     globalThis.clearTimeout = clearTimeout
-    globalThis.setImmediate = setImmediate
-    globalThis.clearImmediate = clearImmediate
 
-    if (globalThis.process) {
+    if (setImmediate) {
+      globalThis.setImmediate = setImmediate
+    }
+    if (clearImmediate) {
+      globalThis.clearImmediate = clearImmediate
+    }
+
+    if (globalThis.process && nextTick) {
       globalThis.process.nextTick = nextTick
     }
 
@@ -38,7 +43,7 @@ function withSafeTimers(fn: () => void) {
     globalThis.setImmediate = currentSetImmediate
     globalThis.clearImmediate = currentClearImmediate
 
-    if (globalThis.process) {
+    if (globalThis.process && nextTick) {
       nextTick(() => {
         globalThis.process.nextTick = currentNextTick
       })
@@ -48,7 +53,7 @@ function withSafeTimers(fn: () => void) {
 
 const promises = new Set<Promise<unknown>>()
 
-export async function rpcDone() {
+export async function rpcDone(): Promise<unknown[] | undefined> {
   if (!promises.size) {
     return
   }
@@ -61,7 +66,7 @@ export function createRuntimeRpc(
     BirpcOptions<RuntimeRPC>,
     'on' | 'post' | 'serialize' | 'deserialize'
   >,
-) {
+): { rpc: WorkerRPC; onCancel: Promise<CancelReason> } {
   let setCancel = (_reason: CancelReason) => {}
   const onCancel = new Promise<CancelReason>((resolve) => {
     setCancel = resolve
@@ -75,28 +80,10 @@ export function createRuntimeRpc(
       {
         eventNames: [
           'onUserConsoleLog',
-          'onFinished',
           'onCollected',
           'onCancel',
         ],
-        onTimeoutError(functionName, args) {
-          let message = `[vitest-worker]: Timeout calling "${functionName}"`
-
-          if (
-            functionName === 'fetch'
-            || functionName === 'transform'
-            || functionName === 'resolveId'
-          ) {
-            message += ` with "${JSON.stringify(args)}"`
-          }
-
-          // JSON.stringify cannot serialize Error instances
-          if (functionName === 'onUnhandledError') {
-            message += ` with "${args[0]?.message || args[0]}"`
-          }
-
-          throw new Error(message)
-        },
+        timeout: -1,
         ...options,
       },
     ),
@@ -108,9 +95,14 @@ export function createRuntimeRpc(
   }
 }
 
-export function createSafeRpc(rpc: WorkerRPC) {
+export function createSafeRpc(rpc: WorkerRPC): WorkerRPC {
   return new Proxy(rpc, {
     get(target, p, handler) {
+      // keep $rejectPendingCalls as sync function
+      if (p === '$rejectPendingCalls') {
+        return rpc.$rejectPendingCalls
+      }
+
       const sendCall = get(target, p, handler)
       const safeSendCall = (...args: any[]) =>
         withSafeTimers(async () => {

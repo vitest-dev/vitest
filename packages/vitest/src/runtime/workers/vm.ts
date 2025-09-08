@@ -1,12 +1,14 @@
 import type { Context } from 'node:vm'
 import type { WorkerGlobalState } from '../../types/worker'
 import { pathToFileURL } from 'node:url'
-import { isContext } from 'node:vm'
+import { isContext, runInContext } from 'node:vm'
 import { resolve } from 'pathe'
 import { distDir } from '../../paths'
 import { createCustomConsole } from '../console'
-import { getDefaultRequestStubs, startVitestExecutor } from '../execute'
 import { ExternalModulesExecutor } from '../external-executor'
+import { getDefaultRequestStubs } from '../moduleRunner/moduleEvaluator'
+import { createNodeImportMeta } from '../moduleRunner/moduleRunner'
+import { startVitestModuleRunner, VITEST_VM_CONTEXT_SYMBOL } from '../moduleRunner/startModuleRunner'
 import { provideWorkerState } from '../utils'
 import { FileMap } from '../vm/file-map'
 
@@ -15,7 +17,7 @@ const entryFile = pathToFileURL(resolve(distDir, 'workers/runVmTests.js')).href
 const fileMap = new FileMap()
 const packageCache = new Map<string, string>()
 
-export async function runVmTests(method: 'run' | 'collect', state: WorkerGlobalState) {
+export async function runVmTests(method: 'run' | 'collect', state: WorkerGlobalState): Promise<void> {
   const { environment, ctx, rpc } = state
 
   if (!environment.setupVM) {
@@ -74,17 +76,38 @@ export async function runVmTests(method: 'run' | 'collect', state: WorkerGlobalS
     viteClientModule: stubs['/@vite/client'],
   })
 
-  const executor = await startVitestExecutor({
+  const moduleRunner = startVitestModuleRunner({
     context,
-    moduleCache: state.moduleCache,
+    evaluatedModules: state.evaluatedModules,
     state,
     externalModulesExecutor,
-    requestStubs: stubs,
+    createImportMeta: createNodeImportMeta,
   })
 
-  context.__vitest_mocker__ = executor.mocker
+  Object.defineProperty(context, VITEST_VM_CONTEXT_SYMBOL, {
+    value: {
+      context,
+      externalModulesExecutor,
+    },
+    configurable: true,
+    enumerable: false,
+    writable: false,
+  })
+  context.__vitest_mocker__ = moduleRunner.mocker
 
-  const { run } = (await executor.importExternalModule(
+  if (ctx.config.serializedDefines) {
+    try {
+      runInContext(ctx.config.serializedDefines, context, {
+        filename: 'virtual:load-defines.js',
+      })
+    }
+    catch (error: any) {
+      throw new Error(`Failed to load custom "defines": ${error.message}`)
+    }
+  }
+  await moduleRunner.mocker.initializeSpyModule()
+
+  const { run } = (await moduleRunner.import(
     entryFile,
   )) as typeof import('../runVmTests')
   const fileSpecs = ctx.files.map(f =>
@@ -98,7 +121,7 @@ export async function runVmTests(method: 'run' | 'collect', state: WorkerGlobalS
       method,
       fileSpecs,
       ctx.config,
-      executor,
+      moduleRunner,
     )
   }
   finally {

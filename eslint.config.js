@@ -15,6 +15,7 @@ export default antfu(
       '**/*.d.ts',
       '**/*.timestamp-*',
       'test/core/src/self',
+      'test/core/test/mocking/already-hoisted.test.ts',
       'test/cache/cache/.vitest-base/results.json',
       'test/core/src/wasm/wasm-bindgen-no-cyclic',
       'test/workspaces/results.json',
@@ -23,6 +24,7 @@ export default antfu(
       'test/network-imports/public/slash@3.0.0.js',
       'test/coverage-test/src/transpiled.js',
       'test/coverage-test/src/original.ts',
+      'test/cli/deps/error/*',
       'examples/**/mockServiceWorker.js',
       'examples/sveltekit/.svelte-kit',
       'packages/browser/**/esm-client-injector.js',
@@ -30,6 +32,7 @@ export default antfu(
       'docs/guide/snapshot.md',
       // uses invalid js example
       'docs/advanced/api/import-example.md',
+      'docs/guide/examples/*.md',
     ],
   },
   {
@@ -110,6 +113,7 @@ export default antfu(
       'unused-imports/no-unused-imports': 'off',
       'ts/method-signature-style': 'off',
       'no-self-compare': 'off',
+      'import/no-mutable-exports': 'off',
     },
   },
   {

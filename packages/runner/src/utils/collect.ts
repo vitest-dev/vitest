@@ -1,5 +1,7 @@
+import type { ParsedStack } from '@vitest/utils'
 import type { File, Suite, TaskBase } from '../types/tasks'
 import { processError } from '@vitest/utils/error'
+import { parseSingleStack } from '@vitest/utils/source-map'
 import { relative } from 'pathe'
 
 /**
@@ -65,6 +67,9 @@ export function interpretTaskModes(
         if (t.mode === 'skip') {
           skipAllTasks(t)
         }
+        else if (t.mode === 'todo') {
+          todoAllTasks(t)
+        }
         else {
           traverseSuite(t, includeTask, hasLocationMatch)
         }
@@ -123,6 +128,16 @@ function skipAllTasks(suite: Suite) {
     }
   })
 }
+function todoAllTasks(suite: Suite) {
+  suite.tasks.forEach((t) => {
+    if (t.mode === 'run' || t.mode === 'queued') {
+      t.mode = 'todo'
+      if (t.type === 'suite') {
+        todoAllTasks(t)
+      }
+    }
+  })
+}
 
 function checkAllowOnly(task: TaskBase, allowOnly?: boolean) {
   if (allowOnly) {
@@ -139,6 +154,7 @@ function checkAllowOnly(task: TaskBase, allowOnly?: boolean) {
   }
 }
 
+/* @__NO_SIDE_EFFECTS__ */
 export function generateHash(str: string): string {
   let hash = 0
   if (str.length === 0) {
@@ -189,9 +205,21 @@ export function createFileTask(
  * @param file File relative to the root of the project to keep ID the same between different machines
  * @param projectName The name of the test project
  */
+/* @__NO_SIDE_EFFECTS__ */
 export function generateFileHash(
   file: string,
   projectName: string | undefined,
 ): string {
-  return generateHash(`${file}${projectName || ''}`)
+  return /* @__PURE__ */ generateHash(`${file}${projectName || ''}`)
+}
+
+export function findTestFileStackTrace(testFilePath: string, error: string): ParsedStack | undefined {
+  // first line is the error message
+  const lines = error.split('\n').slice(1)
+  for (const line of lines) {
+    const stack = parseSingleStack(line)
+    if (stack && stack.file === testFilePath) {
+      return stack
+    }
+  }
 }

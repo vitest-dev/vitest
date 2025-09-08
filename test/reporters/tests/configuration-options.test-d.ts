@@ -5,7 +5,6 @@ type NarrowToTestConfig<T> = T extends { test?: any } ? NonNullable<T['test']> :
 type Configuration = NonNullable<NarrowToTestConfig<(Parameters<typeof defineConfig>[0])>>
 
 test('reporters, single', () => {
-  assertType<Configuration>({ reporters: 'basic' })
   assertType<Configuration>({ reporters: 'default' })
   assertType<Configuration>({ reporters: 'dot' })
   assertType<Configuration>({ reporters: 'hanging-process' })
@@ -18,13 +17,12 @@ test('reporters, single', () => {
 
   assertType<Configuration>({ reporters: 'custom-reporter' })
   assertType<Configuration>({ reporters: './reporter.mjs' })
-  assertType<Configuration>({ reporters: { onFinished() {} } })
+  assertType<Configuration>({ reporters: { onTestRunEnd() {} } })
 })
 
 test('reporters, multiple', () => {
   assertType<Configuration>({
     reporters: [
-      'basic',
       'default',
       'dot',
       'hanging-process',
