@@ -18,6 +18,7 @@ export {
   stringify,
 } from '@vitest/utils/display'
 export { processError } from '@vitest/utils/error'
+export { getType } from '@vitest/utils/helpers'
 export {
   DecodedMap,
   getOriginalPosition,

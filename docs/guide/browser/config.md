@@ -455,14 +455,3 @@ For example, to store diffs in a subdirectory of attachments:
 resolveDiffPath: ({ arg, attachmentsDir, browserName, ext, root, testFileName }) =>
   `${root}/${attachmentsDir}/screenshot-diffs/${testFileName}/${arg}-${browserName}${ext}`
 ```
-
-::: tip
-To have a better type safety when using built-in providers, you should reference
-one of these types (for provider that you are using) in your
-[config file](/config/):
-
-```ts
-/// <reference types="@vitest/browser/providers/playwright" />
-/// <reference types="@vitest/browser/providers/webdriverio" />
-```
-:::

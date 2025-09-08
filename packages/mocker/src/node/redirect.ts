@@ -1,5 +1,5 @@
 import fs from 'node:fs'
-import { builtinModules } from 'node:module'
+import nodeModule from 'node:module'
 import { basename, dirname, extname, join, resolve } from 'pathe'
 
 const { existsSync, readdirSync, statSync } = fs
@@ -55,7 +55,7 @@ export function findMockRedirect(
 }
 
 const builtins = new Set([
-  ...builtinModules,
+  ...nodeModule.builtinModules,
   'assert/strict',
   'diagnostics_channel',
   'dns/promises',
@@ -80,6 +80,10 @@ const prefixedBuiltins = new Set([
 ])
 const NODE_BUILTIN_NAMESPACE = 'node:'
 function isNodeBuiltin(id: string): boolean {
+  // Added in v18.6.0
+  if (nodeModule.isBuiltin) {
+    return nodeModule.isBuiltin(id)
+  }
   if (prefixedBuiltins.has(id)) {
     return true
   }

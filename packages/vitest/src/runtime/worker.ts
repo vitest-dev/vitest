@@ -2,7 +2,6 @@ import type { ModuleRunner } from 'vite/module-runner'
 import type { ContextRPC, WorkerGlobalState } from '../types/worker'
 import type { VitestWorker } from './workers/types'
 import { createStackString, parseStacktrace } from '@vitest/utils/source-map'
-// import { workerId as poolId } from 'tinypool'
 import { EvaluatedModules } from 'vite/module-runner'
 import { loadEnvironment } from '../integrations/env/loader'
 import { setupInspect } from './inspector'
@@ -39,8 +38,8 @@ export async function execute(method: 'run' | 'collect', ctx: ContextRPC, worker
   const cleanups: (() => void | Promise<void>)[] = [setupInspect(ctx)]
 
   process.env.VITEST_WORKER_ID = String(ctx.workerId)
-  process.env.VITEST_POOL_ID = String('1')
-  // process.env.VITEST_POOL_ID = String(poolId)
+  const poolId = process.__tinypool_state__?.workerId
+  process.env.VITEST_POOL_ID = String(poolId)
 
   let environmentLoader: ModuleRunner | undefined
 

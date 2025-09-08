@@ -328,7 +328,7 @@ function handleImportOutsideModuleError(stack: string, logger: ErrorLogger) {
 
   const path = normalize(stack.split('\n')[0].trim())
   let name = path.split('/node_modules/').pop() || ''
-  if (name?.startsWith('@')) {
+  if (name[0] === '@') {
     name = name.split('/').slice(0, 2).join('/')
   }
   else {

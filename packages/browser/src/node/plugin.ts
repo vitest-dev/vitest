@@ -10,9 +10,15 @@ import { toArray } from '@vitest/utils/helpers'
 import MagicString from 'magic-string'
 import { basename, dirname, extname, resolve } from 'pathe'
 import sirv from 'sirv'
-import * as vite from 'vite'
 import { coverageConfigDefaults } from 'vitest/config'
-import { isFileServingAllowed, isValidApiRequest, resolveApiServerConfig, resolveFsAllow, distDir as vitestDist } from 'vitest/node'
+import {
+  isFileServingAllowed,
+  isValidApiRequest,
+  resolveApiServerConfig,
+  resolveFsAllow,
+  rolldownVersion,
+  distDir as vitestDist,
+} from 'vitest/node'
 import { distRoot } from './constants'
 import { createOrchestratorMiddleware } from './middlewares/orchestratorMiddleware'
 import { createTesterMiddleware } from './middlewares/testerMiddleware'
@@ -594,7 +600,7 @@ body {
         }
 
         return {
-          optimizeDeps: 'rolldownVersion' in vite
+          optimizeDeps: rolldownVersion
             ? { rollupOptions: { plugins: [rolldownPlugin] } }
             : { esbuildOptions: { plugins: [esbuildPlugin] } },
         }

@@ -1,9 +1,9 @@
 {
   "name": "@vitest/monorepo",
   "type": "module",
-  "version": "4.0.0-beta.9",
+  "version": "4.0.0-beta.10",
   "private": true,
-  "packageManager": "pnpm@10.15.0",
+  "packageManager": "pnpm@10.15.1",
   "description": "Next generation testing framework powered by Vite",
   "engines": {
     "node": "^18.0.0 || >=20.0.0"
@@ -43,7 +43,7 @@
     "@rollup/plugin-commonjs": "^28.0.6",
     "@rollup/plugin-json": "^6.1.0",
     "@rollup/plugin-node-resolve": "^16.0.1",
-    "@types/node": "^22.18.0",
+    "@types/node": "^22.18.1",
     "@types/ws": "catalog:",
     "@vitest/browser": "workspace:*",
     "@vitest/coverage-istanbul": "workspace:*",
@@ -53,10 +53,10 @@
     "changelogithub": "^13.16.0",
     "esbuild": "^0.25.9",
     "eslint": "^9.34.0",
-    "magic-string": "^0.30.18",
+    "magic-string": "^0.30.19",
     "pathe": "^2.0.3",
     "rimraf": "^6.0.1",
-    "rollup": "^4.49.0",
+    "rollup": "^4.50.1",
     "rollup-plugin-dts": "^6.2.3",
     "rollup-plugin-license": "^3.6.0",
     "tinyglobby": "catalog:",

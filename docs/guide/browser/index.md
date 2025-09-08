@@ -241,6 +241,7 @@ If you need to run some tests using Node-based runner, you can define a [`projec
 
 ```ts [vitest.config.ts]
 import { defineConfig } from 'vitest/config'
+import { playwright } from '@vitest/browser/providers/playwright'
 
 export default defineConfig({
   test: {
@@ -268,6 +269,7 @@ export default defineConfig({
           name: 'browser',
           browser: {
             enabled: true,
+            provider: playwright(),
             instances: [
               { browser: 'chromium' },
             ],
@@ -292,48 +294,6 @@ The browser option in Vitest depends on the provider. Vitest will fail, if you p
   - `firefox`
   - `webkit`
   - `chromium`
-
-## TypeScript
-
-By default, TypeScript doesn't recognize providers options and extra `expect` properties. If you don't use any providers, make sure the `@vitest/browser/matchers` is referenced somewhere in your tests, [setup file](/config/#setupfiles) or a [config file](/config/) to pick up the extra `expect` definitions. If you are using custom providers, make sure to add `@vitest/browser/providers/playwright` or `@vitest/browser/providers/webdriverio` to the same file so TypeScript can pick up definitions for custom options:
-
-::: code-group
-```ts [default]
-/// <reference types="@vitest/browser/matchers" />
-```
-```ts [playwright]
-/// <reference types="@vitest/browser/providers/playwright" />
-```
-```ts [webdriverio]
-/// <reference types="@vitest/browser/providers/webdriverio" />
-```
-:::
-
-Alternatively, you can also add them to `compilerOptions.types` field in your `tsconfig.json` file. Note that specifying anything in this field will disable [auto loading](https://www.typescriptlang.org/tsconfig/#types) of `@types/*` packages.
-
-::: code-group
-```json [default]
-{
-  "compilerOptions": {
-    "types": ["@vitest/browser/matchers"]
-  }
-}
-```
-```json [playwright]
-{
-  "compilerOptions": {
-    "types": ["@vitest/browser/providers/playwright"]
-  }
-}
-```
-```json [webdriverio]
-{
-  "compilerOptions": {
-    "types": ["@vitest/browser/providers/webdriverio"]
-  }
-}
-```
-:::
 
 ## Browser Compatibility
 
