@@ -1,3 +1,4 @@
+import type { StandardSchemaV1 } from '@standard-schema/spec'
 import type { Tester } from '@vitest/expect'
 import { getCurrentTest } from '@vitest/runner'
 import { Temporal } from 'temporal-polyfill'
@@ -474,6 +475,182 @@ describe('expect with custom message', () => {
 
     test('undefined custom message falls back to default matcher message', () => {
       expect(() => expect(1, undefined as any).toBe(2)).toThrow('expected 1 to be 2 // Object.is equality')
+    })
+  })
+})
+
+describe('Standard Schema', () => {
+  function createMockSchema(validate: StandardSchemaV1['~standard']['validate']): StandardSchemaV1 {
+    return {
+      '~standard': {
+        version: 1,
+        vendor: 'mock',
+        validate,
+      },
+    }
+  }
+
+  function createAsyncMockSchema(validate: StandardSchemaV1['~standard']['validate']): StandardSchemaV1 {
+    return {
+      '~standard': {
+        version: 1,
+        vendor: 'mock-async',
+        validate: value => Promise.resolve(validate(value)),
+      },
+    }
+  }
+
+  const stringSchema = createMockSchema(value =>
+    typeof value === 'string' ? { issues: undefined, value } : { issues: [{ message: 'Expected string' }] },
+  )
+  const numberSchema = createMockSchema(value =>
+    typeof value === 'number' ? { issues: undefined, value } : { issues: [{ message: 'Expected number' }] },
+  )
+
+  const objectSchema = createMockSchema(value =>
+    typeof value === 'object' && value !== null && 'name' in value && 'age' in value && typeof value.name === 'string' && typeof value.age === 'number' ? { issues: undefined, value } : { issues: [{ message: 'Expected object' }] },
+  )
+
+  const asyncStringSchema = createAsyncMockSchema(value =>
+    typeof value === 'string' ? { issues: undefined, value } : { issues: [{ message: 'Expected string' }] },
+  )
+
+  describe('toEqual(schema)', () => {
+    test('should validate data against schema', () => {
+      expect('hello').toEqual(stringSchema)
+      expect('42').toEqual(numberSchema)
+
+      expect({
+        name: 'John',
+        age: 30,
+      }).toEqual({
+        name: stringSchema,
+        age: numberSchema,
+      })
+      expect({
+        name: 'John',
+        age: 30,
+      }).toEqual(objectSchema)
+
+      expect(() => expect(123).toEqual(stringSchema)).toThrow()
+    })
+
+    test('should validate data against schema in asymmetric matchers', () => {
+      expect({
+        name: 'John',
+        age: '30',
+      }).toEqual(expect.objectContaining({
+        age: numberSchema,
+      }))
+      expect([{
+        name: 'John',
+        age: 30,
+      }]).toEqual(expect.arrayContaining([objectSchema]))
+    })
+
+    test('should work with negation', () => {
+      expect(123).not.toEqual(stringSchema)
+      expect(() => expect('hello').not.toEqual(stringSchema)).toThrow()
+    })
+
+    test('should throw error for async schemas', () => {
+      expect(() => expect('hello').toEqual(asyncStringSchema)).toThrow('Async schema validation is not supported')
+    })
+  })
+
+  describe('toEqualSchema(schema)', () => {
+    test('should validate data against schema', () => {
+      expect('hello').toEqualSchema(stringSchema)
+      expect('42').toEqualSchema(numberSchema)
+
+      expect(() => expect(123).toEqualSchema(stringSchema)).toThrow()
+      expect(() => expect('hello').toEqualSchema(numberSchema)).toThrow()
+    })
+
+    test('should validate data against schema in asymmetric matchers', () => {
+      expect({
+        name: 'John',
+        age: '30',
+      }).toEqual(expect.objectContaining({
+        age: expect.toEqualSchema(numberSchema),
+      }))
+      expect([{
+        name: 'John',
+        age: 30,
+      }]).toEqual(expect.arrayContaining([expect.toEqualSchema(objectSchema)]))
+    })
+
+    test('should work with negation', () => {
+      expect(123).not.toEqualSchema(stringSchema)
+      expect('hello').not.toEqualSchema(numberSchema)
+
+      expect(() => expect('hello').not.toEqualSchema(stringSchema)).toThrow()
+    })
+
+    test('should throw error for async schemas', () => {
+      expect(() => expect('hello').toEqual(asyncStringSchema)).toThrow('Async schema validation is not supported')
+    })
+
+    test('should throw error for non-schema argument', () => {
+      expect(() => expect('hello').toEqualSchema('not-a-schema')).toThrow()
+    })
+  })
+
+  describe('schemaMatching()', () => {
+    test('should validate data against schema', () => {
+      expect('hello').toEqual(expect.schemaMatching(stringSchema))
+      expect('42').toEqual(expect.schemaMatching(numberSchema))
+
+      expect(() => expect(123).toEqual(expect.schemaMatching(stringSchema))).toThrow()
+      expect(() => expect('hello').toEqual(expect.schemaMatching(numberSchema))).toThrow()
+    })
+
+    test('should work with objectContaining', () => {
+      expect({
+        name: 'John',
+        age: '30',
+      }).toEqual(expect.objectContaining({
+        age: expect.schemaMatching(numberSchema),
+      }))
+    })
+
+    test('should work with arrayContaining', () => {
+      expect([{
+        name: 'John',
+        age: 30,
+      }]).toEqual(expect.arrayContaining([expect.schemaMatching(objectSchema)]))
+    })
+
+    test('should work with negation', () => {
+      expect(123).not.toEqual(expect.schemaMatching(stringSchema))
+      expect('hello').not.toEqual(expect.schemaMatching(numberSchema))
+
+      expect(() => expect('hello').not.toEqual(expect.schemaMatching(stringSchema))).toThrow()
+    })
+
+    test('should throw error for async schemas', () => {
+      expect(() => expect('hello').toEqual(expect.schemaMatching(asyncStringSchema))).toThrow('Async schema validation is not supported')
+    })
+
+    test('should throw error for non-schema argument', () => {
+      expect(() => expect.schemaMatching('not-a-schema')).toThrow('SchemaMatching expected to receive a Standard Schema')
+    })
+
+    test('should work with toMatchObject', () => {
+      const data = {
+        user: {
+          name: 'John',
+          age: 30,
+        },
+        extra: 'data',
+      }
+
+      expect(data).toMatchObject({
+        user: {
+          name: expect.schemaMatching(stringSchema),
+          age: expect.schemaMatching(numberSchema),
+        },
+      })
     })
   })
 })

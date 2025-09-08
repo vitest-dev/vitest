@@ -22,6 +22,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 */
 
+import type { StandardSchemaV1 } from '@standard-schema/spec'
 import type { Tester, TesterContext } from './types'
 import { isObject } from '@vitest/utils'
 
@@ -797,4 +798,45 @@ export function getObjectSubset(
       }
 
   return { subset: getObjectSubsetWithContext()(object, subset), stripped }
+}
+
+/**
+ * Detects if an object is a Standard Schema V1 compatible schema
+ */
+export function isStandardSchema(obj: any): obj is StandardSchemaV1 {
+  return (
+    !!obj
+    && typeof obj === 'object'
+    && obj['~standard']
+    && typeof obj['~standard'].validate === 'function'
+  )
+}
+
+/**
+ * Custom equality tester for Standard Schema validation
+ */
+export function schemaEqualityTester(a: any, b: any): boolean | undefined {
+  const aIsSchema = isStandardSchema(a)
+  const bIsSchema = isStandardSchema(b)
+
+  const validate = (schema: StandardSchemaV1, data: unknown) => {
+    const result = schema['~standard'].validate(data)
+    // Check if the result is a Promise (async validation)
+    if (result instanceof Promise) { throw new TypeError('Async schema validation is not supported') }
+
+    const pass = !result.issues || result.issues.length === 0
+
+    return pass
+  }
+
+  if (aIsSchema && !bIsSchema) {
+    return validate(a, b)
+  }
+
+  if (bIsSchema && !aIsSchema) {
+    return validate(b, a)
+  }
+
+  // Neither is a schema, let default equality handle it
+  return undefined
 }
