@@ -512,6 +512,10 @@ export class TestProject {
           this.clearTmpDir(),
         ].filter(Boolean),
       ).then(() => {
+        if (!this.runner.isClosed()) {
+          return this.runner.close()
+        }
+      }).then(() => {
         this._provided = {} as any
         this._vite = undefined
       })

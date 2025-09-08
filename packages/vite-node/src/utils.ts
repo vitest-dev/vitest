@@ -1,6 +1,6 @@
 import type { Arrayable, Nullable } from './types'
 import { existsSync, promises as fsp } from 'node:fs'
-import { builtinModules } from 'node:module'
+import nodeModule from 'node:module'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { dirname, join, resolve } from 'pathe'
 
@@ -93,7 +93,7 @@ const prefixedBuiltins = new Set([
 ])
 
 const builtins = new Set([
-  ...builtinModules,
+  ...nodeModule.builtinModules,
   'assert/strict',
   'diagnostics_channel',
   'dns/promises',
@@ -137,7 +137,7 @@ export function toFilePath(
       return { absolute: id.slice(4), exists: true }
     }
     // check if /src/module.js -> <root>/src/module.js
-    if (!id.startsWith(withTrailingSlash(root)) && id.startsWith('/')) {
+    if (!id.startsWith(withTrailingSlash(root)) && id[0] === '/') {
       const resolved = resolve(root, id.slice(1))
       if (existsSync(cleanUrl(resolved))) {
         return { absolute: resolved, exists: true }
@@ -159,7 +159,7 @@ export function toFilePath(
   // disambiguate the `<UNIT>:/` on windows: see nodejs/node#31710
   return {
     path:
-      isWindows && absolute.startsWith('/')
+      isWindows && absolute[0] === '/'
         ? slash(fileURLToPath(pathToFileURL(absolute.slice(1)).href))
         : absolute,
     exists,
@@ -168,6 +168,10 @@ export function toFilePath(
 
 const NODE_BUILTIN_NAMESPACE = 'node:'
 export function isNodeBuiltin(id: string): boolean {
+  // Added in v18.6.0
+  if (nodeModule.isBuiltin) {
+    return nodeModule.isBuiltin(id)
+  }
   if (prefixedBuiltins.has(id)) {
     return true
   }

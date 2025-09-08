@@ -366,7 +366,7 @@ function getUsedProps(fn: Function) {
     }
   }
 
-  if (!(first.startsWith('{') && first.endsWith('}'))) {
+  if (!(first[0] === '{' && first.endsWith('}'))) {
     throw new Error(
       `The first argument inside a fixture must use object destructuring pattern, e.g. ({ test } => {}). Instead, received "${first}".`,
     )

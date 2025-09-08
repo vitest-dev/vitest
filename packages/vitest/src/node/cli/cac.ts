@@ -205,7 +205,7 @@ function removeQuotes<T>(str: T): T {
     }
     return str
   }
-  if (str.startsWith('"') && str.endsWith('"')) {
+  if (str[0] === '"' && str.endsWith('"')) {
     return str.slice(1, -1) as unknown as T
   }
   if (str.startsWith(`'`) && str.endsWith(`'`)) {
