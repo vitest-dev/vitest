@@ -67,7 +67,7 @@ export async function getRawErrsMapFromTsCompile(tscErrorStdout: string): Promis
         if (!next) {
           return prev
         }
-        else if (!next.startsWith(' ')) {
+        else if (next[0] !== ' ') {
           prev.push(next)
         }
         else {

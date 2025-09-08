@@ -12,7 +12,7 @@ import { vi } from 'vitest'
 
 ## Mock Modules
 
-This section describes the API that you can use when [mocking a module](/guide/mocking#modules). Beware that Vitest doesn't support mocking modules imported using `require()`.
+This section describes the API that you can use when [mocking a module](/guide/mocking/modules). Beware that Vitest doesn't support mocking modules imported using `require()`.
 
 ### vi.mock
 
@@ -171,7 +171,7 @@ axios.get(`/apples/${increment(1)}`)
 Beware that if you don't call `vi.mock`, modules **are not** mocked automatically. To replicate Jest's automocking behaviour, you can call `vi.mock` for each required module inside [`setupFiles`](/config/#setupfiles).
 :::
 
-If there is no `__mocks__` folder or a factory provided, Vitest will import the original module and auto-mock all its exports. For the rules applied, see [algorithm](/guide/mocking#automocking-algorithm).
+If there is no `__mocks__` folder or a factory provided, Vitest will import the original module and auto-mock all its exports. For the rules applied, see [algorithm](/guide/mocking/modules#automocking-algorithm).
 
 ### vi.doMock
 
@@ -295,7 +295,7 @@ vi.mock('./example.js', async () => {
 function importMock<T>(path: string): Promise<MaybeMockedDeep<T>>
 ```
 
-Imports a module with all of its properties (including nested properties) mocked. Follows the same rules that [`vi.mock`](#vi-mock) does. For the rules applied, see [algorithm](/guide/mocking#automocking-algorithm).
+Imports a module with all of its properties (including nested properties) mocked. Follows the same rules that [`vi.mock`](#vi-mock) does. For the rules applied, see [algorithm](/guide/mocking/modules#automocking-algorithm).
 
 ### vi.unmock
 
@@ -420,8 +420,8 @@ This section describes how to work with [method mocks](/api/mock) and replace en
 function fn(fn?: Procedure | Constructable): Mock
 ```
 
-Creates a spy on a function, though can be initiated without one. Every time a function is invoked, it stores its call arguments, returns, and instances. Also, you can manipulate its behavior with [methods](/api/mock).
-If no function is given, mock will return `undefined`, when invoked.
+Creates a spy on a function, but can also be initiated without one. Every time a function is invoked, it stores its call arguments, returns, and instances. Additionally, you can manipulate its behavior with [methods](/api/mock).
+If no function is given, mock will return `undefined` when invoked.
 
 ```ts
 const getApples = vi.fn(() => 0)
@@ -524,7 +524,7 @@ This restores all original implementations on spies created with [`vi.spyOn`](#v
 After the mock was restored, you can spy on it again.
 
 ::: warning
-This method also does not affect mocks created during [automocking](/guide/mocking-modules#mocking-a-module).
+This method also does not affect mocks created during [automocking](/guide/mocking/modules#mocking-a-module).
 
 Note that unlike [`mock.mockRestore`](/api/mock#mockrestore), `vi.restoreAllMocks` will not clear mock history or reset the mock implementation
 :::
@@ -768,7 +768,7 @@ IntersectionObserver === undefined
 
 ## Fake Timers
 
-This sections describes how to work with [fake timers](/guide/mocking#timers).
+This sections describes how to work with [fake timers](/guide/mocking/timers).
 
 ### vi.advanceTimersByTime
 

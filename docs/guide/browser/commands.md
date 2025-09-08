@@ -148,14 +148,6 @@ export const myCommand: BrowserCommand<[string, number]> = async (
 }
 ```
 
-::: tip
-If you are using TypeScript, don't forget to reference `@vitest/browser/providers/playwright` in your [setup file](/config/#setupfile) or a [config file](/config/) to get autocompletion in the config and in `userEvent` and `page` options:
-
-```ts
-/// <reference types="@vitest/browser/providers/playwright" />
-```
-:::
-
 ### Custom `webdriverio` commands
 
 Vitest exposes some `webdriverio` specific properties on the context object.
@@ -163,11 +155,3 @@ Vitest exposes some `webdriverio` specific properties on the context object.
 - `browser` is the `WebdriverIO.Browser` API.
 
 Vitest automatically switches the `webdriver` context to the test iframe by calling `browser.switchFrame` before the command is called, so `$` and `$$` methods refer to the elements inside the iframe, not in the orchestrator, but non-webdriver APIs will still refer to the parent frame context.
-
-::: tip
-If you are using TypeScript, don't forget to reference `@vitest/browser/providers/webdriverio` in your [setup file](/config/#setupfile) or a [config file](/config/) to get autocompletion:
-
-```ts
-/// <reference types="@vitest/browser/providers/webdriverio" />
-```
-:::
