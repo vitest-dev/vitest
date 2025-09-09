@@ -866,11 +866,26 @@ function formatTitle(template: string, items: any[], idx: number) {
   }
 
   const isObjectItem = isObject(items[0])
+  function formatAttribute(s: string) {
+    return s.replace(/\$([$\w.]+)/g, (_, key: string) => {
+      const isArrayKey = /^\d+$/.test(key)
+      if (!isObjectItem && !isArrayKey) {
+        return `$${key}`
+      }
+      const arrayElement = isArrayKey ? objectAttr(items, key) : undefined
+      const value = isObjectItem ? objectAttr(items[0], key, arrayElement) : arrayElement
+      return objDisplay(value, {
+        truncate: runner?.config?.chaiConfig?.truncateThreshold,
+      })
+    })
+  }
+
   let output = ''
   let i = 0
   handleRegexMatch(
     template,
     formatRegExp,
+    // format "%"
     (match) => {
       if (i < count) {
         output += format(match[0], items[i++])
@@ -879,20 +894,9 @@ function formatTitle(template: string, items: any[], idx: number) {
         output += match[0]
       }
     },
+    // format "$"
     (nonMatch) => {
-      output += nonMatch.replace(/\$([$\w.]+)/g, (_, key: string) => {
-        const isArrayKey = /^\d+$/.test(key)
-        if (!isObjectItem && !isArrayKey) {
-          return `$${key}`
-        }
-        const arrayElement = isArrayKey ? objectAttr(items, key) : undefined
-        const value = isObjectItem
-          ? objectAttr(items[0], key, arrayElement)
-          : arrayElement
-        return objDisplay(value, {
-          truncate: runner?.config?.chaiConfig?.truncateThreshold,
-        })
-      })
+      output += formatAttribute(nonMatch)
     },
   )
   return output
