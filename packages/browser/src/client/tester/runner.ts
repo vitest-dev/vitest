@@ -4,11 +4,11 @@ import type { VitestBrowserClientMocker } from './mocker'
 import { globalChannel, onCancel } from '@vitest/browser/client'
 import { page, userEvent } from '@vitest/browser/context'
 import {
+  DecodedMap,
+  getOriginalPosition,
   loadDiffConfig,
   loadSnapshotSerializers,
-  originalPositionFor,
   takeCoverageInsideWorker,
-  TraceMap,
 } from 'vitest/internal/browser'
 import { NodeBenchmarkRunner, VitestTestRunner } from 'vitest/runners'
 import { createStackString, parseStacktrace } from '../../../../utils/src/source-map'
@@ -154,20 +154,11 @@ export function createBrowserRunner(
           return rpc().onTaskAnnotate(test.id, annotation)
         }
 
-        const traceMap = new TraceMap(map as any)
-        const { line, column, source } = originalPositionFor(traceMap, annotation.location)
-        if (line != null && column != null && source != null) {
-          let file: string = annotation.location.file
-          if (source) {
-            const fileUrl = annotation.location.file.startsWith('file://')
-              ? annotation.location.file
-              : `file://${annotation.location.file}`
-            const sourceRootUrl = map.sourceRoot
-              ? new URL(map.sourceRoot, fileUrl)
-              : fileUrl
-            file = new URL(source, sourceRootUrl).pathname
-          }
-
+        const traceMap = new DecodedMap(map as any, annotation.location.file)
+        const position = getOriginalPosition(traceMap, annotation.location)
+        if (position) {
+          const { source, column, line } = position
+          const file = source || annotation.location.file
           annotation.location = {
             line,
             column: column + 1,
@@ -261,7 +252,7 @@ async function getTraceMap(file: string, sourceMaps: Map<string, any>) {
   if (!result) {
     return null
   }
-  return new TraceMap(result as any)
+  return new DecodedMap(result as any, file)
 }
 
 async function updateTestFilesLocations(files: File[], sourceMaps: Map<string, any>) {
@@ -272,8 +263,9 @@ async function updateTestFilesLocations(files: File[], sourceMaps: Map<string, a
     }
     const updateLocation = (task: Task) => {
       if (task.location) {
-        const { line, column } = originalPositionFor(traceMap, task.location)
-        if (line != null && column != null) {
+        const position = getOriginalPosition(traceMap, task.location)
+        if (position) {
+          const { line, column } = position
           task.location = { line, column: task.each ? column : column + 1 }
         }
       }

@@ -53,7 +53,7 @@ Error: thrown error
 
 ### verbose
 
-In a TTY terminal, the `verbose` reporter works similarly to the `default` reporter. However, in a non-TTY environment, the `verbose` reporter will also print annotations after every test.
+The `verbose` reporter is the only terminal reporter that reports annotations when the test doesn't fail.
 
 ```
 ✓ example.test.js > an example of a test with annotation
