@@ -3,7 +3,7 @@ import type {
   UserConfig as ViteUserConfig,
 } from 'vite'
 import type { ResolvedConfig, UserConfig } from '../types/config'
-import { deepClone, slash } from '@vitest/utils'
+import { deepClone, slash } from '@vitest/utils/helpers'
 import { findUp } from 'find-up'
 import { resolve } from 'pathe'
 import { mergeConfig, resolveConfig as resolveViteConfig } from 'vite'

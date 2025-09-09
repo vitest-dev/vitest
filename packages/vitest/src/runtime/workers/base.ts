@@ -37,8 +37,6 @@ export async function runBaseTests(method: 'run' | 'collect', state: WorkerGloba
       modules.forEach((module) => {
         state.evaluatedModules.invalidateModule(module)
       })
-      // evaluatedModules.delete(fsPath)
-      // evaluatedModules.delete(`mock:${fsPath}`)
     })
   }
   ctx.files.forEach((i) => {
@@ -60,6 +58,7 @@ export async function runBaseTests(method: 'run' | 'collect', state: WorkerGloba
       ? { filepath: f, testLocations: undefined }
       : f,
   )
+  // we could load @vite/env, but it would take ~8ms, while this takes ~0,02ms
   if (ctx.config.serializedDefines) {
     try {
       runInThisContext(`(() =>{\n${ctx.config.serializedDefines}})()`, {

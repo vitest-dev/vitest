@@ -5,7 +5,7 @@ import type { VitestResolver } from '../resolver'
 import { mkdirSync } from 'node:fs'
 import { rename, stat, unlink, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
-import { isExternalUrl, nanoid, unwrapId } from '@vitest/utils'
+import { isExternalUrl, nanoid, unwrapId } from '@vitest/utils/helpers'
 import { dirname, join } from 'pathe'
 import { fetchModule } from 'vite'
 import { hash } from '../hash'
@@ -169,7 +169,7 @@ function inlineSourceMap(result: TransformResult) {
 
   // If the first line is not present on source maps, add simple 1:1 mapping ([0,0,0,0], [1,0,0,0])
   // so that debuggers can be set to break on first line
-  if (sourceMap.mappings.startsWith(';')) {
+  if (sourceMap.mappings[0] === ';') {
     sourceMap.mappings = `AAAA,CAAA${sourceMap.mappings}`
   }
 

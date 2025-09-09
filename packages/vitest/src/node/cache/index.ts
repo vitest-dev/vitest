@@ -1,5 +1,5 @@
 import type { SuiteResultCache } from './results'
-import { slash } from '@vitest/utils'
+import { slash } from '@vitest/utils/helpers'
 import { resolve } from 'pathe'
 import { hash } from '../hash'
 import { FilesStatsCache } from './files'

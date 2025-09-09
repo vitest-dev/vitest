@@ -10,7 +10,7 @@ import type { SnapshotData, SnapshotStateOptions } from '../types'
 import type { SnapshotEnvironment } from '../types/environment'
 import { format as prettyFormat } from '@vitest/pretty-format'
 import naturalCompare from 'natural-compare'
-import { isObject } from '../../../utils/src/index'
+import { isObject } from '../../../utils/src/helpers'
 import { getSerializers } from './plugins'
 
 // TODO: rewrite and clean up
@@ -72,7 +72,7 @@ export function addExtraLineBreaks(string: string): string {
 // Instead of trim, which can remove additional newlines or spaces
 // at beginning or end of the content from a custom serializer.
 export function removeExtraLineBreaks(string: string): string {
-  return string.length > 2 && string.startsWith('\n') && string.endsWith('\n')
+  return string.length > 2 && string[0] === '\n' && string.endsWith('\n')
     ? string.slice(1, -1)
     : string
 }

@@ -10,7 +10,7 @@ import type {
 import type { BaseCoverageOptions, CoverageReporterWithOptions } from '../types/coverage'
 import type { BuiltinPool, ForksOptions, PoolOptions, ThreadsOptions } from '../types/pool-options'
 import crypto from 'node:crypto'
-import { slash, toArray } from '@vitest/utils'
+import { slash, toArray } from '@vitest/utils/helpers'
 import { resolveModule } from 'local-pkg'
 import { normalize, relative, resolve } from 'pathe'
 import c from 'tinyrainbow'
@@ -364,7 +364,7 @@ export function resolveConfig(
 
   resolved.deps.moduleDirectories = resolved.deps.moduleDirectories.map(
     (dir) => {
-      if (!dir.startsWith('/')) {
+      if (dir[0] !== '/') {
         dir = `/${dir}`
       }
       if (!dir.endsWith('/')) {

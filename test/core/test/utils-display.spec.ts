@@ -1,5 +1,5 @@
 import util from 'node:util'
-import { format } from '@vitest/utils'
+import { format } from '@vitest/utils/display'
 import { describe, expect, test } from 'vitest'
 
 describe('format', () => {

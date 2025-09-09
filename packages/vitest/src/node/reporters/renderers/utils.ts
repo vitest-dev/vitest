@@ -3,7 +3,7 @@ import type { SnapshotSummary } from '@vitest/snapshot'
 import type { Formatter } from 'tinyrainbow'
 import type { TestProject } from '../../project'
 import { stripVTControlCharacters } from 'node:util'
-import { slash } from '@vitest/utils'
+import { slash } from '@vitest/utils/helpers'
 import { basename, dirname, isAbsolute, relative } from 'pathe'
 import c from 'tinyrainbow'
 import {
@@ -23,6 +23,7 @@ export const testPass: string = c.green(F_CHECK)
 export const taskFail: string = c.red(F_CROSS)
 export const suiteFail: string = c.red(F_POINTER)
 export const pending: string = c.gray('·')
+export const separator: string = c.dim(' > ')
 
 const labelDefaultColors = [c.bgYellow, c.bgCyan, c.bgGreen, c.bgMagenta] as const
 

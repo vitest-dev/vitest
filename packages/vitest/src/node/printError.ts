@@ -7,7 +7,8 @@ import { Console } from 'node:console'
 import { existsSync, readFileSync } from 'node:fs'
 import { Writable } from 'node:stream'
 import { stripVTControlCharacters } from 'node:util'
-import { inspect, isPrimitive } from '@vitest/utils'
+import { inspect } from '@vitest/utils/display'
+import { isPrimitive } from '@vitest/utils/helpers'
 import { normalize, relative } from 'pathe'
 import c from 'tinyrainbow'
 import { TypeCheckError } from '../typecheck/typechecker'
@@ -327,7 +328,7 @@ function handleImportOutsideModuleError(stack: string, logger: ErrorLogger) {
 
   const path = normalize(stack.split('\n')[0].trim())
   let name = path.split('/node_modules/').pop() || ''
-  if (name?.startsWith('@')) {
+  if (name[0] === '@') {
     name = name.split('/').slice(0, 2).join('/')
   }
   else {

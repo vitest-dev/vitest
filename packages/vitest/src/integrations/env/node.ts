@@ -11,7 +11,7 @@ const denyList = new Set([
   'Uint8Array',
 ])
 
-const nodeGlobals = new Map()
+const nodeGlobals = new Map<string, PropertyDescriptor>()
 
 function populateNodeGlobals() {
   if (nodeGlobals.size !== 0) {
