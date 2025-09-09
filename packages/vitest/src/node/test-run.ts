@@ -17,8 +17,8 @@ import type { TestRunEndReason } from './types/reporter'
 import assert from 'node:assert'
 import { createHash } from 'node:crypto'
 import { copyFile, mkdir } from 'node:fs/promises'
-import { isPrimitive } from '@vitest/utils'
-import { serializeError } from '@vitest/utils/error'
+import { isPrimitive } from '@vitest/utils/helpers'
+import { serializeValue } from '@vitest/utils/serialize'
 import { parseErrorStacktrace } from '@vitest/utils/source-map'
 import mime from 'mime/lite'
 import { basename, dirname, extname, resolve } from 'pathe'
@@ -75,7 +75,7 @@ export class TestRun {
 
     for (const [id, event, data] of events) {
       await this.reportEvent(id, event, data).catch((error) => {
-        this.vitest.state.catchError(serializeError(error), 'Unhandled Reporter Error')
+        this.vitest.state.catchError(serializeValue(error), 'Unhandled Reporter Error')
       })
     }
 

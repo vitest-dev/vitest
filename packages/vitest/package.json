@@ -56,10 +56,6 @@
       "types": "./dist/node.d.ts",
       "default": "./dist/node.js"
     },
-    "./workers": {
-      "types": "./dist/workers.d.ts",
-      "import": "./dist/workers.js"
-    },
     "./internal/browser": {
       "types": "./dist/browser.d.ts",
       "default": "./dist/browser.js"
@@ -181,13 +177,14 @@
   "devDependencies": {
     "@antfu/install-pkg": "^1.1.0",
     "@edge-runtime/vm": "^5.0.0",
+    "@jridgewell/trace-mapping": "catalog:",
     "@sinonjs/fake-timers": "14.0.0",
     "@types/debug": "catalog:",
     "@types/estree": "catalog:",
     "@types/istanbul-lib-coverage": "catalog:",
     "@types/istanbul-reports": "catalog:",
     "@types/jsdom": "^21.1.7",
-    "@types/node": "^22.18.0",
+    "@types/node": "^22.18.1",
     "@types/picomatch": "^4.0.2",
     "@types/prompts": "^2.4.9",
     "@types/sinonjs__fake-timers": "^8.1.5",

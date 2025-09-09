@@ -16,7 +16,6 @@ export type TestExecutionMethod = 'run' | 'collect'
 
 export interface ContextRPC {
   pool: string
-  worker: string
   workerId: number
   config: SerializedConfig
   projectName: string
