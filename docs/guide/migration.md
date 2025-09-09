@@ -260,6 +260,39 @@ export default defineConfig({
 
 The naming of properties in `playwright` factory now also aligns with [Playwright documentation](https://playwright.dev/docs/api/class-testoptions#test-options-launch-options) making it easier to find.
 
+### Snapshots using custom elements print the shadow root
+
+In Vitest 4.0 snapshots that include custom elements will print the shadow root contents. To restore the previous behavior, set the [`printShadowRoot` option](/config/#snapshotformat) to `false`.
+
+```js
+// before Vite 4.0
+exports[`custom element with shadow root 1`] = `
+"<body>
+  <div>
+    <custom-element />
+  </div>
+</body>"
+`
+
+// after Vite 4.0
+exports[`custom element with shadow root 1`] = `
+"<body>
+  <div>
+    <custom-element>
+      #shadow-root
+        <span
+          class="some-name"
+          data-test-id="33"
+          id="5"
+        >
+          hello
+        </span>
+    </custom-element>
+  </div>
+</body>"
+`
+```
+
 ### Deprecated APIs are Removed
 
 Vitest 4.0 removes some deprecated APIs, including:
