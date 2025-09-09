@@ -258,10 +258,10 @@ describe('default reporter', async () => {
          ✓ not array: 0 = { k: 'v2' }, 1 = undefined, k = 'v2' [...]ms
          ✓ handles whole numbers: 343434 as $343,434.00 [...]ms
          ✓ { a: '$b', b: 'yay' } [...]ms
-         ✓ '%j' [...]ms
-         ✓ { a: '%j' } [...]ms
-         ✓ '%j' { a: '%j' } [...]ms
-         ✓ { a: '%j' } '%j' [...]ms"
+         ✓ '%o' [...]ms
+         ✓ { a: '%o' } [...]ms
+         ✓ '%o' { a: '%o' } [...]ms
+         ✓ { a: '%o' } '%o' [...]ms"
     `)
   })
 
