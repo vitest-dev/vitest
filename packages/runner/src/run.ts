@@ -19,7 +19,7 @@ import type {
 } from './types/tasks'
 import { getSafeTimers, shuffle } from '@vitest/utils'
 import { processError } from '@vitest/utils/error'
-import { calculateBackoffDelay, normalizeRetryConfig, shouldRetryOnError, sleep } from '../../vitest/src/utils/retry'
+import { calculateBackoffDelay, normalizeRetryConfig, shouldRetryOnError, sleep } from './utils/retry'
 import { collectTests } from './collect'
 import { abortContextSignal, getFileContext } from './context'
 import { PendingError, TestRunAbortError } from './errors'
@@ -350,8 +350,7 @@ export async function runTest(test: Test, runner: VitestRunner): Promise<void> {
       catch (e) {
         failTask(test.result, e, runner.config.diffOptions)
 
-        const error = test.result.errors?.[0]?.error as Error
-        if (error && !shouldRetryOnError(error, retryConfig.condition)) {
+        if (e instanceof Error && !shouldRetryOnError(e, retryConfig.condition)) {
           break
         }
       }
@@ -413,7 +412,7 @@ export async function runTest(test: Test, runner: VitestRunner): Promise<void> {
         test.result.retryCount = (test.result.retryCount ?? 0) + 1
 
         if (retryConfig.delay > 0) {
-          const delayMs = calculateBackoffDelay(retryConfig.delay, retryCount, 'exponential')
+          const delayMs = calculateBackoffDelay(retryConfig.delay, retryCount)
           await sleep(delayMs)
         }
       }
@@ -422,6 +421,7 @@ export async function runTest(test: Test, runner: VitestRunner): Promise<void> {
     }
   }
 
+  // if test is marked to be failed, flip the result
   if (test.fails) {
     if (test.result.state === 'pass') {
       const error = processError(new Error('Expect test to fail'))
