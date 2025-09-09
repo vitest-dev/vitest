@@ -1,6 +1,6 @@
 import type { EvaluatedModules } from 'vite/module-runner'
 import type { WorkerGlobalState } from '../types/worker'
-import { getSafeTimers } from '@vitest/utils'
+import { getSafeTimers } from '@vitest/utils/timers'
 
 const NAME_WORKER_STATE = '__vitest_worker__'
 

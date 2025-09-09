@@ -1,5 +1,5 @@
 import { describe, expect, test, vi } from 'vitest'
-import { createDefer } from '@vitest/utils'
+import { createDefer } from '@vitest/utils/helpers'
 
 // 3 tests depend on each other,
 // so they will deadlock when maxConcurrency < 3

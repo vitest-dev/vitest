@@ -8,7 +8,6 @@ const sessionId = getBrowserState().sessionId
 const state: WorkerGlobalState = {
   ctx: {
     pool: 'browser',
-    worker: './browser.js',
     workerId: 1,
     config,
     projectName: config.name || '',
