@@ -19,6 +19,7 @@ import type {
 } from './types/tasks'
 import {
   format,
+  formatRegExp,
   isNegativeNaN,
   isObject,
   objDisplay,
@@ -866,23 +867,57 @@ function formatTitle(template: string, items: any[], idx: number) {
     })
   }
 
-  let formatted = format(template, ...items.slice(0, count))
   const isObjectItem = isObject(items[0])
-  formatted = formatted.replace(
-    /\$([$\w.]+)/g,
-    (_, key: string) => {
-      const isArrayKey = /^\d+$/.test(key)
-      if (!isObjectItem && !isArrayKey) {
-        return `$${key}`
+  let output = ''
+  let i = 0
+  handleRegexMatch(
+    template,
+    formatRegExp,
+    (match) => {
+      if (i < count) {
+        output += format(match[0], items[i++])
       }
-      const arrayElement = isArrayKey ? objectAttr(items, key) : undefined
-      const value = isObjectItem ? objectAttr(items[0], key, arrayElement) : arrayElement
-      return objDisplay(value, {
-        truncate: runner?.config?.chaiConfig?.truncateThreshold,
-      }) as unknown as string
+      else {
+        output += match[0]
+      }
+    },
+    (nonMatch) => {
+      output += nonMatch.replace(/\$([$\w.]+)/g, (_, key: string) => {
+        const isArrayKey = /^\d+$/.test(key)
+        if (!isObjectItem && !isArrayKey) {
+          return `$${key}`
+        }
+        const arrayElement = isArrayKey ? objectAttr(items, key) : undefined
+        const value = isObjectItem
+          ? objectAttr(items[0], key, arrayElement)
+          : arrayElement
+        return objDisplay(value, {
+          truncate: runner?.config?.chaiConfig?.truncateThreshold,
+        })
+      })
     },
   )
-  return formatted
+  return output
+}
+
+// based on https://github.com/unocss/unocss/blob/2e74b31625bbe3b9c8351570749aa2d3f799d919/packages/autocomplete/src/parse.ts#L11
+function handleRegexMatch(
+  input: string,
+  regex: RegExp,
+  onMatch: (match: RegExpMatchArray) => void,
+  onNonMatch: (nonMatch: string) => void,
+) {
+  let lastIndex = 0
+  for (const m of input.matchAll(regex)) {
+    if (lastIndex < m.index) {
+      onNonMatch(input.slice(lastIndex, m.index))
+    }
+    onMatch(m)
+    lastIndex = m.index + m[0].length
+  }
+  if (lastIndex < input.length) {
+    onNonMatch(input.slice(lastIndex))
+  }
 }
 
 function formatTemplateString(cases: any[], args: any[]): any[] {

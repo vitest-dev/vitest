@@ -207,7 +207,7 @@ describe('default reporter', async () => {
     })
 
     expect(trimReporterOutput(stdout)).toMatchInlineSnapshot(`
-      "✓ fixtures/test-for-title.test.ts (18 tests) [...]ms
+      "✓ fixtures/test-for-title.test.ts (24 tests) [...]ms
          ✓ test.for object : 0 = 'a', 2 = { te: 'st' } [...]ms
          ✓ test.for object : 0 = 'b', 2 = [ 'test' ] [...]ms
          ✓ test.each object : 0 = 'a', 2 = { te: 'st' }  [...]ms
@@ -225,7 +225,13 @@ describe('default reporter', async () => {
          ✓ first array element is object: 0 = { k1: 'v1' }, 1 = { k2: 'v2' }, k1 = 'v1', k2 = undefined [...]ms
          ✓ first array element is not object: 0 = 'foo', 1 = 'bar', k = $k [...]ms
          ✓ not array: 0 = { k: 'v1' }, 1 = undefined, k = 'v1' [...]ms
-         ✓ not array: 0 = { k: 'v2' }, 1 = undefined, k = 'v2' [...]ms"
+         ✓ not array: 0 = { k: 'v2' }, 1 = undefined, k = 'v2' [...]ms
+         ✓ handles whole numbers: 343434 as $343,434.00 [...]ms
+         ✓ { a: '$b', b: 'yay' } [...]ms
+         ✓ '%o' [...]ms
+         ✓ { a: '%o' } [...]ms
+         ✓ '%o' { a: '%o' } [...]ms
+         ✓ { a: '%o' } '%o' [...]ms"
     `)
   })
 

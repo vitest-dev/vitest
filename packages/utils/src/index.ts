@@ -7,6 +7,7 @@ export {
 } from './constants'
 export {
   format,
+  formatRegExp,
   inspect,
   objDisplay,
   stringify,
