@@ -94,7 +94,7 @@ export interface SerializedConfig {
   diff: string | SerializedDiffOptions | undefined
   retry: number | {
     count?: number
-    strategy?: "immediate" | "test-file" | "deferred"
+    strategy?: 'immediate' | 'test-file' | 'deferred'
     delay?: number
     condition?: string | RegExp | ((error: Error) => boolean)
   }
