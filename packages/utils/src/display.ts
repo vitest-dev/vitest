@@ -78,7 +78,7 @@ export function stringify(
     : result
 }
 
-const formatRegExp = /%[sdjifoOc%]/g
+export const formatRegExp: RegExp = /%[sdjifoOc%]/g
 
 export function format(...args: unknown[]): string {
   if (typeof args[0] !== 'string') {

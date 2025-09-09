@@ -17,7 +17,7 @@ import type {
   TestFunction,
   TestOptions,
 } from './types/tasks'
-import { format, objDisplay } from '@vitest/utils/display'
+import { format, formatRegExp, objDisplay } from '@vitest/utils/display'
 import {
   isNegativeNaN,
   isObject,
@@ -865,11 +865,9 @@ function formatTitle(template: string, items: any[], idx: number) {
     })
   }
 
-  let formatted = format(template, ...items.slice(0, count))
   const isObjectItem = isObject(items[0])
-  formatted = formatted.replace(
-    /\$([$\w.]+)/g,
-    (_, key: string) => {
+  function formatAttribute(s: string) {
+    return s.replace(/\$([$\w.]+)/g, (_, key: string) => {
       const isArrayKey = /^\d+$/.test(key)
       if (!isObjectItem && !isArrayKey) {
         return `$${key}`
@@ -878,10 +876,50 @@ function formatTitle(template: string, items: any[], idx: number) {
       const value = isObjectItem ? objectAttr(items[0], key, arrayElement) : arrayElement
       return objDisplay(value, {
         truncate: runner?.config?.chaiConfig?.truncateThreshold,
-      }) as unknown as string
+      })
+    })
+  }
+
+  let output = ''
+  let i = 0
+  handleRegexMatch(
+    template,
+    formatRegExp,
+    // format "%"
+    (match) => {
+      if (i < count) {
+        output += format(match[0], items[i++])
+      }
+      else {
+        output += match[0]
+      }
+    },
+    // format "$"
+    (nonMatch) => {
+      output += formatAttribute(nonMatch)
     },
   )
-  return formatted
+  return output
+}
+
+// based on https://github.com/unocss/unocss/blob/2e74b31625bbe3b9c8351570749aa2d3f799d919/packages/autocomplete/src/parse.ts#L11
+function handleRegexMatch(
+  input: string,
+  regex: RegExp,
+  onMatch: (match: RegExpMatchArray) => void,
+  onNonMatch: (nonMatch: string) => void,
+) {
+  let lastIndex = 0
+  for (const m of input.matchAll(regex)) {
+    if (lastIndex < m.index) {
+      onNonMatch(input.slice(lastIndex, m.index))
+    }
+    onMatch(m)
+    lastIndex = m.index + m[0].length
+  }
+  if (lastIndex < input.length) {
+    onNonMatch(input.slice(lastIndex))
+  }
 }
 
 function formatTemplateString(cases: any[], args: any[]): any[] {
