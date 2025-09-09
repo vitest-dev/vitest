@@ -55,7 +55,7 @@ test.each([[343434, '$343,434.00']])('handles whole numbers: %s as %s', (input, 
 })
 
 test.each([{ a: '$b', b: 'yay' }])('%o', () => {})
-test.each([{ a: '%o' }])('$a', () => {})
-test.each([{ a: '%o' }])('%o', () => {})
-test.each([{ a: '%o' }])('$a %o', () => {})
-test.each([{ a: '%o' }])('%o $a', () => {})
+test.each([{ a: '%j' }])('$a', () => {})
+test.each([{ a: '%j' }])('%o', () => {})
+test.each([{ a: '%j' }])('$a %o', () => {})
+test.each([{ a: '%j' }])('%o $a', () => {})
