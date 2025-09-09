@@ -602,7 +602,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
   },
   retry: {
     description:
-      'Retry configuration. Can be a number or JSON string with advanced options (default: `0`)',
+      'Retry configuration. Can be a number or advanced options (default: `0`)',
     argument: '<times|config>',
     subcommands: {
       count: {
@@ -618,8 +618,8 @@ export const cliOptionsConfig: VitestCLIOptions = {
         argument: '<milliseconds>',
       },
       condition: {
-        description: 'Condition for retrying: RegExp pattern or custom function',
-        argument: '<pattern|function>',
+        description: 'Condition for retrying: string pattern to match error messages',
+        argument: '<pattern>',
       } as any,
     },
   },
