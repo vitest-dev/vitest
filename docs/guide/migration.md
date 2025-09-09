@@ -246,6 +246,33 @@ export default defineConfig({
 
 The naming of properties in `playwright` factory now also aligns with [Playwright documentation](https://playwright.dev/docs/api/class-testoptions#test-options-launch-options) making it easier to find.
 
+### Reporter Updates
+
+Reporter APIs `onCollected`, `onSpecsCollected`, `onPathsCollected`, `onTaskUpdate` and `onFinished` were removed. See [`Reporters API`](/advanced/api/reporters) for new alternatives. The new APIs were introduced in Vitest `v3.0.0`.
+
+The `basic` reporter was removed as it is equal to:
+
+```ts
+export default defineConfig({
+  test: {
+    reporters: [
+      ['default', { summary: false }]
+    ]
+  }
+})
+```
+
+The [`verbose`](/guide/reporters#verbose-reporter) reporter now prints test cases as a flat list. To revert to the previous behaviour, use `--reporter=tree`:
+
+```ts
+export default defineConfig({
+  test: {
+    reporters: ['verbose'], // [!code --]
+    reporters: ['tree'], // [!code ++]
+  }
+})
+```
+
 ### Snapshots using custom elements print the shadow root
 
 In Vitest 4.0 snapshots that include custom elements will print the shadow root contents. To restore the previous behavior, set the [`printShadowRoot` option](/config/#snapshotformat) to `false`.
@@ -277,32 +304,6 @@ exports[`custom element with shadow root 1`] = `
   </div>
 </body>"
 `
-
-### Reporter Updates
-
-Reporter APIs `onCollected`, `onSpecsCollected`, `onPathsCollected`, `onTaskUpdate` and `onFinished` were removed. See [`Reporters API`](/advanced/api/reporters) for new alternatives. The new APIs were introduced in Vitest `v3.0.0`.
-
-The `basic` reporter was removed as it is equal to:
-
-```ts
-export default defineConfig({
-  test: {
-    reporters: [
-      ['default', { summary: false }]
-    ]
-  }
-})
-```
-
-The [`verbose`](/guide/reporters#verbose-reporter) reporter now prints test cases as a flat list. To revert to the previous behaviour, use `--reporter=tree`:
-
-```ts
-export default defineConfig({
-  test: {
-    reporters: ['verbose'], // [!code --]
-    reporters: ['tree'], // [!code ++]
-  }
-})
 ```
 
 ### Deprecated APIs are Removed
