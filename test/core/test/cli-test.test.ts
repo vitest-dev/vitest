@@ -511,3 +511,25 @@ test('should include builtin reporters list', () => {
   const expected = Object.keys(ReportersMap)
   expect(new Set(listed)).toEqual(new Set(expected))
 })
+
+test('retry options work correctly', async () => {
+  expect(getCLIOptions('--retry 3')).toEqual({
+    retry: 3,
+  })
+
+  expect(getCLIOptions('--retry.count 2 --retry.delay 1000 --retry.strategy immediate --retry.condition "NetworkError"')).toEqual({
+    retry: {
+      count: 2,
+      delay: 1000,
+      strategy: 'immediate',
+      condition: 'NetworkError',
+    },
+  })
+
+  expect(getCLIOptions('--retry.count 1 --retry.delay 500')).toEqual({
+    retry: {
+      count: 1,
+      delay: 500,
+    },
+  })
+})
