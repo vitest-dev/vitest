@@ -442,17 +442,19 @@ type ChainableTestAPI<ExtraContext = object> = ChainableFunction<
 
 type TestCollectorOptions = Omit<TestOptions, 'shuffle'>
 
+export interface RetryConfig {
+  count?: number
+  strategy?: 'immediate' | 'test-file' | 'deferred'
+  delay?: number
+  condition?: string | RegExp | ((error: Error) => boolean)
+}
+
 export interface TestOptions {
   /**
    * Test timeout.
    */
   timeout?: number
-  retry?: number | {
-    count?: number
-    strategy?: 'immediate' | 'test-file' | 'deferred'
-    delay?: number
-    condition?: string | RegExp | ((error: Error) => boolean)
-  }
+  retry?: number | RetryConfig
   /**
    * How many times the test will run again.
    * Only inner tests will repeat if set on `describe()`, nested `describe()` will inherit parent's repeat by default.
