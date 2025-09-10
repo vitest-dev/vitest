@@ -41,6 +41,7 @@
     },
     "./package.json": "./package.json",
     "./optional-types.js": "./optional-types.js",
+    "./src/*": "./src/*",
     "./globals": {
       "types": "./globals.d.ts"
     },
