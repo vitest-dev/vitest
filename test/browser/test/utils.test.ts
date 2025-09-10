@@ -52,3 +52,45 @@ test('should handle DOM content bigger than maxLength', async () => {
   document.body.appendChild(parentDiv)
   expect(await commands.stripVTControlCharacters(prettyDOM(undefined, maxContent))).toMatchSnapshot()
 })
+
+test('should handle shadow DOM content', async () => {
+  class CustomElement extends HTMLElement {
+    connectedCallback() {
+      const shadowRoot = this.attachShadow({ mode: 'open' })
+      const span = document.createElement('span')
+      span.classList.add('some-name')
+      span.setAttribute('data-test-id', '33')
+      span.setAttribute('id', '5')
+      span.textContent = 'hello'
+      shadowRoot.appendChild(span)
+    }
+  }
+  customElements.define('custom-element', CustomElement)
+
+  const div = document.createElement('div')
+  div.innerHTML = '<custom-element></custom-element>'
+  document.body.append(div)
+
+  expect(await commands.stripVTControlCharacters(prettyDOM())).toMatchSnapshot()
+})
+
+test('should be able to opt out of shadow DOM content', async () => {
+  class CustomElement extends HTMLElement {
+    connectedCallback() {
+      const shadowRoot = this.attachShadow({ mode: 'open' })
+      const span = document.createElement('span')
+      span.classList.add('some-name')
+      span.setAttribute('data-test-id', '33')
+      span.setAttribute('id', '5')
+      span.textContent = 'hello'
+      shadowRoot.appendChild(span)
+    }
+  }
+  customElements.define('no-shadow-root', CustomElement)
+
+  const div = document.createElement('div')
+  div.innerHTML = '<no-shadow-root></no-shadow-root>'
+  document.body.append(div)
+
+  expect(await commands.stripVTControlCharacters(prettyDOM(undefined, undefined, { printShadowRoot: false }))).toMatchSnapshot()
+})

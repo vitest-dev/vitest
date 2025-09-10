@@ -48,6 +48,7 @@ export interface PrettyFormatOptions {
   min?: boolean
   printBasicPrototype?: boolean
   printFunctionName?: boolean
+  printShadowRoot?: boolean
   compareKeys?: CompareKeys
   plugins?: Plugins
 }
@@ -67,6 +68,7 @@ export interface Config {
   plugins: Plugins
   printBasicPrototype: boolean
   printFunctionName: boolean
+  printShadowRoot: boolean
   spacingInner: string
   spacingOuter: string
 }
