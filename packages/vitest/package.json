@@ -39,7 +39,7 @@
         "default": "./index.cjs"
       }
     },
-    "./*": "./*",
+    "./package.json": "./package.json",
     "./globals": {
       "types": "./globals.d.ts"
     },
