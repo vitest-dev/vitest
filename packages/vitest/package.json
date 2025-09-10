@@ -40,7 +40,7 @@
       }
     },
     "./package.json": "./package.json",
-    "./optional-types.js": "./optional-types.js",
+    "./optional-types.js": "./optional-types.d.ts",
     "./src/*": "./src/*",
     "./globals": {
       "types": "./globals.d.ts"
