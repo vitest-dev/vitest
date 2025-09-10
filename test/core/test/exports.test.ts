@@ -276,7 +276,6 @@ it('exports snapshot', async ({ skip, task }) => {
             "version": "string",
             "viteVersion": "string",
           },
-          "./optional-types.js": {},
           "./reporters": {
             "BenchmarkReporter": "function",
             "BenchmarkReportsMap": "object",
