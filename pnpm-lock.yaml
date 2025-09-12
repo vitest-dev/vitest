@@ -913,7 +913,7 @@ importers:
         specifier: workspace:*
         version: link:../mocker
       '@vitest/pretty-format':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../pretty-format
       '@vitest/runner':
         specifier: workspace:*
