@@ -13,12 +13,9 @@ import { resolve } from 'node:path'
 import { MessageChannel } from 'node:worker_threads'
 import { createBirpc } from 'birpc'
 import Tinypool from 'tinypool'
-import { rootDir } from '../../paths'
 import { getWorkerMemoryLimit, stringToBytes } from '../../utils/memory-limit'
 import { groupFilesByEnv } from '../../utils/test-helpers'
 import { createMethodsRPC } from './rpc'
-
-const suppressWarningsPath = resolve(rootDir, './suppress-warnings.cjs')
 
 function createWorkerChannel(project: TestProject, collect: boolean) {
   const channel = new MessageChannel()
@@ -85,10 +82,7 @@ export function createVmThreadsPool(
 
     env,
     execArgv: [
-      '--experimental-import-meta-resolve',
       '--experimental-vm-modules',
-      '--require',
-      suppressWarningsPath,
       ...(poolOptions.execArgv ?? []),
       ...execArgv,
     ],
