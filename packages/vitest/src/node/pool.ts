@@ -108,6 +108,7 @@ export function createPool(ctx: Vitest): ProcessPool {
         ...execArgv,
         ...conditions,
         '--experimental-import-meta-resolve',
+        '--require',
         suppressWarningsPath,
       ],
       env: {
