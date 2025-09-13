@@ -76,6 +76,7 @@ export function createStaticClient(): VitestClient {
     resolveSnapshotRawPath: asyncNoop,
     readSnapshotFile: asyncNoop,
     saveSnapshotFile: asyncNoop,
+    getSnapshotData: asyncNoop,
     readTestFile: async (id: string) => {
       return metadata.sources[id]
     },
