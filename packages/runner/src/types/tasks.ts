@@ -491,6 +491,10 @@ export interface TestOptions {
    * Whether the test is expected to fail. If it does, the test will pass, otherwise it will fail.
    */
   fails?: boolean
+  /**
+   * Custom metadata for the task. This will be merged with any meta property defined in the test.
+   */
+  meta?: Partial<TaskMeta>
 }
 
 interface ExtendedAPI<ExtraContext> {
@@ -643,7 +647,7 @@ export interface TaskCustomOptions extends TestOptions {
   /**
    * Custom metadata for the task that will be assigned to `task.meta`.
    */
-  meta?: Record<string, unknown>
+  meta?: Partial<TaskMeta>
   /**
    * Task fixtures.
    */
