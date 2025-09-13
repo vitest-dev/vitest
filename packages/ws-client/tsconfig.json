@@ -1,8 +1,7 @@
 {
-  "extends": "../../tsconfig.base.json",
+  "extends": "../../tsconfig.browser.json",
   "compilerOptions": {
-    "lib": ["DOM"],
-    "isolatedDeclarations": true
+    "lib": ["ES2023", "DOM", "DOM.Iterable"]
   },
   "exclude": ["./dist"]
 }

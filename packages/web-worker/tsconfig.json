@@ -1,8 +1,7 @@
 {
-  "extends": "../../tsconfig.base.json",
+  "extends": "../../tsconfig.browser.json",
   "compilerOptions": {
-    "lib": ["ESNext", "WebWorker", "DOM"],
-    "isolatedDeclarations": true
+    "lib": ["ES2023", "WebWorker", "DOM"]
   },
   "exclude": ["./dist"]
 }

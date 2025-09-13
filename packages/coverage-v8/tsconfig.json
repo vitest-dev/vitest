@@ -1,10 +1,12 @@
 {
-  "extends": "../../tsconfig.base.json",
+  "extends": "../../tsconfig.node.json",
   "compilerOptions": {
-    "moduleResolution": "Bundler",
-    "types": ["@vitest/browser/providers/playwright"],
-    "isolatedDeclarations": true
+    "types": ["@vitest/browser/providers/playwright"]
   },
-  "include": ["./src/**/*.ts"],
+  "include": [
+    "./src/**/*.ts",
+    "../vitest/src/integrations/chai/chai-subset.d.ts",
+    "../vitest/src/shims.dev.d.ts"
+  ],
   "exclude": ["./dist"]
 }

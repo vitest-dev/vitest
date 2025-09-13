@@ -55,6 +55,9 @@
     "dummy.js",
     "providers"
   ],
+  "engines": {
+    "node": ">=18.0.0"
+  },
   "scripts": {
     "typecheck": "tsc -p ./src/client/tsconfig.json --noEmit",
     "typecheck:why": "tsc -p ./src/client/tsconfig.json --noEmit --explainFiles > explainTypes.txt",

@@ -33,6 +33,9 @@
     "*.d.ts",
     "dist"
   ],
+  "engines": {
+    "node": ">=18.0.0"
+  },
   "scripts": {
     "build": "rimraf dist && pnpm build:node && pnpm build:client",
     "build:client": "vite build",

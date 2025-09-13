@@ -1,11 +1,12 @@
 {
-  "extends": "../../tsconfig.base.json",
+  "extends": "../../tsconfig.node-dom.json",
   "compilerOptions": {
-    "lib": ["ESNext", "DOM"],
-    "moduleResolution": "Bundler",
-    "types": ["vite/client"],
-    "isolatedDeclarations": true
+    "types": ["vite/client"]
   },
-  "include": ["src/**/*"],
+  "include": [
+    "src/**/*",
+    "../vitest/src/integrations/chai/chai-subset.d.ts",
+    "../vitest/src/shims.dev.d.ts"
+  ],
   "exclude": ["**/dist/**"]
 }
