@@ -29,7 +29,7 @@ const plugins = [
   }),
   commonjs(),
   oxc({
-    transform: { target: 'node14' },
+    transform: { target: 'node18' },
   }),
 ]
 

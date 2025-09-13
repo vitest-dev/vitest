@@ -1,7 +1,6 @@
 {
-  "extends": "../../tsconfig.base.json",
+  "extends": "../../tsconfig.browser.json",
   "compilerOptions": {
-    "lib": ["ESNext", "DOM"],
     "moduleResolution": "Bundler",
     "types": ["vite/client"],
     "isolatedDeclarations": true
