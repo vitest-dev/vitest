@@ -382,11 +382,11 @@ import { test as baseTest } from 'vitest'
 
 export const test = baseTest.extend({
   perFile: [
-    ({}, { use }) => use([]),
+    ({}, use) => use([]),
     { scope: 'file' },
   ],
   perWorker: [
-    ({}, { use }) => use([]),
+    ({}, use) => use([]),
     { scope: 'worker' },
   ],
 })
@@ -397,7 +397,7 @@ The value is initialised the first time any test has accessed it, unless the fix
 ```ts
 const test = baseTest.extend({
   perFile: [
-    ({}, { use }) => use([]),
+    ({}, use) => use([]),
     {
       scope: 'file',
       // always run this hook before any test
