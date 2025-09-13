@@ -1,6 +1,10 @@
 import type { VMSourceTextModule, VMSyntheticModule } from './types'
 import vm from 'node:vm'
 
+// Threshold for using optimized array approach vs Set-based deduplication.
+// Keep low to ensure O(n^2) array approach is actually faster than O(n) Set approach.
+const SMALL_MODULE_KEY_THRESHOLD = 8
+
 export function interopCommonJsModule(
   interopDefault: boolean | undefined,
   mod: any,
@@ -22,12 +26,26 @@ export function interopCommonJsModule(
     && '__esModule' in mod
     && !isPrimitive(mod.default)
   ) {
-    const defaultKets = Object.keys(mod.default)
+    const defaultKeys = Object.keys(mod.default)
     const moduleKeys = Object.keys(mod)
-    const allKeys = new Set([...defaultKets, ...moduleKeys])
-    allKeys.delete('default')
+
+    let allKeys: string[]
+    if (defaultKeys.length + moduleKeys.length < SMALL_MODULE_KEY_THRESHOLD) {
+      // Small modules: use lightweight Set approach to avoid O(n²) while keeping overhead low
+      const keySet = new Set(defaultKeys)
+      for (const key of moduleKeys) {
+        keySet.add(key)
+      }
+      allKeys = Array.from(keySet)
+    }
+    else {
+      // Large modules: use Set for efficient deduplication
+      allKeys = Array.from(new Set([...defaultKeys, ...moduleKeys]))
+    }
+    const filteredKeys = allKeys.filter(key => key !== 'default')
+
     return {
-      keys: Array.from(allKeys),
+      keys: filteredKeys,
       moduleExports: new Proxy(mod, {
         get(mod, prop) {
           return mod[prop] ?? mod.default?.[prop]
@@ -37,8 +55,11 @@ export function interopCommonJsModule(
     }
   }
 
+  const allKeys = Object.keys(mod)
+  const filteredKeys = allKeys.filter(key => key !== 'default')
+
   return {
-    keys: Object.keys(mod).filter(key => key !== 'default'),
+    keys: filteredKeys,
     moduleExports: mod,
     defaultExport: mod,
   }
