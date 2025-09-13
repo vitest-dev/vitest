@@ -282,8 +282,6 @@ export default (parentServer: ParentBrowserProject, base = '/'): Plugin[] => {
           'vitest > expect-type',
           'vitest > @vitest/snapshot > magic-string',
           'vitest > @vitest/expect > chai',
-          'vitest > @vitest/expect > chai > loupe',
-          'vitest > @vitest/utils > loupe',
           '@vitest/browser > @testing-library/user-event',
           '@vitest/browser > @testing-library/dom',
         ]
