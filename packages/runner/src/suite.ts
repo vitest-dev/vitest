@@ -315,7 +315,7 @@ function createSuiteCollector(
       type: 'test',
       file: undefined!,
       timeout,
-      retry: options.retry ?? runner.config.retry,
+      retry: options.retry ?? runner.config.retry ?? 0,
       repeats: options.repeats,
       mode: options.only
         ? 'only'
