@@ -296,6 +296,11 @@ export default ({ mode }: { mode: string }) => {
                 docFooterText: 'Multiple Setups | Browser Mode',
               },
               {
+                text: 'Component Testing',
+                link: '/guide/browser/component-testing',
+                docFooterText: 'Component Testing | Browser Mode',
+              },
+              {
                 text: 'Visual Regression Testing',
                 link: '/guide/browser/visual-regression-testing',
                 docFooterText: 'Visual Regression Testing | Browser Mode',
