@@ -14,7 +14,7 @@ import v8 from 'node:v8'
 import { createBirpc } from 'birpc'
 import { Tinypool } from 'tinypool'
 import { groupBy } from '../../utils/base'
-import { wrapSerializableConfig } from '../../utils/config-helpers'
+import { wrapFileSpecifications, wrapSerializableConfig } from '../../utils/config-helpers'
 import { envsOrder, groupFilesByEnv } from '../../utils/test-helpers'
 import { createMethodsRPC } from './rpc'
 
@@ -136,7 +136,7 @@ export function createForksPool(
       const data: ContextRPC = {
         pool: 'forks',
         config,
-        files,
+        files: wrapFileSpecifications(files),
         invalidates,
         environment,
         workerId,
