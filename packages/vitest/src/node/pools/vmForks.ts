@@ -14,7 +14,7 @@ import v8 from 'node:v8'
 import { createBirpc } from 'birpc'
 import Tinypool from 'tinypool'
 import { rootDir } from '../../paths'
-import { wrapSerializableConfig } from '../../utils/config-helpers'
+import { wrapFileSpecifications, wrapSerializableConfig } from '../../utils/config-helpers'
 import { getWorkerMemoryLimit, stringToBytes } from '../../utils/memory-limit'
 import { groupFilesByEnv } from '../../utils/test-helpers'
 import { createMethodsRPC } from './rpc'
@@ -144,7 +144,7 @@ export function createVmForksPool(
       const data: ContextRPC = {
         pool: 'vmForks',
         config,
-        files,
+        files: wrapFileSpecifications(files),
         invalidates,
         environment,
         workerId,

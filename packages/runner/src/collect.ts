@@ -30,6 +30,7 @@ export async function collectTests(
   for (const spec of specs) {
     const filepath = typeof spec === 'string' ? spec : spec.filepath
     const testLocations = typeof spec === 'string' ? undefined : spec.testLocations
+    const testNamePattern = (typeof spec === 'string' ? null : spec.testNamePattern) ?? config.testNamePattern
 
     const file = createFileTask(filepath, config.root, config.name, runner.pool)
     setFileContext(file, Object.create(null))
@@ -103,7 +104,7 @@ export async function collectTests(
     const hasOnlyTasks = someTasksAreOnly(file)
     interpretTaskModes(
       file,
-      config.testNamePattern,
+      testNamePattern,
       testLocations,
       hasOnlyTasks,
       false,

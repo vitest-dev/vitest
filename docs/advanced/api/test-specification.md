@@ -7,7 +7,8 @@ You can only create a specification by calling [`createSpecification`](/advanced
 ```ts
 const specification = project.createSpecification(
   resolve('./example.test.ts'),
-  [20, 40], // optional test lines
+  // optional test lines and/or name pattern
+  { testLines: [20, 40], testNamePattern: /hello world/ },
 )
 ```
 
@@ -69,6 +70,10 @@ describe('a group of tests', () => { // [!code error]
 })
 ```
 :::
+
+## testNamePattern
+
+A regexp that matches the name of the test in this module. This value will override the global [`testNamePattern`](/config/#testnamepattern) option if it's set.
 
 ## toJSON
 
