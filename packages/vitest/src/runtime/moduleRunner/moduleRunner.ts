@@ -10,11 +10,7 @@ import * as viteModuleRunner from 'vite/module-runner'
 import { VitestMocker } from './moduleMocker'
 import { VitestTransport } from './moduleTransport'
 
-// eslint-disable-next-line ts/ban-ts-comment
-// @ts-ignore available since Vite 7.1 https://github.com/vitejs/vite/pull/20260
 export type CreateImportMeta = NonNullable<viteModuleRunner.ModuleRunnerOptions['createImportMeta']>
-// eslint-disable-next-line ts/ban-ts-comment
-// @ts-ignore
 export const createNodeImportMeta: CreateImportMeta = (modulePath: string) => {
   if (!viteModuleRunner.createDefaultImportMeta) {
     throw new Error(`createNodeImportMeta is not supported in this version of Vite.`)
