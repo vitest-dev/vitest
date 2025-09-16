@@ -4,13 +4,17 @@ import type { TestProject } from './project'
 import type { TestSpecification } from './spec'
 import type { BuiltinPool, Pool } from './types/pool-options'
 import { isatty } from 'node:tty'
+import { resolve } from 'pathe'
 import { version as viteVersion } from 'vite'
+import { rootDir } from '../paths'
 import { isWindows } from '../utils/env'
 import { createForksPool } from './pools/forks'
 import { createThreadsPool } from './pools/threads'
 import { createTypecheckPool } from './pools/typecheck'
 import { createVmForksPool } from './pools/vmForks'
 import { createVmThreadsPool } from './pools/vmThreads'
+
+const suppressWarningsPath = resolve(rootDir, './suppress-warnings.cjs')
 
 export type RunWithFiles = (
   files: TestSpecification[],
@@ -100,7 +104,13 @@ export function createPool(ctx: Vitest): ProcessPool {
 
   async function executeTests(method: 'runTests' | 'collectTests', files: TestSpecification[], invalidate?: string[]) {
     const options: PoolProcessOptions = {
-      execArgv: [...execArgv, ...conditions],
+      execArgv: [
+        ...execArgv,
+        ...conditions,
+        '--experimental-import-meta-resolve',
+        '--require',
+        suppressWarningsPath,
+      ],
       env: {
         TEST: 'true',
         VITEST: 'true',

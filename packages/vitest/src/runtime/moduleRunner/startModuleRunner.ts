@@ -166,9 +166,6 @@ export function startVitestModuleRunner(options: ContextModuleRunnerOptions): Vi
     createImportMeta: options.createImportMeta,
   })
 
-  // await moduleRunner.import('/@vite/env')
-  // await moduleRunner.mocker.initializeSpyModule()
-
   return moduleRunner
 }
 

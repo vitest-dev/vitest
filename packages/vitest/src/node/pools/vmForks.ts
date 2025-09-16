@@ -13,13 +13,10 @@ import { resolve } from 'node:path'
 import v8 from 'node:v8'
 import { createBirpc } from 'birpc'
 import Tinypool from 'tinypool'
-import { rootDir } from '../../paths'
 import { wrapSerializableConfig } from '../../utils/config-helpers'
 import { getWorkerMemoryLimit, stringToBytes } from '../../utils/memory-limit'
 import { groupFilesByEnv } from '../../utils/test-helpers'
 import { createMethodsRPC } from './rpc'
-
-const suppressWarningsPath = resolve(rootDir, './suppress-warnings.cjs')
 
 function createChildProcessChannel(project: TestProject, collect: boolean) {
   const emitter = new EventEmitter()
@@ -106,10 +103,7 @@ export function createVmForksPool(
 
     env,
     execArgv: [
-      '--experimental-import-meta-resolve',
       '--experimental-vm-modules',
-      '--require',
-      suppressWarningsPath,
       ...(poolOptions.execArgv ?? []),
       ...execArgv,
     ],
