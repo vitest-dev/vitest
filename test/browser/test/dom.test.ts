@@ -37,6 +37,7 @@ describe('dom related activity', () => {
 
     // test typing
     if (0) {
+      await (expect.element(div).toHaveClass('x', { exact: true }) satisfies Promise<void>)
       await expect.element(div).toHaveClass('x', { exact: true })
       await expect.element(div).toHaveClass('x', 'y')
       await expect.element(div).toHaveClass('x', /y/)
