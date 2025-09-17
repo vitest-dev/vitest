@@ -196,7 +196,7 @@ Ensure components work for all users by testing keyboard navigation, focus manag
 ```tsx
 // Test keyboard navigation
 await userEvent.keyboard('{Tab}')
-await expect.element(document.activeElement).toBe(nextFocusableElement)
+await expect.element(document.activeElement).toHaveFocus()
 
 // Test ARIA attributes
 await expect.element(modal).toHaveAttribute('aria-modal', 'true')
