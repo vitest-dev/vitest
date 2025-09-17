@@ -495,7 +495,7 @@ console.log('Button count:', button.length) // Should be 1
 
 // Try alternative queries if the first one fails
 if (button.length === 0) {
-  console.log('All buttons:', page.getByRole('button').all().length)
+  console.log('All buttons:', page.getByRole('button').length)
   console.log('By test ID:', page.getByTestId('submit-btn').length)
 }
 ```
