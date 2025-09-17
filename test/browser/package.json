@@ -11,6 +11,7 @@
     "test-fixtures": "vitest",
     "test-expect-dom": "vitest --root ./fixtures/expect-dom",
     "test-mocking": "vitest --root ./fixtures/mocking",
+    "test-logs": "vitest --root ./fixtures/print-logs",
     "test-failing": "vitest --root ./fixtures/failing",
     "test-timeout": "vitest --root ./fixtures/timeout",
     "test-timeout-hooks": "vitest --root ./fixtures/timeout-hooks",

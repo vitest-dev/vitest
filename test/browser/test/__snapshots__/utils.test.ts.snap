@@ -36,6 +36,14 @@ exports[`prints the element with attributes 1`] = `
 </body>"
 `;
 
+exports[`should be able to opt out of shadow DOM content 1`] = `
+"<body>
+  <div>
+    <no-shadow-root />
+  </div>
+</body>"
+`;
+
 exports[`should handle DOM content bigger than maxLength 1`] = `
 "<body>
   <div>
@@ -44,4 +52,21 @@ exports[`should handle DOM content bigger than maxLength 1`] = `
     </div>
   </div>
 </body>..."
+`;
+
+exports[`should handle shadow DOM content 1`] = `
+"<body>
+  <div>
+    <custom-element>
+      #shadow-root
+        <span
+          class="some-name"
+          data-test-id="33"
+          id="5"
+        >
+          hello
+        </span>
+    </custom-element>
+  </div>
+</body>"
 `;

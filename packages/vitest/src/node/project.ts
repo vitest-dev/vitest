@@ -17,7 +17,7 @@ import { promises as fs, readFileSync } from 'node:fs'
 import { rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
-import { deepMerge, nanoid, slash } from '@vitest/utils'
+import { deepMerge, nanoid, slash } from '@vitest/utils/helpers'
 import { isAbsolute, join, relative } from 'pathe'
 import pm from 'picomatch'
 import { glob } from 'tinyglobby'
@@ -512,6 +512,10 @@ export class TestProject {
           this.clearTmpDir(),
         ].filter(Boolean),
       ).then(() => {
+        if (!this.runner.isClosed()) {
+          return this.runner.close()
+        }
+      }).then(() => {
         this._provided = {} as any
         this._vite = undefined
       })

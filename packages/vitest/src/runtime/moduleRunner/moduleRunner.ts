@@ -10,12 +10,35 @@ import * as viteModuleRunner from 'vite/module-runner'
 import { VitestMocker } from './moduleMocker'
 import { VitestTransport } from './moduleTransport'
 
-// eslint-disable-next-line ts/ban-ts-comment
-// @ts-ignore available since Vite 7.1 https://github.com/vitejs/vite/pull/20260
 export type CreateImportMeta = NonNullable<viteModuleRunner.ModuleRunnerOptions['createImportMeta']>
-// eslint-disable-next-line ts/ban-ts-comment
-// @ts-ignore
-export const createNodeImportMeta: CreateImportMeta = viteModuleRunner.createNodeImportMeta
+export const createNodeImportMeta: CreateImportMeta = (modulePath: string) => {
+  if (!viteModuleRunner.createDefaultImportMeta) {
+    throw new Error(`createNodeImportMeta is not supported in this version of Vite.`)
+  }
+
+  const defaultMeta = viteModuleRunner.createDefaultImportMeta(modulePath)
+  const href = defaultMeta.url
+
+  const importMetaResolver = createImportMetaResolver()
+
+  return {
+    ...defaultMeta,
+    main: false,
+    resolve(id: string, parent?: string) {
+      const resolver = importMetaResolver ?? defaultMeta.resolve
+      return resolver(id, parent ?? href)
+    },
+  }
+}
+
+function createImportMetaResolver() {
+  if (!import.meta.resolve) {
+    return
+  }
+
+  return (specifier: string, importer: string) =>
+    import.meta.resolve(specifier, importer)
+}
 
 // @ts-expect-error overriding private method
 export class VitestModuleRunner extends viteModuleRunner.ModuleRunner {
@@ -32,8 +55,6 @@ export class VitestModuleRunner extends viteModuleRunner.ModuleRunner {
         hmr: false,
         evaluatedModules,
         sourcemapInterceptor: 'prepareStackTrace',
-        // eslint-disable-next-line ts/ban-ts-comment
-        // @ts-ignore
         createImportMeta: vitestOptions.createImportMeta,
       },
       options.evaluator,
@@ -68,10 +89,7 @@ export class VitestModuleRunner extends viteModuleRunner.ModuleRunner {
 
   public async import(rawId: string): Promise<any> {
     const resolved = await this.vitestOptions.transport.resolveId(rawId)
-    if (!resolved) {
-      return super.import(rawId)
-    }
-    return super.import(resolved.url)
+    return super.import(resolved ? resolved.url : rawId)
   }
 
   public async fetchModule(url: string, importer?: string): Promise<EvaluatedModuleNode> {

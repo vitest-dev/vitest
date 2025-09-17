@@ -75,18 +75,19 @@ export class ParentBrowserProject {
         return result?.map
       },
       getUrlId: (id) => {
-        const mod = this.vite.moduleGraph.getModuleById(id)
+        const moduleGraph = this.vite.environments.client.moduleGraph
+        const mod = moduleGraph.getModuleById(id)
         if (mod) {
           return id
         }
         const resolvedPath = resolve(this.vite.config.root, id.slice(1))
-        const modUrl = this.vite.moduleGraph.getModuleById(resolvedPath)
+        const modUrl = moduleGraph.getModuleById(resolvedPath)
         if (modUrl) {
           return resolvedPath
         }
         // some browsers (looking at you, safari) don't report queries in stack traces
         // the next best thing is to try the first id that this file resolves to
-        const files = this.vite.moduleGraph.getModulesByFile(resolvedPath)
+        const files = moduleGraph.getModulesByFile(resolvedPath)
         if (files && files.size) {
           return files.values().next().value!.id!
         }
@@ -235,9 +236,9 @@ export class ParentBrowserProject {
         const transformId = srcLink || join(server.config.root, `virtual__${id || `injected-${index}.js`}`)
         await server.moduleGraph.ensureEntryFromUrl(transformId)
         const contentProcessed
-            = content && type === 'module'
-              ? (await server.pluginContainer.transform(content, transformId)).code
-              : content
+          = content && type === 'module'
+            ? (await server.pluginContainer.transform(content, transformId)).code
+            : content
         return {
           tag: 'script',
           attrs: {

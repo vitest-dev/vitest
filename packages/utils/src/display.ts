@@ -3,7 +3,6 @@ import {
   format as prettyFormat,
   plugins as prettyFormatPlugins,
 } from '@vitest/pretty-format'
-// since this is already part of Vitest via Chai, we can just reuse it without increasing the size of bundle
 import * as loupe from 'loupe'
 
 type Inspect = (value: unknown, options: Options) => string
@@ -79,7 +78,7 @@ export function stringify(
     : result
 }
 
-const formatRegExp = /%[sdjifoOc%]/g
+export const formatRegExp: RegExp = /%[sdjifoOc%]/g
 
 export function format(...args: unknown[]): string {
   if (typeof args[0] !== 'string') {

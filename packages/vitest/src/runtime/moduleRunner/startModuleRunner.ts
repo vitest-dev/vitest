@@ -5,7 +5,7 @@ import type { ExternalModulesExecutor } from '../external-executor'
 import type { CreateImportMeta } from './moduleRunner'
 import fs from 'node:fs'
 import { isBuiltin } from 'node:module'
-import { isBareImport } from '@vitest/utils'
+import { isBareImport } from '@vitest/utils/helpers'
 import { getCachedVitestImport } from './cachedResolver'
 import { listenForErrors } from './errorCatcher'
 import { unwrapId, VitestModuleEvaluator } from './moduleEvaluator'
@@ -165,9 +165,6 @@ export function startVitestModuleRunner(options: ContextModuleRunnerOptions): Vi
     vm,
     createImportMeta: options.createImportMeta,
   })
-
-  // await moduleRunner.import('/@vite/env')
-  // await moduleRunner.mocker.initializeSpyModule()
 
   return moduleRunner
 }

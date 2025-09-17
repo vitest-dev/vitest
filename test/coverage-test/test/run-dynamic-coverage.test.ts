@@ -7,6 +7,7 @@ test('enableCoverage() collects coverage after being called', async () => {
   // Run a minimal suite where coverage starts disabled, then enable it and rerun.
   const { ctx } = await runVitest({
     include: ['fixtures/test/math.test.ts'],
+    watch: true,
     coverage: {
       // start disabled and turn on dynamically
       enabled: false,
@@ -28,6 +29,7 @@ test('enableCoverage() collects coverage after being called', async () => {
 test('disableCoverage() stops collecting coverage going forward', async () => {
   const { ctx } = await runVitest({
     include: ['fixtures/test/math.test.ts'],
+    watch: true,
     coverage: {
       enabled: true,
       reporter: 'json',
