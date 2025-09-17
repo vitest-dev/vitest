@@ -421,7 +421,7 @@ test('Modal component is accessible', async () => {
   // Test focus management - modal should receive focus when opened
   // This is crucial for screen reader users to know a modal opened
   const modal = getByRole('dialog')
-  await expect.element(modal).toBe(document.activeElement)
+  await expect.element(modal).toHaveFocus()
 
   // Test ARIA attributes - these provide semantic information to screen readers
   await expect.element(modal).toHaveAttribute('aria-labelledby') // Links to title element
