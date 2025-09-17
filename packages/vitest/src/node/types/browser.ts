@@ -3,6 +3,7 @@ import type { CancelReason } from '@vitest/runner'
 import type { Awaitable, ParsedStack, TestError } from '@vitest/utils'
 import type { StackTraceParserOptions } from '@vitest/utils/source-map'
 import type { ViteDevServer } from 'vite'
+import type { BrowserTraceViewMode } from '../../runtime/config'
 import type { BrowserTesterOptions } from '../../types/browser'
 import type { TestProject } from '../project'
 import type { ApiConfig, ProjectConfig } from './config'
@@ -59,8 +60,6 @@ type UnsupportedProperties
     | 'server'
     | 'benchmark'
     | 'name'
-
-export type TraceViewMode = 'on' | 'off' | 'on-first-retry' | 'on-all-retries' | 'retain-on-failure'
 
 export interface BrowserInstanceOption extends
   Omit<ProjectConfig, UnsupportedProperties>,
@@ -170,13 +169,12 @@ export interface BrowserConfigOptions {
     testIdAttribute?: string
   }
 
-  // TODO: hide ui when trace view is enabled
   /**
    * Supported only by **playwright** provider.
    */
-  trace?: TraceViewMode | {
+  trace?: BrowserTraceViewMode | {
     tracesDir?: string
-    mode: TraceViewMode
+    mode: BrowserTraceViewMode
     screenshots?: boolean
     snapshots?: boolean
     sources?: boolean
@@ -333,8 +331,8 @@ export interface ResolvedBrowserOptions extends BrowserConfigOptions {
     testIdAttribute: string
   }
   trace: {
+    mode: BrowserTraceViewMode
     tracesDir?: string
-    mode: TraceViewMode
     screenshots?: boolean
     snapshots?: boolean
     // TODO: map locations to test ones

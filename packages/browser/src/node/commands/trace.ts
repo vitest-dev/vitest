@@ -54,14 +54,6 @@ function resolveTracesPath(testPath: string, name: string) {
   return resolve(dir, '__traces__', base, `${name}.zip`)
 }
 
-// export const stopTrace: BrowserCommand<[]> = async (context) => {
-//   if (context.provider instanceof PlaywrightBrowserProvider) {
-//     await context.context.tracing.stop()
-//     return
-//   }
-//   throw new TypeError(`The ${context.provider.name} provider does not support tracing.`)
-// }
-
 export const deleteTracing: BrowserCommand<[{ name: string }]> = async (
   context,
   { name },

@@ -3,7 +3,6 @@ import type { PrettyFormatOptions } from '@vitest/pretty-format'
 import type { SequenceHooks, SequenceSetupFiles } from '@vitest/runner'
 import type { SnapshotEnvironment, SnapshotUpdateState } from '@vitest/snapshot'
 import type { SerializedDiffOptions } from '@vitest/utils/diff'
-import type { TraceViewMode } from '../node/types/browser'
 
 /**
  * Config that tests have access to.
@@ -123,7 +122,7 @@ export interface SerializedConfig {
       // for playwright
       actionTimeout?: number
     }
-    trace: TraceViewMode
+    trace: BrowserTraceViewMode
     trackUnhandledErrors: boolean
   }
   standalone: boolean
@@ -164,3 +163,4 @@ export type RuntimeConfig = Pick<
 }
 
 export type RuntimeOptions = Partial<RuntimeConfig>
+export type BrowserTraceViewMode = 'on' | 'off' | 'on-first-retry' | 'on-all-retries' | 'retain-on-failure'
