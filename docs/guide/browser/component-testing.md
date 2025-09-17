@@ -67,10 +67,12 @@ Good component tests focus on **behavior and user experience** rather than imple
 Test components in isolation by mocking dependencies:
 
 ```tsx
-// Mock external services
-vi.mock(import('../api/userService'), () => ({
-  fetchUser: vi.fn().mockResolvedValue({ name: 'John' })
-}))
+// For API requests, we recommend MSW (Mock Service Worker)
+// See: https://vitest.dev/guide/mocking/requests
+// 
+// vi.mock(import('../api/userService'), () => ({
+//   fetchUser: vi.fn().mockResolvedValue({ name: 'John' })
+// }))
 
 // Mock child components to focus on parent logic
 vi.mock(import('../components/UserCard'), () => ({
@@ -295,9 +297,6 @@ test('UserProfile handles loading, success, and error states', async () => {
   await expect.element(getErrorText('Error: User not found')).toBeInTheDocument()
 })
 
-// Option 2: Module mocking (use only when MSW isn't suitable)
-// const mockUserApi = vi.fn()
-// vi.mock(import('../api/users'), () => ({ getUser: mockUserApi }))
 ```
 
 ### Testing Component Communication
