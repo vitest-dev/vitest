@@ -350,7 +350,6 @@ async function updateTestFilesLocations(files: File[], sourceMaps: Map<string, a
 
 function getTraceName(task: Task, forceRetryCount?: number) {
   const retryCount = forceRetryCount ?? task.result?.retryCount ?? 0
-  // TODO: replace all invalid FS characters
-  const name = getTestName(task, '-').replace(/ /g, '-')
+  const name = getTestName(task, '-').replace(/[^a-z0-9]/gi, '-')
   return `${name}-${retryCount}`
 }

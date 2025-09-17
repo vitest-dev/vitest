@@ -3,7 +3,7 @@ import { unlink } from 'node:fs/promises'
 import { basename, dirname, resolve } from 'pathe'
 import { PlaywrightBrowserProvider } from '../providers/playwright'
 
-// TODO: print trace view location
+// TODO: print trace view location in reporter
 
 export const startTracing: BrowserCommand<[]> = async (context) => {
   if (context.provider instanceof PlaywrightBrowserProvider) {
@@ -11,7 +11,8 @@ export const startTracing: BrowserCommand<[]> = async (context) => {
     await context.context.tracing.start({
       screenshots: options.screenshots ?? true,
       snapshots: options.snapshots ?? true,
-      sources: options.sources ?? true,
+      // currently, PW shows sources in private methods
+      sources: false,
     })
     return
   }
