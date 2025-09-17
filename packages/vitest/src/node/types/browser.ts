@@ -60,6 +60,8 @@ type UnsupportedProperties
     | 'benchmark'
     | 'name'
 
+export type TraceViewMode = 'on' | 'off' | 'on-first-retry' | 'on-all-retries' | 'retain-on-failure'
+
 export interface BrowserInstanceOption extends
   Omit<ProjectConfig, UnsupportedProperties>,
   Pick<
@@ -166,6 +168,18 @@ export interface BrowserConfigOptions {
      * @default 'data-testid'
      */
     testIdAttribute?: string
+  }
+
+  // TODO: hide ui when trace view is enabled
+  /**
+   * Supported only by **playwright** provider.
+   */
+  trace?: TraceViewMode | {
+    tracesDir?: string
+    mode: TraceViewMode
+    screenshots?: boolean
+    snapshots?: boolean
+    sources?: boolean
   }
 
   /**
@@ -317,6 +331,13 @@ export interface ResolvedBrowserOptions extends BrowserConfigOptions {
   screenshotFailures: boolean
   locators: {
     testIdAttribute: string
+  }
+  trace: {
+    tracesDir?: string
+    mode: TraceViewMode
+    screenshots?: boolean
+    snapshots?: boolean
+    sources?: boolean
   }
 }
 

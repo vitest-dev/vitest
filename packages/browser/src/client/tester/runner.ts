@@ -1,8 +1,20 @@
-import type { CancelReason, File, Suite, Task, TaskEventPack, TaskResultPack, Test, TestAnnotation, VitestRunner } from '@vitest/runner'
+import type {
+  CancelReason,
+  File,
+  Suite,
+  Task,
+  TaskEventPack,
+  TaskResultPack,
+  Test,
+  TestAnnotation,
+  VitestRunner,
+} from '@vitest/runner'
 import type { SerializedConfig, TestExecutionMethod, WorkerGlobalState } from 'vitest'
 import type { VitestBrowserClientMocker } from './mocker'
+import type { CommandsManager } from './utils'
 import { globalChannel, onCancel } from '@vitest/browser/client'
 import { page, userEvent } from '@vitest/browser/context'
+import { getTestName } from '@vitest/runner/utils'
 import {
   DecodedMap,
   getOriginalPosition,
@@ -12,7 +24,7 @@ import {
 } from 'vitest/internal/browser'
 import { NodeBenchmarkRunner, VitestTestRunner } from 'vitest/runners'
 import { createStackString, parseStacktrace } from '../../../../utils/src/source-map'
-import { getWorkerState, moduleRunner } from '../utils'
+import { getBrowserState, getWorkerState, moduleRunner } from '../utils'
 import { rpc } from './rpc'
 import { VitestBrowserSnapshotEnvironment } from './snapshot'
 
@@ -43,10 +55,12 @@ export function createBrowserRunner(
     hashMap = browserHashMap
     public sourceMapCache = new Map<string, any>()
     public method = 'run' as TestExecutionMethod
+    private commands: CommandsManager
 
     constructor(options: BrowserRunnerOptions) {
       super(options.config)
       this.config = options.config
+      this.commands = getBrowserState().commands
     }
 
     setMethod(method: TestExecutionMethod) {
@@ -56,10 +70,58 @@ export function createBrowserRunner(
     onBeforeTryTask: VitestRunner['onBeforeTryTask'] = async (...args) => {
       await userEvent.cleanup()
       await super.onBeforeTryTask?.(...args)
+      const trace = this.config.browser.trace
+      const test = args[0]
+      if (trace === 'off') {
+        return
+      }
+      const { retry } = args[1]
+      if (trace === 'on-all-retries' && retry === 0) {
+        return
+      }
+      if (trace === 'on-first-retry' && retry !== 1) {
+        return
+      }
+      const name = getTraceName(test)
+      await this.commands.triggerCommand(
+        '__vitest_startChunkTrace',
+        [{ name, title: test.name }],
+      )
+    }
+
+    onAfterTryTask = async (task: Test, { retry }: { retry: number }) => {
+      const trace = this.config.browser.trace
+      if (trace === 'off') {
+        return
+      }
+      if (trace === 'on-all-retries' && retry === 0) {
+        return
+      }
+      if (trace === 'on-first-retry' && retry !== 1) {
+        return
+      }
+      const name = getTraceName(task)
+      await this.commands.triggerCommand(
+        '__vitest_stopChunkTrace',
+        [{ name }],
+      )
     }
 
     onAfterRunTask = async (task: Test) => {
       await super.onAfterRunTask?.(task)
+      const trace = this.config.browser.trace
+      if (trace === 'retain-on-failure' && task.result?.state === 'pass') {
+        const retryCount = task.result?.retryCount ?? 0
+        await Promise.all(
+          Array.from({ length: retryCount + 1 }).fill(undefined).map((_, index) => {
+            const name = getTraceName(task, index)
+            return this.commands.triggerCommand(
+              '__vitest_deleteTracing',
+              [{ name }],
+            )
+          }),
+        )
+      }
 
       if (this.config.bail && task.result?.state === 'fail') {
         const previousFailures = await rpc().getCountOfFailedTests()
@@ -94,13 +156,14 @@ export function createBrowserRunner(
       await Promise.all([
         super.onBeforeRunSuite?.(suite),
         (async () => {
-          if ('filepath' in suite) {
-            const map = await rpc().getBrowserFileSourceMap(suite.filepath)
-            this.sourceMapCache.set(suite.filepath, map)
-            const snapshotEnvironment = this.config.snapshotOptions.snapshotEnvironment
-            if (snapshotEnvironment instanceof VitestBrowserSnapshotEnvironment) {
-              snapshotEnvironment.addSourceMap(suite.filepath, map)
-            }
+          if (!('filepath' in suite)) {
+            return
+          }
+          const map = await rpc().getBrowserFileSourceMap(suite.filepath)
+          this.sourceMapCache.set(suite.filepath, map)
+          const snapshotEnvironment = this.config.snapshotOptions.snapshotEnvironment
+          if (snapshotEnvironment instanceof VitestBrowserSnapshotEnvironment) {
+            snapshotEnvironment.addSourceMap(suite.filepath, map)
           }
         })(),
       ])
@@ -174,7 +237,7 @@ export function createBrowserRunner(
       return rpc().onTaskUpdate(this.method, task, events)
     }
 
-    importFile = async (filepath: string) => {
+    importFile = async (filepath: string, mode: 'collect' | 'setup') => {
       let hash = this.hashMap.get(filepath)
       if (!hash) {
         hash = Date.now().toString()
@@ -185,6 +248,11 @@ export function createBrowserRunner(
       const prefix = `/${/^\w:/.test(filepath) ? '@fs/' : ''}`
       const query = `browserv=${hash}`
       const importpath = `${prefix}${filepath}?${query}`.replace(/\/+/g, '/')
+      // start tracing before the test file is imported
+      const trace = this.config.browser.trace
+      if (mode === 'collect' && trace !== 'off') {
+        await this.commands.triggerCommand('__vitest_startTracing', [])
+      }
       try {
         await import(/* @vite-ignore */ importpath)
       }
@@ -278,4 +346,11 @@ async function updateTestFilesLocations(files: File[], sourceMaps: Map<string, a
   })
 
   await Promise.all(promises)
+}
+
+function getTraceName(task: Task, forceRetryCount?: number) {
+  const retryCount = forceRetryCount ?? task.result?.retryCount ?? 0
+  // TODO: replace all invalid FS characters
+  const name = getTestName(task, '-').replace(/ /g, '-')
+  return `${name}-${retryCount}`
 }

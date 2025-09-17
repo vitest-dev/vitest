@@ -786,6 +786,10 @@ export function resolveConfig(
     resolved.includeTaskLocation ??= true
   }
 
+  if (typeof resolved.browser.trace === 'string' || !resolved.browser.trace) {
+    resolved.browser.trace = { mode: resolved.browser.trace || 'off' }
+  }
+
   const htmlReporter = toArray(resolved.reporters).some((reporter) => {
     if (Array.isArray(reporter)) {
       return reporter[0] === 'html'

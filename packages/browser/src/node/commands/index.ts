@@ -14,6 +14,7 @@ import { screenshot } from './screenshot'
 import { screenshotMatcher } from './screenshotMatcher'
 import { selectOptions } from './select'
 import { tab } from './tab'
+import { deleteTracing, startChunkTrace, startTracing, stopChunkTrace } from './trace'
 import { type } from './type'
 import { upload } from './upload'
 import { viewport } from './viewport'
@@ -22,6 +23,8 @@ export default {
   readFile: readFile as typeof readFile,
   removeFile: removeFile as typeof removeFile,
   writeFile: writeFile as typeof writeFile,
+
+  // private commands
   __vitest_fileInfo: _fileInfo as typeof _fileInfo,
   __vitest_upload: upload as typeof upload,
   __vitest_click: click as typeof click,
@@ -39,4 +42,8 @@ export default {
   __vitest_cleanup: keyboardCleanup as typeof keyboardCleanup,
   __vitest_viewport: viewport as typeof viewport,
   __vitest_screenshotMatcher: screenshotMatcher as typeof screenshotMatcher,
+  __vitest_deleteTracing: deleteTracing as typeof deleteTracing,
+  __vitest_startChunkTrace: startChunkTrace as typeof startChunkTrace,
+  __vitest_startTracing: startTracing as typeof startTracing,
+  __vitest_stopChunkTrace: stopChunkTrace as typeof stopChunkTrace,
 }

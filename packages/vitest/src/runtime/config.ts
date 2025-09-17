@@ -3,6 +3,7 @@ import type { PrettyFormatOptions } from '@vitest/pretty-format'
 import type { SequenceHooks, SequenceSetupFiles } from '@vitest/runner'
 import type { SnapshotEnvironment, SnapshotUpdateState } from '@vitest/snapshot'
 import type { SerializedDiffOptions } from '@vitest/utils/diff'
+import type { TraceViewMode } from '../node/types/browser'
 
 /**
  * Config that tests have access to.
@@ -122,6 +123,7 @@ export interface SerializedConfig {
       // for playwright
       actionTimeout?: number
     }
+    trace: TraceViewMode
     trackUnhandledErrors: boolean
   }
   standalone: boolean

@@ -39,7 +39,10 @@ export interface PlaywrightProviderOptions {
    * The options passed down to [`playwright.connect`](https://playwright.dev/docs/api/class-browsertype#browser-type-launch) method.
    * @see {@link https://playwright.dev/docs/api/class-browsertype#browser-type-launch}
    */
-  launchOptions?: LaunchOptions
+  launchOptions?: Omit<
+    LaunchOptions,
+    'tracesDir'
+  >
   /**
    * The options passed down to [`playwright.connect`](https://playwright.dev/docs/api/class-browsertype#browser-type-connect) method.
    *
@@ -131,10 +134,14 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
         return this.browser
       }
 
-      const launchOptions = {
+      const launchOptions: LaunchOptions = {
         ...this.options.launchOptions,
         headless: options.headless,
-      } satisfies LaunchOptions
+      }
+
+      if (typeof options.trace === 'object' && options.trace.tracesDir) {
+        launchOptions.tracesDir = options.trace?.tracesDir
+      }
 
       if (this.project.config.inspector.enabled) {
         // NodeJS equivalent defaults: https://nodejs.org/en/learn/getting-started/debugging#enable-inspector
