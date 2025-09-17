@@ -69,7 +69,7 @@ Test components in isolation by mocking dependencies:
 ```tsx
 // For API requests, we recommend MSW (Mock Service Worker)
 // See: https://vitest.dev/guide/mocking/requests
-// 
+//
 // vi.mock(import('../api/userService'), () => ({
 //   fetchUser: vi.fn().mockResolvedValue({ name: 'John' })
 // }))
@@ -296,7 +296,6 @@ test('UserProfile handles loading, success, and error states', async () => {
   const { getByText: getErrorText } = render(<UserProfile userId="999" />)
   await expect.element(getErrorText('Error: User not found')).toBeInTheDocument()
 })
-
 ```
 
 ### Testing Component Communication
