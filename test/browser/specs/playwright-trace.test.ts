@@ -1,9 +1,16 @@
 import { readdirSync, rmSync } from 'node:fs'
 import { resolve } from 'pathe'
-import { describe, expect, onTestFinished, test } from 'vitest'
+import { afterEach, describe, expect, test } from 'vitest'
 import { provider, runBrowserTests } from './utils'
 
+const tracesFolder = resolve(import.meta.dirname, '../fixtures/trace-view/__traces__')
+const basicTestTracesFolder = resolve(tracesFolder, 'basic.test.ts')
+
 describe.runIf(provider.name === 'playwright')('playwright tracing', () => {
+  afterEach(() => {
+    rmSync(tracesFolder, { recursive: true, force: true })
+  })
+
   test('vitest generates trace files when running with `on`', async () => {
     const { stderr } = await runBrowserTests({
       root: './fixtures/trace-view',
@@ -11,13 +18,10 @@ describe.runIf(provider.name === 'playwright')('playwright tracing', () => {
         trace: 'on',
       },
     })
-    const tracesFolder = resolve(import.meta.dirname, '../fixtures/trace-view/__traces__')
-    const testTracesFolder = resolve(tracesFolder, 'basic.test.ts')
-    onTestFinished(() => rmSync(tracesFolder, { recursive: true, force: true }))
 
     expect(stderr).toBe('')
     expect(readdirSync(tracesFolder)).toEqual(['basic.test.ts'])
-    expect(readdirSync(testTracesFolder).sort()).toMatchInlineSnapshot(`
+    expect(readdirSync(basicTestTracesFolder).sort()).toMatchInlineSnapshot(`
     [
       "chromium-a-single-test-0-0.trace.zip",
       "chromium-nested-suite-suite-test-0-0.trace.zip",
@@ -69,13 +73,10 @@ describe.runIf(provider.name === 'playwright')('playwright tracing', () => {
         trace: 'on-all-retries',
       },
     })
-    const tracesFolder = resolve(import.meta.dirname, '../fixtures/trace-view/__traces__')
-    const testTracesFolder = resolve(tracesFolder, 'basic.test.ts')
-    onTestFinished(() => rmSync(tracesFolder, { recursive: true, force: true }))
 
     expect(stderr).toBe('')
     expect(readdirSync(tracesFolder)).toEqual(['basic.test.ts'])
-    expect(readdirSync(testTracesFolder).sort()).toMatchInlineSnapshot(`
+    expect(readdirSync(basicTestTracesFolder).sort()).toMatchInlineSnapshot(`
     [
       "chromium-repeated-retried-tests-0-1.trace.zip",
       "chromium-repeated-retried-tests-0-2.trace.zip",
@@ -100,13 +101,10 @@ describe.runIf(provider.name === 'playwright')('playwright tracing', () => {
         trace: 'on-first-retry',
       },
     })
-    const tracesFolder = resolve(import.meta.dirname, '../fixtures/trace-view/__traces__')
-    const testTracesFolder = resolve(tracesFolder, 'basic.test.ts')
-    onTestFinished(() => rmSync(tracesFolder, { recursive: true, force: true }))
 
     expect(stderr).toBe('')
     expect(readdirSync(tracesFolder)).toEqual(['basic.test.ts'])
-    expect(readdirSync(testTracesFolder).sort()).toMatchInlineSnapshot(`
+    expect(readdirSync(basicTestTracesFolder).sort()).toMatchInlineSnapshot(`
     [
       "chromium-repeated-retried-tests-0-1.trace.zip",
       "chromium-retried-test-0-1.trace.zip",
@@ -127,10 +125,7 @@ describe.runIf(provider.name === 'playwright')('playwright tracing', () => {
       },
     })
 
-    const tracesFolder = resolve(import.meta.dirname, '../fixtures/trace-view/__traces__')
-    const basicTestTracesFolder = resolve(tracesFolder, 'basic.test.ts')
     const failingTestTracesFolder = resolve(tracesFolder, 'failing.special.ts')
-    onTestFinished(() => rmSync(tracesFolder, { recursive: true, force: true }))
 
     expect(readdirSync(tracesFolder)).toEqual([
       'basic.test.ts',
