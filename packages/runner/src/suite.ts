@@ -252,21 +252,8 @@ function parseArguments<T extends (...args: any[]) => any>(
   let options: TestOptions = {}
   let fn: T | undefined
 
-  // it('', () => {}, { retry: 2 })
-  if (typeof timeoutOrTest === 'object') {
-    // it('', { retry: 2 }, { retry: 3 })
-    if (typeof optionsOrFn === 'object') {
-      throw new TypeError(
-        'Cannot use two objects as arguments. Please provide options and a function callback in that order.',
-      )
-    }
-    console.warn(
-      'Using an object as a third argument is deprecated. Vitest 4 will throw an error if the third argument is not a timeout number. Please use the second argument for options. See more at https://vitest.dev/guide/migration',
-    )
-    options = timeoutOrTest
-  }
   // it('', () => {}, 1000)
-  else if (typeof timeoutOrTest === 'number') {
+  if (typeof timeoutOrTest === 'number') {
     options = { timeout: timeoutOrTest }
   }
   // it('', { retry: 2 }, () => {})
