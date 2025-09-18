@@ -195,7 +195,7 @@
     "acorn-walk": "catalog:",
     "birpc": "catalog:",
     "cac": "catalog:",
-    "find-up": "^6.3.0",
+    "empathic": "^2.0.0",
     "flatted": "catalog:",
     "happy-dom": "^18.0.1",
     "jsdom": "^26.1.0",
