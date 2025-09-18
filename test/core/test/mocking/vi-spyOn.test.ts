@@ -282,6 +282,30 @@ describe('vi.spyOn() settings', () => {
     expect(spy2.mock.calls).toEqual(spy1.mock.calls)
   })
 
+  test('vi.spyOn() when spying on a static getter spy returns the same spy', () => {
+    const object = createObject()
+    const spy1 = vi.spyOn(object, 'static', 'get')
+    const spy2 = vi.spyOn(object, 'static', 'get')
+    expect(spy1).toBe(spy2)
+
+    const _example = object.static
+    expect(spy2).toHaveBeenCalledTimes(1)
+    expect(spy1).toHaveBeenCalledTimes(1)
+    expect(spy2.mock.calls).toEqual(spy1.mock.calls)
+  })
+
+  test('vi.spyOn() when spying on a static setter spy returns the same spy', () => {
+    const object = createObject()
+    const spy1 = vi.spyOn(object, 'static', 'set')
+    const spy2 = vi.spyOn(object, 'static', 'set')
+    expect(spy1).toBe(spy2)
+
+    object.static = 33
+    expect(spy2).toHaveBeenCalledTimes(1)
+    expect(spy1).toHaveBeenCalledTimes(1)
+    expect(spy2.mock.calls).toEqual(spy1.mock.calls)
+  })
+
   test('vi.spyOn() can spy on multiple class instances without intervention', () => {
     class Example {
       method() {
@@ -668,5 +692,6 @@ function createObject() {
     set getter(value: number) {
       getterValue = value
     },
+    static: 42,
   }
 }
