@@ -97,7 +97,7 @@ export function createBrowserRunner(
       )
     }
 
-    onAfterTryTask = async (test: Test, { retry, repeats }: { retry: number; repeats: number }) => {
+    onAfterRetryTask = async (test: Test, { retry, repeats }: { retry: number; repeats: number }) => {
       const trace = this.config.browser.trace
       if (trace === 'off') {
         return

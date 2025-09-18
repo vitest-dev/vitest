@@ -106,6 +106,14 @@ export interface VitestRunner {
     test: Test,
     options: { retry: number; repeats: number }
   ) => unknown
+  /**
+   * Called after the retry resolution happend. Unlike `onAfterTryTask`, the test now has a new state.
+   * All `after` hooks were also called by this point.
+   */
+  onAfterRetryTask?: (
+    test: Test,
+    options: { retry: number; repeats: number }
+  ) => unknown
 
   /**
    * Called before running a single suite. Doesn't have "result" yet.
