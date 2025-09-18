@@ -67,6 +67,8 @@ export function createBrowserRunner(
       this.method = method
     }
 
+    private traces = new Map<string, string[]>()
+
     onBeforeTryTask: VitestRunner['onBeforeTryTask'] = async (...args) => {
       await userEvent.cleanup()
       await super.onBeforeTryTask?.(...args)
@@ -109,29 +111,34 @@ export function createBrowserRunner(
         return
       }
       const name = getTraceName(test, retry, repeats)
-      await this.commands.triggerCommand(
+      if (!this.traces.has(test.id)) {
+        this.traces.set(test.id, [])
+      }
+      const traces = this.traces.get(test.id)!
+      const { tracePath } = await this.commands.triggerCommand(
         '__vitest_stopChunkTrace',
         [{ name }],
-      )
+      ) as { tracePath: string }
+      traces.push(tracePath)
     }
 
     onAfterRunTask = async (task: Test) => {
       await super.onAfterRunTask?.(task)
       const trace = this.config.browser.trace
-      if (trace === 'retain-on-failure' && task.result?.state === 'pass') {
-        const retryCount = task.result?.retryCount ?? 0
-        const repeatCount = task.result?.repeatCount ?? 0
-        await Promise.all(
-          Array.from({ length: repeatCount + 1 }).fill(undefined).flatMap((_, repeatCount) => {
-            return Array.from({ length: retryCount + 1 }).fill(undefined).map((_, retryCount) => {
-              const name = getTraceName(task, retryCount, repeatCount)
-              return this.commands.triggerCommand(
-                '__vitest_deleteTracing',
-                [{ name }],
-              )
-            })
-          }),
-        )
+      const traces = this.traces.get(task.id) || []
+      if (traces.length) {
+        if (trace === 'retain-on-failure' && task.result?.state === 'pass') {
+          await this.commands.triggerCommand(
+            '__vitest_deleteTracing',
+            [{ traces }],
+          )
+        }
+        else {
+          await this.commands.triggerCommand(
+            '__vitest_annotateTraces',
+            [{ testId: task.id, traces }],
+          )
+        }
       }
 
       if (this.config.bail && task.result?.state === 'fail') {

@@ -14,7 +14,13 @@ import { screenshot } from './screenshot'
 import { screenshotMatcher } from './screenshotMatcher'
 import { selectOptions } from './select'
 import { tab } from './tab'
-import { deleteTracing, startChunkTrace, startTracing, stopChunkTrace } from './trace'
+import {
+  annotateTraces,
+  deleteTracing,
+  startChunkTrace,
+  startTracing,
+  stopChunkTrace,
+} from './trace'
 import { type } from './type'
 import { upload } from './upload'
 import { viewport } from './viewport'
@@ -46,4 +52,5 @@ export default {
   __vitest_startChunkTrace: startChunkTrace as typeof startChunkTrace,
   __vitest_startTracing: startTracing as typeof startTracing,
   __vitest_stopChunkTrace: stopChunkTrace as typeof stopChunkTrace,
+  __vitest_annotateTraces: annotateTraces as typeof annotateTraces,
 }

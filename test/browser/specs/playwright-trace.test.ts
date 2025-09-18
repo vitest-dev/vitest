@@ -12,7 +12,7 @@ describe.runIf(provider.name === 'playwright')('playwright tracing', () => {
   })
 
   test('vitest generates trace files when running with `on`', async () => {
-    const { stderr } = await runBrowserTests({
+    const { stderr, ctx } = await runBrowserTests({
       root: './fixtures/trace-view',
       browser: {
         trace: 'on',
@@ -64,6 +64,26 @@ describe.runIf(provider.name === 'playwright')('playwright tracing', () => {
       "webkit-retried-test-0-2.trace.zip",
     ]
   `)
+
+    // traces are also stored in attachments so they are visible in all reporters
+    const testModules = ctx.state.getTestModules()
+    expect(testModules).toHaveLength(3)
+    testModules.forEach((testModule) => {
+      for (const test of testModule.children.allTests()) {
+        if (test.result().state === 'skipped') {
+          continue
+        }
+
+        const annotations = test.annotations()
+        expect(annotations.length).toBeGreaterThan(0)
+
+        annotations.forEach((annotation) => {
+          expect(annotation.message).toContain('basic.test.ts/')
+          expect(annotation.type).toBe('traces')
+          expect(annotation.attachment!.contentType).toBe('application/octet-stream')
+        })
+      }
+    })
   })
 
   test('vitest generates trace files when running with `on-all-retries`', async () => {
@@ -117,7 +137,7 @@ describe.runIf(provider.name === 'playwright')('playwright tracing', () => {
   })
 
   test('vitest generates trace files when running with `retain-on-failure`', async () => {
-    await runBrowserTests({
+    const { stderr } = await runBrowserTests({
       root: './fixtures/trace-view',
       include: ['./*.test.ts', './*.special.ts'],
       browser: {
@@ -157,5 +177,9 @@ describe.runIf(provider.name === 'playwright')('playwright tracing', () => {
       "webkit-retried-fail-0-2.trace.zip",
     ]
   `)
+
+    // the default reporter outputs attachments
+    expect(stderr).toContain('❯ traces')
+    expect(stderr).toContain('↳ __traces__/failing.special.ts/')
   })
 })
