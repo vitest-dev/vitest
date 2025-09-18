@@ -243,13 +243,17 @@ export function createSuiteHooks(): SuiteHooks {
 
 function parseArguments<T extends (...args: any[]) => any>(
   optionsOrFn: T | object | undefined,
-  optionsOrTest: object | T | number | undefined,
+  timeoutOrTest: T | number | undefined,
 ) {
+  if (typeof timeoutOrTest === 'object') {
+    throw new TypeError(`Siganture "test(name, fn, { ... })" was deprecated in Vitest 3 and removed in Vitest 4. Please, provide options as a second argument instead.`)
+  }
+
   let options: TestOptions = {}
   let fn: T | undefined
 
   // it('', () => {}, { retry: 2 })
-  if (typeof optionsOrTest === 'object') {
+  if (typeof timeoutOrTest === 'object') {
     // it('', { retry: 2 }, { retry: 3 })
     if (typeof optionsOrFn === 'object') {
       throw new TypeError(
@@ -259,11 +263,11 @@ function parseArguments<T extends (...args: any[]) => any>(
     console.warn(
       'Using an object as a third argument is deprecated. Vitest 4 will throw an error if the third argument is not a timeout number. Please use the second argument for options. See more at https://vitest.dev/guide/migration',
     )
-    options = optionsOrTest
+    options = timeoutOrTest
   }
   // it('', () => {}, 1000)
-  else if (typeof optionsOrTest === 'number') {
-    options = { timeout: optionsOrTest }
+  else if (typeof timeoutOrTest === 'number') {
+    options = { timeout: timeoutOrTest }
   }
   // it('', { retry: 2 }, () => {})
   else if (typeof optionsOrFn === 'object') {
@@ -271,15 +275,15 @@ function parseArguments<T extends (...args: any[]) => any>(
   }
 
   if (typeof optionsOrFn === 'function') {
-    if (typeof optionsOrTest === 'function') {
+    if (typeof timeoutOrTest === 'function') {
       throw new TypeError(
         'Cannot use two functions as arguments. Please use the second argument for options.',
       )
     }
     fn = optionsOrFn as T
   }
-  else if (typeof optionsOrTest === 'function') {
-    fn = optionsOrTest as T
+  else if (typeof timeoutOrTest === 'function') {
+    fn = timeoutOrTest as T
   }
 
   return {
@@ -384,9 +388,9 @@ function createSuiteCollector(
   const test = createTest(function (
     name: string | Function,
     optionsOrFn?: TestOptions | TestFunction,
-    optionsOrTest?: number | TestOptions | TestFunction,
+    timeoutOrTest?: number | TestFunction,
   ) {
-    let { options, handler } = parseArguments(optionsOrFn, optionsOrTest)
+    let { options, handler } = parseArguments(optionsOrFn, timeoutOrTest)
 
     // inherit repeats, retry, timeout from suite
     if (typeof suiteOptions === 'object') {
@@ -533,7 +537,7 @@ function createSuite() {
     this: Record<string, boolean | undefined>,
     name: string | Function,
     factoryOrOptions?: SuiteFactory | TestOptions,
-    optionsOrFactory?: number | TestOptions | SuiteFactory,
+    optionsOrFactory?: number | SuiteFactory,
   ) {
     let mode: RunMode = this.only
       ? 'only'
@@ -597,14 +601,14 @@ function createSuite() {
     return (
       name: string | Function,
       optionsOrFn: ((...args: T[]) => void) | TestOptions,
-      fnOrOptions?: ((...args: T[]) => void) | number | TestOptions,
+      fnOrOptions?: ((...args: T[]) => void) | number,
     ) => {
       const _name = formatName(name)
       const arrayOnlyCases = cases.every(Array.isArray)
 
       const { options, handler } = parseArguments(optionsOrFn, fnOrOptions)
 
-      const fnFirst = typeof optionsOrFn === 'function' && typeof fnOrOptions === 'object'
+      const fnFirst = typeof optionsOrFn === 'function'
 
       cases.forEach((i, idx) => {
         const items = Array.isArray(i) ? i : [i]
@@ -613,11 +617,11 @@ function createSuite() {
             suite(
               formatTitle(_name, items, idx),
               handler ? () => handler(...items) : undefined,
-              options,
+              options.timeout,
             )
           }
           else {
-            suite(formatTitle(_name, items, idx), handler ? () => handler(i) : undefined, options)
+            suite(formatTitle(_name, items, idx), handler ? () => handler(i) : undefined, options.timeout)
           }
         }
         else {
@@ -649,7 +653,7 @@ function createSuite() {
     return (
       name: string | Function,
       optionsOrFn: ((...args: T[]) => void) | TestOptions,
-      fnOrOptions?: ((...args: T[]) => void) | number | TestOptions,
+      fnOrOptions?: ((...args: T[]) => void) | number,
     ) => {
       const name_ = formatName(name)
       const { options, handler } = parseArguments(optionsOrFn, fnOrOptions)
@@ -694,14 +698,14 @@ export function createTaskCollector(
     return (
       name: string | Function,
       optionsOrFn: ((...args: T[]) => void) | TestOptions,
-      fnOrOptions?: ((...args: T[]) => void) | number | TestOptions,
+      fnOrOptions?: ((...args: T[]) => void) | number,
     ) => {
       const _name = formatName(name)
       const arrayOnlyCases = cases.every(Array.isArray)
 
       const { options, handler } = parseArguments(optionsOrFn, fnOrOptions)
 
-      const fnFirst = typeof optionsOrFn === 'function' && typeof fnOrOptions === 'object'
+      const fnFirst = typeof optionsOrFn === 'function'
 
       cases.forEach((i, idx) => {
         const items = Array.isArray(i) ? i : [i]
@@ -711,11 +715,11 @@ export function createTaskCollector(
             test(
               formatTitle(_name, items, idx),
               handler ? () => handler(...items) : undefined,
-              options,
+              options.timeout,
             )
           }
           else {
-            test(formatTitle(_name, items, idx), handler ? () => handler(i) : undefined, options)
+            test(formatTitle(_name, items, idx), handler ? () => handler(i) : undefined, options.timeout)
           }
         }
         else {
@@ -749,7 +753,7 @@ export function createTaskCollector(
     return (
       name: string | Function,
       optionsOrFn: ((...args: T[]) => void) | TestOptions,
-      fnOrOptions?: ((...args: T[]) => void) | number | TestOptions,
+      fnOrOptions?: ((...args: T[]) => void) | number,
     ) => {
       const _name = formatName(name)
       const { options, handler } = parseArguments(optionsOrFn, fnOrOptions)
@@ -788,7 +792,7 @@ export function createTaskCollector(
     return createTest(function (
       name: string | Function,
       optionsOrFn?: TestOptions | TestFunction,
-      optionsOrTest?: number | TestOptions | TestFunction,
+      optionsOrTest?: number | TestFunction,
     ) {
       const collector = getCurrentSuite()
       const scopedFixtures = collector.fixtures()
@@ -825,7 +829,7 @@ function createTest(
     > & { fixtures?: FixtureItem[] },
     title: string,
     optionsOrFn?: TestOptions | TestFunction,
-    optionsOrTest?: number | TestOptions | TestFunction
+    optionsOrTest?: number | TestFunction
   ) => void,
   context?: Record<string, any>,
 ) {

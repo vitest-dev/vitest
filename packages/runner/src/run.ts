@@ -3,7 +3,6 @@ import type { DiffOptions } from '@vitest/utils/diff'
 import type { FileSpecification, VitestRunner } from './types/runner'
 import type {
   File,
-  HookListener,
   SequenceHooks,
   Suite,
   SuiteHooks,
@@ -130,7 +129,7 @@ export async function callSuiteHook<T extends keyof SuiteHooks>(
   currentTask: Task,
   name: T,
   runner: VitestRunner,
-  args: SuiteHooks[T][0] extends HookListener<infer A, any> ? A : never,
+  args: SuiteHooks[T][0] extends (...args: infer A) => Awaitable<any> ? A : never,
 ): Promise<unknown[]> {
   const sequence = runner.config.sequence.hooks
 
@@ -154,7 +153,7 @@ export async function callSuiteHook<T extends keyof SuiteHooks>(
     return getBeforeHookCleanupCallback(
       hook,
       await hook(...args),
-      name === 'beforeEach' ? args[0] : undefined,
+      name === 'beforeEach' ? args[0] as TestContext : undefined,
     )
   }
 
