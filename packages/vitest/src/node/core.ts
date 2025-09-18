@@ -502,6 +502,13 @@ export class Vitest {
     }
   }
 
+  /**
+   * Returns the seed, if tests are running in a random order.
+   */
+  public getSeed(): number | null {
+    return this.config.sequence.seed ?? null
+  }
+
   /** @internal */
   public async _reportFileTask(file: File): Promise<void> {
     const project = this.getProjectByName(file.projectName || '')
