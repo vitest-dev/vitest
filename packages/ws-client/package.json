@@ -33,7 +33,7 @@
     "node": "^18.0.0 || >=20.0.0"
   },
   "scripts": {
-    "build": "rimraf dist && rollup -c",
+    "build": "premove dist && rollup -c",
     "dev": "rollup -c --watch --watch.include 'src/**'",
     "typecheck": "tsc --noEmit"
   },

@@ -199,9 +199,9 @@ importers:
       pathe:
         specifier: ^2.0.3
         version: 2.0.3
-      rimraf:
-        specifier: ^6.0.1
-        version: 6.0.1
+      premove:
+        specifier: ^4.0.0
+        version: 4.0.0
       rollup:
         specifier: ^4.50.1
         version: 4.50.1
@@ -5993,11 +5993,6 @@ packages:
     engines: {node: '>=16 || 14 >=14.18'}
     hasBin: true
 
-  glob@11.0.0:
-    resolution: {integrity: sha512-9UiX/Bl6J2yaBbxKoEBRm4Cipxgok8kQYcOPEhScPwebu2I0HoQOuYdIO6S3hLuWoZgpDpwQZMzTFxgpkyT76g==}
-    engines: {node: 20 || >=22}
-    hasBin: true
-
   glob@7.2.3:
     resolution: {integrity: sha512-nFR0zLpU2YCaRxwoCJvL6UvCH2JFyFVIvwTLsIf21AuHlMskA1hhTdk+LlYJtOlYt9v6dvszD2BGRqBL+iQK9Q==}
     deprecated: Glob versions prior to v9 are no longer supported
@@ -6520,10 +6515,6 @@ packages:
   jackspeak@3.4.0:
     resolution: {integrity: sha512-JVYhQnN59LVPFCEcVa2C3CrEKYacvjRfqIQl+h8oi91aLYQVWRYbxjPcv1bUiUy/kLmQaANrYfNMCO3kuEDHfw==}
     engines: {node: '>=14'}
-
-  jackspeak@4.0.1:
-    resolution: {integrity: sha512-cub8rahkh0Q/bw1+GxP7aeSe29hHHn2V4m29nnDlvCdlgU+3UGxkZp7Z53jLUdpX3jdTO0nJZUDl3xvbWc2Xog==}
-    engines: {node: 20 || >=22}
 
   jake@10.9.4:
     resolution: {integrity: sha512-wpHYzhxiVQL+IV05BLE2Xn34zW1S223hvjtqk0+gsPrwd/8JNLXJgZZM/iPFsYc1xyphF+6M6EvdE5E9MBGkDA==}
@@ -7354,9 +7345,6 @@ packages:
     resolution: {integrity: sha512-5NPgf87AT2STgwa2ntRMr45jTKrYBGkVU36yT0ig/n/GMAa3oPqhZfIQ2kMEimReg0+t9kZViDVZ83qfVUlckg==}
     engines: {node: '>= 14'}
 
-  package-json-from-dist@1.0.0:
-    resolution: {integrity: sha512-dATvCeZN/8wQsGywez1mzHtTlP22H8OEfPrVMLNr4/eGa+ijtLn/6M5f0dY8UKNrC2O9UCU6SSoG3qRKnt7STw==}
-
   package-manager-detector@1.3.0:
     resolution: {integrity: sha512-ZsEbbZORsyHuO00lY1kV3/t72yp6Ysay6Pd17ZAlNGuGwmWDLCJxFpRs0IzfXfj1o4icJOkUEioexFHzyPurSQ==}
 
@@ -7431,10 +7419,6 @@ packages:
   path-scurry@1.11.1:
     resolution: {integrity: sha512-Xa4Nw17FS9ApQFJ9umLiJS4orGjm7ZzwUrwamcGQuHSzDyth9boKDaycYdDcZDuqYATXw4HFXgaqWTctW/v1HA==}
     engines: {node: '>=16 || 14 >=14.18'}
-
-  path-scurry@2.0.0:
-    resolution: {integrity: sha512-ypGJsmGtdXUOeM5u93TyeIEfEhM6s+ljAhrk5vAvSx8uyY/02OvrZnA0YNGUrPXfpJMgI1ODd3nwz8Npx4O4cg==}
-    engines: {node: 20 || >=22}
 
   path-to-regexp@0.1.7:
     resolution: {integrity: sha512-5DFkuoqlv1uYQKxy8omFBeJPQcdoE07Kv2sferDCrAq1ohOU+MSDswDIbnx3YAM60qIOnYa53wBhXW0EbMonrQ==}
@@ -7551,6 +7535,11 @@ packages:
   prelude-ls@1.2.1:
     resolution: {integrity: sha512-vkcDPrRZo1QZLbn5RLGPpg/WmIQ65qoWWhcGKf/b5eplkkarX0m9z8ppCat4mlOqUsWpyNuYgO3VRyrYHSzX5g==}
     engines: {node: '>= 0.8.0'}
+
+  premove@4.0.0:
+    resolution: {integrity: sha512-zim/Hr4+FVdCIM7zL9b9Z0Wfd5Ya3mnKtiuDv7L5lzYzanSq6cOcVJ7EFcgK4I0pt28l8H0jX/x3nyog380XgQ==}
+    engines: {node: '>=6'}
+    hasBin: true
 
   pretty-bytes@5.6.0:
     resolution: {integrity: sha512-FFw039TmrBqFK8ma/7OL3sDz/VytdtJr044/QUJtH0wK9lb9jLq9tJyIxUwtQJHwar2BqtiA4iCWSwo9JLkzFg==}
@@ -7822,11 +7811,6 @@ packages:
 
   rgb2hex@0.2.5:
     resolution: {integrity: sha512-22MOP1Rh7sAo1BZpDG6R5RFYzR2lYEgwq7HEmyW2qcsOqR2lQKmn+O//xV3YG/0rrhMC6KVX2hU+ZXuaw9a5bw==}
-
-  rimraf@6.0.1:
-    resolution: {integrity: sha512-9dkvaxAsk/xNXSJzMgFqqMCuFgt2+KsOFek3TMLfo8NCPfWpBmqwyNn5Y+NX56QUYfCtsyhF3ayiboEoUmJk/A==}
-    engines: {node: 20 || >=22}
-    hasBin: true
 
   rollup-plugin-dts@6.2.3:
     resolution: {integrity: sha512-UgnEsfciXSPpASuOelix7m4DrmyQgiaWBnvI0TM4GxuDh5FkqW8E5hu57bCxXB90VvR1WNfLV80yEDN18UogSA==}
@@ -14273,15 +14257,6 @@ snapshots:
       minipass: 7.1.2
       path-scurry: 1.11.1
 
-  glob@11.0.0:
-    dependencies:
-      foreground-child: 3.1.1
-      jackspeak: 4.0.1
-      minimatch: 10.0.3
-      minipass: 7.1.2
-      package-json-from-dist: 1.0.0
-      path-scurry: 2.0.0
-
   glob@7.2.3:
     dependencies:
       fs.realpath: 1.0.0
@@ -14787,12 +14762,6 @@ snapshots:
   ivya@1.7.0: {}
 
   jackspeak@3.4.0:
-    dependencies:
-      '@isaacs/cliui': 8.0.2
-    optionalDependencies:
-      '@pkgjs/parseargs': 0.11.0
-
-  jackspeak@4.0.1:
     dependencies:
       '@isaacs/cliui': 8.0.2
     optionalDependencies:
@@ -15863,8 +15832,6 @@ snapshots:
       degenerator: 5.0.1
       netmask: 2.0.2
 
-  package-json-from-dist@1.0.0: {}
-
   package-manager-detector@1.3.0: {}
 
   package-name-regex@2.0.6: {}
@@ -15919,11 +15886,6 @@ snapshots:
   path-scurry@1.11.1:
     dependencies:
       lru-cache: 10.2.2
-      minipass: 7.1.2
-
-  path-scurry@2.0.0:
-    dependencies:
-      lru-cache: 11.0.2
       minipass: 7.1.2
 
   path-to-regexp@0.1.7: {}
@@ -16036,6 +15998,8 @@ snapshots:
       source-map-js: 1.2.1
 
   prelude-ls@1.2.1: {}
+
+  premove@4.0.0: {}
 
   pretty-bytes@5.6.0: {}
 
@@ -16330,11 +16294,6 @@ snapshots:
   rfdc@1.4.1: {}
 
   rgb2hex@0.2.5: {}
-
-  rimraf@6.0.1:
-    dependencies:
-      glob: 11.0.0
-      package-json-from-dist: 1.0.0
 
   rollup-plugin-dts@6.2.3(rollup@4.50.1)(typescript@5.9.2):
     dependencies:
