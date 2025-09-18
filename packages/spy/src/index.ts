@@ -264,7 +264,11 @@ export function spyOn<T extends object, K extends keyof T>(
   const originalType = typeof originalImplementation
 
   assert(
-    originalType === 'function',
+    // allow only functions
+    originalType === 'function'
+    // or allow getter/setter on a static value,
+    // e.g. spyOn({ value: 3 }, 'value', 'get')
+    || (accessType !== 'value' && original == null),
     `vi.spyOn() can only spy on a function. Received ${originalType}.`,
   )
 
