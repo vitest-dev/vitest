@@ -1021,9 +1021,6 @@ importers:
       cac:
         specifier: 'catalog:'
         version: 6.7.14(patch_hash=a8f0f3517a47ce716ed90c0cfe6ae382ab763b021a664ada2a608477d0621588)
-      chai-subset:
-        specifier: ^1.6.0
-        version: 1.6.0
       find-up:
         specifier: ^6.3.0
         version: 6.3.0
@@ -4817,11 +4814,6 @@ packages:
 
   ccount@2.0.1:
     resolution: {integrity: sha512-eyrF0jiFpY+3drT6383f1qhkbGsLSifNAjA61IUjZjmLCWjItY6LB9ft9YhoDgwfmclB2zhu51Lc7+95b8NRAg==}
-
-  chai-subset@1.6.0:
-    resolution: {integrity: sha512-K3d+KmqdS5XKW5DWPd5sgNffL3uxdDe+6GdnJh3AYPhwnBGRY5urfvfcbRtWIvvpz+KxkL9FeBB6MZewLUNwug==}
-    engines: {node: '>=4'}
-    deprecated: 'functionality of this lib is built-in to chai now. see more details here: https://github.com/debitoor/chai-subset/pull/85'
 
   chai@6.0.1:
     resolution: {integrity: sha512-/JOoU2//6p5vCXh00FpNgtlw0LjvhGttaWc+y7wpW9yjBm3ys0dI8tSKZxIOgNruz5J0RleccatSIC3uxEZP0g==}
@@ -12833,8 +12825,6 @@ snapshots:
   caniuse-lite@1.0.30001741: {}
 
   ccount@2.0.1: {}
-
-  chai-subset@1.6.0: {}
 
   chai@6.0.1: {}
 

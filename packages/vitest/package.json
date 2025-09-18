@@ -195,7 +195,6 @@
     "acorn-walk": "catalog:",
     "birpc": "catalog:",
     "cac": "catalog:",
-    "chai-subset": "^1.6.0",
     "find-up": "^6.3.0",
     "flatted": "catalog:",
     "happy-dom": "^18.0.1",
