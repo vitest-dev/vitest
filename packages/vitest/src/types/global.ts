@@ -4,24 +4,6 @@ import type { SnapshotState } from '@vitest/snapshot'
 import type { BenchmarkResult } from '../runtime/types/benchmark'
 import type { UserConsoleLog } from './general'
 
-declare global {
-  // eslint-disable-next-line ts/no-namespace
-  namespace Chai {
-    interface ContainSubset {
-      (expected: any): Assertion
-    }
-
-    interface Assertion {
-      containSubset: ContainSubset
-    }
-
-    interface Assert {
-      // eslint-disable-next-line ts/method-signature-style
-      containSubset(val: any, exp: any, msg?: string): void
-    }
-  }
-}
-
 interface SnapshotMatcher<T> {
   <U extends { [P in keyof T]: any }>(
     snapshot: Partial<U>,
