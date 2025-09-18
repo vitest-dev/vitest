@@ -4,8 +4,6 @@ import { unlink } from 'node:fs/promises'
 import { basename, dirname, relative, resolve } from 'pathe'
 import { PlaywrightBrowserProvider } from '../providers/playwright'
 
-// TODO: print trace view location in reporter
-
 export const startTracing: BrowserCommand<[]> = async ({ context, project, provider, sessionId }) => {
   if (provider instanceof PlaywrightBrowserProvider) {
     if (provider.tracingContexts.has(sessionId)) {

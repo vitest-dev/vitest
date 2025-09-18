@@ -170,12 +170,28 @@ export interface BrowserConfigOptions {
   }
 
   /**
-   * Supported only by **playwright** provider.
+   * Generate traces that can be viewed on https://trace.playwright.dev/
+   *
+   * This option is supported only by **playwright** provider.
    */
   trace?: BrowserTraceViewMode | {
-    tracesDir?: string
     mode: BrowserTraceViewMode
+    /**
+     * The directory where all traces will be stored. By default, Vitest
+     * stores all traces in `__traces__` folder close to the test file.
+     */
+    tracesDir?: string
+    /**
+     * Whether to capture screenshots during tracing. Screenshots are used to build a timeline preview.
+     * @default true
+     */
     screenshots?: boolean
+    /**
+     * If this option is true tracing will
+     * - capture DOM snapshot on every action
+     * - record network activity
+     * @default true
+     */
     snapshots?: boolean
   }
 
@@ -280,7 +296,7 @@ export interface ProjectBrowser {
   parseErrorStacktrace: (error: TestError, options?: StackTraceParserOptions) => ParsedStack[]
 }
 
-export interface BrowserCommand<Payload extends unknown[]> {
+export interface BrowserCommand<Payload extends unknown[] = []> {
   (context: BrowserCommandContext, ...payload: Payload): Awaitable<any>
 }
 
