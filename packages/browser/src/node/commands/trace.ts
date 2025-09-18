@@ -1,3 +1,4 @@
+import type { TestProject } from 'vitest/node'
 import type { BrowserCommand } from '../plugin'
 import { unlink } from 'node:fs/promises'
 import { basename, dirname, resolve } from 'pathe'
@@ -5,24 +6,34 @@ import { PlaywrightBrowserProvider } from '../providers/playwright'
 
 // TODO: print trace view location in reporter
 
-export const startTracing: BrowserCommand<[]> = async (context) => {
-  if (context.provider instanceof PlaywrightBrowserProvider) {
-    const options = context.project.config.browser!.trace
-    await context.context.tracing.start({
+export const startTracing: BrowserCommand<[]> = async ({ context, project, provider, sessionId }) => {
+  if (provider instanceof PlaywrightBrowserProvider) {
+    if (provider.tracingContexts.has(sessionId)) {
+      return
+    }
+
+    provider.tracingContexts.add(sessionId)
+    const options = project.config.browser!.trace
+    await context.tracing.start({
       screenshots: options.screenshots ?? true,
       snapshots: options.snapshots ?? true,
       // currently, PW shows sources in private methods
       sources: false,
+    }).catch(() => {
+      provider.tracingContexts.delete(sessionId)
     })
     return
   }
-  throw new TypeError(`The ${context.provider.name} provider does not support tracing.`)
+  throw new TypeError(`The ${provider.name} provider does not support tracing.`)
 }
 
 export const startChunkTrace: BrowserCommand<[{ name: string; title: string }]> = async (
   context,
   { name, title },
 ) => {
+  if (!context.testPath) {
+    throw new Error(`stopChunkTrace cannot be called outside of the test file.`)
+  }
   if (context.provider instanceof PlaywrightBrowserProvider) {
     await context.context.tracing.startChunk({ name, title })
     return
@@ -41,17 +52,17 @@ export const stopChunkTrace: BrowserCommand<[{ name: string }]> = async (
     const options = context.project.config.browser!.trace
     const path = options.tracesDir
       ? resolve(options.tracesDir, name)
-      : resolveTracesPath(context.testPath, name)
+      : resolveTracesPath(context.testPath, context.project, name)
     await context.context.tracing.stopChunk({ path })
     return
   }
   throw new TypeError(`The ${context.provider.name} provider does not support tracing.`)
 }
 
-function resolveTracesPath(testPath: string, name: string) {
+function resolveTracesPath(testPath: string, project: TestProject, name: string) {
   const dir = dirname(testPath)
   const base = basename(testPath)
-  return resolve(dir, '__traces__', base, `${name}.zip`)
+  return resolve(dir, '__traces__', base, `${project.name.replace(/[^a-z0-9]/gi, '-')}-${name}.trace.zip`)
 }
 
 export const deleteTracing: BrowserCommand<[{ name: string }]> = async (
@@ -65,7 +76,7 @@ export const deleteTracing: BrowserCommand<[{ name: string }]> = async (
     const options = context.project.config.browser!.trace
     const path = options.tracesDir
       ? resolve(options.tracesDir, name)
-      : resolveTracesPath(context.testPath, name)
+      : resolveTracesPath(context.testPath, context.project, name)
     return await unlink(path).catch((err) => {
       if (err.code === 'ENOENT') {
         // Ignore the error if the file doesn't exist

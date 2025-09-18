@@ -75,21 +75,29 @@ export function createBrowserRunner(
       if (trace === 'off') {
         return
       }
-      const { retry } = args[1]
+      const { retry, repeats } = args[1]
       if (trace === 'on-all-retries' && retry === 0) {
         return
       }
       if (trace === 'on-first-retry' && retry !== 1) {
         return
       }
-      const name = getTraceName(test)
+      let title = getTestName(test)
+      if (retry) {
+        title += ` (retry x${retry})`
+      }
+      if (repeats) {
+        title += ` (repeat x${repeats})`
+      }
+
+      const name = getTraceName(test, retry, repeats)
       await this.commands.triggerCommand(
         '__vitest_startChunkTrace',
-        [{ name, title: test.name }],
+        [{ name, title }],
       )
     }
 
-    onAfterTryTask = async (task: Test, { retry }: { retry: number }) => {
+    onAfterTryTask = async (test: Test, { retry, repeats }: { retry: number; repeats: number }) => {
       const trace = this.config.browser.trace
       if (trace === 'off') {
         return
@@ -100,7 +108,7 @@ export function createBrowserRunner(
       if (trace === 'on-first-retry' && retry !== 1) {
         return
       }
-      const name = getTraceName(task)
+      const name = getTraceName(test, retry, repeats)
       await this.commands.triggerCommand(
         '__vitest_stopChunkTrace',
         [{ name }],
@@ -112,13 +120,16 @@ export function createBrowserRunner(
       const trace = this.config.browser.trace
       if (trace === 'retain-on-failure' && task.result?.state === 'pass') {
         const retryCount = task.result?.retryCount ?? 0
+        const repeatCount = task.result?.repeatCount ?? 0
         await Promise.all(
-          Array.from({ length: retryCount + 1 }).fill(undefined).map((_, index) => {
-            const name = getTraceName(task, index)
-            return this.commands.triggerCommand(
-              '__vitest_deleteTracing',
-              [{ name }],
-            )
+          Array.from({ length: repeatCount + 1 }).fill(undefined).flatMap((_, repeatCount) => {
+            return Array.from({ length: retryCount + 1 }).fill(undefined).map((_, retryCount) => {
+              const name = getTraceName(task, retryCount, repeatCount)
+              return this.commands.triggerCommand(
+                '__vitest_deleteTracing',
+                [{ name }],
+              )
+            })
           }),
         )
       }
@@ -348,8 +359,7 @@ async function updateTestFilesLocations(files: File[], sourceMaps: Map<string, a
   await Promise.all(promises)
 }
 
-function getTraceName(task: Task, forceRetryCount?: number) {
-  const retryCount = forceRetryCount ?? task.result?.retryCount ?? 0
+function getTraceName(task: Task, retryCount: number, repeatsCount: number) {
   const name = getTestName(task, '-').replace(/[^a-z0-9]/gi, '-')
-  return `${name}-${retryCount}`
+  return `${name}-${repeatsCount}-${retryCount}`
 }

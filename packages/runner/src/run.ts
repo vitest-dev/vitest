@@ -332,11 +332,6 @@ export async function runTest(test: Test, runner: VitestRunner): Promise<void> {
           await fn()
         }
 
-        await runner.onAfterTryTask?.(test, {
-          retry: retryCount,
-          repeats: repeatCount,
-        })
-
         if (test.result.state !== 'fail') {
           if (!test.repeats) {
             test.result.state = 'pass'
@@ -382,6 +377,11 @@ export async function runTest(test: Test, runner: VitestRunner): Promise<void> {
 
       test.onFailed = undefined
       test.onFinished = undefined
+
+      await runner.onAfterTryTask?.(test, {
+        retry: retryCount,
+        repeats: repeatCount,
+      })
 
       // skipped with new PendingError
       if (test.result?.pending || test.result?.state === 'skip') {

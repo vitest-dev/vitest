@@ -94,6 +94,8 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
   private browserPromise: Promise<Browser> | null = null
   private closing = false
 
+  public tracingContexts: Set<string> = new Set()
+
   constructor(
     private project: TestProject,
     private options: PlaywrightProviderOptions,

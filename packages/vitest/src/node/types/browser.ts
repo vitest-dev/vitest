@@ -177,7 +177,6 @@ export interface BrowserConfigOptions {
     mode: BrowserTraceViewMode
     screenshots?: boolean
     snapshots?: boolean
-    sources?: boolean
   }
 
   /**
