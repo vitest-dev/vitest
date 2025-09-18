@@ -9,7 +9,7 @@ catalog:
   '@iconify-json/carbon': ^1.2.13
   '@iconify-json/logos': ^1.2.9
   '@jridgewell/remapping': ^2.3.5
-  '@jridgewell/trace-mapping': 0.3.30
+  '@jridgewell/trace-mapping': 0.3.31
   '@types/chai': ^5.2.2
   '@types/debug': ^4.1.12
   '@types/estree': ^1.0.8
@@ -26,7 +26,7 @@ catalog:
   birpc: ^2.5.0
   cac: ^6.7.14
   chai: ^6.0.1
-  debug: ^4.4.1
+  debug: ^4.4.3
   flatted: ^3.3.3
   istanbul-lib-coverage: ^3.2.2
   istanbul-lib-report: ^3.0.1
@@ -34,7 +34,7 @@ catalog:
   istanbul-reports: ^3.2.0
   magic-string: ^0.30.19
   magicast: ^0.3.5
-  msw: ^2.11.1
+  msw: ^2.11.2
   pathe: ^2.0.3
   sirv: ^3.0.2
   std-env: ^3.9.0
