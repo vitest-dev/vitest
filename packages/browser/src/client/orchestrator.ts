@@ -172,7 +172,7 @@ export class IframeOrchestrator {
     await new Promise<void>((resolve, reject) => {
       iframe.onload = () => {
         const href = this.getIframeHref(iframe)
-        debug('hren', href)
+        debug('iframe loaded with href', href)
         if (href !== iframe.src) {
           reject(this.dispatchIframeError(new Error(
             `Cannot connect to the iframe. `
