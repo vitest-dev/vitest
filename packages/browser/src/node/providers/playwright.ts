@@ -95,6 +95,7 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
   private closing = false
 
   public tracingContexts: Set<string> = new Set()
+  public pendingTraces: Map<string, string> = new Map()
 
   constructor(
     private project: TestProject,
@@ -102,6 +103,21 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
   ) {
     this.browserName = project.config.browser.name as PlaywrightBrowser
     this.mocker = this.createMocker()
+
+    // make sure the traces are finished if the test hangs
+    process.on('SIGTERM', () => {
+      if (!this.browser) {
+        return
+      }
+      const promises = []
+      for (const [trace, contextId] of this.pendingTraces.entries()) {
+        promises.push(() => {
+          const context = this.contexts.get(contextId)
+          return context?.tracing.stopChunk({ path: trace })
+        })
+      }
+      return Promise.allSettled(promises)
+    })
   }
 
   private async openBrowser() {

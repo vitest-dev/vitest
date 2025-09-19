@@ -1,4 +1,4 @@
-import type { TestProject } from 'vitest/node'
+import type { BrowserCommandContext } from 'vitest/node'
 import type { BrowserCommand } from '../plugin'
 import { unlink } from 'node:fs/promises'
 import { basename, dirname, relative, resolve } from 'pathe'
@@ -37,6 +37,8 @@ export const startChunkTrace: BrowserCommand<[{ name: string; title: string }]> 
     if (!provider.tracingContexts.has(sessionId)) {
       await startTracing(command)
     }
+    const path = resolveTracesPath(command, name)
+    provider.pendingTraces.set(path, sessionId)
     await context.tracing.startChunk({ name, title })
     return
   }
@@ -47,21 +49,24 @@ export const stopChunkTrace: BrowserCommand<[{ name: string }]> = async (
   context,
   { name },
 ) => {
-  if (!context.testPath) {
-    throw new Error(`stopChunkTrace cannot be called outside of the test file.`)
-  }
   if (context.provider instanceof PlaywrightBrowserProvider) {
-    const options = context.project.config.browser!.trace
-    const path = options.tracesDir
-      ? resolve(options.tracesDir, name)
-      : resolveTracesPath(context.testPath, context.project, name)
+    const path = resolveTracesPath(context, name)
+    context.provider.pendingTraces.delete(path)
     await context.context.tracing.stopChunk({ path })
     return { tracePath: path }
   }
   throw new TypeError(`The ${context.provider.name} provider does not support tracing.`)
 }
 
-function resolveTracesPath(testPath: string, project: TestProject, name: string) {
+function resolveTracesPath({ testPath, project }: BrowserCommandContext, name: string) {
+  if (!testPath) {
+    throw new Error(`This command can only be called inside a test file.`)
+  }
+  const options = project.config.browser!.trace
+  const sanitizedName = `${project.name.replace(/[^a-z0-9]/gi, '-')}-${name}.trace.zip`
+  if (options.tracesDir) {
+    return resolve(options.tracesDir, sanitizedName)
+  }
   const dir = dirname(testPath)
   const base = basename(testPath)
   return resolve(
