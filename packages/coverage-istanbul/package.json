@@ -37,7 +37,7 @@
     "dist"
   ],
   "scripts": {
-    "build": "rimraf dist && rollup -c",
+    "build": "premove dist && rollup -c",
     "dev": "rollup -c --watch --watch.include 'src/**'"
   },
   "peerDependencies": {
