@@ -67,7 +67,7 @@ export async function showTaskSource(task: Task) {
     file: task.file.id,
     line: task.location?.line ?? 0,
     view: 'editor',
-    test: null,
+    test: task.id,
     column: null,
   })
 }
