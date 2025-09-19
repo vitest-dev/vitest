@@ -10,7 +10,7 @@ test('collector keeps the order of arguments', () => {
 
   collector('a', cb, options.timeout)
 
-  expect(fn).toHaveBeenNthCalledWith(1, 'a', cb, options)
+  expect(fn).toHaveBeenNthCalledWith(1, 'a', cb, options.timeout)
 
   collector('a', options, cb)
 
@@ -18,7 +18,7 @@ test('collector keeps the order of arguments', () => {
 
   collector.each([1])('a', cb, options.timeout)
 
-  expect(fn).toHaveBeenNthCalledWith(3, 'a', expect.any(Function), options)
+  expect(fn).toHaveBeenNthCalledWith(3, 'a', expect.any(Function), options.timeout)
 
   collector.each([1])('a', options, cb)
 
