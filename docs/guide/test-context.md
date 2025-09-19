@@ -94,7 +94,7 @@ function annotate(
 ): Promise<TestAnnotation>
 ```
 
-Add a [test annotation](/guide/test-annotations) that will be displayed by your [reporter](/config/#reporter).
+Add a [test annotation](/guide/test-annotations) that will be displayed by your [reporter](/config/#reporters).
 
 ```ts
 test('annotations API', async ({ annotate }) => {

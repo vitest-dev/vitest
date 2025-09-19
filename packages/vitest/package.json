@@ -120,7 +120,7 @@
     "node": "^18.0.0 || ^20.0.0 || >=22.0.0"
   },
   "scripts": {
-    "build": "rimraf dist && rollup -c",
+    "build": "premove dist && rollup -c",
     "dev": "NODE_OPTIONS=\"--max-old-space-size=8192\" rollup -c --watch -m inline"
   },
   "peerDependencies": {
