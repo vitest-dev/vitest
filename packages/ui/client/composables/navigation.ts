@@ -111,14 +111,30 @@ export function navigateTo({ file, line, view, test, column }: Params) {
   showDashboard(false)
 }
 
-export function showReport(task: Task) {
-  navigateTo({
-    file: task.file.id,
-    test: task.type === 'test' ? task.id : null,
-    line: null,
-    view: null,
-    column: null,
-  })
+export function clickOnTask(task: Task) {
+  if (task.type === 'test') {
+    if (viewMode.value === 'editor') {
+      showTaskSource(task)
+    }
+    else {
+      navigateTo({
+        file: task.file.id,
+        line: null,
+        column: null,
+        view: viewMode.value,
+        test: task.id,
+      })
+    }
+  }
+  else {
+    navigateTo({
+      file: task.file.id,
+      test: null,
+      line: null,
+      view: viewMode.value,
+      column: null,
+    })
+  }
 }
 
 export function showCoverage() {

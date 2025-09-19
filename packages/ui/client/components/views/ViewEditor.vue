@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { Task } from '@vitest/runner'
 import type CodeMirror from 'codemirror'
-import type { File, TestAnnotation, TestError } from 'vitest'
+import type { RunnerTestFile, TestAnnotation, TestError } from 'vitest'
 import { createTooltip, destroyTooltip } from 'floating-vue'
 import { getAttachmentUrl, sanitizeFilePath } from '~/composables/attachments'
 import { client, isReport } from '~/composables/client'
@@ -11,7 +11,7 @@ import { openInEditor } from '~/composables/error'
 import { columnNumber, lineNumber } from '~/composables/params'
 
 const props = defineProps<{
-  file?: File
+  file?: RunnerTestFile
 }>()
 
 const emit = defineEmits<{ (event: 'draft', value: boolean): void }>()
