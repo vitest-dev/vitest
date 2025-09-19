@@ -317,7 +317,7 @@ Capture a trace of your browser test runs. You can preview traces with [Playwrig
 
 This options supports the following values:
 
-- `'on'` - capture trace for all tests.
+- `'on'` - capture trace for all tests. (not recommended as it's performance heavy)
 - `'off'` - do not capture traces.
 - `'on-first-retry'` - capture trace only when retrying the test for the first time.
 - `'on-all-retries'` - capture trace on every retry of the test.
@@ -326,6 +326,7 @@ This options supports the following values:
 
 ```ts
 interface TraceOptions {
+  mode: 'on' | 'off' | 'on-first-retry' | 'on-all-retries' | 'retain-on-failure'
   /**
    * The directory where all traces will be stored. By default, Vitest
    * stores all traces in `__traces__` folder close to the test file.

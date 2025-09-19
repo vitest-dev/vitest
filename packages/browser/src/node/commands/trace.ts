@@ -26,17 +26,21 @@ export const startTracing: BrowserCommand<[]> = async ({ context, project, provi
 }
 
 export const startChunkTrace: BrowserCommand<[{ name: string; title: string }]> = async (
-  context,
+  command,
   { name, title },
 ) => {
-  if (!context.testPath) {
+  const { provider, sessionId, testPath, context } = command
+  if (!testPath) {
     throw new Error(`stopChunkTrace cannot be called outside of the test file.`)
   }
-  if (context.provider instanceof PlaywrightBrowserProvider) {
-    await context.context.tracing.startChunk({ name, title })
+  if (provider instanceof PlaywrightBrowserProvider) {
+    if (!provider.tracingContexts.has(sessionId)) {
+      await startTracing(command)
+    }
+    await context.tracing.startChunk({ name, title })
     return
   }
-  throw new TypeError(`The ${context.provider.name} provider does not support tracing.`)
+  throw new TypeError(`The ${provider.name} provider does not support tracing.`)
 }
 
 export const stopChunkTrace: BrowserCommand<[{ name: string }]> = async (
@@ -60,7 +64,12 @@ export const stopChunkTrace: BrowserCommand<[{ name: string }]> = async (
 function resolveTracesPath(testPath: string, project: TestProject, name: string) {
   const dir = dirname(testPath)
   const base = basename(testPath)
-  return resolve(dir, '__traces__', base, `${project.name.replace(/[^a-z0-9]/gi, '-')}-${name}.trace.zip`)
+  return resolve(
+    dir,
+    '__traces__',
+    base,
+    `${project.name.replace(/[^a-z0-9]/gi, '-')}-${name}.trace.zip`,
+  )
 }
 
 export const deleteTracing: BrowserCommand<[{ traces: string[] }]> = async (
@@ -92,6 +101,7 @@ export const annotateTraces: BrowserCommand<[{ traces: string[]; testId: string 
 ) => {
   const vitest = project.vitest
   await Promise.all(traces.map((trace) => {
+    const entity = vitest.state.getReportedEntityById(testId)
     return vitest._testRun.annotate(testId, {
       message: relative(project.config.root, trace),
       type: 'traces',
@@ -99,6 +109,13 @@ export const annotateTraces: BrowserCommand<[{ traces: string[]; testId: string 
         path: trace,
         contentType: 'application/octet-stream',
       },
+      location: entity?.location
+        ? {
+            file: entity.module.moduleId,
+            line: entity.location.line,
+            column: entity.location.column,
+          }
+        : undefined,
     })
   }))
 }

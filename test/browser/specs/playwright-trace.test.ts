@@ -17,6 +17,7 @@ describe.runIf(provider.name === 'playwright')('playwright tracing', () => {
       browser: {
         trace: 'on',
       },
+      includeTaskLocation: true,
     })
 
     expect(stderr).toBe('')
@@ -81,6 +82,11 @@ describe.runIf(provider.name === 'playwright')('playwright tracing', () => {
           expect(annotation.message).toContain('basic.test.ts/')
           expect(annotation.type).toBe('traces')
           expect(annotation.attachment!.contentType).toBe('application/octet-stream')
+          expect(annotation.location).toEqual({
+            file: test.module.moduleId,
+            line: test.location.line,
+            column: test.location.column,
+          })
         })
       }
     })
