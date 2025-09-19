@@ -345,18 +345,10 @@ type ExtractEachCallbackArgs<T extends ReadonlyArray<any>> = {
                     : 'fallback']
 
 interface EachFunctionReturn<T extends any[]> {
-  /**
-   * @deprecated Use options as the second argument instead
-   */
   (
     name: string | Function,
     fn: (...args: T) => Awaitable<void>,
-    options: TestCollectorOptions
-  ): void
-  (
-    name: string | Function,
-    fn: (...args: T) => Awaitable<void>,
-    options?: number | TestCollectorOptions
+    options?: number
   ): void
   (
     name: string | Function,
@@ -411,18 +403,10 @@ interface SuiteForFunction {
 }
 
 interface TestCollectorCallable<C = object> {
-  /**
-   * @deprecated Use options as the second argument instead
-   */
-  <ExtraContext extends C>(
-    name: string | Function,
-    fn: TestFunction<ExtraContext>,
-    options: TestCollectorOptions
-  ): void
   <ExtraContext extends C>(
     name: string | Function,
     fn?: TestFunction<ExtraContext>,
-    options?: number | TestCollectorOptions
+    options?: number
   ): void
   <ExtraContext extends C>(
     name: string | Function,
@@ -560,18 +544,10 @@ export type Fixtures<T extends Record<string, any>, ExtraContext = object> = {
 export type InferFixturesTypes<T> = T extends TestAPI<infer C> ? C : T
 
 interface SuiteCollectorCallable<ExtraContext = object> {
-  /**
-   * @deprecated Use options as the second argument instead
-   */
-  <OverrideExtraContext extends ExtraContext = ExtraContext>(
-    name: string | Function,
-    fn: SuiteFactory<OverrideExtraContext>,
-    options: TestOptions
-  ): SuiteCollector<OverrideExtraContext>
   <OverrideExtraContext extends ExtraContext = ExtraContext>(
     name: string | Function,
     fn?: SuiteFactory<OverrideExtraContext>,
-    options?: number | TestOptions
+    options?: number
   ): SuiteCollector<OverrideExtraContext>
   <OverrideExtraContext extends ExtraContext = ExtraContext>(
     name: string | Function,
@@ -593,18 +569,6 @@ export type SuiteAPI<ExtraContext = object> = ChainableSuiteAPI<ExtraContext> & 
   skipIf: (condition: any) => ChainableSuiteAPI<ExtraContext>
   runIf: (condition: any) => ChainableSuiteAPI<ExtraContext>
 }
-
-/**
- * @deprecated
- */
-export type HookListener<T extends any[], Return = void> = (
-  ...args: T
-) => Awaitable<Return>
-
-/**
- * @deprecated
- */
-export type HookCleanupCallback = unknown
 
 export interface BeforeAllListener {
   (suite: Readonly<Suite | File>): Awaitable<unknown>
