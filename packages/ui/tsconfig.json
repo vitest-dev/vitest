@@ -1,10 +1,18 @@
 {
-  "extends": "../../tsconfig.base.json",
+  "extends": "../../tsconfig.browser.json",
   "compilerOptions": {
     "jsx": "preserve",
-    "lib": ["dom", "esnext", "DOM.Iterable"],
+    "lib": ["ES2023", "DOM", "DOM.Iterable"],
+    "isolatedDeclarations": false,
     "skipLibCheck": true
   },
-  "include": ["./client/**/*"],
+  "include": [
+    "./client/**/*",
+    "./client/components.d.ts",
+    "./client/shim.d.ts",
+    "./shim.d.ts",
+    "../vitest/src/integrations/chai/chai-subset.d.ts",
+    "../vitest/src/shims.dev.d.ts"
+  ],
   "exclude": ["dist", "node_modules"]
 }

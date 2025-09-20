@@ -3,5 +3,9 @@
   "compilerOptions": {
     "isolatedDeclarations": true
   },
-  "include": ["./*.ts"]
+  "include": [
+    "./*.ts",
+    "../../vitest/src/integrations/chai/chai-subset.d.ts",
+    "../../vitest/src/shims.dev.d.ts"
+  ]
 }

@@ -1,8 +1,9 @@
 {
-  "extends": "../../tsconfig.base.json",
-  "compilerOptions": {
-    "isolatedDeclarations": true
-  },
-  "include": ["src/**/*"],
+  "extends": "../../tsconfig.node-dom.json",
+  "include": [
+    "src/**/*",
+    "src/integrations/chai/chai-subset.d.ts",
+    "src/shims.dev.d.ts"
+  ],
   "exclude": ["**/dist/**"]
 }

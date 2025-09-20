@@ -1,22 +1,23 @@
 {
-  "extends": "./tsconfig.base.json",
   "compilerOptions": {
-    "types": [
-      "node",
-      "vite/client"
-    ]
+    "noEmit": true
   },
-  "exclude": [
-    "**/dist/**",
-    "./packages/vitest/dist/**",
-    "./packages/*/*.d.ts",
-    "./packages/*/*.d.cts",
-    "./examples/**/*.*",
-    "./bench/**",
-    "./test/benchmark/fixtures/**",
-    "./test/typescript/**",
-    "./test/browser/**",
-    "**/coverage/fixtures/**",
-    "./test/watch/fixtures/**"
-  ]
+  "references": [
+    { "path": "./packages/browser" },
+    { "path": "./packages/coverage-istanbul" },
+    { "path": "./packages/coverage-v8" },
+    { "path": "./packages/expect" },
+    { "path": "./packages/mocker" },
+    { "path": "./packages/pretty-format" },
+    { "path": "./packages/runner" },
+    { "path": "./packages/snapshot" },
+    { "path": "./packages/spy" },
+    { "path": "./packages/ui" },
+    { "path": "./packages/utils" },
+    { "path": "./packages/vite-node" },
+    { "path": "./packages/vitest" },
+    { "path": "./packages/web-worker" },
+    { "path": "./packages/ws-client" }
+  ],
+  "files": []
 }

@@ -1,8 +1,7 @@
 {
-  "extends": "../../tsconfig.base.json",
+  "extends": "../../tsconfig.node-dom.json",
   "compilerOptions": {
-    "types": ["node", "vite/client"],
-    "isolatedDeclarations": true
+    "types": ["node", "vite/client"]
   },
   "exclude": [
     "dist",

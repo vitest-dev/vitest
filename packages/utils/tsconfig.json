@@ -1,9 +1,9 @@
 {
-  "extends": "../../tsconfig.base.json",
-  "compilerOptions": {
-    "moduleResolution": "Bundler",
-    "isolatedDeclarations": true
-  },
-  "include": ["src/**/*"],
+  "extends": "../../tsconfig.node-dom.json",
+  "include": [
+    "src/**/*",
+    "../vitest/src/integrations/chai/chai-subset.d.ts",
+    "../vitest/src/shims.dev.d.ts"
+  ],
   "exclude": ["**/dist/**"]
 }

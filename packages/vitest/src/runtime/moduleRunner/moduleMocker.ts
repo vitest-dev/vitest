@@ -40,7 +40,7 @@ export class VitestMocker {
     Array: typeof Array
     Map: typeof Map
     Error: typeof Error
-    Symbol: typeof Symbol
+    Symbol: typeof globalThis.Symbol
   }
 
   private filterPublicKeys: (symbol | string)[]
