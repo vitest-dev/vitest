@@ -93,7 +93,7 @@ export const configDefaults: Readonly<{
 }> = Object.freeze({
   allowOnly: !isCI,
   isolate: true,
-  watch: !isCI && process.stdin.isTTY,
+  watch: undefined as any, // Will be resolved in resolveConfig based on environment variables and defaults
   globals: false,
   environment: 'node' as const,
   pool: 'forks' as const,
