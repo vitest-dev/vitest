@@ -382,6 +382,11 @@ export async function runTest(test: Test, runner: VitestRunner): Promise<void> {
       test.onFailed = undefined
       test.onFinished = undefined
 
+      await runner.onAfterRetryTask?.(test, {
+        retry: retryCount,
+        repeats: repeatCount,
+      })
+
       // skipped with new PendingError
       if (test.result?.pending || test.result?.state === 'skip') {
         test.mode = 'skip'

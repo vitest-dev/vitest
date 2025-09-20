@@ -211,6 +211,11 @@ export class StateManager {
     return this.reportedTasksMap.get(task)
   }
 
+  getReportedEntityById(taskId: string): TestModule | TestCase | TestSuite | undefined {
+    const task = this.idMap.get(taskId)
+    return task ? this.reportedTasksMap.get(task) : undefined
+  }
+
   updateTasks(packs: TaskResultPack[]): void {
     for (const [id, result, meta] of packs) {
       const task = this.idMap.get(id)

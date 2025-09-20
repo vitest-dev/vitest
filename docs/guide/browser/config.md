@@ -128,7 +128,7 @@ A path to the HTML entry point. Can be relative to the root of the project. This
 
 Configure options for Vite server that serves code in the browser. Does not affect [`test.api`](#api) option. By default, Vitest assigns port `63315` to avoid conflicts with the development server, allowing you to run both in parallel.
 
-## browser.provider <Badge type="danger">advanced</Badge> {#browser-provider}
+## browser.provider {#browser-provider}
 
 - **Type:** `BrowserProviderOption`
 - **Default:** `'preview'`
@@ -154,7 +154,7 @@ export default defineConfig({
 
 To configure how provider initializes the browser, you can pass down options to the factory function:
 
-```ts{7-15,22-27}
+```ts{7-13,20-26}
 import { playwright } from '@vitest/browser/providers/playwright'
 
 export default defineConfig({
@@ -188,7 +188,7 @@ export default defineConfig({
 })
 ```
 
-### Custom Provider
+### Custom Provider <Badge type="danger">advanced</Badge>
 
 ::: danger ADVANCED API
 The custom provider API is highly experimental and can change between patches. If you just need to run tests in a browser, use the [`browser.instances`](#browser-instances) option instead.
@@ -305,6 +305,50 @@ The timeout in milliseconds. If connection to the browser takes longer, the test
 
 ::: info
 This is the time it should take for the browser to establish the WebSocket connection with the Vitest server. In normal circumstances, this timeout should never be reached.
+:::
+
+## browser.trace
+
+- **Type:** `'on' | 'off' | 'on-first-retry' | 'on-all-retries' | 'retain-on-failure' | object`
+- **CLI:** `--browser.trace=on`, `--browser.trace=retain-on-failure`
+- **Default:** `'off'`
+
+Capture a trace of your browser test runs. You can preview traces with [Playwright Trace Viewer](https://trace.playwright.dev/).
+
+This options supports the following values:
+
+- `'on'` - capture trace for all tests. (not recommended as it's performance heavy)
+- `'off'` - do not capture traces.
+- `'on-first-retry'` - capture trace only when retrying the test for the first time.
+- `'on-all-retries'` - capture trace on every retry of the test.
+- `'retain-on-failure'` - capture trace only for tests that fail. This will automatically delete traces for tests that pass.
+- `object` - an object with the following shape:
+
+```ts
+interface TraceOptions {
+  mode: 'on' | 'off' | 'on-first-retry' | 'on-all-retries' | 'retain-on-failure'
+  /**
+   * The directory where all traces will be stored. By default, Vitest
+   * stores all traces in `__traces__` folder close to the test file.
+   */
+  tracesDir?: string
+  /**
+   * Whether to capture screenshots during tracing. Screenshots are used to build a timeline preview.
+   * @default true
+   */
+  screenshots?: boolean
+  /**
+   * If this option is true tracing will
+   * - capture DOM snapshot on every action
+   * - record network activity
+   * @default true
+   */
+  snapshots?: boolean
+}
+```
+
+::: danger WARNING
+This option is supported only by the [**playwright**](/guide/browser/playwright) provider.
 :::
 
 ## browser.trackUnhandledErrors

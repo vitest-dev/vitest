@@ -3,6 +3,7 @@ import type { CancelReason } from '@vitest/runner'
 import type { Awaitable, ParsedStack, TestError } from '@vitest/utils'
 import type { StackTraceParserOptions } from '@vitest/utils/source-map'
 import type { ViteDevServer } from 'vite'
+import type { BrowserTraceViewMode } from '../../runtime/config'
 import type { BrowserTesterOptions } from '../../types/browser'
 import type { TestProject } from '../project'
 import type { ApiConfig, ProjectConfig } from './config'
@@ -169,6 +170,32 @@ export interface BrowserConfigOptions {
   }
 
   /**
+   * Generate traces that can be viewed on https://trace.playwright.dev/
+   *
+   * This option is supported only by **playwright** provider.
+   */
+  trace?: BrowserTraceViewMode | {
+    mode: BrowserTraceViewMode
+    /**
+     * The directory where all traces will be stored. By default, Vitest
+     * stores all traces in `__traces__` folder close to the test file.
+     */
+    tracesDir?: string
+    /**
+     * Whether to capture screenshots during tracing. Screenshots are used to build a timeline preview.
+     * @default true
+     */
+    screenshots?: boolean
+    /**
+     * If this option is true tracing will
+     * - capture DOM snapshot on every action
+     * - record network activity
+     * @default true
+     */
+    snapshots?: boolean
+  }
+
+  /**
    * Directory where screenshots will be saved when page.screenshot() is called
    * If not set, all screenshots are saved to __screenshots__ directory in the same folder as the test file.
    * If this is set, it will be resolved relative to the project root.
@@ -269,7 +296,7 @@ export interface ProjectBrowser {
   parseErrorStacktrace: (error: TestError, options?: StackTraceParserOptions) => ParsedStack[]
 }
 
-export interface BrowserCommand<Payload extends unknown[]> {
+export interface BrowserCommand<Payload extends unknown[] = []> {
   (context: BrowserCommandContext, ...payload: Payload): Awaitable<any>
 }
 
@@ -317,6 +344,14 @@ export interface ResolvedBrowserOptions extends BrowserConfigOptions {
   screenshotFailures: boolean
   locators: {
     testIdAttribute: string
+  }
+  trace: {
+    mode: BrowserTraceViewMode
+    tracesDir?: string
+    screenshots?: boolean
+    snapshots?: boolean
+    // TODO: map locations to test ones
+    // sources?: boolean
   }
 }
 

@@ -418,6 +418,14 @@ export const cliOptionsConfig: VitestCLIOptions = {
       trackUnhandledErrors: {
         description: 'Control if Vitest catches uncaught exceptions so they can be reported (default: `true`)',
       },
+      trace: {
+        description: 'Enable trace view mode. Supported: "on", "off", "on-first-retry", "on-all-retries", "retain-on-failure".',
+        argument: '<mode>',
+        subcommands: null, // don't support subcommands
+        transform(value) {
+          return { mode: value }
+        },
+      },
       orchestratorScripts: null,
       commands: null,
       viewport: null,

@@ -1,4 +1,4 @@
-import type { File, Task } from '@vitest/runner'
+import type { File, Task, TestAnnotation } from '@vitest/runner'
 import type { SerializedError } from '@vitest/utils'
 import type { TestError, UserConsoleLog } from '../../types/general'
 import type { Vitest } from '../core'
@@ -275,16 +275,29 @@ export abstract class BaseReporter implements Reporter {
 
     const PADDING = ' '.repeat(padding)
 
-    annotations.forEach(({ location, type, message }) => {
+    const groupedAnnotations: Record<string, TestAnnotation[]> = {}
+
+    annotations.forEach((annotation) => {
+      const { location, type } = annotation
+      let group: string
       if (location) {
         const file = relative(test.project.config.root, location.file)
-        this[console](`${PADDING}${c.blue(F_POINTER)} ${c.gray(`${file}:${location.line}:${location.column}`)} ${c.bold(type)}`)
+        group = `${c.gray(`${file}:${location.line}:${location.column}`)} ${c.bold(type)}`
       }
       else {
-        this[console](`${PADDING}${c.blue(F_POINTER)} ${c.bold(type)}`)
+        group = c.bold(type)
       }
-      this[console](`${PADDING}  ${c.blue(F_DOWN_RIGHT)} ${message}`)
+
+      groupedAnnotations[group] ??= []
+      groupedAnnotations[group].push(annotation)
     })
+
+    for (const group in groupedAnnotations) {
+      this[console](`${PADDING}${c.blue(F_POINTER)} ${group}`)
+      groupedAnnotations[group].forEach(({ message }) => {
+        this[console](`${PADDING}  ${c.blue(F_DOWN_RIGHT)} ${message}`)
+      })
+    }
   }
 
   protected getEntityPrefix(entity: TestCase | TestModule | TestSuite): string {
