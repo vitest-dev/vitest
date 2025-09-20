@@ -6,19 +6,19 @@ test('collector keeps the order of arguments', () => {
   const fn = vi.fn()
   const collector = createTaskCollector(fn)
   const cb = vi.fn()
-  const options = {}
+  const options = { timeout: 100 }
 
-  collector('a', cb, options)
+  collector('a', cb, options.timeout)
 
-  expect(fn).toHaveBeenNthCalledWith(1, 'a', cb, options)
+  expect(fn).toHaveBeenNthCalledWith(1, 'a', cb, options.timeout)
 
   collector('a', options, cb)
 
   expect(fn).toHaveBeenNthCalledWith(2, 'a', options, cb)
 
-  collector.each([1])('a', cb, options)
+  collector.each([1])('a', cb, options.timeout)
 
-  expect(fn).toHaveBeenNthCalledWith(3, 'a', expect.any(Function), options)
+  expect(fn).toHaveBeenNthCalledWith(3, 'a', expect.any(Function), options.timeout)
 
   collector.each([1])('a', options, cb)
 

@@ -11,6 +11,7 @@ declare global {
   const asyncComputed: typeof import('@vueuse/core')['asyncComputed']
   const autoResetRef: typeof import('@vueuse/core')['autoResetRef']
   const calcExternalLabels: typeof import('./composables/module-graph')['calcExternalLabels']
+  const clickOnTask: typeof import('./composables/navigation')['clickOnTask']
   const codemirrorRef: typeof import('./composables/codemirror')['codemirrorRef']
   const columnNumber: typeof import('./composables/params')['columnNumber']
   const computed: typeof import('vue')['computed']
