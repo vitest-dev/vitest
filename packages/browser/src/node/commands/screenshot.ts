@@ -1,8 +1,9 @@
 import type { BrowserCommand, BrowserCommandContext, ResolvedConfig } from 'vitest/node'
 import type { ScreenshotOptions } from '../../../context'
 import { mkdir, rm } from 'node:fs/promises'
-import { normalize } from 'node:path'
-import { basename, dirname, relative, resolve } from 'pathe'
+import { normalize as platformNormalize } from 'node:path'
+import { nanoid } from '@vitest/utils/helpers'
+import { basename, dirname, normalize, relative, resolve } from 'pathe'
 import { PlaywrightBrowserProvider } from '../providers/playwright'
 import { WebdriverBrowserProvider } from '../providers/webdriverio'
 
@@ -50,8 +51,15 @@ export async function takeScreenshot(
     context.project.config,
     options.path,
   )
-  const savePath = normalize(path)
-  await mkdir(dirname(path), { recursive: true })
+
+  // playwright does not need a screenshot path if we don't intend to save it
+  let savePath: string | undefined
+
+  if (options.save) {
+    savePath = normalize(path)
+
+    await mkdir(dirname(savePath), { recursive: true })
+  }
 
   if (context.provider instanceof PlaywrightBrowserProvider) {
     const mask = options.mask?.map(selector => context.iframe.locator(selector))
@@ -62,7 +70,7 @@ export async function takeScreenshot(
       const buffer = await element.screenshot({
         ...config,
         mask,
-        path: options.save ? savePath : undefined,
+        path: savePath,
       })
       return { buffer, path }
     }
@@ -70,12 +78,19 @@ export async function takeScreenshot(
     const buffer = await context.iframe.locator('body').screenshot({
       ...options,
       mask,
-      path: options.save ? savePath : undefined,
+      path: savePath,
     })
     return { buffer, path }
   }
 
   if (context.provider instanceof WebdriverBrowserProvider) {
+    // webdriverio needs a path, so if one is not already set we create a temporary one
+    if (savePath === undefined) {
+      savePath = resolve(context.project.tmpDir, nanoid())
+
+      await mkdir(context.project.tmpDir, { recursive: true })
+    }
+
     const page = context.provider.browser!
     const element = !options.element
       ? await page.$('body')
@@ -84,8 +99,9 @@ export async function takeScreenshot(
     // webdriverio expects the path to contain the extension and only works with PNG files
     const savePathWithExtension = savePath.endsWith('.png') ? savePath : `${savePath}.png`
 
+    // there seems to be a bug in webdriverio, `X:/` gets appended to cwd, so we convert to `X:\`
     const buffer = await element.saveScreenshot(
-      savePathWithExtension,
+      platformNormalize(savePathWithExtension),
     )
     if (!options.save) {
       await rm(savePathWithExtension, { force: true })
