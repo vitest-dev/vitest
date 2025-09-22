@@ -52,7 +52,7 @@ Next generation testing framework powered by Vite.
 - Reporting Uncaught Errors
 - Run your tests in the browser natively (experimental)
 
-> Vitest requires Vite >=v5.0.0 and Node >=v18.0.0
+> Vitest requires Vite >=v6.0.0 and Node >=v20.0.0
 
 ```ts
 import { assert, describe, expect, it } from 'vitest'
