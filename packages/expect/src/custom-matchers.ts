@@ -1,5 +1,4 @@
 import type { MatchersObject } from './types'
-import { isStandardSchema } from './jest-utils'
 
 // selectively ported from https://github.com/jest-community/jest-extended
 export const customMatchers: MatchersObject = {
