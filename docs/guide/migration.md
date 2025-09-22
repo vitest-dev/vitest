@@ -7,20 +7,6 @@ outline: deep
 
 ## Migrating to Vitest 4.0 {#vitest-4}
 
-### Removed `reporters: 'basic'`
-
-Basic reporter is removed as it is equal to:
-
-```ts
-export default defineConfig({
-  test: {
-    reporters: [
-      ['default', { summary: false }]
-    ]
-  }
-})
-```
-
 ### V8 Code Coverage Major Changes
 
 Vitest's V8 code coverage provider is now using more accurate coverage result remapping logic.
@@ -260,16 +246,81 @@ export default defineConfig({
 
 The naming of properties in `playwright` factory now also aligns with [Playwright documentation](https://playwright.dev/docs/api/class-testoptions#test-options-launch-options) making it easier to find.
 
+### Reporter Updates
+
+Reporter APIs `onCollected`, `onSpecsCollected`, `onPathsCollected`, `onTaskUpdate` and `onFinished` were removed. See [`Reporters API`](/advanced/api/reporters) for new alternatives. The new APIs were introduced in Vitest `v3.0.0`.
+
+The `basic` reporter was removed as it is equal to:
+
+```ts
+export default defineConfig({
+  test: {
+    reporters: [
+      ['default', { summary: false }]
+    ]
+  }
+})
+```
+
+The [`verbose`](/guide/reporters#verbose-reporter) reporter now prints test cases as a flat list. To revert to the previous behaviour, use `--reporter=tree`:
+
+```ts
+export default defineConfig({
+  test: {
+    reporters: ['verbose'], // [!code --]
+    reporters: ['tree'], // [!code ++]
+  }
+})
+```
+
+### Snapshots using custom elements print the shadow root
+
+In Vitest 4.0 snapshots that include custom elements will print the shadow root contents. To restore the previous behavior, set the [`printShadowRoot` option](/config/#snapshotformat) to `false`.
+
+```js
+// before Vite 4.0
+exports[`custom element with shadow root 1`] = `
+"<body>
+  <div>
+    <custom-element />
+  </div>
+</body>"
+`
+
+// after Vite 4.0
+exports[`custom element with shadow root 1`] = `
+"<body>
+  <div>
+    <custom-element>
+      #shadow-root
+        <span
+          class="some-name"
+          data-test-id="33"
+          id="5"
+        >
+          hello
+        </span>
+    </custom-element>
+  </div>
+</body>"
+`
+```
+
 ### Deprecated APIs are Removed
 
 Vitest 4.0 removes some deprecated APIs, including:
 
 - `poolMatchGlobs` config option. Use [`projects`](/guide/projects) instead.
 - `environmentMatchGlobs` config option. Use [`projects`](/guide/projects) instead.
-- Reporter APIs `onCollected`, `onSpecsCollected`, `onPathsCollected`, `onTaskUpdate` and `onFinished`. See [`Reporters API`](/advanced/api/reporters) for new alternatives. These APIs were introduced in Vitest `v3.0.0`.
 - `deps.external`, `deps.inline`, `deps.fallbackCJS` config options. Use `server.deps.external`, `server.deps.inline`, or `server.deps.fallbackCJS` instead.
 - `browser.testerScripts` config option. Use [`browser.testerHtmlPath`](/guide/browser/config#browser-testerhtmlpath) instead.
 - `minWorkers` config option. Only `maxWorkers` has any effect on how tests are running, so we are removing this public option.
+- Vitest no longer supports providing test options as a third argument to `test` and `describe`. Use the second argument instead:
+
+```ts
+test('example', () => { /* ... */ }, { retry: 2 }) // [!code --]
+test('example', { retry: 2 }, () => { /* ... */ }) // [!code ++]
+```
 
 This release also removes all deprecated types. This finally fixes an issue where Vitest accidentally pulled in `@types/node` (see [#5481](https://github.com/vitest-dev/vitest/issues/5481) and [#6141](https://github.com/vitest-dev/vitest/issues/6141)).
 

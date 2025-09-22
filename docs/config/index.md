@@ -328,7 +328,7 @@ TypeError: createAsyncThunk is not a function
 TypeError: default is not a function
 ```
 
-By default, Vitest assumes you are using a bundler to bypass this and will not fail, but you can disable this behaviour manually, if you code is not processed.
+By default, Vitest assumes you are using a bundler to bypass this and will not fail, but you can disable this behaviour manually, if your code is not processed.
 
 #### deps.moduleDirectories
 
@@ -1664,7 +1664,7 @@ Will call [`vi.unstubAllGlobals`](/api/vi#vi-unstuballglobals) before each test.
 
 - **Type:** `PrettyFormatOptions`
 
-Format options for snapshot testing. These options are passed down to [`pretty-format`](https://www.npmjs.com/package/pretty-format).
+Format options for snapshot testing. These options are passed down to our fork of [`pretty-format`](https://www.npmjs.com/package/pretty-format). In addition to the `pretty-format` options we support `printShadowRoot: boolean`.
 
 ::: tip
 Beware that `plugins` field on this object will be ignored.
@@ -2439,7 +2439,7 @@ Polling timeout in milliseconds
 
 Always print console traces when calling any `console` method. This is useful for debugging.
 
-### attachmentsDir <Version>3.2.0</Version>
+### attachmentsDir <Version>3.2.0</Version> {#attachmentsdir}
 
 - **Type:** `string`
 - **Default:** `'.vitest-attachments'`

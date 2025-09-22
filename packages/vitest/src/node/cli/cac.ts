@@ -2,7 +2,7 @@ import type { CAC, Command } from 'cac'
 import type { VitestRunMode } from '../types/config'
 import type { CliOptions } from './cli-api'
 import type { CLIOption, CLIOptions as CLIOptionsConfig } from './cli-config'
-import { toArray } from '@vitest/utils'
+import { toArray } from '@vitest/utils/helpers'
 import cac from 'cac'
 import { normalize } from 'pathe'
 import c from 'tinyrainbow'
@@ -205,7 +205,7 @@ function removeQuotes<T>(str: T): T {
     }
     return str
   }
-  if (str.startsWith('"') && str.endsWith('"')) {
+  if (str[0] === '"' && str.endsWith('"')) {
     return str.slice(1, -1) as unknown as T
   }
   if (str.startsWith(`'`) && str.endsWith(`'`)) {

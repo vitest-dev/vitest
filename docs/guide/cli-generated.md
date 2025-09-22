@@ -89,7 +89,7 @@ Hide logs for skipped tests
 - **CLI:** `--reporter <name>`
 - **Config:** [reporters](/config/#reporters)
 
-Specify reporters (default, blob, verbose, dot, json, tap, tap-flat, junit, hanging-process, github-actions)
+Specify reporters (default, blob, verbose, dot, json, tap, tap-flat, junit, tree, hanging-process, github-actions)
 
 ### outputFile
 
@@ -375,6 +375,13 @@ If connection to the browser takes longer, the test suite will fail (default: `6
 - **Config:** [browser.trackUnhandledErrors](/guide/browser/config#browser-trackunhandlederrors)
 
 Control if Vitest catches uncaught exceptions so they can be reported (default: `true`)
+
+### browser.trace
+
+- **CLI:** `--browser.trace <mode>`
+- **Config:** [browser.trace](/guide/browser/config#browser-trace)
+
+Enable trace view mode. Supported: "on", "off", "on-first-retry", "on-all-retries", "retain-on-failure".
 
 ### pool
 

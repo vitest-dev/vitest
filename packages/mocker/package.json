@@ -1,7 +1,7 @@
 {
   "name": "@vitest/mocker",
   "type": "module",
-  "version": "4.0.0-beta.10",
+  "version": "4.0.0-beta.11",
   "description": "Vitest module mocker implementation",
   "license": "MIT",
   "funding": "https://opencollective.com/vitest",
@@ -54,7 +54,7 @@
     "dist"
   ],
   "scripts": {
-    "build": "rimraf dist && rollup -c",
+    "build": "premove dist && rollup -c",
     "dev": "rollup -c --watch"
   },
   "peerDependencies": {

@@ -13,12 +13,9 @@ import { resolve } from 'node:path'
 import { MessageChannel } from 'node:worker_threads'
 import { createBirpc } from 'birpc'
 import Tinypool from 'tinypool'
-import { rootDir } from '../../paths'
 import { getWorkerMemoryLimit, stringToBytes } from '../../utils/memory-limit'
 import { groupFilesByEnv } from '../../utils/test-helpers'
 import { createMethodsRPC } from './rpc'
-
-const suppressWarningsPath = resolve(rootDir, './suppress-warnings.cjs')
 
 function createWorkerChannel(project: TestProject, collect: boolean) {
   const channel = new MessageChannel()
@@ -74,10 +71,8 @@ export function createVmThreadsPool(
     // avoid recreating threads when tests are finished
     : 0
 
-  const worker = resolve(vitest.distPath, 'workers/vmThreads.js')
-
   const options: TinypoolOptions = {
-    filename: resolve(vitest.distPath, 'worker.js'),
+    filename: resolve(vitest.distPath, 'worker-vm.js'),
     // TODO: investigate further
     // It seems atomics introduced V8 Fatal Error https://github.com/vitest-dev/vitest/issues/1191
     useAtomics: poolOptions.useAtomics ?? false,
@@ -87,10 +82,7 @@ export function createVmThreadsPool(
 
     env,
     execArgv: [
-      '--experimental-import-meta-resolve',
       '--experimental-vm-modules',
-      '--require',
-      suppressWarningsPath,
       ...(poolOptions.execArgv ?? []),
       ...execArgv,
     ],
@@ -124,7 +116,6 @@ export function createVmThreadsPool(
       const workerId = ++id
       const data: WorkerContext = {
         pool: 'vmThreads',
-        worker,
         port: workerPort,
         config,
         files: paths,

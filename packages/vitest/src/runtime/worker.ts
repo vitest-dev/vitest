@@ -1,11 +1,9 @@
 import type { ModuleRunner } from 'vite/module-runner'
 import type { ContextRPC, WorkerGlobalState } from '../types/worker'
 import type { VitestWorker } from './workers/types'
-import { pathToFileURL } from 'node:url'
 import { createStackString, parseStacktrace } from '@vitest/utils/source-map'
 import { EvaluatedModules } from 'vite/module-runner'
 import { loadEnvironment } from '../integrations/env/loader'
-import { addCleanupListener, cleanup as cleanupWorker } from './cleanup'
 import { setupInspect } from './inspector'
 import { createRuntimeRpc, rpcDone } from './rpc'
 import { isChildProcess } from './utils'
@@ -29,9 +27,10 @@ if (isChildProcess()) {
 }
 
 const resolvingModules = new Set<string>()
+const globalListeners = new Set<() => unknown>()
 
 // this is what every pool executes when running tests
-async function execute(method: 'run' | 'collect', ctx: ContextRPC) {
+export async function execute(method: 'run' | 'collect', ctx: ContextRPC, worker: VitestWorker): Promise<void> {
   disposeInternalListeners()
 
   const prepareStart = performance.now()
@@ -45,28 +44,6 @@ async function execute(method: 'run' | 'collect', ctx: ContextRPC) {
   let environmentLoader: ModuleRunner | undefined
 
   try {
-    // worker is a filepath or URL to a file that exposes a default export with "getRpcOptions" and "runTests" methods
-    if (ctx.worker[0] === '.') {
-      throw new Error(
-        `Path to the test runner cannot be relative, received "${ctx.worker}"`,
-      )
-    }
-
-    const file = ctx.worker.startsWith('file:')
-      ? ctx.worker
-      : pathToFileURL(ctx.worker).toString()
-    const testRunnerModule = await import(file)
-
-    if (
-      !testRunnerModule.default
-      || typeof testRunnerModule.default !== 'object'
-    ) {
-      throw new TypeError(
-        `Test worker object should be exposed as a default export. Received "${typeof testRunnerModule.default}"`,
-      )
-    }
-
-    const worker = testRunnerModule.default as VitestWorker
     if (!worker.getRpcOptions || typeof worker.getRpcOptions !== 'function') {
       throw new TypeError(
         `Test worker should expose "getRpcOptions" method. Received "${typeof worker.getRpcOptions}".`,
@@ -101,7 +78,7 @@ async function execute(method: 'run' | 'collect', ctx: ContextRPC) {
         prepare: prepareStart,
       },
       rpc,
-      onCleanup: listener => addCleanupListener(listener),
+      onCleanup: listener => globalListeners.add(listener),
       providedContext: ctx.providedContext,
       onFilterStackTrace(stack) {
         return createStackString(parseStacktrace(stack))
@@ -127,16 +104,9 @@ async function execute(method: 'run' | 'collect', ctx: ContextRPC) {
   }
 }
 
-export function run(ctx: ContextRPC): Promise<void> {
-  return execute('run', ctx)
-}
-
-export function collect(ctx: ContextRPC): Promise<void> {
-  return execute('collect', ctx)
-}
-
 export async function teardown(): Promise<void> {
-  return cleanupWorker()
+  const promises = [...globalListeners].map(l => l())
+  await Promise.all(promises)
 }
 
 function createImportMetaEnvProxy(): WorkerGlobalState['metaEnv'] {

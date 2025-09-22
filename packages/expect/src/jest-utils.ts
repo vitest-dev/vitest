@@ -23,8 +23,9 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
 import type { StandardSchemaV1 } from '@standard-schema/spec'
+import type { AsymmetricMatcher } from './jest-asymmetric-matchers'
 import type { Tester, TesterContext } from './types'
-import { isObject } from '@vitest/utils'
+import { isObject } from '@vitest/utils/helpers'
 
 // Extracted out of jasmine 2.5.2
 export function equals(
@@ -39,7 +40,7 @@ export function equals(
 
 const functionToString = Function.prototype.toString
 
-export function isAsymmetric(obj: any): boolean {
+export function isAsymmetric(obj: any): obj is AsymmetricMatcher<any> {
   return (
     !!obj
     && typeof obj === 'object'
@@ -68,7 +69,7 @@ export function hasAsymmetric(obj: any, seen: Set<any> = new Set()): boolean {
   return false
 }
 
-function asymmetricMatch(a: any, b: any) {
+function asymmetricMatch(a: any, b: any, customTesters: Array<Tester>) {
   const asymmetricA = isAsymmetric(a)
   const asymmetricB = isAsymmetric(b)
 
@@ -77,11 +78,11 @@ function asymmetricMatch(a: any, b: any) {
   }
 
   if (asymmetricA) {
-    return a.asymmetricMatch(b)
+    return a.asymmetricMatch(b, customTesters)
   }
 
   if (asymmetricB) {
-    return b.asymmetricMatch(a)
+    return b.asymmetricMatch(a, customTesters)
   }
 }
 
@@ -97,7 +98,7 @@ function eq(
 ): boolean {
   let result = true
 
-  const asymmetricResult = asymmetricMatch(a, b)
+  const asymmetricResult = asymmetricMatch(a, b, customTesters)
   if (asymmetricResult !== undefined) {
     return asymmetricResult
   }
@@ -613,12 +614,12 @@ export function subsetEquality(
             seenReferences.set(subset[key], true)
           }
           const result
-          = object != null
-            && hasPropertyInObject(object, key)
-            && equals(object[key], subset[key], [
-              ...filteredCustomTesters,
-              subsetEqualityWithContext(seenReferences),
-            ])
+            = object != null
+              && hasPropertyInObject(object, key)
+              && equals(object[key], subset[key], [
+                ...filteredCustomTesters,
+                subsetEqualityWithContext(seenReferences),
+              ])
           // The main goal of using seenReference is to avoid circular node on tree.
           // It will only happen within a parent and its child, not a node and nodes next to it (same level)
           // We should keep the reference for a parent and its child only

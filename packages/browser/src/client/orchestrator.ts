@@ -13,6 +13,8 @@ export class IframeOrchestrator {
   private recreateNonIsolatedIframe = false
   private iframes = new Map<string, HTMLIFrameElement>()
 
+  public eventTarget: EventTarget = new EventTarget()
+
   constructor() {
     debug('init orchestrator', getBrowserState().sessionId)
 
@@ -122,6 +124,7 @@ export class IframeOrchestrator {
       method: options.method,
       context: options.providedContext,
     })
+    debug('finished running tests', options.files.join(', '))
     // we don't cleanup here because in non-isolated mode
     // it is done after all tests finished running
   }
@@ -156,32 +159,63 @@ export class IframeOrchestrator {
     })
   }
 
+  private dispatchIframeError(error: Error) {
+    const event = new CustomEvent('iframeerror', { detail: error })
+    this.eventTarget.dispatchEvent(event)
+    return error
+  }
+
   private async prepareIframe(container: HTMLDivElement, iframeId: string, startTime: number) {
     const iframe = this.createTestIframe(iframeId)
     container.appendChild(iframe)
 
     await new Promise<void>((resolve, reject) => {
       iframe.onload = () => {
-        this.iframes.set(iframeId, iframe)
-        sendEventToIframe({
-          event: 'prepare',
-          iframeId,
-          startTime,
-        }).then(resolve, reject)
+        const href = this.getIframeHref(iframe)
+        debug('iframe loaded with href', href)
+        if (href !== iframe.src) {
+          reject(this.dispatchIframeError(new Error(
+            `Cannot connect to the iframe. `
+            + `Did you change the location or submitted a form? `
+            + 'If so, don\'t forget to call `event.preventDefault()` to avoid reloading the page.\n\n'
+            + `Received URL: ${href || 'unknown'}\nExpected: ${iframe.src}`,
+          )))
+        }
+        else {
+          this.iframes.set(iframeId, iframe)
+          sendEventToIframe({
+            event: 'prepare',
+            iframeId,
+            startTime,
+          }).then(resolve, error => reject(this.dispatchIframeError(error)))
+        }
       }
       iframe.onerror = (e) => {
         if (typeof e === 'string') {
-          reject(new Error(e))
+          reject(this.dispatchIframeError(new Error(e)))
         }
         else if (e instanceof ErrorEvent) {
-          reject(e.error)
+          reject(this.dispatchIframeError(e.error))
         }
         else {
-          reject(new Error(`Cannot load the iframe ${iframeId}.`))
+          reject(this.dispatchIframeError(new Error(`Cannot load the iframe ${iframeId}.`)))
         }
       }
     })
     return iframe
+  }
+
+  private getIframeHref(iframe: HTMLIFrameElement) {
+    try {
+      // same origin iframe has contentWindow
+      // same origin trusted iframe (where tests can run)
+      // also allows accessing "location"
+      return iframe.contentWindow?.location.href
+    }
+    catch {
+      // looks like this iframe is not a tester.html
+      return undefined
+    }
   }
 
   private createTestIframe(iframeId: string) {
@@ -257,7 +291,8 @@ export class IframeOrchestrator {
   }
 }
 
-getBrowserState().orchestrator = new IframeOrchestrator()
+const orchestrator = new IframeOrchestrator()
+getBrowserState().orchestrator = orchestrator
 
 async function getContainer(config: SerializedConfig): Promise<HTMLDivElement> {
   if (config.browser.ui) {
@@ -276,16 +311,26 @@ async function getContainer(config: SerializedConfig): Promise<HTMLDivElement> {
 
 async function sendEventToIframe(event: IframeChannelOutgoingEvent) {
   channel.postMessage(event)
-  return new Promise<void>((resolve) => {
-    channel.addEventListener(
-      'message',
-      function handler(e) {
-        if (e.data.iframeId === event.iframeId && e.data.event === `response:${event.event}`) {
-          resolve()
-          channel.removeEventListener('message', handler)
-        }
-      },
-    )
+  return new Promise<void>((resolve, reject) => {
+    function cleanupEvents() {
+      channel.removeEventListener('message', onReceived)
+      orchestrator.eventTarget.removeEventListener('iframeerror', onError)
+    }
+
+    function onReceived(e: MessageEvent) {
+      if (e.data.iframeId === event.iframeId && e.data.event === `response:${event.event}`) {
+        resolve()
+        cleanupEvents()
+      }
+    }
+
+    function onError(e: Event) {
+      reject((e as CustomEvent).detail)
+      cleanupEvents()
+    }
+
+    orchestrator.eventTarget.addEventListener('iframeerror', onError)
+    channel.addEventListener('message', onReceived)
   })
 }
 

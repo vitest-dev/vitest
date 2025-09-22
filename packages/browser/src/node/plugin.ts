@@ -6,7 +6,7 @@ import type { ParentBrowserProject } from './projectParent'
 import { createReadStream, lstatSync, readFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import { dynamicImportPlugin } from '@vitest/mocker/node'
-import { toArray } from '@vitest/utils'
+import { toArray } from '@vitest/utils/helpers'
 import MagicString from 'magic-string'
 import { basename, dirname, extname, resolve } from 'pathe'
 import sirv from 'sirv'
@@ -281,10 +281,7 @@ export default (parentServer: ParentBrowserProject, base = '/'): Plugin[] => {
         const include = [
           'vitest > expect-type',
           'vitest > @vitest/snapshot > magic-string',
-          'vitest > @vitest/runner > strip-literal',
           'vitest > @vitest/expect > chai',
-          'vitest > @vitest/expect > chai > loupe',
-          'vitest > @vitest/utils > loupe',
           '@vitest/browser > @testing-library/user-event',
           '@vitest/browser > @testing-library/dom',
         ]

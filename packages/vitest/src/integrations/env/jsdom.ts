@@ -38,7 +38,7 @@ export default <Environment>{
   viteEnvironment: 'client',
   async setupVM({ jsdom = {} }) {
     const { CookieJar, JSDOM, ResourceLoader, VirtualConsole } = await import(
-      'jsdom'
+      'jsdom',
     )
     const {
       html = '<!DOCTYPE html>',
@@ -128,7 +128,7 @@ export default <Environment>{
   },
   async setup(global, { jsdom = {} }) {
     const { CookieJar, JSDOM, ResourceLoader, VirtualConsole } = await import(
-      'jsdom'
+      'jsdom',
     )
     const {
       html = '<!DOCTYPE html>',

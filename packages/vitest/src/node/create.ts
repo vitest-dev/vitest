@@ -6,8 +6,8 @@ import type { CliOptions } from './cli/cli-api'
 import type { VitestOptions } from './core'
 import type { VitestRunMode } from './types/config'
 import { resolve } from 'node:path'
-import { deepClone, slash } from '@vitest/utils'
-import { findUp } from 'find-up'
+import { deepClone, slash } from '@vitest/utils/helpers'
+import * as find from 'empathic/find'
 import { mergeConfig } from 'vite'
 import { configFiles } from '../constants'
 import { Vitest } from './core'
@@ -28,7 +28,7 @@ export async function createVitest(
       ? false
       : options.config
         ? resolve(root, options.config)
-        : await findUp(configFiles, { cwd: root } as any)
+        : find.any(configFiles, { cwd: root })
 
   options.config = configPath
 

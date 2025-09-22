@@ -7,7 +7,8 @@ import { Console } from 'node:console'
 import { existsSync, readFileSync } from 'node:fs'
 import { Writable } from 'node:stream'
 import { stripVTControlCharacters } from 'node:util'
-import { inspect, isPrimitive } from '@vitest/utils'
+import { inspect } from '@vitest/utils/display'
+import { isPrimitive } from '@vitest/utils/helpers'
 import { normalize, relative } from 'pathe'
 import c from 'tinyrainbow'
 import { TypeCheckError } from '../typecheck/typechecker'
@@ -163,9 +164,10 @@ function printErrorInner(
   }
   printErrorMessage(e, logger)
   if (options.screenshotPaths?.length) {
-    const length = options.screenshotPaths.length
+    const uniqueScreenshots = Array.from(new Set(options.screenshotPaths))
+    const length = uniqueScreenshots.length
     logger.error(`\nFailure screenshot${length > 1 ? 's' : ''}:`)
-    logger.error(options.screenshotPaths.map(p => `  - ${c.dim(relative(process.cwd(), p))}`).join('\n'))
+    logger.error(uniqueScreenshots.map(p => `  - ${c.dim(relative(process.cwd(), p))}`).join('\n'))
     if (!e.diff) {
       logger.error()
     }
@@ -327,7 +329,7 @@ function handleImportOutsideModuleError(stack: string, logger: ErrorLogger) {
 
   const path = normalize(stack.split('\n')[0].trim())
   let name = path.split('/node_modules/').pop() || ''
-  if (name?.startsWith('@')) {
+  if (name[0] === '@') {
     name = name.split('/').slice(0, 2).join('/')
   }
   else {

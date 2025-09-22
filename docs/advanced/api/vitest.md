@@ -579,6 +579,14 @@ function disableCoverage(): void
 
 This method disables coverage collection for tests that run afterwards.
 
+## getSeed <Version>4.0.0</Version> {#getseed}
+
+```ts
+function getSeed(): number | null
+```
+
+Returns the seed, if tests are running in a random order.
+
 ## experimental_parseSpecification <Version>4.0.0</Version> <Badge type="warning">experimental</Badge> {#parsespecification}
 
 ```ts

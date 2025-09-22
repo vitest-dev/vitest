@@ -3,7 +3,6 @@ import type { DiffOptions } from '@vitest/utils/diff'
 import type { FileSpecification, VitestRunner } from './types/runner'
 import type {
   File,
-  HookListener,
   SequenceHooks,
   Suite,
   SuiteHooks,
@@ -17,8 +16,9 @@ import type {
   TestContext,
   WriteableTestContext,
 } from './types/tasks'
-import { getSafeTimers, shuffle } from '@vitest/utils'
-import { processError } from '@vitest/utils/error'
+import { processError } from '@vitest/utils/error' // TODO: load dynamically
+import { shuffle } from '@vitest/utils/helpers'
+import { getSafeTimers } from '@vitest/utils/timers'
 import { collectTests } from './collect'
 import { abortContextSignal, getFileContext } from './context'
 import { PendingError, TestRunAbortError } from './errors'
@@ -129,7 +129,7 @@ export async function callSuiteHook<T extends keyof SuiteHooks>(
   currentTask: Task,
   name: T,
   runner: VitestRunner,
-  args: SuiteHooks[T][0] extends HookListener<infer A, any> ? A : never,
+  args: SuiteHooks[T][0] extends (...args: infer A) => Awaitable<any> ? A : never,
 ): Promise<unknown[]> {
   const sequence = runner.config.sequence.hooks
 
@@ -153,7 +153,7 @@ export async function callSuiteHook<T extends keyof SuiteHooks>(
     return getBeforeHookCleanupCallback(
       hook,
       await hook(...args),
-      name === 'beforeEach' ? args[0] : undefined,
+      name === 'beforeEach' ? args[0] as TestContext : undefined,
     )
   }
 
@@ -381,6 +381,11 @@ export async function runTest(test: Test, runner: VitestRunner): Promise<void> {
 
       test.onFailed = undefined
       test.onFinished = undefined
+
+      await runner.onAfterRetryTask?.(test, {
+        retry: retryCount,
+        repeats: repeatCount,
+      })
 
       // skipped with new PendingError
       if (test.result?.pending || test.result?.state === 'skip') {

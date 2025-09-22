@@ -83,8 +83,6 @@ export {
   test,
 } from '@vitest/runner'
 export type {
-  HookCleanupCallback,
-  HookListener,
   ImportDuration,
   OnTestFailedHandler,
   OnTestFinishedHandler,

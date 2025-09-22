@@ -48,3 +48,22 @@ test.for([
   { k: "v1" },
   { k: "v2" },
 ])('not array: 0 = $0, 1 = $1, k = $k', () => {})
+
+
+test.each([[343434, "$343,434.00"]])(
+  "handles whole numbers: %s as %s",
+  (input, expected) => {
+    expect(
+      new Intl.NumberFormat("en-US", {
+        style: "currency",
+        currency: "USD",
+      }).format(input),
+    ).toBe(expected);
+  },
+);
+
+test.each([{ a: "$b", b: "yay" }])("%o", () => {});
+test.each([{ a: "%o" }])("$a", () => {});
+test.each([{ a: "%o" }])("%o", () => {});
+test.each([{ a: "%o" }])("$a %o", () => {});
+test.each([{ a: "%o" }])("%o $a", () => {});

@@ -4,7 +4,7 @@ import type { SerializedDiffOptions } from '@vitest/utils/diff'
 import type { SerializedConfig } from './config'
 import type { VitestModuleRunner } from './moduleRunner/moduleRunner'
 import { addSerializer } from '@vitest/snapshot'
-import { setSafeTimers } from '@vitest/utils'
+import { setSafeTimers } from '@vitest/utils/timers'
 import { getWorkerState } from './utils'
 
 let globalSetup = false

@@ -14,6 +14,7 @@ import { JsonReporter } from './json'
 import { JUnitReporter } from './junit'
 import { TapReporter } from './tap'
 import { TapFlatReporter } from './tap-flat'
+import { TreeReporter } from './tree'
 import { VerboseReporter } from './verbose'
 
 export {
@@ -25,6 +26,7 @@ export {
   JUnitReporter,
   TapFlatReporter,
   TapReporter,
+  TreeReporter,
   VerboseReporter,
 }
 export type { BaseReporter, Reporter, TestRunEndReason }
@@ -50,6 +52,7 @@ export const ReportersMap = {
   'tap': TapReporter as typeof TapReporter,
   'tap-flat': TapFlatReporter as typeof TapFlatReporter,
   'junit': JUnitReporter as typeof JUnitReporter,
+  'tree': TreeReporter as typeof TreeReporter,
   'hanging-process': HangingProcessReporter as typeof HangingProcessReporter,
   'github-actions': GithubActionsReporter as typeof GithubActionsReporter,
 }
@@ -60,6 +63,7 @@ export interface BuiltinReporterOptions {
   'default': DefaultReporterOptions
   'verbose': DefaultReporterOptions
   'dot': BaseOptions
+  'tree': BaseOptions
   'json': JsonOptions
   'blob': BlobOptions
   'tap': never

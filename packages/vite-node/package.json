@@ -1,7 +1,7 @@
 {
   "name": "vite-node",
   "type": "module",
-  "version": "4.0.0-beta.10",
+  "version": "4.0.0-beta.11",
   "description": "Vite as Node.js runtime",
   "author": "Anthony Fu <anthonyfu117@hotmail.com>",
   "license": "MIT",
@@ -77,7 +77,7 @@
     "node": "^18.0.0 || ^20.0.0 || >=22.0.0"
   },
   "scripts": {
-    "build": "rimraf dist && rollup -c",
+    "build": "premove dist && rollup -c",
     "dev": "rollup -c --watch --watch.include 'src/**' -m inline",
     "typecheck": "tsc --noEmit"
   },

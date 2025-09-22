@@ -16,7 +16,7 @@ import type { TestRunResult } from './types/tests'
 import os from 'node:os'
 import { getTasks, hasFailed, limitConcurrency } from '@vitest/runner/utils'
 import { SnapshotManager } from '@vitest/snapshot/manager'
-import { deepClone, deepMerge, noop, toArray } from '@vitest/utils'
+import { deepClone, deepMerge, noop, toArray } from '@vitest/utils/helpers'
 import { normalize, relative } from 'pathe'
 import { version } from '../../package.json' with { type: 'json' }
 import { WebSocketReporter } from '../api/setup'
@@ -500,6 +500,13 @@ export class Vitest {
       testModules: this.state.getTestModules(),
       unhandledErrors: this.state.getUnhandledErrors(),
     }
+  }
+
+  /**
+   * Returns the seed, if tests are running in a random order.
+   */
+  public getSeed(): number | null {
+    return this.config.sequence.seed ?? null
   }
 
   /** @internal */

@@ -16,8 +16,6 @@ export type {
   FixtureFn,
   FixtureOptions,
   Fixtures,
-  HookCleanupCallback,
-  HookListener,
   ImportDuration,
   InferFixturesTypes,
   OnTestFailedHandler,

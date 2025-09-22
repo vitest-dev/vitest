@@ -94,7 +94,7 @@ function annotate(
 ): Promise<TestAnnotation>
 ```
 
-Add a [test annotation](/guide/test-annotations) that will be displayed by your [reporter](/config/#reporter).
+Add a [test annotation](/guide/test-annotations) that will be displayed by your [reporter](/config/#reporters).
 
 ```ts
 test('annotations API', async ({ annotate }) => {
@@ -382,11 +382,11 @@ import { test as baseTest } from 'vitest'
 
 export const test = baseTest.extend({
   perFile: [
-    ({}, { use }) => use([]),
+    ({}, use) => use([]),
     { scope: 'file' },
   ],
   perWorker: [
-    ({}, { use }) => use([]),
+    ({}, use) => use([]),
     { scope: 'worker' },
   ],
 })
@@ -397,7 +397,7 @@ The value is initialised the first time any test has accessed it, unless the fix
 ```ts
 const test = baseTest.extend({
   perFile: [
-    ({}, { use }) => use([]),
+    ({}, use) => use([]),
     {
       scope: 'file',
       // always run this hook before any test
@@ -456,54 +456,3 @@ test('types are correct', ({
 })
 ```
 :::
-
-### `beforeEach` and `afterEach`
-
-::: danger Deprecated
-This is an outdated way of extending context and it will not work when the `test` is extended with `test.extend`.
-:::
-
-The contexts are different for each test. You can access and extend them within the `beforeEach` and `afterEach` hooks.
-
-```ts
-import { beforeEach, it } from 'vitest'
-
-beforeEach(async (context) => {
-  // extend context
-  context.foo = 'bar'
-})
-
-it('should work', ({ foo }) => {
-  console.log(foo) // 'bar'
-})
-```
-
-#### TypeScript
-
-To provide property types for all your custom contexts, you can augment the `TestContext` type by adding
-
-```ts
-declare module 'vitest' {
-  export interface TestContext {
-    foo?: string
-  }
-}
-```
-
-If you want to provide property types only for specific `beforeEach`, `afterEach`, `it` and `test` hooks, you can pass the type as a generic.
-
-```ts
-interface LocalTestContext {
-  foo: string
-}
-
-beforeEach<LocalTestContext>(async (context) => {
-  // typeof context is 'TestContext & LocalTestContext'
-  context.foo = 'bar'
-})
-
-it<LocalTestContext>('should work', ({ foo }) => {
-  // typeof foo is 'string'
-  console.log(foo) // 'bar'
-})
-```

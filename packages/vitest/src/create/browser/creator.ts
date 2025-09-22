@@ -4,7 +4,7 @@ import { existsSync, readFileSync } from 'node:fs'
 import { writeFile } from 'node:fs/promises'
 import { dirname, relative, resolve } from 'node:path'
 import { detectPackageManager, installPackage } from '@antfu/install-pkg'
-import { findUp } from 'find-up'
+import * as find from 'empathic/find'
 import prompt from 'prompts'
 import { x } from 'tinyexec'
 import c from 'tinyrainbow'
@@ -458,7 +458,7 @@ export async function create(): Promise<void> {
     dependenciesToInstall.filter(pkg => !dependencies[pkg]),
   )
 
-  const rootConfig = await findUp(configFiles, {
+  const rootConfig = find.any(configFiles, {
     cwd: process.cwd(),
   })
 

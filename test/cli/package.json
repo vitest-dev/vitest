@@ -14,7 +14,7 @@
     "@vitejs/plugin-basic-ssl": "^2.1.0",
     "@vitest/runner": "workspace:^",
     "@vitest/utils": "workspace:*",
-    "debug": "^4.4.1",
+    "debug": "^4.4.3",
     "unplugin-swc": "^1.5.7",
     "vite": "latest",
     "vitest": "workspace:*",

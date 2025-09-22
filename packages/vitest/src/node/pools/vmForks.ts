@@ -13,13 +13,10 @@ import { resolve } from 'node:path'
 import v8 from 'node:v8'
 import { createBirpc } from 'birpc'
 import Tinypool from 'tinypool'
-import { rootDir } from '../../paths'
 import { wrapSerializableConfig } from '../../utils/config-helpers'
 import { getWorkerMemoryLimit, stringToBytes } from '../../utils/memory-limit'
 import { groupFilesByEnv } from '../../utils/test-helpers'
 import { createMethodsRPC } from './rpc'
-
-const suppressWarningsPath = resolve(rootDir, './suppress-warnings.cjs')
 
 function createChildProcessChannel(project: TestProject, collect: boolean) {
   const emitter = new EventEmitter()
@@ -97,21 +94,16 @@ export function createVmForksPool(
     // avoid recreating forks when tests are finished
     : 0
 
-  const worker = resolve(vitest.distPath, 'workers/vmForks.js')
-
   const options: TinypoolOptions = {
     runtime: 'child_process',
-    filename: resolve(vitest.distPath, 'worker.js'),
+    filename: resolve(vitest.distPath, 'worker-vm.js'),
 
     maxThreads,
     minThreads,
 
     env,
     execArgv: [
-      '--experimental-import-meta-resolve',
       '--experimental-vm-modules',
-      '--require',
-      suppressWarningsPath,
       ...(poolOptions.execArgv ?? []),
       ...execArgv,
     ],
@@ -144,8 +136,7 @@ export function createVmForksPool(
       const { channel } = createChildProcessChannel(project, name === 'collect')
       const workerId = ++id
       const data: ContextRPC = {
-        pool: 'forks',
-        worker,
+        pool: 'vmForks',
         config,
         files,
         invalidates,
