@@ -122,6 +122,7 @@ export interface SerializedConfig {
       // for playwright
       actionTimeout?: number
     }
+    trace: BrowserTraceViewMode
     trackUnhandledErrors: boolean
   }
   standalone: boolean
@@ -162,3 +163,4 @@ export type RuntimeConfig = Pick<
 }
 
 export type RuntimeOptions = Partial<RuntimeConfig>
+export type BrowserTraceViewMode = 'on' | 'off' | 'on-first-retry' | 'on-all-retries' | 'retain-on-failure'

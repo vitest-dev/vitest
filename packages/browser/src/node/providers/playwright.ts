@@ -39,7 +39,10 @@ export interface PlaywrightProviderOptions {
    * The options passed down to [`playwright.connect`](https://playwright.dev/docs/api/class-browsertype#browser-type-launch) method.
    * @see {@link https://playwright.dev/docs/api/class-browsertype#browser-type-launch}
    */
-  launchOptions?: LaunchOptions
+  launchOptions?: Omit<
+    LaunchOptions,
+    'tracesDir'
+  >
   /**
    * The options passed down to [`playwright.connect`](https://playwright.dev/docs/api/class-browsertype#browser-type-connect) method.
    *
@@ -91,12 +94,30 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
   private browserPromise: Promise<Browser> | null = null
   private closing = false
 
+  public tracingContexts: Set<string> = new Set()
+  public pendingTraces: Map<string, string> = new Map()
+
   constructor(
     private project: TestProject,
     private options: PlaywrightProviderOptions,
   ) {
     this.browserName = project.config.browser.name as PlaywrightBrowser
     this.mocker = this.createMocker()
+
+    // make sure the traces are finished if the test hangs
+    process.on('SIGTERM', () => {
+      if (!this.browser) {
+        return
+      }
+      const promises = []
+      for (const [trace, contextId] of this.pendingTraces.entries()) {
+        promises.push(() => {
+          const context = this.contexts.get(contextId)
+          return context?.tracing.stopChunk({ path: trace })
+        })
+      }
+      return Promise.allSettled(promises)
+    })
   }
 
   private async openBrowser() {
@@ -131,10 +152,14 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
         return this.browser
       }
 
-      const launchOptions = {
+      const launchOptions: LaunchOptions = {
         ...this.options.launchOptions,
         headless: options.headless,
-      } satisfies LaunchOptions
+      }
+
+      if (typeof options.trace === 'object' && options.trace.tracesDir) {
+        launchOptions.tracesDir = options.trace?.tracesDir
+      }
 
       if (this.project.config.inspector.enabled) {
         // NodeJS equivalent defaults: https://nodejs.org/en/learn/getting-started/debugging#enable-inspector

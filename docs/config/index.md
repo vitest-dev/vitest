@@ -2439,7 +2439,7 @@ Polling timeout in milliseconds
 
 Always print console traces when calling any `console` method. This is useful for debugging.
 
-### attachmentsDir <Version>3.2.0</Version>
+### attachmentsDir <Version>3.2.0</Version> {#attachmentsdir}
 
 - **Type:** `string`
 - **Default:** `'.vitest-attachments'`

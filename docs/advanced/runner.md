@@ -27,19 +27,24 @@ export interface VitestRunner {
   /**
    * Called before running a single test. Doesn't have "result" yet.
    */
-  onBeforeRunTask?: (test: TaskPopulated) => unknown
+  onBeforeRunTask?: (test: Test) => unknown
   /**
    * Called before actually running the test function. Already has "result" with "state" and "startTime".
    */
-  onBeforeTryTask?: (test: TaskPopulated, options: { retry: number; repeats: number }) => unknown
+  onBeforeTryTask?: (test: Test, options: { retry: number; repeats: number }) => unknown
   /**
    * Called after result and state are set.
    */
-  onAfterRunTask?: (test: TaskPopulated) => unknown
+  onAfterRunTask?: (test: Test) => unknown
   /**
    * Called right after running the test function. Doesn't have new state yet. Will not be called, if the test function throws.
    */
-  onAfterTryTask?: (test: TaskPopulated, options: { retry: number; repeats: number }) => unknown
+  onAfterTryTask?: (test: Test, options: { retry: number; repeats: number }) => unknown
+  /**
+   * Called after the retry resolution happend. Unlike `onAfterTryTask`, the test now has a new state.
+   * All `after` hooks were also called by this point.
+   */
+  onAfterRetryTask?: (test: Test, options: { retry: number; repeats: number }) => unknown
 
   /**
    * Called before running a single suite. Doesn't have "result" yet.
