@@ -3,6 +3,7 @@ import type { BrowserProvider, BrowserProviderOption, TestProject } from 'vitest
 export function preview(): BrowserProviderOption {
   return {
     name: 'preview',
+    options: {},
     factory(project) {
       return new PreviewBrowserProvider(project)
     },

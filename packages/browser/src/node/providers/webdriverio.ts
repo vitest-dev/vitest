@@ -21,10 +21,11 @@ interface WebdriverProviderOptions extends Partial<
   Parameters<typeof remote>[0]
 > {}
 
-export function webdriverio(options: WebdriverProviderOptions = {}): BrowserProviderOption {
+export function webdriverio(options: WebdriverProviderOptions = {}): BrowserProviderOption<WebdriverProviderOptions> {
   return {
     name: 'webdriverio',
     supportedBrowser: webdriverBrowsers,
+    options,
     factory(project) {
       return new WebdriverBrowserProvider(project, options)
     },
@@ -210,6 +211,20 @@ export class WebdriverBrowserProvider implements BrowserProvider {
       throw new Error(`[vitest] The provider was closed.`)
     }
   }
+
+  // async getCDPSession(sessionId: string): Promise<CDPSession> {
+  //   return {
+  //     send: (method, params) => {
+  //       if (!this.browser) {
+  //         throw new Error(`Browser was destroyed.`)
+  //       }
+  //       return this.browser.sendCommandAndGetResult(method, params as object)
+  //     },
+  //     on: (event, listener) => {
+  //       // this.browser.on
+  //     },
+  //   }
+  // }
 
   async close(): Promise<void> {
     debug?.('[%s] closing provider', this.browserName)
