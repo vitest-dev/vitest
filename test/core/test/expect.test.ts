@@ -515,91 +515,10 @@ describe('Standard Schema', () => {
     typeof value === 'string' ? { issues: undefined, value } : { issues: [{ message: 'Expected string' }] },
   )
 
-  describe('toEqual(schema)', () => {
-    test('should validate data against schema', () => {
-      expect('hello').toEqual(stringSchema)
-      expect('42').toEqual(numberSchema)
-
-      expect({
-        name: 'John',
-        age: 30,
-      }).toEqual({
-        name: stringSchema,
-        age: numberSchema,
-      })
-      expect({
-        name: 'John',
-        age: 30,
-      }).toEqual(objectSchema)
-
-      expect(() => expect(123).toEqual(stringSchema)).toThrow()
-    })
-
-    test('should validate data against schema in asymmetric matchers', () => {
-      expect({
-        name: 'John',
-        age: '30',
-      }).toEqual(expect.objectContaining({
-        age: numberSchema,
-      }))
-      expect([{
-        name: 'John',
-        age: 30,
-      }]).toEqual(expect.arrayContaining([objectSchema]))
-    })
-
-    test('should work with negation', () => {
-      expect(123).not.toEqual(stringSchema)
-      expect(() => expect('hello').not.toEqual(stringSchema)).toThrow()
-    })
-
-    test('should throw error for async schemas', () => {
-      expect(() => expect('hello').toEqual(asyncStringSchema)).toThrow('Async schema validation is not supported')
-    })
-  })
-
-  describe('toEqualSchema(schema)', () => {
-    test('should validate data against schema', () => {
-      expect('hello').toEqualSchema(stringSchema)
-      expect('42').toEqualSchema(numberSchema)
-
-      expect(() => expect(123).toEqualSchema(stringSchema)).toThrow()
-      expect(() => expect('hello').toEqualSchema(numberSchema)).toThrow()
-    })
-
-    test('should validate data against schema in asymmetric matchers', () => {
-      expect({
-        name: 'John',
-        age: '30',
-      }).toEqual(expect.objectContaining({
-        age: expect.toEqualSchema(numberSchema),
-      }))
-      expect([{
-        name: 'John',
-        age: 30,
-      }]).toEqual(expect.arrayContaining([expect.toEqualSchema(objectSchema)]))
-    })
-
-    test('should work with negation', () => {
-      expect(123).not.toEqualSchema(stringSchema)
-      expect('hello').not.toEqualSchema(numberSchema)
-
-      expect(() => expect('hello').not.toEqualSchema(stringSchema)).toThrow()
-    })
-
-    test('should throw error for async schemas', () => {
-      expect(() => expect('hello').toEqual(asyncStringSchema)).toThrow('Async schema validation is not supported')
-    })
-
-    test('should throw error for non-schema argument', () => {
-      expect(() => expect('hello').toEqualSchema('not-a-schema')).toThrow()
-    })
-  })
-
   describe('schemaMatching()', () => {
     test('should validate data against schema', () => {
       expect('hello').toEqual(expect.schemaMatching(stringSchema))
-      expect('42').toEqual(expect.schemaMatching(numberSchema))
+      expect(42).toEqual(expect.schemaMatching(numberSchema))
 
       expect(() => expect(123).toEqual(expect.schemaMatching(stringSchema))).toThrow()
       expect(() => expect('hello').toEqual(expect.schemaMatching(numberSchema))).toThrow()
@@ -608,7 +527,7 @@ describe('Standard Schema', () => {
     test('should work with objectContaining', () => {
       expect({
         name: 'John',
-        age: '30',
+        age: 30,
       }).toEqual(expect.objectContaining({
         age: expect.schemaMatching(numberSchema),
       }))

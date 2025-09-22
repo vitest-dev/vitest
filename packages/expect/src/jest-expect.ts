@@ -18,7 +18,6 @@ import {
   getObjectSubset,
   iterableEquality,
   equals as jestEquals,
-  schemaEqualityTester,
   sparseArrayEquality,
   subsetEquality,
   typeEquality,
@@ -107,7 +106,6 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     const actual = utils.flag(this, 'object')
     const equal = jestEquals(actual, expected, [
       ...customTesters,
-      schemaEqualityTester,
       iterableEquality,
     ])
 

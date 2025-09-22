@@ -812,32 +812,3 @@ export function isStandardSchema(obj: any): obj is StandardSchemaV1 {
     && typeof obj['~standard'].validate === 'function'
   )
 }
-
-/**
- * Custom equality tester for Standard Schema validation
- */
-export function schemaEqualityTester(a: any, b: any): boolean | undefined {
-  const aIsSchema = isStandardSchema(a)
-  const bIsSchema = isStandardSchema(b)
-
-  const validate = (schema: StandardSchemaV1, data: unknown) => {
-    const result = schema['~standard'].validate(data)
-    // Check if the result is a Promise (async validation)
-    if (result instanceof Promise) { throw new TypeError('Async schema validation is not supported') }
-
-    const pass = !result.issues || result.issues.length === 0
-
-    return pass
-  }
-
-  if (aIsSchema && !bIsSchema) {
-    return validate(a, b)
-  }
-
-  if (bIsSchema && !aIsSchema) {
-    return validate(b, a)
-  }
-
-  // Neither is a schema, let default equality handle it
-  return undefined
-}
