@@ -298,11 +298,11 @@ test('my function throws uncaught error', async ({ onTestFinished }) => {
   onTestFinished(() => {
     // if the event was never called during the test,
     // make sure it's removed before the next test starts
-    process.removeAllListeners('unhandledrejection')
+    process.removeAllListeners('unhandledRejection')
   })
 
   return new Promise((resolve, reject) => {
-    process.once('unhandledrejection', (error) => {
+    process.once('unhandledRejection', (error) => {
       try {
         expect(error.message).toBe('my error')
         resolve()
