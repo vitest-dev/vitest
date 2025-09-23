@@ -67,10 +67,11 @@ export interface PlaywrightProviderOptions {
   actionTimeout?: number
 }
 
-export function playwright(options: PlaywrightProviderOptions = {}): BrowserProviderOption {
+export function playwright(options: PlaywrightProviderOptions = {}): BrowserProviderOption<PlaywrightProviderOptions> {
   return {
     name: 'playwright',
     supportedBrowser: playwrightBrowsers,
+    options,
     factory(project) {
       return new PlaywrightBrowserProvider(project, options)
     },

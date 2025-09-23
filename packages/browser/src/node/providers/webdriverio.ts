@@ -21,10 +21,11 @@ interface WebdriverProviderOptions extends Partial<
   Parameters<typeof remote>[0]
 > {}
 
-export function webdriverio(options: WebdriverProviderOptions = {}): BrowserProviderOption {
+export function webdriverio(options: WebdriverProviderOptions = {}): BrowserProviderOption<WebdriverProviderOptions> {
   return {
     name: 'webdriverio',
     supportedBrowser: webdriverBrowsers,
+    options,
     factory(project) {
       return new WebdriverBrowserProvider(project, options)
     },
