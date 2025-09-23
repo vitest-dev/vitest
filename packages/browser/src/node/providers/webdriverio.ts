@@ -212,20 +212,6 @@ export class WebdriverBrowserProvider implements BrowserProvider {
     }
   }
 
-  // async getCDPSession(sessionId: string): Promise<CDPSession> {
-  //   return {
-  //     send: (method, params) => {
-  //       if (!this.browser) {
-  //         throw new Error(`Browser was destroyed.`)
-  //       }
-  //       return this.browser.sendCommandAndGetResult(method, params as object)
-  //     },
-  //     on: (event, listener) => {
-  //       // this.browser.on
-  //     },
-  //   }
-  // }
-
   async close(): Promise<void> {
     debug?.('[%s] closing provider', this.browserName)
     this.closing = true

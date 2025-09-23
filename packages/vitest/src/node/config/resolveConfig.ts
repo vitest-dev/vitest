@@ -768,6 +768,9 @@ export function resolveConfig(
   else {
     resolved.browser.screenshotFailures ??= !isPreview && !resolved.browser.ui
   }
+  if (resolved.browser.provider && resolved.browser.provider.options == null) {
+    resolved.browser.provider.options = {}
+  }
 
   resolved.browser.api = resolveApiServerConfig(
     resolved.browser,
