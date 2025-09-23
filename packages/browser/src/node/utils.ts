@@ -1,4 +1,4 @@
-import type { BrowserProvider, ResolvedBrowserOptions, TestProject } from 'vitest/node'
+import type { BrowserProvider, BrowserProviderOption, ResolvedBrowserOptions, TestProject } from 'vitest/node'
 
 export function replacer(code: string, values: Record<string, string>): string {
   return code.replace(/\{\s*(\w+)\s*\}/g, (_, key) => values[key] ?? _)
@@ -27,7 +27,7 @@ export async function getBrowserProvider(
     if (!(name in providers)) {
       throw new Error(`Unknown browser provider "${name}". Available providers: ${Object.keys(providers).join(', ')}.`)
     }
-    return providers[name]().factory(project)
+    return (providers[name] as (options?: object) => BrowserProviderOption)(options.provider?.options).factory(project)
   }
   const supportedBrowsers = options.provider.supportedBrowser || []
   if (supportedBrowsers.length && !supportedBrowsers.includes(browser)) {
