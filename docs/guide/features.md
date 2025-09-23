@@ -295,24 +295,14 @@ If you need to test that error was not caught, you can create a test that looks 
 
 ```ts
 test('my function throws uncaught error', async ({ onTestFinished }) => {
+  const unhandledRejectionListener = vi.fn()
+  process.on('unhandledRejection', unhandledRejectionListener)
   onTestFinished(() => {
-    // if the event was never called during the test,
-    // make sure it's removed before the next test starts
-    process.removeAllListeners('unhandledrejection')
+    process.off('unhandledRejection', unhandledRejectionListener)
   })
 
-  return new Promise((resolve, reject) => {
-    process.once('unhandledrejection', (error) => {
-      try {
-        expect(error.message).toBe('my error')
-        resolve()
-      }
-      catch (error) {
-        reject(error)
-      }
-    })
+  callMyFunctionThatRejectsError()
 
-    callMyFunctionThatRejectsError()
-  })
+  await expect.poll(unhandledRejectionListener).toHaveBeenCalled()
 })
 ```
