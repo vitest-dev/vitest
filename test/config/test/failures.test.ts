@@ -107,6 +107,9 @@ test('inspect and --inspect-brk cannot be used when not playwright + chromium', 
       if (provider.name === 'playwright' && name === 'chromium') {
         continue
       }
+      if (provider.name === 'webdriverio' && (name === 'chrome' || name === 'edge')) {
+        continue
+      }
 
       const { stderr } = await runVitest({}, {
         test: {
@@ -134,9 +137,9 @@ test('inspect and --inspect-brk cannot be used when not playwright + chromium', 
 Use either:
 {
   browser: {
-    provider: playwright(),
+    provider: ${provider.name === 'preview' ? 'playwright' : provider.name}(),
     instances: [
-      { browser: 'chromium' }
+      { browser: '${(provider.name === 'preview' || provider.name === 'playwright') ? 'chromium' : 'chrome'}' }
     ],
   },
 }
@@ -148,27 +151,32 @@ Use either:
   }
 })
 
-test('v8 coverage provider throws when not playwright + chromium', async () => {
-  for (const { provider, name } of browsers) {
-    if (provider.name === 'playwright' && name === 'chromium') {
-      continue
+test.each(
+  browsers.filter(({ provider, name }) => {
+    if (provider.name === 'playwright') {
+      return name !== 'chromium'
     }
-
-    const { stderr } = await runVitest({}, {
-      test: {
-        coverage: {
-          enabled: true,
-        },
-        browser: {
-          enabled: true,
-          provider,
-          instances: [{ browser: name }],
-        },
+    if (provider.name === 'webdriverio') {
+      return name !== 'chrome' && name !== 'edge'
+    }
+    return true
+  }),
+)('v8 coverage provider throws when $provider.name + $name', async ({ provider, name }) => {
+  const { stderr } = await runVitest({}, {
+    test: {
+      coverage: {
+        enabled: true,
       },
-    })
+      browser: {
+        enabled: true,
+        provider,
+        instances: [{ browser: name }],
+      },
+    },
+  })
 
-    expect(stderr).toMatch(
-      `Error: @vitest/coverage-v8 does not work with
+  expect(stderr).toMatch(
+    `Error: @vitest/coverage-v8 does not work with
 {
   browser: {
     provider: ${provider.name}(),
@@ -181,9 +189,9 @@ test('v8 coverage provider throws when not playwright + chromium', async () => {
 Use either:
 {
   browser: {
-    provider: playwright(),
+    provider: ${provider.name === 'preview' ? 'playwright' : provider.name}(),
     instances: [
-      { browser: 'chromium' }
+      { browser: '${(provider.name === 'preview' || provider.name === 'playwright') ? 'chromium' : 'chrome'}' }
     ],
   },
 }
@@ -195,8 +203,7 @@ Use either:
   },
 }
 `,
-    )
-  }
+  )
 })
 
 test('v8 coverage provider throws when using chromium and other non-chromium browser', async () => {
@@ -250,7 +257,7 @@ Use either:
   )
 })
 
-test('v8 coverage provider cannot be used in workspace without playwright + chromium', async () => {
+test('v8 coverage provider cannot be used in workspace without chromium', async () => {
   const { stderr } = await runVitest({
     coverage: { enabled: true },
     projects: [
@@ -260,7 +267,7 @@ test('v8 coverage provider cannot be used in workspace without playwright + chro
           browser: {
             enabled: true,
             provider: webdriverio(),
-            instances: [{ browser: 'chrome' }],
+            instances: [{ browser: 'webkit' }],
           },
         },
       },
@@ -272,7 +279,7 @@ test('v8 coverage provider cannot be used in workspace without playwright + chro
       browser: {
         provider: webdriverio(),
         instances: [
-          { browser: 'chrome' }
+          { browser: 'webkit' }
         ],
       },
     }`,

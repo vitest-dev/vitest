@@ -112,10 +112,10 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
       }
       const promises = []
       for (const [trace, contextId] of this.pendingTraces.entries()) {
-        promises.push(() => {
+        promises.push((() => {
           const context = this.contexts.get(contextId)
           return context?.tracing.stopChunk({ path: trace })
-        })
+        })())
       }
       return Promise.allSettled(promises)
     })
@@ -162,10 +162,11 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
         launchOptions.tracesDir = options.trace?.tracesDir
       }
 
-      if (this.project.config.inspector.enabled) {
+      const inspector = this.project.vitest.config.inspector
+      if (inspector.enabled) {
         // NodeJS equivalent defaults: https://nodejs.org/en/learn/getting-started/debugging#enable-inspector
-        const port = this.project.config.inspector.port || 9229
-        const host = this.project.config.inspector.host || '127.0.0.1'
+        const port = inspector.port || 9229
+        const host = inspector.host || '127.0.0.1'
 
         launchOptions.args ||= []
         launchOptions.args.push(`--remote-debugging-port=${port}`)
