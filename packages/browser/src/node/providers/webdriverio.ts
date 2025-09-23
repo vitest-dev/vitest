@@ -192,15 +192,16 @@ export class WebdriverBrowserProvider implements BrowserProvider {
       capabilities[key]!.args = args
     }
 
-    if (this.project.vitest.config.inspector.enabled && (browser === 'chrome' || browser === 'edge')) {
+    const inspector = this.project.vitest.config.inspector
+    if (inspector.enabled && (browser === 'chrome' || browser === 'edge')) {
       const key = browser === 'chrome'
         ? 'goog:chromeOptions'
         : 'ms:edgeOptions'
       const args = capabilities[key]?.args || []
 
       // NodeJS equivalent defaults: https://nodejs.org/en/learn/getting-started/debugging#enable-inspector
-      const port = this.project.config.inspector.port || 9229
-      const host = this.project.config.inspector.host || '127.0.0.1'
+      const port = inspector.port || 9229
+      const host = inspector.host || '127.0.0.1'
 
       args.push(`--remote-debugging-port=${port}`)
       args.push(`--remote-debugging-address=${host}`)
