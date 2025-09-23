@@ -6,10 +6,9 @@ import { runVitestCli } from '../../test-utils'
 
 type Message = Partial<InspectorNotification<any>>
 
-const IS_PLAYWRIGHT = process.env.PROVIDER === 'playwright'
 const REMOTE_DEBUG_URL = '127.0.0.1:9123'
 
-test.runIf(IS_PLAYWRIGHT || !process.env.CI).each(['', 'with workspace'])('--inspect-brk stops at test file %s', async (isWorkspace) => {
+test.each(['', 'with workspace'])('--inspect-brk stops at test file %s', async (isWorkspace) => {
   const options = ['--root', 'fixtures/inspect', '--no-file-parallelism', '--inspect-brk', REMOTE_DEBUG_URL]
 
   if (isWorkspace) {
