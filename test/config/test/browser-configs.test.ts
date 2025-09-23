@@ -3,6 +3,8 @@ import type { TestUserConfig, VitestOptions } from 'vitest/node'
 import type { TestFsStructure } from '../../test-utils'
 import crypto from 'node:crypto'
 import { playwright } from '@vitest/browser/providers/playwright'
+import { webdriverio } from '@vitest/browser/providers/webdriverio'
+import { preview } from '@vitest/browser/src/node/providers/preview.js'
 import { resolve } from 'pathe'
 import { describe, expect, onTestFinished, test } from 'vitest'
 import { createVitest } from 'vitest/node'
@@ -383,6 +385,155 @@ test('can enable browser-cli options for multi-project workspace', async () => {
   // browser config
   expect(projects[1].config.browser.enabled).toBe(true)
   expect(projects[1].config.browser.headless).toBe(true)
+})
+
+test('core provider has no options if `provider` is not set', async () => {
+  const v = await vitest({}, {
+    browser: {
+      enabled: true,
+      instances: [{
+        browser: 'chromium',
+      }],
+    },
+  })
+  expect(v.config.browser.provider).toEqual(undefined)
+})
+
+test('core provider has options if `provider` is playwright', async () => {
+  const v = await vitest({}, {
+    browser: {
+      enabled: true,
+      provider: playwright({ actionTimeout: 1000 }),
+      instances: [
+        { browser: 'chromium' },
+      ],
+    },
+  })
+  expect(v.config.browser.provider?.options).toEqual({
+    actionTimeout: 1000,
+  })
+})
+
+test('core provider has options if `provider` is wdio', async () => {
+  const v = await vitest({}, {
+    browser: {
+      enabled: true,
+      provider: webdriverio({ cacheDir: './test' }),
+      instances: [
+        { browser: 'chrome' },
+      ],
+    },
+  })
+  expect(v.config.browser.provider?.options).toEqual({
+    cacheDir: './test',
+  })
+})
+
+test('core provider has options if `provider` is preview', async () => {
+  const v = await vitest({}, {
+    browser: {
+      enabled: true,
+      provider: preview(),
+      instances: [
+        { browser: 'chrome' },
+      ],
+    },
+  })
+  expect(v.config.browser.provider?.options).toEqual({})
+})
+
+test('provider options can be changed dynamically', async () => {
+  const v = await vitest({}, {
+    browser: {
+      enabled: true,
+      provider: playwright({ actionTimeout: 1000 }),
+      instances: [
+        { browser: 'chromium' },
+      ],
+    },
+  }, {
+    plugins: [
+      {
+        name: 'update-options',
+        configureVitest({ project }) {
+          if (project.config.browser.provider) {
+            const options = project.config.browser.provider.options as any
+            options.actionTimeout = 400
+            options.someDifferentOption = 'test'
+          }
+        },
+      },
+    ],
+  })
+  expect(v.config.browser.provider?.options).toEqual({
+    actionTimeout: 400,
+    someDifferentOption: 'test',
+  })
+})
+
+test('provider options can be changed dynamically if no options are specified', async () => {
+  const v = await vitest({}, {
+    browser: {
+      enabled: true,
+      provider: playwright(),
+      instances: [
+        { browser: 'chromium' },
+      ],
+    },
+  }, {
+    plugins: [
+      {
+        name: 'update-options',
+        configureVitest({ project }) {
+          if (project.config.browser.provider) {
+            const options = project.config.browser.provider.options as any
+            options.actionTimeout = 400
+            options.someDifferentOption = 'test'
+          }
+        },
+      },
+    ],
+  })
+  expect(v.config.browser.provider?.options).toEqual({
+    actionTimeout: 400,
+    someDifferentOption: 'test',
+  })
+})
+
+test('provider options can be changed dynamically in CLI', async () => {
+  const v = await vitest({
+    browser: {
+      provider: {
+        name: 'playwright',
+        _cli: true,
+      } as any,
+      instances: [],
+    },
+  }, {
+    browser: {
+      enabled: true,
+      instances: [
+        { browser: 'chromium' },
+      ],
+    },
+  }, {
+    plugins: [
+      {
+        name: 'update-options',
+        configureVitest({ project }) {
+          if (project.config.browser.provider) {
+            const options = project.config.browser.provider.options as any
+            options.actionTimeout = 400
+            options.someDifferentOption = 'test'
+          }
+        },
+      },
+    ],
+  })
+  expect(v.config.browser.provider?.options).toEqual({
+    actionTimeout: 400,
+    someDifferentOption: 'test',
+  })
 })
 
 function getCliConfig(options: TestUserConfig, cli: string[], fs: TestFsStructure = {}) {
