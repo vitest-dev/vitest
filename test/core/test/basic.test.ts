@@ -2,6 +2,13 @@ import { assert, expect, it, suite, test } from 'vitest'
 import { two } from '../src/submodule'
 import { timeout } from '../src/timeout'
 
+const ext = test.extend({
+  todo: 1,
+})
+ext('basic', ({ todo, expect }) => {
+  expect(todo).toBe(1)
+})
+
 const testPath = expect.getState().testPath
 if (!testPath || !testPath.includes('basic.test.ts')) {
   throw new Error(`testPath is not correct: ${testPath}`)
