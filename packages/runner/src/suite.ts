@@ -245,7 +245,7 @@ function parseArguments<T extends (...args: any[]) => any>(
   optionsOrFn: T | object | undefined,
   timeoutOrTest: T | number | undefined,
 ) {
-  if (typeof timeoutOrTest === 'object') {
+  if (timeoutOrTest != null && typeof timeoutOrTest === 'object') {
     throw new TypeError(`Siganture "test(name, fn, { ... })" was deprecated in Vitest 3 and removed in Vitest 4. Please, provide options as a second argument instead.`)
   }
 
@@ -790,9 +790,7 @@ export function createTaskCollector(
           scopedFixtures,
         )
       }
-      const { handler, options } = parseArguments(optionsOrFn, optionsOrTest)
-      const timeout = options.timeout ?? collector.options?.timeout ?? runner?.config.testTimeout
-      originalWrapper.call(context, formatName(name), handler, timeout)
+      originalWrapper.call(context, formatName(name), optionsOrFn, optionsOrTest)
     }, _context)
   }
 
