@@ -1,7 +1,6 @@
 import { transformerTwoslash } from '@shikijs/vitepress-twoslash'
 import { transformerNotationWordHighlight } from '@shikijs/transformers'
 import { withPwa } from '@vite-pwa/vitepress'
-import type { DefaultTheme } from 'vitepress'
 import { defineConfig } from 'vitepress'
 import { tabsMarkdownPlugin } from 'vitepress-plugin-tabs'
 import {
@@ -26,6 +25,9 @@ import {
 } from './meta'
 import { pwa } from './scripts/pwa'
 import { transformHead } from './scripts/transformHead'
+
+// TODO: delete unused
+// TODO: redirect from old urls
 
 export default ({ mode }: { mode: string }) => {
   return withPwa(defineConfig({
@@ -207,7 +209,20 @@ export default ({ mode }: { mode: string }) => {
           {
             text: 'Introduction',
             collapsed: false,
-            items: introduction(),
+            items: [
+              {
+                text: 'Why Vitest',
+                link: '/guide/why',
+              },
+              {
+                text: 'Getting Started',
+                link: '/guide/',
+              },
+              {
+                text: 'Features',
+                link: '/guide/features',
+              },
+            ],
           },
           {
             text: 'Browser Mode',
@@ -248,7 +263,144 @@ export default ({ mode }: { mode: string }) => {
           {
             text: 'Guides',
             collapsed: false,
-            items: guide(),
+            items: [
+              {
+                text: 'CLI',
+                link: '/guide/cli',
+              },
+              {
+                text: 'Test Filtering',
+                link: '/guide/filtering',
+              },
+              {
+                text: 'Test Context',
+                link: '/guide/test-context',
+              },
+              {
+                text: 'Test Environment',
+                link: '/guide/environment',
+              },
+              {
+                text: 'Snapshot',
+                link: '/guide/snapshot',
+              },
+              {
+                text: 'Mocking',
+                link: '/guide/mocking',
+                collapsed: true,
+                items: [
+                  {
+                    text: 'Mocking Dates',
+                    link: '/guide/mocking/dates',
+                  },
+                  {
+                    text: 'Mocking Functions',
+                    link: '/guide/mocking/functions',
+                  },
+                  {
+                    text: 'Mocking Globals',
+                    link: '/guide/mocking/globals',
+                  },
+                  {
+                    text: 'Mocking Modules',
+                    link: '/guide/mocking/modules',
+                  },
+                  {
+                    text: 'Mocking the File System',
+                    link: '/guide/mocking/file-system',
+                  },
+                  {
+                    text: 'Mocking Requests',
+                    link: '/guide/mocking/requests',
+                  },
+                  {
+                    text: 'Mocking Timers',
+                    link: '/guide/mocking/timers',
+                  },
+                  {
+                    text: 'Mocking Classes',
+                    link: '/guide/mocking/classes',
+                  },
+                ],
+              },
+              {
+                text: 'Parallelism',
+                link: '/guide/parallelism',
+              },
+              {
+                text: 'Test Projects',
+                link: '/guide/projects',
+              },
+              {
+                text: 'Reporters',
+                link: '/guide/reporters',
+              },
+              {
+                text: 'Coverage',
+                link: '/guide/coverage',
+              },
+              {
+                text: 'Testing Types',
+                link: '/guide/testing-types',
+              },
+              {
+                text: 'Vitest UI',
+                link: '/guide/ui',
+              },
+              {
+                text: 'In-Source Testing',
+                link: '/guide/in-source',
+              },
+              {
+                text: 'Test Annotations',
+                link: '/guide/test-annotations',
+              },
+              {
+                text: 'Extending Matchers',
+                link: '/guide/extending-matchers',
+              },
+              {
+                text: 'IDE Integration',
+                link: '/guide/ide',
+              },
+              {
+                text: 'Debugging',
+                link: '/guide/debugging',
+              },
+              {
+                text: 'Common Errors',
+                link: '/guide/common-errors',
+              },
+              {
+                text: 'Migration Guide',
+                link: '/guide/migration',
+                collapsed: false,
+                items: [
+                  {
+                    text: 'Migrating to Vitest 4.0',
+                    link: '/guide/migration#vitest-4',
+                  },
+                  {
+                    text: 'Migrating from Jest',
+                    link: '/guide/migration#jest',
+                  },
+                ],
+              },
+              {
+                text: 'Performance',
+                collapsed: false,
+                items: [
+                  {
+                    text: 'Profiling Test Performance',
+                    link: '/guide/profiling-test-performance',
+                  },
+                  {
+                    text: 'Improving Performance',
+                    link: '/guide/improving-performance',
+                  },
+                ],
+              },
+            ],
           },
           {
             text: 'Advanced',
@@ -444,441 +596,8 @@ export default ({ mode }: { mode: string }) => {
           },
         ],
       },
-      sidebar_: {
-        '/guide/browser': [
-          {
-            text: 'Introduction',
-            collapsed: false,
-            items: [
-              {
-                text: 'Why Browser Mode',
-                link: '/guide/browser/why',
-                docFooterText: 'Why Browser Mode | Browser Mode',
-              },
-              {
-                text: 'Getting Started',
-                link: '/guide/browser/',
-                docFooterText: 'Getting Started | Browser Mode',
-              },
-            ],
-          },
-          {
-            text: 'Configuration',
-            collapsed: false,
-            items: [
-              {
-                text: 'Browser Config Reference',
-                link: '/guide/browser/config',
-                docFooterText: 'Browser Config Reference | Browser Mode',
-              },
-              {
-                text: 'Configuring Playwright',
-                link: '/guide/browser/playwright',
-                docFooterText: 'Configuring Playwright | Browser Mode',
-              },
-              {
-                text: 'Configuring WebdriverIO',
-                link: '/guide/browser/webdriverio',
-                docFooterText: 'Configuring WebdriverIO | Browser Mode',
-              },
-            ],
-          },
-          {
-            text: 'API',
-            collapsed: false,
-            items: [
-              {
-                text: 'Context API',
-                link: '/guide/browser/context',
-                docFooterText: 'Context API | Browser Mode',
-              },
-              {
-                text: 'Interactivity API',
-                link: '/guide/browser/interactivity-api',
-                docFooterText: 'Interactivity API | Browser Mode',
-              },
-              {
-                text: 'Locators',
-                link: '/guide/browser/locators',
-                docFooterText: 'Locators | Browser Mode',
-              },
-              {
-                text: 'Assertion API',
-                link: '/guide/browser/assertion-api',
-                docFooterText: 'Assertion API | Browser Mode',
-              },
-              {
-                text: 'Commands API',
-                link: '/guide/browser/commands',
-                docFooterText: 'Commands | Browser Mode',
-              },
-            ],
-          },
-          {
-            text: 'Guides',
-            collapsed: false,
-            items: [
-              {
-                text: 'Multiple Setups',
-                link: '/guide/browser/multiple-setups',
-                docFooterText: 'Multiple Setups | Browser Mode',
-              },
-              {
-                text: 'Component Testing',
-                link: '/guide/browser/component-testing',
-                docFooterText: 'Component Testing | Browser Mode',
-              },
-              {
-                text: 'Visual Regression Testing',
-                link: '/guide/browser/visual-regression-testing',
-                docFooterText: 'Visual Regression Testing | Browser Mode',
-              },
-              {
-                text: 'Trace Viewer',
-                link: '/guide/browser/trace-viewer',
-                docFooterText: 'Trace Viewer | Browser Mode',
-              },
-            ],
-          },
-          {
-            items: [
-              ...footer(),
-              {
-                text: 'Node API Reference',
-                link: '/advanced/api/',
-              },
-            ],
-          },
-        ],
-        '/advanced': [
-          {
-            text: 'API',
-            collapsed: false,
-            items: [
-              {
-                text: 'Node API',
-                items: [
-                  {
-                    text: 'Getting Started',
-                    link: '/advanced/api/',
-                  },
-                  {
-                    text: 'Vitest',
-                    link: '/advanced/api/vitest',
-                  },
-                  {
-                    text: 'TestProject',
-                    link: '/advanced/api/test-project',
-                  },
-                  {
-                    text: 'TestSpecification',
-                    link: '/advanced/api/test-specification',
-                  },
-                ],
-              },
-              {
-                text: 'Test Task API',
-                items: [
-                  {
-                    text: 'TestCase',
-                    link: '/advanced/api/test-case',
-                  },
-                  {
-                    text: 'TestSuite',
-                    link: '/advanced/api/test-suite',
-                  },
-                  {
-                    text: 'TestModule',
-                    link: '/advanced/api/test-module',
-                  },
-                  {
-                    text: 'TestCollection',
-                    link: '/advanced/api/test-collection',
-                  },
-                ],
-              },
-              {
-                text: 'Plugin API',
-                link: '/advanced/api/plugin',
-              },
-              {
-                text: 'Runner API',
-                link: '/advanced/runner',
-              },
-              {
-                text: 'Reporters API',
-                link: '/advanced/api/reporters',
-              },
-              {
-                text: 'Task Metadata',
-                link: '/advanced/metadata',
-              },
-            ],
-          },
-          {
-            text: 'Guides',
-            collapsed: false,
-            items: [
-              {
-                text: 'Running Tests',
-                link: '/advanced/guide/tests',
-              },
-              {
-                text: 'Extending Reporters',
-                link: '/advanced/reporters',
-              },
-              {
-                text: 'Custom Pool',
-                link: '/advanced/pool',
-              },
-            ],
-          },
-          {
-            items: footer(),
-          },
-        ],
-        '/team': [],
-        '/blog': [],
-        '/': [
-          {
-            text: 'Introduction',
-            collapsed: false,
-            items: introduction(),
-          },
-          {
-            text: 'API',
-            collapsed: false,
-            items: api(),
-          },
-          {
-            text: 'Guides',
-            collapsed: false,
-            items: guide(),
-          },
-          {
-            items: [
-              {
-                text: 'Browser Mode',
-                link: '/guide/browser',
-              },
-              {
-                text: 'Node API Reference',
-                link: '/advanced/api',
-              },
-              {
-                text: 'Comparisons',
-                link: '/guide/comparisons',
-              },
-            ],
-          },
-        ],
-      },
     },
     pwa,
     transformHead,
   }))
-}
-
-function footer(): DefaultTheme.SidebarItem[] {
-  return [
-    {
-      text: 'Config Reference',
-      link: '/config/',
-    },
-    {
-      text: 'Test API Reference',
-      link: '/api/',
-    },
-  ]
-}
-
-function introduction(): DefaultTheme.SidebarItem[] {
-  return [
-    {
-      text: 'Why Vitest',
-      link: '/guide/why',
-    },
-    {
-      text: 'Getting Started',
-      link: '/guide/',
-    },
-    {
-      text: 'Features',
-      link: '/guide/features',
-    },
-  ]
-}
-
-function guide(): DefaultTheme.SidebarItem[] {
-  return [
-    {
-      text: 'CLI',
-      link: '/guide/cli',
-    },
-    {
-      text: 'Test Filtering',
-      link: '/guide/filtering',
-    },
-    {
-      text: 'Test Context',
-      link: '/guide/test-context',
-    },
-    {
-      text: 'Test Environment',
-      link: '/guide/environment',
-    },
-    {
-      text: 'Snapshot',
-      link: '/guide/snapshot',
-    },
-    {
-      text: 'Mocking',
-      link: '/guide/mocking',
-      collapsed: true,
-      items: [
-        {
-          text: 'Mocking Dates',
-          link: '/guide/mocking/dates',
-        },
-        {
-          text: 'Mocking Functions',
-          link: '/guide/mocking/functions',
-        },
-        {
-          text: 'Mocking Globals',
-          link: '/guide/mocking/globals',
-        },
-        {
-          text: 'Mocking Modules',
-          link: '/guide/mocking/modules',
-        },
-        {
-          text: 'Mocking the File System',
-          link: '/guide/mocking/file-system',
-        },
-        {
-          text: 'Mocking Requests',
-          link: '/guide/mocking/requests',
-        },
-        {
-          text: 'Mocking Timers',
-          link: '/guide/mocking/timers',
-        },
-        {
-          text: 'Mocking Classes',
-          link: '/guide/mocking/classes',
-        },
-      ],
-    },
-    {
-      text: 'Parallelism',
-      link: '/guide/parallelism',
-    },
-    {
-      text: 'Test Projects',
-      link: '/guide/projects',
-    },
-    {
-      text: 'Reporters',
-      link: '/guide/reporters',
-    },
-    {
-      text: 'Coverage',
-      link: '/guide/coverage',
-    },
-    {
-      text: 'Testing Types',
-      link: '/guide/testing-types',
-    },
-    {
-      text: 'Vitest UI',
-      link: '/guide/ui',
-    },
-    {
-      text: 'In-Source Testing',
-      link: '/guide/in-source',
-    },
-    {
-      text: 'Test Annotations',
-      link: '/guide/test-annotations',
-    },
-    {
-      text: 'Extending Matchers',
-      link: '/guide/extending-matchers',
-    },
-    {
-      text: 'IDE Integration',
-      link: '/guide/ide',
-    },
-    {
-      text: 'Debugging',
-      link: '/guide/debugging',
-    },
-    {
-      text: 'Common Errors',
-      link: '/guide/common-errors',
-    },
-    {
-      text: 'Migration Guide',
-      link: '/guide/migration',
-      collapsed: false,
-      items: [
-        {
-          text: 'Migrating to Vitest 4.0',
-          link: '/guide/migration#vitest-4',
-        },
-        {
-          text: 'Migrating from Jest',
-          link: '/guide/migration#jest',
-        },
-      ],
-    },
-    {
-      text: 'Performance',
-      collapsed: false,
-      items: [
-        {
-          text: 'Profiling Test Performance',
-          link: '/guide/profiling-test-performance',
-        },
-        {
-          text: 'Improving Performance',
-          link: '/guide/improving-performance',
-        },
-      ],
-    },
-  ]
-}
-
-function api(): DefaultTheme.SidebarItem[] {
-  return [
-    {
-      text: 'Test API Reference',
-      link: '/api/',
-    },
-    {
-      text: 'Mocks',
-      link: '/api/mock',
-    },
-    {
-      text: 'Vi Utility',
-      link: '/api/vi',
-    },
-    {
-      text: 'Expect',
-      link: '/api/expect',
-    },
-    {
-      text: 'ExpectTypeOf',
-      link: '/api/expect-typeof',
-    },
-    {
-      text: 'Assert',
-      link: '/api/assert',
-    },
-    {
-      text: 'AssertType',
-      link: '/api/assert-type',
-    },
-  ]
 }
