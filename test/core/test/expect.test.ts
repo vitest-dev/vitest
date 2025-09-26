@@ -506,22 +506,37 @@ describe('Standard Schema', () => {
   const numberSchema = createMockSchema(value =>
     typeof value === 'number' ? { issues: undefined, value } : { issues: [{ message: 'Expected number' }] },
   )
-
+  const emailSchema = createMockSchema(value =>
+    typeof value === 'string' && /^[\w%+.-]+@[\d.A-Z-]+\.[A-Z]{2,}$/i.test(value) ? { issues: undefined, value } : { issues: [{ message: 'Expected email' }] },
+  )
   const objectSchema = createMockSchema(value =>
     typeof value === 'object' && value !== null && 'name' in value && 'age' in value && typeof value.name === 'string' && typeof value.age === 'number' ? { issues: undefined, value } : { issues: [{ message: 'Expected object' }] },
   )
-
   const asyncStringSchema = createAsyncMockSchema(value =>
     typeof value === 'string' ? { issues: undefined, value } : { issues: [{ message: 'Expected string' }] },
   )
 
   describe('schemaMatching()', () => {
-    test('should validate data against schema', () => {
+    test('should work with primitive values', () => {
       expect('hello').toEqual(expect.schemaMatching(stringSchema))
       expect(42).toEqual(expect.schemaMatching(numberSchema))
 
-      expect(() => expect(123).toEqual(expect.schemaMatching(stringSchema))).toThrow()
-      expect(() => expect('hello').toEqual(expect.schemaMatching(numberSchema))).toThrow()
+      expect(() => expect(123).toEqual(expect.schemaMatching(stringSchema))).toThrowErrorMatchingInlineSnapshot(`[AssertionError: expected 123 to deeply equal SchemaMatching{…}]`)
+      expect(() => expect('hello').toEqual(expect.schemaMatching(numberSchema))).toThrowErrorMatchingInlineSnapshot(`[AssertionError: expected 'hello' to deeply equal SchemaMatching{…}]`)
+    })
+
+    test('should work with objects', () => {
+      expect({
+        email: 'john@example.com',
+      }).toEqual({
+        email: expect.schemaMatching(emailSchema),
+      })
+
+      expect(() => expect({
+        email: 123,
+      }).toEqual({
+        email: expect.schemaMatching(emailSchema),
+      })).toThrowErrorMatchingInlineSnapshot(`[AssertionError: expected { email: 123 } to deeply equal { email: SchemaMatching{…} }]`)
     })
 
     test('should work with objectContaining', () => {
@@ -544,15 +559,15 @@ describe('Standard Schema', () => {
       expect(123).not.toEqual(expect.schemaMatching(stringSchema))
       expect('hello').not.toEqual(expect.schemaMatching(numberSchema))
 
-      expect(() => expect('hello').not.toEqual(expect.schemaMatching(stringSchema))).toThrow()
+      expect(() => expect('hello').not.toEqual(expect.schemaMatching(stringSchema))).toThrowErrorMatchingInlineSnapshot(`[AssertionError: expected 'hello' to not deeply equal SchemaMatching]`)
     })
 
     test('should throw error for async schemas', () => {
-      expect(() => expect('hello').toEqual(expect.schemaMatching(asyncStringSchema))).toThrow('Async schema validation is not supported')
+      expect(() => expect('hello').toEqual(expect.schemaMatching(asyncStringSchema))).toThrowErrorMatchingInlineSnapshot(`[TypeError: Async schema validation is not supported in asymmetric matchers.]`)
     })
 
     test('should throw error for non-schema argument', () => {
-      expect(() => expect.schemaMatching('not-a-schema')).toThrow('SchemaMatching expected to receive a Standard Schema')
+      expect(() => expect.schemaMatching('not-a-schema')).toThrowErrorMatchingInlineSnapshot(`[TypeError: SchemaMatching expected to receive a Standard Schema.]`)
     })
 
     test('should work with toMatchObject', () => {
