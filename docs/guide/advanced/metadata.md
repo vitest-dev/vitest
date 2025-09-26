@@ -1,4 +1,4 @@
-# Task Metadata
+# Task Metadata <Badge type="danger">advanced</Badge>
 
 ::: warning
 Vitest exposes experimental private API. Breaking changes might not follow SemVer, please pin Vitest's version when using it.

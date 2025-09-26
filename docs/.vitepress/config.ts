@@ -148,30 +148,12 @@ export default ({ mode }: { mode: string }) => {
       },
 
       nav: [
-        { text: 'Guide & API', link: '/guide/', activeMatch: '^/(guide|api)/(?!browser)' },
+        { text: 'Guides', link: '/guide/', activeMatch: '^/guide/' },
         { text: 'Config', link: '/config/', activeMatch: '^/config/' },
-        { text: 'Browser Mode', link: '/guide/browser', activeMatch: '^/guide/browser/' },
+        { text: 'API', link: '/api/', activeMatch: '^(/api/|/advanced/api/)' },
         {
-          text: 'Resources',
-          items: [
-            {
-              text: 'Advanced API',
-              link: '/advanced/api/',
-              activeMatch: '^/advanced/',
-            },
-            {
-              items: [
-                {
-                  text: 'Blog',
-                  link: '/blog',
-                },
-                {
-                  text: 'Team',
-                  link: '/team',
-                },
-              ],
-            },
-          ],
+          text: 'Blog',
+          link: '/blog',
         },
         {
           text: `v${version}`,
@@ -189,6 +171,10 @@ export default ({ mode }: { mode: string }) => {
                 {
                   text: 'Contributing',
                   link: contributing,
+                },
+                {
+                  text: 'Team',
+                  link: '/team',
                 },
               ],
             },
@@ -217,6 +203,248 @@ export default ({ mode }: { mode: string }) => {
       ],
 
       sidebar: {
+        '/guide': [
+          {
+            text: 'Introduction',
+            collapsed: false,
+            items: introduction(),
+          },
+          {
+            text: 'Browser Mode',
+            collapsed: false,
+            items: [
+              {
+                text: 'Why Browser Mode',
+                link: '/guide/browser/why',
+                docFooterText: 'Why Browser Mode | Browser Mode',
+              },
+              {
+                text: 'Getting Started',
+                link: '/guide/browser/',
+                docFooterText: 'Getting Started | Browser Mode',
+              },
+              {
+                text: 'Multiple Setups',
+                link: '/guide/browser/multiple-setups',
+                docFooterText: 'Multiple Setups | Browser Mode',
+              },
+              {
+                text: 'Component Testing',
+                link: '/guide/browser/component-testing',
+                docFooterText: 'Component Testing | Browser Mode',
+              },
+              {
+                text: 'Visual Regression Testing',
+                link: '/guide/browser/visual-regression-testing',
+                docFooterText: 'Visual Regression Testing | Browser Mode',
+              },
+              {
+                text: 'Trace Viewer',
+                link: '/guide/browser/trace-viewer',
+                docFooterText: 'Trace Viewer | Browser Mode',
+              },
+            ],
+          },
+          {
+            text: 'Guides',
+            collapsed: false,
+            items: guide(),
+          },
+          {
+            text: 'Advanced',
+            collapsed: true,
+            items: [
+              {
+                text: 'Getting Started',
+                link: '/guide/advanced/',
+              },
+              {
+                text: 'Running Tests via API',
+                link: '/guide/advanced/tests',
+              },
+              {
+                text: 'Extending Reporters',
+                link: '/guide/advanced/reporters',
+              },
+              {
+                text: 'Custom Pool',
+                link: '/guide/advanced/pool',
+              },
+            ],
+          },
+        ],
+        '/config': [
+          {
+            text: 'Config Reference',
+            collapsed: false,
+            items: [
+              {
+                text: 'Config File',
+                link: '/config/',
+              },
+              {
+                text: 'name',
+                link: '/config/name',
+              },
+              // TODO: generate
+            ],
+          },
+          {
+            text: 'Browser Mode',
+            collapsed: false,
+            items: [
+              {
+                text: 'browser.enabled',
+                link: '/config/browser/enabled',
+              },
+              // TODO: generate
+              {
+                text: 'playwright',
+                link: '/config/playwright',
+              },
+              {
+                text: 'webdriverio',
+                link: '/config/webdriverio',
+              },
+            ],
+          },
+        ],
+        '/api': [
+          {
+            text: 'Text Runner',
+            collapsed: false,
+            items: [
+              // TODO: generate
+              {
+                text: 'test',
+                link: '/api/test',
+              },
+              {
+                text: 'describe',
+                link: '/api/describe',
+              },
+              {
+                text: 'beforeEach',
+                link: '/api/before-each',
+              },
+              {
+                text: 'afterEach',
+                link: '/api/after-each',
+              },
+            ],
+          },
+          {
+            text: 'Assertion API',
+            collapsed: false,
+            items: [
+              {
+                text: 'expect',
+                link: '/api/expect',
+              },
+              {
+                text: 'assert',
+                link: '/api/assert',
+              },
+              {
+                text: 'expectTypeOf',
+                link: '/api/expect-typeof',
+              },
+              {
+                text: 'assertType',
+                link: '/api/assert-type',
+              },
+            ],
+          },
+          {
+            text: 'Vi Utility API',
+            collapsed: false,
+            items: [
+              {
+                text: 'Mock Modules',
+                link: '/api/vi/mock-modiles',
+              },
+              {
+                text: 'Mock Functions',
+                link: '/api/vi/mock-functions',
+              },
+              {
+                text: 'Mock Timers',
+                link: '/api/vi/mock-timers',
+              },
+              {
+                text: 'Miscellaneous',
+                link: '/api/vi/miscellaneous',
+              },
+            ],
+          },
+          {
+            text: 'Browser Mode',
+            collapsed: false,
+            items: [
+              // TODO: generate
+              {
+                text: 'page',
+                link: '/api/browser/page',
+              },
+              {
+                text: 'locators',
+                link: '/api/browser/locators',
+              },
+            ],
+          },
+          {
+            text: 'Advanced API',
+            collapsed: true,
+            items: [
+              {
+                text: 'Vitest',
+                link: '/api/advanced/vitest',
+              },
+              {
+                text: 'TestProject',
+                link: '/api/advanced/test-project',
+              },
+              {
+                text: 'TestSpecification',
+                link: '/api/advanced/test-specification',
+              },
+              {
+                text: 'TestCase',
+                link: '/api/advanced/test-case',
+              },
+              {
+                text: 'TestSuite',
+                link: '/api/advanced/test-suite',
+              },
+              {
+                text: 'TestModule',
+                link: '/api/advanced/test-module',
+              },
+              {
+                text: 'TestCollection',
+                link: '/api/advanced/test-collection',
+              },
+              {
+                text: 'VitestPlugin',
+                link: '/api/advanced/plugin',
+              },
+              {
+                text: 'VitestRunner',
+                link: '/api/advanced/runner',
+              },
+              {
+                text: 'Reporter',
+                link: '/api/advanced/reporters',
+              },
+              {
+                text: 'TaskMeta',
+                link: '/api/advanced/metadata',
+              },
+            ],
+          },
+        ],
+      },
+      sidebar_: {
         '/guide/browser': [
           {
             text: 'Introduction',
@@ -478,10 +706,6 @@ function introduction(): DefaultTheme.SidebarItem[] {
       text: 'Features',
       link: '/guide/features',
     },
-    {
-      text: 'Config Reference',
-      link: '/config/',
-    },
   ]
 }
 
@@ -496,16 +720,12 @@ function guide(): DefaultTheme.SidebarItem[] {
       link: '/guide/filtering',
     },
     {
-      text: 'Test Projects',
-      link: '/guide/projects',
+      text: 'Test Context',
+      link: '/guide/test-context',
     },
     {
-      text: 'Reporters',
-      link: '/guide/reporters',
-    },
-    {
-      text: 'Coverage',
-      link: '/guide/coverage',
+      text: 'Test Environment',
+      link: '/guide/environment',
     },
     {
       text: 'Snapshot',
@@ -555,6 +775,18 @@ function guide(): DefaultTheme.SidebarItem[] {
       link: '/guide/parallelism',
     },
     {
+      text: 'Test Projects',
+      link: '/guide/projects',
+    },
+    {
+      text: 'Reporters',
+      link: '/guide/reporters',
+    },
+    {
+      text: 'Coverage',
+      link: '/guide/coverage',
+    },
+    {
       text: 'Testing Types',
       link: '/guide/testing-types',
     },
@@ -567,16 +799,8 @@ function guide(): DefaultTheme.SidebarItem[] {
       link: '/guide/in-source',
     },
     {
-      text: 'Test Context',
-      link: '/guide/test-context',
-    },
-    {
       text: 'Test Annotations',
       link: '/guide/test-annotations',
-    },
-    {
-      text: 'Environment',
-      link: '/guide/environment',
     },
     {
       text: 'Extending Matchers',
