@@ -1,4 +1,4 @@
-import type { Awaitable } from './general'
+import type { Awaitable } from '@vitest/utils'
 
 export interface EnvironmentReturn {
   teardown: (global: any) => Awaitable<void>
