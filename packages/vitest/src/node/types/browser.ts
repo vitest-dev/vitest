@@ -21,9 +21,10 @@ export interface BrowserModuleMocker {
   clear: (sessionId: string) => Promise<void>
 }
 
-export interface BrowserProviderOption {
+export interface BrowserProviderOption<Options extends object = object> {
   name: string
   supportedBrowser?: ReadonlyArray<string>
+  options: Options
   factory: (project: TestProject) => BrowserProvider
 }
 

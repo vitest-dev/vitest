@@ -271,10 +271,11 @@ export function resolveConfig(
     }
   }
 
-  const playwrightChromiumOnly = isPlaywrightChromiumOnly(vitest, resolved)
+  const containsChromium = hasBrowserChromium(vitest, resolved)
+  const hasOnlyChromium = hasOnlyBrowserChromium(vitest, resolved)
 
-  // Browser-mode "Playwright + Chromium" only features:
-  if (browser.enabled && !playwrightChromiumOnly) {
+  // Browser-mode "Chromium" only features:
+  if (browser.enabled && (!containsChromium || !hasOnlyChromium)) {
     const browserConfig = `
 {
   browser: {
@@ -286,18 +287,23 @@ export function resolveConfig(
 }
     `.trim()
 
+    const preferredProvider = (!browser.provider?.name || browser.provider.name === 'preview')
+      ? 'playwright'
+      : browser.provider.name
+    const preferredBrowser = preferredProvider === 'playwright' ? 'chromium' : 'chrome'
     const correctExample = `
 {
   browser: {
-    provider: playwright(),
+    provider: ${preferredProvider}(),
     instances: [
-      { browser: 'chromium' }
+      { browser: '${preferredBrowser}' }
     ],
   },
 }
     `.trim()
 
-    if (resolved.coverage.enabled && resolved.coverage.provider === 'v8') {
+    // requires all projects to be chromium
+    if (!hasOnlyChromium && resolved.coverage.enabled && resolved.coverage.provider === 'v8') {
       const coverageExample = `
 {
   coverage: {
@@ -313,7 +319,8 @@ export function resolveConfig(
       )
     }
 
-    if (resolved.inspect || resolved.inspectBrk) {
+    // ignores non-chromium browsers when there is at least one chromium project
+    if (!containsChromium && (resolved.inspect || resolved.inspectBrk)) {
       const inspectOption = `--inspect${resolved.inspectBrk ? '-brk' : ''}`
 
       throw new Error(
@@ -728,6 +735,7 @@ export function resolveConfig(
     ??= options.fileParallelism ?? mode !== 'benchmark'
   // disable in headless mode by default, and if CI is detected
   resolved.browser.ui ??= resolved.browser.headless === true ? false : !isCI
+  resolved.browser.commands ??= {}
   if (resolved.browser.screenshotDirectory) {
     resolved.browser.screenshotDirectory = resolve(
       resolved.root,
@@ -767,6 +775,9 @@ export function resolveConfig(
   }
   else {
     resolved.browser.screenshotFailures ??= !isPreview && !resolved.browser.ui
+  }
+  if (resolved.browser.provider && resolved.browser.provider.options == null) {
+    resolved.browser.provider.options = {}
   }
 
   resolved.browser.api = resolveApiServerConfig(
@@ -843,26 +854,51 @@ export function resolveCoverageReporters(configReporters: NonNullable<BaseCovera
   return resolvedReporters
 }
 
-function isPlaywrightChromiumOnly(vitest: Vitest, config: ResolvedConfig) {
+function isChromiumName(provider: string, name: string) {
+  if (provider === 'playwright') {
+    return name === 'chromium'
+  }
+  return name === 'chrome' || name === 'edge'
+}
+
+function hasBrowserChromium(vitest: Vitest, config: ResolvedConfig) {
   const browser = config.browser
-  if (!browser || !browser.provider || browser.provider.name !== 'playwright' || !browser.enabled) {
+  if (!browser || !browser.provider || browser.provider.name === 'preview' || !browser.enabled) {
     return false
   }
   if (browser.name) {
-    return browser.name === 'chromium'
+    return isChromiumName(browser.provider.name, browser.name)
   }
   if (!browser.instances) {
     return false
   }
-  for (const instance of browser.instances) {
+  return browser.instances.some((instance) => {
     const name = instance.name || (config.name ? `${config.name} (${instance.browser})` : instance.browser)
     // browser config is filtered out
     if (!vitest.matchesProjectFilter(name)) {
-      continue
-    }
-    if (instance.browser !== 'chromium') {
       return false
     }
+    return isChromiumName(browser.provider!.name, instance.browser)
+  })
+}
+
+function hasOnlyBrowserChromium(vitest: Vitest, config: ResolvedConfig) {
+  const browser = config.browser
+  if (!browser || !browser.provider || browser.provider.name === 'preview' || !browser.enabled) {
+    return false
   }
-  return true
+  if (browser.name) {
+    return isChromiumName(browser.provider.name, browser.name)
+  }
+  if (!browser.instances) {
+    return false
+  }
+  return browser.instances.every((instance) => {
+    const name = instance.name || (config.name ? `${config.name} (${instance.browser})` : instance.browser)
+    // browser config is filtered out
+    if (!vitest.matchesProjectFilter(name)) {
+      return true // ignore this project
+    }
+    return isChromiumName(browser.provider!.name, instance.browser)
+  })
 }

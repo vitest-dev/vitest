@@ -6,6 +6,7 @@ import type { Capabilities } from '@wdio/types'
 import type {
   BrowserProvider,
   BrowserProviderOption,
+  CDPSession,
   TestProject,
 } from 'vitest/node'
 import type { ClickOptions, DragAndDropOptions, remote } from 'webdriverio'
@@ -21,10 +22,11 @@ interface WebdriverProviderOptions extends Partial<
   Parameters<typeof remote>[0]
 > {}
 
-export function webdriverio(options: WebdriverProviderOptions = {}): BrowserProviderOption {
+export function webdriverio(options: WebdriverProviderOptions = {}): BrowserProviderOption<WebdriverProviderOptions> {
   return {
     name: 'webdriverio',
     supportedBrowser: webdriverBrowsers,
+    options,
     factory(project) {
       return new WebdriverBrowserProvider(project, options)
     },
@@ -190,6 +192,26 @@ export class WebdriverBrowserProvider implements BrowserProvider {
       capabilities[key]!.args = args
     }
 
+    const inspector = this.project.vitest.config.inspector
+    if (inspector.enabled && (browser === 'chrome' || browser === 'edge')) {
+      const key = browser === 'chrome'
+        ? 'goog:chromeOptions'
+        : 'ms:edgeOptions'
+      const args = capabilities[key]?.args || []
+
+      // NodeJS equivalent defaults: https://nodejs.org/en/learn/getting-started/debugging#enable-inspector
+      const port = inspector.port || 9229
+      const host = inspector.host || '127.0.0.1'
+
+      args.push(`--remote-debugging-port=${port}`)
+      args.push(`--remote-debugging-address=${host}`)
+
+      this.project.vitest.logger.log(`Debugger listening on ws://${host}:${port}`)
+
+      capabilities[key] ??= {}
+      capabilities[key]!.args = args
+    }
+
     return capabilities
   }
 
@@ -224,6 +246,28 @@ export class WebdriverBrowserProvider implements BrowserProvider {
     await browser.deleteSession()
     browser.sessionId = undefined as unknown as string
     this.browser = null
+  }
+
+  async getCDPSession(_sessionId: string): Promise<CDPSession> {
+    return {
+      send: (method: string, params: any) => {
+        if (!this.browser) {
+          throw new Error(`The environment was torn down.`)
+        }
+        return this.browser.sendCommandAndGetResult(method, params ?? {}).catch((error) => {
+          return Promise.reject(new Error(`Failed to execute "${method}" command.`, { cause: error }))
+        })
+      },
+      on: () => {
+        throw new Error(`webdriverio provider doesn't support cdp.on()`)
+      },
+      once: () => {
+        throw new Error(`webdriverio provider doesn't support cdp.once()`)
+      },
+      off: () => {
+        throw new Error(`webdriverio provider doesn't support cdp.off()`)
+      },
+    }
   }
 }
 

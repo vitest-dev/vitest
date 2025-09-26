@@ -356,6 +356,12 @@ class BrowserPool {
     }
 
     const provider = this.project.browser!.provider
+    const browser = this.project.config.browser.name
+
+    if (shouldIgnoreDebugger(provider.name, browser)) {
+      debug?.('[$s] ignoring debugger in %s browser because it is not supported', sessionId, browser)
+      return
+    }
 
     if (!provider.getCDPSession) {
       throw new Error('Unable to set breakpoint, CDP not supported')
@@ -369,4 +375,11 @@ class BrowserPool {
       urlRegex: escapePathToRegexp(file),
     })
   }
+}
+
+function shouldIgnoreDebugger(provider: string, browser: string) {
+  if (provider === 'webdriverio') {
+    return browser !== 'chrome' && browser !== 'edge'
+  }
+  return browser !== 'chromium'
 }

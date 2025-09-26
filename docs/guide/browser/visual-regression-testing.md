@@ -45,7 +45,7 @@ That's why Vitest includes the browser and platform in screenshot names (like
 
 For stable tests, use the same environment everywhere. We **strongly recommend**
 cloud services like
-[Microsoft Playwright Testing](https://azure.microsoft.com/en-us/products/playwright-testing)
+[Azure App Testing](https://azure.microsoft.com/en-us/products/app-testing/)
 or [Docker containers](https://playwright.dev/docs/docker).
 :::
 
@@ -353,7 +353,7 @@ For teams, you've basically got three options:
 1. **Self-hosted runners**, complex to set up, painful to maintain
 1. **GitHub Actions**, free (for open source), works with any provider
 1. **Cloud services**, like
-[Microsoft Playwright Testing](https://azure.microsoft.com/en-us/products/playwright-testing),
+[Azure App Testing](https://azure.microsoft.com/en-us/products/app-testing/),
 built for this exact problem
 
 We'll focus on options 2 and 3 since they're the quickest to get running.
@@ -576,7 +576,7 @@ jobs:
           fi
 ```
 
-=== Microsoft Playwright Testing
+=== Azure App Testing
 
 Your tests stay local, only the browsers run in the cloud. It's Playwright's
 remote browser feature, but Microsoft handles all the infrastructure.
@@ -588,6 +588,7 @@ screenshots should use the service.
 
 The cleanest approach is using [Test Projects](/guide/projects):
 
+<!-- eslint-disable style/quote-props -->
 ```ts [vitest.config.ts]
 import { env } from 'node:process'
 import { defineConfig } from 'vitest/config'
@@ -621,15 +622,16 @@ export default defineConfig({
                 browser: 'chromium',
                 viewport: { width: 2560, height: 1440 },
                 connect: {
-                  wsEndpoint: `${env.PLAYWRIGHT_SERVICE_URL}?cap=${JSON.stringify({
+                  wsEndpoint: `${env.PLAYWRIGHT_SERVICE_URL}?${new URLSearchParams({
+                    'api-version': '2025-09-01',
                     os: 'linux', // always use Linux for consistency
                     // helps identifying runs in the service's dashboard
-                    runId: `Vitest ${env.CI ? 'CI' : 'local'} run @${new Date().toISOString()}`,
+                    runName: `Vitest ${env.CI ? 'CI' : 'local'} run @${new Date().toISOString()}`,
                   })}`,
                   options: {
                     exposeNetwork: '<loopback>',
                     headers: {
-                      'x-mpt-access-key': env.PLAYWRIGHT_SERVICE_ACCESS_TOKEN,
+                      Authorization: `Bearer ${env.PLAYWRIGHT_SERVICE_ACCESS_TOKEN}`,
                     },
                     timeout: 30_000,
                   },
@@ -643,11 +645,14 @@ export default defineConfig({
   },
 })
 ```
+<!-- eslint-enable style/quote-props -->
 
-The service gives you two environment variables:
+Follow the [official guide to create a Playwright Workspace](https://learn.microsoft.com/en-us/azure/app-testing/playwright-workspaces/quickstart-run-end-to-end-tests?tabs=playwrightcli&pivots=playwright-test-runner#create-a-workspace).
 
-- `PLAYWRIGHT_SERVICE_URL` tells Playwright where to connect
-- `PLAYWRIGHT_SERVICE_ACCESS_TOKEN` is your auth token
+Once your workspace is created, configure Vitest to use it:
+
+1. **Set the endpoint URL**: following the [official guide](https://learn.microsoft.com/en-us/azure/app-testing/playwright-workspaces/quickstart-run-end-to-end-tests?tabs=playwrightcli&pivots=playwright-test-runner#configure-the-browser-endpoint), retrieve the URL and set it as the `PLAYWRIGHT_SERVICE_URL` environment variable.
+1. **Enable token authentication**: [enable access tokens](https://learn.microsoft.com/en-us/azure/app-testing/playwright-workspaces/how-to-manage-authentication?pivots=playwright-test-runner#enable-authentication-using-access-tokens) for your workspace, then [generate a token](https://learn.microsoft.com/en-us/azure/app-testing/playwright-workspaces/how-to-manage-access-tokens#generate-a-workspace-access-token) and set it as the `PLAYWRIGHT_SERVICE_ACCESS_TOKEN` environment variable.
 
 ::: danger Keep that Token Secret!
 Never commit `PLAYWRIGHT_SERVICE_ACCESS_TOKEN` to your repository. Anyone with
@@ -710,10 +715,10 @@ everything.
 The downside? That "works on my machine" conversation when someone generates
 screenshots locally and they don't match CI expectations anymore.
 
-The cloud service makes sense if developers need to run visual tests locally.
+A cloud service makes sense if developers need to run visual tests locally.
 
 Some teams have designers checking their work or developers who prefer catching
 issues before pushing. It allows skipping the push-wait-check-fix-push cycle.
 
-Still on the fence? Start with GitHub Actions. You can always add the cloud
+Still on the fence? Start with GitHub Actions. You can always add a cloud
 service later if local testing becomes a pain point.
