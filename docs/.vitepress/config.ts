@@ -460,6 +460,13 @@ export default ({ mode }: { mode: string }) => {
               },
             ],
           },
+          {
+            text: '@vitest/plugin-eslint',
+            collapsed: true,
+            items: [
+              // TODO
+            ],
+          },
         ],
         '/api': [
           {
