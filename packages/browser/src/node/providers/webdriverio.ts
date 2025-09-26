@@ -27,7 +27,7 @@ export function webdriverio(options: WebdriverProviderOptions = {}): BrowserProv
     name: 'webdriverio',
     supportedBrowser: webdriverBrowsers,
     options,
-    factory(project) {
+    providerFactory(project) {
       return new WebdriverBrowserProvider(project, options)
     },
     // --browser.provider=webdriverio

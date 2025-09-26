@@ -509,6 +509,28 @@ importers:
         specifier: ^9.19.2
         version: 9.19.2
 
+  packages/browser-playwright:
+    dependencies:
+      '@vitest/browser':
+        specifier: workspace:*
+        version: link:../browser
+      '@vitest/mocker':
+        specifier: workspace:*
+        version: link:../mocker
+      tinyrainbow:
+        specifier: 'catalog:'
+        version: 3.0.3
+    devDependencies:
+      playwright:
+        specifier: ^1.55.0
+        version: 1.55.0
+      playwright-core:
+        specifier: ^1.55.0
+        version: 1.55.0
+      vitest:
+        specifier: workspace:*
+        version: link:../vitest
+
   packages/coverage-istanbul:
     dependencies:
       '@istanbuljs/schema':

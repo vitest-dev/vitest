@@ -453,31 +453,14 @@ export class TestProject {
     if (!this.isBrowserEnabled() || this._parentBrowser) {
       return
     }
-    await this.vitest.packageInstaller.ensureInstalled(
-      '@vitest/browser',
-      this.config.root,
-      this.vitest.version,
-    )
-    const { createBrowserServer, distRoot } = await import('@vitest/browser')
-    let cacheDir: string
-    const browser = await createBrowserServer(
+    if (typeof this.config.browser.provider!.serverFactory !== 'function') {
+      throw new TypeError(`The provider options do not return a "serverFactory" function.`)
+    }
+    const browser = await this.config.browser.provider!.serverFactory(
       this,
       this.vite.config.configFile,
       [
-        {
-          name: 'vitest:browser-cacheDir',
-          configResolved(config) {
-            cacheDir = config.cacheDir
-          },
-        },
-        ...MocksPlugins({
-          filter(id) {
-            if (id.includes(distRoot) || id.includes(cacheDir)) {
-              return false
-            }
-            return true
-          },
-        }),
+        ...MocksPlugins(), // TODO: inject cacheDir inside the server factory
         MetaEnvReplacerPlugin(),
       ],
       [CoverageTransform(this.vitest)],

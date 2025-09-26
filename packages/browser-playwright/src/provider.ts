@@ -25,6 +25,7 @@ import type {
   CDPSession,
   TestProject,
 } from 'vitest/node'
+import { createBrowserServer } from '@vitest/browser'
 import { createManualModuleSource } from '@vitest/mocker/node'
 import c from 'tinyrainbow'
 import { createDebugger, isCSSRequest } from 'vitest/node'
@@ -75,9 +76,7 @@ export function playwright(options: PlaywrightProviderOptions = {}): BrowserProv
     providerFactory(project) {
       return new PlaywrightBrowserProvider(project, options)
     },
-    // --browser.provider=playwright
-    // @ts-expect-error hidden way to bypass importing playwright
-    _cli: true,
+    serverFactory: createBrowserServer,
   }
 }
 

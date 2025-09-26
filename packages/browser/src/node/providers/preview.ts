@@ -4,7 +4,7 @@ export function preview(): BrowserProviderOption {
   return {
     name: 'preview',
     options: {},
-    factory(project) {
+    providerFactory(project) {
       return new PreviewBrowserProvider(project)
     },
     // --browser.provider=preview

@@ -2,7 +2,7 @@ import type { MockedModule } from '@vitest/mocker'
 import type { CancelReason } from '@vitest/runner'
 import type { Awaitable, ParsedStack, TestError } from '@vitest/utils'
 import type { StackTraceParserOptions } from '@vitest/utils/source-map'
-import type { ViteDevServer } from 'vite'
+import type { Plugin, ViteDevServer } from 'vite'
 import type { BrowserTraceViewMode } from '../../runtime/config'
 import type { BrowserTesterOptions } from '../../types/browser'
 import type { TestProject } from '../project'
@@ -25,7 +25,13 @@ export interface BrowserProviderOption<Options extends object = object> {
   name: string
   supportedBrowser?: ReadonlyArray<string>
   options: Options
-  factory: (project: TestProject) => BrowserProvider
+  providerFactory: (project: TestProject) => BrowserProvider
+  serverFactory: (
+    project: TestProject,
+    configFile: string | undefined,
+    prePlugins: Plugin[],
+    postPlugins: Plugin[],
+  ) => Promise<ParentProjectBrowser>
 }
 
 export interface BrowserProvider {
@@ -285,6 +291,7 @@ export interface BrowserServerState {
 
 export interface ParentProjectBrowser {
   spawn: (project: TestProject) => ProjectBrowser
+  vite: ViteDevServer
 }
 
 export interface ProjectBrowser {

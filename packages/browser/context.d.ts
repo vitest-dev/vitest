@@ -732,6 +732,28 @@ export interface BrowserPage extends LocatorSelectors {
 
 export interface BrowserLocators {
   createElementLocators(element: Element): LocatorSelectors
+  // TODO: enhance docs
+  /**
+   * Extends `page.*` and `locator.*` interfaces.
+   * @see {@link}
+   *
+   * @example
+   * ```ts
+   * import { locators } from '@vitest/browser/context'
+   *
+   * declare module '@vitest/browser/context' {
+   *   interface LocatorSelectors {
+   *     getByCSS(css: string): Locator
+   *   }
+   * }
+   *
+   * locators.extend({
+   *   getByCSS(css: string) {
+   *     return `css=${css}`
+   *   }
+   * })
+   * ```
+   */
   extend(methods: {
     [K in keyof LocatorSelectors]?: (this: BrowserPage | Locator, ...args: Parameters<LocatorSelectors[K]>) => ReturnType<LocatorSelectors[K]> | string
   }): void
