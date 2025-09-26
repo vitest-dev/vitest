@@ -20,14 +20,14 @@ export async function getBrowserProvider(
     options.provider == null
     // the provider is provided via `--browser.provider=playwright`
     // or the config was serialized, but we can infer the factory by the name
-    || ('_cli' in options.provider && typeof options.provider.factory !== 'function')
+    || ('_cli' in options.provider && typeof options.provider.providerFactory !== 'function')
   ) {
     const providers = await import('./providers/index')
     const name = (options.provider?.name || 'preview') as 'preview' | 'webdriverio' | 'playwright'
     if (!(name in providers)) {
       throw new Error(`Unknown browser provider "${name}". Available providers: ${Object.keys(providers).join(', ')}.`)
     }
-    return (providers[name] as (options?: object) => BrowserProviderOption)(options.provider?.options).factory(project)
+    return (providers[name] as (options?: object) => BrowserProviderOption)(options.provider?.options).providerFactory(project)
   }
   const supportedBrowsers = options.provider.supportedBrowser || []
   if (supportedBrowsers.length && !supportedBrowsers.includes(browser)) {
@@ -37,10 +37,10 @@ export async function getBrowserProvider(
       }". Supported browsers: ${supportedBrowsers.join(', ')}.`,
     )
   }
-  if (typeof options.provider.factory !== 'function') {
-    throw new TypeError(`The "${name}" browser provider does not provide a "factory" function. Received ${typeof options.provider.factory}.`)
+  if (typeof options.provider.providerFactory !== 'function') {
+    throw new TypeError(`The "${name}" browser provider does not provide a "factory" function. Received ${typeof options.provider.providerFactory}.`)
   }
-  return options.provider.factory(project)
+  return options.provider.providerFactory(project)
 }
 
 export function slash(path: string): string {
