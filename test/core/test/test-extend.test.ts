@@ -497,3 +497,33 @@ describe('suite with timeout', () => {
     expect(task.timeout).toBe(1_000)
   })
 }, 100)
+
+describe('type-safe fixture hooks', () => {
+  const counterTest = test.extend<{
+    counter: { value: number }
+    fileCounter: { value: number }
+  }>({
+    counter: async ({}, use) => { await use({ value: 0 }) },
+    fileCounter: [async ({}, use) => { await use({ value: 0 }) }, { scope: 'file' }],
+  })
+
+  counterTest.beforeEach(({ counter }) => {
+    // shouldn't have typescript error because of 'counter' here
+    counter.value += 1
+  })
+
+  counterTest.afterEach(({ fileCounter }) => {
+    // shouldn't have typescript error because of 'fileCounter' here
+    fileCounter.value += 2
+  })
+
+  // beforeAll and afterAll hooks are not tested here, because they don't provide an extra context
+
+  counterTest('beforeEach fixture hook can adapt type-safe context', ({ counter }) => {
+    expect(counter.value).toBe(1)
+  })
+
+  counterTest('afterEach fixture hook can adapt type-safe context', ({ fileCounter }) => {
+    expect(fileCounter.value).toBe(2)
+  })
+})

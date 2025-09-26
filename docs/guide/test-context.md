@@ -455,4 +455,26 @@ test('types are correct', ({
   // ...
 })
 ```
+
 :::
+
+When using `test.extend`, the extended `test` object provides type-safe `beforeEach` and `afterEach` hooks that are aware of the new context:
+
+```ts
+const test = baseTest.extend<{
+  todos: number[]
+}>({
+  todos: async ({}, use) => {
+    await use([])
+  },
+})
+
+// Unlike global hooks, these hooks are aware of the extended context
+test.beforeEach(({ todos }) => {
+  todos.push(1)
+})
+
+test.afterEach(({ todos }) => {
+  console.log(todos)
+})
+```
