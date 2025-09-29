@@ -1,13 +1,16 @@
 import type { ScreenshotOptions } from 'vitest/browser'
 import type { BrowserCommandContext } from 'vitest/node'
-import { mkdir } from 'node:fs/promises'
+import { mkdir, rm } from 'node:fs/promises'
+import { normalize as platformNormalize } from 'node:path'
 import { resolveScreenshotPath } from '@vitest/browser'
-import { dirname, normalize } from 'pathe'
+import { nanoid } from '@vitest/utils/helpers'
+import { dirname, normalize, resolve } from 'pathe'
 
 interface ScreenshotCommandOptions extends Omit<ScreenshotOptions, 'element' | 'mask'> {
   element?: string
   mask?: readonly string[]
 }
+
 /**
  * Takes a screenshot using the provided browser context and returns a buffer and the expected screenshot path.
  *
@@ -41,23 +44,27 @@ export async function takeScreenshot(
     await mkdir(dirname(savePath), { recursive: true })
   }
 
-  const mask = options.mask?.map(selector => context.iframe.locator(selector))
+  // webdriverio needs a path, so if one is not already set we create a temporary one
+  if (savePath === undefined) {
+    savePath = resolve(context.project.tmpDir, nanoid())
 
-  if (options.element) {
-    const { element: selector, ...config } = options
-    const element = context.iframe.locator(selector)
-    const buffer = await element.screenshot({
-      ...config,
-      mask,
-      path: savePath,
-    })
-    return { buffer, path }
+    await mkdir(context.project.tmpDir, { recursive: true })
   }
 
-  const buffer = await context.iframe.locator('body').screenshot({
-    ...options,
-    mask,
-    path: savePath,
-  })
+  const page = context.browser
+  const element = !options.element
+    ? await page.$('body')
+    : await page.$(`${options.element}`)
+
+  // webdriverio expects the path to contain the extension and only works with PNG files
+  const savePathWithExtension = savePath.endsWith('.png') ? savePath : `${savePath}.png`
+
+  // there seems to be a bug in webdriverio, `X:/` gets appended to cwd, so we convert to `X:\`
+  const buffer = await element.saveScreenshot(
+    platformNormalize(savePathWithExtension),
+  )
+  if (!options.save) {
+    await rm(savePathWithExtension, { force: true })
+  }
   return { buffer, path }
 }

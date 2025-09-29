@@ -2,11 +2,13 @@ import type {
   BrowserProvider,
   BrowserProviderOption,
   ResolvedBrowserOptions,
+  ResolvedConfig,
   TestProject,
 } from 'vitest/node'
 
 import { defaultKeyMap } from '@testing-library/user-event/dist/esm/keyboard/keyMap.js'
 import { parseKeyDef as tlParse } from '@testing-library/user-event/dist/esm/keyboard/parseKeyDef.js'
+import { basename, dirname, relative, resolve } from 'pathe'
 
 declare enum DOM_KEY_LOCATION {
   STANDARD = 0,
@@ -39,6 +41,28 @@ export function parseKeyDef(text: string): {
 
 export function replacer(code: string, values: Record<string, string>): string {
   return code.replace(/\{\s*(\w+)\s*\}/g, (_, key) => values[key] ?? _)
+}
+
+export function resolveScreenshotPath(
+  testPath: string,
+  name: string,
+  config: ResolvedConfig,
+  customPath: string | undefined,
+): string {
+  if (customPath) {
+    return resolve(dirname(testPath), customPath)
+  }
+  const dir = dirname(testPath)
+  const base = basename(testPath)
+  if (config.browser.screenshotDirectory) {
+    return resolve(
+      config.browser.screenshotDirectory,
+      relative(config.root, dir),
+      base,
+      name,
+    )
+  }
+  return resolve(dir, '__screenshots__', base, name)
 }
 
 export async function getBrowserProvider(

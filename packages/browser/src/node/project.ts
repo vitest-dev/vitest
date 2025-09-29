@@ -66,6 +66,7 @@ export class ProjectBrowser implements IProjectBrowser {
       ReturnType<BrowserCommands[K]>
     >,
   ): void {
+    // TODO: register only for a specific project! don't override the global one because it's possible to have different providers in different projects
     if (!/^[a-z_$][\w$]*$/i.test(name)) {
       throw new Error(
         `Invalid command name "${name}". Only alphanumeric characters, $ and _ are allowed.`,

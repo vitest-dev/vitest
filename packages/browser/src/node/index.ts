@@ -9,10 +9,9 @@ import BrowserPlugin from './plugin'
 import { ParentBrowserProject } from './projectParent'
 import { setupBrowserRpc } from './rpc'
 
-export { createBrowserPool } from './pool'
 export type { ProjectBrowser } from './project'
 
-export { parseKeyDef } from './utils'
+export { parseKeyDef, resolveScreenshotPath } from './utils'
 
 export const createBrowserServer: BrowserServerFactory = async (options) => {
   const project = options.project

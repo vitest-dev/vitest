@@ -4,6 +4,7 @@ import type {
 } from '@vitest/browser/context'
 import type { Capabilities } from '@wdio/types'
 import type {
+  BrowserCommand,
   BrowserProvider,
   BrowserProviderOption,
   CDPSession,
@@ -13,6 +14,7 @@ import type { ClickOptions, DragAndDropOptions, remote } from 'webdriverio'
 import { createBrowserServer } from '@vitest/browser'
 
 import { createDebugger } from 'vitest/node'
+import commands from './commands'
 
 const debug = createDebugger('vitest:browser:wdio')
 
@@ -68,6 +70,10 @@ export class WebdriverBrowserProvider implements BrowserProvider {
     this.project = project
     this.browserName = project.config.browser.name as WebdriverBrowser
     this.options = options
+
+    for (const [name, command] of Object.entries(commands)) {
+      project.browser!.registerCommand(name as any, command as BrowserCommand)
+    }
   }
 
   isIframeSwitched(): boolean {
