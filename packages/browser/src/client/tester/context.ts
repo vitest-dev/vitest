@@ -2,19 +2,19 @@ import type {
   Options as TestingLibraryOptions,
   UserEvent as TestingLibraryUserEvent,
 } from '@testing-library/user-event'
+import type { RunnerTask } from 'vitest'
 import type {
   BrowserLocators,
   BrowserPage,
   Locator,
   UserEvent,
-} from '@vitest/browser/context'
-import type { RunnerTask } from 'vitest'
+} from 'vitest/browser'
 import type { IframeViewportEvent } from '../client'
 import type { BrowserRunnerState } from '../utils'
 import type { Locator as LocatorAPI } from './locators/index'
 import { getElementLocatorSelectors } from '@vitest/browser/utils'
 import { ensureAwaited, getBrowserState, getWorkerState } from '../utils'
-import { convertToSelector, processTimeoutOptions } from './utils'
+import { convertToSelector, processTimeoutOptions } from './tester-utils'
 
 // this file should not import anything directly, only types and utils
 
@@ -38,7 +38,7 @@ export function createUserEvent(__tl_user_event_base__?: TestingLibraryUserEvent
 
   // https://playwright.dev/docs/api/class-keyboard
   // https://webdriver.io/docs/api/browser/keys/
-  const modifier = provider === `playwright`
+  const modifier = provider === 'playwright'
     ? 'ControlOrMeta'
     : provider === 'webdriverio'
       ? 'Ctrl'
@@ -389,7 +389,7 @@ export const locators: BrowserLocators = {
   _extendedMethods: new Set<string>(),
 }
 
-declare module '@vitest/browser/context' {
+declare module 'vitest/browser' {
   interface BrowserPage {
     /** @internal */
     _createLocator: (selector: string) => Locator

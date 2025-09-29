@@ -13,9 +13,6 @@ const external = [
   ...Object.keys(pkg.dependencies),
   ...Object.keys(pkg.peerDependencies || {}),
   /^@?vitest(\/|$)/,
-  '@vitest/browser/utils',
-  'worker_threads',
-  'node:worker_threads',
   'vite',
   'playwright-core/types/protocol',
 ]
@@ -36,7 +33,10 @@ const plugins = [
 export default () =>
   defineConfig([
     {
-      input: './src/index.ts',
+      input: {
+        index: './src/index.ts',
+        locators: './src/locators.ts',
+      },
       output: {
         dir: 'dist',
         format: 'esm',

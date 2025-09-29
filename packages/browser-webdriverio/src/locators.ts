@@ -3,9 +3,9 @@ import type {
   UserEventDragAndDropOptions,
   UserEventHoverOptions,
   UserEventSelectOptions,
-} from '@vitest/browser/context'
-import { page, server } from '@vitest/browser/context'
+} from 'vitest/browser'
 import {
+  convertElementToCssSelector,
   getByAltTextSelector,
   getByLabelSelector,
   getByPlaceholderSelector,
@@ -13,11 +13,12 @@ import {
   getByTestIdSelector,
   getByTextSelector,
   getByTitleSelector,
-} from 'ivya'
-import { getBrowserState } from '../../utils'
-import { getElementError } from '../public-utils'
-import { convertElementToCssSelector, getIframeScale } from '../utils'
-import { Locator, selectorEngine } from './index'
+  getIframeScale,
+  Locator,
+  selectorEngine,
+} from '@vitest/browser/locators'
+import { getElementError } from '@vitest/browser/utils'
+import { page, server } from 'vitest/browser'
 
 page.extend({
   getByLabelText(text, options) {
@@ -42,6 +43,7 @@ page.extend({
     return new WebdriverIOLocator(getByTitleSelector(title, options))
   },
 
+  // @ts-expect-error this is a private property
   _createLocator(selector: string) {
     return new WebdriverIOLocator(selector)
   },
@@ -151,7 +153,7 @@ function getWebdriverioSelectOptions(element: Element, value: string | string[] 
 
 function processClickOptions(options_?: UserEventClickOptions) {
   // only ui scales the iframe, so we need to adjust the position
-  if (!options_ || !getBrowserState().config.browser.ui) {
+  if (!options_ || !server.config.browser.ui) {
     return options_
   }
   const options = options_ as import('webdriverio').ClickOptions
@@ -169,7 +171,7 @@ function processClickOptions(options_?: UserEventClickOptions) {
 
 function processHoverOptions(options_?: UserEventHoverOptions) {
   // only ui scales the iframe, so we need to adjust the position
-  if (!options_ || !getBrowserState().config.browser.ui) {
+  if (!options_ || !server.config.browser.ui) {
     return options_
   }
   const options = options_ as import('webdriverio').MoveToOptions
@@ -185,7 +187,7 @@ function processHoverOptions(options_?: UserEventHoverOptions) {
 
 function processDragAndDropOptions(options_?: UserEventDragAndDropOptions) {
   // only ui scales the iframe, so we need to adjust the position
-  if (!options_ || !getBrowserState().config.browser.ui) {
+  if (!options_ || !server.config.browser.ui) {
     return options_
   }
   const cache = {}

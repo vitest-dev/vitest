@@ -1,5 +1,7 @@
 import type { BrowserProvider, BrowserProviderOption, TestProject } from 'vitest/node'
 import { createBrowserServer } from '@vitest/browser'
+import { resolve } from 'pathe'
+import { distRoot } from './constants'
 
 export function preview(): BrowserProviderOption {
   return {
@@ -17,6 +19,10 @@ export class PreviewBrowserProvider implements BrowserProvider {
   public supportsParallelism: boolean = false
   private project!: TestProject
   private open = false
+
+  public initScripts: string[] = [
+    resolve(distRoot, 'locators.js'),
+  ]
 
   constructor(project: TestProject) {
     this.project = project

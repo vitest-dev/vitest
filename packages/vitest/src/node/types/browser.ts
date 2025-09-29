@@ -44,6 +44,7 @@ export interface BrowserServerFactory {
 export interface BrowserProvider {
   name: string
   mocker?: BrowserModuleMocker
+  readonly initScripts?: string[]
   /**
    * @experimental opt-in into file parallelisation
    */
@@ -85,7 +86,6 @@ export interface BrowserInstanceOption extends
     | 'testerHtmlPath'
     | 'screenshotDirectory'
     | 'screenshotFailures'
-    | 'provider'
   > {
   /**
    * Name of the browser
@@ -93,6 +93,7 @@ export interface BrowserInstanceOption extends
   browser: string
 
   name?: string
+  provider?: BrowserProviderOption
 }
 
 export interface BrowserConfigOptions {
@@ -117,8 +118,19 @@ export interface BrowserConfigOptions {
 
   /**
    * Browser provider
+   * @example
+   * ```ts
+   * import { playwright } from '@vitest/browser-playwright'
+   * export default defineConfig({
+   *   test: {
+   *     browser: {
+   *       provider: playwright(),
+   *     },
+   *   },
+   * })
+   * ```
    */
-  provider?: BrowserProviderOption
+  provider: BrowserProviderOption
 
   /**
    * enable headless mode

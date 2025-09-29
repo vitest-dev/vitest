@@ -13,8 +13,10 @@ import type {
 import type { ClickOptions, DragAndDropOptions, remote } from 'webdriverio'
 import { createBrowserServer } from '@vitest/browser'
 
+import { resolve } from 'pathe'
 import { createDebugger } from 'vitest/node'
 import commands from './commands'
+import { distRoot } from './constants'
 
 const debug = createDebugger('vitest:browser:wdio')
 
@@ -51,6 +53,10 @@ export class WebdriverBrowserProvider implements BrowserProvider {
   private closing = false
   private iframeSwitched = false
   private topLevelContext: string | undefined
+
+  public initScripts: string[] = [
+    resolve(distRoot, 'locators.js'),
+  ]
 
   getSupportedBrowsers(): readonly string[] {
     return webdriverBrowsers

@@ -17,7 +17,7 @@ import { VitestBrowserClientMocker } from './mocker'
 import { createModuleMockerInterceptor } from './mocker-interceptor'
 import { createSafeRpc } from './rpc'
 import { browserHashMap, initiateRunner } from './runner'
-import { CommandsManager } from './utils'
+import { CommandsManager } from './tester-utils'
 
 const debugVar = getConfig().env.VITEST_BROWSER_DEBUG
 const debug = debugVar && debugVar !== 'false'

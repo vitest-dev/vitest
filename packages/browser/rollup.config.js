@@ -71,10 +71,7 @@ export default () =>
     },
     {
       input: {
-        'locators/playwright': './src/client/tester/locators/playwright.ts',
-        'locators/webdriverio': './src/client/tester/locators/webdriverio.ts',
-        'locators/preview': './src/client/tester/locators/preview.ts',
-        'locators/index': './src/client/tester/locators/index.ts',
+        'locators': './src/client/tester/locators/index.ts',
         'expect-element': './src/client/tester/expect-element.ts',
         'utils': './src/client/tester/public-utils.ts',
       },
@@ -146,7 +143,7 @@ export default () =>
     },
     {
       input: dtsUtilsClient.dtsInput({
-        'locators/index': './src/client/tester/locators/index.ts',
+        locators: './src/client/tester/locators/index.ts',
       }),
       output: {
         dir: 'dist',
@@ -157,17 +154,4 @@ export default () =>
       external,
       plugins: dtsUtilsClient.dts(),
     },
-    // {
-    //   input: './src/client/tester/jest-dom.ts',
-    //   output: {
-    //     file: './jest-dom.d.ts',
-    //     format: 'esm',
-    //   },
-    //   external: [],
-    //   plugins: [
-    //     dts({
-    //       respectExternal: true,
-    //     }),
-    //   ],
-    // },
   ])

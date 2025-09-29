@@ -6,8 +6,7 @@ import type {
   UserEventHoverOptions,
   UserEventSelectOptions,
   UserEventUploadOptions,
-} from '@vitest/browser/context'
-import { page, server } from '@vitest/browser/context'
+} from 'vitest/browser'
 import {
   getByAltTextSelector,
   getByLabelSelector,
@@ -16,9 +15,12 @@ import {
   getByTestIdSelector,
   getByTextSelector,
   getByTitleSelector,
-} from 'ivya'
-import { getIframeScale, processTimeoutOptions } from '../utils'
-import { Locator, selectorEngine } from './index'
+  getIframeScale,
+  Locator,
+  processTimeoutOptions,
+  selectorEngine,
+} from '@vitest/browser/locators'
+import { page, server } from 'vitest/browser'
 
 page.extend({
   getByLabelText(text, options) {
@@ -43,6 +45,7 @@ page.extend({
     return new PlaywrightLocator(getByTitleSelector(title, options))
   },
 
+  // @ts-expect-error _createLocator is private
   _createLocator(selector: string) {
     return new PlaywrightLocator(selector)
   },

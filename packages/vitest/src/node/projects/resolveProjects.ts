@@ -18,7 +18,6 @@ import { configFiles as defaultConfigFiles } from '../../constants'
 import { isTTY } from '../../utils/env'
 import { VitestFilteredOutProjectError } from '../errors'
 import { initializeProject, TestProject } from '../project'
-import { withLabel } from '../reporters/renderers/utils'
 
 // vitest.config.*
 // vite.config.*
@@ -190,24 +189,10 @@ export async function resolveBrowserProjects(
       return
     }
     const instances = project.config.browser.instances || []
-    const browser = project.config.browser.name
-    if (instances.length === 0 && browser) {
-      instances.push({
-        browser,
-        name: project.name ? `${project.name} (${browser})` : browser,
-      })
-      vitest.logger.warn(
-        withLabel(
-          'yellow',
-          'Vitest',
-          [
-            `No browser "instances" were defined`,
-            project.name ? ` for the "${project.name}" project. ` : '. ',
-            `Running tests in "${project.config.browser.name}" browser. `,
-            'The "browser.name" field is deprecated since Vitest 3. ',
-            'Read more: https://vitest.dev/guide/browser/config#browser-instances',
-          ].filter(Boolean).join(''),
-        ),
+    if (instances.length === 0) {
+      throw new Error(
+        `No browser "instances" were defined${
+          project.name ? ` for the "${project.name}" project.` : ''}`,
       )
     }
     const originalName = project.config.name
@@ -236,6 +221,9 @@ export async function resolveBrowserProjects(
 
       if (name == null) {
         throw new Error(`The browser configuration must have a "name" property. This is a bug in Vitest. Please, open a new issue with reproduction`)
+      }
+      if (config.provider?.name !== project.config.browser.provider?.name) {
+        throw new Error(`The instance cannot have a different provider from its parent. The "${name}" instance specifies "${config.provider?.name}" provider, but its parent has a "${project.config.browser.provider?.name}" provider.`)
       }
 
       if (names.has(name)) {

@@ -31,9 +31,9 @@
       "types": "./matchers.d.ts",
       "default": "./dummy.js"
     },
-    "./locator": {
-      "types": "./dist/locators/index.d.ts",
-      "default": "./dist/locators/index.js"
+    "./locators": {
+      "types": "./dist/locators.d.ts",
+      "default": "./dist/locators.js"
     },
     "./utils": {
       "types": "./utils.d.ts",
@@ -62,24 +62,9 @@
     "dev": "premove dist && pnpm run --stream '/^dev:/'"
   },
   "peerDependencies": {
-    "playwright": "*",
-    "vitest": "workspace:*",
-    "webdriverio": "^7.0.0 || ^8.0.0 || ^9.0.0"
-  },
-  "peerDependenciesMeta": {
-    "playwright": {
-      "optional": true
-    },
-    "safaridriver": {
-      "optional": true
-    },
-    "webdriverio": {
-      "optional": true
-    }
+    "vitest": "workspace:*"
   },
   "dependencies": {
-    "@testing-library/dom": "^10.4.1",
-    "@testing-library/user-event": "^14.6.1",
     "@vitest/mocker": "workspace:*",
     "@vitest/utils": "workspace:*",
     "magic-string": "catalog:",
@@ -90,18 +75,15 @@
     "ws": "catalog:"
   },
   "devDependencies": {
+    "@testing-library/user-event": "^14.6.1",
     "@types/pngjs": "^6.0.5",
     "@types/ws": "catalog:",
     "@vitest/runner": "workspace:*",
-    "@wdio/types": "^9.19.2",
     "birpc": "catalog:",
     "flatted": "catalog:",
     "ivya": "^1.7.0",
     "mime": "^4.1.0",
     "pathe": "catalog:",
-    "playwright": "^1.55.0",
-    "playwright-core": "^1.55.0",
-    "vitest": "workspace:*",
-    "webdriverio": "^9.19.2"
+    "vitest": "workspace:*"
   }
 }

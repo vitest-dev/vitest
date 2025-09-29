@@ -72,6 +72,7 @@ async function getUserEventImport(provider: string, resolve: (id: string, import
   if (provider !== 'preview') {
     return 'const _userEventSetup = undefined'
   }
+  // TODO: resolve relative to @vitest/browser-preview
   const resolved = await resolve('@testing-library/user-event', __dirname)
   if (!resolved) {
     throw new Error(`Failed to resolve user-event package from ${__dirname}`)

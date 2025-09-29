@@ -1,5 +1,5 @@
-import { page, server, userEvent } from '@vitest/browser/context'
 import {
+  convertElementToCssSelector,
   getByAltTextSelector,
   getByLabelSelector,
   getByPlaceholderSelector,
@@ -7,10 +7,11 @@ import {
   getByTestIdSelector,
   getByTextSelector,
   getByTitleSelector,
-} from 'ivya'
-import { getElementError } from '../public-utils'
-import { convertElementToCssSelector } from '../utils'
-import { Locator, selectorEngine } from './index'
+  Locator,
+  selectorEngine,
+} from '@vitest/browser/locators'
+import { getElementError } from '@vitest/browser/utils'
+import { page, server, userEvent } from 'vitest/browser'
 
 page.extend({
   getByLabelText(text, options) {
@@ -35,6 +36,7 @@ page.extend({
     return new PreviewLocator(getByTitleSelector(title, options))
   },
 
+  // @ts-expect-error _createLocator is private
   _createLocator(selector: string) {
     return new PreviewLocator(selector)
   },

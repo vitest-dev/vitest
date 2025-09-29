@@ -28,9 +28,11 @@ import type {
 } from 'vitest/node'
 import { createBrowserServer } from '@vitest/browser'
 import { createManualModuleSource } from '@vitest/mocker/node'
+import { resolve } from 'pathe'
 import c from 'tinyrainbow'
 import { createDebugger, isCSSRequest } from 'vitest/node'
 import commands from './commands'
+import { distRoot } from './constants'
 
 const debug = createDebugger('vitest:browser:playwright')
 
@@ -98,6 +100,10 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
 
   public tracingContexts: Set<string> = new Set()
   public pendingTraces: Map<string, string> = new Map()
+
+  public initScripts: string[] = [
+    resolve(distRoot, 'locators.js'),
+  ]
 
   constructor(
     private project: TestProject,

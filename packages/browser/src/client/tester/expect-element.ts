@@ -3,7 +3,7 @@ import type { ExpectPollOptions, PromisifyDomAssertion } from 'vitest'
 import { chai, expect } from 'vitest'
 import { getType } from 'vitest/internal/browser'
 import { matchers } from './expect'
-import { processTimeoutOptions } from './utils'
+import { processTimeoutOptions } from './tester-utils'
 
 const kLocator = Symbol.for('$$vitest:locator')
 

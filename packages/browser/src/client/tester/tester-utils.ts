@@ -206,8 +206,14 @@ export function convertToSelector(elementOrLocator: Element | Locator): string {
   if (elementOrLocator instanceof Element) {
     return convertElementToCssSelector(elementOrLocator)
   }
-  if ('selector' in elementOrLocator) {
-    return (elementOrLocator as any).selector
+  if (isLocator(elementOrLocator)) {
+    return elementOrLocator.selector
   }
   throw new Error('Expected element or locator to be an instance of Element or Locator.')
+}
+
+const kLocator = Symbol.for('$$vitest:locator')
+
+export function isLocator(element: unknown): element is Locator {
+  return (!!element && typeof element === 'object' && kLocator in element)
 }

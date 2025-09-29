@@ -77,11 +77,11 @@ export class ProjectBrowser implements IProjectBrowser {
     this.commands[name] = cb
   }
 
-  public triggerCommand<K extends keyof BrowserCommand>(
+  public triggerCommand = (<K extends keyof BrowserCommand>(
     name: K,
     context: BrowserCommandContext,
     ...args: Parameters<BrowserCommands[K]>
-  ): ReturnType<BrowserCommands[K]> {
+  ): ReturnType<BrowserCommands[K]> => {
     if (name in this.commands) {
       return this.commands[name](context, ...args)
     }
@@ -89,7 +89,7 @@ export class ProjectBrowser implements IProjectBrowser {
       return this.parent.commands[name](context, ...args)
     }
     throw new Error(`Provider ${this.provider.name} does not support command "${name}".`)
-  }
+  }) as any
 
   wrapSerializedConfig(): SerializedConfig {
     const config = wrapConfig(this.project.serializedConfig)
@@ -103,6 +103,16 @@ export class ProjectBrowser implements IProjectBrowser {
       return
     }
     this.provider = await getBrowserProvider(project.config.browser, project)
+    if (this.provider.initScripts) {
+      this.parent.initScripts = this.provider.initScripts
+      // make sure the script can be imported
+      this.provider.initScripts.forEach((script) => {
+        const allow = this.parent.vite.config.server.fs.allow
+        if (!allow.includes(script)) {
+          allow.push(script)
+        }
+      })
+    }
   }
 
   public parseErrorStacktrace(

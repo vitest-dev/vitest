@@ -8,7 +8,7 @@ import { createRequire } from 'node:module'
 import { dynamicImportPlugin } from '@vitest/mocker/node'
 import { toArray } from '@vitest/utils/helpers'
 import MagicString from 'magic-string'
-import { basename, dirname, extname, resolve } from 'pathe'
+import { basename, dirname, extname, join, resolve } from 'pathe'
 import sirv from 'sirv'
 import { coverageConfigDefaults } from 'vitest/config'
 import {
@@ -549,16 +549,14 @@ body {
             },
             injectTo: 'head' as const,
           },
-          parentServer.locatorsUrl
-            ? {
-                tag: 'script',
-                attrs: {
-                  type: 'module',
-                  src: parentServer.locatorsUrl,
-                },
-                injectTo: 'head',
-              } as const
-            : null,
+          ...parentServer.initScripts.map(script => ({
+            tag: 'script',
+            attrs: {
+              type: 'module',
+              src: join('/@fs/', script),
+            },
+            injectTo: 'head',
+          } as const)),
           ...testerTags,
         ].filter(s => s != null)
       },

@@ -21,11 +21,21 @@ import {
   getByTextSelector,
   getByTitleSelector,
   Ivya,
-
 } from 'ivya'
 import { ensureAwaited, getBrowserState } from '../../utils'
 import { getElementError } from '../public-utils'
-import { escapeForTextSelector } from '../utils'
+import { escapeForTextSelector, isLocator } from '../tester-utils'
+
+export { convertElementToCssSelector, getIframeScale, processTimeoutOptions } from '../tester-utils'
+export {
+  getByAltTextSelector,
+  getByLabelSelector,
+  getByPlaceholderSelector,
+  getByRoleSelector,
+  getByTestIdSelector,
+  getByTextSelector,
+  getByTitleSelector,
+} from 'ivya'
 
 // we prefer using playwright locators because they are more powerful and support Shadow DOM
 export const selectorEngine: Ivya = Ivya.create({
@@ -125,7 +135,7 @@ export abstract class Locator {
   ): Promise<void> {
     const values = (Array.isArray(value) ? value : [value]).map((v) => {
       if (typeof v !== 'string') {
-        const selector = 'element' in v ? v.selector : selectorEngine.generateSelectorSimple(v)
+        const selector = isLocator(v) ? v.selector : selectorEngine.generateSelectorSimple(v)
         return { element: selector }
       }
       return v

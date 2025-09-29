@@ -11,7 +11,7 @@ import type {
 } from '@vitest/runner'
 import type { SerializedConfig, TestExecutionMethod, WorkerGlobalState } from 'vitest'
 import type { VitestBrowserClientMocker } from './mocker'
-import type { CommandsManager } from './utils'
+import type { CommandsManager } from './tester-utils'
 import { globalChannel, onCancel } from '@vitest/browser/client'
 import { page, userEvent } from '@vitest/browser/context'
 import { getTestName } from '@vitest/runner/utils'

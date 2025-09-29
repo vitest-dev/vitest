@@ -1,7 +1,7 @@
 import type { VitestRunner } from '@vitest/runner'
 import type { EvaluatedModules, SerializedConfig, WorkerGlobalState } from 'vitest'
 import type { IframeOrchestrator } from './orchestrator'
-import type { CommandsManager } from './tester/utils'
+import type { CommandsManager } from './tester/tester-utils'
 
 export async function importId(id: string): Promise<any> {
   const name = `/@id/${id}`.replace(/\\/g, '/')

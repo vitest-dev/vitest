@@ -1,7 +1,6 @@
 import type { BrowserProvider } from 'vitest/node'
 import type { WebdriverBrowserProvider } from '../webdriverio'
 import type { UserEventCommand } from './utils'
-
 import { parseKeyDef } from '@vitest/browser'
 import { Key } from 'webdriverio'
 

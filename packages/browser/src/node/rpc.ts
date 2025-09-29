@@ -5,7 +5,6 @@ import type { BrowserCommandContext, ResolveSnapshotPathHandlerContext, TestProj
 import type { WebSocket } from 'ws'
 import type { WebSocketBrowserEvents, WebSocketBrowserHandlers } from '../types'
 import type { ParentBrowserProject } from './projectParent'
-import type { WebdriverBrowserProvider } from './providers/webdriverio'
 import type { BrowserServerState } from './state'
 import { existsSync, promises as fs } from 'node:fs'
 import { AutomockedModule, AutospiedModule, ManualMockedModule, RedirectedModule } from '@vitest/mocker'
@@ -220,7 +219,7 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject, defaultMocke
           return vitest.state.getCountOfFailedTests()
         },
         async wdioSwitchContext(direction) {
-          const provider = project.browser!.provider as WebdriverBrowserProvider
+          const provider = project.browser!.provider
           if (!provider) {
             throw new Error('Commands are only available for browser tests.')
           }
@@ -228,10 +227,10 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject, defaultMocke
             throw new Error('Switch context is only available for WebDriverIO provider.')
           }
           if (direction === 'iframe') {
-            await provider.switchToTestFrame()
+            await (provider as any).switchToTestFrame()
           }
           else {
-            await provider.switchToMainFrame()
+            await (provider as any).switchToMainFrame()
           }
         },
         async triggerCommand(sessionId, command, testPath, payload) {
