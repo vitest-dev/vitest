@@ -6,7 +6,6 @@ import { defineConfig } from 'rollup'
 import oxc from 'unplugin-oxc/rollup'
 import { createDtsUtils } from '../../scripts/build-utils.js'
 
-const require = createRequire(import.meta.url)
 const pkg = require('./package.json')
 
 const entries = {
