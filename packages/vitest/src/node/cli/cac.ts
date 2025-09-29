@@ -8,6 +8,7 @@ import { normalize } from 'pathe'
 import c from 'tinyrainbow'
 import { version } from '../../../package.json' with { type: 'json' }
 import { benchCliOptionsConfig, cliOptionsConfig, collectCliOptionsConfig } from './cli-config'
+import { setupTabCompletions } from './completions'
 
 function addCommand(cli: CAC | Command, name: string, option: CLIOption<any>) {
   const commandName = option.alias || name
@@ -72,7 +73,7 @@ function addCliOptions(cli: CAC | Command, options: CLIOptionsConfig<any>) {
   }
 }
 
-export function createCLI(options: CliParseOptions = {}): CAC {
+export async function createCLI(options: CliParseOptions = {}): Promise<CAC> {
   const cli = cac('vitest')
 
   cli.version(version)
@@ -195,6 +196,7 @@ export function createCLI(options: CliParseOptions = {}): CAC {
     .command('[...filters]', undefined, options)
     .action((filters, options) => start('test', filters, options))
 
+  await setupTabCompletions(cli)
   return cli
 }
 
@@ -223,17 +225,18 @@ function splitArgv(argv: string): string[] {
   })
 }
 
-export function parseCLI(argv: string | string[], config: CliParseOptions = {}): {
+export async function parseCLI(argv: string | string[], config: CliParseOptions = {}): Promise<{
   filter: string[]
   options: CliOptions
-} {
+}> {
   const arrayArgs = typeof argv === 'string' ? splitArgv(argv) : argv
   if (arrayArgs[0] !== 'vitest') {
     throw new Error(`Expected "vitest" as the first argument, received "${arrayArgs[0]}"`)
   }
   arrayArgs[0] = '/index.js'
   arrayArgs.unshift('node')
-  let { args, options } = createCLI(config).parse(arrayArgs, {
+  const cli = await createCLI(config)
+  let { args, options } = cli.parse(arrayArgs, {
     run: false,
   })
   if (arrayArgs[2] === 'watch' || arrayArgs[2] === 'dev') {

@@ -180,6 +180,7 @@
   },
   "devDependencies": {
     "@antfu/install-pkg": "^1.1.0",
+    "@bomb.sh/tab": "^0.0.4",
     "@edge-runtime/vm": "^5.0.0",
     "@jridgewell/trace-mapping": "catalog:",
     "@sinonjs/fake-timers": "14.0.0",

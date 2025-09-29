@@ -1,3 +1,3 @@
 import { createCLI } from './cli/cac'
 
-createCLI().parse()
+createCLI().then(cli => cli.parse())

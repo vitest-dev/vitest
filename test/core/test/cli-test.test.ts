@@ -355,8 +355,8 @@ test('silent', () => {
   expect(() => getCLIOptions('--silent example.test.ts')).toThrowErrorMatchingInlineSnapshot(`[TypeError: Unexpected value "--silent=example.test.ts". Use "--silent=true example.test.ts" instead.]`)
 })
 
-test('public parseCLI works correctly', () => {
-  expect(parseCLI('vitest dev')).toEqual({
+test('public parseCLI works correctly', async () => {
+  expect(await parseCLI('vitest dev')).toEqual({
     filter: [],
     options: {
       'watch': true,
@@ -364,7 +364,7 @@ test('public parseCLI works correctly', () => {
       'color': true,
     },
   })
-  expect(parseCLI('vitest watch')).toEqual({
+  expect(await parseCLI('vitest watch')).toEqual({
     filter: [],
     options: {
       'watch': true,
@@ -372,7 +372,7 @@ test('public parseCLI works correctly', () => {
       'color': true,
     },
   })
-  expect(parseCLI('vitest run')).toEqual({
+  expect(await parseCLI('vitest run')).toEqual({
     filter: [],
     options: {
       'run': true,
@@ -389,7 +389,7 @@ test('public parseCLI works correctly', () => {
       'color': true,
     },
   })
-  expect(parseCLI('vitest related ./some-files.js')).toEqual({
+  expect(await parseCLI('vitest related ./some-files.js')).toEqual({
     filter: [],
     options: {
       'passWithNoTests': true,
@@ -399,7 +399,7 @@ test('public parseCLI works correctly', () => {
     },
   })
 
-  expect(parseCLI('vitest --coverage --browser=chrome')).toEqual({
+  expect(await parseCLI('vitest --coverage --browser=chrome')).toEqual({
     filter: [],
     options: {
       'coverage': { enabled: true },
@@ -409,7 +409,7 @@ test('public parseCLI works correctly', () => {
     },
   })
 
-  expect(parseCLI('vitest ./tests.js --coverage')).toEqual({
+  expect(await parseCLI('vitest ./tests.js --coverage')).toEqual({
     filter: ['./tests.js'],
     options: {
       'coverage': { enabled: true },
@@ -418,7 +418,7 @@ test('public parseCLI works correctly', () => {
     },
   })
 
-  expect(parseCLI('vitest ./tests.js --coverage --custom-options', { allowUnknownOptions: true })).toEqual({
+  expect(await parseCLI('vitest ./tests.js --coverage --custom-options', { allowUnknownOptions: true })).toEqual({
     filter: ['./tests.js'],
     options: {
       'coverage': { enabled: true },
@@ -428,11 +428,11 @@ test('public parseCLI works correctly', () => {
     },
   })
 
-  expect(() => {
-    parseCLI('node --test --coverage --browser --typecheck')
-  }).toThrowError(`Expected "vitest" as the first argument, received "node"`)
+  await expect(async () => {
+    await parseCLI('node --test --coverage --browser --typecheck')
+  }).rejects.toThrowError(`Expected "vitest" as the first argument, received "node"`)
 
-  expect(parseCLI('vitest --project=space_1 --project=space_2')).toEqual({
+  expect(await parseCLI('vitest --project=space_1 --project=space_2')).toEqual({
     filter: [],
     options: {
       'project': ['space_1', 'space_2'],
@@ -441,7 +441,7 @@ test('public parseCLI works correctly', () => {
     },
   })
 
-  expect(parseCLI('vitest --project="space 1"')).toEqual({
+  expect(await parseCLI('vitest --project="space 1"')).toEqual({
     filter: [],
     options: {
       'project': ['space 1'],
@@ -450,7 +450,7 @@ test('public parseCLI works correctly', () => {
     },
   })
 
-  expect(parseCLI('vitest "--project=space 1"')).toEqual({
+  expect(await parseCLI('vitest "--project=space 1"')).toEqual({
     filter: [],
     options: {
       'project': ['space 1'],
@@ -459,7 +459,7 @@ test('public parseCLI works correctly', () => {
     },
   })
 
-  expect(parseCLI('vitest --project "space 1"')).toEqual({
+  expect(await parseCLI('vitest --project "space 1"')).toEqual({
     filter: [],
     options: {
       'project': ['space 1'],
@@ -468,7 +468,7 @@ test('public parseCLI works correctly', () => {
     },
   })
 
-  expect(parseCLI('vitest --project="space 1" --project="space 2"')).toEqual({
+  expect(await parseCLI('vitest --project="space 1" --project="space 2"')).toEqual({
     filter: [],
     options: {
       'project': ['space 1', 'space 2'],
@@ -477,7 +477,7 @@ test('public parseCLI works correctly', () => {
     },
   })
 
-  expect(parseCLI('vitest ./test-1.js ./test-2.js --project="space 1" --project="space 2" --project="space 3"')).toEqual({
+  expect(await parseCLI('vitest ./test-1.js ./test-2.js --project="space 1" --project="space 2" --project="space 3"')).toEqual({
     filter: ['./test-1.js', './test-2.js'],
     options: {
       'project': ['space 1', 'space 2', 'space 3'],
@@ -486,7 +486,7 @@ test('public parseCLI works correctly', () => {
     },
   })
 
-  expect(parseCLI('vitest --exclude=docs --exclude=demo')).toEqual({
+  expect(await parseCLI('vitest --exclude=docs --exclude=demo')).toEqual({
     filter: [],
     options: {
       'exclude': ['docs', 'demo'],
