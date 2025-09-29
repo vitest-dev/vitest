@@ -1,5 +1,5 @@
 import type { TestCase } from 'vitest/node'
-import { playwright } from '@vitest/browser/providers/playwright'
+import { playwright } from '@vitest/browser-playwright'
 
 import { resolve } from 'pathe'
 import { glob } from 'tinyglobby'

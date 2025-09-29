@@ -1,4 +1,4 @@
-import { playwright } from '@vitest/browser/providers/playwright'
+import { playwright } from '@vitest/browser-playwright'
 import { expect, test } from 'vitest'
 import { runInlineTests } from '../../test-utils'
 

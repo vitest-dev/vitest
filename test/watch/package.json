@@ -6,7 +6,8 @@
     "test": "vitest"
   },
   "devDependencies": {
-    "@vitest/browser": "workspace:*",
+    "@vitest/browser-playwright": "workspace:*",
+    "@vitest/browser-webdriverio": "workspace:*",
     "vite": "latest",
     "vitest": "workspace:*"
   }

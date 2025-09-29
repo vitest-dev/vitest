@@ -1,4 +1,4 @@
-import { playwright } from '@vitest/browser/providers/playwright'
+import { playwright } from '@vitest/browser-playwright'
 import { defineProject } from 'vitest/config'
 
 export default defineProject({

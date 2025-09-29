@@ -17,7 +17,6 @@ const external = [
   'worker_threads',
   'node:worker_threads',
   'vite',
-  'playwright-core/types/protocol',
 ]
 
 const dtsUtils = createDtsUtils()
@@ -39,10 +38,7 @@ const plugins = [
 ]
 
 const input = {
-  'index': './src/node/index.ts',
-  'providers/playwright': './src/node/providers/playwright.ts',
-  'providers/webdriverio': './src/node/providers/webdriverio.ts',
-  'providers/preview': './src/node/providers/preview.ts',
+  index: './src/node/index.ts',
 }
 
 export default () =>

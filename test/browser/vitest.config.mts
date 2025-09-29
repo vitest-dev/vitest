@@ -3,8 +3,8 @@ import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import * as util from 'node:util'
 import { playwright } from '@vitest/browser-playwright'
-import { preview } from '@vitest/browser/providers/preview'
-import { webdriverio } from '@vitest/browser/providers/webdriverio'
+import { preview } from '@vitest/browser-preview'
+import { webdriverio } from '@vitest/browser-webdriverio'
 import { defineConfig } from 'vitest/config'
 
 const dir = dirname(fileURLToPath(import.meta.url))

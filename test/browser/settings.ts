@@ -1,7 +1,7 @@
 import type { BrowserInstanceOption } from 'vitest/node'
 import { playwright } from '@vitest/browser-playwright'
-import { preview } from '@vitest/browser/providers/preview'
-import { webdriverio } from '@vitest/browser/providers/webdriverio'
+import { preview } from '@vitest/browser-preview'
+import { webdriverio } from '@vitest/browser-webdriverio'
 
 const providerName = (process.env.PROVIDER || 'playwright') as 'playwright' | 'webdriverio' | 'preview'
 export const providers = {

@@ -45,12 +45,12 @@ function getProviderPackageNames(provider: BrowserBuiltinProvider) {
   switch (provider) {
     case 'webdriverio':
       return {
-        types: '@vitest/browser/providers/webdriverio',
+        types: '@vitest/browser-webdriverio',
         pkg: 'webdriverio',
       }
     case 'playwright':
       return {
-        types: '@vitest/browser/providers/playwright',
+        types: '@vitest/browser-playwright',
         pkg: 'playwright',
       }
     case 'preview':
@@ -295,7 +295,7 @@ async function generateFrameworkConfigFile(options: {
 
   const configContent = [
     `import { defineConfig } from 'vitest/config'`,
-    `import { ${options.provider} } from '@vitest/browser/providers/${options.provider}'`,
+    `import { ${options.provider} } from '@vitest/browser-${options.provider}'`,
     options.frameworkPlugin ? frameworkImport : null,
     ``,
     'export default defineConfig({',
@@ -433,7 +433,7 @@ export async function create(): Promise<void> {
   }
 
   const dependenciesToInstall = [
-    '@vitest/browser',
+    `@vitest/browser-${provider}`,
   ]
 
   const frameworkPackage = getFrameworkTestPackage(framework)

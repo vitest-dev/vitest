@@ -755,7 +755,7 @@ export function resolveConfig(
   }
 
   if (typeof resolved.browser.provider === 'string') {
-    const source = `@vitest/browser/providers/${resolved.browser.provider}`
+    const source = `@vitest/browser-${resolved.browser.provider}`
     throw new TypeError(
       'The `browser.provider` configuration was changed to accept a factory instead of a string. '
       + `Add an import of "${resolved.browser.provider}" from "${source}" instead. See: https://vitest.dev/guide/browser/config#provider`,

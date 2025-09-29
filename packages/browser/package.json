@@ -20,10 +20,6 @@
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     },
-    "./providers/*": {
-      "types": "./dist/providers/*.d.ts",
-      "default": "./dist/providers/*.js"
-    },
     "./context": {
       "types": "./context.d.ts",
       "default": "./context.js"
