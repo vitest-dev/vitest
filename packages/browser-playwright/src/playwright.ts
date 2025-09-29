@@ -1,9 +1,5 @@
 /* eslint-disable ts/method-signature-style */
 
-import type {
-  ScreenshotComparatorRegistry,
-  ScreenshotMatcherOptions,
-} from '@vitest/browser/context'
 import type { MockedModule } from '@vitest/mocker'
 import type {
   Browser,
@@ -18,6 +14,10 @@ import type {
 import type { Protocol } from 'playwright-core/types/protocol'
 import type { SourceMap } from 'rollup'
 import type { ResolvedConfig } from 'vite'
+import type {
+  ScreenshotComparatorRegistry,
+  ScreenshotMatcherOptions,
+} from 'vitest/browser'
 import type {
   BrowserCommand,
   BrowserModuleMocker,

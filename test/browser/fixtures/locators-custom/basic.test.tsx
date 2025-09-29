@@ -1,8 +1,8 @@
-import { type Locator, locators, page } from '@vitest/browser/context';
+import { type Locator, locators, page } from 'vitest/browser';
 import { beforeEach, expect, test } from 'vitest';
 import { getElementLocatorSelectors } from '@vitest/browser/utils'
 
-declare module '@vitest/browser/context' {
+declare module 'vitest/browser' {
   interface LocatorSelectors {
     getByCustomTitle: (title: string) => Locator
     getByNestedTitle: (title: string) => Locator

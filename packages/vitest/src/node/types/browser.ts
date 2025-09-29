@@ -130,7 +130,7 @@ export interface BrowserConfigOptions {
    * })
    * ```
    */
-  provider: BrowserProviderOption
+  provider?: BrowserProviderOption
 
   /**
    * enable headless mode
@@ -247,7 +247,7 @@ export interface BrowserConfigOptions {
 
   /**
    * Commands that will be executed on the server
-   * via the browser `import("@vitest/browser/context").commands` API.
+   * via the browser `import("vitest/browser").commands` API.
    * @see {@link https://vitest.dev/guide/browser/commands}
    */
   commands?: Record<string, BrowserCommand<any>>

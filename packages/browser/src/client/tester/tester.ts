@@ -1,7 +1,7 @@
 import type { BrowserRPC, IframeChannelEvent } from '@vitest/browser/client'
 import { channel, client, onCancel } from '@vitest/browser/client'
-import { page, server, userEvent } from '@vitest/browser/context'
 import { parse } from 'flatted'
+import { page, server, userEvent } from 'vitest/browser'
 import {
   collectTests,
   setupCommonEnv,

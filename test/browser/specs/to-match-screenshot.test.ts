@@ -13,7 +13,7 @@ const testName = 'screenshot-snapshot'
 const bgColor = '#fff'
 
 const testContent = /* ts */`
-import { page, server } from '@vitest/browser/context'
+import { page, server } from 'vitest/browser'
 import { describe, test } from 'vitest'
 import { render } from './utils'
 

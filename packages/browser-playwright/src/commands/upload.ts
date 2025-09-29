@@ -1,4 +1,4 @@
-import type { UserEventUploadOptions } from '@vitest/browser/context'
+import type { UserEventUploadOptions } from 'vitest/browser'
 import type { UserEventCommand } from './utils'
 import { resolve } from 'pathe'
 

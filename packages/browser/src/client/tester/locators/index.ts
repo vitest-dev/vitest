@@ -1,3 +1,4 @@
+import type { ParsedSelector } from 'ivya'
 import type {
   LocatorByRoleOptions,
   LocatorOptions,
@@ -9,9 +10,7 @@ import type {
   UserEventHoverOptions,
   UserEventSelectOptions,
   UserEventUploadOptions,
-} from '@vitest/browser/context'
-import type { ParsedSelector } from 'ivya'
-import { page, server } from '@vitest/browser/context'
+} from 'vitest/browser'
 import {
   getByAltTextSelector,
   getByLabelSelector,
@@ -22,6 +21,7 @@ import {
   getByTitleSelector,
   Ivya,
 } from 'ivya'
+import { page, server } from 'vitest/browser'
 import { ensureAwaited, getBrowserState } from '../../utils'
 import { getElementError } from '../public-utils'
 import { escapeForTextSelector, isLocator } from '../tester-utils'

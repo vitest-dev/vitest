@@ -1,5 +1,5 @@
 import { expect, onTestFinished, test } from 'vitest'
-import { userEvent } from '@vitest/browser/context'
+import { userEvent } from 'vitest/browser'
 
 // test per-test-file cleanup just in case
 

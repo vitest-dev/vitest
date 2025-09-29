@@ -1,10 +1,10 @@
-import type { BrowserCommand, BrowserCommandContext } from 'vitest/node'
+import type { BrowserCommand, BrowserCommandContext, BrowserProvider } from 'vitest/node'
+import type { PlaywrightBrowserProvider } from '../playwright'
 import { unlink } from 'node:fs/promises'
 import { basename, dirname, relative, resolve } from 'pathe'
-import { PlaywrightBrowserProvider } from '../playwright'
 
 export const startTracing: BrowserCommand<[]> = async ({ context, project, provider, sessionId }) => {
-  if (provider instanceof PlaywrightBrowserProvider) {
+  if (isPlaywrightProvider(provider)) {
     if (provider.tracingContexts.has(sessionId)) {
       return
     }
@@ -32,7 +32,7 @@ export const startChunkTrace: BrowserCommand<[{ name: string; title: string }]> 
   if (!testPath) {
     throw new Error(`stopChunkTrace cannot be called outside of the test file.`)
   }
-  if (provider instanceof PlaywrightBrowserProvider) {
+  if (isPlaywrightProvider(provider)) {
     if (!provider.tracingContexts.has(sessionId)) {
       await startTracing(command)
     }
@@ -48,7 +48,7 @@ export const stopChunkTrace: BrowserCommand<[{ name: string }]> = async (
   context,
   { name },
 ) => {
-  if (context.provider instanceof PlaywrightBrowserProvider) {
+  if (isPlaywrightProvider(context.provider)) {
     const path = resolveTracesPath(context, name)
     context.provider.pendingTraces.delete(path)
     await context.context.tracing.stopChunk({ path })
@@ -83,7 +83,7 @@ export const deleteTracing: BrowserCommand<[{ traces: string[] }]> = async (
   if (!context.testPath) {
     throw new Error(`stopChunkTrace cannot be called outside of the test file.`)
   }
-  if (context.provider instanceof PlaywrightBrowserProvider) {
+  if (isPlaywrightProvider(context.provider)) {
     return Promise.all(
       traces.map(trace => unlink(trace).catch((err) => {
         if (err.code === 'ENOENT') {
@@ -122,4 +122,8 @@ export const annotateTraces: BrowserCommand<[{ traces: string[]; testId: string 
         : undefined,
     })
   }))
+}
+
+function isPlaywrightProvider(provider: BrowserProvider): provider is PlaywrightBrowserProvider {
+  return provider.name === 'playwright'
 }

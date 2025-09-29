@@ -1,8 +1,8 @@
+import type { Capabilities } from '@wdio/types'
 import type {
   ScreenshotComparatorRegistry,
   ScreenshotMatcherOptions,
-} from '@vitest/browser/context'
-import type { Capabilities } from '@wdio/types'
+} from 'vitest/browser'
 import type {
   BrowserCommand,
   BrowserProvider,

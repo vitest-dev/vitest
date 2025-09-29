@@ -7,7 +7,7 @@ title: Interactivity API | Browser Mode
 Vitest implements a subset of [`@testing-library/user-event`](https://testing-library.com/docs/user-event/intro) APIs using [Chrome DevTools Protocol](https://chromedevtools.github.io/devtools-protocol/) or [webdriver](https://www.w3.org/TR/webdriver/) instead of faking events which makes the browser behaviour more reliable and consistent with how users interact with a page.
 
 ```ts
-import { userEvent } from '@vitest/browser/context'
+import { userEvent } from 'vitest/browser'
 
 await userEvent.click(document.querySelector('.button'))
 ```
@@ -23,10 +23,10 @@ function setup(): UserEvent
 Creates a new user event instance. This is useful if you need to keep the state of keyboard to press and release buttons correctly.
 
 ::: warning
-Unlike `@testing-library/user-event`, the default `userEvent` instance from `@vitest/browser/context` is created once, not every time its methods are called! You can see the difference in how it works in this snippet:
+Unlike `@testing-library/user-event`, the default `userEvent` instance from `vitest/browser` is created once, not every time its methods are called! You can see the difference in how it works in this snippet:
 
 ```ts
-import { userEvent as vitestUserEvent } from '@vitest/browser/context'
+import { userEvent as vitestUserEvent } from 'vitest/browser'
 import { userEvent as originalUserEvent } from '@testing-library/user-event'
 
 await vitestUserEvent.keyboard('{Shift}') // press shift without releasing
@@ -51,7 +51,7 @@ function click(
 Click on an element. Inherits provider's options. Please refer to your provider's documentation for detailed explanation about how this method works.
 
 ```ts
-import { page, userEvent } from '@vitest/browser/context'
+import { page, userEvent } from 'vitest/browser'
 
 test('clicks on an element', async () => {
   const logo = page.getByRole('img', { name: /logo/ })
@@ -82,7 +82,7 @@ Triggers a double click event on an element.
 Please refer to your provider's documentation for detailed explanation about how this method works.
 
 ```ts
-import { page, userEvent } from '@vitest/browser/context'
+import { page, userEvent } from 'vitest/browser'
 
 test('triggers a double click on an element', async () => {
   const logo = page.getByRole('img', { name: /logo/ })
@@ -113,7 +113,7 @@ Triggers a triple click event on an element. Since there is no `tripleclick` in 
 Please refer to your provider's documentation for detailed explanation about how this method works.
 
 ```ts
-import { page, userEvent } from '@vitest/browser/context'
+import { page, userEvent } from 'vitest/browser'
 
 test('triggers a triple click on an element', async () => {
   const logo = page.getByRole('img', { name: /logo/ })
@@ -150,7 +150,7 @@ function fill(
 Set a value to the `input`/`textarea`/`contenteditable` field. This will remove any existing text in the input before setting the new value.
 
 ```ts
-import { page, userEvent } from '@vitest/browser/context'
+import { page, userEvent } from 'vitest/browser'
 
 test('update input', async () => {
   const input = page.getByRole('input')
@@ -189,7 +189,7 @@ The `userEvent.keyboard` allows you to trigger keyboard strokes. If any input ha
 This API supports [user-event `keyboard` syntax](https://testing-library.com/docs/user-event/keyboard).
 
 ```ts
-import { userEvent } from '@vitest/browser/context'
+import { userEvent } from 'vitest/browser'
 
 test('trigger keystrokes', async () => {
   await userEvent.keyboard('foo') // translates to: f, o, o
@@ -215,7 +215,7 @@ function tab(options?: UserEventTabOptions): Promise<void>
 Sends a `Tab` key event. This is a shorthand for `userEvent.keyboard('{tab}')`.
 
 ```ts
-import { page, userEvent } from '@vitest/browser/context'
+import { page, userEvent } from 'vitest/browser'
 
 test('tab works', async () => {
   const [input1, input2] = page.getByRole('input').elements()
@@ -259,7 +259,7 @@ This function allows you to type characters into an `input`/`textarea`/`contente
 If you just need to press characters without an input, use [`userEvent.keyboard`](#userevent-keyboard) API.
 
 ```ts
-import { page, userEvent } from '@vitest/browser/context'
+import { page, userEvent } from 'vitest/browser'
 
 test('update input', async () => {
   const input = page.getByRole('input')
@@ -289,7 +289,7 @@ function clear(element: Element | Locator, options?: UserEventClearOptions): Pro
 This method clears the input element content.
 
 ```ts
-import { page, userEvent } from '@vitest/browser/context'
+import { page, userEvent } from 'vitest/browser'
 
 test('clears input', async () => {
   const input = page.getByRole('input')
@@ -336,7 +336,7 @@ Unlike `@testing-library`, Vitest doesn't support [listbox](https://developer.mo
 :::
 
 ```ts
-import { page, userEvent } from '@vitest/browser/context'
+import { page, userEvent } from 'vitest/browser'
 
 test('clears input', async () => {
   const select = page.getByRole('select')
@@ -386,7 +386,7 @@ If you are using `playwright` provider, the cursor moves to "some" visible point
 :::
 
 ```ts
-import { page, userEvent } from '@vitest/browser/context'
+import { page, userEvent } from 'vitest/browser'
 
 test('hovers logo element', async () => {
   const logo = page.getByRole('img', { name: /logo/ })
@@ -419,7 +419,7 @@ By default, the cursor position is in "some" visible place (in `playwright` prov
 :::
 
 ```ts
-import { page, userEvent } from '@vitest/browser/context'
+import { page, userEvent } from 'vitest/browser'
 
 test('unhover logo element', async () => {
   const logo = page.getByRole('img', { name: /logo/ })
@@ -449,7 +449,7 @@ function upload(
 Change a file input element to have the specified files.
 
 ```ts
-import { page, userEvent } from '@vitest/browser/context'
+import { page, userEvent } from 'vitest/browser'
 
 test('can upload a file', async () => {
   const input = page.getByRole('button', { name: /Upload files/ })
@@ -488,7 +488,7 @@ function dragAndDrop(
 Drags the source element on top of the target element. Don't forget that the `source` element has to have the `draggable` attribute set to `true`.
 
 ```ts
-import { page, userEvent } from '@vitest/browser/context'
+import { page, userEvent } from 'vitest/browser'
 
 test('drag and drop works', async () => {
   const source = page.getByRole('img', { name: /logo/ })
@@ -520,7 +520,7 @@ function copy(): Promise<void>
 Copy the selected text to the clipboard.
 
 ```js
-import { page, userEvent } from '@vitest/browser/context'
+import { page, userEvent } from 'vitest/browser'
 
 test('copy and paste', async () => {
   // write to 'source'
@@ -553,7 +553,7 @@ function cut(): Promise<void>
 Cut the selected text to the clipboard.
 
 ```js
-import { page, userEvent } from '@vitest/browser/context'
+import { page, userEvent } from 'vitest/browser'
 
 test('copy and paste', async () => {
   // write to 'source'

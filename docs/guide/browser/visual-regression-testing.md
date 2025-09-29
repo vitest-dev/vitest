@@ -54,7 +54,7 @@ Visual regression testing in Vitest can be done through the
 
 ```ts
 import { expect, test } from 'vitest'
-import { page } from '@vitest/browser/context'
+import { page } from 'vitest/browser'
 
 test('hero section looks correct', async () => {
   // ...the rest of the test

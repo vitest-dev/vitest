@@ -5,8 +5,8 @@ import { fileURLToPath } from 'node:url'
 import { slash } from '@vitest/utils/helpers'
 import { dirname, resolve } from 'pathe'
 
-const VIRTUAL_ID_CONTEXT = '\0@vitest/browser/context'
-const ID_CONTEXT = '@vitest/browser/context'
+const VIRTUAL_ID_CONTEXT = '\0vitest/browser'
+const ID_CONTEXT = 'vitest/browser'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 

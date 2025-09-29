@@ -21,6 +21,7 @@ test('assigns names as browsers', async () => {
     browser: {
       enabled: true,
       headless: true,
+      provider: preview(),
       instances: [
         { browser: 'chromium' },
         { browser: 'firefox' },
@@ -39,6 +40,7 @@ test('filters projects', async () => {
   const { projects } = await vitest({ project: 'chromium' }, {
     browser: {
       enabled: true,
+      provider: preview(),
       instances: [
         { browser: 'chromium' },
         { browser: 'firefox' },
@@ -55,6 +57,7 @@ test('filters projects with a wildcard', async () => {
   const { projects } = await vitest({ project: 'chrom*' }, {
     browser: {
       enabled: true,
+      provider: preview(),
       instances: [
         { browser: 'chromium' },
         { browser: 'firefox' },
@@ -76,6 +79,7 @@ test('assigns names as browsers in a custom project', async () => {
           browser: {
             enabled: true,
             headless: true,
+            provider: preview(),
             instances: [
               { browser: 'chromium' },
               { browser: 'firefox' },
@@ -103,6 +107,7 @@ test('inherits browser options', async () => {
     } as any,
     browser: {
       enabled: true,
+      provider: preview(),
       headless: true,
       screenshotFailures: false,
       testerHtmlPath: '/custom-path.html',
@@ -244,6 +249,7 @@ test('browser instances with include/exclude/includeSource option override paren
     includeSource: ['src/**/*.{js,ts}'],
     browser: {
       enabled: true,
+      provider: preview(),
       headless: true,
       instances: [
         { browser: 'chromium' },
@@ -299,6 +305,7 @@ test('browser instances with empty include array should get parent include patte
     include: ['**/*.test.{js,ts}'],
     browser: {
       enabled: true,
+      provider: preview(),
       headless: true,
       instances: [
         { browser: 'chromium', include: [] },
@@ -349,6 +356,7 @@ test('can enable browser-cli options for multi-project workspace', async () => {
     {
       browser: {
         enabled: true,
+        provider: preview(),
         headless: true,
         instances: [],
       },
@@ -391,6 +399,7 @@ test('core provider has no options if `provider` is not set', async () => {
   const v = await vitest({}, {
     browser: {
       enabled: true,
+      provider: preview(),
       instances: [{
         browser: 'chromium',
       }],
@@ -512,6 +521,7 @@ test('provider options can be changed dynamically in CLI', async () => {
   }, {
     browser: {
       enabled: true,
+      provider: preview(),
       instances: [
         { browser: 'chromium' },
       ],
@@ -785,6 +795,7 @@ describe('[e2e] workspace configs are affected by the CLI options', () => {
             name: 'browser',
             browser: {
               enabled: true,
+              provider: preview(),
               instances: [],
             },
           },
@@ -839,6 +850,7 @@ describe('[e2e] workspace configs are affected by the CLI options', () => {
             name: 'browser',
             browser: {
               enabled: true,
+              provider: preview(),
               instances: [],
             },
           },

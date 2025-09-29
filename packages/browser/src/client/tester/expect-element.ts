@@ -1,5 +1,5 @@
-import type { Locator } from '@vitest/browser/context'
 import type { ExpectPollOptions, PromisifyDomAssertion } from 'vitest'
+import type { Locator } from 'vitest/browser'
 import { chai, expect } from 'vitest'
 import { getType } from 'vitest/internal/browser'
 import { matchers } from './expect'

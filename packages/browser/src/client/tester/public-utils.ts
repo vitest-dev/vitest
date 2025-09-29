@@ -1,7 +1,7 @@
-import type { Locator, LocatorSelectors } from '@vitest/browser/context'
+import type { Locator, LocatorSelectors } from 'vitest/browser'
 import type { StringifyOptions } from 'vitest/internal/browser'
-import { locators, page } from '@vitest/browser/context'
 import { asLocator } from 'ivya'
+import { locators, page } from 'vitest/browser'
 import { stringify } from 'vitest/internal/browser'
 
 export function getElementLocatorSelectors(element: Element): LocatorSelectors {

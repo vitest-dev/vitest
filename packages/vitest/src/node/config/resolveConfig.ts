@@ -750,10 +750,6 @@ export function resolveConfig(
   resolved.browser.locators ??= {} as any
   resolved.browser.locators.testIdAttribute ??= 'data-testid'
 
-  if (resolved.browser.enabled && stdProvider === 'stackblitz') {
-    resolved.browser.provider = undefined // reset to "preview"
-  }
-
   if (typeof resolved.browser.provider === 'string') {
     const source = `@vitest/browser-${resolved.browser.provider}`
     throw new TypeError(
@@ -763,6 +759,10 @@ export function resolveConfig(
   }
 
   const isPreview = resolved.browser.provider?.name === 'preview'
+
+  if (!isPreview && resolved.browser.enabled && stdProvider === 'stackblitz') {
+    throw new Error(`stackblitz environment does not support the ${resolved.browser.provider?.name} provider. Please, use "@vitest/browser-preview" instead.`)
+  }
   if (isPreview && resolved.browser.screenshotFailures === true) {
     console.warn(c.yellow(
       [

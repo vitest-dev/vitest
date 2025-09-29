@@ -13,8 +13,8 @@ import type { SerializedConfig, TestExecutionMethod, WorkerGlobalState } from 'v
 import type { VitestBrowserClientMocker } from './mocker'
 import type { CommandsManager } from './tester-utils'
 import { globalChannel, onCancel } from '@vitest/browser/client'
-import { page, userEvent } from '@vitest/browser/context'
 import { getTestName } from '@vitest/runner/utils'
+import { page, userEvent } from 'vitest/browser'
 import {
   DecodedMap,
   getOriginalPosition,

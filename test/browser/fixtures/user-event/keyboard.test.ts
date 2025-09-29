@@ -1,5 +1,5 @@
 import { expect, test } from 'vitest'
-import { userEvent, page, server } from '@vitest/browser/context'
+import { userEvent, page, server } from 'vitest/browser'
 
 test('non US keys', async () => {
   document.body.innerHTML = `

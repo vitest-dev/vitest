@@ -2,7 +2,7 @@
 // we cannot bundle it because vitest depend on the @vitest/browser and vice versa
 // fortunately, the file is quite small
 
-import { LocatorSelectors, Locator } from '@vitest/browser/context'
+import { LocatorSelectors, Locator } from 'vitest/browser'
 import { StringifyOptions } from 'vitest/internal/browser'
 
 export type PrettyDOMOptions = Omit<StringifyOptions, 'maxLength'>

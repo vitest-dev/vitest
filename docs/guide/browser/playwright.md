@@ -94,7 +94,7 @@ This value configures the default timeout it takes for Playwright to wait until 
 You can also configure the action timeout per-action:
 
 ```ts
-import { page, userEvent } from '@vitest/browser/context'
+import { page, userEvent } from 'vitest/browser'
 
 await userEvent.click(page.getByRole('button'), {
   timeout: 1_000,

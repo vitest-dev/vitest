@@ -186,7 +186,7 @@ export interface UserEvent {
    * state of keyboard to press and release buttons correctly.
    *
    * **Note:** Unlike `@testing-library/user-event`, the default `userEvent` instance
-   * from `@vitest/browser/context` is created once, not every time its methods are called!
+   * from `vitest/browser` is created once, not every time its methods are called!
    * @see {@link https://vitest.dev/guide/browser/interactivity-api.html#userevent-setup}
    */
   setup: () => UserEvent

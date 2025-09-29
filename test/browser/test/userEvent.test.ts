@@ -1,5 +1,5 @@
-import { userEvent as _uE, server } from '@vitest/browser/context'
 import { beforeEach, describe, expect, test, vi } from 'vitest'
+import { userEvent as _uE, server } from 'vitest/browser'
 import '../src/button.css'
 
 beforeEach(() => {
