@@ -240,10 +240,6 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject, defaultMocke
           if (!provider) {
             throw new Error('Commands are only available for browser tests.')
           }
-          const commands = globalServer.commands
-          if (!commands || !commands[command]) {
-            throw new Error(`Provider ${provider.name} does not support command "${command}".`)
-          }
           const context = Object.assign(
             {
               testPath,
@@ -252,12 +248,20 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject, defaultMocke
               contextId: sessionId,
               sessionId,
               triggerCommand: (name: string, ...args: any[]) => {
-                return commands[name](context, ...args)
+                return project.browser!.triggerCommand(
+                  name as any,
+                  context,
+                  ...args,
+                )
               },
             },
             provider.getCommandsContext(sessionId),
           ) as any as BrowserCommandContext
-          return await commands[command](context, ...payload)
+          return await project.browser!.triggerCommand(
+            command as any,
+            context,
+            ...payload,
+          )
         },
         resolveMock(rawId, importer, options) {
           return mockResolver.resolveMock(rawId, importer, options)

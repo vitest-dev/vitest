@@ -4,6 +4,7 @@ import type { ParsedStack, SerializedConfig, TestError } from 'vitest'
 import type { BrowserCommands } from 'vitest/browser'
 import type {
   BrowserCommand,
+  BrowserCommandContext,
   BrowserProvider,
   ProjectBrowser as IProjectBrowser,
   ResolvedConfig,
@@ -59,6 +60,8 @@ export class ProjectBrowser implements IProjectBrowser {
     return this.parent.vite
   }
 
+  private commands = {} as Record<string, BrowserCommand<any, any>>
+
   public registerCommand<K extends keyof BrowserCommands>(
     name: K,
     cb: BrowserCommand<
@@ -66,13 +69,26 @@ export class ProjectBrowser implements IProjectBrowser {
       ReturnType<BrowserCommands[K]>
     >,
   ): void {
-    // TODO: register only for a specific project! don't override the global one because it's possible to have different providers in different projects
     if (!/^[a-z_$][\w$]*$/i.test(name)) {
       throw new Error(
         `Invalid command name "${name}". Only alphanumeric characters, $ and _ are allowed.`,
       )
     }
-    this.parent.commands[name] = cb
+    this.commands[name] = cb
+  }
+
+  public triggerCommand<K extends keyof BrowserCommand>(
+    name: K,
+    context: BrowserCommandContext,
+    ...args: Parameters<BrowserCommands[K]>
+  ): ReturnType<BrowserCommands[K]> {
+    if (name in this.commands) {
+      return this.commands[name](context, ...args)
+    }
+    if (name in this.parent.commands) {
+      return this.parent.commands[name](context, ...args)
+    }
+    throw new Error(`Provider ${this.provider.name} does not support command "${name}".`)
   }
 
   wrapSerializedConfig(): SerializedConfig {

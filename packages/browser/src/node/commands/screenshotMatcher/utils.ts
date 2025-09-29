@@ -1,11 +1,10 @@
+import type { ScreenshotMatcherOptions } from 'vitest/browser'
 import type { BrowserCommandContext, BrowserConfigOptions } from 'vitest/node'
-import type { ScreenshotMatcherOptions } from '../../../../context'
 import type { ScreenshotMatcherArguments } from '../../../shared/screenshotMatcher/types'
 import type { AnyCodec } from './codecs'
 import { platform } from 'node:os'
 import { deepMerge } from '@vitest/utils/helpers'
 import { basename, dirname, extname, join, relative, resolve } from 'pathe'
-import { takeScreenshot } from '../screenshot'
 import { getCodec } from './codecs'
 import { getComparator } from './comparators'
 
@@ -238,8 +237,8 @@ export function takeDecodedScreenshot({
   name: string
   screenshotOptions: ScreenshotMatcherArguments[2]['screenshotOptions']
 }): ReturnType<AnyCodec['decode']> {
-  return takeScreenshot(
-    context,
+  return context.triggerCommand(
+    '__vitest_takeScreenshot',
     name,
     { ...screenshotOptions, save: false, element },
   ).then(

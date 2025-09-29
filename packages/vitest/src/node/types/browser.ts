@@ -320,6 +320,11 @@ export interface ProjectBrowser {
       ReturnType<BrowserCommands[K]>
     >
   ) => void
+  triggerCommand: <K extends keyof BrowserCommands>(
+    name: K,
+    context: BrowserCommandContext,
+    ...args: Parameters<BrowserCommands[K]>
+  ) => ReturnType<BrowserCommands[K]>
 }
 
 export interface BrowserCommand<Payload extends unknown[] = [], ReturnValue = any> {
