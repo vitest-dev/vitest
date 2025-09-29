@@ -173,7 +173,7 @@ describe.each([
     ['www.remote.com:1002', { enabled: true, port: 1002, host: 'www.remote.com' }],
     ['www.remote.com', { enabled: true, host: 'www.remote.com' }],
   ])(`parses "vitest ${inspectFlagName} %s" value`, async (cliValue, inspect) => {
-    const rawConfig = await parseCLI(
+    const rawConfig = parseCLI(
       `vitest --no-file-parallelism ${inspectFlagName} ${cliValue}`,
     )
     const c = await config(rawConfig.options)
@@ -184,7 +184,7 @@ describe.each([
   })
   it('cannot use URL', async () => {
     const url = 'https://www.remote.com:1002'
-    const rawConfig = await parseCLI([
+    const rawConfig = parseCLI([
       'vitest',
       '--no-file-parallelism',
       inspectFlagName,

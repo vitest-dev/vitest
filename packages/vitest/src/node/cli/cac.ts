@@ -73,7 +73,7 @@ function addCliOptions(cli: CAC | Command, options: CLIOptionsConfig<any>) {
   }
 }
 
-export async function createCLI(options: CliParseOptions = {}): Promise<CAC> {
+export function createCLI(options: CliParseOptions = {}): CAC {
   const cli = cac('vitest')
 
   cli.version(version)
@@ -196,6 +196,11 @@ export async function createCLI(options: CliParseOptions = {}): Promise<CAC> {
     .command('[...filters]', undefined, options)
     .action((filters, options) => start('test', filters, options))
 
+  return cli
+}
+
+export async function createCLIWithCompletions(options: CliParseOptions = {}): Promise<CAC> {
+  const cli = createCLI(options)
   await setupTabCompletions(cli)
   return cli
 }
@@ -225,17 +230,17 @@ function splitArgv(argv: string): string[] {
   })
 }
 
-export async function parseCLI(argv: string | string[], config: CliParseOptions = {}): Promise<{
+export function parseCLI(argv: string | string[], config: CliParseOptions = {}): {
   filter: string[]
   options: CliOptions
-}> {
+} {
   const arrayArgs = typeof argv === 'string' ? splitArgv(argv) : argv
   if (arrayArgs[0] !== 'vitest') {
     throw new Error(`Expected "vitest" as the first argument, received "${arrayArgs[0]}"`)
   }
   arrayArgs[0] = '/index.js'
   arrayArgs.unshift('node')
-  const cli = await createCLI(config)
+  const cli = createCLI(config)
   let { args, options } = cli.parse(arrayArgs, {
     run: false,
   })
