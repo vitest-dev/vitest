@@ -3,6 +3,7 @@ import type { CancelReason } from '@vitest/runner'
 import type { Awaitable, ParsedStack, TestError } from '@vitest/utils'
 import type { StackTraceParserOptions } from '@vitest/utils/source-map'
 import type { Plugin, ViteDevServer } from 'vite'
+import type { BrowserCommands } from 'vitest/browser'
 import type { BrowserTraceViewMode } from '../../runtime/config'
 import type { BrowserTesterOptions } from '../../types/browser'
 import type { TestProject } from '../project'
@@ -276,6 +277,10 @@ export interface BrowserCommandContext {
   provider: BrowserProvider
   project: TestProject
   sessionId: string
+  triggerCommand: <K extends keyof BrowserCommands>(
+    name: K,
+    ...args: Parameters<BrowserCommands[K]>
+  ) => ReturnType<BrowserCommands[K]>
 }
 
 export interface BrowserServerStateSession {
@@ -308,10 +313,17 @@ export interface ProjectBrowser {
   initBrowserProvider: (project: TestProject) => Promise<void>
   parseStacktrace: (stack: string) => ParsedStack[]
   parseErrorStacktrace: (error: TestError, options?: StackTraceParserOptions) => ParsedStack[]
+  registerCommand: <K extends keyof BrowserCommands>(
+    name: K,
+    cb: BrowserCommand<
+      Parameters<BrowserCommands[K]>,
+      ReturnType<BrowserCommands[K]>
+    >
+  ) => void
 }
 
-export interface BrowserCommand<Payload extends unknown[] = []> {
-  (context: BrowserCommandContext, ...payload: Payload): Awaitable<any>
+export interface BrowserCommand<Payload extends unknown[] = [], ReturnValue = any> {
+  (context: BrowserCommandContext, ...payload: Payload): Awaitable<ReturnValue>
 }
 
 export interface BrowserScript {

@@ -1,7 +1,9 @@
 import type { StackTraceParserOptions } from '@vitest/utils/source-map'
 import type { ViteDevServer } from 'vite'
 import type { ParsedStack, SerializedConfig, TestError } from 'vitest'
+import type { BrowserCommands } from 'vitest/browser'
 import type {
+  BrowserCommand,
   BrowserProvider,
   ProjectBrowser as IProjectBrowser,
   ResolvedConfig,
@@ -55,6 +57,21 @@ export class ProjectBrowser implements IProjectBrowser {
 
   get vite(): ViteDevServer {
     return this.parent.vite
+  }
+
+  public registerCommand<K extends keyof BrowserCommands>(
+    name: K,
+    cb: BrowserCommand<
+      Parameters<BrowserCommands[K]>,
+      ReturnType<BrowserCommands[K]>
+    >,
+  ): void {
+    if (!/^[a-z_$][\w$]*$/i.test(name)) {
+      throw new Error(
+        `Invalid command name "${name}". Only alphanumeric characters, $ and _ are allowed.`,
+      )
+    }
+    this.parent.commands[name] = cb
   }
 
   wrapSerializedConfig(): SerializedConfig {

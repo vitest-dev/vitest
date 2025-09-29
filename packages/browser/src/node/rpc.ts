@@ -242,7 +242,7 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject, defaultMocke
           }
           const commands = globalServer.commands
           if (!commands || !commands[command]) {
-            throw new Error(`Unknown command "${command}".`)
+            throw new Error(`Provider ${provider.name} does not support command "${command}".`)
           }
           const context = Object.assign(
             {
@@ -251,6 +251,9 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject, defaultMocke
               provider,
               contextId: sessionId,
               sessionId,
+              triggerCommand: (name: string, ...args: any[]) => {
+                return commands[name](context, ...args)
+              },
             },
             provider.getCommandsContext(sessionId),
           ) as any as BrowserCommandContext

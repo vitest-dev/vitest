@@ -1,4 +1,41 @@
-import type { BrowserProvider, BrowserProviderOption, ResolvedBrowserOptions, TestProject } from 'vitest/node'
+import type {
+  BrowserProvider,
+  BrowserProviderOption,
+  ResolvedBrowserOptions,
+  TestProject,
+} from 'vitest/node'
+
+import { defaultKeyMap } from '@testing-library/user-event/dist/esm/keyboard/keyMap.js'
+import { parseKeyDef as tlParse } from '@testing-library/user-event/dist/esm/keyboard/parseKeyDef.js'
+
+declare enum DOM_KEY_LOCATION {
+  STANDARD = 0,
+  LEFT = 1,
+  RIGHT = 2,
+  NUMPAD = 3,
+}
+
+interface keyboardKey {
+  /** Physical location on a keyboard */
+  code?: string
+  /** Character or functional key descriptor */
+  key?: string
+  /** Location on the keyboard for keys with multiple representation */
+  location?: DOM_KEY_LOCATION
+  /** Does the character in `key` require/imply AltRight to be pressed? */
+  altGr?: boolean
+  /** Does the character in `key` require/imply a shiftKey to be pressed? */
+  shift?: boolean
+}
+
+export function parseKeyDef(text: string): {
+  keyDef: keyboardKey
+  releasePrevious: boolean
+  releaseSelf: boolean
+  repeat: number
+}[] {
+  return tlParse(defaultKeyMap, text)
+}
 
 export function replacer(code: string, values: Record<string, string>): string {
   return code.replace(/\{\s*(\w+)\s*\}/g, (_, key) => values[key] ?? _)

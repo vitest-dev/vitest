@@ -19,6 +19,7 @@ import type { Protocol } from 'playwright-core/types/protocol'
 import type { SourceMap } from 'rollup'
 import type { ResolvedConfig } from 'vite'
 import type {
+  BrowserCommand,
   BrowserModuleMocker,
   BrowserProvider,
   BrowserProviderOption,
@@ -29,6 +30,7 @@ import { createBrowserServer } from '@vitest/browser'
 import { createManualModuleSource } from '@vitest/mocker/node'
 import c from 'tinyrainbow'
 import { createDebugger, isCSSRequest } from 'vitest/node'
+import commands from './commands'
 
 const debug = createDebugger('vitest:browser:playwright')
 
@@ -103,6 +105,10 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
   ) {
     this.browserName = project.config.browser.name as PlaywrightBrowser
     this.mocker = this.createMocker()
+
+    for (const [name, command] of Object.entries(commands)) {
+      project.browser!.registerCommand(name as any, command as BrowserCommand)
+    }
 
     // make sure the traces are finished if the test hangs
     process.on('SIGTERM', () => {
@@ -555,7 +561,7 @@ type PWSelectOptions = NonNullable<Parameters<Page['selectOption']>[2]>
 type PWDragAndDropOptions = NonNullable<Parameters<Page['dragAndDrop']>[2]>
 type PWSetInputFiles = NonNullable<Parameters<Page['setInputFiles']>[2]>
 
-declare module '@vitest/browser/context' {
+declare module 'vitest/browser' {
   export interface UserEventHoverOptions extends PWHoverOptions {}
   export interface UserEventClickOptions extends PWClickOptions {}
   export interface UserEventDoubleClickOptions extends PWDoubleClickOptions {}
