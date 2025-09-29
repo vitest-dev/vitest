@@ -10,6 +10,7 @@ import type {
   TestProject,
 } from 'vitest/node'
 import type { ClickOptions, DragAndDropOptions, remote } from 'webdriverio'
+import { createBrowserServer } from '@vitest/browser'
 
 import { createDebugger } from 'vitest/node'
 
@@ -30,9 +31,7 @@ export function webdriverio(options: WebdriverProviderOptions = {}): BrowserProv
     providerFactory(project) {
       return new WebdriverBrowserProvider(project, options)
     },
-    // --browser.provider=webdriverio
-    // @ts-expect-error hidden way to bypass importing webdriverio
-    _cli: true,
+    serverFactory: createBrowserServer,
   }
 }
 
