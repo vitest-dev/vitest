@@ -431,10 +431,9 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
     return page
   }
 
-  async openPage(sessionId: string, url: string, beforeNavigate?: () => Promise<void>): Promise<void> {
+  async openPage(sessionId: string, url: string): Promise<void> {
     debug?.('[%s][%s] creating the browser page for %s', sessionId, this.browserName, url)
     const browserPage = await this.openBrowserPage(sessionId)
-    await beforeNavigate?.()
     debug?.('[%s][%s] browser page is created, opening %s', sessionId, this.browserName, url)
     await browserPage.goto(url, { timeout: 0 })
     await this._throwIfClosing(browserPage)

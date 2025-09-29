@@ -39,6 +39,10 @@
         "default": "./index.cjs"
       }
     },
+    "./browser": {
+      "types": "./browser/context.d.ts",
+      "default": "./browser/context.js"
+    },
     "./package.json": "./package.json",
     "./optional-types.js": {
       "types": "./optional-types.d.ts"
