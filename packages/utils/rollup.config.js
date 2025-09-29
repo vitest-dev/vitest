@@ -1,4 +1,4 @@
-import { builtinModules, createRequire } from 'node:module'
+import { builtinModules } from 'node:module'
 import commonjs from '@rollup/plugin-commonjs'
 import json from '@rollup/plugin-json'
 import resolve from '@rollup/plugin-node-resolve'
