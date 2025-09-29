@@ -1,5 +1,5 @@
 import type { BrowserInstanceOption } from 'vitest/node'
-import { playwright } from '@vitest/browser/providers/playwright'
+import { playwright } from '@vitest/browser-playwright'
 import { preview } from '@vitest/browser/providers/preview'
 import { webdriverio } from '@vitest/browser/providers/webdriverio'
 

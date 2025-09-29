@@ -2,4 +2,4 @@ export {
   playwright,
   PlaywrightBrowserProvider,
   type PlaywrightProviderOptions,
-} from './provider'
+} from './playwright'

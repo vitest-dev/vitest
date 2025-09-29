@@ -19,6 +19,7 @@
       "@vitest/mocker/browser": ["./packages/mocker/src/browser/index.ts"],
       "@vitest/runner": ["./packages/runner/src/index.ts"],
       "@vitest/runner/*": ["./packages/runner/src/*"],
+      "@vitest/browser-playwright": ["./packages/browser-playwright/src/index.ts"],
       "@vitest/browser": ["./packages/browser/src/node/index.ts"],
       "@vitest/browser/client": ["./packages/browser/src/client/client.ts"],
       "~/*": ["./packages/ui/client/*"],

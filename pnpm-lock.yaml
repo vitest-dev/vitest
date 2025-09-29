@@ -531,6 +531,22 @@ importers:
         specifier: workspace:*
         version: link:../vitest
 
+  packages/browser-webdriverio:
+    dependencies:
+      '@vitest/browser':
+        specifier: workspace:*
+        version: link:../browser
+    devDependencies:
+      '@wdio/types':
+        specifier: ^9.19.2
+        version: 9.19.2
+      vitest:
+        specifier: workspace:*
+        version: link:../vitest
+      webdriverio:
+        specifier: ^9.19.2
+        version: 9.19.2
+
   packages/coverage-istanbul:
     dependencies:
       '@istanbuljs/schema':
@@ -1126,6 +1142,9 @@ importers:
       '@vitest/browser':
         specifier: workspace:*
         version: link:../../packages/browser
+      '@vitest/browser-playwright':
+        specifier: workspace:*
+        version: link:../../packages/browser-playwright
       '@vitest/bundled-lib':
         specifier: link:./bundled-lib
         version: link:bundled-lib
