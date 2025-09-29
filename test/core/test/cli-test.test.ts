@@ -30,7 +30,7 @@ function getCLIOptions(commands: string) {
 const enabled = { enabled: true }
 const disabled = { enabled: false }
 
-test('top level nested options return boolean', () => {
+test('top level nested options return boolean', async () => {
   expect(getCLIOptions('--coverage --browser --typecheck')).toEqual({
     coverage: enabled,
     browser: enabled,
@@ -38,7 +38,7 @@ test('top level nested options return boolean', () => {
   })
 })
 
-test('negated top level nested options return boolean', () => {
+test('negated top level nested options return boolean', async () => {
   expect(getCLIOptions('--no-coverage --no-browser --no-typecheck')).toEqual({
     coverage: disabled,
     browser: disabled,
@@ -46,7 +46,7 @@ test('negated top level nested options return boolean', () => {
   })
 })
 
-test('nested coverage options have correct types', () => {
+test('nested coverage options have correct types', async () => {
   expect(getCLIOptions(`
     --coverage.enabled=true
     --coverage.clean false
@@ -108,7 +108,7 @@ test('nested coverage options have correct types', () => {
   })
 })
 
-test('correctly normalizes methods to be an array', () => {
+test('correctly normalizes methods to be an array', async () => {
   expect(getCLIOptions(`
     --coverage.ignoreClassMethods method2
     --coverage.include pattern
@@ -122,19 +122,19 @@ test('correctly normalizes methods to be an array', () => {
   })
 })
 
-test('fails when an array is passed down for a single value', () => {
+test('fails when an array is passed down for a single value', async () => {
   expect(() => getCLIOptions('--coverage.provider v8 --coverage.provider istanbul'))
     .toThrowErrorMatchingInlineSnapshot(`[Error: Expected a single value for option "--coverage.provider <name>", received ["v8", "istanbul"]]`)
 })
 
-test('coverage autoUpdate accepts boolean values from CLI', () => {
+test('coverage autoUpdate accepts boolean values from CLI', async () => {
   expect(getCLIOptions('--coverage.thresholds.autoUpdate true').coverage.thresholds.autoUpdate).toBe(true)
   expect(getCLIOptions('--coverage.thresholds.autoUpdate false').coverage.thresholds.autoUpdate).toBe(false)
   expect(getCLIOptions('--coverage.thresholds.autoUpdate yes').coverage.thresholds.autoUpdate).toBe(true)
   expect(getCLIOptions('--coverage.thresholds.autoUpdate no').coverage.thresholds.autoUpdate).toBe(false)
 })
 
-test('bench only options', () => {
+test('bench only options', async () => {
   expect(() =>
     parseArguments('--compare file.json').matchedCommand?.checkUnknownOptions(),
   ).toThrowErrorMatchingInlineSnapshot(
@@ -142,7 +142,9 @@ test('bench only options', () => {
   )
 
   expect(() =>
-    parseArguments('bench --compare file.json').matchedCommand?.checkUnknownOptions(),
+    parseArguments(
+      'bench --compare file.json',
+    ).matchedCommand?.checkUnknownOptions(),
   ).not.toThrow()
 
   expect(parseArguments('bench --compare file.json').options).toEqual({
@@ -353,7 +355,7 @@ test('silent', () => {
   expect(() => getCLIOptions('--silent example.test.ts')).toThrowErrorMatchingInlineSnapshot(`[TypeError: Unexpected value "--silent=example.test.ts". Use "--silent=true example.test.ts" instead.]`)
 })
 
-test('public parseCLI works correctly', async () => {
+test('public parseCLI works correctly', () => {
   expect(parseCLI('vitest dev')).toEqual({
     filter: [],
     options: {
