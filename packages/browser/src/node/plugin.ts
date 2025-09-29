@@ -232,9 +232,9 @@ export default (parentServer: ParentBrowserProject, base = '/'): Plugin[] => {
 
         const exclude = [
           'vitest',
+          'vitest/browser',
           'vitest/internal/browser',
           'vitest/runners',
-          '@vitest/browser',
           '@vitest/browser/client',
           '@vitest/utils',
           '@vitest/utils/source-map',
@@ -282,9 +282,14 @@ export default (parentServer: ParentBrowserProject, base = '/'): Plugin[] => {
           'vitest > expect-type',
           'vitest > @vitest/snapshot > magic-string',
           'vitest > @vitest/expect > chai',
-          '@vitest/browser > @testing-library/user-event',
-          '@vitest/browser > @testing-library/dom',
         ]
+
+        if (parentServer.config.browser.provider?.name === 'preview') {
+          include.push(
+            '@vitest/browser-preview > @testing-library/user-event',
+            '@vitest/browser-preview > @testing-library/dom',
+          )
+        }
 
         const fileRoot = browserTestFiles[0] ? dirname(browserTestFiles[0]) : project.config.root
 

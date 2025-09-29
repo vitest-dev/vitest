@@ -1,9 +1,9 @@
 import type { ScreenshotOptions } from 'vitest/browser'
 import type { BrowserCommandContext } from 'vitest/node'
+import crypto from 'node:crypto'
 import { mkdir, rm } from 'node:fs/promises'
 import { normalize as platformNormalize } from 'node:path'
 import { resolveScreenshotPath } from '@vitest/browser'
-import { nanoid } from '@vitest/utils/helpers'
 import { dirname, normalize, resolve } from 'pathe'
 
 interface ScreenshotCommandOptions extends Omit<ScreenshotOptions, 'element' | 'mask'> {
@@ -46,7 +46,7 @@ export async function takeScreenshot(
 
   // webdriverio needs a path, so if one is not already set we create a temporary one
   if (savePath === undefined) {
-    savePath = resolve(context.project.tmpDir, nanoid())
+    savePath = resolve(context.project.tmpDir, crypto.randomUUID())
 
     await mkdir(context.project.tmpDir, { recursive: true })
   }
