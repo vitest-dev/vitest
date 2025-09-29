@@ -453,18 +453,16 @@ export class TestProject {
     if (!this.isBrowserEnabled() || this._parentBrowser) {
       return
     }
-    if (typeof this.config.browser.provider!.serverFactory !== 'function') {
-      throw new TypeError(`The provider options do not return a "serverFactory" function.`)
+    const provider = this.config.browser.provider!
+    if (typeof provider.serverFactory !== 'function') {
+      throw new TypeError(`The browser provider options do not return a "serverFactory" function. Are you using the latest "@vitest/browser-${provider?.name}" package?`)
     }
-    const browser = await this.config.browser.provider!.serverFactory(
-      this,
-      this.vite.config.configFile,
-      [
-        ...MocksPlugins(), // TODO: inject cacheDir inside the server factory
-        MetaEnvReplacerPlugin(),
-      ],
-      [CoverageTransform(this.vitest)],
-    )
+    const browser = await this.config.browser.provider!.serverFactory({
+      project: this,
+      mocksPlugins: options => MocksPlugins(options),
+      metaEnvReplacer: () => MetaEnvReplacerPlugin(),
+      coveragePlugin: () => CoverageTransform(this.vitest),
+    })
     this._parentBrowser = browser
     if (this.config.browser.ui) {
       setup(this.vitest, browser.vite)

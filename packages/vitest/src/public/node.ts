@@ -69,6 +69,8 @@ export type {
   BrowserProvider,
   BrowserProviderOption,
   BrowserScript,
+  BrowserServerFactory,
+  BrowserServerOptions,
   BrowserServerState,
   BrowserServerStateSession,
   CDPSession,

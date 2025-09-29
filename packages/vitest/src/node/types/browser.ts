@@ -26,12 +26,18 @@ export interface BrowserProviderOption<Options extends object = object> {
   supportedBrowser?: ReadonlyArray<string>
   options: Options
   providerFactory: (project: TestProject) => BrowserProvider
-  serverFactory: (
-    project: TestProject,
-    configFile: string | undefined,
-    prePlugins: Plugin[],
-    postPlugins: Plugin[],
-  ) => Promise<ParentProjectBrowser>
+  serverFactory: BrowserServerFactory
+}
+
+export interface BrowserServerOptions {
+  project: TestProject
+  coveragePlugin: () => Plugin
+  mocksPlugins: (options: { filter: (id: string) => boolean }) => Plugin[]
+  metaEnvReplacer: () => Plugin
+}
+
+export interface BrowserServerFactory {
+  (otpions: BrowserServerOptions): Promise<ParentProjectBrowser>
 }
 
 export interface BrowserProvider {

@@ -8,6 +8,7 @@ import { resolve } from 'pathe'
 import { version as viteVersion } from 'vite'
 import { rootDir } from '../paths'
 import { isWindows } from '../utils/env'
+import { createBrowserPool } from './pools/browser'
 import { createForksPool } from './pools/forks'
 import { createThreadsPool } from './pools/threads'
 import { createTypecheckPool } from './pools/typecheck'
@@ -175,13 +176,6 @@ export function createPool(ctx: Vitest): ProcessPool {
       return getConcurrentPool(pool, () => resolveCustomPool(pool))
     }
 
-    function getBrowserPool() {
-      return getConcurrentPool('browser', async () => {
-        const { createBrowserPool } = await import('@vitest/browser')
-        return createBrowserPool(ctx)
-      })
-    }
-
     const groupedSpecifications: Record<string, TestSpecification[]> = {}
     const groups = new Set<number>()
 
@@ -191,6 +185,7 @@ export function createPool(ctx: Vitest): ProcessPool {
       threads: specs => createThreadsPool(ctx, options, specs),
       forks: specs => createForksPool(ctx, options, specs),
       typescript: () => createTypecheckPool(ctx),
+      browser: () => createBrowserPool(ctx),
     }
 
     for (const spec of files) {
@@ -253,11 +248,6 @@ export function createPool(ctx: Vitest): ProcessPool {
             const factory = factories[pool]
             pools[pool] ??= factory(specs)
             return pools[pool]![method](specs, invalidate)
-          }
-
-          if (pool === 'browser') {
-            pools.browser ??= await getBrowserPool()
-            return pools.browser[method](specs, invalidate)
           }
 
           const poolHandler = await getCustomPool(pool)
