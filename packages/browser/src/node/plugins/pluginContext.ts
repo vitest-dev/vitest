@@ -7,6 +7,8 @@ import { dirname, resolve } from 'pathe'
 
 const VIRTUAL_ID_CONTEXT = '\0vitest/browser'
 const ID_CONTEXT = 'vitest/browser'
+// for libraries that use an older import but are not type checked
+const DEPRECTED_ID_CONTEXT = '@vitest/browser/context'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
@@ -14,8 +16,18 @@ export default function BrowserContext(globalServer: ParentBrowserProject): Plug
   return {
     name: 'vitest:browser:virtual-module:context',
     enforce: 'pre',
-    resolveId(id) {
+    resolveId(id, importer) {
       if (id === ID_CONTEXT) {
+        return VIRTUAL_ID_CONTEXT
+      }
+      if (id === DEPRECTED_ID_CONTEXT) {
+        if (importer) {
+          this.warn(
+            `[vitest] ${importer} tries to load a deprecated "${id}". `
+            + `This import will stop working in the next major version. `
+            + `Please, use "vitest/browser" instead.`,
+          )
+        }
         return VIRTUAL_ID_CONTEXT
       }
     },
