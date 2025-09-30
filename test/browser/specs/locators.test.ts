@@ -18,7 +18,7 @@ test('locators work correctly', async () => {
   expect(stderr).toReportNoErrors()
   expect(log).toHaveBeenCalledWith(
     expect.stringContaining(
-      `tries to load a deprecated "@vitest/browser/context". `
+      `tries to load a deprecated "@vitest/browser/context" module. `
       + `This import will stop working in the next major version. Please, use "vitest/browser" instead.`,
     ),
   )
