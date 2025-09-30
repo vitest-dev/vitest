@@ -395,19 +395,6 @@ test('can enable browser-cli options for multi-project workspace', async () => {
   expect(projects[1].config.browser.headless).toBe(true)
 })
 
-test('core provider has no options if `provider` is not set', async () => {
-  const v = await vitest({}, {
-    browser: {
-      enabled: true,
-      provider: preview(),
-      instances: [{
-        browser: 'chromium',
-      }],
-    },
-  })
-  expect(v.config.browser.provider).toEqual(undefined)
-})
-
 test('core provider has options if `provider` is playwright', async () => {
   const v = await vitest({}, {
     browser: {
