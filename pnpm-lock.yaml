@@ -1212,6 +1212,9 @@ importers:
       '@vitest/browser-playwright':
         specifier: workspace:*
         version: link:../../packages/browser-playwright
+      '@vitest/browser-preview':
+        specifier: workspace:*
+        version: link:../../packages/browser-preview
       '@vitest/runner':
         specifier: workspace:^
         version: link:../../packages/runner

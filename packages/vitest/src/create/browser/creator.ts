@@ -41,27 +41,6 @@ function getBrowserNames(provider: BrowserBuiltinProvider) {
   }
 }
 
-function getProviderPackageNames(provider: BrowserBuiltinProvider) {
-  switch (provider) {
-    case 'webdriverio':
-      return {
-        types: '@vitest/browser-webdriverio',
-        pkg: 'webdriverio',
-      }
-    case 'playwright':
-      return {
-        types: '@vitest/browser-playwright',
-        pkg: 'playwright',
-      }
-    case 'preview':
-      return {
-        types: '@vitest/browser/matchers',
-        pkg: null,
-      }
-  }
-  throw new Error(`Unsupported provider: ${provider}`)
-}
-
 function getFramework(): prompt.Choice[] {
   return [
     {
@@ -154,15 +133,6 @@ function getFrameworkPluginPackage(framework: string) {
       return '@builder.io/qwik/optimizer'
   }
   return null
-}
-
-async function updateTsConfig(type: string | undefined | null) {
-  if (type == null) {
-    return
-  }
-  const msg = `Add "${c.bold(type)}" to your tsconfig.json "${c.bold('compilerOptions.types')}" field to have better intellisense support.`
-  log()
-  log(c.yellow('◼'), c.yellow(msg))
 }
 
 function getLanguageOptions(): prompt.Choice[] {
@@ -441,10 +411,6 @@ export async function create(): Promise<void> {
     dependenciesToInstall.push(frameworkPackage)
   }
 
-  const providerPkg = getProviderPackageNames(provider)
-  if (providerPkg.pkg) {
-    dependenciesToInstall.push(providerPkg.pkg)
-  }
   const frameworkPlugin = getFrameworkPluginPackage(framework)
   if (frameworkPlugin) {
     dependenciesToInstall.push(frameworkPlugin)
@@ -512,11 +478,6 @@ export async function create(): Promise<void> {
         stdio: ['pipe', 'inherit', 'inherit'],
       },
     })
-  }
-
-  // TODO: can we do this ourselves?
-  if (lang === 'ts') {
-    await updateTsConfig(providerPkg?.types)
   }
 
   log()
