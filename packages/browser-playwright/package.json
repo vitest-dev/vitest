@@ -20,12 +20,16 @@
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     },
+    "./context": {
+      "types": "./context.d.ts"
+    },
     "./package.json": "./package.json"
   },
   "main": "./dist/index.js",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "files": [
+    "context.d.ts",
     "dist"
   ],
   "scripts": {

@@ -39,7 +39,7 @@
       "types": "./utils.d.ts",
       "default": "./dist/utils.js"
     },
-    "./*": "./*"
+    "./package.json": "./package.json"
   },
   "main": "./dist/index.js",
   "module": "./dist/index.js",

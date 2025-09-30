@@ -1,5 +1,9 @@
 /* eslint-disable ts/method-signature-style */
 
+import type {
+  ScreenshotComparatorRegistry,
+  ScreenshotMatcherOptions,
+} from '@vitest/browser/context'
 import type { MockedModule } from '@vitest/mocker'
 import type {
   Browser,
@@ -14,10 +18,6 @@ import type {
 import type { Protocol } from 'playwright-core/types/protocol'
 import type { SourceMap } from 'rollup'
 import type { ResolvedConfig } from 'vite'
-import type {
-  ScreenshotComparatorRegistry,
-  ScreenshotMatcherOptions,
-} from 'vitest/browser'
 import type {
   BrowserCommand,
   BrowserModuleMocker,
@@ -567,7 +567,7 @@ type PWSelectOptions = NonNullable<Parameters<Page['selectOption']>[2]>
 type PWDragAndDropOptions = NonNullable<Parameters<Page['dragAndDrop']>[2]>
 type PWSetInputFiles = NonNullable<Parameters<Page['setInputFiles']>[2]>
 
-declare module 'vitest/browser' {
+declare module '@vitest/browser/context' {
   export interface UserEventHoverOptions extends PWHoverOptions {}
   export interface UserEventClickOptions extends PWClickOptions {}
   export interface UserEventDoubleClickOptions extends PWDoubleClickOptions {}

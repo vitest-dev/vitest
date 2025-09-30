@@ -948,9 +948,12 @@ importers:
 
   packages/vitest:
     dependencies:
-      '@vitest/browser':
+      '@vitest/browser-preview':
         specifier: workspace:*
-        version: link:../browser
+        version: link:../browser-preview
+      '@vitest/browser-webdriverio':
+        specifier: workspace:*
+        version: link:../browser-webdriverio
       '@vitest/expect':
         specifier: workspace:*
         version: link:../expect
@@ -1057,6 +1060,9 @@ importers:
       '@types/sinonjs__fake-timers':
         specifier: ^8.1.5
         version: 8.1.5(patch_hash=0218b33f433e26861380c2b90c757bde6fea871cb988083c0bd4a9a1f6c00252)
+      '@vitest/browser-playwright':
+        specifier: workspace:*
+        version: link:../browser-playwright
       acorn-walk:
         specifier: 'catalog:'
         version: 8.3.4

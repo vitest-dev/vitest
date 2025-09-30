@@ -20,6 +20,9 @@
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     },
+    "./context": {
+      "types": "./context.d.ts"
+    },
     "./package.json": "./package.json"
   },
   "main": "./dist/index.js",

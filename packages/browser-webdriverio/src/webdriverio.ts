@@ -1,8 +1,8 @@
-import type { Capabilities } from '@wdio/types'
 import type {
   ScreenshotComparatorRegistry,
   ScreenshotMatcherOptions,
-} from 'vitest/browser'
+} from '@vitest/browser/context'
+import type { Capabilities } from '@wdio/types'
 import type {
   BrowserCommand,
   BrowserProvider,
@@ -282,7 +282,7 @@ export class WebdriverBrowserProvider implements BrowserProvider {
   }
 }
 
-declare module 'vitest/node' {
+declare module '@vitest/browser/context' {
   export interface UserEventClickOptions extends ClickOptions {}
 
   export interface UserEventDragOptions extends DragAndDropOptions {
@@ -291,7 +291,9 @@ declare module 'vitest/node' {
     targetX?: number
     targetY?: number
   }
+}
 
+declare module 'vitest/node' {
   export interface BrowserCommandContext {
     browser: WebdriverIO.Browser
   }

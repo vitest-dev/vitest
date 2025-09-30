@@ -1,5 +1,5 @@
-import type { Locator } from 'vitest/browser'
 import type { BrowserCommand } from 'vitest/node'
+import type { Locator } from '../../../context'
 
 export type UserEventCommand<T extends (...args: any) => any> = BrowserCommand<
   ConvertUserEventParameters<Parameters<T>>

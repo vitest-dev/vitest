@@ -23,7 +23,7 @@ export interface TestingLibraryMatchers<E, R> {
    * This matcher calculates the intersection ratio between the element and the viewport, similar to the
    * IntersectionObserver API.
    *
-   * The element must be in the document and have visible dimensions. Elements with display: none or 
+   * The element must be in the document and have visible dimensions. Elements with display: none or
    * visibility: hidden are considered not in viewport.
    * @example
    * <div
@@ -34,7 +34,7 @@ export interface TestingLibraryMatchers<E, R> {
    * </div>
    *
    * <div
-   *   data-testid="hidden-element" 
+   *   data-testid="hidden-element"
    *   style="position: fixed; top: -100px; left: 10px; width: 50px; height: 50px;"
    * >
    *   Hidden Element
@@ -49,13 +49,13 @@ export interface TestingLibraryMatchers<E, R> {
    *
    * // Check if any part of element is in viewport
    * await expect.element(page.getByTestId('visible-element')).toBeInViewport()
-   * 
+   *
    * // Check if element is outside viewport
    * await expect.element(page.getByTestId('hidden-element')).not.toBeInViewport()
-   * 
+   *
    * // Check if at least 50% of element is visible
    * await expect.element(page.getByTestId('large-element')).toBeInViewport({ ratio: 0.5 })
-   * 
+   *
    * // Check if element is completely visible
    * await expect.element(page.getByTestId('visible-element')).toBeInViewport({ ratio: 1 })
    * @see https://vitest.dev/guide/browser/assertion-api#tobeinviewport

@@ -1,5 +1,5 @@
-import type { ScreenshotOptions } from 'vitest/browser'
 import type { BrowserCommand } from 'vitest/node'
+import type { ScreenshotOptions } from '../../../context'
 
 interface ScreenshotCommandOptions extends Omit<ScreenshotOptions, 'element' | 'mask'> {
   element?: string

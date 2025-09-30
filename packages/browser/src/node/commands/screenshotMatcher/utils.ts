@@ -1,5 +1,5 @@
-import type { ScreenshotMatcherOptions } from 'vitest/browser'
 import type { BrowserCommandContext, BrowserConfigOptions } from 'vitest/node'
+import type { ScreenshotMatcherOptions } from '../../../../context'
 import type { ScreenshotMatcherArguments } from '../../../shared/screenshotMatcher/types'
 import type { AnyCodec } from './codecs'
 import { platform } from 'node:os'
