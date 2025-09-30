@@ -1,4 +1,5 @@
 import { SerializedConfig } from 'vitest'
+import { StringifyOptions } from 'vitest/internal/browser'
 import { ARIARole } from './aria-role.js'
 import {} from './matchers.js'
 
