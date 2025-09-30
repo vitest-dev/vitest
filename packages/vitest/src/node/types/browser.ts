@@ -56,6 +56,7 @@ export interface BrowserProvider {
 }
 
 export type BrowserBuiltinProvider = 'webdriverio' | 'playwright' | 'preview'
+export interface _BrowserNames {}
 
 type UnsupportedProperties
   = | 'browser'
@@ -90,7 +91,9 @@ export interface BrowserInstanceOption extends
   /**
    * Name of the browser
    */
-  browser: string
+  browser: keyof _BrowserNames extends never
+    ? string
+    : _BrowserNames[keyof _BrowserNames]
 
   name?: string
   provider?: BrowserProviderOption

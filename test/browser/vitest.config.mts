@@ -10,7 +10,7 @@ import { defineConfig } from 'vitest/config'
 const dir = dirname(fileURLToPath(import.meta.url))
 
 const providerName = process.env.PROVIDER || 'playwright'
-const browser = process.env.BROWSER || (providerName === 'playwright' ? 'chromium' : 'chrome')
+const browser = process.env.BROWSER as 'firefox' || (providerName === 'playwright' ? 'chromium' : 'chrome')
 const provider = {
   playwright,
   preview,

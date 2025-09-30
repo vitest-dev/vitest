@@ -299,6 +299,10 @@ declare module 'vitest/node' {
     browser: WebdriverIO.Browser
   }
 
+  export interface _BrowserNames {
+    webdriverio: WebdriverBrowser
+  }
+
   export interface ToMatchScreenshotOptions
     extends Omit<
       ScreenshotMatcherOptions,

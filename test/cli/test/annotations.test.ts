@@ -40,7 +40,7 @@ describe('API', () => {
         provider: playwright(),
         headless: true,
         instances: [
-          { browser: 'chromium' },
+          { browser: 'chromium' as const },
         ],
       },
     },

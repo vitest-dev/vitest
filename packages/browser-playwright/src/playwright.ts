@@ -549,6 +549,10 @@ declare module 'vitest/node' {
     context: BrowserContext
   }
 
+  export interface _BrowserNames {
+    playwright: PlaywrightBrowser
+  }
+
   export interface ToMatchScreenshotOptions
     extends Omit<
       ScreenshotMatcherOptions,

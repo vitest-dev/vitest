@@ -21,7 +21,7 @@ export default defineConfig({
           root: './space_browser_inline',
           browser: {
             enabled: true,
-            instances: [{ browser: process.env.BROWSER || 'chromium' }],
+            instances: [{ browser: process.env.BROWSER as 'chromium' || 'chromium' }],
             headless: true,
             provider: playwright(),
           },

@@ -59,6 +59,7 @@ export { registerConsoleShortcuts } from '../node/stdin'
 export type { BenchmarkUserOptions } from '../node/types/benchmark'
 
 export type {
+  _BrowserNames,
   BrowserBuiltinProvider,
   BrowserCommand,
   BrowserCommandContext,

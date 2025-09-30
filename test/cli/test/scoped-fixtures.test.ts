@@ -555,7 +555,7 @@ describe.for([
       provider: playwright(),
       headless: true,
       instances: [
-        { browser: 'chromium', name: '' },
+        { browser: 'chromium' as const, name: '' },
       ],
     },
   },
