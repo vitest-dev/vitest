@@ -8,7 +8,10 @@ import { dirname, resolve } from 'pathe'
 const VIRTUAL_ID_CONTEXT = '\0vitest/browser'
 const ID_CONTEXT = 'vitest/browser'
 // for libraries that use an older import but are not type checked
-const DEPRECTED_ID_CONTEXT = '@vitest/browser/context'
+const DEPRECATED_ID_CONTEXT = '@vitest/browser/context'
+
+const DEPRECATED_VIRTUAL_ID_UTILS = '\0@vitest/browser/utils'
+const DEPRECATED_ID_UTILS = '@vitest/browser/utils'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
@@ -20,7 +23,7 @@ export default function BrowserContext(globalServer: ParentBrowserProject): Plug
       if (id === ID_CONTEXT) {
         return VIRTUAL_ID_CONTEXT
       }
-      if (id === DEPRECTED_ID_CONTEXT) {
+      if (id === DEPRECATED_ID_CONTEXT) {
         if (importer) {
           globalServer.vitest.logger.deprecate(
             `${importer} tries to load a deprecated "${id}" module. `
@@ -30,10 +33,22 @@ export default function BrowserContext(globalServer: ParentBrowserProject): Plug
         }
         return VIRTUAL_ID_CONTEXT
       }
+      if (id === DEPRECATED_ID_UTILS) {
+        return DEPRECATED_VIRTUAL_ID_UTILS
+      }
     },
     load(id) {
       if (id === VIRTUAL_ID_CONTEXT) {
         return generateContextFile.call(this, globalServer)
+      }
+      if (id === DEPRECATED_VIRTUAL_ID_UTILS) {
+        return `
+import { utils } from 'vitest/browser'
+export const getElementLocatorSelectors = utils.getElementLocatorSelectors
+export const debug = utils.debug
+export const prettyDOM = utils.prettyDOM
+export const getElementError = utils.getElementError
+        `
       }
     },
   }
@@ -61,7 +76,7 @@ async function generateContextFile(
   const distContextPath = slash(`/@fs/${resolve(__dirname, 'context.js')}`)
 
   return `
-import { page, createUserEvent, cdp, locators } from '${distContextPath}'
+import { page, createUserEvent, cdp, locators, utils } from '${distContextPath}'
 ${userEventNonProviderImport}
 
 export const server = {
@@ -76,7 +91,7 @@ export const server = {
 }
 export const commands = server.commands
 export const userEvent = createUserEvent(_userEventSetup)
-export { page, cdp, locators }
+export { page, cdp, locators, utils }
 `
 }
 

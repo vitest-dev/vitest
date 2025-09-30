@@ -17,6 +17,7 @@ const external = [
   'worker_threads',
   'node:worker_threads',
   'vite',
+  'vitest/internal/browser',
 ]
 
 const dtsUtils = createDtsUtils()
@@ -73,7 +74,6 @@ export default () =>
       input: {
         'locators': './src/client/tester/locators/index.ts',
         'expect-element': './src/client/tester/expect-element.ts',
-        'utils': './src/client/tester/public-utils.ts',
       },
       output: {
         dir: 'dist',
@@ -95,7 +95,7 @@ export default () =>
         file: 'dist/context.js',
         format: 'esm',
       },
-      external: ['@vitest/browser/utils'],
+      external: ['vitest/internal/browser'],
       plugins: [
         oxc({
           transform: { target: 'node18' },

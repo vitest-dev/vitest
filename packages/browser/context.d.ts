@@ -762,6 +762,24 @@ export interface BrowserLocators {
   }): void
 }
 
+
+export type PrettyDOMOptions = Omit<StringifyOptions, 'maxLength'>
+
+export const utils: {
+  getElementLocatorSelectors(element: Element): LocatorSelectors
+  debug(
+    el?: Element | Locator | null | (Element | Locator)[],
+    maxLength?: number,
+    options?: PrettyDOMOptions,
+  ): void
+  prettyDOM(
+    dom?: Element | Locator | undefined | null,
+    maxLength?: number,
+    prettyFormatOptions?: PrettyDOMOptions,
+  ): string
+  getElementError(selector: string, container?: Element): Error
+}
+
 export const locators: BrowserLocators
 
 export const page: BrowserPage

@@ -10,8 +10,8 @@ import {
   Locator,
   selectorEngine,
 } from '@vitest/browser/locators'
-import { getElementError } from '@vitest/browser/utils'
-import { page, server, userEvent } from 'vitest/browser'
+import { page, server, userEvent, utils } from 'vitest/browser'
+import { __INTERNAL } from 'vitest/internal/browser'
 
 class PreviewLocator extends Locator {
   constructor(protected _pwSelector: string, protected _container?: Element) {
@@ -21,7 +21,7 @@ class PreviewLocator extends Locator {
   override get selector() {
     const selectors = this.elements().map(element => convertElementToCssSelector(element))
     if (!selectors.length) {
-      throw getElementError(this._pwSelector, this._container || document.body)
+      throw utils.getElementError(this._pwSelector, this._container || document.body)
     }
     return selectors.join(', ')
   }
@@ -103,11 +103,6 @@ page.extend({
       element,
     )
   },
-
-  // _createLocator is private, so types cannot see it
-  ...Object.assign({}, {
-    _createLocator(selector: string) {
-      return new PreviewLocator(selector)
-    },
-  }),
 })
+
+__INTERNAL._createLocator = selector => new PreviewLocator(selector)

@@ -7,6 +7,7 @@ export const userEvent = null
 export const cdp = null
 export const commands = null
 export const locators = null
+export const utils = null
 
 const pool = globalThis.__vitest_worker__?.ctx?.pool
 

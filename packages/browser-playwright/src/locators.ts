@@ -21,6 +21,7 @@ import {
   selectorEngine,
 } from '@vitest/browser/locators'
 import { page, server } from 'vitest/browser'
+import { __INTERNAL } from 'vitest/internal/browser'
 
 class PlaywrightLocator extends Locator {
   constructor(public selector: string, protected _container?: Element) {
@@ -117,14 +118,9 @@ page.extend({
       `${locator.selector} >> internal:control=enter-frame`,
     )
   },
-
-  // _createLocator is private, so types cannot see it
-  ...Object.assign({}, {
-    _createLocator(selector: string) {
-      return new PlaywrightLocator(selector)
-    },
-  }),
 })
+
+__INTERNAL._createLocator = selector => new PlaywrightLocator(selector)
 
 function processDragAndDropOptions(options?: UserEventDragAndDropOptions) {
   if (!options) {

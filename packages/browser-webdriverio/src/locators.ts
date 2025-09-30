@@ -17,8 +17,8 @@ import {
   Locator,
   selectorEngine,
 } from '@vitest/browser/locators'
-import { getElementError } from '@vitest/browser/utils'
-import { page, server } from 'vitest/browser'
+import { page, server, utils } from 'vitest/browser'
+import { __INTERNAL } from 'vitest/internal/browser'
 
 class WebdriverIOLocator extends Locator {
   constructor(protected _pwSelector: string, protected _container?: Element) {
@@ -28,7 +28,7 @@ class WebdriverIOLocator extends Locator {
   override get selector(): string {
     const selectors = this.elements().map(element => convertElementToCssSelector(element))
     if (!selectors.length) {
-      throw getElementError(this._pwSelector, this._container || document.body)
+      throw utils.getElementError(this._pwSelector, this._container || document.body)
     }
     let hasShadowRoot = false
     const newSelectors = selectors.map((selector) => {
@@ -104,14 +104,9 @@ page.extend({
   elementLocator(element: Element) {
     return new WebdriverIOLocator(selectorEngine.generateSelectorSimple(element))
   },
-
-  // _createLocator is private, so types cannot see it
-  ...Object.assign({}, {
-    _createLocator(selector: string) {
-      return new WebdriverIOLocator(selector)
-    },
-  }),
 })
+
+__INTERNAL._createLocator = selector => new WebdriverIOLocator(selector)
 
 function getWebdriverioSelectOptions(element: Element, value: string | string[] | HTMLElement[] | HTMLElement | Locator | Locator[]) {
   const options = [...element.querySelectorAll('option')] as HTMLOptionElement[]

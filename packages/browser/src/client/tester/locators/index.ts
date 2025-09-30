@@ -12,6 +12,7 @@ import type {
   UserEventUploadOptions,
 } from 'vitest/browser'
 import {
+  asLocator,
   getByAltTextSelector,
   getByLabelSelector,
   getByPlaceholderSelector,
@@ -21,9 +22,9 @@ import {
   getByTitleSelector,
   Ivya,
 } from 'ivya'
-import { page, server } from 'vitest/browser'
+import { page, server, utils } from 'vitest/browser'
+import { __INTERNAL } from 'vitest/internal/browser'
 import { ensureAwaited, getBrowserState } from '../../utils'
-import { getElementError } from '../public-utils'
 import { escapeForTextSelector, isLocator } from '../tester-utils'
 
 export { convertElementToCssSelector, getIframeScale, processTimeoutOptions } from '../tester-utils'
@@ -36,6 +37,8 @@ export {
   getByTextSelector,
   getByTitleSelector,
 } from 'ivya'
+
+__INTERNAL._asLocator = asLocator
 
 // we prefer using playwright locators because they are more powerful and support Shadow DOM
 export const selectorEngine: Ivya = Ivya.create({
@@ -233,7 +236,7 @@ export abstract class Locator {
   public element(): HTMLElement | SVGElement {
     const element = this.query()
     if (!element) {
-      throw getElementError(this._pwSelector || this.selector, this._container || document.body)
+      throw utils.getElementError(this._pwSelector || this.selector, this._container || document.body)
     }
     return element
   }
