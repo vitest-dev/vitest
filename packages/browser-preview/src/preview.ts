@@ -1,4 +1,5 @@
 import type { BrowserProvider, BrowserProviderOption, TestProject } from 'vitest/node'
+import { nextTick } from 'node:process'
 import { createBrowserServer } from '@vitest/browser'
 import { resolve } from 'pathe'
 import { distRoot } from './constants'
@@ -32,7 +33,9 @@ export class PreviewBrowserProvider implements BrowserProvider {
         'You\'ve enabled headless mode for "preview" provider but it doesn\'t support it. Use "playwright" or "webdriverio" instead: https://vitest.dev/guide/browser/#configuration',
       )
     }
-    project.vitest.logger.printBrowserBanner(project)
+    nextTick(() => {
+      project.vitest.logger.printBrowserBanner(project)
+    })
   }
 
   isOpen(): boolean {

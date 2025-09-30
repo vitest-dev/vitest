@@ -247,7 +247,7 @@ export class Logger {
     const output = project.isRootProject()
       ? ''
       : formatProjectName(project)
-    const provider = project.browser.provider.name
+    const provider = project.browser.provider?.name
     const providerString = provider === 'preview' ? '' : ` by ${c.reset(c.bold(provider))}`
     this.log(
       c.dim(
