@@ -405,13 +405,13 @@ test('browser.instances is empty', async () => {
       },
     },
   })
-  expect(stderr).toMatch('"browser.instances" was set in the config, but the array is empty. Define at least one browser config.')
+  expect(stderr).toMatch(`Vitest wasn't able to resolve any project. Please, check that you specified the "browser.instances" option.`)
 })
 
 test('browser.name or browser.instances are required', async () => {
   const { stderr, exitCode } = await runVitestCli('--browser.enabled', '--root=./fixtures/browser-no-config')
   expect(exitCode).toBe(1)
-  expect(stderr).toMatch('Vitest Browser Mode requires "browser.name" (deprecated) or "browser.instances" options, none were set.')
+  expect(stderr).toMatch('Vitest received --browser flag, but no project had a browser configuration.')
 })
 
 test('--browser flag without browser configuration throws an error', async () => {

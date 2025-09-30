@@ -253,21 +253,30 @@ export function resolveConfig(
   const browser = resolved.browser
 
   if (browser.enabled) {
-    if (!browser.name && !browser.instances) {
-      throw new Error(`Vitest Browser Mode requires "browser.name" (deprecated) or "browser.instances" options, none were set.`)
+    const instances = browser.instances
+    if (!browser.instances) {
+      browser.instances = []
     }
 
-    const instances = browser.instances
-    if (browser.name && browser.instances) {
+    // use `chromium` by default when the preview provider is specified
+    // for a smoother experience. if chromium is not available, it will
+    // open the default browser anyway
+    if (!browser.instances.length && browser.provider?.name === 'preview') {
+      browser.instances = [{ browser: 'chromium' }]
+    }
+
+    if (browser.name && instances?.length) {
       // --browser=chromium filters configs to a single one
       browser.instances = browser.instances.filter(instance => instance.browser === browser.name)
-    }
 
-    if (browser.instances && !browser.instances.length) {
-      throw new Error([
-        `"browser.instances" was set in the config, but the array is empty. Define at least one browser config.`,
-        browser.name && instances?.length ? ` The "browser.name" was set to "${browser.name}" which filtered all configs (${instances.map(c => c.browser).join(', ')}). Did you mean to use another name?` : '',
-      ].join(''))
+      // if `instances` were defined, but now they are empty,
+      // let's throw an error because the filter is invalid
+      if (!browser.instances.length) {
+        throw new Error([
+          `"browser.instances" was set in the config, but the array is empty. Define at least one browser config.`,
+          ` The "browser.name" was set to "${browser.name}" which filtered all configs (${instances.map(c => c.browser).join(', ')}). Did you mean to use another name?`,
+        ].join(''))
+      }
     }
   }
 

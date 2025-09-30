@@ -190,10 +190,8 @@ export async function resolveBrowserProjects(
     }
     const instances = project.config.browser.instances || []
     if (instances.length === 0) {
-      throw new Error(
-        `No browser "instances" were defined${
-          project.name ? ` for the "${project.name}" project.` : ''}`,
-      )
+      removeProjects.add(project)
+      return
     }
     const originalName = project.config.name
     // if original name is in the --project=name filter, keep all instances

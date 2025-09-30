@@ -117,7 +117,7 @@ export interface BrowserConfigOptions {
   /**
    * Configurations for different browser setups
    */
-  instances: BrowserInstanceOption[]
+  instances?: BrowserInstanceOption[]
 
   /**
    * Browser provider
