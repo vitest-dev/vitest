@@ -239,7 +239,7 @@ await page.viewport(1280, 720)
 ```
 
 ```ts [vitest.config.ts]
-import { playwright } from '@vitest/browser/providers/playwright'
+import { playwright } from '@vitest/browser-playwright'
 import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
@@ -592,7 +592,7 @@ The cleanest approach is using [Test Projects](/guide/projects):
 ```ts [vitest.config.ts]
 import { env } from 'node:process'
 import { defineConfig } from 'vitest/config'
-import { playwright } from '@vitest/browser/providers/playwright'
+import { playwright } from '@vitest/browser-playwright'
 
 export default defineConfig({
   // ...global Vite config

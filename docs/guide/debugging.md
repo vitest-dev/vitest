@@ -52,7 +52,7 @@ vitest --inspect-brk --browser --no-file-parallelism
 ```
 ```ts [vitest.config.js]
 import { defineConfig } from 'vitest/config'
-import { playwright } from '@vitest/browser/providers/playwright'
+import { playwright } from '@vitest/browser-playwright'
 
 export default defineConfig({
   test: {

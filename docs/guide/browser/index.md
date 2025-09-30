@@ -99,7 +99,7 @@ To activate browser mode in your Vitest configuration, set the `browser.enabled`
 
 ```ts [vitest.config.ts]
 import { defineConfig } from 'vitest/config'
-import { playwright } from '@vitest/browser/providers/playwright'
+import { playwright } from '@vitest/browser-playwright'
 
 export default defineConfig({
   test: {
@@ -127,7 +127,7 @@ If you have not used Vite before, make sure you have your framework's plugin ins
 ```ts [react]
 import { defineConfig } from 'vitest/config'
 import react from '@vitejs/plugin-react'
-import { playwright } from '@vitest/browser/providers/playwright'
+import { playwright } from '@vitest/browser-playwright'
 
 export default defineConfig({
   plugins: [react()],
@@ -144,7 +144,7 @@ export default defineConfig({
 ```
 ```ts [vue]
 import { defineConfig } from 'vitest/config'
-import { playwright } from '@vitest/browser/providers/playwright'
+import { playwright } from '@vitest/browser-playwright'
 import vue from '@vitejs/plugin-vue'
 
 export default defineConfig({
@@ -163,7 +163,7 @@ export default defineConfig({
 ```ts [svelte]
 import { defineConfig } from 'vitest/config'
 import { svelte } from '@sveltejs/vite-plugin-svelte'
-import { playwright } from '@vitest/browser/providers/playwright'
+import { playwright } from '@vitest/browser-playwright'
 
 export default defineConfig({
   plugins: [svelte()],
@@ -181,7 +181,7 @@ export default defineConfig({
 ```ts [solid]
 import { defineConfig } from 'vitest/config'
 import solidPlugin from 'vite-plugin-solid'
-import { playwright } from '@vitest/browser/providers/playwright'
+import { playwright } from '@vitest/browser-playwright'
 
 export default defineConfig({
   plugins: [solidPlugin()],
@@ -199,7 +199,7 @@ export default defineConfig({
 ```ts [marko]
 import { defineConfig } from 'vitest/config'
 import marko from '@marko/vite'
-import { playwright } from '@vitest/browser/providers/playwright'
+import { playwright } from '@vitest/browser-playwright'
 
 export default defineConfig({
   plugins: [marko()],
@@ -217,7 +217,7 @@ export default defineConfig({
 ```ts [qwik]
 import { defineConfig } from 'vitest/config'
 import { qwikVite } from '@builder.io/qwik/optimizer'
-import { playwright } from '@vitest/browser/providers/playwright'
+import { playwright } from '@vitest/browser-playwright'
 
 // optional, run the tests in SSR mode
 import { testSSR } from 'vitest-browser-qwik/ssr-plugin'
@@ -241,7 +241,7 @@ If you need to run some tests using Node-based runner, you can define a [`projec
 
 ```ts [vitest.config.ts]
 import { defineConfig } from 'vitest/config'
-import { playwright } from '@vitest/browser/providers/playwright'
+import { playwright } from '@vitest/browser-playwright'
 
 export default defineConfig({
   test: {
@@ -338,7 +338,7 @@ Here's an example configuration enabling headless mode:
 
 ```ts [vitest.config.ts]
 import { defineConfig } from 'vitest/config'
-import { playwright } from '@vitest/browser/providers/playwright'
+import { playwright } from '@vitest/browser-playwright'
 
 export default defineConfig({
   test: {

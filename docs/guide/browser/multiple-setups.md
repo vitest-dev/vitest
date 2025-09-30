@@ -10,7 +10,7 @@ You can use the `browser.instances` field to specify options for different brows
 
 ```ts [vitest.config.ts]
 import { defineConfig } from 'vitest/config'
-import { playwright } from '@vitest/browser/providers/playwright'
+import { playwright } from '@vitest/browser-playwright'
 
 export default defineConfig({
   test: {
@@ -35,7 +35,7 @@ You can also specify different config options independently from the browser (al
 ::: code-group
 ```ts [vitest.config.ts]
 import { defineConfig } from 'vitest/config'
-import { playwright } from '@vitest/browser/providers/playwright'
+import { playwright } from '@vitest/browser-playwright'
 
 export default defineConfig({
   test: {

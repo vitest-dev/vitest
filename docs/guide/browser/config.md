@@ -4,7 +4,7 @@ You can change the browser configuration by updating the `test.browser` field in
 
 ```ts [vitest.config.ts]
 import { defineConfig } from 'vitest/config'
-import { playwright } from '@vitest/browser/providers/playwright'
+import { playwright } from '@vitest/browser-playwright'
 
 export default defineConfig({
   test: {
@@ -134,12 +134,12 @@ Configure options for Vite server that serves code in the browser. Does not affe
 - **Default:** `'preview'`
 - **CLI:** `--browser.provider=playwright`
 
-The return value of the provider factory. You can import the factory from `@vitest/browser/providers/<provider-name>` or make your own provider:
+The return value of the provider factory. You can import the factory from `@vitest/browser-<provider-name>` or make your own provider:
 
 ```ts{8-10}
-import { playwright } from '@vitest/browser/providers/playwright'
-import { webdriverio } from '@vitest/browser/providers/webdriverio'
-import { preview } from '@vitest/browser/providers/preview'
+import { playwright } from '@vitest/browser-playwright'
+import { webdriverio } from '@vitest/browser-webdriverio'
+import { preview } from '@vitest/browser-preview'
 
 export default defineConfig({
   test: {
@@ -155,7 +155,7 @@ export default defineConfig({
 To configure how provider initializes the browser, you can pass down options to the factory function:
 
 ```ts{7-13,20-26}
-import { playwright } from '@vitest/browser/providers/playwright'
+import { playwright } from '@vitest/browser-playwright'
 
 export default defineConfig({
   test: {
