@@ -47,14 +47,11 @@ Run all tests inside a browser by default. Note that `--browser` only works if y
 ## browser.instances
 
 - **Type:** `BrowserConfig`
-- **Default:** `[{ browser: name }]`
+- **Default:** `[]`
 
-Defines multiple browser setups. Every config has to have at least a `browser` field. The config supports your providers configurations:
+Defines multiple browser setups. Every config has to have at least a `browser` field.
 
-- [Configuring Playwright](/guide/browser/playwright)
-- [Configuring WebdriverIO](/guide/browser/webdriverio)
-
-In addition to that, you can also specify most of the [project options](/config/) (not marked with a <NonProjectOption /> icon) and some of the `browser` options like `browser.testerHtmlPath`.
+You can specify most of the [project options](/config/) (not marked with a <NonProjectOption /> icon) and some of the `browser` options like `browser.testerHtmlPath`.
 
 ::: warning
 Every browser config inherits options from the root config:
@@ -93,8 +90,6 @@ List of available `browser` options:
 - [`browser.screenshotDirectory`](#browser-screenshotdirectory)
 - [`browser.screenshotFailures`](#browser-screenshotfailures)
 - [`browser.provider`](#browser-provider)
-
-By default, Vitest creates an array with a single element which uses the [`browser.name`](#browser-name) field as a `browser`. Note that this behaviour will be removed with Vitest 4.
 
 Under the hood, Vitest transforms these instances into separate [test projects](/advanced/api/test-project) sharing a single Vite server for better caching performance.
 
