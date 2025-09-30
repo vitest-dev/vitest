@@ -13,41 +13,6 @@ import {
 import { getElementError } from '@vitest/browser/utils'
 import { page, server, userEvent } from 'vitest/browser'
 
-page.extend({
-  getByLabelText(text, options) {
-    return new PreviewLocator(getByLabelSelector(text, options))
-  },
-  getByRole(role, options) {
-    return new PreviewLocator(getByRoleSelector(role, options))
-  },
-  getByTestId(testId) {
-    return new PreviewLocator(getByTestIdSelector(server.config.browser.locators.testIdAttribute, testId))
-  },
-  getByAltText(text, options) {
-    return new PreviewLocator(getByAltTextSelector(text, options))
-  },
-  getByPlaceholder(text, options) {
-    return new PreviewLocator(getByPlaceholderSelector(text, options))
-  },
-  getByText(text, options) {
-    return new PreviewLocator(getByTextSelector(text, options))
-  },
-  getByTitle(title, options) {
-    return new PreviewLocator(getByTitleSelector(title, options))
-  },
-
-  // @ts-expect-error _createLocator is private
-  _createLocator(selector: string) {
-    return new PreviewLocator(selector)
-  },
-  elementLocator(element: Element) {
-    return new PreviewLocator(
-      selectorEngine.generateSelectorSimple(element),
-      element,
-    )
-  },
-})
-
 class PreviewLocator extends Locator {
   constructor(protected _pwSelector: string, protected _container?: Element) {
     super()
@@ -108,3 +73,41 @@ class PreviewLocator extends Locator {
     )
   }
 }
+
+page.extend({
+  getByLabelText(text, options) {
+    return new PreviewLocator(getByLabelSelector(text, options))
+  },
+  getByRole(role, options) {
+    return new PreviewLocator(getByRoleSelector(role, options))
+  },
+  getByTestId(testId) {
+    return new PreviewLocator(getByTestIdSelector(server.config.browser.locators.testIdAttribute, testId))
+  },
+  getByAltText(text, options) {
+    return new PreviewLocator(getByAltTextSelector(text, options))
+  },
+  getByPlaceholder(text, options) {
+    return new PreviewLocator(getByPlaceholderSelector(text, options))
+  },
+  getByText(text, options) {
+    return new PreviewLocator(getByTextSelector(text, options))
+  },
+  getByTitle(title, options) {
+    return new PreviewLocator(getByTitleSelector(title, options))
+  },
+
+  elementLocator(element: Element) {
+    return new PreviewLocator(
+      selectorEngine.generateSelectorSimple(element),
+      element,
+    )
+  },
+
+  // _createLocator is private, so types cannot see it
+  ...Object.assign({}, {
+    _createLocator(selector: string) {
+      return new PreviewLocator(selector)
+    },
+  }),
+})

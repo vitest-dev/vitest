@@ -22,46 +22,6 @@ import {
 } from '@vitest/browser/locators'
 import { page, server } from 'vitest/browser'
 
-page.extend({
-  getByLabelText(text, options) {
-    return new PlaywrightLocator(getByLabelSelector(text, options))
-  },
-  getByRole(role, options) {
-    return new PlaywrightLocator(getByRoleSelector(role, options))
-  },
-  getByTestId(testId) {
-    return new PlaywrightLocator(getByTestIdSelector(server.config.browser.locators.testIdAttribute, testId))
-  },
-  getByAltText(text, options) {
-    return new PlaywrightLocator(getByAltTextSelector(text, options))
-  },
-  getByPlaceholder(text, options) {
-    return new PlaywrightLocator(getByPlaceholderSelector(text, options))
-  },
-  getByText(text, options) {
-    return new PlaywrightLocator(getByTextSelector(text, options))
-  },
-  getByTitle(title, options) {
-    return new PlaywrightLocator(getByTitleSelector(title, options))
-  },
-
-  // @ts-expect-error _createLocator is private
-  _createLocator(selector: string) {
-    return new PlaywrightLocator(selector)
-  },
-  elementLocator(element: Element) {
-    return new PlaywrightLocator(
-      selectorEngine.generateSelectorSimple(element),
-      element,
-    )
-  },
-  frameLocator(locator: Locator) {
-    return new PlaywrightLocator(
-      `${locator.selector} >> internal:control=enter-frame`,
-    )
-  },
-})
-
 class PlaywrightLocator extends Locator {
   constructor(public selector: string, protected _container?: Element) {
     super()
@@ -123,42 +83,76 @@ class PlaywrightLocator extends Locator {
   }
 }
 
-function processDragAndDropOptions(options_?: UserEventDragAndDropOptions) {
-  if (!options_) {
-    return options_
+page.extend({
+  getByLabelText(text, options) {
+    return new PlaywrightLocator(getByLabelSelector(text, options))
+  },
+  getByRole(role, options) {
+    return new PlaywrightLocator(getByRoleSelector(role, options))
+  },
+  getByTestId(testId) {
+    return new PlaywrightLocator(getByTestIdSelector(server.config.browser.locators.testIdAttribute, testId))
+  },
+  getByAltText(text, options) {
+    return new PlaywrightLocator(getByAltTextSelector(text, options))
+  },
+  getByPlaceholder(text, options) {
+    return new PlaywrightLocator(getByPlaceholderSelector(text, options))
+  },
+  getByText(text, options) {
+    return new PlaywrightLocator(getByTextSelector(text, options))
+  },
+  getByTitle(title, options) {
+    return new PlaywrightLocator(getByTitleSelector(title, options))
+  },
+
+  elementLocator(element: Element) {
+    return new PlaywrightLocator(
+      selectorEngine.generateSelectorSimple(element),
+      element,
+    )
+  },
+  frameLocator(locator: Locator) {
+    return new PlaywrightLocator(
+      `${locator.selector} >> internal:control=enter-frame`,
+    )
+  },
+
+  // _createLocator is private, so types cannot see it
+  ...Object.assign({}, {
+    _createLocator(selector: string) {
+      return new PlaywrightLocator(selector)
+    },
+  }),
+})
+
+function processDragAndDropOptions(options?: UserEventDragAndDropOptions) {
+  if (!options) {
+    return options
   }
-  const options = options_ as NonNullable<
-    Parameters<import('playwright').Page['dragAndDrop']>[2]
-  >
   if (options.sourcePosition) {
     options.sourcePosition = processPlaywrightPosition(options.sourcePosition)
   }
   if (options.targetPosition) {
     options.targetPosition = processPlaywrightPosition(options.targetPosition)
   }
-  return options_
+  return options
 }
 
-function processHoverOptions(options_?: UserEventHoverOptions) {
-  if (!options_) {
-    return options_
+function processHoverOptions(options?: UserEventHoverOptions) {
+  if (!options) {
+    return options
   }
-  const options = options_ as NonNullable<
-    Parameters<import('playwright').Page['hover']>[1]
-  >
   if (options.position) {
     options.position = processPlaywrightPosition(options.position)
   }
-  return options_
+  return options
 }
 
-function processClickOptions(options_?: UserEventClickOptions) {
-  if (!options_) {
-    return options_
+function processClickOptions(options?: UserEventClickOptions) {
+  if (!options) {
+    return options
   }
-  const options = options_ as NonNullable<
-    Parameters<import('playwright').Page['click']>[1]
-  >
   if (options.position) {
     options.position = processPlaywrightPosition(options.position)
   }

@@ -1,8 +1,8 @@
+import type { Capabilities } from '@wdio/types'
 import type {
   ScreenshotComparatorRegistry,
   ScreenshotMatcherOptions,
-} from '@vitest/browser/context'
-import type { Capabilities } from '@wdio/types'
+} from 'vitest/browser'
 import type {
   BrowserCommand,
   BrowserProvider,
@@ -10,7 +10,7 @@ import type {
   CDPSession,
   TestProject,
 } from 'vitest/node'
-import type { ClickOptions, DragAndDropOptions, remote } from 'webdriverio'
+import type { ClickOptions, DragAndDropOptions, MoveToOptions, remote } from 'webdriverio'
 import { createBrowserServer } from '@vitest/browser'
 
 import { resolve } from 'pathe'
@@ -282,10 +282,11 @@ export class WebdriverBrowserProvider implements BrowserProvider {
   }
 }
 
-declare module '@vitest/browser/context' {
-  export interface UserEventClickOptions extends ClickOptions {}
+declare module 'vitest/browser' {
+  export interface UserEventClickOptions extends Partial<ClickOptions> {}
+  export interface UserEventHoverOptions extends MoveToOptions {}
 
-  export interface UserEventDragOptions extends DragAndDropOptions {
+  export interface UserEventDragAndDropOptions extends DragAndDropOptions {
     sourceX?: number
     sourceY?: number
     targetX?: number

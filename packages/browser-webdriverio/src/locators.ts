@@ -20,38 +20,6 @@ import {
 import { getElementError } from '@vitest/browser/utils'
 import { page, server } from 'vitest/browser'
 
-page.extend({
-  getByLabelText(text, options) {
-    return new WebdriverIOLocator(getByLabelSelector(text, options))
-  },
-  getByRole(role, options) {
-    return new WebdriverIOLocator(getByRoleSelector(role, options))
-  },
-  getByTestId(testId) {
-    return new WebdriverIOLocator(getByTestIdSelector(server.config.browser.locators.testIdAttribute, testId))
-  },
-  getByAltText(text, options) {
-    return new WebdriverIOLocator(getByAltTextSelector(text, options))
-  },
-  getByPlaceholder(text, options) {
-    return new WebdriverIOLocator(getByPlaceholderSelector(text, options))
-  },
-  getByText(text, options) {
-    return new WebdriverIOLocator(getByTextSelector(text, options))
-  },
-  getByTitle(title, options) {
-    return new WebdriverIOLocator(getByTitleSelector(title, options))
-  },
-
-  // @ts-expect-error this is a private property
-  _createLocator(selector: string) {
-    return new WebdriverIOLocator(selector)
-  },
-  elementLocator(element: Element) {
-    return new WebdriverIOLocator(selectorEngine.generateSelectorSimple(element))
-  },
-})
-
 class WebdriverIOLocator extends Locator {
   constructor(protected _pwSelector: string, protected _container?: Element) {
     super()
@@ -110,6 +78,41 @@ class WebdriverIOLocator extends Locator {
   }
 }
 
+page.extend({
+  getByLabelText(text, options) {
+    return new WebdriverIOLocator(getByLabelSelector(text, options))
+  },
+  getByRole(role, options) {
+    return new WebdriverIOLocator(getByRoleSelector(role, options))
+  },
+  getByTestId(testId) {
+    return new WebdriverIOLocator(getByTestIdSelector(server.config.browser.locators.testIdAttribute, testId))
+  },
+  getByAltText(text, options) {
+    return new WebdriverIOLocator(getByAltTextSelector(text, options))
+  },
+  getByPlaceholder(text, options) {
+    return new WebdriverIOLocator(getByPlaceholderSelector(text, options))
+  },
+  getByText(text, options) {
+    return new WebdriverIOLocator(getByTextSelector(text, options))
+  },
+  getByTitle(title, options) {
+    return new WebdriverIOLocator(getByTitleSelector(title, options))
+  },
+
+  elementLocator(element: Element) {
+    return new WebdriverIOLocator(selectorEngine.generateSelectorSimple(element))
+  },
+
+  // _createLocator is private, so types cannot see it
+  ...Object.assign({}, {
+    _createLocator(selector: string) {
+      return new WebdriverIOLocator(selector)
+    },
+  }),
+})
+
 function getWebdriverioSelectOptions(element: Element, value: string | string[] | HTMLElement[] | HTMLElement | Locator | Locator[]) {
   const options = [...element.querySelectorAll('option')] as HTMLOptionElement[]
 
@@ -151,12 +154,11 @@ function getWebdriverioSelectOptions(element: Element, value: string | string[] 
   return [{ index: labelIndex }]
 }
 
-function processClickOptions(options_?: UserEventClickOptions) {
+function processClickOptions(options?: UserEventClickOptions) {
   // only ui scales the iframe, so we need to adjust the position
-  if (!options_ || !server.config.browser.ui) {
-    return options_
+  if (!options || !server.config.browser.ui) {
+    return options
   }
-  const options = options_ as import('webdriverio').ClickOptions
   if (options.x != null || options.y != null) {
     const cache = {}
     if (options.x != null) {
@@ -166,15 +168,14 @@ function processClickOptions(options_?: UserEventClickOptions) {
       options.y = scaleCoordinate(options.y, cache)
     }
   }
-  return options_
+  return options
 }
 
-function processHoverOptions(options_?: UserEventHoverOptions) {
+function processHoverOptions(options?: UserEventHoverOptions) {
   // only ui scales the iframe, so we need to adjust the position
-  if (!options_ || !server.config.browser.ui) {
-    return options_
+  if (!options || !server.config.browser.ui) {
+    return options
   }
-  const options = options_ as import('webdriverio').MoveToOptions
   const cache = {}
   if (options.xOffset != null) {
     options.xOffset = scaleCoordinate(options.xOffset, cache)
@@ -182,21 +183,15 @@ function processHoverOptions(options_?: UserEventHoverOptions) {
   if (options.yOffset != null) {
     options.yOffset = scaleCoordinate(options.yOffset, cache)
   }
-  return options_
+  return options
 }
 
-function processDragAndDropOptions(options_?: UserEventDragAndDropOptions) {
+function processDragAndDropOptions(options?: UserEventDragAndDropOptions) {
   // only ui scales the iframe, so we need to adjust the position
-  if (!options_ || !server.config.browser.ui) {
-    return options_
+  if (!options || !server.config.browser.ui) {
+    return options
   }
   const cache = {}
-  const options = options_ as import('webdriverio').DragAndDropOptions & {
-    targetX?: number
-    targetY?: number
-    sourceX?: number
-    sourceY?: number
-  }
   if (options.sourceX != null) {
     options.sourceX = scaleCoordinate(options.sourceX, cache)
   }
@@ -209,7 +204,7 @@ function processDragAndDropOptions(options_?: UserEventDragAndDropOptions) {
   if (options.targetY != null) {
     options.targetY = scaleCoordinate(options.targetY, cache)
   }
-  return options_
+  return options
 }
 
 function scaleCoordinate(coordinate: number, cache: any) {
