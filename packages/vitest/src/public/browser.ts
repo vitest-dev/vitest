@@ -23,6 +23,9 @@ export {
   getOriginalPosition,
 } from '@vitest/utils/source-map'
 export { getSafeTimers, setSafeTimers } from '@vitest/utils/timers'
+/**
+ * @internal
+ */
 export const __INTERNAL: {
   _asLocator: (lang: 'javascript', selector: string) => string
   _createLocator: (selector: string) => any
