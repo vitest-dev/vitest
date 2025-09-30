@@ -222,7 +222,7 @@ export async function resolveBrowserProjects(
       if (name == null) {
         throw new Error(`The browser configuration must have a "name" property. This is a bug in Vitest. Please, open a new issue with reproduction`)
       }
-      if (config.provider?.name != null && config.provider?.name !== project.config.browser.provider?.name) {
+      if (config.provider?.name != null && project.config.browser.provider?.name != null && config.provider?.name !== project.config.browser.provider?.name) {
         throw new Error(`The instance cannot have a different provider from its parent. The "${name}" instance specifies "${config.provider?.name}" provider, but its parent has a "${project.config.browser.provider?.name}" provider.`)
       }
 

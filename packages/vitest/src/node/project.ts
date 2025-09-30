@@ -449,15 +449,18 @@ export class TestProject {
   /** @internal */
   public _parent?: TestProject
   /** @internal */
-  _initParentBrowser = deduped(async () => {
+  _initParentBrowser = deduped(async (childProject: TestProject) => {
     if (!this.isBrowserEnabled() || this._parentBrowser) {
       return
     }
-    const provider = this.config.browser.provider!
-    if (typeof provider.serverFactory !== 'function') {
-      throw new TypeError(`The browser provider options do not return a "serverFactory" function. Are you using the latest "@vitest/browser-${provider?.name}" package?`)
+    const provider = this.config.browser.provider || childProject.config.browser.provider
+    if (provider == null) {
+      throw new Error(`Proider was not specified in the "browser.provider" setting. Please, pass down playwright(), webdriverio() or preview() from "@vitest/browser-playwright", "@vitest/browser-webdriverio" or "@vitest/browser-preview" package respectively.`)
     }
-    const browser = await this.config.browser.provider!.serverFactory({
+    if (typeof provider.serverFactory !== 'function') {
+      throw new TypeError(`The browser provider options do not return a "serverFactory" function. Are you using the latest "@vitest/browser-${provider.name}" package?`)
+    }
+    const browser = await provider.serverFactory({
       project: this,
       mocksPlugins: options => MocksPlugins(options),
       metaEnvReplacer: () => MetaEnvReplacerPlugin(),
@@ -471,7 +474,7 @@ export class TestProject {
 
   /** @internal */
   _initBrowserServer = deduped(async () => {
-    await this._parent?._initParentBrowser()
+    await this._parent?._initParentBrowser(this)
 
     if (!this.browser && this._parent?._parentBrowser) {
       this.browser = this._parent._parentBrowser.spawn(this)
