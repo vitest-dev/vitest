@@ -220,7 +220,7 @@ export default defineWorkspace([ // [!code --]
 In Vitest 4.0, the browser provider now accepts an object instead of a string (`'playwright'`, `'webdriverio'`). This makes it simpler to work with custom options and doesn't require adding `/// <reference` comments anymore.
 
 ```ts
-import { playwright } from '@vitest/browser/providers/playwright' // [!code ++]
+import { playwright } from '@vitest/browser-playwright' // [!code ++]
 
 export default defineConfig({
   test: {

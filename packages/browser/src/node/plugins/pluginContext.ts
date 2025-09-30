@@ -22,8 +22,8 @@ export default function BrowserContext(globalServer: ParentBrowserProject): Plug
       }
       if (id === DEPRECTED_ID_CONTEXT) {
         if (importer) {
-          this.warn(
-            `[vitest] ${importer} tries to load a deprecated "${id}". `
+          globalServer.vitest.logger.deprecate(
+            `${importer} tries to load a deprecated "${id}" module. `
             + `This import will stop working in the next major version. `
             + `Please, use "vitest/browser" instead.`,
           )

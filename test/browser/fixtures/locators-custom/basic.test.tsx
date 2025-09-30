@@ -1,4 +1,5 @@
-import { type Locator, locators, page } from 'vitest/browser';
+import type { BrowserPage, Locator } from 'vitest/browser';
+import { locators, page } from 'vitest/browser';
 import { beforeEach, expect, test } from 'vitest';
 import { getElementLocatorSelectors } from '@vitest/browser/utils'
 
