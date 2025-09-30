@@ -284,7 +284,7 @@ export default (parentServer: ParentBrowserProject, base = '/'): Plugin[] => {
           'vitest > @vitest/expect > chai',
         ]
 
-        const provider = parentServer.config.browser.provider || [...parentServer.children][0].provider
+        const provider = parentServer.config.browser.provider || [...parentServer.children][0]?.provider
         if (provider?.name === 'preview') {
           include.push(
             '@vitest/browser-preview > @testing-library/user-event',
