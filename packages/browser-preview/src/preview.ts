@@ -21,6 +21,8 @@ export class PreviewBrowserProvider implements BrowserProvider {
   private project!: TestProject
   private open = false
 
+  public distRoot: string = distRoot
+
   public initScripts: string[] = [
     resolve(distRoot, 'locators.js'),
   ]

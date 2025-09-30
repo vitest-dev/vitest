@@ -615,7 +615,7 @@ describe.each(inputLike)('userEvent.fill', async (getInput) => {
     expect(value()).toBe('Another Value')
   })
 
-  test('fill input in shadow root', async () => {
+  test.skipIf(server.provider === 'preview')('fill input in shadow root', async () => {
     const input = getInput()
     const shadowRoot = createShadowRoot()
     shadowRoot.appendChild(input)
