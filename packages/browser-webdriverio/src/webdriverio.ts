@@ -11,7 +11,7 @@ import type {
   TestProject,
 } from 'vitest/node'
 import type { ClickOptions, DragAndDropOptions, MoveToOptions, remote } from 'webdriverio'
-import { createBrowserServer } from '@vitest/browser'
+import { defineBrowserProvider } from '@vitest/browser'
 
 import { resolve } from 'pathe'
 import { createDebugger } from 'vitest/node'
@@ -28,15 +28,14 @@ export interface WebdriverProviderOptions extends Partial<
 > {}
 
 export function webdriverio(options: WebdriverProviderOptions = {}): BrowserProviderOption<WebdriverProviderOptions> {
-  return {
+  return defineBrowserProvider({
     name: 'webdriverio',
     supportedBrowser: webdriverBrowsers,
     options,
     providerFactory(project) {
       return new WebdriverBrowserProvider(project, options)
     },
-    serverFactory: createBrowserServer,
-  }
+  })
 }
 
 export class WebdriverBrowserProvider implements BrowserProvider {

@@ -1,7 +1,7 @@
 # Configuring Preview
 
 ::: warning
-The `preview` provider's main functionality is to run tests in a real browser environment. However, it does not support advanced browser automation features like multiple browser instances or headless mode. For more complex scenarios, consider using [Playwright](/guide/browser/playwright) or [WebdriverIO](/guide/browser/webdriverio).
+The `preview` provider's main functionality is to show tests in a real browser environment. However, it does not support advanced browser automation features like multiple browser instances or headless mode. For more complex scenarios, consider using [Playwright](/guide/browser/playwright) or [WebdriverIO](/guide/browser/webdriverio).
 :::
 
 To see your tests running in a real browser, you need to install the [`@vitest/browser-preview`](https://www.npmjs.com/package/@vitest/browser-preview) npm package and specify its `preview` export in the `test.browser.provider` property of your config:

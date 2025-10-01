@@ -287,7 +287,7 @@ export interface BrowserScript {
 - **Type:** `Record<string, BrowserCommand>`
 - **Default:** `{ readFile, writeFile, ... }`
 
-Custom [commands](/guide/browser/commands) that can be imported during browser tests from `@vitest/browser/commands`.
+Custom [commands](/guide/browser/commands) that can be imported during browser tests from `vitest/browser`.
 
 ## browser.connectTimeout
 

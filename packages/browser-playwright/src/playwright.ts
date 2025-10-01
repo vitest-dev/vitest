@@ -27,7 +27,7 @@ import type {
   CDPSession,
   TestProject,
 } from 'vitest/node'
-import { createBrowserServer } from '@vitest/browser'
+import { defineBrowserProvider } from '@vitest/browser'
 import { createManualModuleSource } from '@vitest/mocker/node'
 import { resolve } from 'pathe'
 import c from 'tinyrainbow'
@@ -74,15 +74,14 @@ export interface PlaywrightProviderOptions {
 }
 
 export function playwright(options: PlaywrightProviderOptions = {}): BrowserProviderOption<PlaywrightProviderOptions> {
-  return {
+  return defineBrowserProvider({
     name: 'playwright',
     supportedBrowser: playwrightBrowsers,
     options,
     providerFactory(project) {
       return new PlaywrightBrowserProvider(project, options)
     },
-    serverFactory: createBrowserServer,
-  }
+  })
 }
 
 export class PlaywrightBrowserProvider implements BrowserProvider {

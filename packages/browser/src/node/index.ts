@@ -1,4 +1,4 @@
-import type { BrowserServerFactory } from 'vitest/node'
+import type { BrowserProviderOption, BrowserServerFactory } from 'vitest/node'
 import { MockerRegistry } from '@vitest/mocker'
 import { interceptorPlugin } from '@vitest/mocker/node'
 import c from 'tinyrainbow'
@@ -96,4 +96,15 @@ export const createBrowserServer: BrowserServerFactory = async (options) => {
   setupBrowserRpc(server, mockerRegistry)
 
   return server
+}
+
+export function defineBrowserProvider<T extends object = object>(options: Omit<
+  BrowserProviderOption<T>,
+  'serverFactory' | 'options'
+> & { options?: T }): BrowserProviderOption {
+  return {
+    ...options,
+    options: options.options || {},
+    serverFactory: createBrowserServer,
+  }
 }
