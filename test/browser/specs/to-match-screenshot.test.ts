@@ -1,8 +1,7 @@
-import type { ViteUserConfig } from 'vitest/config.js'
+import type { ViteUserConfig } from 'vitest/config'
 import type { TestFsStructure } from '../../test-utils'
 import { platform } from 'node:os'
 import { resolve } from 'node:path'
-import { playwright } from '@vitest/browser/providers/playwright'
 import { describe, expect, test } from 'vitest'
 import { runVitestCli, useFS } from '../../test-utils'
 import { extractToMatchScreenshotPaths } from '../fixtures/expect-dom/utils'
@@ -13,7 +12,7 @@ const testName = 'screenshot-snapshot'
 const bgColor = '#fff'
 
 const testContent = /* ts */`
-import { page, server } from '@vitest/browser/context'
+import { page, server } from 'vitest/browser'
 import { describe, test } from 'vitest'
 import { render } from './utils'
 
@@ -30,25 +29,27 @@ const browser = 'chromium'
 
 export async function runInlineTests(
   structure: TestFsStructure,
-  config?: ViteUserConfig['test'],
+  config: ViteUserConfig['test'] = {},
 ) {
   const root = resolve(process.cwd(), `vitest-test-${crypto.randomUUID()}`)
 
   const fs = useFS(root, {
     ...structure,
-    'vitest.config.ts': {
+    'vitest.config.ts': `
+    import { playwright } from '@vitest/browser-playwright'
+    export default {
       test: {
         browser: {
           enabled: true,
           screenshotFailures: false,
           provider: playwright(),
           headless: true,
-          instances: [{ browser }],
+          instances: [{ browser: ${JSON.stringify(browser)} }],
         },
         reporters: ['verbose'],
-        ...config,
+        ...${JSON.stringify(config)},
       },
-    },
+    }`,
   })
 
   const vitest = await runVitestCli({

@@ -253,21 +253,30 @@ export function resolveConfig(
   const browser = resolved.browser
 
   if (browser.enabled) {
-    if (!browser.name && !browser.instances) {
-      throw new Error(`Vitest Browser Mode requires "browser.name" (deprecated) or "browser.instances" options, none were set.`)
+    const instances = browser.instances
+    if (!browser.instances) {
+      browser.instances = []
     }
 
-    const instances = browser.instances
-    if (browser.name && browser.instances) {
+    // use `chromium` by default when the preview provider is specified
+    // for a smoother experience. if chromium is not available, it will
+    // open the default browser anyway
+    if (!browser.instances.length && browser.provider?.name === 'preview') {
+      browser.instances = [{ browser: 'chromium' }]
+    }
+
+    if (browser.name && instances?.length) {
       // --browser=chromium filters configs to a single one
       browser.instances = browser.instances.filter(instance => instance.browser === browser.name)
-    }
 
-    if (browser.instances && !browser.instances.length) {
-      throw new Error([
-        `"browser.instances" was set in the config, but the array is empty. Define at least one browser config.`,
-        browser.name && instances?.length ? ` The "browser.name" was set to "${browser.name}" which filtered all configs (${instances.map(c => c.browser).join(', ')}). Did you mean to use another name?` : '',
-      ].join(''))
+      // if `instances` were defined, but now they are empty,
+      // let's throw an error because the filter is invalid
+      if (!browser.instances.length) {
+        throw new Error([
+          `"browser.instances" was set in the config, but the array is empty. Define at least one browser config.`,
+          ` The "browser.name" was set to "${browser.name}" which filtered all configs (${instances.map(c => c.browser).join(', ')}). Did you mean to use another name?`,
+        ].join(''))
+      }
     }
   }
 
@@ -750,12 +759,8 @@ export function resolveConfig(
   resolved.browser.locators ??= {} as any
   resolved.browser.locators.testIdAttribute ??= 'data-testid'
 
-  if (resolved.browser.enabled && stdProvider === 'stackblitz') {
-    resolved.browser.provider = undefined // reset to "preview"
-  }
-
   if (typeof resolved.browser.provider === 'string') {
-    const source = `@vitest/browser/providers/${resolved.browser.provider}`
+    const source = `@vitest/browser-${resolved.browser.provider}`
     throw new TypeError(
       'The `browser.provider` configuration was changed to accept a factory instead of a string. '
       + `Add an import of "${resolved.browser.provider}" from "${source}" instead. See: https://vitest.dev/guide/browser/config#provider`,
@@ -763,6 +768,10 @@ export function resolveConfig(
   }
 
   const isPreview = resolved.browser.provider?.name === 'preview'
+
+  if (!isPreview && resolved.browser.enabled && stdProvider === 'stackblitz') {
+    throw new Error(`stackblitz environment does not support the ${resolved.browser.provider?.name} provider. Please, use "@vitest/browser-preview" instead.`)
+  }
   if (isPreview && resolved.browser.screenshotFailures === true) {
     console.warn(c.yellow(
       [

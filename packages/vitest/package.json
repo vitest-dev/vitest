@@ -39,6 +39,10 @@
         "default": "./index.cjs"
       }
     },
+    "./browser": {
+      "types": "./browser/context.d.ts",
+      "default": "./browser/context.js"
+    },
     "./package.json": "./package.json",
     "./optional-types.js": {
       "types": "./optional-types.d.ts"
@@ -114,6 +118,7 @@
     "*.d.ts",
     "*.mjs",
     "bin",
+    "browser",
     "dist"
   ],
   "engines": {
@@ -127,7 +132,9 @@
     "@edge-runtime/vm": "*",
     "@types/debug": "^4.1.12",
     "@types/node": "^18.0.0 || ^20.0.0 || >=22.0.0",
-    "@vitest/browser": "workspace:*",
+    "@vitest/browser-playwright": "workspace:*",
+    "@vitest/browser-preview": "workspace:*",
+    "@vitest/browser-webdriverio": "workspace:*",
     "@vitest/ui": "workspace:*",
     "happy-dom": "*",
     "jsdom": "*"
@@ -142,7 +149,13 @@
     "@types/node": {
       "optional": true
     },
-    "@vitest/browser": {
+    "@vitest/browser-playwright": {
+      "optional": true
+    },
+    "@vitest/browser-preview": {
+      "optional": true
+    },
+    "@vitest/browser-webdriverio": {
       "optional": true
     },
     "@vitest/ui": {
@@ -192,6 +205,7 @@
     "@types/picomatch": "^4.0.2",
     "@types/prompts": "^2.4.9",
     "@types/sinonjs__fake-timers": "^8.1.5",
+    "@vitest/browser-playwright": "workspace:*",
     "acorn-walk": "catalog:",
     "birpc": "catalog:",
     "cac": "catalog:",

@@ -89,7 +89,7 @@ export default antfu(
   },
   {
     // these files define vitest as peer dependency
-    files: [`packages/{coverage-*,ui,browser,web-worker}/${GLOB_SRC}`],
+    files: [`packages/{coverage-*,ui,browser,web-worker,browser-*}/${GLOB_SRC}`],
     rules: {
       'no-restricted-imports': [
         'error',

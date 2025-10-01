@@ -3,7 +3,7 @@ import type { ScreenshotMatcherOptions } from '../../../../context'
 import type { ScreenshotMatcherArguments, ScreenshotMatcherOutput } from '../../../shared/screenshotMatcher/types'
 import type { Locator } from '../locators'
 import { getBrowserState, getWorkerState } from '../../utils'
-import { convertToSelector } from '../utils'
+import { convertToSelector } from '../tester-utils'
 
 const counters = new Map<string, { current: number }>([])
 

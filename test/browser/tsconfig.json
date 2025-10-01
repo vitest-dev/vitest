@@ -9,7 +9,6 @@
     },
     "types": [
       "vite/client",
-      "@vitest/browser/providers/playwright",
       "vitest-browser-react",
       "vitest/import-meta"
     ],

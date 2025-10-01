@@ -298,6 +298,15 @@ const results = await (${content[0]})({ ${imports.flatMap(([_, is]) => is).join(
 ${(content[1].exports || []).map(e => `export const ${e} = results["${e}"]`)}
     `
   }
+  if ('test' in content && content.test?.browser?.enabled && content.test?.browser?.provider?.name) {
+    const name = content.test.browser.provider.name
+    return `
+import { ${name} } from '@vitest/browser-${name}'
+const config = ${JSON.stringify(content)}
+config.test.browser.provider = ${name}(${JSON.stringify(content.test.browser.provider.options || {})})
+export default config
+    `
+  }
   return `export default ${JSON.stringify(content)}`
 }
 

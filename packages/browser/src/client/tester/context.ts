@@ -2,19 +2,21 @@ import type {
   Options as TestingLibraryOptions,
   UserEvent as TestingLibraryUserEvent,
 } from '@testing-library/user-event'
+import type { RunnerTask } from 'vitest'
 import type {
   BrowserLocators,
   BrowserPage,
   Locator,
+  LocatorSelectors,
   UserEvent,
-} from '@vitest/browser/context'
-import type { RunnerTask } from 'vitest'
+} from 'vitest/browser'
+import type { StringifyOptions } from 'vitest/internal/browser'
 import type { IframeViewportEvent } from '../client'
 import type { BrowserRunnerState } from '../utils'
 import type { Locator as LocatorAPI } from './locators/index'
-import { getElementLocatorSelectors } from '@vitest/browser/utils'
+import { __INTERNAL, stringify } from 'vitest/internal/browser'
 import { ensureAwaited, getBrowserState, getWorkerState } from '../utils'
-import { convertToSelector, processTimeoutOptions } from './utils'
+import { convertToSelector, processTimeoutOptions } from './tester-utils'
 
 // this file should not import anything directly, only types and utils
 
@@ -38,7 +40,7 @@ export function createUserEvent(__tl_user_event_base__?: TestingLibraryUserEvent
 
   // https://playwright.dev/docs/api/class-keyboard
   // https://webdriver.io/docs/api/browser/keys/
-  const modifier = provider === `playwright`
+  const modifier = provider === 'playwright'
     ? 'ControlOrMeta'
     : provider === 'webdriverio'
       ? 'Ctrl'
@@ -340,9 +342,6 @@ export const page: BrowserPage = {
   frameLocator() {
     throw new Error(`Method "frameLocator" is not supported by the "${provider}" provider.`)
   },
-  _createLocator() {
-    throw new Error(`Method "_createLocator" is not supported by the "${provider}" provider.`)
-  },
   extend(methods) {
     for (const key in methods) {
       (page as any)[key] = (methods as any)[key].bind(page)
@@ -365,9 +364,9 @@ function getTaskFullName(task: RunnerTask): string {
 export const locators: BrowserLocators = {
   createElementLocators: getElementLocatorSelectors,
   extend(methods) {
-    const Locator = page._createLocator('css=body').constructor as typeof LocatorAPI
+    const Locator = __INTERNAL._createLocator('css=body').constructor as typeof LocatorAPI
     for (const method in methods) {
-      locators._extendedMethods.add(method)
+      __INTERNAL._extendedMethods.add(method)
       const cb = (methods as any)[method] as (...args: any[]) => string | Locator
       // @ts-expect-error types are hard to make work
       Locator.prototype[method] = function (...args: any[]) {
@@ -380,23 +379,90 @@ export const locators: BrowserLocators = {
       page[method as 'getByRole'] = function (...args: any[]) {
         const selectorOrLocator = cb.call(this, ...args)
         if (typeof selectorOrLocator === 'string') {
-          return page._createLocator(selectorOrLocator)
+          return __INTERNAL._createLocator(selectorOrLocator)
         }
         return selectorOrLocator
       }
     }
   },
-  _extendedMethods: new Set<string>(),
 }
 
-declare module '@vitest/browser/context' {
-  interface BrowserPage {
-    /** @internal */
-    _createLocator: (selector: string) => Locator
+function getElementLocatorSelectors(element: Element): LocatorSelectors {
+  const locator = page.elementLocator(element)
+  return {
+    getByAltText: (altText, options) => locator.getByAltText(altText, options),
+    getByLabelText: (labelText, options) => locator.getByLabelText(labelText, options),
+    getByPlaceholder: (placeholderText, options) => locator.getByPlaceholder(placeholderText, options),
+    getByRole: (role, options) => locator.getByRole(role, options),
+    getByTestId: testId => locator.getByTestId(testId),
+    getByText: (text, options) => locator.getByText(text, options),
+    getByTitle: (title, options) => locator.getByTitle(title, options),
+    ...Array.from(__INTERNAL._extendedMethods).reduce((methods, method) => {
+      methods[method] = (...args: any[]) => (locator as any)[method](...args)
+      return methods
+    }, {} as any),
+  }
+}
+
+type PrettyDOMOptions = Omit<StringifyOptions, 'maxLength'>
+
+function debug(
+  el?: Element | Locator | null | (Element | Locator)[],
+  maxLength?: number,
+  options?: PrettyDOMOptions,
+): void {
+  if (Array.isArray(el)) {
+    // eslint-disable-next-line no-console
+    el.forEach(e => console.log(prettyDOM(e, maxLength, options)))
+  }
+  else {
+    // eslint-disable-next-line no-console
+    console.log(prettyDOM(el, maxLength, options))
+  }
+}
+
+function prettyDOM(
+  dom?: Element | Locator | undefined | null,
+  maxLength: number = Number(import.meta.env.DEBUG_PRINT_LIMIT ?? 7000),
+  prettyFormatOptions: PrettyDOMOptions = {},
+): string {
+  if (maxLength === 0) {
+    return ''
   }
 
-  interface BrowserLocators {
-    /** @internal */
-    _extendedMethods: Set<string>
+  if (!dom) {
+    dom = document.body
   }
+
+  if ('element' in dom && 'all' in dom) {
+    dom = dom.element()
+  }
+
+  const type = typeof dom
+  if (type !== 'object' || !dom.outerHTML) {
+    const typeName = type === 'object' ? dom.constructor.name : type
+    throw new TypeError(`Expecting a valid DOM element, but got ${typeName}.`)
+  }
+
+  const pretty = stringify(dom, Number.POSITIVE_INFINITY, {
+    maxLength,
+    highlight: true,
+    ...prettyFormatOptions,
+  })
+  return dom.outerHTML.length > maxLength
+    ? `${pretty.slice(0, maxLength)}...`
+    : pretty
+}
+
+function getElementError(selector: string, container: Element): Error {
+  const error = new Error(`Cannot find element with locator: ${__INTERNAL._asLocator('javascript', selector)}\n\n${prettyDOM(container)}`)
+  error.name = 'VitestBrowserElementError'
+  return error
+}
+
+export const utils = {
+  getElementError,
+  prettyDOM,
+  debug,
+  getElementLocatorSelectors,
 }

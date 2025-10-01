@@ -215,12 +215,12 @@ export default defineWorkspace([ // [!code --]
 ```
 :::
 
-### Browser Provider Accepts an Object
+### Browser Provider Rework
 
-In Vitest 4.0, the browser provider now accepts an object instead of a string (`'playwright'`, `'webdriverio'`). This makes it simpler to work with custom options and doesn't require adding `/// <reference` comments anymore.
+In Vitest 4.0, the browser provider now accepts an object instead of a string (`'playwright'`, `'webdriverio'`). The `preview` is no longer a default. This makes it simpler to work with custom options and doesn't require adding `/// <reference` comments anymore.
 
 ```ts
-import { playwright } from '@vitest/browser/providers/playwright' // [!code ++]
+import { playwright } from '@vitest/browser-playwright' // [!code ++]
 
 export default defineConfig({
   test: {
@@ -245,6 +245,31 @@ export default defineConfig({
 ```
 
 The naming of properties in `playwright` factory now also aligns with [Playwright documentation](https://playwright.dev/docs/api/class-testoptions#test-options-launch-options) making it easier to find.
+
+With this change, the `@vitest/browser` package is no longer needed, and you can remove it from your dependencies. To support the context import, you should update the `@vitest/browser/context` to `vitest/browser`:
+
+```ts
+import { page } from '@vitest/browser/context' // [!code --]
+import { page } from 'vitest/browser' // [!code ++]
+
+test('example', async () => {
+  await page.getByRole('button').click()
+})
+```
+
+The modules are identical, so doing a simple "Find and Replace" should be sufficient.
+
+If you were using the `@vitest/browser/utils` module, you can now import those utilities from `vitest/browser` as well:
+
+```ts
+import { getElementError } from '@vitest/browser/utils' // [!code --]
+import { utils } from 'vitest/browser' // [!code ++]
+const { getElementError } = utils // [!code ++]
+```
+
+::: warning
+Both `@vitest/browser/context` and `@vitest/browser/utils` work at runtime during the transition period, but they will be removed in a future release.
+:::
 
 ### Reporter Updates
 
@@ -277,7 +302,7 @@ export default defineConfig({
 
 In Vitest 4.0 snapshots that include custom elements will print the shadow root contents. To restore the previous behavior, set the [`printShadowRoot` option](/config/#snapshotformat) to `false`.
 
-```js
+```js{15-22}
 // before Vite 4.0
 exports[`custom element with shadow root 1`] = `
 "<body>

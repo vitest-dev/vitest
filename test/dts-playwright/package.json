@@ -6,7 +6,7 @@
     "test": "tsc -b"
   },
   "devDependencies": {
-    "@vitest/browser": "workspace:*",
+    "@vitest/browser-playwright": "workspace:*",
     "vitest": "workspace:*"
   }
 }

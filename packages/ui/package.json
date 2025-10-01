@@ -66,6 +66,7 @@
     "@types/ws": "catalog:",
     "@unocss/reset": "catalog:",
     "@vitejs/plugin-vue": "catalog:",
+    "@vitest/browser-playwright": "workspace:*",
     "@vitest/runner": "workspace:*",
     "@vitest/ws-client": "workspace:*",
     "@vue/test-utils": "^2.4.6",
