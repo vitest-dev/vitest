@@ -196,12 +196,7 @@ export function createCLI(options: CliParseOptions = {}): CAC {
     .command('[...filters]', undefined, options)
     .action((filters, options) => start('test', filters, options))
 
-  return cli
-}
-
-export async function createCLIWithCompletions(options: CliParseOptions = {}): Promise<CAC> {
-  const cli = createCLI(options)
-  await setupTabCompletions(cli)
+  setupTabCompletions(cli)
   return cli
 }
 

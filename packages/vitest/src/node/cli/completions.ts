@@ -1,7 +1,6 @@
 import type { CAC } from 'cac'
 import tab from '@bomb.sh/tab/cac'
 
-// Sets up tab completions for the Vitest CLI using the @bomb.sh/tab library
 export async function setupTabCompletions(cli: CAC): Promise<void> {
   await tab(cli, {
       subCommands: {
@@ -80,11 +79,6 @@ export async function setupTabCompletions(cli: CAC): Promise<void> {
           complete('vitest.config.mjs', 'ES module config file')
           complete('vite.config.ts', 'Vite TypeScript config file')
           complete('vite.config.js', 'Vite JavaScript config file')
-        },
-        root: function (complete) {
-          complete('./', 'Current directory')
-          complete('../', 'Parent directory')
-          complete('src/', 'Source directory')
         },
         mode: function (complete) {
           complete('test', 'Test mode')

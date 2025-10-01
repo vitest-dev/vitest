@@ -1,3 +1,3 @@
-import { createCLIWithCompletions } from './cli/cac'
+import { createCLI } from './cli/cac'
 
-createCLIWithCompletions().then(cli => cli.parse())
+createCLI().parse()
