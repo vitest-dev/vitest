@@ -14,6 +14,13 @@
   "bugs": {
     "url": "https://github.com/vitest-dev/vitest/issues"
   },
+  "keywords": [
+    "browser",
+    "component",
+    "mocks",
+    "test",
+    "testing"
+  ],
   "sideEffects": false,
   "exports": {
     ".": {
