@@ -118,6 +118,7 @@
     "*.d.ts",
     "*.mjs",
     "bin",
+    "browser",
     "dist"
   ],
   "engines": {

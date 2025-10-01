@@ -24,7 +24,6 @@ import { createOrchestratorMiddleware } from './middlewares/orchestratorMiddlewa
 import { createTesterMiddleware } from './middlewares/testerMiddleware'
 import BrowserContext from './plugins/pluginContext'
 
-export { defineBrowserCommand } from './commands/utils'
 export type { BrowserCommand } from 'vitest/node'
 
 const versionRegexp = /(?:\?|&)v=\w{8}/

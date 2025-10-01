@@ -362,6 +362,10 @@ export interface LocatorOptions {
    * regular expression. Note that exact match still trims whitespace.
    */
   exact?: boolean
+  hasText?: string | RegExp
+  hasNotText?: string | RegExp
+  has?: Locator
+  hasNot?: Locator
 }
 
 export interface LocatorByRoleOptions extends LocatorOptions {
@@ -659,13 +663,6 @@ export const server: {
    * Serialized test config.
    */
   config: SerializedConfig
-}
-
-export interface LocatorOptions {
-  hasText?: string | RegExp
-  hasNotText?: string | RegExp
-  has?: Locator
-  hasNot?: Locator
 }
 
 /**

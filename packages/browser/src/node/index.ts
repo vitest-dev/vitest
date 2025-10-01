@@ -1,4 +1,4 @@
-import type { BrowserProviderOption, BrowserServerFactory } from 'vitest/node'
+import type { BrowserCommand, BrowserProviderOption, BrowserServerFactory } from 'vitest/node'
 import { MockerRegistry } from '@vitest/mocker'
 import { interceptorPlugin } from '@vitest/mocker/node'
 import c from 'tinyrainbow'
@@ -9,9 +9,13 @@ import BrowserPlugin from './plugin'
 import { ParentBrowserProject } from './projectParent'
 import { setupBrowserRpc } from './rpc'
 
-export { defineBrowserCommand } from './commands/utils'
+export function defineBrowserCommand<T extends unknown[]>(
+  fn: BrowserCommand<T>,
+): BrowserCommand<T> {
+  return fn
+}
 
-export type { ProjectBrowser } from './project'
+// export type { ProjectBrowser } from './project'
 export { parseKeyDef, resolveScreenshotPath } from './utils'
 
 export const createBrowserServer: BrowserServerFactory = async (options) => {
