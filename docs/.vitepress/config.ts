@@ -465,6 +465,10 @@ export default ({ mode }: { mode: string }) => {
             collapsed: true,
             items: [
               {
+                text: 'Lints',
+                link: '/config/eslint',
+              },
+              {
                 text: 'consistent-test-filename',
                 link: '/config/eslint/consistent-test-filename',
               },
