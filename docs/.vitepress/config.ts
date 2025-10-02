@@ -446,11 +446,6 @@ export default ({ mode }: { mode: string }) => {
             collapsed: false,
             items: [
               {
-                text: 'browser.enabled',
-                link: '/config/browser/enabled',
-              },
-              // TODO: generate
-              {
                 text: 'playwright',
                 link: '/config/playwright',
               },
@@ -458,14 +453,30 @@ export default ({ mode }: { mode: string }) => {
                 text: 'webdriverio',
                 link: '/config/webdriverio',
               },
+              // TODO: generate
+              {
+                text: 'browser.enabled',
+                link: '/config/browser/enabled',
+              },
             ],
           },
           {
             text: '@vitest/plugin-eslint',
             collapsed: true,
             items: [
-              // TODO
+              {
+                text: 'consistent-test-filename',
+                link: '/config/eslint/consistent-test-filename',
+              },
+              {
+                text: 'consistent-test-it',
+                link: '/config/eslint/consistent-test-it',
+              },
             ],
+          },
+          {
+            text: 'vscode',
+            link: '/config/vscode',
           },
         ],
         '/api': [
