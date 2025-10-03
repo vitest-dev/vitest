@@ -168,7 +168,7 @@ export function createTestContext(
       type: type || 'notice',
     }
     if (attachment) {
-      if ((attachment.body === null || attachment.body === undefined) && !attachment.path) {
+      if (attachment.body == null && !attachment.path) {
         throw new TypeError(`Test attachment requires "body" or "path" to be set. Both are missing.`)
       }
       if (attachment.body && attachment.path) {
