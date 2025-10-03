@@ -131,7 +131,7 @@
   "peerDependencies": {
     "@edge-runtime/vm": "*",
     "@types/debug": "^4.1.12",
-    "@types/node": "^18.0.0 || ^20.0.0 || >=22.0.0",
+    "@types/node": "^20.0.0 || ^22.0.0 || >=24.0.0",
     "@vitest/browser-playwright": "workspace:*",
     "@vitest/browser-preview": "workspace:*",
     "@vitest/browser-webdriverio": "workspace:*",
