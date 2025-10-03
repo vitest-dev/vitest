@@ -743,11 +743,40 @@ export interface InlineConfig {
   bail?: number
 
   /**
-   * Retry the test specific number of times if it fails.
+   * Retry configuration for tests.
+   * Can be a number (for backward compatibility) or an object with advanced options.
    *
    * @default 0
    */
-  retry?: number
+  retry?: number | {
+    /**
+     * Number of times to retry the test if it fails.
+     * @default 0
+     */
+    count?: number
+
+    /**
+     * Strategy for when retries are executed.
+     * - "immediate": retry failed test immediately (default)
+     * - "test-file": run retries until the end of the test file
+     * - "deferred": defer retries after all other tests have run across all test files
+     * @default "immediate"
+     */
+    strategy?: 'immediate' | 'test-file' | 'deferred'
+
+    /**
+     * Delay in milliseconds between retries.
+     * @default 0
+     */
+    delay?: number
+
+    /**
+     * Condition for when to retry. Can be a RegExp pattern to match error messages
+     * or a function that receives the error and returns boolean.
+     * @default undefined (retry on any error)
+     */
+    condition?: string | RegExp | ((error: Error) => boolean)
+  }
 
   /**
    * Show full diff when snapshot fails instead of a patch.
