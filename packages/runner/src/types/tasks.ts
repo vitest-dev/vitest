@@ -1,5 +1,6 @@
 import type { Awaitable, TestError } from '@vitest/utils'
 import type { FixtureItem } from '../fixture'
+import type { afterAll, afterEach, beforeAll, beforeEach } from '../hooks'
 import type { ChainableFunction } from '../utils/chain'
 
 export type RunMode = 'run' | 'skip' | 'only' | 'todo' | 'queued'
@@ -482,8 +483,15 @@ interface ExtendedAPI<ExtraContext> {
   runIf: (condition: any) => ChainableTestAPI<ExtraContext>
 }
 
+interface Hooks<ExtraContext> {
+  beforeAll: typeof beforeAll
+  afterAll: typeof afterAll
+  beforeEach: typeof beforeEach<ExtraContext>
+  afterEach: typeof afterEach<ExtraContext>
+}
+
 export type TestAPI<ExtraContext = object> = ChainableTestAPI<ExtraContext>
-  & ExtendedAPI<ExtraContext> & {
+  & ExtendedAPI<ExtraContext> & Hooks<ExtraContext> & {
     extend: <T extends Record<string, any> = object>(
       fixtures: Fixtures<T, ExtraContext>
     ) => TestAPI<{
