@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, test } from 'vitest'
 import { extractToMatchScreenshotPaths, render } from './utils'
-import { page, server } from '@vitest/browser/context'
+import { page, server } from 'vitest/browser'
 import { join } from 'pathe'
 
 const blockSize = 19

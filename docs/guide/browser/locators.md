@@ -609,7 +609,7 @@ function click(options?: UserEventClickOptions): Promise<void>
 Click on an element. You can use the options to set the cursor position.
 
 ```ts
-import { page } from '@vitest/browser/context'
+import { page } from 'vitest/browser'
 
 await page.getByRole('img', { name: 'Rose' }).click()
 ```
@@ -625,7 +625,7 @@ function dblClick(options?: UserEventDoubleClickOptions): Promise<void>
 Triggers a double click event on an element. You can use the options to set the cursor position.
 
 ```ts
-import { page } from '@vitest/browser/context'
+import { page } from 'vitest/browser'
 
 await page.getByRole('img', { name: 'Rose' }).dblClick()
 ```
@@ -641,7 +641,7 @@ function tripleClick(options?: UserEventTripleClickOptions): Promise<void>
 Triggers a triple click event on an element. Since there is no `tripleclick` in browser api, this method will fire three click events in a row.
 
 ```ts
-import { page } from '@vitest/browser/context'
+import { page } from 'vitest/browser'
 
 await page.getByRole('img', { name: 'Rose' }).tripleClick()
 ```
@@ -657,7 +657,7 @@ function clear(options?: UserEventClearOptions): Promise<void>
 Clears the input element content.
 
 ```ts
-import { page } from '@vitest/browser/context'
+import { page } from 'vitest/browser'
 
 await page.getByRole('textbox', { name: 'Full Name' }).clear()
 ```
@@ -673,7 +673,7 @@ function hover(options?: UserEventHoverOptions): Promise<void>
 Moves the cursor position to the selected element.
 
 ```ts
-import { page } from '@vitest/browser/context'
+import { page } from 'vitest/browser'
 
 await page.getByRole('img', { name: 'Rose' }).hover()
 ```
@@ -689,7 +689,7 @@ function unhover(options?: UserEventHoverOptions): Promise<void>
 This works the same as [`locator.hover`](#hover), but moves the cursor to the `document.body` element instead.
 
 ```ts
-import { page } from '@vitest/browser/context'
+import { page } from 'vitest/browser'
 
 await page.getByRole('img', { name: 'Rose' }).unhover()
 ```
@@ -705,7 +705,7 @@ function fill(text: string, options?: UserEventFillOptions): Promise<void>
 Sets the value of the current `input`, `textarea` or `contenteditable` element.
 
 ```ts
-import { page } from '@vitest/browser/context'
+import { page } from 'vitest/browser'
 
 await page.getByRole('input', { name: 'Full Name' }).fill('Mr. Bean')
 ```
@@ -724,7 +724,7 @@ function dropTo(
 Drags the current element to the target location.
 
 ```ts
-import { page } from '@vitest/browser/context'
+import { page } from 'vitest/browser'
 
 const paris = page.getByText('Paris')
 const france = page.getByText('France')
@@ -752,7 +752,7 @@ function selectOptions(
 Choose one or more values from a `<select>` element.
 
 ```ts
-import { page } from '@vitest/browser/context'
+import { page } from 'vitest/browser'
 
 const languages = page.getByRole('select', { name: 'Languages' })
 
@@ -784,7 +784,7 @@ You can specify the save location for the screenshot using the `path` option, wh
 If you also need the content of the screenshot, you can specify `base64: true` to return it alongside the filepath where the screenshot is saved.
 
 ```ts
-import { page } from '@vitest/browser/context'
+import { page } from 'vitest/browser'
 
 const button = page.getByRole('button', { name: 'Click Me!' })
 
@@ -946,7 +946,7 @@ const test: BrowserCommand<string> = function test(context, selector) {
 
 ```ts [example.test.ts]
 import { test } from 'vitest'
-import { commands, page } from '@vitest/browser/context'
+import { commands, page } from 'vitest/browser'
 
 test('works correctly', async () => {
   await commands.test(page.getByText('Hello').selector) // ✅
@@ -988,7 +988,7 @@ The selector syntax is identical to Playwright locators. Please, read [their gui
 :::
 
 ```ts
-import { locators } from '@vitest/browser/context'
+import { locators } from 'vitest/browser'
 
 locators.extend({
   getByArticleTitle(title) {
@@ -1010,7 +1010,7 @@ locators.extend({
 
 // if you are using typescript, you can extend LocatorSelectors interface
 // to have the autocompletion in locators.extend, page.* and locator.* methods
-declare module '@vitest/browser/context' {
+declare module 'vitest/browser' {
   interface LocatorSelectors {
     // if the custom method returns a string, it will be converted into a locator
     // if it returns anything else, then it will be returned as usual

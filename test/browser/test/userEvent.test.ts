@@ -1,5 +1,5 @@
-import { userEvent as _uE, server } from '@vitest/browser/context'
 import { beforeEach, describe, expect, test, vi } from 'vitest'
+import { userEvent as _uE, server } from 'vitest/browser'
 import '../src/button.css'
 
 beforeEach(() => {
@@ -615,7 +615,7 @@ describe.each(inputLike)('userEvent.fill', async (getInput) => {
     expect(value()).toBe('Another Value')
   })
 
-  test('fill input in shadow root', async () => {
+  test.skipIf(server.provider === 'preview')('fill input in shadow root', async () => {
     const input = getInput()
     const shadowRoot = createShadowRoot()
     shadowRoot.appendChild(input)

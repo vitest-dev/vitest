@@ -9,7 +9,7 @@ Generating trace files is only available when using the [Playwright provider](/g
 ::: code-group
 ```ts [vitest.config.js]
 import { defineConfig } from 'vitest/config'
-import { playwright } from '@vitest/browser/providers/playwright'
+import { playwright } from '@vitest/browser-playwright'
 
 export default defineConfig({
   test: {
@@ -39,7 +39,7 @@ To change the output directory, you can set the `tracesDir` option in the `test.
 
 ```ts [vitest.config.js]
 import { defineConfig } from 'vitest/config'
-import { playwright } from '@vitest/browser/providers/playwright'
+import { playwright } from '@vitest/browser-playwright'
 
 export default defineConfig({
   test: {

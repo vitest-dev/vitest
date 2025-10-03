@@ -1,5 +1,5 @@
 import { existsSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs'
-import { webdriverio } from '@vitest/browser/providers/webdriverio'
+import { webdriverio } from '@vitest/browser-webdriverio'
 
 import { afterEach, describe, expect, test } from 'vitest'
 import * as testUtils from '../../test-utils'

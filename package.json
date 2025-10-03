@@ -1,7 +1,7 @@
 {
   "name": "@vitest/monorepo",
   "type": "module",
-  "version": "4.0.0-beta.13",
+  "version": "4.0.0-beta.16",
   "private": true,
   "packageManager": "pnpm@10.17.0",
   "description": "Next generation testing framework powered by Vite",
@@ -71,6 +71,9 @@
   "pnpm": {
     "overrides": {
       "@vitest/browser": "workspace:*",
+      "@vitest/browser-playwright": "workspace:*",
+      "@vitest/browser-preview": "workspace:*",
+      "@vitest/browser-webdriverio": "workspace:*",
       "@vitest/ui": "workspace:*",
       "acorn": "8.11.3",
       "mlly": "^1.8.0",

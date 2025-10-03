@@ -20,7 +20,7 @@ This API follows [`server.fs`](https://vitejs.dev/config/server-options.html#ser
 :::
 
 ```ts
-import { server } from '@vitest/browser/context'
+import { server } from 'vitest/browser'
 
 const { readFile, writeFile, removeFile } = server.commands
 
@@ -38,10 +38,10 @@ it('handles files', async () => {
 
 ## CDP Session
 
-Vitest exposes access to raw Chrome Devtools Protocol via the `cdp` method exported from `@vitest/browser/context`. It is mostly useful to library authors to build tools on top of it.
+Vitest exposes access to raw Chrome Devtools Protocol via the `cdp` method exported from `vitest/browser`. It is mostly useful to library authors to build tools on top of it.
 
 ```ts
-import { cdp } from '@vitest/browser/context'
+import { cdp } from 'vitest/browser'
 
 const input = document.createElement('input')
 document.body.appendChild(input)
@@ -97,10 +97,10 @@ export default function BrowserCommands(): Plugin {
 }
 ```
 
-Then you can call it inside your test by importing it from `@vitest/browser/context`:
+Then you can call it inside your test by importing it from `vitest/browser`:
 
 ```ts
-import { commands } from '@vitest/browser/context'
+import { commands } from 'vitest/browser'
 import { expect, test } from 'vitest'
 
 test('custom command works correctly', async () => {
@@ -109,7 +109,7 @@ test('custom command works correctly', async () => {
 })
 
 // if you are using TypeScript, you can augment the module
-declare module '@vitest/browser/context' {
+declare module 'vitest/browser' {
   interface BrowserCommands {
     myCustomCommand: (arg1: string, arg2: string) => Promise<{
       someValue: true

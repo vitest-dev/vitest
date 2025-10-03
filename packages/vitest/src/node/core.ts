@@ -273,7 +273,11 @@ export class Vitest {
         throw new Error(`No projects matched the filter "${filter}".`)
       }
       else {
-        throw new Error(`Vitest wasn't able to resolve any project.`)
+        let error = `Vitest wasn't able to resolve any project.`
+        if (this.config.browser.enabled && !this.config.browser.instances?.length) {
+          error += ` Please, check that you specified the "browser.instances" option.`
+        }
+        throw new Error(error)
       }
     }
 

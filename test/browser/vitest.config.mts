@@ -2,15 +2,15 @@ import type { BrowserCommand, BrowserInstanceOption } from 'vitest/node'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import * as util from 'node:util'
-import { playwright } from '@vitest/browser/providers/playwright'
-import { preview } from '@vitest/browser/providers/preview'
-import { webdriverio } from '@vitest/browser/providers/webdriverio'
+import { playwright } from '@vitest/browser-playwright'
+import { preview } from '@vitest/browser-preview'
+import { webdriverio } from '@vitest/browser-webdriverio'
 import { defineConfig } from 'vitest/config'
 
 const dir = dirname(fileURLToPath(import.meta.url))
 
 const providerName = process.env.PROVIDER || 'playwright'
-const browser = process.env.BROWSER || (providerName === 'playwright' ? 'chromium' : 'chrome')
+const browser = process.env.BROWSER as 'firefox' || (providerName === 'playwright' ? 'chromium' : 'chrome')
 const provider = {
   playwright,
   preview,

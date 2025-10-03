@@ -449,39 +449,23 @@ export class TestProject {
   /** @internal */
   public _parent?: TestProject
   /** @internal */
-  _initParentBrowser = deduped(async () => {
+  _initParentBrowser = deduped(async (childProject: TestProject) => {
     if (!this.isBrowserEnabled() || this._parentBrowser) {
       return
     }
-    await this.vitest.packageInstaller.ensureInstalled(
-      '@vitest/browser',
-      this.config.root,
-      this.vitest.version,
-    )
-    const { createBrowserServer, distRoot } = await import('@vitest/browser')
-    let cacheDir: string
-    const browser = await createBrowserServer(
-      this,
-      this.vite.config.configFile,
-      [
-        {
-          name: 'vitest:browser-cacheDir',
-          configResolved(config) {
-            cacheDir = config.cacheDir
-          },
-        },
-        ...MocksPlugins({
-          filter(id) {
-            if (id.includes(distRoot) || id.includes(cacheDir)) {
-              return false
-            }
-            return true
-          },
-        }),
-        MetaEnvReplacerPlugin(),
-      ],
-      [CoverageTransform(this.vitest)],
-    )
+    const provider = this.config.browser.provider || childProject.config.browser.provider
+    if (provider == null) {
+      throw new Error(`Proider was not specified in the "browser.provider" setting. Please, pass down playwright(), webdriverio() or preview() from "@vitest/browser-playwright", "@vitest/browser-webdriverio" or "@vitest/browser-preview" package respectively.`)
+    }
+    if (typeof provider.serverFactory !== 'function') {
+      throw new TypeError(`The browser provider options do not return a "serverFactory" function. Are you using the latest "@vitest/browser-${provider.name}" package?`)
+    }
+    const browser = await provider.serverFactory({
+      project: this,
+      mocksPlugins: options => MocksPlugins(options),
+      metaEnvReplacer: () => MetaEnvReplacerPlugin(),
+      coveragePlugin: () => CoverageTransform(this.vitest),
+    })
     this._parentBrowser = browser
     if (this.config.browser.ui) {
       setup(this.vitest, browser.vite)
@@ -490,7 +474,7 @@ export class TestProject {
 
   /** @internal */
   _initBrowserServer = deduped(async () => {
-    await this._parent?._initParentBrowser()
+    await this._parent?._initParentBrowser(this)
 
     if (!this.browser && this._parent?._parentBrowser) {
       this.browser = this._parent._parentBrowser.spawn(this)

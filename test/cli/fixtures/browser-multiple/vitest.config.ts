@@ -1,4 +1,4 @@
-import { playwright } from '@vitest/browser/providers/playwright';
+import { playwright } from '@vitest/browser-playwright';
 import { resolve } from 'pathe';
 import { defineConfig } from 'vitest/config';
 

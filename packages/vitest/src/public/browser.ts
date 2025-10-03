@@ -3,7 +3,6 @@ export {
   stopCoverageInsideWorker,
   takeCoverageInsideWorker,
 } from '../integrations/coverage'
-
 export {
   loadDiffConfig,
   loadSnapshotSerializers,
@@ -24,3 +23,13 @@ export {
   getOriginalPosition,
 } from '@vitest/utils/source-map'
 export { getSafeTimers, setSafeTimers } from '@vitest/utils/timers'
+/**
+ * @internal
+ */
+export const __INTERNAL: {
+  _asLocator: (lang: 'javascript', selector: string) => string
+  _createLocator: (selector: string) => any
+  _extendedMethods: Set<string>
+} = {
+  _extendedMethods: new Set(),
+} as any

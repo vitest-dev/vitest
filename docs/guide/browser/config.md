@@ -4,7 +4,7 @@ You can change the browser configuration by updating the `test.browser` field in
 
 ```ts [vitest.config.ts]
 import { defineConfig } from 'vitest/config'
-import { playwright } from '@vitest/browser/providers/playwright'
+import { playwright } from '@vitest/browser-playwright'
 
 export default defineConfig({
   test: {
@@ -47,14 +47,11 @@ Run all tests inside a browser by default. Note that `--browser` only works if y
 ## browser.instances
 
 - **Type:** `BrowserConfig`
-- **Default:** `[{ browser: name }]`
+- **Default:** `[]`
 
-Defines multiple browser setups. Every config has to have at least a `browser` field. The config supports your providers configurations:
+Defines multiple browser setups. Every config has to have at least a `browser` field.
 
-- [Configuring Playwright](/guide/browser/playwright)
-- [Configuring WebdriverIO](/guide/browser/webdriverio)
-
-In addition to that, you can also specify most of the [project options](/config/) (not marked with a <NonProjectOption /> icon) and some of the `browser` options like `browser.testerHtmlPath`.
+You can specify most of the [project options](/config/) (not marked with a <NonProjectOption /> icon) and some of the `browser` options like `browser.testerHtmlPath`.
 
 ::: warning
 Every browser config inherits options from the root config:
@@ -79,8 +76,6 @@ export default defineConfig({
 })
 ```
 
-During development, Vitest supports only one [non-headless](#browser-headless) configuration. You can limit the headed project yourself by specifying `headless: false` in the config, or by providing the `--browser.headless=false` flag, or by filtering projects with `--project=chromium` flag.
-
 For more examples, refer to the ["Multiple Setups" guide](/guide/browser/multiple-setups).
 :::
 
@@ -93,8 +88,6 @@ List of available `browser` options:
 - [`browser.screenshotDirectory`](#browser-screenshotdirectory)
 - [`browser.screenshotFailures`](#browser-screenshotfailures)
 - [`browser.provider`](#browser-provider)
-
-By default, Vitest creates an array with a single element which uses the [`browser.name`](#browser-name) field as a `browser`. Note that this behaviour will be removed with Vitest 4.
 
 Under the hood, Vitest transforms these instances into separate [test projects](/advanced/api/test-project) sharing a single Vite server for better caching performance.
 
@@ -134,12 +127,12 @@ Configure options for Vite server that serves code in the browser. Does not affe
 - **Default:** `'preview'`
 - **CLI:** `--browser.provider=playwright`
 
-The return value of the provider factory. You can import the factory from `@vitest/browser/providers/<provider-name>` or make your own provider:
+The return value of the provider factory. You can import the factory from `@vitest/browser-<provider-name>` or make your own provider:
 
 ```ts{8-10}
-import { playwright } from '@vitest/browser/providers/playwright'
-import { webdriverio } from '@vitest/browser/providers/webdriverio'
-import { preview } from '@vitest/browser/providers/preview'
+import { playwright } from '@vitest/browser-playwright'
+import { webdriverio } from '@vitest/browser-webdriverio'
+import { preview } from '@vitest/browser-preview'
 
 export default defineConfig({
   test: {
@@ -155,7 +148,7 @@ export default defineConfig({
 To configure how provider initializes the browser, you can pass down options to the factory function:
 
 ```ts{7-13,20-26}
-import { playwright } from '@vitest/browser/providers/playwright'
+import { playwright } from '@vitest/browser-playwright'
 
 export default defineConfig({
   test: {
@@ -294,7 +287,7 @@ export interface BrowserScript {
 - **Type:** `Record<string, BrowserCommand>`
 - **Default:** `{ readFile, writeFile, ... }`
 
-Custom [commands](/guide/browser/commands) that can be imported during browser tests from `@vitest/browser/commands`.
+Custom [commands](/guide/browser/commands) that can be imported during browser tests from `vitest/browser`.
 
 ## browser.connectTimeout
 
