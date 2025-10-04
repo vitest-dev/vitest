@@ -8,6 +8,7 @@ import { normalize } from 'pathe'
 import c from 'tinyrainbow'
 import { version } from '../../../package.json' with { type: 'json' }
 import { benchCliOptionsConfig, cliOptionsConfig, collectCliOptionsConfig } from './cli-config'
+import { setupTabCompletions } from './completions'
 
 function addCommand(cli: CAC | Command, name: string, option: CLIOption<any>) {
   const commandName = option.alias || name
@@ -195,6 +196,7 @@ export function createCLI(options: CliParseOptions = {}): CAC {
     .command('[...filters]', undefined, options)
     .action((filters, options) => start('test', filters, options))
 
+  setupTabCompletions(cli)
   return cli
 }
 
@@ -233,7 +235,8 @@ export function parseCLI(argv: string | string[], config: CliParseOptions = {}):
   }
   arrayArgs[0] = '/index.js'
   arrayArgs.unshift('node')
-  let { args, options } = createCLI(config).parse(arrayArgs, {
+  const cli = createCLI(config)
+  let { args, options } = cli.parse(arrayArgs, {
     run: false,
   })
   if (arrayArgs[2] === 'watch' || arrayArgs[2] === 'dev') {
