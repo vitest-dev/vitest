@@ -13,6 +13,7 @@
     "collect": "vitest list"
   },
   "devDependencies": {
+    "@standard-schema/spec": "^1.0.0",
     "@test/vite-environment-external": "link:./projects/vite-environment-external",
     "@test/vite-external": "link:./projects/vite-external",
     "@types/debug": "catalog:",
