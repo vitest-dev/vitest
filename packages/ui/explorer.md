@@ -66,11 +66,11 @@ The actions can be found in the [tree class](client/composables/explorer/tree.ts
 
 ## Notes
 
-The previous tree list approach was using a nested structure to map the tree rendering the full tree in the DOM. It was using the entries from the web socket client state (`idsMap` and `filesMap`), using Vue reactive for both maps. Since we updated Vue dependency to latest v3.4.27, every message received from the server was updating the corresponding entries in the maps. The tree list was being updated accordingly, firing a lot of patch updates in the vue components in the recursive tree, which was causing performance issues.
+The previous tree list approach was using a nested structure to map the tree rendering the full tree in the DOM. It was using the entries from the WebSocket client state (`idsMap` and `filesMap`), using Vue reactive for both maps. Since we updated Vue dependency to latest v3.4.27, every message received from the server was updating the corresponding entries in the maps. The tree list was being updated accordingly, firing a lot of patch updates in the vue components in the recursive tree, which was causing performance issues.
 
 The new Explorer is using a flat structure to represent the tree via virtual scroller (`vue-virtual-scroller`). This new structure is easier to handle and manipulate, and it's also a performance improvement since the virtual scroller will update only a few nodes in the ui and not the full tree in the DOM.
-It is using a new approach to handle the tree list, now we have a separated vue shallow ref for entries in the ui ([uiEntries in composables/explorer/state.ts](client/composables/explorer/state.ts)), and the web socket state using vue shallow ref for both, `idsMap` and `filesMap`, while keeping the state itself with Vue reactive.
-Now we are able to update the tree list only when the entries are updated and not when the web socket state is updated, which is a huge performance improvement.
+It is using a new approach to handle the tree list, now we have a separated vue shallow ref for entries in the ui ([uiEntries in composables/explorer/state.ts](client/composables/explorer/state.ts)), and the WebSocket state using vue shallow ref for both, `idsMap` and `filesMap`, while keeping the state itself with Vue reactive.
+Now we are able to update the tree list only when the entries are updated and not when the WebSocket state is updated, which is a huge performance improvement.
 
 Some numbers running `test/core` with Vitest UI (162 files with 3 workspaces: 5100+ tests) in a `i7-12700H` laptop:
 - tree list: after server finishing running the tests, Vitest UI took ~1 minute to finish rendering the full tree (~150MB of memory usage)
