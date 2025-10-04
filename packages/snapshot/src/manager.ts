@@ -8,6 +8,7 @@ import { basename, dirname, isAbsolute, join, resolve } from 'pathe'
 export class SnapshotManager {
   public summary!: SnapshotSummary
   public extension = '.snap'
+  public result?: SnapshotResult
 
   constructor(
     public options: Omit<SnapshotStateOptions, 'snapshotEnvironment'>,
@@ -17,10 +18,12 @@ export class SnapshotManager {
 
   clear(): void {
     this.summary = emptySummary(this.options)
+    this.result = undefined
   }
 
   add(result: SnapshotResult): void {
     addSnapshotResult(this.summary, result)
+    this.result = result
   }
 
   resolvePath<T = any>(testPath: string, context?: T): string {
