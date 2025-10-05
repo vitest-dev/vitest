@@ -903,6 +903,9 @@ importers:
 
   packages/vitest:
     dependencies:
+      '@bomb.sh/tab':
+        specifier: ^0.0.5
+        version: 0.0.5(cac@6.7.14(patch_hash=a8f0f3517a47ce716ed90c0cfe6ae382ab763b021a664ada2a608477d0621588))(citty@0.1.6)
       '@vitest/browser':
         specifier: workspace:*
         version: link:../browser
@@ -976,9 +979,6 @@ importers:
       '@antfu/install-pkg':
         specifier: ^1.1.0
         version: 1.1.0
-      '@bomb.sh/tab':
-        specifier: ^0.0.5
-        version: 0.0.5(cac@6.7.14(patch_hash=a8f0f3517a47ce716ed90c0cfe6ae382ab763b021a664ada2a608477d0621588))(citty@0.1.6)
       '@edge-runtime/vm':
         specifier: ^5.0.0
         version: 5.0.0
