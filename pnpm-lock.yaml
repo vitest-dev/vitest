@@ -977,8 +977,8 @@ importers:
         specifier: ^1.1.0
         version: 1.1.0
       '@bomb.sh/tab':
-        specifier: ^0.0.4
-        version: 0.0.4
+        specifier: ^0.0.5
+        version: 0.0.5(cac@6.7.14(patch_hash=a8f0f3517a47ce716ed90c0cfe6ae382ab763b021a664ada2a608477d0621588))(citty@0.1.6)
       '@edge-runtime/vm':
         specifier: ^5.0.0
         version: 5.0.0
@@ -1316,7 +1316,7 @@ importers:
         version: 2.4.6
       happy-dom:
         specifier: latest
-        version: 18.0.1
+        version: 19.0.2
       istanbul-lib-coverage:
         specifier: ^3.2.2
         version: 3.2.2
@@ -1462,7 +1462,7 @@ importers:
         version: 9.3.4
       happy-dom:
         specifier: latest
-        version: 18.0.1
+        version: 19.0.2
       vitest:
         specifier: workspace:*
         version: link:../../packages/vitest
@@ -2199,9 +2199,20 @@ packages:
     resolution: {integrity: sha512-6zABk/ECA/QYSCQ1NGiVwwbQerUCZ+TQbp64Q3AgmfNvurHH0j8TtXa1qbShXA6qqkpAj4V5W8pP6mLe1mcMqA==}
     engines: {node: '>=18'}
 
-  '@bomb.sh/tab@0.0.4':
-    resolution: {integrity: sha512-iIMFJRK1dVjcqYMevdiXZLGnUBThD4MSe+vVW6V/mlNTWcr1dXRstQsrb7i9O2SdXjVfJZpJB+Ac7u7KR/M4Mg==}
+  '@bomb.sh/tab@0.0.5':
+    resolution: {integrity: sha512-S0dAhnulM/q284LkmBT7ykITbRvnog8a/3nuVi4Iy0VhyfkTZcB0bXB5pltmINyL+OjAfYd9TQeOge+CYk/l1w==}
     hasBin: true
+    peerDependencies:
+      cac: ^6.7.14
+      citty: ^0.1.6
+      commander: ^13.1.0
+    peerDependenciesMeta:
+      cac:
+        optional: true
+      citty:
+        optional: true
+      commander:
+        optional: true
 
   '@bufbuild/protobuf@2.5.2':
     resolution: {integrity: sha512-foZ7qr0IsUBjzWIq+SuBLfdQCpJ1j8cTuNNT4owngTHoN5KsJb8L9t65fzz7SCeSWzescoOil/0ldqiL041ABg==}
@@ -6323,6 +6334,10 @@ packages:
 
   happy-dom@18.0.1:
     resolution: {integrity: sha512-qn+rKOW7KWpVTtgIUi6RVmTBZJSe2k0Db0vh1f7CWrWclkkc7/Q+FrOfkZIb2eiErLyqu5AXEzE7XthO9JVxRA==}
+    engines: {node: '>=20.0.0'}
+
+  happy-dom@19.0.2:
+    resolution: {integrity: sha512-831CLbgDyjRbd2lApHZFsBDe56onuFcjsCBPodzWpzedTpeDr8CGZjs7iEIdNW1DVwSFRecfwzLpVyGBPamwGA==}
     engines: {node: '>=20.0.0'}
 
   has-bigints@1.0.2:
@@ -10469,9 +10484,12 @@ snapshots:
 
   '@bcoe/v8-coverage@1.0.2': {}
 
-  '@bomb.sh/tab@0.0.4':
+  '@bomb.sh/tab@0.0.5(cac@6.7.14(patch_hash=a8f0f3517a47ce716ed90c0cfe6ae382ab763b021a664ada2a608477d0621588))(citty@0.1.6)':
     dependencies:
       mri: 1.2.0
+    optionalDependencies:
+      cac: 6.7.14(patch_hash=a8f0f3517a47ce716ed90c0cfe6ae382ab763b021a664ada2a608477d0621588)
+      citty: 0.1.6
 
   '@bufbuild/protobuf@2.5.2': {}
 
@@ -14722,6 +14740,12 @@ snapshots:
   handle-thing@2.0.1: {}
 
   happy-dom@18.0.1:
+    dependencies:
+      '@types/node': 20.19.17
+      '@types/whatwg-mimetype': 3.0.2
+      whatwg-mimetype: 3.0.0
+
+  happy-dom@19.0.2:
     dependencies:
       '@types/node': 20.19.17
       '@types/whatwg-mimetype': 3.0.2

@@ -235,8 +235,7 @@ export function parseCLI(argv: string | string[], config: CliParseOptions = {}):
   }
   arrayArgs[0] = '/index.js'
   arrayArgs.unshift('node')
-  const cli = createCLI(config)
-  let { args, options } = cli.parse(arrayArgs, {
+  let { args, options } = createCLI(config).parse(arrayArgs, {
     run: false,
   })
   if (arrayArgs[2] === 'watch' || arrayArgs[2] === 'dev') {
