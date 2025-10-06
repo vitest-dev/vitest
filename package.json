@@ -38,7 +38,7 @@
   },
   "devDependencies": {
     "@antfu/eslint-config": "^5.4.1",
-    "@antfu/ni": "^25.0.0",
+    "@antfu/ni": "^26.1.0",
     "@playwright/test": "^1.55.0",
     "@rollup/plugin-commonjs": "^28.0.6",
     "@rollup/plugin-json": "^6.1.0",
