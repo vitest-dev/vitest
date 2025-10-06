@@ -4,3 +4,4 @@ export * from '@vitest/browser-playwright/context'
 export * from '@vitest/browser-webdriverio/context'
 // @ts-ignore -- @vitest/browser-preview might not be installed
 export * from '@vitest/browser-preview/context'
+export { BrowserCommands, FsOptions } from 'vitest/internal/browser'
