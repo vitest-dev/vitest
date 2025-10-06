@@ -1,5 +1,5 @@
 import { SerializedConfig } from 'vitest'
-import { StringifyOptions } from 'vitest/internal/browser'
+import { StringifyOptions, BrowserCommands } from 'vitest/internal/browser'
 import { ARIARole } from './aria-role.js'
 import {} from './matchers.js'
 
@@ -16,11 +16,6 @@ export type BufferEncoding =
   | 'latin1'
   | 'binary'
   | 'hex'
-
-export interface FsOptions {
-  encoding?: BufferEncoding
-  flag?: string | number
-}
 
 export interface CDPSession {
   // methods are defined by the provider type augmentation
