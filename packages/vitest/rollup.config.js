@@ -70,6 +70,7 @@ const external = [
   'node:console',
   'inspector',
   'vitest/optional-types.js',
+  'vitest/browser',
   'vite/module-runner',
   '@vitest/mocker',
   '@vitest/mocker/node',

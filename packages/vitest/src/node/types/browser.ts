@@ -2,7 +2,8 @@ import type { MockedModule } from '@vitest/mocker'
 import type { CancelReason } from '@vitest/runner'
 import type { Awaitable, ParsedStack, TestError } from '@vitest/utils'
 import type { StackTraceParserOptions } from '@vitest/utils/source-map'
-import type { ViteDevServer } from 'vite'
+import type { Plugin, ViteDevServer } from 'vite'
+import type { BrowserCommands } from 'vitest/browser'
 import type { BrowserTraceViewMode } from '../../runtime/config'
 import type { BrowserTesterOptions } from '../../types/browser'
 import type { TestProject } from '../project'
@@ -25,12 +26,25 @@ export interface BrowserProviderOption<Options extends object = object> {
   name: string
   supportedBrowser?: ReadonlyArray<string>
   options: Options
-  factory: (project: TestProject) => BrowserProvider
+  providerFactory: (project: TestProject) => BrowserProvider
+  serverFactory: BrowserServerFactory
+}
+
+export interface BrowserServerOptions {
+  project: TestProject
+  coveragePlugin: () => Plugin
+  mocksPlugins: (options: { filter: (id: string) => boolean }) => Plugin[]
+  metaEnvReplacer: () => Plugin
+}
+
+export interface BrowserServerFactory {
+  (otpions: BrowserServerOptions): Promise<ParentProjectBrowser>
 }
 
 export interface BrowserProvider {
   name: string
   mocker?: BrowserModuleMocker
+  readonly initScripts?: string[]
   /**
    * @experimental opt-in into file parallelisation
    */
@@ -42,6 +56,7 @@ export interface BrowserProvider {
 }
 
 export type BrowserBuiltinProvider = 'webdriverio' | 'playwright' | 'preview'
+export interface _BrowserNames {}
 
 type UnsupportedProperties
   = | 'browser'
@@ -72,14 +87,16 @@ export interface BrowserInstanceOption extends
     | 'testerHtmlPath'
     | 'screenshotDirectory'
     | 'screenshotFailures'
-    | 'provider'
   > {
   /**
    * Name of the browser
    */
-  browser: string
+  browser: keyof _BrowserNames extends never
+    ? string
+    : _BrowserNames[keyof _BrowserNames]
 
   name?: string
+  provider?: BrowserProviderOption
 }
 
 export interface BrowserConfigOptions {
@@ -100,10 +117,21 @@ export interface BrowserConfigOptions {
   /**
    * Configurations for different browser setups
    */
-  instances: BrowserInstanceOption[]
+  instances?: BrowserInstanceOption[]
 
   /**
    * Browser provider
+   * @example
+   * ```ts
+   * import { playwright } from '@vitest/browser-playwright'
+   * export default defineConfig({
+   *   test: {
+   *     browser: {
+   *       provider: playwright(),
+   *     },
+   *   },
+   * })
+   * ```
    */
   provider?: BrowserProviderOption
 
@@ -222,7 +250,7 @@ export interface BrowserConfigOptions {
 
   /**
    * Commands that will be executed on the server
-   * via the browser `import("@vitest/browser/context").commands` API.
+   * via the browser `import("vitest/browser").commands` API.
    * @see {@link https://vitest.dev/guide/browser/commands}
    */
   commands?: Record<string, BrowserCommand<any>>
@@ -264,6 +292,10 @@ export interface BrowserCommandContext {
   provider: BrowserProvider
   project: TestProject
   sessionId: string
+  triggerCommand: <K extends keyof BrowserCommands>(
+    name: K,
+    ...args: Parameters<BrowserCommands[K]>
+  ) => ReturnType<BrowserCommands[K]>
 }
 
 export interface BrowserServerStateSession {
@@ -285,6 +317,7 @@ export interface BrowserServerState {
 
 export interface ParentProjectBrowser {
   spawn: (project: TestProject) => ProjectBrowser
+  vite: ViteDevServer
 }
 
 export interface ProjectBrowser {
@@ -295,10 +328,22 @@ export interface ProjectBrowser {
   initBrowserProvider: (project: TestProject) => Promise<void>
   parseStacktrace: (stack: string) => ParsedStack[]
   parseErrorStacktrace: (error: TestError, options?: StackTraceParserOptions) => ParsedStack[]
+  registerCommand: <K extends keyof BrowserCommands>(
+    name: K,
+    cb: BrowserCommand<
+      Parameters<BrowserCommands[K]>,
+      ReturnType<BrowserCommands[K]>
+    >
+  ) => void
+  triggerCommand: <K extends keyof BrowserCommands>(
+    name: K,
+    context: BrowserCommandContext,
+    ...args: Parameters<BrowserCommands[K]>
+  ) => ReturnType<BrowserCommands[K]>
 }
 
-export interface BrowserCommand<Payload extends unknown[] = []> {
-  (context: BrowserCommandContext, ...payload: Payload): Awaitable<any>
+export interface BrowserCommand<Payload extends unknown[] = [], ReturnValue = any> {
+  (context: BrowserCommandContext, ...payload: Payload): Awaitable<ReturnValue>
 }
 
 export interface BrowserScript {

@@ -1,5 +1,5 @@
 import { expect, test } from 'vitest'
-import { page, userEvent } from '@vitest/browser/context'
+import { page, userEvent } from 'vitest/browser'
 import Blog from '../../src/blog-app/blog'
 
 test('renders blog posts', async () => {

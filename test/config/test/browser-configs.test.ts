@@ -2,9 +2,9 @@ import type { ViteUserConfig } from 'vitest/config'
 import type { TestUserConfig, VitestOptions } from 'vitest/node'
 import type { TestFsStructure } from '../../test-utils'
 import crypto from 'node:crypto'
-import { playwright } from '@vitest/browser/providers/playwright'
-import { webdriverio } from '@vitest/browser/providers/webdriverio'
-import { preview } from '@vitest/browser/src/node/providers/preview.js'
+import { playwright } from '@vitest/browser-playwright'
+import { preview } from '@vitest/browser-preview'
+import { webdriverio } from '@vitest/browser-webdriverio'
 import { resolve } from 'pathe'
 import { describe, expect, onTestFinished, test } from 'vitest'
 import { createVitest } from 'vitest/node'
@@ -21,6 +21,7 @@ test('assigns names as browsers', async () => {
     browser: {
       enabled: true,
       headless: true,
+      provider: preview(),
       instances: [
         { browser: 'chromium' },
         { browser: 'firefox' },
@@ -39,6 +40,7 @@ test('filters projects', async () => {
   const { projects } = await vitest({ project: 'chromium' }, {
     browser: {
       enabled: true,
+      provider: preview(),
       instances: [
         { browser: 'chromium' },
         { browser: 'firefox' },
@@ -55,6 +57,7 @@ test('filters projects with a wildcard', async () => {
   const { projects } = await vitest({ project: 'chrom*' }, {
     browser: {
       enabled: true,
+      provider: preview(),
       instances: [
         { browser: 'chromium' },
         { browser: 'firefox' },
@@ -76,6 +79,7 @@ test('assigns names as browsers in a custom project', async () => {
           browser: {
             enabled: true,
             headless: true,
+            provider: preview(),
             instances: [
               { browser: 'chromium' },
               { browser: 'firefox' },
@@ -103,6 +107,7 @@ test('inherits browser options', async () => {
     } as any,
     browser: {
       enabled: true,
+      provider: preview(),
       headless: true,
       screenshotFailures: false,
       testerHtmlPath: '/custom-path.html',
@@ -244,6 +249,7 @@ test('browser instances with include/exclude/includeSource option override paren
     includeSource: ['src/**/*.{js,ts}'],
     browser: {
       enabled: true,
+      provider: preview(),
       headless: true,
       instances: [
         { browser: 'chromium' },
@@ -299,6 +305,7 @@ test('browser instances with empty include array should get parent include patte
     include: ['**/*.test.{js,ts}'],
     browser: {
       enabled: true,
+      provider: preview(),
       headless: true,
       instances: [
         { browser: 'chromium', include: [] },
@@ -349,6 +356,7 @@ test('can enable browser-cli options for multi-project workspace', async () => {
     {
       browser: {
         enabled: true,
+        provider: preview(),
         headless: true,
         instances: [],
       },
@@ -385,18 +393,6 @@ test('can enable browser-cli options for multi-project workspace', async () => {
   // browser config
   expect(projects[1].config.browser.enabled).toBe(true)
   expect(projects[1].config.browser.headless).toBe(true)
-})
-
-test('core provider has no options if `provider` is not set', async () => {
-  const v = await vitest({}, {
-    browser: {
-      enabled: true,
-      instances: [{
-        browser: 'chromium',
-      }],
-    },
-  })
-  expect(v.config.browser.provider).toEqual(undefined)
 })
 
 test('core provider has options if `provider` is playwright', async () => {
@@ -512,6 +508,7 @@ test('provider options can be changed dynamically in CLI', async () => {
   }, {
     browser: {
       enabled: true,
+      provider: preview(),
       instances: [
         { browser: 'chromium' },
       ],
@@ -785,6 +782,7 @@ describe('[e2e] workspace configs are affected by the CLI options', () => {
             name: 'browser',
             browser: {
               enabled: true,
+              provider: preview(),
               instances: [],
             },
           },
@@ -839,6 +837,7 @@ describe('[e2e] workspace configs are affected by the CLI options', () => {
             name: 'browser',
             browser: {
               enabled: true,
+              provider: preview(),
               instances: [],
             },
           },

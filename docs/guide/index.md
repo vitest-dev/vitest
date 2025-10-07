@@ -123,25 +123,12 @@ Even if you do not use Vite yourself, Vitest relies heavily on it for its transf
 If you are already using Vite, add `test` property in your Vite config. You'll also need to add a reference to Vitest types using a [triple slash directive](https://www.typescriptlang.org/docs/handbook/triple-slash-directives.html#-reference-types-) at the top of your config file.
 
 ```ts [vite.config.ts]
-/// <reference types="vitest" />
-import { defineConfig } from 'vite'
-
-export default defineConfig({
-  test: {
-    // ...
-  },
-})
-```
-
-The `<reference types="vitest" />` will stop working in the next major update, but you can start migrating to `vitest/config` in Vitest 2.1:
-
-```ts [vite.config.ts]
 /// <reference types="vitest/config" />
 import { defineConfig } from 'vite'
 
 export default defineConfig({
   test: {
-    // ... Specify options here.
+    // ...
   },
 })
 ```

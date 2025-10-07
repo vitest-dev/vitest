@@ -18,7 +18,7 @@ export async function getModuleGraph(
     if (!mod || !mod.id) {
       return
     }
-    if (mod.id === '\0@vitest/browser/context') {
+    if (mod.id === '\0vitest/browser') {
       return
     }
     if (seen.has(mod)) {

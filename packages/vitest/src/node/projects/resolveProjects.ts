@@ -15,10 +15,8 @@ import { basename, dirname, relative, resolve } from 'pathe'
 import { glob, isDynamicPattern } from 'tinyglobby'
 import { mergeConfig } from 'vite'
 import { configFiles as defaultConfigFiles } from '../../constants'
-import { isTTY } from '../../utils/env'
 import { VitestFilteredOutProjectError } from '../errors'
 import { initializeProject, TestProject } from '../project'
-import { withLabel } from '../reporters/renderers/utils'
 
 // vitest.config.*
 // vite.config.*
@@ -190,25 +188,9 @@ export async function resolveBrowserProjects(
       return
     }
     const instances = project.config.browser.instances || []
-    const browser = project.config.browser.name
-    if (instances.length === 0 && browser) {
-      instances.push({
-        browser,
-        name: project.name ? `${project.name} (${browser})` : browser,
-      })
-      vitest.logger.warn(
-        withLabel(
-          'yellow',
-          'Vitest',
-          [
-            `No browser "instances" were defined`,
-            project.name ? ` for the "${project.name}" project. ` : '. ',
-            `Running tests in "${project.config.browser.name}" browser. `,
-            'The "browser.name" field is deprecated since Vitest 3. ',
-            'Read more: https://vitest.dev/guide/browser/config#browser-instances',
-          ].filter(Boolean).join(''),
-        ),
-      )
+    if (instances.length === 0) {
+      removeProjects.add(project)
+      return
     }
     const originalName = project.config.name
     // if original name is in the --project=name filter, keep all instances
@@ -237,6 +219,9 @@ export async function resolveBrowserProjects(
       if (name == null) {
         throw new Error(`The browser configuration must have a "name" property. This is a bug in Vitest. Please, open a new issue with reproduction`)
       }
+      if (config.provider?.name != null && project.config.browser.provider?.name != null && config.provider?.name !== project.config.browser.provider?.name) {
+        throw new Error(`The instance cannot have a different provider from its parent. The "${name}" instance specifies "${config.provider?.name}" provider, but its parent has a "${project.config.browser.provider?.name}" provider.`)
+      }
 
       if (names.has(name)) {
         throw new Error(
@@ -257,36 +242,7 @@ export async function resolveBrowserProjects(
     removeProjects.add(project)
   })
 
-  resolvedProjects = resolvedProjects.filter(project => !removeProjects.has(project))
-
-  const headedBrowserProjects = resolvedProjects.filter((project) => {
-    return project.config.browser.enabled && !project.config.browser.headless
-  })
-  if (headedBrowserProjects.length > 1) {
-    const message = [
-      `Found multiple projects that run browser tests in headed mode: "${headedBrowserProjects.map(p => p.name).join('", "')}".`,
-      ` Vitest cannot run multiple headed browsers at the same time.`,
-    ].join('')
-    if (!isTTY) {
-      throw new Error(`${message} Please, filter projects with --browser=name or --project=name flag or run tests with "headless: true" option.`)
-    }
-    const prompts = await import('prompts')
-    const { projectName } = await prompts.default({
-      type: 'select',
-      name: 'projectName',
-      choices: headedBrowserProjects.map(project => ({
-        title: project.name,
-        value: project.name,
-      })),
-      message: `${message} Select a single project to run or cancel and run tests with "headless: true" option. Note that you can also start tests with --browser=name or --project=name flag.`,
-    })
-    if (!projectName) {
-      throw new Error('The test run was aborted.')
-    }
-    return resolvedProjects.filter(project => project.name === projectName)
-  }
-
-  return resolvedProjects
+  return resolvedProjects.filter(project => !removeProjects.has(project))
 }
 
 function cloneConfig(project: TestProject, { browser, ...config }: BrowserInstanceOption) {

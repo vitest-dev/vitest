@@ -4,7 +4,7 @@ import type { TestAPI } from 'vitest'
 import type { ViteUserConfig } from 'vitest/config'
 import type { TestSpecification, TestUserConfig } from 'vitest/node'
 import type { TestFsStructure } from '../../test-utils'
-import { playwright } from '@vitest/browser/providers/playwright'
+import { playwright } from '@vitest/browser-playwright'
 import { runInlineTests } from '../../test-utils'
 
 interface TestContext {
@@ -555,7 +555,7 @@ describe.for([
       provider: playwright(),
       headless: true,
       instances: [
-        { browser: 'chromium', name: '' },
+        { browser: 'chromium' as const, name: '' },
       ],
     },
   },

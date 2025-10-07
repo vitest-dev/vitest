@@ -99,7 +99,7 @@ To activate browser mode in your Vitest configuration, set the `browser.enabled`
 
 ```ts [vitest.config.ts]
 import { defineConfig } from 'vitest/config'
-import { playwright } from '@vitest/browser/providers/playwright'
+import { playwright } from '@vitest/browser-playwright'
 
 export default defineConfig({
   test: {
@@ -127,7 +127,7 @@ If you have not used Vite before, make sure you have your framework's plugin ins
 ```ts [react]
 import { defineConfig } from 'vitest/config'
 import react from '@vitejs/plugin-react'
-import { playwright } from '@vitest/browser/providers/playwright'
+import { playwright } from '@vitest/browser-playwright'
 
 export default defineConfig({
   plugins: [react()],
@@ -144,7 +144,7 @@ export default defineConfig({
 ```
 ```ts [vue]
 import { defineConfig } from 'vitest/config'
-import { playwright } from '@vitest/browser/providers/playwright'
+import { playwright } from '@vitest/browser-playwright'
 import vue from '@vitejs/plugin-vue'
 
 export default defineConfig({
@@ -163,7 +163,7 @@ export default defineConfig({
 ```ts [svelte]
 import { defineConfig } from 'vitest/config'
 import { svelte } from '@sveltejs/vite-plugin-svelte'
-import { playwright } from '@vitest/browser/providers/playwright'
+import { playwright } from '@vitest/browser-playwright'
 
 export default defineConfig({
   plugins: [svelte()],
@@ -181,7 +181,7 @@ export default defineConfig({
 ```ts [solid]
 import { defineConfig } from 'vitest/config'
 import solidPlugin from 'vite-plugin-solid'
-import { playwright } from '@vitest/browser/providers/playwright'
+import { playwright } from '@vitest/browser-playwright'
 
 export default defineConfig({
   plugins: [solidPlugin()],
@@ -199,7 +199,7 @@ export default defineConfig({
 ```ts [marko]
 import { defineConfig } from 'vitest/config'
 import marko from '@marko/vite'
-import { playwright } from '@vitest/browser/providers/playwright'
+import { playwright } from '@vitest/browser-playwright'
 
 export default defineConfig({
   plugins: [marko()],
@@ -217,7 +217,7 @@ export default defineConfig({
 ```ts [qwik]
 import { defineConfig } from 'vitest/config'
 import { qwikVite } from '@builder.io/qwik/optimizer'
-import { playwright } from '@vitest/browser/providers/playwright'
+import { playwright } from '@vitest/browser-playwright'
 
 // optional, run the tests in SSR mode
 import { testSSR } from 'vitest-browser-qwik/ssr-plugin'
@@ -241,7 +241,7 @@ If you need to run some tests using Node-based runner, you can define a [`projec
 
 ```ts [vitest.config.ts]
 import { defineConfig } from 'vitest/config'
-import { playwright } from '@vitest/browser/providers/playwright'
+import { playwright } from '@vitest/browser-playwright'
 
 export default defineConfig({
   test: {
@@ -338,7 +338,7 @@ Here's an example configuration enabling headless mode:
 
 ```ts [vitest.config.ts]
 import { defineConfig } from 'vitest/config'
-import { playwright } from '@vitest/browser/providers/playwright'
+import { playwright } from '@vitest/browser-playwright'
 
 export default defineConfig({
   test: {
@@ -369,7 +369,7 @@ By default, you don't need any external packages to work with the Browser Mode:
 
 ```js [example.test.js]
 import { expect, test } from 'vitest'
-import { page } from '@vitest/browser/context'
+import { page } from 'vitest/browser'
 import { render } from './my-render-function.js'
 
 test('properly handles form inputs', async () => {
@@ -407,15 +407,15 @@ Besides rendering components and locating elements, you will also need to make a
 
 ```ts
 import { expect } from 'vitest'
-import { page } from '@vitest/browser/context'
+import { page } from 'vitest/browser'
 // element is rendered correctly
 await expect.element(page.getByText('Hello World')).toBeInTheDocument()
 ```
 
-Vitest exposes a [Context API](/guide/browser/context) with a small set of utilities that might be useful to you in tests. For example, if you need to make an interaction, like clicking an element or typing text into an input, you can use `userEvent` from `@vitest/browser/context`. Read more at the [Interactivity API](/guide/browser/interactivity-api).
+Vitest exposes a [Context API](/guide/browser/context) with a small set of utilities that might be useful to you in tests. For example, if you need to make an interaction, like clicking an element or typing text into an input, you can use `userEvent` from `vitest/browser`. Read more at the [Interactivity API](/guide/browser/interactivity-api).
 
 ```ts
-import { page, userEvent } from '@vitest/browser/context'
+import { page, userEvent } from 'vitest/browser'
 await userEvent.fill(page.getByLabelText(/username/i), 'Alice')
 // or just locator.fill
 await page.getByLabelText(/username/i).fill('Alice')
@@ -532,7 +532,7 @@ For unsupported frameworks, we recommend using `testing-library` packages:
 You can also see more examples in [`browser-examples`](https://github.com/vitest-tests/browser-examples) repository.
 
 ::: warning
-`testing-library` provides a package `@testing-library/user-event`. We do not recommend using it directly because it simulates events instead of actually triggering them - instead, use [`userEvent`](/guide/browser/interactivity-api) imported from `@vitest/browser/context` that uses Chrome DevTools Protocol or Webdriver (depending on the provider) under the hood.
+`testing-library` provides a package `@testing-library/user-event`. We do not recommend using it directly because it simulates events instead of actually triggering them - instead, use [`userEvent`](/guide/browser/interactivity-api) imported from `vitest/browser` that uses Chrome DevTools Protocol or Webdriver (depending on the provider) under the hood.
 :::
 
 ::: code-group
