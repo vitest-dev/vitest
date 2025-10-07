@@ -5,10 +5,9 @@ import type {
   FrameLocator,
   LaunchOptions,
   Page,
-  CDPSession,
+  CDPSession as PWCDPSession,
   ConnectOptions
 } from 'playwright'
-import { Protocol } from 'playwright-core/types/protocol'
 import '../matchers.js'
 import type {} from "vitest/node"
 
@@ -60,22 +59,5 @@ declare module '@vitest/browser/context' {
 
   export interface ScreenshotOptions extends PWScreenshotOptions {}
 
-  export interface CDPSession {
-    send<T extends keyof Protocol.CommandParameters>(
-      method: T,
-      params?: Protocol.CommandParameters[T]
-    ): Promise<Protocol.CommandReturnValues[T]>
-    on<T extends keyof Protocol.Events>(
-      event: T,
-      listener: (payload: Protocol.Events[T]) => void
-    ): this;
-    once<T extends keyof Protocol.Events>(
-      event: T,
-      listener: (payload: Protocol.Events[T]) => void
-    ): this;
-    off<T extends keyof Protocol.Events>(
-      event: T,
-      listener: (payload: Protocol.Events[T]) => void
-    ): this;
-  }
+  export interface CDPSession extends PWCDPSession {}
 }
