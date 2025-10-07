@@ -121,6 +121,40 @@ tests/test1.test.ts
 tests/test2.test.ts
 ```
 
+## tab Completions
+
+Vitest provides tab completions for commands, options, option values to make your CLI experience better.
+
+### Setup
+
+tab completions are automatically available when you install Vitest. The completions are powered by the [`@bomb.sh/tab`](https://github.com/bombshell-dev/tab) library and work with zsh, bash, fish and pwsh.
+
+To enable tab completions in your shell, you need to source the completion script. Run this command once:
+
+```bash
+# For bash
+vitest --complete >> ~/.bashrc
+
+# For zsh  
+vitest --complete >> ~/.zshrc
+
+# For fish
+vitest --complete >> ~/.config/fish/config.fish
+```
+
+After adding the completion script, restart your terminal or source your shell configuration:
+
+```bash
+# For bash
+source ~/.bashrc
+
+# For zsh
+source ~/.zshrc
+
+# For fish
+source ~/.config/fish/config.fish
+```
+
 ## Options
 
 ::: tip
