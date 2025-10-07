@@ -1,6 +1,7 @@
 import type { StackTraceParserOptions } from '@vitest/utils/source-map'
 import type { ViteDevServer } from 'vite'
 import type { ParsedStack, SerializedConfig, TestError } from 'vitest'
+import type { BrowserCommands } from 'vitest/browser'
 import type {
   BrowserCommand,
   BrowserCommandContext,
@@ -10,7 +11,6 @@ import type {
   TestProject,
   Vitest,
 } from 'vitest/node'
-import type { BrowserCommands } from '../../context'
 import type { ParentBrowserProject } from './projectParent'
 import { existsSync } from 'node:fs'
 import { readFile } from 'node:fs/promises'

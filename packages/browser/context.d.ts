@@ -1,5 +1,5 @@
 import { SerializedConfig } from 'vitest'
-import { StringifyOptions } from 'vitest/internal/browser'
+import { StringifyOptions, BrowserCommands } from 'vitest/internal/browser'
 import { ARIARole } from './aria-role.js'
 import {} from './matchers.js'
 
@@ -16,11 +16,6 @@ export type BufferEncoding =
   | 'latin1'
   | 'binary'
   | 'hex'
-
-export interface FsOptions {
-  encoding?: BufferEncoding
-  flag?: string | number
-}
 
 export interface CDPSession {
   // methods are defined by the provider type augmentation
@@ -166,19 +161,6 @@ export interface ScreenshotMatcherOptions<
    * @default 5000
    */
   timeout?: number
-}
-
-export interface BrowserCommands {
-  readFile: (
-    path: string,
-    options?: BufferEncoding | FsOptions
-  ) => Promise<string>
-  writeFile: (
-    path: string,
-    content: string,
-    options?: BufferEncoding | (FsOptions & { mode?: number | string })
-  ) => Promise<void>
-  removeFile: (path: string) => Promise<void>
 }
 
 export interface UserEvent {
@@ -421,7 +403,7 @@ export interface LocatorByRoleOptions extends LocatorOptions {
 
 interface LocatorScreenshotOptions extends Omit<ScreenshotOptions, 'element'> {}
 
-interface LocatorSelectors {
+export interface LocatorSelectors {
   /**
    * Creates a way to locate an element by its [ARIA role](https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Roles), [ARIA attributes](https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Attributes) and [accessible name](https://developer.mozilla.org/en-US/docs/Glossary/Accessible_name).
    * @see {@link https://vitest.dev/guide/browser/locators#getbyrole}

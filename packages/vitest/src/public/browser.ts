@@ -23,6 +23,24 @@ export {
   getOriginalPosition,
 } from '@vitest/utils/source-map'
 export { getSafeTimers, setSafeTimers } from '@vitest/utils/timers'
+
+export interface FsOptions {
+  encoding?: BufferEncoding
+  flag?: string | number
+}
+
+export interface BrowserCommands {
+  readFile: (
+    path: string,
+    options?: BufferEncoding | FsOptions
+  ) => Promise<string>
+  writeFile: (
+    path: string,
+    content: string,
+    options?: BufferEncoding | (FsOptions & { mode?: number | string })
+  ) => Promise<void>
+  removeFile: (path: string) => Promise<void>
+}
 /**
  * @internal
  */
