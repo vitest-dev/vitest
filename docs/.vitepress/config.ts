@@ -438,6 +438,58 @@ export default ({ mode }: { mode: string }) => {
                 text: 'name',
                 link: '/config/name',
               },
+              {
+                text: 'include',
+                link: '/config/include',
+              },
+              {
+                text: 'includeSource',
+                link: '/config/exclude',
+              },
+              {
+                text: 'exclude',
+                link: '/config/exclude',
+              },
+              {
+                text: 'server',
+                link: '/config/server',
+              },
+              {
+                text: 'runner',
+                link: '/config/runner',
+              },
+              {
+                text: 'alias',
+                link: '/config/alias',
+              },
+              {
+                text: 'globals',
+                link: '/config/globals',
+              },
+              {
+                text: 'watch',
+                link: '/config/watch',
+              },
+              {
+                text: 'root',
+                link: '/config/root',
+              },
+              {
+                text: 'dir',
+                link: '/config/dir',
+              },
+              {
+                text: 'reporters',
+                link: '/config/reporters',
+              },
+              {
+                text: 'fileParallelism',
+                link: '/config/file-parallelism',
+              },
+              {
+                text: 'maxWorkers',
+                link: '/config/max-workers',
+              },
               // TODO: generate
             ],
           },
