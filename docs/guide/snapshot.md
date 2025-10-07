@@ -96,20 +96,21 @@ it('render basic', async () => {
 
 It will compare with the content of `./test/basic.output.html`. And can be written back with the `--update` flag.
 
-## Image Snapshots
+## Visual Snapshots
 
-It's also possible to snapshot images using [`jest-image-snapshot`](https://github.com/americanexpress/jest-image-snapshot).
-
-```bash
-npm i -D jest-image-snapshot
-```
+For visual regression testing of UI components and pages, Vitest provides built-in support through [browser mode](/guide/browser/) with the [`toMatchScreenshot()`](/guide/browser/assertion-api#tomatchscreenshot-experimental) assertion:
 
 ```ts
-test('image snapshot', () => {
-  expect(readFileSync('./test/stubs/input-image.png'))
-    .toMatchImageSnapshot()
+import { expect, test } from 'vitest'
+import { page } from 'vitest/browser'
+
+test('button looks correct', async () => {
+  const button = page.getByRole('button')
+  await expect(button).toMatchScreenshot('primary-button')
 })
 ```
+
+This captures screenshots and compares them against reference images to detect unintended visual changes. Learn more in the [Visual Regression Testing guide](/guide/browser/visual-regression-testing).
 
 ## Custom Serializer
 

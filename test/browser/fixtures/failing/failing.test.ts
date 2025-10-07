@@ -1,4 +1,4 @@
-import { page } from '@vitest/browser/context'
+import { page } from 'vitest/browser'
 import { index } from '@vitest/bundled-lib'
 import { expect, it } from 'vitest'
 import { throwError } from './src/error'

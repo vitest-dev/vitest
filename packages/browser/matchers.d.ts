@@ -1,4 +1,4 @@
-import type { Locator } from '@vitest/browser/context'
+import type { Locator } from './context.js'
 import type { TestingLibraryMatchers } from './jest-dom.js'
 import type { Assertion, ExpectPollOptions } from 'vitest'
 

@@ -1,4 +1,4 @@
-import { page, server } from '@vitest/browser/context';
+import { page, server } from 'vitest/browser';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, onTestFailed, onTestFinished } from 'vitest';
 
 describe.runIf(server.provider === 'playwright')('timeouts are failing correctly', () => {

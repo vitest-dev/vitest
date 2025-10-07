@@ -1,5 +1,5 @@
-import { page, userEvent } from '@vitest/browser/context'
 import { test } from 'vitest'
+import { page, userEvent } from 'vitest/browser'
 
 test('basic', async () => {
   document.body.innerHTML = `<button>hello</button>`

@@ -15,8 +15,8 @@
 
 import type { ExpectationResult, MatcherState } from '@vitest/expect'
 import type { Locator } from '../locators'
-import { server } from '@vitest/browser/context'
 import { beginAriaCaches, endAriaCaches, isElementVisible as ivyaIsVisible } from 'ivya/utils'
+import { server } from 'vitest/browser'
 import { getElementFromUserInput } from './utils'
 
 export default function toBeVisible(

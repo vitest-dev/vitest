@@ -1,4 +1,5 @@
 import { SerializedConfig } from 'vitest'
+import { StringifyOptions, BrowserCommands } from 'vitest/internal/browser'
 import { ARIARole } from './aria-role.js'
 import {} from './matchers.js'
 
@@ -15,11 +16,6 @@ export type BufferEncoding =
   | 'latin1'
   | 'binary'
   | 'hex'
-
-export interface FsOptions {
-  encoding?: BufferEncoding
-  flag?: string | number
-}
 
 export interface CDPSession {
   // methods are defined by the provider type augmentation
@@ -167,26 +163,13 @@ export interface ScreenshotMatcherOptions<
   timeout?: number
 }
 
-export interface BrowserCommands {
-  readFile: (
-    path: string,
-    options?: BufferEncoding | FsOptions
-  ) => Promise<string>
-  writeFile: (
-    path: string,
-    content: string,
-    options?: BufferEncoding | (FsOptions & { mode?: number | string })
-  ) => Promise<void>
-  removeFile: (path: string) => Promise<void>
-}
-
 export interface UserEvent {
   /**
    * Creates a new user event instance. This is useful if you need to keep the
    * state of keyboard to press and release buttons correctly.
    *
    * **Note:** Unlike `@testing-library/user-event`, the default `userEvent` instance
-   * from `@vitest/browser/context` is created once, not every time its methods are called!
+   * from `vitest/browser` is created once, not every time its methods are called!
    * @see {@link https://vitest.dev/guide/browser/interactivity-api.html#userevent-setup}
    */
   setup: () => UserEvent
@@ -361,6 +344,10 @@ export interface LocatorOptions {
    * regular expression. Note that exact match still trims whitespace.
    */
   exact?: boolean
+  hasText?: string | RegExp
+  hasNotText?: string | RegExp
+  has?: Locator
+  hasNot?: Locator
 }
 
 export interface LocatorByRoleOptions extends LocatorOptions {
@@ -416,7 +403,7 @@ export interface LocatorByRoleOptions extends LocatorOptions {
 
 interface LocatorScreenshotOptions extends Omit<ScreenshotOptions, 'element'> {}
 
-interface LocatorSelectors {
+export interface LocatorSelectors {
   /**
    * Creates a way to locate an element by its [ARIA role](https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Roles), [ARIA attributes](https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Attributes) and [accessible name](https://developer.mozilla.org/en-US/docs/Glossary/Accessible_name).
    * @see {@link https://vitest.dev/guide/browser/locators#getbyrole}
@@ -660,13 +647,6 @@ export const server: {
   config: SerializedConfig
 }
 
-export interface LocatorOptions {
-  hasText?: string | RegExp
-  hasNotText?: string | RegExp
-  has?: Locator
-  hasNot?: Locator
-}
-
 /**
  * Handler for user interactions. The support is provided by the browser provider (`playwright` or `webdriverio`).
  * If used with `preview` provider, fallbacks to simulated events via `@testing-library/user-event`.
@@ -732,9 +712,52 @@ export interface BrowserPage extends LocatorSelectors {
 
 export interface BrowserLocators {
   createElementLocators(element: Element): LocatorSelectors
+  // TODO: enhance docs
+  /**
+   * Extends `page.*` and `locator.*` interfaces.
+   * @see {@link}
+   *
+   * @example
+   * ```ts
+   * import { locators } from 'vitest/browser'
+   *
+   * declare module 'vitest/browser' {
+   *   interface LocatorSelectors {
+   *     getByCSS(css: string): Locator
+   *   }
+   * }
+   *
+   * locators.extend({
+   *   getByCSS(css: string) {
+   *     return `css=${css}`
+   *   }
+   * })
+   * ```
+   */
   extend(methods: {
-    [K in keyof LocatorSelectors]?: (this: BrowserPage | Locator, ...args: Parameters<LocatorSelectors[K]>) => ReturnType<LocatorSelectors[K]> | string
+    [K in keyof LocatorSelectors]?: (
+      this: BrowserPage | Locator,
+      ...args: Parameters<LocatorSelectors[K]>
+    ) => ReturnType<LocatorSelectors[K]> | string
   }): void
+}
+
+
+export type PrettyDOMOptions = Omit<StringifyOptions, 'maxLength'>
+
+export const utils: {
+  getElementLocatorSelectors(element: Element): LocatorSelectors
+  debug(
+    el?: Element | Locator | null | (Element | Locator)[],
+    maxLength?: number,
+    options?: PrettyDOMOptions,
+  ): void
+  prettyDOM(
+    dom?: Element | Locator | undefined | null,
+    maxLength?: number,
+    prettyFormatOptions?: PrettyDOMOptions,
+  ): string
+  getElementError(selector: string, container?: Element): Error
 }
 
 export const locators: BrowserLocators

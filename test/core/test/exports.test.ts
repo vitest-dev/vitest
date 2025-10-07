@@ -9,6 +9,9 @@ it('exports snapshot', async ({ skip, task }) => {
   const manifest = await getPackageExportsManifest({
     importMode: 'package', // or 'dist' or 'package'
     cwd: resolve(import.meta.dirname, '../../../packages/vitest'),
+    resolveExportEntries(entries) {
+      return entries.filter(([key]) => key !== './browser')
+    },
   })
 
   if (rolldownVersion) {
@@ -59,6 +62,7 @@ it('exports snapshot', async ({ skip, task }) => {
         "./internal/browser": {
           "DecodedMap": "function",
           "SpyModule": "object",
+          "__INTERNAL": "object",
           "collectTests": "function",
           "format": "function",
           "getOriginalPosition": "function",
@@ -210,6 +214,7 @@ it('exports snapshot', async ({ skip, task }) => {
           "./internal/browser": {
             "DecodedMap": "function",
             "SpyModule": "object",
+            "__INTERNAL": "object",
             "collectTests": "function",
             "format": "function",
             "getOriginalPosition": "function",

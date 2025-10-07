@@ -1,4 +1,4 @@
-import { playwright } from '@vitest/browser/providers/playwright'
+import { playwright } from '@vitest/browser-playwright'
 import { mergeConfig } from 'vite'
 import { defineConfig } from 'vitest/config'
 import viteConfig from './vite.config'

@@ -4,5 +4,4 @@ export interface BrowserTesterOptions {
   method: TestExecutionMethod
   files: string[]
   providedContext: string
-  startTime: number
 }

@@ -143,7 +143,7 @@ function createClient() {
             `Cannot connect to the server in ${connectTimeout / 1000} seconds`,
           ),
         )
-      }, connectTimeout)?.unref?.()
+      }, connectTimeout)
       if (ctx.ws.OPEN === ctx.ws.readyState) {
         resolve()
       }

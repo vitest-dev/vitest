@@ -253,6 +253,11 @@ export default ({ mode }: { mode: string }) => {
                 link: '/guide/browser/webdriverio',
                 docFooterText: 'Configuring WebdriverIO | Browser Mode',
               },
+              {
+                text: 'Configuring Preview',
+                link: '/guide/browser/preview',
+                docFooterText: 'Configuring Preview | Browser Mode',
+              },
             ],
           },
           {

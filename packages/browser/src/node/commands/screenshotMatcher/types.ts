@@ -1,3 +1,8 @@
+import type {
+  ScreenshotComparatorRegistry,
+  ScreenshotMatcherOptions,
+} from '@vitest/browser/context'
+
 interface BaseMetadata { height: number; width: number }
 export type TypedArray
   = | Buffer<ArrayBufferLike>
@@ -41,3 +46,14 @@ export type Comparator<Options extends Record<string, unknown>> = (
     createDiff: boolean
   } & Options
 ) => Promisable<{ pass: boolean; diff: TypedArray | null; message: string | null }>
+
+declare module 'vitest/node' {
+  export interface ToMatchScreenshotOptions
+    extends Omit<
+      ScreenshotMatcherOptions,
+      'comparatorName' | 'comparatorOptions'
+    > {}
+
+  export interface ToMatchScreenshotComparators
+    extends ScreenshotComparatorRegistry {}
+}

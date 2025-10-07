@@ -4,10 +4,10 @@
 If you do not already use WebdriverIO in your project, we recommend starting with [Playwright](/guide/browser/playwright) as it is easier to configure and has more flexible API.
 :::
 
-To run tests using WebdriverIO, you need to specify it in the `test.browser.provider` property in your config:
+To run tests using WebdriverIO, you need to install the [`@vitest/browser-webdriverio`](https://www.npmjs.com/package/@vitest/browser-webdriverio) npm package and specify its `webdriverio` export in the `test.browser.provider` property of your config:
 
 ```ts [vitest.config.js]
-import { webdriverio } from '@vitest/browser/providers/webdriverio'
+import { webdriverio } from '@vitest/browser-webdriverio'
 import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
@@ -20,10 +20,10 @@ export default defineConfig({
 })
 ```
 
-Vitest opens a single page to run all tests in the same file. You can configure all the parameters that [`remote`](https://webdriver.io/docs/api/modules/#remoteoptions-modifier) function accepts:
+You can configure all the parameters that [`remote`](https://webdriver.io/docs/api/modules/#remoteoptions-modifier) function accepts:
 
-```ts{8-12,19-23} [vitest.config.js]
-import { webdriverio } from '@vitest/browser/providers/webdriverio'
+```ts{8-12,19-25} [vitest.config.js]
+import { webdriverio } from '@vitest/browser-webdriverio'
 import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
@@ -42,11 +42,13 @@ export default defineConfig({
           // overriding options only for a single instance
           // this will NOT merge options with the parent one
           provider: webdriverio({
-            'moz:firefoxOptions': {
-              args: ['--disable-gpu'],
+            capabilities: {
+              'moz:firefoxOptions': {
+                args: ['--disable-gpu'],
+              },
             },
           })
-        }
+        },
       ],
     },
   },
@@ -58,5 +60,5 @@ You can find most available options in the [WebdriverIO documentation](https://w
 ::: tip
 Most useful options are located on `capabilities` object. WebdriverIO allows nested capabilities, but Vitest will ignore those options because we rely on a different mechanism to spawn several browsers.
 
-Note that Vitest will ignore `capabilities.browserName`. Use [`test.browser.instances.browser`](/guide/browser/config#browser-capabilities-name) instead.
+Note that Vitest will ignore `capabilities.browserName` — use [`test.browser.instances.browser`](/guide/browser/config#browser-capabilities-name) instead.
 :::
