@@ -127,17 +127,23 @@ Vitest provides shell autocompletions for commands, options, and option values p
 
 ### Setup
 
-Enable autocompletions by sourcing the completion script in your shell:
+For permanent setup in zsh, add this to your `~/.zshrc`:
 
 ```bash
-# adds completion script to your shell profile
-source <(vitest complete bash)   # For bash
-source <(vitest complete zsh)    # For zsh  
-source <(vitest complete fish)   # For fish
-source <(vitest complete pwsh)   # For PowerShell
+# Add to ~/.zshrc for permanent autocompletions
+source <(vitest complete zsh)
 ```
 
-This generates and loads the completion script directly into your current shell session and makes it persistent for future sessions.
+### Package Manager Integration
+
+`@bomb.sh/tab` integrates with package managers. Autocompletions work when running Vitest through:
+
+```bash
+npm run vitest <Tab>
+pnpm vitest <Tab>
+yarn vitest <Tab>
+bun vitest <Tab>
+```
 
 ## Options
 
