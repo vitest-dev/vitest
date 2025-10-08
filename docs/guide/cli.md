@@ -140,6 +140,7 @@ source <(vitest complete zsh)
 
 ```bash
 npx vitest <Tab>
+npm exec vitest <Tab>
 pnpm vitest <Tab>
 yarn vitest <Tab>
 bun vitest <Tab>
