@@ -136,7 +136,7 @@ source <(vitest complete zsh)
 
 ### Package Manager Integration
 
-`@bomb.sh/tab` integrates with package managers. Autocompletions work when running Vitest directly:
+`@bomb.sh/tab` integrates with package managers. Autocompletions work when running vitest directly:
 
 ```bash
 npx vitest <Tab>
