@@ -10,36 +10,9 @@ Vitest instance requires the current test mode. It can be either:
 - `test` when running runtime tests
 - `benchmark` when running benchmarks <Badge type="warning">experimental</Badge>
 
-::: details New in Vitest 3
-Vitest 3 is one step closer to stabilising the public API. To achieve that, we deprecated and removed some of the previously public methods on the `Vitest` class. These APIs were made private:
+::: details New in Vitest 4
+Vitest 4 added several new APIs (they are marked with a "4.0.0+" badge) and removed deprecated APIs:
 
-- `configOverride` (use [`setGlobalTestNamePattern`](#setglobaltestnamepattern) or [`enableSnapshotUpdate`](#enablesnapshotupdate))
-- `coverageProvider`
-- `filenamePattern`
-- `runningPromise`
-- `closingPromise`
-- `isCancelling`
-- `coreWorkspaceProject`
-- `resolvedProjects`
-- `_browserLastPort`
-- `_options`
-- `reporters`
-- `vitenode`
-- `runner`
-- `pool`
-- `setServer`
-- `_initBrowserServers`
-- `rerunTask`
-- `changeProjectName`
-- `changeNamePattern`
-- `changeFilenamePattern`
-- `rerunFailed`
-- `_createRootProject` (renamed to `_ensureRootProject`, but still private)
-- `filterTestsBySource` (this was moved to the new internal `vitest.specifications` instance)
-- `runFiles` (use [`runTestSpecifications`](#runtestspecifications) instead)
-- `onAfterSetServer`
-
-These APIs were deprecated:
 - `invalidates`
 - `changedTests` (use [`onFilterWatchedSpecification`](#onfilterwatchedspecification) instead)
 - `server` (use [`vite`](#vite) instead)
@@ -598,9 +571,9 @@ function experimental_parseSpecification(
 This function will collect all tests inside the file without running it. It uses rollup's `parseAst` function on top of Vite's `ssrTransform` to statically analyse the file and collect all tests that it can.
 
 ::: warning
-If Vitest could not analyse the name of the test, it will inject a hidden `dynamic: true` property to the test or a suite. The `id` will also have a postfix with `-dynamic` to not break tests that were collected properly.
+If Vitest could not analyse the name of the test, it will inject a `dynamic: true` property to the test or a suite. The `id` will also have a postfix with `-dynamic` to not break tests that were collected properly.
 
-Vitest always injects this property in tests with `for` or `each` modifier or tests with a dynamic name (like, `hello ${property}` or `'hello' + ${property}`). Vitest will still assign a name to the test, but it cannot be used to filter the tests.
+Vitest always injects this property in tests with `for` or `each` modifier or tests with a dynamic name (like, `hello ${property}` or `'hello' + ${property}`). Vitest will still assign a name to the test, but it cannot be used to filter tests.
 
 There is nothing Vitest can do to make it possible to filter dynamic tests, but you can turn a test with `for` or `each` modifier into a name pattern with `escapeTestName` function:
 
