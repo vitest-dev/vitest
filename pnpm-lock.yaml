@@ -948,6 +948,9 @@ importers:
 
   packages/vitest:
     dependencies:
+      '@bomb.sh/tab':
+        specifier: ^0.0.5
+        version: 0.0.5(cac@6.7.14(patch_hash=a8f0f3517a47ce716ed90c0cfe6ae382ab763b021a664ada2a608477d0621588))(citty@0.1.6)
       '@vitest/browser-playwright':
         specifier: workspace:*
         version: link:../browser-playwright
@@ -2274,6 +2277,21 @@ packages:
   '@bcoe/v8-coverage@1.0.2':
     resolution: {integrity: sha512-6zABk/ECA/QYSCQ1NGiVwwbQerUCZ+TQbp64Q3AgmfNvurHH0j8TtXa1qbShXA6qqkpAj4V5W8pP6mLe1mcMqA==}
     engines: {node: '>=18'}
+
+  '@bomb.sh/tab@0.0.5':
+    resolution: {integrity: sha512-S0dAhnulM/q284LkmBT7ykITbRvnog8a/3nuVi4Iy0VhyfkTZcB0bXB5pltmINyL+OjAfYd9TQeOge+CYk/l1w==}
+    hasBin: true
+    peerDependencies:
+      cac: ^6.7.14
+      citty: ^0.1.6
+      commander: ^13.1.0
+    peerDependenciesMeta:
+      cac:
+        optional: true
+      citty:
+        optional: true
+      commander:
+        optional: true
 
   '@bufbuild/protobuf@2.5.2':
     resolution: {integrity: sha512-foZ7qr0IsUBjzWIq+SuBLfdQCpJ1j8cTuNNT4owngTHoN5KsJb8L9t65fzz7SCeSWzescoOil/0ldqiL041ABg==}
@@ -10557,6 +10575,13 @@ snapshots:
       '@babel/helper-validator-identifier': 7.27.1
 
   '@bcoe/v8-coverage@1.0.2': {}
+
+  '@bomb.sh/tab@0.0.5(cac@6.7.14(patch_hash=a8f0f3517a47ce716ed90c0cfe6ae382ab763b021a664ada2a608477d0621588))(citty@0.1.6)':
+    dependencies:
+      mri: 1.2.0
+    optionalDependencies:
+      cac: 6.7.14(patch_hash=a8f0f3517a47ce716ed90c0cfe6ae382ab763b021a664ada2a608477d0621588)
+      citty: 0.1.6
 
   '@bufbuild/protobuf@2.5.2': {}
 

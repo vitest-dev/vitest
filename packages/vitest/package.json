@@ -169,6 +169,7 @@
     }
   },
   "dependencies": {
+    "@bomb.sh/tab": "^0.0.5",
     "@vitest/expect": "workspace:*",
     "@vitest/mocker": "workspace:*",
     "@vitest/pretty-format": "workspace:*",
