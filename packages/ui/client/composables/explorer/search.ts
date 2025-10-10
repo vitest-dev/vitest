@@ -1,6 +1,11 @@
-import type { Ref } from 'vue'
+import type { ShallowRef } from 'vue'
+import { availableProjects } from '~/composables/client'
 import { explorerTree } from '~/composables/explorer'
 import {
+  ALL_PROJECTS,
+  currentProject,
+  disableClearProjects,
+  enableProjects,
   filter,
   filteredFiles,
   initialized,
@@ -13,7 +18,10 @@ import {
   uiEntries,
 } from './state'
 
-export function useSearch(searchBox: Ref<HTMLDivElement | undefined>) {
+export function useSearch(
+  selectProject: Readonly<ShallowRef<HTMLSelectElement | null>>,
+  searchBox: Readonly<ShallowRef<HTMLInputElement | null>>,
+) {
   const disableFilter = computed(() => {
     if (isFilteredByStatus.value) {
       return false
@@ -27,6 +35,11 @@ export function useSearch(searchBox: Ref<HTMLDivElement | undefined>) {
   debouncedWatch(() => search.value, (value) => {
     debouncedSearch.value = value?.trim() ?? ''
   }, { debounce: 256 })
+
+  function clearProject() {
+    currentProject.value = ALL_PROJECTS
+    selectProject.value?.focus()
+  }
 
   function clearSearch(focus: boolean) {
     search.value = ''
@@ -51,6 +64,7 @@ export function useSearch(searchBox: Ref<HTMLDivElement | undefined>) {
   }
 
   function updateFilterStorage(
+    project: string,
     searchValue: string,
     failedValue: boolean,
     successValue: boolean,
@@ -61,6 +75,7 @@ export function useSearch(searchBox: Ref<HTMLDivElement | undefined>) {
       return
     }
 
+    treeFilter.value.project = project?.trim() ?? ''
     treeFilter.value.search = searchValue?.trim() ?? ''
     treeFilter.value.failed = failedValue
     treeFilter.value.success = successValue
@@ -75,9 +90,10 @@ export function useSearch(searchBox: Ref<HTMLDivElement | undefined>) {
       filter.success,
       filter.skipped,
       filter.onlyTests,
+      currentProject.value,
     ] as const,
-    ([search, failed, success, skipped, onlyTests]) => {
-      updateFilterStorage(search, failed, success, skipped, onlyTests)
+    ([search, failed, success, skipped, onlyTests, project]) => {
+      updateFilterStorage(project, search, failed, success, skipped, onlyTests)
       explorerTree.filterNodes()
     },
     { flush: 'post' },
@@ -103,5 +119,10 @@ export function useSearch(searchBox: Ref<HTMLDivElement | undefined>) {
     filteredFiles,
     testsTotal,
     uiEntries,
+    availableProjects,
+    enableProjects,
+    disableClearProjects,
+    currentProject,
+    clearProject,
   }
 }

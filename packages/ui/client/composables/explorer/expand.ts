@@ -84,20 +84,28 @@ export function runExpandNode(
  *
  * @param search The search applied.
  * @param filter The filter applied.
+ * @param projectName The filter for the project name.
  */
 export function runExpandAll(
   search: string,
   filter: Filter,
+  projectName?: string,
 ) {
   expandAllNodes(explorerTree.root.tasks, false)
   const entries = [...filterAll(
     search,
     filter,
+    projectName,
   )]
   treeFilter.value.expandAll = false
   openedTreeItems.value = []
   uiEntries.value = entries
-  filteredFiles.value = entries.filter(isFileNode).map(f => findById(f.id)!)
+  if (projectName) {
+    filteredFiles.value = entries.filter(f => isFileNode(f) && f.projectName === projectName).map(f => findById(f.id)!)
+  }
+  else {
+    filteredFiles.value = entries.filter(isFileNode).map(f => findById(f.id)!)
+  }
 }
 
 export function expandNodesOnEndRun(

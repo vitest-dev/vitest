@@ -7,6 +7,7 @@ import { RecycleScroller } from 'vue-virtual-scroller'
 
 import { config } from '~/composables/client'
 import { useSearch } from '~/composables/explorer/search'
+import { ALL_PROJECTS } from '~/composables/explorer/state'
 
 import { activeFileId } from '~/composables/params'
 
@@ -25,7 +26,8 @@ const emit = defineEmits<{
 
 const includeTaskLocation = computed(() => config.value.includeTaskLocation)
 
-const searchBox = ref<HTMLInputElement | undefined>()
+const searchBoxRef = useTemplateRef('searchBoxRef')
+const selectProjectRef = useTemplateRef('selectProjectRef')
 
 const {
   initialized,
@@ -41,12 +43,20 @@ const {
   filteredFiles,
   testsTotal,
   uiEntries,
-} = useSearch(searchBox)
+  availableProjects,
+  enableProjects,
+  disableClearProjects,
+  currentProject,
+  clearProject,
+} = useSearch(
+  selectProjectRef,
+  searchBoxRef,
+)
 
-const filterClass = ref<string>('grid-cols-2')
-const filterHeaderClass = ref<string>('grid-col-span-2')
+const filterClass = shallowRef('grid-cols-2')
+const filterHeaderClass = shallowRef('grid-col-span-2')
 
-const testExplorerRef = ref<HTMLElement | undefined>()
+const testExplorerRef = useTemplateRef('testExplorerRef')
 useResizeObserver(() => testExplorerRef.value, ([{ contentRect }]) => {
   if (contentRect.width < 420) {
     filterClass.value = 'grid-cols-2'
@@ -66,6 +76,47 @@ useResizeObserver(() => testExplorerRef.value, ([{ contentRect }]) => {
         <slot name="header" :filtered-files="isFiltered || isFilteredByStatus ? filteredFiles : undefined" />
       </div>
       <div
+        v-if="enableProjects"
+        p="l3 y2 r2"
+        grid="~ cols-[auto_auto_minmax(0,1fr)_auto]"
+        gap-2
+        items-center
+        bg-header
+        border="b-2 base"
+      >
+        <div class="i-carbon:workspace" flex-shrink-0 />
+        <label for="project-select" text="sm">
+          Projects
+        </label>
+        <select
+          id="project-select"
+          ref="selectProjectRef"
+          v-model="currentProject"
+          flex-1
+          pl-1
+          text="sm"
+        >
+          <option :value="ALL_PROJECTS">
+            All Projects
+          </option>
+          <option
+            v-for="project in availableProjects"
+            :key="project"
+            :value="project"
+          >
+            {{ project }}
+          </option>
+        </select>
+
+        <IconButton
+          v-tooltip.bottom="'Clear project filter'"
+          :disabled="disableClearProjects"
+          title="Clear project filter"
+          icon="i-carbon:filter-remove"
+          @click.passive="clearProject"
+        />
+      </div>
+      <div
         p="l3 y2 r2"
         flex="~ gap-2"
         items-center
@@ -74,7 +125,7 @@ useResizeObserver(() => testExplorerRef.value, ([{ contentRect }]) => {
       >
         <div class="i-carbon:search" flex-shrink-0 />
         <input
-          ref="searchBox"
+          ref="searchBoxRef"
           v-model="search"
           placeholder="Search..."
           outline="none"

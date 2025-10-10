@@ -73,6 +73,7 @@ export interface Filter {
 
 export interface TreeFilterState extends Filter {
   search: string
+  project: string
   expandAll?: boolean
 }
 
