@@ -1,9 +1,12 @@
 <script setup lang="ts">
-const props = defineProps<{ label: string; disabled?: boolean }>()
+const { disabled = false } = defineProps<{
+  label: string
+  disabled?: boolean
+}>()
 const modelValue = defineModel<boolean | null>()
 
 function toggle() {
-  if (props.disabled) {
+  if (disabled) {
     return
   }
 
