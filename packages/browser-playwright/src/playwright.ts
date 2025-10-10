@@ -1,5 +1,6 @@
 /* eslint-disable ts/method-signature-style */
 
+import type { CustomComparatorsRegistry } from '@vitest/browser'
 import type { MockedModule } from '@vitest/mocker'
 import type {
   Browser,
@@ -556,7 +557,7 @@ declare module 'vitest/node' {
     extends Omit<
       ScreenshotMatcherOptions,
       'comparatorName' | 'comparatorOptions'
-    > {}
+    >, CustomComparatorsRegistry {}
 
   export interface ToMatchScreenshotComparators
     extends ScreenshotComparatorRegistry {}

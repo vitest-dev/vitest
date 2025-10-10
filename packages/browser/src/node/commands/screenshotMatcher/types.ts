@@ -1,4 +1,5 @@
 import type {
+  NonStandardScreenshotComparators,
   ScreenshotComparatorRegistry,
   ScreenshotMatcherOptions,
 } from '@vitest/browser/context'
@@ -47,12 +48,21 @@ export type Comparator<Options extends Record<string, unknown>> = (
   } & Options
 ) => Promisable<{ pass: boolean; diff: TypedArray | null; message: string | null }>
 
+type CustomComparatorsToRegister = {
+  [Key in keyof NonStandardScreenshotComparators]: Comparator<NonStandardScreenshotComparators[Key]>
+}
+
+export type CustomComparatorsRegistry
+  = keyof CustomComparatorsToRegister extends never
+    ? { comparators?: Record<string, Comparator<Record<string, unknown>>> }
+    : { comparators: CustomComparatorsToRegister }
+
 declare module 'vitest/node' {
   export interface ToMatchScreenshotOptions
     extends Omit<
       ScreenshotMatcherOptions,
       'comparatorName' | 'comparatorOptions'
-    > {}
+    >, CustomComparatorsRegistry {}
 
   export interface ToMatchScreenshotComparators
     extends ScreenshotComparatorRegistry {}
