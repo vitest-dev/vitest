@@ -11,6 +11,7 @@ import { annotateTest, collectTestsTotalData, preparePendingTasks, runCollect, r
 import { runExpandAll, runExpandNode } from '~/composables/explorer/expand'
 import { runFilter } from '~/composables/explorer/filter'
 import {
+  currentProjectName,
   filter,
   search,
 } from '~/composables/explorer/state'
@@ -70,6 +71,7 @@ export class ExplorerTree {
         skipped: filter.skipped,
         onlyTests: filter.onlyTests,
       },
+      currentProjectName.value,
     )
   }
 
@@ -152,7 +154,7 @@ export class ExplorerTree {
       success: filter.success,
       skipped: filter.skipped,
       onlyTests: filter.onlyTests,
-    })
+    }, currentProjectName.value)
   }
 
   collapseNode(id: string) {
@@ -185,7 +187,7 @@ export class ExplorerTree {
         success: filter.success,
         skipped: filter.skipped,
         onlyTests: filter.onlyTests,
-      })
+      }, currentProjectName.value)
     })
   }
 
@@ -196,7 +198,7 @@ export class ExplorerTree {
         success: filter.success,
         skipped: filter.skipped,
         onlyTests: filter.onlyTests,
-      })
+      }, currentProjectName.value)
     })
   }
 }

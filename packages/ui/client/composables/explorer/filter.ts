@@ -19,24 +19,37 @@ export function testMatcher(task: Task, search: string, filter: Filter) {
  *
  * @param search The search applied.
  * @param filter The filter applied.
+ * @param projectName The filter for the project name.
  */
 export function runFilter(
   search: string,
   filter: Filter,
+  projectName?: string,
 ) {
   const entries = [...filterAll(
     search,
     filter,
+    projectName,
   )]
   uiEntries.value = entries
-  filteredFiles.value = entries.filter(isFileNode).map(f => findById(f.id)!)
+  if (projectName) {
+    filteredFiles.value = entries.filter(f => isFileNode(f) && f.projectName === projectName).map(f => findById(f.id)!)
+  }
+  else {
+    filteredFiles.value = entries.filter(isFileNode).map(f => findById(f.id)!)
+  }
 }
 
 export function* filterAll(
   search: string,
   filter: Filter,
+  projectName?: string,
 ) {
   for (const node of sortedRootTasks()) {
+    if (projectName && node.projectName !== projectName) {
+      continue
+    }
+
     yield* filterNode(node, search, filter)
   }
 }
@@ -45,6 +58,7 @@ export function* filterNode(
   node: UITaskTreeNode,
   search: string,
   filter: Filter,
+  projectName?: string,
 ) {
   const treeNodes = new Set<string>()
 
@@ -69,14 +83,18 @@ export function* filterNode(
       n => matcher(n, search, filter),
     )) {
       if (isParentNode(child)) {
-        parentsMap.set(child.id, match)
         if (isFileNode(child)) {
+          if (projectName && child.projectName !== projectName) {
+            continue
+          }
+          parentsMap.set(child.id, match)
           if (match) {
             fileId = child.id
           }
           list.push([match, child])
         }
         else {
+          parentsMap.set(child.id, match)
           list.push([match || parentsMap.get(child.parentId) === true, child])
         }
       }
