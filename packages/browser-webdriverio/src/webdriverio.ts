@@ -1,3 +1,4 @@
+import type { CustomComparatorsRegistry } from '@vitest/browser'
 import type { Capabilities } from '@wdio/types'
 import type {
   ScreenshotComparatorRegistry,
@@ -306,7 +307,7 @@ declare module 'vitest/node' {
     extends Omit<
       ScreenshotMatcherOptions,
       'comparatorName' | 'comparatorOptions'
-    > {}
+    >, CustomComparatorsRegistry {}
 
   export interface ToMatchScreenshotComparators
     extends ScreenshotComparatorRegistry {}

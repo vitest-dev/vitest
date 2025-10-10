@@ -16,6 +16,12 @@ const renderTestCase = (colors: readonly [string, string, string]) =>
     </div>
   `)
 
+declare module 'vitest/browser' {
+  interface ScreenshotComparatorRegistry {
+    failing: Record<string, never>
+  }
+}
+
 /**
  * ## Screenshot Testing Strategy
  *
@@ -370,4 +376,49 @@ describe('.toMatchScreenshot', () => {
       )
     },
   )
+
+  test('can use custom comparators', async ({ onTestFinished }) => {
+    const filename = globalThis.crypto.randomUUID()
+    const path = join(
+      '__screenshots__',
+      'toMatchScreenshot.test.ts',
+      `${filename}-${server.browser}-${server.platform}.png`,
+    )
+
+    onTestFinished(async () => {
+      await server.commands.removeFile(path)
+    })
+
+    renderTestCase([
+      'oklch(39.6% 0.141 25.723)',
+      'oklch(40.5% 0.101 131.063)',
+      'oklch(37.9% 0.146 265.522)',
+    ])
+
+    const locator = page.getByTestId(dataTestId)
+
+    // Create a reference screenshot by explicitly saving one
+    await locator.screenshot({
+      save: true,
+      path,
+    })
+
+    // Test that `toMatchScreenshot()` correctly uses a custom comparator; since
+    //  the element hasn't changed, it should match, but this custom comparator
+    //  will always fail
+    await expect(locator).toMatchScreenshot(filename)
+
+    let errorMessage: string
+
+    try {
+      await expect(locator).toMatchScreenshot(filename, {
+        comparatorName: 'failing',
+        timeout: 100,
+      })
+    } catch (error) {
+      errorMessage = error.message
+    }
+
+    expect(errorMessage).matches(/^Could not capture a stable screenshot within 100ms\.$/m)
+  })
 })

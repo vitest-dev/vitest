@@ -40,7 +40,7 @@ export interface ScreenshotOptions {
   save?: boolean
 }
 
-export interface ScreenshotComparatorRegistry {
+interface StandardScreenshotComparators {
   pixelmatch: {
     /**
      * The maximum number of pixels that are allowed to differ between the captured
@@ -135,6 +135,13 @@ export interface ScreenshotComparatorRegistry {
     diffMask?: boolean | undefined
   }
 }
+
+export interface ScreenshotComparatorRegistry extends StandardScreenshotComparators {}
+
+export type NonStandardScreenshotComparators = Omit<
+  ScreenshotComparatorRegistry,
+  keyof StandardScreenshotComparators
+>
 
 export interface ScreenshotMatcherOptions<
   ComparatorName extends keyof ScreenshotComparatorRegistry = keyof ScreenshotComparatorRegistry
