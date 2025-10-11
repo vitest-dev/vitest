@@ -1079,8 +1079,8 @@ importers:
         specifier: 'catalog:'
         version: 3.3.3
       happy-dom:
-        specifier: ^18.0.1
-        version: 18.0.1
+        specifier: ^20.0.0
+        version: 20.0.0
       jsdom:
         specifier: ^26.1.0
         version: 26.1.0
@@ -1388,7 +1388,7 @@ importers:
         version: 2.4.6
       happy-dom:
         specifier: latest
-        version: 19.0.2
+        version: 20.0.0
       istanbul-lib-coverage:
         specifier: ^3.2.2
         version: 3.2.2
@@ -1534,7 +1534,7 @@ importers:
         version: 9.3.4
       happy-dom:
         specifier: latest
-        version: 19.0.2
+        version: 20.0.0
       vitest:
         specifier: workspace:*
         version: link:../../packages/vitest
@@ -6405,12 +6405,8 @@ packages:
   handle-thing@2.0.1:
     resolution: {integrity: sha512-9Qn4yBxelxoh2Ow62nP+Ka/kMnOXRi8BXnRaUwezLNhqelnN49xKz4F/dPP8OYLxLxq6JDtZb2i9XznUQbNPTg==}
 
-  happy-dom@18.0.1:
-    resolution: {integrity: sha512-qn+rKOW7KWpVTtgIUi6RVmTBZJSe2k0Db0vh1f7CWrWclkkc7/Q+FrOfkZIb2eiErLyqu5AXEzE7XthO9JVxRA==}
-    engines: {node: '>=20.0.0'}
-
-  happy-dom@19.0.2:
-    resolution: {integrity: sha512-831CLbgDyjRbd2lApHZFsBDe56onuFcjsCBPodzWpzedTpeDr8CGZjs7iEIdNW1DVwSFRecfwzLpVyGBPamwGA==}
+  happy-dom@20.0.0:
+    resolution: {integrity: sha512-GkWnwIFxVGCf2raNrxImLo397RdGhLapj5cT3R2PT7FwL62Ze1DROhzmYW7+J3p9105DYMVenEejEbnq5wA37w==}
     engines: {node: '>=20.0.0'}
 
   has-bigints@1.0.2:
@@ -14819,13 +14815,7 @@ snapshots:
 
   handle-thing@2.0.1: {}
 
-  happy-dom@18.0.1:
-    dependencies:
-      '@types/node': 20.19.17
-      '@types/whatwg-mimetype': 3.0.2
-      whatwg-mimetype: 3.0.0
-
-  happy-dom@19.0.2:
+  happy-dom@20.0.0:
     dependencies:
       '@types/node': 20.19.17
       '@types/whatwg-mimetype': 3.0.2
