@@ -210,7 +210,7 @@
     "cac": "catalog:",
     "empathic": "^2.0.0",
     "flatted": "catalog:",
-    "happy-dom": "^18.0.1",
+    "happy-dom": "^20.0.0",
     "jsdom": "^26.1.0",
     "local-pkg": "^1.1.2",
     "mime": "^4.1.0",
