@@ -235,6 +235,11 @@ function matchTask(
   search: string,
   filter: Filter,
 ) {
+  const project = currentProjectName.value
+  if (project && task.file.projectName !== project) {
+    return false
+  }
+
   const match = search.length === 0 || caseInsensitiveMatch(task.name, search)
 
   // search and filter will apply together
