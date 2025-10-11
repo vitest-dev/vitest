@@ -69,6 +69,7 @@ export const isFilteredByStatus = computed(() => {
 
   return false
 })
+export const isProjectFiltered = computed(() => currentProject.value !== ALL_PROJECTS)
 export const filteredFiles = shallowRef<File[]>([])
 export const initialized = ref(false)
 export const shouldShowExpandAll = computed(() => {
@@ -84,6 +85,7 @@ export const shouldShowExpandAll = computed(() => {
 export const testsTotal = computed<FilteredTests>(() => {
   const filtered = isFiltered.value
   const filteredByStatus = isFilteredByStatus.value
+  const projectFiltered = isProjectFiltered.value
   const onlyTests = filter.onlyTests
   const failed = explorerTree.summary.filesFailed
   const success = explorerTree.summary.filesSuccess
@@ -91,7 +93,7 @@ export const testsTotal = computed<FilteredTests>(() => {
   const running = explorerTree.summary.filesRunning
   const files = filteredFiles.value
   return explorerTree.collectTestsTotal(
-    filtered || filteredByStatus,
+    filtered || filteredByStatus || projectFiltered,
     onlyTests,
     files,
     {
