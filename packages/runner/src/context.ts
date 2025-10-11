@@ -263,7 +263,7 @@ function makeTimeoutError(isHook: boolean, timeout: number, stackTraceError?: Er
     isHook ? 'Hook' : 'Test'
   } timed out in ${timeout}ms.\nIf this is a long-running ${
     isHook ? 'hook' : 'test'
-  }, pass a timeout value as the last argument or configure it globally with "${
+  }, pass a timeout value as a second argument or configure it globally with "${
     isHook ? 'hookTimeout' : 'testTimeout'
   }".`
   const error = new Error(message)
