@@ -54,6 +54,20 @@ exports[`inline diff options: { expand: true } 1`] = `
 +     "k": "foo",
     },
   }",
+  "- Expected
++ Received
+
+  {
+    "arr": [
+      1,
+-     3,
++     2,
+    ],
+    "obj": {
+-     "k": "bar",
++     "k": "foo",
+    },
+  }",
 ]
 `;
 
@@ -93,6 +107,20 @@ exports[`inline diff options: { printBasicPrototype: true } 1`] = `
 -   3000,
 +   29,
   ]",
+  "- Expected
++ Received
+
+  Object {
+    "arr": Array [
+      1,
+-     3,
++     2,
+    ],
+    "obj": Object {
+-     "k": "bar",
++     "k": "foo",
+    },
+  }",
   "- Expected
 + Received
 
