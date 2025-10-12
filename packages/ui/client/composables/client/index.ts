@@ -176,9 +176,9 @@ watch(
       }
       explorerTree.loadFiles(files, projects)
       client.state.collectFiles(files)
+      config.value = _config
       explorerTree.startRun()
       unhandledErrors.value = (errors || []).map(parseError)
-      config.value = _config
     })
 
     ws.addEventListener('close', () => {
