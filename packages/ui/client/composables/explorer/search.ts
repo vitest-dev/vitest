@@ -4,6 +4,7 @@ import { explorerTree } from '~/composables/explorer'
 import {
   ALL_PROJECTS,
   currentProject,
+  currentProjectName,
   disableClearProjects,
   enableProjects,
   filter,
@@ -149,6 +150,7 @@ export function useSearch(
     enableProjects,
     disableClearProjects,
     currentProject,
+    currentProjectName,
     clearProject,
     projectSort,
     disableProjectSort,

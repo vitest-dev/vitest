@@ -46,6 +46,7 @@ const {
   enableProjects,
   disableClearProjects,
   currentProject,
+  currentProjectName,
   clearProject,
   disableProjectSort,
   clearProjectSort,
