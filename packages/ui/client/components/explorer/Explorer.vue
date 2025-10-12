@@ -87,25 +87,35 @@ useResizeObserver(() => testExplorerRef.value, ([{ contentRect }]) => {
         <label for="project-select" text-sm>
           Projects
         </label>
-        <select
-          id="project-select"
-          ref="selectProjectRef"
-          v-model="currentProject"
-          flex-1
-          pl-1
-          text-sm
-        >
-          <option :value="ALL_PROJECTS">
-            All Projects
-          </option>
-          <option
-            v-for="project in availableProjects"
-            :key="project"
-            :value="project"
+        <div class="relative flex-1">
+          <select
+            id="project-select"
+            ref="selectProjectRef"
+            v-model="currentProject"
+            w-full
+            appearance-none
+            bg-base
+            border="~ base rounded"
+            pl-2
+            pr-8
+            py-1
+            text-sm
+            cursor-pointer
+            hover:bg-active
           >
-            {{ project }}
-          </option>
-        </select>
+            <option :value="ALL_PROJECTS">
+              All Projects
+            </option>
+            <option
+              v-for="project in availableProjects"
+              :key="project"
+              :value="project"
+            >
+              {{ project }}
+            </option>
+          </select>
+          <div class="i-carbon:chevron-down absolute right-2 top-1/2 op50 -translate-y-1/2 pointer-events-none" />
+        </div>
 
         <IconButton
           v-tooltip.bottom="'Clear project filter'"
@@ -120,25 +130,35 @@ useResizeObserver(() => testExplorerRef.value, ([{ contentRect }]) => {
         <label for="project-sort" text-sm>
           Sort by
         </label>
-        <select
-          id="project-sort"
-          ref="sortProjectRef"
-          v-model="projectSort"
-          flex-1
-          pl-1
-          text-sm
-          :disabled="disableProjectSort"
-        >
-          <option value="default">
-            Default
-          </option>
-          <option value="asc">
-            Project A-Z
-          </option>
-          <option value="desc">
-            Project Z-A
-          </option>
-        </select>
+        <div class="relative flex-1" :class="{ 'op-50 cursor-not-allowed': disableProjectSort }">
+          <select
+            id="project-sort"
+            ref="sortProjectRef"
+            v-model="projectSort"
+            w-full
+            appearance-none
+            bg-base
+            border="~ base rounded"
+            pl-2
+            pr-8
+            py-1
+            text-sm
+            cursor-pointer
+            hover:bg-active
+            :disabled="disableProjectSort"
+          >
+            <option value="default">
+              Default
+            </option>
+            <option value="asc">
+              Project A-Z
+            </option>
+            <option value="desc">
+              Project Z-A
+            </option>
+          </select>
+          <div class="i-carbon:chevron-down absolute right-2 top-1/2 op50 -translate-y-1/2 pointer-events-none" />
+        </div>
         <IconButton
           v-tooltip.bottom="'Reset sort'"
           :disabled="disableClearProjectSort"
@@ -225,7 +245,7 @@ useResizeObserver(() => testExplorerRef.value, ([{ contentRect }]) => {
           </div>
         </template>
         <!-- empty-state -->
-        <template v-if="(isFiltered || isFilteredByStatus) && uiEntries.length === 0">
+        <template v-if="(isFiltered || isFilteredByStatus || !!currentProjectName) && uiEntries.length === 0">
           <div v-if="initialized" flex="~ col" items-center p="x4 y4" font-light>
             <div op30>
               No matched test
