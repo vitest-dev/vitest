@@ -497,7 +497,7 @@ resolveDiffPath: ({ arg, attachmentsDir, browserName, ext, root, testFileName })
 
 - **Type:** `Record<string, Comparator>`
 
-Register custom screenshot comparison algorithms, like SSIM or perceptual diff implementations.
+Register custom screenshot comparison algorithms, like [SSIM](https://en.wikipedia.org/wiki/Structural_similarity_index_measure) or other perceptual similarity metrics.
 
 To create a custom comparator, you need to register it in your config. If using TypeScript, declare its options in the `ScreenshotComparatorRegistry` interface.
 
