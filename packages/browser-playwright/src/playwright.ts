@@ -42,7 +42,7 @@ type PlaywrightBrowser = (typeof playwrightBrowsers)[number]
 
 // Enable intercepting of requests made by service workers - experimental API is only available in Chromium based browsers
 // Requests from service workers are only available on context.route() https://playwright.dev/docs/service-workers-experimental
-process.env.PW_EXPERIMENTAL_SERVICE_WORKER_NETWORK_EVENTS = '1'
+process.env.PW_EXPERIMENTAL_SERVICE_WORKER_NETWORK_EVENTS ??= '1'
 
 export interface PlaywrightProviderOptions {
   /**
