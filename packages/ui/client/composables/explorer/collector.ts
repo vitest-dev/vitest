@@ -3,7 +3,7 @@ import type { Arrayable } from '@vitest/utils'
 import type { CollectFilteredTests, CollectorInfo, Filter, FilteredTests } from '~/composables/explorer/types'
 import { isTestCase } from '@vitest/runner/utils'
 import { toArray } from '@vitest/utils/helpers'
-import { client, findById } from '~/composables/client'
+import { client, config, findById } from '~/composables/client'
 import { testRunState } from '~/composables/client/state'
 import { expandNodesOnEndRun } from '~/composables/explorer/expand'
 import { runFilter, testMatcher } from '~/composables/explorer/filter'
@@ -106,7 +106,7 @@ export function runCollect(
   })
 
   queueMicrotask(() => {
-    collectData(summary)
+    collectData(summary, end)
   })
 
   queueMicrotask(() => {
@@ -290,7 +290,7 @@ export function resetCollectorInfo(summary: CollectorInfo) {
   summary.failedSnapshotEnabled = false
 }
 
-function collectData(summary: CollectorInfo) {
+function collectData(summary: CollectorInfo, end: boolean) {
   const idMap = client.state.idMap
   const filesMap = new Map(explorerTree.root.tasks.filter(f => idMap.has(f.id)).map(f => [f.id, f]))
   const useFiles = Array.from(filesMap.values()).map(file => [file.id, findById(file.id)] as const)
@@ -329,12 +329,13 @@ function collectData(summary: CollectorInfo) {
       file.duration = f.result?.duration != null ? Math.round(f.result?.duration) : undefined
       file.state = f.result?.state
     }
-    time += Math.max(0, f.collectDuration || 0)
-    time += Math.max(0, f.setupDuration || 0)
-    time += Math.max(0, f.result?.duration || 0)
-    time += Math.max(0, f.environmentLoad || 0)
-    time += Math.max(0, f.prepareDuration || 0)
-    data.time = time > 1000 ? `${(time / 1000).toFixed(2)}s` : `${Math.round(time)}ms`
+    if (!config.value.browser) {
+      time += Math.max(0, f.collectDuration || 0)
+      time += Math.max(0, f.setupDuration || 0)
+      time += Math.max(0, f.result?.duration || 0)
+      time += Math.max(0, f.environmentLoad || 0)
+      time += Math.max(0, f.prepareDuration || 0)
+    }
     if (f.result?.state === 'fail') {
       data.filesFailed++
     }
@@ -371,7 +372,16 @@ function collectData(summary: CollectorInfo) {
   }
 
   summary.files = data.files
-  summary.time = data.time
+  if (config.value.browser) {
+    // only update while running tests: we need to update the UI
+    if (!end) {
+      const browserTime = performance.now() - explorerTree.browserTestsStartTime
+      summary.time = browserTime > 1000 ? `${(browserTime / 1000).toFixed(2)}s` : `${Math.round(browserTime)}ms`
+    }
+  }
+  else {
+    summary.time = time > 1000 ? `${(time / 1000).toFixed(2)}s` : `${Math.round(time)}ms`
+  }
   summary.filesFailed = data.filesFailed
   summary.filesSuccess = data.filesSuccess
   summary.filesIgnore = data.filesIgnore
