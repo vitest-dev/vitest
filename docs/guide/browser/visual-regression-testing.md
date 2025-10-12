@@ -615,27 +615,26 @@ export default defineConfig({
           include: ['visual-regression-tests/**/*.test.ts?(x)'],
           browser: {
             enabled: true,
-            provider: playwright(),
+            provider: playwright({
+              connectOptions: {
+                wsEndpoint: `${env.PLAYWRIGHT_SERVICE_URL}?${new URLSearchParams({
+                  'api-version': '2025-09-01',
+                  os: 'linux', // always use Linux for consistency
+                  // helps identifying runs in the service's dashboard
+                  runName: `Vitest ${env.CI ? 'CI' : 'local'} run @${new Date().toISOString()}`,
+                })}`,
+                exposeNetwork: '<loopback>',
+                headers: {
+                  Authorization: `Bearer ${env.PLAYWRIGHT_SERVICE_ACCESS_TOKEN}`,
+                },
+                timeout: 30_000,
+              }
+            }),
             headless: true,
             instances: [
               {
                 browser: 'chromium',
                 viewport: { width: 2560, height: 1440 },
-                connect: {
-                  wsEndpoint: `${env.PLAYWRIGHT_SERVICE_URL}?${new URLSearchParams({
-                    'api-version': '2025-09-01',
-                    os: 'linux', // always use Linux for consistency
-                    // helps identifying runs in the service's dashboard
-                    runName: `Vitest ${env.CI ? 'CI' : 'local'} run @${new Date().toISOString()}`,
-                  })}`,
-                  options: {
-                    exposeNetwork: '<loopback>',
-                    headers: {
-                      Authorization: `Bearer ${env.PLAYWRIGHT_SERVICE_ACCESS_TOKEN}`,
-                    },
-                    timeout: 30_000,
-                  },
-                },
               },
             ],
           },

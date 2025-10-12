@@ -36,8 +36,7 @@
       "default": "./dist/locators.js"
     },
     "./utils": {
-      "types": "./utils.d.ts",
-      "default": "./dist/utils.js"
+      "default": "./dummy.js"
     },
     "./package.json": "./package.json"
   },

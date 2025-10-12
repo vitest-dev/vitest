@@ -34,6 +34,7 @@ declare module '@vitest/expect' {
   }
 
   interface ExpectStatic {
+    assert: Chai.AssertStatic
     unreachable: (message?: string) => never
     soft: <T>(actual: T, message?: string) => Assertion<T>
     poll: <T>(
