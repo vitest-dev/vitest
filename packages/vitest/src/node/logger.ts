@@ -318,7 +318,8 @@ export class Logger {
         process.exitCode = exitCode !== undefined ? (128 + exitCode) : Number(signal)
       }
 
-      process.exit()
+      // Timeout to flush stderr
+      setTimeout(() => process.exit(), 1)
     }
 
     process.once('SIGINT', onExit)

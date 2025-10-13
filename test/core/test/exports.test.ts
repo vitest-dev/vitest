@@ -163,6 +163,13 @@ it('exports snapshot', async ({ skip, task }) => {
           "setFn": "function",
           "setHooks": "function",
         },
+        "./workers": {
+          "collectVitestWorkerTests": "function",
+          "provideWorkerState": "function",
+          "runBaseTests": "function",
+          "runVitestWorker": "function",
+          "runVmTests": "function",
+        },
       }
     `)
   }

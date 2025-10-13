@@ -33,8 +33,11 @@ const entries = {
   'module-evaluator': 'src/runtime/moduleRunner/moduleEvaluator.ts',
 
   // for performance reasons we bundle them separately so we don't import everything at once
-  'worker-vm': 'src/runtime/worker-vm.ts',
-  'worker-base': 'src/runtime/worker-base.ts',
+  'worker': 'src/runtime/worker.ts',
+  'workers/forks': 'src/runtime/workers/forks.ts',
+  'workers/threads': 'src/runtime/workers/threads.ts',
+  'workers/vmThreads': 'src/runtime/workers/vmThreads.ts',
+  'workers/vmForks': 'src/runtime/workers/vmForks.ts',
 
   'workers/runVmTests': 'src/runtime/runVmTests.ts',
 

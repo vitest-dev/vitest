@@ -90,7 +90,6 @@ export type {
   EnvironmentOptions,
   InlineConfig,
   Pool,
-  PoolOptions,
   ProjectConfig,
   ResolvedConfig,
   ResolvedProjectConfig,

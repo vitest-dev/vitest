@@ -20,7 +20,6 @@ import type { WatcherTriggerPattern } from '../watcher'
 import type { BenchmarkUserOptions } from './benchmark'
 import type { BrowserConfigOptions, ResolvedBrowserOptions } from './browser'
 import type { CoverageOptions, ResolvedCoverageOptions } from './coverage'
-import type { Pool, PoolOptions, ResolvedPoolOptions } from './pool-options'
 import type { Reporter } from './reporter'
 
 export type { CoverageOptions, ResolvedCoverageOptions }
@@ -39,7 +38,6 @@ export type BuiltinEnvironment
 export type VitestEnvironment
   = | BuiltinEnvironment
     | (string & Record<never, never>)
-export type { Pool, PoolOptions }
 export type CSSModuleScopeStrategy = 'stable' | 'scoped' | 'non-scoped'
 
 export type ApiConfig = Pick<
@@ -205,6 +203,16 @@ export type ResolveSnapshotPathHandler = (
   context: ResolveSnapshotPathHandlerContext
 ) => string
 
+export type BuiltinPool
+  = | 'browser'
+    | 'threads'
+    | 'forks'
+    | 'vmThreads'
+    | 'vmForks'
+    | 'typescript'
+
+export type Pool = BuiltinPool | (string & {})
+
 export interface InlineConfig {
   /**
    * Name of the project. Will be used to display in the reporter.
@@ -281,11 +289,30 @@ export interface InlineConfig {
   /**
    * Run tests in an isolated environment. This option has no effect on vmThreads pool.
    *
-   * Disabling this option might improve performance if your code doesn't rely on side effects.
+   * Disabling this option improves performance if your code doesn't rely on side effects.
    *
    * @default true
    */
   isolate?: boolean
+
+  /**
+   * Pass additional arguments to `node` process when spawning the worker.
+   *
+   * See [Command-line API | Node.js](https://nodejs.org/docs/latest/api/cli.html) for more information.
+   *
+   * Set to `process.execArgv` to pass all arguments of the current process.
+   *
+   * Be careful when using, it as some options may crash worker, e.g. --prof, --title. See https://github.com/nodejs/node/issues/41103
+   *
+   * @default [] // no execution arguments are passed
+   */
+  execArgv?: string[]
+
+  /**
+   * Specifies the memory limit for `worker_thread` or `child_process` before they are recycled.
+   * If you see memory leaks, try to tinker this value.
+   */
+  vmMemoryLimit?: string | number
 
   /**
    * Pool used to run tests in.
@@ -297,12 +324,7 @@ export interface InlineConfig {
   pool?: Exclude<Pool, 'browser'>
 
   /**
-   * Pool options
-   */
-  poolOptions?: PoolOptions
-
-  /**
-   * Maximum number or percentage of workers to run tests in. `poolOptions.{threads,vmThreads}.maxThreads`/`poolOptions.forks.maxForks` has higher priority.
+   * Maximum number or percentage of workers to run tests in.
    */
   maxWorkers?: number | string
 
@@ -651,7 +673,7 @@ export interface InlineConfig {
    * Debug tests by opening `node:inspector` in worker / child process.
    * Provides similar experience as `--inspect` Node CLI argument.
    *
-   * Requires `poolOptions.threads.singleThread: true` OR `poolOptions.forks.singleFork: true`.
+   * Requires `fileParallelism: false`.
    */
   inspect?: boolean | string
 
@@ -659,7 +681,7 @@ export interface InlineConfig {
    * Debug tests by opening `node:inspector` in worker / child process and wait for debugger to connect.
    * Provides similar experience as `--inspect-brk` Node CLI argument.
    *
-   * Requires `poolOptions.threads.singleThread: true` OR `poolOptions.forks.singleFork: true`.
+   * Requires `fileParallelism: false`.
    */
   inspectBrk?: boolean | string
 
@@ -937,7 +959,6 @@ export interface ResolvedConfig
     | 'sequence'
     | 'typecheck'
     | 'runner'
-    | 'poolOptions'
     | 'pool'
     | 'cliExclude'
     | 'diff'
@@ -945,6 +966,7 @@ export interface ResolvedConfig
     | 'snapshotEnvironment'
     | 'bail'
     | 'name'
+    | 'vmMemoryLimit'
   > {
   mode: VitestRunMode
 
@@ -966,8 +988,7 @@ export interface ResolvedConfig
   snapshotOptions: SnapshotStateOptions
 
   browser: ResolvedBrowserOptions
-  pool: Pool
-  poolOptions?: ResolvedPoolOptions
+  pool: Pool // TODO: | Runtime
 
   reporters: (InlineReporter | ReporterWithOptions)[]
 
@@ -1011,6 +1032,8 @@ export interface ResolvedConfig
   runner?: string
 
   maxWorkers: number
+
+  vmMemoryLimit?: UserConfig['vmMemoryLimit']
 }
 
 type NonProjectOptions
@@ -1028,7 +1051,7 @@ type NonProjectOptions
     | 'ui'
     | 'open'
     | 'uiBase'
-  // TODO: allow snapshot options
+    // TODO: allow snapshot options
     | 'snapshotFormat'
     | 'resolveSnapshotPath'
     | 'passWithNoTests'
@@ -1039,8 +1062,6 @@ type NonProjectOptions
     | 'inspect'
     | 'inspectBrk'
     | 'coverage'
-    | 'maxWorkers'
-    | 'fileParallelism'
     | 'watchTriggerPatterns'
 
 export interface ServerDepsOptions {
@@ -1073,19 +1094,11 @@ export type ProjectConfig = Omit<
   NonProjectOptions
   | 'sequencer'
   | 'deps'
-  | 'poolOptions'
 > & {
   mode?: string
   sequencer?: Omit<SequenceOptions, 'sequencer' | 'seed'>
   deps?: Omit<DepsOptions, 'moduleDirectories'>
-  poolOptions?: {
-    threads?: Pick<
-      NonNullable<PoolOptions['threads']>,
-      'singleThread' | 'isolate'
-    >
-    vmThreads?: Pick<NonNullable<PoolOptions['vmThreads']>, 'singleThread'>
-    forks?: Pick<NonNullable<PoolOptions['forks']>, 'singleFork' | 'isolate'>
-  }
+  fileParallelism?: boolean
 }
 
 export type ResolvedProjectConfig = Omit<

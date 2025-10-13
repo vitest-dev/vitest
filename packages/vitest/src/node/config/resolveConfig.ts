@@ -4,11 +4,11 @@ import type { BenchmarkBuiltinReporters } from '../reporters'
 import type { ResolvedBrowserOptions } from '../types/browser'
 import type {
   ApiConfig,
+  BuiltinPool,
   ResolvedConfig,
   UserConfig,
 } from '../types/config'
 import type { BaseCoverageOptions, CoverageReporterWithOptions } from '../types/coverage'
-import type { BuiltinPool, ForksOptions, PoolOptions, ThreadsOptions } from '../types/pool-options'
 import crypto from 'node:crypto'
 import { slash, toArray } from '@vitest/utils/helpers'
 import { resolveModule } from 'local-pkg'
@@ -222,16 +222,10 @@ export function resolveConfig(
   }
 
   if (resolved.inspect || resolved.inspectBrk) {
-    const isSingleThread
-      = resolved.pool === 'threads'
-        && resolved.poolOptions?.threads?.singleThread
-    const isSingleFork
-      = resolved.pool === 'forks' && resolved.poolOptions?.forks?.singleFork
-
-    if (resolved.fileParallelism && !isSingleThread && !isSingleFork) {
+    if (resolved.fileParallelism) {
       const inspectOption = `--inspect${resolved.inspectBrk ? '-brk' : ''}`
       throw new Error(
-        `You cannot use ${inspectOption} without "--no-file-parallelism", "poolOptions.threads.singleThread" or "poolOptions.forks.singleFork"`,
+        `You cannot use ${inspectOption} without "--no-file-parallelism"`,
       )
     }
   }
@@ -499,56 +493,19 @@ export function resolveConfig(
     delete (resolved as any).resolveSnapshotPath
   }
 
+  resolved.execArgv ??= []
   resolved.pool ??= 'threads'
 
-  if (process.env.VITEST_MAX_THREADS) {
-    resolved.poolOptions = {
-      ...resolved.poolOptions,
-      threads: {
-        ...resolved.poolOptions?.threads,
-        maxThreads: Number.parseInt(process.env.VITEST_MAX_THREADS),
-      },
-      vmThreads: {
-        ...resolved.poolOptions?.vmThreads,
-        maxThreads: Number.parseInt(process.env.VITEST_MAX_THREADS),
-      },
-    }
+  if (
+    resolved.pool === 'vmForks'
+    || resolved.pool === 'vmThreads'
+    || resolved.pool === 'typescript'
+  ) {
+    resolved.isolate = false
   }
 
-  if (process.env.VITEST_MAX_FORKS) {
-    resolved.poolOptions = {
-      ...resolved.poolOptions,
-      forks: {
-        ...resolved.poolOptions?.forks,
-        maxForks: Number.parseInt(process.env.VITEST_MAX_FORKS),
-      },
-      vmForks: {
-        ...resolved.poolOptions?.vmForks,
-        maxForks: Number.parseInt(process.env.VITEST_MAX_FORKS),
-      },
-    }
-  }
-
-  const poolThreadsOptions = [
-    ['threads', 'maxThreads'],
-    ['vmThreads', 'maxThreads'],
-  ] as const satisfies [keyof PoolOptions, keyof ThreadsOptions][]
-
-  for (const [poolOptionKey, workerOptionKey] of poolThreadsOptions) {
-    if (resolved.poolOptions?.[poolOptionKey]?.[workerOptionKey]) {
-      resolved.poolOptions[poolOptionKey]![workerOptionKey] = resolveInlineWorkerOption(resolved.poolOptions[poolOptionKey]![workerOptionKey]!)
-    }
-  }
-
-  const poolForksOptions = [
-    ['forks', 'maxForks'],
-    ['vmForks', 'maxForks'],
-  ] as const satisfies [keyof PoolOptions, keyof ForksOptions][]
-
-  for (const [poolOptionKey, workerOptionKey] of poolForksOptions) {
-    if (resolved.poolOptions?.[poolOptionKey]?.[workerOptionKey]) {
-      resolved.poolOptions[poolOptionKey]![workerOptionKey] = resolveInlineWorkerOption(resolved.poolOptions[poolOptionKey]![workerOptionKey]!)
-    }
+  if (process.env.VITEST_MAX_WORKERS) {
+    resolved.maxWorkers = Number.parseInt(process.env.VITEST_MAX_WORKERS)
   }
 
   if (!builtinPools.includes(resolved.pool as BuiltinPool)) {

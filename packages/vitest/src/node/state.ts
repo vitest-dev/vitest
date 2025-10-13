@@ -1,4 +1,4 @@
-import type { File, Task, TaskResultPack } from '@vitest/runner'
+import type { File, FileSpecification, Task, TaskResultPack } from '@vitest/runner'
 import type { UserConsoleLog } from '../types/general'
 import type { TestProject } from './project'
 import type { MergedBlobs } from './reporters/blob'
@@ -21,7 +21,6 @@ export class StateManager {
   idMap: Map<string, Task> = new Map()
   taskFileMap: WeakMap<Task, File> = new WeakMap()
   errorsSet: Set<unknown> = new Set()
-  processTimeoutCauses: Set<string> = new Set()
   reportedTasksMap: WeakMap<Task, TestModule | TestCase | TestSuite> = new WeakMap()
   blobs?: MergedBlobs
   transformTime = 0
@@ -77,14 +76,6 @@ export class StateManager {
 
   getUnhandledErrors(): unknown[] {
     return Array.from(this.errorsSet.values())
-  }
-
-  addProcessTimeoutCause(cause: string): void {
-    this.processTimeoutCauses.add(cause)
-  }
-
-  getProcessTimeoutCauses(): string[] {
-    return Array.from(this.processTimeoutCauses.values())
   }
 
   getPaths(): string[] {
@@ -246,11 +237,11 @@ export class StateManager {
     ).length
   }
 
-  cancelFiles(files: string[], project: TestProject): void {
+  cancelFiles(files: FileSpecification[], project: TestProject): void {
     this.collectFiles(
       project,
-      files.map(filepath =>
-        createFileTask(filepath, project.config.root, project.config.name),
+      files.map(file =>
+        createFileTask(file.filepath, project.config.root, project.config.name),
       ),
     )
   }
