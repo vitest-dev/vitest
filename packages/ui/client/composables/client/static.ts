@@ -7,8 +7,8 @@ import type {
   WebSocketEvents,
   WebSocketHandlers,
 } from 'vitest'
+import { parse } from '@ungap/structured-clone/json'
 import { decompressSync, strFromU8 } from 'fflate'
-import { parse } from 'flatted'
 import { StateManager } from '../../../../ws-client/src/state'
 
 interface HTMLReportMetadata {

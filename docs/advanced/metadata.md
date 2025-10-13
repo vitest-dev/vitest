@@ -42,7 +42,7 @@ Vitest uses different methods to communicate with the Node.js process.
 
 - If Vitest runs tests inside worker threads, it will send data via [message port](https://developer.mozilla.org/en-US/docs/Web/API/MessagePort)
 - If Vitest uses child process, the data will be send as a serialized Buffer via [`process.send`](https://nodejs.org/api/process.html#processsendmessage-sendhandle-options-callback) API
-- If Vitest runs tests in the browser, the data will be stringified using [flatted](https://www.npmjs.com/package/flatted) package
+- If Vitest runs tests in the browser, the data will be stringified using [@ungap/structured-clone](https://www.npmjs.com/package/@ungap/structured-clone) package
 
 This property is also present on every test in the `json` reporter, so make sure that data can be serialized into JSON.
 

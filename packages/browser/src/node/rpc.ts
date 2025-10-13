@@ -7,10 +7,10 @@ import type { WebSocketBrowserEvents, WebSocketBrowserHandlers } from '../types'
 import type { ParentBrowserProject } from './projectParent'
 import type { BrowserServerState } from './state'
 import { existsSync, promises as fs } from 'node:fs'
+import { parse, stringify } from '@ungap/structured-clone/json'
 import { AutomockedModule, AutospiedModule, ManualMockedModule, RedirectedModule } from '@vitest/mocker'
 import { ServerMockResolver } from '@vitest/mocker/node'
 import { createBirpc } from 'birpc'
-import { parse, stringify } from 'flatted'
 import { dirname, join } from 'pathe'
 import { createDebugger, isFileServingAllowed, isValidApiRequest } from 'vitest/node'
 import { WebSocketServer } from 'ws'
@@ -369,7 +369,7 @@ function cloneByOwnProperties(value: any) {
 
 /**
  * Replacer function for serialization methods such as JS.stringify() or
- * flatted.stringify().
+ * flatted.stringify(). // here
  */
 export function stringifyReplace(key: string, value: any): any {
   if (value instanceof Error) {

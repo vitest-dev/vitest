@@ -1,6 +1,6 @@
 import fs from 'node:fs'
 import zlib from 'node:zlib'
-import { parse } from 'flatted'
+import { parse } from '@ungap/structured-clone/json'
 import { resolve } from 'pathe'
 import { describe, expect, it } from 'vitest'
 

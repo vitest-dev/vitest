@@ -38,8 +38,8 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@ungap/structured-clone": "catalog:",
     "birpc": "catalog:",
-    "flatted": "catalog:",
     "ws": "catalog:"
   },
   "devDependencies": {

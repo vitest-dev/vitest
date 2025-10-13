@@ -77,7 +77,7 @@ To communicate between different processes, you can create methods object using 
 
 ```ts
 import { createBirpc } from 'birpc'
-import { parse, stringify } from 'flatted'
+import { parse, stringify } from '@ungap/structured-clone/json'
 import { createMethodsRPC, TestProject } from 'vitest/node'
 
 function createRpc(project: TestProject, wss: WebSocketServer) {
