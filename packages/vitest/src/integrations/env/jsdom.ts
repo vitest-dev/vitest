@@ -1,8 +1,9 @@
+import type { DOMWindow } from 'jsdom'
 import type { Environment } from '../../types/environment'
 import type { JSDOMOptions } from '../../types/jsdom-options'
 import { populateGlobal } from './utils'
 
-function catchWindowErrors(window: Window) {
+function catchWindowErrors(window: DOMWindow) {
   let userErrorListenerCount = 0
   function throwUnhandlerError(e: ErrorEvent) {
     if (userErrorListenerCount === 0 && e.error != null) {
@@ -70,7 +71,10 @@ export default <Environment>{
       userAgent,
       ...restOptions,
     })
-    const clearWindowErrors = catchWindowErrors(dom.window as any)
+
+    patchAddEventListener(dom.window)
+
+    const clearWindowErrors = catchWindowErrors(dom.window)
 
     // TODO: browser doesn't expose Buffer, but a lot of dependencies use it
     dom.window.Buffer = Buffer
@@ -161,37 +165,7 @@ export default <Environment>{
       ...restOptions,
     })
 
-    const originalAddEventListener = dom.window.EventTarget.prototype.addEventListener
-
-    dom.window.EventTarget.prototype.addEventListener = function addEventListener(
-      type: string,
-      callback: EventListenerOrEventListenerObject | null,
-      options?: AddEventListenerOptions | boolean,
-    ) {
-      if (typeof options === 'object' && options.signal != null) {
-        const { signal, ...otherOptions } = options
-        // - this happens because AbortSignal is provided by Node.js,
-        // but jsdom APIs require jsdom's AbortSignal, while Node APIs
-        // (like fetch and Request) require a Node.js AbortSignal
-        // - disable narrow typing with "as any" because we need it later
-        if (!((signal as any) instanceof dom.window.AbortSignal)) {
-          const jsdomCompatOptions = Object.create(null)
-          Object.assign(jsdomCompatOptions, otherOptions)
-
-          // use jsdom-native abort controller instead and forward the
-          // previous one with `addEventListener`
-          const jsdomAbortController = new dom.window.AbortController()
-          signal.addEventListener('abort', () => {
-            jsdomAbortController.abort(signal.reason)
-          })
-
-          jsdomCompatOptions.signal = jsdomAbortController.signal
-          return originalAddEventListener.call(this, type, callback, jsdomCompatOptions)
-        }
-      }
-
-      return originalAddEventListener.call(this, type, callback, options)
-    }
+    patchAddEventListener(dom.window)
 
     const { keys, originals } = populateGlobal(global, dom.window, {
       bindFunctions: true,
@@ -211,4 +185,40 @@ export default <Environment>{
       },
     }
   },
+}
+
+function patchAddEventListener(window: DOMWindow) {
+  const JSDOMAbortSignal = window.AbortSignal
+  const JSDOMAbortController = window.AbortController
+  const originalAddEventListener = window.EventTarget.prototype.addEventListener
+
+  window.EventTarget.prototype.addEventListener = function addEventListener(
+    type: string,
+    callback: EventListenerOrEventListenerObject | null,
+    options?: AddEventListenerOptions | boolean,
+  ) {
+    if (typeof options === 'object' && options.signal != null) {
+      const { signal, ...otherOptions } = options
+      // - this happens because AbortSignal is provided by Node.js,
+      // but jsdom APIs require jsdom's AbortSignal, while Node APIs
+      // (like fetch and Request) require a Node.js AbortSignal
+      // - disable narrow typing with "as any" because we need it later
+      if (!((signal as any) instanceof JSDOMAbortSignal)) {
+        const jsdomCompatOptions = Object.create(null)
+        Object.assign(jsdomCompatOptions, otherOptions)
+
+        // use jsdom-native abort controller instead and forward the
+        // previous one with `addEventListener`
+        const jsdomAbortController = new JSDOMAbortController()
+        signal.addEventListener('abort', () => {
+          jsdomAbortController.abort(signal.reason)
+        })
+
+        jsdomCompatOptions.signal = jsdomAbortController.signal
+        return originalAddEventListener.call(this, type, callback, jsdomCompatOptions)
+      }
+    }
+
+    return originalAddEventListener.call(this, type, callback, options)
+  }
 }
