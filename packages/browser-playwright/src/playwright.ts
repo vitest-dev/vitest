@@ -10,8 +10,8 @@ import type {
   FrameLocator,
   LaunchOptions,
   Page,
+  CDPSession as PWCDPSession,
 } from 'playwright'
-import type { Protocol } from 'playwright-core/types/protocol'
 import type { SourceMap } from 'rollup'
 import type { ResolvedConfig } from 'vite'
 import type {
@@ -585,22 +585,5 @@ declare module 'vitest/browser' {
     mask?: ReadonlyArray<Element | Locator> | undefined
   }
 
-  export interface CDPSession {
-    send<T extends keyof Protocol.CommandParameters>(
-      method: T,
-      params?: Protocol.CommandParameters[T]
-    ): Promise<Protocol.CommandReturnValues[T]>
-    on<T extends keyof Protocol.Events>(
-      event: T,
-      listener: (payload: Protocol.Events[T]) => void
-    ): this
-    once<T extends keyof Protocol.Events>(
-      event: T,
-      listener: (payload: Protocol.Events[T]) => void
-    ): this
-    off<T extends keyof Protocol.Events>(
-      event: T,
-      listener: (payload: Protocol.Events[T]) => void
-    ): this
-  }
+  export interface CDPSession extends PWCDPSession {}
 }

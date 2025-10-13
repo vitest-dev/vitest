@@ -512,9 +512,6 @@ importers:
       playwright:
         specifier: ^1.55.0
         version: 1.55.0
-      playwright-core:
-        specifier: ^1.55.0
-        version: 1.55.0
       vitest:
         specifier: workspace:*
         version: link:../vitest
