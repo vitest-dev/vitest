@@ -10,7 +10,7 @@ import type {
   FrameLocator,
   LaunchOptions,
   Page,
-  CDPSession as PWCDPSession,
+  CDPSession as PlaywrightCDPSession,
 } from 'playwright'
 import type { SourceMap } from 'rollup'
 import type { ResolvedConfig } from 'vite'
@@ -570,6 +570,8 @@ type PWScreenshotOptions = NonNullable<Parameters<Page['screenshot']>[0]>
 type PWSelectOptions = NonNullable<Parameters<Page['selectOption']>[2]>
 type PWDragAndDropOptions = NonNullable<Parameters<Page['dragAndDrop']>[2]>
 type PWSetInputFiles = NonNullable<Parameters<Page['setInputFiles']>[2]>
+// Must be re-aliased here or rollup-plugin-dts removes the import alias and you end up with a circular reference
+type PWCDPSession = PlaywrightCDPSession
 
 declare module 'vitest/browser' {
   export interface UserEventHoverOptions extends PWHoverOptions {}
