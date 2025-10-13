@@ -14,7 +14,6 @@ const external = [
   ...Object.keys(pkg.peerDependencies || {}),
   /^@?vitest(\/|$)/,
   'vite',
-  'playwright-core/types/protocol',
 ]
 
 const dtsUtils = createDtsUtils()
