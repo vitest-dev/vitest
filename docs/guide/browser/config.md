@@ -492,3 +492,116 @@ For example, to store diffs in a subdirectory of attachments:
 resolveDiffPath: ({ arg, attachmentsDir, browserName, ext, root, testFileName }) =>
   `${root}/${attachmentsDir}/screenshot-diffs/${testFileName}/${arg}-${browserName}${ext}`
 ```
+
+#### browser.expect.toMatchScreenshot.comparators
+
+- **Type:** `Record<string, Comparator>`
+
+Register custom screenshot comparison algorithms, like [SSIM](https://en.wikipedia.org/wiki/Structural_similarity_index_measure) or other perceptual similarity metrics.
+
+To create a custom comparator, you need to register it in your config. If using TypeScript, declare its options in the `ScreenshotComparatorRegistry` interface.
+
+```ts
+import { defineConfig } from 'vitest/config'
+
+// 1. Declare the comparator's options type
+declare module 'vitest/browser' {
+  interface ScreenshotComparatorRegistry {
+    myCustomComparator: {
+      sensitivity?: number
+      ignoreColors?: boolean
+    }
+  }
+}
+
+// 2. Implement the comparator
+export default defineConfig({
+  test: {
+    browser: {
+      expect: {
+        toMatchScreenshot: {
+          comparators: {
+            myCustomComparator: async (
+              reference,
+              actual,
+              {
+                createDiff, // always provided by Vitest
+                sensitivity = 0.01,
+                ignoreColors = false,
+              }
+            ) => {
+              // ...algorithm implementation
+              return { pass, diff, message }
+            },
+          },
+        },
+      },
+    },
+  },
+})
+```
+
+Then use it in your tests:
+
+```ts
+await expect(locator).toMatchScreenshot({
+  comparatorName: 'myCustomComparator',
+  comparatorOptions: {
+    sensitivity: 0.08,
+    ignoreColors: true,
+  },
+})
+```
+
+**Comparator Function Signature:**
+
+```ts
+type Comparator<Options> = (
+  reference: {
+    metadata: { height: number; width: number }
+    data: TypedArray
+  },
+  actual: {
+    metadata: { height: number; width: number }
+    data: TypedArray
+  },
+  options: {
+    createDiff: boolean
+  } & Options
+) => Promise<{
+  pass: boolean
+  diff: TypedArray | null
+  message: string | null
+}> | {
+  pass: boolean
+  diff: TypedArray | null
+  message: string | null
+}
+```
+
+The `reference` and `actual` images are decoded using the appropriate codec (currently only PNG). The `data` property is a flat `TypedArray` (`Buffer`, `Uint8Array`, or `Uint8ClampedArray`) containing pixel data in RGBA format:
+
+- **4 bytes per pixel**: red, green, blue, alpha (from `0` to `255` each)
+- **Row-major order**: pixels are stored left-to-right, top-to-bottom
+- **Total length**: `width × height × 4` bytes
+- **Alpha channel**: always present. Images without transparency have alpha values set to `255` (fully opaque)
+
+::: tip Performance Considerations
+The `createDiff` option indicates whether a diff image is needed. During [stable screenshot detection](/guide/browser/visual-regression-testing#how-visual-tests-work), Vitest calls comparators with `createDiff: false` to avoid unnecessary work.
+
+**Respect this flag to keep your tests fast**.
+:::
+
+::: warning Handle Missing Options
+The `options` parameter in `toMatchScreenshot()` is optional, so users might not provide all your comparator options. Always make them optional with default values:
+
+```ts
+myCustomComparator: (
+  reference,
+  actual,
+  { createDiff, threshold = 0.1, maxDiff = 100 },
+) => {
+  // ...comparison logic
+}
+```
+:::

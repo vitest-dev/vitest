@@ -121,6 +121,24 @@ $ vitest --update
 Review updated screenshots before committing to make sure changes are
 intentional.
 
+## How Visual Tests Work
+
+Visual regression tests need stable screenshots to compare against. But pages aren't instantly stable as images load, animations finish, fonts render, and layouts settle.
+
+Vitest handles this automatically through "Stable Screenshot Detection":
+
+1. Vitest takes a first screenshot (or uses the reference screenshot if available) as baseline
+1. It takes another screenshot and compares it with the baseline
+    - If the screenshots match, the page is stable and testing continues
+    - If they differ, Vitest uses the newest screenshot as the baseline and repeats
+1. This continues until stability is achieved or the timeout is reached
+
+This ensures that transient visual changes (like loading spinners or animations) don't cause false failures. If something never stops animating though, you'll hit the timeout, so consider [disabling animations during testing](#disable-animations).
+
+If a stable screenshot is captured after retries (one or more) and a reference screenshot exists, Vitest performs a final comparison with the reference using `createDiff: true`. This will generate a diff image if they don't match.
+
+During stability detection, Vitest calls comparators with `createDiff: false` since it only needs to know if screenshots match. This keeps the detection process fast.
+
 ## Configuring Visual Tests
 
 ### Global Configuration
