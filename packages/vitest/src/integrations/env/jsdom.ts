@@ -161,6 +161,38 @@ export default <Environment>{
       ...restOptions,
     })
 
+    const originalAddEventListener = dom.window.EventTarget.prototype.addEventListener
+
+    dom.window.EventTarget.prototype.addEventListener = function addEventListener(
+      type: string,
+      callback: EventListenerOrEventListenerObject | null,
+      options?: AddEventListenerOptions | boolean,
+    ) {
+      if (typeof options === 'object' && options.signal != null) {
+        const { signal, ...otherOptions } = options
+        // - this happens because AbortSignal is provided by Node.js,
+        // but jsdom APIs require jsdom's AbortSignal, while Node APIs
+        // (like fetch and Request) require a Node.js AbortSignal
+        // - disable narrow typing with "as any" because we need it later
+        if (!((signal as any) instanceof dom.window.AbortSignal)) {
+          const jsdomCompatOptions = Object.create(null)
+          Object.assign(jsdomCompatOptions, otherOptions)
+
+          // use jsdom-native abort controller instead and forward the
+          // previous one with `addEventListener`
+          const jsdomAbortController = new dom.window.AbortController()
+          signal.addEventListener('abort', () => {
+            jsdomAbortController.abort(signal.reason)
+          })
+
+          jsdomCompatOptions.signal = jsdomAbortController.signal
+          return originalAddEventListener.call(this, type, callback, jsdomCompatOptions)
+        }
+      }
+
+      return originalAddEventListener.call(this, type, callback, options)
+    }
+
     const { keys, originals } = populateGlobal(global, dom.window, {
       bindFunctions: true,
     })
