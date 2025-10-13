@@ -1,6 +1,8 @@
 import type { StandardSchemaV1 } from '@standard-schema/spec'
 import type { Tester } from '@vitest/expect'
+import { stripVTControlCharacters } from 'node:util'
 import { getCurrentTest } from '@vitest/runner'
+import { processError } from '@vitest/utils/error'
 import { Temporal } from 'temporal-polyfill'
 import { describe, expect, expectTypeOf, test, vi } from 'vitest'
 
@@ -523,6 +525,28 @@ describe('Standard Schema', () => {
 
       expect(() => expect(123).toEqual(expect.schemaMatching(stringSchema))).toThrowErrorMatchingInlineSnapshot(`[AssertionError: expected 123 to deeply equal SchemaMatching{…}]`)
       expect(() => expect('hello').toEqual(expect.schemaMatching(numberSchema))).toThrowErrorMatchingInlineSnapshot(`[AssertionError: expected 'hello' to deeply equal SchemaMatching{…}]`)
+
+      try {
+        expect(123).toEqual(expect.schemaMatching(stringSchema))
+        expect.unreachable()
+      }
+      catch (err) {
+        const error = processError(err)
+        const diff = stripVTControlCharacters(error.diff)
+        expect(diff).toMatchInlineSnapshot(`
+          "- Expected: 
+          SchemaMatching {
+            "issues": [
+              {
+                "message": "Expected string",
+              },
+            ],
+          }
+
+          + Received: 
+          123"
+        `)
+      }
     })
 
     test('should work with objects', () => {
@@ -537,6 +561,34 @@ describe('Standard Schema', () => {
       }).toEqual({
         email: expect.schemaMatching(emailSchema),
       })).toThrowErrorMatchingInlineSnapshot(`[AssertionError: expected { email: 123 } to deeply equal { email: SchemaMatching{…} }]`)
+
+      try {
+        expect({
+          email: 'not-an-email',
+        }).toEqual({
+          email: expect.schemaMatching(emailSchema),
+        })
+        expect.unreachable()
+      }
+      catch (err) {
+        const error = processError(err)
+        const diff = stripVTControlCharacters(error.diff)
+        expect(diff).toMatchInlineSnapshot(`
+          "- Expected
+          + Received
+
+            {
+          -   "email": SchemaMatching {
+          -   "issues": [
+          -     {
+          -       "message": "Expected email",
+          -     },
+          -   ],
+          - },
+          +   "email": "not-an-email",
+            }"
+        `)
+      }
     })
 
     test('should work with objectContaining', () => {
@@ -546,6 +598,43 @@ describe('Standard Schema', () => {
       }).toEqual(expect.objectContaining({
         age: expect.schemaMatching(numberSchema),
       }))
+
+      try {
+        expect({
+          user: {
+            name: 'John',
+            age: 'thirty',
+          },
+        }).toEqual({
+          user: {
+            name: expect.schemaMatching(stringSchema),
+            age: expect.schemaMatching(numberSchema),
+          },
+        })
+        expect.unreachable()
+      }
+      catch (err) {
+        const error = processError(err)
+        const diff = stripVTControlCharacters(error.diff)
+        expect(diff).toMatchInlineSnapshot(`
+          "- Expected
+          + Received
+
+            {
+              "user": {
+          -     "age": SchemaMatching {
+          -   "issues": [
+          -     {
+          -       "message": "Expected number",
+          -     },
+          -   ],
+          - },
+          +     "age": "thirty",
+                "name": SchemaMatching,
+              },
+            }"
+        `)
+      }
     })
 
     test('should work with arrayContaining', () => {
@@ -553,6 +642,20 @@ describe('Standard Schema', () => {
         name: 'John',
         age: 30,
       }]).toEqual(expect.arrayContaining([expect.schemaMatching(objectSchema)]))
+
+      try {
+        expect([{
+          name: 'John',
+          age: 'thirty',
+        }]).toEqual(expect.arrayContaining([expect.schemaMatching(objectSchema)]))
+        expect.unreachable()
+      }
+      catch (err) {
+        const error = processError(err)
+        const diff = stripVTControlCharacters(error.diff)
+        expect(diff).toContain('SchemaMatching')
+        expect(diff).toContain('ArrayContaining')
+      }
     })
 
     test('should work with negation', () => {
@@ -560,6 +663,22 @@ describe('Standard Schema', () => {
       expect('hello').not.toEqual(expect.schemaMatching(numberSchema))
 
       expect(() => expect('hello').not.toEqual(expect.schemaMatching(stringSchema))).toThrowErrorMatchingInlineSnapshot(`[AssertionError: expected 'hello' to not deeply equal SchemaMatching]`)
+
+      try {
+        expect('hello').not.toEqual(expect.schemaMatching(stringSchema))
+        expect.unreachable()
+      }
+      catch (err) {
+        const error = processError(err)
+        const diff = stripVTControlCharacters(error.diff)
+        expect(diff).toMatchInlineSnapshot(`
+          "- Expected: 
+          SchemaMatching
+
+          + Received: 
+          "hello""
+        `)
+      }
     })
 
     test('should throw error for async schemas', () => {
@@ -585,6 +704,89 @@ describe('Standard Schema', () => {
           age: expect.schemaMatching(numberSchema),
         },
       })
+
+      try {
+        expect({
+          user: {
+            name: 123,
+            age: 30,
+          },
+        }).toMatchObject({
+          user: {
+            name: expect.schemaMatching(stringSchema),
+          },
+        })
+        expect.unreachable()
+      }
+      catch (err) {
+        const error = processError(err)
+        const diff = stripVTControlCharacters(error.diff)
+        expect(diff).toMatchInlineSnapshot(`
+          "- Expected
+          + Received
+
+            {
+              "user": {
+          -     "name": SchemaMatching {
+          -   "issues": [
+          -     {
+          -       "message": "Expected string",
+          -     },
+          -   ],
+          - },
+          +     "name": 123,
+              },
+            }"
+        `)
+      }
+
+      try {
+        expect({
+          name: 123,
+          email: 'invalid',
+          age: 'thirty',
+        }).toEqual({
+          name: expect.schemaMatching(stringSchema),
+          email: expect.schemaMatching(emailSchema),
+          age: expect.schemaMatching(numberSchema),
+        })
+        expect.unreachable()
+      }
+      catch (err) {
+        const error = processError(err)
+        const diff = stripVTControlCharacters(error.diff)
+        expect(diff).toMatchInlineSnapshot(`
+          "- Expected
+          + Received
+
+            {
+          -   "age": SchemaMatching {
+          -   "issues": [
+          -     {
+          -       "message": "Expected number",
+          -     },
+          -   ],
+          - },
+          -   "email": SchemaMatching {
+          -   "issues": [
+          -     {
+          -       "message": "Expected email",
+          -     },
+          -   ],
+          - },
+          -   "name": SchemaMatching {
+          -   "issues": [
+          -     {
+          -       "message": "Expected string",
+          -     },
+          -   ],
+          - },
+          +   "age": "thirty",
+          +   "email": "invalid",
+          +   "name": 123,
+            }"
+        `)
+      }
     })
   })
 })
