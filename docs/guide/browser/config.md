@@ -191,6 +191,7 @@ The custom provider API is highly experimental and can change between patches. I
 export interface BrowserProvider {
   name: string
   mocker?: BrowserModuleMocker
+  readonly initScripts?: string[]
   /**
    * @experimental opt-in into file parallelisation
    */

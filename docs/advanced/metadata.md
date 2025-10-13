@@ -1,9 +1,5 @@
 # Task Metadata
 
-::: warning
-Vitest exposes experimental private API. Breaking changes might not follow SemVer, please pin Vitest's version when using it.
-:::
-
 If you are developing a custom reporter or using Vitest Node.js API, you might find it useful to pass data from tests that are being executed in various contexts to your reporter or custom Vitest handler.
 
 To accomplish this, relying on the [test context](/guide/test-context) is not feasible since it cannot be serialized. However, with Vitest, you can utilize the `meta` property available on every task (suite or test) to share data between your tests and the Node.js process. It's important to note that this communication is one-way only, as the `meta` property can only be modified from within the test context. Any changes made within the Node.js context will not be visible in your tests.
