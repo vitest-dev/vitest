@@ -788,8 +788,8 @@ export function resolveConfig(
   resolved.server ??= {}
   resolved.server.deps ??= {}
 
-  resolved.testTimeout ??= resolved.browser.enabled ? 15000 : 5000
-  resolved.hookTimeout ??= resolved.browser.enabled ? 30000 : 10000
+  resolved.testTimeout ??= resolved.browser.enabled ? 30_000 : 5_000
+  resolved.hookTimeout ??= resolved.browser.enabled ? 30_000 : 10_000
 
   return resolved
 }

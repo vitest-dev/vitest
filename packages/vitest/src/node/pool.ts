@@ -12,6 +12,7 @@ import { rootDir } from '../paths'
 import { isWindows } from '../utils/env'
 import { getWorkerMemoryLimit, stringToBytes } from '../utils/memory-limit'
 import { groupFilesByEnv } from '../utils/test-helpers'
+import { createBrowserPool } from './pools/browser'
 import { Pool } from './pools/pool'
 
 const suppressWarningsPath = resolve(rootDir, './suppress-warnings.cjs')
@@ -19,7 +20,7 @@ const suppressWarningsPath = resolve(rootDir, './suppress-warnings.cjs')
 type RunWithFiles = (
   files: TestSpecification[],
   invalidates?: string[]
-) => Awaitable<void>
+) => Promise<void>
 
 export interface ProcessPool {
   name: string
@@ -60,6 +61,8 @@ export function createPool(ctx: Vitest): ProcessPool {
   const Sequencer = ctx.config.sequence.sequencer
   const sequencer = new Sequencer(ctx)
 
+  let browserPool: ProcessPool | undefined
+
   async function executeTests(method: 'run' | 'collect', specs: TestSpecification[], invalidates?: string[]): Promise<void> {
     ctx.onCancel(() => pool.cancel())
 
@@ -73,7 +76,12 @@ export function createPool(ctx: Vitest): ProcessPool {
       specs = await sequencer.shard(Array.from(specs))
     }
 
-    const taskGroups: { tasks: Task[]; maxWorkers: number }[] = []
+    const taskGroups: {
+      tasks: Task[]
+      maxWorkers: number
+      // browser pool has a more complex logic, so we keep it separately for now
+      browserSpecs: TestSpecification[]
+    }[] = []
     let workerId = 0
 
     const sorted = await sequencer.sort(specs)
@@ -85,10 +93,20 @@ export function createPool(ctx: Vitest): ProcessPool {
       }
 
       const taskGroup: Task[] = []
-      taskGroups.push({ tasks: taskGroup, maxWorkers: group.maxWorkers })
+      const browserSpecs: TestSpecification[] = []
+      taskGroups.push({
+        tasks: taskGroup,
+        maxWorkers: group.maxWorkers,
+        browserSpecs,
+      })
 
       for (const specs of group.specs) {
         const { project, pool } = specs[0]
+        if (pool === 'browser') {
+          browserSpecs.push(...specs)
+          continue
+        }
+
         const byEnv = await groupFilesByEnv(specs)
         const env = Object.values(byEnv)[0][0]
 
@@ -113,33 +131,41 @@ export function createPool(ctx: Vitest): ProcessPool {
       }
     }
 
-    // TODO: const { createBrowserPool } = await import('@vitest/browser')
-
     const results: PromiseSettledResult<void>[] = []
 
-    for (const { tasks, maxWorkers } of taskGroups) {
+    for (const { tasks, browserSpecs, maxWorkers } of taskGroups) {
       pool.setMaxWorkers(maxWorkers)
 
-      const groupResults = await Promise.allSettled(
-        tasks.map(async (task) => {
-          if (ctx.isCancelling) {
-            return ctx.state.cancelFiles(task.context.files, task.project)
-          }
+      const promises = tasks.map(async (task) => {
+        if (ctx.isCancelling) {
+          return ctx.state.cancelFiles(task.context.files, task.project)
+        }
 
-          try {
-            await pool.run(task, method)
+        try {
+          await pool.run(task, method)
+        }
+        catch (error) {
+          // Intentionally cancelled
+          if (ctx.isCancelling && error instanceof Error && error.message === 'Cancelled') {
+            ctx.state.cancelFiles(task.context.files, task.project)
           }
-          catch (error) {
-            // Intentionally cancelled
-            if (ctx.isCancelling && error instanceof Error && error.message === 'Cancelled') {
-              ctx.state.cancelFiles(task.context.files, task.project)
-            }
-            else {
-              throw error
-            }
+          else {
+            throw error
           }
-        }),
-      )
+        }
+      })
+
+      if (browserSpecs.length) {
+        browserPool = createBrowserPool(ctx)
+        if (method === 'collect') {
+          promises.push(browserPool.collectTests(browserSpecs))
+        }
+        else {
+          promises.push(browserPool.runTests(browserSpecs))
+        }
+      }
+
+      const groupResults = await Promise.allSettled(promises)
 
       results.push(...groupResults)
     }
@@ -161,7 +187,7 @@ export function createPool(ctx: Vitest): ProcessPool {
     runTests: (files, invalidates) => executeTests('run', files, invalidates),
     collectTests: (files, invalidates) => executeTests('collect', files, invalidates),
     async close() {
-      await pool.close()
+      await Promise.all([pool.close(), browserPool?.close?.()])
     },
   }
 }
