@@ -4,17 +4,18 @@ import type { TypecheckResults } from '../../../typecheck/typechecker'
 import type { Vitest } from '../../core'
 import type { TestProject } from '../../project'
 import type { TestRunEndReason } from '../../types/reporter'
-import type { Runtime, WorkerRequest, WorkerResponse } from '../types'
+import type { PoolRuntime, WorkerRequest, WorkerResponse } from '../types'
 import { hasFailed } from '@vitest/runner/utils'
 import { createDefer } from '@vitest/utils/helpers'
 import { Typechecker } from '../../../typecheck/typechecker'
 import { BaseRuntime } from './base'
 
+/** @experimental */
 export class TypecheckRuntime extends BaseRuntime {
   name = 'typecheck'
   private workerListeners: ((arg: any) => void)[] = []
 
-  constructor(options: Runtime['options']) {
+  constructor(options: PoolRuntime['options']) {
     super(options)
   }
 

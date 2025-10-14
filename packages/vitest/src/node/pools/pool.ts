@@ -1,5 +1,5 @@
 import type { Logger } from '../logger'
-import type { Runtime, Task, WorkerResponse } from './types'
+import type { PoolRuntime, PoolTask, WorkerResponse } from './types'
 import { ForksRuntime } from './runtimes/forks'
 import { ThreadsRuntime } from './runtimes/threads'
 import { TypecheckRuntime } from './runtimes/typecheck'
@@ -14,10 +14,10 @@ interface Options {
 }
 
 interface QueuedTask {
-  task: Task
+  task: PoolTask
   resolver: ReturnType<typeof withResolvers>
   method: 'run' | 'collect'
-  warmRuntime?: Runtime
+  warmRuntime?: PoolRuntime
 }
 
 export class Pool {
@@ -26,7 +26,7 @@ export class Pool {
 
   private queue: QueuedTask[] = []
   private activeTasks: (QueuedTask & { cancelTask: () => Promise<void> })[] = []
-  private sharedRuntimes: Runtime[] = []
+  private sharedRuntimes: PoolRuntime[] = []
   private exitPromises: Promise<void>[] = []
 
   constructor(private options: Options, private logger: Logger) {}
@@ -39,7 +39,7 @@ export class Pool {
     )
   }
 
-  async run(task: Task, method: 'run' | 'collect' = 'run'): Promise<void> {
+  async run(task: PoolTask, method: 'run' | 'collect' = 'run'): Promise<void> {
     // Every runtime related failure should make this promise reject so that it's picked by pool.
     // This resolver is used to make the error handling in recursive queue easier.
     const testFinish = withResolvers()
@@ -179,7 +179,7 @@ export class Pool {
     await this.cancel()
   }
 
-  private getRuntime(task: Task, method: 'run' | 'collect'): Runtime {
+  private getRuntime(task: PoolTask, method: 'run' | 'collect'): PoolRuntime {
     if (task.isolate === false) {
       const index = this.sharedRuntimes.findIndex(runtime => isEqualRuntime(runtime, task))
 
@@ -212,9 +212,9 @@ export class Pool {
         return new TypecheckRuntime(options)
     }
 
-    // TODO: Custom runtimes. pool can an instance of Runtime. Atm not tested, not typed.
-    if ((task.project.config.pool as unknown as Runtime).name === task.runtime) {
-      return task.project.config.pool as unknown as Runtime
+    const CustomRuntime = task.project.config.poolRuntime
+    if (CustomRuntime != null && CustomRuntime.runtime === task.runtime) {
+      return new CustomRuntime(options)
     }
 
     throw new Error(`Runtime ${task.runtime} not supported. Test files: ${formatFiles(task)}.`)
@@ -250,11 +250,11 @@ function withResolvers() {
   return { resolve, reject, promise }
 }
 
-function formatFiles(task: Task) {
+function formatFiles(task: PoolTask) {
   return task.context.files.map(file => file.filepath).join(', ')
 }
 
-function isEqualRuntime(runtime: Runtime, task: Task) {
+function isEqualRuntime(runtime: PoolRuntime, task: PoolTask) {
   if (task.isolate) {
     throw new Error('Isolated tasks should not share runtimes')
   }

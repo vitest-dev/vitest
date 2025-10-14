@@ -10,6 +10,7 @@ import type { SerializedConfig } from '../../runtime/config'
 import type { LabelColor, ParsedStack, ProvidedContext, TestError } from '../../types/general'
 import type { HappyDOMOptions } from '../../types/happy-dom-options'
 import type { JSDOMOptions } from '../../types/jsdom-options'
+import type { PoolRuntimeConstructor } from '../pools/types'
 import type {
   BuiltinReporterOptions,
   BuiltinReporters,
@@ -334,11 +335,11 @@ export interface InlineConfig {
   /**
    * Pool used to run tests in.
    *
-   * Supports 'threads', 'forks', 'vmThreads'
+   * Supports 'threads', 'forks', 'vmThreads', 'vmForks'
    *
    * @default 'forks'
    */
-  pool?: Exclude<Pool, 'browser'>
+  pool?: Exclude<Pool, 'browser'> | PoolRuntimeConstructor
 
   /**
    * Maximum number or percentage of workers to run tests in.
@@ -1004,7 +1005,8 @@ export interface ResolvedConfig
   snapshotOptions: SnapshotStateOptions
 
   browser: ResolvedBrowserOptions
-  pool: Pool // TODO: | Runtime
+  pool: Pool
+  poolRuntime?: PoolRuntimeConstructor
 
   reporters: (InlineReporter | ReporterWithOptions)[]
 

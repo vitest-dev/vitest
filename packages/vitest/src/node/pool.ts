@@ -1,6 +1,6 @@
 import type { Awaitable } from '@vitest/utils'
 import type { Vitest } from './core'
-import type { Task } from './pools/types'
+import type { PoolTask } from './pools/types'
 import type { TestProject } from './project'
 import type { TestSpecification } from './spec'
 import type { BuiltinPool, ResolvedConfig } from './types/config'
@@ -77,7 +77,7 @@ export function createPool(ctx: Vitest): ProcessPool {
     }
 
     const taskGroups: {
-      tasks: Task[]
+      tasks: PoolTask[]
       maxWorkers: number
       // browser pool has a more complex logic, so we keep it separately for now
       browserSpecs: TestSpecification[]
@@ -92,7 +92,7 @@ export function createPool(ctx: Vitest): ProcessPool {
         continue
       }
 
-      const taskGroup: Task[] = []
+      const taskGroup: PoolTask[] = []
       const browserSpecs: TestSpecification[] = []
       taskGroups.push({
         tasks: taskGroup,

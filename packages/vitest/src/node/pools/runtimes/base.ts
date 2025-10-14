@@ -1,17 +1,17 @@
 import type { BirpcReturn } from 'birpc'
 import type { RunnerRPC, RuntimeRPC } from '../../../types/rpc'
-import type { Runtime, WorkerRequest, WorkerResponse } from '../types'
+import type { PoolRuntime, WorkerRequest, WorkerResponse } from '../types'
 import { resolve } from 'node:path'
 import { createBirpc } from 'birpc'
 import { createMethodsRPC } from '../rpc'
 
 /** @experimental */
-export class BaseRuntime implements Runtime {
+export class BaseRuntime implements PoolRuntime {
   name = 'base'
   reportMemory = false
   isTerminating = false
   isStarted = false
-  options: Runtime['options']
+  options: PoolRuntime['options']
   poolId = undefined
 
   private rpc: BirpcReturn<RunnerRPC, RuntimeRPC>
@@ -19,7 +19,7 @@ export class BaseRuntime implements Runtime {
   private onMessageListeners: ((message: WorkerResponse) => void)[] = []
   private onErrorListeners: ((error: Error) => void)[] = []
 
-  constructor(options: Runtime['options']) {
+  constructor(options: PoolRuntime['options']) {
     this.options = options
 
     this.rpc = createBirpc<RunnerRPC, RuntimeRPC>(
@@ -58,7 +58,7 @@ export class BaseRuntime implements Runtime {
     return message as any
   }
 
-  async start(_: Parameters<Runtime['start']>[0]): Promise<void> {
+  async start(_: Parameters<PoolRuntime['start']>[0]): Promise<void> {
     if (this.isStarted) {
       return
     }

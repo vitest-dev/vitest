@@ -1,14 +1,15 @@
-import type { Runtime, WorkerRequest } from '../types'
+import type { PoolRuntime, WorkerRequest } from '../types'
 import { resolve } from 'node:path'
 import { Worker } from 'node:worker_threads'
 import { BaseRuntime } from './base'
 
+/** @experimental */
 export class ThreadsRuntime extends BaseRuntime {
   name = 'threads'
   entrypoint: string
   private thread?: Worker
 
-  constructor(options: Runtime['options']) {
+  constructor(options: PoolRuntime['options']) {
     super(options)
 
     /** Loads {@link file://./../../../runtime/workers/threads.ts} */
@@ -29,7 +30,7 @@ export class ThreadsRuntime extends BaseRuntime {
     }
   }
 
-  async start(options: Parameters<Runtime['start']>[0]): Promise<void> {
+  async start(options: Parameters<PoolRuntime['start']>[0]): Promise<void> {
     this.thread ||= new Worker(this.entrypoint, options)
 
     await super.start(options)

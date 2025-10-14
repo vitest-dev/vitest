@@ -1,6 +1,6 @@
 import type { ChildProcess } from 'node:child_process'
 import type { SerializedConfig } from '../../types/config'
-import type { Runtime, WorkerRequest } from '../types'
+import type { PoolRuntime, WorkerRequest } from '../types'
 import { fork } from 'node:child_process'
 import { resolve } from 'node:path'
 import v8 from 'node:v8'
@@ -8,13 +8,14 @@ import { BaseRuntime } from './base'
 
 const SIGKILL_TIMEOUT = 1_000
 
+/** @experimental */
 export class ForksRuntime extends BaseRuntime {
   name = 'forks'
   entrypoint: string
   rpcOptions = { cacheFs: true }
   private fork?: ChildProcess
 
-  constructor(options: Runtime['options']) {
+  constructor(options: PoolRuntime['options']) {
     options.cacheFs = true
     super(options)
 
@@ -48,7 +49,7 @@ export class ForksRuntime extends BaseRuntime {
     this.fork?.send(this.serialize(message))
   }
 
-  async start(options: Parameters<Runtime['start']>[0]): Promise<void> {
+  async start(options: Parameters<PoolRuntime['start']>[0]): Promise<void> {
     this.fork ||= fork(this.entrypoint, [], options)
 
     await super.start(options)

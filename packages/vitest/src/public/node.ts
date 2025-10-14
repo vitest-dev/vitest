@@ -24,6 +24,20 @@ export { resolveFsAllow } from '../node/plugins/utils'
 export type { ProcessPool } from '../node/pool'
 export { getFilePoolName } from '../node/pool'
 export { createMethodsRPC } from '../node/pools/rpc'
+export { BaseRuntime } from '../node/pools/runtimes/base'
+export { ForksRuntime } from '../node/pools/runtimes/forks'
+export { ThreadsRuntime } from '../node/pools/runtimes/threads'
+export { TypecheckRuntime } from '../node/pools/runtimes/typecheck'
+export { VmForksRuntime } from '../node/pools/runtimes/vmForks'
+export { VmThreadsRuntime } from '../node/pools/runtimes/vmThreads'
+export type {
+  PoolRuntime,
+  PoolRuntimeConstructor,
+  PoolRuntimeOptions,
+  PoolTask,
+  WorkerRequest,
+  WorkerResponse,
+} from '../node/pools/types'
 export type { SerializedTestProject, TestProject } from '../node/project'
 export type { HTMLOptions } from '../node/reporters/html'
 export type { JsonOptions } from '../node/reporters/json'

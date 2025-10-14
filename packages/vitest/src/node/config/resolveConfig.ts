@@ -4,7 +4,6 @@ import type { BenchmarkBuiltinReporters } from '../reporters'
 import type { ResolvedBrowserOptions } from '../types/browser'
 import type {
   ApiConfig,
-  BuiltinPool,
   ResolvedConfig,
   UserConfig,
 } from '../types/config'
@@ -24,7 +23,6 @@ import {
 import { benchmarkConfigDefaults, configDefaults } from '../../defaults'
 import { isCI, stdProvider } from '../../utils/env'
 import { getWorkersCountByPercentage } from '../../utils/workers'
-import { builtinPools } from '../pool'
 import { BaseSequencer } from '../sequencers/BaseSequencer'
 import { RandomSequencer } from '../sequencers/RandomSequencer'
 
@@ -142,6 +140,11 @@ export function resolveConfig(
     root: viteConfig.root,
     mode,
   } as any as ResolvedConfig
+
+  if (typeof options.pool === 'function') {
+    resolved.pool = options.pool.runtime
+    resolved.poolRuntime = options.pool
+  }
 
   resolved.project = toArray(resolved.project)
   resolved.provide ??= {}
@@ -506,10 +509,6 @@ export function resolveConfig(
 
   if (process.env.VITEST_MAX_WORKERS) {
     resolved.maxWorkers = Number.parseInt(process.env.VITEST_MAX_WORKERS)
-  }
-
-  if (!builtinPools.includes(resolved.pool as BuiltinPool)) {
-    resolved.pool = resolvePath(resolved.pool, resolved.root)
   }
 
   if (mode === 'benchmark') {

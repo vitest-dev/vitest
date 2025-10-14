@@ -1,7 +1,23 @@
 import type { ContextRPC } from '../../types/worker'
 import type { TestProject } from '../project'
 
-export interface Runtime {
+export interface PoolRuntimeConstructor {
+  new (options: PoolRuntimeOptions): PoolRuntime
+  /**
+   * The name of the runtime available on a static constructor.
+   */
+  runtime: string
+}
+
+export interface PoolRuntimeOptions {
+  distPath: string
+  project: TestProject
+  method: 'run' | 'collect'
+  cacheFs?: boolean
+  environment: string
+}
+
+export interface PoolRuntime {
   name: string
   isStarted: boolean
   reportMemory?: boolean
@@ -9,16 +25,10 @@ export interface Runtime {
   /** Exposed to test runner as `VITEST_POOL_ID`. Value is between 1-`maxWorkers`. */
   poolId?: number
 
-  options: {
-    distPath: string
-    project: TestProject
-    method: 'run' | 'collect'
-    cacheFs?: boolean
-    environment: string
-  }
+  options: PoolRuntimeOptions
 
   /** Note that start can be called multiple times. First time indicates worker warmup. */
-  start: (options: Pick<Task, 'env' | 'execArgv'>) => Promise<void>
+  start: (options: Pick<PoolTask, 'env' | 'execArgv'>) => Promise<void>
   stop: () => Promise<void>
   on: ((event: 'message', callback: (message: WorkerResponse) => void) => void) & ((event: 'error', callback: (error: Error) => void) => void)
   off: ((event: 'message', callback: (message: WorkerResponse) => void) => void) & ((event: 'error', callback: (error: Error) => void) => void)
@@ -29,7 +39,7 @@ export interface Runtime {
   deserialize: (message: any) => any
 }
 
-export interface Task {
+export interface PoolTask {
   runtime: 'forks' | 'threads' | 'vmForks' | 'vmThreads' | (string & {})
   project: TestProject
   isolate: boolean
