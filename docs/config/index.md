@@ -1610,16 +1610,12 @@ Open Vitest UI (WIP)
 
 Listen to port and serve API. When set to true, the default port is 51204
 
-### browser <Badge type="warning">experimental</Badge> {#browser}
+### browser {#browser}
 
 - **Default:** `{ enabled: false }`
 - **CLI:** `--browser=<name>`, `--browser.name=chrome --browser.headless`
 
 Configuration for running browser tests. Please, refer to the ["Browser Config Reference"](/guide/browser/config) article.
-
-::: warning
-This is an experimental feature. Breaking changes might not follow SemVer, please pin Vitest's version when using it.
-:::
 
 ### clearMocks
 

@@ -482,7 +482,6 @@ export interface InlineConfig {
 
   /**
    * options for test in a browser environment
-   * @experimental
    *
    * @default false
    */

@@ -39,7 +39,6 @@ import { createViteServer } from './vite'
 export class TestProject {
   /**
    * The global Vitest instance.
-   * @experimental The public Vitest API is experimental and does not follow semver.
    */
   public readonly vitest: Vitest
 
