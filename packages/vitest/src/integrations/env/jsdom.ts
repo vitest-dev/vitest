@@ -72,7 +72,7 @@ export default <Environment>{
       ...restOptions,
     })
 
-    patchAddEventListener(dom.window)
+    const clearAddEventListenerPatch = patchAddEventListener(dom.window)
 
     const clearWindowErrors = catchWindowErrors(dom.window)
 
@@ -124,6 +124,7 @@ export default <Environment>{
         return dom.getInternalVMContext()
       },
       teardown() {
+        clearAddEventListenerPatch()
         clearWindowErrors()
         dom.window.close()
         dom = undefined as any
@@ -165,7 +166,7 @@ export default <Environment>{
       ...restOptions,
     })
 
-    patchAddEventListener(dom.window)
+    const clearAddEventListenerPatch = patchAddEventListener(dom.window)
 
     const { keys, originals } = populateGlobal(global, dom.window, {
       bindFunctions: true,
@@ -177,6 +178,7 @@ export default <Environment>{
 
     return {
       teardown(global) {
+        clearAddEventListenerPatch()
         clearWindowErrors()
         dom.window.close()
         delete global.jsdom
@@ -220,5 +222,9 @@ function patchAddEventListener(window: DOMWindow) {
     }
 
     return originalAddEventListener.call(this, type, callback, options)
+  }
+
+  return () => {
+    window.EventTarget.prototype.addEventListener = originalAddEventListener
   }
 }
