@@ -246,6 +246,17 @@ export interface InlineConfig {
 
   server?: {
     deps?: ServerDepsOptions
+    debug?: {
+      /**
+       * The folder where Vitest stores the contents of transformed
+       * test files that can be inspected manually.
+       *
+       * If `true`, Vitest dumps the files in `.vitest-dump` folder relative to the root of the project.
+       *
+       * You can also use `VITEST_DEBUG_DUMP` env variable to enable this.
+       */
+      dump?: string | true
+    }
   }
 
   /**
@@ -1010,6 +1021,8 @@ export interface ResolvedConfig
   runner?: string
 
   maxWorkers: number
+
+  dumpDir?: string
 }
 
 type NonProjectOptions

@@ -6,7 +6,7 @@ import { mkdirSync } from 'node:fs'
 import { rename, stat, unlink, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { isExternalUrl, nanoid, unwrapId } from '@vitest/utils/helpers'
-import { dirname, join } from 'pathe'
+import { dirname, join, resolve } from 'pathe'
 import { fetchModule } from 'vite'
 import { hash } from '../hash'
 
@@ -17,6 +17,7 @@ export function createFetchModuleFunction(
   resolver: VitestResolver,
   cacheFs: boolean = false,
   tmpDir: string = join(tmpdir(), nanoid()),
+  dumpFolder?: string,
 ): (
   url: string,
   importer: string | undefined,
@@ -78,6 +79,11 @@ export function createFetchModuleFunction(
     ).catch(handleRollupError)
 
     const result = processResultSource(environment, moduleRunnerModule)
+
+    if (dumpFolder && 'code' in result) {
+      const path = resolve(dumpFolder, result.url.replace(/[^\w+]/g, '-'))
+      await writeFile(path, `${result.code}\n\n// ${result.id}`, 'utf-8')
+    }
 
     if (!cacheFs || !('code' in result)) {
       return result
