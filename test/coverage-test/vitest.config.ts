@@ -134,12 +134,7 @@ export default defineConfig({
         },
       },
     ],
-    poolOptions: {
-      threads: {
-        // Tests may have side effects, e.g. writing files to disk,
-        singleThread: true,
-      },
-    },
+    fileParallelism: false,
     onConsoleLog(log) {
       if (log.includes('ERROR: Coverage for')) {
         // Ignore threshold error messages

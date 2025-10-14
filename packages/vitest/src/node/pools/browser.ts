@@ -1,3 +1,4 @@
+import type { FileSpecification } from '@vitest/runner'
 import type { DeferPromise } from '@vitest/utils/helpers'
 import type { Vitest } from '../core'
 import type { ProcessPool } from '../pool'
@@ -58,10 +59,13 @@ export function createBrowserPool(vitest: Vitest): ProcessPool {
   }
 
   const runWorkspaceTests = async (method: 'run' | 'collect', specs: TestSpecification[]) => {
-    const groupedFiles = new Map<TestProject, string[]>()
-    for (const { project, moduleId } of specs) {
+    const groupedFiles = new Map<TestProject, FileSpecification[]>()
+    for (const { project, moduleId, testLines } of specs) {
       const files = groupedFiles.get(project) || []
-      files.push(moduleId)
+      files.push({
+        filepath: moduleId,
+        testLocations: testLines,
+      })
       groupedFiles.set(project, files)
     }
 
@@ -84,7 +88,7 @@ export function createBrowserPool(vitest: Vitest): ProcessPool {
       debug?.('provider is ready for %s project', project.name)
 
       const pool = ensurePool(project)
-      vitest.state.clearFiles(project, files)
+      vitest.state.clearFiles(project, files.map(f => f.filepath))
       providers.add(project.browser!.provider)
 
       return {
@@ -166,7 +170,7 @@ function escapePathToRegexp(path: string): string {
 }
 
 class BrowserPool {
-  private _queue: string[] = []
+  private _queue: FileSpecification[] = []
   private _promise: DeferPromise<void> | undefined
   private _providedContext: string | undefined
 
@@ -194,7 +198,7 @@ class BrowserPool {
     return this.project.browser!.state.orchestrators
   }
 
-  async runTests(method: 'run' | 'collect', files: string[]): Promise<void> {
+  async runTests(method: 'run' | 'collect', files: FileSpecification[]): Promise<void> {
     this._promise ??= createDefer<void>()
 
     if (!files.length) {
@@ -314,7 +318,7 @@ class BrowserPool {
     const orchestrator = this.getOrchestrator(sessionId)
     debug?.('[%s] run test %s', sessionId, file)
 
-    this.setBreakpoint(sessionId, file).then(() => {
+    this.setBreakpoint(sessionId, file.filepath).then(() => {
       // this starts running tests inside the orchestrator
       orchestrator.createTesters(
         {

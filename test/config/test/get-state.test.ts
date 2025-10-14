@@ -6,7 +6,6 @@ test.for([
   { isolate: true },
   { isolate: false, maxWorkers: 1 },
   { isolate: false, fileParallelism: false },
-  { isolate: false, poolOptions: { forks: { singleFork: true } } },
 ] satisfies TestUserConfig[])(`getState().testPath during collection %s`, async (config) => {
   const result = await runVitest({
     root: './fixtures/get-state',

@@ -72,31 +72,31 @@ test('shard count can be smaller than count of test files when passWithNoTests',
 test('inspect requires changing pool and singleThread/singleFork', async () => {
   const { stderr } = await runVitest({ inspect: true })
 
-  expect(stderr).toMatch('Error: You cannot use --inspect without "--no-file-parallelism", "poolOptions.threads.singleThread" or "poolOptions.forks.singleFork"')
+  expect(stderr).toMatch('Error: You cannot use --inspect without "--no-file-parallelism"')
 })
 
 test('inspect cannot be used with multi-threading', async () => {
-  const { stderr } = await runVitest({ inspect: true, pool: 'threads', poolOptions: { threads: { singleThread: false } } })
+  const { stderr } = await runVitest({ inspect: true, pool: 'threads', fileParallelism: true })
 
-  expect(stderr).toMatch('Error: You cannot use --inspect without "--no-file-parallelism", "poolOptions.threads.singleThread" or "poolOptions.forks.singleFork"')
+  expect(stderr).toMatch('Error: You cannot use --inspect without "--no-file-parallelism"')
 })
 
 test('inspect in browser mode requires no-file-parallelism', async () => {
   const { stderr } = await runVitest({ inspect: true, browser: { enabled: true, instances: [{ browser: 'chromium' }], provider: playwright() } })
 
-  expect(stderr).toMatch('Error: You cannot use --inspect without "--no-file-parallelism", "poolOptions.threads.singleThread" or "poolOptions.forks.singleFork"')
+  expect(stderr).toMatch('Error: You cannot use --inspect without "--no-file-parallelism"')
 })
 
 test('inspect-brk cannot be used with multi processing', async () => {
-  const { stderr } = await runVitest({ inspect: true, pool: 'forks', poolOptions: { forks: { singleFork: false } } })
+  const { stderr } = await runVitest({ inspect: true, pool: 'forks', fileParallelism: true })
 
-  expect(stderr).toMatch('Error: You cannot use --inspect without "--no-file-parallelism", "poolOptions.threads.singleThread" or "poolOptions.forks.singleFork"')
+  expect(stderr).toMatch('Error: You cannot use --inspect without "--no-file-parallelism"')
 })
 
 test('inspect-brk in browser mode requires no-file-parallelism', async () => {
   const { stderr } = await runVitest({ inspectBrk: true, browser: { enabled: true, instances: [{ browser: 'chromium' }], provider: playwright() } })
 
-  expect(stderr).toMatch('Error: You cannot use --inspect-brk without "--no-file-parallelism", "poolOptions.threads.singleThread" or "poolOptions.forks.singleFork"')
+  expect(stderr).toMatch('Error: You cannot use --inspect-brk without "--no-file-parallelism"')
 })
 
 test('inspect and --inspect-brk cannot be used when not playwright + chromium', async () => {
