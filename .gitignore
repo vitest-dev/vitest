@@ -35,3 +35,4 @@ test/browser/html/
 test/core/html/
 .vitest-attachments
 explainFiles.txt
+.vitest-dump

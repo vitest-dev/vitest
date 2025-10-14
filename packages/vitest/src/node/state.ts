@@ -26,6 +26,17 @@ export class StateManager {
   blobs?: MergedBlobs
   transformTime = 0
 
+  metadata: Record<string, {
+    externalized: Record<string, string>
+    duration: Record<string, number[]>
+    tmps: Record<string, string>
+    dumpDir?: string
+    outline?: {
+      externalized: number
+      inlined: number
+    }
+  }> = {}
+
   onUnhandledError?: OnUnhandledErrorCallback
 
   /** @internal */
