@@ -197,14 +197,16 @@ Note that errors are serialized into simple objects: `instanceof Error` will alw
 function meta(): TaskMeta
 ```
 
-Custom [metadata](/advanced/metadata) that was attached to the suite during its execution or collection. The meta can be attached by assigning a property to the `task.meta` object during a test run:
+Custom [metadata](/advanced/metadata) that was attached to the suite during its execution or collection. The meta can be attached by assigning a property to the `suite.meta` object during a test run:
 
-```ts {5,10}
+```ts {7,12}
 import { test } from 'vitest'
+import { getCurrentSuite } from 'vitest/suite'
 
-describe('the validation works correctly', (task) => {
+describe('the validation works correctly', () => {
   // assign "decorated" during collection
-  task.meta.decorated = false
+  const { suite } = getCurrentSuite()
+  suite!.meta.decorated = true
 
   test('some test', ({ task }) => {
     // assign "decorated" during test run, it will be available

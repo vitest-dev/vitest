@@ -95,7 +95,7 @@ export default defineConfig({
     },
     includeTaskLocation: true,
     reporters: process.env.GITHUB_ACTIONS
-      ? ['default', 'github-actions']
+      ? ['default', ['github-actions', { displayAnnotations: false }]]
       : [['default', { summary: true }], 'hanging-process'],
     testNamePattern: '^((?!does not include test that).)*$',
     coverage: {
