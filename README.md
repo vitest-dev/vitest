@@ -49,7 +49,7 @@ Next generation testing framework powered by Vite.
 - Filtering, timeouts, concurrent for suite and tests
 - Sharding support
 - Reporting Uncaught Errors
-- Run your tests in the browser natively (experimental)
+- Run your tests in the browser natively
 
 > Vitest requires Vite >=v6.0.0 and Node >=v20.0.0
 

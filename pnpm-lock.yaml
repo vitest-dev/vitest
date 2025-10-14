@@ -666,6 +666,9 @@ importers:
 
   packages/expect:
     dependencies:
+      '@standard-schema/spec':
+        specifier: ^1.0.0
+        version: 1.0.0
       '@types/chai':
         specifier: 'catalog:'
         version: 5.2.2
@@ -1263,6 +1266,9 @@ importers:
 
   test/core:
     devDependencies:
+      '@standard-schema/spec':
+        specifier: ^1.0.0
+        version: 1.0.0
       '@test/vite-environment-external':
         specifier: link:./projects/vite-environment-external
         version: link:projects/vite-environment-external
@@ -4017,6 +4023,9 @@ packages:
 
   '@sinonjs/fake-timers@14.0.0':
     resolution: {integrity: sha512-QfoXRaUTjMVVn/ZbnD4LS3TPtqOkOdKIYCKldIVPnuClcwRKat6LI2mRZ2s5qiBfO6Fy03An35dSls/2/FEc0Q==}
+
+  '@standard-schema/spec@1.0.0':
+    resolution: {integrity: sha512-m2bOd0f2RT9k8QJx1JN85cZYyH1RqFBdlwtkSlf4tBDYLCiiZnv1fIIwacK6cqwXavOydf0NPToMQgpKq+dVlA==}
 
   '@stylistic/eslint-plugin@5.4.0':
     resolution: {integrity: sha512-UG8hdElzuBDzIbjG1QDwnYH0MQ73YLXDFHgZzB4Zh/YJfnw8XNsloVtytqzx0I2Qky9THSdpTmi8Vjn/pf/Lew==}
@@ -11919,6 +11928,8 @@ snapshots:
   '@sinonjs/fake-timers@14.0.0(patch_hash=6f7091fcf11165157b4bfb8dde6b5b6b7697e3efd6e9b53bb4bdef442f60a278)':
     dependencies:
       '@sinonjs/commons': 3.0.1
+
+  '@standard-schema/spec@1.0.0': {}
 
   '@stylistic/eslint-plugin@5.4.0(eslint@9.37.0(jiti@2.5.1))':
     dependencies:

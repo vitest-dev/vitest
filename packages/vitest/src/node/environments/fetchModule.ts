@@ -2,21 +2,27 @@ import type { DevEnvironment, FetchResult, Rollup, TransformResult } from 'vite'
 import type { FetchFunctionOptions } from 'vite/module-runner'
 import type { FetchCachedFileSystemResult } from '../../types/general'
 import type { VitestResolver } from '../resolver'
-import { mkdirSync } from 'node:fs'
-import { rename, stat, unlink, writeFile } from 'node:fs/promises'
+import { existsSync, mkdirSync } from 'node:fs'
+import { readFile, rename, stat, unlink, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { isExternalUrl, nanoid, unwrapId } from '@vitest/utils/helpers'
-import { dirname, join } from 'pathe'
+import { dirname, join, resolve } from 'pathe'
 import { fetchModule } from 'vite'
 import { hash } from '../hash'
 
 const created = new Set()
 const promises = new Map<string, Promise<void>>()
 
+interface DumpOptions {
+  dumpFolder?: string
+  readFromDump?: boolean
+}
+
 export function createFetchModuleFunction(
   resolver: VitestResolver,
   cacheFs: boolean = false,
   tmpDir: string = join(tmpdir(), nanoid()),
+  dump?: DumpOptions,
 ): (
   url: string,
   importer: string | undefined,
@@ -67,17 +73,44 @@ export function createFetchModuleFunction(
       }
     }
 
-    const moduleRunnerModule = await fetchModule(
-      environment,
-      url,
-      importer,
-      {
-        ...options,
-        inlineSourceMap: false,
-      },
-    ).catch(handleRollupError)
+    let moduleRunnerModule: FetchResult | undefined
+
+    if (dump?.dumpFolder && dump.readFromDump) {
+      const path = resolve(dump?.dumpFolder, url.replace(/[^\w+]/g, '-'))
+      if (existsSync(path)) {
+        const code = await readFile(path, 'utf-8')
+        const matchIndex = code.lastIndexOf('\n//')
+        if (matchIndex !== -1) {
+          const { id, file } = JSON.parse(code.slice(matchIndex + 4))
+          moduleRunnerModule = {
+            code,
+            id,
+            url,
+            file,
+            invalidate: false,
+          }
+        }
+      }
+    }
+
+    if (!moduleRunnerModule) {
+      moduleRunnerModule = await fetchModule(
+        environment,
+        url,
+        importer,
+        {
+          ...options,
+          inlineSourceMap: false,
+        },
+      ).catch(handleRollupError)
+    }
 
     const result = processResultSource(environment, moduleRunnerModule)
+
+    if (dump?.dumpFolder && 'code' in result) {
+      const path = resolve(dump?.dumpFolder, result.url.replace(/[^\w+]/g, '-'))
+      await writeFile(path, `${result.code}\n// ${JSON.stringify({ id: result.id, file: result.file })}`, 'utf-8')
+    }
 
     if (!cacheFs || !('code' in result)) {
       return result

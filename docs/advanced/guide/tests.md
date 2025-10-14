@@ -2,8 +2,6 @@
 
 ::: warning
 This guide explains how to use the advanced API to run tests via a Node.js script. If you just want to [run tests](/guide/), you probably don't need this. It is primarily used by library authors.
-
-Breaking changes might not follow SemVer, please pin Vitest's version when using the experimental API.
 :::
 
 Vitest exposes two methods to initiate Vitest:

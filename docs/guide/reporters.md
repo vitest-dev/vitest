@@ -564,6 +564,18 @@ export default defineConfig({
 })
 ```
 
+If you are using [Annotations API](/guide/test-annotations), the reporter will automatically inline them in the GitHub UI. You can disable this by setting `displayAnnotations` option to `false`:
+
+```ts
+export default defineConfig({
+  test: {
+    reporters: [
+      ['github-actions', { displayAnnotations: false }],
+    ],
+  },
+})
+```
+
 ### Blob Reporter
 
 Stores test results on the machine so they can be later merged using [`--merge-reports`](/guide/cli#merge-reports) command.

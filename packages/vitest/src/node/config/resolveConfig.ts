@@ -788,6 +788,17 @@ export function resolveConfig(
   resolved.server ??= {}
   resolved.server.deps ??= {}
 
+  if (resolved.server.debug?.dump || process.env.VITEST_DEBUG_DUMP) {
+    const userFolder = resolved.server.debug?.dump || process.env.VITEST_DEBUG_DUMP
+    resolved.dumpDir = resolve(
+      resolved.root,
+      typeof userFolder === 'string' && userFolder !== 'true'
+        ? userFolder
+        : '.vitest-dump',
+      resolved.name || 'root',
+    )
+  }
+
   resolved.testTimeout ??= resolved.browser.enabled ? 30_000 : 5_000
   resolved.hookTimeout ??= resolved.browser.enabled ? 30_000 : 10_000
 
