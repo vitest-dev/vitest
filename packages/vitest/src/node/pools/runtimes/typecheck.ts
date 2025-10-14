@@ -45,14 +45,18 @@ export class TypecheckRuntime extends BaseRuntime {
 }
 
 const __vitest_worker_response__ = true
-let runner: ReturnType<typeof createRunner> | undefined
+const runners = new WeakMap<Vitest, ReturnType<typeof createRunner>>()
 
 async function onMessage(message: WorkerRequest, project: TestProject): Promise<WorkerResponse | void> {
   if (message?.__vitest_worker_request__ !== true) {
     return undefined
   }
 
-  runner ??= createRunner(project.vitest)
+  let runner = runners.get(project.vitest)
+  if (!runner) {
+    runner = createRunner(project.vitest)
+    runners.set(project.vitest, runner)
+  }
 
   switch (message.type) {
     case 'start': {

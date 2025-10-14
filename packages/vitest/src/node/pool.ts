@@ -349,7 +349,7 @@ function groupSpecs(specs: TestSpecification[]) {
   })
 
   for (const project in typechecks) {
-    const order = Math.max(...groups.keys()) + 1
+    const order = Math.max(0, ...groups.keys()) + 1
 
     groups[order] ||= { specs: [], maxWorkers: resolveMaxWorkers(typechecks[project][0].project) }
     groups[order].specs.push(typechecks[project])
