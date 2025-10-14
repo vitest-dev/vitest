@@ -22,7 +22,7 @@ export default function workerInit(options: {
     worker: {
       post: v => parentPort!.postMessage(v),
       on: (fn) => {
-        parentPort!.addEventListener('message', fn)
+        parentPort!.on('message', fn)
         disposer.on(() => parentPort!.off('message', fn))
       },
       runTests: async (state) => {
