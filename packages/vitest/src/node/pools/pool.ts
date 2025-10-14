@@ -192,6 +192,7 @@ export class Pool {
       distPath: this.options.distPath,
       project: task.project,
       method,
+      environment: task.context.environment.name,
     }
 
     switch (task.runtime) {
@@ -258,6 +259,8 @@ function isEqualRuntime(runtime: Runtime, task: Task) {
     throw new Error('Isolated tasks should not share runtimes')
   }
 
-  // TODO: Compare task.context.environment.name, add runtime.options.env
-  return runtime.name === task.runtime && runtime.options.project.name === task.project.name
+  // TODO: Compare add runtime.options.env
+  return runtime.name === task.runtime
+    && runtime.options.project === task.project
+    && runtime.options.environment === task.context.environment.name
 }

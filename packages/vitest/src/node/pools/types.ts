@@ -14,6 +14,7 @@ export interface Runtime {
     project: TestProject
     method: 'run' | 'collect'
     cacheFs?: boolean
+    environment: string
   }
 
   /** Note that start can be called multiple times. First time indicates worker warmup. */
