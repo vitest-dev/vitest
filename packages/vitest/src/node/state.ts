@@ -31,6 +31,10 @@ export class StateManager {
     duration: Record<string, number[]>
     tmps: Record<string, string>
     dumpDir?: string
+    outline?: {
+      externalized: number
+      inlined: number
+    }
   }> = {}
 
   onUnhandledError?: OnUnhandledErrorCallback

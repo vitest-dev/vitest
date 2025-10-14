@@ -114,6 +114,10 @@ export class TestRun {
         continue
       }
       const path = resolve(meta.dumpDir, 'vitest-metadata.json')
+      meta.outline = {
+        externalized: Object.keys(meta.externalized).length,
+        inlined: Object.keys(meta.tmps).length,
+      }
       await writeFile(
         path,
         JSON.stringify(meta, null, 2),
