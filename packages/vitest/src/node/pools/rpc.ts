@@ -20,17 +20,19 @@ export function createMethodsRPC(project: TestProject, options: MethodsOptions =
     externalized: {},
     duration: {},
     tmps: {},
-    dumpDir: '',
   }
   if (project.config.dumpDir && !existsSync(project.config.dumpDir)) {
     mkdirSync(project.config.dumpDir, { recursive: true })
-    project.vitest.state.metadata[project.name].dumpDir = project.config.dumpDir
   }
+  project.vitest.state.metadata[project.name].dumpDir = project.config.dumpDir
   const fetch = createFetchModuleFunction(
     project._resolver,
     cacheFs,
     project.tmpDir,
-    project.config.dumpDir,
+    {
+      dumpFolder: project.config.dumpDir,
+      readFromDump: project.config.server.debug?.load ?? process.env.VITEST_DEBUG_LOAD_DUMP != null,
+    },
   )
   return {
     async fetch(

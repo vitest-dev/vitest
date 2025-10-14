@@ -256,6 +256,12 @@ export interface InlineConfig {
        * You can also use `VITEST_DEBUG_DUMP` env variable to enable this.
        */
       dump?: string | true
+      /**
+       * If dump is enabled, should Vitest load the files from there instead of transforming them.
+       *
+       * You can also use `VITEST_DEBUG_LOAD_DUMP` env variable to enable this.
+       */
+      load?: boolean
     }
   }
 
