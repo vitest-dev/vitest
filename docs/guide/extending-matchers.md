@@ -29,7 +29,7 @@ If you are using TypeScript, you can extend default `Assertion` interface in an 
 ```ts [<Version>3.2.0</Version>]
 import 'vitest'
 
-interface CustomMatchers<R = unknown> {
+interface CustomMatchers<R = any> {
   toBeFoo: () => R
 }
 
@@ -40,7 +40,7 @@ declare module 'vitest' {
 ```ts [<Version>3.0.0</Version>]
 import 'vitest'
 
-interface CustomMatchers<R = unknown> {
+interface CustomMatchers<R = any> {
   toBeFoo: () => R
 }
 
