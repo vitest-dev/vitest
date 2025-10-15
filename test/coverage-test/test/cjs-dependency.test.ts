@@ -7,7 +7,7 @@ test('excludes Vite transforms done for CJS dependency', async () => {
     coverage: {
       reporter: 'json',
     },
-  })
+  }, undefined, { optimizeDeps: { include: ['@vitest/cjs-lib'] } })
   const coverageMap = await readCoverageMap()
   const files = coverageMap.files()
 
