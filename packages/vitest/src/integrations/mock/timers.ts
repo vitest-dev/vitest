@@ -127,7 +127,6 @@ export class FakeTimers {
 
   runAllTicks(): void {
     if (this._checkFakeTimers()) {
-      // @ts-expect-error method not exposed
       this._clock.runMicrotasks()
     }
   }
