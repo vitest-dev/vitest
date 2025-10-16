@@ -22,7 +22,7 @@ export function createCustomPool(settings: OptionsCustomPool): PoolRuntimeConstr
 export class CustomRuntime extends BaseRuntime implements PoolRuntime {
   name = 'custom'
   private vitest: Vitest
-  private eventEmitter = new EventEmitter()
+  private customEvents = new EventEmitter()
 
   constructor(options: PoolRuntime['options'], private settings: OptionsCustomPool) {
     super(options)
@@ -32,20 +32,20 @@ export class CustomRuntime extends BaseRuntime implements PoolRuntime {
   postMessage(request: WorkerRequest): void {
     void onMessage(request, this.options.project, this.settings).then((response) => {
       if (response) {
-        this.eventEmitter.emit('message', response)
+        this.customEvents.emit('message', response)
       }
     })
   }
 
   onWorker(event: string, callback: (arg: any) => void): void {
     if (event === 'message') {
-      this.eventEmitter.on('message', callback)
+      this.customEvents.on('message', callback)
     }
   }
 
   offWorker(event: string, callback: (arg: any) => void): void {
     if (event === 'message') {
-      this.eventEmitter.off('message', callback)
+      this.customEvents.off('message', callback)
     }
   }
 
