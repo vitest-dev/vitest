@@ -1374,6 +1374,9 @@ importers:
       '@vitest/browser-playwright':
         specifier: workspace:*
         version: link:../../packages/browser-playwright
+      '@vitest/cjs-lib':
+        specifier: file:../browser/cjs-lib
+        version: file:test/browser/cjs-lib
       '@vitest/coverage-istanbul':
         specifier: workspace:*
         version: link:../../packages/coverage-istanbul
@@ -4546,6 +4549,9 @@ packages:
     peerDependencies:
       vite: ^7.1.5
       vue: ^3.2.25
+
+  '@vitest/cjs-lib@file:test/browser/cjs-lib':
+    resolution: {directory: test/browser/cjs-lib, type: directory}
 
   '@vitest/eslint-plugin@1.3.12':
     resolution: {integrity: sha512-cSEyUYGj8j8SLqKrzN7BlfsJ3wG67eRT25819PXuyoSBogLXiyagdKx4MHWHV1zv+EEuyMXsEKkBEKzXpxyBrg==}
@@ -12592,6 +12598,8 @@ snapshots:
       '@rolldown/pluginutils': 1.0.0-beta.29
       vite: 7.1.5(@types/node@22.18.6)(jiti@2.5.1)(lightningcss@1.30.1)(sass-embedded@1.93.0)(sass@1.93.0)(terser@5.44.0)(tsx@4.20.5)(yaml@2.8.1)
       vue: 3.5.21(typescript@5.9.2)
+
+  '@vitest/cjs-lib@file:test/browser/cjs-lib': {}
 
   '@vitest/eslint-plugin@1.3.12(eslint@9.37.0(jiti@2.5.1))(typescript@5.9.2)(vitest@packages+vitest)':
     dependencies:

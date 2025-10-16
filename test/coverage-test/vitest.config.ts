@@ -6,6 +6,7 @@ const ISTANBUL_TESTS = 'test/**.istanbul.test.ts'
 const CUSTOM_TESTS = 'test/**.custom.test.ts'
 const UNIT_TESTS = 'test/**.unit.test.ts'
 const BROWSER_TESTS = 'test/**.browser.test.ts'
+const FIXTURES = '**/fixtures/**'
 
 const config = defineConfig({
   test: {
@@ -31,6 +32,7 @@ export default defineConfig({
             UNIT_TESTS,
             CUSTOM_TESTS,
             BROWSER_TESTS,
+            FIXTURES,
           ],
         },
       },
@@ -47,6 +49,7 @@ export default defineConfig({
             UNIT_TESTS,
             CUSTOM_TESTS,
             BROWSER_TESTS,
+            FIXTURES,
           ],
         },
       },
@@ -58,6 +61,7 @@ export default defineConfig({
           name: { label: 'custom', color: 'yellow' },
           env: { COVERAGE_PROVIDER: 'custom' },
           include: [CUSTOM_TESTS],
+          exclude: [FIXTURES],
         },
       },
 
@@ -87,7 +91,9 @@ export default defineConfig({
             '**/vue.test.ts',
             '**/in-source.test.ts',
             '**/query-param-transforms.test.ts',
+            '**/test/cjs-dependency.test.ts',
           ],
+          exclude: [FIXTURES],
         },
       },
       {
@@ -115,7 +121,9 @@ export default defineConfig({
             '**/vue.test.ts',
             '**/in-source.test.ts',
             '**/query-param-transforms.test.ts',
+            '**/test/cjs-dependency.test.ts',
           ],
+          exclude: [FIXTURES],
         },
       },
 

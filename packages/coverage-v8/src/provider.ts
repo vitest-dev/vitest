@@ -244,6 +244,20 @@ export class V8CoverageProvider extends BaseCoverageProvider<ResolvedCoverageOpt
           return true
         }
 
+        // CJS imports as ternaries - e.g.
+        // const React = __vite__cjsImport0_react.__esModule ? __vite__cjsImport0_react.default : __vite__cjsImport0_react;
+        if (
+          type === 'branch'
+          && node.type === 'ConditionalExpression'
+          && node.test.type === 'MemberExpression'
+          && node.test.object.type === 'Identifier'
+          && node.test.object.name.startsWith('__vite__cjsImport')
+          && node.test.property.type === 'Identifier'
+          && node.test.property.name === '__esModule'
+        ) {
+          return true
+        }
+
         // in-source test with "if (import.meta.vitest)"
         if (
           (type === 'branch' || type === 'statement')
