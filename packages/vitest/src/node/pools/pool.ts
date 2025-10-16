@@ -67,8 +67,8 @@ export class Pool {
       runtime.on('error', error => resolver.reject(new Error(`[vitest-pool]: Runtime ${task.runtime} emitted error`, { cause: error })))
 
       async function cancelTask() {
-        resolver.reject(new Error('Cancelled'))
         await runtime.stop()
+        resolver.reject(new Error('Cancelled'))
       }
 
       function onFinished(message: WorkerResponse) {
