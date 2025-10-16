@@ -10,7 +10,6 @@ import { createRuntimeRpc, rpcDone } from './rpc'
 const resolvingModules = new Set<string>()
 const globalListeners = new Set<() => unknown>()
 
-/** This is what every pool executes when running tests, {@link file://./../node/pools/runtimes/base.ts} */
 async function execute(method: 'run' | 'collect', ctx: ContextRPC, worker: VitestWorker) {
   const prepareStart = performance.now()
 
@@ -69,7 +68,7 @@ async function execute(method: 'run' | 'collect', ctx: ContextRPC, worker: Vites
     await Promise.all(cleanups.map(fn => fn()))
 
     await rpcDone().catch(() => {})
-    environmentLoader?.close()
+    await environmentLoader?.close()
   }
 }
 

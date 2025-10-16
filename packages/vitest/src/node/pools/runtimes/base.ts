@@ -9,6 +9,7 @@ export class BaseRuntime implements PoolRuntime {
   name = 'base'
   reportMemory = false
   isTerminating = false
+  terminatingPromise: Promise<void> | undefined
   isStarted = false
   options: PoolRuntime['options']
   poolId = undefined
@@ -84,28 +85,31 @@ export class BaseRuntime implements PoolRuntime {
 
   async stop(): Promise<void> {
     if (this.isTerminating) {
-      return
+      return this.terminatingPromise
     }
 
-    this.offWorker('exit', this.onUnexpectedExit)
+    this.terminatingPromise = (async () => {
+      this.offWorker('exit', this.onUnexpectedExit)
 
-    await new Promise<void>((resolve) => {
-      const onStop = (message: WorkerResponse) => {
-        if (message.type === 'stopped') {
-          resolve()
-          this.off('message', onStop)
+      await new Promise<void>((resolve) => {
+        const onStop = (message: WorkerResponse) => {
+          if (message.type === 'stopped') {
+            resolve()
+            this.off('message', onStop)
+          }
         }
-      }
 
-      this.on('message', onStop)
-      this.postMessage({ type: 'stop', __vitest_worker_request__: true })
-    })
+        this.on('message', onStop)
+        this.postMessage({ type: 'stop', __vitest_worker_request__: true })
+      })
 
-    this.isStarted = false
-    this.isTerminating = true
-    this.onMessageListeners = []
-    this.onErrorListeners = []
-    this.rpc.$close(new Error('[vitest-pool-runtime]: Pending methods while closing rpc'))
+      this.isStarted = false
+      this.isTerminating = true
+      this.onMessageListeners = []
+      this.onErrorListeners = []
+      this.rpc.$close(new Error('[vitest-pool-runtime]: Pending methods while closing rpc'))
+    })().finally(() => (this.terminatingPromise = undefined))
+    await this.terminatingPromise
   }
 
   on(event: 'message', callback: (message: WorkerResponse) => void): void

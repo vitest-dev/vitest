@@ -6,8 +6,6 @@ import { resolve } from 'node:path'
 import v8 from 'node:v8'
 import { BaseRuntime } from './base'
 
-const SIGKILL_TIMEOUT = 1_000
-
 /** @experimental */
 export class ForksRuntime extends BaseRuntime {
   name = 'forks'
@@ -61,7 +59,7 @@ export class ForksRuntime extends BaseRuntime {
 
     const sigkillTimeout = setTimeout(
       () => this.fork?.kill('SIGKILL'),
-      SIGKILL_TIMEOUT,
+      this.options.project.vitest.config.teardownTimeout,
     )
 
     this.fork?.kill()

@@ -6,7 +6,7 @@ export interface PoolRuntimeConstructor {
   /**
    * The name of the runtime available on a static constructor.
    */
-  runtime: string
+  readonly runtime: string
 }
 
 export interface PoolRuntimeOptions {

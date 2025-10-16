@@ -39,7 +39,6 @@ export function init({ send, subscribe, off, worker }: Options): void {
         runPromise = entrypoint.run(message.context, worker).finally(() => {
           runPromise = undefined
         })
-
         await runPromise
 
         send({
@@ -52,7 +51,13 @@ export function init({ send, subscribe, off, worker }: Options): void {
       }
 
       case 'collect': {
-        await entrypoint.collect(message.context, worker)
+        process.env.VITEST_POOL_ID = String(message.poolId)
+        process.env.VITEST_WORKER_ID = String(message.context.workerId)
+
+        runPromise = entrypoint.collect(message.context, worker).then(() => {
+          runPromise = undefined
+        })
+        await runPromise
 
         send({
           type: 'testfileFinished',
