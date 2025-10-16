@@ -16,6 +16,8 @@ let reportMemory = false
 export function init({ send, subscribe, off, worker }: Options): void {
   subscribe(onMessage)
 
+  let runPromise: Promise<void> | undefined
+
   async function onMessage(message: WorkerRequest) {
     if (message?.__vitest_worker_request__ !== true) {
       return
@@ -34,7 +36,11 @@ export function init({ send, subscribe, off, worker }: Options): void {
         process.env.VITEST_POOL_ID = String(message.poolId)
         process.env.VITEST_WORKER_ID = String(message.context.workerId)
 
-        await entrypoint.run(message.context, worker)
+        runPromise = entrypoint.run(message.context, worker).finally(() => {
+          runPromise = undefined
+        })
+
+        await runPromise
 
         send({
           type: 'testfileFinished',
@@ -58,10 +64,8 @@ export function init({ send, subscribe, off, worker }: Options): void {
       }
 
       case 'stop': {
-        // entrypoint can be missing in case of fast start + cancel
-        if (entrypoint) {
-          await entrypoint.teardown()
-        }
+        await runPromise
+        await entrypoint.teardown()
 
         send({ type: 'stopped', __vitest_worker_response__ })
         off(onMessage)
