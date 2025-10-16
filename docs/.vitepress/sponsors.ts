@@ -29,7 +29,13 @@ const vitestSponsors = {
       img: '/zammad.svg',
     },
   ],
-  // platinum: [],
+  platinum: [
+    {
+      name: 'mintlify',
+      url: 'https://www.mintlify.com/',
+      img: '/mintlify.svg',
+    },
+  ],
   gold: [
     {
       name: 'vital',
@@ -65,11 +71,11 @@ export const sponsors = [
     size: 'big',
     items: vitestSponsors.special,
   },
-  // {
-  //   tier: 'Platinum Sponsors',
-  //   size: 'big',
-  //   items: vitestSponsors.platinum,
-  // },
+  {
+    tier: 'Platinum Sponsors',
+    size: 'big',
+    items: vitestSponsors.platinum,
+  },
   {
     tier: 'Gold Sponsors',
     size: 'medium',
