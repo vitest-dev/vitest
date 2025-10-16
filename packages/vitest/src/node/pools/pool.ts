@@ -20,12 +20,16 @@ interface QueuedTask {
   warmRuntime?: PoolRuntime
 }
 
+interface ActiveTask extends QueuedTask {
+  cancelTask: () => Promise<void>
+}
+
 export class Pool {
   private maxWorkers: number = 0
   private workerIds = new Map<number, boolean>()
 
   private queue: QueuedTask[] = []
-  private activeTasks: (QueuedTask & { cancelTask: () => Promise<void> })[] = []
+  private activeTasks: ActiveTask[] = []
   private sharedRuntimes: PoolRuntime[] = []
   private exitPromises: Promise<void>[] = []
 
@@ -39,7 +43,7 @@ export class Pool {
     )
   }
 
-  async run(task: PoolTask, method: 'run' | 'collect' = 'run'): Promise<void> {
+  async run(task: PoolTask, method: 'run' | 'collect'): Promise<void> {
     // Every runtime related failure should make this promise reject so that it's picked by pool.
     // This resolver is used to make the error handling in recursive queue easier.
     const testFinish = withResolvers()

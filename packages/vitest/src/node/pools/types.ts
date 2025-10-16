@@ -17,6 +17,8 @@ export interface PoolRuntimeOptions {
   environment: string
 }
 
+export type PoolStartOptions = Pick<PoolTask, 'env' | 'execArgv'>
+
 export interface PoolRuntime {
   name: string
   isStarted: boolean
@@ -28,7 +30,7 @@ export interface PoolRuntime {
   options: PoolRuntimeOptions
 
   /** Note that start can be called multiple times. First time indicates worker warmup. */
-  start: (options: Pick<PoolTask, 'env' | 'execArgv'>) => Promise<void>
+  start: (options: PoolStartOptions) => Promise<void>
   stop: () => Promise<void>
   on: ((event: 'message', callback: (message: WorkerResponse) => void) => void) & ((event: 'error', callback: (error: Error) => void) => void)
   off: ((event: 'message', callback: (message: WorkerResponse) => void) => void) & ((event: 'error', callback: (error: Error) => void) => void)

@@ -1,6 +1,7 @@
 import type { BirpcReturn } from 'birpc'
 import type { RunnerRPC, RuntimeRPC } from '../../../types/rpc'
 import type { PoolRuntime, WorkerRequest, WorkerResponse } from '../types'
+import { EventEmitter } from 'node:events'
 import { createBirpc } from 'birpc'
 import { createMethodsRPC } from '../rpc'
 
@@ -14,10 +15,13 @@ export class BaseRuntime implements PoolRuntime {
   options: PoolRuntime['options']
   poolId = undefined
 
+  protected eventEmitter: EventEmitter<{
+    message: [WorkerResponse]
+    error: [Error]
+    rpc: [unknown]
+  }> = new EventEmitter()
+
   private rpc: BirpcReturn<RunnerRPC, RuntimeRPC>
-  private rpcListeners: ((message: unknown) => void)[] = []
-  private onMessageListeners: ((message: WorkerResponse) => void)[] = []
-  private onErrorListeners: ((error: Error) => void)[] = []
 
   constructor(options: PoolRuntime['options']) {
     this.options = options
@@ -30,7 +34,7 @@ export class BaseRuntime implements PoolRuntime {
       {
         eventNames: ['onCancel'],
         post: request => this.postMessage(request),
-        on: callback => this.rpcListeners.push(callback),
+        on: callback => this.eventEmitter.on('rpc', callback),
         timeout: -1,
       },
     )
@@ -67,9 +71,9 @@ export class BaseRuntime implements PoolRuntime {
 
     const isStarted = this.waitForStart()
 
-    this.onWorker('error', this.onWorkerError)
-    this.onWorker('exit', this.onUnexpectedExit)
-    this.onWorker('message', this.onWorkerMessage)
+    this.onWorker('error', this.emitWorkerError)
+    this.onWorker('exit', this.emitUnexpectedExit)
+    this.onWorker('message', this.emitWorkerMessage)
 
     this.postMessage({
       type: 'start',
@@ -89,7 +93,7 @@ export class BaseRuntime implements PoolRuntime {
     }
 
     this.terminatingPromise = (async () => {
-      this.offWorker('exit', this.onUnexpectedExit)
+      this.offWorker('exit', this.emitUnexpectedExit)
 
       await new Promise<void>((resolve) => {
         const onStop = (message: WorkerResponse) => {
@@ -105,8 +109,8 @@ export class BaseRuntime implements PoolRuntime {
 
       this.isStarted = false
       this.isTerminating = true
-      this.onMessageListeners = []
-      this.onErrorListeners = []
+      this.eventEmitter.removeAllListeners('message')
+      this.eventEmitter.removeAllListeners('error')
       this.rpc.$close(new Error('[vitest-pool-runtime]: Pending methods while closing rpc'))
     })().finally(() => (this.terminatingPromise = undefined))
     await this.terminatingPromise
@@ -114,60 +118,42 @@ export class BaseRuntime implements PoolRuntime {
 
   on(event: 'message', callback: (message: WorkerResponse) => void): void
   on(event: 'error', callback: (error: Error) => void): void
-  on(event: string, callback: (arg: any) => void): void {
-    if (event === 'message') {
-      this.onMessageListeners.push(callback)
-    }
-    else if (event === 'error') {
-      this.onErrorListeners.push(callback)
-    }
+  on(event: 'message' | 'error', callback: (arg: any) => void): void {
+    this.eventEmitter.on(event, callback)
   }
 
   off(event: 'message', callback: (message: WorkerResponse) => void): void
   off(event: 'error', callback: (error: Error) => void): void
-  off(event: string, callback: (arg: any) => void): void {
-    let listeners
-
-    if (event === 'message') {
-      listeners = this.onMessageListeners
-    }
-    else if (event === 'error') {
-      listeners = this.onErrorListeners
-    }
-
-    const index = listeners?.indexOf(callback) ?? -1
-
-    if (index !== -1) {
-      listeners?.splice(index, 1)
-    }
+  off(event: 'message' | 'error', callback: (arg: any) => void): void {
+    this.eventEmitter.off(event, callback)
   }
 
-  private onWorkerError(maybeError: unknown): void {
+  private emitWorkerError(maybeError: unknown): void {
     const error = maybeError instanceof Error ? maybeError : new Error(String(maybeError))
 
-    this.onErrorListeners.forEach(callback => callback(error))
+    this.eventEmitter.emit('error', error)
   }
 
-  private onWorkerMessage = (response: WorkerResponse | { m: string; __vitest_worker_response__: false }): void => {
+  private emitWorkerMessage = (response: WorkerResponse | { m: string; __vitest_worker_response__: false }): void => {
     try {
       const message = this.deserialize(response)
 
       if (message.__vitest_worker_response__) {
-        this.onMessageListeners.forEach(callback => callback(message))
+        this.eventEmitter.emit('message', message)
       }
       else {
-        this.rpcListeners.forEach(callback => callback(message))
+        this.eventEmitter.emit('rpc', message)
       }
     }
     catch (error) {
-      this.onErrorListeners.forEach(callback => callback(error as Error))
+      this.eventEmitter.emit('error', error as Error)
     }
   }
 
-  private onUnexpectedExit = (): void => {
+  private emitUnexpectedExit = (): void => {
     const error = new Error('Worker exited unexpectedly')
 
-    this.onErrorListeners.forEach(callback => callback(error))
+    this.eventEmitter.emit('error', error)
   }
 
   private waitForStart() {

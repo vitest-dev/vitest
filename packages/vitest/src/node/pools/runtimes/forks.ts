@@ -55,21 +55,30 @@ export class ForksRuntime extends BaseRuntime {
     await super.start(options)
   }
 
+  private stopPromise: Promise<void> | undefined
+
   async stop(): Promise<void> {
-    const waitForExit = new Promise<void>(resolve => this.fork?.once('exit', resolve))
-    await super.stop()
+    if (this.stopPromise) {
+      return this.stopPromise
+    }
 
-    // why does it need a timeout? what is it not dying in time? how to debug it?
-    const sigkillTimeout = setTimeout(
-      () => this.fork?.kill('SIGKILL'),
-      SIGKILL_TIMEOUT,
-    )
+    this.stopPromise = (async () => {
+      const waitForExit = new Promise<void>(resolve => this.fork?.once('exit', resolve))
+      await super.stop()
 
-    this.fork?.kill()
-    await waitForExit
-    clearTimeout(sigkillTimeout)
+      // why does it need a timeout? what is it not dying in time? how to debug it?
+      const sigkillTimeout = setTimeout(
+        () => this.fork?.kill('SIGKILL'),
+        SIGKILL_TIMEOUT,
+      )
 
-    this.fork = undefined
+      this.fork?.kill()
+      await waitForExit
+      clearTimeout(sigkillTimeout)
+
+      this.fork = undefined
+    })().finally(() => (this.stopPromise = undefined))
+    await this.stopPromise
   }
 
   serialize(data: any): any {
