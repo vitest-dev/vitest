@@ -76,7 +76,19 @@ export class ForksRuntime extends BaseRuntime {
   }
 
   deserialize(data: any): any {
-    return v8.deserialize(Buffer.from(data))
+    try {
+      return v8.deserialize(Buffer.from(data))
+    }
+    catch (error) {
+      let stringified = ''
+
+      try {
+        stringified = `\nReceived value: ${JSON.stringify(data)}`
+      }
+      catch {}
+
+      throw new Error(`[vitest-pool]: Unexpected call to process.send(). Make sure your test cases are not interfering with process's channel.${stringified}`, { cause: error })
+    }
   }
 }
 

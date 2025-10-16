@@ -148,13 +148,18 @@ export class BaseRuntime implements PoolRuntime {
   }
 
   private onWorkerMessage = (response: WorkerResponse | { m: string; __vitest_worker_response__: false }): void => {
-    const message = this.deserialize(response)
+    try {
+      const message = this.deserialize(response)
 
-    if (message.__vitest_worker_response__) {
-      this.onMessageListeners.forEach(callback => callback(message))
+      if (message.__vitest_worker_response__) {
+        this.onMessageListeners.forEach(callback => callback(message))
+      }
+      else {
+        this.rpcListeners.forEach(callback => callback(message))
+      }
     }
-    else {
-      this.rpcListeners.forEach(callback => callback(message))
+    catch (error) {
+      this.onErrorListeners.forEach(callback => callback(error as Error))
     }
   }
 
