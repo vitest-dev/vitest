@@ -1,7 +1,6 @@
 import type { BirpcReturn } from 'birpc'
 import type { RunnerRPC, RuntimeRPC } from '../../../types/rpc'
 import type { PoolRuntime, WorkerRequest, WorkerResponse } from '../types'
-import { resolve } from 'node:path'
 import { createBirpc } from 'birpc'
 import { createMethodsRPC } from '../rpc'
 
@@ -75,8 +74,6 @@ export class BaseRuntime implements PoolRuntime {
       type: 'start',
       __vitest_worker_request__: true,
       options: {
-        /** Loads {@link file://./../../../runtime/worker.ts} */
-        workerFilename: resolve(this.options.distPath, 'worker.js'),
         reportMemory: this.reportMemory,
       },
     })

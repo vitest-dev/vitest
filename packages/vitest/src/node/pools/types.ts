@@ -51,7 +51,7 @@ export interface PoolTask {
 
 export type WorkerRequest
   = { __vitest_worker_request__: true } & (
-    | { type: 'start'; options: { workerFilename: string; reportMemory: boolean } }
+    | { type: 'start'; options: { reportMemory: boolean } }
     | { type: 'stop' }
     | { type: 'run'; context: ContextRPC; poolId: number }
     | { type: 'collect'; context: ContextRPC; poolId: number }

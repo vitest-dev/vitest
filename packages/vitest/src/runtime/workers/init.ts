@@ -1,5 +1,6 @@
 import type { WorkerRequest, WorkerResponse } from '../../node/pools/types'
 import type { VitestWorker } from './types'
+import * as entrypoint from '../worker'
 
 interface Options {
   send: (response: WorkerResponse) => void
@@ -13,8 +14,6 @@ const memoryUsage = process.memoryUsage.bind(process)
 let reportMemory = false
 
 export function init({ send, subscribe, off, worker }: Options): void {
-  let entrypoint: typeof import('../worker')
-
   subscribe(onMessage)
 
   async function onMessage(message: WorkerRequest) {
@@ -25,7 +24,6 @@ export function init({ send, subscribe, off, worker }: Options): void {
     switch (message.type) {
       case 'start': {
         reportMemory = message.options.reportMemory
-        entrypoint = await import(message.options.workerFilename)
 
         send({ type: 'started', __vitest_worker_response__ })
 
