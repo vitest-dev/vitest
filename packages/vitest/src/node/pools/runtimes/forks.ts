@@ -6,6 +6,8 @@ import { resolve } from 'node:path'
 import v8 from 'node:v8'
 import { BaseRuntime } from './base'
 
+const SIGKILL_TIMEOUT = 1_000
+
 /** @experimental */
 export class ForksRuntime extends BaseRuntime {
   name = 'forks'
@@ -57,9 +59,10 @@ export class ForksRuntime extends BaseRuntime {
     const waitForExit = new Promise<void>(resolve => this.fork?.once('exit', resolve))
     await super.stop()
 
+    // why does it need a timeout? what is it not dying in time? how to debug it?
     const sigkillTimeout = setTimeout(
       () => this.fork?.kill('SIGKILL'),
-      this.options.project.vitest.config.teardownTimeout,
+      SIGKILL_TIMEOUT,
     )
 
     this.fork?.kill()
