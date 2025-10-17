@@ -156,7 +156,7 @@ export function createPool(ctx: Vitest): ProcessPool {
       })
 
       if (browserSpecs.length) {
-        browserPool = createBrowserPool(ctx)
+        browserPool ??= createBrowserPool(ctx)
         if (method === 'collect') {
           promises.push(browserPool.collectTests(browserSpecs))
         }
