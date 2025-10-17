@@ -54,7 +54,7 @@ For the latest news about the Vitest ecosystem and Vitest core, follow us on [Bl
 
 ## Browser Mode is Stable
 
-With this release we are removing the `experimental` tag from [Browser Mode](/guide/browser). To make it possible, we had to introduce some changes to the public API.
+With this release we are removing the `experimental` tag from [Browser Mode](/guide/browser/). To make it possible, we had to introduce some changes to the public API.
 
 To define a provider, you now need to install a separate package: [`@vitest/browser-playwright`](https://www.npmjs.com/package/@vitest/browser-playwright), [`@vitest/browser-webdriverio`](https://www.npmjs.com/package/@vitest/browser-webdriverio), or [`@vitest/browser-preview`](https://www.npmjs.com/package/@vitest/browser-preview). This makes it simpler to work with custom options and doesn't require adding `/// <reference` comments anymore.
 
@@ -311,8 +311,8 @@ import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
   test: {
-    reporter: process.env.CI ? 'verbose' : 'default'
-  }
+    reporter: process.env.CI ? 'verbose' : 'default',
+  },
 })
 ```
 
