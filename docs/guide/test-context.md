@@ -478,3 +478,62 @@ test.afterEach(({ todos }) => {
   console.log(todos)
 })
 ```
+
+### Module Augmentation
+
+Alternatively, you can extend the global `TestContext` interface directly using TypeScript's module augmentation. This allows you to add properties to the test context that are available in all tests without using `test.extend`.
+
+To extend the global `TestContext`, create an ambient declaration file (for example, `vitest.d.ts`) and add the following:
+
+```ts
+declare module '@vitest/runner' {
+  interface TestContext {
+    foo?: string
+  }
+}
+```
+
+::: warning
+Don't forget to include the ambient declaration file in your `tsconfig.json`:
+
+```json
+{
+  "compilerOptions": {
+    // ...
+  },
+  "include": [
+    "vitest.d.ts"
+  ]
+}
+```
+:::
+
+Now you can access the `foo` property in your test context:
+
+```ts
+import { it } from 'vitest'
+
+it('should have access to foo', (context) => {
+  context.foo = 'bar'
+  console.log(context.foo) // 'bar'
+})
+```
+
+This approach is useful when you want to add properties to the test context that are available globally across all tests in your project, rather than creating a custom test API with `test.extend`.
+
+::: tip
+If you need to add properties with specific types per test file, consider using `test.extend` with a local context type instead:
+
+```ts
+import { test } from 'vitest'
+
+interface LocalTestContext {
+  bar: number
+}
+
+test<LocalTestContext>('should have access to bar', (context) => {
+  context.bar = 123
+  console.log(context.bar) // 123
+})
+```
+:::
