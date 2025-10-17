@@ -98,6 +98,13 @@ export class BaseRuntime implements PoolRuntime {
       await new Promise<void>((resolve) => {
         const onStop = (message: WorkerResponse) => {
           if (message.type === 'stopped') {
+            if (message.error) {
+              this.options.project.vitest.state.catchError(
+                message.error,
+                'Teardown Error',
+              )
+            }
+
             resolve()
             this.off('message', onStop)
           }

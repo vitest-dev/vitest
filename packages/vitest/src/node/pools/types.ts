@@ -63,6 +63,6 @@ export type WorkerRequest
 export type WorkerResponse
   = { __vitest_worker_response__: true } & (
     | { type: 'started' }
-    | { type: 'stopped' }
-    | { type: 'testfileFinished'; usedMemory?: number }
+    | { type: 'stopped'; error?: unknown }
+    | { type: 'testfileFinished'; usedMemory?: number; error?: unknown }
 )

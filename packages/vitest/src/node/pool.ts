@@ -54,6 +54,7 @@ export function createPool(ctx: Vitest): ProcessPool {
   const pool = new Pool({
     distPath: ctx.distPath,
     teardownTimeout: ctx.config.teardownTimeout,
+    state: ctx.state,
   }, ctx.logger)
 
   const options = resolveOptions(ctx)

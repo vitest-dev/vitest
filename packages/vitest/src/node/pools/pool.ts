@@ -1,4 +1,5 @@
 import type { Logger } from '../logger'
+import type { StateManager } from '../state'
 import type { PoolRuntime, PoolTask, WorkerResponse } from './types'
 import { ForksRuntime } from './runtimes/forks'
 import { ThreadsRuntime } from './runtimes/threads'
@@ -11,6 +12,7 @@ const WORKER_START_TIMEOUT = 5_000
 interface Options {
   distPath: string
   teardownTimeout: number
+  state: StateManager
 }
 
 interface QueuedTask {
@@ -75,10 +77,13 @@ export class Pool {
         resolver.reject(new Error('Cancelled'))
       }
 
-      function onFinished(message: WorkerResponse) {
+      const onFinished = (message: WorkerResponse) => {
         if (message?.__vitest_worker_response__ && message.type === 'testfileFinished') {
           if (task.memoryLimit && message.usedMemory) {
             isMemoryLimitReached = message.usedMemory >= task.memoryLimit
+          }
+          if (message.error) {
+            this.options.state.catchError(message.error, 'Test Run Error')
           }
 
           runtime.off('message', onFinished)

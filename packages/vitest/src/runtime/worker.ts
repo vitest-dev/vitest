@@ -81,8 +81,7 @@ export function collect(ctx: ContextRPC, worker: VitestWorker): Promise<void> {
 }
 
 export async function teardown(): Promise<void> {
-  const promises = [...globalListeners].map(l => l())
-  await Promise.all(promises)
+  await Promise.all([...globalListeners].map(l => l()))
 }
 
 function createImportMetaEnvProxy(): WorkerGlobalState['metaEnv'] {

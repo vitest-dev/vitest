@@ -1,5 +1,6 @@
 import type { WorkerRequest, WorkerResponse } from '../../node/pools/types'
 import type { VitestWorker } from './types'
+import { serializeError } from '@vitest/utils/error'
 import * as entrypoint from '../worker'
 
 interface Options {
@@ -16,7 +17,7 @@ let reportMemory = false
 export function init({ send, subscribe, off, worker }: Options): void {
   subscribe(onMessage)
 
-  let runPromise: Promise<void> | undefined
+  let runPromise: Promise<unknown> | undefined
 
   async function onMessage(message: WorkerRequest) {
     if (message?.__vitest_worker_request__ !== true) {
@@ -36,14 +37,15 @@ export function init({ send, subscribe, off, worker }: Options): void {
         process.env.VITEST_POOL_ID = String(message.poolId)
         process.env.VITEST_WORKER_ID = String(message.context.workerId)
 
-        runPromise = entrypoint.run(message.context, worker).finally(() => {
-          runPromise = undefined
-        })
-        await runPromise
+        runPromise = entrypoint.run(message.context, worker)
+          .catch(error => serializeError(error))
+          .finally(() => (runPromise = undefined))
+        const error = await runPromise
 
         send({
           type: 'testfileFinished',
           __vitest_worker_response__,
+          error,
           usedMemory: reportMemory ? memoryUsage().heapUsed : undefined,
         })
 
@@ -54,14 +56,15 @@ export function init({ send, subscribe, off, worker }: Options): void {
         process.env.VITEST_POOL_ID = String(message.poolId)
         process.env.VITEST_WORKER_ID = String(message.context.workerId)
 
-        runPromise = entrypoint.collect(message.context, worker).then(() => {
-          runPromise = undefined
-        })
-        await runPromise
+        runPromise = entrypoint.collect(message.context, worker)
+          .catch(error => serializeError(error))
+          .finally(() => (runPromise = undefined))
+        const error = await runPromise
 
         send({
           type: 'testfileFinished',
           __vitest_worker_response__,
+          error,
           usedMemory: reportMemory ? memoryUsage().heapUsed : undefined,
         })
 
@@ -70,9 +73,10 @@ export function init({ send, subscribe, off, worker }: Options): void {
 
       case 'stop': {
         await runPromise
-        await entrypoint.teardown()
+        const error = await entrypoint.teardown()
+          .catch(error => serializeError(error))
 
-        send({ type: 'stopped', __vitest_worker_response__ })
+        send({ type: 'stopped', error, __vitest_worker_response__ })
         off(onMessage)
 
         break
