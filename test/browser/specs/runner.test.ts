@@ -290,7 +290,7 @@ test('in-source tests run correctly when filtered', async () => {
   expect(stdout).toContain(`Tests  ${instances.length} passed`)
 })
 
-test.runIf(provider.name === 'playwright').only('timeout hooks', async () => {
+test.runIf(provider.name === 'playwright')('timeout hooks', async () => {
   const { stderr } = await runBrowserTests({
     root: './fixtures/timeout-hooks',
   })
