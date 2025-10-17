@@ -143,6 +143,11 @@ Final output after tests have finished:
 
 ### Basic Reporter
 
+::: warning
+The `basic` reporter will be removed in [Vitest v4](https://github.com/vitest-dev/vitest/releases/tag/v4.0.0-beta.1).
+Use [default reporter](#default-reporter) with `summary` false.
+:::
+
 The `basic` reporter is equivalent to `default` reporter without `summary`.
 
 :::code-group

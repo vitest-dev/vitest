@@ -12,7 +12,7 @@ export class BasicReporter extends BaseReporter {
     super.onInit(ctx)
 
     ctx.logger.deprecate(
-      `'basic' reporter is deprecated and will be removed in Vitest v3.\n`
+      `'basic' reporter is deprecated and will be removed in Vitest v4.\n`
       + `Remove 'basic' from 'reporters' option. To match 'basic' reporter 100%, use configuration:\n${
         JSON.stringify({ test: { reporters: [['default', { summary: false }]] } }, null, 2)}`,
     )
