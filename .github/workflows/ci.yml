@@ -205,5 +205,5 @@ jobs:
         if: ${{ !cancelled() }}
         with:
           name: playwright-report-rolldown
-          path: test/ui/test-results/
+          path: rolldown/test/ui/test-results/
           retention-days: 30
