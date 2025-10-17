@@ -752,6 +752,10 @@ export function resolveConfig(
     )
   }
 
+  if (resolved.inspector.enabled) {
+    resolved.browser.trackUnhandledErrors ??= false
+  }
+
   resolved.browser.viewport ??= {} as any
   resolved.browser.viewport.width ??= 414
   resolved.browser.viewport.height ??= 896
