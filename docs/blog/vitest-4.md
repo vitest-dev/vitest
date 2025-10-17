@@ -144,7 +144,7 @@ With these changes, the `@vitest/browser` package is no longer needed, and you c
 
 ## Visual Regression Testing
 
-Vitest 4 adds support for [Visual Regression testing](/guide/browser/visual-regression-testing.md) in Browser Mode. We will continue to iterate over this feature to improve the feel of it.
+Vitest 4 adds support for [Visual Regression testing](/guide/browser/visual-regression-testing.md) in Browser Mode. We will continue to iterate on this feature to improve the experience.
 
 Visual regression testing in Vitest can be done through the
 [`toMatchScreenshot` assertion](/guide/browser/assertion-api.html#tomatchscreenshot):
@@ -198,7 +198,7 @@ await frame.click() // ❌ Not available
 Every locator now exposes a `length` property, allowing them to be used with `toHaveLength` matcher automatically:
 
 ```ts
-await expect.element(page.getByTxt('Item')).toHaveLength(3)
+await expect.element(page.getByText('Item')).toHaveLength(3)
 ```
 
 ## Improved Debugging
@@ -209,7 +209,7 @@ If you prefer configuring the debug options yourself, you can start Vitest with 
 
 ## Type-Aware Hooks
 
-When using `test.extend` with lifeycle hooks like `beforeEach` and `afterEach`, you can now reference them directly on the returned `test` object:
+When using `test.extend` with lifecycle hooks like `beforeEach` and `afterEach`, you can now reference them directly on the returned `test` object:
 
 ```ts
 import { test as baseTest } from 'vitest'
@@ -304,7 +304,7 @@ export default defineConfig({
 
 The [`default`](/guide/reporters#default-reporter) reporter now always prints tests in a tree if there is only one test file running. If you want to always see tests printed as a tree, you can use a new [`tree`](/guide/reporters#tree-reporter) reporter.
 
-The [`verbose`](/guide/reporters#verbose-reporter) reporter now always prints tests one by one when they are finished. Previously, this was done only in CI, and locally `verbose` would behave mostly like a `default` reporter. If you prefer to keep the old behaviour, you can conditionally use the `verose` reporter only in CI by updating the config:
+The [`verbose`](/guide/reporters#verbose-reporter) reporter now always prints tests one by one when they are finished. Previously, this was done only in CI, and locally `verbose` would behave mostly like a `default` reporter. If you prefer to keep the old behaviour, you can conditionally use the `verbose` reporter only in CI by updating the config:
 
 ```ts
 import { defineConfig } from 'vitest/config'
