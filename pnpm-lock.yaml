@@ -948,9 +948,6 @@ importers:
 
   packages/vitest:
     dependencies:
-      '@bomb.sh/tab':
-        specifier: ^0.0.5
-        version: 0.0.5(cac@6.7.14(patch_hash=a8f0f3517a47ce716ed90c0cfe6ae382ab763b021a664ada2a608477d0621588))(citty@0.1.6)
       '@vitest/browser-playwright':
         specifier: workspace:*
         version: link:../browser-playwright
@@ -1030,6 +1027,9 @@ importers:
       '@antfu/install-pkg':
         specifier: ^1.1.0
         version: 1.1.0
+      '@bomb.sh/tab':
+        specifier: ^0.0.6
+        version: 0.0.6(cac@6.7.14(patch_hash=a8f0f3517a47ce716ed90c0cfe6ae382ab763b021a664ada2a608477d0621588))(citty@0.1.6)
       '@edge-runtime/vm':
         specifier: ^5.0.0
         version: 5.0.0
@@ -2278,8 +2278,8 @@ packages:
     resolution: {integrity: sha512-6zABk/ECA/QYSCQ1NGiVwwbQerUCZ+TQbp64Q3AgmfNvurHH0j8TtXa1qbShXA6qqkpAj4V5W8pP6mLe1mcMqA==}
     engines: {node: '>=18'}
 
-  '@bomb.sh/tab@0.0.5':
-    resolution: {integrity: sha512-S0dAhnulM/q284LkmBT7ykITbRvnog8a/3nuVi4Iy0VhyfkTZcB0bXB5pltmINyL+OjAfYd9TQeOge+CYk/l1w==}
+  '@bomb.sh/tab@0.0.6':
+    resolution: {integrity: sha512-EK9Ssulo5Ju/N8o9qV35MTA7F5210ehEoHvWzBxtiHrpUEmGk7NYeW0E8BH0scR6BbzdxjDQqHLK4PK/ifjREw==}
     hasBin: true
     peerDependencies:
       cac: ^6.7.14
@@ -10576,9 +10576,7 @@ snapshots:
 
   '@bcoe/v8-coverage@1.0.2': {}
 
-  '@bomb.sh/tab@0.0.5(cac@6.7.14(patch_hash=a8f0f3517a47ce716ed90c0cfe6ae382ab763b021a664ada2a608477d0621588))(citty@0.1.6)':
-    dependencies:
-      mri: 1.2.0
+  '@bomb.sh/tab@0.0.6(cac@6.7.14(patch_hash=a8f0f3517a47ce716ed90c0cfe6ae382ab763b021a664ada2a608477d0621588))(citty@0.1.6)':
     optionalDependencies:
       cac: 6.7.14(patch_hash=a8f0f3517a47ce716ed90c0cfe6ae382ab763b021a664ada2a608477d0621588)
       citty: 0.1.6
