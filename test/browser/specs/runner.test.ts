@@ -290,9 +290,13 @@ test('in-source tests run correctly when filtered', async () => {
   expect(stdout).toContain(`Tests  ${instances.length} passed`)
 })
 
-test.runIf(provider.name === 'playwright')('timeout hooks', async () => {
+test.runIf(provider.name === 'playwright')('timeout hooks', async ({ onTestFailed }) => {
   const { stderr } = await runBrowserTests({
     root: './fixtures/timeout-hooks',
+  })
+
+  onTestFailed(() => {
+    console.error(stderr)
   })
 
   const lines = stderr.split('\n')
