@@ -2,7 +2,7 @@
 title: Vitest 4.0 is out!
 author:
   name: The Vitest Team
-date: 2025-12-31
+date: 2025-10-22
 sidebar: false
 head:
   - - meta
@@ -27,7 +27,7 @@ head:
 
 # Vitest 4.0 is out!
 
-_January 1, 2025_
+_October 22, 2025_
 
 ![Vitest 4 Announcement Cover Image](/og-vitest-4.jpg)
 
