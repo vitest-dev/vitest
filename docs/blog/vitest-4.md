@@ -52,6 +52,117 @@ To get started, we suggest helping [triage issues](https://github.com/vitest-dev
 
 For the latest news about the Vitest ecosystem and Vitest core, follow us on [Bluesky](https://bsky.app/profile/vitest.dev) or [Mastodon](https://webtoo.ls/@vitest).
 
+## Browser Mode is Stable
+
+With this release we are removing the `experimental` tag from [Browser Mode](/guide/browser). To make it possible, we had to introduce some changes to the public API.
+
+To define a provider, you now need to install a separate package: [`@vitest/browser-playwright`](https://www.npmjs.com/package/@vitest/browser-playwright), [`@vitest/browser-webdriverio`](https://www.npmjs.com/package/@vitest/browser-webdriverio), or [`@vitest/browser-preview`](https://www.npmjs.com/package/@vitest/browser-preview). This makes it simpler to work with custom options and doesn't require adding `/// <reference` comments anymore.
+
+::: code-group
+```ts [playwright]
+import { defineConfig } from 'vitest/config'
+import { playwright } from '@vitest/browser-playwright' // [!code ++]
+/// <reference path="@vitest/browser/providers/playwright" /> // [!code --]
+
+export default defineConfig({
+  test: {
+    browser: {
+      provider: 'playwright', // [!code --]
+      provider: playwright({ // [!code ++]
+        launchOptions: { // [!code ++]
+          slowMo: 100, // [!code ++]
+        }, // [!code ++]
+      }), // [!code ++]
+      instances: [
+        {
+          browser: 'chromium',
+          launch: { // [!code --]
+            slowMo: 100, // [!code --]
+          }, // [!code --]
+        },
+      ],
+    },
+  },
+})
+```
+```ts [webdriverio]
+import { defineConfig } from 'vitest/config'
+import { playwright } from '@vitest/browser-webdriverio' // [!code ++]
+/// <reference path="@vitest/browser/providers/webdriverio" /> // [!code --]
+
+export default defineConfig({
+  test: {
+    browser: {
+      provider: 'webdriverio', // [!code --]
+      provider: webdriverio({ // [!code ++]
+        capabilities: { // [!code ++]
+          browserVersion: '82', // [!code ++]
+        }, // [!code ++]
+      }),
+      instances: [
+        {
+          browser: 'chrome',
+          capabilities: { // [!code --]
+            browserVersion: '82', // [!code --]
+          }, // [!code --]
+        },
+      ],
+    },
+  },
+})
+```
+```ts [preview]
+import { defineConfig } from 'vitest/config'
+import { playwright } from '@vitest/browser-preview' // [!code ++]
+
+export default defineConfig({
+  test: {
+    browser: {
+      provider: 'preview', // [!code --]
+      provider: preview(), // [!code ++]
+      instances: [
+        { browser: 'chrome' },
+      ],
+    },
+  },
+})
+```
+:::
+
+The context is no longer imported from `@vitest/browser/context` (but it will keep working for better compatibility with tools that did not update yet), now just import from `vitest/browser`:
+
+```ts
+import { page } from '@vitest/browser/context' // [!code --]
+import { page } from 'vitest/browser' // [!code ++]
+
+test('example', async () => {
+  await page.getByRole('button').click()
+})
+```
+
+With these changes, the `@vitest/browser` package is no longer needed, and you can remove it from your dependencies.
+
+## Visual Regression Testing
+
+Vitest 4 adds support for [Visual Regression testing](/guide/browser/visual-regression-testing.md) in Browser Mode. We will continue to iterate over this feature to improve the feel of it.
+
+Visual regression testing in Vitest can be done through the
+[`toMatchScreenshot` assertion](/guide/browser/assertion-api.html#tomatchscreenshot):
+
+```ts
+import { expect, test } from 'vitest'
+import { page } from 'vitest/browser'
+
+test('hero section looks correct', async () => {
+  // ...the rest of the test
+
+  // capture and compare screenshot
+  await expect(page.getByTestId('hero')).toMatchScreenshot('hero-section')
+})
+```
+
+Vitest captures screenshots of your UI components and pages, then compares them against reference images to detect unintended visual changes.
+
 ## Breaking changes
 
 Vitest 4 has a few breaking changes that could affect you, so we advise reviewing the detailed [Migration Guide](/guide/migration#vitest-4) before upgrading.
@@ -60,4 +171,4 @@ The complete list of changes is at the [Vitest 4 Changelog](https://github.com/v
 
 ## Acknowledgments
 
-Vitest 4 is the result of countless hours by the [Vitest team](/team) and our contributors. We appreciate the individuals and companies sponsoring Vitest development. [Vladimir](https://github.com/sheremet-va) and [Hiroshi](https://github.com/hi-ogawa) are part of the [VoidZero](https://voidzero.dev) Team and are able to to work on Vite and Vitest full-time, and [Ari](https://github.com/ariperkkio) can invest more time in Vitest thanks to [StackBlitz](https://stackblitz.com/). A shout-out to [NuxtLabs](https://nuxtlabs.com), [Zammad](https://zammad.com), and sponsors on [Vitest's GitHub Sponsors](https://github.com/sponsors/vitest-dev) and [Vitest's Open Collective](https://opencollective.com/vitest).
+Vitest 4 is the result of countless hours by the [Vitest team](/team) and our contributors. We appreciate the individuals and companies sponsoring Vitest development. [Vladimir](https://github.com/sheremet-va) and [Hiroshi](https://github.com/hi-ogawa) are part of the [VoidZero](https://voidzero.dev) Team and are able to work on Vite and Vitest full-time, and [Ari](https://github.com/ariperkkio) can invest more time in Vitest thanks to [StackBlitz](https://stackblitz.com/). A shout-out to [NuxtLabs](https://nuxtlabs.com), [Zammad](https://zammad.com), and sponsors on [Vitest's GitHub Sponsors](https://github.com/sponsors/vitest-dev) and [Vitest's Open Collective](https://opencollective.com/vitest).
