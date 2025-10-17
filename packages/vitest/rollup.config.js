@@ -71,6 +71,7 @@ const external = [
   'node:vm',
   'node:http',
   'node:console',
+  'node:events',
   'inspector',
   'vitest/optional-types.js',
   'vitest/browser',
