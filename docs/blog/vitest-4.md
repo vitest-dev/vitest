@@ -163,6 +163,170 @@ test('hero section looks correct', async () => {
 
 Vitest captures screenshots of your UI components and pages, then compares them against reference images to detect unintended visual changes.
 
+Alongside this feature, Vitest also introduces a `toBeInViewport` matcher. It allows you to check if an element is currently in viewport with [IntersectionObserver API](https://developer.mozilla.org/en-US/docs/Web/API/Intersection_Observer_API).
+
+```ts
+// A specific element is in viewport.
+await expect.element(page.getByText('Welcome')).toBeInViewport()
+
+// 50% of a specific element should be in viewport
+await expect.element(page.getByText('To')).toBeInViewport({ ratio: 0.5 })
+```
+
+## Playwright Traces Support
+
+Vitest 4 supports generating [Playwright Traces](/guide/browser/trace-view). To enable tracing, you need to set the [`trace`](/guide/browser/config#browser-trace) option in the `test.browser` configuration or pass down `--browser.trace=on` option (`off`, `on-first-retry`, `on-all-retries`, `retain-on-failure` are also available).
+
+![Playwright Traces interface](/traces.png)
+
+The traces are available in reporters as [annotations](/guide/test-annotations). For example, in the HTML reporter, you can find the link to the trace file in the test details. To open the trace file, you can use the [Playwright Trace Viewer](https://playwright.dev/docs/trace-viewer).
+
+## Locator Improvements
+
+The `frameLocator` method returns a `FrameLocator` instance that can be used to find elements inside the iframe.
+Vitest now supports a new [`page.frameLocator`](/guide/browser/context#framelocator) API (only with `playwright` provider).
+
+```ts
+const frame = page.frameLocator(
+  page.getByTestId('iframe')
+)
+
+await frame.getByText('Hello World').click() // ✅
+await frame.click() // ❌ Not available
+```
+
+Every locator now exposes a `length` property, allowing them to be used with `toHaveLength` matcher automatically:
+
+```ts
+await expect.element(page.getByTxt('Item')).toHaveLength(3)
+```
+
+## Improved Debugging
+
+The [vscode extension](https://vitest.dev/vscode) now supports "Debug Test" button when running browser tests.
+
+If you prefer configuring the debug options yourself, you can start Vitest with the `--inspect` flag (available with `playwright` and `webdriverio`) and connect to [DevTools](chrome://inspect/) manually. In this case Vitest will also disable the new [`trackUnhandledErrors`](/guide/browser/config#browser-trackunhandlederrors) option automatically.
+
+## Type-Aware Hooks
+
+When using `test.extend` with lifeycle hooks like `beforeEach` and `afterEach`, you can now reference them directly on the returned `test` object:
+
+```ts
+import { test as baseTest } from 'vitest'
+
+const test = baseTest.extend<{
+  todos: number[]
+}>({
+  todos: async ({}, use) => {
+    await use([])
+  },
+})
+
+// Unlike global hooks, these hooks are aware of the extended context
+test.beforeEach(({ todos }) => {
+  todos.push(1)
+})
+
+test.afterEach(({ todos }) => {
+  console.log(todos)
+})
+```
+
+## `expect.assert`
+
+Vitest has always exported [Chai's `assert`](https://www.chaijs.com/api/assert/), but sometimes using it was inconvenient because many modules have the same export.
+
+Now Vitest exposes the same method on `expect` for an easy access. This is especially useful if you need to narrow down the type, since `expect.to*` methods do not support that:
+
+```ts
+interface Cat {
+  __type: 'Cat'
+  mew(): void
+}
+interface Dog {
+  __type: 'Dog'
+  bark(): void
+}
+type Animal = Cat | Dog
+
+const animal: Animal = { __type: 'Dog', bark: () => {} }
+
+expect.assert(animal.__type === 'Dog')
+// does not show a type error!
+expect(animal.bark()).toBeUndefined()
+```
+
+## `expect.schemaMatching`
+
+Vitest 4 introduces a new asymmetric matcher called `expect.schemaMatching`. It accepts a [Standard Schema v1](https://standardschema.dev/) object and validates values against it, passing the assertion when the value conforms to the schema.
+
+As a reminder, asymmetric matchers can be used in all `expect` matchers that check equality, including `toEqual`, `toStrictEqual`, `toMatchObject`, `toContainEqual`, `toThrowError`, `toHaveBeenCalledWith`, `toHaveReturnedWith` and `toHaveBeenResolvedWith`.
+
+```ts
+import { expect, test } from 'vitest'
+import { z } from 'zod'
+import * as v from 'valibot'
+import { type } from 'arktype'
+
+test('email validation', () => {
+  const user = { email: 'john@example.com' }
+
+  // using Zod
+  expect(user).toEqual({
+    email: expect.schemaMatching(z.string().email()),
+  })
+
+  // using Valibot
+  expect(user).toEqual({
+    email: expect.schemaMatching(v.pipe(v.string(), v.email()))
+  })
+
+  // using ArkType
+  expect(user).toEqual({
+    email: expect.schemaMatching(type('string.email')),
+  })
+})
+```
+
+## Reporter Updates
+
+The `basic` reporter was removed. You can use the `default` reporter with `summary: false` instead:
+
+```ts
+export default defineConfig({
+  test: {
+    reporters: [
+      ['default', { summary: false }],
+    ],
+  },
+})
+```
+
+The [`default`](/guide/reporters#default-reporter) reporter now always prints tests in a tree if there is only one test file running. If you want to always see tests printed as a tree, you can use a new [`tree`](/guide/reporters#tree-reporter) reporter.
+
+The [`verbose`](/guide/reporters#verbose-reporter) reporter now always prints tests one by one when they are finished. Previously, this was done only in CI, and locally `verbose` would behave mostly like a `default` reporter. If you prefer to keep the old behaviour, you can conditionally use the `verose` reporter only in CI by updating the config:
+
+```ts
+import { defineConfig } from 'vitest/config'
+
+export default defineConfig({
+  test: {
+    reporter: process.env.CI ? 'verbose' : 'default'
+  }
+})
+```
+
+## New API Methods
+
+Vitest 4 comes with new advanced public [API methods](/advanced/api/vitest):
+
+- [`experimental_parseSpecifications`](/advanced/api/vitest#parsespecification) allows you to parse a test file without running it.
+- [`watcher`](/advanced/api/vitest#watcher) exposes methods that can be used when you disable the default Vitest watcher.
+- [`enableCoverage`](/advanced/api/vitest#enablecoverage) and [`disableCoverage`](/advanced/api/vitest#disablecoverage) allow you to enable and disable coverage dynamically.
+- [`getSeed`](/advanced/api/vitest#enablecoverage) returns the seed value, if tests run at random.
+- [`getGlobalTestNamePattern`](/advanced/api/vitest#getglobaltestnamepattern) returns the current test name pattern.
+- [`waitForTestRunEnd`](/advanced/api/vitest#waitfortestrunend) returns a promise that resolves when all tests have finished running.
+
 ## Breaking changes
 
 Vitest 4 has a few breaking changes that could affect you, so we advise reviewing the detailed [Migration Guide](/guide/migration#vitest-4) before upgrading.
