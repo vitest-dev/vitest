@@ -41,6 +41,10 @@ const debug = createDebugger('vitest:browser:playwright')
 const playwrightBrowsers = ['firefox', 'webkit', 'chromium'] as const
 type PlaywrightBrowser = (typeof playwrightBrowsers)[number]
 
+// Enable intercepting of requests made by service workers - experimental API is only available in Chromium based browsers
+// Requests from service workers are only available on context.route() https://playwright.dev/docs/service-workers-experimental
+process.env.PW_EXPERIMENTAL_SERVICE_WORKER_NETWORK_EVENTS ??= '1'
+
 export interface PlaywrightProviderOptions {
   /**
    * The options passed down to [`playwright.connect`](https://playwright.dev/docs/api/class-browsertype#browser-type-launch) method.
@@ -254,7 +258,7 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
     return {
       register: async (sessionId: string, module: MockedModule): Promise<void> => {
         const page = this.getPage(sessionId)
-        await page.route(createPredicate(sessionId, module.url), async (route) => {
+        await page.context().route(createPredicate(sessionId, module.url), async (route) => {
           if (module.type === 'manual') {
             const exports = Object.keys(await module.resolve())
             const body = createManualModuleSource(module.url, exports)
@@ -323,7 +327,7 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
         const key = predicateKey(sessionId, id)
         const predicate = idPreficates.get(key)
         if (predicate) {
-          await page.unroute(predicate).finally(() => idPreficates.delete(key))
+          await page.context().unroute(predicate).finally(() => idPreficates.delete(key))
         }
       },
       clear: async (sessionId: string): Promise<void> => {
@@ -333,7 +337,7 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
           const key = predicateKey(sessionId, id)
           const predicate = idPreficates.get(key)
           if (predicate) {
-            return page.unroute(predicate).finally(() => idPreficates.delete(key))
+            return page.context().unroute(predicate).finally(() => idPreficates.delete(key))
           }
           return null
         })
