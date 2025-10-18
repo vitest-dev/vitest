@@ -15,6 +15,7 @@ export interface SerializedConfig {
   disableConsoleIntercept: boolean | undefined
   runner: string | undefined
   isolate: boolean
+  fileParallelism: boolean
   maxWorkers: number
   mode: 'test' | 'benchmark'
   bail: number | undefined
