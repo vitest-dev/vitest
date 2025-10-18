@@ -58,24 +58,31 @@ async function onMessage(message: WorkerRequest, project: TestProject): Promise<
     runners.set(project.vitest, runner)
   }
 
+  let runPromise: Promise<unknown> | undefined
+
   switch (message.type) {
     case 'start': {
       return { type: 'started', __vitest_worker_response__ }
     }
 
     case 'run': {
-      await runner.runTests(message.context.files, project)
+      runPromise = runner.runTests(message.context.files, project)
+        .catch(error => error)
+      const error = await runPromise
 
-      return { type: 'testfileFinished', __vitest_worker_response__ }
+      return { type: 'testfileFinished', error, __vitest_worker_response__ }
     }
 
     case 'collect': {
-      await runner.collectTests(message.context.files, project)
+      runPromise = runner.collectTests(message.context.files, project)
+        .catch(error => error)
+      const error = await runPromise
 
-      return { type: 'testfileFinished', __vitest_worker_response__ }
+      return { type: 'testfileFinished', error, __vitest_worker_response__ }
     }
 
     case 'stop': {
+      await runPromise
       await project.typechecker?.stop()
       return { type: 'stopped', __vitest_worker_response__ }
     }
