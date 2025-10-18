@@ -10,9 +10,9 @@
     "test:run": "vitest run"
   },
   "devDependencies": {
-    "@types/node": "^20.19.17",
+    "@types/node": "^20.19.22",
     "@vitest/ui": "latest",
-    "typescript": "^5.9.2",
+    "typescript": "^5.9.3",
     "vite": "latest",
     "vitest": "latest"
   },

@@ -9,17 +9,17 @@
     "test:run": "vitest run"
   },
   "devDependencies": {
-    "@testing-library/jest-dom": "^6.8.0",
+    "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^14.6.1",
-    "@types/react": "^19.1.13",
-    "@vitejs/plugin-react": "^5.0.3",
+    "@types/react": "^19.2.2",
+    "@vitejs/plugin-react": "^5.0.4",
     "@vitest/ui": "latest",
-    "fastify": "^5.6.0",
+    "fastify": "^5.6.1",
     "jsdom": "^26.1.0",
-    "react": "^19.1.1",
+    "react": "^19.2.0",
     "supertest": "^6.3.4",
-    "tsx": "^4.20.5",
+    "tsx": "^4.20.6",
     "vite": "latest",
     "vitest": "latest"
   },

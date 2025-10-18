@@ -21,7 +21,7 @@
     "istanbul-lib-report": "catalog:",
     "magic-string": "^0.30.19",
     "magicast": "^0.3.5",
-    "sass-embedded": "^1.93.0",
+    "sass-embedded": "^1.93.2",
     "unplugin-swc": "^1.5.7",
     "vite": "latest",
     "vitest": "workspace:*",

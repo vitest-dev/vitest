@@ -6,7 +6,7 @@ packages:
   - test/config/fixtures/conditions-pkg
 
 catalog:
-  '@iconify-json/carbon': ^1.2.13
+  '@iconify-json/carbon': ^1.2.14
   '@iconify-json/logos': ^1.2.9
   '@jridgewell/remapping': ^2.3.5
   '@jridgewell/trace-mapping': 0.3.31
@@ -19,13 +19,13 @@ catalog:
   '@types/istanbul-reports': ^3.0.4
   '@types/test-exclude': ^6.0.2
   '@types/ws': ^8.18.1
-  '@unocss/reset': ^66.5.1
+  '@unocss/reset': ^66.5.4
   '@vitejs/plugin-vue': ^6.0.1
   '@vueuse/core': ^12.8.2
   acorn-walk: ^8.3.4
-  birpc: ^2.5.0
+  birpc: ^2.6.1
   cac: ^6.7.14
-  chai: ^6.0.1
+  chai: ^6.2.0
   debug: ^4.4.3
   flatted: ^3.3.3
   istanbul-lib-coverage: ^3.2.2
@@ -34,15 +34,15 @@ catalog:
   istanbul-reports: ^3.2.0
   magic-string: ^0.30.19
   magicast: ^0.3.5
-  msw: ^2.11.3
+  msw: ^2.11.5
   pathe: ^2.0.3
   sirv: ^3.0.2
-  std-env: ^3.9.0
-  strip-literal: ^3.0.0
+  std-env: ^3.10.0
+  strip-literal: ^3.1.0
   test-exclude: ^7.0.1
   tinyglobby: ^0.2.15
   tinyrainbow: ^3.0.3
-  unocss: ^66.5.1
+  unocss: ^66.5.4
   unplugin-vue-components: ^0.28.0
-  vue: ^3.5.21
+  vue: ^3.5.22
   ws: ^8.18.3
