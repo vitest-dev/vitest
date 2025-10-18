@@ -21,6 +21,7 @@ export type {
   SerializedCoverageConfig,
 } from '../runtime/config'
 
+export { VitestEvaluatedModules as EvaluatedModules } from '../runtime/moduleRunner/evaluatedModules'
 export type {
   BenchFactory,
   BenchFunction,
@@ -134,5 +135,3 @@ export type {
 export type { SerializedError } from '@vitest/utils'
 export type { SerializedTestSpecification }
 export type { DiffOptions } from '@vitest/utils/diff'
-
-export { EvaluatedModules } from 'vite/module-runner'
