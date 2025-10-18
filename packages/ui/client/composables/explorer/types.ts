@@ -71,9 +71,14 @@ export interface Filter {
   onlyTests: boolean
 }
 
+export type ProjectSortType = 'asc' | 'desc'
+export type ProjectSortUIType = ProjectSortType | 'default'
+
 export interface TreeFilterState extends Filter {
   search: string
   expandAll?: boolean
+  project?: string
+  projectSort?: ProjectSortType
 }
 
 export interface CollectorInfo {
