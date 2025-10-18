@@ -57,6 +57,13 @@ Repository: git+https://github.com/antfu/install-pkg.git
 
 ---------------------------------------
 
+## @bomb.sh/tab
+License: MIT
+By: Bombshell Authors
+Repository: git+https://github.com/bombshell-dev/tab.git
+
+---------------------------------------
+
 ## @jridgewell/resolve-uri
 License: MIT
 By: Justin Ridgewell
