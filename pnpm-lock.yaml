@@ -866,8 +866,8 @@ importers:
         specifier: ^4.52.0
         version: 4.52.0
       splitpanes:
-        specifier: ^3.2.0
-        version: 3.2.0(vue@3.5.21(typescript@5.9.2))
+        specifier: ^4.0.4
+        version: 4.0.4(vue@3.5.21(typescript@5.9.2))
       unocss:
         specifier: 'catalog:'
         version: 66.5.1(postcss@8.5.6)(vite@7.1.5(@types/node@22.18.6)(jiti@2.5.1)(lightningcss@1.30.1)(sass-embedded@1.93.0)(sass@1.93.0)(terser@5.44.0)(tsx@4.20.5)(yaml@2.8.1))
@@ -8573,8 +8573,8 @@ packages:
     resolution: {integrity: sha512-UcjcJOWknrNkF6PLX83qcHM6KHgVKNkV62Y8a5uYDVv9ydGQVwAHMKqHdJje1VTWpljG0WYpCDhrCdAOYH4TWg==}
     engines: {node: '>= 10.x'}
 
-  splitpanes@3.2.0:
-    resolution: {integrity: sha512-K+WKxWdqtKShV33gPjQl769wHxB3glypTOReCvYu/AJd38J+abHlpiF8rK6uBNPMrgw5thHZCI5JkEwsAqa9XA==}
+  splitpanes@4.0.4:
+    resolution: {integrity: sha512-RbysugZhjbCw5fgplvk3hOXr41stahQDtZhHVkhnnJI6H4wlGDhM2kIpbehy7v92duy9GnMa8zIhHigIV1TWtg==}
     peerDependencies:
       vue: ^3.2.0
 
@@ -17347,7 +17347,7 @@ snapshots:
 
   split2@4.2.0: {}
 
-  splitpanes@3.2.0(vue@3.5.21(typescript@5.9.2)):
+  splitpanes@4.0.4(vue@3.5.21(typescript@5.9.2)):
     dependencies:
       vue: 3.5.21(typescript@5.9.2)
 

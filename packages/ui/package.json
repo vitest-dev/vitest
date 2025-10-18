@@ -79,7 +79,7 @@
     "floating-vue": "^5.2.2",
     "mime": "^4.1.0",
     "rollup": "^4.52.0",
-    "splitpanes": "^3.2.0",
+    "splitpanes": "^4.0.4",
     "unocss": "catalog:",
     "unplugin-auto-import": "^0.19.0",
     "unplugin-vue-components": "catalog:",
