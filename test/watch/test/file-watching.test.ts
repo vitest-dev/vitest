@@ -189,13 +189,15 @@ test('editing source file generates new test report to file system', async () =>
 describe('browser', () => {
   test.runIf((process.platform !== 'win32'))('editing source file triggers re-run', { retry: 3 }, async () => {
     const { vitest } = await testUtils.runVitest({
-      ...options,
-      browser: {
+      root: 'fixtures',
+      watch: true,
+    }, undefined, undefined, {
+      test: { browser: {
         instances: [{ browser: 'chromium' }],
         provider: webdriverio(),
         enabled: true,
         headless: true,
-      },
+      } },
     })
 
     writeFileSync(sourceFile, editFile(sourceFileContent), 'utf8')
