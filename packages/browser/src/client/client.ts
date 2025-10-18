@@ -3,8 +3,8 @@ import type { CancelReason } from '@vitest/runner'
 import type { BirpcReturn } from 'birpc'
 import type { WebSocketBrowserEvents, WebSocketBrowserHandlers } from '../types'
 import type { IframeOrchestrator } from './orchestrator'
+import { parse, stringify } from '@ungap/structured-clone/json'
 import { createBirpc } from 'birpc'
-import { parse, stringify } from 'flatted'
 import { getBrowserState } from './utils'
 
 const PAGE_TYPE = getBrowserState().type

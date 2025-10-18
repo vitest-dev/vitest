@@ -15,9 +15,9 @@ import type {
   WebSocketRPC,
 } from './types'
 import { existsSync, promises as fs } from 'node:fs'
+import { parse, stringify } from '@ungap/structured-clone/json'
 import { noop } from '@vitest/utils/helpers'
 import { createBirpc } from 'birpc'
-import { parse, stringify } from 'flatted'
 import { WebSocketServer } from 'ws'
 import { API_PATH } from '../constants'
 import { getModuleGraph } from '../utils/graph'

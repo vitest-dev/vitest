@@ -6,8 +6,8 @@ import type { TestSpecification } from '../spec'
 import type { BrowserProvider } from '../types/browser'
 import crypto from 'node:crypto'
 import * as nodeos from 'node:os'
+import { stringify } from '@ungap/structured-clone/json'
 import { createDefer } from '@vitest/utils/helpers'
-import { stringify } from 'flatted'
 import { createDebugger } from '../../utils/debugger'
 
 const debug = createDebugger('vitest:browser:pool')

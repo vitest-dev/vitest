@@ -1,9 +1,9 @@
 import type { BirpcOptions, BirpcReturn } from 'birpc'
 // eslint-disable-next-line no-restricted-imports
 import type { WebSocketEvents, WebSocketHandlers } from 'vitest'
-import { createBirpc } from 'birpc'
+import { parse, stringify } from '@ungap/structured-clone/json'
 
-import { parse, stringify } from 'flatted'
+import { createBirpc } from 'birpc'
 import { StateManager } from './state'
 
 export * from '@vitest/runner/utils'
