@@ -1,4 +1,5 @@
 import type { GlobalChannelIncomingEvent, IframeChannelIncomingEvent, IframeChannelOutgoingEvent, IframeViewportDoneEvent, IframeViewportFailEvent } from '@vitest/browser/client'
+import type { FileSpecification } from '@vitest/runner'
 import type { BrowserTesterOptions, SerializedConfig } from 'vitest'
 import { channel, client, globalChannel } from '@vitest/browser/client'
 import { generateFileHash } from '@vitest/runner/utils'
@@ -134,12 +135,14 @@ export class IframeOrchestrator {
 
   private async runIsolatedTestInIframe(
     container: HTMLDivElement,
-    file: string,
+    spec: FileSpecification,
     options: BrowserTesterOptions,
     startTime: number,
   ) {
     const config = getConfig()
     const { width, height } = config.browser.viewport
+
+    const file = spec.filepath
 
     if (this.iframes.has(file)) {
       this.iframes.get(file)!.remove()
@@ -151,7 +154,7 @@ export class IframeOrchestrator {
     // running tests after the "prepare" event
     await sendEventToIframe({
       event: 'execute',
-      files: [file],
+      files: [spec],
       method: options.method,
       iframeId: file,
       context: options.providedContext,

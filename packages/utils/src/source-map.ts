@@ -23,7 +23,6 @@ const stackIgnorePatterns: (string | RegExp)[] = [
   '/vite-node/dist/',
   '/vite-node/src/',
   '/node_modules/chai/',
-  '/node_modules/tinypool/',
   '/node_modules/tinyspy/',
   '/vite/dist/node/module-runner',
   '/rolldown-vite/dist/node/module-runner',

@@ -186,7 +186,6 @@
     "tinybench": "^2.9.0",
     "tinyexec": "^0.3.2",
     "tinyglobby": "catalog:",
-    "tinypool": "^2.0.0",
     "tinyrainbow": "catalog:",
     "vite": "^6.0.0 || ^7.0.0",
     "why-is-node-running": "^2.3.0"

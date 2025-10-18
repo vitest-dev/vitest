@@ -16,17 +16,14 @@ You can provide your own pool by specifying a file path:
 
 ```ts [vitest.config.ts]
 import { defineConfig } from 'vitest/config'
+import customPool from './my-custom-pool.ts'
 
 export default defineConfig({
   test: {
     // will run every file with a custom pool by default
-    pool: './my-custom-pool.ts',
-    // you can provide options using `poolOptions` object
-    poolOptions: {
-      myCustomPool: {
-        customProperty: true,
-      },
-    },
+    pool: customPool({
+      customProperty: true,
+    })
   },
 })
 ```

@@ -5,16 +5,14 @@ export function serializeConfig(project: TestProject): SerializedConfig {
   const { config, globalConfig } = project
   const viteConfig = project._vite?.config
   const optimizer = config.deps?.optimizer || {}
-  const poolOptions = config.poolOptions
-
-  // Resolve from server.config to avoid comparing against default value
-  const isolate = viteConfig?.test?.isolate
 
   return {
     // TODO: remove functions from environmentOptions
     environmentOptions: config.environmentOptions,
     mode: config.mode,
     isolate: config.isolate,
+    fileParallelism: config.fileParallelism,
+    maxWorkers: config.maxWorkers,
     base: config.base,
     logHeapUsage: config.logHeapUsage,
     runner: config.runner,
@@ -63,42 +61,6 @@ export function serializeConfig(project: TestProject): SerializedConfig {
       }
     })(config.coverage),
     fakeTimers: config.fakeTimers,
-    poolOptions: {
-      forks: {
-        singleFork:
-          poolOptions?.forks?.singleFork
-          ?? globalConfig.poolOptions?.forks?.singleFork
-          ?? false,
-        isolate:
-          poolOptions?.forks?.isolate
-          ?? isolate
-          ?? globalConfig.poolOptions?.forks?.isolate
-          ?? true,
-      },
-      threads: {
-        singleThread:
-          poolOptions?.threads?.singleThread
-          ?? globalConfig.poolOptions?.threads?.singleThread
-          ?? false,
-        isolate:
-          poolOptions?.threads?.isolate
-          ?? isolate
-          ?? globalConfig.poolOptions?.threads?.isolate
-          ?? true,
-      },
-      vmThreads: {
-        singleThread:
-          poolOptions?.vmThreads?.singleThread
-          ?? globalConfig.poolOptions?.vmThreads?.singleThread
-          ?? false,
-      },
-      vmForks: {
-        singleFork:
-          poolOptions?.vmForks?.singleFork
-          ?? globalConfig.poolOptions?.vmForks?.singleFork
-          ?? false,
-      },
-    },
     deps: {
       web: config.deps.web || {},
       optimizer: Object.entries(optimizer).reduce((acc, [name, option]) => {

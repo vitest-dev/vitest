@@ -34,54 +34,23 @@ In cases where your test execution time is high, you can generate a profile of t
 The `--prof` option does not work with `pool: 'threads'` due to `node:worker_threads` limitations.
 :::
 
-To pass these options to Vitest's test runner, define `poolOptions.<pool>.execArgv` in your Vitest configuration:
+To pass these options to Vitest's test runner, define `execArgv` in your Vitest configuration:
 
-::: code-group
-```ts [Forks]
+```ts
 import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
   test: {
-    pool: 'forks',
-    poolOptions: {
-      forks: {
-        execArgv: [
-          '--cpu-prof',
-          '--cpu-prof-dir=test-runner-profile',
-          '--heap-prof',
-          '--heap-prof-dir=test-runner-profile'
-        ],
-
-        // To generate a single profile
-        singleFork: true,
-      },
-    },
+    fileParallelism: false,
+    execArgv: [
+      '--cpu-prof',
+      '--cpu-prof-dir=test-runner-profile',
+      '--heap-prof',
+      '--heap-prof-dir=test-runner-profile'
+    ],
   },
 })
 ```
-```ts [Threads]
-import { defineConfig } from 'vitest/config'
-
-export default defineConfig({
-  test: {
-    pool: 'threads',
-    poolOptions: {
-      threads: {
-        execArgv: [
-          '--cpu-prof',
-          '--cpu-prof-dir=test-runner-profile',
-          '--heap-prof',
-          '--heap-prof-dir=test-runner-profile'
-        ],
-
-        // To generate a single profile
-        singleThread: true,
-      },
-    },
-  },
-})
-```
-:::
 
 After the tests have run there should be a `test-runner-profile/*.cpuprofile` and `test-runner-profile/*.heapprofile` files generated. See [Inspecting profiling records](#inspecting-profiling-records) for instructions how to analyze these files.
 

@@ -2,16 +2,13 @@ import { defineConfig } from 'vite'
 
 export default defineConfig({
   test: {
+    pool: 'threads',
     include: ['test/**.test.ts'],
     includeTaskLocation: true,
     reporters: ['verbose'],
     testTimeout: 60_000,
     globals: true,
-    poolOptions: {
-      forks: {
-        singleFork: true,
-      },
-    },
+    fileParallelism: false,
     chaiConfig: {
       truncateThreshold: 999,
     },

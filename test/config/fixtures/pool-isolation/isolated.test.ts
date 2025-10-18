@@ -8,10 +8,10 @@ test('is isolated', () => {
   const config: TestUserConfig = globalThis.__vitest_worker__.config
 
   if (pool === 'forks') {
-    expect(config.poolOptions?.forks?.isolate).toBe(true)
+    expect(config.isolate).toBe(false)
   }
   else {
     expect(pool).toBe('threads')
-    expect(config.poolOptions?.threads?.isolate).toBe(true)
+    expect(config.isolate).toBe(false)
   }
 })

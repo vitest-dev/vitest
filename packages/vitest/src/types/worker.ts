@@ -16,13 +16,15 @@ export type TestExecutionMethod = 'run' | 'collect'
 
 export interface ContextRPC {
   pool: string
-  workerId: number
   config: SerializedConfig
   projectName: string
-  files: string[] | FileSpecification[]
+  files: FileSpecification[]
   environment: ContextTestEnvironment
   providedContext: Record<string, any>
   invalidates?: string[]
+
+  /** Exposed to test runner as `VITEST_WORKER_ID`. Value is unique per each isolated worker. */
+  workerId: number
 }
 
 export interface WorkerGlobalState {

@@ -65,7 +65,6 @@ type UnsupportedProperties
     | 'sequence'
     | 'root'
     | 'pool'
-    | 'poolOptions'
   // browser mode doesn't support a custom runner
     | 'runner'
   // non-browser options

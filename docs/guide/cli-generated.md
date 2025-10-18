@@ -390,117 +390,19 @@ Enable trace view mode. Supported: "on", "off", "on-first-retry", "on-all-retrie
 
 Specify pool, if not running in the browser (default: `forks`)
 
-### poolOptions.threads.isolate
+### execArgv
 
-- **CLI:** `--poolOptions.threads.isolate`
-- **Config:** [poolOptions.threads.isolate](/config/#pooloptions-threads-isolate)
+- **CLI:** `--execArgv <option>`
+- **Config:** [execArgv](/config/#execargv)
 
-Isolate tests in threads pool (default: `true`)
+Pass additional arguments to `node` process when spawning `worker_threads` or `child_process`.
 
-### poolOptions.threads.singleThread
+### vmMemoryLimit
 
-- **CLI:** `--poolOptions.threads.singleThread`
-- **Config:** [poolOptions.threads.singleThread](/config/#pooloptions-threads-singlethread)
+- **CLI:** `--vmMemoryLimit <limit>`
+- **Config:** [vmMemoryLimit](/config/#vmmemorylimit)
 
-Run tests inside a single thread (default: `false`)
-
-### poolOptions.threads.maxThreads
-
-- **CLI:** `--poolOptions.threads.maxThreads <workers>`
-- **Config:** [poolOptions.threads.maxThreads](/config/#pooloptions-threads-maxthreads)
-
-Maximum number or percentage of threads to run tests in
-
-### poolOptions.threads.useAtomics
-
-- **CLI:** `--poolOptions.threads.useAtomics`
-- **Config:** [poolOptions.threads.useAtomics](/config/#pooloptions-threads-useatomics)
-
-Use Atomics to synchronize threads. This can improve performance in some cases, but might cause segfault in older Node versions (default: `false`)
-
-### poolOptions.vmThreads.isolate
-
-- **CLI:** `--poolOptions.vmThreads.isolate`
-- **Config:** [poolOptions.vmThreads.isolate](/config/#pooloptions-vmthreads-isolate)
-
-Isolate tests in threads pool (default: `true`)
-
-### poolOptions.vmThreads.singleThread
-
-- **CLI:** `--poolOptions.vmThreads.singleThread`
-- **Config:** [poolOptions.vmThreads.singleThread](/config/#pooloptions-vmthreads-singlethread)
-
-Run tests inside a single thread (default: `false`)
-
-### poolOptions.vmThreads.maxThreads
-
-- **CLI:** `--poolOptions.vmThreads.maxThreads <workers>`
-- **Config:** [poolOptions.vmThreads.maxThreads](/config/#pooloptions-vmthreads-maxthreads)
-
-Maximum number or percentage of threads to run tests in
-
-### poolOptions.vmThreads.useAtomics
-
-- **CLI:** `--poolOptions.vmThreads.useAtomics`
-- **Config:** [poolOptions.vmThreads.useAtomics](/config/#pooloptions-vmthreads-useatomics)
-
-Use Atomics to synchronize threads. This can improve performance in some cases, but might cause segfault in older Node versions (default: `false`)
-
-### poolOptions.vmThreads.memoryLimit
-
-- **CLI:** `--poolOptions.vmThreads.memoryLimit <limit>`
-- **Config:** [poolOptions.vmThreads.memoryLimit](/config/#pooloptions-vmthreads-memorylimit)
-
-Memory limit for VM threads pool. If you see memory leaks, try to tinker this value.
-
-### poolOptions.forks.isolate
-
-- **CLI:** `--poolOptions.forks.isolate`
-- **Config:** [poolOptions.forks.isolate](/config/#pooloptions-forks-isolate)
-
-Isolate tests in forks pool (default: `true`)
-
-### poolOptions.forks.singleFork
-
-- **CLI:** `--poolOptions.forks.singleFork`
-- **Config:** [poolOptions.forks.singleFork](/config/#pooloptions-forks-singlefork)
-
-Run tests inside a single child_process (default: `false`)
-
-### poolOptions.forks.maxForks
-
-- **CLI:** `--poolOptions.forks.maxForks <workers>`
-- **Config:** [poolOptions.forks.maxForks](/config/#pooloptions-forks-maxforks)
-
-Maximum number or percentage of processes to run tests in
-
-### poolOptions.vmForks.isolate
-
-- **CLI:** `--poolOptions.vmForks.isolate`
-- **Config:** [poolOptions.vmForks.isolate](/config/#pooloptions-vmforks-isolate)
-
-Isolate tests in forks pool (default: `true`)
-
-### poolOptions.vmForks.singleFork
-
-- **CLI:** `--poolOptions.vmForks.singleFork`
-- **Config:** [poolOptions.vmForks.singleFork](/config/#pooloptions-vmforks-singlefork)
-
-Run tests inside a single child_process (default: `false`)
-
-### poolOptions.vmForks.maxForks
-
-- **CLI:** `--poolOptions.vmForks.maxForks <workers>`
-- **Config:** [poolOptions.vmForks.maxForks](/config/#pooloptions-vmforks-maxforks)
-
-Maximum number or percentage of processes to run tests in
-
-### poolOptions.vmForks.memoryLimit
-
-- **CLI:** `--poolOptions.vmForks.memoryLimit <limit>`
-- **Config:** [poolOptions.vmForks.memoryLimit](/config/#pooloptions-vmforks-memorylimit)
-
-Memory limit for VM forks pool. If you see memory leaks, try to tinker this value.
+Memory limit for VM pools. If you see memory leaks, try to tinker this value.
 
 ### fileParallelism
 

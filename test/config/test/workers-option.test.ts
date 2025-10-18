@@ -37,22 +37,12 @@ test('workers percent argument should not throw error', async () => {
 })
 
 test.each([
-  { poolOption: 'threads' },
+  { pool: 'threads' },
   { poolOption: 'vmThreads' },
   { poolOption: 'forks' },
   { poolOption: 'vmForks' },
-] as const)('workers percent argument in $poolOption should not throw error', async ({ poolOption }) => {
-  let workerOptions = {}
-
-  if (poolOption.toLowerCase().includes('threads')) {
-    workerOptions = { maxThreads: '100%' }
-  }
-
-  if (poolOption.toLowerCase().includes('forks')) {
-    workerOptions = { maxForks: '100%' }
-  }
-
-  const { stderr } = await runVitest({ poolOptions: { [poolOption]: workerOptions } })
+] as const)('workers percent argument in $poolOption should not throw error', async ({ pool }) => {
+  const { stderr } = await runVitest({ maxWorkers: '100%', pool })
 
   expect(stderr).toBe('')
 })

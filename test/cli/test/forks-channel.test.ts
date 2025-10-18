@@ -7,6 +7,6 @@ test.each(['forks', 'vmForks'] as const)('test case\'s process.send() calls are 
     pool,
   })
 
-  expect(stderr).toContain('⎯⎯⎯⎯ Unhandled Rejection ⎯⎯⎯⎯⎯')
+  expect(stderr).toContain('⎯⎯⎯⎯ Unhandled Errors ⎯⎯⎯⎯⎯')
   expect(stderr).toContain('Error: [vitest-pool]: Unexpected call to process.send(). Make sure your test cases are not interfering with process\'s channel.')
 })

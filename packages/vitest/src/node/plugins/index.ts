@@ -113,22 +113,6 @@ export async function VitestPlugin(
             },
           },
           test: {
-            poolOptions: {
-              threads: {
-                isolate:
-                  options.poolOptions?.threads?.isolate
-                  ?? options.isolate
-                  ?? testConfig.poolOptions?.threads?.isolate
-                  ?? viteConfig.test?.isolate,
-              },
-              forks: {
-                isolate:
-                  options.poolOptions?.forks?.isolate
-                  ?? options.isolate
-                  ?? testConfig.poolOptions?.forks?.isolate
-                  ?? viteConfig.test?.isolate,
-              },
-            },
             root: testConfig.root ?? viteConfig.test?.root,
             deps: testConfig.deps ?? viteConfig.test?.deps,
           },

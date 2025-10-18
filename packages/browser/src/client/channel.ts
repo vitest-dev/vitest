@@ -1,4 +1,4 @@
-import type { CancelReason } from '@vitest/runner'
+import type { CancelReason, FileSpecification } from '@vitest/runner'
 import { getBrowserState } from './utils'
 
 export interface IframeViewportEvent {
@@ -27,7 +27,7 @@ export interface GlobalChannelTestRunCanceledEvent {
 export interface IframeExecuteEvent {
   event: 'execute'
   method: 'run' | 'collect'
-  files: string[]
+  files: FileSpecification[]
   iframeId: string
   context: string
 }

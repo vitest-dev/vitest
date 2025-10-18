@@ -2,7 +2,7 @@ import type { Options } from 'tinyexec'
 import type { UserConfig as ViteUserConfig } from 'vite'
 import type { WorkerGlobalState } from 'vitest'
 import type { TestProjectConfiguration } from 'vitest/config'
-import type { TestModule, TestSpecification, TestUserConfig, Vitest, VitestRunMode } from 'vitest/node'
+import type { TestSpecification, TestUserConfig, Vitest, VitestRunMode } from 'vitest/node'
 import { webcrypto as crypto } from 'node:crypto'
 import fs from 'node:fs'
 import { Readable, Writable } from 'node:stream'
@@ -376,7 +376,7 @@ export async function runInlineTests(
     root,
     ...vitest,
     get results() {
-      return (vitest.ctx?.state.getFiles() || []).map(file => vitest.ctx?.state.getReportedEntity(file) as TestModule)
+      return vitest.ctx?.state.getTestModules() || []
     },
   }
 }
