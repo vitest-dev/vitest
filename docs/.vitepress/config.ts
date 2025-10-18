@@ -311,9 +311,9 @@ export default ({ mode }: { mode: string }) => {
                 docFooterText: 'Visual Regression Testing | Browser Mode',
               },
               {
-                text: 'Trace Viewer',
-                link: '/guide/browser/trace-viewer',
-                docFooterText: 'Trace Viewer | Browser Mode',
+                text: 'Trace View',
+                link: '/guide/browser/trace-view',
+                docFooterText: 'Trace View | Browser Mode',
               },
             ],
           },
