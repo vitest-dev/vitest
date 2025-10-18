@@ -9,7 +9,7 @@ export default defineConfig({
   test: {
     reporters: 'verbose',
     include: ['test/**/*.test.*'],
-    pool: 'forks',
+    pool: 'threads',
     chaiConfig: {
       truncateThreshold: 0,
     },

@@ -8,23 +8,21 @@ const UNIT_TESTS = 'test/**.unit.test.ts'
 const BROWSER_TESTS = 'test/**.browser.test.ts'
 const FIXTURES = '**/fixtures/**'
 
-const config = defineConfig({
-  test: {
-    pool: 'threads',
-    setupFiles: ['./setup.ts'],
-  },
-})
-
 export default defineConfig({
   test: {
     reporters: 'verbose',
     isolate: false,
+    fileParallelism: false,
+    pool: 'threads',
+    setupFiles: ['./setup.ts'],
+
     projects: [
       // Test cases for v8-provider
       {
+        extends: true,
         test: {
-          ...config.test,
           name: { label: 'v8', color: 'green' },
+          sequence: { groupOrder: 1 },
           env: { COVERAGE_PROVIDER: 'v8' },
           include: [GENERIC_TESTS, V8_TESTS],
           exclude: [
@@ -39,9 +37,10 @@ export default defineConfig({
 
       // Test cases for istanbul-provider
       {
+        extends: true,
         test: {
-          ...config.test,
           name: { label: 'istanbul', color: 'magenta' },
+          sequence: { groupOrder: 2 },
           env: { COVERAGE_PROVIDER: 'istanbul' },
           include: [GENERIC_TESTS, ISTANBUL_TESTS],
           exclude: [
@@ -56,9 +55,10 @@ export default defineConfig({
 
       // Test cases for custom-provider
       {
+        extends: true,
         test: {
-          ...config.test,
           name: { label: 'custom', color: 'yellow' },
+          sequence: { groupOrder: 3 },
           env: { COVERAGE_PROVIDER: 'custom' },
           include: [CUSTOM_TESTS],
           exclude: [FIXTURES],
@@ -67,9 +67,10 @@ export default defineConfig({
 
       // Test cases for browser. Browser mode itself is activated by COVERAGE_BROWSER env var.
       {
+        extends: true,
         test: {
-          ...config.test,
           name: { label: 'istanbul-browser', color: 'blue' },
+          sequence: { groupOrder: 4 },
           env: { COVERAGE_PROVIDER: 'istanbul', COVERAGE_BROWSER: 'true' },
           include: [
             BROWSER_TESTS,
@@ -97,9 +98,10 @@ export default defineConfig({
         },
       },
       {
+        extends: true,
         test: {
-          ...config.test,
           name: { label: 'v8-browser', color: 'red' },
+          sequence: { groupOrder: 5 },
           env: { COVERAGE_PROVIDER: 'v8', COVERAGE_BROWSER: 'true' },
           include: [
             BROWSER_TESTS,
@@ -129,9 +131,10 @@ export default defineConfig({
 
       // Test cases that aren't provider specific
       {
+        extends: true,
         test: {
-          ...config.test,
           name: { label: 'unit', color: 'cyan' },
+          sequence: { groupOrder: 6 },
           include: [UNIT_TESTS],
           typecheck: {
             enabled: true,
@@ -142,7 +145,6 @@ export default defineConfig({
         },
       },
     ],
-    fileParallelism: false,
     onConsoleLog(log) {
       if (log.includes('ERROR: Coverage for')) {
         // Ignore threshold error messages

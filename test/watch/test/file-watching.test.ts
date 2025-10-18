@@ -193,7 +193,7 @@ describe('browser', () => {
       watch: true,
     }, undefined, undefined, {
       test: { browser: {
-        instances: [{ browser: 'chromium' }],
+        instances: [{ browser: 'chrome' }],
         provider: webdriverio(),
         enabled: true,
         headless: true,
