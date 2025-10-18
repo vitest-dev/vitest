@@ -1,6 +1,6 @@
 import { expect, expectTypeOf, test } from 'vitest'
 
-interface CustomMatchers<R = unknown> {
+interface CustomMatchers<R = any> {
   toMatchSchema: (schema: { a: string }) => R
   toEqualMultiple: (a: string, b: number) => R
 }

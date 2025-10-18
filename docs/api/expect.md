@@ -1773,7 +1773,7 @@ This function is compatible with Jest's `expect.extend`, so any library that use
 If you are using TypeScript, since Vitest 0.31.0 you can extend default `Assertion` interface in an ambient declaration file (e.g: `vitest.d.ts`) with the code below:
 
 ```ts
-interface CustomMatchers<R = unknown> {
+interface CustomMatchers<R = any> {
   toBeFoo: () => R
 }
 

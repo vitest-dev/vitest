@@ -8,7 +8,7 @@ import { assert, beforeAll, describe, expect, it, vi } from 'vitest'
 class TestError extends Error {}
 
 // For expect.extend
-interface CustomMatchers<R = unknown> {
+interface CustomMatchers<R = any> {
   toBeDividedBy: (divisor: number) => R
   toBeTestedAsync: () => Promise<R>
   toBeTestedSync: () => R
