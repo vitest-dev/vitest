@@ -192,7 +192,7 @@ Pretty foo: Object {
 }
 ```
 
-We are using Jest's `pretty-format` for serializing snapshots. You can read more about it here: [pretty-format](https://github.com/facebook/jest/blob/main/packages/pretty-format/README.md#serialize).
+We are using our fork of `pretty-format` for serializing snapshots. You can read more about it here: [@vitest/pretty-format](https://www.npmjs.com/package/@vitest/pretty-format).
 
 ## Difference from Jest
 
@@ -209,7 +209,7 @@ This does not really affect the functionality but might affect your commit diff 
 
 #### 2. `printBasicPrototype` is default to `false`
 
-Both Jest and Vitest's snapshots are powered by [`pretty-format`](https://github.com/facebook/jest/blob/main/packages/pretty-format). In Vitest we set `printBasicPrototype` default to `false` to provide a cleaner snapshot output, while in Jest <29.0.0 it's `true` by default.
+Both Jest and Vitest's snapshots are powered by `pretty-format`. Vitest uses its own fork [`@vitest/pretty-format`](https://www.npmjs.com/package/@vitest/pretty-format). In Vitest we set `printBasicPrototype` default to `false` to provide a cleaner snapshot output, while in Jest <29.0.0 it's `true` by default.
 
 ```ts
 import { expect, test } from 'vitest'

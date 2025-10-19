@@ -1660,7 +1660,7 @@ Will call [`vi.unstubAllGlobals`](/api/vi#vi-unstuballglobals) before each test.
 
 - **Type:** `PrettyFormatOptions`
 
-Format options for snapshot testing. These options are passed down to our fork of [`pretty-format`](https://www.npmjs.com/package/pretty-format). In addition to the `pretty-format` options we support `printShadowRoot: boolean`.
+Format options for snapshot testing. These options are passed down to our fork of [`@vitest/pretty-format`](https://www.npmjs.com/package/@vitest/pretty-format). In addition to the `@vitest/pretty-format` options we support `printShadowRoot: boolean`.
 
 ::: tip
 Beware that `plugins` field on this object will be ignored.
