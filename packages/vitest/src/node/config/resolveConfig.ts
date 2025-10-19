@@ -141,10 +141,12 @@ export function resolveConfig(
     mode,
   } as any as ResolvedConfig
 
-  if (typeof options.pool === 'function') {
+  if (options.pool && typeof options.pool !== 'string') {
     resolved.pool = options.pool.runtime
     resolved.poolRuntime = options.pool
   }
+
+  resolved.pool ??= 'forks'
 
   resolved.project = toArray(resolved.project)
   resolved.provide ??= {}

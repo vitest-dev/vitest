@@ -1,5 +1,6 @@
 import type { RunnerTestCase } from 'vitest'
-import { BaseRuntime, PoolRuntimeConstructor, PoolRuntimeOptions, TestProject, WorkerRequest, WorkerResponse, type PoolRuntime, type ProcessPool, type Vitest } from 'vitest/node'
+import { BaseRuntime } from 'vitest/node'
+import type { PoolRuntime, PoolRuntimeInitializer, TestProject, Vitest, WorkerRequest, WorkerResponse } from 'vitest/node'
 import { createFileTask } from '@vitest/runner/utils'
 import { normalize } from 'pathe'
 import EventEmitter from 'node:events';
@@ -9,13 +10,10 @@ interface OptionsCustomPool {
   array: any;
 }
 
-export function createCustomPool(settings: OptionsCustomPool): PoolRuntimeConstructor {
-  return class PublicCustomRuntime extends CustomRuntime {
-    static runtime = 'custom'
-
-    constructor(options: PoolRuntimeOptions) {
-      super(options, settings)
-    }
+export function createCustomPool(settings: OptionsCustomPool): PoolRuntimeInitializer {
+  return {
+    runtime: 'custom',
+    create: (options) => new CustomRuntime(options, settings),
   }
 }
 

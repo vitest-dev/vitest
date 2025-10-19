@@ -29,11 +29,12 @@ const entries = {
   'spy': 'src/integrations/spy.ts',
   'coverage': 'src/public/coverage.ts',
   'reporters': 'src/public/reporters.ts',
+  'worker': 'src/public/worker.ts',
   'module-runner': 'src/public/module-runner.ts',
   'module-evaluator': 'src/runtime/moduleRunner/moduleEvaluator.ts',
 
   // for performance reasons we bundle them separately so we don't import everything at once
-  'worker': 'src/runtime/worker.ts',
+  // 'worker': 'src/runtime/worker.ts',
   'workers/forks': 'src/runtime/workers/forks.ts',
   'workers/threads': 'src/runtime/workers/threads.ts',
   'workers/vmThreads': 'src/runtime/workers/vmThreads.ts',
@@ -56,6 +57,7 @@ const dtsEntries = {
   'reporters': 'src/public/reporters.ts',
   'mocker': 'src/public/mocker.ts',
   'snapshot': 'src/public/snapshot.ts',
+  'worker': 'src/public/worker.ts',
   'module-evaluator': 'src/runtime/moduleRunner/moduleEvaluator.ts',
 }
 

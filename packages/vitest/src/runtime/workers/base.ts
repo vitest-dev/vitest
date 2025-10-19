@@ -23,6 +23,7 @@ function startModuleRunner(options: ContextModuleRunnerOptions) {
   return _moduleRunner
 }
 
+/** @experimental */
 export async function runBaseTests(method: 'run' | 'collect', state: WorkerGlobalState): Promise<void> {
   const { ctx } = state
   // state has new context, but we want to reuse existing ones

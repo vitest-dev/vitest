@@ -1,12 +1,9 @@
 import type { ContextRPC } from '../../types/worker'
 import type { TestProject } from '../project'
 
-export interface PoolRuntimeConstructor {
-  new (options: PoolRuntimeOptions): PoolRuntime
-  /**
-   * The name of the runtime available on a static constructor.
-   */
-  readonly runtime: string
+export interface PoolRuntimeInitializer {
+  runtime: string
+  create: (options: PoolRuntimeOptions) => PoolRuntime
 }
 
 export interface PoolRuntimeOptions {

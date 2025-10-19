@@ -334,6 +334,10 @@ it('exports snapshot', async ({ skip, task }) => {
             "setFn": "function",
             "setHooks": "function",
           },
+          "./worker": {
+            "init": "function",
+            "runBaseTests": "function",
+          },
         }
       `)
   }

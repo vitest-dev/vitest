@@ -32,7 +32,7 @@ export { VmForksRuntime } from '../node/pools/runtimes/vmForks'
 export { VmThreadsRuntime } from '../node/pools/runtimes/vmThreads'
 export type {
   PoolRuntime,
-  PoolRuntimeConstructor,
+  PoolRuntimeInitializer,
   PoolRuntimeOptions,
   PoolTask,
   WorkerRequest,

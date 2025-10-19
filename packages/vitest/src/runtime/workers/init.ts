@@ -14,6 +14,7 @@ const __vitest_worker_response__ = true
 const memoryUsage = process.memoryUsage.bind(process)
 let reportMemory = false
 
+/** @experimental */
 export function init({ send, subscribe, off, worker }: Options): void {
   subscribe(onMessage)
 

@@ -209,9 +209,9 @@ export class Pool {
         return new TypecheckRuntime(options)
     }
 
-    const CustomRuntime = task.project.config.poolRuntime
-    if (CustomRuntime != null && CustomRuntime.runtime === task.runtime) {
-      return new CustomRuntime(options)
+    const customPool = task.project.config.poolRuntime
+    if (customPool != null && customPool.runtime === task.runtime) {
+      return customPool.create(options)
     }
 
     throw new Error(`Runtime ${task.runtime} not supported. Test files: ${formatFiles(task)}.`)
