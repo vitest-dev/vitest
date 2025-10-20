@@ -10,7 +10,8 @@ import { stripVTControlCharacters } from 'node:util'
 import { playwright } from '@vitest/browser-playwright'
 import libCoverage from 'istanbul-lib-coverage'
 import { normalize } from 'pathe'
-import { vi, describe as vitestDescribe, test as vitestTest } from 'vitest'
+import { onTestFailed, vi, describe as vitestDescribe, test as vitestTest } from 'vitest'
+import { getCurrentTest } from 'vitest/suite'
 import * as testUtils from '../test-utils'
 
 export function test(name: string, fn: TestFunction, skip = false) {
@@ -61,6 +62,13 @@ export async function runVitest(config: TestUserConfig, options = { throwOnError
       },
     },
   })
+
+  if (getCurrentTest()) {
+    onTestFailed(() => {
+      console.error('stderr:', result.stderr)
+      console.error('stdout:', result.stdout)
+    })
+  }
 
   if (options.throwOnError) {
     if (result.stderr !== '') {
