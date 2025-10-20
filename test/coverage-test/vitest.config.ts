@@ -71,6 +71,7 @@ export default defineConfig({
           ...config.test,
           name: { label: 'istanbul-browser', color: 'blue' },
           env: { COVERAGE_PROVIDER: 'istanbul', COVERAGE_BROWSER: 'true' },
+          testTimeout: 15_000,
           include: [
             BROWSER_TESTS,
 
@@ -101,6 +102,7 @@ export default defineConfig({
           ...config.test,
           name: { label: 'v8-browser', color: 'red' },
           env: { COVERAGE_PROVIDER: 'v8', COVERAGE_BROWSER: 'true' },
+          testTimeout: 15_000,
           include: [
             BROWSER_TESTS,
 
