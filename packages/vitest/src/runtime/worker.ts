@@ -17,10 +17,10 @@ async function execute(method: 'run' | 'collect', ctx: ContextRPC, worker: Vites
 
   let environmentLoader: ModuleRunner | undefined
 
-  try {
-    // RPC is used to communicate between worker (be it a thread worker or child process or a custom implementation) and the main thread
-    const { rpc, onCancel } = createRuntimeRpc(worker)
+  // RPC is used to communicate between worker (be it a thread worker or child process or a custom implementation) and the main thread
+  const { rpc, onCancel } = createRuntimeRpc(worker)
 
+  try {
     // do not close the RPC channel so that we can get the error messages sent to the main thread
     cleanups.push(async () => {
       await Promise.all(rpc.$rejectPendingCalls(({ method, reject }) => {
@@ -69,6 +69,7 @@ async function execute(method: 'run' | 'collect', ctx: ContextRPC, worker: Vites
 
     await rpcDone().catch(() => {})
     await environmentLoader?.close()
+    rpc.$close()
   }
 }
 

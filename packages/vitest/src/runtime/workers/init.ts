@@ -3,11 +3,8 @@ import type { VitestWorker } from './types'
 import { serializeError } from '@vitest/utils/error'
 import * as entrypoint from '../worker'
 
-interface Options {
-  send: (response: WorkerResponse) => void
-  subscribe: (callback: (message: WorkerRequest) => Promise<void>) => void
-  off: (callback: Parameters<Options['subscribe']>[0]) => void
-  worker: VitestWorker
+interface Options extends VitestWorker {
+  removeAllListeners: () => void
 }
 
 const __vitest_worker_response__ = true
@@ -15,12 +12,20 @@ const memoryUsage = process.memoryUsage.bind(process)
 let reportMemory = false
 
 /** @experimental */
-export function init({ send, subscribe, off, worker }: Options): void {
-  subscribe(onMessage)
+export function init(worker: Options): void {
+  worker.on(onMessage)
 
   let runPromise: Promise<unknown> | undefined
 
-  async function onMessage(message: WorkerRequest) {
+  function send(response: WorkerResponse) {
+    worker.post(worker.serialize ? worker.serialize(response) : response)
+  }
+
+  async function onMessage(rawMessage: unknown) {
+    const message: WorkerRequest = worker.deserialize
+      ? worker.deserialize(rawMessage)
+      : rawMessage
+
     if (message?.__vitest_worker_request__ !== true) {
       return
     }
@@ -28,7 +33,6 @@ export function init({ send, subscribe, off, worker }: Options): void {
     switch (message.type) {
       case 'start': {
         reportMemory = message.options.reportMemory
-
         send({ type: 'started', __vitest_worker_response__ })
 
         break
@@ -78,33 +82,10 @@ export function init({ send, subscribe, off, worker }: Options): void {
           .catch(error => serializeError(error))
 
         send({ type: 'stopped', error, __vitest_worker_response__ })
-        off(onMessage)
+        worker.removeAllListeners()
 
         break
       }
     }
   }
-}
-
-export function createDisposer(): {
-  on: (callback: () => void) => void
-  clear: () => void
-} {
-  const callbacks: (() => void)[] = []
-
-  function on(callback: () => void): void {
-    callbacks.push(callback)
-  }
-
-  function clear(): void {
-    for (const fn of callbacks) {
-      try {
-        fn()
-      }
-      catch {}
-    }
-    callbacks.length = 0
-  }
-
-  return { on, clear }
 }

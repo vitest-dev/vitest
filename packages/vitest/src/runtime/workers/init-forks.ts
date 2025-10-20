@@ -1,7 +1,7 @@
 import type { ResolvedConfig, SerializedConfig } from '../../node/types/config'
 import type { WorkerGlobalState } from '../../types/worker'
 import v8 from 'node:v8'
-import { createDisposer, init } from './init'
+import { init } from './init'
 
 if (!process.send) {
   throw new Error('Expected worker to be run in node:child_process')
@@ -11,7 +11,7 @@ if (!process.send) {
 const processExit = process.exit.bind(process)
 const processSend = process.send.bind(process)
 const processOn = process.on.bind(process)
-const processOff = process.off.bind(process)
+const processRemoveAllListeners = process.removeAllListeners.bind(process)
 
 const isProfiling = process.execArgv.some(
   execArg =>
@@ -31,28 +31,14 @@ export default function workerInit(options: {
 }): void {
   const { runTests } = options
 
-  // RPC listeners of previous run
-  const disposer = createDisposer()
-
   init({
-    send: response => processSend(v8.serialize(response)),
-    subscribe: callback => processOn('message', (message: string) => callback(v8.deserialize(Buffer.from(message)))),
-    off: callback => processOff('message', callback),
-
-    worker: {
-      serialize: v8.serialize,
-      deserialize: v => v8.deserialize(Buffer.from(v)),
-      post: v => processSend!(v),
-      on: (fn) => {
-        const handler = (message: any, ...extras: any) => {
-          return fn(message, ...extras)
-        }
-        processOn('message', handler)
-        disposer.on(() => processOff('message', handler))
-      },
-      runTests: state => executeTests('run', state),
-      collectTests: state => executeTests('collect', state),
-    },
+    post: v => processSend(v),
+    on: cb => processOn('message', cb),
+    removeAllListeners: () => processRemoveAllListeners('message'),
+    serialize: v8.serialize,
+    deserialize: v => v8.deserialize(Buffer.from(v)),
+    runTests: state => executeTests('run', state),
+    collectTests: state => executeTests('collect', state),
   })
 
   async function executeTests(method: 'run' | 'collect', state: WorkerGlobalState) {
@@ -60,7 +46,6 @@ export default function workerInit(options: {
 
     try {
       await runTests(method, state)
-      disposer.clear()
     }
     finally {
       process.exit = processExit

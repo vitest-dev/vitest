@@ -99,7 +99,7 @@ class CustomPoolRuntime implements PoolRuntimeWorker {
   }
 
   off(event: string, callback: (arg: any) => void): void {
-    // Provide way to unsubscribe `onWorker` listeners
+    // Provide way to unsubscribe `on` listeners
   }
 
   async start() {
@@ -124,27 +124,22 @@ In your worker file, you can import helper utilities from `vitest/worker`:
 import { init, runBaseTests } from 'vitest/worker'
 
 init({
-  send: (response) => {
+  post: (response) => {
     // Provider way to send this message to CustomPoolRuntime's onWorker as message event
   },
-  subscribe: (callback) => {
+  on: (callback) => {
     // Provide a way to listen CustomPoolRuntime's "postMessage" calls
   },
-  off: (callback) => {
-    // Provider a way to unsubscribe the `subscribe` listeners
+  removeAllListeners: () => {
+    // Provider a way to unsubscribe all the `on` listeners
   },
-
-  worker: {
-    post: (v) => {
-      // Provider way to send this message to CustomPoolRuntime's onWorker as message event
-      // This should be same as "send"
-    },
-    on: (fn) => {
-      // Provide a way to listen CustomPoolRuntime's "postMessage" calls
-      // This should be same as "subscribe"
-    },
-    runTests: state => runBaseTests('run', state),
-    collectTests: state => runBaseTests('collect', state),
+  serialize: (value) => {
+    // Optional, provide custom serializer for `post` calls
   },
+  deserialize: (value) => {
+    // Optional, provide custom deserializer for `on` callbacks
+  },
+  runTests: state => runBaseTests('run', state),
+  collectTests: state => runBaseTests('collect', state),
 })
 ```

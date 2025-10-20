@@ -1,6 +1,6 @@
 import type { WorkerGlobalState } from '../../types/worker'
 import { isMainThread, parentPort } from 'node:worker_threads'
-import { createDisposer, init } from './init'
+import { init } from './init'
 
 if (isMainThread || !parentPort) {
   throw new Error('Expected worker to be run in node:worker_threads')
@@ -11,28 +11,11 @@ export default function workerInit(options: {
 }): void {
   const { runTests } = options
 
-  // RPC listeners of previous run
-  const disposer = createDisposer()
-
   init({
-    send: response => parentPort!.postMessage(response),
-    subscribe: callback => parentPort!.on('message', callback),
-    off: callback => parentPort!.off('message', callback),
-
-    worker: {
-      post: v => parentPort!.postMessage(v),
-      on: (fn) => {
-        parentPort!.on('message', fn)
-        disposer.on(() => parentPort!.off('message', fn))
-      },
-      runTests: async (state) => {
-        await runTests('run', state)
-        disposer.clear()
-      },
-      collectTests: async (state) => {
-        await runTests('collect', state)
-        disposer.clear()
-      },
-    },
+    post: response => parentPort!.postMessage(response),
+    on: callback => parentPort!.on('message', callback),
+    removeAllListeners: () => parentPort!.removeAllListeners('message'),
+    runTests: async state => runTests('run', state),
+    collectTests: async state => runTests('collect', state),
   })
 }
