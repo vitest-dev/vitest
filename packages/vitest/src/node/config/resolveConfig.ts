@@ -436,7 +436,7 @@ export function resolveConfig(
     '**\/__x00__*',
 
     '**/node_modules/**',
-  ].filter(pattern => pattern != null)
+  ].filter(pattern => typeof pattern === 'string')
 
   resolved.forceRerunTriggers = [
     ...resolved.forceRerunTriggers,
@@ -708,6 +708,10 @@ export function resolveConfig(
       resolved.root,
       resolved.browser.screenshotDirectory,
     )
+  }
+
+  if (resolved.inspector.enabled) {
+    resolved.browser.trackUnhandledErrors ??= false
   }
 
   resolved.browser.viewport ??= {} as any
