@@ -1688,6 +1688,42 @@ test('variety ends with "re"', () => {
 You can use `expect.not` with this matcher to negate the expected value.
 :::
 
+## expect.schemaMatching
+
+- **Type:** `(expected: StandardSchemaV1) => any`
+
+When used with an equality check, this asymmetric matcher will return `true` if the value matches the provided schema. The schema must implement the [Standard Schema v1](https://standardschema.dev/) specification.
+
+```ts
+import { expect, test } from 'vitest'
+import { z } from 'zod'
+import * as v from 'valibot'
+import { type } from 'arktype'
+
+test('email validation', () => {
+  const user = { email: 'john@example.com' }
+
+  // using Zod
+  expect(user).toEqual({
+    email: expect.schemaMatching(z.string().email()),
+  })
+
+  // using Valibot
+  expect(user).toEqual({
+    email: expect.schemaMatching(v.pipe(v.string(), v.email()))
+  })
+
+  // using ArkType
+  expect(user).toEqual({
+    email: expect.schemaMatching(type('string.email')),
+  })
+})
+```
+
+:::tip
+You can use `expect.not` with this matcher to negate the expected value.
+:::
+
 ## expect.addSnapshotSerializer
 
 - **Type:** `(plugin: PrettyFormatPlugin) => void`

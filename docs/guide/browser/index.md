@@ -3,9 +3,9 @@ title: Browser Mode | Guide
 outline: deep
 ---
 
-# Browser Mode <Badge type="warning">Experimental</Badge> {#browser-mode}
+# Browser Mode {#browser-mode}
 
-This page provides information about the experimental browser mode feature in the Vitest API, which allows you to run your tests in the browser natively, providing access to browser globals like window and document. This feature is currently under development, and APIs may change in the future.
+This page provides information about the browser mode feature in the Vitest API, which allows you to run your tests in the browser natively, providing access to browser globals like window and document.
 
 ::: tip
 If you are looking for documentation for `expect`, `vi` or any general API like test projects or type testing, refer to the ["Getting Started" guide](/guide/).

@@ -1,5 +1,6 @@
 /* eslint-disable ts/method-signature-style */
 
+import type { CustomComparatorsRegistry } from '@vitest/browser'
 import type { MockedModule } from '@vitest/mocker'
 import type {
   Browser,
@@ -10,8 +11,8 @@ import type {
   FrameLocator,
   LaunchOptions,
   Page,
+  CDPSession as PlaywrightCDPSession,
 } from 'playwright'
-import type { Protocol } from 'playwright-core/types/protocol'
 import type { SourceMap } from 'rollup'
 import type { ResolvedConfig } from 'vite'
 import type {
@@ -560,7 +561,7 @@ declare module 'vitest/node' {
     extends Omit<
       ScreenshotMatcherOptions,
       'comparatorName' | 'comparatorOptions'
-    > {}
+    >, CustomComparatorsRegistry {}
 
   export interface ToMatchScreenshotComparators
     extends ScreenshotComparatorRegistry {}
@@ -574,6 +575,8 @@ type PWScreenshotOptions = NonNullable<Parameters<Page['screenshot']>[0]>
 type PWSelectOptions = NonNullable<Parameters<Page['selectOption']>[2]>
 type PWDragAndDropOptions = NonNullable<Parameters<Page['dragAndDrop']>[2]>
 type PWSetInputFiles = NonNullable<Parameters<Page['setInputFiles']>[2]>
+// Must be re-aliased here or rollup-plugin-dts removes the import alias and you end up with a circular reference
+type PWCDPSession = PlaywrightCDPSession
 
 declare module 'vitest/browser' {
   export interface UserEventHoverOptions extends PWHoverOptions {}
@@ -589,22 +592,5 @@ declare module 'vitest/browser' {
     mask?: ReadonlyArray<Element | Locator> | undefined
   }
 
-  export interface CDPSession {
-    send<T extends keyof Protocol.CommandParameters>(
-      method: T,
-      params?: Protocol.CommandParameters[T]
-    ): Promise<Protocol.CommandReturnValues[T]>
-    on<T extends keyof Protocol.Events>(
-      event: T,
-      listener: (payload: Protocol.Events[T]) => void
-    ): this
-    once<T extends keyof Protocol.Events>(
-      event: T,
-      listener: (payload: Protocol.Events[T]) => void
-    ): this
-    off<T extends keyof Protocol.Events>(
-      event: T,
-      listener: (payload: Protocol.Events[T]) => void
-    ): this
-  }
+  export interface CDPSession extends PWCDPSession {}
 }

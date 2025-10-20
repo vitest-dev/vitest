@@ -10,6 +10,10 @@ import { capturePrintError } from '../printError'
 
 export interface GithubActionsReporterOptions {
   onWritePath?: (path: string) => string
+  /**
+   * @default true
+   */
+  displayAnnotations?: boolean
 }
 
 export class GithubActionsReporter implements Reporter {
@@ -25,7 +29,7 @@ export class GithubActionsReporter implements Reporter {
   }
 
   onTestCaseAnnotate(testCase: TestCase, annotation: TestAnnotation): void {
-    if (!annotation.location) {
+    if (!annotation.location || this.options.displayAnnotations === false) {
       return
     }
 

@@ -1,5 +1,6 @@
 /* eslint-disable unicorn/no-instanceof-builtins -- we check both */
 
+import type { StandardSchemaV1 } from '@standard-schema/spec'
 import type { ChaiPlugin, MatcherState, Tester } from './types'
 import { GLOBAL_EXPECT } from './constants'
 import {
@@ -8,14 +9,15 @@ import {
   getMatcherUtils,
   stringify,
 } from './jest-matcher-utils'
+
 import {
   equals,
   isA,
+  isStandardSchema,
   iterableEquality,
   pluralize,
   subsetEquality,
 } from './jest-utils'
-
 import { getState } from './state'
 
 export interface AsymmetricMatcherInterface {
@@ -395,6 +397,50 @@ class CloseTo extends AsymmetricMatcher<number> {
   }
 }
 
+export class SchemaMatching extends AsymmetricMatcher<StandardSchemaV1<unknown, unknown>> {
+  private result: StandardSchemaV1.Result<unknown> | undefined
+
+  constructor(sample: StandardSchemaV1<unknown, unknown>, inverse = false) {
+    if (!isStandardSchema(sample)) {
+      throw new TypeError(
+        'SchemaMatching expected to receive a Standard Schema.',
+      )
+    }
+    super(sample, inverse)
+  }
+
+  asymmetricMatch(other: unknown): boolean {
+    const result = this.sample['~standard'].validate(other)
+
+    // Check if the result is a Promise (async validation)
+    if (result instanceof Promise) {
+      throw new TypeError('Async schema validation is not supported in asymmetric matchers.')
+    }
+
+    this.result = result
+    const pass = !this.result.issues || this.result.issues.length === 0
+
+    return this.inverse ? !pass : pass
+  }
+
+  toString() {
+    return `Schema${this.inverse ? 'Not' : ''}Matching`
+  }
+
+  getExpectedType() {
+    return 'object'
+  }
+
+  toAsymmetricMatcher(): string {
+    const { utils } = this.getMatcherContext()
+    const issues = this.result?.issues || []
+    if (issues.length > 0) {
+      return `${this.toString()} ${utils.stringify(this.result, undefined, { printBasicPrototype: false })}`
+    }
+    return this.toString()
+  }
+}
+
 export const JestAsymmetricMatchers: ChaiPlugin = (chai, utils) => {
   utils.addMethod(chai.expect, 'anything', () => new Anything())
 
@@ -428,6 +474,12 @@ export const JestAsymmetricMatchers: ChaiPlugin = (chai, utils) => {
     chai.expect,
     'closeTo',
     (expected: any, precision?: number) => new CloseTo(expected, precision),
+  )
+
+  utils.addMethod(
+    chai.expect,
+    'schemaMatching',
+    (expected: any) => new SchemaMatching(expected),
   );
 
   // defineProperty does not work
@@ -441,5 +493,6 @@ export const JestAsymmetricMatchers: ChaiPlugin = (chai, utils) => {
       new StringMatching(expected, true),
     closeTo: (expected: any, precision?: number) =>
       new CloseTo(expected, precision, true),
+    schemaMatching: (expected: any) => new SchemaMatching(expected, true),
   }
 }

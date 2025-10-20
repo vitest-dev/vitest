@@ -437,7 +437,7 @@ export function resolveConfig(
     '**\/__x00__*',
 
     '**/node_modules/**',
-  ].filter(pattern => pattern != null)
+  ].filter(pattern => typeof pattern === 'string')
 
   resolved.forceRerunTriggers = [
     ...resolved.forceRerunTriggers,
@@ -752,6 +752,10 @@ export function resolveConfig(
     )
   }
 
+  if (resolved.inspector.enabled) {
+    resolved.browser.trackUnhandledErrors ??= false
+  }
+
   resolved.browser.viewport ??= {} as any
   resolved.browser.viewport.width ??= 414
   resolved.browser.viewport.height ??= 896
@@ -830,6 +834,17 @@ export function resolveConfig(
 
   resolved.server ??= {}
   resolved.server.deps ??= {}
+
+  if (resolved.server.debug?.dump || process.env.VITEST_DEBUG_DUMP) {
+    const userFolder = resolved.server.debug?.dump || process.env.VITEST_DEBUG_DUMP
+    resolved.dumpDir = resolve(
+      resolved.root,
+      typeof userFolder === 'string' && userFolder !== 'true'
+        ? userFolder
+        : '.vitest-dump',
+      resolved.name || 'root',
+    )
+  }
 
   resolved.testTimeout ??= resolved.browser.enabled ? 15000 : 5000
   resolved.hookTimeout ??= resolved.browser.enabled ? 30000 : 10000

@@ -2,7 +2,7 @@
 
 import { stripVTControlCharacters } from 'node:util'
 import { processError } from '@vitest/utils/error'
-import { expect, test } from 'vitest'
+import { expect, test, vi } from 'vitest'
 
 test('MessageChannel and MessagePort are available', () => {
   expect(MessageChannel).toBeDefined()
@@ -38,6 +38,26 @@ test('Fetch API accepts other APIs', () => {
   const searchParams = new URLSearchParams()
   searchParams.set('key', 'value')
   expect.soft(() => new Request('http://localhost', { method: 'POST', body: searchParams })).not.toThrowError()
+})
+
+test('DOM APIs accept AbortController', () => {
+  const element = document.createElement('div')
+  document.body.append(element)
+  const controller = new AbortController()
+  const spy = vi.fn()
+  element.addEventListener('click', spy, {
+    signal: controller.signal,
+  })
+
+  element.click()
+
+  expect(spy).toHaveBeenCalledTimes(1)
+
+  controller.abort()
+
+  element.click()
+
+  expect(spy).toHaveBeenCalledTimes(1)
 })
 
 test('atob and btoa are available', () => {
