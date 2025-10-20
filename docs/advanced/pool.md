@@ -1,7 +1,7 @@
 # Custom Pool
 
 ::: warning
-This is an advanced and very low-level API. If you just want to [run tests](/guide/), you probably don't need this. It is primarily used by library authors.
+This is an advanced, experimental and very low-level API. If you just want to [run tests](/guide/), you probably don't need this. It is primarily used by library authors.
 :::
 
 Vitest runs tests in a pool. By default, there are several pool runtimes:
@@ -13,7 +13,7 @@ Vitest runs tests in a pool. By default, there are several pool runtimes:
 - `typescript` to run typechecking on tests
 
 ::: tip
-See [`vitest-pool-example`](https://github.com/AriPerkkio/vitest-pool-example) for example of a custom pool runtime implementation.
+See [`vitest-pool-example`](https://www.npmjs.com/package/vitest-pool-example) for example of a custom pool runtime implementation.
 :::
 
 ## Usage
@@ -71,18 +71,18 @@ import type { PoolRuntimeInitializer } from 'vitest/node'
 export function customPool(customOptions: CustomOptions): PoolRuntimeInitializer {
   return {
     runtime: 'custom-pool',
-    create: options => new CustomPool(options, customOptions),
+    create: options => new CustomPoolRuntime(options, customOptions),
   }
 }
 ```
 
-In your `CustomPool` you can extend experimental `BaseRuntime` to get most of the runtime orchestrations out-of-the-box.
+In your `CustomPoolRuntime` you can extend experimental `BaseRuntime` to get most of the runtime orchestrations out-of-the-box.
 
 ```ts [my-custom-pool.ts]
 import { BaseRuntime } from 'vitest/node'
 import type { PoolRuntime, WorkerRequest } from 'vitest/node'
 
-class CustomPool extends BaseRuntime implements PoolRuntime {
+class CustomPoolRuntime extends BaseRuntime implements PoolRuntime {
   name = 'custom-pool'
   private customOptions: CustomOptions
 
@@ -105,7 +105,7 @@ class CustomPool extends BaseRuntime implements PoolRuntime {
 }
 ```
 
-Your `CustomPool` will be controlling how your custom test runner worker life cycles and communication channel works. For example, your `CustomPool` could launch a `node:worker_threads` `Worker`, and provide communication via `Worker.postMessage` and `parentPort`.
+Your `CustomPoolRuntime` will be controlling how your custom test runner worker life cycles and communication channel works. For example, your `CustomPoolRuntime` could launch a `node:worker_threads` `Worker`, and provide communication via `Worker.postMessage` and `parentPort`.
 
 In your worker file, you can import helper utilities from `vitest/worker`:
 
@@ -114,10 +114,10 @@ import { init, runBaseTests } from 'vitest/worker'
 
 init({
   send: (response) => {
-    // Provider way to send this message to CustomPool's onWorker as message event
+    // Provider way to send this message to CustomPoolRuntime's onWorker as message event
   },
   subscribe: (callback) => {
-    // Provide a way to listen CustomPool's "postMessage" calls
+    // Provide a way to listen CustomPoolRuntime's "postMessage" calls
   },
   off: (callback) => {
     // Provider a way to unsubscribe the `subscribe` listeners
@@ -125,11 +125,11 @@ init({
 
   worker: {
     post: (v) => {
-      // Provider way to send this message to CustomPool's onWorker as message event
+      // Provider way to send this message to CustomPoolRuntime's onWorker as message event
       // This should be same as "send"
     },
     on: (fn) => {
-      // Provide a way to listen CustomPool's "postMessage" calls
+      // Provide a way to listen CustomPoolRuntime's "postMessage" calls
       // This should be same as "subscribe"
     },
     runTests: state => runBaseTests('run', state),

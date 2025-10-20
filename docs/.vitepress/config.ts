@@ -628,6 +628,10 @@ function guide(): DefaultTheme.SidebarItem[] {
         },
       ],
     },
+    {
+      text: 'Recipes',
+      link: '/guide/recipes',
+    },
   ]
 }
 
