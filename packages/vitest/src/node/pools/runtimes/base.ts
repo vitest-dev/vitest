@@ -10,7 +10,6 @@ export class BaseRuntime implements PoolRuntime {
   name = 'base'
   reportMemory = false
   isTerminating = false
-  terminatingPromise: Promise<void> | undefined
   isStarted = false
   options: PoolRuntime['options']
   poolId = undefined
@@ -88,39 +87,31 @@ export class BaseRuntime implements PoolRuntime {
   }
 
   async stop(): Promise<void> {
-    if (this.isTerminating) {
-      return this.terminatingPromise
-    }
+    this.offWorker('exit', this.emitUnexpectedExit)
 
-    this.terminatingPromise = (async () => {
-      this.offWorker('exit', this.emitUnexpectedExit)
-
-      await new Promise<void>((resolve) => {
-        const onStop = (message: WorkerResponse) => {
-          if (message.type === 'stopped') {
-            if (message.error) {
-              this.options.project.vitest.state.catchError(
-                message.error,
-                'Teardown Error',
-              )
-            }
-
-            resolve()
-            this.off('message', onStop)
+    await new Promise<void>((resolve) => {
+      const onStop = (message: WorkerResponse) => {
+        if (message.type === 'stopped') {
+          if (message.error) {
+            this.options.project.vitest.state.catchError(
+              message.error,
+              'Teardown Error',
+            )
           }
+
+          resolve()
+          this.off('message', onStop)
         }
+      }
 
-        this.on('message', onStop)
-        this.postMessage({ type: 'stop', __vitest_worker_request__: true })
-      })
+      this.on('message', onStop)
+      this.postMessage({ type: 'stop', __vitest_worker_request__: true })
+    })
 
-      this.isStarted = false
-      this.isTerminating = true
-      this.eventEmitter.removeAllListeners('message')
-      this.eventEmitter.removeAllListeners('error')
-      this.rpc.$close(new Error('[vitest-pool-runtime]: Pending methods while closing rpc'))
-    })().finally(() => (this.terminatingPromise = undefined))
-    await this.terminatingPromise
+    this.isStarted = false
+    this.isTerminating = true
+    this.eventEmitter.removeAllListeners()
+    this.rpc.$close(new Error('[vitest-pool-runtime]: Pending methods while closing rpc'))
   }
 
   on(event: 'message', callback: (message: WorkerResponse) => void): void

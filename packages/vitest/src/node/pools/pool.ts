@@ -135,12 +135,15 @@ export class Pool {
         this.options.teardownTimeout,
       )
 
-      // Runtime terminations are started but not awaited until the end of full run
-      this.exitPromises.push(
-        runtime.stop()
-          .then(() => clearTimeout(id))
-          .catch(error => this.logger.error(`[vitest-pool]: Failed to terminate ${task.runtime} worker for test files ${formatFiles(task)}.`, error)),
-      )
+      // Runtime terminations are started but not awaited until the end of full run.
+      // Runtime termination can also already start from task cancellation.
+      if (!runtime.isTerminating) {
+        this.exitPromises.push(
+          runtime.stop()
+            .then(() => clearTimeout(id))
+            .catch(error => this.logger.error(`[vitest-pool]: Failed to terminate ${task.runtime} worker for test files ${formatFiles(task)}.`, error)),
+        )
+      }
 
       this.freeWorkerId(poolId)
     }

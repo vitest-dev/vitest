@@ -32,10 +32,6 @@ export class ForksRuntime extends BaseRuntime {
   }
 
   postMessage(message: WorkerRequest): void {
-    if (this.isTerminating) {
-      return
-    }
-
     if ('context' in message) {
       message = {
         ...message,
@@ -58,35 +54,26 @@ export class ForksRuntime extends BaseRuntime {
     await super.start()
   }
 
-  private stopPromise: Promise<void> | undefined
-
   async stop(): Promise<void> {
-    if (this.stopPromise) {
-      return this.stopPromise
-    }
+    const waitForExit = new Promise<void>(resolve => this.fork?.once('exit', resolve))
+    await super.stop()
 
-    this.stopPromise = (async () => {
-      const waitForExit = new Promise<void>(resolve => this.fork?.once('exit', resolve))
-      await super.stop()
+    /*
+     * If process running user's code does not stop on SIGTERM, send SIGKILL.
+     * This is similar to
+     * - https://github.com/jestjs/jest/blob/25a8785584c9d54a05887001ee7f498d489a5441/packages/jest-worker/src/workers/ChildProcessWorker.ts#L463-L477
+     * - https://github.com/tinylibs/tinypool/blob/40b4b3eb926dabfbfd3d0a7e3d1222d4dd1c0d2d/src/runtime/process-worker.ts#L56
+     */
+    const sigkillTimeout = setTimeout(
+      () => this.fork?.kill('SIGKILL'),
+      SIGKILL_TIMEOUT,
+    )
 
-      /*
-       * If process running user's code does not stop on SIGTERM, send SIGKILL.
-       * This is similar to
-       * - https://github.com/jestjs/jest/blob/25a8785584c9d54a05887001ee7f498d489a5441/packages/jest-worker/src/workers/ChildProcessWorker.ts#L463-L477
-       * - https://github.com/tinylibs/tinypool/blob/40b4b3eb926dabfbfd3d0a7e3d1222d4dd1c0d2d/src/runtime/process-worker.ts#L56
-       */
-      const sigkillTimeout = setTimeout(
-        () => this.fork?.kill('SIGKILL'),
-        SIGKILL_TIMEOUT,
-      )
+    this.fork?.kill()
+    await waitForExit
+    clearTimeout(sigkillTimeout)
 
-      this.fork?.kill()
-      await waitForExit
-      clearTimeout(sigkillTimeout)
-
-      this.fork = undefined
-    })().finally(() => (this.stopPromise = undefined))
-    await this.stopPromise
+    this.fork = undefined
   }
 
   serialize(data: any): any {

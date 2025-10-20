@@ -19,6 +19,7 @@ export interface PoolRuntimeOptions {
 export interface PoolRuntime {
   name: string
   isStarted: boolean
+  isTerminating: boolean
   reportMemory?: boolean
 
   /** Exposed to test runner as `VITEST_POOL_ID`. Value is between 1-`maxWorkers`. */

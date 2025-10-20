@@ -25,9 +25,7 @@ export class ThreadsRuntime extends BaseRuntime {
   }
 
   postMessage(message: WorkerRequest): void {
-    if (!this.isTerminating) {
-      this.thread?.postMessage(message)
-    }
+    this.thread?.postMessage(message)
   }
 
   async start(): Promise<void> {
@@ -39,14 +37,9 @@ export class ThreadsRuntime extends BaseRuntime {
     await super.start()
   }
 
-  private stopPromise: Promise<void> | undefined
-
   async stop(): Promise<void> {
     await super.stop()
-    this.stopPromise ??= this.thread?.terminate()
-      ?.then(() => this.stopPromise = undefined)
-    await this.stopPromise
-
+    await this.thread?.terminate()
     this.thread = undefined
   }
 }
