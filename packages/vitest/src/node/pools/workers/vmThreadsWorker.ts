@@ -1,14 +1,14 @@
-import type { PoolRuntimeOptions } from '../types'
+import type { PoolOptions } from '../types'
 import { resolve } from 'node:path'
-import { ThreadsRuntimeWorker } from './threads'
+import { ThreadsPoolWorker } from './threadsWorker'
 
 /** @experimental */
-export class VmThreadsRuntimeWorker extends ThreadsRuntimeWorker {
+export class VmThreadsPoolWorker extends ThreadsPoolWorker {
   public readonly name = 'vmThreads'
   public readonly reportMemory = true
   protected readonly entrypoint: string
 
-  constructor(options: PoolRuntimeOptions) {
+  constructor(options: PoolOptions) {
     super({ ...options, execArgv: [...options.execArgv, '--experimental-vm-modules'] })
 
     /** Loads {@link file://./../../../runtime/workers/vmThreads.ts} */

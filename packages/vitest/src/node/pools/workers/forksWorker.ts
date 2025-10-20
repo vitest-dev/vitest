@@ -1,6 +1,6 @@
 import type { ChildProcess } from 'node:child_process'
 import type { SerializedConfig } from '../../types/config'
-import type { PoolRuntimeOptions, RuntimeWorker, WorkerRequest } from '../types'
+import type { PoolOptions, PoolWorker, WorkerRequest } from '../types'
 import { fork } from 'node:child_process'
 import { resolve } from 'node:path'
 import v8 from 'node:v8'
@@ -8,7 +8,7 @@ import v8 from 'node:v8'
 const SIGKILL_TIMEOUT = 500 /** jest does 500ms by default, let's follow it */
 
 /** @experimental */
-export class ForksRuntimeWorker implements RuntimeWorker {
+export class ForksPoolWorker implements PoolWorker {
   public readonly name: string = 'forks'
   public readonly execArgv: string[]
   public readonly env: Record<string, string>
@@ -18,7 +18,7 @@ export class ForksRuntimeWorker implements RuntimeWorker {
 
   private _fork?: ChildProcess
 
-  constructor(options: PoolRuntimeOptions) {
+  constructor(options: PoolOptions) {
     this.execArgv = options.execArgv
     this.env = options.env
     /** Loads {@link file://./../../../runtime/workers/forks.ts} */

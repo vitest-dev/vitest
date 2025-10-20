@@ -1,12 +1,12 @@
 import type { ContextRPC } from '../../types/worker'
 import type { TestProject } from '../project'
 
-export interface PoolRuntimeInitializer {
-  readonly runtime: string
-  createWorker: (options: PoolRuntimeOptions) => RuntimeWorker
+export interface PoolRunnerInitializer {
+  readonly name: string
+  createPoolWorker: (options: PoolOptions) => PoolWorker
 }
 
-export interface PoolRuntimeOptions {
+export interface PoolOptions {
   distPath: string
   project: TestProject
   method: 'run' | 'collect'
@@ -16,7 +16,7 @@ export interface PoolRuntimeOptions {
   env: Record<string, string>
 }
 
-export interface RuntimeWorker {
+export interface PoolWorker {
   readonly name: string
   readonly execArgv: string[]
   readonly env: Record<string, string>
@@ -33,7 +33,7 @@ export interface RuntimeWorker {
 }
 
 export interface PoolTask {
-  runtime: 'forks' | 'threads' | 'vmForks' | 'vmThreads' | (string & {})
+  worker: 'forks' | 'threads' | 'vmForks' | 'vmThreads' | (string & {})
   project: TestProject
   isolate: boolean
   env: Record<string, string>

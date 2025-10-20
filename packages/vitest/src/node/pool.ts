@@ -125,7 +125,7 @@ export function createPool(ctx: Vitest): ProcessPool {
           project,
           env: options.env,
           execArgv: [...options.execArgv, ...project.config.execArgv],
-          runtime: pool,
+          worker: pool,
           isolate: project.config.isolate,
           memoryLimit: getMemoryLimit(ctx.config, pool) ?? null,
         })
@@ -309,11 +309,11 @@ function getMemoryLimit(config: ResolvedConfig, pool: string) {
 function groupSpecs(specs: TestSpecification[]) {
   // Test files are passed to test runner one at a time, except Typechecker.
   // TODO: Should non-isolated test files be passed to test runner all at once?
-  type SpecsForRuntime = TestSpecification[]
+  type SpecsForRunner = TestSpecification[]
 
   // Tests in a single group are executed with `maxWorkers` parallelism.
   // Next group starts running after previous finishes - allows real sequential tests.
-  interface Groups { specs: SpecsForRuntime[]; maxWorkers: number }
+  interface Groups { specs: SpecsForRunner[]; maxWorkers: number }
   const groups: Groups[] = []
 
   // Files without file parallelism but without explicit sequence.groupOrder

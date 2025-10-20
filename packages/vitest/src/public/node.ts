@@ -24,19 +24,19 @@ export { resolveFsAllow } from '../node/plugins/utils'
 export type { ProcessPool } from '../node/pool'
 export { getFilePoolName } from '../node/pool'
 export { createMethodsRPC } from '../node/pools/rpc'
-export { ForksRuntimeWorker } from '../node/pools/runtimes/forks'
-export { ThreadsRuntimeWorker } from '../node/pools/runtimes/threads'
-export { TypecheckRuntimeWorker } from '../node/pools/runtimes/typecheck'
-export { VmForksRuntimeWorker } from '../node/pools/runtimes/vmForks'
-export { VmThreadsRuntimeWorker } from '../node/pools/runtimes/vmThreads'
 export type {
-  PoolRuntimeInitializer,
-  PoolRuntimeOptions,
+  PoolOptions,
+  PoolRunnerInitializer,
   PoolTask,
-  RuntimeWorker,
+  PoolWorker,
   WorkerRequest,
   WorkerResponse,
 } from '../node/pools/types'
+export { ForksPoolWorker } from '../node/pools/workers/forksWorker'
+export { ThreadsPoolWorker } from '../node/pools/workers/threadsWorker'
+export { TypecheckPoolWorker } from '../node/pools/workers/typecheckWorker'
+export { VmForksPoolWorker } from '../node/pools/workers/vmForksWorker'
+export { VmThreadsPoolWorker } from '../node/pools/workers/vmThreadsWorker'
 export type { SerializedTestProject, TestProject } from '../node/project'
 export type { HTMLOptions } from '../node/reporters/html'
 export type { JsonOptions } from '../node/reporters/json'

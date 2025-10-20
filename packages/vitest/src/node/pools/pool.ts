@@ -1,12 +1,12 @@
 import type { Logger } from '../logger'
 import type { StateManager } from '../state'
-import type { PoolRuntimeOptions, PoolTask, WorkerResponse } from './types'
-import { PoolRuntime } from './runtimes/base'
-import { ForksRuntimeWorker } from './runtimes/forks'
-import { ThreadsRuntimeWorker } from './runtimes/threads'
-import { TypecheckRuntimeWorker } from './runtimes/typecheck'
-import { VmForksRuntimeWorker } from './runtimes/vmForks'
-import { VmThreadsRuntimeWorker } from './runtimes/vmThreads'
+import type { PoolOptions, PoolTask, WorkerResponse } from './types'
+import { PoolRunner } from './poolRunner'
+import { ForksPoolWorker } from './workers/forksWorker'
+import { ThreadsPoolWorker } from './workers/threadsWorker'
+import { TypecheckPoolWorker } from './workers/typecheckWorker'
+import { VmForksPoolWorker } from './workers/vmForksWorker'
+import { VmThreadsPoolWorker } from './workers/vmThreadsWorker'
 
 const WORKER_START_TIMEOUT = 5_000
 
@@ -32,7 +32,7 @@ export class Pool {
 
   private queue: QueuedTask[] = []
   private activeTasks: ActiveTask[] = []
-  private sharedRuntimes: PoolRuntime[] = []
+  private sharedRunners: PoolRunner[] = []
   private exitPromises: Promise<void>[] = []
 
   constructor(private options: Options, private logger: Logger) {}
@@ -46,7 +46,7 @@ export class Pool {
   }
 
   async run(task: PoolTask, method: 'run' | 'collect'): Promise<void> {
-    // Every runtime related failure should make this promise reject so that it's picked by pool.
+    // Every runner related failure should make this promise reject so that it's picked by pool.
     // This resolver is used to make the error handling in recursive queue easier.
     const testFinish = withResolvers()
 
@@ -65,15 +65,15 @@ export class Pool {
 
     try {
       let isMemoryLimitReached = false
-      const runtime = this.getRuntime(task, method)
+      const runner = this.getPoolRunner(task, method)
 
       const activeTask = { task, resolver, method, cancelTask }
       this.activeTasks.push(activeTask)
 
-      runtime.on('error', error => resolver.reject(new Error(`[vitest-pool]: Runtime ${task.runtime} emitted error`, { cause: error })))
+      runner.on('error', error => resolver.reject(new Error(`[vitest-pool]: Worker ${task.worker} emitted error`, { cause: error })))
 
       async function cancelTask() {
-        await runtime.stop()
+        await runner.stop()
         resolver.reject(new Error('Cancelled'))
       }
 
@@ -86,28 +86,28 @@ export class Pool {
             this.options.state.catchError(message.error, 'Test Run Error')
           }
 
-          runtime.off('message', onFinished)
+          runner.off('message', onFinished)
           resolver.resolve()
         }
       }
 
-      runtime.on('message', onFinished)
+      runner.on('message', onFinished)
 
-      if (!runtime.isStarted) {
+      if (!runner.isStarted) {
         const id = setTimeout(
-          () => resolver.reject(new Error(`[vitest-pool]: Timeout starting ${task.runtime} runtime.`)),
+          () => resolver.reject(new Error(`[vitest-pool]: Timeout starting ${task.worker} runner.`)),
           WORKER_START_TIMEOUT,
         )
 
-        await runtime.start()
+        await runner.start()
         clearTimeout(id)
       }
 
-      const poolId = runtime.poolId ?? this.getWorkerId()
-      runtime.poolId = poolId
+      const poolId = runner.poolId ?? this.getWorkerId()
+      runner.poolId = poolId
 
       // Start running the test in the worker
-      runtime.postMessage({
+      runner.postMessage({
         __vitest_worker_request__: true,
         type: method,
         context: task.context,
@@ -125,24 +125,24 @@ export class Pool {
         !task.isolate
         && !isMemoryLimitReached
         && this.queue[0]?.task.isolate === false
-        && isEqualRuntime(runtime, this.queue[0].task)
+        && isEqualRunner(runner, this.queue[0].task)
       ) {
-        this.sharedRuntimes.push(runtime)
+        this.sharedRunners.push(runner)
         return this.schedule()
       }
 
       const id = setTimeout(
-        () => this.logger.error(`[vitest-pool]: Timeout terminating ${task.runtime} worker for test files ${formatFiles(task)}.`),
+        () => this.logger.error(`[vitest-pool]: Timeout terminating ${task.worker} worker for test files ${formatFiles(task)}.`),
         this.options.teardownTimeout,
       )
 
-      // Runtime terminations are started but not awaited until the end of full run.
-      // Runtime termination can also already start from task cancellation.
-      if (!runtime.isTerminating) {
+      // Runner terminations are started but not awaited until the end of full run.
+      // Runner termination can also already start from task cancellation.
+      if (!runner.isTerminating) {
         this.exitPromises.push(
-          runtime.stop()
+          runner.stop()
             .then(() => clearTimeout(id))
-            .catch(error => this.logger.error(`[vitest-pool]: Failed to terminate ${task.runtime} worker for test files ${formatFiles(task)}.`, error)),
+            .catch(error => this.logger.error(`[vitest-pool]: Failed to terminate ${task.worker} worker for test files ${formatFiles(task)}.`, error)),
         )
       }
 
@@ -168,8 +168,8 @@ export class Pool {
     const activeTasks = this.activeTasks.splice(0)
     await Promise.all(activeTasks.map(task => task.cancelTask()))
 
-    const sharedRuntimes = this.sharedRuntimes.splice(0)
-    await Promise.all(sharedRuntimes.map(runtime => runtime.stop()))
+    const sharedRunners = this.sharedRunners.splice(0)
+    await Promise.all(sharedRunners.map(runner => runner.stop()))
 
     await Promise.all(this.exitPromises.splice(0))
 
@@ -180,16 +180,16 @@ export class Pool {
     await this.cancel()
   }
 
-  private getRuntime(task: PoolTask, method: 'run' | 'collect'): PoolRuntime {
+  private getPoolRunner(task: PoolTask, method: 'run' | 'collect'): PoolRunner {
     if (task.isolate === false) {
-      const index = this.sharedRuntimes.findIndex(runtime => isEqualRuntime(runtime, task))
+      const index = this.sharedRunners.findIndex(runner => isEqualRunner(runner, task))
 
       if (index !== -1) {
-        return this.sharedRuntimes.splice(index, 1)[0]
+        return this.sharedRunners.splice(index, 1)[0]
       }
     }
 
-    const options: PoolRuntimeOptions = {
+    const options: PoolOptions = {
       distPath: this.options.distPath,
       project: task.project,
       method,
@@ -198,29 +198,29 @@ export class Pool {
       execArgv: task.execArgv,
     }
 
-    switch (task.runtime) {
+    switch (task.worker) {
       case 'forks':
-        return new PoolRuntime(options, new ForksRuntimeWorker(options))
+        return new PoolRunner(options, new ForksPoolWorker(options))
 
       case 'vmForks':
-        return new PoolRuntime(options, new VmForksRuntimeWorker(options))
+        return new PoolRunner(options, new VmForksPoolWorker(options))
 
       case 'threads':
-        return new PoolRuntime(options, new ThreadsRuntimeWorker(options))
+        return new PoolRunner(options, new ThreadsPoolWorker(options))
 
       case 'vmThreads':
-        return new PoolRuntime(options, new VmThreadsRuntimeWorker(options))
+        return new PoolRunner(options, new VmThreadsPoolWorker(options))
 
       case 'typescript':
-        return new PoolRuntime(options, new TypecheckRuntimeWorker(options))
+        return new PoolRunner(options, new TypecheckPoolWorker(options))
     }
 
-    const customPool = task.project.config.poolRuntime
-    if (customPool != null && customPool.runtime === task.runtime) {
-      return new PoolRuntime(options, customPool.createWorker(options))
+    const customPool = task.project.config.poolRunner
+    if (customPool != null && customPool.name === task.worker) {
+      return new PoolRunner(options, customPool.createPoolWorker(options))
     }
 
-    throw new Error(`Runtime ${task.runtime} not supported. Test files: ${formatFiles(task)}.`)
+    throw new Error(`Runner ${task.worker} is not supported. Test files: ${formatFiles(task)}.`)
   }
 
   private getWorkerId() {
@@ -257,21 +257,21 @@ function formatFiles(task: PoolTask) {
   return task.context.files.map(file => file.filepath).join(', ')
 }
 
-function isEqualRuntime(runtime: PoolRuntime, task: PoolTask) {
+function isEqualRunner(runner: PoolRunner, task: PoolTask) {
   if (task.isolate) {
-    throw new Error('Isolated tasks should not share runtimes')
+    throw new Error('Isolated tasks should not share runners')
   }
 
   return (
-    runtime.worker.name === task.runtime
-    && runtime.project === task.project
-    && runtime.environment === task.context.environment.name
-    && runtime.worker.execArgv.every((arg, index) => task.execArgv[index] === arg)
-    && isEnvEqual(runtime.worker.env, task.env)
+    runner.worker.name === task.worker
+    && runner.project === task.project
+    && runner.environment === task.context.environment.name
+    && runner.worker.execArgv.every((arg, index) => task.execArgv[index] === arg)
+    && isEnvEqual(runner.worker.env, task.env)
   )
 }
 
-function isEnvEqual(a: PoolRuntimeOptions['env'], b: PoolTask['env']) {
+function isEnvEqual(a: PoolOptions['env'], b: PoolTask['env']) {
   const keys = Object.keys(a)
 
   if (keys.length !== Object.keys(b).length) {

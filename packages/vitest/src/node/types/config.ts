@@ -10,7 +10,7 @@ import type { SerializedConfig } from '../../runtime/config'
 import type { LabelColor, ParsedStack, ProvidedContext, TestError } from '../../types/general'
 import type { HappyDOMOptions } from '../../types/happy-dom-options'
 import type { JSDOMOptions } from '../../types/jsdom-options'
-import type { PoolRuntimeInitializer } from '../pools/types'
+import type { PoolRunnerInitializer } from '../pools/types'
 import type {
   BuiltinReporterOptions,
   BuiltinReporters,
@@ -339,7 +339,7 @@ export interface InlineConfig {
    *
    * @default 'forks'
    */
-  pool?: Exclude<Pool, 'browser'> | PoolRuntimeInitializer
+  pool?: Exclude<Pool, 'browser'> | PoolRunnerInitializer
 
   /**
    * Maximum number or percentage of workers to run tests in.
@@ -1006,7 +1006,7 @@ export interface ResolvedConfig
 
   browser: ResolvedBrowserOptions
   pool: Pool
-  poolRuntime?: PoolRuntimeInitializer
+  poolRunner?: PoolRunnerInitializer
 
   reporters: (InlineReporter | ReporterWithOptions)[]
 

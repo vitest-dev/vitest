@@ -4,7 +4,7 @@
 This is an advanced, experimental and very low-level API. If you just want to [run tests](/guide/), you probably don't need this. It is primarily used by library authors.
 :::
 
-Vitest runs tests in a pool. By default, there are several pool runtimes:
+Vitest runs tests in a pool. By default, there are several pool runners:
 
 - `threads` to run tests using `node:worker_threads` (isolation is provided with a new worker context)
 - `forks` to run tests using `node:child_process` (isolation is provided with a new `child_process.fork` process)
@@ -13,12 +13,12 @@ Vitest runs tests in a pool. By default, there are several pool runtimes:
 - `typescript` to run typechecking on tests
 
 ::: tip
-See [`vitest-pool-example`](https://www.npmjs.com/package/vitest-pool-example) for example of a custom pool runtime implementation.
+See [`vitest-pool-example`](https://www.npmjs.com/package/vitest-pool-example) for example of a custom pool runner implementation.
 :::
 
 ## Usage
 
-You can provide your own pool runtime by a function that returns `PoolRuntimeInitializer`.
+You can provide your own pool runner by a function that returns `PoolRunnerInitializer`.
 
 ```ts [vitest.config.ts]
 import { defineConfig } from 'vitest/config'
@@ -63,15 +63,15 @@ export default defineConfig({
 
 ## API
 
-The `pool` option accepts a `PoolRuntimeInitializer` that can be used for custom pool runtimes. The `runtime` property should indicate name of the custom pool runtime. It should be identical with your runtime's `name` property.
+The `pool` option accepts a `PoolRunnerInitializer` that can be used for custom pool runners. The `name` property should indicate name of the custom pool runner. It should be identical with your worker's `name` property.
 
 ```ts [my-custom-pool.ts]
-import type { PoolRuntimeInitializer } from 'vitest/node'
+import type { PoolRunnerInitializer } from 'vitest/node'
 
-export function customPool(customOptions: CustomOptions): PoolRuntimeInitializer {
+export function customPool(customOptions: CustomOptions): PoolRunnerInitializer {
   return {
-    runtime: 'custom-pool',
-    createWorker: options => new CustomPoolWorker(options, customOptions),
+    name: 'custom-pool',
+    createPoolWorker: options => new CustomPoolWorker(options, customOptions),
   }
 }
 ```
@@ -79,14 +79,13 @@ export function customPool(customOptions: CustomOptions): PoolRuntimeInitializer
 In your `CustomPoolWorker` you need to define all required methods:
 
 ```ts [my-custom-pool.ts]
-import { BaseRuntime } from 'vitest/node'
-import type { PoolRuntimeOptions, PoolRuntimeWorker, WorkerRequest } from 'vitest/node'
+import type { PoolOptions, PoolWorker, WorkerRequest } from 'vitest/node'
 
-class CustomPoolRuntime implements PoolRuntimeWorker {
+class CustomPoolWorker implements PoolWorker {
   name = 'custom-pool'
   private customOptions: CustomOptions
 
-  constructor(options: PoolRuntimeOptions, customOptions: CustomOptions) {
+  constructor(options: PoolOptions, customOptions: CustomOptions) {
     this.customOptions = customOptions
   }
 
@@ -116,7 +115,7 @@ class CustomPoolRuntime implements PoolRuntimeWorker {
 }
 ```
 
-Your `CustomPoolRuntime` will be controlling how your custom test runner worker life cycles and communication channel works. For example, your `CustomPoolRuntime` could launch a `node:worker_threads` `Worker`, and provide communication via `Worker.postMessage` and `parentPort`.
+Your `CustomPoolRunner` will be controlling how your custom test runner worker life cycles and communication channel works. For example, your `CustomPoolRunner` could launch a `node:worker_threads` `Worker`, and provide communication via `Worker.postMessage` and `parentPort`.
 
 In your worker file, you can import helper utilities from `vitest/worker`:
 
@@ -125,10 +124,10 @@ import { init, runBaseTests } from 'vitest/worker'
 
 init({
   post: (response) => {
-    // Provider way to send this message to CustomPoolRuntime's onWorker as message event
+    // Provider way to send this message to CustomPoolRunner's onWorker as message event
   },
   on: (callback) => {
-    // Provide a way to listen CustomPoolRuntime's "postMessage" calls
+    // Provide a way to listen CustomPoolRunner's "postMessage" calls
   },
   removeAllListeners: () => {
     // Provider a way to unsubscribe all the `on` listeners

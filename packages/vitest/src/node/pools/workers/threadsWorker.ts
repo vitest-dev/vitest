@@ -1,9 +1,9 @@
-import type { PoolRuntimeOptions, RuntimeWorker, WorkerRequest } from '../types'
+import type { PoolOptions, PoolWorker, WorkerRequest } from '../types'
 import { resolve } from 'node:path'
 import { Worker } from 'node:worker_threads'
 
 /** @experimental */
-export class ThreadsRuntimeWorker implements RuntimeWorker {
+export class ThreadsPoolWorker implements PoolWorker {
   public readonly name: string = 'threads'
   public readonly execArgv: string[]
   public readonly env: Record<string, string>
@@ -11,7 +11,7 @@ export class ThreadsRuntimeWorker implements RuntimeWorker {
 
   private _thread?: Worker
 
-  constructor(options: PoolRuntimeOptions) {
+  constructor(options: PoolOptions) {
     this.execArgv = options.execArgv
     this.env = options.env
     /** Loads {@link file://./../../../runtime/workers/threads.ts} */

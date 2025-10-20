@@ -1,14 +1,13 @@
 import type { BirpcReturn } from 'birpc'
-import type { RunnerRPC, RuntimeRPC } from '../../../types/rpc'
-import type { TestProject } from '../../project'
-import type { PoolRuntimeOptions, RuntimeWorker, WorkerRequest, WorkerResponse } from '../types'
+import type { RunnerRPC, RuntimeRPC } from '../../types/rpc'
+import type { TestProject } from '../project'
+import type { PoolOptions, PoolWorker, WorkerRequest, WorkerResponse } from './types'
 import { EventEmitter } from 'node:events'
 import { createBirpc } from 'birpc'
-import { createMethodsRPC } from '../rpc'
+import { createMethodsRPC } from './rpc'
 
 /** @experimental */
-export class PoolRuntime {
-  public readonly name = 'base'
+export class PoolRunner {
   public isTerminating = false
   public isStarted = false
   /** Exposed to test runner as `VITEST_POOL_ID`. Value is between 1-`maxWorkers`. */
@@ -25,7 +24,7 @@ export class PoolRuntime {
 
   private _rpc: BirpcReturn<RunnerRPC, RuntimeRPC>
 
-  constructor(options: PoolRuntimeOptions, public worker: RuntimeWorker) {
+  constructor(options: PoolOptions, public worker: PoolWorker) {
     this.project = options.project
     this.environment = options.environment
     this._rpc = createBirpc<RunnerRPC, RuntimeRPC>(
@@ -81,11 +80,11 @@ export class PoolRuntime {
     this.worker.off('exit', this.emitUnexpectedExit)
 
     await new Promise<void>((resolve) => {
-      const onStop = (message: WorkerResponse) => {
-        if (message.type === 'stopped') {
-          if (message.error) {
+      const onStop = (response: WorkerResponse) => {
+        if (response.type === 'stopped') {
+          if (response.error) {
             this.project.vitest.state.catchError(
-              message.error,
+              response.error,
               'Teardown Error',
             )
           }
@@ -102,7 +101,7 @@ export class PoolRuntime {
     this.isStarted = false
     this.isTerminating = true
     this._eventEmitter.removeAllListeners()
-    this._rpc.$close(new Error('[vitest-pool-runtime]: Pending methods while closing rpc'))
+    this._rpc.$close(new Error('[vitest-pool-runner]: Pending methods while closing rpc'))
 
     await this.worker.stop()
   }
@@ -127,10 +126,10 @@ export class PoolRuntime {
 
   private emitWorkerMessage = (response: WorkerResponse | { m: string; __vitest_worker_response__: false }): void => {
     try {
-      const message = this.worker.deserialize(response)
+      const message = this.worker.deserialize(response) as WorkerResponse
 
-      if (typeof message === 'object' && message != null && (message as WorkerResponse).__vitest_worker_response__) {
-        this._eventEmitter.emit('message', message as WorkerResponse)
+      if (typeof message === 'object' && message != null && message.__vitest_worker_response__) {
+        this._eventEmitter.emit('message', message)
       }
       else {
         this._eventEmitter.emit('rpc', message)

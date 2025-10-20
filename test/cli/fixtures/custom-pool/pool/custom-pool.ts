@@ -1,5 +1,5 @@
 import type { RunnerTestCase } from 'vitest'
-import type { RuntimeWorker, PoolRuntimeInitializer, TestProject, Vitest, WorkerRequest, WorkerResponse, PoolRuntimeOptions } from 'vitest/node'
+import type { PoolWorker, PoolRunnerInitializer, TestProject, Vitest, WorkerRequest, WorkerResponse, PoolOptions } from 'vitest/node'
 import { createFileTask } from '@vitest/runner/utils'
 import { normalize } from 'pathe'
 import EventEmitter from 'node:events';
@@ -9,14 +9,14 @@ interface OptionsCustomPool {
   array: any;
 }
 
-export function createCustomPool(settings: OptionsCustomPool): PoolRuntimeInitializer {
+export function createCustomPool(settings: OptionsCustomPool): PoolRunnerInitializer {
   return {
     runtime: 'custom',
-    createWorker: (options) => new CustomRuntimeWorker(options, settings),
+    createPoolWorker: (options) => new CustomRuntimeWorker(options, settings),
   }
 }
 
-export class CustomRuntimeWorker implements RuntimeWorker {
+export class CustomRuntimeWorker implements PoolWorker {
   public readonly name = 'custom'
   private vitest: Vitest
   private customEvents = new EventEmitter()
@@ -24,7 +24,7 @@ export class CustomRuntimeWorker implements RuntimeWorker {
   readonly env: Record<string, string>
   private project: TestProject
 
-  constructor(options: PoolRuntimeOptions, private settings: OptionsCustomPool) {
+  constructor(options: PoolOptions, private settings: OptionsCustomPool) {
     this.execArgv = options.execArgv
     this.env = options.env
     this.vitest = options.project.vitest

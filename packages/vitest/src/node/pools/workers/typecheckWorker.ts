@@ -4,14 +4,14 @@ import type { TypecheckResults } from '../../../typecheck/typechecker'
 import type { Vitest } from '../../core'
 import type { TestProject } from '../../project'
 import type { TestRunEndReason } from '../../types/reporter'
-import type { PoolRuntimeOptions, RuntimeWorker, WorkerRequest, WorkerResponse } from '../types'
+import type { PoolOptions, PoolWorker, WorkerRequest, WorkerResponse } from '../types'
 import EventEmitter from 'node:events'
 import { hasFailed } from '@vitest/runner/utils'
 import { createDefer } from '@vitest/utils/helpers'
 import { Typechecker } from '../../../typecheck/typechecker'
 
 /** @experimental */
-export class TypecheckRuntimeWorker implements RuntimeWorker {
+export class TypecheckPoolWorker implements PoolWorker {
   public readonly name: string = 'typecheck'
   public readonly execArgv: string[]
   public readonly env: Record<string, string>
@@ -19,7 +19,7 @@ export class TypecheckRuntimeWorker implements RuntimeWorker {
 
   private _eventEmitter = new EventEmitter()
 
-  constructor(options: PoolRuntimeOptions) {
+  constructor(options: PoolOptions) {
     this.execArgv = options.execArgv
     this.env = options.env
     this.project = options.project

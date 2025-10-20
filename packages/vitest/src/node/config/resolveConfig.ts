@@ -142,8 +142,8 @@ export function resolveConfig(
   } as any as ResolvedConfig
 
   if (options.pool && typeof options.pool !== 'string') {
-    resolved.pool = options.pool.runtime
-    resolved.poolRuntime = options.pool
+    resolved.pool = options.pool.name
+    resolved.poolRunner = options.pool
   }
 
   resolved.pool ??= 'forks'
