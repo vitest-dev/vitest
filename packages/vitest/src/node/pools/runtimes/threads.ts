@@ -30,10 +30,13 @@ export class ThreadsRuntime extends BaseRuntime {
     }
   }
 
-  async start(options: Parameters<PoolRuntime['start']>[0]): Promise<void> {
-    this.thread ||= new Worker(this.entrypoint, options)
+  async start(): Promise<void> {
+    this.thread ||= new Worker(this.entrypoint, {
+      env: this.options.env,
+      execArgv: this.options.execArgv,
+    })
 
-    await super.start(options)
+    await super.start()
   }
 
   private stopPromise: Promise<void> | undefined

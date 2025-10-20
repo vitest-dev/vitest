@@ -12,9 +12,9 @@ export interface PoolRuntimeOptions {
   method: 'run' | 'collect'
   cacheFs?: boolean
   environment: string
+  execArgv: string[]
+  env: Record<string, string>
 }
-
-export type PoolStartOptions = Pick<PoolTask, 'env' | 'execArgv'>
 
 export interface PoolRuntime {
   name: string
@@ -27,7 +27,7 @@ export interface PoolRuntime {
   options: PoolRuntimeOptions
 
   /** Note that start can be called multiple times. First time indicates worker warmup. */
-  start: (options: PoolStartOptions) => Promise<void>
+  start: () => Promise<void>
   stop: () => Promise<void>
   on: ((event: 'message', callback: (message: WorkerResponse) => void) => void) & ((event: 'error', callback: (error: Error) => void) => void)
   off: ((event: 'message', callback: (message: WorkerResponse) => void) => void) & ((event: 'error', callback: (error: Error) => void) => void)

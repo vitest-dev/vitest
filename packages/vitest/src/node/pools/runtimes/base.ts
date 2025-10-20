@@ -62,7 +62,7 @@ export class BaseRuntime implements PoolRuntime {
     return message as any
   }
 
-  async start(_: Parameters<PoolRuntime['start']>[0]): Promise<void> {
+  async start(): Promise<void> {
     if (this.isStarted) {
       return
     }

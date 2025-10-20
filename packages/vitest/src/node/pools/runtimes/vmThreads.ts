@@ -9,19 +9,9 @@ export class VmThreadsRuntime extends ThreadsRuntime {
   entrypoint: string
 
   constructor(options: PoolRuntime['options']) {
-    super(options)
+    super({ ...options, execArgv: [...options.execArgv, '--experimental-vm-modules'] })
 
     /** Loads {@link file://./../../../runtime/workers/vmThreads.ts} */
     this.entrypoint = resolve(options.distPath, 'workers/vmThreads.js')
-  }
-
-  async start(options: Parameters<PoolRuntime['start']>[0]): Promise<void> {
-    return super.start({
-      ...options,
-      execArgv: [
-        ...options.execArgv,
-        '--experimental-vm-modules',
-      ],
-    })
   }
 }

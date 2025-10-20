@@ -98,7 +98,7 @@ export class Pool {
           WORKER_START_TIMEOUT,
         )
 
-        await runtime.start({ env: task.env, execArgv: task.execArgv })
+        await runtime.start()
         clearTimeout(id)
       }
 
@@ -185,11 +185,13 @@ export class Pool {
       }
     }
 
-    const options = {
+    const options: PoolRuntime['options'] = {
       distPath: this.options.distPath,
       project: task.project,
       method,
       environment: task.context.environment.name,
+      env: task.env,
+      execArgv: task.execArgv,
     }
 
     switch (task.runtime) {
@@ -256,8 +258,21 @@ function isEqualRuntime(runtime: PoolRuntime, task: PoolTask) {
     throw new Error('Isolated tasks should not share runtimes')
   }
 
-  // TODO: Compare add runtime.options.env, runtime.options.execArgv
-  return runtime.name === task.runtime
+  return (
+    runtime.name === task.runtime
     && runtime.options.project === task.project
     && runtime.options.environment === task.context.environment.name
+    && runtime.options.execArgv.every((arg, index) => task.execArgv[index] === arg)
+    && isEnvEqual(runtime.options.env, task.env)
+  )
+}
+
+function isEnvEqual(a: PoolRuntime['options']['env'], b: PoolTask['env']) {
+  const keys = Object.keys(a)
+
+  if (keys.length !== Object.keys(b).length) {
+    return false
+  }
+
+  return keys.every(key => a[key] === b[key])
 }

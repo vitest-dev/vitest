@@ -49,10 +49,13 @@ export class ForksRuntime extends BaseRuntime {
     this.fork?.send(this.serialize(message))
   }
 
-  async start(options: Parameters<PoolRuntime['start']>[0]): Promise<void> {
-    this.fork ||= fork(this.entrypoint, [], options)
+  async start(): Promise<void> {
+    this.fork ||= fork(this.entrypoint, [], {
+      env: this.options.env,
+      execArgv: this.options.execArgv,
+    })
 
-    await super.start(options)
+    await super.start()
   }
 
   private stopPromise: Promise<void> | undefined
