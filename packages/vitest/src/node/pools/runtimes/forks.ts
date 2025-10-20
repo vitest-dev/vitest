@@ -66,7 +66,6 @@ export class ForksRuntime extends BaseRuntime {
       const waitForExit = new Promise<void>(resolve => this.fork?.once('exit', resolve))
       await super.stop()
 
-      // why does it need a timeout? what is it not dying in time? how to debug it?
       const sigkillTimeout = setTimeout(
         () => this.fork?.kill('SIGKILL'),
         SIGKILL_TIMEOUT,
