@@ -13,8 +13,6 @@ const processSend = process.send.bind(process)
 const processOn = process.on.bind(process)
 const processOff = process.off.bind(process)
 
-// TODO: Should we do `process.send = undefined` to make test files not see that they are in child_process?
-
 const isProfiling = process.execArgv.some(
   execArg =>
     execArg.startsWith('--prof')
