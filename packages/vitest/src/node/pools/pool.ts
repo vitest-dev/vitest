@@ -256,7 +256,7 @@ function isEqualRuntime(runtime: PoolRuntime, task: PoolTask) {
     throw new Error('Isolated tasks should not share runtimes')
   }
 
-  // TODO: Compare add runtime.options.env
+  // TODO: Compare add runtime.options.env, runtime.options.execArgv
   return runtime.name === task.runtime
     && runtime.options.project === task.project
     && runtime.options.environment === task.context.environment.name
