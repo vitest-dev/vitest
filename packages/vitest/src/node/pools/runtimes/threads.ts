@@ -36,9 +36,13 @@ export class ThreadsRuntime extends BaseRuntime {
     await super.start(options)
   }
 
+  private stopPromise: Promise<void> | undefined
+
   async stop(): Promise<void> {
     await super.stop()
-    await this.thread?.terminate()
+    this.stopPromise ??= (() => this.thread?.terminate())()
+      ?.then(() => this.stopPromise = undefined)
+    await this.stopPromise
 
     this.thread = undefined
   }
