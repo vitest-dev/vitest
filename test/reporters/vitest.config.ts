@@ -6,7 +6,7 @@ export default defineConfig({
     exclude: ['node_modules', 'fixtures', 'dist', '**/vitest-test-*/**'],
     reporters: ['verbose'],
     testTimeout: 100000,
-    pool: 'threads',
+    pool: 'forks',
     chaiConfig: {
       truncateThreshold: 0,
     },

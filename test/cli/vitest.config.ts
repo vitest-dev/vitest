@@ -2,7 +2,6 @@ import { defineConfig } from 'vite'
 
 export default defineConfig({
   test: {
-    pool: 'threads',
     include: ['test/**.test.ts'],
     includeTaskLocation: true,
     reporters: ['verbose'],
