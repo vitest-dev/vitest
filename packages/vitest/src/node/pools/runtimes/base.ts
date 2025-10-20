@@ -1,64 +1,53 @@
 import type { BirpcReturn } from 'birpc'
 import type { RunnerRPC, RuntimeRPC } from '../../../types/rpc'
-import type { PoolRuntime, WorkerRequest, WorkerResponse } from '../types'
+import type { TestProject } from '../../project'
+import type { PoolRuntimeOptions, RuntimeWorker, WorkerRequest, WorkerResponse } from '../types'
 import { EventEmitter } from 'node:events'
 import { createBirpc } from 'birpc'
 import { createMethodsRPC } from '../rpc'
 
 /** @experimental */
-export class BaseRuntime implements PoolRuntime {
-  name = 'base'
-  reportMemory = false
-  isTerminating = false
-  isStarted = false
-  options: PoolRuntime['options']
-  poolId = undefined
+export class PoolRuntime {
+  public readonly name = 'base'
+  public isTerminating = false
+  public isStarted = false
+  /** Exposed to test runner as `VITEST_POOL_ID`. Value is between 1-`maxWorkers`. */
+  public poolId: number | undefined = undefined
 
-  protected eventEmitter: EventEmitter<{
+  public readonly project: TestProject
+  public readonly environment: string
+
+  private _eventEmitter: EventEmitter<{
     message: [WorkerResponse]
     error: [Error]
     rpc: [unknown]
   }> = new EventEmitter()
 
-  private rpc: BirpcReturn<RunnerRPC, RuntimeRPC>
+  private _rpc: BirpcReturn<RunnerRPC, RuntimeRPC>
 
-  constructor(options: PoolRuntime['options']) {
-    this.options = options
-
-    this.rpc = createBirpc<RunnerRPC, RuntimeRPC>(
-      createMethodsRPC(this.options.project, {
-        collect: this.options.method === 'collect',
-        cacheFs: this.options.cacheFs,
+  constructor(options: PoolRuntimeOptions, public worker: RuntimeWorker) {
+    this.project = options.project
+    this.environment = options.environment
+    this._rpc = createBirpc<RunnerRPC, RuntimeRPC>(
+      createMethodsRPC(this.project, {
+        collect: options.method === 'collect',
+        cacheFs: worker.cacheFs,
       }),
       {
         eventNames: ['onCancel'],
         post: request => this.postMessage(request),
-        on: callback => this.eventEmitter.on('rpc', callback),
+        on: callback => this._eventEmitter.on('rpc', callback),
         timeout: -1,
       },
     )
 
-    this.options.project.vitest.onCancel(reason => this.rpc.onCancel(reason))
+    this.project.vitest.onCancel(reason => this._rpc.onCancel(reason))
   }
 
-  postMessage(_: WorkerRequest): void {
-    throw new Error('Expected to be implemented')
-  }
-
-  onWorker(_event: string, _callback: (arg: any) => void): void {
-    throw new Error('Expected to be implemented')
-  }
-
-  offWorker(_event: string, _callback: (arg: any) => void): void {
-    throw new Error('Expected to be implemented')
-  }
-
-  serialize<In, Out = In>(message: In): Out {
-    return message as any
-  }
-
-  deserialize<In, Out = In>(message: In): Out {
-    return message as any
+  postMessage(message: WorkerRequest): void {
+    if (!this.isTerminating) {
+      return this.worker.send(message)
+    }
   }
 
   async start(): Promise<void> {
@@ -66,19 +55,21 @@ export class BaseRuntime implements PoolRuntime {
       return
     }
 
+    await this.worker.start()
+
     this.isTerminating = false
 
     const isStarted = this.waitForStart()
 
-    this.onWorker('error', this.emitWorkerError)
-    this.onWorker('exit', this.emitUnexpectedExit)
-    this.onWorker('message', this.emitWorkerMessage)
+    this.worker.on('error', this.emitWorkerError)
+    this.worker.on('exit', this.emitUnexpectedExit)
+    this.worker.on('message', this.emitWorkerMessage)
 
     this.postMessage({
       type: 'start',
       __vitest_worker_request__: true,
       options: {
-        reportMemory: this.reportMemory,
+        reportMemory: this.worker.reportMemory ?? false,
       },
     })
 
@@ -87,13 +78,13 @@ export class BaseRuntime implements PoolRuntime {
   }
 
   async stop(): Promise<void> {
-    this.offWorker('exit', this.emitUnexpectedExit)
+    this.worker.off('exit', this.emitUnexpectedExit)
 
     await new Promise<void>((resolve) => {
       const onStop = (message: WorkerResponse) => {
         if (message.type === 'stopped') {
           if (message.error) {
-            this.options.project.vitest.state.catchError(
+            this.project.vitest.state.catchError(
               message.error,
               'Teardown Error',
             )
@@ -110,48 +101,50 @@ export class BaseRuntime implements PoolRuntime {
 
     this.isStarted = false
     this.isTerminating = true
-    this.eventEmitter.removeAllListeners()
-    this.rpc.$close(new Error('[vitest-pool-runtime]: Pending methods while closing rpc'))
+    this._eventEmitter.removeAllListeners()
+    this._rpc.$close(new Error('[vitest-pool-runtime]: Pending methods while closing rpc'))
+
+    await this.worker.stop()
   }
 
   on(event: 'message', callback: (message: WorkerResponse) => void): void
   on(event: 'error', callback: (error: Error) => void): void
   on(event: 'message' | 'error', callback: (arg: any) => void): void {
-    this.eventEmitter.on(event, callback)
+    this._eventEmitter.on(event, callback)
   }
 
   off(event: 'message', callback: (message: WorkerResponse) => void): void
   off(event: 'error', callback: (error: Error) => void): void
   off(event: 'message' | 'error', callback: (arg: any) => void): void {
-    this.eventEmitter.off(event, callback)
+    this._eventEmitter.off(event, callback)
   }
 
   private emitWorkerError(maybeError: unknown): void {
     const error = maybeError instanceof Error ? maybeError : new Error(String(maybeError))
 
-    this.eventEmitter.emit('error', error)
+    this._eventEmitter.emit('error', error)
   }
 
   private emitWorkerMessage = (response: WorkerResponse | { m: string; __vitest_worker_response__: false }): void => {
     try {
-      const message = this.deserialize(response)
+      const message = this.worker.deserialize(response)
 
-      if (message.__vitest_worker_response__) {
-        this.eventEmitter.emit('message', message)
+      if (typeof message === 'object' && message != null && (message as WorkerResponse).__vitest_worker_response__) {
+        this._eventEmitter.emit('message', message as WorkerResponse)
       }
       else {
-        this.eventEmitter.emit('rpc', message)
+        this._eventEmitter.emit('rpc', message)
       }
     }
     catch (error) {
-      this.eventEmitter.emit('error', error as Error)
+      this._eventEmitter.emit('error', error as Error)
     }
   }
 
   private emitUnexpectedExit = (): void => {
     const error = new Error('Worker exited unexpectedly')
 
-    this.eventEmitter.emit('error', error)
+    this._eventEmitter.emit('error', error)
   }
 
   private waitForStart() {

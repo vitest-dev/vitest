@@ -71,36 +71,47 @@ import type { PoolRuntimeInitializer } from 'vitest/node'
 export function customPool(customOptions: CustomOptions): PoolRuntimeInitializer {
   return {
     runtime: 'custom-pool',
-    create: options => new CustomPoolRuntime(options, customOptions),
+    createWorker: options => new CustomPoolWorker(options, customOptions),
   }
 }
 ```
 
-In your `CustomPoolRuntime` you can extend experimental `BaseRuntime` to get most of the runtime orchestrations out-of-the-box.
+In your `CustomPoolWorker` you need to define all required methods:
 
 ```ts [my-custom-pool.ts]
 import { BaseRuntime } from 'vitest/node'
-import type { PoolRuntime, WorkerRequest } from 'vitest/node'
+import type { PoolRuntimeOptions, PoolRuntimeWorker, WorkerRequest } from 'vitest/node'
 
-class CustomPoolRuntime extends BaseRuntime implements PoolRuntime {
+class CustomPoolRuntime implements PoolRuntimeWorker {
   name = 'custom-pool'
   private customOptions: CustomOptions
 
-  constructor(options: PoolRuntime['options'], customOptions: CustomOptions) {
-    super(options)
+  constructor(options: PoolRuntimeOptions, customOptions: CustomOptions) {
     this.customOptions = customOptions
   }
 
-  postMessage(message: WorkerRequest): void {
+  send(message: WorkerRequest): void {
     // Provide way to send your worker a message
   }
 
-  onWorker(event: string, callback: (arg: any) => void): void {
+  on(event: string, callback: (arg: any) => void): void {
     // Provide way to listen to your workers events, e.g. message, error, exit
   }
 
-  offWorker(event: string, callback: (arg: any) => void): void {
+  off(event: string, callback: (arg: any) => void): void {
     // Provide way to unsubscribe `onWorker` listeners
+  }
+
+  async start() {
+    // do something when the worker is started
+  }
+
+  async stop() {
+    // cleanup the state
+  }
+
+  deserialize(data) {
+    return data
   }
 }
 ```

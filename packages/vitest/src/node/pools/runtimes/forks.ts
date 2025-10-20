@@ -1,37 +1,39 @@
 import type { ChildProcess } from 'node:child_process'
 import type { SerializedConfig } from '../../types/config'
-import type { PoolRuntime, WorkerRequest } from '../types'
+import type { PoolRuntimeOptions, RuntimeWorker, WorkerRequest } from '../types'
 import { fork } from 'node:child_process'
 import { resolve } from 'node:path'
 import v8 from 'node:v8'
-import { BaseRuntime } from './base'
 
-const SIGKILL_TIMEOUT = 1_000
+const SIGKILL_TIMEOUT = 500 /** jest does 500ms by default, let's follow it */
 
 /** @experimental */
-export class ForksRuntime extends BaseRuntime {
-  name = 'forks'
-  entrypoint: string
-  rpcOptions = { cacheFs: true }
-  private fork?: ChildProcess
+export class ForksRuntimeWorker implements RuntimeWorker {
+  public readonly name: string = 'forks'
+  public readonly execArgv: string[]
+  public readonly env: Record<string, string>
+  public readonly cacheFs: boolean = true
 
-  constructor(options: PoolRuntime['options']) {
-    options.cacheFs = true
-    super(options)
+  protected readonly entrypoint: string
 
+  private _fork?: ChildProcess
+
+  constructor(options: PoolRuntimeOptions) {
+    this.execArgv = options.execArgv
+    this.env = options.env
     /** Loads {@link file://./../../../runtime/workers/forks.ts} */
     this.entrypoint = resolve(options.distPath, 'workers/forks.js')
   }
 
-  onWorker(event: string, callback: (arg: any) => void): void {
-    this.fork?.on(event, callback)
+  on(event: string, callback: (arg: any) => void): void {
+    this.fork.on(event, callback)
   }
 
-  offWorker(event: string, callback: (arg: any) => void): void {
-    this.fork?.off(event, callback)
+  off(event: string, callback: (arg: any) => void): void {
+    this.fork.off(event, callback)
   }
 
-  postMessage(message: WorkerRequest): void {
+  send(message: WorkerRequest): void {
     if ('context' in message) {
       message = {
         ...message,
@@ -42,21 +44,26 @@ export class ForksRuntime extends BaseRuntime {
       }
     }
 
-    this.fork?.send(this.serialize(message))
+    this.fork.send(v8.serialize(message))
   }
 
   async start(): Promise<void> {
-    this.fork ||= fork(this.entrypoint, [], {
-      env: this.options.env,
-      execArgv: this.options.execArgv,
+    this._fork ||= fork(this.entrypoint, [], {
+      env: this.env,
+      execArgv: this.execArgv,
     })
-
-    await super.start()
   }
 
   async stop(): Promise<void> {
-    const waitForExit = new Promise<void>(resolve => this.fork?.once('exit', resolve))
-    await super.stop()
+    const fork = this.fork
+    const waitForExit = new Promise<void>((resolve) => {
+      if (fork.killed) {
+        resolve()
+      }
+      else {
+        fork.once('exit', resolve)
+      }
+    })
 
     /*
      * If process running user's code does not stop on SIGTERM, send SIGKILL.
@@ -65,24 +72,20 @@ export class ForksRuntime extends BaseRuntime {
      * - https://github.com/tinylibs/tinypool/blob/40b4b3eb926dabfbfd3d0a7e3d1222d4dd1c0d2d/src/runtime/process-worker.ts#L56
      */
     const sigkillTimeout = setTimeout(
-      () => this.fork?.kill('SIGKILL'),
+      () => fork.kill('SIGKILL'),
       SIGKILL_TIMEOUT,
     )
 
-    this.fork?.kill()
+    fork.kill()
     await waitForExit
     clearTimeout(sigkillTimeout)
 
-    this.fork = undefined
+    this._fork = undefined
   }
 
-  serialize(data: any): any {
-    return v8.serialize(data)
-  }
-
-  deserialize(data: any): any {
+  deserialize(data: unknown): unknown {
     try {
-      return v8.deserialize(Buffer.from(data))
+      return v8.deserialize(Buffer.from(data as ArrayBuffer))
     }
     catch (error) {
       let stringified = ''
@@ -94,6 +97,13 @@ export class ForksRuntime extends BaseRuntime {
 
       throw new Error(`[vitest-pool]: Unexpected call to process.send(). Make sure your test cases are not interfering with process's channel.${stringified}`, { cause: error })
     }
+  }
+
+  private get fork() {
+    if (!this._fork) {
+      throw new Error(`The child process was torn down or never initialized. This is a bug in Vitest.`)
+    }
+    return this._fork
   }
 }
 

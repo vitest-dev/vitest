@@ -1,13 +1,14 @@
-import type { PoolRuntime } from '../types'
+import type { PoolRuntimeOptions } from '../types'
 import { resolve } from 'node:path'
-import { ForksRuntime } from './forks'
+import { ForksRuntimeWorker } from './forks'
 
 /** @experimental */
-export class VmForksRuntime extends ForksRuntime {
-  name = 'vmForks'
-  reportMemory = true
+export class VmForksRuntimeWorker extends ForksRuntimeWorker {
+  public readonly name = 'vmForks'
+  public readonly reportMemory = true
+  protected readonly entrypoint: string
 
-  constructor(options: PoolRuntime['options']) {
+  constructor(options: PoolRuntimeOptions) {
     super({ ...options, execArgv: [...options.execArgv, '--experimental-vm-modules'] })
 
     /** Loads {@link file://./../../../runtime/workers/vmForks.ts} */

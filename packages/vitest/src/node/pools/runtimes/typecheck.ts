@@ -4,43 +4,53 @@ import type { TypecheckResults } from '../../../typecheck/typechecker'
 import type { Vitest } from '../../core'
 import type { TestProject } from '../../project'
 import type { TestRunEndReason } from '../../types/reporter'
-import type { PoolRuntime, WorkerRequest, WorkerResponse } from '../types'
+import type { PoolRuntimeOptions, RuntimeWorker, WorkerRequest, WorkerResponse } from '../types'
+import EventEmitter from 'node:events'
 import { hasFailed } from '@vitest/runner/utils'
 import { createDefer } from '@vitest/utils/helpers'
 import { Typechecker } from '../../../typecheck/typechecker'
-import { BaseRuntime } from './base'
 
 /** @experimental */
-export class TypecheckRuntime extends BaseRuntime {
-  name = 'typecheck'
-  private workerListeners: ((arg: any) => void)[] = []
+export class TypecheckRuntimeWorker implements RuntimeWorker {
+  public readonly name: string = 'typecheck'
+  public readonly execArgv: string[]
+  public readonly env: Record<string, string>
+  private readonly project: TestProject
 
-  constructor(options: PoolRuntime['options']) {
-    super(options)
+  private _eventEmitter = new EventEmitter()
+
+  constructor(options: PoolRuntimeOptions) {
+    this.execArgv = options.execArgv
+    this.env = options.env
+    this.project = options.project
   }
 
-  postMessage(request: WorkerRequest): void {
-    void onMessage(request, this.options.project).then((response) => {
+  async start(): Promise<void> {
+    // noop, onMessage handles it
+  }
+
+  async stop(): Promise<void> {
+    // noop, onMessage handles it
+  }
+
+  send(message: WorkerRequest): void {
+    void onMessage(message, this.project).then((response) => {
       if (response) {
-        this.workerListeners.forEach(listener => listener(response))
+        this._eventEmitter.emit('message', response)
       }
     })
   }
 
-  onWorker(event: string, callback: (arg: any) => void): void {
-    if (event === 'message') {
-      this.workerListeners.push(callback)
-    }
+  on(event: string, callback: (arg: any) => any): void {
+    this._eventEmitter.on(event, callback)
   }
 
-  offWorker(event: string, callback: (arg: any) => void): void {
-    if (event === 'message') {
-      const index = this.workerListeners.indexOf(callback) ?? -1
+  off(event: string, callback: (arg: any) => any): void {
+    this._eventEmitter.on(event, callback)
+  }
 
-      if (index !== -1) {
-        this.workerListeners.splice(index, 1)
-      }
-    }
+  deserialize(data: unknown): unknown {
+    return data
   }
 }
 

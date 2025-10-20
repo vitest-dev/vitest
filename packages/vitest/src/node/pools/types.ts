@@ -2,8 +2,8 @@ import type { ContextRPC } from '../../types/worker'
 import type { TestProject } from '../project'
 
 export interface PoolRuntimeInitializer {
-  runtime: string
-  create: (options: PoolRuntimeOptions) => PoolRuntime
+  readonly runtime: string
+  createWorker: (options: PoolRuntimeOptions) => RuntimeWorker
 }
 
 export interface PoolRuntimeOptions {
@@ -16,27 +16,20 @@ export interface PoolRuntimeOptions {
   env: Record<string, string>
 }
 
-export interface PoolRuntime {
-  name: string
-  isStarted: boolean
-  isTerminating: boolean
-  reportMemory?: boolean
+export interface RuntimeWorker {
+  readonly name: string
+  readonly execArgv: string[]
+  readonly env: Record<string, string>
+  readonly reportMemory?: boolean
+  readonly cacheFs?: boolean
 
-  /** Exposed to test runner as `VITEST_POOL_ID`. Value is between 1-`maxWorkers`. */
-  poolId?: number
+  on: (event: string, callback: (arg: any) => void) => void
+  off: (event: string, callback: (arg: any) => void) => void
+  send: (message: WorkerRequest) => void
+  deserialize: (data: unknown) => unknown
 
-  options: PoolRuntimeOptions
-
-  /** Note that start can be called multiple times. First time indicates worker warmup. */
   start: () => Promise<void>
   stop: () => Promise<void>
-  on: ((event: 'message', callback: (message: WorkerResponse) => void) => void) & ((event: 'error', callback: (error: Error) => void) => void)
-  off: ((event: 'message', callback: (message: WorkerResponse) => void) => void) & ((event: 'error', callback: (error: Error) => void) => void)
-  onWorker: (event: string, callback: (arg: any) => void) => void
-  offWorker: (event: string, callback: (arg: any) => void) => void
-  postMessage: (message: WorkerRequest) => void
-  serialize: (message: any) => any
-  deserialize: (message: any) => any
 }
 
 export interface PoolTask {

@@ -1,11 +1,12 @@
 import type { Logger } from '../logger'
 import type { StateManager } from '../state'
-import type { PoolRuntime, PoolTask, WorkerResponse } from './types'
-import { ForksRuntime } from './runtimes/forks'
-import { ThreadsRuntime } from './runtimes/threads'
-import { TypecheckRuntime } from './runtimes/typecheck'
-import { VmForksRuntime } from './runtimes/vmForks'
-import { VmThreadsRuntime } from './runtimes/vmThreads'
+import type { PoolRuntimeOptions, PoolTask, WorkerResponse } from './types'
+import { PoolRuntime } from './runtimes/base'
+import { ForksRuntimeWorker } from './runtimes/forks'
+import { ThreadsRuntimeWorker } from './runtimes/threads'
+import { TypecheckRuntimeWorker } from './runtimes/typecheck'
+import { VmForksRuntimeWorker } from './runtimes/vmForks'
+import { VmThreadsRuntimeWorker } from './runtimes/vmThreads'
 
 const WORKER_START_TIMEOUT = 5_000
 
@@ -188,7 +189,7 @@ export class Pool {
       }
     }
 
-    const options: PoolRuntime['options'] = {
+    const options: PoolRuntimeOptions = {
       distPath: this.options.distPath,
       project: task.project,
       method,
@@ -199,24 +200,24 @@ export class Pool {
 
     switch (task.runtime) {
       case 'forks':
-        return new ForksRuntime(options)
+        return new PoolRuntime(options, new ForksRuntimeWorker(options))
 
       case 'vmForks':
-        return new VmForksRuntime(options)
+        return new PoolRuntime(options, new VmForksRuntimeWorker(options))
 
       case 'threads':
-        return new ThreadsRuntime(options)
+        return new PoolRuntime(options, new ThreadsRuntimeWorker(options))
 
       case 'vmThreads':
-        return new VmThreadsRuntime(options)
+        return new PoolRuntime(options, new VmThreadsRuntimeWorker(options))
 
       case 'typescript':
-        return new TypecheckRuntime(options)
+        return new PoolRuntime(options, new TypecheckRuntimeWorker(options))
     }
 
     const customPool = task.project.config.poolRuntime
     if (customPool != null && customPool.runtime === task.runtime) {
-      return customPool.create(options)
+      return new PoolRuntime(options, customPool.createWorker(options))
     }
 
     throw new Error(`Runtime ${task.runtime} not supported. Test files: ${formatFiles(task)}.`)
@@ -262,15 +263,15 @@ function isEqualRuntime(runtime: PoolRuntime, task: PoolTask) {
   }
 
   return (
-    runtime.name === task.runtime
-    && runtime.options.project === task.project
-    && runtime.options.environment === task.context.environment.name
-    && runtime.options.execArgv.every((arg, index) => task.execArgv[index] === arg)
-    && isEnvEqual(runtime.options.env, task.env)
+    runtime.worker.name === task.runtime
+    && runtime.project === task.project
+    && runtime.environment === task.context.environment.name
+    && runtime.worker.execArgv.every((arg, index) => task.execArgv[index] === arg)
+    && isEnvEqual(runtime.worker.env, task.env)
   )
 }
 
-function isEnvEqual(a: PoolRuntime['options']['env'], b: PoolTask['env']) {
+function isEnvEqual(a: PoolRuntimeOptions['env'], b: PoolTask['env']) {
   const keys = Object.keys(a)
 
   if (keys.length !== Object.keys(b).length) {

@@ -1,6 +1,5 @@
 import type { RunnerTestCase } from 'vitest'
-import { BaseRuntime } from 'vitest/node'
-import type { PoolRuntime, PoolRuntimeInitializer, TestProject, Vitest, WorkerRequest, WorkerResponse } from 'vitest/node'
+import type { RuntimeWorker, PoolRuntimeInitializer, TestProject, Vitest, WorkerRequest, WorkerResponse, PoolRuntimeOptions } from 'vitest/node'
 import { createFileTask } from '@vitest/runner/utils'
 import { normalize } from 'pathe'
 import EventEmitter from 'node:events';
@@ -13,43 +12,51 @@ interface OptionsCustomPool {
 export function createCustomPool(settings: OptionsCustomPool): PoolRuntimeInitializer {
   return {
     runtime: 'custom',
-    create: (options) => new CustomRuntime(options, settings),
+    createWorker: (options) => new CustomRuntimeWorker(options, settings),
   }
 }
 
-export class CustomRuntime extends BaseRuntime implements PoolRuntime {
-  name = 'custom'
+export class CustomRuntimeWorker implements RuntimeWorker {
+  public readonly name = 'custom'
   private vitest: Vitest
   private customEvents = new EventEmitter()
+  readonly execArgv: string[]
+  readonly env: Record<string, string>
+  private project: TestProject
 
-  constructor(options: PoolRuntime['options'], private settings: OptionsCustomPool) {
-    super(options)
+  constructor(options: PoolRuntimeOptions, private settings: OptionsCustomPool) {
+    this.execArgv = options.execArgv
+    this.env = options.env
     this.vitest = options.project.vitest
+    this.project = options.project
   }
 
-  postMessage(request: WorkerRequest): void {
-    void onMessage(request, this.options.project, this.settings).then((response) => {
+  send(request: WorkerRequest) {
+    void onMessage(request, this.project, this.settings).then((response) => {
       if (response) {
         this.customEvents.emit('message', response)
       }
     })
   }
 
-  onWorker(event: string, callback: (arg: any) => void): void {
-    if (event === 'message') {
-      this.customEvents.on('message', callback)
-    }
+  on(event: string, callback: (arg: any) => void): void {
+    this.customEvents.on(event, callback)
   }
 
-  offWorker(event: string, callback: (arg: any) => void): void {
-    if (event === 'message') {
-      this.customEvents.off('message', callback)
-    }
+  off(event: string, callback: (arg: any) => void): void {
+    this.customEvents.off(event, callback)
+  }
+
+  deserialize(data: unknown): unknown {
+    return data
+  }
+
+  async start() {
+    // noop
   }
 
   async stop() {
     this.vitest.logger.console.warn('[pool] custom pool is closed!')
-    return super.stop()
   }
 }
 
