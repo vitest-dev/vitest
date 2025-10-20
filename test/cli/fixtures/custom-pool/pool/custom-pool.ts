@@ -11,7 +11,7 @@ interface OptionsCustomPool {
 
 export function createCustomPool(settings: OptionsCustomPool): PoolRunnerInitializer {
   return {
-    runtime: 'custom',
+    name: 'custom',
     createPoolWorker: (options) => new CustomRuntimeWorker(options, settings),
   }
 }
