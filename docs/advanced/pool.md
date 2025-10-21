@@ -124,13 +124,13 @@ import { init, runBaseTests } from 'vitest/worker'
 
 init({
   post: (response) => {
-    // Provider way to send this message to CustomPoolRunner's onWorker as message event
+    // Provide way to send this message to CustomPoolRunner's onWorker as message event
   },
   on: (callback) => {
     // Provide a way to listen CustomPoolRunner's "postMessage" calls
   },
-  removeAllListeners: () => {
-    // Provider a way to unsubscribe all the `on` listeners
+  teardown: () => {
+    // Optional, provide a way to teardown worker, e.g. unsubscribe all the `on` listeners
   },
   serialize: (value) => {
     // Optional, provide custom serializer for `post` calls

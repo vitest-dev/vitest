@@ -4,7 +4,7 @@ import { serializeError } from '@vitest/utils/error'
 import * as entrypoint from '../worker'
 
 interface Options extends VitestWorker {
-  removeAllListeners: () => void
+  teardown?: () => void
 }
 
 const __vitest_worker_response__ = true
@@ -82,7 +82,7 @@ export function init(worker: Options): void {
           .catch(error => serializeError(error))
 
         send({ type: 'stopped', error, __vitest_worker_response__ })
-        worker.removeAllListeners()
+        worker.teardown?.()
 
         break
       }

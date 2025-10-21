@@ -34,7 +34,7 @@ export default function workerInit(options: {
   init({
     post: v => processSend(v),
     on: cb => processOn('message', cb),
-    removeAllListeners: () => processRemoveAllListeners('message'),
+    teardown: () => processRemoveAllListeners('message'),
     serialize: v8.serialize,
     deserialize: v => v8.deserialize(Buffer.from(v)),
     runTests: state => executeTests('run', state),
