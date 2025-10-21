@@ -79,12 +79,10 @@ export class PoolRunner {
       await this._operationLock
     }
 
-    // If already started or starting, return early
     if (this._state === RunnerState.STARTED || this._state === RunnerState.STARTING) {
       return
     }
 
-    // If stopped, cannot restart
     if (this._state === RunnerState.STOPPED) {
       throw new Error('[vitest-pool-runner]: Cannot start a stopped runner')
     }
@@ -103,7 +101,6 @@ export class PoolRunner {
       this.worker.on('exit', this.emitUnexpectedExit)
       this.worker.on('message', this.emitWorkerMessage)
 
-      // Wait for 'started' message with timeout
       const startPromise = this.withTimeout(this.waitForStart(), START_TIMEOUT)
 
       this.postMessage({
@@ -134,12 +131,10 @@ export class PoolRunner {
       await this._operationLock
     }
 
-    // If already stopped or stopping, return early
     if (this._state === RunnerState.STOPPED || this._state === RunnerState.STOPPING) {
       return
     }
 
-    // If never started, just mark as stopped
     if (this._state === RunnerState.IDLE) {
       this._state = RunnerState.STOPPED
       return
@@ -154,7 +149,6 @@ export class PoolRunner {
       // Remove exit listener early to avoid "unexpected exit" errors during shutdown
       this.worker.off('exit', this.emitUnexpectedExit)
 
-      // Wait for 'stopped' message with timeout
       await this.withTimeout(
         new Promise<void>((resolve) => {
           const onStop = (response: WorkerResponse) => {
@@ -177,8 +171,6 @@ export class PoolRunner {
         STOP_TIMEOUT,
       )
 
-      // Clean up internal event emitter and RPC
-      // This implicitly cleans up all message listeners
       this._eventEmitter.removeAllListeners()
       this._rpc.$close(new Error('[vitest-pool-runner]: Pending methods while closing rpc'))
 
