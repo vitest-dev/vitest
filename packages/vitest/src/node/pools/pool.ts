@@ -128,17 +128,17 @@ export class Pool {
         && isEqualRunner(runner, this.queue[0].task)
       ) {
         this.sharedRunners.push(runner)
-        return this.schedule()
+        return await this.schedule()
       }
-
-      const id = setTimeout(
-        () => this.logger.error(`[vitest-pool]: Timeout terminating ${task.worker} worker for test files ${formatFiles(task)}.`),
-        this.options.teardownTimeout,
-      )
 
       // Runner terminations are started but not awaited until the end of full run.
       // Runner termination can also already start from task cancellation.
       if (!runner.isTerminating) {
+        const id = setTimeout(
+          () => this.logger.error(`[vitest-pool]: Timeout terminating ${task.worker} worker for test files ${formatFiles(task)}.`),
+          this.options.teardownTimeout,
+        )
+
         this.exitPromises.push(
           runner.stop()
             .then(() => clearTimeout(id))
