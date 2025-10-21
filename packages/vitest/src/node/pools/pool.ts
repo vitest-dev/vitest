@@ -131,7 +131,7 @@ export class Pool {
         && isEqualRunner(runner, this.queue[0].task)
       ) {
         this.sharedRunners.push(runner)
-        return await this.schedule()
+        return this.schedule()
       }
 
       // Runner terminations are started but not awaited until the end of full run.
