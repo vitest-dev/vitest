@@ -1,4 +1,5 @@
 import { expect, test } from 'vitest'
+import { page } from 'vitest/browser'
 
 test('.toBeInTheDocument', () => {
   const window = document.defaultView
@@ -34,6 +35,8 @@ test('.toBeInTheDocument', () => {
   expect(customElementChild).toBeInTheDocument()
   expect(detachedElement).not.toBeInTheDocument()
   expect(nullElement).not.toBeInTheDocument()
+
+  expect(page.getByTestId('non-existing')).not.toBeInTheDocument()
 
   // negative test cases wrapped in throwError assertions for coverage.
   const expectToBe = /expect.*\.toBeInTheDocument/
