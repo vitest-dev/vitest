@@ -1041,8 +1041,8 @@ describe('test run result', () => {
           onInit(ctx) {
             vitest = ctx
           },
-          async onTestModuleCollected() {
-            await vitest.cancelCurrentRun('keyboard-input')
+          onTestModuleCollected() {
+            vitest.cancelCurrentRun('keyboard-input')
           },
           onTestRunEnd(_, __, reason_) {
             reason = reason_
