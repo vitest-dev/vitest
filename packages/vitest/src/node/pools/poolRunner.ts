@@ -8,7 +8,7 @@ import { createMethodsRPC } from './rpc'
 
 /** @experimental */
 export class PoolRunner {
-  public isTerminating = false
+  public isTerminated = false
   public isStarted = false
   /** Exposed to test runner as `VITEST_POOL_ID`. Value is between 1-`maxWorkers`. */
   public poolId: number | undefined = undefined
@@ -44,7 +44,7 @@ export class PoolRunner {
   }
 
   postMessage(message: WorkerRequest): void {
-    if (!this.isTerminating) {
+    if (!this.isTerminated) {
       return this.worker.send(message)
     }
   }
@@ -56,7 +56,7 @@ export class PoolRunner {
 
     await this.worker.start()
 
-    this.isTerminating = false
+    this.isTerminated = false
 
     const isStarted = this.waitForStart()
 
@@ -99,11 +99,12 @@ export class PoolRunner {
     })
 
     this.isStarted = false
-    this.isTerminating = true
     this._eventEmitter.removeAllListeners()
     this._rpc.$close(new Error('[vitest-pool-runner]: Pending methods while closing rpc'))
 
     await this.worker.stop()
+
+    this.isTerminated = true
   }
 
   on(event: 'message', callback: (message: WorkerResponse) => void): void

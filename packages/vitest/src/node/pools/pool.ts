@@ -136,7 +136,7 @@ export class Pool {
 
       // Runner terminations are started but not awaited until the end of full run.
       // Runner termination can also already start from task cancellation.
-      if (!runner.isTerminating) {
+      if (!runner.isTerminated) {
         const id = setTimeout(
           () => this.logger.error(`[vitest-pool]: Timeout terminating ${task.worker} worker for test files ${formatFiles(task)}.`),
           this.options.teardownTimeout,
