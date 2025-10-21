@@ -129,7 +129,7 @@ export default defineConfig({
 ```
 :::
 
-The context is no longer imported from `@vitest/browser/context` (but it will keep working for better compatibility with tools that did not update yet), now just import from `vitest/browser`:
+The context is no longer imported from `@vitest/browser/context` (but it will keep working until the next major version for better compatibility with tools that did not update yet), now just import from `vitest/browser`:
 
 ```ts
 import { page } from '@vitest/browser/context' // [!code --]
@@ -140,7 +140,7 @@ test('example', async () => {
 })
 ```
 
-With these changes, the `@vitest/browser` package is no longer needed, and you can remove it from your dependencies.
+With these changes, the `@vitest/browser` package can be removed from your dependencies. It is now included in every provider package automatically.
 
 ## Visual Regression Testing
 
