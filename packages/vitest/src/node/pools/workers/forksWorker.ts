@@ -57,7 +57,7 @@ export class ForksPoolWorker implements PoolWorker {
   async stop(): Promise<void> {
     const fork = this.fork
     const waitForExit = new Promise<void>((resolve) => {
-      if (fork.killed) {
+      if (fork.exitCode != null) {
         resolve()
       }
       else {
