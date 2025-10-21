@@ -2,9 +2,9 @@ import type { ModuleRunner } from 'vite/module-runner'
 import type { ContextRPC, WorkerGlobalState } from '../types/worker'
 import type { VitestWorker } from './workers/types'
 import { createStackString, parseStacktrace } from '@vitest/utils/source-map'
-import { EvaluatedModules } from 'vite/module-runner'
 import { loadEnvironment } from '../integrations/env/loader'
 import { setupInspect } from './inspector'
+import { VitestEvaluatedModules } from './moduleRunner/evaluatedModules'
 import { createRuntimeRpc, rpcDone } from './rpc'
 
 const resolvingModules = new Set<string>()
@@ -35,7 +35,7 @@ async function execute(method: 'run' | 'collect', ctx: ContextRPC, worker: Vites
     const state = {
       ctx,
       // here we create a new one, workers can reassign this if they need to keep it non-isolated
-      evaluatedModules: new EvaluatedModules(),
+      evaluatedModules: new VitestEvaluatedModules(),
       resolvingModules,
       moduleExecutionInfo: new Map(),
       config: ctx.config,
