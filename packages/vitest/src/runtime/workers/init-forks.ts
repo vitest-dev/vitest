@@ -11,6 +11,7 @@ if (!process.send) {
 const processExit = process.exit.bind(process)
 const processSend = process.send.bind(process)
 const processOn = process.on.bind(process)
+const processOff = process.off.bind(process)
 const processRemoveAllListeners = process.removeAllListeners.bind(process)
 
 const isProfiling = process.execArgv.some(
@@ -34,6 +35,7 @@ export default function workerInit(options: {
   init({
     post: v => processSend(v),
     on: cb => processOn('message', cb),
+    off: cb => processOff('message', cb),
     teardown: () => processRemoveAllListeners('message'),
     serialize: v8.serialize,
     deserialize: v => v8.deserialize(Buffer.from(v)),

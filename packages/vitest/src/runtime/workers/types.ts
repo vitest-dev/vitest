@@ -5,7 +5,7 @@ import type { WorkerGlobalState } from '../../types/worker'
 
 type WorkerRpcOptions = Pick<
   BirpcOptions<RuntimeRPC>,
-  'on' | 'post' | 'serialize' | 'deserialize'
+  'on' | 'off' | 'post' | 'serialize' | 'deserialize'
 >
 
 export interface VitestWorker extends WorkerRpcOptions {
