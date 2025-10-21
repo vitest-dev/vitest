@@ -301,7 +301,7 @@ export default defineConfig({
     execArgv: ['--expose-gc'], // [!code ++]
     isolate: false, // [!code ++]
     maxWorkers: 1, // [!code ++]
-    memoryLimit: '300Mb', // [!code ++]
+    vmMemoryLimit: '300Mb', // [!code ++]
   }
 })
 ```
