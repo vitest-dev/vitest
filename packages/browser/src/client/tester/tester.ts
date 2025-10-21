@@ -1,6 +1,6 @@
 import type { BrowserRPC, IframeChannelEvent } from '@vitest/browser/client'
+import { parse } from '@ungap/structured-clone/json'
 import { channel, client, onCancel } from '@vitest/browser/client'
-import { parse } from 'flatted'
 import { page, server, userEvent } from 'vitest/browser'
 import {
   collectTests,
