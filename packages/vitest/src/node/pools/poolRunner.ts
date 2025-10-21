@@ -1,20 +1,34 @@
+import type { DeferPromise } from '@vitest/utils/helpers'
 import type { BirpcReturn } from 'birpc'
 import type { RunnerRPC, RuntimeRPC } from '../../types/rpc'
 import type { TestProject } from '../project'
 import type { PoolOptions, PoolWorker, WorkerRequest, WorkerResponse } from './types'
 import { EventEmitter } from 'node:events'
+import { createDefer } from '@vitest/utils/helpers'
 import { createBirpc } from 'birpc'
 import { createMethodsRPC } from './rpc'
 
+enum RunnerState {
+  IDLE = 'idle',
+  STARTING = 'starting',
+  STARTED = 'started',
+  STOPPING = 'stopping',
+  STOPPED = 'stopped',
+}
+
+const START_TIMEOUT = 10_000
+const STOP_TIMEOUT = 10_000
+
 /** @experimental */
 export class PoolRunner {
-  public isTerminated = false
-  public isStarted = false
   /** Exposed to test runner as `VITEST_POOL_ID`. Value is between 1-`maxWorkers`. */
   public poolId: number | undefined = undefined
 
   public readonly project: TestProject
   public readonly environment: string
+
+  private _state: RunnerState = RunnerState.IDLE
+  private _operationLock: DeferPromise<void> | null = null
 
   private _eventEmitter: EventEmitter<{
     message: [WorkerResponse]
@@ -23,6 +37,14 @@ export class PoolRunner {
   }> = new EventEmitter()
 
   private _rpc: BirpcReturn<RunnerRPC, RuntimeRPC>
+
+  public get isTerminated(): boolean {
+    return this._state === RunnerState.STOPPED
+  }
+
+  public get isStarted(): boolean {
+    return this._state === RunnerState.STARTED
+  }
 
   constructor(options: PoolOptions, public worker: PoolWorker) {
     this.project = options.project
@@ -44,67 +66,137 @@ export class PoolRunner {
   }
 
   postMessage(message: WorkerRequest): void {
-    if (!this.isTerminated) {
+    // Only send messages when runner is active (not fully stopped)
+    // Allow sending during STOPPING state for the 'stop' message itself
+    if (this._state !== RunnerState.STOPPED) {
       return this.worker.send(message)
     }
   }
 
   async start(): Promise<void> {
-    if (this.isStarted) {
+    // Wait for any ongoing operation to complete
+    if (this._operationLock) {
+      await this._operationLock
+    }
+
+    // If already started or starting, return early
+    if (this._state === RunnerState.STARTED || this._state === RunnerState.STARTING) {
       return
     }
 
-    await this.worker.start()
+    // If stopped, cannot restart
+    if (this._state === RunnerState.STOPPED) {
+      throw new Error('[vitest-pool-runner]: Cannot start a stopped runner')
+    }
 
-    this.isTerminated = false
+    // Create operation lock to prevent concurrent start/stop
+    this._operationLock = createDefer()
 
-    const isStarted = this.waitForStart()
+    try {
+      this._state = RunnerState.STARTING
 
-    this.worker.on('error', this.emitWorkerError)
-    this.worker.on('exit', this.emitUnexpectedExit)
-    this.worker.on('message', this.emitWorkerMessage)
+      await this.worker.start()
 
-    this.postMessage({
-      type: 'start',
-      __vitest_worker_request__: true,
-      options: {
-        reportMemory: this.worker.reportMemory ?? false,
-      },
-    })
+      // Attach event listeners AFTER starting worker to avoid issues
+      // if worker.start() fails
+      this.worker.on('error', this.emitWorkerError)
+      this.worker.on('exit', this.emitUnexpectedExit)
+      this.worker.on('message', this.emitWorkerMessage)
 
-    await isStarted
-    this.isStarted = true
+      // Wait for 'started' message with timeout
+      const startPromise = this.withTimeout(this.waitForStart(), START_TIMEOUT)
+
+      this.postMessage({
+        type: 'start',
+        __vitest_worker_request__: true,
+        options: {
+          reportMemory: this.worker.reportMemory ?? false,
+        },
+      })
+
+      await startPromise
+
+      this._state = RunnerState.STARTED
+    }
+    catch (error) {
+      this._state = RunnerState.IDLE
+      throw error
+    }
+    finally {
+      this._operationLock.resolve()
+      this._operationLock = null
+    }
   }
 
   async stop(): Promise<void> {
-    this.worker.off('exit', this.emitUnexpectedExit)
+    // Wait for any ongoing operation to complete
+    if (this._operationLock) {
+      await this._operationLock
+    }
 
-    await new Promise<void>((resolve) => {
-      const onStop = (response: WorkerResponse) => {
-        if (response.type === 'stopped') {
-          if (response.error) {
-            this.project.vitest.state.catchError(
-              response.error,
-              'Teardown Error',
-            )
+    // If already stopped or stopping, return early
+    if (this._state === RunnerState.STOPPED || this._state === RunnerState.STOPPING) {
+      return
+    }
+
+    // If never started, just mark as stopped
+    if (this._state === RunnerState.IDLE) {
+      this._state = RunnerState.STOPPED
+      return
+    }
+
+    // Create operation lock to prevent concurrent start/stop
+    this._operationLock = createDefer()
+
+    try {
+      this._state = RunnerState.STOPPING
+
+      // Remove exit listener early to avoid "unexpected exit" errors during shutdown
+      this.worker.off('exit', this.emitUnexpectedExit)
+
+      // Wait for 'stopped' message with timeout
+      await this.withTimeout(
+        new Promise<void>((resolve) => {
+          const onStop = (response: WorkerResponse) => {
+            if (response.type === 'stopped') {
+              if (response.error) {
+                this.project.vitest.state.catchError(
+                  response.error,
+                  'Teardown Error',
+                )
+              }
+
+              resolve()
+              this.off('message', onStop)
+            }
           }
 
-          resolve()
-          this.off('message', onStop)
-        }
-      }
+          this.on('message', onStop)
+          this.postMessage({ type: 'stop', __vitest_worker_request__: true })
+        }),
+        STOP_TIMEOUT,
+      )
 
-      this.on('message', onStop)
-      this.postMessage({ type: 'stop', __vitest_worker_request__: true })
-    })
+      // Clean up internal event emitter and RPC
+      // This implicitly cleans up all message listeners
+      this._eventEmitter.removeAllListeners()
+      this._rpc.$close(new Error('[vitest-pool-runner]: Pending methods while closing rpc'))
 
-    this.isStarted = false
-    this._eventEmitter.removeAllListeners()
-    this._rpc.$close(new Error('[vitest-pool-runner]: Pending methods while closing rpc'))
+      // Stop the worker process (this sets _fork/_thread to undefined)
+      // Worker's event listeners (error, message) are implicitly removed when worker terminates
+      await this.worker.stop()
 
-    await this.worker.stop()
-
-    this.isTerminated = true
+      this._state = RunnerState.STOPPED
+    }
+    catch (error) {
+      // Ensure we transition to stopped state even on error
+      this._state = RunnerState.STOPPED
+      throw error
+    }
+    finally {
+      this._operationLock.resolve()
+      this._operationLock = null
+    }
   }
 
   on(event: 'message', callback: (message: WorkerResponse) => void): void
@@ -157,6 +249,26 @@ export class PoolRunner {
       }
 
       this.on('message', onStart)
+    })
+  }
+
+  private withTimeout(promise: Promise<unknown>, timeout: number) {
+    return new Promise<unknown>((resolve_, reject_) => {
+      const timer = setTimeout(
+        () => reject(new Error('[vitest-pool-runner]: Timeout waiting for worker to respond')),
+        timeout,
+      )
+
+      function resolve(value: unknown) {
+        clearTimeout(timer)
+        resolve_(value)
+      }
+      function reject(error: Error) {
+        clearTimeout(timer)
+        reject_(error)
+      }
+
+      promise.then(resolve, reject)
     })
   }
 }

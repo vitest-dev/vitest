@@ -34,6 +34,7 @@ export class Pool {
   private activeTasks: ActiveTask[] = []
   private sharedRunners: PoolRunner[] = []
   private exitPromises: Promise<void>[] = []
+  private _isCancelling: boolean = false
 
   constructor(private options: Options, private logger: Logger) {}
 
@@ -46,6 +47,11 @@ export class Pool {
   }
 
   async run(task: PoolTask, method: 'run' | 'collect'): Promise<void> {
+    // Prevent new tasks from being queued during cancellation
+    if (this._isCancelling) {
+      throw new Error('[vitest-pool]: Cannot run tasks while pool is cancelling')
+    }
+
     // Every runner related failure should make this promise reject so that it's picked by pool.
     // This resolver is used to make the error handling in recursive queue easier.
     const testFinish = withResolvers()
@@ -161,6 +167,9 @@ export class Pool {
   }
 
   async cancel(): Promise<void> {
+    // Set flag to prevent new tasks from being queued
+    this._isCancelling = true
+
     const pendingTasks = this.queue.splice(0)
 
     if (pendingTasks.length) {
@@ -177,6 +186,9 @@ export class Pool {
     await Promise.all(this.exitPromises.splice(0))
 
     this.workerIds.forEach((_, id) => this.freeWorkerId(id))
+
+    // Reset flag after cancellation completes
+    this._isCancelling = false
   }
 
   async close(): Promise<void> {

@@ -16,6 +16,7 @@ export function init(worker: Options): void {
   worker.on(onMessage)
 
   let runPromise: Promise<unknown> | undefined
+  let isRunning = false
 
   function send(response: WorkerResponse) {
     worker.post(worker.serialize ? worker.serialize(response) : response)
@@ -39,39 +40,71 @@ export function init(worker: Options): void {
       }
 
       case 'run': {
+        // Prevent concurrent execution if worker is already running
+        if (isRunning) {
+          send({
+            type: 'testfileFinished',
+            __vitest_worker_response__,
+            error: serializeError(new Error('[vitest-worker]: Worker is already running tests')),
+          })
+          return
+        }
+
+        isRunning = true
         process.env.VITEST_POOL_ID = String(message.poolId)
         process.env.VITEST_WORKER_ID = String(message.context.workerId)
 
-        runPromise = entrypoint.run(message.context, worker)
-          .catch(error => serializeError(error))
-          .finally(() => (runPromise = undefined))
-        const error = await runPromise
+        try {
+          runPromise = entrypoint.run(message.context, worker)
+            .catch(error => serializeError(error))
+          const error = await runPromise
 
-        send({
-          type: 'testfileFinished',
-          __vitest_worker_response__,
-          error,
-          usedMemory: reportMemory ? memoryUsage().heapUsed : undefined,
-        })
+          send({
+            type: 'testfileFinished',
+            __vitest_worker_response__,
+            error,
+            usedMemory: reportMemory ? memoryUsage().heapUsed : undefined,
+          })
+        }
+        finally {
+          runPromise = undefined
+          isRunning = false
+        }
 
         break
       }
 
       case 'collect': {
+        // Prevent concurrent execution if worker is already running
+        if (isRunning) {
+          send({
+            type: 'testfileFinished',
+            __vitest_worker_response__,
+            error: serializeError(new Error('[vitest-worker]: Worker is already running tests')),
+          })
+          return
+        }
+
+        isRunning = true
         process.env.VITEST_POOL_ID = String(message.poolId)
         process.env.VITEST_WORKER_ID = String(message.context.workerId)
 
-        runPromise = entrypoint.collect(message.context, worker)
-          .catch(error => serializeError(error))
-          .finally(() => (runPromise = undefined))
-        const error = await runPromise
+        try {
+          runPromise = entrypoint.collect(message.context, worker)
+            .catch(error => serializeError(error))
+          const error = await runPromise
 
-        send({
-          type: 'testfileFinished',
-          __vitest_worker_response__,
-          error,
-          usedMemory: reportMemory ? memoryUsage().heapUsed : undefined,
-        })
+          send({
+            type: 'testfileFinished',
+            __vitest_worker_response__,
+            error,
+            usedMemory: reportMemory ? memoryUsage().heapUsed : undefined,
+          })
+        }
+        finally {
+          runPromise = undefined
+          isRunning = false
+        }
 
         break
       }
