@@ -31,8 +31,6 @@ _October 22, 2025_
 
 ![Vitest 4 Announcement Cover Image](/og-vitest-4.jpg)
 
-<!-- placeholder -->
-
 ## The next Vitest major is here
 
 Today, we are thrilled to announce Vitest 4!
@@ -51,6 +49,8 @@ We extend our gratitude to the over [640 contributors to Vitest Core](https://gi
 To get started, we suggest helping [triage issues](https://github.com/vitest-dev/vitest/issues), [review PRs](https://github.com/vitest-dev/vitest/pulls), send failing tests PRs based on open issues, and support others in [Discussions](https://github.com/vitest-dev/vitest/discussions) and Vitest Land's [help forum](https://discord.com/channels/917386801235247114/1057959614160851024). If you'd like to talk to us, join our [Discord community](http://chat.vitest.dev/) and say hi on the [#contributing channel](https://discord.com/channels/917386801235247114/1057959614160851024).
 
 For the latest news about the Vitest ecosystem and Vitest core, follow us on [Bluesky](https://bsky.app/profile/vitest.dev) or [Mastodon](https://webtoo.ls/@vitest).
+
+To stay updated, keep an eye on the [VoidZero blog](https://voidzero.dev/blog) and subscribe to the [newsletter](https://voidzero.dev/newsletter).
 
 ## Browser Mode is Stable
 
