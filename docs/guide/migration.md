@@ -440,11 +440,17 @@ Vitest 4.0 removes some deprecated APIs, including:
 - `deps.external`, `deps.inline`, `deps.fallbackCJS` config options. Use `server.deps.external`, `server.deps.inline`, or `server.deps.fallbackCJS` instead.
 - `browser.testerScripts` config option. Use [`browser.testerHtmlPath`](/guide/browser/config#browser-testerhtmlpath) instead.
 - `minWorkers` config option. Only `maxWorkers` has any effect on how tests are running, so we are removing this public option.
-- Vitest no longer supports providing test options as a third argument to `test` and `describe`. Use the second argument instead:
+- Vitest no longer supports providing test options object as a third argument to `test` and `describe`. Use the second argument instead:
 
 ```ts
 test('example', () => { /* ... */ }, { retry: 2 }) // [!code --]
 test('example', { retry: 2 }, () => { /* ... */ }) // [!code ++]
+```
+
+Note that providing a timeout number as the last argument is still supported:
+
+```ts
+test('example', () => { /* ... */ }, 1000) // ✅
 ```
 
 This release also removes all deprecated types. This finally fixes an issue where Vitest accidentally pulled in `@types/node` (see [#5481](https://github.com/vitest-dev/vitest/issues/5481) and [#6141](https://github.com/vitest-dev/vitest/issues/6141)).
