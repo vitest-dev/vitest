@@ -149,7 +149,7 @@ Avoid deps that has large transitive dependencies that results in bloated size c
 
 If there are libraries that are needed and don't comply with our size
 requirements, a fork can be tried to reduce its size while we work with them to
-upstream our changes (see [tinypool](https://github.com/tinylibs/tinypool) for example)
+upstream our changes.
 
 ### Think before adding yet another option
 

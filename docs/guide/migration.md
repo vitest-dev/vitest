@@ -271,6 +271,106 @@ const { getElementError } = utils // [!code ++]
 Both `@vitest/browser/context` and `@vitest/browser/utils` work at runtime during the transition period, but they will be removed in a future release.
 :::
 
+### Pool Rework
+
+Vitest has used [`tinypool`](https://github.com/tinylibs/tinypool) for orchestrating how test files are run in the test runner workers. Tinypool has controlled how complex tasks like parallelism, isolation and IPC communication works internally. However we've found that Tinypool has some flaws that are slowing down development of Vitest. In Vitest v4 we've completely removed Tinypool and rewritten how pools work without new dependencies. Read more about reasoning from [feat!: rewrite pools without tinypool #8705
+](https://github.com/vitest-dev/vitest/pull/8705).
+
+New pool architecture allows Vitest to simplify many previously complex configuration options:
+
+- `maxThreads` and `maxForks` are now `maxWorkers`.
+- Environment variables `VITEST_MAX_THREADS` and `VITEST_MAX_FORKS` are now `VITEST_MAX_WORKERS`.
+- `singleThread` and `singleFork` are now `maxWorkers: 1`.
+- `poolOptions` is removed. All previous `poolOptions` are now top-level options. The `memoryLimit` of VM pools is renamed to `vmMemoryLimit`.
+- `threads.useAtomics` is removed. If you have a use case for this, feel free to open a new feature request.
+- Custom pool interface has been rewritten, see [Custom Pool](/advanced/pool.html#custom-pool)
+
+```ts
+export default defineConfig({
+  test: {
+    poolOptions: { // [!code --]
+      forks: { // [!code --]
+        execArgv: ['--expose-gc'], // [!code --]
+        isolate: false, // [!code --]
+        singleFork: true, // [!code --]
+      }, // [!code --]
+      vmThreads: { // [!code --]
+        memoryLimit: '300Mb' // [!code --]
+      }, // [!code --]
+    }, // [!code --]
+    execArgv: ['--expose-gc'], // [!code ++]
+    isolate: false, // [!code ++]
+    maxWorkers: 1, // [!code ++]
+    memoryLimit: '300Mb', // [!code ++]
+  }
+})
+```
+
+Previously it was not possible to specify some pool related options per project when using [Vitest Projects](/guide/projects). With the new architecture this is no longer a blocker.
+
+::: code-group
+```ts [Isolation per project]
+import { defineConfig } from 'vitest/config'
+
+export default defineConfig({
+  test: {
+    projects: [
+      {
+        // Non-isolated unit tests
+        name: 'Unit tests',
+        isolate: false,
+        exclude: ['**.integration.test.ts'],
+      },
+      {
+        // Isolated integration tests
+        name: 'Integration tests',
+        include: ['**.integration.test.ts'],
+      },
+    ],
+  },
+})
+```
+```ts [Parallel & Sequential projects]
+import { defineConfig } from 'vitest/config'
+
+export default defineConfig({
+  test: {
+    projects: [
+      {
+        name: 'Parallel',
+        exclude: ['**.sequantial.test.ts'],
+      },
+      {
+        name: 'Sequential',
+        include: ['**.sequantial.test.ts'],
+        fileParallelism: false,
+      },
+    ],
+  },
+})
+```
+```ts [Node CLI options per project]
+import { defineConfig } from 'vitest/config'
+
+export default defineConfig({
+  test: {
+    projects: [
+      {
+        name: 'Production env',
+        execArgv: ['--env-file=.env.prod']
+      },
+      {
+        name: 'Staging env',
+        execArgv: ['--env-file=.env.staging']
+      },
+    ],
+  },
+})
+```
+:::
+
+See [Recipes](/guide/recipes) for more examples.
+
 ### Reporter Updates
 
 Reporter APIs `onCollected`, `onSpecsCollected`, `onPathsCollected`, `onTaskUpdate` and `onFinished` were removed. See [`Reporters API`](/advanced/api/reporters) for new alternatives. The new APIs were introduced in Vitest `v3.0.0`.
@@ -424,7 +524,7 @@ Vitest's `test` names are joined with a `>` symbol to make it easier to distingu
 
 ### Envs
 
-Just like Jest, Vitest sets `NODE_ENV` to `test`, if it wasn't set before. Vitest also has a counterpart for `JEST_WORKER_ID` called `VITEST_POOL_ID` (always less than or equal to `maxThreads`), so if you rely on it, don't forget to rename it. Vitest also exposes `VITEST_WORKER_ID` which is a unique ID of a running worker - this number is not affected by `maxThreads`, and will increase with each created worker.
+Just like Jest, Vitest sets `NODE_ENV` to `test`, if it wasn't set before. Vitest also has a counterpart for `JEST_WORKER_ID` called `VITEST_POOL_ID` (always less than or equal to `maxWorkers`), so if you rely on it, don't forget to rename it. Vitest also exposes `VITEST_WORKER_ID` which is a unique ID of a running worker - this number is not affected by `maxWorkers`, and will increase with each created worker.
 
 ### Replace property
 

@@ -674,7 +674,7 @@ Custom [reporters](/guide/reporters) for output. Reporters can be [a Reporter in
 Write test results to a file when the `--reporter=json`, `--reporter=html` or `--reporter=junit` option is also specified.
 By providing an object instead of a string you can define individual outputs when using multiple reporters.
 
-### pool<NonProjectOption /> {#pool}
+### pool
 
 - **Type:** `'threads' | 'forks' | 'vmThreads' | 'vmForks'`
 - **Default:** `'forks'`
@@ -682,19 +682,19 @@ By providing an object instead of a string you can define individual outputs whe
 
 Pool used to run tests in.
 
-#### threads<NonProjectOption />
+#### threads
 
-Enable multi-threading using [tinypool](https://github.com/tinylibs/tinypool) (a lightweight fork of [Piscina](https://github.com/piscinajs/piscina)). When using threads you are unable to use process related APIs such as `process.chdir()`. Some libraries written in native languages, such as Prisma, `bcrypt` and `canvas`, have problems when running in multiple threads and run into segfaults. In these cases it is advised to use `forks` pool instead.
+Enable multi-threading. When using threads you are unable to use process related APIs such as `process.chdir()`. Some libraries written in native languages, such as Prisma, `bcrypt` and `canvas`, have problems when running in multiple threads and run into segfaults. In these cases it is advised to use `forks` pool instead.
 
-#### forks<NonProjectOption />
+#### forks
 
-Similar as `threads` pool but uses `child_process` instead of `worker_threads` via [tinypool](https://github.com/tinylibs/tinypool). Communication between tests and main process is not as fast as with `threads` pool. Process related APIs such as `process.chdir()` are available in `forks` pool.
+Similar as `threads` pool but uses `child_process` instead of `worker_threads`. Communication between tests and main process is not as fast as with `threads` pool. Process related APIs such as `process.chdir()` are available in `forks` pool.
 
-#### vmThreads<NonProjectOption />
+#### vmThreads
 
 Run tests using [VM context](https://nodejs.org/api/vm.html) (inside a sandboxed environment) in a `threads` pool.
 
-This makes tests run faster, but the VM module is unstable when running [ESM code](https://github.com/nodejs/node/issues/37648). Your tests will [leak memory](https://github.com/nodejs/node/issues/33439) - to battle that, consider manually editing [`poolOptions.vmThreads.memoryLimit`](#pooloptions-vmthreads-memorylimit) value.
+This makes tests run faster, but the VM module is unstable when running [ESM code](https://github.com/nodejs/node/issues/37648). Your tests will [leak memory](https://github.com/nodejs/node/issues/33439) - to battle that, consider manually editing [`vmMemoryLimit`](#vmMemorylimit) value.
 
 ::: warning
 Running code in a sandbox has some advantages (faster tests), but also comes with a number of disadvantages.
@@ -716,165 +716,27 @@ catch (err) {
 Please, be aware of these issues when using this option. Vitest team cannot fix any of the issues on our side.
 :::
 
-#### vmForks<NonProjectOption />
+#### vmForks
 
-Similar as `vmThreads` pool but uses `child_process` instead of `worker_threads` via [tinypool](https://github.com/tinylibs/tinypool). Communication between tests and the main process is not as fast as with `vmThreads` pool. Process related APIs such as `process.chdir()` are available in `vmForks` pool. Please be aware that this pool has the same pitfalls listed in `vmThreads`.
+Similar as `vmThreads` pool but uses `child_process` instead of `worker_threads`. Communication between tests and the main process is not as fast as with `vmThreads` pool. Process related APIs such as `process.chdir()` are available in `vmForks` pool. Please be aware that this pool has the same pitfalls listed in `vmThreads`.
 
-### poolOptions<NonProjectOption /> {#pooloptions}
-
-- **Type:** `Record<'threads' | 'forks' | 'vmThreads' | 'vmForks', {}>`
-- **Default:** `{}`
-
-#### poolOptions.threads
-
-Options for `threads` pool.
-
-```ts
-import { defineConfig } from 'vitest/config'
-
-export default defineConfig({
-  test: {
-    poolOptions: {
-      threads: {
-        // Threads related options here
-      }
-    }
-  }
-})
-```
-
-##### poolOptions.threads.maxThreads<NonProjectOption />
-
-- **Type:** `number | string`
-- **Default:** _available CPUs_
-
-Maximum number or percentage of threads. You can also use `VITEST_MAX_THREADS` environment variable.
-
-##### poolOptions.threads.singleThread
-
-- **Type:** `boolean`
-- **Default:** `false`
-
-Run all tests with the same environment inside a single worker thread. This will disable built-in module isolation (your source code or [inlined](#server-deps-inline) code will still be reevaluated for each test), but can improve test performance.
-
-:::warning
-Even though this option will force tests to run one after another, this option is different from Jest's `--runInBand`. Vitest uses workers not only for running tests in parallel, but also to provide isolation. By disabling this option, your tests will run sequentially, but in the same global context, so you must provide isolation yourself.
-
-This might cause all sorts of issues, if you are relying on global state (frontend frameworks usually do) or your code relies on environment to be defined separately for each test. But can be a speed boost for your tests (up to 3 times faster), that don't necessarily rely on global state or can easily bypass that.
-:::
-
-##### poolOptions.threads.useAtomics<NonProjectOption />
-
-- **Type:** `boolean`
-- **Default:** `false`
-
-Use Atomics to synchronize threads.
-
-This can improve performance in some cases, but might cause segfault in older Node versions.
-
-##### poolOptions.threads.isolate
-
-- **Type:** `boolean`
-- **Default:** `true`
-
-Isolate environment for each test file.
-
-##### poolOptions.threads.execArgv<NonProjectOption />
+### execArgv
 
 - **Type:** `string[]`
 - **Default:** `[]`
 
-Pass additional arguments to `node` in the threads. See [Command-line API | Node.js](https://nodejs.org/docs/latest/api/cli.html) for more information.
+Pass additional arguments to `node` in the runner worker. See [Command-line API | Node.js](https://nodejs.org/docs/latest/api/cli.html) for more information.
 
 :::warning
 Be careful when using, it as some options may crash worker, e.g. --prof, --title. See https://github.com/nodejs/node/issues/41103.
 :::
 
-#### poolOptions.forks
-
-Options for `forks` pool.
-
-```ts
-import { defineConfig } from 'vitest/config'
-
-export default defineConfig({
-  test: {
-    poolOptions: {
-      forks: {
-        // Forks related options here
-      }
-    }
-  }
-})
-```
-
-##### poolOptions.forks.maxForks<NonProjectOption />
-
-- **Type:** `number | string`
-- **Default:** _available CPUs_
-
-Maximum number or percentage of forks. You can also use `VITEST_MAX_FORKS` environment variable.
-
-##### poolOptions.forks.isolate
-
-- **Type:** `boolean`
-- **Default:** `true`
-
-Isolate environment for each test file.
-
-##### poolOptions.forks.singleFork
-
-- **Type:** `boolean`
-- **Default:** `false`
-
-Run all tests with the same environment inside a single child process. This will disable built-in module isolation (your source code or [inlined](#server-deps-inline) code will still be reevaluated for each test), but can improve test performance.
-
-:::warning
-Even though this option will force tests to run one after another, this option is different from Jest's `--runInBand`. Vitest uses child processes not only for running tests in parallel, but also to provide isolation. By disabling this option, your tests will run sequentially, but in the same global context, so you must provide isolation yourself.
-
-This might cause all sorts of issues, if you are relying on global state (frontend frameworks usually do) or your code relies on environment to be defined separately for each test. But can be a speed boost for your tests (up to 3 times faster), that don't necessarily rely on global state or can easily bypass that.
-:::
-
-##### poolOptions.forks.execArgv<NonProjectOption />
-
-- **Type:** `string[]`
-- **Default:** `[]`
-
-Pass additional arguments to `node` process in the child processes. See [Command-line API | Node.js](https://nodejs.org/docs/latest/api/cli.html) for more information.
-
-:::warning
-Be careful when using, it as some options may crash worker, e.g. --prof, --title. See https://github.com/nodejs/node/issues/41103.
-:::
-
-#### poolOptions.vmThreads
-
-Options for `vmThreads` pool.
-
-```ts
-import { defineConfig } from 'vitest/config'
-
-export default defineConfig({
-  test: {
-    poolOptions: {
-      vmThreads: {
-        // VM threads related options here
-      }
-    }
-  }
-})
-```
-
-##### poolOptions.vmThreads.maxThreads<NonProjectOption />
-
-- **Type:** `number | string`
-- **Default:** _available CPUs_
-
-Maximum number or percentage of threads. You can also use `VITEST_MAX_THREADS` environment variable.
-
-##### poolOptions.vmThreads.memoryLimit<NonProjectOption />
+### vmMemoryLimit
 
 - **Type:** `string | number`
 - **Default:** `1 / CPU Cores`
+
+This option affects only `vmForks` and `vmThreads` pools.
 
 Specifies the memory limit for workers before they are recycled. This value heavily depends on your environment, so it's better to specify it manually instead of relying on the default.
 
@@ -900,70 +762,7 @@ The limit can be specified in a number of different ways and whatever the result
 Percentage based memory limit [does not work on Linux CircleCI](https://github.com/jestjs/jest/issues/11956#issuecomment-1212925677) workers due to incorrect system memory being reported.
 :::
 
-##### poolOptions.vmThreads.useAtomics<NonProjectOption />
-
-- **Type:** `boolean`
-- **Default:** `false`
-
-Use Atomics to synchronize threads.
-
-This can improve performance in some cases, but might cause segfault in older Node versions.
-
-##### poolOptions.vmThreads.execArgv<NonProjectOption />
-
-- **Type:** `string[]`
-- **Default:** `[]`
-
-Pass additional arguments to `node` process in the VM context. See [Command-line API | Node.js](https://nodejs.org/docs/latest/api/cli.html) for more information.
-
-:::warning
-Be careful when using, it as some options may crash worker, e.g. --prof, --title. See https://github.com/nodejs/node/issues/41103.
-:::
-
-#### poolOptions.vmForks<NonProjectOption />
-
-Options for `vmForks` pool.
-
-```ts
-import { defineConfig } from 'vitest/config'
-
-export default defineConfig({
-  test: {
-    poolOptions: {
-      vmForks: {
-        // VM forks related options here
-      }
-    }
-  }
-})
-```
-
-##### poolOptions.vmForks.maxForks<NonProjectOption />
-
-- **Type:** `number | string`
-- **Default:** _available CPUs_
-
-Maximum number or percentage of forks. You can also use `VITEST_MAX_FORKS` environment variable.
-
-##### poolOptions.vmForks.memoryLimit<NonProjectOption />
-
-- **Type:** `string | number`
-- **Default:** `1 / CPU Cores`
-
-Specifies the memory limit for workers before they are recycled. This value heavily depends on your environment, so it's better to specify it manually instead of relying on the default. How the value is calculated is described in [`poolOptions.vmThreads.memoryLimit`](#pooloptions-vmthreads-memorylimit)
-
-##### poolOptions.vmForks.execArgv<NonProjectOption />
-
-- **Type:** `string[]`
-- **Default:** `[]`
-
-Pass additional arguments to `node` process in the VM context. See [Command-line API | Node.js](https://nodejs.org/docs/latest/api/cli.html) for more information.
-
-:::warning
-Be careful when using, it as some options may crash worker, e.g. --prof, --title. See https://github.com/nodejs/node/issues/41103.
-:::
-
-### fileParallelism<NonProjectOption /> {#fileparallelism}
+### fileParallelism
 
 - **Type:** `boolean`
 - **Default:** `true`
@@ -975,11 +774,11 @@ Should all test files run in parallel. Setting this to `false` will override `ma
 This option doesn't affect tests running in the same file. If you want to run those in parallel, use `concurrent` option on [describe](/api/#describe-concurrent) or via [a config](#sequence-concurrent).
 :::
 
-### maxWorkers<NonProjectOption /> {#maxworkers}
+### maxWorkers
 
 - **Type:** `number | string`
 
-Maximum number or percentage of workers to run tests in. `poolOptions.{threads,vmThreads}.maxThreads`/`poolOptions.forks.maxForks` has higher priority.
+Maximum number or percentage of workers to run tests in.
 
 ### testTimeout
 
@@ -2342,7 +2141,7 @@ Run tests in an isolated environment. This option has no effect on `vmThreads` a
 Disabling this option might [improve performance](/guide/improving-performance) if your code doesn't rely on side effects (which is usually true for projects with `node` environment).
 
 ::: tip
-You can disable isolation for specific pools by using [`poolOptions`](#pooloptions) property.
+You can disable isolation for specific test files by using Vitest workspaces and disabling isolation per project.
 :::
 
 ### includeTaskLocation {#includeTaskLocation}

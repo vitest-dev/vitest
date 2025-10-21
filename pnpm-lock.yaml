@@ -1011,9 +1011,6 @@ importers:
       tinyglobby:
         specifier: 'catalog:'
         version: 0.2.15
-      tinypool:
-        specifier: ^2.0.0
-        version: 2.0.0
       tinyrainbow:
         specifier: 'catalog:'
         version: 3.0.3
@@ -8816,10 +8813,6 @@ packages:
     peerDependenciesMeta:
       picocolors:
         optional: true
-
-  tinypool@2.0.0:
-    resolution: {integrity: sha512-/RX9RzeH2xU5ADE7n2Ykvmi9ED3FBGPAjw9u3zucrNNaEBIO0HPSYgL0NT7+3p147ojeSdaVu08F6hjpv31HJg==}
-    engines: {node: ^20.0.0 || >=22.0.0}
 
   tinyrainbow@3.0.3:
     resolution: {integrity: sha512-PSkbLUoxOFRzJYjjxHJt9xro7D+iilgMX/C9lawzVuYiIdcihh9DXmVibBe8lmcFrRi/VzlPjBxbN7rH24q8/Q==}
@@ -17642,8 +17635,6 @@ snapshots:
       js-tokens: 8.0.2
     optionalDependencies:
       picocolors: 1.1.1
-
-  tinypool@2.0.0: {}
 
   tinyrainbow@3.0.3: {}
 

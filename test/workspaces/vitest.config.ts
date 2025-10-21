@@ -60,29 +60,18 @@ export default defineConfig({
       },
       {
         test: {
-          name: 'Single thread pool',
+          name: 'Non-parallel thread pool',
           include: [
             './space-pools/threads.test.ts',
             './space-pools/single-worker.test.ts',
           ],
           pool: 'threads',
-          poolOptions: { threads: { singleThread: true } },
+          fileParallelism: false,
         },
       },
       {
         test: {
-          name: 'Non-isolated thread pool #1',
-          include: [
-            './space-pools/threads.test.ts',
-            './space-pools/no-isolate.test.ts',
-          ],
-          pool: 'threads',
-          poolOptions: { threads: { isolate: false } },
-        },
-      },
-      {
-        test: {
-          name: 'Non-isolated thread pool #2',
+          name: 'Non-isolated thread pool',
           include: [
             './space-pools/threads.test.ts',
             './space-pools/no-isolate.test.ts',
@@ -104,29 +93,18 @@ export default defineConfig({
       },
       {
         test: {
-          name: 'Single fork pool',
+          name: 'Non-parallel fork pool',
           include: [
             './space-pools/forks.test.ts',
             './space-pools/single-worker.test.ts',
           ],
           pool: 'forks',
-          poolOptions: { forks: { singleFork: true } },
+          fileParallelism: false,
         },
       },
       {
         test: {
-          name: 'Non-isolated fork pool #1',
-          include: [
-            './space-pools/forks.test.ts',
-            './space-pools/no-isolate.test.ts',
-          ],
-          pool: 'forks',
-          poolOptions: { forks: { isolate: false } },
-        },
-      },
-      {
-        test: {
-          name: 'Non-isolated fork pool #2',
+          name: 'Non-isolated fork pool',
           include: [
             './space-pools/forks.test.ts',
             './space-pools/no-isolate.test.ts',

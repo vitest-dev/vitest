@@ -1185,7 +1185,6 @@ export class Vitest {
     setTimeout(() => {
       this.report('onProcessTimeout').then(() => {
         console.warn(`close timed out after ${this.config.teardownTimeout}ms`)
-        this.state.getProcessTimeoutCauses().forEach(cause => console.warn(cause))
 
         if (!this.pool) {
           const runningServers = [this._vite, ...this.projects.map(p => p._vite)].filter(Boolean).length
