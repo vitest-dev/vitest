@@ -129,6 +129,9 @@ init({
   on: (callback) => {
     // Provide a way to listen CustomPoolRunner's "postMessage" calls
   },
+  off: (callback) => {
+    // Optional, provide a way to remove listeners added by "on" calls
+  },
   teardown: () => {
     // Optional, provide a way to teardown worker, e.g. unsubscribe all the `on` listeners
   },
