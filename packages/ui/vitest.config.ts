@@ -12,11 +12,5 @@ export default mergeConfig(
         instances: [{ browser: 'chromium' }],
       },
     },
-    optimizeDeps: {
-      entries: [
-        // to avoid codemirror being found dynamically
-        './client/composables/codemirror.ts',
-      ],
-    },
   }),
 )

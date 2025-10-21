@@ -1,3 +1,7 @@
+<script setup lang="ts">
+import TestsFilesContainer from './dashboard/TestsFilesContainer.vue'
+</script>
+
 <template>
   <div h="full" flex="~ col">
     <div p="3" h-10 flex="~ gap-2" items-center bg-header border="b base">

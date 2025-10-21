@@ -2,14 +2,17 @@
 import type { Task, TaskState } from '@vitest/runner'
 import type { TaskTreeNodeType } from '~/composables/explorer/types'
 import { Tooltip as VueTooltip } from 'floating-vue'
-import { nextTick } from 'vue'
+import { computed, nextTick } from 'vue'
 import { client, isReport, runFiles, runTask } from '~/composables/client'
 import { showTaskSource } from '~/composables/codemirror'
 import { explorerTree } from '~/composables/explorer'
 import { hasFailedSnapshot } from '~/composables/explorer/collector'
 import { escapeHtml, highlightRegex } from '~/composables/explorer/state'
-import { coverageEnabled } from '~/composables/navigation'
+import { coverageEnabled, disableCoverage } from '~/composables/navigation'
 import { getProjectTextColor } from '~/utils/task'
+import IconAction from '../IconAction.vue'
+import IconButton from '../IconButton.vue'
+import StatusIcon from '../StatusIcon.vue'
 
 // TODO: better handling of "opened" - it means to forcefully open the tree item and set in TasksList right now
 const {

@@ -2,7 +2,9 @@
 import type { RunnerTask, RunnerTestCase } from 'vitest'
 import type { ModuleGraph } from '~/composables/module-graph'
 import type { Params } from '~/composables/params'
+import { debouncedWatch } from '@vueuse/core'
 import { toJSON } from 'flatted'
+import { computed, nextTick, ref } from 'vue'
 import {
   browserState,
   client,
@@ -13,8 +15,15 @@ import {
 import { explorerTree } from '~/composables/explorer'
 import { hasFailedSnapshot } from '~/composables/explorer/collector'
 import { getModuleGraph } from '~/composables/module-graph'
-import { viewMode } from '~/composables/params'
+import { selectedTest, viewMode } from '~/composables/params'
 import { getProjectNameColor, getProjectTextColor } from '~/utils/task'
+import IconButton from './IconButton.vue'
+import StatusIcon from './StatusIcon.vue'
+import ViewConsoleOutput from './views/ViewConsoleOutput.vue'
+import ViewEditor from './views/ViewEditor.vue'
+import ViewModuleGraph from './views/ViewModuleGraph.vue'
+import ViewReport from './views/ViewReport.vue'
+import ViewTestReport from './views/ViewTestReport.vue'
 
 const graph = ref<ModuleGraph>({ nodes: [], links: [] })
 const draft = ref(false)

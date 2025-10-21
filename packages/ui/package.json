@@ -38,6 +38,7 @@
     "build:client": "vite build",
     "build:node": "rollup -c",
     "typecheck": "tsc --noEmit",
+    "typecheck:client": "vue-tsc --noEmit",
     "dev:client": "vite",
     "dev": "rollup -c --watch --watch.include 'node/**'",
     "dev:ui": "pnpm run --stream '/^(dev|dev:client)$/'",
@@ -79,14 +80,15 @@
     "mime": "^4.1.0",
     "rollup": "^4.52.0",
     "splitpanes": "^3.2.0",
+    "typescript": "^5.9.3",
     "unocss": "catalog:",
-    "unplugin-auto-import": "^0.19.0",
     "unplugin-vue-components": "catalog:",
     "vite": "^5.0.0",
     "vite-plugin-pages": "^0.33.1",
     "vitest-browser-vue": "2.0.0-beta.1",
     "vue": "catalog:",
     "vue-router": "^4.5.1",
+    "vue-tsc": "^3.1.1",
     "vue-virtual-scroller": "2.0.0-beta.8"
   }
 }
