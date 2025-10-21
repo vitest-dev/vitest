@@ -12,7 +12,7 @@ By default, Vitest runs _test files_ in parallel. Depending on the specified `po
 - `forks` (the default) and `vmForks` run tests in different [child processes](https://nodejs.org/api/child_process.html)
 - `threads` and `vmThreads` run tests in different [worker threads](https://nodejs.org/api/worker_threads.html)
 
-Both "child processes" and "worker threads" are refered to as "workers". You can configure the number of running workers with [`maxWorkers`](/config/#maxworkers) option. Or more granually with [`poolOptions`](/config/#pooloptions) configuration.
+Both "child processes" and "worker threads" are refered to as "workers". You can configure the number of running workers with [`maxWorkers`](/config/#maxworkers) option.
 
 If you have a lot of tests, it is usually faster to run them in parallel, but it also depends on the project, the environment and [isolation](/config/#isolate) state. To disable file parallelisation, you can set [`fileParallelism`](/config/#fileparallelism) to `false`. To learn more about possible performance improvements, read the [Performance Guide](/guide/improving-performance).
 

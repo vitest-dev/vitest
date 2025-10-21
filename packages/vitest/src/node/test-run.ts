@@ -135,6 +135,7 @@ export class TestRun {
     return modules.some(m => !m.ok())
   }
 
+  // make sure the error always has a "stacks" property
   private syncUpdateStacks(update: TaskResultPack[]): void {
     update.forEach(([taskId, result]) => {
       const task = this.vitest.state.idMap.get(taskId)

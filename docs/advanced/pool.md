@@ -1,10 +1,10 @@
 # Custom Pool
 
 ::: warning
-This is an advanced and very low-level API. If you just want to [run tests](/guide/), you probably don't need this. It is primarily used by library authors.
+This is an advanced, experimental and very low-level API. If you just want to [run tests](/guide/), you probably don't need this. It is primarily used by library authors.
 :::
 
-Vitest runs tests in pools. By default, there are several pools:
+Vitest runs tests in a pool. By default, there are several pool runners:
 
 - `threads` to run tests using `node:worker_threads` (isolation is provided with a new worker context)
 - `forks` to run tests using `node:child_process` (isolation is provided with a new `child_process.fork` process)
@@ -12,21 +12,24 @@ Vitest runs tests in pools. By default, there are several pools:
 - `browser` to run tests using browser providers
 - `typescript` to run typechecking on tests
 
-You can provide your own pool by specifying a file path:
+::: tip
+See [`vitest-pool-example`](https://www.npmjs.com/package/vitest-pool-example) for example of a custom pool runner implementation.
+:::
+
+## Usage
+
+You can provide your own pool runner by a function that returns `PoolRunnerInitializer`.
 
 ```ts [vitest.config.ts]
 import { defineConfig } from 'vitest/config'
+import customPool from './my-custom-pool.ts'
 
 export default defineConfig({
   test: {
     // will run every file with a custom pool by default
-    pool: './my-custom-pool.ts',
-    // you can provide options using `poolOptions` object
-    poolOptions: {
-      myCustomPool: {
-        customProperty: true,
-      },
-    },
+    pool: customPool({
+      customProperty: true,
+    })
   },
 })
 ```
@@ -34,6 +37,8 @@ export default defineConfig({
 If you need to run tests in different pools, use the [`projects`](/guide/projects) feature:
 
 ```ts [vitest.config.ts]
+import customPool from './my-custom-pool.ts'
+
 export default defineConfig({
   test: {
     projects: [
@@ -43,6 +48,14 @@ export default defineConfig({
           pool: 'threads',
         },
       },
+      {
+        extends: true,
+        test: {
+          pool: customPool({
+            customProperty: true,
+          })
+        }
+      }
     ],
   },
 })
@@ -50,47 +63,85 @@ export default defineConfig({
 
 ## API
 
-The file specified in `pool` option should export a function (can be async) that accepts `Vitest` interface as its first option. This function needs to return an object matching `ProcessPool` interface:
+The `pool` option accepts a `PoolRunnerInitializer` that can be used for custom pool runners. The `name` property should indicate name of the custom pool runner. It should be identical with your worker's `name` property.
 
-```ts
-import type { ProcessPool, TestSpecification } from 'vitest/node'
+```ts [my-custom-pool.ts]
+import type { PoolRunnerInitializer } from 'vitest/node'
 
-export interface ProcessPool {
-  name: string
-  runTests: (files: TestSpecification[], invalidates?: string[]) => Promise<void>
-  collectTests: (files: TestSpecification[], invalidates?: string[]) => Promise<void>
-  close?: () => Promise<void>
+export function customPool(customOptions: CustomOptions): PoolRunnerInitializer {
+  return {
+    name: 'custom-pool',
+    createPoolWorker: options => new CustomPoolWorker(options, customOptions),
+  }
 }
 ```
 
-The function is called only once (unless the server config was updated), and it's generally a good idea to initialize everything you need for tests inside that function and reuse it when `runTests` is called.
+In your `CustomPoolWorker` you need to define all required methods:
 
-Vitest calls `runTest` when new tests are scheduled to run. It will not call it if `files` is empty. The first argument is an array of [TestSpecifications](/advanced/api/test-specification). Files are sorted using [`sequencer`](/config/#sequence-sequencer) before `runTests` is called. It's possible (but unlikely) to have the same file twice, but it will always have a different project - this is implemented via [`projects`](/guide/projects) configuration.
+```ts [my-custom-pool.ts]
+import type { PoolOptions, PoolWorker, WorkerRequest } from 'vitest/node'
 
-Vitest will wait until `runTests` is executed before finishing a run (i.e., it will emit [`onTestRunEnd`](/advanced/reporters) only after `runTests` is resolved).
+class CustomPoolWorker implements PoolWorker {
+  name = 'custom-pool'
+  private customOptions: CustomOptions
 
-If you are using a custom pool, you will have to provide test files and their results yourself - you can reference [`vitest.state`](https://github.com/vitest-dev/vitest/blob/main/packages/vitest/src/node/state.ts) for that (most important are `collectFiles` and `updateTasks`). Vitest uses `startTests` function from `@vitest/runner` package to do that.
+  constructor(options: PoolOptions, customOptions: CustomOptions) {
+    this.customOptions = customOptions
+  }
 
-Vitest will call `collectTests` if `vitest.collect` is called or `vitest list` is invoked via a CLI command. It works the same way as `runTests`, but you don't have to run test callbacks, only report their tasks by calling `vitest.state.collectFiles(files)`.
+  send(message: WorkerRequest): void {
+    // Provide way to send your worker a message
+  }
 
-To communicate between different processes, you can create methods object using `createMethodsRPC` from `vitest/node`, and use any form of communication that you prefer. For example, to use WebSockets with `birpc` you can write something like this:
+  on(event: string, callback: (arg: any) => void): void {
+    // Provide way to listen to your workers events, e.g. message, error, exit
+  }
 
-```ts
-import { createBirpc } from 'birpc'
-import { parse, stringify } from 'flatted'
-import { createMethodsRPC, TestProject } from 'vitest/node'
+  off(event: string, callback: (arg: any) => void): void {
+    // Provide way to unsubscribe `on` listeners
+  }
 
-function createRpc(project: TestProject, wss: WebSocketServer) {
-  return createBirpc(
-    createMethodsRPC(project),
-    {
-      post: msg => wss.send(msg),
-      on: fn => wss.on('message', fn),
-      serialize: stringify,
-      deserialize: parse,
-    },
-  )
+  async start() {
+    // do something when the worker is started
+  }
+
+  async stop() {
+    // cleanup the state
+  }
+
+  deserialize(data) {
+    return data
+  }
 }
 ```
 
-You can see a simple example of a pool made from scratch that doesn't run tests but marks them as collected in [pool/custom-pool.ts](https://github.com/vitest-dev/vitest/blob/main/test/cli/fixtures/custom-pool/pool/custom-pool.ts).
+Your `CustomPoolRunner` will be controlling how your custom test runner worker life cycles and communication channel works. For example, your `CustomPoolRunner` could launch a `node:worker_threads` `Worker`, and provide communication via `Worker.postMessage` and `parentPort`.
+
+In your worker file, you can import helper utilities from `vitest/worker`:
+
+```ts [my-worker.ts]
+import { init, runBaseTests } from 'vitest/worker'
+
+init({
+  post: (response) => {
+    // Provide way to send this message to CustomPoolRunner's onWorker as message event
+  },
+  on: (callback) => {
+    // Provide a way to listen CustomPoolRunner's "postMessage" calls
+  },
+  off: (callback) => {
+    // Optional, provide a way to remove listeners added by "on" calls
+  },
+  teardown: () => {
+    // Optional, provide a way to teardown worker, e.g. unsubscribe all the `on` listeners
+  },
+  serialize: (value) => {
+    // Optional, provide custom serializer for `post` calls
+  },
+  deserialize: (value) => {
+    // Optional, provide custom deserializer for `on` callbacks
+  },
+  runTests: state => runBaseTests('run', state),
+  collectTests: state => runBaseTests('collect', state),
+})
+```

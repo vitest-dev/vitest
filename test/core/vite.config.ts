@@ -111,14 +111,7 @@ export default defineConfig({
         option: 'config-option',
       },
     },
-    poolOptions: {
-      threads: {
-        execArgv: ['--experimental-wasm-modules'],
-      },
-      forks: {
-        execArgv: ['--experimental-wasm-modules'],
-      },
-    },
+    execArgv: ['--experimental-wasm-modules'],
     env: {
       CUSTOM_ENV: 'foo',
     },
@@ -151,6 +144,12 @@ export default defineConfig({
         return false
       }
       if (log.includes('run [...filters]')) {
+        return false
+      }
+      if (log.includes('Cannot find module') && log.includes('/web-worker/some-invalid-path')) {
+        return false
+      }
+      if (log.includes('Cannot find module') && log.includes('/web-worker/workerInvalid-path.ts')) {
         return false
       }
       if (log.startsWith(`[vitest]`) && log.includes(`did not use 'function' or 'class' in its implementation`)) {
