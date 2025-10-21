@@ -12,11 +12,11 @@ import { config } from '~/composables/client'
 
 import { useSearch } from '~/composables/explorer/search'
 import { activeFileId } from '~/composables/params'
-import 'vue-virtual-scroller/dist/vue-virtual-scroller.css'
 import DetailsPanel from '../DetailsPanel.vue'
-import ExplorerItem from './ExplorerItem.vue'
 import FilterStatus from '../FilterStatus.vue'
 import IconButton from '../IconButton.vue'
+import ExplorerItem from './ExplorerItem.vue'
+import 'vue-virtual-scroller/dist/vue-virtual-scroller.css'
 
 defineOptions({ inheritAttrs: false })
 

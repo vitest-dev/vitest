@@ -2,6 +2,13 @@
 import { useDebounceFn } from '@vueuse/core'
 // @ts-expect-error missing types
 import { Pane, Splitpanes } from 'splitpanes'
+import BrowserIframe from '~/components/BrowserIframe.vue'
+import ConnectionOverlay from '~/components/ConnectionOverlay.vue'
+import Coverage from '~/components/Coverage.vue'
+import Dashboard from '~/components/Dashboard.vue'
+import FileDetails from '~/components/FileDetails.vue'
+import Navigation from '~/components/Navigation.vue'
+import ProgressBar from '~/components/ProgressBar.vue'
 import { browserState } from '~/composables/client'
 import {
   coverageUrl,
@@ -11,13 +18,6 @@ import {
   mainSizes,
   panels,
 } from '~/composables/navigation'
-import BrowserIframe from '~/components/BrowserIframe.vue'
-import ConnectionOverlay from '~/components/ConnectionOverlay.vue'
-import Coverage from '~/components/Coverage.vue'
-import Dashboard from '~/components/Dashboard.vue'
-import FileDetails from '~/components/FileDetails.vue'
-import Navigation from '~/components/Navigation.vue'
-import ProgressBar from '~/components/ProgressBar.vue'
 
 const dashboardVisible = initializeNavigation()
 
