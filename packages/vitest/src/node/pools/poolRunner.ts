@@ -119,7 +119,7 @@ export class PoolRunner {
     this._eventEmitter.off(event, callback)
   }
 
-  private emitWorkerError(maybeError: unknown): void {
+  private emitWorkerError = (maybeError: unknown): void => {
     const error = maybeError instanceof Error ? maybeError : new Error(String(maybeError))
 
     this._eventEmitter.emit('error', error)
