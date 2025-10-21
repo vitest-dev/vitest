@@ -571,6 +571,7 @@ body {
     },
     {
       name: 'vitest:browser:support-testing-library',
+      enforce: 'pre',
       config() {
         const rolldownPlugin = {
           name: 'vue-test-utils-rewrite',
@@ -586,7 +587,6 @@ body {
             },
           },
         }
-
         const esbuildPlugin = {
           name: 'test-utils-rewrite',
           // "any" because vite doesn't expose any types for this
