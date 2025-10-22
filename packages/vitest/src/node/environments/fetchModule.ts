@@ -33,7 +33,6 @@ export function createFetchModuleFunction(
   tmpDir: string = join(tmpdir(), nanoid()),
   dump?: DumpOptions,
 ): VitestFetchFunction {
-  const cacheByEnvironment: Record<string, Map<string, string>> = {}
   return async (
     url,
     importer,
@@ -121,13 +120,15 @@ export function createFetchModuleFunction(
       return result
     }
 
-    const cachedFsResults = cacheByEnvironment[environment.name] || (cacheByEnvironment[environment.name] = new Map())
-
     const code = result.code
+    const transformResult = result.transformResult!
+    if (!transformResult) {
+      throw new Error(`"transformResult" in not defined. This is a bug in Vitest.`)
+    }
     // to avoid serialising large chunks of code,
     // we store them in a tmp file and read in the test thread
-    if (cachedFsResults.has(result.id)) {
-      return getCachedResult(result, cachedFsResults)
+    if ('_vitestTmp' in transformResult) {
+      return getCachedResult(result, Reflect.get(transformResult as any, '_vitestTmp'))
     }
     const dir = join(tmpDir, environment.name)
     const name = hash('sha1', result.id, 'hex')
@@ -138,8 +139,8 @@ export function createFetchModuleFunction(
     }
     if (promises.has(tmp)) {
       await promises.get(tmp)
-      cachedFsResults.set(result.id, tmp)
-      return getCachedResult(result, cachedFsResults)
+      Reflect.set(transformResult, '_vitestTmp', tmp)
+      return getCachedResult(result, tmp)
     }
     promises.set(
       tmp,
@@ -150,8 +151,7 @@ export function createFetchModuleFunction(
         .finally(() => promises.delete(tmp)),
     )
     await promises.get(tmp)
-    cachedFsResults.set(result.id, tmp)
-    return getCachedResult(result, cachedFsResults)
+    return getCachedResult(result, tmp)
   }
 }
 
@@ -160,7 +160,9 @@ SOURCEMAPPING_URL += 'ppingURL'
 
 const MODULE_RUNNER_SOURCEMAPPING_SOURCE = '//# sourceMappingSource=vite-generated'
 
-function processResultSource(environment: DevEnvironment, result: FetchResult): FetchResult {
+function processResultSource(environment: DevEnvironment, result: FetchResult): FetchResult & {
+  transformResult?: TransformResult | null
+} {
   if (!('code' in result)) {
     return result
   }
@@ -175,6 +177,7 @@ function processResultSource(environment: DevEnvironment, result: FetchResult): 
   return {
     ...result,
     code: node?.transformResult?.code || result.code,
+    transformResult: node?.transformResult,
   }
 }
 
@@ -227,11 +230,7 @@ function genSourceMapUrl(map: Rollup.SourceMap | string): string {
   return `data:application/json;base64,${Buffer.from(map).toString('base64')}`
 }
 
-function getCachedResult(result: Extract<FetchResult, { code: string }>, cachedFsResults: Map<string, string>): FetchCachedFileSystemResult {
-  const tmp = cachedFsResults.get(result.id)
-  if (!tmp) {
-    throw new Error(`The cached result was returned too early for ${result.id}.`)
-  }
+function getCachedResult(result: Extract<FetchResult, { code: string }>, tmp: string): FetchCachedFileSystemResult {
   return {
     cached: true as const,
     file: result.file,
