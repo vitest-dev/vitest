@@ -1,7 +1,6 @@
 import type { RuntimeRPC } from '../../types/rpc'
 import type { TestProject } from '../project'
 import type { ResolveSnapshotPathHandlerContext } from '../types/config'
-import { existsSync, mkdirSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { cleanUrl } from '@vitest/utils/helpers'
 import { handleRollupError } from '../environments/fetchModule'
@@ -20,9 +19,6 @@ export function createMethodsRPC(project: TestProject, options: MethodsOptions =
     externalized: {},
     duration: {},
     tmps: {},
-  }
-  if (project.config.dumpDir && !existsSync(project.config.dumpDir)) {
-    mkdirSync(project.config.dumpDir, { recursive: true })
   }
   project.vitest.state.metadata[project.name].dumpDir = project.config.dumpDir
   return {

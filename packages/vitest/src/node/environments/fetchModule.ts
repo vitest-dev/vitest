@@ -112,7 +112,11 @@ export function createFetchModuleFunction(
     const result = processResultSource(environment, moduleRunnerModule)
 
     if (dump?.dumpFolder && 'code' in result) {
-      const path = resolve(dump?.dumpFolder, result.url.replace(/[^\w+]/g, '-'))
+      if (!created.has(dump.dumpFolder) && !existsSync(dump.dumpFolder)) {
+        mkdirSync(dump.dumpFolder, { recursive: true })
+      }
+      created.add(dump.dumpFolder)
+      const path = resolve(dump.dumpFolder, result.url.replace(/[^\w+]/g, '-'))
       await writeFile(path, `${result.code}\n// ${JSON.stringify({ id: result.id, file: result.file })}`, 'utf-8')
     }
 
