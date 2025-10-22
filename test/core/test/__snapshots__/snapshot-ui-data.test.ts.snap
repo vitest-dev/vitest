@@ -1,0 +1,135 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`ViewSnapshot UI component data > UI snapshot data structure 1`] = `
+{
+  "filepath": "/src/components/Button.test.tsx",
+  "snapshots": {
+    "added": [
+      {
+        "content": "<button class="btn">Click me</button>",
+        "name": "Button default state 1",
+        "testName": "Button default state",
+      },
+    ],
+    "matched": [
+      {
+        "content": "<button class="btn" disabled>Click me</button>",
+        "name": "Button disabled state 1",
+        "testName": "Button disabled state",
+      },
+    ],
+    "unchecked": [],
+  },
+}
+`;
+
+exports[`ViewSnapshot UI component data > real-world snapshot content examples 1`] = `
+[
+  {
+    "content": "<div className="container">
+  <h1>Welcome</h1>
+  <p>Hello World</p>
+</div>",
+    "name": "React component 1",
+    "testName": "React component",
+  },
+  {
+    "content": "{
+  "status": "success",
+  "data": {
+    "id": 1,
+    "name": "John"
+  },
+  "timestamp": "2024-01-01T00:00:00Z"
+}",
+    "name": "API response 1",
+    "testName": "API response",
+  },
+  {
+    "content": "Error: Invalid input provided",
+    "name": "Error message 1",
+    "testName": "Error message",
+  },
+]
+`;
+
+exports[`snapshot visualization API > complex snapshot content 1`] = `
+{
+  "content": "{
+  "component": "MyComponent",
+  "props": {
+    "id": 1,
+    "name": "test"
+  },
+  "children": [
+    "item1",
+    "item2"
+  ],
+  "nested": {
+    "deeply": {
+      "nested": "value"
+    }
+  }
+}",
+  "name": "complex object test 1",
+  "testName": "complex object test",
+}
+`;
+
+exports[`snapshot visualization API > empty snapshot data handling 1`] = `
+{
+  "filepath": "/test/empty.test.ts",
+  "snapshots": {
+    "added": [],
+    "matched": [],
+    "unchecked": [],
+  },
+}
+`;
+
+exports[`snapshot visualization API > inline and external snapshot merging 1`] = `
+{
+  "external test 1": "external snapshot content",
+  "inline test 1": "inline snapshot content",
+}
+`;
+
+exports[`snapshot visualization API > snapshot data categorization 1`] = `
+{
+  "filepath": "/test/component.test.tsx",
+  "snapshots": {
+    "added": [
+      {
+        "content": "<div>Hello World</div>",
+        "name": "Component renders correctly 1",
+        "testName": "Component renders correctly",
+      },
+    ],
+    "matched": [
+      {
+        "content": "<div>Hello John</div>",
+        "name": "Component with props 1",
+        "testName": "Component with props",
+      },
+    ],
+    "unchecked": [
+      {
+        "content": "<div>Old content</div>",
+        "name": "Unchecked snapshot 1",
+        "testName": "Unchecked snapshot",
+      },
+    ],
+  },
+}
+`;
+
+exports[`snapshot visualization API > test name extraction from snapshot keys 1`] = `
+[
+  "simple test",
+  "test with multiple words",
+  "nested > test",
+  "test-with-dashes",
+  "test_with_underscores",
+  "no number at end",
+]
+`;
