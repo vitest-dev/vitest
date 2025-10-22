@@ -31,18 +31,22 @@ export function runLoadFiles(
   collect: boolean,
   search: string,
   filter: Filter,
+  projectName?: string,
 ) {
   remoteFiles.map(f => [`${f.filepath}:${f.projectName || ''}`, f] as const)
     .sort(([a], [b]) => a.localeCompare(b))
     .map(([, f]) => createOrUpdateFileNode(f, collect))
 
-  uiFiles.value = [...explorerTree.root.tasks]
+  console.log('Filtering by:', projectName)
+  uiFiles.value = projectName
+    ? [...explorerTree.root.tasks.filter(f => f.projectName === projectName)]
+    : [...explorerTree.root.tasks]
   runFilter(search.trim(), {
     failed: filter.failed,
     success: filter.success,
     skipped: filter.skipped,
     onlyTests: filter.onlyTests,
-  })
+  }, projectName)
 }
 
 export function preparePendingTasks(packs: TaskResultPack[]) {
@@ -90,6 +94,7 @@ export function runCollect(
   summary: CollectorInfo,
   search: string,
   filter: Filter,
+  projectName?: string,
 ) {
   if (start) {
     resetCollectorInfo(summary)
@@ -387,7 +392,7 @@ function collectData(summary: CollectorInfo) {
   summary.totalTests = data.totalTests
 }
 
-function collectTests(file: File, search = '', filter?: Filter) {
+function collectTests(file: File, search = '', filter?: Filter, projectName?: string) {
   const data = {
     failed: 0,
     success: 0,
@@ -397,6 +402,10 @@ function collectTests(file: File, search = '', filter?: Filter) {
     ignored: 0,
     todo: 0,
   } satisfies CollectFilteredTests
+
+  if (projectName && file.projectName !== projectName) {
+    return data
+  }
 
   for (const t of testsCollector(file)) {
     if (!filter || testMatcher(t, search, filter)) {
@@ -430,11 +439,12 @@ export function collectTestsTotalData(
   filesSummary: FilteredTests,
   search: string,
   filter: Filter,
+  projectName?: string,
 ) {
   if (onlyTests) {
     // todo: apply similar logic when filtered
     return tests
-      .map(file => collectTests(file, search, filter))
+      .map(file => collectTests(file, search, filter, projectName))
       .reduce((acc, {
         failed,
         success,
