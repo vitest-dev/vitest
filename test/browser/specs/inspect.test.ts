@@ -20,10 +20,9 @@ test.each(['', 'with workspace'])('--inspect-brk stops at test file %s', async (
 
   await vitest.waitForStdout(`Debugger listening on ws://${REMOTE_DEBUG_URL}`)
 
-  const url = await vi.waitFor(() =>
-    fetch(`http://${REMOTE_DEBUG_URL}/json/list`)
-      .then(response => response.json())
-      .then(json => json[0].webSocketDebuggerUrl))
+  const url = await vi.waitFor(() => fetch(`http://${REMOTE_DEBUG_URL}/json/list`)
+    .then(response => response.json())
+    .then(json => json[0].webSocketDebuggerUrl), { timeout: 30_000 })
 
   const { receive, send } = await createChannel(url)
 
@@ -47,7 +46,7 @@ test.each(['', 'with workspace'])('--inspect-brk stops at test file %s', async (
 
   await vitest.waitForStdout('Test Files  1 passed (1)')
   await waitForClose()
-})
+}, 60_000)
 
 async function createChannel(url: string) {
   const ws = new WebSocket(url)

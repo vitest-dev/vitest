@@ -2,12 +2,18 @@
 import type { TestAnnotation, TestAnnotationLocation } from '@vitest/runner'
 import type { RunnerTestCase } from 'vitest'
 import { relative } from 'pathe'
+import { computed } from 'vue'
 import { getAttachmentUrl, sanitizeFilePath } from '~/composables/attachments'
 import { browserState, config } from '~/composables/client'
 import { showAnnotationSource } from '~/composables/codemirror'
 import { isDark } from '~/composables/dark'
 import { mapLeveledTaskStacks } from '~/composables/error'
 import { openScreenshot, useScreenshot } from '~/composables/screenshot'
+import AnnotationAttachmentImage from '../AnnotationAttachmentImage.vue'
+import IconButton from '../IconButton.vue'
+import Modal from '../Modal.vue'
+import ScreenshotError from './ScreenshotError.vue'
+import ViewReportError from './ViewReportError.vue'
 
 const props = defineProps<{
   test: RunnerTestCase

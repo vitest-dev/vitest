@@ -138,7 +138,7 @@ The key is using `page.elementLocator()` to bridge Testing Library's DOM output 
 ```jsx
 // For Solid.js components
 import { render } from '@testing-library/solid'
-import { page } from '@vitest/browser/context'
+import { page } from 'vitest/browser'
 
 test('Solid component handles user interaction', async () => {
   // Use Testing Library to render the component
@@ -564,7 +564,7 @@ import { render } from 'vitest-browser-react' // [!code ++]
 ### Key Differences
 
 - Use `await expect.element()` instead of `expect()` for DOM assertions
-- Use `@vitest/browser/context` for user interactions instead of `@testing-library/user-event`
+- Use `vitest/browser` for user interactions instead of `@testing-library/user-event`
 - Browser Mode provides real browser environment for accurate testing
 
 ## Learn More

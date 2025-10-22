@@ -54,7 +54,7 @@ export default ({ mode }: { mode: string }) => {
       ['link', { rel: 'icon', href: '/favicon.ico', sizes: '48x48' }],
       ['link', { rel: 'icon', href: '/logo.svg', sizes: 'any', type: 'image/svg+xml' }],
       ['meta', { name: 'author', content: `${teamMembers.map(c => c.name).join(', ')} and ${vitestName} contributors` }],
-      ['meta', { name: 'keywords', content: 'vitest, vite, test, coverage, snapshot, react, vue, preact, svelte, solid, lit, marko, ruby, cypress, puppeteer, jsdom, happy-dom, test-runner, jest, typescript, esm, tinypool, tinyspy, node' }],
+      ['meta', { name: 'keywords', content: 'vitest, vite, test, coverage, snapshot, react, vue, preact, svelte, solid, lit, marko, ruby, cypress, puppeteer, jsdom, happy-dom, test-runner, jest, typescript, esm, tinyspy, node' }],
       ['meta', { property: 'og:title', content: vitestName }],
       ['meta', { property: 'og:description', content: vitestDescription }],
       ['meta', { property: 'og:url', content: ogUrl }],
@@ -198,6 +198,10 @@ export default ({ mode }: { mode: string }) => {
                   text: 'v2.x',
                   link: 'https://v2.vitest.dev/',
                 },
+                {
+                  text: 'v3.x',
+                  link: 'https://v3.vitest.dev/',
+                },
               ],
             },
           ],
@@ -254,9 +258,9 @@ export default ({ mode }: { mode: string }) => {
                 docFooterText: 'Visual Regression Testing | Browser Mode',
               },
               {
-                text: 'Trace Viewer',
-                link: '/guide/browser/trace-viewer',
-                docFooterText: 'Trace Viewer | Browser Mode',
+                text: 'Trace View',
+                link: '/guide/browser/trace-view',
+                docFooterText: 'Trace View | Browser Mode',
               },
             ],
           },
@@ -400,6 +404,10 @@ export default ({ mode }: { mode: string }) => {
                   },
                 ],
               },
+              {
+                text: 'Recipes',
+                link: '/guide/recipes',
+              },
             ],
           },
           {
@@ -499,11 +507,15 @@ export default ({ mode }: { mode: string }) => {
             items: [
               {
                 text: 'playwright',
-                link: '/config/playwright',
+                link: '/config/browser/playwright',
               },
               {
                 text: 'webdriverio',
-                link: '/config/webdriverio',
+                link: '/config/browser/webdriverio',
+              },
+              {
+                text: 'preview',
+                link: '/config/browser/preview',
               },
               // TODO: generate
               {

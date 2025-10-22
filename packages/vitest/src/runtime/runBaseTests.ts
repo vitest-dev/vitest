@@ -25,12 +25,8 @@ export async function run(
 ): Promise<void> {
   const workerState = getWorkerState()
 
-  const isIsolatedThreads = config.pool === 'threads' && (config.poolOptions?.threads?.isolate ?? true)
-  const isIsolatedForks = config.pool === 'forks' && (config.poolOptions?.forks?.isolate ?? true)
-  const isolate = isIsolatedThreads || isIsolatedForks
-
   await setupGlobalEnv(config, environment, moduleRunner)
-  await startCoverageInsideWorker(config.coverage, moduleRunner, { isolate })
+  await startCoverageInsideWorker(config.coverage, moduleRunner, { isolate: config.isolate })
 
   if (config.chaiConfig) {
     setupChaiConfig(config.chaiConfig)
@@ -54,7 +50,7 @@ export async function run(
         = performance.now() - workerState.durations.environment
 
       for (const file of files) {
-        if (isolate) {
+        if (config.isolate) {
           moduleRunner.mocker.reset()
           resetModules(workerState.evaluatedModules, true)
         }
@@ -74,7 +70,7 @@ export async function run(
         vi.restoreAllMocks()
       }
 
-      await stopCoverageInsideWorker(config.coverage, moduleRunner, { isolate })
+      await stopCoverageInsideWorker(config.coverage, moduleRunner, { isolate: config.isolate })
     },
   )
 

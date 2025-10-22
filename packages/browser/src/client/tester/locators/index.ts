@@ -1,3 +1,4 @@
+import type { ParsedSelector } from 'ivya'
 import type {
   LocatorByRoleOptions,
   LocatorOptions,
@@ -9,10 +10,9 @@ import type {
   UserEventHoverOptions,
   UserEventSelectOptions,
   UserEventUploadOptions,
-} from '@vitest/browser/context'
-import type { ParsedSelector } from 'ivya'
-import { page, server } from '@vitest/browser/context'
+} from 'vitest/browser'
 import {
+  asLocator,
   getByAltTextSelector,
   getByLabelSelector,
   getByPlaceholderSelector,
@@ -21,11 +21,24 @@ import {
   getByTextSelector,
   getByTitleSelector,
   Ivya,
-
 } from 'ivya'
+import { page, server, utils } from 'vitest/browser'
+import { __INTERNAL } from 'vitest/internal/browser'
 import { ensureAwaited, getBrowserState } from '../../utils'
-import { getElementError } from '../public-utils'
-import { escapeForTextSelector } from '../utils'
+import { escapeForTextSelector, isLocator } from '../tester-utils'
+
+export { convertElementToCssSelector, getIframeScale, processTimeoutOptions } from '../tester-utils'
+export {
+  getByAltTextSelector,
+  getByLabelSelector,
+  getByPlaceholderSelector,
+  getByRoleSelector,
+  getByTestIdSelector,
+  getByTextSelector,
+  getByTitleSelector,
+} from 'ivya'
+
+__INTERNAL._asLocator = asLocator
 
 // we prefer using playwright locators because they are more powerful and support Shadow DOM
 export const selectorEngine: Ivya = Ivya.create({
@@ -125,7 +138,7 @@ export abstract class Locator {
   ): Promise<void> {
     const values = (Array.isArray(value) ? value : [value]).map((v) => {
       if (typeof v !== 'string') {
-        const selector = 'element' in v ? v.selector : selectorEngine.generateSelectorSimple(v)
+        const selector = isLocator(v) ? v.selector : selectorEngine.generateSelectorSimple(v)
         return { element: selector }
       }
       return v
@@ -223,7 +236,7 @@ export abstract class Locator {
   public element(): HTMLElement | SVGElement {
     const element = this.query()
     if (!element) {
-      throw getElementError(this._pwSelector || this.selector, this._container || document.body)
+      throw utils.getElementError(this._pwSelector || this.selector, this._container || document.body)
     }
     return element
   }

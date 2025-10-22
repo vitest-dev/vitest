@@ -73,7 +73,7 @@ See also new guides:
 
 ### `spyOn` and `fn` Support Constructors
 
-Previously, if you tried to spy on a constructor with `vi.spyOn`, you would get an error like `Constructor <name> requires 'new'`. Since Vitest 4, all mocks called with a `new` keyword construct the instance instead of callying `mock.apply`. This means that the mock implementation has to use either the `function` or the `class` keyword in these cases:
+Previously, if you tried to spy on a constructor with `vi.spyOn`, you would get an error like `Constructor <name> requires 'new'`. Since Vitest 4, all mocks called with a `new` keyword construct the instance instead of calling `mock.apply`. This means that the mock implementation has to use either the `function` or the `class` keyword in these cases:
 
 ```ts {12-14,16-20}
 const cart = {
@@ -104,7 +104,7 @@ Note that now if you provide an arrow function, you will get [`<anonymous> is no
 
 ### Changes to Mocking
 
-Alongside new features like supporting constructors, Vitest 4 creates mocks differently to address several module mocking issues that we received over the years. This release attemts to make module spies less confusing, especially when working with classes.
+Alongside new features like supporting constructors, Vitest 4 creates mocks differently to address several module mocking issues that we received over the years. This release attempts to make module spies less confusing, especially when working with classes.
 
 - `vi.fn().getMockName()` now returns `vi.fn()` by default instead of `spy`. This can affect snapshots with mocks - the name will be changed from `[MockFunction spy]` to `[MockFunction]`. Spies created with `vi.spyOn` will keep using the original name by default for better debugging experience
 - `vi.restoreAllMocks` no longer resets the state of spies and only restores spies created manually with `vi.spyOn`, automocks are no longer affected by this function (this also affects the config option [`restoreMocks`](/config/#restoremocks)). Note that `.mockRestore` will still reset the mock implementation and clear the state
@@ -215,12 +215,12 @@ export default defineWorkspace([ // [!code --]
 ```
 :::
 
-### Browser Provider Accepts an Object
+### Browser Provider Rework
 
-In Vitest 4.0, the browser provider now accepts an object instead of a string (`'playwright'`, `'webdriverio'`). This makes it simpler to work with custom options and doesn't require adding `/// <reference` comments anymore.
+In Vitest 4.0, the browser provider now accepts an object instead of a string (`'playwright'`, `'webdriverio'`). The `preview` is no longer a default. This makes it simpler to work with custom options and doesn't require adding `/// <reference` comments anymore.
 
 ```ts
-import { playwright } from '@vitest/browser/providers/playwright' // [!code ++]
+import { playwright } from '@vitest/browser-playwright' // [!code ++]
 
 export default defineConfig({
   test: {
@@ -245,6 +245,131 @@ export default defineConfig({
 ```
 
 The naming of properties in `playwright` factory now also aligns with [Playwright documentation](https://playwright.dev/docs/api/class-testoptions#test-options-launch-options) making it easier to find.
+
+With this change, the `@vitest/browser` package is no longer needed, and you can remove it from your dependencies. To support the context import, you should update the `@vitest/browser/context` to `vitest/browser`:
+
+```ts
+import { page } from '@vitest/browser/context' // [!code --]
+import { page } from 'vitest/browser' // [!code ++]
+
+test('example', async () => {
+  await page.getByRole('button').click()
+})
+```
+
+The modules are identical, so doing a simple "Find and Replace" should be sufficient.
+
+If you were using the `@vitest/browser/utils` module, you can now import those utilities from `vitest/browser` as well:
+
+```ts
+import { getElementError } from '@vitest/browser/utils' // [!code --]
+import { utils } from 'vitest/browser' // [!code ++]
+const { getElementError } = utils // [!code ++]
+```
+
+::: warning
+Both `@vitest/browser/context` and `@vitest/browser/utils` work at runtime during the transition period, but they will be removed in a future release.
+:::
+
+### Pool Rework
+
+Vitest has used [`tinypool`](https://github.com/tinylibs/tinypool) for orchestrating how test files are run in the test runner workers. Tinypool has controlled how complex tasks like parallelism, isolation and IPC communication works internally. However we've found that Tinypool has some flaws that are slowing down development of Vitest. In Vitest v4 we've completely removed Tinypool and rewritten how pools work without new dependencies. Read more about reasoning from [feat!: rewrite pools without tinypool #8705
+](https://github.com/vitest-dev/vitest/pull/8705).
+
+New pool architecture allows Vitest to simplify many previously complex configuration options:
+
+- `maxThreads` and `maxForks` are now `maxWorkers`.
+- Environment variables `VITEST_MAX_THREADS` and `VITEST_MAX_FORKS` are now `VITEST_MAX_WORKERS`.
+- `singleThread` and `singleFork` are now `maxWorkers: 1`.
+- `poolOptions` is removed. All previous `poolOptions` are now top-level options. The `memoryLimit` of VM pools is renamed to `vmMemoryLimit`.
+- `threads.useAtomics` is removed. If you have a use case for this, feel free to open a new feature request.
+- Custom pool interface has been rewritten, see [Custom Pool](/advanced/pool.html#custom-pool)
+
+```ts
+export default defineConfig({
+  test: {
+    poolOptions: { // [!code --]
+      forks: { // [!code --]
+        execArgv: ['--expose-gc'], // [!code --]
+        isolate: false, // [!code --]
+        singleFork: true, // [!code --]
+      }, // [!code --]
+      vmThreads: { // [!code --]
+        memoryLimit: '300Mb' // [!code --]
+      }, // [!code --]
+    }, // [!code --]
+    execArgv: ['--expose-gc'], // [!code ++]
+    isolate: false, // [!code ++]
+    maxWorkers: 1, // [!code ++]
+    vmMemoryLimit: '300Mb', // [!code ++]
+  }
+})
+```
+
+Previously it was not possible to specify some pool related options per project when using [Vitest Projects](/guide/projects). With the new architecture this is no longer a blocker.
+
+::: code-group
+```ts [Isolation per project]
+import { defineConfig } from 'vitest/config'
+
+export default defineConfig({
+  test: {
+    projects: [
+      {
+        // Non-isolated unit tests
+        name: 'Unit tests',
+        isolate: false,
+        exclude: ['**.integration.test.ts'],
+      },
+      {
+        // Isolated integration tests
+        name: 'Integration tests',
+        include: ['**.integration.test.ts'],
+      },
+    ],
+  },
+})
+```
+```ts [Parallel & Sequential projects]
+import { defineConfig } from 'vitest/config'
+
+export default defineConfig({
+  test: {
+    projects: [
+      {
+        name: 'Parallel',
+        exclude: ['**.sequantial.test.ts'],
+      },
+      {
+        name: 'Sequential',
+        include: ['**.sequantial.test.ts'],
+        fileParallelism: false,
+      },
+    ],
+  },
+})
+```
+```ts [Node CLI options per project]
+import { defineConfig } from 'vitest/config'
+
+export default defineConfig({
+  test: {
+    projects: [
+      {
+        name: 'Production env',
+        execArgv: ['--env-file=.env.prod']
+      },
+      {
+        name: 'Staging env',
+        execArgv: ['--env-file=.env.staging']
+      },
+    ],
+  },
+})
+```
+:::
+
+See [Recipes](/guide/recipes) for more examples.
 
 ### Reporter Updates
 
@@ -277,7 +402,7 @@ export default defineConfig({
 
 In Vitest 4.0 snapshots that include custom elements will print the shadow root contents. To restore the previous behavior, set the [`printShadowRoot` option](/config/#snapshotformat) to `false`.
 
-```js
+```js{15-22}
 // before Vite 4.0
 exports[`custom element with shadow root 1`] = `
 "<body>
@@ -315,11 +440,17 @@ Vitest 4.0 removes some deprecated APIs, including:
 - `deps.external`, `deps.inline`, `deps.fallbackCJS` config options. Use `server.deps.external`, `server.deps.inline`, or `server.deps.fallbackCJS` instead.
 - `browser.testerScripts` config option. Use [`browser.testerHtmlPath`](/guide/browser/config#browser-testerhtmlpath) instead.
 - `minWorkers` config option. Only `maxWorkers` has any effect on how tests are running, so we are removing this public option.
-- Vitest no longer supports providing test options as a third argument to `test` and `describe`. Use the second argument instead:
+- Vitest no longer supports providing test options object as a third argument to `test` and `describe`. Use the second argument instead:
 
 ```ts
 test('example', () => { /* ... */ }, { retry: 2 }) // [!code --]
 test('example', { retry: 2 }, () => { /* ... */ }) // [!code ++]
+```
+
+Note that providing a timeout number as the last argument is still supported:
+
+```ts
+test('example', () => { /* ... */ }, 1000) // ✅
 ```
 
 This release also removes all deprecated types. This finally fixes an issue where Vitest accidentally pulled in `@types/node` (see [#5481](https://github.com/vitest-dev/vitest/issues/5481) and [#6141](https://github.com/vitest-dev/vitest/issues/6141)).
@@ -399,7 +530,7 @@ Vitest's `test` names are joined with a `>` symbol to make it easier to distingu
 
 ### Envs
 
-Just like Jest, Vitest sets `NODE_ENV` to `test`, if it wasn't set before. Vitest also has a counterpart for `JEST_WORKER_ID` called `VITEST_POOL_ID` (always less than or equal to `maxThreads`), so if you rely on it, don't forget to rename it. Vitest also exposes `VITEST_WORKER_ID` which is a unique ID of a running worker - this number is not affected by `maxThreads`, and will increase with each created worker.
+Just like Jest, Vitest sets `NODE_ENV` to `test`, if it wasn't set before. Vitest also has a counterpart for `JEST_WORKER_ID` called `VITEST_POOL_ID` (always less than or equal to `maxWorkers`), so if you rely on it, don't forget to rename it. Vitest also exposes `VITEST_WORKER_ID` which is a unique ID of a running worker - this number is not affected by `maxWorkers`, and will increase with each created worker.
 
 ### Replace property
 

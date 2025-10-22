@@ -38,6 +38,8 @@ export class ParentBrowserProject {
   public matchersUrl: string
   public stateJs: Promise<string> | string
 
+  public initScripts: string[] = []
+
   public commands: Record<string, BrowserCommand<any>> = {}
   public children: Set<ProjectBrowser> = new Set()
   public vitest: Vitest
@@ -129,11 +131,6 @@ export class ParentBrowserProject {
     ).then(js => (this.injectorJs = js))
     this.errorCatcherUrl = join('/@fs/', resolve(distRoot, 'client/error-catcher.js'))
 
-    const builtinProviders = ['playwright', 'webdriverio', 'preview']
-    const providerName = project.config.browser.provider?.name || 'preview'
-    if (builtinProviders.includes(providerName)) {
-      this.locatorsUrl = join('/@fs/', distRoot, 'locators', `${providerName}.js`)
-    }
     this.matchersUrl = join('/@fs/', distRoot, 'expect-element.js')
     this.stateJs = readFile(
       resolve(distRoot, 'state.js'),

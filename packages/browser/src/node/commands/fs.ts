@@ -1,5 +1,5 @@
+import type { BrowserCommands } from 'vitest/browser'
 import type { BrowserCommand, TestProject } from 'vitest/node'
-import type { BrowserCommands } from '../../../context'
 import fs, { promises as fsp } from 'node:fs'
 import { basename, dirname, resolve } from 'node:path'
 import mime from 'mime/lite'

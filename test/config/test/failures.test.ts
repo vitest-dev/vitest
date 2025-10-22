@@ -1,9 +1,9 @@
 import type { UserConfig as ViteUserConfig } from 'vite'
 import type { TestUserConfig } from 'vitest/node'
 import type { VitestRunnerCLIOptions } from '../../test-utils'
-import { playwright } from '@vitest/browser/providers/playwright'
-import { preview } from '@vitest/browser/providers/preview'
-import { webdriverio } from '@vitest/browser/providers/webdriverio'
+import { playwright } from '@vitest/browser-playwright'
+import { preview } from '@vitest/browser-preview'
+import { webdriverio } from '@vitest/browser-webdriverio'
 import { normalize, resolve } from 'pathe'
 import { beforeEach, expect, test } from 'vitest'
 import { version } from 'vitest/package.json'
@@ -72,31 +72,31 @@ test('shard count can be smaller than count of test files when passWithNoTests',
 test('inspect requires changing pool and singleThread/singleFork', async () => {
   const { stderr } = await runVitest({ inspect: true })
 
-  expect(stderr).toMatch('Error: You cannot use --inspect without "--no-file-parallelism", "poolOptions.threads.singleThread" or "poolOptions.forks.singleFork"')
+  expect(stderr).toMatch('Error: You cannot use --inspect without "--no-file-parallelism"')
 })
 
 test('inspect cannot be used with multi-threading', async () => {
-  const { stderr } = await runVitest({ inspect: true, pool: 'threads', poolOptions: { threads: { singleThread: false } } })
+  const { stderr } = await runVitest({ inspect: true, pool: 'threads', fileParallelism: true })
 
-  expect(stderr).toMatch('Error: You cannot use --inspect without "--no-file-parallelism", "poolOptions.threads.singleThread" or "poolOptions.forks.singleFork"')
+  expect(stderr).toMatch('Error: You cannot use --inspect without "--no-file-parallelism"')
 })
 
 test('inspect in browser mode requires no-file-parallelism', async () => {
   const { stderr } = await runVitest({ inspect: true, browser: { enabled: true, instances: [{ browser: 'chromium' }], provider: playwright() } })
 
-  expect(stderr).toMatch('Error: You cannot use --inspect without "--no-file-parallelism", "poolOptions.threads.singleThread" or "poolOptions.forks.singleFork"')
+  expect(stderr).toMatch('Error: You cannot use --inspect without "--no-file-parallelism"')
 })
 
 test('inspect-brk cannot be used with multi processing', async () => {
-  const { stderr } = await runVitest({ inspect: true, pool: 'forks', poolOptions: { forks: { singleFork: false } } })
+  const { stderr } = await runVitest({ inspect: true, pool: 'forks', fileParallelism: true })
 
-  expect(stderr).toMatch('Error: You cannot use --inspect without "--no-file-parallelism", "poolOptions.threads.singleThread" or "poolOptions.forks.singleFork"')
+  expect(stderr).toMatch('Error: You cannot use --inspect without "--no-file-parallelism"')
 })
 
 test('inspect-brk in browser mode requires no-file-parallelism', async () => {
   const { stderr } = await runVitest({ inspectBrk: true, browser: { enabled: true, instances: [{ browser: 'chromium' }], provider: playwright() } })
 
-  expect(stderr).toMatch('Error: You cannot use --inspect-brk without "--no-file-parallelism", "poolOptions.threads.singleThread" or "poolOptions.forks.singleFork"')
+  expect(stderr).toMatch('Error: You cannot use --inspect-brk without "--no-file-parallelism"')
 })
 
 test('inspect and --inspect-brk cannot be used when not playwright + chromium', async () => {
@@ -405,13 +405,13 @@ test('browser.instances is empty', async () => {
       },
     },
   })
-  expect(stderr).toMatch('"browser.instances" was set in the config, but the array is empty. Define at least one browser config.')
+  expect(stderr).toMatch(`Vitest wasn't able to resolve any project. Please, check that you specified the "browser.instances" option.`)
 })
 
 test('browser.name or browser.instances are required', async () => {
   const { stderr, exitCode } = await runVitestCli('--browser.enabled', '--root=./fixtures/browser-no-config')
   expect(exitCode).toBe(1)
-  expect(stderr).toMatch('Vitest Browser Mode requires "browser.name" (deprecated) or "browser.instances" options, none were set.')
+  expect(stderr).toMatch('Vitest received --browser flag, but no project had a browser configuration.')
 })
 
 test('--browser flag without browser configuration throws an error', async () => {
@@ -495,24 +495,6 @@ test('throws an error if name conflicts with a workspace name', async () => {
     },
   })
   expect(stderr).toMatch('Cannot define a nested project for a firefox browser. The project name "1 (firefox)" was already defined. If you have multiple instances for the same browser, make sure to define a custom "name". All projects should have unique names. Make sure your configuration is correct.')
-})
-
-test('throws an error if several browsers are headed in nonTTY mode', async () => {
-  const { stderr } = await runVitest({}, {
-    test: {
-      browser: {
-        enabled: true,
-        provider: playwright(),
-        headless: false,
-        instances: [
-          { browser: 'chromium' },
-          { browser: 'firefox' },
-        ],
-      },
-    },
-  })
-  expect(stderr).toContain('Found multiple projects that run browser tests in headed mode: "chromium", "firefox"')
-  expect(stderr).toContain('Please, filter projects with --browser=name or --project=name flag or run tests with "headless: true" option')
 })
 
 test('non existing project name will throw', async () => {

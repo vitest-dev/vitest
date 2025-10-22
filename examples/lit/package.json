@@ -17,7 +17,7 @@
     "lit": "^3.3.1"
   },
   "devDependencies": {
-    "@vitest/browser": "latest",
+    "@vitest/browser-playwright": "latest",
     "jsdom": "latest",
     "playwright": "^1.55.0",
     "vite": "latest",

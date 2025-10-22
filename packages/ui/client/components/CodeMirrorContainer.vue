@@ -1,5 +1,7 @@
 <script setup lang="ts">
-import { codemirrorRef } from '~/composables/codemirror'
+import type { Ref } from 'vue'
+import { onMounted, ref, useAttrs } from 'vue'
+import { codemirrorRef, useCodeMirror } from '~/composables/codemirror'
 
 const { mode, readOnly } = defineProps<{
   mode?: string

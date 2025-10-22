@@ -1,4 +1,4 @@
-import { userEvent } from '@vitest/browser/context';
+import { userEvent } from 'vitest/browser';
 import { test } from 'vitest';
 
 test('submitting a form reloads the iframe with "?" query', async () => {

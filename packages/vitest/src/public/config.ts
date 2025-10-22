@@ -47,6 +47,7 @@ export function defineConfig(
   config: Promise<ViteUserConfig>
 ): Promise<ViteUserConfig>
 export function defineConfig(config: ViteUserConfigFnObject): ViteUserConfigFnObject
+export function defineConfig(config: ViteUserConfigFnPromise): ViteUserConfigFnPromise
 export function defineConfig(config: ViteUserConfigExport): ViteUserConfigExport
 export function defineConfig(config: ViteUserConfigExport): ViteUserConfigExport {
   return config

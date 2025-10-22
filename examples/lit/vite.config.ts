@@ -1,6 +1,6 @@
 /// <reference types="vitest/config" />
 
-import { playwright } from '@vitest/browser/providers/playwright'
+import { playwright } from '@vitest/browser-playwright'
 import { defineConfig } from 'vite'
 
 // https://vitejs.dev/config/

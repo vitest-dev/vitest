@@ -3,7 +3,7 @@ import type { VitestModuleRunner } from '../moduleRunner/moduleRunner'
 import type { ContextModuleRunnerOptions } from '../moduleRunner/startModuleRunner'
 import { runInThisContext } from 'node:vm'
 import * as spyModule from '@vitest/spy'
-import { EvaluatedModules } from 'vite/module-runner'
+import { VitestEvaluatedModules } from '../moduleRunner/evaluatedModules'
 import { createNodeImportMeta } from '../moduleRunner/moduleRunner'
 import { startVitestModuleRunner } from '../moduleRunner/startModuleRunner'
 import { run } from '../runBaseTests'
@@ -11,7 +11,7 @@ import { provideWorkerState } from '../utils'
 
 let _moduleRunner: VitestModuleRunner
 
-const evaluatedModules = new EvaluatedModules()
+const evaluatedModules = new VitestEvaluatedModules()
 const moduleExecutionInfo = new Map()
 
 function startModuleRunner(options: ContextModuleRunnerOptions) {
@@ -23,6 +23,7 @@ function startModuleRunner(options: ContextModuleRunnerOptions) {
   return _moduleRunner
 }
 
+/** @experimental */
 export async function runBaseTests(method: 'run' | 'collect', state: WorkerGlobalState): Promise<void> {
   const { ctx } = state
   // state has new context, but we want to reuse existing ones

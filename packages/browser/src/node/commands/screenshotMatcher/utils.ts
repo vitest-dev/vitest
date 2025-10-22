@@ -5,16 +5,16 @@ import type { AnyCodec } from './codecs'
 import { platform } from 'node:os'
 import { deepMerge } from '@vitest/utils/helpers'
 import { basename, dirname, extname, join, relative, resolve } from 'pathe'
-import { takeScreenshot } from '../screenshot'
 import { getCodec } from './codecs'
 import { getComparator } from './comparators'
 
-type GlobalOptions = Required<
+type GlobalOptions = Required<Omit<
   NonNullable<
     NonNullable<BrowserConfigOptions['expect']>['toMatchScreenshot']
     & NonNullable<Pick<ScreenshotMatcherArguments[2], 'screenshotOptions'>>
-  >
->
+  >,
+  'comparators'
+>>
 
 const defaultOptions = {
   comparatorName: 'pixelmatch',
@@ -141,7 +141,7 @@ export function resolveOptions(
 
   return {
     codec: getCodec(extension),
-    comparator: getComparator(resolvedOptions.comparatorName),
+    comparator: getComparator(resolvedOptions.comparatorName, context),
     resolvedOptions,
     paths: {
       reference: resolvedOptions.resolveScreenshotPath(resolvePathData),
@@ -238,8 +238,8 @@ export function takeDecodedScreenshot({
   name: string
   screenshotOptions: ScreenshotMatcherArguments[2]['screenshotOptions']
 }): ReturnType<AnyCodec['decode']> {
-  return takeScreenshot(
-    context,
+  return context.triggerCommand(
+    '__vitest_takeScreenshot',
     name,
     { ...screenshotOptions, save: false, element },
   ).then(

@@ -89,7 +89,7 @@ export default antfu(
   },
   {
     // these files define vitest as peer dependency
-    files: [`packages/{coverage-*,ui,browser,web-worker}/${GLOB_SRC}`],
+    files: [`packages/{coverage-*,ui,browser,web-worker,browser-*}/${GLOB_SRC}`],
     rules: {
       'no-restricted-imports': [
         'error',
@@ -133,13 +133,6 @@ export default antfu(
     rules: {
       'antfu/no-top-level-await': 'off',
       'unicorn/consistent-function-scoping': 'off',
-    },
-  },
-  {
-    files: [`packages/vite-node/${GLOB_SRC}`],
-    rules: {
-      // false positive on "exports" variable
-      'antfu/no-cjs-exports': 'off',
     },
   },
 )

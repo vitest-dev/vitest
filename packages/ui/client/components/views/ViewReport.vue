@@ -1,9 +1,14 @@
 <script setup lang="ts">
 import type { RunnerTask, RunnerTestFile, RunnerTestSuite } from 'vitest'
+import { computed } from 'vue'
 import { browserState, config } from '~/composables/client'
 import { isDark } from '~/composables/dark'
 import { mapLeveledTaskStacks } from '~/composables/error'
 import { openScreenshot, useScreenshot } from '~/composables/screenshot'
+import IconButton from '../IconButton.vue'
+import Modal from '../Modal.vue'
+import ScreenshotError from './ScreenshotError.vue'
+import ViewReportError from './ViewReportError.vue'
 
 const props = defineProps<{
   file: RunnerTestFile

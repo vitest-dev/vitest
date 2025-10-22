@@ -2,32 +2,42 @@ import type { DevEnvironment, FetchResult, Rollup, TransformResult } from 'vite'
 import type { FetchFunctionOptions } from 'vite/module-runner'
 import type { FetchCachedFileSystemResult } from '../../types/general'
 import type { VitestResolver } from '../resolver'
-import { mkdirSync } from 'node:fs'
-import { rename, stat, unlink, writeFile } from 'node:fs/promises'
+import { existsSync, mkdirSync } from 'node:fs'
+import { readFile, rename, stat, unlink, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { isExternalUrl, nanoid, unwrapId } from '@vitest/utils/helpers'
-import { dirname, join } from 'pathe'
+import { dirname, join, resolve } from 'pathe'
 import { fetchModule } from 'vite'
 import { hash } from '../hash'
 
 const created = new Set()
 const promises = new Map<string, Promise<void>>()
 
+interface DumpOptions {
+  dumpFolder?: string
+  readFromDump?: boolean
+}
+
+export interface VitestFetchFunction {
+  (
+    url: string,
+    importer: string | undefined,
+    environment: DevEnvironment,
+    cacheFs: boolean,
+    options?: FetchFunctionOptions
+  ): Promise<FetchResult | FetchCachedFileSystemResult>
+}
+
 export function createFetchModuleFunction(
   resolver: VitestResolver,
-  cacheFs: boolean = false,
   tmpDir: string = join(tmpdir(), nanoid()),
-): (
-  url: string,
-  importer: string | undefined,
-  environment: DevEnvironment,
-  options?: FetchFunctionOptions
-) => Promise<FetchResult | FetchCachedFileSystemResult> {
-  const cachedFsResults = new Map<string, string>()
+  dump?: DumpOptions,
+): VitestFetchFunction {
   return async (
     url,
     importer,
     environment,
+    cacheFs,
     options,
   ) => {
     // We are copy pasting Vite's externalization logic from `fetchModule` because
@@ -67,27 +77,58 @@ export function createFetchModuleFunction(
       }
     }
 
-    const moduleRunnerModule = await fetchModule(
-      environment,
-      url,
-      importer,
-      {
-        ...options,
-        inlineSourceMap: false,
-      },
-    ).catch(handleRollupError)
+    let moduleRunnerModule: FetchResult | undefined
+
+    if (dump?.dumpFolder && dump.readFromDump) {
+      const path = resolve(dump?.dumpFolder, url.replace(/[^\w+]/g, '-'))
+      if (existsSync(path)) {
+        const code = await readFile(path, 'utf-8')
+        const matchIndex = code.lastIndexOf('\n//')
+        if (matchIndex !== -1) {
+          const { id, file } = JSON.parse(code.slice(matchIndex + 4))
+          moduleRunnerModule = {
+            code,
+            id,
+            url,
+            file,
+            invalidate: false,
+          }
+        }
+      }
+    }
+
+    if (!moduleRunnerModule) {
+      moduleRunnerModule = await fetchModule(
+        environment,
+        url,
+        importer,
+        {
+          ...options,
+          inlineSourceMap: false,
+        },
+      ).catch(handleRollupError)
+    }
 
     const result = processResultSource(environment, moduleRunnerModule)
+
+    if (dump?.dumpFolder && 'code' in result) {
+      const path = resolve(dump?.dumpFolder, result.url.replace(/[^\w+]/g, '-'))
+      await writeFile(path, `${result.code}\n// ${JSON.stringify({ id: result.id, file: result.file })}`, 'utf-8')
+    }
 
     if (!cacheFs || !('code' in result)) {
       return result
     }
 
     const code = result.code
+    const transformResult = result.transformResult!
+    if (!transformResult) {
+      throw new Error(`"transformResult" in not defined. This is a bug in Vitest.`)
+    }
     // to avoid serialising large chunks of code,
     // we store them in a tmp file and read in the test thread
-    if (cachedFsResults.has(result.id)) {
-      return getCachedResult(result, cachedFsResults)
+    if ('_vitestTmp' in transformResult) {
+      return getCachedResult(result, Reflect.get(transformResult as any, '_vitestTmp'))
     }
     const dir = join(tmpDir, environment.name)
     const name = hash('sha1', result.id, 'hex')
@@ -98,8 +139,8 @@ export function createFetchModuleFunction(
     }
     if (promises.has(tmp)) {
       await promises.get(tmp)
-      cachedFsResults.set(result.id, tmp)
-      return getCachedResult(result, cachedFsResults)
+      Reflect.set(transformResult, '_vitestTmp', tmp)
+      return getCachedResult(result, tmp)
     }
     promises.set(
       tmp,
@@ -110,8 +151,7 @@ export function createFetchModuleFunction(
         .finally(() => promises.delete(tmp)),
     )
     await promises.get(tmp)
-    cachedFsResults.set(result.id, tmp)
-    return getCachedResult(result, cachedFsResults)
+    return getCachedResult(result, tmp)
   }
 }
 
@@ -120,7 +160,9 @@ SOURCEMAPPING_URL += 'ppingURL'
 
 const MODULE_RUNNER_SOURCEMAPPING_SOURCE = '//# sourceMappingSource=vite-generated'
 
-function processResultSource(environment: DevEnvironment, result: FetchResult): FetchResult {
+function processResultSource(environment: DevEnvironment, result: FetchResult): FetchResult & {
+  transformResult?: TransformResult | null
+} {
   if (!('code' in result)) {
     return result
   }
@@ -135,6 +177,7 @@ function processResultSource(environment: DevEnvironment, result: FetchResult): 
   return {
     ...result,
     code: node?.transformResult?.code || result.code,
+    transformResult: node?.transformResult,
   }
 }
 
@@ -187,11 +230,7 @@ function genSourceMapUrl(map: Rollup.SourceMap | string): string {
   return `data:application/json;base64,${Buffer.from(map).toString('base64')}`
 }
 
-function getCachedResult(result: Extract<FetchResult, { code: string }>, cachedFsResults: Map<string, string>): FetchCachedFileSystemResult {
-  const tmp = cachedFsResults.get(result.id)
-  if (!tmp) {
-    throw new Error(`The cached result was returned too early for ${result.id}.`)
-  }
+function getCachedResult(result: Extract<FetchResult, { code: string }>, tmp: string): FetchCachedFileSystemResult {
   return {
     cached: true as const,
     file: result.file,

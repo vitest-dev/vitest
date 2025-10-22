@@ -47,6 +47,9 @@ jobs:
       - name: Typecheck
         run: pnpm run typecheck
 
+      - name: Typecheck UI
+        run: pnpm run -C packages/ui typecheck:client
+
       # From https://github.com/rhysd/actionlint/blob/main/docs/usage.md#use-actionlint-on-github-actions
       - name: Check workflow files
         run: |
@@ -86,9 +89,9 @@ jobs:
         node_version: [20, 22, 24]
         include:
           - os: macos-latest
-            node_version: 20
+            node_version: 22
           - os: windows-latest
-            node_version: 20
+            node_version: 22
       fail-fast: false
 
     steps:
@@ -103,8 +106,7 @@ jobs:
       - name: Install
         run: pnpm i
 
-      - name: Install Playwright Dependencies
-        run: pnpm exec playwright install chromium --with-deps --only-shell
+      - uses: ./.github/actions/setup-playwright
 
       - name: Build
         run: pnpm run build
@@ -127,7 +129,7 @@ jobs:
 
   test-browser:
     needs: changed
-    name: 'Browsers: node-20, ${{ matrix.os }}'
+    name: 'Browsers: node-22, ${{ matrix.os }}'
     if: needs.changed.outputs.should_skip != 'true'
 
     runs-on: ${{ matrix.os }}
@@ -145,7 +147,7 @@ jobs:
 
       - uses: ./.github/actions/setup-and-cache
         with:
-          node-version: 20
+          node-version: 22
 
       - uses: browser-actions/setup-chrome@b94431e051d1c52dcbe9a7092a4f10f827795416 # v2.1.0
       - uses: browser-actions/setup-firefox@5914774dda97099441f02628f8d46411fcfbd208 # v1.7.0
@@ -153,8 +155,7 @@ jobs:
       - name: Install
         run: pnpm i
 
-      - name: Install Playwright Dependencies
-        run: pnpm exec playwright install --with-deps --only-shell
+      - uses: ./.github/actions/setup-playwright
 
       - name: Build
         run: pnpm run build
@@ -186,8 +187,7 @@ jobs:
       - name: Install
         run: pnpm add vite@npm:rolldown-vite && git add . && git commit -m "ci" && pnpm i --prefer-offline --no-frozen-lockfile
 
-      - name: Install Playwright Dependencies
-        run: pnpm exec playwright install --with-deps --only-shell
+      - uses: ./.github/actions/setup-playwright
 
       - name: Build
         run: pnpm run build
@@ -205,5 +205,5 @@ jobs:
         if: ${{ !cancelled() }}
         with:
           name: playwright-report-rolldown
-          path: test/ui/test-results/
+          path: rolldown/test/ui/test-results/
           retention-days: 30

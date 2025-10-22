@@ -1,6 +1,6 @@
 import type { TestUserConfig } from 'vitest/node'
 
-import { playwright } from '@vitest/browser/providers/playwright'
+import { playwright } from '@vitest/browser-playwright'
 import { expect, test } from 'vitest'
 import { runVitest } from '../../test-utils'
 
@@ -8,7 +8,7 @@ const configs: TestUserConfig[] = []
 const pools: TestUserConfig[] = [
   { pool: 'threads' },
   { pool: 'forks' },
-  { pool: 'threads', poolOptions: { threads: { singleThread: true } } },
+  { pool: 'threads', fileParallelism: false },
 ]
 
 if (process.platform !== 'win32') {
@@ -42,13 +42,7 @@ for (const isolate of [true, false]) {
   for (const pool of pools) {
     configs.push({
       ...pool,
-      poolOptions: {
-        threads: {
-          ...pool.poolOptions?.threads,
-          isolate,
-        },
-        forks: { isolate },
-      },
+      isolate,
       browser: {
         ...pool.browser!,
         isolate,
@@ -65,8 +59,8 @@ for (const config of configs) {
     },
     async () => {
       const isParallel
-        = (config.pool === 'threads' && config.poolOptions?.threads?.singleThread !== true)
-          || (config.pool === 'forks' && config.poolOptions?.forks?.singleFork !== true)
+        = (config.pool === 'threads' && config.fileParallelism !== false)
+          || (config.pool === 'forks' && config.fileParallelism !== false)
           || (config.browser?.enabled && config.browser.fileParallelism)
 
       // THREADS here means that multiple tests are run parallel

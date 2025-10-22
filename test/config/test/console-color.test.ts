@@ -1,5 +1,4 @@
 import { expect, test } from 'vitest'
-import { isWindows } from '../../../packages/vite-node/src/utils'
 import { runVitest } from '../../test-utils'
 
 test('with color', async () => {
@@ -31,7 +30,7 @@ test('without color', async () => {
   expect(stdout).not.toContain('\x1B[33mtrue\x1B[39m\n')
 })
 
-test.skipIf(isWindows)('without color, forks pool in non-TTY parent', async () => {
+test.skipIf(process.platform === 'win32')('without color, forks pool in non-TTY parent', async () => {
   const { stdout } = await runVitest({
     root: 'fixtures/console-color',
     env: {

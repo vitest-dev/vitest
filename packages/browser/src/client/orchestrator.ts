@@ -1,4 +1,5 @@
 import type { GlobalChannelIncomingEvent, IframeChannelIncomingEvent, IframeChannelOutgoingEvent, IframeViewportDoneEvent, IframeViewportFailEvent } from '@vitest/browser/client'
+import type { FileSpecification } from '@vitest/runner'
 import type { BrowserTesterOptions, SerializedConfig } from 'vitest'
 import { channel, client, globalChannel } from '@vitest/browser/client'
 import { generateFileHash } from '@vitest/runner/utils'
@@ -29,6 +30,8 @@ export class IframeOrchestrator {
   }
 
   public async createTesters(options: BrowserTesterOptions): Promise<void> {
+    const startTime = performance.now()
+
     this.cancelled = false
 
     const config = getConfig()
@@ -46,7 +49,7 @@ export class IframeOrchestrator {
     }
 
     if (config.browser.isolate === false) {
-      await this.runNonIsolatedTests(container, options)
+      await this.runNonIsolatedTests(container, options, startTime)
       return
     }
 
@@ -65,6 +68,7 @@ export class IframeOrchestrator {
         container,
         file,
         options,
+        startTime,
       )
     }
   }
@@ -95,7 +99,7 @@ export class IframeOrchestrator {
     this.recreateNonIsolatedIframe = true
   }
 
-  private async runNonIsolatedTests(container: HTMLDivElement, options: BrowserTesterOptions) {
+  private async runNonIsolatedTests(container: HTMLDivElement, options: BrowserTesterOptions, startTime: number) {
     if (this.recreateNonIsolatedIframe) {
       // recreate a new non-isolated iframe during watcher reruns
       // because we called "cleanup" in the previous run
@@ -108,7 +112,7 @@ export class IframeOrchestrator {
 
     if (!this.iframes.has(ID_ALL)) {
       debug('preparing non-isolated iframe')
-      await this.prepareIframe(container, ID_ALL, options.startTime)
+      await this.prepareIframe(container, ID_ALL, startTime)
     }
 
     const config = getConfig()
@@ -131,23 +135,26 @@ export class IframeOrchestrator {
 
   private async runIsolatedTestInIframe(
     container: HTMLDivElement,
-    file: string,
+    spec: FileSpecification,
     options: BrowserTesterOptions,
+    startTime: number,
   ) {
     const config = getConfig()
     const { width, height } = config.browser.viewport
+
+    const file = spec.filepath
 
     if (this.iframes.has(file)) {
       this.iframes.get(file)!.remove()
       this.iframes.delete(file)
     }
 
-    const iframe = await this.prepareIframe(container, file, options.startTime)
+    const iframe = await this.prepareIframe(container, file, startTime)
     await setIframeViewport(iframe, width, height)
     // running tests after the "prepare" event
     await sendEventToIframe({
       event: 'execute',
-      files: [file],
+      files: [spec],
       method: options.method,
       iframeId: file,
       context: options.providedContext,

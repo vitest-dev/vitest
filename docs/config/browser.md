@@ -4,7 +4,7 @@ You can change the browser configuration by updating the `test.browser` field in
 
 ```ts [vitest.config.ts]
 import { defineConfig } from 'vitest/config'
-import { playwright } from '@vitest/browser/providers/playwright'
+import { playwright } from '@vitest/browser-playwright'
 
 export default defineConfig({
   test: {
@@ -47,14 +47,11 @@ Run all tests inside a browser by default. Note that `--browser` only works if y
 ## browser.instances
 
 - **Type:** `BrowserConfig`
-- **Default:** `[{ browser: name }]`
+- **Default:** `[]`
 
-Defines multiple browser setups. Every config has to have at least a `browser` field. The config supports your providers configurations:
+Defines multiple browser setups. Every config has to have at least a `browser` field.
 
-- [Configuring Playwright](/guide/browser/playwright)
-- [Configuring WebdriverIO](/guide/browser/webdriverio)
-
-In addition to that, you can also specify most of the [project options](/config/) (not marked with a <NonProjectOption /> icon) and some of the `browser` options like `browser.testerHtmlPath`.
+You can specify most of the [project options](/config/) (not marked with a <NonProjectOption /> icon) and some of the `browser` options like `browser.testerHtmlPath`.
 
 ::: warning
 Every browser config inherits options from the root config:
@@ -79,8 +76,6 @@ export default defineConfig({
 })
 ```
 
-During development, Vitest supports only one [non-headless](#browser-headless) configuration. You can limit the headed project yourself by specifying `headless: false` in the config, or by providing the `--browser.headless=false` flag, or by filtering projects with `--project=chromium` flag.
-
 For more examples, refer to the ["Multiple Setups" guide](/guide/browser/multiple-setups).
 :::
 
@@ -93,8 +88,6 @@ List of available `browser` options:
 - [`browser.screenshotDirectory`](#browser-screenshotdirectory)
 - [`browser.screenshotFailures`](#browser-screenshotfailures)
 - [`browser.provider`](#browser-provider)
-
-By default, Vitest creates an array with a single element which uses the [`browser.name`](#browser-name) field as a `browser`. Note that this behaviour will be removed with Vitest 4.
 
 Under the hood, Vitest transforms these instances into separate [test projects](/advanced/api/test-project) sharing a single Vite server for better caching performance.
 
@@ -134,12 +127,12 @@ Configure options for Vite server that serves code in the browser. Does not affe
 - **Default:** `'preview'`
 - **CLI:** `--browser.provider=playwright`
 
-The return value of the provider factory. You can import the factory from `@vitest/browser/providers/<provider-name>` or make your own provider:
+The return value of the provider factory. You can import the factory from `@vitest/browser-<provider-name>` or make your own provider:
 
 ```ts{8-10}
-import { playwright } from '@vitest/browser/providers/playwright'
-import { webdriverio } from '@vitest/browser/providers/webdriverio'
-import { preview } from '@vitest/browser/providers/preview'
+import { playwright } from '@vitest/browser-playwright'
+import { webdriverio } from '@vitest/browser-webdriverio'
+import { preview } from '@vitest/browser-preview'
 
 export default defineConfig({
   test: {
@@ -155,7 +148,7 @@ export default defineConfig({
 To configure how provider initializes the browser, you can pass down options to the factory function:
 
 ```ts{7-13,20-26}
-import { playwright } from '@vitest/browser/providers/playwright'
+import { playwright } from '@vitest/browser-playwright'
 
 export default defineConfig({
   test: {
@@ -198,6 +191,7 @@ The custom provider API is highly experimental and can change between patches. I
 export interface BrowserProvider {
   name: string
   mocker?: BrowserModuleMocker
+  readonly initScripts?: string[]
   /**
    * @experimental opt-in into file parallelisation
    */
@@ -294,7 +288,7 @@ export interface BrowserScript {
 - **Type:** `Record<string, BrowserCommand>`
 - **Default:** `{ readFile, writeFile, ... }`
 
-Custom [commands](/guide/browser/commands) that can be imported during browser tests from `@vitest/browser/commands`.
+Custom [commands](/guide/browser/commands) that can be imported during browser tests from `vitest/browser`.
 
 ## browser.connectTimeout
 
@@ -499,3 +493,116 @@ For example, to store diffs in a subdirectory of attachments:
 resolveDiffPath: ({ arg, attachmentsDir, browserName, ext, root, testFileName }) =>
   `${root}/${attachmentsDir}/screenshot-diffs/${testFileName}/${arg}-${browserName}${ext}`
 ```
+
+#### browser.expect.toMatchScreenshot.comparators
+
+- **Type:** `Record<string, Comparator>`
+
+Register custom screenshot comparison algorithms, like [SSIM](https://en.wikipedia.org/wiki/Structural_similarity_index_measure) or other perceptual similarity metrics.
+
+To create a custom comparator, you need to register it in your config. If using TypeScript, declare its options in the `ScreenshotComparatorRegistry` interface.
+
+```ts
+import { defineConfig } from 'vitest/config'
+
+// 1. Declare the comparator's options type
+declare module 'vitest/browser' {
+  interface ScreenshotComparatorRegistry {
+    myCustomComparator: {
+      sensitivity?: number
+      ignoreColors?: boolean
+    }
+  }
+}
+
+// 2. Implement the comparator
+export default defineConfig({
+  test: {
+    browser: {
+      expect: {
+        toMatchScreenshot: {
+          comparators: {
+            myCustomComparator: async (
+              reference,
+              actual,
+              {
+                createDiff, // always provided by Vitest
+                sensitivity = 0.01,
+                ignoreColors = false,
+              }
+            ) => {
+              // ...algorithm implementation
+              return { pass, diff, message }
+            },
+          },
+        },
+      },
+    },
+  },
+})
+```
+
+Then use it in your tests:
+
+```ts
+await expect(locator).toMatchScreenshot({
+  comparatorName: 'myCustomComparator',
+  comparatorOptions: {
+    sensitivity: 0.08,
+    ignoreColors: true,
+  },
+})
+```
+
+**Comparator Function Signature:**
+
+```ts
+type Comparator<Options> = (
+  reference: {
+    metadata: { height: number; width: number }
+    data: TypedArray
+  },
+  actual: {
+    metadata: { height: number; width: number }
+    data: TypedArray
+  },
+  options: {
+    createDiff: boolean
+  } & Options
+) => Promise<{
+  pass: boolean
+  diff: TypedArray | null
+  message: string | null
+}> | {
+  pass: boolean
+  diff: TypedArray | null
+  message: string | null
+}
+```
+
+The `reference` and `actual` images are decoded using the appropriate codec (currently only PNG). The `data` property is a flat `TypedArray` (`Buffer`, `Uint8Array`, or `Uint8ClampedArray`) containing pixel data in RGBA format:
+
+- **4 bytes per pixel**: red, green, blue, alpha (from `0` to `255` each)
+- **Row-major order**: pixels are stored left-to-right, top-to-bottom
+- **Total length**: `width × height × 4` bytes
+- **Alpha channel**: always present. Images without transparency have alpha values set to `255` (fully opaque)
+
+::: tip Performance Considerations
+The `createDiff` option indicates whether a diff image is needed. During [stable screenshot detection](/guide/browser/visual-regression-testing#how-visual-tests-work), Vitest calls comparators with `createDiff: false` to avoid unnecessary work.
+
+**Respect this flag to keep your tests fast**.
+:::
+
+::: warning Handle Missing Options
+The `options` parameter in `toMatchScreenshot()` is optional, so users might not provide all your comparator options. Always make them optional with default values:
+
+```ts
+myCustomComparator: (
+  reference,
+  actual,
+  { createDiff, threshold = 0.1, maxDiff = 100 },
+) => {
+  // ...comparison logic
+}
+```
+:::

@@ -35,7 +35,7 @@ export default vite.defineConfig({
         /^vitest\//,
         'vitest',
         /^msw/,
-        '@vitest/browser/context',
+        'vitest/browser',
         '@vitest/browser/client',
       ],
     },

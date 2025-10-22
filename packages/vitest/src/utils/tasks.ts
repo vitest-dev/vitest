@@ -1,5 +1,5 @@
 import type { File, Suite, Task, TaskEventPack, TaskResultPack } from '@vitest/runner'
-import type { Arrayable } from '../types/general'
+import type { Arrayable } from '@vitest/utils'
 import { getTests } from '@vitest/runner/utils'
 import { toArray } from '@vitest/utils/helpers'
 

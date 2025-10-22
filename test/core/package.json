@@ -13,6 +13,7 @@
     "collect": "vitest list"
   },
   "devDependencies": {
+    "@standard-schema/spec": "^1.0.0",
     "@test/vite-environment-external": "link:./projects/vite-environment-external",
     "@test/vite-external": "link:./projects/vite-external",
     "@types/debug": "catalog:",
@@ -36,7 +37,6 @@
     "tinyrainbow": "catalog:",
     "tinyspy": "^4.0.4",
     "url": "^0.11.4",
-    "vite-node": "workspace:*",
     "vitest": "workspace:*",
     "vitest-environment-custom": "file:./vitest-environment-custom",
     "vitest-package-exports": "^0.1.1",

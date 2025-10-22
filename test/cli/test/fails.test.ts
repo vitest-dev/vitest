@@ -1,5 +1,5 @@
 import type { TestCase } from 'vitest/node'
-import { playwright } from '@vitest/browser/providers/playwright'
+import { playwright } from '@vitest/browser-playwright'
 
 import { resolve } from 'pathe'
 import { glob } from 'tinyglobby'
@@ -109,16 +109,6 @@ it('prints a warning if the assertion is not awaited', async () => {
 
 it('prints a warning if the assertion is not awaited in the browser mode', async () => {
   const { stderr } = await runInlineTests({
-    './vitest.config.js': {
-      test: {
-        browser: {
-          enabled: true,
-          instances: [{ browser: 'chromium' }],
-          provider: playwright(),
-          headless: true,
-        },
-      },
-    },
     'base.test.js': ts`
     import { expect, test } from 'vitest';
 
@@ -126,6 +116,15 @@ it('prints a warning if the assertion is not awaited in the browser mode', async
       expect(Promise.resolve(1)).resolves.toBe(1)
     })
     `,
+  }, {}, {}, {
+    test: {
+      browser: {
+        enabled: true,
+        instances: [{ browser: 'chromium' }],
+        provider: playwright(),
+        headless: true,
+      },
+    },
   })
   expect(stderr).toContain('Promise returned by \`expect(actual).resolves.toBe(expected)\` was not awaited')
   expect(stderr).toContain('base.test.js:5:33')

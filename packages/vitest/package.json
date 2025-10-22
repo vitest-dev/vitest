@@ -1,7 +1,7 @@
 {
   "name": "vitest",
   "type": "module",
-  "version": "4.0.0-beta.13",
+  "version": "4.0.1",
   "description": "Next generation testing framework powered by Vite",
   "author": "Anthony Fu <anthonyfu117@hotmail.com>",
   "license": "MIT",
@@ -38,6 +38,10 @@
         "types": "./index.d.cts",
         "default": "./index.cjs"
       }
+    },
+    "./browser": {
+      "types": "./browser/context.d.ts",
+      "default": "./browser/context.js"
     },
     "./package.json": "./package.json",
     "./optional-types.js": {
@@ -100,6 +104,10 @@
     "./mocker": {
       "types": "./dist/mocker.d.ts",
       "default": "./dist/mocker.js"
+    },
+    "./worker": {
+      "types": "./worker.d.ts",
+      "default": "./dist/worker.js"
     }
   },
   "main": "./dist/index.js",
@@ -114,6 +122,7 @@
     "*.d.ts",
     "*.mjs",
     "bin",
+    "browser",
     "dist"
   ],
   "engines": {
@@ -126,8 +135,10 @@
   "peerDependencies": {
     "@edge-runtime/vm": "*",
     "@types/debug": "^4.1.12",
-    "@types/node": "^18.0.0 || ^20.0.0 || >=22.0.0",
-    "@vitest/browser": "workspace:*",
+    "@types/node": "^20.0.0 || ^22.0.0 || >=24.0.0",
+    "@vitest/browser-playwright": "workspace:*",
+    "@vitest/browser-preview": "workspace:*",
+    "@vitest/browser-webdriverio": "workspace:*",
     "@vitest/ui": "workspace:*",
     "happy-dom": "*",
     "jsdom": "*"
@@ -142,7 +153,13 @@
     "@types/node": {
       "optional": true
     },
-    "@vitest/browser": {
+    "@vitest/browser-playwright": {
+      "optional": true
+    },
+    "@vitest/browser-preview": {
+      "optional": true
+    },
+    "@vitest/browser-webdriverio": {
       "optional": true
     },
     "@vitest/ui": {
@@ -173,9 +190,8 @@
     "tinybench": "^2.9.0",
     "tinyexec": "^0.3.2",
     "tinyglobby": "catalog:",
-    "tinypool": "^2.0.0",
     "tinyrainbow": "catalog:",
-    "vite": "^6.0.0 || ^7.0.0-0",
+    "vite": "^6.0.0 || ^7.0.0",
     "why-is-node-running": "^2.3.0"
   },
   "devDependencies": {
@@ -197,7 +213,7 @@
     "cac": "catalog:",
     "empathic": "^2.0.0",
     "flatted": "catalog:",
-    "happy-dom": "^18.0.1",
+    "happy-dom": "^20.0.0",
     "jsdom": "^26.1.0",
     "local-pkg": "^1.1.2",
     "mime": "^4.1.0",

@@ -2,7 +2,7 @@ import type { Options } from 'tinyexec'
 import type { UserConfig as ViteUserConfig } from 'vite'
 import type { WorkerGlobalState } from 'vitest'
 import type { TestProjectConfiguration } from 'vitest/config'
-import type { TestModule, TestSpecification, TestUserConfig, Vitest, VitestRunMode } from 'vitest/node'
+import type { TestSpecification, TestUserConfig, Vitest, VitestRunMode } from 'vitest/node'
 import { webcrypto as crypto } from 'node:crypto'
 import fs from 'node:fs'
 import { Readable, Writable } from 'node:stream'
@@ -153,7 +153,7 @@ interface CliOptions extends Partial<Options> {
   preserveAnsi?: boolean
 }
 
-async function runCli(command: 'vitest' | 'vite-node', _options?: CliOptions | string, ...args: string[]) {
+async function runCli(command: 'vitest', _options?: CliOptions | string, ...args: string[]) {
   let options = _options
 
   if (typeof _options === 'string') {
@@ -228,13 +228,6 @@ export async function runVitestCli(_options?: CliOptions | string, ...args: stri
   return runCli('vitest', _options, ...args)
 }
 
-export async function runViteNodeCli(_options?: CliOptions | string, ...args: string[]) {
-  process.env.VITE_TEST_WATCHER_DEBUG = 'true'
-  const { vitest, ...rest } = await runCli('vite-node', _options, ...args)
-
-  return { viteNode: vitest, ...rest }
-}
-
 export function getInternalState(): WorkerGlobalState {
   // @ts-expect-error untyped global
   return globalThis.__vitest_worker__
@@ -296,6 +289,15 @@ function getGeneratedFileContent(content: TestFsStructure[string]) {
 ${imports.map(([path, is]) => `import { ${is.join(', ')} } from '${path}'`)}
 const results = await (${content[0]})({ ${imports.flatMap(([_, is]) => is).join(', ')} })
 ${(content[1].exports || []).map(e => `export const ${e} = results["${e}"]`)}
+    `
+  }
+  if ('test' in content && content.test?.browser?.enabled && content.test?.browser?.provider?.name) {
+    const name = content.test.browser.provider.name
+    return `
+import { ${name} } from '@vitest/browser-${name}'
+const config = ${JSON.stringify(content)}
+config.test.browser.provider = ${name}(${JSON.stringify(content.test.browser.provider.options || {})})
+export default config
     `
   }
   return `export default ${JSON.stringify(content)}`
@@ -367,7 +369,7 @@ export async function runInlineTests(
     root,
     ...vitest,
     get results() {
-      return (vitest.ctx?.state.getFiles() || []).map(file => vitest.ctx?.state.getReportedEntity(file) as TestModule)
+      return vitest.ctx?.state.getTestModules() || []
     },
   }
 }

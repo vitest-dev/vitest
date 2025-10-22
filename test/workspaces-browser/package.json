@@ -6,7 +6,7 @@
     "test": "vitest run"
   },
   "devDependencies": {
-    "@vitest/browser": "workspace:^",
+    "@vitest/browser-playwright": "workspace:^",
     "vitest": "workspace:*"
   }
 }

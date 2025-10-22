@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { TestAnnotation } from 'vitest'
+import { computed } from 'vue'
 import { getAttachmentUrl, isExternalAttachment } from '~/composables/attachments'
 
 const props = defineProps<{

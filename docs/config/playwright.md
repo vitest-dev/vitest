@@ -1,9 +1,9 @@
 # Configuring Playwright
 
-To run tests using playwright, you need to specify it in the `test.browser.provider` property in your config:
+To run tests using playwright, you need to install the [`@vitest/browser-playwright`](https://www.npmjs.com/package/@vitest/browser-playwright) npm package and specify its `playwright` export in the `test.browser.provider` property of your config:
 
 ```ts [vitest.config.js]
-import { playwright } from '@vitest/browser/providers/playwright'
+import { playwright } from '@vitest/browser-playwright'
 import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
@@ -16,10 +16,10 @@ export default defineConfig({
 })
 ```
 
-Vitest opens a single page to run all tests in the same file. You can configure the `launch`, `connect` and `context` when calling `playwright` at the top level or inside instances:
+You can configure the [`launchOptions`](https://playwright.dev/docs/api/class-browsertype#browser-type-launch), [`connectOptions`](https://playwright.dev/docs/api/class-browsertype#browser-type-connect) and [`contextOptions`](https://playwright.dev/docs/api/class-browser#browser-new-context) when calling `playwright` at the top level or inside instances:
 
 ```ts{7-14,21-26} [vitest.config.js]
-import { playwright } from '@vitest/browser/providers/playwright'
+import { playwright } from '@vitest/browser-playwright'
 import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
@@ -52,6 +52,10 @@ export default defineConfig({
   },
 })
 ```
+
+::: warning
+Unlike Playwright test runner, Vitest opens a _single_ page to run all tests that are defined in the same file. This means that isolation is restricted to a single test file, not to every individual test.
+:::
 
 ## launchOptions
 
@@ -94,7 +98,7 @@ This value configures the default timeout it takes for Playwright to wait until 
 You can also configure the action timeout per-action:
 
 ```ts
-import { page, userEvent } from '@vitest/browser/context'
+import { page, userEvent } from 'vitest/browser'
 
 await userEvent.click(page.getByRole('button'), {
   timeout: 1_000,

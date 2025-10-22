@@ -8,7 +8,7 @@ import { createRequire } from 'node:module'
 import { dynamicImportPlugin } from '@vitest/mocker/node'
 import { toArray } from '@vitest/utils/helpers'
 import MagicString from 'magic-string'
-import { basename, dirname, extname, resolve } from 'pathe'
+import { basename, dirname, extname, join, resolve } from 'pathe'
 import sirv from 'sirv'
 import { coverageConfigDefaults } from 'vitest/config'
 import {
@@ -24,7 +24,6 @@ import { createOrchestratorMiddleware } from './middlewares/orchestratorMiddlewa
 import { createTesterMiddleware } from './middlewares/testerMiddleware'
 import BrowserContext from './plugins/pluginContext'
 
-export { defineBrowserCommand } from './commands/utils'
 export type { BrowserCommand } from 'vitest/node'
 
 const versionRegexp = /(?:\?|&)v=\w{8}/
@@ -232,9 +231,12 @@ export default (parentServer: ParentBrowserProject, base = '/'): Plugin[] => {
 
         const exclude = [
           'vitest',
+          'vitest/browser',
           'vitest/internal/browser',
           'vitest/runners',
-          '@vitest/browser',
+          'vite/module-runner',
+          '@vitest/browser/utils',
+          '@vitest/browser/context',
           '@vitest/browser/client',
           '@vitest/utils',
           '@vitest/utils/source-map',
@@ -282,9 +284,15 @@ export default (parentServer: ParentBrowserProject, base = '/'): Plugin[] => {
           'vitest > expect-type',
           'vitest > @vitest/snapshot > magic-string',
           'vitest > @vitest/expect > chai',
-          '@vitest/browser > @testing-library/user-event',
-          '@vitest/browser > @testing-library/dom',
         ]
+
+        const provider = parentServer.config.browser.provider || [...parentServer.children][0]?.provider
+        if (provider?.name === 'preview') {
+          include.push(
+            '@vitest/browser-preview > @testing-library/user-event',
+            '@vitest/browser-preview > @testing-library/dom',
+          )
+        }
 
         const fileRoot = browserTestFiles[0] ? dirname(browserTestFiles[0]) : project.config.root
 
@@ -549,22 +557,21 @@ body {
             },
             injectTo: 'head' as const,
           },
-          parentServer.locatorsUrl
-            ? {
-                tag: 'script',
-                attrs: {
-                  type: 'module',
-                  src: parentServer.locatorsUrl,
-                },
-                injectTo: 'head',
-              } as const
-            : null,
+          ...parentServer.initScripts.map(script => ({
+            tag: 'script',
+            attrs: {
+              type: 'module',
+              src: join('/@fs/', script),
+            },
+            injectTo: 'head',
+          } as const)),
           ...testerTags,
         ].filter(s => s != null)
       },
     },
     {
       name: 'vitest:browser:support-testing-library',
+      enforce: 'pre',
       config() {
         const rolldownPlugin = {
           name: 'vue-test-utils-rewrite',
@@ -580,7 +587,6 @@ body {
             },
           },
         }
-
         const esbuildPlugin = {
           name: 'test-utils-rewrite',
           // "any" because vite doesn't expose any types for this

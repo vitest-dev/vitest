@@ -24,6 +24,19 @@ export { resolveFsAllow } from '../node/plugins/utils'
 export type { ProcessPool } from '../node/pool'
 export { getFilePoolName } from '../node/pool'
 export { createMethodsRPC } from '../node/pools/rpc'
+export type {
+  PoolOptions,
+  PoolRunnerInitializer,
+  PoolTask,
+  PoolWorker,
+  WorkerRequest,
+  WorkerResponse,
+} from '../node/pools/types'
+export { ForksPoolWorker } from '../node/pools/workers/forksWorker'
+export { ThreadsPoolWorker } from '../node/pools/workers/threadsWorker'
+export { TypecheckPoolWorker } from '../node/pools/workers/typecheckWorker'
+export { VmForksPoolWorker } from '../node/pools/workers/vmForksWorker'
+export { VmThreadsPoolWorker } from '../node/pools/workers/vmThreadsWorker'
 export type { SerializedTestProject, TestProject } from '../node/project'
 export type { HTMLOptions } from '../node/reporters/html'
 export type { JsonOptions } from '../node/reporters/json'
@@ -59,6 +72,7 @@ export { registerConsoleShortcuts } from '../node/stdin'
 export type { BenchmarkUserOptions } from '../node/types/benchmark'
 
 export type {
+  _BrowserNames,
   BrowserBuiltinProvider,
   BrowserCommand,
   BrowserCommandContext,
@@ -69,6 +83,8 @@ export type {
   BrowserProvider,
   BrowserProviderOption,
   BrowserScript,
+  BrowserServerFactory,
+  BrowserServerOptions,
   BrowserServerState,
   BrowserServerStateSession,
   CDPSession,
@@ -87,7 +103,6 @@ export type {
   EnvironmentOptions,
   InlineConfig,
   Pool,
-  PoolOptions,
   ProjectConfig,
   ResolvedConfig,
   ResolvedProjectConfig,

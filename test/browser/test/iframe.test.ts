@@ -1,5 +1,5 @@
-import { page, server } from '@vitest/browser/context'
 import { expect, test } from 'vitest'
+import { page, server } from 'vitest/browser'
 
 test.runIf(server.provider === 'playwright')('locates an iframe', async () => {
   const iframe = document.createElement('iframe')

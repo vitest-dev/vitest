@@ -4,7 +4,7 @@ title: Context API | Browser Mode
 
 # Context API
 
-Vitest exposes a context module via `@vitest/browser/context` entry point. As of 2.0, it exposes a small set of utilities that might be useful to you in tests.
+Vitest exposes a context module via `vitest/browser` entry point. As of 2.0, it exposes a small set of utilities that might be useful to you in tests.
 
 ## `userEvent`
 

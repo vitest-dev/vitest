@@ -9,6 +9,9 @@ it('exports snapshot', async ({ skip, task }) => {
   const manifest = await getPackageExportsManifest({
     importMode: 'package', // or 'dist' or 'package'
     cwd: resolve(import.meta.dirname, '../../../packages/vitest'),
+    resolveExportEntries(entries) {
+      return entries.filter(([key]) => key !== './browser')
+    },
   })
 
   if (rolldownVersion) {
@@ -59,6 +62,7 @@ it('exports snapshot', async ({ skip, task }) => {
         "./internal/browser": {
           "DecodedMap": "function",
           "SpyModule": "object",
+          "__INTERNAL": "object",
           "collectTests": "function",
           "format": "function",
           "getOriginalPosition": "function",
@@ -92,11 +96,17 @@ it('exports snapshot', async ({ skip, task }) => {
           "mockObject": "function",
         },
         "./node": {
+          "BaseRuntime": "function",
           "BaseSequencer": "function",
+          "ForksRuntime": "function",
           "GitNotFoundError": "function",
           "TestsNotFoundError": "function",
+          "ThreadsRuntime": "function",
+          "TypecheckRuntime": "function",
           "VitestPackageInstaller": "function",
           "VitestPlugin": "function",
+          "VmForksRuntime": "function",
+          "VmThreadsRuntime": "function",
           "createDebugger": "function",
           "createMethodsRPC": "function",
           "createViteLogger": "function",
@@ -159,6 +169,13 @@ it('exports snapshot', async ({ skip, task }) => {
           "setFn": "function",
           "setHooks": "function",
         },
+        "./workers": {
+          "collectVitestWorkerTests": "function",
+          "provideWorkerState": "function",
+          "runBaseTests": "function",
+          "runVitestWorker": "function",
+          "runVmTests": "function",
+        },
       }
     `)
   }
@@ -210,6 +227,7 @@ it('exports snapshot', async ({ skip, task }) => {
           "./internal/browser": {
             "DecodedMap": "function",
             "SpyModule": "object",
+            "__INTERNAL": "object",
             "collectTests": "function",
             "format": "function",
             "getOriginalPosition": "function",
@@ -244,10 +262,15 @@ it('exports snapshot', async ({ skip, task }) => {
           },
           "./node": {
             "BaseSequencer": "function",
+            "ForksPoolWorker": "function",
             "GitNotFoundError": "function",
             "TestsNotFoundError": "function",
+            "ThreadsPoolWorker": "function",
+            "TypecheckPoolWorker": "function",
             "VitestPackageInstaller": "function",
             "VitestPlugin": "function",
+            "VmForksPoolWorker": "function",
+            "VmThreadsPoolWorker": "function",
             "createDebugger": "function",
             "createMethodsRPC": "function",
             "createViteLogger": "function",
@@ -309,6 +332,10 @@ it('exports snapshot', async ({ skip, task }) => {
             "getHooks": "function",
             "setFn": "function",
             "setHooks": "function",
+          },
+          "./worker": {
+            "init": "function",
+            "runBaseTests": "function",
           },
         }
       `)

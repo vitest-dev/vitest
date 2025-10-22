@@ -19,7 +19,6 @@ describe('define project helper', () => {
 
   test('allows expected project fields on a project config', () => {
     expectProjectTestConfig.toHaveProperty('pool')
-    expectProjectTestConfig.toHaveProperty('poolOptions')
   })
 })
 
