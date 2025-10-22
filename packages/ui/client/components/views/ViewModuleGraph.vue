@@ -14,7 +14,11 @@ import {
   Markers,
   PositionInitializers,
 } from 'd3-graph-controller'
+import { onMounted, onUnmounted, ref, toRefs, watch, watchEffect } from 'vue'
 import { isReport } from '~/composables/client'
+import IconButton from '../IconButton.vue'
+import Modal from '../Modal.vue'
+import ModuleTransformResultView from '../ModuleTransformResultView.vue'
 
 const props = defineProps<{
   graph: ModuleGraph

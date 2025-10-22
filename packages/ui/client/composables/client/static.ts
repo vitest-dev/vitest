@@ -9,6 +9,7 @@ import type {
 } from 'vitest'
 import { decompressSync, strFromU8 } from 'fflate'
 import { parse } from 'flatted'
+import { reactive } from 'vue'
 import { StateManager } from '../../../../ws-client/src/state'
 
 interface HTMLReportMetadata {

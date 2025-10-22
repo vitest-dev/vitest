@@ -10,7 +10,7 @@ import type {
 import type { BrowserRunnerState } from '../../../types'
 import { createFileTask } from '@vitest/runner/utils'
 import { createClient, getTasks } from '@vitest/ws-client'
-import { reactive as reactiveVue } from 'vue'
+import { computed, reactive as reactiveVue, ref, shallowRef, watch } from 'vue'
 import { explorerTree } from '~/composables/explorer'
 import { isFileNode } from '~/composables/explorer/utils'
 import { isSuite as isTaskSuite } from '~/utils/task'
