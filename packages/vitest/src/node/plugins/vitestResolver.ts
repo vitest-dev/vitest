@@ -7,6 +7,14 @@ export function VitestProjectResolver(ctx: Vitest): Plugin {
   const plugin: Plugin = {
     name: 'vitest:resolve-root',
     enforce: 'pre',
+    config: {
+      order: 'post',
+      handler() {
+        return {
+          base: '/',
+        }
+      },
+    },
     async resolveId(id, _, { ssr }) {
       if (id === 'vitest' || id.startsWith('@vitest/') || id.startsWith('vitest/')) {
         // always redirect the request to the root vitest plugin since
@@ -26,6 +34,14 @@ export function VitestCoreResolver(ctx: Vitest): Plugin {
   return {
     name: 'vitest:resolve-core',
     enforce: 'pre',
+    config: {
+      order: 'post',
+      handler() {
+        return {
+          base: '/',
+        }
+      },
+    },
     async resolveId(id) {
       if (id === 'vitest') {
         return resolve(distDir, 'index.js')

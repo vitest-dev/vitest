@@ -5,6 +5,8 @@ import { defaultExclude, defineConfig } from 'vitest/config'
 import { rolldownVersion } from 'vitest/node'
 
 export default defineConfig({
+  // tests should not fail when base is set
+  base: '/some-url/',
   plugins: [
     {
       name: 'example',
