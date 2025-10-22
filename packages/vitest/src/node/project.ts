@@ -4,6 +4,7 @@ import type { ModuleRunner } from 'vite/module-runner'
 import type { Typechecker } from '../typecheck/typechecker'
 import type { ProvidedContext } from '../types/general'
 import type { OnTestsRerunHandler, Vitest } from './core'
+import type { VitestFetchFunction } from './environments/fetchModule'
 import type { GlobalSetupFile } from './globalSetup'
 import type { ParentProjectBrowser, ProjectBrowser } from './types/browser'
 import type {
@@ -25,6 +26,7 @@ import { setup } from '../api/setup'
 import { createDefinesScript } from '../utils/config-helpers'
 import { isBrowserEnabled, resolveConfig } from './config/resolveConfig'
 import { serializeConfig } from './config/serializeConfig'
+import { createFetchModuleFunction } from './environments/fetchModule'
 import { ServerModuleRunner } from './environments/serverRunner'
 import { loadGlobalSetupFiles } from './globalSetup'
 import { CoverageTransform } from './plugins/coverageTransform'
@@ -55,13 +57,14 @@ export class TestProject {
   /**
    * Temporary directory for the project. This is unique for each project. Vitest stores transformed content here.
    */
-  public readonly tmpDir: string = join(tmpdir(), nanoid())
+  public readonly tmpDir: string
 
   /** @internal */ typechecker?: Typechecker
   /** @internal */ _config?: ResolvedConfig
   /** @internal */ _vite?: ViteDevServer
   /** @internal */ _hash?: string
   /** @internal */ _resolver!: VitestResolver
+  /** @internal */ _fetcher!: VitestFetchFunction
   /** @internal */ _serializedDefines?: string
   /** @inetrnal */ testFilesList: string[] | null = null
 
@@ -77,9 +80,11 @@ export class TestProject {
   constructor(
     vitest: Vitest,
     public options?: InitializeProjectOptions | undefined,
+    tmpDir?: string,
   ) {
     this.vitest = vitest
     this.globalConfig = vitest.config
+    this.tmpDir = tmpDir || join(tmpdir(), nanoid())
   }
 
   /**
@@ -545,11 +550,19 @@ export class TestProject {
     this._resolver = new VitestResolver(server.config.cacheDir, this._config)
     this._vite = server
     this._serializedDefines = createDefinesScript(server.config.define)
+    this._fetcher = createFetchModuleFunction(
+      this._resolver,
+      this.tmpDir,
+      {
+        dumpFolder: this.config.dumpDir,
+        readFromDump: this.config.server.debug?.load ?? process.env.VITEST_DEBUG_LOAD_DUMP != null,
+      },
+    )
 
     const environment = server.environments.__vitest__
     this.runner = new ServerModuleRunner(
       environment,
-      this._resolver,
+      this._fetcher,
       this._config,
     )
   }
@@ -600,11 +613,14 @@ export class TestProject {
   static _createBasicProject(vitest: Vitest): TestProject {
     const project = new TestProject(
       vitest,
+      undefined,
+      vitest._tmpDir,
     )
     project.runner = vitest.runner
     project._vite = vitest.vite
     project._config = vitest.config
     project._resolver = vitest._resolver
+    project._fetcher = vitest._fetcher
     project._serializedDefines = createDefinesScript(vitest.vite.config.define)
     project._setHash()
     project._provideObject(vitest.config.provide)
@@ -613,10 +629,11 @@ export class TestProject {
 
   /** @internal */
   static _cloneBrowserProject(parent: TestProject, config: ResolvedConfig): TestProject {
-    const clone = new TestProject(parent.vitest)
+    const clone = new TestProject(parent.vitest, undefined, parent.tmpDir)
     clone.runner = parent.runner
     clone._vite = parent._vite
     clone._resolver = parent._resolver
+    clone._fetcher = parent._fetcher
     clone._config = config
     clone._setHash()
     clone._parent = parent

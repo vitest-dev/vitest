@@ -1,21 +1,16 @@
 import type { DevEnvironment } from 'vite'
-import type { VitestResolver } from '../resolver'
 import type { ResolvedConfig } from '../types/config'
+import type { VitestFetchFunction } from './fetchModule'
 import { VitestModuleEvaluator } from '#module-evaluator'
 import { ModuleRunner } from 'vite/module-runner'
-import { createFetchModuleFunction } from './fetchModule'
 import { normalizeResolvedIdToUrl } from './normalizeUrl'
 
 export class ServerModuleRunner extends ModuleRunner {
   constructor(
     private environment: DevEnvironment,
-    resolver: VitestResolver,
+    fetcher: VitestFetchFunction,
     private config: ResolvedConfig,
   ) {
-    const fetchModule = createFetchModuleFunction(
-      resolver,
-      false,
-    )
     super(
       {
         hmr: false,
@@ -26,7 +21,7 @@ export class ServerModuleRunner extends ModuleRunner {
             }
             const { data } = event.data
             try {
-              const result = await fetchModule(data[0], data[1], environment, data[2])
+              const result = await fetcher(data[0], data[1], environment, false, data[2])
               return { result }
             }
             catch (error) {
