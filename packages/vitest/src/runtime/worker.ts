@@ -65,11 +65,9 @@ async function execute(method: 'run' | 'collect', ctx: ContextRPC, worker: Vites
     await worker[methodName](state)
   }
   finally {
-    await Promise.all(cleanups.map(fn => fn()))
-
     await rpcDone().catch(() => {})
+    await Promise.all(cleanups.map(fn => fn())).catch(() => {})
     await environmentLoader?.close()
-    rpc.$close()
   }
 }
 
