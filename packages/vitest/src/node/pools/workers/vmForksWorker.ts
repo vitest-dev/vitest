@@ -9,8 +9,7 @@ export class VmForksPoolWorker extends ForksPoolWorker {
   protected readonly entrypoint: string
 
   constructor(options: PoolOptions) {
-    super(options)
-    this.execArgv.push('--experimental-vm-modules')
+    super({ ...options, execArgv: [...options.execArgv, '--experimental-vm-modules'] })
 
     /** Loads {@link file://./../../../runtime/workers/vmForks.ts} */
     this.entrypoint = resolve(options.distPath, 'workers/vmForks.js')
