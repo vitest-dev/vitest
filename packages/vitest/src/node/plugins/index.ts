@@ -74,6 +74,7 @@ export async function VitestPlugin(
         const resolveOptions = getDefaultResolveOptions()
 
         let config: ViteConfig = {
+          base: '/',
           root: viteConfig.test?.root || options.root,
           define: {
             // disable replacing `process.env.NODE_ENV` with static string by vite:client-inject

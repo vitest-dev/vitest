@@ -94,6 +94,7 @@ export function WorkspaceVitestPlugin(
         }
 
         return {
+          base: '/',
           environments: {
             __vitest__: {
               dev: {},
