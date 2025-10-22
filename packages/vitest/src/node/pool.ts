@@ -120,6 +120,7 @@ export function createPool(ctx: Vitest): ProcessPool {
         let env = projectEnvs.get(project)
         if (!env) {
           env = {
+            ...process.env,
             ...options.env,
             ...ctx.config.env,
             ...project.config.env,
