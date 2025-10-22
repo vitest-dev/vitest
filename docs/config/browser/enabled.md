@@ -20,7 +20,7 @@ Note that to enable [Browser Mode](/guide/browser), you also have to specify the
 
 ## Example
 
-```ts [vitest.config.js]
+```js [vitest.config.js]
 import { defineConfig } from 'vitest/config'
 import { playwright } from '@vitest/browser-playwright'
 
