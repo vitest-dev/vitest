@@ -281,17 +281,6 @@ function isEqualRunner(runner: PoolRunner, task: PoolTask) {
     runner.worker.name === task.worker
     && runner.project === task.project
     && runner.environment === task.context.environment.name
-    && runner.worker.execArgv.every((arg, index) => task.execArgv[index] === arg)
-    && isEnvEqual(runner.worker.env, task.env)
+    && (!runner.worker.canReuse || runner.worker.canReuse(task))
   )
-}
-
-function isEnvEqual(a: PoolOptions['env'], b: PoolTask['env']) {
-  const keys = Object.keys(a)
-
-  if (keys.length !== Object.keys(b).length) {
-    return false
-  }
-
-  return keys.every(key => a[key] === b[key])
 }

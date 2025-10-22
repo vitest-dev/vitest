@@ -123,7 +123,7 @@ export function createPool(ctx: Vitest): ProcessPool {
             workerId: workerId++,
           },
           project,
-          env: options.env,
+          env: { ...options.env, ...project.config.env },
           execArgv: [...options.execArgv, ...project.config.execArgv],
           worker: pool,
           isolate: project.config.isolate,

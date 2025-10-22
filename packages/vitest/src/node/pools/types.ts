@@ -13,13 +13,11 @@ export interface PoolOptions {
   cacheFs?: boolean
   environment: string
   execArgv: string[]
-  env: Record<string, string>
+  env: Partial<NodeJS.ProcessEnv>
 }
 
 export interface PoolWorker {
   readonly name: string
-  readonly execArgv: string[]
-  readonly env: Record<string, string>
   readonly reportMemory?: boolean
   readonly cacheFs?: boolean
 
@@ -30,13 +28,20 @@ export interface PoolWorker {
 
   start: () => Promise<void>
   stop: () => Promise<void>
+
+  /**
+   * This is called on workers that already satisfy certain constraints:
+   * - The task has the same project
+   * - The task has the same environment
+   */
+  canReuse?: (task: PoolTask) => boolean
 }
 
 export interface PoolTask {
   worker: 'forks' | 'threads' | 'vmForks' | 'vmThreads' | (string & {})
   project: TestProject
   isolate: boolean
-  env: Record<string, string>
+  env: Partial<NodeJS.ProcessEnv>
   execArgv: string[]
   context: ContextRPC
   memoryLimit: number | null
