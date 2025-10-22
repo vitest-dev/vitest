@@ -6,6 +6,7 @@ import type { ModuleRunner } from 'vite/module-runner'
 import type { SerializedCoverageConfig } from '../runtime/config'
 import type { ArgumentsType, ProvidedContext, UserConsoleLog } from '../types/general'
 import type { CliOptions } from './cli/cli-api'
+import type { VitestFetchFunction } from './environments/fetchModule'
 import type { ProcessPool } from './pool'
 import type { TestModule } from './reporters/reported-tasks'
 import type { TestSpecification } from './spec'
@@ -13,11 +14,11 @@ import type { ResolvedConfig, TestProjectConfiguration, UserConfig, VitestRunMod
 import type { CoverageProvider, ResolvedCoverageOptions } from './types/coverage'
 import type { Reporter } from './types/reporter'
 import type { TestRunResult } from './types/tests'
-import os from 'node:os'
+import os, { tmpdir } from 'node:os'
 import { getTasks, hasFailed, limitConcurrency } from '@vitest/runner/utils'
 import { SnapshotManager } from '@vitest/snapshot/manager'
-import { deepClone, deepMerge, noop, toArray } from '@vitest/utils/helpers'
-import { normalize, relative } from 'pathe'
+import { deepClone, deepMerge, nanoid, noop, toArray } from '@vitest/utils/helpers'
+import { join, normalize, relative } from 'pathe'
 import { version } from '../../package.json' with { type: 'json' }
 import { WebSocketReporter } from '../api/setup'
 import { distDir } from '../paths'
@@ -28,6 +29,7 @@ import { BrowserSessions } from './browser/sessions'
 import { VitestCache } from './cache'
 import { resolveConfig } from './config/resolveConfig'
 import { getCoverageProvider } from './coverage'
+import { createFetchModuleFunction } from './environments/fetchModule'
 import { ServerModuleRunner } from './environments/serverRunner'
 import { FilesNotFoundError } from './errors'
 import { Logger } from './logger'
@@ -105,6 +107,8 @@ export class Vitest {
   /** @internal */ runner!: ModuleRunner
   /** @internal */ _testRun: TestRun = undefined!
   /** @internal */ _resolver!: VitestResolver
+  /** @internal */ _fetcher!: VitestFetchFunction
+  /** @internal */ _tmpDir = join(tmpdir(), nanoid())
 
   private isFirstRun = true
   private restartsCount = 0
@@ -212,10 +216,18 @@ export class Vitest {
     }
 
     this._resolver = new VitestResolver(server.config.cacheDir, resolved)
+    this._fetcher = createFetchModuleFunction(
+      this._resolver,
+      this._tmpDir,
+      {
+        dumpFolder: this.config.dumpDir,
+        readFromDump: this.config.server.debug?.load ?? process.env.VITEST_DEBUG_LOAD_DUMP != null,
+      },
+    )
     const environment = server.environments.__vitest__
     this.runner = new ServerModuleRunner(
       environment,
-      this._resolver,
+      this._fetcher,
       resolved,
     )
 

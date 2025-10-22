@@ -57,7 +57,7 @@ export class TestProject {
   /**
    * Temporary directory for the project. This is unique for each project. Vitest stores transformed content here.
    */
-  public readonly tmpDir: string = join(tmpdir(), nanoid())
+  public readonly tmpDir: string
 
   /** @internal */ typechecker?: Typechecker
   /** @internal */ _config?: ResolvedConfig
@@ -80,9 +80,11 @@ export class TestProject {
   constructor(
     vitest: Vitest,
     public options?: InitializeProjectOptions | undefined,
+    tmpDir?: string,
   ) {
     this.vitest = vitest
     this.globalConfig = vitest.config
+    this.tmpDir = tmpDir || join(tmpdir(), nanoid())
   }
 
   /**
@@ -611,11 +613,14 @@ export class TestProject {
   static _createBasicProject(vitest: Vitest): TestProject {
     const project = new TestProject(
       vitest,
+      undefined,
+      vitest._tmpDir,
     )
     project.runner = vitest.runner
     project._vite = vitest.vite
     project._config = vitest.config
     project._resolver = vitest._resolver
+    project._fetcher = vitest._fetcher
     project._serializedDefines = createDefinesScript(vitest.vite.config.define)
     project._setHash()
     project._provideObject(vitest.config.provide)
@@ -624,10 +629,11 @@ export class TestProject {
 
   /** @internal */
   static _cloneBrowserProject(parent: TestProject, config: ResolvedConfig): TestProject {
-    const clone = new TestProject(parent.vitest)
+    const clone = new TestProject(parent.vitest, undefined, parent.tmpDir)
     clone.runner = parent.runner
     clone._vite = parent._vite
     clone._resolver = parent._resolver
+    clone._fetcher = parent._fetcher
     clone._config = config
     clone._setHash()
     clone._parent = parent
