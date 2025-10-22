@@ -10,11 +10,11 @@ const SIGKILL_TIMEOUT = 500 /** jest does 500ms by default, let's follow it */
 /** @experimental */
 export class ForksPoolWorker implements PoolWorker {
   public readonly name: string = 'forks'
-  public readonly execArgv: string[]
-  public readonly env: Record<string, string>
   public readonly cacheFs: boolean = true
 
   protected readonly entrypoint: string
+  protected execArgv: string[]
+  protected env: Partial<NodeJS.ProcessEnv>
 
   private _fork?: ChildProcess
 

@@ -9,7 +9,8 @@ export class VmThreadsPoolWorker extends ThreadsPoolWorker {
   protected readonly entrypoint: string
 
   constructor(options: PoolOptions) {
-    super({ ...options, execArgv: [...options.execArgv, '--experimental-vm-modules'] })
+    super(options)
+    this.execArgv.push('--experimental-vm-modules')
 
     /** Loads {@link file://./../../../runtime/workers/vmThreads.ts} */
     this.entrypoint = resolve(options.distPath, 'workers/vmThreads.js')

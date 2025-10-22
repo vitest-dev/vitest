@@ -5,9 +5,10 @@ import { Worker } from 'node:worker_threads'
 /** @experimental */
 export class ThreadsPoolWorker implements PoolWorker {
   public readonly name: string = 'threads'
-  public readonly execArgv: string[]
-  public readonly env: Record<string, string>
+
   protected readonly entrypoint: string
+  protected execArgv: string[]
+  protected env: Partial<NodeJS.ProcessEnv>
 
   private _thread?: Worker
 
