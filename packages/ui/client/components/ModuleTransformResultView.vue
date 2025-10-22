@@ -1,5 +1,9 @@
 <script setup lang="ts">
+import { asyncComputed, onKeyStroke } from '@vueuse/core'
+import { computed } from 'vue'
 import { browserState, client } from '~/composables/client'
+import CodeMirrorContainer from './CodeMirrorContainer.vue'
+import IconButton from './IconButton.vue'
 
 const props = defineProps<{ id: string; projectName: string }>()
 const emit = defineEmits<{ (e: 'close'): void }>()

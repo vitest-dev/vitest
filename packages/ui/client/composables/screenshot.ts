@@ -1,4 +1,5 @@
 import type { RunnerTask } from 'vitest'
+import { computed, ref } from 'vue'
 
 export function openScreenshot(task: RunnerTask) {
   const filePath = task.meta?.failScreenshotPath
