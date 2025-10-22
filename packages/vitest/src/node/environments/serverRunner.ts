@@ -1,9 +1,12 @@
 import type { DevEnvironment } from 'vite'
 import type { ResolvedConfig } from '../types/config'
 import type { VitestFetchFunction } from './fetchModule'
+import { builtinModules } from 'node:module'
 import { VitestModuleEvaluator } from '#module-evaluator'
 import { ModuleRunner } from 'vite/module-runner'
 import { normalizeResolvedIdToUrl } from './normalizeUrl'
+
+const nodeBuiltins = builtinModules.filter(id => !id.includes(':'))
 
 export class ServerModuleRunner extends ModuleRunner {
   constructor(
@@ -19,7 +22,13 @@ export class ServerModuleRunner extends ModuleRunner {
             if (event.type !== 'custom') {
               throw new Error(`Vitest Module Runner doesn't support Vite HMR events.`)
             }
-            const { data } = event.data
+            const { name, data } = event.data
+            if (name === 'getBuiltins') {
+              return { result: [...nodeBuiltins, /^node:/] }
+            }
+            if (name !== 'fetchModule') {
+              return { error: new Error(`Unknown method: ${name}. Expected "fetchModule".`) }
+            }
             try {
               const result = await fetcher(data[0], data[1], environment, false, data[2])
               return { result }
