@@ -8,6 +8,10 @@
   --vp-c-brand-3: #506e10;
   --vp-c-sponsor: #ca2971;
   --vitest-c-sponsor-hover: #c13071;
+
+  /* Old Document */
+  --vp-c-old-document-bg: #f4f8e0;
+  --vp-c-old-document-text: #2a3a1b;
 }
 
 .dark {
@@ -16,6 +20,10 @@
   --vp-c-brand-3: #acd268;
   --vp-c-sponsor: #ee4e95;
   --vitest-c-sponsor-hover: #e51370;
+
+  /* Old Document */
+  --vp-c-old-document-bg: #2d3b2e;
+  --vp-c-old-document-text: #c5d9b6;
 }
 
 
@@ -47,18 +55,14 @@
  * Component: Home
  * -------------------------------------------------------------------------- */
 
- :root {
+:root {
   --vp-home-hero-name-color: transparent;
-  --vp-home-hero-name-background: -webkit-linear-gradient(
-    120deg,
-    #86b91a 30%,
-    #edd532
-  );
-  --vp-home-hero-image-background-image: linear-gradient(
-    -45deg,
-    #86b91a60 30%,
-    #edd53260
-  );
+  --vp-home-hero-name-background: -webkit-linear-gradient(120deg,
+      #86b91a 30%,
+      #edd532);
+  --vp-home-hero-image-background-image: linear-gradient(-45deg,
+      #86b91a60 30%,
+      #edd53260);
   --vp-home-hero-image-filter: blur(30px);
 }
 

@@ -11,6 +11,7 @@ import '../style/vars.css'
 import 'uno.css'
 import '@shikijs/vitepress-twoslash/style.css'
 import 'virtual:group-icons.css'
+import OldDocument from '../components/OldDocument.vue'
 
 if (inBrowser) {
   import('./pwa')
@@ -21,6 +22,7 @@ export default {
   Layout() {
     return h(DefaultTheme.Layout, null, {
       'home-features-after': () => h(HomePage),
+      'layout-top': () => h(OldDocument),
     })
   },
   enhanceApp({ app }) {
