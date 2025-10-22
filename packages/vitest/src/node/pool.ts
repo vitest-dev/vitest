@@ -11,7 +11,7 @@ import { version as viteVersion } from 'vite'
 import { rootDir } from '../paths'
 import { isWindows } from '../utils/env'
 import { getWorkerMemoryLimit, stringToBytes } from '../utils/memory-limit'
-import { groupFilesByEnv } from '../utils/test-helpers'
+import { getSpecificationsEnvironments } from '../utils/test-helpers'
 import { createBrowserPool } from './pools/browser'
 import { Pool } from './pools/pool'
 
@@ -86,6 +86,7 @@ export function createPool(ctx: Vitest): ProcessPool {
     let workerId = 0
 
     const sorted = await sequencer.sort(specs)
+    const environments = await getSpecificationsEnvironments(specs)
     const groups = groupSpecs(sorted)
 
     for (const group of groups) {
@@ -108,8 +109,10 @@ export function createPool(ctx: Vitest): ProcessPool {
           continue
         }
 
-        const byEnv = await groupFilesByEnv(specs)
-        const env = Object.values(byEnv)[0][0]
+        const environment = environments.get(specs[0])!
+        if (!environment) {
+          throw new Error(`Cannot find the environment. This is a bug in Vitest.`)
+        }
 
         taskGroup.push({
           context: {
@@ -117,7 +120,7 @@ export function createPool(ctx: Vitest): ProcessPool {
             config: project.serializedConfig,
             files: specs.map(spec => ({ filepath: spec.moduleId, testLocations: spec.testLines })),
             invalidates,
-            environment: env.environment,
+            environment,
             projectName: project.name,
             providedContext: project.getProvidedContext(),
             workerId: workerId++,
@@ -313,7 +316,7 @@ function groupSpecs(specs: TestSpecification[]) {
 
   // Tests in a single group are executed with `maxWorkers` parallelism.
   // Next group starts running after previous finishes - allows real sequential tests.
-  interface Groups { specs: SpecsForRunner[]; maxWorkers: number }
+  interface Groups { specs: SpecsForRunner[]; maxWorkers: number; typecheck?: boolean }
   const groups: Groups[] = []
 
   // Files without file parallelism but without explicit sequence.groupOrder
@@ -349,11 +352,17 @@ function groupSpecs(specs: TestSpecification[]) {
     groups[order].specs.push([spec])
   })
 
-  for (const project in typechecks) {
-    const order = Math.max(0, ...groups.keys()) + 1
+  let order = Math.max(0, ...groups.keys()) + 1
 
-    groups[order] ||= { specs: [], maxWorkers: resolveMaxWorkers(typechecks[project][0].project) }
-    groups[order].specs.push(typechecks[project])
+  for (const projectName in typechecks) {
+    const maxWorkers = resolveMaxWorkers(typechecks[projectName][0].project)
+    const previous = groups[order - 1]
+    if (previous && previous.typecheck && maxWorkers !== previous.maxWorkers) {
+      order += 1
+    }
+
+    groups[order] ||= { specs: [], maxWorkers, typecheck: true }
+    groups[order].specs.push(typechecks[projectName])
   }
 
   if (sequential.specs.length) {
