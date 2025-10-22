@@ -13,15 +13,11 @@ import { Typechecker } from '../../../typecheck/typechecker'
 /** @experimental */
 export class TypecheckPoolWorker implements PoolWorker {
   public readonly name: string = 'typecheck'
-  public readonly execArgv: string[]
-  public readonly env: Record<string, string>
   private readonly project: TestProject
 
   private _eventEmitter = new EventEmitter()
 
   constructor(options: PoolOptions) {
-    this.execArgv = options.execArgv
-    this.env = options.env
     this.project = options.project
   }
 
@@ -31,6 +27,10 @@ export class TypecheckPoolWorker implements PoolWorker {
 
   async stop(): Promise<void> {
     // noop, onMessage handles it
+  }
+
+  canReuse(): boolean {
+    return true
   }
 
   send(message: WorkerRequest): void {

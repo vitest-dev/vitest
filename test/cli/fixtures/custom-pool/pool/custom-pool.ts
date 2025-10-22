@@ -20,13 +20,9 @@ export class CustomRuntimeWorker implements PoolWorker {
   public readonly name = 'custom'
   private vitest: Vitest
   private customEvents = new EventEmitter()
-  readonly execArgv: string[]
-  readonly env: Record<string, string>
   private project: TestProject
 
   constructor(options: PoolOptions, private settings: OptionsCustomPool) {
-    this.execArgv = options.execArgv
-    this.env = options.env
     this.vitest = options.project.vitest
     this.project = options.project
   }
