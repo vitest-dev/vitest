@@ -135,11 +135,4 @@ export default antfu(
       'unicorn/consistent-function-scoping': 'off',
     },
   },
-  {
-    files: [`packages/vite-node/${GLOB_SRC}`],
-    rules: {
-      // false positive on "exports" variable
-      'antfu/no-cjs-exports': 'off',
-    },
-  },
 )

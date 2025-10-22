@@ -28,9 +28,7 @@
       "vitest/internal/module-runner": ["./packages/vitest/src/public/module-runner.ts"],
       "vitest/globals": ["./packages/vitest/globals.d.ts"],
       "vitest/browser": ["./packages/vitest/browser/context.d.ts"],
-      "vitest/*": ["./packages/vitest/src/public/*"],
-      "vite-node": ["./packages/vite-node/src/index.ts"],
-      "vite-node/*": ["./packages/vite-node/src/*"]
+      "vitest/*": ["./packages/vitest/src/public/*"]
     },
     "strict": true,
     "declaration": true,

@@ -156,7 +156,7 @@ Color used by CLI and UI can be changed by providing an object with `color` prop
 
 - **Type:** `{ sourcemap?, deps?, ... }`
 
-Vite-Node server options.
+Moudle runner options.
 
 #### server.sourcemap
 
@@ -169,7 +169,7 @@ Inject inline source map to modules.
 
 - **Type:** `{ dumpModules?, loadDumppedModules? }`
 
-Vite-Node debugger options.
+Module runner debugger options.
 
 #### server.debug.dumpModules
 

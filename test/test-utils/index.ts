@@ -153,7 +153,7 @@ interface CliOptions extends Partial<Options> {
   preserveAnsi?: boolean
 }
 
-async function runCli(command: 'vitest' | 'vite-node', _options?: CliOptions | string, ...args: string[]) {
+async function runCli(command: 'vitest', _options?: CliOptions | string, ...args: string[]) {
   let options = _options
 
   if (typeof _options === 'string') {
@@ -226,13 +226,6 @@ async function runCli(command: 'vitest' | 'vite-node', _options?: CliOptions | s
 export async function runVitestCli(_options?: CliOptions | string, ...args: string[]) {
   process.env.VITE_TEST_WATCHER_DEBUG = 'true'
   return runCli('vitest', _options, ...args)
-}
-
-export async function runViteNodeCli(_options?: CliOptions | string, ...args: string[]) {
-  process.env.VITE_TEST_WATCHER_DEBUG = 'true'
-  const { vitest, ...rest } = await runCli('vite-node', _options, ...args)
-
-  return { viteNode: vitest, ...rest }
 }
 
 export function getInternalState(): WorkerGlobalState {
