@@ -44,7 +44,6 @@ Vitest is a next-generation testing framework powered by Vite. This is a monorep
 
 ### Core Packages (`packages/`)
 - `vitest` - Main testing framework
-- `vite-node` - Vite SSR runtime
 - `browser` - Browser testing support
 - `ui` - Web UI for test results
 - `runner` - Test runner core
