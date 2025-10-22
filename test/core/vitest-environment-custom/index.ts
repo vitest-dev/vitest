@@ -15,6 +15,8 @@ export default <Environment>{
       setTimeout,
       clearTimeout,
       AbortController,
+      EventTarget,
+      Event,
     })
     return {
       getVmContext() {
