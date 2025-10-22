@@ -4,7 +4,7 @@ import type { ResolveSnapshotPathHandlerContext } from '../types/config'
 import { existsSync, mkdirSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { cleanUrl } from '@vitest/utils/helpers'
-import { createFetchModuleFunction, handleRollupError } from '../environments/fetchModule'
+import { handleRollupError } from '../environments/fetchModule'
 import { normalizeResolvedIdToUrl } from '../environments/normalizeUrl'
 
 interface MethodsOptions {
@@ -25,15 +25,6 @@ export function createMethodsRPC(project: TestProject, options: MethodsOptions =
     mkdirSync(project.config.dumpDir, { recursive: true })
   }
   project.vitest.state.metadata[project.name].dumpDir = project.config.dumpDir
-  const fetch = createFetchModuleFunction(
-    project._resolver,
-    cacheFs,
-    project.tmpDir,
-    {
-      dumpFolder: project.config.dumpDir,
-      readFromDump: project.config.server.debug?.load ?? process.env.VITEST_DEBUG_LOAD_DUMP != null,
-    },
-  )
   return {
     async fetch(
       url,
@@ -48,7 +39,7 @@ export function createMethodsRPC(project: TestProject, options: MethodsOptions =
 
       const start = performance.now()
 
-      return await fetch(url, importer, environment, options).then((result) => {
+      return await project._fetcher(url, importer, environment, cacheFs, options).then((result) => {
         const duration = performance.now() - start
         project.vitest.state.transformTime += duration
         const metadata = project.vitest.state.metadata[project.name]
