@@ -18,22 +18,27 @@ interface DumpOptions {
   readFromDump?: boolean
 }
 
+export interface VitestFetchFunction {
+  (
+    url: string,
+    importer: string | undefined,
+    environment: DevEnvironment,
+    cacheFs: boolean,
+    options?: FetchFunctionOptions
+  ): Promise<FetchResult | FetchCachedFileSystemResult>
+}
+
 export function createFetchModuleFunction(
   resolver: VitestResolver,
-  cacheFs: boolean = false,
   tmpDir: string = join(tmpdir(), nanoid()),
   dump?: DumpOptions,
-): (
-  url: string,
-  importer: string | undefined,
-  environment: DevEnvironment,
-  options?: FetchFunctionOptions
-) => Promise<FetchResult | FetchCachedFileSystemResult> {
-  const cachedFsResults = new Map<string, string>()
+): VitestFetchFunction {
+  const cacheByEnvironment: Record<string, Map<string, string>> = {}
   return async (
     url,
     importer,
     environment,
+    cacheFs,
     options,
   ) => {
     // We are copy pasting Vite's externalization logic from `fetchModule` because
@@ -115,6 +120,8 @@ export function createFetchModuleFunction(
     if (!cacheFs || !('code' in result)) {
       return result
     }
+
+    const cachedFsResults = cacheByEnvironment[environment.name] || (cacheByEnvironment[environment.name] = new Map())
 
     const code = result.code
     // to avoid serialising large chunks of code,
