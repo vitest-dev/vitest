@@ -1,4 +1,5 @@
 import type { Awaitable } from '@vitest/utils'
+import type { ContextTestEnvironment } from '../types/worker'
 import type { Vitest } from './core'
 import type { PoolTask } from './pools/types'
 import type { TestProject } from './project'
@@ -12,6 +13,7 @@ import { rootDir } from '../paths'
 import { isWindows } from '../utils/env'
 import { getWorkerMemoryLimit, stringToBytes } from '../utils/memory-limit'
 import { getSpecificationsEnvironments } from '../utils/test-helpers'
+import { OptimizedTestGrouper } from './optimizedGrouper'
 import { createBrowserPool } from './pools/browser'
 import { Pool } from './pools/pool'
 
@@ -87,7 +89,7 @@ export function createPool(ctx: Vitest): ProcessPool {
 
     const sorted = await sequencer.sort(specs)
     const environments = await getSpecificationsEnvironments(specs)
-    const groups = groupSpecs(sorted)
+    const groups = groupSpecs(sorted, ctx, environments)
 
     for (const group of groups) {
       if (!group) {
@@ -309,7 +311,7 @@ function getMemoryLimit(config: ResolvedConfig, pool: string) {
   return null
 }
 
-function groupSpecs(specs: TestSpecification[]) {
+function groupSpecs(specs: TestSpecification[], ctx: Vitest, environments: WeakMap<TestSpecification, ContextTestEnvironment>) {
   // Test files are passed to test runner one at a time, except Typechecker.
   // TODO: Should non-isolated test files be passed to test runner all at once?
   type SpecsForRunner = TestSpecification[]
@@ -325,7 +327,29 @@ function groupSpecs(specs: TestSpecification[]) {
   // Type tests are run in a single group, per project
   const typechecks: Record<string, TestSpecification[]> = {}
 
-  specs.forEach((spec) => {
+  // Use OptimizedTestGrouper to optimize test execution order
+  const grouper = new OptimizedTestGrouper(
+    ctx.cache.results.cache,
+    ctx.cache.stats.cache,
+  )
+
+  // Get the grouping strategy from the first spec (all specs in same groupOrder should have same strategy)
+  const strategy = specs[0]?.project.config.sequence.groupingStrategy || 'balanced'
+  const maxWorkers = specs[0] ? resolveMaxWorkers(specs[0].project) : 1
+
+  // Apply optimized grouping which respects environment boundaries
+  const optimizedGroups = grouper.group(specs, maxWorkers, strategy, environments)
+
+  // Flatten the optimized groups back into a simple array for processing
+  const orderedSpecs: TestSpecification[] = []
+  for (const tier of optimizedGroups) {
+    for (const group of tier) {
+      orderedSpecs.push(...group.specs)
+    }
+  }
+
+  // Now process the ordered specs using the original logic
+  orderedSpecs.forEach((spec) => {
     if (spec.pool === 'typescript') {
       typechecks[spec.project.name] ||= []
       typechecks[spec.project.name].push(spec)
@@ -339,11 +363,11 @@ function groupSpecs(specs: TestSpecification[]) {
       return sequential.specs.push([spec])
     }
 
-    const maxWorkers = resolveMaxWorkers(spec.project)
-    groups[order] ||= { specs: [], maxWorkers }
+    const specMaxWorkers = resolveMaxWorkers(spec.project)
+    groups[order] ||= { specs: [], maxWorkers: specMaxWorkers }
 
     // Multiple projects with different maxWorkers but same groupId
-    if (groups[order].maxWorkers !== maxWorkers) {
+    if (groups[order].maxWorkers !== specMaxWorkers) {
       const last = groups[order].specs.at(-1)?.at(-1)?.project.name
 
       throw new Error(`Projects "${last}" and "${spec.project.name}" have different 'maxWorkers' but same 'sequence.groupId'.\nProvide unique 'sequence.groupId' for them.`)
@@ -354,6 +378,7 @@ function groupSpecs(specs: TestSpecification[]) {
 
   let order = Math.max(0, ...groups.keys()) + 1
 
+  // Handle typecheck specs
   for (const projectName in typechecks) {
     const maxWorkers = resolveMaxWorkers(typechecks[projectName][0].project)
     const previous = groups[order - 1]
