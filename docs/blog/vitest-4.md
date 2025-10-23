@@ -87,7 +87,7 @@ export default defineConfig({
 ```
 ```ts [webdriverio]
 import { defineConfig } from 'vitest/config'
-import { playwright } from '@vitest/browser-webdriverio' // [!code ++]
+import { webdriverio } from '@vitest/browser-webdriverio' // [!code ++]
 /// <reference path="@vitest/browser/providers/webdriverio" /> // [!code --]
 
 export default defineConfig({
@@ -113,7 +113,7 @@ export default defineConfig({
 ```
 ```ts [preview]
 import { defineConfig } from 'vitest/config'
-import { playwright } from '@vitest/browser-preview' // [!code ++]
+import { preview } from '@vitest/browser-preview' // [!code ++]
 
 export default defineConfig({
   test: {
