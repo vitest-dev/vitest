@@ -89,6 +89,9 @@ export function createPool(ctx: Vitest): ProcessPool {
     const environments = await getSpecificationsEnvironments(specs)
     const groups = groupSpecs(sorted)
 
+    const projectEnvs = new WeakMap<TestProject, Partial<NodeJS.ProcessEnv>>()
+    const projectExecArgvs = new WeakMap<TestProject, string[]>()
+
     for (const group of groups) {
       if (!group) {
         continue
@@ -114,6 +117,33 @@ export function createPool(ctx: Vitest): ProcessPool {
           throw new Error(`Cannot find the environment. This is a bug in Vitest.`)
         }
 
+        let env = projectEnvs.get(project)
+        if (!env) {
+          env = {
+            ...process.env,
+            ...options.env,
+            ...ctx.config.env,
+            ...project.config.env,
+          }
+
+          // env are case-insensitive on Windows, but spawned processes don't support it
+          if (isWindows) {
+            for (const name in env) {
+              env[name.toUpperCase()] = env[name]
+            }
+          }
+          projectEnvs.set(project, env)
+        }
+
+        let execArgv = projectExecArgvs.get(project)
+        if (!execArgv) {
+          execArgv = [
+            ...options.execArgv,
+            ...project.config.execArgv,
+          ]
+          projectExecArgvs.set(project, execArgv)
+        }
+
         taskGroup.push({
           context: {
             pool,
@@ -126,8 +156,8 @@ export function createPool(ctx: Vitest): ProcessPool {
             workerId: workerId++,
           },
           project,
-          env: { ...options.env, ...project.config.env },
-          execArgv: [...options.execArgv, ...project.config.execArgv],
+          env,
+          execArgv,
           worker: pool,
           isolate: project.config.isolate,
           memoryLimit: getMemoryLimit(ctx.config, pool) ?? null,
@@ -250,16 +280,7 @@ function resolveOptions(ctx: Vitest) {
       NODE_ENV: process.env.NODE_ENV || 'test',
       VITEST_MODE: ctx.config.watch ? 'WATCH' : 'RUN',
       FORCE_TTY: isatty(1) ? 'true' : '',
-      ...process.env,
-      ...ctx.config.env,
     },
-  }
-
-  // env are case-insensitive on Windows, but spawned processes don't support it
-  if (isWindows) {
-    for (const name in options.env) {
-      options.env[name.toUpperCase()] = options.env[name]
-    }
   }
 
   return options
