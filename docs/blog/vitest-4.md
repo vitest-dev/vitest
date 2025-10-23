@@ -147,7 +147,7 @@ With these changes, the `@vitest/browser` package can be removed from your depen
 Vitest 4 adds support for [Visual Regression testing](/guide/browser/visual-regression-testing.md) in Browser Mode. We will continue to iterate on this feature to improve the experience.
 
 Visual regression testing in Vitest can be done through the
-[`toMatchScreenshot` assertion](/guide/browser/assertion-api.html#tomatchscreenshot):
+[`toMatchScreenshot` assertion](/guide/browser/assertion-api.html#tomatchscreenshot-experimental):
 
 ```ts
 import { expect, test } from 'vitest'
