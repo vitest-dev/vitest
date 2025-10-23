@@ -12,11 +12,11 @@ test('all mocked are valid', async () => {
 
   // creates a new mocked function with no formal arguments.
   expect(example.square.name).toEqual('square')
-  expect(example.square.length).toEqual(0)
+  expect(example.square.length).toEqual(2)
 
   // async functions get the same treatment as standard synchronous functions.
   expect(example.asyncSquare.name).toEqual('asyncSquare')
-  expect(example.asyncSquare.length).toEqual(0)
+  expect(example.asyncSquare.length).toEqual(2)
 
   // creates a new class with the same interface, member functions and properties are mocked.
   expect(example.someClasses.constructor.name).toEqual('Bar')
