@@ -231,10 +231,10 @@ function clearModuleMocks(config: SerializedConfig) {
   if (restoreMocks) {
     vi.restoreAllMocks()
   }
-  else if (mockReset) {
+  if (mockReset) {
     vi.resetAllMocks()
   }
-  else if (clearMocks) {
+  if (clearMocks) {
     vi.clearAllMocks()
   }
 
