@@ -1,6 +1,23 @@
 import type { MockContext } from 'vitest'
 import { describe, expect, test, vi } from 'vitest'
 
+test('vi.fn() has correct length', () => {
+  const fn0 = vi.spyOn({ fn: () => {} }, 'fn')
+  expect(fn0.length).toBe(0)
+
+  const fnArgs = vi.spyOn({ fn: (..._args: any[]) => {} }, 'fn')
+  expect(fnArgs.length).toBe(0)
+
+  const fn1 = vi.spyOn({ fn: (_arg1: any) => {} }, 'fn')
+  expect(fn1.length).toBe(1)
+
+  const fn2 = vi.spyOn({ fn: (_arg1: any, _arg2: any) => {} }, 'fn')
+  expect(fn2.length).toBe(2)
+
+  const fn3 = vi.spyOn({ fn: (_arg1: any, _arg2: any, _arg3: any) => {} }, 'fn')
+  expect(fn3.length).toBe(3)
+})
+
 describe('vi.spyOn() state', () => {
   test('vi.spyOn() spies on an object and tracks the calls', () => {
     const object = createObject()
