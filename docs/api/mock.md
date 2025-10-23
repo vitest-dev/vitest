@@ -20,6 +20,24 @@ getApplesSpy.mock.calls.length === 1
 
 You should use mock assertions (e.g., [`toHaveBeenCalled`](/api/expect#tohavebeencalled)) on [`expect`](/api/expect) to assert mock results. This API reference describes available properties and methods to manipulate mock behavior.
 
+::: warning IMPORTANT
+Vitest spies inherit implementation's `length` property. This means that `length` can be different from the original implementation:
+
+```ts
+const example = {
+  fn(arg1, arg2) {
+    // ...
+  }
+}
+
+const fn = vi.spyOn(example, 'fn')
+fn.length // == 2
+
+fn.mockImplementation(() => {})
+fn.length // == 0
+```
+:::
+
 ::: tip
 The custom function implementation in the types below is marked with a generic `<T>`.
 :::
