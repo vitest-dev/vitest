@@ -494,6 +494,25 @@ function createMock(
   if (original) {
     copyOriginalStaticProperties(namedObject[name], original)
   }
+  let overrideLength: number | undefined
+  Object.defineProperty(namedObject[name], 'length', {
+    configurable: true,
+    get: () => {
+      if (overrideLength != null) {
+        return overrideLength
+      }
+
+      const implementation = config.onceMockImplementations[0]
+        || config.mockImplementation
+        || prototypeConfig?.onceMockImplementations[0]
+        || prototypeConfig?.mockImplementation
+        || original
+      return implementation?.length ?? 0
+    },
+    set: (length: number) => {
+      overrideLength = length
+    },
+  })
   return namedObject[name]
 }
 
