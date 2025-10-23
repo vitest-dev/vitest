@@ -48,6 +48,13 @@ export function createMockInstance(options: MockInstanceOption = {}): Mock {
     state,
     ...options,
   })
+  const mockLength = (mockImplementation || originalImplementation)?.length ?? 0
+  Object.defineProperty(mock, 'length', {
+    writable: true,
+    enumerable: false,
+    value: mockLength,
+    configurable: true,
+  })
   // inherit the default name so it appears in snapshots and logs
   // this is used by `vi.spyOn()` for better debugging.
   // when `vi.fn()` is called, we just use the default string
@@ -494,25 +501,6 @@ function createMock(
   if (original) {
     copyOriginalStaticProperties(namedObject[name], original)
   }
-  let overrideLength: number | undefined
-  Object.defineProperty(namedObject[name], 'length', {
-    configurable: true,
-    get: () => {
-      if (overrideLength != null) {
-        return overrideLength
-      }
-
-      const implementation = config.onceMockImplementations[0]
-        || config.mockImplementation
-        || prototypeConfig?.onceMockImplementations[0]
-        || prototypeConfig?.mockImplementation
-        || original
-      return implementation?.length ?? 0
-    },
-    set: (length: number) => {
-      overrideLength = length
-    },
-  })
   return namedObject[name]
 }
 
