@@ -43,7 +43,7 @@
     "react-dom": "^19.1.1",
     "url": "^0.11.4",
     "vitest": "workspace:*",
-    "vitest-browser-react": "^0.3.0",
+    "vitest-browser-react": "^2.0.0",
     "ws": "catalog:"
   }
 }
