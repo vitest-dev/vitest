@@ -506,16 +506,40 @@ export default ({ mode }: { mode: string }) => {
             collapsed: false,
             items: [
               {
-                text: 'playwright',
-                link: '/config/browser/playwright',
+                text: 'Providers',
+                collapsed: true,
+                items: [
+                  {
+                    text: 'playwright',
+                    link: '/config/browser/playwright',
+                  },
+                  {
+                    text: 'webdriverio',
+                    link: '/config/browser/webdriverio',
+                  },
+                  {
+                    text: 'preview',
+                    link: '/config/browser/preview',
+                  },
+                ],
               },
               {
-                text: 'webdriverio',
-                link: '/config/browser/webdriverio',
-              },
-              {
-                text: 'preview',
-                link: '/config/browser/preview',
+                text: 'Render Function',
+                collapsed: true,
+                items: [
+                  {
+                    text: 'react',
+                    link: '/config/browser/react',
+                  },
+                  {
+                    text: 'vue',
+                    link: '/config/browser/vue',
+                  },
+                  {
+                    text: 'svelte',
+                    link: '/config/browser/svelte',
+                  },
+                ],
               },
               // TODO: generate
               {
