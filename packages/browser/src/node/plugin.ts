@@ -342,14 +342,7 @@ export default (parentServer: ParentBrowserProject, base = '/'): Plugin[] => {
           useId = useId.replace(/\\/g, '/')
         }
 
-        return {
-          id: useId,
-          meta: {
-            'vitest:browser': {
-              isTestFile: true,
-            },
-          },
-        }
+        return useId
       },
     },
     {
@@ -441,11 +434,6 @@ export default (parentServer: ParentBrowserProject, base = '/'): Plugin[] => {
           code: /import\.meta\.vitest/,
         },
         handler(code, id) {
-          const meta = this.getModuleInfo(id)?.meta
-          if (!meta?.['vitest:browser']?.isTestFile) {
-            return
-          }
-
           const filename = cleanUrl(id)
 
           if (!code.includes('import.meta.vitest')) {
