@@ -35,6 +35,9 @@ export function serializeConfig(project: TestProject): SerializedConfig {
     // TODO: non serializable function?
     diff: config.diff,
     retry: config.retry,
+    retryDelay: config.retryDelay,
+    retryCondition: config.retryCondition,
+    retryStrategy: config.retryStrategy,
     disableConsoleIntercept: config.disableConsoleIntercept,
     root: config.root,
     name: config.name,

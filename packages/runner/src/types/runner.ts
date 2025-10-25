@@ -37,6 +37,9 @@ export interface VitestRunnerConfig {
   testTimeout: number
   hookTimeout: number
   retry: number
+  retryDelay?: number
+  retryCondition?: string | ((error: Error) => boolean)
+  retryStrategy?: 'immediate' | 'test-file' | 'deferred'
   includeTaskLocation?: boolean
   diffOptions?: DiffOptions
 }

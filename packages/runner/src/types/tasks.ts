@@ -92,6 +92,21 @@ export interface TaskBase {
    */
   retry?: number
   /**
+   * Delay in milliseconds between retry attempts.
+   * @default 0
+   */
+  retryDelay?: number
+  /**
+   * Condition to determine if a test should be retried based on the error.
+   * @default undefined (retry on all errors)
+   */
+  retryCondition?: string | ((error: Error) => boolean)
+  /**
+   * Strategy for when to retry failed tests.
+   * @default 'immediate'
+   */
+  retryStrategy?: 'immediate' | 'test-file' | 'deferred'
+  /**
    * The amount of times the task should be repeated after the successful run.
    * If the task fails, it will not be retried unless `retry` is specified.
    * @default 0
@@ -473,6 +488,30 @@ export interface TestOptions {
    * @default 0
    */
   retry?: number
+  /**
+   * Delay in milliseconds between retry attempts.
+   * Useful for tests that interact with rate-limited APIs or need time to recover.
+   *
+   * @default 0
+   */
+  retryDelay?: number
+  /**
+   * Condition to determine if a test should be retried based on the error.
+   * - If a string, treated as a regular expression to match against error message
+   * - If a function, called with the error object; return true to retry
+   *
+   * @default undefined (retry on all errors)
+   */
+  retryCondition?: string | ((error: Error) => boolean)
+  /**
+   * Strategy for when to retry failed tests.
+   * - 'immediate': Retry immediately after failure (default)
+   * - 'test-file': Defer retries until after all tests in the file complete
+   * - 'deferred': Defer retries until after all test files complete
+   *
+   * @default 'immediate'
+   */
+  retryStrategy?: 'immediate' | 'test-file' | 'deferred'
   /**
    * How many times the test will run again.
    * Only inner tests will repeat if set on `describe()`, nested `describe()` will inherit parent's repeat by default.

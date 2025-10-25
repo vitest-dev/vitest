@@ -790,6 +790,33 @@ export interface InlineConfig {
   retry?: number
 
   /**
+   * Delay in milliseconds between retry attempts.
+   * Useful for tests that interact with rate-limited APIs or need time to recover.
+   *
+   * @default 0
+   */
+  retryDelay?: number
+
+  /**
+   * Condition to determine if a test should be retried based on the error.
+   * - If a string, treated as a regular expression to match against error message
+   * - If a function, called with the error object; return true to retry
+   *
+   * @default undefined (retry on all errors)
+   */
+  retryCondition?: string | ((error: Error) => boolean)
+
+  /**
+   * Strategy for when to retry failed tests.
+   * - 'immediate': Retry immediately after failure (default)
+   * - 'test-file': Defer retries until after all tests in the file complete
+   * - 'deferred': Defer retries until after all test files complete
+   *
+   * @default 'immediate'
+   */
+  retryStrategy?: 'immediate' | 'test-file' | 'deferred'
+
+  /**
    * Show full diff when snapshot fails instead of a patch.
    */
   expandSnapshotDiff?: boolean

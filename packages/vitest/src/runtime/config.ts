@@ -78,6 +78,9 @@ export interface SerializedConfig {
   } | undefined
   diff: string | SerializedDiffOptions | undefined
   retry: number
+  retryDelay: number | undefined
+  retryCondition: string | ((error: Error) => boolean) | undefined
+  retryStrategy: 'immediate' | 'test-file' | 'deferred' | undefined
   includeTaskLocation: boolean | undefined
   inspect: boolean | string | undefined
   inspectBrk: boolean | string | undefined

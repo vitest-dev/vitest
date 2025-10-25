@@ -322,6 +322,9 @@ function createSuiteCollector(
       file: (currentSuite?.file ?? collectorContext.currentSuite?.file)!,
       timeout,
       retry: options.retry ?? runner.config.retry,
+      retryDelay: options.retryDelay ?? runner.config.retryDelay,
+      retryCondition: options.retryCondition ?? runner.config.retryCondition,
+      retryStrategy: options.retryStrategy ?? runner.config.retryStrategy ?? 'immediate',
       repeats: options.repeats,
       mode: options.only
         ? 'only'
