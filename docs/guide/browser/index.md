@@ -63,16 +63,16 @@ If you don't already use one of these tools, we recommend starting with Playwrig
 
 ::: code-group
 ```bash [npm]
-npm install -D vitest @vitest/browser playwright
+npm install -D vitest @vitest/browser @vitest/browser-playwright playwright
 ```
 ```bash [yarn]
-yarn add -D vitest @vitest/browser playwright
+yarn add -D vitest @vitest/browser @vitest/browser-playwright playwright
 ```
 ```bash [pnpm]
-pnpm add -D vitest @vitest/browser playwright
+pnpm add -D vitest @vitest/browser @vitest/browser-playwright playwright
 ```
 ```bash [bun]
-bun add -D vitest @vitest/browser playwright
+bun add -D vitest @vitest/browser @vitest/browser-playwright playwright
 ```
 == WebdriverIO
 
