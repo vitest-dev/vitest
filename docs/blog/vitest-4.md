@@ -302,7 +302,7 @@ export default defineConfig({
 })
 ```
 
-The [`default`](/guide/reporters#default-reporter) reporter now always prints tests in a tree if there is only one test file running. If you want to always see tests printed as a tree, you can use a new [`tree`](/guide/reporters#tree-reporter) reporter.
+The [`default`](/guide/reporters#default-reporter) reporter now only prints tests in a tree if there is only one test file running. If you want to always see tests printed as a tree, you can use a new [`tree`](/guide/reporters#tree-reporter) reporter.
 
 The [`verbose`](/guide/reporters#verbose-reporter) reporter now always prints tests one by one when they are finished. Previously, this was done only in CI, and locally `verbose` would behave mostly like a `default` reporter. If you prefer to keep the old behaviour, you can conditionally use the `verbose` reporter only in CI by updating the config:
 
