@@ -15,7 +15,18 @@ Assign a custom name to the test project or Vitest process. The name will be vis
 
 The color used by the CLI and UI can be changed by providing an object with a `color` property.
 
-<!-- TODO: show how reporter prints it (terminal and UI) -->
+## Colors
+
+The displayed colors depend on your terminal’s color scheme. In the UI, colors match their CSS equivalents.
+
+- black
+- red
+- green
+- yellow
+- blue
+- magenta
+- cyan
+- white
 
 ## Example
 
@@ -45,7 +56,7 @@ export default defineConfig({
 
 This property is mostly useful if you have several projects as it helps distinguish them in your terminal:
 
-```js [vitest.config.js]
+```js{7,11} [vitest.config.js]
 import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
@@ -78,7 +89,7 @@ Note that projects cannot have the same name. Vitest will throw an error during 
 
 You can also assign different names to different browser [instances](/config/browser/instances):
 
-```js [vitest.config.js]
+```js{10,11} [vitest.config.js]
 import { defineConfig } from 'vitest/config'
 import { playwright } from '@vitest/browser-playwright'
 
