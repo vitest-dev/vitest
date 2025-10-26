@@ -13,7 +13,7 @@ interface UserConfig {
 
 Assign a custom name to the test project or Vitest process. The name will be visible in the CLI and UI, and available in the Node.js API via [`project.name`](/advanced/api/test-project#name).
 
-Color used by CLI and UI can be changed by providing an object with a `color` property.
+The color used by the CLI and UI can be changed by providing an object with a `color` property.
 
 <!-- TODO: show how reporter prints it (terminal and UI) -->
 
@@ -65,7 +65,7 @@ export default defineConfig({
 ```
 
 ::: tip
-Vitest assigns a name automatically when none is provided. Resolution order:
+Vitest automatically assigns a name when none is provided. Resolution order:
 
 - If the project is specified by a config file or directory, Vitest uses the package.json's `name` field.
 - If there is no `package.json`, Vitest falls back to the project folder's basename.

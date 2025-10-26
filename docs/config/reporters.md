@@ -25,7 +25,7 @@ This option defines a single reporter or a list of reporters available to Vitest
 
 Alongside built-in reporters, you can also pass down a custom implementation of a [`Reporter` interface](/api/advanced/reporters), or a path to a module that exports it as a default export (e.g. `'./path/to/reporter.ts'`, `'@scope/reporter'`).
 
-You can configure a reporter by providing a tuple: `[string, object]`, where the string is a reporter name, and object is reporter's options.
+You can configure a reporter by providing a tuple: `[string, object]`, where the string is a reporter name, and the object is the reporter's options.
 
 ::: warning
 Note that the [coverage](/guide/coverage) feature uses a different [`coverage.reporter`](/config/coverage#reporter) option instead of this one.
@@ -57,8 +57,8 @@ export default defineConfig({
       'default',
       // conditional reporter
       process.env.CI ? 'github-actions' : {},
-      // custom reporter from npm package with options
-      // are passed down as a tuple
+      // custom reporter from npm package
+      // options are passed down as a tuple
       [
         'vitest-sonar-reporter',
         { outputFile: 'sonar-report.xml' }
