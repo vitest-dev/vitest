@@ -455,7 +455,7 @@ export default ({ mode }: { mode: string }) => {
               },
               {
                 text: 'includeSource',
-                link: '/config/includesource',
+                link: '/config/include-source',
               },
               {
                 text: 'name',
