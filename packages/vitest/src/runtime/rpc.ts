@@ -61,12 +61,19 @@ export async function rpcDone(): Promise<unknown[] | undefined> {
   return Promise.all(awaitable)
 }
 
+let previousRpc: undefined | WorkerRPC
+
 export function createRuntimeRpc(
   options: Pick<
     BirpcOptions<RuntimeRPC>,
     'on' | 'post' | 'serialize' | 'deserialize'
   >,
 ): { rpc: WorkerRPC; onCancel: Promise<CancelReason> } {
+  if (previousRpc) {
+    previousRpc.$close()
+    previousRpc = undefined
+  }
+
   let setCancel = (_reason: CancelReason) => {}
   const onCancel = new Promise<CancelReason>((resolve) => {
     setCancel = resolve
@@ -88,6 +95,8 @@ export function createRuntimeRpc(
       },
     ),
   )
+
+  previousRpc = rpc
 
   return {
     rpc,
