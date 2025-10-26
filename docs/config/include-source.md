@@ -63,7 +63,7 @@ export default defineConfig({
 ```js [rolldown.config.js]
 import { defineConfig } from 'rolldown/config'
 
-defineConfig({
+export default defineConfig({
   transform: {
     define: { // [!code ++]
       'import.meta.vitest': 'undefined', // [!code ++]
