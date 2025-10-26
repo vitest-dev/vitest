@@ -31,6 +31,9 @@ import { transformHead } from './scripts/transformHead'
 
 export default ({ mode }: { mode: string }) => {
   return withPwa(defineConfig({
+    // TODO: remove when finished
+    ignoreDeadLinks: true,
+
     lang: 'en-US',
     title: vitestName,
     description: vitestDescription,
