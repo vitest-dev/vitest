@@ -4,17 +4,9 @@ title: browser.enabled | Config
 
 # browser.enabled
 
-- **Type**
-
-  `boolean`
-
-- **Default**
-
-  `false`
-
-- **CLI**
-
-  `--browser`, `--browser.enabled=false`
+- **Type:** `boolean`
+- **Default:** `false`
+- **CLI:** `--browser`, `--browser.enabled=false`
 
 Enabling this flag makes Vitest run all tests in a [browser](/guide/browser) by default. If you are configuring other browser options via the CLI, you can use `--browser.enabled` alongside them instead of `--browser`:
 

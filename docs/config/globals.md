@@ -10,7 +10,7 @@ title: globals | Config
 
 By default, `vitest` does not provide global APIs for explicitness. If you prefer to use the APIs globally like Jest, you can pass the `--globals` option to CLI or add `globals: true` in the config.
 
-```ts
+```js
 import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
