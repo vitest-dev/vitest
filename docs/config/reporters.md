@@ -2,9 +2,9 @@
 title: reporters | Config
 ---
 
-# reporters <CRoot /> {#reporters}
+# reporters <CRoot />
 
-- **Type**
+- **Type:**
 
 ```ts
 interface UserConfig {
@@ -14,10 +14,8 @@ interface UserConfig {
 type ConfigReporter = string | Reporter | [string, object?]
 ```
 
-- **Default**
-
-  [`'default'`](/guide/reporters#default-reporter)
-- **CLI**
+- **Default:** [`'default'`](/guide/reporters#default-reporter)
+- **CLI:**
   - `--reporter=tap` for a single reporter
   - `--reporter=verbose --reporter=github-actions` for multiple reporters
 

@@ -3,7 +3,7 @@ title: name | Config
 ---
 
 # name
-- **Type**
+- **Type:**
 
 ```ts
 interface UserConfig {

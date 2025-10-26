@@ -1,3 +1,7 @@
+---
+title: browser.enabled | Config
+---
+
 # browser.enabled
 
 - **Type**
