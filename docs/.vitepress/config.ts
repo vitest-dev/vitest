@@ -446,28 +446,36 @@ export default ({ mode }: { mode: string }) => {
                 link: '/config/',
               },
               {
-                text: 'name',
-                link: '/config/name',
-              },
-              {
                 text: 'include',
                 link: '/config/include',
-              },
-              {
-                text: 'includeSource',
-                link: '/config/exclude',
               },
               {
                 text: 'exclude',
                 link: '/config/exclude',
               },
               {
+                text: 'includeSource',
+                link: '/config/includesource',
+              },
+              {
+                text: 'name',
+                link: '/config/name',
+              },
+              {
                 text: 'server',
                 link: '/config/server',
               },
               {
+                text: 'deps',
+                link: '/config/deps',
+              },
+              {
                 text: 'runner',
                 link: '/config/runner',
+              },
+              {
+                text: 'benchmark',
+                link: '/config/benchmark',
               },
               {
                 text: 'alias',
@@ -478,8 +486,24 @@ export default ({ mode }: { mode: string }) => {
                 link: '/config/globals',
               },
               {
+                text: 'environment',
+                link: '/config/environment',
+              },
+              {
+                text: 'environmentOptions',
+                link: '/config/environmentoptions',
+              },
+              {
+                text: 'update',
+                link: '/config/update',
+              },
+              {
                 text: 'watch',
                 link: '/config/watch',
+              },
+              {
+                text: 'watchTriggerPatterns',
+                link: '/config/watchtriggerpatterns',
               },
               {
                 text: 'root',
@@ -494,14 +518,217 @@ export default ({ mode }: { mode: string }) => {
                 link: '/config/reporters',
               },
               {
+                text: 'outputFile',
+                link: '/config/outputfile',
+              },
+              {
+                text: 'pool',
+                link: '/config/pool',
+              },
+              {
+                text: 'execArgv',
+                link: '/config/execargv',
+              },
+              {
+                text: 'vmMemoryLimit',
+                link: '/config/vmmemorylimit',
+              },
+              {
                 text: 'fileParallelism',
-                link: '/config/file-parallelism',
+                link: '/config/fileparallelism',
               },
               {
                 text: 'maxWorkers',
-                link: '/config/max-workers',
+                link: '/config/maxworkers',
               },
-              // TODO: generate
+              {
+                text: 'testTimeout',
+                link: '/config/testtimeout',
+              },
+              {
+                text: 'hookTimeout',
+                link: '/config/hooktimeout',
+              },
+              {
+                text: 'teardownTimeout',
+                link: '/config/teardowntimeout',
+              },
+              {
+                text: 'silent',
+                link: '/config/silent',
+              },
+              {
+                text: 'setupFiles',
+                link: '/config/setupfiles',
+              },
+              {
+                text: 'provide',
+                link: '/config/provide',
+              },
+              {
+                text: 'globalSetup',
+                link: '/config/globalsetup',
+              },
+              {
+                text: 'forceRerunTriggers',
+                link: '/config/forcereruntriggers',
+              },
+              {
+                text: 'coverage',
+                link: '/config/coverage',
+              },
+              {
+                text: 'testNamePattern',
+                link: '/config/testnamepattern',
+              },
+              {
+                text: 'open',
+                link: '/config/open',
+              },
+              {
+                text: 'api',
+                link: '/config/api',
+              },
+              {
+                text: 'browser',
+                link: '/config/browser/enabled',
+              },
+              {
+                text: 'clearMocks',
+                link: '/config/clearmocks',
+              },
+              {
+                text: 'mockReset',
+                link: '/config/mockreset',
+              },
+              {
+                text: 'restoreMocks',
+                link: '/config/restoremocks',
+              },
+              {
+                text: 'unstubEnvs',
+                link: '/config/unstubenvs',
+              },
+              {
+                text: 'unstubGlobals',
+                link: '/config/unstubglobals',
+              },
+              {
+                text: 'snapshotFormat',
+                link: '/config/snapshotformat',
+              },
+              {
+                text: 'snapshotSerializers',
+                link: '/config/snapshotserializers',
+              },
+              {
+                text: 'resolveSnapshotPath',
+                link: '/config/resolvesnapshotpath',
+              },
+              {
+                text: 'allowOnly',
+                link: '/config/allowonly',
+              },
+              {
+                text: 'dangerouslyIgnoreUnhandledErrors',
+                link: '/config/dangerouslyignoreunhandlederrors',
+              },
+              {
+                text: 'passWithNoTests',
+                link: '/config/passwithnotests',
+              },
+              {
+                text: 'logHeapUsage',
+                link: '/config/logheapusage',
+              },
+              {
+                text: 'css',
+                link: '/config/css',
+              },
+              {
+                text: 'maxConcurrency',
+                link: '/config/maxconcurrency',
+              },
+              {
+                text: 'cache',
+                link: '/config/cache',
+              },
+              {
+                text: 'sequence',
+                link: '/config/sequence',
+              },
+              {
+                text: 'typecheck',
+                link: '/config/typecheck',
+              },
+              {
+                text: 'slowTestThreshold',
+                link: '/config/slowtestthreshold',
+              },
+              {
+                text: 'chaiConfig',
+                link: '/config/chaiconfig',
+              },
+              {
+                text: 'bail',
+                link: '/config/bail',
+              },
+              {
+                text: 'retry',
+                link: '/config/retry',
+              },
+              {
+                text: 'onConsoleLog',
+                link: '/config/onconsolelog',
+              },
+              {
+                text: 'onStackTrace',
+                link: '/config/onstacktrace',
+              },
+              {
+                text: 'onUnhandledError',
+                link: '/config/onunhandlederror',
+              },
+              {
+                text: 'diff',
+                link: '/config/diff',
+              },
+              {
+                text: 'fakeTimers',
+                link: '/config/faketimers',
+              },
+              {
+                text: 'projects',
+                link: '/config/projects',
+              },
+              {
+                text: 'isolate',
+                link: '/config/isolate',
+              },
+              {
+                text: 'includeTaskLocation',
+                link: '/config/includetasklocation',
+              },
+              {
+                text: 'snapshotEnvironment',
+                link: '/config/snapshotenvironment',
+              },
+              {
+                text: 'env',
+                link: '/config/env',
+              },
+              {
+                text: 'expect',
+                link: '/config/expect',
+              },
+              {
+                text: 'printConsoleTrace',
+                link: '/config/printconsoletrace',
+              },
+              {
+                text: 'attachmentsDir',
+                link: '/config/attachmentsdir',
+              },
             ],
           },
           {
@@ -544,10 +771,77 @@ export default ({ mode }: { mode: string }) => {
                   },
                 ],
               },
-              // TODO: generate
               {
                 text: 'browser.enabled',
                 link: '/config/browser/enabled',
+              },
+              {
+                text: 'browser.instances',
+                link: '/config/browser/instances',
+              },
+              {
+                text: 'browser.headless',
+                link: '/config/browser/headless',
+              },
+              {
+                text: 'browser.isolate',
+                link: '/config/browser/isolate',
+              },
+              {
+                text: 'browser.testerHtmlPath',
+                link: '/config/browser/tester-html-path',
+              },
+              {
+                text: 'browser.api',
+                link: '/config/browser/api',
+              },
+              {
+                text: 'browser.provider',
+                link: '/config/browser/provider',
+              },
+              {
+                text: 'browser.ui',
+                link: '/config/browser/ui',
+              },
+              {
+                text: 'browser.viewport',
+                link: '/config/browser/viewport',
+              },
+              {
+                text: 'browser.locators',
+                link: '/config/browser/locators',
+              },
+              {
+                text: 'browser.screenshotDirectory',
+                link: '/config/browser/screenshot-directory',
+              },
+              {
+                text: 'browser.screenshotFailures',
+                link: '/config/browser/screenshot-failures',
+              },
+              {
+                text: 'browser.orchestratorScripts',
+                link: '/config/browser/orchestrator-scripts',
+              },
+              {
+                text: 'browser.commands',
+                link: '/config/browser/commands',
+              },
+              {
+                text: 'browser.connectTimeout',
+                link: '/config/browser/connect-timeout',
+              },
+              {
+                text: 'browser.trace',
+                link: '/config/browser/trace',
+              },
+              {
+                text: 'browser.trackUnhandledErrors',
+                link: '/config/browser/track-unhandled-errors',
+              },
+              {
+                text: 'browser.expect',
+                link: '/config/browser/expect',
               },
             ],
           },
