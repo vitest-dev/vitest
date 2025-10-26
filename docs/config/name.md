@@ -3,6 +3,7 @@ title: name | Config
 ---
 
 # name
+
 - **Type:**
 
 ```ts
