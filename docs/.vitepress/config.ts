@@ -630,10 +630,6 @@ export default ({ mode }: { mode: string }) => {
                 link: '/config/allowonly',
               },
               {
-                text: 'dangerouslyIgnoreUnhandledErrors',
-                link: '/config/dangerouslyignoreunhandlederrors',
-              },
-              {
                 text: 'passWithNoTests',
                 link: '/config/passwithnotests',
               },
@@ -688,6 +684,10 @@ export default ({ mode }: { mode: string }) => {
               {
                 text: 'onUnhandledError',
                 link: '/config/onunhandlederror',
+              },
+              {
+                text: 'dangerouslyIgnoreUnhandledErrors',
+                link: '/config/dangerouslyignoreunhandlederrors',
               },
               {
                 text: 'diff',
