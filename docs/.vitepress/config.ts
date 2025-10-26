@@ -494,10 +494,6 @@ export default ({ mode }: { mode: string }) => {
                 link: '/config/environmentoptions',
               },
               {
-                text: 'update',
-                link: '/config/update',
-              },
-              {
                 text: 'watch',
                 link: '/config/watch',
               },
