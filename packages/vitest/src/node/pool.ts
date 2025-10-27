@@ -1,4 +1,5 @@
 import type { Awaitable } from '@vitest/utils'
+import type { ContextTestEnvironment } from '../types/worker'
 import type { Vitest } from './core'
 import type { PoolTask } from './pools/types'
 import type { TestProject } from './project'
@@ -345,6 +346,43 @@ function groupSpecs(specs: TestSpecification[], environments: Awaited<ReturnType
   // Type tests are run in a single group, per project
   const typechecks: Record<string, TestSpecification[]> = {}
 
+  const serializedEnvironmentOptions = new Map<ContextTestEnvironment, string>()
+
+  function getSerializedOptions(env: ContextTestEnvironment) {
+    const options = serializedEnvironmentOptions.get(env)
+
+    if (options) {
+      return options
+    }
+
+    const serialized = JSON.stringify(env.options)
+    serializedEnvironmentOptions.set(env, serialized)
+    return serialized
+  }
+
+  function isEqualEnvironments(a: TestSpecification, b: TestSpecification) {
+    const aEnv = environments.get(a)
+    const bEnv = environments.get(b)
+
+    if (!aEnv && !bEnv) {
+      return true
+    }
+
+    if (!aEnv || !bEnv || aEnv.name !== bEnv.name) {
+      return false
+    }
+
+    if (!aEnv.options && !bEnv.options) {
+      return true
+    }
+
+    if (!aEnv.options || !bEnv.options) {
+      return false
+    }
+
+    return getSerializedOptions(aEnv) === getSerializedOptions(bEnv)
+  }
+
   specs.forEach((spec) => {
     if (spec.pool === 'typescript') {
       typechecks[spec.project.name] ||= []
@@ -374,16 +412,8 @@ function groupSpecs(specs: TestSpecification[], environments: Awaited<ReturnType
     if (isolate === false && maxWorkers === 1) {
       const previous = groups[order].specs[0]?.[0]
 
-      if (previous && previous.project.name === spec.project.name) {
-        const env = environments.get(spec)
-        const previousEnv = environments.get(previous)
-
-        if (
-          env?.name === previousEnv?.name
-          && JSON.stringify(env?.options) === JSON.stringify(previousEnv?.options)
-        ) {
-          return groups[order].specs[0].push(spec)
-        }
+      if (previous && previous.project.name === spec.project.name && isEqualEnvironments(spec, previous)) {
+        return groups[order].specs[0].push(spec)
       }
     }
 
