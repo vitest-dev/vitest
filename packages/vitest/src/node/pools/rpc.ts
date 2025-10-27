@@ -2,6 +2,7 @@ import type { RuntimeRPC } from '../../types/rpc'
 import type { TestProject } from '../project'
 import type { ResolveSnapshotPathHandlerContext } from '../types/config'
 import { existsSync, mkdirSync } from 'node:fs'
+import { isBuiltin } from 'node:module'
 import { fileURLToPath } from 'node:url'
 import { cleanUrl } from '@vitest/utils/helpers'
 import { handleRollupError } from '../environments/fetchModule'
@@ -62,6 +63,17 @@ export function createMethodsRPC(project: TestProject, options: MethodsOptions =
       const resolved = await environment.pluginContainer.resolveId(id, importer)
       if (!resolved) {
         return null
+      }
+      const file = cleanUrl(resolved.id)
+      if (resolved.external) {
+        return {
+          file,
+          // TODO: use isBuiltin defined in the environment
+          url: !resolved.id.startsWith('node:') && isBuiltin(resolved.id)
+            ? `node:${resolved.id}`
+            : resolved.id,
+          id: resolved.id,
+        }
       }
       return {
         file: cleanUrl(resolved.id),
