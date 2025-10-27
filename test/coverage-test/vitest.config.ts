@@ -19,6 +19,7 @@ export default defineConfig({
         extends: true,
         test: {
           name: { label: 'v8', color: 'green' },
+          sequence: { groupOrder: 1 },
           env: { COVERAGE_PROVIDER: 'v8' },
           include: [GENERIC_TESTS, V8_TESTS],
           exclude: [
@@ -36,6 +37,7 @@ export default defineConfig({
         extends: true,
         test: {
           name: { label: 'istanbul', color: 'magenta' },
+          sequence: { groupOrder: 2 },
           env: { COVERAGE_PROVIDER: 'istanbul' },
           include: [GENERIC_TESTS, ISTANBUL_TESTS],
           exclude: [
@@ -53,6 +55,7 @@ export default defineConfig({
         extends: true,
         test: {
           name: { label: 'custom', color: 'yellow' },
+          sequence: { groupOrder: 3 },
           env: { COVERAGE_PROVIDER: 'custom' },
           include: [CUSTOM_TESTS],
           exclude: [FIXTURES],
@@ -64,6 +67,7 @@ export default defineConfig({
         extends: true,
         test: {
           name: { label: 'istanbul-browser', color: 'blue' },
+          sequence: { groupOrder: 4 },
           env: { COVERAGE_PROVIDER: 'istanbul', COVERAGE_BROWSER: 'true' },
           testTimeout: 15_000,
           include: [
@@ -95,6 +99,7 @@ export default defineConfig({
         extends: true,
         test: {
           name: { label: 'v8-browser', color: 'red' },
+          sequence: { groupOrder: 5 },
           env: { COVERAGE_PROVIDER: 'v8', COVERAGE_BROWSER: 'true' },
           testTimeout: 15_000,
           include: [
@@ -128,6 +133,7 @@ export default defineConfig({
         extends: true,
         test: {
           name: { label: 'unit', color: 'cyan' },
+          sequence: { groupOrder: 6 },
           include: [UNIT_TESTS],
           typecheck: {
             enabled: true,
