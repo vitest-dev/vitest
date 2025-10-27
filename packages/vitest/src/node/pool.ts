@@ -87,7 +87,7 @@ export function createPool(ctx: Vitest): ProcessPool {
 
     const sorted = await sequencer.sort(specs)
     const environments = await getSpecificationsEnvironments(specs)
-    const groups = groupSpecs(sorted)
+    const groups = groupSpecs(sorted, environments)
 
     const projectEnvs = new WeakMap<TestProject, Partial<NodeJS.ProcessEnv>>()
     const projectExecArgvs = new WeakMap<TestProject, string[]>()
@@ -330,9 +330,8 @@ function getMemoryLimit(config: ResolvedConfig, pool: string) {
   return null
 }
 
-function groupSpecs(specs: TestSpecification[]) {
-  // Test files are passed to test runner one at a time, except Typechecker.
-  // TODO: Should non-isolated test files be passed to test runner all at once?
+function groupSpecs(specs: TestSpecification[], environments: Awaited<ReturnType<typeof getSpecificationsEnvironments>>) {
+  // Test files are passed to test runner one at a time, except for Typechecker or when "--maxWorker=1 --no-isolate"
   type SpecsForRunner = TestSpecification[]
 
   // Tests in a single group are executed with `maxWorkers` parallelism.
@@ -361,6 +360,7 @@ function groupSpecs(specs: TestSpecification[]) {
     }
 
     const maxWorkers = resolveMaxWorkers(spec.project)
+    const isolate = spec.project.config.isolate
     groups[order] ||= { specs: [], maxWorkers }
 
     // Multiple projects with different maxWorkers but same groupId
@@ -368,6 +368,23 @@ function groupSpecs(specs: TestSpecification[]) {
       const last = groups[order].specs.at(-1)?.at(-1)?.project.name
 
       throw new Error(`Projects "${last}" and "${spec.project.name}" have different 'maxWorkers' but same 'sequence.groupId'.\nProvide unique 'sequence.groupId' for them.`)
+    }
+
+    // Non-isolated single worker can receive all files at once
+    if (isolate === false && maxWorkers === 1) {
+      const previous = groups[order].specs[0]?.[0]
+
+      if (previous && previous.project.name === spec.project.name) {
+        const env = environments.get(spec)
+        const previousEnv = environments.get(previous)
+
+        if (
+          env?.name === previousEnv?.name
+          && JSON.stringify(env?.options) === JSON.stringify(previousEnv?.options)
+        ) {
+          return groups[order].specs[0].push(spec)
+        }
+      }
     }
 
     groups[order].specs.push([spec])
