@@ -158,7 +158,7 @@ export function resolveConfig(
   resolved.color = typeof options.name !== 'string' ? options.name?.color : undefined
 
   if (resolved.environment === 'browser') {
-    throw new Error(`Looks like you set "test.environment" to "browser". To enabled Browser Mode, use "test.browser.enabled" instead.`)
+    throw new Error(`Looks like you set "test.environment" to "browser". To enable Browser Mode, use "test.browser.enabled" instead.`)
   }
 
   const inspector = resolved.inspect || resolved.inspectBrk
@@ -623,9 +623,22 @@ export function resolveConfig(
     )
 
     if (cliReporters.length) {
+      // When CLI reporters are specified, preserve options from config file
+      const configReportersMap = new Map<string, Record<string, unknown>>()
+
+      // Build a map of reporter names to their options from the config
+      for (const reporter of resolved.reporters) {
+        if (Array.isArray(reporter)) {
+          const [reporterName, reporterOptions] = reporter
+          if (typeof reporterName === 'string') {
+            configReportersMap.set(reporterName, reporterOptions as Record<string, unknown>)
+          }
+        }
+      }
+
       resolved.reporters = Array.from(new Set(toArray(cliReporters)))
         .filter(Boolean)
-        .map(reporter => [reporter, {}])
+        .map(reporter => [reporter, configReportersMap.get(reporter) || {}])
     }
   }
 

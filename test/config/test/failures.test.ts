@@ -519,5 +519,5 @@ test('cannot set environment: browser', async () => {
   const { stderr } = await runVitest({
     environment: 'browser',
   })
-  expect(stderr).toContain('Looks like you set "test.environment" to "browser". To enabled Browser Mode, use "test.browser.enabled" instead.')
+  expect(stderr).toContain('Looks like you set "test.environment" to "browser". To enable Browser Mode, use "test.browser.enabled" instead.')
 })

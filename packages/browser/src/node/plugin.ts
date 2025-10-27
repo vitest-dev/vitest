@@ -429,21 +429,25 @@ export default (parentServer: ParentBrowserProject, base = '/'): Plugin[] => {
     },
     {
       name: 'vitest:browser:in-source-tests',
-      transform(code, id) {
-        const filename = cleanUrl(id)
-        const project = parentServer.vitest.getProjectByName(parentServer.config.name)
+      transform: {
+        filter: {
+          code: /import\.meta\.vitest/,
+        },
+        handler(code, id) {
+          const filename = cleanUrl(id)
 
-        if (!project._isCachedTestFile(filename) || !code.includes('import.meta.vitest')) {
-          return
-        }
-        const s = new MagicString(code, { filename })
-        s.prepend(
-          `Object.defineProperty(import.meta, 'vitest', { get() { return typeof __vitest_worker__ !== 'undefined' && __vitest_worker__.filepath === "${filename.replace(/"/g, '\\"')}" ? __vitest_index__ : undefined } });\n`,
-        )
-        return {
-          code: s.toString(),
-          map: s.generateMap({ hires: true }),
-        }
+          if (!code.includes('import.meta.vitest')) {
+            return
+          }
+          const s = new MagicString(code, { filename })
+          s.prepend(
+            `Object.defineProperty(import.meta, 'vitest', { get() { return typeof __vitest_worker__ !== 'undefined' && __vitest_worker__.filepath === "${filename.replace(/"/g, '\\"')}" ? __vitest_index__ : undefined } });\n`,
+          )
+          return {
+            code: s.toString(),
+            map: s.generateMap({ hires: true }),
+          }
+        },
       },
     },
     {

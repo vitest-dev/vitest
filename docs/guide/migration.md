@@ -31,7 +31,7 @@ These default values were chosen for a good reason - it is impossible for testin
 This ended up having Vitest's coverage providers processing unexpected files, like minified Javascript, leading to slow/stuck coverage report generations.
 In Vitest v4 we have removed `coverage.all` completely and <ins>**defaulted to include only covered files in the report**</ins>.
 
-When upgrading to v4 it is recommended to define `coverage.include` in your configuration, and then start applying simple `coverage.exclusion` patterns if needed.
+When upgrading to v4 it is recommended to define `coverage.include` in your configuration, and then start applying simple `coverage.exclude` patterns if needed.
 
 ```ts [vitest.config.ts]
 export default defineConfig({
@@ -109,6 +109,7 @@ Alongside new features like supporting constructors, Vitest 4 creates mocks diff
 - `vi.fn().getMockName()` now returns `vi.fn()` by default instead of `spy`. This can affect snapshots with mocks - the name will be changed from `[MockFunction spy]` to `[MockFunction]`. Spies created with `vi.spyOn` will keep using the original name by default for better debugging experience
 - `vi.restoreAllMocks` no longer resets the state of spies and only restores spies created manually with `vi.spyOn`, automocks are no longer affected by this function (this also affects the config option [`restoreMocks`](/config/#restoremocks)). Note that `.mockRestore` will still reset the mock implementation and clear the state
 - Calling `vi.spyOn` on a mock now returns the same mock
+- `mock.settledResults` are now populated immediately on function invocation with an `'incomplete'` result. When the promise is finished, the type is changed according to the result.
 - Automocked instance methods are now properly isolated, but share a state with the prototype. Overriding the prototype implementation will always affect instance methods unless the methods have a custom mock implementation of their own. Calling `.mockReset` on the mock also no longer breaks that inheritance.
 ```ts
 import { AutoMockedClass } from './example.js'
@@ -280,7 +281,7 @@ New pool architecture allows Vitest to simplify many previously complex configur
 
 - `maxThreads` and `maxForks` are now `maxWorkers`.
 - Environment variables `VITEST_MAX_THREADS` and `VITEST_MAX_FORKS` are now `VITEST_MAX_WORKERS`.
-- `singleThread` and `singleFork` are now `maxWorkers: 1`.
+- `singleThread` and `singleFork` are now `maxWorkers: 1, isolate: false`. If your tests were relying on module reset between tests, you'll need to add [setupFile](/config/#setupfiles) that calls [`vi.resetModules()`](https://vitest.dev/api/vi.html#vi-resetmodules) in [`beforeAll` test hook](/api/#beforeall).
 - `poolOptions` is removed. All previous `poolOptions` are now top-level options. The `memoryLimit` of VM pools is renamed to `vmMemoryLimit`.
 - `threads.useAtomics` is removed. If you have a use case for this, feel free to open a new feature request.
 - Custom pool interface has been rewritten, see [Custom Pool](/advanced/pool.html#custom-pool)

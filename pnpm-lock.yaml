@@ -1155,8 +1155,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/vitest
       vitest-browser-react:
-        specifier: ^0.3.0
-        version: 0.3.0(@types/react-dom@18.2.14)(@types/react@19.1.13)(@vitest/browser@packages+browser)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)(vitest@packages+vitest)
+        specifier: ^2.0.0
+        version: 2.0.0(@types/react-dom@18.2.14)(@types/react@19.1.13)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)(vitest@packages+vitest)
       ws:
         specifier: 'catalog:'
         version: 8.18.3
@@ -9114,13 +9114,11 @@ packages:
       postcss:
         optional: true
 
-  vitest-browser-react@0.3.0:
-    resolution: {integrity: sha512-dk8T3GHhwrmCJLqDer1A2NB8MlIGsUb9Wr4/iMpbrwz4sBCh1PjV0SkZ9BYmoBrJ4j/Tx8qxzCXFXnbE2IbWzg==}
-    engines: {node: ^18.0.0 || ^20.0.0 || >=22.0.0}
+  vitest-browser-react@2.0.0:
+    resolution: {integrity: sha512-h6JbNDnEwE/zuqvChEeIf+fSXMJ5jyqSHmxPKWMFFGkeHOTLTwTskdoFAeW5UZMH+udiJH2VoGnNxOU2gWEdnQ==}
     peerDependencies:
       '@types/react': ^18.0.0 || ^19.0.0
       '@types/react-dom': ^18.0.0 || ^19.0.0
-      '@vitest/browser': workspace:*
       react: ^18.0.0 || ^19.0.0
       react-dom: ^18.0.0 || ^19.0.0
       vitest: workspace:*
@@ -17885,9 +17883,8 @@ snapshots:
       - universal-cookie
       - yaml
 
-  vitest-browser-react@0.3.0(@types/react-dom@18.2.14)(@types/react@19.1.13)(@vitest/browser@packages+browser)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)(vitest@packages+vitest):
+  vitest-browser-react@2.0.0(@types/react-dom@18.2.14)(@types/react@19.1.13)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)(vitest@packages+vitest):
     dependencies:
-      '@vitest/browser': link:packages/browser
       react: 19.1.1
       react-dom: 19.1.1(react@19.1.1)
       vitest: link:packages/vitest

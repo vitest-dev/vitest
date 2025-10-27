@@ -81,6 +81,7 @@ Vitest is a next-generation testing framework powered by Vite. This is a monorep
 - ESM-first approach
 - Follow existing patterns in the codebase
 - Use utilities from `@vitest/utils/*` when available. Never import from `@vitest/utils` main entry point directly.
+- Do not add comments explaining what the line does unless prompted to.
 
 ## Common Workflows
 

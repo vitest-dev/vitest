@@ -48,6 +48,13 @@ export function createMockInstance(options: MockInstanceOption = {}): Mock {
     state,
     ...options,
   })
+  const mockLength = (mockImplementation || originalImplementation)?.length ?? 0
+  Object.defineProperty(mock, 'length', {
+    writable: true,
+    enumerable: false,
+    value: mockLength,
+    configurable: true,
+  })
   // inherit the default name so it appears in snapshots and logs
   // this is used by `vi.spyOn()` for better debugging.
   // when `vi.fn()` is called, we just use the default string

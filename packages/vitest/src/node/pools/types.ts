@@ -41,7 +41,15 @@ export interface PoolTask {
   worker: 'forks' | 'threads' | 'vmForks' | 'vmThreads' | (string & {})
   project: TestProject
   isolate: boolean
+  /**
+   * Custom `process.env`. All tasks in the same project will reference the same object,
+   * so modifying it once will modify it for every task.
+   */
   env: Partial<NodeJS.ProcessEnv>
+  /**
+   * Custom `execArgv`. All tasks in the same project will reference the same array,
+   * so modifying it once will modify it for every task.
+   */
   execArgv: string[]
   context: ContextRPC
   memoryLimit: number | null
