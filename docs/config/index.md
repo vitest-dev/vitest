@@ -458,9 +458,9 @@ export default defineConfig({
 })
 ```
 
-To get TypeScript working with the global APIs, add `vitest/globals` to the `types` field in your `tsconfig.json`
+To get TypeScript working with the global APIs, add `vitest/globals` to the `types` field in your `tsconfig.json` or `tsconfig.app.json`
 
-```json [tsconfig.json]
+```json [tsconfig.json/tsconfig.app.json]
 {
   "compilerOptions": {
     "types": ["vitest/globals"]
@@ -470,7 +470,7 @@ To get TypeScript working with the global APIs, add `vitest/globals` to the `typ
 
 If you have redefined your [`typeRoots`](https://www.typescriptlang.org/tsconfig/#typeRoots) to include more types in your compilation, you will have to add back the `node_modules` to make `vitest/globals` discoverable.
 
-```json [tsconfig.json]
+```json [tsconfig.json/tsconfig.app.json]
 {
   "compilerOptions": {
     "typeRoots": ["./types", "./node_modules/@types", "./node_modules"],
