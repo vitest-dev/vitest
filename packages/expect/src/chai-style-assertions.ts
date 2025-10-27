@@ -84,8 +84,17 @@ export const ChaiStyleAssertions: ChaiPlugin = (chai, utils) => {
   // Delegates to: toHaveReturnedWith
   def('returnedWith', 'toHaveReturnedWith')
 
-  // Additional Chai-style assertions for completeness
-  // These follow sinon-chai conventions
+  // Chai-style assertion: returnedTimes(n)
+  // Delegates to: toHaveReturnedTimes
+  def('returnedTimes', 'toHaveReturnedTimes')
+
+  // Chai-style assertion: lastReturnedWith(value)
+  // Delegates to: toHaveLastReturnedWith
+  def('lastReturnedWith', 'toHaveLastReturnedWith')
+
+  // Chai-style assertion: nthReturnedWith(n, value)
+  // Delegates to: toHaveNthReturnedWith
+  def('nthReturnedWith', 'toHaveNthReturnedWith')
 
   // Chai-style assertion: calledBefore(spy)
   // Delegates to: toHaveBeenCalledBefore
@@ -94,4 +103,36 @@ export const ChaiStyleAssertions: ChaiPlugin = (chai, utils) => {
   // Chai-style assertion: calledAfter(spy)
   // Delegates to: toHaveBeenCalledAfter
   def('calledAfter', 'toHaveBeenCalledAfter')
+
+  // Chai-style assertion: calledTwice
+  // Wrapper that calls toHaveBeenCalledTimes(2)
+  utils.addMethod(
+    chai.Assertion.prototype,
+    'calledTwice',
+    function (this: Chai.AssertionStatic & Assertion) {
+      const jestMethod = (chai.Assertion.prototype as any).toHaveBeenCalledTimes
+      if (!jestMethod) {
+        throw new Error(
+          'Cannot delegate to toHaveBeenCalledTimes: method not found. Ensure JestChaiExpect plugin is loaded first.',
+        )
+      }
+      return jestMethod.call(this, 2)
+    },
+  )
+
+  // Chai-style assertion: calledThrice
+  // Wrapper that calls toHaveBeenCalledTimes(3)
+  utils.addMethod(
+    chai.Assertion.prototype,
+    'calledThrice',
+    function (this: Chai.AssertionStatic & Assertion) {
+      const jestMethod = (chai.Assertion.prototype as any).toHaveBeenCalledTimes
+      if (!jestMethod) {
+        throw new Error(
+          'Cannot delegate to toHaveBeenCalledTimes: method not found. Ensure JestChaiExpect plugin is loaded first.',
+        )
+      }
+      return jestMethod.call(this, 3)
+    },
+  )
 }

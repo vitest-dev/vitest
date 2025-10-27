@@ -881,6 +881,33 @@ export interface ChaiStyleAssertion {
   returnedWith: <E>(value: E) => void
 
   /**
+   * Checks that a spy returned successfully a specific number of times.
+   * Chai-style equivalent of `toHaveReturnedTimes`.
+   *
+   * @example
+   * expect(spy).to.have.returnedTimes(3)
+   */
+  returnedTimes: (count: number) => void
+
+  /**
+   * Checks that the last return value of a spy matches the expected value.
+   * Chai-style equivalent of `toHaveLastReturnedWith`.
+   *
+   * @example
+   * expect(spy).to.have.lastReturnedWith('value')
+   */
+  lastReturnedWith: <E>(value: E) => void
+
+  /**
+   * Checks that the nth return value of a spy matches the expected value.
+   * Chai-style equivalent of `toHaveNthReturnedWith`.
+   *
+   * @example
+   * expect(spy).to.have.nthReturnedWith(2, 'value')
+   */
+  nthReturnedWith: <E>(n: number, value: E) => void
+
+  /**
    * Checks that a spy was called before another spy.
    * Chai-style equivalent of `toHaveBeenCalledBefore`.
    *
@@ -897,6 +924,24 @@ export interface ChaiStyleAssertion {
    * expect(spy1).to.have.been.calledAfter(spy2)
    */
   calledAfter: (mock: MockInstance, failIfNoFirstInvocation?: boolean) => void
+
+  /**
+   * Checks that a spy was called exactly twice.
+   * Chai-style equivalent of `toHaveBeenCalledTimes(2)`.
+   *
+   * @example
+   * expect(spy).to.have.been.calledTwice
+   */
+  calledTwice: () => void
+
+  /**
+   * Checks that a spy was called exactly three times.
+   * Chai-style equivalent of `toHaveBeenCalledTimes(3)`.
+   *
+   * @example
+   * expect(spy).to.have.been.calledThrice
+   */
+  calledThrice: () => void
 }
 
 declare global {

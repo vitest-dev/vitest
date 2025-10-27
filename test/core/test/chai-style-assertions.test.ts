@@ -321,4 +321,164 @@ describe('Chai-style assertions', () => {
       expect(spy1).to.not.have.been.calledAfter(spy2)
     })
   })
+
+  describe('returnedTimes', () => {
+    it('passes when spy returned successfully exact number of times', () => {
+      const spy = vi.fn(() => 'value')
+      spy()
+      spy()
+      spy()
+      expect(spy).to.have.returnedTimes(3)
+    })
+
+    it('fails when spy returned different number of times', () => {
+      const spy = vi.fn(() => 'value').mockName('testSpy')
+      spy()
+      spy()
+      expect(() => {
+        expect(spy).to.have.returnedTimes(3)
+      }).toThrow(/expected "testSpy"/)
+    })
+
+    it('negated: passes when spy returned different number of times', () => {
+      const spy = vi.fn(() => 'value')
+      spy()
+      expect(spy).to.not.have.returnedTimes(3)
+    })
+
+    it('does not count throws as returns', () => {
+      const spy = vi.fn(() => {
+        throw new Error('error')
+      })
+      expect(() => spy()).toThrow()
+      expect(() => spy()).toThrow()
+      expect(spy).to.have.returnedTimes(0)
+    })
+  })
+
+  describe('lastReturnedWith', () => {
+    it('passes when last return value matches', () => {
+      const spy = vi.fn()
+        .mockReturnValueOnce('first')
+        .mockReturnValueOnce('second')
+        .mockReturnValueOnce('last')
+      spy()
+      spy()
+      spy()
+      expect(spy).to.have.lastReturnedWith('last')
+    })
+
+    it('fails when last return value does not match', () => {
+      const spy = vi.fn(() => 'wrong').mockName('testSpy')
+      spy()
+      expect(() => {
+        expect(spy).to.have.lastReturnedWith('expected')
+      }).toThrow(/expected last "testSpy" call to return/)
+    })
+
+    it('negated: passes when last return value does not match', () => {
+      const spy = vi.fn(() => 'actual')
+      spy()
+      expect(spy).to.not.have.lastReturnedWith('different')
+    })
+  })
+
+  describe('nthReturnedWith', () => {
+    it('passes when nth return value matches', () => {
+      const spy = vi.fn()
+        .mockReturnValueOnce('first')
+        .mockReturnValueOnce('second')
+        .mockReturnValueOnce('third')
+      spy()
+      spy()
+      spy()
+      expect(spy).to.have.nthReturnedWith(2, 'second')
+    })
+
+    it('fails when nth return value does not match', () => {
+      const spy = vi.fn(() => 'wrong').mockName('testSpy')
+      spy()
+      spy()
+      expect(() => {
+        expect(spy).to.have.nthReturnedWith(2, 'expected')
+      }).toThrow(/expected 2nd call "testSpy" call to return/)
+    })
+
+    it('negated: passes when nth return value does not match', () => {
+      const spy = vi.fn()
+        .mockReturnValueOnce('first')
+        .mockReturnValueOnce('second')
+      spy()
+      spy()
+      expect(spy).to.not.have.nthReturnedWith(2, 'different')
+    })
+  })
+
+  describe('calledTwice', () => {
+    it('passes when spy was called exactly twice', () => {
+      const spy = vi.fn()
+      spy()
+      spy()
+      expect(spy).to.have.been.calledTwice()
+    })
+
+    it('fails when spy was not called twice', () => {
+      const spy = vi.fn().mockName('testSpy')
+      spy()
+      expect(() => {
+        expect(spy).to.have.been.calledTwice()
+      }).toThrow(/expected "testSpy" to be called 2 times, but got 1 times/)
+    })
+
+    it('negated: passes when spy was not called twice', () => {
+      const spy = vi.fn()
+      spy()
+      expect(spy).to.not.have.been.calledTwice()
+    })
+
+    it('fails when spy was called three times', () => {
+      const spy = vi.fn().mockName('testSpy')
+      spy()
+      spy()
+      spy()
+      expect(() => {
+        expect(spy).to.have.been.calledTwice()
+      }).toThrow(/expected "testSpy" to be called 2 times, but got 3 times/)
+    })
+  })
+
+  describe('calledThrice', () => {
+    it('passes when spy was called exactly three times', () => {
+      const spy = vi.fn()
+      spy()
+      spy()
+      spy()
+      expect(spy).to.have.been.calledThrice()
+    })
+
+    it('fails when spy was not called three times', () => {
+      const spy = vi.fn().mockName('testSpy')
+      spy()
+      spy()
+      expect(() => {
+        expect(spy).to.have.been.calledThrice()
+      }).toThrow(/expected "testSpy" to be called 3 times, but got 2 times/)
+    })
+
+    it('negated: passes when spy was not called three times', () => {
+      const spy = vi.fn()
+      spy()
+      spy()
+      expect(spy).to.not.have.been.calledThrice()
+    })
+
+    it('fails when spy was called twice', () => {
+      const spy = vi.fn().mockName('testSpy')
+      spy()
+      spy()
+      expect(() => {
+        expect(spy).to.have.been.calledThrice()
+      }).toThrow(/expected "testSpy" to be called 3 times, but got 2 times/)
+    })
+  })
 })
