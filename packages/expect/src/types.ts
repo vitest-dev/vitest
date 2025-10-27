@@ -667,6 +667,7 @@ export type PromisifyAssertion<T> = Promisify<Assertion<T>>
 export interface Assertion<T = any>
   extends VitestAssertion<Chai.Assertion, T>,
   JestAssertion<T>,
+  ChaiStyleAssertion,
   Matchers<T> {
   /**
    * Ensures a value is of a specific type.
@@ -791,6 +792,111 @@ export interface Assertion<T = any>
    * await expect(someAsyncFunc).rejects.toThrow('error');
    */
   rejects: PromisifyAssertion<T>
+}
+
+/**
+ * Chai-style assertions for spy/mock testing.
+ * These provide sinon-chai compatible assertion names that delegate to Jest-style implementations.
+ */
+export interface ChaiStyleAssertion {
+  /**
+   * Checks that a spy was called at least once.
+   * Chai-style equivalent of `toHaveBeenCalled`.
+   *
+   * @example
+   * expect(spy).to.have.been.called
+   */
+  called: () => void
+
+  /**
+   * Checks that a spy was called a specific number of times.
+   * Chai-style equivalent of `toHaveBeenCalledTimes`.
+   *
+   * @example
+   * expect(spy).to.have.callCount(3)
+   */
+  callCount: (count: number) => void
+
+  /**
+   * Checks that a spy was called with specific arguments at least once.
+   * Chai-style equivalent of `toHaveBeenCalledWith`.
+   *
+   * @example
+   * expect(spy).to.have.been.calledWith('arg1', 'arg2')
+   */
+  calledWith: <E extends any[]>(...args: E) => void
+
+  /**
+   * Checks that a spy was called exactly once.
+   * Chai-style equivalent of `toHaveBeenCalledOnce`.
+   *
+   * @example
+   * expect(spy).to.have.been.calledOnce
+   */
+  calledOnce: () => void
+
+  /**
+   * Checks that a spy was called exactly once with specific arguments.
+   * Chai-style equivalent of `toHaveBeenCalledExactlyOnceWith`.
+   *
+   * @example
+   * expect(spy).to.have.been.calledOnceWith('arg1', 'arg2')
+   */
+  calledOnceWith: <E extends any[]>(...args: E) => void
+
+  /**
+   * Checks that the last call to a spy was made with specific arguments.
+   * Chai-style equivalent of `toHaveBeenLastCalledWith`.
+   *
+   * @example
+   * expect(spy).to.have.been.lastCalledWith('arg1', 'arg2')
+   */
+  lastCalledWith: <E extends any[]>(...args: E) => void
+
+  /**
+   * Checks that the nth call to a spy was made with specific arguments.
+   * Chai-style equivalent of `toHaveBeenNthCalledWith`.
+   *
+   * @example
+   * expect(spy).to.have.been.nthCalledWith(2, 'arg1', 'arg2')
+   */
+  nthCalledWith: <E extends any[]>(n: number, ...args: E) => void
+
+  /**
+   * Checks that a spy returned successfully at least once.
+   * Chai-style equivalent of `toHaveReturned`.
+   *
+   * @example
+   * expect(spy).to.have.returned
+   */
+  returned: () => void
+
+  /**
+   * Checks that a spy returned a specific value at least once.
+   * Chai-style equivalent of `toHaveReturnedWith`.
+   *
+   * @example
+   * expect(spy).to.have.returnedWith('value')
+   */
+  returnedWith: <E>(value: E) => void
+
+  /**
+   * Checks that a spy was called before another spy.
+   * Chai-style equivalent of `toHaveBeenCalledBefore`.
+   *
+   * @example
+   * expect(spy1).to.have.been.calledBefore(spy2)
+   */
+  calledBefore: (mock: MockInstance, failIfNoFirstInvocation?: boolean) => void
+
+  /**
+   * Checks that a spy was called after another spy.
+   * Chai-style equivalent of `toHaveBeenCalledAfter`.
+   *
+   * @example
+   * expect(spy1).to.have.been.calledAfter(spy2)
+   */
+  calledAfter: (mock: MockInstance, failIfNoFirstInvocation?: boolean) => void
 }
 
 declare global {
