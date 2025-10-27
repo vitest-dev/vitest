@@ -31,7 +31,7 @@ export default defineConfig({
     browser: {
       provider: preview(),
       instances: [
-        { name: 'chromium' },
+        { browser: 'chromium' },
       ],
     },
   },
