@@ -602,3 +602,305 @@ export default defineConfig({
 ```
 
 Otherwise your snapshots will have a lot of escaped `"` characters.
+
+## Migrating from Mocha + Chai + Sinon {#mocha-chai-sinon}
+
+Vitest provides excellent support for migrating from Mocha+Chai+Sinon test suites. While Vitest uses a Jest-compatible API by default, it also provides Chai-style assertions for spy/mock testing, making migration easier.
+
+### Test Structure
+
+Mocha and Vitest have similar test structures, but with some differences:
+
+```ts
+// Mocha
+describe('suite', function() {
+  before(function() { /* setup */ })
+  after(function() { /* teardown */ })
+  beforeEach(function() { /* setup */ })
+  afterEach(function() { /* teardown */ })
+
+  it('test', function() {
+    // test code
+  })
+})
+
+// Vitest - same structure works!
+import { describe, beforeAll, afterAll, beforeEach, afterEach, it } from 'vitest'
+
+describe('suite', () => {
+  beforeAll(() => { /* setup */ })
+  afterAll(() => { /* teardown */ })
+  beforeEach(() => { /* setup */ })
+  afterEach(() => { /* teardown */ })
+
+  it('test', () => {
+    // test code
+  })
+})
+```
+
+::: tip
+Vitest supports both `before`/`after` (Mocha-style) and `beforeAll`/`afterAll` (Jest-style) - they're aliases!
+:::
+
+### Assertions
+
+Vitest includes Chai assertions by default, so most Chai assertions work without changes:
+
+```ts
+// Both Mocha+Chai and Vitest
+import { expect } from 'vitest' // or 'chai' in Mocha
+
+expect(value).to.equal(42)
+expect(value).to.be.true
+expect(array).to.have.lengthOf(3)
+expect(obj).to.have.property('key')
+```
+
+### Spy/Mock Assertions
+
+Vitest provides **Chai-style assertions** for spies and mocks, allowing you to migrate from Sinon without rewriting assertions:
+
+```ts
+// Before (Mocha + Chai + Sinon)
+const sinon = require('sinon')
+const chai = require('chai')
+const sinonChai = require('sinon-chai')
+chai.use(sinonChai)
+
+const spy = sinon.spy(obj, 'method')
+obj.method('arg1', 'arg2')
+
+expect(spy).to.have.been.called
+expect(spy).to.have.been.calledOnce
+expect(spy).to.have.been.calledWith('arg1', 'arg2')
+
+// After (Vitest) - same assertion syntax!
+import { expect, vi } from 'vitest'
+
+const spy = vi.spyOn(obj, 'method')
+obj.method('arg1', 'arg2')
+
+expect(spy).to.have.been.called()
+expect(spy).to.have.been.calledOnce()
+expect(spy).to.have.been.calledWith('arg1', 'arg2')
+```
+
+::: tip
+Notice the only difference: Chai-style assertions in Vitest use method calls `called()` instead of properties `called`. This is because Vitest implements these as methods that delegate to Jest-style matchers.
+:::
+
+#### Complete Chai-Style Assertion Support
+
+Vitest supports all common sinon-chai assertions:
+
+| Sinon-Chai (property) | Vitest (method) | Description |
+|----------------------|-----------------|-------------|
+| `spy.called` | `called()` | Spy was called at least once |
+| `spy.calledOnce` | `calledOnce()` | Spy was called exactly once |
+| `spy.calledTwice` | `calledTwice()` | Spy was called exactly twice |
+| `spy.calledThrice` | `calledThrice()` | Spy was called exactly three times |
+| `spy.callCount(n)` | `callCount(n)` | Spy was called n times |
+| `spy.calledWith(...)` | `calledWith(...)` | Spy was called with specific args |
+| `spy.calledOnceWith(...)` | `calledOnceWith(...)` | Spy was called once with specific args |
+| `spy.returned` | `returned()` | Spy returned successfully |
+| `spy.returnedWith(value)` | `returnedWith(value)` | Spy returned specific value |
+
+See the [Chai-Style Spy Assertions](/api/expect#chai-style-spy-assertions) documentation for the complete list.
+
+### Creating Spies and Mocks
+
+Replace Sinon's spy/stub/mock creation with Vitest's `vi` utilities:
+
+```ts
+// Sinon
+const sinon = require('sinon')
+const spy = sinon.spy()
+const stub = sinon.stub(obj, 'method')
+const mock = sinon.mock(obj)
+
+// Vitest
+import { vi } from 'vitest'
+const spy = vi.fn()
+const stub = vi.spyOn(obj, 'method')
+// Vitest doesn't have "mocks" - use spies instead
+```
+
+### Stubbing Return Values
+
+```ts
+// Sinon
+stub.returns(42)
+stub.onFirstCall().returns(1)
+stub.onSecondCall().returns(2)
+
+// Vitest
+stub.mockReturnValue(42)
+stub.mockReturnValueOnce(1)
+stub.mockReturnValueOnce(2)
+```
+
+### Stubbing Implementations
+
+```ts
+// Sinon
+stub.callsFake((arg) => arg * 2)
+
+// Vitest
+stub.mockImplementation((arg) => arg * 2)
+```
+
+### Restoring Spies
+
+```ts
+// Sinon
+spy.restore()
+sinon.restore() // restore all
+
+// Vitest
+spy.mockRestore()
+vi.restoreAllMocks() // restore all
+```
+
+### Module Mocking
+
+Vitest uses a different approach for module mocking:
+
+```ts
+// Sinon (not directly supported)
+// Usually required manual module replacement
+
+// Vitest
+import { vi } from 'vitest'
+
+vi.mock('./module', () => ({
+  namedExport: vi.fn(),
+  default: vi.fn(),
+}))
+```
+
+See the [Mocking guide](/guide/mocking) for more details.
+
+### Timers
+
+Both Sinon and Vitest use `@sinonjs/fake-timers` internally:
+
+```ts
+// Sinon
+const clock = sinon.useFakeTimers()
+clock.tick(1000)
+clock.restore()
+
+// Vitest
+import { vi } from 'vitest'
+vi.useFakeTimers()
+vi.advanceTimersByTime(1000)
+vi.useRealTimers()
+```
+
+### Async Testing
+
+```ts
+// Mocha (callback style)
+it('async test', function(done) {
+  asyncFunction((err, result) => {
+    expect(result).to.equal(42)
+    done()
+  })
+})
+
+// Vitest (async/await)
+it('async test', async () => {
+  const result = await asyncFunction()
+  expect(result).to.equal(42)
+})
+```
+
+### Key Differences
+
+1. **Globals**: Mocha provides globals by default. In Vitest, either import from `vitest` or enable [`globals`](/config/#globals) config
+2. **Assertion style**: You can use both Chai-style (`expect(spy).to.have.been.called()`) and Jest-style (`expect(spy).toHaveBeenCalled()`)
+3. **Method vs Property**: Chai-style assertions in Vitest use methods `called()` instead of properties `called`
+4. **Module mocking**: Vitest has built-in module mocking with `vi.mock()`, unlike Sinon
+5. **Parallel execution**: Vitest runs tests in parallel by default, Mocha runs sequentially
+
+### Migration Checklist
+
+- [ ] Replace `require()` with `import` statements
+- [ ] Import test functions from `vitest`: `import { describe, it, expect, vi } from 'vitest'`
+- [ ] Replace `sinon.spy()` with `vi.fn()` or `vi.spyOn()`
+- [ ] Replace `sinon.stub()` with `vi.spyOn().mockImplementation()`
+- [ ] Update Chai-style spy assertions to use methods: `called` → `called()`
+- [ ] Replace `sinon.useFakeTimers()` with `vi.useFakeTimers()`
+- [ ] Convert callback-style async tests to `async`/`await`
+- [ ] Update module mocking to use `vi.mock()`
+- [ ] Enable [`globals`](/config/#globals) config if you prefer not to import test functions
+
+### Example Migration
+
+::: code-group
+```ts [Before (Mocha + Chai + Sinon)]
+const { expect } = require('chai')
+const sinon = require('sinon')
+const sinonChai = require('sinon-chai')
+const chai = require('chai')
+chai.use(sinonChai)
+
+describe('Calculator', function() {
+  let calculator
+  let spy
+
+  beforeEach(function() {
+    calculator = {
+      add: (a, b) => a + b
+    }
+    spy = sinon.spy(calculator, 'add')
+  })
+
+  afterEach(function() {
+    spy.restore()
+  })
+
+  it('should add numbers', function() {
+    const result = calculator.add(2, 3)
+
+    expect(result).to.equal(5)
+    expect(spy).to.have.been.calledOnce
+    expect(spy).to.have.been.calledWith(2, 3)
+  })
+})
+```
+
+```ts [After (Vitest)]
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+
+describe('Calculator', () => {
+  let calculator
+  let spy
+
+  beforeEach(() => {
+    calculator = {
+      add: (a, b) => a + b
+    }
+    spy = vi.spyOn(calculator, 'add')
+  })
+
+  afterEach(() => {
+    spy.mockRestore()
+  })
+
+  it('should add numbers', () => {
+    const result = calculator.add(2, 3)
+
+    expect(result).to.equal(5)
+    expect(spy).to.have.been.calledOnce()
+    expect(spy).to.have.been.calledWith(2, 3)
+  })
+})
+```
+:::
+
+For more information, see:
+- [Chai-Style Spy Assertions](/api/expect#chai-style-spy-assertions)
+- [Mocking Guide](/guide/mocking)
+- [Vi API](/api/vi)
