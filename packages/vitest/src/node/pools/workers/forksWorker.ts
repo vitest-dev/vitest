@@ -1,4 +1,5 @@
 import type { ChildProcess } from 'node:child_process'
+import type { Writable } from 'node:stream'
 import type { SerializedConfig } from '../../types/config'
 import type { PoolOptions, PoolWorker, WorkerRequest } from '../types'
 import { fork } from 'node:child_process'
@@ -17,10 +18,15 @@ export class ForksPoolWorker implements PoolWorker {
   protected env: Partial<NodeJS.ProcessEnv>
 
   private _fork?: ChildProcess
+  private stdout: NodeJS.WriteStream | Writable
+  private stderr: NodeJS.WriteStream | Writable
 
   constructor(options: PoolOptions) {
     this.execArgv = options.execArgv
     this.env = options.env
+    this.stdout = options.project.vitest.logger.outputStream
+    this.stderr = options.project.vitest.logger.errorStream
+
     /** Loads {@link file://./../../../runtime/workers/forks.ts} */
     this.entrypoint = resolve(options.distPath, 'workers/forks.js')
   }
@@ -51,7 +57,18 @@ export class ForksPoolWorker implements PoolWorker {
     this._fork ||= fork(this.entrypoint, [], {
       env: this.env,
       execArgv: this.execArgv,
+      stdio: 'pipe',
     })
+
+    if (this._fork.stdout) {
+      this.stdout.setMaxListeners(1 + this.stdout.getMaxListeners())
+      this._fork.stdout.pipe(this.stdout)
+    }
+
+    if (this._fork.stderr) {
+      this.stderr.setMaxListeners(1 + this.stderr.getMaxListeners())
+      this._fork.stderr.pipe(this.stderr)
+    }
   }
 
   async stop(): Promise<void> {
@@ -79,6 +96,16 @@ export class ForksPoolWorker implements PoolWorker {
     fork.kill()
     await waitForExit
     clearTimeout(sigkillTimeout)
+
+    if (fork.stdout) {
+      fork.stdout?.unpipe(this.stdout)
+      this.stdout.setMaxListeners(this.stdout.getMaxListeners() - 1)
+    }
+
+    if (fork.stderr) {
+      fork.stderr?.unpipe(this.stderr)
+      this.stderr.setMaxListeners(this.stderr.getMaxListeners() - 1)
+    }
 
     this._fork = undefined
   }

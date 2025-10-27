@@ -9,6 +9,18 @@ describe.each(['forks', 'threads', 'vmThreads', 'vmForks'])('%s', async (pool) =
 
     expect(config.pool).toBe(pool)
   })
+
+  test('can capture worker\'s stdout and stderr', async () => {
+    const { stdout, stderr } = await runVitest({
+      root: './fixtures/pool',
+      include: ['write-to-stdout-and-stderr.test.ts'],
+      pool,
+    })
+
+    expect(stderr).toContain('Worker writing to stderr')
+    expect(stdout).toContain('Worker writing to stdout')
+    expect(stderr).toContain('MaxListenersExceededWarning: Possible EventEmitter memory leak detected. 3 message listeners added to [TestFixturesCustomEmitter]')
+  })
 })
 
 test('extended project inherits top-level pool related options', async () => {
