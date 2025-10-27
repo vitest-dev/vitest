@@ -613,19 +613,19 @@ Mocha and Vitest have similar test structures, but with some differences:
 
 ```ts
 // Mocha
-describe('suite', function() {
-  before(function() { /* setup */ })
-  after(function() { /* teardown */ })
-  beforeEach(function() { /* setup */ })
-  afterEach(function() { /* teardown */ })
+describe('suite', () => {
+  before(() => { /* setup */ })
+  after(() => { /* teardown */ })
+  beforeEach(() => { /* setup */ })
+  afterEach(() => { /* teardown */ })
 
-  it('test', function() {
+  it('test', () => {
     // test code
   })
 })
 
 // Vitest - same structure works!
-import { describe, beforeAll, afterAll, beforeEach, afterEach, it } from 'vitest'
+import { afterAll, afterEach, beforeAll, beforeEach, describe, it } from 'vitest'
 
 describe('suite', () => {
   beforeAll(() => { /* setup */ })
@@ -744,10 +744,10 @@ stub.mockReturnValueOnce(2)
 
 ```ts
 // Sinon
-stub.callsFake((arg) => arg * 2)
+stub.callsFake(arg => arg * 2)
 
 // Vitest
-stub.mockImplementation((arg) => arg * 2)
+stub.mockImplementation(arg => arg * 2)
 ```
 
 ### Restoring Spies
@@ -802,8 +802,9 @@ vi.useRealTimers()
 
 ```ts
 // Mocha (callback style)
-it('async test', function(done) {
+it('async test', (done) => {
   asyncFunction((err, result) => {
+    if (err) { return done(err) }
     expect(result).to.equal(42)
     done()
   })
@@ -846,22 +847,22 @@ const sinonChai = require('sinon-chai')
 const chai = require('chai')
 chai.use(sinonChai)
 
-describe('Calculator', function() {
+describe('Calculator', () => {
   let calculator
   let spy
 
-  beforeEach(function() {
+  beforeEach(() => {
     calculator = {
       add: (a, b) => a + b
     }
     spy = sinon.spy(calculator, 'add')
   })
 
-  afterEach(function() {
+  afterEach(() => {
     spy.restore()
   })
 
-  it('should add numbers', function() {
+  it('should add numbers', () => {
     const result = calculator.add(2, 3)
 
     expect(result).to.equal(5)
@@ -872,7 +873,7 @@ describe('Calculator', function() {
 ```
 
 ```ts [After (Vitest)]
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 describe('Calculator', () => {
   let calculator
