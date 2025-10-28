@@ -9,7 +9,7 @@ export interface SuiteResultCache {
 }
 
 export class ResultsCache {
-  private cache = new Map<string, SuiteResultCache>()
+  public cache: Map<string, SuiteResultCache> = new Map<string, SuiteResultCache>()
   private workspacesKeyMap = new Map<string, string[]>()
   private cachePath: string | null = null
   private version: string

@@ -64,6 +64,8 @@ export interface ProjectName {
   color?: LabelColor
 }
 
+export type GroupingStrategy = 'balanced' | 'fast-fail' | 'dependency-aware' | 'resource-optimized'
+
 interface SequenceOptions {
   /**
    * Class that handles sorting and sharding algorithm.
@@ -76,11 +78,21 @@ interface SequenceOptions {
    * Controls the order in which this project runs its tests when using multiple [projects](/guide/projects).
    *
    * - Projects with the same group order number will run together, and groups are run from lowest to highest.
-   * - If you don’t set this option, all projects run in parallel.
+   * - If you don't set this option, all projects run in parallel.
    * - If several projects use the same group order, they will run at the same time.
    * @default 0
    */
   groupOrder?: number
+  /**
+   * Advanced test grouping strategy for optimal execution.
+   *
+   * - 'balanced': Load-balanced distribution across workers (default)
+   * - 'fast-fail': Prioritizes failed tests for early CI feedback
+   * - 'dependency-aware': Minimizes resource contention
+   * - 'resource-optimized': Multi-dimensional bin packing for memory/CPU constraints
+   * @default 'balanced'
+   */
+  groupingStrategy?: GroupingStrategy
   /**
    * Should files and tests run in random order.
    * @default false
@@ -1036,6 +1048,7 @@ export interface ResolvedConfig
 
   sequence: {
     sequencer: TestSequencerConstructor
+    groupingStrategy?: GroupingStrategy
     hooks: SequenceHooks
     setupFiles: SequenceSetupFiles
     shuffle?: boolean
