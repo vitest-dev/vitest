@@ -156,7 +156,7 @@ Color used by CLI and UI can be changed by providing an object with `color` prop
 
 - **Type:** `{ sourcemap?, deps?, ... }`
 
-Moudle runner options.
+Module runner options.
 
 #### server.sourcemap
 
