@@ -1,7 +1,8 @@
 import type { SerializedConfig } from 'vitest'
 import type { TestUserConfig } from 'vitest/node'
+import { normalize } from 'pathe'
 import { assert, describe, expect, test } from 'vitest'
-import { runVitest } from '../../test-utils'
+import { runVitest, StableTestFileOrderSorter } from '../../test-utils'
 
 describe.each(['forks', 'threads', 'vmThreads', 'vmForks'])('%s', async (pool) => {
   test('resolves top-level pool', async () => {
@@ -51,8 +52,39 @@ test('project level pool options overwrites top-level', async () => {
   expect(config.fileParallelism).toBe(false)
 })
 
-async function getConfig(options: Partial<TestUserConfig>, cliOptions: Partial<TestUserConfig> = {}) {
-  let config: SerializedConfig | undefined
+test('isolated single worker pool receives single testfile at once', async () => {
+  const files = await getConfig<string[]>({
+    maxWorkers: 1,
+    isolate: true,
+    sequence: { sequencer: StableTestFileOrderSorter },
+  }, { include: ['print-testfiles.test.ts', 'a.test.ts', 'b.test.ts', 'c.test.ts'] })
+
+  expect(files.map(normalizeFilename)).toMatchInlineSnapshot(`
+    [
+      "<process-cwd>/fixtures/pool/print-testfiles.test.ts",
+    ]
+  `)
+})
+
+test('non-isolated single worker pool receives all testfiles at once', async () => {
+  const files = await getConfig<string[]>({
+    maxWorkers: 1,
+    isolate: false,
+    sequence: { sequencer: StableTestFileOrderSorter },
+  }, { include: ['print-testfiles.test.ts', 'a.test.ts', 'b.test.ts', 'c.test.ts'] })
+
+  expect(files.map(normalizeFilename)).toMatchInlineSnapshot(`
+    [
+      "<process-cwd>/fixtures/pool/a.test.ts",
+      "<process-cwd>/fixtures/pool/b.test.ts",
+      "<process-cwd>/fixtures/pool/c.test.ts",
+      "<process-cwd>/fixtures/pool/print-testfiles.test.ts",
+    ]
+  `)
+})
+
+async function getConfig<T = SerializedConfig>(options: Partial<TestUserConfig>, cliOptions: Partial<TestUserConfig> = {}): Promise<T> {
+  let config: T | undefined
 
   await runVitest({
     root: './fixtures/pool',
@@ -65,4 +97,9 @@ async function getConfig(options: Partial<TestUserConfig>, cliOptions: Partial<T
 
   assert(config)
   return config
+}
+
+function normalizeFilename(filename: string) {
+  return normalize(filename)
+    .replace(normalize(process.cwd()), '<process-cwd>')
 }
