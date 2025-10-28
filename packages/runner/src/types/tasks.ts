@@ -87,25 +87,42 @@ export interface TaskBase {
    */
   result?: TaskResult
   /**
-   * The amount of times the task should be retried if it fails.
+   * Retry configuration for the task.
+   * - If a number, specifies how many times to retry
+   * - If an object, allows fine-grained retry control
    * @default 0
    */
-  retry?: number
-  /**
-   * Delay in milliseconds between retry attempts.
-   * @default 0
-   */
-  retryDelay?: number
-  /**
-   * Condition to determine if a test should be retried based on the error.
-   * @default undefined (retry on all errors)
-   */
-  retryCondition?: string | ((error: Error) => boolean)
-  /**
-   * Strategy for when to retry failed tests.
-   * @default 'immediate'
-   */
-  retryStrategy?: 'immediate' | 'test-file' | 'deferred'
+  retry?: number | {
+    /**
+     * The number of times to retry the test if it fails.
+     * @default 0
+     */
+    count?: number
+    /**
+     * Delay in milliseconds between retry attempts.
+     * @default 0
+     */
+    delay?: number
+    /**
+     * Condition to determine if a test should be retried based on the error.
+     * - If a string, treated as a regular expression to match against error message
+     * - If a function, called with the error object; return true to retry
+     *
+     * NOTE: Functions can only be used in test files, not in vitest.config.ts,
+     * because the configuration is serialized when passed to worker threads.
+     *
+     * @default undefined (retry on all errors)
+     */
+    condition?: string | ((error: Error) => boolean)
+    /**
+     * Strategy for when to retry failed tests.
+     * - 'immediate': Retry immediately after failure (default)
+     * - 'test-file': Defer retries until after all tests in the file complete
+     * - 'deferred': Defer retries until after all test files complete
+     * @default 'immediate'
+     */
+    strategy?: 'immediate' | 'test-file' | 'deferred'
+  }
   /**
    * The amount of times the task should be repeated after the successful run.
    * If the task fails, it will not be retried unless `retry` is specified.
@@ -482,36 +499,42 @@ export interface TestOptions {
    */
   timeout?: number
   /**
-   * Times to retry the test if fails. Useful for making flaky tests more stable.
-   * When retries is up, the last test error will be thrown.
-   *
+   * Retry configuration for the test.
+   * - If a number, specifies how many times to retry
+   * - If an object, allows fine-grained retry control
    * @default 0
    */
-  retry?: number
-  /**
-   * Delay in milliseconds between retry attempts.
-   * Useful for tests that interact with rate-limited APIs or need time to recover.
-   *
-   * @default 0
-   */
-  retryDelay?: number
-  /**
-   * Condition to determine if a test should be retried based on the error.
-   * - If a string, treated as a regular expression to match against error message
-   * - If a function, called with the error object; return true to retry
-   *
-   * @default undefined (retry on all errors)
-   */
-  retryCondition?: string | ((error: Error) => boolean)
-  /**
-   * Strategy for when to retry failed tests.
-   * - 'immediate': Retry immediately after failure (default)
-   * - 'test-file': Defer retries until after all tests in the file complete
-   * - 'deferred': Defer retries until after all test files complete
-   *
-   * @default 'immediate'
-   */
-  retryStrategy?: 'immediate' | 'test-file' | 'deferred'
+  retry?: number | {
+    /**
+     * The number of times to retry the test if it fails.
+     * @default 0
+     */
+    count?: number
+    /**
+     * Delay in milliseconds between retry attempts.
+     * @default 0
+     */
+    delay?: number
+    /**
+     * Condition to determine if a test should be retried based on the error.
+     * - If a string, treated as a regular expression to match against error message
+     * - If a function, called with the error object; return true to retry
+     *
+     * NOTE: Functions can only be used in test files, not in vitest.config.ts,
+     * because the configuration is serialized when passed to worker threads.
+     *
+     * @default undefined (retry on all errors)
+     */
+    condition?: string | ((error: Error) => boolean)
+    /**
+     * Strategy for when to retry failed tests.
+     * - 'immediate': Retry immediately after failure (default)
+     * - 'test-file': Defer retries until after all tests in the file complete
+     * - 'deferred': Defer retries until after all test files complete
+     * @default 'immediate'
+     */
+    strategy?: 'immediate' | 'test-file' | 'deferred'
+  }
   /**
    * How many times the test will run again.
    * Only inner tests will repeat if set on `describe()`, nested `describe()` will inherit parent's repeat by default.

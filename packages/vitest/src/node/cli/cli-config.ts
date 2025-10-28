@@ -530,14 +530,8 @@ export const cliOptionsConfig: VitestCLIOptions = {
     description:
       'Retry the test specific number of times if it fails (default: `0`)',
     argument: '<times>',
+    subcommands: null,
   },
-  retryDelay: {
-    description:
-      'Delay in milliseconds between retry attempts (default: `0`)',
-    argument: '<milliseconds>',
-  },
-  retryCondition: null,
-  retryStrategy: null,
   diff: {
     description:
       'DiffOptions object or a path to a module which exports DiffOptions object',

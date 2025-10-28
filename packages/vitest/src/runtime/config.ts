@@ -77,10 +77,12 @@ export interface SerializedConfig {
     truncateThreshold?: number
   } | undefined
   diff: string | SerializedDiffOptions | undefined
-  retry: number
-  retryDelay: number | undefined
-  retryCondition: string | ((error: Error) => boolean) | undefined
-  retryStrategy: 'immediate' | 'test-file' | 'deferred' | undefined
+  retry: number | {
+    count?: number
+    delay?: number
+    condition?: string | ((error: Error) => boolean)
+    strategy?: 'immediate' | 'test-file' | 'deferred'
+  }
   includeTaskLocation: boolean | undefined
   inspect: boolean | string | undefined
   inspectBrk: boolean | string | undefined

@@ -36,10 +36,12 @@ export interface VitestRunnerConfig {
   maxConcurrency: number
   testTimeout: number
   hookTimeout: number
-  retry: number
-  retryDelay?: number
-  retryCondition?: string | ((error: Error) => boolean)
-  retryStrategy?: 'immediate' | 'test-file' | 'deferred'
+  retry: number | {
+    count?: number
+    delay?: number
+    condition?: string | ((error: Error) => boolean)
+    strategy?: 'immediate' | 'test-file' | 'deferred'
+  }
   includeTaskLocation?: boolean
   diffOptions?: DiffOptions
 }

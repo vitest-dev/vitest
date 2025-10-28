@@ -6,6 +6,20 @@ export function serializeConfig(project: TestProject): SerializedConfig {
   const viteConfig = project._vite?.config
   const optimizer = config.deps?.optimizer || {}
 
+  // Handle retry configuration serialization
+  let retry = config.retry
+  if (retry && typeof retry === 'object' && typeof retry.condition === 'function') {
+    console.warn(
+      'Warning: retry.condition function cannot be used in vitest.config.ts. '
+      + 'Use a string pattern instead, or define the function in your test file.',
+    )
+    // Remove the function from serialized config
+    retry = {
+      ...retry,
+      condition: undefined,
+    }
+  }
+
   return {
     // TODO: remove functions from environmentOptions
     environmentOptions: config.environmentOptions,
@@ -34,10 +48,7 @@ export function serializeConfig(project: TestProject): SerializedConfig {
     snapshotSerializers: config.snapshotSerializers,
     // TODO: non serializable function?
     diff: config.diff,
-    retry: config.retry,
-    retryDelay: config.retryDelay,
-    retryCondition: config.retryCondition,
-    retryStrategy: config.retryStrategy,
+    retry,
     disableConsoleIntercept: config.disableConsoleIntercept,
     root: config.root,
     name: config.name,
