@@ -34,6 +34,46 @@ const now = globalThis.performance ? globalThis.performance.now.bind(globalThis.
 const unixNow = Date.now
 const { clearTimeout, setTimeout } = getSafeTimers()
 
+/**
+ * Normalizes retry configuration to extract individual values.
+ * Handles both number and object forms.
+ */
+function getRetryCount(retry: number | { count?: number } | undefined): number {
+  if (retry === undefined)
+    return 0
+  if (typeof retry === 'number')
+    return retry
+  return retry.count ?? 0
+}
+
+function getRetryDelay(retry: number | { delay?: number } | undefined): number {
+  if (retry === undefined)
+    return 0
+  if (typeof retry === 'number')
+    return 0
+  return retry.delay ?? 0
+}
+
+function getRetryCondition(
+  retry: number | { condition?: string | ((error: Error) => boolean) } | undefined,
+): string | ((error: Error) => boolean) | undefined {
+  if (retry === undefined)
+    return undefined
+  if (typeof retry === 'number')
+    return undefined
+  return retry.condition
+}
+
+function getRetryStrategy(
+  retry: number | { strategy?: 'immediate' | 'test-file' | 'deferred' } | undefined,
+): 'immediate' | 'test-file' | 'deferred' {
+  if (retry === undefined)
+    return 'immediate'
+  if (typeof retry === 'number')
+    return 'immediate'
+  return retry.strategy ?? 'immediate'
+}
+
 function updateSuiteHookState(
   task: Task,
   name: keyof SuiteHooks,
@@ -270,16 +310,16 @@ async function callCleanupHooks(runner: VitestRunner, cleanups: unknown[]) {
  * Determines if a test should be retried based on its retryCondition configuration
  */
 function shouldRetryTest(test: Test, errors: TestError[] | undefined): boolean {
-  const condition = test.retryCondition
-
-  // No condition means always retry
-  if (!condition) {
-    return true
-  }
+  const condition = getRetryCondition(test.retry)
 
   // No errors means test passed, shouldn't get here but handle it
   if (!errors || errors.length === 0) {
     return false
+  }
+
+  // No condition means always retry
+  if (!condition) {
+    return true
   }
 
   // Check only the most recent error (last in array) against the condition
@@ -344,7 +384,7 @@ export async function runTest(test: Test, runner: VitestRunner): Promise<void> {
 
   const repeats = test.repeats ?? 0
   for (let repeatCount = 0; repeatCount <= repeats; repeatCount++) {
-    const retry = test.retry ?? 0
+    const retry = getRetryCount(test.retry)
     for (let retryCount = 0; retryCount <= retry; retryCount++) {
       let beforeEachCleanups: unknown[] = []
       try {
@@ -461,7 +501,7 @@ export async function runTest(test: Test, runner: VitestRunner): Promise<void> {
         }
 
         // Check retry strategy
-        const strategy = test.retryStrategy || 'immediate'
+        const strategy = getRetryStrategy(test.retry)
 
         if (strategy === 'test-file' || strategy === 'deferred') {
           // For test-file and deferred strategies, exit the retry loop
@@ -476,7 +516,7 @@ export async function runTest(test: Test, runner: VitestRunner): Promise<void> {
         test.result.retryCount = (test.result.retryCount ?? 0) + 1
 
         // Apply retry delay if configured
-        const delay = test.retryDelay ?? 0
+        const delay = getRetryDelay(test.retry)
         if (delay > 0) {
           await new Promise(resolve => setTimeout(resolve, delay))
         }
@@ -546,22 +586,20 @@ function collectDeferredRetryTests(suite: Suite, strategy: 'test-file' | 'deferr
 
   function collectFromTask(task: Task) {
     if (task.type === 'test') {
-      const test = task as Test
-      const retry = test.retry ?? 0
-      const retryCount = test.result?.retryCount ?? 0
-      const testStrategy = test.retryStrategy || 'immediate'
+      const retry = getRetryCount(task.retry)
+      const retryCount = task.result?.retryCount ?? 0
+      const testStrategy = getRetryStrategy(task.retry)
 
       if (
         testStrategy === strategy
-        && test.result?.state === 'fail'
+        && task.result?.state === 'fail'
         && retryCount < retry
       ) {
-        tests.push(test)
+        tests.push(task)
       }
     }
     else if (task.type === 'suite') {
-      const subSuite = task as Suite
-      for (const child of subSuite.tasks) {
+      for (const child of task.tasks) {
         collectFromTask(child)
       }
     }
@@ -659,7 +697,7 @@ export async function runSuite(suite: Suite, runner: VitestRunner): Promise<void
             continue
           }
 
-          const retry = test.retry ?? 0
+          const retry = getRetryCount(test.retry)
           const retryCount = test.result.retryCount ?? 0
 
           // Retry the test up to the remaining retry count
@@ -669,7 +707,7 @@ export async function runSuite(suite: Suite, runner: VitestRunner): Promise<void
             test.result.retryCount = i + 1
 
             // Apply retry delay if configured
-            const delay = test.retryDelay ?? 0
+            const delay = getRetryDelay(test.retry)
             if (delay > 0) {
               await new Promise(resolve => setTimeout(resolve, delay))
             }
@@ -777,7 +815,7 @@ export async function runFiles(files: File[], runner: VitestRunner): Promise<voi
       continue
     }
 
-    const retry = test.retry ?? 0
+    const retry = getRetryCount(test.retry)
     const retryCount = test.result.retryCount ?? 0
 
     // Retry the test up to the remaining retry count
@@ -787,7 +825,7 @@ export async function runFiles(files: File[], runner: VitestRunner): Promise<voi
       test.result.retryCount = i + 1
 
       // Apply retry delay if configured
-      const delay = test.retryDelay ?? 0
+      const delay = getRetryDelay(test.retry)
       if (delay > 0) {
         await new Promise(resolve => setTimeout(resolve, delay))
       }
