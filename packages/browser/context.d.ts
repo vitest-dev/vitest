@@ -227,7 +227,7 @@ export interface UserEvent {
    * @see {@link https://testing-library.com/docs/user-event/utility/#-selectoptions-deselectoptions} testing-library API
    */
   selectOptions: (
-    element: Element | Locator,
+    element: HTMLElement | Locator,
     values: HTMLElement | HTMLElement[] | Locator | Locator[] | string | string[],
     options?: UserEventSelectOptions,
   ) => Promise<void>
