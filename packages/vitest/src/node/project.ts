@@ -547,7 +547,7 @@ export class TestProject {
 
     this.closingPromise = undefined
 
-    this._resolver = new VitestResolver(server.config.cacheDir, this._config)
+    this._resolver = new VitestResolver(server.config.cacheDir, this._config, server.config)
     this._vite = server
     this._serializedDefines = createDefinesScript(server.config.define)
     this._fetcher = createFetchModuleFunction(
