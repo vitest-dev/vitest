@@ -215,7 +215,7 @@ export class Vitest {
       this.watcher.registerWatcher()
     }
 
-    this._resolver = new VitestResolver(server.config.cacheDir, resolved, server.config)
+    this._resolver = new VitestResolver(server.config.cacheDir, resolved)
     this._fetcher = createFetchModuleFunction(
       this._resolver,
       this._tmpDir,

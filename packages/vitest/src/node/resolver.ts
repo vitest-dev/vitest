@@ -1,51 +1,18 @@
-import type { ResolvedConfig as ViteResolvedConfig } from 'vite'
 import type { ResolvedConfig, ServerDepsOptions } from './types/config'
 import { existsSync, promises as fsp } from 'node:fs'
 import { isBuiltin } from 'node:module'
 import { pathToFileURL } from 'node:url'
 import { KNOWN_ASSET_RE } from '@vitest/utils/constants'
-import { toArray } from '@vitest/utils/helpers'
 import { findNearestPackageData } from '@vitest/utils/resolver'
 import * as esModuleLexer from 'es-module-lexer'
 import { dirname, extname, join, resolve } from 'pathe'
-import { escapeRegExp } from '../utils/base'
 import { isWindows } from '../utils/env'
 
 export class VitestResolver {
   private options: ExternalizeOptions
   private externalizeCache = new Map<string, Promise<string | false>>()
 
-  constructor(cacheDir: string, config: ResolvedConfig, viteConfig: ViteResolvedConfig) {
-    const inline: true | (string | RegExp)[] = config.server.deps?.inline === true
-      ? true
-      : []
-    const external: (string | RegExp)[] = []
-    const ssrEnvironment = viteConfig.environments.ssr
-
-    if (config.server.deps?.external) {
-      external.push(...config.server.deps?.external)
-    }
-    if (ssrEnvironment.resolve.external !== true) {
-      external.push(...ssrEnvironment.resolve.external || [])
-    }
-
-    if (inline !== true) {
-      inline.push(...(config.server.deps?.inline as string[] || []))
-
-      if (ssrEnvironment.resolve.noExternal !== true) {
-        const noExternal = toArray(ssrEnvironment.resolve.noExternal).map((dep) => {
-          if (typeof dep === 'string') {
-            const moduleDirectories = (config.deps.moduleDirectories || ['/node_modules/']).map(r => escapeRegExp(r))
-            return new RegExp(
-              `(${moduleDirectories.join('|')})${dep.replace(/\*/g, '[\w/]+')}`,
-            )
-          }
-          return dep
-        }).filter(dep => typeof dep === 'string' || dep instanceof RegExp)
-        inline.push(...noExternal)
-      }
-    }
-
+  constructor(cacheDir: string, config: ResolvedConfig) {
     this.options = {
       moduleDirectories: config.deps.moduleDirectories,
       inlineFiles: config.setupFiles.flatMap((file) => {
@@ -56,8 +23,8 @@ export class VitestResolver {
         return [resolvedId, pathToFileURL(resolvedId).href]
       }),
       cacheDir,
-      inline,
-      external,
+      inline: config.server.deps?.inline,
+      external: config.server.deps?.external,
     }
   }
 
@@ -194,13 +161,13 @@ async function _shouldExternalize(
 
   const moduleDirectories = options?.moduleDirectories || ['/node_modules/']
 
-  if (matchExternalizePattern(id, moduleDirectories, options?.inline)) {
+  if (matchPattern(id, moduleDirectories, options?.inline)) {
     return false
   }
   if (options?.inlineFiles && options?.inlineFiles.includes(id)) {
     return false
   }
-  if (matchExternalizePattern(id, moduleDirectories, options?.external)) {
+  if (matchPattern(id, moduleDirectories, options?.external)) {
     return id
   }
 
@@ -214,10 +181,10 @@ async function _shouldExternalize(
   const guessCJS = isLibraryModule && options?.fallbackCJS
   id = guessCJS ? guessCJSversion(id) || id : id
 
-  if (matchExternalizePattern(id, moduleDirectories, defaultInline)) {
+  if (matchPattern(id, moduleDirectories, defaultInline)) {
     return false
   }
-  if (matchExternalizePattern(id, moduleDirectories, depsExternal)) {
+  if (matchPattern(id, moduleDirectories, depsExternal)) {
     return id
   }
 
@@ -228,7 +195,7 @@ async function _shouldExternalize(
   return false
 }
 
-function matchExternalizePattern(
+function matchPattern(
   id: string,
   moduleDirectories: string[],
   patterns?: (string | RegExp)[] | true,
