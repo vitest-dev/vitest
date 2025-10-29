@@ -19,16 +19,8 @@ export class VitestTransport implements ModuleRunnerTransport {
     }
     const { name, data } = event.data
     if (name === 'getBuiltins') {
-      if (!this.options.getBuiltins) {
-        return { result: [] }
-      }
-      try {
-        const result = await this.options.getBuiltins()
-        return { result }
-      }
-      catch (error) {
-        return { error }
-      }
+      // we don't know the builtins beforehand
+      return { result: [] }
     }
     if (name !== 'fetchModule') {
       return { error: new Error(`Unknown method: ${name}. Expected "fetchModule".`) }
