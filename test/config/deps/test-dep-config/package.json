@@ -1,0 +1,6 @@
+{
+  "name": "@test/test-dep-config",
+  "type": "module",
+  "private": true,
+  "main": "./index.js"
+}
