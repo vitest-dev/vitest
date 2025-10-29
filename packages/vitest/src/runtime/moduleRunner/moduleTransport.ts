@@ -4,6 +4,7 @@ import { builtinModules } from 'node:module'
 
 export interface VitestTransportOptions {
   fetchModule: FetchFunction
+  getBuiltins?: () => Promise<(string | RegExp)[]>
   resolveId: (id: string, importer?: string) => Promise<ResolveFunctionResult | null>
 }
 
@@ -21,7 +22,16 @@ export class VitestTransport implements ModuleRunnerTransport {
     }
     const { name, data } = event.data
     if (name === 'getBuiltins') {
-      return { result: [...nodeBuiltins, /^node:/] }
+      if (!this.options.getBuiltins) {
+        return { result: [...nodeBuiltins, /^node:/] }
+      }
+      try {
+        const result = await this.options.getBuiltins()
+        return { result }
+      }
+      catch (error) {
+        return { error }
+      }
     }
     if (name !== 'fetchModule') {
       return { error: new Error(`Unknown method: ${name}. Expected "fetchModule".`) }
