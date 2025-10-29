@@ -369,29 +369,6 @@ export function resolveConfig(
   resolved.deps ??= {}
   resolved.deps.moduleDirectories ??= []
 
-  const envModuleDirectories
-    = process.env.VITEST_MODULE_DIRECTORIES
-      || process.env.npm_config_VITEST_MODULE_DIRECTORIES
-
-  if (envModuleDirectories) {
-    resolved.deps.moduleDirectories.push(...envModuleDirectories.split(','))
-  }
-
-  resolved.deps.moduleDirectories = resolved.deps.moduleDirectories.map(
-    (dir) => {
-      if (dir[0] !== '/') {
-        dir = `/${dir}`
-      }
-      if (!dir.endsWith('/')) {
-        dir += '/'
-      }
-      return normalize(dir)
-    },
-  )
-  if (!resolved.deps.moduleDirectories.includes('/node_modules/')) {
-    resolved.deps.moduleDirectories.push('/node_modules/')
-  }
-
   resolved.deps.optimizer ??= {}
   resolved.deps.optimizer.ssr ??= {}
   resolved.deps.optimizer.ssr.enabled ??= false
