@@ -43,6 +43,7 @@ export type {
   Test,
   TestAnnotation,
   TestAnnotationLocation,
+  TestAnnotationMetadata,
   TestAPI,
   TestAttachment,
   TestContext,

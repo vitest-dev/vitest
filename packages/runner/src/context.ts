@@ -6,8 +6,6 @@ import type {
   SuiteCollector,
   Test,
   TestAnnotation,
-  TestAnnotationLocation,
-  TestAttachment,
   TestContext,
   WriteableTestContext,
 } from './types/tasks'
@@ -157,33 +155,47 @@ export function createTestContext(
     )
   }
 
-  async function annotate(
-    message: string,
-    location?: TestAnnotationLocation,
-    type?: string,
-    attachment?: TestAttachment,
-  ) {
-    const annotation: TestAnnotation = {
-      message,
-      type: type || 'notice',
+  function prepareAnnotation(annotation: TestAnnotation): TestAnnotation {
+    const stack = findTestFileStackTrace(
+      test.file.filepath,
+      new Error('STACK_TRACE').stack!,
+    )
+
+    if (stack) {
+      annotation.location = {
+        file: stack.file,
+        line: stack.line,
+        column: stack.column,
+      }
     }
-    if (attachment) {
+
+    if (annotation.attachment !== undefined && annotation.attachments !== undefined) {
+      throw new TypeError('A test annotation cannot have both "attachment" and "attachments"')
+    }
+
+    const attachments = annotation.attachments ?? (annotation.attachment !== undefined ? [annotation.attachment] : [])
+
+    for (const attachment of attachments) {
       if (attachment.body == null && !attachment.path) {
         throw new TypeError(`Test attachment requires "body" or "path" to be set. Both are missing.`)
       }
+
       if (attachment.body && attachment.path) {
         throw new TypeError(`Test attachment requires only one of "body" or "path" to be set. Both are specified.`)
       }
-      annotation.attachment = attachment
+
       // convert to a string so it's easier to serialise
       if (attachment.body instanceof Uint8Array) {
         attachment.body = encodeUint8Array(attachment.body)
       }
     }
-    if (location) {
-      annotation.location = location
-    }
 
+    return annotation
+  }
+
+  async function annotate(
+    annotation: TestAnnotation,
+  ) {
     if (!runner.onTestAnnotate) {
       throw new Error(`Test runner doesn't support test annotations.`)
     }
@@ -200,33 +212,30 @@ export function createTestContext(
       throw new Error(`Cannot annotate tests outside of the test run. The test "${test.name}" finished running with the "${test.result.state}" state already.`)
     }
 
-    const stack = findTestFileStackTrace(
-      test.file.filepath,
-      new Error('STACK_TRACE').stack!,
-    )
+    let annotation: TestAnnotation
 
-    let location: undefined | TestAnnotationLocation
+    if (typeof message === 'object') {
+      annotation = (message)
+    }
+    else if (typeof type === 'object') {
+      annotation = ({
+        type: 'notice',
+        message,
+        attachment: type,
+      })
+    }
+    else {
+      annotation = ({
+        type: type ?? 'notice',
+        message,
+      })
 
-    if (stack) {
-      location = {
-        file: stack.file,
-        line: stack.line,
-        column: stack.column,
+      if (attachment !== undefined) {
+        annotation.attachment = attachment
       }
     }
 
-    if (typeof type === 'object') {
-      return recordAsyncAnnotation(
-        test,
-        annotate(message, location, undefined, type),
-      )
-    }
-    else {
-      return recordAsyncAnnotation(
-        test,
-        annotate(message, location, type, attachment),
-      )
-    }
+    return recordAsyncAnnotation(test, annotate(prepareAnnotation(annotation)))
   }) as TestContext['annotate']
 
   context.onTestFailed = (handler, timeout) => {

@@ -286,9 +286,11 @@ export interface Test<ExtraContext = object> extends TaskPopulated {
 }
 
 export interface TestAttachment {
+  name?: string
   contentType?: string
   path?: string
   body?: string | Uint8Array
+  metadata?: Record<string, unknown>
 }
 
 export interface TestAnnotationLocation {
@@ -297,11 +299,23 @@ export interface TestAnnotationLocation {
   file: string
 }
 
+export interface TestAnnotationMetadata {
+  'internal:toMatchScreenshot'?: {
+    kind: string
+  }
+  [key: string]: unknown
+}
+
 export interface TestAnnotation {
+  title?: string
   message: string
   type: string
   location?: TestAnnotationLocation
   attachment?: TestAttachment
+  /** @experimental */
+  attachments?: TestAttachment[]
+  /** @experimental */
+  metadata?: TestAnnotationMetadata
 }
 
 export type Task = Test | Suite | File
@@ -705,6 +719,8 @@ export interface TestContext {
   readonly annotate: {
     (message: string, type?: string, attachment?: TestAttachment): Promise<TestAnnotation>
     (message: string, attachment?: TestAttachment): Promise<TestAnnotation>
+    /** @experimental */
+    (annotation: Omit<TestAnnotation, 'location'>): Promise<TestAnnotation>
   }
 }
 
