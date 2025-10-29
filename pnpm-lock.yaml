@@ -1208,6 +1208,9 @@ importers:
 
   test/config:
     devDependencies:
+      '@test/test-dep-config':
+        specifier: link:./deps/test-dep-config
+        version: link:deps/test-dep-config
       '@vitest/browser-playwright':
         specifier: workspace:*
         version: link:../../packages/browser-playwright
