@@ -21,9 +21,7 @@ export class ServerModuleRunner extends ModuleRunner {
             }
             const { name, data } = event.data
             if (name === 'getBuiltins') {
-              // we return an empty array here to avoid client-side builtin check,
-              // as we need builtins to go through `fetchModule`
-              return { result: [] }
+              return await environment.hot.handleInvoke(event)
             }
             if (name !== 'fetchModule') {
               return { error: new Error(`Unknown method: ${name}. Expected "fetchModule".`) }
