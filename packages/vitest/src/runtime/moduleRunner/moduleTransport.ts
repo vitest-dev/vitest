@@ -3,7 +3,6 @@ import type { ResolveFunctionResult } from '../../types/general'
 
 export interface VitestTransportOptions {
   fetchModule: FetchFunction
-  getBuiltins?: () => Promise<(string | RegExp)[]>
   resolveId: (id: string, importer?: string) => Promise<ResolveFunctionResult | null>
 }
 
