@@ -1,22 +1,13 @@
 <script setup lang="ts">
 import type { TestAnnotation } from 'vitest'
 import { computed } from 'vue'
-import { getAttachmentUrl, isExternalAttachment } from '~/composables/attachments'
+import { internalOrExternalUrl, isExternalAttachment } from '~/composables/attachments'
 
 const props = defineProps<{
   annotation: TestAnnotation
 }>()
 
-const href = computed<string>(() => {
-  const attachment = props.annotation.attachment!
-  const potentialUrl = attachment.path || attachment.body
-  if (typeof potentialUrl === 'string' && (potentialUrl.startsWith('http://') || potentialUrl.startsWith('https://'))) {
-    return potentialUrl
-  }
-  else {
-    return getAttachmentUrl(attachment)
-  }
-})
+const href = computed<string>(() => internalOrExternalUrl(props.annotation.attachment!))
 </script>
 
 <template>
