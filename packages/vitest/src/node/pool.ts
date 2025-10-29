@@ -392,7 +392,7 @@ function groupSpecs(specs: TestSpecification[], environments: Awaited<ReturnType
 
     const order = spec.project.config.sequence.groupOrder
 
-    // Files that have disabled parallelism and default groupId are set into their own group
+    // Files that have disabled parallelism and default groupOrder are set into their own group
     if (order === 0 && spec.project.config.fileParallelism === false) {
       return sequential.specs.push([spec])
     }
@@ -401,11 +401,11 @@ function groupSpecs(specs: TestSpecification[], environments: Awaited<ReturnType
     const isolate = spec.project.config.isolate
     groups[order] ||= { specs: [], maxWorkers }
 
-    // Multiple projects with different maxWorkers but same groupId
+    // Multiple projects with different maxWorkers but same groupOrder
     if (groups[order].maxWorkers !== maxWorkers) {
       const last = groups[order].specs.at(-1)?.at(-1)?.project.name
 
-      throw new Error(`Projects "${last}" and "${spec.project.name}" have different 'maxWorkers' but same 'sequence.groupId'.\nProvide unique 'sequence.groupId' for them.`)
+      throw new Error(`Projects "${last}" and "${spec.project.name}" have different 'maxWorkers' but same 'sequence.groupOrder'.\nProvide unique 'sequence.groupOrder' for them.`)
     }
 
     // Non-isolated single worker can receive all files at once
