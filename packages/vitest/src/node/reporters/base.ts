@@ -617,6 +617,7 @@ export abstract class BaseReporter implements Reporter {
     const failedTests = tests.filter(i => i.result?.state === 'fail')
     const failedTotal = countTestErrors(failedSuites) + countTestErrors(failedTests)
 
+    // TODO: error divider should take into account merged errors for counting
     let current = 1
     const errorDivider = () => this.error(`${c.red(c.dim(divider(`[${current++}/${failedTotal}]`, undefined, 1)))}\n`)
 
