@@ -34,10 +34,15 @@ function catchWindowErrors(window: DOMWindow) {
   }
 }
 
+let _FormData!: typeof FormData
+
 export default <Environment>{
   name: 'jsdom',
   viteEnvironment: 'client',
   async setupVM({ jsdom = {} }) {
+    // delay initialization because it takes ~1s
+    _FormData = globalThis.FormData
+
     const { CookieJar, JSDOM, ResourceLoader, VirtualConsole } = await import(
       'jsdom',
     )
@@ -75,10 +80,12 @@ export default <Environment>{
     const clearAddEventListenerPatch = patchAddEventListener(dom.window)
 
     const clearWindowErrors = catchWindowErrors(dom.window)
+    const FormData_ = createFormData(dom.window)
 
     // TODO: browser doesn't expose Buffer, but a lot of dependencies use it
     dom.window.Buffer = Buffer
     dom.window.jsdom = dom
+    dom.window.FormData = FormData_
 
     // inject web globals if they missing in JSDOM but otherwise available in Nodejs
     // https://nodejs.org/dist/latest/docs/api/globals.html
@@ -132,6 +139,9 @@ export default <Environment>{
     }
   },
   async setup(global, { jsdom = {} }) {
+    // delay initialization because it takes ~1s
+    _FormData = globalThis.FormData
+
     const { CookieJar, JSDOM, ResourceLoader, VirtualConsole } = await import(
       'jsdom',
     )
@@ -173,8 +183,10 @@ export default <Environment>{
     })
 
     const clearWindowErrors = catchWindowErrors(global)
+    const FormData_ = createFormData(dom.window)
 
     global.jsdom = dom
+    global.FormData = FormData_
 
     return {
       teardown(global) {
@@ -187,6 +199,28 @@ export default <Environment>{
       },
     }
   },
+}
+
+// Node.js 24 has a global FormData that Request accepts
+// FormData is not used anywhere else in JSDOM, so we can safely
+// override it with Node.js implementation, but keep the DOM behaviour
+// this is required because Request (and other fetch API)
+// are not implemented by JSDOM
+function createFormData(window: DOMWindow) {
+  const JSDOMFormData = window.FormData
+  if (!_FormData) {
+    return JSDOMFormData
+  }
+
+  return class FormData extends _FormData {
+    constructor(...args: any[]) {
+      super()
+      const formData = new JSDOMFormData(...args)
+      formData.forEach((value, key) => {
+        this.append(key, value)
+      })
+    }
+  }
 }
 
 function patchAddEventListener(window: DOMWindow) {
