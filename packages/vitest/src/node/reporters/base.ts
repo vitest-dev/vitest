@@ -677,7 +677,7 @@ export abstract class BaseReporter implements Reporter {
 
         if (error?.stack) {
           previous = errorsQueue.find((i) => {
-            if (i[0]?.stack !== error.stack) {
+            if (i[0]?.stack !== error.stack || i[0]?.diff !== error.diff) {
               return false
             }
 
