@@ -2,7 +2,7 @@ import type { CoverageMap } from 'istanbul-lib-coverage'
 import type { Instrumenter } from 'istanbul-lib-instrument'
 import type { ProxifiedModule } from 'magicast'
 import type { CoverageProvider, ReportContext, ResolvedCoverageOptions, Vite, Vitest } from 'vitest/node'
-import { promises as fs } from 'node:fs'
+import { existsSync, promises as fs } from 'node:fs'
 // @ts-expect-error missing types
 import { defaults as istanbulDefaults } from '@istanbuljs/schema'
 import createDebug from 'debug'
@@ -15,7 +15,6 @@ import { parseModule } from 'magicast'
 import c from 'tinyrainbow'
 import { BaseCoverageProvider } from 'vitest/coverage'
 import { isCSSRequest } from 'vitest/node'
-
 import { version } from '../package.json' with { type: 'json' }
 import { COVERAGE_STORE_KEY } from './constants'
 
@@ -118,9 +117,15 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider<ResolvedCover
       coverageMap.merge(await transformCoverage(uncoveredCoverage))
     }
 
-    if (this.options.excludeAfterRemap) {
-      coverageMap.filter(filename => this.isIncluded(filename))
-    }
+    coverageMap.filter((filename) => {
+      const exists = existsSync(filename)
+
+      if (this.options.excludeAfterRemap) {
+        return exists && this.isIncluded(filename)
+      }
+
+      return exists
+    })
 
     if (debug.enabled) {
       debug('Generate coverage total time %d ms', (performance.now() - start!).toFixed())
