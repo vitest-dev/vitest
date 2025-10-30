@@ -28,6 +28,12 @@ test('merge reports', async () => {
     reporters: [['blob', { outputFile: './.vitest-reports/second-run.json' }]],
   })
 
+  await runVitest({
+    root: './fixtures/merge-reports',
+    include: ['third.test.ts'],
+    reporters: [['blob', { outputFile: './.vitest-reports/third-run.json' }]],
+  })
+
   const { stdout: reporterDefault, stderr: stderrDefault, exitCode } = await runVitest({
     root: './fixtures/merge-reports',
     mergeReports: reportsDir,
@@ -43,7 +49,7 @@ test('merge reports', async () => {
     ...stderrArr.slice(21, -3),
   ]
 
-  expect(stderrDefault).toMatch('Failed Tests 2')
+  expect(stderrDefault).toMatch('Failed Tests 4')
 
   expect(stderrCheck.join('\n')).toMatchInlineSnapshot(`
     "AssertionError: expected 1 to be 2 // Object.is equality
@@ -78,6 +84,53 @@ test('merge reports', async () => {
            |             ^
           6| })
           7| 
+
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/4]⎯
+
+     FAIL  third.test.ts > test 3-1
+    AssertionError: expected [ …(2) ] to deeply equal ArrayContaining{…}
+
+    - Expected
+    + Received
+
+    - ArrayContaining [
+    + [
+    +   "Lorem ipsum dolor sit amet consectetur",
+        "adipiscing elit sed do eiusmod tempor",
+    -   "incididunt ut labore et dolore magna",
+      ]
+
+     ❯ third.test.ts:27:18
+         25| 
+         26| it.each(cases)('test 3-%$', ({ actual, expected }) => {
+         27|   expect(actual).toEqual(expect.arrayContaining(expected))
+           |                  ^
+         28| })
+         29| 
+
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/4]⎯
+
+     FAIL  third.test.ts > test 3-2
+    AssertionError: expected [ …(2) ] to deeply equal ArrayContaining{…}
+
+    - Expected
+    + Received
+
+    - ArrayContaining [
+    -   "ut aliquip ex ea commodo consequat",
+    -   "Duis aute irure dolor in reprehenderit...",
+    + [
+    +   "aliqua Ut enim ad minim veniam",
+    +   "quis nostrud exercitation ullamco laboris nisi",
+      ]
+
+     ❯ third.test.ts:27:18
+         25| 
+         26| it.each(cases)('test 3-%$', ({ actual, expected }) => {
+         27|   expect(actual).toEqual(expect.arrayContaining(expected))
+           |                  ^
+         28| })
+         29| 
     "
   `)
 
@@ -104,11 +157,14 @@ test('merge reports', async () => {
        × test 2-1 <time>
          ✓ test 2-2 <time>
          ✓ test 2-3 <time>
+     ❯ third.test.ts (2 tests | 2 failed) <time>
+       × test 3-1 <time>
+       × test 3-2 <time>
 
-     Test Files  2 failed (2)
-          Tests  2 failed | 3 passed (5)
+     Test Files  3 failed (3)
+          Tests  4 failed | 3 passed (7)
        Duration  <time> (transform <time>, setup <time>, collect <time>, tests <time>, environment <time>, prepare <time>)
-       Per blob  <time> <time>"
+       Per blob  <time> <time> <time>"
   `)
 
   const { stdout: reporterJson } = await runVitest({
@@ -137,15 +193,15 @@ test('merge reports', async () => {
 
   expect(json).toMatchInlineSnapshot(`
     {
-      "numFailedTestSuites": 2,
-      "numFailedTests": 2,
+      "numFailedTestSuites": 3,
+      "numFailedTests": 4,
       "numPassedTestSuites": 1,
       "numPassedTests": 3,
       "numPendingTestSuites": 0,
       "numPendingTests": 0,
       "numTodoTests": 0,
-      "numTotalTestSuites": 3,
-      "numTotalTests": 5,
+      "numTotalTestSuites": 4,
+      "numTotalTests": 7,
       "snapshot": {
         "added": 0,
         "didUpdate": false,
@@ -230,6 +286,37 @@ test('merge reports', async () => {
           "endTime": "<time>",
           "message": "",
           "name": "<root>/fixtures/merge-reports/second.test.ts",
+          "startTime": "<time>",
+          "status": "failed",
+        },
+        {
+          "assertionResults": [
+            {
+              "ancestorTitles": [],
+              "failureMessages": [
+                "AssertionError: expected [ …(2) ] to deeply equal ArrayContaining{…}
+        at <root>/fixtures/merge-reports/third.test.ts:27:18",
+              ],
+              "fullName": "test 3-1",
+              "meta": {},
+              "status": "failed",
+              "title": "test 3-1",
+            },
+            {
+              "ancestorTitles": [],
+              "failureMessages": [
+                "AssertionError: expected [ …(2) ] to deeply equal ArrayContaining{…}
+        at <root>/fixtures/merge-reports/third.test.ts:27:18",
+              ],
+              "fullName": "test 3-2",
+              "meta": {},
+              "status": "failed",
+              "title": "test 3-2",
+            },
+          ],
+          "endTime": "<time>",
+          "message": "",
+          "name": "<root>/fixtures/merge-reports/third.test.ts",
           "startTime": "<time>",
           "status": "failed",
         },

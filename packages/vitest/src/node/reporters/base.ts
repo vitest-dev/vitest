@@ -680,6 +680,9 @@ export abstract class BaseReporter implements Reporter {
             if (i[0]?.stack !== error.stack) {
               return false
             }
+            if (i[0]?.diff !== error.diff) {
+              return false
+            }
 
             const currentProjectName = (task as File)?.projectName || task.file?.projectName || ''
             const projectName = (i[1][0] as File)?.projectName || i[1][0].file?.projectName || ''
