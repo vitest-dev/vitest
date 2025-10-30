@@ -80,12 +80,11 @@ export default <Environment>{
     const clearAddEventListenerPatch = patchAddEventListener(dom.window)
 
     const clearWindowErrors = catchWindowErrors(dom.window)
-    const FormData_ = createFormData(dom.window)
 
     // TODO: browser doesn't expose Buffer, but a lot of dependencies use it
     dom.window.Buffer = Buffer
     dom.window.jsdom = dom
-    dom.window.FormData = FormData_
+    dom.window.FormData = createFormData(dom.window)
 
     // inject web globals if they missing in JSDOM but otherwise available in Nodejs
     // https://nodejs.org/dist/latest/docs/api/globals.html
@@ -183,10 +182,9 @@ export default <Environment>{
     })
 
     const clearWindowErrors = catchWindowErrors(global)
-    const FormData_ = createFormData(dom.window)
 
     global.jsdom = dom
-    global.FormData = FormData_
+    global.FormData = createFormData(dom.window)
 
     return {
       teardown(global) {
