@@ -1,5 +1,7 @@
-import type { Mock, MockResult, MockSettledResult, Procedure } from '@vitest/spy'
-import { expectTypeOf, test } from 'vitest'
+import type { Mock, MockResult, MockSettledResult } from 'vitest'
+import { expectTypeOf, test, vi } from 'vitest'
+
+type Procedure = (...args: any[]) => any
 
 test('spy.mock when implementation is a class', () => {
   class Klass {

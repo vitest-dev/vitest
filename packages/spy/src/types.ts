@@ -357,13 +357,12 @@ export interface MockInstance<T extends Procedure | Constructable = Procedure> e
    * await asyncMock() // throws Error<'Async error'>
    */
   mockRejectedValueOnce(error: unknown): this
+  /** @internal */
+  _isMockFunction: true
 }
 /* eslint-enable ts/method-signature-style */
 
-export type Mock<T extends Procedure | Constructable = Procedure> = MockInstance<T> & {
-  /** @internal */
-  _isMockFunction: true
-} & (
+export type Mock<T extends Procedure | Constructable = Procedure> = MockInstance<T> & (
   T extends Constructable
     ? (
         T extends Procedure
