@@ -76,7 +76,7 @@ export interface MockContext<T extends Procedure | Constructable = Procedure> {
    * This is an array containing all instances that were instantiated when mock was called with a `new` keyword. Note that this is an actual context (`this`) of the function, not a return value.
    * @see https://vitest.dev/api/mock#mock-instances
    */
-  instances: MockReturnType<T>[]
+  instances: MockProcedureContext<T>[]
   /**
    * An array of `this` values that were used during each call to the mock function.
    * @see https://vitest.dev/api/mock#mock-contexts
@@ -284,7 +284,8 @@ export interface MockInstance<T extends Procedure | Constructable = Procedure> e
    *
    * myMockFn() // 'original'
    */
-  withImplementation<T2>(fn: NormalizedProcedure<T>, cb: () => T2): T2 extends Promise<unknown> ? Promise<this> : this
+  withImplementation(fn: NormalizedProcedure<T>, cb: () => Promise<unknown>): Promise<this>
+  withImplementation(fn: NormalizedProcedure<T>, cb: () => unknown): this
 
   /**
    * Use this if you need to return the `this` context from the method without invoking the actual implementation.
@@ -359,12 +360,29 @@ export interface MockInstance<T extends Procedure | Constructable = Procedure> e
 }
 /* eslint-enable ts/method-signature-style */
 
-export interface Mock<T extends Procedure | Constructable = Procedure> extends MockInstance<T> {
-  new (...args: MockParameters<T>): T extends Constructable ? InstanceType<T> : MockReturnType<T>
-  (...args: MockParameters<T>): MockReturnType<T>
+export type Mock<T extends Procedure | Constructable = Procedure> = MockInstance<T> & {
   /** @internal */
   _isMockFunction: true
-}
+} & (
+  T extends Constructable
+    ? (
+        T extends Procedure
+          // supports both `new Class()` and `Class()`
+          ? {
+              new (...args: ConstructorParameters<T>): InstanceType<T>
+              (...args: Parameters<T>): ReturnType<T>
+            }
+          // supports only `new Class()`
+          : {
+              new (...args: ConstructorParameters<T>): InstanceType<T>
+            }
+      )
+    // any function can be called with the new keyword
+    : {
+        new (...args: MockParameters<T>): MockReturnType<T>
+        (...args: MockParameters<T>): MockReturnType<T>
+      }
+) & { [P in keyof T]: T[P] }
 
 type PartialMaybePromise<T> = T extends Promise<Awaited<T>>
   ? Promise<Partial<Awaited<T>>>
@@ -381,12 +399,13 @@ type PartialResultFunction<T> = T extends Constructable
     ? (...args: Parameters<T>) => PartialMaybePromise<ReturnType<T>>
     : T
 
-export interface PartialMock<T extends Procedure | Constructable = Procedure>
-  extends Mock<
-    PartialResultFunction<T extends Mock
+export type PartialMock<T extends Procedure | Constructable = Procedure> = Mock<
+  PartialResultFunction<
+    T extends Mock
       ? NonNullable<ReturnType<T['getMockImplementation']>>
-      : T>
-  > {}
+      : T
+  >
+>
 
 export type MaybeMockedConstructor<T> = T extends Constructable
   ? Mock<T>
