@@ -104,5 +104,8 @@
       "svelte-preprocess",
       "vue-demi"
     ]
+  }, 
+   "stackblitz": {
+    "startCommand": "pnpm --filter='./packages/vitest' run dev"
   }
 }

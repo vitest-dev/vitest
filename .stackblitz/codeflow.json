@@ -1,0 +1,15 @@
+{
+  "pnpm": {
+    "overrides": {
+      "vitest": "./packages/vitest", 
+      "@vitest/coverage-istanbul": "./packages/istanbul", 
+      "@vitest/browser-playwright": "./packages/browser-playwright", 
+      "@vitest/coverage-v8": "./packages/coverage-v8",
+      "@vitest/runner": "./packages/runner", 
+      "@vitest/snapshot": ".packages/shapshot",
+      "@vitest/mocker": "./packages/mocker",
+      "@vitest/ui": "./packages/ui", 
+      "@vitest/utils": "./packages/utils"
+    }
+  }
+}
