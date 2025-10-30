@@ -290,7 +290,7 @@ test('in-source tests run correctly when filtered', async () => {
   expect(stdout).toContain(`Tests  ${instances.length} passed`)
 })
 
-test.fails('re-evaluate setupFiles on each test run even when isolate is false', async () => {
+test('re-evaluate setupFiles on each test run even when isolate is false', async () => {
   const { exitCode } = await runBrowserTests({
     root: './fixtures/isolate-and-setup-file',
   })

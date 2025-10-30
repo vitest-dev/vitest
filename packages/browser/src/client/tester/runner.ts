@@ -257,7 +257,9 @@ export function createBrowserRunner(
 
     importFile = async (filepath: string, mode: 'collect' | 'setup') => {
       let hash = this.hashMap.get(filepath)
-      if (!hash) {
+
+      // if the mode is setup, we need to re-evaluate the setup file on each test run
+      if (mode === 'setup' || !hash) {
         hash = Date.now().toString()
         this.hashMap.set(filepath, hash)
       }
