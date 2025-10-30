@@ -1244,6 +1244,9 @@ importers:
       '@standard-schema/spec':
         specifier: ^1.0.0
         version: 1.0.0
+      '@test/dep-esm-non-existing':
+        specifier: link:./deps/dep-esm-non-existing
+        version: link:deps/dep-esm-non-existing
       '@test/vite-environment-external':
         specifier: link:./projects/vite-environment-external
         version: link:projects/vite-environment-external
