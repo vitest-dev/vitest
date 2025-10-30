@@ -7,7 +7,7 @@ title: Debugging | Guide
 :::tip
 When debugging tests you might want to use following options:
 
-- [`--test-timeout=0`](/guide/cli#testtimeout) to prevent tests from timing out when stopping at breakpoints
+- [`--testTimeout=0`](/guide/cli#testtimeout) to prevent tests from timing out when stopping at breakpoints
 - [`--no-file-parallelism`](/guide/cli#fileparallelism) to prevent test files from running parallel
 
 :::
