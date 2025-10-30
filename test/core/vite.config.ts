@@ -91,6 +91,7 @@ export default defineConfig({
           /packages\/web-worker/,
           /\.wasm$/,
           /\/wasm-bindgen-no-cyclic\/index_bg.js/,
+          /dep-esm-non-existing/,
         ],
         inline: ['inline-lib'],
       },
