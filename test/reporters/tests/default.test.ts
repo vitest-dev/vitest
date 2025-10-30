@@ -290,4 +290,13 @@ describe('default reporter', async () => {
 
     expect(stderr).toMatch('FAIL   > { name: fails, meta: Failing test added this } (Custom getFullName here')
   })
+
+  test('merge identical errors', async () => {
+    const { stderr } = await runVitest({
+      root: 'fixtures/merge-errors',
+      reporters: [['default', { isTTY: true, summary: false }]],
+      config: false,
+    })
+    expect(stderr).toMatchSnapshot()
+  })
 }, 120000)
