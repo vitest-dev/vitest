@@ -12,9 +12,7 @@ import { GitNotFoundError, IncludeTaskLocationDisabledError, LocationFilterFileN
 
 export class VitestSpecifications {
   private readonly _cachedSpecs = new Map<string, TestSpecification[]>()
-
-  /** @internal */
-  _environments: WeakMap<TestSpecification, ContextTestEnvironment> | undefined
+  private environments: WeakMap<TestSpecification, ContextTestEnvironment> | undefined
 
   constructor(private vitest: Vitest) {}
 
@@ -100,12 +98,12 @@ export class VitestSpecifications {
   public clearCache(moduleId?: string): void {
     if (moduleId) {
       this._cachedSpecs.get(moduleId)?.forEach((spec) => {
-        this._environments?.delete(spec)
+        this.environments?.delete(spec)
       })
       this._cachedSpecs.delete(moduleId)
     }
     else {
-      this._environments = undefined
+      this.environments = undefined
       this._cachedSpecs.clear()
     }
   }
@@ -209,9 +207,9 @@ export class VitestSpecifications {
 
   /** @internal */
   async _getSpecificationsEnvironments(specifications: TestSpecification[]) {
-    if (!this._environments) {
-      this._environments = await getSpecificationsEnvironments(specifications)
+    if (!this.environments) {
+      this.environments = await getSpecificationsEnvironments(specifications)
     }
-    return this._environments
+    return this.environments
   }
 }

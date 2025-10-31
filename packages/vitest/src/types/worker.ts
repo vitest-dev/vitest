@@ -10,6 +10,7 @@ export type WorkerRPC = BirpcReturn<RuntimeRPC, RunnerRPC>
 export interface ContextTestEnvironment {
   name: string
   options: Record<string, any> | null
+  optionsJson: string
 }
 
 export type TestExecutionMethod = 'run' | 'collect'

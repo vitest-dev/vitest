@@ -1,7 +1,9 @@
 import type { Awaitable } from '@vitest/utils'
+import type { ContextTestEnvironment } from '../types/worker'
 import type { Vitest } from './core'
 import type { PoolTask } from './pools/types'
 import type { TestProject } from './project'
+import type { TestSequencer } from './sequencers/types'
 import type { TestSpecification } from './spec'
 import type { BuiltinPool, ResolvedConfig } from './types/config'
 import * as nodeos from 'node:os'
@@ -77,28 +79,17 @@ export function createPool(ctx: Vitest): ProcessPool {
     }
 
     const sorted = await sequencer.sort(specs)
-
     const environments = await ctx._getSpecificationsEnvironments(sorted)
+    const { parallelTests, sequentialTests, browserTests } = await groupSpecifications(
+      specs,
+      environments,
+      sequencer,
+    )
 
     const projectEnvs = new WeakMap<TestProject, Partial<NodeJS.ProcessEnv>>()
     const projectExecArgvs = new WeakMap<TestProject, string[]>()
 
-    const tasks: PoolTask[] = []
-    const browserSpecs: TestSpecification[] = []
-    let workerId = 0
-
-    for (const spec of sorted) {
-      const { project, pool: worker } = spec
-      if (worker === 'browser') {
-        browserSpecs.push(spec)
-        continue
-      }
-
-      const environment = environments.get(spec)!
-      if (!environment) {
-        throw new Error(`Cannot find the environment. This is a bug in Vitest.`)
-      }
-
+    function getEnv(project: TestProject) {
       let env = projectEnvs.get(project)
       if (!env) {
         env = {
@@ -114,21 +105,29 @@ export function createPool(ctx: Vitest): ProcessPool {
         }
         projectEnvs.set(project, env)
       }
+      return env
+    }
 
+    function getExecArg(project: TestProject) {
       let execArgv = projectExecArgvs.get(project)
       if (!execArgv) {
-        execArgv = [
-          ...options.execArgv,
-          ...project.config.execArgv,
-        ]
+        execArgv = [...options.execArgv, ...project.config.execArgv]
         projectExecArgvs.set(project, execArgv)
       }
+      return execArgv
+    }
 
-      tasks.push({
+    let workerId = 0
+
+    function createTask(specifications: TestSpecification[]): PoolTask {
+      const { project, pool } = specifications[0]
+      const environment = environments.get(specifications[0])!
+
+      return {
         context: {
-          pool: worker,
+          pool,
           config: project.serializedConfig,
-          files: [{ filepath: spec.moduleId, testLocations: spec.testLines }],
+          files: specifications.map(s => ({ filepath: s.moduleId, testLocations: s.testLines })),
           invalidates,
           environment,
           projectName: project.name,
@@ -136,52 +135,77 @@ export function createPool(ctx: Vitest): ProcessPool {
           workerId: workerId++,
         },
         project,
-        env,
-        execArgv,
-        worker,
+        env: getEnv(project),
+        execArgv: getExecArg(project),
+        worker: pool,
         isolate: project.config.isolate,
-        memoryLimit: getMemoryLimit(ctx.config, worker) ?? null,
-      })
+        memoryLimit: getMemoryLimit(ctx.config, pool) ?? null,
+      }
     }
 
+    const poolGroups: {
+      tasks: PoolTask[]
+      browserTests: TestSpecification[]
+      maxWorkers: number
+    }[] = []
+
     // TODO: we need to have a single maxWorkers, how to resolve this(?)
-    const globalMaxWorkers = tasks.length
-      ? Math.max(...tasks.map(t => resolveMaxWorkers(t.project)))
+    const globalMaxWorkers = parallelTests.length
+      ? Math.max(...parallelTests.map(t => t.project.config.maxWorkers))
       : 1
-    pool.setMaxWorkers(globalMaxWorkers)
+
+    // run all the parallel tests first
+    poolGroups.push({
+      maxWorkers: globalMaxWorkers,
+      tasks: parallelTests.map(specification => createTask([specification])),
+      browserTests,
+    })
+
+    poolGroups.push({
+      maxWorkers: 1,
+      browserTests: [],
+      tasks: sequentialTests.map(specifications => createTask(specifications)),
+    })
 
     const results: PromiseSettledResult<void>[] = []
 
-    const promises = tasks.map(async (task) => {
-      if (ctx.isCancelling) {
-        return ctx.state.cancelFiles(task.context.files, task.project)
+    for (const { tasks, maxWorkers, browserTests } of poolGroups) {
+      if (!tasks.length && !browserTests.length) {
+        continue
       }
 
-      try {
-        await pool.run(task, method)
-      }
-      catch (error) {
-        if (ctx.isCancelling && error instanceof Error && error.message === 'Cancelled') {
-          ctx.state.cancelFiles(task.context.files, task.project)
+      pool.setMaxWorkers(maxWorkers)
+
+      const promises = tasks.map(async (task) => {
+        if (ctx.isCancelling) {
+          return ctx.state.cancelFiles(task.context.files, task.project)
+        }
+
+        try {
+          await pool.run(task, method)
+        }
+        catch (error) {
+          if (ctx.isCancelling && error instanceof Error && error.message === 'Cancelled') {
+            ctx.state.cancelFiles(task.context.files, task.project)
+          }
+          else {
+            throw error
+          }
+        }
+      })
+
+      if (browserTests.length) {
+        browserPool ??= createBrowserPool(ctx)
+        if (method === 'collect') {
+          promises.push(browserPool.collectTests(browserTests))
         }
         else {
-          throw error
+          promises.push(browserPool.runTests(browserTests))
         }
       }
-    })
 
-    if (browserSpecs.length) {
-      browserPool ??= createBrowserPool(ctx)
-      if (method === 'collect') {
-        promises.push(browserPool.collectTests(browserSpecs))
-      }
-      else {
-        promises.push(browserPool.runTests(browserSpecs))
-      }
+      results.push(...await Promise.allSettled(promises))
     }
-
-    const groupResults = await Promise.allSettled(promises)
-    results.push(...groupResults)
 
     const errors = results
       .filter(result => result.status === 'rejected')
@@ -265,26 +289,6 @@ function resolveOptions(ctx: Vitest) {
   return options
 }
 
-function resolveMaxWorkers(project: TestProject) {
-  if (project.config.maxWorkers) {
-    return project.config.maxWorkers
-  }
-
-  if (project.vitest.config.maxWorkers) {
-    return project.vitest.config.maxWorkers
-  }
-
-  const numCpus = typeof nodeos.availableParallelism === 'function'
-    ? nodeos.availableParallelism()
-    : nodeos.cpus().length
-
-  if (project.vitest.config.watch) {
-    return Math.max(Math.floor(numCpus / 2), 1)
-  }
-
-  return Math.max(numCpus - 1, 1)
-}
-
 function getMemoryLimit(config: ResolvedConfig, pool: string) {
   if (pool !== 'vmForks' && pool !== 'vmThreads') {
     return null
@@ -307,4 +311,114 @@ function getMemoryLimit(config: ResolvedConfig, pool: string) {
 
   // just ignore "memoryLimit" value because we cannot detect memory limit
   return null
+}
+
+async function groupSpecifications(
+  specifications: TestSpecification[],
+  environments: WeakMap<TestSpecification, ContextTestEnvironment>,
+  sequencer: TestSequencer,
+) {
+  // Build groups by groupOrder
+  const groups = new Map<number, { specifications: TestSpecification[]; maxWorkers: number }>()
+  for (const spec of specifications) {
+    const order = spec.project.config.sequence.groupOrder
+    const maxWorkers = spec.project.config.maxWorkers
+    const group = groups.get(order)
+    if (group) {
+      if (group.maxWorkers !== maxWorkers) {
+        const last = group.specifications.at(-1)?.project.name
+        throw new Error(`Projects "${last}" and "${spec.project.name}" have different 'maxWorkers' but same 'sequence.groupOrder'.\nProvide unique 'sequence.groupOrder' for them.`)
+      }
+      group.specifications.push(spec)
+    }
+    else {
+      groups.set(order, { specifications: [spec], maxWorkers })
+    }
+  }
+
+  const sortedOrders = Array.from(groups.keys()).sort((a, b) => a - b)
+  const result: TestSpecification[] = []
+  const deferredNonIsolatedMaxOne: TestSpecification[] = []
+  const deferredIsolatedMaxOne: TestSpecification[] = []
+  const sequentialTests: TestSpecification[][] = []
+  const browserTests: TestSpecification[] = []
+
+  function isNonIsolatedMaxOne(spec: TestSpecification) {
+    const p = spec.project
+    const isolated = p.config.isolate === false
+    const maxOne = p.config.maxWorkers === 1
+    return isolated && maxOne
+  }
+
+  function isIsolatedMaxOne(spec: TestSpecification) {
+    const p = spec.project
+    const isolated = p.config.isolate === true
+    const maxOne = p.config.maxWorkers === 1
+    return isolated && maxOne
+  }
+
+  function runnerKey(spec: TestSpecification) {
+    const env = environments.get(spec)
+    const envName = env?.name || ''
+    const envOpts = env?.optionsJson || ''
+    return `${spec.project.name}|${envName}|${envOpts}`
+  }
+
+  for (const order of sortedOrders) {
+    const specs = groups.get(order)!.specifications
+    const parallelTests: TestSpecification[] = []
+
+    for (const spec of specs) {
+      if (spec.pool === 'browser') {
+        browserTests.push(spec)
+      }
+      else if (isNonIsolatedMaxOne(spec)) {
+        deferredNonIsolatedMaxOne.push(spec)
+      }
+      else if (isIsolatedMaxOne(spec)) {
+        deferredIsolatedMaxOne.push(spec)
+      }
+      else {
+        parallelTests.push(spec)
+      }
+    }
+
+    async function clusterize(tests: TestSpecification[]) {
+      // Cluster by runner identity to maximize reuse
+      const clusters = new Map<string, TestSpecification[]>()
+      for (const spec of tests) {
+        const key = runnerKey(spec)
+        const arr = clusters.get(key)
+        if (arr) {
+          arr.push(spec)
+        }
+        else {
+          clusters.set(key, [spec])
+        }
+      }
+
+      const sortedTests: TestSpecification[][] = []
+
+      for (const key of Array.from(clusters.keys()).sort()) {
+        const cluster = clusters.get(key)!
+        sortedTests.push(await sequencer.sort(cluster))
+      }
+      return sortedTests
+    }
+
+    result.push(...(await clusterize(parallelTests)).flat())
+
+    sequentialTests.push(
+      ...(await clusterize(deferredIsolatedMaxOne)).flatMap(specs => specs.map(s => [s])),
+    )
+    sequentialTests.push(
+      ...await clusterize(deferredNonIsolatedMaxOne),
+    )
+  }
+
+  return {
+    browserTests: await sequencer.sort(browserTests),
+    parallelTests: result,
+    sequentialTests,
+  }
 }
