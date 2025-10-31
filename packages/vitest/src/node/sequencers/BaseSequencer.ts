@@ -36,7 +36,6 @@ export class BaseSequencer implements TestSequencer {
     const cache = this.ctx.cache
     const environments = await this.ctx._getSpecificationsEnvironments(files)
 
-    // Comparator that follows existing heuristics
     const compareByHeuristics = (a: TestSpecification, b: TestSpecification) => {
       const keyA = `${a.project.name}:${relative(this.ctx.config.root, a.moduleId)}`
       const keyB = `${b.project.name}:${relative(this.ctx.config.root, b.moduleId)}`
@@ -71,7 +70,9 @@ export class BaseSequencer implements TestSequencer {
       if (list) {
         list.push(spec)
       }
-      else { groups.set(order, [spec]) }
+      else {
+        groups.set(order, [spec])
+      }
     }
 
     const sortedOrders = Array.from(groups.keys()).sort((a, b) => a - b)

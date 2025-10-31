@@ -76,13 +76,10 @@ export function createPool(ctx: Vitest): ProcessPool {
       specs = await sequencer.shard(Array.from(specs))
     }
 
-    // 1) Sort using sequencer
     const sorted = await sequencer.sort(specs)
 
-    // 2) Resolve environments for all sorted specs
     const environments = await ctx._getSpecificationsEnvironments(sorted)
 
-    // 3) Build tasks and collect browser specs
     const projectEnvs = new WeakMap<TestProject, Partial<NodeJS.ProcessEnv>>()
     const projectExecArgvs = new WeakMap<TestProject, string[]>()
 
@@ -147,7 +144,7 @@ export function createPool(ctx: Vitest): ProcessPool {
       })
     }
 
-    // 4) Determine a single global maxWorkers and run all tasks through the pool
+    // TODO: we need to have a single maxWorkers, how to resolve this(?)
     const globalMaxWorkers = tasks.length
       ? Math.max(...tasks.map(t => resolveMaxWorkers(t.project)))
       : 1
