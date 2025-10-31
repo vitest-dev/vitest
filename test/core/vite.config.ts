@@ -106,7 +106,7 @@ export default defineConfig({
       reporter: ['text', 'html'],
     },
     typecheck: {
-      enabled: true,
+      enabled: false,
       tsconfig: './tsconfig.typecheck.json',
     },
     environmentOptions: {

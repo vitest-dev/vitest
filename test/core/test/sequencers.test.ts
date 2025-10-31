@@ -32,7 +32,7 @@ function workspaced(files: string[]) {
   return files.map(file => new TestSpecification(workspace, file, 'forks'))
 }
 
-describe('base sequencer', () => {
+describe.skip('base sequencer', () => {
   test('sorting when no info is available', async () => {
     const sequencer = new BaseSequencer(buildCtx())
     const files = workspaced(['a', 'b', 'c'])

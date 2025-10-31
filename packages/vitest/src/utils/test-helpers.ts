@@ -36,6 +36,9 @@ export async function getSpecificationsEnvironments(
         options: envOptions
           ? ({ [envKey]: envOptions } as EnvironmentOptions)
           : null,
+        // normalized options if there are random spaces
+        // this is needed later so we can properly group tests
+        optionsJson: JSON.stringify(envOptions),
       }
       environments.set(spec, environment)
     }),

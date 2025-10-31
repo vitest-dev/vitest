@@ -109,13 +109,13 @@ export class Vitest {
   /** @internal */ _resolver!: VitestResolver
   /** @internal */ _fetcher!: VitestFetchFunction
   /** @internal */ _tmpDir = join(tmpdir(), nanoid())
+  /** @internal */ _config?: ResolvedConfig
 
   private isFirstRun = true
   private restartsCount = 0
 
   private readonly specifications: VitestSpecifications
   private pool: ProcessPool | undefined
-  private _config?: ResolvedConfig
   private _vite?: ViteDevServer
   private _state?: StateManager
   private _cache?: VitestCache
@@ -1304,6 +1304,11 @@ export class Vitest {
       const regexp = wildcardPatternToRegExp(project)
       return regexp.test(name)
     })
+  }
+
+  /** @internal */
+  async _getSpecificationsEnvironments(specifications: TestSpecification[]) {
+    return this.specifications._getSpecificationsEnvironments(specifications)
   }
 }
 

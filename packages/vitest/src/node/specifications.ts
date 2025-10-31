@@ -1,3 +1,4 @@
+import type { ContextTestEnvironment } from '../types/worker'
 import type { Vitest } from './core'
 import type { TestProject } from './project'
 import type { TestSpecification } from './spec'
@@ -5,11 +6,13 @@ import { existsSync } from 'node:fs'
 import { join, relative, resolve } from 'pathe'
 import pm from 'picomatch'
 import { isWindows } from '../utils/env'
+import { getSpecificationsEnvironments } from '../utils/test-helpers'
 import { groupFilters, parseFilter } from './cli/filter'
 import { GitNotFoundError, IncludeTaskLocationDisabledError, LocationFilterFileNotFoundError } from './errors'
 
 export class VitestSpecifications {
   private readonly _cachedSpecs = new Map<string, TestSpecification[]>()
+  private environments: WeakMap<TestSpecification, ContextTestEnvironment> | undefined
 
   constructor(private vitest: Vitest) {}
 
@@ -94,9 +97,13 @@ export class VitestSpecifications {
 
   public clearCache(moduleId?: string): void {
     if (moduleId) {
+      this._cachedSpecs.get(moduleId)?.forEach((spec) => {
+        this.environments?.delete(spec)
+      })
       this._cachedSpecs.delete(moduleId)
     }
     else {
+      this.environments = undefined
       this._cachedSpecs.clear()
     }
   }
@@ -196,5 +203,13 @@ export class VitestSpecifications {
     deps.delete(spec.moduleId)
 
     return deps
+  }
+
+  /** @internal */
+  async _getSpecificationsEnvironments(specifications: TestSpecification[]) {
+    if (!this.environments) {
+      this.environments = await getSpecificationsEnvironments(specifications)
+    }
+    return this.environments
   }
 }

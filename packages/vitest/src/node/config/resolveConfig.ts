@@ -9,6 +9,7 @@ import type {
 } from '../types/config'
 import type { BaseCoverageOptions, CoverageReporterWithOptions } from '../types/coverage'
 import crypto from 'node:crypto'
+import nodeos from 'node:os'
 import { slash, toArray } from '@vitest/utils/helpers'
 import { resolveModule } from 'local-pkg'
 import { normalize, relative, resolve } from 'pathe'
@@ -488,6 +489,21 @@ export function resolveConfig(
 
   if (process.env.VITEST_MAX_WORKERS) {
     resolved.maxWorkers = Number.parseInt(process.env.VITEST_MAX_WORKERS)
+  }
+
+  const numCpus = typeof nodeos.availableParallelism === 'function'
+    ? nodeos.availableParallelism()
+    : nodeos.cpus().length
+
+  if (resolved.maxWorkers == null) {
+    if (vitest._config?.maxWorkers != null) {
+      resolved.maxWorkers = vitest._config?.maxWorkers
+    }
+    else {
+      resolved.maxWorkers = resolved.watch
+        ? Math.max(Math.floor(numCpus / 2), 1)
+        : Math.max(numCpus - 1, 1)
+    }
   }
 
   if (mode === 'benchmark') {

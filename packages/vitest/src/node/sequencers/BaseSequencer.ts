@@ -44,17 +44,12 @@ export class BaseSequencer implements TestSequencer {
       if (!aState || !bState) {
         const statsA = cache.getFileStats(keyA)
         const statsB = cache.getFileStats(keyB)
-
-        // run unknown first
         if (!statsA || !statsB) {
           return !statsA && statsB ? -1 : !statsB && statsA ? 1 : 0
         }
-
-        // run larger files first
         return statsB.size - statsA.size
       }
 
-      // run failed first
       if (aState.failed && !bState.failed) {
         return -1
       }
@@ -62,7 +57,6 @@ export class BaseSequencer implements TestSequencer {
         return 1
       }
 
-      // run longer first
       return bState.duration - aState.duration
     })
   }
