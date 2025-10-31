@@ -291,10 +291,16 @@ test('in-source tests run correctly when filtered', async () => {
 })
 
 test('re-evaluate setupFiles on each test run even when isolate is false', async () => {
-  const { exitCode } = await runBrowserTests({
+  const { exitCode, stderr, stdout } = await runBrowserTests({
     root: './fixtures/isolate-and-setup-file',
   })
+
   expect(exitCode).toBe(0)
+  expect(stderr).toBe('')
+  instances.forEach(({ browser }) => {
+    expect(stdout).toReportPassedTest('a.test.ts', browser)
+    expect(stdout).toReportPassedTest('b.test.ts', browser)
+  })
 })
 
 test.runIf(provider.name === 'playwright')('timeout hooks', async ({ onTestFailed }) => {
