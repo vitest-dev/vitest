@@ -1,5 +1,4 @@
 import type { Awaitable } from '@vitest/utils'
-import type { ContextTestEnvironment } from '../types/worker'
 import type { Vitest } from './core'
 import type { PoolTask } from './pools/types'
 import type { TestProject } from './project'
@@ -12,7 +11,6 @@ import { version as viteVersion } from 'vite'
 import { rootDir } from '../paths'
 import { isWindows } from '../utils/env'
 import { getWorkerMemoryLimit, stringToBytes } from '../utils/memory-limit'
-import { getSpecificationsEnvironments } from '../utils/test-helpers'
 import { createBrowserPool } from './pools/browser'
 import { Pool } from './pools/pool'
 
@@ -78,132 +76,115 @@ export function createPool(ctx: Vitest): ProcessPool {
       specs = await sequencer.shard(Array.from(specs))
     }
 
-    const taskGroups: {
-      tasks: PoolTask[]
-      maxWorkers: number
-      // browser pool has a more complex logic, so we keep it separately for now
-      browserSpecs: TestSpecification[]
-    }[] = []
-    let workerId = 0
-
+    // 1) Sort using sequencer
     const sorted = await sequencer.sort(specs)
-    const environments = await getSpecificationsEnvironments(specs)
-    const groups = groupSpecs(sorted, environments)
 
+    // 2) Resolve environments for all sorted specs
+    const environments = await ctx._getSpecificationsEnvironments(sorted)
+
+    // 3) Build tasks and collect browser specs
     const projectEnvs = new WeakMap<TestProject, Partial<NodeJS.ProcessEnv>>()
     const projectExecArgvs = new WeakMap<TestProject, string[]>()
 
-    for (const group of groups) {
-      if (!group) {
+    const tasks: PoolTask[] = []
+    const browserSpecs: TestSpecification[] = []
+    let workerId = 0
+
+    for (const spec of sorted) {
+      const { project, pool: worker } = spec
+      if (worker === 'browser') {
+        browserSpecs.push(spec)
         continue
       }
 
-      const taskGroup: PoolTask[] = []
-      const browserSpecs: TestSpecification[] = []
-      taskGroups.push({
-        tasks: taskGroup,
-        maxWorkers: group.maxWorkers,
-        browserSpecs,
-      })
-
-      for (const specs of group.specs) {
-        const { project, pool } = specs[0]
-        if (pool === 'browser') {
-          browserSpecs.push(...specs)
-          continue
-        }
-
-        const environment = environments.get(specs[0])!
-        if (!environment) {
-          throw new Error(`Cannot find the environment. This is a bug in Vitest.`)
-        }
-
-        let env = projectEnvs.get(project)
-        if (!env) {
-          env = {
-            ...process.env,
-            ...options.env,
-            ...ctx.config.env,
-            ...project.config.env,
-          }
-
-          // env are case-insensitive on Windows, but spawned processes don't support it
-          if (isWindows) {
-            for (const name in env) {
-              env[name.toUpperCase()] = env[name]
-            }
-          }
-          projectEnvs.set(project, env)
-        }
-
-        let execArgv = projectExecArgvs.get(project)
-        if (!execArgv) {
-          execArgv = [
-            ...options.execArgv,
-            ...project.config.execArgv,
-          ]
-          projectExecArgvs.set(project, execArgv)
-        }
-
-        taskGroup.push({
-          context: {
-            pool,
-            config: project.serializedConfig,
-            files: specs.map(spec => ({ filepath: spec.moduleId, testLocations: spec.testLines })),
-            invalidates,
-            environment,
-            projectName: project.name,
-            providedContext: project.getProvidedContext(),
-            workerId: workerId++,
-          },
-          project,
-          env,
-          execArgv,
-          worker: pool,
-          isolate: project.config.isolate,
-          memoryLimit: getMemoryLimit(ctx.config, pool) ?? null,
-        })
+      const environment = environments.get(spec)!
+      if (!environment) {
+        throw new Error(`Cannot find the environment. This is a bug in Vitest.`)
       }
+
+      let env = projectEnvs.get(project)
+      if (!env) {
+        env = {
+          ...process.env,
+          ...options.env,
+          ...ctx.config.env,
+          ...project.config.env,
+        }
+        if (isWindows) {
+          for (const name in env) {
+            env[name.toUpperCase()] = env[name]
+          }
+        }
+        projectEnvs.set(project, env)
+      }
+
+      let execArgv = projectExecArgvs.get(project)
+      if (!execArgv) {
+        execArgv = [
+          ...options.execArgv,
+          ...project.config.execArgv,
+        ]
+        projectExecArgvs.set(project, execArgv)
+      }
+
+      tasks.push({
+        context: {
+          pool: worker,
+          config: project.serializedConfig,
+          files: [{ filepath: spec.moduleId, testLocations: spec.testLines }],
+          invalidates,
+          environment,
+          projectName: project.name,
+          providedContext: project.getProvidedContext(),
+          workerId: workerId++,
+        },
+        project,
+        env,
+        execArgv,
+        worker,
+        isolate: project.config.isolate,
+        memoryLimit: getMemoryLimit(ctx.config, worker) ?? null,
+      })
     }
+
+    // 4) Determine a single global maxWorkers and run all tasks through the pool
+    const globalMaxWorkers = tasks.length
+      ? Math.max(...tasks.map(t => resolveMaxWorkers(t.project)))
+      : 1
+    pool.setMaxWorkers(globalMaxWorkers)
 
     const results: PromiseSettledResult<void>[] = []
 
-    for (const { tasks, browserSpecs, maxWorkers } of taskGroups) {
-      pool.setMaxWorkers(maxWorkers)
-
-      const promises = tasks.map(async (task) => {
-        if (ctx.isCancelling) {
-          return ctx.state.cancelFiles(task.context.files, task.project)
-        }
-
-        try {
-          await pool.run(task, method)
-        }
-        catch (error) {
-          // Intentionally cancelled
-          if (ctx.isCancelling && error instanceof Error && error.message === 'Cancelled') {
-            ctx.state.cancelFiles(task.context.files, task.project)
-          }
-          else {
-            throw error
-          }
-        }
-      })
-
-      if (browserSpecs.length) {
-        browserPool ??= createBrowserPool(ctx)
-        if (method === 'collect') {
-          promises.push(browserPool.collectTests(browserSpecs))
-        }
-        else {
-          promises.push(browserPool.runTests(browserSpecs))
-        }
+    const promises = tasks.map(async (task) => {
+      if (ctx.isCancelling) {
+        return ctx.state.cancelFiles(task.context.files, task.project)
       }
 
-      const groupResults = await Promise.allSettled(promises)
+      try {
+        await pool.run(task, method)
+      }
+      catch (error) {
+        if (ctx.isCancelling && error instanceof Error && error.message === 'Cancelled') {
+          ctx.state.cancelFiles(task.context.files, task.project)
+        }
+        else {
+          throw error
+        }
+      }
+    })
 
-      results.push(...groupResults)
+    if (browserSpecs.length) {
+      browserPool ??= createBrowserPool(ctx)
+      if (method === 'collect') {
+        promises.push(browserPool.collectTests(browserSpecs))
+      }
+      else {
+        promises.push(browserPool.runTests(browserSpecs))
+      }
     }
+
+    const groupResults = await Promise.allSettled(promises)
+    results.push(...groupResults)
 
     const errors = results
       .filter(result => result.status === 'rejected')
@@ -329,113 +310,4 @@ function getMemoryLimit(config: ResolvedConfig, pool: string) {
 
   // just ignore "memoryLimit" value because we cannot detect memory limit
   return null
-}
-
-function groupSpecs(specs: TestSpecification[], environments: Awaited<ReturnType<typeof getSpecificationsEnvironments>>) {
-  // Test files are passed to test runner one at a time, except for Typechecker or when "--maxWorker=1 --no-isolate"
-  type SpecsForRunner = TestSpecification[]
-
-  // Tests in a single group are executed with `maxWorkers` parallelism.
-  // Next group starts running after previous finishes - allows real sequential tests.
-  interface Groups { specs: SpecsForRunner[]; maxWorkers: number; typecheck?: boolean }
-  const groups: Groups[] = []
-
-  // Files without file parallelism but without explicit sequence.groupOrder
-  const sequential: Groups = { specs: [], maxWorkers: 1 }
-
-  // Type tests are run in a single group, per project
-  const typechecks: Record<string, TestSpecification[]> = {}
-
-  const serializedEnvironmentOptions = new Map<ContextTestEnvironment, string>()
-
-  function getSerializedOptions(env: ContextTestEnvironment) {
-    const options = serializedEnvironmentOptions.get(env)
-
-    if (options) {
-      return options
-    }
-
-    const serialized = JSON.stringify(env.options)
-    serializedEnvironmentOptions.set(env, serialized)
-    return serialized
-  }
-
-  function isEqualEnvironments(a: TestSpecification, b: TestSpecification) {
-    const aEnv = environments.get(a)
-    const bEnv = environments.get(b)
-
-    if (!aEnv && !bEnv) {
-      return true
-    }
-
-    if (!aEnv || !bEnv || aEnv.name !== bEnv.name) {
-      return false
-    }
-
-    if (!aEnv.options && !bEnv.options) {
-      return true
-    }
-
-    if (!aEnv.options || !bEnv.options) {
-      return false
-    }
-
-    return getSerializedOptions(aEnv) === getSerializedOptions(bEnv)
-  }
-
-  specs.forEach((spec) => {
-    if (spec.pool === 'typescript') {
-      typechecks[spec.project.name] ||= []
-      typechecks[spec.project.name].push(spec)
-      return
-    }
-
-    const order = spec.project.config.sequence.groupOrder
-
-    // Files that have disabled parallelism and default groupOrder are set into their own group
-    if (order === 0 && spec.project.config.fileParallelism === false) {
-      return sequential.specs.push([spec])
-    }
-
-    const maxWorkers = resolveMaxWorkers(spec.project)
-    const isolate = spec.project.config.isolate
-    groups[order] ||= { specs: [], maxWorkers }
-
-    // Multiple projects with different maxWorkers but same groupOrder
-    if (groups[order].maxWorkers !== maxWorkers) {
-      const last = groups[order].specs.at(-1)?.at(-1)?.project.name
-
-      throw new Error(`Projects "${last}" and "${spec.project.name}" have different 'maxWorkers' but same 'sequence.groupOrder'.\nProvide unique 'sequence.groupOrder' for them.`)
-    }
-
-    // Non-isolated single worker can receive all files at once
-    if (isolate === false && maxWorkers === 1) {
-      const previous = groups[order].specs[0]?.[0]
-
-      if (previous && previous.project.name === spec.project.name && isEqualEnvironments(spec, previous)) {
-        return groups[order].specs[0].push(spec)
-      }
-    }
-
-    groups[order].specs.push([spec])
-  })
-
-  let order = Math.max(0, ...groups.keys()) + 1
-
-  for (const projectName in typechecks) {
-    const maxWorkers = resolveMaxWorkers(typechecks[projectName][0].project)
-    const previous = groups[order - 1]
-    if (previous && previous.typecheck && maxWorkers !== previous.maxWorkers) {
-      order += 1
-    }
-
-    groups[order] ||= { specs: [], maxWorkers, typecheck: true }
-    groups[order].specs.push(typechecks[projectName])
-  }
-
-  if (sequential.specs.length) {
-    groups.push(sequential)
-  }
-
-  return groups
 }

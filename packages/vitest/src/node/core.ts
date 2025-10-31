@@ -1305,6 +1305,11 @@ export class Vitest {
       return regexp.test(name)
     })
   }
+
+  /** @internal */
+  async _getSpecificationsEnvironments(specifications: TestSpecification[]) {
+    return this.specifications._getSpecificationsEnvironments(specifications)
+  }
 }
 
 function assert(condition: unknown, property: string, name: string = property): asserts condition {
