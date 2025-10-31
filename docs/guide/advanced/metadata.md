@@ -1,4 +1,4 @@
-# Task Metadata
+# Task Metadata <Badge type="danger">advanced</Badge>
 
 If you are developing a custom reporter or using Vitest Node.js API, you might find it useful to pass data from tests that are being executed in various contexts to your reporter or custom Vitest handler.
 

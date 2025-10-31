@@ -228,9 +228,10 @@ export interface InlineConfig {
   benchmark?: BenchmarkUserOptions
 
   /**
-   * Include globs for test files
+   * A list of [glob patterns](https://superchupu.dev/tinyglobby/comparison) that match your test files.
    *
    * @default ['**\/*.{test,spec}.?(c|m)[jt]s?(x)']
+   * @see {@link https://vitest.dev/config/include}
    */
   include?: string[]
 
