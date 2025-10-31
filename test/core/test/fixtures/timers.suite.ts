@@ -10,7 +10,7 @@
  * LICENSE file in the root directory of https://github.com/facebook/jest.
  */
 
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { FakeTimers } from '../../../../packages/vitest/src/integrations/mock/timers'
 
 class FakeDate extends Date {}
@@ -1501,6 +1501,88 @@ describe('FakeTimers', () => {
       // Some test
 
       timers.useRealTimers()
+    })
+  })
+
+  describe('setTimerTickMode', () => {
+    const realTimeout = setTimeout;
+    let timers: FakeTimers;
+
+    beforeEach(() => {
+      timers = new FakeTimers({ global })
+      timers.useFakeTimers();
+    })
+    afterEach(() => {
+      timers.useRealTimers();
+    })
+
+    it('can be set to manual', async () => {
+      const spy = vi.fn()
+      setTimeout(spy, 10)
+
+      timers.setTimerTickMode('manual')
+      await new Promise(resolve => realTimeout(resolve, 20))
+
+      expect(spy).not.toHaveBeenCalled()
+
+      timers.advanceTimersByTime(100)
+      expect(spy).toHaveBeenCalledOnce()
+    })
+
+    it('can be set to nextTimerAsync', async () => {
+      const spy = vi.fn()
+      setTimeout(spy, 10_000_000)
+
+      timers.setTimerTickMode('nextTimerAsync')
+      await new Promise(resolve => setTimeout(resolve, 20_000_000))
+
+      expect(spy).toHaveBeenCalledOnce()
+    })
+
+    it('can be set to interval', async () => {
+      const spy = vi.fn()
+      setTimeout(spy, 10)
+
+      timers.setTimerTickMode('interval', 5)
+      await new Promise(resolve => setTimeout(resolve, 15))
+
+      expect(spy).toHaveBeenCalledOnce()
+    })
+
+    it('can switch from nextTimerAsync to manual', async () => {
+      const spy = vi.fn()
+      setTimeout(spy, 10)
+
+      timers.setTimerTickMode('nextTimerAsync')
+
+      // Let one macrotask run, but the timer is not due yet.
+      await new Promise(resolve => setTimeout(resolve, 5))
+      expect(spy).not.toHaveBeenCalled()
+
+      timers.setTimerTickMode('manual')
+
+      await new Promise(resolve => realTimeout(resolve, 10))
+
+      expect(spy).not.toHaveBeenCalled()
+
+      timers.advanceTimersByTime(100)
+      expect(spy).toHaveBeenCalledOnce()
+    })
+
+    it('nextTimerAsync advances timers scheduled inside other timers', async () => {
+      const nestedSpy = vi.fn()
+      const spy = vi.fn(() => {
+        setTimeout(nestedSpy, 50)
+      })
+      setTimeout(spy, 100)
+
+      timers.setTimerTickMode('nextTimerAsync')
+
+      // Wait long enough for both timers to have a chance to run
+      await new Promise(resolve => setTimeout(resolve, 300))
+
+      expect(spy).toHaveBeenCalledOnce()
+      expect(nestedSpy).toHaveBeenCalledOnce()
     })
   })
 })
