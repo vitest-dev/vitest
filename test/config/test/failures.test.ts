@@ -70,31 +70,31 @@ test('shard count can be smaller than count of test files when passWithNoTests',
 })
 
 test('inspect requires changing pool and singleThread/singleFork', async () => {
-  const { stderr } = await runVitest({ inspect: true })
+  const { stderr } = await runVitest({ inspect: true, maxWorkers: 4 })
 
   expect(stderr).toMatch('Error: You cannot use --inspect without "--no-file-parallelism"')
 })
 
 test('inspect cannot be used with multi-threading', async () => {
-  const { stderr } = await runVitest({ inspect: true, pool: 'threads', fileParallelism: true })
+  const { stderr } = await runVitest({ inspect: true, pool: 'threads', fileParallelism: true, maxWorkers: 4 })
 
   expect(stderr).toMatch('Error: You cannot use --inspect without "--no-file-parallelism"')
 })
 
 test('inspect in browser mode requires no-file-parallelism', async () => {
-  const { stderr } = await runVitest({ inspect: true, browser: { enabled: true, instances: [{ browser: 'chromium' }], provider: playwright() } })
+  const { stderr } = await runVitest({ inspect: true, maxWorkers: 4, browser: { enabled: true, instances: [{ browser: 'chromium' }], provider: playwright() } })
 
   expect(stderr).toMatch('Error: You cannot use --inspect without "--no-file-parallelism"')
 })
 
 test('inspect-brk cannot be used with multi processing', async () => {
-  const { stderr } = await runVitest({ inspect: true, pool: 'forks', fileParallelism: true })
+  const { stderr } = await runVitest({ inspect: true, pool: 'forks', fileParallelism: true, maxWorkers: 4 })
 
   expect(stderr).toMatch('Error: You cannot use --inspect without "--no-file-parallelism"')
 })
 
 test('inspect-brk in browser mode requires no-file-parallelism', async () => {
-  const { stderr } = await runVitest({ inspectBrk: true, browser: { enabled: true, instances: [{ browser: 'chromium' }], provider: playwright() } })
+  const { stderr } = await runVitest({ inspectBrk: true, maxWorkers: 4, browser: { enabled: true, instances: [{ browser: 'chromium' }], provider: playwright() } })
 
   expect(stderr).toMatch('Error: You cannot use --inspect-brk without "--no-file-parallelism"')
 })
