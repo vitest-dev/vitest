@@ -6,7 +6,7 @@ The following types are used in the type signatures below
 type Awaitable<T> = T | PromiseLike<T>
 ```
 
-`expect` is used to create assertions. In this context `assertions` are functions that can be called to assert a statement. Vitest provides `chai` assertions by default and also `Jest` compatible assertions built on top of `chai`. Unlike `Jest`, Vitest supports a message as the second argument - if the assertion fails, the error message will be equal to it.
+`expect` is used to create assertions. In this context `assertions` are functions that can be called to assert a statement. Vitest provides `chai` assertions by default and also `Jest` compatible assertions built on top of `chai`. For spy/mock testing, Vitest also provides [Chai-style assertions](#chai-style-spy-assertions) (e.g., `expect(spy).to.have.been.called()`) alongside Jest-style assertions (e.g., `expect(spy).toHaveBeenCalled()`). Unlike `Jest`, Vitest supports a message as the second argument - if the assertion fails, the error message will be equal to it.
 
 ```ts
 export interface ExpectStatic extends Chai.ExpectStatic, AsymmetricMatchersContaining {
@@ -1328,6 +1328,140 @@ test('spy function returns bananas on second call', async () => {
   expect(sell).toHaveNthResolvedWith(2, { product: 'bananas' })
 })
 ```
+
+## Chai-Style Spy Assertions
+
+Vitest provides Chai-style assertion names for spy/mock testing, making it easier to migrate from Mocha+Chai+Sinon. These assertions use familiar Chai syntax (e.g., `expect(spy).to.have.been.called()`) while delegating to Vitest's existing Jest-style implementations.
+
+::: tip
+All Chai-style assertions work alongside Jest-style assertions. You can use both styles in the same test file, or even mix them in the same test. Choose whichever style your team prefers!
+:::
+
+### Comparison Table
+
+Here's a quick reference showing the equivalent assertions:
+
+| Chai-style | Jest-style |
+|------------|------------|
+| `called()` | `toHaveBeenCalled()` |
+| `callCount(n)` | `toHaveBeenCalledTimes(n)` |
+| `calledWith(...args)` | `toHaveBeenCalledWith(...args)` |
+| `calledOnce()` | `toHaveBeenCalledOnce()` |
+| `calledOnceWith(...args)` | `toHaveBeenCalledExactlyOnceWith(...args)` |
+| `calledTwice()` | `toHaveBeenCalledTimes(2)` |
+| `calledThrice()` | `toHaveBeenCalledTimes(3)` |
+| `lastCalledWith(...args)` | `toHaveBeenLastCalledWith(...args)` |
+| `nthCalledWith(n, ...args)` | `toHaveBeenNthCalledWith(n, ...args)` |
+| `returned()` | `toHaveReturned()` |
+| `returnedWith(value)` | `toHaveReturnedWith(value)` |
+| `returnedTimes(n)` | `toHaveReturnedTimes(n)` |
+| `lastReturnedWith(value)` | `toHaveLastReturnedWith(value)` |
+| `nthReturnedWith(n, value)` | `toHaveNthReturnedWith(n, value)` |
+| `calledBefore(spy)` | `toHaveBeenCalledBefore(spy)` |
+| `calledAfter(spy)` | `toHaveBeenCalledAfter(spy)` |
+
+### Usage Examples
+
+#### Basic Call Assertions
+
+```ts
+import { expect, test, vi } from 'vitest'
+
+test('spy call assertions', () => {
+  const spy = vi.fn()
+
+  spy('arg1', 'arg2')
+  spy('arg3')
+
+  // Chai-style assertions
+  expect(spy).to.have.been.called()
+  expect(spy).to.have.callCount(2)
+  expect(spy).to.have.been.calledWith('arg1', 'arg2')
+  expect(spy).to.have.been.lastCalledWith('arg3')
+
+  // Negation works too
+  expect(spy).to.not.have.been.calledWith('wrong')
+})
+```
+
+#### Return Value Assertions
+
+```ts
+test('spy return assertions', () => {
+  const spy = vi.fn()
+    .mockReturnValueOnce('first')
+    .mockReturnValueOnce('second')
+    .mockReturnValueOnce('third')
+
+  spy()
+  spy()
+  spy()
+
+  // Chai-style return assertions
+  expect(spy).to.have.returned()
+  expect(spy).to.have.returnedTimes(3)
+  expect(spy).to.have.returnedWith('second')
+  expect(spy).to.have.lastReturnedWith('third')
+  expect(spy).to.have.nthReturnedWith(2, 'second')
+})
+```
+
+#### Convenience Assertions
+
+```ts
+test('sinon-chai style convenience assertions', () => {
+  const spy = vi.fn()
+
+  spy()
+  spy()
+  expect(spy).to.have.been.calledTwice()
+
+  spy()
+  expect(spy).to.have.been.calledThrice()
+})
+```
+
+#### Call Ordering
+
+```ts
+test('spy call ordering', () => {
+  const spy1 = vi.fn()
+  const spy2 = vi.fn()
+
+  spy1()
+  spy2()
+
+  expect(spy1).to.have.been.calledBefore(spy2)
+  expect(spy2).to.have.been.calledAfter(spy1)
+})
+```
+
+### Migration from Mocha + Chai + Sinon
+
+If you're migrating from Mocha+Chai+Sinon, you can use Chai-style assertions without rewriting your tests:
+
+```ts
+// Before (Mocha + Chai + Sinon)
+const sinon = require('sinon')
+const chai = require('chai')
+const sinonChai = require('sinon-chai')
+chai.use(sinonChai)
+
+const spy = sinon.spy()
+spy('hello')
+expect(spy).to.have.been.calledWith('hello')
+
+// After (Vitest) - same assertion syntax!
+import { expect, vi } from 'vitest'
+
+const spy = vi.fn()
+spy('hello')
+expect(spy).to.have.been.calledWith('hello')
+```
+
+::: tip
+For a complete migration guide from Mocha+Chai+Sinon, see the [Migration Guide](/guide/migration#mocha-chai-sinon).
+:::
 
 ## toSatisfy
 
