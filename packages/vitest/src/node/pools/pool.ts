@@ -20,6 +20,7 @@ interface QueuedTask {
   task: PoolTask
   resolver: ReturnType<typeof withResolvers>
   method: 'run' | 'collect'
+  warmRunner?: Promise<PoolRunner>
 }
 
 interface ActiveTask extends QueuedTask {
@@ -67,11 +68,11 @@ export class Pool {
       return
     }
 
-    const { task, resolver, method } = this.queue.shift()!
+    const { task, resolver, method, warmRunner } = this.queue.shift()!
 
     try {
       let isMemoryLimitReached = false
-      const runner = this.getPoolRunner(task, method)
+      const runner = warmRunner ? await warmRunner : this.getPoolRunner(task, method)
 
       const activeTask = { task, resolver, method, cancelTask }
       this.activeTasks.push(activeTask)
@@ -122,6 +123,14 @@ export class Pool {
         context: task.context,
         poolId,
       })
+
+      const next = this.queue.find(entry => !entry.warmRunner && entry.task.isolate)
+
+      // Warmup the next runtime. This will start the dynamic imports inside the worker early.
+      if (next) {
+        const warmRunner = this.getPoolRunner(next.task, next.method)
+        next.warmRunner = warmRunner.start().then(() => warmRunner)
+      }
 
       await resolver.promise
 
@@ -175,6 +184,7 @@ export class Pool {
     if (pendingTasks.length) {
       const error = new Error('Cancelled')
       pendingTasks.forEach(task => task.resolver.reject(error))
+      await Promise.all(pendingTasks.map(task => task.warmRunner?.then(runner => runner.stop())))
     }
 
     const activeTasks = this.activeTasks.splice(0)
