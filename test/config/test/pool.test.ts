@@ -83,6 +83,24 @@ test('non-isolated single worker pool receives all testfiles at once', async () 
   `)
 })
 
+test('non-isolated happy-dom worker pool receives all testfiles at once', async () => {
+  const files = await getConfig<string[]>({
+    fileParallelism: false,
+    isolate: false,
+    environment: 'happy-dom',
+    sequence: { sequencer: StableTestFileOrderSorter },
+  }, { include: ['print-testfiles.test.ts', 'a.test.ts', 'b.test.ts', 'c.test.ts'] })
+
+  expect(files.map(normalizeFilename)).toMatchInlineSnapshot(`
+    [
+      "<process-cwd>/fixtures/pool/a.test.ts",
+      "<process-cwd>/fixtures/pool/b.test.ts",
+      "<process-cwd>/fixtures/pool/c.test.ts",
+      "<process-cwd>/fixtures/pool/print-testfiles.test.ts",
+    ]
+  `)
+})
+
 async function getConfig<T = SerializedConfig>(options: Partial<TestUserConfig>, cliOptions: Partial<TestUserConfig> = {}): Promise<T> {
   let config: T | undefined
 
