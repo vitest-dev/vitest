@@ -49,7 +49,7 @@ test('project level pool options overwrites top-level', async () => {
   })
 
   expect(config.pool).toBe('vmThreads')
-  expect(config.fileParallelism).toBe(false)
+  expect(config.maxWorkers).toBe(1)
 })
 
 test('isolated single worker pool receives single testfile at once', async () => {
