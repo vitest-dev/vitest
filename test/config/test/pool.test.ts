@@ -41,6 +41,7 @@ test('extended project inherits top-level pool related options', async () => {
 test('project level pool options overwrites top-level', async () => {
   const config = await getConfig({
     pool: 'vmForks',
+    maxWorkers: 4,
     fileParallelism: true,
     projects: [{
       extends: true,
