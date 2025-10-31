@@ -12,6 +12,7 @@ declare module 'vue' {
     Box: typeof import('./components/Box.vue')['default']
     Contributors: typeof import('./components/Contributors.vue')['default']
     CourseLink: typeof import('./components/CourseLink.vue')['default']
+    Deprecated: typeof import('./components/Deprecated.vue')['default']
     FeaturesList: typeof import('./components/FeaturesList.vue')['default']
     HomePage: typeof import('./components/HomePage.vue')['default']
     ListItem: typeof import('./components/ListItem.vue')['default']

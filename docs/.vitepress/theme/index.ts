@@ -6,6 +6,7 @@ import { enhanceAppWithTabs } from 'vitepress-plugin-tabs/client'
 import { h } from 'vue'
 import HomePage from '../components/HomePage.vue'
 import Version from '../components/Version.vue'
+import Deprecated from '../components/Deprecated.vue'
 import '../style/main.css'
 import '../style/vars.css'
 import 'uno.css'
@@ -25,6 +26,7 @@ export default {
   },
   enhanceApp({ app }) {
     app.component('Version', Version)
+    app.component('Deprecated', Deprecated)
     app.use(TwoslashFloatingVue)
     enhanceAppWithTabs(app)
   },

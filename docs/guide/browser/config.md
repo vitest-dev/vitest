@@ -99,13 +99,17 @@ Under the hood, Vitest transforms these instances into separate [test projects](
 
 Run the browser in a `headless` mode. If you are running Vitest in CI, it will be enabled by default.
 
-## browser.isolate
+## browser.isolate <Deprecated />
 
 - **Type:** `boolean`
-- **Default:** `true`
+- **Default:** the same as [`--isolate`](/config/#isolate)
 - **CLI:** `--browser.isolate`, `--browser.isolate=false`
 
 Run every test in a separate iframe.
+
+::: danger DEPRECATED
+This option is deprecated. Use [`isolate`](/config/#isolate) instead.
+:::
 
 ## browser.testerHtmlPath
 
