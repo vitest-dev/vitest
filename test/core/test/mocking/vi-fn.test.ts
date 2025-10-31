@@ -652,6 +652,7 @@ describe('vi.fn() implementations', () => {
 
   test('vi.fn() throws an error if new is not called on a class', () => {
     const Mock = vi.fn(class _Mock {})
+    // @ts-expect-error value is not callable
     expect(() => Mock()).toThrowError(
       `Class constructor _Mock cannot be invoked without 'new'`,
     )
