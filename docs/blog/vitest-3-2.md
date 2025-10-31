@@ -242,7 +242,7 @@ For example, to have a type-safe `toBeFoo` matcher, you can write something like
 ```ts twoslash
 import { expect } from 'vitest'
 
-interface CustomMatchers<R = unknown> {
+interface CustomMatchers<R = any> {
   toBeFoo: (arg: string) => R
 }
 
