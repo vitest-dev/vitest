@@ -121,6 +121,33 @@ tests/test1.test.ts
 tests/test2.test.ts
 ```
 
+## Shell Autocompletions
+
+Vitest provides shell autocompletions for commands, options, and option values powered by [`@bomb.sh/tab`](https://github.com/bombshell-dev/tab).
+
+### Setup
+
+For permanent setup in zsh, add this to your `~/.zshrc`:
+
+```bash
+# Add to ~/.zshrc for permanent autocompletions (same can be done for other shells)
+source <(vitest complete zsh)
+```
+
+### Package Manager Integration
+
+`@bomb.sh/tab` integrates with [package managers](https://github.com/bombshell-dev/tab?tab=readme-ov-file#package-manager-completions). Autocompletions work when running vitest directly:
+
+```bash
+npx vitest <Tab>
+npm exec vitest <Tab>
+pnpm vitest <Tab>
+yarn vitest <Tab>
+bun vitest <Tab>
+```
+
+For package manager autocompletions, you should install [tab's package manager completions](https://github.com/bombshell-dev/tab?tab=readme-ov-file#package-manager-completions) separately.
+
 ## Options
 
 ::: tip
