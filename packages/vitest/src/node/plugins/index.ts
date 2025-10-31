@@ -54,7 +54,7 @@ export async function VitestPlugin(
         const testConfig = deepMerge(
           {} as UserConfig,
           configDefaults,
-          removeUndefinedValues(viteConfig.test ?? {}),
+          viteConfig.test ?? {},
           options,
         )
         testConfig.api = resolveApiServerConfig(testConfig, defaultPort)
@@ -288,14 +288,4 @@ export async function VitestPlugin(
     NormalizeURLPlugin(),
     ModuleRunnerTransform(),
   ].filter(notNullish)
-}
-function removeUndefinedValues<T extends Record<string, any>>(
-  obj: T,
-): T {
-  for (const key in Object.keys(obj)) {
-    if (obj[key] === undefined) {
-      delete obj[key]
-    }
-  }
-  return obj
 }
