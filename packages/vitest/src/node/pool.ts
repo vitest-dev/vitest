@@ -391,14 +391,14 @@ function groupSpecs(specs: TestSpecification[], environments: Awaited<ReturnType
     }
 
     const order = spec.project.config.sequence.groupOrder
+    const isolate = spec.project.config.isolate
 
     // Files that have disabled parallelism and default groupOrder are set into their own group
-    if (order === 0 && spec.project.config.fileParallelism === false) {
+    if (isolate === true && order === 0 && spec.project.config.maxWorkers === 1) {
       return sequential.specs.push([spec])
     }
 
     const maxWorkers = resolveMaxWorkers(spec.project)
-    const isolate = spec.project.config.isolate
     groups[order] ||= { specs: [], maxWorkers }
 
     // Multiple projects with different maxWorkers but same groupOrder

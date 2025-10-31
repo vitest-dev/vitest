@@ -212,9 +212,9 @@ export function resolveConfig(
   }
 
   // run benchmark sequentially by default
-  resolved.fileParallelism ??= mode !== 'benchmark'
+  const fileParallelism = options.fileParallelism ?? mode !== 'benchmark'
 
-  if (!resolved.fileParallelism) {
+  if (!fileParallelism) {
     // ignore user config, parallelism cannot be implemented without limiting workers
     resolved.maxWorkers = 1
   }
@@ -227,7 +227,7 @@ export function resolveConfig(
   }
 
   if (resolved.inspect || resolved.inspectBrk) {
-    if (resolved.fileParallelism) {
+    if (resolved.maxWorkers !== 1) {
       const inspectOption = `--inspect${resolved.inspectBrk ? '-brk' : ''}`
       throw new Error(
         `You cannot use ${inspectOption} without "--no-file-parallelism"`,
