@@ -360,13 +360,6 @@ export interface InlineConfig {
   projects?: TestProjectConfiguration[]
 
   /**
-   * Update snapshot
-   *
-   * @default false
-   */
-  update?: boolean
-
-  /**
    * Watch mode
    *
    * @default !process.env.CI
@@ -896,6 +889,13 @@ export interface UserConfig extends InlineConfig {
    * Use happy-dom
    */
   dom?: boolean
+
+  /**
+   * Update snapshot
+   *
+   * @default false
+   */
+  update?: boolean
 
   /**
    * Run tests that cover a list of source files
