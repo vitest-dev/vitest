@@ -7,7 +7,7 @@ import { vi } from 'vitest'
 
 const fn = vi.fn()
 fn('hello world')
-fn.mock.calls[0] === ['hello world']
+fn.mock.calls[0][0] === 'hello world'
 
 const market = {
   getApples: () => 100
