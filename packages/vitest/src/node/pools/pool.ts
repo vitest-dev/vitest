@@ -63,6 +63,11 @@ export class Pool {
   }
 
   private async schedule(): Promise<void> {
+    const nextItem = this.queue[0]
+    if (nextItem) {
+      this.setMaxWorkers(nextItem.task.project.config.maxWorkers)
+    }
+
     if (this.queue.length === 0 || this.activeTasks.length >= this.maxWorkers) {
       return
     }

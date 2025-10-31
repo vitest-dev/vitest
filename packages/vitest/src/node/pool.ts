@@ -143,69 +143,42 @@ export function createPool(ctx: Vitest): ProcessPool {
       }
     }
 
-    const poolGroups: {
-      tasks: PoolTask[]
-      browserTests: TestSpecification[]
-      maxWorkers: number
-    }[] = []
-
-    // TODO: we need to have a single maxWorkers, how to resolve this(?)
-    const globalMaxWorkers = parallelTests.length
-      ? Math.max(...parallelTests.map(t => t.project.config.maxWorkers))
-      : 1
-
-    // run all the parallel tests first
-    poolGroups.push({
-      maxWorkers: globalMaxWorkers,
-      tasks: parallelTests.map(specification => createTask([specification])),
-      browserTests,
-    })
-
-    poolGroups.push({
-      maxWorkers: 1,
-      browserTests: [],
-      tasks: sequentialTests.map(specifications => createTask(specifications)),
-    })
+    const tasks = [
+      ...parallelTests.map(specification => createTask([specification])),
+      ...sequentialTests.map(specifications => createTask(specifications)),
+    ]
 
     const results: PromiseSettledResult<void>[] = []
 
-    for (const { tasks, maxWorkers, browserTests } of poolGroups) {
-      if (!tasks.length && !browserTests.length) {
-        continue
+    const promises = tasks.map(async (task) => {
+      if (ctx.isCancelling) {
+        return ctx.state.cancelFiles(task.context.files, task.project)
       }
 
-      pool.setMaxWorkers(maxWorkers)
-
-      const promises = tasks.map(async (task) => {
-        if (ctx.isCancelling) {
-          return ctx.state.cancelFiles(task.context.files, task.project)
-        }
-
-        try {
-          await pool.run(task, method)
-        }
-        catch (error) {
-          if (ctx.isCancelling && error instanceof Error && error.message === 'Cancelled') {
-            ctx.state.cancelFiles(task.context.files, task.project)
-          }
-          else {
-            throw error
-          }
-        }
-      })
-
-      if (browserTests.length) {
-        browserPool ??= createBrowserPool(ctx)
-        if (method === 'collect') {
-          promises.push(browserPool.collectTests(browserTests))
+      try {
+        await pool.run(task, method)
+      }
+      catch (error) {
+        if (ctx.isCancelling && error instanceof Error && error.message === 'Cancelled') {
+          ctx.state.cancelFiles(task.context.files, task.project)
         }
         else {
-          promises.push(browserPool.runTests(browserTests))
+          throw error
         }
       }
+    })
 
-      results.push(...await Promise.allSettled(promises))
+    if (browserTests.length) {
+      browserPool ??= createBrowserPool(ctx)
+      if (method === 'collect') {
+        promises.push(browserPool.collectTests(browserTests))
+      }
+      else {
+        promises.push(browserPool.runTests(browserTests))
+      }
     }
+
+    results.push(...await Promise.allSettled(promises))
 
     const errors = results
       .filter(result => result.status === 'rejected')
@@ -409,9 +382,11 @@ async function groupSpecifications(
     result.push(...(await clusterize(parallelTests)).flat())
 
     sequentialTests.push(
+      // run isolated one by one
       ...(await clusterize(deferredIsolatedMaxOne)).flatMap(specs => specs.map(s => [s])),
     )
     sequentialTests.push(
+      // run isolated together
       ...await clusterize(deferredNonIsolatedMaxOne),
     )
   }
