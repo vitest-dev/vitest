@@ -266,11 +266,8 @@ import { setupWorker } from 'msw/browser'
 // Set up MSW worker with API handlers
 const worker = setupWorker(
   http.get('/api/users/:id', ({ params }) => {
-    const { id } = params
-    if (id === '123') {
-      return HttpResponse.json({ name: 'John Doe', email: 'john@example.com' })
-    }
-    return HttpResponse.json({ error: 'User not found' }, { status: 404 })
+    // Describe the happy path
+    return HttpResponse.json({ id: params.id, name: 'John Doe', email: 'john@example.com' })
   })
 )
 
