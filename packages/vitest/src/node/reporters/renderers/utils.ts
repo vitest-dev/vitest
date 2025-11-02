@@ -149,17 +149,17 @@ export function getStateString(
     return c.dim(`no ${name}`)
   }
 
-  const passed = tasks.filter(i => i.result?.state === 'pass')
-  const failed = tasks.filter(i => i.result?.state === 'fail')
-  const skipped = tasks.filter(i => i.mode === 'skip')
-  const todo = tasks.filter(i => i.mode === 'todo')
+  const passed = tasks.reduce((acc, i) => i.result?.state === 'pass' ? acc + 1 : acc, 0)
+  const failed = tasks.reduce((acc, i) => i.result?.state === 'fail' ? acc + 1 : acc, 0)
+  const skipped = tasks.reduce((acc, i) => i.mode === 'skip' ? acc + 1 : acc, 0)
+  const todo = tasks.reduce((acc, i) => i.mode === 'todo' ? acc + 1 : acc, 0)
 
   return (
     [
-      failed.length ? c.bold(c.red(`${failed.length} failed`)) : null,
-      passed.length ? c.bold(c.green(`${passed.length} passed`)) : null,
-      skipped.length ? c.yellow(`${skipped.length} skipped`) : null,
-      todo.length ? c.gray(`${todo.length} todo`) : null,
+      failed ? c.bold(c.red(`${failed} failed`)) : null,
+      passed ? c.bold(c.green(`${passed} passed`)) : null,
+      skipped ? c.yellow(`${skipped} skipped`) : null,
+      todo ? c.gray(`${todo} todo`) : null,
     ]
       .filter(Boolean)
       .join(c.dim(' | ')) + (showTotal ? c.gray(` (${tasks.length})`) : '')
