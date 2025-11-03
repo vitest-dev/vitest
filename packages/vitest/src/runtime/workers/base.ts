@@ -73,7 +73,7 @@ export async function runBaseTests(method: 'run' | 'collect', state: WorkerGloba
     })
   }
   ctx.files.forEach((i) => {
-    const filepath = typeof i === 'string' ? i : i.filepath
+    const filepath = i.filepath
     const modules = state.evaluatedModules.fileToModulesMap.get(filepath) || []
     modules.forEach((module) => {
       state.evaluatedModules.invalidateModule(module)
