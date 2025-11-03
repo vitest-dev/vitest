@@ -132,12 +132,19 @@ export function init(worker: Options): void {
 
       case 'stop': {
         await runPromise
-        const error = await entrypoint.teardown()
-          .catch(error => serializeError(error))
 
-        await workerTeardown?.()
+        try {
+          const error = await entrypoint.teardown()
+            .catch(error => serializeError(error))
 
-        send({ type: 'stopped', error, __vitest_worker_response__ })
+          await workerTeardown?.()
+
+          send({ type: 'stopped', error, __vitest_worker_response__ })
+        }
+        catch (error) {
+          send({ type: 'stopped', error: serializeError(error), __vitest_worker_response__ })
+        }
+
         worker.teardown?.()
 
         break
