@@ -222,7 +222,11 @@ export function createPool(ctx: Vitest): ProcessPool {
     runTests: (files, invalidates) => executeTests('run', files, invalidates),
     collectTests: (files, invalidates) => executeTests('collect', files, invalidates),
     async close() {
-      await Promise.all([pool.close(), browserPool?.close?.()])
+      await Promise.all([
+        pool.close(),
+        browserPool?.close?.(),
+        ...ctx.projects.map(project => project.typechecker?.stop()),
+      ])
     },
   }
 }
