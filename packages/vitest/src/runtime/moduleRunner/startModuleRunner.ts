@@ -174,7 +174,12 @@ export function toBuiltin(id: string): string {
     id = id.slice(browserExternalLength)
   }
 
-  if (!id.startsWith('node:')) {
+  // builtins that aren't provided by node should not get rewritten
+  const excludedBuiltinNamespaces = ["bun"];
+  const excludedBuiltinModules = ["bun"];
+  const isNodeBuiltin = !excludedBuiltinModules.includes(id) && !excludedBuiltinNamespaces.some(m => id.startsWith(`${m}:`))
+
+  if (!id.startsWith('node:') && isNodeBuiltin) {
     id = `node:${id}`
   }
   return id
