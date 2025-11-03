@@ -711,17 +711,17 @@ exports[`toBeOneOf() > error message 1`] = `
   "actual": "undefined",
   "diff": undefined,
   "expected": "undefined",
-  "message": "expect(received).toBeOneOf()
-
-Expected value to be one of:
-Array [
+  "message": "  expect(received).toBeOneOf()
+  
+  Expected value to be one of:
+  Array [
   0,
   1,
   2,
 ]
-
-Received:
-3",
+  
+  Received:
+  3",
 }
 `;
 
@@ -730,15 +730,15 @@ exports[`toBeOneOf() > error message 2`] = `
   "actual": "undefined",
   "diff": undefined,
   "expected": "undefined",
-  "message": "expect(received).toBeOneOf()
-
-Expected value to be one of:
-Array [
+  "message": "  expect(received).toBeOneOf()
+  
+  Expected value to be one of:
+  Array [
   Any<String>,
 ]
-
-Received:
-3",
+  
+  Received:
+  3",
 }
 `;
 

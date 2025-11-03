@@ -379,19 +379,23 @@ test('getApplesCount has some unusual side effects...', () => {
 
 ## toBeOneOf
 
-- **Type:** `(sample: Array<any>) => any`
+- **Type:** `(sample: Array<any> | Iterable<any>) => any`
 
-`toBeOneOf` asserts if a value matches any of the values in the provided array.
+`toBeOneOf` asserts if a value matches any of the values in the provided array or iterable (Set, Map, etc.).
 
 ```ts
 import { expect, test } from 'vitest'
 
 test('fruit is one of the allowed values', () => {
-  expect(fruit).toBeOneOf(['apple', 'banana', 'orange'])
+  expect('apple').toBeOneOf(['apple', 'banana', 'orange'])
+
+  // Also works with Sets and other iterables
+  const allowedFruits = new Set(['apple', 'banana', 'orange'])
+  expect('apple').toBeOneOf(allowedFruits)
 })
 ```
 
-The asymmetric matcher is particularly useful when testing optional properties that could be either `null` or `undefined`:
+The asymmetric matcher is particularly useful when testing optional properties:
 
 ```ts
 test('optional properties can be null or undefined', () => {
@@ -408,10 +412,6 @@ test('optional properties can be null or undefined', () => {
   })
 })
 ```
-
-:::tip
-You can use `expect.not` with this matcher to ensure a value does NOT match any of the provided options.
-:::
 
 ## toBeTypeOf
 

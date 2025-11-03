@@ -27,18 +27,26 @@ ${printReceived(actual)}`,
     }
   },
 
-  toBeOneOf(actual: unknown, expected: Array<unknown>) {
+  toBeOneOf(actual: unknown, expected: Array<unknown> | Iterable<unknown>) {
     const { equals, customTesters } = this
     const { printReceived, printExpected, matcherHint } = this.utils
 
-    if (!Array.isArray(expected)) {
+    const isArray = Array.isArray(expected)
+    const isString = typeof expected === 'string'
+    const isIterable = !isString
+      && expected != null
+      && typeof (expected as any)[Symbol.iterator] === 'function'
+
+    if (!isArray && !isIterable) {
       throw new TypeError(
-        `You must provide an array to ${matcherHint('.toBeOneOf')}, not '${typeof expected}'.`,
+        `You must provide an array or iterable to ${matcherHint('.toBeOneOf')}, not '${typeof expected}'.`,
       )
     }
 
-    const pass = expected.length === 0
-      || expected.some(item =>
+    const expectedArray = isArray ? expected : Array.from(expected as Iterable<unknown>)
+
+    const pass = expectedArray.length === 0
+      || expectedArray.some(item =>
         equals(item, actual, customTesters),
       )
 
@@ -47,20 +55,20 @@ ${printReceived(actual)}`,
       message: () =>
         pass
           ? `\
-${matcherHint('.not.toBeOneOf', 'received', '')}
-
-Expected value to not be one of:
-${printExpected(expected)}
-Received:
-${printReceived(actual)}`
+  ${matcherHint('.not.toBeOneOf', 'received', '')}
+  
+  Expected value to not be one of:
+  ${printExpected(expectedArray)}
+  Received:
+  ${printReceived(actual)}`
           : `\
-${matcherHint('.toBeOneOf', 'received', '')}
-
-Expected value to be one of:
-${printExpected(expected)}
-
-Received:
-${printReceived(actual)}`,
+  ${matcherHint('.toBeOneOf', 'received', '')}
+  
+  Expected value to be one of:
+  ${printExpected(expectedArray)}
+  
+  Received:
+  ${printReceived(actual)}`,
     }
   },
 }
