@@ -65,7 +65,6 @@ export interface WorkerGlobalState {
     SSR: boolean
   }
   environment: Environment
-  environmentTeardownRun?: boolean
   evaluatedModules: EvaluatedModules
   resolvingModules: Set<string>
   moduleExecutionInfo: Map<string, any>

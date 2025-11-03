@@ -131,6 +131,5 @@ export async function runVmTests(method: 'run' | 'collect', state: WorkerGlobalS
   }
   finally {
     await vm.teardown?.()
-    state.environmentTeardownRun = true
   }
 }

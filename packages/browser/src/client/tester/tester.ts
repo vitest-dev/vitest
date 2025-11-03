@@ -254,7 +254,6 @@ async function cleanup() {
     await rpc.wdioSwitchContext('parent')
       .catch(error => unhandledError(error, 'Cleanup Error'))
   }
-  state.environmentTeardownRun = true
   await stopCoverageInsideWorker(config.coverage, moduleRunner, { isolate: config.browser.isolate }).catch((error) => {
     return unhandledError(error, 'Coverage Error')
   })

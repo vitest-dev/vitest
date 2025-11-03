@@ -64,6 +64,4 @@ export async function run(
   }
 
   await stopCoverageInsideWorker(config.coverage, moduleRunner, { isolate: config.isolate })
-
-  workerState.environmentTeardownRun = true
 }
