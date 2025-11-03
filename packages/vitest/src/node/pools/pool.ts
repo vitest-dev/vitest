@@ -76,12 +76,6 @@ export class Pool {
       const activeTask = { task, resolver, method, cancelTask }
       this.activeTasks.push(activeTask)
 
-      runner.on('error', (error) => {
-        resolver.reject(
-          new Error(`[vitest-pool]: Worker ${task.worker} emitted error.`, { cause: error }),
-        )
-      })
-
       async function cancelTask() {
         await runner.stop()
         resolver.reject(new Error('Cancelled'))
@@ -104,6 +98,12 @@ export class Pool {
       runner.on('message', onFinished)
 
       if (!runner.isStarted) {
+        runner.on('error', (error) => {
+          resolver.reject(
+            new Error(`[vitest-pool]: Worker ${task.worker} emitted error.`, { cause: error }),
+          )
+        })
+
         const id = setTimeout(
           () => resolver.reject(new Error(`[vitest-pool]: Timeout starting ${task.worker} runner.`)),
           WORKER_START_TIMEOUT,

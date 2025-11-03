@@ -24,10 +24,10 @@ const MOCK_RESTORE = new Set<() => void>()
 // Jest keeps the state in a separate WeakMap which is good for memory,
 // but it makes the state slower to access and return different values
 // if you stored it before calling `mockClear` where it will be recreated
-const REGISTERED_MOCKS = new Set<Mock>()
-const MOCK_CONFIGS = new WeakMap<Mock, MockConfig>()
+const REGISTERED_MOCKS = new Set<Mock<Procedure | Constructable>>()
+const MOCK_CONFIGS = new WeakMap<Mock<Procedure | Constructable>, MockConfig>()
 
-export function createMockInstance(options: MockInstanceOption = {}): Mock {
+export function createMockInstance(options: MockInstanceOption = {}): Mock<Procedure | Constructable> {
   const {
     originalImplementation,
     restore,
@@ -47,6 +47,13 @@ export function createMockInstance(options: MockInstanceOption = {}): Mock {
     config,
     state,
     ...options,
+  })
+  const mockLength = (mockImplementation || originalImplementation)?.length ?? 0
+  Object.defineProperty(mock, 'length', {
+    writable: true,
+    enumerable: false,
+    value: mockLength,
+    configurable: true,
   })
   // inherit the default name so it appears in snapshots and logs
   // this is used by `vi.spyOn()` for better debugging.
@@ -218,7 +225,7 @@ export function spyOn<T extends object, K extends keyof T>(
   object: T,
   key: K,
   accessor?: 'get' | 'set',
-): Mock {
+): Mock<Procedure | Constructable> {
   assert(
     object != null,
     'The vi.spyOn() function could not find an object to spy upon. The first argument must be defined.',
@@ -491,10 +498,11 @@ function createMock(
       return returnValue
     }) as Mock,
   }
+  const mock = namedObject[name] as Mock<Procedure | Constructable>
   if (original) {
-    copyOriginalStaticProperties(namedObject[name], original)
+    copyOriginalStaticProperties(mock, original)
   }
-  return namedObject[name]
+  return mock
 }
 
 function registerCalls(args: unknown[], state: MockContext, prototypeState?: MockContext) {
@@ -529,7 +537,7 @@ function registerContext(context: MockProcedureContext<Procedure>, state: MockCo
   return [contextIndex, contextPrototypeIndex] as const
 }
 
-function copyOriginalStaticProperties(mock: Mock, original: Procedure | Constructable) {
+function copyOriginalStaticProperties(mock: Mock<Procedure | Constructable>, original: Procedure | Constructable) {
   const { properties, descriptors } = getAllProperties(original)
 
   for (const key of properties) {
@@ -618,6 +626,7 @@ export function resetAllMocks(): void {
 }
 
 export type {
+  Constructable,
   MaybeMocked,
   MaybeMockedConstructor,
   MaybeMockedDeep,
@@ -647,4 +656,5 @@ export type {
   PartiallyMockedFunction,
   PartiallyMockedFunctionDeep,
   PartialMock,
+  Procedure,
 } from './types'

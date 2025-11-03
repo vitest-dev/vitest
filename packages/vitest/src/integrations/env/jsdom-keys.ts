@@ -141,7 +141,6 @@ const LIVING_KEYS = [
   'ValidityState',
   'DOMParser',
   'XMLSerializer',
-  'FormData',
   'XMLHttpRequestEventTarget',
   'XMLHttpRequestUpload',
   'XMLHttpRequest',
@@ -185,6 +184,7 @@ const LIVING_KEYS = [
   // 'AbortSignal',
   // 'URL',
   // 'URLSearchParams',
+  // 'FormData',
 ]
 
 const OTHER_KEYS = [

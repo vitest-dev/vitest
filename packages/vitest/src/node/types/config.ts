@@ -985,6 +985,7 @@ export interface ResolvedConfig
     | 'bail'
     | 'name'
     | 'vmMemoryLimit'
+    | 'fileParallelism'
   > {
   mode: VitestRunMode
 
@@ -1118,7 +1119,6 @@ export type ProjectConfig = Omit<
   mode?: string
   sequencer?: Omit<SequenceOptions, 'sequencer' | 'seed'>
   deps?: Omit<DepsOptions, 'moduleDirectories'>
-  fileParallelism?: boolean
 }
 
 export type ResolvedProjectConfig = Omit<

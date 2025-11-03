@@ -35,27 +35,29 @@ bunx vitest init browser
 
 ### Manual Installation
 
-You can also install packages manually. By default, Browser Mode doesn't require any additional E2E provider to run tests locally because it reuses your existing browser.
+You can also install packages manually. Vitest always requires a provider to be defined. You can chose either [`preview`](/guide/browser/preview), [`playwright`](/guide/browser/playwright) or [`webdriverio`](/guide/browser/webdriverio).
+
+If you want to just preview how your tests look, you can use the `preview` provider:
 
 ::: code-group
 ```bash [npm]
-npm install -D vitest @vitest/browser
+npm install -D vitest @vitest/browser-preview
 ```
 ```bash [yarn]
-yarn add -D vitest @vitest/browser
+yarn add -D vitest @vitest/browser-preview
 ```
 ```bash [pnpm]
-pnpm add -D vitest @vitest/browser
+pnpm add -D vitest @vitest/browser-preview
 ```
 ```bash [bun]
-bun add -D vitest @vitest/browser
+bun add -D vitest @vitest/browser-preview
 ```
 :::
 
 ::: warning
 However, to run tests in CI you need to install either [`playwright`](https://npmjs.com/package/playwright) or [`webdriverio`](https://www.npmjs.com/package/webdriverio). We also recommend switching to either one of them for testing locally instead of using the default `preview` provider since it relies on simulating events instead of using Chrome DevTools Protocol.
 
-If you don't already use one of these tools, we recommend starting with Playwright because it supports parallel execution, which makes your tests run faster. Additionally, Playwright uses [Chrome DevTools Protocol](https://chromedevtools.github.io/devtools-protocol/) which is generally faster than WebDriver.
+If you don't already use one of these tools, we recommend starting with Playwright because it supports parallel execution, which makes your tests run faster.
 
 ::: tabs key:provider
 == Playwright
@@ -63,16 +65,16 @@ If you don't already use one of these tools, we recommend starting with Playwrig
 
 ::: code-group
 ```bash [npm]
-npm install -D vitest @vitest/browser playwright
+npm install -D vitest @vitest/browser-playwright
 ```
 ```bash [yarn]
-yarn add -D vitest @vitest/browser playwright
+yarn add -D vitest @vitest/browser-playwright
 ```
 ```bash [pnpm]
-pnpm add -D vitest @vitest/browser playwright
+pnpm add -D vitest @vitest/browser-playwright
 ```
 ```bash [bun]
-bun add -D vitest @vitest/browser playwright
+bun add -D vitest @vitest/browser-playwright
 ```
 == WebdriverIO
 
@@ -80,16 +82,16 @@ bun add -D vitest @vitest/browser playwright
 
 ::: code-group
 ```bash [npm]
-npm install -D vitest @vitest/browser webdriverio
+npm install -D vitest @vitest/browser-webdriverio
 ```
 ```bash [yarn]
-yarn add -D vitest @vitest/browser webdriverio
+yarn add -D vitest @vitest/browser-webdriverio
 ```
 ```bash [pnpm]
-pnpm add -D vitest @vitest/browser webdriverio
+pnpm add -D vitest @vitest/browser-webdriverio
 ```
 ```bash [bun]
-bun add -D vitest @vitest/browser webdriverio
+bun add -D vitest @vitest/browser-webdriverio
 ```
 :::
 

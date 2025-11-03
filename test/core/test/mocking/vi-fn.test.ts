@@ -20,6 +20,54 @@ test('vi.fn().mock cannot be overriden', () => {
   }).toThrowError()
 })
 
+describe('fn.length is consistent', () => {
+  test('vi.fn() has correct length', () => {
+    const fn0 = vi.fn(() => {})
+    expect(fn0.length).toBe(0)
+
+    const fnArgs = vi.fn((..._args) => {})
+    expect(fnArgs.length).toBe(0)
+
+    const fn1 = vi.fn((_arg1) => {})
+    expect(fn1.length).toBe(1)
+
+    const fn2 = vi.fn((_arg1, _arg2) => {})
+    expect(fn2.length).toBe(2)
+
+    const fn3 = vi.fn((_arg1, _arg2, _arg3) => {})
+    expect(fn3.length).toBe(3)
+  })
+
+  test('vi.fn() always returns length of the initial implementation', () => {
+    const fn = vi.fn<(...args: any[]) => void>((_arg) => {})
+
+    expect(fn.length).toBe(1)
+
+    fn.mockImplementationOnce(() => {})
+
+    expect(fn.length).toBe(1)
+    fn(1)
+    expect(fn.length).toBe(1)
+
+    fn.mockImplementation((_arg1, _arg2) => {})
+
+    expect(fn.length).toBe(1)
+    fn(1)
+    expect(fn.length).toBe(1)
+
+    fn.withImplementation((_arg1, _arg2, _arg3) => {}, () => {
+      expect(fn.length).toBe(1)
+    })
+  })
+})
+
+test('vi.fn() has overridable length', () => {
+  const fn0 = vi.fn(() => {})
+  // @ts-expect-error TS doesn't allow override
+  fn0.length = 5
+  expect(fn0.length).toBe(5)
+})
+
 describe('vi.fn() state', () => {
   // TODO: test when calls is not empty
   test('vi.fn() clears calls without a custom implementation', () => {
@@ -604,6 +652,7 @@ describe('vi.fn() implementations', () => {
 
   test('vi.fn() throws an error if new is not called on a class', () => {
     const Mock = vi.fn(class _Mock {})
+    // @ts-expect-error value is not callable
     expect(() => Mock()).toThrowError(
       `Class constructor _Mock cannot be invoked without 'new'`,
     )

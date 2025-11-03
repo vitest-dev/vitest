@@ -29,7 +29,7 @@ To develop and test `vitest` package:
 
 ### VS Code
 
-If you want to use break point and explore code execution you can use the ["Run and debug"](https://code.visualstudio.com/docs/editor/debugging) feature from vscode.
+If you want to use break point and explore code execution you can use the ["Run and debug"](https://code.visualstudio.com/docs/debugtest/debugging) feature from vscode.
 
 1. Add a `debugger` statement where you want to stop the code execution.
 
@@ -39,11 +39,11 @@ If you want to use break point and explore code execution you can use the ["Run 
 
 4. It will open a terminal, then type the test command: `pnpm run test`
 
-5. The execution will stop and you'll use the [Debug toolbar](https://code.visualstudio.com/docs/editor/debugging#_debug-actions) to continue, step over, restart the process...
+5. The execution will stop and you'll use the [Debug toolbar](https://code.visualstudio.com/docs/debugtest/debugging#_debug-actions) to continue, step over, restart the process...
 
 ## Testing Vitest against external packages
 
-You may wish to test your locally-modified copy of Vitest against another package that is using it. For pnpm, after building Vitest, you can use [`pnpm.overrides`](https://pnpm.io/package_json#pnpmoverrides). Please note that `pnpm.overrides` must be specified in the root `package.json` and you must first list the package as a dependency in the root `package.json`:
+You may wish to test your locally-modified copy of Vitest against another package that is using it. For pnpm, after building Vitest, you can use [`pnpm.overrides`](https://pnpm.io/9.x/package_json#pnpmoverrides). Please note that `pnpm.overrides` must be specified in the root `package.json` and you must first list the package as a dependency in the root `package.json`:
 
 ```json
 {

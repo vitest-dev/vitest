@@ -158,7 +158,7 @@ export function resolveConfig(
   resolved.color = typeof options.name !== 'string' ? options.name?.color : undefined
 
   if (resolved.environment === 'browser') {
-    throw new Error(`Looks like you set "test.environment" to "browser". To enabled Browser Mode, use "test.browser.enabled" instead.`)
+    throw new Error(`Looks like you set "test.environment" to "browser". To enable Browser Mode, use "test.browser.enabled" instead.`)
   }
 
   const inspector = resolved.inspect || resolved.inspectBrk
@@ -212,9 +212,9 @@ export function resolveConfig(
   }
 
   // run benchmark sequentially by default
-  resolved.fileParallelism ??= mode !== 'benchmark'
+  const fileParallelism = options.fileParallelism ?? mode !== 'benchmark'
 
-  if (!resolved.fileParallelism) {
+  if (!fileParallelism) {
     // ignore user config, parallelism cannot be implemented without limiting workers
     resolved.maxWorkers = 1
   }
@@ -227,7 +227,7 @@ export function resolveConfig(
   }
 
   if (resolved.inspect || resolved.inspectBrk) {
-    if (resolved.fileParallelism) {
+    if (resolved.maxWorkers !== 1) {
       const inspectOption = `--inspect${resolved.inspectBrk ? '-brk' : ''}`
       throw new Error(
         `You cannot use ${inspectOption} without "--no-file-parallelism"`,
@@ -368,29 +368,6 @@ export function resolveConfig(
 
   resolved.deps ??= {}
   resolved.deps.moduleDirectories ??= []
-
-  const envModuleDirectories
-    = process.env.VITEST_MODULE_DIRECTORIES
-      || process.env.npm_config_VITEST_MODULE_DIRECTORIES
-
-  if (envModuleDirectories) {
-    resolved.deps.moduleDirectories.push(...envModuleDirectories.split(','))
-  }
-
-  resolved.deps.moduleDirectories = resolved.deps.moduleDirectories.map(
-    (dir) => {
-      if (dir[0] !== '/') {
-        dir = `/${dir}`
-      }
-      if (!dir.endsWith('/')) {
-        dir += '/'
-      }
-      return normalize(dir)
-    },
-  )
-  if (!resolved.deps.moduleDirectories.includes('/node_modules/')) {
-    resolved.deps.moduleDirectories.push('/node_modules/')
-  }
 
   resolved.deps.optimizer ??= {}
   resolved.deps.optimizer.ssr ??= {}
@@ -623,9 +600,22 @@ export function resolveConfig(
     )
 
     if (cliReporters.length) {
+      // When CLI reporters are specified, preserve options from config file
+      const configReportersMap = new Map<string, Record<string, unknown>>()
+
+      // Build a map of reporter names to their options from the config
+      for (const reporter of resolved.reporters) {
+        if (Array.isArray(reporter)) {
+          const [reporterName, reporterOptions] = reporter
+          if (typeof reporterName === 'string') {
+            configReportersMap.set(reporterName, reporterOptions as Record<string, unknown>)
+          }
+        }
+      }
+
       resolved.reporters = Array.from(new Set(toArray(cliReporters)))
         .filter(Boolean)
-        .map(reporter => [reporter, {}])
+        .map(reporter => [reporter, configReportersMap.get(reporter) || {}])
     }
   }
 
@@ -697,7 +687,7 @@ export function resolveConfig(
 
   resolved.browser.enabled ??= false
   resolved.browser.headless ??= isCI
-  resolved.browser.isolate ??= true
+  resolved.browser.isolate ??= resolved.isolate ?? true
   resolved.browser.fileParallelism
     ??= options.fileParallelism ?? mode !== 'benchmark'
   // disable in headless mode by default, and if CI is detected

@@ -11,3 +11,7 @@ test('setup file has been loaded without relative path prefix', () => {
   const result = loaded
   expect(result).toBeTruthy()
 })
+
+test('the process.env is injected correctly', () => {
+  expect(process.env.NEW_VALUE).toBe('true')
+})

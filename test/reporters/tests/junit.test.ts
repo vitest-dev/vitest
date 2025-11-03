@@ -156,3 +156,21 @@ test('many errors without warning', async () => {
   )
   expect(stderr).not.toContain('MaxListenersExceededWarning')
 })
+
+test('CLI reporter option preserves config file options', async () => {
+  const { stdout } = await runVitestCli(
+    'run',
+    '--reporter=junit',
+    '--root',
+    resolve(import.meta.dirname, '../fixtures/junit-cli-options'),
+  )
+
+  const xml = stabilizeReport(stdout)
+
+  // Verify that suiteName from config is preserved
+  expect(xml).not.toContain('<testsuites name="vitest tests"')
+  expect(xml).toContain('<testsuites name="custom-suite-name"')
+
+  // Verify that addFileAttribute from config is preserved
+  expect(xml).toContain('file="')
+})

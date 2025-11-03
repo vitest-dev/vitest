@@ -2,7 +2,7 @@ import type { Options } from 'tinyexec'
 import type { UserConfig as ViteUserConfig } from 'vite'
 import type { WorkerGlobalState } from 'vitest'
 import type { TestProjectConfiguration } from 'vitest/config'
-import type { TestSpecification, TestUserConfig, Vitest, VitestRunMode } from 'vitest/node'
+import type { TestCollection, TestModule, TestSpecification, TestUserConfig, Vitest, VitestRunMode } from 'vitest/node'
 import { webcrypto as crypto } from 'node:crypto'
 import fs from 'node:fs'
 import { Readable, Writable } from 'node:stream'
@@ -371,6 +371,9 @@ export async function runInlineTests(
     get results() {
       return vitest.ctx?.state.getTestModules() || []
     },
+    testTree() {
+      return buildTestTree(vitest.ctx?.state.getTestModules() || [])
+    },
   }
 }
 
@@ -384,4 +387,36 @@ export class StableTestFileOrderSorter {
   shard(files: TestSpecification[]) {
     return files
   }
+}
+
+function buildTestTree(testModules: TestModule[]) {
+  type TestTree = Record<string, any>
+
+  function walkCollection(collection: TestCollection): TestTree {
+    const node: TestTree = {}
+
+    for (const child of collection) {
+      if (child.type === 'suite') {
+        // Recursively walk suite children
+        const suiteChildren = walkCollection(child.children)
+        node[child.name] = suiteChildren
+      }
+      else if (child.type === 'test') {
+        const result = child.result()
+        node[child.name] = result.state
+      }
+    }
+
+    return node
+  }
+
+  const tree: TestTree = {}
+
+  for (const module of testModules) {
+    // Use relative module ID for cleaner output
+    const key = module.relativeModuleId
+    tree[key] = walkCollection(module.children)
+  }
+
+  return tree
 }

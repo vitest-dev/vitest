@@ -227,14 +227,13 @@ function clearModuleMocks(config: SerializedConfig) {
   const { clearMocks, mockReset, restoreMocks, unstubEnvs, unstubGlobals }
     = config
 
-  // since each function calls another, we can just call one
   if (restoreMocks) {
     vi.restoreAllMocks()
   }
-  else if (mockReset) {
+  if (mockReset) {
     vi.resetAllMocks()
   }
-  else if (clearMocks) {
+  if (clearMocks) {
     vi.clearAllMocks()
   }
 

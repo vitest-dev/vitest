@@ -63,8 +63,19 @@ export default <Environment>{
 
     const { keys, originals } = populateGlobal(global, win, {
       bindFunctions: true,
-      // jsdom doesn't support Request and Response, but happy-dom does
-      additionalKeys: ['Request', 'Response', 'MessagePort', 'fetch'],
+      // jsdom doesn't support fetch API, but happy-dom does
+      additionalKeys: [
+        'Request',
+        'Response',
+        'MessagePort',
+        'fetch',
+        'Headers',
+        'AbortController',
+        'AbortSignal',
+        'URL',
+        'URLSearchParams',
+        'FormData',
+      ],
     })
 
     return {
