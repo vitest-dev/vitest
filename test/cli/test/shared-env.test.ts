@@ -17,15 +17,11 @@ test('document is the same', () => {
     '2.test.js': testCode,
     '3.test.js': testCode,
     '4.test.js': testCode,
-    './setup.js': `
-globalThis.__shared = true
-    `,
     'vitest.config.js': {
       test: {
         environment: 'happy-dom',
         globals: true,
         isolate: false,
-        setupFiles: ['./setup.js'],
       },
     },
   }, { sequence: { sequencer: StableTestFileOrderSorter }, maxWorkers })
