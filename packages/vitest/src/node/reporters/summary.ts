@@ -289,7 +289,7 @@ export class SummaryReporter implements Reporter {
 
       const slowTasks = [
         testFile.hook,
-        ...Array.from(testFile.tests.values()),
+        ...testFile.tests.values(),
       ].filter((t): t is SlowTask => t != null && t.visible)
 
       for (const [index, task] of slowTasks.entries()) {
