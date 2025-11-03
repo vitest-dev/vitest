@@ -503,6 +503,35 @@ export default ({ mode }: { mode: string }) => {
                 text: 'attachmentsDir',
                 link: '/config/attachmentsdir',
               },
+              // TODO: sort, and add files
+              {
+                text: 'hideSkippedTests',
+                link: '/config/hideskippedtests',
+              },
+              {
+                text: 'mode',
+                link: '/config/mode',
+              },
+              {
+                text: 'expandSnapshotDiff',
+                link: '/config/expandsnapshotdiff',
+              },
+              {
+                text: 'disableConsoleIntercept',
+                link: '/config/disableconsoleintercept',
+              },
+              {
+                text: 'clearScreen',
+                link: '/config/clearscreen',
+              },
+              {
+                text: 'configLoader',
+                link: '/config/configloader',
+              },
+              {
+                text: 'standalone',
+                link: '/config/standalone',
+              },
             ],
           },
           {
