@@ -638,6 +638,7 @@ describe('toBeOneOf()', () => {
     expect('apple').toBeOneOf(['apple', 'banana', 'orange'])
     expect('apple').toBeOneOf(new Set(['apple', 'banana', 'orange']))
     expect('apple').toBeOneOf([expect.any(String)])
+    expect('apple').toBeOneOf(new Set([expect.any(String)]))
     expect(true).toBeOneOf([true, false])
     expect(true).toBeOneOf([expect.any(Boolean)])
     expect(null).toBeOneOf([expect.any(Object)])
@@ -650,6 +651,7 @@ describe('toBeOneOf()', () => {
     expect('mango').not.toBeOneOf(['apple', 'banana', 'orange'])
     expect('mango').not.toBeOneOf(new Set(['apple', 'banana', 'orange']))
     expect('mango').not.toBeOneOf([expect.any(Number)])
+    expect('mango').not.toBeOneOf(new Set([expect.any(Number)]))
     expect(null).not.toBeOneOf([undefined])
   })
 
@@ -659,6 +661,7 @@ describe('toBeOneOf()', () => {
     expect('mango').toBeOneOf(['apple', 'banana', 'orange'])
     expect('mango').toBeOneOf(new Set(['apple', 'banana', 'orange']))
     expect('mango').toBeOneOf([expect.any(Number)])
+    expect('mango').toBeOneOf(new Set([expect.any(Number)]))
     expect(null).toBeOneOf([undefined])
   })
 

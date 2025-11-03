@@ -40,7 +40,7 @@ ${printReceived(actual)}`,
         )
     }
     else if (expected instanceof Set) {
-      pass = expected.size === 0 || expected.has(actual)
+      pass = expected.size === 0 || expected.has(actual) || [expected].some(item => equals(item, actual, customTesters))
     }
     else {
       throw new TypeError(
