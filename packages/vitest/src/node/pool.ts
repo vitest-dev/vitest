@@ -147,15 +147,12 @@ export function createPool(ctx: Vitest): ProcessPool {
 
         taskGroup.push({
           context: {
-            pool,
-            config: project.serializedConfig,
             files: specs.map(spec => ({ filepath: spec.moduleId, testLocations: spec.testLines })),
             invalidates,
-            environment,
-            projectName: project.name,
             providedContext: project.getProvidedContext(),
             workerId: workerId++,
           },
+          environment,
           project,
           env,
           execArgv,
