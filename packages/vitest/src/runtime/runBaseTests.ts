@@ -25,15 +25,17 @@ export async function run(
 ): Promise<void> {
   const workerState = getWorkerState()
 
-  if (!workerState.config.snapshotOptions.snapshotEnvironment) {
-    workerState.config.snapshotOptions.snapshotEnvironment
-      = await resolveSnapshotEnvironment(config, moduleRunner)
-  }
-
-  await setupGlobalEnv(config, environment)
-  await startCoverageInsideWorker(config.coverage, moduleRunner, { isolate: config.isolate })
-
-  const testRunner = await resolveTestRunner(config, moduleRunner)
+  const [testRunner] = await Promise.all([
+    resolveTestRunner(config, moduleRunner),
+    setupGlobalEnv(config, environment),
+    startCoverageInsideWorker(config.coverage, moduleRunner, { isolate: config.isolate }),
+    (async () => {
+      if (!workerState.config.snapshotOptions.snapshotEnvironment) {
+        workerState.config.snapshotOptions.snapshotEnvironment
+          = await resolveSnapshotEnvironment(config, moduleRunner)
+      }
+    })(),
+  ])
 
   workerState.onCancel((reason) => {
     closeInspector(config)
