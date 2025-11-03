@@ -724,8 +724,13 @@ Similar as `vmThreads` pool but uses `child_process` instead of `worker_threads`
 
 - **Type:** `string[]`
 - **Default:** `[]`
+- **CLI:** `--execArgv=<flag-1> --execArgv=<flag-2>`
 
 Pass additional arguments to `node` in the runner worker. See [Command-line API | Node.js](https://nodejs.org/docs/latest/api/cli.html) for more information.
+
+```sh
+vitest --execArgv=--cpu-prof --execArgv=--cpu-prof-dir=./cpu-profile
+```
 
 :::warning
 Be careful when using, it as some options may crash worker, e.g. --prof, --title. See https://github.com/nodejs/node/issues/41103.
