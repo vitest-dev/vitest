@@ -19,10 +19,10 @@ const fileMap = new FileMap()
 const packageCache = new Map<string, string>()
 
 export async function runVmTests(method: 'run' | 'collect', state: WorkerGlobalState): Promise<void> {
-  const { environment: workerEnvironment, ctx, rpc } = state
+  const { ctx, rpc } = state
 
   const beforeEnvironmentTime = performance.now()
-  const { environment } = await loadEnvironment(workerEnvironment.name, ctx.config.root, rpc)
+  const { environment } = await loadEnvironment(ctx.environment.name, ctx.config.root, rpc)
   state.environment = environment
 
   if (!environment.setupVM) {
