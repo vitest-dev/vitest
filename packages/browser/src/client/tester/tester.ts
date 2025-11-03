@@ -103,6 +103,7 @@ async function prepareTestEnvironment(options: PrepareOptions) {
 
   state.metaEnv = import.meta.env
   state.onCancel = onCancel
+  state.ctx.rpc = rpc as any
   state.rpc = rpc as any
 
   const interceptor = createModuleMockerInterceptor()

@@ -312,7 +312,7 @@ export async function initiateRunner(
   })
   cachedRunner = runner
 
-  onCancel.then((reason) => {
+  onCancel((reason) => {
     runner.cancel?.(reason)
   })
 
