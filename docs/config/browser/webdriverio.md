@@ -1,7 +1,7 @@
 # Configuring WebdriverIO
 
 ::: info Playwright vs WebdriverIO
-If you do not already use WebdriverIO in your project, we recommend starting with [Playwright](/guide/browser/playwright) as it is easier to configure and has more flexible API.
+If you do not already use WebdriverIO in your project, we recommend starting with [Playwright](/config/browser/playwright) as it is easier to configure and has more flexible API.
 :::
 
 To run tests using WebdriverIO, you need to install the [`@vitest/browser-webdriverio`](https://www.npmjs.com/package/@vitest/browser-webdriverio) npm package and specify its `webdriverio` export in the `test.browser.provider` property of your config:
@@ -60,5 +60,5 @@ You can find most available options in the [WebdriverIO documentation](https://w
 ::: tip
 Most useful options are located on `capabilities` object. WebdriverIO allows nested capabilities, but Vitest will ignore those options because we rely on a different mechanism to spawn several browsers.
 
-Note that Vitest will ignore `capabilities.browserName` — use [`test.browser.instances.browser`](/guide/browser/config#browser-capabilities-name) instead.
+Note that Vitest will ignore `capabilities.browserName` — use [`test.browser.instances.browser`](/config/browser/capabilities-name) instead.
 :::

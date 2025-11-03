@@ -148,7 +148,7 @@ When defined, Vitest will run all matched files with `import.meta.vitest` inside
 
 - **Type:** `string | { label: string, color?: LabelColor }`
 
-Assign a custom name to the test project or Vitest process. The name will be visible in the CLI and UI, and available in the Node.js API via [`project.name`](/advanced/api/test-project#name).
+Assign a custom name to the test project or Vitest process. The name will be visible in the CLI and UI, and available in the Node.js API via [`project.name`](/api/advanced/test-project#name).
 
 Color used by CLI and UI can be changed by providing an object with `color` property.
 
@@ -358,7 +358,7 @@ export default defineConfig({
 - **Type**: `VitestRunnerConstructor`
 - **Default**: `node`, when running tests, or `benchmark`, when running benchmarks
 
-Path to a custom test runner. This is an advanced feature and should be used with custom library runners. You can read more about it in [the documentation](/advanced/runner).
+Path to a custom test runner. This is an advanced feature and should be used with custom library runners. You can read more about it in [the documentation](/api/advanced/runner).
 
 ### benchmark
 
@@ -1414,7 +1414,7 @@ Listen to port and serve API. When set to true, the default port is 51204
 - **Default:** `{ enabled: false }`
 - **CLI:** `--browser=<name>`, `--browser.name=chrome --browser.headless`
 
-Configuration for running browser tests. Please, refer to the ["Browser Config Reference"](/guide/browser/config) article.
+Configuration for running browser tests. Please, refer to the ["Browser Config Reference"](/config/browser/) article.
 
 ### clearMocks
 

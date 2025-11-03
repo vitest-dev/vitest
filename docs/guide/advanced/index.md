@@ -32,7 +32,7 @@ const vitest = await startVitest('test')
 await vitest.close()
 ```
 
-`startVitest` function returns [`Vitest`](/advanced/api/vitest) instance if tests can be started.
+`startVitest` function returns [`Vitest`](/api/advanced/vitest) instance if tests can be started.
 
 If watch mode is not enabled, Vitest will call `close` method automatically.
 
@@ -42,7 +42,7 @@ You can pass down a list of filters as a second argument. Vitest will run only t
 
 Additionally, you can use the third argument to pass in CLI arguments, which will override any test config options. Alternatively, you can pass in the complete Vite config as the fourth argument, which will take precedence over any other user-defined options.
 
-After running the tests, you can get the results from the [`state.getTestModules`](/advanced/api/test-module) API:
+After running the tests, you can get the results from the [`state.getTestModules`](/api/advanced/test-module) API:
 
 ```ts
 import type { TestModule } from 'vitest/node'
@@ -53,7 +53,7 @@ console.log(vitest.state.getTestModules()) // [TestModule]
 ```
 
 ::: tip
-The ["Running Tests"](/advanced/guide/tests#startvitest) guide has a usage example.
+The ["Running Tests"](/guide/advanced/tests#startvitest) guide has a usage example.
 :::
 
 ## createVitest
@@ -67,7 +67,7 @@ function createVitest(
 ): Promise<Vitest>
 ```
 
-You can create Vitest instance by using `createVitest` function. It returns the same [`Vitest`](/advanced/api/vitest) instance as `startVitest`, but it doesn't start tests and doesn't validate installed packages.
+You can create Vitest instance by using `createVitest` function. It returns the same [`Vitest`](/api/advanced/vitest) instance as `startVitest`, but it doesn't start tests and doesn't validate installed packages.
 
 ```js
 import { createVitest } from 'vitest/node'
@@ -78,7 +78,7 @@ const vitest = await createVitest('test', {
 ```
 
 ::: tip
-The ["Running Tests"](/advanced/guide/tests#createvitest) guide has a usage example.
+The ["Running Tests"](/guide/advanced/tests#createvitest) guide has a usage example.
 :::
 
 ## resolveConfig

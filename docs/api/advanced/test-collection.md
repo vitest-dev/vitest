@@ -1,6 +1,6 @@
 # TestCollection
 
-`TestCollection` represents a collection of top-level [suites](/advanced/api/test-suite) and [tests](/advanced/api/test-case) in a suite or a module. It also provides useful methods to iterate over itself.
+`TestCollection` represents a collection of top-level [suites](/api/advanced/test-suite) and [tests](/api/advanced/test-case) in a suite or a module. It also provides useful methods to iterate over itself.
 
 ::: info
 Most methods return an iterator instead of an array for better performance in case you don't need every item in the collection. If you prefer working with array, you can spread the iterator: `[...children.allSuites()]`.

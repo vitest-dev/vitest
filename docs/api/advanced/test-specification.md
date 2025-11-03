@@ -2,7 +2,7 @@
 
 The `TestSpecification` class describes what module to run as a test and its parameters.
 
-You can only create a specification by calling [`createSpecification`](/advanced/api/test-project#createspecification) method on a test project:
+You can only create a specification by calling [`createSpecification`](/api/advanced/test-project#createspecification) method on a test project:
 
 ```ts
 const specification = project.createSpecification(
@@ -15,11 +15,11 @@ const specification = project.createSpecification(
 
 ## taskId
 
-[Test module's](/advanced/api/test-suite#id) identifier.
+[Test module's](/api/advanced/test-suite#id) identifier.
 
 ## project
 
-This references the [`TestProject`](/advanced/api/test-project) that the test module belongs to.
+This references the [`TestProject`](/api/advanced/test-project) that the test module belongs to.
 
 ## moduleId
 
@@ -33,7 +33,7 @@ The ID of the module in Vite's module graph. Usually, it's an absolute file path
 
 ## testModule
 
-Instance of [`TestModule`](/advanced/api/test-module) associated with the specification. If test wasn't queued yet, this will be `undefined`.
+Instance of [`TestModule`](/api/advanced/test-module) associated with the specification. If test wasn't queued yet, this will be `undefined`.
 
 ## pool <Badge type="warning">experimental</Badge> {#pool}
 

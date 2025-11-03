@@ -51,12 +51,12 @@ export default defineConfig({
 :::
 
 ::: info
-If the [root project](/advanced/api/vitest#getroottestproject) is not part of user projects, its `name` will not be resolved.
+If the [root project](/api/advanced/vitest#getroottestproject) is not part of user projects, its `name` will not be resolved.
 :::
 
 ## vitest
 
-`vitest` references the global [`Vitest`](/advanced/api/vitest) process.
+`vitest` references the global [`Vitest`](/api/advanced/vitest) process.
 
 ## serializedConfig
 
@@ -78,7 +78,7 @@ project.serializedConfig === project.serializedConfig // ❌
 
 ## globalConfig
 
-The test config that [`Vitest`](/advanced/api/vitest) was initialized with. If this is the [root project](/advanced/api/vitest#getroottestproject), `globalConfig` and `config` will reference the same object. This config is useful for values that cannot be set on the project level, like `coverage` or `reporters`.
+The test config that [`Vitest`](/api/advanced/vitest) was initialized with. If this is the [root project](/api/advanced/vitest#getroottestproject), `globalConfig` and `config` will reference the same object. This config is useful for values that cannot be set on the project level, like `coverage` or `reporters`.
 
 ```ts
 import type { ResolvedConfig } from 'vitest/node'
@@ -179,7 +179,7 @@ function createSpecification(
 ): TestSpecification
 ```
 
-Create a [test specification](/advanced/api/test-specification) that can be used in [`vitest.runTestSpecifications`](/advanced/api/vitest#runtestspecifications). Specification scopes the test file to a specific `project` and test `locations` (optional). Test [locations](/advanced/api/test-case#location) are code lines where the test is defined in the source code. If locations are provided, Vitest will only run tests defined on those lines. Note that if [`testNamePattern`](/config/#testnamepattern) is defined, then it will also be applied.
+Create a [test specification](/api/advanced/test-specification) that can be used in [`vitest.runTestSpecifications`](/api/advanced/vitest#runtestspecifications). Specification scopes the test file to a specific `project` and test `locations` (optional). Test [locations](/api/advanced/test-case#location) are code lines where the test is defined in the source code. If locations are provided, Vitest will only run tests defined on those lines. Note that if [`testNamePattern`](/config/#testnamepattern) is defined, then it will also be applied.
 
 ```ts
 import { createVitest } from 'vitest/node'
@@ -195,7 +195,7 @@ await vitest.runTestSpecifications([specification])
 ```
 
 ::: warning
-`createSpecification` expects resolved [module ID](/advanced/api/test-specification#moduleid). It doesn't auto-resolve the file or check that it exists on the file system.
+`createSpecification` expects resolved [module ID](/api/advanced/test-specification#moduleid). It doesn't auto-resolve the file or check that it exists on the file system.
 
 Also note that `project.createSpecification` always returns a new instance.
 :::
@@ -225,7 +225,7 @@ function globTestFiles(filters?: string[]): {
 
 Globs all test files. This function returns an object with regular tests and typecheck tests.
 
-This method accepts `filters`. Filters can only a part of the file path, unlike in other methods on the [`Vitest`](/advanced/api/vitest) instance:
+This method accepts `filters`. Filters can only a part of the file path, unlike in other methods on the [`Vitest`](/api/advanced/vitest) instance:
 
 ```js
 project.globTestFiles(['foo']) // ✅
@@ -298,7 +298,7 @@ Internally, Vitest uses this method to import global setups, custom coverage pro
 function onTestsRerun(cb: OnTestsRerunHandler): void
 ```
 
-This is a shorthand for [`project.vitest.onTestsRerun`](/advanced/api/vitest#ontestsrerun). It accepts a callback that will be awaited when the tests have been scheduled to rerun (usually, due to a file change).
+This is a shorthand for [`project.vitest.onTestsRerun`](/api/advanced/vitest#ontestsrerun). It accepts a callback that will be awaited when the tests have been scheduled to rerun (usually, due to a file change).
 
 ```ts
 project.onTestsRerun((specs) => {

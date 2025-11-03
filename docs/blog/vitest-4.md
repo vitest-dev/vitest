@@ -175,7 +175,7 @@ await expect.element(page.getByText('To')).toBeInViewport({ ratio: 0.5 })
 
 ## Playwright Traces Support
 
-Vitest 4 supports generating [Playwright Traces](/guide/browser/trace-view). To enable tracing, you need to set the [`trace`](/guide/browser/config#browser-trace) option in the `test.browser` configuration or pass down `--browser.trace=on` option (`off`, `on-first-retry`, `on-all-retries`, `retain-on-failure` are also available).
+Vitest 4 supports generating [Playwright Traces](/guide/browser/trace-view). To enable tracing, you need to set the [`trace`](/config/browser/trace) option in the `test.browser` configuration or pass down `--browser.trace=on` option (`off`, `on-first-retry`, `on-all-retries`, `retain-on-failure` are also available).
 
 ![Playwright Traces interface](/traces.png)
 
@@ -205,7 +205,7 @@ await expect.element(page.getByText('Item')).toHaveLength(3)
 
 The [vscode extension](https://vitest.dev/vscode) now supports "Debug Test" button when running browser tests.
 
-If you prefer configuring the debug options yourself, you can start Vitest with the `--inspect` flag (available with `playwright` and `webdriverio`) and connect to [DevTools](chrome://inspect/) manually. In this case Vitest will also disable the new [`trackUnhandledErrors`](/guide/browser/config#browser-trackunhandlederrors) option automatically.
+If you prefer configuring the debug options yourself, you can start Vitest with the `--inspect` flag (available with `playwright` and `webdriverio`) and connect to [DevTools](chrome://inspect/) manually. In this case Vitest will also disable the new [`trackUnhandledErrors`](/config/browser/trackunhandlederrors) option automatically.
 
 ## Type-Aware Hooks
 
@@ -318,14 +318,14 @@ export default defineConfig({
 
 ## New API Methods
 
-Vitest 4 comes with new advanced public [API methods](/advanced/api/vitest):
+Vitest 4 comes with new advanced public [API methods](/api/advanced/vitest):
 
-- [`experimental_parseSpecifications`](/advanced/api/vitest#parsespecification) allows you to parse a test file without running it.
-- [`watcher`](/advanced/api/vitest#watcher) exposes methods that can be used when you disable the default Vitest watcher.
-- [`enableCoverage`](/advanced/api/vitest#enablecoverage) and [`disableCoverage`](/advanced/api/vitest#disablecoverage) allow you to enable and disable coverage dynamically.
-- [`getSeed`](/advanced/api/vitest#enablecoverage) returns the seed value, if tests run at random.
-- [`getGlobalTestNamePattern`](/advanced/api/vitest#getglobaltestnamepattern) returns the current test name pattern.
-- [`waitForTestRunEnd`](/advanced/api/vitest#waitfortestrunend) returns a promise that resolves when all tests have finished running.
+- [`experimental_parseSpecifications`](/api/advanced/vitest#parsespecification) allows you to parse a test file without running it.
+- [`watcher`](/api/advanced/vitest#watcher) exposes methods that can be used when you disable the default Vitest watcher.
+- [`enableCoverage`](/api/advanced/vitest#enablecoverage) and [`disableCoverage`](/api/advanced/vitest#disablecoverage) allow you to enable and disable coverage dynamically.
+- [`getSeed`](/api/advanced/vitest#enablecoverage) returns the seed value, if tests run at random.
+- [`getGlobalTestNamePattern`](/api/advanced/vitest#getglobaltestnamepattern) returns the current test name pattern.
+- [`waitForTestRunEnd`](/api/advanced/vitest#waitfortestrunend) returns a promise that resolves when all tests have finished running.
 
 ## Breaking changes
 

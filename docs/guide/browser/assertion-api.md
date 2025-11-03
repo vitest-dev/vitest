@@ -1082,7 +1082,7 @@ function toMatchScreenshot(
 
 ::: tip
 The `toMatchScreenshot` assertion can be configured globally in your
-[Vitest config](/guide/browser/config#browser-expect-tomatchscreenshot).
+[Vitest config](/config/browser/expect#tomatchscreenshot).
 :::
 
 This assertion allows you to perform visual regression testing by comparing

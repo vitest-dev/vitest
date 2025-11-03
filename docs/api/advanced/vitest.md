@@ -53,7 +53,7 @@ This is a global [`ViteDevServer`](https://vite.dev/guide/api-javascript#vitedev
 Public `state` is an experimental API (except `vitest.state.getReportedEntity`). Breaking changes might not follow SemVer, please pin Vitest's version when using it.
 :::
 
-Global state stores information about the current tests. It uses the same API from `@vitest/runner` by default, but we recommend using the [Reported Tasks API](/advanced/reporters#reported-tasks) instead by calling `state.getReportedEntity()` on the `@vitest/runner` API:
+Global state stores information about the current tests. It uses the same API from `@vitest/runner` by default, but we recommend using the [Reported Tasks API](/api/advanced/reporters#reported-tasks) instead by calling `state.getReportedEntity()` on the `@vitest/runner` API:
 
 ```ts
 const task = vitest.state.idMap.get(taskId) // old API
@@ -78,7 +78,7 @@ The instance of a Vitest watcher with useful methods to track file changes and r
 
 ## projects
 
-An array of [test projects](/advanced/api/test-project) that belong to user's projects. If the user did not specify a them, this array will only contain a [root project](#getrootproject).
+An array of [test projects](/api/advanced/test-project) that belong to user's projects. If the user did not specify a them, this array will only contain a [root project](#getrootproject).
 
 Vitest will ensure that there is always at least one project in this array. If the user specifies a non-existent `--project` name, Vitest will throw an error before this array is defined.
 
@@ -132,7 +132,7 @@ declare module 'vitest' {
 ```
 
 ::: warning
-Technically, `provide` is a method of [`TestProject`](/advanced/api/test-project), so it is limited to the specific project. However, all projects inherit the values from the root project which makes `vitest.provide` universal way of passing down values to tests.
+Technically, `provide` is a method of [`TestProject`](/api/advanced/test-project), so it is limited to the specific project. However, all projects inherit the values from the root project which makes `vitest.provide` universal way of passing down values to tests.
 :::
 
 ## getProvidedContext
@@ -165,7 +165,7 @@ function globTestSpecifications(
 ): Promise<TestSpecification[]>
 ```
 
-This method constructs new [test specifications](/advanced/api/test-specification) by collecting every test in all projects with [`project.globTestFiles`](/advanced/api/test-project#globtestfiles). It accepts string filters to match the test files - these are the same filters that [CLI supports](/guide/filtering#cli).
+This method constructs new [test specifications](/api/advanced/test-specification) by collecting every test in all projects with [`project.globTestFiles`](/api/advanced/test-project#globtestfiles). It accepts string filters to match the test files - these are the same filters that [CLI supports](/guide/filtering#cli).
 
 This method automatically caches all test specifications. When you call [`getModuleSpecifications`](#getmodulespecifications) next time, it will return the same specifications unless [`clearSpecificationsCache`](#clearspecificationscache) was called before that.
 
@@ -187,7 +187,7 @@ function getRelevantTestSpecifications(
 ): Promise<TestSpecification[]>
 ```
 
-This method resolves every test specification by calling [`project.globTestFiles`](/advanced/api/test-project#globtestfiles). It accepts string filters to match the test files - these are the same filters that [CLI supports](/guide/filtering#cli). If `--changed` flag was specified, the list will be filtered to include only files that changed. `getRelevantTestSpecifications` doesn't run any test files.
+This method resolves every test specification by calling [`project.globTestFiles`](/api/advanced/test-project#globtestfiles). It accepts string filters to match the test files - these are the same filters that [CLI supports](/guide/filtering#cli). If `--changed` flag was specified, the list will be filtered to include only files that changed. `getRelevantTestSpecifications` doesn't run any test files.
 
 ::: warning
 This method can be slow because it needs to filter `--changed` flags. Do not use it if you just need a list of test files.
@@ -206,7 +206,7 @@ Merge reports from multiple runs located in the specified directory (value from 
 
 Note that the `directory` will always be resolved relative to the working directory.
 
-This method is called automatically by [`startVitest`](/advanced/guide/tests) if `config.mergeReports` is set.
+This method is called automatically by [`startVitest`](/guide/advanced/tests) if `config.mergeReports` is set.
 
 ## collect
 
@@ -214,9 +214,9 @@ This method is called automatically by [`startVitest`](/advanced/guide/tests) if
 function collect(filters?: string[]): Promise<TestRunResult>
 ```
 
-Execute test files without running test callbacks. `collect` returns unhandled errors and an array of [test modules](/advanced/api/test-module). It accepts string filters to match the test files - these are the same filters that [CLI supports](/guide/filtering#cli).
+Execute test files without running test callbacks. `collect` returns unhandled errors and an array of [test modules](/api/advanced/test-module). It accepts string filters to match the test files - these are the same filters that [CLI supports](/guide/filtering#cli).
 
-This method resolves tests specifications based on the config `include`, `exclude`, and `includeSource` values. Read more at [`project.globTestFiles`](/advanced/api/test-project#globtestfiles). If `--changed` flag was specified, the list will be filtered to include only files that changed.
+This method resolves tests specifications based on the config `include`, `exclude`, and `includeSource` values. Read more at [`project.globTestFiles`](/api/advanced/test-project#globtestfiles). If `--changed` flag was specified, the list will be filtered to include only files that changed.
 
 ::: warning
 Note that Vitest doesn't use static analysis to collect tests. Vitest will run every test file in isolation, just like it runs regular tests.
@@ -236,7 +236,7 @@ Initialize reporters, the coverage provider, and run tests. This method accepts 
 This method should not be called if [`vitest.init()`](#init) is also invoked. Use [`runTestSpecifications`](#runtestspecifications) or [`rerunTestSpecifications`](#reruntestspecifications) instead if you need to run tests after Vitest was initialised.
 :::
 
-This method is called automatically by [`startVitest`](/advanced/guide/tests) if `config.mergeReports` and `config.standalone` are not set.
+This method is called automatically by [`startVitest`](/guide/advanced/tests) if `config.mergeReports` and `config.standalone` are not set.
 
 ## init
 
@@ -252,7 +252,7 @@ Internally, this method is called only if [`--standalone`](/guide/cli#standalone
 This method should not be called if [`vitest.start()`](#start) is also invoked.
 :::
 
-This method is called automatically by [`startVitest`](/advanced/guide/tests) if `config.standalone` is set.
+This method is called automatically by [`startVitest`](/guide/advanced/tests) if `config.standalone` is set.
 
 ## getModuleSpecifications
 
@@ -262,7 +262,7 @@ function getModuleSpecifications(moduleId: string): TestSpecification[]
 
 Returns a list of test specifications related to the module ID. The ID should already be resolved to an absolute file path. If ID doesn't match `include` or `includeSource` patterns, the returned array will be empty.
 
-This method can return already cached specifications based on the `moduleId` and `pool`. But note that [`project.createSpecification`](/advanced/api/test-project#createspecification) always returns a new instance and it's not cached automatically. However, specifications are automatically cached when [`runTestSpecifications`](#runtestspecifications) is called.
+This method can return already cached specifications based on the `moduleId` and `pool`. But note that [`project.createSpecification`](/api/advanced/test-project#createspecification) always returns a new instance and it's not cached automatically. However, specifications are automatically cached when [`runTestSpecifications`](#runtestspecifications) is called.
 
 ::: warning
 As of Vitest 3, this method uses a cache to check if the file is a test. To make sure that the cache is not empty, call [`globTestSpecifications`](#globtestspecifications) at least once.
@@ -285,7 +285,7 @@ function runTestSpecifications(
 ): Promise<TestRunResult>
 ```
 
-This method runs every test based on the received [specifications](/advanced/api/test-specification). The second argument, `allTestsRun`, is used by the coverage provider to determine if it needs to include uncovered files in report.
+This method runs every test based on the received [specifications](/api/advanced/test-specification). The second argument, `allTestsRun`, is used by the coverage provider to determine if it needs to include uncovered files in report.
 
 ::: warning
 This method doesn't trigger `onWatcherRerun`, `onWatcherStart` and `onTestsRerun` callbacks. If you are rerunning tests based on the file change, consider using [`rerunTestSpecifications`](#reruntestspecifications) instead.
@@ -318,7 +318,7 @@ function collectTests(
 ): Promise<TestRunResult>
 ```
 
-Execute test files without running test callbacks. `collectTests` returns unhandled errors and an array of [test modules](/advanced/api/test-module).
+Execute test files without running test callbacks. `collectTests` returns unhandled errors and an array of [test modules](/api/advanced/test-module).
 
 This method works exactly the same as [`collect`](#collect), but you need to provide test specifications yourself.
 
@@ -502,7 +502,7 @@ vitest.onFilterWatchedSpecification(specification =>
 )
 ```
 
-Vitest can create different specifications for the same file depending on the `pool` or `locations` options, so do not rely on the reference. Vitest can also return cached specification from [`vitest.getModuleSpecifications`](#getmodulespecifications) - the cache is based on the `moduleId` and `pool`. Note that [`project.createSpecification`](/advanced/api/test-project#createspecification) always returns a new instance.
+Vitest can create different specifications for the same file depending on the `pool` or `locations` options, so do not rely on the reference. Vitest can also return cached specification from [`vitest.getModuleSpecifications`](#getmodulespecifications) - the cache is based on the `moduleId` and `pool`. Note that [`project.createSpecification`](/api/advanced/test-project#createspecification) always returns a new instance.
 
 ## matchesProjectFilter <Version>3.1.0</Version> {#matchesprojectfilter}
 

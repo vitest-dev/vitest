@@ -8,14 +8,14 @@ title: browser.enabled | Config
 - **Default:** `false`
 - **CLI:** `--browser`, `--browser.enabled=false`
 
-Enabling this flag makes Vitest run all tests in a [browser](/guide/browser) by default. If you are configuring other browser options via the CLI, you can use `--browser.enabled` alongside them instead of `--browser`:
+Enabling this flag makes Vitest run all tests in a [browser](/guide/browser/) by default. If you are configuring other browser options via the CLI, you can use `--browser.enabled` alongside them instead of `--browser`:
 
 ```sh
 vitest --browser.enabled --browser.headless
 ```
 
 ::: warning
-To enable [Browser Mode](/guide/browser), you must also specify the [`provider`](/config/browser/provider) and at least one [`instance`](/config/browser/instances). Available providers:
+To enable [Browser Mode](/guide/browser/), you must also specify the [`provider`](/config/browser/provider) and at least one [`instance`](/config/browser/instances). Available providers:
 
 - [playwright](/config/browser/playwright)
 - [webdriverio](/config/browser/webdriverio)

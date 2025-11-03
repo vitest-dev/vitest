@@ -1,6 +1,6 @@
 # TestModule
 
-The `TestModule` class represents a single module in a single project. This class is only available in the main thread. Refer to the ["Runner API"](/advanced/runner#tasks) if you are working with runtime tasks.
+The `TestModule` class represents a single module in a single project. This class is only available in the main thread. Refer to the ["Runner API"](/api/advanced/runner#tasks) if you are working with runtime tasks.
 
 The `TestModule` instance always has a `type` property with the value of `module`. You can use it to distinguish between different task types:
 
@@ -11,7 +11,7 @@ if (task.type === 'module') {
 ```
 
 ::: warning Extending Suite Methods
-The `TestModule` class inherits all methods and properties from the [`TestSuite`](/advanced/api/test-suite). This guide will only list methods and properties unique to the `TestModule`.
+The `TestModule` class inherits all methods and properties from the [`TestSuite`](/api/advanced/test-suite). This guide will only list methods and properties unique to the `TestModule`.
 :::
 
 ## moduleId
@@ -40,7 +40,7 @@ Module id relative to the project. This is the same as `task.name` in the deprec
 function state(): TestModuleState
 ```
 
-Works the same way as [`testSuite.state()`](/advanced/api/test-suite#state), but can also return `queued` if module wasn't executed yet.
+Works the same way as [`testSuite.state()`](/api/advanced/test-suite#state), but can also return `queued` if module wasn't executed yet.
 
 ## meta <Version>3.1.0</Version> {#meta}
 
@@ -48,7 +48,7 @@ Works the same way as [`testSuite.state()`](/advanced/api/test-suite#state), but
 function meta(): TaskMeta
 ```
 
-Custom [metadata](/advanced/metadata) that was attached to the module during its execution or collection. The meta can be attached by assigning a property to the `task.meta` object during a test run:
+Custom [metadata](/api/advanced/metadata) that was attached to the module during its execution or collection. The meta can be attached by assigning a property to the `task.meta` object during a test run:
 
 ```ts {5,10}
 import { test } from 'vitest'

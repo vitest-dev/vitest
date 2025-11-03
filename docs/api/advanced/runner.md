@@ -150,7 +150,7 @@ Snapshot support and some other features depend on the runner. If you don't want
 ## Tasks
 
 ::: warning
-The "Runner Tasks API" is experimental and should primarily be used only in the test runtime. Vitest also exposes the ["Reported Tasks API"](/advanced/api/test-module), which should be preferred when working in the main thread (inside the reporter, for example).
+The "Runner Tasks API" is experimental and should primarily be used only in the test runtime. Vitest also exposes the ["Reported Tasks API"](/api/advanced/test-module), which should be preferred when working in the main thread (inside the reporter, for example).
 
 The team is currently discussing if "Runner Tasks" should be replaced by "Reported Tasks" in the future.
 :::

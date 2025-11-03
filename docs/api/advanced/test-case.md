@@ -1,6 +1,6 @@
 # TestCase
 
-The `TestCase` class represents a single test. This class is only available in the main thread. Refer to the ["Runner API"](/advanced/runner#tasks) if you are working with runtime tasks.
+The `TestCase` class represents a single test. This class is only available in the main thread. Refer to the ["Runner API"](/api/advanced/runner#tasks) if you are working with runtime tasks.
 
 The `TestCase` instance always has a `type` property with the value of `test`. You can use it to distinguish between different task types:
 
@@ -12,11 +12,11 @@ if (task.type === 'test') {
 
 ## project
 
-This references the [`TestProject`](/advanced/api/test-project) that the test belongs to.
+This references the [`TestProject`](/api/advanced/test-project) that the test belongs to.
 
 ## module
 
-This is a direct reference to the [`TestModule`](/advanced/api/test-module) where the test is defined.
+This is a direct reference to the [`TestModule`](/api/advanced/test-module) where the test is defined.
 
 ## name
 
@@ -49,7 +49,7 @@ describe('the validation logic', () => {
 
 ## id
 
-This is test's unique identifier. This ID is deterministic and will be the same for the same test across multiple runs. The ID is based on the [project](/advanced/api/test-project) name, module ID and test order.
+This is test's unique identifier. This ID is deterministic and will be the same for the same test across multiple runs. The ID is based on the [project](/api/advanced/test-project) name, module ID and test order.
 
 The ID looks like this:
 
@@ -93,7 +93,7 @@ test('the validation works correctly', () => {
 
 ## parent
 
-Parent [suite](/advanced/api/test-suite). If the test was called directly inside the [module](/advanced/api/test-module), the parent will be the module itself.
+Parent [suite](/api/advanced/test-suite). If the test was called directly inside the [module](/api/advanced/test-module), the parent will be the module itself.
 
 ## options
 
@@ -125,7 +125,7 @@ Checks if the test did not fail the suite. If the test is not finished yet or wa
 function meta(): TaskMeta
 ```
 
-Custom [metadata](/advanced/metadata) that was attached to the test during its execution. The meta can be attached by assigning a property to the `ctx.task.meta` object during a test run:
+Custom [metadata](/api/advanced/metadata) that was attached to the test during its execution. The meta can be attached by assigning a property to the `ctx.task.meta` object during a test run:
 
 ```ts {3,6}
 import { test } from 'vitest'

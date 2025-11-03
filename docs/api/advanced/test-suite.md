@@ -1,6 +1,6 @@
 # TestSuite
 
-The `TestSuite` class represents a single suite. This class is only available in the main thread. Refer to the ["Runner API"](/advanced/runner#tasks) if you are working with runtime tasks.
+The `TestSuite` class represents a single suite. This class is only available in the main thread. Refer to the ["Runner API"](/api/api/advanced/runner#tasks) if you are working with runtime tasks.
 
 The `TestSuite` instance always has a `type` property with the value of `suite`. You can use it to distinguish between different task types:
 
@@ -12,11 +12,11 @@ if (task.type === 'suite') {
 
 ## project
 
-This references the [`TestProject`](/advanced/api/test-project) that the test belongs to.
+This references the [`TestProject`](/api/advanced/test-project) that the test belongs to.
 
 ## module
 
-This is a direct reference to the [`TestModule`](/advanced/api/test-module) where the test is defined.
+This is a direct reference to the [`TestModule`](/api/advanced/test-module) where the test is defined.
 
 ## name
 
@@ -49,7 +49,7 @@ describe('the validation logic', () => {
 
 ## id
 
-This is suite's unique identifier. This ID is deterministic and will be the same for the same suite across multiple runs. The ID is based on the [project](/advanced/api/test-project) name, module ID and suite order.
+This is suite's unique identifier. This ID is deterministic and will be the same for the same suite across multiple runs. The ID is based on the [project](/api/advanced/test-project) name, module ID and suite order.
 
 The ID looks like this:
 
@@ -94,7 +94,7 @@ describe('the validation works correctly', () => {
 
 ## parent
 
-Parent suite. If the suite was called directly inside the [module](/advanced/api/test-module), the parent will be the module itself.
+Parent suite. If the suite was called directly inside the [module](/api/advanced/test-module), the parent will be the module itself.
 
 ## options
 
@@ -114,7 +114,7 @@ The options that suite was collected with.
 
 ## children
 
-This is a [collection](/advanced/api/test-collection) of all suites and tests inside the current suite.
+This is a [collection](/api/advanced/test-collection) of all suites and tests inside the current suite.
 
 ```ts
 for (const task of suite.children) {
@@ -129,7 +129,7 @@ for (const task of suite.children) {
 ```
 
 ::: warning
-Note that `suite.children` will only iterate the first level of nesting, it won't go deeper. If you need to iterate over all tests or suites, use [`children.allTests()`](/advanced/api/test-collection#alltests) or [`children.allSuites()`](/advanced/api/test-collection#allsuites). If you need to iterate over everything, use recursive function:
+Note that `suite.children` will only iterate the first level of nesting, it won't go deeper. If you need to iterate over all tests or suites, use [`children.allTests()`](/api/advanced/test-collection#alltests) or [`children.allSuites()`](/api/advanced/test-collection#allsuites). If you need to iterate over everything, use recursive function:
 
 ```ts
 function visit(collection: TestCollection) {
@@ -168,7 +168,7 @@ Checks the running state of the suite. Possible return values:
 - **skipped**: this suite was skipped during collection.
 
 ::: warning
-Note that [test module](/advanced/api/test-module) also has a `state` method that returns the same values, but it can also return an additional `queued` state if the module wasn't executed yet.
+Note that [test module](/api/advanced/test-module) also has a `state` method that returns the same values, but it can also return an additional `queued` state if the module wasn't executed yet.
 :::
 
 ## errors
@@ -197,7 +197,7 @@ Note that errors are serialized into simple objects: `instanceof Error` will alw
 function meta(): TaskMeta
 ```
 
-Custom [metadata](/advanced/metadata) that was attached to the suite during its execution or collection. The meta can be attached by assigning a property to the `suite.meta` object during a test run:
+Custom [metadata](/api/api/advanced/metadata) that was attached to the suite during its execution or collection. The meta can be attached by assigning a property to the `suite.meta` object during a test run:
 
 ```ts {7,12}
 import { test } from 'vitest'

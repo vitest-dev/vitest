@@ -35,7 +35,7 @@ bunx vitest init browser
 
 ### Manual Installation
 
-You can also install packages manually. Vitest always requires a provider to be defined. You can chose either [`preview`](/guide/browser/preview), [`playwright`](/guide/browser/playwright) or [`webdriverio`](/guide/browser/webdriverio).
+You can also install packages manually. Vitest always requires a provider to be defined. You can chose either [`preview`](/config/browser/preview), [`playwright`](/config/browser/playwright) or [`webdriverio`](/config/browser/webdriverio).
 
 If you want to just preview how your tests look, you can use the `preview` provider:
 

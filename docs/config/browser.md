@@ -89,7 +89,7 @@ List of available `browser` options:
 - [`browser.screenshotFailures`](#browser-screenshotfailures)
 - [`browser.provider`](#browser-provider)
 
-Under the hood, Vitest transforms these instances into separate [test projects](/advanced/api/test-project) sharing a single Vite server for better caching performance.
+Under the hood, Vitest transforms these instances into separate [test projects](/api/advanced/test-project) sharing a single Vite server for better caching performance.
 
 ## browser.headless
 
@@ -346,7 +346,7 @@ interface TraceOptions {
 ```
 
 ::: danger WARNING
-This option is supported only by the [**playwright**](/guide/browser/playwright) provider.
+This option is supported only by the [**playwright**](/config/browser/playwright) provider.
 :::
 
 ## browser.trackUnhandledErrors
@@ -450,7 +450,7 @@ receives an object with the following properties:
 - `screenshotDirectory: string`
 
   The value provided to
-  [`browser.screenshotDirectory`](/guide/browser/config#browser-screenshotdirectory),
+  [`browser.screenshotDirectory`](/config/browser/screenshotdirectory),
   if none is provided, its default value.
 
 - `root: string`

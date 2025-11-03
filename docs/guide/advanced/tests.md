@@ -28,12 +28,12 @@ for (const testModule of testModules) {
 ```
 
 ::: tip
-[`TestModule`](/advanced/api/test-module), [`TestSuite`](/advanced/api/test-suite) and [`TestCase`](/advanced/api/test-case) APIs are not experimental and follow SemVer since Vitest 2.1.
+[`TestModule`](/api/advanced/test-module), [`TestSuite`](/api/advanced/test-suite) and [`TestCase`](/api/advanced/test-case) APIs are not experimental and follow SemVer since Vitest 2.1.
 :::
 
 ## `createVitest`
 
-Creates a [Vitest](/advanced/api/vitest) instances without running tests.
+Creates a [Vitest](/api/advanced/vitest) instances without running tests.
 
 `createVitest` method doesn't validate that required packages are installed. It also doesn't respect `config.standalone` or `config.mergeReports`. Vitest won't be closed automatically even if `watch` is disabled.
 
@@ -69,9 +69,9 @@ finally {
 }
 ```
 
-If you intend to keep the `Vitest` instance, make sure to at least call [`init`](/advanced/api/vitest#init). This will initialise reporters and the coverage provider, but won't run any tests. It is also recommended to enable the `watch` mode even if you don't intend to use the Vitest watcher, but want to keep the instance running. Vitest relies on this flag for some of its features to work correctly in a continuous process.
+If you intend to keep the `Vitest` instance, make sure to at least call [`init`](/api/advanced/vitest#init). This will initialise reporters and the coverage provider, but won't run any tests. It is also recommended to enable the `watch` mode even if you don't intend to use the Vitest watcher, but want to keep the instance running. Vitest relies on this flag for some of its features to work correctly in a continuous process.
 
-After reporters are initialised, use [`runTestSpecifications`](/advanced/api/vitest#runtestspecifications) or [`rerunTestSpecifications`](/advanced/api/vitest#reruntestspecifications) to run tests if manual run is required:
+After reporters are initialised, use [`runTestSpecifications`](/api/advanced/vitest#runtestspecifications) or [`rerunTestSpecifications`](/api/advanced/vitest#reruntestspecifications) to run tests if manual run is required:
 
 ```ts
 watcher.on('change', async (file) => {

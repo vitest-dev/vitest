@@ -62,7 +62,7 @@ Unlike Playwright test runner, Vitest opens a _single_ page to run all tests tha
 These options are directly passed down to `playwright[browser].launch` command. You can read more about the command and available arguments in the [Playwright documentation](https://playwright.dev/docs/api/class-browsertype#browser-type-launch).
 
 ::: warning
-Vitest will ignore `launch.headless` option. Instead, use [`test.browser.headless`](/guide/browser/config#browser-headless).
+Vitest will ignore `launch.headless` option. Instead, use [`test.browser.headless`](/config/browser/headless).
 
 Note that Vitest will push debugging flags to `launch.args` if [`--inspect`](/guide/cli#inspect) is enabled.
 :::
@@ -86,7 +86,7 @@ Note that the context is created for every _test file_, not every _test_ like in
 ::: warning
 Vitest always sets `ignoreHTTPSErrors` to `true` in case your server is served via HTTPS and `serviceWorkers` to `'allow'` to support module mocking via [MSW](https://mswjs.io).
 
-It is also recommended to use [`test.browser.viewport`](/guide/browser/config#browser-headless) instead of specifying it here as it will be lost when tests are running in headless mode.
+It is also recommended to use [`test.browser.viewport`](/config/browser/headless) instead of specifying it here as it will be lost when tests are running in headless mode.
 :::
 
 ## `actionTimeout`

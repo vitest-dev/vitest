@@ -53,7 +53,7 @@ Vitest re-exports all Vite type-only imports via a `Vite` namespace, which you c
 ```
 :::
 
-Unlike [`reporter.onInit`](/advanced/api/reporters#oninit), this hooks runs early in Vitest lifecycle allowing you to make changes to configuration like `coverage` and `reporters`. A more notable change is that you can manipulate the global config from a [test project](/guide/projects) if your plugin is defined in the project and not in the global config.
+Unlike [`reporter.onInit`](/api/advanced/reporters#oninit), this hooks runs early in Vitest lifecycle allowing you to make changes to configuration like `coverage` and `reporters`. A more notable change is that you can manipulate the global config from a [test project](/guide/projects) if your plugin is defined in the project and not in the global config.
 
 ## Context
 

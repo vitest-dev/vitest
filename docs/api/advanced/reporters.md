@@ -51,13 +51,13 @@ export default class CustomReporter extends BaseReporter {
 function onInit(vitest: Vitest): Awaitable<void>
 ```
 
-This method is called when [Vitest](/advanced/api/vitest) was initiated or started, but before the tests were filtered.
+This method is called when [Vitest](/api/advanced/vitest) was initiated or started, but before the tests were filtered.
 
 ::: info
-Internally this method is called inside [`vitest.start`](/advanced/api/vitest#start), [`vitest.init`](/advanced/api/vitest#init) or [`vitest.mergeReports`](/advanced/api/vitest#mergereports). If you are using programmatic API, make sure to call either one depending on your needs before calling [`vitest.runTestSpecifications`](/advanced/api/vitest#runtestspecifications), for example. Built-in CLI will always run methods in correct order.
+Internally this method is called inside [`vitest.start`](/api/advanced/vitest#start), [`vitest.init`](/api/advanced/vitest#init) or [`vitest.mergeReports`](/api/advanced/vitest#mergereports). If you are using programmatic API, make sure to call either one depending on your needs before calling [`vitest.runTestSpecifications`](/api/advanced/vitest#runtestspecifications), for example. Built-in CLI will always run methods in correct order.
 :::
 
-Note that you can also get access to `vitest` instance from test cases, suites and test modules via a [`project`](/advanced/api/test-project) property, but it might also be useful to store a reference to `vitest` in this method.
+Note that you can also get access to `vitest` instance from test cases, suites and test modules via a [`project`](/api/advanced/test-project) property, but it might also be useful to store a reference to `vitest` in this method.
 
 ::: details Example
 ```ts
@@ -99,7 +99,7 @@ function onTestRunStart(
 ): Awaitable<void>
 ```
 
-This method is called when a new test run has started. It receives an array of [test specifications](/advanced/api/test-specification) scheduled to run. This array is readonly and available only for information purposes.
+This method is called when a new test run has started. It receives an array of [test specifications](/api/advanced/test-specification) scheduled to run. This array is readonly and available only for information purposes.
 
 If Vitest didn't find any test files to run, this event will be invoked with an empty array, and then [`onTestRunEnd`](#ontestrunend) will be called immediately after.
 
@@ -133,7 +133,7 @@ function onTestRunEnd(
 
 This method is called after all tests have finished running and the coverage merged all reports, if it's enabled. Note that you can get the coverage information in [`onCoverage`](#oncoverage) hook.
 
-It receives a readonly list of test modules. You can iterate over it via a [`testModule.children`](/advanced/api/test-collection) property to report the state and errors, if any.
+It receives a readonly list of test modules. You can iterate over it via a [`testModule.children`](/api/advanced/test-collection) property to report the state and errors, if any.
 
 The second argument is a readonly list of unhandled errors that Vitest wasn't able to attribute to any test. These can happen outside of the test run because of an error in a plugin, or inside the test run as a side-effect of a non-awaited function (for example, a timeout that threw an error after the test has finished running).
 
@@ -141,7 +141,7 @@ The third argument indicated why the test run was finished:
 
 - `passed`: test run was finished normally and there are no errors
 - `failed`: test run has at least one error (due to a syntax error during collection or an actual error during test execution)
-- `interrupted`: test was interrupted by [`vitest.cancelCurrentRun`](/advanced/api/vitest#cancelcurrentrun) call or `Ctrl+C` was pressed in the terminal (note that it's still possible to have failed tests in this case)
+- `interrupted`: test was interrupted by [`vitest.cancelCurrentRun`](/api/advanced/vitest#cancelcurrentrun) call or `Ctrl+C` was pressed in the terminal (note that it's still possible to have failed tests in this case)
 
 If Vitest didn't find any test files to run, this event will be invoked with empty arrays of modules and errors, and the state will depend on the value of [`config.passWithNoTests`](/config/#passwithnotests).
 
@@ -210,7 +210,7 @@ If Vitest didn't perform any coverage, this hook is not called.
 function onTestModuleQueued(testModule: TestModule): Awaitable<void>
 ```
 
-This method is called right before Vitest imports the setup file and the test module itself. This means that `testModule` will have no [`children`](/advanced/api/test-suite#children) yet, but you can start reporting it as the next test to run.
+This method is called right before Vitest imports the setup file and the test module itself. This means that `testModule` will have no [`children`](/api/advanced/test-suite#children) yet, but you can start reporting it as the next test to run.
 
 ## onTestModuleCollected
 
@@ -218,7 +218,7 @@ This method is called right before Vitest imports the setup file and the test mo
 function onTestModuleCollected(testModule: TestModule): Awaitable<void>
 ```
 
-This method is called when all tests inside the file were collected, meaning [`testModule.children`](/advanced/api/test-suite#children) collection is populated, but tests don't have any results yet.
+This method is called when all tests inside the file were collected, meaning [`testModule.children`](/api/advanced/test-suite#children) collection is populated, but tests don't have any results yet.
 
 ## onTestModuleStart
 
@@ -226,7 +226,7 @@ This method is called when all tests inside the file were collected, meaning [`t
 function onTestModuleStart(testModule: TestModule): Awaitable<void>
 ```
 
-This method is called right after [`onTestModuleCollected`](#ontestmodulecollected) unless Vitest runs in collection mode ([`vitest.collect()`](/advanced/api/vitest#collect) or `vitest collect` in the CLI), in this case it will not be called at all because there are no tests to run.
+This method is called right after [`onTestModuleCollected`](#ontestmodulecollected) unless Vitest runs in collection mode ([`vitest.collect()`](/api/advanced/vitest#collect) or `vitest collect` in the CLI), in this case it will not be called at all because there are no tests to run.
 
 ## onTestModuleEnd
 
@@ -234,7 +234,7 @@ This method is called right after [`onTestModuleCollected`](#ontestmodulecollect
 function onTestModuleEnd(testModule: TestModule): Awaitable<void>
 ```
 
-This method is called when every test in the module finished running. This means, every test inside [`testModule.children`](/advanced/api/test-suite#children) will have a `test.result()` that is not equal to `pending`.
+This method is called when every test in the module finished running. This means, every test inside [`testModule.children`](/api/advanced/test-suite#children) will have a `test.result()` that is not equal to `pending`.
 
 ## onHookStart
 
@@ -249,9 +249,9 @@ This method is called when any of these hooks have started running:
 - `beforeEach`
 - `afterEach`
 
-If `beforeAll` or `afterAll` are started, the `entity` will be either [`TestSuite`](/advanced/api/test-suite) or [`TestModule`](/advanced/api/test-module).
+If `beforeAll` or `afterAll` are started, the `entity` will be either [`TestSuite`](/api/advanced/test-suite) or [`TestModule`](/api/advanced/test-module).
 
-If `beforeEach` or `afterEach` are started, the `entity` will always be [`TestCase`](/advanced/api/test-case).
+If `beforeEach` or `afterEach` are started, the `entity` will always be [`TestCase`](/api/advanced/test-case).
 
 ::: warning
 `onHookStart` method will not be called if the hook did not run during the test run.
@@ -270,9 +270,9 @@ This method is called when any of these hooks have finished running:
 - `beforeEach`
 - `afterEach`
 
-If `beforeAll` or `afterAll` have finished, the `entity` will be either [`TestSuite`](/advanced/api/test-suite) or [`TestModule`](/advanced/api/test-module).
+If `beforeAll` or `afterAll` have finished, the `entity` will be either [`TestSuite`](/api/advanced/test-suite) or [`TestModule`](/api/advanced/test-module).
 
-If `beforeEach` or `afterEach` have finished, the `entity` will always be [`TestCase`](/advanced/api/test-case).
+If `beforeEach` or `afterEach` have finished, the `entity` will always be [`TestCase`](/api/advanced/test-case).
 
 ::: warning
 `onHookEnd` method will not be called if the hook did not run during the test run.
@@ -307,7 +307,7 @@ function onTestCaseReady(testCase: TestCase): Awaitable<void>
 This method is called before the test starts to run or it was skipped. Note that `beforeEach` and `afterEach` hooks are considered part of the test because they can influence the result.
 
 ::: warning
-Notice that it's possible to have [`testCase.result()`](/advanced/api/test-case#result) with `passed` or `failed` state already when `onTestCaseReady` is called. This can happen if test was running too fast and both `onTestCaseReady` and `onTestCaseResult` were scheduled to run in the same microtask.
+Notice that it's possible to have [`testCase.result()`](/api/advanced/test-case#result) with `passed` or `failed` state already when `onTestCaseReady` is called. This can happen if test was running too fast and both `onTestCaseReady` and `onTestCaseResult` were scheduled to run in the same microtask.
 :::
 
 ## onTestCaseResult
@@ -318,7 +318,7 @@ function onTestCaseResult(testCase: TestCase): Awaitable<void>
 
 This method is called when the test has finished running or was just skipped. Note that this will be called after the `afterEach` hook is finished, if there are any.
 
-At this point, [`testCase.result()`](/advanced/api/test-case#result) will have non-pending state.
+At this point, [`testCase.result()`](/api/advanced/test-case#result) will have non-pending state.
 
 ## onTestAnnotate <Version>3.2.0</Version> {#ontestannotate}
 
