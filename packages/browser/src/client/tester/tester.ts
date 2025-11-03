@@ -103,6 +103,7 @@ async function prepareTestEnvironment(options: PrepareOptions) {
 
   state.metaEnv = import.meta.env
   state.onCancel = onCancel
+  state.ctx.rpc = rpc as any
   state.rpc = rpc as any
 
   const interceptor = createModuleMockerInterceptor()
@@ -253,7 +254,6 @@ async function cleanup() {
     await rpc.wdioSwitchContext('parent')
       .catch(error => unhandledError(error, 'Cleanup Error'))
   }
-  state.environmentTeardownRun = true
   await stopCoverageInsideWorker(config.coverage, moduleRunner, { isolate: config.browser.isolate }).catch((error) => {
     return unhandledError(error, 'Coverage Error')
   })
