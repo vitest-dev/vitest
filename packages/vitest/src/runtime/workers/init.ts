@@ -50,9 +50,20 @@ export function init(worker: Options): void {
           return
         }
 
+        try {
+          process.env.VITEST_POOL_ID = String(message.poolId)
+          process.env.VITEST_WORKER_ID = String(message.context.workerId)
+        }
+        catch (error) {
+          return send({
+            type: 'testfileFinished',
+            __vitest_worker_response__,
+            error,
+            usedMemory: reportMemory ? memoryUsage().heapUsed : undefined,
+          })
+        }
+
         isRunning = true
-        process.env.VITEST_POOL_ID = String(message.poolId)
-        process.env.VITEST_WORKER_ID = String(message.context.workerId)
 
         try {
           runPromise = entrypoint.run(message.context, worker)
@@ -85,9 +96,20 @@ export function init(worker: Options): void {
           return
         }
 
+        try {
+          process.env.VITEST_POOL_ID = String(message.poolId)
+          process.env.VITEST_WORKER_ID = String(message.context.workerId)
+        }
+        catch (error) {
+          return send({
+            type: 'testfileFinished',
+            __vitest_worker_response__,
+            error,
+            usedMemory: reportMemory ? memoryUsage().heapUsed : undefined,
+          })
+        }
+
         isRunning = true
-        process.env.VITEST_POOL_ID = String(message.poolId)
-        process.env.VITEST_WORKER_ID = String(message.context.workerId)
 
         try {
           runPromise = entrypoint.collect(message.context, worker)
