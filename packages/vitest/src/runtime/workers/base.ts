@@ -41,10 +41,11 @@ export async function setupEnvironment(context: WorkerSetupContext): Promise<() 
   _currentEnvironment = environment
   const env = await environment.setup(globalThis, environmentOptions || config.environmentOptions || {})
 
+  _environmentTime = performance.now() - startTime
+
   if (config.chaiConfig) {
     setupChaiConfig(config.chaiConfig)
   }
-  _environmentTime = performance.now() - startTime
 
   return async () => {
     await env.teardown(globalThis)
@@ -85,11 +86,6 @@ export async function runBaseTests(method: 'run' | 'collect', state: WorkerGloba
     spyModule,
     createImportMeta: createNodeImportMeta,
   })
-  const fileSpecs = ctx.files.map(f =>
-    typeof f === 'string'
-      ? { filepath: f, testLocations: undefined }
-      : f,
-  )
   // we could load @vite/env, but it would take ~8ms, while this takes ~0,02ms
   if (ctx.config.serializedDefines) {
     try {
@@ -105,7 +101,7 @@ export async function runBaseTests(method: 'run' | 'collect', state: WorkerGloba
 
   await run(
     method,
-    fileSpecs,
+    ctx.files,
     ctx.config,
     moduleRunner,
     _currentEnvironment,

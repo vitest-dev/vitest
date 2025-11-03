@@ -31,7 +31,7 @@ async function execute(method: 'run' | 'collect', ctx: ContextRPC, worker: Vites
       resolvingModules,
       moduleExecutionInfo: new Map(),
       config: ctx.config,
-      // this is set later by vm of base
+      // this is set later by vm or base
       environment: null!,
       durations: {
         environment: 0,
@@ -75,10 +75,12 @@ export async function teardown(): Promise<void> {
   await Promise.all([...globalListeners].map(l => l()))
 }
 
+const env = process.env
+
 function createImportMetaEnvProxy(): WorkerGlobalState['metaEnv'] {
   // packages/vitest/src/node/plugins/index.ts:146
   const booleanKeys = ['DEV', 'PROD', 'SSR']
-  return new Proxy(process.env, {
+  return new Proxy(env, {
     get(_, key) {
       if (typeof key !== 'string') {
         return undefined
