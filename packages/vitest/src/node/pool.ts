@@ -147,15 +147,12 @@ export function createPool(ctx: Vitest): ProcessPool {
 
         taskGroup.push({
           context: {
-            pool,
-            config: project.serializedConfig,
             files: specs.map(spec => ({ filepath: spec.moduleId, testLocations: spec.testLines })),
             invalidates,
-            environment,
-            projectName: project.name,
             providedContext: project.getProvidedContext(),
             workerId: workerId++,
           },
+          environment,
           project,
           env,
           execArgv,
@@ -222,7 +219,11 @@ export function createPool(ctx: Vitest): ProcessPool {
     runTests: (files, invalidates) => executeTests('run', files, invalidates),
     collectTests: (files, invalidates) => executeTests('collect', files, invalidates),
     async close() {
-      await Promise.all([pool.close(), browserPool?.close?.()])
+      await Promise.all([
+        pool.close(),
+        browserPool?.close?.(),
+        ...ctx.projects.map(project => project.typechecker?.stop()),
+      ])
     },
   }
 }
@@ -272,8 +273,8 @@ function resolveOptions(ctx: Vitest) {
       ...execArgv,
       ...conditions,
       '--experimental-import-meta-resolve',
-      '--require',
-      suppressWarningsPath,
+      // https://github.com/vitest-dev/vitest/issues/8896
+      ...((globalThis as any).Deno ? [] : ['--require', suppressWarningsPath]),
     ],
     env: {
       TEST: 'true',

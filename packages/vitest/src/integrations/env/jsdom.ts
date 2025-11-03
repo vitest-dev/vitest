@@ -7,6 +7,7 @@ function catchWindowErrors(window: DOMWindow) {
   let userErrorListenerCount = 0
   function throwUnhandlerError(e: ErrorEvent) {
     if (userErrorListenerCount === 0 && e.error != null) {
+      e.preventDefault()
       process.emit('uncaughtException', e.error)
     }
   }

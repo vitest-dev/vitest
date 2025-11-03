@@ -1,5 +1,5 @@
 import type { ResolvedConfig, SerializedConfig } from '../../node/types/config'
-import type { WorkerGlobalState } from '../../types/worker'
+import type { WorkerGlobalState, WorkerSetupContext } from '../../types/worker'
 import v8 from 'node:v8'
 import { init } from './init'
 
@@ -29,6 +29,7 @@ if (isProfiling) {
 
 export default function workerInit(options: {
   runTests: (method: 'run' | 'collect', state: WorkerGlobalState) => Promise<void>
+  setup?: (context: WorkerSetupContext) => Promise<() => Promise<unknown>>
 }): void {
   const { runTests } = options
 
@@ -41,6 +42,7 @@ export default function workerInit(options: {
     deserialize: v => v8.deserialize(Buffer.from(v)),
     runTests: state => executeTests('run', state),
     collectTests: state => executeTests('collect', state),
+    setup: options.setup,
   })
 
   async function executeTests(method: 'run' | 'collect', state: WorkerGlobalState) {

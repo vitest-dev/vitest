@@ -1,6 +1,6 @@
 import type { BuiltinEnvironment, VitestEnvironment } from '../../node/types/config'
 import type { Environment } from '../../types/environment'
-import type { ContextRPC, WorkerRPC } from '../../types/worker'
+import type { WorkerRPC } from '../../types/worker'
 import { readFileSync } from 'node:fs'
 import { isBuiltin } from 'node:module'
 import { pathToFileURL } from 'node:url'
@@ -54,14 +54,13 @@ export async function createEnvironmentLoader(root: string, rpc: WorkerRPC): Pro
 }
 
 export async function loadEnvironment(
-  ctx: ContextRPC,
+  name: string,
+  root: string,
   rpc: WorkerRPC,
 ): Promise<{ environment: Environment; loader?: ModuleRunner }> {
-  const name = ctx.environment.name
   if (isBuiltinEnvironment(name)) {
     return { environment: environments[name] }
   }
-  const root = ctx.config.root
   const loader = await createEnvironmentLoader(root, rpc)
   const packageId
     = name[0] === '.' || name[0] === '/'
