@@ -1,4 +1,5 @@
 import type { FileSpecification } from '@vitest/runner'
+import type { Environment } from '../types/environment'
 import type { SerializedConfig } from './config'
 import type { VitestModuleRunner } from './moduleRunner/moduleRunner'
 import { performance } from 'node:perf_hooks'
@@ -20,7 +21,7 @@ export async function run(
   files: FileSpecification[],
   config: SerializedConfig,
   moduleRunner: VitestModuleRunner,
-  viteEnvironment: string,
+  environment: Environment,
 ): Promise<void> {
   const workerState = getWorkerState()
 
@@ -29,7 +30,7 @@ export async function run(
       = await resolveSnapshotEnvironment(config, moduleRunner)
   }
 
-  await setupGlobalEnv(config, viteEnvironment)
+  await setupGlobalEnv(config, environment)
   await startCoverageInsideWorker(config.coverage, moduleRunner, { isolate: config.isolate })
 
   const testRunner = await resolveTestRunner(config, moduleRunner)

@@ -108,6 +108,6 @@ export async function runBaseTests(method: 'run' | 'collect', state: WorkerGloba
     fileSpecs,
     ctx.config,
     moduleRunner,
-    _currentEnvironment.viteEnvironment || _currentEnvironment.name,
+    _currentEnvironment,
   )
 }

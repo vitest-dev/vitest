@@ -1,3 +1,4 @@
+import type { Environment } from '../types/environment'
 import type { SerializedConfig } from './config'
 import { createRequire } from 'node:module'
 import timers from 'node:timers'
@@ -11,7 +12,7 @@ import { setupCommonEnv } from './setup-common'
 let globalSetup = false
 export async function setupGlobalEnv(
   config: SerializedConfig,
-  viteEnvironment: string,
+  environment: Environment,
 ): Promise<void> {
   await setupCommonEnv(config)
 
@@ -20,12 +21,17 @@ export async function setupGlobalEnv(
     enumerable: false,
   })
 
+  VitestIndex.expect.setState({
+    environment: environment.name,
+  })
+
   if (globalSetup) {
     return
   }
 
   globalSetup = true
 
+  const viteEnvironment = environment.viteEnvironment || environment.name
   if (viteEnvironment === 'client') {
     const _require = createRequire(import.meta.url)
     // always mock "required" `css` files, because we cannot process them
