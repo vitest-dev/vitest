@@ -408,6 +408,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
   execArgv: {
     description: 'Pass additional arguments to `node` process when spawning `worker_threads` or `child_process`.',
     argument: '<option>',
+    array: true,
   },
   vmMemoryLimit: {
     description:
