@@ -1,4 +1,4 @@
-import type { WorkerGlobalState } from '../../types/worker'
+import type { WorkerGlobalState, WorkerSetupContext } from '../../types/worker'
 import { isMainThread, parentPort } from 'node:worker_threads'
 import { init } from './init'
 
@@ -8,6 +8,7 @@ if (isMainThread || !parentPort) {
 
 export default function workerInit(options: {
   runTests: (method: 'run' | 'collect', state: WorkerGlobalState) => Promise<void>
+  setup?: (context: WorkerSetupContext) => Promise<() => Promise<unknown>>
 }): void {
   const { runTests } = options
 
@@ -18,5 +19,6 @@ export default function workerInit(options: {
     teardown: () => parentPort!.removeAllListeners('message'),
     runTests: async state => runTests('run', state),
     collectTests: async state => runTests('collect', state),
+    setup: options.setup,
   })
 }
