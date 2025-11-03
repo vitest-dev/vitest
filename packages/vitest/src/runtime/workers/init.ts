@@ -58,7 +58,7 @@ export function init(worker: Options): void {
           return send({
             type: 'testfileFinished',
             __vitest_worker_response__,
-            error,
+            error: serializeError(error),
             usedMemory: reportMemory ? memoryUsage().heapUsed : undefined,
           })
         }
@@ -104,7 +104,7 @@ export function init(worker: Options): void {
           return send({
             type: 'testfileFinished',
             __vitest_worker_response__,
-            error,
+            error: serializeError(error),
             usedMemory: reportMemory ? memoryUsage().heapUsed : undefined,
           })
         }
