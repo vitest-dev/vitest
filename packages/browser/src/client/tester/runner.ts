@@ -74,6 +74,11 @@ export function createBrowserRunner(
       await super.onBeforeTryTask?.(...args)
       const trace = this.config.browser.trace
       const test = args[0]
+
+      // Clear screenshot paths array to prevent memory leak in long test runs
+      if (test.meta.screenshotPaths) {
+        test.meta.screenshotPaths = []
+      }
       if (trace === 'off') {
         return
       }
