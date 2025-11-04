@@ -36,7 +36,7 @@ export default {
       }
       if (url.pathname === '/config' || url.pathname === '/config/') {
         const [page, ...hash] = (url.hash.startsWith('#browser.') ? url.hash.slice(9) : url.hash.slice(1)).toLowerCase().split('-')
-        setTimeout(() => { router.go(`/config/${page}${hash.length ? '#' : ''}${hash.join('-')}`) })
+        setTimeout(() => { router.go(`/config/${page}${hash.length ? `#${[page, ...hash].join('-')}` : ''}`) })
         return false
       }
       // TODO: /guide/browser/config
