@@ -110,6 +110,9 @@ export interface SerializedConfig {
     trace: BrowserTraceViewMode
     trackUnhandledErrors: boolean
   }
+  ui: {
+    enabled: boolean
+  }
   standalone: boolean
   logHeapUsage: boolean | undefined
   coverage: SerializedCoverageConfig

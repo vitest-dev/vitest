@@ -120,6 +120,7 @@ export function serializeConfig(project: TestProject): SerializedConfig {
         trace: browser.trace.mode,
       }
     })(config.browser),
+    ui: config.ui,
     standalone: config.standalone,
     printConsoleTrace:
       config.printConsoleTrace ?? globalConfig.printConsoleTrace,

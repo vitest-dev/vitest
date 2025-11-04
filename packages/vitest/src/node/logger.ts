@@ -205,7 +205,7 @@ export class Logger {
       this.log(PAD + c.gray(`Running tests with seed "${this.ctx.config.sequence.seed}"`))
     }
 
-    if (this.ctx.config.ui) {
+    if (this.ctx.config.ui === true || (typeof this.ctx.config.ui === 'object' && this.ctx.config.ui.enabled === true)) {
       const host = this.ctx.config.api?.host || 'localhost'
       const port = this.ctx.vite.config.server.port
       const base = this.ctx.config.uiBase
