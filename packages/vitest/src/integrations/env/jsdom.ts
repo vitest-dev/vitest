@@ -216,16 +216,20 @@ export default <Environment>{
 function createCompatRequest(utils: CompatUtils) {
   return class Request extends NodeRequest_ {
     constructor(...args: [input: RequestInfo, init?: RequestInit]) {
-      const [_, init] = args
+      const [input, init] = args
       if (init?.body != null) {
+        const compatInit = { ...init }
         if (init.body instanceof utils.window.Blob) {
-          init.body = utils.makeCompatBlob(init.body as any) as any
+          compatInit.body = utils.makeCompatBlob(init.body as any) as any
         }
         if (init.body instanceof utils.window.FormData) {
-          init.body = utils.makeCompatFormData(init.body)
+          compatInit.body = utils.makeCompatFormData(init.body)
         }
+        super(input, compatInit)
       }
-      super(...args)
+      else {
+        super(...args)
+      }
     }
   }
 }

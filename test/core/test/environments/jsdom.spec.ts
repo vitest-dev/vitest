@@ -40,6 +40,16 @@ test('Fetch API accepts other APIs', async () => {
   expect.soft(() => new Request('http://localhost', { method: 'POST', body: searchParams })).not.toThrowError()
 })
 
+test('fetch api doesnt override the init object', () => {
+  const body = new FormData()
+  const init: RequestInit = {
+    method: 'post',
+    body,
+  }
+  const _request = new Request('http://localhost', init)
+  expect(init.body).toBe(body)
+})
+
 describe('FormData', () => {
   test('can pass down a simple form data', async () => {
     const formData = new FormData()
