@@ -364,10 +364,6 @@ export default ({ mode }: { mode: string }) => {
                 link: '/config/api',
               },
               {
-                text: 'browser',
-                link: '/config/browser/enabled',
-              },
-              {
                 text: 'clearMocks',
                 link: '/config/clearmocks',
               },
@@ -503,7 +499,6 @@ export default ({ mode }: { mode: string }) => {
                 text: 'attachmentsDir',
                 link: '/config/attachmentsdir',
               },
-              // TODO: sort, and add files
               {
                 text: 'hideSkippedTests',
                 link: '/config/hideskippedtests',
@@ -519,18 +514,6 @@ export default ({ mode }: { mode: string }) => {
               {
                 text: 'disableConsoleIntercept',
                 link: '/config/disableconsoleintercept',
-              },
-              {
-                text: 'clearScreen',
-                link: '/config/clearscreen',
-              },
-              {
-                text: 'configLoader',
-                link: '/config/configloader',
-              },
-              {
-                text: 'standalone',
-                link: '/config/standalone',
               },
             ],
           },
