@@ -1,6 +1,8 @@
 import type { DOMWindow } from 'jsdom'
+import type { NodeBlob } from 'node:buffer'
 import type { Environment } from '../../types/environment'
 import type { JSDOMOptions } from '../../types/jsdom-options'
+import { URL as NodeURL } from 'node:url'
 import { populateGlobal } from './utils'
 
 function catchWindowErrors(window: DOMWindow) {
@@ -35,14 +37,16 @@ function catchWindowErrors(window: DOMWindow) {
   }
 }
 
-let _FormData!: typeof FormData
+let NodeFormData_!: typeof FormData
+let NodeBlob_!: typeof NodeBlob
 
 export default <Environment>{
   name: 'jsdom',
   viteEnvironment: 'client',
   async setupVM({ jsdom = {} }) {
     // delay initialization because it takes ~1s
-    _FormData = globalThis.FormData
+    NodeFormData_ = globalThis.FormData
+    NodeBlob_ = globalThis.Blob as typeof NodeBlob
 
     const { CookieJar, JSDOM, ResourceLoader, VirtualConsole } = await import(
       'jsdom',
@@ -82,12 +86,15 @@ export default <Environment>{
 
     const clearWindowErrors = catchWindowErrors(dom.window)
 
+    const utils = createCompatUtils(dom.window)
+
     // TODO: browser doesn't expose Buffer, but a lot of dependencies use it
     dom.window.Buffer = Buffer
     dom.window.jsdom = dom
-    dom.window.FormData = createFormData(dom.window)
+    dom.window.FormData = createFormData(dom.window, utils)
+    dom.window.URL = createJSDOMCompatURL(utils)
 
-    // inject web globals if they missing in JSDOM but otherwise available in Nodejs
+    // inject web globals if they are missing in JSDOM but otherwise available in Nodejs
     // https://nodejs.org/dist/latest/docs/api/globals.html
     const globalNames = [
       'structuredClone',
@@ -116,8 +123,9 @@ export default <Environment>{
       'Headers',
       'AbortController',
       'AbortSignal',
-      'URL',
       'URLSearchParams',
+      // URL is overriden with a compat one
+      // 'URL',
     ] as const
     for (const name of overrideGlobals) {
       const value = globalThis[name]
@@ -140,7 +148,8 @@ export default <Environment>{
   },
   async setup(global, { jsdom = {} }) {
     // delay initialization because it takes ~1s
-    _FormData = globalThis.FormData
+    NodeFormData_ = globalThis.FormData
+    NodeBlob_ = globalThis.Blob as typeof NodeBlob
 
     const { CookieJar, JSDOM, ResourceLoader, VirtualConsole } = await import(
       'jsdom',
@@ -183,9 +192,11 @@ export default <Environment>{
     })
 
     const clearWindowErrors = catchWindowErrors(global)
+    const utils = createCompatUtils(dom.window)
 
     global.jsdom = dom
-    global.FormData = createFormData(dom.window)
+    global.FormData = createFormData(dom.window, utils)
+    global.URL = createJSDOMCompatURL(utils)
 
     return {
       teardown(global) {
@@ -205,13 +216,13 @@ export default <Environment>{
 // override it with Node.js implementation, but keep the DOM behaviour
 // this is required because Request (and other fetch API)
 // are not implemented by JSDOM
-function createFormData(window: DOMWindow) {
+function createFormData(window: DOMWindow, utils: CompatUtils) {
   const JSDOMFormData = window.FormData
-  if (!_FormData) {
+  if (!NodeFormData_) {
     return JSDOMFormData
   }
 
-  return class FormData extends _FormData {
+  return class FormData extends NodeFormData_ {
     constructor(...args: any[]) {
       super()
       const formData = new JSDOMFormData(...args)
@@ -219,6 +230,50 @@ function createFormData(window: DOMWindow) {
         this.append(key, value)
       })
     }
+
+    set(...args: [name: string, blobValue: unknown, filename?: string]) {
+      if (args[1] instanceof window.Blob) {
+        args[1] = utils.makeCompatBlob(args[1] as NodeBlob)
+      }
+      return super.set(...args as [string, string])
+    }
+
+    append(...args: [name: string, blobValue: unknown, filename?: string]) {
+      if (args[1] instanceof window.Blob) {
+        args[1] = utils.makeCompatBlob(args[1] as NodeBlob)
+      }
+      return super.append(...args as [string, string])
+    }
+  }
+}
+
+function createJSDOMCompatURL(utils: CompatUtils): typeof URL {
+  return class URL extends NodeURL {
+    static createObjectURL(blob: NodeBlob): string {
+      const compatBlob = utils.makeCompatBlob(blob)
+      return NodeURL.createObjectURL(compatBlob)
+    }
+  } as typeof URL
+}
+
+interface CompatUtils {
+  makeCompatBlob: (blob: NodeBlob) => NodeBlob
+}
+
+function createCompatUtils(window: DOMWindow): CompatUtils {
+  // this returns a hidden Symbol(impl)
+  // this is cursed, and jsdom should just implement fetch API itself
+  const implSymbol = Object.getOwnPropertySymbols(
+    Object.getOwnPropertyDescriptors(new window.Blob()),
+  )[0]
+  return {
+    makeCompatBlob(blob: NodeBlob) {
+      if (blob instanceof window.Blob) {
+        const buffer = (blob as any)[implSymbol]._buffer
+        return new NodeBlob_([buffer], { type: blob.type })
+      }
+      return blob
+    },
   }
 }
 
