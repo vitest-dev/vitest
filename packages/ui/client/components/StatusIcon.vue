@@ -38,7 +38,8 @@ defineProps<{
   <div
     v-else-if="mode === 'skip' || state === 'skip'"
     v-tooltip.right="'Skipped'"
-    text-gray-500
+    text-purple-500
+    op-50
     flex-shrink-0
     i-carbon:redo
     rotate-90
