@@ -135,6 +135,7 @@ const LIVING_KEYS = [
   'Plugin',
   'MimeType',
   'FileReader',
+  'FormData',
   'Blob',
   'File',
   'FileList',
@@ -184,7 +185,6 @@ const LIVING_KEYS = [
   // 'AbortSignal',
   // 'URL',
   // 'URLSearchParams',
-  // 'FormData',
 ]
 
 const OTHER_KEYS = [
