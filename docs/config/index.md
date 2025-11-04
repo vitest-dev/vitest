@@ -1846,6 +1846,50 @@ Path to custom tsconfig, relative to the project root.
 
 Minimum time in milliseconds it takes to spawn the typechecker.
 
+### ui
+
+- **Type:** `boolean | UIConfig`
+- **Default:** `false`
+- **CLI:** `--ui`
+
+Enable Vitest UI. When set to `true`, it's equivalent to `{ enabled: true }`.
+
+```ts
+export default defineConfig({
+  test: {
+    ui: true,
+    // or with configuration
+    ui: {
+      enabled: true,
+      screenshotsInReport: true,
+    },
+  },
+})
+```
+
+#### ui.enabled
+
+- **Type:** `boolean`
+- **Default:** `false`
+
+Enable Vitest UI.
+
+#### ui.screenshotsInReport
+
+- **Type:** `boolean`
+- **Default:** `false`
+
+Display screenshots in the test reports within Vitest UI. Screenshots must be captured using `page.screenshot()` in browser tests or by enabling [`browser.screenshotTestEnd`](/guide/browser/config#browser-screenshottestend).
+
+The screenshots are loaded from the [`browser.screenshotDirectory`](/guide/browser/config#browser-screenshotdirectory) and displayed in a carousel in the UI. Duplicate screenshot paths are automatically deduplicated.
+
+:::tip
+This works with:
+- Manual screenshots via `page.screenshot()`
+- Auto-captured screenshots via `browser.screenshotTestEnd`
+- Failure screenshots via `browser.screenshotFailures`
+:::
+
 ### slowTestThreshold<NonProjectOption />
 
 - **Type**: `number`

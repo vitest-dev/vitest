@@ -39,6 +39,54 @@ export default defineConfig({
 
 You can check your coverage report in Vitest UI: see [Vitest UI Coverage](/guide/coverage#vitest-ui) for more details.
 
+## Screenshots in Reports
+
+Vitest UI can display screenshots captured during browser tests. To enable this feature:
+
+1. Enable screenshot capture in your tests using one of these methods:
+   - **Manual**: Call `page.screenshot()` in your tests
+   - **Automatic**: Enable [`browser.screenshotTestEnd`](/guide/browser/config#browser-screenshottestend)
+   - **On Failure**: Enable [`browser.screenshotFailures`](/guide/browser/config#browser-screenshotfailures)
+
+2. Enable screenshot display in the UI:
+
+```ts [vitest.config.ts]
+export default defineConfig({
+  test: {
+    browser: {
+      enabled: true,
+      screenshotTestEnd: true, // Auto-capture at end of every test
+    },
+    ui: {
+      enabled: true,
+      screenshotsInReport: true, // Display in UI
+    },
+  },
+})
+```
+
+Screenshots will appear in a carousel viewer in the test report, making it easy to visually verify test behavior. The UI automatically deduplicates screenshot paths, so if a test fails and captures both a failure screenshot and an end-of-test screenshot of the same view, it will only appear once.
+
+### Cleaning Up Screenshots
+
+To prevent screenshot directories from accumulating files across test runs, enable cleanup in your browser configuration:
+
+```ts [vitest.config.ts]
+export default defineConfig({
+  test: {
+    browser: {
+      cleanupScreenshots: true, // Clean before running tests
+    },
+    ui: {
+      enabled: true,
+      screenshotsInReport: true,
+    },
+  },
+})
+```
+
+The cleanup is instance-specific, so screenshots from other browser configurations (e.g., different viewports or browsers) won't be deleted.
+
 ::: warning
 If you still want to see how your tests are running in real time in the terminal, don't forget to add `default` reporter to `reporters` option: `['default', 'html']`.
 :::

@@ -87,6 +87,8 @@ List of available `browser` options:
 - [`browser.testerHtmlPath`](#browser-testerhtmlpath)
 - [`browser.screenshotDirectory`](#browser-screenshotdirectory)
 - [`browser.screenshotFailures`](#browser-screenshotfailures)
+- [`browser.screenshotTestEnd`](#browser-screenshottestend)
+- [`browser.cleanupScreenshots`](#browser-cleanupscreenshots)
 - [`browser.provider`](#browser-provider)
 
 Under the hood, Vitest transforms these instances into separate [test projects](/advanced/api/test-project) sharing a single Vite server for better caching performance.
@@ -246,6 +248,41 @@ Path to the screenshots directory relative to the `root`.
 - **Default:** `!browser.ui`
 
 Should Vitest take screenshots if the test fails.
+
+## browser.screenshotTestEnd
+
+- **Type:** `boolean`
+- **Default:** `false`
+
+Automatically capture screenshots at the end of every test. Screenshots are saved to the [`browser.screenshotDirectory`](#browser-screenshotdirectory) with an `-auto` suffix to distinguish them from manual screenshots.
+
+When combined with [`ui.screenshotsInReport`](/config/#ui-screenshotsinreport), these screenshots will appear in the Vitest UI test reports.
+
+:::tip
+This feature is useful for visual debugging and creating visual test reports. The screenshots are stored in `task.meta.screenshotPaths` and can be accessed by reporters.
+:::
+
+:::warning
+This option requires a browser provider that supports screenshots (Playwright or WebDriverIO). It is automatically disabled when using the `preview` provider.
+:::
+
+## browser.cleanupScreenshots
+
+- **Type:** `boolean`
+- **Default:** `false`
+
+Clean up old screenshots before running tests. This only deletes screenshots from the current browser instance to avoid conflicts when running multiple browser configurations.
+
+The cleanup applies to:
+- Manual screenshots (with numbered suffixes like `-1.png`, `-2.png`)
+- Auto-captured screenshots (with `-auto` suffix)
+- Failure screenshots (if using default paths)
+
+Screenshots are identified by the instance name suffix (e.g., `-chromium.png`, `-firefox.png`). If no instance name is configured, all screenshots in the directory will be cleaned up.
+
+:::tip
+Enable this option to prevent screenshot directories from accumulating files across test runs, especially useful in CI environments.
+:::
 
 ## browser.orchestratorScripts
 
