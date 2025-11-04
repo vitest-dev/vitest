@@ -405,7 +405,7 @@ export interface JestAssertion<T = any> extends jest.Matchers<void, T>, CustomMa
   /**
    * Using exact equality with floating point numbers is a bad idea.
    * Rounding means that intuitive things fail.
-   * The default for `precision` is 2.
+   * The default for `numDigits` is 2.
    *
    * @example
    * expect(price).toBeCloseTo(9.99, 2);
