@@ -9,7 +9,7 @@ Vitest exposes a context module via `vitest/browser` entry point. As of 2.0, it 
 ## `userEvent`
 
 ::: tip
-The `userEvent` API is explained in detail at [Interactivity API](/guide/browser/interactivity-api).
+The `userEvent` API is explained in detail at [Interactivity API](/api/browser/interactivity).
 :::
 
 ```ts
@@ -43,7 +43,7 @@ export const userEvent: {
 ## `commands`
 
 ::: tip
-This API is explained in detail at [Commands API](/guide/browser/commands).
+This API is explained in detail at [Commands API](/api/browser/commands).
 :::
 
 ```ts
@@ -61,7 +61,7 @@ The `page` export provides utilities to interact with the current `page`.
 ::: warning
 While it exposes some utilities from Playwright's `page`, it is not the same object. Since the browser context is evaluated in the browser, your tests don't have access to Playwright's `page` because it runs on the server.
 
-Use [Commands API](/guide/browser/commands) if you need to have access to Playwright's `page` object.
+Use [Commands API](/api/browser/commands) if you need to have access to Playwright's `page` object.
 :::
 
 ```ts
@@ -108,7 +108,7 @@ export const page: {
 ```
 
 ::: tip
-The `getBy*` API is explained at [Locators API](/guide/browser/locators).
+The `getBy*` API is explained at [Locators API](/api/browser/locators).
 :::
 
 ::: warning WARNING <Version>3.2.0</Version>

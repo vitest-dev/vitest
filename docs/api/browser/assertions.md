@@ -300,7 +300,7 @@ await expect.element(
 ).toBeVisible()
 ```
 
-## toBeInViewport
+## toBeInViewport <Version>4.0.0</Version> {#tobeinviewport}
 
 ```ts
 function toBeInViewport(options: { ratio?: number }): Promise<void>
@@ -1194,7 +1194,7 @@ await expect.element(getByTestId('button')).toMatchScreenshot('fancy-button', {
 - `screenshotOptions: object`
 
   The same options allowed by
-  [`locator.screenshot()`](/guide/browser/locators.html#screenshot), except for:
+  [`locator.screenshot()`](/api/browser/locators.html#screenshot), except for:
 
   - `'base64'`
   - `'path'`

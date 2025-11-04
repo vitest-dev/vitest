@@ -93,7 +93,7 @@ It is also recommended to use [`test.browser.viewport`](/config/browser/headless
 
 - **Default:** no timeout
 
-This value configures the default timeout it takes for Playwright to wait until all accessibility checks pass and [the action](/guide/browser/interactivity-api) is actually done.
+This value configures the default timeout it takes for Playwright to wait until all accessibility checks pass and [the action](/api/browser/interactivity) is actually done.
 
 You can also configure the action timeout per-action:
 

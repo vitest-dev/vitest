@@ -229,7 +229,7 @@ Default iframe's viewport.
 
 ## browser.locators
 
-Options for built-in [browser locators](/guide/browser/locators).
+Options for built-in [browser locators](/api/browser/locators).
 
 ### browser.locators.testIdAttribute
 
@@ -297,7 +297,7 @@ export interface BrowserScript {
 - **Type:** `Record<string, BrowserCommand>`
 - **Default:** `{ readFile, writeFile, ... }`
 
-Custom [commands](/guide/browser/commands) that can be imported during browser tests from `vitest/browser`.
+Custom [commands](/api/browser/commands) that can be imported during browser tests from `vitest/browser`.
 
 ## browser.connectTimeout
 
@@ -372,7 +372,7 @@ Disabling this will completely remove all Vitest error handlers, which can help 
 ### browser.expect.toMatchScreenshot
 
 Default options for the
-[`toMatchScreenshot` assertion](/guide/browser/assertion-api.html#tomatchscreenshot).
+[`toMatchScreenshot` assertion](/api/browser/assertions.html#tomatchscreenshot).
 These options will be applied to all screenshot assertions.
 
 ::: tip
@@ -404,7 +404,7 @@ export default defineConfig({
 })
 ```
 
-[All options available in the `toMatchScreenshot` assertion](/guide/browser/assertion-api#options)
+[All options available in the `toMatchScreenshot` assertion](/api/browser/assertions#options)
 can be configured here. Additionally, two path resolution functions are
 available: `resolveScreenshotPath` and `resolveDiffPath`.
 

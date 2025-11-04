@@ -8,4 +8,4 @@ outline: deep
 - **Type:** `Record<string, BrowserCommand>`
 - **Default:** `{ readFile, writeFile, ... }`
 
-Custom [commands](/guide/browser/commands) that can be imported during browser tests from `vitest/browser`.
+Custom [commands](/api/browser/commands) that can be imported during browser tests from `vitest/browser`.

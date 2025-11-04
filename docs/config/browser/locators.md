@@ -5,7 +5,7 @@ outline: deep
 
 # browser.locators
 
-Options for built-in [browser locators](/guide/browser/locators).
+Options for built-in [browser locators](/api/browser/locators).
 
 ## browser.locators.testIdAttribute
 

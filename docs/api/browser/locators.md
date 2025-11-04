@@ -614,7 +614,7 @@ import { page } from 'vitest/browser'
 await page.getByRole('img', { name: 'Rose' }).click()
 ```
 
-- [See more at `userEvent.click`](/guide/browser/interactivity-api#userevent-click)
+- [See more at `userEvent.click`](/api/browser/interactivity#userevent-click)
 
 ### dblClick
 
@@ -630,7 +630,7 @@ import { page } from 'vitest/browser'
 await page.getByRole('img', { name: 'Rose' }).dblClick()
 ```
 
-- [See more at `userEvent.dblClick`](/guide/browser/interactivity-api#userevent-dblclick)
+- [See more at `userEvent.dblClick`](/api/browser/interactivity#userevent-dblclick)
 
 ### tripleClick
 
@@ -646,7 +646,7 @@ import { page } from 'vitest/browser'
 await page.getByRole('img', { name: 'Rose' }).tripleClick()
 ```
 
-- [See more at `userEvent.tripleClick`](/guide/browser/interactivity-api#userevent-tripleclick)
+- [See more at `userEvent.tripleClick`](/api/browser/interactivity#userevent-tripleclick)
 
 ### clear
 
@@ -662,7 +662,7 @@ import { page } from 'vitest/browser'
 await page.getByRole('textbox', { name: 'Full Name' }).clear()
 ```
 
-- [See more at `userEvent.clear`](/guide/browser/interactivity-api#userevent-clear)
+- [See more at `userEvent.clear`](/api/browser/interactivity#userevent-clear)
 
 ### hover
 
@@ -678,7 +678,7 @@ import { page } from 'vitest/browser'
 await page.getByRole('img', { name: 'Rose' }).hover()
 ```
 
-- [See more at `userEvent.hover`](/guide/browser/interactivity-api#userevent-hover)
+- [See more at `userEvent.hover`](/api/browser/interactivity#userevent-hover)
 
 ### unhover
 
@@ -694,7 +694,7 @@ import { page } from 'vitest/browser'
 await page.getByRole('img', { name: 'Rose' }).unhover()
 ```
 
-- [See more at `userEvent.unhover`](/guide/browser/interactivity-api#userevent-unhover)
+- [See more at `userEvent.unhover`](/api/browser/interactivity#userevent-unhover)
 
 ### fill
 
@@ -710,7 +710,7 @@ import { page } from 'vitest/browser'
 await page.getByRole('input', { name: 'Full Name' }).fill('Mr. Bean')
 ```
 
-- [See more at `userEvent.fill`](/guide/browser/interactivity-api#userevent-fill)
+- [See more at `userEvent.fill`](/api/browser/interactivity#userevent-fill)
 
 ### dropTo
 
@@ -732,7 +732,7 @@ const france = page.getByText('France')
 await paris.dropTo(france)
 ```
 
-- [See more at `userEvent.dragAndDrop`](/guide/browser/interactivity-api#userevent-draganddrop)
+- [See more at `userEvent.dragAndDrop`](/api/browser/interactivity#userevent-draganddrop)
 
 ### selectOptions
 
@@ -764,7 +764,7 @@ await languages.selectOptions([
 ])
 ```
 
-- [See more at `userEvent.selectOptions`](/guide/browser/interactivity-api#userevent-selectoptions)
+- [See more at `userEvent.selectOptions`](/api/browser/interactivity#userevent-selectoptions)
 
 ### screenshot
 
@@ -850,7 +850,7 @@ If _no element_ matches the selector, an error is thrown. Consider using [`.quer
 If _multiple elements_ match the selector, an error is thrown. Use [`.elements()`](#elements) when you need all matching DOM Elements or [`.all()`](#all) if you need an array of locators matching the selector.
 
 ::: tip
-This method can be useful if you need to pass it down to an external library. It is called automatically when locator is used with `expect.element` every time the assertion is [retried](/guide/browser/assertion-api):
+This method can be useful if you need to pass it down to an external library. It is called automatically when locator is used with `expect.element` every time the assertion is [retried](/api/browser/assertions):
 
 ```ts
 await expect.element(page.getByRole('button')).toBeDisabled()
@@ -920,7 +920,7 @@ function all(): Locator[]
 
 This method returns an array of new locators that match the selector.
 
-Internally, this method calls `.elements` and wraps every element using [`page.elementLocator`](/guide/browser/context#page).
+Internally, this method calls `.elements` and wraps every element using [`page.elementLocator`](/api/browser/context#page).
 
 - [See `locator.elements()`](#elements)
 

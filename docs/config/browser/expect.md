@@ -10,7 +10,7 @@ outline: deep
 ## browser.expect.toMatchScreenshot
 
 Default options for the
-[`toMatchScreenshot` assertion](/guide/browser/assertion-api.html#tomatchscreenshot).
+[`toMatchScreenshot` assertion](/api/browser/assertions.html#tomatchscreenshot).
 These options will be applied to all screenshot assertions.
 
 ::: tip
@@ -42,7 +42,7 @@ export default defineConfig({
 })
 ```
 
-[All options available in the `toMatchScreenshot` assertion](/guide/browser/assertion-api#options)
+[All options available in the `toMatchScreenshot` assertion](/api/browser/assertions#options)
 can be configured here. Additionally, two path resolution functions are
 available: `resolveScreenshotPath` and `resolveDiffPath`.
 

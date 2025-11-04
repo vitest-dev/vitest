@@ -147,7 +147,7 @@ With these changes, the `@vitest/browser` package can be removed from your depen
 Vitest 4 adds support for [Visual Regression testing](/guide/browser/visual-regression-testing.md) in Browser Mode. We will continue to iterate on this feature to improve the experience.
 
 Visual regression testing in Vitest can be done through the
-[`toMatchScreenshot` assertion](/guide/browser/assertion-api.html#tomatchscreenshot):
+[`toMatchScreenshot` assertion](/api/browser/assertions.html#tomatchscreenshot):
 
 ```ts
 import { expect, test } from 'vitest'
@@ -184,7 +184,7 @@ The traces are available in reporters as [annotations](/guide/test-annotations).
 ## Locator Improvements
 
 The `frameLocator` method returns a `FrameLocator` instance that can be used to find elements inside the iframe.
-Vitest now supports a new [`page.frameLocator`](/guide/browser/context#framelocator) API (only with `playwright` provider).
+Vitest now supports a new [`page.frameLocator`](/api/browser/context#framelocator) API (only with `playwright` provider).
 
 ```ts
 const frame = page.frameLocator(

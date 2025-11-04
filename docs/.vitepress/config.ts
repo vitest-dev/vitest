@@ -1,7 +1,6 @@
 import { transformerTwoslash } from '@shikijs/vitepress-twoslash'
 import { transformerNotationWordHighlight } from '@shikijs/transformers'
 import { withPwa } from '@vite-pwa/vitepress'
-import type { DefaultTheme } from 'vitepress'
 import { defineConfig } from 'vitepress'
 import { tabsMarkdownPlugin } from 'vitepress-plugin-tabs'
 import {
@@ -26,9 +25,6 @@ import {
 } from './meta'
 import { pwa } from './scripts/pwa'
 import { transformHead } from './scripts/transformHead'
-
-// TODO: delete unused
-// TODO: redirect from old urls
 
 export default ({ mode }: { mode: string }) => {
   return withPwa(defineConfig({
@@ -154,10 +150,9 @@ export default ({ mode }: { mode: string }) => {
       },
 
       nav: [
-        { text: 'Guides & API', link: '/guide/', activeMatch: '^/(guide|api)/' },
-        // { text: 'Guides', link: '/guide/', activeMatch: '^/guide/' },
+        { text: 'Guides', link: '/guide/', activeMatch: '^/guide/' },
+        { text: 'API', link: '/api/', activeMatch: '^/api/' },
         { text: 'Config', link: '/config/', activeMatch: '^/config/' },
-        // { text: 'API', link: '/api/', activeMatch: '^(/api/|/advanced/api/)' },
         {
           text: 'Blog',
           link: '/blog',
@@ -656,7 +651,7 @@ export default ({ mode }: { mode: string }) => {
           // },
         ],
         // TODO: only /guide
-        '/': [
+        '/guide': [
           {
             text: 'Introduction',
             collapsed: false,
@@ -674,11 +669,6 @@ export default ({ mode }: { mode: string }) => {
                 link: '/guide/features',
               },
             ],
-          },
-          {
-            text: 'API',
-            collapsed: false,
-            items: api(),
           },
           {
             text: 'Browser Mode',
@@ -884,7 +874,61 @@ export default ({ mode }: { mode: string }) => {
               },
             ],
           },
-          // TODO: should be under /api/advanced
+        ],
+        '/api': [
+          {
+            text: 'Test API Reference',
+            link: '/api/',
+          },
+          {
+            text: 'Mocks',
+            link: '/api/mock',
+          },
+          {
+            text: 'Vi Utility',
+            link: '/api/vi',
+          },
+          {
+            text: 'Expect',
+            link: '/api/expect',
+          },
+          {
+            text: 'ExpectTypeOf',
+            link: '/api/expect-typeof',
+          },
+          {
+            text: 'Assert',
+            link: '/api/assert',
+          },
+          {
+            text: 'AssertType',
+            link: '/api/assert-type',
+          },
+          {
+            text: 'Browser Mode',
+            items: [
+              {
+                text: 'Context',
+                link: '/api/browser/context',
+              },
+              {
+                text: 'Interactivity',
+                link: '/api/browser/interactivity',
+              },
+              {
+                text: 'Locators',
+                link: '/api/browser/locators',
+              },
+              {
+                text: 'Assertions',
+                link: '/api/browser/assertions',
+              },
+              {
+                text: 'Commands',
+                link: '/api/browser/commands',
+              },
+            ],
+          },
           {
             text: 'Advanced API',
             collapsed: true,
@@ -935,128 +979,92 @@ export default ({ mode }: { mode: string }) => {
               },
             ],
           },
+          // {
+          //   text: 'Text Runner',
+          //   collapsed: false,
+          //   items: [
+          //     // TODO: generate
+          //     {
+          //       text: 'test',
+          //       link: '/api/test',
+          //     },
+          //     {
+          //       text: 'describe',
+          //       link: '/api/describe',
+          //     },
+          //     {
+          //       text: 'beforeEach',
+          //       link: '/api/before-each',
+          //     },
+          //     {
+          //       text: 'afterEach',
+          //       link: '/api/after-each',
+          //     },
+          //   ],
+          // },
+          // {
+          //   text: 'Assertion API',
+          //   collapsed: false,
+          //   items: [
+          //     {
+          //       text: 'expect',
+          //       link: '/api/expect',
+          //     },
+          //     {
+          //       text: 'assert',
+          //       link: '/api/assert',
+          //     },
+          //     {
+          //       text: 'expectTypeOf',
+          //       link: '/api/expect-typeof',
+          //     },
+          //     {
+          //       text: 'assertType',
+          //       link: '/api/assert-type',
+          //     },
+          //   ],
+          // },
+          // {
+          //   text: 'Vi Utility API',
+          //   collapsed: false,
+          //   items: [
+          //     {
+          //       text: 'Mock Modules',
+          //       link: '/api/vi/mock-modiles',
+          //     },
+          //     {
+          //       text: 'Mock Functions',
+          //       link: '/api/vi/mock-functions',
+          //     },
+          //     {
+          //       text: 'Mock Timers',
+          //       link: '/api/vi/mock-timers',
+          //     },
+          //     {
+          //       text: 'Miscellaneous',
+          //       link: '/api/vi/miscellaneous',
+          //     },
+          //   ],
+          // },
+          // {
+          //   text: 'Browser Mode',
+          //   collapsed: false,
+          //   items: [
+          //     // TODO: generate
+          //     {
+          //       text: 'page',
+          //       link: '/api/browser/page',
+          //     },
+          //     {
+          //       text: 'locators',
+          //       link: '/api/browser/locators',
+          //     },
+          //   ],
+          // },
         ],
-        // '/api': [
-        //   {
-        //     text: 'Text Runner',
-        //     collapsed: false,
-        //     items: [
-        //       // TODO: generate
-        //       {
-        //         text: 'test',
-        //         link: '/api/test',
-        //       },
-        //       {
-        //         text: 'describe',
-        //         link: '/api/describe',
-        //       },
-        //       {
-        //         text: 'beforeEach',
-        //         link: '/api/before-each',
-        //       },
-        //       {
-        //         text: 'afterEach',
-        //         link: '/api/after-each',
-        //       },
-        //     ],
-        //   },
-        //   {
-        //     text: 'Assertion API',
-        //     collapsed: false,
-        //     items: [
-        //       {
-        //         text: 'expect',
-        //         link: '/api/expect',
-        //       },
-        //       {
-        //         text: 'assert',
-        //         link: '/api/assert',
-        //       },
-        //       {
-        //         text: 'expectTypeOf',
-        //         link: '/api/expect-typeof',
-        //       },
-        //       {
-        //         text: 'assertType',
-        //         link: '/api/assert-type',
-        //       },
-        //     ],
-        //   },
-        //   {
-        //     text: 'Vi Utility API',
-        //     collapsed: false,
-        //     items: [
-        //       {
-        //         text: 'Mock Modules',
-        //         link: '/api/vi/mock-modiles',
-        //       },
-        //       {
-        //         text: 'Mock Functions',
-        //         link: '/api/vi/mock-functions',
-        //       },
-        //       {
-        //         text: 'Mock Timers',
-        //         link: '/api/vi/mock-timers',
-        //       },
-        //       {
-        //         text: 'Miscellaneous',
-        //         link: '/api/vi/miscellaneous',
-        //       },
-        //     ],
-        //   },
-        //   {
-        //     text: 'Browser Mode',
-        //     collapsed: false,
-        //     items: [
-        //       // TODO: generate
-        //       {
-        //         text: 'page',
-        //         link: '/api/browser/page',
-        //       },
-        //       {
-        //         text: 'locators',
-        //         link: '/api/browser/locators',
-        //       },
-        //     ],
-        //   },
-        //   },
-        // ],
       },
     },
     pwa,
     transformHead,
   }))
-}
-
-function api(): DefaultTheme.SidebarItem[] {
-  return [
-    {
-      text: 'Test API Reference',
-      link: '/api/',
-    },
-    {
-      text: 'Mocks',
-      link: '/api/mock',
-    },
-    {
-      text: 'Vi Utility',
-      link: '/api/vi',
-    },
-    {
-      text: 'Expect',
-      link: '/api/expect',
-    },
-    {
-      text: 'ExpectTypeOf',
-      link: '/api/expect-typeof',
-    },
-    {
-      text: 'Assert',
-      link: '/api/assert',
-    },
-    {
-      text: 'AssertType',
-      link: '/api/assert-type',
-    },
-  ]
 }

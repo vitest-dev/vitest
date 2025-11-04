@@ -29,4 +29,4 @@ The preview provider has some limitations compared to other providers like [Play
 - It does not support headless mode; the browser window will always be visible.
 - It does not support multiple instances of the same browser; each instance must use a different browser.
 - It does not support advanced browser capabilities or options; you can only specify the browser name.
-- It does not support CDP (Chrome DevTools Protocol) commands or other low-level browser interactions. Unlike Playwright or WebdriverIO, the [`userEvent`](/guide/browser/interactivity-api) API is just re-exported from [`@testing-library/user-event`](https://www.npmjs.com/package/@testing-library/user-event) and does not have any special integration with the browser.
+- It does not support CDP (Chrome DevTools Protocol) commands or other low-level browser interactions. Unlike Playwright or WebdriverIO, the [`userEvent`](/api/browser/interactivity) API is just re-exported from [`@testing-library/user-event`](https://www.npmjs.com/package/@testing-library/user-event) and does not have any special integration with the browser.
