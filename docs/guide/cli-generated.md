@@ -299,6 +299,13 @@ Mock browser API with happy-dom
 
 Run tests in the browser. Equivalent to `--browser.enabled` (default: `false`)
 
+### browser.name
+
+- **CLI:** `--browser.name <name>`
+- **Config:** [browser.name](/config/browser/name)
+
+Run all tests in a specific browser. Some browsers are only available for specific providers (see `--browser.provider`).
+
 ### browser.headless
 
 - **CLI:** `--browser.headless`
@@ -332,7 +339,7 @@ Set to true to exit if port is already in use, instead of automatically trying t
 - **CLI:** `--browser.provider <name>`
 - **Config:** [browser.provider](/config/browser/provider)
 
-Provider used to run browser tests. Some browsers are only available for specific providers. Can be "webdriverio", "playwright", "preview", or the path to a custom provider. Visit [`browser.provider`](/guide/browser/config.html#browser-provider) for more information (default: `"preview"`)
+Provider used to run browser tests. Some browsers are only available for specific providers. Can be "webdriverio", "playwright", "preview", or the path to a custom provider. Visit [`browser.provider`](/config/browser/provider) for more information
 
 ### browser.isolate
 
@@ -491,7 +498,6 @@ Changes the order in which setup files are executed. Accepted values are: "list"
 ### inspect
 
 - **CLI:** `--inspect [[host:]port]`
-- **Config:** [inspect](/config/inspect)
 
 Enable Node.js inspector (default: `127.0.0.1:9229`)
 
@@ -701,7 +707,6 @@ Minimum time in milliseconds it takes to spawn the typechecker
 ### project
 
 - **CLI:** `--project <name>`
-- **Config:** [project](/config/project)
 
 The name of the project to run if you are using Vitest workspace feature. This can be repeated for multiple projects: `--project=1 --project=2`. You can also filter projects using wildcards like `--project=packages*`, and exclude projects with `--project=!pattern`.
 

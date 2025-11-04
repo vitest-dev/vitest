@@ -35,6 +35,10 @@ const skipConfig = new Set([
   'run',
   'hideSkippedTests',
   'dom',
+  'inspect',
+  'inspectBrk',
+  'project',
+  'ui',
 ])
 
 function resolveOptions(options: CLIOptions<any>, parentName?: string) {
