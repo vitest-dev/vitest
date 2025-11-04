@@ -11,7 +11,7 @@ import { AutomockedModule, AutospiedModule, ManualMockedModule, RedirectedModule
 import { ServerMockResolver } from '@vitest/mocker/node'
 import { createBirpc } from 'birpc'
 import { parse, stringify } from 'flatted'
-import { dirname, join } from 'pathe'
+import { dirname, join, resolve, sep } from 'pathe'
 import { createDebugger, isFileServingAllowed, isValidApiRequest } from 'vitest/node'
 import { WebSocketServer } from 'ws'
 
@@ -372,6 +372,15 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject, defaultMocke
 
               if (shouldDelete) {
                 const filePath = join(screenshotDir, file)
+
+                // Security: Validate that the resolved path is still within screenshotDir
+                // This prevents path traversal attacks if the file variable could be malicious
+                const normalizedFilePath = resolve(filePath)
+                const normalizedScreenshotDir = resolve(screenshotDir)
+                if (!normalizedFilePath.startsWith(normalizedScreenshotDir + sep)) {
+                  continue // Skip files outside the screenshot directory
+                }
+
                 checkFileAccess(filePath)
                 rmSync(filePath, { force: true })
               }
