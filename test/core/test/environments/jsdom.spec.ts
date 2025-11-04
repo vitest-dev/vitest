@@ -153,7 +153,7 @@ describe('FormData', () => {
 
     const retrievedBlob = form.get(key)
 
-    expect(retrievedBlob).not.toBeTypeOf('string')
+    expect(retrievedBlob).toBeInstanceOf(Blob)
   })
 
   test('supports File', () => {
@@ -166,7 +166,7 @@ describe('FormData', () => {
 
     const retrievedBlob = form.get(key)
 
-    expect(retrievedBlob).not.toBeTypeOf('string')
+    expect(retrievedBlob).toBeInstanceOf(File)
   })
 })
 

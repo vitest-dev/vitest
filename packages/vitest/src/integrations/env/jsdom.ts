@@ -39,6 +39,7 @@ function catchWindowErrors(window: DOMWindow) {
 
 let NodeFormData_!: typeof FormData
 let NodeBlob_!: typeof NodeBlob
+let NodeRequest_!: typeof Request
 
 export default <Environment>{
   name: 'jsdom',
@@ -47,6 +48,7 @@ export default <Environment>{
     // delay initialization because it takes ~1s
     NodeFormData_ = globalThis.FormData
     NodeBlob_ = globalThis.Blob as typeof NodeBlob
+    NodeRequest_ = globalThis.Request
 
     const { CookieJar, JSDOM, ResourceLoader, VirtualConsole } = await import(
       'jsdom',
@@ -91,7 +93,7 @@ export default <Environment>{
     // TODO: browser doesn't expose Buffer, but a lot of dependencies use it
     dom.window.Buffer = Buffer
     dom.window.jsdom = dom
-    dom.window.FormData = createFormData(dom.window, utils)
+    dom.window.Request = createCompatRequest(utils)
     dom.window.URL = createJSDOMCompatURL(utils)
 
     // inject web globals if they are missing in JSDOM but otherwise available in Nodejs
@@ -118,14 +120,14 @@ export default <Environment>{
     // we also should override other APIs they use
     const overrideGlobals = [
       'fetch',
-      'Request',
       'Response',
       'Headers',
       'AbortController',
       'AbortSignal',
       'URLSearchParams',
-      // URL is overriden with a compat one
+      // URL and Request is overriden with a compat one
       // 'URL',
+      // 'Request',
     ] as const
     for (const name of overrideGlobals) {
       const value = globalThis[name]
@@ -150,6 +152,7 @@ export default <Environment>{
     // delay initialization because it takes ~1s
     NodeFormData_ = globalThis.FormData
     NodeBlob_ = globalThis.Blob as typeof NodeBlob
+    NodeRequest_ = globalThis.Request
 
     const { CookieJar, JSDOM, ResourceLoader, VirtualConsole } = await import(
       'jsdom',
@@ -195,7 +198,7 @@ export default <Environment>{
     const utils = createCompatUtils(dom.window)
 
     global.jsdom = dom
-    global.FormData = createFormData(dom.window, utils)
+    global.Request = createCompatRequest(utils)
     global.URL = createJSDOMCompatURL(utils)
 
     return {
@@ -211,38 +214,19 @@ export default <Environment>{
   },
 }
 
-// Node.js 24 has a global FormData that Request accepts
-// FormData is not used anywhere else in JSDOM, so we can safely
-// override it with Node.js implementation, but keep the DOM behaviour
-// this is required because Request (and other fetch API)
-// are not implemented by JSDOM
-function createFormData(window: DOMWindow, utils: CompatUtils) {
-  const JSDOMFormData = window.FormData
-  if (!NodeFormData_) {
-    return JSDOMFormData
-  }
-
-  return class FormData extends NodeFormData_ {
-    constructor(...args: any[]) {
-      super()
-      const formData = new JSDOMFormData(...args)
-      formData.forEach((value, key) => {
-        this.append(key, value)
-      })
-    }
-
-    set(...args: [name: string, blobValue: unknown, filename?: string]) {
-      if (args[1] instanceof window.Blob) {
-        args[1] = utils.makeCompatBlob(args[1] as NodeBlob)
+function createCompatRequest(utils: CompatUtils) {
+  return class Request extends NodeRequest_ {
+    constructor(...args: [input: RequestInfo, init?: RequestInit]) {
+      const [_, init] = args
+      if (init?.body != null) {
+        if (init.body instanceof utils.window.Blob) {
+          init.body = utils.makeCompatBlob(init.body as any) as any
+        }
+        if (init.body instanceof utils.window.FormData) {
+          init.body = utils.makeCompatFormData(init.body)
+        }
       }
-      return super.set(...args as [string, string])
-    }
-
-    append(...args: [name: string, blobValue: unknown, filename?: string]) {
-      if (args[1] instanceof window.Blob) {
-        args[1] = utils.makeCompatBlob(args[1] as NodeBlob)
-      }
-      return super.append(...args as [string, string])
+      super(...args)
     }
   }
 }
@@ -250,14 +234,19 @@ function createFormData(window: DOMWindow, utils: CompatUtils) {
 function createJSDOMCompatURL(utils: CompatUtils): typeof URL {
   return class URL extends NodeURL {
     static createObjectURL(blob: NodeBlob): string {
-      const compatBlob = utils.makeCompatBlob(blob)
-      return NodeURL.createObjectURL(compatBlob)
+      if (blob instanceof utils.window.Blob) {
+        const compatBlob = utils.makeCompatBlob(blob)
+        return NodeURL.createObjectURL(compatBlob)
+      }
+      return NodeURL.createObjectURL(blob)
     }
   } as typeof URL
 }
 
 interface CompatUtils {
+  window: DOMWindow
   makeCompatBlob: (blob: NodeBlob) => NodeBlob
+  makeCompatFormData: (formData: FormData) => FormData
 }
 
 function createCompatUtils(window: DOMWindow): CompatUtils {
@@ -266,15 +255,26 @@ function createCompatUtils(window: DOMWindow): CompatUtils {
   const implSymbol = Object.getOwnPropertySymbols(
     Object.getOwnPropertyDescriptors(new window.Blob()),
   )[0]
-  return {
+  const utils = {
+    window,
+    makeCompatFormData(formData: FormData) {
+      const nodeFormData = new NodeFormData_()
+      formData.forEach((value, key) => {
+        if (value instanceof window.Blob) {
+          nodeFormData.append(key, utils.makeCompatBlob(value as any) as any)
+        }
+        else {
+          nodeFormData.append(key, value)
+        }
+      })
+      return nodeFormData
+    },
     makeCompatBlob(blob: NodeBlob) {
-      if (blob instanceof window.Blob) {
-        const buffer = (blob as any)[implSymbol]._buffer
-        return new NodeBlob_([buffer], { type: blob.type })
-      }
-      return blob
+      const buffer = (blob as any)[implSymbol]._buffer
+      return new NodeBlob_([buffer], { type: blob.type })
     },
   }
+  return utils
 }
 
 function patchAddEventListener(window: DOMWindow) {
