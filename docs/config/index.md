@@ -167,17 +167,17 @@ Inject inline source map to modules.
 
 #### server.debug
 
-- **Type:** `{ dumpModules?, loadDumppedModules? }`
+- **Type:** `{ dump?, load? }`
 
 Module runner debugger options.
 
-#### server.debug.dumpModules
+#### server.debug.dump
 
 - **Type:** `boolean | string`
 
 Dump the transformed module to filesystem. Passing a string will dump to the specified path.
 
-#### server.debug.loadDumppedModules
+#### server.debug.load
 
 - **Type:** `boolean`
 
@@ -214,7 +214,7 @@ If `true`, every dependency will be inlined. All dependencies, specified in [`ss
 - **Type** `boolean`
 - **Default:** `false`
 
-When a dependency is a valid ESM package, try to guess the cjs version based on the path. This might be helpful, if a dependency has the wrong ESM file.
+When a dependency is a valid ESM package, try to guess the CJS version based on the path. This might be helpful, if a dependency has the wrong ESM file.
 
 This might potentially cause some misalignment if a package has different logic in ESM and CJS mode.
 
