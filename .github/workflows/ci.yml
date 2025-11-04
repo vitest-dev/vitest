@@ -135,7 +135,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        node-version: 24
+        node-version: [24]
         os:
           - macos-latest
           - windows-latest
