@@ -1,5 +1,4 @@
 import type { DOMWindow } from 'jsdom'
-import type { NodeBlob } from 'node:buffer'
 import type { Environment } from '../../types/environment'
 import type { JSDOMOptions } from '../../types/jsdom-options'
 import { URL as NodeURL } from 'node:url'
@@ -38,7 +37,7 @@ function catchWindowErrors(window: DOMWindow) {
 }
 
 let NodeFormData_!: typeof FormData
-let NodeBlob_!: typeof NodeBlob
+let NodeBlob_!: typeof Blob
 let NodeRequest_!: typeof Request
 
 export default <Environment>{
@@ -47,7 +46,7 @@ export default <Environment>{
   async setupVM({ jsdom = {} }) {
     // delay initialization because it takes ~1s
     NodeFormData_ = globalThis.FormData
-    NodeBlob_ = globalThis.Blob as typeof NodeBlob
+    NodeBlob_ = globalThis.Blob
     NodeRequest_ = globalThis.Request
 
     const { CookieJar, JSDOM, ResourceLoader, VirtualConsole } = await import(
@@ -151,7 +150,7 @@ export default <Environment>{
   async setup(global, { jsdom = {} }) {
     // delay initialization because it takes ~1s
     NodeFormData_ = globalThis.FormData
-    NodeBlob_ = globalThis.Blob as typeof NodeBlob
+    NodeBlob_ = globalThis.Blob
     NodeRequest_ = globalThis.Request
 
     const { CookieJar, JSDOM, ResourceLoader, VirtualConsole } = await import(
@@ -233,10 +232,10 @@ function createCompatRequest(utils: CompatUtils) {
 
 function createJSDOMCompatURL(utils: CompatUtils): typeof URL {
   return class URL extends NodeURL {
-    static createObjectURL(blob: NodeBlob): string {
+    static createObjectURL(blob: any): string {
       if (blob instanceof utils.window.Blob) {
         const compatBlob = utils.makeCompatBlob(blob)
-        return NodeURL.createObjectURL(compatBlob)
+        return NodeURL.createObjectURL(compatBlob as any)
       }
       return NodeURL.createObjectURL(blob)
     }
@@ -245,7 +244,7 @@ function createJSDOMCompatURL(utils: CompatUtils): typeof URL {
 
 interface CompatUtils {
   window: DOMWindow
-  makeCompatBlob: (blob: NodeBlob) => NodeBlob
+  makeCompatBlob: (blob: Blob) => Blob
   makeCompatFormData: (formData: FormData) => FormData
 }
 
@@ -269,7 +268,7 @@ function createCompatUtils(window: DOMWindow): CompatUtils {
       })
       return nodeFormData
     },
-    makeCompatBlob(blob: NodeBlob) {
+    makeCompatBlob(blob: Blob) {
       const buffer = (blob as any)[implSymbol]._buffer
       return new NodeBlob_([buffer], { type: blob.type })
     },
