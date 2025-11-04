@@ -31,13 +31,13 @@ to = "/guide/projects"
 status = 301
 
 [[redirects]]
-from = "/advanced/api/*"
-to = "/api/advanced/:splat"
+from = "/advanced/api"
+to = "/guide/advanced"
 status = 301
 
 [[redirects]]
-from = "/advanced/api"
-to = "/guide/advanced"
+from = "/advanced/api/*"
+to = "/api/advanced/:splat"
 status = 301
 
 [[redirects]]
