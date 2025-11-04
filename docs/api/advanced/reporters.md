@@ -32,7 +32,7 @@ Tests and suites within a single module will be reported in order unless they we
 
 Note that since test modules can run in parallel, Vitest will report them in parallel.
 
-This guide lists all supported reporter methods. However, don't forget that instead of creating your own reporter, you can [extend existing one](/advanced/reporters) instead:
+This guide lists all supported reporter methods. However, don't forget that instead of creating your own reporter, you can [extend existing one](/guide/advanced/reporters) instead:
 
 ```ts [custom-reporter.js]
 import { BaseReporter } from 'vitest/reporters'

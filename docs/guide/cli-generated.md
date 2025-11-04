@@ -299,13 +299,6 @@ Mock browser API with happy-dom
 
 Run tests in the browser. Equivalent to `--browser.enabled` (default: `false`)
 
-### browser.name
-
-- **CLI:** `--browser.name <name>`
-- **Config:** [browser.name](/config/browser/name)
-
-Run all tests in a specific browser. Some browsers are only available for specific providers (see `--browser.provider`). Visit [`browser.name`](/guide/browser/config/#browser-name) for more information
-
 ### browser.headless
 
 - **CLI:** `--browser.headless`

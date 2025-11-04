@@ -1,6 +1,6 @@
 # TestSuite
 
-The `TestSuite` class represents a single suite. This class is only available in the main thread. Refer to the ["Runner API"](/api/api/advanced/runner#tasks) if you are working with runtime tasks.
+The `TestSuite` class represents a single suite. This class is only available in the main thread. Refer to the ["Runner API"](/api/advanced/runner#tasks) if you are working with runtime tasks.
 
 The `TestSuite` instance always has a `type` property with the value of `suite`. You can use it to distinguish between different task types:
 
@@ -197,7 +197,7 @@ Note that errors are serialized into simple objects: `instanceof Error` will alw
 function meta(): TaskMeta
 ```
 
-Custom [metadata](/api/api/advanced/metadata) that was attached to the suite during its execution or collection. The meta can be attached by assigning a property to the `suite.meta` object during a test run:
+Custom [metadata](/api/advanced/metadata) that was attached to the suite during its execution or collection. The meta can be attached by assigning a property to the `suite.meta` object during a test run:
 
 ```ts {7,12}
 import { test } from 'vitest'
