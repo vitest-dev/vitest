@@ -28,9 +28,6 @@ import { transformHead } from './scripts/transformHead'
 
 export default ({ mode }: { mode: string }) => {
   return withPwa(defineConfig({
-    // TODO: remove when finished
-    // ignoreDeadLinks: true,
-
     lang: 'en-US',
     title: vitestName,
     description: vitestDescription,
@@ -853,7 +850,7 @@ export default ({ mode }: { mode: string }) => {
             ],
           },
           {
-            text: 'Advanced Guides',
+            text: 'Advanced',
             collapsed: true,
             items: [
               {
@@ -930,7 +927,7 @@ export default ({ mode }: { mode: string }) => {
             ],
           },
           {
-            text: 'Advanced API',
+            text: 'Advanced',
             collapsed: true,
             items: [
               {
