@@ -761,6 +761,22 @@ export function resolveConfig(
   else {
     resolved.browser.screenshotFailures ??= !isPreview && !resolved.browser.ui
   }
+
+  // Set default for screenshotTestEnd
+  if (isPreview && resolved.browser.screenshotTestEnd === true) {
+    console.warn(c.yellow(
+      [
+        `Browser provider "preview" doesn't support screenshots, `,
+        `so "browser.screenshotTestEnd" option is forcefully disabled. `,
+        `Set "browser.screenshotTestEnd" to false or remove it from the config to suppress this warning.`,
+      ].join(''),
+    ))
+    resolved.browser.screenshotTestEnd = false
+  }
+  else {
+    resolved.browser.screenshotTestEnd ??= false
+  }
+
   if (resolved.browser.provider && resolved.browser.provider.options == null) {
     resolved.browser.provider.options = {}
   }

@@ -103,6 +103,7 @@ export interface SerializedConfig {
       testIdAttribute: string
     }
     screenshotFailures: boolean
+    screenshotTestEnd: boolean
     providerOptions: {
       // for playwright
       actionTimeout?: number

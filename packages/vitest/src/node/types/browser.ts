@@ -240,6 +240,13 @@ export interface BrowserConfigOptions {
   screenshotFailures?: boolean
 
   /**
+   * Automatically capture screenshots at the end of each test
+   * Requires browser mode to be enabled
+   * @default false
+   */
+  screenshotTestEnd?: boolean
+
+  /**
    * Path to the index.html file that will be used to run tests.
    */
   testerHtmlPath?: string

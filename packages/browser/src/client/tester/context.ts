@@ -291,8 +291,13 @@ export const page: BrowserPage = {
     screenshotIds[repeatCount] ??= {}
     screenshotIds[repeatCount][taskName] = number + 1
 
+    // Append instance name only when screenshotTestEnd is enabled (for multi-instance automatic screenshots)
+    const config = getBrowserState().config
+    const shouldAppendInstance = config.browser?.screenshotTestEnd && config.name
+    const baseName = `${taskName.replace(/[^a-z0-9]/gi, '-').replace(/-+/g, '-')}-${number}`
+    const instanceSuffix = shouldAppendInstance ? `-${config.name}` : ''
     const name
-      = options.path || `${taskName.replace(/[^a-z0-9]/gi, '-')}-${number}.png`
+      = options.path || `${baseName}${instanceSuffix}.png`
 
     const normalizedOptions = 'mask' in options
       ? {

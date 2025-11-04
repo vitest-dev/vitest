@@ -108,6 +108,7 @@ export function serializeConfig(project: TestProject): SerializedConfig {
         ui: browser.ui,
         viewport: browser.viewport,
         screenshotFailures: browser.screenshotFailures,
+        screenshotTestEnd: browser.screenshotTestEnd,
         locators: {
           testIdAttribute: browser.locators.testIdAttribute,
         },
