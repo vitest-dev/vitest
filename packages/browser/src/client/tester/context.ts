@@ -301,7 +301,7 @@ export const page: BrowserPage = {
         }
       : options
 
-    return ensureAwaited(error => triggerCommand(
+    const screenshot = await ensureAwaited(error => triggerCommand(
       '__vitest_screenshot',
       [
         name,
@@ -314,6 +314,14 @@ export const page: BrowserPage = {
       ],
       error,
     ))
+
+    // Store screenshot path in array for UI display
+    if (screenshot && typeof screenshot === 'string') {
+      currentTest.meta.screenshotPaths ??= []
+      currentTest.meta.screenshotPaths.push(screenshot)
+    }
+
+    return screenshot
   },
   getByRole() {
     throw new Error(`Method "getByRole" is not supported by the "${provider}" provider.`)

@@ -112,6 +112,7 @@ export interface SerializedConfig {
   }
   ui: {
     enabled: boolean
+    screenshotsInReport: boolean
   }
   standalone: boolean
   logHeapUsage: boolean | undefined

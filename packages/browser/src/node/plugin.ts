@@ -108,7 +108,8 @@ export default (parentServer: ParentBrowserProject, base = '/'): Plugin[] => {
             }
 
             const task = parentServer.vitest.state.idMap.get(id)
-            const file = task?.meta.failScreenshotPath
+            // Check for both failScreenshotPath and screenshotPath
+            const file = task?.meta.failScreenshotPath || task?.meta.screenshotPath
             if (!file) {
               res.statusCode = 404
               res.end()
