@@ -42,7 +42,6 @@ Base directory to scan for the test files
 ### ui
 
 - **CLI:** `--ui`
-- **Config:** [ui](/config/ui)
 
 Enable UI
 
@@ -302,7 +301,6 @@ Run tests in the browser. Equivalent to `--browser.enabled` (default: `false`)
 ### browser.name
 
 - **CLI:** `--browser.name <name>`
-- **Config:** [browser.name](/config/browser/name)
 
 Run all tests in a specific browser. Some browsers are only available for specific providers (see `--browser.provider`).
 
@@ -358,7 +356,6 @@ Show Vitest UI when running tests (default: `!process.env.CI`)
 ### browser.fileParallelism
 
 - **CLI:** `--browser.fileParallelism`
-- **Config:** [browser.fileParallelism](/config/browser/fileparallelism)
 
 Should browser test files run in parallel. Use `--browser.fileParallelism=false` to disable (default: `true`)
 
@@ -504,7 +501,6 @@ Enable Node.js inspector (default: `127.0.0.1:9229`)
 ### inspectBrk
 
 - **CLI:** `--inspectBrk [[host:]port]`
-- **Config:** [inspectBrk](/config/inspectbrk)
 
 Enable Node.js inspector and break before the test starts
 

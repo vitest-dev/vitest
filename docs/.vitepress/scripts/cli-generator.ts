@@ -39,6 +39,8 @@ const skipConfig = new Set([
   'inspectBrk',
   'project',
   'ui',
+  'browser.name',
+  'browser.fileParallelism',
 ])
 
 function resolveOptions(options: CLIOptions<any>, parentName?: string) {

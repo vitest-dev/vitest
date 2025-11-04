@@ -575,7 +575,7 @@ export default ({ mode }: { mode: string }) => {
               },
               {
                 text: 'browser.testerHtmlPath',
-                link: '/config/browser/tester-html-path',
+                link: '/config/browser/testerhtmlpath',
               },
               {
                 text: 'browser.api',
@@ -599,15 +599,15 @@ export default ({ mode }: { mode: string }) => {
               },
               {
                 text: 'browser.screenshotDirectory',
-                link: '/config/browser/screenshot-directory',
+                link: '/config/browser/screenshotdirectory',
               },
               {
                 text: 'browser.screenshotFailures',
-                link: '/config/browser/screenshot-failures',
+                link: '/config/browser/screenshotfailures',
               },
               {
                 text: 'browser.orchestratorScripts',
-                link: '/config/browser/orchestrator-scripts',
+                link: '/config/browser/orchestratorscripts',
               },
               {
                 text: 'browser.commands',
@@ -615,7 +615,7 @@ export default ({ mode }: { mode: string }) => {
               },
               {
                 text: 'browser.connectTimeout',
-                link: '/config/browser/connect-timeout',
+                link: '/config/browser/connecttimeout',
               },
               {
                 text: 'browser.trace',
@@ -623,7 +623,7 @@ export default ({ mode }: { mode: string }) => {
               },
               {
                 text: 'browser.trackUnhandledErrors',
-                link: '/config/browser/track-unhandled-errors',
+                link: '/config/browser/trackunhandlederrors',
               },
               {
                 text: 'browser.expect',

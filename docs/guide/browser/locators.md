@@ -368,7 +368,7 @@ page.getByTitle('Create') // ❌
 function getByTestId(text: string | RegExp): Locator
 ```
 
-Creates a locator capable of finding an element that matches the specified test id attribute. You can configure the attribute name with [`browser.locators.testIdAttribute`](/config/browser/locators-testidattribute).
+Creates a locator capable of finding an element that matches the specified test id attribute. You can configure the attribute name with [`browser.locators.testIdAttribute`](/config/browser/locators#testidattribute).
 
 ```tsx
 <div data-testid="custom-element" />

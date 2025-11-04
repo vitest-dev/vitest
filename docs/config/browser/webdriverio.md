@@ -60,5 +60,5 @@ You can find most available options in the [WebdriverIO documentation](https://w
 ::: tip
 Most useful options are located on `capabilities` object. WebdriverIO allows nested capabilities, but Vitest will ignore those options because we rely on a different mechanism to spawn several browsers.
 
-Note that Vitest will ignore `capabilities.browserName` — use [`test.browser.instances.browser`](/config/browser/capabilities-name) instead.
+Note that Vitest will ignore `capabilities.browserName` — use [`test.browser.instances.browser`](/config/browser/instances#browser) instead.
 :::

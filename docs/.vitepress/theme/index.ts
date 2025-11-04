@@ -27,6 +27,9 @@ export default {
   },
   enhanceApp({ app, router }) {
     router.onBeforeRouteChange = (to) => {
+      if (typeof location === 'undefined') {
+        return true
+      }
       const url = new URL(to, location.href)
       if (!url.hash) {
         return true
@@ -36,6 +39,7 @@ export default {
         setTimeout(() => { router.go(`/config/${page}${hash.length ? '#' : ''}${hash.join('-')}`) })
         return false
       }
+      // TODO: /guide/browser/config
     }
     app.component('Version', Version)
     app.component('CRoot', CRoot)

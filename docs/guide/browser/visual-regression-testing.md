@@ -144,7 +144,7 @@ During stability detection, Vitest calls comparators with `createDiff: false` si
 ### Global Configuration
 
 Configure visual regression testing defaults in your
-[Vitest config](/config/browser/expect-tomatchscreenshot):
+[Vitest config](/config/browser/expect#tomatchscreenshot):
 
 ```ts [vitest.config.ts]
 import { defineConfig } from 'vitest/config'
