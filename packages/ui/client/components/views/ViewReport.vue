@@ -7,6 +7,7 @@ import { mapLeveledTaskStacks } from '~/composables/error'
 import { openScreenshot, useScreenshot } from '~/composables/screenshot'
 import IconButton from '../IconButton.vue'
 import Modal from '../Modal.vue'
+import StatusBanner from '../StatusBanner.vue'
 import ScreenshotError from './ScreenshotError.vue'
 import ViewReportError from './ViewReportError.vue'
 
@@ -72,6 +73,7 @@ const {
   <div h-full class="scrolls">
     <template v-if="failed.length">
       <div v-for="task of failed" :id="task.id" :key="task.id">
+        <StatusBanner :task="task" />
         <div
           bg="red-500/10"
           text="red-500 sm"
@@ -124,9 +126,7 @@ const {
       </div>
     </template>
     <template v-else>
-      <div bg="green-500/10" text="green-500 sm" p="x4 y2" m-2 rounded>
-        All tests passed in this file
-      </div>
+      <StatusBanner :file="file" />
     </template>
     <template v-if="browserState">
       <Modal v-model="showScreenshot" direction="right">
