@@ -324,7 +324,7 @@ await expect.element(page.getByText('Vitest')).toBeInViewport({ ratio: 1 })
 ## toContainElement
 
 ```ts
-function toContainElement(element: HTMLElement | SVGElement | null): Promise<void>
+function toContainElement(element: HTMLElement | SVGElement | Locator | null): Promise<void>
 ```
 
 This allows you to assert whether an element contains another element as a descendant or not.

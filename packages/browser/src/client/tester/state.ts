@@ -8,6 +8,7 @@ const sessionId = getBrowserState().sessionId
 
 const state: WorkerGlobalState = {
   ctx: {
+    rpc: null as any,
     pool: 'browser',
     workerId: 1,
     config,

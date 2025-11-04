@@ -29,7 +29,6 @@ export function listenForErrors(state: () => WorkerGlobalState): void {
       if (worker.filepath) {
         error.VITEST_TEST_PATH = worker.filepath
       }
-      error.VITEST_AFTER_ENV_TEARDOWN = worker.environmentTeardownRun
     }
     state().rpc.onUnhandledError(error, type)
   }

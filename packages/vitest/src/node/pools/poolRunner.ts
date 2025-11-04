@@ -1,6 +1,7 @@
 import type { DeferPromise } from '@vitest/utils/helpers'
 import type { BirpcReturn } from 'birpc'
 import type { RunnerRPC, RuntimeRPC } from '../../types/rpc'
+import type { ContextTestEnvironment } from '../../types/worker'
 import type { TestProject } from '../project'
 import type { PoolOptions, PoolWorker, WorkerRequest, WorkerResponse } from './types'
 import { EventEmitter } from 'node:events'
@@ -25,7 +26,7 @@ export class PoolRunner {
   public poolId: number | undefined = undefined
 
   public readonly project: TestProject
-  public readonly environment: string
+  public readonly environment: ContextTestEnvironment
 
   private _state: RunnerState = RunnerState.IDLE
   private _operationLock: DeferPromise<void> | null = null
@@ -108,6 +109,14 @@ export class PoolRunner {
         __vitest_worker_request__: true,
         options: {
           reportMemory: this.worker.reportMemory ?? false,
+        },
+        context: {
+          environment: {
+            name: this.environment.name,
+            options: this.environment.options,
+          },
+          config: this.project.serializedConfig,
+          pool: this.worker.name,
         },
       })
 
@@ -232,11 +241,16 @@ export class PoolRunner {
   }
 
   private waitForStart() {
-    return new Promise<void>((resolve) => {
+    return new Promise<void>((resolve, reject) => {
       const onStart = (message: WorkerResponse) => {
         if (message.type === 'started') {
           this.off('message', onStart)
-          resolve()
+          if (message.error) {
+            reject(message.error)
+          }
+          else {
+            resolve()
+          }
         }
       }
 

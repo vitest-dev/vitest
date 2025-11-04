@@ -1,7 +1,7 @@
 // Disable automatic exports.
 
 import { ARIARole } from './aria-role.ts'
-import { ScreenshotComparatorRegistry, ScreenshotMatcherOptions } from './context.js'
+import { Locator, ScreenshotComparatorRegistry, ScreenshotMatcherOptions } from './context.js'
 
 export interface TestingLibraryMatchers<E, R> {
   /**
@@ -207,7 +207,7 @@ export interface TestingLibraryMatchers<E, R> {
    * await expect.element(ancestor).not.toContainElement(nonExistentElement)
    * @see https://vitest.dev/guide/browser/assertion-api#tocontainelement
    */
-  toContainElement(element: HTMLElement | SVGElement | null): R
+  toContainElement(element: HTMLElement | SVGElement | Locator | null): R
   /**
    * @description
    * Assert whether a string representing a HTML element is contained in another element.
