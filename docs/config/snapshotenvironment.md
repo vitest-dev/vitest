@@ -1,3 +1,8 @@
+---
+title: snapshotEnvironment | Config
+outline: deep
+---
+
 # snapshotEnvironment
 
 - **Type:** `string`

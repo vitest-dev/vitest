@@ -1,3 +1,8 @@
+---
+title: slowTestThreshold | Config
+outline: deep
+---
+
 # slowTestThreshold
 
 - **Type**: `number`

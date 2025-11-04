@@ -1,3 +1,8 @@
+---
+title: snapshotFormat | Config
+outline: deep
+---
+
 # snapshotFormat
 
 - **Type:** `PrettyFormatOptions`

@@ -1,3 +1,8 @@
+---
+title: teardownTimeout | Config
+outline: deep
+---
+
 # teardownTimeout
 
 - **Type:** `number`

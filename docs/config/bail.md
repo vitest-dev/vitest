@@ -1,3 +1,8 @@
+---
+title: bail | Config
+outline: deep
+---
+
 # bail
 
 - **Type:** `number`

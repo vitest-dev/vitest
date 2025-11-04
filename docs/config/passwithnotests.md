@@ -1,3 +1,8 @@
+---
+title: passWithNoTests | Config
+outline: deep
+---
+
 # passWithNoTests
 
 - **Type**: `boolean`

@@ -1,3 +1,8 @@
+---
+title: api | Config
+outline: deep
+---
+
 # api
 
 - **Type:** `boolean | number`

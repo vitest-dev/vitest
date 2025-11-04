@@ -1,3 +1,8 @@
+---
+title: maxWorkers | Config
+outline: deep
+---
+
 # maxWorkers
 
 - **Type:** `number | string`

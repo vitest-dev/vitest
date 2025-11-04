@@ -36,6 +36,16 @@ to = "/api/advanced/:splat"
 status = 301
 
 [[redirects]]
+from = "/advanced/api"
+to = "/guide/advanced"
+status = 301
+
+[[redirects]]
+from = "/advanced/*"
+to = "/guide/advanced/:splat"
+status = 301
+
+[[redirects]]
 from = "/guide/workspace.html"
 to = "/guide/projects"
 status = 301

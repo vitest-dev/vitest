@@ -1,3 +1,8 @@
+---
+title: css | Config
+outline: deep
+---
+
 # css
 
 - **Type**: `boolean | { include?, exclude?, modules? }`

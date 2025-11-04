@@ -1,3 +1,8 @@
+---
+title: maxConcurrency | Config
+outline: deep
+---
+
 # maxConcurrency
 
 - **Type**: `number`

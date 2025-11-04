@@ -1,3 +1,8 @@
+---
+title: isolate | Config
+outline: deep
+---
+
 # isolate
 
 - **Type:** `boolean`

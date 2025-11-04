@@ -1,3 +1,8 @@
+---
+title: open | Config
+outline: deep
+---
+
 # open
 
 - **Type:** `boolean`

@@ -1,3 +1,8 @@
+---
+title: dir | Config
+outline: deep
+---
+
 # dir
 
 - **Type:** `string`

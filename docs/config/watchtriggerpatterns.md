@@ -1,3 +1,8 @@
+---
+title: watchTriggerPatterns | Config
+outline: deep
+---
+
 # watchTriggerPatterns
 
 - **Type:** `WatcherTriggerPattern[]`

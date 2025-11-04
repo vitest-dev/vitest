@@ -1,3 +1,8 @@
+---
+title: onStackTrace | Config
+outline: deep
+---
+
 # onStackTrace
 
 - **Type**: `(error: Error, frame: ParsedStack) => boolean | void`

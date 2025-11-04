@@ -1,3 +1,8 @@
+---
+title: setupFiles | Config
+outline: deep
+---
+
 # setupFiles
 
 - **Type:** `string | string[]`

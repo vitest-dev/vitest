@@ -1,3 +1,8 @@
+---
+title: restoreMocks | Config
+outline: deep
+---
+
 # restoreMocks
 
 - **Type:** `boolean`

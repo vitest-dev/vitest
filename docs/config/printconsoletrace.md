@@ -1,3 +1,8 @@
+---
+title: printConsoleTrace | Config
+outline: deep
+---
+
 # printConsoleTrace
 
 - **Type:** `boolean`

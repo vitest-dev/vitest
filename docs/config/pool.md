@@ -1,3 +1,8 @@
+---
+title: pool | Config
+outline: deep
+---
+
 # pool
 
 - **Type:** `'threads' | 'forks' | 'vmThreads' | 'vmForks'`

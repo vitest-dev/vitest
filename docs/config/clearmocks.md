@@ -1,3 +1,8 @@
+---
+title: clearMocks | Config
+outline: deep
+---
+
 # clearMocks
 
 - **Type:** `boolean`

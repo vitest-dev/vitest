@@ -1,3 +1,8 @@
+---
+title: runner | Config
+outline: deep
+---
+
 # runner
 
 - **Type**: `VitestRunnerConstructor`

@@ -1,3 +1,8 @@
+---
+title: unstubGlobals | Config
+outline: deep
+---
+
 # unstubGlobals
 
 - **Type:** `boolean`

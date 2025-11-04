@@ -1,3 +1,8 @@
+---
+title: update | Config
+outline: deep
+---
+
 # update
 
 - **Type:** `boolean`

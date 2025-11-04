@@ -1,3 +1,8 @@
+---
+title: forceRerunTriggers | Config
+outline: deep
+---
+
 # forceRerunTriggers
 
 - **Type**: `string[]`

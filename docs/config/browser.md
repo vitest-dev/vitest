@@ -1,3 +1,8 @@
+---
+title: Browser Config Reference | Config
+outline: deep
+---
+
 # Browser Config Reference
 
 You can change the browser configuration by updating the `test.browser` field in your [config file](/config/). An example of a simple config file:

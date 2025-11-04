@@ -1,3 +1,8 @@
+---
+title: testTimeout | Config
+outline: deep
+---
+
 # testTimeout
 
 - **Type:** `number`

@@ -1,3 +1,8 @@
+---
+title: outputFile | Config
+outline: deep
+---
+
 # outputFile
 
 - **Type:** `string | Record<string, string>`

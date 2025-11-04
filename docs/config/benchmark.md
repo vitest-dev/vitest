@@ -1,3 +1,8 @@
+---
+title: benchmark | Config
+outline: deep
+---
+
 # benchmark
 
 - **Type:** `{ include?, exclude?, ... }`

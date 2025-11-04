@@ -1,3 +1,8 @@
+---
+title: attachmentsDir | Config
+outline: deep
+---
+
 # attachmentsDir
 
 - **Type:** `string`

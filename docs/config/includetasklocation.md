@@ -1,3 +1,8 @@
+---
+title: includeTaskLocation | Config
+outline: deep
+---
+
 # includeTaskLocation
 
 - **Type:** `boolean`

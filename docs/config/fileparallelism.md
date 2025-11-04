@@ -1,3 +1,8 @@
+---
+title: fileParallelism | Config
+outline: deep
+---
+
 # fileParallelism
 
 - **Type:** `boolean`

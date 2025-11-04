@@ -1,3 +1,8 @@
+---
+title: watch | Config
+outline: deep
+---
+
 # watch
 
 - **Type:** `boolean`

@@ -1,3 +1,8 @@
+---
+title: root | Config
+outline: deep
+---
+
 # root
 
 - **Type:** `string`

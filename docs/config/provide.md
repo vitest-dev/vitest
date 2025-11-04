@@ -1,3 +1,8 @@
+---
+title: provide | Config
+outline: deep
+---
+
 # provide
 
 - **Type:** `Partial<ProvidedContext>`

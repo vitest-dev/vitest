@@ -1,3 +1,8 @@
+---
+title: silent | Config
+outline: deep
+---
+
 # silent
 
 - **Type:** `boolean | 'passed-only'`

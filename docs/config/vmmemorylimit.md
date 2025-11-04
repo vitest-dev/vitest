@@ -1,3 +1,8 @@
+---
+title: vmMemoryLimit | Config
+outline: deep
+---
+
 # vmMemoryLimit
 
 - **Type:** `string | number`

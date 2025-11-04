@@ -1,4 +1,4 @@
-# Running Tests <Badge type="danger">advanced</Badge>
+# Running Tests <Badge type="danger">advanced</Badge> {#running-tests}
 
 ::: warning
 This guide explains how to use the advanced API to run tests via a Node.js script. If you just want to [run tests](/guide/), you probably don't need this. It is primarily used by library authors.

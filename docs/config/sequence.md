@@ -1,3 +1,8 @@
+---
+title: sequence | Config
+outline: deep
+---
+
 # sequence
 
 - **Type**: `{ sequencer?, shuffle?, seed?, hooks?, setupFiles?, groupOrder }`

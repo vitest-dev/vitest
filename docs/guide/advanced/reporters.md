@@ -1,4 +1,4 @@
-# Extending Reporters <Badge type="danger">advanced</Badge>
+# Extending Reporters <Badge type="danger">advanced</Badge> {#extending-reporters}
 
 ::: warning
 This is an advanced API. If you just want to configure built-in reporters, read the ["Reporters"](/guide/reporters) guide.

@@ -1,3 +1,8 @@
+---
+title: globalSetup | Config
+outline: deep
+---
+
 # globalSetup
 
 - **Type:** `string | string[]`

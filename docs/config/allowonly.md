@@ -1,3 +1,8 @@
+---
+title: allowOnly | Config
+outline: deep
+---
+
 # allowOnly
 
 - **Type**: `boolean`

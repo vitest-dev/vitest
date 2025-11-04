@@ -1,3 +1,8 @@
+---
+title: alias | Config
+outline: deep
+---
+
 # alias
 
 - **Type:** `Record<string, string> | Array<{ find: string | RegExp, replacement: string, customResolver?: ResolverFunction | ResolverObject }>`

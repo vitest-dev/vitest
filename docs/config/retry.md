@@ -1,3 +1,8 @@
+---
+title: retry | Config
+outline: deep
+---
+
 # retry
 
 - **Type:** `number`

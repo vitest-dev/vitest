@@ -1,3 +1,8 @@
+---
+title: logHeapUsage | Config
+outline: deep
+---
+
 # logHeapUsage
 
 - **Type**: `boolean`

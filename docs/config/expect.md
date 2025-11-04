@@ -1,3 +1,8 @@
+---
+title: expect | Config
+outline: deep
+---
+
 # expect
 
 - **Type:** `ExpectOptions`

@@ -1,3 +1,8 @@
+---
+title: unstubEnvs | Config
+outline: deep
+---
+
 # unstubEnvs
 
 - **Type:** `boolean`

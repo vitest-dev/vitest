@@ -1,3 +1,8 @@
+---
+title: deps | Config
+outline: deep
+---
+
 # deps
 
 - **Type:** `{ optimizer?, ... }`

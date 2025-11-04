@@ -1,3 +1,8 @@
+---
+title: cache | Config
+outline: deep
+---
+
 # cache
 
 - **Type**: `false`

@@ -2,7 +2,7 @@
 title: Advanced API
 ---
 
-# Getting Started <Badge type="danger">advanced</Badge>
+# Getting Started <Badge type="danger">advanced</Badge> {#getting-started}
 
 ::: warning
 This guide lists advanced APIs to run tests via a Node.js script. If you just want to [run tests](/guide/), you probably don't need this. It is primarily used by library authors.

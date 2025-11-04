@@ -1,3 +1,8 @@
+---
+title: resolveSnapshotPath | Config
+outline: deep
+---
+
 # resolveSnapshotPath
 
 - **Type**: `(testPath: string, snapExtension: string, context: { config: SerializedConfig }) => string`

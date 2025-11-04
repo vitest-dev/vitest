@@ -1,3 +1,8 @@
+---
+title: chaiConfig | Config
+outline: deep
+---
+
 # chaiConfig
 
 - **Type:** `{ includeStack?, showDiff?, truncateThreshold? }`

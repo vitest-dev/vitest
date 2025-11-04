@@ -1,3 +1,8 @@
+---
+title: typecheck | Config
+outline: deep
+---
+
 # typecheck
 
 Options for configuring [typechecking](/guide/testing-types) test environment.

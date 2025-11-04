@@ -1,3 +1,8 @@
+---
+title: testNamePattern | Config
+outline: deep
+---
+
 # testNamePattern
 
 - **Type** `string | RegExp`

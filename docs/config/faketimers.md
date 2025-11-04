@@ -1,3 +1,8 @@
+---
+title: fakeTimers | Config
+outline: deep
+---
+
 # fakeTimers
 
 - **Type:** `FakeTimerInstallOpts`

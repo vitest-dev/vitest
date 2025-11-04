@@ -1,3 +1,8 @@
+---
+title: diff | Config
+outline: deep
+---
+
 # diff
 
 - **Type:** `string`

@@ -1,3 +1,8 @@
+---
+title: projects | Config
+outline: deep
+---
+
 # projects
 
 - **Type:** `TestProjectConfiguration[]`

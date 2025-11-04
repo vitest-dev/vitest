@@ -1,3 +1,8 @@
+---
+title: hookTimeout | Config
+outline: deep
+---
+
 # hookTimeout
 
 - **Type:** `number`

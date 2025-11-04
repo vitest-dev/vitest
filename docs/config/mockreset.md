@@ -1,3 +1,8 @@
+---
+title: mockReset | Config
+outline: deep
+---
+
 # mockReset
 
 - **Type:** `boolean`
