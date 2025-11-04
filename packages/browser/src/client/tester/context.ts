@@ -169,7 +169,7 @@ function createPreviewUserEvent(userEventBase: TestingLibraryUserEvent, options:
         return option
       })
       await userEvent.selectOptions(
-        element,
+        toElement(element),
         options as string[] | HTMLElement[],
       )
     },

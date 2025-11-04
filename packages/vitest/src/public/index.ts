@@ -130,6 +130,14 @@ export type {
   MockedFunction,
   MockedObject,
   MockInstance,
+  MockResult,
+  MockResultIncomplete,
+  MockResultReturn,
+  MockResultThrow,
+  MockSettledResult,
+  MockSettledResultFulfilled,
+  MockSettledResultIncomplete,
+  MockSettledResultRejected,
 } from '@vitest/spy'
 
 export type { SerializedError } from '@vitest/utils'

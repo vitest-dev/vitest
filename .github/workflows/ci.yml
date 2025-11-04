@@ -89,9 +89,9 @@ jobs:
         node_version: [20, 22, 24]
         include:
           - os: macos-latest
-            node_version: 22
+            node_version: 24
           - os: windows-latest
-            node_version: 22
+            node_version: 24
       fail-fast: false
 
     steps:
@@ -168,7 +168,7 @@ jobs:
 
   test-rolldown:
     needs: changed
-    # macos-latest is the fastes one
+    # macos-latest is the fastest one
     name: 'Rolldown&Test: node-22, macos-latest'
     if: needs.changed.outputs.should_skip != 'true'
     runs-on: macos-latest

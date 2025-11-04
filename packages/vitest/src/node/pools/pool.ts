@@ -208,7 +208,7 @@ export class Pool {
       distPath: this.options.distPath,
       project: task.project,
       method,
-      environment: task.context.environment.name,
+      environment: task.environment,
       env: task.env,
       execArgv: task.execArgv,
     }
@@ -280,7 +280,7 @@ function isEqualRunner(runner: PoolRunner, task: PoolTask) {
   return (
     runner.worker.name === task.worker
     && runner.project === task.project
-    && runner.environment === task.context.environment.name
+    && runner.environment.name === task.environment.name
     && (!runner.worker.canReuse || runner.worker.canReuse(task))
   )
 }

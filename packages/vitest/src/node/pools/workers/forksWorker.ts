@@ -40,14 +40,8 @@ export class ForksPoolWorker implements PoolWorker {
   }
 
   send(message: WorkerRequest): void {
-    if ('context' in message) {
-      message = {
-        ...message,
-        context: {
-          ...message.context,
-          config: wrapSerializableConfig(message.context.config),
-        },
-      }
+    if ('context' in message && 'config' in message.context) {
+      message.context.config = wrapSerializableConfig(message.context.config)
     }
 
     this.fork.send(v8.serialize(message))

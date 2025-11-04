@@ -152,6 +152,7 @@ export interface BrowserConfigOptions {
    * Isolate test environment after each test
    *
    * @default true
+   * @deprecated use top-level `isolate` instead
    */
   isolate?: boolean
 
@@ -160,6 +161,7 @@ export interface BrowserConfigOptions {
    * This option only has effect in headless mode (enabled in CI by default)
    *
    * @default // Same as "test.fileParallelism"
+   * @deprecated use top-level `fileParallelism` instead
    */
   fileParallelism?: boolean
 

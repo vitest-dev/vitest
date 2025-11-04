@@ -1,11 +1,17 @@
 import { mkdir, writeFile } from 'node:fs/promises'
 import { fileURLToPath } from 'node:url'
+import { NonExported } from '@test/dep-esm-non-existing'
 import { resolve } from 'pathe'
 import { describe, expect, test, vi } from 'vitest'
 // @ts-expect-error module is not typed
 import promiseExport from '../src/cjs/promise-export'
 
 import { dynamicRelativeImport } from '../src/relative-import'
+
+test('can import type from an ESM dependency', () => {
+  // @ts-expect-error NonExported is type
+  expect(NonExported).toBe(undefined)
+})
 
 test('promise export works correctly', async () => {
   await expect(promiseExport).resolves.toEqual({ value: 42 })
