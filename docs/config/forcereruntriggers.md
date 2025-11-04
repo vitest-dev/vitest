@@ -3,7 +3,7 @@ title: forceRerunTriggers | Config
 outline: deep
 ---
 
-# forceRerunTriggers
+# forceRerunTriggers <CRoot />
 
 - **Type**: `string[]`
 - **Default:** `['**/package.json/**', '**/vitest.config.*/**', '**/vite.config.*/**']`

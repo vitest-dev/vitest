@@ -3,7 +3,7 @@ title: snapshotFormat | Config
 outline: deep
 ---
 
-# snapshotFormat
+# snapshotFormat <CRoot />
 
 - **Type:** `PrettyFormatOptions`
 

@@ -3,7 +3,7 @@ title: cache | Config
 outline: deep
 ---
 
-# cache
+# cache <CRoot />
 
 - **Type**: `false`
 - **CLI**: `--no-cache`, `--cache=false`

@@ -15,7 +15,7 @@ You can provide sequence options to CLI with dot notation:
 npx vitest --sequence.shuffle --sequence.seed=1000
 ```
 
-## sequence.sequencer
+## sequence.sequencer <CRoot />
 
 - **Type**: `TestSequencerConstructor`
 - **Default**: `BaseSequencer`
@@ -127,7 +127,7 @@ If you want tests to run in parallel, you can enable it with this option, or CLI
 When you run tests with `sequence.concurrent` and `expect.requireAssertions` set to `true`, you should use [local expect](/guide/test-context.html#expect) instead of the global one. Otherwise, this may cause false negatives in [some situations (#8469)](https://github.com/vitest-dev/vitest/issues/8469).
 :::
 
-## sequence.seed
+## sequence.seed <CRoot />
 
 - **Type**: `number`
 - **Default**: `Date.now()`

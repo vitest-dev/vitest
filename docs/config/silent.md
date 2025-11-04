@@ -3,7 +3,7 @@ title: silent | Config
 outline: deep
 ---
 
-# silent
+# silent <CRoot /> {#silent}
 
 - **Type:** `boolean | 'passed-only'`
 - **Default:** `false`

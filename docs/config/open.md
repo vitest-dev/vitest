@@ -3,7 +3,7 @@ title: open | Config
 outline: deep
 ---
 
-# open
+# open <CRoot />
 
 - **Type:** `boolean`
 - **Default:** `!process.env.CI`

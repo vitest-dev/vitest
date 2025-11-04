@@ -56,7 +56,7 @@ Run all tests inside a browser by default. Note that `--browser` only works if y
 
 Defines multiple browser setups. Every config has to have at least a `browser` field.
 
-You can specify most of the [project options](/config/) (not marked with a <NonProjectOption /> icon) and some of the `browser` options like `browser.testerHtmlPath`.
+You can specify most of the [project options](/config/) (not marked with a <CRoot /> icon) and some of the `browser` options like `browser.testerHtmlPath`.
 
 ::: warning
 Every browser config inherits options from the root config:

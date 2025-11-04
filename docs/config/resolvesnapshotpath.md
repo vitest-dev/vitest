@@ -3,7 +3,7 @@ title: resolveSnapshotPath | Config
 outline: deep
 ---
 
-# resolveSnapshotPath
+# resolveSnapshotPath <CRoot />
 
 - **Type**: `(testPath: string, snapExtension: string, context: { config: SerializedConfig }) => string`
 - **Default**: stores snapshot files in `__snapshots__` directory

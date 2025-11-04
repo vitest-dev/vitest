@@ -3,7 +3,7 @@ title: coverage | Config
 outline: deep
 ---
 
-# coverage
+# coverage <CRoot /> {#coverage}
 
 You can use [`v8`](/guide/coverage.html#v8-provider), [`istanbul`](/guide/coverage.html#istanbul-provider) or [a custom coverage solution](/guide/coverage#custom-coverage-provider) for coverage collection.
 

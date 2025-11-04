@@ -3,7 +3,7 @@ title: snapshotSerializers | Config
 outline: deep
 ---
 
-# snapshotSerializers
+# snapshotSerializers <CRoot />
 
 - **Type:** `string[]`
 - **Default:** `[]`

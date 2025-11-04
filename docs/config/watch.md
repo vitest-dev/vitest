@@ -3,7 +3,7 @@ title: watch | Config
 outline: deep
 ---
 
-# watch
+# watch <CRoot /> {#watch}
 
 - **Type:** `boolean`
 - **Default:** `!process.env.CI && process.stdin.isTTY`

@@ -3,7 +3,7 @@ title: onConsoleLog | Config
 outline: deep
 ---
 
-# onConsoleLog
+# onConsoleLog <CRoot />
 
 ```ts
 function onConsoleLog(

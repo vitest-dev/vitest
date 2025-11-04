@@ -3,7 +3,7 @@ title: watchTriggerPatterns | Config
 outline: deep
 ---
 
-# watchTriggerPatterns
+# watchTriggerPatterns <CRoot /> <Version>3.2.0</Version>
 
 - **Type:** `WatcherTriggerPattern[]`
 

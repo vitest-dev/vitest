@@ -523,7 +523,7 @@ export default ({ mode }: { mode: string }) => {
             items: [
               {
                 text: 'Providers',
-                collapsed: true,
+                collapsed: false,
                 items: [
                   {
                     text: 'playwright',
@@ -539,24 +539,24 @@ export default ({ mode }: { mode: string }) => {
                   },
                 ],
               },
-              {
-                text: 'Render Function',
-                collapsed: true,
-                items: [
-                  {
-                    text: 'react',
-                    link: '/config/browser/react',
-                  },
-                  {
-                    text: 'vue',
-                    link: '/config/browser/vue',
-                  },
-                  {
-                    text: 'svelte',
-                    link: '/config/browser/svelte',
-                  },
-                ],
-              },
+              // {
+              //   text: 'Render Function',
+              //   collapsed: true,
+              //   items: [
+              //     {
+              //       text: 'react',
+              //       link: '/config/browser/react',
+              //     },
+              //     {
+              //       text: 'vue',
+              //       link: '/config/browser/vue',
+              //     },
+              //     {
+              //       text: 'svelte',
+              //       link: '/config/browser/svelte',
+              //     },
+              //   ],
+              // },
               {
                 text: 'browser.enabled',
                 link: '/config/browser/enabled',
@@ -631,28 +631,29 @@ export default ({ mode }: { mode: string }) => {
               },
             ],
           },
-          {
-            text: '@vitest/plugin-eslint',
-            collapsed: true,
-            items: [
-              {
-                text: 'Lints',
-                link: '/config/eslint',
-              },
-              {
-                text: 'consistent-test-filename',
-                link: '/config/eslint/consistent-test-filename',
-              },
-              {
-                text: 'consistent-test-it',
-                link: '/config/eslint/consistent-test-it',
-              },
-            ],
-          },
-          {
-            text: 'vscode',
-            link: '/config/vscode',
-          },
+          // {
+          //   text: '@vitest/plugin-eslint',
+          //   collapsed: true,
+          //   items: [
+          //     {
+          //       text: 'Lints',
+          //       link: '/config/eslint',
+          //     },
+          //     // TODO: generate
+          //     {
+          //       text: 'consistent-test-filename',
+          //       link: '/config/eslint/consistent-test-filename',
+          //     },
+          //     {
+          //       text: 'consistent-test-it',
+          //       link: '/config/eslint/consistent-test-it',
+          //     },
+          //   ],
+          // },
+          // {
+          //   text: 'vscode',
+          //   link: '/config/vscode',
+          // },
         ],
         // TODO: only /guide
         '/': [

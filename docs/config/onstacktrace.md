@@ -3,7 +3,7 @@ title: onStackTrace | Config
 outline: deep
 ---
 
-# onStackTrace
+# onStackTrace <CRoot />
 
 - **Type**: `(error: Error, frame: ParsedStack) => boolean | void`
 

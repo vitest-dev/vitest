@@ -3,7 +3,7 @@ title: teardownTimeout | Config
 outline: deep
 ---
 
-# teardownTimeout
+# teardownTimeout <CRoot /> {#teardowntimeout}
 
 - **Type:** `number`
 - **Default:** `10000`

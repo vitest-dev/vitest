@@ -3,7 +3,7 @@ title: outputFile | Config
 outline: deep
 ---
 
-# outputFile
+# outputFile <CRoot /> {#outputfile}
 
 - **Type:** `string | Record<string, string>`
 - **CLI:** `--outputFile=<path>`, `--outputFile.json=./path`

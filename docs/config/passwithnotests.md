@@ -3,7 +3,7 @@ title: passWithNoTests | Config
 outline: deep
 ---
 
-# passWithNoTests
+# passWithNoTests <CRoot />
 
 - **Type**: `boolean`
 - **Default**: `false`

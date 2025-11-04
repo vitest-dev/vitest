@@ -3,7 +3,7 @@ title: projects | Config
 outline: deep
 ---
 
-# projects
+# projects <CRoot />
 
 - **Type:** `TestProjectConfiguration[]`
 - **Default:** `[]`

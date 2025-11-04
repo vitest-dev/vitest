@@ -3,7 +3,7 @@ title: update | Config
 outline: deep
 ---
 
-# update
+# update <CRoot /> {#update}
 
 - **Type:** `boolean`
 - **Default:** `false`

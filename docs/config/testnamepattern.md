@@ -3,7 +3,7 @@ title: testNamePattern | Config
 outline: deep
 ---
 
-# testNamePattern
+# testNamePattern <CRoot /> {#testnamepattern}
 
 - **Type** `string | RegExp`
 - **CLI:** `-t <pattern>`, `--testNamePattern=<pattern>`, `--test-name-pattern=<pattern>`

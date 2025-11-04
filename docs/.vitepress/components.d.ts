@@ -17,7 +17,6 @@ declare module 'vue' {
     FeaturesList: typeof import('./components/FeaturesList.vue')['default']
     HomePage: typeof import('./components/HomePage.vue')['default']
     ListItem: typeof import('./components/ListItem.vue')['default']
-    NonProjectOption: typeof import('./components/NonProjectOption.vue')['default']
     Version: typeof import('./components/Version.vue')['default']
   }
 }
