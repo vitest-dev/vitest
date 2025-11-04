@@ -104,6 +104,7 @@ export interface SerializedConfig {
     }
     screenshotFailures: boolean
     screenshotTestEnd: boolean
+    cleanupScreenshots: boolean
     providerOptions: {
       // for playwright
       actionTimeout?: number

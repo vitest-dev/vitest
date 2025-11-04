@@ -328,6 +328,63 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject, defaultMocke
           return mocker.delete(sessionId, id)
         },
 
+        // Screenshot cleanup
+        async cleanupScreenshots(testPath: string, instanceName: string | undefined) {
+          const { resolveScreenshotPath } = await import('../node/utils')
+          const { readdirSync, rmSync } = await import('node:fs')
+
+          try {
+            // Get the screenshot directory for this test file
+            const fakeScreenshotPath = resolveScreenshotPath(
+              testPath,
+              'fake.png',
+              project.config,
+              undefined,
+            )
+            const screenshotDir = dirname(fakeScreenshotPath)
+
+            // Check if directory exists
+            if (!existsSync(screenshotDir)) {
+              return
+            }
+
+            checkFileAccess(screenshotDir)
+
+            // Read directory and delete matching files
+            const files = readdirSync(screenshotDir)
+            for (const file of files) {
+              // Skip non-PNG files
+              if (!file.endsWith('.png')) {
+                continue
+              }
+
+              let shouldDelete = false
+
+              if (instanceName) {
+                // For instances with custom names: delete files ending with -<instance>.png or -auto-<instance>.png
+                // This matches: test-1-mobile.png, test-2-mobile.png, test-auto-mobile.png
+                shouldDelete = file.endsWith(`-${instanceName}.png`) || file.endsWith(`-auto-${instanceName}.png`)
+              }
+              else {
+                // No instance name: delete all .png files
+                shouldDelete = true
+              }
+
+              if (shouldDelete) {
+                const filePath = join(screenshotDir, file)
+                checkFileAccess(filePath)
+                rmSync(filePath, { force: true })
+              }
+            }
+          }
+          catch (error: any) {
+            // Silently ignore errors (race conditions, non-existent files, etc.)
+            if (error?.code !== 'ENOENT') {
+              debug?.('Error cleaning up screenshots:', error)
+            }
+          }
+        },
+
         // CDP
         async sendCdpEvent(sessionId: string, event: string, payload?: Record<string, unknown>) {
           const cdp = await globalServer.ensureCDPHandler(sessionId, rpcId)

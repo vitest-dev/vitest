@@ -777,6 +777,9 @@ export function resolveConfig(
     resolved.browser.screenshotTestEnd ??= false
   }
 
+  // Set default for cleanupScreenshots
+  resolved.browser.cleanupScreenshots ??= false
+
   if (resolved.browser.provider && resolved.browser.provider.options == null) {
     resolved.browser.provider.options = {}
   }

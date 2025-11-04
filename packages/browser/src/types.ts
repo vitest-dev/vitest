@@ -57,6 +57,9 @@ export interface WebSocketBrowserHandlers {
   // cdp
   sendCdpEvent: (sessionId: string, event: string, payload?: Record<string, unknown>) => unknown
   trackCdpEvent: (sessionId: string, type: 'on' | 'once' | 'off', event: string, listenerId: string) => void
+
+  // screenshot cleanup
+  cleanupScreenshots: (testPath: string, instanceName: string | undefined) => Promise<void>
 }
 
 export type Awaitable<T> = T | PromiseLike<T>

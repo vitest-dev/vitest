@@ -247,6 +247,14 @@ export interface BrowserConfigOptions {
   screenshotTestEnd?: boolean
 
   /**
+   * Clean up old screenshots before running tests
+   * Only deletes screenshots from the current browser instance to avoid conflicts
+   * Applies to both default __screenshots__ directory and custom screenshotDirectory
+   * @default false
+   */
+  cleanupScreenshots?: boolean
+
+  /**
    * Path to the index.html file that will be used to run tests.
    */
   testerHtmlPath?: string

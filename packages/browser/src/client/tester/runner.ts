@@ -199,6 +199,14 @@ export function createBrowserRunner(
           if (!('filepath' in suite)) {
             return
           }
+
+          // Cleanup old screenshots if enabled
+          if (this.config.browser.cleanupScreenshots) {
+            await rpc().cleanupScreenshots(suite.filepath, this.config.name).catch((err) => {
+              console.warn('[vitest] Failed to cleanup screenshots:', err)
+            })
+          }
+
           const map = await rpc().getBrowserFileSourceMap(suite.filepath)
           this.sourceMapCache.set(suite.filepath, map)
           const snapshotEnvironment = this.config.snapshotOptions.snapshotEnvironment
