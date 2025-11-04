@@ -8,5 +8,16 @@ outline: deep
 - **Type:** `boolean`
 - **Default:** `false`
 
-Will call [`vi.resetAllMocks()`](/api/vi#vi-resetallmocks) before each test.
+Should Vitest automatically call [`vi.resetAllMocks()`](/api/vi#vi-resetallmocks) before each test.
+
 This will clear mock history and reset each implementation.
+
+```js [vitest.config.js]
+import { defineConfig } from 'vitest/config'
+
+export default defineConfig({
+  test: {
+    mockReset: true,
+  },
+})
+```

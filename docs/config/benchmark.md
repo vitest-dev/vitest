@@ -3,7 +3,7 @@ title: benchmark | Config
 outline: deep
 ---
 
-# benchmark
+# benchmark <Experimental /> {#benchmark}
 
 - **Type:** `{ include?, exclude?, ... }`
 

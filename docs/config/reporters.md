@@ -46,7 +46,8 @@ Note that the [coverage](/guide/coverage) feature uses a different [`coverage.re
 
 ## Example
 
-```ts [vitest.config.ts]
+::: code-group
+```js [vitest.config.js]
 import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
@@ -65,3 +66,7 @@ export default defineConfig({
   }
 })
 ```
+```bash [CLI]
+vitest --reporter=github-actions --reporter=junit
+```
+:::

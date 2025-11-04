@@ -9,4 +9,4 @@ outline: deep
 - **Default:** `!process.env.CI`
 - **CLI:** `--open`, `--open=false`
 
-Open Vitest UI (WIP)
+Open Vitest UI automatically if it's [enabled](/config/ui).

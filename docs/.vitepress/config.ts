@@ -348,6 +348,10 @@ export default ({ mode }: { mode: string }) => {
                 link: '/config/testnamepattern',
               },
               {
+                text: 'ui',
+                link: '/config/ui',
+              },
+              {
                 text: 'open',
                 link: '/config/open',
               },

@@ -8,6 +8,16 @@ outline: deep
 - **Type:** `boolean`
 - **Default:** `false`
 
-Will call [`vi.restoreAllMocks()`](/api/vi#vi-restoreallmocks) before each test.
+Should Vitest automatically call [`vi.restoreAllMocks()`](/api/vi#vi-restoreallmocks) before each test.
 
-This restores all original implementations on spies created with [`vi.spyOn`](#vi-spyon).
+This restores all original implementations on spies created manually with [`vi.spyOn`](/api/vi#vi-spyon).
+
+```js [vitest.config.js]
+import { defineConfig } from 'vitest/config'
+
+export default defineConfig({
+  test: {
+    restoreMocks: true,
+  },
+})
+```

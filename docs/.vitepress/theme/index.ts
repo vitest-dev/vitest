@@ -8,6 +8,7 @@ import HomePage from '../components/HomePage.vue'
 import Version from '../components/Version.vue'
 import CRoot from '../components/CRoot.vue'
 import Deprecated from '../components/Deprecated.vue'
+import Experimental from '../components/Experimental.vue'
 import '../style/main.css'
 import '../style/vars.css'
 import 'uno.css'
@@ -43,6 +44,7 @@ export default {
     }
     app.component('Version', Version)
     app.component('CRoot', CRoot)
+    app.component('Experimental', Experimental)
     app.component('Deprecated', Deprecated)
     app.use(TwoslashFloatingVue)
     enhanceAppWithTabs(app)
