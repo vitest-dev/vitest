@@ -9,6 +9,10 @@ outline: deep
 
 Configure if CSS should be processed. When excluded, CSS files will be replaced with empty strings to bypass the subsequent processing. CSS Modules will return a proxy to not affect runtime.
 
+::: warning
+This option is not applied to [browser tests](/guide/browser/).
+:::
+
 ## css.include
 
 - **Type**: `RegExp | RegExp[]`

@@ -35,12 +35,16 @@ export default {
       if (!url.hash) {
         return true
       }
-      if (url.pathname === '/config' || url.pathname === '/config/') {
+      if (url.pathname === '/config' || url.pathname === '/config/' || url.pathname === '/config.html') {
         const [page, ...hash] = (url.hash.startsWith('#browser.') ? url.hash.slice(9) : url.hash.slice(1)).toLowerCase().split('-')
         setTimeout(() => { router.go(`/config/${page}${hash.length ? `#${[page, ...hash].join('-')}` : ''}`) })
         return false
       }
-      // TODO: /guide/browser/config
+      if (url.pathname === '/guide/browser/config' || url.pathname === '/guide/browser/config/' || url.pathname === '/guide/browser/config.html') {
+        const [page, ...hash] = url.hash.slice('#browser.'.length).toLowerCase().split('-')
+        setTimeout(() => { router.go(`/config/browser/${page}${hash.length ? `#${[page, ...hash].join('-')}` : ''}`) })
+        return false
+      }
     }
     app.component('Version', Version)
     app.component('CRoot', CRoot)

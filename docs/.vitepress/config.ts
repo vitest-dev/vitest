@@ -452,7 +452,7 @@ export default ({ mode }: { mode: string }) => {
                 link: '/config/onunhandlederror',
               },
               {
-                text: 'dangerouslyIgnoreUnhandledErrors',
+                text: 'dangerouslyIgnoreUnhandled...',
                 link: '/config/dangerouslyignoreunhandlederrors',
               },
               {

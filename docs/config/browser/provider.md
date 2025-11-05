@@ -21,7 +21,7 @@ export default defineConfig({
     browser: {
       provider: playwright(),
       provider: webdriverio(),
-      provider: preview(), // default
+      provider: preview(),
     },
   },
 })
