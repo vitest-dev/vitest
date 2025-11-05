@@ -383,7 +383,9 @@ test('getApplesCount has some unusual side effects...', () => {
 
 `toBeOneOf` asserts if a value matches any of the values in the provided array or set.
 
-> Providing a `Set` is an experimental feature and may change in a future release.
+::: warning EXPERIMENTAL
+Providing a `Set` is an experimental feature and may change in a future release.
+:::
 
 
 ```ts
