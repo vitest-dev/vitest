@@ -651,7 +651,6 @@ export default ({ mode }: { mode: string }) => {
           //   link: '/config/vscode',
           // },
         ],
-        // TODO: only /guide
         '/guide': [
           {
             text: 'Introduction',
