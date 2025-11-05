@@ -59,7 +59,31 @@ test('clicks on an element', async () => {
   await userEvent.click(logo)
   // or you can access it directly on the locator
   await logo.click()
+
+  // With WebdriverIO, this uses either ElementClick (with no arguments) or
+  // actions (with arguments). Use an empty object to force the use of actions.
+  await logo.click({})
 })
+```
+
+### Clicking with a modifier
+
+With either WebdriverIO or Playwright:
+
+```ts
+await userEvent.keyboard('{Shift>}')
+// By using an empty object as the option, this opts in to using a chain of actions
+// instead of an ElementClick in webdriver.
+// Firefox has a bug that makes this necessary.
+// Follow https://bugzilla.mozilla.org/show_bug.cgi?id=1456642 to know when this
+// will be fixed.
+await userEvent.click(element, {})
+await userEvent.keyboard('{/Shift}')
+```
+
+With Playwright:
+```ts
+await userEvent.click(element, { modifiers: ['Shift'] })
 ```
 
 References:
