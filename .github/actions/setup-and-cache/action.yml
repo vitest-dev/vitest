@@ -4,7 +4,7 @@ inputs:
   node-version:
     required: false
     description: Node version for setup-node
-    default: 20.x
+    default: 24.x
 
 runs:
   using: composite

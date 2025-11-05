@@ -79,6 +79,15 @@ export default (parentServer: ParentBrowserProject, base = '/'): Plugin[] => {
               single: true,
               dev: true,
               setHeaders: (res) => {
+                const csp = res.getHeader('Content-Security-Policy')
+                if (typeof csp === 'string') {
+                  // add frame-ancestors to allow the iframe to be loaded by Vitest,
+                  // but keep the rest of the CSP
+                  res.setHeader(
+                    'Content-Security-Policy',
+                    csp.replace(/frame-ancestors [^;]+/, 'frame-ancestors *'),
+                  )
+                }
                 res.setHeader(
                   'Cache-Control',
                   'public,max-age=0,must-revalidate',

@@ -40,6 +40,16 @@ test('Fetch API accepts other APIs', async () => {
   expect.soft(() => new Request('http://localhost', { method: 'POST', body: searchParams })).not.toThrowError()
 })
 
+test('fetch api doesnt override the init object', () => {
+  const body = new FormData()
+  const init: RequestInit = {
+    method: 'post',
+    body,
+  }
+  const _request = new Request('http://localhost', init)
+  expect(init.body).toBe(body)
+})
+
 describe('FormData', () => {
   test('can pass down a simple form data', async () => {
     const formData = new FormData()
@@ -142,6 +152,32 @@ describe('FormData', () => {
       expect(error).toEqual(expectedError)
     }
   })
+
+  test('supports Blob', () => {
+    const form = new FormData()
+    const key = 'prop'
+
+    const data = new Blob()
+
+    form.set(key, data)
+
+    const retrievedBlob = form.get(key)
+
+    expect(retrievedBlob).toBeInstanceOf(Blob)
+  })
+
+  test('supports File', () => {
+    const form = new FormData()
+    const key = 'prop'
+
+    const data = new File([], 'name')
+
+    form.set(key, data)
+
+    const retrievedBlob = form.get(key)
+
+    expect(retrievedBlob).toBeInstanceOf(File)
+  })
 })
 
 test('DOM APIs accept AbortController', () => {
@@ -232,6 +268,15 @@ test('request doesn\'t support absolute URL because jsdom doesn\'t provide compa
   expect(() => {
     const _r = new Request('/api', { method: 'GET' })
   }).toThrow(/Failed to parse URL/)
+})
+
+test('URL.createObjectUrl works properly', () => {
+  expect(() => {
+    URL.createObjectURL(new Blob())
+  }).not.toThrow()
+  expect(() => {
+    URL.createObjectURL(new File([], 'name.js'))
+  }).not.toThrow()
 })
 
 test('jsdom global is exposed', () => {

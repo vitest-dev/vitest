@@ -1,7 +1,7 @@
 {
   "name": "@vitest/monorepo",
   "type": "module",
-  "version": "4.0.6",
+  "version": "4.0.7",
   "private": true,
   "packageManager": "pnpm@10.17.0",
   "description": "Next generation testing framework powered by Vite",
@@ -52,7 +52,7 @@
     "bumpp": "^10.2.3",
     "changelogithub": "^13.16.0",
     "esbuild": "^0.25.10",
-    "eslint": "^9.38.0",
+    "eslint": "^9.39.1",
     "magic-string": "^0.30.19",
     "pathe": "^2.0.3",
     "premove": "^4.0.0",
