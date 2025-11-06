@@ -79,7 +79,7 @@
     "floating-vue": "^5.2.2",
     "mime": "^4.1.0",
     "rollup": "^4.52.5",
-    "splitpanes": "^3.2.0",
+    "splitpanes": "^4.0.4",
     "typescript": "^5.9.3",
     "unocss": "catalog:",
     "vite": "^5.0.0",
