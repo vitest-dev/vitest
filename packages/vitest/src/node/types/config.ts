@@ -201,7 +201,7 @@ export interface ResolveSnapshotPathHandlerContext { config: SerializedConfig }
 export type ResolveSnapshotPathHandler = (
   testPath: string,
   snapExtension: string,
-  context: ResolveSnapshotPathHandlerContext
+  context: ResolveSnapshotPathHandlerContext,
 ) => string
 
 export type BuiltinPool
@@ -1132,7 +1132,7 @@ export interface UserWorkspaceConfig extends ViteUserConfig {
 
 // TODO: remove types when "workspace" support is removed
 export type UserProjectConfigFn = (
-  env: ConfigEnv
+  env: ConfigEnv,
 ) => UserWorkspaceConfig | Promise<UserWorkspaceConfig>
 export type UserProjectConfigExport
   = | UserWorkspaceConfig

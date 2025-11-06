@@ -334,7 +334,7 @@ export interface ProjectBrowser {
     cb: BrowserCommand<
       Parameters<BrowserCommands[K]>,
       ReturnType<BrowserCommands[K]>
-    >
+    >,
   ) => void
   triggerCommand: <K extends keyof BrowserCommands>(
     name: K,

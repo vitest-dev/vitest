@@ -820,7 +820,7 @@ function createTest(
     > & { fixtures?: FixtureItem[] },
     title: string,
     optionsOrFn?: TestOptions | TestFunction,
-    optionsOrTest?: number | TestFunction
+    optionsOrTest?: number | TestFunction,
   ) => void,
   context?: Record<string, any>,
 ) {
