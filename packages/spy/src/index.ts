@@ -212,16 +212,16 @@ export function fn<T extends Procedure | Constructable = Procedure>(
 export function spyOn<T extends object, S extends Properties<Required<T>>>(
   object: T,
   key: S,
-  accessor: 'get'
+  accessor: 'get',
 ): Mock<() => T[S]>
 export function spyOn<T extends object, G extends Properties<Required<T>>>(
   object: T,
   key: G,
-  accessor: 'set'
+  accessor: 'set',
 ): Mock<(arg: T[G]) => void>
 export function spyOn<T extends object, M extends Classes<Required<T>> | Methods<Required<T>>>(
   object: T,
-  key: M
+  key: M,
 ): Required<T>[M] extends Constructable | Procedure
   ? Mock<Required<T>[M]>
   : never

@@ -45,7 +45,7 @@ function createBenchmark(
     this: Record<'skip' | 'only' | 'todo', boolean | undefined>,
     name: string | Function,
     fn?: BenchFunction,
-    options?: BenchOptions
+    options?: BenchOptions,
   ) => void,
 ) {
   const benchmark = createChainable(

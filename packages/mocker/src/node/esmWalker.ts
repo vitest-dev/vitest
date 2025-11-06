@@ -41,7 +41,7 @@ interface Visitors {
   onIdentifier?: (
     node: Positioned<Identifier>,
     info: IdentifierInfo,
-    parentStack: Node[]
+    parentStack: Node[],
   ) => void
   onImportMeta?: (node: Node) => void
   onDynamicImport?: (node: Positioned<ImportExpression>) => void

@@ -18,7 +18,7 @@ export type Tester = (
   this: TesterContext,
   a: any,
   b: any,
-  customTesters: Array<Tester>
+  customTesters: Array<Tester>,
 ) => boolean | undefined
 
 export interface TesterContext {
@@ -26,7 +26,7 @@ export interface TesterContext {
     a: unknown,
     b: unknown,
     customTesters?: Array<Tester>,
-    strictCheck?: boolean
+    strictCheck?: boolean,
   ) => boolean
 }
 export type { DiffOptions } from '@vitest/utils/diff'
@@ -52,7 +52,7 @@ export interface MatcherState {
     a: unknown,
     b: unknown,
     customTesters?: Array<Tester>,
-    strictCheck?: boolean
+    strictCheck?: boolean,
   ) => boolean
   expand?: boolean
   expectedAssertionsNumber?: number | null
@@ -399,7 +399,7 @@ export interface JestAssertion<T = any> extends jest.Matchers<void, T>, CustomMa
    */
   toHaveProperty: <E>(
     property: string | (string | number)[],
-    value?: E
+    value?: E,
   ) => void
 
   /**
@@ -684,7 +684,7 @@ export interface Assertion<T = any>
       | 'object'
       | 'string'
       | 'symbol'
-      | 'undefined'
+      | 'undefined',
   ) => void
 
   /**
