@@ -7,6 +7,7 @@
 
 // This is a fork of Jest's jest-diff package, but it doesn't depend on Node environment (like chalk).
 
+import type { ArrayContaining, AsymmetricMatcher } from '@vitest/expect'
 import type { PrettyFormatOptions } from '@vitest/pretty-format'
 import type { DiffOptions } from './types'
 import {
@@ -34,22 +35,13 @@ function getCommonMessage(message: string, options?: DiffOptions) {
   return commonColor(message)
 }
 
-const {
-  AsymmetricMatcher,
-  DOMCollection,
-  DOMElement,
-  Immutable,
-  ReactElement,
-  ReactTestComponent,
-} = prettyFormatPlugins
-
 const PLUGINS = [
-  ReactTestComponent,
-  ReactElement,
-  DOMElement,
-  DOMCollection,
-  Immutable,
-  AsymmetricMatcher,
+  prettyFormatPlugins.ReactTestComponent,
+  prettyFormatPlugins.ReactElement,
+  prettyFormatPlugins.DOMElement,
+  prettyFormatPlugins.DOMCollection,
+  prettyFormatPlugins.Immutable,
+  prettyFormatPlugins.AsymmetricMatcher,
   prettyFormatPlugins.Error,
 ]
 const FORMAT_OPTIONS = {
@@ -129,6 +121,11 @@ export function diff(a: any, b: any, options?: DiffOptions): string | undefined 
       return compareObjects(sortMap(a), sortMap(b), options)
     case 'set':
       return compareObjects(sortSet(a), sortSet(b), options)
+    case 'array':
+      if (isAsymmetricMatcher(a) && isArrayContaining(a)) {
+        return compareArrayContaining(a, b, options)
+      }
+      // else fallthrough
     default:
       return compareObjects(a, b, options)
   }
@@ -188,6 +185,40 @@ function compareObjects(
   return difference
 }
 
+function compareArrayContaining(
+  a: ArrayContaining,
+  b: Array<any>,
+  options?: DiffOptions,
+) {
+  let difference
+  let hasThrown = false
+
+  try {
+    const formatOptions = getFormatOptions(FORMAT_OPTIONS, options)
+    difference = getArrayContainingDifference(a, b, formatOptions, options)
+  }
+  catch {
+    hasThrown = true
+  }
+
+  const noDiffMessage = getCommonMessage(NO_DIFF_MESSAGE, options)
+  // If the comparison yields no results, compare again but this time
+  // without calling `toJSON`. It's also possible that toJSON might throw.
+  if (difference === undefined || difference === noDiffMessage) {
+    const formatOptions = getFormatOptions(FALLBACK_FORMAT_OPTIONS, options)
+    difference = getArrayContainingDifference(a, b, formatOptions, options)
+
+    if (difference !== noDiffMessage && !hasThrown) {
+      difference = `${getCommonMessage(
+        SIMILAR_MESSAGE,
+        options,
+      )}\n\n${difference}`
+    }
+  }
+
+  return difference
+}
+
 function getFormatOptions(
   formatOptions: PrettyFormatOptions,
   options?: DiffOptions,
@@ -229,11 +260,43 @@ function getObjectsDifference(
   }
 }
 
+function getArrayContainingDifference(
+  a: ArrayContaining,
+  b: Array<any>,
+  formatOptions: PrettyFormatOptions,
+  options?: DiffOptions,
+): string {
+  const formatOptionsZeroIndent = { ...formatOptions, indent: 0 }
+  const aCompare = a.sample.map(val => prettyFormat(val, formatOptionsZeroIndent))
+  const bCompare = b.map(val => prettyFormat(val, formatOptionsZeroIndent))
+
+  if (aCompare.join('\n') === bCompare.join('\n')) {
+    return getCommonMessage(NO_DIFF_MESSAGE, options)
+  }
+  else {
+    const aDisplay = a.sample.map(val => prettyFormat(val, formatOptions))
+    const bDisplay = b.map(val => prettyFormat(val, formatOptions))
+
+    return diffLinesUnified2(
+      aDisplay,
+      bDisplay,
+      aCompare,
+      bCompare,
+      options,
+    )
+  }
+}
+
 const MAX_DIFF_STRING_LENGTH = 20_000
 
-function isAsymmetricMatcher(data: any) {
+function isAsymmetricMatcher(data: any): data is AsymmetricMatcher<unknown> {
   const type = getSimpleType(data)
   return type === 'Object' && typeof data.asymmetricMatch === 'function'
+}
+
+function isArrayContaining(data: AsymmetricMatcher<unknown>): data is ArrayContaining {
+  const matcherName = data.toString()
+  return matcherName === 'ArrayContaining' || matcherName === 'ArrayNotContaining'
 }
 
 function isReplaceable(obj1: any, obj2: any) {
