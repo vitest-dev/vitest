@@ -37,8 +37,8 @@
     "tinyrainbow": "catalog:"
   },
   "devDependencies": {
-    "@types/react-is": "^19.0.0",
-    "react-is": "^19.1.1",
+    "@types/react-is": "^19.2.0",
+    "react-is": "^19.2.0",
     "react-is-18": "npm:react-is@18.3.1"
   }
 }
