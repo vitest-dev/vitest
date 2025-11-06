@@ -863,8 +863,8 @@ importers:
         specifier: ^4.52.5
         version: 4.52.5
       splitpanes:
-        specifier: ^3.2.0
-        version: 3.2.0(vue@3.5.23(typescript@5.9.3))
+        specifier: ^4.0.4
+        version: 4.0.4(vue@3.5.23(typescript@5.9.3))
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
@@ -8354,8 +8354,8 @@ packages:
     resolution: {integrity: sha512-UcjcJOWknrNkF6PLX83qcHM6KHgVKNkV62Y8a5uYDVv9ydGQVwAHMKqHdJje1VTWpljG0WYpCDhrCdAOYH4TWg==}
     engines: {node: '>= 10.x'}
 
-  splitpanes@3.2.0:
-    resolution: {integrity: sha512-K+WKxWdqtKShV33gPjQl769wHxB3glypTOReCvYu/AJd38J+abHlpiF8rK6uBNPMrgw5thHZCI5JkEwsAqa9XA==}
+  splitpanes@4.0.4:
+    resolution: {integrity: sha512-RbysugZhjbCw5fgplvk3hOXr41stahQDtZhHVkhnnJI6H4wlGDhM2kIpbehy7v92duy9GnMa8zIhHigIV1TWtg==}
     peerDependencies:
       vue: ^3.2.0
 
@@ -16888,7 +16888,7 @@ snapshots:
 
   split2@4.2.0: {}
 
-  splitpanes@3.2.0(vue@3.5.23(typescript@5.9.3)):
+  splitpanes@4.0.4(vue@3.5.23(typescript@5.9.3)):
     dependencies:
       vue: 3.5.23(typescript@5.9.3)
 
