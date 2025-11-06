@@ -846,10 +846,6 @@ export default ({ mode }: { mode: string }) => {
                   },
                 ],
               },
-              {
-                text: 'Recipes',
-                link: '/guide/recipes',
-              },
             ],
           },
           {
@@ -871,6 +867,18 @@ export default ({ mode }: { mode: string }) => {
               {
                 text: 'Custom Pool',
                 link: '/guide/advanced/pool',
+              },
+            ],
+          },
+          {
+            items: [
+              {
+                text: 'Recipes',
+                link: '/guide/recipes',
+              },
+              {
+                text: 'Comparisons',
+                link: '/guide/comparisons',
               },
             ],
           },
