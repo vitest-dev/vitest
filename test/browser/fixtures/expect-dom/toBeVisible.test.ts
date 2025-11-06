@@ -43,10 +43,15 @@ describe('.toBeVisible', () => {
     expect(() => expect(subject).toBeVisible()).toThrowError()
   })
 
-  it('locator which does not locate any element is not visible', () => {
+  it('locator which does not locate any element is not visible', async () => {
     const locator = page.getByTestId('not-existing');
     expect(locator).not.toBeVisible()
     expect(() => expect(locator).toBeVisible()).toThrowError()
+  })
+
+  it('locator which does not locate any element is not visible when using expect.element', async () => {
+    const locator = page.getByTestId('not-existing');
+    await expect.element(locator).not.toBeVisible()
   })
 
   describe('with a <details /> element', () => {

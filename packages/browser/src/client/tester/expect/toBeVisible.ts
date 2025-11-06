@@ -21,15 +21,18 @@ import { getElementFromUserInput, queryElementFromUserInput } from './utils'
 
 export default function toBeVisible(
   this: MatcherState,
-  actual: Element | Locator,
+  actual: Element | Locator | null,
 ): ExpectationResult {
   // When using expect(locator).not.toBeVisible(), we want the test to succeed, so we query instead of getting
   // the element, to avoid an exception if the element can't be found
-  const htmlElement = this.isNot ? queryElementFromUserInput(actual, toBeVisible, this) : getElementFromUserInput(actual, toBeVisible, this)
+  let htmlElement: null | HTMLElement | SVGElement = null
+  if (actual !== null || !this.isNot) {
+    htmlElement = this.isNot ? queryElementFromUserInput(actual, toBeVisible, this) : getElementFromUserInput(actual, toBeVisible, this)
+  }
   const isInDocument
     = htmlElement != null && htmlElement.ownerDocument === htmlElement.getRootNode({ composed: true })
   beginAriaCaches()
-  const isVisible = isInDocument && isElementVisible(htmlElement)
+  const isVisible = htmlElement != null && isInDocument && isElementVisible(htmlElement)
   endAriaCaches()
   return {
     pass: isVisible,
