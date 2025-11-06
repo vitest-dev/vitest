@@ -240,6 +240,21 @@ export interface BrowserConfigOptions {
   screenshotFailures?: boolean
 
   /**
+   * Automatically capture screenshots at the end of each test
+   * Requires browser mode to be enabled
+   * @default false
+   */
+  screenshotTestEnd?: boolean
+
+  /**
+   * Clean up old screenshots before running tests
+   * Only deletes screenshots from the current browser instance to avoid conflicts
+   * Applies to both default __screenshots__ directory and custom screenshotDirectory
+   * @default false
+   */
+  cleanupScreenshots?: boolean
+
+  /**
    * Path to the index.html file that will be used to run tests.
    */
   testerHtmlPath?: string

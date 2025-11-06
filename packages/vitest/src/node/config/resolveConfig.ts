@@ -60,7 +60,8 @@ export function resolveApiServerConfig<Options extends ApiConfig & Omit<UserConf
 ): ApiConfig | undefined {
   let api: ApiConfig | undefined
 
-  if (options.ui && !options.api) {
+  const uiEnabled = options.ui === true || (typeof options.ui === 'object' && options.ui.enabled === true)
+  if (uiEnabled && !options.api) {
     api = { port: defaultPort }
   }
   else if (options.api === true) {
@@ -537,6 +538,29 @@ export function resolveConfig(
   const api = resolveApiServerConfig(options, defaultPort)
   resolved.api = { ...api, token: __VITEST_GENERATE_UI_TOKEN__ ? crypto.randomUUID() : '0' }
 
+  // normalize ui config
+  if (typeof options.ui === 'boolean') {
+    resolved.ui = {
+      enabled: options.ui,
+      screenshotsInReport: false,
+      cleanupScreenshots: false,
+    }
+  }
+  else if (typeof options.ui === 'object') {
+    resolved.ui = {
+      enabled: options.ui.enabled ?? false,
+      screenshotsInReport: options.ui.screenshotsInReport ?? false,
+      cleanupScreenshots: options.ui.cleanupScreenshots ?? false,
+    }
+  }
+  else {
+    resolved.ui = {
+      enabled: false,
+      screenshotsInReport: false,
+      cleanupScreenshots: false,
+    }
+  }
+
   if (options.related) {
     resolved.related = toArray(options.related).map(file =>
       resolve(resolved.root, file),
@@ -737,6 +761,25 @@ export function resolveConfig(
   else {
     resolved.browser.screenshotFailures ??= !isPreview && !resolved.browser.ui
   }
+
+  // Set default for screenshotTestEnd
+  if (isPreview && resolved.browser.screenshotTestEnd === true) {
+    console.warn(c.yellow(
+      [
+        `Browser provider "preview" doesn't support screenshots, `,
+        `so "browser.screenshotTestEnd" option is forcefully disabled. `,
+        `Set "browser.screenshotTestEnd" to false or remove it from the config to suppress this warning.`,
+      ].join(''),
+    ))
+    resolved.browser.screenshotTestEnd = false
+  }
+  else {
+    resolved.browser.screenshotTestEnd ??= false
+  }
+
+  // Set default for cleanupScreenshots
+  resolved.browser.cleanupScreenshots ??= false
+
   if (resolved.browser.provider && resolved.browser.provider.options == null) {
     resolved.browser.provider.options = {}
   }
@@ -754,7 +797,7 @@ export function resolveConfig(
       resolved.includeTaskLocation ??= true
     }
   }
-  else if (resolved.ui) {
+  else if (resolved.ui.enabled) {
     resolved.includeTaskLocation ??= true
   }
 

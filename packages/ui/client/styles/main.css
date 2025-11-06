@@ -10,6 +10,16 @@ body {
   --color-text-dark: #ddd;
   --color-text: var(--color-text-light);
   --background-color: #e4e4e4;
+
+  /* Test status colors */
+  --status-pass-bg: rgba(34, 197, 94, 0.1);
+  --status-pass-text: rgb(34, 197, 94);
+  --status-fail-bg: rgba(239, 68, 68, 0.1);
+  --status-fail-text: rgb(239, 68, 68);
+  --status-skip-bg: rgba(168, 85, 247, 0.1);
+  --status-skip-text: rgba(168, 85, 247, 0.5);
+  --status-run-bg: rgba(234, 179, 8, 0.1);
+  --status-run-text: rgb(234, 179, 8);
 }
 
 html.dark {

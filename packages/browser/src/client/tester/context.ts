@@ -291,8 +291,13 @@ export const page: BrowserPage = {
     screenshotIds[repeatCount] ??= {}
     screenshotIds[repeatCount][taskName] = number + 1
 
+    // Append instance name only when screenshotTestEnd is enabled (for multi-instance automatic screenshots)
+    const config = getBrowserState().config
+    const shouldAppendInstance = config.browser?.screenshotTestEnd && config.name
+    const baseName = `${taskName.replace(/[^a-z0-9]/gi, '-').replace(/-+/g, '-')}-${number}`
+    const instanceSuffix = shouldAppendInstance ? `-${config.name}` : ''
     const name
-      = options.path || `${taskName.replace(/[^a-z0-9]/gi, '-')}-${number}.png`
+      = options.path || `${baseName}${instanceSuffix}.png`
 
     const normalizedOptions = 'mask' in options
       ? {
@@ -301,7 +306,7 @@ export const page: BrowserPage = {
         }
       : options
 
-    return ensureAwaited(error => triggerCommand(
+    const screenshot = await ensureAwaited(error => triggerCommand(
       '__vitest_screenshot',
       [
         name,
@@ -314,6 +319,14 @@ export const page: BrowserPage = {
       ],
       error,
     ))
+
+    // Store screenshot path in array for UI display
+    if (screenshot && typeof screenshot === 'string') {
+      currentTest.meta.screenshotPaths ??= []
+      currentTest.meta.screenshotPaths.push(screenshot)
+    }
+
+    return screenshot
   },
   getByRole() {
     throw new Error(`Method "getByRole" is not supported by the "${provider}" provider.`)

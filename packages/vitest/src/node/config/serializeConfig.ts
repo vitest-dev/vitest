@@ -108,6 +108,8 @@ export function serializeConfig(project: TestProject): SerializedConfig {
         ui: browser.ui,
         viewport: browser.viewport,
         screenshotFailures: browser.screenshotFailures,
+        screenshotTestEnd: browser.screenshotTestEnd,
+        cleanupScreenshots: browser.cleanupScreenshots,
         locators: {
           testIdAttribute: browser.locators.testIdAttribute,
         },
@@ -120,6 +122,7 @@ export function serializeConfig(project: TestProject): SerializedConfig {
         trace: browser.trace.mode,
       }
     })(config.browser),
+    ui: config.ui,
     standalone: config.standalone,
     printConsoleTrace:
       config.printConsoleTrace ?? globalConfig.printConsoleTrace,

@@ -103,12 +103,18 @@ export interface SerializedConfig {
       testIdAttribute: string
     }
     screenshotFailures: boolean
+    screenshotTestEnd: boolean
+    cleanupScreenshots: boolean
     providerOptions: {
       // for playwright
       actionTimeout?: number
     }
     trace: BrowserTraceViewMode
     trackUnhandledErrors: boolean
+  }
+  ui: {
+    enabled: boolean
+    screenshotsInReport: boolean
   }
   standalone: boolean
   logHeapUsage: boolean | undefined

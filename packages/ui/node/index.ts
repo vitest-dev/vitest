@@ -75,7 +75,15 @@ export default (ctx: Vitest): Plugin => {
             const fsPath = decodeURIComponent(path)
 
             if (!isFileServingAllowed(ctx.vite.config, fsPath)) {
-              return next()
+              res.statusCode = 403
+              res.end()
+              return
+            }
+
+            if (!fs.existsSync(fsPath)) {
+              res.statusCode = 404
+              res.end()
+              return
             }
 
             try {
@@ -84,6 +92,12 @@ export default (ctx: Vitest): Plugin => {
               })
               fs.createReadStream(fsPath)
                 .pipe(res)
+                .on('error', () => {
+                  if (!res.headersSent) {
+                    res.statusCode = 500
+                  }
+                  res.end()
+                })
                 .on('close', () => res.end())
             }
             catch (err) {

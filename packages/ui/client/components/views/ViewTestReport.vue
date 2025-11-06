@@ -8,10 +8,12 @@ import { browserState, config } from '~/composables/client'
 import { showAnnotationSource } from '~/composables/codemirror'
 import { isDark } from '~/composables/dark'
 import { mapLeveledTaskStacks } from '~/composables/error'
-import { openScreenshot, useScreenshot } from '~/composables/screenshot'
+import { getScreenshotUrls, hasScreenshot, openScreenshot, useScreenshot } from '~/composables/screenshot'
 import AnnotationAttachmentImage from '../AnnotationAttachmentImage.vue'
 import IconButton from '../IconButton.vue'
 import Modal from '../Modal.vue'
+import ScreenshotCarousel from '../ScreenshotCarousel.vue'
+import StatusBanner from '../StatusBanner.vue'
 import ScreenshotError from './ScreenshotError.vue'
 import ViewReportError from './ViewReportError.vue'
 
@@ -46,6 +48,7 @@ const kWellKnownMeta = new Set([
   'benchmark',
   'typecheck',
   'failScreenshotPath',
+  'screenshotPaths',
 ])
 const meta = computed(() => {
   return Object.entries(props.test.meta).filter(([name]) => {
@@ -57,6 +60,14 @@ const meta = computed(() => {
 <template>
   <div h-full class="scrolls">
     <div v-if="failed">
+      <StatusBanner :task="test" />
+      <!-- Display screenshot when screenshotsInReport is enabled -->
+      <div v-if="config.ui.screenshotsInReport && hasScreenshot(test)" p="x3 y2" m-2>
+        <ScreenshotCarousel
+          :screenshot-urls="getScreenshotUrls(test)"
+          :alt="`Screenshot for ${test.name}`"
+        />
+      </div>
       <div
         bg="red-500/10"
         text="red-500 sm"
@@ -102,8 +113,13 @@ const meta = computed(() => {
       </div>
     </div>
     <template v-else>
-      <div bg="green-500/10" text="green-500 sm" p="x4 y2" m-2 rounded>
-        All tests passed in this file
+      <StatusBanner :task="test" />
+      <!-- Display screenshot for passed test when screenshotsInReport is enabled -->
+      <div v-if="config.ui.screenshotsInReport && hasScreenshot(test)" p="x3 y2" m-2>
+        <ScreenshotCarousel
+          :screenshot-urls="getScreenshotUrls(test)"
+          :alt="`Screenshot for ${test.name}`"
+        />
       </div>
     </template>
     <template v-if="test.annotations.length">

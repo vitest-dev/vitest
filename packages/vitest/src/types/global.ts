@@ -109,6 +109,7 @@ declare module '@vitest/runner' {
     typecheck?: boolean
     benchmark?: boolean
     failScreenshotPath?: string
+    screenshotPaths?: string[]
   }
 
   interface File {

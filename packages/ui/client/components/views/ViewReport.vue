@@ -4,9 +4,11 @@ import { computed } from 'vue'
 import { browserState, config } from '~/composables/client'
 import { isDark } from '~/composables/dark'
 import { mapLeveledTaskStacks } from '~/composables/error'
-import { openScreenshot, useScreenshot } from '~/composables/screenshot'
-import IconButton from '../IconButton.vue'
+import { activeFileId, selectedTest } from '~/composables/params'
+import { getScreenshotUrls, hasScreenshot, useScreenshot } from '~/composables/screenshot'
 import Modal from '../Modal.vue'
+import ScreenshotCarousel from '../ScreenshotCarousel.vue'
+import StatusBanner from '../StatusBanner.vue'
 import ScreenshotError from './ScreenshotError.vue'
 import ViewReportError from './ViewReportError.vue'
 
@@ -27,10 +29,21 @@ function collectFailed(task: RunnerTask, level: number): LeveledTask[] {
     return [{ ...task, level }]
   }
   else {
-    return [
-      { ...task, level },
-      ...task.tasks.flatMap(t => collectFailed(t, level + 1)),
-    ]
+    // For suites/describes, only collect child test failures, not the suite itself
+    return task.tasks.flatMap(t => collectFailed(t, level))
+  }
+}
+
+function collectPassed(task: RunnerTask, level: number): LeveledTask[] {
+  if (task.result?.state !== 'pass') {
+    return []
+  }
+
+  if (task.type === 'test') {
+    return [{ ...task, level }]
+  }
+  else {
+    return task.tasks.flatMap(t => collectPassed(t, level + 1))
   }
 }
 
@@ -60,21 +73,56 @@ const failed = computed(() => {
     : failedFlatMap
 })
 
+const passed = computed(() => {
+  const file = props.file
+  return file.tasks?.flatMap(t => collectPassed(t, 0)) ?? []
+})
+
 const {
   currentTask,
   showScreenshot,
   showScreenshotModal,
   currentScreenshotUrl,
 } = useScreenshot()
+
+function navigateToTest(task: RunnerTask) {
+  activeFileId.value = task.file.id
+  selectedTest.value = task.id
+}
+
+function getFullTestName(task: RunnerTask): string {
+  const names: string[] = []
+  let current: RunnerTask | undefined = task
+
+  while (current) {
+    if (current.type !== 'file') {
+      names.unshift(current.name)
+    }
+    current = current.suite
+  }
+
+  return names.join(' > ')
+}
 </script>
 
 <template>
   <div h-full class="scrolls">
     <template v-if="failed.length">
-      <div v-for="task of failed" :id="task.id" :key="task.id">
+      <div v-for="task of failed" :id="task.id" :key="task.id" class="test-card">
+        <h3 class="test-name" @click="navigateToTest(task)">
+          {{ getFullTestName(task) }}
+        </h3>
+        <StatusBanner :task="task" />
+        <!-- Display screenshot when screenshotsInReport is enabled -->
+        <div v-if="config.ui.screenshotsInReport && hasScreenshot(task)" p="x3 y2" m-2>
+          <ScreenshotCarousel
+            :screenshot-urls="getScreenshotUrls(task)"
+            :alt="`Screenshot for ${task.name}`"
+          />
+        </div>
+        <!-- Only show error container if there are actual errors -->
         <div
-          bg="red-500/10"
-          text="red-500 sm"
+          v-if="task.result?.htmlError || task.result?.errors?.length"
           p="x3 y2"
           m-2
           rounded
@@ -124,9 +172,22 @@ const {
       </div>
     </template>
     <template v-else>
-      <div bg="green-500/10" text="green-500 sm" p="x4 y2" m-2 rounded>
-        All tests passed in this file
-      </div>
+      <StatusBanner :file="file" />
+      <!-- Display screenshots for passed tests when screenshotsInReport is enabled -->
+      <template v-if="config.ui.screenshotsInReport && passed.length">
+        <div v-for="task of passed" :id="task.id" :key="task.id" class="test-card">
+          <h3 class="test-name" @click="navigateToTest(task)">
+            {{ getFullTestName(task) }}
+          </h3>
+          <StatusBanner :task="task" />
+          <div v-if="hasScreenshot(task)" p="x3 y2" m-2>
+            <ScreenshotCarousel
+              :screenshot-urls="getScreenshotUrls(task)"
+              :alt="`Screenshot for ${task.name}`"
+            />
+          </div>
+        </div>
+      </template>
     </template>
     <template v-if="browserState">
       <Modal v-model="showScreenshot" direction="right">
@@ -146,6 +207,30 @@ const {
 </template>
 
 <style scoped>
+.test-card {
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid rgba(128, 128, 128, 0.1);
+}
+
+.test-card:last-child {
+  border-bottom: none;
+}
+
+.test-name {
+  margin: 0.5rem 0.5rem 0 0.5rem;
+  padding: 0.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.2s;
+  color: var(--color-text);
+}
+
+.test-name:hover {
+  opacity: 0.7;
+}
+
 .task-error {
   --cm-ttc-c-thumb: #ccc;
 }

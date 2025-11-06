@@ -132,18 +132,18 @@ useResizeObserver(() => testExplorerRef.value, ([{ contentRect }]) => {
       <DetailsPanel>
         <template v-if="initialized" #summary>
           <div grid="~ items-center gap-x-1 cols-[auto_min-content_auto] rows-[min-content_min-content]">
-            <span text-red5>
+            <span :style="{ color: 'var(--status-fail-text)' }">
               FAIL ({{ testsTotal.failed }})
             </span>
             <span>/</span>
-            <span text-yellow5>
+            <span :style="{ color: 'var(--status-run-text)' }">
               RUNNING ({{ testsTotal.running }})
             </span>
-            <span text-green5>
+            <span :style="{ color: 'var(--status-pass-text)' }">
               PASS ({{ testsTotal.success }})
             </span>
             <span>/</span>
-            <span class="text-purple5:50">
+            <span :style="{ color: 'var(--status-skip-text)' }">
               SKIP ({{ filter.onlyTests ? testsTotal.skipped : '--' }})
             </span>
           </div>

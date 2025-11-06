@@ -11,7 +11,7 @@ import { AutomockedModule, AutospiedModule, ManualMockedModule, RedirectedModule
 import { ServerMockResolver } from '@vitest/mocker/node'
 import { createBirpc } from 'birpc'
 import { parse, stringify } from 'flatted'
-import { dirname, join } from 'pathe'
+import { dirname, join, resolve, sep } from 'pathe'
 import { createDebugger, isFileServingAllowed, isValidApiRequest } from 'vitest/node'
 import { WebSocketServer } from 'ws'
 
@@ -326,6 +326,72 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject, defaultMocke
             return defaultMockerRegistry.delete(id)
           }
           return mocker.delete(sessionId, id)
+        },
+
+        // Screenshot cleanup
+        async cleanupScreenshots(testPath: string, instanceName: string | undefined) {
+          const { resolveScreenshotPath } = await import('../node/utils')
+          const { readdirSync, rmSync } = await import('node:fs')
+
+          try {
+            // Get the screenshot directory for this test file
+            const fakeScreenshotPath = resolveScreenshotPath(
+              testPath,
+              'fake.png',
+              project.config,
+              undefined,
+            )
+            const screenshotDir = dirname(fakeScreenshotPath)
+
+            // Check if directory exists
+            if (!existsSync(screenshotDir)) {
+              return
+            }
+
+            checkFileAccess(screenshotDir)
+
+            // Read directory and delete matching files
+            const files = readdirSync(screenshotDir)
+            for (const file of files) {
+              // Skip non-PNG files
+              if (!file.endsWith('.png')) {
+                continue
+              }
+
+              let shouldDelete = false
+
+              if (instanceName) {
+                // For instances with custom names: delete files ending with -<instance>.png or -auto-<instance>.png
+                // This matches: test-1-mobile.png, test-2-mobile.png, test-auto-mobile.png
+                shouldDelete = file.endsWith(`-${instanceName}.png`) || file.endsWith(`-auto-${instanceName}.png`)
+              }
+              else {
+                // No instance name: delete all .png files
+                shouldDelete = true
+              }
+
+              if (shouldDelete) {
+                const filePath = join(screenshotDir, file)
+
+                // Security: Validate that the resolved path is still within screenshotDir
+                // This prevents path traversal attacks if the file variable could be malicious
+                const normalizedFilePath = resolve(filePath)
+                const normalizedScreenshotDir = resolve(screenshotDir)
+                if (!normalizedFilePath.startsWith(normalizedScreenshotDir + sep)) {
+                  continue // Skip files outside the screenshot directory
+                }
+
+                checkFileAccess(filePath)
+                rmSync(filePath, { force: true })
+              }
+            }
+          }
+          catch (error: any) {
+            // Silently ignore errors (race conditions, non-existent files, etc.)
+            if (error?.code !== 'ENOENT') {
+              debug?.('Error cleaning up screenshots:', error)
+            }
+          }
         },
 
         // CDP

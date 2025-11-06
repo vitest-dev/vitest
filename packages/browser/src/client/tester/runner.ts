@@ -74,6 +74,11 @@ export function createBrowserRunner(
       await super.onBeforeTryTask?.(...args)
       const trace = this.config.browser.trace
       const test = args[0]
+
+      // Clear screenshot paths array to prevent memory leak in long test runs
+      if (test.meta.screenshotPaths) {
+        test.meta.screenshotPaths = []
+      }
       if (trace === 'off') {
         return
       }
@@ -153,14 +158,36 @@ export function createBrowserRunner(
     }
 
     onTaskFinished = async (task: Task) => {
-      if (this.config.browser.screenshotFailures && document.body.clientHeight > 0 && task.result?.state === 'fail') {
+      const shouldCaptureFailure = this.config.browser.screenshotFailures && task.result?.state === 'fail'
+      const shouldCaptureAll = this.config.browser.screenshotTestEnd
+      const shouldCapture = (shouldCaptureFailure || shouldCaptureAll) && document.body.clientHeight > 0
+
+      if (shouldCapture) {
+        // Generate custom name for auto-capture to avoid clashing with manual screenshots
+        const taskName = getTestName(task)
+        const sanitized = taskName.replace(/[^a-z0-9]/gi, '-').replace(/-+/g, '-')
+        const instanceName = this.config.name
+        const instanceSuffix = instanceName ? `-${instanceName}` : ''
+
+        // Get test file basename only (not full path) and include __screenshots__ structure
+        const file = task.file
+        const testFileName = file?.filepath ? file.filepath.split('/').pop() : 'unknown'
+        const autoScreenshotPath = `__screenshots__/${testFileName}/${sanitized}-auto${instanceSuffix}.png`
+
         const screenshot = await page.screenshot({
+          path: autoScreenshotPath,
           timeout: this.config.browser.providerOptions?.actionTimeout ?? 5_000,
         } as any /** TODO */).catch((err) => {
           console.error('[vitest] Failed to take a screenshot', err)
         })
         if (screenshot) {
-          task.meta.failScreenshotPath = screenshot
+          if (shouldCaptureFailure) {
+            task.meta.failScreenshotPath = screenshot
+          }
+          if (shouldCaptureAll) {
+            task.meta.screenshotPaths ??= []
+            task.meta.screenshotPaths.push(screenshot)
+          }
         }
       }
     }
@@ -177,6 +204,14 @@ export function createBrowserRunner(
           if (!('filepath' in suite)) {
             return
           }
+
+          // Cleanup old screenshots if enabled
+          if (this.config.browser.cleanupScreenshots) {
+            await rpc().cleanupScreenshots(suite.filepath, this.config.name).catch((err) => {
+              console.warn('[vitest] Failed to cleanup screenshots:', err)
+            })
+          }
+
           const map = await rpc().getBrowserFileSourceMap(suite.filepath)
           this.sourceMapCache.set(suite.filepath, map)
           const snapshotEnvironment = this.config.snapshotOptions.snapshotEnvironment

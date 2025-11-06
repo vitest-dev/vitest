@@ -46,6 +46,33 @@ export type ApiConfig = Pick<
   'port' | 'strictPort' | 'host' | 'middlewareMode'
 >
 
+export interface UIConfig {
+  /**
+   * Enable Vitest UI
+   *
+   * @default false
+   */
+  enabled?: boolean
+
+  /**
+   * Display screenshots in the test report
+   * Screenshots must be captured using page.screenshot() in browser tests
+   * and will be loaded from the __screenshots__ directory
+   *
+   * @default false
+   */
+  screenshotsInReport?: boolean
+
+  /**
+   * Clean up old screenshots before running tests
+   * Only deletes screenshots from the current browser instance to avoid conflicts
+   * Applies to both default __screenshots__ directory and custom screenshotDirectory
+   *
+   * @default false
+   */
+  cleanupScreenshots?: boolean
+}
+
 export interface EnvironmentOptions {
   /**
    * jsdom options.
@@ -515,10 +542,11 @@ export interface InlineConfig {
 
   /**
    * Enable Vitest UI
+   * Can be a boolean to enable/disable, or an object with UI configuration options
    *
    * @default false
    */
-  ui?: boolean
+  ui?: boolean | UIConfig
 
   /**
    * options for test in a browser environment
@@ -1014,6 +1042,7 @@ export interface ResolvedConfig
   defines: Record<string, any>
 
   api: ApiConfig & { token: string }
+  ui: boolean | UIConfig
   cliExclude?: string[]
 
   project: string[]
