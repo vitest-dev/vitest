@@ -1,4 +1,4 @@
-import type { DOMWindow } from 'jsdom'
+import type { DOMWindow, VirtualConsole as IVirtualConsole } from 'jsdom'
 import type { Environment } from '../../types/environment'
 import type { JSDOMOptions } from '../../types/jsdom-options'
 import { URL as NodeURL } from 'node:url'
@@ -65,6 +65,18 @@ export default <Environment>{
       cookieJar = false,
       ...restOptions
     } = jsdom as JSDOMOptions
+    let virtualConsole: IVirtualConsole | undefined
+    if (console && globalThis.console) {
+      virtualConsole = new VirtualConsole()
+      // jsdom <27
+      if ('sendTo' in virtualConsole) {
+        (virtualConsole.sendTo as any)(globalThis.console)
+      }
+      // jsdom >=27
+      else {
+        virtualConsole.forwardTo(globalThis.console)
+      }
+    }
     let dom = new JSDOM(html, {
       pretendToBeVisual,
       resources:
@@ -72,10 +84,7 @@ export default <Environment>{
         ?? (userAgent ? new ResourceLoader({ userAgent }) : undefined),
       runScripts,
       url,
-      virtualConsole:
-        console && globalThis.console
-          ? new VirtualConsole().sendTo(globalThis.console)
-          : undefined,
+      virtualConsole,
       cookieJar: cookieJar ? new CookieJar() : undefined,
       includeNodeLocations,
       contentType,
@@ -169,6 +178,18 @@ export default <Environment>{
       cookieJar = false,
       ...restOptions
     } = jsdom as any
+    let virtualConsole: IVirtualConsole | undefined
+    if (console && globalThis.console) {
+      virtualConsole = new VirtualConsole()
+      // jsdom <27
+      if ('sendTo' in virtualConsole) {
+        (virtualConsole.sendTo as any)(globalThis.console)
+      }
+      // jsdom >=27
+      else {
+        virtualConsole.forwardTo(globalThis.console)
+      }
+    }
     const dom = new JSDOM(html, {
       pretendToBeVisual,
       resources:
@@ -176,10 +197,7 @@ export default <Environment>{
         ?? (userAgent ? new ResourceLoader({ userAgent }) : undefined),
       runScripts,
       url,
-      virtualConsole:
-        console && global.console
-          ? new VirtualConsole().sendTo(global.console)
-          : undefined,
+      virtualConsole,
       cookieJar: cookieJar ? new CookieJar() : undefined,
       includeNodeLocations,
       contentType,
