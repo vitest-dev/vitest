@@ -1,7 +1,7 @@
 {
   "name": "@vitest/pretty-format",
   "type": "module",
-  "version": "4.0.6",
+  "version": "4.0.7",
   "description": "Fork of pretty-format with support for ESM",
   "license": "MIT",
   "funding": "https://opencollective.com/vitest",

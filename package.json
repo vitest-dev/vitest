@@ -1,7 +1,7 @@
 {
   "name": "@vitest/monorepo",
   "type": "module",
-  "version": "4.0.6",
+  "version": "4.0.7",
   "private": true,
   "packageManager": "pnpm@10.17.0",
   "description": "Next generation testing framework powered by Vite",

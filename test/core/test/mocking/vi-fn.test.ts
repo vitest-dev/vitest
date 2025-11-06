@@ -20,6 +20,37 @@ test('vi.fn().mock cannot be overriden', () => {
   }).toThrowError()
 })
 
+describe('vi.fn() copies static properties', () => {
+  test('vi.fn() copies static properties from functions', () => {
+    function Example() {}
+    Example.HELLO_WORLD = true
+
+    const spy = vi.fn(Example)
+    expect(Example.HELLO_WORLD).toBe(true)
+    expect(spy.HELLO_WORLD).toBe(true)
+  })
+
+  test('vi.fn() copies static properties from classes', () => {
+    class Example {
+      static HELLO_WORLD = true
+    }
+
+    const spy = vi.fn(Example)
+    expect(Example.HELLO_WORLD).toBe(true)
+    expect(spy.HELLO_WORLD).toBe(true)
+  })
+
+  test('vi.fn() ignores "node.js.promisify" symbol', () => {
+    const promisifySymbol = Symbol.for('nodejs.util.promisify.custom')
+    class Example {
+      static [promisifySymbol] = () => Promise.resolve(42)
+    }
+
+    const spy = vi.fn(Example)
+    expect(spy[promisifySymbol]).toBe(undefined)
+  })
+})
+
 describe('fn.length is consistent', () => {
   test('vi.fn() has correct length', () => {
     const fn0 = vi.fn(() => {})
