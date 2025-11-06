@@ -593,14 +593,6 @@ jsdom environment exposes `jsdom` global variable equal to the current [JSDOM](h
 
 These options are passed down to `setup` method of current [`environment`](#environment). By default, you can configure only JSDOM options, if you are using it as your test environment.
 
-### update<NonProjectOption />
-
-- **Type:** `boolean`
-- **Default:** `false`
-- **CLI:** `-u`, `--update`, `--update=false`
-
-Update snapshot files. This will update all changed snapshots and delete obsolete ones.
-
 ### watch<NonProjectOption />
 
 - **Type:** `boolean`
