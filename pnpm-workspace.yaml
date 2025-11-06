@@ -17,7 +17,6 @@ catalog:
   '@types/istanbul-lib-report': ^3.0.3
   '@types/istanbul-lib-source-maps': ^4.0.4
   '@types/istanbul-reports': ^3.0.4
-  '@types/test-exclude': ^6.0.2
   '@types/ws': ^8.18.1
   '@unocss/reset': ^66.5.1
   '@vitejs/plugin-vue': ^6.0.1
@@ -39,7 +38,6 @@ catalog:
   sirv: ^3.0.2
   std-env: ^3.9.0
   strip-literal: ^3.0.0
-  test-exclude: ^7.0.1
   tinyglobby: ^0.2.15
   tinyrainbow: ^3.0.3
   unocss: ^66.5.1
