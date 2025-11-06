@@ -146,6 +146,7 @@ export function ModuleRunnerTransform(): VitePlugin {
           environment.resolve.noExternal = true
 
           // Workaround `noExternal` merging bug on Vite 6
+          // https://github.com/vitejs/vite/pull/20502
           if (name === 'ssr') {
             delete config.ssr?.noExternal
           }
