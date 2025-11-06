@@ -19,7 +19,7 @@ test('vi.fn() has correct length', () => {
 })
 
 describe('vi.spyOn() copies static properties', () => {
-  test('spying copies properties from functions', () => {
+  test('vi.spyOn() copies properties from functions', () => {
     function a() {}
     a.HELLO_WORLD = true
     const obj = {
@@ -32,7 +32,7 @@ describe('vi.spyOn() copies static properties', () => {
     expect(spy.HELLO_WORLD).toBe(true)
   })
 
-  test('spying copies properties from classes', () => {
+  test('vi.spyOn() copies properties from classes', () => {
     class A {
       static HELLO_WORLD = true
     }
@@ -46,7 +46,7 @@ describe('vi.spyOn() copies static properties', () => {
     expect(spy.HELLO_WORLD).toBe(true)
   })
 
-  test('ignores node.js.promisify symbol', () => {
+  test('vi.spyOn() ignores node.js.promisify symbol', () => {
     const promisifySymbol = Symbol.for('nodejs.util.promisify.custom')
     class Example {
       static [promisifySymbol] = () => Promise.resolve(42)
