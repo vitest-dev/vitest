@@ -429,8 +429,6 @@ You can also access Object attributes with `.`, if you are using objects as argu
   // ✓ add(3, b) -> 3b
   ```
 
-Starting from Vitest 0.25.3, you can also use template string table.
-
 * First row should be column names, separated by `|`;
 * One or more subsequent rows of data supplied as template literal expressions using `${value}` syntax.
 
@@ -1041,8 +1039,6 @@ describe.each([
 })
 ```
 
-Starting from Vitest 0.25.3, you can also use template string table.
-
 * First row should be column names, separated by `|`;
 * One or more subsequent rows of data supplied as template literal expressions using `${value}` syntax.
 
@@ -1159,7 +1155,7 @@ afterEach(async () => {
 Here, the `afterEach` ensures that testing data is cleared after each test runs.
 
 ::: tip
-Vitest 1.3.0 added [`onTestFinished`](#ontestfinished) hook. You can call it during the test execution to cleanup any state after the test has finished running.
+You can also use [`onTestFinished`](#ontestfinished) during the test execution to cleanup any state after the test has finished running.
 :::
 
 ### beforeAll

@@ -252,7 +252,7 @@ export interface BrowserConfigOptions {
   /**
    * Commands that will be executed on the server
    * via the browser `import("vitest/browser").commands` API.
-   * @see {@link https://vitest.dev/guide/browser/commands}
+   * @see {@link https://vitest.dev/api/browser/commands}
    */
   commands?: Record<string, BrowserCommand<any>>
 
@@ -441,7 +441,7 @@ type ToMatchScreenshotResolvePath = (data: {
   platform: NodeJS.Platform
   /**
    * The value provided to
-   * {@linkcode https://vitest.dev/guide/browser/config#browser-screenshotdirectory|browser.screenshotDirectory},
+   * {@linkcode https://vitest.dev/config/browser/screenshotdirectory|browser.screenshotDirectory},
    * if none is provided, its default value.
    */
   screenshotDirectory: string

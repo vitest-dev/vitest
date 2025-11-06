@@ -50,7 +50,7 @@ or [Docker containers](https://playwright.dev/docs/docker).
 :::
 
 Visual regression testing in Vitest can be done through the
-[`toMatchScreenshot` assertion](/guide/browser/assertion-api.html#tomatchscreenshot):
+[`toMatchScreenshot` assertion](/api/browser/assertions.html#tomatchscreenshot):
 
 ```ts
 import { expect, test } from 'vitest'
@@ -144,7 +144,7 @@ During stability detection, Vitest calls comparators with `createDiff: false` si
 ### Global Configuration
 
 Configure visual regression testing defaults in your
-[Vitest config](/guide/browser/config#browser-expect-tomatchscreenshot):
+[Vitest config](/config/browser/expect#tomatchscreenshot):
 
 ```ts [vitest.config.ts]
 import { defineConfig } from 'vitest/config'

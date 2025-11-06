@@ -108,7 +108,7 @@ An [`AbortSignal`](https://developer.mozilla.org/en-US/docs/Web/API/AbortSignal)
 
 - Test times out
 - User manually cancelled the test run with Ctrl+C
-- [`vitest.cancelCurrentRun`](/advanced/api/vitest#cancelcurrentrun) was called programmatically
+- [`vitest.cancelCurrentRun`](/api/advanced/vitest#cancelcurrentrun) was called programmatically
 - Another test failed in parallel and the [`bail`](/config/#bail) flag is set
 
 ```ts
