@@ -16,6 +16,7 @@ function element<T extends HTMLElement | SVGElement | null | Locator>(elementOrL
     if (elementOrLocator instanceof Element || elementOrLocator == null) {
       return elementOrLocator
     }
+
     const isNot = chai.util.flag(this, 'negate') as boolean
     const name = chai.util.flag(this, '_name') as string
     // special case for `toBeInTheDocument` matcher
