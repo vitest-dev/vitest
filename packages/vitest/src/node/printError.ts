@@ -219,7 +219,6 @@ function printErrorInner(
 
   const testPath = (e as any).VITEST_TEST_PATH
   const testName = (e as any).VITEST_TEST_NAME
-  const afterEnvTeardown = (e as any).VITEST_AFTER_ENV_TEARDOWN
   // testName has testPath inside
   if (testPath) {
     logger.error(
@@ -238,15 +237,6 @@ function printErrorInner(
         )}". It might mean one of the following:`
         + '\n- The error was thrown, while Vitest was running this test.'
         + '\n- If the error occurred after the test had been completed, this was the last documented test before it was thrown.',
-      ),
-    )
-  }
-  if (afterEnvTeardown) {
-    logger.error(
-      c.red(
-        'This error was caught after test environment was torn down. Make sure to cancel any running tasks before test finishes:'
-        + '\n- cancel timeouts using clearTimeout and clearInterval'
-        + '\n- wait for promises to resolve using the await keyword',
       ),
     )
   }
@@ -292,7 +282,6 @@ const skipErrorProperties = new Set([
   'columnNumber',
   'VITEST_TEST_NAME',
   'VITEST_TEST_PATH',
-  'VITEST_AFTER_ENV_TEARDOWN',
   '__vitest_rollup_error__',
   ...Object.getOwnPropertyNames(Error.prototype),
   ...Object.getOwnPropertyNames(Object.prototype),

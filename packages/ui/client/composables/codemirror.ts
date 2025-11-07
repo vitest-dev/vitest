@@ -3,9 +3,11 @@ import type { RunnerTestCase } from 'vitest'
 import type { Ref, WritableComputedRef } from 'vue'
 import CodeMirror from 'codemirror'
 
-import { watch } from 'vue'
+import { markRaw, onUnmounted, shallowRef, watch } from 'vue'
 
 import { navigateTo } from '~/composables/navigation'
+import { openInEditor } from './error'
+import { selectedTest } from './params'
 import 'codemirror/mode/javascript/javascript'
 // import 'codemirror/mode/css/css'
 import 'codemirror/mode/xml/xml'

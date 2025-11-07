@@ -10,7 +10,6 @@
     "tinyexec": "^0.3.2",
     "tinyrainbow": "catalog:",
     "vite": "latest",
-    "vite-node": "workspace:*",
     "vitest": "workspace:*"
   }
 }

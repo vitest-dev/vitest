@@ -21,6 +21,7 @@ export type {
   SerializedCoverageConfig,
 } from '../runtime/config'
 
+export { VitestEvaluatedModules as EvaluatedModules } from '../runtime/moduleRunner/evaluatedModules'
 export type {
   BenchFactory,
   BenchFunction,
@@ -129,10 +130,16 @@ export type {
   MockedFunction,
   MockedObject,
   MockInstance,
+  MockResult,
+  MockResultIncomplete,
+  MockResultReturn,
+  MockResultThrow,
+  MockSettledResult,
+  MockSettledResultFulfilled,
+  MockSettledResultIncomplete,
+  MockSettledResultRejected,
 } from '@vitest/spy'
 
 export type { SerializedError } from '@vitest/utils'
 export type { SerializedTestSpecification }
 export type { DiffOptions } from '@vitest/utils/diff'
-
-export { EvaluatedModules } from 'vite/module-runner'

@@ -87,6 +87,17 @@ export class VitestModuleRunner extends viteModuleRunner.ModuleRunner {
     }
   }
 
+  /**
+   * Vite checks that the module has exports emulating the Node.js behaviour,
+   * but Vitest is more relaxed.
+   *
+   * We should keep the Vite behavour when there is a `strict` flag.
+   * @internal
+   */
+  processImport(exports: Record<string, any>): Record<string, any> {
+    return exports
+  }
+
   public async import(rawId: string): Promise<any> {
     const resolved = await this.vitestOptions.transport.resolveId(rawId)
     return super.import(resolved ? resolved.url : rawId)

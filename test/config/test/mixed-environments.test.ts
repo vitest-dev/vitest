@@ -4,11 +4,11 @@ import { expect, test } from 'vitest'
 import { runVitest } from '../../test-utils'
 
 const configs: TestUserConfig[] = [
-  { pool: 'threads', poolOptions: { threads: { isolate: false, singleThread: true } } },
-  { pool: 'threads', poolOptions: { threads: { isolate: false, singleThread: false } } },
-  { pool: 'threads', poolOptions: { threads: { isolate: false, maxThreads: 1 } } },
-  { pool: 'forks', poolOptions: { forks: { isolate: true } } },
-  { pool: 'forks', poolOptions: { forks: { isolate: false } } },
+  { pool: 'threads', isolate: false, fileParallelism: false },
+  { pool: 'threads', isolate: false, fileParallelism: true },
+  { pool: 'threads', isolate: false, maxWorkers: 1 },
+  { pool: 'forks', isolate: true },
+  { pool: 'forks', isolate: false },
 ]
 
 test.each(configs)('should isolate environments when %s', async (config) => {

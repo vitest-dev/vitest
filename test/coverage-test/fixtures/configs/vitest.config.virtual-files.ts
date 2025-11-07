@@ -1,4 +1,7 @@
+import { readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
 import { Plugin, defineConfig, mergeConfig } from 'vitest/config'
+import { transformWithEsbuild } from 'vite'
 
 import base from './vitest.config'
 
@@ -22,6 +25,10 @@ function VirtualFilesPlugin(): Plugin {
       if (id === '\0vitest-custom-virtual-file-2') {
         return 'src/\0vitest-custom-virtual-file-2.ts'
       }
+
+      if (id.includes('vitest-custom-virtual:math')) {
+        return resolve(import.meta.dirname, "../src/vitest-custom-virtual:math")
+      }
     },
     load(id) {
       if (id === 'src/virtual:vitest-custom-virtual-file-1.ts') {
@@ -37,6 +44,13 @@ function VirtualFilesPlugin(): Plugin {
           const virtualFile = "This file should be excluded from coverage report #2"
           export default virtualFile;
         `
+      }
+
+      if(id.includes("vitest-custom-virtual:math")) {
+        const filename = resolve(import.meta.dirname, "../src/math.ts");
+        const sources = readFileSync(filename, "utf8")
+
+        return transformWithEsbuild(sources, filename)
       }
     },
   }

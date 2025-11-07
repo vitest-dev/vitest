@@ -15,6 +15,7 @@ export interface SerializedConfig {
   disableConsoleIntercept: boolean | undefined
   runner: string | undefined
   isolate: boolean
+  maxWorkers: number
   mode: 'test' | 'benchmark'
   bail: number | undefined
   environmentOptions?: Record<string, any>
@@ -48,22 +49,6 @@ export interface SerializedConfig {
     seed: number
     hooks: SequenceHooks
     setupFiles: SequenceSetupFiles
-  }
-  poolOptions: {
-    forks: {
-      singleFork: boolean
-      isolate: boolean
-    }
-    threads: {
-      singleThread: boolean
-      isolate: boolean
-    }
-    vmThreads: {
-      singleThread: boolean
-    }
-    vmForks: {
-      singleFork: boolean
-    }
   }
   deps: {
     web: {

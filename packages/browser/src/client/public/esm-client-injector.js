@@ -1,26 +1,37 @@
 (() => {
-  const moduleCache = new Map();
-
-  function wrapModule(module) {
-    if (typeof module === "function") {
-      const promise = new Promise((resolve, reject) => {
-        if (typeof __vitest_mocker__ === "undefined")
-          return module().then(resolve, reject);
-        __vitest_mocker__.prepare().finally(() => {
-          module().then(resolve, reject);
-        });
-      });
-      moduleCache.set(promise, { promise, evaluated: false });
-      return promise.finally(() => moduleCache.delete(promise));
+  function wrapModule(moduleCallback) {
+    if (typeof moduleCallback !== "function") {
+      return moduleCallback
     }
-    return module;
+
+    if (typeof __vitest_mocker__ === "undefined" || typeof __vitest_worker__ === 'undefined') {
+      return moduleCallback()
+    }
+
+    const { evaluatedModules } = __vitest_worker__
+    const moduleId = crypto.randomUUID()
+    const viteModule = evaluatedModules.ensureModule(moduleId, moduleId)
+
+    viteModule.evaluated = false
+    viteModule.promise = new Promise((resolve, reject) => {
+      __vitest_mocker__.prepare().finally(() => {
+        moduleCallback().then(resolve, reject)
+      });
+    });
+    return viteModule.promise.finally(() => {
+      viteModule.evaluated = true
+      viteModule.promise = undefined
+
+      evaluatedModules.idToModuleMap.delete(viteModule.id)
+      evaluatedModules.fileToModulesMap.delete(viteModule.file)
+      evaluatedModules.urlToIdModuleMap.delete(viteModule.url)
+    });
   }
 
   window.__vitest_browser_runner__ = {
     wrapModule,
     wrapDynamicImport: wrapModule,
     disposeExceptionTracker: () => {},
-    moduleCache,
     cleanups: [],
     config: { __VITEST_CONFIG__ },
     viteConfig: { __VITEST_VITE_CONFIG__ },

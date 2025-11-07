@@ -10,7 +10,6 @@
     <ListItem>Component testing for Vue, React, Svelte, Lit, Marko and more</ListItem>
     <ListItem>Out-of-the-box TypeScript / JSX support</ListItem>
     <ListItem>ESM first, top level await</ListItem>
-    <ListItem>Workers multi-threading via <a target="_blank" href="https://github.com/tinylibs/tinypool" rel="noopener noreferrer">Tinypool</a></ListItem>
     <ListItem>Benchmarking support with <a target="_blank" href="https://github.com/tinylibs/tinybench" rel="noopener noreferrer">Tinybench</a></ListItem>
     <ListItem>Filtering, timeouts, concurrent for suite and tests</ListItem>
     <ListItem><a href="/guide/projects">Projects</a> support</ListItem>

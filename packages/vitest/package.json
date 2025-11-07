@@ -1,7 +1,7 @@
 {
   "name": "vitest",
   "type": "module",
-  "version": "4.0.0-beta.17",
+  "version": "4.0.8",
   "description": "Next generation testing framework powered by Vite",
   "author": "Anthony Fu <anthonyfu117@hotmail.com>",
   "license": "MIT",
@@ -104,6 +104,10 @@
     "./mocker": {
       "types": "./dist/mocker.d.ts",
       "default": "./dist/mocker.js"
+    },
+    "./worker": {
+      "types": "./worker.d.ts",
+      "default": "./dist/worker.js"
     }
   },
   "main": "./dist/index.js",
@@ -186,7 +190,6 @@
     "tinybench": "^2.9.0",
     "tinyexec": "^0.3.2",
     "tinyglobby": "catalog:",
-    "tinypool": "^2.0.0",
     "tinyrainbow": "catalog:",
     "vite": "^6.0.0 || ^7.0.0",
     "why-is-node-running": "^2.3.0"
@@ -200,8 +203,8 @@
     "@types/estree": "catalog:",
     "@types/istanbul-lib-coverage": "catalog:",
     "@types/istanbul-reports": "catalog:",
-    "@types/jsdom": "^21.1.7",
-    "@types/node": "^22.18.6",
+    "@types/jsdom": "^27.0.0",
+    "@types/node": "^22.19.0",
     "@types/picomatch": "^4.0.2",
     "@types/prompts": "^2.4.9",
     "@types/sinonjs__fake-timers": "^8.1.5",
@@ -210,8 +213,8 @@
     "cac": "catalog:",
     "empathic": "^2.0.0",
     "flatted": "catalog:",
-    "happy-dom": "^20.0.0",
-    "jsdom": "^26.1.0",
+    "happy-dom": "^20.0.10",
+    "jsdom": "^27.1.0",
     "local-pkg": "^1.1.2",
     "mime": "^4.1.0",
     "prompts": "^2.4.2",

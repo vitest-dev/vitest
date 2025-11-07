@@ -17,7 +17,7 @@ import type { TestRunEndReason } from './types/reporter'
 import assert from 'node:assert'
 import { createHash } from 'node:crypto'
 import { existsSync } from 'node:fs'
-import { copyFile, mkdir } from 'node:fs/promises'
+import { copyFile, mkdir, writeFile } from 'node:fs/promises'
 import { isPrimitive } from '@vitest/utils/helpers'
 import { serializeValue } from '@vitest/utils/serialize'
 import { parseErrorStacktrace } from '@vitest/utils/source-map'
@@ -107,6 +107,24 @@ export class TestRun {
     }
 
     await this.vitest.report('onTestRunEnd', modules, [...errors] as SerializedError[], state)
+
+    for (const project in this.vitest.state.metadata) {
+      const meta = this.vitest.state.metadata[project]
+      if (!meta?.dumpDir) {
+        continue
+      }
+      const path = resolve(meta.dumpDir, 'vitest-metadata.json')
+      meta.outline = {
+        externalized: Object.keys(meta.externalized).length,
+        inlined: Object.keys(meta.tmps).length,
+      }
+      await writeFile(
+        path,
+        JSON.stringify(meta, null, 2),
+        'utf-8',
+      )
+      this.vitest.logger.log(`Metadata written to ${path}`)
+    }
   }
 
   private hasFailed(modules: TestModule[]) {
@@ -117,6 +135,7 @@ export class TestRun {
     return modules.some(m => !m.ok())
   }
 
+  // make sure the error always has a "stacks" property
   private syncUpdateStacks(update: TaskResultPack[]): void {
     update.forEach(([taskId, result]) => {
       const task = this.vitest.state.idMap.get(taskId)

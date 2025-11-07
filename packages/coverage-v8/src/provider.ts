@@ -2,7 +2,7 @@ import type { CoverageMap } from 'istanbul-lib-coverage'
 import type { ProxifiedModule } from 'magicast'
 import type { Profiler } from 'node:inspector'
 import type { CoverageProvider, ReportContext, ResolvedCoverageOptions, TestProject, Vite, Vitest } from 'vitest/node'
-import { promises as fs } from 'node:fs'
+import { existsSync, promises as fs } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 // @ts-expect-error -- untyped
 import { mergeProcessCovs } from '@bcoe/v8-coverage'
@@ -86,9 +86,15 @@ export class V8CoverageProvider extends BaseCoverageProvider<ResolvedCoverageOpt
       coverageMap.merge(await transformCoverage(untestedCoverage))
     }
 
-    if (this.options.excludeAfterRemap) {
-      coverageMap.filter(filename => this.isIncluded(filename))
-    }
+    coverageMap.filter((filename) => {
+      const exists = existsSync(filename)
+
+      if (this.options.excludeAfterRemap) {
+        return exists && this.isIncluded(filename)
+      }
+
+      return exists
+    })
 
     if (debug.enabled) {
       debug(`Generate coverage total time ${(performance.now() - start!).toFixed()} ms`)
@@ -240,6 +246,20 @@ export class V8CoverageProvider extends BaseCoverageProvider<ResolvedCoverageOpt
           && node.type === 'VariableDeclarator'
           && node.id.type === 'Identifier'
           && node.id.name === '__vite_ssr_export_default__'
+        ) {
+          return true
+        }
+
+        // CJS imports as ternaries - e.g.
+        // const React = __vite__cjsImport0_react.__esModule ? __vite__cjsImport0_react.default : __vite__cjsImport0_react;
+        if (
+          type === 'branch'
+          && node.type === 'ConditionalExpression'
+          && node.test.type === 'MemberExpression'
+          && node.test.object.type === 'Identifier'
+          && node.test.object.name.startsWith('__vite__cjsImport')
+          && node.test.property.type === 'Identifier'
+          && node.test.property.name === '__esModule'
         ) {
           return true
         }

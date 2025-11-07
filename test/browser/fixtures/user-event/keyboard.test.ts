@@ -63,7 +63,8 @@ test('click with modifier', async () => {
   });
 
   await userEvent.keyboard('{Shift>}')
-  await userEvent.click(el)
+  // By using an empty object as the option, this opts in to using a chain of actions instead of an elementClick in webdriver.
+  await userEvent.click(el, {})
   await userEvent.keyboard('{/Shift}')
   await expect.poll(() => el.textContent).toContain("[ok]")
 })

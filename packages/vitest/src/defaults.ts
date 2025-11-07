@@ -58,7 +58,6 @@ export const configDefaults: Readonly<{
   watch: boolean
   globals: boolean
   environment: 'node'
-  pool: 'forks'
   clearMocks: boolean
   restoreMocks: boolean
   mockReset: boolean
@@ -96,7 +95,6 @@ export const configDefaults: Readonly<{
   watch: !isCI && process.stdin.isTTY,
   globals: false,
   environment: 'node' as const,
-  pool: 'forks' as const,
   clearMocks: false,
   restoreMocks: false,
   mockReset: false,

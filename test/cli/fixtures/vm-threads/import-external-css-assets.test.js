@@ -16,7 +16,7 @@ describe('import external css', () => {
     const el = document.createElement('div')
     el.classList.add('test1')
     expect(el.classList.contains('test1')).toBe(true)
-    expect(window.getComputedStyle(el).color).toBe('')
+    expect(window.getComputedStyle(el).color).toBe('rgb(0, 0, 0)')
   })
 
   test('when importing processed.css, element changes style', () => {

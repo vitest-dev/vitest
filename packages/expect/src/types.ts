@@ -18,7 +18,7 @@ export type Tester = (
   this: TesterContext,
   a: any,
   b: any,
-  customTesters: Array<Tester>
+  customTesters: Array<Tester>,
 ) => boolean | undefined
 
 export interface TesterContext {
@@ -26,7 +26,7 @@ export interface TesterContext {
     a: unknown,
     b: unknown,
     customTesters?: Array<Tester>,
-    strictCheck?: boolean
+    strictCheck?: boolean,
   ) => boolean
 }
 export type { DiffOptions } from '@vitest/utils/diff'
@@ -52,7 +52,7 @@ export interface MatcherState {
     a: unknown,
     b: unknown,
     customTesters?: Array<Tester>,
-    strictCheck?: boolean
+    strictCheck?: boolean,
   ) => boolean
   expand?: boolean
   expectedAssertionsNumber?: number | null
@@ -184,6 +184,17 @@ export interface AsymmetricMatchersContaining extends CustomMatcher {
    * expect(5.11).toEqual(expect.closeTo(5.12)); // with default precision
    */
   closeTo: (expected: number, precision?: number) => any
+
+  /**
+   * Matches if the received value validates against a Standard Schema.
+   *
+   * @param schema - A Standard Schema V1 compatible schema object
+   *
+   * @example
+   * expect(user).toEqual(expect.schemaMatching(z.object({ name: z.string() })))
+   * expect(['hello', 'world']).toEqual([expect.schemaMatching(z.string()), expect.schemaMatching(z.string())])
+   */
+  schemaMatching: (schema: unknown) => any
 }
 
 type WithAsymmetricMatcher<T> = T | AsymmetricMatcher<unknown>
@@ -388,13 +399,13 @@ export interface JestAssertion<T = any> extends jest.Matchers<void, T>, CustomMa
    */
   toHaveProperty: <E>(
     property: string | (string | number)[],
-    value?: E
+    value?: E,
   ) => void
 
   /**
    * Using exact equality with floating point numbers is a bad idea.
    * Rounding means that intuitive things fail.
-   * The default for `precision` is 2.
+   * The default for `numDigits` is 2.
    *
    * @example
    * expect(price).toBeCloseTo(9.99, 2);
@@ -673,7 +684,7 @@ export interface Assertion<T = any>
       | 'object'
       | 'string'
       | 'symbol'
-      | 'undefined'
+      | 'undefined',
   ) => void
 
   /**

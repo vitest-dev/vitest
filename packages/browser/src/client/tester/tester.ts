@@ -1,4 +1,5 @@
 import type { BrowserRPC, IframeChannelEvent } from '@vitest/browser/client'
+import type { FileSpecification } from '@vitest/runner'
 import { channel, client, onCancel } from '@vitest/browser/client'
 import { parse } from 'flatted'
 import { page, server, userEvent } from 'vitest/browser'
@@ -102,6 +103,7 @@ async function prepareTestEnvironment(options: PrepareOptions) {
 
   state.metaEnv = import.meta.env
   state.onCancel = onCancel
+  state.ctx.rpc = rpc as any
   state.rpc = rpc as any
 
   const interceptor = createModuleMockerInterceptor()
@@ -155,7 +157,7 @@ let preparedData:
   | Awaited<ReturnType<typeof prepareTestEnvironment>>
   | undefined
 
-async function executeTests(method: 'run' | 'collect', files: string[]) {
+async function executeTests(method: 'run' | 'collect', files: FileSpecification[]) {
   if (!preparedData) {
     throw new Error(`Data was not properly initialized. This is a bug in Vitest. Please, open a new issue with reproduction.`)
   }
@@ -168,17 +170,17 @@ async function executeTests(method: 'run' | 'collect', files: string[]) {
   runner.setMethod(method)
 
   const version = url.searchParams.get('browserv') || ''
-  files.forEach((filename) => {
-    const currentVersion = browserHashMap.get(filename)
+  files.forEach(({ filepath }) => {
+    const currentVersion = browserHashMap.get(filepath)
     if (!currentVersion || currentVersion[1] !== version) {
-      browserHashMap.set(filename, version)
+      browserHashMap.set(filepath, version)
     }
   })
 
   debug?.('prepare time', state.durations.prepare, 'ms')
 
   for (const file of files) {
-    state.filepath = file
+    state.filepath = file.filepath
 
     if (method === 'run') {
       await startTests([file], runner)
@@ -252,7 +254,6 @@ async function cleanup() {
     await rpc.wdioSwitchContext('parent')
       .catch(error => unhandledError(error, 'Cleanup Error'))
   }
-  state.environmentTeardownRun = true
   await stopCoverageInsideWorker(config.coverage, moduleRunner, { isolate: config.browser.isolate }).catch((error) => {
     return unhandledError(error, 'Coverage Error')
   })

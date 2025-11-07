@@ -8,6 +8,11 @@ jobs:
   trigger:
     runs-on: ubuntu-latest
     if: github.repository == 'vitest-dev/vitest' && github.event.issue.pull_request && startsWith(github.event.comment.body, '/ecosystem-ci run')
+    permissions:
+      issues: write # to add / delete reactions, post comments
+      pull-requests: write # to read PR data, and to add labels
+      actions: read # to check workflow status
+      contents: read # to clone the repo
     steps:
       - uses: actions/github-script@v8
         with:
@@ -70,12 +75,13 @@ jobs:
         id: trigger
         env:
           COMMENT: ${{ github.event.comment.body }}
+          PR_DATA: ${{ steps.get-pr-data.outputs.result }}
         with:
           github-token: ${{ steps.generate-token.outputs.token }}
           result-encoding: string
           script: |
             const comment = process.env.COMMENT.trim()
-            const prData = ${{ steps.get-pr-data.outputs.result }}
+            const prData = JSON.parse(process.env.PR_DATA)
 
             const suite = comment.split('\n')[0].replace(/^\/ecosystem-ci run/, '').trim()
 

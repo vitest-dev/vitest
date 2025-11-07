@@ -1,7 +1,8 @@
 import type { BrowserUI } from 'vitest'
 import { viewport } from './browser'
 import { browserState, findById } from './client'
-import { updateBrowserPanel } from './navigation'
+import { currentModule, showDashboard, updateBrowserPanel } from './navigation'
+import { activeFileId } from './params'
 
 export const ui: BrowserUI = {
   setCurrentFileId(fileId: string) {

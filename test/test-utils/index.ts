@@ -2,7 +2,7 @@ import type { Options } from 'tinyexec'
 import type { UserConfig as ViteUserConfig } from 'vite'
 import type { WorkerGlobalState } from 'vitest'
 import type { TestProjectConfiguration } from 'vitest/config'
-import type { TestModule, TestSpecification, TestUserConfig, Vitest, VitestRunMode } from 'vitest/node'
+import type { TestCollection, TestModule, TestSpecification, TestUserConfig, Vitest, VitestRunMode } from 'vitest/node'
 import { webcrypto as crypto } from 'node:crypto'
 import fs from 'node:fs'
 import { Readable, Writable } from 'node:stream'
@@ -153,7 +153,7 @@ interface CliOptions extends Partial<Options> {
   preserveAnsi?: boolean
 }
 
-async function runCli(command: 'vitest' | 'vite-node', _options?: CliOptions | string, ...args: string[]) {
+async function runCli(command: 'vitest', _options?: CliOptions | string, ...args: string[]) {
   let options = _options
 
   if (typeof _options === 'string') {
@@ -226,13 +226,6 @@ async function runCli(command: 'vitest' | 'vite-node', _options?: CliOptions | s
 export async function runVitestCli(_options?: CliOptions | string, ...args: string[]) {
   process.env.VITE_TEST_WATCHER_DEBUG = 'true'
   return runCli('vitest', _options, ...args)
-}
-
-export async function runViteNodeCli(_options?: CliOptions | string, ...args: string[]) {
-  process.env.VITE_TEST_WATCHER_DEBUG = 'true'
-  const { vitest, ...rest } = await runCli('vite-node', _options, ...args)
-
-  return { viteNode: vitest, ...rest }
 }
 
 export function getInternalState(): WorkerGlobalState {
@@ -376,7 +369,10 @@ export async function runInlineTests(
     root,
     ...vitest,
     get results() {
-      return (vitest.ctx?.state.getFiles() || []).map(file => vitest.ctx?.state.getReportedEntity(file) as TestModule)
+      return vitest.ctx?.state.getTestModules() || []
+    },
+    testTree() {
+      return buildTestTree(vitest.ctx?.state.getTestModules() || [])
     },
   }
 }
@@ -391,4 +387,36 @@ export class StableTestFileOrderSorter {
   shard(files: TestSpecification[]) {
     return files
   }
+}
+
+function buildTestTree(testModules: TestModule[]) {
+  type TestTree = Record<string, any>
+
+  function walkCollection(collection: TestCollection): TestTree {
+    const node: TestTree = {}
+
+    for (const child of collection) {
+      if (child.type === 'suite') {
+        // Recursively walk suite children
+        const suiteChildren = walkCollection(child.children)
+        node[child.name] = suiteChildren
+      }
+      else if (child.type === 'test') {
+        const result = child.result()
+        node[child.name] = result.state
+      }
+    }
+
+    return node
+  }
+
+  const tree: TestTree = {}
+
+  for (const module of testModules) {
+    // Use relative module ID for cleaner output
+    const key = module.relativeModuleId
+    tree[key] = walkCollection(module.children)
+  }
+
+  return tree
 }
