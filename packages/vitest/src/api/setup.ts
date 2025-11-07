@@ -15,6 +15,7 @@ import type {
   WebSocketRPC,
 } from './types'
 import { existsSync, promises as fs } from 'node:fs'
+import { performance } from 'node:perf_hooks'
 import { noop } from '@vitest/utils/helpers'
 import { createBirpc } from 'birpc'
 import { parse, stringify } from 'flatted'
@@ -23,7 +24,6 @@ import { API_PATH } from '../constants'
 import { getModuleGraph } from '../utils/graph'
 import { stringifyReplace } from '../utils/serialization'
 import { isValidApiRequest } from './check'
-import {performance} from "node:perf_hooks";
 
 export function setup(ctx: Vitest, _server?: ViteDevServer): void {
   const wss = new WebSocketServer({ noServer: true })
