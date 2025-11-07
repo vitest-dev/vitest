@@ -6,9 +6,9 @@ import type {
   RootTreeNode,
   UITaskTreeNode,
 } from '~/composables/explorer/types'
-import { config } from '~/composables/client'
 import { useRafFn } from '@vueuse/core'
 import { reactive } from 'vue'
+import { config } from '~/composables/client'
 import { runCollapseAllTask, runCollapseNode } from '~/composables/explorer/collapse'
 import { annotateTest, collectTestsTotalData, preparePendingTasks, runCollect, runLoadFiles } from '~/composables/explorer/collector'
 import { runExpandAll, runExpandNode } from '~/composables/explorer/expand'
