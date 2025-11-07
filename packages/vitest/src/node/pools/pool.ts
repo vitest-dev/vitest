@@ -167,7 +167,6 @@ export class Pool {
   }
 
   async cancel(): Promise<void> {
-
     // Create a promise to track cancellation completion
     const cancelPromise = (async () => {
       const pendingTasks = this.queue.splice(0)
