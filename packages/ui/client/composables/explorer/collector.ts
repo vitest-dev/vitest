@@ -318,28 +318,10 @@ function collectData(
     failedSnapshotEnabled: false,
   } satisfies CollectorInfo
 
-  // let time = 0
   for (const [_, f] of useFiles) {
     if (!f) {
       continue
     }
-    /*
-    const file = filesMap.get(id)
-    if (file) {
-      file.mode = f.mode
-      file.setupDuration = f.setupDuration
-      file.prepareDuration = f.prepareDuration
-      file.environmentLoad = f.environmentLoad
-      file.collectDuration = f.collectDuration
-      file.duration = f.result?.duration != null ? Math.round(f.result?.duration) : undefined
-      file.state = f.result?.state
-    }
-    time += Math.max(0, f.collectDuration || 0)
-    time += Math.max(0, f.setupDuration || 0)
-    time += Math.max(0, f.result?.duration || 0)
-    time += Math.max(0, f.environmentLoad || 0)
-    time += Math.max(0, f.prepareDuration || 0)
-    data.time = time > 1000 ? `${(time / 1000).toFixed(2)}s` : `${Math.round(time)}ms`*/
     if (f.result?.state === 'fail') {
       data.filesFailed++
     }
