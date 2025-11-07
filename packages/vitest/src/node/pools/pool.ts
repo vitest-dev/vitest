@@ -34,7 +34,7 @@ export class Pool {
   private activeTasks: ActiveTask[] = []
   private sharedRunners: PoolRunner[] = []
   private exitPromises: Promise<void>[] = []
-  private _isCancelling: boolean = false
+  private cancellingPromise: Promise<void> | null = null
 
   constructor(private options: Options, private logger: Logger) {}
 
@@ -47,9 +47,9 @@ export class Pool {
   }
 
   async run(task: PoolTask, method: 'run' | 'collect'): Promise<void> {
-    // Prevent new tasks from being queued during cancellation
-    if (this._isCancelling) {
-      throw new Error('[vitest-pool]: Cannot run tasks while pool is cancelling')
+    // Wait for any ongoing cancellation to complete before accepting new tasks
+    if (this.cancellingPromise) {
+      await this.cancellingPromise
     }
 
     // Every runner related failure should make this promise reject so that it's picked by pool.
@@ -167,28 +167,31 @@ export class Pool {
   }
 
   async cancel(): Promise<void> {
-    // Set flag to prevent new tasks from being queued
-    this._isCancelling = true
 
-    const pendingTasks = this.queue.splice(0)
+    // Create a promise to track cancellation completion
+    const cancelPromise = (async () => {
+      const pendingTasks = this.queue.splice(0)
 
-    if (pendingTasks.length) {
-      const error = new Error('Cancelled')
-      pendingTasks.forEach(task => task.resolver.reject(error))
-    }
+      if (pendingTasks.length) {
+        const error = new Error('Cancelled')
+        pendingTasks.forEach(task => task.resolver.reject(error))
+      }
 
-    const activeTasks = this.activeTasks.splice(0)
-    await Promise.all(activeTasks.map(task => task.cancelTask()))
+      const activeTasks = this.activeTasks.splice(0)
+      await Promise.all(activeTasks.map(task => task.cancelTask()))
 
-    const sharedRunners = this.sharedRunners.splice(0)
-    await Promise.all(sharedRunners.map(runner => runner.stop()))
+      const sharedRunners = this.sharedRunners.splice(0)
+      await Promise.all(sharedRunners.map(runner => runner.stop()))
 
-    await Promise.all(this.exitPromises.splice(0))
+      await Promise.all(this.exitPromises.splice(0))
 
-    this.workerIds.forEach((_, id) => this.freeWorkerId(id))
+      this.workerIds.forEach((_, id) => this.freeWorkerId(id))
 
-    // Reset flag after cancellation completes
-    this._isCancelling = false
+      this.cancellingPromise = null
+    })()
+
+    this.cancellingPromise = cancelPromise
+    await cancelPromise
   }
 
   async close(): Promise<void> {
