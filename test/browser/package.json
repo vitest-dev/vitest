@@ -24,6 +24,8 @@
     "test-broken-iframe": "vitest --root ./fixtures/broken-iframe",
     "coverage": "vitest --coverage.enabled --coverage.provider=istanbul --browser.headless=yes",
     "test:browser:preview": "PROVIDER=preview vitest",
+    "test:browser:preview:chrome": "BROWSER=chrome PROVIDER=preview vitest",
+    "test:browser:preview:firefox": "BROWSER=firefox PROVIDER=preview vitest",
     "test:browser:playwright": "PROVIDER=playwright vitest",
     "test:browser:webdriverio": "PROVIDER=webdriverio vitest",
     "test:browser:playwright:html": "PROVIDER=playwright vitest --reporter=html"
