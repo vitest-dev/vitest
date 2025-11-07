@@ -139,7 +139,6 @@ export function createFetchModuleFunction(
     }
     if (promises.has(tmp)) {
       await promises.get(tmp)
-      Reflect.set(transformResult, '_vitestTmp', tmp)
       return getCachedResult(result, tmp)
     }
     promises.set(
@@ -148,7 +147,10 @@ export function createFetchModuleFunction(
       atomicWriteFile(tmp, code)
         // Fallback to non-atomic write for windows case where file already exists:
         .catch(() => writeFile(tmp, code, 'utf-8'))
-        .finally(() => promises.delete(tmp)),
+        .finally(() => {
+          Reflect.set(transformResult, '_vitestTmp', tmp)
+          promises.delete(tmp)
+        }),
     )
     await promises.get(tmp)
     return getCachedResult(result, tmp)
