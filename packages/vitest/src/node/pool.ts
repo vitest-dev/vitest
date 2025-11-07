@@ -20,7 +20,7 @@ const suppressWarningsPath = resolve(rootDir, './suppress-warnings.cjs')
 
 type RunWithFiles = (
   files: TestSpecification[],
-  invalidates?: string[]
+  invalidates?: string[],
 ) => Promise<void>
 
 export interface ProcessPool {

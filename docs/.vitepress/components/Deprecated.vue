@@ -1,9 +1,5 @@
-<script setup lang="ts">
-import { VPBadge } from 'vitepress/theme'
-</script>
-
 <template>
-  <VPBadge type="danger">
+  <Badge type="danger">
     deprecated
-  </VPBadge>
+  </Badge>
 </template>

@@ -181,7 +181,7 @@ If your framework gets official Vitest support later, you can gradually migrate 
 Ensure tests run in real browser environments for the most accurate testing. Browser Mode provides accurate CSS rendering, real browser APIs, and proper event handling.
 
 ### 2. Test User Interactions
-Simulate real user behavior using Vitest's [Interactivity API](/guide/browser/interactivity-api). Use `page.getByRole()` and `userEvent` methods as shown in our [Advanced Testing Patterns](#advanced-testing-patterns):
+Simulate real user behavior using Vitest's [Interactivity API](/api/browser/interactivity). Use `page.getByRole()` and `userEvent` methods as shown in our [Advanced Testing Patterns](#advanced-testing-patterns):
 
 ```tsx
 // Good: Test actual user interactions
@@ -570,6 +570,6 @@ import { render } from 'vitest-browser-react' // [!code ++]
 ## Learn More
 
 - [Browser Mode Documentation](/guide/browser/)
-- [Assertion API](/guide/browser/assertion-api)
-- [Interactivity API](/guide/browser/interactivity-api)
+- [Assertion API](/api/browser/assertions)
+- [Interactivity API](/api/browser/interactivity)
 - [Example Repository](https://github.com/vitest-tests/browser-examples)
