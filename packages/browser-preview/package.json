@@ -36,6 +36,7 @@
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "files": [
+    "context.d.ts",
     "dist"
   ],
   "scripts": {
