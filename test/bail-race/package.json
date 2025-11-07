@@ -1,0 +1,10 @@
+{
+  "name": "@vitest/test-bail-race",
+  "type": "module",
+  "scripts": {
+    "test": "node run-bail.js"
+  },
+  "dependencies": {
+    "vitest": "workspace:*"
+  }
+}
