@@ -58,12 +58,13 @@ export interface WebSocketEvents {
     files: File[],
     errors: unknown[],
     coverage?: unknown,
+    executionTime?: number,
   ) => Awaitable<void>
   onTestAnnotate?: (testId: string, annotation: TestAnnotation) => Awaitable<void>
   onTaskUpdate?: (packs: TaskResultPack[], events: TaskEventPack[]) => Awaitable<void>
   onUserConsoleLog?: (log: UserConsoleLog) => Awaitable<void>
   onPathsCollected?: (paths?: string[]) => Awaitable<void>
-  onSpecsCollected?: (specs?: SerializedTestSpecification[]) => Awaitable<void>
+  onSpecsCollected?: (specs?: SerializedTestSpecification[], startTime?: number) => Awaitable<void>
   onFinishedReportCoverage: () => void
 }
 

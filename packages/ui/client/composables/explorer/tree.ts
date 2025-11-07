@@ -20,6 +20,8 @@ import {
 export class ExplorerTree {
   private rafCollector: ReturnType<typeof useRafFn>
   private resumeEndRunId: ReturnType<typeof setTimeout> | undefined
+  public startTime: number = 0
+  public executionTime: number = 0
   constructor(
     public projects: string[] = [],
     public colors = new Map<string, string | undefined>(),
@@ -76,6 +78,7 @@ export class ExplorerTree {
   }
 
   startRun() {
+    this.startTime = performance.now()
     this.resumeEndRunId = setTimeout(() => this.endRun(), this.resumeEndTimeout)
     this.collect(true, false)
   }
@@ -100,7 +103,8 @@ export class ExplorerTree {
     }
   }
 
-  endRun() {
+  endRun(executionTime = performance.now() - this.startTime) {
+    this.executionTime = executionTime
     this.rafCollector.pause()
     this.onTaskUpdateCalled = false
     this.collect(false, true)
@@ -124,6 +128,7 @@ export class ExplorerTree {
             skipped: filter.skipped,
             onlyTests: filter.onlyTests,
           },
+          end ? this.executionTime : performance.now() - this.startTime,
         )
       })
     }
@@ -139,6 +144,7 @@ export class ExplorerTree {
           skipped: filter.skipped,
           onlyTests: filter.onlyTests,
         },
+        end ? this.executionTime : performance.now() - this.startTime,
       )
     }
   }
