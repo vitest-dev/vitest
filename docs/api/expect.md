@@ -1331,7 +1331,7 @@ test('spy function returns bananas on second call', async () => {
 
 ## Chai-Style Spy Assertions
 
-Vitest provides Chai-style assertion names for spy/mock testing, making it easier to migrate from Mocha+Chai+Sinon. These assertions use familiar Chai syntax (e.g., `expect(spy).to.have.been.called()`) while delegating to Vitest's existing Jest-style implementations.
+Vitest provides Chai-style assertion names for spy/mock testing, making it easier to migrate from Mocha+Chai+Sinon. These assertions use familiar Chai syntax (e.g., `expect(spy).to.have.been.called`) while delegating to Vitest's existing Jest-style implementations.
 
 ::: tip
 All Chai-style assertions work alongside Jest-style assertions. You can use both styles in the same test file, or even mix them in the same test. Choose whichever style your team prefers!
@@ -1343,16 +1343,16 @@ Here's a quick reference showing the equivalent assertions:
 
 | Chai-style | Jest-style |
 |------------|------------|
-| `called()` | `toHaveBeenCalled()` |
+| `called` | `toHaveBeenCalled()` |
 | `callCount(n)` | `toHaveBeenCalledTimes(n)` |
 | `calledWith(...args)` | `toHaveBeenCalledWith(...args)` |
-| `calledOnce()` | `toHaveBeenCalledOnce()` |
+| `calledOnce` | `toHaveBeenCalledOnce()` |
 | `calledOnceWith(...args)` | `toHaveBeenCalledExactlyOnceWith(...args)` |
-| `calledTwice()` | `toHaveBeenCalledTimes(2)` |
-| `calledThrice()` | `toHaveBeenCalledTimes(3)` |
+| `calledTwice` | `toHaveBeenCalledTimes(2)` |
+| `calledThrice` | `toHaveBeenCalledTimes(3)` |
 | `lastCalledWith(...args)` | `toHaveBeenLastCalledWith(...args)` |
 | `nthCalledWith(n, ...args)` | `toHaveBeenNthCalledWith(n, ...args)` |
-| `returned()` | `toHaveReturned()` |
+| `returned` | `toHaveReturned()` |
 | `returnedWith(value)` | `toHaveReturnedWith(value)` |
 | `returnedTimes(n)` | `toHaveReturnedTimes(n)` |
 | `lastReturnedWith(value)` | `toHaveLastReturnedWith(value)` |
@@ -1374,7 +1374,7 @@ test('spy call assertions', () => {
   spy('arg3')
 
   // Chai-style assertions
-  expect(spy).to.have.been.called()
+  expect(spy).to.have.been.called
   expect(spy).to.have.callCount(2)
   expect(spy).to.have.been.calledWith('arg1', 'arg2')
   expect(spy).to.have.been.lastCalledWith('arg3')
@@ -1398,7 +1398,7 @@ test('spy return assertions', () => {
   spy()
 
   // Chai-style return assertions
-  expect(spy).to.have.returned()
+  expect(spy).to.have.returned
   expect(spy).to.have.returnedTimes(3)
   expect(spy).to.have.returnedWith('second')
   expect(spy).to.have.lastReturnedWith('third')
@@ -1414,10 +1414,10 @@ test('sinon-chai style convenience assertions', () => {
 
   spy()
   spy()
-  expect(spy).to.have.been.calledTwice()
+  expect(spy).to.have.been.calledTwice
 
   spy()
-  expect(spy).to.have.been.calledThrice()
+  expect(spy).to.have.been.calledThrice
 })
 ```
 

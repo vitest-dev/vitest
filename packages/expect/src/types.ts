@@ -667,7 +667,7 @@ export type PromisifyAssertion<T> = Promisify<Assertion<T>>
 export interface Assertion<T = any>
   extends VitestAssertion<Chai.Assertion, T>,
   JestAssertion<T>,
-  ChaiStyleAssertion,
+  ChaiMockAssertion,
   Matchers<T> {
   /**
    * Ensures a value is of a specific type.
@@ -798,7 +798,7 @@ export interface Assertion<T = any>
  * Chai-style assertions for spy/mock testing.
  * These provide sinon-chai compatible assertion names that delegate to Jest-style implementations.
  */
-export interface ChaiStyleAssertion {
+export interface ChaiMockAssertion {
   /**
    * Checks that a spy was called at least once.
    * Chai-style equivalent of `toHaveBeenCalled`.
@@ -806,7 +806,7 @@ export interface ChaiStyleAssertion {
    * @example
    * expect(spy).to.have.been.called
    */
-  called: () => void
+  readonly called: Assertion
 
   /**
    * Checks that a spy was called a specific number of times.
@@ -833,7 +833,7 @@ export interface ChaiStyleAssertion {
    * @example
    * expect(spy).to.have.been.calledOnce
    */
-  calledOnce: () => void
+  readonly calledOnce: Assertion
 
   /**
    * Checks that a spy was called exactly once with specific arguments.
@@ -869,7 +869,7 @@ export interface ChaiStyleAssertion {
    * @example
    * expect(spy).to.have.returned
    */
-  returned: () => void
+  readonly returned: Assertion
 
   /**
    * Checks that a spy returned a specific value at least once.
@@ -932,7 +932,7 @@ export interface ChaiStyleAssertion {
    * @example
    * expect(spy).to.have.been.calledTwice
    */
-  calledTwice: () => void
+  readonly calledTwice: Assertion
 
   /**
    * Checks that a spy was called exactly three times.
@@ -941,7 +941,7 @@ export interface ChaiStyleAssertion {
    * @example
    * expect(spy).to.have.been.calledThrice
    */
-  calledThrice: () => void
+  readonly calledThrice: Assertion
 }
 
 declare global {

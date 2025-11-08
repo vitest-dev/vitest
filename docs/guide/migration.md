@@ -639,13 +639,9 @@ describe('suite', () => {
 })
 ```
 
-::: tip
-Vitest supports both `before`/`after` (Mocha-style) and `beforeAll`/`afterAll` (Jest-style) - they're aliases!
-:::
-
 ### Assertions
 
-Vitest includes Chai assertions by default, so most Chai assertions work without changes:
+Vitest includes Chai assertions by default, so Chai assertions work without changes:
 
 ```ts
 // Both Mocha+Chai and Vitest
@@ -681,29 +677,25 @@ import { expect, vi } from 'vitest'
 const spy = vi.spyOn(obj, 'method')
 obj.method('arg1', 'arg2')
 
-expect(spy).to.have.been.called()
-expect(spy).to.have.been.calledOnce()
+expect(spy).to.have.been.called
+expect(spy).to.have.been.calledOnce
 expect(spy).to.have.been.calledWith('arg1', 'arg2')
 ```
-
-::: tip
-Notice the only difference: Chai-style assertions in Vitest use method calls `called()` instead of properties `called`. This is because Vitest implements these as methods that delegate to Jest-style matchers.
-:::
 
 #### Complete Chai-Style Assertion Support
 
 Vitest supports all common sinon-chai assertions:
 
-| Sinon-Chai (property) | Vitest (method) | Description |
-|----------------------|-----------------|-------------|
-| `spy.called` | `called()` | Spy was called at least once |
-| `spy.calledOnce` | `calledOnce()` | Spy was called exactly once |
-| `spy.calledTwice` | `calledTwice()` | Spy was called exactly twice |
-| `spy.calledThrice` | `calledThrice()` | Spy was called exactly three times |
+| Sinon-Chai | Vitest | Description |
+|------------|--------|-------------|
+| `spy.called` | `called` | Spy was called at least once |
+| `spy.calledOnce` | `calledOnce` | Spy was called exactly once |
+| `spy.calledTwice` | `calledTwice` | Spy was called exactly twice |
+| `spy.calledThrice` | `calledThrice` | Spy was called exactly three times |
 | `spy.callCount(n)` | `callCount(n)` | Spy was called n times |
 | `spy.calledWith(...)` | `calledWith(...)` | Spy was called with specific args |
 | `spy.calledOnceWith(...)` | `calledOnceWith(...)` | Spy was called once with specific args |
-| `spy.returned` | `returned()` | Spy returned successfully |
+| `spy.returned` | `returned` | Spy returned successfully |
 | `spy.returnedWith(value)` | `returnedWith(value)` | Spy returned specific value |
 
 See the [Chai-Style Spy Assertions](/api/expect#chai-style-spy-assertions) documentation for the complete list.
@@ -798,25 +790,6 @@ vi.advanceTimersByTime(1000)
 vi.useRealTimers()
 ```
 
-### Async Testing
-
-```ts
-// Mocha (callback style)
-it('async test', (done) => {
-  asyncFunction((err, result) => {
-    if (err) { return done(err) }
-    expect(result).to.equal(42)
-    done()
-  })
-})
-
-// Vitest (async/await)
-it('async test', async () => {
-  const result = await asyncFunction()
-  expect(result).to.equal(42)
-})
-```
-
 ### Key Differences
 
 1. **Globals**: Mocha provides globals by default. In Vitest, either import from `vitest` or enable [`globals`](/config/#globals) config
@@ -894,7 +867,7 @@ describe('Calculator', () => {
     const result = calculator.add(2, 3)
 
     expect(result).to.equal(5)
-    expect(spy).to.have.been.calledOnce()
+    expect(spy).to.have.been.calledOnce
     expect(spy).to.have.been.calledWith(2, 3)
   })
 })

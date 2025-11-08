@@ -1,3 +1,4 @@
+/* eslint-disable ts/no-unused-expressions */
 import { describe, expect, it, vi } from 'vitest'
 
 describe('Chai-style assertions', () => {
@@ -5,26 +6,26 @@ describe('Chai-style assertions', () => {
     it('passes when spy was called', () => {
       const spy = vi.fn()
       spy()
-      expect(spy).to.have.been.called()
+      expect(spy).to.have.been.called
     })
 
     it('fails when spy was not called', () => {
       const spy = vi.fn().mockName('testSpy')
       expect(() => {
-        expect(spy).to.have.been.called()
+        expect(spy).to.have.been.called
       }).toThrow(/expected "testSpy" to be called at least once/)
     })
 
     it('negated: passes when spy was not called', () => {
       const spy = vi.fn()
-      expect(spy).to.not.have.been.called()
+      expect(spy).to.not.have.been.called
     })
 
     it('negated: fails when spy was called', () => {
       const spy = vi.fn().mockName('testSpy')
       spy()
       expect(() => {
-        expect(spy).to.not.have.been.called()
+        expect(spy).to.not.have.been.called
       }).toThrow(/expected "testSpy" to not be called at all/)
     })
   })
@@ -88,13 +89,13 @@ describe('Chai-style assertions', () => {
     it('passes when spy was called exactly once', () => {
       const spy = vi.fn()
       spy()
-      expect(spy).to.have.been.calledOnce()
+      expect(spy).to.have.been.calledOnce
     })
 
     it('fails when spy was not called', () => {
       const spy = vi.fn().mockName('testSpy')
       expect(() => {
-        expect(spy).to.have.been.calledOnce()
+        expect(spy).to.have.been.calledOnce
       }).toThrow(/expected "testSpy" to be called once, but got 0 times/)
     })
 
@@ -103,7 +104,7 @@ describe('Chai-style assertions', () => {
       spy()
       spy()
       expect(() => {
-        expect(spy).to.have.been.calledOnce()
+        expect(spy).to.have.been.calledOnce
       }).toThrow(/expected "testSpy" to be called once, but got 2 times/)
     })
 
@@ -111,7 +112,7 @@ describe('Chai-style assertions', () => {
       const spy = vi.fn()
       spy()
       spy()
-      expect(spy).to.not.have.been.calledOnce()
+      expect(spy).to.not.have.been.calledOnce
     })
   })
 
@@ -205,7 +206,7 @@ describe('Chai-style assertions', () => {
     it('passes when spy returned successfully', () => {
       const spy = vi.fn(() => 'value')
       spy()
-      expect(spy).to.have.returned()
+      expect(spy).to.have.returned
     })
 
     it('fails when spy threw an error', () => {
@@ -217,7 +218,7 @@ describe('Chai-style assertions', () => {
       }
       catch {}
       expect(() => {
-        expect(spy).to.have.returned()
+        expect(spy).to.have.returned
       }).toThrow(/expected "testSpy" to be successfully called at least once/)
     })
 
@@ -229,7 +230,7 @@ describe('Chai-style assertions', () => {
         spy()
       }
       catch {}
-      expect(spy).to.not.have.returned()
+      expect(spy).to.not.have.returned
     })
   })
 
@@ -419,21 +420,21 @@ describe('Chai-style assertions', () => {
       const spy = vi.fn()
       spy()
       spy()
-      expect(spy).to.have.been.calledTwice()
+      expect(spy).to.have.been.calledTwice
     })
 
     it('fails when spy was not called twice', () => {
       const spy = vi.fn().mockName('testSpy')
       spy()
       expect(() => {
-        expect(spy).to.have.been.calledTwice()
+        expect(spy).to.have.been.calledTwice
       }).toThrow(/expected "testSpy" to be called 2 times, but got 1 times/)
     })
 
     it('negated: passes when spy was not called twice', () => {
       const spy = vi.fn()
       spy()
-      expect(spy).to.not.have.been.calledTwice()
+      expect(spy).to.not.have.been.calledTwice
     })
 
     it('fails when spy was called three times', () => {
@@ -442,7 +443,7 @@ describe('Chai-style assertions', () => {
       spy()
       spy()
       expect(() => {
-        expect(spy).to.have.been.calledTwice()
+        expect(spy).to.have.been.calledTwice
       }).toThrow(/expected "testSpy" to be called 2 times, but got 3 times/)
     })
   })
@@ -453,7 +454,7 @@ describe('Chai-style assertions', () => {
       spy()
       spy()
       spy()
-      expect(spy).to.have.been.calledThrice()
+      expect(spy).to.have.been.calledThrice
     })
 
     it('fails when spy was not called three times', () => {
@@ -461,7 +462,7 @@ describe('Chai-style assertions', () => {
       spy()
       spy()
       expect(() => {
-        expect(spy).to.have.been.calledThrice()
+        expect(spy).to.have.been.calledThrice
       }).toThrow(/expected "testSpy" to be called 3 times, but got 2 times/)
     })
 
@@ -469,7 +470,7 @@ describe('Chai-style assertions', () => {
       const spy = vi.fn()
       spy()
       spy()
-      expect(spy).to.not.have.been.calledThrice()
+      expect(spy).to.not.have.been.calledThrice
     })
 
     it('fails when spy was called twice', () => {
@@ -477,7 +478,7 @@ describe('Chai-style assertions', () => {
       spy()
       spy()
       expect(() => {
-        expect(spy).to.have.been.calledThrice()
+        expect(spy).to.have.been.calledThrice
       }).toThrow(/expected "testSpy" to be called 3 times, but got 2 times/)
     })
   })
