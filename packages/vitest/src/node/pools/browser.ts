@@ -111,7 +111,8 @@ export function createBrowserPool(vitest: Vitest): ProcessPool {
         return
       }
 
-      if (pool.provider.mocker && pool.provider.supportsParallelism) {
+      // preview cannot run tests in parallel, but we can launch the browser instances in parallel
+      if (pool.provider.name === 'preview' || (pool.provider.mocker && pool.provider.supportsParallelism)) {
         parallelPools.push(pool.runTests)
       }
       else {

@@ -249,12 +249,11 @@ export class Logger {
       : formatProjectName(project)
     const provider = project.browser.provider?.name
     if (provider === 'preview') {
-      const sessionId = project.vitest._browserSessions.sessionIds.size > 0
-        ? `?sessionId=${project.vitest._browserSessions.sessionIds.values().next().value}`
-        : ''
+      const sessionId = project.vitest._browserSessions.findSessionByBrowser(project)
+      const sessionQuery = sessionId ? `?sessionId=${sessionId}` : ''
       this.log(
         c.dim(
-          `${output}Browser runner started ${c.dim('at')} ${c.blue(new URL(`/__vitest_test__/${sessionId}`, origin))}\n`,
+          `${output}Browser runner started ${c.dim('at')} ${c.blue(new URL(`/__vitest_test__/${sessionQuery}`, origin))}\n`,
         ),
       )
     }
