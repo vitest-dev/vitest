@@ -12,6 +12,9 @@ catalogs:
     '@iconify-json/logos':
       specifier: ^1.2.10
       version: 1.2.10
+    '@jridgewell/remapping':
+      specifier: ^2.3.5
+      version: 2.3.5
     '@jridgewell/trace-mapping':
       specifier: 0.3.31
       version: 0.3.31
@@ -1335,7 +1338,7 @@ importers:
   test/coverage-test:
     devDependencies:
       '@jridgewell/remapping':
-        specifier: ^2.3.5
+        specifier: 'catalog:'
         version: 2.3.5
       '@types/istanbul-lib-coverage':
         specifier: 'catalog:'
@@ -1368,7 +1371,7 @@ importers:
         specifier: latest
         version: 20.0.10
       istanbul-lib-coverage:
-        specifier: ^3.2.2
+        specifier: 'catalog:'
         version: 3.2.2
       istanbul-lib-report:
         specifier: 'catalog:'
@@ -1532,13 +1535,13 @@ importers:
   test/workspaces:
     devDependencies:
       '@jridgewell/remapping':
-        specifier: ^2.3.5
+        specifier: 'catalog:'
         version: 2.3.5
       '@types/istanbul-lib-coverage':
         specifier: 'catalog:'
         version: 2.0.6
       istanbul-lib-coverage:
-        specifier: ^3.2.2
+        specifier: 'catalog:'
         version: 3.2.2
       jsdom:
         specifier: latest
@@ -10827,7 +10830,7 @@ snapshots:
 
   '@jridgewell/remapping@2.3.5':
     dependencies:
-      '@jridgewell/gen-mapping': 0.3.12
+      '@jridgewell/gen-mapping': 0.3.13
       '@jridgewell/trace-mapping': 0.3.31
 
   '@jridgewell/resolve-uri@3.1.2': {}
