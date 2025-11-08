@@ -793,10 +793,9 @@ vi.useRealTimers()
 ### Key Differences
 
 1. **Globals**: Mocha provides globals by default. In Vitest, either import from `vitest` or enable [`globals`](/config/#globals) config
-2. **Assertion style**: You can use both Chai-style (`expect(spy).to.have.been.called()`) and Jest-style (`expect(spy).toHaveBeenCalled()`)
-3. **Method vs Property**: Chai-style assertions in Vitest use methods `called()` instead of properties `called`
-4. **Module mocking**: Vitest has built-in module mocking with `vi.mock()`, unlike Sinon
-5. **Parallel execution**: Vitest runs tests in parallel by default, Mocha runs sequentially
+2. **Assertion style**: You can use both Chai-style (`expect(spy).to.have.been.called`) and Jest-style (`expect(spy).toHaveBeenCalled()`)
+3. **Module mocking**: Vitest has built-in module mocking with `vi.mock()`, unlike Sinon
+4. **Parallel execution**: Vitest runs tests in parallel by default, Mocha runs sequentially
 
 ### Migration Checklist
 
@@ -804,7 +803,6 @@ vi.useRealTimers()
 - [ ] Import test functions from `vitest`: `import { describe, it, expect, vi } from 'vitest'`
 - [ ] Replace `sinon.spy()` with `vi.fn()` or `vi.spyOn()`
 - [ ] Replace `sinon.stub()` with `vi.spyOn().mockImplementation()`
-- [ ] Update Chai-style spy assertions to use methods: `called` → `called()`
 - [ ] Replace `sinon.useFakeTimers()` with `vi.useFakeTimers()`
 - [ ] Convert callback-style async tests to `async`/`await`
 - [ ] Update module mocking to use `vi.mock()`
