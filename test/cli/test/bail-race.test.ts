@@ -1,3 +1,4 @@
+import { Writable } from 'node:stream'
 import { resolve } from 'pathe'
 import { expect, it } from 'vitest'
 import { createVitest } from 'vitest/node'
@@ -16,7 +17,7 @@ it('should be able to bail fast without race conditions', async () => {
       bail: 1,
       reporters: [],
       root,
-    })
+    }, {}, { stderr: new Writable({ write() {} }) })
     while (vitest.state.errorsSet.size === 0 && !runController.signal.aborted) {
       await vitest.start()
     }
