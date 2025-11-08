@@ -794,19 +794,7 @@ vi.useRealTimers()
 
 1. **Globals**: Mocha provides globals by default. In Vitest, either import from `vitest` or enable [`globals`](/config/#globals) config
 2. **Assertion style**: You can use both Chai-style (`expect(spy).to.have.been.called`) and Jest-style (`expect(spy).toHaveBeenCalled()`)
-3. **Module mocking**: Vitest has built-in module mocking with `vi.mock()`, unlike Sinon
-4. **Parallel execution**: Vitest runs tests in parallel by default, Mocha runs sequentially
-
-### Migration Checklist
-
-- [ ] Replace `require()` with `import` statements
-- [ ] Import test functions from `vitest`: `import { describe, it, expect, vi } from 'vitest'`
-- [ ] Replace `sinon.spy()` with `vi.fn()` or `vi.spyOn()`
-- [ ] Replace `sinon.stub()` with `vi.spyOn().mockImplementation()`
-- [ ] Replace `sinon.useFakeTimers()` with `vi.useFakeTimers()`
-- [ ] Convert callback-style async tests to `async`/`await`
-- [ ] Update module mocking to use `vi.mock()`
-- [ ] Enable [`globals`](/config/#globals) config if you prefer not to import test functions
+3. **Parallel execution**: Vitest runs tests in parallel by default, Mocha runs sequentially
 
 ### Example Migration
 
