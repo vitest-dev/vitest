@@ -157,7 +157,7 @@ let preparedData:
   | Awaited<ReturnType<typeof prepareTestEnvironment>>
   | undefined
 
-async function executeTests(method: 'run' | 'collect', files: FileSpecification[]) {
+async function executeTests(method: 'run' | 'collect', specifications: FileSpecification[]) {
   if (!preparedData) {
     throw new Error(`Data was not properly initialized. This is a bug in Vitest. Please, open a new issue with reproduction.`)
   }
@@ -166,21 +166,20 @@ async function executeTests(method: 'run' | 'collect', files: FileSpecification[
 
   const { runner, state } = preparedData
 
-  state.ctx.files = files
+  state.ctx.files = specifications
   runner.setMethod(method)
 
   const version = url.searchParams.get('browserv') || ''
-  files.forEach(({ filepath }) => {
+  specifications.forEach(({ filepath }) => {
     const currentVersion = browserHashMap.get(filepath)
     if (!currentVersion || currentVersion[1] !== version) {
       browserHashMap.set(filepath, version)
     }
   })
 
-  debug?.('prepare time', state.durations.prepare, 'ms')
-
-  for (const file of files) {
+  for (const file of specifications) {
     state.filepath = file.filepath
+    debug?.('running test file', file.filepath)
 
     if (method === 'run') {
       await startTests([file], runner)

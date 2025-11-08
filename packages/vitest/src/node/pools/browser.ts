@@ -347,7 +347,9 @@ class BrowserPool {
             return
           }
           debug?.('[%s] error during %s test run: %s', sessionId, file, error)
-          this.reject(error)
+          this.reject(
+            new Error(`Failed to run the test ${file.filepath}.`, { cause: error }),
+          )
         })
     }).catch(err => this.reject(err))
   }
