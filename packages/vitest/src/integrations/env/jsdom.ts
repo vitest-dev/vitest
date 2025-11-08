@@ -249,6 +249,10 @@ function createCompatRequest(utils: CompatUtils) {
         super(...args)
       }
     }
+
+    static [Symbol.hasInstance](instance: unknown): boolean {
+      return instance instanceof NodeRequest_
+    }
   }
 }
 
@@ -260,6 +264,10 @@ function createJSDOMCompatURL(utils: CompatUtils): typeof URL {
         return NodeURL.createObjectURL(compatBlob as any)
       }
       return NodeURL.createObjectURL(blob)
+    }
+
+    static [Symbol.hasInstance](instance: unknown): boolean {
+      return instance instanceof NodeURL
     }
   } as typeof URL
 }

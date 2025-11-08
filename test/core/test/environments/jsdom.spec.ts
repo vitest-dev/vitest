@@ -38,6 +38,9 @@ test('Fetch API accepts other APIs', async () => {
   const searchParams = new URLSearchParams()
   searchParams.set('key', 'value')
   expect.soft(() => new Request('http://localhost', { method: 'POST', body: searchParams })).not.toThrowError()
+
+  const clone = request.clone()
+  expect.soft(clone).toBeInstanceOf(Request)
 })
 
 test('fetch api doesnt override the init object', () => {
