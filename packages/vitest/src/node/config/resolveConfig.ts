@@ -737,16 +737,24 @@ export function resolveConfig(
   else {
     resolved.browser.screenshotFailures ??= !isPreview && !resolved.browser.ui
   }
-  if (isPreview && resolved.browser.enabled && stdProvider === 'stackblitz' && resolved.browser.instances && resolved.browser.instances.length > 1) {
-    console.warn(c.yellow(
-      [
-        `Browser provider "preview" doesn't support multiple instances when running on stackblitz, `,
-        `so "browser.instances" option is forcefully to use the first instance. `,
-        `You can use "import { provider } from 'std-env'" and check if it is "stackblitz" to configure
+  if (isPreview && resolved.browser.enabled && resolved.browser.instances && resolved.browser.instances.length > 1) {
+    if (stdProvider === 'stackblitz') {
+      console.warn(c.yellow(
+        [
+          `Browser provider "preview" doesn't support multiple instances when running on stackblitz, `,
+          `so "browser.instances" option is forcefully to use the first instance. `,
+          `You can use "import { provider } from 'std-env'" and check if it is "stackblitz" to configure
         'the browser.instances correctly to supress this warning.`,
-      ].join(''),
-    ))
-    resolved.browser.instances = [resolved.browser.instances[0]]
+        ].join(''),
+      ))
+      resolved.browser.instances = [resolved.browser.instances[0]]
+    }
+    else {
+      console.warn(c.yellow([
+        `'Vitest is running multiple browser instances with the "preview" provider. `,
+        `Tests may not start until you focus each browser window.'`,
+      ].join('')))
+    }
   }
   if (resolved.browser.provider && resolved.browser.provider.options == null) {
     resolved.browser.provider.options = {}
