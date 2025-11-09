@@ -2,7 +2,7 @@ import type { AsyncExpectationResult, MatcherState } from '@vitest/expect'
 import type { ScreenshotMatcherOptions } from '../../../../context'
 import type { ScreenshotMatcherArguments, ScreenshotMatcherOutput } from '../../../shared/screenshotMatcher/types'
 import type { Locator } from '../locators'
-import { getBrowserState, getWorkerState } from '../../utils'
+import { getBrowserState } from '../../utils'
 import { convertToSelector } from '../tester-utils'
 
 const counters = new Map<string, { current: number }>([])
@@ -19,13 +19,11 @@ export default async function toMatchScreenshot(
     throw new Error('\'toMatchScreenshot\' cannot be used with "not"')
   }
 
-  const currentTest = getWorkerState().current
-
-  if (currentTest === undefined || this.currentTestName === undefined) {
+  if (this.task === undefined || this.currentTestName === undefined) {
     throw new Error('\'toMatchScreenshot\' cannot be used without test context')
   }
 
-  const counterName = `${currentTest.result?.repeatCount ?? 0}${this.testPath}${this.currentTestName}`
+  const counterName = `${this.task.result?.repeatCount ?? 0}${this.testPath}${this.currentTestName}`
   let counter = counters.get(counterName)
 
   if (counter === undefined) {
@@ -66,8 +64,8 @@ export default async function toMatchScreenshot(
     ] satisfies ScreenshotMatcherArguments,
   )
 
-  if (result.pass === false && 'context' in currentTest) {
-    const { annotate } = currentTest.context
+  if (result.pass === false) {
+    const { annotate } = this.task.context
 
     const annotations: ReturnType<typeof annotate>[] = []
 
