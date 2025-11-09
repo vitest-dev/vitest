@@ -20,6 +20,21 @@ export class BrowserSessions {
     }
   }
 
+  getPreviewProviderSessions(project: TestProject): string | undefined {
+    if (project.config.browser.provider?.name !== 'preview') {
+      return undefined
+    }
+
+    const name = project.config.browser.name
+    for (const [sessionId, session] of this.sessions.entries()) {
+      if (session.project.config.browser.name === name) {
+        return sessionId
+      }
+    }
+
+    return undefined
+  }
+
   destroySession(sessionId: string): void {
     this.sessions.delete(sessionId)
   }

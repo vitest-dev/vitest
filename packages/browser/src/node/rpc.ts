@@ -59,25 +59,36 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject, defaultMocke
 
     const sessions = vitest._browserSessions
 
+    let connect = true
+
     if (!sessions.sessionIds.has(sessionId)) {
       const ids = [...sessions.sessionIds].join(', ')
-      return error(
+      console.warn([
+        `[vitest] Unknown session id "${sessionId}". Expected one of ${ids}.`,
+        'Close old browser instances/tabs',
+      ].join('\n'))
+      /* return error(
         new Error(`[vitest] Unknown session id "${sessionId}". Expected one of ${ids}.`),
-      )
+      ) */
+      connect = false
     }
 
-    if (type === 'orchestrator') {
+    if (connect && type === 'orchestrator') {
       const session = sessions.getSession(sessionId)
       // it's possible the session was already resolved by the preview provider
       session?.connected()
     }
 
-    const project = vitest.getProjectByName(projectName)
+    const project = connect ? vitest.getProjectByName(projectName) : undefined
 
-    if (!project) {
+    if (connect && !project) {
       return error(
         new Error(`[vitest] Project "${projectName}" not found.`),
       )
+    }
+
+    if (!project) {
+      return
     }
 
     wss.handleUpgrade(request, socket, head, (ws) => {
