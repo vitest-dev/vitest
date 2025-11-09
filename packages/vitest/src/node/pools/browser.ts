@@ -30,9 +30,9 @@ export function createBrowserPool(vitest: Vitest): ProcessPool {
 
   const projectPools = new WeakMap<TestProject, BrowserPool>()
 
-  const ensurePool = (project: TestProject): [existing: boolean, pool: BrowserPool] => {
+  const ensurePool = (project: TestProject): [isNew: boolean, pool: BrowserPool] => {
     if (projectPools.has(project)) {
-      return [true, projectPools.get(project)!]
+      return [false, projectPools.get(project)!]
     }
 
     debug?.('creating pool for project %s', project.name)
@@ -55,7 +55,7 @@ export function createBrowserPool(vitest: Vitest): ProcessPool {
       pool.cancel()
     })
 
-    return [false, pool]
+    return [true, pool]
   }
 
   const runWorkspaceTests = async (method: 'run' | 'collect', specs: TestSpecification[]) => {
@@ -87,13 +87,14 @@ export function createBrowserPool(vitest: Vitest): ProcessPool {
 
       debug?.('provider is ready for %s project', project.name)
 
-      const [existing, pool] = ensurePool(project)
-      // eager session creation and registration: don't block execution
+      const [isNew, pool] = ensurePool(project)
       vitest.state.clearFiles(project, files.map(f => f.filepath))
       providers.add(project.browser!.provider)
 
-      const prepareSession: Promise<void> | undefined = project.browser!.provider.name === 'preview'
-        ? !existing ? pool.prepareSession() : undefined // <== DON'T RECREATE THE SESSION => Vitest will hang
+      // eager session creation and registration when using preview provider and pool created:
+      // - DON'T RECREATE THE SESSION => Vitest will hang
+      const prepareSession: Promise<void> | undefined = project.browser!.provider.name === 'preview' && isNew
+        ? pool.prepareSession()
         : undefined
 
       return {
@@ -239,26 +240,20 @@ class BrowserPool {
 
     this._queue.push(...files)
 
-    const testRun = this.readySessions.size > 0 && this._queue.length > 0
-
-    this.readySessions.forEach((sessionId) => {
-      if (this._queue.length) {
-        this.readySessions.delete(sessionId)
-        this.runNextTest(method, sessionId)
-      }
-    })
-
     if (this.project.browser!.provider.name !== 'preview' && this.orchestrators.size >= this.options.maxWorkers) {
       debug?.('all orchestrators are ready, not creating more')
       return this._promise
     }
 
     if (this.project.browser!.provider.name === 'preview') {
-      if (testRun) {
-        return this._promise
-      }
       const sessionId = this.project.vitest._browserSessions.findSessionByBrowser(this.project)
       if (sessionId) {
+        // readySessions should have only the sessionId
+        if (this.readySessions.size > 0 && this._queue.length > 0) {
+          this.readySessions.delete(sessionId)
+          this.runNextTest(method, sessionId)
+          return this._promise
+        }
         this.runNextTest(method, sessionId)
         debug?.('all sessions are created')
         return this._promise
@@ -267,6 +262,13 @@ class BrowserPool {
       this.cancel()
       return this._promise
     }
+
+    this.readySessions.forEach((sessionId) => {
+      if (this._queue.length) {
+        this.readySessions.delete(sessionId)
+        this.runNextTest(method, sessionId)
+      }
+    })
 
     // open the minimum amount of tabs
     // if there is only 1 file running, we don't need 8 tabs running
