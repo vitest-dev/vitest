@@ -1000,8 +1000,8 @@ importers:
         specifier: ^1.1.0
         version: 1.1.0
       '@bomb.sh/tab':
-        specifier: ^0.0.6
-        version: 0.0.6(cac@6.7.14(patch_hash=a8f0f3517a47ce716ed90c0cfe6ae382ab763b021a664ada2a608477d0621588))(citty@0.1.6)
+        specifier: ^0.0.9
+        version: 0.0.9(cac@6.7.14(patch_hash=a8f0f3517a47ce716ed90c0cfe6ae382ab763b021a664ada2a608477d0621588))(citty@0.1.6)
       '@edge-runtime/vm':
         specifier: ^5.0.0
         version: 5.0.0
@@ -2254,8 +2254,8 @@ packages:
     resolution: {integrity: sha512-6zABk/ECA/QYSCQ1NGiVwwbQerUCZ+TQbp64Q3AgmfNvurHH0j8TtXa1qbShXA6qqkpAj4V5W8pP6mLe1mcMqA==}
     engines: {node: '>=18'}
 
-  '@bomb.sh/tab@0.0.6':
-    resolution: {integrity: sha512-EK9Ssulo5Ju/N8o9qV35MTA7F5210ehEoHvWzBxtiHrpUEmGk7NYeW0E8BH0scR6BbzdxjDQqHLK4PK/ifjREw==}
+  '@bomb.sh/tab@0.0.9':
+    resolution: {integrity: sha512-HUJ0b+LkZpLsyn0u7G/H5aJioAdSLqWMWX5ryuFS6n70MOEFu+SGrF8d8u6HzI1gINVQTvsfoxDLcjWkmI0AWg==}
     hasBin: true
     peerDependencies:
       cac: ^6.7.14
@@ -10328,7 +10328,7 @@ snapshots:
 
   '@bcoe/v8-coverage@1.0.2': {}
 
-  '@bomb.sh/tab@0.0.6(cac@6.7.14(patch_hash=a8f0f3517a47ce716ed90c0cfe6ae382ab763b021a664ada2a608477d0621588))(citty@0.1.6)':
+  '@bomb.sh/tab@0.0.9(cac@6.7.14(patch_hash=a8f0f3517a47ce716ed90c0cfe6ae382ab763b021a664ada2a608477d0621588))(citty@0.1.6)':
     optionalDependencies:
       cac: 6.7.14(patch_hash=a8f0f3517a47ce716ed90c0cfe6ae382ab763b021a664ada2a608477d0621588)
       citty: 0.1.6

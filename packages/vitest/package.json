@@ -195,7 +195,7 @@
     "why-is-node-running": "^2.3.0"
   },
   "devDependencies": {
-    "@bomb.sh/tab": "^0.0.6",
+    "@bomb.sh/tab": "^0.0.9",
     "@antfu/install-pkg": "^1.1.0",
     "@edge-runtime/vm": "^5.0.0",
     "@jridgewell/trace-mapping": "catalog:",
