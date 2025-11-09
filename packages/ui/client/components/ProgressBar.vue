@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { useWindowSize } from '@vueuse/core'
+import { computed } from 'vue'
 import { finished } from '~/composables/client/state'
 import { explorerTree } from '~/composables/explorer'
 

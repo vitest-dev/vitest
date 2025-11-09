@@ -26,3 +26,16 @@ test('request doesn\'t fail when using absolute url because it supports it', () 
     const _r = new Request('/api', { method: 'GET' })
   }).not.toThrow()
 })
+
+test('can pass down a simple form data', async () => {
+  const formData = new FormData()
+  formData.set('hello', 'world')
+
+  await expect((async () => {
+    const req = new Request('http://localhost:3000/', {
+      method: 'POST',
+      body: formData,
+    })
+    await req.formData()
+  })()).resolves.not.toThrowError()
+})

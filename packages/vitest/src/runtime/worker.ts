@@ -1,58 +1,22 @@
-import type { ModuleRunner } from 'vite/module-runner'
 import type { ContextRPC, WorkerGlobalState } from '../types/worker'
 import type { VitestWorker } from './workers/types'
 import { createStackString, parseStacktrace } from '@vitest/utils/source-map'
-import { EvaluatedModules } from 'vite/module-runner'
-import { loadEnvironment } from '../integrations/env/loader'
 import { setupInspect } from './inspector'
-import { createRuntimeRpc, rpcDone } from './rpc'
-import { isChildProcess } from './utils'
-import { disposeInternalListeners } from './workers/utils'
-
-if (isChildProcess()) {
-  const isProfiling = process.execArgv.some(
-    execArg =>
-      execArg.startsWith('--prof')
-      || execArg.startsWith('--cpu-prof')
-      || execArg.startsWith('--heap-prof')
-      || execArg.startsWith('--diagnostic-dir'),
-  )
-
-  if (isProfiling) {
-    // Work-around for nodejs/node#55094
-    process.on('SIGTERM', () => {
-      process.exit()
-    })
-  }
-}
+import { VitestEvaluatedModules } from './moduleRunner/evaluatedModules'
+import { onCancel, rpcDone } from './rpc'
 
 const resolvingModules = new Set<string>()
 const globalListeners = new Set<() => unknown>()
 
-// this is what every pool executes when running tests
-export async function execute(method: 'run' | 'collect', ctx: ContextRPC, worker: VitestWorker): Promise<void> {
-  disposeInternalListeners()
-
+async function execute(method: 'run' | 'collect', ctx: ContextRPC, worker: VitestWorker) {
   const prepareStart = performance.now()
 
   const cleanups: (() => void | Promise<void>)[] = [setupInspect(ctx)]
 
-  process.env.VITEST_WORKER_ID = String(ctx.workerId)
-  const poolId = process.__tinypool_state__?.workerId
-  process.env.VITEST_POOL_ID = String(poolId)
-
-  let environmentLoader: ModuleRunner | undefined
+  // RPC is used to communicate between worker (be it a thread worker or child process or a custom implementation) and the main thread
+  const rpc = ctx.rpc
 
   try {
-    if (!worker.getRpcOptions || typeof worker.getRpcOptions !== 'function') {
-      throw new TypeError(
-        `Test worker should expose "getRpcOptions" method. Received "${typeof worker.getRpcOptions}".`,
-      )
-    }
-
-    // RPC is used to communicate between worker (be it a thread worker or child process or a custom implementation) and the main thread
-    const { rpc, onCancel } = createRuntimeRpc(worker.getRpcOptions(ctx))
-
     // do not close the RPC channel so that we can get the error messages sent to the main thread
     cleanups.push(async () => {
       await Promise.all(rpc.$rejectPendingCalls(({ method, reject }) => {
@@ -60,24 +24,21 @@ export async function execute(method: 'run' | 'collect', ctx: ContextRPC, worker
       }))
     })
 
-    const beforeEnvironmentTime = performance.now()
-    const { environment, loader } = await loadEnvironment(ctx, rpc)
-    environmentLoader = loader
-
     const state = {
       ctx,
       // here we create a new one, workers can reassign this if they need to keep it non-isolated
-      evaluatedModules: new EvaluatedModules(),
+      evaluatedModules: new VitestEvaluatedModules(),
       resolvingModules,
       moduleExecutionInfo: new Map(),
       config: ctx.config,
-      onCancel,
-      environment,
+      // this is set later by vm or base
+      environment: null!,
       durations: {
-        environment: beforeEnvironmentTime,
+        environment: 0,
         prepare: prepareStart,
       },
       rpc,
+      onCancel,
       onCleanup: listener => globalListeners.add(listener),
       providedContext: ctx.providedContext,
       onFilterStackTrace(stack) {
@@ -97,22 +58,29 @@ export async function execute(method: 'run' | 'collect', ctx: ContextRPC, worker
     await worker[methodName](state)
   }
   finally {
-    await Promise.all(cleanups.map(fn => fn()))
-
     await rpcDone().catch(() => {})
-    environmentLoader?.close()
+    await Promise.all(cleanups.map(fn => fn())).catch(() => {})
   }
 }
 
-export async function teardown(): Promise<void> {
-  const promises = [...globalListeners].map(l => l())
-  await Promise.all(promises)
+export function run(ctx: ContextRPC, worker: VitestWorker): Promise<void> {
+  return execute('run', ctx, worker)
 }
+
+export function collect(ctx: ContextRPC, worker: VitestWorker): Promise<void> {
+  return execute('collect', ctx, worker)
+}
+
+export async function teardown(): Promise<void> {
+  await Promise.all([...globalListeners].map(l => l()))
+}
+
+const env = process.env
 
 function createImportMetaEnvProxy(): WorkerGlobalState['metaEnv'] {
   // packages/vitest/src/node/plugins/index.ts:146
   const booleanKeys = ['DEV', 'PROD', 'SSR']
-  return new Proxy(process.env, {
+  return new Proxy(env, {
     get(_, key) {
       if (typeof key !== 'string') {
         return undefined

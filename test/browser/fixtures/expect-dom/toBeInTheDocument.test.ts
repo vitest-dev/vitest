@@ -1,4 +1,5 @@
 import { expect, test } from 'vitest'
+import { page } from 'vitest/browser'
 
 test('.toBeInTheDocument', () => {
   const window = document.defaultView
@@ -35,10 +36,13 @@ test('.toBeInTheDocument', () => {
   expect(detachedElement).not.toBeInTheDocument()
   expect(nullElement).not.toBeInTheDocument()
 
+  expect(page.getByTestId('non-existing')).not.toBeInTheDocument()
+
   // negative test cases wrapped in throwError assertions for coverage.
   const expectToBe = /expect.*\.toBeInTheDocument/
   const expectNotToBe = /expect.*not\.toBeInTheDocument/
   const userInputNode = /an HTMLElement or an SVGElement/
+  const notFound = /element could not be found in the document/
   expect(() => expect(htmlElement).not.toBeInTheDocument()).toThrowError(
     expectNotToBe,
   )
@@ -52,12 +56,10 @@ test('.toBeInTheDocument', () => {
     userInputNode,
   )
   expect(() => expect(nullElement).toBeInTheDocument()).toThrowError(
-    userInputNode,
+    notFound,
   )
   expect(() => expect(undefinedElement).toBeInTheDocument()).toThrowError(
-    userInputNode,
+    notFound,
   )
-  expect(() => expect(undefinedElement).not.toBeInTheDocument()).toThrowError(
-    userInputNode,
-  )
+  expect(() => expect(undefinedElement).not.toBeInTheDocument()).not.toThrowError()
 })

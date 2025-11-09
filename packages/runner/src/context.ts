@@ -289,14 +289,15 @@ export function setFileContext(file: File, context: Record<string, unknown>): vo
 
 const table: string[] = []
 for (let i = 65; i < 91; i++) {
-  table.push(String.fromCharCode(i))
+  table.push(String.fromCharCode(i)) // A-Z
 }
 for (let i = 97; i < 123; i++) {
-  table.push(String.fromCharCode(i))
+  table.push(String.fromCharCode(i)) // a-z
 }
 for (let i = 0; i < 10; i++) {
-  table.push(i.toString(10))
+  table.push(i.toString(10)) // 0-9
 }
+table.push('+', '/')
 
 function encodeUint8Array(bytes: Uint8Array): string {
   let base64 = ''

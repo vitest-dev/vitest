@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { ref } from 'vue'
+
 defineProps<{
   color?: string
 }>()
@@ -11,7 +13,7 @@ const open = ref(true)
     :open="open"
     class="details-panel"
     data-testid="details-panel"
-    @toggle="open = $event.target.open"
+    @toggle="open = ($event.target as any).open"
   >
     <div
       p="y1"

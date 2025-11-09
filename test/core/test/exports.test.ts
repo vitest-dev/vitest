@@ -96,11 +96,17 @@ it('exports snapshot', async ({ skip, task }) => {
           "mockObject": "function",
         },
         "./node": {
+          "BaseRuntime": "function",
           "BaseSequencer": "function",
+          "ForksRuntime": "function",
           "GitNotFoundError": "function",
           "TestsNotFoundError": "function",
+          "ThreadsRuntime": "function",
+          "TypecheckRuntime": "function",
           "VitestPackageInstaller": "function",
           "VitestPlugin": "function",
+          "VmForksRuntime": "function",
+          "VmThreadsRuntime": "function",
           "createDebugger": "function",
           "createMethodsRPC": "function",
           "createViteLogger": "function",
@@ -162,6 +168,13 @@ it('exports snapshot', async ({ skip, task }) => {
           "getHooks": "function",
           "setFn": "function",
           "setHooks": "function",
+        },
+        "./workers": {
+          "collectVitestWorkerTests": "function",
+          "provideWorkerState": "function",
+          "runBaseTests": "function",
+          "runVitestWorker": "function",
+          "runVmTests": "function",
         },
       }
     `)
@@ -249,10 +262,15 @@ it('exports snapshot', async ({ skip, task }) => {
           },
           "./node": {
             "BaseSequencer": "function",
+            "ForksPoolWorker": "function",
             "GitNotFoundError": "function",
             "TestsNotFoundError": "function",
+            "ThreadsPoolWorker": "function",
+            "TypecheckPoolWorker": "function",
             "VitestPackageInstaller": "function",
             "VitestPlugin": "function",
+            "VmForksPoolWorker": "function",
+            "VmThreadsPoolWorker": "function",
             "createDebugger": "function",
             "createMethodsRPC": "function",
             "createViteLogger": "function",
@@ -314,6 +332,10 @@ it('exports snapshot', async ({ skip, task }) => {
             "getHooks": "function",
             "setFn": "function",
             "setHooks": "function",
+          },
+          "./worker": {
+            "init": "function",
+            "runBaseTests": "function",
           },
         }
       `)

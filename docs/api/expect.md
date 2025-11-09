@@ -39,6 +39,36 @@ Also, `expect` can be used statically to access matcher functions, described lat
 `expect` has no effect on testing types, if the expression doesn't have a type error. If you want to use Vitest as [type checker](/guide/testing-types), use [`expectTypeOf`](/api/expect-typeof) or [`assertType`](/api/assert-type).
 :::
 
+## assert
+
+- **Type:** `Chai.AssertStatic`
+
+Vitest reexports chai's [`assert` API](https://www.chaijs.com/api/assert/) as `expect.assert` for convenience. You can see the supported methods on the [Assert API page](/api/assert).
+
+This is especially useful if you need to narrow down the type, since `expect.to*` methods do not support that:
+
+```ts
+interface Cat {
+  __type: 'Cat'
+  mew(): void
+}
+interface Dog {
+  __type: 'Dog'
+  bark(): void
+}
+type Animal = Cat | Dog
+
+const animal: Animal = { __type: 'Dog', bark: () => {} }
+
+expect.assert(animal.__type === 'Dog')
+// does not show a type error!
+expect(animal.bark()).toBeUndefined()
+```
+
+::: tip
+Note that `expect.assert` also supports other type-narrowing methods (like `assert.isDefined`, `assert.exists` and so on).
+:::
+
 ## soft
 
 - **Type:** `ExpectStatic & (actual: any) => Assertions`
@@ -158,7 +188,7 @@ Try not to use `toBe` with floating-point numbers. Since JavaScript rounds them,
 
 - **Type:** `(value: number, numDigits?: number) => Awaitable<void>`
 
-Use `toBeCloseTo` to compare floating-point numbers. The optional `numDigits` argument limits the number of digits to check _after_ the decimal point. For example:
+Use `toBeCloseTo` to compare floating-point numbers. The optional `numDigits` argument limits the number of digits to check _after_ the decimal point. The default for `numDigits` is 2. For example:
 
 ```ts
 import { expect, test } from 'vitest'
@@ -313,7 +343,7 @@ function apples() {
 }
 
 function bananas() {
-  return null
+  return undefined
 }
 
 test('we don\'t have apples', () => {
@@ -398,6 +428,17 @@ test('stock is type of string', () => {
   expect(actual).toBeTypeOf('string')
 })
 ```
+
+:::warning
+`toBeTypeOf` uses the native `typeof` operator under the hood with all its quirks, most notably that the value `null` has type `object`.
+
+```ts
+test('toBeTypeOf cannot check for null or array', () => {
+  expect(null).toBeTypeOf('object')
+  expect([]).toBeTypeOf('object')
+})
+```
+:::
 
 ## toBeInstanceOf
 
@@ -557,7 +598,13 @@ import { getAllFruits } from './stocks.js'
 
 test('the fruit list contains orange', () => {
   expect(getAllFruits()).toContain('orange')
+})
 
+test('pineapple contains apple', () => {
+  expect('pineapple').toContain('apple')
+})
+
+test('the element contains a class and is contained', () => {
   const element = document.querySelector('#el')
   // element has a class
   expect(element.classList).toContain('flex')
@@ -653,6 +700,9 @@ test('John Doe Invoice', () => {
 
   // Wrap your key in an array to avoid the key from being parsed as a deep reference
   expect(invoice).toHaveProperty(['P.O'], '12345')
+
+  // Deep equality of object property
+  expect(invoice).toHaveProperty('items[0]', { type: 'apples', quantity: 10 })
 })
 ```
 
@@ -1177,6 +1227,8 @@ test('spy function returns bananas on a last call', () => {
 
 You can call this assertion to check if a function has successfully returned a value with certain parameters on a certain call. Requires a spy function to be passed to `expect`.
 
+The count starts at 1. So, to check the second entry, you would write `.toHaveNthReturnedWith(2, ...)`.
+
 ```ts
 import { expect, test, vi } from 'vitest'
 
@@ -1285,6 +1337,8 @@ test('spy function resolves bananas on a last call', async () => {
 You can call this assertion to check if a function has successfully resolved a certain value on a specific invocation. Requires a spy function to be passed to `expect`.
 
 If the function returned a promise, but it was not resolved yet, this will fail.
+
+The count starts at 1. So, to check the second entry, you would write `.toHaveNthResolvedWith(2, ...)`.
 
 ```ts
 import { expect, test, vi } from 'vitest'
@@ -1650,6 +1704,42 @@ test('variety ends with "re"', () => {
   expect(variety).toEqual({
     name: expect.stringMatching(/re$/),
     count: 1,
+  })
+})
+```
+
+:::tip
+You can use `expect.not` with this matcher to negate the expected value.
+:::
+
+## expect.schemaMatching
+
+- **Type:** `(expected: StandardSchemaV1) => any`
+
+When used with an equality check, this asymmetric matcher will return `true` if the value matches the provided schema. The schema must implement the [Standard Schema v1](https://standardschema.dev/) specification.
+
+```ts
+import { expect, test } from 'vitest'
+import { z } from 'zod'
+import * as v from 'valibot'
+import { type } from 'arktype'
+
+test('email validation', () => {
+  const user = { email: 'john@example.com' }
+
+  // using Zod
+  expect(user).toEqual({
+    email: expect.schemaMatching(z.string().email()),
+  })
+
+  // using Valibot
+  expect(user).toEqual({
+    email: expect.schemaMatching(v.pipe(v.string(), v.email()))
+  })
+
+  // using ArkType
+  expect(user).toEqual({
+    email: expect.schemaMatching(type('string.email')),
   })
 })
 ```

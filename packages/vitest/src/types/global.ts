@@ -34,11 +34,12 @@ declare module '@vitest/expect' {
   }
 
   interface ExpectStatic {
+    assert: Chai.AssertStatic
     unreachable: (message?: string) => never
     soft: <T>(actual: T, message?: string) => Assertion<T>
     poll: <T>(
       actual: () => T,
-      options?: ExpectPollOptions
+      options?: ExpectPollOptions,
     ) => PromisifyAssertion<Awaited<T>>
     addEqualityTesters: (testers: Array<Tester>) => void
     assertions: (expected: number) => void
@@ -75,7 +76,7 @@ declare module '@vitest/expect' {
      */
     toThrowErrorMatchingInlineSnapshot: (
       snapshot?: string,
-      hint?: string
+      hint?: string,
     ) => void
 
     /**

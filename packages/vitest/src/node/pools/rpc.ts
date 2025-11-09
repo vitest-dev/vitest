@@ -1,9 +1,11 @@
 import type { RuntimeRPC } from '../../types/rpc'
 import type { TestProject } from '../project'
 import type { ResolveSnapshotPathHandlerContext } from '../types/config'
+import { existsSync, mkdirSync } from 'node:fs'
+import { isBuiltin } from 'node:module'
 import { fileURLToPath } from 'node:url'
 import { cleanUrl } from '@vitest/utils/helpers'
-import { createFetchModuleFunction, handleRollupError } from '../environments/fetchModule'
+import { handleRollupError } from '../environments/fetchModule'
 import { normalizeResolvedIdToUrl } from '../environments/normalizeUrl'
 
 interface MethodsOptions {
@@ -13,9 +15,17 @@ interface MethodsOptions {
 }
 
 export function createMethodsRPC(project: TestProject, options: MethodsOptions = {}): RuntimeRPC {
-  const ctx = project.vitest
+  const vitest = project.vitest
   const cacheFs = options.cacheFs ?? false
-  const fetch = createFetchModuleFunction(project._resolver, cacheFs, project.tmpDir)
+  project.vitest.state.metadata[project.name] ??= {
+    externalized: {},
+    duration: {},
+    tmps: {},
+  }
+  if (project.config.dumpDir && !existsSync(project.config.dumpDir)) {
+    mkdirSync(project.config.dumpDir, { recursive: true })
+  }
+  project.vitest.state.metadata[project.name].dumpDir = project.config.dumpDir
   return {
     async fetch(
       url,
@@ -30,12 +40,20 @@ export function createMethodsRPC(project: TestProject, options: MethodsOptions =
 
       const start = performance.now()
 
-      try {
-        return await fetch(url, importer, environment, options)
-      }
-      finally {
-        project.vitest.state.transformTime += (performance.now() - start)
-      }
+      return await project._fetcher(url, importer, environment, cacheFs, options).then((result) => {
+        const duration = performance.now() - start
+        project.vitest.state.transformTime += duration
+        const metadata = project.vitest.state.metadata[project.name]
+        if ('externalize' in result) {
+          metadata.externalized[url] = result.externalize
+        }
+        if ('tmp' in result) {
+          metadata.tmps[url] = result.tmp
+        }
+        metadata.duration[url] ??= []
+        metadata.duration[url].push(duration)
+        return result
+      })
     },
     async resolve(id, importer, environmentName) {
       const environment = project.vite.environments[environmentName]
@@ -46,6 +64,17 @@ export function createMethodsRPC(project: TestProject, options: MethodsOptions =
       if (!resolved) {
         return null
       }
+      const file = cleanUrl(resolved.id)
+      if (resolved.external) {
+        return {
+          file,
+          // TODO: use isBuiltin defined in the environment
+          url: !resolved.id.startsWith('node:') && isBuiltin(resolved.id)
+            ? `node:${resolved.id}`
+            : resolved.id,
+          id: resolved.id,
+        }
+      }
       return {
         file: cleanUrl(resolved.id),
         url: normalizeResolvedIdToUrl(environment, resolved.id),
@@ -54,10 +83,10 @@ export function createMethodsRPC(project: TestProject, options: MethodsOptions =
     },
 
     snapshotSaved(snapshot) {
-      ctx.snapshot.add(snapshot)
+      vitest.snapshot.add(snapshot)
     },
     resolveSnapshotPath(testPath: string) {
-      return ctx.snapshot.resolvePath<ResolveSnapshotPathHandlerContext>(testPath, {
+      return vitest.snapshot.resolvePath<ResolveSnapshotPathHandlerContext>(testPath, {
         config: project.serializedConfig,
       })
     },
@@ -73,50 +102,50 @@ export function createMethodsRPC(project: TestProject, options: MethodsOptions =
     },
     async onQueued(file) {
       if (options.collect) {
-        ctx.state.collectFiles(project, [file])
+        vitest.state.collectFiles(project, [file])
       }
       else {
-        await ctx._testRun.enqueued(project, file)
+        await vitest._testRun.enqueued(project, file)
       }
     },
     async onCollected(files) {
       if (options.collect) {
-        ctx.state.collectFiles(project, files)
+        vitest.state.collectFiles(project, files)
       }
       else {
-        await ctx._testRun.collected(project, files)
+        await vitest._testRun.collected(project, files)
       }
     },
     onAfterSuiteRun(meta) {
-      ctx.coverageProvider?.onAfterSuiteRun(meta)
+      vitest.coverageProvider?.onAfterSuiteRun(meta)
     },
     async onTaskAnnotate(testId, annotation) {
-      return ctx._testRun.annotate(testId, annotation)
+      return vitest._testRun.annotate(testId, annotation)
     },
     async onTaskUpdate(packs, events) {
       if (options.collect) {
-        ctx.state.updateTasks(packs)
+        vitest.state.updateTasks(packs)
       }
       else {
-        await ctx._testRun.updated(packs, events)
+        await vitest._testRun.updated(packs, events)
       }
     },
     async onUserConsoleLog(log) {
       if (options.collect) {
-        ctx.state.updateUserLog(log)
+        vitest.state.updateUserLog(log)
       }
       else {
-        await ctx._testRun.log(log)
+        await vitest._testRun.log(log)
       }
     },
     onUnhandledError(err, type) {
-      ctx.state.catchError(err, type)
+      vitest.state.catchError(err, type)
     },
     onCancel(reason) {
-      ctx.cancelCurrentRun(reason)
+      vitest.cancelCurrentRun(reason)
     },
     getCountOfFailedTests() {
-      return ctx.state.getCountOfFailedTests()
+      return vitest.state.getCountOfFailedTests()
     },
   }
 }

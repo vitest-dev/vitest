@@ -16,6 +16,7 @@ dist
 .vite-node
 ltex*
 .DS_Store
+.zed
 bench/test/*/*/
 **/bench.json
 **/browser/browser.json
@@ -35,3 +36,4 @@ test/browser/html/
 test/core/html/
 .vitest-attachments
 explainFiles.txt
+.vitest-dump

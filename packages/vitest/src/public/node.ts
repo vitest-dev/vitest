@@ -7,6 +7,7 @@ export { isValidApiRequest } from '../api/check'
 export { escapeTestName } from '../node/ast-collect'
 export { parseCLI } from '../node/cli/cac'
 export type { CliParseOptions } from '../node/cli/cac'
+export type { CliOptions } from '../node/cli/cli-api'
 export { startVitest } from '../node/cli/cli-api'
 export { resolveApiServerConfig } from '../node/config/resolveConfig'
 export type {
@@ -24,6 +25,19 @@ export { resolveFsAllow } from '../node/plugins/utils'
 export type { ProcessPool } from '../node/pool'
 export { getFilePoolName } from '../node/pool'
 export { createMethodsRPC } from '../node/pools/rpc'
+export type {
+  PoolOptions,
+  PoolRunnerInitializer,
+  PoolTask,
+  PoolWorker,
+  WorkerRequest,
+  WorkerResponse,
+} from '../node/pools/types'
+export { ForksPoolWorker } from '../node/pools/workers/forksWorker'
+export { ThreadsPoolWorker } from '../node/pools/workers/threadsWorker'
+export { TypecheckPoolWorker } from '../node/pools/workers/typecheckWorker'
+export { VmForksPoolWorker } from '../node/pools/workers/vmForksWorker'
+export { VmThreadsPoolWorker } from '../node/pools/workers/vmThreadsWorker'
 export type { SerializedTestProject, TestProject } from '../node/project'
 export type { HTMLOptions } from '../node/reporters/html'
 export type { JsonOptions } from '../node/reporters/json'
@@ -90,7 +104,6 @@ export type {
   EnvironmentOptions,
   InlineConfig,
   Pool,
-  PoolOptions,
   ProjectConfig,
   ResolvedConfig,
   ResolvedProjectConfig,

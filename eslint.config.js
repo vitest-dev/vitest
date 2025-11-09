@@ -31,7 +31,7 @@ export default antfu(
       // contains technically invalid code to display pretty diff
       'docs/guide/snapshot.md',
       // uses invalid js example
-      'docs/advanced/api/import-example.md',
+      'docs/api/advanced/import-example.md',
       'docs/guide/examples/*.md',
     ],
   },
@@ -133,13 +133,6 @@ export default antfu(
     rules: {
       'antfu/no-top-level-await': 'off',
       'unicorn/consistent-function-scoping': 'off',
-    },
-  },
-  {
-    files: [`packages/vite-node/${GLOB_SRC}`],
-    rules: {
-      // false positive on "exports" variable
-      'antfu/no-cjs-exports': 'off',
     },
   },
 )
