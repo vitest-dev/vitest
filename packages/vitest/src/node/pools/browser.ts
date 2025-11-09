@@ -248,14 +248,20 @@ class BrowserPool {
     if (this.project.browser!.provider.name === 'preview') {
       const sessionId = this.project.vitest._browserSessions.findSessionByBrowser(this.project)
       if (sessionId) {
-        // readySessions should have only the sessionId
+        const sessionsCreated = this.readySessions.size === 0
+        // readySessions we have only one sessionId
         if (this.readySessions.size > 0 && this._queue.length > 0) {
           this.readySessions.delete(sessionId)
-          this.runNextTest(method, sessionId)
-          return this._promise
         }
-        this.runNextTest(method, sessionId)
-        debug?.('all sessions are created')
+        if (this._queue.length > 0) {
+          this.runNextTest(method, sessionId)
+          if (sessionsCreated) {
+            debug?.('all sessions are created')
+          }
+        }
+        else {
+          this._promise.resolve()
+        }
         return this._promise
       }
       this._promise.reject(new Error('Preview session not found when starting tests.'))
