@@ -138,13 +138,29 @@ source <(vitest complete zsh)
 
 `@bomb.sh/tab` integrates with [package managers](https://github.com/bombshell-dev/tab?tab=readme-ov-file#package-manager-completions). Autocompletions work when running vitest directly:
 
-```bash
-npx vitest <Tab>
+::: code-group
+
+```bash [npm]
+npm vitest <Tab>
+```
+
+```bash [npm]
 npm exec vitest <Tab>
+```
+
+```bash [pnpm]
 pnpm vitest <Tab>
+```
+
+```bash [yarn]
 yarn vitest <Tab>
+```
+
+```bash [bun]
 bun vitest <Tab>
 ```
+
+:::
 
 For package manager autocompletions, you should install [tab's package manager completions](https://github.com/bombshell-dev/tab?tab=readme-ov-file#package-manager-completions) separately.
 

@@ -28,7 +28,7 @@ export async function setupTabCompletions(cli: CAC): Promise<void> {
         complete('tap-flat', 'TAP flat reporter')
         complete('hanging-process', 'Hanging process reporter')
       },
-      'coverage.reporter'(complete) {
+      'coverage.reporter': function (complete) {
         complete('text', 'Text coverage reporter')
         complete('html', 'HTML coverage reporter')
         complete('clover', 'Clover coverage reporter')
@@ -39,17 +39,12 @@ export async function setupTabCompletions(cli: CAC): Promise<void> {
         complete('teamcity', 'TeamCity coverage reporter')
         complete('cobertura', 'Cobertura coverage reporter')
       },
-      'browser.name'(complete) {
-        complete('chrome', 'Google Chrome')
+      'browser.name': function (complete) {
+        complete('chromium', 'Chromium')
         complete('firefox', 'Mozilla Firefox')
         complete('safari', 'Safari')
+        complete('chrome', 'Google Chrome')
         complete('edge', 'Microsoft Edge')
-        complete('chromium', 'Chromium')
-      },
-      'browser.provider'(complete) {
-        complete('playwright', 'Playwright provider')
-        complete('webdriverio', 'WebdriverIO provider')
-        complete('preview', 'Preview provider')
       },
       silent(complete) {
         complete('true', 'Enable silent mode')
