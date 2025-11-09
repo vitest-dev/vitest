@@ -73,10 +73,18 @@ export async function resolveTestRunner(
   // patch some methods, so custom runners don't need to call RPC
   const originalOnTestAnnotate = testRunner.onTestAnnotate
   testRunner.onTestAnnotate = async (test, annotation) => {
-    const p = rpc().onTaskAnnotate(test.id, annotation)
+    const p = rpc().onTaskArtifactRecord(test.id, { type: 'internal:annotation', location: annotation.location, annotation })
     const overriddenResult = await originalOnTestAnnotate?.call(testRunner, test, annotation)
     const vitestResult = await p
-    return overriddenResult || vitestResult
+    return overriddenResult || vitestResult.annotation
+  }
+
+  const originalOnTestArtifactRecord = testRunner.onTestArtifactRecord
+  testRunner.onTestArtifactRecord = async (test, artifact) => {
+    const p = rpc().onTaskArtifactRecord(test.id, artifact)
+    const overriddenResult = await originalOnTestArtifactRecord?.call(testRunner, test, artifact)
+    const vitestResult = await p
+    return overriddenResult as typeof artifact || vitestResult
   }
 
   const originalOnCollectStart = testRunner.onCollectStart

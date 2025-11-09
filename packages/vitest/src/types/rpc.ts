@@ -1,4 +1,4 @@
-import type { CancelReason, File, TaskEventPack, TaskResultPack, TestAnnotation } from '@vitest/runner'
+import type { CancelReason, File, TaskEventPack, TaskResultPack, TestArtifact } from '@vitest/runner'
 import type { SnapshotResult } from '@vitest/snapshot'
 import type { FetchFunctionOptions, FetchResult } from 'vite/module-runner'
 import type { OTELCarrier } from '../utils/traces'
@@ -20,7 +20,7 @@ export interface RuntimeRPC {
   onQueued: (file: File) => void
   onCollected: (files: File[]) => Promise<void>
   onAfterSuiteRun: (meta: AfterSuiteRunMeta) => void
-  onTaskAnnotate: (testId: string, annotation: TestAnnotation) => Promise<TestAnnotation>
+  onTaskArtifactRecord: <Artifact extends TestArtifact>(testId: string, artifact: Artifact) => Promise<Artifact>
   onTaskUpdate: (pack: TaskResultPack[], events: TaskEventPack[]) => Promise<void>
   onCancel: (reason: CancelReason) => void
   getCountOfFailedTests: () => number

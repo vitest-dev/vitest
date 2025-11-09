@@ -350,6 +350,7 @@ function createFileTask(
         meta: {},
         timeout: 0,
         annotations: [],
+        artifacts: [],
       }
       definition.task = task
       latestSuite.tasks.push(task)

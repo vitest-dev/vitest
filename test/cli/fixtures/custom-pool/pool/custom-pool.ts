@@ -92,6 +92,7 @@ async function onMessage(message: WorkerRequest, project: TestProject, options: 
           mode: 'run',
           meta: {},
           annotations: [],
+          artifacts: [],
           timeout: 0,
           file: taskFile,
           result: {

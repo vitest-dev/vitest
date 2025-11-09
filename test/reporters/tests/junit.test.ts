@@ -26,6 +26,7 @@ test('calc the duration used by junit', () => {
     mode: 'run',
     result,
     annotations: [],
+    artifacts: [],
     file,
     timeout: 0,
     context: null as any,
