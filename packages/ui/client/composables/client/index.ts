@@ -34,7 +34,10 @@ export const client = (function createVitestClient() {
       },
       handlers: {
         onTestAnnotate(testId: string, annotation: TestAnnotation) {
-          explorerTree.annotateTest(testId, annotation)
+          explorerTree.recordTestArtifact(testId, { type: 'internal:annotation', annotation, location: annotation.location })
+        },
+        onTestArtifactRecord(testId, artifact) {
+          explorerTree.recordTestArtifact(testId, artifact)
         },
         onTaskUpdate(packs: RunnerTaskResultPack[], events: RunnerTaskEventPack[]) {
           explorerTree.resumeRun(packs, events)

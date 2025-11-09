@@ -192,6 +192,7 @@ export type TaskResultPack = [
 
 export interface TaskEventData {
   annotation?: TestAnnotation | undefined
+  artifact?: TestArtifact | undefined
 }
 
 export type TaskEventPack = [
@@ -222,6 +223,7 @@ export type TaskUpdateEvent
     | 'after-hook-start'
     | 'after-hook-end'
     | 'test-annotation'
+    | 'test-artifact'
 
 export interface Suite extends TaskBase {
   type: 'suite'
@@ -283,25 +285,12 @@ export interface Test<ExtraContext = object> extends TaskPopulated {
    * An array of custom annotations.
    */
   annotations: TestAnnotation[]
-}
-
-export interface TestAttachment {
-  contentType?: string
-  path?: string
-  body?: string | Uint8Array
-}
-
-export interface TestAnnotationLocation {
-  line: number
-  column: number
-  file: string
-}
-
-export interface TestAnnotation {
-  message: string
-  type: string
-  location?: TestAnnotationLocation
-  attachment?: TestAttachment
+  /**
+   * An array of artifacts produced by the test.
+   *
+   * @experimental
+   */
+  artifacts: TestArtifact[]
 }
 
 export type Task = Test | Suite | File
@@ -721,3 +710,154 @@ export type SequenceSetupFiles = 'list' | 'parallel'
 export type WriteableTestContext = {
   -readonly [P in keyof TestContext]: TestContext[P]
 }
+
+// test artifacts
+
+/**
+ * Represents a file or data attachment associated with a test artifact.
+ *
+ * Attachments can be either file-based (via `path`) or inline content (via `body`).
+ * The `contentType` helps consumers understand how to interpret the attachment data.
+ */
+export interface TestAttachment {
+  /** MIME type of the attachment (e.g., 'image/png', 'text/plain') */
+  contentType?: string
+  /** File system path to the attachment */
+  path?: string
+  /** Inline attachment content as a string or raw binary data */
+  body?: string | Uint8Array
+}
+
+/**
+ * Source code location information for a test artifact.
+ *
+ * Indicates where in the source code the artifact originated from.
+ */
+export interface TestArtifactLocation {
+  /** Line number in the source file (1-indexed) */
+  line: number
+  /** Column number in the line (1-indexed) */
+  column: number
+  /** Path to the source file */
+  file: string
+}
+
+/**
+ * @experimental
+ *
+ * Base interface for all test artifacts.
+ *
+ * Extend this interface when creating custom test artifacts. Vitest automatically manages the `attachments` array and injects the `location` property to indicate where the artifact was created in your test code.
+ */
+export interface TestArtifactBase {
+  /** File or data attachments associated with this artifact */
+  attachments?: TestAttachment[]
+  /** Source location where this artifact was created */
+  location?: TestArtifactLocation
+}
+
+/**
+ * @deprecated Use {@linkcode TestArtifactLocation} instead.
+ *
+ * Kept for backwards compatibility.
+ */
+export type TestAnnotationLocation = TestArtifactLocation
+
+export interface TestAnnotation {
+  message: string
+  type: string
+  location?: TestArtifactLocation
+  attachment?: TestAttachment
+}
+
+/**
+ * @experimental
+ *
+ * Artifact type for test annotations.
+ */
+export interface TestAnnotationArtifact extends TestArtifactBase {
+  type: 'internal:annotation'
+  annotation: TestAnnotation
+}
+
+/**
+ * @experimental
+ * @advanced
+ *
+ * Registry for custom test artifact types.
+ *
+ * Augment this interface to register custom artifact types that your tests can produce.
+ *
+ * Each custom artifact should extend {@linkcode TestArtifactBase} and include a unique `type` discriminator property.
+ *
+ * @remarks
+ * - Use a `Symbol` as the **registry key** to guarantee uniqueness
+ * - The `type` property should follow the pattern `'package-name:artifact-name'`, `'internal:'` is a reserved prefix
+ * - Use `attachments` to include files or data; extend {@linkcode TestAttachment} for custom metadata
+ * - `location` property is automatically injected to indicate where the artifact was created
+ *
+ * @example
+ *  ```ts
+ * import { recordArtifact } from 'vitest'
+ *
+ * // Define custom attachment type with accessibility violation details
+ * interface A11yViolationAttachment extends TestAttachment {
+ *   contentType: 'application/json'
+ *   body: string
+ *   violationCount: number
+ *   wcagLevel: 'A' | 'AA' | 'AAA'
+ * }
+ *
+ * interface AccessibilityArtifact extends TestArtifactBase {
+ *   type: 'my-plugin:accessibility-report'
+ *   elementSelector: string
+ *   passed: boolean
+ *   attachments: A11yViolationAttachment[]
+ * }
+ *
+ * // Use a symbol to guarantee key uniqueness
+ * const a11yKey = Symbol('accessibility-report')
+ *
+ * declare module 'vitest' {
+ *   interface TestArtifactRegistry {
+ *     [a11yKey]: AccessibilityArtifact
+ *   }
+ * }
+ *
+ * // Custom assertion for accessibility testing
+ * async function toBeAccessible(
+ *   this: MatcherState,
+ *   actual: Element | Locator,
+ *   wcagLevel: 'A' | 'AA' | 'AAA' = 'AA'
+ * ): AsyncExpectationResult {
+ *   const violations = await runAccessibilityAudit(actual, wcagLevel)
+ *
+ *   recordArtifact({
+ *     type: 'my-plugin:accessibility-report',
+ *     elementSelector: getSelector(actual),
+ *     passed: violations.length === 0,
+ *     attachments: [{
+ *       contentType: 'application/json',
+ *       body: JSON.stringify(violations),
+ *       violationCount: violations.length,
+ *       wcagLevel
+ *     }]
+ *   }, this.task)
+ *
+ *   return {
+ *     pass: violations.length === 0,
+ *     message: () => `Found ${violations.length} accessibility violation(s) for WCAG ${wcagLevel}`
+ *   }
+ * }
+ * ```
+ */
+export interface TestArtifactRegistry {}
+
+/**
+ * @experimental
+ *
+ * Union type of all test artifacts, including built-in and custom registered artifacts.
+ *
+ * This type automatically includes all artifacts registered via {@link TestArtifactRegistry}.
+ */
+export type TestArtifact = TestAnnotationArtifact | TestArtifactRegistry[keyof TestArtifactRegistry]

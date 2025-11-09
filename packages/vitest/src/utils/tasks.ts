@@ -43,6 +43,9 @@ export function convertTasksToEvents(file: File, onTask?: (task: Task) => void):
           task.annotations.forEach((annotation) => {
             events.push([task.id, 'test-annotation', { annotation }])
           })
+          task.artifacts.forEach((artifact) => {
+            events.push([task.id, 'test-artifact', { artifact }])
+          })
           events.push([task.id, 'test-finished', undefined])
         }
       }

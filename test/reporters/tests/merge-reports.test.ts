@@ -291,6 +291,7 @@ function createTest(name: string, file: File): Test {
     file,
     suite: file,
     annotations: [],
+    artifacts: [],
     timeout: 0,
     result: { state: 'pass' },
     meta: {},

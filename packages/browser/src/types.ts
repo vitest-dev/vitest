@@ -1,5 +1,5 @@
 import type { MockedModuleSerialized, ServerIdResolution, ServerMockResolution } from '@vitest/mocker'
-import type { TaskEventPack, TaskResultPack, TestAnnotation } from '@vitest/runner'
+import type { TaskEventPack, TaskResultPack, TestArtifact } from '@vitest/runner'
 import type { BirpcReturn } from 'birpc'
 import type {
   AfterSuiteRunMeta,
@@ -18,7 +18,7 @@ export interface WebSocketBrowserHandlers {
   onUnhandledError: (error: unknown, type: string) => Promise<void>
   onQueued: (method: TestExecutionMethod, file: RunnerTestFile) => void
   onCollected: (method: TestExecutionMethod, files: RunnerTestFile[]) => Promise<void>
-  onTaskAnnotate: (testId: string, annotation: TestAnnotation) => Promise<TestAnnotation>
+  onTaskArtifactRecord: <Artifact extends TestArtifact>(testId: string, artifact: Artifact) => Promise<Artifact>
   onTaskUpdate: (method: TestExecutionMethod, packs: TaskResultPack[], events: TaskEventPack[]) => void
   onAfterSuiteRun: (meta: AfterSuiteRunMeta) => void
   cancelCurrentRun: (reason: CancelReason) => void

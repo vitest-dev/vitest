@@ -119,8 +119,8 @@ export function createMethodsRPC(project: TestProject, options: MethodsOptions =
     onAfterSuiteRun(meta) {
       vitest.coverageProvider?.onAfterSuiteRun(meta)
     },
-    async onTaskAnnotate(testId, annotation) {
-      return vitest._testRun.annotate(testId, annotation)
+    async onTaskArtifactRecord(testId, artifact) {
+      return vitest._testRun.recordArtifact(testId, artifact)
     },
     async onTaskUpdate(packs, events) {
       if (options.collect) {
