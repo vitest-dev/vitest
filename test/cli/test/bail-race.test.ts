@@ -32,6 +32,10 @@ test('cancels previous run before starting new one', async () => {
     rounds++
   }
 
+  if (vitest.state.errorsSet.size > 0) {
+    throw vitest.state.errorsSet.values().next().value
+  }
+
   expect(results).toMatchInlineSnapshot(`
     [
       {
