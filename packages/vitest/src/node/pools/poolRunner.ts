@@ -63,7 +63,11 @@ export class PoolRunner {
       },
     )
 
-    this.project.vitest.onCancel(reason => this._rpc.onCancel(reason))
+    this.project.vitest.onCancel((reason) => {
+      if (!this._rpc.$closed) {
+        return this._rpc.onCancel(reason)
+      }
+    })
   }
 
   postMessage(message: WorkerRequest): void {
