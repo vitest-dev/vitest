@@ -1,15 +1,15 @@
 import { resolve } from 'pathe'
 import { expect, test } from 'vitest'
-import { createVitest } from 'vitest/node'
+import { runVitest } from '../../test-utils'
 
 test('cancels previous run before starting new one', async () => {
   const results: string[] = []
 
-  const vitest = await createVitest('test', {
+  const { ctx: vitest } = await runVitest({
     root: resolve(import.meta.dirname, '../fixtures/bail-race'),
     bail: 1,
     maxWorkers: 1,
-    watch: false,
+    pool: 'threads',
     reporters: [{
       onTestCaseResult(testCase) {
         const result = testCase.result()
@@ -18,6 +18,10 @@ test('cancels previous run before starting new one', async () => {
       },
     }],
   })
+
+  if (!vitest) {
+    throw new Error('Vitest context is undefined')
+  }
 
   let rounds = 0
 
