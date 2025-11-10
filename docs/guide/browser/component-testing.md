@@ -261,23 +261,20 @@ test('ShoppingCart manages items correctly', async () => {
 ```tsx
 // Option 1: Recommended - Use MSW (Mock Service Worker) for API mocking
 import { http, HttpResponse } from 'msw'
-import { setupServer } from 'msw/node'
+import { setupWorker } from 'msw/browser'
 
-// Set up MSW server with API handlers
-const server = setupServer(
+// Set up MSW worker with API handlers
+const worker = setupWorker(
   http.get('/api/users/:id', ({ params }) => {
-    const { id } = params
-    if (id === '123') {
-      return HttpResponse.json({ name: 'John Doe', email: 'john@example.com' })
-    }
-    return HttpResponse.json({ error: 'User not found' }, { status: 404 })
+    // Describe the happy path
+    return HttpResponse.json({ id: params.id, name: 'John Doe', email: 'john@example.com' })
   })
 )
 
-// Start server before all tests
-beforeAll(() => server.listen())
-afterEach(() => server.resetHandlers())
-afterAll(() => server.close())
+// Start the worker before all tests
+beforeAll(() => worker.start())
+afterEach(() => worker.resetHandlers())
+afterAll(() => worker.stop())
 
 test('UserProfile handles loading, success, and error states', async () => {
   // Test success state
@@ -287,7 +284,7 @@ test('UserProfile handles loading, success, and error states', async () => {
   await expect.element(getByText('john@example.com')).toBeInTheDocument()
 
   // Test error state by overriding the handler for this test
-  server.use(
+  worker.use(
     http.get('/api/users/:id', () => {
       return HttpResponse.json({ error: 'User not found' }, { status: 404 })
     })
@@ -297,6 +294,10 @@ test('UserProfile handles loading, success, and error states', async () => {
   await expect.element(getErrorText('Error: User not found')).toBeInTheDocument()
 })
 ```
+
+::: tip
+See more details on [using MSW in the browser](https://mswjs.io/docs/integrations/browser).
+:::
 
 ### Testing Component Communication
 
