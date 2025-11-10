@@ -168,7 +168,7 @@ export class Pool {
 
   async cancel(): Promise<void> {
     // Create a promise to track cancellation completion
-    const cancelPromise = (async () => {
+    this.cancellingPromise = (async () => {
       const pendingTasks = this.queue.splice(0)
 
       if (pendingTasks.length) {
@@ -185,12 +185,14 @@ export class Pool {
       await Promise.all(this.exitPromises.splice(0))
 
       this.workerIds.forEach((_, id) => this.freeWorkerId(id))
-
-      this.cancellingPromise = null
     })()
 
-    this.cancellingPromise = cancelPromise
-    await cancelPromise
+    try {
+      await this.cancellingPromise
+    }
+    finally {
+      this.cancellingPromise = null
+    }
   }
 
   async close(): Promise<void> {
