@@ -1,10 +1,8 @@
 import type { ChildProcess } from 'node:child_process'
 import type { Writable } from 'node:stream'
-import type { SerializedConfig } from '../../types/config'
 import type { PoolOptions, PoolWorker, WorkerRequest } from '../types'
 import { fork } from 'node:child_process'
 import { resolve } from 'node:path'
-import v8 from 'node:v8'
 
 const SIGKILL_TIMEOUT = 500 /** jest does 500ms by default, let's follow it */
 
@@ -40,11 +38,7 @@ export class ForksPoolWorker implements PoolWorker {
   }
 
   send(message: WorkerRequest): void {
-    if ('context' in message && 'config' in message.context) {
-      message.context.config = wrapSerializableConfig(message.context.config)
-    }
-
-    this.fork.send(v8.serialize(message))
+    this.fork.send(message)
   }
 
   async start(): Promise<void> {
@@ -52,6 +46,7 @@ export class ForksPoolWorker implements PoolWorker {
       env: this.env,
       execArgv: this.execArgv,
       stdio: 'pipe',
+      serialization: 'advanced',
     })
 
     if (this._fork.stdout) {
@@ -105,19 +100,7 @@ export class ForksPoolWorker implements PoolWorker {
   }
 
   deserialize(data: unknown): unknown {
-    try {
-      return v8.deserialize(Buffer.from(data as ArrayBuffer))
-    }
-    catch (error) {
-      let stringified = ''
-
-      try {
-        stringified = `\nReceived value: ${JSON.stringify(data)}`
-      }
-      catch {}
-
-      throw new Error(`[vitest-pool]: Unexpected call to process.send(). Make sure your test cases are not interfering with process's channel.${stringified}`, { cause: error })
-    }
+    return data
   }
 
   private get fork() {
@@ -126,29 +109,4 @@ export class ForksPoolWorker implements PoolWorker {
     }
     return this._fork
   }
-}
-
-/**
- * Prepares `SerializedConfig` for serialization, e.g. `node:v8.serialize`
- * - Unwrapping done in {@link file://./../../../runtime/workers/init-forks.ts}
- */
-function wrapSerializableConfig(config: SerializedConfig) {
-  let testNamePattern = config.testNamePattern
-  let defines = config.defines
-
-  // v8 serialize does not support regex
-  if (testNamePattern && typeof testNamePattern !== 'string') {
-    testNamePattern = `$$vitest:${testNamePattern.toString()}` as unknown as RegExp
-  }
-
-  // v8 serialize drops properties with undefined value
-  if (defines) {
-    defines = { keys: Object.keys(defines), original: defines }
-  }
-
-  return {
-    ...config,
-    testNamePattern,
-    defines,
-  } as SerializedConfig
 }
