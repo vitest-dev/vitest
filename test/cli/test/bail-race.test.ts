@@ -1,3 +1,4 @@
+import type { RunnerTestCase, RunnerTestSuite } from 'vitest/node'
 import { Writable } from 'node:stream'
 import { resolve } from 'pathe'
 import { expect, it } from 'vitest'
@@ -26,6 +27,19 @@ it('should be able to bail fast without race conditions', async () => {
     }, {}, { stderr: new NoopStream(), stdout: new NoopStream() })
     while (vitest.state.errorsSet.size === 0 && !abortController.signal.aborted) {
       await vitest.start()
+      const tests = vitest.state.getFiles().flatMap(file => collectTestsFromSuite(file)).map(({ name, result }) => ({ name, state: result?.state }))
+      expect(tests).toEqual(
+        [
+          {
+            name: 'adds two numbers',
+            state: 'pass',
+          },
+          {
+            name: 'fails adding two numbers',
+            state: 'fail',
+          },
+        ],
+      )
     }
     await vitest.close()
     abortController.abort()
@@ -49,3 +63,19 @@ it('should be able to bail fast without race conditions', async () => {
 
   await expect(Promise.race([runPromise, timeoutPromise])).resolves.toBeUndefined()
 })
+
+function collectTestsFromSuite(
+  suite: RunnerTestSuite,
+): RunnerTestCase[] {
+  return suite.tasks.flatMap((task) => {
+    if (task.type === 'suite') {
+      return collectTestsFromSuite(task)
+    }
+    else if (task.type === 'test') {
+      return task
+    }
+    else {
+      return []
+    }
+  })
+}
