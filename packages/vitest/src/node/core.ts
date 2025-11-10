@@ -33,6 +33,7 @@ import { createFetchModuleFunction } from './environments/fetchModule'
 import { ServerModuleRunner } from './environments/serverRunner'
 import { FilesNotFoundError } from './errors'
 import { Logger } from './logger'
+import { Telemetry } from './otel'
 import { VitestPackageInstaller } from './packageInstaller'
 import { createPool } from './pool'
 import { TestProject } from './project'
@@ -94,6 +95,9 @@ export class Vitest {
    * Vitest behaviour.
    */
   public readonly watcher: VitestWatcher
+
+  // TODO: public?
+  /** @internal */ telemetry!: Telemetry
 
   /** @internal */ configOverride: Partial<ResolvedConfig> = {}
   /** @internal */ filenamePattern?: string[]
@@ -210,6 +214,9 @@ export class Vitest {
     this._cache = new VitestCache(this.version)
     this._snapshot = new SnapshotManager({ ...resolved.snapshotOptions })
     this._testRun = new TestRun(this)
+    this.telemetry = new Telemetry({
+      enabled: true, // TODO: options
+    })
 
     if (this.config.watch) {
       this.watcher.registerWatcher()
@@ -218,6 +225,7 @@ export class Vitest {
     this._resolver = new VitestResolver(server.config.cacheDir, resolved)
     this._fetcher = createFetchModuleFunction(
       this._resolver,
+      this.telemetry,
       this._tmpDir,
       {
         dumpFolder: this.config.dumpDir,
@@ -576,48 +584,71 @@ export class Vitest {
    * @param filters String filters to match the test files
    */
   async start(filters?: string[]): Promise<TestRunResult> {
-    try {
-      await this.initCoverageProvider()
-      await this.coverageProvider?.clean(this._coverageOptions.clean)
-    }
-    finally {
-      await this.report('onInit', this)
-    }
-
-    this.filenamePattern = filters && filters?.length > 0 ? filters : undefined
-    const files = await this.specifications.getRelevantTestSpecifications(filters)
-
-    // if run with --changed, don't exit if no tests are found
-    if (!files.length) {
-      await this._testRun.start([])
-      const coverage = await this.coverageProvider?.generateCoverage?.({ allTestsRun: true })
-
-      await this._testRun.end([], [], coverage)
-      // Report coverage for uncovered files
-      await this.reportCoverage(coverage, true)
-
-      if (!this.config.watch || !(this.config.changed || this.config.related?.length)) {
-        throw new FilesNotFoundError(this.mode)
+    return await this.telemetry.startActiveSpan('vitest.start', async (startSpan) => {
+      try {
+        await this.telemetry.startActiveSpan('vitest.coverage.init', async () => {
+          await this.initCoverageProvider()
+          await this.coverageProvider?.clean(this._coverageOptions.clean)
+        })
       }
-    }
+      finally {
+        await this.report('onInit', this)
+      }
 
-    let testModules: TestRunResult = {
-      testModules: [],
-      unhandledErrors: [],
-    }
+      this.filenamePattern = filters && filters?.length > 0 ? filters : undefined
+      startSpan.setAttribute('vitest.start.filters', this.filenamePattern || [])
+      const files = await this.telemetry.startActiveSpan(
+        'vitest.getRelevantTestSpecifications',
+        async () => {
+          const specifications = await this.specifications.getRelevantTestSpecifications(filters)
+          startSpan.setAttribute(
+            'vitest.start.specifications',
+            specifications.map((s) => {
+              const relativeModuleId = relative(s.project.config.root, s.moduleId)
+              if (s.project.name) {
+                return `|${s.project.name}| ${relativeModuleId}`
+              }
+              return relativeModuleId
+            }),
+          )
+          return specifications
+        },
+      )
 
-    if (files.length) {
-      // populate once, update cache on watch
-      await this.cache.stats.populateStats(this.config.root, files)
+      // if run with --changed, don't exit if no tests are found
+      if (!files.length) {
+        await this.telemetry.startActiveSpan('vitest.testRun', async () => {
+          await this._testRun.start([])
+          const coverage = await this.coverageProvider?.generateCoverage?.({ allTestsRun: true })
 
-      testModules = await this.runFiles(files, true)
-    }
+          await this._testRun.end([], [], coverage)
+          // Report coverage for uncovered files
+          await this.reportCoverage(coverage, true)
+        })
 
-    if (this.config.watch) {
-      await this.report('onWatcherStart')
-    }
+        if (!this.config.watch || !(this.config.changed || this.config.related?.length)) {
+          throw new FilesNotFoundError(this.mode)
+        }
+      }
 
-    return testModules
+      let testModules: TestRunResult = {
+        testModules: [],
+        unhandledErrors: [],
+      }
+
+      if (files.length) {
+        // populate once, update cache on watch
+        await this.cache.stats.populateStats(this.config.root, files)
+
+        testModules = await this.telemetry.startActiveSpan('vitest.testRun', () => this.runFiles(files, true))
+      }
+
+      if (this.config.watch) {
+        await this.report('onWatcherStart')
+      }
+
+      return testModules
+    })
   }
 
   /**
@@ -1228,10 +1259,14 @@ export class Vitest {
 
   /** @internal */
   async report<T extends keyof Reporter>(name: T, ...args: ArgumentsType<Reporter[T]>) {
-    await Promise.all(this.reporters.map(r => r[name]?.(
+    await this.telemetry.startActiveSpan('vitest.report', async (span) => {
+      span.setAttribute('vitest.report.event', name)
+
+      await Promise.all(this.reporters.map(r => r[name]?.(
       // @ts-expect-error let me go
-      ...args,
-    )))
+        ...args,
+      )))
+    })
   }
 
   /** @internal */

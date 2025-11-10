@@ -1,6 +1,8 @@
+import type { Span } from '@opentelemetry/api'
 import type { DevEnvironment, FetchResult, Rollup, TransformResult } from 'vite'
 import type { FetchFunctionOptions } from 'vite/module-runner'
 import type { FetchCachedFileSystemResult } from '../../types/general'
+import type { Telemetry } from '../otel'
 import type { VitestResolver } from '../resolver'
 import { existsSync, mkdirSync } from 'node:fs'
 import { readFile, rename, stat, unlink, writeFile } from 'node:fs/promises'
@@ -30,24 +32,28 @@ export interface VitestFetchFunction {
 
 export function createFetchModuleFunction(
   resolver: VitestResolver,
+  telemetry: Telemetry,
   tmpDir: string = join(tmpdir(), nanoid()),
   dump?: DumpOptions,
 ): VitestFetchFunction {
-  return async (
-    url,
-    importer,
-    environment,
-    cacheFs,
-    options,
-  ) => {
+  const fetcher = async (
+    fetcherSpan: Span,
+    url: string,
+    importer: string | undefined,
+    environment: DevEnvironment,
+    cacheFs: boolean,
+    options?: FetchFunctionOptions,
+  ): Promise<FetchResult | FetchCachedFileSystemResult> => {
     // We are copy pasting Vite's externalization logic from `fetchModule` because
     // we instead rely on our own `shouldExternalize` method because Vite
     // doesn't support `resolve.external` in non SSR environments (jsdom/happy-dom)
     if (url.startsWith('data:')) {
+      fetcherSpan.setAttribute('vitest.fetcher.external', url)
       return { externalize: url, type: 'builtin' }
     }
 
     if (url === '/@vite/client' || url === '@vite/client') {
+      fetcherSpan.setAttribute('vitest.fetcher.external', url)
       // this will be stubbed
       return { externalize: '/@vite/client', type: 'module' }
     }
@@ -55,6 +61,7 @@ export function createFetchModuleFunction(
     const isFileUrl = url.startsWith('file://')
 
     if (isExternalUrl(url) && !isFileUrl) {
+      fetcherSpan.setAttribute('vitest.fetcher.external', url)
       return { externalize: url, type: 'network' }
     }
 
@@ -65,55 +72,98 @@ export function createFetchModuleFunction(
     const moduleGraphModule = await environment.moduleGraph.ensureEntryFromUrl(unwrapId(url))
     const cached = !!moduleGraphModule.transformResult
 
+    if (moduleGraphModule.file) {
+      fetcherSpan.setAttribute('code.file.path', moduleGraphModule.file)
+    }
+
     // if url is already cached, we can just confirm it's also cached on the server
     if (options?.cached && cached) {
       return { cache: true }
     }
 
     if (moduleGraphModule.id) {
-      const externalize = await resolver.shouldExternalize(moduleGraphModule.id)
+      const id = moduleGraphModule.id
+      const externalize = await telemetry.startActiveSpan('vitest.fetcher.externalize', () => resolver.shouldExternalize(id))
       if (externalize) {
+        fetcherSpan.setAttribute('vitest.fetcher.external', externalize)
         return { externalize, type: 'module' }
       }
     }
+
+    fetcherSpan.setAttribute('vitest.fetcher.external', false)
 
     let moduleRunnerModule: FetchResult | undefined
 
     if (dump?.dumpFolder && dump.readFromDump) {
       const path = resolve(dump?.dumpFolder, url.replace(/[^\w+]/g, '-'))
       if (existsSync(path)) {
-        const code = await readFile(path, 'utf-8')
-        const matchIndex = code.lastIndexOf('\n//')
-        if (matchIndex !== -1) {
-          const { id, file } = JSON.parse(code.slice(matchIndex + 4))
-          moduleRunnerModule = {
-            code,
-            id,
-            url,
-            file,
-            invalidate: false,
+        await telemetry.startActiveSpan('vitest.fetcher.debug.dumpFolder', async (span) => {
+          span.setAttribute('code.file.path', path)
+
+          const code = await readFile(path, 'utf-8')
+          const matchIndex = code.lastIndexOf('\n//')
+          if (matchIndex !== -1) {
+            const { id, file } = JSON.parse(code.slice(matchIndex + 4))
+            moduleRunnerModule = {
+              code,
+              id,
+              url,
+              file,
+              invalidate: false,
+            }
           }
-        }
+        })
       }
     }
 
     if (!moduleRunnerModule) {
-      moduleRunnerModule = await fetchModule(
-        environment,
-        url,
-        importer,
-        {
-          ...options,
-          inlineSourceMap: false,
+      moduleRunnerModule = await telemetry.startActiveSpan(
+        'vitest.fetcher.fetchModule',
+        async (fetchModuleSpan) => {
+          const module = await fetchModule(
+            environment,
+            url,
+            importer,
+            {
+              ...options,
+              inlineSourceMap: false,
+            },
+          ).catch(handleRollupError)
+          if ('id' in module) {
+            fetchModuleSpan.setAttribute('vitest.fetchedModule.invalidate', module.invalidate)
+            fetchModuleSpan.setAttribute('vitest.fetchedModule.codeLength', module.code.length)
+            fetchModuleSpan.setAttribute('vitest.fetchedModule.id', module.id)
+            fetchModuleSpan.setAttribute('vitest.fetchedModule.url', module.url)
+            fetchModuleSpan.setAttribute('vitest.fetchedModule.cache', false)
+            if (module.file) {
+              fetchModuleSpan.setAttribute('code.file.path', module.file)
+              fetcherSpan.setAttribute('code.file.path', module.file)
+            }
+          }
+          else if ('cache' in module) {
+            fetchModuleSpan.setAttribute('vitest.fetchedModule.cache', module.cache)
+          }
+          else {
+            fetchModuleSpan.setAttribute('vitest.fetchedModule.type', module.type)
+            fetchModuleSpan.setAttribute('vitest.fetchedModule.external', module.externalize)
+          }
+          return module
         },
-      ).catch(handleRollupError)
+      )
     }
 
-    const result = processResultSource(environment, moduleRunnerModule)
+    const result = telemetry.startActiveSpan(
+      'vitest.fetcher.processResultSource',
+      () => processResultSource(environment, moduleRunnerModule!),
+    )
 
     if (dump?.dumpFolder && 'code' in result) {
       const path = resolve(dump?.dumpFolder, result.url.replace(/[^\w+]/g, '-'))
-      await writeFile(path, `${result.code}\n// ${JSON.stringify({ id: result.id, file: result.file })}`, 'utf-8')
+      await telemetry.startActiveSpan(
+        'vitest.fetcher.debug.writeDump',
+        { attributes: { 'code.file.path': path } },
+        () => writeFile(path, `${result.code}\n// ${JSON.stringify({ id: result.id, file: result.file })}`, 'utf-8'),
+      )
     }
 
     if (!cacheFs || !('code' in result)) {
@@ -144,16 +194,35 @@ export function createFetchModuleFunction(
     promises.set(
       tmp,
 
-      atomicWriteFile(tmp, code)
-        // Fallback to non-atomic write for windows case where file already exists:
-        .catch(() => writeFile(tmp, code, 'utf-8'))
-        .finally(() => {
-          Reflect.set(transformResult, '_vitestTmp', tmp)
-          promises.delete(tmp)
-        }),
+      telemetry.startActiveSpan(
+        'vitest.fetcher.atomicWriteFile',
+        {
+          attributes: { 'code.file.path': tmp },
+        },
+        () =>
+          atomicWriteFile(tmp, code)
+            // Fallback to non-atomic write for windows case where file already exists:
+            .catch(() => writeFile(tmp, code, 'utf-8')),
+      ).finally(() => {
+        Reflect.set(transformResult, '_vitestTmp', tmp)
+        promises.delete(tmp)
+      }),
     )
     await promises.get(tmp)
     return getCachedResult(result, tmp)
+  }
+  return async (
+    url,
+    importer,
+    environment,
+    cacheFs,
+    options,
+  ) => {
+    await telemetry.waitInit()
+    return telemetry.startActiveSpan(
+      'vitest.fetcher',
+      span => fetcher(span, url, importer, environment, cacheFs, options),
+    )
   }
 }
 
