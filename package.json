@@ -40,7 +40,7 @@
     "@antfu/eslint-config": "^6.2.0",
     "@antfu/ni": "^27.0.1",
     "@playwright/test": "^1.56.1",
-    "@rollup/plugin-commonjs": "^28.0.9",
+    "@rollup/plugin-commonjs": "^29.0.0",
     "@rollup/plugin-json": "^6.1.0",
     "@rollup/plugin-node-resolve": "^16.0.3",
     "@types/node": "^22.19.0",
