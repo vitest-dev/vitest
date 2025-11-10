@@ -13,6 +13,7 @@ class NoopStream extends Writable {
 }
 
 it('should be able to bail fast without race conditions', async () => {
+  // Arrange
   const abortController = new AbortController()
   const runPromise = Promise.resolve().then(async () => {
     const vitest = await createVitest('test', {
@@ -25,10 +26,12 @@ it('should be able to bail fast without race conditions', async () => {
       reporters: [],
       root,
     }, {}, { stderr: new NoopStream(), stdout: new NoopStream() })
+
+    // Act
     while (vitest.state.errorsSet.size === 0 && !abortController.signal.aborted) {
       await vitest.start()
       const tests = vitest.state.getFiles().flatMap(file => collectTestsFromSuite(file)).map(({ name, result }) => ({ name, state: result?.state }))
-      expect(tests).toEqual(
+      expect(tests).toEqual( // verify that nothing strange happened
         [
           {
             name: 'adds two numbers',
@@ -51,17 +54,18 @@ it('should be able to bail fast without race conditions', async () => {
     }
   })
 
-  const timeoutPromise = new Promise<void>((res) => {
+  const timeoutPromise = new Promise<'timeout'>((res) => {
     const timeoutId = setTimeout(() => {
       abortController.abort()
-      res()
-    }, 5000)
+      res('timeout') // Success!
+    }, 5_000) // Give race condition 5 seconds to manifest
     abortController.signal.addEventListener('abort', () => {
       clearTimeout(timeoutId)
     })
   })
 
-  await expect(Promise.race([runPromise, timeoutPromise])).resolves.toBeUndefined()
+  // Assert
+  await expect(Promise.race([runPromise, timeoutPromise])).resolves.toBe('timeout')
 })
 
 function collectTestsFromSuite(
