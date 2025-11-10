@@ -676,6 +676,83 @@ describe('toBeOneOf()', () => {
     snapshotError(() => expect({ a: 0 }).toEqual(expect.toBeOneOf([expect.objectContaining({ b: 0 }), null, undefined])))
     snapshotError(() => expect({ name: 'mango' }).toEqual({ name: expect.toBeOneOf(['apple', 'banana', 'orange']) }))
   })
+
+  describe('with iterables', () => {
+    it('pass with Set', () => {
+      expect(0).toBeOneOf(new Set([0, 1, 2]))
+      expect('apple').toBeOneOf(new Set(['apple', 'banana', 'orange']))
+      expect(true).toBeOneOf(new Set([true, false]))
+      expect(null).toBeOneOf(new Set([null, undefined]))
+    })
+
+    it('pass with Set and null/undefined values', () => {
+      expect(3).not.toBeOneOf(new Set([0, 1, 2]))
+      expect('mango').not.toBeOneOf(new Set(['apple', 'banana', 'orange']))
+      expect(false).not.toBeOneOf(new Set([null, undefined]))
+    })
+
+    it('pass with Map keys', () => {
+      const map = new Map([[1, 'a'], [2, 'b'], [3, 'c']])
+      expect(2).toBeOneOf(map.keys())
+      expect(4).not.toBeOneOf(map.keys())
+    })
+
+    it('pass with Map values', () => {
+      const map = new Map([[1, 'a'], [2, 'b'], [3, 'c']])
+      expect('b').toBeOneOf(map.values())
+      expect('d').not.toBeOneOf(map.values())
+    })
+
+    it('pass with generator', () => {
+      function* generator() {
+        yield 1
+        yield 2
+        yield 3
+      }
+      expect(2).toBeOneOf(generator())
+      expect(5).not.toBeOneOf(generator())
+    })
+
+    it('pass with TypedArray', () => {
+      expect(2).toBeOneOf(new Uint8Array([1, 2, 3]))
+      expect(5).not.toBeOneOf(new Uint8Array([1, 2, 3]))
+    })
+
+    it('pass with custom iterable', () => {
+      const customIterable = {
+        * [Symbol.iterator]() {
+          yield 'a'
+          yield 'b'
+          yield 'c'
+        },
+      }
+      expect('b').toBeOneOf(customIterable)
+      expect('d').not.toBeOneOf(customIterable)
+    })
+
+    it.fails('fail with Set and missing negotiation', () => {
+      expect(3).toBeOneOf(new Set([0, 1, 2]))
+      expect('mango').toBeOneOf(new Set(['apple', 'banana', 'orange']))
+    })
+  })
+
+  it('reject invalid types', () => {
+    expect(() => expect('test').toBeOneOf('invalid' as any))
+      .toThrow('You must provide an array or iterable to')
+    expect(() => expect('test').toBeOneOf(123 as any))
+      .toThrow('You must provide an array or iterable to')
+    expect(() => expect('test').toBeOneOf({ a: 1 } as any))
+      .toThrow('You must provide an array or iterable to')
+    expect(() => expect('test').toBeOneOf(null as any))
+      .toThrow('You must provide an array or iterable to')
+    expect(() => expect('test').toBeOneOf(undefined as any))
+      .toThrow('You must provide an array or iterable to')
+  })
+
+  it('reject strings (even though they are technically iterable)', () => {
+    expect(() => expect('a').toBeOneOf('abc' as any))
+      .toThrow('You must provide an array or iterable to')
+  })
 })
 
 describe('toSatisfy()', () => {

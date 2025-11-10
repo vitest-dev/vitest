@@ -129,14 +129,16 @@ interface CustomMatcher {
   toSatisfy: (matcher: (value: any) => boolean, message?: string) => any
 
   /**
-   * Matches if the received value is one of the values in the expected array.
+   * Matches if the received value is one of the values in the expected array or iterable.
    *
    * @example
    * expect(1).toBeOneOf([1, 2, 3])
    * expect('foo').toBeOneOf([expect.any(String)])
+   * expect('bar').toBeOneOf(new Set(['foo', 'bar', 'baz']))
+   * expect('id1').toBeOneOf(myMap.keys())
    * expect({ a: 1 }).toEqual({ a: expect.toBeOneOf(['1', '2', '3']) })
    */
-  toBeOneOf: <T>(sample: Array<T>) => any
+  toBeOneOf: <T>(sample: Array<T> | Iterable<T>) => any
 }
 
 export interface AsymmetricMatchersContaining extends CustomMatcher {
