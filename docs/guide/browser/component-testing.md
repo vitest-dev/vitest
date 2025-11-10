@@ -295,7 +295,9 @@ test('UserProfile handles loading, success, and error states', async () => {
 })
 ```
 
-> See more details on [using MSW in the browser](https://mswjs.io/docs/integrations/browser).
+::: tip
+See more details on [using MSW in the browser](https://mswjs.io/docs/integrations/browser).
+:::
 
 ### Testing Component Communication
 
