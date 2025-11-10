@@ -687,7 +687,7 @@ export function resolveConfig(
 
   resolved.browser.enabled ??= false
   resolved.browser.headless ??= isCI
-  resolved.browser.isolate ??= true
+  resolved.browser.isolate ??= resolved.isolate ?? true
   resolved.browser.fileParallelism
     ??= options.fileParallelism ?? mode !== 'benchmark'
   // disable in headless mode by default, and if CI is detected
@@ -715,7 +715,7 @@ export function resolveConfig(
     const source = `@vitest/browser-${resolved.browser.provider}`
     throw new TypeError(
       'The `browser.provider` configuration was changed to accept a factory instead of a string. '
-      + `Add an import of "${resolved.browser.provider}" from "${source}" instead. See: https://vitest.dev/guide/browser/config#provider`,
+      + `Add an import of "${resolved.browser.provider}" from "${source}" instead. See: https://vitest.dev/config/browser/provider`,
     )
   }
 

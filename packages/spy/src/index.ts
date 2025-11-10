@@ -194,6 +194,12 @@ export function createMockInstance(options: MockInstanceOption = {}): Mock<Proce
 export function fn<T extends Procedure | Constructable = Procedure>(
   originalImplementation?: T,
 ): Mock<T> {
+  // if the function is already a mock, just return the same function,
+  // simillarly to how vi.spyOn() works
+  if (originalImplementation != null && isMockFunction(originalImplementation)) {
+    return originalImplementation as Mock<T>
+  }
+
   return createMockInstance({
     // we pass this down so getMockImplementation() always returns the value
     mockImplementation: originalImplementation,
@@ -206,21 +212,19 @@ export function fn<T extends Procedure | Constructable = Procedure>(
 export function spyOn<T extends object, S extends Properties<Required<T>>>(
   object: T,
   key: S,
-  accessor: 'get'
+  accessor: 'get',
 ): Mock<() => T[S]>
 export function spyOn<T extends object, G extends Properties<Required<T>>>(
   object: T,
   key: G,
-  accessor: 'set'
+  accessor: 'set',
 ): Mock<(arg: T[G]) => void>
 export function spyOn<T extends object, M extends Classes<Required<T>> | Methods<Required<T>>>(
   object: T,
-  key: M
-): Required<T>[M] extends { new (...args: infer A): infer R }
-  ? Mock<{ new (...args: A): R }>
-  : Required<T>[M] extends Procedure
-    ? Mock<Required<T>[M]>
-    : never
+  key: M,
+): Required<T>[M] extends Constructable | Procedure
+  ? Mock<Required<T>[M]>
+  : never
 export function spyOn<T extends object, K extends keyof T>(
   object: T,
   key: K,
@@ -374,13 +378,15 @@ function createMock(
     prototypeState,
     prototypeConfig,
     keepMembersImplementation,
+    mockImplementation,
     prototypeMembers = [],
   }: MockInstanceOption & {
     state: MockContext
     config: MockConfig
   },
 ) {
-  const original = config.mockOriginal
+  const original = config.mockOriginal // init with vi.spyOn(obj, 'Klass')
+  const pseudoOriginal = mockImplementation // init with vi.fn(Klass)
   const name = (mockName || original?.name || 'Mock') as string
   const namedObject: Record<string, Mock<Procedure | Constructable>> = {
     // to keep the name of the function intact
@@ -499,8 +505,9 @@ function createMock(
     }) as Mock,
   }
   const mock = namedObject[name] as Mock<Procedure | Constructable>
-  if (original) {
-    copyOriginalStaticProperties(mock, original)
+  const copyPropertiesFrom = original || pseudoOriginal
+  if (copyPropertiesFrom) {
+    copyOriginalStaticProperties(mock, copyPropertiesFrom)
   }
   return mock
 }

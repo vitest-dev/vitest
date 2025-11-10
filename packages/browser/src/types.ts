@@ -31,13 +31,13 @@ export interface WebSocketBrowserHandlers {
   debug: (...args: string[]) => void
   resolveId: (
     id: string,
-    importer?: string
+    importer?: string,
   ) => Promise<ServerIdResolution | null>
   triggerCommand: <T>(
     sessionId: string,
     command: string,
     testPath: string | undefined,
-    payload: unknown[]
+    payload: unknown[],
   ) => Promise<T>
   resolveMock: (
     id: string,
@@ -46,7 +46,7 @@ export interface WebSocketBrowserHandlers {
   ) => Promise<ServerMockResolution>
   invalidate: (ids: string[]) => void
   getBrowserFileSourceMap: (
-    id: string
+    id: string,
   ) => SourceMap | null | { mappings: '' } | undefined
   wdioSwitchContext: (direction: 'iframe' | 'parent') => void
 

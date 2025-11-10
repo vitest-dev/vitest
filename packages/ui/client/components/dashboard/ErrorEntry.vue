@@ -30,15 +30,4 @@ defineProps<{
       </li>
     </ul>
   </div>
-  <div v-if="error.VITEST_AFTER_ENV_TEARDOWN" text="sm" font-thin>
-    This error was caught after test environment was torn down. Make sure to cancel any running tasks before test finishes:<br>
-    <ul>
-      <li>
-        Cancel timeouts using clearTimeout and clearInterval.
-      </li>
-      <li>
-        Wait for promises to resolve using the await keyword.
-      </li>
-    </ul>
-  </div>
 </template>

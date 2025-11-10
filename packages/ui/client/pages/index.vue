@@ -21,41 +21,41 @@ import {
 
 const dashboardVisible = initializeNavigation()
 
-const onBrowserPanelResizing = useDebounceFn((event: { size: number }[]) => {
+const onBrowserPanelResizing = useDebounceFn(({ panes }: { panes: { size: number }[] }) => {
   // don't trigger events in the iframe while resizing
   preventBrowserEvents()
-  recordDetailsResize(event)
+  recordDetailsResize(panes)
 }, 0)
 
-const onMainResized = useDebounceFn((event: { size: number }[]) => {
-  event.forEach((e, i) => {
+const onMainResized = useDebounceFn(({ panes }: { panes: { size: number }[] }) => {
+  panes.forEach((e, i) => {
     mainSizes.value[i] = e.size
   })
-  recordMainResize(event)
+  recordMainResize(panes)
   allowBrowserEvents()
 }, 0)
 
-const onModuleResized = useDebounceFn((event: { size: number }[]) => {
-  event.forEach((e, i) => {
+const onModuleResized = useDebounceFn(({ panes }: { panes: { size: number }[] }) => {
+  panes.forEach((e, i) => {
     detailSizes.value[i] = e.size
   })
-  recordDetailsResize(event)
+  recordDetailsResize(panes)
   allowBrowserEvents()
 }, 0)
 
-const resizingMain = useDebounceFn((event: { size: number }[]) => {
-  recordMainResize(event)
+const resizingMain = useDebounceFn(({ panes }: { panes: { size: number }[] }) => {
+  recordMainResize(panes)
   preventBrowserEvents()
 }, 0)
 
-function recordMainResize(event: { size: number }[]) {
-  panels.navigation = event[0].size
-  panels.details.size = event[1].size
+function recordMainResize(panes: { size: number }[]) {
+  panels.navigation = panes[0].size
+  panels.details.size = panes[1].size
 }
 
-function recordDetailsResize(event: { size: number }[]) {
-  panels.details.browser = event[0].size
-  panels.details.main = event[1].size
+function recordDetailsResize(panes: { size: number }[]) {
+  panels.details.browser = panes[0].size
+  panels.details.main = panes[1].size
 }
 
 function preventBrowserEvents() {

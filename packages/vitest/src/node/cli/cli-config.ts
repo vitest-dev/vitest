@@ -335,7 +335,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
       },
       name: {
         description:
-          'Run all tests in a specific browser. Some browsers are only available for specific providers (see `--browser.provider`). Visit [`browser.name`](https://vitest.dev/guide/browser/config/#browser-name) for more information',
+          'Run all tests in a specific browser. Some browsers are only available for specific providers (see `--browser.provider`).',
         argument: '<name>',
       },
       headless: {
@@ -350,7 +350,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
       },
       provider: {
         description:
-          'Provider used to run browser tests. Some browsers are only available for specific providers. Can be "webdriverio", "playwright", "preview", or the path to a custom provider. Visit [`browser.provider`](https://vitest.dev/guide/browser/config.html#browser-provider) for more information (default: `"preview"`)',
+          'Provider used to run browser tests. Some browsers are only available for specific providers. Can be "webdriverio", "playwright", "preview", or the path to a custom provider. Visit [`browser.provider`](https://vitest.dev/config/browser/provider) for more information',
         argument: '<name>',
         subcommands: null, // don't support custom objects
         transform(value) {
@@ -408,6 +408,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
   execArgv: {
     description: 'Pass additional arguments to `node` process when spawning `worker_threads` or `child_process`.',
     argument: '<option>',
+    array: true,
   },
   vmMemoryLimit: {
     description:
