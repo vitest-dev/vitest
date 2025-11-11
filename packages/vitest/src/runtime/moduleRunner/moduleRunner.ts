@@ -7,6 +7,7 @@ import type { ModuleExecutionInfo } from './moduleDebug'
 import type { VitestModuleEvaluator } from './moduleEvaluator'
 import type { VitestTransportOptions } from './moduleTransport'
 import * as viteModuleRunner from 'vite/module-runner'
+import { Telemetry } from '../../utils/otel'
 import { VitestMocker } from './moduleMocker'
 import { VitestTransport } from './moduleTransport'
 
@@ -44,6 +45,7 @@ function createImportMetaResolver() {
 export class VitestModuleRunner extends viteModuleRunner.ModuleRunner {
   public mocker: VitestMocker
   public moduleExecutionInfo: ModuleExecutionInfo
+  private _otel: Telemetry
 
   constructor(private vitestOptions: VitestModuleRunnerOptions) {
     const options = vitestOptions
@@ -59,10 +61,12 @@ export class VitestModuleRunner extends viteModuleRunner.ModuleRunner {
       },
       options.evaluator,
     )
+    this._otel = vitestOptions.telemetry || new Telemetry({ enabled: false })
     this.moduleExecutionInfo = options.getWorkerState().moduleExecutionInfo
     this.mocker = options.mocker || new VitestMocker(this, {
       spyModule: options.spyModule,
       context: options.vm?.context,
+      telemetry: this._otel,
       resolveId: options.transport.resolveId,
       get root() {
         return options.getWorkerState().config.root
@@ -99,7 +103,15 @@ export class VitestModuleRunner extends viteModuleRunner.ModuleRunner {
   }
 
   public async import(rawId: string): Promise<any> {
-    const resolved = await this.vitestOptions.transport.resolveId(rawId)
+    const resolved = await this._otel.$(
+      'vitest.runtime.runner.resolve',
+      {
+        attributes: {
+          'vitest.module.rawId': rawId,
+        },
+      },
+      () => this.vitestOptions.transport.resolveId(rawId),
+    )
     return super.import(resolved ? resolved.url : rawId)
   }
 
@@ -184,6 +196,7 @@ export interface VitestModuleRunnerOptions {
   getWorkerState: () => WorkerGlobalState
   mocker?: VitestMocker
   vm?: VitestVmOptions
+  telemetry?: Telemetry
   spyModule?: typeof import('@vitest/spy')
   createImportMeta?: CreateImportMeta
 }

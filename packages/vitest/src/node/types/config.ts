@@ -826,6 +826,7 @@ export interface InlineConfig {
    */
   attachmentsDir?: string
 
+  /** @experimental */
   experimental?: {
     openTelemetry?: {
       enabled: boolean
@@ -1091,6 +1092,7 @@ type NonProjectOptions
     | 'inspectBrk'
     | 'coverage'
     | 'watchTriggerPatterns'
+    | 'experimental'
 
 export interface ServerDepsOptions {
   /**

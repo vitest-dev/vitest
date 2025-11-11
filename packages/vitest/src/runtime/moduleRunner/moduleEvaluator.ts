@@ -1,3 +1,4 @@
+import type { Span } from '@opentelemetry/api'
 import type {
   EvaluatedModuleNode,
   ModuleEvaluator,
@@ -17,6 +18,7 @@ import {
   ssrImportMetaKey,
   ssrModuleExportsKey,
 } from 'vite/module-runner'
+import { Telemetry } from '../../utils/otel'
 import { ModuleDebug } from './moduleDebug'
 
 const isWindows = process.platform === 'win32'
@@ -27,6 +29,7 @@ export interface VitestModuleEvaluatorOptions {
   getCurrentTestFilepath?: () => string | undefined
   compiledFunctionArgumentsNames?: string[]
   compiledFunctionArgumentsValues?: unknown[]
+  telemetry?: Telemetry
 }
 
 export class VitestModuleEvaluator implements ModuleEvaluator {
@@ -44,11 +47,13 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
   }
 
   private debug = new ModuleDebug()
+  private _otel: Telemetry
 
   constructor(
     vmOptions?: VitestVmOptions | undefined,
     private options: VitestModuleEvaluatorOptions = {},
   ) {
+    this._otel = options.telemetry || new Telemetry({ enabled: false })
     this.vm = vmOptions
     this.stubs = getDefaultRequestStubs(vmOptions?.context)
     if (options.compiledFunctionArgumentsNames) {
@@ -93,9 +98,12 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
 
     const file = this.convertIdToImportUrl(id)
 
-    const namespace = this.vm
-      ? await this.vm.externalModulesExecutor.import(file)
-      : await import(file)
+    const namespace = this._otel.$(
+      'vitest.evaluator.import.external',
+      () => this.vm
+        ? this.vm.externalModulesExecutor.import(file)
+        : import(file),
+    )
 
     if (!this.shouldInterop(file, namespace)) {
       return namespace
@@ -139,6 +147,18 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
     code: string,
     module: Readonly<EvaluatedModuleNode>,
   ): Promise<any> {
+    return this._otel.$(
+      'vitest.evaluator.import.inline',
+      span => this._runInlinedModule(context, code, module, span),
+    )
+  }
+
+  private async _runInlinedModule(
+    context: ModuleRunnerContext,
+    code: string,
+    module: Readonly<EvaluatedModuleNode>,
+    span: Span,
+  ): Promise<any> {
     context.__vite_ssr_import_meta__.env = this.env
 
     const { Reflect, Proxy, Object } = this.primitives
@@ -146,6 +166,7 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
     const exportsObject = context[ssrModuleExportsKey]
     const SYMBOL_NOT_DEFINED = Symbol('not defined')
     let moduleExports: unknown = SYMBOL_NOT_DEFINED
+    let cjsProxyTriggered = false
     // this proxy is triggered only on exports.{name} and module.exports access
     // inside the module itself. imported module is always "exports"
     const cjsExports = new Proxy(exportsObject, {
@@ -157,41 +178,48 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
       },
       getPrototypeOf: () => Object.prototype,
       set: (_, p, value) => {
-        // treat "module.exports =" the same as "exports.default =" to not have nested "default.default",
-        // so "exports.default" becomes the actual module
-        if (
-          p === 'default'
-          && this.shouldInterop(module.file, { default: value })
-          && cjsExports !== value
-        ) {
-          exportAll(cjsExports, value)
-          exportsObject.default = value
+        cjsProxyTriggered = true
+        return this._otel.$('vitest.evaluator.module.cjs.set', (span) => {
+          span.setAttribute('vitest.module.cjs.name', String(p))
+
+          // treat "module.exports =" the same as "exports.default =" to not have nested "default.default",
+          // so "exports.default" becomes the actual module
+          if (
+            p === 'default'
+            && this.shouldInterop(module.file, { default: value })
+            && cjsExports !== value
+          ) {
+            exportAll(cjsExports, value)
+            exportsObject.default = value
+            span.addEvent('`exports.default` is assigned, copying values')
+            return true
+          }
+
+          if (!Reflect.has(exportsObject, 'default')) {
+            exportsObject.default = {}
+          }
+
+          // returns undefined, when accessing named exports, if default is not an object
+          // but is still present inside hasOwnKeys, this is Node behaviour for CJS
+          if (
+            moduleExports !== SYMBOL_NOT_DEFINED
+            && isPrimitive(moduleExports)
+          ) {
+            defineExport(exportsObject, p, () => undefined)
+            span.addEvent(`\`exports.${String(p)}\` is assigned, but module.exports is a primitive. assigning "undefined" values instead to comply with ESM`)
+            return true
+          }
+
+          if (!isPrimitive(exportsObject.default)) {
+            exportsObject.default[p] = value
+          }
+
+          if (p !== 'default') {
+            defineExport(exportsObject, p, () => value)
+          }
+
           return true
-        }
-
-        if (!Reflect.has(exportsObject, 'default')) {
-          exportsObject.default = {}
-        }
-
-        // returns undefined, when accessing named exports, if default is not an object
-        // but is still present inside hasOwnKeys, this is Node behaviour for CJS
-        if (
-          moduleExports !== SYMBOL_NOT_DEFINED
-          && isPrimitive(moduleExports)
-        ) {
-          defineExport(exportsObject, p, () => undefined)
-          return true
-        }
-
-        if (!isPrimitive(exportsObject.default)) {
-          exportsObject.default[p] = value
-        }
-
-        if (p !== 'default') {
-          defineExport(exportsObject, p, () => value)
-        }
-
-        return true
+        })
       },
     })
 
@@ -220,6 +248,11 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
     const filename = meta.filename
     const dirname = meta.dirname
 
+    span.setAttributes({
+      'code.file.path': filename,
+      'vitest.module.dirname': dirname,
+    })
+
     const require = this.createRequire(filename)
 
     const argumentsList = [
@@ -244,6 +277,8 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
       argumentsList.push(...this.compiledFunctionArgumentsNames)
     }
 
+    span.setAttribute('vitest.module.arguments', argumentsList)
+
     // add 'use strict' since ESM enables it by default
     const codeDefinition = `'use strict';async (${argumentsList.join(
       ',',
@@ -258,9 +293,12 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
     const finishModuleExecutionInfo = this.debug.startCalculateModuleExecutionInfo(options.filename, codeDefinition.length)
 
     try {
-      const initModule = this.vm
-        ? vm.runInContext(wrappedCode, this.vm.context, options)
-        : vm.runInThisContext(wrappedCode, options)
+      const initModule = this._otel.$(
+        'vitest.evaluator.module.evaluate',
+        () => this.vm
+          ? vm.runInContext(wrappedCode, this.vm.context, options)
+          : vm.runInThisContext(wrappedCode, options),
+      )
 
       const dynamicRequest = async (dep: string, options: ImportCallOptions) => {
         dep = String(dep)
@@ -272,7 +310,7 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
         return context[ssrDynamicImportKey](dep, options)
       }
 
-      await initModule(
+      await this._otel.$('vitest.evaluator.module.init', () => initModule(
         context[ssrModuleExportsKey],
         context[ssrImportMetaKey],
         context[ssrImportKey],
@@ -293,9 +331,10 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
         require,
 
         ...this.compiledFunctionArgumentsValues,
-      )
+      ))
     }
     finally {
+      span.setAttribute('vitest.module.cjs', cjsProxyTriggered)
       // moduleExecutionInfo needs to use Node filename instead of the normalized one
       // because we rely on this behaviour in coverage-v8, for example
       this.options.moduleExecutionInfo?.set(options.filename, finishModuleExecutionInfo())

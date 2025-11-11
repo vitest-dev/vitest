@@ -63,6 +63,7 @@ export function startVitestModuleRunner(options: ContextModuleRunnerOptions): Vi
   const evaluator = options.evaluator || new VitestModuleEvaluator(
     vm,
     {
+      telemetry,
       get moduleExecutionInfo() {
         return state().moduleExecutionInfo
       },
@@ -77,6 +78,7 @@ export function startVitestModuleRunner(options: ContextModuleRunnerOptions): Vi
     spyModule: options.spyModule,
     evaluatedModules: options.evaluatedModules,
     evaluator,
+    telemetry,
     mocker: options.mocker,
     transport: {
       async fetchModule(id, importer, options) {

@@ -11,6 +11,7 @@ import type {
   VitestRunnerImportSource,
 } from '@vitest/runner'
 import type { ModuleRunner } from 'vite/module-runner'
+import type { Telemetry } from '../../utils/otel'
 import type { SerializedConfig } from '../config'
 import { getState, GLOBAL_EXPECT, setState } from '@vitest/expect'
 import { getNames, getTestName, getTests } from '@vitest/runner/utils'
@@ -35,6 +36,7 @@ export class VitestTestRunner implements VitestRunner {
   private assertionsErrors = new WeakMap<Readonly<Task>, Error>()
 
   public pool: string = this.workerState.ctx.pool
+  private otel!: Telemetry
 
   constructor(public config: SerializedConfig) {}
 
@@ -45,7 +47,16 @@ export class VitestTestRunner implements VitestRunner {
         this.workerState.evaluatedModules.invalidateModule(moduleNode)
       }
     }
-    return this.moduleRunner.import(filepath)
+    return this.otel.$(
+      'vitest.test.runner.import',
+      {
+        attributes: {
+          'vitest.test.runner.import.source': source,
+          'code.file.path': filepath,
+        },
+      },
+      () => this.moduleRunner.import(filepath),
+    )
   }
 
   onCollectStart(file: File): void {
@@ -212,14 +223,21 @@ export class VitestTestRunner implements VitestRunner {
   }
 
   getImportDurations(): Record<string, ImportDuration> {
-    const entries = [...(this.workerState.moduleExecutionInfo?.entries() ?? [])]
-    return Object.fromEntries(entries.map(([filepath, { duration, selfTime }]) => [
-      normalize(filepath),
-      {
+    const importDurations: Record<string, ImportDuration> = {}
+    const entries = this.workerState.moduleExecutionInfo?.entries() || []
+
+    for (const [filepath, { duration, selfTime }] of entries) {
+      importDurations[normalize(filepath)] = {
         selfTime,
         totalTime: duration,
-      },
-    ]))
+      }
+    }
+
+    return importDurations
+  }
+
+  __setOtel(otel: Telemetry): void {
+    this.otel = otel
   }
 }
 

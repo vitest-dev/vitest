@@ -13,6 +13,7 @@ import type { OTELCarrier } from '../node/pools/types'
 interface TelemetryOptions {
   enabled: boolean
   sdkPath?: string
+  tracerName?: string
 }
 
 interface TelemetrySpanOptions extends SpanOptions {
@@ -40,13 +41,12 @@ export class Telemetry {
     if (options.enabled) {
       const apiInit = import('@opentelemetry/api').then((api) => {
         const otel = {
-          tracer: api.trace.getTracer('vitest'),
+          tracer: api.trace.getTracer(options.tracerName || 'vitest'),
           context: api.context,
           propagation: api.propagation,
           trace: api.trace,
           SpanStatusCode: api.SpanStatusCode,
         }
-        otel.trace.getTracerProvider()
         this.#otel = otel
       }).catch(() => {
         // TODO: link, message

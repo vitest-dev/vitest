@@ -35,8 +35,7 @@ export async function resolveTestRunner(
   otel: Telemetry,
 ): Promise<VitestRunner> {
   const TestRunner = await getTestRunnerConstructor(config, moduleRunner)
-  // @ts-expect-error -- otel is not typed
-  const testRunner = new TestRunner(config, otel)
+  const testRunner = new TestRunner(config)
 
   // inject private executor to every runner
   Object.defineProperty(testRunner, 'moduleRunner', {
@@ -51,6 +50,10 @@ export async function resolveTestRunner(
 
   if (!testRunner.importFile) {
     throw new Error('Runner must implement "importFile" method.')
+  }
+
+  if ('__setOtel' in testRunner) {
+    (testRunner.__setOtel as any)(otel)
   }
 
   const [diffOptions] = await Promise.all([

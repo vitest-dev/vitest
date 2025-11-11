@@ -71,7 +71,10 @@ export function createFetchModuleFunction(
     // so we do this first to resolve the module and check its `id`. The next call of
     // `ensureEntryFromUrl` inside `fetchModule` is cached and should take no time
     // This also makes it so externalized modules are inside the module graph.
-    const moduleGraphModule = await environment.moduleGraph.ensureEntryFromUrl(unwrapId(url))
+    const moduleGraphModule = await telemetry.$(
+      'vitest.fetcher.ensureEntryFromUrl',
+      () => environment.moduleGraph.ensureEntryFromUrl(unwrapId(url)),
+    )
     const cached = !!moduleGraphModule.transformResult
 
     if (moduleGraphModule.file) {
