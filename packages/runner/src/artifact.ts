@@ -13,8 +13,8 @@ import { findTestFileStackTrace } from './utils/collect'
  *
  * Vitest automatically injects the source location where the artifact was created and manages any attachments you include.
  *
- * @param artifact - The artifact to record. Must extend {@linkcode TestArtifactBase}
  * @param task - The test task context, typically accessed via `this.task` in custom matchers or `context.task` in tests
+ * @param artifact - The artifact to record. Must extend {@linkcode TestArtifactBase}
  *
  * @returns A promise that resolves to the recorded artifact with location injected
  *
@@ -29,20 +29,20 @@ import { findTestFileStackTrace } from './utils/collect'
  * async function toHaveValidSchema(this: MatcherState, actual: unknown) {
  *   const validation = validateSchema(actual)
  *
- *   await recordArtifact({
+ *   await recordArtifact(this.task, {
  *     type: 'my-plugin:schema-validation',
  *     passed: validation.valid,
  *     attachments: [{
  *       contentType: 'application/json',
  *       body: JSON.stringify(validation.errors)
  *     }]
- *   }, this.task)
+ *   })
  *
  *   return { pass: validation.valid, message: () => '...' }
  * }
  * ```
  */
-export async function recordArtifact<Artifact extends TestArtifact>(artifact: Artifact, task: Test): Promise<Artifact> {
+export async function recordArtifact<Artifact extends TestArtifact>(task: Test, artifact: Artifact): Promise<Artifact> {
   const runner = getRunner()
 
   if (task.result && task.result.state !== 'run') {

@@ -832,7 +832,7 @@ export interface TestAnnotationArtifact extends TestArtifactBase {
  * ): AsyncExpectationResult {
  *   const violations = await runAccessibilityAudit(actual, wcagLevel)
  *
- *   recordArtifact({
+ *   recordArtifact(this.task, {
  *     type: 'my-plugin:accessibility-report',
  *     elementSelector: getSelector(actual),
  *     passed: violations.length === 0,
@@ -842,7 +842,7 @@ export interface TestAnnotationArtifact extends TestArtifactBase {
  *       violationCount: violations.length,
  *       wcagLevel
  *     }]
- *   }, this.task)
+ *   })
  *
  *   return {
  *     pass: violations.length === 0,

@@ -6,7 +6,7 @@ import { runInlineTests } from '../../test-utils'
 
 const test3Content = /* ts */`
 export async function externalArtifactRecord(recordArtifact, task) {
-  await recordArtifact({ type: 'external' }, task)
+  await recordArtifact(task, { type: 'external' })
 }
 `
 
@@ -15,18 +15,18 @@ import { test, describe, recordArtifact } from 'vitest'
 import { externalArtifactRecord } from './test-3.js'
 
 test('simple', async ({ task }) => {
-  await recordArtifact({ type: 'with-no-attachments' }, task)
-  await recordArtifact({ type: 'with-one-attachment', attachments: [{ path: './test-3.js' }] }, task)
-  await recordArtifact({ type: 'with-multiple-attachments', attachments: [{ path: './test-3.js' }, { path: './test-4.js' }] }, task)
+  await recordArtifact(task, { type: 'with-no-attachments' })
+  await recordArtifact(task, { type: 'with-one-attachment', attachments: [{ path: './test-3.js' }] })
+  await recordArtifact(task, { type: 'with-multiple-attachments', attachments: [{ path: './test-3.js' }, { path: './test-4.js' }] })
   await externalArtifactRecord(recordArtifact, task)
-  await recordArtifact({ type: 'with-base64', attachments: [{ body: 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/' }]}, task)
-  await recordArtifact({ type: 'with-bytes', attachments: [{ body: new Uint8Array(Array.from({ length: 256 }).map((_, i) => i)) }] }, task)
-  await recordArtifact({ type: 'with-contentType', attachments: [{ body: '', contentType: 'text/plain' }] }, task)
+  await recordArtifact(task, { type: 'with-base64', attachments: [{ body: 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/' }]})
+  await recordArtifact(task, { type: 'with-bytes', attachments: [{ body: new Uint8Array(Array.from({ length: 256 }).map((_, i) => i)) }] })
+  await recordArtifact(task, { type: 'with-contentType', attachments: [{ body: '', contentType: 'text/plain' }] })
 })
 
 describe('suite', () => {
   test('second', async ({ task }) => {
-    await recordArtifact({ type: 'with-external-link', attachments: [{ path: 'https://absolute-path.com' }] }, task)
+    await recordArtifact(task, { type: 'with-external-link', attachments: [{ path: 'https://absolute-path.com' }] })
   })
 })
 `
@@ -252,7 +252,7 @@ describe('API', () => {
         import { recordArtifact } from 'vitest'
         test('finished early', ({ task }) => {
           setTimeout(() => {
-            recordArtifact({ type: 'invalid-artifact' }, task)
+            recordArtifact(task, { type: 'invalid-artifact' })
           }, 50)
         })
 
