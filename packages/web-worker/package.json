@@ -41,10 +41,9 @@
     "vitest": "workspace:*"
   },
   "dependencies": {
-    "debug": "catalog:"
+    "obug": "catalog:"
   },
   "devDependencies": {
-    "@types/debug": "catalog:",
     "@types/ungap__structured-clone": "^1.2.0",
     "@ungap/structured-clone": "^1.3.0"
   }
