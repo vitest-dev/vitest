@@ -387,7 +387,6 @@ test('getApplesCount has some unusual side effects...', () => {
 Providing a `Set` is an experimental feature and may change in a future release.
 :::
 
-
 ```ts
 import { expect, test } from 'vitest'
 
