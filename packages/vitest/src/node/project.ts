@@ -552,7 +552,7 @@ export class TestProject {
     this._serializedDefines = createDefinesScript(server.config.define)
     this._fetcher = createFetchModuleFunction(
       this._resolver,
-      this.vitest.telemetry,
+      this.vitest._telemetry,
       this.tmpDir,
       {
         dumpFolder: this.config.dumpDir,

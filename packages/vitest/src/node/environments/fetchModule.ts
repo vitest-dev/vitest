@@ -2,7 +2,7 @@ import type { Span } from '@opentelemetry/api'
 import type { DevEnvironment, FetchResult, Rollup, TransformResult } from 'vite'
 import type { FetchFunctionOptions } from 'vite/module-runner'
 import type { FetchCachedFileSystemResult } from '../../types/general'
-import type { Telemetry } from '../otel'
+import type { Telemetry } from '../../utils/otel'
 import type { VitestResolver } from '../resolver'
 import { existsSync, mkdirSync } from 'node:fs'
 import { readFile, rename, stat, unlink, writeFile } from 'node:fs/promises'
@@ -26,7 +26,8 @@ export interface VitestFetchFunction {
     importer: string | undefined,
     environment: DevEnvironment,
     cacheFs: boolean,
-    options?: FetchFunctionOptions
+    options?: FetchFunctionOptions,
+    span?: any // TODO type?
   ): Promise<FetchResult | FetchCachedFileSystemResult>
 }
 
@@ -130,11 +131,13 @@ export function createFetchModuleFunction(
             },
           ).catch(handleRollupError)
           if ('id' in module) {
-            fetchModuleSpan.setAttribute('vitest.fetchedModule.invalidate', module.invalidate)
-            fetchModuleSpan.setAttribute('vitest.fetchedModule.codeLength', module.code.length)
-            fetchModuleSpan.setAttribute('vitest.fetchedModule.id', module.id)
-            fetchModuleSpan.setAttribute('vitest.fetchedModule.url', module.url)
-            fetchModuleSpan.setAttribute('vitest.fetchedModule.cache', false)
+            fetchModuleSpan.setAttributes({
+              'vitest.fetchedModule.invalidate': module.invalidate,
+              'vitest.fetchedModule.codeLength': module.code.length,
+              'vitest.fetchedModule.id': module.id,
+              'vitest.fetchedModule.url': module.url,
+              'vitest.fetchedModule.cache': false,
+            })
             if (module.file) {
               fetchModuleSpan.setAttribute('code.file.path', module.file)
               fetcherSpan.setAttribute('code.file.path', module.file)
@@ -152,10 +155,7 @@ export function createFetchModuleFunction(
       )
     }
 
-    const result = telemetry.startActiveSpan(
-      'vitest.fetcher.processResultSource',
-      () => processResultSource(environment, moduleRunnerModule!),
-    )
+    const result = processResultSource(environment, moduleRunnerModule)
 
     if (dump?.dumpFolder && 'code' in result) {
       const path = resolve(dump?.dumpFolder, result.url.replace(/[^\w+]/g, '-'))
@@ -217,10 +217,14 @@ export function createFetchModuleFunction(
     environment,
     cacheFs,
     options,
+    context, // TODO: types
   ) => {
     await telemetry.waitInit()
     return telemetry.startActiveSpan(
       'vitest.fetcher',
+      context
+        ? { context }
+        : {},
       span => fetcher(span, url, importer, environment, cacheFs, options),
     )
   }

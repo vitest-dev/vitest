@@ -2,6 +2,7 @@ import type { WorkerRequest, WorkerResponse } from '../../node/pools/types'
 import type { WorkerSetupContext } from '../../types/worker'
 import type { VitestWorker } from './types'
 import { serializeError } from '@vitest/utils/error'
+import { Telemetry } from '../../utils/otel'
 import { createRuntimeRpc } from '../rpc'
 import * as entrypoint from '../worker'
 
@@ -12,6 +13,8 @@ interface Options extends VitestWorker {
 const __vitest_worker_response__ = true
 const memoryUsage = process.memoryUsage.bind(process)
 let reportMemory = false
+
+let telemetry: Telemetry | null = null
 
 /** @experimental */
 export function init(worker: Options): void {
@@ -35,11 +38,27 @@ export function init(worker: Options): void {
       return
     }
 
+    const telemetryStart = performance.now()
+
+    telemetry ??= await new Telemetry({
+      // TODO: how to pass down options properly?
+      enabled: !!process.env.VITETS_OTEL_ENABLED,
+      sdkPath: process.env.VITEST_OTEL_SDK,
+    }).waitInit()
+    const telemetryEnd = performance.now()
+
     switch (message.type) {
       case 'start': {
         reportMemory = message.options.reportMemory
 
         const { environment, config, pool } = message.context
+        const context = telemetry.getContextFromCarrier(message.otelCarrier)
+
+        // record telemetry as part of "startup"
+        telemetry
+          .startSpan('vitest.runtime.telemetry', { startTime: telemetryStart }, context)
+          .end(telemetryEnd)
+
         try {
           const rpc = createRuntimeRpc(worker)
           setupContext = {
@@ -48,8 +67,13 @@ export function init(worker: Options): void {
             pool,
             rpc,
             projectName: config.name || '',
+            telemetry,
           }
-          workerTeardown = await worker.setup?.(setupContext)
+          workerTeardown = await telemetry.startActiveSpan(
+            'vitest.runtime.setup',
+            { context },
+            () => worker.setup?.(setupContext),
+          )
 
           send({ type: 'started', __vitest_worker_response__ })
         }
@@ -87,8 +111,20 @@ export function init(worker: Options): void {
         isRunning = true
 
         try {
-          runPromise = entrypoint.run({ ...setupContext, ...message.context }, worker)
-            .catch(error => serializeError(error))
+          const telemetryContext = telemetry.getContextFromCarrier(message.otelCarrier)
+          runPromise = telemetry.startActiveSpan(
+            'vitest.runtime.run',
+            {
+              context: telemetryContext,
+              attributes: {
+                // TODO: include :location
+                'vitest.worker.files': message.context.files.map(f => f.filepath),
+                'vitest.worker.id': message.context.workerId,
+              },
+            },
+            () => entrypoint.run({ ...setupContext, ...message.context }, worker)
+              .catch(error => serializeError(error)),
+          )
           const error = await runPromise
 
           send({
@@ -156,10 +192,19 @@ export function init(worker: Options): void {
         await runPromise
 
         try {
-          const error = await entrypoint.teardown()
-            .catch(error => serializeError(error))
+          const context = telemetry.getContextFromCarrier(message.otelCarrier)
 
-          await workerTeardown?.()
+          const error = await telemetry.startActiveSpan(
+            'vitest.runtime.teardown',
+            { context },
+            async () => {
+              const error = await entrypoint.teardown().catch(error => serializeError(error))
+              await workerTeardown?.()
+              return error
+            },
+          )
+
+          await telemetry.finish()
 
           send({ type: 'stopped', error, __vitest_worker_response__ })
         }

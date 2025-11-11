@@ -1,9 +1,11 @@
+import type { Span, TimeInput } from '@opentelemetry/api'
 import type { DeferPromise } from '@vitest/utils/helpers'
 import type { BirpcReturn } from 'birpc'
 import type { RunnerRPC, RuntimeRPC } from '../../types/rpc'
-import type { ContextTestEnvironment } from '../../types/worker'
+import type { ContextTestEnvironment, WorkerExecuteContext } from '../../types/worker'
+import type { Telemetry } from '../../utils/otel'
 import type { TestProject } from '../project'
-import type { PoolOptions, PoolWorker, WorkerRequest, WorkerResponse } from './types'
+import type { PoolOptions, PoolRunnerOTEL, PoolWorker, WorkerRequest, WorkerResponse } from './types'
 import { EventEmitter } from 'node:events'
 import { createDefer } from '@vitest/utils/helpers'
 import { createBirpc } from 'birpc'
@@ -39,6 +41,9 @@ export class PoolRunner {
 
   private _rpc: BirpcReturn<RunnerRPC, RuntimeRPC>
 
+  private _otel: PoolRunnerOTEL | null = null
+  private _telemetry: Telemetry
+
   public get isTerminated(): boolean {
     return this._state === RunnerState.STOPPED
   }
@@ -50,10 +55,24 @@ export class PoolRunner {
   constructor(options: PoolOptions, public worker: PoolWorker) {
     this.project = options.project
     this.environment = options.environment
+
+    const vitest = this.project.vitest
+    this._telemetry = vitest._telemetry
+    const otel = vitest._telemetry.getWorkerOTEL()
+    this._otel = otel
+    this._otel?.span.setAttributes({
+      'vitest.worker.name': this.worker.name,
+      'vitest.project': this.project.name,
+      'vitest.environment': this.environment.name,
+    })
+
     this._rpc = createBirpc<RunnerRPC, RuntimeRPC>(
       createMethodsRPC(this.project, {
         collect: options.method === 'collect',
         cacheFs: worker.cacheFs,
+        get context() {
+          return otel?.currentContext || otel?.workerContext
+        },
       }),
       {
         eventNames: ['onCancel'],
@@ -63,7 +82,7 @@ export class PoolRunner {
       },
     )
 
-    this.project.vitest.onCancel(reason => this._rpc.onCancel(reason))
+    vitest.onCancel(reason => this._rpc.onCancel(reason))
   }
 
   postMessage(message: WorkerRequest): void {
@@ -72,6 +91,39 @@ export class PoolRunner {
     if (this._state !== RunnerState.STOPPED) {
       return this.worker.send(message)
     }
+  }
+
+  startTelemetrySpan(name: string): Span {
+    const telemetry = this.project.vitest._telemetry
+    if (!this._otel) {
+      return telemetry.startSpan(name)
+    }
+    const { span, context } = telemetry.startContextSpan(name, this._otel.workerContext)
+    this._otel.currentContext = context
+    const end = span.end.bind(span)
+    span.end = (endTime?: TimeInput) => {
+      this._otel!.currentContext = undefined
+      return end(endTime)
+    }
+    return span
+  }
+
+  request(method: 'run' | 'collect', context: WorkerExecuteContext): void {
+    this._otel?.files.push(...context.files.map(f => f.filepath))
+    return this.postMessage({
+      __vitest_worker_request__: true,
+      type: method,
+      context,
+      poolId: this.poolId!,
+      otelCarrier: this.getOTELCarrier(),
+    } satisfies WorkerRequest)
+  }
+
+  private getOTELCarrier() {
+    const activeContext = this._otel?.currentContext || this._otel?.workerContext
+    return activeContext
+      ? this._telemetry.getContextCarrier(activeContext)
+      : undefined
   }
 
   async start(): Promise<void> {
@@ -91,10 +143,15 @@ export class PoolRunner {
     // Create operation lock to prevent concurrent start/stop
     this._operationLock = createDefer()
 
+    let startSpan: Span | undefined
     try {
       this._state = RunnerState.STARTING
 
-      await this.worker.start()
+      await this._telemetry.startActiveSpan(
+        `vitest.${this.worker.name}.start`,
+        { context: this._otel?.workerContext },
+        () => this.worker.start(),
+      )
 
       // Attach event listeners AFTER starting worker to avoid issues
       // if worker.start() fails
@@ -102,6 +159,7 @@ export class PoolRunner {
       this.worker.on('exit', this.emitUnexpectedExit)
       this.worker.on('message', this.emitWorkerMessage)
 
+      startSpan = this.startTelemetrySpan('vitest.worker.start')
       const startPromise = this.withTimeout(this.waitForStart(), START_TIMEOUT)
 
       this.postMessage({
@@ -118,17 +176,20 @@ export class PoolRunner {
           config: this.project.serializedConfig,
           pool: this.worker.name,
         },
+        otelCarrier: this.getOTELCarrier(),
       })
 
       await startPromise
 
       this._state = RunnerState.STARTED
     }
-    catch (error) {
+    catch (error: any) {
       this._state = RunnerState.IDLE
+      startSpan?.recordException(error)
       throw error
     }
     finally {
+      startSpan?.end()
       this._operationLock.resolve()
       this._operationLock = null
     }
@@ -144,7 +205,10 @@ export class PoolRunner {
       return
     }
 
+    this._otel?.span.setAttribute('vitest.worker.files', this._otel.files)
+
     if (this._state === RunnerState.IDLE) {
+      this._otel?.span.end()
       this._state = RunnerState.STOPPED
       return
     }
@@ -158,11 +222,13 @@ export class PoolRunner {
       // Remove exit listener early to avoid "unexpected exit" errors during shutdown
       this.worker.off('exit', this.emitUnexpectedExit)
 
+      const stopSpan = this.startTelemetrySpan('vitest.worker.stop')
       await this.withTimeout(
         new Promise<void>((resolve) => {
           const onStop = (response: WorkerResponse) => {
             if (response.type === 'stopped') {
               if (response.error) {
+                stopSpan.recordException(response.error as Error)
                 this.project.vitest.state.catchError(
                   response.error,
                   'Teardown Error',
@@ -175,17 +241,26 @@ export class PoolRunner {
           }
 
           this.on('message', onStop)
-          this.postMessage({ type: 'stop', __vitest_worker_request__: true })
+          this.postMessage({
+            type: 'stop',
+            __vitest_worker_request__: true,
+            otelCarrier: this.getOTELCarrier(),
+          })
         }),
         STOP_TIMEOUT,
       )
+      stopSpan.end()
 
       this._eventEmitter.removeAllListeners()
       this._rpc.$close(new Error('[vitest-pool-runner]: Pending methods while closing rpc'))
 
       // Stop the worker process (this sets _fork/_thread to undefined)
       // Worker's event listeners (error, message) are implicitly removed when worker terminates
-      await this.worker.stop()
+      await this._telemetry.startActiveSpan(
+        `vitest.${this.worker.name}.stop`,
+        { context: this._otel?.workerContext },
+        () => this.worker.stop(),
+      )
 
       this._state = RunnerState.STOPPED
     }
@@ -197,6 +272,7 @@ export class PoolRunner {
     finally {
       this._operationLock.resolve()
       this._operationLock = null
+      this._otel?.span.end()
     }
   }
 

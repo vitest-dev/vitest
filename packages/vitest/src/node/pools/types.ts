@@ -1,3 +1,4 @@
+import type { Context, Span } from '@opentelemetry/api'
 import type { ContextTestEnvironment, WorkerExecuteContext, WorkerTestEnvironment } from '../../types/worker'
 import type { TestProject } from '../project'
 import type { SerializedConfig } from '../types/config'
@@ -57,6 +58,19 @@ export interface PoolTask {
   memoryLimit: number | null
 }
 
+export interface WorkerOTELCarrier {
+  traceparent?: string
+  tracestate?: string
+}
+
+export interface PoolRunnerOTEL {
+  span: Span
+  workerContext: Context
+  currentContext?: Context
+  carrier: WorkerOTELCarrier
+  files: string[]
+}
+
 export type WorkerRequest
   = { __vitest_worker_request__: true } & (
     | {
@@ -67,10 +81,24 @@ export type WorkerRequest
         config: SerializedConfig
         pool: string
       }
+      otelCarrier?: WorkerOTELCarrier
     }
-    | { type: 'stop' }
-    | { type: 'run'; context: WorkerExecuteContext; poolId: number }
-    | { type: 'collect'; context: WorkerExecuteContext; poolId: number }
+    | {
+      type: 'stop'
+      otelCarrier?: WorkerOTELCarrier
+    }
+    | {
+      type: 'run'
+      context: WorkerExecuteContext
+      poolId: number
+      otelCarrier?: WorkerOTELCarrier
+    }
+    | {
+      type: 'collect'
+      context: WorkerExecuteContext
+      poolId: number
+      carrier?: WorkerOTELCarrier
+    }
     | { type: 'cancel' }
 )
 

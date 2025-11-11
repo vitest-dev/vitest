@@ -37,9 +37,32 @@ export async function setupEnvironment(context: WorkerSetupContext): Promise<() 
     config,
   } = context
 
-  const { environment, loader } = await loadEnvironment(environmentName, config.root, rpc)
+  // we could load @vite/env, but it would take ~8ms, while this takes ~0,02ms
+  if (context.config.serializedDefines) {
+    try {
+      runInThisContext(`(() =>{\n${context.config.serializedDefines}})()`, {
+        lineOffset: 1,
+        filename: 'virtual:load-defines.js',
+      })
+    }
+    catch (error: any) {
+      throw new Error(`Failed to load custom "defines": ${error.message}`)
+    }
+  }
+  const otel = context.telemetry
+
+  const { environment, loader } = await loadEnvironment(environmentName, config.root, rpc, otel)
   _currentEnvironment = environment
-  const env = await environment.setup(globalThis, environmentOptions || config.environmentOptions || {})
+  const env = await otel.startActiveSpan(
+    'vitest.runtime.environment.setup',
+    {
+      attributes: {
+        'vitest.environment': environment.name,
+        'vitest.environment.viteEnvironment': environment.viteEnvironment || environment.name,
+      },
+    },
+    () => environment.setup(globalThis, environmentOptions || config.environmentOptions || {}),
+  )
 
   _environmentTime = performance.now() - startTime
 
@@ -48,7 +71,10 @@ export async function setupEnvironment(context: WorkerSetupContext): Promise<() 
   }
 
   return async () => {
-    await env.teardown(globalThis)
+    await otel.startActiveSpan(
+      'vitest.runtime.environment.teardown',
+      () => env.teardown(globalThis),
+    )
     await loader?.close()
   }
 }
@@ -86,18 +112,6 @@ export async function runBaseTests(method: 'run' | 'collect', state: WorkerGloba
     spyModule,
     createImportMeta: createNodeImportMeta,
   })
-  // we could load @vite/env, but it would take ~8ms, while this takes ~0,02ms
-  if (ctx.config.serializedDefines) {
-    try {
-      runInThisContext(`(() =>{\n${ctx.config.serializedDefines}})()`, {
-        lineOffset: 1,
-        filename: 'virtual:load-defines.js',
-      })
-    }
-    catch (error: any) {
-      throw new Error(`Failed to load custom "defines": ${error.message}`)
-    }
-  }
 
   await run(
     method,

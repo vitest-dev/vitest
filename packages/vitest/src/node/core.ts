@@ -23,6 +23,7 @@ import { version } from '../../package.json' with { type: 'json' }
 import { WebSocketReporter } from '../api/setup'
 import { distDir } from '../paths'
 import { wildcardPatternToRegExp } from '../utils/base'
+import { Telemetry } from '../utils/otel'
 import { convertTasksToEvents } from '../utils/tasks'
 import { astCollectTests, createFailedFileTask } from './ast-collect'
 import { BrowserSessions } from './browser/sessions'
@@ -33,7 +34,6 @@ import { createFetchModuleFunction } from './environments/fetchModule'
 import { ServerModuleRunner } from './environments/serverRunner'
 import { FilesNotFoundError } from './errors'
 import { Logger } from './logger'
-import { Telemetry } from './otel'
 import { VitestPackageInstaller } from './packageInstaller'
 import { createPool } from './pool'
 import { TestProject } from './project'
@@ -96,9 +96,6 @@ export class Vitest {
    */
   public readonly watcher: VitestWatcher
 
-  // TODO: public?
-  /** @internal */ telemetry!: Telemetry
-
   /** @internal */ configOverride: Partial<ResolvedConfig> = {}
   /** @internal */ filenamePattern?: string[]
   /** @internal */ runningPromise?: Promise<TestRunResult>
@@ -113,6 +110,7 @@ export class Vitest {
   /** @internal */ _resolver!: VitestResolver
   /** @internal */ _fetcher!: VitestFetchFunction
   /** @internal */ _tmpDir = join(tmpdir(), nanoid())
+  /** @internal */ _telemetry!: Telemetry
 
   private isFirstRun = true
   private restartsCount = 0
@@ -214,8 +212,10 @@ export class Vitest {
     this._cache = new VitestCache(this.version)
     this._snapshot = new SnapshotManager({ ...resolved.snapshotOptions })
     this._testRun = new TestRun(this)
-    this.telemetry = new Telemetry({
-      enabled: true, // TODO: options
+    const otelSdkPath = resolved.experimental.openTelemetry?.sdkPath
+    this._telemetry = new Telemetry({
+      enabled: !!resolved.experimental.openTelemetry?.enabled,
+      sdkPath: otelSdkPath,
     })
 
     if (this.config.watch) {
@@ -225,7 +225,7 @@ export class Vitest {
     this._resolver = new VitestResolver(server.config.cacheDir, resolved)
     this._fetcher = createFetchModuleFunction(
       this._resolver,
-      this.telemetry,
+      this._telemetry,
       this._tmpDir,
       {
         dumpFolder: this.config.dumpDir,
@@ -584,9 +584,10 @@ export class Vitest {
    * @param filters String filters to match the test files
    */
   async start(filters?: string[]): Promise<TestRunResult> {
-    return await this.telemetry.startActiveSpan('vitest.start', async (startSpan) => {
+    await this._telemetry.waitInit()
+    return this._telemetry.startActiveSpan('vitest.start', async (startSpan) => {
       try {
-        await this.telemetry.startActiveSpan('vitest.coverage.init', async () => {
+        await this._telemetry.startActiveSpan('vitest.coverage.init', async () => {
           await this.initCoverageProvider()
           await this.coverageProvider?.clean(this._coverageOptions.clean)
         })
@@ -597,7 +598,7 @@ export class Vitest {
 
       this.filenamePattern = filters && filters?.length > 0 ? filters : undefined
       startSpan.setAttribute('vitest.start.filters', this.filenamePattern || [])
-      const files = await this.telemetry.startActiveSpan(
+      const files = await this._telemetry.startActiveSpan(
         'vitest.getRelevantTestSpecifications',
         async () => {
           const specifications = await this.specifications.getRelevantTestSpecifications(filters)
@@ -617,7 +618,7 @@ export class Vitest {
 
       // if run with --changed, don't exit if no tests are found
       if (!files.length) {
-        await this.telemetry.startActiveSpan('vitest.testRun', async () => {
+        await this._telemetry.startActiveSpan('vitest.testRun', async () => {
           await this._testRun.start([])
           const coverage = await this.coverageProvider?.generateCoverage?.({ allTestsRun: true })
 
@@ -640,7 +641,7 @@ export class Vitest {
         // populate once, update cache on watch
         await this.cache.stats.populateStats(this.config.root, files)
 
-        testModules = await this.telemetry.startActiveSpan('vitest.testRun', () => this.runFiles(files, true))
+        testModules = await this._telemetry.startActiveSpan('vitest.testRun', () => this.runFiles(files, true))
       }
 
       if (this.config.watch) {
@@ -1206,6 +1207,7 @@ export class Vitest {
           })())
         }
 
+        closePromises.push(this._telemetry.finish())
         closePromises.push(...this._onClose.map(fn => fn()))
 
         return Promise.allSettled(closePromises).then((results) => {
@@ -1259,14 +1261,19 @@ export class Vitest {
 
   /** @internal */
   async report<T extends keyof Reporter>(name: T, ...args: ArgumentsType<Reporter[T]>) {
-    await this.telemetry.startActiveSpan('vitest.report', async (span) => {
-      span.setAttribute('vitest.report.event', name)
-
-      await Promise.all(this.reporters.map(r => r[name]?.(
+    await Promise.all(this.reporters.map(r => r[name]?.(
       // @ts-expect-error let me go
-        ...args,
-      )))
-    })
+      ...args,
+    )))
+    // TODO: optional(?)
+    // await this.telemetry.startActiveSpan('vitest.report', async (span) => {
+    //   span.setAttribute('vitest.report.event', name)
+
+    //   await Promise.all(this.reporters.map(r => r[name]?.(
+    //   // @ts-expect-error let me go
+    //     ...args,
+    //   )))
+    // })
   }
 
   /** @internal */

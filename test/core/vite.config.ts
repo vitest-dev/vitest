@@ -1,19 +1,8 @@
 import type { LabelColor } from 'vitest'
 import type { Pool } from 'vitest/node'
-import { getNodeAutoInstrumentations } from '@opentelemetry/auto-instrumentations-node'
-import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-proto'
-import { NodeSDK } from '@opentelemetry/sdk-node'
 import { basename, dirname, join, resolve } from 'pathe'
 import { defaultExclude, defineConfig } from 'vitest/config'
 import { rolldownVersion } from 'vitest/node'
-
-const sdk = new NodeSDK({
-  serviceName: 'vitest',
-  traceExporter: new OTLPTraceExporter(),
-  instrumentations: [getNodeAutoInstrumentations()],
-})
-
-sdk.start()
 
 export default defineConfig({
   // tests should not fail when base is set
@@ -169,6 +158,12 @@ export default defineConfig({
       if (log.startsWith(`[vitest]`) && log.includes(`did not use 'function' or 'class' in its implementation`)) {
         return false
       }
+    },
+    experimental: {
+      openTelemetry: {
+        enabled: true,
+        sdkPath: './otel.sdk.js',
+      },
     },
     // projects: [
     //   project('threads', 'red'),
