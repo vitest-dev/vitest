@@ -585,9 +585,9 @@ export class Vitest {
    */
   async start(filters?: string[]): Promise<TestRunResult> {
     await this._telemetry.waitInit()
-    return this._telemetry.startActiveSpan('vitest.start', async (startSpan) => {
+    return this._telemetry.$('vitest.start', async (startSpan) => {
       try {
-        await this._telemetry.startActiveSpan('vitest.coverage.init', async () => {
+        await this._telemetry.$('vitest.coverage.init', async () => {
           await this.initCoverageProvider()
           await this.coverageProvider?.clean(this._coverageOptions.clean)
         })
@@ -598,7 +598,7 @@ export class Vitest {
 
       this.filenamePattern = filters && filters?.length > 0 ? filters : undefined
       startSpan.setAttribute('vitest.start.filters', this.filenamePattern || [])
-      const files = await this._telemetry.startActiveSpan(
+      const files = await this._telemetry.$(
         'vitest.getRelevantTestSpecifications',
         async () => {
           const specifications = await this.specifications.getRelevantTestSpecifications(filters)
@@ -618,7 +618,7 @@ export class Vitest {
 
       // if run with --changed, don't exit if no tests are found
       if (!files.length) {
-        await this._telemetry.startActiveSpan('vitest.testRun', async () => {
+        await this._telemetry.$('vitest.testRun', async () => {
           await this._testRun.start([])
           const coverage = await this.coverageProvider?.generateCoverage?.({ allTestsRun: true })
 
@@ -641,7 +641,7 @@ export class Vitest {
         // populate once, update cache on watch
         await this.cache.stats.populateStats(this.config.root, files)
 
-        testModules = await this._telemetry.startActiveSpan('vitest.testRun', () => this.runFiles(files, true))
+        testModules = await this._telemetry.$('vitest.testRun', () => this.runFiles(files, true))
       }
 
       if (this.config.watch) {
@@ -1207,7 +1207,7 @@ export class Vitest {
           })())
         }
 
-        closePromises.push(this._telemetry.finish())
+        closePromises.push(this._telemetry?.finish())
         closePromises.push(...this._onClose.map(fn => fn()))
 
         return Promise.allSettled(closePromises).then((results) => {

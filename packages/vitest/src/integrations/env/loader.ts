@@ -66,12 +66,12 @@ export async function loadEnvironment(
   const packageId
     = name[0] === '.' || name[0] === '/'
       ? resolve(root, name)
-      : (await telemetry.startActiveSpan(
+      : (await telemetry.$(
           'vitest.runtime.environment.resolve',
           () => rpc.resolve(`vitest-environment-${name}`, undefined, '__vitest__'),
         ))
           ?.id ?? resolve(root, name)
-  const pkg = await telemetry.startActiveSpan(
+  const pkg = await telemetry.$(
     'vitest.runtime.environment.import',
     () => loader.import(packageId) as Promise<{ default: Environment }>,
   )

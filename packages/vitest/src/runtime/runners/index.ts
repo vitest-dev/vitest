@@ -1,4 +1,5 @@
 import type { VitestRunner, VitestRunnerConstructor } from '@vitest/runner'
+import type { Telemetry } from '../../utils/otel'
 import type { SerializedConfig } from '../config'
 import type { VitestModuleRunner } from '../moduleRunner/moduleRunner'
 import { takeCoverageInsideWorker } from '../../integrations/coverage'
@@ -31,9 +32,11 @@ async function getTestRunnerConstructor(
 export async function resolveTestRunner(
   config: SerializedConfig,
   moduleRunner: VitestModuleRunner,
+  otel: Telemetry,
 ): Promise<VitestRunner> {
   const TestRunner = await getTestRunnerConstructor(config, moduleRunner)
-  const testRunner = new TestRunner(config)
+  // @ts-expect-error -- otel is not typed
+  const testRunner = new TestRunner(config, otel)
 
   // inject private executor to every runner
   Object.defineProperty(testRunner, 'moduleRunner', {

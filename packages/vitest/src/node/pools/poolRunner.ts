@@ -58,21 +58,24 @@ export class PoolRunner {
 
     const vitest = this.project.vitest
     this._telemetry = vitest._telemetry
-    const otel = vitest._telemetry.getWorkerOTEL()
-    this._otel = otel
-    this._otel?.span.setAttributes({
-      'vitest.worker.name': this.worker.name,
-      'vitest.project': this.project.name,
-      'vitest.environment': this.environment.name,
-    })
+    if (this._telemetry.isEnabled()) {
+      const { span: workerSpan, context } = this._telemetry.startContextSpan('vitest.worker')
+      this._otel = {
+        span: workerSpan,
+        workerContext: context,
+        files: [],
+      }
+      this._otel.span.setAttributes({
+        'vitest.worker.name': this.worker.name,
+        'vitest.project': this.project.name,
+        'vitest.environment': this.environment.name,
+      })
+    }
 
     this._rpc = createBirpc<RunnerRPC, RuntimeRPC>(
       createMethodsRPC(this.project, {
         collect: options.method === 'collect',
         cacheFs: worker.cacheFs,
-        get context() {
-          return otel?.currentContext || otel?.workerContext
-        },
       }),
       {
         eventNames: ['onCancel'],
@@ -94,7 +97,7 @@ export class PoolRunner {
   }
 
   startTelemetrySpan(name: string): Span {
-    const telemetry = this.project.vitest._telemetry
+    const telemetry = this._telemetry
     if (!this._otel) {
       return telemetry.startSpan(name)
     }
@@ -147,7 +150,7 @@ export class PoolRunner {
     try {
       this._state = RunnerState.STARTING
 
-      await this._telemetry.startActiveSpan(
+      await this._telemetry.$(
         `vitest.${this.worker.name}.start`,
         { context: this._otel?.workerContext },
         () => this.worker.start(),
@@ -256,7 +259,7 @@ export class PoolRunner {
 
       // Stop the worker process (this sets _fork/_thread to undefined)
       // Worker's event listeners (error, message) are implicitly removed when worker terminates
-      await this._telemetry.startActiveSpan(
+      await this._telemetry.$(
         `vitest.${this.worker.name}.stop`,
         { context: this._otel?.workerContext },
         () => this.worker.stop(),

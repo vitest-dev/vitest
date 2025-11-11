@@ -3,6 +3,7 @@ import type { DevEnvironment, FetchResult, Rollup, TransformResult } from 'vite'
 import type { FetchFunctionOptions } from 'vite/module-runner'
 import type { FetchCachedFileSystemResult } from '../../types/general'
 import type { Telemetry } from '../../utils/otel'
+import type { OTELCarrier } from '../pools/types'
 import type { VitestResolver } from '../resolver'
 import { existsSync, mkdirSync } from 'node:fs'
 import { readFile, rename, stat, unlink, writeFile } from 'node:fs/promises'
@@ -27,7 +28,7 @@ export interface VitestFetchFunction {
     environment: DevEnvironment,
     cacheFs: boolean,
     options?: FetchFunctionOptions,
-    span?: any // TODO type?
+    otelCarrier?: OTELCarrier
   ): Promise<FetchResult | FetchCachedFileSystemResult>
 }
 
@@ -84,7 +85,7 @@ export function createFetchModuleFunction(
 
     if (moduleGraphModule.id) {
       const id = moduleGraphModule.id
-      const externalize = await telemetry.startActiveSpan('vitest.fetcher.externalize', () => resolver.shouldExternalize(id))
+      const externalize = await telemetry.$('vitest.fetcher.externalize', () => resolver.shouldExternalize(id))
       if (externalize) {
         fetcherSpan.setAttribute('vitest.fetcher.external', externalize)
         return { externalize, type: 'module' }
@@ -98,7 +99,7 @@ export function createFetchModuleFunction(
     if (dump?.dumpFolder && dump.readFromDump) {
       const path = resolve(dump?.dumpFolder, url.replace(/[^\w+]/g, '-'))
       if (existsSync(path)) {
-        await telemetry.startActiveSpan('vitest.fetcher.debug.dumpFolder', async (span) => {
+        await telemetry.$('vitest.fetcher.debug.dumpFolder', async (span) => {
           span.setAttribute('code.file.path', path)
 
           const code = await readFile(path, 'utf-8')
@@ -118,7 +119,7 @@ export function createFetchModuleFunction(
     }
 
     if (!moduleRunnerModule) {
-      moduleRunnerModule = await telemetry.startActiveSpan(
+      moduleRunnerModule = await telemetry.$(
         'vitest.fetcher.fetchModule',
         async (fetchModuleSpan) => {
           const module = await fetchModule(
@@ -159,7 +160,7 @@ export function createFetchModuleFunction(
 
     if (dump?.dumpFolder && 'code' in result) {
       const path = resolve(dump?.dumpFolder, result.url.replace(/[^\w+]/g, '-'))
-      await telemetry.startActiveSpan(
+      await telemetry.$(
         'vitest.fetcher.debug.writeDump',
         { attributes: { 'code.file.path': path } },
         () => writeFile(path, `${result.code}\n// ${JSON.stringify({ id: result.id, file: result.file })}`, 'utf-8'),
@@ -194,7 +195,7 @@ export function createFetchModuleFunction(
     promises.set(
       tmp,
 
-      telemetry.startActiveSpan(
+      telemetry.$(
         'vitest.fetcher.atomicWriteFile',
         {
           attributes: { 'code.file.path': tmp },
@@ -217,10 +218,13 @@ export function createFetchModuleFunction(
     environment,
     cacheFs,
     options,
-    context, // TODO: types
+    otelCarrier,
   ) => {
     await telemetry.waitInit()
-    return telemetry.startActiveSpan(
+    const context = otelCarrier
+      ? telemetry.getContextFromCarrier(otelCarrier)
+      : undefined
+    return telemetry.$(
       'vitest.fetcher',
       context
         ? { context }

@@ -1,5 +1,6 @@
 import type { FileSpecification } from '@vitest/runner'
 import type { Environment } from '../types/environment'
+import type { Telemetry } from '../utils/otel'
 import type { SerializedConfig } from './config'
 import type { VitestModuleRunner } from './moduleRunner/moduleRunner'
 import { performance } from 'node:perf_hooks'
@@ -22,19 +23,20 @@ export async function run(
   config: SerializedConfig,
   moduleRunner: VitestModuleRunner,
   environment: Environment,
+  otel: Telemetry,
 ): Promise<void> {
   const workerState = getWorkerState()
 
   const [testRunner] = await Promise.all([
-    resolveTestRunner(config, moduleRunner),
-    setupGlobalEnv(config, environment),
-    startCoverageInsideWorker(config.coverage, moduleRunner, { isolate: config.isolate }),
-    (async () => {
+    otel.$('vitest.runtime.runner', () => resolveTestRunner(config, moduleRunner, otel)),
+    otel.$('vitest.runtime.globalEnv', () => setupGlobalEnv(config, environment)),
+    otel.$('vitest.runtime.coverage.start', () => startCoverageInsideWorker(config.coverage, moduleRunner, { isolate: config.isolate })),
+    otel.$('vitest.runtime.snapshot.environment', async () => {
       if (!workerState.config.snapshotOptions.snapshotEnvironment) {
         workerState.config.snapshotOptions.snapshotEnvironment
           = await resolveSnapshotEnvironment(config, moduleRunner)
       }
-    })(),
+    }),
   ])
 
   workerState.onCancel((reason) => {

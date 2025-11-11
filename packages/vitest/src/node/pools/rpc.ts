@@ -12,8 +12,6 @@ interface MethodsOptions {
   cacheFs?: boolean
   // do not report files
   collect?: boolean
-  // TODO: types?
-  context?: any
 }
 
 export function createMethodsRPC(project: TestProject, methodsOptions: MethodsOptions = {}): RuntimeRPC {
@@ -34,6 +32,7 @@ export function createMethodsRPC(project: TestProject, methodsOptions: MethodsOp
       importer,
       environmentName,
       options,
+      otelCarrier,
     ) {
       const environment = project.vite.environments[environmentName]
       if (!environment) {
@@ -42,7 +41,7 @@ export function createMethodsRPC(project: TestProject, methodsOptions: MethodsOp
 
       const start = performance.now()
 
-      return await project._fetcher(url, importer, environment, cacheFs, options, methodsOptions.context).then((result) => {
+      return await project._fetcher(url, importer, environment, cacheFs, options, otelCarrier).then((result) => {
         const duration = performance.now() - start
         project.vitest.state.transformTime += duration
         const metadata = project.vitest.state.metadata[project.name]

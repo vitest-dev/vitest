@@ -14,7 +14,7 @@ const __vitest_worker_response__ = true
 const memoryUsage = process.memoryUsage.bind(process)
 let reportMemory = false
 
-let telemetry: Telemetry | null = null
+let telemetry!: Telemetry
 
 /** @experimental */
 export function init(worker: Options): void {
@@ -54,7 +54,7 @@ export function init(worker: Options): void {
         const { environment, config, pool } = message.context
         const context = telemetry.getContextFromCarrier(message.otelCarrier)
 
-        // record telemetry as part of "startup"
+        // record telemetry as part of "start"
         telemetry
           .startSpan('vitest.runtime.telemetry', { startTime: telemetryStart }, context)
           .end(telemetryEnd)
@@ -69,7 +69,7 @@ export function init(worker: Options): void {
             projectName: config.name || '',
             telemetry,
           }
-          workerTeardown = await telemetry.startActiveSpan(
+          workerTeardown = await telemetry.$(
             'vitest.runtime.setup',
             { context },
             () => worker.setup?.(setupContext),
@@ -112,7 +112,7 @@ export function init(worker: Options): void {
 
         try {
           const telemetryContext = telemetry.getContextFromCarrier(message.otelCarrier)
-          runPromise = telemetry.startActiveSpan(
+          runPromise = telemetry.$(
             'vitest.runtime.run',
             {
               context: telemetryContext,
@@ -122,7 +122,7 @@ export function init(worker: Options): void {
                 'vitest.worker.id': message.context.workerId,
               },
             },
-            () => entrypoint.run({ ...setupContext, ...message.context }, worker)
+            () => entrypoint.run({ ...setupContext, ...message.context }, worker, telemetry)
               .catch(error => serializeError(error)),
           )
           const error = await runPromise
@@ -169,8 +169,20 @@ export function init(worker: Options): void {
         isRunning = true
 
         try {
-          runPromise = entrypoint.collect({ ...setupContext, ...message.context }, worker)
-            .catch(error => serializeError(error))
+          const telemetryContext = telemetry.getContextFromCarrier(message.otelCarrier)
+          runPromise = telemetry.$(
+            'vitest.runtime.collect',
+            {
+              context: telemetryContext,
+              attributes: {
+                // TODO: include :location
+                'vitest.worker.files': message.context.files.map(f => f.filepath),
+                'vitest.worker.id': message.context.workerId,
+              },
+            },
+            () => entrypoint.collect({ ...setupContext, ...message.context }, worker, telemetry)
+              .catch(error => serializeError(error)),
+          )
           const error = await runPromise
 
           send({
@@ -194,7 +206,7 @@ export function init(worker: Options): void {
         try {
           const context = telemetry.getContextFromCarrier(message.otelCarrier)
 
-          const error = await telemetry.startActiveSpan(
+          const error = await telemetry.$(
             'vitest.runtime.teardown',
             { context },
             async () => {

@@ -1,5 +1,6 @@
 import type { Environment } from '../../types/environment'
 import type { WorkerGlobalState, WorkerSetupContext } from '../../types/worker'
+import type { Telemetry } from '../../utils/otel'
 import type { VitestModuleRunner } from '../moduleRunner/moduleRunner'
 import type { ContextModuleRunnerOptions } from '../moduleRunner/startModuleRunner'
 import { runInThisContext } from 'node:vm'
@@ -53,7 +54,7 @@ export async function setupEnvironment(context: WorkerSetupContext): Promise<() 
 
   const { environment, loader } = await loadEnvironment(environmentName, config.root, rpc, otel)
   _currentEnvironment = environment
-  const env = await otel.startActiveSpan(
+  const env = await otel.$(
     'vitest.runtime.environment.setup',
     {
       attributes: {
@@ -71,7 +72,7 @@ export async function setupEnvironment(context: WorkerSetupContext): Promise<() 
   }
 
   return async () => {
-    await otel.startActiveSpan(
+    await otel.$(
       'vitest.runtime.environment.teardown',
       () => env.teardown(globalThis),
     )
@@ -80,7 +81,7 @@ export async function setupEnvironment(context: WorkerSetupContext): Promise<() 
 }
 
 /** @experimental */
-export async function runBaseTests(method: 'run' | 'collect', state: WorkerGlobalState): Promise<void> {
+export async function runBaseTests(method: 'run' | 'collect', state: WorkerGlobalState, telemetry: Telemetry): Promise<void> {
   const { ctx } = state
   state.environment = _currentEnvironment
   state.durations.environment = _environmentTime
@@ -111,6 +112,7 @@ export async function runBaseTests(method: 'run' | 'collect', state: WorkerGloba
     evaluatedModules: state.evaluatedModules,
     spyModule,
     createImportMeta: createNodeImportMeta,
+    telemetry,
   })
 
   await run(
@@ -119,5 +121,6 @@ export async function runBaseTests(method: 'run' | 'collect', state: WorkerGloba
     ctx.config,
     moduleRunner,
     _currentEnvironment,
+    telemetry,
   )
 }

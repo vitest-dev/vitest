@@ -1,5 +1,6 @@
 import type { ResolvedConfig, SerializedConfig } from '../../node/types/config'
 import type { WorkerGlobalState, WorkerSetupContext } from '../../types/worker'
+import type { Telemetry } from '../../utils/otel'
 import v8 from 'node:v8'
 import { init } from './init'
 
@@ -28,7 +29,7 @@ if (isProfiling) {
 }
 
 export default function workerInit(options: {
-  runTests: (method: 'run' | 'collect', state: WorkerGlobalState) => Promise<void>
+  runTests: (method: 'run' | 'collect', state: WorkerGlobalState, otel: Telemetry) => Promise<void>
   setup?: (context: WorkerSetupContext) => Promise<() => Promise<unknown>>
 }): void {
   const { runTests } = options
@@ -40,16 +41,16 @@ export default function workerInit(options: {
     teardown: () => processRemoveAllListeners('message'),
     serialize: v8.serialize,
     deserialize: v => v8.deserialize(Buffer.from(v)),
-    runTests: state => executeTests('run', state),
-    collectTests: state => executeTests('collect', state),
+    runTests: (state, otel) => executeTests('run', state, otel),
+    collectTests: (state, otel) => executeTests('collect', state, otel),
     setup: options.setup,
   })
 
-  async function executeTests(method: 'run' | 'collect', state: WorkerGlobalState) {
+  async function executeTests(method: 'run' | 'collect', state: WorkerGlobalState, otel: Telemetry) {
     state.ctx.config = unwrapSerializableConfig(state.ctx.config)
 
     try {
-      await runTests(method, state)
+      await runTests(method, state, otel)
     }
     finally {
       process.exit = processExit

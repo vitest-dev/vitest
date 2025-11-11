@@ -58,7 +58,8 @@ export interface PoolTask {
   memoryLimit: number | null
 }
 
-export interface WorkerOTELCarrier {
+// TODO: move to general types
+export interface OTELCarrier {
   traceparent?: string
   tracestate?: string
 }
@@ -67,7 +68,6 @@ export interface PoolRunnerOTEL {
   span: Span
   workerContext: Context
   currentContext?: Context
-  carrier: WorkerOTELCarrier
   files: string[]
 }
 
@@ -81,23 +81,23 @@ export type WorkerRequest
         config: SerializedConfig
         pool: string
       }
-      otelCarrier?: WorkerOTELCarrier
+      otelCarrier?: OTELCarrier
     }
     | {
       type: 'stop'
-      otelCarrier?: WorkerOTELCarrier
+      otelCarrier?: OTELCarrier
     }
     | {
       type: 'run'
       context: WorkerExecuteContext
       poolId: number
-      otelCarrier?: WorkerOTELCarrier
+      otelCarrier?: OTELCarrier
     }
     | {
       type: 'collect'
       context: WorkerExecuteContext
       poolId: number
-      carrier?: WorkerOTELCarrier
+      otelCarrier?: OTELCarrier
     }
     | { type: 'cancel' }
 )

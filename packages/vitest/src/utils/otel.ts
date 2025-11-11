@@ -8,7 +8,7 @@ import type {
   TraceAPI,
   Tracer,
 } from '@opentelemetry/api'
-import type { PoolRunnerOTEL, WorkerOTELCarrier } from '../node/pools/types'
+import type { OTELCarrier } from '../node/pools/types'
 
 interface TelemetryOptions {
   enabled: boolean
@@ -29,20 +29,15 @@ interface OTEL {
 
 export class Telemetry {
   #otel: OTEL | null = null
-  #sdk: {
-    shutdown: () => Promise<void>
-  } | null = null
-
-  #init: Promise<unknown> | null
+  // TODO: we need sdk to shutdown the server
+  // is there a better way to flish events?
+  #sdk: { shutdown: () => Promise<void> } | null = null
+  #init: Promise<unknown> | null = null
   #noopSpan = createNoopSpan()
   #noopContext = createNoopContext()
 
   constructor(options: TelemetryOptions) {
-    if (!options.enabled) {
-      this.#otel = null
-      this.#init = null
-    }
-    else {
+    if (options.enabled) {
       const apiInit = import('@opentelemetry/api').then((api) => {
         const otel = {
           tracer: api.trace.getTracer('vitest'),
@@ -68,16 +63,15 @@ export class Telemetry {
     }
   }
 
+  public isEnabled(): boolean {
+    return !!this.#otel
+  }
+
   async waitInit(): Promise<this> {
     if (this.#init) {
       await this.#init
     }
     return this
-  }
-
-  // TODO: for testing
-  get __otel(): OTEL {
-    return this.#otel!
   }
 
   startContextSpan(name: string, currentContext?: Context): {
@@ -104,7 +98,7 @@ export class Telemetry {
     }
   }
 
-  getContextFromCarrier(carrier: WorkerOTELCarrier | undefined): Context {
+  getContextFromCarrier(carrier: OTELCarrier | undefined): Context {
     if (!this.#otel) {
       return this.#noopContext
     }
@@ -115,40 +109,13 @@ export class Telemetry {
     return this.#otel.propagation.extract(activeContext, carrier)
   }
 
-  getContextCarrier(context: Context): WorkerOTELCarrier | undefined {
+  getContextCarrier(context?: Context): OTELCarrier | undefined {
     if (!this.#otel) {
       return undefined
     }
     const carrier = {}
-    this.#otel.propagation.inject(context, carrier)
+    this.#otel.propagation.inject(context || this.#otel.context.active(), carrier)
     return carrier
-  }
-
-  getWorkerOTEL(): PoolRunnerOTEL | null {
-    if (!this.#otel) {
-      return null
-    }
-
-    const { context, span } = this.startContextSpan('vitest.worker')
-    const carrier = {}
-    this.#otel.propagation.inject(context, carrier)
-    return {
-      span,
-      workerContext: context,
-      carrier,
-      files: [],
-    }
-  }
-
-  within<T>(carrier: WorkerOTELCarrier, callback: () => T): T {
-    if (!this.#otel) {
-      return callback()
-    }
-    const activeContext = this.#otel.propagation.extract(
-      this.#otel.context.active(),
-      carrier,
-    )
-    return this.#otel.context.with(activeContext, callback)
   }
 
   #callActiveSpan<T>(span: Span, callback: (span: Span) => T): T {
@@ -187,9 +154,9 @@ export class Telemetry {
     }
   }
 
-  startActiveSpan<T>(name: string, fn: (span: Span) => T): T
-  startActiveSpan<T>(name: string, optionsOrFn: TelemetrySpanOptions, fn: (span: Span) => T): T
-  startActiveSpan<T>(name: string, optionsOrFn: TelemetrySpanOptions | ((span: Span) => T), fn?: (span: Span) => T): T {
+  $<T>(name: string, fn: (span: Span) => T): T
+  $<T>(name: string, optionsOrFn: TelemetrySpanOptions, fn: (span: Span) => T): T
+  $<T>(name: string, optionsOrFn: TelemetrySpanOptions | ((span: Span) => T), fn?: (span: Span) => T): T {
     const callback = typeof optionsOrFn === 'function' ? optionsOrFn : fn!
     if (!this.#otel) {
       return callback(this.#noopSpan)
