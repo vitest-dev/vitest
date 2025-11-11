@@ -174,7 +174,7 @@ export function createTestContext(
 
     return recordAsyncOperation(
       test,
-      recordArtifact({ type: 'internal:annotation', annotation }, test).then(async ({ annotation }) => {
+      recordArtifact(test, { type: 'internal:annotation', annotation }).then(async ({ annotation }) => {
         if (!runner.onTestAnnotate) {
           throw new Error(`Test runner doesn't support test annotations.`)
         }
