@@ -33,7 +33,6 @@ export class Pool {
   private queue: QueuedTask[] = []
   private activeTasks: ActiveTask[] = []
   private sharedRunners: PoolRunner[] = []
-  private exitPromises: Promise<void>[] = []
   private _isCancelling: boolean = false
 
   constructor(private options: Options, private logger: Logger) {}
@@ -140,7 +139,6 @@ export class Pool {
         return this.schedule()
       }
 
-      // Runner terminations are started but not awaited until the end of full run.
       // Runner termination can also already start from task cancellation.
       if (!runner.isTerminated) {
         const id = setTimeout(
@@ -148,11 +146,9 @@ export class Pool {
           this.options.teardownTimeout,
         )
 
-        this.exitPromises.push(
-          runner.stop()
-            .then(() => clearTimeout(id))
-            .catch(error => this.logger.error(`[vitest-pool]: Failed to terminate ${task.worker} worker for test files ${formatFiles(task)}.`, error)),
-        )
+        await runner.stop()
+          .then(() => clearTimeout(id))
+          .catch(error => this.logger.error(`[vitest-pool]: Failed to terminate ${task.worker} worker for test files ${formatFiles(task)}.`, error))
       }
 
       this.freeWorkerId(poolId)
@@ -182,8 +178,6 @@ export class Pool {
 
     const sharedRunners = this.sharedRunners.splice(0)
     await Promise.all(sharedRunners.map(runner => runner.stop()))
-
-    await Promise.all(this.exitPromises.splice(0))
 
     this.workerIds.forEach((_, id) => this.freeWorkerId(id))
 
