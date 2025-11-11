@@ -69,7 +69,7 @@ export function createMethodsRPC(project: TestProject, options: MethodsOptions =
         return {
           file,
           // TODO: use isBuiltin defined in the environment
-          url: !resolved.id.startsWith('node:') && isBuiltin(resolved.id)
+          url: !resolved.id.startsWith('bun:') && !resolved.id.startsWith('node:') && isBuiltin(resolved.id)
             ? `node:${resolved.id}`
             : resolved.id,
           id: resolved.id,
