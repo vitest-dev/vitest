@@ -798,55 +798,56 @@ export interface TestAnnotationArtifact extends TestArtifactBase {
  *
  * @example
  *  ```ts
- * import { recordArtifact } from 'vitest'
- *
- * // Define custom attachment type with accessibility violation details
- * interface A11yViolationAttachment extends TestAttachment {
- *   contentType: 'application/json'
- *   body: string
- *   violationCount: number
- *   wcagLevel: 'A' | 'AA' | 'AAA'
+ * // Define custom attachment type for generated PDF
+ * interface PDFAttachment extends TestAttachment {
+ *   contentType: 'application/pdf'
+ *   body: Uint8Array
+ *   pageCount: number
+ *   fileSize: number
  * }
  *
- * interface AccessibilityArtifact extends TestArtifactBase {
- *   type: 'my-plugin:accessibility-report'
- *   elementSelector: string
- *   passed: boolean
- *   attachments: A11yViolationAttachment[]
+ * interface PDFGenerationArtifact extends TestArtifactBase {
+ *   type: 'my-plugin:pdf-generation'
+ *   templateName: string
+ *   isValid: boolean
+ *   attachments: [PDFAttachment]
  * }
  *
  * // Use a symbol to guarantee key uniqueness
- * const a11yKey = Symbol('accessibility-report')
+ * const pdfKey = Symbol('pdf-generation')
  *
  * declare module 'vitest' {
  *   interface TestArtifactRegistry {
- *     [a11yKey]: AccessibilityArtifact
+ *     [pdfKey]: PDFGenerationArtifact
  *   }
  * }
  *
- * // Custom assertion for accessibility testing
- * async function toBeAccessible(
+ * // Custom assertion for PDF generation
+ * async function toGenerateValidPDF(
  *   this: MatcherState,
- *   actual: Element | Locator,
- *   wcagLevel: 'A' | 'AA' | 'AAA' = 'AA'
+ *   actual: PDFTemplate,
+ *   data: Record<string, unknown>
  * ): AsyncExpectationResult {
- *   const violations = await runAccessibilityAudit(actual, wcagLevel)
+ *   const pdfBuffer = await actual.render(data)
+ *   const validation = await validatePDF(pdfBuffer)
  *
- *   recordArtifact(this.task, {
- *     type: 'my-plugin:accessibility-report',
- *     elementSelector: getSelector(actual),
- *     passed: violations.length === 0,
+ *   await recordArtifact(this.task, {
+ *     type: 'my-plugin:pdf-generation',
+ *     templateName: actual.name,
+ *     isValid: validation.success,
  *     attachments: [{
- *       contentType: 'application/json',
- *       body: JSON.stringify(violations),
- *       violationCount: violations.length,
- *       wcagLevel
+ *       contentType: 'application/pdf',
+ *       body: pdfBuffer,
+ *       pageCount: validation.pageCount,
+ *       fileSize: pdfBuffer.byteLength
  *     }]
  *   })
  *
  *   return {
- *     pass: violations.length === 0,
- *     message: () => `Found ${violations.length} accessibility violation(s) for WCAG ${wcagLevel}`
+ *     pass: validation.success,
+ *     message: () => validation.success
+ *       ? `Generated valid PDF with ${validation.pageCount} pages`
+ *       : `Invalid PDF: ${validation.error}`
  *   }
  * }
  * ```

@@ -23,8 +23,6 @@ import { findTestFileStackTrace } from './utils/collect'
  *
  * @example
  * ```ts
- * import { recordArtifact } from 'vitest'
- *
  * // In a custom assertion
  * async function toHaveValidSchema(this: MatcherState, actual: unknown) {
  *   const validation = validateSchema(actual)
@@ -32,10 +30,7 @@ import { findTestFileStackTrace } from './utils/collect'
  *   await recordArtifact(this.task, {
  *     type: 'my-plugin:schema-validation',
  *     passed: validation.valid,
- *     attachments: [{
- *       contentType: 'application/json',
- *       body: JSON.stringify(validation.errors)
- *     }]
+ *     errors: validation.errors,
  *   })
  *
  *   return { pass: validation.valid, message: () => '...' }
