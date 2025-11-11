@@ -100,6 +100,9 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
 
     const namespace = this._otel.$(
       'vitest.evaluator.import.external',
+      {
+        attributes: { 'code.file.path': file },
+      },
       () => this.vm
         ? this.vm.externalModulesExecutor.import(file)
         : import(file),

@@ -55,10 +55,18 @@ export async function run(
     workerState.filepath = file.filepath
 
     if (method === 'run') {
-      await startTests([file], testRunner)
+      await otel.$(
+        'vitest.test.runner.run',
+        { attributes: { 'code.file.path': file.filepath } },
+        () => startTests([file], testRunner),
+      )
     }
     else {
-      await collectTests([file], testRunner)
+      await otel.$(
+        'vitest.test.runner.collect',
+        { attributes: { 'code.file.path': file.filepath } },
+        () => collectTests([file], testRunner),
+      )
     }
 
     // reset after tests, because user might call `vi.setConfig` in setupFile
