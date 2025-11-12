@@ -1,4 +1,4 @@
-import type { ExpectStatic } from '@vitest/expect'
+import type { ExpectStatic, MatcherState } from '@vitest/expect'
 import type {
   CancelReason,
   File,
@@ -147,16 +147,23 @@ export class VitestTestRunner implements VitestRunner {
   onBeforeTryTask(test: Task): void {
     clearModuleMocks(this.config)
     this.snapshotClient.clearTest(test.file.filepath, test.id)
+
+    const state: Partial<MatcherState> = {
+      assertionCalls: 0,
+      isExpectingAssertions: false,
+      isExpectingAssertionsError: null,
+      expectedAssertionsNumber: null,
+      expectedAssertionsNumberErrorGen: null,
+      currentTestName: getTestName(test),
+      snapshotState: this.snapshotClient.getSnapshotState(test.file.filepath),
+    }
+
+    if (test.type === 'test') {
+      state.task = test
+    }
+
     setState(
-      {
-        assertionCalls: 0,
-        isExpectingAssertions: false,
-        isExpectingAssertionsError: null,
-        expectedAssertionsNumber: null,
-        expectedAssertionsNumberErrorGen: null,
-        currentTestName: getTestName(test),
-        snapshotState: this.snapshotClient.getSnapshotState(test.file.filepath),
-      },
+      state,
       (globalThis as any)[GLOBAL_EXPECT],
     )
   }

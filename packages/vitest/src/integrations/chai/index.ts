@@ -1,5 +1,5 @@
 import type { Assertion, ExpectStatic, MatcherState } from '@vitest/expect'
-import type { TaskPopulated, Test } from '@vitest/runner'
+import type { Test } from '@vitest/runner'
 import {
   addCustomEqualityTesters,
   ASYMMETRIC_MATCHERS_OBJECT,
@@ -15,7 +15,7 @@ import { getWorkerState } from '../../runtime/utils'
 import { createExpectPoll } from './poll'
 import './setup'
 
-export function createExpect(test?: TaskPopulated): ExpectStatic {
+export function createExpect(test?: Test): ExpectStatic {
   const expect = ((value: any, message?: string): Assertion => {
     const { assertionCalls } = getState(expect)
     setState({ assertionCalls: assertionCalls + 1 }, expect)
@@ -38,22 +38,28 @@ export function createExpect(test?: TaskPopulated): ExpectStatic {
   // @ts-expect-error global is not typed
   const globalState = getState(globalThis[GLOBAL_EXPECT]) || {}
 
-  setState<MatcherState>(
-    {
-      // this should also add "snapshotState" that is added conditionally
-      ...globalState,
-      assertionCalls: 0,
-      isExpectingAssertions: false,
-      isExpectingAssertionsError: null,
-      expectedAssertionsNumber: null,
-      expectedAssertionsNumberErrorGen: null,
-      get testPath() {
-        return getWorkerState().filepath
-      },
-      currentTestName: test
-        ? getTestName(test as Test)
-        : globalState.currentTestName,
+  const state = {
+    // this should also add "snapshotState" that is added conditionally
+    ...globalState,
+    assertionCalls: 0,
+    isExpectingAssertions: false,
+    isExpectingAssertionsError: null,
+    expectedAssertionsNumber: null,
+    expectedAssertionsNumberErrorGen: null,
+    get testPath() {
+      return getWorkerState().filepath
     },
+    currentTestName: test
+      ? getTestName(test as Test)
+      : globalState.currentTestName,
+  }
+
+  if (test !== undefined) {
+    state.task = test
+  }
+
+  setState<MatcherState>(
+    state,
     expect,
   )
 
