@@ -986,7 +986,7 @@ export default ({ mode }: { mode: string }) => {
                 link: '/api/advanced/metadata',
               },
               {
-                text: 'Artifacts',
+                text: 'TestArtifact',
                 link: '/api/advanced/artifacts',
               },
             ],

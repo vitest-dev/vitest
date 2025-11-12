@@ -3,7 +3,7 @@ outline: deep
 title: Test Artifacts
 ---
 
-# Test Artifacts <Badge type="danger">advanced</Badge> <Badge type="warning">experimental</Badge>
+# Test Artifacts <Advanced /> <Version type="experimental">4.0.9</Version> <Experimental />
 
 ::: warning
 This is an advanced API. As a user, you most likely want to use [test annotations](/guide/test-annotations) to add notes or context to your tests instead. This is primarily used internally and by library authors.
@@ -25,7 +25,7 @@ Vitest automatically manages attachment serialization (files are copied to [`att
 
 ## API
 
-### `recordArtifact` <Badge type="warning">experimental</Badge> {#recordartifact}
+### `recordArtifact` <Experimental /> {#recordartifact}
 
 ::: warning
 `recordArtifact` is an experimental API. Breaking changes might not follow SemVer, please pin Vitest's version when using it.
@@ -49,7 +49,7 @@ Note: annotations, [even though they're built on top of this feature](#relations
 
 The `TestArtifact` type is a union containing all artifacts Vitest can produce, including custom ones. All artifacts extend from [`TestArtifactBase`](#testartifactbase)
 
-### `TestArtifactBase` <Badge type="warning">experimental</Badge> {#testartifactbase}
+### `TestArtifactBase` <Experimental /> {#testartifactbase}
 
 ```ts
 export interface TestArtifactBase {
