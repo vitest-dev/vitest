@@ -16,6 +16,7 @@ Vitest has its own test run lifecycle. These are represented by reporter's metho
       - [`onHookEnd(beforeAll)`](#onhookend)
         - [`onTestCaseReady`](#ontestcaseready)
           - [`onTestAnnotate`](#ontestannotate) <Version>3.2.0</Version>
+          - [`onTestCaseArtifactRecord`](#ontestcaseartifactrecord) <Version>4.0.9</Version>
           - [`onHookStart(beforeEach)`](#onhookstart)
           - [`onHookEnd(beforeEach)`](#onhookend)
           - [`onHookStart(afterEach)`](#onhookstart)
@@ -330,5 +331,18 @@ function onTestAnnotate(
 ```
 
 The `onTestAnnotate` hook is associated with the [`context.annotate`](/guide/test-context#annotate) method. When `annotate` is invoked, Vitest serialises it and sends the same attachment to the main thread where reporter can interact with it.
+
+If the path is specified, Vitest stores it in a separate directory (configured by [`attachmentsDir`](/config/#attachmentsdir)) and modifies the `path` property to reference it.
+
+## onTestCaseArtifactRecord <Version>4.0.9</Version> {#ontestcaseartifactrecord}
+
+```ts
+function onTestCaseArtifactRecord(
+  testCase: TestCase,
+  artifact: TestArtifact,
+): Awaitable<void>
+```
+
+The `onTestCaseArtifactRecord` hook is associated with the [`recordArtifact`](/api/advanced/artifacts#recordartifact) utility. When `recordArtifact` is invoked, Vitest serialises it and sends the same attachment to the main thread where reporter can interact with it.
 
 If the path is specified, Vitest stores it in a separate directory (configured by [`attachmentsDir`](/config/#attachmentsdir)) and modifies the `path` property to reference it.
