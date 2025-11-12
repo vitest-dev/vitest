@@ -985,6 +985,10 @@ export default ({ mode }: { mode: string }) => {
                 text: 'TaskMeta',
                 link: '/api/advanced/metadata',
               },
+              {
+                text: 'Artifacts',
+                link: '/api/advanced/artifacts',
+              },
             ],
           },
           // {
