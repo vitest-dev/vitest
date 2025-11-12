@@ -12,6 +12,7 @@ import type {
   LaunchOptions,
   Page,
   CDPSession as PlaywrightCDPSession,
+  Route as PlaywrightRoute,
 } from 'playwright'
 import type { SourceMap } from 'rollup'
 import type { ResolvedConfig } from 'vite'
@@ -41,9 +42,43 @@ const debug = createDebugger('vitest:browser:playwright')
 const playwrightBrowsers = ['firefox', 'webkit', 'chromium'] as const
 type PlaywrightBrowser = (typeof playwrightBrowsers)[number]
 
+interface PlaywrightRouteEntry {
+  matcher: string | RegExp
+  handler: Parameters<Page['route']>[1]
+}
+
 // Enable intercepting of requests made by service workers - experimental API is only available in Chromium based browsers
 // Requests from service workers are only available on context.route() https://playwright.dev/docs/service-workers-experimental
 process.env.PW_EXPERIMENTAL_SERVICE_WORKER_NETWORK_EVENTS ??= '1'
+
+type SerializedRouteMatcher
+  = | { type: 'string'; value: string }
+    | { type: 'regexp'; value: string; flags: string }
+
+interface RouteRegisterPayload {
+  id: string
+  matcher: SerializedRouteMatcher
+}
+
+interface RouteContinueOverrides {
+  url?: string
+  method?: string
+  headers?: Record<string, string>
+  postData?: string
+}
+
+interface RouteEvaluationRequest {
+  url: string
+  method: string
+  headers: Record<string, string>
+  postData?: string | null
+  resourceType?: string
+}
+
+type RouteEvaluationResult
+  = | { type: 'continue'; overrides?: RouteContinueOverrides }
+    | { type: 'fulfill'; status?: number; headers?: Record<string, string>; body?: string; contentType?: string }
+    | { type: 'abort'; errorCode?: string }
 
 export interface PlaywrightProviderOptions {
   /**
@@ -97,6 +132,7 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
 
   public contexts: Map<string, BrowserContext> = new Map()
   public pages: Map<string, Page> = new Map()
+  private routes: Map<string, Map<string, PlaywrightRouteEntry>> = new Map()
   public mocker: BrowserModuleMocker
   public browserName: PlaywrightBrowser
 
@@ -416,6 +452,168 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
     }
   }
 
+  private getSessionRouteMap(sessionId: string): Map<string, PlaywrightRouteEntry> {
+    let routes = this.routes.get(sessionId)
+    if (!routes) {
+      routes = new Map()
+      this.routes.set(sessionId, routes)
+    }
+    return routes
+  }
+
+  private deserializeMatcher(matcher: SerializedRouteMatcher): string | RegExp {
+    if (matcher.type === 'string') {
+      return matcher.value
+    }
+    if (matcher.type === 'regexp') {
+      return new RegExp(matcher.value, matcher.flags)
+    }
+    throw new Error(`Unsupported route matcher type "${(matcher as any)?.type}".`)
+  }
+
+  private createRouteHandler(sessionId: string, routeId: string): Parameters<Page['route']>[1] {
+    return async (route) => {
+      const request = route.request()
+      const requestInfo: RouteEvaluationRequest = {
+        url: request.url(),
+        method: request.method(),
+        headers: { ...request.headers() },
+        postData: request.postData(),
+        resourceType: typeof request.resourceType === 'function' ? request.resourceType() : undefined,
+      }
+      const result = await this.evaluateRouteHandler(sessionId, routeId, requestInfo)
+      await this.applyRouteResult(route, result)
+    }
+  }
+
+  private async evaluateRouteHandler(
+    sessionId: string,
+    routeId: string,
+    request: RouteEvaluationRequest,
+  ): Promise<RouteEvaluationResult> {
+    const page = this.getPage(sessionId)
+    try {
+      const result = await page.evaluate(([id, payload]) => {
+        const handler = (window as any).__vitest_handleRoute
+        if (!handler) {
+          return { type: 'continue' }
+        }
+        return handler(id, payload)
+      }, [routeId, request] as const)
+
+      if (!result || typeof result !== 'object') {
+        return { type: 'continue' }
+      }
+      return result as RouteEvaluationResult
+    }
+    catch (error) {
+      debug?.('[%s] route handler execution failed: %O', sessionId, error)
+      return { type: 'continue' }
+    }
+  }
+
+  private async applyRouteResult(route: PlaywrightRoute, result: RouteEvaluationResult): Promise<void> {
+    if (result.type === 'fulfill') {
+      let headers = result.headers ? { ...result.headers } : undefined
+      if (result.contentType) {
+        headers ??= {}
+        headers['content-type'] = result.contentType
+      }
+      await route.fulfill({
+        status: result.status,
+        headers,
+        body: result.body,
+      })
+      return
+    }
+
+    if (result.type === 'abort') {
+      await route.abort(result.errorCode)
+      return
+    }
+
+    const overrides = result.overrides
+    if (overrides) {
+      await route.continue({
+        url: overrides.url,
+        method: overrides.method,
+        headers: overrides.headers,
+        postData: overrides.postData,
+      })
+      return
+    }
+
+    await route.continue()
+  }
+
+  private async reapplyRoutes(sessionId: string, page: Page): Promise<void> {
+    const routes = this.routes.get(sessionId)
+    if (!routes?.size) {
+      return
+    }
+    for (const [routeId, entry] of routes) {
+      const handler = this.createRouteHandler(sessionId, routeId)
+      await page.route(entry.matcher, handler)
+      entry.handler = handler
+    }
+  }
+
+  public async registerRoute(sessionId: string, payload: RouteRegisterPayload): Promise<void> {
+    const routes = this.getSessionRouteMap(sessionId)
+    if (routes.has(payload.id)) {
+      await this.unregisterRoute(sessionId, payload.id)
+    }
+    const matcher = this.deserializeMatcher(payload.matcher)
+    const handler = this.createRouteHandler(sessionId, payload.id)
+    const page = this.getPage(sessionId)
+    await page.route(matcher, handler)
+    routes.set(payload.id, { matcher, handler })
+  }
+
+  public async unregisterRoute(sessionId: string, routeId: string): Promise<void> {
+    const routes = this.routes.get(sessionId)
+    if (!routes) {
+      return
+    }
+    const entry = routes.get(routeId)
+    if (!entry) {
+      return
+    }
+    routes.delete(routeId)
+    const page = this.pages.get(sessionId)
+    if (page) {
+      try {
+        await page.unroute(entry.matcher, entry.handler)
+      }
+      catch (error) {
+        debug?.('[%s] failed to unroute handler: %O', sessionId, error)
+      }
+    }
+    if (!routes.size) {
+      this.routes.delete(sessionId)
+    }
+  }
+
+  public async resetRoutes(sessionId: string): Promise<void> {
+    const routes = this.routes.get(sessionId)
+    if (!routes?.size) {
+      return
+    }
+    const page = this.pages.get(sessionId)
+    if (page) {
+      for (const entry of routes.values()) {
+        try {
+          await page.unroute(entry.matcher, entry.handler)
+        }
+        catch (error) {
+          debug?.('[%s] failed to unroute handler: %O', sessionId, error)
+        }
+      }
+    }
+    routes.clear()
+    this.routes.delete(sessionId)
+  }
+
   private async openBrowserPage(sessionId: string) {
     await this._throwIfClosing()
 
@@ -431,6 +629,7 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
     debug?.('[%s][%s] the page is ready', sessionId, this.browserName)
     await this._throwIfClosing(page)
     this.pages.set(sessionId, page)
+    await this.reapplyRoutes(sessionId, page)
 
     if (process.env.VITEST_PW_DEBUG) {
       page.on('requestfailed', (request) => {
@@ -499,6 +698,7 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
     this.browser = null
     await Promise.all([...this.pages.values()].map(p => p.close()))
     this.pages.clear()
+    this.routes.clear()
     await Promise.all([...this.contexts.values()].map(c => c.close()))
     this.contexts.clear()
     await browser?.close()

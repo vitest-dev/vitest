@@ -668,11 +668,68 @@ export const userEvent: UserEvent
  */
 export const commands: BrowserCommands
 
+export type BrowserRouteMatch = string | RegExp
+
+export interface BrowserRouteRequest {
+  url(): string
+  method(): string
+  headers(): Record<string, string>
+  postData(): string | null
+  resourceType(): string | undefined
+}
+
+export interface BrowserRouteFulfillOptions {
+  status?: number
+  headers?: Record<string, string>
+  body?: string
+  /**
+   * Convenience option that sets the `content-type` header.
+   */
+  contentType?: string
+}
+
+export interface BrowserRouteAbortOptions {
+  errorCode?: string
+}
+
+export interface BrowserRouteContinueOverrides {
+  url?: string
+  method?: string
+  headers?: Record<string, string>
+  postData?: string
+}
+
+export interface BrowserRoute {
+  request(): BrowserRouteRequest
+  fulfill(options: BrowserRouteFulfillOptions): Promise<void> | void
+  abort(error?: string | BrowserRouteAbortOptions): void
+  continue(overrides?: BrowserRouteContinueOverrides): void
+}
+
+export type BrowserRouteHandler = (
+  route: BrowserRoute,
+  request: BrowserRouteRequest
+) => unknown | Promise<unknown>
+
 export interface BrowserPage extends LocatorSelectors {
   /**
    * Change the size of iframe's viewport.
    */
   viewport(width: number, height: number): Promise<void>
+  /**
+   * Intercept network requests that match the provided pattern.
+   * Only available for the `playwright` and `webdriverio` providers.
+   */
+  route(match: BrowserRouteMatch, handler: BrowserRouteHandler): Promise<void>
+  /**
+   * Remove previously registered route handlers.
+   * If `handler` is omitted, every handler for the pattern is removed.
+   */
+  unroute(match: BrowserRouteMatch, handler?: BrowserRouteHandler): Promise<void>
+  /**
+   * Remove every route handler registered in the current session.
+   */
+  unrouteAll(): Promise<void>
   /**
    * Make a screenshot of the test iframe or a specific element.
    * @returns Path to the screenshot file or path and base64.

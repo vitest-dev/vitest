@@ -12,8 +12,9 @@ import type {
   TestProject,
 } from 'vitest/node'
 import type { ClickOptions, DragAndDropOptions, MoveToOptions, remote } from 'webdriverio'
-import { defineBrowserProvider } from '@vitest/browser'
+import { Buffer } from 'node:buffer'
 
+import { defineBrowserProvider } from '@vitest/browser'
 import { resolve } from 'pathe'
 import { createDebugger } from 'vitest/node'
 import commands from './commands'
@@ -23,6 +24,40 @@ const debug = createDebugger('vitest:browser:wdio')
 
 const webdriverBrowsers = ['firefox', 'chrome', 'edge', 'safari'] as const
 type WebdriverBrowser = (typeof webdriverBrowsers)[number]
+
+type SerializedRouteMatcher
+  = | { type: 'string'; value: string }
+    | { type: 'regexp'; value: string; flags: string }
+
+interface RouteRegisterPayload {
+  id: string
+  matcher: SerializedRouteMatcher
+}
+
+interface RouteContinueOverrides {
+  url?: string
+  method?: string
+  headers?: Record<string, string>
+  postData?: string
+}
+
+interface RouteEvaluationRequest {
+  url: string
+  method: string
+  headers: Record<string, string>
+  postData?: string | null
+  resourceType?: string
+}
+
+type RouteEvaluationResult
+  = | { type: 'continue'; overrides?: RouteContinueOverrides }
+    | { type: 'fulfill'; status?: number; headers?: Record<string, string>; body?: string; contentType?: string }
+    | { type: 'abort'; errorCode?: string }
+
+interface WebdriverRouteEntry {
+  matcher: string | RegExp
+  mock: WebdriverIO.Mock
+}
 
 export interface WebdriverProviderOptions extends Partial<
   Parameters<typeof remote>[0]
@@ -44,6 +79,7 @@ export class WebdriverBrowserProvider implements BrowserProvider {
   public supportsParallelism: boolean = false
 
   public browser: WebdriverIO.Browser | null = null
+  private routes: Map<string, Map<string, WebdriverRouteEntry>> = new Map()
 
   private browserName!: WebdriverBrowser
   private project!: TestProject
@@ -133,6 +169,240 @@ export class WebdriverBrowserProvider implements BrowserProvider {
     return {
       browser: this.browser,
     }
+  }
+
+  private getSessionRouteMap(sessionId: string): Map<string, WebdriverRouteEntry> {
+    let routes = this.routes.get(sessionId)
+    if (!routes) {
+      routes = new Map()
+      this.routes.set(sessionId, routes)
+    }
+    return routes
+  }
+
+  private deserializeMatcher(matcher: SerializedRouteMatcher): string | RegExp {
+    if (matcher.type === 'string') {
+      return matcher.value
+    }
+    if (matcher.type === 'regexp') {
+      return new RegExp(matcher.value, matcher.flags)
+    }
+    throw new Error(`Unsupported route matcher type "${(matcher as any)?.type}".`)
+  }
+
+  private normalizeHeaders(headers: any): Record<string, string> {
+    const normalized: Record<string, string> = {}
+    if (!headers) {
+      return normalized
+    }
+    if (Array.isArray(headers)) {
+      for (const header of headers) {
+        if (!header) {
+          continue
+        }
+        const name = header.name ?? header.key
+        if (!name) {
+          continue
+        }
+        const value = Array.isArray(header.value)
+          ? header.value.join(', ')
+          : header.value ?? header.values
+        if (value == null) {
+          continue
+        }
+        normalized[name] = String(value)
+      }
+      return normalized
+    }
+    if (typeof headers === 'object') {
+      for (const [key, value] of Object.entries(headers)) {
+        if (value == null) {
+          continue
+        }
+        normalized[key] = Array.isArray(value) ? value.join(', ') : String(value)
+      }
+    }
+    return normalized
+  }
+
+  private extractBody(body: any): string | null {
+    if (!body) {
+      return null
+    }
+    if (typeof body === 'string') {
+      return body
+    }
+    if (typeof body.text === 'string') {
+      return body.text
+    }
+    if (typeof body.value === 'string') {
+      return body.value
+    }
+    if (typeof body.data === 'string') {
+      return body.data
+    }
+    if (typeof body.bytes === 'string') {
+      try {
+        return Buffer.from(body.bytes, 'base64').toString()
+      }
+      catch {
+        return null
+      }
+    }
+    return null
+  }
+
+  private toRouteRequest(event: any): RouteEvaluationRequest {
+    const request = (event && event.request) || {}
+    const url = typeof request.url === 'string' ? request.url : ''
+    const method = typeof request.method === 'string' ? request.method : 'GET'
+    const headers = this.normalizeHeaders(request.headers)
+    const postData = this.extractBody(request.body)
+    const resourceType = typeof request.initiator?.type === 'string'
+      ? request.initiator.type
+      : (typeof request.resourceType === 'string' ? request.resourceType : undefined)
+    return {
+      url,
+      method,
+      headers,
+      postData,
+      resourceType,
+    }
+  }
+
+  private async evaluateRouteHandler(
+    sessionId: string,
+    routeId: string,
+    request: RouteEvaluationRequest,
+  ): Promise<RouteEvaluationResult> {
+    const browser = await this.openBrowser()
+    try {
+      const result = await browser.execute(
+        (id: string, payload: RouteEvaluationRequest) => {
+          const handler = (window as any).__vitest_handleRoute
+          if (!handler) {
+            return { type: 'continue' }
+          }
+          return handler(id, payload)
+        },
+        routeId,
+        request,
+      )
+      if (!result || typeof result !== 'object') {
+        return { type: 'continue' }
+      }
+      return result as RouteEvaluationResult
+    }
+    catch (error) {
+      debug?.('[%s] route handler execution failed: %O', sessionId, error)
+      return { type: 'continue' }
+    }
+  }
+
+  private applyMockResult(mock: WebdriverIO.Mock, result: RouteEvaluationResult) {
+    if (result.type === 'fulfill') {
+      const options: Record<string, any> = {}
+      if (result.status != null) {
+        options.statusCode = result.status
+      }
+      if (result.headers) {
+        options.headers = result.headers
+      }
+      if (result.contentType) {
+        options.headers ??= {}
+        options.headers['content-type'] = result.contentType
+      }
+      mock.respondOnce(result.body ?? '', options)
+      return
+    }
+
+    if (result.type === 'abort') {
+      mock.abortOnce()
+      return
+    }
+
+    const overrides = result.overrides
+    if (overrides) {
+      mock.requestOnce({
+        url: overrides.url,
+        method: overrides.method as any,
+        headers: overrides.headers,
+        body: overrides.postData,
+      })
+    }
+  }
+
+  private async handleMockRequest(
+    sessionId: string,
+    routeId: string,
+    mock: WebdriverIO.Mock,
+    event: any,
+  ) {
+    try {
+      const request = this.toRouteRequest(event)
+      const result = await this.evaluateRouteHandler(sessionId, routeId, request)
+      this.applyMockResult(mock, result)
+    }
+    catch (error) {
+      debug?.('[%s] failed to process network mock: %O', sessionId, error)
+    }
+  }
+
+  public async registerRoute(sessionId: string, payload: RouteRegisterPayload): Promise<void> {
+    const routes = this.getSessionRouteMap(sessionId)
+    if (routes.has(payload.id)) {
+      await this.unregisterRoute(sessionId, payload.id)
+    }
+    const matcher = this.deserializeMatcher(payload.matcher)
+    const browser = await this.openBrowser()
+    if (typeof browser.mock !== 'function') {
+      throw new TypeError('This WebDriverIO setup does not support network interception. Ensure WebDriver BiDi is available.')
+    }
+    const mock = await browser.mock(matcher as any)
+    mock.on('request', (event) => {
+      void this.handleMockRequest(sessionId, payload.id, mock, event)
+    })
+    routes.set(payload.id, { matcher, mock })
+  }
+
+  public async unregisterRoute(sessionId: string, routeId: string): Promise<void> {
+    const routes = this.routes.get(sessionId)
+    if (!routes) {
+      return
+    }
+    const entry = routes.get(routeId)
+    if (!entry) {
+      return
+    }
+    routes.delete(routeId)
+    try {
+      await entry.mock.restore()
+    }
+    catch (error) {
+      debug?.('[%s] failed to restore mock: %O', sessionId, error)
+    }
+    if (!routes.size) {
+      this.routes.delete(sessionId)
+    }
+  }
+
+  public async resetRoutes(sessionId: string): Promise<void> {
+    const routes = this.routes.get(sessionId)
+    if (!routes?.size) {
+      return
+    }
+    await Promise.all(
+      [...routes.values()].map(async (entry) => {
+        try {
+          await entry.mock.restore()
+        }
+        catch (error) {
+          debug?.('[%s] failed to restore mock: %O', sessionId, error)
+        }
+      }),
+    )
+    routes.clear()
+    this.routes.delete(sessionId)
   }
 
   async openBrowser(): Promise<WebdriverIO.Browser> {
@@ -250,8 +520,14 @@ export class WebdriverBrowserProvider implements BrowserProvider {
     const browser = this.browser
     const sessionId = browser?.sessionId
     if (!browser || !sessionId) {
+      this.routes.clear()
       return
     }
+
+    await Promise.all([...this.routes.keys()].map(id => this.resetRoutes(id))).catch((error) => {
+      debug?.('[%s] failed to reset routes during teardown: %O', this.browserName, error)
+    })
+    this.routes.clear()
 
     // https://github.com/webdriverio/webdriverio/blob/ab1a2e82b13a9c7d0e275ae87e7357e1b047d8d3/packages/wdio-runner/src/index.ts#L486
     await browser.deleteSession()

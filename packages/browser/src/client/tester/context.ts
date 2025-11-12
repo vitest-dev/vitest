@@ -6,6 +6,13 @@ import type { RunnerTask } from 'vitest'
 import type {
   BrowserLocators,
   BrowserPage,
+  BrowserRoute,
+  BrowserRouteAbortOptions,
+  BrowserRouteContinueOverrides,
+  BrowserRouteFulfillOptions,
+  BrowserRouteHandler,
+  BrowserRouteMatch,
+  BrowserRouteRequest,
   Locator,
   LocatorSelectors,
   UserEvent,
@@ -28,6 +35,256 @@ const channel = new BroadcastChannel(`vitest:${sessionId}`)
 function triggerCommand<T>(command: string, args: any[], error?: Error) {
   return getBrowserState().commands.triggerCommand<T>(command, args, error)
 }
+
+type SerializedRouteMatcher
+  = | { type: 'string'; value: string }
+    | { type: 'regexp'; value: string; flags: string }
+
+interface RouteEvaluationRequest {
+  url: string
+  method: string
+  headers: Record<string, string>
+  postData?: string | null
+  resourceType?: string
+}
+
+type RouteEvaluationResult
+  = | { type: 'continue'; overrides?: BrowserRouteContinueOverrides }
+    | { type: 'fulfill'; status?: number; headers?: Record<string, string>; body?: string; contentType?: string }
+    | { type: 'abort'; errorCode?: string }
+
+interface RegisteredRoute {
+  id: string
+  match: BrowserRouteMatch
+  serialized: SerializedRouteMatcher
+  handler: BrowserRouteHandler
+}
+
+const registeredRoutes = new Map<string, RegisteredRoute>()
+const handlerToRouteIds = new Map<BrowserRouteHandler, Set<string>>()
+let routeIdCounter = 0
+
+function assertRouteSupported() {
+  if (provider !== 'playwright' && provider !== 'webdriverio') {
+    throw new Error('page.route is only supported when using the Playwright or WebdriverIO providers.')
+  }
+}
+
+function createRouteId(): string {
+  routeIdCounter += 1
+  return `vitest-route-${routeIdCounter}`
+}
+
+function serializeRouteMatcher(match: BrowserRouteMatch): SerializedRouteMatcher {
+  if (typeof match === 'string') {
+    return { type: 'string', value: match }
+  }
+  if (match instanceof RegExp) {
+    return { type: 'regexp', value: match.source, flags: match.flags }
+  }
+  throw new TypeError('Only string or RegExp matchers are supported for page.route.')
+}
+
+function sameMatcher(a: BrowserRouteMatch, b: BrowserRouteMatch): boolean {
+  if (typeof a === 'string' && typeof b === 'string') {
+    return a === b
+  }
+  if (a instanceof RegExp && b instanceof RegExp) {
+    return a.source === b.source && a.flags === b.flags
+  }
+  return false
+}
+
+function registerRouteLocally(match: BrowserRouteMatch, handler: BrowserRouteHandler): RegisteredRoute {
+  const id = createRouteId()
+  const serialized = serializeRouteMatcher(match)
+  const entry: RegisteredRoute = { id, match, serialized, handler }
+  registeredRoutes.set(id, entry)
+  const ids = handlerToRouteIds.get(handler) ?? new Set<string>()
+  ids.add(id)
+  handlerToRouteIds.set(handler, ids)
+  getBrowserState().cleanups.push(() => {
+    if (!registeredRoutes.has(id)) {
+      return
+    }
+    removeRouteLocally(id)
+    return triggerCommand('__vitest_route_unregister', [id]).catch(() => {})
+  })
+  return entry
+}
+
+function removeRouteLocally(id: string) {
+  const entry = registeredRoutes.get(id)
+  if (!entry) {
+    return
+  }
+  registeredRoutes.delete(id)
+  const ids = handlerToRouteIds.get(entry.handler)
+  if (ids) {
+    ids.delete(id)
+    if (!ids.size) {
+      handlerToRouteIds.delete(entry.handler)
+    }
+  }
+}
+
+function clearAllRoutesLocally() {
+  registeredRoutes.clear()
+  handlerToRouteIds.clear()
+}
+
+function findMatchingRoutes(match: BrowserRouteMatch, handler?: BrowserRouteHandler): RegisteredRoute[] {
+  const routes = Array.from(registeredRoutes.values()).filter(entry => sameMatcher(entry.match, match))
+  if (!handler) {
+    return routes
+  }
+  return routes.filter(entry => entry.handler === handler)
+}
+
+class BrowserRouteRequestImpl implements BrowserRouteRequest {
+  constructor(private readonly payload: RouteEvaluationRequest) {}
+
+  url(): string {
+    return this.payload.url
+  }
+
+  method(): string {
+    return this.payload.method
+  }
+
+  headers(): Record<string, string> {
+    return { ...this.payload.headers }
+  }
+
+  postData(): string | null {
+    return this.payload.postData ?? null
+  }
+
+  resourceType(): string | undefined {
+    return this.payload.resourceType
+  }
+}
+
+class BrowserRouteImpl implements BrowserRoute {
+  private handled = false
+  private result: RouteEvaluationResult = { type: 'continue' }
+
+  constructor(private readonly requestInfo: BrowserRouteRequestImpl) {}
+
+  request(): BrowserRouteRequest {
+    return this.requestInfo
+  }
+
+  fulfill(options: BrowserRouteFulfillOptions) {
+    this.ensureNotHandled('fulfill')
+    if (options.body != null && typeof options.body !== 'string') {
+      throw new TypeError('route.fulfill only supports string bodies.')
+    }
+    let headers = normalizeHeaders(options.headers)
+    if (options.contentType) {
+      headers ??= {}
+      headers['content-type'] = options.contentType
+    }
+    this.result = {
+      type: 'fulfill',
+      status: options.status,
+      headers,
+      body: options.body,
+      contentType: options.contentType,
+    }
+    this.handled = true
+  }
+
+  abort(error?: string | BrowserRouteAbortOptions) {
+    this.ensureNotHandled('abort')
+    const errorCode = typeof error === 'string' ? error : error?.errorCode
+    this.result = {
+      type: 'abort',
+      errorCode,
+    }
+    this.handled = true
+  }
+
+  continue(overrides?: BrowserRouteContinueOverrides) {
+    this.ensureNotHandled('continue')
+    this.result = {
+      type: 'continue',
+      overrides: normalizeContinueOverrides(overrides),
+    }
+    this.handled = true
+  }
+
+  getResult(): RouteEvaluationResult {
+    return this.result
+  }
+
+  private ensureNotHandled(action: string) {
+    if (this.handled) {
+      throw new Error(`route.${action} was already called for this request.`)
+    }
+  }
+}
+
+function normalizeHeaders(headers?: Record<string, string>): Record<string, string> | undefined {
+  if (!headers) {
+    return undefined
+  }
+  const normalized: Record<string, string> = {}
+  for (const [key, value] of Object.entries(headers)) {
+    if (value == null) {
+      continue
+    }
+    normalized[key] = String(value)
+  }
+  return normalized
+}
+
+function normalizeContinueOverrides(
+  overrides?: BrowserRouteContinueOverrides,
+): BrowserRouteContinueOverrides | undefined {
+  if (!overrides) {
+    return undefined
+  }
+  const normalized: BrowserRouteContinueOverrides = {}
+  if (overrides.url != null) {
+    normalized.url = overrides.url
+  }
+  if (overrides.method != null) {
+    normalized.method = overrides.method
+  }
+  if (overrides.headers) {
+    normalized.headers = normalizeHeaders(overrides.headers)
+  }
+  if (overrides.postData != null) {
+    normalized.postData = overrides.postData
+  }
+  return normalized
+}
+
+async function handleRoute(routeId: string, payload: RouteEvaluationRequest): Promise<RouteEvaluationResult> {
+  const entry = registeredRoutes.get(routeId)
+  if (!entry) {
+    return { type: 'continue' }
+  }
+  const request = new BrowserRouteRequestImpl(payload)
+  const route = new BrowserRouteImpl(request)
+  try {
+    await entry.handler(route, request)
+  }
+  catch (error) {
+    console.error('[vitest] Failed to execute route handler', error)
+    return { type: 'continue' }
+  }
+  return route.getResult()
+}
+
+declare global {
+  interface Window {
+    __vitest_handleRoute?: (routeId: string, payload: RouteEvaluationRequest) => Promise<RouteEvaluationResult> | RouteEvaluationResult
+  }
+}
+
+window.__vitest_handleRoute = handleRoute
 
 export function createUserEvent(__tl_user_event_base__?: TestingLibraryUserEvent, options?: TestingLibraryOptions): UserEvent {
   if (__tl_user_event_base__) {
@@ -268,6 +525,48 @@ export const page: BrowserPage = {
           reject(new Error(e.data.error))
         }
       })
+    })
+  },
+  route(match, handler) {
+    assertRouteSupported()
+    if (typeof handler !== 'function') {
+      throw new TypeError('page.route requires a handler function.')
+    }
+    const entry = registerRouteLocally(match, handler)
+    return ensureAwaited(async (error) => {
+      try {
+        await triggerCommand('__vitest_route_register', [{
+          id: entry.id,
+          matcher: entry.serialized,
+        }], error)
+      }
+      catch (err) {
+        removeRouteLocally(entry.id)
+        throw err
+      }
+    })
+  },
+  unroute(match, handler) {
+    assertRouteSupported()
+    const targets = findMatchingRoutes(match, handler)
+    if (!targets.length) {
+      return Promise.resolve()
+    }
+    return ensureAwaited(async (error) => {
+      for (const entry of targets) {
+        await triggerCommand('__vitest_route_unregister', [entry.id], error)
+        removeRouteLocally(entry.id)
+      }
+    })
+  },
+  unrouteAll() {
+    assertRouteSupported()
+    if (!registeredRoutes.size) {
+      return Promise.resolve()
+    }
+    return ensureAwaited(async (error) => {
+      await triggerCommand('__vitest_route_reset', [], error)
+      clearAllRoutesLocally()
     })
   },
   async screenshot(options = {}) {
