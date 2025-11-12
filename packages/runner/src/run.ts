@@ -22,7 +22,7 @@ import { getSafeTimers } from '@vitest/utils/timers'
 import { collectTests } from './collect'
 import { abortContextSignal, getFileContext } from './context'
 import { PendingError, TestRunAbortError } from './errors'
-import { callFixtureCleanup } from './fixture'
+import { callFixtureCleanup, getFixtureCleanups } from './fixture'
 import { getBeforeHookCleanupCallback } from './hooks'
 import { getFn, getHooks } from './map'
 import { addRunningTest, getRunningTests, setCurrentTest } from './test-state'
@@ -365,7 +365,10 @@ export async function runTest(test: Test, runner: VitestRunner): Promise<void> {
         if (beforeEachCleanups.length) {
           await $('test.run.cleanup', () => callCleanupHooks(runner, beforeEachCleanups))
         }
-        await $('test.run.fixtures.cleanup', () => callFixtureCleanup(test.context))
+        const fixtureCleanups = getFixtureCleanups(test.context)
+        if (fixtureCleanups) {
+          await $('test.run.fixtures.cleanup', () => callFixtureCleanup(test.context))
+        }
       }
       catch (e) {
         failTask(test.result, e, runner.config.diffOptions)
@@ -562,7 +565,10 @@ export async function runSuite(suite: Suite, runner: VitestRunner): Promise<void
       }
       if (suite.file === suite) {
         const context = getFileContext(suite as File)
-        await $('suite.run.fixtures.cleanup', () => callFixtureCleanup(context))
+        const fixtureCleanups = getFixtureCleanups(context)
+        if (fixtureCleanups) {
+          await $('suite.run.fixtures.cleanup', () => callFixtureCleanup(context))
+        }
       }
     }
     catch (e) {
@@ -646,7 +652,7 @@ export async function runFiles(files: File[], runner: VitestRunner): Promise<voi
       }
     }
     await runner.otel!(
-      'run.file',
+      'run.spec',
       {
         'code.file.path': file.filepath,
         'vitest.suite.tasks.length': file.tasks.length,
@@ -667,6 +673,7 @@ function defaultOtel<T>(_: string, attributes: any, cb?: () => T): T {
 
 export async function startTests(specs: string[] | FileSpecification[], runner: VitestRunner): Promise<File[]> {
   runner.otel ??= defaultOtel
+  const $ = runner.otel
   const cancel = runner.cancel?.bind(runner)
   // Ideally, we need to have an event listener for this, but only have a runner here.
   // Adding another onCancel felt wrong (maybe it needs to be refactored)
@@ -682,8 +689,9 @@ export async function startTests(specs: string[] | FileSpecification[], runner: 
   if (!workerRunners.has(runner)) {
     runner.onCleanupWorkerContext?.(async () => {
       const context = runner.getWorkerContext?.()
-      if (context) {
-        await callFixtureCleanup(context)
+      const fixtureCleanups = context ? getFixtureCleanups(context) : undefined
+      if (fixtureCleanups) {
+        await $('worker.fixtures.cleanup', () => callFixtureCleanup(context!))
       }
     })
     workerRunners.add(runner)
