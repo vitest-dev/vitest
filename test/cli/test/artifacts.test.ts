@@ -10,25 +10,23 @@ export async function externalArtifactRecord(recordArtifact, task) {
 }
 `
 
-const annotationTest = /* ts */`
+const artifactsTest = /* ts */`
 import { test, describe, recordArtifact } from 'vitest'
 import { externalArtifactRecord } from './test-3.js'
 
 test('simple', async ({ task }) => {
-  await recordArtifact({ type: '1' }, task)
-  await recordArtifact({ type: '2' }, task)
-  await recordArtifact({ type: '3', attachments: [{ path: './test-3.js' }] }, task)
-  await recordArtifact({ type: '4', attachments: [{ path: './test-4.js' }] }, task)
+  await recordArtifact({ type: 'with-no-attachments' }, task)
+  await recordArtifact({ type: 'with-one-attachment', attachments: [{ path: './test-3.js' }] }, task)
+  await recordArtifact({ type: 'with-multiple-attachments', attachments: [{ path: './test-3.js' }, { path: './test-4.js' }] }, task)
   await externalArtifactRecord(recordArtifact, task)
-  await recordArtifact({ type: 'with base64 body', attachments: [{ body: 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/' }]}, task)
-  await recordArtifact({ type: 'with Uint8Array body', attachments: [{ body: new Uint8Array(Array.from({ length: 256 }).map((_, i) => i)) }] }, task)
-  await recordArtifact({ type: 'with contentType', attachments: [{ body: '', contentType: 'text/plain' }] }, task)
+  await recordArtifact({ type: 'with-base64', attachments: [{ body: 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/' }]}, task)
+  await recordArtifact({ type: 'with-bytes', attachments: [{ body: new Uint8Array(Array.from({ length: 256 }).map((_, i) => i)) }] }, task)
+  await recordArtifact({ type: 'with-contentType', attachments: [{ body: '', contentType: 'text/plain' }] }, task)
 })
 
 describe('suite', () => {
   test('second', async ({ task }) => {
-    await recordArtifact({ type: '5' }, task)
-    await recordArtifact({ type: '6', attachments: [{ path: 'https://absolute-path.com' }] }, task)
+    await recordArtifact({ type: 'with-external-link', attachments: [{ path: 'https://absolute-path.com' }] }, task)
   })
 })
 `
@@ -48,14 +46,14 @@ describe('API', () => {
         ],
       },
     },
-  ])('annotations are exposed correctly in $name', async (options) => {
+  ])('artifacts are exposed correctly in $name', async (options) => {
     const events: string[] = []
     const annotations: Record<string, ReadonlyArray<TestAnnotation>> = {}
     const artifacts: Record<string, ReadonlyArray<TestArtifact>> = {}
 
     const { stderr } = await runInlineTests(
       {
-        'basic.test.ts': annotationTest,
+        'basic.test.ts': artifactsTest,
         'test-3.js': test3Content,
         'test-4.js': '',
       },
@@ -112,20 +110,21 @@ describe('API', () => {
     expect(events).toMatchInlineSnapshot(`
       [
         "[ready] simple",
-        "[artifact] simple 1 path=undefined contentType=undefined body=undefined",
-        "[artifact] simple 2 path=undefined contentType=undefined body=undefined",
-        "[artifact] simple 3 path=[ '<root>/.vitest-attachments/<hash>.js' ] contentType=[ 'text/javascript' ] body=[ undefined ]",
-        "[artifact] simple 4 path=[ '<root>/.vitest-attachments/<hash>.js' ] contentType=[ 'text/javascript' ] body=[ undefined ]",
+        "[artifact] simple with-no-attachments path=undefined contentType=undefined body=undefined",
+        "[artifact] simple with-one-attachment path=[ '<root>/.vitest-attachments/<hash>.js' ] contentType=[ 'text/javascript' ] body=[ undefined ]",
+        "[artifact] simple with-multiple-attachments path=[
+        '<root>/.vitest-attachments/<hash>.js',
+        '<root>/.vitest-attachments/<hash>.js'
+      ] contentType=[ 'text/javascript', 'text/javascript' ] body=[ undefined, undefined ]",
         "[artifact] simple external path=undefined contentType=undefined body=undefined",
-        "[artifact] simple with base64 body path=[ undefined ] contentType=[ undefined ] body=[ 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/' ]",
-        "[artifact] simple with Uint8Array body path=[ undefined ] contentType=[ undefined ] body=[
+        "[artifact] simple with-base64 path=[ undefined ] contentType=[ undefined ] body=[ 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/' ]",
+        "[artifact] simple with-bytes path=[ undefined ] contentType=[ undefined ] body=[
         'AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8gISIjJCUmJygpKissLS4vMDEyMzQ1Njc4OTo7PD0+P0BBQkNERUZHSElKS0xNTk9QUVJTVFVWV1hZWltcXV5fYGFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6e3x9fn+AgYKDhIWGh4iJiouMjY6PkJGSk5SVlpeYmZqbnJ2en6ChoqOkpaanqKmqq6ytrq+wsbKztLW2t7i5uru8vb6/wMHCw8TFxsfIycrLzM3Oz9DR0tPU1dbX2Nna29zd3t/g4eLj5OXm5+jp6uvs7e7v8PHy8/T19vf4+fr7/P3+/w=='
       ]",
-        "[artifact] simple with contentType path=[ undefined ] contentType=[ 'text/plain' ] body=[ '' ]",
+        "[artifact] simple with-contentType path=[ undefined ] contentType=[ 'text/plain' ] body=[ '' ]",
         "[result] simple",
         "[ready] second",
-        "[artifact] second 5 path=undefined contentType=undefined body=undefined",
-        "[artifact] second 6 path=[ 'https://absolute-path.com' ] contentType=[ undefined ] body=[ undefined ]",
+        "[artifact] second with-external-link path=[ 'https://absolute-path.com' ] contentType=[ undefined ] body=[ undefined ]",
         "[result] second",
       ]
     `)
@@ -133,14 +132,6 @@ describe('API', () => {
     expect(artifacts).toMatchInlineSnapshot(`
       {
         "second": [
-          {
-            "location": {
-              "column": 11,
-              "file": "<root>/basic.test.ts",
-              "line": 18,
-            },
-            "type": "5",
-          },
           {
             "attachments": [
               {
@@ -150,9 +141,9 @@ describe('API', () => {
             "location": {
               "column": 11,
               "file": "<root>/basic.test.ts",
-              "line": 19,
+              "line": 17,
             },
-            "type": "6",
+            "type": "with-external-link",
           },
         ],
         "simple": [
@@ -162,18 +153,28 @@ describe('API', () => {
               "file": "<root>/basic.test.ts",
               "line": 6,
             },
-            "type": "1",
+            "type": "with-no-attachments",
           },
           {
+            "attachments": [
+              {
+                "contentType": "text/javascript",
+                "path": "<root>/.vitest-attachments/<hash>.js",
+              },
+            ],
             "location": {
               "column": 9,
               "file": "<root>/basic.test.ts",
               "line": 7,
             },
-            "type": "2",
+            "type": "with-one-attachment",
           },
           {
             "attachments": [
+              {
+                "contentType": "text/javascript",
+                "path": "<root>/.vitest-attachments/<hash>.js",
+              },
               {
                 "contentType": "text/javascript",
                 "path": "<root>/.vitest-attachments/<hash>.js",
@@ -184,27 +185,13 @@ describe('API', () => {
               "file": "<root>/basic.test.ts",
               "line": 8,
             },
-            "type": "3",
+            "type": "with-multiple-attachments",
           },
           {
-            "attachments": [
-              {
-                "contentType": "text/javascript",
-                "path": "<root>/.vitest-attachments/<hash>.js",
-              },
-            ],
             "location": {
               "column": 9,
               "file": "<root>/basic.test.ts",
               "line": 9,
-            },
-            "type": "4",
-          },
-          {
-            "location": {
-              "column": 9,
-              "file": "<root>/basic.test.ts",
-              "line": 10,
             },
             "type": "external",
           },
@@ -217,9 +204,9 @@ describe('API', () => {
             "location": {
               "column": 9,
               "file": "<root>/basic.test.ts",
-              "line": 11,
+              "line": 10,
             },
-            "type": "with base64 body",
+            "type": "with-base64",
           },
           {
             "attachments": [
@@ -230,9 +217,9 @@ describe('API', () => {
             "location": {
               "column": 9,
               "file": "<root>/basic.test.ts",
-              "line": 12,
+              "line": 11,
             },
-            "type": "with Uint8Array body",
+            "type": "with-bytes",
           },
           {
             "attachments": [
@@ -244,9 +231,9 @@ describe('API', () => {
             "location": {
               "column": 9,
               "file": "<root>/basic.test.ts",
-              "line": 13,
+              "line": 12,
             },
-            "type": "with contentType",
+            "type": "with-contentType",
           },
         ],
       }
@@ -259,10 +246,10 @@ describe('API', () => {
     `)
   })
 
-  test('cannot annotate tests when the test finished running', async () => {
+  test('cannot record artifacts when the test finished running', async () => {
     const { stderr } = await runInlineTests({
       'basic.test.ts': `
-        import { test, recordArtifact } from 'vitest'
+        import { recordArtifact } from 'vitest'
         test('finished early', ({ task }) => {
           setTimeout(() => {
             recordArtifact({ type: 'invalid-artifact' }, task)
@@ -273,16 +260,16 @@ describe('API', () => {
           await new Promise(r => setTimeout(() => r(), 100))
         })
       `,
-    })
+    }, { globals: true })
     expect(stderr).toContain('Cannot record a test artifact outside of the test run. The test "finished early" finished running with the "pass" state already.')
   })
 })
 
 describe('reporters', () => {
-  test('tap reporter', async () => {
+  test('tap', async () => {
     const { stdout } = await runInlineTests(
       {
-        'basic.test.ts': annotationTest,
+        'basic.test.ts': artifactsTest,
         'test-3.js': test3Content,
         'test-4.js': '',
       },
@@ -304,10 +291,10 @@ describe('reporters', () => {
     `)
   })
 
-  test('tap-flat reporter', async () => {
+  test('tap-flat', async () => {
     const { stdout } = await runInlineTests(
       {
-        'basic.test.ts': annotationTest,
+        'basic.test.ts': artifactsTest,
         'test-3.js': test3Content,
         'test-4.js': '',
       },
@@ -323,10 +310,10 @@ describe('reporters', () => {
     `)
   })
 
-  test('junit reporter', async () => {
+  test('junit', async () => {
     const { stdout } = await runInlineTests(
       {
-        'basic.test.ts': annotationTest,
+        'basic.test.ts': artifactsTest,
         'test-3.js': test3Content,
         'test-4.js': '',
       },
@@ -352,10 +339,10 @@ describe('reporters', () => {
     `)
   })
 
-  test('github-actions reporter', async () => {
+  test('github-actions', async () => {
     const { stdout, ctx } = await runInlineTests(
       {
-        'basic.test.ts': annotationTest,
+        'basic.test.ts': artifactsTest,
         'test-3.js': test3Content,
         'test-4.js': '',
       },
@@ -368,40 +355,66 @@ describe('reporters', () => {
   })
 
   test('verbose non-tty', async () => {
-    const { stdout } = await runInlineTests(
+    const { stdout, ctx } = await runInlineTests(
       {
-        'basic.test.ts': annotationTest,
+        'basic.test.ts': artifactsTest,
         'test-3.js': test3Content,
         'test-4.js': '',
       },
       { reporters: [['verbose', { isTTY: false }]] },
     )
 
-    const result = stdout
-      .replace(/\d+ms/g, '<time>')
-      .split('\n')
-      // remove banner and summary
-      .slice(3, -6)
-      .join('\n')
+    expect(
+      stdout
+        .replace(/\d+\.\d+\.\d+/, '<version>')
+        .replace(ctx!.config.root, '<root>')
+        .replace(/\d+:\d+:\d+/, '<time>')
+        .replace(/\d+m?s/g, '<duration>'),
+    ).toMatchInlineSnapshot(`
+      "
+       RUN  v<version> <root>
 
-    expect(result).toMatchInlineSnapshot(`
-      " ✓ basic.test.ts > simple <time>
-       ✓ basic.test.ts > suite > second <time>
+       ✓ basic.test.ts > simple <duration>
+       ✓ basic.test.ts > suite > second <duration>
+
+       Test Files  1 passed (1)
+            Tests  2 passed (2)
+         Start at  <time>
+         Duration  <duration> (transform <duration>, setup <duration>, collect <duration>, tests <duration>, environment <duration>, prepare <duration>)
+
       "
     `)
   })
 
-  test('default reporter prints annotations after the error', async () => {
-    const { stdout, stderr } = await runInlineTests(
+  test('default', async () => {
+    const { stdout, stderr, ctx } = await runInlineTests(
       {
-        'basic.test.ts': annotationTest,
+        'basic.test.ts': artifactsTest,
         'test-3.js': test3Content,
         'test-4.js': '',
       },
       { reporters: [['default', { isTTY: false }]] },
     )
 
-    expect(stdout).toContain('✓ basic.test.ts (2 tests)')
+    expect(
+      stdout
+        .replace(/\d+\.\d+\.\d+/, '<version>')
+        .replace(ctx!.config.root, '<root>')
+        .replace(/\d+:\d+:\d+/, '<time>')
+        .replace(/\d+m?s/g, '<duration>'),
+    ).toMatchInlineSnapshot(`
+      "
+       RUN  v<version> <root>
+
+       ✓ basic.test.ts (2 tests) <duration>
+
+       Test Files  1 passed (1)
+            Tests  2 passed (2)
+         Start at  <time>
+         Duration  <duration> (transform <duration>, setup <duration>, collect <duration>, tests <duration>, environment <duration>, prepare <duration>)
+
+      "
+    `)
     expect(stderr).toMatchInlineSnapshot(`""`)
   })
 })
