@@ -36,7 +36,7 @@ export class VitestTestRunner implements VitestRunner {
   private assertionsErrors = new WeakMap<Readonly<Task>, Error>()
 
   public pool: string = this.workerState.ctx.pool
-  private otel!: Telemetry
+  private _otel!: Telemetry
 
   constructor(public config: SerializedConfig) {}
 
@@ -47,7 +47,7 @@ export class VitestTestRunner implements VitestRunner {
         this.workerState.evaluatedModules.invalidateModule(moduleNode)
       }
     }
-    return this.otel.$(
+    return this._otel.$(
       'vitest.test.runner.import',
       {
         attributes: {
@@ -236,8 +236,13 @@ export class VitestTestRunner implements VitestRunner {
     return importDurations
   }
 
+  otel = <T>(name: string, attributes: Record<string, any> | (() => T), cb?: () => T): T => {
+    const options = typeof attributes === 'object' ? { attributes } : {}
+    return this._otel.$(`vitest.test.runner.${name}`, options, cb || attributes as () => T)
+  }
+
   __setOtel(otel: Telemetry): void {
-    this.otel = otel
+    this._otel = otel
   }
 }
 

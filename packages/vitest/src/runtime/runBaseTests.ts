@@ -45,35 +45,39 @@ export async function run(
   })
 
   workerState.durations.prepare = performance.now() - workerState.durations.prepare
+  await otel.$(
+    `vitest.test.runner.${method}`,
+    async () => {
+      for (const file of files) {
+        if (config.isolate) {
+          moduleRunner.mocker.reset()
+          resetModules(workerState.evaluatedModules, true)
+        }
 
-  for (const file of files) {
-    if (config.isolate) {
-      moduleRunner.mocker.reset()
-      resetModules(workerState.evaluatedModules, true)
-    }
+        workerState.filepath = file.filepath
 
-    workerState.filepath = file.filepath
+        if (method === 'run') {
+          await otel.$(
+            `vitest.test.runner.${method}.module`,
+            { attributes: { 'code.file.path': file.filepath } },
+            () => startTests([file], testRunner),
+          )
+        }
+        else {
+          await otel.$(
+            `vitest.test.runner.${method}.module`,
+            { attributes: { 'code.file.path': file.filepath } },
+            () => collectTests([file], testRunner),
+          )
+        }
 
-    if (method === 'run') {
-      await otel.$(
-        'vitest.test.runner.run',
-        { attributes: { 'code.file.path': file.filepath } },
-        () => startTests([file], testRunner),
-      )
-    }
-    else {
-      await otel.$(
-        'vitest.test.runner.collect',
-        { attributes: { 'code.file.path': file.filepath } },
-        () => collectTests([file], testRunner),
-      )
-    }
-
-    // reset after tests, because user might call `vi.setConfig` in setupFile
-    vi.resetConfig()
-    // mocks should not affect different files
-    vi.restoreAllMocks()
-  }
+        // reset after tests, because user might call `vi.setConfig` in setupFile
+        vi.resetConfig()
+        // mocks should not affect different files
+        vi.restoreAllMocks()
+      }
+    },
+  )
 
   await stopCoverageInsideWorker(config.coverage, moduleRunner, { isolate: config.isolate })
 }

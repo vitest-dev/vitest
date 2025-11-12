@@ -29,6 +29,9 @@ interface OTEL {
 }
 
 export class Telemetry {
+  /**
+   * otel stands for OpenTelemetry
+   */
   #otel: OTEL | null = null
   // TODO: we need sdk to shutdown the server
   // is there a better way to flish events?
@@ -130,6 +133,9 @@ export class Telemetry {
               message: error.message,
               stack: error.stack,
             })
+            span.setStatus({
+              code: this.#otel!.SpanStatusCode.ERROR,
+            })
             throw error
           })
           .finally(() => span.end()) as T
@@ -142,6 +148,9 @@ export class Telemetry {
           name: error.name,
           message: error.message,
           stack: error.stack,
+        })
+        span.setStatus({
+          code: this.#otel!.SpanStatusCode.ERROR,
         })
       }
       throw error
@@ -168,14 +177,14 @@ export class Telemetry {
     if (context) {
       return otel.tracer.startActiveSpan(
         name,
-        typeof optionsOrFn === 'function' ? {} : optionsOrFn,
+        options,
         context,
         span => this.#callActiveSpan(span, callback),
       )
     }
     return otel.tracer.startActiveSpan(
       name,
-      typeof optionsOrFn === 'function' ? {} : optionsOrFn,
+      options,
       span => this.#callActiveSpan(span, callback),
     )
   }

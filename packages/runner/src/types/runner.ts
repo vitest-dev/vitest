@@ -187,6 +187,11 @@ export interface VitestRunner {
   getWorkerContext?: () => Record<string, unknown>
   onCleanupWorkerContext?: (cleanup: () => unknown) => void
 
+  // eslint-disable-next-line ts/method-signature-style
+  otel?<T>(name: string, cb: () => T): T
+  // eslint-disable-next-line ts/method-signature-style
+  otel?<T>(name: string, attributes: Record<string, any>, cb: () => T): T
+
   /** @private */
   _currentTaskStartTime?: number
   /** @private */
