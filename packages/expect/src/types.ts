@@ -6,6 +6,7 @@
  *
  */
 
+import type { Test } from '@vitest/runner'
 import type { MockInstance } from '@vitest/spy'
 import type { Constructable } from '@vitest/utils'
 import type { Formatter } from 'tinyrainbow'
@@ -73,6 +74,7 @@ export interface MatcherState {
   }
   soft?: boolean
   poll?: boolean
+  task?: Readonly<Test>
 }
 
 export interface SyncExpectationResult {
