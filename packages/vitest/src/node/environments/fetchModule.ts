@@ -50,12 +50,12 @@ export function createFetchModuleFunction(
     // we instead rely on our own `shouldExternalize` method because Vite
     // doesn't support `resolve.external` in non SSR environments (jsdom/happy-dom)
     if (url.startsWith('data:')) {
-      fetcherSpan.setAttribute('vitest.fetcher.external', url)
+      fetcherSpan.setAttribute('vitest.module.external', url)
       return { externalize: url, type: 'builtin' }
     }
 
     if (url === '/@vite/client' || url === '@vite/client') {
-      fetcherSpan.setAttribute('vitest.fetcher.external', url)
+      fetcherSpan.setAttribute('vitest.module.external', url)
       // this will be stubbed
       return { externalize: '/@vite/client', type: 'module' }
     }
@@ -63,7 +63,7 @@ export function createFetchModuleFunction(
     const isFileUrl = url.startsWith('file://')
 
     if (isExternalUrl(url) && !isFileUrl) {
-      fetcherSpan.setAttribute('vitest.fetcher.external', url)
+      fetcherSpan.setAttribute('vitest.module.external', url)
       return { externalize: url, type: 'network' }
     }
 
@@ -87,12 +87,12 @@ export function createFetchModuleFunction(
       const id = moduleGraphModule.id
       const externalize = await resolver.shouldExternalize(id)
       if (externalize) {
-        fetcherSpan.setAttribute('vitest.fetcher.external', externalize)
+        fetcherSpan.setAttribute('vitest.module.external', externalize)
         return { externalize, type: 'module' }
       }
     }
 
-    fetcherSpan.setAttribute('vitest.fetcher.external', false)
+    fetcherSpan.setAttribute('vitest.module.external', false)
 
     let moduleRunnerModule: FetchResult | undefined
 
