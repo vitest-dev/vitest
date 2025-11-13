@@ -104,13 +104,23 @@ export class VitestModuleRunner extends viteModuleRunner.ModuleRunner {
 
   public async import(rawId: string): Promise<any> {
     const resolved = await this._otel.$(
-      'vitest.runtime.runner.resolve',
+      'vitest.module.resolve_id',
       {
         attributes: {
-          'vitest.module.rawId': rawId,
+          'vitest.module.raw_id': rawId,
         },
       },
-      () => this.vitestOptions.transport.resolveId(rawId),
+      async (span) => {
+        const result = await this.vitestOptions.transport.resolveId(rawId)
+        if (result) {
+          span.setAttributes({
+            'vitest.module.url': result.url,
+            'vitest.module.file': result.file,
+            'vitest.module.id': result.id,
+          })
+        }
+        return result
+      },
     )
     return super.import(resolved ? resolved.url : rawId)
   }

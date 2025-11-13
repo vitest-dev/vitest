@@ -71,10 +71,7 @@ export function createFetchModuleFunction(
     // so we do this first to resolve the module and check its `id`. The next call of
     // `ensureEntryFromUrl` inside `fetchModule` is cached and should take no time
     // This also makes it so externalized modules are inside the module graph.
-    const moduleGraphModule = await telemetry.$(
-      'vitest.fetcher.ensureEntryFromUrl',
-      () => environment.moduleGraph.ensureEntryFromUrl(unwrapId(url)),
-    )
+    const moduleGraphModule = await environment.moduleGraph.ensureEntryFromUrl(unwrapId(url))
     const cached = !!moduleGraphModule.transformResult
 
     if (moduleGraphModule.file) {
@@ -88,7 +85,7 @@ export function createFetchModuleFunction(
 
     if (moduleGraphModule.id) {
       const id = moduleGraphModule.id
-      const externalize = await telemetry.$('vitest.fetcher.externalize', () => resolver.shouldExternalize(id))
+      const externalize = await resolver.shouldExternalize(id)
       if (externalize) {
         fetcherSpan.setAttribute('vitest.fetcher.external', externalize)
         return { externalize, type: 'module' }
@@ -102,72 +99,58 @@ export function createFetchModuleFunction(
     if (dump?.dumpFolder && dump.readFromDump) {
       const path = resolve(dump?.dumpFolder, url.replace(/[^\w+]/g, '-'))
       if (existsSync(path)) {
-        await telemetry.$('vitest.fetcher.debug.dumpFolder', async (span) => {
-          span.setAttribute('code.file.path', path)
-
-          const code = await readFile(path, 'utf-8')
-          const matchIndex = code.lastIndexOf('\n//')
-          if (matchIndex !== -1) {
-            const { id, file } = JSON.parse(code.slice(matchIndex + 4))
-            moduleRunnerModule = {
-              code,
-              id,
-              url,
-              file,
-              invalidate: false,
-            }
+        const code = await readFile(path, 'utf-8')
+        const matchIndex = code.lastIndexOf('\n//')
+        if (matchIndex !== -1) {
+          const { id, file } = JSON.parse(code.slice(matchIndex + 4))
+          moduleRunnerModule = {
+            code,
+            id,
+            url,
+            file,
+            invalidate: false,
           }
-        })
+        }
       }
     }
 
     if (!moduleRunnerModule) {
-      moduleRunnerModule = await telemetry.$(
-        'vitest.fetcher.fetchModule',
-        async (fetchModuleSpan) => {
-          const module = await fetchModule(
-            environment,
-            url,
-            importer,
-            {
-              ...options,
-              inlineSourceMap: false,
-            },
-          ).catch(handleRollupError)
-          if ('id' in module) {
-            fetchModuleSpan.setAttributes({
-              'vitest.fetchedModule.invalidate': module.invalidate,
-              'vitest.fetchedModule.codeLength': module.code.length,
-              'vitest.fetchedModule.id': module.id,
-              'vitest.fetchedModule.url': module.url,
-              'vitest.fetchedModule.cache': false,
-            })
-            if (module.file) {
-              fetchModuleSpan.setAttribute('code.file.path', module.file)
-              fetcherSpan.setAttribute('code.file.path', module.file)
-            }
-          }
-          else if ('cache' in module) {
-            fetchModuleSpan.setAttribute('vitest.fetchedModule.cache', module.cache)
-          }
-          else {
-            fetchModuleSpan.setAttribute('vitest.fetchedModule.type', module.type)
-            fetchModuleSpan.setAttribute('vitest.fetchedModule.external', module.externalize)
-          }
-          return module
+      moduleRunnerModule = await fetchModule(
+        environment,
+        url,
+        importer,
+        {
+          ...options,
+          inlineSourceMap: false,
         },
-      )
+      ).catch(handleRollupError)
+    }
+
+    if ('id' in moduleRunnerModule) {
+      fetcherSpan.setAttributes({
+        'vitest.fetchedModule.invalidate': moduleRunnerModule.invalidate,
+        'vitest.fetchedModule.codeLength': moduleRunnerModule.code.length,
+        'vitest.fetchedModule.id': moduleRunnerModule.id,
+        'vitest.fetchedModule.url': moduleRunnerModule.url,
+        'vitest.fetchedModule.cache': false,
+      })
+      if (moduleRunnerModule.file) {
+        fetcherSpan.setAttribute('code.file.path', moduleRunnerModule.file)
+      }
+    }
+    else if ('cache' in moduleRunnerModule) {
+      fetcherSpan.setAttribute('vitest.fetchedModule.cache', moduleRunnerModule.cache)
+    }
+    else {
+      fetcherSpan.setAttribute('vitest.fetchedModule.type', moduleRunnerModule.type)
+      fetcherSpan.setAttribute('vitest.fetchedModule.external', moduleRunnerModule.externalize)
     }
 
     const result = processResultSource(environment, moduleRunnerModule)
 
     if (dump?.dumpFolder && 'code' in result) {
       const path = resolve(dump?.dumpFolder, result.url.replace(/[^\w+]/g, '-'))
-      await telemetry.$(
-        'vitest.fetcher.debug.writeDump',
-        { attributes: { 'code.file.path': path } },
-        () => writeFile(path, `${result.code}\n// ${JSON.stringify({ id: result.id, file: result.file })}`, 'utf-8'),
-      )
+      await writeFile(path, `${result.code}\n// ${JSON.stringify({ id: result.id, file: result.file })}`, 'utf-8')
     }
 
     if (!cacheFs || !('code' in result)) {
@@ -198,19 +181,13 @@ export function createFetchModuleFunction(
     promises.set(
       tmp,
 
-      telemetry.$(
-        'vitest.fetcher.atomicWriteFile',
-        {
-          attributes: { 'code.file.path': tmp },
-        },
-        () =>
-          atomicWriteFile(tmp, code)
-            // Fallback to non-atomic write for windows case where file already exists:
-            .catch(() => writeFile(tmp, code, 'utf-8')),
-      ).finally(() => {
-        Reflect.set(transformResult, '_vitestTmp', tmp)
-        promises.delete(tmp)
-      }),
+      atomicWriteFile(tmp, code)
+      // Fallback to non-atomic write for windows case where file already exists:
+        .catch(() => writeFile(tmp, code, 'utf-8'))
+        .finally(() => {
+          Reflect.set(transformResult, '_vitestTmp', tmp)
+          promises.delete(tmp)
+        }),
     )
     await promises.get(tmp)
     return getCachedResult(result, tmp)
@@ -228,7 +205,7 @@ export function createFetchModuleFunction(
       ? telemetry.getContextFromCarrier(otelCarrier)
       : undefined
     return telemetry.$(
-      'vitest.fetcher',
+      'vitest.module.transform',
       context
         ? { context }
         : {},

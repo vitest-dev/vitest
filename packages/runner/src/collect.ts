@@ -31,10 +31,8 @@ export async function collectTests(
   for (const spec of specs) {
     const filepath = typeof spec === 'string' ? spec : spec.filepath
     await $(
-      'collect.spec',
-      {
-        'code.file.path': filepath,
-      },
+      'collect_spec',
+      { 'code.file.path': filepath },
       async () => {
         const testLocations = typeof spec === 'string' ? undefined : spec.testLocations
 

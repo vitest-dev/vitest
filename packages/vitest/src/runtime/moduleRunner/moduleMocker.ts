@@ -162,32 +162,23 @@ export class VitestMocker {
     external: string | null
   }> {
     return this._otel.$(
-      'vitest.mocker.resolve',
+      'vitest.mocker.resolve_id',
       {
         attributes: {
-          'vitest.module.rawId': rawId,
+          'vitest.module.raw_id': rawId,
           'vitest.module.importer': rawId,
         },
       },
       async (span) => {
         const result = await this.options.resolveId(rawId, importer)
         if (!result) {
-          span.setAttribute('vitest.mocker.resolvedId', false)
-        }
-        else {
-          span.setAttributes({
-            'vitest.mocker.resolvedId': result.id,
-            'vitest.mocker.file': result.file,
-            'vitest.mocker.url': result.url,
-          })
-        }
-        if (!result) {
+          span.addEvent('could not resolve id, fallback to unresolved values')
           const id = normalizeModuleId(rawId)
           span.setAttributes({
-            'vitest.mocker.resolvedId': id,
-            'vitest.mocker.url': rawId,
-            'vitest.mocker.external': id,
-            'vitest.mocker.fallback': true,
+            'vitest.module.id': id,
+            'vitest.module.url': rawId,
+            'vitest.module.external': id,
+            'vitest.module.fallback': true,
           })
           return {
             id,
@@ -201,9 +192,9 @@ export class VitestMocker {
           = !isAbsolute(result.file) || this.isModuleDirectory(result.file) ? normalizeModuleId(rawId) : null
         const id = normalizeModuleId(result.id)
         span.setAttributes({
-          'vitest.mocker.resolvedId': id,
-          'vitest.mocker.url': result.url,
-          'vitest.mocker.external': external ?? false,
+          'vitest.module.id': id,
+          'vitest.module.url': result.url,
+          'vitest.module.external': external ?? false,
         })
         return {
           ...result,
@@ -435,11 +426,11 @@ export class VitestMocker {
       const mockId = this.getMockPath(evaluatedNode.id)
 
       span.setAttributes({
-        'vitest.mocker.module.id': mockId,
-        'vitest.mocker.mock.type': mock.type,
-        'vitest.mocker.mock.id': mock.id,
-        'vitest.mocker.mock.url': mock.url,
-        'vitest.mocker.mock.raw': mock.raw,
+        'vitest.module.id': mockId,
+        'vitest.mock.type': mock.type,
+        'vitest.mock.id': mock.id,
+        'vitest.mock.url': mock.url,
+        'vitest.mock.raw': mock.raw,
       })
 
       if (mock.type === 'automock' || mock.type === 'autospy') {
@@ -491,7 +482,7 @@ export class VitestMocker {
         }
       }
       else if (mock.type === 'redirect' && !callstack.includes(mock.redirect)) {
-        span.setAttribute('vitest.mocker.mock.redirect', mock.redirect)
+        span.setAttribute('vitest.mock.redirect', mock.redirect)
         return mock.redirect
       }
     })

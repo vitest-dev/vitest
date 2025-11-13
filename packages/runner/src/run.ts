@@ -311,7 +311,7 @@ export async function runTest(test: Test, runner: VitestRunner): Promise<void> {
 
         test.result.repeatCount = repeatCount
 
-        beforeEachCleanups = await $('test.run.beforeEach', () => callSuiteHook(
+        beforeEachCleanups = await $('test.beforeEach', () => callSuiteHook(
           suite,
           test,
           'beforeEach',
@@ -320,7 +320,7 @@ export async function runTest(test: Test, runner: VitestRunner): Promise<void> {
         ))
 
         if (runner.runTask) {
-          await $('test.run.callback', () => runner.runTask!(test))
+          await $('test.callback', () => runner.runTask!(test))
         }
         else {
           const fn = getFn(test)
@@ -329,7 +329,7 @@ export async function runTest(test: Test, runner: VitestRunner): Promise<void> {
               'Test function is not found. Did you add it using `setFn`?',
             )
           }
-          await $('test.run.callback', () => fn())
+          await $('test.callback', () => fn())
         }
 
         await runner.onAfterTryTask?.(test, {
@@ -358,16 +358,16 @@ export async function runTest(test: Test, runner: VitestRunner): Promise<void> {
       }
 
       try {
-        await $('test.run.afterEach', () => callSuiteHook(suite, test, 'afterEach', runner, [
+        await $('test.afterEach', () => callSuiteHook(suite, test, 'afterEach', runner, [
           test.context,
           suite,
         ]))
         if (beforeEachCleanups.length) {
-          await $('test.run.cleanup', () => callCleanupHooks(runner, beforeEachCleanups))
+          await $('test.cleanup', () => callCleanupHooks(runner, beforeEachCleanups))
         }
         const fixtureCleanups = getFixtureCleanups(test.context)
         if (fixtureCleanups) {
-          await $('test.run.fixtures.cleanup', () => callFixtureCleanup(test.context))
+          await $('test.fixtures.cleanup', () => callFixtureCleanup(test.context))
         }
       }
       catch (e) {
@@ -375,11 +375,11 @@ export async function runTest(test: Test, runner: VitestRunner): Promise<void> {
       }
 
       if (test.onFinished?.length) {
-        await $('test.run.onFinished', () => callTestHooks(runner, test, test.onFinished!, 'stack'))
+        await $('test.onFinished', () => callTestHooks(runner, test, test.onFinished!, 'stack'))
       }
 
       if (test.result.state === 'fail' && test.onFailed?.length) {
-        await $('test.run.onFailed', () => callTestHooks(
+        await $('test.onFailed', () => callTestHooks(
           runner,
           test,
           test.onFailed!,
@@ -559,15 +559,15 @@ export async function runSuite(suite: Suite, runner: VitestRunner): Promise<void
     }
 
     try {
-      await $('suite.run.afterAll', () => callSuiteHook(suite, suite, 'afterAll', runner, [suite]))
+      await $('suite.afterAll', () => callSuiteHook(suite, suite, 'afterAll', runner, [suite]))
       if (beforeAllCleanups.length) {
-        await $('suite.run.cleanup', () => callCleanupHooks(runner, beforeAllCleanups))
+        await $('suite.cleanup', () => callCleanupHooks(runner, beforeAllCleanups))
       }
       if (suite.file === suite) {
         const context = getFileContext(suite as File)
         const fixtureCleanups = getFixtureCleanups(context)
         if (fixtureCleanups) {
-          await $('suite.run.fixtures.cleanup', () => callFixtureCleanup(context))
+          await $('suite.fixtures.cleanup', () => callFixtureCleanup(context))
         }
       }
     }

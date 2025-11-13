@@ -10,10 +10,6 @@ import type {
 } from '@opentelemetry/api'
 import type { OTELCarrier } from '../node/pools/types'
 
-// TODO: this still doesn't fix issues in timers-node.test.ts
-// we are calling it ourselves in case the timers are overriden by tests
-const performanceNow = performance.now.bind(performance)
-
 interface TelemetryOptions {
   enabled: boolean
   sdkPath?: string
@@ -52,6 +48,7 @@ export class Telemetry {
           context: api.context,
           propagation: api.propagation,
           trace: api.trace,
+          SpanKind: api.SpanKind,
           SpanStatusCode: api.SpanStatusCode,
         }
         this.#otel = otel
@@ -142,7 +139,7 @@ export class Telemetry {
             })
             throw error
           })
-          .finally(() => span.end(performanceNow())) as T
+          .finally(() => span.end()) as T
       }
       return result
     }
@@ -162,7 +159,7 @@ export class Telemetry {
     finally {
       // end sync callbcak
       if (!(result instanceof Promise)) {
-        span.end(performanceNow())
+        span.end()
       }
     }
   }
@@ -177,7 +174,6 @@ export class Telemetry {
 
     const otel = this.#otel
     const options = typeof optionsOrFn === 'function' ? {} : optionsOrFn
-    options.startTime = performanceNow()
     const context = options.context
     if (context) {
       return otel.tracer.startActiveSpan(

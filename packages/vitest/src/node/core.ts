@@ -599,7 +599,7 @@ export class Vitest {
       this.filenamePattern = filters && filters?.length > 0 ? filters : undefined
       startSpan.setAttribute('vitest.start.filters', this.filenamePattern || [])
       const files = await this._telemetry.$(
-        'vitest.getRelevantTestSpecifications',
+        'vitest.config.resolve_include_glob',
         async () => {
           const specifications = await this.specifications.getRelevantTestSpecifications(filters)
           startSpan.setAttribute(
@@ -618,7 +618,7 @@ export class Vitest {
 
       // if run with --changed, don't exit if no tests are found
       if (!files.length) {
-        await this._telemetry.$('vitest.testRun', async () => {
+        await this._telemetry.$('vitest.test_run', async () => {
           await this._testRun.start([])
           const coverage = await this.coverageProvider?.generateCoverage?.({ allTestsRun: true })
 
@@ -641,7 +641,7 @@ export class Vitest {
         // populate once, update cache on watch
         await this.cache.stats.populateStats(this.config.root, files)
 
-        testModules = await this._telemetry.$('vitest.testRun', () => this.runFiles(files, true))
+        testModules = await this._telemetry.$('vitest.test_run', () => this.runFiles(files, true))
       }
 
       if (this.config.watch) {

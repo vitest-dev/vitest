@@ -1,3 +1,4 @@
+import type { SpanOptions } from '@opentelemetry/api'
 import type { ExpectStatic } from '@vitest/expect'
 import type {
   CancelReason,
@@ -48,10 +49,9 @@ export class VitestTestRunner implements VitestRunner {
       }
     }
     return this._otel.$(
-      'vitest.test.runner.import',
+      `vitest.module.import_${source === 'setup' ? 'setup' : 'spec'}`,
       {
         attributes: {
-          'vitest.test.runner.import.source': source,
           'code.file.path': filepath,
         },
       },
@@ -237,7 +237,7 @@ export class VitestTestRunner implements VitestRunner {
   }
 
   otel = <T>(name: string, attributes: Record<string, any> | (() => T), cb?: () => T): T => {
-    const options = typeof attributes === 'object' ? { attributes } : {}
+    const options: SpanOptions = typeof attributes === 'object' ? { attributes } : {}
     return this._otel.$(`vitest.test.runner.${name}`, options, cb || attributes as () => T)
   }
 

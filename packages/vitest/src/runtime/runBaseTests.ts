@@ -29,7 +29,7 @@ export async function run(
 
   const [testRunner] = await Promise.all([
     otel.$('vitest.runtime.runner', () => resolveTestRunner(config, moduleRunner, otel)),
-    otel.$('vitest.runtime.globalEnv', () => setupGlobalEnv(config, environment)),
+    otel.$('vitest.runtime.global_env', () => setupGlobalEnv(config, environment)),
     otel.$('vitest.runtime.coverage.start', () => startCoverageInsideWorker(config.coverage, moduleRunner, { isolate: config.isolate })),
     otel.$('vitest.runtime.snapshot.environment', async () => {
       if (!workerState.config.snapshotOptions.snapshotEnvironment) {
