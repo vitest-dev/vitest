@@ -798,7 +798,7 @@ export function resolveConfig(
   resolved.hookTimeout ??= resolved.browser.enabled ? 30_000 : 10_000
 
   resolved.experimental ??= {}
-  if (resolved.experimental.openTelemetry) {
+  if (resolved.experimental.openTelemetry?.sdkPath) {
     resolved.experimental.openTelemetry.sdkPath = resolve(
       resolved.root,
       resolved.experimental.openTelemetry.sdkPath,

@@ -828,6 +828,9 @@ export interface InlineConfig {
 
   /** @experimental */
   experimental?: {
+    /**
+     * {@link https://vitest.dev/guide/open-telemetry}
+     */
     openTelemetry?: {
       enabled: boolean
       sdkPath: string
