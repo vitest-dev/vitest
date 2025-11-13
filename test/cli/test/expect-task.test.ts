@@ -1,28 +1,11 @@
 import { expect, test } from 'vitest'
 import { runInlineTests } from '../../test-utils'
 
-function createTest({
-  context = '/* context */',
-  globalPrelude = '/* global-prelude */',
-  imports = '/* imports */',
-  options = '/* options */',
-  prelude = '/* prelude */',
-}: Partial<
-  Record<
-    | 'context'
-    | 'globalPrelude'
-    | 'imports'
-    | 'options'
-    | 'prelude',
-    string
-  >
->) {
-  return /* ts */`
+const globalsGlobalExtend = /* ts */`
   import {
     test,
     describe,
     recordArtifact,
-    ${imports}
   } from 'vitest'
 
   function toMatchTest(this, expected) {
@@ -33,11 +16,10 @@ function createTest({
     return { pass: true, message: () => undefined }
   }
 
-  ${globalPrelude}
+  expect.extend({ toMatchTest })
 
-  describe('tests', { ${options} }, async () => {
-    test('first', async ({ ${context} }) => {
-      ${prelude}
+  describe('tests', { /* options */ }, async () => {
+    test('first', async () => {
       const { promise, resolve } = Promise.withResolvers()
       setTimeout(resolve, 100)
       await promise
@@ -45,58 +27,294 @@ function createTest({
       expect('first').toMatchTest()
     })
 
-    test('second', ({ ${context} }) => {
-      ${prelude}
+    test('second', () => {
       expect('second').toMatchTest()
     })
   })
 `
-}
 
-const values = {
-  extend: 'expect.extend({ toMatchTest })',
-  expect: 'expect',
-  concurrent: 'concurrent: true',
-  task: 'task',
-  createExpect: 'createExpect',
-  initExpect: 'const expect = createExpect(task)',
+const globalsLocalExtend = /* ts */`
+  import {
+    test,
+    describe,
+    recordArtifact,
+  } from 'vitest'
+
+  function toMatchTest(this, expected) {
+    if (this.task.name !== expected) {
+      return { pass: false, message: () => 'Active: "' + this.task.name + '"\\nExpected: "' + expected + '"' }
+    }
+
+    return { pass: true, message: () => undefined }
+  }
+
+  describe('tests', { /* options */ }, async () => {
+    test('first', async () => {
+      expect.extend({ toMatchTest })
+
+      const { promise, resolve } = Promise.withResolvers()
+      setTimeout(resolve, 100)
+      await promise
+
+      expect('first').toMatchTest()
+    })
+
+    test('second', () => {
+      expect.extend({ toMatchTest })
+      expect('second').toMatchTest()
+    })
+  })
+`
+
+const globalImportGlobalExtend = /* ts */`
+  import {
+    test,
+    describe,
+    recordArtifact,
+    expect
+  } from 'vitest'
+
+  function toMatchTest(this, expected) {
+    if (this.task.name !== expected) {
+      return { pass: false, message: () => 'Active: "' + this.task.name + '"\\nExpected: "' + expected + '"' }
+    }
+
+    return { pass: true, message: () => undefined }
+  }
+
+  expect.extend({ toMatchTest })
+
+  describe('tests', { /* options */ }, async () => {
+    test('first', async () => {
+      const { promise, resolve } = Promise.withResolvers()
+      setTimeout(resolve, 100)
+      await promise
+
+      expect('first').toMatchTest()
+    })
+
+    test('second', () => {
+      expect('second').toMatchTest()
+    })
+  })
+`
+
+const globalImportLocalExtend = /* ts */`
+  import {
+    test,
+    describe,
+    recordArtifact,
+    expect,
+  } from 'vitest'
+
+  function toMatchTest(this, expected) {
+    if (this.task.name !== expected) {
+      return { pass: false, message: () => 'Active: "' + this.task.name + '"\\nExpected: "' + expected + '"' }
+    }
+
+    return { pass: true, message: () => undefined }
+  }
+
+  describe('tests', { /* options */ }, async () => {
+    test('first', async () => {
+      expect.extend({ toMatchTest })
+
+      const { promise, resolve } = Promise.withResolvers()
+      setTimeout(resolve, 100)
+      await promise
+
+      expect('first').toMatchTest()
+    })
+
+    test('second', () => {
+      expect.extend({ toMatchTest })
+
+      expect('second').toMatchTest()
+    })
+  })
+`
+
+const contextGlobalExtend = /* ts */`
+  import {
+    test,
+    describe,
+    recordArtifact,
+    expect,
+  } from 'vitest'
+
+  function toMatchTest(this, expected) {
+    if (this.task.name !== expected) {
+      return { pass: false, message: () => 'Active: "' + this.task.name + '"\\nExpected: "' + expected + '"' }
+    }
+
+    return { pass: true, message: () => undefined }
+  }
+
+  expect.extend({ toMatchTest })
+
+  describe('tests', { /* options */ }, async () => {
+    test('first', async ({ expect }) => {
+      const { promise, resolve } = Promise.withResolvers()
+      setTimeout(resolve, 100)
+      await promise
+
+      expect('first').toMatchTest()
+    })
+
+    test('second', ({ expect }) => {
+      expect('second').toMatchTest()
+    })
+  })
+`
+
+const contextLocalExtend = /* ts */`
+  import {
+    test,
+    describe,
+    recordArtifact,
+  } from 'vitest'
+
+  function toMatchTest(this, expected) {
+    if (this.task.name !== expected) {
+      return { pass: false, message: () => 'Active: "' + this.task.name + '"\\nExpected: "' + expected + '"' }
+    }
+
+    return { pass: true, message: () => undefined }
+  }
+
+  describe('tests', { /* options */ }, async () => {
+    test('first', async ({ expect }) => {
+      expect.extend({ toMatchTest })
+
+      const { promise, resolve } = Promise.withResolvers()
+      setTimeout(resolve, 100)
+      await promise
+
+      expect('first').toMatchTest()
+    })
+
+    test('second', ({ expect }) => {
+      expect.extend({ toMatchTest })
+
+      expect('second').toMatchTest()
+    })
+  })
+`
+
+const testBoundGlobalExtend = /* ts */`
+  import {
+    test,
+    describe,
+    recordArtifact,
+    expect,
+    createExpect,
+  } from 'vitest'
+
+  function toMatchTest(this, expected) {
+    if (this.task.name !== expected) {
+      return { pass: false, message: () => 'Active: "' + this.task.name + '"\\nExpected: "' + expected + '"' }
+    }
+
+    return { pass: true, message: () => undefined }
+  }
+
+  expect.extend({ toMatchTest })
+
+  describe('tests', { /* options */ }, async () => {
+    test('first', async ({ task }) => {
+      const expect = createExpect(task)
+
+      const { promise, resolve } = Promise.withResolvers()
+      setTimeout(resolve, 100)
+      await promise
+
+      expect('first').toMatchTest()
+    })
+
+    test('second', ({ task }) => {
+      const expect = createExpect(task)
+
+      expect('second').toMatchTest()
+    })
+  })
+`
+
+const testBoundLocalExtend = /* ts */`
+  import {
+    test,
+    describe,
+    recordArtifact,
+    createExpect,
+  } from 'vitest'
+
+  function toMatchTest(this, expected) {
+    if (this.task.name !== expected) {
+      return { pass: false, message: () => 'Active: "' + this.task.name + '"\\nExpected: "' + expected + '"' }
+    }
+
+    return { pass: true, message: () => undefined }
+  }
+
+  describe('tests', { /* options */ }, async () => {
+    test('first', async ({ task }) => {
+      const expect = createExpect(task)
+      expect.extend({ toMatchTest })
+
+      const { promise, resolve } = Promise.withResolvers()
+      setTimeout(resolve, 100)
+      await promise
+
+      expect('first').toMatchTest()
+    })
+
+    test('second', ({ task }) => {
+      const expect = createExpect(task)
+      expect.extend({ toMatchTest })
+
+      expect('second').toMatchTest()
+    })
+  })
+`
+
+function withConcurrency(test: string): string {
+  return test.replace('/* options */', 'concurrent: true')
 }
 
 describe('serial', () => {
   test.for([
     {
       name: 'globals & global extend',
-      test: createTest({ globalPrelude: values.extend }),
+      test: globalsGlobalExtend,
       options: { globals: true },
     },
     {
       name: 'globals & local extend',
-      test: createTest({ prelude: values.extend }),
+      test: globalsLocalExtend,
       options: { globals: true },
     },
     {
       name: 'global import & global extend',
-      test: createTest({ imports: values.expect, globalPrelude: values.extend }),
+      test: globalImportGlobalExtend,
     },
     {
       name: 'global import & local extend',
-      test: createTest({ imports: values.expect, prelude: values.extend }),
+      test: globalImportLocalExtend,
     },
     {
       name: 'context destructuring & global extend',
-      test: createTest({ imports: values.expect, globalPrelude: values.extend, context: values.expect }),
+      test: contextGlobalExtend,
     },
     {
       name: 'context destructuring & local extend',
-      test: createTest({ context: values.expect, prelude: values.extend }),
+      test: contextLocalExtend,
     },
     {
       name: 'test-bound extend & global extend',
-      test: createTest({ imports: `${values.expect},${values.createExpect}`, globalPrelude: values.extend, context: values.task, prelude: values.initExpect }),
+      test: testBoundGlobalExtend,
     },
     {
       name: 'test-bound extend & local extend',
-      test: createTest({ imports: values.createExpect, context: values.task, prelude: `${values.initExpect}; ${values.extend}` }),
+      test: testBoundLocalExtend,
     },
   ] as const)('works with $name', async ({ options, test }) => {
     const { stdout } = await runInlineTests(
@@ -126,37 +344,37 @@ describe('concurrent', () => {
   test.for([
     {
       name: 'globals & global extend',
-      test: createTest({ globalPrelude: values.extend, options: values.concurrent }),
+      test: withConcurrency(globalsGlobalExtend),
       options: { globals: true },
     },
     {
       name: 'globals & local extend',
-      test: createTest({ prelude: values.extend, options: values.concurrent }),
+      test: withConcurrency(globalsLocalExtend),
       options: { globals: true },
     },
     {
       name: 'global import & global extend',
-      test: createTest({ imports: values.expect, globalPrelude: values.extend, options: values.concurrent }),
+      test: withConcurrency(globalImportGlobalExtend),
     },
     {
       name: 'global import & local extend',
-      test: createTest({ imports: values.expect, prelude: values.extend, options: values.concurrent }),
+      test: withConcurrency(globalImportLocalExtend),
     },
     {
       name: 'context destructuring & global extend',
-      test: createTest({ imports: values.expect, globalPrelude: values.extend, context: values.expect, options: values.concurrent }),
+      test: withConcurrency(contextGlobalExtend),
     },
     {
       name: 'context destructuring & local extend',
-      test: createTest({ context: values.expect, prelude: values.extend, options: values.concurrent }),
+      test: withConcurrency(contextLocalExtend),
     },
     {
       name: 'test-bound extend & global extend',
-      test: createTest({ imports: `${values.expect},${values.createExpect}`, globalPrelude: values.extend, context: values.task, prelude: values.initExpect, options: values.concurrent }),
+      test: withConcurrency(testBoundGlobalExtend),
     },
     {
       name: 'test-bound extend & local extend',
-      test: createTest({ imports: values.createExpect, context: values.task, prelude: `${values.initExpect}; ${values.extend}`, options: values.concurrent }),
+      test: withConcurrency(testBoundLocalExtend),
     },
   ] as const)('fails with $name', async ({ options, test }) => {
     const { stdout, ctx } = await runInlineTests(
@@ -170,7 +388,8 @@ describe('concurrent', () => {
     expect(
       stdout
         .replace(/[\d.]+m?s/g, '<time>')
-        .replace(ctx!.config.root, '<root>'),
+        .replace(ctx!.config.root, '<root>')
+        .replace(/:\d+:\d+/, ':<line>:<column>'),
     ).toMatchInlineSnapshot(`
       "TAP version 13
       1..1
@@ -184,7 +403,7 @@ describe('concurrent', () => {
                       name: "Error"
                       message: "Active: \\"second\\"
       Expected: \\"first\\""
-                  at: "<root>/basic.test.ts:26:23"
+                  at: "<root>/basic.test.ts:<line>:<column>"
                   ...
               ok 2 - second # time=<time>
           }
