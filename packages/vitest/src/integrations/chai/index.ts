@@ -1,5 +1,5 @@
 import type { Assertion, ExpectStatic, MatcherState } from '@vitest/expect'
-import type { Test } from '@vitest/runner'
+import type { TaskPopulated, Test } from '@vitest/runner'
 import {
   addCustomEqualityTesters,
   ASYMMETRIC_MATCHERS_OBJECT,
@@ -15,7 +15,7 @@ import { getWorkerState } from '../../runtime/utils'
 import { createExpectPoll } from './poll'
 import './setup'
 
-export function createExpect(test?: Test): ExpectStatic {
+export function createExpect(test?: Test | TaskPopulated): ExpectStatic {
   const expect = ((value: any, message?: string): Assertion => {
     const { assertionCalls } = getState(expect)
     setState({ assertionCalls: assertionCalls + 1 }, expect)
@@ -54,7 +54,7 @@ export function createExpect(test?: Test): ExpectStatic {
       : globalState.currentTestName,
   }
 
-  if (test !== undefined) {
+  if (test !== undefined && 'type' in test && test.type === 'test') {
     state.task = test
   }
 
