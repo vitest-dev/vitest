@@ -22,7 +22,7 @@ import { getSafeTimers } from '@vitest/utils/timers'
 import { collectTests } from './collect'
 import { abortContextSignal, getFileContext } from './context'
 import { PendingError, TestRunAbortError } from './errors'
-import { callFixtureCleanup, getFixtureCleanups } from './fixture'
+import { callFixtureCleanup } from './fixture'
 import { getBeforeHookCleanupCallback } from './hooks'
 import { getFn, getHooks } from './map'
 import { addRunningTest, getRunningTests, setCurrentTest } from './test-state'
@@ -365,10 +365,7 @@ export async function runTest(test: Test, runner: VitestRunner): Promise<void> {
         if (beforeEachCleanups.length) {
           await $('test.cleanup', () => callCleanupHooks(runner, beforeEachCleanups))
         }
-        const fixtureCleanups = getFixtureCleanups(test.context)
-        if (fixtureCleanups) {
-          await $('test.fixtures.cleanup', () => callFixtureCleanup(test.context))
-        }
+        await callFixtureCleanup(test.context)
       }
       catch (e) {
         failTask(test.result, e, runner.config.diffOptions)
@@ -565,10 +562,7 @@ export async function runSuite(suite: Suite, runner: VitestRunner): Promise<void
       }
       if (suite.file === suite) {
         const context = getFileContext(suite as File)
-        const fixtureCleanups = getFixtureCleanups(context)
-        if (fixtureCleanups) {
-          await $('suite.fixtures.cleanup', () => callFixtureCleanup(context))
-        }
+        await callFixtureCleanup(context)
       }
     }
     catch (e) {
@@ -673,7 +667,6 @@ function defaultOtel<T>(_: string, attributes: any, cb?: () => T): T {
 
 export async function startTests(specs: string[] | FileSpecification[], runner: VitestRunner): Promise<File[]> {
   runner.otel ??= defaultOtel
-  const $ = runner.otel
   const cancel = runner.cancel?.bind(runner)
   // Ideally, we need to have an event listener for this, but only have a runner here.
   // Adding another onCancel felt wrong (maybe it needs to be refactored)
@@ -689,9 +682,8 @@ export async function startTests(specs: string[] | FileSpecification[], runner: 
   if (!workerRunners.has(runner)) {
     runner.onCleanupWorkerContext?.(async () => {
       const context = runner.getWorkerContext?.()
-      const fixtureCleanups = context ? getFixtureCleanups(context) : undefined
-      if (fixtureCleanups) {
-        await $('worker.fixtures.cleanup', () => callFixtureCleanup(context!))
+      if (context) {
+        await callFixtureCleanup(context)
       }
     })
     workerRunners.add(runner)

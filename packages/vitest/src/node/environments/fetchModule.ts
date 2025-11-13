@@ -128,22 +128,22 @@ export function createFetchModuleFunction(
 
     if ('id' in moduleRunnerModule) {
       fetcherSpan.setAttributes({
-        'vitest.fetchedModule.invalidate': moduleRunnerModule.invalidate,
-        'vitest.fetchedModule.codeLength': moduleRunnerModule.code.length,
-        'vitest.fetchedModule.id': moduleRunnerModule.id,
-        'vitest.fetchedModule.url': moduleRunnerModule.url,
-        'vitest.fetchedModule.cache': false,
+        'vitest.fetched_module.invalidate': moduleRunnerModule.invalidate,
+        'vitest.fetched_module.code_length': moduleRunnerModule.code.length,
+        'vitest.fetched_module.id': moduleRunnerModule.id,
+        'vitest.fetched_module.url': moduleRunnerModule.url,
+        'vitest.fetched_module.cache': false,
       })
       if (moduleRunnerModule.file) {
         fetcherSpan.setAttribute('code.file.path', moduleRunnerModule.file)
       }
     }
     else if ('cache' in moduleRunnerModule) {
-      fetcherSpan.setAttribute('vitest.fetchedModule.cache', moduleRunnerModule.cache)
+      fetcherSpan.setAttribute('vitest.fetched_module.cache', moduleRunnerModule.cache)
     }
     else {
-      fetcherSpan.setAttribute('vitest.fetchedModule.type', moduleRunnerModule.type)
-      fetcherSpan.setAttribute('vitest.fetchedModule.external', moduleRunnerModule.externalize)
+      fetcherSpan.setAttribute('vitest.fetched_module.type', moduleRunnerModule.type)
+      fetcherSpan.setAttribute('vitest.fetched_module.external', moduleRunnerModule.externalize)
     }
 
     const result = processResultSource(environment, moduleRunnerModule)
@@ -182,7 +182,7 @@ export function createFetchModuleFunction(
       tmp,
 
       atomicWriteFile(tmp, code)
-      // Fallback to non-atomic write for windows case where file already exists:
+        // Fallback to non-atomic write for windows case where file already exists:
         .catch(() => writeFile(tmp, code, 'utf-8'))
         .finally(() => {
           Reflect.set(transformResult, '_vitestTmp', tmp)

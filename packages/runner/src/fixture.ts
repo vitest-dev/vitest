@@ -124,10 +124,6 @@ const cleanupFnArrayMap = new Map<
   Array<() => void | Promise<void>>
 >()
 
-export function getFixtureCleanups(context: object): Array<() => void | Promise<void>> | undefined {
-  return cleanupFnArrayMap.get(context)
-}
-
 export async function callFixtureCleanup(context: object): Promise<void> {
   const cleanupFnArray = cleanupFnArrayMap.get(context) ?? []
   for (const cleanup of cleanupFnArray.reverse()) {
