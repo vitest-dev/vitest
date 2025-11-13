@@ -15,7 +15,7 @@ import type { CoverageProvider, ResolvedCoverageOptions } from './types/coverage
 import type { Reporter } from './types/reporter'
 import type { TestRunResult } from './types/tests'
 import os, { tmpdir } from 'node:os'
-import { getTasks, hasFailed, limitConcurrency } from '@vitest/runner/utils'
+import { generateHash, getTasks, hasFailed, limitConcurrency } from '@vitest/runner/utils'
 import { SnapshotManager } from '@vitest/snapshot/manager'
 import { deepClone, deepMerge, nanoid, noop, toArray } from '@vitest/utils/helpers'
 import { join, normalize, relative } from 'pathe'
@@ -223,6 +223,9 @@ export class Vitest {
         dumpFolder: this.config.dumpDir,
         readFromDump: this.config.server.debug?.load ?? process.env.VITEST_DEBUG_LOAD_DUMP != null,
       },
+      generateHash(
+        this._config!.root + this._config!.name,
+      ),
     )
     const environment = server.environments.__vitest__
     this.runner = new ServerModuleRunner(

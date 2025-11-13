@@ -557,6 +557,7 @@ export class TestProject {
         dumpFolder: this.config.dumpDir,
         readFromDump: this.config.server.debug?.load ?? process.env.VITEST_DEBUG_LOAD_DUMP != null,
       },
+      this._hash!,
     )
 
     const environment = server.environments.__vitest__
