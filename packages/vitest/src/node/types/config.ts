@@ -969,6 +969,7 @@ export interface UserConfig extends InlineConfig {
 
   /**
    * Delete all Vitest caches, including `experimental.fsModuleCache`.
+   * @experimental
    */
   clearCache?: boolean
 }
