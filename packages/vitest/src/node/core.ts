@@ -482,7 +482,11 @@ export class Vitest {
     return this._coverageProvider
   }
 
-  public async clearCache(): Promise<void> {
+  /**
+   * Deletes all Vitest caches, including `experimental.fsModuleCache`.
+   * @experimental
+   */
+  public async experimental_clearCache(): Promise<void> {
     await this.cache.results.clearCache()
     const projects = [...this.projects]
     if (this.coreWorkspaceProject && !projects.includes(this.coreWorkspaceProject)) {
