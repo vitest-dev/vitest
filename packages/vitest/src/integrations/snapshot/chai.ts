@@ -9,17 +9,19 @@ import {
 } from '@vitest/snapshot'
 import { createAssertionMessage, recordAsyncExpect } from '../../../../expect/src/utils'
 
-let _client: SnapshotClient
+const __SNAPSHOT_CLIENT__ = Symbol('__SNAPSHOT_CLIENT__')
 
 export function getSnapshotClient(): SnapshotClient {
-  if (!_client) {
-    _client = new SnapshotClient({
+  let client = Reflect.get(globalThis, __SNAPSHOT_CLIENT__) as SnapshotClient
+  if (!client) {
+    client = new SnapshotClient({
       isEqual: (received, expected) => {
         return equals(received, expected, [iterableEquality, subsetEquality])
       },
     })
+    Reflect.set(globalThis, __SNAPSHOT_CLIENT__, client)
   }
-  return _client
+  return client
 }
 
 function getError(expected: () => void | Error, promise: string | undefined) {
