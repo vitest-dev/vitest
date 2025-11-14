@@ -236,13 +236,13 @@ export class VitestTestRunner implements VitestRunner {
     return importDurations
   }
 
-  otel = <T>(name: string, attributes: Record<string, any> | (() => T), cb?: () => T): T => {
+  trace = <T>(name: string, attributes: Record<string, any> | (() => T), cb?: () => T): T => {
     const options: SpanOptions = typeof attributes === 'object' ? { attributes } : {}
     return this._otel.$(`vitest.test.runner.${name}`, options, cb || attributes as () => T)
   }
 
-  __setOtel(otel: Traces): void {
-    this._otel = otel
+  __setTraces(traces: Traces): void {
+    this._otel = traces
   }
 }
 

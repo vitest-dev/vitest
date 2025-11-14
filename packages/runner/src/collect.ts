@@ -26,7 +26,7 @@ export async function collectTests(
   const files: File[] = []
 
   const config = runner.config
-  const $ = runner.otel!
+  const $ = runner.trace!
 
   for (const spec of specs) {
     const filepath = typeof spec === 'string' ? spec : spec.filepath

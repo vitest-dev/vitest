@@ -296,7 +296,7 @@ export async function runTest(test: Test, runner: VitestRunner): Promise<void> {
   setCurrentTest(test)
 
   const suite = test.suite || test.file
-  const $ = runner.otel!
+  const $ = runner.trace!
 
   const repeats = test.repeats ?? 0
   for (let repeatCount = 0; repeatCount <= repeats; repeatCount++) {
@@ -491,7 +491,7 @@ export async function runSuite(suite: Suite, runner: VitestRunner): Promise<void
     state: mode === 'skip' || mode === 'todo' ? mode : 'run',
     startTime: unixNow(),
   }
-  const $ = runner.otel!
+  const $ = runner.trace!
 
   updateTask('suite-prepare', suite, runner)
 
@@ -598,7 +598,7 @@ export async function runSuite(suite: Suite, runner: VitestRunner): Promise<void
 let limitMaxConcurrency: ReturnType<typeof limitConcurrency>
 
 async function runSuiteChild(c: Task, runner: VitestRunner) {
-  const $ = runner.otel!
+  const $ = runner.trace!
   if (c.type === 'test') {
     return limitMaxConcurrency(() => $(
       'run.test',
@@ -645,7 +645,7 @@ export async function runFiles(files: File[], runner: VitestRunner): Promise<voi
         }
       }
     }
-    await runner.otel!(
+    await runner.trace!(
       'run.spec',
       {
         'code.file.path': file.filepath,
@@ -658,7 +658,7 @@ export async function runFiles(files: File[], runner: VitestRunner): Promise<voi
 
 const workerRunners = new WeakSet<VitestRunner>()
 
-function defaultOtel<T>(_: string, attributes: any, cb?: () => T): T {
+function defaultTrace<T>(_: string, attributes: any, cb?: () => T): T {
   if (typeof attributes === 'function') {
     return attributes() as T
   }
@@ -666,7 +666,7 @@ function defaultOtel<T>(_: string, attributes: any, cb?: () => T): T {
 }
 
 export async function startTests(specs: string[] | FileSpecification[], runner: VitestRunner): Promise<File[]> {
-  runner.otel ??= defaultOtel
+  runner.trace ??= defaultTrace
   const cancel = runner.cancel?.bind(runner)
   // Ideally, we need to have an event listener for this, but only have a runner here.
   // Adding another onCancel felt wrong (maybe it needs to be refactored)
@@ -712,7 +712,7 @@ export async function startTests(specs: string[] | FileSpecification[], runner: 
 }
 
 async function publicCollect(specs: string[] | FileSpecification[], runner: VitestRunner): Promise<File[]> {
-  runner.otel ??= defaultOtel
+  runner.trace ??= defaultTrace
 
   const paths = specs.map(f => typeof f === 'string' ? f : f.filepath)
 

@@ -18,8 +18,8 @@ export default function workerInit(options: {
     on: callback => parentPort!.on('message', callback),
     off: callback => parentPort!.off('message', callback),
     teardown: () => parentPort!.removeAllListeners('message'),
-    runTests: async (state, otel) => runTests('run', state, otel),
-    collectTests: async (state, otel) => runTests('collect', state, otel),
+    runTests: async (state, traces) => runTests('run', state, traces),
+    collectTests: async (state, traces) => runTests('collect', state, traces),
     setup: options.setup,
   })
 }

@@ -27,7 +27,7 @@ if (isProfiling) {
 }
 
 export default function workerInit(options: {
-  runTests: (method: 'run' | 'collect', state: WorkerGlobalState, otel: Traces) => Promise<void>
+  runTests: (method: 'run' | 'collect', state: WorkerGlobalState, traces: Traces) => Promise<void>
   setup?: (context: WorkerSetupContext) => Promise<() => Promise<unknown>>
 }): void {
   const { runTests } = options
@@ -37,14 +37,14 @@ export default function workerInit(options: {
     on: cb => processOn('message', cb),
     off: cb => processOff('message', cb),
     teardown: () => processRemoveAllListeners('message'),
-    runTests: (state, otel) => executeTests('run', state, otel),
-    collectTests: (state, otel) => executeTests('run', state, otel),
+    runTests: (state, traces) => executeTests('run', state, traces),
+    collectTests: (state, traces) => executeTests('run', state, traces),
     setup: options.setup,
   })
 
-  async function executeTests(method: 'run' | 'collect', state: WorkerGlobalState, otel: Traces) {
+  async function executeTests(method: 'run' | 'collect', state: WorkerGlobalState, traces: Traces) {
     try {
-      await runTests(method, state, otel)
+      await runTests(method, state, traces)
     }
     finally {
       process.exit = processExit

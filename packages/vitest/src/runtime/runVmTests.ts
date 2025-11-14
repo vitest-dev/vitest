@@ -26,11 +26,11 @@ export async function run(
   files: FileSpecification[],
   config: SerializedConfig,
   moduleRunner: VitestModuleRunner,
-  otel: Traces,
+  traces: Traces,
 ): Promise<void> {
   const workerState = getWorkerState()
 
-  await otel.$('vitest.runtime.global_env', () => setupCommonEnv(config))
+  await traces.$('vitest.runtime.global_env', () => setupCommonEnv(config))
 
   Object.defineProperty(globalThis, '__vitest_index__', {
     value: VitestIndex,
@@ -65,15 +65,15 @@ export async function run(
     timersPromises,
   }
 
-  await otel.$('vitest.runtime.coverage.start', () => startCoverageInsideWorker(config.coverage, moduleRunner, { isolate: false }))
+  await traces.$('vitest.runtime.coverage.start', () => startCoverageInsideWorker(config.coverage, moduleRunner, { isolate: false }))
 
   if (config.chaiConfig) {
     setupChaiConfig(config.chaiConfig)
   }
 
   const [testRunner, snapshotEnvironment] = await Promise.all([
-    otel.$('vitest.runtime.runner', () => resolveTestRunner(config, moduleRunner, otel)),
-    otel.$('vitest.runtime.snapshot.environment', () => resolveSnapshotEnvironment(config, moduleRunner)),
+    traces.$('vitest.runtime.runner', () => resolveTestRunner(config, moduleRunner, traces)),
+    traces.$('vitest.runtime.snapshot.environment', () => resolveSnapshotEnvironment(config, moduleRunner)),
   ])
 
   config.snapshotOptions.snapshotEnvironment = snapshotEnvironment
@@ -90,21 +90,21 @@ export async function run(
 
   const { vi } = VitestIndex
 
-  await otel.$(
+  await traces.$(
     `vitest.test.runner.${method}`,
     async () => {
       for (const file of files) {
         workerState.filepath = file.filepath
 
         if (method === 'run') {
-          await otel.$(
+          await traces.$(
             `vitest.test.runner.${method}.module`,
             { attributes: { 'code.file.path': file.filepath } },
             () => startTests([file], testRunner),
           )
         }
         else {
-          await otel.$(
+          await traces.$(
             `vitest.test.runner.${method}.module`,
             { attributes: { 'code.file.path': file.filepath } },
             () => collectTests([file], testRunner),
@@ -119,7 +119,7 @@ export async function run(
     },
   )
 
-  await otel.$('vitest.runtime.coverage.stop', () => stopCoverageInsideWorker(config.coverage, moduleRunner, { isolate: false }))
+  await traces.$('vitest.runtime.coverage.stop', () => stopCoverageInsideWorker(config.coverage, moduleRunner, { isolate: false }))
 }
 
 function resolveCss(mod: NodeJS.Module) {

@@ -32,7 +32,7 @@ async function getTestRunnerConstructor(
 export async function resolveTestRunner(
   config: SerializedConfig,
   moduleRunner: VitestModuleRunner,
-  otel: Traces,
+  traces: Traces,
 ): Promise<VitestRunner> {
   const TestRunner = await getTestRunnerConstructor(config, moduleRunner)
   const testRunner = new TestRunner(config)
@@ -52,8 +52,8 @@ export async function resolveTestRunner(
     throw new Error('Runner must implement "importFile" method.')
   }
 
-  if ('__setOtel' in testRunner) {
-    (testRunner.__setOtel as any)(otel)
+  if ('__setTraces' in testRunner) {
+    (testRunner.__setTraces as any)(traces)
   }
 
   const [diffOptions] = await Promise.all([
