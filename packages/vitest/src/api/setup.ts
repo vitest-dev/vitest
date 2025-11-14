@@ -15,6 +15,7 @@ import type {
   WebSocketRPC,
 } from './types'
 import { existsSync, promises as fs } from 'node:fs'
+import { performance } from 'node:perf_hooks'
 import { noop } from '@vitest/utils/helpers'
 import { createBirpc } from 'birpc'
 import { parse, stringify } from 'flatted'
@@ -157,6 +158,8 @@ export function setup(ctx: Vitest, _server?: ViteDevServer): void {
 }
 
 export class WebSocketReporter implements Reporter {
+  private start = 0
+  private end = 0
   constructor(
     public ctx: Vitest,
     public wss: WebSocketServer,
@@ -178,8 +181,8 @@ export class WebSocketReporter implements Reporter {
       return
     }
 
+    this.start = performance.now()
     const serializedSpecs = specifications.map(spec => spec.toJSON())
-
     this.clients.forEach((client) => {
       client.onSpecsCollected?.(serializedSpecs)?.catch?.(noop)
     })
@@ -205,6 +208,12 @@ export class WebSocketReporter implements Reporter {
     })
   }
 
+  private sum<T>(items: T[], cb: (_next: T) => number | undefined) {
+    return items.reduce((total, next) => {
+      return total + Math.max(cb(next) || 0, 0)
+    }, 0)
+  }
+
   onTestRunEnd(testModules: ReadonlyArray<TestModule>, unhandledErrors: ReadonlyArray<SerializedError>): void {
     if (!this.clients.size) {
       return
@@ -213,8 +222,13 @@ export class WebSocketReporter implements Reporter {
     const files = testModules.map(testModule => testModule.task)
     const errors = [...unhandledErrors]
 
+    this.end = performance.now()
+    const blobs = this.ctx.state.blobs
+    // Execution time is either sum of all runs of `--merge-reports` or the current run's time
+    const executionTime = blobs?.executionTimes ? this.sum(blobs.executionTimes, time => time) : this.end - this.start
+
     this.clients.forEach((client) => {
-      client.onFinished?.(files, errors)?.catch?.(noop)
+      client.onFinished?.(files, errors, undefined, executionTime)?.catch?.(noop)
     })
   }
 
