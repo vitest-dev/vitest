@@ -159,17 +159,11 @@ export default defineConfig({
         return false
       }
     },
-    experimental: {
-      openTelemetry: {
-        enabled: true,
-        sdkPath: './otel.sdk.js',
-      },
-    },
-    // projects: [
-    //   project('threads', 'red'),
-    //   project('forks', 'green'),
-    //   project('vmThreads', 'blue'),
-    // ],
+    projects: [
+      project('threads', 'red'),
+      project('forks', 'green'),
+      project('vmThreads', 'blue'),
+    ],
   },
 })
 
