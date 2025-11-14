@@ -17,8 +17,8 @@ enum RunnerState {
   STOPPED = 'stopped',
 }
 
-const START_TIMEOUT = 10_000
-const STOP_TIMEOUT = 10_000
+const START_TIMEOUT = 60_000
+const STOP_TIMEOUT = 60_000
 
 /** @experimental */
 export class PoolRunner {
