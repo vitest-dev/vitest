@@ -91,7 +91,10 @@ export async function runVitest(
         ...rest.env,
       },
       // override cache config with the one that was used to run `vitest` formt the CLI
-      ...(currentConfig.cache === false ? { cache: false } : {}),
+      experimental: {
+        fsModuleCache: currentConfig.experimental.fsModuleCache,
+        ...rest.experimental,
+      },
     }, {
       ...viteOverrides,
       server: {

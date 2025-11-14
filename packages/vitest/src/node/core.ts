@@ -224,13 +224,6 @@ export class Vitest {
       this._config,
       this._fsCache,
       this._tmpDir,
-      // {
-      //   dumpFolder: this.config.dumpDir,
-      //   readFromDump: this.config.server.debug?.load ?? process.env.VITEST_DEBUG_LOAD_DUMP != null,
-      // },
-      // generateHash(
-      //   this._config!.root + this._config!.name,
-      // ),
     )
     const environment = server.environments.__vitest__
     this.runner = new ServerModuleRunner(

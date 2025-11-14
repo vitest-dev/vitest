@@ -117,7 +117,9 @@ export interface SerializedConfig {
     includeSamples: boolean
   } | undefined
   serializedDefines: string
-  cache: boolean
+  experimental: {
+    fsModuleCache: boolean
+  }
 }
 
 export interface SerializedCoverageConfig {
