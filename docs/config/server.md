@@ -71,25 +71,3 @@ If a `RegExp` is provided, it is matched against the full file path.
 When a dependency is a valid ESM package, try to guess the cjs version based on the path. This might be helpful, if a dependency has the wrong ESM file.
 
 This might potentially cause some misalignment if a package has different logic in ESM and CJS mode.
-
-## debug
-
-### dump
-
-- **Type:** `string | boolean`
-- **Default:** `false`
-
-The folder where Vitest stores the contents of inlined test files that can be inspected manually.
-
-If set to `true`, Vitest dumps the files inside the `.vitest-dump` folder relative to the root of the project.
-
-You can also use `VITEST_DEBUG_DUMP` env variable to enable this conditionally.
-
-### load
-
-- **Type:** `boolean`
-- **Default:** `false`
-
-Read files from the dump instead of transforming them. If dump is disabled, this does nothing.
-
-You can also use `VITEST_DEBUG_LOAD_DUMP` env variable to enable this conditionally.

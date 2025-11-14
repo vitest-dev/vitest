@@ -1,7 +1,10 @@
 import type { File } from '@vitest/runner'
+import type { Logger } from '../logger'
 import type { ResolvedConfig } from '../types/config'
-import fs from 'node:fs'
+import fs, { existsSync } from 'node:fs'
+import { rm } from 'node:fs/promises'
 import { dirname, relative, resolve } from 'pathe'
+import { Vitest } from '../core'
 
 export interface SuiteResultCache {
   failed: boolean
@@ -15,8 +18,8 @@ export class ResultsCache {
   private version: string
   private root = '/'
 
-  constructor(version: string) {
-    this.version = version
+  constructor(private logger: Logger) {
+    this.version = Vitest.version
   }
 
   public getCachePath(): string | null {
@@ -32,6 +35,13 @@ export class ResultsCache {
 
   getResults(key: string): SuiteResultCache | undefined {
     return this.cache.get(key)
+  }
+
+  async clearCache(): Promise<void> {
+    if (this.cachePath && existsSync(this.cachePath)) {
+      await rm(this.cachePath, { force: true, recursive: true })
+      this.logger.log('[cache] cleared results cache at', this.cachePath)
+    }
   }
 
   async readFromCache(): Promise<void> {

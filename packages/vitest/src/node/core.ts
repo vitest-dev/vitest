@@ -27,6 +27,7 @@ import { convertTasksToEvents } from '../utils/tasks'
 import { astCollectTests, createFailedFileTask } from './ast-collect'
 import { BrowserSessions } from './browser/sessions'
 import { VitestCache } from './cache'
+import { FileSystemModuleCache } from './cache/fsCache'
 import { resolveConfig } from './config/resolveConfig'
 import { getCoverageProvider } from './coverage'
 import { createFetchModuleFunction } from './environments/fetchModule'
@@ -108,6 +109,7 @@ export class Vitest {
   /** @internal */ _testRun: TestRun = undefined!
   /** @internal */ _resolver!: VitestResolver
   /** @internal */ _fetcher!: VitestFetchFunction
+  /** @internal */ _fsCache!: FileSystemModuleCache
   /** @internal */ _tmpDir = join(tmpdir(), nanoid())
 
   private isFirstRun = true
@@ -207,7 +209,7 @@ export class Vitest {
     this._state = new StateManager({
       onUnhandledError: resolved.onUnhandledError,
     })
-    this._cache = new VitestCache(this.version)
+    this._cache = new VitestCache(this.logger)
     this._snapshot = new SnapshotManager({ ...resolved.snapshotOptions })
     this._testRun = new TestRun(this)
 
@@ -216,13 +218,12 @@ export class Vitest {
     }
 
     this._resolver = new VitestResolver(server.config.cacheDir, resolved)
+    this._fsCache = new FileSystemModuleCache(this.logger)
     this._fetcher = createFetchModuleFunction(
       this._resolver,
+      this._config,
+      this._fsCache,
       this._tmpDir,
-      {
-        dumpFolder: this.config.dumpDir,
-        readFromDump: this.config.server.debug?.load ?? process.env.VITEST_DEBUG_LOAD_DUMP != null,
-      },
     )
     const environment = server.environments.__vitest__
     this.runner = new ServerModuleRunner(
@@ -479,6 +480,17 @@ export class Vitest {
       this.config.coverage = this._coverageProvider.resolveOptions()
     }
     return this._coverageProvider
+  }
+
+  public async clearCache(): Promise<void> {
+    await this.cache.results.clearCache()
+    const projects = [...this.projects]
+    if (this.coreWorkspaceProject && !projects.includes(this.coreWorkspaceProject)) {
+      projects.push(this.coreWorkspaceProject)
+    }
+    await Promise.all(
+      projects.map(p => p._fsCache.clearCache()),
+    )
   }
 
   /**
@@ -1104,15 +1116,20 @@ export class Vitest {
    * Invalidate a file in all projects.
    */
   public invalidateFile(filepath: string): void {
-    this.projects.forEach(({ vite, browser }) => {
+    this.projects.forEach(({ vite, browser, _fsCache }) => {
       const environments = [
         ...Object.values(vite.environments),
         ...Object.values(browser?.vite.environments || {}),
       ]
 
-      environments.forEach(({ moduleGraph }) => {
+      environments.forEach((environment) => {
+        const { moduleGraph } = environment
         const modules = moduleGraph.getModulesByFile(filepath)
-        modules?.forEach(module => moduleGraph.invalidateModule(module))
+        if (!modules) {
+          return
+        }
+
+        modules.forEach(module => moduleGraph.invalidateModule(module))
       })
     })
   }

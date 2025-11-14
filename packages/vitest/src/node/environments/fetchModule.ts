@@ -1,54 +1,44 @@
-import type { DevEnvironment, FetchResult, Rollup, TransformResult } from 'vite'
+import type { DevEnvironment, EnvironmentModuleNode, FetchResult, Rollup, TransformResult } from 'vite'
 import type { FetchFunctionOptions } from 'vite/module-runner'
 import type { FetchCachedFileSystemResult } from '../../types/general'
+import type { FileSystemModuleCache } from '../cache/fsCache'
 import type { VitestResolver } from '../resolver'
+import type { ResolvedConfig } from '../types/config'
 import { existsSync, mkdirSync } from 'node:fs'
-import { readFile, rename, stat, unlink, writeFile } from 'node:fs/promises'
-import { tmpdir } from 'node:os'
-import { isExternalUrl, nanoid, unwrapId } from '@vitest/utils/helpers'
-import { dirname, join, resolve } from 'pathe'
+import { readFile } from 'node:fs/promises'
+import { isExternalUrl, unwrapId } from '@vitest/utils/helpers'
+import { join } from 'pathe'
 import { fetchModule } from 'vite'
 import { hash } from '../hash'
 
-const created = new Set()
-const promises = new Map<string, Promise<void>>()
+const saveCachePromises = new Map<string, Promise<FetchResult>>()
+const readFilePromises = new Map<string, Promise<string>>()
 
-interface DumpOptions {
-  dumpFolder?: string
-  readFromDump?: boolean
-}
+class ModuleFetcher {
+  private tmpDirectories = new Set<string>()
+  private fsCacheEnabled: boolean
 
-export interface VitestFetchFunction {
-  (
+  constructor(
+    private resolver: VitestResolver,
+    private config: ResolvedConfig,
+    private fsCache: FileSystemModuleCache,
+    private tmpProjectDir: string,
+  ) {
+    this.fsCacheEnabled = config.experimental?.fsModuleCache === true
+  }
+
+  async fetch(
     url: string,
     importer: string | undefined,
     environment: DevEnvironment,
-    cacheFs: boolean,
-    options?: FetchFunctionOptions
-  ): Promise<FetchResult | FetchCachedFileSystemResult>
-}
-
-export function createFetchModuleFunction(
-  resolver: VitestResolver,
-  tmpDir: string = join(tmpdir(), nanoid()),
-  dump?: DumpOptions,
-): VitestFetchFunction {
-  return async (
-    url,
-    importer,
-    environment,
-    cacheFs,
-    options,
-  ) => {
-    // We are copy pasting Vite's externalization logic from `fetchModule` because
-    // we instead rely on our own `shouldExternalize` method because Vite
-    // doesn't support `resolve.external` in non SSR environments (jsdom/happy-dom)
+    makeTmpCopies?: boolean,
+    options?: FetchFunctionOptions,
+  ): Promise<FetchResult | FetchCachedFileSystemResult> {
     if (url.startsWith('data:')) {
       return { externalize: url, type: 'builtin' }
     }
 
     if (url === '/@vite/client' || url === '@vite/client') {
-      // this will be stubbed
       return { externalize: '/@vite/client', type: 'module' }
     }
 
@@ -58,103 +48,194 @@ export function createFetchModuleFunction(
       return { externalize: url, type: 'network' }
     }
 
-    // Vite does the same in `fetchModule`, but we want to externalize modules ourselves,
-    // so we do this first to resolve the module and check its `id`. The next call of
-    // `ensureEntryFromUrl` inside `fetchModule` is cached and should take no time
-    // This also makes it so externalized modules are inside the module graph.
     const moduleGraphModule = await environment.moduleGraph.ensureEntryFromUrl(unwrapId(url))
     const cached = !!moduleGraphModule.transformResult
 
-    // if url is already cached, we can just confirm it's also cached on the server
     if (options?.cached && cached) {
       return { cache: true }
     }
 
-    if (moduleGraphModule.id) {
-      const externalize = await resolver.shouldExternalize(moduleGraphModule.id)
-      if (externalize) {
-        return { externalize, type: 'module' }
+    // full fs caching is disabled, but we still want to keep tmp files if makeTmpCopies is enabled
+    // this is primarily used by the forks pool to avoid using process.send(bigBuffer)
+    if (!this.fsCacheEnabled) {
+      const result = await this.fetchAndProcess(environment, url, importer, moduleGraphModule, options)
+      if (!makeTmpCopies || !('code' in result)) {
+        return result
       }
-    }
 
-    let moduleRunnerModule: FetchResult | undefined
+      const transformResult = moduleGraphModule.transformResult
+      const tmpPath = transformResult && Reflect.get(transformResult, '_vitest_tmp')
+      if (typeof tmpPath === 'string') {
+        return getCachedResult(result, tmpPath)
+      }
 
-    if (dump?.dumpFolder && dump.readFromDump) {
-      const path = resolve(dump?.dumpFolder, url.replace(/[^\w+]/g, '-'))
-      if (existsSync(path)) {
-        const code = await readFile(path, 'utf-8')
-        const matchIndex = code.lastIndexOf('\n//')
-        if (matchIndex !== -1) {
-          const { id, file } = JSON.parse(code.slice(matchIndex + 4))
-          moduleRunnerModule = {
-            code,
-            id,
-            url,
-            file,
-            invalidate: false,
-          }
+      const tmpDir = join(this.tmpProjectDir, environment.name)
+      if (!this.tmpDirectories.has(tmpDir)) {
+        if (!existsSync(tmpDir)) {
+          mkdirSync(tmpDir, { recursive: true })
         }
+        this.tmpDirectories.add(tmpDir)
       }
+
+      const tmpFile = join(tmpDir, hash('sha1', result.id, 'hex'))
+      return this.cacheResult(result, tmpFile).then((result) => {
+        if (transformResult) {
+          Reflect.set(transformResult, '_vitest_tmp', tmpFile)
+        }
+        return result
+      })
     }
 
-    if (!moduleRunnerModule) {
-      moduleRunnerModule = await fetchModule(
-        environment,
-        url,
-        importer,
-        {
-          ...options,
-          inlineSourceMap: false,
-        },
-      ).catch(handleRollupError)
-    }
-
-    const result = processResultSource(environment, moduleRunnerModule)
-
-    if (dump?.dumpFolder && 'code' in result) {
-      const path = resolve(dump?.dumpFolder, result.url.replace(/[^\w+]/g, '-'))
-      await writeFile(path, `${result.code}\n// ${JSON.stringify({ id: result.id, file: result.file })}`, 'utf-8')
-    }
-
-    if (!cacheFs || !('code' in result)) {
-      return result
-    }
-
-    const code = result.code
-    const transformResult = result.transformResult!
-    if (!transformResult) {
-      throw new Error(`"transformResult" in not defined. This is a bug in Vitest.`)
-    }
-    // to avoid serialising large chunks of code,
-    // we store them in a tmp file and read in the test thread
-    if ('_vitestTmp' in transformResult) {
-      return getCachedResult(result, Reflect.get(transformResult as any, '_vitestTmp'))
-    }
-    const dir = join(tmpDir, environment.name)
-    const name = hash('sha1', result.id, 'hex')
-    const tmp = join(dir, name)
-    if (!created.has(dir)) {
-      mkdirSync(dir, { recursive: true })
-      created.add(dir)
-    }
-    if (promises.has(tmp)) {
-      await promises.get(tmp)
-      return getCachedResult(result, tmp)
-    }
-    promises.set(
-      tmp,
-
-      atomicWriteFile(tmp, code)
-        // Fallback to non-atomic write for windows case where file already exists:
-        .catch(() => writeFile(tmp, code, 'utf-8'))
-        .finally(() => {
-          Reflect.set(transformResult, '_vitestTmp', tmp)
-          promises.delete(tmp)
-        }),
+    const fileContent = await this.readFileContentToCache(environment, moduleGraphModule)
+    const cachePath = this.fsCache.getCachePath(
+      this.config,
+      environment,
+      this.resolver,
+      moduleGraphModule.id!,
+      fileContent,
     )
-    await promises.get(tmp)
-    return getCachedResult(result, tmp)
+
+    if (saveCachePromises.has(cachePath)) {
+      return saveCachePromises.get(cachePath)!
+    }
+
+    const cachedModule = await this.getCachedModule(cachePath, moduleGraphModule)
+    if (cachedModule) {
+      return cachedModule
+    }
+
+    const result = await this.fetchAndProcess(environment, url, importer, moduleGraphModule, options)
+
+    return this.cacheResult(result, cachePath)
   }
+
+  private async readFileContentToCache(
+    environment: DevEnvironment,
+    moduleGraphModule: EnvironmentModuleNode,
+  ): Promise<string> {
+    if (moduleGraphModule.file) {
+      return this.readFileConcurrently(moduleGraphModule.file)
+    }
+
+    const loadResult = await environment.pluginContainer.load(moduleGraphModule.id!)
+    if (typeof loadResult === 'string') {
+      return loadResult
+    }
+    if (loadResult != null) {
+      return loadResult.code
+    }
+    return ''
+  }
+
+  private async getCachedModule(
+    cachePath: string,
+    moduleGraphModule: EnvironmentModuleNode,
+  ): Promise<FetchResult | FetchCachedFileSystemResult | undefined> {
+    const cachedModule = await this.fsCache.getCachedModule(cachePath)
+
+    if (cachedModule && 'code' in cachedModule) {
+      // keep the module graph in sync
+      if (!moduleGraphModule.transformResult) {
+        const map = extractSourceMap(cachedModule.code)
+        if (map && cachedModule.file) {
+          map.file = cachedModule.file
+        }
+        moduleGraphModule.transformResult = { code: cachedModule.code, map }
+      }
+      return getCachedResult(cachedModule, cachePath)
+    }
+
+    return cachedModule
+  }
+
+  private async fetchAndProcess(
+    environment: DevEnvironment,
+    url: string,
+    importer: string | undefined,
+    moduleGraphModule: EnvironmentModuleNode,
+    options?: FetchFunctionOptions,
+  ): Promise<FetchResult> {
+    const externalize = await this.resolver.shouldExternalize(moduleGraphModule.id!)
+    if (externalize) {
+      return { externalize, type: 'module' }
+    }
+
+    const moduleRunnerModule = await fetchModule(
+      environment,
+      url,
+      importer,
+      {
+        ...options,
+        inlineSourceMap: false,
+      },
+    ).catch(handleRollupError)
+
+    return processResultSource(environment, moduleRunnerModule)
+  }
+
+  private async cacheResult(
+    result: FetchResult,
+    cachePath: string,
+  ): Promise<FetchResult | FetchCachedFileSystemResult> {
+    const returnResult = 'code' in result
+      ? getCachedResult(result, cachePath)
+      : result
+
+    if (saveCachePromises.has(cachePath)) {
+      await saveCachePromises.get(cachePath)
+      return returnResult
+    }
+
+    const savePromise = this.fsCache
+      .saveCachedModule(cachePath, result)
+      .then(() => result)
+      .finally(() => {
+        saveCachePromises.delete(cachePath)
+      })
+
+    saveCachePromises.set(cachePath, savePromise)
+    await savePromise
+
+    return returnResult
+  }
+
+  private readFileConcurrently(file: string): Promise<string> {
+    if (!readFilePromises.has(file)) {
+      readFilePromises.set(
+        file,
+        readFile(file, 'utf-8').finally(() => {
+          readFilePromises.delete(file)
+        }),
+      )
+    }
+    return readFilePromises.get(file)!
+  }
+}
+
+// interface DumpOptions {
+//   dumpFolder?: string
+//   readFromDump?: boolean
+// }
+
+export interface VitestFetchFunction {
+  (
+    url: string,
+    importer: string | undefined,
+    environment: DevEnvironment,
+    cacheFs?: boolean,
+    options?: FetchFunctionOptions
+  ): Promise<FetchResult | FetchCachedFileSystemResult>
+}
+
+export function createFetchModuleFunction(
+  resolver: VitestResolver,
+  config: ResolvedConfig,
+  fsCache: FileSystemModuleCache,
+  tmpProjectDir: string,
+): VitestFetchFunction {
+  const fetcher = new ModuleFetcher(resolver, config, fsCache, tmpProjectDir)
+  return (url, importer, environment, cacheFs, options) =>
+    fetcher.fetch(url, importer, environment, cacheFs, options)
 }
 
 let SOURCEMAPPING_URL = 'sourceMa'
@@ -162,9 +243,7 @@ SOURCEMAPPING_URL += 'ppingURL'
 
 const MODULE_RUNNER_SOURCEMAPPING_SOURCE = '//# sourceMappingSource=vite-generated'
 
-function processResultSource(environment: DevEnvironment, result: FetchResult): FetchResult & {
-  transformResult?: TransformResult | null
-} {
+function processResultSource(environment: DevEnvironment, result: FetchResult): FetchResult {
   if (!('code' in result)) {
     return result
   }
@@ -179,7 +258,6 @@ function processResultSource(environment: DevEnvironment, result: FetchResult): 
   return {
     ...result,
     code: node?.transformResult?.code || result.code,
-    transformResult: node?.transformResult,
   }
 }
 
@@ -243,6 +321,26 @@ function getCachedResult(result: Extract<FetchResult, { code: string }>, tmp: st
   }
 }
 
+const MODULE_RUNNER_SOURCEMAPPING_REGEXP = new RegExp(
+  `//# ${SOURCEMAPPING_URL}=data:application/json;base64,(.+)`,
+)
+
+function extractSourceMap(code: string): null | Rollup.SourceMap {
+  const pattern = `//# ${SOURCEMAPPING_URL}=data:application/json;base64,`
+  const lastIndex = code.lastIndexOf(pattern)
+  if (lastIndex === -1) {
+    return null
+  }
+
+  const mapString = MODULE_RUNNER_SOURCEMAPPING_REGEXP.exec(
+    code.slice(lastIndex),
+  )?.[1]
+  if (!mapString) {
+    return null
+  }
+  return JSON.parse(Buffer.from(mapString, 'base64').toString('utf-8'))
+}
+
 // serialize rollup error on server to preserve details as a test error
 export function handleRollupError(e: unknown): never {
   if (
@@ -264,36 +362,4 @@ export function handleRollupError(e: unknown): never {
     }
   }
   throw e
-}
-
-/**
- * Performs an atomic write operation using the write-then-rename pattern.
- *
- * Why we need this:
- * - Ensures file integrity by never leaving partially written files on disk
- * - Prevents other processes from reading incomplete data during writes
- * - Particularly important for test files where incomplete writes could cause test failures
- *
- * The implementation writes to a temporary file first, then renames it to the target path.
- * This rename operation is atomic on most filesystems (including POSIX-compliant ones),
- * guaranteeing that other processes will only ever see the complete file.
- *
- * Added in https://github.com/vitest-dev/vitest/pull/7531
- */
-async function atomicWriteFile(realFilePath: string, data: string): Promise<void> {
-  const dir = dirname(realFilePath)
-  const tmpFilePath = join(dir, `.tmp-${Date.now()}-${Math.random().toString(36).slice(2)}`)
-
-  try {
-    await writeFile(tmpFilePath, data, 'utf-8')
-    await rename(tmpFilePath, realFilePath)
-  }
-  finally {
-    try {
-      if (await stat(tmpFilePath)) {
-        await unlink(tmpFilePath)
-      }
-    }
-    catch {}
-  }
 }

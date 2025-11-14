@@ -1,6 +1,6 @@
 import type { UserConfig as ViteConfig, Plugin as VitePlugin } from 'vite'
 import type { TestProject } from '../project'
-import type { BrowserConfigOptions, ResolvedConfig, TestProjectInlineConfiguration } from '../types/config'
+import type { BrowserConfigOptions, ResolvedConfig, TestProjectInlineConfiguration, UserConfig } from '../types/config'
 import { existsSync, readFileSync } from 'node:fs'
 import { deepMerge } from '@vitest/utils/helpers'
 import { basename, dirname, relative, resolve } from 'pathe'
@@ -93,6 +93,16 @@ export function WorkspaceVitestPlugin(
           }
         }
 
+        const vitestConfig: UserConfig = {
+          name: { label: name, color },
+        }
+
+        // always inherit the global `fsModuleCache` value even without `extends: true`
+        if (testConfig.experimental?.fsModuleCache == null && project.vitest.config.experimental?.fsModuleCache !== null) {
+          vitestConfig.experimental ??= {}
+          vitestConfig.experimental.fsModuleCache = project.vitest.config.experimental.fsModuleCache
+        }
+
         return {
           base: '/',
           environments: {
@@ -100,9 +110,7 @@ export function WorkspaceVitestPlugin(
               dev: {},
             },
           },
-          test: {
-            name: { label: name, color },
-          },
+          test: vitestConfig,
         }
       },
     },
