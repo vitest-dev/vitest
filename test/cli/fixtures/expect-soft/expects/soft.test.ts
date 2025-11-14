@@ -1,6 +1,6 @@
 import { expect, test } from 'vitest'
 
-interface CustomMatchers<R = unknown> {
+interface CustomMatchers<R = any> {
   toBeAsync: (expected: unknown) => Promise<R>;
   toBeDividedBy(divisor: number): R
 }
