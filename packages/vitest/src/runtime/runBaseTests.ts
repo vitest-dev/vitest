@@ -79,5 +79,5 @@ export async function run(
     },
   )
 
-  await stopCoverageInsideWorker(config.coverage, moduleRunner, { isolate: config.isolate })
+  await otel.$('vitest.runtime.coverage.stop', () => stopCoverageInsideWorker(config.coverage, moduleRunner, { isolate: config.isolate }))
 }
