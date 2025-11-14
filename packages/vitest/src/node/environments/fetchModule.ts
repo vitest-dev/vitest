@@ -1,7 +1,7 @@
 import type { DevEnvironment, EnvironmentModuleNode, FetchResult, Rollup, TransformResult } from 'vite'
 import type { FetchFunctionOptions } from 'vite/module-runner'
 import type { FetchCachedFileSystemResult } from '../../types/general'
-import type { FileSystemModuleCache } from '../cache/fs'
+import type { FileSystemModuleCache } from '../cache/fsCache'
 import type { VitestResolver } from '../resolver'
 import type { ResolvedConfig } from '../types/config'
 import { readFile } from 'node:fs/promises'
