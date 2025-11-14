@@ -10,7 +10,7 @@ import { join } from 'pathe'
 import { fetchModule } from 'vite'
 import { FileSystemModuleCache } from '../cache/fs'
 
-const saveCachePromises = new Map<string, Promise<void>>()
+const saveCachePromises = new Map<string, Promise<FetchResult>>()
 const readFilePromises = new Map<string, Promise<string>>()
 
 class ModuleFetcher {
@@ -64,6 +64,10 @@ class ModuleFetcher {
       moduleGraphModule.id!,
       fileContent,
     )
+
+    if (saveCachePromises.has(cachePath)) {
+      return saveCachePromises.get(cachePath)!
+    }
 
     const cachedModule = await this.getCachedModule(cachePath, moduleGraphModule)
     if (cachedModule) {
@@ -158,6 +162,7 @@ class ModuleFetcher {
 
     const savePromise = this.fsCache
       .saveCachedModule(cachePath, result)
+      .then(() => result)
       .finally(() => {
         saveCachePromises.delete(cachePath)
       })
