@@ -37,6 +37,7 @@ export class PoolRunner {
     rpc: [unknown]
   }> = new EventEmitter()
 
+  private _offCancel: () => void
   private _rpc: BirpcReturn<RunnerRPC, RuntimeRPC>
 
   public get isTerminated(): boolean {
@@ -63,7 +64,7 @@ export class PoolRunner {
       },
     )
 
-    this.project.vitest.onCancel(reason => this._rpc.onCancel(reason))
+    this._offCancel = this.project.vitest.onCancel(reason => this._rpc.onCancel(reason))
   }
 
   postMessage(message: WorkerRequest): void {
@@ -181,6 +182,7 @@ export class PoolRunner {
       )
 
       this._eventEmitter.removeAllListeners()
+      this._offCancel()
       this._rpc.$close(new Error('[vitest-pool-runner]: Pending methods while closing rpc'))
 
       // Stop the worker process (this sets _fork/_thread to undefined)

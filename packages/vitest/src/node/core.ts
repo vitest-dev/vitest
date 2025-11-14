@@ -1257,8 +1257,11 @@ export class Vitest {
   /**
    * Register a handler that will be called when the test run is cancelled with `vitest.cancelCurrentRun`.
    */
-  onCancel(fn: (reason: CancelReason) => Awaitable<void>): void {
+  onCancel(fn: (reason: CancelReason) => Awaitable<void>): () => void {
     this._onCancelListeners.push(fn)
+    return () => {
+      this._onCancelListeners.splice(this._onCancelListeners.indexOf(fn))
+    }
   }
 
   /**
