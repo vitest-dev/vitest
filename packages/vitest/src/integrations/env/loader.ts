@@ -1,7 +1,7 @@
 import type { BuiltinEnvironment, VitestEnvironment } from '../../node/types/config'
 import type { Environment } from '../../types/environment'
 import type { WorkerRPC } from '../../types/worker'
-import type { Telemetry } from '../../utils/otel'
+import type { Traces } from '../../utils/traces'
 import { readFileSync } from 'node:fs'
 import { isBuiltin } from 'node:module'
 import { pathToFileURL } from 'node:url'
@@ -57,7 +57,7 @@ export async function loadEnvironment(
   name: string,
   root: string,
   rpc: WorkerRPC,
-  telemetry: Telemetry,
+  traces: Traces,
 ): Promise<{ environment: Environment; loader?: ModuleRunner }> {
   if (isBuiltinEnvironment(name)) {
     return { environment: environments[name] }
@@ -66,12 +66,12 @@ export async function loadEnvironment(
   const packageId
     = name[0] === '.' || name[0] === '/'
       ? resolve(root, name)
-      : (await telemetry.$(
+      : (await traces.$(
           'vitest.runtime.environment.resolve',
           () => rpc.resolve(`vitest-environment-${name}`, undefined, '__vitest__'),
         ))
           ?.id ?? resolve(root, name)
-  const pkg = await telemetry.$(
+  const pkg = await traces.$(
     'vitest.runtime.environment.import',
     () => loader.import(packageId) as Promise<{ default: Environment }>,
   )

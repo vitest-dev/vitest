@@ -2,7 +2,7 @@ import type { WorkerRequest, WorkerResponse } from '../../node/pools/types'
 import type { WorkerSetupContext } from '../../types/worker'
 import type { VitestWorker } from './types'
 import { serializeError } from '@vitest/utils/error'
-import { Telemetry } from '../../utils/otel'
+import { Traces } from '../../utils/traces'
 import { createRuntimeRpc } from '../rpc'
 import * as entrypoint from '../worker'
 
@@ -14,7 +14,7 @@ const __vitest_worker_response__ = true
 const memoryUsage = process.memoryUsage.bind(process)
 let reportMemory = false
 
-let telemetry!: Telemetry
+let traces!: Traces
 
 /** @experimental */
 export function init(worker: Options): void {
@@ -38,26 +38,26 @@ export function init(worker: Options): void {
       return
     }
 
-    const telemetryStart = performance.now()
+    const tracesStart = performance.now()
 
-    telemetry ??= await new Telemetry({
+    traces ??= await new Traces({
       // TODO: how to pass down options properly?
       enabled: !!process.env.VITETS_OTEL_ENABLED,
       sdkPath: process.env.VITEST_OTEL_SDK,
     }).waitInit()
-    const telemetryEnd = performance.now()
+    const tracesEnd = performance.now()
 
     switch (message.type) {
       case 'start': {
         reportMemory = message.options.reportMemory
 
         const { environment, config, pool } = message.context
-        const context = telemetry.getContextFromCarrier(message.otelCarrier)
+        const context = traces.getContextFromCarrier(message.otelCarrier)
 
         // record telemetry as part of "start"
-        telemetry
-          .startSpan('vitest.runtime.telemetry', { startTime: telemetryStart }, context)
-          .end(telemetryEnd)
+        traces
+          .startSpan('vitest.runtime.traces', { startTime: tracesStart }, context)
+          .end(tracesEnd)
 
         try {
           const rpc = createRuntimeRpc(worker)
@@ -67,9 +67,9 @@ export function init(worker: Options): void {
             pool,
             rpc,
             projectName: config.name || '',
-            telemetry,
+            traces,
           }
-          workerTeardown = await telemetry.$(
+          workerTeardown = await traces.$(
             'vitest.runtime.setup',
             { context },
             () => worker.setup?.(setupContext),
@@ -111,18 +111,18 @@ export function init(worker: Options): void {
         isRunning = true
 
         try {
-          const telemetryContext = telemetry.getContextFromCarrier(message.otelCarrier)
-          runPromise = telemetry.$(
+          const tracesContext = traces.getContextFromCarrier(message.otelCarrier)
+          runPromise = traces.$(
             'vitest.runtime.run',
             {
-              context: telemetryContext,
+              context: tracesContext,
               attributes: {
                 // TODO: include :location
                 'vitest.worker.files': message.context.files.map(f => f.filepath),
                 'vitest.worker.id': message.context.workerId,
               },
             },
-            () => entrypoint.run({ ...setupContext, ...message.context }, worker, telemetry)
+            () => entrypoint.run({ ...setupContext, ...message.context }, worker, traces)
               .catch(error => serializeError(error)),
           )
           const error = await runPromise
@@ -169,18 +169,18 @@ export function init(worker: Options): void {
         isRunning = true
 
         try {
-          const telemetryContext = telemetry.getContextFromCarrier(message.otelCarrier)
-          runPromise = telemetry.$(
+          const tracesContext = traces.getContextFromCarrier(message.otelCarrier)
+          runPromise = traces.$(
             'vitest.runtime.collect',
             {
-              context: telemetryContext,
+              context: tracesContext,
               attributes: {
                 // TODO: include :location
                 'vitest.worker.files': message.context.files.map(f => f.filepath),
                 'vitest.worker.id': message.context.workerId,
               },
             },
-            () => entrypoint.collect({ ...setupContext, ...message.context }, worker, telemetry)
+            () => entrypoint.collect({ ...setupContext, ...message.context }, worker, traces)
               .catch(error => serializeError(error)),
           )
           const error = await runPromise
@@ -204,9 +204,9 @@ export function init(worker: Options): void {
         await runPromise
 
         try {
-          const context = telemetry.getContextFromCarrier(message.otelCarrier)
+          const context = traces.getContextFromCarrier(message.otelCarrier)
 
-          const error = await telemetry.$(
+          const error = await traces.$(
             'vitest.runtime.teardown',
             { context },
             async () => {
@@ -216,7 +216,7 @@ export function init(worker: Options): void {
             },
           )
 
-          await telemetry.finish()
+          await traces.finish()
 
           send({ type: 'stopped', error, __vitest_worker_response__ })
         }

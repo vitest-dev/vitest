@@ -1,7 +1,7 @@
 import type vm from 'node:vm'
 import type { EvaluatedModules } from 'vite/module-runner'
 import type { WorkerGlobalState } from '../../types/worker'
-import type { Telemetry } from '../../utils/otel'
+import type { Traces } from '../../utils/traces'
 import type { ExternalModulesExecutor } from '../external-executor'
 import type { CreateImportMeta } from './moduleRunner'
 import fs from 'node:fs'
@@ -27,7 +27,7 @@ export interface ContextModuleRunnerOptions {
   context?: vm.Context
   externalModulesExecutor?: ExternalModulesExecutor
   state: WorkerGlobalState
-  telemetry?: Telemetry // optional to keep backwards compat
+  traces?: Traces // optional to keep backwards compat
   spyModule?: typeof import('@vitest/spy')
   createImportMeta?: CreateImportMeta
 }
@@ -36,7 +36,7 @@ const cwd = process.cwd()
 const isWindows = process.platform === 'win32'
 
 export function startVitestModuleRunner(options: ContextModuleRunnerOptions): VitestModuleRunner {
-  const telemetry = options.telemetry
+  const traces = options.traces
   const state = (): WorkerGlobalState =>
     // @ts-expect-error injected untyped global
     globalThis.__vitest_worker__ || options.state
@@ -63,7 +63,7 @@ export function startVitestModuleRunner(options: ContextModuleRunnerOptions): Vi
   const evaluator = options.evaluator || new VitestModuleEvaluator(
     vm,
     {
-      telemetry,
+      traces,
       get moduleExecutionInfo() {
         return state().moduleExecutionInfo
       },
@@ -78,7 +78,7 @@ export function startVitestModuleRunner(options: ContextModuleRunnerOptions): Vi
     spyModule: options.spyModule,
     evaluatedModules: options.evaluatedModules,
     evaluator,
-    telemetry,
+    traces,
     mocker: options.mocker,
     transport: {
       async fetchModule(id, importer, options) {
@@ -125,7 +125,7 @@ export function startVitestModuleRunner(options: ContextModuleRunnerOptions): Vi
             return { externalize: toBuiltin(rawId), type: 'builtin' }
           }
 
-          const otelCarrier = telemetry?.getContextCarrier()
+          const otelCarrier = traces?.getContextCarrier()
           const result = await rpc().fetch(
             id,
             importer,

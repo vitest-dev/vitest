@@ -10,13 +10,13 @@ import type {
 } from '@opentelemetry/api'
 import type { OTELCarrier } from '../node/pools/types'
 
-interface TelemetryOptions {
+interface TracesOptions {
   enabled: boolean
   sdkPath?: string
   tracerName?: string
 }
 
-interface TelemetrySpanOptions extends SpanOptions {
+interface TracesSpanOptions extends SpanOptions {
   context?: Context
 }
 
@@ -28,7 +28,7 @@ interface OTEL {
   propagation: PropagationAPI
 }
 
-export class Telemetry {
+export class Traces {
   /**
    * otel stands for OpenTelemetry
    */
@@ -40,7 +40,7 @@ export class Telemetry {
   #noopSpan = createNoopSpan()
   #noopContext = createNoopContext()
 
-  constructor(options: TelemetryOptions) {
+  constructor(options: TracesOptions) {
     if (options.enabled) {
       const apiInit = import('@opentelemetry/api').then((api) => {
         const otel = {
@@ -165,8 +165,8 @@ export class Telemetry {
   }
 
   $<T>(name: string, fn: (span: Span) => T): T
-  $<T>(name: string, optionsOrFn: TelemetrySpanOptions, fn: (span: Span) => T): T
-  $<T>(name: string, optionsOrFn: TelemetrySpanOptions | ((span: Span) => T), fn?: (span: Span) => T): T {
+  $<T>(name: string, optionsOrFn: TracesSpanOptions, fn: (span: Span) => T): T
+  $<T>(name: string, optionsOrFn: TracesSpanOptions | ((span: Span) => T), fn?: (span: Span) => T): T {
     const callback = typeof optionsOrFn === 'function' ? optionsOrFn : fn!
     if (!this.#otel) {
       return callback(this.#noopSpan)

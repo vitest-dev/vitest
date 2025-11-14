@@ -2,7 +2,7 @@ import type { CancelReason, FileSpecification, Task } from '@vitest/runner'
 import type { BirpcReturn } from 'birpc'
 import type { EvaluatedModules } from 'vite/module-runner'
 import type { SerializedConfig } from '../runtime/config'
-import type { Telemetry } from '../utils/otel'
+import type { Traces } from '../utils/traces'
 import type { Environment } from './environment'
 import type { RunnerRPC, RuntimeRPC } from './rpc'
 
@@ -49,7 +49,7 @@ export interface WorkerSetupContext {
   config: SerializedConfig
   projectName: string
   rpc: WorkerRPC
-  telemetry: Telemetry
+  traces: Traces
 }
 
 export interface WorkerGlobalState {

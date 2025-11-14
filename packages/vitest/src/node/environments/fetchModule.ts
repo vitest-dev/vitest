@@ -2,7 +2,7 @@ import type { Span } from '@opentelemetry/api'
 import type { DevEnvironment, FetchResult, Rollup, TransformResult } from 'vite'
 import type { FetchFunctionOptions } from 'vite/module-runner'
 import type { FetchCachedFileSystemResult } from '../../types/general'
-import type { Telemetry } from '../../utils/otel'
+import type { Traces } from '../../utils/traces'
 import type { OTELCarrier } from '../pools/types'
 import type { VitestResolver } from '../resolver'
 import { existsSync, mkdirSync } from 'node:fs'
@@ -34,7 +34,7 @@ export interface VitestFetchFunction {
 
 export function createFetchModuleFunction(
   resolver: VitestResolver,
-  telemetry: Telemetry,
+  traces: Traces,
   tmpDir: string = join(tmpdir(), nanoid()),
   dump?: DumpOptions,
 ): VitestFetchFunction {
@@ -200,11 +200,11 @@ export function createFetchModuleFunction(
     options,
     otelCarrier,
   ) => {
-    await telemetry.waitInit()
+    await traces.waitInit()
     const context = otelCarrier
-      ? telemetry.getContextFromCarrier(otelCarrier)
+      ? traces.getContextFromCarrier(otelCarrier)
       : undefined
-    return telemetry.$(
+    return traces.$(
       'vitest.module.transform',
       context
         ? { context }

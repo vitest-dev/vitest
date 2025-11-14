@@ -1,6 +1,6 @@
 import type { FileSpecification } from '@vitest/runner'
 import type { Environment } from '../types/environment'
-import type { Telemetry } from '../utils/otel'
+import type { Traces } from '../utils/traces'
 import type { SerializedConfig } from './config'
 import type { VitestModuleRunner } from './moduleRunner/moduleRunner'
 import { performance } from 'node:perf_hooks'
@@ -23,7 +23,7 @@ export async function run(
   config: SerializedConfig,
   moduleRunner: VitestModuleRunner,
   environment: Environment,
-  otel: Telemetry,
+  otel: Traces,
 ): Promise<void> {
   const workerState = getWorkerState()
 

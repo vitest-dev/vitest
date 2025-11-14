@@ -23,8 +23,8 @@ import { version } from '../../package.json' with { type: 'json' }
 import { WebSocketReporter } from '../api/setup'
 import { distDir } from '../paths'
 import { wildcardPatternToRegExp } from '../utils/base'
-import { Telemetry } from '../utils/otel'
 import { convertTasksToEvents } from '../utils/tasks'
+import { Traces } from '../utils/traces'
 import { astCollectTests, createFailedFileTask } from './ast-collect'
 import { BrowserSessions } from './browser/sessions'
 import { VitestCache } from './cache'
@@ -110,7 +110,7 @@ export class Vitest {
   /** @internal */ _resolver!: VitestResolver
   /** @internal */ _fetcher!: VitestFetchFunction
   /** @internal */ _tmpDir = join(tmpdir(), nanoid())
-  /** @internal */ _telemetry!: Telemetry
+  /** @internal */ _traces!: Traces
 
   private isFirstRun = true
   private restartsCount = 0
@@ -213,7 +213,7 @@ export class Vitest {
     this._snapshot = new SnapshotManager({ ...resolved.snapshotOptions })
     this._testRun = new TestRun(this)
     const otelSdkPath = resolved.experimental.openTelemetry?.sdkPath
-    this._telemetry = new Telemetry({
+    this._traces = new Traces({
       enabled: !!resolved.experimental.openTelemetry?.enabled,
       sdkPath: otelSdkPath,
     })
@@ -225,7 +225,7 @@ export class Vitest {
     this._resolver = new VitestResolver(server.config.cacheDir, resolved)
     this._fetcher = createFetchModuleFunction(
       this._resolver,
-      this._telemetry,
+      this._traces,
       this._tmpDir,
       {
         dumpFolder: this.config.dumpDir,
@@ -315,7 +315,7 @@ export class Vitest {
 
     await Promise.all([
       ...this._onSetServer.map(fn => fn()),
-      this._telemetry.waitInit(),
+      this._traces.waitInit(),
     ])
   }
 
@@ -496,7 +496,7 @@ export class Vitest {
    * Merge reports from multiple runs located in the specified directory (value from `--merge-reports` if not specified).
    */
   public async mergeReports(directory?: string): Promise<TestRunResult> {
-    return this._telemetry.$('vitest.merge_reports', async () => {
+    return this._traces.$('vitest.merge_reports', async () => {
       if (this.reporters.some(r => r instanceof BlobReporter)) {
         throw new Error('Cannot merge reports when `--reporter=blob` is used. Remove blob reporter from the config first.')
       }
@@ -562,11 +562,11 @@ export class Vitest {
   }
 
   async collect(filters?: string[]): Promise<TestRunResult> {
-    return this._telemetry.$('vitest.collect', async (collectSpan) => {
+    return this._traces.$('vitest.collect', async (collectSpan) => {
       const filenamePattern = filters && filters?.length > 0 ? filters : []
       collectSpan.setAttribute('vitest.collect.filters', filenamePattern)
 
-      const files = await this._telemetry.$(
+      const files = await this._traces.$(
         'vitest.config.resolve_include_glob',
         async () => {
           const specifications = await this.specifications.getRelevantTestSpecifications(filters)
@@ -610,9 +610,9 @@ export class Vitest {
    * @param filters String filters to match the test files
    */
   async start(filters?: string[]): Promise<TestRunResult> {
-    return this._telemetry.$('vitest.start', async (startSpan) => {
+    return this._traces.$('vitest.start', async (startSpan) => {
       try {
-        await this._telemetry.$('vitest.coverage.init', async () => {
+        await this._traces.$('vitest.coverage.init', async () => {
           await this.initCoverageProvider()
           await this.coverageProvider?.clean(this._coverageOptions.clean)
         })
@@ -623,7 +623,7 @@ export class Vitest {
 
       this.filenamePattern = filters && filters?.length > 0 ? filters : undefined
       startSpan.setAttribute('vitest.start.filters', this.filenamePattern || [])
-      const files = await this._telemetry.$(
+      const files = await this._traces.$(
         'vitest.config.resolve_include_glob',
         async () => {
           const specifications = await this.specifications.getRelevantTestSpecifications(filters)
@@ -643,7 +643,7 @@ export class Vitest {
 
       // if run with --changed, don't exit if no tests are found
       if (!files.length) {
-        await this._telemetry.$('vitest.test_run', async () => {
+        await this._traces.$('vitest.test_run', async () => {
           await this._testRun.start([])
           const coverage = await this.coverageProvider?.generateCoverage?.({ allTestsRun: true })
 
@@ -682,7 +682,7 @@ export class Vitest {
    * If the `--watch` flag is provided, Vitest will still run changed tests even if this method was not called.
    */
   async init(): Promise<void> {
-    await this._telemetry.$('vitest.init', async () => {
+    await this._traces.$('vitest.init', async () => {
       try {
         await this.initCoverageProvider()
         await this.coverageProvider?.clean(this._coverageOptions.clean)
@@ -761,7 +761,7 @@ export class Vitest {
   }
 
   private async runFiles(specs: TestSpecification[], allTestsRun: boolean): Promise<TestRunResult> {
-    return this._telemetry.$('vitest.test_run', async () => {
+    return this._traces.$('vitest.test_run', async () => {
       await this._testRun.start(specs)
 
       // previous run
@@ -1236,7 +1236,7 @@ export class Vitest {
           })())
         }
 
-        closePromises.push(this._telemetry?.finish())
+        closePromises.push(this._traces?.finish())
         closePromises.push(...this._onClose.map(fn => fn()))
 
         return Promise.allSettled(closePromises).then((results) => {

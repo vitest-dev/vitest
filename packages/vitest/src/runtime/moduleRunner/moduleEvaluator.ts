@@ -18,7 +18,7 @@ import {
   ssrImportMetaKey,
   ssrModuleExportsKey,
 } from 'vite/module-runner'
-import { Telemetry } from '../../utils/otel'
+import { Traces } from '../../utils/traces'
 import { ModuleDebug } from './moduleDebug'
 
 const isWindows = process.platform === 'win32'
@@ -29,7 +29,7 @@ export interface VitestModuleEvaluatorOptions {
   getCurrentTestFilepath?: () => string | undefined
   compiledFunctionArgumentsNames?: string[]
   compiledFunctionArgumentsValues?: unknown[]
-  telemetry?: Telemetry
+  traces?: Traces
 }
 
 export class VitestModuleEvaluator implements ModuleEvaluator {
@@ -47,13 +47,13 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
   }
 
   private debug = new ModuleDebug()
-  private _otel: Telemetry
+  private _otel: Traces
 
   constructor(
     vmOptions?: VitestVmOptions | undefined,
     private options: VitestModuleEvaluatorOptions = {},
   ) {
-    this._otel = options.telemetry || new Telemetry({ enabled: false })
+    this._otel = options.traces || new Traces({ enabled: false })
     this.vm = vmOptions
     this.stubs = getDefaultRequestStubs(vmOptions?.context)
     if (options.compiledFunctionArgumentsNames) {

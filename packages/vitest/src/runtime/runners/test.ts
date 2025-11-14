@@ -12,7 +12,7 @@ import type {
   VitestRunnerImportSource,
 } from '@vitest/runner'
 import type { ModuleRunner } from 'vite/module-runner'
-import type { Telemetry } from '../../utils/otel'
+import type { Traces } from '../../utils/traces'
 import type { SerializedConfig } from '../config'
 import { getState, GLOBAL_EXPECT, setState } from '@vitest/expect'
 import { getNames, getTestName, getTests } from '@vitest/runner/utils'
@@ -37,7 +37,7 @@ export class VitestTestRunner implements VitestRunner {
   private assertionsErrors = new WeakMap<Readonly<Task>, Error>()
 
   public pool: string = this.workerState.ctx.pool
-  private _otel!: Telemetry
+  private _otel!: Traces
 
   constructor(public config: SerializedConfig) {}
 
@@ -241,7 +241,7 @@ export class VitestTestRunner implements VitestRunner {
     return this._otel.$(`vitest.test.runner.${name}`, options, cb || attributes as () => T)
   }
 
-  __setOtel(otel: Telemetry): void {
+  __setOtel(otel: Traces): void {
     this._otel = otel
   }
 }

@@ -7,7 +7,7 @@ import type { ModuleExecutionInfo } from './moduleDebug'
 import type { VitestModuleEvaluator } from './moduleEvaluator'
 import type { VitestTransportOptions } from './moduleTransport'
 import * as viteModuleRunner from 'vite/module-runner'
-import { Telemetry } from '../../utils/otel'
+import { Traces } from '../../utils/traces'
 import { VitestMocker } from './moduleMocker'
 import { VitestTransport } from './moduleTransport'
 
@@ -45,7 +45,7 @@ function createImportMetaResolver() {
 export class VitestModuleRunner extends viteModuleRunner.ModuleRunner {
   public mocker: VitestMocker
   public moduleExecutionInfo: ModuleExecutionInfo
-  private _otel: Telemetry
+  private _otel: Traces
 
   constructor(private vitestOptions: VitestModuleRunnerOptions) {
     const options = vitestOptions
@@ -61,12 +61,12 @@ export class VitestModuleRunner extends viteModuleRunner.ModuleRunner {
       },
       options.evaluator,
     )
-    this._otel = vitestOptions.telemetry || new Telemetry({ enabled: false })
+    this._otel = vitestOptions.traces || new Traces({ enabled: false })
     this.moduleExecutionInfo = options.getWorkerState().moduleExecutionInfo
     this.mocker = options.mocker || new VitestMocker(this, {
       spyModule: options.spyModule,
       context: options.vm?.context,
-      telemetry: this._otel,
+      traces: this._otel,
       resolveId: options.transport.resolveId,
       get root() {
         return options.getWorkerState().config.root
@@ -206,7 +206,7 @@ export interface VitestModuleRunnerOptions {
   getWorkerState: () => WorkerGlobalState
   mocker?: VitestMocker
   vm?: VitestVmOptions
-  telemetry?: Telemetry
+  traces?: Traces
   spyModule?: typeof import('@vitest/spy')
   createImportMeta?: CreateImportMeta
 }

@@ -1,6 +1,6 @@
 import type { ResolvedConfig, SerializedConfig } from '../../node/types/config'
 import type { WorkerGlobalState, WorkerSetupContext } from '../../types/worker'
-import type { Telemetry } from '../../utils/otel'
+import type { Traces } from '../../utils/traces'
 import v8 from 'node:v8'
 import { init } from './init'
 
@@ -29,7 +29,7 @@ if (isProfiling) {
 }
 
 export default function workerInit(options: {
-  runTests: (method: 'run' | 'collect', state: WorkerGlobalState, otel: Telemetry) => Promise<void>
+  runTests: (method: 'run' | 'collect', state: WorkerGlobalState, otel: Traces) => Promise<void>
   setup?: (context: WorkerSetupContext) => Promise<() => Promise<unknown>>
 }): void {
   const { runTests } = options
@@ -46,7 +46,7 @@ export default function workerInit(options: {
     setup: options.setup,
   })
 
-  async function executeTests(method: 'run' | 'collect', state: WorkerGlobalState, otel: Telemetry) {
+  async function executeTests(method: 'run' | 'collect', state: WorkerGlobalState, otel: Traces) {
     state.ctx.config = unwrapSerializableConfig(state.ctx.config)
 
     try {

@@ -115,7 +115,7 @@ export class Pool {
       const poolId = runner.poolId ?? this.getWorkerId()
       runner.poolId = poolId
 
-      const span = runner.startTelemetrySpan(`vitest.worker.${method}`)
+      const span = runner.startTracesSpan(`vitest.worker.${method}`)
       // Start running the test in the worker
       runner.request(method, task.context)
 

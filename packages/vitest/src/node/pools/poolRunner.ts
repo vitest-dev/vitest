@@ -3,7 +3,7 @@ import type { DeferPromise } from '@vitest/utils/helpers'
 import type { BirpcReturn } from 'birpc'
 import type { RunnerRPC, RuntimeRPC } from '../../types/rpc'
 import type { ContextTestEnvironment, WorkerExecuteContext } from '../../types/worker'
-import type { Telemetry } from '../../utils/otel'
+import type { Traces } from '../../utils/traces'
 import type { TestProject } from '../project'
 import type { PoolOptions, PoolRunnerOTEL, PoolWorker, WorkerRequest, WorkerResponse } from './types'
 import { EventEmitter } from 'node:events'
@@ -42,7 +42,7 @@ export class PoolRunner {
   private _rpc: BirpcReturn<RunnerRPC, RuntimeRPC>
 
   private _otel: PoolRunnerOTEL | null = null
-  private _telemetry: Telemetry
+  private _traces: Traces
 
   public get isTerminated(): boolean {
     return this._state === RunnerState.STOPPED
@@ -57,9 +57,9 @@ export class PoolRunner {
     this.environment = options.environment
 
     const vitest = this.project.vitest
-    this._telemetry = vitest._telemetry
-    if (this._telemetry.isEnabled()) {
-      const { span: workerSpan, context } = this._telemetry.startContextSpan('vitest.worker')
+    this._traces = vitest._traces
+    if (this._traces.isEnabled()) {
+      const { span: workerSpan, context } = this._traces.startContextSpan('vitest.worker')
       this._otel = {
         span: workerSpan,
         workerContext: context,
@@ -96,12 +96,12 @@ export class PoolRunner {
     }
   }
 
-  startTelemetrySpan(name: string): Span {
-    const telemetry = this._telemetry
+  startTracesSpan(name: string): Span {
+    const traces = this._traces
     if (!this._otel) {
-      return telemetry.startSpan(name)
+      return traces.startSpan(name)
     }
-    const { span, context } = telemetry.startContextSpan(name, this._otel.workerContext)
+    const { span, context } = traces.startContextSpan(name, this._otel.workerContext)
     this._otel.currentContext = context
     const end = span.end.bind(span)
     span.end = (endTime?: TimeInput) => {
@@ -125,7 +125,7 @@ export class PoolRunner {
   private getOTELCarrier() {
     const activeContext = this._otel?.currentContext || this._otel?.workerContext
     return activeContext
-      ? this._telemetry.getContextCarrier(activeContext)
+      ? this._traces.getContextCarrier(activeContext)
       : undefined
   }
 
@@ -150,7 +150,7 @@ export class PoolRunner {
     try {
       this._state = RunnerState.STARTING
 
-      await this._telemetry.$(
+      await this._traces.$(
         `vitest.${this.worker.name}.start`,
         { context: this._otel?.workerContext },
         () => this.worker.start(),
@@ -162,7 +162,7 @@ export class PoolRunner {
       this.worker.on('exit', this.emitUnexpectedExit)
       this.worker.on('message', this.emitWorkerMessage)
 
-      startSpan = this.startTelemetrySpan('vitest.worker.start')
+      startSpan = this.startTracesSpan('vitest.worker.start')
       const startPromise = this.withTimeout(this.waitForStart(), START_TIMEOUT)
 
       this.postMessage({
@@ -225,7 +225,7 @@ export class PoolRunner {
       // Remove exit listener early to avoid "unexpected exit" errors during shutdown
       this.worker.off('exit', this.emitUnexpectedExit)
 
-      const stopSpan = this.startTelemetrySpan('vitest.worker.stop')
+      const stopSpan = this.startTracesSpan('vitest.worker.stop')
       await this.withTimeout(
         new Promise<void>((resolve) => {
           const onStop = (response: WorkerResponse) => {
@@ -259,7 +259,7 @@ export class PoolRunner {
 
       // Stop the worker process (this sets _fork/_thread to undefined)
       // Worker's event listeners (error, message) are implicitly removed when worker terminates
-      await this._telemetry.$(
+      await this._traces.$(
         `vitest.${this.worker.name}.stop`,
         { context: this._otel?.workerContext },
         () => this.worker.stop(),

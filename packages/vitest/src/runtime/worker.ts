@@ -1,5 +1,5 @@
 import type { ContextRPC, WorkerGlobalState } from '../types/worker'
-import type { Telemetry } from '../utils/otel'
+import type { Traces } from '../utils/traces'
 import type { VitestWorker } from './workers/types'
 import { createStackString, parseStacktrace } from '@vitest/utils/source-map'
 import { setupInspect } from './inspector'
@@ -9,7 +9,7 @@ import { onCancel, rpcDone } from './rpc'
 const resolvingModules = new Set<string>()
 const globalListeners = new Set<() => unknown>()
 
-async function execute(method: 'run' | 'collect', ctx: ContextRPC, worker: VitestWorker, telemetry: Telemetry) {
+async function execute(method: 'run' | 'collect', ctx: ContextRPC, worker: VitestWorker, traces: Traces) {
   const prepareStart = performance.now()
 
   const cleanups: (() => void | Promise<void>)[] = [setupInspect(ctx)]
@@ -56,7 +56,7 @@ async function execute(method: 'run' | 'collect', ctx: ContextRPC, worker: Vites
       )
     }
 
-    await worker[methodName](state, telemetry)
+    await worker[methodName](state, traces)
   }
   finally {
     await rpcDone().catch(() => {})
@@ -64,12 +64,12 @@ async function execute(method: 'run' | 'collect', ctx: ContextRPC, worker: Vites
   }
 }
 
-export function run(ctx: ContextRPC, worker: VitestWorker, telemetry: Telemetry): Promise<void> {
-  return execute('run', ctx, worker, telemetry)
+export function run(ctx: ContextRPC, worker: VitestWorker, traces: Traces): Promise<void> {
+  return execute('run', ctx, worker, traces)
 }
 
-export function collect(ctx: ContextRPC, worker: VitestWorker, telemetry: Telemetry): Promise<void> {
-  return execute('collect', ctx, worker, telemetry)
+export function collect(ctx: ContextRPC, worker: VitestWorker, traces: Traces): Promise<void> {
+  return execute('collect', ctx, worker, traces)
 }
 
 export async function teardown(): Promise<void> {

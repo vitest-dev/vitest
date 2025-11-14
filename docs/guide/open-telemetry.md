@@ -4,7 +4,7 @@ OpenTelemetry can be a useful tool to debug the performance and behaviour of you
 
 Vitest integration starts active spans that are scoped to the test worker.
 
-The OpenTelemetry initialisation is also shown in traces as `vitest.runtime.telemetry` span.
+The OpenTelemetry initialisation is also shown in traces as `vitest.runtime.traces` span.
 
 ::: danger
 It is important to reset fake timers before the test ends, otherwise traces might not be tracked properly.

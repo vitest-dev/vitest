@@ -1,5 +1,5 @@
 import type { VitestRunner, VitestRunnerConstructor } from '@vitest/runner'
-import type { Telemetry } from '../../utils/otel'
+import type { Traces } from '../../utils/traces'
 import type { SerializedConfig } from '../config'
 import type { VitestModuleRunner } from '../moduleRunner/moduleRunner'
 import { takeCoverageInsideWorker } from '../../integrations/coverage'
@@ -32,7 +32,7 @@ async function getTestRunnerConstructor(
 export async function resolveTestRunner(
   config: SerializedConfig,
   moduleRunner: VitestModuleRunner,
-  otel: Telemetry,
+  otel: Traces,
 ): Promise<VitestRunner> {
   const TestRunner = await getTestRunnerConstructor(config, moduleRunner)
   const testRunner = new TestRunner(config)

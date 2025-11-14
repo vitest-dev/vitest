@@ -1,5 +1,5 @@
 import type { WorkerGlobalState, WorkerSetupContext } from '../../types/worker'
-import type { Telemetry } from '../../utils/otel'
+import type { Traces } from '../../utils/traces'
 import { isMainThread, parentPort } from 'node:worker_threads'
 import { init } from './init'
 
@@ -8,7 +8,7 @@ if (isMainThread || !parentPort) {
 }
 
 export default function workerInit(options: {
-  runTests: (method: 'run' | 'collect', state: WorkerGlobalState, telemetry: Telemetry) => Promise<void>
+  runTests: (method: 'run' | 'collect', state: WorkerGlobalState, telemetry: Traces) => Promise<void>
   setup?: (context: WorkerSetupContext) => Promise<() => Promise<unknown>>
 }): void {
   const { runTests } = options

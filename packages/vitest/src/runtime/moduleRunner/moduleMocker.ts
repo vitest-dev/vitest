@@ -1,7 +1,7 @@
 import type { ManualMockedModule, MockedModule, MockedModuleType } from '@vitest/mocker'
 import type { EvaluatedModuleNode } from 'vite/module-runner'
 import type { MockFactory, MockOptions, PendingSuiteMock } from '../../types/mocker'
-import type { Telemetry } from '../../utils/otel'
+import type { Traces } from '../../utils/traces'
 import type { VitestModuleRunner } from './moduleRunner'
 import { isAbsolute, resolve } from 'node:path'
 import vm from 'node:vm'
@@ -20,7 +20,7 @@ interface MockContext {
 
 export interface VitestMockerOptions {
   context?: vm.Context
-  telemetry: Telemetry
+  traces: Traces
   spyModule?: typeof import('@vitest/spy')
   root: string
   moduleDirectories: string[]
@@ -53,11 +53,11 @@ export class VitestMocker {
     callstack: null,
   }
 
-  private _otel: Telemetry
+  private _otel: Traces
 
   constructor(public moduleRunner: VitestModuleRunner, private options: VitestMockerOptions) {
     const context = this.options.context
-    this._otel = options.telemetry
+    this._otel = options.traces
     if (context) {
       this.primitives = vm.runInContext(
         '({ Object, Error, Function, RegExp, Symbol, Array, Map })',
