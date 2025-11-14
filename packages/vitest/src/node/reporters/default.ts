@@ -42,6 +42,7 @@ export class DefaultReporter extends BaseReporter {
       }
     }
 
+    super.onTestRunStart(specifications)
     this.summary?.onTestRunStart(specifications)
   }
 
