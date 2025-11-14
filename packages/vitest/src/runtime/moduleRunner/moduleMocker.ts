@@ -1,6 +1,7 @@
 import type { ManualMockedModule, MockedModule, MockedModuleType } from '@vitest/mocker'
 import type { EvaluatedModuleNode } from 'vite/module-runner'
 import type { MockFactory, MockOptions, PendingSuiteMock } from '../../types/mocker'
+import type { Traces } from '../../utils/traces'
 import type { VitestModuleRunner } from './moduleRunner'
 import { isAbsolute, resolve } from 'node:path'
 import vm from 'node:vm'
@@ -19,6 +20,7 @@ interface MockContext {
 
 export interface VitestMockerOptions {
   context?: vm.Context
+  traces: Traces
   spyModule?: typeof import('@vitest/spy')
   root: string
   moduleDirectories: string[]
@@ -51,8 +53,11 @@ export class VitestMocker {
     callstack: null,
   }
 
+  private _otel: Traces
+
   constructor(public moduleRunner: VitestModuleRunner, private options: VitestMockerOptions) {
     const context = this.options.context
+    this._otel = options.traces
     if (context) {
       this.primitives = vm.runInContext(
         '({ Object, Error, Function, RegExp, Symbol, Array, Map })',
@@ -156,24 +161,48 @@ export class VitestMocker {
     url: string
     external: string | null
   }> {
-    const result = await this.options.resolveId(rawId, importer)
-    if (!result) {
-      const id = normalizeModuleId(rawId)
-      return {
-        id,
-        url: rawId,
-        external: id,
-      }
-    }
-    // external is node_module or unresolved module
-    // for example, some people mock "vscode" and don't have it installed
-    const external
-      = !isAbsolute(result.file) || this.isModuleDirectory(result.file) ? normalizeModuleId(rawId) : null
-    return {
-      ...result,
-      id: normalizeModuleId(result.id),
-      external,
-    }
+    return this._otel.$(
+      'vitest.mocker.resolve_id',
+      {
+        attributes: {
+          'vitest.module.raw_id': rawId,
+          'vitest.module.importer': rawId,
+        },
+      },
+      async (span) => {
+        const result = await this.options.resolveId(rawId, importer)
+        if (!result) {
+          span.addEvent('could not resolve id, fallback to unresolved values')
+          const id = normalizeModuleId(rawId)
+          span.setAttributes({
+            'vitest.module.id': id,
+            'vitest.module.url': rawId,
+            'vitest.module.external': id,
+            'vitest.module.fallback': true,
+          })
+          return {
+            id,
+            url: rawId,
+            external: id,
+          }
+        }
+        // external is node_module or unresolved module
+        // for example, some people mock "vscode" and don't have it installed
+        const external
+          = !isAbsolute(result.file) || this.isModuleDirectory(result.file) ? normalizeModuleId(rawId) : null
+        const id = normalizeModuleId(result.id)
+        span.setAttributes({
+          'vitest.module.id': id,
+          'vitest.module.url': result.url,
+          'vitest.module.external': external ?? false,
+        })
+        return {
+          ...result,
+          id,
+          external,
+        }
+      },
+    )
   }
 
   public async resolveMocks(): Promise<void> {
@@ -393,59 +422,70 @@ export class VitestMocker {
     callstack: string[],
     mock: MockedModule,
   ): Promise<any> {
-    const mockId = this.getMockPath(evaluatedNode.id)
+    return this._otel.$('vitest.mocker.evaluate', async (span) => {
+      const mockId = this.getMockPath(evaluatedNode.id)
 
-    if (mock.type === 'automock' || mock.type === 'autospy') {
-      const cache = this.evaluatedModules.getModuleById(mockId)
-      if (cache && cache.mockedExports) {
-        return cache.mockedExports
-      }
-      const Object = this.primitives.Object
-      // we have to define a separate object that will copy all properties into itself
-      // and can't just use the same `exports` define automatically by Vite before the evaluator
-      const exports = Object.create(null)
-      Object.defineProperty(exports, Symbol.toStringTag, {
-        value: 'Module',
-        configurable: true,
-        writable: true,
+      span.setAttributes({
+        'vitest.module.id': mockId,
+        'vitest.mock.type': mock.type,
+        'vitest.mock.id': mock.id,
+        'vitest.mock.url': mock.url,
+        'vitest.mock.raw': mock.raw,
       })
-      const node = this.ensureModule(mockId, this.getMockPath(evaluatedNode.url))
-      node.meta = evaluatedNode.meta
-      node.file = evaluatedNode.file
-      node.mockedExports = exports
 
-      const mod = await this.moduleRunner.cachedRequest(
-        url,
-        node,
-        callstack,
-        undefined,
-        true,
-      )
-      this.mockObject(mod, exports, mock.type)
-      return exports
-    }
-    if (
-      mock.type === 'manual'
-      && !callstack.includes(mockId)
-      && !callstack.includes(url)
-    ) {
-      try {
-        callstack.push(mockId)
-        // this will not work if user does Promise.all(import(), import())
-        // we can also use AsyncLocalStorage to store callstack, but this won't work in the browser
-        // maybe we should improve mock API in the future?
-        this.mockContext.callstack = callstack
-        return await this.callFunctionMock(mockId, this.getMockPath(url), mock)
+      if (mock.type === 'automock' || mock.type === 'autospy') {
+        const cache = this.evaluatedModules.getModuleById(mockId)
+        if (cache && cache.mockedExports) {
+          return cache.mockedExports
+        }
+        const Object = this.primitives.Object
+        // we have to define a separate object that will copy all properties into itself
+        // and can't just use the same `exports` define automatically by Vite before the evaluator
+        const exports = Object.create(null)
+        Object.defineProperty(exports, Symbol.toStringTag, {
+          value: 'Module',
+          configurable: true,
+          writable: true,
+        })
+        const node = this.ensureModule(mockId, this.getMockPath(evaluatedNode.url))
+        node.meta = evaluatedNode.meta
+        node.file = evaluatedNode.file
+        node.mockedExports = exports
+
+        const mod = await this.moduleRunner.cachedRequest(
+          url,
+          node,
+          callstack,
+          undefined,
+          true,
+        )
+        this.mockObject(mod, exports, mock.type)
+        return exports
       }
-      finally {
-        this.mockContext.callstack = null
-        const indexMock = callstack.indexOf(mockId)
-        callstack.splice(indexMock, 1)
+      if (
+        mock.type === 'manual'
+        && !callstack.includes(mockId)
+        && !callstack.includes(url)
+      ) {
+        try {
+          callstack.push(mockId)
+          // this will not work if user does Promise.all(import(), import())
+          // we can also use AsyncLocalStorage to store callstack, but this won't work in the browser
+          // maybe we should improve mock API in the future?
+          this.mockContext.callstack = callstack
+          return await this.callFunctionMock(mockId, this.getMockPath(url), mock)
+        }
+        finally {
+          this.mockContext.callstack = null
+          const indexMock = callstack.indexOf(mockId)
+          callstack.splice(indexMock, 1)
+        }
       }
-    }
-    else if (mock.type === 'redirect' && !callstack.includes(mock.redirect)) {
-      return mock.redirect
-    }
+      else if (mock.type === 'redirect' && !callstack.includes(mock.redirect)) {
+        span.setAttribute('vitest.mock.redirect', mock.redirect)
+        return mock.redirect
+      }
+    })
   }
 
   public async mockedRequest(url: string, evaluatedNode: EvaluatedModuleNode, callstack: string[]): Promise<any> {

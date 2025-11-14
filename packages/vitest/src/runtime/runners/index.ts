@@ -1,4 +1,5 @@
 import type { VitestRunner, VitestRunnerConstructor } from '@vitest/runner'
+import type { Traces } from '../../utils/traces'
 import type { SerializedConfig } from '../config'
 import type { VitestModuleRunner } from '../moduleRunner/moduleRunner'
 import { takeCoverageInsideWorker } from '../../integrations/coverage'
@@ -31,6 +32,7 @@ async function getTestRunnerConstructor(
 export async function resolveTestRunner(
   config: SerializedConfig,
   moduleRunner: VitestModuleRunner,
+  traces: Traces,
 ): Promise<VitestRunner> {
   const TestRunner = await getTestRunnerConstructor(config, moduleRunner)
   const testRunner = new TestRunner(config)
@@ -48,6 +50,10 @@ export async function resolveTestRunner(
 
   if (!testRunner.importFile) {
     throw new Error('Runner must implement "importFile" method.')
+  }
+
+  if ('__setTraces' in testRunner) {
+    (testRunner.__setTraces as any)(traces)
   }
 
   const [diffOptions] = await Promise.all([

@@ -14,9 +14,9 @@ interface MethodsOptions {
   collect?: boolean
 }
 
-export function createMethodsRPC(project: TestProject, options: MethodsOptions = {}): RuntimeRPC {
+export function createMethodsRPC(project: TestProject, methodsOptions: MethodsOptions = {}): RuntimeRPC {
   const vitest = project.vitest
-  const cacheFs = options.cacheFs ?? false
+  const cacheFs = methodsOptions.cacheFs ?? false
   project.vitest.state.metadata[project.name] ??= {
     externalized: {},
     duration: {},
@@ -32,6 +32,7 @@ export function createMethodsRPC(project: TestProject, options: MethodsOptions =
       importer,
       environmentName,
       options,
+      otelCarrier,
     ) {
       const environment = project.vite.environments[environmentName]
       if (!environment) {
@@ -40,7 +41,7 @@ export function createMethodsRPC(project: TestProject, options: MethodsOptions =
 
       const start = performance.now()
 
-      return await project._fetcher(url, importer, environment, cacheFs, options).then((result) => {
+      return await project._fetcher(url, importer, environment, cacheFs, options, otelCarrier).then((result) => {
         const duration = performance.now() - start
         project.vitest.state.transformTime += duration
         const metadata = project.vitest.state.metadata[project.name]
@@ -101,7 +102,7 @@ export function createMethodsRPC(project: TestProject, options: MethodsOptions =
       return { code: result?.code }
     },
     async onQueued(file) {
-      if (options.collect) {
+      if (methodsOptions.collect) {
         vitest.state.collectFiles(project, [file])
       }
       else {
@@ -109,7 +110,7 @@ export function createMethodsRPC(project: TestProject, options: MethodsOptions =
       }
     },
     async onCollected(files) {
-      if (options.collect) {
+      if (methodsOptions.collect) {
         vitest.state.collectFiles(project, files)
       }
       else {
@@ -123,7 +124,7 @@ export function createMethodsRPC(project: TestProject, options: MethodsOptions =
       return vitest._testRun.annotate(testId, annotation)
     },
     async onTaskUpdate(packs, events) {
-      if (options.collect) {
+      if (methodsOptions.collect) {
         vitest.state.updateTasks(packs)
       }
       else {
@@ -131,7 +132,7 @@ export function createMethodsRPC(project: TestProject, options: MethodsOptions =
       }
     },
     async onUserConsoleLog(log) {
-      if (options.collect) {
+      if (methodsOptions.collect) {
         vitest.state.updateUserLog(log)
       }
       else {

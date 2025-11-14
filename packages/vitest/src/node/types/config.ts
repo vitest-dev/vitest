@@ -825,6 +825,17 @@ export interface InlineConfig {
    * @default '.vitest-attachments'
    */
   attachmentsDir?: string
+
+  /** @experimental */
+  experimental?: {
+    /**
+     * {@link https://vitest.dev/guide/open-telemetry}
+     */
+    openTelemetry?: {
+      enabled: boolean
+      sdkPath: string
+    }
+  }
 }
 
 export interface TypecheckConfig {
@@ -1084,6 +1095,7 @@ type NonProjectOptions
     | 'inspectBrk'
     | 'coverage'
     | 'watchTriggerPatterns'
+    | 'experimental'
 
 export interface ServerDepsOptions {
   /**

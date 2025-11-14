@@ -1,3 +1,4 @@
+import type { Span } from '@opentelemetry/api'
 import type {
   EvaluatedModuleNode,
   ModuleEvaluator,
@@ -17,6 +18,7 @@ import {
   ssrImportMetaKey,
   ssrModuleExportsKey,
 } from 'vite/module-runner'
+import { Traces } from '../../utils/traces'
 import { ModuleDebug } from './moduleDebug'
 
 const isWindows = process.platform === 'win32'
@@ -27,6 +29,7 @@ export interface VitestModuleEvaluatorOptions {
   getCurrentTestFilepath?: () => string | undefined
   compiledFunctionArgumentsNames?: string[]
   compiledFunctionArgumentsValues?: unknown[]
+  traces?: Traces
 }
 
 export class VitestModuleEvaluator implements ModuleEvaluator {
@@ -44,11 +47,13 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
   }
 
   private debug = new ModuleDebug()
+  private _otel: Traces
 
   constructor(
     vmOptions?: VitestVmOptions | undefined,
     private options: VitestModuleEvaluatorOptions = {},
   ) {
+    this._otel = options.traces || new Traces({ enabled: false })
     this.vm = vmOptions
     this.stubs = getDefaultRequestStubs(vmOptions?.context)
     if (options.compiledFunctionArgumentsNames) {
@@ -74,6 +79,7 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
 
   private convertIdToImportUrl(id: string) {
     // TODO: vitest returns paths for external modules, but Vite returns file://
+    // REMOVE WHEN VITE 6 SUPPORT IS OVER
     // unfortunetly, there is a bug in Vite where ID is resolved incorrectly, so we can't return files until the fix is merged
     // https://github.com/vitejs/vite/pull/20449
     if (!isWindows || isBuiltin(id) || /^(?:node:|data:|http:|https:|file:)/.test(id)) {
@@ -93,9 +99,15 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
 
     const file = this.convertIdToImportUrl(id)
 
-    const namespace = this.vm
-      ? await this.vm.externalModulesExecutor.import(file)
-      : await import(file)
+    const namespace = this._otel.$(
+      'vitest.module.external',
+      {
+        attributes: { 'code.file.path': file },
+      },
+      () => this.vm
+        ? this.vm.externalModulesExecutor.import(file)
+        : import(file),
+    )
 
     if (!this.shouldInterop(file, namespace)) {
       return namespace
@@ -139,6 +151,18 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
     code: string,
     module: Readonly<EvaluatedModuleNode>,
   ): Promise<any> {
+    return this._otel.$(
+      'vitest.module.inline',
+      span => this._runInlinedModule(context, code, module, span),
+    )
+  }
+
+  private async _runInlinedModule(
+    context: ModuleRunnerContext,
+    code: string,
+    module: Readonly<EvaluatedModuleNode>,
+    span: Span,
+  ): Promise<any> {
     context.__vite_ssr_import_meta__.env = this.env
 
     const { Reflect, Proxy, Object } = this.primitives
@@ -157,6 +181,7 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
       },
       getPrototypeOf: () => Object.prototype,
       set: (_, p, value) => {
+        span.addEvent(`cjs export proxy is triggered for ${String(p)}`)
         // treat "module.exports =" the same as "exports.default =" to not have nested "default.default",
         // so "exports.default" becomes the actual module
         if (
@@ -166,6 +191,7 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
         ) {
           exportAll(cjsExports, value)
           exportsObject.default = value
+          span.addEvent('`exports.default` is assigned, copying values')
           return true
         }
 
@@ -180,6 +206,7 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
           && isPrimitive(moduleExports)
         ) {
           defineExport(exportsObject, p, () => undefined)
+          span.addEvent(`\`exports.${String(p)}\` is assigned, but module.exports is a primitive. assigning "undefined" values instead to comply with ESM`)
           return true
         }
 
@@ -197,6 +224,7 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
 
     const moduleProxy = {
       set exports(value) {
+        span.addEvent('`module.exports` is assigned directly, copying all properties to `exports`')
         exportAll(cjsExports, value)
         exportsObject.default = value
         moduleExports = value
@@ -219,6 +247,10 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
 
     const filename = meta.filename
     const dirname = meta.dirname
+
+    span.setAttributes({
+      'code.file.path': filename,
+    })
 
     const require = this.createRequire(filename)
 
@@ -243,6 +275,8 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
     if (this.compiledFunctionArgumentsNames) {
       argumentsList.push(...this.compiledFunctionArgumentsNames)
     }
+
+    span.setAttribute('vitest.module.arguments', argumentsList)
 
     // add 'use strict' since ESM enables it by default
     const codeDefinition = `'use strict';async (${argumentsList.join(

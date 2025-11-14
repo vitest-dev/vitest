@@ -511,6 +511,10 @@ export default ({ mode }: { mode: string }) => {
                 text: 'disableConsoleIntercept',
                 link: '/config/disableconsoleintercept',
               },
+              {
+                text: 'experimental',
+                link: '/config/experimental',
+              },
             ],
           },
           {
@@ -845,6 +849,10 @@ export default ({ mode }: { mode: string }) => {
                     link: '/guide/improving-performance',
                   },
                 ],
+              },
+              {
+                text: 'OpenTelemetry',
+                link: '/guide/open-telemetry',
               },
             ],
           },

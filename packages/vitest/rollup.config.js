@@ -90,6 +90,7 @@ const external = [
   /@vitest\/utils\/\w+/,
 
   '#module-evaluator',
+  '@opentelemetry/api',
 ]
 
 const dir = dirname(fileURLToPath(import.meta.url))
