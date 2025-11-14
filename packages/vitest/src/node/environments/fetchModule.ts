@@ -2,6 +2,8 @@ import type { DevEnvironment, FetchResult, Rollup, TransformResult } from 'vite'
 import type { FetchFunctionOptions } from 'vite/module-runner'
 import type { FetchCachedFileSystemResult } from '../../types/general'
 import type { VitestResolver } from '../resolver'
+import type { ResolvedConfig } from '../types/config'
+import { readFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { isExternalUrl, nanoid, unwrapId } from '@vitest/utils/helpers'
 import { join } from 'pathe'
@@ -27,12 +29,13 @@ export interface VitestFetchFunction {
 
 export function createFetchModuleFunction(
   resolver: VitestResolver,
+  config: ResolvedConfig,
   _tmpDir: string = join(tmpdir(), nanoid()),
-  dump: DumpOptions,
-  fsCacheKey: string,
+  _dump: DumpOptions,
+  _fsCacheKey: string,
 ): VitestFetchFunction {
   // TODO: doesn't work with watch mode
-  const fsCache = new FileSystemModuleCache(fsCacheKey)
+  const fsCache = new FileSystemModuleCache(config.cache !== false)
   return async (
     url,
     importer,
@@ -70,9 +73,47 @@ export function createFetchModuleFunction(
       return { cache: true }
     }
 
-    const cachedModule = await fsCache.getCachedModule(environment, moduleGraphModule.id!)
+    let fileContent = ''
+    if (!fsCache.isEnabled()) {
+      if (moduleGraphModule.file) {
+        fileContent = await readFile(moduleGraphModule.file, 'utf-8')
+      }
+      else {
+        const loadResult = await environment.pluginContainer.load(moduleGraphModule.id!)
+        if (typeof loadResult === 'string') {
+          fileContent = loadResult
+        }
+        else if (loadResult != null) {
+          fileContent = loadResult.code
+        }
+      }
+    }
+
+    const cachePath = fsCache.getCachePath(
+      config,
+      environment,
+      resolver,
+      moduleGraphModule.id!,
+      fileContent,
+    )
+
+    const cachedModule = await fsCache.getCachedModule(cachePath)
 
     if (cachedModule) {
+      if ('tmp' in cachedModule) {
+        // keep the module graph in sync
+        if (!moduleGraphModule.transformResult) {
+          const code = await readFile(cachedModule.tmp, 'utf-8')
+          const map = extractSourceMap(code)
+          if (map && cachedModule.file) {
+            map.file = cachedModule.file
+          }
+          moduleGraphModule.transformResult = {
+            code,
+            map,
+          }
+        }
+      }
       return cachedModule
     }
 
@@ -80,8 +121,7 @@ export function createFetchModuleFunction(
       const externalize = await resolver.shouldExternalize(moduleGraphModule.id)
       if (externalize) {
         await fsCache.saveCachedModule(
-          environment,
-          moduleGraphModule.id,
+          cachePath,
           { externalize, type: 'module' },
         )
         return { externalize, type: 'module' }
@@ -100,7 +140,8 @@ export function createFetchModuleFunction(
 
     const result = processResultSource(environment, moduleRunnerModule)
 
-    if (!cacheFs || !('code' in result)) {
+    // TODO: still save the tmp file for `forks` pool _somehow_
+    if (!fsCache.isEnabled() || !cacheFs || !('code' in result)) {
       return result
     }
 
@@ -113,7 +154,6 @@ export function createFetchModuleFunction(
     if ('_vitestTmp' in transformResult) {
       return getCachedResult(result, Reflect.get(transformResult as any, '_vitestTmp'))
     }
-    const cachePath = fsCache.getCachePath(environment, result.id)
     if (promises.has(cachePath)) {
       await promises.get(cachePath)
       return getCachedResult(result, cachePath)
@@ -121,7 +161,7 @@ export function createFetchModuleFunction(
     promises.set(
       cachePath,
 
-      fsCache.saveCachedModule(environment, result.id, result)
+      fsCache.saveCachedModule(cachePath, result)
         .finally(() => {
           Reflect.set(transformResult, '_vitestTmp', cachePath)
           promises.delete(cachePath)
@@ -239,4 +279,24 @@ export function handleRollupError(e: unknown): never {
     }
   }
   throw e
+}
+
+const MODULE_RUNNER_SOURCEMAPPING_REGEXP = new RegExp(
+  `//# ${SOURCEMAPPING_URL}=data:application/json;base64,(.+)`,
+)
+
+function extractSourceMap(code: string): null | Rollup.SourceMap {
+  const pattern = `//# ${SOURCEMAPPING_URL}=data:application/json;base64,`
+  const lastIndex = code.lastIndexOf(pattern)
+  if (lastIndex === -1) {
+    return null
+  }
+
+  const mapString = MODULE_RUNNER_SOURCEMAPPING_REGEXP.exec(
+    code.slice(lastIndex),
+  )?.[1]
+  if (!mapString) {
+    return null
+  }
+  return JSON.parse(Buffer.from(mapString, 'base64').toString('utf-8'))
 }

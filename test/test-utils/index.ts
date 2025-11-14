@@ -1,6 +1,6 @@
 import type { Options } from 'tinyexec'
 import type { UserConfig as ViteUserConfig } from 'vite'
-import type { WorkerGlobalState } from 'vitest'
+import type { SerializedConfig, WorkerGlobalState } from 'vitest'
 import type { TestProjectConfiguration } from 'vitest/config'
 import type { TestCollection, TestModule, TestSpecification, TestUserConfig, Vitest, VitestRunMode } from 'vitest/node'
 import { webcrypto as crypto } from 'node:crypto'
@@ -70,6 +70,8 @@ export async function runVitest(
   stdin.isTTY = true
   stdin.setRawMode = () => stdin
   const cli = new Cli({ stdin, stdout, stderr, preserveAnsi: runnerOptions.preserveAnsi })
+  // @ts-expect-error not typed global
+  const currentConfig: SerializedConfig = __vitest_worker__.ctx.config
 
   let ctx: Vitest | undefined
   let thrown = false
@@ -88,6 +90,8 @@ export async function runVitest(
         NO_COLOR: 'true',
         ...rest.env,
       },
+      // override cache config with the one that was used to run `vitest` formt the CLI
+      ...(currentConfig.cache === false ? { cache: false } : {}),
     }, {
       ...viteOverrides,
       server: {

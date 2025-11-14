@@ -218,6 +218,7 @@ export class Vitest {
     this._resolver = new VitestResolver(server.config.cacheDir, resolved)
     this._fetcher = createFetchModuleFunction(
       this._resolver,
+      this._config,
       this._tmpDir,
       {
         dumpFolder: this.config.dumpDir,

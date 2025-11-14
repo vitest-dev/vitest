@@ -9,7 +9,7 @@ import { dirname, extname, join, resolve } from 'pathe'
 import { isWindows } from '../utils/env'
 
 export class VitestResolver {
-  private options: ExternalizeOptions
+  public readonly options: ExternalizeOptions
   private externalizeCache = new Map<string, Promise<string | false>>()
 
   constructor(cacheDir: string, config: ResolvedConfig) {

@@ -774,6 +774,9 @@ export const cliOptionsConfig: VitestCLIOptions = {
       return value
     },
   },
+  clearCache: {
+    description: 'Clear all caches.',
+  },
 
   // disable CLI options
   cliExclude: null,

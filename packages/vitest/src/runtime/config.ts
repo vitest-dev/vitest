@@ -117,6 +117,7 @@ export interface SerializedConfig {
     includeSamples: boolean
   } | undefined
   serializedDefines: string
+  cache: boolean
 }
 
 export interface SerializedCoverageConfig {
