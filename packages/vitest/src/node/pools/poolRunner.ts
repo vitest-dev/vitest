@@ -19,8 +19,8 @@ enum RunnerState {
   STOPPED = 'stopped',
 }
 
-const START_TIMEOUT = 10_000
-const STOP_TIMEOUT = 10_000
+const START_TIMEOUT = 60_000
+const STOP_TIMEOUT = 60_000
 
 /** @experimental */
 export class PoolRunner {
@@ -39,6 +39,7 @@ export class PoolRunner {
     rpc: [unknown]
   }> = new EventEmitter()
 
+  private _offCancel: () => void
   private _rpc: BirpcReturn<RunnerRPC, RuntimeRPC>
 
   private _otel: PoolRunnerOTEL | null = null
@@ -85,7 +86,7 @@ export class PoolRunner {
       },
     )
 
-    vitest.onCancel(reason => this._rpc.onCancel(reason))
+    this._offCancel = vitest.onCancel(reason => this._rpc.onCancel(reason))
   }
 
   postMessage(message: WorkerRequest): void {
@@ -255,6 +256,7 @@ export class PoolRunner {
       stopSpan.end()
 
       this._eventEmitter.removeAllListeners()
+      this._offCancel()
       this._rpc.$close(new Error('[vitest-pool-runner]: Pending methods while closing rpc'))
 
       // Stop the worker process (this sets _fork/_thread to undefined)

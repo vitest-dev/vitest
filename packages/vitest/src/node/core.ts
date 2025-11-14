@@ -141,7 +141,7 @@ export class Vitest {
   private _onRestartListeners: OnServerRestartHandler[] = []
   private _onClose: (() => Awaitable<void>)[] = []
   private _onSetServer: OnServerRestartHandler[] = []
-  private _onCancelListeners: ((reason: CancelReason) => Awaitable<void>)[] = []
+  private _onCancelListeners = new Set<(reason: CancelReason) => Awaitable<void>>()
   private _onUserTestsRerun: OnTestsRerunHandler[] = []
   private _onFilterWatchedSpecification: ((spec: TestSpecification) => boolean)[] = []
 
@@ -766,7 +766,7 @@ export class Vitest {
 
       // previous run
       await this.runningPromise
-      this._onCancelListeners = []
+      this._onCancelListeners.clear()
       this.isCancelling = false
 
       // schedule the new run
@@ -868,7 +868,7 @@ export class Vitest {
 
     // previous run
     await this.runningPromise
-    this._onCancelListeners = []
+    this._onCancelListeners.clear()
     this.isCancelling = false
 
     // schedule the new run
@@ -920,7 +920,7 @@ export class Vitest {
    */
   async cancelCurrentRun(reason: CancelReason): Promise<void> {
     this.isCancelling = true
-    await Promise.all(this._onCancelListeners.splice(0).map(listener => listener(reason)))
+    await Promise.all([...this._onCancelListeners].map(listener => listener(reason)))
     await this.runningPromise
   }
 
@@ -1319,8 +1319,11 @@ export class Vitest {
   /**
    * Register a handler that will be called when the test run is cancelled with `vitest.cancelCurrentRun`.
    */
-  onCancel(fn: (reason: CancelReason) => Awaitable<void>): void {
-    this._onCancelListeners.push(fn)
+  onCancel(fn: (reason: CancelReason) => Awaitable<void>): () => void {
+    this._onCancelListeners.add(fn)
+    return () => {
+      this._onCancelListeners.delete(fn)
+    }
   }
 
   /**

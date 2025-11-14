@@ -8,7 +8,7 @@ import { TypecheckPoolWorker } from './workers/typecheckWorker'
 import { VmForksPoolWorker } from './workers/vmForksWorker'
 import { VmThreadsPoolWorker } from './workers/vmThreadsWorker'
 
-const WORKER_START_TIMEOUT = 5_000
+const WORKER_START_TIMEOUT = 90_000
 
 interface Options {
   distPath: string

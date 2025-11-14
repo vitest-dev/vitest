@@ -379,9 +379,13 @@ test('getApplesCount has some unusual side effects...', () => {
 
 ## toBeOneOf
 
-- **Type:** `(sample: Array<any>) => any`
+- **Type:** `(sample: Array<any> | Set<any>) => any`
 
-`toBeOneOf` asserts if a value matches any of the values in the provided array.
+`toBeOneOf` asserts if a value matches any of the values in the provided array or set.
+
+::: warning EXPERIMENTAL
+Providing a `Set` is an experimental feature and may change in a future release.
+:::
 
 ```ts
 import { expect, test } from 'vitest'
