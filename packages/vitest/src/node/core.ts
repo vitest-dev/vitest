@@ -1294,15 +1294,6 @@ export class Vitest {
       // @ts-expect-error let me go
       ...args,
     )))
-    // TODO: optional(?)
-    // await this.telemetry.startActiveSpan('vitest.report', async (span) => {
-    //   span.setAttribute('vitest.report.event', name)
-
-    //   await Promise.all(this.reporters.map(r => r[name]?.(
-    //   // @ts-expect-error let me go
-    //     ...args,
-    //   )))
-    // })
   }
 
   /** @internal */
