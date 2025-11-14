@@ -552,12 +552,12 @@ export class TestProject {
     this._resolver = new VitestResolver(server.config.cacheDir, this._config)
     this._vite = server
     this._serializedDefines = createDefinesScript(server.config.define)
-    this._fsCache = new FileSystemModuleCache(this._config.cache !== false)
+    this._fsCache = new FileSystemModuleCache()
     this._fetcher = createFetchModuleFunction(
       this._resolver,
       this._config,
       this._fsCache,
-      // this.tmpDir,
+      this.tmpDir,
       // {
       //   dumpFolder: this.config.dumpDir,
       //   readFromDump: this.config.server.debug?.load ?? process.env.VITEST_DEBUG_LOAD_DUMP != null,

@@ -218,12 +218,12 @@ export class Vitest {
     }
 
     this._resolver = new VitestResolver(server.config.cacheDir, resolved)
-    this._fsCache = new FileSystemModuleCache(this._config.cache !== false)
+    this._fsCache = new FileSystemModuleCache()
     this._fetcher = createFetchModuleFunction(
       this._resolver,
       this._config,
       this._fsCache,
-      // this._tmpDir,
+      this._tmpDir,
       // {
       //   dumpFolder: this.config.dumpDir,
       //   readFromDump: this.config.server.debug?.load ?? process.env.VITEST_DEBUG_LOAD_DUMP != null,

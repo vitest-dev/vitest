@@ -4,25 +4,34 @@ import type { FetchCachedFileSystemResult } from '../../types/general'
 import type { FileSystemModuleCache } from '../cache/fsCache'
 import type { VitestResolver } from '../resolver'
 import type { ResolvedConfig } from '../types/config'
+import { existsSync, mkdirSync } from 'node:fs'
 import { readFile } from 'node:fs/promises'
 import { isExternalUrl, unwrapId } from '@vitest/utils/helpers'
+import { join } from 'pathe'
 import { fetchModule } from 'vite'
+import { hash } from '../hash'
 
 const saveCachePromises = new Map<string, Promise<FetchResult>>()
 const readFilePromises = new Map<string, Promise<string>>()
 
 class ModuleFetcher {
+  private tmpDirectories = new Set<string>()
+  private fsCacheEnabled: boolean
+
   constructor(
     private resolver: VitestResolver,
     private config: ResolvedConfig,
     private fsCache: FileSystemModuleCache,
-  ) {}
+    private tmpProjectDir: string,
+  ) {
+    this.fsCacheEnabled = config.cache !== false
+  }
 
   async fetch(
     url: string,
     importer: string | undefined,
     environment: DevEnvironment,
-    cacheFs: boolean,
+    makeTmpCopies?: boolean,
     options?: FetchFunctionOptions,
   ): Promise<FetchResult | FetchCachedFileSystemResult> {
     if (url.startsWith('data:')) {
@@ -46,9 +55,35 @@ class ModuleFetcher {
       return { cache: true }
     }
 
-    // caching can be disabled on a project-per-project or file-per-file basis
-    if (!cacheFs || !this.fsCache.isEnabled()) {
-      return this.fetchAndProcess(environment, url, importer, moduleGraphModule, options)
+    // full fs caching is disabled, but we still want to keep tmp files if makeTmpCopies is enabled
+    // this is primarily used by the forks pool to avoid using process.send(bigBuffer)
+    if (!this.fsCacheEnabled) {
+      const result = await this.fetchAndProcess(environment, url, importer, moduleGraphModule, options)
+      if (!makeTmpCopies || !('code' in result)) {
+        return result
+      }
+
+      const transformResult = moduleGraphModule.transformResult
+      const tmpPath = transformResult && Reflect.get(transformResult, '_vitest_tmp')
+      if (typeof tmpPath === 'string') {
+        return getCachedResult(result, tmpPath)
+      }
+
+      const tmpDir = join(this.tmpProjectDir, environment.name)
+      if (!this.tmpDirectories.has(tmpDir)) {
+        if (!existsSync(tmpDir)) {
+          mkdirSync(tmpDir, { recursive: true })
+        }
+        this.tmpDirectories.add(tmpDir)
+      }
+
+      const tmpFile = join(tmpDir, hash('sha1', result.id, 'hex'))
+      return this.cacheResult(result, tmpFile).then((result) => {
+        if (transformResult) {
+          Reflect.set(transformResult, '_vitest_tmp', tmpFile)
+        }
+        return result
+      })
     }
 
     const fileContent = await this.readFileContentToCache(environment, moduleGraphModule)
@@ -98,16 +133,16 @@ class ModuleFetcher {
   ): Promise<FetchResult | FetchCachedFileSystemResult | undefined> {
     const cachedModule = await this.fsCache.getCachedModule(cachePath)
 
-    if (cachedModule && 'tmp' in cachedModule) {
+    if (cachedModule && 'code' in cachedModule) {
       // keep the module graph in sync
       if (!moduleGraphModule.transformResult) {
-        const code = await readFile(cachedModule.tmp, 'utf-8')
-        const map = extractSourceMap(code)
+        const map = extractSourceMap(cachedModule.code)
         if (map && cachedModule.file) {
           map.file = cachedModule.file
         }
-        moduleGraphModule.transformResult = { code, map }
+        moduleGraphModule.transformResult = { code: cachedModule.code, map }
       }
+      return getCachedResult(cachedModule, cachePath)
     }
 
     return cachedModule
@@ -142,10 +177,6 @@ class ModuleFetcher {
     result: FetchResult,
     cachePath: string,
   ): Promise<FetchResult | FetchCachedFileSystemResult> {
-    if (!this.fsCache.isEnabled()) {
-      return result
-    }
-
     const returnResult = 'code' in result
       ? getCachedResult(result, cachePath)
       : result
@@ -191,7 +222,7 @@ export interface VitestFetchFunction {
     url: string,
     importer: string | undefined,
     environment: DevEnvironment,
-    cacheFs: boolean,
+    cacheFs?: boolean,
     options?: FetchFunctionOptions
   ): Promise<FetchResult | FetchCachedFileSystemResult>
 }
@@ -200,8 +231,9 @@ export function createFetchModuleFunction(
   resolver: VitestResolver,
   config: ResolvedConfig,
   fsCache: FileSystemModuleCache,
+  tmpProjectDir: string,
 ): VitestFetchFunction {
-  const fetcher = new ModuleFetcher(resolver, config, fsCache)
+  const fetcher = new ModuleFetcher(resolver, config, fsCache, tmpProjectDir)
   return (url, importer, environment, cacheFs, options) =>
     fetcher.fetch(url, importer, environment, cacheFs, options)
 }
@@ -211,9 +243,7 @@ SOURCEMAPPING_URL += 'ppingURL'
 
 const MODULE_RUNNER_SOURCEMAPPING_SOURCE = '//# sourceMappingSource=vite-generated'
 
-function processResultSource(environment: DevEnvironment, result: FetchResult): FetchResult & {
-  transformResult?: TransformResult | null
-} {
+function processResultSource(environment: DevEnvironment, result: FetchResult): FetchResult {
   if (!('code' in result)) {
     return result
   }

@@ -17,32 +17,28 @@ export class FileSystemModuleCache {
   private fsCacheRoot: string
   private version = '1.0.0'
 
-  constructor(private _enabled: boolean) {
+  constructor() {
     this.fsCacheRoot = join(tmpdir(), 'vitest')
 
-    if (_enabled && !existsSync(this.fsCacheRoot)) {
+    if (!existsSync(this.fsCacheRoot)) {
       mkdirSync(this.fsCacheRoot)
     }
-  }
-
-  public isEnabled(): boolean {
-    return this._enabled
   }
 
   async getCachedModule(
     cachedFilePath: string,
   ): Promise<FetchResult | FetchCachedFileSystemResult | undefined> {
-    if (!this.isEnabled() || !existsSync(cachedFilePath)) {
+    if (!existsSync(cachedFilePath)) {
       return
     }
 
-    const content = await readFile(cachedFilePath, 'utf-8')
-    const matchIndex = content.lastIndexOf('\n//')
+    const code = await readFile(cachedFilePath, 'utf-8')
+    const matchIndex = code.lastIndexOf('\n//')
     if (matchIndex === -1) {
       return
     }
 
-    const meta = JSON.parse(content.slice(matchIndex + 4))
+    const meta = JSON.parse(code.slice(matchIndex + 4))
     if (meta.externalize) {
       return { externalize: meta.externalize, type: meta.type }
     }
@@ -51,9 +47,7 @@ export class FileSystemModuleCache {
       id: meta.id,
       url: meta.url,
       file: meta.file,
-      // TODO: if cacheFs is false, return with `code`
-      tmp: cachedFilePath,
-      cached: true,
+      code,
       invalidate: false,
     }
   }
@@ -62,10 +56,6 @@ export class FileSystemModuleCache {
     cachedFilePath: string,
     fetchResult: T,
   ): Promise<void> {
-    if (!this.isEnabled()) {
-      return
-    }
-
     // TODO: also keep dependencies, so they can populate the module graph on the next run
 
     if ('externalize' in fetchResult) {
@@ -89,10 +79,6 @@ export class FileSystemModuleCache {
     id: string,
     fileContent: string,
   ): string {
-    if (!this.isEnabled()) {
-      return id
-    }
-
     const config = environment.config
     const viteConfig = JSON.stringify(
       {
