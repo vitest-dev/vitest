@@ -97,9 +97,10 @@ export function WorkspaceVitestPlugin(
           name: { label: name, color },
         }
 
-        // always inherit the global `cache` value
-        if (testConfig.cache == null && project.vitest.config.cache === false) {
-          vitestConfig.cache = false
+        // always inherit the global `fsModuleCache` value even without `extends: true`
+        if (testConfig.experimental?.fsModuleCache == null && project.vitest.config.experimental?.fsModuleCache !== null) {
+          vitestConfig.experimental ??= {}
+          vitestConfig.experimental.fsModuleCache = project.vitest.config.experimental.fsModuleCache
         }
 
         return {
