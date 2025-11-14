@@ -5,7 +5,7 @@ outline: deep
 
 # experimental
 
-## openTelemetry <Version type="warning">4.0.9</Version>
+## openTelemetry <Version type="experimental">4.0.10</Version>
 
 - **Type:**
 
