@@ -774,10 +774,16 @@ export const cliOptionsConfig: VitestCLIOptions = {
       return value
     },
   },
-  clearCache: {
-    description: 'Clear all caches.',
-  },
 
+  experimental: {
+    description: 'Experimental features.',
+    argument: '<features>',
+    subcommands: {
+      fsModuleCache: {
+        description: 'Enable caching of modules on the file system between reruns.',
+      },
+    },
+  },
   // disable CLI options
   cliExclude: null,
   server: null,

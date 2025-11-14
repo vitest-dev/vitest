@@ -24,7 +24,7 @@ class ModuleFetcher {
     private fsCache: FileSystemModuleCache,
     private tmpProjectDir: string,
   ) {
-    this.fsCacheEnabled = config.cache !== false
+    this.fsCacheEnabled = config.experimental?.fsModuleCache === true
   }
 
   async fetch(
