@@ -1,17 +1,18 @@
 <script setup lang="ts">
-import type { TestAnnotation, TestAnnotationLocation } from '@vitest/runner'
+import type { TestAnnotationLocation } from '@vitest/runner'
 import type { RunnerTestCase } from 'vitest'
 import { relative } from 'pathe'
 import { computed } from 'vue'
 import { getAttachmentUrl, sanitizeFilePath } from '~/composables/attachments'
 import { browserState, config } from '~/composables/client'
-import { showAnnotationSource } from '~/composables/codemirror'
+import { showAttachmentSource } from '~/composables/codemirror'
 import { isDark } from '~/composables/dark'
 import { mapLeveledTaskStacks } from '~/composables/error'
 import { openScreenshot, useScreenshot } from '~/composables/screenshot'
 import AnnotationAttachmentImage from '../AnnotationAttachmentImage.vue'
 import IconButton from '../IconButton.vue'
 import Modal from '../Modal.vue'
+import VisualRegression from '../VisualRegression.vue'
 import ScreenshotError from './ScreenshotError.vue'
 import ViewReportError from './ViewReportError.vue'
 
@@ -26,8 +27,8 @@ const failed = computed(() => {
   return mapLeveledTaskStacks(isDark.value, [props.test])[0] as RunnerTestCase | null
 })
 
-function openAnnotation(annotation: TestAnnotation) {
-  return showAnnotationSource(props.test, annotation)
+function openLocation(location?: TestAnnotationLocation) {
+  return showAttachmentSource(props.test, location)
 }
 
 const {
@@ -119,6 +120,7 @@ const meta = computed(() => {
         m-2
         rounded
         role="note"
+        flex="~ col gap-4"
       >
         <div flex="~ gap-2 items-center justify-between" overflow-hidden>
           <div class="flex gap-2" overflow-hidden>
@@ -140,7 +142,7 @@ const meta = computed(() => {
               title="Open in Editor"
               class="flex gap-1 text-yellow-500/80 cursor-pointer"
               ws-nowrap
-              @click="openAnnotation(annotation)"
+              @click="openLocation(annotation.location)"
             >
               {{ getLocationString(annotation.location) }}
             </span>
@@ -153,15 +155,21 @@ const meta = computed(() => {
             </span>
           </div>
         </div>
-
-        <div
-          class="scrolls scrolls-rounded task-error"
-          data-testid="task-error"
-        >
-          {{ annotation.message }}
+        <div>
+          <header v-if="annotation.title">
+            <h1>
+              {{ annotation.title }}
+            </h1>
+          </header>
+          <div
+            class="scrolls scrolls-rounded task-error"
+            data-testid="task-error"
+          >
+            {{ annotation.message }}
+          </div>
         </div>
-
-        <AnnotationAttachmentImage :annotation="annotation" />
+        <VisualRegression v-if="annotation.metadata?.['internal:toMatchScreenshot'] !== undefined && annotation.metadata?.['internal:toMatchScreenshot'].kind === 'visual-regression'" :annotation="annotation" />
+        <AnnotationAttachmentImage v-else :annotation="annotation" />
       </div>
     </template>
     <template v-if="meta.length">

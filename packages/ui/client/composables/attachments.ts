@@ -25,3 +25,13 @@ export function isExternalAttachment(attachment: TestAttachment): boolean {
   const potentialUrl = attachment.path || attachment.body
   return typeof potentialUrl === 'string' && (potentialUrl.startsWith('http://') || potentialUrl.startsWith('https://'))
 }
+
+export function internalOrExternalUrl(attachment: TestAttachment): string {
+  const potentialUrl = attachment.path || attachment.body
+
+  if (typeof potentialUrl === 'string' && (potentialUrl.startsWith('http://') || potentialUrl.startsWith('https://'))) {
+    return potentialUrl
+  }
+
+  return getAttachmentUrl(attachment)
+}
