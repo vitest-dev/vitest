@@ -552,7 +552,7 @@ export class TestProject {
     this._resolver = new VitestResolver(server.config.cacheDir, this._config)
     this._vite = server
     this._serializedDefines = createDefinesScript(server.config.define)
-    this._fsCache = new FileSystemModuleCache()
+    this._fsCache = new FileSystemModuleCache(this.vitest.logger)
     this._fetcher = createFetchModuleFunction(
       this._resolver,
       this._config,

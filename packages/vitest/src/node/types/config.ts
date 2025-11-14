@@ -966,6 +966,11 @@ export interface UserConfig extends InlineConfig {
    * @default '.vitest-reports'
    */
   mergeReports?: string
+
+  /**
+   * Delete all Vitest caches, including `experimental.fsModuleCache`.
+   */
+  clearCache?: boolean
 }
 
 export type OnUnhandledErrorCallback = (error: (TestError | Error) & { type: string }) => boolean | void

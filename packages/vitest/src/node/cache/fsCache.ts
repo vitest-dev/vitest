@@ -1,10 +1,11 @@
 import type { DevEnvironment, FetchResult } from 'vite'
 import type { FetchCachedFileSystemResult } from '../../types/general'
+import type { Logger } from '../logger'
 import type { VitestResolver } from '../resolver'
 import type { ResolvedConfig } from '../types/config'
 import crypto from 'node:crypto'
 import { existsSync, mkdirSync } from 'node:fs'
-import { readFile, rename, stat, unlink, writeFile } from 'node:fs/promises'
+import { readFile, rename, rm, stat, unlink, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { dirname, join } from 'pathe'
 import { version as viteVersion } from 'vite'
@@ -17,12 +18,19 @@ export class FileSystemModuleCache {
   private fsCacheRoot: string
   private version = '1.0.0'
 
-  constructor() {
+  // TODO: keep track of stale cache somehow? maybe in a meta file?
+
+  constructor(private logger: Logger) {
     this.fsCacheRoot = join(tmpdir(), 'vitest')
 
     if (!existsSync(this.fsCacheRoot)) {
       mkdirSync(this.fsCacheRoot)
     }
+  }
+
+  async clearCache(): Promise<void> {
+    await rm(this.fsCacheRoot, { force: true, recursive: true })
+    this.logger.log('[cache] cleared fs module cache at', this.fsCacheRoot)
   }
 
   async getCachedModule(

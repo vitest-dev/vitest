@@ -209,7 +209,7 @@ export class Vitest {
     this._state = new StateManager({
       onUnhandledError: resolved.onUnhandledError,
     })
-    this._cache = new VitestCache(this.version)
+    this._cache = new VitestCache(this.logger)
     this._snapshot = new SnapshotManager({ ...resolved.snapshotOptions })
     this._testRun = new TestRun(this)
 
@@ -218,7 +218,7 @@ export class Vitest {
     }
 
     this._resolver = new VitestResolver(server.config.cacheDir, resolved)
-    this._fsCache = new FileSystemModuleCache()
+    this._fsCache = new FileSystemModuleCache(this.logger)
     this._fetcher = createFetchModuleFunction(
       this._resolver,
       this._config,
@@ -480,6 +480,17 @@ export class Vitest {
       this.config.coverage = this._coverageProvider.resolveOptions()
     }
     return this._coverageProvider
+  }
+
+  public async clearCache(): Promise<void> {
+    await this.cache.results.clearCache()
+    const projects = [...this.projects]
+    if (this.coreWorkspaceProject && !projects.includes(this.coreWorkspaceProject)) {
+      projects.push(this.coreWorkspaceProject)
+    }
+    await Promise.all(
+      projects.map(p => p._fsCache.clearCache()),
+    )
   }
 
   /**
