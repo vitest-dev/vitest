@@ -24,6 +24,7 @@ import pm from 'picomatch'
 import { glob } from 'tinyglobby'
 import { setup } from '../api/setup'
 import { createDefinesScript } from '../utils/config-helpers'
+import { FileSystemModuleCache } from './cache/fs'
 import { isBrowserEnabled, resolveConfig } from './config/resolveConfig'
 import { serializeConfig } from './config/serializeConfig'
 import { createFetchModuleFunction } from './environments/fetchModule'
@@ -65,6 +66,7 @@ export class TestProject {
   /** @internal */ _hash?: string
   /** @internal */ _resolver!: VitestResolver
   /** @internal */ _fetcher!: VitestFetchFunction
+  /** @internal */ _fsCache!: FileSystemModuleCache
   /** @internal */ _serializedDefines?: string
   /** @inetrnal */ testFilesList: string[] | null = null
 
@@ -550,15 +552,17 @@ export class TestProject {
     this._resolver = new VitestResolver(server.config.cacheDir, this._config)
     this._vite = server
     this._serializedDefines = createDefinesScript(server.config.define)
+    this._fsCache = new FileSystemModuleCache(this._config.cache !== false)
     this._fetcher = createFetchModuleFunction(
       this._resolver,
       this._config,
-      this.tmpDir,
-      {
-        dumpFolder: this.config.dumpDir,
-        readFromDump: this.config.server.debug?.load ?? process.env.VITEST_DEBUG_LOAD_DUMP != null,
-      },
-      this._hash!,
+      this._fsCache,
+      // this.tmpDir,
+      // {
+      //   dumpFolder: this.config.dumpDir,
+      //   readFromDump: this.config.server.debug?.load ?? process.env.VITEST_DEBUG_LOAD_DUMP != null,
+      // },
+      // this._hash!,
     )
 
     const environment = server.environments.__vitest__
@@ -623,6 +627,7 @@ export class TestProject {
     project._config = vitest.config
     project._resolver = vitest._resolver
     project._fetcher = vitest._fetcher
+    project._fsCache = vitest._fsCache
     project._serializedDefines = createDefinesScript(vitest.vite.config.define)
     project._setHash()
     project._provideObject(vitest.config.provide)

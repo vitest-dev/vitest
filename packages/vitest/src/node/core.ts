@@ -15,7 +15,7 @@ import type { CoverageProvider, ResolvedCoverageOptions } from './types/coverage
 import type { Reporter } from './types/reporter'
 import type { TestRunResult } from './types/tests'
 import os, { tmpdir } from 'node:os'
-import { generateHash, getTasks, hasFailed, limitConcurrency } from '@vitest/runner/utils'
+import { getTasks, hasFailed, limitConcurrency } from '@vitest/runner/utils'
 import { SnapshotManager } from '@vitest/snapshot/manager'
 import { deepClone, deepMerge, nanoid, noop, toArray } from '@vitest/utils/helpers'
 import { join, normalize, relative } from 'pathe'
@@ -27,6 +27,7 @@ import { convertTasksToEvents } from '../utils/tasks'
 import { astCollectTests, createFailedFileTask } from './ast-collect'
 import { BrowserSessions } from './browser/sessions'
 import { VitestCache } from './cache'
+import { FileSystemModuleCache } from './cache/fs'
 import { resolveConfig } from './config/resolveConfig'
 import { getCoverageProvider } from './coverage'
 import { createFetchModuleFunction } from './environments/fetchModule'
@@ -108,6 +109,7 @@ export class Vitest {
   /** @internal */ _testRun: TestRun = undefined!
   /** @internal */ _resolver!: VitestResolver
   /** @internal */ _fetcher!: VitestFetchFunction
+  /** @internal */ _fsCache!: FileSystemModuleCache
   /** @internal */ _tmpDir = join(tmpdir(), nanoid())
 
   private isFirstRun = true
@@ -216,17 +218,19 @@ export class Vitest {
     }
 
     this._resolver = new VitestResolver(server.config.cacheDir, resolved)
+    this._fsCache = new FileSystemModuleCache(this._config.cache !== false)
     this._fetcher = createFetchModuleFunction(
       this._resolver,
       this._config,
-      this._tmpDir,
-      {
-        dumpFolder: this.config.dumpDir,
-        readFromDump: this.config.server.debug?.load ?? process.env.VITEST_DEBUG_LOAD_DUMP != null,
-      },
-      generateHash(
-        this._config!.root + this._config!.name,
-      ),
+      this._fsCache,
+      // this._tmpDir,
+      // {
+      //   dumpFolder: this.config.dumpDir,
+      //   readFromDump: this.config.server.debug?.load ?? process.env.VITEST_DEBUG_LOAD_DUMP != null,
+      // },
+      // generateHash(
+      //   this._config!.root + this._config!.name,
+      // ),
     )
     const environment = server.environments.__vitest__
     this.runner = new ServerModuleRunner(
@@ -1108,15 +1112,20 @@ export class Vitest {
    * Invalidate a file in all projects.
    */
   public invalidateFile(filepath: string): void {
-    this.projects.forEach(({ vite, browser }) => {
+    this.projects.forEach(({ vite, browser, _fsCache }) => {
       const environments = [
         ...Object.values(vite.environments),
         ...Object.values(browser?.vite.environments || {}),
       ]
 
-      environments.forEach(({ moduleGraph }) => {
+      environments.forEach((environment) => {
+        const { moduleGraph } = environment
         const modules = moduleGraph.getModulesByFile(filepath)
-        modules?.forEach(module => moduleGraph.invalidateModule(module))
+        if (!modules) {
+          return
+        }
+
+        modules.forEach(module => moduleGraph.invalidateModule(module))
       })
     })
   }

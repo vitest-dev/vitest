@@ -1,27 +1,22 @@
 import type { DevEnvironment, EnvironmentModuleNode, FetchResult, Rollup, TransformResult } from 'vite'
 import type { FetchFunctionOptions } from 'vite/module-runner'
 import type { FetchCachedFileSystemResult } from '../../types/general'
+import type { FileSystemModuleCache } from '../cache/fs'
 import type { VitestResolver } from '../resolver'
 import type { ResolvedConfig } from '../types/config'
 import { readFile } from 'node:fs/promises'
-import { tmpdir } from 'node:os'
-import { isExternalUrl, nanoid, unwrapId } from '@vitest/utils/helpers'
-import { join } from 'pathe'
+import { isExternalUrl, unwrapId } from '@vitest/utils/helpers'
 import { fetchModule } from 'vite'
-import { FileSystemModuleCache } from '../cache/fs'
 
 const saveCachePromises = new Map<string, Promise<FetchResult>>()
 const readFilePromises = new Map<string, Promise<string>>()
 
 class ModuleFetcher {
-  private fsCache: FileSystemModuleCache
-
   constructor(
     private resolver: VitestResolver,
     private config: ResolvedConfig,
-  ) {
-    this.fsCache = new FileSystemModuleCache(config.cache !== false)
-  }
+    private fsCache: FileSystemModuleCache,
+  ) {}
 
   async fetch(
     url: string,
@@ -186,10 +181,10 @@ class ModuleFetcher {
   }
 }
 
-interface DumpOptions {
-  dumpFolder?: string
-  readFromDump?: boolean
-}
+// interface DumpOptions {
+//   dumpFolder?: string
+//   readFromDump?: boolean
+// }
 
 export interface VitestFetchFunction {
   (
@@ -204,11 +199,9 @@ export interface VitestFetchFunction {
 export function createFetchModuleFunction(
   resolver: VitestResolver,
   config: ResolvedConfig,
-  _tmpDir: string = join(tmpdir(), nanoid()),
-  _dump: DumpOptions,
-  _fsCacheKey: string,
+  fsCache: FileSystemModuleCache,
 ): VitestFetchFunction {
-  const fetcher = new ModuleFetcher(resolver, config)
+  const fetcher = new ModuleFetcher(resolver, config, fsCache)
   return (url, importer, environment, cacheFs, options) =>
     fetcher.fetch(url, importer, environment, cacheFs, options)
 }
