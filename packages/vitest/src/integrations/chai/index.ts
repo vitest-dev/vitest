@@ -15,7 +15,7 @@ import { getWorkerState } from '../../runtime/utils'
 import { createExpectPoll } from './poll'
 import './setup'
 
-export function createExpect(test?: TaskPopulated): ExpectStatic {
+export function createExpect(test?: Test | TaskPopulated): ExpectStatic {
   const expect = ((value: any, message?: string): Assertion => {
     const { assertionCalls } = getState(expect)
     setState({ assertionCalls: assertionCalls + 1 }, expect)

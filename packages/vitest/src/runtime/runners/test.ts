@@ -147,6 +147,7 @@ export class VitestTestRunner implements VitestRunner {
   onBeforeTryTask(test: Task): void {
     clearModuleMocks(this.config)
     this.snapshotClient.clearTest(test.file.filepath, test.id)
+
     setState(
       {
         assertionCalls: 0,
