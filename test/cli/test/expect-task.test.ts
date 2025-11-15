@@ -1,16 +1,12 @@
-import { expect, test } from 'vitest'
+import { test } from 'vitest'
 import { runInlineTests } from '../../test-utils'
 
 const globalsGlobalExtend = /* ts */`
-  import {
-    test,
-    describe,
-    recordArtifact,
-  } from 'vitest'
+  import { test, describe } from 'vitest'
 
   function toMatchTest(this, expected) {
-    if (this.task.name !== expected) {
-      return { pass: false, message: () => 'Active: "' + this.task.name + '"\\nExpected: "' + expected + '"' }
+    if (this.task?.name !== expected) {
+      return { pass: false, message: () => 'Active: "' + this.task?.name + '"\\nExpected: "' + expected + '"' }
     }
 
     return { pass: true, message: () => undefined }
@@ -34,15 +30,11 @@ const globalsGlobalExtend = /* ts */`
 `
 
 const globalsLocalExtend = /* ts */`
-  import {
-    test,
-    describe,
-    recordArtifact,
-  } from 'vitest'
+  import { test, describe } from 'vitest'
 
   function toMatchTest(this, expected) {
-    if (this.task.name !== expected) {
-      return { pass: false, message: () => 'Active: "' + this.task.name + '"\\nExpected: "' + expected + '"' }
+    if (this.task?.name !== expected) {
+      return { pass: false, message: () => 'Active: "' + this.task?.name + '"\\nExpected: "' + expected + '"' }
     }
 
     return { pass: true, message: () => undefined }
@@ -67,16 +59,11 @@ const globalsLocalExtend = /* ts */`
 `
 
 const globalImportGlobalExtend = /* ts */`
-  import {
-    test,
-    describe,
-    recordArtifact,
-    expect
-  } from 'vitest'
+  import { test, describe, expect } from 'vitest'
 
   function toMatchTest(this, expected) {
-    if (this.task.name !== expected) {
-      return { pass: false, message: () => 'Active: "' + this.task.name + '"\\nExpected: "' + expected + '"' }
+    if (this.task?.name !== expected) {
+      return { pass: false, message: () => 'Active: "' + this.task?.name + '"\\nExpected: "' + expected + '"' }
     }
 
     return { pass: true, message: () => undefined }
@@ -100,16 +87,11 @@ const globalImportGlobalExtend = /* ts */`
 `
 
 const globalImportLocalExtend = /* ts */`
-  import {
-    test,
-    describe,
-    recordArtifact,
-    expect,
-  } from 'vitest'
+  import { test, describe, expect } from 'vitest'
 
   function toMatchTest(this, expected) {
-    if (this.task.name !== expected) {
-      return { pass: false, message: () => 'Active: "' + this.task.name + '"\\nExpected: "' + expected + '"' }
+    if (this.task?.name !== expected) {
+      return { pass: false, message: () => 'Active: "' + this.task?.name + '"\\nExpected: "' + expected + '"' }
     }
 
     return { pass: true, message: () => undefined }
@@ -135,16 +117,11 @@ const globalImportLocalExtend = /* ts */`
 `
 
 const contextGlobalExtend = /* ts */`
-  import {
-    test,
-    describe,
-    recordArtifact,
-    expect,
-  } from 'vitest'
+  import { test, describe, expect } from 'vitest'
 
   function toMatchTest(this, expected) {
-    if (this.task.name !== expected) {
-      return { pass: false, message: () => 'Active: "' + this.task.name + '"\\nExpected: "' + expected + '"' }
+    if (this.task?.name !== expected) {
+      return { pass: false, message: () => 'Active: "' + this.task?.name + '"\\nExpected: "' + expected + '"' }
     }
 
     return { pass: true, message: () => undefined }
@@ -168,15 +145,11 @@ const contextGlobalExtend = /* ts */`
 `
 
 const contextLocalExtend = /* ts */`
-  import {
-    test,
-    describe,
-    recordArtifact,
-  } from 'vitest'
+  import { test, describe } from 'vitest'
 
   function toMatchTest(this, expected) {
-    if (this.task.name !== expected) {
-      return { pass: false, message: () => 'Active: "' + this.task.name + '"\\nExpected: "' + expected + '"' }
+    if (this.task?.name !== expected) {
+      return { pass: false, message: () => 'Active: "' + this.task?.name + '"\\nExpected: "' + expected + '"' }
     }
 
     return { pass: true, message: () => undefined }
@@ -202,17 +175,11 @@ const contextLocalExtend = /* ts */`
 `
 
 const testBoundGlobalExtend = /* ts */`
-  import {
-    test,
-    describe,
-    recordArtifact,
-    expect,
-    createExpect,
-  } from 'vitest'
+  import { test, describe, expect, createExpect } from 'vitest'
 
   function toMatchTest(this, expected) {
-    if (this.task.name !== expected) {
-      return { pass: false, message: () => 'Active: "' + this.task.name + '"\\nExpected: "' + expected + '"' }
+    if (this.task?.name !== expected) {
+      return { pass: false, message: () => 'Active: "' + this.task?.name + '"\\nExpected: "' + expected + '"' }
     }
 
     return { pass: true, message: () => undefined }
@@ -240,16 +207,11 @@ const testBoundGlobalExtend = /* ts */`
 `
 
 const testBoundLocalExtend = /* ts */`
-  import {
-    test,
-    describe,
-    recordArtifact,
-    createExpect,
-  } from 'vitest'
+  import { test, describe, createExpect } from 'vitest'
 
   function toMatchTest(this, expected) {
-    if (this.task.name !== expected) {
-      return { pass: false, message: () => 'Active: "' + this.task.name + '"\\nExpected: "' + expected + '"' }
+    if (this.task?.name !== expected) {
+      return { pass: false, message: () => 'Active: "' + this.task?.name + '"\\nExpected: "' + expected + '"' }
     }
 
     return { pass: true, message: () => undefined }
@@ -280,7 +242,7 @@ function withConcurrency(test: string): string {
   return test.replace('/* options */', 'concurrent: true')
 }
 
-describe('serial', () => {
+describe('serial', { concurrent: true }, () => {
   test.for([
     {
       name: 'globals & global extend',
@@ -316,7 +278,7 @@ describe('serial', () => {
       name: 'test-bound extend & local extend',
       test: testBoundLocalExtend,
     },
-  ] as const)('works with $name', async ({ options, test }) => {
+  ] as const)('works with $name', async ({ options, test }, { expect }) => {
     const { stdout } = await runInlineTests(
       {
         'basic.test.ts': test,
@@ -340,7 +302,8 @@ describe('serial', () => {
   })
 })
 
-describe('concurrent', () => {
+describe('concurrent', { concurrent: true }, () => {
+  // when using globals or global `expect`, context is "lost" or not tracked in concurrent mode
   test.for([
     {
       name: 'globals & global extend',
@@ -360,23 +323,7 @@ describe('concurrent', () => {
       name: 'global import & local extend',
       test: withConcurrency(globalImportLocalExtend),
     },
-    {
-      name: 'context destructuring & global extend',
-      test: withConcurrency(contextGlobalExtend),
-    },
-    {
-      name: 'context destructuring & local extend',
-      test: withConcurrency(contextLocalExtend),
-    },
-    {
-      name: 'test-bound extend & global extend',
-      test: withConcurrency(testBoundGlobalExtend),
-    },
-    {
-      name: 'test-bound extend & local extend',
-      test: withConcurrency(testBoundLocalExtend),
-    },
-  ] as const)('fails with $name', async ({ options, test }) => {
+  ] as const)('fails with $name', async ({ options, test }, { expect }) => {
     const { stdout, ctx } = await runInlineTests(
       {
         'basic.test.ts': test,
@@ -384,7 +331,6 @@ describe('concurrent', () => {
       { reporters: ['tap'], ...options },
     )
 
-    // !!! these tests are failing, context is lost in concurrent mode
     expect(
       stdout
         .replace(/[\d.]+m?s/g, '<time>')
@@ -401,10 +347,50 @@ describe('concurrent', () => {
                   ---
                   error:
                       name: "Error"
-                      message: "Active: \\"second\\"
+                      message: "Active: \\"undefined\\"
       Expected: \\"first\\""
                   at: "<root>/basic.test.ts:<line>:<column>"
                   ...
+              ok 2 - second # time=<time>
+          }
+      }
+      "
+    `)
+  })
+
+  test.for([
+    {
+      name: 'context destructuring & global extend',
+      test: withConcurrency(contextGlobalExtend),
+    },
+    {
+      name: 'context destructuring & local extend',
+      test: withConcurrency(contextLocalExtend),
+    },
+    {
+      name: 'test-bound extend & global extend',
+      test: withConcurrency(testBoundGlobalExtend),
+    },
+    {
+      name: 'test-bound extend & local extend',
+      test: withConcurrency(testBoundLocalExtend),
+    },
+  ])('works with $name', async ({ test }, { expect }) => {
+    const { stdout } = await runInlineTests(
+      {
+        'basic.test.ts': test,
+      },
+      { reporters: ['tap'] },
+    )
+
+    expect(stdout.replace(/[\d.]+m?s/g, '<time>')).toMatchInlineSnapshot(`
+      "TAP version 13
+      1..1
+      ok 1 - basic.test.ts # time=<time> {
+          1..1
+          ok 1 - tests # time=<time> {
+              1..2
+              ok 1 - first # time=<time>
               ok 2 - second # time=<time>
           }
       }

@@ -38,28 +38,22 @@ export function createExpect(test?: Test | TaskPopulated): ExpectStatic {
   // @ts-expect-error global is not typed
   const globalState = getState(globalThis[GLOBAL_EXPECT]) || {}
 
-  const state = {
-    // this should also add "snapshotState" that is added conditionally
-    ...globalState,
-    assertionCalls: 0,
-    isExpectingAssertions: false,
-    isExpectingAssertionsError: null,
-    expectedAssertionsNumber: null,
-    expectedAssertionsNumberErrorGen: null,
-    get testPath() {
-      return getWorkerState().filepath
-    },
-    currentTestName: test
-      ? getTestName(test as Test)
-      : globalState.currentTestName,
-  }
-
-  if (test !== undefined && 'type' in test && test.type === 'test') {
-    state.task = test
-  }
-
   setState<MatcherState>(
-    state,
+    {
+      // this should also add "snapshotState" that is added conditionally
+      ...globalState,
+      assertionCalls: 0,
+      isExpectingAssertions: false,
+      isExpectingAssertionsError: null,
+      expectedAssertionsNumber: null,
+      expectedAssertionsNumberErrorGen: null,
+      get testPath() {
+        return getWorkerState().filepath
+      },
+      currentTestName: test
+        ? getTestName(test as Test)
+        : globalState.currentTestName,
+    },
     expect,
   )
 
