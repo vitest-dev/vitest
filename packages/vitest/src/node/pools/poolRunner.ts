@@ -30,6 +30,7 @@ export class PoolRunner {
 
   private _state: RunnerState = RunnerState.IDLE
   private _operationLock: DeferPromise<void> | null = null
+  private _terminatePromise: DeferPromise<void> = createDefer()
 
   private _eventEmitter: EventEmitter<{
     message: [WorkerResponse]
@@ -42,6 +43,10 @@ export class PoolRunner {
 
   public get isTerminated(): boolean {
     return this._state === RunnerState.STOPPED
+  }
+
+  public get waitForTerminated(): Promise<void> {
+    return this._terminatePromise
   }
 
   public get isStarted(): boolean {
@@ -58,7 +63,11 @@ export class PoolRunner {
       }),
       {
         eventNames: ['onCancel'],
-        post: request => this.postMessage(request),
+        post: (request) => {
+          if (this._state !== RunnerState.STOPPING && this._state !== RunnerState.STOPPED) {
+            this.postMessage(request)
+          }
+        },
         on: callback => this._eventEmitter.on('rpc', callback),
         timeout: -1,
       },
@@ -199,6 +208,7 @@ export class PoolRunner {
     finally {
       this._operationLock.resolve()
       this._operationLock = null
+      this._terminatePromise.resolve()
     }
   }
 
