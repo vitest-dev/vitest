@@ -37,12 +37,12 @@ export interface WebSocketHandlers {
   getModuleGraph: (
     projectName: string,
     id: string,
-    browser?: boolean
+    browser?: boolean,
   ) => Promise<ModuleGraphData>
   getTransformResult: (
     projectName: string,
     id: string,
-    browser?: boolean
+    browser?: boolean,
   ) => Promise<TransformResultWithSource | undefined>
   readTestFile: (id: string) => Promise<string | null>
   saveTestFile: (id: string, content: string) => Promise<void>
@@ -57,13 +57,14 @@ export interface WebSocketEvents {
   onFinished?: (
     files: File[],
     errors: unknown[],
-    coverage?: unknown
+    coverage?: unknown,
+    executionTime?: number,
   ) => Awaitable<void>
   onTestAnnotate?: (testId: string, annotation: TestAnnotation) => Awaitable<void>
   onTaskUpdate?: (packs: TaskResultPack[], events: TaskEventPack[]) => Awaitable<void>
   onUserConsoleLog?: (log: UserConsoleLog) => Awaitable<void>
   onPathsCollected?: (paths?: string[]) => Awaitable<void>
-  onSpecsCollected?: (specs?: SerializedTestSpecification[]) => Awaitable<void>
+  onSpecsCollected?: (specs?: SerializedTestSpecification[], startTime?: number) => Awaitable<void>
   onFinishedReportCoverage: () => void
 }
 

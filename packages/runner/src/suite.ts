@@ -247,7 +247,7 @@ function parseArguments<T extends (...args: any[]) => any>(
   timeoutOrTest: T | number | undefined,
 ) {
   if (timeoutOrTest != null && typeof timeoutOrTest === 'object') {
-    throw new TypeError(`Siganture "test(name, fn, { ... })" was deprecated in Vitest 3 and removed in Vitest 4. Please, provide options as a second argument instead.`)
+    throw new TypeError(`Signature "test(name, fn, { ... })" was deprecated in Vitest 3 and removed in Vitest 4. Please, provide options as a second argument instead.`)
   }
 
   let options: TestOptions = {}
@@ -820,7 +820,7 @@ function createTest(
     > & { fixtures?: FixtureItem[] },
     title: string,
     optionsOrFn?: TestOptions | TestFunction,
-    optionsOrTest?: number | TestFunction
+    optionsOrTest?: number | TestFunction,
   ) => void,
   context?: Record<string, any>,
 ) {

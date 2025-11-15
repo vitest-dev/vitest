@@ -3,6 +3,7 @@ import type { WorkerGlobalState } from '../../types/worker'
 import { pathToFileURL } from 'node:url'
 import { isContext, runInContext } from 'node:vm'
 import { resolve } from 'pathe'
+import { loadEnvironment } from '../../integrations/env/loader'
 import { distDir } from '../../paths'
 import { createCustomConsole } from '../console'
 import { ExternalModulesExecutor } from '../external-executor'
@@ -18,7 +19,11 @@ const fileMap = new FileMap()
 const packageCache = new Map<string, string>()
 
 export async function runVmTests(method: 'run' | 'collect', state: WorkerGlobalState): Promise<void> {
-  const { environment, ctx, rpc } = state
+  const { ctx, rpc } = state
+
+  const beforeEnvironmentTime = performance.now()
+  const { environment } = await loadEnvironment(ctx.environment.name, ctx.config.root, rpc)
+  state.environment = environment
 
   if (!environment.setupVM) {
     const envName = ctx.environment.name
@@ -34,7 +39,7 @@ export async function runVmTests(method: 'run' | 'collect', state: WorkerGlobalS
     ctx.environment.options || ctx.config.environmentOptions || {},
   )
 
-  state.durations.environment = performance.now() - state.durations.environment
+  state.durations.environment = performance.now() - beforeEnvironmentTime
 
   process.env.VITEST_VM_POOL = '1'
 
@@ -126,6 +131,5 @@ export async function runVmTests(method: 'run' | 'collect', state: WorkerGlobalS
   }
   finally {
     await vm.teardown?.()
-    state.environmentTeardownRun = true
   }
 }

@@ -32,7 +32,7 @@ export default defineConfig({
         // ...custom playwright options
       }),
       instances: [
-        { name: 'chromium' },
+        { browser: 'chromium' },
       ],
     },
   },

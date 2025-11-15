@@ -221,7 +221,6 @@ it('throws syntax error if no arguments are provided', () => {
 })
 
 function sendEventMessage(worker: SharedWorker, msg: any) {
-  worker.port.postMessage(msg)
   return new Promise<string>((resolve, reject) => {
     const timeout = setTimeout(() => {
       reject(new Error(`Failed to send the message ${msg} to the SharedWorker.`))
@@ -231,11 +230,11 @@ function sendEventMessage(worker: SharedWorker, msg: any) {
       clearTimeout(timeout)
       resolve(e.data as string)
     })
+    worker.port.postMessage(msg)
   })
 }
 
 function sendOnMessage(worker: SharedWorker, msg: any) {
-  worker.port.postMessage(msg)
   return new Promise<string>((resolve, reject) => {
     const timeout = setTimeout(() => {
       reject(new Error(`Failed to send the message ${msg} to the SharedWorker.`))
@@ -245,6 +244,7 @@ function sendOnMessage(worker: SharedWorker, msg: any) {
       clearTimeout(timeout)
       resolve(e.data as string)
     }
+    worker.port.postMessage(msg)
   })
 }
 

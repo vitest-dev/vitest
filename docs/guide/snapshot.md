@@ -98,7 +98,7 @@ It will compare with the content of `./test/basic.output.html`. And can be writt
 
 ## Visual Snapshots
 
-For visual regression testing of UI components and pages, Vitest provides built-in support through [browser mode](/guide/browser/) with the [`toMatchScreenshot()`](/guide/browser/assertion-api#tomatchscreenshot-experimental) assertion:
+For visual regression testing of UI components and pages, Vitest provides built-in support through [browser mode](/guide/browser/) with the [`toMatchScreenshot()`](/api/browser/assertions#tomatchscreenshot-experimental) assertion:
 
 ```ts
 import { expect, test } from 'vitest'

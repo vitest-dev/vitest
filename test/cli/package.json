@@ -17,7 +17,7 @@
     "@vitest/runner": "workspace:^",
     "@vitest/utils": "workspace:*",
     "debug": "^4.4.3",
-    "unplugin-swc": "^1.5.7",
+    "unplugin-swc": "^1.5.8",
     "vite": "latest",
     "vitest": "workspace:*",
     "ws": "catalog:"

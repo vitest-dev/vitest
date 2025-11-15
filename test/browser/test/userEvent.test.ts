@@ -23,12 +23,23 @@ describe('userEvent.click', () => {
     document.body.appendChild(button)
     const onClick = vi.fn()
     const dblClick = vi.fn()
+    // Make sure a contextmenu doesn't actually appear, as it may make some
+    // tests fail later.
+    const onContextmenu = vi.fn(e => e.preventDefault())
     button.addEventListener('click', onClick)
+    button.addEventListener('dblclick', onClick)
+    button.addEventListener('contextmenu', onContextmenu)
 
     await userEvent.click(button)
 
     expect(onClick).toHaveBeenCalled()
     expect(dblClick).not.toHaveBeenCalled()
+    expect(onContextmenu).not.toHaveBeenCalled()
+
+    onClick.mockClear()
+    await userEvent.click(button, { button: 'right' })
+    expect(onClick).not.toHaveBeenCalled()
+    expect(onContextmenu).toHaveBeenCalled()
   })
 
   test('correctly doesn\'t click on a disabled button', async () => {

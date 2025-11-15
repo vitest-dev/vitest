@@ -188,7 +188,7 @@ Try not to use `toBe` with floating-point numbers. Since JavaScript rounds them,
 
 - **Type:** `(value: number, numDigits?: number) => Awaitable<void>`
 
-Use `toBeCloseTo` to compare floating-point numbers. The optional `numDigits` argument limits the number of digits to check _after_ the decimal point. For example:
+Use `toBeCloseTo` to compare floating-point numbers. The optional `numDigits` argument limits the number of digits to check _after_ the decimal point. The default for `numDigits` is 2. For example:
 
 ```ts
 import { expect, test } from 'vitest'
@@ -343,7 +343,7 @@ function apples() {
 }
 
 function bananas() {
-  return null
+  return undefined
 }
 
 test('we don\'t have apples', () => {
@@ -379,9 +379,13 @@ test('getApplesCount has some unusual side effects...', () => {
 
 ## toBeOneOf
 
-- **Type:** `(sample: Array<any>) => any`
+- **Type:** `(sample: Array<any> | Set<any>) => any`
 
-`toBeOneOf` asserts if a value matches any of the values in the provided array.
+`toBeOneOf` asserts if a value matches any of the values in the provided array or set.
+
+::: warning EXPERIMENTAL
+Providing a `Set` is an experimental feature and may change in a future release.
+:::
 
 ```ts
 import { expect, test } from 'vitest'
@@ -428,6 +432,17 @@ test('stock is type of string', () => {
   expect(actual).toBeTypeOf('string')
 })
 ```
+
+:::warning
+`toBeTypeOf` uses the native `typeof` operator under the hood with all its quirks, most notably that the value `null` has type `object`.
+
+```ts
+test('toBeTypeOf cannot check for null or array', () => {
+  expect(null).toBeTypeOf('object')
+  expect([]).toBeTypeOf('object')
+})
+```
+:::
 
 ## toBeInstanceOf
 
@@ -587,7 +602,13 @@ import { getAllFruits } from './stocks.js'
 
 test('the fruit list contains orange', () => {
   expect(getAllFruits()).toContain('orange')
+})
 
+test('pineapple contains apple', () => {
+  expect('pineapple').toContain('apple')
+})
+
+test('the element contains a class and is contained', () => {
   const element = document.querySelector('#el')
   // element has a class
   expect(element.classList).toContain('flex')
@@ -683,6 +704,9 @@ test('John Doe Invoice', () => {
 
   // Wrap your key in an array to avoid the key from being parsed as a deep reference
   expect(invoice).toHaveProperty(['P.O'], '12345')
+
+  // Deep equality of object property
+  expect(invoice).toHaveProperty('items[0]', { type: 'apples', quantity: 10 })
 })
 ```
 
@@ -1207,6 +1231,8 @@ test('spy function returns bananas on a last call', () => {
 
 You can call this assertion to check if a function has successfully returned a value with certain parameters on a certain call. Requires a spy function to be passed to `expect`.
 
+The count starts at 1. So, to check the second entry, you would write `.toHaveNthReturnedWith(2, ...)`.
+
 ```ts
 import { expect, test, vi } from 'vitest'
 
@@ -1315,6 +1341,8 @@ test('spy function resolves bananas on a last call', async () => {
 You can call this assertion to check if a function has successfully resolved a certain value on a specific invocation. Requires a spy function to be passed to `expect`.
 
 If the function returned a promise, but it was not resolved yet, this will fail.
+
+The count starts at 1. So, to check the second entry, you would write `.toHaveNthResolvedWith(2, ...)`.
 
 ```ts
 import { expect, test, vi } from 'vitest'

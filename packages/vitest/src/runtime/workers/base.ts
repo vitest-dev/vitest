@@ -1,8 +1,11 @@
-import type { WorkerGlobalState } from '../../types/worker'
+import type { Environment } from '../../types/environment'
+import type { WorkerGlobalState, WorkerSetupContext } from '../../types/worker'
 import type { VitestModuleRunner } from '../moduleRunner/moduleRunner'
 import type { ContextModuleRunnerOptions } from '../moduleRunner/startModuleRunner'
 import { runInThisContext } from 'node:vm'
 import * as spyModule from '@vitest/spy'
+import { setupChaiConfig } from '../../integrations/chai/config'
+import { loadEnvironment } from '../../integrations/env/loader'
 import { VitestEvaluatedModules } from '../moduleRunner/evaluatedModules'
 import { createNodeImportMeta } from '../moduleRunner/moduleRunner'
 import { startVitestModuleRunner } from '../moduleRunner/startModuleRunner'
@@ -23,9 +26,38 @@ function startModuleRunner(options: ContextModuleRunnerOptions) {
   return _moduleRunner
 }
 
+let _currentEnvironment!: Environment
+let _environmentTime: number
+
+export async function setupEnvironment(context: WorkerSetupContext): Promise<() => Promise<void>> {
+  const startTime = performance.now()
+  const {
+    environment: { name: environmentName, options: environmentOptions },
+    rpc,
+    config,
+  } = context
+
+  const { environment, loader } = await loadEnvironment(environmentName, config.root, rpc)
+  _currentEnvironment = environment
+  const env = await environment.setup(globalThis, environmentOptions || config.environmentOptions || {})
+
+  _environmentTime = performance.now() - startTime
+
+  if (config.chaiConfig) {
+    setupChaiConfig(config.chaiConfig)
+  }
+
+  return async () => {
+    await env.teardown(globalThis)
+    await loader?.close()
+  }
+}
+
 /** @experimental */
 export async function runBaseTests(method: 'run' | 'collect', state: WorkerGlobalState): Promise<void> {
   const { ctx } = state
+  state.environment = _currentEnvironment
+  state.durations.environment = _environmentTime
   // state has new context, but we want to reuse existing ones
   state.evaluatedModules = evaluatedModules
   state.moduleExecutionInfo = moduleExecutionInfo
@@ -41,24 +73,19 @@ export async function runBaseTests(method: 'run' | 'collect', state: WorkerGloba
     })
   }
   ctx.files.forEach((i) => {
-    const filepath = typeof i === 'string' ? i : i.filepath
+    const filepath = i.filepath
     const modules = state.evaluatedModules.fileToModulesMap.get(filepath) || []
     modules.forEach((module) => {
       state.evaluatedModules.invalidateModule(module)
     })
   })
 
-  const executor = startModuleRunner({
+  const moduleRunner = startModuleRunner({
     state,
     evaluatedModules: state.evaluatedModules,
     spyModule,
     createImportMeta: createNodeImportMeta,
   })
-  const fileSpecs = ctx.files.map(f =>
-    typeof f === 'string'
-      ? { filepath: f, testLocations: undefined }
-      : f,
-  )
   // we could load @vite/env, but it would take ~8ms, while this takes ~0,02ms
   if (ctx.config.serializedDefines) {
     try {
@@ -74,9 +101,9 @@ export async function runBaseTests(method: 'run' | 'collect', state: WorkerGloba
 
   await run(
     method,
-    fileSpecs,
+    ctx.files,
     ctx.config,
-    { environment: state.environment, options: ctx.environment.options },
-    executor,
+    moduleRunner,
+    _currentEnvironment,
   )
 }

@@ -18,14 +18,14 @@ export interface Codec<
 > {
   decode: (
     buffer: TypedArray,
-    options: DecoderOptions
+    options: DecoderOptions,
   ) => Promisable<{
     data: TypedArray
     metadata: DecoderMetadata & BaseMetadata
   }>
   encode: (
     image: { data: TypedArray; metadata: BaseMetadata },
-    options: EncoderOptions
+    options: EncoderOptions,
   ) => Promisable<TypedArray>
 }
 
@@ -45,7 +45,7 @@ export type Comparator<Options extends Record<string, unknown>> = (
      * Note that the comparator might choose to ignore the flag, so a diff image is not guaranteed.
      */
     createDiff: boolean
-  } & Options
+  } & Options,
 ) => Promisable<{ pass: boolean; diff: TypedArray | null; message: string | null }>
 
 type CustomComparatorsToRegister = {

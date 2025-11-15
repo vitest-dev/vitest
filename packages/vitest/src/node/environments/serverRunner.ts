@@ -1,12 +1,9 @@
 import type { DevEnvironment } from 'vite'
 import type { ResolvedConfig } from '../types/config'
 import type { VitestFetchFunction } from './fetchModule'
-import { builtinModules } from 'node:module'
 import { VitestModuleEvaluator } from '#module-evaluator'
 import { ModuleRunner } from 'vite/module-runner'
 import { normalizeResolvedIdToUrl } from './normalizeUrl'
-
-const nodeBuiltins = builtinModules.filter(id => !id.includes(':'))
 
 export class ServerModuleRunner extends ModuleRunner {
   constructor(
@@ -24,7 +21,7 @@ export class ServerModuleRunner extends ModuleRunner {
             }
             const { name, data } = event.data
             if (name === 'getBuiltins') {
-              return { result: [...nodeBuiltins, /^node:/] }
+              return await environment.hot.handleInvoke(event)
             }
             if (name !== 'fetchModule') {
               return { error: new Error(`Unknown method: ${name}. Expected "fetchModule".`) }

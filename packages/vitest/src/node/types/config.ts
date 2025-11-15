@@ -201,7 +201,7 @@ export interface ResolveSnapshotPathHandlerContext { config: SerializedConfig }
 export type ResolveSnapshotPathHandler = (
   testPath: string,
   snapExtension: string,
-  context: ResolveSnapshotPathHandlerContext
+  context: ResolveSnapshotPathHandlerContext,
 ) => string
 
 export type BuiltinPool
@@ -228,9 +228,10 @@ export interface InlineConfig {
   benchmark?: BenchmarkUserOptions
 
   /**
-   * Include globs for test files
+   * A list of [glob patterns](https://superchupu.dev/tinyglobby/comparison) that match your test files.
    *
    * @default ['**\/*.{test,spec}.?(c|m)[jt]s?(x)']
+   * @see {@link https://vitest.dev/config/include}
    */
   include?: string[]
 
@@ -1017,6 +1018,7 @@ export interface ResolvedConfig
     | 'bail'
     | 'name'
     | 'vmMemoryLimit'
+    | 'fileParallelism'
   > {
   mode: VitestRunMode
 
@@ -1150,7 +1152,6 @@ export type ProjectConfig = Omit<
   mode?: string
   sequencer?: Omit<SequenceOptions, 'sequencer' | 'seed'>
   deps?: Omit<DepsOptions, 'moduleDirectories'>
-  fileParallelism?: boolean
 }
 
 export type ResolvedProjectConfig = Omit<
@@ -1165,7 +1166,7 @@ export interface UserWorkspaceConfig extends ViteUserConfig {
 
 // TODO: remove types when "workspace" support is removed
 export type UserProjectConfigFn = (
-  env: ConfigEnv
+  env: ConfigEnv,
 ) => UserWorkspaceConfig | Promise<UserWorkspaceConfig>
 export type UserProjectConfigExport
   = | UserWorkspaceConfig

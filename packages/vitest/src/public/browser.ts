@@ -32,12 +32,12 @@ export interface FsOptions {
 export interface BrowserCommands {
   readFile: (
     path: string,
-    options?: BufferEncoding | FsOptions
+    options?: BufferEncoding | FsOptions,
   ) => Promise<string>
   writeFile: (
     path: string,
     content: string,
-    options?: BufferEncoding | (FsOptions & { mode?: number | string })
+    options?: BufferEncoding | (FsOptions & { mode?: number | string }),
   ) => Promise<void>
   removeFile: (path: string) => Promise<void>
 }

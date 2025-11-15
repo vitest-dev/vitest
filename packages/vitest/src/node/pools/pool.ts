@@ -8,7 +8,7 @@ import { TypecheckPoolWorker } from './workers/typecheckWorker'
 import { VmForksPoolWorker } from './workers/vmForksWorker'
 import { VmThreadsPoolWorker } from './workers/vmThreadsWorker'
 
-const WORKER_START_TIMEOUT = 5_000
+const WORKER_START_TIMEOUT = 90_000
 
 interface Options {
   distPath: string
@@ -76,12 +76,6 @@ export class Pool {
       const activeTask = { task, resolver, method, cancelTask }
       this.activeTasks.push(activeTask)
 
-      runner.on('error', (error) => {
-        resolver.reject(
-          new Error(`[vitest-pool]: Worker ${task.worker} emitted error.`, { cause: error }),
-        )
-      })
-
       async function cancelTask() {
         await runner.stop()
         resolver.reject(new Error('Cancelled'))
@@ -104,6 +98,12 @@ export class Pool {
       runner.on('message', onFinished)
 
       if (!runner.isStarted) {
+        runner.on('error', (error) => {
+          resolver.reject(
+            new Error(`[vitest-pool]: Worker ${task.worker} emitted error.`, { cause: error }),
+          )
+        })
+
         const id = setTimeout(
           () => resolver.reject(new Error(`[vitest-pool]: Timeout starting ${task.worker} runner.`)),
           WORKER_START_TIMEOUT,
@@ -208,7 +208,7 @@ export class Pool {
       distPath: this.options.distPath,
       project: task.project,
       method,
-      environment: task.context.environment.name,
+      environment: task.environment,
       env: task.env,
       execArgv: task.execArgv,
     }
@@ -280,7 +280,7 @@ function isEqualRunner(runner: PoolRunner, task: PoolTask) {
   return (
     runner.worker.name === task.worker
     && runner.project === task.project
-    && runner.environment === task.context.environment.name
+    && runner.environment.name === task.environment.name
     && (!runner.worker.canReuse || runner.worker.canReuse(task))
   )
 }

@@ -4,7 +4,7 @@ command = "pnpm ci:docs"
 ignore = "git diff --quiet $CACHED_COMMIT_REF $COMMIT_REF docs/ package.json pnpm-lock.yaml"
 
 [build.environment]
-NODE_VERSION = "22"
+NODE_VERSION = "24"
 # don't need playwright for docs build
 PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD = "1"
 # https://github.com/nodejs/corepack/issues/612#issuecomment-2631462297
@@ -31,8 +31,48 @@ to = "/guide/projects"
 status = 301
 
 [[redirects]]
+from = "/advanced/api"
+to = "/guide/advanced"
+status = 301
+
+[[redirects]]
+from = "/advanced/api/*"
+to = "/api/advanced/:splat"
+status = 301
+
+[[redirects]]
+from = "/advanced/*"
+to = "/guide/advanced/:splat"
+status = 301
+
+[[redirects]]
 from = "/guide/workspace.html"
 to = "/guide/projects"
+status = 301
+
+[[redirects]]
+from = "/guide/browser/context"
+to = "/api/browser/context"
+status = 301
+
+[[redirects]]
+from = "/guide/browser/interactivity-api"
+to = "/api/browser/interactivity"
+status = 301
+
+[[redirects]]
+from = "/guide/browser/locators"
+to = "/api/browser/locators"
+status = 301
+
+[[redirects]]
+from = "/guide/browser/assertion-api"
+to = "/api/browser/assertions"
+status = 301
+
+[[redirects]]
+from = "/guide/browser/commands"
+to = "/api/browser/commands"
 status = 301
 
 [[headers]]

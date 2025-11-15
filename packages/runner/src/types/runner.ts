@@ -94,7 +94,7 @@ export interface VitestRunner {
    */
   onBeforeTryTask?: (
     test: Test,
-    options: { retry: number; repeats: number }
+    options: { retry: number; repeats: number },
   ) => unknown
   /**
    * When the task has finished running, but before cleanup hooks are called
@@ -109,7 +109,7 @@ export interface VitestRunner {
    */
   onAfterTryTask?: (
     test: Test,
-    options: { retry: number; repeats: number }
+    options: { retry: number; repeats: number },
   ) => unknown
   /**
    * Called after the retry resolution happend. Unlike `onAfterTryTask`, the test now has a new state.
@@ -117,7 +117,7 @@ export interface VitestRunner {
    */
   onAfterRetryTask?: (
     test: Test,
-    options: { retry: number; repeats: number }
+    options: { retry: number; repeats: number },
   ) => unknown
 
   /**

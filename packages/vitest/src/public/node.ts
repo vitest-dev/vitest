@@ -7,6 +7,7 @@ export { isValidApiRequest } from '../api/check'
 export { escapeTestName } from '../node/ast-collect'
 export { parseCLI } from '../node/cli/cac'
 export type { CliParseOptions } from '../node/cli/cac'
+export type { CliOptions } from '../node/cli/cli-api'
 export { startVitest } from '../node/cli/cli-api'
 export { resolveApiServerConfig } from '../node/config/resolveConfig'
 export type {

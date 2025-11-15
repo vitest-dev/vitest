@@ -2,7 +2,7 @@
 
 import { stripVTControlCharacters } from 'node:util'
 import { processError } from '@vitest/utils/error'
-import { expect, test, vi } from 'vitest'
+import { describe, expect, test, vi } from 'vitest'
 
 test('MessageChannel and MessagePort are available', () => {
   expect(MessageChannel).toBeDefined()
@@ -22,7 +22,7 @@ test('fetch, Request, Response, and BroadcastChannel are available', () => {
   expect(BroadcastChannel).toBeDefined()
 })
 
-test('Fetch API accepts other APIs', () => {
+test('Fetch API accepts other APIs', async () => {
   expect.soft(() => new Request('http://localhost', { signal: new AbortController().signal })).not.toThrowError()
   expect.soft(() => new Request('http://localhost', { method: 'POST', body: new FormData() })).not.toThrowError()
   expect.soft(() => new Request('http://localhost', { method: 'POST', body: new Blob() })).not.toThrowError()
@@ -38,6 +38,149 @@ test('Fetch API accepts other APIs', () => {
   const searchParams = new URLSearchParams()
   searchParams.set('key', 'value')
   expect.soft(() => new Request('http://localhost', { method: 'POST', body: searchParams })).not.toThrowError()
+
+  const clone = request.clone()
+  expect.soft(clone).toBeInstanceOf(Request)
+})
+
+test('fetch api doesnt override the init object', () => {
+  const body = new FormData()
+  const init: RequestInit = {
+    method: 'post',
+    body,
+  }
+  const _request = new Request('http://localhost', init)
+  expect(init.body).toBe(body)
+})
+
+describe('FormData', () => {
+  test('can pass down a simple form data', async () => {
+    const formData = new FormData()
+    formData.set('hello', 'world')
+
+    await expect((async () => {
+      const req = new Request('http://localhost:3000/', {
+        method: 'POST',
+        body: formData,
+      })
+      await req.formData()
+    })()).resolves.not.toThrowError()
+  })
+
+  test('can pass down form data from a FORM element', async () => {
+    const form = document.createElement('form')
+    document.body.append(form)
+
+    const hello = document.createElement('input')
+    hello.value = 'world'
+    hello.type = 'text'
+    hello.name = 'hello'
+    form.append(hello)
+
+    const formData = new FormData(form)
+    expect([...formData.entries()]).toEqual([
+      ['hello', 'world'],
+    ])
+
+    await expect((async () => {
+      const req = new Request('http://localhost:3000/', {
+        method: 'POST',
+        body: formData,
+      })
+      await req.formData()
+    })()).resolves.not.toThrowError()
+  })
+
+  test('can pass down form data from a FORM element with a submitter', async () => {
+    const form = document.createElement('form')
+    document.body.append(form)
+
+    const hello = document.createElement('input')
+    hello.value = 'world'
+    hello.type = 'text'
+    hello.name = 'hello'
+    form.append(hello)
+
+    const submitter = document.createElement('button')
+    submitter.type = 'submit'
+    submitter.name = 'include'
+    submitter.value = 'submitter'
+    form.append(submitter)
+
+    const formData = new FormData(form, submitter)
+    expect([...formData.entries()]).toEqual([
+      ['hello', 'world'],
+      ['include', 'submitter'],
+    ])
+
+    await expect((async () => {
+      const req = new Request('http://localhost:3000/', {
+        method: 'POST',
+        body: formData,
+      })
+      await req.formData()
+    })()).resolves.not.toThrowError()
+  })
+
+  // https://developer.mozilla.org/en-US/docs/Web/API/FormData/FormData#exceptions
+  test('cannot pass down form data from a FORM element with a non-sumbit sumbitter', async () => {
+    const form = document.createElement('form')
+    document.body.append(form)
+    const submitter = document.createElement('button')
+    submitter.type = 'button'
+    form.append(submitter)
+
+    expect(() => new FormData(form, submitter)).toThrowError(
+      new TypeError('The specified element is not a submit button'),
+    )
+  })
+
+  test('cannot pass down form data from a FORM element with a sumbitter from a wrong form', async () => {
+    const form1 = document.createElement('form')
+    const form2 = document.createElement('form')
+    document.body.append(form1, form2)
+    const submitter = document.createElement('button')
+    submitter.type = 'submit'
+    form2.append(submitter)
+
+    try {
+      // can't use toThrow here because DOMException is not an Error
+      const _ = new FormData(form1, submitter)
+    }
+    catch (error: any) {
+      const expectedError = new DOMException(
+        'The specified element is not owned by this form element',
+        'NotFoundError',
+      )
+      expect(error).toEqual(expectedError)
+    }
+  })
+
+  test('supports Blob', () => {
+    const form = new FormData()
+    const key = 'prop'
+
+    const data = new Blob()
+
+    form.set(key, data)
+
+    const retrievedBlob = form.get(key)
+
+    expect(retrievedBlob).toBeInstanceOf(Blob)
+  })
+
+  test('supports File', () => {
+    const form = new FormData()
+    const key = 'prop'
+
+    const data = new File([], 'name')
+
+    form.set(key, data)
+
+    const retrievedBlob = form.get(key)
+
+    expect(retrievedBlob).toBeInstanceOf(File)
+  })
 })
 
 test('DOM APIs accept AbortController', () => {
@@ -128,6 +271,15 @@ test('request doesn\'t support absolute URL because jsdom doesn\'t provide compa
   expect(() => {
     const _r = new Request('/api', { method: 'GET' })
   }).toThrow(/Failed to parse URL/)
+})
+
+test('URL.createObjectUrl works properly', () => {
+  expect(() => {
+    URL.createObjectURL(new Blob())
+  }).not.toThrow()
+  expect(() => {
+    URL.createObjectURL(new File([], 'name.js'))
+  }).not.toThrow()
 })
 
 test('jsdom global is exposed', () => {

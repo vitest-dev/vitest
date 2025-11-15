@@ -1,5 +1,6 @@
-import type { ContextRPC } from '../../types/worker'
+import type { ContextTestEnvironment, WorkerExecuteContext, WorkerTestEnvironment } from '../../types/worker'
 import type { TestProject } from '../project'
+import type { SerializedConfig } from '../types/config'
 
 export interface PoolRunnerInitializer {
   readonly name: string
@@ -11,7 +12,7 @@ export interface PoolOptions {
   project: TestProject
   method: 'run' | 'collect'
   cacheFs?: boolean
-  environment: string
+  environment: ContextTestEnvironment
   execArgv: string[]
   env: Partial<NodeJS.ProcessEnv>
 }
@@ -51,22 +52,31 @@ export interface PoolTask {
    * so modifying it once will modify it for every task.
    */
   execArgv: string[]
-  context: ContextRPC
+  context: WorkerExecuteContext
+  environment: ContextTestEnvironment
   memoryLimit: number | null
 }
 
 export type WorkerRequest
   = { __vitest_worker_request__: true } & (
-    | { type: 'start'; options: { reportMemory: boolean } }
+    | {
+      type: 'start'
+      options: { reportMemory: boolean }
+      context: {
+        environment: WorkerTestEnvironment
+        config: SerializedConfig
+        pool: string
+      }
+    }
     | { type: 'stop' }
-    | { type: 'run'; context: ContextRPC; poolId: number }
-    | { type: 'collect'; context: ContextRPC; poolId: number }
+    | { type: 'run'; context: WorkerExecuteContext; poolId: number }
+    | { type: 'collect'; context: WorkerExecuteContext; poolId: number }
     | { type: 'cancel' }
 )
 
 export type WorkerResponse
   = { __vitest_worker_response__: true } & (
-    | { type: 'started' }
+    | { type: 'started'; error?: unknown }
     | { type: 'stopped'; error?: unknown }
     | { type: 'testfileFinished'; usedMemory?: number; error?: unknown }
 )

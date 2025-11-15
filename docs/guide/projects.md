@@ -285,5 +285,5 @@ Some of the configuration options are not allowed in a project config. Most nota
 - `resolveSnapshotPath`: only root-level resolver is respected
 - all other options that don't affect test runners
 
-All configuration options that are not supported inside a project configuration are marked with a <NonProjectOption /> sign in the ["Config"](/config/) guide. They have to be defined once in the root config file.
+All configuration options that are not supported inside a project configuration are marked with a <CRoot /> icon next to their name. They can onle be defined once in the root config file.
 :::

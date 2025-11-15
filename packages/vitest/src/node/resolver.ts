@@ -161,13 +161,13 @@ async function _shouldExternalize(
 
   const moduleDirectories = options?.moduleDirectories || ['/node_modules/']
 
-  if (matchExternalizePattern(id, moduleDirectories, options?.inline)) {
+  if (matchPattern(id, moduleDirectories, options?.inline)) {
     return false
   }
   if (options?.inlineFiles && options?.inlineFiles.includes(id)) {
     return false
   }
-  if (matchExternalizePattern(id, moduleDirectories, options?.external)) {
+  if (matchPattern(id, moduleDirectories, options?.external)) {
     return id
   }
 
@@ -181,10 +181,10 @@ async function _shouldExternalize(
   const guessCJS = isLibraryModule && options?.fallbackCJS
   id = guessCJS ? guessCJSversion(id) || id : id
 
-  if (matchExternalizePattern(id, moduleDirectories, defaultInline)) {
+  if (matchPattern(id, moduleDirectories, defaultInline)) {
     return false
   }
-  if (matchExternalizePattern(id, moduleDirectories, depsExternal)) {
+  if (matchPattern(id, moduleDirectories, depsExternal)) {
     return id
   }
 
@@ -195,7 +195,7 @@ async function _shouldExternalize(
   return false
 }
 
-function matchExternalizePattern(
+function matchPattern(
   id: string,
   moduleDirectories: string[],
   patterns?: (string | RegExp)[] | true,

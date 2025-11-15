@@ -77,6 +77,8 @@ export async function resolveOrchestrator(
     const jsEntry = manifestContent['orchestrator.html'].file
     const base = browserProject.parent.vite.config.base || '/'
     baseHtml = baseHtml
+      .replace('href="./favicon.ico"', `href="${base}__vitest__/favicon.ico"`)
+      .replace('href="./favicon.svg"', `href="${base}__vitest__/favicon.svg"`)
       .replaceAll('./assets/', `${base}__vitest__/assets/`)
       .replace(
         '<!-- !LOAD_METADATA! -->',

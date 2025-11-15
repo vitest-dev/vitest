@@ -35,7 +35,7 @@ export interface Reporter {
   onTestRunEnd?: (
     testModules: ReadonlyArray<TestModule>,
     unhandledErrors: ReadonlyArray<SerializedError>,
-    reason: TestRunEndReason
+    reason: TestRunEndReason,
   ) => Awaitable<void>
 
   /**

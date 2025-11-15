@@ -32,7 +32,7 @@ export default defineConfig({
         // ...custom webdriverio options
       }),
       instances: [
-        { name: 'chrome' },
+        { browser: 'chrome' },
       ],
     },
   },

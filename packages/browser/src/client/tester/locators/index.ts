@@ -74,15 +74,15 @@ export abstract class Locator {
     })
   }
 
-  public click(options: UserEventClickOptions = {}): Promise<void> {
+  public click(options?: UserEventClickOptions): Promise<void> {
     return this.triggerCommand<void>('__vitest_click', this.selector, options)
   }
 
-  public dblClick(options: UserEventClickOptions = {}): Promise<void> {
+  public dblClick(options?: UserEventClickOptions): Promise<void> {
     return this.triggerCommand<void>('__vitest_dblClick', this.selector, options)
   }
 
-  public tripleClick(options: UserEventClickOptions = {}): Promise<void> {
+  public tripleClick(options?: UserEventClickOptions): Promise<void> {
     return this.triggerCommand<void>('__vitest_tripleClick', this.selector, options)
   }
 

@@ -1,3 +1,4 @@
+import type { Writable } from 'node:stream'
 import type { PoolOptions, PoolWorker, WorkerRequest } from '../types'
 import { resolve } from 'node:path'
 import { Worker } from 'node:worker_threads'
@@ -11,10 +12,15 @@ export class ThreadsPoolWorker implements PoolWorker {
   protected env: Partial<NodeJS.ProcessEnv>
 
   private _thread?: Worker
+  private stdout: NodeJS.WriteStream | Writable
+  private stderr: NodeJS.WriteStream | Writable
 
   constructor(options: PoolOptions) {
     this.execArgv = options.execArgv
     this.env = options.env
+    this.stdout = options.project.vitest.logger.outputStream
+    this.stderr = options.project.vitest.logger.errorStream
+
     /** Loads {@link file://./../../../runtime/workers/threads.ts} */
     this.entrypoint = resolve(options.distPath, 'workers/threads.js')
   }
@@ -36,13 +42,27 @@ export class ThreadsPoolWorker implements PoolWorker {
     this._thread ||= new Worker(this.entrypoint, {
       env: this.env,
       execArgv: this.execArgv,
+      stdout: true,
+      stderr: true,
     })
+
+    this.stdout.setMaxListeners(1 + this.stdout.getMaxListeners())
+    this._thread.stdout.pipe(this.stdout)
+
+    this.stderr.setMaxListeners(1 + this.stderr.getMaxListeners())
+    this._thread.stderr.pipe(this.stderr)
   }
 
   async stop(): Promise<void> {
-    await this.thread.terminate().then(() => {
-      this._thread = undefined
-    })
+    await this.thread.terminate()
+
+    this._thread?.stdout?.unpipe(this.stdout)
+    this.stdout.setMaxListeners(this.stdout.getMaxListeners() - 1)
+
+    this._thread?.stderr?.unpipe(this.stderr)
+    this.stderr.setMaxListeners(this.stderr.getMaxListeners() - 1)
+
+    this._thread = undefined
   }
 
   deserialize(data: unknown): unknown {

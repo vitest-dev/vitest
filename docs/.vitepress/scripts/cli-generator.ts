@@ -35,6 +35,12 @@ const skipConfig = new Set([
   'run',
   'hideSkippedTests',
   'dom',
+  'inspect',
+  'inspectBrk',
+  'project',
+  'ui',
+  'browser.name',
+  'browser.fileParallelism',
 ])
 
 function resolveOptions(options: CLIOptions<any>, parentName?: string) {
@@ -76,8 +82,9 @@ const options = resolveOptions(cliOptionsConfig)
 const template = options.map((option) => {
   const title = option.title
   const cli = option.cli
-  const config = skipConfig.has(title) ? '' : `[${title}](${title.includes('browser.') ? '/guide/browser/config' : '/config/'}#${title.toLowerCase().replace(/\./g, '-')})`
-  return `### ${title}\n\n- **CLI:** ${cli}\n${config ? `- **Config:** ${config}\n` : ''}\n${option.description}\n`
+  const [page, ...hash] = (title.startsWith('browser.') ? title.slice(8) : title).toLowerCase().split('.')
+  const config = skipConfig.has(title) ? '' : `[${title}](${title.includes('browser.') ? '/config/browser/' : '/config/'}${page}${hash.length ? `#${[page, ...hash].join('-')}` : ''})`
+  return `### ${title}\n\n- **CLI:** ${cli}\n${config ? `- **Config:** ${config}\n` : ''}\n${option.description.replace(/https:\/\/vitest\.dev\//g, '/')}\n`
 }).join('\n')
 
 writeFileSync(cliTablePath, template, 'utf-8')

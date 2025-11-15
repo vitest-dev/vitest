@@ -12,11 +12,10 @@ function element<T extends HTMLElement | SVGElement | null | Locator>(elementOrL
     throw new Error(`Invalid element or locator: ${elementOrLocator}. Expected an instance of HTMLElement, SVGElement or Locator, received ${getType(elementOrLocator)}`)
   }
 
-  return expect.poll<HTMLElement | SVGElement | null>(function element(this: object) {
+  const expectElement = expect.poll<HTMLElement | SVGElement | null>(function element(this: object) {
     if (elementOrLocator instanceof Element || elementOrLocator == null) {
       return elementOrLocator
     }
-    chai.util.flag(this, '_poll.element', true)
 
     const isNot = chai.util.flag(this, 'negate') as boolean
     const name = chai.util.flag(this, '_name') as string
@@ -47,6 +46,10 @@ function element<T extends HTMLElement | SVGElement | null | Locator>(elementOrL
 
     return result
   }, processTimeoutOptions(options))
+
+  chai.util.flag(expectElement, '_poll.element', true)
+
+  return expectElement
 }
 
 expect.extend(matchers)

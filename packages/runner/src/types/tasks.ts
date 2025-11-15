@@ -339,7 +339,7 @@ export interface TestAnnotation {
 export type Task = Test | Suite | File
 
 export type TestFunction<ExtraContext = object> = (
-  context: TestContext & ExtraContext
+  context: TestContext & ExtraContext,
 ) => Awaitable<any> | void
 
 // jest's ExtractEachCallbackArgs
@@ -555,7 +555,7 @@ interface Hooks<ExtraContext> {
 export type TestAPI<ExtraContext = object> = ChainableTestAPI<ExtraContext>
   & ExtendedAPI<ExtraContext> & Hooks<ExtraContext> & {
     extend: <T extends Record<string, any> = object>(
-      fixtures: Fixtures<T, ExtraContext>
+      fixtures: Fixtures<T, ExtraContext>,
     ) => TestAPI<{
       [K in keyof T | keyof ExtraContext]: K extends keyof T
         ? T[K]
@@ -564,7 +564,7 @@ export type TestAPI<ExtraContext = object> = ChainableTestAPI<ExtraContext>
           : never;
     }>
     scoped: (
-      fixtures: Fixtures<Partial<ExtraContext>>
+      fixtures: Fixtures<Partial<ExtraContext>>,
     ) => void
   }
 
@@ -593,7 +593,7 @@ export interface FixtureOptions {
 export type Use<T> = (value: T) => Promise<void>
 export type FixtureFn<T, K extends keyof T, ExtraContext> = (
   context: Omit<T, K> & ExtraContext,
-  use: Use<T[K]>
+  use: Use<T[K]>,
 ) => Promise<void>
 export type Fixture<T, K extends keyof T, ExtraContext = object> = ((
   ...args: any
@@ -714,7 +714,7 @@ export interface SuiteCollector<ExtraContext = object> {
 }
 
 export type SuiteFactory<ExtraContext = object> = (
-  test: TestAPI<ExtraContext>
+  test: TestAPI<ExtraContext>,
 ) => Awaitable<void>
 
 export interface RuntimeContext {

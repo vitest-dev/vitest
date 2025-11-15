@@ -89,9 +89,9 @@ jobs:
         node_version: [20, 22, 24]
         include:
           - os: macos-latest
-            node_version: 22
+            node_version: 24
           - os: windows-latest
-            node_version: 22
+            node_version: 24
       fail-fast: false
 
     steps:
@@ -120,7 +120,7 @@ jobs:
       - name: Unit Test UI
         run: pnpm run -C packages/ui test:ui
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         if: ${{ !cancelled() }}
         with:
           name: playwright-report
@@ -129,12 +129,13 @@ jobs:
 
   test-browser:
     needs: changed
-    name: 'Browsers: node-22, ${{ matrix.os }}'
+    name: 'Browsers: node-${{ matrix.node_version }}, ${{ matrix.os }}'
     if: needs.changed.outputs.should_skip != 'true'
 
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
+        node_version: [24]
         os:
           - macos-latest
           - windows-latest
@@ -147,7 +148,7 @@ jobs:
 
       - uses: ./.github/actions/setup-and-cache
         with:
-          node-version: 22
+          node-version: ${{ matrix.node_version }}
 
       - uses: browser-actions/setup-chrome@b94431e051d1c52dcbe9a7092a4f10f827795416 # v2.1.0
       - uses: browser-actions/setup-firefox@5914774dda97099441f02628f8d46411fcfbd208 # v1.7.0
@@ -168,7 +169,7 @@ jobs:
 
   test-rolldown:
     needs: changed
-    # macos-latest is the fastes one
+    # macos-latest is the fastest one
     name: 'Rolldown&Test: node-22, macos-latest'
     if: needs.changed.outputs.should_skip != 'true'
     runs-on: macos-latest
@@ -201,7 +202,7 @@ jobs:
       - name: Test Browser (playwright)
         run: pnpm run test:browser:playwright
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         if: ${{ !cancelled() }}
         with:
           name: playwright-report-rolldown

@@ -74,6 +74,7 @@ export default <Environment>{
         'AbortSignal',
         'URL',
         'URLSearchParams',
+        'FormData',
       ],
     })
 

@@ -8,7 +8,7 @@ test.runIf(nodeMajor >= 22)('import node:sqlite', async () => {
     'vitest.config.ts': {
       test: {
         pool: 'forks',
-        execArgv: ['--experimental-sqlite'],
+        execArgv: ['--experimental-sqlite', '--no-warnings=ExperimentalWarning'],
       },
     },
     'basic.test.ts': ts`

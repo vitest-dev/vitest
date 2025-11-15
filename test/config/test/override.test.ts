@@ -44,6 +44,12 @@ describe('correctly defines api flag', () => {
       token: expect.any(String),
     })
   })
+
+  it('browser.isolate is inherited', async () => {
+    const c = await vitest({ isolate: false }, {})
+    expect(c.config.isolate).toBe(false)
+    expect(c.config.browser.isolate).toBe(false)
+  })
 })
 
 describe.each([

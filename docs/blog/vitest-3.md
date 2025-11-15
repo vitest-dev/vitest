@@ -62,7 +62,7 @@ For the latest news about the Vitest ecosystem and Vitest core, follow us on [Bl
   </video>
 </div>
 
-Alongside this change, we also redesign the public reporter API (the `reporters` field) making the [lifecycle](/advanced/api/reporters) easier to understand.
+Alongside this change, we also redesign the public reporter API (the `reporters` field) making the [lifecycle](/api/advanced/reporters) easier to understand.
 
 You can follow the design process in [#7069](https://github.com/vitest-dev/vitest/pull/7069) PR. It was a hard fight trying to reverse-engineer the previous `onTaskUpdate` API to make this new elegant lifecycle possible.
 
@@ -115,7 +115,7 @@ export default defineConfig({
 
 The main advantage of `instances` over `workspace` is a better caching strategy - Vitest creates only a single Vite server to serve files, which are processed only once, independent of how many browsers you test.
 
-This release also improves the documentation of Browser Mode features and introduces separate guides for [Playwright](/guide/browser/playwright) and [WebdriverIO](/guide/browser/webdriverio) hopefully making it easier to configure.
+This release also improves the documentation of Browser Mode features and introduces separate guides for [Playwright](/config/browser/playwright) and [WebdriverIO](/config/browser/webdriverio) hopefully making it easier to configure.
 
 ## Filtering by Location
 

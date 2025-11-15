@@ -78,7 +78,7 @@ export async function run(
 
   runner.getWorkerContext = undefined
 
-  workerState.onCancel.then((reason) => {
+  workerState.onCancel((reason) => {
     closeInspector(config)
     runner.cancel?.(reason)
   })

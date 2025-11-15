@@ -52,7 +52,6 @@ export default defineConfig({
           name: 'Threads pool',
           include: [
             './space-pools/threads.test.ts',
-            './space-pools/multi-worker.test.ts',
             './space-pools/isolate.test.ts',
           ],
           pool: 'threads',
@@ -63,7 +62,6 @@ export default defineConfig({
           name: 'Non-parallel thread pool',
           include: [
             './space-pools/threads.test.ts',
-            './space-pools/single-worker.test.ts',
           ],
           pool: 'threads',
           fileParallelism: false,
@@ -85,7 +83,6 @@ export default defineConfig({
           name: 'Forks pool',
           include: [
             './space-pools/forks.test.ts',
-            './space-pools/multi-worker.test.ts',
             './space-pools/isolate.test.ts',
           ],
           pool: 'forks',
@@ -96,7 +93,6 @@ export default defineConfig({
           name: 'Non-parallel fork pool',
           include: [
             './space-pools/forks.test.ts',
-            './space-pools/single-worker.test.ts',
           ],
           pool: 'forks',
           fileParallelism: false,

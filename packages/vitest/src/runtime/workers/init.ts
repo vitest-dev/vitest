@@ -1,6 +1,8 @@
 import type { WorkerRequest, WorkerResponse } from '../../node/pools/types'
+import type { WorkerSetupContext } from '../../types/worker'
 import type { VitestWorker } from './types'
 import { serializeError } from '@vitest/utils/error'
+import { createRuntimeRpc } from '../rpc'
 import * as entrypoint from '../worker'
 
 interface Options extends VitestWorker {
@@ -17,6 +19,8 @@ export function init(worker: Options): void {
 
   let runPromise: Promise<unknown> | undefined
   let isRunning = false
+  let workerTeardown: (() => Promise<unknown>) | undefined
+  let setupContext!: WorkerSetupContext
 
   function send(response: WorkerResponse) {
     worker.post(worker.serialize ? worker.serialize(response) : response)
@@ -34,7 +38,24 @@ export function init(worker: Options): void {
     switch (message.type) {
       case 'start': {
         reportMemory = message.options.reportMemory
-        send({ type: 'started', __vitest_worker_response__ })
+
+        const { environment, config, pool } = message.context
+        try {
+          const rpc = createRuntimeRpc(worker)
+          setupContext = {
+            environment,
+            config,
+            pool,
+            rpc,
+            projectName: config.name || '',
+          }
+          workerTeardown = await worker.setup?.(setupContext)
+
+          send({ type: 'started', __vitest_worker_response__ })
+        }
+        catch (error) {
+          send({ type: 'started', __vitest_worker_response__, error: serializeError(error) })
+        }
 
         break
       }
@@ -50,12 +71,23 @@ export function init(worker: Options): void {
           return
         }
 
+        try {
+          process.env.VITEST_POOL_ID = String(message.poolId)
+          process.env.VITEST_WORKER_ID = String(message.context.workerId)
+        }
+        catch (error) {
+          return send({
+            type: 'testfileFinished',
+            __vitest_worker_response__,
+            error: serializeError(error),
+            usedMemory: reportMemory ? memoryUsage().heapUsed : undefined,
+          })
+        }
+
         isRunning = true
-        process.env.VITEST_POOL_ID = String(message.poolId)
-        process.env.VITEST_WORKER_ID = String(message.context.workerId)
 
         try {
-          runPromise = entrypoint.run(message.context, worker)
+          runPromise = entrypoint.run({ ...setupContext, ...message.context }, worker)
             .catch(error => serializeError(error))
           const error = await runPromise
 
@@ -85,12 +117,23 @@ export function init(worker: Options): void {
           return
         }
 
+        try {
+          process.env.VITEST_POOL_ID = String(message.poolId)
+          process.env.VITEST_WORKER_ID = String(message.context.workerId)
+        }
+        catch (error) {
+          return send({
+            type: 'testfileFinished',
+            __vitest_worker_response__,
+            error: serializeError(error),
+            usedMemory: reportMemory ? memoryUsage().heapUsed : undefined,
+          })
+        }
+
         isRunning = true
-        process.env.VITEST_POOL_ID = String(message.poolId)
-        process.env.VITEST_WORKER_ID = String(message.context.workerId)
 
         try {
-          runPromise = entrypoint.collect(message.context, worker)
+          runPromise = entrypoint.collect({ ...setupContext, ...message.context }, worker)
             .catch(error => serializeError(error))
           const error = await runPromise
 
@@ -111,10 +154,19 @@ export function init(worker: Options): void {
 
       case 'stop': {
         await runPromise
-        const error = await entrypoint.teardown()
-          .catch(error => serializeError(error))
 
-        send({ type: 'stopped', error, __vitest_worker_response__ })
+        try {
+          const error = await entrypoint.teardown()
+            .catch(error => serializeError(error))
+
+          await workerTeardown?.()
+
+          send({ type: 'stopped', error, __vitest_worker_response__ })
+        }
+        catch (error) {
+          send({ type: 'stopped', error: serializeError(error), __vitest_worker_response__ })
+        }
+
         worker.teardown?.()
 
         break

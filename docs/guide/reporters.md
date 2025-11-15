@@ -614,7 +614,7 @@ export default defineConfig({
 ```
 :::
 
-Additionally, you can define your own [custom reporters](/advanced/reporters) and use them by specifying their file path:
+Additionally, you can define your own [custom reporters](/guide/advanced/reporters) and use them by specifying their file path:
 
 ```bash
 npx vitest --reporter=./path/to/reporter.ts
