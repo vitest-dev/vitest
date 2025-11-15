@@ -208,6 +208,7 @@ export async function collectTests(
         end: definition.end,
         start: definition.start,
         annotations: [],
+        artifacts: [],
         meta: {
           typecheck: true,
         },

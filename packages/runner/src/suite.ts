@@ -318,6 +318,7 @@ function createSuiteCollector(
             : 'run',
       meta: options.meta ?? Object.create(null),
       annotations: [],
+      artifacts: [],
     }
     const handler = options.handler
     if (task.mode === 'run' && !handler) {
