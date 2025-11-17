@@ -16,13 +16,13 @@ import type { TestSpecification } from './spec'
 import type { TestRunEndReason } from './types/reporter'
 import assert from 'node:assert'
 import { createHash } from 'node:crypto'
-import { existsSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
 import { copyFile, mkdir, writeFile } from 'node:fs/promises'
 import { isPrimitive } from '@vitest/utils/helpers'
 import { serializeValue } from '@vitest/utils/serialize'
 import { parseErrorStacktrace } from '@vitest/utils/source-map'
 import mime from 'mime/lite'
-import { basename, extname, resolve } from 'pathe'
+import { basename, dirname, extname, resolve } from 'pathe'
 
 export class TestRun {
   constructor(private vitest: Vitest) {}
@@ -155,6 +155,26 @@ export class TestRun {
         else {
           error.stacks = parseErrorStacktrace(error, {
             frameFilter: project.config.onStackTrace,
+            getSourceMap: (id) => {
+              const result = project.vite.moduleGraph.getModuleById(id)?.transformResult
+              // this could happen for bundled dependencies in node_modules/.vite
+              if (result && !result.map) {
+                const sourceMapUrl = retrieveSourceMapURL(result.code)
+                if (!sourceMapUrl) {
+                  return null
+                }
+                const filepathDir = dirname(id)
+                const sourceMapPath = resolve(filepathDir, sourceMapUrl)
+                try {
+                  const map = JSON.parse(readFileSync(sourceMapPath, 'utf-8'))
+                  return map
+                }
+                catch {
+                  return null
+                }
+              }
+              return result?.map
+            },
           })
         }
       })
@@ -271,6 +291,20 @@ export class TestRun {
       }
     }
   }
+}
+
+function retrieveSourceMapURL(source: string): string | null {
+  const re = /\/\/[@#]\s*sourceMappingURL=([^\s'"]+)\s*$|\/\*[@#]\s*sourceMappingURL=[^\s*'"]+\s*\*\/\s*$/gm
+  // continue executing the search to find the *last* sourceMappingURL to avoid picking up souceMappingURL from comments, strings, etc
+  let lastMatch, match
+  // eslint-disable-next-line no-cond-assign
+  while ((match = re.exec(source))) {
+    lastMatch = match
+  }
+  if (!lastMatch) {
+    return null
+  }
+  return lastMatch[1]
 }
 
 function sanitizeFilePath(s: string): string {
