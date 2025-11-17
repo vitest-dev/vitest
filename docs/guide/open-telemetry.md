@@ -55,7 +55,7 @@ If you want to provide a TypeScript file, make sure to familiarize yourself with
 
 ## View Traces
 
-To generate traces, run Vitest as usual. It is preferable to run Vitest in [watch mode](/config/watch), so OpenTelemetry has enough time to process and send HTTP requests properly.
+To generate traces, run Vitest as usual. You can run Vitest in either watch mode or run mode. Vitest will call `sdk.shutdown()` manually after everything is finished to make sure traces are handled properly.
 
 You can view traces using any of the open source or commercial products that support OpenTelemetry API. If you did not use OpenTelemetry before, we recommend starting with [Jaeger](https://www.jaegertracing.io/docs/2.11/getting-started/#all-in-one) because it is really easy to setup.
 

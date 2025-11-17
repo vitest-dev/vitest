@@ -267,8 +267,9 @@ export class PoolRunner {
           })
         }),
         STOP_TIMEOUT,
-      )
-      stopSpan.end()
+      ).finally(() => {
+        stopSpan.end()
+      })
 
       this._eventEmitter.removeAllListeners()
       this._offCancel()

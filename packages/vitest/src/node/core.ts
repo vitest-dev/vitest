@@ -1242,16 +1242,16 @@ export class Vitest {
           })())
         }
 
-        closePromises.push(this._traces?.finish())
         closePromises.push(...this._onClose.map(fn => fn()))
 
-        return Promise.allSettled(closePromises).then((results) => {
+        await Promise.allSettled(closePromises).then((results) => {
           results.forEach((r) => {
             if (r.status === 'rejected') {
               this.logger.error('error during close', r.reason)
             }
           })
         })
+        await this._traces?.finish()
       })()
     }
     return this.closingPromise
