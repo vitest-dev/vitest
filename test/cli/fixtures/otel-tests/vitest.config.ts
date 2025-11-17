@@ -1,3 +1,10 @@
 export default {
-  test: {}
+  test: {
+    // experimental: {
+    //   openTelemetry: {
+    //     enabled: true,
+    //     sdkPath: './otel.sdk.js',
+    //   },
+    // },
+  }
 }
