@@ -825,6 +825,17 @@ export interface InlineConfig {
    * @default '.vitest-attachments'
    */
   attachmentsDir?: string
+
+  /** @experimental */
+  experimental?: {
+    /**
+     * {@link https://vitest.dev/guide/open-telemetry}
+     */
+    openTelemetry?: {
+      enabled: boolean
+      sdkPath?: string
+    }
+  }
 }
 
 export interface TypecheckConfig {

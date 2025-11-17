@@ -1,6 +1,8 @@
+import type { Span } from '@opentelemetry/api'
 import type { DevEnvironment, FetchResult, Rollup, TransformResult } from 'vite'
 import type { FetchFunctionOptions } from 'vite/module-runner'
 import type { FetchCachedFileSystemResult } from '../../types/general'
+import type { OTELCarrier, Traces } from '../../utils/traces'
 import type { VitestResolver } from '../resolver'
 import { existsSync, mkdirSync } from 'node:fs'
 import { readFile, rename, stat, unlink, writeFile } from 'node:fs/promises'
@@ -24,30 +26,35 @@ export interface VitestFetchFunction {
     importer: string | undefined,
     environment: DevEnvironment,
     cacheFs: boolean,
-    options?: FetchFunctionOptions
+    options?: FetchFunctionOptions,
+    otelCarrier?: OTELCarrier
   ): Promise<FetchResult | FetchCachedFileSystemResult>
 }
 
 export function createFetchModuleFunction(
   resolver: VitestResolver,
+  traces: Traces,
   tmpDir: string = join(tmpdir(), nanoid()),
   dump?: DumpOptions,
 ): VitestFetchFunction {
-  return async (
-    url,
-    importer,
-    environment,
-    cacheFs,
-    options,
-  ) => {
+  const fetcher = async (
+    fetcherSpan: Span,
+    url: string,
+    importer: string | undefined,
+    environment: DevEnvironment,
+    cacheFs: boolean,
+    options?: FetchFunctionOptions,
+  ): Promise<FetchResult | FetchCachedFileSystemResult> => {
     // We are copy pasting Vite's externalization logic from `fetchModule` because
     // we instead rely on our own `shouldExternalize` method because Vite
     // doesn't support `resolve.external` in non SSR environments (jsdom/happy-dom)
     if (url.startsWith('data:')) {
+      fetcherSpan.setAttribute('vitest.module.external', url)
       return { externalize: url, type: 'builtin' }
     }
 
     if (url === '/@vite/client' || url === '@vite/client') {
+      fetcherSpan.setAttribute('vitest.module.external', url)
       // this will be stubbed
       return { externalize: '/@vite/client', type: 'module' }
     }
@@ -55,6 +62,7 @@ export function createFetchModuleFunction(
     const isFileUrl = url.startsWith('file://')
 
     if (isExternalUrl(url) && !isFileUrl) {
+      fetcherSpan.setAttribute('vitest.module.external', url)
       return { externalize: url, type: 'network' }
     }
 
@@ -65,17 +73,25 @@ export function createFetchModuleFunction(
     const moduleGraphModule = await environment.moduleGraph.ensureEntryFromUrl(unwrapId(url))
     const cached = !!moduleGraphModule.transformResult
 
+    if (moduleGraphModule.file) {
+      fetcherSpan.setAttribute('code.file.path', moduleGraphModule.file)
+    }
+
     // if url is already cached, we can just confirm it's also cached on the server
     if (options?.cached && cached) {
       return { cache: true }
     }
 
     if (moduleGraphModule.id) {
-      const externalize = await resolver.shouldExternalize(moduleGraphModule.id)
+      const id = moduleGraphModule.id
+      const externalize = await resolver.shouldExternalize(id)
       if (externalize) {
+        fetcherSpan.setAttribute('vitest.module.external', externalize)
         return { externalize, type: 'module' }
       }
     }
+
+    fetcherSpan.setAttribute('vitest.module.external', false)
 
     let moduleRunnerModule: FetchResult | undefined
 
@@ -107,6 +123,26 @@ export function createFetchModuleFunction(
           inlineSourceMap: false,
         },
       ).catch(handleRollupError)
+    }
+
+    if ('id' in moduleRunnerModule) {
+      fetcherSpan.setAttributes({
+        'vitest.fetched_module.invalidate': moduleRunnerModule.invalidate,
+        'vitest.fetched_module.code_length': moduleRunnerModule.code.length,
+        'vitest.fetched_module.id': moduleRunnerModule.id,
+        'vitest.fetched_module.url': moduleRunnerModule.url,
+        'vitest.fetched_module.cache': false,
+      })
+      if (moduleRunnerModule.file) {
+        fetcherSpan.setAttribute('code.file.path', moduleRunnerModule.file)
+      }
+    }
+    else if ('cache' in moduleRunnerModule) {
+      fetcherSpan.setAttribute('vitest.fetched_module.cache', moduleRunnerModule.cache)
+    }
+    else {
+      fetcherSpan.setAttribute('vitest.fetched_module.type', moduleRunnerModule.type)
+      fetcherSpan.setAttribute('vitest.fetched_module.external', moduleRunnerModule.externalize)
     }
 
     const result = processResultSource(environment, moduleRunnerModule)
@@ -154,6 +190,26 @@ export function createFetchModuleFunction(
     )
     await promises.get(tmp)
     return getCachedResult(result, tmp)
+  }
+  return async (
+    url,
+    importer,
+    environment,
+    cacheFs,
+    options,
+    otelCarrier,
+  ) => {
+    await traces.waitInit()
+    const context = otelCarrier
+      ? traces.getContextFromCarrier(otelCarrier)
+      : undefined
+    return traces.$(
+      'vitest.module.transform',
+      context
+        ? { context }
+        : {},
+      span => fetcher(span, url, importer, environment, cacheFs, options),
+    )
   }
 }
 

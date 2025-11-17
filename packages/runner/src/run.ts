@@ -296,6 +296,7 @@ export async function runTest(test: Test, runner: VitestRunner): Promise<void> {
   setCurrentTest(test)
 
   const suite = test.suite || test.file
+  const $ = runner.trace!
 
   const repeats = test.repeats ?? 0
   for (let repeatCount = 0; repeatCount <= repeats; repeatCount++) {
@@ -310,16 +311,16 @@ export async function runTest(test: Test, runner: VitestRunner): Promise<void> {
 
         test.result.repeatCount = repeatCount
 
-        beforeEachCleanups = await callSuiteHook(
+        beforeEachCleanups = await $('test.beforeEach', () => callSuiteHook(
           suite,
           test,
           'beforeEach',
           runner,
           [test.context, suite],
-        )
+        ))
 
         if (runner.runTask) {
-          await runner.runTask(test)
+          await $('test.callback', () => runner.runTask!(test))
         }
         else {
           const fn = getFn(test)
@@ -328,7 +329,7 @@ export async function runTest(test: Test, runner: VitestRunner): Promise<void> {
               'Test function is not found. Did you add it using `setFn`?',
             )
           }
-          await fn()
+          await $('test.callback', () => fn())
         }
 
         await runner.onAfterTryTask?.(test, {
@@ -357,26 +358,30 @@ export async function runTest(test: Test, runner: VitestRunner): Promise<void> {
       }
 
       try {
-        await callSuiteHook(suite, test, 'afterEach', runner, [
+        await $('test.afterEach', () => callSuiteHook(suite, test, 'afterEach', runner, [
           test.context,
           suite,
-        ])
-        await callCleanupHooks(runner, beforeEachCleanups)
+        ]))
+        if (beforeEachCleanups.length) {
+          await $('test.cleanup', () => callCleanupHooks(runner, beforeEachCleanups))
+        }
         await callFixtureCleanup(test.context)
       }
       catch (e) {
         failTask(test.result, e, runner.config.diffOptions)
       }
 
-      await callTestHooks(runner, test, test.onFinished || [], 'stack')
+      if (test.onFinished?.length) {
+        await $('test.onFinished', () => callTestHooks(runner, test, test.onFinished!, 'stack'))
+      }
 
-      if (test.result.state === 'fail') {
-        await callTestHooks(
+      if (test.result.state === 'fail' && test.onFailed?.length) {
+        await $('test.onFailed', () => callTestHooks(
           runner,
           test,
-          test.onFailed || [],
+          test.onFailed!,
           runner.config.sequence.hooks,
-        )
+        ))
       }
 
       test.onFailed = undefined
@@ -486,6 +491,7 @@ export async function runSuite(suite: Suite, runner: VitestRunner): Promise<void
     state: mode === 'skip' || mode === 'todo' ? mode : 'run',
     startTime: unixNow(),
   }
+  const $ = runner.trace!
 
   updateTask('suite-prepare', suite, runner)
 
@@ -504,13 +510,13 @@ export async function runSuite(suite: Suite, runner: VitestRunner): Promise<void
   else {
     try {
       try {
-        beforeAllCleanups = await callSuiteHook(
+        beforeAllCleanups = await $('suite.beforeAll', () => callSuiteHook(
           suite,
           suite,
           'beforeAll',
           runner,
           [suite],
-        )
+        ))
       }
       catch (e) {
         markTasksAsSkipped(suite, runner)
@@ -550,8 +556,10 @@ export async function runSuite(suite: Suite, runner: VitestRunner): Promise<void
     }
 
     try {
-      await callSuiteHook(suite, suite, 'afterAll', runner, [suite])
-      await callCleanupHooks(runner, beforeAllCleanups)
+      await $('suite.afterAll', () => callSuiteHook(suite, suite, 'afterAll', runner, [suite]))
+      if (beforeAllCleanups.length) {
+        await $('suite.cleanup', () => callCleanupHooks(runner, beforeAllCleanups))
+      }
       if (suite.file === suite) {
         const context = getFileContext(suite as File)
         await callFixtureCleanup(context)
@@ -590,11 +598,35 @@ export async function runSuite(suite: Suite, runner: VitestRunner): Promise<void
 let limitMaxConcurrency: ReturnType<typeof limitConcurrency>
 
 async function runSuiteChild(c: Task, runner: VitestRunner) {
+  const $ = runner.trace!
   if (c.type === 'test') {
-    return limitMaxConcurrency(() => runTest(c, runner))
+    return limitMaxConcurrency(() => $(
+      'run.test',
+      {
+        'vitest.test.id': c.id,
+        'vitest.test.name': c.name,
+        'vitest.test.mode': c.mode,
+        'vitest.test.timeout': c.timeout,
+        'code.file.path': c.file.filepath,
+        'code.line.number': c.location?.line,
+        'code.column.number': c.location?.column,
+      },
+      () => runTest(c, runner),
+    ))
   }
   else if (c.type === 'suite') {
-    return runSuite(c, runner)
+    return $(
+      'run.suite',
+      {
+        'vitest.suite.id': c.id,
+        'vitest.suite.name': c.name,
+        'vitest.suite.mode': c.mode,
+        'code.file.path': c.file.filepath,
+        'code.line.number': c.location?.line,
+        'code.column.number': c.location?.column,
+      },
+      () => runSuite(c, runner),
+    )
   }
 }
 
@@ -613,13 +645,28 @@ export async function runFiles(files: File[], runner: VitestRunner): Promise<voi
         }
       }
     }
-    await runSuite(file, runner)
+    await runner.trace!(
+      'run.spec',
+      {
+        'code.file.path': file.filepath,
+        'vitest.suite.tasks.length': file.tasks.length,
+      },
+      () => runSuite(file, runner),
+    )
   }
 }
 
 const workerRunners = new WeakSet<VitestRunner>()
 
+function defaultTrace<T>(_: string, attributes: any, cb?: () => T): T {
+  if (typeof attributes === 'function') {
+    return attributes() as T
+  }
+  return cb!()
+}
+
 export async function startTests(specs: string[] | FileSpecification[], runner: VitestRunner): Promise<File[]> {
+  runner.trace ??= defaultTrace
   const cancel = runner.cancel?.bind(runner)
   // Ideally, we need to have an event listener for this, but only have a runner here.
   // Adding another onCancel felt wrong (maybe it needs to be refactored)
@@ -665,6 +712,8 @@ export async function startTests(specs: string[] | FileSpecification[], runner: 
 }
 
 async function publicCollect(specs: string[] | FileSpecification[], runner: VitestRunner): Promise<File[]> {
+  runner.trace ??= defaultTrace
+
   const paths = specs.map(f => typeof f === 'string' ? f : f.filepath)
 
   await runner.onBeforeCollect?.(paths)

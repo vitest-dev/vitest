@@ -1,4 +1,5 @@
 import type { WorkerGlobalState, WorkerSetupContext } from '../../types/worker'
+import type { Traces } from '../../utils/traces'
 import { init } from './init'
 
 if (!process.send) {
@@ -26,7 +27,7 @@ if (isProfiling) {
 }
 
 export default function workerInit(options: {
-  runTests: (method: 'run' | 'collect', state: WorkerGlobalState) => Promise<void>
+  runTests: (method: 'run' | 'collect', state: WorkerGlobalState, traces: Traces) => Promise<void>
   setup?: (context: WorkerSetupContext) => Promise<() => Promise<unknown>>
 }): void {
   const { runTests } = options
@@ -36,14 +37,14 @@ export default function workerInit(options: {
     on: cb => processOn('message', cb),
     off: cb => processOff('message', cb),
     teardown: () => processRemoveAllListeners('message'),
-    runTests: state => executeTests('run', state),
-    collectTests: state => executeTests('collect', state),
+    runTests: (state, traces) => executeTests('run', state, traces),
+    collectTests: (state, traces) => executeTests('collect', state, traces),
     setup: options.setup,
   })
 
-  async function executeTests(method: 'run' | 'collect', state: WorkerGlobalState) {
+  async function executeTests(method: 'run' | 'collect', state: WorkerGlobalState, traces: Traces) {
     try {
-      await runTests(method, state)
+      await runTests(method, state, traces)
     }
     finally {
       process.exit = processExit

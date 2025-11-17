@@ -775,6 +775,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
     },
   },
 
+  experimental: null,
   // disable CLI options
   cliExclude: null,
   server: null,

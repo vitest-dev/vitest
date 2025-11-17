@@ -1,10 +1,17 @@
 import type { CancelReason, File, TaskEventPack, TaskResultPack, TestAnnotation } from '@vitest/runner'
 import type { SnapshotResult } from '@vitest/snapshot'
 import type { FetchFunctionOptions, FetchResult } from 'vite/module-runner'
+import type { OTELCarrier } from '../utils/traces'
 import type { AfterSuiteRunMeta, FetchCachedFileSystemResult, ResolveFunctionResult, UserConsoleLog } from './general'
 
 export interface RuntimeRPC {
-  fetch: (id: string, importer: string | undefined, environment: string, options?: FetchFunctionOptions) => Promise<FetchResult | FetchCachedFileSystemResult>
+  fetch: (
+    id: string,
+    importer: string | undefined,
+    environment: string,
+    options?: FetchFunctionOptions,
+    otelCarrier?: OTELCarrier,
+  ) => Promise<FetchResult | FetchCachedFileSystemResult>
   resolve: (id: string, importer: string | undefined, environment: string) => Promise<ResolveFunctionResult | null>
   transform: (id: string) => Promise<{ code?: string }>
 
