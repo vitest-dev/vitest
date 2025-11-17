@@ -14,7 +14,7 @@ import { fetchModule } from 'vite'
 import { hash } from '../hash'
 
 const saveCachePromises = new Map<string, Promise<FetchResult>>()
-const readFilePromises = new Map<string, Promise<string>>()
+const readFilePromises = new Map<string, Promise<string | null>>()
 
 class ModuleFetcher {
   private tmpDirectories = new Set<string>()
@@ -154,8 +154,16 @@ class ModuleFetcher {
     environment: DevEnvironment,
     moduleGraphModule: EnvironmentModuleNode,
   ): Promise<string> {
-    if (moduleGraphModule.file) {
-      return this.readFileConcurrently(moduleGraphModule.file)
+    if (
+      moduleGraphModule.file
+      // \x00 is a virtual file convention
+      && !moduleGraphModule.file.startsWith('\x00')
+      && !moduleGraphModule.file.startsWith('virtual:')
+    ) {
+      const result = await this.readFileConcurrently(moduleGraphModule.file)
+      if (result != null) {
+        return result
+      }
     }
 
     const loadResult = await environment.pluginContainer.load(moduleGraphModule.id!)
@@ -240,11 +248,12 @@ class ModuleFetcher {
     return returnResult
   }
 
-  private readFileConcurrently(file: string): Promise<string> {
+  private readFileConcurrently(file: string): Promise<string | null> {
     if (!readFilePromises.has(file)) {
       readFilePromises.set(
         file,
-        readFile(file, 'utf-8').finally(() => {
+        // virtual file can have a "file" property
+        readFile(file, 'utf-8').catch(() => null).finally(() => {
           readFilePromises.delete(file)
         }),
       )
