@@ -62,7 +62,7 @@ export class Traces {
         throw new Error(`"@opentelemetry/api" is not installed locally. Make sure you have setup OpenTelemetry instrumentation: https://vitest.dev/guide/open-telemetry`)
       })
       const sdkInit = (options.sdkPath ? import(options.sdkPath!) : Promise.resolve()).catch((cause) => {
-        throw new Error(`Failed to import custom OpenTelemetry SDK script: ${options.sdkPath}.`, { cause })
+        throw new Error(`Failed to import custom OpenTelemetry SDK script (${options.sdkPath}): ${cause.message}`)
       })
       this.#init = Promise.all([sdkInit, apiInit]).then(([sdk]) => {
         if (sdk != null) {
