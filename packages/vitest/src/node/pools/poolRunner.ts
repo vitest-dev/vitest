@@ -45,7 +45,7 @@ export class PoolRunner {
     return this._state === RunnerState.STOPPED
   }
 
-  public get waitForTerminated(): Promise<void> {
+  public waitForTerminated(): Promise<void> {
     return this._terminatePromise
   }
 

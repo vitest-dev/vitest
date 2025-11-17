@@ -78,7 +78,7 @@ export class Pool {
 
       // active tasks receive cancel signal and shut down gracefully
       async function cancelTask() {
-        await runner.waitForTerminated
+        await runner.waitForTerminated()
         resolver.reject(new Error('Cancelled'))
       }
 
