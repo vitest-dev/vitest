@@ -159,7 +159,7 @@ jobs:
         run: pnpm run build
 
       - name: Test
-        run: pnpm run test:ci
+        run: pnpm run test:ci:cache
 
   test-browser:
     needs: changed
