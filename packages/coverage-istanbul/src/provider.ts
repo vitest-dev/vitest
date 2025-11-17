@@ -5,6 +5,8 @@ import type { CoverageProvider, ReportContext, ResolvedCoverageOptions, Vite, Vi
 import { existsSync, promises as fs } from 'node:fs'
 // @ts-expect-error missing types
 import { defaults as istanbulDefaults } from '@istanbuljs/schema'
+import { addMapping, GenMapping, toEncodedMap } from '@jridgewell/gen-mapping'
+import { eachMapping, TraceMap } from '@jridgewell/trace-mapping'
 import libCoverage from 'istanbul-lib-coverage'
 import { createInstrumenter } from 'istanbul-lib-instrument'
 import libReport from 'istanbul-lib-report'
@@ -85,6 +87,30 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider<ResolvedCover
       id,
       sourceMap as any,
     )
+
+    const transformMap = new GenMapping(sourceMap)
+
+    eachMapping(new TraceMap(sourceMap as any), (mapping) => {
+      addMapping(transformMap, {
+        generated: { line: mapping.generatedLine, column: mapping.generatedColumn },
+        original: { line: mapping.generatedLine, column: mapping.generatedColumn },
+        content: sourceCode,
+        name: mapping.name || '',
+        source: mapping.source || '',
+      })
+    })
+
+    const encodedMap = toEncodedMap(transformMap)
+    delete encodedMap.file
+    delete encodedMap.ignoreList
+    delete encodedMap.sourceRoot
+
+    this.instrumenter.instrumentSync(
+      sourceCode,
+      id,
+      encodedMap as any,
+    )
+
     const map = this.instrumenter.lastSourceMap() as any
     this.transformedModuleIds.add(id)
 
