@@ -1,24 +1,31 @@
 import { test } from 'vitest'
 import { runInlineTests } from '../../test-utils'
 
-const globalsGlobalExtend = /* ts */`
-  import { test, describe } from 'vitest'
-
-  function toMatchTest(this, expected) {
-    if (this.task?.name !== expected) {
-      return { pass: false, message: () => 'Active: "' + this.task?.name + '"\\nExpected: "' + expected + '"' }
-    }
-
-    return { pass: true, message: () => undefined }
+const toMatchTest = /* ts */`
+export function toMatchTest(this, expected) {
+  if (this.task?.name !== expected) {
+    return { pass: false, message: () => 'Active: "' + this.task?.name + '"\\nExpected: "' + expected + '"' }
   }
+
+  return { pass: true, message: () => undefined }
+}
+
+export function delay() {
+  return new Promise(resolve => {
+    setTimeout(resolve, 100)
+  })
+}
+`
+
+const globals = /* ts */`
+  import { test, describe } from 'vitest'
+  import { delay, toMatchTest } from './to-match-test.ts'
 
   expect.extend({ toMatchTest })
 
   describe('tests', { /* options */ }, async () => {
     test('first', async () => {
-      const { promise, resolve } = Promise.withResolvers()
-      setTimeout(resolve, 100)
-      await promise
+      await delay()
 
       expect('first').toMatchTest()
     })
@@ -29,53 +36,15 @@ const globalsGlobalExtend = /* ts */`
   })
 `
 
-const globalsLocalExtend = /* ts */`
-  import { test, describe } from 'vitest'
-
-  function toMatchTest(this, expected) {
-    if (this.task?.name !== expected) {
-      return { pass: false, message: () => 'Active: "' + this.task?.name + '"\\nExpected: "' + expected + '"' }
-    }
-
-    return { pass: true, message: () => undefined }
-  }
-
-  describe('tests', { /* options */ }, async () => {
-    test('first', async () => {
-      expect.extend({ toMatchTest })
-
-      const { promise, resolve } = Promise.withResolvers()
-      setTimeout(resolve, 100)
-      await promise
-
-      expect('first').toMatchTest()
-    })
-
-    test('second', () => {
-      expect.extend({ toMatchTest })
-      expect('second').toMatchTest()
-    })
-  })
-`
-
-const globalImportGlobalExtend = /* ts */`
+const globalImport = /* ts */`
   import { test, describe, expect } from 'vitest'
-
-  function toMatchTest(this, expected) {
-    if (this.task?.name !== expected) {
-      return { pass: false, message: () => 'Active: "' + this.task?.name + '"\\nExpected: "' + expected + '"' }
-    }
-
-    return { pass: true, message: () => undefined }
-  }
+  import { delay, toMatchTest } from './to-match-test.ts'
 
   expect.extend({ toMatchTest })
 
   describe('tests', { /* options */ }, async () => {
     test('first', async () => {
-      const { promise, resolve } = Promise.withResolvers()
-      setTimeout(resolve, 100)
-      await promise
+      await delay()
 
       expect('first').toMatchTest()
     })
@@ -86,54 +55,15 @@ const globalImportGlobalExtend = /* ts */`
   })
 `
 
-const globalImportLocalExtend = /* ts */`
+const fromContextGlobalExtend = /* ts */`
   import { test, describe, expect } from 'vitest'
-
-  function toMatchTest(this, expected) {
-    if (this.task?.name !== expected) {
-      return { pass: false, message: () => 'Active: "' + this.task?.name + '"\\nExpected: "' + expected + '"' }
-    }
-
-    return { pass: true, message: () => undefined }
-  }
-
-  describe('tests', { /* options */ }, async () => {
-    test('first', async () => {
-      expect.extend({ toMatchTest })
-
-      const { promise, resolve } = Promise.withResolvers()
-      setTimeout(resolve, 100)
-      await promise
-
-      expect('first').toMatchTest()
-    })
-
-    test('second', () => {
-      expect.extend({ toMatchTest })
-
-      expect('second').toMatchTest()
-    })
-  })
-`
-
-const contextGlobalExtend = /* ts */`
-  import { test, describe, expect } from 'vitest'
-
-  function toMatchTest(this, expected) {
-    if (this.task?.name !== expected) {
-      return { pass: false, message: () => 'Active: "' + this.task?.name + '"\\nExpected: "' + expected + '"' }
-    }
-
-    return { pass: true, message: () => undefined }
-  }
+  import { delay, toMatchTest } from './to-match-test.ts'
 
   expect.extend({ toMatchTest })
 
   describe('tests', { /* options */ }, async () => {
     test('first', async ({ expect }) => {
-      const { promise, resolve } = Promise.withResolvers()
-      setTimeout(resolve, 100)
-      await promise
+      await delay()
 
       expect('first').toMatchTest()
     })
@@ -144,24 +74,15 @@ const contextGlobalExtend = /* ts */`
   })
 `
 
-const contextLocalExtend = /* ts */`
+const fromContextLocalExtend = /* ts */`
   import { test, describe } from 'vitest'
-
-  function toMatchTest(this, expected) {
-    if (this.task?.name !== expected) {
-      return { pass: false, message: () => 'Active: "' + this.task?.name + '"\\nExpected: "' + expected + '"' }
-    }
-
-    return { pass: true, message: () => undefined }
-  }
+  import { delay, toMatchTest } from './to-match-test.ts'
 
   describe('tests', { /* options */ }, async () => {
     test('first', async ({ expect }) => {
       expect.extend({ toMatchTest })
 
-      const { promise, resolve } = Promise.withResolvers()
-      setTimeout(resolve, 100)
-      await promise
+      await delay()
 
       expect('first').toMatchTest()
     })
@@ -176,14 +97,7 @@ const contextLocalExtend = /* ts */`
 
 const testBoundGlobalExtend = /* ts */`
   import { test, describe, expect, createExpect } from 'vitest'
-
-  function toMatchTest(this, expected) {
-    if (this.task?.name !== expected) {
-      return { pass: false, message: () => 'Active: "' + this.task?.name + '"\\nExpected: "' + expected + '"' }
-    }
-
-    return { pass: true, message: () => undefined }
-  }
+  import { delay, toMatchTest } from './to-match-test.ts'
 
   expect.extend({ toMatchTest })
 
@@ -191,9 +105,7 @@ const testBoundGlobalExtend = /* ts */`
     test('first', async ({ task }) => {
       const expect = createExpect(task)
 
-      const { promise, resolve } = Promise.withResolvers()
-      setTimeout(resolve, 100)
-      await promise
+      await delay()
 
       expect('first').toMatchTest()
     })
@@ -208,23 +120,14 @@ const testBoundGlobalExtend = /* ts */`
 
 const testBoundLocalExtend = /* ts */`
   import { test, describe, createExpect } from 'vitest'
-
-  function toMatchTest(this, expected) {
-    if (this.task?.name !== expected) {
-      return { pass: false, message: () => 'Active: "' + this.task?.name + '"\\nExpected: "' + expected + '"' }
-    }
-
-    return { pass: true, message: () => undefined }
-  }
+  import { delay, toMatchTest } from './to-match-test.ts'
 
   describe('tests', { /* options */ }, async () => {
     test('first', async ({ task }) => {
       const expect = createExpect(task)
       expect.extend({ toMatchTest })
 
-      const { promise, resolve } = Promise.withResolvers()
-      setTimeout(resolve, 100)
-      await promise
+      await delay()
 
       expect('first').toMatchTest()
     })
@@ -245,30 +148,21 @@ function withConcurrency(test: string): string {
 describe('serial', { concurrent: true }, () => {
   test.for([
     {
-      name: 'globals & global extend',
-      test: globalsGlobalExtend,
+      name: 'globals',
+      test: globals,
       options: { globals: true },
     },
     {
-      name: 'globals & local extend',
-      test: globalsLocalExtend,
-      options: { globals: true },
-    },
-    {
-      name: 'global import & global extend',
-      test: globalImportGlobalExtend,
-    },
-    {
-      name: 'global import & local extend',
-      test: globalImportLocalExtend,
+      name: 'global import',
+      test: globalImport,
     },
     {
       name: 'context destructuring & global extend',
-      test: contextGlobalExtend,
+      test: fromContextGlobalExtend,
     },
     {
       name: 'context destructuring & local extend',
-      test: contextLocalExtend,
+      test: fromContextLocalExtend,
     },
     {
       name: 'test-bound extend & global extend',
@@ -282,6 +176,7 @@ describe('serial', { concurrent: true }, () => {
     const { stdout } = await runInlineTests(
       {
         'basic.test.ts': test,
+        'to-match-test.ts': toMatchTest,
       },
       { reporters: ['tap'], ...options },
     )
@@ -306,27 +201,19 @@ describe('concurrent', { concurrent: true }, () => {
   // when using globals or global `expect`, context is "lost" or not tracked in concurrent mode
   test.for([
     {
-      name: 'globals & global extend',
-      test: withConcurrency(globalsGlobalExtend),
+      name: 'globals',
+      test: withConcurrency(globals),
       options: { globals: true },
     },
     {
-      name: 'globals & local extend',
-      test: withConcurrency(globalsLocalExtend),
-      options: { globals: true },
-    },
-    {
-      name: 'global import & global extend',
-      test: withConcurrency(globalImportGlobalExtend),
-    },
-    {
-      name: 'global import & local extend',
-      test: withConcurrency(globalImportLocalExtend),
+      name: 'global import',
+      test: withConcurrency(globalImport),
     },
   ] as const)('fails with $name', async ({ options, test }, { expect }) => {
     const { stdout, ctx } = await runInlineTests(
       {
         'basic.test.ts': test,
+        'to-match-test.ts': toMatchTest,
       },
       { reporters: ['tap'], ...options },
     )
@@ -361,11 +248,11 @@ describe('concurrent', { concurrent: true }, () => {
   test.for([
     {
       name: 'context destructuring & global extend',
-      test: withConcurrency(contextGlobalExtend),
+      test: withConcurrency(fromContextGlobalExtend),
     },
     {
       name: 'context destructuring & local extend',
-      test: withConcurrency(contextLocalExtend),
+      test: withConcurrency(fromContextLocalExtend),
     },
     {
       name: 'test-bound extend & global extend',
@@ -379,6 +266,7 @@ describe('concurrent', { concurrent: true }, () => {
     const { stdout } = await runInlineTests(
       {
         'basic.test.ts': test,
+        'to-match-test.ts': toMatchTest,
       },
       { reporters: ['tap'] },
     )
