@@ -174,8 +174,11 @@ export class PoolRunner {
 
       startSpan = this.startTracesSpan('vitest.worker.start')
       const startPromise = this.withTimeout(this.waitForStart(), START_TIMEOUT)
-      const tracesEnabled = this.project.config.experimental.openTelemetry?.enabled === true
-      const tracesSdk = this.project.config.experimental.openTelemetry?.sdkPath
+      const globalConfig = this.project.vitest.config.experimental.openTelemetry
+      const projectConfig = this.project.config.experimental.openTelemetry
+
+      const tracesEnabled = projectConfig?.enabled ?? globalConfig?.enabled === true
+      const tracesSdk = projectConfig?.sdkPath ?? globalConfig?.sdkPath
 
       this.postMessage({
         type: 'start',
