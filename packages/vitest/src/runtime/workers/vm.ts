@@ -41,7 +41,7 @@ export async function runVmTests(method: 'run' | 'collect', state: WorkerGlobalS
     {
       attributes: {
         'vitest.environment': environment.name,
-        'vitest.environment.viteEnvironment': environment.viteEnvironment || environment.name,
+        'vitest.environment.vite_environment': environment.viteEnvironment || environment.name,
       },
     },
     () => environment.setupVM!(ctx.environment.options || ctx.config.environmentOptions || {}),

@@ -58,8 +58,7 @@ export class Traces {
         }
         this.#otel = otel
       }).catch(() => {
-        // TODO: link, message
-        throw new Error(`"@opentelemetry/api" is not installed locally. Make sure you have setup OpenTelemetry instrumentation: https://svelte.dev/docs/kit/observability`)
+        throw new Error(`"@opentelemetry/api" is not installed locally. Make sure you have setup OpenTelemetry instrumentation: https://vitest.dev/guide/open-telemetry`)
       })
       const sdkInit = (options.sdkPath ? import(options.sdkPath!) : Promise.resolve()).catch((cause) => {
         throw new Error(`Failed to import custom OpenTelemetry SDK script: ${options.sdkPath}.`, { cause })

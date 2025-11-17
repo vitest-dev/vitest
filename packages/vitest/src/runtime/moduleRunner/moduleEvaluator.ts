@@ -189,9 +189,9 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
           && this.shouldInterop(module.file, { default: value })
           && cjsExports !== value
         ) {
+          span.addEvent('`exports.default` is assigned, copying values')
           exportAll(cjsExports, value)
           exportsObject.default = value
-          span.addEvent('`exports.default` is assigned, copying values')
           return true
         }
 
@@ -205,8 +205,8 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
           moduleExports !== SYMBOL_NOT_DEFINED
           && isPrimitive(moduleExports)
         ) {
-          defineExport(exportsObject, p, () => undefined)
           span.addEvent(`\`exports.${String(p)}\` is assigned, but module.exports is a primitive. assigning "undefined" values instead to comply with ESM`)
+          defineExport(exportsObject, p, () => undefined)
           return true
         }
 

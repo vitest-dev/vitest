@@ -1,3 +1,4 @@
+import type { FileSpecification } from '@vitest/runner'
 import type { WorkerRequest, WorkerResponse } from '../../node/pools/types'
 import type { WorkerSetupContext } from '../../types/worker'
 import type { VitestWorker } from './types'
@@ -116,8 +117,9 @@ export function init(worker: Options): void {
             {
               context: tracesContext,
               attributes: {
-                // TODO: include :location
-                'vitest.worker.files': message.context.files.map(f => f.filepath),
+                'vitest.worker.specifications': traces.isEnabled()
+                  ? getFilesWithLocations(message.context.files)
+                  : [],
                 'vitest.worker.id': message.context.workerId,
               },
             },
@@ -174,8 +176,9 @@ export function init(worker: Options): void {
             {
               context: tracesContext,
               attributes: {
-                // TODO: include :location
-                'vitest.worker.files': message.context.files.map(f => f.filepath),
+                'vitest.worker.specifications': traces.isEnabled()
+                  ? getFilesWithLocations(message.context.files)
+                  : [],
                 'vitest.worker.id': message.context.workerId,
               },
             },
@@ -229,4 +232,15 @@ export function init(worker: Options): void {
       }
     }
   }
+}
+
+function getFilesWithLocations(files: FileSpecification[]): string[] {
+  return files.flatMap((file) => {
+    if (!file.testLocations) {
+      return file.filepath
+    }
+    return file.testLocations.map((location) => {
+      return `${file}:${location}`
+    })
+  })
 }

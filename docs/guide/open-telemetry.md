@@ -1,18 +1,24 @@
 # Open Telemetry Support <Experimental /> {#open-telemetry-support}
 
-OpenTelemetry traces can be a useful tool to debug the performance and behavior of your application inside tests.
+[OpenTelemetry](https://opentelemetry.io/) traces can be a useful tool to debug the performance and behavior of your application inside tests.
 
-If enabled, Vitest integration starts active spans that are scoped to the test worker.
+If enabled, Vitest integration generates spans that are scoped to your test's worker.
 
 ::: warning
 OpenTelemetry initialization increases the startup time of every test unless Vitest runs without [isolation](/config/isolate). You can see it as the `vitest.runtime.traces` span inside `vitest.worker.start`.
 :::
 
-You can use the OpenTelemetry API yourself to track certain operations in your code. Custom traces automatically inherit the Vitest OpenTelemetry context.
-
-To start using OpenTelemetry in Vitest, specify an SDK module path via [`experimental.openTelemetry.sdkPath`](/config/experimental#opentelemetry) and set `experimental.openTelemetry.enabled` to `true`. Vitest will automatically load the SDK before running all tests and inside of each worker.
+To start using OpenTelemetry in Vitest, specify an SDK module path via [`experimental.openTelemetry.sdkPath`](/config/experimental#opentelemetry) and set `experimental.openTelemetry.enabled` to `true`. Vitest will automatically instrument the whole process and each individual test worker.
 
 Make sure to export the SDK as a default export, so that Vitest can flush the network requests before the process is closed. Note that Vitest doesn't automatically call `start`.
+
+## Quickstart
+
+Before previewing your application traces, install required packages and specify the path to your instrumentation file in the config.
+
+```shell
+npm i @opentelemetry/sdk-node @opentelemetry/auto-instrumentations-node @opentelemetry/exporter-trace-otlp-proto
+```
 
 ::: code-group
 ```js{12} [otel.js]
@@ -53,6 +59,23 @@ Vitest doesn't process the `sdkPath` module, so it is important that the SDK can
 
 If you want to provide a TypeScript file, make sure to familiarize yourself with [TypeScript](https://nodejs.org/api/typescript.html#type-stripping) page in the Node.js documentation.
 
+## Custom Traces
+
+You can use the OpenTelemetry API yourself to track certain operations in your code. Custom traces automatically inherit the Vitest OpenTelemetry context:
+
+```ts
+import { trace } from '@opentelemetry/api'
+import { test } from 'vitest'
+import { db } from './src/db'
+
+const tracer = trace.getTracer('vitest')
+
+test('db connects properly', async () => {
+  // this is shown inside `vitest.test.runner.test.callback` span
+  await tracer.startActiveSpan('db.connect', () => db.connect())
+})
+```
+
 ## View Traces
 
 To generate traces, run Vitest as usual. You can run Vitest in either watch mode or run mode. Vitest will call `sdk.shutdown()` manually after everything is finished to make sure traces are handled properly.
@@ -60,3 +83,9 @@ To generate traces, run Vitest as usual. You can run Vitest in either watch mode
 You can view traces using any of the open source or commercial products that support OpenTelemetry API. If you did not use OpenTelemetry before, we recommend starting with [Jaeger](https://www.jaegertracing.io/docs/2.11/getting-started/#all-in-one) because it is really easy to setup.
 
 <img src="/otel-jaeger.png" />
+
+## `@opentelemetry/api`
+
+Vitest declares `@opentelemetry/api` as an optional peer dependency, which it uses internally to generate spans. When trace collection is not enabled, Vitest will not attempt to use this dependency.
+
+When configuring Vitest to use OpenTelemetry, you will typically install `@opentelemetry/sdk-node`, which includes `@opentelemetry/api` as a transitive dependency, thereby satisfying Vitest's peer dependency requirement. If you encounter an error indicating that `@opentelemetry/api` cannot be found, this typically means trace collection has not been enabled. If the error persists after proper configuration, you may need to install `@opentelemetry/api` explicitly.

@@ -59,7 +59,7 @@ export async function setupEnvironment(context: WorkerSetupContext): Promise<() 
     {
       attributes: {
         'vitest.environment': environment.name,
-        'vitest.environment.viteEnvironment': environment.viteEnvironment || environment.name,
+        'vitest.environment.vite_environment': environment.viteEnvironment || environment.name,
       },
     },
     () => environment.setup(globalThis, environmentOptions || config.environmentOptions || {}),
