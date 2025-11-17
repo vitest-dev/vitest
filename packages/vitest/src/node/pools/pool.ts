@@ -8,7 +8,7 @@ import { TypecheckPoolWorker } from './workers/typecheckWorker'
 import { VmForksPoolWorker } from './workers/vmForksWorker'
 import { VmThreadsPoolWorker } from './workers/vmThreadsWorker'
 
-const WORKER_START_TIMEOUT = 5_000
+const WORKER_START_TIMEOUT = 90_000
 
 interface Options {
   distPath: string
@@ -76,8 +76,9 @@ export class Pool {
       const activeTask = { task, resolver, method, cancelTask }
       this.activeTasks.push(activeTask)
 
+      // active tasks receive cancel signal and shut down gracefully
       async function cancelTask() {
-        await runner.stop()
+        await runner.waitForTerminated()
         resolver.reject(new Error('Cancelled'))
       }
 
@@ -115,15 +116,18 @@ export class Pool {
       const poolId = runner.poolId ?? this.getWorkerId()
       runner.poolId = poolId
 
+      const span = runner.startTracesSpan(`vitest.worker.${method}`)
       // Start running the test in the worker
-      runner.postMessage({
-        __vitest_worker_request__: true,
-        type: method,
-        context: task.context,
-        poolId,
-      })
+      runner.request(method, task.context)
 
       await resolver.promise
+        .catch((error) => {
+          span.recordException(error)
+          throw error
+        })
+        .finally(() => {
+          span.end()
+        })
 
       const index = this.activeTasks.indexOf(activeTask)
       if (index !== -1) {

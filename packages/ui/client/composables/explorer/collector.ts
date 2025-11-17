@@ -90,6 +90,7 @@ export function runCollect(
   summary: CollectorInfo,
   search: string,
   filter: Filter,
+  executionTime: number,
 ) {
   if (start) {
     resetCollectorInfo(summary)
@@ -106,7 +107,7 @@ export function runCollect(
   })
 
   queueMicrotask(() => {
-    collectData(summary)
+    collectData(summary, executionTime)
   })
 
   queueMicrotask(() => {
@@ -290,13 +291,16 @@ export function resetCollectorInfo(summary: CollectorInfo) {
   summary.failedSnapshotEnabled = false
 }
 
-function collectData(summary: CollectorInfo) {
+function collectData(
+  summary: CollectorInfo,
+  time: number,
+) {
   const idMap = client.state.idMap
   const filesMap = new Map(explorerTree.root.tasks.filter(f => idMap.has(f.id)).map(f => [f.id, f]))
   const useFiles = Array.from(filesMap.values()).map(file => [file.id, findById(file.id)] as const)
   const data = {
     files: filesMap.size,
-    time: '',
+    time: time > 1000 ? `${(time / 1000).toFixed(2)}s` : `${Math.round(time)}ms`,
     filesFailed: 0,
     filesSuccess: 0,
     filesIgnore: 0,
@@ -314,27 +318,10 @@ function collectData(summary: CollectorInfo) {
     failedSnapshotEnabled: false,
   } satisfies CollectorInfo
 
-  let time = 0
-  for (const [id, f] of useFiles) {
+  for (const [_, f] of useFiles) {
     if (!f) {
       continue
     }
-    const file = filesMap.get(id)
-    if (file) {
-      file.mode = f.mode
-      file.setupDuration = f.setupDuration
-      file.prepareDuration = f.prepareDuration
-      file.environmentLoad = f.environmentLoad
-      file.collectDuration = f.collectDuration
-      file.duration = f.result?.duration != null ? Math.round(f.result?.duration) : undefined
-      file.state = f.result?.state
-    }
-    time += Math.max(0, f.collectDuration || 0)
-    time += Math.max(0, f.setupDuration || 0)
-    time += Math.max(0, f.result?.duration || 0)
-    time += Math.max(0, f.environmentLoad || 0)
-    time += Math.max(0, f.prepareDuration || 0)
-    data.time = time > 1000 ? `${(time / 1000).toFixed(2)}s` : `${Math.round(time)}ms`
     if (f.result?.state === 'fail') {
       data.filesFailed++
     }

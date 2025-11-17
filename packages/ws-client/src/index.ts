@@ -54,11 +54,11 @@ export function createClient(url: string, options: VitestClientOptions = {}): Vi
     onTestAnnotate(testId, annotation) {
       handlers.onTestAnnotate?.(testId, annotation)
     },
-    onSpecsCollected(specs) {
+    onSpecsCollected(specs, startTime) {
       specs?.forEach(([config, file]) => {
         ctx.state.clearFiles({ config }, [file])
       })
-      handlers.onSpecsCollected?.(specs)
+      handlers.onSpecsCollected?.(specs, startTime)
     },
     onPathsCollected(paths) {
       ctx.state.collectPaths(paths)
@@ -76,8 +76,8 @@ export function createClient(url: string, options: VitestClientOptions = {}): Vi
       ctx.state.updateUserLog(log)
       handlers.onUserConsoleLog?.(log)
     },
-    onFinished(files, errors) {
-      handlers.onFinished?.(files, errors)
+    onFinished(files, errors, coverage, executionTime) {
+      handlers.onFinished?.(files, errors, coverage, executionTime)
     },
     onFinishedReportCoverage() {
       handlers.onFinishedReportCoverage?.()

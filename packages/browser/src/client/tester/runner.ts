@@ -280,6 +280,10 @@ export function createBrowserRunner(
         throw new Error(`Failed to import test file ${filepath}`, { cause: err })
       }
     }
+
+    // disable tracing in the browser for now
+    trace = undefined
+    __setTraces = undefined
   }
 }
 

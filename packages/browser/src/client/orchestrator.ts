@@ -35,7 +35,7 @@ export class IframeOrchestrator {
     this.cancelled = false
 
     const config = getConfig()
-    debug('create testers', options.files.join(', '))
+    debug('create testers', ...options.files.join(', '))
     const container = await getContainer(config)
 
     if (config.browser.ui) {
@@ -62,7 +62,7 @@ export class IframeOrchestrator {
       }
 
       const file = options.files[i]
-      debug('create iframe', file)
+      debug('create iframe', file.filepath)
 
       await this.runIsolatedTestInIframe(
         container,

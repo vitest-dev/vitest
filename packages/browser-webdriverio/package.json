@@ -1,7 +1,7 @@
 {
   "name": "@vitest/browser-webdriverio",
   "type": "module",
-  "version": "4.0.8",
+  "version": "4.0.10",
   "description": "Browser running for Vitest using webdriverio",
   "license": "MIT",
   "funding": "https://opencollective.com/vitest",

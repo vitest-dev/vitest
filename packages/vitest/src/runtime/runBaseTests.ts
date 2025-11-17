@@ -1,5 +1,6 @@
 import type { FileSpecification } from '@vitest/runner'
 import type { Environment } from '../types/environment'
+import type { Traces } from '../utils/traces'
 import type { SerializedConfig } from './config'
 import type { VitestModuleRunner } from './moduleRunner/moduleRunner'
 import { performance } from 'node:perf_hooks'
@@ -22,19 +23,20 @@ export async function run(
   config: SerializedConfig,
   moduleRunner: VitestModuleRunner,
   environment: Environment,
+  traces: Traces,
 ): Promise<void> {
   const workerState = getWorkerState()
 
   const [testRunner] = await Promise.all([
-    resolveTestRunner(config, moduleRunner),
-    setupGlobalEnv(config, environment),
-    startCoverageInsideWorker(config.coverage, moduleRunner, { isolate: config.isolate }),
-    (async () => {
+    traces.$('vitest.runtime.runner', () => resolveTestRunner(config, moduleRunner, traces)),
+    traces.$('vitest.runtime.global_env', () => setupGlobalEnv(config, environment)),
+    traces.$('vitest.runtime.coverage.start', () => startCoverageInsideWorker(config.coverage, moduleRunner, { isolate: config.isolate })),
+    traces.$('vitest.runtime.snapshot.environment', async () => {
       if (!workerState.config.snapshotOptions.snapshotEnvironment) {
         workerState.config.snapshotOptions.snapshotEnvironment
           = await resolveSnapshotEnvironment(config, moduleRunner)
       }
-    })(),
+    }),
   ])
 
   workerState.onCancel((reason) => {
@@ -43,27 +45,39 @@ export async function run(
   })
 
   workerState.durations.prepare = performance.now() - workerState.durations.prepare
+  await traces.$(
+    `vitest.test.runner.${method}`,
+    async () => {
+      for (const file of files) {
+        if (config.isolate) {
+          moduleRunner.mocker.reset()
+          resetModules(workerState.evaluatedModules, true)
+        }
 
-  for (const file of files) {
-    if (config.isolate) {
-      moduleRunner.mocker.reset()
-      resetModules(workerState.evaluatedModules, true)
-    }
+        workerState.filepath = file.filepath
 
-    workerState.filepath = file.filepath
+        if (method === 'run') {
+          await traces.$(
+            `vitest.test.runner.${method}.module`,
+            { attributes: { 'code.file.path': file.filepath } },
+            () => startTests([file], testRunner),
+          )
+        }
+        else {
+          await traces.$(
+            `vitest.test.runner.${method}.module`,
+            { attributes: { 'code.file.path': file.filepath } },
+            () => collectTests([file], testRunner),
+          )
+        }
 
-    if (method === 'run') {
-      await startTests([file], testRunner)
-    }
-    else {
-      await collectTests([file], testRunner)
-    }
+        // reset after tests, because user might call `vi.setConfig` in setupFile
+        vi.resetConfig()
+        // mocks should not affect different files
+        vi.restoreAllMocks()
+      }
+    },
+  )
 
-    // reset after tests, because user might call `vi.setConfig` in setupFile
-    vi.resetConfig()
-    // mocks should not affect different files
-    vi.restoreAllMocks()
-  }
-
-  await stopCoverageInsideWorker(config.coverage, moduleRunner, { isolate: config.isolate })
+  await traces.$('vitest.runtime.coverage.stop', () => stopCoverageInsideWorker(config.coverage, moduleRunner, { isolate: config.isolate }))
 }

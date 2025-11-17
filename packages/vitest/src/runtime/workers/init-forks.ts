@@ -1,6 +1,5 @@
-import type { ResolvedConfig, SerializedConfig } from '../../node/types/config'
 import type { WorkerGlobalState, WorkerSetupContext } from '../../types/worker'
-import v8 from 'node:v8'
+import type { Traces } from '../../utils/traces'
 import { init } from './init'
 
 if (!process.send) {
@@ -28,7 +27,7 @@ if (isProfiling) {
 }
 
 export default function workerInit(options: {
-  runTests: (method: 'run' | 'collect', state: WorkerGlobalState) => Promise<void>
+  runTests: (method: 'run' | 'collect', state: WorkerGlobalState, traces: Traces) => Promise<void>
   setup?: (context: WorkerSetupContext) => Promise<() => Promise<unknown>>
 }): void {
   const { runTests } = options
@@ -38,72 +37,17 @@ export default function workerInit(options: {
     on: cb => processOn('message', cb),
     off: cb => processOff('message', cb),
     teardown: () => processRemoveAllListeners('message'),
-    serialize: v8.serialize,
-    deserialize: v => v8.deserialize(Buffer.from(v)),
-    runTests: state => executeTests('run', state),
-    collectTests: state => executeTests('collect', state),
+    runTests: (state, traces) => executeTests('run', state, traces),
+    collectTests: (state, traces) => executeTests('collect', state, traces),
     setup: options.setup,
   })
 
-  async function executeTests(method: 'run' | 'collect', state: WorkerGlobalState) {
-    state.ctx.config = unwrapSerializableConfig(state.ctx.config)
-
+  async function executeTests(method: 'run' | 'collect', state: WorkerGlobalState, traces: Traces) {
     try {
-      await runTests(method, state)
+      await runTests(method, state, traces)
     }
     finally {
       process.exit = processExit
     }
   }
-}
-
-/**
- * Reverts the wrapping done by `wrapSerializableConfig` in {@link file://./../../node/pool/runtimes/forks.ts}
- */
-function unwrapSerializableConfig(config: SerializedConfig): SerializedConfig {
-  if (config.testNamePattern && typeof config.testNamePattern === 'string') {
-    const testNamePattern = config.testNamePattern as string
-
-    if (testNamePattern.startsWith('$$vitest:')) {
-      config.testNamePattern = parseRegexp(testNamePattern.slice('$$vitest:'.length))
-    }
-  }
-
-  if (
-    config.defines
-    && Array.isArray(config.defines.keys)
-    && config.defines.original
-  ) {
-    const { keys, original } = config.defines
-    const defines: ResolvedConfig['defines'] = {}
-
-    // Apply all keys from the original. Entries which had undefined value are missing from original now
-    for (const key of keys) {
-      defines[key] = original[key]
-    }
-
-    config.defines = defines
-  }
-
-  return config
-}
-
-function parseRegexp(input: string): RegExp {
-  // Parse input
-  // eslint-disable-next-line regexp/no-misleading-capturing-group
-  const m = input.match(/(\/?)(.+)\1([a-z]*)/i)
-
-  // match nothing
-  if (!m) {
-    return /$^/
-  }
-
-  // Invalid flags
-  // eslint-disable-next-line regexp/optimal-quantifier-concatenation
-  if (m[3] && !/^(?!.*?(.).*?\1)[gmixXsuUAJ]+$/.test(m[3])) {
-    return new RegExp(input)
-  }
-
-  // Create the regular expression
-  return new RegExp(m[2], m[3])
 }

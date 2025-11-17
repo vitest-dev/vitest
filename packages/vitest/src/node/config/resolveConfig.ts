@@ -9,6 +9,7 @@ import type {
 } from '../types/config'
 import type { BaseCoverageOptions, CoverageReporterWithOptions } from '../types/coverage'
 import crypto from 'node:crypto'
+import { pathToFileURL } from 'node:url'
 import { slash, toArray } from '@vitest/utils/helpers'
 import { resolveModule } from 'local-pkg'
 import { normalize, relative, resolve } from 'pathe'
@@ -798,6 +799,13 @@ export function resolveConfig(
   resolved.hookTimeout ??= resolved.browser.enabled ? 30_000 : 10_000
 
   resolved.experimental ??= {}
+  if (resolved.experimental.openTelemetry?.sdkPath) {
+    const sdkPath = resolve(
+      resolved.root,
+      resolved.experimental.openTelemetry.sdkPath,
+    )
+    resolved.experimental.openTelemetry.sdkPath = pathToFileURL(sdkPath).toString()
+  }
 
   return resolved
 }

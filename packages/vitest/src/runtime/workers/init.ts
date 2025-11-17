@@ -1,7 +1,9 @@
+import type { FileSpecification } from '@vitest/runner'
 import type { WorkerRequest, WorkerResponse } from '../../node/pools/types'
 import type { WorkerSetupContext } from '../../types/worker'
 import type { VitestWorker } from './types'
 import { serializeError } from '@vitest/utils/error'
+import { Traces } from '../../utils/traces'
 import { createRuntimeRpc } from '../rpc'
 import * as entrypoint from '../worker'
 
@@ -12,6 +14,8 @@ interface Options extends VitestWorker {
 const __vitest_worker_response__ = true
 const memoryUsage = process.memoryUsage.bind(process)
 let reportMemory = false
+
+let traces!: Traces
 
 /** @experimental */
 export function init(worker: Options): void {
@@ -39,7 +43,22 @@ export function init(worker: Options): void {
       case 'start': {
         reportMemory = message.options.reportMemory
 
+        const tracesStart = performance.now()
+
+        traces ??= await new Traces({
+          enabled: message.traces.enabled,
+          sdkPath: message.traces.sdkPath,
+        }).waitInit()
+        const tracesEnd = performance.now()
+
         const { environment, config, pool } = message.context
+        const context = traces.getContextFromCarrier(message.traces.otelCarrier)
+
+        // record telemetry as part of "start"
+        traces
+          .startSpan('vitest.runtime.traces', { startTime: tracesStart }, context)
+          .end(tracesEnd)
+
         try {
           const rpc = createRuntimeRpc(worker)
           setupContext = {
@@ -48,8 +67,13 @@ export function init(worker: Options): void {
             pool,
             rpc,
             projectName: config.name || '',
+            traces,
           }
-          workerTeardown = await worker.setup?.(setupContext)
+          workerTeardown = await traces.$(
+            'vitest.runtime.setup',
+            { context },
+            () => worker.setup?.(setupContext),
+          )
 
           send({ type: 'started', __vitest_worker_response__ })
         }
@@ -87,8 +111,21 @@ export function init(worker: Options): void {
         isRunning = true
 
         try {
-          runPromise = entrypoint.run({ ...setupContext, ...message.context }, worker)
-            .catch(error => serializeError(error))
+          const tracesContext = traces.getContextFromCarrier(message.otelCarrier)
+          runPromise = traces.$(
+            'vitest.runtime.run',
+            {
+              context: tracesContext,
+              attributes: {
+                'vitest.worker.specifications': traces.isEnabled()
+                  ? getFilesWithLocations(message.context.files)
+                  : [],
+                'vitest.worker.id': message.context.workerId,
+              },
+            },
+            () => entrypoint.run({ ...setupContext, ...message.context }, worker, traces)
+              .catch(error => serializeError(error)),
+          )
           const error = await runPromise
 
           send({
@@ -133,8 +170,21 @@ export function init(worker: Options): void {
         isRunning = true
 
         try {
-          runPromise = entrypoint.collect({ ...setupContext, ...message.context }, worker)
-            .catch(error => serializeError(error))
+          const tracesContext = traces.getContextFromCarrier(message.otelCarrier)
+          runPromise = traces.$(
+            'vitest.runtime.collect',
+            {
+              context: tracesContext,
+              attributes: {
+                'vitest.worker.specifications': traces.isEnabled()
+                  ? getFilesWithLocations(message.context.files)
+                  : [],
+                'vitest.worker.id': message.context.workerId,
+              },
+            },
+            () => entrypoint.collect({ ...setupContext, ...message.context }, worker, traces)
+              .catch(error => serializeError(error)),
+          )
           const error = await runPromise
 
           send({
@@ -156,10 +206,19 @@ export function init(worker: Options): void {
         await runPromise
 
         try {
-          const error = await entrypoint.teardown()
-            .catch(error => serializeError(error))
+          const context = traces.getContextFromCarrier(message.otelCarrier)
 
-          await workerTeardown?.()
+          const error = await traces.$(
+            'vitest.runtime.teardown',
+            { context },
+            async () => {
+              const error = await entrypoint.teardown().catch(error => serializeError(error))
+              await workerTeardown?.()
+              return error
+            },
+          )
+
+          await traces.finish()
 
           send({ type: 'stopped', error, __vitest_worker_response__ })
         }
@@ -173,4 +232,15 @@ export function init(worker: Options): void {
       }
     }
   }
+}
+
+function getFilesWithLocations(files: FileSpecification[]): string[] {
+  return files.flatMap((file) => {
+    if (!file.testLocations) {
+      return file.filepath
+    }
+    return file.testLocations.map((location) => {
+      return `${file}:${location}`
+    })
+  })
 }

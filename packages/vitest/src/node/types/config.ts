@@ -836,6 +836,13 @@ export interface InlineConfig {
      * Enable caching of modules on the file system between reruns.
      */
     fsModuleCache?: boolean
+    /**
+     * {@link https://vitest.dev/guide/open-telemetry}
+     */
+    openTelemetry?: {
+      enabled: boolean
+      sdkPath?: string
+    }
   }
 }
 

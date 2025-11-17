@@ -785,6 +785,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
       fsModuleCache: {
         description: 'Enable caching of modules on the file system between reruns.',
       },
+      openTelemetry: null,
     },
   },
   // disable CLI options

@@ -458,10 +458,14 @@ Register a handler that will be called when the server is restarted due to a con
 ## onCancel
 
 ```ts
-function onCancel(fn: (reason: CancelReason) => Awaitable<void>): void
+function onCancel(fn: (reason: CancelReason) => Awaitable<void>): () => void
 ```
 
 Register a handler that will be called when the test run is cancelled with [`vitest.cancelCurrentRun`](#cancelcurrentrun).
+
+::: warning EXPERIMENTAL
+Since 4.0.10, `onCancel` returns a teardown function that will remove the listener.
+:::
 
 ## onClose
 
