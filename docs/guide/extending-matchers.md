@@ -112,6 +112,14 @@ This contains a set of utility functions that you can use to display messages.
 
 Full name of the current test (including describe block).
 
+### `task`
+
+Contains a reference to [the `Test` runner task](/api/advanced/runner#tasks) when available.
+
+::: warning
+When using the global `expect` with concurrent tests, `this.task` is `undefined`. Use `context.expect` instead to ensure `task` is available in custom matchers.
+:::
+
 ### `testPath`
 
 Path to the current test.
