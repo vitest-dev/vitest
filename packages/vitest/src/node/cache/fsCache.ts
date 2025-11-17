@@ -63,7 +63,7 @@ export class FileSystemModuleCache {
   async saveCachedModule<T extends FetchResult>(
     cachedFilePath: string,
     fetchResult: T,
-    importers: SerializedImporters[] = [],
+    importers: string[] = [],
   ): Promise<void> {
     if ('externalize' in fetchResult) {
       await atomicWriteFile(cachedFilePath, `\n// ${this.toBase64(fetchResult)}`)
@@ -180,12 +180,5 @@ export interface CachedInlineModuleMeta {
   id: string
   file: string | null
   code: string
-  importers: SerializedImporters[]
-}
-
-export interface SerializedImporters {
-  url: string
-  id: string
-  file: string | null
-  type: 'js' | 'css' | 'asset'
+  importers: string[]
 }

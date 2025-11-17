@@ -3,7 +3,7 @@ import type { DevEnvironment, EnvironmentModuleNode, FetchResult, Rollup, Transf
 import type { FetchFunctionOptions } from 'vite/module-runner'
 import type { FetchCachedFileSystemResult } from '../../types/general'
 import type { OTELCarrier, Traces } from '../../utils/traces'
-import type { FileSystemModuleCache, SerializedImporters } from '../cache/fsCache'
+import type { FileSystemModuleCache } from '../cache/fsCache'
 import type { VitestResolver } from '../resolver'
 import type { ResolvedConfig } from '../types/config'
 import { existsSync, mkdirSync } from 'node:fs'
@@ -128,15 +128,12 @@ class ModuleFetcher {
     return this.cacheResult(result, cachePath, importers)
   }
 
-  private getSerializedDependencies(node: EnvironmentModuleNode): SerializedImporters[] {
-    const dependencies: SerializedImporters[] = []
+  private getSerializedDependencies(node: EnvironmentModuleNode): string[] {
+    const dependencies: string[] = []
     node.importers.forEach((importer) => {
-      dependencies.push({
-        id: importer.id!,
-        file: importer.file,
-        url: importer.url,
-        type: importer.type,
-      })
+      if (importer.id) {
+        dependencies.push(importer.id)
+      }
     })
     return dependencies
   }
@@ -208,24 +205,10 @@ class ModuleFetcher {
 
         // we populate the module graph to make the watch mode work because it relies on importers
         cachedModule.importers.forEach((importer) => {
-          const environmentNode = environment.moduleGraph.getModuleById(importer.id)
+          const environmentNode = environment.moduleGraph.getModuleById(importer)
           if (environmentNode) {
             moduleGraphModule.importers.add(environmentNode)
-            return
           }
-
-          const node = environment.moduleGraph.createFileOnlyEntry(importer.file || importer.id)
-          moduleGraphModule.importers.add(node)
-          if (!importer.file) {
-            environment.moduleGraph.fileToModulesMap.get(importer.id)?.delete(node)
-          }
-
-          node.url = importer.url
-          node.id = importer.id
-          node.type = importer.type
-
-          environment.moduleGraph.urlToModuleMap.set(importer.url, node)
-          environment.moduleGraph.idToModuleMap.set(importer.id, node)
         })
       }
       return {
@@ -269,7 +252,7 @@ class ModuleFetcher {
   private async cacheResult(
     result: FetchResult,
     cachePath: string,
-    importers: SerializedImporters[] = [],
+    importers: string[] = [],
   ): Promise<FetchResult | FetchCachedFileSystemResult> {
     const returnResult = 'code' in result
       ? getCachedResult(result, cachePath)
