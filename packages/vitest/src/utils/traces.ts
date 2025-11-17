@@ -19,6 +19,7 @@ export interface OTELCarrier {
 
 interface TracesOptions {
   enabled: boolean
+  watchMode?: boolean
   sdkPath?: string
   tracerName?: string
 }
@@ -68,8 +69,8 @@ export class Traces {
           if (sdk.default != null && typeof sdk.default === 'object' && typeof sdk.default.shutdown === 'function') {
             this.#sdk = sdk.default
           }
-          else {
-            console.warn(`OpenTelemetry SDK module (${options.sdkPath}) does not have a default export with a "shutdown" method. Did you forget to export it?`)
+          else if (options.watchMode !== true && process.env.VITEST_MODE !== 'watch') {
+            console.warn(`OpenTelemetry instrumentation module (${options.sdkPath}) does not have a default export with a "shutdown" method. Vitest won't be able to ensure that all traces are processed in time. Try running Vitest in watch mode instead.`)
           }
         }
       }).finally(() => {

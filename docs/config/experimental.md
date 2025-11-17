@@ -33,7 +33,7 @@ You can use a [custom service](/guide/open-telemetry) together with Vitest to pi
 At the moment, Vitest does not start any spans when running in [the browser](/guide/browser/).
 :::
 
-An `sdkPath` is resolved relative to the [`root`](/config/root) of the project and should point to a module that exposes a started NodeSDK instance as a default export. For example:
+An `sdkPath` is resolved relative to the [`root`](/config/root) of the project and should point to a module that exposes a started SDK instance as a default export. For example:
 
 ::: code-group
 ```js [otel.js]
@@ -67,6 +67,5 @@ export default defineConfig({
 :::
 
 ::: warning
-It's important that Node can process `sdkPath` content because it is not transformed by Vitest.
-<!-- TODO To support TypeScript, add a flag(?) -->
+It's important that Node can process `sdkPath` content because it is not transformed by Vitest. See [the guide](/guide/open-telemetry) on how to work with OpenTelemetry inside of Vitest.
 :::

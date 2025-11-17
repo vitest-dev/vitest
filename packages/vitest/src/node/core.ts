@@ -217,6 +217,7 @@ export class Vitest {
     this._traces = new Traces({
       enabled: !!resolved.experimental.openTelemetry?.enabled,
       sdkPath: otelSdkPath,
+      watchMode: resolved.watch,
     })
 
     if (this.config.watch) {
