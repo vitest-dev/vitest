@@ -99,7 +99,7 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
 
     const file = this.convertIdToImportUrl(id)
 
-    const namespace = this._otel.$(
+    const namespace = await this._otel.$(
       'vitest.module.external',
       {
         attributes: { 'code.file.path': file },

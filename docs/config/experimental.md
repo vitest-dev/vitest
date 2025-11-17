@@ -15,7 +15,7 @@ interface OpenTelemetryOptions {
   /**
    * A path to a file that exposes an OpenTelemetry SDK.
    */
-  sdkPath: string
+  sdkPath?: string
 }
 ```
 
