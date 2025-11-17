@@ -77,7 +77,7 @@ By default, Vitest now only excludes tests from `node_modules` and `.git` folder
 
 - `dist` and `cypress` folders
 - `.idea`, `.cache`, `.output`, `.temp` folders
-- config files like `rollup.config.js`, `pretter.config.js`, `ava.config.js` and so on
+- config files like `rollup.config.js`, `prettier.config.js`, `ava.config.js` and so on
 
 If you need to limit the directory where your tests files are located, use the [`test.dir`](/config/dir) option instead because it is more performant than excluding files:
 
