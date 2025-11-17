@@ -1,15 +1,14 @@
 import type { DevEnvironment, FetchResult } from 'vite'
-import type { FetchCachedFileSystemResult } from '../../types/general'
 import type { Logger } from '../logger'
 import type { VitestResolver } from '../resolver'
 import type { ResolvedConfig } from '../types/config'
-import crypto from 'node:crypto'
 import { existsSync, mkdirSync } from 'node:fs'
 import { readFile, rename, rm, stat, unlink, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { dirname, join } from 'pathe'
 import { version as viteVersion } from 'vite'
 import { Vitest } from '../core'
+import { hash } from '../hash'
 
 /**
  * @experimental
@@ -33,9 +32,7 @@ export class FileSystemModuleCache {
     this.logger.log('[cache] cleared fs module cache at', this.fsCacheRoot)
   }
 
-  async getCachedModule(
-    cachedFilePath: string,
-  ): Promise<FetchResult | FetchCachedFileSystemResult | undefined> {
+  async getCachedModule(cachedFilePath: string): Promise<FetchResult | undefined> {
     if (!existsSync(cachedFilePath)) {
       return
     }
@@ -88,16 +85,21 @@ export class FileSystemModuleCache {
     fileContent: string,
   ): string {
     const config = environment.config
-    const viteConfig = JSON.stringify(
+    const cacheConfig = JSON.stringify(
       {
         root: config.root,
-        base: config.base,
+        // at the moment, Vitest always forces base to be /
+        // base: config.base,
         mode: config.mode,
         consumer: config.consumer,
         resolve: config.resolve,
+        // plugins can have different options, so this is not the best key,
+        // but we canot access the options because there is no standard API for it
         plugins: config.plugins.map(p => p.name),
         environment: environment.name,
+        // this affects Vitest CSS plugin
         css: vitestConfig.css,
+        // this affect externalization
         resolver: resolver.options,
       },
       (_, value) => {
@@ -107,15 +109,17 @@ export class FileSystemModuleCache {
         return value
       },
     )
-    const cacheKey = crypto.createHash('sha1')
-      .update(id)
-      .update(fileContent)
-      .update(process.env.NODE_ENV ?? '')
-      .update(this.version)
-      .update(viteConfig)
-      .update(viteVersion)
-      .update(Vitest.version)
-      .digest('hex')
+    const cacheKey = hash(
+      'sha1',
+      id
+      + fileContent
+      + (process.env.NODE_ENV ?? '')
+      + this.version
+      + cacheConfig
+      + viteVersion
+      + Vitest.version,
+      'hex',
+    )
     return join(this.fsCacheRoot, cacheKey)
   }
 }
