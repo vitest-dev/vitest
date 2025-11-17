@@ -837,6 +837,11 @@ export interface InlineConfig {
      */
     fsModuleCache?: boolean
     /**
+     * Path relative to the root of the project where the fs module cache will be stored.
+     * @default join(tmpdir(), 'vitest')
+     */
+    fsModuleCachePath?: string
+    /**
      * {@link https://vitest.dev/guide/open-telemetry}
      */
     openTelemetry?: {

@@ -14,6 +14,13 @@ Enabling this option allows Vitest to keep cached modules on the file system, ma
 
 You can delete the old cache by running `vitest --clearCache`.
 
+## fsModuleCachePath <Version type="experimental">4.0.10</Version> {#fsmodulecachepath}
+
+- **Type:** `string`
+- **Default:** `join(tmpdir(), 'vitest')`
+
+Directory where the file system cache is located.
+
 ## openTelemetry <Version type="experimental">4.0.10</Version> {#opentelemetry}
 
 - **Type:**

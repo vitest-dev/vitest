@@ -227,7 +227,7 @@ export class Vitest {
     }
 
     this._resolver = new VitestResolver(server.config.cacheDir, resolved)
-    this._fsCache = new FileSystemModuleCache(this.logger)
+    this._fsCache = new FileSystemModuleCache()
     this._fetcher = createFetchModuleFunction(
       this._resolver,
       this._config,
@@ -501,13 +501,7 @@ export class Vitest {
    */
   public async experimental_clearCache(): Promise<void> {
     await this.cache.results.clearCache()
-    const projects = [...this.projects]
-    if (this.coreWorkspaceProject && !projects.includes(this.coreWorkspaceProject)) {
-      projects.push(this.coreWorkspaceProject)
-    }
-    await Promise.all(
-      projects.map(p => p._fsCache.clearCache()),
-    )
+    await this._fsCache.clearCache(this)
   }
 
   /**
@@ -1192,7 +1186,7 @@ export class Vitest {
    * Invalidate a file in all projects.
    */
   public invalidateFile(filepath: string): void {
-    this.projects.forEach(({ vite, browser, _fsCache }) => {
+    this.projects.forEach(({ vite, browser }) => {
       const environments = [
         ...Object.values(vite.environments),
         ...Object.values(browser?.vite.environments || {}),

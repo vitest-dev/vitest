@@ -24,7 +24,6 @@ import pm from 'picomatch'
 import { glob } from 'tinyglobby'
 import { setup } from '../api/setup'
 import { createDefinesScript } from '../utils/config-helpers'
-import { FileSystemModuleCache } from './cache/fsCache'
 import { isBrowserEnabled, resolveConfig } from './config/resolveConfig'
 import { serializeConfig } from './config/serializeConfig'
 import { createFetchModuleFunction } from './environments/fetchModule'
@@ -66,7 +65,6 @@ export class TestProject {
   /** @internal */ _hash?: string
   /** @internal */ _resolver!: VitestResolver
   /** @internal */ _fetcher!: VitestFetchFunction
-  /** @internal */ _fsCache!: FileSystemModuleCache
   /** @internal */ _serializedDefines?: string
   /** @inetrnal */ testFilesList: string[] | null = null
 
@@ -561,11 +559,10 @@ export class TestProject {
     this._resolver = new VitestResolver(server.config.cacheDir, this._config)
     this._vite = server
     this._serializedDefines = createDefinesScript(server.config.define)
-    this._fsCache = new FileSystemModuleCache(this.vitest.logger)
     this._fetcher = createFetchModuleFunction(
       this._resolver,
       this._config,
-      this._fsCache,
+      this.vitest._fsCache,
       this.vitest._traces,
       this.tmpDir,
     )
@@ -632,7 +629,6 @@ export class TestProject {
     project._config = vitest.config
     project._resolver = vitest._resolver
     project._fetcher = vitest._fetcher
-    project._fsCache = vitest._fsCache
     project._serializedDefines = createDefinesScript(vitest.vite.config.define)
     project._setHash()
     project._provideObject(vitest.config.provide)

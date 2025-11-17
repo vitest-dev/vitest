@@ -1,5 +1,4 @@
 import type { DevEnvironment, FetchResult } from 'vite'
-import type { Logger } from '../logger'
 import type { VitestResolver } from '../resolver'
 import type { ResolvedConfig } from '../types/config'
 import { existsSync, mkdirSync } from 'node:fs'
@@ -10,26 +9,25 @@ import { version as viteVersion } from 'vite'
 import { Vitest } from '../core'
 import { hash } from '../hash'
 
+// TODO: keep track of stale cache somehow? maybe in a meta file?
+
 /**
  * @experimental
  */
 export class FileSystemModuleCache {
-  private fsCacheRoot: string
   private version = '1.0.0'
+  private fsCacheRoots = new WeakMap<ResolvedConfig, string>()
 
-  // TODO: keep track of stale cache somehow? maybe in a meta file?
-
-  constructor(private logger: Logger) {
-    this.fsCacheRoot = join(tmpdir(), 'vitest')
-
-    if (!existsSync(this.fsCacheRoot)) {
-      mkdirSync(this.fsCacheRoot)
-    }
-  }
-
-  async clearCache(): Promise<void> {
-    await rm(this.fsCacheRoot, { force: true, recursive: true })
-    this.logger.log('[cache] cleared fs module cache at', this.fsCacheRoot)
+  async clearCache(vitest: Vitest): Promise<void> {
+    const defaultFsCache = join(tmpdir(), 'vitest')
+    const fsCachePaths = vitest.projects.map((r) => {
+      return r.config.experimental.fsModuleCachePath || defaultFsCache
+    })
+    const uniquePaths = Array.from(new Set(fsCachePaths))
+    await Promise.all(
+      uniquePaths.map(directory => rm(directory, { force: true, recursive: true })),
+    )
+    vitest.logger.log('[cache] cleared fs module cache at', uniquePaths.join(', '))
   }
 
   async getCachedModule(cachedFilePath: string): Promise<FetchResult | undefined> {
@@ -89,7 +87,7 @@ export class FileSystemModuleCache {
       {
         root: config.root,
         // at the moment, Vitest always forces base to be /
-        // base: config.base,
+        base: config.base,
         mode: config.mode,
         consumer: config.consumer,
         resolve: config.resolve,
@@ -120,7 +118,14 @@ export class FileSystemModuleCache {
       + Vitest.version,
       'hex',
     )
-    return join(this.fsCacheRoot, cacheKey)
+    let cacheRoot = this.fsCacheRoots.get(vitestConfig)
+    if (cacheRoot == null) {
+      cacheRoot = vitestConfig.experimental.fsModuleCachePath || join(tmpdir(), 'vitest')
+      if (!existsSync(cacheRoot)) {
+        mkdirSync(cacheRoot, { recursive: true })
+      }
+    }
+    return join(cacheRoot, cacheKey)
   }
 }
 
