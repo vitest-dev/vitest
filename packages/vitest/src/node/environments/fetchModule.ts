@@ -3,7 +3,7 @@ import type { DevEnvironment, EnvironmentModuleNode, FetchResult, Rollup, Transf
 import type { FetchFunctionOptions } from 'vite/module-runner'
 import type { FetchCachedFileSystemResult } from '../../types/general'
 import type { OTELCarrier, Traces } from '../../utils/traces'
-import type { FileSystemModuleCache } from '../cache/fsCache'
+import type { FileSystemModuleCache, SerializedImporters } from '../cache/fsCache'
 import type { VitestResolver } from '../resolver'
 import type { ResolvedConfig } from '../types/config'
 import { existsSync, mkdirSync } from 'node:fs'
@@ -116,15 +116,29 @@ class ModuleFetcher {
       })
     }
 
-    const cachedModule = await this.getCachedModule(cachePath, moduleGraphModule)
+    const cachedModule = await this.getCachedModule(cachePath, environment, moduleGraphModule)
     if (cachedModule) {
       this.recordResult(trace, cachedModule)
       return cachedModule
     }
 
     const result = await this.fetchAndProcess(environment, url, importer, moduleGraphModule, options)
+    const importers = this.getSerializedDependencies(moduleGraphModule)
 
-    return this.cacheResult(result, cachePath)
+    return this.cacheResult(result, cachePath, importers)
+  }
+
+  private getSerializedDependencies(node: EnvironmentModuleNode): SerializedImporters[] {
+    const dependencies: SerializedImporters[] = []
+    node.importers.forEach((importer) => {
+      dependencies.push({
+        id: importer.id!,
+        file: importer.file,
+        url: importer.url,
+        type: importer.type,
+      })
+    })
+    return dependencies
   }
 
   private recordResult(trace: Span, result: FetchResult | FetchCachedFileSystemResult): void {
@@ -178,6 +192,7 @@ class ModuleFetcher {
 
   private async getCachedModule(
     cachePath: string,
+    environment: DevEnvironment,
     moduleGraphModule: EnvironmentModuleNode,
   ): Promise<FetchResult | FetchCachedFileSystemResult | undefined> {
     const cachedModule = await this.fsCache.getCachedModule(cachePath)
@@ -190,8 +205,37 @@ class ModuleFetcher {
           map.file = cachedModule.file
         }
         moduleGraphModule.transformResult = { code: cachedModule.code, map }
+
+        // we populate the module graph to make the watch mode work because it relies on importers
+        cachedModule.importers.forEach((importer) => {
+          const environmentNode = environment.moduleGraph.getModuleById(importer.id)
+          if (environmentNode) {
+            moduleGraphModule.importers.add(environmentNode)
+            return
+          }
+
+          const node = environment.moduleGraph.createFileOnlyEntry(importer.file || importer.id)
+          moduleGraphModule.importers.add(node)
+          if (!importer.file) {
+            environment.moduleGraph.fileToModulesMap.get(importer.id)?.delete(node)
+          }
+
+          node.url = importer.url
+          node.id = importer.id
+          node.type = importer.type
+
+          environment.moduleGraph.urlToModuleMap.set(importer.url, node)
+          environment.moduleGraph.idToModuleMap.set(importer.id, node)
+        })
       }
-      return getCachedResult(cachedModule, cachePath)
+      return {
+        cached: true as const,
+        file: cachedModule.file,
+        id: cachedModule.id,
+        tmp: cachePath,
+        url: cachedModule.url,
+        invalidate: false,
+      }
     }
 
     return cachedModule
@@ -225,6 +269,7 @@ class ModuleFetcher {
   private async cacheResult(
     result: FetchResult,
     cachePath: string,
+    importers: SerializedImporters[] = [],
   ): Promise<FetchResult | FetchCachedFileSystemResult> {
     const returnResult = 'code' in result
       ? getCachedResult(result, cachePath)
@@ -236,7 +281,7 @@ class ModuleFetcher {
     }
 
     const savePromise = this.fsCache
-      .saveCachedModule(cachePath, result)
+      .saveCachedModule(cachePath, result, importers)
       .then(() => result)
       .finally(() => {
         saveCachePromises.delete(cachePath)

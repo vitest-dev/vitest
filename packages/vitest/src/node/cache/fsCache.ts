@@ -4,6 +4,7 @@ import type { ResolvedConfig } from '../types/config'
 import { existsSync, mkdirSync } from 'node:fs'
 import { readFile, rename, rm, stat, unlink, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
+import { parse, stringify } from 'flatted'
 import { dirname, join } from 'pathe'
 import { version as viteVersion } from 'vite'
 import { Vitest } from '../core'
@@ -30,7 +31,11 @@ export class FileSystemModuleCache {
     vitest.logger.log('[cache] cleared fs module cache at', uniquePaths.join(', '))
   }
 
-  async getCachedModule(cachedFilePath: string): Promise<FetchResult | undefined> {
+  async getCachedModule(cachedFilePath: string): Promise<
+    CachedInlineModuleMeta
+    | Extract<FetchResult, { externalize: string }>
+    | undefined
+  > {
     if (!existsSync(cachedFilePath)) {
       return
     }
@@ -41,7 +46,7 @@ export class FileSystemModuleCache {
       return
     }
 
-    const meta = JSON.parse(code.slice(matchIndex + 4))
+    const meta = this.fromBase64(code.slice(matchIndex + 4))
     if (meta.externalize) {
       return { externalize: meta.externalize, type: meta.type }
     }
@@ -51,28 +56,37 @@ export class FileSystemModuleCache {
       url: meta.url,
       file: meta.file,
       code,
-      invalidate: false,
+      importers: meta.importers,
     }
   }
 
   async saveCachedModule<T extends FetchResult>(
     cachedFilePath: string,
     fetchResult: T,
+    importers: SerializedImporters[] = [],
   ): Promise<void> {
-    // TODO: also keep dependencies, so they can populate the module graph on the next run
-
     if ('externalize' in fetchResult) {
-      await atomicWriteFile(cachedFilePath, `\n// ${JSON.stringify(fetchResult)}`)
+      await atomicWriteFile(cachedFilePath, `\n// ${this.toBase64(fetchResult)}`)
     }
     else if ('code' in fetchResult) {
       const result = {
         file: fetchResult.file,
         id: fetchResult.id,
         url: fetchResult.url,
-        invalidate: false,
-      } satisfies Omit<FetchResult, 'code'>
-      await atomicWriteFile(cachedFilePath, `${fetchResult.code}\n// ${JSON.stringify(result)}`)
+        importers,
+      } satisfies Omit<FetchResult, 'code' | 'invalidate'>
+      await atomicWriteFile(cachedFilePath, `${fetchResult.code}\n// ${this.toBase64(result)}`)
     }
+  }
+
+  private toBase64(obj: unknown) {
+    const json = stringify(obj)
+    return Buffer.from(json).toString('base64')
+  }
+
+  private fromBase64(obj: string) {
+    const json = Buffer.from(obj, 'base64').toString('utf-8')
+    return parse(json)
   }
 
   getCachePath(
@@ -159,4 +173,19 @@ async function atomicWriteFile(realFilePath: string, data: string): Promise<void
     }
     catch {}
   }
+}
+
+export interface CachedInlineModuleMeta {
+  url: string
+  id: string
+  file: string | null
+  code: string
+  importers: SerializedImporters[]
+}
+
+export interface SerializedImporters {
+  url: string
+  id: string
+  file: string | null
+  type: 'js' | 'css' | 'asset'
 }
