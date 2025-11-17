@@ -16,7 +16,7 @@ Vitest has its own test run lifecycle. These are represented by reporter's metho
       - [`onHookEnd(beforeAll)`](#onhookend)
         - [`onTestCaseReady`](#ontestcaseready)
           - [`onTestAnnotate`](#ontestannotate) <Version>3.2.0</Version>
-          - [`onTestCaseArtifactRecord`](#ontestcaseartifactrecord) <Version type="experimental">4.0.9</Version>
+          - [`onTestCaseArtifactRecord`](#ontestcaseartifactrecord) <Version type="experimental">4.0.11</Version>
           - [`onHookStart(beforeEach)`](#onhookstart)
           - [`onHookEnd(beforeEach)`](#onhookend)
           - [`onHookStart(afterEach)`](#onhookstart)
@@ -334,7 +334,7 @@ The `onTestAnnotate` hook is associated with the [`context.annotate`](/guide/tes
 
 If the path is specified, Vitest stores it in a separate directory (configured by [`attachmentsDir`](/config/#attachmentsdir)) and modifies the `path` property to reference it.
 
-## onTestCaseArtifactRecord <Version type="experimental">4.0.9</Version> {#ontestcaseartifactrecord}
+## onTestCaseArtifactRecord <Version type="experimental">4.0.11</Version> {#ontestcaseartifactrecord}
 
 ```ts
 function onTestCaseArtifactRecord(
