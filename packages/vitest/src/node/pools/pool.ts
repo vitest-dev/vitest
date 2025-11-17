@@ -76,8 +76,9 @@ export class Pool {
       const activeTask = { task, resolver, method, cancelTask }
       this.activeTasks.push(activeTask)
 
+      // active tasks receive cancel signal and shut down gracefully
       async function cancelTask() {
-        await runner.stop()
+        await runner.waitForTerminated()
         resolver.reject(new Error('Cancelled'))
       }
 

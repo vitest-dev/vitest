@@ -100,6 +100,7 @@ export class Vitest {
   /** @internal */ filenamePattern?: string[]
   /** @internal */ runningPromise?: Promise<TestRunResult>
   /** @internal */ closingPromise?: Promise<void>
+  /** @internal */ cancelPromise?: Promise<void | void[]>
   /** @internal */ isCancelling = false
   /** @internal */ coreWorkspaceProject: TestProject | undefined
   /** @internal */ _browserSessions = new BrowserSessions()
@@ -765,6 +766,7 @@ export class Vitest {
       await this._testRun.start(specs)
 
       // previous run
+      await this.cancelPromise
       await this.runningPromise
       this._onCancelListeners.clear()
       this.isCancelling = false
@@ -867,6 +869,7 @@ export class Vitest {
     this.state.collectPaths(filepaths)
 
     // previous run
+    await this.cancelPromise
     await this.runningPromise
     this._onCancelListeners.clear()
     this.isCancelling = false
@@ -920,7 +923,9 @@ export class Vitest {
    */
   async cancelCurrentRun(reason: CancelReason): Promise<void> {
     this.isCancelling = true
-    await Promise.all([...this._onCancelListeners].map(listener => listener(reason)))
+    this.cancelPromise = Promise.all([...this._onCancelListeners].map(listener => listener(reason)))
+
+    await this.cancelPromise.finally(() => (this.cancelPromise = undefined))
     await this.runningPromise
   }
 
@@ -1106,6 +1111,7 @@ export class Vitest {
   private async scheduleRerun(triggerId: string): Promise<void> {
     const currentCount = this.restartsCount
     clearTimeout(this._rerunTimer)
+    await this.cancelPromise
     await this.runningPromise
     clearTimeout(this._rerunTimer)
 

@@ -123,6 +123,7 @@ export class Traces {
   }
 
   #callActiveSpan<T>(span: Span, callback: (span: Span) => T): T {
+    const otel = this.#otel!
     let result!: T
     try {
       result = callback(span)
@@ -135,7 +136,7 @@ export class Traces {
               stack: error.stack,
             })
             span.setStatus({
-              code: this.#otel!.SpanStatusCode.ERROR,
+              code: otel.SpanStatusCode.ERROR,
             })
             throw error
           })
@@ -151,7 +152,7 @@ export class Traces {
           stack: error.stack,
         })
         span.setStatus({
-          code: this.#otel!.SpanStatusCode.ERROR,
+          code: otel.SpanStatusCode.ERROR,
         })
       }
       throw error

@@ -6,12 +6,12 @@ import type { WebSocket } from 'ws'
 import type { WebSocketBrowserEvents, WebSocketBrowserHandlers } from '../types'
 import type { ParentBrowserProject } from './projectParent'
 import type { BrowserServerState } from './state'
-import { existsSync, promises as fs } from 'node:fs'
+import { existsSync, promises as fs, readFileSync } from 'node:fs'
 import { AutomockedModule, AutospiedModule, ManualMockedModule, RedirectedModule } from '@vitest/mocker'
 import { ServerMockResolver } from '@vitest/mocker/node'
 import { createBirpc } from 'birpc'
 import { parse, stringify } from 'flatted'
-import { dirname, join } from 'pathe'
+import { dirname, join, resolve } from 'pathe'
 import { createDebugger, isFileServingAllowed, isValidApiRequest } from 'vitest/node'
 import { WebSocketServer } from 'ws'
 
@@ -204,7 +204,24 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject, defaultMocke
         },
         getBrowserFileSourceMap(id) {
           const mod = globalServer.vite.moduleGraph.getModuleById(id)
-          return mod?.transformResult?.map
+          const result = mod?.transformResult
+          // this can happen for bundled dependencies in node_modules/.vite
+          if (result && !result.map) {
+            const sourceMapUrl = retrieveSourceMapURL(result.code)
+            if (!sourceMapUrl) {
+              return null
+            }
+            const filepathDir = dirname(id)
+            const sourceMapPath = resolve(filepathDir, sourceMapUrl)
+            try {
+              const map = JSON.parse(readFileSync(sourceMapPath, 'utf-8'))
+              return map
+            }
+            catch {
+              return null
+            }
+          }
+          return result?.map
         },
         cancelCurrentRun(reason) {
           vitest.cancelCurrentRun(reason)
@@ -352,6 +369,21 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject, defaultMocke
 
     return rpc
   }
+}
+
+function retrieveSourceMapURL(source: string): string | null {
+  const re = /\/\/[@#]\s*sourceMappingURL=([^\s'"]+)\s*$|\/\*[@#]\s*sourceMappingURL=[^\s*'"]+\s*\*\/\s*$/gm
+  // keep executing the search to find the *last* sourceMappingURL to avoid
+  // picking up sourceMappingURLs from comments, strings, etc.
+  let lastMatch, match
+  // eslint-disable-next-line no-cond-assign
+  while ((match = re.exec(source))) {
+    lastMatch = match
+  }
+  if (!lastMatch) {
+    return null
+  }
+  return lastMatch[1]
 }
 
 // Serialization support utils.
