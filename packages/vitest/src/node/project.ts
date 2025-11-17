@@ -277,34 +277,43 @@ export class TestProject {
      */
     typecheckTestFiles: string[]
   }> {
-    const dir = this.config.dir || this.config.root
+    return this.vitest._traces.$('vitest.config.resolve_include_project', async (span) => {
+      const dir = this.config.dir || this.config.root
 
-    const { include, exclude, includeSource } = this.config
-    const typecheck = this.config.typecheck
+      const { include, exclude, includeSource } = this.config
+      const typecheck = this.config.typecheck
+      span.setAttributes({
+        cwd: dir,
+        include,
+        exclude,
+        includeSource,
+        typecheck: typecheck.enabled ? typecheck.include : [],
+      })
 
-    const [testFiles, typecheckTestFiles] = await Promise.all([
-      typecheck.enabled && typecheck.only
-        ? []
-        : this.globAllTestFiles(include, exclude, includeSource, dir),
-      typecheck.enabled
-        ? (this.typecheckFilesList || this.globFiles(typecheck.include, typecheck.exclude, dir))
-        : [],
-    ])
+      const [testFiles, typecheckTestFiles] = await Promise.all([
+        typecheck.enabled && typecheck.only
+          ? []
+          : this.globAllTestFiles(include, exclude, includeSource, dir),
+        typecheck.enabled
+          ? (this.typecheckFilesList || this.globFiles(typecheck.include, typecheck.exclude, dir))
+          : [],
+      ])
 
-    this.typecheckFilesList = typecheckTestFiles
+      this.typecheckFilesList = typecheckTestFiles
 
-    return {
-      testFiles: this.filterFiles(
-        testFiles,
-        filters,
-        dir,
-      ),
-      typecheckTestFiles: this.filterFiles(
-        typecheckTestFiles,
-        filters,
-        dir,
-      ),
-    }
+      return {
+        testFiles: this.filterFiles(
+          testFiles,
+          filters,
+          dir,
+        ),
+        typecheckTestFiles: this.filterFiles(
+          typecheckTestFiles,
+          filters,
+          dir,
+        ),
+      }
+    })
   }
 
   private async globAllTestFiles(

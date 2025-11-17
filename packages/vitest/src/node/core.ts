@@ -613,6 +613,10 @@ export class Vitest {
    */
   async start(filters?: string[]): Promise<TestRunResult> {
     return this._traces.$('vitest.start', async (startSpan) => {
+      startSpan.setAttributes({
+        config: this.vite.config.configFile,
+      })
+
       try {
         await this._traces.$('vitest.coverage.init', async () => {
           await this.initCoverageProvider()
