@@ -5,7 +5,7 @@ outline: deep
 
 # experimental
 
-## fsModuleCache <Version type="warning">4.0.10</Version>
+## fsModuleCache <Version type="experimental">4.0.10</Version> {#fsmodulecache}
 
 - **Type:** `boolean`
 - **Default:** `false`
@@ -14,7 +14,7 @@ Enabling this option allows Vitest to keep cached modules on the file system, ma
 
 You can delete the old cache by running `vitest --clearCache`.
 
-## openTelemetry <Version type="experimental">4.0.10</Version>
+## openTelemetry <Version type="experimental">4.0.10</Version> {#opentelemetry}
 
 - **Type:**
 
