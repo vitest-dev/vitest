@@ -214,7 +214,7 @@
     "empathic": "^2.0.0",
     "flatted": "catalog:",
     "happy-dom": "^20.0.10",
-    "jsdom": "^27.1.0",
+    "jsdom": "^27.2.0",
     "local-pkg": "^1.1.2",
     "mime": "^4.1.0",
     "prompts": "^2.4.2",
