@@ -1169,6 +1169,21 @@ importers:
 
   test/cli:
     devDependencies:
+      '@opentelemetry/auto-instrumentations-node':
+        specifier: ^0.67.0
+        version: 0.67.0(@opentelemetry/api@1.9.0)(@opentelemetry/core@2.2.0(@opentelemetry/api@1.9.0))
+      '@opentelemetry/exporter-collector-proto':
+        specifier: ^0.25.0
+        version: 0.25.0(@opentelemetry/api@1.9.0)
+      '@opentelemetry/exporter-trace-otlp-proto':
+        specifier: ^0.208.0
+        version: 0.208.0(@opentelemetry/api@1.9.0)
+      '@opentelemetry/sdk-node':
+        specifier: ^0.208.0
+        version: 0.208.0(@opentelemetry/api@1.9.0)
+      '@opentelemetry/sdk-trace-node':
+        specifier: ^2.2.0
+        version: 2.2.0(@opentelemetry/api@1.9.0)
       '@test/test-dep-error':
         specifier: file:./deps/error
         version: file:test/cli/deps/error
@@ -1247,21 +1262,6 @@ importers:
 
   test/core:
     devDependencies:
-      '@opentelemetry/auto-instrumentations-node':
-        specifier: ^0.67.0
-        version: 0.67.0(@opentelemetry/api@1.9.0)(@opentelemetry/core@2.2.0(@opentelemetry/api@1.9.0))
-      '@opentelemetry/exporter-collector-proto':
-        specifier: ^0.25.0
-        version: 0.25.0(@opentelemetry/api@1.9.0)
-      '@opentelemetry/exporter-trace-otlp-proto':
-        specifier: ^0.208.0
-        version: 0.208.0(@opentelemetry/api@1.9.0)
-      '@opentelemetry/sdk-node':
-        specifier: ^0.208.0
-        version: 0.208.0(@opentelemetry/api@1.9.0)
-      '@opentelemetry/sdk-trace-node':
-        specifier: ^2.2.0
-        version: 2.2.0(@opentelemetry/api@1.9.0)
       '@standard-schema/spec':
         specifier: ^1.0.0
         version: 1.0.0
@@ -4663,8 +4663,8 @@ packages:
   '@types/aria-query@5.0.3':
     resolution: {integrity: sha512-0Z6Tr7wjKJIk4OUEjVUQMtyunLDy339vcMaj38Kpj6jM2OE1p3S4kXExKZ7a3uXQAPCoy3sbrP1wibDKaf39oA==}
 
-  '@types/aws-lambda@8.10.157':
-    resolution: {integrity: sha512-ofjcRCO1N7tMZDSO11u5bFHPDfUFD3Q9YK9g4S4w8UDKuG3CNlw2lNK1sd3Itdo7JORygZmG4h9ZykS8dlXvMA==}
+  '@types/aws-lambda@8.10.158':
+    resolution: {integrity: sha512-v/n2WsL1ksRKigfqZ9ff7ANobfT3t/T8kI8UOiur98tREwFulv9lRv+pDrocGPWOe3DpD2Y2GKRO+OiyxwgaCQ==}
 
   '@types/babel-generator@6.25.8':
     resolution: {integrity: sha512-f5l89J0UpYhTE6TFCxy3X+8pJVru1eig1fcvF9qHmOk9h1VxZimd+++tu5GShntCOdhE/MoZZ0SlpGTyh4XrKg==}
@@ -12100,7 +12100,7 @@ snapshots:
       '@opentelemetry/api': 1.9.0
       '@opentelemetry/instrumentation': 0.208.0(@opentelemetry/api@1.9.0)
       '@opentelemetry/semantic-conventions': 1.38.0
-      '@types/aws-lambda': 8.10.157
+      '@types/aws-lambda': 8.10.158
     transitivePeerDependencies:
       - supports-color
 
@@ -13294,7 +13294,7 @@ snapshots:
 
   '@types/aria-query@5.0.3': {}
 
-  '@types/aws-lambda@8.10.157': {}
+  '@types/aws-lambda@8.10.158': {}
 
   '@types/babel-generator@6.25.8':
     dependencies:

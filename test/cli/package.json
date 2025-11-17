@@ -7,6 +7,11 @@
     "stacktraces": "vitest --root=./fixtures/stacktraces --watch=false"
   },
   "devDependencies": {
+    "@opentelemetry/auto-instrumentations-node": "^0.67.0",
+    "@opentelemetry/exporter-collector-proto": "^0.25.0",
+    "@opentelemetry/exporter-trace-otlp-proto": "^0.208.0",
+    "@opentelemetry/sdk-node": "^0.208.0",
+    "@opentelemetry/sdk-trace-node": "^2.2.0",
     "@test/test-dep-error": "file:./deps/error",
     "@test/test-dep-linked": "link:./deps/linked",
     "@types/debug": "catalog:",

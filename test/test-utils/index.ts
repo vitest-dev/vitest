@@ -141,6 +141,9 @@ export async function runVitest(
     vitest: cli,
     stdout: cli.stdout,
     stderr: cli.stderr,
+    testTree() {
+      return buildTestTree(ctx?.state.getTestModules() || [])
+    },
     waitForClose: async () => {
       await new Promise<void>(resolve => ctx!.onClose(resolve))
       return ctx?.closingPromise

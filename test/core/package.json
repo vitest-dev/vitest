@@ -13,11 +13,6 @@
     "collect": "vitest list"
   },
   "devDependencies": {
-    "@opentelemetry/auto-instrumentations-node": "^0.67.0",
-    "@opentelemetry/exporter-collector-proto": "^0.25.0",
-    "@opentelemetry/exporter-trace-otlp-proto": "^0.208.0",
-    "@opentelemetry/sdk-node": "^0.208.0",
-    "@opentelemetry/sdk-trace-node": "^2.2.0",
     "@standard-schema/spec": "^1.0.0",
     "@test/dep-esm-non-existing": "link:./deps/dep-esm-non-existing",
     "@test/vite-environment-external": "link:./projects/vite-environment-external",

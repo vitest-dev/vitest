@@ -1095,7 +1095,6 @@ type NonProjectOptions
     | 'inspectBrk'
     | 'coverage'
     | 'watchTriggerPatterns'
-    | 'experimental'
 
 export interface ServerDepsOptions {
   /**
