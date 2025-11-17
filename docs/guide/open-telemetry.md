@@ -2,7 +2,7 @@
 
 OpenTelemetry traces can be a useful tool to debug the performance and behavior of your application inside tests.
 
-Vitest integration starts active spans that are scoped to the test worker.
+If enabled, Vitest integration starts active spans that are scoped to the test worker.
 
 ::: warning
 OpenTelemetry initialization increases the startup time of every test unless Vitest runs without [isolation](/config/isolate). You can see it as the `vitest.runtime.traces` span inside `vitest.worker.start`.

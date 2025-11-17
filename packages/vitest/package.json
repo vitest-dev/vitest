@@ -134,6 +134,7 @@
   },
   "peerDependencies": {
     "@edge-runtime/vm": "*",
+    "@opentelemetry/api": "^1.9.0",
     "@types/debug": "^4.1.12",
     "@types/node": "^20.0.0 || ^22.0.0 || >=24.0.0",
     "@vitest/browser-playwright": "workspace:*",
@@ -145,6 +146,9 @@
   },
   "peerDependenciesMeta": {
     "@edge-runtime/vm": {
+      "optional": true
+    },
+    "@opentelemetry/api": {
       "optional": true
     },
     "@types/debug": {
