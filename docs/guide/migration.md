@@ -71,6 +71,44 @@ See also new guides:
 - [Including and excluding files from coverage report](/guide/coverage.html#including-and-excluding-files-from-coverage-report) for examples
 - [Profiling Test Performance | Code coverage](/guide/profiling-test-performance.html#code-coverage) for tips about debugging coverage generation
 
+### Simplified `exclude`
+
+By default, Vitest now only excludes tests from `node_modules` and `.git` folders. This means that Vitest no longer excludes:
+
+- `dist` and `cypress` folders
+- `.idea`, `.cache`, `.output`, `.temp` folders
+- config files like `rollup.config.js`, `prettier.config.js`, `ava.config.js` and so on
+
+If you need to limit the directory where your tests files are located, use the [`test.dir`](/config/dir) option instead because it is more performant than excluding files:
+
+```ts
+import { configDefaults, defineConfig } from 'vitest/config'
+
+export default defineConfig({
+  test: {
+    dir: './frontend/tests', // [!code ++]
+  },
+})
+```
+
+To restore the previous behaviour, specify old `excludes` manually:
+
+```ts
+import { configDefaults, defineConfig } from 'vitest/config'
+
+export default defineConfig({
+  test: {
+    exclude: [
+      ...configDefaults.exclude,
+      '**/dist/**', // [!code ++]
+      '**/cypress/**', // [!code ++]
+      '**/.{idea,git,cache,output,temp}/**', // [!code ++]
+      '**/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress,tsup,build,eslint,prettier}.config.*' // [!code ++]
+    ],
+  },
+})
+```
+
 ### `spyOn` and `fn` Support Constructors
 
 Previously, if you tried to spy on a constructor with `vi.spyOn`, you would get an error like `Constructor <name> requires 'new'`. Since Vitest 4, all mocks called with a `new` keyword construct the instance instead of calling `mock.apply`. This means that the mock implementation has to use either the `function` or the `class` keyword in these cases:
