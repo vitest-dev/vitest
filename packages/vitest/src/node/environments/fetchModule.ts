@@ -1,6 +1,8 @@
+import type { Span } from '@opentelemetry/api'
 import type { DevEnvironment, EnvironmentModuleNode, FetchResult, Rollup, TransformResult } from 'vite'
 import type { FetchFunctionOptions } from 'vite/module-runner'
 import type { FetchCachedFileSystemResult } from '../../types/general'
+import type { OTELCarrier, Traces } from '../../utils/traces'
 import type { FileSystemModuleCache } from '../cache/fsCache'
 import type { VitestResolver } from '../resolver'
 import type { ResolvedConfig } from '../types/config'
@@ -22,12 +24,14 @@ class ModuleFetcher {
     private resolver: VitestResolver,
     private config: ResolvedConfig,
     private fsCache: FileSystemModuleCache,
+    private traces: Traces,
     private tmpProjectDir: string,
   ) {
     this.fsCacheEnabled = config.experimental?.fsModuleCache === true
   }
 
   async fetch(
+    trace: Span,
     url: string,
     importer: string | undefined,
     environment: DevEnvironment,
@@ -35,21 +39,28 @@ class ModuleFetcher {
     options?: FetchFunctionOptions,
   ): Promise<FetchResult | FetchCachedFileSystemResult> {
     if (url.startsWith('data:')) {
+      trace.setAttribute('vitest.module.external', url)
       return { externalize: url, type: 'builtin' }
     }
 
     if (url === '/@vite/client' || url === '@vite/client') {
+      trace.setAttribute('vitest.module.external', url)
       return { externalize: '/@vite/client', type: 'module' }
     }
 
     const isFileUrl = url.startsWith('file://')
 
     if (isExternalUrl(url) && !isFileUrl) {
+      trace.setAttribute('vitest.module.external', url)
       return { externalize: url, type: 'network' }
     }
 
     const moduleGraphModule = await environment.moduleGraph.ensureEntryFromUrl(unwrapId(url))
     const cached = !!moduleGraphModule.transformResult
+
+    if (moduleGraphModule.file) {
+      trace.setAttribute('code.file.path', moduleGraphModule.file)
+    }
 
     if (options?.cached && cached) {
       return { cache: true }
@@ -59,6 +70,9 @@ class ModuleFetcher {
     // this is primarily used by the forks pool to avoid using process.send(bigBuffer)
     if (!this.fsCacheEnabled) {
       const result = await this.fetchAndProcess(environment, url, importer, moduleGraphModule, options)
+
+      this.recordResult(trace, result)
+
       if (!makeTmpCopies || !('code' in result)) {
         return result
       }
@@ -96,17 +110,44 @@ class ModuleFetcher {
     )
 
     if (saveCachePromises.has(cachePath)) {
-      return saveCachePromises.get(cachePath)!
+      return saveCachePromises.get(cachePath)!.then((result) => {
+        this.recordResult(trace, result)
+        return result
+      })
     }
 
     const cachedModule = await this.getCachedModule(cachePath, moduleGraphModule)
     if (cachedModule) {
+      this.recordResult(trace, cachedModule)
       return cachedModule
     }
 
     const result = await this.fetchAndProcess(environment, url, importer, moduleGraphModule, options)
 
     return this.cacheResult(result, cachePath)
+  }
+
+  private recordResult(trace: Span, result: FetchResult | FetchCachedFileSystemResult): void {
+    if ('externalize' in result) {
+      trace.setAttributes({
+        'vitest.module.external': result.externalize,
+        'vitest.fetched_module.type': result.type,
+      })
+    }
+    if ('id' in result) {
+      trace.setAttributes({
+        'vitest.fetched_module.invalidate': result.invalidate,
+        'vitest.fetched_module.id': result.id,
+        'vitest.fetched_module.url': result.url,
+        'vitest.fetched_module.cache': false,
+      })
+      if (result.file) {
+        trace.setAttribute('code.file.path', result.file)
+      }
+    }
+    if ('code' in result) {
+      trace.setAttribute('vitest.fetched_module.code_length', result.code.length)
+    }
   }
 
   private async readFileContentToCache(
@@ -212,18 +253,14 @@ class ModuleFetcher {
   }
 }
 
-// interface DumpOptions {
-//   dumpFolder?: string
-//   readFromDump?: boolean
-// }
-
 export interface VitestFetchFunction {
   (
     url: string,
     importer: string | undefined,
     environment: DevEnvironment,
     cacheFs?: boolean,
-    options?: FetchFunctionOptions
+    options?: FetchFunctionOptions,
+    otelCarrier?: OTELCarrier
   ): Promise<FetchResult | FetchCachedFileSystemResult>
 }
 
@@ -231,11 +268,23 @@ export function createFetchModuleFunction(
   resolver: VitestResolver,
   config: ResolvedConfig,
   fsCache: FileSystemModuleCache,
+  traces: Traces,
   tmpProjectDir: string,
 ): VitestFetchFunction {
-  const fetcher = new ModuleFetcher(resolver, config, fsCache, tmpProjectDir)
-  return (url, importer, environment, cacheFs, options) =>
-    fetcher.fetch(url, importer, environment, cacheFs, options)
+  const fetcher = new ModuleFetcher(resolver, config, fsCache, traces, tmpProjectDir)
+  return async (url, importer, environment, cacheFs, options, otelCarrier) => {
+    await traces.waitInit()
+    const context = otelCarrier
+      ? traces.getContextFromCarrier(otelCarrier)
+      : undefined
+    return traces.$(
+      'vitest.module.transform',
+      context
+        ? { context }
+        : {},
+      span => fetcher.fetch(span, url, importer, environment, cacheFs, options),
+    )
+  }
 }
 
 let SOURCEMAPPING_URL = 'sourceMa'

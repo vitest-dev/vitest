@@ -232,6 +232,7 @@ export class Vitest {
       this._resolver,
       this._config,
       this._fsCache,
+      this._traces,
       this._tmpDir,
     )
     const environment = server.environments.__vitest__

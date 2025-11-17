@@ -566,6 +566,7 @@ export class TestProject {
       this._resolver,
       this._config,
       this._fsCache,
+      this.vitest._traces,
       this.tmpDir,
     )
 
