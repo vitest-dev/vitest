@@ -46,3 +46,5 @@ catalog:
   ws: ^8.18.3
 
 trustPolicy: no-downgrade
+trustPolicyExclude:
+  - semver@6.3.1
