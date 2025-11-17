@@ -18,6 +18,11 @@ import { hash } from '../hash'
 export class FileSystemModuleCache {
   private version = '1.0.0'
   private fsCacheRoots = new WeakMap<ResolvedConfig, string>()
+  private fsCacheKeys = new WeakMap<
+    DevEnvironment,
+    // Map<id, tmp>
+    Map<string, string>
+  >()
 
   async clearCache(vitest: Vitest): Promise<void> {
     const defaultFsCache = join(tmpdir(), 'vitest')
@@ -89,7 +94,21 @@ export class FileSystemModuleCache {
     return parse(json)
   }
 
-  getCachePath(
+  invalidateCachePath(
+    environment: DevEnvironment,
+    id: string,
+  ): void {
+    this.fsCacheKeys.get(environment)?.delete(id)
+  }
+
+  getMemoryCachePath(
+    environment: DevEnvironment,
+    id: string,
+  ): string | undefined {
+    return this.fsCacheKeys.get(environment)?.get(id)
+  }
+
+  generateCachePath(
     vitestConfig: ResolvedConfig,
     environment: DevEnvironment,
     resolver: VitestResolver,
@@ -139,7 +158,14 @@ export class FileSystemModuleCache {
         mkdirSync(cacheRoot, { recursive: true })
       }
     }
-    return join(cacheRoot, cacheKey)
+    let environmentKeys = this.fsCacheKeys.get(environment)
+    if (!environmentKeys) {
+      environmentKeys = new Map()
+      this.fsCacheKeys.set(environment, environmentKeys)
+    }
+    const fsResultPath = join(cacheRoot, cacheKey)
+    environmentKeys.set(id, fsResultPath)
+    return fsResultPath
   }
 }
 

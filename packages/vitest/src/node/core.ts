@@ -1199,7 +1199,10 @@ export class Vitest {
           return
         }
 
-        modules.forEach(module => moduleGraph.invalidateModule(module))
+        modules.forEach((module) => {
+          moduleGraph.invalidateModule(module)
+          this._fsCache.invalidateCachePath(environment, module.id!)
+        })
       })
     })
   }

@@ -100,13 +100,9 @@ class ModuleFetcher {
       })
     }
 
-    const fileContent = await this.readFileContentToCache(environment, moduleGraphModule)
-    const cachePath = this.fsCache.getCachePath(
-      this.config,
+    const cachePath = await this.getCachePath(
       environment,
-      this.resolver,
-      moduleGraphModule.id!,
-      fileContent,
+      moduleGraphModule,
     )
 
     if (saveCachePromises.has(cachePath)) {
@@ -159,6 +155,21 @@ class ModuleFetcher {
     if ('code' in result) {
       trace.setAttribute('vitest.fetched_module.code_length', result.code.length)
     }
+  }
+
+  private async getCachePath(environment: DevEnvironment, moduleGraphModule: EnvironmentModuleNode) {
+    const memoryCacheKey = this.fsCache.getMemoryCachePath(environment, moduleGraphModule.id!)
+    if (memoryCacheKey != null) {
+      return memoryCacheKey
+    }
+    const fileContent = await this.readFileContentToCache(environment, moduleGraphModule)
+    return this.fsCache.generateCachePath(
+      this.config,
+      environment,
+      this.resolver,
+      moduleGraphModule.id!,
+      fileContent,
+    )
   }
 
   private async readFileContentToCache(
