@@ -833,7 +833,7 @@ export interface InlineConfig {
      */
     openTelemetry?: {
       enabled: boolean
-      sdkPath: string
+      sdkPath?: string
     }
   }
 }

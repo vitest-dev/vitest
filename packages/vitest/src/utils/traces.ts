@@ -40,8 +40,6 @@ export class Traces {
    * otel stands for OpenTelemetry
    */
   #otel: OTEL | null = null
-  // TODO: we need sdk to shutdown the server
-  // is there a better way to flish events?
   #sdk: { shutdown: () => Promise<void> } | null = null
   #init: Promise<unknown> | null = null
   #noopSpan = createNoopSpan()
@@ -67,7 +65,14 @@ export class Traces {
         throw new Error(`Failed to import custom OpenTelemetry SDK script: ${options.sdkPath}.`, { cause })
       })
       this.#init = Promise.all([sdkInit, apiInit]).then(([sdk]) => {
-        this.#sdk = sdk?.default ?? null
+        if (sdk != null) {
+          if (sdk.default != null && typeof sdk.default === 'object' && typeof sdk.default.shutdown === 'function') {
+            this.#sdk = sdk.default
+          }
+          else {
+            console.warn(`OpenTelemetry SDK module (${options.sdkPath}) does not have a default export with a "shutdown" method. Did you forget to export it?`)
+          }
+        }
       }).finally(() => {
         this.#init = null
       })

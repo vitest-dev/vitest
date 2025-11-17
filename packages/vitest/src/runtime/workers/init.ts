@@ -38,21 +38,20 @@ export function init(worker: Options): void {
       return
     }
 
-    const tracesStart = performance.now()
-
-    traces ??= await new Traces({
-      // TODO: how to pass down options properly?
-      enabled: !!process.env.VITETS_OTEL_ENABLED,
-      sdkPath: process.env.VITEST_OTEL_SDK,
-    }).waitInit()
-    const tracesEnd = performance.now()
-
     switch (message.type) {
       case 'start': {
         reportMemory = message.options.reportMemory
 
+        const tracesStart = performance.now()
+
+        traces ??= await new Traces({
+          enabled: message.traces.enabled,
+          sdkPath: message.traces.sdkPath,
+        }).waitInit()
+        const tracesEnd = performance.now()
+
         const { environment, config, pool } = message.context
-        const context = traces.getContextFromCarrier(message.otelCarrier)
+        const context = traces.getContextFromCarrier(message.traces.otelCarrier)
 
         // record telemetry as part of "start"
         traces

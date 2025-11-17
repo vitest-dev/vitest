@@ -174,6 +174,8 @@ export class PoolRunner {
 
       startSpan = this.startTracesSpan('vitest.worker.start')
       const startPromise = this.withTimeout(this.waitForStart(), START_TIMEOUT)
+      const tracesEnabled = this.project.config.experimental.openTelemetry?.enabled === true
+      const tracesSdk = this.project.config.experimental.openTelemetry?.sdkPath
 
       this.postMessage({
         type: 'start',
@@ -189,7 +191,11 @@ export class PoolRunner {
           config: this.project.serializedConfig,
           pool: this.worker.name,
         },
-        otelCarrier: this.getOTELCarrier(),
+        traces: {
+          enabled: tracesEnabled,
+          sdkPath: tracesSdk,
+          otelCarrier: this.getOTELCarrier(),
+        },
       })
 
       await startPromise

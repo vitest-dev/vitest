@@ -125,9 +125,6 @@ export function createPool(ctx: Vitest): ProcessPool {
             ...options.env,
             ...ctx.config.env,
             ...project.config.env,
-            // TODO: is this ok?
-            VITETS_OTEL_ENABLED: project.config.experimental.openTelemetry?.enabled === true ? '1' : '',
-            VITEST_OTEL_SDK: project.config.experimental.openTelemetry?.sdkPath,
           }
 
           // env are case-insensitive on Windows, but spawned processes don't support it

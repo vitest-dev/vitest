@@ -76,7 +76,11 @@ export type WorkerRequest
         config: SerializedConfig
         pool: string
       }
-      otelCarrier?: OTELCarrier
+      traces: {
+        enabled: boolean
+        sdkPath?: string
+        otelCarrier?: OTELCarrier
+      }
     }
     | {
       type: 'stop'
