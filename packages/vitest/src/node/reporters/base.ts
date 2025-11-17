@@ -2,6 +2,7 @@ import type { File, Task, TestAnnotation } from '@vitest/runner'
 import type { SerializedError } from '@vitest/utils'
 import type { TestError, UserConsoleLog } from '../../types/general'
 import type { Vitest } from '../core'
+import type { TestSpecification } from '../spec'
 import type { Reporter, TestRunEndReason } from '../types/reporter'
 import type { TestCase, TestCollection, TestModule, TestModuleState, TestResult, TestSuite, TestSuiteState } from './reported-tasks'
 import { performance } from 'node:perf_hooks'
@@ -57,7 +58,6 @@ export abstract class BaseReporter implements Reporter {
     this.ctx = ctx
 
     this.ctx.logger.printBanner()
-    this.start = performance.now()
   }
 
   log(...messages: any): void {
@@ -70,6 +70,11 @@ export abstract class BaseReporter implements Reporter {
 
   relative(path: string): string {
     return relative(this.ctx.config.root, path)
+  }
+
+  onTestRunStart(_specifications: ReadonlyArray<TestSpecification>): void {
+    this.start = performance.now()
+    this._timeStart = formatTimeString(new Date())
   }
 
   onTestRunEnd(
@@ -419,9 +424,6 @@ export abstract class BaseReporter implements Reporter {
     for (const testModule of this.failedUnwatchedFiles) {
       this.printTestModule(testModule)
     }
-
-    this._timeStart = formatTimeString(new Date())
-    this.start = performance.now()
   }
 
   onUserConsoleLog(log: UserConsoleLog, taskState?: TestResult['state']): void {
