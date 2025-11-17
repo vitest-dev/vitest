@@ -8,7 +8,14 @@ import type {
   TraceAPI,
   Tracer,
 } from '@opentelemetry/api'
-import type { OTELCarrier } from '../node/pools/types'
+
+// important: this module should not import types, it should only expose them
+// because it is used by browser, node and test types at the same time
+
+export interface OTELCarrier {
+  traceparent?: string
+  tracestate?: string
+}
 
 interface TracesOptions {
   enabled: boolean

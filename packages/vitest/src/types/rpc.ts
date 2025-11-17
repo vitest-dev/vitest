@@ -1,7 +1,7 @@
 import type { CancelReason, File, TaskEventPack, TaskResultPack, TestAnnotation } from '@vitest/runner'
 import type { SnapshotResult } from '@vitest/snapshot'
 import type { FetchFunctionOptions, FetchResult } from 'vite/module-runner'
-import type { OTELCarrier } from '../node/pools/types'
+import type { OTELCarrier } from '../utils/traces'
 import type { AfterSuiteRunMeta, FetchCachedFileSystemResult, ResolveFunctionResult, UserConsoleLog } from './general'
 
 export interface RuntimeRPC {

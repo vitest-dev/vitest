@@ -1,5 +1,6 @@
 import type { Context, Span } from '@opentelemetry/api'
 import type { ContextTestEnvironment, WorkerExecuteContext, WorkerTestEnvironment } from '../../types/worker'
+import type { OTELCarrier } from '../../utils/traces'
 import type { TestProject } from '../project'
 import type { SerializedConfig } from '../types/config'
 
@@ -56,12 +57,6 @@ export interface PoolTask {
   context: WorkerExecuteContext
   environment: ContextTestEnvironment
   memoryLimit: number | null
-}
-
-// TODO: move to general types
-export interface OTELCarrier {
-  traceparent?: string
-  tracestate?: string
 }
 
 export interface PoolRunnerOTEL {
