@@ -137,8 +137,10 @@ jobs:
 
     strategy:
       matrix:
-        os: [macos-latest]
         node_version: [24]
+        os:
+          - macos-latest
+          - windows-latest
       fail-fast: false
 
     steps:
