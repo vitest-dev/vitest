@@ -45,4 +45,4 @@ Then run Vitest in the browser mode:
 npx vitest --browser
 ```
 
-[GitHub](https://github.com/vitest-dev/vitest/tree/main/packages/browser-webdriverio) | [Documentation](https://vitest.dev/guide/browser/webdriverio)
+[GitHub](https://github.com/vitest-dev/vitest/tree/main/packages/browser-webdriverio) | [Documentation](https://vitest.dev/config/browser/webdriverio)
