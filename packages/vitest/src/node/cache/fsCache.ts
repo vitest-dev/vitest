@@ -7,8 +7,11 @@ import { tmpdir } from 'node:os'
 import { parse, stringify } from 'flatted'
 import { dirname, join } from 'pathe'
 import { version as viteVersion } from 'vite'
+import { createDebugger } from '../../utils/debugger'
 import { Vitest } from '../core'
 import { hash } from '../hash'
+
+const debug = createDebugger('vitest:cache')
 
 const cacheComment = '\n//# vitestCache='
 const cacheCommentLength = cacheComment.length
@@ -49,19 +52,23 @@ export class FileSystemModuleCache {
     | undefined
   > {
     if (!existsSync(cachedFilePath)) {
+      debug?.(`[read] ${cachedFilePath} doesn't exist, transforming by vite instead`)
       return
     }
 
     const code = await readFile(cachedFilePath, 'utf-8')
     const matchIndex = code.lastIndexOf(cacheComment)
     if (matchIndex === -1) {
+      debug?.(`[read] ${cachedFilePath} exists, but doesn't have a ${cacheComment} comment, transforming by vite instead`)
       return
     }
 
     const meta = this.fromBase64(code.slice(matchIndex + cacheCommentLength))
     if (meta.externalize) {
+      debug?.(`[read] ${cachedFilePath} is externalized into ${meta.externalize}`)
       return { externalize: meta.externalize, type: meta.type }
     }
+    debug?.(`[read] ${cachedFilePath} is cached as ${meta.url}`)
 
     return {
       id: meta.id,
@@ -78,6 +85,7 @@ export class FileSystemModuleCache {
     importers: string[] = [],
   ): Promise<void> {
     if ('externalize' in fetchResult) {
+      debug?.(`[write] ${cachedFilePath} is externalized into ${fetchResult.externalize}`)
       await atomicWriteFile(cachedFilePath, `${cacheComment}${this.toBase64(fetchResult)}`)
     }
     else if ('code' in fetchResult) {
@@ -87,6 +95,7 @@ export class FileSystemModuleCache {
         url: fetchResult.url,
         importers,
       } satisfies Omit<FetchResult, 'code' | 'invalidate'>
+      debug?.(`[write] ${cachedFilePath} is cached as ${fetchResult.url}`)
       await atomicWriteFile(cachedFilePath, `${fetchResult.code}${cacheComment}${this.toBase64(result)}`)
     }
   }
@@ -105,10 +114,12 @@ export class FileSystemModuleCache {
     environment: DevEnvironment,
     id: string,
   ): void {
+    debug?.(`cache for ${id} in ${environment.name} environment is invalidated`)
     this.fsCacheKeys.get(environment)?.delete(id)
   }
 
   invalidateAllCachePaths(environment: DevEnvironment): void {
+    debug?.(`the ${environment.name} environment cache is invalidated`)
     this.fsCacheKeys.get(environment)?.clear()
   }
 
@@ -116,7 +127,11 @@ export class FileSystemModuleCache {
     environment: DevEnvironment,
     id: string,
   ): string | undefined {
-    return this.fsCacheKeys.get(environment)?.get(id)
+    const result = this.fsCacheKeys.get(environment)?.get(id)
+    if (result) {
+      debug?.(`[memory][read] ${result} is cached from memory for ${id}`)
+    }
+    return result
   }
 
   generateCachePath(
@@ -184,6 +199,7 @@ export class FileSystemModuleCache {
       this.fsCacheKeys.set(environment, environmentKeys)
     }
     const fsResultPath = join(cacheRoot, cacheKey)
+    debug?.(`[memory][write] ${fsResultPath} is cached from memory for ${id}`)
     environmentKeys.set(id, fsResultPath)
     return fsResultPath
   }
