@@ -10,6 +10,9 @@ import { version as viteVersion } from 'vite'
 import { Vitest } from '../core'
 import { hash } from '../hash'
 
+const cacheComment = '\n//# vitestCache='
+const cacheCommentLength = cacheComment.length
+
 // TODO: keep track of stale cache somehow? maybe in a meta file?
 
 /**
@@ -50,12 +53,12 @@ export class FileSystemModuleCache {
     }
 
     const code = await readFile(cachedFilePath, 'utf-8')
-    const matchIndex = code.lastIndexOf('\n//')
+    const matchIndex = code.lastIndexOf(cacheComment)
     if (matchIndex === -1) {
       return
     }
 
-    const meta = this.fromBase64(code.slice(matchIndex + 4))
+    const meta = this.fromBase64(code.slice(matchIndex + cacheCommentLength))
     if (meta.externalize) {
       return { externalize: meta.externalize, type: meta.type }
     }
@@ -75,7 +78,7 @@ export class FileSystemModuleCache {
     importers: string[] = [],
   ): Promise<void> {
     if ('externalize' in fetchResult) {
-      await atomicWriteFile(cachedFilePath, `\n// ${this.toBase64(fetchResult)}`)
+      await atomicWriteFile(cachedFilePath, `${cacheComment}${this.toBase64(fetchResult)}`)
     }
     else if ('code' in fetchResult) {
       const result = {
@@ -84,7 +87,7 @@ export class FileSystemModuleCache {
         url: fetchResult.url,
         importers,
       } satisfies Omit<FetchResult, 'code' | 'invalidate'>
-      await atomicWriteFile(cachedFilePath, `${fetchResult.code}\n// ${this.toBase64(result)}`)
+      await atomicWriteFile(cachedFilePath, `${fetchResult.code}${cacheComment}${this.toBase64(result)}`)
     }
   }
 

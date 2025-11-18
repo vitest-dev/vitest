@@ -435,7 +435,12 @@ function extractSourceMap(code: string): null | Rollup.SourceMap {
   if (!mapString) {
     return null
   }
-  return JSON.parse(Buffer.from(mapString, 'base64').toString('utf-8'))
+  const sourceMap = JSON.parse(Buffer.from(mapString, 'base64').toString('utf-8'))
+  // remove source map mapping added by "inlineSourceMap" to keep the original behaviour of transformRequest
+  if (sourceMap.mappings.startsWith('AAAA,CAAA')) {
+    sourceMap.mappings = sourceMap.mappings.slice(9)
+  }
+  return sourceMap
 }
 
 // serialize rollup error on server to preserve details as a test error
