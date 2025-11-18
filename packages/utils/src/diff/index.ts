@@ -121,12 +121,10 @@ export function diff(a: any, b: any, options?: DiffOptions): string | undefined 
       return compareObjects(sortMap(a), sortMap(b), options)
     case 'set':
       return compareObjects(sortSet(a), sortSet(b), options)
-    case 'array':
+    default:
       if (isAsymmetricMatcher(a) && isArrayContaining(a)) {
         return compareArrayContaining(a, b, options)
       }
-      // else fallthrough
-    default:
       return compareObjects(a, b, options)
   }
 }
@@ -267,24 +265,93 @@ function getArrayContainingDifference(
   options?: DiffOptions,
 ): string {
   const formatOptionsZeroIndent = { ...formatOptions, indent: 0 }
-  const aCompare = a.sample.map(val => prettyFormat(val, formatOptionsZeroIndent))
-  const bCompare = b.map(val => prettyFormat(val, formatOptionsZeroIndent))
+  const aCompare = prettyFormat(a, formatOptionsZeroIndent)
+  const bCompare = prettyFormat(b, formatOptionsZeroIndent)
 
-  if (aCompare.join('\n') === bCompare.join('\n')) {
+  if (aCompare === bCompare) {
     return getCommonMessage(NO_DIFF_MESSAGE, options)
   }
   else {
-    const aDisplay = a.sample.map(val => prettyFormat(val, formatOptions))
-    const bDisplay = b.map(val => prettyFormat(val, formatOptions))
+    const aLinesCompare = aCompare.split('\n')
+    const bLinesCompare = bCompare.split('\n')
+    const reordered = getArrayContainingMatchOrder(aLinesCompare, bLinesCompare)
+
+    const aLinesDisplay = prettyFormat(a, formatOptions).split('\n')
+    const bLinesDisplay = prettyFormat(b, formatOptions).split('\n')
+
+    const aLinesCompareAsymmetricMatch = reordered.map(index => aLinesCompare[index])
+    const aLinesDisplayAsymmetricMatch = reordered.map(index => aLinesDisplay[index])
 
     return diffLinesUnified2(
-      aDisplay,
-      bDisplay,
-      aCompare,
-      bCompare,
+      aLinesDisplayAsymmetricMatch,
+      bLinesDisplay,
+      aLinesCompareAsymmetricMatch,
+      bLinesCompare,
       options,
     )
   }
+}
+
+/**
+ * Given two arrays of string, A and B, returns the indices of the multiset
+ * difference A − (A ∩ B) in A order, and the multiset A ∩ B in B order in
+ * Θ(|A| + |B|) with at most 2 passes over A and 1 pass over B.
+ */
+export function getArrayContainingMatchOrder(
+  aCompare: readonly string[],
+  bCompare: readonly string[],
+): number[] {
+  // Step 1: hash map for Θ(1) lookup of values to indices in A
+  const indexMap = new Map<string, { indices: number[]; head: number }>() // { indices: all positions in A, head: how many we've consumed }
+  let aLength = aCompare.length
+  for (let aIndex = 0; aIndex < aLength; aIndex++) {
+    const value = aCompare[aIndex]
+    let bucket = indexMap.get(value)
+    if (bucket === undefined) {
+      bucket = { indices: [aIndex], head: 0 }
+      indexMap.set(value, bucket)
+    }
+    else {
+      bucket.indices.push(aIndex)
+    }
+  }
+
+  // Step 2: scan B, and greedily match indices from A
+  const bLength = bCompare.length
+  const multisetIntersection: number[] = []
+  for (let bIndex = 0; bIndex < bLength; bIndex++) {
+    if (aLength === 0) {
+      break
+    }
+
+    const value = bCompare[bIndex]
+    const bucket = indexMap.get(value)
+    if (!bucket) {
+      continue
+    }
+
+    const head = bucket.head
+    const indices = bucket.indices
+    if (head < indices.length) {
+      multisetIntersection.push(indices[head])
+      bucket.head = head + 1
+      aLength--
+    }
+  }
+
+  // Step 3: collect unmatched indices from A as multiset difference A − (A ∩ B)
+  const multisetDifference: number[] = []
+  if (aLength !== 0) {
+    multisetDifference.length = 0
+    for (const bucket of indexMap.values()) {
+      const indices = bucket.indices
+      for (let head = bucket.head; head < indices.length; head++) {
+        multisetDifference.push(indices[head])
+      }
+    }
+  }
+
+  return [...multisetDifference, ...multisetIntersection]
 }
 
 const MAX_DIFF_STRING_LENGTH = 20_000
