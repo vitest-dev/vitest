@@ -157,17 +157,17 @@ export class FileSystemModuleCache {
         return value
       },
     )
-    const cacheKey = hash(
-      'sha1',
-      id
+    let hashString = id
       + fileContent
       + (process.env.NODE_ENV ?? '')
       + this.version
       + cacheConfig
       + viteVersion
-      + Vitest.version,
-      'hex',
-    )
+      + Vitest.version
+    if (vitestConfig.experimental.fsModuleCacheKeyGenerator) {
+      hashString += vitestConfig.experimental.fsModuleCacheKeyGenerator(environment, vitestConfig, id, fileContent)
+    }
+    const cacheKey = hash('sha1', hashString, 'hex')
     let cacheRoot = this.fsCacheRoots.get(vitestConfig)
     if (cacheRoot == null) {
       cacheRoot = vitestConfig.experimental.fsModuleCachePath || join(tmpdir(), 'vitest')
