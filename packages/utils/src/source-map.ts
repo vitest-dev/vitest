@@ -383,3 +383,17 @@ export function getOriginalPosition(
   }
   return result
 }
+
+export function retrieveSourceMapURL(source: string): string | null {
+  const re = /\/\/[@#]\s*sourceMappingURL=([^\s'"]+)\s*$|\/\*[@#]\s*sourceMappingURL=[^\s*'"]+\s*\*\/\s*$/gm
+  // continue executing the search to find the *last* sourceMappingURL to avoid picking up souceMappingURL from comments, strings, etc
+  let lastMatch, match
+  // eslint-disable-next-line no-cond-assign
+  while ((match = re.exec(source))) {
+    lastMatch = match
+  }
+  if (!lastMatch) {
+    return null
+  }
+  return lastMatch[1]
+}

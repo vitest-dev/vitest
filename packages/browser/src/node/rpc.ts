@@ -9,6 +9,7 @@ import type { BrowserServerState } from './state'
 import { existsSync, promises as fs, readFileSync } from 'node:fs'
 import { AutomockedModule, AutospiedModule, ManualMockedModule, RedirectedModule } from '@vitest/mocker'
 import { ServerMockResolver } from '@vitest/mocker/node'
+import { retrieveSourceMapURL } from '@vitest/utils/source-map'
 import { createBirpc } from 'birpc'
 import { parse, stringify } from 'flatted'
 import { dirname, join, resolve } from 'pathe'
@@ -369,21 +370,6 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject, defaultMocke
 
     return rpc
   }
-}
-
-function retrieveSourceMapURL(source: string): string | null {
-  const re = /\/\/[@#]\s*sourceMappingURL=([^\s'"]+)\s*$|\/\*[@#]\s*sourceMappingURL=[^\s*'"]+\s*\*\/\s*$/gm
-  // keep executing the search to find the *last* sourceMappingURL to avoid
-  // picking up sourceMappingURLs from comments, strings, etc.
-  let lastMatch, match
-  // eslint-disable-next-line no-cond-assign
-  while ((match = re.exec(source))) {
-    lastMatch = match
-  }
-  if (!lastMatch) {
-    return null
-  }
-  return lastMatch[1]
 }
 
 // Serialization support utils.

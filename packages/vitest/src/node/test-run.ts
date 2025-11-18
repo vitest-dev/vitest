@@ -20,7 +20,7 @@ import { existsSync, readFileSync } from 'node:fs'
 import { copyFile, mkdir, writeFile } from 'node:fs/promises'
 import { isPrimitive } from '@vitest/utils/helpers'
 import { serializeValue } from '@vitest/utils/serialize'
-import { parseErrorStacktrace } from '@vitest/utils/source-map'
+import { parseErrorStacktrace, retrieveSourceMapURL } from '@vitest/utils/source-map'
 import mime from 'mime/lite'
 import { basename, dirname, extname, resolve } from 'pathe'
 
@@ -291,20 +291,6 @@ export class TestRun {
       }
     }
   }
-}
-
-function retrieveSourceMapURL(source: string): string | null {
-  const re = /\/\/[@#]\s*sourceMappingURL=([^\s'"]+)\s*$|\/\*[@#]\s*sourceMappingURL=[^\s*'"]+\s*\*\/\s*$/gm
-  // continue executing the search to find the *last* sourceMappingURL to avoid picking up souceMappingURL from comments, strings, etc
-  let lastMatch, match
-  // eslint-disable-next-line no-cond-assign
-  while ((match = re.exec(source))) {
-    lastMatch = match
-  }
-  if (!lastMatch) {
-    return null
-  }
-  return lastMatch[1]
 }
 
 function sanitizeFilePath(s: string): string {
