@@ -336,6 +336,7 @@ export class JUnitReporter implements Reporter {
           suite: null as any,
           file: null as any,
           annotations: [],
+          artifacts: [],
         } satisfies Task)
       }
 

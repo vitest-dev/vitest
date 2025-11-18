@@ -1,4 +1,4 @@
-import type { File, Task, TaskResultPack, Test, TestAnnotation } from '@vitest/runner'
+import type { File, Task, TaskResultPack, Test, TestArtifact } from '@vitest/runner'
 import type { Arrayable } from '@vitest/utils'
 import type { CollectFilteredTests, CollectorInfo, Filter, FilteredTests } from '~/composables/explorer/types'
 import { isTestCase } from '@vitest/runner/utils'
@@ -66,9 +66,9 @@ export function preparePendingTasks(packs: TaskResultPack[]) {
   })
 }
 
-export function annotateTest(
+export function recordTestArtifact(
   id: string,
-  annotation: TestAnnotation,
+  artifact: TestArtifact,
 ) {
   const pending = explorerTree.pendingTasks
   const idMap = client.state.idMap
@@ -80,7 +80,13 @@ export function annotateTest(
       pending.set(test.file.id, file)
     }
     file.add(test.id)
-    test.annotations.push(annotation)
+
+    if (artifact.type === 'internal:annotation') {
+      test.annotations.push(artifact.annotation)
+    }
+    else {
+      test.artifacts.push(artifact)
+    }
   }
 }
 
