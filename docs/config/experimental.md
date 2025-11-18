@@ -14,6 +14,14 @@ Enabling this option allows Vitest to keep cached modules on the file system, ma
 
 You can delete the old cache by running `vitest --clearCache`.
 
+::: warning BROWSER SUPPORT
+At the moment, this option does not affect [the browser](/guide/browser/).
+:::
+
+::: danger ADVANCED
+If you are a plugin author, consider defining a [cache key generator](/api/advanced/plugin#definecachekeygenerator) if your plugin can be registered with different options that affect the transform result.
+:::
+
 ## fsModuleCachePath <Version type="experimental">4.0.10</Version> {#fsmodulecachepath}
 
 - **Type:** `string`

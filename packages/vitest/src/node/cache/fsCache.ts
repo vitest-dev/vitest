@@ -24,6 +24,7 @@ const cacheCommentLength = cacheComment.length
 export class FileSystemModuleCache {
   private version = '1.0.0'
   private fsCacheRoots = new WeakMap<ResolvedConfig, string>()
+  private fsCacheKeyGenerators = new Set<CacheKeyIdGenerator>()
   // this exists only to avoid the perf. cost of reading a file and generating a hash again
   // on some machines this has negligible effect
   private fsCacheKeys = new WeakMap<
@@ -33,6 +34,10 @@ export class FileSystemModuleCache {
   >()
 
   constructor(private vitest: Vitest) {}
+
+  public defineCacheKeyGenerator(callback: CacheKeyIdGenerator): void {
+    this.fsCacheKeyGenerators.add(callback)
+  }
 
   async clearCache(): Promise<void> {
     const defaultFsCache = join(tmpdir(), 'vitest')
@@ -185,9 +190,14 @@ export class FileSystemModuleCache {
       + cacheConfig
       + viteVersion
       + Vitest.version
-    if (vitestConfig.experimental.fsModuleCacheKeyGenerator) {
-      hashString += vitestConfig.experimental.fsModuleCacheKeyGenerator(environment, vitestConfig, id, fileContent)
-    }
+
+    this.fsCacheKeyGenerators.forEach((generator) => {
+      const result = generator(environment, id, fileContent)
+      if (typeof result === 'string') {
+        hashString += result
+      }
+    })
+
     const cacheKey = hash('sha1', hashString, 'hex')
     let cacheRoot = this.fsCacheRoots.get(vitestConfig)
     if (cacheRoot == null) {
@@ -247,4 +257,12 @@ export interface CachedInlineModuleMeta {
   code: string
   importers: string[]
   mappings: boolean
+}
+
+export interface CacheKeyIdGenerator {
+  (
+    environment: DevEnvironment,
+    id: string,
+    sourceCode: string,
+  ): string | undefined | null
 }

@@ -281,6 +281,10 @@ export class Vitest {
         project,
         vitest: this,
         injectTestProjects: this.injectTestProject,
+        /**
+         * @experimental
+         */
+        experimental_defineCacheKeyGenerator: callback => this._fsCache.defineCacheKeyGenerator(callback),
       }))
     }))
 

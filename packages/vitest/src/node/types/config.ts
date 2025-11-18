@@ -4,7 +4,7 @@ import type { SequenceHooks, SequenceSetupFiles } from '@vitest/runner'
 import type { SnapshotStateOptions } from '@vitest/snapshot'
 import type { Arrayable } from '@vitest/utils'
 import type { SerializedDiffOptions } from '@vitest/utils/diff'
-import type { AliasOptions, ConfigEnv, DepOptimizationConfig, DevEnvironment, ServerOptions, UserConfig as ViteUserConfig } from 'vite'
+import type { AliasOptions, ConfigEnv, DepOptimizationConfig, ServerOptions, UserConfig as ViteUserConfig } from 'vite'
 import type { ChaiConfig } from '../../integrations/chai/config'
 import type { SerializedConfig } from '../../runtime/config'
 import type { LabelColor, ParsedStack, ProvidedContext, TestError } from '../../types/general'
@@ -841,18 +841,6 @@ export interface InlineConfig {
      * @default join(tmpdir(), 'vitest')
      */
     fsModuleCachePath?: string
-    /**
-     * A generator that should return any custom string. This string will be appended to the end of hash data.
-     *
-     * Note: this **IS NOT** the hash itself. Vitest will concatenate its own cache key
-     * and the custom one before turning it into a file system hash.
-     */
-    fsModuleCacheKeyGenerator?: (
-      environment: DevEnvironment,
-      config: ResolvedConfig,
-      id: string,
-      sourceCode: string,
-    ) => string
     /**
      * {@link https://vitest.dev/guide/open-telemetry}
      */
