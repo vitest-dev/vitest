@@ -227,7 +227,7 @@ export class Vitest {
     }
 
     this._resolver = new VitestResolver(server.config.cacheDir, resolved)
-    this._fsCache = new FileSystemModuleCache()
+    this._fsCache = new FileSystemModuleCache(this)
     this._fetcher = createFetchModuleFunction(
       this._resolver,
       this._config,
@@ -335,11 +335,32 @@ export class Vitest {
     this.configOverride.coverage!.enabled = true
     await this.createCoverageProvider()
     await this.coverageProvider?.onEnabled?.()
+
+    // onFileTransform is the only thing that affects hash
+    if (this.coverageProvider?.onFileTransform) {
+      this.clearAllCachePaths()
+    }
   }
 
   public disableCoverage(): void {
     this.configOverride.coverage ??= {} as any
     this.configOverride.coverage!.enabled = false
+    // onFileTransform is the only thing that affects hash
+    if (this.coverageProvider?.onFileTransform) {
+      this.clearAllCachePaths()
+    }
+  }
+
+  private clearAllCachePaths() {
+    this.projects.forEach(({ vite, browser }) => {
+      const environments = [
+        ...Object.values(vite.environments),
+        ...Object.values(browser?.vite.environments || {}),
+      ]
+      environments.forEach(environment =>
+        this._fsCache.invalidateAllCachePaths(environment),
+      )
+    })
   }
 
   private _coverageOverrideCache = new WeakMap<ResolvedCoverageOptions, ResolvedCoverageOptions>()
@@ -501,7 +522,7 @@ export class Vitest {
    */
   public async experimental_clearCache(): Promise<void> {
     await this.cache.results.clearCache()
-    await this._fsCache.clearCache(this)
+    await this._fsCache.clearCache()
   }
 
   /**

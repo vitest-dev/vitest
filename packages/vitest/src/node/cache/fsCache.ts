@@ -18,22 +18,26 @@ import { hash } from '../hash'
 export class FileSystemModuleCache {
   private version = '1.0.0'
   private fsCacheRoots = new WeakMap<ResolvedConfig, string>()
+  // this exists only to avoid the perf. cost of reading a file and generating a hash again
+  // on some machines this has negligible effect
   private fsCacheKeys = new WeakMap<
     DevEnvironment,
     // Map<id, tmp>
     Map<string, string>
   >()
 
-  async clearCache(vitest: Vitest): Promise<void> {
+  constructor(private vitest: Vitest) {}
+
+  async clearCache(): Promise<void> {
     const defaultFsCache = join(tmpdir(), 'vitest')
-    const fsCachePaths = vitest.projects.map((r) => {
+    const fsCachePaths = this.vitest.projects.map((r) => {
       return r.config.experimental.fsModuleCachePath || defaultFsCache
     })
     const uniquePaths = Array.from(new Set(fsCachePaths))
     await Promise.all(
       uniquePaths.map(directory => rm(directory, { force: true, recursive: true })),
     )
-    vitest.logger.log('[cache] cleared fs module cache at', uniquePaths.join(', '))
+    this.vitest.logger.log('[cache] cleared fs module cache at', uniquePaths.join(', '))
   }
 
   async getCachedModule(cachedFilePath: string): Promise<
@@ -101,6 +105,10 @@ export class FileSystemModuleCache {
     this.fsCacheKeys.get(environment)?.delete(id)
   }
 
+  invalidateAllCachePaths(environment: DevEnvironment): void {
+    this.fsCacheKeys.get(environment)?.clear()
+  }
+
   getMemoryCachePath(
     environment: DevEnvironment,
     id: string,
@@ -116,6 +124,9 @@ export class FileSystemModuleCache {
     fileContent: string,
   ): string {
     const config = environment.config
+    // coverage provider is dynamic, so we also clear the whole cache if
+    // vitest.enableCoverage/vitest.disableCoverage is called
+    const coverageAffectsCache = !!(this.vitest.config.coverage.enabled && this.vitest.coverageProvider?.requiresTransform?.(id))
     const cacheConfig = JSON.stringify(
       {
         root: config.root,
@@ -131,7 +142,13 @@ export class FileSystemModuleCache {
         // this affects Vitest CSS plugin
         css: vitestConfig.css,
         // this affect externalization
-        resolver: resolver.options,
+        resolver: {
+          inline: resolver.options.inline,
+          external: resolver.options.external,
+          inlineFiles: resolver.options.inlineFiles,
+          moduleDirectories: resolver.options.moduleDirectories,
+        },
+        coverageAffectsCache,
       },
       (_, value) => {
         if (typeof value === 'function' || value instanceof RegExp) {

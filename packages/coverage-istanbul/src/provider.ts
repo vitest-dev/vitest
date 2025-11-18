@@ -50,15 +50,26 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider<ResolvedCover
     })
   }
 
-  onFileTransform(sourceCode: string, id: string, pluginCtx: any): { code: string; map: any } | undefined {
+  requiresTransform(id: string): boolean {
     // Istanbul/babel cannot instrument CSS - e.g. Vue imports end up here.
     // File extension itself is .vue, but it contains CSS.
     // e.g. "Example.vue?vue&type=style&index=0&scoped=f7f04e08&lang.css"
     if (isCSSRequest(id)) {
-      return
+      return false
     }
 
     if (!this.isIncluded(removeQueryParameters(id))) {
+      return false
+    }
+
+    return true
+  }
+
+  onFileTransform(sourceCode: string, id: string, pluginCtx: Vite.Rollup.TransformPluginContext): { code: string; map: any } | undefined {
+    // Istanbul/babel cannot instrument CSS - e.g. Vue imports end up here.
+    // File extension itself is .vue, but it contains CSS.
+    // e.g. "Example.vue?vue&type=style&index=0&scoped=f7f04e08&lang.css"
+    if (!this.requiresTransform(id)) {
       return
     }
 
