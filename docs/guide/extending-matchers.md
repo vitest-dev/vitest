@@ -112,7 +112,7 @@ This contains a set of utility functions that you can use to display messages.
 
 Full name of the current test (including describe block).
 
-### `task`
+### `task` <Advanced /> <Version type="experimental">4.0.11</Version> {#task}
 
 Contains a reference to [the `Test` runner task](/api/advanced/runner#tasks) when available.
 
