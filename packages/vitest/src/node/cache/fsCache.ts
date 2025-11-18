@@ -6,12 +6,14 @@ import { readFile, rename, rm, stat, unlink, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { parse, stringify } from 'flatted'
 import { dirname, join } from 'pathe'
+import c from 'tinyrainbow'
 import { version as viteVersion } from 'vite'
 import { createDebugger } from '../../utils/debugger'
 import { Vitest } from '../core'
 import { hash } from '../hash'
 
-const debug = createDebugger('vitest:cache')
+const debugFs = createDebugger('vitest:cache:fs')
+const debugMemory = createDebugger('vitest:cache:memory')
 
 const cacheComment = '\n//# vitestCache='
 const cacheCommentLength = cacheComment.length
@@ -57,23 +59,23 @@ export class FileSystemModuleCache {
     | undefined
   > {
     if (!existsSync(cachedFilePath)) {
-      debug?.(`[read] ${cachedFilePath} doesn't exist, transforming by vite instead`)
+      debugFs?.(`${c.red('[empty]')} ${cachedFilePath} doesn't exist, transforming by vite instead`)
       return
     }
 
     const code = await readFile(cachedFilePath, 'utf-8')
     const matchIndex = code.lastIndexOf(cacheComment)
     if (matchIndex === -1) {
-      debug?.(`[read] ${cachedFilePath} exists, but doesn't have a ${cacheComment} comment, transforming by vite instead`)
+      debugFs?.(`${c.red('[empty]')} ${cachedFilePath} exists, but doesn't have a ${cacheComment} comment, transforming by vite instead`)
       return
     }
 
     const meta = this.fromBase64(code.slice(matchIndex + cacheCommentLength))
     if (meta.externalize) {
-      debug?.(`[read] ${cachedFilePath} is externalized into ${meta.externalize}`)
+      debugFs?.(`${c.green('[read]')} ${meta.externalize} is externalized inside ${cachedFilePath}`)
       return { externalize: meta.externalize, type: meta.type }
     }
-    debug?.(`[read] ${cachedFilePath} is cached as ${meta.url}`)
+    debugFs?.(`${c.green('[read]')} ${meta.id} is cached in ${cachedFilePath}`)
 
     return {
       id: meta.id,
@@ -92,7 +94,7 @@ export class FileSystemModuleCache {
     mappings: boolean = false,
   ): Promise<void> {
     if ('externalize' in fetchResult) {
-      debug?.(`[write] ${cachedFilePath} is externalized into ${fetchResult.externalize}`)
+      debugFs?.(`${c.yellow('[write]')} ${fetchResult.externalize} is externalized inside ${cachedFilePath}`)
       await atomicWriteFile(cachedFilePath, `${cacheComment}${this.toBase64(fetchResult)}`)
     }
     else if ('code' in fetchResult) {
@@ -103,7 +105,7 @@ export class FileSystemModuleCache {
         importers,
         mappings,
       } satisfies Omit<FetchResult, 'code' | 'invalidate'>
-      debug?.(`[write] ${cachedFilePath} is cached as ${fetchResult.url}`)
+      debugFs?.(`${c.yellow('[write]')} ${fetchResult.id} is cached in ${cachedFilePath}`)
       await atomicWriteFile(cachedFilePath, `${fetchResult.code}${cacheComment}${this.toBase64(result)}`)
     }
   }
@@ -122,12 +124,12 @@ export class FileSystemModuleCache {
     environment: DevEnvironment,
     id: string,
   ): void {
-    debug?.(`cache for ${id} in ${environment.name} environment is invalidated`)
+    debugFs?.(`cache for ${id} in ${environment.name} environment is invalidated`)
     this.fsCacheKeys.get(environment)?.delete(id)
   }
 
   invalidateAllCachePaths(environment: DevEnvironment): void {
-    debug?.(`the ${environment.name} environment cache is invalidated`)
+    debugFs?.(`the ${environment.name} environment cache is invalidated`)
     this.fsCacheKeys.get(environment)?.clear()
   }
 
@@ -137,7 +139,7 @@ export class FileSystemModuleCache {
   ): string | undefined {
     const result = this.fsCacheKeys.get(environment)?.get(id)
     if (result) {
-      debug?.(`[memory][read] ${result} is cached from memory for ${id}`)
+      debugMemory?.(`${c.green('[write]')} ${id} was cached in ${result}`)
     }
     return result
   }
@@ -212,7 +214,7 @@ export class FileSystemModuleCache {
       this.fsCacheKeys.set(environment, environmentKeys)
     }
     const fsResultPath = join(cacheRoot, cacheKey)
-    debug?.(`[memory][write] ${fsResultPath} is cached from memory for ${id}`)
+    debugMemory?.(`${c.yellow('[write]')} ${id} generated a cache in ${fsResultPath}`)
     environmentKeys.set(id, fsResultPath)
     return fsResultPath
   }
