@@ -38,7 +38,7 @@ export interface BrowserServerOptions {
 }
 
 export interface BrowserServerFactory {
-  (otpions: BrowserServerOptions): Promise<ParentProjectBrowser>
+  (options: BrowserServerOptions): Promise<ParentProjectBrowser>
 }
 
 export interface BrowserProvider {
