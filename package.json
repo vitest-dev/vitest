@@ -25,7 +25,7 @@
     "release": "tsx scripts/release.ts",
     "test": "pnpm --filter test-core test:threads",
     "test:ci": "CI=true pnpm -r --reporter-hide-prefix --stream --sequential --filter '@vitest/test-*' --filter !test-browser run test",
-    "test:ci:cache": "CI=true pnpm -r --reporter-hide-prefix --stream --sequential --filter '@vitest/test-*' --filter !test-browser run test --experimental.fsModuleCache",
+    "test:ci:cache": "CI=true pnpm -r --reporter-hide-prefix --stream --sequential --filter '@vitest/test-*' --filter !test-browser --filter !test-dts-config run test --experimental.fsModuleCache",
     "test:examples": "CI=true pnpm -r --reporter-hide-prefix --stream --filter '@vitest/example-*' run test",
     "test:ecosystem-ci": "ECOSYSTEM_CI=true pnpm test:ci",
     "typebuild": "tsx ./scripts/explain-types.ts",
