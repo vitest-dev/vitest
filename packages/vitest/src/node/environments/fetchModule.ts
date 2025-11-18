@@ -120,8 +120,10 @@ class ModuleFetcher {
 
     const result = await this.fetchAndProcess(environment, url, importer, moduleGraphModule, options)
     const importers = this.getSerializedDependencies(moduleGraphModule)
+    const map = moduleGraphModule.transformResult?.map
+    const mappings = map && !('version' in map) && map.mappings === ''
 
-    return this.cacheResult(result, cachePath, importers)
+    return this.cacheResult(result, cachePath, importers, !!mappings)
   }
 
   private getSerializedDependencies(node: EnvironmentModuleNode): string[] {
@@ -208,11 +210,19 @@ class ModuleFetcher {
     if (cachedModule && 'code' in cachedModule) {
       // keep the module graph in sync
       if (!moduleGraphModule.transformResult) {
-        const map = extractSourceMap(cachedModule.code)
+        let map: Rollup.SourceMap | null | { mappings: '' } = extractSourceMap(cachedModule.code)
         if (map && cachedModule.file) {
           map.file = cachedModule.file
         }
-        moduleGraphModule.transformResult = { code: cachedModule.code, map }
+        // mappings is a special source map identifier in rollup
+        if (!map && cachedModule.mappings) {
+          map = { mappings: '' }
+        }
+        moduleGraphModule.transformResult = {
+          code: cachedModule.code,
+          map,
+          ssr: true,
+        }
 
         // we populate the module graph to make the watch mode work because it relies on importers
         cachedModule.importers.forEach((importer) => {
@@ -264,6 +274,7 @@ class ModuleFetcher {
     result: FetchResult,
     cachePath: string,
     importers: string[] = [],
+    mappings = false,
   ): Promise<FetchResult | FetchCachedFileSystemResult> {
     const returnResult = 'code' in result
       ? getCachedResult(result, cachePath)
@@ -275,7 +286,7 @@ class ModuleFetcher {
     }
 
     const savePromise = this.fsCache
-      .saveCachedModule(cachePath, result, importers)
+      .saveCachedModule(cachePath, result, importers, mappings)
       .then(() => result)
       .finally(() => {
         saveCachePromises.delete(cachePath)
@@ -437,7 +448,8 @@ function extractSourceMap(code: string): null | Rollup.SourceMap {
   }
   const sourceMap = JSON.parse(Buffer.from(mapString, 'base64').toString('utf-8'))
   // remove source map mapping added by "inlineSourceMap" to keep the original behaviour of transformRequest
-  if (sourceMap.mappings.startsWith('AAAA,CAAA')) {
+  if (sourceMap.mappings.startsWith('AAAA,CAAA;')) {
+    // 9 because we want to only remove "AAAA,CAAA", but keep ; at the start
     sourceMap.mappings = sourceMap.mappings.slice(9)
   }
   return sourceMap

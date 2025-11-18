@@ -76,6 +76,7 @@ export class FileSystemModuleCache {
       file: meta.file,
       code,
       importers: meta.importers,
+      mappings: meta.mappings,
     }
   }
 
@@ -83,6 +84,7 @@ export class FileSystemModuleCache {
     cachedFilePath: string,
     fetchResult: T,
     importers: string[] = [],
+    mappings: boolean = false,
   ): Promise<void> {
     if ('externalize' in fetchResult) {
       debug?.(`[write] ${cachedFilePath} is externalized into ${fetchResult.externalize}`)
@@ -94,6 +96,7 @@ export class FileSystemModuleCache {
         id: fetchResult.id,
         url: fetchResult.url,
         importers,
+        mappings,
       } satisfies Omit<FetchResult, 'code' | 'invalidate'>
       debug?.(`[write] ${cachedFilePath} is cached as ${fetchResult.url}`)
       await atomicWriteFile(cachedFilePath, `${fetchResult.code}${cacheComment}${this.toBase64(result)}`)
@@ -243,4 +246,5 @@ export interface CachedInlineModuleMeta {
   file: string | null
   code: string
   importers: string[]
+  mappings: boolean
 }
