@@ -276,7 +276,7 @@ async function generateFrameworkConfigFile(options: {
     `      provider: ${options.provider}(),`,
     options.provider !== 'preview' && `      // ${getProviderDocsLink(options.provider)}`,
     `      instances: [`,
-    ...options.browsers.map(browser => `      { browser: '${browser}' },`),
+    ...options.browsers.map(browser => `        { browser: '${browser}' },`),
     `      ],`,
     `    },`,
     `  },`,
