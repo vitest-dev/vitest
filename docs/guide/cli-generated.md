@@ -798,3 +798,16 @@ Use `bundle` to bundle the config with esbuild or `runner` (experimental) to pro
 - **CLI:** `--standalone`
 
 Start Vitest without running tests. Tests will be running only on change. This option is ignored when CLI file filters are passed. (default: `false`)
+
+### clearCache
+
+- **CLI:** `--clearCache`
+
+Delete all Vitest caches, including `experimental.fsModuleCache`, without running any tests. This will reduce the performance in the subsequent test run.
+
+### experimental.fsModuleCache
+
+- **CLI:** `--experimental.fsModuleCache`
+- **Config:** [experimental.fsModuleCache](/config/experimental#experimental-fsmodulecache)
+
+Enable caching of modules on the file system between reruns.

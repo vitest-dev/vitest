@@ -5,14 +5,14 @@ outline: deep
 
 # experimental
 
-## fsModuleCache <Version type="experimental">4.0.10</Version> {#fsmodulecache}
+## experimental.fsModuleCache <Version type="experimental">4.0.11</Version> {#experimental-fsmodulecache}
 
 - **Type:** `boolean`
 - **Default:** `false`
 
 Enabling this option allows Vitest to keep cached modules on the file system, making tests run faster between reruns.
 
-You can delete the old cache by running `vitest --clearCache`.
+You can delete the old cache by running [`vitest --clearCache`](/guide/cli#clearcache).
 
 ::: warning BROWSER SUPPORT
 At the moment, this option does not affect [the browser](/guide/browser/).
@@ -22,14 +22,14 @@ At the moment, this option does not affect [the browser](/guide/browser/).
 If you are a plugin author, consider defining a [cache key generator](/api/advanced/plugin#definecachekeygenerator) if your plugin can be registered with different options that affect the transform result.
 :::
 
-## fsModuleCachePath <Version type="experimental">4.0.10</Version> {#fsmodulecachepath}
+## experimental.fsModuleCachePath <Version type="experimental">4.0.11</Version> {#experimental-fsmodulecachepath}
 
 - **Type:** `string`
 - **Default:** `join(tmpdir(), 'vitest')`
 
 Directory where the file system cache is located.
 
-## openTelemetry <Version type="experimental">4.0.10</Version> {#opentelemetry}
+## experimental.openTelemetry <Version type="experimental">4.0.11</Version> {#experimental-opentelemetry}
 
 - **Type:**
 

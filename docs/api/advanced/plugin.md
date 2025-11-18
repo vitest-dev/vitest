@@ -124,7 +124,7 @@ The project's `configFile` can be accessed in Vite's config: `project.vite.confi
 Note that this will also inherit the `name` - Vitest doesn't allow multiple projects with the same name, so this will throw an error. Make sure you specified a different name. You can access the current name via the `project.name` property and all used names are available in the `vitest.projects` array.
 :::
 
-### experimental_defineCacheKeyGenerator <Experimental /> {#definecachekeygenerator}
+### experimental_defineCacheKeyGenerator <Experimental /> <Version type="experimental">4.0.11</Version> {#definecachekeygenerator}
 
 ```ts
 function experimental_defineCacheKeyGenerator(
