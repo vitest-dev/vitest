@@ -2,7 +2,7 @@ import { expect, test } from 'vitest'
 import { runInlineTests } from '../../test-utils'
 
 test('should load external source maps for bundled dependencies', async () => {
-  const { stderr, stdout } = await runInlineTests(
+  const { stderr } = await runInlineTests(
     {
       'bundled-dep.js': `
 // Simulated bundled code (transformed)
