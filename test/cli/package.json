@@ -16,7 +16,7 @@
     "@vitest/browser-preview": "workspace:*",
     "@vitest/runner": "workspace:^",
     "@vitest/utils": "workspace:*",
-    "obug": "^2.0.0",
+    "obug": "^2.1.0",
     "unplugin-swc": "^1.5.8",
     "vite": "latest",
     "vitest": "workspace:*",

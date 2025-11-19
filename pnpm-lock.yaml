@@ -85,8 +85,8 @@ catalogs:
       specifier: ^2.12.2
       version: 2.12.2
     obug:
-      specifier: ^2.0.0
-      version: 2.0.0
+      specifier: ^2.1.0
+      version: 2.1.0
     pathe:
       specifier: ^2.0.3
       version: 2.0.3
@@ -225,7 +225,7 @@ importers:
         version: 5.9.3
       unplugin-isolated-decl:
         specifier: ^0.15.5
-        version: 0.15.5(ms@2.1.3)(typescript@5.9.3)
+        version: 0.15.5(typescript@5.9.3)
       unplugin-oxc:
         specifier: ^0.5.4
         version: 0.5.4
@@ -573,7 +573,7 @@ importers:
         version: 0.5.1
       obug:
         specifier: 'catalog:'
-        version: 2.0.0(ms@2.1.3)
+        version: 2.1.0
       tinyrainbow:
         specifier: 'catalog:'
         version: 3.0.3
@@ -628,7 +628,7 @@ importers:
         version: 0.5.1
       obug:
         specifier: 'catalog:'
-        version: 2.0.0(ms@2.1.3)
+        version: 2.1.0
       std-env:
         specifier: 'catalog:'
         version: 3.10.0
@@ -958,7 +958,7 @@ importers:
         version: 0.30.21
       obug:
         specifier: 'catalog:'
-        version: 2.0.0(ms@2.1.3)
+        version: 2.1.0
       pathe:
         specifier: 'catalog:'
         version: 2.0.3
@@ -1067,7 +1067,7 @@ importers:
     dependencies:
       obug:
         specifier: 'catalog:'
-        version: 2.0.0(ms@2.1.3)
+        version: 2.1.0
       vitest:
         specifier: workspace:*
         version: link:../vitest
@@ -1182,8 +1182,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/utils
       obug:
-        specifier: ^2.0.0
-        version: 2.0.0(ms@2.1.3)
+        specifier: ^2.1.0
+        version: 2.1.0
       unplugin-swc:
         specifier: ^1.5.8
         version: 1.5.8(@swc/core@1.4.1)(rollup@4.53.2)
@@ -1284,8 +1284,8 @@ importers:
         specifier: ^4.51.0
         version: 4.51.0
       obug:
-        specifier: ^2.0.0
-        version: 2.0.0(ms@2.1.3)
+        specifier: ^2.1.0
+        version: 2.1.0
       react:
         specifier: ^19.2.0
         version: 19.2.0
@@ -7726,13 +7726,8 @@ packages:
   obuf@1.1.2:
     resolution: {integrity: sha512-PX1wu0AmAdPqOL1mWhqmlOd8kOIZQwGZw6rh7uby9fTc5lhaOWFLX3I6R1hrF9k3zUY40e6igsLGkDXK92LJNg==}
 
-  obug@2.0.0:
-    resolution: {integrity: sha512-dpSQuPXoKUjulinHmXjZV1YIRhOLEqBl1J6PYi9mRQR2dYcSK+OULRr+GuT1vufk2f40mtIOqmSL/aTikjmq5Q==}
-    peerDependencies:
-      ms: ^2.0.0
-    peerDependenciesMeta:
-      ms:
-        optional: true
+  obug@2.1.0:
+    resolution: {integrity: sha512-uu/tgLPoa75CFA7UDkmqspKbefvZh1WMPwkU3bNr0PY746a/+xwXVgbw5co5C3GvJj3h5u8g/pbxXzI0gd1QFg==}
 
   ofetch@1.4.1:
     resolution: {integrity: sha512-QZj2DfGplQAr2oj9KzceK9Hwz6Whxazmn85yYeVuS3u9XTMOGMRx0kO95MQ+vLsj/S/NwBDMMLU5hpxvI6Tklw==}
@@ -16387,9 +16382,7 @@ snapshots:
 
   obuf@1.1.2: {}
 
-  obug@2.0.0(ms@2.1.3):
-    optionalDependencies:
-      ms: 2.1.3
+  obug@2.1.0: {}
 
   ofetch@1.4.1:
     dependencies:
@@ -18050,18 +18043,16 @@ snapshots:
 
   unpipe@1.0.0: {}
 
-  unplugin-isolated-decl@0.15.5(ms@2.1.3)(typescript@5.9.3):
+  unplugin-isolated-decl@0.15.5(typescript@5.9.3):
     dependencies:
       magic-string: 0.30.21
-      obug: 2.0.0(ms@2.1.3)
+      obug: 2.1.0
       oxc-parser: 0.97.0
       oxc-transform: 0.97.0
       unplugin: 2.3.10
       unplugin-utils: 0.3.1
     optionalDependencies:
       typescript: 5.9.3
-    transitivePeerDependencies:
-      - ms
 
   unplugin-oxc@0.5.4:
     dependencies:
