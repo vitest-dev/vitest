@@ -5,7 +5,7 @@
   "description": "Browser running for Vitest using webdriverio",
   "license": "MIT",
   "funding": "https://opencollective.com/vitest",
-  "homepage": "https://vitest.dev/guide/browser/webdriverio",
+  "homepage": "https://vitest.dev/config/browser/webdriverio",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/vitest-dev/vitest.git",

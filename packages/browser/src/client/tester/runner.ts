@@ -7,6 +7,7 @@ import type {
   TaskResultPack,
   Test,
   TestAnnotation,
+  TestArtifact,
   VitestRunner,
 } from '@vitest/runner'
 import type { SerializedConfig, TestExecutionMethod, WorkerGlobalState } from 'vitest'
@@ -227,28 +228,41 @@ export function createBrowserRunner(
     }
 
     onTestAnnotate = (test: Test, annotation: TestAnnotation): Promise<TestAnnotation> => {
-      if (annotation.location) {
+      const artifact: TestArtifact = { type: 'internal:annotation', annotation, location: annotation.location }
+
+      return this.onTestArtifactRecord(test, artifact).then(({ annotation }) => annotation)
+    }
+
+    onTestArtifactRecord = <Artifact extends TestArtifact>(test: Test, artifact: Artifact): Promise<Artifact> => {
+      if (artifact.location) {
         // the file should be the test file
         // tests from other files are not supported
-        const map = this.sourceMapCache.get(annotation.location.file)
+        const map = this.sourceMapCache.get(artifact.location.file)
+
         if (!map) {
-          return rpc().onTaskAnnotate(test.id, annotation)
+          return rpc().onTaskArtifactRecord(test.id, artifact)
         }
 
-        const traceMap = new DecodedMap(map as any, annotation.location.file)
-        const position = getOriginalPosition(traceMap, annotation.location)
+        const traceMap = new DecodedMap(map as any, artifact.location.file)
+        const position = getOriginalPosition(traceMap, artifact.location)
+
         if (position) {
           const { source, column, line } = position
-          const file = source || annotation.location.file
-          annotation.location = {
+          const file = source || artifact.location.file
+          artifact.location = {
             line,
             column: column + 1,
             // if the file path is on windows, we need to remove the starting slash
             file: file.match(/\/\w:\//) ? file.slice(1) : file,
           }
+
+          if (artifact.type === 'internal:annotation') {
+            artifact.annotation.location = artifact.location
+          }
         }
       }
-      return rpc().onTaskAnnotate(test.id, annotation)
+
+      return rpc().onTaskArtifactRecord(test.id, artifact)
     }
 
     onTaskUpdate = (task: TaskResultPack[], events: TaskEventPack[]): Promise<void> => {

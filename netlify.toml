@@ -75,6 +75,16 @@ from = "/guide/browser/commands"
 to = "/api/browser/commands"
 status = 301
 
+[[redirects]]
+from = "/guide/browser/playwright"
+to = "/config/browser/playwright"
+status = 301
+
+[[redirects]]
+from = "/guide/browser/webdriverio"
+to = "/config/browser/webdriverio"
+status = 301
+
 [[headers]]
 for = "/manifest.webmanifest"
 

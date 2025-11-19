@@ -9,6 +9,7 @@ import type {
   TaskResultPack,
   Test,
   TestAnnotation,
+  TestArtifact,
   TestContext,
 } from './tasks'
 
@@ -144,6 +145,13 @@ export interface VitestRunner {
    * Called when annotation is added via the `context.annotate` method.
    */
   onTestAnnotate?: (test: Test, annotation: TestAnnotation) => Promise<TestAnnotation>
+
+  /**
+   * @experimental
+   *
+   * Called when artifacts are recorded on tests via the `recordArtifact` utility.
+   */
+  onTestArtifactRecord?: <Artifact extends TestArtifact>(test: Test, artifact: Artifact) => Promise<Artifact>
 
   /**
    * Called before running all tests in collected paths.
