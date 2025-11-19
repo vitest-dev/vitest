@@ -1,15 +1,14 @@
-import type { DevEnvironment, FetchResult } from 'vite'
+import type { DevEnvironment, FetchResult, Rollup } from 'vite'
+import type { Vitest } from '../core'
 import type { VitestResolver } from '../resolver'
 import type { ResolvedConfig } from '../types/config'
-import { existsSync, mkdirSync } from 'node:fs'
+import fs, { existsSync, mkdirSync } from 'node:fs'
 import { readFile, rename, rm, stat, unlink, writeFile } from 'node:fs/promises'
-import { tmpdir } from 'node:os'
 import { parse, stringify } from 'flatted'
 import { dirname, join } from 'pathe'
 import c from 'tinyrainbow'
-import { version as viteVersion } from 'vite'
+import { searchForWorkspaceRoot } from 'vite'
 import { createDebugger } from '../../utils/debugger'
-import { Vitest } from '../core'
 import { hash } from '../hash'
 
 const debugFs = createDebugger('vitest:cache:fs')
@@ -18,40 +17,55 @@ const debugMemory = createDebugger('vitest:cache:memory')
 const cacheComment = '\n//# vitestCache='
 const cacheCommentLength = cacheComment.length
 
-// TODO: keep track of stale cache somehow? maybe in a meta file?
+const METADATA_FILE = '_metadata.json'
 
 /**
  * @experimental
  */
 export class FileSystemModuleCache {
-  private version = '1.0.0'
+  /**
+   * Even though it's possible to override the folder of project's caches
+   * We still keep a single metadata file for all projects because
+   * - they can reference files between each other
+   * - lockfile changes are reflected for the whole workspace, not just for a single project
+   */
+  private rootCache: string
+  private metadataFilePath: string
+
+  private version = '1.0.0-beta.1'
   private fsCacheRoots = new WeakMap<ResolvedConfig, string>()
   private fsEnvironmentHashMap = new WeakMap<DevEnvironment, string>()
   private fsCacheKeyGenerators = new Set<CacheKeyIdGenerator>()
   // this exists only to avoid the perf. cost of reading a file and generating a hash again
-  // on some machines this has negligible effect
+  // surprisingly, on some machines this has negligible effect
   private fsCacheKeys = new WeakMap<
     DevEnvironment,
     // Map<id, tmp>
     Map<string, string>
   >()
 
-  constructor(private vitest: Vitest) {}
+  constructor(private vitest: Vitest) {
+    const workspaceRoot = searchForWorkspaceRoot(vitest.vite.config.root)
+    this.rootCache = vitest.config.experimental.fsModuleCachePath
+      || join(workspaceRoot, 'node_modules', '.experimental-vitest-cache')
+    this.metadataFilePath = join(this.rootCache, METADATA_FILE)
+  }
 
   public defineCacheKeyGenerator(callback: CacheKeyIdGenerator): void {
     this.fsCacheKeyGenerators.add(callback)
   }
 
-  async clearCache(): Promise<void> {
-    const defaultFsCache = join(tmpdir(), 'vitest')
+  async clearCache(log = true): Promise<void> {
     const fsCachePaths = this.vitest.projects.map((r) => {
-      return r.config.experimental.fsModuleCachePath || defaultFsCache
+      return r.config.experimental.fsModuleCachePath || this.rootCache
     })
     const uniquePaths = Array.from(new Set(fsCachePaths))
     await Promise.all(
       uniquePaths.map(directory => rm(directory, { force: true, recursive: true })),
     )
-    this.vitest.logger.log('[cache] cleared fs module cache at', uniquePaths.join(', '))
+    if (log) {
+      this.vitest.logger.log(`[cache] cleared fs module cache at ${uniquePaths.join(', ')}`)
+    }
   }
 
   async getCachedModule(cachedFilePath: string): Promise<
@@ -168,7 +182,15 @@ export class FileSystemModuleCache {
           resolve: config.resolve,
           // plugins can have different options, so this is not the best key,
           // but we canot access the options because there is no standard API for it
-          plugins: config.plugins.map(p => p.name),
+          // we bust the cache if lockfile changes, so it covers installed plugins,
+          // but users can also have local plugins - for this use case we
+          // serialize hooks in case the implementation ever changes
+          plugins: config.plugins.map((p) => {
+            return p.name
+              + serializePluginHook(p.transform)
+              + serializePluginHook(p.load)
+              + serializePluginHook(p.resolveId)
+          }),
           environment: environment.name,
           // this affects Vitest CSS plugin
           css: vitestConfig.css,
@@ -196,8 +218,6 @@ export class FileSystemModuleCache {
       + this.version
       + cacheConfig
       + coverageAffectsCache
-      + viteVersion
-      + Vitest.version
 
     this.fsCacheKeyGenerators.forEach((generator) => {
       const result = generator({ environment, id, sourceCode: fileContent })
@@ -210,7 +230,7 @@ export class FileSystemModuleCache {
 
     let cacheRoot = this.fsCacheRoots.get(vitestConfig)
     if (cacheRoot == null) {
-      cacheRoot = vitestConfig.experimental.fsModuleCachePath || join(tmpdir(), 'vitest')
+      cacheRoot = vitestConfig.experimental.fsModuleCachePath || this.rootCache
       if (!existsSync(cacheRoot)) {
         mkdirSync(cacheRoot, { recursive: true })
       }
@@ -226,6 +246,66 @@ export class FileSystemModuleCache {
     debugMemory?.(`${c.yellow('[write]')} ${id} generated a cache in ${fsResultPath}`)
     environmentKeys.set(id, fsResultPath)
     return fsResultPath
+  }
+
+  private async readMetadata(): Promise<{ lockfileHash: string } | undefined> {
+    // metadata is shared between every projects in the workspace, so we ignore project's fsModuleCachePath
+    if (!existsSync(this.metadataFilePath)) {
+      return undefined
+    }
+    try {
+      const content = await readFile(this.metadataFilePath, 'utf-8')
+      return JSON.parse(content)
+    }
+    catch {}
+  }
+
+  // before vitest starts running tests, we check that the lockfile wasn't updated
+  // if it was, we nuke the previous cache in case a custom plugin was updated
+  // or a new version of vite/vitest is installed
+  // for the same reason we also serialize plugin hooks, but that won't catch changes made outside of those hooks
+  public async ensureCacheIntegrity(): Promise<void> {
+    const enabled = [
+      this.vitest.getRootProject(),
+      ...this.vitest.projects,
+    ].some(p => p.config.experimental.fsModuleCache)
+    if (!enabled) {
+      return
+    }
+
+    const metadata = await this.readMetadata()
+    const currentLockfileHash = getLockfileHash(this.vitest.vite.config.root)
+
+    // no metadata found, just store a new one, don't reset the cache
+    if (!metadata) {
+      if (!existsSync(this.rootCache)) {
+        mkdirSync(this.rootCache, { recursive: true })
+      }
+      debugFs?.(`fs metadata file was created with hash ${currentLockfileHash}`)
+
+      await writeFile(
+        this.metadataFilePath,
+        JSON.stringify({ lockfileHash: currentLockfileHash }, null, 2),
+        'utf-8',
+      )
+      return
+    }
+
+    // if lockfile didn't change, don't do anything
+    if (metadata.lockfileHash === currentLockfileHash) {
+      return
+    }
+
+    // lockfile changed, let's clear all caches
+    await this.clearCache(false)
+    this.vitest.vite.config.logger.info(
+      `fs cache was cleared because lockfile has changed`,
+      {
+        timestamp: true,
+        environment: c.yellow('[vitest]'),
+      },
+    )
+    debugFs?.(`fs cache was cleared because lockfile has changed`)
   }
 }
 
@@ -284,4 +364,130 @@ export interface CacheKeyIdGeneratorContext {
   environment: DevEnvironment
   id: string
   sourceCode: string
+}
+
+function serializePluginHook(hook: Rollup.ObjectHook<(...args: any[]) => any> | undefined) {
+  if (hook == null) {
+    return ''
+  }
+  if (typeof hook === 'function') {
+    return hook.toString()
+  }
+  if (typeof hook === 'object' && 'handler' in hook && typeof hook.handler === 'function') {
+    return hook.handler.toString()
+  }
+  return ''
+}
+
+// lockfile hash resolution taken from vite
+// since this is experimental, we don't ask to expose it
+const lockfileFormats = [
+  {
+    path: 'node_modules/.package-lock.json',
+    checkPatchesDir: 'patches',
+    manager: 'npm',
+  },
+  {
+    // Yarn non-PnP
+    path: 'node_modules/.yarn-state.yml',
+    checkPatchesDir: false,
+    manager: 'yarn',
+  },
+  {
+    // Yarn v3+ PnP
+    path: '.pnp.cjs',
+    checkPatchesDir: '.yarn/patches',
+    manager: 'yarn',
+  },
+  {
+    // Yarn v2 PnP
+    path: '.pnp.js',
+    checkPatchesDir: '.yarn/patches',
+    manager: 'yarn',
+  },
+  {
+    // yarn 1
+    path: 'node_modules/.yarn-integrity',
+    checkPatchesDir: 'patches',
+    manager: 'yarn',
+  },
+  {
+    path: 'node_modules/.pnpm/lock.yaml',
+    // Included in lockfile
+    checkPatchesDir: false,
+    manager: 'pnpm',
+  },
+  {
+    path: '.rush/temp/shrinkwrap-deps.json',
+    // Included in lockfile
+    checkPatchesDir: false,
+    manager: 'pnpm',
+  },
+  {
+    path: 'bun.lock',
+    checkPatchesDir: 'patches',
+    manager: 'bun',
+  },
+  {
+    path: 'bun.lockb',
+    checkPatchesDir: 'patches',
+    manager: 'bun',
+  },
+].sort((_, { manager }) => {
+  return process.env.npm_config_user_agent?.startsWith(manager) ? 1 : -1
+})
+const lockfilePaths = lockfileFormats.map(l => l.path)
+
+function getLockfileHash(root: string): string {
+  const lockfilePath = lookupFile(root, lockfilePaths)
+  let content = lockfilePath ? fs.readFileSync(lockfilePath, 'utf-8') : ''
+  if (lockfilePath) {
+    const normalizedLockfilePath = lockfilePath.replaceAll('\\', '/')
+    const lockfileFormat = lockfileFormats.find(f =>
+      normalizedLockfilePath.endsWith(f.path),
+    )!
+    if (lockfileFormat.checkPatchesDir) {
+      // Default of https://github.com/ds300/patch-package
+      const baseDir = lockfilePath.slice(0, -lockfileFormat.path.length)
+      const fullPath = join(
+        baseDir,
+        lockfileFormat.checkPatchesDir as string,
+      )
+      const stat = tryStatSync(fullPath)
+      if (stat?.isDirectory()) {
+        content += stat.mtimeMs.toString()
+      }
+    }
+  }
+  return hash('sha256', content, 'hex').substring(0, 8).padEnd(8, '_')
+}
+
+function lookupFile(
+  dir: string,
+  fileNames: string[],
+): string | undefined {
+  while (dir) {
+    for (const fileName of fileNames) {
+      const fullPath = join(dir, fileName)
+      if (tryStatSync(fullPath)?.isFile()) {
+        return fullPath
+      }
+    }
+    const parentDir = dirname(dir)
+    if (parentDir === dir) {
+      return
+    }
+
+    dir = parentDir
+  }
+}
+
+function tryStatSync(file: string): fs.Stats | undefined {
+  try {
+    // The "throwIfNoEntry" is a performance optimization for cases where the file does not exist
+    return fs.statSync(file, { throwIfNoEntry: false })
+  }
+  catch {
+    // Ignore errors
+  }
 }

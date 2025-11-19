@@ -22,12 +22,22 @@ At the moment, this option does not affect [the browser](/guide/browser/).
 If you are a plugin author, consider defining a [cache key generator](/api/advanced/plugin#definecachekeygenerator) if your plugin can be registered with different options that affect the transform result.
 :::
 
+You can debug if your modules are cached by running vitest with a `DEBUG=vitest:cache:fs` environment variable:
+
+```shell
+DEBUG=vitest:cache:fs vitest --experimental.fsModuleCache
+```
+
 ## experimental.fsModuleCachePath <Version type="experimental">4.0.11</Version> {#experimental-fsmodulecachepath}
 
 - **Type:** `string`
-- **Default:** `join(tmpdir(), 'vitest')`
+- **Default:** `'node_modules/.experimental-vitest-cache'`
 
 Directory where the file system cache is located.
+
+By default, Vitest will try to find the workspace root and store the cache inside the `node_modules` folder. The root is based on your package manager's lockfile (for example, `.package-lock.json`, `.yarn-state.yml`, `.pnpm/lock.yaml` and so on).
+
+At the moment, Vitest ignores the [test.cache.dir](/config/cache) or [cacheDir](https://vite.dev/config/shared-options#cachedir) options completely and creates a separate folder.
 
 ## experimental.openTelemetry <Version type="experimental">4.0.11</Version> {#experimental-opentelemetry}
 

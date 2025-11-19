@@ -320,6 +320,8 @@ export class Vitest {
       ? await createBenchmarkReporters(toArray(resolved.benchmark?.reporters), this.runner)
       : await createReporters(resolved.reporters, this)
 
+    await this._fsCache.ensureCacheIntegrity()
+
     await Promise.all([
       ...this._onSetServer.map(fn => fn()),
       this._traces.waitInit(),
