@@ -1167,6 +1167,12 @@ importers:
         specifier: 'catalog:'
         version: 8.18.3
 
+  test/cache:
+    devDependencies:
+      vitest:
+        specifier: workspace:*
+        version: link:../../packages/vitest
+
   test/cli:
     devDependencies:
       '@opentelemetry/sdk-node':
