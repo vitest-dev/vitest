@@ -3,7 +3,7 @@ import type { DevEnvironment, EnvironmentModuleNode, FetchResult, Rollup, Transf
 import type { FetchFunctionOptions } from 'vite/module-runner'
 import type { FetchCachedFileSystemResult } from '../../types/general'
 import type { OTELCarrier, Traces } from '../../utils/traces'
-import type { FileSystemModuleCache } from '../cache/fsCache'
+import type { FileSystemModuleCache } from '../cache/fsModuleCache'
 import type { VitestResolver } from '../resolver'
 import type { ResolvedConfig } from '../types/config'
 import { existsSync, mkdirSync } from 'node:fs'

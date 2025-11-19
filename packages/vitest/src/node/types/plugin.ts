@@ -1,4 +1,4 @@
-import type { CacheKeyIdGenerator } from '../cache/fsCache'
+import type { CacheKeyIdGenerator } from '../cache/fsModuleCache'
 import type { Vitest } from '../core'
 import type { TestProject } from '../project'
 import type { TestProjectConfiguration } from './config'
