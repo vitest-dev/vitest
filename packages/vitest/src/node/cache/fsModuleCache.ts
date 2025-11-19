@@ -26,6 +26,7 @@ const cacheCommentLength = cacheComment.length
 export class FileSystemModuleCache {
   private version = '1.0.0'
   private fsCacheRoots = new WeakMap<ResolvedConfig, string>()
+  private fsEnvironmentHashMap = new WeakMap<DevEnvironment, string>()
   private fsCacheKeyGenerators = new Set<CacheKeyIdGenerator>()
   // this exists only to avoid the perf. cost of reading a file and generating a hash again
   // on some machines this has negligible effect
@@ -154,42 +155,47 @@ export class FileSystemModuleCache {
     const config = environment.config
     // coverage provider is dynamic, so we also clear the whole cache if
     // vitest.enableCoverage/vitest.disableCoverage is called
-    const coverageAffectsCache = !!(this.vitest.config.coverage.enabled && this.vitest.coverageProvider?.requiresTransform?.(id))
-    const cacheConfig = JSON.stringify(
-      {
-        root: config.root,
-        // at the moment, Vitest always forces base to be /
-        base: config.base,
-        mode: config.mode,
-        consumer: config.consumer,
-        resolve: config.resolve,
-        // plugins can have different options, so this is not the best key,
-        // but we canot access the options because there is no standard API for it
-        plugins: config.plugins.map(p => p.name),
-        environment: environment.name,
-        // this affects Vitest CSS plugin
-        css: vitestConfig.css,
-        // this affect externalization
-        resolver: {
-          inline: resolver.options.inline,
-          external: resolver.options.external,
-          inlineFiles: resolver.options.inlineFiles,
-          moduleDirectories: resolver.options.moduleDirectories,
+    const coverageAffectsCache = String(this.vitest.config.coverage.enabled && this.vitest.coverageProvider?.requiresTransform?.(id))
+    let cacheConfig = this.fsEnvironmentHashMap.get(environment)
+    if (!cacheConfig) {
+      cacheConfig = JSON.stringify(
+        {
+          root: config.root,
+          // at the moment, Vitest always forces base to be /
+          base: config.base,
+          mode: config.mode,
+          consumer: config.consumer,
+          resolve: config.resolve,
+          // plugins can have different options, so this is not the best key,
+          // but we canot access the options because there is no standard API for it
+          plugins: config.plugins.map(p => p.name),
+          environment: environment.name,
+          // this affects Vitest CSS plugin
+          css: vitestConfig.css,
+          // this affect externalization
+          resolver: {
+            inline: resolver.options.inline,
+            external: resolver.options.external,
+            inlineFiles: resolver.options.inlineFiles,
+            moduleDirectories: resolver.options.moduleDirectories,
+          },
         },
-        coverageAffectsCache,
-      },
-      (_, value) => {
-        if (typeof value === 'function' || value instanceof RegExp) {
-          return value.toString()
-        }
-        return value
-      },
-    )
+        (_, value) => {
+          if (typeof value === 'function' || value instanceof RegExp) {
+            return value.toString()
+          }
+          return value
+        },
+      )
+      this.fsEnvironmentHashMap.set(environment, cacheConfig)
+    }
+
     let hashString = id
       + fileContent
       + (process.env.NODE_ENV ?? '')
       + this.version
       + cacheConfig
+      + coverageAffectsCache
       + viteVersion
       + Vitest.version
 
@@ -201,6 +207,7 @@ export class FileSystemModuleCache {
     })
 
     const cacheKey = hash('sha1', hashString, 'hex')
+
     let cacheRoot = this.fsCacheRoots.get(vitestConfig)
     if (cacheRoot == null) {
       cacheRoot = vitestConfig.experimental.fsModuleCachePath || join(tmpdir(), 'vitest')
@@ -208,11 +215,13 @@ export class FileSystemModuleCache {
         mkdirSync(cacheRoot, { recursive: true })
       }
     }
+
     let environmentKeys = this.fsCacheKeys.get(environment)
     if (!environmentKeys) {
       environmentKeys = new Map()
       this.fsCacheKeys.set(environment, environmentKeys)
     }
+
     const fsResultPath = join(cacheRoot, cacheKey)
     debugMemory?.(`${c.yellow('[write]')} ${id} generated a cache in ${fsResultPath}`)
     environmentKeys.set(id, fsResultPath)
