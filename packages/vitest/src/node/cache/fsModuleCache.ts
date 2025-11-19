@@ -1,8 +1,8 @@
-import type { DevEnvironment, FetchResult, Rollup } from 'vite'
+import type { DevEnvironment, FetchResult } from 'vite'
 import type { Vitest } from '../core'
 import type { VitestResolver } from '../resolver'
 import type { ResolvedConfig } from '../types/config'
-import fs, { existsSync, mkdirSync } from 'node:fs'
+import fs, { existsSync, mkdirSync, readFileSync } from 'node:fs'
 import { readFile, rename, rm, stat, unlink, writeFile } from 'node:fs/promises'
 import { parse, stringify } from 'flatted'
 import { dirname, join } from 'pathe'
@@ -182,15 +182,10 @@ export class FileSystemModuleCache {
           resolve: config.resolve,
           // plugins can have different options, so this is not the best key,
           // but we canot access the options because there is no standard API for it
-          // we bust the cache if lockfile changes, so it covers installed plugins,
-          // but users can also have local plugins - for this use case we
-          // serialize hooks in case the implementation ever changes
-          plugins: config.plugins.map((p) => {
-            return p.name
-              + serializePluginHook(p.transform)
-              + serializePluginHook(p.load)
-              + serializePluginHook(p.resolveId)
-          }),
+          plugins: config.plugins.map(p => p.name),
+          // in case local plugins change
+          // configFileDependencies also includes configFile
+          configFileDependencies: config.configFileDependencies.map(file => tryReadFileSync(file)),
           environment: environment.name,
           // this affects Vitest CSS plugin
           css: vitestConfig.css,
@@ -366,19 +361,6 @@ export interface CacheKeyIdGeneratorContext {
   sourceCode: string
 }
 
-function serializePluginHook(hook: Rollup.ObjectHook<(...args: any[]) => any> | undefined) {
-  if (hook == null) {
-    return ''
-  }
-  if (typeof hook === 'function') {
-    return hook.toString()
-  }
-  if (typeof hook === 'object' && 'handler' in hook && typeof hook.handler === 'function') {
-    return hook.handler.toString()
-  }
-  return ''
-}
-
 // lockfile hash resolution taken from vite
 // since this is experimental, we don't ask to expose it
 const lockfileFormats = [
@@ -479,6 +461,15 @@ function lookupFile(
     }
 
     dir = parentDir
+  }
+}
+
+function tryReadFileSync(file: string): string {
+  try {
+    return readFileSync(file, 'utf-8')
+  }
+  catch {
+    return ''
   }
 }
 
