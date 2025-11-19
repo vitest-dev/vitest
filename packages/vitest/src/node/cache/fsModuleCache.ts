@@ -200,7 +200,7 @@ export class FileSystemModuleCache {
       + Vitest.version
 
     this.fsCacheKeyGenerators.forEach((generator) => {
-      const result = generator(environment, id, fileContent)
+      const result = generator({ environment, id, sourceCode: fileContent })
       if (typeof result === 'string') {
         hashString += result
       }
@@ -270,10 +270,18 @@ export interface CachedInlineModuleMeta {
   mappings: boolean
 }
 
+/**
+ * @experimental
+ */
 export interface CacheKeyIdGenerator {
-  (
-    environment: DevEnvironment,
-    id: string,
-    sourceCode: string,
-  ): string | undefined | null
+  (context: CacheKeyIdGeneratorContext): string | undefined | null
+}
+
+/**
+ * @experimental
+ */
+export interface CacheKeyIdGeneratorContext {
+  environment: DevEnvironment
+  id: string
+  sourceCode: string
 }

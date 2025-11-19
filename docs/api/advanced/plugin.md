@@ -127,12 +127,14 @@ Note that this will also inherit the `name` - Vitest doesn't allow multiple proj
 ### experimental_defineCacheKeyGenerator <Version type="experimental">4.0.11</Version> <Experimental /> {#definecachekeygenerator}
 
 ```ts
+interface CacheKeyIdGeneratorContext {
+  environment: DevEnvironment
+  id: string
+  sourceCode: string
+}
+
 function experimental_defineCacheKeyGenerator(
-  callback: (
-    environment: DevEnvironment,
-    id: string,
-    sourceCode: string,
-  ) => string | undefined | null
+  callback: (context: CacheKeyIdGeneratorContext) => string | undefined | null
 ): void
 ```
 
