@@ -2,7 +2,15 @@ import type { Options } from 'tinyexec'
 import type { UserConfig as ViteUserConfig } from 'vite'
 import type { SerializedConfig, WorkerGlobalState } from 'vitest'
 import type { TestProjectConfiguration } from 'vitest/config'
-import type { TestCase, TestCollection, TestModule, TestResult, TestSpecification, TestUserConfig, Vitest, VitestRunMode } from 'vitest/node'
+import type {
+  TestCollection,
+  TestModule,
+  TestResult,
+  TestSpecification,
+  TestUserConfig,
+  Vitest,
+  VitestRunMode,
+} from 'vitest/node'
 import { webcrypto as crypto } from 'node:crypto'
 import fs from 'node:fs'
 import { Readable, Writable } from 'node:stream'
