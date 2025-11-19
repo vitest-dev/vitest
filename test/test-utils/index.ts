@@ -2,7 +2,7 @@ import type { Options } from 'tinyexec'
 import type { UserConfig as ViteUserConfig } from 'vite'
 import type { SerializedConfig, WorkerGlobalState } from 'vitest'
 import type { TestProjectConfiguration } from 'vitest/config'
-import type { TestCollection, TestModule, TestSpecification, TestUserConfig, Vitest, VitestRunMode } from 'vitest/node'
+import type { TestCase, TestCollection, TestModule, TestResult, TestSpecification, TestUserConfig, Vitest, VitestRunMode } from 'vitest/node'
 import { webcrypto as crypto } from 'node:crypto'
 import fs from 'node:fs'
 import { Readable, Writable } from 'node:stream'
@@ -148,6 +148,17 @@ export async function runVitest(
     vitest: cli,
     stdout: cli.stdout,
     stderr: cli.stderr,
+    get results() {
+      return ctx?.state.getTestModules() || []
+    },
+    errorTree() {
+      return buildTestTree(ctx?.state.getTestModules() || [], (result) => {
+        if (result.state === 'failed') {
+          return result.errors.map(e => e.message)
+        }
+        return result.state
+      })
+    },
     testTree() {
       return buildTestTree(ctx?.state.getTestModules() || [])
     },
@@ -399,7 +410,7 @@ export class StableTestFileOrderSorter {
   }
 }
 
-function buildTestTree(testModules: TestModule[]) {
+function buildTestTree(testModules: TestModule[], onResult?: (result: TestResult) => unknown) {
   type TestTree = Record<string, any>
 
   function walkCollection(collection: TestCollection): TestTree {
@@ -413,7 +424,12 @@ function buildTestTree(testModules: TestModule[]) {
       }
       else if (child.type === 'test') {
         const result = child.result()
-        node[child.name] = result.state
+        if (onResult) {
+          node[child.name] = onResult(result)
+        }
+        else {
+          node[child.name] = result.state
+        }
       }
     }
 
