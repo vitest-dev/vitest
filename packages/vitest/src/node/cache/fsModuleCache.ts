@@ -258,7 +258,7 @@ export class FileSystemModuleCache {
   // before vitest starts running tests, we check that the lockfile wasn't updated
   // if it was, we nuke the previous cache in case a custom plugin was updated
   // or a new version of vite/vitest is installed
-  // for the same reason we also serialize plugin hooks, but that won't catch changes made outside of those hooks
+  // for the same reason we also cache config file content, but that won't catch changes made in external plugins
   public async ensureCacheIntegrity(): Promise<void> {
     const enabled = [
       this.vitest.getRootProject(),
