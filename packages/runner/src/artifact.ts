@@ -1,4 +1,4 @@
-import type { Test, TestArtifact, TestArtifactBase /* used in JSDoc */, TestAttachment } from './types'
+import type { Test, TestArtifact, TestArtifactBase /* used in JSDoc */, TestAttachment } from './types/tasks'
 import { finishSendTasksUpdate } from './run'
 import { getRunner } from './suite'
 import { findTestFileStackTrace } from './utils/collect'
