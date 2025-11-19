@@ -1,6 +1,6 @@
 import type { Environment } from 'vitest/environments'
 import vm from 'node:vm'
-import createDebug from 'obug'
+import { createDebug } from 'obug'
 
 // test that external packages (debug) are loaded correctly
 const log = createDebug('test:env')

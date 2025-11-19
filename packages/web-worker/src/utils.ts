@@ -2,7 +2,7 @@ import type { Debugger } from 'obug'
 import type { WorkerGlobalState } from 'vitest'
 import type { CloneOption } from './types'
 import ponyfillStructuredClone from '@ungap/structured-clone'
-import createDebug from 'obug'
+import { createDebug } from 'obug'
 
 export const debug: Debugger = createDebug('vitest:web-worker')
 

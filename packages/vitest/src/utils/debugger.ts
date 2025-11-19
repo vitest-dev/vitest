@@ -1,5 +1,5 @@
 import type { Debugger } from 'obug'
-import createDebug from 'obug'
+import { createDebug } from 'obug'
 
 export function createDebugger(namespace: `vitest:${string}`): Debugger | undefined {
   const debug = createDebug(namespace)
