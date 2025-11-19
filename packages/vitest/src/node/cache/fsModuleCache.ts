@@ -154,7 +154,7 @@ export class FileSystemModuleCache {
   ): string | undefined {
     const result = this.fsCacheKeys.get(environment)?.get(id)
     if (result) {
-      debugMemory?.(`${c.green('[write]')} ${id} was cached in ${result}`)
+      debugMemory?.(`${c.green('[read]')} ${id} was cached in ${result}`)
     }
     return result
   }
