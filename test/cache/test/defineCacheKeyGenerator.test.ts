@@ -9,6 +9,7 @@ test('if no cache key generator is defined, the hash is invalid', async () => {
     config: './vitest.config.fails.js',
     experimental: {
       fsModuleCache: true,
+      fsModuleCachePath: './node_modules/.vitest-fs-cache',
     },
     reporters: [
       {
@@ -35,6 +36,7 @@ test('if no cache key generator is defined, the hash is invalid', async () => {
     config: './vitest.config.fails.js',
     experimental: {
       fsModuleCache: true,
+      fsModuleCachePath: './node_modules/.vitest-fs-cache',
     },
   })
 
@@ -57,6 +59,7 @@ test('if cache key generator is defined, the hash is valid', async () => {
     config: './vitest.config.passes.js',
     experimental: {
       fsModuleCache: true,
+      fsModuleCachePath: './node_modules/.vitest-fs-cache',
     },
     reporters: [
       {
@@ -83,6 +86,7 @@ test('if cache key generator is defined, the hash is valid', async () => {
     config: './vitest.config.passes.js',
     experimental: {
       fsModuleCache: true,
+      fsModuleCachePath: './node_modules/.vitest-fs-cache',
     },
   })
 
