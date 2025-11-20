@@ -134,7 +134,7 @@ interface CacheKeyIdGeneratorContext {
 }
 
 function experimental_defineCacheKeyGenerator(
-  callback: (context: CacheKeyIdGeneratorContext) => string | undefined | null
+  callback: (context: CacheKeyIdGeneratorContext) => string | undefined | null | false
 ): void
 ```
 
@@ -169,3 +169,5 @@ export function plugin(options: PluginOptions) {
   }
 }
 ```
+
+If the `false` is returned, the module will not be cached on the file system.

@@ -40,8 +40,8 @@ export class FileSystemModuleCache {
   // surprisingly, on some machines this has negligible effect
   private fsCacheKeys = new WeakMap<
     DevEnvironment,
-    // Map<id, tmp>
-    Map<string, string>
+    // Map<id, tmp | null>
+    Map<string, string | null>
   >()
 
   constructor(private vitest: Vitest) {
@@ -151,10 +151,13 @@ export class FileSystemModuleCache {
   getMemoryCachePath(
     environment: DevEnvironment,
     id: string,
-  ): string | undefined {
+  ): string | null | undefined {
     const result = this.fsCacheKeys.get(environment)?.get(id)
-    if (result) {
+    if (result != null) {
       debugMemory?.(`${c.green('[read]')} ${id} was cached in ${result}`)
+    }
+    else if (result === null) {
+      debugMemory?.(`${c.green('[read]')} ${id} was bailed out`)
     }
     return result
   }
@@ -165,7 +168,29 @@ export class FileSystemModuleCache {
     resolver: VitestResolver,
     id: string,
     fileContent: string,
-  ): string {
+  ): string | null {
+    let hashString = ''
+
+    // bail out if file has import.meta.glob because it depends on other files
+    // TODO: figure out a way to still support it
+    if (fileContent.includes('import.meta.glob')) {
+      this.saveMemoryCache(environment, id, null)
+      debugMemory?.(`${c.yellow('[write]')} ${id} was bailed out`)
+      return null
+    }
+
+    for (const generator of this.fsCacheKeyGenerators) {
+      const result = generator({ environment, id, sourceCode: fileContent })
+      if (typeof result === 'string') {
+        hashString += result
+      }
+      if (result === false) {
+        this.saveMemoryCache(environment, id, null)
+        debugMemory?.(`${c.yellow('[write]')} ${id} was bailed out by a custom generator`)
+        return null
+      }
+    }
+
     const config = environment.config
     // coverage provider is dynamic, so we also clear the whole cache if
     // vitest.enableCoverage/vitest.disableCoverage is called
@@ -207,19 +232,12 @@ export class FileSystemModuleCache {
       this.fsEnvironmentHashMap.set(environment, cacheConfig)
     }
 
-    let hashString = id
+    hashString += id
       + fileContent
       + (process.env.NODE_ENV ?? '')
       + this.version
       + cacheConfig
       + coverageAffectsCache
-
-    this.fsCacheKeyGenerators.forEach((generator) => {
-      const result = generator({ environment, id, sourceCode: fileContent })
-      if (typeof result === 'string') {
-        hashString += result
-      }
-    })
 
     const cacheKey = hash('sha1', hashString, 'hex')
 
@@ -231,16 +249,19 @@ export class FileSystemModuleCache {
       }
     }
 
+    const fsResultPath = join(cacheRoot, cacheKey)
+    debugMemory?.(`${c.yellow('[write]')} ${id} generated a cache in ${fsResultPath}`)
+    this.saveMemoryCache(environment, id, fsResultPath)
+    return fsResultPath
+  }
+
+  private saveMemoryCache(environment: DevEnvironment, id: string, cache: string | null) {
     let environmentKeys = this.fsCacheKeys.get(environment)
     if (!environmentKeys) {
       environmentKeys = new Map()
       this.fsCacheKeys.set(environment, environmentKeys)
     }
-
-    const fsResultPath = join(cacheRoot, cacheKey)
-    debugMemory?.(`${c.yellow('[write]')} ${id} generated a cache in ${fsResultPath}`)
-    environmentKeys.set(id, fsResultPath)
-    return fsResultPath
+    environmentKeys.set(id, cache)
   }
 
   private async readMetadata(): Promise<{ lockfileHash: string } | undefined> {
@@ -346,10 +367,13 @@ export interface CachedInlineModuleMeta {
 }
 
 /**
+ * Generate a unique cache identifier.
+ *
+ * Return `false` to disable caching of the file.
  * @experimental
  */
 export interface CacheKeyIdGenerator {
-  (context: CacheKeyIdGeneratorContext): string | undefined | null
+  (context: CacheKeyIdGeneratorContext): string | undefined | null | false
 }
 
 /**

@@ -66,9 +66,14 @@ class ModuleFetcher {
       return { cache: true }
     }
 
+    const cachePath = await this.getCachePath(
+      environment,
+      moduleGraphModule,
+    )
+
     // full fs caching is disabled, but we still want to keep tmp files if makeTmpCopies is enabled
     // this is primarily used by the forks pool to avoid using process.send(bigBuffer)
-    if (!this.fsCacheEnabled) {
+    if (cachePath == null) {
       const result = await this.fetchAndProcess(environment, url, importer, moduleGraphModule, options)
 
       this.recordResult(trace, result)
@@ -99,11 +104,6 @@ class ModuleFetcher {
         return result
       })
     }
-
-    const cachePath = await this.getCachePath(
-      environment,
-      moduleGraphModule,
-    )
 
     if (saveCachePromises.has(cachePath)) {
       return saveCachePromises.get(cachePath)!.then((result) => {
@@ -159,11 +159,19 @@ class ModuleFetcher {
     }
   }
 
-  private async getCachePath(environment: DevEnvironment, moduleGraphModule: EnvironmentModuleNode) {
-    const memoryCacheKey = this.fsCache.getMemoryCachePath(environment, moduleGraphModule.id!)
-    if (memoryCacheKey != null) {
+  private async getCachePath(environment: DevEnvironment, moduleGraphModule: EnvironmentModuleNode): Promise<null | string> {
+    if (!this.fsCacheEnabled) {
+      return null
+    }
+    const moduleId = moduleGraphModule.id!
+
+    const memoryCacheKey = this.fsCache.getMemoryCachePath(environment, moduleId)
+    // undefined means there is no key in memory
+    // null means the file should not be cached
+    if (memoryCacheKey !== undefined) {
       return memoryCacheKey
     }
+
     const fileContent = await this.readFileContentToCache(environment, moduleGraphModule)
     return this.fsCache.generateCachePath(
       this.config,
