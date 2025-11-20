@@ -19,7 +19,9 @@ At the moment, this option does not affect [the browser](/guide/browser/).
 :::
 
 ::: danger ADVANCED
-If you are a plugin author, consider defining a [cache key generator](/api/advanced/plugin#definecachekeygenerator) if your plugin can be registered with different options that affect the transform result.
+Consider defining a [cache key generator](/api/advanced/plugin#definecachekeygenerator) if your plugin can be registered with different options that affect the transform result.
+
+You can also define it in a local plugin if you are having issues with specific files caching when they shouldn't.
 :::
 
 You can debug if your modules are cached by running vitest with a `DEBUG=vitest:cache:fs` environment variable:

@@ -173,7 +173,7 @@ export class FileSystemModuleCache {
 
     // bail out if file has import.meta.glob because it depends on other files
     // TODO: figure out a way to still support it
-    if (fileContent.includes('import.meta.glob')) {
+    if (fileContent.includes('import.meta.glob(')) {
       this.saveMemoryCache(environment, id, null)
       debugMemory?.(`${c.yellow('[write]')} ${id} was bailed out`)
       return null
