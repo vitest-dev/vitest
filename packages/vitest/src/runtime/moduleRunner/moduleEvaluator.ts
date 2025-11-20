@@ -29,6 +29,9 @@ export interface VitestModuleEvaluatorOptions {
   getCurrentTestFilepath?: () => string | undefined
   compiledFunctionArgumentsNames?: string[]
   compiledFunctionArgumentsValues?: unknown[]
+  /**
+   * @internal
+   */
   traces?: Traces
 }
 

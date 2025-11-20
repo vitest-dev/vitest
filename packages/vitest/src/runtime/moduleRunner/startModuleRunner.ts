@@ -27,6 +27,9 @@ export interface ContextModuleRunnerOptions {
   context?: vm.Context
   externalModulesExecutor?: ExternalModulesExecutor
   state: WorkerGlobalState
+  /**
+   * @internal
+   */
   traces?: Traces // optional to keep backwards compat
   spyModule?: typeof import('@vitest/spy')
   createImportMeta?: CreateImportMeta
