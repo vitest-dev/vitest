@@ -527,6 +527,9 @@ export class VitestMocker {
 
 declare module 'vite/module-runner' {
   interface EvaluatedModuleNode {
+    /**
+     * @internal
+     */
     mockedExports?: Record<string, any>
   }
 }
