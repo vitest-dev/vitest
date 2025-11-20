@@ -102,6 +102,10 @@ export function WorkspaceVitestPlugin(
           vitestConfig.experimental ??= {}
           vitestConfig.experimental.fsModuleCache = project.vitest.config.experimental.fsModuleCache
         }
+        if (testConfig.experimental?.fsModuleCachePath == null && project.vitest.config.experimental?.fsModuleCachePath !== null) {
+          vitestConfig.experimental ??= {}
+          vitestConfig.experimental.fsModuleCachePath = project.vitest.config.experimental.fsModuleCachePath
+        }
 
         return {
           base: '/',

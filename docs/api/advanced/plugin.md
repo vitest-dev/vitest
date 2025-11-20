@@ -170,4 +170,4 @@ export function plugin(options: PluginOptions) {
 }
 ```
 
-If the `false` is returned, the module will not be cached on the file system.
+If `false` is returned, the module will not be cached on the file system.
