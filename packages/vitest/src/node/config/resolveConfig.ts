@@ -806,6 +806,12 @@ export function resolveConfig(
     )
     resolved.experimental.openTelemetry.sdkPath = pathToFileURL(sdkPath).toString()
   }
+  if (resolved.experimental.fsModuleCachePath) {
+    resolved.experimental.fsModuleCachePath = resolve(
+      resolved.root,
+      resolved.experimental.fsModuleCachePath,
+    )
+  }
 
   return resolved
 }

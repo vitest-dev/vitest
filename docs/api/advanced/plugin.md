@@ -123,3 +123,51 @@ The project's `configFile` can be accessed in Vite's config: `project.vite.confi
 
 Note that this will also inherit the `name` - Vitest doesn't allow multiple projects with the same name, so this will throw an error. Make sure you specified a different name. You can access the current name via the `project.name` property and all used names are available in the `vitest.projects` array.
 :::
+
+### experimental_defineCacheKeyGenerator <Version type="experimental">4.0.11</Version> <Experimental /> {#definecachekeygenerator}
+
+```ts
+interface CacheKeyIdGeneratorContext {
+  environment: DevEnvironment
+  id: string
+  sourceCode: string
+}
+
+function experimental_defineCacheKeyGenerator(
+  callback: (context: CacheKeyIdGeneratorContext) => string | undefined | null | false
+): void
+```
+
+Define a generator that will be applied before hashing the cache key.
+
+Use this to make sure Vitest generates correct hash. It is a good idea to define this function if your plugin can be registered with different options.
+
+This is called only if [`experimental.fsModuleCache`](/config/experimental#fsmodulecache) is defined.
+
+```ts
+interface PluginOptions {
+  replacePropertyKey: string
+  replacePropertyValue: string
+}
+
+export function plugin(options: PluginOptions) {
+  return {
+    name: 'plugin-that-replaces-property',
+    transform(code) {
+      return code.replace(
+        options.replacePropertyKey,
+        options.replacePropertyValue
+      )
+    },
+    configureVitest({ experimental_defineCacheKeyGenerator }) {
+      experimental_defineCacheKeyGenerator(() => {
+        // since these options affect the transform result,
+        // return them together as a unique string
+        return options.replacePropertyKey + options.replacePropertyValue
+      })
+    }
+  }
+}
+```
+
+If the `false` is returned, the module will not be cached on the file system.

@@ -89,3 +89,40 @@ describe.each([
     }).rejects.toThrowError(`Inspector host cannot be a URL. Use "host:port" instead of "${url}"`)
   })
 })
+
+it('experimental fsModuleCache is inherited in a project', async () => {
+  const v = await vitest({}, {
+    experimental: {
+      fsModuleCache: true,
+    },
+    projects: [
+      {
+        test: {
+          name: 'project',
+        },
+      },
+    ],
+  })
+  expect(v.config.experimental.fsModuleCache).toBe(true)
+  expect(v.projects[0].config.experimental.fsModuleCache).toBe(true)
+})
+
+it('project overrides experimental fsModuleCache', async () => {
+  const v = await vitest({}, {
+    experimental: {
+      fsModuleCache: true,
+    },
+    projects: [
+      {
+        test: {
+          name: 'project',
+          experimental: {
+            fsModuleCache: false,
+          },
+        },
+      },
+    ],
+  })
+  expect(v.config.experimental.fsModuleCache).toBe(true)
+  expect(v.projects[0].config.experimental.fsModuleCache).toBe(false)
+})

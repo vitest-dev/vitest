@@ -607,3 +607,11 @@ function experimental_parseSpecifications(
 ```
 
 This method will [collect tests](#parsespecification) from an array of specifications. By default, Vitest will run only `os.availableParallelism()` number of specifications at a time to reduce the potential performance degradation. You can specify a different number in a second argument.
+
+## experimental_clearCache <Version type="experimental">4.0.11</Version> <Badge type="warning">experimental</Badge> {#clearcache}
+
+```ts
+function experimental_clearCache(): Promise<void>
+```
+
+Deletes all Vitest caches, including [`experimental.fsModuleCache`](/config/experimental#fsmodulecache).

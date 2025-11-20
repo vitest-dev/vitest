@@ -53,6 +53,13 @@ export interface CoverageProvider {
     pluginCtx: any,
   ) => TransformResult | Promise<TransformResult>
 
+  /**
+   * Return `true` if this file is transformed by the coverage provider.
+   * This is used to generate the persistent file hash by `fsModuleCache`
+   * @experimental
+   */
+  requiresTransform?: (id: string) => boolean
+
   /** Callback that's called when the coverage is enabled via a programmatic `enableCoverage` API. */
   onEnabled?: () => void | Promise<void>
 }
