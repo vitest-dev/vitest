@@ -49,6 +49,9 @@ export interface WorkerSetupContext {
   config: SerializedConfig
   projectName: string
   rpc: WorkerRPC
+  /**
+   * @internal
+   */
   traces: Traces
 }
 

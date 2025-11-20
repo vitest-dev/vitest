@@ -206,6 +206,9 @@ export interface VitestModuleRunnerOptions {
   getWorkerState: () => WorkerGlobalState
   mocker?: VitestMocker
   vm?: VitestVmOptions
+  /**
+   * @internal
+   */
   traces?: Traces
   spyModule?: typeof import('@vitest/spy')
   createImportMeta?: CreateImportMeta
