@@ -192,7 +192,7 @@
     "picomatch": "^4.0.3",
     "std-env": "catalog:",
     "tinybench": "^2.9.0",
-    "tinyexec": "^0.3.2",
+    "tinyexec": "^1.0.1",
     "tinyglobby": "catalog:",
     "tinyrainbow": "catalog:",
     "vite": "^6.0.0 || ^7.0.0",
