@@ -39,38 +39,46 @@ const { clearTimeout, setTimeout } = getSafeTimers()
  * Handles both number and object forms.
  */
 function getRetryCount(retry: number | { count?: number } | undefined): number {
-  if (retry === undefined)
+  if (retry === undefined) {
     return 0
-  if (typeof retry === 'number')
+  }
+  if (typeof retry === 'number') {
     return retry
+  }
   return retry.count ?? 0
 }
 
 function getRetryDelay(retry: number | { delay?: number } | undefined): number {
-  if (retry === undefined)
+  if (retry === undefined) {
     return 0
-  if (typeof retry === 'number')
+  }
+  if (typeof retry === 'number') {
     return 0
+  }
   return retry.delay ?? 0
 }
 
 function getRetryCondition(
   retry: number | { condition?: string | ((error: Error) => boolean) } | undefined,
 ): string | ((error: Error) => boolean) | undefined {
-  if (retry === undefined)
+  if (retry === undefined) {
     return undefined
-  if (typeof retry === 'number')
+  }
+  if (typeof retry === 'number') {
     return undefined
+  }
   return retry.condition
 }
 
 function getRetryStrategy(
   retry: number | { strategy?: 'immediate' | 'test-file' | 'deferred' } | undefined,
 ): 'immediate' | 'test-file' | 'deferred' {
-  if (retry === undefined)
+  if (retry === undefined) {
     return 'immediate'
-  if (typeof retry === 'number')
+  }
+  if (typeof retry === 'number') {
     return 'immediate'
+  }
   return retry.strategy ?? 'immediate'
 }
 
