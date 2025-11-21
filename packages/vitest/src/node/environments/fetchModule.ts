@@ -139,7 +139,7 @@ class ModuleFetcher {
   private recordResult(trace: Span, result: FetchResult | FetchCachedFileSystemResult): void {
     if ('externalize' in result) {
       trace.setAttributes({
-        'vitest.module.external': result.externalize,
+        'vitest.fetched_module.external': result.externalize,
         'vitest.fetched_module.type': result.type,
       })
     }
@@ -213,44 +213,55 @@ class ModuleFetcher {
     environment: DevEnvironment,
     moduleGraphModule: EnvironmentModuleNode,
   ): Promise<FetchResult | FetchCachedFileSystemResult | undefined> {
-    const cachedModule = await this.fsCache.getCachedModule(cachePath)
-
-    if (cachedModule && 'code' in cachedModule) {
-      // keep the module graph in sync
-      if (!moduleGraphModule.transformResult) {
-        let map: Rollup.SourceMap | null | { mappings: '' } = extractSourceMap(cachedModule.code)
-        if (map && cachedModule.file) {
-          map.file = cachedModule.file
-        }
-        // mappings is a special source map identifier in rollup
-        if (!map && cachedModule.mappings) {
-          map = { mappings: '' }
-        }
-        moduleGraphModule.transformResult = {
-          code: cachedModule.code,
-          map,
-          ssr: true,
-        }
-
-        // we populate the module graph to make the watch mode work because it relies on importers
-        cachedModule.importers.forEach((importer) => {
-          const environmentNode = environment.moduleGraph.getModuleById(importer)
-          if (environmentNode) {
-            moduleGraphModule.importers.add(environmentNode)
-          }
-        })
-      }
+    if (moduleGraphModule.transformResult?.__vitestTmp) {
       return {
         cached: true as const,
-        file: cachedModule.file,
-        id: cachedModule.id,
-        tmp: cachePath,
-        url: cachedModule.url,
+        file: moduleGraphModule.file,
+        id: moduleGraphModule.id!,
+        tmp: moduleGraphModule.transformResult.__vitestTmp,
+        url: moduleGraphModule.url,
         invalidate: false,
       }
     }
 
-    return cachedModule
+    const cachedModule = await this.fsCache.getCachedModule(cachePath)
+
+    if (!cachedModule) {
+      return
+    }
+
+    // keep the module graph in sync
+    let map: Rollup.SourceMap | null | { mappings: '' } = extractSourceMap(cachedModule.code)
+    if (map && cachedModule.file) {
+      map.file = cachedModule.file
+    }
+    // mappings is a special source map identifier in rollup
+    if (!map && cachedModule.mappings) {
+      map = { mappings: '' }
+    }
+    moduleGraphModule.transformResult = {
+      code: cachedModule.code,
+      map,
+      ssr: true,
+      __vitestTmp: cachePath,
+    }
+
+    // we populate the module graph to make the watch mode work because it relies on importers
+    cachedModule.importers.forEach((importer) => {
+      const environmentNode = environment.moduleGraph.getModuleById(importer)
+      if (environmentNode) {
+        moduleGraphModule.importers.add(environmentNode)
+      }
+    })
+
+    return {
+      cached: true as const,
+      file: cachedModule.file,
+      id: cachedModule.id,
+      tmp: cachePath,
+      url: cachedModule.url,
+      invalidate: false,
+    }
   }
 
   private async fetchAndProcess(
@@ -484,4 +495,10 @@ export function handleRollupError(e: unknown): never {
     }
   }
   throw e
+}
+
+declare module 'vite' {
+  export interface TransformResult {
+    __vitestTmp?: string
+  }
 }

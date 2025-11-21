@@ -19,6 +19,8 @@ const cacheCommentLength = cacheComment.length
 
 const METADATA_FILE = '_metadata.json'
 
+const parallelFsCacheRead = new Map<string, Promise<{ code: string; meta: CachedInlineModuleMeta } | undefined>>()
+
 /**
  * @experimental
  */
@@ -68,9 +70,25 @@ export class FileSystemModuleCache {
     }
   }
 
+  private readCachedFileConcurrently(cachedFilePath: string) {
+    if (!parallelFsCacheRead.has(cachedFilePath)) {
+      parallelFsCacheRead.set(cachedFilePath, readFile(cachedFilePath, 'utf-8').then((code) => {
+        const matchIndex = code.lastIndexOf(cacheComment)
+        if (matchIndex === -1) {
+          debugFs?.(`${c.red('[empty]')} ${cachedFilePath} exists, but doesn't have a ${cacheComment} comment, transforming by vite instead`)
+          return
+        }
+
+        return { code, meta: this.fromBase64(code.slice(matchIndex + cacheCommentLength)) }
+      }).finally(() => {
+        parallelFsCacheRead.delete(cachedFilePath)
+      }))
+    }
+    return parallelFsCacheRead.get(cachedFilePath)!
+  }
+
   async getCachedModule(cachedFilePath: string): Promise<
     CachedInlineModuleMeta
-    | Extract<FetchResult, { externalize: string }>
     | undefined
   > {
     if (!existsSync(cachedFilePath)) {
@@ -78,18 +96,12 @@ export class FileSystemModuleCache {
       return
     }
 
-    const code = await readFile(cachedFilePath, 'utf-8')
-    const matchIndex = code.lastIndexOf(cacheComment)
-    if (matchIndex === -1) {
-      debugFs?.(`${c.red('[empty]')} ${cachedFilePath} exists, but doesn't have a ${cacheComment} comment, transforming by vite instead`)
+    const fileResult = await this.readCachedFileConcurrently(cachedFilePath)
+    if (!fileResult) {
       return
     }
+    const { code, meta } = fileResult
 
-    const meta = this.fromBase64(code.slice(matchIndex + cacheCommentLength))
-    if (meta.externalize) {
-      debugFs?.(`${c.green('[read]')} ${meta.externalize} is externalized inside ${cachedFilePath}`)
-      return { externalize: meta.externalize, type: meta.type }
-    }
     debugFs?.(`${c.green('[read]')} ${meta.id} is cached in ${cachedFilePath}`)
 
     return {
@@ -108,11 +120,7 @@ export class FileSystemModuleCache {
     importers: string[] = [],
     mappings: boolean = false,
   ): Promise<void> {
-    if ('externalize' in fetchResult) {
-      debugFs?.(`${c.yellow('[write]')} ${fetchResult.externalize} is externalized inside ${cachedFilePath}`)
-      await atomicWriteFile(cachedFilePath, `${cacheComment}${this.toBase64(fetchResult)}`)
-    }
-    else if ('code' in fetchResult) {
+    if ('code' in fetchResult) {
       const result = {
         file: fetchResult.file,
         id: fetchResult.id,
@@ -169,8 +177,6 @@ export class FileSystemModuleCache {
     id: string,
     fileContent: string,
   ): string | null {
-    let hashString = ''
-
     // bail out if file has import.meta.glob because it depends on other files
     // TODO: figure out a way to still support it
     if (fileContent.includes('import.meta.glob(')) {
@@ -178,6 +184,8 @@ export class FileSystemModuleCache {
       debugMemory?.(`${c.yellow('[write]')} ${id} was bailed out`)
       return null
     }
+
+    let hashString = ''
 
     for (const generator of this.fsCacheKeyGenerators) {
       const result = generator({ environment, id, sourceCode: fileContent })
@@ -214,13 +222,6 @@ export class FileSystemModuleCache {
           environment: environment.name,
           // this affects Vitest CSS plugin
           css: vitestConfig.css,
-          // this affect externalization
-          resolver: {
-            inline: resolver.options.inline,
-            external: resolver.options.external,
-            inlineFiles: resolver.options.inlineFiles,
-            moduleDirectories: resolver.options.moduleDirectories,
-          },
         },
         (_, value) => {
           if (typeof value === 'function' || value instanceof RegExp) {
