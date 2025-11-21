@@ -7,6 +7,7 @@
 
 // This is a fork of Jest's jest-diff package, but it doesn't depend on Node environment (like chalk).
 
+import type { ArrayContaining, AsymmetricMatcher } from '@vitest/expect'
 import type { PrettyFormatOptions } from '@vitest/pretty-format'
 import type { DiffOptions } from './types'
 import {
@@ -34,22 +35,13 @@ function getCommonMessage(message: string, options?: DiffOptions) {
   return commonColor(message)
 }
 
-const {
-  AsymmetricMatcher,
-  DOMCollection,
-  DOMElement,
-  Immutable,
-  ReactElement,
-  ReactTestComponent,
-} = prettyFormatPlugins
-
 const PLUGINS = [
-  ReactTestComponent,
-  ReactElement,
-  DOMElement,
-  DOMCollection,
-  Immutable,
-  AsymmetricMatcher,
+  prettyFormatPlugins.ReactTestComponent,
+  prettyFormatPlugins.ReactElement,
+  prettyFormatPlugins.DOMElement,
+  prettyFormatPlugins.DOMCollection,
+  prettyFormatPlugins.Immutable,
+  prettyFormatPlugins.AsymmetricMatcher,
   prettyFormatPlugins.Error,
 ]
 const FORMAT_OPTIONS = {
@@ -130,6 +122,9 @@ export function diff(a: any, b: any, options?: DiffOptions): string | undefined 
     case 'set':
       return compareObjects(sortSet(a), sortSet(b), options)
     default:
+      if (isAsymmetricMatcher(a) && isArrayContaining(a)) {
+        return compareArrayContaining(a, b, options)
+      }
       return compareObjects(a, b, options)
   }
 }
@@ -188,6 +183,40 @@ function compareObjects(
   return difference
 }
 
+function compareArrayContaining(
+  a: ArrayContaining,
+  b: Array<any>,
+  options?: DiffOptions,
+) {
+  let difference
+  let hasThrown = false
+
+  try {
+    const formatOptions = getFormatOptions(FORMAT_OPTIONS, options)
+    difference = getArrayContainingDifference(a, b, formatOptions, options)
+  }
+  catch {
+    hasThrown = true
+  }
+
+  const noDiffMessage = getCommonMessage(NO_DIFF_MESSAGE, options)
+  // If the comparison yields no results, compare again but this time
+  // without calling `toJSON`. It's also possible that toJSON might throw.
+  if (difference === undefined || difference === noDiffMessage) {
+    const formatOptions = getFormatOptions(FALLBACK_FORMAT_OPTIONS, options)
+    difference = getArrayContainingDifference(a, b, formatOptions, options)
+
+    if (difference !== noDiffMessage && !hasThrown) {
+      difference = `${getCommonMessage(
+        SIMILAR_MESSAGE,
+        options,
+      )}\n\n${difference}`
+    }
+  }
+
+  return difference
+}
+
 function getFormatOptions(
   formatOptions: PrettyFormatOptions,
   options?: DiffOptions,
@@ -229,11 +258,112 @@ function getObjectsDifference(
   }
 }
 
+function getArrayContainingDifference(
+  a: ArrayContaining,
+  b: Array<any>,
+  formatOptions: PrettyFormatOptions,
+  options?: DiffOptions,
+): string {
+  const formatOptionsZeroIndent = { ...formatOptions, indent: 0 }
+  const aCompare = prettyFormat(a, formatOptionsZeroIndent)
+  const bCompare = prettyFormat(b, formatOptionsZeroIndent)
+
+  if (aCompare === bCompare) {
+    return getCommonMessage(NO_DIFF_MESSAGE, options)
+  }
+  else {
+    const aLinesCompare = aCompare.split('\n')
+    const bLinesCompare = bCompare.split('\n')
+    const reordered = getArrayContainingMatchOrder(aLinesCompare, bLinesCompare)
+
+    const aLinesDisplay = prettyFormat(a, formatOptions).split('\n')
+    const bLinesDisplay = prettyFormat(b, formatOptions).split('\n')
+
+    const aLinesCompareAsymmetricMatch = reordered.map(index => aLinesCompare[index])
+    const aLinesDisplayAsymmetricMatch = reordered.map(index => aLinesDisplay[index])
+
+    return diffLinesUnified2(
+      aLinesDisplayAsymmetricMatch,
+      bLinesDisplay,
+      aLinesCompareAsymmetricMatch,
+      bLinesCompare,
+      options,
+    )
+  }
+}
+
+/**
+ * Given two arrays of string, A and B, returns the indices of the multiset
+ * difference A − (A ∩ B) in A order, and the multiset A ∩ B in B order in
+ * Θ(|A| + |B|) with at most 2 passes over A and 1 pass over B.
+ */
+export function getArrayContainingMatchOrder(
+  aCompare: readonly string[],
+  bCompare: readonly string[],
+): number[] {
+  // Step 1: hash map for Θ(1) lookup of values to indices in A
+  const indexMap = new Map<string, { indices: number[]; head: number }>() // { indices: all positions in A, head: how many we've consumed }
+  let aLength = aCompare.length
+  for (let aIndex = 0; aIndex < aLength; aIndex++) {
+    const value = aCompare[aIndex]
+    let bucket = indexMap.get(value)
+    if (bucket === undefined) {
+      bucket = { indices: [aIndex], head: 0 }
+      indexMap.set(value, bucket)
+    }
+    else {
+      bucket.indices.push(aIndex)
+    }
+  }
+
+  // Step 2: scan B, and greedily match indices from A
+  const bLength = bCompare.length
+  const multisetIntersection: number[] = []
+  for (let bIndex = 0; bIndex < bLength; bIndex++) {
+    if (aLength === 0) {
+      break
+    }
+
+    const value = bCompare[bIndex]
+    const bucket = indexMap.get(value)
+    if (!bucket) {
+      continue
+    }
+
+    const head = bucket.head
+    const indices = bucket.indices
+    if (head < indices.length) {
+      multisetIntersection.push(indices[head])
+      bucket.head = head + 1
+      aLength--
+    }
+  }
+
+  // Step 3: collect unmatched indices from A as multiset difference A − (A ∩ B)
+  const multisetDifference: number[] = []
+  if (aLength !== 0) {
+    multisetDifference.length = 0
+    for (const bucket of indexMap.values()) {
+      const indices = bucket.indices
+      for (let head = bucket.head; head < indices.length; head++) {
+        multisetDifference.push(indices[head])
+      }
+    }
+  }
+
+  return [...multisetDifference, ...multisetIntersection]
+}
+
 const MAX_DIFF_STRING_LENGTH = 20_000
 
-function isAsymmetricMatcher(data: any) {
+function isAsymmetricMatcher(data: any): data is AsymmetricMatcher<unknown> {
   const type = getSimpleType(data)
   return type === 'Object' && typeof data.asymmetricMatch === 'function'
+}
+
+function isArrayContaining(data: AsymmetricMatcher<unknown>): data is ArrayContaining {
+  const matcherName = data.toString()
+  return matcherName === 'ArrayContaining' || matcherName === 'ArrayNotContaining'
 }
 
 function isReplaceable(obj1: any, obj2: any) {
