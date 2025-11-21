@@ -85,6 +85,12 @@ export function startVitestModuleRunner(options: ContextModuleRunnerOptions): Vi
     mocker: options.mocker,
     transport: {
       async fetchModule(id, importer, options) {
+        // if module is invalidated, the worker will be recreated,
+        // so cached is always true in a single worker
+        if (options?.cached) {
+          return { cache: true }
+        }
+
         const resolvingModules = state().resolvingModules
 
         if (isWindows) {
