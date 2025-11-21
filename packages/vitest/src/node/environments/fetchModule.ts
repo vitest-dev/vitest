@@ -139,7 +139,7 @@ class ModuleFetcher {
   private recordResult(trace: Span, result: FetchResult | FetchCachedFileSystemResult): void {
     if ('externalize' in result) {
       trace.setAttributes({
-        'vitest.module.external': result.externalize,
+        'vitest.fetched_module.external': result.externalize,
         'vitest.fetched_module.type': result.type,
       })
     }
