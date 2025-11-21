@@ -19,7 +19,7 @@ const cacheCommentLength = cacheComment.length
 
 const METADATA_FILE = '_metadata.json'
 
-const parallelFsCacheRead = new Map<string, Promise<[string, CachedInlineModuleMeta] | undefined>>()
+const parallelFsCacheRead = new Map<string, Promise<{ code: string; meta: CachedInlineModuleMeta } | undefined>>()
 
 /**
  * @experimental
@@ -79,7 +79,7 @@ export class FileSystemModuleCache {
           return
         }
 
-        return [code, this.fromBase64(code.slice(matchIndex + cacheCommentLength))] as [string, any]
+        return { code, meta: this.fromBase64(code.slice(matchIndex + cacheCommentLength)) }
       }).finally(() => {
         parallelFsCacheRead.delete(cachedFilePath)
       }))
@@ -100,7 +100,7 @@ export class FileSystemModuleCache {
     if (!fileResult) {
       return
     }
-    const [code, meta] = fileResult
+    const { code, meta } = fileResult
 
     debugFs?.(`${c.green('[read]')} ${meta.id} is cached in ${cachedFilePath}`)
 

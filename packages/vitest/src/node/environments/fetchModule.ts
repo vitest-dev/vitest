@@ -213,12 +213,12 @@ class ModuleFetcher {
     environment: DevEnvironment,
     moduleGraphModule: EnvironmentModuleNode,
   ): Promise<FetchResult | FetchCachedFileSystemResult | undefined> {
-    if (moduleGraphModule.transformResult?.code) {
+    if (moduleGraphModule.transformResult?.__vitestTmp) {
       return {
         cached: true as const,
         file: moduleGraphModule.file,
         id: moduleGraphModule.id!,
-        tmp: cachePath,
+        tmp: moduleGraphModule.transformResult.__vitestTmp,
         url: moduleGraphModule.url,
         invalidate: false,
       }
@@ -243,6 +243,7 @@ class ModuleFetcher {
       code: cachedModule.code,
       map,
       ssr: true,
+      __vitestTmp: cachePath,
     }
 
     // we populate the module graph to make the watch mode work because it relies on importers
@@ -494,4 +495,10 @@ export function handleRollupError(e: unknown): never {
     }
   }
   throw e
+}
+
+declare module 'vite' {
+  export interface TransformResult {
+    __vitestTmp?: string
+  }
 }
