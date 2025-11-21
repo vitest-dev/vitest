@@ -48,11 +48,11 @@ Error: Hook timed out in 102ms."
 `;
 
 exports[`should fail inline-snapshop-inside-each.test.ts 1`] = `
-"Error: InlineSnapshot cannot be used inside of test.each or describe.each
-Error: InlineSnapshot cannot be used inside of test.each or describe.each
-Error: InlineSnapshot cannot be used inside of test.each or describe.each
-Error: InlineSnapshot cannot be used inside of test.each or describe.each
-Error: InlineSnapshot cannot be used inside of test.each or describe.each"
+"Error: InlineSnapshot cannot be used inside of test.each or describe.each. Use toMatchSnapshot instead
+Error: InlineSnapshot cannot be used inside of test.each or describe.each. Use toMatchSnapshot instead
+Error: InlineSnapshot cannot be used inside of test.each or describe.each. Use toMatchSnapshot instead
+Error: InlineSnapshot cannot be used inside of test.each or describe.each. Use toMatchSnapshot instead
+Error: InlineSnapshot cannot be used inside of test.each or describe.each. Use toMatchSnapshot instead"
 `;
 
 exports[`should fail mock-import-proxy-module.test.ts 1`] = `"Error: There are some problems in resolving the mocks API."`;
