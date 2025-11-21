@@ -213,11 +213,7 @@ class ModuleFetcher {
     environment: DevEnvironment,
     moduleGraphModule: EnvironmentModuleNode,
   ): Promise<FetchResult | FetchCachedFileSystemResult | undefined> {
-    if (moduleGraphModule.externalize) {
-      return moduleGraphModule.externalize
-    }
-
-    if (moduleGraphModule.transformResult) {
+    if (moduleGraphModule.transformResult?.code) {
       return {
         cached: true as const,
         file: moduleGraphModule.file,
@@ -234,41 +230,37 @@ class ModuleFetcher {
       return
     }
 
-    if ('code' in cachedModule) {
-      // keep the module graph in sync
-      let map: Rollup.SourceMap | null | { mappings: '' } = extractSourceMap(cachedModule.code)
-      if (map && cachedModule.file) {
-        map.file = cachedModule.file
-      }
-      // mappings is a special source map identifier in rollup
-      if (!map && cachedModule.mappings) {
-        map = { mappings: '' }
-      }
-      moduleGraphModule.transformResult = {
-        code: cachedModule.code,
-        map,
-        ssr: true,
-      }
-
-      // we populate the module graph to make the watch mode work because it relies on importers
-      cachedModule.importers.forEach((importer) => {
-        const environmentNode = environment.moduleGraph.getModuleById(importer)
-        if (environmentNode) {
-          moduleGraphModule.importers.add(environmentNode)
-        }
-      })
-
-      return {
-        cached: true as const,
-        file: cachedModule.file,
-        id: cachedModule.id,
-        tmp: cachePath,
-        url: cachedModule.url,
-        invalidate: false,
-      }
+    // keep the module graph in sync
+    let map: Rollup.SourceMap | null | { mappings: '' } = extractSourceMap(cachedModule.code)
+    if (map && cachedModule.file) {
+      map.file = cachedModule.file
     }
-    moduleGraphModule.externalize = cachedModule
-    return cachedModule
+    // mappings is a special source map identifier in rollup
+    if (!map && cachedModule.mappings) {
+      map = { mappings: '' }
+    }
+    moduleGraphModule.transformResult = {
+      code: cachedModule.code,
+      map,
+      ssr: true,
+    }
+
+    // we populate the module graph to make the watch mode work because it relies on importers
+    cachedModule.importers.forEach((importer) => {
+      const environmentNode = environment.moduleGraph.getModuleById(importer)
+      if (environmentNode) {
+        moduleGraphModule.importers.add(environmentNode)
+      }
+    })
+
+    return {
+      cached: true as const,
+      file: cachedModule.file,
+      id: cachedModule.id,
+      tmp: cachePath,
+      url: cachedModule.url,
+      invalidate: false,
+    }
   }
 
   private async fetchAndProcess(
@@ -502,10 +494,4 @@ export function handleRollupError(e: unknown): never {
     }
   }
   throw e
-}
-
-declare module 'vite' {
-  export interface EnvironmentModuleNode {
-    externalize?: Extract<FetchResult, { externalize: string }>
-  }
 }

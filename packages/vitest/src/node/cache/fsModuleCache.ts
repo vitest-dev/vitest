@@ -19,10 +19,7 @@ const cacheCommentLength = cacheComment.length
 
 const METADATA_FILE = '_metadata.json'
 
-const parallelFsCacheRead = new Map<string, Promise<[string, CachedInlineModuleMeta & {
-  externalize?: string
-  type?: string
-}] | undefined>>()
+const parallelFsCacheRead = new Map<string, Promise<[string, CachedInlineModuleMeta] | undefined>>()
 
 /**
  * @experimental
@@ -92,7 +89,6 @@ export class FileSystemModuleCache {
 
   async getCachedModule(cachedFilePath: string): Promise<
     CachedInlineModuleMeta
-    | Extract<FetchResult, { externalize: string }>
     | undefined
   > {
     if (!existsSync(cachedFilePath)) {
@@ -106,10 +102,6 @@ export class FileSystemModuleCache {
     }
     const [code, meta] = fileResult
 
-    if (meta.externalize) {
-      debugFs?.(`${c.green('[read]')} ${meta.externalize} is externalized inside ${cachedFilePath}`)
-      return { externalize: meta.externalize, type: meta.type as 'module' }
-    }
     debugFs?.(`${c.green('[read]')} ${meta.id} is cached in ${cachedFilePath}`)
 
     return {
@@ -128,11 +120,7 @@ export class FileSystemModuleCache {
     importers: string[] = [],
     mappings: boolean = false,
   ): Promise<void> {
-    if ('externalize' in fetchResult) {
-      debugFs?.(`${c.yellow('[write]')} ${fetchResult.externalize} is externalized inside ${cachedFilePath}`)
-      await atomicWriteFile(cachedFilePath, `${cacheComment}${this.toBase64(fetchResult)}`)
-    }
-    else if ('code' in fetchResult) {
+    if ('code' in fetchResult) {
       const result = {
         file: fetchResult.file,
         id: fetchResult.id,
@@ -234,13 +222,6 @@ export class FileSystemModuleCache {
           environment: environment.name,
           // this affects Vitest CSS plugin
           css: vitestConfig.css,
-          // this affect externalization
-          resolver: {
-            inline: resolver.options.inline,
-            external: resolver.options.external,
-            inlineFiles: resolver.options.inlineFiles,
-            moduleDirectories: resolver.options.moduleDirectories,
-          },
         },
         (_, value) => {
           if (typeof value === 'function' || value instanceof RegExp) {
