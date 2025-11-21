@@ -19,6 +19,11 @@ const cacheCommentLength = cacheComment.length
 
 const METADATA_FILE = '_metadata.json'
 
+const parallelFsCacheRead = new Map<string, Promise<[string, CachedInlineModuleMeta & {
+  externalize?: string
+  type?: string
+}] | undefined>>()
+
 /**
  * @experimental
  */
@@ -68,6 +73,23 @@ export class FileSystemModuleCache {
     }
   }
 
+  private readCachedFileConcurrently(cachedFilePath: string) {
+    if (!parallelFsCacheRead.has(cachedFilePath)) {
+      parallelFsCacheRead.set(cachedFilePath, readFile(cachedFilePath, 'utf-8').then((code) => {
+        const matchIndex = code.lastIndexOf(cacheComment)
+        if (matchIndex === -1) {
+          debugFs?.(`${c.red('[empty]')} ${cachedFilePath} exists, but doesn't have a ${cacheComment} comment, transforming by vite instead`)
+          return
+        }
+
+        return [code, this.fromBase64(code.slice(matchIndex + cacheCommentLength))] as [string, any]
+      }).finally(() => {
+        parallelFsCacheRead.delete(cachedFilePath)
+      }))
+    }
+    return parallelFsCacheRead.get(cachedFilePath)!
+  }
+
   async getCachedModule(cachedFilePath: string): Promise<
     CachedInlineModuleMeta
     | Extract<FetchResult, { externalize: string }>
@@ -78,17 +100,15 @@ export class FileSystemModuleCache {
       return
     }
 
-    const code = await readFile(cachedFilePath, 'utf-8')
-    const matchIndex = code.lastIndexOf(cacheComment)
-    if (matchIndex === -1) {
-      debugFs?.(`${c.red('[empty]')} ${cachedFilePath} exists, but doesn't have a ${cacheComment} comment, transforming by vite instead`)
+    const fileResult = await this.readCachedFileConcurrently(cachedFilePath)
+    if (!fileResult) {
       return
     }
+    const [code, meta] = fileResult
 
-    const meta = this.fromBase64(code.slice(matchIndex + cacheCommentLength))
     if (meta.externalize) {
       debugFs?.(`${c.green('[read]')} ${meta.externalize} is externalized inside ${cachedFilePath}`)
-      return { externalize: meta.externalize, type: meta.type }
+      return { externalize: meta.externalize, type: meta.type as 'module' }
     }
     debugFs?.(`${c.green('[read]')} ${meta.id} is cached in ${cachedFilePath}`)
 
@@ -169,8 +189,6 @@ export class FileSystemModuleCache {
     id: string,
     fileContent: string,
   ): string | null {
-    let hashString = ''
-
     // bail out if file has import.meta.glob because it depends on other files
     // TODO: figure out a way to still support it
     if (fileContent.includes('import.meta.glob(')) {
@@ -178,6 +196,8 @@ export class FileSystemModuleCache {
       debugMemory?.(`${c.yellow('[write]')} ${id} was bailed out`)
       return null
     }
+
+    let hashString = ''
 
     for (const generator of this.fsCacheKeyGenerators) {
       const result = generator({ environment, id, sourceCode: fileContent })

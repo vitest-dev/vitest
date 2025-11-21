@@ -1228,6 +1228,7 @@ export class Vitest {
 
         modules.forEach((module) => {
           moduleGraph.invalidateModule(module)
+          module.externalize = undefined
           this._fsCache.invalidateCachePath(environment, module.id!)
         })
       })
