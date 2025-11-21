@@ -190,7 +190,7 @@ export function toBuiltin(id: string): string {
     id = id.slice(browserExternalLength)
   }
 
-  if (!id.startsWith('node:')) {
+  if (!id.startsWith('bun:') && !id.startsWith('node:')) {
     id = `node:${id}`
   }
   return id
