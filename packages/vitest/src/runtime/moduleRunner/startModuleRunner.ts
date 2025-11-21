@@ -128,6 +128,12 @@ export function startVitestModuleRunner(options: ContextModuleRunnerOptions): Vi
             return { externalize: toBuiltin(rawId), type: 'builtin' }
           }
 
+          // if module is invalidated, the worker will be recreated,
+          // so cached is always true in a single worker
+          if (options?.cached) {
+            return { cache: true }
+          }
+
           const otelCarrier = traces?.getContextCarrier()
           const result = await rpc().fetch(
             id,
