@@ -57,17 +57,16 @@
     "@bcoe/v8-coverage": "^1.0.2",
     "@vitest/utils": "workspace:*",
     "ast-v8-to-istanbul": "^0.3.8",
-    "debug": "catalog:",
     "istanbul-lib-coverage": "catalog:",
     "istanbul-lib-report": "catalog:",
     "istanbul-lib-source-maps": "catalog:",
     "istanbul-reports": "catalog:",
     "magicast": "catalog:",
+    "obug": "catalog:",
     "std-env": "catalog:",
     "tinyrainbow": "catalog:"
   },
   "devDependencies": {
-    "@types/debug": "catalog:",
     "@types/istanbul-lib-coverage": "catalog:",
     "@types/istanbul-lib-report": "catalog:",
     "@types/istanbul-lib-source-maps": "catalog:",

@@ -135,7 +135,6 @@
   "peerDependencies": {
     "@edge-runtime/vm": "*",
     "@opentelemetry/api": "^1.9.0",
-    "@types/debug": "^4.1.12",
     "@types/node": "^20.0.0 || ^22.0.0 || >=24.0.0",
     "@vitest/browser-playwright": "workspace:*",
     "@vitest/browser-preview": "workspace:*",
@@ -149,9 +148,6 @@
       "optional": true
     },
     "@opentelemetry/api": {
-      "optional": true
-    },
-    "@types/debug": {
       "optional": true
     },
     "@types/node": {
@@ -184,10 +180,10 @@
     "@vitest/snapshot": "workspace:*",
     "@vitest/spy": "workspace:*",
     "@vitest/utils": "workspace:*",
-    "debug": "catalog:",
     "es-module-lexer": "^1.7.0",
     "expect-type": "^1.2.2",
     "magic-string": "catalog:",
+    "obug": "catalog:",
     "pathe": "catalog:",
     "picomatch": "^4.0.3",
     "std-env": "catalog:",
@@ -204,7 +200,6 @@
     "@jridgewell/trace-mapping": "catalog:",
     "@opentelemetry/api": "^1.9.0",
     "@sinonjs/fake-timers": "14.0.0",
-    "@types/debug": "catalog:",
     "@types/estree": "catalog:",
     "@types/istanbul-lib-coverage": "catalog:",
     "@types/istanbul-reports": "catalog:",

@@ -11,7 +11,6 @@ catalog:
   '@jridgewell/remapping': ^2.3.5
   '@jridgewell/trace-mapping': 0.3.31
   '@types/chai': ^5.2.2
-  '@types/debug': ^4.1.12
   '@types/estree': ^1.0.8
   '@types/istanbul-lib-coverage': ^2.0.6
   '@types/istanbul-lib-report': ^3.0.3
@@ -25,7 +24,6 @@ catalog:
   birpc: ^2.8.0
   cac: ^6.7.14
   chai: ^6.2.1
-  debug: ^4.4.3
   flatted: ^3.3.3
   istanbul-lib-coverage: ^3.2.2
   istanbul-lib-report: ^3.0.1
@@ -34,6 +32,7 @@ catalog:
   magic-string: ^0.30.21
   magicast: ^0.5.1
   msw: ^2.12.2
+  obug: ^2.1.0
   pathe: ^2.0.3
   sirv: ^3.0.2
   std-env: ^3.10.0
