@@ -29,16 +29,32 @@ const groups = computed(() => ({
       {{ regression.message }}
     </template>
     <SmallTabs>
-      <SmallTabsPane v-if="groups.diff" title="Diff">
+      <SmallTabsPane
+        v-if="groups.diff"
+        :key="groups.diff.path"
+        title="Diff"
+      >
         <VisualRegressionImage :attachment="groups.diff" />
       </SmallTabsPane>
-      <SmallTabsPane v-if="groups.reference" title="Reference">
+      <SmallTabsPane
+        v-if="groups.reference"
+        :key="groups.reference.path"
+        title="Reference"
+      >
         <VisualRegressionImage :attachment="groups.reference" />
       </SmallTabsPane>
-      <SmallTabsPane v-if="groups.actual" title="Actual">
+      <SmallTabsPane
+        v-if="groups.actual"
+        :key="groups.actual.path"
+        title="Actual"
+      >
         <VisualRegressionImage :attachment="groups.actual" />
       </SmallTabsPane>
-      <SmallTabsPane v-if="groups.reference && groups.actual" title="Slider">
+      <SmallTabsPane
+        v-if="groups.reference && groups.actual"
+        :key="(groups.reference.path ?? '') + (groups.actual.path ?? '')"
+        title="Slider"
+      >
         <VisualRegressionSlider :actual="groups.actual" :reference="groups.reference" />
       </SmallTabsPane>
     </SmallTabs>

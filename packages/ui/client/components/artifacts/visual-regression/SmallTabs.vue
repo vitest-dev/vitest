@@ -6,10 +6,6 @@ import { idFor, SMALL_TABS_CONTEXT } from '~/composables/small-tabs'
 const activeTab = ref<string | null>(null)
 const tabs = ref<SmallTabsConfig[]>([])
 
-function setActive(key: string) {
-  activeTab.value = key
-}
-
 const id = useId()
 
 provide(SMALL_TABS_CONTEXT, {
@@ -21,7 +17,7 @@ provide(SMALL_TABS_CONTEXT, {
     }
 
     if (tabs.value.length === 1) {
-      setActive(tab.id)
+      activeTab.value = tab.id
     }
   },
   unregisterTab: (tab) => {
@@ -29,6 +25,10 @@ provide(SMALL_TABS_CONTEXT, {
 
     if (index > -1) {
       tabs.value.splice(index, 1)
+    }
+
+    if (activeTab.value === tab.id) {
+      activeTab.value = tabs.value[0]?.id ?? null
     }
   },
 })
@@ -52,7 +52,7 @@ provide(SMALL_TABS_CONTEXT, {
         :aria-controls="idFor.tabpanel(tab.id, id)"
         type="button"
         class="aria-[selected=true]:underline underline-offset-4"
-        @click="setActive(tab.id)"
+        @click="activeTab = tab.id"
       >
         {{ tab.title }}
       </button>
