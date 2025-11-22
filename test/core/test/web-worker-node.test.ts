@@ -211,6 +211,18 @@ it('self injected into worker and its deps should be equal', async () => {
   expect(await testSelfWorker(new Worker(new URL('../src/web-worker/selfWorker.ts', import.meta.url)))).toBeTruthy()
 })
 
+it('transfer MessagePort objects to worker as event.ports', async () => {
+  expect.assertions(1)
+
+  const worker = new MyWorker()
+  const channel = new MessageChannel()
+  expect(new Promise<string>((resolve, reject) => {
+    channel.port1.onmessage = e => resolve(e.data as string)
+    channel.port1.onmessageerror = reject
+  })).resolves.toBe('hello world via port')
+  worker.postMessage('hello', [channel.port2])
+})
+
 it('throws syntax error if no arguments are provided', () => {
   const worker = new MyWorker()
 
