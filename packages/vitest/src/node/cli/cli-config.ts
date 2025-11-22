@@ -542,6 +542,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
     description:
       'Retry the test specific number of times if it fails (default: `0`)',
     argument: '<times>',
+    subcommands: null,
   },
   diff: {
     description:

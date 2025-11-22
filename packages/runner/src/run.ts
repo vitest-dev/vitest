@@ -1,4 +1,4 @@
-import type { Awaitable } from '@vitest/utils'
+import type { Awaitable, TestError } from '@vitest/utils'
 import type { DiffOptions } from '@vitest/utils/diff'
 import type { FileSpecification, VitestRunner } from './types/runner'
 import type {
@@ -33,6 +33,54 @@ import { hasFailed, hasTests } from './utils/tasks'
 const now = globalThis.performance ? globalThis.performance.now.bind(globalThis.performance) : Date.now
 const unixNow = Date.now
 const { clearTimeout, setTimeout } = getSafeTimers()
+
+/**
+ * Normalizes retry configuration to extract individual values.
+ * Handles both number and object forms.
+ */
+function getRetryCount(retry: number | { count?: number } | undefined): number {
+  if (retry === undefined) {
+    return 0
+  }
+  if (typeof retry === 'number') {
+    return retry
+  }
+  return retry.count ?? 0
+}
+
+function getRetryDelay(retry: number | { delay?: number } | undefined): number {
+  if (retry === undefined) {
+    return 0
+  }
+  if (typeof retry === 'number') {
+    return 0
+  }
+  return retry.delay ?? 0
+}
+
+function getRetryCondition(
+  retry: number | { condition?: string | ((error: Error) => boolean) } | undefined,
+): string | ((error: Error) => boolean) | undefined {
+  if (retry === undefined) {
+    return undefined
+  }
+  if (typeof retry === 'number') {
+    return undefined
+  }
+  return retry.condition
+}
+
+function getRetryStrategy(
+  retry: number | { strategy?: 'immediate' | 'test-file' | 'deferred' } | undefined,
+): 'immediate' | 'test-file' | 'deferred' {
+  if (retry === undefined) {
+    return 'immediate'
+  }
+  if (typeof retry === 'number') {
+    return 'immediate'
+  }
+  return retry.strategy ?? 'immediate'
+}
 
 function updateSuiteHookState(
   task: Task,
@@ -266,6 +314,51 @@ async function callCleanupHooks(runner: VitestRunner, cleanups: unknown[]) {
   }
 }
 
+/**
+ * Determines if a test should be retried based on its retryCondition configuration
+ */
+function shouldRetryTest(test: Test, errors: TestError[] | undefined): boolean {
+  const condition = getRetryCondition(test.retry)
+
+  // No errors means test passed, shouldn't get here but handle it
+  if (!errors || errors.length === 0) {
+    return false
+  }
+
+  // No condition means always retry
+  if (!condition) {
+    return true
+  }
+
+  // Check only the most recent error (last in array) against the condition
+  const error = errors[errors.length - 1]
+
+  if (typeof condition === 'string') {
+    // String condition is treated as regex pattern
+    const regex = new RegExp(condition, 'i')
+    return regex.test(error.message || '')
+  }
+  else if (typeof condition === 'function') {
+    // Function condition is called with error object
+    try {
+      // Convert TestError back to Error-like object for the condition function
+      const errorObj = Object.assign(new Error(error.message), {
+        name: error.name,
+        stack: error.stack,
+        cause: error.cause,
+      })
+      return condition(errorObj)
+    }
+    catch (e) {
+      // If condition function throws, treat as no match
+      console.error('retryCondition function threw error:', e)
+      return false
+    }
+  }
+
+  return false
+}
+
 export async function runTest(test: Test, runner: VitestRunner): Promise<void> {
   await runner.onBeforeRunTask?.(test)
 
@@ -300,7 +393,7 @@ export async function runTest(test: Test, runner: VitestRunner): Promise<void> {
 
   const repeats = test.repeats ?? 0
   for (let repeatCount = 0; repeatCount <= repeats; repeatCount++) {
-    const retry = test.retry ?? 0
+    const retry = getRetryCount(test.retry)
     for (let retryCount = 0; retryCount <= retry; retryCount++) {
       let beforeEachCleanups: unknown[] = []
       try {
@@ -412,9 +505,34 @@ export async function runTest(test: Test, runner: VitestRunner): Promise<void> {
       }
 
       if (retryCount < retry) {
+        // Check if we should retry based on the error condition
+        const shouldRetry = shouldRetryTest(test, test.result.errors)
+
+        if (!shouldRetry) {
+          // Error doesn't match retry condition, stop retrying
+          break
+        }
+
+        // Check retry strategy
+        const strategy = getRetryStrategy(test.retry)
+
+        if (strategy === 'test-file' || strategy === 'deferred') {
+          // For test-file and deferred strategies, exit the retry loop
+          // test-file: let the suite handle it
+          // deferred: let the global runner handle it
+          break
+        }
+
+        // For immediate strategy (default), retry immediately
         // reset state when retry test
         test.result.state = 'run'
         test.result.retryCount = (test.result.retryCount ?? 0) + 1
+
+        // Apply retry delay if configured
+        const delay = getRetryDelay(test.retry)
+        if (delay > 0) {
+          await new Promise(resolve => setTimeout(resolve, delay))
+        }
       }
 
       // update retry info
@@ -471,6 +589,40 @@ function markTasksAsSkipped(suite: Suite, runner: VitestRunner) {
       markTasksAsSkipped(t, runner)
     }
   })
+}
+
+/**
+ * Collects tests that failed and have test-file retry strategy
+ */
+function collectDeferredRetryTests(suite: Suite, strategy: 'test-file' | 'deferred'): Test[] {
+  const tests: Test[] = []
+
+  function collectFromTask(task: Task) {
+    if (task.type === 'test') {
+      const retry = getRetryCount(task.retry)
+      const retryCount = task.result?.retryCount ?? 0
+      const testStrategy = getRetryStrategy(task.retry)
+
+      if (
+        testStrategy === strategy
+        && task.result?.state === 'fail'
+        && retryCount < retry
+      ) {
+        tests.push(task)
+      }
+    }
+    else if (task.type === 'suite') {
+      for (const child of task.tasks) {
+        collectFromTask(child)
+      }
+    }
+  }
+
+  for (const task of suite.tasks) {
+    collectFromTask(task)
+  }
+
+  return tests
 }
 
 export async function runSuite(suite: Suite, runner: VitestRunner): Promise<void> {
@@ -546,6 +698,48 @@ export async function runSuite(suite: Suite, runner: VitestRunner): Promise<void
             }
             for (const c of tasksGroup) {
               await runSuiteChild(c, runner)
+            }
+          }
+        }
+      }
+
+      // For file-level suites, retry tests with 'test-file' strategy
+      if (suite.file === suite) {
+        const deferredRetryTests = collectDeferredRetryTests(suite, 'test-file')
+        for (const test of deferredRetryTests) {
+          if (!test.result) {
+            continue
+          }
+
+          const retry = getRetryCount(test.retry)
+          const retryCount = test.result.retryCount ?? 0
+
+          // Retry the test up to the remaining retry count
+          for (let i = retryCount; i < retry; i++) {
+            // Reset test state for retry
+            test.result.state = 'run'
+            test.result.retryCount = i + 1
+
+            // Apply retry delay if configured
+            const delay = getRetryDelay(test.retry)
+            if (delay > 0) {
+              await new Promise(resolve => setTimeout(resolve, delay))
+            }
+
+            // Run the test again
+            await runTest(test, runner)
+
+            // If test passed, stop retrying (use any to bypass TypeScript flow analysis)
+            if (test.result && (test.result as any).state === 'pass') {
+              break
+            }
+
+            // Check retry condition for next attempt
+            if (i + 1 < retry && test.result) {
+              const shouldRetry = shouldRetryTest(test, test.result.errors)
+              if (!shouldRetry) {
+                break
+              }
             }
           }
         }
@@ -653,6 +847,52 @@ export async function runFiles(files: File[], runner: VitestRunner): Promise<voi
       },
       () => runSuite(file, runner),
     )
+  }
+
+  // After all files have run, retry tests with 'deferred' strategy
+  const globalDeferredTests: Test[] = []
+  for (const file of files) {
+    const deferredTests = collectDeferredRetryTests(file, 'deferred')
+    globalDeferredTests.push(...deferredTests)
+  }
+
+  // Retry all deferred tests
+  for (const test of globalDeferredTests) {
+    if (!test.result) {
+      continue
+    }
+
+    const retry = getRetryCount(test.retry)
+    const retryCount = test.result.retryCount ?? 0
+
+    // Retry the test up to the remaining retry count
+    for (let i = retryCount; i < retry; i++) {
+      // Reset test state for retry
+      test.result.state = 'run'
+      test.result.retryCount = i + 1
+
+      // Apply retry delay if configured
+      const delay = getRetryDelay(test.retry)
+      if (delay > 0) {
+        await new Promise(resolve => setTimeout(resolve, delay))
+      }
+
+      // Run the test again
+      await runTest(test, runner)
+
+      // If test passed, stop retrying
+      if (test.result && (test.result as any).state === 'pass') {
+        break
+      }
+
+      // Check retry condition for next attempt
+      if (i + 1 < retry && test.result) {
+        const shouldRetry = shouldRetryTest(test, test.result.errors)
+        if (!shouldRetry) {
+          break
+        }
+      }
+    }
   }
 }
 
