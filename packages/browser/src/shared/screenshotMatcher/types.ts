@@ -12,11 +12,13 @@ export type ScreenshotMatcherArguments<
     },
 ]
 
+interface ScreenshotData { path: string; width: number; height: number }
+
 export type ScreenshotMatcherOutput = Promise<
   {
     pass: false
-    reference: string | null
-    actual: string | null
+    reference: ScreenshotData | null
+    actual: ScreenshotData | null
     diff: string | null
     message: string
   }

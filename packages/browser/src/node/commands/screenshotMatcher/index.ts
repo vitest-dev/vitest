@@ -55,7 +55,7 @@ export const screenshotMatcher: BrowserCommand<
   if (value === null || value.actual === null) {
     return {
       pass: false,
-      reference: referenceFile && paths.reference,
+      reference: referenceFile && { path: paths.reference, width: reference!.metadata.width, height: reference!.metadata.height },
       actual: null,
       diff: null,
       message: `Could not capture a stable screenshot within ${timeout}ms.`,
@@ -80,7 +80,8 @@ export const screenshotMatcher: BrowserCommand<
     if (updateSnapshot !== 'all') {
       return {
         pass: false,
-        reference: referencePath,
+        // we use `actual`'s metadata because that's the screenshot we saved
+        reference: { path: referencePath, width: value.actual.metadata.width, height: value.actual.metadata.height },
         actual: null,
         diff: null,
         message: `No existing reference screenshot found${
@@ -143,8 +144,8 @@ export const screenshotMatcher: BrowserCommand<
   //  - fail
   return {
     pass: false,
-    reference: paths.reference,
-    actual: paths.diffs.actual,
+    reference: { path: paths.reference, width: reference.metadata.width, height: reference.metadata.height },
+    actual: { path: paths.diffs.actual, width: value.actual.metadata.width, height: value.actual.metadata.height },
     diff: finalResult.diff && paths.diffs.diff,
     message: `Screenshot does not match the stored reference.${
       finalResult.message === null
