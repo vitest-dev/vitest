@@ -5,66 +5,156 @@ outline: deep
 
 # How Browser Mode Works
 
-## Why Is This Important To Read
+## Why This Guide Is Important
 
-This article explains the architecture, internals, and workflow of Vitest's Browser Mode. Whether you're a user wanting to understand how your tests execute or a contributor diving into the codebase, this guide covers both high-level concepts and technical details
+This article explains the architecture, internals, and workflow of Vitest's Browser Mode. Whether you're a user wanting to understand how your tests execute or a contributor exploring the codebase, this guide covers both high-level concepts and technical implementation details.
 
 ## The Philosophy
 
-## The key players
+Though Vitest Browser Mode can be used for system-wide end-to-end tests, its unique characteristics truly shine in page-level or component testing. Here, you can achieve both realism with a real browser and exceptional developer experience with performance.
 
-- **The Node.js process** -  is where the CLI is being invoked, doing common setup tasks like filtering test files and then it orchestrates a pool of test processors where the actual execution happens
+Developers who write unit or component tests with great libraries like React Testing Library want to keep past features like test coverage and mocking while gaining the benefits of browser realism and awesome performance. This supports a true shift-left workflow: developers can execute tests early while coding and sometimes even use Browser Mode as their development browser to watch the UI evolve as code is written.
 
-- The provider responsible to instantiate and interact with a real browser using some specific technology like Playwright WebDriver I/O, or any custom future implementation. This is configurable for the sake of simplicity, the rest of this guide assumes a Playwright usage, but most of the concepts apply to every provider.
+This guide helps you find the sweet spot between safe, realistic tests and performant, developer-friendly testing. Understanding the mechanisms and configuration options explained here will help you tune your setup to meet your testing goals.
 
-- The tester page HTML page that is being rendered inside the browser that was created with the provider and allows putting the code under test inside along with other Vitest utilities to execute a code as explained in the next line
+## Where Tests Actually Run
 
-- Iframe & the test runner - an iframe is being placed inside a page, and this is where we're about to execute the test and render the component. This is also meant for isolation, which is explained below in the section on Parallelization and Isolation. Inside the iframe, the test runner is being kicked off. - Whether Vanilla Vitest or Browser Mod. This code simply goes through all the test files and the test functions and executes the code inside to generate a success/failure report in the end. As part of the test execution it also renders components inside that view
+A crucial point to understand: **your tests themselves execute inside the real browser**, not just the code being tested. This means you can write unit tests that run in an actual browser environment with full access to browser APIs like Canvas, WebGL, IndexedDB, and the real DOM.
 
-- The orchestrator given the Node.js process which is the main coordinator and has full permissions and access in the tester page. There is a need to orchestrate messages and actions between the test runner and the Node.js process. See the next paragraph for a basic flow that makes the point why it is required.
+**The benefit**: Unlike Node.js-based testing with JSDOM or happy-dom, your tests have access to the complete browser API surface and real browser behavior.
 
-## A Basic Flow
+**The limitation**: Running in the browser means limited access to Node.js APIs (filesystem, process, OS-level operations). To bridge this gap, Vitest provides the **Commands API**—a mechanism that lets your browser-based tests call back to the Node.js orchestrator to perform server-side operations like reading files or executing Node.js utilities.
 
-### Initializing A Test Flow
+## The Key Players {#key-players}
 
-There is an attached image here which shows one how the main thread worker pool opens the browser first using one of the providers (in this example, let's play right then). It asks to render the tester page which embodies the test orchestrator and a test runner inside an iframe. Then the main thread asked the orchestrator to start running some test suite. The orchestrator asks the test runner to run this file which processes each and every test, executes it, if there is a render, it will render it inside an anchor that is placed in the page, and finally reports failure or success back to the main thread using the orchestrator
+- **The Node.js process** - This is where the CLI is invoked. It performs common setup tasks like filtering test files and orchestrates a pool of test workers where actual execution happens.
 
-(image in /docs/public/vitest-browser-initializing-test-suite.png)
+- **The provider** - Responsible for instantiating and interacting with a real browser using specific technologies like Playwright, WebDriver I/O, or custom implementations. This is configurable. For simplicity, the rest of this guide assumes Playwright usage, but most concepts apply to every provider.
 
-### A Typical Action Flow
+- **The tester page** - An HTML page rendered inside the browser created by the provider. It hosts the code under test along with Vitest utilities needed to execute tests.
 
-In the image, we can see:
-1. When there is a user event in a test (like a click), the test runner would like to perform a realistic event using the lowest browser driver that is available.
-2. But it has no permission access to the browser's low-level API, so it approaches using a WebSocket message.
-3. The main thread sends a command to the provider (in this example, it's Playwright).
-4. The provider sends a CDB message (or a WebDriver message if it's WebDriver IO) to the browser, and this makes it a realistic event that is very close to how a user click happens in a production environment.
+- **Iframe & the test runner** - An iframe is placed inside the tester page where tests execute and components render. This provides isolation (explained in the Parallelization and Isolation section). Inside the iframe, the test runner kicks off—whether vanilla Vitest or Browser Mode specific. It processes test files and functions, executing code to generate success/failure reports. During test execution, components are also rendered inside this iframe.
 
-(image in /docs/public/vitest-browser-typical-action.png)
+- **The orchestrator** - The Node.js process is the main coordinator with full permissions, while the tester page has limited browser access. The orchestrator bridges these environments, managing messages and actions between the test runner and the Node.js process. See the next section for a basic flow that demonstrates why this is needed.
 
-## Mocking Code And Network Calls
+## Browser Providers {#providers}
 
-### Mocking code
+Vitest doesn't ship its own browser automation. Instead, it uses a **provider system** that delegates browser control to specialized tools:
 
-Explain here the flow of a typical mocking first say that Vitest, unlike many others end-to-end solutions, aims to serve more as a component or page testing. In this environment, it's quite typical that, although it's not ideal and usually mocking trying to be reduced, sometimes it is needed. Here is a typical mocking flow when a test is using VI.mock or any other test doubles instruction. Vitest will hoist this instruction at the beginning of the file, and then, when the page loads, it first always first parses the test file and note the request to replace some module. This happens first because that mocking statement was placed at the beginning of the test. Then, after, when the code under test (e.g., a front-end page) tries to reach the origin module, the ones that was mocked, Vitest realizes this and since it was kept in its mocking registry, it knows to serve a mocked module (the ones that was defined in the test)
+- **Playwright** (recommended): Uses Chrome DevTools Protocol (CDP) for Chromium and WebDriver for Firefox/WebKit. Supports parallel execution and all three major browser engines.
+- **WebdriverIO**: Uses the WebDriver protocol for cross-browser support including Chrome, Firefox, Edge, and Safari.
+- **Preview**: Lightweight development-only option with no headless mode. Uses simulated events instead of real browser automation—useful for quick local development but not recommended for actual testing.
 
-Explain here, why Playwright network interceptor page.trout is being used to serve the mocked model.
+## A Basic Flow {#basic-flow}
 
-### Network code
+### Initializing a Test Flow {#initializing-test-flow}
 
-It's quite common to also mock or shall we say intercept, network requests. In some testing strategies, it is even encouraged. How can this be achieved? The thing about the browser mode is that the code is actually executed inside a browser, so any capability that was available in a browser environment is still available for your tests. Any technique or library that was useful in your unit test or component test with JSDOM, for example, can still be reused in this environment. That is to say, you can use any of the popular libraries that allow mocking network requests like MSW (put link) and others
+The attached diagram shows how the main thread's worker pool opens the browser using one of the providers (in this example, Playwright). Here's what happens:
 
-## Parallelization And Isolation
+1. The worker pool requests the provider to render the tester page, which contains the test orchestrator and a test runner inside an iframe
+2. The main thread asks the orchestrator to start running a specific test suite
+3. The orchestrator instructs the test runner to execute the file
+4. The test runner processes each test and executes it
+5. If a test renders a component, it appears inside an anchor element placed in the page
+6. Finally, the test reports success or failure back to the main thread via the orchestrator
 
-When dealing with real browsers and tests that have a significant footprint, there is always the trade-off between performance and safety. Isolating each and every test with a unique browser can have an unbearable performance impact. On the other side of the spectrum, running multiple tests at a time over the same view is likely to introduce collisions. Finding the sweet spot for your specific case is the drill here. Let's understand some basic mechanics first.
+![Browser Mode Initialization Flow](/vitest-browser-initializing-test-suite.png)
 
-## The file level
+###    {#typical-action-flow}
 
-For a start, before all test files are executed, a new browser context is created which is similar to a new incognito mode. In other words, a bunch of test files that are executed in a single worker process starts from a clean browser state. Then, by default, each file (a test suite) gets a fresh new iframe to run in, so it can be isolated from previously run test suites. If you wish to change this, you may set browser.isolate to false - this will show a performance gain but might make test suites step on each other's toes.
+The diagram illustrates the following flow:
 
-By default, the various test files will be executed sequentially, one after the other, and not concurrently. While this reduces performance significantly, it provides better isolation, so each test file can assume no other tests executed at the same time in the same browser. Though this is and one may set browser.fileParallelism=true, this is a true risk that puts the test at a state where various actions might leak between various iframes. We should explain here also that parallelism means that multiple iframes would be created in the same browser.
+1. When a test needs to perform a user interaction (like a click), the test runner wants to trigger a realistic event using the browser's low-level driver
+2. However, it lacks permission to access the browser's low-level API directly, so it sends a message via **WebSocket** to the orchestrator in the Node.js main thread
+3. The main thread receives the message and sends a command to the provider (in this example, Playwright)
+4. The provider sends a **CDP message** (Chrome DevTools Protocol)—or a WebDriver message if using WebDriver I/O—to the browser
+5. This triggers a realistic event that closely mimics how a user click happens in a production environment
 
-A quote from the official config docs: "This makes it impossible to use interactive APIs (like clicking or hovering) because there are several iframes on the screen at the same time, but if your tests don't rely on those APIs, it might be much faster to just run all of them at the same time"
+![Browser Mode Action Flow](/vitest-browser-typical-action.png)
 
-## The test level
+### Communication Channels {#communication-channels}
 
-By design, inside a test file, tests are not isolated at all which means that after one test is done, the next one will be executed over the same iframe and might share the same globals, CSS name space, event listener central. It's the application-level responsibility to decide whether this is an issue. If it is, to clean up on the app level and/or use test runner cleanups like mock resets
+Three different communication mechanisms work together to enable browser testing:
+
+- **BroadcastChannel**: The orchestrator and test runner (running in an iframe) communicate within the browser using the BroadcastChannel API—a browser feature that allows different contexts (iframes, windows, tabs) to send messages on a named channel. This enables coordination between the test UI and test execution without involving the Node.js process.
+
+- **WebSocket**: The browser communicates with the Node.js main thread via WebSocket for operations requiring Node.js permissions (like file access via Commands API) or for reporting test results back to the orchestrator.
+
+- **CDP/WebDriver**: The provider (Playwright/WebdriverIO) sends low-level browser automation commands using Chrome DevTools Protocol (for Chromium) or WebDriver protocol (for other browsers). These protocols enable real browser events and interactions.
+
+### Module Resolution and Transformation {#module-transformation}
+
+Before your tests can run, modules need to be transformed and served to the browser:
+
+1. **Test file request**: The browser requests a test file (e.g., `/test.spec.ts`)
+2. **Vite transformation**: Vite's dev server transforms TypeScript to JavaScript, resolves path aliases, and processes JSX
+3. **Mock injection**: If `vi.mock()` was called for a module, Vitest injects mock handling code by intercepting the HTTP request via the provider's network interception (Playwright's `page.route()`)
+4. **Instrumentation**: Coverage instrumentation is added if enabled
+5. **Serve to browser**: The transformed JavaScript module is served to the browser's native ES module loader
+
+This transformation pipeline is what enables features like mocking in the browser—by intercepting and modifying module requests before they reach the browser.
+
+## Mocking Code and Network Calls {#mocking}
+
+### Mocking Code {#mocking-code}
+
+Vitest, unlike many end-to-end solutions, is designed primarily for component and page testing. In this environment, while mocking is generally minimized, it's sometimes necessary.
+
+Here's a typical mocking flow when a test uses `vi.mock()` or other test double instructions:
+
+1. **Hoisting** - Vitest hoists the mocking instruction to the beginning of the file
+2. **Registration** - When the page loads, it first parses the test file and notes the request to mock a specific module (this happens first because the mocking statement was placed at the beginning)
+3. **Interception** - When the code under test (e.g., a frontend page) tries to import the original module, Vitest recognizes it was registered in the mocking registry
+4. **Substitution** - Vitest serves the mocked module (the one defined in the test) instead of the original
+
+**How interception works**: Playwright's network interceptor `page.route()` is used to intercept HTTP requests for modules. When the browser requests a mocked module, the provider intercepts the request and serves the mock implementation instead of the original code.
+
+### Network Mocking {#network-mocking}
+
+It's common to mock or intercept network requests. Some testing strategies even encourage this practice.
+
+Since Browser Mode executes code inside an actual browser, any capability available in a browser environment remains available for your tests. Techniques or libraries that worked in your unit or component tests with JSDOM can be reused in Browser Mode.
+
+You can use popular libraries for mocking network requests like [MSW (Mock Service Worker)](https://mswjs.io) and similar tools. These libraries work seamlessly in Browser Mode just as they would in your actual application.
+
+## Parallelization and Isolation {#parallelization-isolation}
+
+When dealing with real browsers and tests with significant footprints, there's always a trade-off between performance and safety. Isolating each test with a unique browser can have an unbearable performance impact. On the other hand, running multiple tests simultaneously over the same view risks introducing collisions. Finding the right balance for your specific case is key.
+
+### File-Level Configuration {#file-level}
+
+Before test files execute, a new browser context is created (similar to opening a new incognito window). This means test files executed in a single worker process start from a clean browser state.
+
+By default, each file (a test suite) gets a fresh iframe to run in, isolating it from previously run test suites. If you want to change this for better performance, set `isolate: false` in your configuration. This provides a performance boost but might cause test suites to interfere with each other.
+
+```typescript
+export default defineConfig({
+  test: {
+    isolate: false, // Share iframe between test files
+  },
+})
+```
+
+By default, test files execute sequentially, one after another, not concurrently. While this reduces performance, it provides better isolation so each test file can assume no other tests are running simultaneously in the same browser.
+
+You can enable parallel execution by setting `fileParallelism: true`. When enabled, multiple iframes are created in the same browser, allowing tests to run simultaneously.
+
+```typescript
+export default defineConfig({
+  test: {
+    fileParallelism: true, // Run test files in parallel
+  },
+})
+```
+
+::: warning Interactive APIs and Parallelism
+From the [official Vitest documentation](https://v1.vitest.dev/config/#browser-fileparallelism):
+
+"This makes it impossible to use interactive APIs (like clicking or hovering) because there are several iframes on the screen at the same time, but if your tests don't rely on those APIs, it might be much faster to just run all of them at the same time."
+:::
+
+### Test-Level Isolation {#test-level}
+
+By design, tests inside a test file are not isolated from each other. After one test completes, the next executes in the same iframe, potentially sharing the same globals, CSS namespace, and event listeners.
+
+It's the application's responsibility to decide whether this is an issue. If it is, clean up at the application level and/or use test runner cleanup mechanisms like mock resets in `beforeEach` or `afterEach` hooks.

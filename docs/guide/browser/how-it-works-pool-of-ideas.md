@@ -1798,3 +1798,399 @@ Vitest Browser Mode continues to evolve, with Vitest 4.0 delivering stable Brows
 **Document Compiled**: November 2024
 **Research Sources**: 45+ official docs, articles, GitHub issues, videos, and technical references
 **Vitest Version Context**: 3.x - 4.x (Browser Mode stabilized in 4.0)
+
+ I'll research these specific Vitest Browser Mode configuration keys to understand their meaning and implications.
+
+⏺ Task(Research browser.isolate and fileParallelism)
+  ⎿  Done (39 tool uses · 53.4k tokens · 6m 49s)
+
+⏺ I've researched these configuration keys extensively. Here's a comprehensive explanation:
+
+  browser.isolate
+
+  Controls whether each test file runs in a separate iframe.
+
+  - Default: true
+  - Status: Deprecated in v4.0.6 (now inherits from general isolate option)
+
+  When true (default):
+
+  - Each test file gets its own dedicated iframe
+  - Complete isolation between test files
+  - Automatic cleanup of global state/DOM/event listeners
+  - Slower due to iframe creation/destruction overhead
+
+  When false:
+
+  - All test files share the same iframe
+  - Several times faster (per official docs)
+  - Requires manual cleanup in beforeEach/afterEach
+  - Risk of state leakage between files
+
+  Key insight: Isolation is at the file level, not test level. Tests within the same file always share globalThis even with
+  isolate: true.
+
+  ---
+  browser.fileParallelism
+
+  Controls whether test files run simultaneously or sequentially.
+
+  - Default: true
+  - Status: Deprecated in v4.0.6 (now inherits from general fileParallelism option)
+
+  When true (default):
+
+  - Multiple test files run in parallel (multiple iframes on screen at once)
+  - 3-5x faster for large test suites
+  - Cannot use interactive APIs (click, hover, type) reliably
+  - Best for assertion-based tests without DOM interaction
+
+  When false:
+
+  - Test files run one after another (one iframe at a time)
+  - Required for interactive APIs (Vitest Interactivity API, user-event)
+  - Slower but allows proper click/hover/drag operations
+  - Better for debugging
+
+  Critical limitation: With parallelism enabled, browser automation tools can't determine which iframe to target for
+  clicks/hovers, making interactive testing impossible.
+
+  ---
+  Configuration Strategies
+
+  Maximum Speed (non-interactive tests):
+
+  test: {
+    isolate: false,          // Share iframe
+    fileParallelism: true,   // Run in parallel
+  }
+
+  Interactive Testing:
+
+  test: {
+    isolate: true,           // Separate iframes
+    fileParallelism: false,  // Sequential for reliable clicks/hovers
+  }
+
+  Performance Optimization (v4.0.6+):
+
+  When both are false, Vitest reuses the same environment, reducing overhead even more.
+
+  ---
+  Migration note: As of v4.0.6, use the general isolate and fileParallelism options instead of browser.isolate and
+  browser.fileParallelism.
+
+> can I get reference to where it is written that "Cannot use interactive APIs"
+
+⏺ I'll find the exact documentation reference for you.
+
+⏺ Fetch(https://vitest.dev/config/#browser-fileparallelism)
+  ⎿  Received 82.4KB (200 OK)
+
+⏺ Fetch(https://v1.vitest.dev/config/#browser-fileparallelism)
+  ⎿  Received 258.6KB (200 OK)
+
+⏺ Web Search("vitest fileParallelism "interactive APIs" "clicking or hovering" documentation")
+  ⎿  Did 1 search in 12s
+
+⏺ Perfect! I found the exact reference for you.
+
+  Official Documentation Reference
+
+  Source: https://v1.vitest.dev/config/
+
+  Section: browser.fileParallelism
+
+  Exact Quote:
+
+  "Run every test in a separate iframe. This makes it impossible to use interactive APIs (like clicking or hovering) because there
+   are several iframes on the screen at the same time, but if your tests don't rely on those APIs, it might be much faster to just
+   run all of them at the same time."
+
+  ---
+  Additional Context from the Same Section:
+
+  "Note that if you disabled isolation via browser.isolate=false, your test files will still run one after another because of the
+  nature of the test runner."
+
+  ---
+  Direct Link: The full configuration reference is available at https://v1.vitest.dev/config/#browser-fileparallelism
+
+  This is the official documentation from the Vitest team explicitly stating that interactive APIs cannot be used when
+  fileParallelism is enabled (the default behavior).
+
+> Is there any parallelism or isolation on the test level? So inside the test file, say there are five tests, do they run
+sequentially? Is there any isolation between each one of them?
+
+⏺ I'll research test-level parallelism and isolation within a single test file for you.
+
+⏺ Plan(Research test-level parallelism)
+  ⎿  Done (22 tool uses · 43.4k tokens · 3m 56s)
+
+⏺ Based on my research, here are the clear answers to your questions:
+
+  Tests Within a Single File
+
+  1. Do they run sequentially?
+
+  YES, by default - Tests within a single file execute sequentially, one after another, in the order they're defined.
+
+  Official quote:
+  "By default, Vitest runs tests in sequence within a single file. Tests execute in the order they are defined, one after
+  another."
+
+  2. Is there isolation between them?
+
+  NO - Tests within the same file share ALL state.
+
+  From GitHub Issue #6588 (closed as "Not Planned"):
+  "This is by design. Tests are isolated on the file level, not on the test function level."
+
+  — Vitest maintainer (sheremet-va)
+
+  What Tests Share Within a File:
+
+  - ✅ globalThis object
+  - ✅ DOM state
+  - ✅ Global event listeners
+  - ✅ Window/document properties
+  - ✅ Module imports (cached)
+
+  Practical impact: If 5 tests in one file each bind a global event handler, you'll have 5 callbacks running by the end.
+
+  ---
+  Running Tests in Parallel Within a File
+
+  You CAN run tests concurrently using:
+
+  // Option 1: Mark individual tests
+  test.concurrent('test 1', async () => {})
+  test.concurrent('test 2', async () => {})
+
+  // Option 2: Mark entire suite
+  describe.concurrent('suite', () => {
+    test('test 1', async () => {})  // runs in parallel
+    test('test 2', async () => {})  // runs in parallel
+  })
+
+  // Option 3: CLI flag
+  // vitest --sequence.concurrent
+
+  But: Concurrent tests still share ALL the same state (no additional isolation). They run in the same worker with the same
+  VITEST_WORKER_ID.
+
+  Max concurrent tests: Default is 5 (controlled by maxConcurrency)
+
+  Performance note: Concurrency only helps with async operations. Synchronous tests still run sequentially even when marked
+  concurrent.
+
+  ---
+  Summary
+
+  | Question                              | Answer                                             |
+  |---------------------------------------|----------------------------------------------------|
+  | Sequential by default?                | ✅ YES                                              |
+  | Isolation between tests in same file? | ❌ NO - all state is shared                         |
+  | Can run in parallel?                  | ✅ YES - via test.concurrent or describe.concurrent |
+  | Isolation when parallel?              | ❌ NO - still share all state                       |
+
+  Bottom line: You must manually clean up state in beforeEach/afterEach hooks, regardless of whether tests run sequentially or
+  concurrently within a file.
+
+  How Mocking Works in Vitest Browser Mode
+
+  The Core Challenge
+
+  In Node.js, Vitest can intercept require() and import calls directly. In browsers, modules are loaded via HTTP requests, so
+  mocking requires a completely different approach: network interception.
+
+  The Architecture
+
+  1. Four Types of Mocks
+
+  From the Playwright provider code I examined, there are 4 mock types:
+
+  // From packages/browser-playwright/src/playwright.ts
+
+  type MockType =
+    | 'manual'    // User provides exact mock implementation
+    | 'redirect'  // Redirect to a different module
+    | 'automock'  // Auto-generate mock with vi.fn() for all exports
+    | 'autospy'   // Like automock but spies on original implementation
+
+  2. Network Interception Flow
+
+  Here's how it works step-by-step:
+
+  Step 1: Register the Mock (Node.js side)
+  // When you write:
+  vi.mock('./module.js', () => ({ foo: 'mocked' }))
+
+  // Vitest registers this with the BrowserModuleMocker
+  mocker.register(sessionId, {
+    url: '/src/module.js',
+    type: 'manual',
+    resolve: async () => ({ foo: 'mocked' })
+  })
+
+  Step 2: Set Up Route Interception
+  The provider (e.g., Playwright) intercepts HTTP requests:
+
+  // From playwright.ts - simplified
+  mocker.register = async (sessionId: string, module: MockedModule) => {
+    const page = this.getPage(sessionId)
+
+    // Create a predicate that matches this module's URL
+    const predicate = (url: URL) => {
+      return url.pathname === moduleUrl.pathname
+    }
+
+    // Intercept all matching requests
+    await page.context().route(predicate, async (route) => {
+      // Handle based on mock type...
+    })
+  }
+
+  Step 3: Serve Mocked Content
+  When the browser requests the module:
+
+  // For 'manual' mocks
+  if (module.type === 'manual') {
+    const exports = Object.keys(await module.resolve())
+    const body = createManualModuleSource(module.url, exports)
+    return route.fulfill({
+      body,
+      headers: { 'Content-Type': 'application/javascript' }
+    })
+  }
+
+  // For 'redirect' mocks
+  if (module.type === 'redirect') {
+    return route.fulfill({
+      status: 302,
+      headers: { Location: module.redirect }
+    })
+  }
+
+  // For 'automock'/'autospy' mocks
+  if (module.type === 'automock' || module.type === 'autospy') {
+    const url = new URL(route.request().url())
+    url.searchParams.set('mock', module.type)
+    return route.fulfill({
+      status: 302,
+      headers: { Location: url.href }
+    })
+  }
+
+  3. Manual Mock Implementation
+
+  Manual mocks generate JavaScript on-the-fly:
+
+  // From @vitest/mocker/node
+  export function createManualModuleSource(url: string, exports: string[]) {
+    return `
+      const module = await import('${url}?_vitest_original')
+      const mocks = ${JSON.stringify(exports)}
+
+      export default module.default
+      ${exports.map(name => `export const ${name} = module.${name}`).join('\n')}
+    `
+  }
+
+  4. Automock via Vite Transformation
+
+  For automock/autospy, the URL gets ?mock=automock parameter, which triggers Vite plugins:
+
+  // Vite plugin intercepts and transforms
+  if (id.includes('?mock=automock')) {
+    // Generate mock with vi.fn() for each export
+    const module = await analyzeModule(id)
+    return generateMockCode(module.exports)
+  }
+
+  Real-World Example
+
+  // Your test code
+  import { vi } from 'vitest'
+
+  vi.mock('./api.js', () => ({
+    fetchUser: vi.fn(() => Promise.resolve({ id: 1 }))
+  }))
+
+  import { fetchUser } from './api.js'
+
+  test('mocked', async () => {
+    const user = await fetchUser()
+    expect(user.id).toBe(1)
+  })
+
+  What happens:
+
+  1. Registration: vi.mock() registers the mock with the browser provider via RPC
+  2. Interception: Provider sets up route interception for /src/api.js
+  3. Request: When import './api.js' executes, browser makes HTTP request
+  4. Fulfillment: Interceptor returns mocked code instead of original
+  5. Execution: Browser executes mocked module
+
+  Key Implementation Details
+
+  Session Isolation
+  // Each session tracks its own mocks
+  const sessionMocks = new Map<string, Map<string, MockedModule>>()
+
+  // Mocks are isolated per browser tab/context
+  await mocker.register(sessionId, module)
+  await mocker.clear(sessionId) // Only clears this session's mocks
+
+  WebKit Special Case
+  // Webkit doesn't support 302 redirects in route handlers
+  const isWebkit = this.browserName === 'webkit'
+  if (isWebkit) {
+    // Fetch and transform the module server-side
+    const result = await vite.transformRequest(url)
+    return route.fulfill({ body: result.code })
+  }
+
+  Cache Busting
+  // Vite adds ?v=hash to imports for caching
+  // Mocking predicate ignores these params
+  url.searchParams.delete('t')
+  url.searchParams.delete('v')
+  url.searchParams.delete('import')
+
+  Performance Optimization
+
+  The mocking system is smart about what it intercepts:
+
+  // Only intercepts specific module URLs
+  const predicate = (url: URL) => {
+    if (url.searchParams.has('_vitest_original')) {
+      return false // Never intercept original module requests
+    }
+
+    if (url.pathname !== moduleUrl.pathname) {
+      return false // Different module, ignore
+    }
+
+    // Check search params match exactly
+    return searchParamsMatch(url, moduleUrl)
+  }
+
+  Summary
+
+  Vitest Browser Mode mocking works by:
+  1. Registering mocks in Node.js memory
+  2. Intercepting HTTP requests at the browser provider level (Playwright/WebDriverIO)
+  3. Serving mocked content instead of original modules
+  4. Using URL parameters and redirects to signal mock types
+  5. Leveraging Vite's transform pipeline for automocks
+
+  This approach gives you the same mocking DX as Node.js testing, but implemented through network interception rather than module
+  system hooks.
+
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+>
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  ⎇ feat/wishlist | Total: 2.5M | (+0,-0)                                                                      ⧉ 1406 lines selected
+  Session: 18m | Ctx(u): 86.0% | Ctx: 137.6k                                                    Context left until auto-compact: 11%
+  ⏸ plan mode on (shift+tab to cycle)
