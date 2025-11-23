@@ -501,9 +501,6 @@ function createSuiteCollector(
     suite.file = file
     suite.tasks = allChildren
 
-    // as the file is "injected" we have to change the suite's and tasks' names to include it
-    suite.fullName = createTaskName([file.fullName, suite.fullName])
-
     allChildren.forEach((task) => {
       task.file = file
       task.fullName = createTaskName([file.fullName, task.fullName])
