@@ -684,6 +684,11 @@ export default ({ mode }: { mode: string }) => {
                 docFooterText: 'Why Browser Mode | Browser Mode',
               },
               {
+                text: 'How It Works',
+                link: '/guide/browser/how-it-works',
+                docFooterText: 'How It Works | Browser Mode',
+              },
+              {
                 text: 'Getting Started',
                 link: '/guide/browser/',
                 docFooterText: 'Getting Started | Browser Mode',
