@@ -286,6 +286,8 @@ function createTest(name: string, file: File): Test {
   return {
     type: 'test',
     name,
+    fullName: `${file.fullName} > ${name}`,
+    fullTestName: `${file.fullTestName} > ${name}`,
     id: `${file.id}_0`,
     mode: 'run',
     file,

@@ -327,6 +327,8 @@ export class JUnitReporter implements Reporter {
           id: file.id,
           type: 'test',
           name: file.name,
+          fullName: file.name,
+          fullTestName: file.name,
           mode: 'run',
           result: file.result,
           meta: {},

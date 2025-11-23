@@ -38,6 +38,7 @@ import { getHooks, setFn, setHooks, setTestFixture } from './map'
 import { getCurrentTest } from './test-state'
 import { findTestFileStackTrace } from './utils'
 import { createChainable } from './utils/chain'
+import { createTaskName } from './utils/tasks'
 
 /**
  * Creates a suite of tests, allowing for grouping and hierarchical organization of tests.
@@ -297,10 +298,13 @@ function createSuiteCollector(
 
   const task = function (name = '', options: TaskCustomOptions = {}) {
     const timeout = options?.timeout ?? runner.config.testTimeout
+    const currentSuite = collectorContext.currentSuite?.suite
     const task: Test = {
       id: '',
       name,
-      suite: collectorContext.currentSuite?.suite,
+      fullName: createTaskName([currentSuite?.fullName, name]),
+      fullTestName: createTaskName([currentSuite?.fullTestName, name]),
+      suite: currentSuite,
       each: options.each,
       fails: options.fails,
       context: undefined!,
@@ -439,11 +443,15 @@ function createSuiteCollector(
       suiteOptions = { timeout: suiteOptions }
     }
 
+    const currentSuite = collectorContext.currentSuite?.suite
+
     suite = {
       id: '',
       type: 'suite',
       name,
-      suite: collectorContext.currentSuite?.suite,
+      fullName: createTaskName([currentSuite?.fullName, name]),
+      fullTestName: createTaskName([currentSuite?.fullTestName, name]),
+      suite: currentSuite,
       mode,
       each,
       file: undefined!,
@@ -493,8 +501,12 @@ function createSuiteCollector(
     suite.file = file
     suite.tasks = allChildren
 
+    // as the file is "injected" we have to change the suite's and tasks' names to include it
+    suite.fullName = createTaskName([file.fullName, suite.fullName])
+
     allChildren.forEach((task) => {
       task.file = file
+      task.fullName = createTaskName([file.fullName, task.fullName])
     })
 
     return suite

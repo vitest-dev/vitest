@@ -187,6 +187,7 @@ export function createFileTask(
   const file: File = {
     id: generateFileHash(path, projectName),
     name: path,
+    fullName: path,
     type: 'suite',
     mode: 'queued',
     filepath,
