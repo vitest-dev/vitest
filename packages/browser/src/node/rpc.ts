@@ -83,7 +83,7 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject, defaultMocke
     wss.handleUpgrade(request, socket, head, (ws) => {
       wss.emit('connection', ws, request)
 
-      const rpc = setupClient(project, rpcId, ws)
+      const { rpc, offCancel } = setupClient(project, rpcId, ws)
       const state = project.browser!.state as BrowserServerState
       const clients = type === 'tester' ? state.testers : state.orchestrators
       clients.set(rpcId, rpc)
@@ -92,6 +92,7 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject, defaultMocke
 
       ws.on('close', () => {
         debug?.('[%s] Browser API disconnected from %s', rpcId, type)
+        offCancel()
         clients.delete(rpcId)
         globalServer.removeCDPHandler(rpcId)
         if (type === 'orchestrator') {
@@ -365,9 +366,9 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject, defaultMocke
       },
     )
 
-    vitest.onCancel(reason => rpc.onCancel(reason))
+    const offCancel = vitest.onCancel(reason => rpc.onCancel(reason))
 
-    return rpc
+    return { rpc, offCancel }
   }
 }
 

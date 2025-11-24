@@ -83,6 +83,11 @@ describe('running browser tests', async () => {
     expect(actionsTest).toBeDefined()
     expect(actionsTest.assertionResults).toHaveLength(1)
   })
+
+  test('unsubscribes cancel listeners after run', async () => {
+    // should not throw birpc closing errors
+    await expect(vitest.cancelCurrentRun('keyboard-input')).resolves.not.toThrow()
+  })
 })
 
 describe('console logging tests', async () => {
