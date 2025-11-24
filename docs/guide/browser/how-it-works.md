@@ -52,7 +52,7 @@ The attached diagram shows how the main thread's worker pool opens the browser u
 
 ![Browser Mode Initialization Flow](/vitest-browser-initializing-test-suite.png)
 
-###    {#typical-action-flow}
+### Typical Action Flow {#typical-action-flow}
 
 The diagram illustrates the following flow:
 
