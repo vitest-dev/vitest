@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 
+import { setMaxListeners } from 'node:events'
 import { stripVTControlCharacters } from 'node:util'
 import { processError } from '@vitest/utils/error'
 import { describe, expect, test, vi } from 'vitest'
@@ -201,6 +202,28 @@ test('DOM APIs accept AbortController', () => {
   element.click()
 
   expect(spy).toHaveBeenCalledTimes(1)
+})
+
+test('can pass down the same abort signal many times without a warning', ({ onTestFinished }) => {
+  const controller = new AbortController()
+  const signal = controller.signal
+  setMaxListeners(5, signal)
+
+  const emitWarning = vi.spyOn(process, 'emitWarning').mockImplementation(() => {})
+  onTestFinished(() => emitWarning.mockRestore())
+
+  const element = document.createElement('div')
+  document.body.append(element)
+
+  for (let i = 0; i < 20; i++) {
+    element.addEventListener('click', () => {}, {
+      signal,
+    })
+  }
+
+  expect(emitWarning).not.toHaveBeenCalledWith(expect.objectContaining({
+    message: expect.stringContaining('Possible EventTarget memory leak detected.'),
+  }))
 })
 
 test('atob and btoa are available', () => {
