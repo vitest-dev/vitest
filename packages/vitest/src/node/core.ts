@@ -28,6 +28,7 @@ import { Traces } from '../utils/traces'
 import { astCollectTests, createFailedFileTask } from './ast-collect'
 import { BrowserSessions } from './browser/sessions'
 import { VitestCache } from './cache'
+import { FileSystemModuleCache } from './cache/fsModuleCache'
 import { resolveConfig } from './config/resolveConfig'
 import { getCoverageProvider } from './coverage'
 import { createFetchModuleFunction } from './environments/fetchModule'
@@ -110,6 +111,7 @@ export class Vitest {
   /** @internal */ _testRun: TestRun = undefined!
   /** @internal */ _resolver!: VitestResolver
   /** @internal */ _fetcher!: VitestFetchFunction
+  /** @internal */ _fsCache!: FileSystemModuleCache
   /** @internal */ _tmpDir = join(tmpdir(), nanoid())
   /** @internal */ _traces!: Traces
 
@@ -210,7 +212,7 @@ export class Vitest {
     this._state = new StateManager({
       onUnhandledError: resolved.onUnhandledError,
     })
-    this._cache = new VitestCache(this.version)
+    this._cache = new VitestCache(this.logger)
     this._snapshot = new SnapshotManager({ ...resolved.snapshotOptions })
     this._testRun = new TestRun(this)
     const otelSdkPath = resolved.experimental.openTelemetry?.sdkPath
@@ -225,14 +227,13 @@ export class Vitest {
     }
 
     this._resolver = new VitestResolver(server.config.cacheDir, resolved)
+    this._fsCache = new FileSystemModuleCache(this)
     this._fetcher = createFetchModuleFunction(
       this._resolver,
+      this._config,
+      this._fsCache,
       this._traces,
       this._tmpDir,
-      {
-        dumpFolder: this.config.dumpDir,
-        readFromDump: this.config.server.debug?.load ?? process.env.VITEST_DEBUG_LOAD_DUMP != null,
-      },
     )
     const environment = server.environments.__vitest__
     this.runner = new ServerModuleRunner(
@@ -280,6 +281,10 @@ export class Vitest {
         project,
         vitest: this,
         injectTestProjects: this.injectTestProject,
+        /**
+         * @experimental
+         */
+        experimental_defineCacheKeyGenerator: callback => this._fsCache.defineCacheKeyGenerator(callback),
       }))
     }))
 
@@ -315,6 +320,8 @@ export class Vitest {
       ? await createBenchmarkReporters(toArray(resolved.benchmark?.reporters), this.runner)
       : await createReporters(resolved.reporters, this)
 
+    await this._fsCache.ensureCacheIntegrity()
+
     await Promise.all([
       ...this._onSetServer.map(fn => fn()),
       this._traces.waitInit(),
@@ -334,11 +341,32 @@ export class Vitest {
     this.configOverride.coverage!.enabled = true
     await this.createCoverageProvider()
     await this.coverageProvider?.onEnabled?.()
+
+    // onFileTransform is the only thing that affects hash
+    if (this.coverageProvider?.onFileTransform) {
+      this.clearAllCachePaths()
+    }
   }
 
   public disableCoverage(): void {
     this.configOverride.coverage ??= {} as any
     this.configOverride.coverage!.enabled = false
+    // onFileTransform is the only thing that affects hash
+    if (this.coverageProvider?.onFileTransform) {
+      this.clearAllCachePaths()
+    }
+  }
+
+  private clearAllCachePaths() {
+    this.projects.forEach(({ vite, browser }) => {
+      const environments = [
+        ...Object.values(vite.environments),
+        ...Object.values(browser?.vite.environments || {}),
+      ]
+      environments.forEach(environment =>
+        this._fsCache.invalidateAllCachePaths(environment),
+      )
+    })
   }
 
   private _coverageOverrideCache = new WeakMap<ResolvedCoverageOptions, ResolvedCoverageOptions>()
@@ -492,6 +520,15 @@ export class Vitest {
       this.config.coverage = this._coverageProvider.resolveOptions()
     }
     return this._coverageProvider
+  }
+
+  /**
+   * Deletes all Vitest caches, including `experimental.fsModuleCache`.
+   * @experimental
+   */
+  public async experimental_clearCache(): Promise<void> {
+    await this.cache.results.clearCache()
+    await this._fsCache.clearCache()
   }
 
   /**
@@ -1182,9 +1219,17 @@ export class Vitest {
         ...Object.values(browser?.vite.environments || {}),
       ]
 
-      environments.forEach(({ moduleGraph }) => {
+      environments.forEach((environment) => {
+        const { moduleGraph } = environment
         const modules = moduleGraph.getModulesByFile(filepath)
-        modules?.forEach(module => moduleGraph.invalidateModule(module))
+        if (!modules) {
+          return
+        }
+
+        modules.forEach((module) => {
+          moduleGraph.invalidateModule(module)
+          this._fsCache.invalidateCachePath(environment, module.id!)
+        })
       })
     })
   }

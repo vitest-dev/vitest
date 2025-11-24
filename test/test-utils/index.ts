@@ -1,8 +1,16 @@
 import type { Options } from 'tinyexec'
 import type { UserConfig as ViteUserConfig } from 'vite'
-import type { WorkerGlobalState } from 'vitest'
+import type { SerializedConfig, WorkerGlobalState } from 'vitest'
 import type { TestProjectConfiguration } from 'vitest/config'
-import type { TestCollection, TestModule, TestSpecification, TestUserConfig, Vitest, VitestRunMode } from 'vitest/node'
+import type {
+  TestCollection,
+  TestModule,
+  TestResult,
+  TestSpecification,
+  TestUserConfig,
+  Vitest,
+  VitestRunMode,
+} from 'vitest/node'
 import { webcrypto as crypto } from 'node:crypto'
 import fs from 'node:fs'
 import { Readable, Writable } from 'node:stream'
@@ -70,6 +78,8 @@ export async function runVitest(
   stdin.isTTY = true
   stdin.setRawMode = () => stdin
   const cli = new Cli({ stdin, stdout, stderr, preserveAnsi: runnerOptions.preserveAnsi })
+  // @ts-expect-error not typed global
+  const currentConfig: SerializedConfig = __vitest_worker__.ctx.config
 
   let ctx: Vitest | undefined
   let thrown = false
@@ -87,6 +97,11 @@ export async function runVitest(
       env: {
         NO_COLOR: 'true',
         ...rest.env,
+      },
+      // override cache config with the one that was used to run `vitest` formt the CLI
+      experimental: {
+        fsModuleCache: currentConfig.experimental.fsModuleCache,
+        ...rest.experimental,
       },
     }, {
       ...viteOverrides,
@@ -141,6 +156,17 @@ export async function runVitest(
     vitest: cli,
     stdout: cli.stdout,
     stderr: cli.stderr,
+    get results() {
+      return ctx?.state.getTestModules() || []
+    },
+    errorTree() {
+      return buildTestTree(ctx?.state.getTestModules() || [], (result) => {
+        if (result.state === 'failed') {
+          return result.errors.map(e => e.message)
+        }
+        return result.state
+      })
+    },
     testTree() {
       return buildTestTree(ctx?.state.getTestModules() || [])
     },
@@ -306,10 +332,10 @@ export default config
   return `export default ${JSON.stringify(content)}`
 }
 
-export function useFS<T extends TestFsStructure>(root: string, structure: T) {
+export function useFS<T extends TestFsStructure>(root: string, structure: T, ensureConfig = true) {
   const files = new Set<string>()
   const hasConfig = Object.keys(structure).some(file => file.includes('.config.'))
-  if (!hasConfig) {
+  if (ensureConfig && !hasConfig) {
     ;(structure as any)['./vitest.config.js'] = {}
   }
   for (const file in structure) {
@@ -338,9 +364,10 @@ export function useFS<T extends TestFsStructure>(root: string, structure: T) {
         throw new Error(`file ${file} is outside of the test file system`)
       }
       const filepath = resolve(root, file)
-      if (!files.has(filepath)) {
+      if (files.has(filepath)) {
         throw new Error(`file ${file} already exists in the test file system`)
       }
+      files.add(filepath)
       createFile(filepath, content)
     },
     statFile: (file: string): fs.Stats => {
@@ -392,7 +419,7 @@ export class StableTestFileOrderSorter {
   }
 }
 
-function buildTestTree(testModules: TestModule[]) {
+function buildTestTree(testModules: TestModule[], onResult?: (result: TestResult) => unknown) {
   type TestTree = Record<string, any>
 
   function walkCollection(collection: TestCollection): TestTree {
@@ -406,7 +433,12 @@ function buildTestTree(testModules: TestModule[]) {
       }
       else if (child.type === 'test') {
         const result = child.result()
-        node[child.name] = result.state
+        if (onResult) {
+          node[child.name] = onResult(result)
+        }
+        else {
+          node[child.name] = result.state
+        }
       }
     }
 

@@ -561,12 +561,10 @@ export class TestProject {
     this._serializedDefines = createDefinesScript(server.config.define)
     this._fetcher = createFetchModuleFunction(
       this._resolver,
+      this._config,
+      this.vitest._fsCache,
       this.vitest._traces,
       this.tmpDir,
-      {
-        dumpFolder: this.config.dumpDir,
-        readFromDump: this.config.server.debug?.load ?? process.env.VITEST_DEBUG_LOAD_DUMP != null,
-      },
     )
 
     const environment = server.environments.__vitest__

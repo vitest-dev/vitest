@@ -130,5 +130,8 @@ export function serializeConfig(project: TestProject): SerializedConfig {
     serializedDefines: config.browser.enabled
       ? ''
       : project._serializedDefines || '',
+    experimental: {
+      fsModuleCache: config.experimental.fsModuleCache ?? false,
+    },
   }
 }

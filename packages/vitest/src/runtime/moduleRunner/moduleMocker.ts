@@ -20,6 +20,9 @@ interface MockContext {
 
 export interface VitestMockerOptions {
   context?: vm.Context
+  /**
+   * @internal
+   */
   traces: Traces
   spyModule?: typeof import('@vitest/spy')
   root: string
@@ -524,6 +527,9 @@ export class VitestMocker {
 
 declare module 'vite/module-runner' {
   interface EvaluatedModuleNode {
+    /**
+     * @internal
+     */
     mockedExports?: Record<string, any>
   }
 }

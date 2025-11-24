@@ -826,8 +826,21 @@ export interface InlineConfig {
    */
   attachmentsDir?: string
 
-  /** @experimental */
+  /**
+   * Experimental features
+   *
+   * @experimental
+   */
   experimental?: {
+    /**
+     * Enable caching of modules on the file system between reruns.
+     */
+    fsModuleCache?: boolean
+    /**
+     * Path relative to the root of the project where the fs module cache will be stored.
+     * @default node_modules/.experimental-vitest-cache
+     */
+    fsModuleCachePath?: string
     /**
      * {@link https://vitest.dev/guide/open-telemetry}
      */
@@ -965,6 +978,12 @@ export interface UserConfig extends InlineConfig {
    * @default '.vitest-reports'
    */
   mergeReports?: string
+
+  /**
+   * Delete all Vitest caches, including `experimental.fsModuleCache`.
+   * @experimental
+   */
+  clearCache?: boolean
 }
 
 export type OnUnhandledErrorCallback = (error: (TestError | Error) & { type: string }) => boolean | void

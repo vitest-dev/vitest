@@ -9,12 +9,21 @@ import { dirname, extname, join, resolve } from 'pathe'
 import { isWindows } from '../utils/env'
 
 export class VitestResolver {
-  private options: ExternalizeOptions
+  public readonly options: ExternalizeOptions
   private externalizeCache = new Map<string, Promise<string | false>>()
 
   constructor(cacheDir: string, config: ResolvedConfig) {
+    // sorting to make cache consistent
+    const inline = config.server.deps?.inline
+    if (Array.isArray(inline)) {
+      inline.sort()
+    }
+    const external = config.server.deps?.external
+    if (Array.isArray(external)) {
+      external.sort()
+    }
     this.options = {
-      moduleDirectories: config.deps.moduleDirectories,
+      moduleDirectories: config.deps.moduleDirectories?.sort(),
       inlineFiles: config.setupFiles.flatMap((file) => {
         if (file.startsWith('file://')) {
           return file
@@ -23,8 +32,8 @@ export class VitestResolver {
         return [resolvedId, pathToFileURL(resolvedId).href]
       }),
       cacheDir,
-      inline: config.server.deps?.inline,
-      external: config.server.deps?.external,
+      inline,
+      external,
     }
   }
 

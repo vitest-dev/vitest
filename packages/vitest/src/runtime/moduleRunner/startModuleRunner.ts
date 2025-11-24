@@ -27,6 +27,9 @@ export interface ContextModuleRunnerOptions {
   context?: vm.Context
   externalModulesExecutor?: ExternalModulesExecutor
   state: WorkerGlobalState
+  /**
+   * @internal
+   */
   traces?: Traces // optional to keep backwards compat
   spyModule?: typeof import('@vitest/spy')
   createImportMeta?: CreateImportMeta
@@ -123,6 +126,12 @@ export function startVitestModuleRunner(options: ContextModuleRunnerOptions): Vi
 
           if (isBuiltin(rawId) || rawId.startsWith(browserExternalId)) {
             return { externalize: toBuiltin(rawId), type: 'builtin' }
+          }
+
+          // if module is invalidated, the worker will be recreated,
+          // so cached is always true in a single worker
+          if (options?.cached) {
+            return { cache: true }
           }
 
           const otelCarrier = traces?.getContextCarrier()

@@ -774,8 +774,21 @@ export const cliOptionsConfig: VitestCLIOptions = {
       return value
     },
   },
+  clearCache: {
+    description: 'Delete all Vitest caches, including `experimental.fsModuleCache`, without running any tests. This will reduce the performance in the subsequent test run.',
+  },
 
-  experimental: null,
+  experimental: {
+    description: 'Experimental features.',
+    argument: '<features>',
+    subcommands: {
+      fsModuleCache: {
+        description: 'Enable caching of modules on the file system between reruns.',
+      },
+      fsModuleCachePath: null,
+      openTelemetry: null,
+    },
+  },
   // disable CLI options
   cliExclude: null,
   server: null,

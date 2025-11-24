@@ -83,6 +83,9 @@ export class Traces {
     return !!this.#otel
   }
 
+  /**
+   * @internal
+   */
   async waitInit(): Promise<this> {
     if (this.#init) {
       await this.#init
@@ -90,6 +93,9 @@ export class Traces {
     return this
   }
 
+  /**
+   * @internal
+   */
   startContextSpan(name: string, currentContext?: Context): {
     span: Span
     context: Context
@@ -114,6 +120,9 @@ export class Traces {
     }
   }
 
+  /**
+   * @internal
+   */
   getContextFromCarrier(carrier: OTELCarrier | undefined): Context {
     if (!this.#otel) {
       return this.#noopContext
@@ -125,6 +134,9 @@ export class Traces {
     return this.#otel.propagation.extract(activeContext, carrier)
   }
 
+  /**
+   * @internal
+   */
   getContextCarrier(context?: Context): OTELCarrier | undefined {
     if (!this.#otel) {
       return undefined
@@ -177,8 +189,17 @@ export class Traces {
     }
   }
 
+  /**
+   * @internal
+   */
   $<T>(name: string, fn: (span: Span) => T): T
+  /**
+   * @internal
+   */
   $<T>(name: string, optionsOrFn: TracesSpanOptions, fn: (span: Span) => T): T
+  /**
+   * @internal
+   */
   $<T>(name: string, optionsOrFn: TracesSpanOptions | ((span: Span) => T), fn?: (span: Span) => T): T {
     const callback = typeof optionsOrFn === 'function' ? optionsOrFn : fn!
     if (!this.#otel) {
@@ -203,6 +224,9 @@ export class Traces {
     )
   }
 
+  /**
+   * @internal
+   */
   startSpan(name: string, options?: SpanOptions, context?: Context): Span {
     if (!this.#otel) {
       return this.#noopSpan
@@ -211,6 +235,9 @@ export class Traces {
     return tracer.startSpan(name, options, context)
   }
 
+  /**
+   * @internal
+   */
   async finish(): Promise<void> {
     await this.#sdk?.shutdown()
   }

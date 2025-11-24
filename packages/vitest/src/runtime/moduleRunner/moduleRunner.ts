@@ -11,7 +11,7 @@ import { Traces } from '../../utils/traces'
 import { VitestMocker } from './moduleMocker'
 import { VitestTransport } from './moduleTransport'
 
-export type CreateImportMeta = NonNullable<viteModuleRunner.ModuleRunnerOptions['createImportMeta']>
+export type CreateImportMeta = (modulePath: string) => viteModuleRunner.ModuleRunnerImportMeta | Promise<viteModuleRunner.ModuleRunnerImportMeta>
 export const createNodeImportMeta: CreateImportMeta = (modulePath: string) => {
   if (!viteModuleRunner.createDefaultImportMeta) {
     throw new Error(`createNodeImportMeta is not supported in this version of Vite.`)
@@ -206,6 +206,9 @@ export interface VitestModuleRunnerOptions {
   getWorkerState: () => WorkerGlobalState
   mocker?: VitestMocker
   vm?: VitestVmOptions
+  /**
+   * @internal
+   */
   traces?: Traces
   spyModule?: typeof import('@vitest/spy')
   createImportMeta?: CreateImportMeta

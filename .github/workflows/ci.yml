@@ -127,6 +127,42 @@ jobs:
           path: test/ui/test-results/
           retention-days: 30
 
+  test-cached:
+    needs: changed
+    name: 'Cache&Test: node-${{ matrix.node_version }}, ${{ matrix.os }}'
+    if: needs.changed.outputs.should_skip != 'true'
+    runs-on: ${{ matrix.os }}
+
+    timeout-minutes: 30
+
+    strategy:
+      matrix:
+        node_version: [24]
+        os:
+          - macos-latest
+          - windows-latest
+      fail-fast: false
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: ./.github/actions/setup-and-cache
+        with:
+          node-version: ${{ matrix.node_version }}
+
+      - uses: browser-actions/setup-chrome@b94431e051d1c52dcbe9a7092a4f10f827795416 # v2.1.0
+
+      - name: Install
+        run: pnpm i
+
+      - uses: ./.github/actions/setup-playwright
+
+      - name: Build
+        run: pnpm run build
+
+      - name: Test
+        run: pnpm run test:ci:cache
+
   test-browser:
     needs: changed
     name: 'Browsers: node-${{ matrix.node_version }}, ${{ matrix.os }}'
