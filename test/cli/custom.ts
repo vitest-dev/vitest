@@ -2,7 +2,7 @@ import type { Environment } from 'vitest/environments'
 import vm from 'node:vm'
 import { createDebug } from 'obug'
 
-// test that external packages (debug) are loaded correctly
+// test that external packages (obug) are loaded correctly
 const log = createDebug('test:env')
 
 export default <Environment>{
