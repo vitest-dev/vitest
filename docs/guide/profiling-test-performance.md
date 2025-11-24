@@ -20,7 +20,6 @@ When you run Vitest it reports multiple time metrics of your tests:
 - Import: Time it took to import your test file. This also includes the time spent collecting all tests.
 - Tests: Time spent for actually running the test cases.
 - Environment: Time spent for setting up the test [`environment`](/config/#environment), for example JSDOM.
-- Prepare: Time Vitest uses to prepare the test runner. When running tests in Node, this is the time to import and execute all internal utilities inside the worker. When running tests in the browser, this also includes the time to initiate the iframe.
 
 ## Test runner
 

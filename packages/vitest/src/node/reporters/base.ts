@@ -587,7 +587,6 @@ export abstract class BaseReporter implements Reporter {
       const executionTime = blobs?.executionTimes ? sum(blobs.executionTimes, time => time) : this.end - this.start
 
       const environmentTime = sum(files, file => file.environmentLoad)
-      const prepareTime = sum(files, file => file.prepareDuration)
       const transformTime = this.ctx.state.transformTime
       const typecheck = sum(this.ctx.projects, project => project.typechecker?.getResult().time)
 
@@ -597,7 +596,6 @@ export abstract class BaseReporter implements Reporter {
         `import ${formatTime(collectTime)}`,
         `tests ${formatTime(testsTime)}`,
         `environment ${formatTime(environmentTime)}`,
-        `prepare ${formatTime(prepareTime)}`,
         typecheck && `typecheck ${formatTime(typecheck)}`,
       ].filter(Boolean).join(', ')
 
