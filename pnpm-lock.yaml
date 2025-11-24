@@ -21,9 +21,6 @@ catalogs:
     '@types/chai':
       specifier: ^5.2.2
       version: 5.2.2
-    '@types/debug':
-      specifier: ^4.1.12
-      version: 4.1.12
     '@types/estree':
       specifier: ^1.0.8
       version: 1.0.8
@@ -47,7 +44,7 @@ catalogs:
       version: 66.5.6
     '@vitejs/plugin-vue':
       specifier: ^6.0.1
-      version: 6.0.1
+      version: 6.0.2
     '@vueuse/core':
       specifier: ^12.8.2
       version: 12.8.2
@@ -63,9 +60,6 @@ catalogs:
     chai:
       specifier: ^6.2.1
       version: 6.2.1
-    debug:
-      specifier: ^4.4.3
-      version: 4.4.3
     flatted:
       specifier: ^3.3.3
       version: 3.3.3
@@ -90,6 +84,9 @@ catalogs:
     msw:
       specifier: ^2.12.2
       version: 2.12.2
+    obug:
+      specifier: ^2.1.0
+      version: 2.1.0
     pathe:
       specifier: ^2.0.3
       version: 2.0.3
@@ -228,7 +225,7 @@ importers:
         version: 5.9.3
       unplugin-isolated-decl:
         specifier: ^0.15.5
-        version: 0.15.5(ms@2.1.3)(typescript@5.9.3)
+        version: 0.15.5(typescript@5.9.3)
       unplugin-oxc:
         specifier: ^0.5.4
         version: 0.5.4
@@ -274,7 +271,7 @@ importers:
         version: 1.0.1(@vite-pwa/assets-generator@1.0.2)(vite-plugin-pwa@0.21.2(@vite-pwa/assets-generator@1.0.2)(vite@7.1.5(@types/node@24.10.1)(jiti@2.6.1)(lightningcss@1.30.1)(sass-embedded@1.93.3)(sass@1.93.3)(terser@5.44.0)(tsx@4.20.6)(yaml@2.8.1))(workbox-build@7.1.0(@types/babel__core@7.20.5))(workbox-window@7.3.0))
       '@vitejs/plugin-vue':
         specifier: 'catalog:'
-        version: 6.0.1(vite@7.1.5(@types/node@24.10.1)(jiti@2.6.1)(lightningcss@1.30.1)(sass-embedded@1.93.3)(sass@1.93.3)(terser@5.44.0)(tsx@4.20.6)(yaml@2.8.1))(vue@3.5.24(typescript@5.9.3))
+        version: 6.0.2(vite@7.1.5(@types/node@24.10.1)(jiti@2.6.1)(lightningcss@1.30.1)(sass-embedded@1.93.3)(sass@1.93.3)(terser@5.44.0)(tsx@4.20.6)(yaml@2.8.1))(vue@3.5.24(typescript@5.9.3))
       https-localhost:
         specifier: ^4.7.1
         version: 4.7.1
@@ -556,9 +553,6 @@ importers:
       '@istanbuljs/schema':
         specifier: ^0.1.3
         version: 0.1.3
-      debug:
-        specifier: 'catalog:'
-        version: 4.4.3
       istanbul-lib-coverage:
         specifier: 'catalog:'
         version: 3.2.2
@@ -577,13 +571,13 @@ importers:
       magicast:
         specifier: 'catalog:'
         version: 0.5.1
+      obug:
+        specifier: 'catalog:'
+        version: 2.1.0
       tinyrainbow:
         specifier: 'catalog:'
         version: 3.0.3
     devDependencies:
-      '@types/debug':
-        specifier: 'catalog:'
-        version: 4.1.12
       '@types/istanbul-lib-coverage':
         specifier: 'catalog:'
         version: 2.0.6
@@ -617,9 +611,6 @@ importers:
       ast-v8-to-istanbul:
         specifier: ^0.3.8
         version: 0.3.8
-      debug:
-        specifier: 'catalog:'
-        version: 4.4.3
       istanbul-lib-coverage:
         specifier: 'catalog:'
         version: 3.2.2
@@ -635,6 +626,9 @@ importers:
       magicast:
         specifier: 'catalog:'
         version: 0.5.1
+      obug:
+        specifier: 'catalog:'
+        version: 2.1.0
       std-env:
         specifier: 'catalog:'
         version: 3.10.0
@@ -642,9 +636,6 @@ importers:
         specifier: 'catalog:'
         version: 3.0.3
     devDependencies:
-      '@types/debug':
-        specifier: 'catalog:'
-        version: 4.1.12
       '@types/istanbul-lib-coverage':
         specifier: 'catalog:'
         version: 2.0.6
@@ -825,7 +816,7 @@ importers:
         version: 66.5.6
       '@vitejs/plugin-vue':
         specifier: 'catalog:'
-        version: 6.0.1(vite@7.1.5(@types/node@24.10.1)(jiti@2.6.1)(lightningcss@1.30.1)(sass-embedded@1.93.3)(sass@1.93.3)(terser@5.44.0)(tsx@4.20.6)(yaml@2.8.1))(vue@3.5.24(typescript@5.9.3))
+        version: 6.0.2(vite@7.1.5(@types/node@24.10.1)(jiti@2.6.1)(lightningcss@1.30.1)(sass-embedded@1.93.3)(sass@1.93.3)(terser@5.44.0)(tsx@4.20.6)(yaml@2.8.1))(vue@3.5.24(typescript@5.9.3))
       '@vitest/browser-playwright':
         specifier: workspace:*
         version: link:../browser-playwright
@@ -956,9 +947,6 @@ importers:
       '@vitest/utils':
         specifier: workspace:*
         version: link:../utils
-      debug:
-        specifier: 'catalog:'
-        version: 4.4.3
       es-module-lexer:
         specifier: ^1.7.0
         version: 1.7.0
@@ -968,6 +956,9 @@ importers:
       magic-string:
         specifier: 'catalog:'
         version: 0.30.21
+      obug:
+        specifier: 'catalog:'
+        version: 2.1.0
       pathe:
         specifier: 'catalog:'
         version: 2.0.3
@@ -1011,9 +1002,6 @@ importers:
       '@sinonjs/fake-timers':
         specifier: 14.0.0
         version: 14.0.0(patch_hash=6f7091fcf11165157b4bfb8dde6b5b6b7697e3efd6e9b53bb4bdef442f60a278)
-      '@types/debug':
-        specifier: 'catalog:'
-        version: 4.1.12
       '@types/estree':
         specifier: 'catalog:'
         version: 1.0.8
@@ -1077,16 +1065,13 @@ importers:
 
   packages/web-worker:
     dependencies:
-      debug:
+      obug:
         specifier: 'catalog:'
-        version: 4.4.3
+        version: 2.1.0
       vitest:
         specifier: workspace:*
         version: link:../vitest
     devDependencies:
-      '@types/debug':
-        specifier: 'catalog:'
-        version: 4.1.12
       '@types/ungap__structured-clone':
         specifier: ^1.2.0
         version: 1.2.0
@@ -1184,9 +1169,6 @@ importers:
       '@test/test-dep-linked':
         specifier: link:./deps/linked
         version: link:deps/linked
-      '@types/debug':
-        specifier: 'catalog:'
-        version: 4.1.12
       '@types/ws':
         specifier: 'catalog:'
         version: 8.18.1
@@ -1205,9 +1187,9 @@ importers:
       '@vitest/utils':
         specifier: workspace:*
         version: link:../../packages/utils
-      debug:
-        specifier: ^4.4.3
-        version: 4.4.3
+      obug:
+        specifier: ^2.1.0
+        version: 2.1.0
       unplugin-swc:
         specifier: ^1.5.8
         version: 1.5.8(@swc/core@1.4.1)(rollup@4.53.2)
@@ -1268,9 +1250,6 @@ importers:
       '@test/vite-external':
         specifier: link:./projects/vite-external
         version: link:projects/vite-external
-      '@types/debug':
-        specifier: 'catalog:'
-        version: 4.1.12
       '@vitest/expect':
         specifier: workspace:*
         version: link:../../packages/expect
@@ -1300,19 +1279,19 @@ importers:
         version: link:../../packages/web-worker
       '@vueuse/integrations':
         specifier: ^10.11.1
-        version: 10.11.1(axios@1.13.2(debug@4.4.3))(focus-trap@7.6.6)(vue@3.5.24(typescript@5.9.3))
+        version: 10.11.1(axios@1.13.2)(focus-trap@7.6.6)(vue@3.5.24(typescript@5.9.3))
       axios:
         specifier: ^1.13.2
-        version: 1.13.2(debug@4.4.3)
-      debug:
-        specifier: ^4.4.3
-        version: 4.4.3
+        version: 1.13.2
       immutable:
         specifier: 5.1.4
         version: 5.1.4
       memfs:
         specifier: ^4.51.0
         version: 4.51.0
+      obug:
+        specifier: ^2.1.0
+        version: 2.1.0
       react:
         specifier: ^19.2.0
         version: 19.2.0
@@ -3919,6 +3898,9 @@ packages:
   '@rolldown/pluginutils@1.0.0-beta.47':
     resolution: {integrity: sha512-8QagwMH3kNCuzD8EWL8R2YPW5e4OrHNSAHRFDdmFqEwEaD/KcNKjVoumo+gP2vW5eKB2UPbM6vTYiGZX0ixLnw==}
 
+  '@rolldown/pluginutils@1.0.0-beta.50':
+    resolution: {integrity: sha512-5e76wQiQVeL1ICOZVUg4LSOVYg9jyhGCin+icYozhsUzM+fHE7kddi1bdiE0jwVqTfkjba3jUFbEkoC9WkdvyA==}
+
   '@rollup/plugin-babel@5.3.1':
     resolution: {integrity: sha512-WFfdLWU/xVWKeRQnKmIAQULUI7Il0gZnBIH/ZFO069wYIfPu+8zrfp/KMW0atmELoRDq8FbiP3VCss9MhCut7Q==}
     engines: {node: '>= 10.0.0'}
@@ -4682,6 +4664,13 @@ packages:
       vite: ^7.1.5
       vue: ^3.2.25
 
+  '@vitejs/plugin-vue@6.0.2':
+    resolution: {integrity: sha512-iHmwV3QcVGGvSC1BG5bZ4z6iwa1SOpAPWmnjOErd4Ske+lZua5K9TtAVdx0gMBClJ28DViCbSmZitjWZsWO3LA==}
+    engines: {node: ^20.19.0 || >=22.12.0}
+    peerDependencies:
+      vite: ^7.1.5
+      vue: ^3.2.25
+
   '@vitest/cjs-lib@file:test/browser/cjs-lib':
     resolution: {directory: test/browser/cjs-lib, type: directory}
 
@@ -4737,14 +4726,8 @@ packages:
   '@volar/typescript@2.4.23':
     resolution: {integrity: sha512-lAB5zJghWxVPqfcStmAP1ZqQacMpe90UrP5RJ3arDyrhy4aCUQqmxPPLB2PWDKugvylmO41ljK7vZ+t6INMTag==}
 
-  '@vue/compiler-core@3.5.23':
-    resolution: {integrity: sha512-nW7THWj5HOp085ROk65LwaoxuzDsjIxr485F4iu63BoxsXoSqKqmsUUoP4A7Gl67DgIgi0zJ8JFgHfvny/74MA==}
-
   '@vue/compiler-core@3.5.24':
     resolution: {integrity: sha512-eDl5H57AOpNakGNAkFDH+y7kTqrQpJkZFXhWZQGyx/5Wh7B1uQYvcWkvZi11BDhscPgj8N7XV3oRwiPnx1Vrig==}
-
-  '@vue/compiler-dom@3.5.23':
-    resolution: {integrity: sha512-AT8RMw0vEzzzO0JU5gY0F6iCzaWUIh/aaRVordzMBKXRpoTllTT4kocHDssByPsvodNCfump/Lkdow2mT/O5KQ==}
 
   '@vue/compiler-dom@3.5.24':
     resolution: {integrity: sha512-1QHGAvs53gXkWdd3ZMGYuvQFXHW4ksKWPG8HP8/2BscrbZ0brw183q2oNWjMrSWImYLHxHrx1ItBQr50I/q2zw==}
@@ -4804,9 +4787,6 @@ packages:
     resolution: {integrity: sha512-Yh2j2Y4G/0/4z/xJ1Bad4mxaAk++C2v4kaa8oSYTMJBJ00/ndPuxCnWeot0/7/qafQFLh5pr6xeV6SdMcE/G1w==}
     peerDependencies:
       vue: 3.5.24
-
-  '@vue/shared@3.5.23':
-    resolution: {integrity: sha512-0YZ1DYuC5o/YJPf6pFdt2KYxVGDxkDbH/1NYJnVJWUkzr8ituBEmFVQRNX2gCaAsFEjEDnLkWpgqlZA7htgS/g==}
 
   '@vue/shared@3.5.24':
     resolution: {integrity: sha512-9cwHL2EsJBdi8NY22pngYYWzkTDhld6fAD6jlaeloNGciNSJL6bLpbxVgXl96X00Jtc6YWQv96YA/0sxex/k1A==}
@@ -7330,9 +7310,6 @@ packages:
   magic-string@0.25.9:
     resolution: {integrity: sha512-RmF0AsMzgt25qzqqLc1+MbHmhdx0ojF2Fvs4XnOqz2ZOBXzzkEwc/dJQZCYHAn7v1jbVOjAZfK8msRn4BxO4VQ==}
 
-  magic-string@0.30.19:
-    resolution: {integrity: sha512-2N21sPY9Ws53PZvsEpVtNuSW+ScYbQdp4b9qUaL+9QkHUrGFKo56Lg9Emg5s9V/qrtNBmiR01sYhUOwu3H+VOw==}
-
   magic-string@0.30.21:
     resolution: {integrity: sha512-vd2F4YUyEXKGcLHoq+TEyCjxueSeHnFxyyjNp80yg0XV4vUhnDer/lvvlqM/arB5bXQN5K2/3oinyCRyx8T2CQ==}
 
@@ -7755,13 +7732,8 @@ packages:
   obuf@1.1.2:
     resolution: {integrity: sha512-PX1wu0AmAdPqOL1mWhqmlOd8kOIZQwGZw6rh7uby9fTc5lhaOWFLX3I6R1hrF9k3zUY40e6igsLGkDXK92LJNg==}
 
-  obug@2.0.0:
-    resolution: {integrity: sha512-dpSQuPXoKUjulinHmXjZV1YIRhOLEqBl1J6PYi9mRQR2dYcSK+OULRr+GuT1vufk2f40mtIOqmSL/aTikjmq5Q==}
-    peerDependencies:
-      ms: ^2.0.0
-    peerDependenciesMeta:
-      ms:
-        optional: true
+  obug@2.1.0:
+    resolution: {integrity: sha512-uu/tgLPoa75CFA7UDkmqspKbefvZh1WMPwkU3bNr0PY746a/+xwXVgbw5co5C3GvJj3h5u8g/pbxXzI0gd1QFg==}
 
   ofetch@1.4.1:
     resolution: {integrity: sha512-QZj2DfGplQAr2oj9KzceK9Hwz6Whxazmn85yYeVuS3u9XTMOGMRx0kO95MQ+vLsj/S/NwBDMMLU5hpxvI6Tklw==}
@@ -8741,9 +8713,6 @@ packages:
 
   std-env@3.10.0:
     resolution: {integrity: sha512-5GS12FdOZNliM5mAOxFRg7Ir0pWz8MdpYm6AY6VPkGpbA7ZzmbzNcBJQ0GPvvyWgcY7QAhCgf9Uy89I03faLkg==}
-
-  std-env@3.9.0:
-    resolution: {integrity: sha512-UGvjygr6F6tpH7o2qyqR6QYpwraIjKSdtzyBdyytFOHmPZY917kwdwLG0RbOjWOnKmnm3PeHjaoLLMie7kPLQw==}
 
   stop-iteration-iterator@1.0.0:
     resolution: {integrity: sha512-iCGQj+0l0HOdZ2AEeBADlsRC+vsnDsZsbdSiH1yNSjcfKM7fdpCMfqAL/dwF5BLiw/XhRft/Wax6zQbhq2BcjQ==}
@@ -10635,7 +10604,7 @@ snapshots:
   '@babel/traverse@7.27.7':
     dependencies:
       '@babel/code-frame': 7.27.1
-      '@babel/generator': 7.28.3
+      '@babel/generator': 7.28.5
       '@babel/parser': 7.28.5
       '@babel/template': 7.27.2
       '@babel/types': 7.28.5
@@ -11944,6 +11913,8 @@ snapshots:
 
   '@rolldown/pluginutils@1.0.0-beta.47': {}
 
+  '@rolldown/pluginutils@1.0.0-beta.50': {}
+
   '@rollup/plugin-babel@5.3.1(@babel/core@7.28.5)(@types/babel__core@7.20.5)(rollup@4.53.2)':
     dependencies:
       '@babel/core': 7.28.5
@@ -12821,6 +12792,12 @@ snapshots:
       vite: 7.1.5(@types/node@24.10.1)(jiti@2.6.1)(lightningcss@1.30.1)(sass-embedded@1.93.3)(sass@1.93.3)(terser@5.44.0)(tsx@4.20.6)(yaml@2.8.1)
       vue: 3.5.24(typescript@5.9.3)
 
+  '@vitejs/plugin-vue@6.0.2(vite@7.1.5(@types/node@24.10.1)(jiti@2.6.1)(lightningcss@1.30.1)(sass-embedded@1.93.3)(sass@1.93.3)(terser@5.44.0)(tsx@4.20.6)(yaml@2.8.1))(vue@3.5.24(typescript@5.9.3))':
+    dependencies:
+      '@rolldown/pluginutils': 1.0.0-beta.50
+      vite: 7.1.5(@types/node@24.10.1)(jiti@2.6.1)(lightningcss@1.30.1)(sass-embedded@1.93.3)(sass@1.93.3)(terser@5.44.0)(tsx@4.20.6)(yaml@2.8.1)
+      vue: 3.5.24(typescript@5.9.3)
+
   '@vitest/cjs-lib@file:test/browser/cjs-lib': {}
 
   '@vitest/eslint-plugin@1.4.1(eslint@9.39.1(jiti@2.6.1))(typescript@5.9.3)(vitest@packages+vitest)':
@@ -12877,14 +12854,6 @@ snapshots:
       path-browserify: 1.0.1
       vscode-uri: 3.1.0
 
-  '@vue/compiler-core@3.5.23':
-    dependencies:
-      '@babel/parser': 7.28.5
-      '@vue/shared': 3.5.23
-      entities: 4.5.0
-      estree-walker: 2.0.2
-      source-map-js: 1.2.1
-
   '@vue/compiler-core@3.5.24':
     dependencies:
       '@babel/parser': 7.28.5
@@ -12892,11 +12861,6 @@ snapshots:
       entities: 4.5.0
       estree-walker: 2.0.2
       source-map-js: 1.2.1
-
-  '@vue/compiler-dom@3.5.23':
-    dependencies:
-      '@vue/compiler-core': 3.5.23
-      '@vue/shared': 3.5.23
 
   '@vue/compiler-dom@3.5.24':
     dependencies:
@@ -12944,7 +12908,7 @@ snapshots:
     dependencies:
       '@volar/language-core': 1.11.1
       '@volar/source-map': 1.11.1
-      '@vue/compiler-dom': 3.5.23
+      '@vue/compiler-dom': 3.5.24
       '@vue/shared': 3.5.24
       computeds: 0.0.1
       minimatch: 9.0.5
@@ -12957,7 +12921,7 @@ snapshots:
   '@vue/language-core@3.1.1(typescript@5.9.3)':
     dependencies:
       '@volar/language-core': 2.4.23
-      '@vue/compiler-dom': 3.5.23
+      '@vue/compiler-dom': 3.5.24
       '@vue/shared': 3.5.24
       alien-signals: 3.0.3
       muggle-string: 0.4.1
@@ -13000,8 +12964,6 @@ snapshots:
       '@vue/shared': 3.5.24
       vue: 3.5.24(typescript@5.9.3)
 
-  '@vue/shared@3.5.23': {}
-
   '@vue/shared@3.5.24': {}
 
   '@vue/test-utils@2.4.6':
@@ -13035,13 +12997,13 @@ snapshots:
       '@vueuse/shared': 14.0.0(vue@3.5.24(typescript@5.9.3))
       vue: 3.5.24(typescript@5.9.3)
 
-  '@vueuse/integrations@10.11.1(axios@1.13.2(debug@4.4.3))(focus-trap@7.6.6)(vue@3.5.24(typescript@5.9.3))':
+  '@vueuse/integrations@10.11.1(axios@1.13.2)(focus-trap@7.6.6)(vue@3.5.24(typescript@5.9.3))':
     dependencies:
       '@vueuse/core': 10.11.1(vue@3.5.24(typescript@5.9.3))
       '@vueuse/shared': 10.11.1(vue@3.5.24(typescript@5.9.3))
       vue-demi: 0.14.10(vue@3.5.24(typescript@5.9.3))
     optionalDependencies:
-      axios: 1.13.2(debug@4.4.3)
+      axios: 1.13.2
       focus-trap: 7.6.6
     transitivePeerDependencies:
       - '@vue/composition-api'
@@ -13053,7 +13015,7 @@ snapshots:
       '@vueuse/shared': 14.0.0(vue@3.5.24(typescript@5.9.3))
       vue: 3.5.24(typescript@5.9.3)
     optionalDependencies:
-      axios: 1.13.2(debug@4.4.3)
+      axios: 1.13.2
       change-case: 5.4.4
       focus-trap: 7.6.6
 
@@ -13300,9 +13262,9 @@ snapshots:
       '@fastify/error': 4.2.0
       fastq: 1.17.1
 
-  axios@1.13.2(debug@4.4.3):
+  axios@1.13.2:
     dependencies:
-      follow-redirects: 1.15.11(debug@4.4.3)
+      follow-redirects: 1.15.11
       form-data: 4.0.4
       proxy-from-env: 1.1.0
     transitivePeerDependencies:
@@ -13548,7 +13510,7 @@ snapshots:
       pkg-types: 1.3.1
       scule: 1.3.0
       semver: 7.7.3
-      std-env: 3.9.0
+      std-env: 3.10.0
       yaml: 2.8.1
     transitivePeerDependencies:
       - magicast
@@ -14829,9 +14791,7 @@ snapshots:
     dependencies:
       tabbable: 6.3.0
 
-  follow-redirects@1.15.11(debug@4.4.3):
-    optionalDependencies:
-      debug: 4.4.3
+  follow-redirects@1.15.11: {}
 
   for-each@0.3.3:
     dependencies:
@@ -15832,10 +15792,6 @@ snapshots:
     dependencies:
       sourcemap-codec: 1.4.8
 
-  magic-string@0.30.19:
-    dependencies:
-      '@jridgewell/sourcemap-codec': 1.5.5
-
   magic-string@0.30.21:
     dependencies:
       '@jridgewell/sourcemap-codec': 1.5.5
@@ -16432,9 +16388,7 @@ snapshots:
 
   obuf@1.1.2: {}
 
-  obug@2.0.0(ms@2.1.3):
-    optionalDependencies:
-      ms: 2.1.3
+  obug@2.1.0: {}
 
   ofetch@1.4.1:
     dependencies:
@@ -17578,8 +17532,6 @@ snapshots:
 
   std-env@3.10.0: {}
 
-  std-env@3.9.0: {}
-
   stop-iteration-iterator@1.0.0:
     dependencies:
       internal-slot: 1.0.7
@@ -18097,18 +18049,16 @@ snapshots:
 
   unpipe@1.0.0: {}
 
-  unplugin-isolated-decl@0.15.5(ms@2.1.3)(typescript@5.9.3):
+  unplugin-isolated-decl@0.15.5(typescript@5.9.3):
     dependencies:
       magic-string: 0.30.21
-      obug: 2.0.0(ms@2.1.3)
+      obug: 2.1.0
       oxc-parser: 0.97.0
       oxc-transform: 0.97.0
       unplugin: 2.3.10
       unplugin-utils: 0.3.1
     optionalDependencies:
       typescript: 5.9.3
-    transitivePeerDependencies:
-      - ms
 
   unplugin-oxc@0.5.4:
     dependencies:
@@ -18139,7 +18089,7 @@ snapshots:
       debug: 4.4.3
       fast-glob: 3.3.3
       local-pkg: 0.5.1
-      magic-string: 0.30.19
+      magic-string: 0.30.21
       minimatch: 9.0.5
       mlly: 1.8.0
       unplugin: 2.3.10
@@ -18305,7 +18255,7 @@ snapshots:
       '@shikijs/transformers': 3.15.0
       '@shikijs/types': 3.15.0
       '@types/markdown-it': 14.1.2
-      '@vitejs/plugin-vue': 6.0.1(vite@7.1.5(@types/node@24.10.1)(jiti@2.6.1)(lightningcss@1.30.1)(sass-embedded@1.93.3)(sass@1.93.3)(terser@5.44.0)(tsx@4.20.6)(yaml@2.8.1))(vue@3.5.24(typescript@5.9.3))
+      '@vitejs/plugin-vue': 6.0.2(vite@7.1.5(@types/node@24.10.1)(jiti@2.6.1)(lightningcss@1.30.1)(sass-embedded@1.93.3)(sass@1.93.3)(terser@5.44.0)(tsx@4.20.6)(yaml@2.8.1))(vue@3.5.24(typescript@5.9.3))
       '@vue/devtools-api': 8.0.3
       '@vue/shared': 3.5.24
       '@vueuse/core': 14.0.0(vue@3.5.24(typescript@5.9.3))

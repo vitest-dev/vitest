@@ -1,9 +1,10 @@
+import type { Debugger } from 'obug'
 import type { WorkerGlobalState } from 'vitest'
 import type { CloneOption } from './types'
 import ponyfillStructuredClone from '@ungap/structured-clone'
-import createDebug from 'debug'
+import { createDebug } from 'obug'
 
-export const debug: createDebug.Debugger = createDebug('vitest:web-worker')
+export const debug: Debugger = createDebug('vitest:web-worker')
 
 export function getWorkerState(): WorkerGlobalState {
   // @ts-expect-error untyped global
