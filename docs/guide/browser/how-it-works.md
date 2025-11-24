@@ -11,19 +11,11 @@ This article explains the architecture, internals, and workflow of Vitest's Brow
 
 ## The Philosophy
 
-Though Vitest Browser Mode can be used for system-wide end-to-end tests, its unique characteristics truly shine in page-level or component testing. Here, you can achieve both realism with a real browser and exceptional developer experience with performance.
+Vitest Browser Mode can be used for any kind of webpage testing (e.g., also end-to-end tests), though its unique characteristics truly shine in page-level or component testing. Here, you can achieve both realism with a real browser and exceptional developer experience with performance.
 
-Developers who write unit or component tests with great libraries like React Testing Library want to keep past features like test coverage and mocking while gaining the benefits of browser realism and awesome performance. This supports a true shift-left workflow: developers can execute tests early while coding and sometimes even use Browser Mode as their development browser to watch the UI evolve as code is written.
+Developers who write unit or component tests with great libraries like React Testing Library want to keep past features like test coverage and mocking while gaining the benefits of browser realism and the same level of performance, more or less. This supports a true shift-left workflow: developers can execute tests early while coding and sometimes even use Browser Mode as their development browser to watch the UI evolve as code is written.
 
-This guide helps you find the sweet spot between safe, realistic tests and performant, developer-friendly testing. Understanding the mechanisms and configuration options explained here will help you tune your setup to meet your testing goals.
-
-## Where Tests Actually Run
-
-A crucial point to understand: **your tests themselves execute inside the real browser**, not just the code being tested. This means you can write unit tests that run in an actual browser environment with full access to browser APIs like Canvas, WebGL, IndexedDB, and the real DOM.
-
-**The benefit**: Unlike Node.js-based testing with JSDOM or happy-dom, your tests have access to the complete browser API surface and real browser behavior.
-
-**The limitation**: Running in the browser means limited access to Node.js APIs (filesystem, process, OS-level operations). To bridge this gap, Vitest provides the **Commands API**—a mechanism that lets your browser-based tests call back to the Node.js orchestrator to perform server-side operations like reading files or executing Node.js utilities.
+This guide helps you find the sweet spot between visual and realistic tests and performant, developer-friendly testing. Understanding the mechanisms and configuration options explained here will help you tune your setup to meet your testing goals.
 
 ## The Key Players {#key-players}
 
@@ -33,9 +25,9 @@ A crucial point to understand: **your tests themselves execute inside the real b
 
 - **The tester page** - An HTML page rendered inside the browser created by the provider. It hosts the code under test along with Vitest utilities needed to execute tests.
 
-- **Iframe & the test runner** - An iframe is placed inside the tester page where tests execute and components render. This provides isolation (explained in the Parallelization and Isolation section). Inside the iframe, the test runner kicks off—whether vanilla Vitest or Browser Mode specific. It processes test files and functions, executing code to generate success/failure reports. During test execution, components are also rendered inside this iframe.
+- **Iframe & the test runner** - An iframe is placed inside the tester page where tests execute and components render. This provides isolation (explained in the Parallelization and Isolation section). Inside the iframe, the test runner kicks off—whether vanilla Vitest or Browser Mode specific. It processes test files and functions, executing code to generate success/failure reports. During test execution, components are also rendered inside this iframe. **A crucial point**: your tests themselves execute inside the real browser, not just the code being tested. This enables not only visual page testing but also unit tests that run in an actual browser environment with full access to browser APIs like Canvas, WebGL, IndexedDB, and the real DOM. Unlike Node.js-based testing with JSDOM or happy-dom, your tests have access to the complete browser API surface and real browser behavior.
 
-- **The orchestrator** - The Node.js process is the main coordinator with full permissions, while the tester page has limited browser access. The orchestrator bridges these environments, managing messages and actions between the test runner and the Node.js process. See the next section for a basic flow that demonstrates why this is needed.
+- **The orchestrator** - The Node.js process is the main coordinator with full permissions, while the tester page has limited browser access. The orchestrator bridges these environments, managing messages and actions between the test runner and the Node.js process. **The limitation**: Running tests in the browser means limited access to Node.js APIs (filesystem, process, OS-level operations). To bridge this gap, Vitest provides the **Commands API**—a mechanism that lets your browser-based tests call back to the Node.js orchestrator to perform server-side operations like reading files or executing Node.js utilities. See the next section for a basic flow that demonstrates why this is needed.
 
 ## Browser Providers {#providers}
 
@@ -68,7 +60,7 @@ The diagram illustrates the following flow:
 2. However, it lacks permission to access the browser's low-level API directly, so it sends a message via **WebSocket** to the orchestrator in the Node.js main thread
 3. The main thread receives the message and sends a command to the provider (in this example, Playwright)
 4. The provider sends a **CDP message** (Chrome DevTools Protocol)—or a WebDriver message if using WebDriver I/O—to the browser
-5. This triggers a realistic event that closely mimics how a user click happens in a production environment
+5. This triggers a realistic event—an event that enters through the browser's low-level API and is close to how users interact with their mouse and keyboard (not a JS-space click on a DOM)—that closely mimics how a user click happens in a production environment
 
 ![Browser Mode Action Flow](/vitest-browser-typical-action.png)
 
