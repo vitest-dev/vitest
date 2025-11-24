@@ -216,11 +216,12 @@ it('transfer MessagePort objects to worker as event.ports', async () => {
 
   const worker = new MyWorker()
   const channel = new MessageChannel()
-  expect(new Promise<string>((resolve, reject) => {
+  const promise = new Promise<string>((resolve, reject) => {
     channel.port1.onmessage = e => resolve(e.data as string)
     channel.port1.onmessageerror = reject
-  })).resolves.toBe('hello world via port')
+  })
   worker.postMessage('hello', [channel.port2])
+  await expect(promise).resolves.toBe('hello world via port')
 })
 
 it('throws syntax error if no arguments are provided', () => {
