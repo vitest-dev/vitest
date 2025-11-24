@@ -113,7 +113,7 @@ export class Pool {
           WORKER_START_TIMEOUT,
         )
 
-        await runner.start().finally(() => clearTimeout(id))
+        await runner.start({ workerId: task.context.workerId }).finally(() => clearTimeout(id))
       }
 
       const span = runner.startTracesSpan(`vitest.worker.${method}`)

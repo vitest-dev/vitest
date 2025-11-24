@@ -10,4 +10,8 @@ test('custom env is defined', () => {
   expect((global as any).POOL_ID_DURING_ENV_SETUP).toBeDefined()
   expect(process.env.VITEST_POOL_ID).toBeDefined()
   expect((global as any).POOL_ID_DURING_ENV_SETUP).toBe(process.env.VITEST_POOL_ID)
+
+  expect((global as any).WORKER_ID_DURING_ENV_SETUP).toBeDefined()
+  expect(process.env.VITEST_WORKER_ID).toBeDefined()
+  expect((global as any).WORKER_ID_DURING_ENV_SETUP).toBe(process.env.VITEST_WORKER_ID)
 })

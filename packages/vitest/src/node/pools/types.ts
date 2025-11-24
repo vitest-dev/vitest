@@ -71,6 +71,7 @@ export type WorkerRequest
     | {
       type: 'start'
       poolId: number
+      workerId: WorkerExecuteContext['workerId'] // Initial worker ID, may change when non-isolated worker runs multiple test files
       options: { reportMemory: boolean }
       context: {
         environment: WorkerTestEnvironment
