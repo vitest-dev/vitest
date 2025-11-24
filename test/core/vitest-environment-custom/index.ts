@@ -12,6 +12,7 @@ export default <Environment>{
     const context = vm.createContext({
       testEnvironment: 'custom',
       option: custom.option,
+      POOL_ID_DURING_ENV_SETUP: process.env.VITEST_POOL_ID,
       setTimeout,
       clearTimeout,
       AbortController,
@@ -31,6 +32,8 @@ export default <Environment>{
   setup(global, { custom }) {
     global.testEnvironment = 'custom'
     global.option = custom.option
+    global.POOL_ID_DURING_ENV_SETUP = process.env.VITEST_POOL_ID
+
     return {
       teardown() {
         delete global.testEnvironment

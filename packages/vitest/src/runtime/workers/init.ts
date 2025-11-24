@@ -41,6 +41,7 @@ export function init(worker: Options): void {
 
     switch (message.type) {
       case 'start': {
+        process.env.VITEST_POOL_ID = String(message.poolId)
         reportMemory = message.options.reportMemory
 
         const tracesStart = performance.now()
@@ -96,7 +97,6 @@ export function init(worker: Options): void {
         }
 
         try {
-          process.env.VITEST_POOL_ID = String(message.poolId)
           process.env.VITEST_WORKER_ID = String(message.context.workerId)
         }
         catch (error) {
@@ -155,7 +155,6 @@ export function init(worker: Options): void {
         }
 
         try {
-          process.env.VITEST_POOL_ID = String(message.poolId)
           process.env.VITEST_WORKER_ID = String(message.context.workerId)
         }
         catch (error) {

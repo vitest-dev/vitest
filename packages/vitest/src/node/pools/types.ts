@@ -70,6 +70,7 @@ export type WorkerRequest
   = { __vitest_worker_request__: true } & (
     | {
       type: 'start'
+      poolId: number
       options: { reportMemory: boolean }
       context: {
         environment: WorkerTestEnvironment
@@ -89,13 +90,11 @@ export type WorkerRequest
     | {
       type: 'run'
       context: WorkerExecuteContext
-      poolId: number
       otelCarrier?: OTELCarrier
     }
     | {
       type: 'collect'
       context: WorkerExecuteContext
-      poolId: number
       otelCarrier?: OTELCarrier
     }
     | { type: 'cancel' }

@@ -127,7 +127,6 @@ export class PoolRunner {
       __vitest_worker_request__: true,
       type: method,
       context,
-      poolId: this.poolId!,
       otelCarrier: this.getOTELCarrier(),
     } satisfies WorkerRequest)
   }
@@ -182,6 +181,7 @@ export class PoolRunner {
 
       this.postMessage({
         type: 'start',
+        poolId: this.poolId!,
         __vitest_worker_request__: true,
         options: {
           reportMemory: this.worker.reportMemory ?? false,

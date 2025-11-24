@@ -73,6 +73,9 @@ export class Pool {
       let isMemoryLimitReached = false
       const runner = this.getPoolRunner(task, method)
 
+      const poolId = runner.poolId ?? this.getWorkerId()
+      runner.poolId = poolId
+
       const activeTask = { task, resolver, method, cancelTask }
       this.activeTasks.push(activeTask)
 
@@ -112,9 +115,6 @@ export class Pool {
 
         await runner.start().finally(() => clearTimeout(id))
       }
-
-      const poolId = runner.poolId ?? this.getWorkerId()
-      runner.poolId = poolId
 
       const span = runner.startTracesSpan(`vitest.worker.${method}`)
       // Start running the test in the worker
