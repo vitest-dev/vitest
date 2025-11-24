@@ -74,11 +74,11 @@ export function getNames(task: Task): string[] {
 }
 
 export function getFullName(task: Task, separator = ' > '): string {
-  return createTaskName(getNames(task), separator)
+  return getNames(task).join(separator)
 }
 
 export function getTestName(task: Task, separator = ' > '): string {
-  return createTaskName(getNames(task).slice(1), separator)
+  return getNames(task).slice(1).join(separator)
 }
 
 export function createTaskName(names: readonly (string | undefined)[], separator = ' > '): string {
