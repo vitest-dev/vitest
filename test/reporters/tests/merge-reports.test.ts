@@ -107,7 +107,7 @@ test('merge reports', async () => {
 
      Test Files  2 failed (2)
           Tests  2 failed | 3 passed (5)
-       Duration  <time> (transform <time>, setup <time>, collect <time>, tests <time>, environment <time>, prepare <time>)
+       Duration  <time> (transform <time>, setup <time>, import <time>, tests <time>, environment <time>)
        Per blob  <time> <time>"
   `)
 

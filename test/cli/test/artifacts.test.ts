@@ -380,7 +380,7 @@ describe('reporters', () => {
        Test Files  1 passed (1)
             Tests  2 passed (2)
          Start at  <time>
-         Duration  <duration> (transform <duration>, setup <duration>, collect <duration>, tests <duration>, environment <duration>, prepare <duration>)
+         Duration  <duration> (transform <duration>, setup <duration>, import <duration>, tests <duration>, environment <duration>)
 
       "
     `)
@@ -411,7 +411,7 @@ describe('reporters', () => {
        Test Files  1 passed (1)
             Tests  2 passed (2)
          Start at  <time>
-         Duration  <duration> (transform <duration>, setup <duration>, collect <duration>, tests <duration>, environment <duration>, prepare <duration>)
+         Duration  <duration> (transform <duration>, setup <duration>, import <duration>, tests <duration>, environment <duration>)
 
       "
     `)
