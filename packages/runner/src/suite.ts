@@ -205,9 +205,10 @@ export function getRunner(): VitestRunner {
   return runner
 }
 
-function createDefaultSuite(runner: VitestRunner) {
+function createDefaultSuite(runner: VitestRunner, file: File) {
   const config = runner.config.sequence
   const collector = suite('', { concurrent: config.concurrent }, () => {})
+  collector.file = file
   // no parent suite for top-level tests
   delete collector.suite
   return collector
@@ -216,9 +217,10 @@ function createDefaultSuite(runner: VitestRunner) {
 export function clearCollectorContext(
   filepath: string,
   currentRunner: VitestRunner,
+  file: File,
 ): void {
   if (!defaultSuite) {
-    defaultSuite = createDefaultSuite(currentRunner)
+    defaultSuite = createDefaultSuite(currentRunner, file)
   }
   runner = currentRunner
   currentTestFilepath = filepath
@@ -302,7 +304,10 @@ function createSuiteCollector(
     const task: Test = {
       id: '',
       name,
-      fullName: createTaskName([currentSuite?.fullName, name]),
+      fullName: createTaskName([
+        currentSuite?.fullName ?? collectorContext.currentSuite?.file?.fullName,
+        name,
+      ]),
       fullTestName: createTaskName([currentSuite?.fullTestName, name]),
       suite: currentSuite,
       each: options.each,
@@ -449,7 +454,10 @@ function createSuiteCollector(
       id: '',
       type: 'suite',
       name,
-      fullName: createTaskName([currentSuite?.fullName, name]),
+      fullName: createTaskName([
+        currentSuite?.fullName ?? collectorContext.currentSuite?.file?.fullName,
+        name,
+      ]),
       fullTestName: createTaskName([currentSuite?.fullTestName, name]),
       suite: currentSuite,
       mode,
@@ -503,7 +511,6 @@ function createSuiteCollector(
 
     allChildren.forEach((task) => {
       task.file = file
-      task.fullName = createTaskName([file.fullName, task.fullName])
     })
 
     return suite
