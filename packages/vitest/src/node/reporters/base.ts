@@ -594,7 +594,7 @@ export abstract class BaseReporter implements Reporter {
       const timers = [
         `transform ${formatTime(transformTime)}`,
         `setup ${formatTime(setupTime)}`,
-        `collect ${formatTime(collectTime)}`,
+        `import ${formatTime(collectTime)}`,
         `tests ${formatTime(testsTime)}`,
         `environment ${formatTime(environmentTime)}`,
         `prepare ${formatTime(prepareTime)}`,
