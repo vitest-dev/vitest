@@ -204,12 +204,13 @@ test('DOM APIs accept AbortController', () => {
   expect(spy).toHaveBeenCalledTimes(1)
 })
 
-test('can pass down the same abort signal many times without a warning', () => {
+test('can pass down the same abort signal many times without a warning', ({ onTestFinished }) => {
   const controller = new AbortController()
   const signal = controller.signal
   setMaxListeners(5, signal)
 
-  using emitWarning = vi.spyOn(process, 'emitWarning').mockImplementation(() => {})
+  const emitWarning = vi.spyOn(process, 'emitWarning').mockImplementation(() => {})
+  onTestFinished(() => emitWarning.mockRestore())
 
   const element = document.createElement('div')
   document.body.append(element)
