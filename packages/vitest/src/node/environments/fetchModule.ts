@@ -66,6 +66,11 @@ class ModuleFetcher {
       return { cache: true }
     }
 
+    const externalize = await this.resolver.shouldExternalize(moduleGraphModule.id!)
+    if (externalize) {
+      return { externalize, type: 'module' }
+    }
+
     const cachePath = await this.getCachePath(
       environment,
       moduleGraphModule,
@@ -271,11 +276,6 @@ class ModuleFetcher {
     moduleGraphModule: EnvironmentModuleNode,
     options?: FetchFunctionOptions,
   ): Promise<FetchResult> {
-    const externalize = await this.resolver.shouldExternalize(moduleGraphModule.id!)
-    if (externalize) {
-      return { externalize, type: 'module' }
-    }
-
     const moduleRunnerModule = await fetchModule(
       environment,
       url,
