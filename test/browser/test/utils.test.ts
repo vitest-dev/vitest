@@ -93,3 +93,19 @@ test('should be able to opt out of shadow DOM content', async () => {
 
   expect(await commands.stripVTControlCharacters(utils.prettyDOM(undefined, undefined, { printShadowRoot: false }))).toMatchSnapshot()
 })
+
+test('changing the defaults works', async () => {
+  utils.configurePrettyDOM({
+    maxDepth: 1,
+  })
+
+  const div = document.createElement('div')
+  div.innerHTML = '<div><div><div><div></div></div></div></div>'
+  document.body.append(div)
+
+  expect(await commands.stripVTControlCharacters(utils.prettyDOM(div))).toMatchInlineSnapshot(`
+    "<div>
+      <div … />
+    </div>"
+  `)
+})
