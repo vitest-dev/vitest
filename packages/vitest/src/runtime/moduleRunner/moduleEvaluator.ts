@@ -102,6 +102,7 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
 
     const file = this.convertIdToImportUrl(id)
 
+    const finishModuleExecutionInfo = this.debug.startCalculateModuleExecutionInfo(file, 0)
     const namespace = await this._otel.$(
       'vitest.module.external',
       {
@@ -110,7 +111,9 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
       () => this.vm
         ? this.vm.externalModulesExecutor.import(file)
         : import(file),
-    )
+    ).finally(() => {
+      finishModuleExecutionInfo()
+    })
 
     if (!this.shouldInterop(file, namespace)) {
       return namespace
