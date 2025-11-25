@@ -26,15 +26,14 @@
     "@types/chai",
     "@sinonjs/fake-timers",
     "cac",
-    // Pinned because it requires "node" condition in the new version
-    // But we intentionally build Vitest ambiguously
-    "find-up",
     // Transitive dependency that we patch
     "acorn",
     // Keep using codemirror 5
     "codemirror",
     "react-18",
-    "react-is-18"
+    "react-is-18",
+    // webdriverio removed provenance: https://github.com/webdriverio/webdriverio/issues/14887
+    "webdriverio"
   ],
   "ignorePaths": [
     "**/node_modules/**"
