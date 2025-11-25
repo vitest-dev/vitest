@@ -119,15 +119,15 @@ async function isValidNodeImport(id: string) {
     return false
   }
 
-  if (isSyntaxDetectionEnabled(process.versions.node)) {
-    return true
-  }
-
   id = id.replace('file:///', '')
 
   const package_ = findNearestPackageData(dirname(id))
 
   if (package_.type === 'module') {
+    return true
+  }
+
+  if (!package_.type && isSyntaxDetectionEnabled(process.versions.node)) {
     return true
   }
 
