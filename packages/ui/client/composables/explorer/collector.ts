@@ -214,7 +214,7 @@ function traverseReceivedFiles(collect: boolean) {
       continue
     }
     createOrUpdateFileNode(file, collect)
-    createOrUpdateEntry(Array.from(entries).map(id => idMap.get(id)).filter(Boolean) as Task[])
+    createOrUpdateEntry(Array.from(entries, id => idMap.get(id)).filter(Boolean) as Task[])
   }
 }
 
@@ -303,7 +303,7 @@ function collectData(
 ) {
   const idMap = client.state.idMap
   const filesMap = new Map(explorerTree.root.tasks.filter(f => idMap.has(f.id)).map(f => [f.id, f]))
-  const useFiles = Array.from(filesMap.values()).map(file => [file.id, findById(file.id)] as const)
+  const useFiles = Array.from(filesMap.values(), file => [file.id, findById(file.id)] as const)
   const data = {
     files: filesMap.size,
     time: time > 1000 ? `${(time / 1000).toFixed(2)}s` : `${Math.round(time)}ms`,
