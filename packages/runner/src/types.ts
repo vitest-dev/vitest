@@ -54,4 +54,5 @@ export type {
   TestFunction,
   TestOptions,
   Use,
+  VisualRegressionArtifact,
 } from './types/tasks'

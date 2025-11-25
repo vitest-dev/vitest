@@ -780,6 +780,24 @@ export interface TestAnnotationArtifact extends TestArtifactBase {
   annotation: TestAnnotation
 }
 
+type VisualRegressionArtifactAttachment = TestAttachment & ({
+  name: 'reference' | 'actual'
+  width: number
+  height: number
+} | { name: 'diff' })
+
+/**
+ * @experimental
+ *
+ * Artifact type for visual regressions.
+ */
+export interface VisualRegressionArtifact extends TestArtifactBase {
+  type: 'internal:toMatchScreenshot'
+  kind: 'visual-regression'
+  message: string
+  attachments: VisualRegressionArtifactAttachment[]
+}
+
 /**
  * @experimental
  * @advanced
@@ -861,4 +879,4 @@ export interface TestArtifactRegistry {}
  *
  * This type automatically includes all artifacts registered via {@link TestArtifactRegistry}.
  */
-export type TestArtifact = TestAnnotationArtifact | TestArtifactRegistry[keyof TestArtifactRegistry]
+export type TestArtifact = TestAnnotationArtifact | VisualRegressionArtifact | TestArtifactRegistry[keyof TestArtifactRegistry]
