@@ -214,16 +214,15 @@ function createDefaultSuite(runner: VitestRunner) {
 }
 
 export function clearCollectorContext(
-  filepath: string,
-  currentRunner: VitestRunner,
   file: File,
+  currentRunner: VitestRunner,
 ): void {
   if (!defaultSuite) {
     defaultSuite = createDefaultSuite(currentRunner)
   }
   defaultSuite.file = file
   runner = currentRunner
-  currentTestFilepath = filepath
+  currentTestFilepath = file.filepath
   collectorContext.tasks.length = 0
   defaultSuite.clear()
   collectorContext.currentSuite = defaultSuite
