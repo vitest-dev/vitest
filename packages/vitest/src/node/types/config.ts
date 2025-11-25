@@ -848,6 +848,8 @@ export interface InlineConfig {
       enabled: boolean
       sdkPath?: string
     }
+    // TODO: reporter option?
+    printImportBreakdown?: boolean
   }
 }
 
