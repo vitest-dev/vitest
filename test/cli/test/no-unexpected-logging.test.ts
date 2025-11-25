@@ -33,7 +33,7 @@ describe.each(['forks', 'threads', 'vmForks', 'vmThreads'] as const)('%s', (pool
  Test Files  12 passed (12)
       Tests  12 passed (12)
    Start at  [...]
-   Duration  [...]ms (transform [...]ms, setup [...]ms, collect [...]ms, tests [...]ms, environment [...]ms, prepare [...]ms)
+   Duration  [...]ms (transform [...]ms, setup [...]ms, import [...]ms, tests [...]ms, environment [...]ms)
 
    `.trim())
   })
