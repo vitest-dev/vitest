@@ -10,19 +10,26 @@ const root = resolve(import.meta.dirname, '../fixtures')
 test('calc the duration used by junit', () => {
   const result: RunnerTaskResult = { state: 'pass', duration: 0 }
   const file: RunnerTestFile = createFileTask('/test.ts', '/', 'test')
+  const suiteName
+    = 'suite'
   const suite: RunnerTestSuite = {
     id: '1_0',
     type: 'suite',
-    name: 'suite',
+    name: suiteName,
+    fullName: `${file.fullName} > ${suiteName}`,
+    fullTestName: `${file.fullTestName} > ${suiteName}`,
     mode: 'run',
     tasks: [],
     file,
     meta: {},
   }
+  const taskName = 'timeout'
   const task: RunnerTestCase = {
     id: '1_0_0',
     type: 'test',
-    name: 'timeout',
+    name: taskName,
+    fullName: `${suite.fullName} > ${suiteName}`,
+    fullTestName: `${suite.fullTestName} > ${suiteName}`,
     mode: 'run',
     result,
     annotations: [],

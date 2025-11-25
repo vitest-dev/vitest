@@ -4,6 +4,7 @@ import type { TestProject } from './project'
 import { originalPositionFor, TraceMap } from '@jridgewell/trace-mapping'
 import {
   calculateSuiteHash,
+  createTaskName,
   generateHash,
   interpretTaskModes,
   someTasksAreOnly,
@@ -193,6 +194,7 @@ export function createFailedFileTask(project: TestProject, filepath: string, err
     type: 'suite',
     id: /* @__PURE__ */ generateHash(`${testFilepath}${project.config.name || ''}`),
     name: testFilepath,
+    fullName: testFilepath,
     mode: 'run',
     tasks: [],
     start: 0,
@@ -252,6 +254,7 @@ function createFileTask(
     type: 'suite',
     id: /* @__PURE__ */ generateHash(`${testFilepath}${options.name || ''}`),
     name: testFilepath,
+    fullName: testFilepath,
     mode: 'run',
     tasks: [],
     start: ast.start,
@@ -324,6 +327,8 @@ function createFileTask(
           tasks: [],
           mode,
           name: definition.name,
+          fullName: createTaskName([latestSuite.fullName, definition.name]),
+          fullTestName: createTaskName([latestSuite.fullTestName, definition.name]),
           end: definition.end,
           start: definition.start,
           location,
@@ -343,6 +348,8 @@ function createFileTask(
         mode,
         context: {} as any, // not used on the server
         name: definition.name,
+        fullName: createTaskName([latestSuite.fullName, definition.name]),
+        fullTestName: createTaskName([latestSuite.fullTestName, definition.name]),
         end: definition.end,
         start: definition.start,
         location,

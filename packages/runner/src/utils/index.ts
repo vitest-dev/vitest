@@ -11,6 +11,7 @@ export {
 export { limitConcurrency } from './limit-concurrency'
 export { partitionSuiteChildren } from './suite'
 export {
+  createTaskName,
   getFullName,
   getNames,
   getSuites,

@@ -48,6 +48,7 @@ const fileWithTextStacks: RunnerTestFile = {
   type: 'suite',
   mode: 'run',
   filepath: 'test/plain-stack-trace.ts',
+  fullName: 'test/plain-stack-trace.ts',
   meta: {},
   result: {
     state: 'fail',
@@ -98,6 +99,7 @@ describe('ViewReport', () => {
       type: 'suite',
       mode: 'run',
       filepath: 'test/plain-stack-trace.ts',
+      fullName: 'test/plain-stack-trace.ts',
       meta: {},
       result: {
         state: 'fail',
@@ -157,6 +159,7 @@ describe('ViewReport', () => {
       type: 'suite',
       mode: 'run',
       filepath: 'test/plain-stack-trace.ts',
+      fullName: 'test/plain-stack-trace.ts',
       meta: {},
       result: {
         state: 'fail',

@@ -46,6 +46,7 @@ const failed = computed(() => {
       id: file!.id,
       file: file!,
       name: file!.name,
+      fullName: file!.name,
       level: 0,
       type: 'suite',
       mode: 'run',
