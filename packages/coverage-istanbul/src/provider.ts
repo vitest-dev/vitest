@@ -239,6 +239,7 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider<ResolvedCover
     if (node.id && !this.transformedModuleIds.has(node.id)) {
       moduleGraph.invalidateModule(node, seen)
     }
+    seen.add(node) // to avoid infinite loops in circular dependencies
     node.importedModules.forEach((mod) => {
       this.invalidateTree(mod, moduleGraph, seen)
     })
