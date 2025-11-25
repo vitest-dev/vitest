@@ -91,7 +91,7 @@ export function setup(ctx: Vitest, _server?: ViteDevServer): void {
         getResolvedProjectLabels(): { name: string; color?: LabelColor }[] {
           return ctx.projects.map(p => ({ name: p.name, color: p.color }))
         },
-        async getTransformResult(projectName: string, id, browser = false) {
+        async getTransformResult(projectName: string, id, testFileId, browser = false) {
           const project = ctx.getProjectByName(projectName)
           const result: TransformResultWithSource | null | undefined = browser
             ? await project.browser!.vite.transformRequest(id)
@@ -101,6 +101,12 @@ export function setup(ctx: Vitest, _server?: ViteDevServer): void {
               result.source = result.source || (await fs.readFile(id, 'utf-8'))
             }
             catch {}
+            const testModule = testFileId && ctx.state.getReportedEntityById(testFileId) as TestModule
+            if (testModule) {
+              const durations = testModule.diagnostic().importDurations[id]
+              result.totalTime = durations?.totalTime
+              result.selfTime = durations?.selfTime
+            }
             return result
           }
         },

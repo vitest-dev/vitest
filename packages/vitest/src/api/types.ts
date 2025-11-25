@@ -25,6 +25,8 @@ export interface TransformResultWithSource {
   deps?: string[]
   dynamicDeps?: string[]
   source?: string
+  totalTime?: number
+  selfTime?: number
 }
 
 export interface WebSocketHandlers {
@@ -42,6 +44,7 @@ export interface WebSocketHandlers {
   getTransformResult: (
     projectName: string,
     id: string,
+    testFileId?: string,
     browser?: boolean,
   ) => Promise<TransformResultWithSource | undefined>
   readTestFile: (id: string) => Promise<string | null>

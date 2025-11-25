@@ -14,6 +14,8 @@ export async function getModuleGraph(
 
   const project = ctx.getProjectByName(projectName)
 
+  // TODO: store cached and times
+
   async function get(mod?: ModuleNode, seen = new Map<ModuleNode, string>()) {
     if (!mod || !mod.id) {
       return
@@ -26,6 +28,11 @@ export async function getModuleGraph(
     }
     let id = clearId(mod.id)
     seen.set(mod, id)
+    if (id.startsWith('__vite-browser-external:')) {
+      const external = id.slice('__vite-browser-external:'.length)
+      externalized.add(external)
+      return external
+    }
     // TODO: how to know if it was rewritten(?) - what is rewritten?
     const rewrote = browser
       ? mod.file?.includes(project.browser!.vite.config.cacheDir)
@@ -40,9 +47,11 @@ export async function getModuleGraph(
     else {
       inlined.add(id)
     }
+    // TODO: cached modules don't have that!
     const mods = Array.from(mod.importedModules).filter(
       i => i.id && !i.id.includes('/vitest/dist/'),
     )
+    // console.log(mod)
     graph[id] = (await Promise.all(mods.map(m => get(m, seen)))).filter(
       Boolean,
     ) as string[]

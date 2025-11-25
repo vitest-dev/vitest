@@ -66,6 +66,12 @@ watch(() => [loading.value, saving.value, props.file, lineNumber.value, columnNu
       nextTick(() => {
         const cp = currentPosition.value
         const line = cp ?? { line: (l ?? 1) - 1, ch: c ?? 0 }
+        if (line.line < 0) {
+          line.line = 0
+        }
+        if (line.ch < 0) {
+          line.ch = 0
+        }
         // restore caret position: the watchDebounced below will use old value
         if (cp) {
           currentPosition.value = undefined
