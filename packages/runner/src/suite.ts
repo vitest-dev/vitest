@@ -205,10 +205,9 @@ export function getRunner(): VitestRunner {
   return runner
 }
 
-function createDefaultSuite(runner: VitestRunner, file: File) {
+function createDefaultSuite(runner: VitestRunner) {
   const config = runner.config.sequence
   const collector = suite('', { concurrent: config.concurrent }, () => {})
-  collector.file = file
   // no parent suite for top-level tests
   delete collector.suite
   return collector
@@ -220,8 +219,9 @@ export function clearCollectorContext(
   file: File,
 ): void {
   if (!defaultSuite) {
-    defaultSuite = createDefaultSuite(currentRunner, file)
+    defaultSuite = createDefaultSuite(currentRunner)
   }
+  defaultSuite.file = file
   runner = currentRunner
   currentTestFilepath = filepath
   collectorContext.tasks.length = 0
