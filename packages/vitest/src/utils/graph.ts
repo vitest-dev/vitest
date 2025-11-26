@@ -21,7 +21,7 @@ export async function getModuleGraph(
     throw new Error(`Cannot find environment for ${testFilePath}`)
   }
 
-  async function get(mod?: EnvironmentModuleNode, seen = new Map<EnvironmentModuleNode, string>()) {
+  function get(mod?: EnvironmentModuleNode, seen = new Map<EnvironmentModuleNode, string>()) {
     if (!mod || !mod.id) {
       return
     }
@@ -57,13 +57,13 @@ export async function getModuleGraph(
     const mods = Array.from(mod.importedModules).filter(
       i => i.id && !i.id.includes('/vitest/dist/'),
     )
-    graph[id] = (await Promise.all(mods.map(m => get(m, seen)))).filter(
+    graph[id] = mods.map(m => get(m, seen)).filter(
       Boolean,
     ) as string[]
     return id
   }
 
-  await get(environment.moduleGraph.getModuleById(testFilePath))
+  get(environment.moduleGraph.getModuleById(testFilePath))
 
   return {
     graph,

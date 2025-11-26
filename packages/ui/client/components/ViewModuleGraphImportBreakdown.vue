@@ -79,7 +79,7 @@ function getDurationClass(duration: number) {
 
 <template>
   <div class="overflow-auto max-h-120">
-    <h1>Import Breakdown (ordered by Total Time) (Top {{ maxAmount }})</h1>
+    <h1>Import Breakdown <span op-40>(ordered by Total Time) (Top {{ maxAmount }})</span></h1>
     <table text-sm>
       <thead>
         <tr>
@@ -92,6 +92,9 @@ function getDurationClass(duration: number) {
           <th>
             Total
           </th>
+          <th>
+            %
+          </th>
         </tr>
       </thead>
       <tbody>
@@ -103,11 +106,14 @@ function getDurationClass(duration: number) {
           >
             {{ row.relativeFile }}
           </td>
-          <td class="pr-2" :class="row.selfTimeClass">
+          <td pr-2 :class="row.selfTimeClass">
             {{ row.formattedSelfTime }}
           </td>
-          <td :class="row.totalTimeClass">
+          <td pr-2 :class="row.totalTimeClass">
             {{ row.formattedTotalTime }}
+          </td>
+          <td pr-2 :class="row.totalTimeClass">
+            {{ Math.round((row.totalTime / sortedImports[0].totalTime) * 100) }}%
           </td>
         </tr>
       </tbody>

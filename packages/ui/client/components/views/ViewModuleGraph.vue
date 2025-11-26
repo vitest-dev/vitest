@@ -288,6 +288,10 @@ function resetGraphController(reset = false) {
     zoom = 0.3
     min = 0.2
   }
+  else if (nodesLength > 200) {
+    zoom = 0.4
+    min = 0.3
+  }
   else if (nodesLength > 100) {
     zoom = 0.5
     min = 0.3

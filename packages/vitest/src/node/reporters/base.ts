@@ -662,7 +662,7 @@ export abstract class BaseReporter implements Reporter {
       const pathDisplay = this.importBreakdownPath(imp.importedFile, imp.external)
 
       this.log(
-        `${pathDisplay.padEnd(50)} ${c.dim('self:')} ${this.importDurationTime(imp.selfTime)} ${c.dim('total:')} ${this.importDurationTime(imp.totalTime)} ${bar}`,
+        `${pathDisplay} ${c.dim('self:')} ${this.importDurationTime(imp.selfTime)} ${c.dim('total:')} ${this.importDurationTime(imp.totalTime)} ${bar}`,
       )
     }
 
@@ -679,11 +679,11 @@ export abstract class BaseReporter implements Reporter {
 
   private importBreakdownPath(path: string, external: boolean | undefined) {
     const pathDisplay = this.relative(path)
-    const color = external ? c.italic : (c: string) => c
+    const color = external ? c.magenta : (c: string) => c
     if (pathDisplay.length <= 45) {
-      return color(pathDisplay)
+      return color(pathDisplay.padEnd(50))
     }
-    return color(`...${pathDisplay.slice(-45)}`)
+    return color(`...${pathDisplay.slice(-45)}`.padEnd(50))
   }
 
   private printErrorsSummary(files: File[], errors: unknown[]) {
