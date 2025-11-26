@@ -134,7 +134,7 @@ export function setup(ctx: Vitest, _server?: ViteDevServer): void {
           catch {}
           const durations = testModule.diagnostic().importDurations[moduleId]
           result.totalTime = durations?.totalTime
-          result.selfTime = durations?.selfTime
+          result.selfTime = durations?.totalTime
 
           const transformDuration = ctx.state.metadata[projectName]?.duration[moduleNode.url]?.[0]
           if (transformDuration != null) {

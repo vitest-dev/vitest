@@ -132,6 +132,7 @@ export function serializeConfig(project: TestProject): SerializedConfig {
       : project._serializedDefines || '',
     experimental: {
       fsModuleCache: config.experimental.fsModuleCache ?? false,
+      printImportBreakdown: config.experimental.printImportBreakdown ?? false,
     },
   }
 }

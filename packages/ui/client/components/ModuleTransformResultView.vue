@@ -6,6 +6,7 @@ import { Tooltip as VueTooltip } from 'floating-vue'
 import { computed } from 'vue'
 import { browserState, client } from '~/composables/client'
 import { currentModule } from '~/composables/navigation'
+import { formatPreciseTime, formatTime, getImportDurationType } from '~/utils/task'
 import Badge from './Badge.vue'
 import CodeMirrorContainer from './CodeMirrorContainer.vue'
 import IconButton from './IconButton.vue'
@@ -67,30 +68,6 @@ const sourceMap = computed(() => {
 onKeyStroke('Escape', () => {
   emit('close')
 })
-
-// TODO: to utils
-function formatTime(time: number): string {
-  if (time > 1000) {
-    return `${(time / 1000).toFixed(2)}s`
-  }
-  return `${Math.round(time)}ms`
-}
-
-function formatPreciseTime(time: number): string {
-  if (time > 1000) {
-    return `${(time / 1000).toFixed(2)}s`
-  }
-  return `${time.toFixed(2)}ms`
-}
-
-function getDurationType(duration: number) {
-  if (duration >= 500) {
-    return 'danger'
-  }
-  if (duration >= 100) {
-    return 'warning'
-  }
-}
 // TODO: sourcemap https://evanw.github.io/source-map-visualization/
 </script>
 
@@ -125,7 +102,7 @@ function getDurationType(duration: number) {
         </p>
         <div mr-8 flex gap-2 items-center>
           <VueTooltip v-if="result && 'selfTime' in result && result.selfTime" class="inline" cursor-help>
-            <Badge :type="getDurationType(result.selfTime)">
+            <Badge :type="getImportDurationType(result.selfTime)">
               self: {{ formatTime(result.selfTime) }}
             </Badge>
             <template #popper>
@@ -133,7 +110,7 @@ function getDurationType(duration: number) {
             </template>
           </VueTooltip>
           <VueTooltip v-if="result?.totalTime" class="inline" cursor-help>
-            <Badge :type="getDurationType(result.totalTime)">
+            <Badge :type="getImportDurationType(result.totalTime)">
               total: {{ formatTime(result.totalTime) }}
             </Badge>
             <template #popper>
@@ -141,7 +118,7 @@ function getDurationType(duration: number) {
             </template>
           </VueTooltip>
           <VueTooltip v-if="result && 'transformTime' in result && result.transformTime" class="inline" cursor-help>
-            <Badge :type="getDurationType(result.transformTime)">
+            <Badge :type="getImportDurationType(result.transformTime)">
               transform: {{ formatTime(result.transformTime) }}
             </Badge>
             <template #popper>

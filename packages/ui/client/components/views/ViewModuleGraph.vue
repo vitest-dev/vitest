@@ -16,11 +16,12 @@ import {
   PositionInitializers,
 } from 'd3-graph-controller'
 import { computed, onMounted, onUnmounted, ref, shallowRef, toRefs, watch, watchEffect } from 'vue'
-import { isReport } from '~/composables/client'
+import { config, isReport } from '~/composables/client'
+import { currentModule } from '~/composables/navigation'
 import IconButton from '../IconButton.vue'
 import Modal from '../Modal.vue'
 import ModuleTransformResultView from '../ModuleTransformResultView.vue'
-import ViewModuleGraphImportBreakdown from './ViewModuleGraphImportBreakdown.vue'
+import ViewModuleGraphImportBreakdown from '../ViewModuleGraphImportBreakdown.vue'
 
 const props = defineProps<{
   graph: ModuleGraph
@@ -34,12 +35,26 @@ const { graph } = toRefs(props)
 const el = ref<HTMLDivElement>()
 
 const modalShow = ref(false)
+const breakdownShow = ref(config.value?.experimental?.fsModuleCache ?? false)
 const selectedModule = ref<string | null>()
 const selectedModuleType = ref<ModuleType | null>(null)
 const controller = ref<ModuleGraphController | undefined>()
 const focusedNode = ref<string | null>(null)
 const filteredGraph = shallowRef<ModuleGraph>(graph.value)
 const nodeLengths = computed(() => graph.value.nodes.length)
+const breakdownClass = computed(() => {
+  let textClass = ''
+  for (const { totalTime } of Object.values(currentModule.value?.importDurations || {})) {
+    if (totalTime >= 500) {
+      textClass = 'text-red'
+      break
+    }
+    else if (totalTime >= 100) {
+      textClass = 'text-orange'
+    }
+  }
+  return textClass
+})
 
 watchEffect(
   () => {
@@ -67,6 +82,10 @@ watch(graph, () => {
 function showFullGraph() {
   filteredGraph.value = graph.value
   resetGraphController()
+}
+
+function toggleImportBreakdown() {
+  breakdownShow.value = !breakdownShow.value
 }
 
 // TODO: if number of nodes is low, just keep the original graph
@@ -173,9 +192,9 @@ function setFilter(name: ModuleType, value: boolean) {
   controller.value?.filterNodesByType(value, name)
 }
 
-function setSelectedModule(node: ModuleNode) {
-  selectedModule.value = node.id
-  selectedModuleType.value = node.type
+function setSelectedModule(id: string, type: ModuleType) {
+  selectedModule.value = id
+  selectedModuleType.value = type
   modalShow.value = true
 }
 
@@ -382,7 +401,7 @@ function bindOnClick(
         // Right-click or Shift+Click: open modal
         if (wasRightClick || event.shiftKey) {
           event.preventDefault()
-          setSelectedModule(node)
+          setSelectedModule(node.id, node.type)
         }
         // Left-click: focus on node (show 2 levels from this node)
         // Block if node has more than 100 links
@@ -463,10 +482,12 @@ function bindOnClick(
           <span>Click: focus node • Right-click/Shift: details</span>
         </div>
         <div>
-          <!-- TODO implemewnt show/hide -->
+          <!-- TODO implemewnt show/hide, show the color dependning on the highest import count -->
           <IconButton
             v-tooltip.bottom="'Hide Import Breakdown'"
             icon="i-carbon-notebook"
+            :class="breakdownClass"
+            @click="toggleImportBreakdown()"
           />
         </div>
         <div>
@@ -485,8 +506,8 @@ function bindOnClick(
         </div>
       </div>
     </div>
-    <div class="absolute bg-base border-base py-2 px-4 right-0 mr-2 rounded mt-2">
-      <ViewModuleGraphImportBreakdown />
+    <div v-if="breakdownShow" class="absolute bg-base border-base py-2 px-4 right-0 mr-2 rounded mt-2">
+      <ViewModuleGraphImportBreakdown @select="(id, type) => setSelectedModule(id, type)" />
     </div>
     <div ref="el" />
     <Modal v-model="modalShow" direction="right">

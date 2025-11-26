@@ -631,7 +631,7 @@ export abstract class BaseReporter implements Reporter {
       for (const [filePath, duration] of Object.entries(importDurations)) {
         allImports.push({
           importedFile: filePath,
-          selfTime: duration.selfTime,
+          selfTime: duration.totalTime,
           totalTime: duration.totalTime,
         })
       }
@@ -657,6 +657,7 @@ export abstract class BaseReporter implements Reporter {
       const filledWidth = Math.round((imp.totalTime / maxTotalTime) * barWidth)
       const bar = c.cyan('█'.repeat(filledWidth)) + c.dim('░'.repeat(barWidth - filledWidth))
 
+      // TODO: slice with ... at the start if too long
       const pathDisplay = this.relative(imp.importedFile)
 
       this.log(
