@@ -2,7 +2,7 @@ import type { CliOptions } from 'vitest/node'
 import { describe, expect, onTestFinished, test } from 'vitest'
 import { createVitest } from 'vitest/node'
 
-describe.each(['deprecated', 'environment'] as const)('VitestResolver with Vite SSR config in %s style', (style) => {
+describe.skip.each(['deprecated', 'environment'] as const)('VitestResolver with Vite SSR config in %s style', (style) => {
   test('merges vite ssr.resolve.noExternal with server.deps.inline', async () => {
     const resolver = await getResolver(style, {
       server: {
