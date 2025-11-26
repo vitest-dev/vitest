@@ -20,7 +20,7 @@ import { performance } from 'node:perf_hooks'
 import { noop } from '@vitest/utils/helpers'
 import { createBirpc } from 'birpc'
 import { parse, stringify } from 'flatted'
-import { join } from 'pathe'
+import { isFileServingAllowed } from 'vite'
 import { WebSocketServer } from 'ws'
 import { API_PATH } from '../constants'
 import { getTestFileEnvironment } from '../utils/environments'
@@ -100,6 +100,10 @@ export function setup(ctx: Vitest, _server?: ViteDevServer): void {
             return undefined
           }
 
+          if (!isFileServingAllowed(testModule.project.vite.config, moduleId)) {
+            return undefined
+          }
+
           // TODO: cache
           const result: ExternalResult = {}
 
@@ -108,22 +112,20 @@ export function setup(ctx: Vitest, _server?: ViteDevServer): void {
           }
           catch {}
 
-          const durations = testModule.diagnostic().importDurations[moduleId] || testModule.diagnostic().importDurations[join('/@fs/', moduleId)]
-          result.totalTime = durations?.totalTime
           return result
         },
         async getTransformResult(projectName: string, moduleId, testFileTaskId, browser = false) {
           const project = ctx.getProjectByName(projectName)
           const testModule = ctx.state.getReportedEntityById(testFileTaskId) as TestModule | undefined
-          if (!testModule) {
-            return undefined
+          if (!testModule || !isFileServingAllowed(project.vite.config, moduleId)) {
+            return
           }
 
           const environment = getTestFileEnvironment(project, testModule.moduleId, browser)
 
           const moduleNode = environment?.moduleGraph.getModuleById(moduleId)
           if (!moduleNode?.transformResult) {
-            return undefined
+            return
           }
 
           // TODO: parse imports into { id, start: { line, column }, end: { line, column } }
@@ -132,10 +134,8 @@ export function setup(ctx: Vitest, _server?: ViteDevServer): void {
             result.source = result.source || (moduleNode.file ? await fs.readFile(moduleNode.file, 'utf-8') : undefined)
           }
           catch {}
-          const durations = testModule.diagnostic().importDurations[moduleId]
-          result.totalTime = durations?.totalTime
-          result.selfTime = durations?.totalTime
 
+          // TODO: store this in HTML reporter separetly
           const transformDuration = ctx.state.metadata[projectName]?.duration[moduleNode.url]?.[0]
           if (transformDuration != null) {
             result.transformTime = transformDuration

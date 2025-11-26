@@ -18,7 +18,6 @@ interface SourceMap {
 
 export interface ExternalResult {
   source?: string
-  totalTime?: number
 }
 
 export interface TransformResultWithSource {
@@ -30,8 +29,6 @@ export interface TransformResultWithSource {
   deps?: string[]
   dynamicDeps?: string[]
   source?: string
-  totalTime?: number
-  selfTime?: number
   transformTime?: number
 }
 

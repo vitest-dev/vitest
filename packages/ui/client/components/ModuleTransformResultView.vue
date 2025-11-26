@@ -3,6 +3,7 @@ import type { ExternalResult, TransformResultWithSource } from 'vitest'
 import type { ModuleType } from '~/composables/module-graph'
 import { asyncComputed, onKeyStroke } from '@vueuse/core'
 import { Tooltip as VueTooltip } from 'floating-vue'
+import { join } from 'pathe'
 import { computed } from 'vue'
 import { browserState, client } from '~/composables/client'
 import { currentModule } from '~/composables/navigation'
@@ -28,6 +29,10 @@ const result = asyncComputed<TransformResultWithSource | ExternalResult | undefi
   if (props.type === 'external') {
     return client.rpc.getExternalResult(props.id, currentModule.value.id)
   }
+})
+const durations = computed(() => {
+  const importDurations = currentModule.value?.importDurations || {}
+  return importDurations[props.id] || importDurations[join('/@fs/', props.id)] || {}
 })
 const ext = computed(() => props.id?.split(/\./g).pop() || 'js')
 
@@ -101,20 +106,20 @@ onKeyStroke('Escape', () => {
           </VueTooltip>
         </p>
         <div mr-8 flex gap-2 items-center>
-          <VueTooltip v-if="result && 'selfTime' in result && result.selfTime" class="inline" cursor-help>
-            <Badge :type="getImportDurationType(result.selfTime)">
-              self: {{ formatTime(result.selfTime) }}
+          <VueTooltip v-if="durations.selfTime != null" class="inline" cursor-help>
+            <Badge :type="getImportDurationType(durations.selfTime)">
+              self: {{ formatTime(durations.selfTime) }}
             </Badge>
             <template #popper>
-              It took {{ formatPreciseTime(result.selfTime) }} to import this module, excluding static imports.
+              It took {{ formatPreciseTime(durations.selfTime) }} to import this module, excluding static imports.
             </template>
           </VueTooltip>
-          <VueTooltip v-if="result?.totalTime" class="inline" cursor-help>
-            <Badge :type="getImportDurationType(result.totalTime)">
-              total: {{ formatTime(result.totalTime) }}
+          <VueTooltip v-if="durations.totalTime != null" class="inline" cursor-help>
+            <Badge :type="getImportDurationType(durations.totalTime)">
+              total: {{ formatTime(durations.totalTime) }}
             </Badge>
             <template #popper>
-              It took {{ formatPreciseTime(result.totalTime) }} to import the whole module, including static imports.
+              It took {{ formatPreciseTime(durations.totalTime) }} to import the whole module, including static imports.
             </template>
           </VueTooltip>
           <VueTooltip v-if="result && 'transformTime' in result && result.transformTime" class="inline" cursor-help>
