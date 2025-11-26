@@ -203,6 +203,9 @@ export interface ImportDuration {
 
   /** The time spent importing & executing the file and all its imports. */
   totalTime: number
+
+  /** Will be set to `true`, if the module was externalized. In this case totalTime and selfTime are identical. */
+  external?: boolean
 }
 
 /**

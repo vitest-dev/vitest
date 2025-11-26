@@ -8,6 +8,8 @@ export interface ModuleExecutionInfoEntry {
 
   /** The time that was spent executing the module itself and externalized imports. */
   selfTime: number
+
+  external?: boolean
 }
 
 /** Stack to track nested module execution for self-time calculation. */
@@ -27,7 +29,7 @@ const performanceNow = performance.now.bind(performance)
 export class ModuleDebug {
   private executionStack: ExecutionStack = []
 
-  startCalculateModuleExecutionInfo(filename: string, startOffset: number): () => ModuleExecutionInfoEntry {
+  startCalculateModuleExecutionInfo(filename: string, startOffset: number, external?: boolean): () => ModuleExecutionInfoEntry {
     const startTime = performanceNow()
 
     this.executionStack.push({
@@ -53,6 +55,7 @@ export class ModuleDebug {
 
       return {
         startOffset,
+        external,
         duration,
         selfTime,
       }
