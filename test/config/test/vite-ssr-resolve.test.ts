@@ -2,7 +2,7 @@ import type { CliOptions } from 'vitest/node'
 import { describe, expect, onTestFinished, test } from 'vitest'
 import { createVitest } from 'vitest/node'
 
-describe.skip.each(['deprecated', 'environment'] as const)('VitestResolver with Vite SSR config in %s style', (style) => {
+describe.each(['deprecated', 'environment'] as const)('VitestResolver with Vite SSR config in %s style', (style) => {
   test('merges vite ssr.resolve.noExternal with server.deps.inline', async () => {
     const resolver = await getResolver(style, {
       server: {
@@ -205,7 +205,7 @@ describe.skip.each(['deprecated', 'environment'] as const)('VitestResolver with 
 
     // Should inline 'my-lib' from node_modules too
     expect(await resolver.shouldExternalize('/usr/a/project/node_modules/my-lib/index.js')).toBe(false)
-
+    // TODO
     // Other packages: depsExternal pattern only matches /node_modules/
     // So regular .js files in /vendor/ are inlined by default
     expect(await resolver.shouldExternalize('/usr/a/project/vendor/other-lib/index.js')).toBe(false)
@@ -228,7 +228,7 @@ describe.skip.each(['deprecated', 'environment'] as const)('VitestResolver with 
 
     // Should also match wildcard in standard node_modules
     expect(await resolver.shouldExternalize('/usr/a/project/node_modules/@org/utils/index.js')).toBe(false)
-
+    // TODO
     // Other scopes: depsExternal pattern only matches /node_modules/
     // So regular .js files in /packages/ are inlined by default
     expect(await resolver.shouldExternalize('/usr/a/project/packages/@other/utils/index.js')).toBe(false)
@@ -262,9 +262,23 @@ async function getResolver(style: 'environment' | 'deprecated', options: CliOpti
   external?: true | string[]
   noExternal?: true | string | RegExp | (string | RegExp)[]
 }) {
+  // const ctx = await createVitest('test', {
+  //   watch: false,
+  //   ...options,
+  // }, style === 'environment'
+  //   ? {
+  //       environments: {
+  //         ssr: {
+  //           resolve: externalOptions,
+  //         },
+  //       },
+  //     }
+  //   : {
+  //       ssr: externalOptions,
+  //     })
   const ctx = await createVitest('test', {
     watch: false,
-    ...options,
+    // ...options,
   }, style === 'environment'
     ? {
         environments: {
@@ -272,9 +286,11 @@ async function getResolver(style: 'environment' | 'deprecated', options: CliOpti
             resolve: externalOptions,
           },
         },
+        test: options,
       }
     : {
         ssr: externalOptions,
+        test: options,
       })
   onTestFinished(() => ctx.close())
   return ctx._resolver
