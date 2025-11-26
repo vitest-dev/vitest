@@ -11,7 +11,7 @@ This article explains the architecture, internals, and workflow of Vitest's Brow
 
 ## The Philosophy
 
-Vitest Browser Mode can be used for any kind of webpage testing (e.g., also end-to-end tests), though its unique characteristics truly shine in page-level or component testing. Here, you can achieve both realism with a real browser and exceptional developer experience with performance.
+Vitest Browser Mode can be used for any kind of webpage testing, though its unique characteristics truly shine in page-level or component testing. Here, you can achieve both realism with a real browser and exceptional developer experience with performance.
 
 Developers who write unit or component tests with great libraries like React Testing Library want to keep past features like test coverage and mocking while gaining the benefits of browser realism and the same level of performance, more or less. This supports a true shift-left workflow: developers can execute tests early while coding and sometimes even use Browser Mode as their development browser to watch the UI evolve as code is written.
 
