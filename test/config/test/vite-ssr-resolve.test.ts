@@ -7,11 +7,11 @@ describe.each(['deprecated', 'environment'] as const)('VitestResolver with Vite 
     const resolver = await getResolver(style, {
       server: {
         deps: {
-          inline: ['inline-dep'],
+          // inline: ['inline-dep'],
         },
       },
     }, {
-      noExternal: ['ssr-no-external-dep'],
+      // noExternal: ['ssr-no-external-dep'],
     })
 
     // Both inline-dep and ssr-no-external-dep should be inlined (return false)
