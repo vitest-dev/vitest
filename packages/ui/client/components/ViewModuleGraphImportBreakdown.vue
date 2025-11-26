@@ -79,7 +79,7 @@ function getDurationClass(duration: number) {
 
 <template>
   <div class="overflow-auto max-h-120">
-    <h1>Import Breakdown (ordered by Total Time) (Top 10)</h1>
+    <h1>Import Breakdown (ordered by Total Time) (Top {{ maxAmount }})</h1>
     <table text-sm>
       <thead>
         <tr>
@@ -112,6 +112,7 @@ function getDurationClass(duration: number) {
         </tr>
       </tbody>
     </table>
+    <!-- TODO: design -->
     <button v-if="maxAmount < sortedImports.length" @click="maxAmount += 5">
       more
     </button>

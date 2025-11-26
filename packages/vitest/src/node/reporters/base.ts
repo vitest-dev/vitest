@@ -619,6 +619,7 @@ export abstract class BaseReporter implements Reporter {
     interface ImportEntry {
       importedFile: string
       selfTime: number
+      external?: boolean
       totalTime: number
     }
 
@@ -631,8 +632,9 @@ export abstract class BaseReporter implements Reporter {
       for (const [filePath, duration] of Object.entries(importDurations)) {
         allImports.push({
           importedFile: filePath,
-          selfTime: duration.totalTime,
+          selfTime: duration.selfTime,
           totalTime: duration.totalTime,
+          external: duration.external,
         })
       }
     }
@@ -657,11 +659,10 @@ export abstract class BaseReporter implements Reporter {
       const filledWidth = Math.round((imp.totalTime / maxTotalTime) * barWidth)
       const bar = c.cyan('█'.repeat(filledWidth)) + c.dim('░'.repeat(barWidth - filledWidth))
 
-      // TODO: slice with ... at the start if too long
-      const pathDisplay = this.relative(imp.importedFile)
+      const pathDisplay = this.importBreakdownPath(imp.importedFile, imp.external)
 
       this.log(
-        `${pathDisplay.padEnd(50)} ${c.dim('self:')} ${formatTime(imp.selfTime).padStart(6)} ${c.dim('total:')} ${formatTime(imp.totalTime).padStart(6)} ${bar}`,
+        `${pathDisplay.padEnd(50)} ${c.dim('self:')} ${this.importDurationTime(imp.selfTime)} ${c.dim('total:')} ${this.importDurationTime(imp.totalTime)} ${bar}`,
       )
     }
 
@@ -669,6 +670,20 @@ export abstract class BaseReporter implements Reporter {
     this.log(c.dim('Total imports: ') + allImports.length)
     this.log(c.dim('Slowest import (total-time): ') + formatTime(slowestImport.totalTime))
     this.log(c.dim('Total import time (self/total): ') + formatTime(totalSelfTime) + c.dim(' / ') + formatTime(totalTotalTime))
+  }
+
+  private importDurationTime(duration: number) {
+    const color = duration >= 500 ? c.red : duration >= 100 ? c.yellow : (c: string) => c
+    return color(formatTime(duration).padStart(6))
+  }
+
+  private importBreakdownPath(path: string, external: boolean | undefined) {
+    const pathDisplay = this.relative(path)
+    const color = external ? c.italic : (c: string) => c
+    if (pathDisplay.length <= 45) {
+      return color(pathDisplay)
+    }
+    return color(`...${pathDisplay.slice(-45)}`)
   }
 
   private printErrorsSummary(files: File[], errors: unknown[]) {
