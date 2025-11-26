@@ -21,7 +21,7 @@ This guide helps you find the sweet spot between visual and realistic tests and 
 
 - **The Node.js process** - This is where the CLI is invoked. It performs common setup tasks like filtering test files and orchestrates a pool of test workers where actual execution happens.
 
-- **The provider** - Responsible for instantiating and interacting with a real browser using specific technologies like Playwright, WebDriver I/O, or custom implementations. This is configurable. For simplicity, the rest of this guide assumes Playwright usage, but most concepts apply to every provider.
+- **The provider** - Responsible for instantiating and interacting with a real browser using specific technologies like Playwright, WebdriverIO, or custom implementations. This is configurable. For simplicity, the rest of this guide assumes Playwright usage, but most concepts apply to every provider.
 
 - **The tester page** - An HTML page rendered inside the browser created by the provider. It hosts the code under test along with Vitest utilities needed to execute tests.
 
