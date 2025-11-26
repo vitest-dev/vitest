@@ -59,7 +59,7 @@ The diagram illustrates the following flow:
 1. When a test needs to perform a user interaction (like a click), the test runner wants to trigger a realistic event using the browser's low-level driver
 2. However, it lacks permission to access the browser's low-level API directly, so it sends a message via **WebSocket** to the orchestrator in the Node.js main thread
 3. The main thread receives the message and sends a command to the provider (in this example, Playwright)
-4. The provider sends a **CDP message** (Chrome DevTools Protocol)—or a WebDriver message if using WebDriver I/O—to the browser
+4. The provider sends a **CDP message** (Chrome DevTools Protocol)—or a WebDriver message if using WebdriverIO—to the browser
 5. This triggers a realistic event—an event that enters through the browser's low-level API and is close to how users interact with their mouse and keyboard (not a JS-space click on a DOM)—that closely mimics how a user click happens in a production environment
 
 ![Browser Mode Action Flow](/vitest-browser-typical-action.png)
