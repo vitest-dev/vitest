@@ -30,7 +30,7 @@ const draft = ref(false)
 const hasGraphBeenDisplayed = ref(false)
 const loadingModuleGraph = ref(false)
 const currentFilepath = ref<string | undefined>(undefined)
-const hideNodeModules = ref(true)
+const hideNodeModules = ref(false)
 
 const test = computed(() => {
   return selectedTest.value

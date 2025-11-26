@@ -18,9 +18,9 @@ const modelValue = defineModel<string>()
 const attrs = useAttrs()
 
 const modeMap: Record<string, any> = {
-  // html: 'htmlmixed',
-  // vue: 'htmlmixed',
-  // svelte: 'htmlmixed',
+  html: 'htmlmixed',
+  vue: 'htmlmixed',
+  svelte: 'htmlmixed',
   js: 'javascript',
   mjs: 'javascript',
   cjs: 'javascript',

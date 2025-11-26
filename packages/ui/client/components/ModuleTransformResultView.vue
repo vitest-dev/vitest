@@ -1,38 +1,68 @@
 <script setup lang="ts">
+import type { ExternalResult, TransformResultWithSource } from 'vitest'
+import type { ModuleType } from '~/composables/module-graph'
 import { asyncComputed, onKeyStroke } from '@vueuse/core'
+import { Tooltip as VueTooltip } from 'floating-vue'
 import { computed } from 'vue'
 import { browserState, client } from '~/composables/client'
 import { currentModule } from '~/composables/navigation'
+import Badge from './Badge.vue'
 import CodeMirrorContainer from './CodeMirrorContainer.vue'
 import IconButton from './IconButton.vue'
 
-const props = defineProps<{ id: string; projectName: string }>()
+const props = defineProps<{
+  id: string
+  projectName: string
+  type: ModuleType
+}>()
 const emit = defineEmits<{ (e: 'close'): void }>()
 
-const result = asyncComputed(() =>
-  client.rpc.getTransformResult(props.projectName, props.id, currentModule.value?.id, !!browserState),
-)
+const result = asyncComputed<TransformResultWithSource | ExternalResult | undefined>(() => {
+  if (!currentModule.value?.id) {
+    return undefined
+  }
+  if (props.type === 'inline') {
+    return client.rpc.getTransformResult(props.projectName, props.id, currentModule.value.id, !!browserState)
+  }
+  if (props.type === 'external') {
+    return client.rpc.getExternalResult(props.id, currentModule.value.id)
+  }
+})
 const ext = computed(() => props.id?.split(/\./g).pop() || 'js')
 
 const source = computed(() => result.value?.source?.trim() || '')
 const isCached = computed(() => {
-  const index = result.value?.code.lastIndexOf('vitestCache=')
+  if (!result.value || !('code' in result.value)) {
+    return false
+  }
+  const index = result.value.code.lastIndexOf('vitestCache=')
   return index !== -1
 })
 
 // TODO: parse modules and make it clickable
 const code = computed(
-  () =>
-    result.value?.code
-      ?.replace(/\/\/# sourceMappingURL=.*\n/, '')
+  () => {
+    if (!result.value || !('code' in result.value)) {
+      return null
+    }
+    return result.value.code
+      .replace(/\/\/# sourceMappingURL=.*\n/, '')
       .replace(/\/\/# sourceMappingSource=.*\n/, '')
       .replace(/\/\/# vitestCache=.*\n?/, '')
-      .trim() || '',
+      .trim() || ''
+  },
 )
-const sourceMap = computed(() => ({
-  mappings: result.value?.map?.mappings ?? '',
-  version: (result.value?.map as any)?.version,
-}))
+const sourceMap = computed(() => {
+  if (!result.value || !('map' in result.value)) {
+    return {
+      mappings: '',
+    }
+  }
+  return {
+    mappings: result.value?.map?.mappings ?? '',
+    version: (result.value?.map as any)?.version,
+  }
+})
 
 onKeyStroke('Escape', () => {
   emit('close')
@@ -45,40 +75,83 @@ function formatTime(time: number): string {
   }
   return `${Math.round(time)}ms`
 }
+
+function formatPreciseTime(time: number): string {
+  if (time > 1000) {
+    return `${(time / 1000).toFixed(2)}s`
+  }
+  return `${time.toFixed(2)}ms`
+}
+
+function getDurationType(duration: number) {
+  if (duration >= 500) {
+    return 'danger'
+  }
+  if (duration >= 100) {
+    return 'warning'
+  }
+}
 // TODO: sourcemap https://evanw.github.io/source-map-visualization/
 </script>
 
 <template>
   <div w-350 max-w-screen h-full flex flex-col>
     <div p-4 relative>
-      <p>
-        Module Info
-        <!-- TODO: badge component -->
-        <span v-if="isCached" class="absolute rounded-full py-0.5 px-2 ml-2 text-xs" bg-orange>
-          cached
-        </span>
-      </p>
+      <div flex justify-between>
+        <p>
+          Module Info
+          <VueTooltip class="inline" cursor-help>
+            <Badge type="custom" ml-1 :style="{ backgroundColor: `var(--color-node-${type})` }">
+              {{ type }}
+            </Badge>
+            <template #popper>
+              This is module is {{ type === 'external' ? 'externalized' : 'inlined' }}.
+              <template v-if="type === 'external'">
+                It means that the module was not processed by Vite plugins, but instead was directly imported by the environment.
+              </template>
+              <template v-else>
+                It means that the module was processed by Vite plugins.
+              </template>
+            </template>
+          </VueTooltip>
+          <VueTooltip v-if="isCached" class="inline" cursor-help>
+            <Badge type="tip" ml-2>
+              cached
+            </Badge>
+            <template #popper>
+              This module is cached on the file system under `experimental.fsModuleCachePath` ("node_modules/.exprtimental-vitest-cache" by default).
+            </template>
+          </VueTooltip>
+        </p>
+        <div mr-8 flex gap-2 items-center>
+          <VueTooltip v-if="result && 'selfTime' in result && result.selfTime" class="inline" cursor-help>
+            <Badge :type="getDurationType(result.selfTime)">
+              self: {{ formatTime(result.selfTime) }}
+            </Badge>
+            <template #popper>
+              It took {{ formatPreciseTime(result.selfTime) }} to import this module, excluding static imports.
+            </template>
+          </VueTooltip>
+          <VueTooltip v-if="result?.totalTime" class="inline" cursor-help>
+            <Badge :type="getDurationType(result.totalTime)">
+              total: {{ formatTime(result.totalTime) }}
+            </Badge>
+            <template #popper>
+              It took {{ formatPreciseTime(result.totalTime) }} to import the whole module, including static imports.
+            </template>
+          </VueTooltip>
+          <VueTooltip v-if="result && 'transformTime' in result && result.transformTime" class="inline" cursor-help>
+            <Badge :type="getDurationType(result.transformTime)">
+              transform: {{ formatTime(result.transformTime) }}
+            </Badge>
+            <template #popper>
+              It took {{ formatPreciseTime(result.transformTime) }} to transform this module by Vite plugins.
+            </template>
+          </VueTooltip>
+        </div>
+      </div>
       <p op50 font-mono text-sm>
         {{ id }}
-        <!-- TODO: component? -->
-        <span
-          v-if="result?.selfTime != null"
-          :class="{
-            'text-red': result.selfTime >= 500,
-            'text-orange': result.selfTime >= 100 && result.selfTime < 500,
-          }"
-        >
-          (self: {{ formatTime(result.selfTime) }},
-        </span>
-        <span
-          v-if="result?.totalTime != null"
-          :class="{
-            'text-red': result.totalTime >= 500,
-            'text-orange': result.totalTime >= 100 && result.totalTime < 500,
-          }"
-        >
-          total: {{ formatTime(result.totalTime) }})
-        </span>
       </p>
       <IconButton
         icon="i-carbon-close"
@@ -93,11 +166,11 @@ function formatTime(time: number): string {
       No transform result found for this module.
     </div>
     <template v-else>
-      <div grid="~ cols-2 rows-[min-content_auto]" overflow-hidden flex-auto>
+      <div grid="~ rows-[min-content_auto]" overflow-hidden flex-auto :class="{ 'cols-2': code != null }">
         <div p="x3 y-1" bg-overlay border="base b t r">
           Source
         </div>
-        <div p="x3 y-1" bg-overlay border="base b t">
+        <div v-if="code != null" p="x3 y-1" bg-overlay border="base b t">
           Transformed
         </div>
         <CodeMirrorContainer
@@ -108,11 +181,12 @@ function formatTime(time: number): string {
           :mode="ext"
         />
         <CodeMirrorContainer
+          v-if="code != null"
           h-full
           :model-value="code"
           read-only
           v-bind="{ lineNumbers: true }"
-          :mode="ext"
+          mode="js"
         />
       </div>
       <div v-if="sourceMap.mappings !== ''">
@@ -123,7 +197,6 @@ function formatTime(time: number): string {
           :model-value="sourceMap.mappings"
           read-only
           v-bind="{ lineNumbers: true }"
-          :mode="ext"
         />
       </div>
     </template>

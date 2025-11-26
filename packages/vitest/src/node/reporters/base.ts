@@ -616,9 +616,7 @@ export abstract class BaseReporter implements Reporter {
   private printImportsBreakdown() {
     const testModules = this.ctx.state.getTestModules()
 
-    // Collect all import durations from all test modules
     interface ImportEntry {
-      testFile: string
       importedFile: string
       selfTime: number
       totalTime: number
@@ -632,7 +630,6 @@ export abstract class BaseReporter implements Reporter {
 
       for (const [filePath, duration] of Object.entries(importDurations)) {
         allImports.push({
-          testFile: testModule.task.filepath,
           importedFile: filePath,
           selfTime: duration.selfTime,
           totalTime: duration.totalTime,
@@ -644,31 +641,22 @@ export abstract class BaseReporter implements Reporter {
       return
     }
 
-    // Sort by total time (descending)
     const sortedImports = allImports.sort((a, b) => b.totalTime - a.totalTime)
-
-    // Get the slowest import for scaling the progress bar
     const maxTotalTime = sortedImports[0].totalTime
-
-    // Take top 10
     const topImports = sortedImports.slice(0, 10)
 
-    // Calculate totals
     const totalSelfTime = allImports.reduce((sum, imp) => sum + imp.selfTime, 0)
     const totalTotalTime = allImports.reduce((sum, imp) => sum + imp.totalTime, 0)
     const slowestImport = sortedImports[0]
 
-    // Render the breakdown
     this.log()
     this.log(c.bold('Import Duration Breakdown') + c.dim(' (ordered by Total Time) (Top 10)'))
 
     for (const imp of topImports) {
-      // Create a simple progress bar
       const barWidth = 20
       const filledWidth = Math.round((imp.totalTime / maxTotalTime) * barWidth)
       const bar = c.cyan('█'.repeat(filledWidth)) + c.dim('░'.repeat(barWidth - filledWidth))
 
-      // Show only the imported file path
       const pathDisplay = this.relative(imp.importedFile)
 
       this.log(

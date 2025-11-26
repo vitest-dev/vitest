@@ -10,15 +10,17 @@ import type {
 } from '~/composables/module-graph'
 import {
   defineGraphConfig,
+  defineNode,
   GraphController,
   Markers,
   PositionInitializers,
 } from 'd3-graph-controller'
-import { onMounted, onUnmounted, ref, toRefs, watch, watchEffect } from 'vue'
+import { computed, onMounted, onUnmounted, ref, shallowRef, toRefs, watch, watchEffect } from 'vue'
 import { isReport } from '~/composables/client'
 import IconButton from '../IconButton.vue'
 import Modal from '../Modal.vue'
 import ModuleTransformResultView from '../ModuleTransformResultView.vue'
+import ViewModuleGraphImportBreakdown from './ViewModuleGraphImportBreakdown.vue'
 
 const props = defineProps<{
   graph: ModuleGraph
@@ -33,7 +35,11 @@ const el = ref<HTMLDivElement>()
 
 const modalShow = ref(false)
 const selectedModule = ref<string | null>()
+const selectedModuleType = ref<ModuleType | null>(null)
 const controller = ref<ModuleGraphController | undefined>()
+const focusedNode = ref<string | null>(null)
+const filteredGraph = shallowRef<ModuleGraph>(graph.value)
+const nodeLengths = computed(() => graph.value.nodes.length)
 
 watchEffect(
   () => {
@@ -45,6 +51,7 @@ watchEffect(
 )
 
 onMounted(() => {
+  filteredGraph.value = filterGraphByLevels(graph.value, null, 2)
   resetGraphController()
 })
 
@@ -52,15 +59,193 @@ onUnmounted(() => {
   controller.value?.shutdown()
 })
 
-watch(graph, () => resetGraphController())
+watch(graph, () => {
+  filteredGraph.value = filterGraphByLevels(graph.value, focusedNode.value, 2)
+  resetGraphController()
+})
+
+function showFullGraph() {
+  filteredGraph.value = graph.value
+  resetGraphController()
+}
+
+// TODO: if number of nodes is low, just keep the original graph
+function filterGraphByLevels(
+  sourceGraph: ModuleGraph,
+  startNodeId: string | null,
+  levels: number = 2,
+): ModuleGraph {
+  if (!sourceGraph.nodes.length) {
+    return sourceGraph
+  }
+
+  // Build adjacency list for efficient traversal
+  const adjacencyList = new Map<string, Set<string>>()
+  sourceGraph.nodes.forEach(node => adjacencyList.set(node.id, new Set()))
+
+  sourceGraph.links.forEach((link) => {
+    const sourceId = typeof link.source === 'object' ? link.source.id : String(link.source)
+    const targetId = typeof link.target === 'object' ? link.target.id : String(link.target)
+    adjacencyList.get(sourceId)?.add(targetId)
+    adjacencyList.get(targetId)?.add(sourceId)
+  })
+
+  // Find starting node(s)
+  let startNodes: string[]
+  if (startNodeId) {
+    startNodes = [startNodeId]
+  }
+  else {
+    // Find root node (node with type 'inline' that appears as source but not target, or first inline node)
+    const targetIds = new Set(sourceGraph.links.map(link =>
+      typeof link.target === 'object' ? link.target.id : String(link.target),
+    ))
+    const rootCandidates = sourceGraph.nodes.filter(
+      node => node.type === 'inline' && !targetIds.has(node.id),
+    )
+    startNodes = rootCandidates.length > 0
+      ? [rootCandidates[0].id]
+      : [sourceGraph.nodes[0].id]
+  }
+
+  // BFS to find all nodes within N levels
+  const visitedNodes = new Set<string>()
+  const queue: Array<{ id: string; level: number }> = startNodes.map(id => ({ id, level: 0 }))
+
+  while (queue.length > 0) {
+    const { id, level } = queue.shift()!
+
+    if (visitedNodes.has(id) || level > levels) {
+      continue
+    }
+
+    visitedNodes.add(id)
+
+    if (level < levels) {
+      const neighbors = adjacencyList.get(id) || new Set()
+      neighbors.forEach((neighborId) => {
+        if (!visitedNodes.has(neighborId)) {
+          queue.push({ id: neighborId, level: level + 1 })
+        }
+      })
+    }
+  }
+
+  // Filter nodes and links
+  const nodeMap = new Map(sourceGraph.nodes.map(node => [node.id, node]))
+  const filteredNodes = Array.from(visitedNodes)
+    .map(id => nodeMap.get(id))
+    .filter(node => node !== undefined) as ModuleNode[]
+
+  // Create a map of filtered nodes for quick lookup
+  const filteredNodeMap = new Map(filteredNodes.map(node => [node.id, node]))
+
+  // Recreate links with the filtered node references
+  const filteredLinks = sourceGraph.links
+    .map((link) => {
+      const sourceId = typeof link.source === 'object' ? link.source.id : String(link.source)
+      const targetId = typeof link.target === 'object' ? link.target.id : String(link.target)
+
+      // Only include links where both nodes are in the filtered set
+      if (visitedNodes.has(sourceId) && visitedNodes.has(targetId)) {
+        const sourceNode = filteredNodeMap.get(sourceId)
+        const targetNode = filteredNodeMap.get(targetId)
+
+        if (sourceNode && targetNode) {
+          return {
+            ...link,
+            source: sourceNode,
+            target: targetNode,
+          }
+        }
+      }
+      return null
+    })
+    .filter(link => link !== null) as ModuleLink[]
+
+  return {
+    nodes: filteredNodes,
+    links: filteredLinks,
+  }
+}
 
 function setFilter(name: ModuleType, value: boolean) {
   controller.value?.filterNodesByType(value, name)
 }
 
-function setSelectedModule(id: string) {
-  selectedModule.value = id
+function setSelectedModule(node: ModuleNode) {
+  selectedModule.value = node.id
+  selectedModuleType.value = node.type
   modalShow.value = true
+}
+
+function focusOnNode(nodeId: string) {
+  focusedNode.value = nodeId
+  filteredGraph.value = filterGraphByLevels(graph.value, nodeId, 2)
+  updateNodeColors()
+  resetGraphController()
+}
+
+function resetToRoot() {
+  focusedNode.value = null
+  filteredGraph.value = filterGraphByLevels(graph.value, null, 2)
+  updateNodeColors()
+  resetGraphController()
+}
+
+function updateNodeColors() {
+  // Update node colors based on focused state by recreating nodes
+  const updatedNodes = filteredGraph.value.nodes.map((node) => {
+    let color: string
+    let labelColor: string
+
+    if (node.id === focusedNode.value) {
+      // Highlight the focused node with a distinct color
+      color = 'var(--color-node-focused)'
+      labelColor = 'var(--color-node-focused)'
+    }
+    else if (node.type === 'inline') {
+      const originalColor = node.color
+      const isRoot = originalColor === 'var(--color-node-root)'
+      color = isRoot ? 'var(--color-node-root)' : 'var(--color-node-inline)'
+      labelColor = color
+    }
+    else {
+      color = 'var(--color-node-external)'
+      labelColor = 'var(--color-node-external)'
+    }
+
+    return defineNode<ModuleType, ModuleNode>({
+      ...node,
+      color,
+      label: node.label
+        ? {
+            ...node.label,
+            color: labelColor,
+          }
+        : node.label,
+    })
+  })
+
+  // Create a map for quick node lookup by ID
+  const nodeMap = new Map(updatedNodes.map(node => [node.id, node]))
+
+  // Update links to reference the new node objects
+  const updatedLinks = filteredGraph.value.links.map((link) => {
+    const sourceId = typeof link.source === 'object' ? link.source.id : String(link.source)
+    const targetId = typeof link.target === 'object' ? link.target.id : String(link.target)
+
+    return {
+      ...link,
+      source: nodeMap.get(sourceId)!,
+      target: nodeMap.get(targetId)!,
+    }
+  })
+
+  filteredGraph.value = {
+    nodes: updatedNodes,
+    links: updatedLinks,
+  }
 }
 
 function resetGraphController(reset = false) {
@@ -73,13 +258,29 @@ function resetGraphController(reset = false) {
     return
   }
 
-  if (!graph.value || !el.value) {
+  if (!filteredGraph.value || !el.value) {
     return
+  }
+
+  const nodesLength = filteredGraph.value.nodes.length
+  let zoom = 1
+  let min = 0.5
+  if (nodesLength > 300) {
+    zoom = 0.3
+    min = 0.2
+  }
+  else if (nodesLength > 100) {
+    zoom = 0.5
+    min = 0.3
+  }
+  else if (nodesLength > 50) {
+    zoom = 0.7
+    zoom = 0.4
   }
 
   controller.value = new GraphController(
     el.value!,
-    graph.value,
+    filteredGraph.value,
     // See https://graph-controller.yeger.eu/config/ for more options
     defineGraphConfig<ModuleType, ModuleNode, ModuleLink>({
       nodeRadius: 10,
@@ -92,7 +293,7 @@ function resetGraphController(reset = false) {
             if (willBeHidden) {
               return 0
             }
-            return 0.25
+            return 0.05
           },
         },
         forces: {
@@ -100,7 +301,7 @@ function resetGraphController(reset = false) {
             radiusMultiplier: 10,
           },
           link: {
-            length: 240,
+            length: 140,
           },
         },
       },
@@ -108,19 +309,20 @@ function resetGraphController(reset = false) {
       modifiers: {
         node: bindOnClick,
       },
-      positionInitializer:
-        graph.value.nodes.length > 1
-          ? PositionInitializers.Randomized
-          : PositionInitializers.Centered,
+      positionInitializer: graph.value.nodes.length === 1
+        ? PositionInitializers.Centered
+        : PositionInitializers.Randomized,
       zoom: {
-        min: 0.5,
-        max: 2,
+        initial: zoom,
+        min,
+        max: 1.5,
       },
     }),
   )
 }
 
 const isValidClick = (event: PointerEvent) => event.button === 0
+const isRightClick = (event: PointerEvent) => event.button === 2
 
 function bindOnClick(
   selection: Selection<SVGCircleElement, ModuleNode, SVGGElement, undefined>,
@@ -128,38 +330,70 @@ function bindOnClick(
   if (isReport) {
     return
   }
-  // Only trigger on left-click and primary touch
+  // Handle both left-click (focus) and right-click (open modal)
   let px = 0
   let py = 0
   let pt = 0
+  let isRightClickDown = false
 
   selection
     .on('pointerdown', (event: PointerEvent, node) => {
-      if (node.type === 'external') {
+      if (!node.x || !node.y) {
         return
       }
-      if (!node.x || !node.y || !isValidClick(event)) {
+
+      isRightClickDown = isRightClick(event)
+
+      // if (node.type === 'external') {
+      //   return
+      // }
+
+      if (!isValidClick(event) && !isRightClickDown) {
         return
       }
+
       px = node.x
       py = node.y
       pt = Date.now()
     })
     .on('pointerup', (event: PointerEvent, node: ModuleNode) => {
-      if (node.type === 'external') {
+      if (!node.x || !node.y) {
         return
       }
-      if (!node.x || !node.y || !isValidClick(event)) {
+
+      const wasRightClick = isRightClick(event)
+
+      // External nodes only respond to right-click
+      if (node.type === 'external' && !wasRightClick) {
         return
       }
+
+      if (!isValidClick(event) && !wasRightClick) {
+        return
+      }
+
       if (Date.now() - pt > 500) {
         return
       }
+
       const dx = node.x - px
       const dy = node.y - py
       if (dx ** 2 + dy ** 2 < 100) {
-        setSelectedModule(node.id)
+        // Right-click or Shift+Click: open modal
+        if (wasRightClick || event.shiftKey) {
+          event.preventDefault()
+          setSelectedModule(node)
+        }
+        // Left-click: focus on node (show 2 levels from this node)
+        // Block if node has more than 100 links
+        else if (node.type === 'inline') {
+          focusOnNode(node.id)
+        }
       }
+    })
+    .on('contextmenu', (event: PointerEvent) => {
+      // Prevent default context menu
+      event.preventDefault()
     })
 }
 </script>
@@ -167,12 +401,15 @@ function bindOnClick(
 <template>
   <div h-full min-h-75 flex-1 overflow="hidden">
     <div>
-      <div flex items-center gap-4 px-3 py-2>
+      <div flex items-center gap-2 px-3 py-2>
         <div
           flex="~ gap-1"
           items-center
           select-none
         >
+          <div class="pr-2">
+            {{ filteredGraph.nodes.length }}/{{ nodeLengths }} {{ filteredGraph.nodes.length === 1 ? 'module' : 'modules' }}
+          </div>
           <input
             id="hide-node-modules"
             v-model="hideNodeModules"
@@ -217,14 +454,39 @@ function bindOnClick(
           >{{ node }} Modules</label>
         </div>
         <div flex-auto />
+        <div
+          flex="~ gap-2"
+          items-center
+          text-xs
+          opacity-60
+        >
+          <span>Click: focus node • Right-click/Shift: details</span>
+        </div>
+        <div>
+          <!-- TODO implemewnt show/hide -->
+          <IconButton
+            v-tooltip.bottom="'Hide Import Breakdown'"
+            icon="i-carbon-notebook"
+          />
+        </div>
+        <div>
+          <IconButton
+            v-tooltip.bottom="'Show Full Graph'"
+            icon="i-carbon-ibm-cloud-direct-link-2-connect"
+            @click="showFullGraph()"
+          />
+        </div>
         <div>
           <IconButton
             v-tooltip.bottom="'Reset'"
             icon="i-carbon-reset"
-            @click="resetGraphController(true)"
+            @click="resetToRoot()"
           />
         </div>
       </div>
+    </div>
+    <div class="absolute bg-base border-base py-2 px-4 right-0 mr-2 rounded mt-2">
+      <ViewModuleGraphImportBreakdown />
     </div>
     <div ref="el" />
     <Modal v-model="modalShow" direction="right">
@@ -233,6 +495,7 @@ function bindOnClick(
           <ModuleTransformResultView
             :id="selectedModule"
             :project-name="projectName"
+            :type="selectedModuleType!"
             @close="modalShow = false"
           />
         </Suspense>
@@ -248,6 +511,7 @@ function bindOnClick(
   --color-node-external: #c0ad79;
   --color-node-inline: #8bc4a0;
   --color-node-root: #6e9aa5;
+  --color-node-focused: #e67e22;
   --color-node-label: var(--color-text);
   --color-node-stroke: var(--color-text);
 }
@@ -258,6 +522,7 @@ html.dark {
   --color-node-external: #857a40;
   --color-node-inline: #468b60;
   --color-node-root: #467d8b;
+  --color-node-focused: #f39c12;
 }
 
 .graph {

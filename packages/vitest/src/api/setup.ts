@@ -9,6 +9,7 @@ import type { TestSpecification } from '../node/spec'
 import type { Reporter } from '../node/types/reporter'
 import type { LabelColor, ModuleGraphData, UserConsoleLog } from '../types/general'
 import type {
+  ExternalResult,
   TransformResultWithSource,
   WebSocketEvents,
   WebSocketHandlers,
@@ -19,8 +20,10 @@ import { performance } from 'node:perf_hooks'
 import { noop } from '@vitest/utils/helpers'
 import { createBirpc } from 'birpc'
 import { parse, stringify } from 'flatted'
+import { join } from 'pathe'
 import { WebSocketServer } from 'ws'
 import { API_PATH } from '../constants'
+import { getTestFileEnvironment } from '../utils/environments'
 import { getModuleGraph } from '../utils/graph'
 import { stringifyReplace } from '../utils/serialization'
 import { isValidApiRequest } from './check'
@@ -91,24 +94,53 @@ export function setup(ctx: Vitest, _server?: ViteDevServer): void {
         getResolvedProjectLabels(): { name: string; color?: LabelColor }[] {
           return ctx.projects.map(p => ({ name: p.name, color: p.color }))
         },
-        async getTransformResult(projectName: string, id, testFileId, browser = false) {
-          const project = ctx.getProjectByName(projectName)
-          const result: TransformResultWithSource | null | undefined = browser
-            ? await project.browser!.vite.transformRequest(id)
-            : await project.vite.transformRequest(id)
-          if (result) {
-            try {
-              result.source = result.source || (await fs.readFile(id, 'utf-8'))
-            }
-            catch {}
-            const testModule = testFileId && ctx.state.getReportedEntityById(testFileId) as TestModule
-            if (testModule) {
-              const durations = testModule.diagnostic().importDurations[id]
-              result.totalTime = durations?.totalTime
-              result.selfTime = durations?.selfTime
-            }
-            return result
+        async getExternalResult(moduleId: string, testFileTaskId: string) {
+          const testModule = ctx.state.getReportedEntityById(testFileTaskId) as TestModule | undefined
+          if (!testModule) {
+            return undefined
           }
+
+          // TODO: cache
+          const result: ExternalResult = {}
+
+          try {
+            result.source = await fs.readFile(moduleId, 'utf-8')
+          }
+          catch {}
+
+          const durations = testModule.diagnostic().importDurations[moduleId] || testModule.diagnostic().importDurations[join('/@fs/', moduleId)]
+          result.totalTime = durations?.totalTime
+          return result
+        },
+        async getTransformResult(projectName: string, moduleId, testFileTaskId, browser = false) {
+          const project = ctx.getProjectByName(projectName)
+          const testModule = ctx.state.getReportedEntityById(testFileTaskId) as TestModule | undefined
+          if (!testModule) {
+            return undefined
+          }
+
+          const environment = getTestFileEnvironment(project, testModule.moduleId, browser)
+
+          const moduleNode = environment?.moduleGraph.getModuleById(moduleId)
+          if (!moduleNode?.transformResult) {
+            return undefined
+          }
+
+          // TODO: parse imports into { id, start: { line, column }, end: { line, column } }
+          const result: TransformResultWithSource = moduleNode.transformResult
+          try {
+            result.source = result.source || (moduleNode.file ? await fs.readFile(moduleNode.file, 'utf-8') : undefined)
+          }
+          catch {}
+          const durations = testModule.diagnostic().importDurations[moduleId]
+          result.totalTime = durations?.totalTime
+          result.selfTime = durations?.selfTime
+
+          const transformDuration = ctx.state.metadata[projectName]?.duration[moduleNode.url]?.[0]
+          if (transformDuration != null) {
+            result.transformTime = transformDuration
+          }
+          return result
         },
         async getModuleGraph(project, id, browser): Promise<ModuleGraphData> {
           return getModuleGraph(ctx, project, id, browser)

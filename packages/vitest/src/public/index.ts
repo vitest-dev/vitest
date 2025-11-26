@@ -3,6 +3,7 @@ import type { SerializedTestSpecification } from '../runtime/types/utils'
 import '../types/global'
 
 export type {
+  ExternalResult,
   TransformResultWithSource,
   WebSocketEvents,
   WebSocketHandlers,

@@ -16,6 +16,11 @@ interface SourceMap {
   toUrl: () => string
 }
 
+export interface ExternalResult {
+  source?: string
+  totalTime?: number
+}
+
 export interface TransformResultWithSource {
   code: string
   map: SourceMap | {
@@ -27,6 +32,7 @@ export interface TransformResultWithSource {
   source?: string
   totalTime?: number
   selfTime?: number
+  transformTime?: number
 }
 
 export interface WebSocketHandlers {
@@ -44,9 +50,13 @@ export interface WebSocketHandlers {
   getTransformResult: (
     projectName: string,
     id: string,
-    testFileId?: string,
+    testFileId: string,
     browser?: boolean,
   ) => Promise<TransformResultWithSource | undefined>
+  getExternalResult: (
+    id: string,
+    testFileId: string,
+  ) => Promise<ExternalResult | undefined>
   readTestFile: (id: string) => Promise<string | null>
   saveTestFile: (id: string, content: string) => Promise<void>
   rerun: (files: string[], resetTestNamePattern?: boolean) => Promise<void>
