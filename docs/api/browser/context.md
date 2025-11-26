@@ -191,3 +191,43 @@ export const server: {
   config: SerializedConfig
 }
 ```
+
+## `utils`
+
+Utility functions useful for custom render libraries.
+
+```ts
+export const utils: {
+  /**
+   * This is simillar to calling `page.elementLocator`, but it returns only
+   * locator selectors.
+   */
+  getElementLocatorSelectors(element: Element): LocatorSelectors
+  /**
+   * Prints prettified HTML of an element.
+   */
+  debug(
+    el?: Element | Locator | null | (Element | Locator)[],
+    maxLength?: number,
+    options?: PrettyDOMOptions,
+  ): void
+  /**
+   * Returns prettified HTML of an element.
+   */
+  prettyDOM(
+    dom?: Element | Locator | undefined | null,
+    maxLength?: number,
+    prettyFormatOptions?: PrettyDOMOptions,
+  ): string
+  /**
+   * Configures default options of `prettyDOM` and `debug` functions.
+   * This will also affect `vitest-browser-{framework}` package.
+   * @experimental
+   */
+  configurePrettyDOM(options: StringifyOptions): void
+  /**
+   * Creates "Cannot find element" error. Useful for custom locators.
+   */
+  getElementError(selector: string, container?: Element): Error
+}
+```

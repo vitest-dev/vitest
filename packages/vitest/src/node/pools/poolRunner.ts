@@ -127,7 +127,6 @@ export class PoolRunner {
       __vitest_worker_request__: true,
       type: method,
       context,
-      poolId: this.poolId!,
       otelCarrier: this.getOTELCarrier(),
     } satisfies WorkerRequest)
   }
@@ -139,7 +138,7 @@ export class PoolRunner {
       : undefined
   }
 
-  async start(): Promise<void> {
+  async start(options: { workerId: number }): Promise<void> {
     // Wait for any ongoing operation to complete
     if (this._operationLock) {
       await this._operationLock
@@ -182,6 +181,8 @@ export class PoolRunner {
 
       this.postMessage({
         type: 'start',
+        poolId: this.poolId!,
+        workerId: options.workerId,
         __vitest_worker_request__: true,
         options: {
           reportMemory: this.worker.reportMemory ?? false,

@@ -1,4 +1,4 @@
-import type { Task, TestAnnotation } from '@vitest/runner'
+import type { Task, TestArtifactLocation } from '@vitest/runner'
 import type { RunnerTestCase } from 'vitest'
 import type { Ref, WritableComputedRef } from 'vue'
 import CodeMirror from 'codemirror'
@@ -84,11 +84,11 @@ export function showLocationSource(fileId: string, location: { line: number; col
   })
 }
 
-export function showAnnotationSource(task: RunnerTestCase, annotation: TestAnnotation) {
-  if (!annotation.location) {
+export function showAttachmentSource(task: RunnerTestCase, location?: TestArtifactLocation) {
+  if (!location) {
     return
   }
-  const { line, column, file } = annotation.location
+  const { line, column, file } = location
   if (task.file.filepath !== file) {
     return openInEditor(file, line, column)
   }

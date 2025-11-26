@@ -70,6 +70,8 @@ export type WorkerRequest
   = { __vitest_worker_request__: true } & (
     | {
       type: 'start'
+      poolId: number
+      workerId: WorkerExecuteContext['workerId'] // Initial worker ID, may change when non-isolated worker runs multiple test files
       options: { reportMemory: boolean }
       context: {
         environment: WorkerTestEnvironment
@@ -89,13 +91,11 @@ export type WorkerRequest
     | {
       type: 'run'
       context: WorkerExecuteContext
-      poolId: number
       otelCarrier?: OTELCarrier
     }
     | {
       type: 'collect'
       context: WorkerExecuteContext
-      poolId: number
       otelCarrier?: OTELCarrier
     }
     | { type: 'cancel' }

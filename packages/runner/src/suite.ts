@@ -38,6 +38,7 @@ import { getHooks, setFn, setHooks, setTestFixture } from './map'
 import { getCurrentTest } from './test-state'
 import { findTestFileStackTrace } from './utils'
 import { createChainable } from './utils/chain'
+import { createTaskName } from './utils/tasks'
 
 /**
  * Creates a suite of tests, allowing for grouping and hierarchical organization of tests.
@@ -213,14 +214,15 @@ function createDefaultSuite(runner: VitestRunner) {
 }
 
 export function clearCollectorContext(
-  filepath: string,
+  file: File,
   currentRunner: VitestRunner,
 ): void {
   if (!defaultSuite) {
     defaultSuite = createDefaultSuite(currentRunner)
   }
+  defaultSuite.file = file
   runner = currentRunner
-  currentTestFilepath = filepath
+  currentTestFilepath = file.filepath
   collectorContext.tasks.length = 0
   defaultSuite.clear()
   collectorContext.currentSuite = defaultSuite
@@ -297,10 +299,16 @@ function createSuiteCollector(
 
   const task = function (name = '', options: TaskCustomOptions = {}) {
     const timeout = options?.timeout ?? runner.config.testTimeout
+    const currentSuite = collectorContext.currentSuite?.suite
     const task: Test = {
       id: '',
       name,
-      suite: collectorContext.currentSuite?.suite,
+      fullName: createTaskName([
+        currentSuite?.fullName ?? collectorContext.currentSuite?.file?.fullName,
+        name,
+      ]),
+      fullTestName: createTaskName([currentSuite?.fullTestName, name]),
+      suite: currentSuite,
       each: options.each,
       fails: options.fails,
       context: undefined!,
@@ -439,11 +447,18 @@ function createSuiteCollector(
       suiteOptions = { timeout: suiteOptions }
     }
 
+    const currentSuite = collectorContext.currentSuite?.suite
+
     suite = {
       id: '',
       type: 'suite',
       name,
-      suite: collectorContext.currentSuite?.suite,
+      fullName: createTaskName([
+        currentSuite?.fullName ?? collectorContext.currentSuite?.file?.fullName,
+        name,
+      ]),
+      fullTestName: createTaskName([currentSuite?.fullTestName, name]),
+      suite: currentSuite,
       mode,
       each,
       file: undefined!,

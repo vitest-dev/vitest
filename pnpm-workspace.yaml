@@ -17,8 +17,8 @@ catalog:
   '@types/istanbul-lib-source-maps': ^4.0.4
   '@types/istanbul-reports': ^3.0.4
   '@types/ws': ^8.18.1
-  '@unocss/reset': ^66.5.6
-  '@vitejs/plugin-vue': ^6.0.1
+  '@unocss/reset': ^66.5.9
+  '@vitejs/plugin-vue': ^6.0.2
   '@vueuse/core': ^12.8.2
   acorn-walk: ^8.3.4
   birpc: ^2.8.0
@@ -31,19 +31,20 @@ catalog:
   istanbul-reports: ^3.2.0
   magic-string: ^0.30.21
   magicast: ^0.5.1
-  msw: ^2.12.2
-  obug: ^2.1.0
+  msw: ^2.12.3
+  obug: ^2.1.1
   pathe: ^2.0.3
   sirv: ^3.0.2
   std-env: ^3.10.0
   strip-literal: ^3.1.0
   tinyglobby: ^0.2.15
   tinyrainbow: ^3.0.3
-  unocss: ^66.5.6
+  unocss: ^66.5.9
   unplugin-vue-components: ^0.28.0
-  vue: ^3.5.24
+  vue: ^3.5.25
   ws: ^8.18.3
 
 trustPolicy: no-downgrade
 trustPolicyExclude:
   - semver@6.3.1
+  - chokidar@4.0.3

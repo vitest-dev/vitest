@@ -19,6 +19,40 @@ export interface TaskBase {
    */
   name: string
   /**
+   * Full name including the file path, any parent suites, and this task's name.
+   *
+   * Uses ` > ` as the separator between levels.
+   *
+   * @example
+   * // file
+   * 'test/task-names.test.ts'
+   * @example
+   * // suite
+   * 'test/task-names.test.ts > meal planning'
+   * 'test/task-names.test.ts > meal planning > grocery lists'
+   * @example
+   * // test
+   * 'test/task-names.test.ts > meal planning > grocery lists > calculates ingredients'
+   */
+  fullName: string
+  /**
+   * Full name excluding the file path, including any parent suites and this task's name. `undefined` for file tasks.
+   *
+   * Uses ` > ` as the separator between levels.
+   *
+   * @example
+   * // file
+   * undefined
+   * @example
+   * // suite
+   * 'meal planning'
+   * 'meal planning > grocery lists'
+   * @example
+   * // test
+   * 'meal planning > grocery lists > calculates ingredients'
+   */
+  fullTestName?: string
+  /**
    * Task mode.
    * - **skip**: task is skipped
    * - **only**: only this task and other tasks with `only` mode will run
@@ -291,6 +325,7 @@ export interface Test<ExtraContext = object> extends TaskPopulated {
    * @experimental
    */
   artifacts: TestArtifact[]
+  fullTestName: string
 }
 
 export type Task = Test | Suite | File
@@ -630,6 +665,7 @@ export interface SuiteCollector<ExtraContext = object> {
   )[]
   scoped: (fixtures: Fixtures<any, ExtraContext>) => void
   fixtures: () => FixtureItem[] | undefined
+  file?: File
   suite?: Suite
   task: (name: string, options?: TaskCustomOptions) => Test<ExtraContext>
   collect: (file: File) => Promise<Suite>
@@ -780,6 +816,24 @@ export interface TestAnnotationArtifact extends TestArtifactBase {
   annotation: TestAnnotation
 }
 
+type VisualRegressionArtifactAttachment = TestAttachment & ({
+  name: 'reference' | 'actual'
+  width: number
+  height: number
+} | { name: 'diff' })
+
+/**
+ * @experimental
+ *
+ * Artifact type for visual regressions.
+ */
+export interface VisualRegressionArtifact extends TestArtifactBase {
+  type: 'internal:toMatchScreenshot'
+  kind: 'visual-regression'
+  message: string
+  attachments: VisualRegressionArtifactAttachment[]
+}
+
 /**
  * @experimental
  * @advanced
@@ -861,4 +915,4 @@ export interface TestArtifactRegistry {}
  *
  * This type automatically includes all artifacts registered via {@link TestArtifactRegistry}.
  */
-export type TestArtifact = TestAnnotationArtifact | TestArtifactRegistry[keyof TestArtifactRegistry]
+export type TestArtifact = TestAnnotationArtifact | VisualRegressionArtifact | TestArtifactRegistry[keyof TestArtifactRegistry]

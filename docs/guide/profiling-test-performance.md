@@ -11,16 +11,15 @@ When you run Vitest it reports multiple time metrics of your tests:
 > Test Files  1 passed (1)
 >      Tests  1 passed (1)
 >   Start at  09:32:53
->   Duration  4.80s (transform 44ms, setup 0ms, collect 35ms, tests 4.52s, environment 0ms, prepare 81ms)
+>   Duration  4.80s (transform 44ms, setup 0ms, import 35ms, tests 4.52s, environment 0ms, prepare 81ms)
 >   # Time metrics ^^
 > ```
 
 - Transform: How much time was spent transforming the files. See [File Transform](#file-transform).
 - Setup: Time spent for running the [`setupFiles`](/config/#setupfiles) files.
-- Collect: Time spent for collecting all tests in the test files. This includes the time it took to import all file dependencies.
+- Import: Time it took to import your test files and their dependencies. This also includes the time spent collecting all tests. Note that this doesn't include dynamic imports inside of tests.
 - Tests: Time spent for actually running the test cases.
 - Environment: Time spent for setting up the test [`environment`](/config/#environment), for example JSDOM.
-- Prepare: Time Vitest uses to prepare the test runner. When running tests in Node, this is the time to import and execute all internal utilities inside the worker. When running tests in the browser, this also includes the time to initiate the iframe.
 
 ## Test runner
 

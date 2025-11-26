@@ -42,7 +42,7 @@ export async function collectTests(
 
         runner.onCollectStart?.(file)
 
-        clearCollectorContext(filepath, runner)
+        clearCollectorContext(file, runner)
 
         try {
           const setupFiles = toArray(config.setupFiles)

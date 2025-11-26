@@ -807,7 +807,7 @@ export function getObjectSubset(
 export function isStandardSchema(obj: any): obj is StandardSchemaV1 {
   return (
     !!obj
-    && typeof obj === 'object'
+    && (typeof obj === 'object' || typeof obj === 'function')
     && obj['~standard']
     && typeof obj['~standard'].validate === 'function'
   )

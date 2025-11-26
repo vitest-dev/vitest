@@ -406,6 +406,8 @@ function getElementLocatorSelectors(element: Element): LocatorSelectors {
 
 type PrettyDOMOptions = Omit<StringifyOptions, 'maxLength'>
 
+let defaultOptions: StringifyOptions | undefined
+
 function debug(
   el?: Element | Locator | null | (Element | Locator)[],
   maxLength?: number,
@@ -423,7 +425,7 @@ function debug(
 
 function prettyDOM(
   dom?: Element | Locator | undefined | null,
-  maxLength: number = Number(import.meta.env.DEBUG_PRINT_LIMIT ?? 7000),
+  maxLength: number = Number(defaultOptions?.maxLength ?? import.meta.env.DEBUG_PRINT_LIMIT ?? 7000),
   prettyFormatOptions: PrettyDOMOptions = {},
 ): string {
   if (maxLength === 0) {
@@ -447,6 +449,7 @@ function prettyDOM(
   const pretty = stringify(dom, Number.POSITIVE_INFINITY, {
     maxLength,
     highlight: true,
+    ...defaultOptions,
     ...prettyFormatOptions,
   })
   return dom.outerHTML.length > maxLength
@@ -460,9 +463,17 @@ function getElementError(selector: string, container: Element): Error {
   return error
 }
 
+/**
+ * @experimental
+ */
+function configurePrettyDOM(options: StringifyOptions) {
+  defaultOptions = options
+}
+
 export const utils = {
   getElementError,
   prettyDOM,
   debug,
   getElementLocatorSelectors,
+  configurePrettyDOM,
 }
