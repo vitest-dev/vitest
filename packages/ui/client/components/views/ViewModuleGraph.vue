@@ -482,9 +482,8 @@ function bindOnClick(
           <span>Click: focus node • Right-click/Shift: details</span>
         </div>
         <div>
-          <!-- TODO implemewnt show/hide, show the color dependning on the highest import count -->
           <IconButton
-            v-tooltip.bottom="'Hide Import Breakdown'"
+            v-tooltip.bottom="`${breakdownShow ? 'Hide' : 'Show'} Import Breakdown`"
             icon="i-carbon-notebook"
             :class="breakdownClass"
             @click="toggleImportBreakdown()"
