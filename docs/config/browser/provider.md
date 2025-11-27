@@ -6,8 +6,6 @@ outline: deep
 # browser.provider {#browser-provider}
 
 - **Type:** `BrowserProviderOption`
-- **Default:** `'preview'`
-- **CLI:** `--browser.provider=playwright`
 
 The return value of the provider factory. You can import the factory from `@vitest/browser-<provider-name>` or make your own provider:
 

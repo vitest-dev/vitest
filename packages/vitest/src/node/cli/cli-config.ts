@@ -348,19 +348,6 @@ export const cliOptionsConfig: VitestCLIOptions = {
         argument: '[port]',
         subcommands: apiConfig(defaultBrowserPort),
       },
-      provider: {
-        description:
-          'Provider used to run browser tests. Some browsers are only available for specific providers. Can be "webdriverio", "playwright", "preview", or the path to a custom provider. Visit [`browser.provider`](https://vitest.dev/config/browser/provider) for more information',
-        argument: '<name>',
-        subcommands: null, // don't support custom objects
-        transform(value) {
-          const supported = ['playwright', 'webdriverio', 'preview']
-          if (typeof value !== 'string' || !supported.includes(value)) {
-            throw new Error(`Unsupported browser provider: ${value}. Supported providers are: ${supported.join(', ')}`)
-          }
-          return { name: value, _cli: true }
-        },
-      },
       isolate: {
         description:
           'Run every browser test file in isolation. To disable isolation, use `--browser.isolate=false` (default: `true`)',
@@ -397,6 +384,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
       testerHtmlPath: null,
       instances: null,
       expect: null,
+      provider: null,
     },
   },
   pool: {
