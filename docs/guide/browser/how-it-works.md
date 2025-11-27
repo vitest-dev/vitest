@@ -47,6 +47,11 @@ The attached diagram shows how the main thread's worker pool opens the browser u
 2. The main thread asks the orchestrator to start running a specific test suite
 3. The orchestrator instructs the test runner to execute the file
 4. The test runner processes each test and executes it
+
+::: warning
+Since the test runner is executed within the same page along with the code under test (e.g., a component or a page), should the code tries to navigate away to another page - The text execution will get interrupted and never end with a successful result. Make sure to prevent page refresh and navigation, for example, by stubbing your router navigation functions
+:::
+
 5. If a test renders a component, it appears inside an anchor element placed in the page
 6. Finally, the test reports success or failure back to the main thread via the orchestrator
 
