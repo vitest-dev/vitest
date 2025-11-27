@@ -369,7 +369,7 @@ describe('reporters', () => {
         .replace(/\d+\.\d+\.\d+/, '<version>')
         .replace(ctx!.config.root, '<root>')
         .replace(/\d+:\d+:\d+/, '<time>')
-        .replace(/\d+m?s/g, '<duration>'),
+        .replace(/\d+(?:\.\d+)?m?s/g, '<duration>'),
     ).toMatchInlineSnapshot(`
       "
        RUN  v<version> <root>
@@ -401,7 +401,7 @@ describe('reporters', () => {
         .replace(/\d+\.\d+\.\d+/, '<version>')
         .replace(ctx!.config.root, '<root>')
         .replace(/\d+:\d+:\d+/, '<time>')
-        .replace(/\d+m?s/g, '<duration>'),
+        .replace(/\d+(?:\.\d+)?m?s/g, '<duration>'),
     ).toMatchInlineSnapshot(`
       "
        RUN  v<version> <root>
