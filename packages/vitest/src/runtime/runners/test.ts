@@ -226,11 +226,12 @@ export class VitestTestRunner implements VitestRunner {
     const importDurations: Record<string, ImportDuration> = {}
     const entries = this.workerState.moduleExecutionInfo?.entries() || []
 
-    for (const [filepath, { duration, selfTime, external }] of entries) {
+    for (const [filepath, { duration, selfTime, external, importer }] of entries) {
       importDurations[normalize(filepath)] = {
         selfTime,
         totalTime: duration,
         external,
+        importer,
       }
     }
 

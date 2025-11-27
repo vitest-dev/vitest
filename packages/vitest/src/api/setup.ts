@@ -142,12 +142,9 @@ export function setup(ctx: Vitest, _server?: ViteDevServer): void {
           }
           try {
             const diagnostic = await ctx.experimental_getModuleDiagnostic(environment, moduleId, testModule)
-            result.imports = diagnostic.imports
+            result.modules = diagnostic.modules
           }
-          catch (err) {
-            // TODO: remove
-            console.error(err)
-          }
+          catch {}
           return result
         },
         async getModuleGraph(project, id, browser): Promise<ModuleGraphData> {

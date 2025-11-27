@@ -886,13 +886,13 @@ export class Vitest {
   public async experimental_getModuleDiagnostic(environment: DevEnvironment, moduleId: string, testModule?: TestModule): Promise<ModuleDurationsDiagnostic> {
     const transformResult = environment.moduleGraph.getModuleById(moduleId)?.transformResult
     if (!transformResult) {
-      return { imports: [] }
+      return { modules: [] }
     }
     const moduleDiagnostic = await collectModuleDiagnostic(environment.moduleGraph, transformResult)
     if (moduleDiagnostic) {
-      return collectModuleDurationsDiagnostic(this.state, moduleDiagnostic, testModule)
+      return collectModuleDurationsDiagnostic(moduleId, this.state, moduleDiagnostic, testModule)
     }
-    return { imports: [] }
+    return { modules: [] }
   }
 
   public async experimental_parseSpecifications(specifications: TestSpecification[], options?: {

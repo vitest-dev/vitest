@@ -67,6 +67,7 @@ export function startVitestModuleRunner(options: ContextModuleRunnerOptions): Vi
     vm,
     {
       traces,
+      evaluatedModules: options.evaluatedModules,
       get moduleExecutionInfo() {
         return state().moduleExecutionInfo
       },

@@ -5,6 +5,7 @@ import type {
   ModuleRunnerContext,
   ModuleRunnerImportMeta,
 } from 'vite/module-runner'
+import type { VitestEvaluatedModules } from './evaluatedModules'
 import type { ModuleExecutionInfo } from './moduleDebug'
 import type { VitestVmOptions } from './moduleRunner'
 import { createRequire, isBuiltin } from 'node:module'
@@ -24,6 +25,7 @@ import { ModuleDebug } from './moduleDebug'
 const isWindows = process.platform === 'win32'
 
 export interface VitestModuleEvaluatorOptions {
+  evaluatedModules?: VitestEvaluatedModules
   interopDefault?: boolean | undefined
   moduleExecutionInfo?: ModuleExecutionInfo
   getCurrentTestFilepath?: () => string | undefined
@@ -51,6 +53,7 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
 
   private debug = new ModuleDebug()
   private _otel: Traces
+  private _evaluatedModules?: VitestEvaluatedModules
 
   constructor(
     vmOptions?: VitestVmOptions | undefined,
@@ -59,6 +62,7 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
     this._otel = options.traces || new Traces({ enabled: false })
     this.vm = vmOptions
     this.stubs = getDefaultRequestStubs(vmOptions?.context)
+    this._evaluatedModules = options.evaluatedModules
     if (options.compiledFunctionArgumentsNames) {
       this.compiledFunctionArgumentsNames = options.compiledFunctionArgumentsNames
     }
@@ -102,7 +106,14 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
 
     const file = this.convertIdToImportUrl(id)
 
-    const finishModuleExecutionInfo = this.debug.startCalculateModuleExecutionInfo(id, 0, true)
+    // this will always be 1 element because it's cached after load
+    const importers = this._evaluatedModules?.getModuleById(id)?.importers
+    const importer = importers?.values().next().value
+    const finishModuleExecutionInfo = this.debug.startCalculateModuleExecutionInfo(id, {
+      startOffset: 0,
+      external: true,
+      importer,
+    })
     const namespace = await this._otel.$(
       'vitest.module.external',
       {
@@ -295,7 +306,12 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
       columnOffset: -codeDefinition.length,
     }
 
-    const finishModuleExecutionInfo = this.debug.startCalculateModuleExecutionInfo(options.filename, codeDefinition.length)
+    // this will always be 1 element because it's cached after load
+    const importer = module.importers.values().next().value
+    const finishModuleExecutionInfo = this.debug.startCalculateModuleExecutionInfo(options.filename, {
+      startOffset: codeDefinition.length,
+      importer,
+    })
 
     try {
       const initModule = this.vm

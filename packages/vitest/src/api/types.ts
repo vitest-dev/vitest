@@ -31,7 +31,7 @@ export interface TransformResultWithSource {
   dynamicDeps?: string[]
   source?: string
   transformTime?: number
-  imports?: ModuleImportDurationsDiagnostic[]
+  modules?: ModuleImportDurationsDiagnostic[]
 }
 
 export interface WebSocketHandlers {

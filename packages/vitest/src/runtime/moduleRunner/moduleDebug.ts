@@ -10,6 +10,7 @@ export interface ModuleExecutionInfoEntry {
   selfTime: number
 
   external?: boolean
+  importer?: string
 }
 
 /** Stack to track nested module execution for self-time calculation. */
@@ -24,12 +25,18 @@ export type ExecutionStack = Array<{
   subImportTime: number
 }>
 
+export interface ExecutionInfoOptions {
+  startOffset: number
+  external?: boolean
+  importer?: string
+}
+
 const performanceNow = performance.now.bind(performance)
 
 export class ModuleDebug {
   private executionStack: ExecutionStack = []
 
-  startCalculateModuleExecutionInfo(filename: string, startOffset: number, external?: boolean): () => ModuleExecutionInfoEntry {
+  startCalculateModuleExecutionInfo(filename: string, options: ExecutionInfoOptions): () => ModuleExecutionInfoEntry {
     const startTime = performanceNow()
 
     this.executionStack.push({
@@ -54,8 +61,9 @@ export class ModuleDebug {
       }
 
       return {
-        startOffset,
-        external,
+        startOffset: options.startOffset,
+        external: options.external,
+        importer: options.importer,
         duration,
         selfTime,
       }

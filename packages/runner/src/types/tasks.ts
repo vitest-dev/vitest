@@ -206,6 +206,9 @@ export interface ImportDuration {
 
   /** Will be set to `true`, if the module was externalized. In this case totalTime and selfTime are identical. */
   external?: boolean
+
+  /** Which module imported this module first. All subsequent imports are cached. */
+  importer?: string
 }
 
 /**

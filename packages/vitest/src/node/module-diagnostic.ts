@@ -19,56 +19,66 @@ export interface ModuleImportDurationsDiagnostic extends ModuleImportDiagnostic 
 }
 
 interface ModuleDiagnostic {
-  imports: ModuleImportDiagnostic[]
+  modules: ModuleImportDiagnostic[]
 }
 
 export interface ModuleDurationsDiagnostic {
-  imports: ModuleImportDurationsDiagnostic[]
+  modules: ModuleImportDurationsDiagnostic[]
   // TODO: support exports
 }
 
 export function collectModuleDurationsDiagnostic(
+  moduleId: string,
   state: StateManager,
   moduleDiagnostic: ModuleDiagnostic,
   testModule?: TestModule,
 ): ModuleDurationsDiagnostic {
-  const imports: ModuleImportDurationsDiagnostic[] = []
-  const importsById: Record<string, {
+  const modules: ModuleImportDurationsDiagnostic[] = []
+  const modulesById: Record<string, {
     selfTime: number
     totalTime: number
     external?: boolean
   }> = {}
+  // this aggregates the times for _ALL_ tests if testModule is not passed
+  // so if the module was imported in separate tests, the time will be accumulated
   for (const files of (testModule ? [[testModule.task]] : state.filesMap.values())) {
     for (const file of files) {
       const importDurations = file.importDurations
       if (!importDurations) {
         continue
       }
-      moduleDiagnostic.imports.forEach((diagnostic) => {
+      moduleDiagnostic.modules.forEach((diagnostic) => {
         const durations = importDurations[diagnostic.resolvedId]
         if (durations) {
-          importsById[diagnostic.resolvedId] ??= {
+          // TODO: if not isolated, do it only once, because the times are not accumulated
+
+          modulesById[diagnostic.resolvedId] ??= {
             selfTime: 0,
             totalTime: 0,
             external: durations.external,
           }
-          importsById[diagnostic.resolvedId].selfTime += durations.selfTime
-          importsById[diagnostic.resolvedId].totalTime += durations.totalTime
+
+          // only track if the current module imported this module,
+          // otherwise it was imported instantly because it's cached
+          if (durations.importer === moduleId) {
+            modulesById[diagnostic.resolvedId].selfTime += durations.selfTime
+            modulesById[diagnostic.resolvedId].totalTime += durations.totalTime
+          }
         }
       })
     }
   }
-  moduleDiagnostic.imports.forEach((diagnostic) => {
-    const durations = importsById[diagnostic.resolvedId]
+  moduleDiagnostic.modules.forEach((diagnostic) => {
+    const durations = modulesById[diagnostic.resolvedId]
     if (durations) {
-      imports.push({
+      modules.push({
         ...diagnostic,
         ...durations,
       })
     }
   })
   return {
-    imports,
+    modules,
   }
 }
 
@@ -81,18 +91,16 @@ export async function collectModuleDiagnostic(
   }
   const map = transformResult.map
   if (!map || !('version' in map) || !map.sources.length) {
-    // console.log('no map', map)
     return
   }
   const sourceImports = map.sources.reduce((acc, sourceId, index) => {
     const source = map.sourcesContent?.[index]
     if (source != null) {
-      acc[sourceId] = parseSourceImports(source)
+      acc[sourceId] = parseSourceImportsAndExports(source)
     }
     return acc
   }, {} as Record<string, Map<string, SourceStaticImport>>)
   const transformImports = await parseTransformResult(moduleGraph, transformResult)
-  // console.log(sourceImports, transformImports)
   const traceMap = map && 'version' in map && new TraceMap(map as any)
   const imports: ModuleImportDiagnostic[] = []
   transformImports.forEach((row) => {
@@ -112,7 +120,7 @@ export async function collectModuleDiagnostic(
     }
   })
   return {
-    imports,
+    modules: imports,
   }
 }
 
@@ -129,13 +137,14 @@ interface SourceStaticImport {
   url: string
 }
 
-function parseSourceImports(source: string): Map<string, SourceStaticImport> {
-  if (!source.includes('import ')) {
-    return new Map()
-  }
-  const sourcesMap = new Map<string, SourceStaticImport>()
-  const indexMap = createIndexMap(source)
-  const splitSources = source.split('import ')
+function fillSourcesMap(
+  syntax: 'import' | 'export',
+  sourcesMap: Map<string, SourceStaticImport>,
+  source: string,
+  indexMap: Map<number, Location>,
+) {
+  const splitSeparator = `${syntax} `
+  const splitSources = source.split(splitSeparator)
   const chunks: {
     chunk: string
     startIndex: number
@@ -146,7 +155,7 @@ function parseSourceImports(source: string): Map<string, SourceStaticImport> {
       chunk,
       startIndex: index,
     })
-    index += chunk.length + 7 // 'import '.length
+    index += chunk.length + splitSeparator.length
   }
 
   chunks.forEach(({ chunk, startIndex }) => {
@@ -161,7 +170,7 @@ function parseSourceImports(source: string): Map<string, SourceStaticImport> {
       return
     }
 
-    const staticImport = {
+    const staticSyntax = {
       startIndex: startIndex + startQuoteIdx,
       endIndex: startIndex + endQuoteIdx + 1,
       start: indexMap.get(startIndex + startQuoteIdx)!,
@@ -170,13 +179,24 @@ function parseSourceImports(source: string): Map<string, SourceStaticImport> {
     }
 
     // -7 to include "import "
-    for (let i = startIndex - 7; i < staticImport.endIndex; i++) {
+    for (let i = startIndex - 7; i < staticSyntax.endIndex; i++) {
       const location = indexMap.get(i)!
       if (location) {
-        sourcesMap.set(`${location.line}:${location.column}`, staticImport)
+        sourcesMap.set(`${location.line}:${location.column}`, staticSyntax)
       }
     }
   })
+}
+
+function parseSourceImportsAndExports(source: string): Map<string, SourceStaticImport> {
+  if (!source.includes('import ') && !source.includes('export ')) {
+    return new Map()
+  }
+  const sourcesMap = new Map<string, SourceStaticImport>()
+  const indexMap = createIndexMap(source)
+
+  fillSourcesMap('import', sourcesMap, source, indexMap)
+  fillSourcesMap('export', sourcesMap, source, indexMap)
 
   return sourcesMap
 }
@@ -216,7 +236,7 @@ async function parseTransformResult(moduleGraph: EnvironmentModuleGraph, transfo
 
 // TODO: utils, share with ast-collect
 function createIndexMap(source: string) {
-  const map = new Map<number, { line: number; column: number }>()
+  const map = new Map<number, Location>()
   let index = 0
   let line = 1
   let column = 1

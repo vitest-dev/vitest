@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { Editor, EditorFromTextArea } from 'codemirror'
+import type { Editor, EditorFromTextArea, TextMarker } from 'codemirror'
 import type { ExternalResult, TransformResultWithSource } from 'vitest'
 import type { ModuleType } from '~/composables/module-graph'
 import { asyncComputed, onKeyStroke } from '@vueuse/core'
@@ -77,6 +77,7 @@ const sourceMap = computed(() => {
 })
 
 const widgetElements: HTMLDivElement[] = []
+const markers: TextMarker[] = []
 
 function onMousedown(editor: Editor, e: MouseEvent) {
   const lineCh = editor.coordsChar({ left: e.clientX, top: e.clientY })
@@ -95,11 +96,14 @@ function markImportDurations(codemirror: EditorFromTextArea) {
   widgetElements.forEach(el => el.remove())
   widgetElements.length = 0
 
-  if (result.value && 'imports' in result.value) {
+  markers.forEach(m => m.clear())
+  markers.length = 0
+
+  if (result.value && 'modules' in result.value) {
     codemirror.off('mousedown', onMousedown)
     codemirror.on('mousedown', onMousedown)
 
-    result.value.imports?.forEach((diagnostic) => {
+    result.value.modules?.forEach((diagnostic) => {
       const start = {
         line: diagnostic.start.line - 1,
         ch: diagnostic.start.column,
@@ -108,13 +112,14 @@ function markImportDurations(codemirror: EditorFromTextArea) {
         line: diagnostic.end.line - 1,
         ch: diagnostic.end.column,
       }
-      codemirror.markText(start, end, {
+      const marker = codemirror.markText(start, end, {
         title: diagnostic.resolvedId,
         attributes: {
           'data-external': String(diagnostic.external === true),
         },
-        className: 'underline decoration-red decoration-dotted cursor-pointer',
+        className: 'underline decoration-red decoration-dotted cursor-pointer select-none',
       })
+      markers.push(marker)
       const timeElement = document.createElement('div')
       timeElement.className = 'flex ml-2 -mt-5'
       timeElement.textContent = formatTime(diagnostic.totalTime)
@@ -228,6 +233,7 @@ onKeyStroke('Escape', () => {
           Transformed
         </div>
         <CodeMirrorContainer
+          :key="id"
           h-full
           :model-value="source"
           read-only
