@@ -48,9 +48,8 @@ describe.each(['deprecated', 'environment'] as const)('VitestResolver with Vite 
     expect(resolver.options.external).toEqual(['external-dep', 'ssr-external-dep'])
 
     // Both external-dep and ssr-external-dep should be externalized (return the ID)
-    // External config matches before isValidNodeImport check, so it even externalizes non-existing files
-    expect(await resolver.shouldExternalize('/usr/a/non-existing/node_modules/external-dep/index.js')).toBeTruthy()
-    expect(await resolver.shouldExternalize('/usr/a/non-existing/node_modules/ssr-external-dep/index.js')).toBeTruthy()
+    expect(await resolver.shouldExternalize('/usr/a/project/node_modules/external-dep/index.js')).toBeTruthy()
+    expect(await resolver.shouldExternalize('/usr/a/project/node_modules/ssr-external-dep/index.js')).toBeTruthy()
   })
 
   test('handles ssr.resolve.noExternal with wildcard patterns', async () => {
