@@ -1,5 +1,5 @@
 {
   "name": "other-dep",
   "type": "module",
-  "exports": "./index.cjs.js"
+  "exports": "./index.js"
 }
