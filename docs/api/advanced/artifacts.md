@@ -41,7 +41,7 @@ The `recordArtifact` function records an artifact during test execution and retu
 
 This function has to be used within a test, and the test has to still be running. Recording after test completion will throw an error.
 
-When an artifact is recorded on a test, it emits an `onTestArtifactRecord` runner event and a [`onTestCaseArtifactRecord` reporter event](/api/advanced/reporters#ontestcaseartifactrecord).
+When an artifact is recorded on a test, it emits an `onTestArtifactRecord` runner event and a [`onTestCaseArtifactRecord` reporter event](/api/advanced/reporters#ontestcaseartifactrecord). To retrieve recorded artifacts from a test case, use the [`artifacts()`](/api/advanced/test-case#artifacts) method.
 
 Note: annotations, [even though they're built on top of this feature](#relationship-with-annotations), won't appear in the `task.artifacts` array for backwards compatibility reasons until the next major version.
 
