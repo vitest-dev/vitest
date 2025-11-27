@@ -1,6 +1,9 @@
 import type { CliOptions } from 'vitest/node'
+import { join } from 'pathe'
 import { describe, expect, onTestFinished, test } from 'vitest'
 import { createVitest } from 'vitest/node'
+
+const nodeModulesDir = join(import.meta.dirname, '../../node_modules')
 
 describe.each(['deprecated', 'environment'] as const)('VitestResolver with Vite SSR config in %s style', (style) => {
   test('merges vite ssr.resolve.noExternal with server.deps.inline', async () => {
@@ -15,11 +18,15 @@ describe.each(['deprecated', 'environment'] as const)('VitestResolver with Vite 
     })
 
     // Both inline-dep and ssr-no-external-dep should be inlined (return false)
-    expect(await resolver.shouldExternalize('/usr/a/project/node_modules/inline-dep/index.js')).toBe(false)
-    expect(await resolver.shouldExternalize('/usr/a/project/node_modules/ssr-no-external-dep/index.js')).toBe(false)
+    expect(await resolver.shouldExternalize(join(nodeModulesDir, 'inline-dep/index.js'))).toBe(false)
+    expect(await resolver.shouldExternalize(join(nodeModulesDir, 'ssr-no-external-dep/index.js'))).toBe(false)
 
     // Other deps should be externalized
-    expect(await resolver.shouldExternalize('/usr/a/project/node_modules/other-dep/index.cjs.js')).toBeTruthy()
+    expect(await resolver.shouldExternalize(join(nodeModulesDir, 'other-dep/index.js'))).toBeTruthy()
+
+    // hard-coded pattern for external
+    expect(await resolver.shouldExternalize('/usr/anything/node_modules/anything/index.cjs.js')).toBeTruthy()
+    expect(await resolver.shouldExternalize('/usr/anything/node_modules/anything/index.mjs')).toBeTruthy()
   })
 
   test('merges vite ssr.resolve.external with server.deps.external', async () => {
@@ -264,7 +271,6 @@ async function getResolver(style: 'environment' | 'deprecated', options: CliOpti
 }) {
   const ctx = await createVitest('test', {
     watch: false,
-    ...options,
   }, style === 'environment'
     ? {
         environments: {
@@ -272,9 +278,11 @@ async function getResolver(style: 'environment' | 'deprecated', options: CliOpti
             resolve: externalOptions,
           },
         },
+        test: options,
       }
     : {
         ssr: externalOptions,
+        test: options,
       })
   onTestFinished(() => ctx.close())
   return ctx._resolver

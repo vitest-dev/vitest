@@ -1226,6 +1226,15 @@ importers:
       '@vitest/test-dep-conditions':
         specifier: file:./deps/test-dep-conditions
         version: file:test/config/deps/test-dep-conditions
+      inline-dep:
+        specifier: file:./deps/vite-ssr-resolve/inline-dep
+        version: file:test/config/deps/vite-ssr-resolve/inline-dep
+      other-dep:
+        specifier: file:./deps/vite-ssr-resolve/other-dep
+        version: file:test/config/deps/vite-ssr-resolve/other-dep
+      ssr-no-external-dep:
+        specifier: file:./deps/vite-ssr-resolve/ssr-no-external-dep
+        version: file:test/config/deps/vite-ssr-resolve/ssr-no-external-dep
       tinyexec:
         specifier: ^0.3.2
         version: 0.3.2
@@ -6714,6 +6723,9 @@ packages:
   ini@1.3.8:
     resolution: {integrity: sha512-JV/yugV2uzW5iMRSiZAyDtQd+nxtUnjeLt0acNdw98kKLrvuRVyB80tsREOE7yvGVgalhZ6RNXCmEHkUKBKxew==}
 
+  inline-dep@file:test/config/deps/vite-ssr-resolve/inline-dep:
+    resolution: {directory: test/config/deps/vite-ssr-resolve/inline-dep, type: directory}
+
   internal-slot@1.0.7:
     resolution: {integrity: sha512-NGnrKwXzSms2qUUih/ILZ5JBqNTSa1+ZmP6flaIp6KmSElgE9qdndzS3cqjrDovwFdmwsGsLdeFgB6suw+1e9g==}
     engines: {node: '>= 0.4'}
@@ -7794,6 +7806,9 @@ packages:
     resolution: {integrity: sha512-JjCoypp+jKn1ttEFExxhetCKeJt9zhAgAve5FXHixTvFDW/5aEktX9bufBKLRRMdU7bNtpLfcGu94B3cdEJgjg==}
     engines: {node: '>= 0.8.0'}
 
+  other-dep@file:test/config/deps/vite-ssr-resolve/other-dep:
+    resolution: {directory: test/config/deps/vite-ssr-resolve/other-dep, type: directory}
+
   outvariant@1.4.3:
     resolution: {integrity: sha512-+Sl2UErvtsoajRDKCE5/dBz4DIvHXQQnAxtQTF04OJxY0+DyZXSo5P5Bb7XYWOh81syohlYL24hbDwxedPUJCA==}
 
@@ -8714,6 +8729,9 @@ packages:
 
   ssim.js@3.5.0:
     resolution: {integrity: sha512-Aj6Jl2z6oDmgYFFbQqK7fght19bXdOxY7Tj03nF+03M9gCBAjeIiO8/PlEGMfKDwYpw4q6iBqVq2YuREorGg/g==}
+
+  ssr-no-external-dep@file:test/config/deps/vite-ssr-resolve/ssr-no-external-dep:
+    resolution: {directory: test/config/deps/vite-ssr-resolve/ssr-no-external-dep, type: directory}
 
   stackback@0.0.2:
     resolution: {integrity: sha512-1XMJE5fQo1jGH6Y/7ebnwPOBEkIEnT4QF32d5R1+VXdXveM0IBMJt8zfaxX1P3QhVwrYe+576+jkANtSS2mBbw==}
@@ -15252,6 +15270,8 @@ snapshots:
 
   ini@1.3.8: {}
 
+  inline-dep@file:test/config/deps/vite-ssr-resolve/inline-dep: {}
+
   internal-slot@1.0.7:
     dependencies:
       es-errors: 1.3.0
@@ -16485,6 +16505,8 @@ snapshots:
       prelude-ls: 1.2.1
       type-check: 0.4.0
 
+  other-dep@file:test/config/deps/vite-ssr-resolve/other-dep: {}
+
   outvariant@1.4.3: {}
 
   own-keys@1.0.1:
@@ -17563,6 +17585,8 @@ snapshots:
   sprintf-js@1.1.3: {}
 
   ssim.js@3.5.0: {}
+
+  ssr-no-external-dep@file:test/config/deps/vite-ssr-resolve/ssr-no-external-dep: {}
 
   stackback@0.0.2: {}
 
