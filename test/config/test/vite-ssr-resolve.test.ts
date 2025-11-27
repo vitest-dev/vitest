@@ -264,7 +264,6 @@ async function getResolver(style: 'environment' | 'deprecated', options: CliOpti
 }) {
   const ctx = await createVitest('test', {
     watch: false,
-    ...options,
   }, style === 'environment'
     ? {
         environments: {
@@ -272,9 +271,12 @@ async function getResolver(style: 'environment' | 'deprecated', options: CliOpti
             resolve: externalOptions,
           },
         },
+        // pass it through vite config to test merge correctly
+        test: options,
       }
     : {
         ssr: externalOptions,
+        test: options,
       })
   onTestFinished(() => ctx.close())
   return ctx._resolver
