@@ -37,7 +37,7 @@ export class VitestResolver {
     }
   }
 
-  public shouldExternalize(file: string): Promise<string | false> {
+  public shouldExternalize(file: string): Promise<string | false | undefined> {
     return shouldExternalize(normalizeId(file), this.options, this.externalizeCache)
   }
 }
@@ -145,8 +145,8 @@ async function isValidNodeImport(id: string) {
 export async function shouldExternalize(
   id: string,
   options: ExternalizeOptions,
-  cache: Map<string, Promise<string | false>>,
-): Promise<string | false> {
+  cache: Map<string, Promise<string | false | undefined>>,
+): Promise<string | false | undefined> {
   if (!cache.has(id)) {
     cache.set(id, _shouldExternalize(id, options))
   }
@@ -156,7 +156,7 @@ export async function shouldExternalize(
 async function _shouldExternalize(
   id: string,
   options?: ExternalizeOptions,
-): Promise<string | false> {
+): Promise<string | false | undefined> {
   if (isBuiltin(id)) {
     return id
   }
@@ -200,8 +200,6 @@ async function _shouldExternalize(
   if (isLibraryModule && (await isValidNodeImport(id))) {
     return id
   }
-
-  return false
 }
 
 function matchPattern(
