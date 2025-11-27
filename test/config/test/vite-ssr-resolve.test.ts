@@ -205,6 +205,7 @@ describe.each(['deprecated', 'environment'] as const)('VitestResolver with Vite 
 
     // Should inline 'my-lib' from node_modules too
     expect(await resolver.shouldExternalize('/usr/a/project/node_modules/my-lib/index.js')).toBe(false)
+
     // Other packages: depsExternal pattern only matches /node_modules/
     // So regular .js files in /vendor/ are inlined by default
     expect(await resolver.shouldExternalize('/usr/a/project/vendor/other-lib/index.js')).toBe(false)
@@ -227,6 +228,7 @@ describe.each(['deprecated', 'environment'] as const)('VitestResolver with Vite 
 
     // Should also match wildcard in standard node_modules
     expect(await resolver.shouldExternalize('/usr/a/project/node_modules/@org/utils/index.js')).toBe(false)
+
     // Other scopes: depsExternal pattern only matches /node_modules/
     // So regular .js files in /packages/ are inlined by default
     expect(await resolver.shouldExternalize('/usr/a/project/packages/@other/utils/index.js')).toBe(false)
