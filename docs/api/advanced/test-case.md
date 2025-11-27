@@ -264,3 +264,19 @@ interface TestDiagnostic {
 ::: info
 `diagnostic()` will return `undefined` if the test was not scheduled to run yet.
 :::
+
+## annotations
+
+```ts
+function annotations(): ReadonlyArray<TestAnnotation>
+```
+
+[Test annotations](/guide/test-annotations) added via the [`task.annotate`](/guide/test-context#annotate) API during the test execution.
+
+## artifacts <Version type="experimental">4.0.11</Version> <Experimental /> {#artifacts}
+
+```ts
+function artifacts(): ReadonlyArray<TestArtifact>
+```
+
+[Test artifacts](/api/advanced/artifacts) recorded via the `recordArtifact` API during the test execution.
