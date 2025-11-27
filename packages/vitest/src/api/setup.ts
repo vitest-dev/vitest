@@ -124,7 +124,7 @@ export function setup(ctx: Vitest, _server?: ViteDevServer): void {
           const environment = getTestFileEnvironment(project, testModule.moduleId, browser)
 
           const moduleNode = environment?.moduleGraph.getModuleById(moduleId)
-          if (!moduleNode?.transformResult) {
+          if (!environment || !moduleNode?.transformResult) {
             return
           }
 
@@ -139,6 +139,14 @@ export function setup(ctx: Vitest, _server?: ViteDevServer): void {
           const transformDuration = ctx.state.metadata[projectName]?.duration[moduleNode.url]?.[0]
           if (transformDuration != null) {
             result.transformTime = transformDuration
+          }
+          try {
+            const diagnostic = await ctx.experimental_getModuleDiagnostic(environment, moduleId, testModule)
+            result.imports = diagnostic.imports
+          }
+          catch (err) {
+            // TODO: remove
+            console.error(err)
           }
           return result
         },

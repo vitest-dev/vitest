@@ -8,6 +8,7 @@ import type {
   ModuleNode,
   ModuleType,
 } from '~/composables/module-graph'
+import { useRefHistory } from '@vueuse/core'
 import {
   defineGraphConfig,
   defineNode,
@@ -15,7 +16,7 @@ import {
   Markers,
   PositionInitializers,
 } from 'd3-graph-controller'
-import { computed, onMounted, onUnmounted, ref, shallowRef, toRefs, watch, watchEffect } from 'vue'
+import { computed, onMounted, onUnmounted, ref, shallowRef, toRefs, watch } from 'vue'
 import { config, isReport } from '~/composables/client'
 import { currentModule } from '~/composables/navigation'
 import IconButton from '../IconButton.vue'
@@ -36,8 +37,8 @@ const el = ref<HTMLDivElement>()
 
 const modalShow = ref(false)
 const breakdownShow = ref(config.value?.experimental?.fsModuleCache ?? false)
-const selectedModule = ref<string | null>()
-const selectedModuleType = ref<ModuleType | null>(null)
+const selectedModule = ref<{ id: string; type: ModuleType } | null>()
+const selectedModuleHistory = useRefHistory(selectedModule)
 const controller = ref<ModuleGraphController | undefined>()
 const focusedNode = ref<string | null>(null)
 const filteredGraph = shallowRef<ModuleGraph>(graph.value)
@@ -55,15 +56,6 @@ const breakdownClass = computed(() => {
   }
   return textClass
 })
-
-watchEffect(
-  () => {
-    if (modalShow.value === false) {
-      setTimeout(() => (selectedModule.value = undefined), 300)
-    }
-  },
-  { flush: 'post' },
-)
 
 onMounted(() => {
   filteredGraph.value = filterGraphByLevels(graph.value, null, 2)
@@ -193,9 +185,17 @@ function setFilter(name: ModuleType, value: boolean) {
 }
 
 function setSelectedModule(id: string, type: ModuleType) {
-  selectedModule.value = id
-  selectedModuleType.value = type
+  selectedModule.value = { id, type }
   modalShow.value = true
+}
+
+function selectPreviousModule() {
+  selectedModuleHistory.undo()
+}
+
+function closeResultView() {
+  modalShow.value = false
+  selectedModuleHistory.clear()
 }
 
 function focusOnNode(nodeId: string) {
@@ -517,10 +517,13 @@ function bindOnClick(
       <template v-if="selectedModule">
         <Suspense>
           <ModuleTransformResultView
-            :id="selectedModule"
+            :id="selectedModule.id"
             :project-name="projectName"
-            :type="selectedModuleType!"
-            @close="modalShow = false"
+            :type="selectedModule.type"
+            :can-undo="selectedModuleHistory.undoStack.value.length > 1"
+            @close="closeResultView()"
+            @select="(id, type) => setSelectedModule(id, type)"
+            @back="selectPreviousModule()"
           />
         </Suspense>
       </template>

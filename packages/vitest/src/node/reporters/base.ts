@@ -606,6 +606,8 @@ export abstract class BaseReporter implements Reporter {
       }
     }
 
+    // TODO: still print a warning that Vitest found files that took too long to load?
+    // make it toggable: To hide this message, set `printImportWarnings` to `false`.
     if (this.ctx.config.experimental.printImportBreakdown) {
       this.printImportsBreakdown()
     }

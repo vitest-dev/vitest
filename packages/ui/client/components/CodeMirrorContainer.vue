@@ -1,9 +1,11 @@
 <script setup lang="ts">
+import type { EditorFromTextArea } from 'codemirror'
 import type { Ref } from 'vue'
 import { onMounted, ref, useAttrs } from 'vue'
 import { codemirrorRef, useCodeMirror } from '~/composables/codemirror'
 
 const { mode, readOnly } = defineProps<{
+  uid?: string
   mode?: string
   readOnly?: boolean
   saving?: boolean
@@ -11,6 +13,7 @@ const { mode, readOnly } = defineProps<{
 
 const emit = defineEmits<{
   (event: 'save', content: string): void
+  (event: 'codemirror', codemirror: EditorFromTextArea): void
 }>()
 
 const modelValue = defineModel<string>()
@@ -54,15 +57,22 @@ onMounted(async () => {
       },
     },
   })
+
+  codemirror.on('refresh', () => {
+    emit('codemirror', codemirror)
+  })
+  codemirror.on('change', () => {
+    emit('codemirror', codemirror)
+  })
   codemirror.setSize('100%', '100%')
   codemirror.clearHistory()
   codemirrorRef.value = codemirror
-  setTimeout(() => codemirrorRef.value!.refresh(), 100)
+  setTimeout(() => codemirrorRef.value?.refresh(), 100)
 })
 </script>
 
 <template>
   <div relative font-mono text-sm class="codemirror-scrolls" :class="saving ? 'codemirror-busy' : undefined">
-    <textarea ref="el" />
+    <textarea ref="el" :key="uid" />
   </div>
 </template>

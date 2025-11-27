@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { Editor, EditorFromTextArea } from 'codemirror'
 import type { ExternalResult, TransformResultWithSource } from 'vitest'
 import type { ModuleType } from '~/composables/module-graph'
 import { asyncComputed, onKeyStroke } from '@vueuse/core'
@@ -16,8 +17,14 @@ const props = defineProps<{
   id: string
   projectName: string
   type: ModuleType
+  canUndo: boolean
 }>()
-const emit = defineEmits<{ (e: 'close'): void }>()
+
+const emit = defineEmits<{
+  (e: 'close'): void
+  (e: 'select', id: string, type: ModuleType): void
+  (e: 'back'): void
+}>()
 
 const result = asyncComputed<TransformResultWithSource | ExternalResult | undefined>(() => {
   if (!currentModule.value?.id) {
@@ -45,7 +52,6 @@ const isCached = computed(() => {
   return index !== -1
 })
 
-// TODO: parse modules and make it clickable
 const code = computed(
   () => {
     if (!result.value || !('code' in result.value)) {
@@ -70,6 +76,65 @@ const sourceMap = computed(() => {
   }
 })
 
+const widgetElements: HTMLDivElement[] = []
+
+function onMousedown(editor: Editor, e: MouseEvent) {
+  const lineCh = editor.coordsChar({ left: e.clientX, top: e.clientY })
+  const markers = editor.findMarksAt(lineCh)
+  if (markers.length !== 1) {
+    return
+  }
+  const resolvedUrl = markers[0].title
+  if (resolvedUrl) {
+    const type = markers[0].attributes?.['data-external'] === 'true' ? 'external' : 'inline'
+    emit('select', resolvedUrl, type)
+  }
+}
+
+function markImportDurations(codemirror: EditorFromTextArea) {
+  widgetElements.forEach(el => el.remove())
+  widgetElements.length = 0
+
+  if (result.value && 'imports' in result.value) {
+    codemirror.off('mousedown', onMousedown)
+    codemirror.on('mousedown', onMousedown)
+
+    result.value.imports?.forEach((diagnostic) => {
+      const start = {
+        line: diagnostic.start.line - 1,
+        ch: diagnostic.start.column,
+      }
+      const end = {
+        line: diagnostic.end.line - 1,
+        ch: diagnostic.end.column,
+      }
+      codemirror.markText(start, end, {
+        title: diagnostic.resolvedId,
+        attributes: {
+          'data-external': String(diagnostic.external === true),
+        },
+        className: 'underline decoration-red decoration-dotted cursor-pointer',
+      })
+      const timeElement = document.createElement('div')
+      timeElement.className = 'flex ml-2 -mt-5'
+      timeElement.textContent = formatTime(diagnostic.totalTime)
+      widgetElements.push(timeElement)
+      codemirror.addWidget(
+        {
+          line: diagnostic.end.line - 1,
+          ch: diagnostic.end.column + 1,
+        },
+        timeElement,
+        false,
+      )
+    })
+  }
+}
+
+function goBack() {
+  emit('back')
+}
+
 onKeyStroke('Escape', () => {
   emit('close')
 })
@@ -81,6 +146,13 @@ onKeyStroke('Escape', () => {
     <div p-4 relative>
       <div flex justify-between>
         <p>
+          <IconButton
+            v-if="canUndo"
+            v-tooltip.bottom="'Go Back'"
+            icon="i-carbon-arrow-left"
+            class="flex-inline"
+            @click="goBack()"
+          />
           Module Info
           <VueTooltip class="inline" cursor-help>
             <Badge type="custom" ml-1 :style="{ backgroundColor: `var(--color-node-${type})` }">
@@ -161,6 +233,7 @@ onKeyStroke('Escape', () => {
           read-only
           v-bind="{ lineNumbers: true }"
           :mode="ext"
+          @codemirror="markImportDurations($event)"
         />
         <CodeMirrorContainer
           v-if="code != null"
