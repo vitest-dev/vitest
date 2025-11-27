@@ -31,7 +31,7 @@ describe.each(['deprecated', 'environment'] as const)('VitestResolver with Vite 
     expect(await resolver.shouldExternalize('/usr/a/non-existing/node_modules/non-existing/index.mjs')).toBeTruthy()
 
     // non-existing files are inlined
-    expect(await resolver.shouldExternalize('/usr/a/non-existing/node_modules/non-existing/index.js')).toBe(false)
+    expect(await resolver.shouldExternalize('/usr/a/non-existing/node_modules/non-existing/index.js')).toBeUndefined()
   })
 
   test('merges vite ssr.resolve.external with server.deps.external', async () => {
@@ -168,7 +168,7 @@ describe.each(['deprecated', 'environment'] as const)('VitestResolver with Vite 
     const resolver = await getResolver(style, {}, {})
 
     // Files with Vite query parameters should be inlined (matched by defaultInline pattern)
-    expect(await resolver.shouldExternalize('/usr/a/project/node_modules/some-lib/Component.vue?vue&type=script')).toBe(false)
+    expect(await resolver.shouldExternalize('/usr/a/project/node_modules/some-lib/Component.vue?vue&type=script')).toBeUndefined()
     expect(await resolver.shouldExternalize('/usr/a/project/node_modules/some-lib/data.txt?raw')).toBe(false)
     expect(await resolver.shouldExternalize('/usr/a/project/node_modules/some-lib/image.png?url')).toBe(false)
     expect(await resolver.shouldExternalize('/usr/a/project/node_modules/some-lib/style.css?inline')).toBe(false)
@@ -199,7 +199,7 @@ describe.each(['deprecated', 'environment'] as const)('VitestResolver with Vite 
     // Note: depsExternal pattern only matches /node_modules/, not custom directories
     // So .cjs.js files in custom directories won't be automatically externalized
     // Regular .js files in custom directories are inlined by default
-    expect(await resolver.shouldExternalize('/usr/a/project/custom_modules/other-dep/index.js')).toBe(false)
+    expect(await resolver.shouldExternalize('/usr/a/project/custom_modules/other-dep/index.js')).toBeUndefined()
 
     // But .cjs.js in node_modules IS externalized
     expect(await resolver.shouldExternalize('/usr/a/project/node_modules/other-dep/index.cjs.js')).toBeTruthy()
@@ -222,7 +222,7 @@ describe.each(['deprecated', 'environment'] as const)('VitestResolver with Vite 
 
     // Other packages: depsExternal pattern only matches /node_modules/
     // So regular .js files in /vendor/ are inlined by default
-    expect(await resolver.shouldExternalize('/usr/a/project/vendor/other-lib/index.js')).toBe(false)
+    expect(await resolver.shouldExternalize('/usr/a/project/vendor/other-lib/index.js')).toBeUndefined()
     // But .cjs.js in node_modules IS externalized
     expect(await resolver.shouldExternalize('/usr/a/project/node_modules/other-lib/index.cjs.js')).toBeTruthy()
   })
@@ -245,7 +245,7 @@ describe.each(['deprecated', 'environment'] as const)('VitestResolver with Vite 
 
     // Other scopes: depsExternal pattern only matches /node_modules/
     // So regular .js files in /packages/ are inlined by default
-    expect(await resolver.shouldExternalize('/usr/a/project/packages/@other/utils/index.js')).toBe(false)
+    expect(await resolver.shouldExternalize('/usr/a/project/packages/@other/utils/index.js')).toBeUndefined()
     // But .cjs.js in node_modules IS externalized
     expect(await resolver.shouldExternalize('/usr/a/project/node_modules/@other/utils/index.cjs.js')).toBeTruthy()
   })
@@ -268,7 +268,7 @@ describe.each(['deprecated', 'environment'] as const)('VitestResolver with Vite 
     // Multiple query parameters should still be inlined
     expect(await resolver.shouldExternalize('/usr/a/project/node_modules/lib/file.js?url&used')).toBe(false)
     expect(await resolver.shouldExternalize('/usr/a/project/node_modules/lib/style.css?inline&lang=scss')).toBe(false)
-    expect(await resolver.shouldExternalize('/usr/a/project/node_modules/lib/Component.vue?vue&type=template&lang=pug')).toBe(false)
+    expect(await resolver.shouldExternalize('/usr/a/project/node_modules/lib/Component.vue?vue&type=template&lang=pug')).toBeUndefined()
   })
 })
 
