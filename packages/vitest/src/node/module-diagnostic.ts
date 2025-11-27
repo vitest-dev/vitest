@@ -212,17 +212,26 @@ async function parseTransformResult(moduleGraph: EnvironmentModuleGraph, transfo
     endIndex: number
   }[] = []
   const lineColumnMap = createIndexMap(code)
+  const importPositions: {
+    raw: string
+    startIndex: number
+    endIndex: number
+  }[] = []
   let match: RegExpMatchArray | null
   // eslint-disable-next-line no-cond-assign
   while (match = regexp.exec(code)) {
     const startIndex = match.index!
     const endIndex = match.index! + match[0].length - 1 // 1 is "
+    importPositions.push({ raw: match[1], startIndex, endIndex })
+  }
+  await Promise.all(importPositions.map(async ({ startIndex, endIndex, raw }) => {
     const position = lineColumnMap.get(startIndex)!
     const endPosition = lineColumnMap.get(endIndex)!
-    const moduleNode = await moduleGraph.getModuleByUrl(match[1])
+    const moduleNode = await moduleGraph.getModuleByUrl(raw)
     if (!position || !endPosition || !moduleNode || !moduleNode.id) {
-      continue
+      return
     }
+
     results.push({
       resolvedId: moduleNode.id,
       start: position,
@@ -230,7 +239,7 @@ async function parseTransformResult(moduleGraph: EnvironmentModuleGraph, transfo
       startIndex,
       endIndex,
     })
-  }
+  }))
   return results
 }
 
