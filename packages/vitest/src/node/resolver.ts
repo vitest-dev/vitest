@@ -123,12 +123,13 @@ async function isValidNodeImport(id: string) {
 
   const package_ = findNearestPackageData(dirname(id))
 
-  if (package_.type === 'module') {
-    return true
-  }
-
-  if (!package_.type && isSyntaxDetectionEnabled(process.versions.node)) {
-    return true
+  if (package_) {
+    if (package_.type === 'module') {
+      return true
+    }
+    if (!package_.type && isSyntaxDetectionEnabled(process.versions.node)) {
+      return true
+    }
   }
 
   if (/\.(?:\w+-)?esm?(?:-\w+)?\.js$|\/esm?\//.test(id)) {
