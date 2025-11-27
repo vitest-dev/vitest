@@ -17,6 +17,8 @@ describe.each(['deprecated', 'environment'] as const)('VitestResolver with Vite 
       noExternal: ['ssr-no-external-dep'],
     })
 
+    expect(resolver.options.inline).toEqual(['inline-dep', 'ssr-no-external-dep'])
+
     // Both inline-dep and ssr-no-external-dep should be inlined (return false)
     expect(await resolver.shouldExternalize(join(nodeModulesDir, 'inline-dep/index.js'))).toBe(false)
     expect(await resolver.shouldExternalize(join(nodeModulesDir, 'ssr-no-external-dep/index.js'))).toBe(false)
@@ -43,10 +45,12 @@ describe.each(['deprecated', 'environment'] as const)('VitestResolver with Vite 
       external: ['ssr-external-dep'],
     })
 
+    expect(resolver.options.external).toEqual(['external-dep', 'ssr-external-dep'])
+
     // Both external-dep and ssr-external-dep should be externalized (return the ID)
-    // Using .cjs.js extension which matches depsExternal pattern
-    expect(await resolver.shouldExternalize('/usr/a/project/node_modules/external-dep/index.cjs.js')).toBeTruthy()
-    expect(await resolver.shouldExternalize('/usr/a/project/node_modules/ssr-external-dep/index.cjs.js')).toBeTruthy()
+    // External config matches before isValidNodeImport check, so it even externalizes non-existing files
+    expect(await resolver.shouldExternalize('/usr/a/non-existing/node_modules/external-dep/index.js')).toBeTruthy()
+    expect(await resolver.shouldExternalize('/usr/a/non-existing/node_modules/ssr-external-dep/index.js')).toBeTruthy()
   })
 
   test('handles ssr.resolve.noExternal with wildcard patterns', async () => {
