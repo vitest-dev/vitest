@@ -2,9 +2,10 @@
 
 import { version } from 'node:process'
 
-import { beforeEach, describe, expect, it, vi } from 'vitest'
-import MyEventListenerWorker from '../src/web-worker/eventListenerWorker?worker'
+import { defineWebWorkers } from '@vitest/web-worker/pure'
 
+import { afterAll, beforeAll, beforeEach, describe, expect, it, suite, vi } from 'vitest'
+import MyEventListenerWorker from '../src/web-worker/eventListenerWorker?worker'
 import MyObjectWorker from '../src/web-worker/objectWorker?worker'
 import MySelfWorker from '../src/web-worker/selfWorker?worker'
 import MySharedWorker from '../src/web-worker/sharedWorker?sharedworker'
@@ -49,7 +50,7 @@ describe.runIf(major >= 17)('when node supports structuredClone', () => {
     expect(structuredClone).toBeDefined()
 
     const worker = new MyObjectWorker()
-    const obj = { hello: 'world', name() {} }
+    const obj = { hello: 'world', name() { } }
     worker.postMessage(obj)
 
     return new Promise<void>((resolve, reject) => {
@@ -211,17 +212,41 @@ it('self injected into worker and its deps should be equal', async () => {
   expect(await testSelfWorker(new Worker(new URL('../src/web-worker/selfWorker.ts', import.meta.url)))).toBeTruthy()
 })
 
-it('transfer MessagePort objects to worker as event.ports', async () => {
-  expect.assertions(1)
+const cloneTypes = [
+  'native',
+  'ponyfill',
+  'none',
+] satisfies Array<NonNullable<Parameters<typeof defineWebWorkers>[0]>['clone']>
+cloneTypes.forEach((clone) => {
+  suite(`defineWebWorkers with clone=${clone}`, () => {
+    let originalWorker: typeof Worker
+    let originalSharedWorker: typeof SharedWorker
+    beforeAll(async () => {
+      originalWorker = globalThis.Worker
+      originalSharedWorker = globalThis.SharedWorker
+      delete (globalThis as any).Worker
+      delete (globalThis as any).SharedWorker
 
-  const worker = new MyWorker()
-  const channel = new MessageChannel()
-  const promise = new Promise<string>((resolve, reject) => {
-    channel.port1.onmessage = e => resolve(e.data as string)
-    channel.port1.onmessageerror = reject
+      defineWebWorkers({ clone })
+    })
+    afterAll(() => {
+      globalThis.Worker = originalWorker
+      globalThis.SharedWorker = originalSharedWorker
+    })
+
+    it('transfer MessagePort objects to worker as event.ports', async () => {
+      expect.assertions(1)
+
+      const worker = new MyWorker()
+      const channel = new MessageChannel()
+      const promise = new Promise<string>((resolve, reject) => {
+        channel.port1.onmessage = e => resolve(e.data as string)
+        channel.port1.onmessageerror = reject
+      })
+      worker.postMessage('hello', [channel.port2])
+      await expect(promise).resolves.toBe('hello world via port')
+    })
   })
-  worker.postMessage('hello', [channel.port2])
-  await expect(promise).resolves.toBe('hello world via port')
 })
 
 it('throws syntax error if no arguments are provided', () => {
