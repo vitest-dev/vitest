@@ -25,8 +25,11 @@ describe.each(['deprecated', 'environment'] as const)('VitestResolver with Vite 
     expect(await resolver.shouldExternalize(join(nodeModulesDir, 'other-dep/index.js'))).toBeTruthy()
 
     // hard-coded pattern for external
-    expect(await resolver.shouldExternalize('/usr/anything/node_modules/anything/index.cjs.js')).toBeTruthy()
-    expect(await resolver.shouldExternalize('/usr/anything/node_modules/anything/index.mjs')).toBeTruthy()
+    expect(await resolver.shouldExternalize('/usr/a/non-existing/node_modules/non-existing/index.cjs.js')).toBeTruthy()
+    expect(await resolver.shouldExternalize('/usr/a/non-existing/node_modules/non-existing/index.mjs')).toBeTruthy()
+
+    // non-existing files are inlined
+    expect(await resolver.shouldExternalize('/usr/a/non-existing/node_modules/non-existing/index.js')).toBe(false)
   })
 
   test('merges vite ssr.resolve.external with server.deps.external', async () => {
