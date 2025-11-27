@@ -2,9 +2,9 @@ import type { RuntimeRPC } from '../../types/rpc'
 import type { TestProject } from '../project'
 import type { ResolveSnapshotPathHandlerContext } from '../types/config'
 import { existsSync, mkdirSync } from 'node:fs'
-import { isBuiltin } from 'node:module'
 import { fileURLToPath } from 'node:url'
 import { cleanUrl } from '@vitest/utils/helpers'
+import { isBuiltin, toBuiltin } from '../../utils/modules'
 import { handleRollupError } from '../environments/fetchModule'
 import { normalizeResolvedIdToUrl } from '../environments/normalizeUrl'
 
@@ -69,9 +69,10 @@ export function createMethodsRPC(project: TestProject, methodsOptions: MethodsOp
       if (resolved.external) {
         return {
           file,
-          // TODO: use isBuiltin defined in the environment
-          url: !resolved.id.startsWith('node:') && isBuiltin(resolved.id)
-            ? `node:${resolved.id}`
+          // this is only used by the module mocker and it always
+          // standardizes the id to mock "node:url" and "url" at the same time
+          url: isBuiltin(resolved.id)
+            ? toBuiltin(resolved.id)
             : resolved.id,
           id: resolved.id,
         }
