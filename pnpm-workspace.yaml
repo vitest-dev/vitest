@@ -9,6 +9,17 @@ trustPolicy: no-downgrade
 trustPolicyExclude:
   - semver@6.3.1
   - chokidar@4.0.3
+  - webdriverio@9.20.0
+  - webdriver@9.20.0
+  - '@wdio/types@9.20.0'
+  - '@wdio/repl@9.16.2'
+  - '@wdio/utils@9.20.0'
+  - '@wdio/config@9.20.0'
+  - '@wdio/logger@9.18.0'
+  - '@wdio/protocols@9.16.2'
+  - undici-types@6.21.0
+  - undici@6.21.3
+  - rxjs@7.8.2
 
 overrides:
   '@vitest/browser': 'workspace:*'
