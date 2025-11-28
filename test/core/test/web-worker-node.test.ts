@@ -50,7 +50,7 @@ describe.runIf(major >= 17)('when node supports structuredClone', () => {
     expect(structuredClone).toBeDefined()
 
     const worker = new MyObjectWorker()
-    const obj = { hello: 'world', name() { } }
+    const obj = { hello: 'world', name() {} }
     worker.postMessage(obj)
 
     return new Promise<void>((resolve, reject) => {
