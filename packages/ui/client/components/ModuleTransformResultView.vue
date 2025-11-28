@@ -14,6 +14,7 @@ import CodeMirrorContainer from './CodeMirrorContainer.vue'
 import IconButton from './IconButton.vue'
 
 const props = defineProps<{
+  // TODO: keep in query
   id: string
   projectName: string
   type: ModuleType
@@ -92,6 +93,9 @@ function onMousedown(editor: Editor, e: MouseEvent) {
   }
 }
 
+// TODO: import.meta.glob is bugged
+// example: /Users/vladimir/Projects/zammad/app/frontend/shared/form/index.ts is bugged
+
 function markImportDurations(codemirror: EditorFromTextArea) {
   widgetElements.forEach(el => el.remove())
   widgetElements.length = 0
@@ -117,12 +121,19 @@ function markImportDurations(codemirror: EditorFromTextArea) {
         attributes: {
           'data-external': String(diagnostic.external === true),
         },
-        className: 'underline decoration-red decoration-dotted cursor-pointer select-none',
+        className: 'hover:underline decoration-red cursor-pointer select-none',
       })
       markers.push(marker)
       const timeElement = document.createElement('div')
       timeElement.className = 'flex ml-2 -mt-5'
       timeElement.textContent = formatTime(diagnostic.totalTime)
+      const durationType = getImportDurationType(diagnostic.totalTime)
+      if (durationType === 'danger') {
+        timeElement.classList.add('text-red/60')
+      }
+      else if (durationType === 'warning') {
+        timeElement.classList.add('text-orange/60')
+      }
       widgetElements.push(timeElement)
       codemirror.addWidget(
         {

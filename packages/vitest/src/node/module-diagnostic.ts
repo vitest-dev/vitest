@@ -18,27 +18,32 @@ export interface ModuleImportDurationsDiagnostic extends ModuleImportDiagnostic 
   external?: boolean
 }
 
-interface ModuleDiagnostic {
-  modules: ModuleImportDiagnostic[]
-}
-
-export interface ModuleDurationsDiagnostic {
+export interface ModuleDiagnostic {
   modules: ModuleImportDurationsDiagnostic[]
-  // TODO: support exports
 }
 
-export function collectModuleDurationsDiagnostic(
+export async function collectModuleDurationsDiagnostic(
   moduleId: string,
+  moduleGraph: EnvironmentModuleGraph,
   state: StateManager,
-  moduleDiagnostic: ModuleDiagnostic,
   testModule?: TestModule,
-): ModuleDurationsDiagnostic {
+): Promise<ModuleDiagnostic> {
+  const transformResult = moduleGraph.getModuleById(moduleId)?.transformResult
+  if (!transformResult) {
+    return { modules: [] }
+  }
+  const moduleDiagnostic = await collectModuleDiagnostic(moduleGraph, transformResult)
+  if (!moduleDiagnostic) {
+    return { modules: [] }
+  }
+
   const modules: ModuleImportDurationsDiagnostic[] = []
   const modulesById: Record<string, {
     selfTime: number
     totalTime: number
     external?: boolean
   }> = {}
+
   // this aggregates the times for _ALL_ tests if testModule is not passed
   // so if the module was imported in separate tests, the time will be accumulated
   for (const files of (testModule ? [[testModule.task]] : state.filesMap.values())) {
@@ -47,27 +52,31 @@ export function collectModuleDurationsDiagnostic(
       if (!importDurations) {
         continue
       }
-      moduleDiagnostic.modules.forEach((diagnostic) => {
-        const durations = importDurations[diagnostic.resolvedId]
-        if (durations) {
-          // TODO: if not isolated, do it only once, because the times are not accumulated
 
-          modulesById[diagnostic.resolvedId] ??= {
-            selfTime: 0,
-            totalTime: 0,
-            external: durations.external,
-          }
+      moduleDiagnostic.modules.forEach(({ resolvedId }) => {
+        const durations = importDurations[resolvedId]
+        if (!durations) {
+          return
+        }
 
-          // only track if the current module imported this module,
-          // otherwise it was imported instantly because it's cached
-          if (durations.importer === moduleId) {
-            modulesById[diagnostic.resolvedId].selfTime += durations.selfTime
-            modulesById[diagnostic.resolvedId].totalTime += durations.totalTime
-          }
+        // TODO: if not isolated, do it only once, because the times are not accumulated
+
+        modulesById[resolvedId] ??= {
+          selfTime: 0,
+          totalTime: 0,
+          external: durations.external,
+        }
+
+        // only track if the current module imported this module,
+        // otherwise it was imported instantly because it's cached
+        if (durations.importer === moduleId) {
+          modulesById[resolvedId].selfTime += durations.selfTime
+          modulesById[resolvedId].totalTime += durations.totalTime
         }
       })
     }
   }
+
   moduleDiagnostic.modules.forEach((diagnostic) => {
     const durations = modulesById[diagnostic.resolvedId]
     if (durations) {
@@ -77,15 +86,16 @@ export function collectModuleDurationsDiagnostic(
       })
     }
   })
+
   return {
     modules,
   }
 }
 
-export async function collectModuleDiagnostic(
+async function collectModuleDiagnostic(
   moduleGraph: EnvironmentModuleGraph,
   transformResult: TransformResult, // with ssr transform
-): Promise<ModuleDiagnostic | undefined> {
+) {
   if (!transformResult.ssr) {
     return
   }
@@ -93,22 +103,27 @@ export async function collectModuleDiagnostic(
   if (!map || !('version' in map) || !map.sources.length) {
     return
   }
-  const sourceImports = map.sources.reduce((acc, sourceId, index) => {
-    const source = map.sourcesContent?.[index]
-    if (source != null) {
-      acc[sourceId] = parseSourceImportsAndExports(source)
-    }
-    return acc
-  }, {} as Record<string, Map<string, SourceStaticImport>>)
+
+  const sourceImports = map.sources.reduce<Record<string, Map<string, SourceStaticImport>>>(
+    (acc, sourceId, index) => {
+      const source = map.sourcesContent?.[index]
+      if (source != null) {
+        acc[sourceId] = parseSourceImportsAndExports(source)
+      }
+      return acc
+    },
+    {},
+  )
+
   const transformImports = await parseTransformResult(moduleGraph, transformResult)
   const traceMap = map && 'version' in map && new TraceMap(map as any)
-  const imports: ModuleImportDiagnostic[] = []
+  const modules: ModuleImportDiagnostic[] = []
   transformImports.forEach((row) => {
     const original = traceMap && originalPositionFor(traceMap, row.start)
     if (original && original.source != null) {
       const sourceImport = sourceImports[original.source].get(`${original.line}:${original.column}`)
       if (sourceImport) {
-        imports.push({
+        modules.push({
           start: sourceImport.start,
           end: sourceImport.end,
           startIndex: sourceImport.startIndex,
@@ -120,7 +135,7 @@ export async function collectModuleDiagnostic(
     }
   })
   return {
-    modules: imports,
+    modules,
   }
 }
 

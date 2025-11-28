@@ -21,8 +21,8 @@ import { config, isReport } from '~/composables/client'
 import { currentModule } from '~/composables/navigation'
 import IconButton from '../IconButton.vue'
 import Modal from '../Modal.vue'
+import ViewModuleGraphImportBreakdown from '../ModuleGraphImportBreakdown.vue'
 import ModuleTransformResultView from '../ModuleTransformResultView.vue'
-import ViewModuleGraphImportBreakdown from '../ViewModuleGraphImportBreakdown.vue'
 
 const props = defineProps<{
   graph: ModuleGraph

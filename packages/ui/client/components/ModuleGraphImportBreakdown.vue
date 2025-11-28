@@ -79,7 +79,7 @@ function getDurationClass(duration: number) {
 
 <template>
   <div class="overflow-auto max-h-120">
-    <h1>Import Breakdown <span op-40>(ordered by Total Time) (Top {{ maxAmount }})</span></h1>
+    <h1>Import Breakdown <span op-40>(ordered by Total Time) (Top {{ Math.min(maxAmount, imports.length) }})</span></h1>
     <table text-sm>
       <thead>
         <tr>

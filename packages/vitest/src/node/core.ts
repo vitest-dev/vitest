@@ -7,7 +7,7 @@ import type { SerializedCoverageConfig } from '../runtime/config'
 import type { ArgumentsType, ProvidedContext, UserConsoleLog } from '../types/general'
 import type { CliOptions } from './cli/cli-api'
 import type { VitestFetchFunction } from './environments/fetchModule'
-import type { ModuleDurationsDiagnostic } from './module-diagnostic'
+import type { ModuleDiagnostic } from './module-diagnostic'
 import type { ProcessPool } from './pool'
 import type { TestModule } from './reporters/reported-tasks'
 import type { TestSpecification } from './spec'
@@ -36,7 +36,7 @@ import { createFetchModuleFunction } from './environments/fetchModule'
 import { ServerModuleRunner } from './environments/serverRunner'
 import { FilesNotFoundError } from './errors'
 import { Logger } from './logger'
-import { collectModuleDiagnostic, collectModuleDurationsDiagnostic } from './module-diagnostic'
+import { collectModuleDurationsDiagnostic } from './module-diagnostic'
 import { VitestPackageInstaller } from './packageInstaller'
 import { createPool } from './pool'
 import { TestProject } from './project'
@@ -882,17 +882,9 @@ export class Vitest {
    * If TestModule is passed down, it will return diagnostic of the modules only if it ran them.
    * @experimental
    */
-  // TODO: iterate over each environment instead of accepting one and aggregate the data
-  public async experimental_getModuleDiagnostic(environment: DevEnvironment, moduleId: string, testModule?: TestModule): Promise<ModuleDurationsDiagnostic> {
-    const transformResult = environment.moduleGraph.getModuleById(moduleId)?.transformResult
-    if (!transformResult) {
-      return { modules: [] }
-    }
-    const moduleDiagnostic = await collectModuleDiagnostic(environment.moduleGraph, transformResult)
-    if (moduleDiagnostic) {
-      return collectModuleDurationsDiagnostic(moduleId, this.state, moduleDiagnostic, testModule)
-    }
-    return { modules: [] }
+  public async experimental_getModuleDiagnostic(environment: DevEnvironment, moduleId: string, testModule?: TestModule): Promise<ModuleDiagnostic> {
+    // TODO: iterate over each environment instead of accepting one and aggregate the data
+    return collectModuleDurationsDiagnostic(moduleId, environment.moduleGraph, this.state, testModule)
   }
 
   public async experimental_parseSpecifications(specifications: TestSpecification[], options?: {
