@@ -13,7 +13,7 @@ import type {
 import type { BrowserServerState } from './state'
 import { readFileSync } from 'node:fs'
 import { readFile } from 'node:fs/promises'
-import { parseErrorStacktrace, parseStacktrace } from '@vitest/utils/source-map'
+import { parseErrorStacktrace, parseStacktrace, retrieveSourceMapURL } from '@vitest/utils/source-map'
 import { dirname, join, resolve } from 'pathe'
 import { BrowserServerCDPHandler } from './cdp'
 import builtinCommands from './commands/index'
@@ -64,7 +64,7 @@ export class ParentBrowserProject {
         const result = this.vite.moduleGraph.getModuleById(id)?.transformResult
         // this can happen for bundled dependencies in node_modules/.vite
         if (result && !result.map) {
-          const sourceMapUrl = this.retrieveSourceMapURL(result.code)
+          const sourceMapUrl = retrieveSourceMapURL(result.code)
           if (!sourceMapUrl) {
             return null
           }
@@ -261,21 +261,5 @@ export class ParentBrowserProject {
       .split('/')
     const decodedTestFile = decodeURIComponent(testFile)
     return { sessionId, testFile: decodedTestFile }
-  }
-
-  private retrieveSourceMapURL(source: string): string | null {
-    const re
-      = /\/\/[@#]\s*sourceMappingURL=([^\s'"]+)\s*$|\/\*[@#]\s*sourceMappingURL=[^\s*'"]+\s*\*\/\s*$/gm
-    // Keep executing the search to find the *last* sourceMappingURL to avoid
-    // picking up sourceMappingURLs from comments, strings, etc.
-    let lastMatch, match
-    // eslint-disable-next-line no-cond-assign
-    while ((match = re.exec(source))) {
-      lastMatch = match
-    }
-    if (!lastMatch) {
-      return null
-    }
-    return lastMatch[1]
   }
 }
