@@ -219,7 +219,7 @@ const cloneTypes = [
 ] satisfies Array<NonNullable<Parameters<typeof defineWebWorkers>[0]>['clone']>
 cloneTypes.forEach((clone) => {
   describe(`defineWebWorkers with clone=${clone}`, () => {
-    beforeAll(async () => {
+    beforeAll(() => {
       process.env.VITEST_WEB_WORKER_CLONE = clone
     })
     afterAll(() => {
