@@ -6,7 +6,7 @@ const { type = 'info' } = defineProps<{
 
 <template>
   <span
-    class="rounded-full py-0.5 px-2 text-xs text-white"
+    class="rounded-full py-0.5 px-2 text-xs text-white select-none"
     :class="{
       'bg-red': type === 'danger',
       'bg-orange': type === 'warning',
