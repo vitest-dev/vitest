@@ -1,3 +1,4 @@
+import type { ImportDuration } from '@vitest/runner'
 import type { EnvironmentModuleGraph, TransformResult } from 'vite'
 import type { TestModule } from './reporters/reported-tasks'
 import type { StateManager } from './state'
@@ -77,7 +78,8 @@ export async function collectModuleDurationsDiagnostic(
 
       allModules.forEach(({ resolvedId }) => {
         const durations = importDurations[resolvedId]
-        if (!durations) {
+        // do not accumulate if module was already visited by suite (or suites in non-isolate mode)
+        if (!durations || visited.has(resolvedId)) {
           return
         }
 
@@ -89,8 +91,7 @@ export async function collectModuleDurationsDiagnostic(
 
         // only track if the current module imported this module,
         // otherwise it was imported instantly because it's cached
-        // do not accumulate if module was already visited by suite (or suites in non-isolate mode)
-        if (!visited.has(resolvedId) && durations.importer === moduleId) {
+        if (isModuleImporter(moduleId, durations, currentModule)) {
           visited.add(resolvedId)
           modulesById[resolvedId].selfTime += durations.selfTime
           modulesById[resolvedId].totalTime += durations.totalTime
@@ -154,6 +155,21 @@ export async function collectModuleDurationsDiagnostic(
     modules,
     untrackedModules: untracked,
   }
+}
+
+function isModuleImporter(moduleId: string, durations: ImportDuration, testModule: TestModule): boolean {
+  if (durations.importer === moduleId) {
+    return true
+  }
+  if (!durations.importer) {
+    if (moduleId === testModule.moduleId) {
+      return true
+    }
+
+    const setupFiles = testModule.project.config.setupFiles
+    return setupFiles.includes(moduleId)
+  }
+  return false
 }
 
 async function collectModuleDiagnostic(

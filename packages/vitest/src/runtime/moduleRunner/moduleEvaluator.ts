@@ -9,7 +9,7 @@ import type { VitestEvaluatedModules } from './evaluatedModules'
 import type { ModuleExecutionInfo } from './moduleDebug'
 import type { VitestVmOptions } from './moduleRunner'
 import { createRequire, isBuiltin } from 'node:module'
-import { pathToFileURL } from 'node:url'
+import { fileURLToPath, pathToFileURL } from 'node:url'
 import vm from 'node:vm'
 import { isAbsolute } from 'pathe'
 import {
@@ -109,11 +109,15 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
     // this will always be 1 element because it's cached after load
     const importers = this._evaluatedModules?.getModuleById(id)?.importers
     const importer = importers?.values().next().value
-    const finishModuleExecutionInfo = this.debug.startCalculateModuleExecutionInfo(id, {
-      startOffset: 0,
-      external: true,
-      importer,
-    })
+    const filename = id.startsWith('file://') ? fileURLToPath(id) : id
+    const finishModuleExecutionInfo = this.debug.startCalculateModuleExecutionInfo(
+      filename,
+      {
+        startOffset: 0,
+        external: true,
+        importer,
+      },
+    )
     const namespace = await this._otel.$(
       'vitest.module.external',
       {
@@ -123,7 +127,7 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
         ? this.vm.externalModulesExecutor.import(file)
         : import(file),
     ).finally(() => {
-      this.options.moduleExecutionInfo?.set(id, finishModuleExecutionInfo())
+      this.options.moduleExecutionInfo?.set(filename, finishModuleExecutionInfo())
     })
 
     if (!this.shouldInterop(file, namespace)) {
