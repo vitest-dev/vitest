@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import type { Editor, EditorFromTextArea, LineWidget, TextMarker } from 'codemirror'
-import type { ExternalResult, TransformResultWithSource } from 'vitest'
-import type { UntrackedModuleDefinitionDiagnostic } from 'vitest/node'
+import type { Experimental, ExternalResult, TransformResultWithSource } from 'vitest'
 import type { ModuleType } from '~/composables/module-graph'
 import { asyncComputed, onKeyStroke } from '@vueuse/core'
 import { Tooltip as VueTooltip } from 'floating-vue'
@@ -94,7 +93,7 @@ function onMousedown(editor: Editor, e: MouseEvent) {
   }
 }
 
-function buildShadowImportsHtml(imports: UntrackedModuleDefinitionDiagnostic[]) {
+function buildShadowImportsHtml(imports: Experimental.UntrackedModuleDefinitionDiagnostic[]) {
   const shadowImportsDiv = document.createElement('div')
   shadowImportsDiv.classList.add('mb-5')
 

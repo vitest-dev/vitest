@@ -1,36 +1,16 @@
 import type { ImportDuration } from '@vitest/runner'
 import type { EnvironmentModuleGraph, TransformResult } from 'vite'
+import type {
+  ModuleDefinitionDiagnostic,
+  ModuleDefinitionDurationsDiagnostic,
+  ModuleDefinitionLocation,
+  SourceModuleDiagnostic,
+  SourceModuleLocations,
+  UntrackedModuleDefinitionDiagnostic,
+} from '../types/module-locations'
 import type { TestModule } from './reporters/reported-tasks'
 import type { StateManager } from './state'
 import { originalPositionFor, TraceMap } from '@jridgewell/trace-mapping'
-
-interface ModuleDefinitionDiagnostic {
-  start: Location
-  end: Location
-  startIndex: number
-  endIndex: number
-  url: string
-  resolvedId: string
-}
-
-export interface ModuleDefinitionDurationsDiagnostic extends ModuleDefinitionDiagnostic {
-  selfTime: number
-  totalTime: number
-  external?: boolean
-}
-
-export interface UntrackedModuleDefinitionDiagnostic {
-  url: string
-  resolvedId: string
-  selfTime: number
-  totalTime: number
-  external?: boolean
-}
-
-export interface SourceModuleDiagnostic {
-  modules: ModuleDefinitionDurationsDiagnostic[]
-  untrackedModules: UntrackedModuleDefinitionDiagnostic[]
-}
 
 export async function collectModuleDurationsDiagnostic(
   moduleId: string,
@@ -167,11 +147,6 @@ function isModuleImporter(moduleId: string, durations: ImportDuration, testModul
   return false
 }
 
-export interface SourceModuleLocations {
-  modules: ModuleDefinitionDiagnostic[]
-  untracked: ModuleDefinitionDiagnostic[]
-}
-
 export async function collectSourceModulesLocations(
   moduleId: string,
   moduleGraph: EnvironmentModuleGraph,
@@ -233,14 +208,9 @@ export async function collectSourceModulesLocations(
   }
 }
 
-interface Location {
-  line: number
-  column: number
-}
-
 interface SourceStaticImport {
-  start: Location
-  end: Location
+  start: ModuleDefinitionLocation
+  end: ModuleDefinitionLocation
   startIndex: number
   endIndex: number
   url: string
@@ -250,7 +220,7 @@ function fillSourcesMap(
   syntax: 'import' | 'export',
   sourcesMap: Map<string, SourceStaticImport>,
   source: string,
-  indexMap: Map<number, Location>,
+  indexMap: Map<number, ModuleDefinitionLocation>,
 ) {
   const splitSeparator = `${syntax} `
   const splitSources = source.split(splitSeparator)
@@ -349,7 +319,7 @@ async function parseTransformResult(moduleGraph: EnvironmentModuleGraph, transfo
 
 // TODO: utils, share with ast-collect
 function createIndexMap(source: string) {
-  const map = new Map<number, Location>()
+  const map = new Map<number, ModuleDefinitionLocation>()
   let index = 0
   let line = 1
   let column = 1

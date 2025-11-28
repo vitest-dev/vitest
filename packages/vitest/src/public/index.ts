@@ -1,5 +1,4 @@
 import type { SerializedTestSpecification } from '../runtime/types/utils'
-
 import '../types/global'
 
 export type {
@@ -40,6 +39,7 @@ export { expectTypeOf } from '../typecheck/expectTypeOf'
 export type { ExpectTypeOf } from '../typecheck/expectTypeOf'
 
 export type { BrowserTesterOptions } from '../types/browser'
+export type * as Experimental from '../types/experimental'
 export type {
   AfterSuiteRunMeta,
   LabelColor,

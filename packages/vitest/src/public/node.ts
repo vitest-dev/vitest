@@ -19,11 +19,6 @@ export type {
 } from '../node/core'
 export { createVitest } from '../node/create'
 export { GitNotFoundError, FilesNotFoundError as TestsNotFoundError } from '../node/errors'
-export type {
-  ModuleDefinitionDurationsDiagnostic,
-  SourceModuleDiagnostic,
-  UntrackedModuleDefinitionDiagnostic,
-} from '../node/module-diagnostic'
 export { VitestPackageInstaller } from '../node/packageInstaller'
 export { VitestPlugin } from '../node/plugins'
 export { resolveConfig } from '../node/plugins/publicConfig'
