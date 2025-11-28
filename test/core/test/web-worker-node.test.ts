@@ -1,10 +1,11 @@
 // @vitest-environment node
 
+import type { defineWebWorkers } from '@vitest/web-worker/pure'
+
 import { version } from 'node:process'
 
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import MyEventListenerWorker from '../src/web-worker/eventListenerWorker?worker'
-
 import MyObjectWorker from '../src/web-worker/objectWorker?worker'
 import MySelfWorker from '../src/web-worker/selfWorker?worker'
 import MySharedWorker from '../src/web-worker/sharedWorker?sharedworker'
@@ -211,17 +212,33 @@ it('self injected into worker and its deps should be equal', async () => {
   expect(await testSelfWorker(new Worker(new URL('../src/web-worker/selfWorker.ts', import.meta.url)))).toBeTruthy()
 })
 
-it('transfer MessagePort objects to worker as event.ports', async () => {
-  expect.assertions(1)
+const cloneTypes = [
+  'native',
+  'ponyfill',
+  'none',
+] satisfies Array<NonNullable<Parameters<typeof defineWebWorkers>[0]>['clone']>
+cloneTypes.forEach((clone) => {
+  describe(`defineWebWorkers with clone=${clone}`, () => {
+    beforeEach(() => {
+      process.env.VITEST_WEB_WORKER_CLONE = clone
+    })
+    afterEach(() => {
+      process.env.VITEST_WEB_WORKER_CLONE = undefined
+    })
 
-  const worker = new MyWorker()
-  const channel = new MessageChannel()
-  const promise = new Promise<string>((resolve, reject) => {
-    channel.port1.onmessage = e => resolve(e.data as string)
-    channel.port1.onmessageerror = reject
+    it('transfers MessagePort objects to worker as event.ports', async () => {
+      expect.assertions(1)
+
+      const worker = new MyWorker()
+      const channel = new MessageChannel()
+      const promise = new Promise<string>((resolve, reject) => {
+        channel.port1.onmessage = e => resolve(e.data as string)
+        channel.port1.onmessageerror = reject
+      })
+      worker.postMessage('hello', [channel.port2])
+      await expect(promise).resolves.toBe('hello world via port')
+    })
   })
-  worker.postMessage('hello', [channel.port2])
-  await expect(promise).resolves.toBe('hello world via port')
 })
 
 it('throws syntax error if no arguments are provided', () => {
