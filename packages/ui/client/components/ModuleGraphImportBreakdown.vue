@@ -71,9 +71,9 @@ function ellipsisFile(moduleId: string) {
 <template>
   <div class="overflow-auto max-h-120">
     <h1 my-2 mx-4>
-      Import Breakdown <span op-40>(ordered by Total Time) (Top {{ Math.min(maxAmount, imports.length) }})</span>
+      Import Breakdown <span op-70>(ordered by Total Time) (Top {{ Math.min(maxAmount, imports.length) }})</span>
     </h1>
-    <table my-2 mx-4 text-sm>
+    <table my-2 mx-4 text-sm font-light op-90>
       <thead>
         <tr>
           <th>
@@ -113,7 +113,7 @@ function ellipsisFile(moduleId: string) {
     </table>
     <button
       v-if="maxAmount < sortedImports.length"
-      class="flex w-full justify-center h-8 text-sm z-10 relative"
+      class="flex w-full justify-center h-8 text-sm z-10 relative font-light"
       @click="maxAmount += 5"
     >
       <!-- <button @click="maxAmount += 5"> -->

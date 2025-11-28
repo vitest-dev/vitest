@@ -141,7 +141,7 @@ export function setup(ctx: Vitest, _server?: ViteDevServer): void {
             result.transformTime = transformDuration
           }
           try {
-            const diagnostic = await ctx.experimental_getModuleDiagnostic(environment, moduleId, testModule)
+            const diagnostic = await ctx.experimental_getSourceModuleDiagnostic(environment, moduleId, testModule)
             result.modules = diagnostic.modules
             result.untrackedModules = diagnostic.untrackedModules
           }

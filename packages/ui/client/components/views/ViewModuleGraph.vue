@@ -491,7 +491,7 @@ function bindOnClick(
         </div>
       </div>
     </div>
-    <div v-if="breakdownShow" class="absolute bg-base border-base right-0 mr-2 rounded-xl mt-2">
+    <div v-if="breakdownShow" class="absolute bg-[#eee] dark:bg-[#222] border-base right-0 mr-2 rounded-xl mt-2">
       <ViewModuleGraphImportBreakdown @select="(id, type) => setSelectedModule(id, type)" />
     </div>
     <div ref="el" />

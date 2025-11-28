@@ -882,7 +882,7 @@ export class Vitest {
    * If TestModule is passed down, it will return diagnostic of the modules only if it ran them.
    * @experimental
    */
-  public async experimental_getModuleDiagnostic(environment: DevEnvironment, moduleId: string, testModule?: TestModule): Promise<SourceModuleDiagnostic> {
+  public async experimental_getSourceModuleDiagnostic(environment: DevEnvironment, moduleId: string, testModule?: TestModule): Promise<SourceModuleDiagnostic> {
     // TODO: iterate over each environment instead of accepting one and aggregate the data
     return collectModuleDurationsDiagnostic(moduleId, environment.moduleGraph, this.state, testModule)
   }
