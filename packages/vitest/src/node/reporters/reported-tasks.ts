@@ -471,7 +471,6 @@ export class TestModule extends SuiteImplementation {
     else if (typeof task.viteEnvironment === 'string') {
       this.viteEnvironment = project.vite.environments[task.viteEnvironment]
     }
-    console.log(task.viteEnvironment, !!this.viteEnvironment)
   }
 
   /**
