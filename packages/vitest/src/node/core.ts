@@ -7,7 +7,7 @@ import type { SerializedCoverageConfig } from '../runtime/config'
 import type { ArgumentsType, ProvidedContext, UserConsoleLog } from '../types/general'
 import type { CliOptions } from './cli/cli-api'
 import type { VitestFetchFunction } from './environments/fetchModule'
-import type { ModuleDiagnostic } from './module-diagnostic'
+import type { SourceModuleDiagnostic } from './module-diagnostic'
 import type { ProcessPool } from './pool'
 import type { TestModule } from './reporters/reported-tasks'
 import type { TestSpecification } from './spec'
@@ -882,7 +882,7 @@ export class Vitest {
    * If TestModule is passed down, it will return diagnostic of the modules only if it ran them.
    * @experimental
    */
-  public async experimental_getModuleDiagnostic(environment: DevEnvironment, moduleId: string, testModule?: TestModule): Promise<ModuleDiagnostic> {
+  public async experimental_getModuleDiagnostic(environment: DevEnvironment, moduleId: string, testModule?: TestModule): Promise<SourceModuleDiagnostic> {
     // TODO: iterate over each environment instead of accepting one and aggregate the data
     return collectModuleDurationsDiagnostic(moduleId, environment.moduleGraph, this.state, testModule)
   }

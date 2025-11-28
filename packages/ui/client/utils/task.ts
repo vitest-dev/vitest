@@ -124,6 +124,16 @@ export function getImportDurationType(duration: number) {
   }
 }
 
+export function getDurationClass(duration: number) {
+  const type = getImportDurationType(duration)
+  if (type === 'danger') {
+    return 'text-red'
+  }
+  if (type === 'warning') {
+    return 'text-orange'
+  }
+}
+
 export function getProjectNameColor(name: string | undefined) {
   if (!name) {
     return ''

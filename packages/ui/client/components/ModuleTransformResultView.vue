@@ -1,14 +1,15 @@
 <script setup lang="ts">
-import type { Editor, EditorFromTextArea, TextMarker } from 'codemirror'
+import type { Editor, EditorFromTextArea, LineWidget, TextMarker } from 'codemirror'
 import type { ExternalResult, TransformResultWithSource } from 'vitest'
+import type { UntrackedModuleImportDiagnostic } from 'vitest/node'
 import type { ModuleType } from '~/composables/module-graph'
 import { asyncComputed, onKeyStroke } from '@vueuse/core'
 import { Tooltip as VueTooltip } from 'floating-vue'
-import { join } from 'pathe'
+import { join, relative } from 'pathe'
 import { computed } from 'vue'
-import { browserState, client } from '~/composables/client'
+import { browserState, client, config } from '~/composables/client'
 import { currentModule } from '~/composables/navigation'
-import { formatPreciseTime, formatTime, getImportDurationType } from '~/utils/task'
+import { formatPreciseTime, formatTime, getDurationClass, getImportDurationType } from '~/utils/task'
 import Badge from './Badge.vue'
 import CodeMirrorContainer from './CodeMirrorContainer.vue'
 import IconButton from './IconButton.vue'
@@ -79,6 +80,7 @@ const sourceMap = computed(() => {
 
 const widgetElements: HTMLDivElement[] = []
 const markers: TextMarker[] = []
+const lineWidgets: LineWidget[] = []
 
 function onMousedown(editor: Editor, e: MouseEvent) {
   const lineCh = editor.coordsChar({ left: e.clientX, top: e.clientY })
@@ -96,6 +98,47 @@ function onMousedown(editor: Editor, e: MouseEvent) {
 // TODO: import.meta.glob is bugged
 // example: /Users/vladimir/Projects/zammad/app/frontend/shared/form/index.ts is bugged
 
+function buildShadowImportsHtml(imports: UntrackedModuleImportDiagnostic[]) {
+  const shadowImportsDiv = document.createElement('div')
+  shadowImportsDiv.classList.add('mt-5')
+
+  imports.forEach(({ resolvedId, totalTime, external }) => {
+    const importDiv = document.createElement('div')
+    importDiv.append(document.createTextNode('import '))
+
+    const sourceDiv = document.createElement('span')
+    const url = relative(config.value.root, resolvedId)
+    sourceDiv.textContent = `"/${url}"`
+    sourceDiv.className = 'hover:underline decoration-gray cursor-pointer select-none'
+    importDiv.append(sourceDiv)
+    sourceDiv.addEventListener('click', () => {
+      emit('select', resolvedId, external ? 'external' : 'inline')
+    })
+
+    const timeElement = document.createElement('span')
+    timeElement.textContent = ` ${formatTime(totalTime)}`
+    const durationClass = getDurationClass(totalTime)
+    if (durationClass) {
+      timeElement.classList.add(durationClass)
+    }
+    importDiv.append(timeElement)
+
+    shadowImportsDiv.append(importDiv)
+  })
+  return shadowImportsDiv
+}
+
+function createDurationDiv(duration: number) {
+  const timeElement = document.createElement('div')
+  timeElement.className = 'flex ml-2'
+  timeElement.textContent = formatTime(duration)
+  const durationClass = getDurationClass(duration)
+  if (durationClass) {
+    timeElement.classList.add(durationClass)
+  }
+  return timeElement
+}
+
 function markImportDurations(codemirror: EditorFromTextArea) {
   widgetElements.forEach(el => el.remove())
   widgetElements.length = 0
@@ -103,9 +146,20 @@ function markImportDurations(codemirror: EditorFromTextArea) {
   markers.forEach(m => m.clear())
   markers.length = 0
 
+  lineWidgets.forEach(lw => lw.clear())
+  lineWidgets.length = 0
+
   if (result.value && 'modules' in result.value) {
     codemirror.off('mousedown', onMousedown)
     codemirror.on('mousedown', onMousedown)
+
+    const untrackedModules = result.value.untrackedModules
+
+    if (untrackedModules?.length) {
+      const importDiv = buildShadowImportsHtml(untrackedModules)
+      widgetElements.push(importDiv)
+      lineWidgets.push(codemirror.addLineWidget(0, importDiv))
+    }
 
     result.value.modules?.forEach((diagnostic) => {
       const start = {
@@ -124,15 +178,9 @@ function markImportDurations(codemirror: EditorFromTextArea) {
         className: 'hover:underline decoration-red cursor-pointer select-none',
       })
       markers.push(marker)
-      const timeElement = document.createElement('div')
-      timeElement.className = 'flex ml-2 -mt-5'
-      timeElement.textContent = formatTime(diagnostic.totalTime)
-      const durationType = getImportDurationType(diagnostic.totalTime)
-      if (durationType === 'danger') {
-        timeElement.classList.add('text-red/60')
-      }
-      else if (durationType === 'warning') {
-        timeElement.classList.add('text-orange/60')
+      const timeElement = createDurationDiv(diagnostic.totalTime)
+      if (!untrackedModules?.length) {
+        timeElement.classList.add('-mt-5')
       }
       widgetElements.push(timeElement)
       codemirror.addWidget(

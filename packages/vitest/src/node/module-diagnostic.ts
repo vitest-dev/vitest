@@ -26,7 +26,7 @@ export interface UntrackedModuleImportDiagnostic {
   external?: boolean
 }
 
-export interface ModuleDiagnostic {
+export interface SourceModuleDiagnostic {
   modules: ModuleImportDurationsDiagnostic[]
   untrackedModules: UntrackedModuleImportDiagnostic[]
 }
@@ -36,7 +36,7 @@ export async function collectModuleDurationsDiagnostic(
   moduleGraph: EnvironmentModuleGraph,
   state: StateManager,
   testModule?: TestModule,
-): Promise<ModuleDiagnostic> {
+): Promise<SourceModuleDiagnostic> {
   const transformResult = moduleGraph.getModuleById(moduleId)?.transformResult
   if (!transformResult) {
     return { modules: [], untrackedModules: [] }

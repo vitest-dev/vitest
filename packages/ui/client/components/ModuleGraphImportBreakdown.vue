@@ -4,7 +4,7 @@ import { relative } from 'pathe'
 import { computed, ref } from 'vue'
 import { config } from '~/composables/client'
 import { currentModule } from '~/composables/navigation'
-import { formatTime, getExternalModuleName, getImportDurationType } from '~/utils/task'
+import { formatTime, getDurationClass, getExternalModuleName } from '~/utils/task'
 
 interface ImportEntry {
   importedFile: string
@@ -64,16 +64,6 @@ function ellipsisFile(moduleId: string) {
     return moduleId
   }
   return `...${moduleId.slice(-45)}`
-}
-
-function getDurationClass(duration: number) {
-  const type = getImportDurationType(duration)
-  if (type === 'danger') {
-    return 'text-red'
-  }
-  if (type === 'warning') {
-    return 'text-orange'
-  }
 }
 </script>
 
