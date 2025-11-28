@@ -248,12 +248,22 @@ export class Logger {
       ? ''
       : formatProjectName(project)
     const provider = project.browser.provider?.name
-    const providerString = provider === 'preview' ? '' : ` by ${c.reset(c.bold(provider))}`
-    this.log(
-      c.dim(
-        `${output}Browser runner started${providerString} ${c.dim('at')} ${c.blue(new URL('/__vitest_test__/', origin))}\n`,
-      ),
-    )
+    if (provider === 'preview') {
+      const sessionId = project.vitest._browserSessions.findSessionByBrowser(project)
+      const sessionQuery = sessionId ? `?sessionId=${sessionId}` : ''
+      this.log(
+        c.dim(
+          `${output}Browser runner started ${c.dim('at')} ${c.blue(new URL(`/__vitest_test__/${sessionQuery}`, origin))}\n`,
+        ),
+      )
+    }
+    else {
+      this.log(
+        c.dim(
+          `${output}Browser runner started by ${c.reset(c.bold(provider))} ${c.dim('at')} ${c.blue(new URL('/__vitest_test__/', origin))}\n`,
+        ),
+      )
+    }
   }
 
   printUnhandledErrors(errors: ReadonlyArray<unknown>): void {
