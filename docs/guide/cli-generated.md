@@ -332,13 +332,6 @@ Specify which IP addresses the server should listen on. Set this to `0.0.0.0` or
 
 Set to true to exit if port is already in use, instead of automatically trying the next available port
 
-### browser.provider
-
-- **CLI:** `--browser.provider <name>`
-- **Config:** [browser.provider](/config/browser/provider)
-
-Provider used to run browser tests. Some browsers are only available for specific providers. Can be "webdriverio", "playwright", "preview", or the path to a custom provider. Visit [`browser.provider`](/config/browser/provider) for more information
-
 ### browser.isolate
 
 - **CLI:** `--browser.isolate`
