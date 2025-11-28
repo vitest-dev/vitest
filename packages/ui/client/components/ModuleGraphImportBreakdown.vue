@@ -34,11 +34,6 @@ const sortedImports = computed(() => {
   const root = config.value.root
   const allImports: ImportEntry[] = []
   for (const [filePath, duration] of Object.entries(importDurations)) {
-    // ignore the test file because it will always be the biggest
-    if (filePath === file.filepath) {
-      continue
-    }
-
     const raltiveModule = duration.external
       ? getExternalModuleName(filePath)
       : relative(root, filePath)
@@ -58,7 +53,7 @@ const sortedImports = computed(() => {
   return sortedImports
 })
 
-const imports = computed(() => sortedImports.value.slice(0, maxAmount.value + 1))
+const imports = computed(() => sortedImports.value.slice(0, maxAmount.value))
 
 function ellipsisFile(moduleId: string) {
   if (moduleId.length <= 45) {
@@ -71,7 +66,7 @@ function ellipsisFile(moduleId: string) {
 <template>
   <div class="overflow-auto max-h-120">
     <h1 my-2 mx-4>
-      Import Breakdown <span op-70>(ordered by Total Time) (Top {{ Math.min(maxAmount, imports.length) }})</span>
+      Import Duration Breakdown <span op-70>(ordered by Total Time) (Top {{ Math.min(maxAmount, imports.length) }})</span>
     </h1>
     <table my-2 mx-4 text-sm font-light op-90>
       <thead>
@@ -116,9 +111,7 @@ function ellipsisFile(moduleId: string) {
       class="flex w-full justify-center h-8 text-sm z-10 relative font-light"
       @click="maxAmount += 5"
     >
-      <!-- <button @click="maxAmount += 5"> -->
       Show more
-      <!-- </button> -->
     </button>
   </div>
 </template>
