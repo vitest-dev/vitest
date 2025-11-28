@@ -110,6 +110,10 @@ export function guessCJSversion(id: string): string | undefined {
 
 // The code from https://github.com/unjs/mlly/blob/c5bcca0cda175921344fd6de1bc0c499e73e5dac/src/syntax.ts#L51-L98
 async function isValidNodeImport(id: string) {
+  // clean url to strip off `?v=...` query etc.
+  // node can natively import files with query params, so externalizing them is safe.
+  id = cleanUrl(id)
+
   const extension = extname(id)
 
   if (BUILTIN_EXTENSIONS.has(extension)) {
@@ -134,9 +138,7 @@ async function isValidNodeImport(id: string) {
 
   try {
     await esModuleLexer.init
-    // clean url to strip off `?v=...` query etc.
-    // node can natively import files with query params, so externalizing them is safe.
-    const code = await fsp.readFile(cleanUrl(id), 'utf8')
+    const code = await fsp.readFile(id, 'utf8')
     const [, , , hasModuleSyntax] = esModuleLexer.parse(code)
     return !hasModuleSyntax
   }
