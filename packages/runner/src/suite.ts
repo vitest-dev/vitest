@@ -313,7 +313,7 @@ function createSuiteCollector(
       fails: options.fails,
       context: undefined!,
       type: 'test',
-      file: undefined!,
+      file: (currentSuite?.file ?? collectorContext.currentSuite?.file)!,
       timeout,
       retry: options.retry ?? runner.config.retry,
       repeats: options.repeats,
@@ -461,7 +461,7 @@ function createSuiteCollector(
       suite: currentSuite,
       mode,
       each,
-      file: undefined!,
+      file: (currentSuite?.file ?? collectorContext.currentSuite?.file)!,
       shuffle: suiteOptions?.shuffle,
       tasks: [],
       meta: Object.create(null),
@@ -505,12 +505,7 @@ function createSuiteCollector(
       allChildren.push(i.type === 'collector' ? await i.collect(file) : i)
     }
 
-    suite.file = file
     suite.tasks = allChildren
-
-    allChildren.forEach((task) => {
-      task.file = file
-    })
 
     return suite
   }
