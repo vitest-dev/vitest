@@ -1,8 +1,8 @@
 // @vitest-environment node
 
-import { version } from 'node:process'
+import type { defineWebWorkers } from '@vitest/web-worker/pure'
 
-import { defineWebWorkers } from '@vitest/web-worker/pure'
+import { version } from 'node:process'
 
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 import MyEventListenerWorker from '../src/web-worker/eventListenerWorker?worker'
@@ -219,19 +219,11 @@ const cloneTypes = [
 ] satisfies Array<NonNullable<Parameters<typeof defineWebWorkers>[0]>['clone']>
 cloneTypes.forEach((clone) => {
   describe(`defineWebWorkers with clone=${clone}`, () => {
-    let originalWorker: typeof Worker
-    let originalSharedWorker: typeof SharedWorker
     beforeAll(async () => {
-      originalWorker = globalThis.Worker
-      originalSharedWorker = globalThis.SharedWorker
-      delete (globalThis as any).Worker
-      delete (globalThis as any).SharedWorker
-
-      defineWebWorkers({ clone })
+      process.env.VITEST_WEB_WORKER_CLONE = clone
     })
     afterAll(() => {
-      globalThis.Worker = originalWorker
-      globalThis.SharedWorker = originalSharedWorker
+      process.env.VITEST_WEB_WORKER_CLONE = undefined
     })
 
     it('transfers MessagePort objects to worker as event.ports', async () => {
