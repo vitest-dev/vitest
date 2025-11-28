@@ -606,7 +606,86 @@ export abstract class BaseReporter implements Reporter {
       }
     }
 
+    // TODO: still print a warning that Vitest found files that took too long to load?
+    // make it toggable: To hide this message, set `printImportWarnings` to `false`.
+    if (this.ctx.config.experimental.printImportBreakdown) {
+      this.printImportsBreakdown()
+    }
+
     this.log()
+  }
+
+  private printImportsBreakdown() {
+    const testModules = this.ctx.state.getTestModules()
+
+    interface ImportEntry {
+      importedFile: string
+      selfTime: number
+      external?: boolean
+      totalTime: number
+    }
+
+    const allImports: ImportEntry[] = []
+
+    for (const testModule of testModules) {
+      const diagnostic = testModule.diagnostic()
+      const importDurations = diagnostic.importDurations
+
+      for (const [filePath, duration] of Object.entries(importDurations)) {
+        allImports.push({
+          importedFile: filePath,
+          selfTime: duration.selfTime,
+          totalTime: duration.totalTime,
+          external: duration.external,
+        })
+      }
+    }
+
+    if (allImports.length === 0) {
+      return
+    }
+
+    const sortedImports = allImports.sort((a, b) => b.totalTime - a.totalTime)
+    const maxTotalTime = sortedImports[0].totalTime
+    const topImports = sortedImports.slice(0, 10)
+
+    const totalSelfTime = allImports.reduce((sum, imp) => sum + imp.selfTime, 0)
+    const totalTotalTime = allImports.reduce((sum, imp) => sum + imp.totalTime, 0)
+    const slowestImport = sortedImports[0]
+
+    this.log()
+    this.log(c.bold('Import Duration Breakdown') + c.dim(' (ordered by Total Time) (Top 10)'))
+
+    for (const imp of topImports) {
+      const barWidth = 20
+      const filledWidth = Math.round((imp.totalTime / maxTotalTime) * barWidth)
+      const bar = c.cyan('█'.repeat(filledWidth)) + c.dim('░'.repeat(barWidth - filledWidth))
+
+      const pathDisplay = this.importBreakdownPath(imp.importedFile, imp.external)
+
+      this.log(
+        `${pathDisplay} ${c.dim('self:')} ${this.importDurationTime(imp.selfTime)} ${c.dim('total:')} ${this.importDurationTime(imp.totalTime)} ${bar}`,
+      )
+    }
+
+    this.log()
+    this.log(c.dim('Total imports: ') + allImports.length)
+    this.log(c.dim('Slowest import (total-time): ') + formatTime(slowestImport.totalTime))
+    this.log(c.dim('Total import time (self/total): ') + formatTime(totalSelfTime) + c.dim(' / ') + formatTime(totalTotalTime))
+  }
+
+  private importDurationTime(duration: number) {
+    const color = duration >= 500 ? c.red : duration >= 100 ? c.yellow : (c: string) => c
+    return color(formatTime(duration).padStart(6))
+  }
+
+  private importBreakdownPath(path: string, external: boolean | undefined) {
+    const pathDisplay = this.relative(path)
+    const color = external ? c.magenta : (c: string) => c
+    if (pathDisplay.length <= 45) {
+      return color(pathDisplay.padEnd(50))
+    }
+    return color(`...${pathDisplay.slice(-45)}`.padEnd(50))
   }
 
   private printErrorsSummary(files: File[], errors: unknown[]) {

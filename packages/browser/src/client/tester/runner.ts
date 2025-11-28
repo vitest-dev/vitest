@@ -62,6 +62,7 @@ export function createBrowserRunner(
       super(options.config)
       this.config = options.config
       this.commands = getBrowserState().commands
+      this.viteEnvironment = '__browser__'
     }
 
     setMethod(method: TestExecutionMethod) {

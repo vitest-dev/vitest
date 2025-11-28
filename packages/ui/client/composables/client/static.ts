@@ -61,6 +61,7 @@ export function createStaticClient(): VitestClient {
     getUnhandledErrors: () => {
       return metadata.unhandledErrors
     },
+    getExternalResult: asyncNoop,
     getTransformResult: asyncNoop,
     onDone: noop,
     onTaskUpdate: noop,

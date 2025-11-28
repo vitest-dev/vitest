@@ -203,6 +203,12 @@ export interface ImportDuration {
 
   /** The time spent importing & executing the file and all its imports. */
   totalTime: number
+
+  /** Will be set to `true`, if the module was externalized. In this case totalTime and selfTime are identical. */
+  external?: boolean
+
+  /** Which module imported this module first. All subsequent imports are cached. */
+  importer?: string
 }
 
 /**
@@ -277,6 +283,10 @@ export interface File extends Suite {
    * @default 'forks'
    */
   pool?: string
+  /**
+   * The environment that processes the file on the server.
+   */
+  viteEnvironment?: string
   /**
    * The path to the file in UNIX format.
    */

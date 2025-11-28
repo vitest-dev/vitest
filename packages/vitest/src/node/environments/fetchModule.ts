@@ -125,10 +125,19 @@ class ModuleFetcher {
 
     const result = await this.fetchAndProcess(environment, url, importer, moduleGraphModule, options)
     const importers = this.getSerializedDependencies(moduleGraphModule)
+    const importedUrls = this.getSerializedImports(moduleGraphModule)
     const map = moduleGraphModule.transformResult?.map
     const mappings = map && !('version' in map) && map.mappings === ''
 
-    return this.cacheResult(result, cachePath, importers, !!mappings)
+    return this.cacheResult(result, cachePath, importers, importedUrls, !!mappings)
+  }
+
+  private getSerializedImports(node: EnvironmentModuleNode): string[] {
+    const imports: string[] = []
+    node.importedModules.forEach((importer) => {
+      imports.push(importer.url)
+    })
+    return imports
   }
 
   private getSerializedDependencies(node: EnvironmentModuleNode): string[] {
@@ -259,6 +268,13 @@ class ModuleFetcher {
       }
     })
 
+    await Promise.all(cachedModule.importedUrls.map(async (url) => {
+      const moduleNode = await environment.moduleGraph.ensureEntryFromUrl(url).catch(() => null)
+      if (moduleNode) {
+        moduleGraphModule.importedModules.add(moduleNode)
+      }
+    }))
+
     return {
       cached: true as const,
       file: cachedModule.file,
@@ -293,6 +309,7 @@ class ModuleFetcher {
     result: FetchResult,
     cachePath: string,
     importers: string[] = [],
+    importedUrls: string[] = [],
     mappings = false,
   ): Promise<FetchResult | FetchCachedFileSystemResult> {
     const returnResult = 'code' in result
@@ -305,7 +322,7 @@ class ModuleFetcher {
     }
 
     const savePromise = this.fsCache
-      .saveCachedModule(cachePath, result, importers, mappings)
+      .saveCachedModule(cachePath, result, importers, importedUrls, mappings)
       .then(() => result)
       .finally(() => {
         saveCachePromises.delete(cachePath)

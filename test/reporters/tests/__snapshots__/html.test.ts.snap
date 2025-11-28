@@ -86,6 +86,7 @@ exports[`html reporter > resolves to "failing" status for test file "json-fail" 
         },
       ],
       "type": "suite",
+      "viteEnvironment": "ssr",
     },
   ],
   "moduleGraph": {
@@ -191,6 +192,7 @@ exports[`html reporter > resolves to "passing" status for test file "all-passing
         },
       ],
       "type": "suite",
+      "viteEnvironment": "ssr",
     },
   ],
   "moduleGraph": {

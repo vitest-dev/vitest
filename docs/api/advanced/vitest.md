@@ -615,3 +615,50 @@ function experimental_clearCache(): Promise<void>
 ```
 
 Deletes all Vitest caches, including [`experimental.fsModuleCache`](/config/experimental#experimental-fsmodulecache).
+
+## experimental_getSourceModuleDiagnostic <Version type="experimental">4.0.15</Version> <Badge type="warning">experimental</Badge> {#getsourcemodulediagnostic}
+
+```ts
+export function experimental_getSourceModuleDiagnostic(
+  moduleId: string,
+  testModule?: TestModule,
+): Promise<SourceModuleDiagnostic>
+```
+
+::: details Types
+```ts
+interface ModuleImportDiagnostic {
+  start: Location
+  end: Location
+  startIndex: number
+  endIndex: number
+  url: string
+  resolvedId: string
+}
+
+interface ModuleImportDurationsDiagnostic extends ModuleImportDiagnostic {
+  selfTime: number
+  totalTime: number
+  external?: boolean
+}
+
+interface UntrackedModuleImportDiagnostic {
+  url: string
+  resolvedId: string
+  selfTime: number
+  totalTime: number
+  external?: boolean
+}
+
+export interface SourceModuleDiagnostic {
+  modules: ModuleImportDurationsDiagnostic[]
+  untrackedModules: UntrackedModuleImportDiagnostic[]
+}
+```
+:::
+
+Returns module's diagnostic. If [`testModule`](/api/advanced/test-module) is not provided, `selfTime` and `totalTime` will be aggregated across all tests. If the module was not transformed or executed, the diagnostic will be empty.
+
+::: warning
+At the moment, the [browser](/guide/browser/) modules are not supported.
+:::

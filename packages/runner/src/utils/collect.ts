@@ -182,6 +182,7 @@ export function createFileTask(
   root: string,
   projectName: string | undefined,
   pool?: string,
+  viteEnvironment?: string,
 ): File {
   const path = relative(root, filepath)
   const file: File = {
@@ -196,6 +197,7 @@ export function createFileTask(
     projectName,
     file: undefined!,
     pool,
+    viteEnvironment,
   }
   file.file = file
   return file

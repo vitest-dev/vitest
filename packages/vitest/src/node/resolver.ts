@@ -11,7 +11,8 @@ import { isWindows } from '../utils/env'
 
 export class VitestResolver {
   public readonly options: ExternalizeOptions
-  private externalizeCache = new Map<string, Promise<string | false>>()
+  private externalizeConcurrentCache = new Map<string, Promise<string | false | undefined>>()
+  private externalizeCache = new Map<string, string | false | undefined>()
 
   constructor(cacheDir: string, config: ResolvedConfig) {
     // sorting to make cache consistent
@@ -38,8 +39,26 @@ export class VitestResolver {
     }
   }
 
-  public shouldExternalize(file: string): Promise<string | false | undefined> {
-    return shouldExternalize(normalizeId(file), this.options, this.externalizeCache)
+  public wasExternalized(file: string): string | false {
+    const normalizedFile = normalizeId(file)
+    if (!this.externalizeCache.has(normalizedFile)) {
+      return false
+    }
+    return this.externalizeCache.get(normalizedFile) ?? false
+  }
+
+  public async shouldExternalize(file: string): Promise<string | false | undefined> {
+    const normalizedFile = normalizeId(file)
+    if (this.externalizeCache.has(normalizedFile)) {
+      return this.externalizeCache.get(normalizedFile)!
+    }
+
+    return shouldExternalize(normalizeId(file), this.options, this.externalizeConcurrentCache).then((result) => {
+      this.externalizeCache.set(normalizedFile, result)
+      return result
+    }).finally(() => {
+      this.externalizeConcurrentCache.delete(normalizedFile)
+    })
   }
 }
 

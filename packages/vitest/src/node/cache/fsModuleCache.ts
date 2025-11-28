@@ -34,7 +34,7 @@ export class FileSystemModuleCache {
   private rootCache: string
   private metadataFilePath: string
 
-  private version = '1.0.0-beta.2'
+  private version = '1.0.0-beta.3'
   private fsCacheRoots = new WeakMap<ResolvedConfig, string>()
   private fsEnvironmentHashMap = new WeakMap<DevEnvironment, string>()
   private fsCacheKeyGenerators = new Set<CacheKeyIdGenerator>()
@@ -110,6 +110,7 @@ export class FileSystemModuleCache {
       file: meta.file,
       code,
       importers: meta.importers,
+      importedUrls: meta.importedUrls,
       mappings: meta.mappings,
     }
   }
@@ -118,6 +119,7 @@ export class FileSystemModuleCache {
     cachedFilePath: string,
     fetchResult: T,
     importers: string[] = [],
+    importedUrls: string[] = [],
     mappings: boolean = false,
   ): Promise<void> {
     if ('code' in fetchResult) {
@@ -126,8 +128,9 @@ export class FileSystemModuleCache {
         id: fetchResult.id,
         url: fetchResult.url,
         importers,
+        importedUrls,
         mappings,
-      } satisfies Omit<FetchResult, 'code' | 'invalidate'>
+      } satisfies Omit<CachedInlineModuleMeta, 'code'>
       debugFs?.(`${c.yellow('[write]')} ${fetchResult.id} is cached in ${cachedFilePath}`)
       await atomicWriteFile(cachedFilePath, `${fetchResult.code}${cacheComment}${this.toBase64(result)}`)
     }
@@ -365,6 +368,7 @@ export interface CachedInlineModuleMeta {
   code: string
   importers: string[]
   mappings: boolean
+  importedUrls: string[]
 }
 
 /**

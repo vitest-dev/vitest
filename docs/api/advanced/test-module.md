@@ -120,3 +120,7 @@ interface ImportDuration {
   totalTime: number
 }
 ```
+
+## viteEnvironment <Version type="experimental">4.0.15</Version> <Experimental /> {#viteenvironment}
+
+This is a Vite's [`DevEnvironment`](https://vite.dev/guide/api-environment) that transforms all files inside of the test module.
