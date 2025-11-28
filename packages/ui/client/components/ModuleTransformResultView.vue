@@ -14,10 +14,7 @@ import Badge from './Badge.vue'
 import CodeMirrorContainer from './CodeMirrorContainer.vue'
 import IconButton from './IconButton.vue'
 
-// TODO: documentation
-
 const props = defineProps<{
-  // TODO: keep in query
   id: string
   projectName: string
   type: ModuleType
@@ -250,7 +247,7 @@ onKeyStroke('Escape', () => {
           </VueTooltip>
         </p>
         <div mr-8 flex gap-2 items-center>
-          <VueTooltip v-if="durations.selfTime != null" class="inline" cursor-help>
+          <VueTooltip v-if="durations.selfTime != null && durations.external !== true" class="inline" cursor-help>
             <Badge :type="getImportDurationType(durations.selfTime)">
               self: {{ formatTime(durations.selfTime) }}
             </Badge>

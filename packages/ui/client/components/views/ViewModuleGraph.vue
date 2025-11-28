@@ -36,7 +36,6 @@ const { graph } = toRefs(props)
 const el = ref<HTMLDivElement>()
 
 const modalShow = ref(false)
-const breakdownShow = ref(config.value?.experimental?.fsModuleCache ?? false)
 const selectedModule = ref<{ id: string; type: ModuleType } | null>()
 const selectedModuleHistory = useRefHistory(selectedModule)
 const controller = ref<ModuleGraphController | undefined>()
@@ -55,6 +54,7 @@ const breakdownIconClass = computed(() => {
   }
   return textClass
 })
+const breakdownShow = ref(config.value?.experimental?.printImportBreakdown ?? breakdownIconClass.value === 'text-red')
 
 onMounted(() => {
   filteredGraph.value = filterGraphByLevels(graph.value, null, 2)

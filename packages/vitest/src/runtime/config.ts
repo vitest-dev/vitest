@@ -119,7 +119,7 @@ export interface SerializedConfig {
   serializedDefines: string
   experimental: {
     fsModuleCache: boolean
-    printImportBreakdown: boolean
+    printImportBreakdown: boolean | undefined
   }
 }
 
