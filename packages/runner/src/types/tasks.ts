@@ -284,6 +284,10 @@ export interface File extends Suite {
    */
   pool?: string
   /**
+   * The environment that processes the file on the server.
+   */
+  viteEnvironment?: string
+  /**
    * The path to the file in UNIX format.
    */
   filepath: string

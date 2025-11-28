@@ -4,7 +4,7 @@ import type { TestModule } from './reporters/reported-tasks'
 import type { StateManager } from './state'
 import { originalPositionFor, TraceMap } from '@jridgewell/trace-mapping'
 
-interface ModuleImportDiagnostic {
+interface ModuleDefinitionDiagnostic {
   start: Location
   end: Location
   startIndex: number
@@ -13,13 +13,13 @@ interface ModuleImportDiagnostic {
   resolvedId: string
 }
 
-export interface ModuleImportDurationsDiagnostic extends ModuleImportDiagnostic {
+export interface ModuleDefinitionDurationsDiagnostic extends ModuleDefinitionDiagnostic {
   selfTime: number
   totalTime: number
   external?: boolean
 }
 
-export interface UntrackedModuleImportDiagnostic {
+export interface UntrackedModuleDefinitionDiagnostic {
   url: string
   resolvedId: string
   selfTime: number
@@ -28,26 +28,21 @@ export interface UntrackedModuleImportDiagnostic {
 }
 
 export interface SourceModuleDiagnostic {
-  modules: ModuleImportDurationsDiagnostic[]
-  untrackedModules: UntrackedModuleImportDiagnostic[]
+  modules: ModuleDefinitionDurationsDiagnostic[]
+  untrackedModules: UntrackedModuleDefinitionDiagnostic[]
 }
 
 export async function collectModuleDurationsDiagnostic(
   moduleId: string,
-  moduleGraph: EnvironmentModuleGraph,
   state: StateManager,
+  moduleDiagnostic: SourceModuleLocations | undefined,
   testModule?: TestModule,
 ): Promise<SourceModuleDiagnostic> {
-  const transformResult = moduleGraph.getModuleById(moduleId)?.transformResult
-  if (!transformResult) {
-    return { modules: [], untrackedModules: [] }
-  }
-  const moduleDiagnostic = await collectModuleDiagnostic(moduleGraph, transformResult)
   if (!moduleDiagnostic) {
     return { modules: [], untrackedModules: [] }
   }
 
-  const modules: ModuleImportDurationsDiagnostic[] = []
+  const modules: ModuleDefinitionDurationsDiagnostic[] = []
   const modulesById: Record<string, {
     selfTime: number
     totalTime: number
@@ -125,7 +120,7 @@ export async function collectModuleDurationsDiagnostic(
       })
     }
   })
-  const untracked: UntrackedModuleImportDiagnostic[] = []
+  const untracked: UntrackedModuleDefinitionDiagnostic[] = []
   moduleDiagnostic.untracked.forEach((diagnostic) => {
     const durations = modulesById[diagnostic.resolvedId]
     if (!durations) {
@@ -172,11 +167,17 @@ function isModuleImporter(moduleId: string, durations: ImportDuration, testModul
   return false
 }
 
-async function collectModuleDiagnostic(
+export interface SourceModuleLocations {
+  modules: ModuleDefinitionDiagnostic[]
+  untracked: ModuleDefinitionDiagnostic[]
+}
+
+export async function collectSourceModulesLocations(
+  moduleId: string,
   moduleGraph: EnvironmentModuleGraph,
-  transformResult: TransformResult, // with ssr transform
-) {
-  if (!transformResult.ssr) {
+): Promise<SourceModuleLocations | undefined> {
+  const transformResult = moduleGraph.getModuleById(moduleId)?.transformResult
+  if (!transformResult || !transformResult.ssr) {
     return
   }
   const map = transformResult.map
@@ -197,8 +198,8 @@ async function collectModuleDiagnostic(
 
   const transformImports = await parseTransformResult(moduleGraph, transformResult)
   const traceMap = map && 'version' in map && new TraceMap(map as any)
-  const modules: Record<string, ModuleImportDiagnostic[]> = {}
-  const untracked: ModuleImportDiagnostic[] = []
+  const modules: Record<string, ModuleDefinitionDiagnostic[]> = {}
+  const untracked: ModuleDefinitionDiagnostic[] = []
   transformImports.forEach((row) => {
     const original = traceMap && originalPositionFor(traceMap, row.start)
     if (original && original.source != null) {

@@ -188,6 +188,10 @@ export interface VitestRunner {
    * The name of the current pool. Can affect how stack trace is inferred on the server side.
    */
   pool?: string
+  /**
+   * The current Vite environment that processes the files on the server.
+   */
+  viteEnvironment?: string
 
   /**
    * Return the worker context for fixtures specified with `scope: 'worker'`

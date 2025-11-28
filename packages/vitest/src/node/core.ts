@@ -1,13 +1,13 @@
 import type { CancelReason, File } from '@vitest/runner'
 import type { Awaitable } from '@vitest/utils'
 import type { Writable } from 'node:stream'
-import type { DevEnvironment, ViteDevServer } from 'vite'
+import type { ViteDevServer } from 'vite'
 import type { ModuleRunner } from 'vite/module-runner'
 import type { SerializedCoverageConfig } from '../runtime/config'
 import type { ArgumentsType, ProvidedContext, UserConsoleLog } from '../types/general'
 import type { CliOptions } from './cli/cli-api'
 import type { VitestFetchFunction } from './environments/fetchModule'
-import type { SourceModuleDiagnostic } from './module-diagnostic'
+import type { SourceModuleDiagnostic, SourceModuleLocations } from './module-diagnostic'
 import type { ProcessPool } from './pool'
 import type { TestModule } from './reporters/reported-tasks'
 import type { TestSpecification } from './spec'
@@ -36,7 +36,7 @@ import { createFetchModuleFunction } from './environments/fetchModule'
 import { ServerModuleRunner } from './environments/serverRunner'
 import { FilesNotFoundError } from './errors'
 import { Logger } from './logger'
-import { collectModuleDurationsDiagnostic } from './module-diagnostic'
+import { collectModuleDurationsDiagnostic, collectSourceModulesLocations } from './module-diagnostic'
 import { VitestPackageInstaller } from './packageInstaller'
 import { createPool } from './pool'
 import { TestProject } from './project'
@@ -876,15 +876,43 @@ export class Vitest {
   }
 
   /**
-   * Returns module diagnostic if Vitest ran this module.
+   * Returns module's diagnostic. If `testModule` is not provided, `selfTime` and `totalTime` will be aggregated across all tests.
    *
-   * TODO: explain better
-   * If TestModule is passed down, it will return diagnostic of the modules only if it ran them.
+   * If the module was not transformed or executed, the diagnostic will be empty.
    * @experimental
+   * @see {@link https://vitest.dev/api/advanced/vitest.html#getsourcemodulediagnostic}
    */
-  public async experimental_getSourceModuleDiagnostic(environment: DevEnvironment, moduleId: string, testModule?: TestModule): Promise<SourceModuleDiagnostic> {
-    // TODO: iterate over each environment instead of accepting one and aggregate the data
-    return collectModuleDurationsDiagnostic(moduleId, environment.moduleGraph, this.state, testModule)
+  public async experimental_getSourceModuleDiagnostic(moduleId: string, testModule?: TestModule): Promise<SourceModuleDiagnostic> {
+    if (testModule) {
+      const viteEnvironment = testModule.viteEnvironment
+      // if there is no viteEnvironment, it means the file did not run yet
+      if (!viteEnvironment) {
+        return { modules: [], untrackedModules: [] }
+      }
+      const moduleLocations = await collectSourceModulesLocations(moduleId, viteEnvironment.moduleGraph)
+      return collectModuleDurationsDiagnostic(moduleId, this.state, moduleLocations, testModule)
+    }
+
+    const environments = this.projects.flatMap((p) => {
+      return Object.values(p.vite.environments)
+    })
+    const aggregatedLocationsResult = await Promise.all(
+      environments.map(environment =>
+        collectSourceModulesLocations(moduleId, environment.moduleGraph),
+      ),
+    )
+
+    return collectModuleDurationsDiagnostic(
+      moduleId,
+      this.state,
+      aggregatedLocationsResult.reduce<SourceModuleLocations>((acc, locations) => {
+        if (locations) {
+          acc.modules.push(...locations.modules)
+          acc.untracked.push(...locations.untracked)
+        }
+        return acc
+      }, { modules: [], untracked: [] }),
+    )
   }
 
   public async experimental_parseSpecifications(specifications: TestSpecification[], options?: {

@@ -38,8 +38,12 @@ export class VitestTestRunner implements VitestRunner {
 
   public pool: string = this.workerState.ctx.pool
   private _otel!: Traces
+  public viteEnvironment: string
 
-  constructor(public config: SerializedConfig) {}
+  constructor(public config: SerializedConfig) {
+    const environment = this.workerState.environment
+    this.viteEnvironment = environment.viteEnvironment || environment.name
+  }
 
   importFile(filepath: string, source: VitestRunnerImportSource): unknown {
     if (source === 'setup') {

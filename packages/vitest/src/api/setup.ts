@@ -128,7 +128,6 @@ export function setup(ctx: Vitest, _server?: ViteDevServer): void {
             return
           }
 
-          // TODO: parse imports into { id, start: { line, column }, end: { line, column } }
           const result: TransformResultWithSource = moduleNode.transformResult
           try {
             result.source = result.source || (moduleNode.file ? await fs.readFile(moduleNode.file, 'utf-8') : undefined)
@@ -141,7 +140,7 @@ export function setup(ctx: Vitest, _server?: ViteDevServer): void {
             result.transformTime = transformDuration
           }
           try {
-            const diagnostic = await ctx.experimental_getSourceModuleDiagnostic(environment, moduleId, testModule)
+            const diagnostic = await ctx.experimental_getSourceModuleDiagnostic(moduleId, testModule)
             result.modules = diagnostic.modules
             result.untrackedModules = diagnostic.untrackedModules
           }
