@@ -4,7 +4,7 @@ import { version } from 'node:process'
 
 import { defineWebWorkers } from '@vitest/web-worker/pure'
 
-import { afterAll, beforeAll, beforeEach, describe, expect, it, suite, vi } from 'vitest'
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 import MyEventListenerWorker from '../src/web-worker/eventListenerWorker?worker'
 import MyObjectWorker from '../src/web-worker/objectWorker?worker'
 import MySelfWorker from '../src/web-worker/selfWorker?worker'
@@ -218,7 +218,7 @@ const cloneTypes = [
   'none',
 ] satisfies Array<NonNullable<Parameters<typeof defineWebWorkers>[0]>['clone']>
 cloneTypes.forEach((clone) => {
-  suite(`defineWebWorkers with clone=${clone}`, () => {
+  describe(`defineWebWorkers with clone=${clone}`, () => {
     let originalWorker: typeof Worker
     let originalSharedWorker: typeof SharedWorker
     beforeAll(async () => {
@@ -234,7 +234,7 @@ cloneTypes.forEach((clone) => {
       globalThis.SharedWorker = originalSharedWorker
     })
 
-    it('transfer MessagePort objects to worker as event.ports', async () => {
+    it('transfers MessagePort objects to worker as event.ports', async () => {
       expect.assertions(1)
 
       const worker = new MyWorker()
