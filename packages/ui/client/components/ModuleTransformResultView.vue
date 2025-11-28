@@ -47,8 +47,8 @@ const ext = computed(() => props.id?.split(/\./g).pop() || 'js')
 
 const source = computed(() => result.value?.source?.trim() || '')
 const isCached = computed(() => {
-  if (!result.value || !('code' in result.value)) {
-    return false
+  if (!result.value || !('code' in result.value) || !config.value.experimental?.fsModuleCache) {
+    return undefined
   }
   const index = result.value.code.lastIndexOf('vitestCache=')
   return index !== -1
@@ -97,7 +97,7 @@ function onMousedown(editor: Editor, e: MouseEvent) {
 
 function buildShadowImportsHtml(imports: UntrackedModuleImportDiagnostic[]) {
   const shadowImportsDiv = document.createElement('div')
-  shadowImportsDiv.classList.add('mt-5')
+  shadowImportsDiv.classList.add('mb-5')
 
   imports.forEach(({ resolvedId, totalTime, external }) => {
     const importDiv = document.createElement('div')
@@ -155,7 +155,7 @@ function markImportDurations(codemirror: EditorFromTextArea) {
     if (untrackedModules?.length) {
       const importDiv = buildShadowImportsHtml(untrackedModules)
       widgetElements.push(importDiv)
-      lineWidgets.push(codemirror.addLineWidget(0, importDiv))
+      lineWidgets.push(codemirror.addLineWidget(0, importDiv, { above: true }))
     }
 
     result.value.modules?.forEach((diagnostic) => {
@@ -229,12 +229,21 @@ onKeyStroke('Escape', () => {
               </template>
             </template>
           </VueTooltip>
-          <VueTooltip v-if="isCached" class="inline" cursor-help>
+          <VueTooltip v-if="isCached === true" class="inline" cursor-help>
             <Badge type="tip" ml-2>
               cached
             </Badge>
             <template #popper>
               This module is cached on the file system under `experimental.fsModuleCachePath` ("node_modules/.exprtimental-vitest-cache" by default).
+            </template>
+          </VueTooltip>
+          <VueTooltip v-if="isCached === false" class="inline" cursor-help>
+            <Badge type="warning" ml-2>
+              not cached
+            </Badge>
+            <template #popper>
+              <p>This module is not cached on the file system. It might be the first test run after cache invalidation or</p>
+              <p>it was excluded manually via `experimental_defineCacheKeyGenerator`, or it cannot be cached (modules with `import.meta.glob`, for example).</p>
             </template>
           </VueTooltip>
         </p>
