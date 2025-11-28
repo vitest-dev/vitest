@@ -1,7 +1,7 @@
 import type { File, TaskEventPack, TaskResultPack, TestAnnotation, TestArtifact } from '@vitest/runner'
 import type { Awaitable } from '@vitest/utils'
 import type { BirpcReturn } from 'birpc'
-import type { ModuleImportDurationsDiagnostic } from '../node/module-diagnostic'
+import type { ModuleImportDurationsDiagnostic, UntrackedModuleImportDiagnostic } from '../node/module-diagnostic'
 import type { SerializedConfig } from '../runtime/config'
 import type { SerializedTestSpecification } from '../runtime/types/utils'
 import type { LabelColor, ModuleGraphData, UserConsoleLog } from '../types/general'
@@ -32,6 +32,7 @@ export interface TransformResultWithSource {
   source?: string
   transformTime?: number
   modules?: ModuleImportDurationsDiagnostic[]
+  untrackedModules?: UntrackedModuleImportDiagnostic[]
 }
 
 export interface WebSocketHandlers {

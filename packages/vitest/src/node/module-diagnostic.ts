@@ -18,8 +18,17 @@ export interface ModuleImportDurationsDiagnostic extends ModuleImportDiagnostic 
   external?: boolean
 }
 
+export interface UntrackedModuleImportDiagnostic {
+  url: string
+  resolvedId: string
+  selfTime: number
+  totalTime: number
+  external?: boolean
+}
+
 export interface ModuleDiagnostic {
   modules: ModuleImportDurationsDiagnostic[]
+  untrackedModules: UntrackedModuleImportDiagnostic[]
 }
 
 export async function collectModuleDurationsDiagnostic(
@@ -30,11 +39,11 @@ export async function collectModuleDurationsDiagnostic(
 ): Promise<ModuleDiagnostic> {
   const transformResult = moduleGraph.getModuleById(moduleId)?.transformResult
   if (!transformResult) {
-    return { modules: [] }
+    return { modules: [], untrackedModules: [] }
   }
   const moduleDiagnostic = await collectModuleDiagnostic(moduleGraph, transformResult)
   if (!moduleDiagnostic) {
-    return { modules: [] }
+    return { modules: [], untrackedModules: [] }
   }
 
   const modules: ModuleImportDurationsDiagnostic[] = []
@@ -43,6 +52,8 @@ export async function collectModuleDurationsDiagnostic(
     totalTime: number
     external?: boolean
   }> = {}
+
+  const allModules = [...moduleDiagnostic.modules, ...moduleDiagnostic.untracked]
 
   // this aggregates the times for _ALL_ tests if testModule is not passed
   // so if the module was imported in separate tests, the time will be accumulated
@@ -53,7 +64,7 @@ export async function collectModuleDurationsDiagnostic(
         continue
       }
 
-      moduleDiagnostic.modules.forEach(({ resolvedId }) => {
+      allModules.forEach(({ resolvedId }) => {
         const durations = importDurations[resolvedId]
         if (!durations) {
           return
@@ -86,9 +97,21 @@ export async function collectModuleDurationsDiagnostic(
       })
     }
   })
+  const untracked: UntrackedModuleImportDiagnostic[] = []
+  moduleDiagnostic.untracked.forEach((diagnostic) => {
+    const durations = modulesById[diagnostic.resolvedId]
+    if (durations) {
+      untracked.push({
+        ...durations,
+        resolvedId: diagnostic.resolvedId,
+        url: diagnostic.url,
+      })
+    }
+  })
 
   return {
     modules,
+    untrackedModules: untracked,
   }
 }
 
@@ -117,25 +140,34 @@ async function collectModuleDiagnostic(
 
   const transformImports = await parseTransformResult(moduleGraph, transformResult)
   const traceMap = map && 'version' in map && new TraceMap(map as any)
-  const modules: ModuleImportDiagnostic[] = []
+  const modules: Record<string, ModuleImportDiagnostic> = {}
+  const untracked: ModuleImportDiagnostic[] = []
   transformImports.forEach((row) => {
     const original = traceMap && originalPositionFor(traceMap, row.start)
     if (original && original.source != null) {
+      // if there are several at the same position, this is a bug
+      // probably caused by import.meta.glob imports returning incorrect positions
+      // all the new import.meta.glob imports come first, so only the last module on this line is correct
       const sourceImport = sourceImports[original.source].get(`${original.line}:${original.column}`)
       if (sourceImport) {
-        modules.push({
+        if (modules[sourceImport.url]) {
+          untracked.push(modules[sourceImport.url])
+        }
+
+        modules[sourceImport.url] = {
           start: sourceImport.start,
           end: sourceImport.end,
           startIndex: sourceImport.startIndex,
           endIndex: sourceImport.endIndex,
           url: sourceImport.url,
           resolvedId: row.resolvedId,
-        })
+        }
       }
     }
   })
   return {
-    modules,
+    modules: Object.values(modules),
+    untracked,
   }
 }
 
@@ -219,13 +251,6 @@ function parseSourceImportsAndExports(source: string): Map<string, SourceStaticI
 async function parseTransformResult(moduleGraph: EnvironmentModuleGraph, transformResult: TransformResult) {
   const code = transformResult.code
   const regexp = /__vite_ssr_import__\("([^"]+)"/g
-  const results: {
-    resolvedId: string
-    start: Location
-    end: Location
-    startIndex: number
-    endIndex: number
-  }[] = []
   const lineColumnMap = createIndexMap(code)
   const importPositions: {
     raw: string
@@ -239,7 +264,8 @@ async function parseTransformResult(moduleGraph: EnvironmentModuleGraph, transfo
     const endIndex = match.index! + match[0].length - 1 // 1 is "
     importPositions.push({ raw: match[1], startIndex, endIndex })
   }
-  await Promise.all(importPositions.map(async ({ startIndex, endIndex, raw }) => {
+
+  const results = await Promise.all(importPositions.map(async ({ startIndex, endIndex, raw }) => {
     const position = lineColumnMap.get(startIndex)!
     const endPosition = lineColumnMap.get(endIndex)!
     const moduleNode = await moduleGraph.getModuleByUrl(raw)
@@ -247,15 +273,16 @@ async function parseTransformResult(moduleGraph: EnvironmentModuleGraph, transfo
       return
     }
 
-    results.push({
+    return {
       resolvedId: moduleNode.id,
       start: position,
       end: endPosition,
       startIndex,
       endIndex,
-    })
+    }
   }))
-  return results
+
+  return results.filter(n => n != null)
 }
 
 // TODO: utils, share with ast-collect

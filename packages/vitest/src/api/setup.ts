@@ -143,6 +143,7 @@ export function setup(ctx: Vitest, _server?: ViteDevServer): void {
           try {
             const diagnostic = await ctx.experimental_getModuleDiagnostic(environment, moduleId, testModule)
             result.modules = diagnostic.modules
+            result.untrackedModules = diagnostic.untrackedModules
           }
           catch {}
           return result
