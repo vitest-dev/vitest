@@ -5,8 +5,8 @@ import type { Traces } from '../../utils/traces'
 import type { ExternalModulesExecutor } from '../external-executor'
 import type { CreateImportMeta } from './moduleRunner'
 import fs from 'node:fs'
-import { isBuiltin } from 'node:module'
 import { isBareImport } from '@vitest/utils/helpers'
+import { isBrowserExternal, isBuiltin, toBuiltin } from '../../utils/modules'
 import { getCachedVitestImport } from './cachedResolver'
 import { listenForErrors } from './errorCatcher'
 import { unwrapId, VitestModuleEvaluator } from './moduleEvaluator'
@@ -14,9 +14,6 @@ import { VitestMocker } from './moduleMocker'
 import { VitestModuleRunner } from './moduleRunner'
 
 const { readFileSync } = fs
-
-const browserExternalId = '__vite-browser-external'
-const browserExternalLength = browserExternalId.length + 1 // 1 is ":"
 
 export const VITEST_VM_CONTEXT_SYMBOL: string = '__vitest_vm_context__'
 
@@ -124,7 +121,11 @@ export function startVitestModuleRunner(options: ContextModuleRunnerOptions): Vi
             }
           }
 
-          if (isBuiltin(rawId) || rawId.startsWith(browserExternalId)) {
+          if (isBuiltin(rawId)) {
+            return { externalize: rawId, type: 'builtin' }
+          }
+
+          if (isBrowserExternal(rawId)) {
             return { externalize: toBuiltin(rawId), type: 'builtin' }
           }
 
@@ -183,15 +184,4 @@ export function startVitestModuleRunner(options: ContextModuleRunnerOptions): Vi
   })
 
   return moduleRunner
-}
-
-export function toBuiltin(id: string): string {
-  if (id.startsWith(browserExternalId)) {
-    id = id.slice(browserExternalLength)
-  }
-
-  if (!id.startsWith('node:')) {
-    id = `node:${id}`
-  }
-  return id
 }
