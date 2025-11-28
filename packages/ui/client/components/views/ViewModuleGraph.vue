@@ -367,10 +367,6 @@ function bindOnClick(
 
       isRightClickDown = isRightClick(event)
 
-      // if (node.type === 'external') {
-      //   return
-      // }
-
       if (!isValidClick(event) && !isRightClickDown) {
         return
       }
@@ -386,11 +382,6 @@ function bindOnClick(
 
       const wasRightClick = isRightClick(event)
 
-      // External nodes only respond to right-click
-      if (node.type === 'external' && !wasRightClick) {
-        return
-      }
-
       if (!isValidClick(event) && !wasRightClick) {
         return
       }
@@ -402,15 +393,16 @@ function bindOnClick(
       const dx = node.x - px
       const dy = node.y - py
       if (dx ** 2 + dy ** 2 < 100) {
-        // Right-click or Shift+Click: open modal
-        if (wasRightClick || event.shiftKey) {
-          event.preventDefault()
+        // Left-click: show details (open modal)
+        if (!wasRightClick && !event.shiftKey) {
           setSelectedModule(node.id, node.type)
         }
-        // Left-click: focus on node (show 2 levels from this node)
-        // Block if node has more than 100 links
-        else if (node.type === 'inline') {
-          focusOnNode(node.id)
+        // Right-click or Shift+Click: expand graph (focus on node)
+        else if (wasRightClick || event.shiftKey) {
+          event.preventDefault()
+          if (node.type === 'inline') {
+            focusOnNode(node.id)
+          }
         }
       }
     })
@@ -483,7 +475,7 @@ function bindOnClick(
           text-xs
           opacity-60
         >
-          <span>Click: focus node • Right-click/Shift: details</span>
+          <span>Click on node: details • Right-click/Shift: expand graph</span>
         </div>
         <div>
           <IconButton

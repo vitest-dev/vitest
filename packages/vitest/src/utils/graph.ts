@@ -20,8 +20,9 @@ export async function getModuleGraph(
   if (!environment) {
     throw new Error(`Cannot find environment for ${testFilePath}`)
   }
+  const seen = new Map<EnvironmentModuleNode, string>()
 
-  function get(mod?: EnvironmentModuleNode, seen = new Map<EnvironmentModuleNode, string>()) {
+  function get(mod?: EnvironmentModuleNode) {
     if (!mod || !mod.id) {
       return
     }
@@ -57,13 +58,16 @@ export async function getModuleGraph(
     const mods = Array.from(mod.importedModules).filter(
       i => i.id && !i.id.includes('/vitest/dist/'),
     )
-    graph[id] = mods.map(m => get(m, seen)).filter(
+    graph[id] = mods.map(m => get(m)).filter(
       Boolean,
     ) as string[]
     return id
   }
 
   get(environment.moduleGraph.getModuleById(testFilePath))
+  project.config.setupFiles.forEach((setupFile) => {
+    get(environment.moduleGraph.getModuleById(setupFile))
+  })
 
   return {
     graph,
