@@ -14,6 +14,8 @@ import Badge from './Badge.vue'
 import CodeMirrorContainer from './CodeMirrorContainer.vue'
 import IconButton from './IconButton.vue'
 
+// TODO: documentation
+
 const props = defineProps<{
   // TODO: keep in query
   id: string

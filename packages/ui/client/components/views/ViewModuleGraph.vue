@@ -42,8 +42,7 @@ const selectedModuleHistory = useRefHistory(selectedModule)
 const controller = ref<ModuleGraphController | undefined>()
 const focusedNode = ref<string | null>(null)
 const filteredGraph = shallowRef<ModuleGraph>(graph.value)
-const nodeLengths = computed(() => graph.value.nodes.length)
-const breakdownClass = computed(() => {
+const breakdownIconClass = computed(() => {
   let textClass = ''
   for (const { totalTime } of Object.values(currentModule.value?.importDurations || {})) {
     if (totalTime >= 500) {
@@ -80,13 +79,12 @@ function toggleImportBreakdown() {
   breakdownShow.value = !breakdownShow.value
 }
 
-// TODO: if number of nodes is low, just keep the original graph
 function filterGraphByLevels(
   sourceGraph: ModuleGraph,
   startNodeId: string | null,
   levels: number = 2,
 ): ModuleGraph {
-  if (!sourceGraph.nodes.length) {
+  if (!sourceGraph.nodes.length || sourceGraph.nodes.length <= 50) {
     return sourceGraph
   }
 
@@ -101,7 +99,6 @@ function filterGraphByLevels(
     adjacencyList.get(targetId)?.add(sourceId)
   })
 
-  // Find starting node(s)
   let startNodes: string[]
   if (startNodeId) {
     startNodes = [startNodeId]
@@ -142,16 +139,13 @@ function filterGraphByLevels(
     }
   }
 
-  // Filter nodes and links
   const nodeMap = new Map(sourceGraph.nodes.map(node => [node.id, node]))
   const filteredNodes = Array.from(visitedNodes)
     .map(id => nodeMap.get(id))
     .filter(node => node !== undefined) as ModuleNode[]
 
-  // Create a map of filtered nodes for quick lookup
   const filteredNodeMap = new Map(filteredNodes.map(node => [node.id, node]))
 
-  // Recreate links with the filtered node references
   const filteredLinks = sourceGraph.links
     .map((link) => {
       const sourceId = typeof link.source === 'object' ? link.source.id : String(link.source)
@@ -213,13 +207,11 @@ function resetToRoot() {
 }
 
 function updateNodeColors() {
-  // Update node colors based on focused state by recreating nodes
   const updatedNodes = filteredGraph.value.nodes.map((node) => {
     let color: string
     let labelColor: string
 
     if (node.id === focusedNode.value) {
-      // Highlight the focused node with a distinct color
       color = 'var(--color-node-focused)'
       labelColor = 'var(--color-node-focused)'
     }
@@ -246,10 +238,8 @@ function updateNodeColors() {
     })
   })
 
-  // Create a map for quick node lookup by ID
   const nodeMap = new Map(updatedNodes.map(node => [node.id, node]))
 
-  // Update links to reference the new node objects
   const updatedLinks = filteredGraph.value.links.map((link) => {
     const sourceId = typeof link.source === 'object' ? link.source.id : String(link.source)
     const targetId = typeof link.target === 'object' ? link.target.id : String(link.target)
@@ -423,7 +413,7 @@ function bindOnClick(
           select-none
         >
           <div class="pr-2">
-            {{ filteredGraph.nodes.length }}/{{ nodeLengths }} {{ filteredGraph.nodes.length === 1 ? 'module' : 'modules' }}
+            {{ filteredGraph.nodes.length }}/{{ graph.nodes.length }} {{ filteredGraph.nodes.length === 1 ? 'module' : 'modules' }}
           </div>
           <input
             id="hide-node-modules"
@@ -481,7 +471,7 @@ function bindOnClick(
           <IconButton
             v-tooltip.bottom="`${breakdownShow ? 'Hide' : 'Show'} Import Breakdown`"
             icon="i-carbon-notebook"
-            :class="breakdownClass"
+            :class="breakdownIconClass"
             @click="toggleImportBreakdown()"
           />
         </div>
@@ -501,7 +491,7 @@ function bindOnClick(
         </div>
       </div>
     </div>
-    <div v-if="breakdownShow" class="absolute bg-base border-base py-2 px-4 right-0 mr-2 rounded mt-2">
+    <div v-if="breakdownShow" class="absolute bg-base border-base right-0 mr-2 rounded-xl mt-2">
       <ViewModuleGraphImportBreakdown @select="(id, type) => setSelectedModule(id, type)" />
     </div>
     <div ref="el" />

@@ -5,7 +5,6 @@ import { onMounted, ref, useAttrs } from 'vue'
 import { codemirrorRef, useCodeMirror } from '~/composables/codemirror'
 
 const { mode, readOnly } = defineProps<{
-  uid?: string
   mode?: string
   readOnly?: boolean
   saving?: boolean
@@ -73,6 +72,6 @@ onMounted(async () => {
 
 <template>
   <div relative font-mono text-sm class="codemirror-scrolls" :class="saving ? 'codemirror-busy' : undefined">
-    <textarea ref="el" :key="uid" />
+    <textarea ref="el" />
   </div>
 </template>

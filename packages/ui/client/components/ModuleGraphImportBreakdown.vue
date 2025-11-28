@@ -39,8 +39,9 @@ const sortedImports = computed(() => {
       continue
     }
 
-    const raltiveModule = duration.external ? getExternalModuleName(filePath) : relative(root, filePath)
-    // TODO: if starts with file://, remove the protocol
+    const raltiveModule = duration.external
+      ? getExternalModuleName(filePath)
+      : relative(root, filePath)
     allImports.push({
       importedFile: filePath,
       relativeFile: ellipsisFile(raltiveModule),
@@ -57,7 +58,7 @@ const sortedImports = computed(() => {
   return sortedImports
 })
 
-const imports = computed(() => sortedImports.value.slice(0, maxAmount.value))
+const imports = computed(() => sortedImports.value.slice(0, maxAmount.value + 1))
 
 function ellipsisFile(moduleId: string) {
   if (moduleId.length <= 45) {
@@ -69,8 +70,10 @@ function ellipsisFile(moduleId: string) {
 
 <template>
   <div class="overflow-auto max-h-120">
-    <h1>Import Breakdown <span op-40>(ordered by Total Time) (Top {{ Math.min(maxAmount, imports.length) }})</span></h1>
-    <table text-sm>
+    <h1 my-2 mx-4>
+      Import Breakdown <span op-40>(ordered by Total Time) (Top {{ Math.min(maxAmount, imports.length) }})</span>
+    </h1>
+    <table my-2 mx-4 text-sm>
       <thead>
         <tr>
           <th>
@@ -108,9 +111,14 @@ function ellipsisFile(moduleId: string) {
         </tr>
       </tbody>
     </table>
-    <!-- TODO: design -->
-    <button v-if="maxAmount < sortedImports.length" @click="maxAmount += 5">
-      more
+    <button
+      v-if="maxAmount < sortedImports.length"
+      class="flex w-full justify-center h-8 text-sm z-10 relative"
+      @click="maxAmount += 5"
+    >
+      <!-- <button @click="maxAmount += 5"> -->
+      Show more
+      <!-- </button> -->
     </button>
   </div>
 </template>
