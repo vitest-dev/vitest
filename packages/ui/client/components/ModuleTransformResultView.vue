@@ -95,9 +95,6 @@ function onMousedown(editor: Editor, e: MouseEvent) {
   }
 }
 
-// TODO: import.meta.glob is bugged
-// example: /Users/vladimir/Projects/zammad/app/frontend/shared/form/index.ts is bugged
-
 function buildShadowImportsHtml(imports: UntrackedModuleImportDiagnostic[]) {
   const shadowImportsDiv = document.createElement('div')
   shadowImportsDiv.classList.add('mt-5')
@@ -140,14 +137,14 @@ function createDurationDiv(duration: number) {
 }
 
 function markImportDurations(codemirror: EditorFromTextArea) {
+  lineWidgets.forEach(lw => lw.clear())
+  lineWidgets.length = 0
+
   widgetElements.forEach(el => el.remove())
   widgetElements.length = 0
 
   markers.forEach(m => m.clear())
   markers.length = 0
-
-  lineWidgets.forEach(lw => lw.clear())
-  lineWidgets.length = 0
 
   if (result.value && 'modules' in result.value) {
     codemirror.off('mousedown', onMousedown)
