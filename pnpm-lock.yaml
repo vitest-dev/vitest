@@ -1226,6 +1226,12 @@ importers:
       '@vitest/test-dep-conditions':
         specifier: file:./deps/test-dep-conditions
         version: file:test/config/deps/test-dep-conditions
+      '@vitest/test-dep-optimizer-external':
+        specifier: file:./deps/optimizer/external
+        version: file:test/config/deps/optimizer/external
+      '@vitest/test-dep-optimizer-optimized':
+        specifier: file:./deps/optimizer/optimized
+        version: file:test/config/deps/optimizer/optimized
       inline-dep:
         specifier: file:./deps/vite-ssr-resolve/inline-dep
         version: file:test/config/deps/vite-ssr-resolve/inline-dep
@@ -4710,6 +4716,12 @@ packages:
 
   '@vitest/test-dep-nested-cjs@file:test/core/deps/dep-nested-cjs':
     resolution: {directory: test/core/deps/dep-nested-cjs, type: directory}
+
+  '@vitest/test-dep-optimizer-external@file:test/config/deps/optimizer/external':
+    resolution: {directory: test/config/deps/optimizer/external, type: directory}
+
+  '@vitest/test-dep-optimizer-optimized@file:test/config/deps/optimizer/optimized':
+    resolution: {directory: test/config/deps/optimizer/optimized, type: directory}
 
   '@vitest/test-dep1@file:test/core/deps/dep1':
     resolution: {directory: test/core/deps/dep1, type: directory}
@@ -12860,6 +12872,10 @@ snapshots:
       '@vitest/test-dep-conditions-indirect': file:test/config/deps/test-dep-conditions-indirect
 
   '@vitest/test-dep-nested-cjs@file:test/core/deps/dep-nested-cjs': {}
+
+  '@vitest/test-dep-optimizer-external@file:test/config/deps/optimizer/external': {}
+
+  '@vitest/test-dep-optimizer-optimized@file:test/config/deps/optimizer/optimized': {}
 
   '@vitest/test-dep1@file:test/core/deps/dep1': {}
 
