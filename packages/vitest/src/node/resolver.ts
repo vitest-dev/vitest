@@ -3,6 +3,7 @@ import { existsSync, promises as fsp } from 'node:fs'
 import { isBuiltin } from 'node:module'
 import { pathToFileURL } from 'node:url'
 import { KNOWN_ASSET_RE } from '@vitest/utils/constants'
+import { cleanUrl } from '@vitest/utils/helpers'
 import { findNearestPackageData } from '@vitest/utils/resolver'
 import * as esModuleLexer from 'es-module-lexer'
 import { dirname, extname, join, resolve } from 'pathe'
@@ -133,7 +134,9 @@ async function isValidNodeImport(id: string) {
 
   try {
     await esModuleLexer.init
-    const code = await fsp.readFile(id, 'utf8')
+    // clean url to strip off `?v=...` query etc.
+    // node can natively import files with query params, so externalizing them is safe.
+    const code = await fsp.readFile(cleanUrl(id), 'utf8')
     const [, , , hasModuleSyntax] = esModuleLexer.parse(code)
     return !hasModuleSyntax
   }
