@@ -16,7 +16,7 @@
     "inline-dep": "file:./deps/vite-ssr-resolve/inline-dep",
     "other-dep": "file:./deps/vite-ssr-resolve/other-dep",
     "ssr-no-external-dep": "file:./deps/vite-ssr-resolve/ssr-no-external-dep",
-    "tinyexec": "^0.3.2",
+    "tinyexec": "^1.0.2",
     "vite": "latest",
     "vitest": "workspace:*"
   }
