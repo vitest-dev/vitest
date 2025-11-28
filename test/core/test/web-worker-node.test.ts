@@ -4,7 +4,7 @@ import type { defineWebWorkers } from '@vitest/web-worker/pure'
 
 import { version } from 'node:process'
 
-import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import MyEventListenerWorker from '../src/web-worker/eventListenerWorker?worker'
 import MyObjectWorker from '../src/web-worker/objectWorker?worker'
 import MySelfWorker from '../src/web-worker/selfWorker?worker'
@@ -219,10 +219,10 @@ const cloneTypes = [
 ] satisfies Array<NonNullable<Parameters<typeof defineWebWorkers>[0]>['clone']>
 cloneTypes.forEach((clone) => {
   describe(`defineWebWorkers with clone=${clone}`, () => {
-    beforeAll(() => {
+    beforeEach(() => {
       process.env.VITEST_WEB_WORKER_CLONE = clone
     })
-    afterAll(() => {
+    afterEach(() => {
       process.env.VITEST_WEB_WORKER_CLONE = undefined
     })
 
