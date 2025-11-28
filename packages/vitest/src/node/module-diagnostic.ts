@@ -55,6 +55,8 @@ export async function collectModuleDurationsDiagnostic(
 
   const allModules = [...moduleDiagnostic.modules, ...moduleDiagnostic.untracked]
 
+  const visitedByFiles: Record<string, Set<string>> = {}
+
   // this aggregates the times for _ALL_ tests if testModule is not passed
   // so if the module was imported in separate tests, the time will be accumulated
   for (const files of (testModule ? [[testModule.task]] : state.filesMap.values())) {
@@ -63,14 +65,21 @@ export async function collectModuleDurationsDiagnostic(
       if (!importDurations) {
         continue
       }
+      const currentModule = state.getReportedEntity(file) as TestModule | undefined
+      if (!currentModule) {
+        continue
+      }
+      const visitedKey = currentModule.project.config.isolate === false ? 'non-isolate' : file.id
+      if (!visitedByFiles[visitedKey]) {
+        visitedByFiles[visitedKey] = new Set()
+      }
+      const visited = visitedByFiles[visitedKey]
 
       allModules.forEach(({ resolvedId }) => {
         const durations = importDurations[resolvedId]
         if (!durations) {
           return
         }
-
-        // TODO: if not isolated, do it only once, because the times are not accumulated
 
         modulesById[resolvedId] ??= {
           selfTime: 0,
@@ -80,7 +89,9 @@ export async function collectModuleDurationsDiagnostic(
 
         // only track if the current module imported this module,
         // otherwise it was imported instantly because it's cached
-        if (durations.importer === moduleId) {
+        // do not accumulate if module was already visited by suite (or suites in non-isolate mode)
+        if (!visited.has(resolvedId) && durations.importer === moduleId) {
+          visited.add(resolvedId)
           modulesById[resolvedId].selfTime += durations.selfTime
           modulesById[resolvedId].totalTime += durations.totalTime
         }
@@ -88,9 +99,25 @@ export async function collectModuleDurationsDiagnostic(
     }
   }
 
+  // if module was imported twice in the same file,
+  // show only one time - the second should be shown as 0
+  const visitedInFile = new Set<string>()
   moduleDiagnostic.modules.forEach((diagnostic) => {
     const durations = modulesById[diagnostic.resolvedId]
-    if (durations) {
+    if (!durations) {
+      return
+    }
+
+    if (visitedInFile.has(diagnostic.resolvedId)) {
+      modules.push({
+        ...diagnostic,
+        selfTime: 0,
+        totalTime: 0,
+        external: durations.external,
+      })
+    }
+    else {
+      visitedInFile.add(diagnostic.resolvedId)
       modules.push({
         ...diagnostic,
         ...durations,
@@ -100,7 +127,21 @@ export async function collectModuleDurationsDiagnostic(
   const untracked: UntrackedModuleImportDiagnostic[] = []
   moduleDiagnostic.untracked.forEach((diagnostic) => {
     const durations = modulesById[diagnostic.resolvedId]
-    if (durations) {
+    if (!durations) {
+      return
+    }
+
+    if (visitedInFile.has(diagnostic.resolvedId)) {
+      untracked.push({
+        selfTime: 0,
+        totalTime: 0,
+        external: durations.external,
+        resolvedId: diagnostic.resolvedId,
+        url: diagnostic.url,
+      })
+    }
+    else {
+      visitedInFile.add(diagnostic.resolvedId)
       untracked.push({
         ...durations,
         resolvedId: diagnostic.resolvedId,
@@ -140,7 +181,7 @@ async function collectModuleDiagnostic(
 
   const transformImports = await parseTransformResult(moduleGraph, transformResult)
   const traceMap = map && 'version' in map && new TraceMap(map as any)
-  const modules: Record<string, ModuleImportDiagnostic> = {}
+  const modules: Record<string, ModuleImportDiagnostic[]> = {}
   const untracked: ModuleImportDiagnostic[] = []
   transformImports.forEach((row) => {
     const original = traceMap && originalPositionFor(traceMap, row.start)
@@ -151,22 +192,26 @@ async function collectModuleDiagnostic(
       const sourceImport = sourceImports[original.source].get(`${original.line}:${original.column}`)
       if (sourceImport) {
         if (modules[sourceImport.url]) {
-          untracked.push(modules[sourceImport.url])
+          // remove imports with a different resolvedId
+          const differentImports = modules[sourceImport.url].filter(d => d.resolvedId !== row.resolvedId)
+          untracked.push(...differentImports)
+          modules[sourceImport.url] = modules[sourceImport.url].filter(d => d.resolvedId === row.resolvedId)
         }
 
-        modules[sourceImport.url] = {
+        modules[sourceImport.url] ??= []
+        modules[sourceImport.url].push({
           start: sourceImport.start,
           end: sourceImport.end,
           startIndex: sourceImport.startIndex,
           endIndex: sourceImport.endIndex,
           url: sourceImport.url,
           resolvedId: row.resolvedId,
-        }
+        })
       }
     }
   })
   return {
-    modules: Object.values(modules),
+    modules: Object.values(modules).flat(),
     untracked,
   }
 }
@@ -250,7 +295,7 @@ function parseSourceImportsAndExports(source: string): Map<string, SourceStaticI
 
 async function parseTransformResult(moduleGraph: EnvironmentModuleGraph, transformResult: TransformResult) {
   const code = transformResult.code
-  const regexp = /__vite_ssr_import__\("([^"]+)"/g
+  const regexp = /(?:__vite_ssr_import__|__vite_ssr_dynamic_import__)\("([^"]+)"/g
   const lineColumnMap = createIndexMap(code)
   const importPositions: {
     raw: string
