@@ -149,6 +149,7 @@ export function ModuleRunnerTransform(): VitePlugin {
           // https://github.com/vitejs/vite/pull/20502
           if (name === 'ssr') {
             delete config.ssr?.noExternal
+            delete config.ssr?.external
           }
 
           if (name === '__vitest_vm__' || name === '__vitest__') {

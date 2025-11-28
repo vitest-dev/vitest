@@ -617,7 +617,7 @@ body {
 
         return {
           optimizeDeps: rolldownVersion
-            ? { rollupOptions: { plugins: [rolldownPlugin] } }
+            ? { rolldownOptions: { plugins: [rolldownPlugin] } }
             : { esbuildOptions: { plugins: [esbuildPlugin] } },
         }
       },
