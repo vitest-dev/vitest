@@ -10,8 +10,8 @@ import { isWindows } from '../utils/env'
 
 export class VitestResolver {
   public readonly options: ExternalizeOptions
-  private externalizeConcurrentCache = new Map<string, Promise<string | false>>()
-  private externalizeCache = new Map<string, string | false>()
+  private externalizeConcurrentCache = new Map<string, Promise<string | false | undefined>>()
+  private externalizeCache = new Map<string, string | false | undefined>()
 
   constructor(cacheDir: string, config: ResolvedConfig) {
     // sorting to make cache consistent
@@ -38,12 +38,15 @@ export class VitestResolver {
     }
   }
 
-  public wasExternalized(file: string): string | false | undefined {
+  public wasExternalized(file: string): string | false {
     const normalizedFile = normalizeId(file)
-    return this.externalizeCache.get(normalizedFile)!
+    if (!this.externalizeCache.has(normalizedFile)) {
+      return false
+    }
+    return this.externalizeCache.get(normalizedFile) ?? false
   }
 
-  public async shouldExternalize(file: string): Promise<string | false> {
+  public async shouldExternalize(file: string): Promise<string | false | undefined> {
     const normalizedFile = normalizeId(file)
     if (this.externalizeCache.has(normalizedFile)) {
       return this.externalizeCache.get(normalizedFile)!
@@ -161,8 +164,8 @@ async function isValidNodeImport(id: string) {
 export async function shouldExternalize(
   id: string,
   options: ExternalizeOptions,
-  cache: Map<string, Promise<string | false>>,
-): Promise<string | false> {
+  cache: Map<string, Promise<string | false | undefined>>,
+): Promise<string | false | undefined> {
   if (!cache.has(id)) {
     cache.set(id, _shouldExternalize(id, options))
   }
@@ -172,7 +175,7 @@ export async function shouldExternalize(
 async function _shouldExternalize(
   id: string,
   options?: ExternalizeOptions,
-): Promise<string | false> {
+): Promise<string | false | undefined> {
   if (isBuiltin(id)) {
     return id
   }
@@ -216,8 +219,6 @@ async function _shouldExternalize(
   if (isLibraryModule && (await isValidNodeImport(id))) {
     return id
   }
-
-  return false
 }
 
 function matchPattern(

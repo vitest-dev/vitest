@@ -11,7 +11,10 @@
     "@vitest/browser-preview": "workspace:*",
     "@vitest/browser-webdriverio": "workspace:*",
     "@vitest/test-dep-conditions": "file:./deps/test-dep-conditions",
-    "tinyexec": "^0.3.2",
+    "inline-dep": "file:./deps/vite-ssr-resolve/inline-dep",
+    "other-dep": "file:./deps/vite-ssr-resolve/other-dep",
+    "ssr-no-external-dep": "file:./deps/vite-ssr-resolve/ssr-no-external-dep",
+    "tinyexec": "^1.0.2",
     "vite": "latest",
     "vitest": "workspace:*"
   }

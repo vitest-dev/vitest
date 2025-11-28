@@ -5,6 +5,33 @@ packages:
   - test/*
   - test/config/fixtures/conditions-pkg
 
+trustPolicy: no-downgrade
+trustPolicyExclude:
+  - semver@6.3.1
+  - chokidar@4.0.3
+  - webdriverio@9.20.0
+  - webdriver@9.20.0
+  - '@wdio/types@9.20.0'
+  - '@wdio/repl@9.16.2'
+  - '@wdio/utils@9.20.0'
+  - '@wdio/config@9.20.0'
+  - '@wdio/logger@9.18.0'
+  - '@wdio/protocols@9.16.2'
+  - undici-types@6.21.0
+  - undici@6.21.3
+  - rxjs@7.8.2
+
+overrides:
+  '@vitest/browser': 'workspace:*'
+  '@vitest/browser-playwright': 'workspace:*'
+  '@vitest/browser-preview': 'workspace:*'
+  '@vitest/browser-webdriverio': 'workspace:*'
+  '@vitest/ui': 'workspace:*'
+  acorn: 8.11.3
+  mlly: ^1.8.0
+  rollup: $rollup
+  vite: $vite
+  vitest: 'workspace:*'
 catalog:
   '@iconify-json/carbon': ^1.2.14
   '@iconify-json/logos': ^1.2.10
@@ -43,8 +70,3 @@ catalog:
   unplugin-vue-components: ^0.28.0
   vue: ^3.5.25
   ws: ^8.18.3
-
-trustPolicy: no-downgrade
-trustPolicyExclude:
-  - semver@6.3.1
-  - chokidar@4.0.3

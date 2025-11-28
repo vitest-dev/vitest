@@ -70,18 +70,6 @@
     "zx": "^8.8.5"
   },
   "pnpm": {
-    "overrides": {
-      "@vitest/browser": "workspace:*",
-      "@vitest/browser-playwright": "workspace:*",
-      "@vitest/browser-preview": "workspace:*",
-      "@vitest/browser-webdriverio": "workspace:*",
-      "@vitest/ui": "workspace:*",
-      "acorn": "8.11.3",
-      "mlly": "^1.8.0",
-      "rollup": "$rollup",
-      "vite": "$vite",
-      "vitest": "workspace:*"
-    },
     "peerDependencyRules": {
       "ignoreMissing": [
         "@algolia/client-search"
