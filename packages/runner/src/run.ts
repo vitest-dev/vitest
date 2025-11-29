@@ -850,48 +850,76 @@ export async function runFiles(files: File[], runner: VitestRunner): Promise<voi
   }
 
   // After all files have run, retry tests with 'deferred' strategy
-  const globalDeferredTests: Test[] = []
+  // Group deferred tests by file to properly setup/cleanup snapshot state
+  const deferredTestsByFile = new Map<File, Test[]>()
   for (const file of files) {
     const deferredTests = collectDeferredRetryTests(file, 'deferred')
-    globalDeferredTests.push(...deferredTests)
+    if (deferredTests.length > 0) {
+      deferredTestsByFile.set(file, deferredTests)
+    }
   }
 
-  // Retry all deferred tests
-  for (const test of globalDeferredTests) {
-    if (!test.result) {
-      continue
-    }
+  // Retry deferred tests, grouped by file
+  for (const [file, deferredTests] of deferredTestsByFile) {
+    // Setup file context (including snapshot state) before running deferred retries
+    await runner.onBeforeRunSuite?.(file)
 
-    const retry = getRetryCount(test.retry)
-    const retryCount = test.result.retryCount ?? 0
-
-    // Retry the test up to the remaining retry count
-    for (let i = retryCount; i < retry; i++) {
-      // Reset test state for retry
-      test.result.state = 'run'
-      test.result.retryCount = i + 1
-
-      // Apply retry delay if configured
-      const delay = getRetryDelay(test.retry)
-      if (delay > 0) {
-        await new Promise(resolve => setTimeout(resolve, delay))
+    for (const test of deferredTests) {
+      if (!test.result) {
+        continue
       }
 
-      // Run the test again
-      await runTest(test, runner)
+      const retry = getRetryCount(test.retry)
+      const retryCount = test.result.retryCount ?? 0
 
-      // If test passed, stop retrying
-      if (test.result && (test.result as any).state === 'pass') {
-        break
-      }
+      // Retry the test up to the remaining retry count
+      for (let i = retryCount; i < retry; i++) {
+        // Reset test state for retry
+        test.result.state = 'run'
+        test.result.retryCount = i + 1
 
-      // Check retry condition for next attempt
-      if (i + 1 < retry && test.result) {
-        const shouldRetry = shouldRetryTest(test, test.result.errors)
-        if (!shouldRetry) {
+        // Apply retry delay if configured
+        const delay = getRetryDelay(test.retry)
+        if (delay > 0) {
+          await new Promise(resolve => setTimeout(resolve, delay))
+        }
+
+        // Run the test again
+        await runTest(test, runner)
+
+        // If test passed, stop retrying
+        if (test.result && (test.result as any).state === 'pass') {
           break
         }
+
+        // Check retry condition for next attempt
+        if (i + 1 < retry && test.result) {
+          const shouldRetry = shouldRetryTest(test, test.result.errors)
+          if (!shouldRetry) {
+            break
+          }
+        }
       }
+    }
+
+    // Cleanup file context (including snapshot state) after deferred retries
+    await runner.onAfterRunSuite?.(file)
+
+    // Update file result state based on final test results
+    // This is necessary because the file was previously marked as 'fail'
+    // before deferred retries ran
+    if (file.result && file.mode !== 'skip') {
+      // Check if any child tasks have failed (not the file itself)
+      // We need to check children only because the file's own state
+      // was set to 'fail' before deferred retries
+      if (hasFailed(file.tasks)) {
+        file.result.state = 'fail'
+      }
+      else {
+        file.result.state = 'pass'
+      }
+      // Send updated file state to the main process
+      updateTask('suite-finished', file, runner)
     }
   }
 }
