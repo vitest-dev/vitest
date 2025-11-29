@@ -1,4 +1,4 @@
----
+vitest --reporter=github-actions --reporter=junit---
 title: reporters | Config
 ---
 
