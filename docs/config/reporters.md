@@ -1,6 +1,6 @@
 vitest --reporter=github-actions --reporter=junit---
 title: reporters | Config
----
+B5690EEEBB952194---c5b0bc35c60d3928797289ba8ce53feaa2424ab9
 
 # reporters <CRoot />
 
