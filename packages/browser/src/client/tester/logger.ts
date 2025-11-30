@@ -124,7 +124,7 @@ function formatInput(input: unknown) {
 }
 
 function processLog(args: unknown[]) {
-  return args.map(formatInput).join(' ')
+  return format(...args)
 }
 
 function sendLog(
