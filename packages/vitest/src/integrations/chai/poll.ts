@@ -69,12 +69,36 @@ export function createExpectPoll(expect: ExpectStatic): ExpectStatic['poll'] {
             let timeoutId: any
             let lastError: any
             const { setTimeout, clearTimeout } = getSafeTimers()
+            const rejectWithCause = (error: any) => {
+              if (error.cause == null) {
+                error.cause = new Error('Matcher did not succeed in time.')
+              }
+              reject(
+                copyStackTrace(
+                  error,
+                  STACK_TRACE_ERROR,
+                ),
+              )
+            }
             const check = async () => {
               try {
                 chai.util.flag(assertion, '_name', key)
                 const obj = await fn()
                 chai.util.flag(assertion, 'object', obj)
-                resolve(await assertionFunction.call(assertion, ...args))
+                try {
+                  resolve(await assertionFunction.call(assertion, ...args))
+                }
+                catch (err) {
+                  if (chai.util.flag(assertion, '_poll.assert_once')) {
+                    clearTimeout(intervalId)
+                    clearTimeout(timeoutId)
+
+                    rejectWithCause(err)
+                  }
+                  else {
+                    throw err
+                  }
+                }
                 clearTimeout(intervalId)
                 clearTimeout(timeoutId)
               }
@@ -88,17 +112,6 @@ export function createExpectPoll(expect: ExpectStatic): ExpectStatic['poll'] {
             timeoutId = setTimeout(() => {
               clearTimeout(intervalId)
               chai.util.flag(assertion, '_isLastPollAttempt', true)
-              const rejectWithCause = (error: any) => {
-                if (error.cause == null) {
-                  error.cause = new Error('Matcher did not succeed in time.')
-                }
-                reject(
-                  copyStackTrace(
-                    error,
-                    STACK_TRACE_ERROR,
-                  ),
-                )
-              }
               check()
                 .then(() => rejectWithCause(lastError))
                 .catch(e => rejectWithCause(e))

@@ -29,6 +29,11 @@ function element<T extends HTMLElement | SVGElement | null | Locator>(elementOrL
       return elementOrLocator.elements() as unknown as HTMLElement
     }
 
+    if (name === 'toMatchScreenshot' && !chai.util.flag(this, '_poll.assert_once')) {
+      // `toMatchScreenshot` should only run once after the element resolves
+      chai.util.flag(this, '_poll.assert_once', true)
+    }
+
     // element selector uses prettyDOM under the hood, which is an expensive call
     // that should not be called on each failed locator attempt to avoid memory leak:
     // https://github.com/vitest-dev/vitest/issues/7139
