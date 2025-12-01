@@ -33,7 +33,8 @@ const sortedImports = computed(() => {
 
   const root = config.value.root
   const allImports: ImportEntry[] = []
-  for (const [filePath, duration] of Object.entries(importDurations)) {
+  for (const filePath in importDurations) {
+    const duration = importDurations[filePath]
     const raltiveModule = duration.external
       ? getExternalModuleName(filePath)
       : relative(root, filePath)
