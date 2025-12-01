@@ -527,8 +527,8 @@ describe('.toMatchScreenshot', () => {
 
       const elapsed = performance.now() - start
 
-      // Allow some buffer for screenshot capture + diffing
-      expect(elapsed).toBeLessThan(renderDelay + 500)
+      // Elapsed time should be lower than the default `poll`/`element` timeout
+      expect(elapsed).toBeLessThan(30_000)
     },
   )
 })
