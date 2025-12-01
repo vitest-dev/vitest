@@ -517,7 +517,7 @@ function bindOnClick(
 :root {
   --color-link-label: var(--color-text);
   --color-link: #ddd;
-  --color-node-external: #c0ad79;
+  --color-node-external: #6C5C33;
   --color-node-inline: #8bc4a0;
   --color-node-root: #6e9aa5;
   --color-node-focused: #e67e22;
@@ -528,7 +528,7 @@ function bindOnClick(
 html.dark {
   --color-text: #fff;
   --color-link: #333;
-  --color-node-external: #857a40;
+  --color-node-external: #c0ad79;
   --color-node-inline: #468b60;
   --color-node-root: #467d8b;
   --color-node-focused: #f39c12;
