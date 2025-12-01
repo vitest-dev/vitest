@@ -1,5 +1,6 @@
 {
   "name": "other-dep",
   "type": "module",
+  "private": true,
   "exports": "./index.js"
 }
