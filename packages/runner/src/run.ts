@@ -593,16 +593,12 @@ function collectDeferredRetryTests(suite: Suite, strategy: 'test-file' | 'deferr
   const tests: Test[] = []
 
   function collectFromTask(task: Task) {
-    if (task.type === 'test') {
+    if (task.type === 'test' && task.result?.state === 'fail') {
       const retry = getRetryCount(task.retry)
       const retryCount = task.result?.retryCount ?? 0
       const testStrategy = getRetryStrategy(task.retry)
 
-      if (
-        testStrategy === strategy
-        && task.result?.state === 'fail'
-        && retryCount < retry
-      ) {
+      if (testStrategy === strategy && retryCount < retry) {
         tests.push(task)
       }
     }
