@@ -564,7 +564,7 @@ function getSeed(): number | null
 
 Returns the seed, if tests are running in a random order.
 
-## experimental_parseSpecification <Version>4.0.0</Version> <Badge type="warning">experimental</Badge> {#parsespecification}
+## experimental_parseSpecification <Version type="experimental">4.0.0</Version> <Experimental /> {#parsespecification}
 
 ```ts
 function experimental_parseSpecification(
@@ -595,7 +595,7 @@ Vitest will only collect tests defined in the file. It will never follow imports
 Vitest collects all `it`, `test`, `suite` and `describe` definitions even if they were not imported from the `vitest` entry point.
 :::
 
-## experimental_parseSpecifications <Version>4.0.0</Version> <Badge type="warning">experimental</Badge> {#parsespecifications}
+## experimental_parseSpecifications <Version type="experimental">4.0.0</Version> <Experimental /> {#parsespecifications}
 
 ```ts
 function experimental_parseSpecifications(
@@ -608,7 +608,7 @@ function experimental_parseSpecifications(
 
 This method will [collect tests](#parsespecification) from an array of specifications. By default, Vitest will run only `os.availableParallelism()` number of specifications at a time to reduce the potential performance degradation. You can specify a different number in a second argument.
 
-## experimental_clearCache <Version type="experimental">4.0.11</Version> <Badge type="warning">experimental</Badge> {#clearcache}
+## experimental_clearCache <Version type="experimental">4.0.11</Version> <Experimental /> {#clearcache}
 
 ```ts
 function experimental_clearCache(): Promise<void>
@@ -616,7 +616,7 @@ function experimental_clearCache(): Promise<void>
 
 Deletes all Vitest caches, including [`experimental.fsModuleCache`](/config/experimental#experimental-fsmodulecache).
 
-## experimental_getSourceModuleDiagnostic <Version type="experimental">4.0.15</Version> <Badge type="warning">experimental</Badge> {#getsourcemodulediagnostic}
+## experimental_getSourceModuleDiagnostic <Version type="experimental">4.0.15</Version> <Experimental /> {#getsourcemodulediagnostic}
 
 ```ts
 export function experimental_getSourceModuleDiagnostic(
@@ -627,22 +627,32 @@ export function experimental_getSourceModuleDiagnostic(
 
 ::: details Types
 ```ts
-interface ModuleImportDiagnostic {
-  start: Location
-  end: Location
+export interface ModuleDefinitionLocation {
+  line: number
+  column: number
+}
+
+export interface SourceModuleLocations {
+  modules: ModuleDefinitionDiagnostic[]
+  untracked: ModuleDefinitionDiagnostic[]
+}
+
+export interface ModuleDefinitionDiagnostic {
+  start: ModuleDefinitionLocation
+  end: ModuleDefinitionLocation
   startIndex: number
   endIndex: number
   url: string
   resolvedId: string
 }
 
-interface ModuleImportDurationsDiagnostic extends ModuleImportDiagnostic {
+export interface ModuleDefinitionDurationsDiagnostic extends ModuleDefinitionDiagnostic {
   selfTime: number
   totalTime: number
   external?: boolean
 }
 
-interface UntrackedModuleImportDiagnostic {
+export interface UntrackedModuleDefinitionDiagnostic {
   url: string
   resolvedId: string
   selfTime: number
@@ -651,13 +661,13 @@ interface UntrackedModuleImportDiagnostic {
 }
 
 export interface SourceModuleDiagnostic {
-  modules: ModuleImportDurationsDiagnostic[]
-  untrackedModules: UntrackedModuleImportDiagnostic[]
+  modules: ModuleDefinitionDurationsDiagnostic[]
+  untrackedModules: UntrackedModuleDefinitionDiagnostic[]
 }
 ```
 :::
 
-Returns module's diagnostic. If [`testModule`](/api/advanced/test-module) is not provided, `selfTime` and `totalTime` will be aggregated across all tests. If the module was not transformed or executed, the diagnostic will be empty.
+Returns module's diagnostic. If [`testModule`](/api/advanced/test-module) is not provided, `selfTime` and `totalTime` will be aggregated across all tests that were running the last time. If the module was not transformed or executed, the diagnostic will be empty.
 
 ::: warning
 At the moment, the [browser](/guide/browser/) modules are not supported.
