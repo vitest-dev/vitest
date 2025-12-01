@@ -11,6 +11,7 @@ import { toArray } from '@vitest/utils/helpers'
 import { parseStacktrace } from '@vitest/utils/source-map'
 import { relative } from 'pathe'
 import c from 'tinyrainbow'
+import { groupBy } from '../../utils/base'
 import { isTTY } from '../../utils/env'
 import { hasFailedSnapshot } from '../../utils/tasks'
 import { F_CHECK, F_DOWN_RIGHT, F_POINTER } from './renderers/figures'
@@ -619,10 +620,11 @@ export abstract class BaseReporter implements Reporter {
     const testModules = this.ctx.state.getTestModules()
 
     interface ImportEntry {
-      importedFile: string
+      importedModuleId: string
       selfTime: number
       external?: boolean
       totalTime: number
+      testModule: TestModule
     }
 
     const allImports: ImportEntry[] = []
@@ -631,9 +633,11 @@ export abstract class BaseReporter implements Reporter {
       const diagnostic = testModule.diagnostic()
       const importDurations = diagnostic.importDurations
 
-      for (const [filePath, duration] of Object.entries(importDurations)) {
+      for (const filePath in importDurations) {
+        const duration = importDurations[filePath]
         allImports.push({
-          importedFile: filePath,
+          importedModuleId: filePath,
+          testModule,
           selfTime: duration.selfTime,
           totalTime: duration.totalTime,
           external: duration.external,
@@ -656,16 +660,38 @@ export abstract class BaseReporter implements Reporter {
     this.log()
     this.log(c.bold('Import Duration Breakdown') + c.dim(' (ordered by Total Time) (Top 10)'))
 
-    for (const imp of topImports) {
-      const barWidth = 20
-      const filledWidth = Math.round((imp.totalTime / maxTotalTime) * barWidth)
-      const bar = c.cyan('█'.repeat(filledWidth)) + c.dim('░'.repeat(barWidth - filledWidth))
+    // if there are multiple files, it's highly possible that some of them will import the same large file
+    // we group them to show the distinction between those files more easily
+    //     Import Duration Breakdown (ordered by Total Time) (Top 10)
+    // .../fields/FieldFile/__tests__/FieldFile.spec.ts   self:    7ms total:  1.01s ████████████████████
+    //  ↳ tests/support/components/index.ts               self:    0ms total:  861ms █████████████████░░░
+    //  ↳ tests/support/components/renderComponent.ts     self:   59ms total:  861ms █████████████████░░░
+    // ...s__/apps/desktop/form-updater.desktop.spec.ts   self:    8ms total:  991ms ████████████████████
+    // ...sts__/apps/mobile/form-updater.mobile.spec.ts   self:   11ms total:  990ms ████████████████████
+    // shared/components/Form/__tests__/Form.spec.ts      self:    5ms total:  988ms ████████████████████
+    //  ↳ tests/support/components/index.ts               self:    0ms total:  935ms ███████████████████░
+    //  ↳ tests/support/components/renderComponent.ts     self:   61ms total:  935ms ███████████████████░
+    // ...ditor/features/link/__test__/LinkForm.spec.ts   self:    7ms total:  972ms ███████████████████░
+    //  ↳ tests/support/components/renderComponent.ts     self:   56ms total:  936ms ███████████████████░
 
-      const pathDisplay = this.importBreakdownPath(imp.importedFile, imp.external)
+    const groupedImports = Object.entries(
+      groupBy(topImports, i => i.testModule.id),
+      // the first one is always the highest because the modules are already sorted
+    ).sort(([, imps1], [, imps2]) => imps2[0].totalTime - imps1[0].totalTime)
 
-      this.log(
-        `${pathDisplay} ${c.dim('self:')} ${this.importDurationTime(imp.selfTime)} ${c.dim('total:')} ${this.importDurationTime(imp.totalTime)} ${bar}`,
-      )
+    for (const [_, group] of groupedImports) {
+      group.forEach((imp, index) => {
+        const barWidth = 20
+        const filledWidth = Math.round((imp.totalTime / maxTotalTime) * barWidth)
+        const bar = c.cyan('█'.repeat(filledWidth)) + c.dim('░'.repeat(barWidth - filledWidth))
+
+        // only show the arrow if there is more than 1 group
+        const pathDisplay = this.ellipsisPath(imp.importedModuleId, imp.external, groupedImports.length > 0 && index > 0)
+
+        this.log(
+          `${pathDisplay} ${c.dim('self:')} ${this.importDurationTime(imp.selfTime)} ${c.dim('total:')} ${this.importDurationTime(imp.totalTime)} ${bar}`,
+        )
+      })
     }
 
     this.log()
@@ -679,13 +705,19 @@ export abstract class BaseReporter implements Reporter {
     return color(formatTime(duration).padStart(6))
   }
 
-  private importBreakdownPath(path: string, external: boolean | undefined) {
+  private ellipsisPath(path: string, external: boolean | undefined, nested: boolean) {
     const pathDisplay = this.relative(path)
     const color = external ? c.magenta : (c: string) => c
-    if (pathDisplay.length <= 45) {
-      return color(pathDisplay.padEnd(50))
+    const slicedPath = pathDisplay.slice(-45)
+    let title = ''
+    if (pathDisplay.length > slicedPath.length) {
+      title += '...'
     }
-    return color(`...${pathDisplay.slice(-45)}`.padEnd(50))
+    if (nested) {
+      title = ` ${F_DOWN_RIGHT} ${title}`
+    }
+    title += slicedPath
+    return color(title.padEnd(50))
   }
 
   private printErrorsSummary(files: File[], errors: unknown[]) {
