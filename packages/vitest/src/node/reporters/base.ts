@@ -684,7 +684,7 @@ export abstract class BaseReporter implements Reporter {
         const bar = c.cyan('█'.repeat(filledWidth)) + c.dim('░'.repeat(barWidth - filledWidth))
 
         // only show the arrow if there is more than 1 group
-        const pathDisplay = this.ellipsisPath(imp.importedModuleId, imp.external, groupedImports.length > 0 && index > 0)
+        const pathDisplay = this.ellipsisPath(imp.importedModuleId, imp.external, groupedImports.length > 1 && index > 0)
 
         this.log(
           `${pathDisplay} ${c.dim('self:')} ${this.importDurationTime(imp.selfTime)} ${c.dim('total:')} ${this.importDurationTime(imp.totalTime)} ${bar}`,
@@ -706,7 +706,7 @@ export abstract class BaseReporter implements Reporter {
   private ellipsisPath(path: string, external: boolean | undefined, nested: boolean) {
     const pathDisplay = this.relative(path)
     const color = external ? c.magenta : (c: string) => c
-    const slicedPath = pathDisplay.slice(-45)
+    const slicedPath = pathDisplay.slice(-44)
     let title = ''
     if (pathDisplay.length > slicedPath.length) {
       title += '...'
