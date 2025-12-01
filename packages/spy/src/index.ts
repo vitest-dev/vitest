@@ -433,6 +433,12 @@ function createMock(
           // are only used by the automocker, so this doesn't matter
           for (const prop of prototypeMembers) {
             const prototypeMock = returnValue[prop]
+            // the method was overidden because of inheritence, ignore it
+            // eslint-disable-next-line ts/no-use-before-define
+            if (prototypeMock !== mock.prototype[prop]) {
+              continue
+            }
+
             const isMock = isMockFunction(prototypeMock)
             const prototypeState = isMock ? prototypeMock.mock : undefined
             const prototypeConfig = isMock ? MOCK_CONFIGS.get(prototypeMock) : undefined

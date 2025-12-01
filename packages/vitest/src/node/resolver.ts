@@ -3,6 +3,7 @@ import { existsSync, promises as fsp } from 'node:fs'
 import { isBuiltin } from 'node:module'
 import { pathToFileURL } from 'node:url'
 import { KNOWN_ASSET_RE } from '@vitest/utils/constants'
+import { cleanUrl } from '@vitest/utils/helpers'
 import { findNearestPackageData } from '@vitest/utils/resolver'
 import * as esModuleLexer from 'es-module-lexer'
 import { dirname, extname, join, resolve } from 'pathe'
@@ -37,7 +38,7 @@ export class VitestResolver {
     }
   }
 
-  public shouldExternalize(file: string): Promise<string | false> {
+  public shouldExternalize(file: string): Promise<string | false | undefined> {
     return shouldExternalize(normalizeId(file), this.options, this.externalizeCache)
   }
 }
@@ -109,6 +110,10 @@ export function guessCJSversion(id: string): string | undefined {
 
 // The code from https://github.com/unjs/mlly/blob/c5bcca0cda175921344fd6de1bc0c499e73e5dac/src/syntax.ts#L51-L98
 async function isValidNodeImport(id: string) {
+  // clean url to strip off `?v=...` query etc.
+  // node can natively import files with query params, so externalizing them is safe.
+  id = cleanUrl(id)
+
   const extension = extname(id)
 
   if (BUILTIN_EXTENSIONS.has(extension)) {
@@ -163,8 +168,8 @@ function isSyntaxDetectionEnabled(nodeVersion: string): boolean {
 export async function shouldExternalize(
   id: string,
   options: ExternalizeOptions,
-  cache: Map<string, Promise<string | false>>,
-): Promise<string | false> {
+  cache: Map<string, Promise<string | false | undefined>>,
+): Promise<string | false | undefined> {
   if (!cache.has(id)) {
     cache.set(id, _shouldExternalize(id, options))
   }
@@ -174,7 +179,7 @@ export async function shouldExternalize(
 async function _shouldExternalize(
   id: string,
   options?: ExternalizeOptions,
-): Promise<string | false> {
+): Promise<string | false | undefined> {
   if (isBuiltin(id)) {
     return id
   }
@@ -218,8 +223,6 @@ async function _shouldExternalize(
   if (isLibraryModule && (await isValidNodeImport(id))) {
     return id
   }
-
-  return false
 }
 
 function matchPattern(

@@ -35,6 +35,7 @@ function getMatcherState(
     subsetEquality,
   }
   let task: Test | undefined = util.flag(assertion, 'vitest-test')
+  const currentTestName = task?.fullTestName ?? ''
 
   if (task?.type !== 'test') {
     task = undefined
@@ -43,6 +44,7 @@ function getMatcherState(
   const matcherState: MatcherState = {
     ...getState(expect),
     task,
+    currentTestName,
     customTesters: getCustomEqualityTesters(),
     isNot,
     utils: jestUtils,
