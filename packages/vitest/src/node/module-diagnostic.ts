@@ -12,12 +12,16 @@ import type { TestModule } from './reporters/reported-tasks'
 import type { StateManager } from './state'
 import { originalPositionFor, TraceMap } from '@jridgewell/trace-mapping'
 
-export async function collectModuleDurationsDiagnostic(
+// this function recieves the module diagnostic with the location of imports
+// and populates it with collected import durations; the duration is injected
+// only if the current module is the one that imported the module
+// if testModule is not defined, then Vitest aggregates durations of ALL collected test modules
+export function collectModuleDurationsDiagnostic(
   moduleId: string,
   state: StateManager,
   moduleDiagnostic: SourceModuleLocations | undefined,
   testModule?: TestModule,
-): Promise<SourceModuleDiagnostic> {
+): SourceModuleDiagnostic {
   if (!moduleDiagnostic) {
     return { modules: [], untrackedModules: [] }
   }
@@ -147,6 +151,12 @@ function isModuleImporter(moduleId: string, durations: ImportDuration, testModul
   return false
 }
 
+// the idea of this is very simple
+// it parses the source code to extract import/export statements
+// it parses SSR transformed file to extract __vite_ssr_import__ and __vite_ssr_dynamic_import__
+// it combines the two by looking at the original positions of SSR primitives
+// in the end, we are able to return a list of modules that were imported by this module
+// mapped to their IDs in Vite's module graph
 export async function collectSourceModulesLocations(
   moduleId: string,
   moduleGraph: EnvironmentModuleGraph,
@@ -267,6 +277,9 @@ function fillSourcesMap(
   })
 }
 
+// this function tries to parse ESM static import and export statements from
+// the source. if the source is not JS/TS, but supports static ESM syntax,
+// then this will also find them because it' only checks the strings, it doesn't parse the AST
 function parseSourceImportsAndExports(source: string): Map<string, SourceStaticImport> {
   if (!source.includes('import ') && !source.includes('export ')) {
     return new Map()

@@ -104,7 +104,6 @@ export function setup(ctx: Vitest, _server?: ViteDevServer): void {
             return undefined
           }
 
-          // TODO: cache
           const result: ExternalResult = {}
 
           try {
