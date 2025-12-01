@@ -776,7 +776,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
       fsModuleCachePath: null,
       openTelemetry: null,
       printImportBreakdown: {
-        description: 'Print the import breakdown after the summary. If the reporter doesn\'t support summary, this will have no effect. Note that UI\'s "Module Graph" tab always has an import breakdown.',
+        description: 'Print import breakdown after the summary. If the reporter doesn\'t support summary, this will have no effect. Note that UI\'s "Module Graph" tab always has an import breakdown.',
       },
     },
   },

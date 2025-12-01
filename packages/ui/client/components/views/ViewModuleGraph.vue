@@ -43,7 +43,9 @@ const focusedNode = ref<string | null>(null)
 const filteredGraph = shallowRef<ModuleGraph>(graph.value)
 const breakdownIconClass = computed(() => {
   let textClass = ''
-  for (const { totalTime } of Object.values(currentModule.value?.importDurations || {})) {
+  const importDurations = currentModule.value?.importDurations || {}
+  for (const moduleId in importDurations) {
+    const { totalTime } = importDurations[moduleId]
     if (totalTime >= 500) {
       textClass = 'text-red'
       break

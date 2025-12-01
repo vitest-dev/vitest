@@ -880,7 +880,7 @@ export class Vitest {
    *
    * If the module was not transformed or executed, the diagnostic will be empty.
    * @experimental
-   * @see {@link https://vitest.dev/api/advanced/vitest.html#getsourcemodulediagnostic}
+   * @see {@link https://vitest.dev/api/advanced/vitest#getsourcemodulediagnostic}
    */
   public async experimental_getSourceModuleDiagnostic(moduleId: string, testModule?: TestModule): Promise<SourceModuleDiagnostic> {
     if (testModule) {

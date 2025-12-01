@@ -11,6 +11,7 @@ import type {
 import type { TestModule } from './reporters/reported-tasks'
 import type { StateManager } from './state'
 import { originalPositionFor, TraceMap } from '@jridgewell/trace-mapping'
+import { createIndexLocationsMap } from '../utils/base'
 
 // this function recieves the module diagnostic with the location of imports
 // and populates it with collected import durations; the duration is injected
@@ -285,7 +286,7 @@ function parseSourceImportsAndExports(source: string): Map<string, SourceStaticI
     return new Map()
   }
   const sourcesMap = new Map<string, SourceStaticImport>()
-  const indexMap = createIndexMap(source)
+  const indexMap = createIndexLocationsMap(source)
 
   fillSourcesMap('import', sourcesMap, source, indexMap)
   fillSourcesMap('export', sourcesMap, source, indexMap)
@@ -296,7 +297,7 @@ function parseSourceImportsAndExports(source: string): Map<string, SourceStaticI
 async function parseTransformResult(moduleGraph: EnvironmentModuleGraph, transformResult: TransformResult) {
   const code = transformResult.code
   const regexp = /(?:__vite_ssr_import__|__vite_ssr_dynamic_import__)\("([^"]+)"/g
-  const lineColumnMap = createIndexMap(code)
+  const lineColumnMap = createIndexLocationsMap(code)
   const importPositions: {
     raw: string
     startIndex: number
@@ -328,23 +329,4 @@ async function parseTransformResult(moduleGraph: EnvironmentModuleGraph, transfo
   }))
 
   return results.filter(n => n != null)
-}
-
-// TODO: utils, share with ast-collect
-function createIndexMap(source: string) {
-  const map = new Map<number, ModuleDefinitionLocation>()
-  let index = 0
-  let line = 1
-  let column = 1
-  for (const char of source) {
-    map.set(index++, { line, column })
-    if (char === '\n' || char === '\r\n') {
-      line++
-      column = 0
-    }
-    else {
-      column++
-    }
-  }
-  return map
 }

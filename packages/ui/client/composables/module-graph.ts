@@ -25,13 +25,15 @@ function defineExternalModuleNodes(modules: string[]): ModuleNode[] {
     createModuleLabelItem(module),
   )
   const map = calcExternalLabels(labels)
-  return labels.map(({ raw, id }) => {
+  return labels.map(({ raw, id, splits }) => {
     return defineNode<ModuleType, ModuleNode>({
       color: 'var(--color-node-external)',
       label: {
         color: 'var(--color-node-external)',
         fontSize: '0.875rem',
-        text: map.get(raw) ?? '',
+        text: id.includes('node_modules')
+          ? (map.get(raw) ?? raw)
+          : splits.pop()!,
       },
       isFocused: false,
       id,

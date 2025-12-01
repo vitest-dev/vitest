@@ -46,7 +46,6 @@ export function calcExternalLabels(
   const result: Map<string, string> = new Map()
   const splitMap: Map<string, number[]> = new Map()
   const firsts: number[] = []
-  // TODO: should not be applied if not inside node_modules
   while (true) {
     let finishedCount = 0
     labels.forEach((label, i) => {

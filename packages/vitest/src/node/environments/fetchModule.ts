@@ -24,7 +24,6 @@ class ModuleFetcher {
     private resolver: VitestResolver,
     private config: ResolvedConfig,
     private fsCache: FileSystemModuleCache,
-    private traces: Traces,
     private tmpProjectDir: string,
   ) {
     this.fsCacheEnabled = config.experimental?.fsModuleCache === true
@@ -132,6 +131,7 @@ class ModuleFetcher {
     return this.cacheResult(result, cachePath, importers, importedUrls, !!mappings)
   }
 
+  // we need this for UI to be able to show a module graph
   private getSerializedImports(node: EnvironmentModuleNode): string[] {
     const imports: string[] = []
     node.importedModules.forEach((importer) => {
@@ -140,6 +140,7 @@ class ModuleFetcher {
     return imports
   }
 
+  // we need this for the watcher to be able to find the related test file
   private getSerializedDependencies(node: EnvironmentModuleNode): string[] {
     const dependencies: string[] = []
     node.importers.forEach((importer) => {
@@ -366,7 +367,7 @@ export function createFetchModuleFunction(
   traces: Traces,
   tmpProjectDir: string,
 ): VitestFetchFunction {
-  const fetcher = new ModuleFetcher(resolver, config, fsCache, traces, tmpProjectDir)
+  const fetcher = new ModuleFetcher(resolver, config, fsCache, tmpProjectDir)
   return async (url, importer, environment, cacheFs, options, otelCarrier) => {
     await traces.waitInit()
     const context = otelCarrier
