@@ -19,7 +19,7 @@
     "jsdom": "^27.2.0",
     "react": "^19.2.0",
     "supertest": "^6.3.4",
-    "tsx": "^4.20.6",
+    "tsx": "^4.21.0",
     "vite": "latest",
     "vitest": "latest"
   },
