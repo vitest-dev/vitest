@@ -11,7 +11,7 @@ When you run Vitest it reports multiple time metrics of your tests:
 > Test Files  1 passed (1)
 >      Tests  1 passed (1)
 >   Start at  09:32:53
->   Duration  4.80s (transform 44ms, setup 0ms, import 35ms, tests 4.52s, environment 0ms, prepare 81ms)
+>   Duration  4.80s (transform 44ms, setup 0ms, import 35ms, tests 4.52s, environment 0ms)
 >   # Time metrics ^^
 > ```
 
