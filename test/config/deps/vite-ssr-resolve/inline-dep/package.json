@@ -1,6 +1,5 @@
 {
   "name": "inline-dep",
   "type": "module",
-  "private": true,
   "exports": "./index.js"
 }

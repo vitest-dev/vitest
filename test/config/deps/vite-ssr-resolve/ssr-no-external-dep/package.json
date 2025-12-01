@@ -1,6 +1,5 @@
 {
   "name": "ssr-no-external-dep",
   "type": "module",
-  "private": true,
   "exports": "./index.js"
 }
