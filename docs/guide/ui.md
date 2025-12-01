@@ -75,7 +75,7 @@ If there are more than 50 modules, the module graph displays only the first two 
 Note that if your graph is too big, it may take some time before the node positions are stabilized.
 :::
 
-You can always restore the entry module graph by clicking on "Reset". To expand the module graph, right-click on the node that interests you. It will display all nodes related to the selected one.
+You can always restore the entry module graph by clicking on "Reset". To expand the module graph, right-click or hold <kbd>Shift</kbd> while clicking the node that interests you. It will display all nodes related to the selected one.
 
 By default, Vitest doesn't show the modules from `node_modules`. Usually, these modules are externalized. You can enable them by deselecting "Hide node_modules".
 
