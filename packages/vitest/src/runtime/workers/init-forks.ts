@@ -26,6 +26,8 @@ if (isProfiling) {
   processOn('SIGTERM', () => processExit())
 }
 
+processOn('error', onError)
+
 export default function workerInit(options: {
   runTests: (method: 'run' | 'collect', state: WorkerGlobalState, traces: Traces) => Promise<void>
   setup?: (context: WorkerSetupContext) => Promise<() => Promise<unknown>>
@@ -36,7 +38,10 @@ export default function workerInit(options: {
     post: v => processSend(v),
     on: cb => processOn('message', cb),
     off: cb => processOff('message', cb),
-    teardown: () => processRemoveAllListeners('message'),
+    teardown: () => {
+      processRemoveAllListeners('message')
+      processOn('error', onError)
+    },
     runTests: (state, traces) => executeTests('run', state, traces),
     collectTests: (state, traces) => executeTests('collect', state, traces),
     setup: options.setup,
@@ -49,5 +54,13 @@ export default function workerInit(options: {
     finally {
       process.exit = processExit
     }
+  }
+}
+
+// Prevent leaving worker in loops where it tries to send message to closed main
+// thread, errors, and tries to send the error.
+function onError(error: any) {
+  if (error?.code === 'ERR_IPC_CHANNEL_CLOSED' || error?.code === 'EPIPE') {
+    processExit(1)
   }
 }
