@@ -80,7 +80,7 @@ export class GithubActionsReporter implements Reporter {
         for (const error of task.result?.errors ?? []) {
           projectErrors.push({
             project,
-            title,
+            title: project.name ? `[${project.name}] ${title}` : title,
             error,
             file,
           })
