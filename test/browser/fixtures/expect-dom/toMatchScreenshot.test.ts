@@ -483,7 +483,7 @@ describe('.toMatchScreenshot', () => {
         errorMessage = error.message
       }
 
-      expect(typeof errorMessage === 'string')
+      expect(typeof errorMessage).toBe('string')
 
       const [referencePath, actualPath, diffPath] = extractToMatchScreenshotPaths(
         errorMessage,
