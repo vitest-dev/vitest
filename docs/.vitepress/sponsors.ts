@@ -29,13 +29,7 @@ const vitestSponsors = {
       img: '/zammad.svg',
     },
   ],
-  platinum: [
-    {
-      name: 'mintlify',
-      url: 'https://www.mintlify.com/',
-      img: '/mintlify.svg',
-    },
-  ],
+  // platinum: [],
   gold: [
     {
       name: 'vital',
@@ -57,6 +51,11 @@ const vitestSponsors = {
       url: 'https://www.liminity.se/',
       img: '/liminity.svg',
     },
+    {
+      name: 'Bytebase',
+      url: 'https://www.bytebase.com/',
+      img: '/bytebase.svg',
+    },
   ],
 } satisfies Record<string, Sponsor[]>
 
@@ -71,11 +70,11 @@ export const sponsors = [
     size: 'big',
     items: vitestSponsors.special,
   },
-  {
-    tier: 'Platinum Sponsors',
-    size: 'big',
-    items: vitestSponsors.platinum,
-  },
+  // {
+  //   tier: 'Platinum Sponsors',
+  //   size: 'big',
+  //   items: vitestSponsors.platinum,
+  // },
   {
     tier: 'Gold Sponsors',
     size: 'medium',
