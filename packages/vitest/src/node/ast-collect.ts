@@ -12,6 +12,7 @@ import {
 import { ancestor as walkAst } from 'acorn-walk'
 import { relative } from 'pathe'
 import { parseAst } from 'vite'
+import { createIndexLocationsMap } from '../utils/base'
 import { createDebugger } from '../utils/debugger'
 
 interface ParsedFile extends File {
@@ -265,7 +266,7 @@ function createFileTask(
     file: null!,
   }
   file.file = file
-  const indexMap = createIndexMap(code)
+  const indexMap = createIndexLocationsMap(code)
   const map = requestMap && new TraceMap(requestMap)
   let lastSuite: ParsedSuite = file as any
   const updateLatestSuite = (index: number) => {
@@ -416,24 +417,6 @@ async function transformSSR(project: TestProject, filepath: string) {
     return null
   }
   return await project.vite.ssrTransform(request.code, request.map, filepath)
-}
-
-function createIndexMap(source: string) {
-  const map = new Map<number, { line: number; column: number }>()
-  let index = 0
-  let line = 1
-  let column = 1
-  for (const char of source) {
-    map.set(index++, { line, column })
-    if (char === '\n' || char === '\r\n') {
-      line++
-      column = 0
-    }
-    else {
-      column++
-    }
-  }
-  return map
 }
 
 function markDynamicTests(tasks: Task[]) {

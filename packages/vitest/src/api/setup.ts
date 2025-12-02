@@ -9,6 +9,7 @@ import type { TestSpecification } from '../node/spec'
 import type { Reporter } from '../node/types/reporter'
 import type { LabelColor, ModuleGraphData, UserConsoleLog } from '../types/general'
 import type {
+  ExternalResult,
   TransformResultWithSource,
   WebSocketEvents,
   WebSocketHandlers,
@@ -19,8 +20,10 @@ import { performance } from 'node:perf_hooks'
 import { noop } from '@vitest/utils/helpers'
 import { createBirpc } from 'birpc'
 import { parse, stringify } from 'flatted'
+import { isFileServingAllowed } from 'vite'
 import { WebSocketServer } from 'ws'
 import { API_PATH } from '../constants'
+import { getTestFileEnvironment } from '../utils/environments'
 import { getModuleGraph } from '../utils/graph'
 import { stringifyReplace } from '../utils/serialization'
 import { isValidApiRequest } from './check'
@@ -91,18 +94,57 @@ export function setup(ctx: Vitest, _server?: ViteDevServer): void {
         getResolvedProjectLabels(): { name: string; color?: LabelColor }[] {
           return ctx.projects.map(p => ({ name: p.name, color: p.color }))
         },
-        async getTransformResult(projectName: string, id, browser = false) {
-          const project = ctx.getProjectByName(projectName)
-          const result: TransformResultWithSource | null | undefined = browser
-            ? await project.browser!.vite.transformRequest(id)
-            : await project.vite.transformRequest(id)
-          if (result) {
-            try {
-              result.source = result.source || (await fs.readFile(id, 'utf-8'))
-            }
-            catch {}
-            return result
+        async getExternalResult(moduleId: string, testFileTaskId: string) {
+          const testModule = ctx.state.getReportedEntityById(testFileTaskId) as TestModule | undefined
+          if (!testModule) {
+            return undefined
           }
+
+          if (!isFileServingAllowed(testModule.project.vite.config, moduleId)) {
+            return undefined
+          }
+
+          const result: ExternalResult = {}
+
+          try {
+            result.source = await fs.readFile(moduleId, 'utf-8')
+          }
+          catch {}
+
+          return result
+        },
+        async getTransformResult(projectName: string, moduleId, testFileTaskId, browser = false) {
+          const project = ctx.getProjectByName(projectName)
+          const testModule = ctx.state.getReportedEntityById(testFileTaskId) as TestModule | undefined
+          if (!testModule || !isFileServingAllowed(project.vite.config, moduleId)) {
+            return
+          }
+
+          const environment = getTestFileEnvironment(project, testModule.moduleId, browser)
+
+          const moduleNode = environment?.moduleGraph.getModuleById(moduleId)
+          if (!environment || !moduleNode?.transformResult) {
+            return
+          }
+
+          const result: TransformResultWithSource = moduleNode.transformResult
+          try {
+            result.source = result.source || (moduleNode.file ? await fs.readFile(moduleNode.file, 'utf-8') : undefined)
+          }
+          catch {}
+
+          // TODO: store this in HTML reporter separetly
+          const transformDuration = ctx.state.metadata[projectName]?.duration[moduleNode.url]?.[0]
+          if (transformDuration != null) {
+            result.transformTime = transformDuration
+          }
+          try {
+            const diagnostic = await ctx.experimental_getSourceModuleDiagnostic(moduleId, testModule)
+            result.modules = diagnostic.modules
+            result.untrackedModules = diagnostic.untrackedModules
+          }
+          catch {}
+          return result
         },
         async getModuleGraph(project, id, browser): Promise<ModuleGraphData> {
           return getModuleGraph(ctx, project, id, browser)
