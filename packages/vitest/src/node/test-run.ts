@@ -22,7 +22,6 @@ import path from 'node:path'
 import { isPrimitive } from '@vitest/utils/helpers'
 import { serializeValue } from '@vitest/utils/serialize'
 import { parseErrorStacktrace } from '@vitest/utils/source-map'
-
 import convertSourceMap from 'convert-source-map'
 import mime from 'mime/lite'
 import { basename, extname, resolve } from 'pathe'
