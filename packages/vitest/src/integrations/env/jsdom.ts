@@ -38,6 +38,7 @@ function catchWindowErrors(window: DOMWindow) {
 
 let NodeFormData_!: typeof FormData
 let NodeBlob_!: typeof Blob
+let NodeFile_!: typeof File
 let NodeRequest_!: typeof Request
 
 export default <Environment>{
@@ -160,6 +161,7 @@ export default <Environment>{
     // delay initialization because it takes ~1s
     NodeFormData_ = globalThis.FormData
     NodeBlob_ = globalThis.Blob
+    NodeFile_ = globalThis.File
     NodeRequest_ = globalThis.Request
 
     const { CookieJar, JSDOM, ResourceLoader, VirtualConsole } = await import(
@@ -288,6 +290,9 @@ function createCompatUtils(window: DOMWindow): CompatUtils {
     window,
     makeCompatFormData(formData: FormData) {
       const nodeFormData = new NodeFormData_()
+      // make sure undici uses Node's `File` during `FormData.prototype.append`
+      // https://github.com/nodejs/undici/blob/e0700ddd953b5f50f63a5e0e38de6d6d4b3b27ba/lib/web/fetch/formdata.js#L237      
+      globalThis.File = NodeFile_
       formData.forEach((value, key) => {
         if (value instanceof window.Blob) {
           nodeFormData.append(key, utils.makeCompatBlob(value as any) as any)
@@ -296,6 +301,7 @@ function createCompatUtils(window: DOMWindow): CompatUtils {
           nodeFormData.append(key, value)
         }
       })
+      globalThis.File = window.File
       return nodeFormData
     },
     makeCompatBlob(blob: Blob) {
