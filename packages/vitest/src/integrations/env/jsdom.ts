@@ -291,7 +291,7 @@ function createCompatUtils(window: DOMWindow): CompatUtils {
     makeCompatFormData(formData: FormData) {
       const nodeFormData = new NodeFormData_()
       // make sure undici uses Node's `File` during `FormData.prototype.append`
-      // https://github.com/nodejs/undici/blob/e0700ddd953b5f50f63a5e0e38de6d6d4b3b27ba/lib/web/fetch/formdata.js#L237      
+      // https://github.com/nodejs/undici/blob/e0700ddd953b5f50f63a5e0e38de6d6d4b3b27ba/lib/web/fetch/formdata.js#L237
       globalThis.File = NodeFile_
       formData.forEach((value, key) => {
         if (value instanceof window.Blob) {
