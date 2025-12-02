@@ -31,7 +31,9 @@ export function collectModuleDurationsDiagnostic(
   const modulesById: Record<string, {
     selfTime: number
     totalTime: number
+    transformTime?: number
     external?: boolean
+    importer?: string
   }> = {}
 
   const allModules = [...moduleDiagnostic.modules, ...moduleDiagnostic.untracked]
@@ -56,25 +58,32 @@ export function collectModuleDurationsDiagnostic(
       }
       const visited = visitedByFiles[visitedKey]
 
-      allModules.forEach(({ resolvedId }) => {
+      allModules.forEach(({ resolvedId, resolvedUrl }) => {
         const durations = importDurations[resolvedId]
         // do not accumulate if module was already visited by suite (or suites in non-isolate mode)
         if (!durations || visited.has(resolvedId)) {
           return
         }
 
+        const importer = getModuleImporter(moduleId, durations, currentModule)
+
         modulesById[resolvedId] ??= {
           selfTime: 0,
           totalTime: 0,
+          transformTime: 0,
           external: durations.external,
+          importer,
         }
 
         // only track if the current module imported this module,
         // otherwise it was imported instantly because it's cached
-        if (isModuleImporter(moduleId, durations, currentModule)) {
+        if (importer === moduleId) {
           visited.add(resolvedId)
           modulesById[resolvedId].selfTime += durations.selfTime
           modulesById[resolvedId].totalTime += durations.totalTime
+
+          // don't aggregate
+          modulesById[resolvedId].transformTime = state.metadata[currentModule.project.name]?.duration[resolvedUrl]?.[0]
         }
       })
     }
@@ -94,7 +103,9 @@ export function collectModuleDurationsDiagnostic(
         ...diagnostic,
         selfTime: 0,
         totalTime: 0,
+        transformTime: 0,
         external: durations.external,
+        importer: durations.importer,
       })
     }
     else {
@@ -116,9 +127,12 @@ export function collectModuleDurationsDiagnostic(
       untracked.push({
         selfTime: 0,
         totalTime: 0,
+        transformTime: 0,
         external: durations.external,
+        importer: durations.importer,
         resolvedId: diagnostic.resolvedId,
-        url: diagnostic.url,
+        resolvedUrl: diagnostic.resolvedUrl,
+        url: diagnostic.rawUrl,
       })
     }
     else {
@@ -126,7 +140,8 @@ export function collectModuleDurationsDiagnostic(
       untracked.push({
         ...durations,
         resolvedId: diagnostic.resolvedId,
-        url: diagnostic.url,
+        resolvedUrl: diagnostic.resolvedUrl,
+        url: diagnostic.rawUrl,
       })
     }
   })
@@ -137,19 +152,21 @@ export function collectModuleDurationsDiagnostic(
   }
 }
 
-function isModuleImporter(moduleId: string, durations: ImportDuration, testModule: TestModule): boolean {
+function getModuleImporter(moduleId: string, durations: ImportDuration, testModule: TestModule): string | undefined {
   if (durations.importer === moduleId) {
-    return true
+    return moduleId
   }
   if (!durations.importer) {
     if (moduleId === testModule.moduleId) {
-      return true
+      return testModule.moduleId
     }
 
     const setupFiles = testModule.project.config.setupFiles
     return setupFiles.includes(moduleId)
+      ? moduleId
+      : durations.importer
   }
-  return false
+  return durations.importer
 }
 
 // the idea of this is very simple
@@ -194,21 +211,22 @@ export async function collectSourceModulesLocations(
       // all the new import.meta.glob imports come first, so only the last module on this line is correct
       const sourceImport = sourceImports[original.source].get(`${original.line}:${original.column}`)
       if (sourceImport) {
-        if (modules[sourceImport.url]) {
+        if (modules[sourceImport.rawUrl]) {
           // remove imports with a different resolvedId
-          const differentImports = modules[sourceImport.url].filter(d => d.resolvedId !== row.resolvedId)
+          const differentImports = modules[sourceImport.rawUrl].filter(d => d.resolvedId !== row.resolvedId)
           untracked.push(...differentImports)
-          modules[sourceImport.url] = modules[sourceImport.url].filter(d => d.resolvedId === row.resolvedId)
+          modules[sourceImport.rawUrl] = modules[sourceImport.rawUrl].filter(d => d.resolvedId === row.resolvedId)
         }
 
-        modules[sourceImport.url] ??= []
-        modules[sourceImport.url].push({
+        modules[sourceImport.rawUrl] ??= []
+        modules[sourceImport.rawUrl].push({
           start: sourceImport.start,
           end: sourceImport.end,
           startIndex: sourceImport.startIndex,
           endIndex: sourceImport.endIndex,
-          url: sourceImport.url,
+          rawUrl: sourceImport.rawUrl,
           resolvedId: row.resolvedId,
+          resolvedUrl: row.resolvedUrl,
         })
       }
     }
@@ -224,7 +242,7 @@ interface SourceStaticImport {
   end: ModuleDefinitionLocation
   startIndex: number
   endIndex: number
-  url: string
+  rawUrl: string
 }
 
 function fillSourcesMap(
@@ -265,7 +283,7 @@ function fillSourcesMap(
       endIndex: startIndex + endQuoteIdx + 1,
       start: indexMap.get(startIndex + startQuoteIdx)!,
       end: indexMap.get(startIndex + endQuoteIdx + 1)!,
-      url: normalized.slice(startQuoteIdx + 1, endQuoteIdx),
+      rawUrl: normalized.slice(startQuoteIdx + 1, endQuoteIdx),
     }
 
     // -7 to include "import "
@@ -321,6 +339,7 @@ async function parseTransformResult(moduleGraph: EnvironmentModuleGraph, transfo
 
     return {
       resolvedId: moduleNode.id,
+      resolvedUrl: moduleNode.url,
       start: position,
       end: endPosition,
       startIndex,

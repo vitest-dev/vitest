@@ -173,7 +173,7 @@ function markImportDurations(codemirror: EditorFromTextArea) {
         className: 'hover:underline decoration-red cursor-pointer select-none',
       })
       markers.push(marker)
-      const timeElement = createDurationDiv(diagnostic.totalTime)
+      const timeElement = createDurationDiv(diagnostic.totalTime + (diagnostic.transformTime || 0))
       if (!untrackedModules?.length) {
         timeElement.classList.add('-mt-5')
       }

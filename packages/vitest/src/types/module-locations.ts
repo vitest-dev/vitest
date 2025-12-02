@@ -13,22 +13,28 @@ export interface ModuleDefinitionDiagnostic {
   end: ModuleDefinitionLocation
   startIndex: number
   endIndex: number
-  url: string
+  rawUrl: string
+  resolvedUrl: string
   resolvedId: string
 }
 
 export interface ModuleDefinitionDurationsDiagnostic extends ModuleDefinitionDiagnostic {
   selfTime: number
   totalTime: number
+  transformTime?: number
   external?: boolean
+  importer?: string
 }
 
 export interface UntrackedModuleDefinitionDiagnostic {
   url: string
   resolvedId: string
+  resolvedUrl: string
   selfTime: number
   totalTime: number
+  transformTime?: number
   external?: boolean
+  importer?: string
 }
 
 export interface SourceModuleDiagnostic {
