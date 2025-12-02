@@ -19,6 +19,21 @@ enum RunnerState {
   STOPPED = 'stopped',
 }
 
+interface StopOptions {
+  /**
+   * **Do not use unless you have good reason to.**
+   *
+   * Indicates whether to skip waiting for worker's response for `{ type: 'stop' }` message or not.
+   * By default `.stop()` terminates the workers gracefully by sending them stop-message
+   * and waiting for workers response, so that workers can do proper teardown.
+   *
+   * Force exit is used when user presses `CTRL+c` twice in row and intentionally does
+   * non-graceful exit. For example in cases where worker is stuck on synchronous thread
+   * blocking function call and it won't response to `{ type: 'stop' }` messages.
+   */
+  force: boolean
+}
+
 const START_TIMEOUT = 60_000
 const STOP_TIMEOUT = 60_000
 
@@ -218,7 +233,7 @@ export class PoolRunner {
     }
   }
 
-  async stop(): Promise<void> {
+  async stop(options?: StopOptions): Promise<void> {
     // Wait for any ongoing operation to complete
     if (this._operationLock) {
       await this._operationLock
@@ -261,6 +276,11 @@ export class PoolRunner {
               resolve()
               this.off('message', onStop)
             }
+          }
+
+          // Don't wait for graceful exit's response when force exiting
+          if (options?.force) {
+            return onStop({ type: 'stopped', __vitest_worker_response__: true })
           }
 
           this.on('message', onStop)
