@@ -40,7 +40,7 @@ export default function workerInit(options: {
     off: cb => processOff('message', cb),
     teardown: () => {
       processRemoveAllListeners('message')
-      processOn('error', onError)
+      processOff('error', onError)
     },
     runTests: (state, traces) => executeTests('run', state, traces),
     collectTests: (state, traces) => executeTests('collect', state, traces),
