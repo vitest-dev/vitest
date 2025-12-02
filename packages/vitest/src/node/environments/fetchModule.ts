@@ -191,7 +191,6 @@ class ModuleFetcher {
     return this.fsCache.generateCachePath(
       this.config,
       environment,
-      this.resolver,
       moduleGraphModule.id!,
       fileContent,
     )
