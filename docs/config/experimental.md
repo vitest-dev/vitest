@@ -62,6 +62,34 @@ export default defineConfig({
 
 If you are a plugin author, consider defining a [cache key generator](/api/advanced/plugin#definecachekeygenerator) in your plugin if it can be registered with different options that affect the transform result.
 
+On the other hand, if your plugin should not affect the cache key, you can opt-out by setting `api.vitest.experimental.ignoreFsModuleCache` to `true`:
+
+```js [vitest.config.js]
+import { defineConfig } from 'vitest/config'
+
+export default defineConfig({
+  plugins: [
+    {
+      name: 'vitest-cache',
+      api: {
+        vitest: {
+          experimental: {
+            ignoreFsModuleCache: true,
+          },
+        },
+      },
+    },
+  ],
+  test: {
+    experimental: {
+      fsModuleCache: true,
+    },
+  },
+})
+```
+
+Note that you can still define the cache key generator even the plugin opt-out of module caching.
+
 ## experimental.fsModuleCachePath <Version type="experimental">4.0.11</Version> {#experimental-fsmodulecachepath}
 
 - **Type:** `string`
