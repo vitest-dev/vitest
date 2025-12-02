@@ -109,6 +109,7 @@ export default ({ mode }: { mode: string }) => {
       languages: ['js', 'jsx', 'ts', 'tsx'],
     },
     themeConfig: {
+      variant: 'vitest',
       logo: '/logo.svg',
 
       editLink: {

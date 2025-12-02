@@ -15,7 +15,9 @@
   },
   "dependencies": {
     "@vueuse/core": "catalog:",
-    "vue": "catalog:"
+    "vue": "catalog:",
+    "@docsearch/css": "^4.3.2",
+    "@docsearch/js": "^4.3.2"
   },
   "devDependencies": {
     "@iconify-json/carbon": "catalog:",
@@ -26,6 +28,7 @@
     "@vite-pwa/assets-generator": "^1.0.2",
     "@vite-pwa/vitepress": "^1.1.0",
     "@vitejs/plugin-vue": "catalog:",
+    "@voidzero-dev/vitepress-theme": "link:../../vitepress-theme",
     "https-localhost": "^4.7.1",
     "tinyglobby": "catalog:",
     "unocss": "catalog:",

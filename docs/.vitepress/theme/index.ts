@@ -1,7 +1,8 @@
 import type { Theme } from 'vitepress'
 import TwoslashFloatingVue from '@shikijs/vitepress-twoslash/client'
 import { inBrowser } from 'vitepress'
-import DefaultTheme from 'vitepress/theme'
+import VoidZeroTheme from '@voidzero-dev/vitepress-theme'
+import '@voidzero-dev/vitepress-theme/index.css'
 import { enhanceAppWithTabs } from 'vitepress-plugin-tabs/client'
 import { h } from 'vue'
 import HomePage from '../components/HomePage.vue'
@@ -9,9 +10,6 @@ import Version from '../components/Version.vue'
 import CRoot from '../components/CRoot.vue'
 import Deprecated from '../components/Deprecated.vue'
 import Experimental from '../components/Experimental.vue'
-import '../style/main.css'
-import '../style/vars.css'
-import 'uno.css'
 import '@shikijs/vitepress-twoslash/style.css'
 import 'virtual:group-icons.css'
 
@@ -20,9 +18,9 @@ if (inBrowser) {
 }
 
 export default {
-  extends: DefaultTheme,
+  extends: VoidZeroTheme,
   Layout() {
-    return h(DefaultTheme.Layout, null, {
+    return h(VoidZeroTheme.Layout, null, {
       'home-features-after': () => h(HomePage),
     })
   },
