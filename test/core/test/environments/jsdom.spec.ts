@@ -182,6 +182,33 @@ describe('FormData', () => {
 
     expect(retrievedBlob).toBeInstanceOf(File)
   })
+
+  test('supports Request with File/Blob FormData', async () => {
+    function createRequest() {
+      const formData = new FormData()
+      formData.append('file', new File(['test'], 'test.txt'), 'test.txt')
+      formData.append('blob', new Blob(['blob']), 'blob.txt')
+      return new Request('http://localhost:3000/', {
+        method: 'POST',
+        body: formData,
+      })
+    }
+
+    await createRequest().arrayBuffer()
+    await new Promise((resolve, reject) => {
+      createRequest().body!.pipeTo(new WritableStream({
+        close() {
+          resolve(null)
+        },
+        abort(_err) {
+          reject(_err)
+        },
+      }))
+    })
+
+    // TODO
+    // await createRequest().formData()
+  })
 })
 
 test('DOM APIs accept AbortController', () => {
