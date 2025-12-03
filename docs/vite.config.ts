@@ -3,6 +3,7 @@ import { presetAttributify, presetIcons, presetUno } from 'unocss'
 import Unocss from 'unocss/vite'
 import Components from 'unplugin-vue-components/vite'
 import { defineConfig } from 'vite'
+import {resolve} from "node:path";
 
 export default defineConfig({
   optimizeDeps: {
@@ -11,9 +12,16 @@ export default defineConfig({
     exclude: ['@vueuse/core', 'vitepress', '@docsearch/css'],
   },
   server: {
-    hmr: {
-      overlay: false,
+    fs: {
+      // Allow serving files from the linked theme package (parent directory)
+      allow: [resolve(__dirname, '..', '..', '..')],
     },
+    watch: {
+      ignored: ['!**/node_modules/@voidzero-dev/**'],
+    },
+  },
+  ssr: {
+    noExternal: ['@voidzero-dev/vitepress-theme'],
   },
   plugins: [
     Components({

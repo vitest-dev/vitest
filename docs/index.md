@@ -15,6 +15,5 @@ theme: dark
 <HeadingSection
 heading="Powering your favorite frameworks and tools"
 />
-<ViteFrameworks />
 <Spacer />
 <Footer/>
