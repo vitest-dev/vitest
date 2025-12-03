@@ -379,6 +379,9 @@ export function useFS<T extends TestFsStructure>(root: string, structure: T, ens
 
       return fs.statSync(filepath)
     },
+    resolveFile: (file: string): string => {
+      return resolve(root, file)
+    },
   }
 }
 

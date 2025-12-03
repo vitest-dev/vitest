@@ -38,7 +38,7 @@ it('handles files', async () => {
 
 ## CDP Session
 
-Vitest exposes access to raw Chrome Devtools Protocol via the `cdp` method exported from `vitest/browser`. It is mostly useful to library authors to build tools on top of it.
+Vitest exposes access to raw Chrome DevTools Protocol via the `cdp` method exported from `vitest/browser`. It is mostly useful to library authors to build tools on top of it.
 
 ```ts
 import { cdp } from 'vitest/browser'

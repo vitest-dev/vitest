@@ -62,6 +62,34 @@ export default defineConfig({
 
 If you are a plugin author, consider defining a [cache key generator](/api/advanced/plugin#definecachekeygenerator) in your plugin if it can be registered with different options that affect the transform result.
 
+On the other hand, if your plugin should not affect the cache key, you can opt-out by setting `api.vitest.experimental.ignoreFsModuleCache` to `true`:
+
+```js [vitest.config.js]
+import { defineConfig } from 'vitest/config'
+
+export default defineConfig({
+  plugins: [
+    {
+      name: 'vitest-cache',
+      api: {
+        vitest: {
+          experimental: {
+            ignoreFsModuleCache: true,
+          },
+        },
+      },
+    },
+  ],
+  test: {
+    experimental: {
+      fsModuleCache: true,
+    },
+  },
+})
+```
+
+Note that you can still define the cache key generator even the plugin opt-out of module caching.
+
 ## experimental.fsModuleCachePath <Version type="experimental">4.0.11</Version> {#experimental-fsmodulecachepath}
 
 - **Type:** `string`
@@ -136,4 +164,22 @@ export default defineConfig({
 
 ::: warning
 It's important that Node can process `sdkPath` content because it is not transformed by Vitest. See [the guide](/guide/open-telemetry) on how to work with OpenTelemetry inside of Vitest.
+:::
+
+## experimental.printImportBreakdown <Version type="experimental">4.0.15</Version> {#experimental-printimportbreakdown}
+
+- **Type:** `boolean`
+- **Default:** `false`
+
+Show import duration breakdown after tests have finished running. This option only works with [`default`](/guide/reporters#default), [`verbose`](/guide/reporters#verbose), or [`tree`](/guide/reporters#tree) reporters.
+
+- Self: the time it took to import the module, excluding static imports;
+- Total: the time it took to import the module, including static imports. Note that this does not include `transform` time of the current module.
+
+<img alt="An example of import breakdown in the terminal" src="/reporter-import-breakdown.png" />
+
+Note that if the file path is too long, Vitest will truncate it at the start until it fits 45 character limit.
+
+::: info
+[Vitest UI](/guide/ui#import-breakdown) shows a breakdown of imports automatically if at least one file took longer than 500 milliseconds to load. You can manually set this option to `false` to disable this.
 :::
