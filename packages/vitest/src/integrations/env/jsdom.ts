@@ -38,7 +38,6 @@ function catchWindowErrors(window: DOMWindow) {
 
 let NodeFormData_!: typeof FormData
 let NodeBlob_!: typeof Blob
-let NodeFile_!: typeof File
 let NodeRequest_!: typeof Request
 
 export default <Environment>{
