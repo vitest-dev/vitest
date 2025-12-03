@@ -7,8 +7,9 @@ theme: dark
 
 <Hero/>
 <TrustedBy />
+<Intro/>
 <HeadingSection
-    heading="Features section title"
-    subheading="Pending copy"
+    heading="Fast. Lightweight. Integrated."
   />
+<VitestFeatureGrid/>
 <Spacer />
