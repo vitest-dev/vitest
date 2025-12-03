@@ -160,7 +160,6 @@ export default <Environment>{
     // delay initialization because it takes ~1s
     NodeFormData_ = globalThis.FormData
     NodeBlob_ = globalThis.Blob
-    NodeFile_ = globalThis.File
     NodeRequest_ = globalThis.Request
 
     const { CookieJar, JSDOM, ResourceLoader, VirtualConsole } = await import(
