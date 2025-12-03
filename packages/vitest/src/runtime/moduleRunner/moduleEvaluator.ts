@@ -322,21 +322,22 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
         ? vm.runInContext(wrappedCode, this.vm.context, options)
         : vm.runInThisContext(wrappedCode, options)
 
-      const dynamicRequest = async (dep: string, options: ImportCallOptions) => {
-        dep = String(dep)
-        // TODO: support more edge cases?
-        // vite doesn't support dynamic modules by design, but we have to
-        if (dep[0] === '#') {
-          return context[ssrDynamicImportKey](wrapId(dep), options)
-        }
-        return context[ssrDynamicImportKey](dep, options)
-      }
+      // const dynamicRequest = async (dep: string, options: ImportCallOptions) => {
+      //   dep = String(dep)
+      //   // TODO: support more edge cases?
+      //   // vite doesn't support dynamic modules by design, but we have to
+      //   if (dep[0] === '#') {
+      //     return context[ssrDynamicImportKey](wrapId(dep), options)
+      //   }
+      //   return context[ssrDynamicImportKey](dep, options)
+      // }
 
       await initModule(
         context[ssrModuleExportsKey],
         context[ssrImportMetaKey],
         context[ssrImportKey],
-        dynamicRequest,
+        // dynamicRequest,
+        context[ssrDynamicImportKey],
         context[ssrExportAllKey],
         // vite 7 support, remove when vite 7+ is supported
         (context as any).__vite_ssr_exportName__
