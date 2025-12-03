@@ -290,9 +290,6 @@ function createCompatUtils(window: DOMWindow): CompatUtils {
     window,
     makeCompatFormData(formData: FormData) {
       const nodeFormData = new NodeFormData_()
-      // make sure undici uses Node's `File` during `FormData.prototype.append`
-      // https://github.com/nodejs/undici/blob/e0700ddd953b5f50f63a5e0e38de6d6d4b3b27ba/lib/web/fetch/formdata.js#L237
-      globalThis.File = NodeFile_
       formData.forEach((value, key) => {
         if (value instanceof window.Blob) {
           nodeFormData.append(key, utils.makeCompatBlob(value as any) as any)
@@ -301,13 +298,17 @@ function createCompatUtils(window: DOMWindow): CompatUtils {
           nodeFormData.append(key, value)
         }
       })
-      globalThis.File = window.File
       return nodeFormData
     },
     makeCompatBlob(blob: Blob) {
       const buffer = (blob as any)[implSymbol]._buffer
       return new NodeBlob_([buffer], { type: blob.type })
     },
+  }
+  // some Blob methods are not implemented by jsdom
+  // https://github.com/jsdom/jsdom/issues/2555
+  window.Blob.prototype.stream = function (this) {
+    return utils.makeCompatBlob(this).stream()
   }
   return utils
 }
