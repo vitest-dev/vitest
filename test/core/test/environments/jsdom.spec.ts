@@ -194,7 +194,6 @@ describe('FormData', () => {
       })
     }
 
-    await createRequest().arrayBuffer()
     await new Promise((resolve, reject) => {
       createRequest().body!.pipeTo(new WritableStream({
         close() {
@@ -205,6 +204,8 @@ describe('FormData', () => {
         },
       }))
     })
+
+    await createRequest().arrayBuffer()
 
     // TODO
     // await createRequest().formData()
