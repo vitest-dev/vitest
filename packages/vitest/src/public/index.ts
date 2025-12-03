@@ -1,8 +1,28 @@
 import type { SerializedTestSpecification } from '../runtime/types/utils'
-
+import type {
+  ModuleDefinitionDiagnostic,
+  ModuleDefinitionDurationsDiagnostic,
+  ModuleDefinitionLocation,
+  SourceModuleDiagnostic,
+  SourceModuleLocations,
+  UntrackedModuleDefinitionDiagnostic,
+} from '../types/module-locations'
 import '../types/global'
 
+// eslint-disable-next-line ts/no-namespace
+export declare namespace Experimental {
+  export {
+    ModuleDefinitionDiagnostic,
+    ModuleDefinitionDurationsDiagnostic,
+    ModuleDefinitionLocation,
+    SourceModuleDiagnostic,
+    SourceModuleLocations,
+    UntrackedModuleDefinitionDiagnostic,
+  }
+}
+
 export type {
+  ExternalResult,
   TransformResultWithSource,
   WebSocketEvents,
   WebSocketHandlers,
@@ -39,6 +59,7 @@ export { expectTypeOf } from '../typecheck/expectTypeOf'
 export type { ExpectTypeOf } from '../typecheck/expectTypeOf'
 
 export type { BrowserTesterOptions } from '../types/browser'
+// export type * as Experimental from '../types/experimental'
 export type {
   AfterSuiteRunMeta,
   LabelColor,

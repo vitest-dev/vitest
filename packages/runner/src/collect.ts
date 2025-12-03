@@ -36,7 +36,7 @@ export async function collectTests(
       async () => {
         const testLocations = typeof spec === 'string' ? undefined : spec.testLocations
 
-        const file = createFileTask(filepath, config.root, config.name, runner.pool)
+        const file = createFileTask(filepath, config.root, config.name, runner.pool, runner.viteEnvironment)
         setFileContext(file, Object.create(null))
         file.shuffle = config.sequence.shuffle
 

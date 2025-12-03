@@ -25,7 +25,6 @@ class ModuleFetcher {
     private resolver: VitestResolver,
     private config: ResolvedConfig,
     private fsCache: FileSystemModuleCache,
-    private traces: Traces,
     private tmpProjectDir: string,
   ) {
     this.fsCacheEnabled = config.experimental?.fsModuleCache === true
@@ -134,12 +133,23 @@ class ModuleFetcher {
 
     const result = await this.fetchAndProcess(environment, url, importer, moduleGraphModule, options)
     const importers = this.getSerializedDependencies(moduleGraphModule)
+    const importedUrls = this.getSerializedImports(moduleGraphModule)
     const map = moduleGraphModule.transformResult?.map
     const mappings = map && !('version' in map) && map.mappings === ''
 
-    return this.cacheResult(result, cachePath, importers, !!mappings)
+    return this.cacheResult(result, cachePath, importers, importedUrls, !!mappings)
   }
 
+  // we need this for UI to be able to show a module graph
+  private getSerializedImports(node: EnvironmentModuleNode): string[] {
+    const imports: string[] = []
+    node.importedModules.forEach((importer) => {
+      imports.push(importer.url)
+    })
+    return imports
+  }
+
+  // we need this for the watcher to be able to find the related test file
   private getSerializedDependencies(node: EnvironmentModuleNode): string[] {
     const dependencies: string[] = []
     node.importers.forEach((importer) => {
@@ -190,7 +200,6 @@ class ModuleFetcher {
     return this.fsCache.generateCachePath(
       this.config,
       environment,
-      this.resolver,
       moduleGraphModule.id!,
       fileContent,
     )
@@ -268,6 +277,13 @@ class ModuleFetcher {
       }
     })
 
+    await Promise.all(cachedModule.importedUrls.map(async (url) => {
+      const moduleNode = await environment.moduleGraph.ensureEntryFromUrl(url).catch(() => null)
+      if (moduleNode) {
+        moduleGraphModule.importedModules.add(moduleNode)
+      }
+    }))
+
     return {
       cached: true as const,
       file: cachedModule.file,
@@ -302,6 +318,7 @@ class ModuleFetcher {
     result: FetchResult,
     cachePath: string,
     importers: string[] = [],
+    importedUrls: string[] = [],
     mappings = false,
   ): Promise<FetchResult | FetchCachedFileSystemResult> {
     const returnResult = 'code' in result
@@ -314,7 +331,7 @@ class ModuleFetcher {
     }
 
     const savePromise = this.fsCache
-      .saveCachedModule(cachePath, result, importers, mappings)
+      .saveCachedModule(cachePath, result, importers, importedUrls, mappings)
       .then(() => result)
       .finally(() => {
         saveCachePromises.delete(cachePath)
@@ -358,7 +375,7 @@ export function createFetchModuleFunction(
   traces: Traces,
   tmpProjectDir: string,
 ): VitestFetchFunction {
-  const fetcher = new ModuleFetcher(resolver, config, fsCache, traces, tmpProjectDir)
+  const fetcher = new ModuleFetcher(resolver, config, fsCache, tmpProjectDir)
   return async (url, importer, environment, cacheFs, options, otelCarrier) => {
     await traces.waitInit()
     const context = otelCarrier

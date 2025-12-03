@@ -13,10 +13,10 @@ import { eachMapping, generatedPositionFor, TraceMap } from '@jridgewell/trace-m
 import { basename, join, resolve } from 'pathe'
 import { x } from 'tinyexec'
 import { distDir } from '../paths'
+import { createLocationsIndexMap } from '../utils/base'
 import { convertTasksToEvents } from '../utils/tasks'
 import { collectTests } from './collect'
 import { getRawErrsMapFromTsCompile } from './parse'
-import { createIndexMap } from './utils'
 
 export class TypeCheckError extends Error {
   name = 'TypeCheckError'
@@ -146,7 +146,7 @@ export class Typechecker {
       ]
       // has no map for ".js" files that use // @ts-check
       const traceMap = (map && new TraceMap(map as any))
-      const indexMap = createIndexMap(parsed)
+      const indexMap = createLocationsIndexMap(parsed)
       const markState = (task: Task, state: TaskState) => {
         task.result = {
           state:
