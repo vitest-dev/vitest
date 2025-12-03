@@ -8,12 +8,7 @@ theme: dark
 <Hero/>
 <TrustedBy />
 <HeadingSection
-    heading="Redefining developer experience"
-    subheading="Vite makes web development simple again"
+    heading="Features section title"
+    subheading="Pending copy"
   />
-<ViteFeatureGrid />
-<HeadingSection
-heading="Powering your favorite frameworks and tools"
-/>
 <Spacer />
-<Footer/>
