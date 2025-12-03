@@ -848,6 +848,12 @@ export interface InlineConfig {
       enabled: boolean
       sdkPath?: string
     }
+    /**
+     * Show imports (top 10) that take a long time.
+     *
+     * Enabling this will also show a breakdown by default in UI, but you can always press a button to toggle it.
+     */
+    printImportBreakdown?: boolean
   }
 }
 

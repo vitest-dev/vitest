@@ -142,7 +142,7 @@ Define a generator that will be applied before hashing the cache key.
 
 Use this to make sure Vitest generates correct hash. It is a good idea to define this function if your plugin can be registered with different options.
 
-This is called only if [`experimental.fsModuleCache`](/config/experimental#fsmodulecache) is defined.
+This is called only if [`experimental.fsModuleCache`](/config/experimental#experimental-fsmodulecache) is defined.
 
 ```ts
 interface PluginOptions {

@@ -1,6 +1,5 @@
 import type { DevEnvironment, FetchResult } from 'vite'
 import type { Vitest } from '../core'
-import type { VitestResolver } from '../resolver'
 import type { ResolvedConfig } from '../types/config'
 import fs, { existsSync, mkdirSync, readFileSync } from 'node:fs'
 import { readFile, rename, rm, stat, unlink, writeFile } from 'node:fs/promises'
@@ -34,7 +33,7 @@ export class FileSystemModuleCache {
   private rootCache: string
   private metadataFilePath: string
 
-  private version = '1.0.0-beta.2'
+  private version = '1.0.0-beta.3'
   private fsCacheRoots = new WeakMap<ResolvedConfig, string>()
   private fsEnvironmentHashMap = new WeakMap<DevEnvironment, string>()
   private fsCacheKeyGenerators = new Set<CacheKeyIdGenerator>()
@@ -92,7 +91,7 @@ export class FileSystemModuleCache {
     | undefined
   > {
     if (!existsSync(cachedFilePath)) {
-      debugFs?.(`${c.red('[empty]')} ${cachedFilePath} doesn't exist, transforming by vite instead`)
+      debugFs?.(`${c.red('[empty]')} ${cachedFilePath} doesn't exist, transforming by vite first`)
       return
     }
 
@@ -110,6 +109,7 @@ export class FileSystemModuleCache {
       file: meta.file,
       code,
       importers: meta.importers,
+      importedUrls: meta.importedUrls,
       mappings: meta.mappings,
     }
   }
@@ -118,6 +118,7 @@ export class FileSystemModuleCache {
     cachedFilePath: string,
     fetchResult: T,
     importers: string[] = [],
+    importedUrls: string[] = [],
     mappings: boolean = false,
   ): Promise<void> {
     if ('code' in fetchResult) {
@@ -126,8 +127,9 @@ export class FileSystemModuleCache {
         id: fetchResult.id,
         url: fetchResult.url,
         importers,
+        importedUrls,
         mappings,
-      } satisfies Omit<FetchResult, 'code' | 'invalidate'>
+      } satisfies Omit<CachedInlineModuleMeta, 'code'>
       debugFs?.(`${c.yellow('[write]')} ${fetchResult.id} is cached in ${cachedFilePath}`)
       await atomicWriteFile(cachedFilePath, `${fetchResult.code}${cacheComment}${this.toBase64(result)}`)
     }
@@ -173,7 +175,6 @@ export class FileSystemModuleCache {
   generateCachePath(
     vitestConfig: ResolvedConfig,
     environment: DevEnvironment,
-    resolver: VitestResolver,
     id: string,
     fileContent: string,
   ): string | null {
@@ -181,7 +182,7 @@ export class FileSystemModuleCache {
     // TODO: figure out a way to still support it
     if (fileContent.includes('import.meta.glob(')) {
       this.saveMemoryCache(environment, id, null)
-      debugMemory?.(`${c.yellow('[write]')} ${id} was bailed out`)
+      debugMemory?.(`${c.yellow('[write]')} ${id} was bailed out because it has "import.meta.glob"`)
       return null
     }
 
@@ -215,7 +216,9 @@ export class FileSystemModuleCache {
           resolve: config.resolve,
           // plugins can have different options, so this is not the best key,
           // but we canot access the options because there is no standard API for it
-          plugins: config.plugins.map(p => p.name),
+          plugins: config.plugins
+            .filter(p => p.api?.vitest?.experimental?.ignoreFsModuleCache !== true)
+            .map(p => p.name),
           // in case local plugins change
           // configFileDependencies also includes configFile
           configFileDependencies: config.configFileDependencies.map(file => tryReadFileSync(file)),
@@ -245,6 +248,7 @@ export class FileSystemModuleCache {
     let cacheRoot = this.fsCacheRoots.get(vitestConfig)
     if (cacheRoot == null) {
       cacheRoot = vitestConfig.experimental.fsModuleCachePath || this.rootCache
+      this.fsCacheRoots.set(vitestConfig, cacheRoot)
       if (!existsSync(cacheRoot)) {
         mkdirSync(cacheRoot, { recursive: true })
       }
@@ -365,6 +369,7 @@ export interface CachedInlineModuleMeta {
   code: string
   importers: string[]
   mappings: boolean
+  importedUrls: string[]
 }
 
 /**
