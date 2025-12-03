@@ -170,6 +170,7 @@ export type { SerializedError } from '@vitest/utils'
 export {
   esbuildVersion,
   isCSSRequest,
+  isFileLoadingAllowed,
   isFileServingAllowed,
   parseAst,
   parseAstAsync,
