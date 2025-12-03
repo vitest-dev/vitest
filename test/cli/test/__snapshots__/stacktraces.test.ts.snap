@@ -56,8 +56,8 @@ Error: __TEST_STACK_TS__
 
  FAIL  error-in-package.test.js > transpiled
 Error: __TEST_STACK_TRANSPILED__
- ❯ innerTestStack (NODE_MODULES)/@test/test-dep-error/transpiled.js:22:8
- ❯ testStack (NODE_MODULES)/@test/test-dep-error/transpiled.js:12:2
+ ❯ innerTestStack (NODE_MODULES)/@test/test-dep-error/transpiled.ts:22:8
+ ❯ testStack (NODE_MODULES)/@test/test-dep-error/transpiled.ts:12:2
  ❯ error-in-package.test.js:16:22
      14| 
      15| test('transpiled', () => {
@@ -70,8 +70,8 @@ Error: __TEST_STACK_TRANSPILED__
 
  FAIL  error-in-package.test.js > transpiled inline
 Error: __TEST_STACK_TRANSPILED_INLINE__
- ❯ innerTestStack (NODE_MODULES)/@test/test-dep-error/transpiled-inline.js:22:8
- ❯ testStack (NODE_MODULES)/@test/test-dep-error/transpiled-inline.js:12:2
+ ❯ innerTestStack (NODE_MODULES)/@test/test-dep-error/transpiled-inline.ts:22:8
+ ❯ testStack (NODE_MODULES)/@test/test-dep-error/transpiled-inline.ts:12:2
  ❯ error-in-package.test.js:20:28
      18| 
      19| test('transpiled inline', () => {
