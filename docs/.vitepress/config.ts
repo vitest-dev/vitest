@@ -145,6 +145,50 @@ export default ({ mode }: { mode: string }) => {
       footer: {
         message: 'Released under the MIT License.',
         copyright: 'Copyright © 2021-PRESENT VoidZero Inc. and Vitest contributors',
+        nav: [
+          {
+            title: 'Vitest',
+            items: [
+              { text: 'Guide & API', link: '/guide/' },
+              { text: 'Config', link: '/config/' },
+              { text: 'Browser Mode', link: '/guide/browser/' },
+            ],
+          },
+          {
+            title: 'Resources',
+            items: [
+              { text: 'Advanced API', link: '/api/advanced/vitest' },
+              { text: 'Blog', link: '/blog' },
+              { text: 'Team', link: '/team' },
+            ],
+          },
+          {
+            title: 'Versions',
+            items: [
+              { text: `v${version}`, link: `https://github.com/vitest-dev/vitest/releases/tag/v${version}` },
+              { text: 'Releases Notes', link: releases },
+              { text: 'Contributing', link: contributing },
+              { text: 'Unreleased', link: 'https://main.vitest.dev/' },
+              { text: 'v0.x', link: 'https://v0.vitest.dev/' },
+              { text: 'v1.x', link: 'https://v1.vitest.dev/' },
+              { text: 'v2.x', link: 'https://v2.vitest.dev/' },
+            ],
+          },
+          /*{
+            title: 'Legal',
+            items: [
+              { text: 'Terms & Conditions', link: 'https://voidzero.dev/terms' },
+              { text: 'Privacy Policy', link: 'https://voidzero.dev/privacy' },
+              { text: 'Cookie Policy', link: 'https://voidzero.dev/cookies' },
+            ],
+          },*/
+        ],
+        social: [
+          { icon: 'github', link: github },
+          { icon: 'discord', link: discord },
+          { icon: 'bluesky', link: bluesky },
+          { icon: 'x', link: 'https://x.com/vitest_dev' },
+        ],
       },
 
       nav: [

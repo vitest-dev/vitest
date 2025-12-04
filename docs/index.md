@@ -13,3 +13,9 @@ theme: dark
   />
 <VitestFeatureGrid/>
 <Spacer />
+<Footer
+  heading="Start testing with Vitest"
+  subheading="Supercharge your tests with unparalleled performance made for the modern web"
+  button-text="Get started"
+  button-link="/guide/"
+/>
