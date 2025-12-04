@@ -296,6 +296,7 @@ export function createBrowserRunner(
       }
     }
 
+    // TODO
     // disable tracing in the browser for now
     trace = undefined
     __setTraces = undefined

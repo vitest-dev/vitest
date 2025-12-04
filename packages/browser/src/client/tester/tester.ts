@@ -121,6 +121,9 @@ async function prepareTestEnvironment(options: PrepareOptions) {
   setupConsoleLogSpy()
   setupDialogsSpy()
 
+  // TODO: setup traces
+  // TODO: propagte from parents
+
   const runner = await initiateRunner(state, mocker, config)
   getBrowserState().runner = runner
 
@@ -224,6 +227,7 @@ async function prepare(options: PrepareOptions) {
 }
 
 async function cleanup() {
+  // TODO: flush traces
   const state = getWorkerState()
   const config = getConfig()
   const rpc = state.rpc as any as BrowserRPC
