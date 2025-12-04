@@ -187,13 +187,19 @@ export function createCLI(options: CliParseOptions = {}): CAC {
   addCliOptions(
     cli
       .command('list [...filters]', undefined, options)
-      .action((filters, options) => collect('test', filters, options)),
+      .action((filters, options) => {
+        validateNestedOptions(options, cliOptionsConfig)
+        collect('test', filters, options)
+      }),
     collectCliOptionsConfig,
   )
 
   cli
     .command('[...filters]', undefined, options)
-    .action((filters, options) => start('test', filters, options))
+    .action((filters, options) => {
+      validateNestedOptions(options, cliOptionsConfig)
+      start('test', filters, options)
+    })
 
   return cli
 }
@@ -212,6 +218,51 @@ function removeQuotes<T>(str: T): T {
     return str.slice(1, -1) as unknown as T
   }
   return str
+}
+
+function validateNestedOptions(options: CliOptions, config: CLIOptionsConfig<any>, path: string = ''): void {
+  console.log('options', options)
+  console.log('config', config)
+  for (const [optionName, option] of Object.entries(config)) {
+    if (!option) {
+      continue
+    }
+
+    const hasSubcommands = 'subcommands' in option && option.subcommands
+    if (!hasSubcommands) {
+      continue
+    }
+
+    const optionValue = (options as any)[optionName]
+    console.log('optionValue', optionValue)
+    if (optionValue == null || typeof optionValue !== 'object' || Array.isArray(optionValue)) {
+      continue
+    }
+
+    const validSubcommands = new Set(Object.keys(option.subcommands || {}))
+    const currentPath = path ? `${path}.${optionName}` : optionName
+
+    for (const key in optionValue) {
+      if (!validSubcommands.has(key)) {
+        const validOptionsList = Array.from(validSubcommands).map(opt => `"${currentPath}.${opt}"`).join(', ')
+        const suggestions = validOptionsList || 'none'
+        throw new Error(
+          `Unknown option "${currentPath}.${key}". `
+          + `Did you mean one of: ${suggestions}? `
+          + `Use '--help --${currentPath.split('.')[0]}' for more info.`,
+        )
+      }
+
+      // Recursively validate nested subcommands
+      const subcommandConfig = option.subcommands![key]
+      if (subcommandConfig && 'subcommands' in subcommandConfig && subcommandConfig.subcommands) {
+        const nestedValue = (optionValue as any)[key]
+        if (nestedValue != null && typeof nestedValue === 'object' && !Array.isArray(nestedValue)) {
+          validateNestedOptions(nestedValue as CliOptions, { [key]: subcommandConfig }, currentPath)
+        }
+      }
+    }
+  }
 }
 
 function splitArgv(argv: string): string[] {
@@ -236,6 +287,10 @@ export function parseCLI(argv: string | string[], config: CliParseOptions = {}):
   let { args, options } = createCLI(config).parse(arrayArgs, {
     run: false,
   })
+
+  // Validate nested options (e.g., experimental.*) against their defined subcommands
+  validateNestedOptions(options, cliOptionsConfig)
+
   if (arrayArgs[2] === 'watch' || arrayArgs[2] === 'dev') {
     options.watch = true
   }
@@ -254,17 +309,20 @@ export function parseCLI(argv: string | string[], config: CliParseOptions = {}):
 }
 
 async function runRelated(relatedFiles: string[] | string, argv: CliOptions): Promise<void> {
+  validateNestedOptions(argv, cliOptionsConfig)
   argv.related = relatedFiles
   argv.passWithNoTests ??= true
   await start('test', [], argv)
 }
 
 async function watch(cliFilters: string[], options: CliOptions): Promise<void> {
+  validateNestedOptions(options, cliOptionsConfig)
   options.watch = true
   await start('test', cliFilters, options)
 }
 
 async function run(cliFilters: string[], options: CliOptions): Promise<void> {
+  validateNestedOptions(options, cliOptionsConfig)
   // "vitest run --watch" should still be watch mode
   options.run = !options.watch
 
@@ -272,6 +330,7 @@ async function run(cliFilters: string[], options: CliOptions): Promise<void> {
 }
 
 async function benchmark(cliFilters: string[], options: CliOptions): Promise<void> {
+  validateNestedOptions(options, cliOptionsConfig)
   console.warn(c.yellow('Benchmarking is an experimental feature.\nBreaking changes might not follow SemVer, please pin Vitest\'s version when using it.'))
   await start('benchmark', cliFilters, options)
 }
