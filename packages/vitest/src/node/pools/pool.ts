@@ -23,7 +23,7 @@ interface QueuedTask {
 }
 
 interface ActiveTask extends QueuedTask {
-  cancelTask: () => Promise<void>
+  cancelTask: (options?: { force: boolean }) => Promise<void>
 }
 
 export class Pool {
@@ -80,7 +80,11 @@ export class Pool {
       this.activeTasks.push(activeTask)
 
       // active tasks receive cancel signal and shut down gracefully
-      async function cancelTask() {
+      async function cancelTask(options?: { force: boolean }) {
+        if (options?.force) {
+          await runner.stop({ force: true })
+        }
+
         await runner.waitForTerminated()
         resolver.reject(new Error('Cancelled'))
       }
@@ -171,6 +175,10 @@ export class Pool {
   }
 
   async cancel(): Promise<void> {
+    // Force exit if previous cancel is still on-going
+    // for example when user does 'CTRL+c' twice in row
+    const force = this._isCancelling
+
     // Set flag to prevent new tasks from being queued
     this._isCancelling = true
 
@@ -181,13 +189,14 @@ export class Pool {
       pendingTasks.forEach(task => task.resolver.reject(error))
     }
 
-    const activeTasks = this.activeTasks.splice(0)
-    await Promise.all(activeTasks.map(task => task.cancelTask()))
+    await Promise.all(this.activeTasks.map(task => task.cancelTask({ force })))
+    this.activeTasks = []
 
-    const sharedRunners = this.sharedRunners.splice(0)
-    await Promise.all(sharedRunners.map(runner => runner.stop()))
+    await Promise.all(this.sharedRunners.map(runner => runner.stop()))
+    this.sharedRunners = []
 
-    await Promise.all(this.exitPromises.splice(0))
+    await Promise.all(this.exitPromises)
+    this.exitPromises = []
 
     this.workerIds.forEach((_, id) => this.freeWorkerId(id))
 

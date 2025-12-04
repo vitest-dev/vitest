@@ -1,7 +1,7 @@
 {
   "name": "vitest",
   "type": "module",
-  "version": "4.0.14",
+  "version": "4.0.15",
   "description": "Next generation testing framework powered by Vite",
   "author": "Anthony Fu <anthonyfu117@hotmail.com>",
   "license": "MIT",
@@ -213,7 +213,7 @@
     "cac": "catalog:",
     "empathic": "^2.0.0",
     "flatted": "catalog:",
-    "happy-dom": "^20.0.10",
+    "happy-dom": "^20.0.11",
     "jsdom": "^27.2.0",
     "local-pkg": "^1.1.2",
     "mime": "^4.1.0",

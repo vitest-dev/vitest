@@ -9,6 +9,7 @@ import type {
   TestArtifact,
 } from '@vitest/runner'
 import type { SerializedError, TestError } from '@vitest/utils'
+import type { DevEnvironment } from 'vite'
 import type { TestProject } from '../project'
 
 class ReportedTaskImplementation {
@@ -441,6 +442,13 @@ export class TestModule extends SuiteImplementation {
   public readonly type = 'module'
 
   /**
+   * The Vite environment that processes files on the server.
+   *
+   * Can be empty if test module did not run yet.
+   */
+  public readonly viteEnvironment: DevEnvironment | undefined
+
+  /**
    * This is usually an absolute UNIX file path.
    * It can be a virtual ID if the file is not on the disk.
    * This value corresponds to the ID in the Vite's module graph.
@@ -457,6 +465,12 @@ export class TestModule extends SuiteImplementation {
     super(task, project)
     this.moduleId = task.filepath
     this.relativeModuleId = task.name
+    if (task.viteEnvironment === '__browser__') {
+      this.viteEnvironment = project.browser?.vite.environments.client
+    }
+    else if (typeof task.viteEnvironment === 'string') {
+      this.viteEnvironment = project.vite.environments[task.viteEnvironment]
+    }
   }
 
   /**
