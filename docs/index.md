@@ -5,6 +5,10 @@ layout: home
 theme: dark
 ---
 
+<script setup>
+import { vitestSponsors } from './.vitepress/sponsors'
+</script>
+
 <Hero/>
 <TrustedBy />
 <Intro/>
@@ -12,6 +16,7 @@ theme: dark
     heading="Fast. Lightweight. Integrated."
   />
 <VitestFeatureGrid/>
+<Sponsors :sponsors="vitestSponsors" />
 <Spacer />
 <Footer
   heading="Start testing with Vitest"

@@ -1,80 +1,30 @@
 interface Sponsor {
   name: string
-  img: string
   url: string
+  img?: string
 }
 
-const vitestSponsors = {
-  provided: [
-    {
-      name: 'VoidZero',
-      url: 'https://voidzero.dev',
-      img: '/voidzero.svg',
-    },
-  ],
+export const vitestSponsors = {
   special: [
-    {
-      name: 'NuxtLabs',
-      url: 'https://nuxtlabs.com',
-      img: '/nuxtlabs.svg',
-    },
-    {
-      name: 'Bolt',
-      url: 'https://bolt.new',
-      img: '/bolt.svg',
-    },
-    {
-      name: 'Zammad',
-      url: 'https://zammad.com',
-      img: '/zammad.svg',
-    },
+    { name: 'NuxtLabs', url: 'https://nuxtlabs.com' },
+    { name: 'Bolt', url: 'https://bolt.new' },
+    { name: 'Zammad', url: 'https://zammad.com' },
   ],
-  // platinum: [],
   gold: [
-    {
-      name: 'vital',
-      url: 'https://vital.io/',
-      img: '/vital.svg',
-    },
-    {
-      name: 'OOMOL',
-      url: 'https://oomol.com/',
-      img: '/oomol.svg',
-    },
-    {
-      name: 'Mailmeteor',
-      url: 'https://mailmeteor.com/',
-      img: '/mailmeteor.svg',
-    },
-    {
-      name: 'Liminity',
-      url: 'https://www.liminity.se/',
-      img: '/liminity.svg',
-    },
-    {
-      name: 'Bytebase',
-      url: 'https://www.bytebase.com/',
-      img: '/bytebase.svg',
-    },
+    { name: 'Vital', url: 'https://vital.io/' },
+    { name: 'OOMOL', url: 'https://oomol.com/' },
+    { name: 'Mailmeteor', url: 'https://mailmeteor.com/' },
+    { name: 'Liminity', url: 'https://www.liminity.se/' },
+    { name: 'Bytebase', url: 'https://www.bytebase.com/' },
   ],
 } satisfies Record<string, Sponsor[]>
 
 export const sponsors = [
   {
-    tier: 'Brought to you by',
-    size: 'big',
-    items: vitestSponsors.provided,
-  },
-  {
     tier: 'Special Sponsors',
     size: 'big',
     items: vitestSponsors.special,
   },
-  // {
-  //   tier: 'Platinum Sponsors',
-  //   size: 'big',
-  //   items: vitestSponsors.platinum,
-  // },
   {
     tier: 'Gold Sponsors',
     size: 'medium',
