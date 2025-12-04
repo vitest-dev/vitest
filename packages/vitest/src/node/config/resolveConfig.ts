@@ -795,7 +795,7 @@ export function resolveConfig(
     )
   }
 
-  resolved.testTimeout ??= resolved.browser.enabled ? 30_000 : 5_000
+  resolved.testTimeout ??= resolved.browser.enabled ? 15_000 : 5_000
   resolved.hookTimeout ??= resolved.browser.enabled ? 30_000 : 10_000
 
   resolved.experimental ??= {}
