@@ -303,6 +303,11 @@ function createCompatUtils(window: DOMWindow): CompatUtils {
       return new NodeBlob_([buffer], { type: blob.type })
     },
   }
+  // some Blob methods are not implemented by jsdom
+  // https://github.com/jsdom/jsdom/issues/2555
+  window.Blob.prototype.stream = function (this) {
+    return utils.makeCompatBlob(this).stream()
+  }
   return utils
 }
 
