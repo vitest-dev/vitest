@@ -1,5 +1,6 @@
 import type { FileSpecification } from '@vitest/runner'
 import type { DeferPromise } from '@vitest/utils/helpers'
+import type { Traces } from '../../utils/traces'
 import type { Vitest } from '../core'
 import type { ProcessPool } from '../pool'
 import type { TestProject } from '../project'
@@ -15,6 +16,7 @@ const debug = createDebugger('vitest:browser:pool')
 
 export function createBrowserPool(vitest: Vitest): ProcessPool {
   const providers = new Set<BrowserProvider>()
+  vitest._traces
 
   const numCpus
     = typeof nodeos.availableParallelism === 'function'
@@ -173,6 +175,7 @@ class BrowserPool {
   private _queue: FileSpecification[] = []
   private _promise: DeferPromise<void> | undefined
   private _providedContext: string | undefined
+  private _traces: Traces
 
   private readySessions = new Set<string>()
 
@@ -182,7 +185,9 @@ class BrowserPool {
       maxWorkers: number
       origin: string
     },
-  ) {}
+  ) {
+    this._traces = project.vitest._traces
+  }
 
   public cancel(): void {
     this._queue = []
