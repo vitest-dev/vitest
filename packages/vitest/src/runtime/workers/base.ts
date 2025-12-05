@@ -30,6 +30,7 @@ function startModuleRunner(options: ContextModuleRunnerOptions) {
 let _currentEnvironment!: Environment
 let _environmentTime: number
 
+/** @experimental */
 export async function setupEnvironment(context: WorkerSetupContext): Promise<() => Promise<void>> {
   const startTime = performance.now()
   const {
