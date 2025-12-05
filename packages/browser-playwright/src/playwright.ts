@@ -114,9 +114,6 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
     private project: TestProject,
     private options: PlaywrightProviderOptions,
   ) {
-    // TODO
-    project.vitest._traces
-
     this.browserName = project.config.browser.name as PlaywrightBrowser
     this.mocker = this.createMocker()
 

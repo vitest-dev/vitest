@@ -247,19 +247,15 @@ class BrowserPool {
         `vitest.browser.open`,
         async (span) => {
           span.setAttributes({
-            "vitest.project": project,
-            "vitest.browser.provider": this.project.browser!.provider.name,
-            "vitest.browser.session_id": sessionId,
-          });
-          await this.openPage(sessionId);
+            'vitest.project': project,
+            'vitest.browser.provider': this.project.browser!.provider.name,
+            'vitest.browser.session_id': sessionId,
+          })
+          await this.openPage(sessionId)
           // start running tests on the page when it's ready
-          this.runNextTest(method, sessionId);
+          this.runNextTest(method, sessionId)
         },
       )
-      // const page = this.openPage(sessionId).then(() => {
-      //   // start running tests on the page when it's ready
-      //   this.runNextTest(method, sessionId)
-      // })
       promises.push(page)
     }
     await Promise.all(promises)
@@ -344,8 +340,8 @@ class BrowserPool {
         `vitest.browser.run`,
         {
           attributes: {
-            "vitest.browser.filepath": file.filepath,
-          }
+            'vitest.browser.filepath': file.filepath,
+          },
         },
         async () => {
           return orchestrator.createTesters(
@@ -358,8 +354,8 @@ class BrowserPool {
               // TODO: pass trace context to browser runtime?
             },
           )
-        }
-      );
+        },
+      )
       testersPromise
         .then(() => {
           debug?.('[%s] test %s finished running', sessionId, file)
