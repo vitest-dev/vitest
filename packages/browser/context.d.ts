@@ -333,6 +333,7 @@ export interface UserEvent {
    * @see {@link https://webdriver.io/docs/api/element/dragAndDrop/} WebdriverIO API
    */
   dragAndDrop: (source: Element | Locator, target: Element | Locator, options?: UserEventDragAndDropOptions) => Promise<void>
+  wheel: (element: Element | Locator, deltaX: number, deltaY: number) => Promise<void>
 }
 
 export interface UserEventFillOptions {}
@@ -489,6 +490,7 @@ export interface Locator extends LocatorSelectors {
    * @see {@link https://vitest.dev/api/browser/interactivity#userevent-tripleclick}
    */
   tripleClick(options?: UserEventTripleClickOptions): Promise<void>
+  wheel(deltaX: number, deltaY: number): Promise<void>
   /**
    * Clears the input element content
    * @see {@link https://vitest.dev/api/browser/interactivity#userevent-clear}

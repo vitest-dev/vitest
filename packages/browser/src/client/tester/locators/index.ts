@@ -86,6 +86,10 @@ export abstract class Locator {
     return this.triggerCommand<void>('__vitest_tripleClick', this.selector, options)
   }
 
+  public wheel(deltaX: number, deltaY: number): Promise<void> {
+    return this.triggerCommand<void>('__vitest_wheel', this.selector, deltaX, deltaY)
+  }
+
   public clear(options?: UserEventClearOptions): Promise<void> {
     return this.triggerCommand<void>('__vitest_clear', this.selector, options)
   }

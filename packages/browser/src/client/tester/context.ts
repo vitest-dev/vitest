@@ -133,6 +133,9 @@ export function createUserEvent(__tl_user_event_base__?: TestingLibraryUserEvent
     async paste() {
       await userEvent.keyboard(`{${modifier}>}{v}{/${modifier}}`)
     },
+    async wheel(element, deltaX, deltaY) {
+      await convertToLocator(element).wheel(deltaX, deltaY)
+    },
   }
   return userEvent
 }
@@ -229,6 +232,9 @@ function createPreviewUserEvent(userEventBase: TestingLibraryUserEvent, options:
     },
     async paste() {
       await userEvent.paste(clipboardData)
+    },
+    async wheel(element, deltaX, deltaY) {
+      await convertToLocator(element).wheel(deltaX, deltaY)
     },
   }
 
