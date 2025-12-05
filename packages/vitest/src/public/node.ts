@@ -135,6 +135,7 @@ export type {
 export type { VitestPluginContext } from '../node/types/plugin'
 export type { TestRunResult } from '../node/types/tests'
 export type { WorkerContext } from '../node/types/worker'
+export { isFileServingAllowed } from '../node/vite'
 export { createViteLogger } from '../node/viteLogger'
 export type { WatcherTriggerPattern } from '../node/watcher'
 
@@ -170,7 +171,7 @@ export type { SerializedError } from '@vitest/utils'
 export {
   esbuildVersion,
   isCSSRequest,
-  isFileServingAllowed,
+  isFileLoadingAllowed,
   parseAst,
   parseAstAsync,
   rollupVersion,
