@@ -1,0 +1,15 @@
+{
+  "name": "@vitest/example-opentelemetry",
+  "type": "module",
+  "private": true,
+  "license": "MIT",
+  "scripts": {
+    "test": "vitest"
+  },
+  "devDependencies": {
+    "@opentelemetry/sdk-node": "^0.208.0",
+    "@vitest/browser-playwright": "latest",
+    "vite": "latest",
+    "vitest": "latest"
+  }
+}

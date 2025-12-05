@@ -74,6 +74,7 @@
     "ws": "catalog:"
   },
   "devDependencies": {
+    "@opentelemetry/sdk-trace-web": "^2.2.0",
     "@testing-library/user-event": "^14.6.1",
     "@types/pngjs": "^6.0.5",
     "@types/ws": "catalog:",
