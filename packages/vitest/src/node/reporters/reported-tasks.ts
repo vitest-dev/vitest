@@ -524,7 +524,12 @@ export interface TaskOptions {
   readonly fails: boolean | undefined
   readonly concurrent: boolean | undefined
   readonly shuffle: boolean | undefined
-  readonly retry: number | undefined
+  readonly retry: number | {
+    count?: number
+    delay?: number
+    condition?: string | ((error: Error) => boolean)
+    strategy?: 'immediate' | 'test-file' | 'deferred'
+  } | undefined
   readonly repeats: number | undefined
   readonly mode: 'run' | 'only' | 'skip' | 'todo'
 }
