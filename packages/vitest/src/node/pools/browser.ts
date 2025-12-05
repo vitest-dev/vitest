@@ -6,6 +6,7 @@ import type { ProcessPool } from '../pool'
 import type { TestProject } from '../project'
 import type { TestSpecification } from '../spec'
 import type { BrowserProvider } from '../types/browser'
+import type { PoolRunnerOTEL } from './types'
 import crypto from 'node:crypto'
 import * as nodeos from 'node:os'
 import { createDefer } from '@vitest/utils/helpers'
@@ -16,7 +17,6 @@ const debug = createDebugger('vitest:browser:pool')
 
 export function createBrowserPool(vitest: Vitest): ProcessPool {
   const providers = new Set<BrowserProvider>()
-  vitest._traces
 
   const numCpus
     = typeof nodeos.availableParallelism === 'function'
@@ -175,9 +175,11 @@ class BrowserPool {
   private _queue: FileSpecification[] = []
   private _promise: DeferPromise<void> | undefined
   private _providedContext: string | undefined
-  private _traces: Traces
 
   private readySessions = new Set<string>()
+
+  private _traces: Traces
+  private _otel: PoolRunnerOTEL | null = null
 
   constructor(
     private project: TestProject,
@@ -241,10 +243,23 @@ class BrowserPool {
       this.project.vitest._browserSessions.sessionIds.add(sessionId)
       const project = this.project.name
       debug?.('[%s] creating session for %s', sessionId, project)
-      const page = this.openPage(sessionId).then(() => {
-        // start running tests on the page when it's ready
-        this.runNextTest(method, sessionId)
-      })
+      const page = this._traces.$(
+        `vitest.browser.open`,
+        async (span) => {
+          span.setAttributes({
+            "vitest.project": project,
+            "vitest.browser.provider": this.project.browser!.provider.name,
+            "vitest.browser.session_id": sessionId,
+          });
+          await this.openPage(sessionId);
+          // start running tests on the page when it's ready
+          this.runNextTest(method, sessionId);
+        },
+      )
+      // const page = this.openPage(sessionId).then(() => {
+      //   // start running tests on the page when it's ready
+      //   this.runNextTest(method, sessionId)
+      // })
       promises.push(page)
     }
     await Promise.all(promises)
@@ -332,6 +347,7 @@ class BrowserPool {
           // this will be parsed by the test iframe, not the orchestrator
           // so we need to stringify it first to avoid double serialization
           providedContext: this._providedContext || '[{}]',
+          // TODO: trace context?
         },
       )
         .then(() => {
