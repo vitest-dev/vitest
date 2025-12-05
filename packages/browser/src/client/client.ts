@@ -5,6 +5,7 @@ import type { WebSocketBrowserEvents, WebSocketBrowserHandlers } from '../types'
 import type { IframeOrchestrator } from './orchestrator'
 import { createBirpc } from 'birpc'
 import { parse, stringify } from 'flatted'
+import { runHttpResolver } from './http-resolver'
 import { getBrowserState } from './utils'
 
 const PAGE_TYPE = getBrowserState().type
@@ -85,6 +86,13 @@ function createClient() {
       async cleanupTesters() {
         const orchestrator = await waitForOrchestrator()
         return orchestrator.cleanupTesters()
+      },
+      async runHttpResolver(resolverId) {
+        const state = getBrowserState()
+        if (state.type !== 'tester') {
+          throw new Error('HTTP resolvers can only run in tester context.')
+        }
+        return runHttpResolver(resolverId)
       },
       cdpEvent(event: string, payload: unknown) {
         const cdp = getBrowserState().cdp
