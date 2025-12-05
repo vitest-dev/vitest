@@ -1030,8 +1030,8 @@ importers:
         specifier: ^2.4.9
         version: 2.4.9
       '@types/sinonjs__fake-timers':
-        specifier: ^8.1.5
-        version: 8.1.5(patch_hash=0218b33f433e26861380c2b90c757bde6fea871cb988083c0bd4a9a1f6c00252)
+        specifier: ^15.0.1
+        version: 15.0.1
       acorn-walk:
         specifier: 'catalog:'
         version: 8.3.4
@@ -4278,6 +4278,9 @@ packages:
 
   '@types/resolve@1.20.2':
     resolution: {integrity: sha512-60BCwRFOZCQhDncwQdxxeOEEkbc5dIMccYLwbxsS4TUNeVECQ/pBJ0j09mrHOl/JJvpRPGwO9SvE4nR2Nb/a4Q==}
+
+  '@types/sinonjs__fake-timers@15.0.1':
+    resolution: {integrity: sha512-Ko2tjWJq8oozHzHV+reuvS5KYIRAokHnGbDwGh/J64LntgpbuylF74ipEL24HCyRjf9FOlBiBHWBR1RlVKsI1w==}
 
   '@types/sinonjs__fake-timers@8.1.5':
     resolution: {integrity: sha512-mQkU2jY8jJEF7YHjHvsQO8+3ughTL1mcnn96igfhONmR+fUPSKIkefQYpSe8bsly2Ep7oQbn/6VG5/9/0qcArQ==}
@@ -12281,6 +12284,8 @@ snapshots:
       csstype: 3.2.3
 
   '@types/resolve@1.20.2': {}
+
+  '@types/sinonjs__fake-timers@15.0.1': {}
 
   '@types/sinonjs__fake-timers@8.1.5(patch_hash=0218b33f433e26861380c2b90c757bde6fea871cb988083c0bd4a9a1f6c00252)': {}
 
