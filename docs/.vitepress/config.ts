@@ -143,8 +143,6 @@ export default ({ mode }: { mode: string }) => {
       ],
 
       footer: {
-        message: 'Released under the MIT License.',
-        copyright: 'Copyright © 2021-PRESENT VoidZero Inc. and Vitest contributors',
         nav: [
           {
             title: 'Vitest',
