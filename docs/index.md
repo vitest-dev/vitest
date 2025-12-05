@@ -16,7 +16,11 @@ import { vitestSponsors } from './.vitepress/sponsors'
     heading="Fast. Lightweight. Integrated."
   />
 <VitestFeatureGrid/>
-<Sponsors :sponsors="vitestSponsors" />
+<Sponsors
+  description="Vitest is free and open source, made possible by wonderful sponsors."
+  sponsorLink="https://github.com/sponsors/vitest-dev"
+  :sponsors="vitestSponsors"
+/>
 <Spacer />
 <Footer
   heading="Start testing with Vitest"
