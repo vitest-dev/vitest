@@ -7,6 +7,7 @@ import cac from 'cac'
 import { normalize } from 'pathe'
 import c from 'tinyrainbow'
 import { version } from '../../../package.json' with { type: 'json' }
+import { validateNestedOptions } from '../../utils/validate-nested-options'
 import { benchCliOptionsConfig, cliOptionsConfig, collectCliOptionsConfig } from './cli-config'
 
 function addCommand(cli: CAC | Command, name: string, option: CLIOption<any>) {
@@ -218,51 +219,6 @@ function removeQuotes<T>(str: T): T {
     return str.slice(1, -1) as unknown as T
   }
   return str
-}
-
-function validateNestedOptions(options: CliOptions, config: CLIOptionsConfig<any>, path: string = ''): void {
-  console.log('options', options)
-  console.log('config', config)
-  for (const [optionName, option] of Object.entries(config)) {
-    if (!option) {
-      continue
-    }
-
-    const hasSubcommands = 'subcommands' in option && option.subcommands
-    if (!hasSubcommands) {
-      continue
-    }
-
-    const optionValue = (options as any)[optionName]
-    console.log('optionValue', optionValue)
-    if (optionValue == null || typeof optionValue !== 'object' || Array.isArray(optionValue)) {
-      continue
-    }
-
-    const validSubcommands = new Set(Object.keys(option.subcommands || {}))
-    const currentPath = path ? `${path}.${optionName}` : optionName
-
-    for (const key in optionValue) {
-      if (!validSubcommands.has(key)) {
-        const validOptionsList = Array.from(validSubcommands).map(opt => `"${currentPath}.${opt}"`).join(', ')
-        const suggestions = validOptionsList || 'none'
-        throw new Error(
-          `Unknown option "${currentPath}.${key}". `
-          + `Did you mean one of: ${suggestions}? `
-          + `Use '--help --${currentPath.split('.')[0]}' for more info.`,
-        )
-      }
-
-      // Recursively validate nested subcommands
-      const subcommandConfig = option.subcommands![key]
-      if (subcommandConfig && 'subcommands' in subcommandConfig && subcommandConfig.subcommands) {
-        const nestedValue = (optionValue as any)[key]
-        if (nestedValue != null && typeof nestedValue === 'object' && !Array.isArray(nestedValue)) {
-          validateNestedOptions(nestedValue as CliOptions, { [key]: subcommandConfig }, currentPath)
-        }
-      }
-    }
-  }
 }
 
 function splitArgv(argv: string): string[] {
