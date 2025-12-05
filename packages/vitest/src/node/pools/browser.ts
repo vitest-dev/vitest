@@ -340,16 +340,27 @@ class BrowserPool {
 
     this.setBreakpoint(sessionId, file.filepath).then(() => {
       // this starts running tests inside the orchestrator
-      orchestrator.createTesters(
+      const testersPromise = this._traces.$(
+        `vitest.browser.run`,
         {
-          method,
-          files: [file],
-          // this will be parsed by the test iframe, not the orchestrator
-          // so we need to stringify it first to avoid double serialization
-          providedContext: this._providedContext || '[{}]',
-          // TODO: trace context?
+          attributes: {
+            "vitest.browser.filepath": file.filepath,
+          }
         },
-      )
+        async () => {
+          return orchestrator.createTesters(
+            {
+              method,
+              files: [file],
+              // this will be parsed by the test iframe, not the orchestrator
+              // so we need to stringify it first to avoid double serialization
+              providedContext: this._providedContext || '[{}]',
+              // TODO: pass trace context to browser runtime?
+            },
+          )
+        }
+      );
+      testersPromise
         .then(() => {
           debug?.('[%s] test %s finished running', sessionId, file)
           this.runNextTest(method, sessionId)
