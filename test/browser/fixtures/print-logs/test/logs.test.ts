@@ -2,6 +2,8 @@
 import { test, vi } from 'vitest'
 
 test('logging to stdout', () => {
+  const placeholderVar = "placeholder"
+  console.log('hello from %s', placeholderVar)
   console.log('hello from console.log')
   console.info('hello from console.info')
   console.debug('hello from console.debug')

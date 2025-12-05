@@ -104,6 +104,7 @@ describe('console logging tests', async () => {
 
   test('logs are redirected to stdout', () => {
     expect(stdout).toContain('stdout | test/logs.test.ts > logging to stdout')
+    expect(stdout).toContain('hello from placeholder')
     expect(stdout).toContain('hello from console.log')
     expect(stdout).toContain('hello from console.info')
     expect(stdout).toContain('hello from console.debug')
@@ -143,27 +144,27 @@ describe('console logging tests', async () => {
   test(`logs have stack traces`, () => {
     expect(stdout).toMatch(`
 log with a stack
- ❯ test/logs.test.ts:58:10
+ ❯ test/logs.test.ts:60:10
     `.trim())
     expect(stderr).toMatch(`
 error with a stack
- ❯ test/logs.test.ts:59:10
+ ❯ test/logs.test.ts:61:10
     `.trim())
     // console.trace processes the stack trace correctly
-    expect(stderr).toMatch('test/logs.test.ts:60:10')
+    expect(stderr).toMatch('test/logs.test.ts:62:10')
 
     if (instances.some(({ browser }) => browser === 'webkit')) {
     // safari print stack trace in a different place
       expect(stdout).toMatch(`
 log with a stack
- ❯ test/logs.test.ts:58:14
+ ❯ test/logs.test.ts:60:14
     `.trim())
       expect(stderr).toMatch(`
 error with a stack
- ❯ test/logs.test.ts:59:16
+ ❯ test/logs.test.ts:61:16
     `.trim())
       // console.trace processes the stack trace correctly
-      expect(stderr).toMatch('test/logs.test.ts:60:16')
+      expect(stderr).toMatch('test/logs.test.ts:62:16')
     }
   })
 

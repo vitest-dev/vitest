@@ -80,11 +80,20 @@ export function stringify(
 
 export const formatRegExp: RegExp = /%[sdjifoOc%]/g
 
-export function format(...args: unknown[]): string {
+export interface FormatOptions {
+  prettifyObject?: boolean
+}
+
+function baseFormat(args: unknown[], options: FormatOptions = {}): string {
+  const objectPrettyFormat = (item: unknown) => stringify(item, undefined, {
+    printBasicPrototype: false,
+    escapeString: false,
+  })
+
   if (typeof args[0] !== 'string') {
     const objects = []
     for (let i = 0; i < args.length; i++) {
-      objects.push(inspect(args[i], { depth: 0, colors: false }))
+      objects.push(options.prettifyObject ? objectPrettyFormat(args[i]) : inspect(args[i], { depth: 0, colors: false }))
     }
     return objects.join(' ')
   }
@@ -112,7 +121,7 @@ export function format(...args: unknown[]): string {
           if (typeof value.toString === 'function' && value.toString !== Object.prototype.toString) {
             return value.toString()
           }
-          return inspect(value, { depth: 0, colors: false })
+          return options.prettifyObject ? objectPrettyFormat(value) : inspect(value, { depth: 0, colors: false })
         }
         return String(value)
       }
@@ -133,9 +142,9 @@ export function format(...args: unknown[]): string {
       case '%f':
         return Number.parseFloat(String(args[i++])).toString()
       case '%o':
-        return inspect(args[i++], { showHidden: true, showProxy: true })
+        return options.prettifyObject ? objectPrettyFormat(args[i++]) : inspect(args[i++], { showHidden: true, showProxy: true })
       case '%O':
-        return inspect(args[i++])
+        return options.prettifyObject ? objectPrettyFormat(args[i++]) : inspect(args[i++])
       case '%c': {
         i++
         return ''
@@ -168,10 +177,18 @@ export function format(...args: unknown[]): string {
       str += ` ${x}`
     }
     else {
-      str += ` ${inspect(x)}`
+      str += ` ${options.prettifyObject ? objectPrettyFormat(x) : inspect(x)}`
     }
   }
   return str
+}
+
+export function format(...args: unknown[]): string {
+  return baseFormat(args)
+}
+
+export function browserFormat(...args: unknown[]): string {
+  return baseFormat(args, { prettifyObject: true })
 }
 
 export function inspect(obj: unknown, options: LoupeOptions = {}): string {
