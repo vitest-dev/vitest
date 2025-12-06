@@ -3,7 +3,6 @@ import { click, dblClick, tripleClick } from './click'
 import { dragAndDrop } from './dragAndDrop'
 import { fill } from './fill'
 import { hover } from './hover'
-import { http } from './http'
 import { keyboard, keyboardCleanup } from './keyboard'
 import { takeScreenshot } from './screenshot'
 import { selectOptions } from './select'
@@ -28,5 +27,4 @@ export default {
   __vitest_hover: hover as typeof hover,
   __vitest_cleanup: keyboardCleanup as typeof keyboardCleanup,
   __vitest_viewport: viewport as typeof viewport,
-  __vitest_http: http as typeof http,
 }

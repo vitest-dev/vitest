@@ -1,4 +1,4 @@
-import { expect, test } from 'vitest'
+import { test as baseTest, expect } from 'vitest'
 import { page, server } from 'vitest/browser'
 
 const httpMethods = [
@@ -8,6 +8,9 @@ const httpMethods = [
   { method: 'PATCH' as const, url: '/api/route-patch', status: 200, body: { message: 'patched' } },
   { method: 'DELETE' as const, url: '/api/route-delete', status: 200, body: { ok: true } },
 ] as const
+
+const skipWebdriver = server.provider === 'webdriverio'
+const test = baseTest.runIf(!skipWebdriver)
 
 test.each(httpMethods)('fulfills mocked %s request', async (entry) => {
   const { method, url, body, status } = entry
@@ -59,8 +62,7 @@ test('fulfills mocked OPTIONS request', async () => {
   expect(response.headers.get('Allow')).toBe('GET, POST, OPTIONS')
 })
 
-// For some reason, this test only works in Playwright
-test.runIf(server.provider === 'playwright')('fulfills mocked request with wildcard path', async () => {
+test('fulfills mocked request with wildcard path', async () => {
   await page.http.get('/api/products/*', () => {
     return new Response(JSON.stringify({ wildcard: true }), {
       status: 200,
@@ -73,8 +75,7 @@ test.runIf(server.provider === 'playwright')('fulfills mocked request with wildc
   expect(await simple.json()).toEqual({ wildcard: true })
 })
 
-// For WebdriverIO, it uses URLPattern internally, and matching with RegExp does not work correctly, so this test is only run in Playwright
-test.runIf(server.provider === 'playwright')('fulfills mocked request with RegExp path', async () => {
+test('fulfills mocked request with RegExp path', async () => {
   await page.http.get(/\/api\/files\/(\d+)$/, () => {
     return new Response(JSON.stringify({ matched: true }), {
       status: 200,
