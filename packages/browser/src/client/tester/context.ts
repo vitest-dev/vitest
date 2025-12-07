@@ -129,7 +129,9 @@ export function createUserEvent(__tl_user_event_base__?: TestingLibraryUserEvent
         if (browser === 'chromium' || browser === 'chrome') {
           return new Promise((resolve) => {
             requestAnimationFrame(() => {
-              resolve()
+              requestAnimationFrame(() => {
+                resolve()
+              })
             })
           })
         }

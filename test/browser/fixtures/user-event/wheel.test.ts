@@ -52,7 +52,7 @@ test.for([
   expect(wheel.mock.calls[0][0].deltaY).toBe(deltaY)
 })
 
-test("fires wheel event multiple times when `times` option is set", { repeats: 50, retry: 5, timeout: 30_000 }, async () => {
+test("fires wheel event multiple times when `times` option is set", { repeats: 100, timeout: 30_000 }, async () => {
   document.body.innerHTML = `
     <div style="padding: 1rem;">
       <button>Scroll Me</button>
