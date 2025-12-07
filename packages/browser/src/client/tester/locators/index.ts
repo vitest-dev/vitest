@@ -10,6 +10,7 @@ import type {
   UserEventHoverOptions,
   UserEventSelectOptions,
   UserEventUploadOptions,
+  WheelOptions,
 } from 'vitest/browser'
 import {
   asLocator,
@@ -84,6 +85,10 @@ export abstract class Locator {
 
   public tripleClick(options?: UserEventClickOptions): Promise<void> {
     return this.triggerCommand<void>('__vitest_tripleClick', this.selector, options)
+  }
+
+  public wheel(options: WheelOptions): Promise<void> {
+    return this.triggerCommand<void>('__vitest_wheel', this.selector, options)
   }
 
   public clear(options?: UserEventClearOptions): Promise<void> {

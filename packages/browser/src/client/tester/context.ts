@@ -9,6 +9,8 @@ import type {
   Locator,
   LocatorSelectors,
   UserEvent,
+  WheelOptions,
+  WheelOptionsWithDelta,
 } from 'vitest/browser'
 import type { StringifyOptions } from 'vitest/internal/browser'
 import type { IframeViewportEvent } from '../client'
@@ -16,7 +18,7 @@ import type { BrowserRunnerState } from '../utils'
 import type { Locator as LocatorAPI } from './locators/index'
 import { __INTERNAL, stringify } from 'vitest/internal/browser'
 import { ensureAwaited, getBrowserState, getWorkerState } from '../utils'
-import { convertToSelector, processTimeoutOptions } from './tester-utils'
+import { convertToSelector, isLocator, processTimeoutOptions } from './tester-utils'
 
 // this file should not import anything directly, only types and utils
 
@@ -24,6 +26,44 @@ import { convertToSelector, processTimeoutOptions } from './tester-utils'
 const provider = __vitest_browser_runner__.provider
 const sessionId = getBrowserState().sessionId
 const channel = new BroadcastChannel(`vitest:${sessionId}`)
+
+const DEFAULT_SCROLL_DISTANCE = 100
+
+function resolveWheelOptions(options: WheelOptions): WheelOptionsWithDelta {
+  let delta: WheelOptionsWithDelta['delta']
+
+  if (options.delta) {
+    delta = options.delta
+  }
+  else {
+    switch (options.direction) {
+      case 'up': {
+        delta = { x: 0, y: -DEFAULT_SCROLL_DISTANCE }
+        break
+      }
+
+      case 'down': {
+        delta = { x: 0, y: DEFAULT_SCROLL_DISTANCE }
+        break
+      }
+
+      case 'left': {
+        delta = { x: -DEFAULT_SCROLL_DISTANCE, y: 0 }
+        break
+      }
+
+      case 'right': {
+        delta = { x: DEFAULT_SCROLL_DISTANCE, y: 0 }
+        break
+      }
+    }
+  }
+
+  return {
+    delta,
+    times: options.times,
+  }
+}
 
 function triggerCommand<T>(command: string, args: any[], error?: Error) {
   return getBrowserState().commands.triggerCommand<T>(command, args, error)
@@ -68,6 +108,32 @@ export function createUserEvent(__tl_user_event_base__?: TestingLibraryUserEvent
     },
     tripleClick(element, options) {
       return convertToLocator(element).tripleClick(options)
+    },
+    async wheel(elementOrOptions: Element | Locator | WheelOptions, options?: WheelOptions) {
+      return ensureAwaited<void>(async (error) => {
+        if ((elementOrOptions instanceof Element || isLocator(elementOrOptions))) {
+          // @todo assert `options`
+          await convertToLocator(elementOrOptions).wheel(resolveWheelOptions(options!))
+        }
+        else {
+          await triggerCommand(
+            '__vitest_wheel',
+            [null, resolveWheelOptions(elementOrOptions)],
+            error,
+          )
+        }
+
+        const browser = getBrowserState().config.browser.name
+
+        // looks like on Chromium the scroll event gets dispatched a frame later
+        if (browser === 'chromium' || browser === 'chrome') {
+          return new Promise((resolve) => {
+            requestAnimationFrame(() => {
+              resolve()
+            })
+          })
+        }
+      })
     },
     selectOptions(element, value, options) {
       return convertToLocator(element).selectOptions(value, options)
@@ -229,6 +295,15 @@ function createPreviewUserEvent(userEventBase: TestingLibraryUserEvent, options:
     },
     async paste() {
       await userEvent.paste(clipboardData)
+    },
+    async wheel(elementOrOptions: Element | Locator | WheelOptions, options?: WheelOptions) {
+      // @todo handle in preview
+      if (elementOrOptions) {
+        //
+      }
+      if (options) {
+        //
+      }
     },
   }
 
