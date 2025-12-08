@@ -107,10 +107,10 @@ export function startVitestModuleRunner(options: ContextModuleRunnerOptions): Vi
 
         try {
           if (VitestMocker.pendingIds.length) {
-            await moduleRunner.mocker.resolveMocks()
+            await moduleRunner.mocker?.resolveMocks()
           }
 
-          const resolvedMock = moduleRunner.mocker.getDependencyMock(rawId)
+          const resolvedMock = moduleRunner.mocker?.getDependencyMock(rawId)
           if (resolvedMock?.type === 'manual' || resolvedMock?.type === 'redirect') {
             return {
               code: '',

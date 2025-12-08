@@ -42,8 +42,8 @@ function createImportMetaResolver() {
 }
 
 // @ts-expect-error overriding private method
-export class VitestModuleRunner extends viteModuleRunner.ModuleRunner {
-  public mocker: VitestMocker
+export class VitestModuleRunner extends viteModuleRunner.ModuleRunner implements IVitestModuleRunner {
+  public mocker?: VitestMocker
   public moduleExecutionInfo: ModuleExecutionInfo
   private _otel: Traces
 
@@ -156,7 +156,7 @@ export class VitestModuleRunner extends viteModuleRunner.ModuleRunner {
 
     let mocked: any
     if (mod.meta && 'mockedModule' in mod.meta) {
-      mocked = await this.mocker.requestWithMockedModule(
+      mocked = await this.mocker?.requestWithMockedModule(
         url,
         mod,
         callstack,
@@ -164,7 +164,7 @@ export class VitestModuleRunner extends viteModuleRunner.ModuleRunner {
       )
     }
     else {
-      mocked = await this.mocker.mockedRequest(url, mod, callstack)
+      mocked = await this.mocker?.mockedRequest(url, mod, callstack)
     }
 
     if (typeof mocked === 'string') {

@@ -119,7 +119,7 @@ export async function runVmTests(method: 'run' | 'collect', state: WorkerGlobalS
       throw new Error(`Failed to load custom "defines": ${error.message}`)
     }
   }
-  await moduleRunner.mocker.initializeSpyModule()
+  await moduleRunner.mocker?.initializeSpyModule()
 
   const { run } = (await moduleRunner.import(
     entryFile,

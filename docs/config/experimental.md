@@ -232,10 +232,26 @@ We are planning to support some of these features by using the [Node.js Loaders 
 
 ### TypeScript
 
-If you are using TypeScript and Node.js lower than 22.18 or 23.6, then you will need to either:
+If you are using Node.js 22.18/23.6 or higher, then TypeScript will be [transformed natively](https://nodejs.org/en/learn/typescript/run-natively) by Node.js.
 
-- build your test files and source code and run them
-- define a [custom loader](https://nodejs.org/api/module.html#customization-hooks) via `execArgv` flag
+::: warning TypeScript with Node.js 22.6-22.18
+If you are using Node.js version between 22.6 and 22.18, you can also enable native TypeScript support via `--experimental-strip-types` flag:
+
+```shell
+NODE_OPTIONS="--experimental-strip-types" vitest
+```
+
+Note that Node.js will print an experimental warning for every test file; you can silence the warning by providing `--no-warnings` flag:
+
+```shell
+NODE_OPTIONS="--experimental-strip-types --no-warnings" vitest
+```
+:::
+
+If you are using TypeScript and Node.js version lower than 22.6, then you will need to either:
+
+- build your test files and source code and run those files directly
+- import a [custom loader](https://nodejs.org/api/module.html#customization-hooks) via `execArgv` flag
 
 ```ts
 import { defineConfig } from 'vitest/config'
@@ -250,21 +266,5 @@ export default defineConfig({
   },
 })
 ```
-
-If you are using Node.js 22.18 or 23.6 or higher, then TypeScript will be [transformed natively](https://nodejs.org/en/learn/typescript/run-natively) by Node.js.
-
-::: warning TypeScript with Node.js <22.18 or <23.6
-If you are using Node.js lower than 22.18, you can also enable native TypeScript support via `--experimental-strip-types` flag:
-
-```shell
-NODE_OPTIONS="--experimental-strip-types" vitest
-```
-
-Note that Node.js will print an experimental warning for every test file; you can silence the warning by providing `--no-warnings` flag:
-
-```shell
-NODE_OPTIONS="--experimental-strip-types --no-warnings" vitest
-```
-:::
 
 If you are running tests in Deno, TypeScript files are processed by the runtime without any additional configurations.

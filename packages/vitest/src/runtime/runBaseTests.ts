@@ -50,7 +50,7 @@ export async function run(
     async () => {
       for (const file of files) {
         if (config.isolate) {
-          moduleRunner.mocker.reset()
+          moduleRunner.mocker?.reset()
           resetModules(workerState.evaluatedModules, true)
         }
 

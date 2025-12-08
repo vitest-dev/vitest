@@ -7,6 +7,7 @@ import { runInThisContext } from 'node:vm'
 import * as spyModule from '@vitest/spy'
 import { setupChaiConfig } from '../../integrations/chai/config'
 import { loadEnvironment } from '../../integrations/env/loader'
+import { NativeModuleRunner } from '../../utils/nativeModuleRunner'
 import { VitestEvaluatedModules } from '../moduleRunner/evaluatedModules'
 import { createNodeImportMeta } from '../moduleRunner/moduleRunner'
 import { startVitestModuleRunner } from '../moduleRunner/startModuleRunner'
@@ -18,8 +19,14 @@ let _moduleRunner: VitestModuleRunner
 const evaluatedModules = new VitestEvaluatedModules()
 const moduleExecutionInfo = new Map()
 
-function startModuleRunner(options: ContextModuleRunnerOptions) {
+function startModuleRunner(options: ContextModuleRunnerOptions): VitestModuleRunner {
   if (_moduleRunner) {
+    return _moduleRunner
+  }
+
+  if (options.state.config.experimental.viteModuleRunner === false) {
+    _moduleRunner = new NativeModuleRunner(options.state.config.root) as any as VitestModuleRunner
+    _moduleRunner.moduleExecutionInfo = options.state.moduleExecutionInfo
     return _moduleRunner
   }
 

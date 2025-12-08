@@ -24,6 +24,7 @@ import pm from 'picomatch'
 import { glob } from 'tinyglobby'
 import { setup } from '../api/setup'
 import { createDefinesScript } from '../utils/config-helpers'
+import { NativeModuleRunner } from '../utils/nativeModuleRunner'
 import { isBrowserEnabled, resolveConfig } from './config/resolveConfig'
 import { serializeConfig } from './config/serializeConfig'
 import { createFetchModuleFunction } from './environments/fetchModule'
@@ -568,11 +569,13 @@ export class TestProject {
     )
 
     const environment = server.environments.__vitest__
-    this.runner = new ServerModuleRunner(
-      environment,
-      this._fetcher,
-      this._config,
-    )
+    this.runner = this._config.experimental.viteModuleRunner === false
+      ? new NativeModuleRunner(this._config.root)
+      : new ServerModuleRunner(
+          environment,
+          this._fetcher,
+          this._config,
+        )
   }
 
   private _serializeOverriddenConfig(): SerializedConfig {
