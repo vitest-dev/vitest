@@ -123,6 +123,22 @@ export class Typechecker {
     sourceErrors: TestError[]
     time: number
   }> {
+    // Detect if tsc output is help text instead of error output
+    // This happens when tsconfig.json is missing and tsc can't find any config
+    if (output.includes('The TypeScript Compiler - Version') || output.includes('COMMON COMMANDS')) {
+      const { typecheck } = this.project.config
+      const tsconfigPath = typecheck.tsconfig || 'tsconfig.json'
+      throw new Error(
+        `TypeScript compiler returned help text instead of type checking results.\n`
+        + `This usually means the tsconfig file was not found.\n\n`
+        + `Possible solutions:\n`
+        + `  1. Ensure '${tsconfigPath}' exists in your project root\n`
+        + `  2. If using a custom tsconfig, verify the path in your Vitest config:\n`
+        + `     test: { typecheck: { tsconfig: 'path/to/tsconfig.json' } }\n`
+        + `  3. Check that the tsconfig file is valid JSON`,
+      )
+    }
+
     const typeErrors = await this.parseTscLikeOutput(output)
     const testFiles = new Set(this.getFiles())
 
@@ -341,6 +357,12 @@ export class Typechecker {
           })
           this._output = ''
         }
+      })
+
+      // Also capture stderr for configuration errors like missing tsconfig
+      child.process.stderr?.on('data', (chunk) => {
+        dataReceived = true
+        this._output += chunk
       })
 
       const timeout = setTimeout(
