@@ -19,6 +19,10 @@ test('custom env', () => {
   expect(import.meta.env.CUSTOM_ENV).toBe('foo')
 })
 
+test('import.meta.env via define', () => {
+  expect(import.meta.env.DEFINE_CUSTOM_ENV).toBe('define-custom-env')
+})
+
 test('ignores import.meta.env in string literals', () => {
   expect('import.meta.env').toBe('import' + '.meta.env')
 })
