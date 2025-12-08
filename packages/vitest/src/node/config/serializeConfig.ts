@@ -134,6 +134,7 @@ export function serializeConfig(project: TestProject): SerializedConfig {
       fsModuleCache: config.experimental.fsModuleCache ?? false,
       printImportBreakdown: config.experimental.printImportBreakdown,
       viteModuleRunner: config.experimental.viteModuleRunner ?? true,
+      nodeLoader: config.experimental.nodeLoader ?? true,
     },
   }
 }

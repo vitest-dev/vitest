@@ -218,17 +218,18 @@ While running JSDOM/happy-dom tests in a permissive fake environment might be ju
 
 ### Limitations
 
-Some Vitest features rely on files being transformed in some way. These feature do not work if Vitest doesn't use the module runner:
+Some Vitest features rely on files being transformed. Vitest uses [Node.js Loaders API](https://nodejs.org/api/module.html#customization-hooks) to transform certain files to support these features:
 
-- no `import.meta.env` in Node: `import.meta.env` is a Vite feature, use `process.env` instead
-- no `import.meta.vitest`: in-source testing requires injecting values to `import.meta` which is not supported by any environment without custom transforms
-- no `vi.mock` support: mocking modules is not supported because it relies on code transformations
+- [`import.meta.vitest`](/guide/in-source)
+- partial [`vi.mock`](/api/vi#vi-mock) support
+
+This could affect performance because Vitest needs to read the file and process it. If you do not use these features, you can disable them by setting `experimental.nodeLoader` to `false`.
+
+Some features will not work due to the nature of `viteModuleRunner`, including:
+
+- no `import.meta.env`: `import.meta.env` is a Vite feature, use `process.env` instead
 - no `plugins`: plugins are not applied because there is no transformation phase
-- no `alias`: aliases are not applied because there is no transformation/resolution phase
-
-::: warning Support is Coming
-We are planning to support some of these features by using the [Node.js Loaders API](https://nodejs.org/api/module.html#customization-hooks) in the future.
-:::
+- no `alias`: aliases are not applied because there is no transformation phase
 
 ### TypeScript
 
@@ -268,3 +269,12 @@ export default defineConfig({
 ```
 
 If you are running tests in Deno, TypeScript files are processed by the runtime without any additional configurations.
+
+## experimental.nodeLoader <Version type="experimental">4.0.16</Version> {#experimental-nodeloader}
+
+- **Type:** `boolean`
+- **Default:** `true`
+
+If module runner is disabled, Vitest uses a module loader to transform files to support `import.meta.vitest` and `vi.mock`.
+
+If you don't use these features, you can disable this.

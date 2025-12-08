@@ -862,6 +862,13 @@ export interface InlineConfig {
      * @default true
      */
     viteModuleRunner?: boolean
+    /**
+     * If module runner is disabled, Vitest uses a module loader to transform files to support
+     * `import.meta.vitest` and `vi.mock`.
+     *
+     * If you don't use these features, you can disable this.
+     */
+    nodeLoader?: boolean
   }
 }
 

@@ -176,3 +176,133 @@ test('no esm globals', () => {
     }
   `)
 })
+
+test('in-source tests in CJS work', async () => {
+  const { stderr, testTree } = await runInlineTests({
+    'in-source.js': `
+if (import.meta.vitest) {
+  const { test, expect } = import.meta.vitest
+  test('works', () => {
+    expect(import.meta.vitest).toBeDefined()
+  })
+}
+    `,
+    'package.json': JSON.stringify({
+      name: '@test/no-globals-esm-cjs-native-module-runner',
+      type: 'commonjs',
+    }),
+    'vitest.config.js': {
+      test: {
+        globals: true,
+        includeSource: ['./in-source.js'],
+        experimental: {
+          viteModuleRunner: false,
+        },
+      },
+    },
+  })
+  expect(stderr).toBe('')
+  expect(testTree()).toMatchInlineSnapshot(`
+    {
+      "in-source.js": {
+        "works": "passed",
+      },
+    }
+  `)
+})
+
+test('in-source tests in ESM work', async () => {
+  const { stderr, testTree } = await runInlineTests({
+    'in-source.js': `
+if (import.meta.vitest) {
+  const { test, expect } = import.meta.vitest
+  test('works', () => {
+    expect(import.meta.vitest).toBeDefined()
+  })
+}
+    `,
+    'package.json': JSON.stringify({
+      name: '@test/no-globals-cjs-esm-native-module-runner',
+      type: 'module',
+    }),
+    'vitest.config.js': {
+      test: {
+        globals: true,
+        includeSource: ['./in-source.js'],
+        experimental: {
+          viteModuleRunner: false,
+        },
+      },
+    },
+  })
+  expect(stderr).toBe('')
+  expect(testTree()).toMatchInlineSnapshot(`
+    {
+      "in-source.js": {
+        "works": "passed",
+      },
+    }
+  `)
+})
+
+test.runIf(process.features.typescript)('an error in in-source tests is shown correctly', async () => {
+  const { stderr, errorTree } = await runInlineTests({
+    'in-source.ts': `
+interface HelloWorld {
+  isStripped: true
+}
+
+if (import.meta.vitest) {
+  const {
+    test,
+    expect
+  } = import.meta.vitest
+
+  test('works', () => {
+    throw new Error('test throws correctly')
+  })
+}
+    `,
+    'package.json': JSON.stringify({
+      name: '@test/no-globals-cjs-esm-native-module-runner',
+      type: 'module',
+    }),
+    'vitest.config.js': {
+      test: {
+        globals: true,
+        includeTaskLocation: true,
+        includeSource: ['./in-source.ts'],
+        experimental: {
+          viteModuleRunner: false,
+        },
+      },
+    },
+  })
+  expect(stderr).toMatchInlineSnapshot(`
+    "
+    ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+     FAIL  in-source.ts:12:3 > works
+    Error: test throws correctly
+     ❯ <anonymous> in-source.ts:13:11
+         11| 
+         12|   test('works', () => {
+         13|     throw new Error('test throws correctly')
+           |           ^
+         14|   })
+         15| }
+
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+    "
+  `)
+  expect(errorTree()).toMatchInlineSnapshot(`
+    {
+      "in-source.ts": {
+        "works": [
+          "test throws correctly",
+        ],
+      },
+    }
+  `)
+})

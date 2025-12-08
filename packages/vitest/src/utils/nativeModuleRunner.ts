@@ -6,6 +6,7 @@ export class NativeModuleRunner extends ModuleRunner {
   constructor(private root: string) {
     super({
       hmr: false,
+      sourcemapInterceptor: false,
       transport: {
         invoke() {
           throw new Error('Unexpected `invoke`')

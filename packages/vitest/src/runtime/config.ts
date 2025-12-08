@@ -121,6 +121,7 @@ export interface SerializedConfig {
     fsModuleCache: boolean
     printImportBreakdown: boolean | undefined
     viteModuleRunner: boolean
+    nodeLoader: boolean
   }
 }
 
