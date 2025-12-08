@@ -5,6 +5,7 @@ import type { ContextModuleRunnerOptions } from '../moduleRunner/startVitestModu
 import type { TestModuleRunner } from '../moduleRunner/testModuleRunner'
 import module from 'node:module'
 import { runInThisContext } from 'node:vm'
+import { MessageChannel } from 'node:worker_threads'
 import * as spyModule from '@vitest/spy'
 import { setupChaiConfig } from '../../integrations/chai/config'
 import { loadEnvironment } from '../../integrations/env/loader'
@@ -39,7 +40,9 @@ let _environmentTime: number
 
 /** @experimental */
 export async function setupBaseEnvironment(context: WorkerSetupContext): Promise<() => Promise<void>> {
-  setupLoaderHooks(context)
+  if (context.config.experimental.viteModuleRunner) {
+    setupNodeLoaderHooks(context)
+  }
 
   const startTime = performance.now()
   const {
@@ -90,14 +93,13 @@ export async function setupBaseEnvironment(context: WorkerSetupContext): Promise
   }
 }
 
-function setupLoaderHooks(worker: WorkerSetupContext) {
+function setupNodeLoaderHooks(worker: WorkerSetupContext) {
   if (typeof module.registerHooks === 'function') {
     module.registerHooks({
       resolve(specifier, context, nextResolve) {
         const result = nextResolve(specifier, context)
-        // TODO: a better filter
         // avoid node_modules for performance reasons
-        if (context.parentURL && result.url && !result.url.includes('node_modules')) {
+        if (context.parentURL && result.url && !result.url.includes('/node_modules/')) {
           worker.rpc.ensureModuleGraphEntry(result.url, context.parentURL).catch(() => {
             // ignore the errors if any
           })
@@ -106,8 +108,32 @@ function setupLoaderHooks(worker: WorkerSetupContext) {
       },
     })
   }
-  // TODO: fallback to module.register
-  else {
+  else if (module.register) {
+    const { port1, port2 } = new MessageChannel()
+    port1.unref()
+    port2.unref()
+    port1.on('message', (data) => {
+      if (!data || typeof data !== 'object') {
+        return
+      }
+      switch (data.event) {
+        case 'register-module-graph-entry': {
+          const { url, parentURL } = data
+          worker.rpc.ensureModuleGraphEntry(url, parentURL)
+          return
+        }
+        default: {
+          console.error('Unknown message event:', data.event)
+        }
+      }
+    })
+    module.register('#test-loader', {
+      parentURL: import.meta.url,
+      data: { port: port2 },
+      transferList: [port2],
+    })
+  }
+  else if (!process.versions.deno && !process.versions.bun) {
     console.warn(
       '"module.registerHooks" and "module.register" are not supported. Some Vitest features may not work. Please, use Node.js 18.19.0 or higher.',
     )

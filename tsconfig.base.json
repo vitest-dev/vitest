@@ -30,6 +30,7 @@
       "vitest/browser": ["./packages/vitest/browser/context.d.ts"],
       "vitest/*": ["./packages/vitest/src/public/*"]
     },
+    "allowImportingTsExtensions": true,
     "strict": true,
     "declaration": true,
     "noEmit": true,
