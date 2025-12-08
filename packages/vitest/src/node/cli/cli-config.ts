@@ -781,6 +781,9 @@ export const cliOptionsConfig: VitestCLIOptions = {
       viteModuleRunner: {
         description: 'Control whether Vitest uses Vite\'s module runner to run the code or fallback to the native `import`. (default: `true`)',
       },
+      nodeLoader: {
+        description: 'Controls whether Vitest will use Node.js Loader API to process in-source or mocked files. This has no effect if `viteModuleRunner` is enabled. Disabling this can increase performance. (default: `true`)',
+      },
     },
   },
   // disable CLI options
