@@ -23,7 +23,7 @@ export function init(worker: Options): void {
 
   let runPromise: Promise<unknown> | undefined
   let isRunning = false
-  let workerTeardown: (() => Promise<unknown>) | undefined
+  let workerTeardown: (() => Promise<unknown>) | undefined | void
   let setupContext!: WorkerSetupContext
 
   function send(response: WorkerResponse) {

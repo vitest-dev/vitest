@@ -191,6 +191,8 @@ Note that if the file path is too long, Vitest will truncate it at the start unt
 
 Controls whether Vitest uses Vite's [module runner](https://vite.dev/guide/api-environment-runtimes#modulerunner) to run the code or fallback to the native `import`.
 
+If this option is defined in the root config, all [projects](/guide/projects) will inherit it automatically.
+
 We recommend disabling the module runner if you are running tests in the same environment as your code (server backend or simple scripts, for example). However, we still recommend running `jsdom`/`happy-dom` tests with the module runner or in [the browser](/guide/browser/) as it doesn't require any additional configuration.
 
 Disabling this flag will disable _all_ file transforms:

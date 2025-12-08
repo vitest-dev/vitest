@@ -98,13 +98,17 @@ export function WorkspaceVitestPlugin(
         }
 
         // always inherit the global `fsModuleCache` value even without `extends: true`
-        if (testConfig.experimental?.fsModuleCache == null && project.vitest.config.experimental?.fsModuleCache !== null) {
+        if (testConfig.experimental?.fsModuleCache == null && project.vitest.config.experimental?.fsModuleCache != null) {
           vitestConfig.experimental ??= {}
           vitestConfig.experimental.fsModuleCache = project.vitest.config.experimental.fsModuleCache
         }
-        if (testConfig.experimental?.fsModuleCachePath == null && project.vitest.config.experimental?.fsModuleCachePath !== null) {
+        if (testConfig.experimental?.fsModuleCachePath == null && project.vitest.config.experimental?.fsModuleCachePath != null) {
           vitestConfig.experimental ??= {}
           vitestConfig.experimental.fsModuleCachePath = project.vitest.config.experimental.fsModuleCachePath
+        }
+        if (testConfig.experimental?.viteModuleRunner == null && project.vitest.config.experimental?.viteModuleRunner != null) {
+          vitestConfig.experimental ??= {}
+          vitestConfig.experimental.viteModuleRunner = project.vitest.config.experimental.viteModuleRunner
         }
 
         return {

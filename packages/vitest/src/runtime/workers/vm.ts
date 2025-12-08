@@ -1,5 +1,5 @@
 import type { Context } from 'node:vm'
-import type { WorkerGlobalState } from '../../types/worker'
+import type { WorkerGlobalState, WorkerSetupContext } from '../../types/worker'
 import type { Traces } from '../../utils/traces'
 import { pathToFileURL } from 'node:url'
 import { isContext, runInContext } from 'node:vm'
@@ -144,5 +144,11 @@ export async function runVmTests(method: 'run' | 'collect', state: WorkerGlobalS
       'vitest.runtime.environment.teardown',
       () => vm.teardown?.(),
     )
+  }
+}
+
+export function setupVmWorker(context: WorkerSetupContext): void {
+  if (context.config.experimental.viteModuleRunner === false) {
+    throw new Error(`Pool "${context.pool}" cannot run with "experimental.viteModuleRunner: false". Please, use "threads" or "forks" instead.`)
   }
 }
