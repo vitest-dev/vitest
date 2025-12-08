@@ -1,5 +1,5 @@
 import type { GlobOptions } from 'tinyglobby'
-import type { ViteDevServer, InlineConfig as ViteInlineConfig } from 'vite'
+import type { DevEnvironment, ViteDevServer, InlineConfig as ViteInlineConfig } from 'vite'
 import type { ModuleRunner } from 'vite/module-runner'
 import type { Typechecker } from '../typecheck/typechecker'
 import type { ProvidedContext } from '../types/general'
@@ -576,6 +576,14 @@ export class TestProject {
           this._fetcher,
           this._config,
         )
+  }
+
+  /** @internal */
+  public _getViteEnvironments(): DevEnvironment[] {
+    return [
+      ...Object.values(this.browser?.vite.environments || {}),
+      ...Object.values(this.vite.environments || {}),
+    ]
   }
 
   private _serializeOverriddenConfig(): SerializedConfig {
