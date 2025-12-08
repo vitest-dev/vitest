@@ -144,7 +144,7 @@ patchedDependencies:
     hash: a8f0f3517a47ce716ed90c0cfe6ae382ab763b021a664ada2a608477d0621588
     path: patches/cac@6.7.14.patch
   istanbul-lib-instrument:
-    hash: 1f854df809a8bd473152bd24f5911314f318dc80ab6ce4133c92baaab6f6713b
+    hash: fa76adf262fdb0bf545d5c529c5420e0ae33df7f5e344a6c8a727a2ffc0b0b11
     path: patches/istanbul-lib-instrument.patch
 
 importers:
@@ -619,7 +619,7 @@ importers:
         version: 3.0.4
       istanbul-lib-instrument:
         specifier: ^6.0.3
-        version: 6.0.3(patch_hash=1f854df809a8bd473152bd24f5911314f318dc80ab6ce4133c92baaab6f6713b)
+        version: 6.0.3(patch_hash=fa76adf262fdb0bf545d5c529c5420e0ae33df7f5e344a6c8a727a2ffc0b0b11)
       pathe:
         specifier: 'catalog:'
         version: 2.0.3
@@ -636,8 +636,8 @@ importers:
         specifier: workspace:*
         version: link:../utils
       ast-v8-to-istanbul:
-        specifier: https://pkg.pr.new/AriPerkkio/ast-v8-to-istanbul@c927a11
-        version: https://pkg.pr.new/AriPerkkio/ast-v8-to-istanbul@c927a11
+        specifier: https://pkg.pr.new/AriPerkkio/ast-v8-to-istanbul@be51299
+        version: https://pkg.pr.new/AriPerkkio/ast-v8-to-istanbul@be51299
       istanbul-lib-coverage:
         specifier: 'catalog:'
         version: 3.2.2
@@ -4913,8 +4913,8 @@ packages:
     resolution: {integrity: sha512-x1FCFnFifvYDDzTaLII71vG5uvDwgtmDTEVWAxrgeiR8VjMONcCXJx7E+USjDtHlwFmt9MysbqgF9b9Vjr6w+w==}
     engines: {node: '>=4'}
 
-  ast-v8-to-istanbul@https://pkg.pr.new/AriPerkkio/ast-v8-to-istanbul@c927a11:
-    resolution: {tarball: https://pkg.pr.new/AriPerkkio/ast-v8-to-istanbul@c927a11}
+  ast-v8-to-istanbul@https://pkg.pr.new/AriPerkkio/ast-v8-to-istanbul@be51299:
+    resolution: {tarball: https://pkg.pr.new/AriPerkkio/ast-v8-to-istanbul@be51299}
     version: 0.3.8
 
   async-function@1.0.0:
@@ -12924,7 +12924,7 @@ snapshots:
     dependencies:
       tslib: 2.8.1
 
-  ast-v8-to-istanbul@https://pkg.pr.new/AriPerkkio/ast-v8-to-istanbul@c927a11:
+  ast-v8-to-istanbul@https://pkg.pr.new/AriPerkkio/ast-v8-to-istanbul@be51299:
     dependencies:
       '@jridgewell/trace-mapping': 0.3.31
       estree-walker: 3.0.3
@@ -15128,7 +15128,7 @@ snapshots:
 
   istanbul-lib-coverage@3.2.2: {}
 
-  istanbul-lib-instrument@6.0.3(patch_hash=1f854df809a8bd473152bd24f5911314f318dc80ab6ce4133c92baaab6f6713b):
+  istanbul-lib-instrument@6.0.3(patch_hash=fa76adf262fdb0bf545d5c529c5420e0ae33df7f5e344a6c8a727a2ffc0b0b11):
     dependencies:
       '@babel/core': 7.28.5
       '@babel/parser': 7.28.5
