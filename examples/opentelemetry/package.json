@@ -4,6 +4,7 @@
   "private": true,
   "license": "MIT",
   "scripts": {
+    "compose": "docker compose",
     "test": "vitest"
   },
   "devDependencies": {
