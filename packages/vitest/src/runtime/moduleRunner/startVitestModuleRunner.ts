@@ -158,7 +158,7 @@ export function startVitestModuleRunner(options: ContextModuleRunnerOptions): Vi
             || (typeof cause?.message === 'string' && cause.message.startsWith('Cannot find module \''))
           ) {
             const error = new Error(
-              `Cannot find ${isBareImport(id) ? 'package' : 'module'} '${id}'${importer ? ` imported from '${importer}'` : ''}`,
+              `Cannot find ${isBareImport(id) ? 'package' : 'module'} '${id}'${importer ? ` imported from ${importer}` : ''}`,
               { cause },
             ) as Error & { code: string }
             error.code = 'ERR_MODULE_NOT_FOUND'

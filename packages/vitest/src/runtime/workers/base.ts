@@ -3,6 +3,7 @@ import type { WorkerGlobalState, WorkerSetupContext } from '../../types/worker'
 import type { Traces } from '../../utils/traces'
 import type { ContextModuleRunnerOptions } from '../moduleRunner/startVitestModuleRunner'
 import type { TestModuleRunner } from '../moduleRunner/testModuleRunner'
+import module from 'node:module'
 import { runInThisContext } from 'node:vm'
 import * as spyModule from '@vitest/spy'
 import { setupChaiConfig } from '../../integrations/chai/config'
@@ -37,7 +38,9 @@ let _currentEnvironment!: Environment
 let _environmentTime: number
 
 /** @experimental */
-export async function setupEnvironment(context: WorkerSetupContext): Promise<() => Promise<void>> {
+export async function setupBaseEnvironment(context: WorkerSetupContext): Promise<() => Promise<void>> {
+  setupLoaderHooks(context)
+
   const startTime = performance.now()
   const {
     environment: { name: environmentName, options: environmentOptions },
@@ -84,6 +87,30 @@ export async function setupEnvironment(context: WorkerSetupContext): Promise<() 
       () => env.teardown(globalThis),
     )
     await loader?.close()
+  }
+}
+
+function setupLoaderHooks(worker: WorkerSetupContext) {
+  if (typeof module.registerHooks === 'function') {
+    module.registerHooks({
+      resolve(specifier, context, nextResolve) {
+        const result = nextResolve(specifier, context)
+        // TODO: a better filter
+        // avoid node_modules for performance reasons
+        if (context.parentURL && result.url && !result.url.includes('node_modules')) {
+          worker.rpc.ensureModuleGraphEntry(result.url, context.parentURL).catch(() => {
+            // ignore the errors if any
+          })
+        }
+        return result
+      },
+    })
+  }
+  // TODO: fallback to module.register
+  else {
+    console.warn(
+      '"module.registerHooks" and "module.register" are not supported. Some Vitest features may not work. Please, use Node.js 18.19.0 or higher.',
+    )
   }
 }
 
