@@ -622,6 +622,16 @@ body {
         }
       },
     },
+    {
+      name: 'vitest:browser:__vitest_browser_import_meta_env_init__',
+      transform: {
+        handler(code) {
+          if (code.includes('__vitest_browser_import_meta_env_init__')) {
+            return code.replace('__vitest_browser_import_meta_env_init__', 'import.meta.env')
+          }
+        },
+      },
+    },
   ]
 }
 
