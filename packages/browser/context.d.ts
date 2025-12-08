@@ -1,5 +1,5 @@
 import { SerializedConfig } from 'vitest'
-import { StringifyOptions, BrowserCommands } from 'vitest/internal/browser'
+import { AtLeastOneOf, ExactlyOneOf, StringifyOptions, BrowserCommands } from 'vitest/internal/browser'
 import { ARIARole } from './aria-role.js'
 import {} from './matchers.js'
 
@@ -208,6 +208,24 @@ export interface UserEvent {
    */
   tripleClick: (element: Element | Locator, options?: UserEventTripleClickOptions) => Promise<void>
   /**
+   * Triggers a wheel event on an element.
+   *
+   * @param element - The target element to receive wheel events.
+   * @param options - Scroll configuration using `delta` or `direction`.
+   * @returns A promise that resolves when all wheel events have been dispatched.
+   *
+   * @see {@link https://vitest.dev/api/browser/interactivity#userevent-wheel}
+   *
+   * @example
+   * // Scroll down by 100 pixels
+   * await userEvent.wheel(container, { delta: { y: 100 } })
+   *
+   * @example
+   * // Scroll up 5 times
+   * await userEvent.wheel(container, { direction: 'up', times: 5 })
+   */
+  wheel(element: Element | Locator, options: UserEventWheelOptions): Promise<void>
+  /**
    * Choose one or more values from a select element. Uses provider's API under the hood.
    * If select doesn't have `multiple` attribute, only the first value will be selected.
    * @example
@@ -344,6 +362,35 @@ export interface UserEventDoubleClickOptions {}
 export interface UserEventTripleClickOptions {}
 export interface UserEventDragAndDropOptions {}
 export interface UserEventUploadOptions {}
+/**
+ * Options for triggering wheel events.
+ *
+ * Specify scrolling using either `delta` for precise pixel values, or `direction` for semantic scrolling. These are mutually exclusive.
+ */
+export type UserEventWheelOptions = ExactlyOneOf<
+  {
+    /**
+     * Precise scroll delta values in pixels. At least one axis must be specified.
+     *
+     * - Positive `y` scrolls down, negative `y` scrolls up.
+     * - Positive `x` scrolls right, negative `x` scrolls left.
+     */
+    delta: AtLeastOneOf<{ x: number, y: number }>,
+    /**
+     * Semantic scroll direction. Use this for readable tests when exact pixel values don't matter.
+     */
+    direction: 'up' | 'down' | 'left' | 'right',
+    /**
+     * Number of wheel events to fire. Defaults to `1`.
+     *
+     * Useful for triggering multiple scroll steps in a single call.
+     */
+    times?: number,
+  },
+  'delta' | 'direction'
+>
+
+export type UserEventWheelOptionsWithDelta = Extract<UserEventWheelOptions, { delta: { x?: number; y?: number } }>
 
 export interface LocatorOptions {
   /**
@@ -489,6 +536,23 @@ export interface Locator extends LocatorSelectors {
    * @see {@link https://vitest.dev/api/browser/interactivity#userevent-tripleclick}
    */
   tripleClick(options?: UserEventTripleClickOptions): Promise<void>
+  /**
+   * Triggers a wheel event on an element.
+   *
+   * @param options - Scroll configuration using `delta` or `direction`.
+   * @returns A promise that resolves when all wheel events have been dispatched.
+   *
+   * @see {@link https://vitest.dev/api/browser/interactivity#userevent-wheel}
+   *
+   * @example
+   * // Scroll down by 100 pixels
+   * await container.wheel({ delta: { y: 100 } })
+   *
+   * @example
+   * // Scroll up 5 times
+   * await container.wheel({ direction: 'up', times: 5 })
+   */
+  wheel(options: UserEventWheelOptions): Promise<void>
   /**
    * Clears the input element content
    * @see {@link https://vitest.dev/api/browser/interactivity#userevent-clear}
