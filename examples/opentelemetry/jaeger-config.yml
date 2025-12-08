@@ -1,5 +1,4 @@
 # https://www.jaegertracing.io/docs/2.12/deployment/configuration/
-# https://www.jaegertracing.io/docs/2.12/storage/badger/
 extensions:
   jaeger_storage:
     backends:

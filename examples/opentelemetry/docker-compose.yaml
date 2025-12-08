@@ -16,6 +16,7 @@ services:
 
     # Use volume to persist data across container restarts.
     # This can be commented out if persistence is not needed.
+    # https://www.jaegertracing.io/docs/2.12/storage/badger/
     user: '0:0'
     command: --config /etc/jaeger/config.yml
     volumes:
