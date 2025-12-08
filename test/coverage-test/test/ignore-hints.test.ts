@@ -16,15 +16,30 @@ test('ignore hints work', async () => {
   const fileCoverage = coverageMap.fileCoverageFor('<process-cwd>/fixtures/src/ignore-hints.ts')
   const lines = fileCoverage.getLineCoverage()
 
+  // Covered
   expect(lines[8]).toBeGreaterThanOrEqual(1)
-  expect(lines[12]).toBeGreaterThanOrEqual(1)
+  expect(lines[22]).toBeGreaterThanOrEqual(1)
+  expect(lines[30]).toBeGreaterThanOrEqual(1)
 
+  // Ignored start+end lines
+  expect(lines[11]).toBeUndefined()
+  expect(lines[12]).toBeUndefined()
+  expect(lines[13]).toBeUndefined()
+  expect(lines[14]).toBeUndefined()
+  expect(lines[15]).toBeUndefined()
+  expect(lines[16]).toBeUndefined()
+  expect(lines[17]).toBeUndefined()
+  expect(lines[18]).toBeUndefined()
+  expect(lines[19]).toBeUndefined()
+
+  // Ignore istanbul
+  expect(lines[28]).toBeUndefined()
+
+  // Line 25 = Ignore v8
   if (isV8Provider()) {
-    expect(lines[15]).toBeUndefined()
-    expect(lines[18]).toBeUndefined()
+    expect(lines[25]).toBeUndefined()
   }
   else {
-    expect(lines[15]).toBeGreaterThanOrEqual(1)
-    expect(lines[18]).toBeUndefined()
+    expect(lines[25]).toBeGreaterThanOrEqual(1)
   }
 })
