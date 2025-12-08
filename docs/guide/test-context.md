@@ -408,7 +408,11 @@ const test = baseTest.extend({
 ```
 
 ::: warning
-The built-in [`task`](#task) fixture is **not available** in file-scoped or worker-scoped fixtures. This is because these fixtures are initialized before any test (task) runs, so there is no well-defined test context to reference. If you need access to file-level metadata like the file path in a fixture, you can use `expect.getState().testPath` instead.
+The built-in [`task`](#task) fixture behaves differently in file-scoped or worker-scoped fixtures:
+- For `auto` fixtures (`{ auto: true }`), `task` is **undefined** because the fixture is initialized before any test runs
+- For non-auto fixtures, `task` will reference the first test that triggered the fixture initialization
+
+If you need reliable access to file-level metadata like the file path, use `expect.getState().testPath` instead of relying on `task.file`.
 :::
 
 The `worker` scope will run the fixture once per worker. The number of running workers depends on various factors. By default, every file runs in a separate worker, so `file` and `worker` scopes work the same way.
