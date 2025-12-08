@@ -6,7 +6,6 @@
 
 :::
 
-
 [OpenTelemetry](https://opentelemetry.io/) traces can be a useful tool to debug the performance and behavior of your application inside tests.
 
 If enabled, Vitest integration generates spans that are scoped to your test's worker.
