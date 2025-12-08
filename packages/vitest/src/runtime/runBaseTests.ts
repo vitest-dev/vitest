@@ -2,7 +2,7 @@ import type { FileSpecification } from '@vitest/runner'
 import type { Environment } from '../types/environment'
 import type { Traces } from '../utils/traces'
 import type { SerializedConfig } from './config'
-import type { VitestModuleRunner } from './moduleRunner/moduleRunner'
+import type { TestModuleRunner } from './moduleRunner/testModuleRunner'
 import { performance } from 'node:perf_hooks'
 import { collectTests, startTests } from '@vitest/runner'
 import {
@@ -21,7 +21,7 @@ export async function run(
   method: 'run' | 'collect',
   files: FileSpecification[],
   config: SerializedConfig,
-  moduleRunner: VitestModuleRunner,
+  moduleRunner: TestModuleRunner,
   environment: Environment,
   traces: Traces,
 ): Promise<void> {

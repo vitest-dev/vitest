@@ -1,8 +1,8 @@
 import type { Environment } from '../../types/environment'
 import type { WorkerGlobalState, WorkerSetupContext } from '../../types/worker'
 import type { Traces } from '../../utils/traces'
-import type { VitestModuleRunner } from '../moduleRunner/moduleRunner'
-import type { ContextModuleRunnerOptions } from '../moduleRunner/startModuleRunner'
+import type { ContextModuleRunnerOptions } from '../moduleRunner/startVitestModuleRunner'
+import type { TestModuleRunner } from '../moduleRunner/testModuleRunner'
 import { runInThisContext } from 'node:vm'
 import * as spyModule from '@vitest/spy'
 import { setupChaiConfig } from '../../integrations/chai/config'
@@ -10,23 +10,22 @@ import { loadEnvironment } from '../../integrations/env/loader'
 import { NativeModuleRunner } from '../../utils/nativeModuleRunner'
 import { VitestEvaluatedModules } from '../moduleRunner/evaluatedModules'
 import { createNodeImportMeta } from '../moduleRunner/moduleRunner'
-import { startVitestModuleRunner } from '../moduleRunner/startModuleRunner'
+import { startVitestModuleRunner } from '../moduleRunner/startVitestModuleRunner'
 import { run } from '../runBaseTests'
 import { provideWorkerState } from '../utils'
 
-let _moduleRunner: VitestModuleRunner
+let _moduleRunner: TestModuleRunner
 
 const evaluatedModules = new VitestEvaluatedModules()
 const moduleExecutionInfo = new Map()
 
-function startModuleRunner(options: ContextModuleRunnerOptions): VitestModuleRunner {
+function startModuleRunner(options: ContextModuleRunnerOptions): TestModuleRunner {
   if (_moduleRunner) {
     return _moduleRunner
   }
 
   if (options.state.config.experimental.viteModuleRunner === false) {
-    _moduleRunner = new NativeModuleRunner(options.state.config.root) as any as VitestModuleRunner
-    _moduleRunner.moduleExecutionInfo = options.state.moduleExecutionInfo
+    _moduleRunner = new NativeModuleRunner(options.state.config.root)
     return _moduleRunner
   }
 

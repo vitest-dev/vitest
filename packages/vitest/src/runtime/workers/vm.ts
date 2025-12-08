@@ -10,7 +10,7 @@ import { createCustomConsole } from '../console'
 import { ExternalModulesExecutor } from '../external-executor'
 import { getDefaultRequestStubs } from '../moduleRunner/moduleEvaluator'
 import { createNodeImportMeta } from '../moduleRunner/moduleRunner'
-import { startVitestModuleRunner, VITEST_VM_CONTEXT_SYMBOL } from '../moduleRunner/startModuleRunner'
+import { startVitestModuleRunner, VITEST_VM_CONTEXT_SYMBOL } from '../moduleRunner/startVitestModuleRunner'
 import { provideWorkerState } from '../utils'
 import { FileMap } from '../vm/file-map'
 
@@ -119,7 +119,7 @@ export async function runVmTests(method: 'run' | 'collect', state: WorkerGlobalS
       throw new Error(`Failed to load custom "defines": ${error.message}`)
     }
   }
-  await moduleRunner.mocker?.initializeSpyModule()
+  await moduleRunner.mocker.initializeSpyModule()
 
   const { run } = (await moduleRunner.import(
     entryFile,
