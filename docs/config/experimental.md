@@ -183,3 +183,86 @@ Note that if the file path is too long, Vitest will truncate it at the start unt
 ::: info
 [Vitest UI](/guide/ui#import-breakdown) shows a breakdown of imports automatically if at least one file took longer than 500 milliseconds to load. You can manually set this option to `false` to disable this.
 :::
+
+## experimental.viteModuleRunner <Version type="experimental">4.0.16</Version> {#experimental-vitemodulerunner}
+
+- **Type:** `boolean`
+- **Default:** `true`
+
+Controls whether Vitest uses Vite's [module runner](https://vite.dev/guide/api-environment-runtimes#modulerunner) to run the code or fallback to the native `import`.
+
+We recommend disabling the module runner if you are running tests in the same environment as your code (server backend or simple scripts, for example). However, we still recommend running `jsdom`/`happy-dom` tests with the module runner or in [the browser](/guide/browser/) as it doesn't require any additional configuration.
+
+Disabling this flag will disable _all_ file transforms:
+
+- test files and your source code are not processed by Vite
+- your global setup files are not processed
+- your custom runner/pool/environment files are not processed
+- your config file is still processed by Vite's config resolution mechanism (this happens before Vitest knows the flag)
+
+::: warning
+At the moment, Vitest still requires Vite for certain functionality like the module graph or watch mode.
+:::
+
+### Module Runner
+
+By default, Vitest runs tests in a very permissive module runner sandbox powered by Vite's [Environment API](https://vite.dev/guide/api-environment.html#environment-api). Every file is categorized as either an "inline" module or an "external" module.
+
+Module runner runs all "inline" modules. It provides `import.meta.env`, `require`, `__dirname`, `__filename`, static `import`, and has its own module resolution mechanism. This makes it very easy to run code when you don't want to configure the environment and just need to test that the bare JavaScript logic you wrote works as intended.
+
+All "external" modules run in native mode, meaning they are executed outside of the module runner sandbox. If you are running tests in Node.js, these files are imported with the native `import` keyword and processed by Node.js directly.
+
+While running JSDOM/happy-dom tests in a permissive fake environment might be justified, running Node.js tests in a non-Node.js environment is counter-productive as it can hide and silence potential errors you may encounter in production, especially if your code doesn't require any additional transformations provided by Vite plugins.
+
+### Limitations
+
+Some Vitest features rely on files being transformed in some way. These feature do not work if Vitest doesn't use the module runner:
+
+- no `import.meta.env` in Node: `import.meta.env` is a Vite feature, use `process.env` instead
+- no `import.meta.vitest`: in-source testing requires injecting values to `import.meta` which is not supported by any environment without custom transforms
+- no `vi.mock` support: mocking modules is not supported because it relies on code transformations
+- no `plugins`: plugins are not applied because there is no transformation phase
+- no `alias`: aliases are not applied because there is no transformation/resolution phase
+
+::: warning Support is Coming
+We are planning to support some of these features by using the [Node.js Loaders API](https://nodejs.org/api/module.html#customization-hooks) in the future.
+:::
+
+### TypeScript
+
+If you are using TypeScript and Node.js lower than 22.18 or 23.6, then you will need to either:
+
+- build your test files and source code and run them
+- define a [custom loader](https://nodejs.org/api/module.html#customization-hooks) via `execArgv` flag
+
+```ts
+import { defineConfig } from 'vitest/config'
+
+export default defineConfig({
+  test: {
+    // TODO: validate
+    execArgv: ['--require=tsx/esm'],
+    experimental: {
+      viteModuleRunner: false,
+    },
+  },
+})
+```
+
+If you are using Node.js 22.18 or 23.6 or higher, then TypeScript will be [transformed natively](https://nodejs.org/en/learn/typescript/run-natively) by Node.js.
+
+::: warning TypeScript with Node.js <22.18 or <23.6
+If you are using Node.js lower than 22.18, you can also enable native TypeScript support via `--experimental-strip-types` flag:
+
+```shell
+NODE_OPTIONS="--experimental-strip-types" vitest
+```
+
+Note that Node.js will print an experimental warning for every test file; you can silence the warning by providing `--no-warnings` flag:
+
+```shell
+NODE_OPTIONS="--experimental-strip-types --no-warnings" vitest
+```
+:::
+
+If you are running tests in Deno, TypeScript files are processed by the runtime without any additional configurations.

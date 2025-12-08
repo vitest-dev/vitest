@@ -778,6 +778,9 @@ export const cliOptionsConfig: VitestCLIOptions = {
       printImportBreakdown: {
         description: 'Print import breakdown after the summary. If the reporter doesn\'t support summary, this will have no effect. Note that UI\'s "Module Graph" tab always has an import breakdown.',
       },
+      viteModuleRunner: {
+        description: 'Control whether Vitest uses Vite\'s module runner to run the code or fallback to the native `import`. (default: `true`)',
+      },
     },
   },
   // disable CLI options

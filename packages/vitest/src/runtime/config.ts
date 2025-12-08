@@ -120,6 +120,7 @@ export interface SerializedConfig {
   experimental: {
     fsModuleCache: boolean
     printImportBreakdown: boolean | undefined
+    viteModuleRunner: boolean
   }
 }
 
