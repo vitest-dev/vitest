@@ -258,6 +258,7 @@ export class Traces {
    * @internal
    */
   async flush(): Promise<void> {
+    // TODO: no need?
     await this.#sdk?.forceFlush?.()
   }
 }

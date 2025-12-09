@@ -105,7 +105,7 @@ async function prepareTestEnvironment(options: PrepareOptions) {
   })
   await traces.waitInit()
   const testerSpan = traces.startContextSpan(
-    'vitest.browser.tester',
+    'vitest.browser.tester.run',
     traces.getContextFromCarrier(options.otelCarrier),
   )
   traces.bind(testerSpan.context)

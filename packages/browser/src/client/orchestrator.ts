@@ -18,16 +18,16 @@ export class IframeOrchestrator {
 
   public eventTarget: EventTarget = new EventTarget()
 
-  private traces_: Traces
+  // private traces_: Traces
 
   constructor() {
     debug('init orchestrator', getBrowserState().sessionId)
 
-    const otelConfig = getBrowserState().config.experimental.openTelemetry
-    this.traces_ = new Traces({
-      enabled: !!(otelConfig?.enabled && otelConfig.browserSdkPath),
-      sdkPath: otelConfig?.browserSdkPath,
-    })
+    // const otelConfig = getBrowserState().config.experimental.openTelemetry
+    // this.traces_ = new Traces({
+    //   enabled: !!(otelConfig?.enabled && otelConfig.browserSdkPath),
+    //   sdkPath: otelConfig?.browserSdkPath,
+    // })
 
     channel.addEventListener(
       'message',
@@ -39,7 +39,19 @@ export class IframeOrchestrator {
     )
   }
 
+  private async createTraces() {
+    const otelConfig = getBrowserState().config.experimental.openTelemetry
+    const traces = new Traces({
+      enabled: !!(otelConfig?.enabled && otelConfig.browserSdkPath),
+      sdkPath: otelConfig?.browserSdkPath,
+    })
+    await traces.waitInit()
+    return traces
+  }
+
   public async createTesters(options: BrowserTesterOptions): Promise<void> {
+    // TODO: instantiate traces here
+
     const startTime = performance.now()
 
     this.cancelled = false
@@ -159,16 +171,17 @@ export class IframeOrchestrator {
       this.iframes.delete(file)
     }
 
-    await this.traces_.waitInit()
-    const traceContext = this.traces_.getContextFromCarrier(options.otelCarrier)
-    const iframe = await this.traces_.$(
-      'vitest.browser.orchestrator.iframe',
-      { context: traceContext },
-      () => {
-        return this.prepareIframe(container, file, startTime, options.otelCarrier)
-      },
+    const traces = await this.createTraces()
+    const iframeSpan = traces.startContextSpan(
+      'vitest.browser.orchestrator.run',
+      traces.getContextFromCarrier(options.otelCarrier),
     )
-    // const iframe = await this.prepareIframe(container, file, startTime)
+    traces.bind(iframeSpan.context)
+    iframeSpan.span.setAttributes({
+      'vitest.browser.files': [file],
+    })
+
+    const iframe = await this.prepareIframe(container, file, startTime, traces.getContextCarrier(iframeSpan.context))
     await setIframeViewport(iframe, width, height)
     // running tests after the "prepare" event
     await sendEventToIframe({
@@ -183,8 +196,9 @@ export class IframeOrchestrator {
       event: 'cleanup',
       iframeId: file,
     })
-    // TODO: when does orchestrator get teardown?
-    await this.traces_.flush()
+
+    iframeSpan.span.end()
+    await traces.finish();
   }
 
   private dispatchIframeError(error: Error) {
