@@ -31,11 +31,13 @@ export interface IframeExecuteEvent {
   files: FileSpecification[]
   iframeId: string
   context: string
+  otelCarrier?: OTELCarrier
 }
 
 export interface IframeCleanupEvent {
   event: 'cleanup'
   iframeId: string
+  otelCarrier?: OTELCarrier
 }
 
 export interface IframePrepareEvent {

@@ -245,17 +245,6 @@ export class Traces {
       return
     }
     this.$ = this.#otel.context.bind(context, this.$)
-    this.getBoundContext = this.#otel.context.bind(context, this.getBoundContext)
-  }
-
-  /**
-   * @internal
-   */
-  getBoundContext(): Context {
-    if (!this.#otel) {
-      return this.#noopContext
-    }
-    return this.#otel.context.active()
   }
 
   /**
@@ -269,7 +258,6 @@ export class Traces {
    * @internal
    */
   async flush(): Promise<void> {
-    // TODO: no need?
     await this.#sdk?.forceFlush?.()
   }
 }
