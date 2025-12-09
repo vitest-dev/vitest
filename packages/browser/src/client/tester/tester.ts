@@ -248,7 +248,6 @@ async function prepare(options: PrepareOptions) {
 }
 
 async function cleanup() {
-  // TODO: flush traces
   const state = getWorkerState()
   const config = getConfig()
   const rpc = state.rpc as any as BrowserRPC

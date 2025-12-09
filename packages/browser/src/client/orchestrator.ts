@@ -1,7 +1,6 @@
 import type { GlobalChannelIncomingEvent, IframeChannelIncomingEvent, IframeChannelOutgoingEvent, IframeViewportDoneEvent, IframeViewportFailEvent } from '@vitest/browser/client'
 import type { FileSpecification } from '@vitest/runner'
 import type { BrowserTesterOptions, SerializedConfig } from 'vitest'
-import type { OTELCarrier } from 'vitest/internal/browser'
 import { channel, client, globalChannel } from '@vitest/browser/client'
 import { generateFileHash } from '@vitest/runner/utils'
 import { relative } from 'pathe'
@@ -14,20 +13,13 @@ const ID_ALL = '__vitest_all__'
 export class IframeOrchestrator {
   private cancelled = false
   private recreateNonIsolatedIframe = false
+  // TODO: iframeToTraces?
   private iframes = new Map<string, HTMLIFrameElement>()
 
   public eventTarget: EventTarget = new EventTarget()
 
-  // private traces_: Traces
-
   constructor() {
     debug('init orchestrator', getBrowserState().sessionId)
-
-    // const otelConfig = getBrowserState().config.experimental.openTelemetry
-    // this.traces_ = new Traces({
-    //   enabled: !!(otelConfig?.enabled && otelConfig.browserSdkPath),
-    //   sdkPath: otelConfig?.browserSdkPath,
-    // })
 
     channel.addEventListener(
       'message',
@@ -39,18 +31,26 @@ export class IframeOrchestrator {
     )
   }
 
-  private async createTraces() {
+  public async createTesters(options: BrowserTesterOptions): Promise<void> {
     const otelConfig = getBrowserState().config.experimental.openTelemetry
     const traces = new Traces({
       enabled: !!(otelConfig?.enabled && otelConfig.browserSdkPath),
       sdkPath: otelConfig?.browserSdkPath,
     })
     await traces.waitInit()
-    return traces
-  }
+    const orchestratorSpan = traces.startContextSpan(
+      'vitest.browser.orchestrator.run',
+      traces.getContextFromCarrier(options.otelCarrier),
+    )
+    traces.bind(orchestratorSpan.context)
+    orchestratorSpan.span.setAttributes({
+      'vitest.browser.files': options.files.map(f => f.filepath),
+    })
 
-  public async createTesters(options: BrowserTesterOptions): Promise<void> {
-    // TODO: instantiate traces here
+    async function endTraces() {
+      orchestratorSpan.span.end()
+      await traces.finish()
+    }
 
     const startTime = performance.now()
 
@@ -71,7 +71,8 @@ export class IframeOrchestrator {
     }
 
     if (config.browser.isolate === false) {
-      await this.runNonIsolatedTests(container, options, startTime)
+      await this.runNonIsolatedTests(container, options, startTime, traces)
+      await endTraces()
       return
     }
 
@@ -80,6 +81,7 @@ export class IframeOrchestrator {
 
     for (let i = 0; i < options.files.length; i++) {
       if (this.cancelled) {
+        await endTraces()
         return
       }
 
@@ -91,7 +93,9 @@ export class IframeOrchestrator {
         file,
         options,
         startTime,
+        traces,
       )
+      await endTraces()
     }
   }
 
@@ -121,7 +125,12 @@ export class IframeOrchestrator {
     this.recreateNonIsolatedIframe = true
   }
 
-  private async runNonIsolatedTests(container: HTMLDivElement, options: BrowserTesterOptions, startTime: number) {
+  private async runNonIsolatedTests(
+    container: HTMLDivElement,
+    options: BrowserTesterOptions,
+    startTime: number,
+    traces: Traces,
+  ) {
     if (this.recreateNonIsolatedIframe) {
       // recreate a new non-isolated iframe during watcher reruns
       // because we called "cleanup" in the previous run
@@ -134,7 +143,7 @@ export class IframeOrchestrator {
 
     if (!this.iframes.has(ID_ALL)) {
       debug('preparing non-isolated iframe')
-      await this.prepareIframe(container, ID_ALL, startTime)
+      await this.prepareIframe(container, ID_ALL, startTime, traces)
     }
 
     const config = getConfig()
@@ -160,6 +169,7 @@ export class IframeOrchestrator {
     spec: FileSpecification,
     options: BrowserTesterOptions,
     startTime: number,
+    traces: Traces,
   ) {
     const config = getConfig()
     const { width, height } = config.browser.viewport
@@ -171,17 +181,12 @@ export class IframeOrchestrator {
       this.iframes.delete(file)
     }
 
-    const traces = await this.createTraces()
-    const iframeSpan = traces.startContextSpan(
-      'vitest.browser.orchestrator.run',
-      traces.getContextFromCarrier(options.otelCarrier),
+    const iframe = await this.prepareIframe(
+      container,
+      file,
+      startTime,
+      traces,
     )
-    traces.bind(iframeSpan.context)
-    iframeSpan.span.setAttributes({
-      'vitest.browser.files': [file],
-    })
-
-    const iframe = await this.prepareIframe(container, file, startTime, traces.getContextCarrier(iframeSpan.context))
     await setIframeViewport(iframe, width, height)
     // running tests after the "prepare" event
     await sendEventToIframe({
@@ -196,9 +201,6 @@ export class IframeOrchestrator {
       event: 'cleanup',
       iframeId: file,
     })
-
-    iframeSpan.span.end()
-    await traces.finish();
   }
 
   private dispatchIframeError(error: Error) {
@@ -207,7 +209,7 @@ export class IframeOrchestrator {
     return error
   }
 
-  private async prepareIframe(container: HTMLDivElement, iframeId: string, startTime: number, otelCarrier?: OTELCarrier) {
+  private async prepareIframe(container: HTMLDivElement, iframeId: string, startTime: number, traces: Traces) {
     const iframe = this.createTestIframe(iframeId)
     container.appendChild(iframe)
 
@@ -229,7 +231,7 @@ export class IframeOrchestrator {
             event: 'prepare',
             iframeId,
             startTime,
-            otelCarrier,
+            otelCarrier: traces.getContextCarrier(traces.getBoundContext()),
           }).then(resolve, error => reject(this.dispatchIframeError(error)))
         }
       }

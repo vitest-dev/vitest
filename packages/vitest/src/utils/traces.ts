@@ -235,6 +235,8 @@ export class Traces {
     return tracer.startSpan(name, options, context)
   }
 
+  // On browser mode, async context is not automatically propagated,
+  // so we manually bind the `$` calls to the provided context.
   /**
    * @internal
    */
@@ -242,9 +244,18 @@ export class Traces {
     if (!this.#otel) {
       return
     }
-    // On browser mode, async context is not automatically propagated,
-    // so we manually setup one root span as a default context of all `$` calls.
     this.$ = this.#otel.context.bind(context, this.$)
+    this.getBoundContext = this.#otel.context.bind(context, this.getBoundContext)
+  }
+
+  /**
+   * @internal
+   */
+  getBoundContext(): Context {
+    if (!this.#otel) {
+      return this.#noopContext
+    }
+    return this.#otel.context.active()
   }
 
   /**
