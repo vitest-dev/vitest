@@ -11,18 +11,27 @@ import MagicString from 'magic-string'
 import { resolve } from 'pathe'
 import { distDir } from '../../paths'
 
+const NOW_LENGTH = Date.now().toString().length
+const REGEXP_VITEST = new RegExp(`%3Fvitest=\\d{${NOW_LENGTH}}`)
+
 export function setupNodeLoaderHooks(worker: WorkerSetupContext): void {
   module.setSourceMapsSupport(true)
 
   if (typeof module.registerHooks === 'function') {
     module.registerHooks({
       resolve(specifier, context, nextResolve) {
-        const result = nextResolve(specifier, context)
+        const isVitest = specifier.includes('vitest=')
+        const result = nextResolve(isVitest ? specifier.replace(REGEXP_VITEST, '') : specifier, context)
+
         // avoid /node_modules/ for performance reasons
         if (context.parentURL && result.url && !result.url.includes('/node_modules/')) {
           worker.rpc.ensureModuleGraphEntry(result.url, context.parentURL).catch(() => {
             // ignore errors
           })
+        }
+
+        if (isVitest) {
+          result.url = `${result.url}?vitest=${Date.now()}`
         }
         // TODO: better distDir check
         if (worker.config.experimental.nodeLoader === false || result.url.includes(distDir)) {

@@ -1,5 +1,5 @@
 import { assert, describe, expect, it } from 'vitest'
-import { getSetupStates } from '../src/setups.ts'
+import { getSetupStates, initJsSetup, initTsSetup } from '../src/setups.ts'
 
 describe('suite name', () => {
   it('foo', () => {
@@ -7,6 +7,9 @@ describe('suite name', () => {
   })
 
   it('setups work', () => {
+    expect(initJsSetup).toHaveBeenCalled()
+    expect(initTsSetup).toHaveBeenCalled()
+
     expect(getSetupStates()).toEqual({
       jsSetup: true,
       tsSetup: true,

@@ -1,13 +1,15 @@
+import { vi } from 'vitest'
+
 let jsSetup = false
 let tsSetup = false
 
-export function initJsSetup() {
+export const initJsSetup = vi.fn(() => {
   jsSetup = true
-}
+})
 
-export function initTsSetup() {
+export const initTsSetup = vi.fn(() => {
   tsSetup = true
-}
+})
 
 export function getSetupStates() {
   return {
