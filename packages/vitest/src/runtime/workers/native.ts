@@ -21,48 +21,10 @@ export function setupNodeLoaderHooks(worker: WorkerSetupContext): void {
         }
         return result
       },
-      load(url, context, nextLoad) {
-        const result = nextLoad(url, context)
-        // TODO: allow opt-in flags
-        if (url.includes('/node_modules/')) {
-          return result
-        }
-        const source = result.source?.toString()
-        if (typeof source === 'string') {
-          let _ms: MagicString | undefined
-          const ms = () => {
-            if (_ms) {
-              return _ms
-            }
-            return (_ms = new MagicString(source))
-          }
-
-          if (source.includes('import.meta.vitest')) {
-            replaceInSourceMarker(url, source, ms)
-          }
-
-          let code: string
-          if (_ms) {
-            const filename = fileURLToPath(url)
-            const string = _ms.toString()
-            const map = _ms.generateMap({ hires: 'boundary', source: filename })
-            // TODO - extract the one that might've been there already
-            code = `${string}\n//# sourceMappingURL=${genSourceMapUrl(map as any)}`
-          }
-          else {
-            code = source
-          }
-
-          return {
-            format: result.format,
-            shortCircuit: true,
-            source: code,
-          }
-        }
-        return result
-      },
+      load: worker.config.experimental.nodeLoader === false ? undefined : createLoadHook(worker),
     })
   }
+  // TODO
   else if (module.register) {
     const { port1, port2 } = new MessageChannel()
     port1.unref()
@@ -118,5 +80,43 @@ function replaceInSourceMarker(url: string, source: string, ms: () => MagicStrin
   if (overriden) {
     const filename = resolve(fileURLToPath(url))
     ms().prepend(`const IMPORT_META_VITEST = typeof __vitest_worker__ !== 'undefined' && __vitest_worker__.filepath === "${filename.replace(/"/g, '\\"')}" ? __vitest_index__ : undefined;\n`)
+  }
+}
+
+function createLoadHook(_worker: WorkerSetupContext): module.LoadHookSync {
+  return (url, context, nextLoad) => {
+    const result = nextLoad(url, context)
+    // ignore node_modules for performance reasons
+    if (url.includes('/node_modules/')) {
+      return result
+    }
+    const source = result.source?.toString()
+    if (typeof source === 'string') {
+      let _ms: MagicString | undefined
+      const ms = () => _ms || (_ms = new MagicString(source))
+
+      if (source.includes('import.meta.vitest')) {
+        replaceInSourceMarker(url, source, ms)
+      }
+
+      let code: string
+      if (_ms) {
+        const filename = fileURLToPath(url)
+        const string = _ms.toString()
+        const map = _ms.generateMap({ hires: 'boundary', source: filename })
+        // TODO - extract the one that might've been there already
+        code = `${string}\n//# sourceMappingURL=${genSourceMapUrl(map as any)}`
+      }
+      else {
+        code = source
+      }
+
+      return {
+        format: result.format,
+        shortCircuit: true,
+        source: code,
+      }
+    }
+    return result
   }
 }

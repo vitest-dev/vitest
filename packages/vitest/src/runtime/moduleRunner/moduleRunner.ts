@@ -159,7 +159,7 @@ export class VitestModuleRunner
 
     let mocked: any
     if (mod.meta && 'mockedModule' in mod.meta) {
-      mocked = await this.mocker?.requestWithMockedModule(
+      mocked = await this.mocker.requestWithMockedModule(
         url,
         mod,
         callstack,
@@ -167,7 +167,7 @@ export class VitestModuleRunner
       )
     }
     else {
-      mocked = await this.mocker?.mockedRequest(url, mod, callstack)
+      mocked = await this.mocker.mockedRequest(url, mod, callstack)
     }
 
     if (typeof mocked === 'string') {

@@ -38,7 +38,7 @@ let _environmentTime: number
 
 /** @experimental */
 export async function setupBaseEnvironment(context: WorkerSetupContext): Promise<() => Promise<void>> {
-  if (context.config.experimental.viteModuleRunner === false && context.config.experimental.nodeLoader !== false) {
+  if (context.config.experimental.viteModuleRunner === false) {
     const { setupNodeLoaderHooks } = await import('./native')
     setupNodeLoaderHooks(context)
   }
