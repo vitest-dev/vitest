@@ -59,13 +59,6 @@ export function setupNodeLoaderHooks(worker: WorkerSetupContext): void {
   }
 }
 
-function genSourceMapUrl(map: SourceMap | string): string {
-  if (typeof map !== 'string') {
-    map = JSON.stringify(map)
-  }
-  return `data:application/json;base64,${Buffer.from(map).toString('base64')}`
-}
-
 function replaceInSourceMarker(url: string, source: string, ms: () => MagicString) {
   const re = /import\.meta\.vitest/g
   let match: RegExpExecArray | null
@@ -81,7 +74,7 @@ function replaceInSourceMarker(url: string, source: string, ms: () => MagicStrin
   }
   if (overriden) {
     const filename = resolve(fileURLToPath(url))
-    ms().prepend(`const IMPORT_META_VITEST = typeof __vitest_worker__ !== 'undefined' && __vitest_worker__.filepath === "${filename.replace(/"/g, '\\"')}" ? __vitest_index__ : undefined;\n`)
+    ms().prepend(`const IMPORT_META_VITEST = typeof __vitest_worker__ !== 'undefined' && __vitest_worker__.filepath === "${filename.replace(/"/g, '\\"')}" ? __vitest_index__ : undefined;`)
   }
 }
 
@@ -109,7 +102,6 @@ function createLoadHook(_worker: WorkerSetupContext): module.LoadHookSync {
         const filename = fileURLToPath(url)
         const string = _ms.toString()
         const map = _ms.generateMap({ hires: 'boundary', source: filename })
-        // TODO - extract the one that might've been there already
         code = `${string}\n//# sourceMappingURL=${genSourceMapUrl(map as any)}`
       }
       else {
@@ -124,4 +116,11 @@ function createLoadHook(_worker: WorkerSetupContext): module.LoadHookSync {
     }
     return result
   }
+}
+
+function genSourceMapUrl(map: SourceMap | string): string {
+  if (typeof map !== 'string') {
+    map = JSON.stringify(map)
+  }
+  return `data:application/json;base64,${Buffer.from(map).toString('base64')}`
 }
