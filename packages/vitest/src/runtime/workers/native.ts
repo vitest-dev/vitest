@@ -21,7 +21,9 @@ export function setupNodeLoaderHooks(worker: WorkerSetupContext): void {
         }
         return result
       },
-      load: worker.config.experimental.nodeLoader === false ? undefined : createLoadHook(worker),
+      load: worker.config.experimental.nodeLoader === false
+        ? undefined
+        : createLoadHook(worker),
     })
   }
   // TODO
@@ -90,6 +92,9 @@ function createLoadHook(_worker: WorkerSetupContext): module.LoadHookSync {
     if (url.includes('/node_modules/')) {
       return result
     }
+    // TODO: technically, we know every file that has import.meta.vitest inside already
+    // it is collected in project#isInSourceTestCode - we just need to pass the down,
+    // then we don't need to stringify the source, which is better for performance
     const source = result.source?.toString()
     if (typeof source === 'string') {
       let _ms: MagicString | undefined

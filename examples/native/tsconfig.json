@@ -1,7 +1,8 @@
 {
   "compilerOptions": {
     "target": "es2020",
-    "module": "node16",
+    "module": "nodenext",
+    "moduleResolution": "node16",
     "types": ["vitest/importMeta"],
     "allowImportingTsExtensions": true,
     "strict": true,
