@@ -1,8 +1,9 @@
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-proto'
 import { resourceFromAttributes } from '@opentelemetry/resources'
 import {
-  ConsoleSpanExporter,
-  SimpleSpanProcessor,
+  BatchSpanProcessor,
+  // ConsoleSpanExporter,
+  // SimpleSpanProcessor,
   StackContextManager,
   WebTracerProvider,
 } from '@opentelemetry/sdk-trace-web'
@@ -15,8 +16,8 @@ const provider = new WebTracerProvider({
     'service.name': 'vitest-browser',
   }),
   spanProcessors: [
-    new SimpleSpanProcessor(new ConsoleSpanExporter()),
-    new SimpleSpanProcessor(new OTLPTraceExporter()),
+    // new SimpleSpanProcessor(new ConsoleSpanExporter()),
+    new BatchSpanProcessor(new OTLPTraceExporter()),
   ],
 })
 
