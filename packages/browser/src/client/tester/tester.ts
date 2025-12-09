@@ -1,4 +1,4 @@
-import type { BrowserRPC, IframeChannelEvent, IframePrepareEvent } from '@vitest/browser/client'
+import type { BrowserRPC, IframeChannelEvent } from '@vitest/browser/client'
 import type { FileSpecification } from '@vitest/runner'
 import { channel, client, onCancel } from '@vitest/browser/client'
 import { parse } from 'flatted'
@@ -26,6 +26,12 @@ const debug = debugVar && debugVar !== 'false'
   ? (...args: unknown[]) => client.rpc.debug?.(...args.map(String))
   : undefined
 
+const otelConfig = getConfig().experimental.openTelemetry
+const traces = new Traces({
+  enabled: !!(otelConfig?.enabled && otelConfig?.browserSdkPath),
+  sdkPath: otelConfig?.browserSdkPath,
+})
+
 channel.addEventListener('message', async (e) => {
   await client.waitForConnection()
 
@@ -41,6 +47,18 @@ channel.addEventListener('message', async (e) => {
   // ignore events to other iframes
   if (!('iframeId' in data) || data.iframeId !== getBrowserState().iframeId) {
     return
+  }
+
+  let testerEventSpan: ReturnType<Traces['startContextSpan']> | undefined
+  if ('otelCarrier' in data) {
+    await traces.waitInit()
+    await new Promise(resolve => setTimeout(resolve, 0))
+    testerEventSpan = traces.startContextSpan(
+      `vitest.browser.tester.${data.event}`,
+      traces.getContextFromCarrier(data.otelCarrier),
+    )
+    // this assumes `otelCarrier` events are not processed in parallel
+    traces.bind(testerEventSpan.context)
   }
 
   switch (data.event) {
@@ -83,6 +101,7 @@ channel.addEventListener('message', async (e) => {
     event: `response:${data.event}`,
     iframeId: getBrowserState().iframeId!,
   })
+  testerEventSpan?.span.end()
 })
 
 const url = new URL(location.href)
@@ -97,18 +116,6 @@ let contextSwitched = false
 async function prepareTestEnvironment(options: PrepareOptions) {
   debug?.('trying to resolve the runner')
   const config = getConfig()
-
-  const otelConfig = config.experimental.openTelemetry
-  const traces = new Traces({
-    enabled: !!(otelConfig?.enabled && otelConfig?.browserSdkPath),
-    sdkPath: otelConfig?.browserSdkPath,
-  })
-  await traces.waitInit()
-  const testerSpan = traces.startContextSpan(
-    'vitest.browser.tester.run',
-    traces.getContextFromCarrier(options.otelCarrier),
-  )
-  traces.bind(testerSpan.context)
 
   const rpc = createSafeRpc(client)
 
@@ -164,8 +171,6 @@ async function prepareTestEnvironment(options: PrepareOptions) {
     runner,
     config,
     state,
-    traces,
-    testerSpan,
   }
 }
 
@@ -180,7 +185,7 @@ async function executeTests(method: 'run' | 'collect', specifications: FileSpeci
 
   debug?.('runner resolved successfully')
 
-  const { runner, state, traces } = preparedData
+  const { runner, state } = preparedData
 
   state.ctx.files = specifications
   runner.setMethod(method)
@@ -213,10 +218,9 @@ async function executeTests(method: 'run' | 'collect', specifications: FileSpeci
   }
 }
 
-type PrepareOptions = Pick<IframePrepareEvent, 'startTime' | 'otelCarrier'>
-// interface PrepareOptions {
-//   startTime: number
-// }
+interface PrepareOptions {
+  startTime: number
+}
 
 async function prepare(options: PrepareOptions) {
   preparedData = await prepareTestEnvironment(options)
@@ -281,9 +285,7 @@ async function cleanup() {
     return unhandledError(error, 'Coverage Error')
   })
 
-  const { traces, testerSpan } = preparedData ?? {}
-  testerSpan?.span.end()
-  await traces?.finish()
+  await traces.finish()
 }
 
 function unhandledError(e: Error, type: string) {

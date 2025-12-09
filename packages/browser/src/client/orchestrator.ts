@@ -40,7 +40,7 @@ export class IframeOrchestrator {
   }
 
   public async createTesters(options: BrowserTesterOptions): Promise<void> {
-    await this.traces.waitInit();
+    await this.traces.waitInit()
     const orchestratorSpan = this.traces.startContextSpan(
       'vitest.browser.orchestrator.run',
       this.traces.getContextFromCarrier(options.otelCarrier),

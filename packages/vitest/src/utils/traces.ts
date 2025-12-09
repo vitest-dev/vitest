@@ -244,7 +244,9 @@ export class Traces {
     if (!this.#otel) {
       return
     }
-    this.$ = this.#otel.context.bind(context, this.$)
+    const original = (this.$ as any).__original ?? this.$
+    this.$ = this.#otel.context.bind(context, original)
+    ;(this.$ as any).__original = original
   }
 
   /**
