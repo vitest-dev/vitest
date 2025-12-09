@@ -123,6 +123,7 @@ export interface SerializedConfig {
     openTelemetry: {
       enabled: boolean
       sdkPath?: string
+      browserSdkPath?: string
     } | undefined
   }
 }
