@@ -41,7 +41,7 @@ export class Traces {
    * otel stands for OpenTelemetry
    */
   #otel: OTEL | null = null
-  #sdk: { shutdown: () => Promise<void> } | null = null
+  #sdk: { shutdown: () => Promise<void>; forceFlush?: () => Promise<void> } | null = null
   #init: Promise<unknown> | null = null
   #noopSpan = createNoopSpan()
   #noopContext = createNoopContext()
@@ -61,7 +61,7 @@ export class Traces {
       }).catch(() => {
         throw new Error(`"@opentelemetry/api" is not installed locally. Make sure you have setup OpenTelemetry instrumentation: https://vitest.dev/guide/open-telemetry`)
       })
-      const sdkInit = (options.sdkPath ? import(options.sdkPath!) : Promise.resolve()).catch((cause) => {
+      const sdkInit = (options.sdkPath ? import(/* @vite-ignore */ options.sdkPath!) : Promise.resolve()).catch((cause) => {
         throw new Error(`Failed to import custom OpenTelemetry SDK script (${options.sdkPath}): ${cause.message}`)
       })
       this.#init = Promise.all([sdkInit, apiInit]).then(([sdk]) => {
@@ -240,6 +240,13 @@ export class Traces {
    */
   async finish(): Promise<void> {
     await this.#sdk?.shutdown()
+  }
+
+  /**
+   * @internal
+   */
+  async flush(): Promise<void> {
+    await this.#sdk?.forceFlush?.()
   }
 }
 

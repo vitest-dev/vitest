@@ -4,6 +4,7 @@ import type { BrowserTesterOptions, SerializedConfig } from 'vitest'
 import { channel, client, globalChannel } from '@vitest/browser/client'
 import { generateFileHash } from '@vitest/runner/utils'
 import { relative } from 'pathe'
+import { Traces } from 'vitest/internal/browser'
 import { getUiAPI } from './ui'
 import { getBrowserState, getConfig } from './utils'
 
@@ -16,8 +17,15 @@ export class IframeOrchestrator {
 
   public eventTarget: EventTarget = new EventTarget()
 
+  private traces_: Traces
+
   constructor() {
     debug('init orchestrator', getBrowserState().sessionId)
+    this.traces_ = new Traces({
+      enabled: getBrowserState().config.experimental.openTelemetry?.enabled ?? false,
+      // TODO: browserSdkPath
+      sdkPath: '/otel-browser.js',
+    })
 
     channel.addEventListener(
       'message',
@@ -30,9 +38,6 @@ export class IframeOrchestrator {
   }
 
   public async createTesters(options: BrowserTesterOptions): Promise<void> {
-    // TODO
-    // options.otelCarrier
-
     const startTime = performance.now()
 
     this.cancelled = false
@@ -152,7 +157,18 @@ export class IframeOrchestrator {
       this.iframes.delete(file)
     }
 
-    const iframe = await this.prepareIframe(container, file, startTime)
+    // TODO: headless not working?
+    const traceContext = options.otelCarrier
+      ? this.traces_.getContextFromCarrier(options.otelCarrier)
+      : undefined
+    const iframe = await this.traces_.$(
+      'vitest.browser.orchestrator.iframe',
+      { context: traceContext },
+      () => {
+        return this.prepareIframe(container, file, startTime)
+      },
+    )
+    // const iframe = await this.prepareIframe(container, file, startTime)
     await setIframeViewport(iframe, width, height)
     // running tests after the "prepare" event
     await sendEventToIframe({
@@ -167,6 +183,8 @@ export class IframeOrchestrator {
       event: 'cleanup',
       iframeId: file,
     })
+    // TODO: when does orchestrator get teardown?
+    await this.traces_.flush()
   }
 
   private dispatchIframeError(error: Error) {

@@ -17,4 +17,13 @@ export default defineConfig({
       instances: [{ browser: 'chromium' }],
     },
   },
+  optimizeDeps: {
+    // TODO
+    include: [
+      '@opentelemetry/api',
+      '@opentelemetry/sdk-trace-web',
+      '@opentelemetry/exporter-trace-otlp-proto',
+      '@opentelemetry/resources',
+    ],
+  },
 })
