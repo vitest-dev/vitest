@@ -1,9 +1,15 @@
+import type { TestModuleMocker } from '@vitest/mocker'
 import { pathToFileURL } from 'node:url'
 import { isAbsolute, resolve } from 'pathe'
 import { ModuleRunner } from 'vite/module-runner'
 
 export class NativeModuleRunner extends ModuleRunner {
-  constructor(private root: string) {
+  /**
+   * @internal
+   */
+  public mocker?: TestModuleMocker
+
+  constructor(private root: string, mocker?: TestModuleMocker) {
     super({
       hmr: false,
       sourcemapInterceptor: false,
@@ -13,6 +19,14 @@ export class NativeModuleRunner extends ModuleRunner {
         },
       },
     })
+    this.mocker = mocker
+    if (mocker) {
+      Object.defineProperty(globalThis, '__vitest_mocker__', {
+        configurable: true,
+        writable: true,
+        value: mocker,
+      })
+    }
   }
 
   override import(moduleId: string): Promise<any> {

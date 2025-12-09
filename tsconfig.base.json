@@ -17,6 +17,7 @@
       "@vitest/mocker": ["./packages/mocker/src/index.ts"],
       "@vitest/mocker/node": ["./packages/mocker/src/node/index.ts"],
       "@vitest/mocker/browser": ["./packages/mocker/src/browser/index.ts"],
+      "@vitest/mocker/transforms": ["./packages/mocker/src/node/transforms.ts"],
       "@vitest/runner": ["./packages/runner/src/index.ts"],
       "@vitest/runner/*": ["./packages/runner/src/*"],
       "@vitest/browser-playwright": ["./packages/browser-playwright/src/index.ts"],

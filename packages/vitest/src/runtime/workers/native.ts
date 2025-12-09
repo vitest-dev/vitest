@@ -1,10 +1,15 @@
 import type { SourceMap } from 'node:module'
 import type { WorkerSetupContext } from '../../types/worker'
+import type { NativeModuleMocker } from '../moduleRunner/nativeModuleMocker'
 import module from 'node:module'
-import { fileURLToPath } from 'node:url'
+import { fileURLToPath, pathToFileURL } from 'node:url'
 import { MessageChannel } from 'node:worker_threads'
+import { automockModule, hoistMocks } from '@vitest/mocker/transforms'
+import { cleanUrl } from '@vitest/utils/helpers'
+import { parse } from 'acorn'
 import MagicString from 'magic-string'
 import { resolve } from 'pathe'
+import { distDir } from '../../paths'
 
 export function setupNodeLoaderHooks(worker: WorkerSetupContext): void {
   module.setSourceMapsSupport(true)
@@ -13,12 +18,40 @@ export function setupNodeLoaderHooks(worker: WorkerSetupContext): void {
     module.registerHooks({
       resolve(specifier, context, nextResolve) {
         const result = nextResolve(specifier, context)
-        // avoid node_modules for performance reasons
+        // avoid /node_modules/ for performance reasons
         if (context.parentURL && result.url && !result.url.includes('/node_modules/')) {
           worker.rpc.ensureModuleGraphEntry(result.url, context.parentURL).catch(() => {
-            // ignore the errors if any
+            // ignore errors
           })
         }
+        // TODO: better distDir check
+        if (worker.config.experimental.nodeLoader === false || result.url.includes(distDir)) {
+          return result
+        }
+
+        const mocker = getNativeMocker()
+        if (!mocker || !context.parentURL) {
+          return result
+        }
+        const url = result.url
+        const moduelId = url.startsWith('file://') ? fileURLToPath(url) : url
+        const mockedModule = mocker?.getDependencyMock(moduelId)
+        if (!mockedModule) {
+          return result
+        }
+        if (mockedModule.type === 'redirect') {
+          return {
+            url: pathToFileURL(mockedModule.redirect).toString(),
+            shortCircuit: true,
+          }
+        }
+        if (mockedModule.type === 'automock' || mockedModule.type === 'autospy') {
+          return {
+            url: injectQuery(result.url, context.parentURL, `mock=${mockedModule.type}`),
+            shortCircuit: true,
+          }
+        }
+
         return result
       },
       load: worker.config.experimental.nodeLoader === false
@@ -78,31 +111,68 @@ function replaceInSourceMarker(url: string, source: string, ms: () => MagicStrin
   }
 }
 
+const ignoreFormats = new Set<string>([
+  'addon',
+  'builtin',
+  'wasm',
+])
+
 function createLoadHook(_worker: WorkerSetupContext): module.LoadHookSync {
   return (url, context, nextLoad) => {
     const result = nextLoad(url, context)
-    // ignore node_modules for performance reasons
-    if (url.includes('/node_modules/')) {
+    if (
+      (result.format && ignoreFormats.has(result.format))
+      // ignore node_modules for performance reasons
+      || url.includes('/node_modules/')
+      || url.includes(distDir)
+    ) {
       return result
     }
-    // TODO: technically, we know every file that has import.meta.vitest inside already
-    // it is collected in project#isInSourceTestCode - we just need to pass the down,
-    // then we don't need to stringify the source, which is better for performance
+    const filename = url.startsWith('file://') ? fileURLToPath(url) : url
     const source = result.source?.toString()
     if (typeof source === 'string') {
       let _ms: MagicString | undefined
       const ms = () => _ms || (_ms = new MagicString(source))
 
+      if (url.includes('mock=automock') || url.includes('mock=autospy')) {
+        const mockType = url.includes('mock=automock') ? 'automock' : 'autospy'
+        const transformedCode = result.format === 'module-typescript' || result.format === 'commonjs-typescript'
+          ? module.stripTypeScriptTypes(source)
+          : source
+        const code = automockModule(transformedCode, mockType, code => parse(code, {
+          ecmaVersion: 'latest',
+          sourceType: result.format === 'module' || result.format === 'module-typescript' ? 'module' : 'script',
+        }))
+
+        return {
+          format: 'module',
+          source: code.toString(),
+          shortCircuit: true,
+        }
+      }
+
       if (source.includes('import.meta.vitest')) {
         replaceInSourceMarker(url, source, ms)
       }
 
+      hoistMocks(
+        source,
+        filename,
+        code => parse(code, {
+          ecmaVersion: 'latest',
+          sourceType: result.format === 'module' || result.format === 'module-typescript' ? 'module' : 'script',
+        }),
+        {
+          magicString: ms,
+          globalThisAccessor: '"__vitest_mocker__"',
+        },
+      )
+
       let code: string
       if (_ms) {
-        const filename = fileURLToPath(url)
-        const string = _ms.toString()
+        const transformed = _ms.toString()
         const map = _ms.generateMap({ hires: 'boundary', source: filename })
-        code = `${string}\n//# sourceMappingURL=${genSourceMapUrl(map as any)}`
+        code = `${transformed}\n//# sourceMappingURL=${genSourceMapUrl(map as any)}`
       }
       else {
         code = source
@@ -123,4 +193,26 @@ function genSourceMapUrl(map: SourceMap | string): string {
     map = JSON.stringify(map)
   }
   return `data:application/json;base64,${Buffer.from(map).toString('base64')}`
+}
+
+function getNativeMocker() {
+  const mocker: NativeModuleMocker | undefined
+  // @ts-expect-error untyped global
+    = typeof __vitest_mocker__ !== 'undefined' ? __vitest_mocker__ : undefined
+  return mocker
+}
+
+const replacePercentageRE = /%/g
+function injectQuery(url: string, importer: string, queryToInject: string): string {
+  // encode percents for consistent behavior with pathToFileURL
+  // see #2614 for details
+  const resolvedUrl = new URL(
+    url.replace(replacePercentageRE, '%25'),
+    importer,
+  )
+  const { search, hash } = resolvedUrl
+  const pathname = cleanUrl(url)
+  return `${pathname}?${queryToInject}${search ? `&${search.slice(1)}` : ''}${
+    hash ?? ''
+  }`
 }

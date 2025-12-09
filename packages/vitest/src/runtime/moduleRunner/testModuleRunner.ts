@@ -1,8 +1,8 @@
+import type { TestModuleMocker } from '@vitest/mocker'
 import type { ModuleExecutionInfo } from './moduleDebug'
-import type { VitestMocker } from './moduleMocker'
 
 export interface TestModuleRunner {
   moduleExecutionInfo?: ModuleExecutionInfo
-  mocker?: VitestMocker
+  mocker?: TestModuleMocker
   import: <T = any>(moduleId: string) => Promise<T>
 }

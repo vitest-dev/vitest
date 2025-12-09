@@ -209,6 +209,7 @@
     "@types/picomatch": "^4.0.2",
     "@types/prompts": "^2.4.9",
     "@types/sinonjs__fake-timers": "^8.1.5",
+    "acorn": "8.11.3",
     "acorn-walk": "catalog:",
     "birpc": "catalog:",
     "cac": "catalog:",
