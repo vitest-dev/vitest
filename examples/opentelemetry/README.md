@@ -1,4 +1,8 @@
-# Vitest Opentelemtry Demo
+# Vitest Opentelemtry Example
+
+- **Documentation**: https://vitest.dev/guide/open-telemetry.html
+
+## Usage
 
 ```sh
 # Start Jaeger service to receive otlp traces over http

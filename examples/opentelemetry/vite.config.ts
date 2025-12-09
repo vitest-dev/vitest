@@ -5,12 +5,14 @@ export default defineConfig({
   test: {
     experimental: {
       openTelemetry: {
-        // or use CLI flag --experimental.openTelemetry.enabled=true
+        // enable via CLI flag --experimental.openTelemetry.enabled=true
         enabled: false,
         sdkPath: './otel.js',
       },
     },
     browser: {
+      // enable via CLI flag --browser.enabled=true
+      enabled: false,
       provider: playwright(),
       instances: [{ browser: 'chromium' }],
     },
