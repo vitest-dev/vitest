@@ -30,6 +30,9 @@ export class IframeOrchestrator {
   }
 
   public async createTesters(options: BrowserTesterOptions): Promise<void> {
+    // TODO
+    // options.otelCarrier
+
     const startTime = performance.now()
 
     this.cancelled = false

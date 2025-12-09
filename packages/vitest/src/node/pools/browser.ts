@@ -1,3 +1,4 @@
+import type { Context, Span } from '@opentelemetry/api'
 import type { FileSpecification } from '@vitest/runner'
 import type { DeferPromise } from '@vitest/utils/helpers'
 import type { Traces } from '../../utils/traces'
@@ -6,7 +7,6 @@ import type { ProcessPool } from '../pool'
 import type { TestProject } from '../project'
 import type { TestSpecification } from '../spec'
 import type { BrowserProvider } from '../types/browser'
-import type { PoolRunnerOTEL } from './types'
 import crypto from 'node:crypto'
 import * as nodeos from 'node:os'
 import { createDefer } from '@vitest/utils/helpers'
@@ -179,7 +179,10 @@ class BrowserPool {
   private readySessions = new Set<string>()
 
   private _traces: Traces
-  private _otel: PoolRunnerOTEL | null = null
+  private _otel: {
+    span: Span
+    context: Context
+  }
 
   constructor(
     private project: TestProject,
@@ -189,10 +192,16 @@ class BrowserPool {
     },
   ) {
     this._traces = project.vitest._traces
+    this._otel = this._traces.startContextSpan('vitest.browser')
+    this._otel.span.setAttributes({
+      'vitest.project': project.name,
+      'vitest.browser.provider': this.project.browser!.provider.name,
+    })
   }
 
   public cancel(): void {
     this._queue = []
+    this._otel.span.end()
   }
 
   public reject(error: Error): void {
@@ -245,12 +254,14 @@ class BrowserPool {
       debug?.('[%s] creating session for %s', sessionId, project)
       const page = this._traces.$(
         `vitest.browser.open`,
-        async (span) => {
-          span.setAttributes({
-            'vitest.project': project,
-            'vitest.browser.provider': this.project.browser!.provider.name,
+        {
+          context: this._otel.context,
+          attributes: {
             'vitest.browser.session_id': sessionId,
-          })
+          },
+        },
+        async () => {
+          // TODO: trace each orchestrator?
           await this.openPage(sessionId)
           // start running tests on the page when it's ready
           this.runNextTest(method, sessionId)
@@ -289,6 +300,7 @@ class BrowserPool {
 
   private finishSession(sessionId: string): void {
     this.readySessions.add(sessionId)
+    this._otel.span.end()
 
     // the last worker finished running tests
     if (this.readySessions.size === this.orchestrators.size) {
@@ -339,8 +351,9 @@ class BrowserPool {
       const testersPromise = this._traces.$(
         `vitest.browser.run`,
         {
+          context: this._otel.context,
           attributes: {
-            'vitest.browser.filepath': file.filepath,
+            'code.file.path': file.filepath,
           },
         },
         async () => {
@@ -351,7 +364,7 @@ class BrowserPool {
               // this will be parsed by the test iframe, not the orchestrator
               // so we need to stringify it first to avoid double serialization
               providedContext: this._providedContext || '[{}]',
-              // TODO: pass trace context to browser runtime?
+              otelCarrier: this._traces.getContextCarrier(),
             },
           )
         },
