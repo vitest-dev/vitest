@@ -74,6 +74,7 @@
     "ws": "catalog:"
   },
   "devDependencies": {
+    "@opentelemetry/api": "^1.9.0",
     "@testing-library/user-event": "^14.6.1",
     "@types/pngjs": "^6.0.5",
     "@types/ws": "catalog:",

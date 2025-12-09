@@ -11,7 +11,7 @@ import {
 
 const provider = new WebTracerProvider({
   resource: resourceFromAttributes({
-    'service.name': 'vitest.browser',
+    'service.name': 'vitest-browser',
   }),
   spanProcessors: [
     new SimpleSpanProcessor(new ConsoleSpanExporter()),

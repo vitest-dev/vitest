@@ -1,3 +1,4 @@
+import type { SpanOptions } from '@opentelemetry/api'
 import type {
   CancelReason,
   File,
@@ -11,6 +12,9 @@ import type {
   VitestRunner,
 } from '@vitest/runner'
 import type { SerializedConfig, TestExecutionMethod, WorkerGlobalState } from 'vitest'
+import type {
+  Traces,
+} from 'vitest/internal/browser'
 import type { VitestBrowserClientMocker } from './mocker'
 import type { CommandsManager } from './tester-utils'
 import { globalChannel, onCancel } from '@vitest/browser/client'
@@ -31,6 +35,7 @@ import { VitestBrowserSnapshotEnvironment } from './snapshot'
 
 interface BrowserRunnerOptions {
   config: SerializedConfig
+  traces: Traces
 }
 
 export const browserHashMap: Map<string, string> = new Map()
@@ -57,12 +62,14 @@ export function createBrowserRunner(
     public sourceMapCache = new Map<string, any>()
     public method = 'run' as TestExecutionMethod
     private commands: CommandsManager
+    private otelTraces_!: Traces
 
     constructor(options: BrowserRunnerOptions) {
       super(options.config)
       this.config = options.config
       this.commands = getBrowserState().commands
       this.viteEnvironment = '__browser__'
+      this.otelTraces_ = options.traces
     }
 
     setMethod(method: TestExecutionMethod) {
@@ -297,9 +304,10 @@ export function createBrowserRunner(
     }
 
     // TODO
-    // disable tracing in the browser for now
-    trace = undefined
-    __setTraces = undefined
+    trace = <T>(name: string, attributes: Record<string, any> | (() => T), cb?: () => T): T => {
+      const options: SpanOptions = typeof attributes === 'object' ? { attributes } : {}
+      return this.otelTraces_.$(`vitest.test.runner.${name}`, options, cb || attributes as () => T)
+    }
   }
 }
 
@@ -313,6 +321,7 @@ export async function initiateRunner(
   state: WorkerGlobalState,
   mocker: VitestBrowserClientMocker,
   config: SerializedConfig,
+  traces: Traces,
 ): Promise<BrowserVitestRunner> {
   if (cachedRunner) {
     return cachedRunner
@@ -329,6 +338,7 @@ export async function initiateRunner(
   }
   const runner = new BrowserRunner({
     config,
+    traces,
   })
   cachedRunner = runner
 

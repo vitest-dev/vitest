@@ -1,4 +1,4 @@
-import type { BrowserRPC, IframeChannelEvent } from '@vitest/browser/client'
+import type { BrowserRPC, IframeChannelEvent, IframePrepareEvent } from '@vitest/browser/client'
 import type { FileSpecification } from '@vitest/runner'
 import { channel, client, onCancel } from '@vitest/browser/client'
 import { parse } from 'flatted'
@@ -10,6 +10,7 @@ import {
   startCoverageInsideWorker,
   startTests,
   stopCoverageInsideWorker,
+  Traces,
 } from 'vitest/internal/browser'
 import { getBrowserState, getConfig, getWorkerState, moduleRunner } from '../utils'
 import { setupDialogsSpy } from './dialog'
@@ -97,6 +98,14 @@ async function prepareTestEnvironment(options: PrepareOptions) {
   debug?.('trying to resolve the runner')
   const config = getConfig()
 
+  const otelConfig = config.experimental.openTelemetry
+  const traces = new Traces({
+    enabled: !!(otelConfig?.enabled && otelConfig?.browserSdkPath),
+    sdkPath: otelConfig?.browserSdkPath,
+  })
+  // TODO: inject to root context?
+  // options.otelCarrier
+
   const rpc = createSafeRpc(client)
 
   const state = getWorkerState()
@@ -122,10 +131,7 @@ async function prepareTestEnvironment(options: PrepareOptions) {
   setupConsoleLogSpy()
   setupDialogsSpy()
 
-  // TODO: setup traces
-  // TODO: propagte from parents
-
-  const runner = await initiateRunner(state, mocker, config)
+  const runner = await initiateRunner(state, mocker, config, traces)
   getBrowserState().runner = runner
 
   // webdiverio context depends on the iframe state, so we need to switch the context,
@@ -194,9 +200,10 @@ async function executeTests(method: 'run' | 'collect', specifications: FileSpeci
   }
 }
 
-interface PrepareOptions {
-  startTime: number
-}
+type PrepareOptions = Pick<IframePrepareEvent, 'startTime' | 'otelCarrier'>
+// interface PrepareOptions {
+//   startTime: number
+// }
 
 async function prepare(options: PrepareOptions) {
   preparedData = await prepareTestEnvironment(options)

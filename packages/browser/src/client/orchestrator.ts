@@ -1,6 +1,7 @@
 import type { GlobalChannelIncomingEvent, IframeChannelIncomingEvent, IframeChannelOutgoingEvent, IframeViewportDoneEvent, IframeViewportFailEvent } from '@vitest/browser/client'
 import type { FileSpecification } from '@vitest/runner'
 import type { BrowserTesterOptions, SerializedConfig } from 'vitest'
+import type { OTELCarrier } from 'vitest/internal/browser'
 import { channel, client, globalChannel } from '@vitest/browser/client'
 import { generateFileHash } from '@vitest/runner/utils'
 import { relative } from 'pathe'
@@ -159,9 +160,7 @@ export class IframeOrchestrator {
     }
 
     // TODO: headless not working?
-    const traceContext = options.otelCarrier
-      ? this.traces_.getContextFromCarrier(options.otelCarrier)
-      : undefined
+    const traceContext = this.traces_.getContextFromCarrier(options.otelCarrier)
     const iframe = await this.traces_.$(
       'vitest.browser.orchestrator.iframe',
       { context: traceContext },
@@ -194,7 +193,7 @@ export class IframeOrchestrator {
     return error
   }
 
-  private async prepareIframe(container: HTMLDivElement, iframeId: string, startTime: number) {
+  private async prepareIframe(container: HTMLDivElement, iframeId: string, startTime: number, otelCarrier?: OTELCarrier) {
     const iframe = this.createTestIframe(iframeId)
     container.appendChild(iframe)
 
@@ -216,6 +215,7 @@ export class IframeOrchestrator {
             event: 'prepare',
             iframeId,
             startTime,
+            otelCarrier,
           }).then(resolve, error => reject(this.dispatchIframeError(error)))
         }
       }
