@@ -1,7 +1,7 @@
-import type { Locator, UserEventWheelOptionsWithDelta } from 'vitest/browser'
+import type { Locator, UserEventWheelDeltaOptions } from 'vitest/browser'
 import type { UserEventCommand } from './utils'
 
-type WheelCommand = (element: Locator | Element, options: UserEventWheelOptionsWithDelta) => Promise<void>
+type WheelCommand = (element: Locator | Element, options: UserEventWheelDeltaOptions) => Promise<void>
 
 export const wheel: UserEventCommand<WheelCommand> = async (
   context,
