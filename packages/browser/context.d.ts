@@ -561,7 +561,7 @@ export interface Locator extends LocatorSelectors {
    */
   tripleClick(options?: UserEventTripleClickOptions): Promise<void>
   /**
-   * Triggers a wheel event on an element.
+   * Triggers a {@link https://developer.mozilla.org/en-US/docs/Web/API/Element/wheel_event|`wheel` event} on an element.
    *
    * @param options - Scroll configuration using `delta` or `direction`.
    * @returns A promise that resolves when all wheel events have been dispatched.
