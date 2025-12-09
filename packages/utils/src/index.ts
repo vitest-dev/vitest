@@ -4,11 +4,9 @@ export type { SafeTimers } from './timers'
 export type {
   ArgumentsType,
   Arrayable,
-  AtLeastOneOf,
   Awaitable,
   Constructable,
   DeepMerge,
-  ExactlyOneOf,
   MergeInsertions,
   Nullable,
   ParsedStack,

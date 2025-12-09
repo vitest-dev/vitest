@@ -1,4 +1,4 @@
-import type { Locator, UserEventWheelOptions, UserEventWheelOptionsWithDelta } from 'vitest/browser'
+import type { Locator, UserEventWheelDeltaOptions, UserEventWheelOptions } from 'vitest/browser'
 import type { BrowserRPC } from '../client'
 import { getBrowserState, getWorkerState } from '../utils'
 
@@ -220,8 +220,8 @@ export function isLocator(element: unknown): element is Locator {
 
 const DEFAULT_WHEEL_DELTA = 100
 
-export function resolveUserEventWheelOptions(options: UserEventWheelOptions): UserEventWheelOptionsWithDelta {
-  let delta: UserEventWheelOptionsWithDelta['delta']
+export function resolveUserEventWheelOptions(options: UserEventWheelOptions): UserEventWheelDeltaOptions {
+  let delta: UserEventWheelDeltaOptions['delta']
 
   if (options.delta) {
     delta = options.delta
