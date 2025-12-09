@@ -56,7 +56,6 @@ export async function getModuleGraph(
       return id
     }
     inlined.add(id)
-    // TODO: cached modules don't have that!
     const mods = Array.from(mod.importedModules).filter(
       i => i.id && !i.id.includes('/vitest/dist/'),
     )

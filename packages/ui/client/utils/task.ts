@@ -36,6 +36,7 @@ export interface ModuleLabelItem {
   id: string
   raw: string
   splits: string[]
+  readonly splitted: string[]
   candidate: string
   finished: boolean
 }
@@ -103,6 +104,7 @@ export function createModuleLabelItem(module: string): ModuleLabelItem {
   return {
     raw,
     splits,
+    splitted: [...splits],
     candidate: '',
     finished: false,
     id: module,
