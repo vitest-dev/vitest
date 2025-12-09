@@ -103,8 +103,12 @@ async function prepareTestEnvironment(options: PrepareOptions) {
     enabled: !!(otelConfig?.enabled && otelConfig?.browserSdkPath),
     sdkPath: otelConfig?.browserSdkPath,
   })
-  // TODO: inject to root context?
-  // options.otelCarrier
+  await traces.waitInit()
+  const testerSpan = traces.startContextSpan(
+    'vitest.browser.tester',
+    traces.getContextFromCarrier(options.otelCarrier),
+  )
+  traces.bind(testerSpan.context)
 
   const rpc = createSafeRpc(client)
 
@@ -160,6 +164,8 @@ async function prepareTestEnvironment(options: PrepareOptions) {
     runner,
     config,
     state,
+    traces,
+    testerSpan,
   }
 }
 
@@ -174,7 +180,7 @@ async function executeTests(method: 'run' | 'collect', specifications: FileSpeci
 
   debug?.('runner resolved successfully')
 
-  const { runner, state } = preparedData
+  const { runner, state, traces } = preparedData
 
   state.ctx.files = specifications
   runner.setMethod(method)
@@ -191,12 +197,19 @@ async function executeTests(method: 'run' | 'collect', specifications: FileSpeci
     state.filepath = file.filepath
     debug?.('running test file', file.filepath)
 
-    if (method === 'run') {
-      await startTests([file], runner)
-    }
-    else {
-      await collectTests([file], runner)
-    }
+    await traces.$(
+      `vitest.test.runner.${method}.module`,
+      { attributes: { 'code.file.path': file.filepath },
+      },
+      async () => {
+        if (method === 'run') {
+          await startTests([file], runner)
+        }
+        else {
+          await collectTests([file], runner)
+        }
+      },
+    )
   }
 }
 
@@ -268,6 +281,10 @@ async function cleanup() {
   await stopCoverageInsideWorker(config.coverage, moduleRunner, { isolate: config.browser.isolate }).catch((error) => {
     return unhandledError(error, 'Coverage Error')
   })
+
+  const { traces, testerSpan } = preparedData ?? {}
+  testerSpan?.span.end()
+  await traces?.finish()
 }
 
 function unhandledError(e: Error, type: string) {

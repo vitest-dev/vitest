@@ -238,6 +238,18 @@ export class Traces {
   /**
    * @internal
    */
+  bind(context: Context) {
+    if (!this.#otel) {
+      return
+    }
+    // On browser mode, async context is not automatically propagated,
+    // so we manually setup one root span as a default context of all `$` calls.
+    this.$ = this.#otel.context.bind(context, this.$)
+  }
+
+  /**
+   * @internal
+   */
   async finish(): Promise<void> {
     await this.#sdk?.shutdown()
   }

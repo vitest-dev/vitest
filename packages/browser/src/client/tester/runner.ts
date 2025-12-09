@@ -1,4 +1,3 @@
-import type { SpanOptions } from '@opentelemetry/api'
 import type {
   CancelReason,
   File,
@@ -304,8 +303,9 @@ export function createBrowserRunner(
     }
 
     // TODO
+    // trace = undefined
     trace = <T>(name: string, attributes: Record<string, any> | (() => T), cb?: () => T): T => {
-      const options: SpanOptions = typeof attributes === 'object' ? { attributes } : {}
+      const options: import('@opentelemetry/api').SpanOptions = typeof attributes === 'object' ? { attributes } : {}
       return this.otelTraces_.$(`vitest.test.runner.${name}`, options, cb || attributes as () => T)
     }
   }

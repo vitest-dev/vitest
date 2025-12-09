@@ -159,13 +159,13 @@ export class IframeOrchestrator {
       this.iframes.delete(file)
     }
 
-    // TODO: headless not working?
+    await this.traces_.waitInit()
     const traceContext = this.traces_.getContextFromCarrier(options.otelCarrier)
     const iframe = await this.traces_.$(
       'vitest.browser.orchestrator.iframe',
       { context: traceContext },
       () => {
-        return this.prepareIframe(container, file, startTime)
+        return this.prepareIframe(container, file, startTime, options.otelCarrier)
       },
     )
     // const iframe = await this.prepareIframe(container, file, startTime)

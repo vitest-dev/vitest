@@ -3,6 +3,7 @@ import { resourceFromAttributes } from '@opentelemetry/resources'
 import {
   ConsoleSpanExporter,
   SimpleSpanProcessor,
+  StackContextManager,
   WebTracerProvider,
 } from '@opentelemetry/sdk-trace-web'
 // import { ZoneContextManager } from '@opentelemetry/context-zone';
@@ -20,7 +21,9 @@ const provider = new WebTracerProvider({
 })
 
 provider.register({
+  // https://github.com/open-telemetry/opentelemetry-js/discussions/2060
   // contextManager: new ZoneContextManager(),
+  contextManager: new StackContextManager(),
 })
 
 export default provider
