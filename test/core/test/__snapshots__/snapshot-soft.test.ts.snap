@@ -1,0 +1,25 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`expect.soft tracks failures for matchSnapshot 1`] = `
+{
+  "time": "2000-01-01T00:00:00.000Z",
+}
+`;
+
+exports[`expect.soft tracks failures for matchSnapshot 2`] = `
+{
+  "uuid": "00000000-0000-0000-0000-000000000000",
+}
+`;
+
+exports[`expect.soft tracks failures for toMatchSnapshot 1`] = `
+{
+  "time": "2000-01-01T00:00:00.000Z",
+}
+`;
+
+exports[`expect.soft tracks failures for toMatchSnapshot 2`] = `
+{
+  "uuid": "00000000-0000-0000-0000-000000000000",
+}
+`;
