@@ -7,6 +7,7 @@ describe('suite name', () => {
   })
 
   it('setups work', () => {
+    // TODO: a separate CLI test that confirms --maxWorkers=1 --no-isolate runs the setup file for every test file
     expect(initJsSetup).toHaveBeenCalled()
     expect(initTsSetup).toHaveBeenCalled()
 

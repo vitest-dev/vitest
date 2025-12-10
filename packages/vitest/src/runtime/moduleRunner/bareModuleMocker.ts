@@ -260,7 +260,7 @@ export class BareModuleMocker implements TestModuleMocker {
   }
 
   async importMock<T>(_rawId: string, _importer: string, _callstack?: string[] | null): Promise<T> {
-    throw new Error(`importActual is not implemented`)
+    throw new Error(`importMock is not implemented`)
   }
 
   public queueMock(

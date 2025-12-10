@@ -12,4 +12,13 @@ export class NativeModuleMocker extends BareModuleMocker {
     }
     return moduleFactory
   }
+
+  public getFactoryModule(id: string): any {
+    const registry = this.getMockerRegistry()
+    const mock = registry.getById(id)
+    if (!mock || mock.type !== 'manual') {
+      throw new Error(`Mock ${id} wasn't registered. This is probably a Vitest error. Please, open a new issue with reproduction.`)
+    }
+    return mock.resolve()
+  }
 }

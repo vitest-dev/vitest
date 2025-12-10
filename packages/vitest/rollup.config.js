@@ -32,7 +32,7 @@ const entries = {
   'worker': 'src/public/worker.ts',
   'module-runner': 'src/public/module-runner.ts',
   'module-evaluator': 'src/runtime/moduleRunner/moduleEvaluator.ts',
-  'nodejs-worker-loader.js': 'src/runtime/nodejsWorkerLoader.ts',
+  'nodejs-worker-loader': 'src/runtime/nodejsWorkerLoader.ts',
 
   // for performance reasons we bundle them separately so we don't import everything at once
   // 'worker': 'src/runtime/worker.ts',

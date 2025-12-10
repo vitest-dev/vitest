@@ -4,9 +4,11 @@ import type { NativeModuleMocker } from '../moduleRunner/nativeModuleMocker'
 import module from 'node:module'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { MessageChannel } from 'node:worker_threads'
-import { automockModule, hoistMocks } from '@vitest/mocker/transforms'
+import { automockModule, createManualModuleSource, hoistMocks } from '@vitest/mocker/transforms'
 import { cleanUrl } from '@vitest/utils/helpers'
 import { parse } from 'acorn'
+import { initSync as initCjsLexer, parse as parseCjsSyntax } from 'cjs-module-lexer'
+import { initSync as initModuleLexer, parse as parseModuleSyntax } from 'es-module-lexer'
 import MagicString from 'magic-string'
 import { resolve } from 'pathe'
 import { distDir } from '../../paths'
@@ -14,13 +16,18 @@ import { distDir } from '../../paths'
 const NOW_LENGTH = Date.now().toString().length
 const REGEXP_VITEST = new RegExp(`%3Fvitest=\\d{${NOW_LENGTH}}`)
 
+// TODO: add createDebug()
+
+let moduleLexerReady = false
+let cjsLexerReady = false
+
 export function setupNodeLoaderHooks(worker: WorkerSetupContext): void {
   module.setSourceMapsSupport(true)
 
   if (typeof module.registerHooks === 'function') {
     module.registerHooks({
       resolve(specifier, context, nextResolve) {
-        const isVitest = specifier.includes('vitest=')
+        const isVitest = specifier.includes('%3Fvitest=')
         const result = nextResolve(isVitest ? specifier.replace(REGEXP_VITEST, '') : specifier, context)
 
         // avoid /node_modules/ for performance reasons
@@ -30,6 +37,8 @@ export function setupNodeLoaderHooks(worker: WorkerSetupContext): void {
           })
         }
 
+        // this is require for in-source tests to be invalidated if
+        // one of the files already imported it in --maxWorkers=1 --no-isolate
         if (isVitest) {
           result.url = `${result.url}?vitest=${Date.now()}`
         }
@@ -57,6 +66,12 @@ export function setupNodeLoaderHooks(worker: WorkerSetupContext): void {
         if (mockedModule.type === 'automock' || mockedModule.type === 'autospy') {
           return {
             url: injectQuery(result.url, context.parentURL, `mock=${mockedModule.type}`),
+            shortCircuit: true,
+          }
+        }
+        if (mockedModule.type === 'manual') {
+          return {
+            url: injectQuery(result.url, context.parentURL, 'mock=manual'),
             shortCircuit: true,
           }
         }
@@ -140,25 +155,95 @@ function createLoadHook(_worker: WorkerSetupContext): module.LoadHookSync {
     const filename = url.startsWith('file://') ? fileURLToPath(url) : url
     const source = result.source?.toString()
     if (typeof source === 'string') {
-      let _ms: MagicString | undefined
-      const ms = () => _ms || (_ms = new MagicString(source))
-
       if (url.includes('mock=automock') || url.includes('mock=autospy')) {
         const mockType = url.includes('mock=automock') ? 'automock' : 'autospy'
         const transformedCode = result.format === 'module-typescript' || result.format === 'commonjs-typescript'
           ? module.stripTypeScriptTypes(source)
           : source
-        const code = automockModule(transformedCode, mockType, code => parse(code, {
+        const ms = automockModule(transformedCode, mockType, code => parse(code, {
           ecmaVersion: 'latest',
           sourceType: result.format === 'module' || result.format === 'module-typescript' ? 'module' : 'script',
         }))
+        const transformed = ms.toString()
+        const map = ms.generateMap({ hires: 'boundary', source: filename })
+        const code = `${transformed}\n//# sourceMappingURL=${genSourceMapUrl(map as any)}`
 
         return {
           format: 'module',
-          source: code.toString(),
+          source: code,
           shortCircuit: true,
         }
       }
+      if (url.includes('mock=manual')) {
+        const mocker = getNativeMocker()
+        const mockedModule = mocker?.getDependencyMock(cleanUrl(filename))
+        // should not be possible
+        if (mockedModule?.type !== 'manual') {
+          console.warn(`Vitest detected unregistered manual mock ${filename}. This is a bug in Vitest. Please, open a new issue with reproduction.`)
+          return result
+        }
+
+        const mockedFactoryResult = mockedModule.resolve()
+        // the factory is _not_ a promise, we can just take returned exports without
+        // parsing the original file
+        if (typeof mockedFactoryResult.then !== 'function') {
+          const keys = Object.keys(mockedFactoryResult)
+          const manualMockedModule = createManualModuleSource(filename, keys)
+
+          return {
+            format: 'module',
+            source: manualMockedModule,
+            shortCircuit: true,
+          }
+        }
+        // noop the error handling
+        mockedFactoryResult.then(() => {}, () => {})
+
+        // since the factory returned an async result, we have to figure out keys synchronosly somehow
+        // so we parse the module with es/cjs-module-lexer to find the original exports -- we assume the same ones are returned
+        // injecting new keys is not supported (and should not be advised anyway)
+
+        const transformedCode = result.format === 'module-typescript' || result.format === 'commonjs-typescript'
+          ? module.stripTypeScriptTypes(source)
+          : source
+
+        let exports: string[]
+        if (result.format === 'module' || result.format === 'module-typescript') {
+          if (!moduleLexerReady) {
+            initModuleLexer()
+            moduleLexerReady = true
+          }
+          const [imports_, exports_] = parseModuleSyntax(transformedCode, filename)
+          exports = exports_.map(p => p.n)
+          imports_.forEach(({ ss: start, se: end }) => {
+            const substring = transformedCode.substring(start, end)
+            if (substring.startsWith('export *')) {
+              console.warn(`[mocking] Vitest found a namespace export (${substring}) inside ${filename} that it cannot analyze for performance reasons. The manual mock will omit all exports from this module.`)
+            }
+          })
+        }
+        else {
+          if (!cjsLexerReady) {
+            initCjsLexer()
+            cjsLexerReady = true
+          }
+          const { exports: exports_ } = parseCjsSyntax(transformedCode, filename)
+          exports = exports_
+        }
+
+        // TODO: what about re-exports? is it better to require `vi.mock` factory to be sync?
+        // for performance reasons we can go one deep inside, _maybe_?
+        const manualMockedModule = createManualModuleSource(filename, exports)
+
+        return {
+          format: 'module',
+          source: manualMockedModule,
+          shortCircuit: true,
+        }
+      }
+
+      let _ms: MagicString | undefined
+      const ms = () => _ms || (_ms = new MagicString(source))
 
       if (source.includes('import.meta.vitest')) {
         replaceInSourceMarker(url, source, ms)
