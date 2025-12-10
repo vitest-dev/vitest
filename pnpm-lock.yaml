@@ -1244,6 +1244,9 @@ importers:
       '@test/test-dep-config':
         specifier: link:./deps/test-dep-config
         version: link:deps/test-dep-config
+      '@vitejs/test-dep-virtual':
+        specifier: file:./deps/test-dep-virtual
+        version: file:test/config/deps/test-dep-virtual
       '@vitest/browser-playwright':
         specifier: workspace:*
         version: link:../../packages/browser-playwright
@@ -4585,6 +4588,9 @@ packages:
     peerDependencies:
       vite: ^7.1.5
       vue: ^3.2.25
+
+  '@vitejs/test-dep-virtual@file:test/config/deps/test-dep-virtual':
+    resolution: {directory: test/config/deps/test-dep-virtual, type: directory}
 
   '@vitest/cjs-lib@file:test/browser/cjs-lib':
     resolution: {directory: test/browser/cjs-lib, type: directory}
@@ -12746,6 +12752,8 @@ snapshots:
       '@rolldown/pluginutils': 1.0.0-beta.50
       vite: 7.1.5(@types/node@24.10.1)(jiti@2.6.1)(lightningcss@1.30.1)(sass-embedded@1.93.3)(sass@1.93.3)(terser@5.44.0)(tsx@4.21.0)(yaml@2.8.1)
       vue: 3.5.25(typescript@5.9.3)
+
+  '@vitejs/test-dep-virtual@file:test/config/deps/test-dep-virtual': {}
 
   '@vitest/cjs-lib@file:test/browser/cjs-lib': {}
 
