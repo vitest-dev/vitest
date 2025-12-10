@@ -252,7 +252,7 @@ class BrowserPool {
       this.project.vitest._browserSessions.sessionIds.add(sessionId)
       const project = this.project.name
       debug?.('[%s] creating session for %s', sessionId, project)
-      const page = this._traces.$(
+      let page = this._traces.$(
         `vitest.browser.open`,
         {
           context: this._otel.context,
@@ -260,13 +260,12 @@ class BrowserPool {
             'vitest.browser.session_id': sessionId,
           },
         },
-        async () => {
-          // TODO: trace each orchestrator?
-          await this.openPage(sessionId)
-          // start running tests on the page when it's ready
-          this.runNextTest(method, sessionId)
-        },
+        () => this.openPage(sessionId),
       )
+      page = page.then(() => {
+        // start running tests on the page when it's ready
+        this.runNextTest(method, sessionId)
+      })
       promises.push(page)
     }
     await Promise.all(promises)
