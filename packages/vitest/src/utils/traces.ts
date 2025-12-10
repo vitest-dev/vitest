@@ -237,6 +237,7 @@ export class Traces {
 
   // On browser mode, async context is not automatically propagated,
   // so we manually bind the `$` calls to the provided context.
+  // TODO: this doesn't bind to user land's `@optelemetry/api` calls
   /**
    * @internal
    */

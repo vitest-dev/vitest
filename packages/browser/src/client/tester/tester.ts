@@ -26,15 +26,16 @@ const debug = debugVar && debugVar !== 'false'
   ? (...args: unknown[]) => client.rpc.debug?.(...args.map(String))
   : undefined
 
-// TODO: root tester span from "prepare" to "cleanup"?
 const otelConfig = getConfig().experimental.openTelemetry
 const traces = new Traces({
   enabled: !!(otelConfig?.enabled && otelConfig?.browserSdkPath),
   sdkPath: otelConfig?.browserSdkPath,
 })
+let rootTesterSpan: ReturnType<Traces['startContextSpan']>
 
 channel.addEventListener('message', async (e) => {
   await client.waitForConnection()
+  await traces.waitInit()
 
   const data = e.data
   debug?.('event from orchestrator', JSON.stringify(e.data))
@@ -48,18 +49,6 @@ channel.addEventListener('message', async (e) => {
   // ignore events to other iframes
   if (!('iframeId' in data) || data.iframeId !== getBrowserState().iframeId) {
     return
-  }
-
-  let testerEventSpan: ReturnType<Traces['startContextSpan']> | undefined
-  if ('otelCarrier' in data) {
-    await traces.waitInit()
-    await new Promise(resolve => setTimeout(resolve, 0))
-    testerEventSpan = traces.startContextSpan(
-      `vitest.browser.tester.${data.event}`,
-      traces.getContextFromCarrier(data.otelCarrier),
-    )
-    // TODO: this assumes `otelCarrier` events are not processed in parallel
-    traces.bind(testerEventSpan.context)
   }
 
   switch (data.event) {
@@ -81,9 +70,16 @@ channel.addEventListener('message', async (e) => {
     }
     case 'cleanup': {
       await cleanup().catch(err => unhandledError(err, 'Cleanup Error'))
+      rootTesterSpan.span.end()
+      await traces.finish()
       break
     }
     case 'prepare': {
+      rootTesterSpan = traces.startContextSpan(
+        `vitest.browser.tester.run`,
+        traces.getContextFromCarrier(data.otelCarrier),
+      )
+      traces.bind(rootTesterSpan.context)
       await prepare(data).catch(err => unhandledError(err, 'Prepare Error'))
       break
     }
@@ -102,7 +98,6 @@ channel.addEventListener('message', async (e) => {
     event: `response:${data.event}`,
     iframeId: getBrowserState().iframeId!,
   })
-  testerEventSpan?.span.end()
 })
 
 const url = new URL(location.href)
@@ -285,8 +280,6 @@ async function cleanup() {
   await stopCoverageInsideWorker(config.coverage, moduleRunner, { isolate: config.browser.isolate }).catch((error) => {
     return unhandledError(error, 'Coverage Error')
   })
-
-  await traces.finish()
 }
 
 function unhandledError(e: Error, type: string) {
