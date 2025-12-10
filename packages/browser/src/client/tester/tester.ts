@@ -35,7 +35,6 @@ let rootTesterSpan: ReturnType<Traces['startContextSpan']>
 
 channel.addEventListener('message', async (e) => {
   await client.waitForConnection()
-  await traces.waitInit()
 
   const data = e.data
   debug?.('event from orchestrator', JSON.stringify(e.data))
@@ -75,6 +74,7 @@ channel.addEventListener('message', async (e) => {
       break
     }
     case 'prepare': {
+      await traces.waitInit()
       rootTesterSpan = traces.startContextSpan(
         `vitest.browser.tester.run`,
         traces.getContextFromCarrier(data.otelCarrier),
