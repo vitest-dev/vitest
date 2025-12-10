@@ -95,14 +95,14 @@ npm i @opentelemetry/api @opentelemetry/sdk-trace-web @opentelemetry/exporter-tr
 ::: code-group
 ```js [otel-browser.js]
 import {
-  SimpleSpanProcessor,
+  BatchSpanProcessor,
   WebTracerProvider,
 } from '@opentelemetry/sdk-trace-web'
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http'
 
 const provider = new WebTracerProvider({
   spanProcessors: [
-    new SimpleSpanProcessor(new OTLPTraceExporter()),
+    new BatchSpanProcessor(new OTLPTraceExporter()),
   ],
 })
 
