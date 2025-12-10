@@ -811,7 +811,7 @@ export function resolveConfig(
       resolved.root,
       resolved.experimental.openTelemetry.browserSdkPath,
     )
-    resolved.experimental.openTelemetry.browserSdkPath = '/@fs' + browserSdkPath
+    resolved.experimental.openTelemetry.browserSdkPath = browserSdkPath
   }
   if (resolved.experimental.fsModuleCachePath) {
     resolved.experimental.fsModuleCachePath = resolve(

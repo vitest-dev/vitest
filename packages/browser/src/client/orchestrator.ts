@@ -26,7 +26,7 @@ export class IframeOrchestrator {
     const otelConfig = getBrowserState().config.experimental.openTelemetry
     this.traces = new Traces({
       enabled: !!(otelConfig?.enabled && otelConfig.browserSdkPath),
-      sdkPath: otelConfig?.browserSdkPath,
+      sdkPath: `/@fs/${otelConfig?.browserSdkPath}`,
     })
 
     channel.addEventListener(

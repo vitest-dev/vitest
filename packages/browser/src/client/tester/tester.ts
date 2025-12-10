@@ -29,7 +29,7 @@ const debug = debugVar && debugVar !== 'false'
 const otelConfig = getConfig().experimental.openTelemetry
 const traces = new Traces({
   enabled: !!(otelConfig?.enabled && otelConfig?.browserSdkPath),
-  sdkPath: otelConfig?.browserSdkPath,
+  sdkPath: `/@fs/${otelConfig?.browserSdkPath}`,
 })
 let rootTesterSpan: ReturnType<Traces['startContextSpan']>
 
