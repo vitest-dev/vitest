@@ -26,6 +26,7 @@ const debug = debugVar && debugVar !== 'false'
   ? (...args: unknown[]) => client.rpc.debug?.(...args.map(String))
   : undefined
 
+// TODO: root tester span from "prepare" to "cleanup"?
 const otelConfig = getConfig().experimental.openTelemetry
 const traces = new Traces({
   enabled: !!(otelConfig?.enabled && otelConfig?.browserSdkPath),
@@ -57,7 +58,7 @@ channel.addEventListener('message', async (e) => {
       `vitest.browser.tester.${data.event}`,
       traces.getContextFromCarrier(data.otelCarrier),
     )
-    // this assumes `otelCarrier` events are not processed in parallel
+    // TODO: this assumes `otelCarrier` events are not processed in parallel
     traces.bind(testerEventSpan.context)
   }
 
