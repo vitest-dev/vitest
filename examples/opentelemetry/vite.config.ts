@@ -8,8 +8,7 @@ export default defineConfig({
         // enable via CLI flag --experimental.openTelemetry.enabled=true
         enabled: false,
         sdkPath: './otel.js',
-        // TODO: resolve full path
-        browserSdkPath: '/otel-browser.js',
+        browserSdkPath: './otel-browser.js',
       },
     },
     browser: {
@@ -18,14 +17,5 @@ export default defineConfig({
       provider: playwright(),
       instances: [{ browser: 'chromium' }],
     },
-  },
-  optimizeDeps: {
-    // TODO: browserSdkpath as optimizeDeps.entries
-    include: [
-      '@opentelemetry/api',
-      '@opentelemetry/sdk-trace-web',
-      '@opentelemetry/exporter-trace-otlp-proto',
-      '@opentelemetry/resources',
-    ],
   },
 })
