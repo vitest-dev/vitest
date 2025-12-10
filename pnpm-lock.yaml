@@ -1481,6 +1481,9 @@ importers:
 
   test/reporters:
     devDependencies:
+      '@vitest/browser-playwright':
+        specifier: workspace:*
+        version: link:../../packages/browser-playwright
       '@vitest/runner':
         specifier: workspace:*
         version: link:../../packages/runner
