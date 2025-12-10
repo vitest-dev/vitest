@@ -82,6 +82,14 @@ test('db connects properly', async () => {
 })
 ```
 
+## Browser Mode
+
+TODO:
+- node / browser driver side trace is available without `browserSdkPath`
+- `browserSdkPath` is required for additional traces on browser runtime
+- mention the lack of async context propagation
+- show example
+
 ## View Traces
 
 To generate traces, run Vitest as usual. You can run Vitest in either watch mode or run mode. Vitest will call `sdk.shutdown()` manually after everything is finished to make sure traces are handled properly.
