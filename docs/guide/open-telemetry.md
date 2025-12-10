@@ -84,31 +84,9 @@ test('db connects properly', async () => {
 
 ## Browser Mode
 
-When running tests in [browser mode](/guide/browser/), Vitest automatically propagates trace context between Node.js and the browser using the W3C Trace Context format. This means you can see the full trace of your test execution across both environments.
+When running tests in [browser mode](/guide/browser/), Vitest propagates trace context between Node.js and the browser. Node.js side traces (test orchestration, browser driver communication) are available without additional configuration.
 
-### Without `browserSdkPath`
-
-By default, traces from the Node.js side (test orchestration, browser driver communication) are available without any additional configuration. These traces show:
-
-- Browser pool initialization
-- Test file execution coordination
-- Communication between Node.js and the browser
-
-### With `browserSdkPath`
-
-To capture traces from code running inside the browser, you need to provide a separate browser-compatible OpenTelemetry SDK via the `browserSdkPath` option. This enables:
-
-- Custom spans in your browser-side test code
-- Traces from browser-specific instrumentation
-- Full end-to-end visibility across Node.js and browser
-
-::: warning ASYNC CONTEXT
-Unlike Node.js, browsers do not have automatic async context propagation. Vitest handles this internally for test execution, but if you create custom spans in deeply nested async code, context may not propagate automatically.
-:::
-
-### Browser SDK Setup
-
-Install browser-compatible OpenTelemetry packages:
+To capture traces from the browser runtime, provide a browser-compatible SDK via `browserSdkPath`:
 
 ```shell
 npm i @opentelemetry/api @opentelemetry/sdk-trace-web @opentelemetry/exporter-trace-otlp-http
@@ -153,7 +131,9 @@ export default defineConfig({
 ```
 :::
 
-See the [example project](https://github.com/vitest-dev/vitest/tree/main/examples/opentelemetry) for a complete setup.
+::: warning ASYNC CONTEXT
+Unlike Node.js, browsers do not have automatic async context propagation. Vitest handles this internally for test execution, but custom spans in deeply nested async code may not propagate context automatically.
+:::
 
 ## View Traces
 
