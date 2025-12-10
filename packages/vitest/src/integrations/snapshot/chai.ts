@@ -7,7 +7,7 @@ import {
   SnapshotClient,
   stripSnapshotIndentation,
 } from '@vitest/snapshot'
-import { createAssertionMessage, recordAsyncExpect } from '../../../../expect/src/utils'
+import { createAssertionMessage, recordAsyncExpect, wrapAssertion } from '../../../../expect/src/utils'
 
 let _client: SnapshotClient
 
@@ -62,42 +62,38 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
   }
 
   for (const key of ['matchSnapshot', 'toMatchSnapshot']) {
-    utils.addMethod(
-      chai.Assertion.prototype,
-      key,
-      function (
-        this: Record<string, unknown>,
-        properties?: object,
-        message?: string,
-      ) {
-        utils.flag(this, '_name', key)
-        const isNot = utils.flag(this, 'negate')
-        if (isNot) {
-          throw new Error(`${key} cannot be used with "not"`)
-        }
-        const expected = utils.flag(this, 'object')
-        const test = getTest(key, this)
-        if (typeof properties === 'string' && typeof message === 'undefined') {
-          message = properties
-          properties = undefined
-        }
-        const errorMessage = utils.flag(this, 'message')
-        getSnapshotClient().assert({
-          received: expected,
-          message,
-          isInline: false,
-          properties,
-          errorMessage,
-          ...getTestNames(test),
-        })
-      },
-    )
+    utils.addMethod(chai.Assertion.prototype, key, wrapAssertion(utils, key, function (
+      this: Chai.AssertionStatic & Assertion,
+      properties?: object,
+      message?: string,
+    ) {
+      utils.flag(this, '_name', key)
+      const isNot = utils.flag(this, 'negate')
+      if (isNot) {
+        throw new Error(`${key} cannot be used with "not"`)
+      }
+      const expected = utils.flag(this, 'object')
+      const test = getTest(key, this)
+      if (typeof properties === 'string' && typeof message === 'undefined') {
+        message = properties
+        properties = undefined
+      }
+      const errorMessage = utils.flag(this, 'message')
+      getSnapshotClient().assert({
+        received: expected,
+        message,
+        isInline: false,
+        properties,
+        errorMessage,
+        ...getTestNames(test),
+      })
+    }))
   }
 
   utils.addMethod(
     chai.Assertion.prototype,
     'toMatchFileSnapshot',
-    function (this: Assertion, file: string, message?: string) {
+    wrapAssertion(utils, 'toMatchFileSnapshot', function (this: Assertion, file: string, message?: string) {
       utils.flag(this, '_name', 'toMatchFileSnapshot')
       const isNot = utils.flag(this, 'negate')
       if (isNot) {
@@ -119,13 +115,19 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
         ...getTestNames(test),
       })
 
+      const isSoft = utils.flag(this, 'soft')
+      if (isSoft) {
+        // assert result with soft wrapAssertion instead of recordAsyncExpect
+        return promise
+      }
+
       return recordAsyncExpect(
         test,
         promise,
         createAssertionMessage(utils, this, true),
         error,
       )
-    },
+    }),
   )
 
   utils.addMethod(
@@ -141,6 +143,10 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
       const isNot = utils.flag(this, 'negate')
       if (isNot) {
         throw new Error('toMatchInlineSnapshot cannot be used with "not"')
+      }
+      const isSoft = utils.flag(this, 'soft')
+      if (isSoft) {
+        throw new Error('toMatchInlineSnapshot cannot be used with "soft"')
       }
       const test = getTest('toMatchInlineSnapshot', this)
       const isInsideEach = test.each || test.suite?.each
@@ -176,7 +182,7 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
   utils.addMethod(
     chai.Assertion.prototype,
     'toThrowErrorMatchingSnapshot',
-    function (this: Record<string, unknown>, message?: string) {
+    wrapAssertion(utils, 'toThrowErrorMatchingSnapshot', function (this: Chai.AssertionStatic & Assertion, properties?: object, message?: string) {
       utils.flag(this, '_name', 'toThrowErrorMatchingSnapshot')
       const isNot = utils.flag(this, 'negate')
       if (isNot) {
@@ -194,7 +200,7 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
         errorMessage,
         ...getTestNames(test),
       })
-    },
+    }),
   )
   utils.addMethod(
     chai.Assertion.prototype,
@@ -209,6 +215,10 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
         throw new Error(
           'toThrowErrorMatchingInlineSnapshot cannot be used with "not"',
         )
+      }
+      const isSoft = utils.flag(this, 'soft')
+      if (isSoft) {
+        throw new Error('toThrowErrorMatchingInlineSnapshot cannot be used with "soft"')
       }
       const test = getTest('toThrowErrorMatchingInlineSnapshot', this)
       const isInsideEach = test.each || test.suite?.each
