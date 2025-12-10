@@ -84,11 +84,76 @@ test('db connects properly', async () => {
 
 ## Browser Mode
 
-TODO:
-- node / browser driver side trace is available without `browserSdkPath`
-- `browserSdkPath` is required for additional traces on browser runtime
-- mention the lack of async context propagation
-- show example
+When running tests in [browser mode](/guide/browser/), Vitest automatically propagates trace context between Node.js and the browser using the W3C Trace Context format. This means you can see the full trace of your test execution across both environments.
+
+### Without `browserSdkPath`
+
+By default, traces from the Node.js side (test orchestration, browser driver communication) are available without any additional configuration. These traces show:
+
+- Browser pool initialization
+- Test file execution coordination
+- Communication between Node.js and the browser
+
+### With `browserSdkPath`
+
+To capture traces from code running inside the browser, you need to provide a separate browser-compatible OpenTelemetry SDK via the `browserSdkPath` option. This enables:
+
+- Custom spans in your browser-side test code
+- Traces from browser-specific instrumentation
+- Full end-to-end visibility across Node.js and browser
+
+::: warning ASYNC CONTEXT
+Unlike Node.js, browsers do not have automatic async context propagation. Vitest handles this internally for test execution, but if you create custom spans in deeply nested async code, context may not propagate automatically.
+:::
+
+### Browser SDK Setup
+
+Install browser-compatible OpenTelemetry packages:
+
+```shell
+npm i @opentelemetry/api @opentelemetry/sdk-trace-web @opentelemetry/exporter-trace-otlp-http
+```
+
+::: code-group
+```js [otel-browser.js]
+import {
+  SimpleSpanProcessor,
+  WebTracerProvider,
+} from '@opentelemetry/sdk-trace-web'
+import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http'
+
+const provider = new WebTracerProvider({
+  spanProcessors: [
+    new SimpleSpanProcessor(new OTLPTraceExporter()),
+  ],
+})
+
+provider.register()
+export default provider
+```
+```js [vitest.config.js]
+import { defineConfig } from 'vitest/config'
+
+export default defineConfig({
+  test: {
+    browser: {
+      enabled: true,
+      provider: 'playwright',
+      instances: [{ browser: 'chromium' }],
+    },
+    experimental: {
+      openTelemetry: {
+        enabled: true,
+        sdkPath: './otel.js',
+        browserSdkPath: './otel-browser.js',
+      },
+    },
+  },
+})
+```
+:::
+
+See the [example project](https://github.com/vitest-dev/vitest/tree/main/examples/opentelemetry) for a complete setup.
 
 ## View Traces
 
