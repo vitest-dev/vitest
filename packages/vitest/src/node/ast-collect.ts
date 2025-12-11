@@ -14,6 +14,7 @@ import { relative } from 'pathe'
 import { parseAst } from 'vite'
 import { createIndexLocationsMap } from '../utils/base'
 import { createDebugger } from '../utils/debugger'
+import { AstConfig } from './types/config'
 
 interface ParsedFile extends File {
   start: number
@@ -45,8 +46,9 @@ interface LocalCallDefinition {
 const debug = createDebugger('vitest:ast-collect-info')
 const verbose = createDebugger('vitest:ast-collect-verbose')
 
-function astParseFile(filepath: string, code: string) {
+function astParseFile(filepath: string, code: string, config: AstConfig = {}) {
   const ast = parseAst(code)
+  const testNames = config.test ?? ['it', 'test']
 
   if (verbose) {
     verbose(
@@ -75,7 +77,7 @@ function astParseFile(filepath: string, code: string) {
     if (callee.type === 'MemberExpression') {
       if (
         callee.object?.type === 'Identifier'
-        && ['it', 'test', 'describe', 'suite'].includes(callee.object.name)
+        && [...testNames, 'describe', 'suite'].includes(callee.object.name)
       ) {
         return callee.object?.name
       }
@@ -108,7 +110,7 @@ function astParseFile(filepath: string, code: string) {
       if (!name) {
         return
       }
-      if (!['it', 'test', 'describe', 'suite'].includes(name)) {
+      if (![...testNames, 'describe', 'suite'].includes(name)) {
         verbose?.(`Skipping ${name} (unknown call)`)
         return
       }
@@ -175,7 +177,7 @@ function astParseFile(filepath: string, code: string) {
         start,
         end,
         name: message,
-        type: name === 'it' || name === 'test' ? 'test' : 'suite',
+        type: testNames.includes(name) ? 'test' : 'suite',
         mode,
         task: null as any,
         dynamic: isDynamicEach,
@@ -241,6 +243,7 @@ interface ParseOptions {
   allowOnly: boolean
   pool: string
   testNamePattern?: RegExp | undefined
+  ast?: AstConfig
 }
 
 function createFileTask(
@@ -249,7 +252,7 @@ function createFileTask(
   requestMap: any,
   options: ParseOptions,
 ) {
-  const { definitions, ast } = astParseFile(testFilepath, code)
+  const { definitions, ast } = astParseFile(testFilepath, code, options.ast)
   const file: ParsedFile = {
     filepath: options.filepath,
     type: 'suite',
@@ -408,6 +411,7 @@ export async function astCollectTests(
     allowOnly: project.config.allowOnly,
     testNamePattern: project.config.testNamePattern,
     pool: project.browser ? 'browser' : project.config.pool,
+    ast: project.config.ast ?? {},
   })
 }
 
