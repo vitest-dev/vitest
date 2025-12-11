@@ -648,6 +648,23 @@ await page.getByRole('img', { name: 'Rose' }).tripleClick()
 
 - [See more at `userEvent.tripleClick`](/api/browser/interactivity#userevent-tripleclick)
 
+### wheel <Version>4.1.0</Version> {#wheel}
+
+```ts
+function wheel(options: UserEventWheelOptions): Promise<void>
+```
+
+Triggers a [`wheel` event](https://developer.mozilla.org/en-US/docs/Web/API/Element/wheel_event) on an element. You can use the options to choose a general scroll `direction` or a precise `delta` value.
+
+```ts
+import { page } from 'vitest/browser'
+
+// Scroll right
+await page.getByRole('tablist').wheel({ direction: 'right' })
+```
+
+- [See more at `userEvent.wheel`](/api/browser/interactivity#userevent-wheel)
+
 ### clear
 
 ```ts
