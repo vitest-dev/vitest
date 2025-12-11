@@ -120,6 +120,7 @@ it('exports snapshot', async ({ skip, task }) => {
           "generateFileHash": "function",
           "getFilePoolName": "function",
           "isCSSRequest": "function",
+          "isFileLoadingAllowed": "function",
           "isFileServingAllowed": "function",
           "isValidApiRequest": "function",
           "parseAst": "function",
@@ -286,6 +287,7 @@ it('exports snapshot', async ({ skip, task }) => {
             "generateFileHash": "function",
             "getFilePoolName": "function",
             "isCSSRequest": "function",
+            "isFileLoadingAllowed": "function",
             "isFileServingAllowed": "function",
             "isValidApiRequest": "function",
             "parseAst": "function",
@@ -339,6 +341,7 @@ it('exports snapshot', async ({ skip, task }) => {
           "./worker": {
             "init": "function",
             "runBaseTests": "function",
+            "setupEnvironment": "function",
           },
         }
       `)

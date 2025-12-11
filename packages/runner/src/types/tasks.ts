@@ -712,13 +712,15 @@ export interface TestContext {
   readonly signal: AbortSignal
 
   /**
-   * Extract hooks on test failed
+   * Register a callback to run when this specific test fails.
+   * Useful when tests run concurrently.
    * @see {@link https://vitest.dev/guide/test-context#ontestfailed}
    */
   readonly onTestFailed: (fn: OnTestFailedHandler, timeout?: number) => void
 
   /**
-   * Extract hooks on test failed
+   * Register a callback to run when this specific test finishes.
+   * Useful when tests run concurrently.
    * @see {@link https://vitest.dev/guide/test-context#ontestfinished}
    */
   readonly onTestFinished: (fn: OnTestFinishedHandler, timeout?: number) => void
