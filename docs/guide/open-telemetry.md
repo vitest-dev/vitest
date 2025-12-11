@@ -89,7 +89,7 @@ When running tests in [browser mode](/guide/browser/), Vitest propagates trace c
 To capture traces from the browser runtime, provide a browser-compatible SDK via `browserSdkPath`:
 
 ```shell
-npm i @opentelemetry/api @opentelemetry/sdk-trace-web @opentelemetry/exporter-trace-otlp-http
+npm i @opentelemetry/api @opentelemetry/sdk-trace-web @opentelemetry/exporter-trace-otlp-proto
 ```
 
 ::: code-group
@@ -98,7 +98,7 @@ import {
   BatchSpanProcessor,
   WebTracerProvider,
 } from '@opentelemetry/sdk-trace-web'
-import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http'
+import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-proto'
 
 const provider = new WebTracerProvider({
   spanProcessors: [
