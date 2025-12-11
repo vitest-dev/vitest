@@ -96,8 +96,8 @@ export class IframeOrchestrator {
         startTime,
         orchestratorSpan.context,
       )
-      await endSpan()
     }
+    await endSpan()
   }
 
   public async cleanupTesters(): Promise<void> {
