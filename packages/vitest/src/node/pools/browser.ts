@@ -299,10 +299,10 @@ class BrowserPool {
 
   private finishSession(sessionId: string): void {
     this.readySessions.add(sessionId)
-    this._otel.span.end()
 
     // the last worker finished running tests
     if (this.readySessions.size === this.orchestrators.size) {
+      this._otel.span.end()
       this._promise?.resolve()
       this._promise = undefined
       debug?.('[%s] all tests finished running', sessionId)
