@@ -80,20 +80,25 @@ export function stringify(
 
 export const formatRegExp: RegExp = /%[sdjifoOc%]/g
 
-export interface FormatOptions {
+interface FormatOptions {
   prettifyObject?: boolean
 }
 
 function baseFormat(args: unknown[], options: FormatOptions = {}): string {
-  const objectPrettyFormat = (item: unknown) => stringify(item, undefined, {
-    printBasicPrototype: false,
-    escapeString: false,
-  })
+  const formatArg = (item: unknown, inspecOptions?: LoupeOptions) => {
+    if (options.prettifyObject) {
+      return stringify(item, undefined, {
+        printBasicPrototype: false,
+        escapeString: false,
+      })
+    }
+    return inspect(item, inspecOptions)
+  }
 
   if (typeof args[0] !== 'string') {
     const objects = []
     for (let i = 0; i < args.length; i++) {
-      objects.push(options.prettifyObject ? objectPrettyFormat(args[i]) : inspect(args[i], { depth: 0, colors: false }))
+      objects.push(formatArg(args[i], { depth: 0, colors: false }))
     }
     return objects.join(' ')
   }
@@ -121,7 +126,7 @@ function baseFormat(args: unknown[], options: FormatOptions = {}): string {
           if (typeof value.toString === 'function' && value.toString !== Object.prototype.toString) {
             return value.toString()
           }
-          return options.prettifyObject ? objectPrettyFormat(value) : inspect(value, { depth: 0, colors: false })
+          return formatArg(value, { depth: 0, colors: false })
         }
         return String(value)
       }
@@ -142,9 +147,9 @@ function baseFormat(args: unknown[], options: FormatOptions = {}): string {
       case '%f':
         return Number.parseFloat(String(args[i++])).toString()
       case '%o':
-        return options.prettifyObject ? objectPrettyFormat(args[i++]) : inspect(args[i++], { showHidden: true, showProxy: true })
+        return formatArg(args[i++], { showHidden: true, showProxy: true })
       case '%O':
-        return options.prettifyObject ? objectPrettyFormat(args[i++]) : inspect(args[i++])
+        return formatArg(args[i++])
       case '%c': {
         i++
         return ''
@@ -177,7 +182,7 @@ function baseFormat(args: unknown[], options: FormatOptions = {}): string {
       str += ` ${x}`
     }
     else {
-      str += ` ${options.prettifyObject ? objectPrettyFormat(x) : inspect(x)}`
+      str += ` ${formatArg(x)}`
     }
   }
   return str
