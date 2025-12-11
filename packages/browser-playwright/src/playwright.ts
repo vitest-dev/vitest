@@ -220,19 +220,12 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
           = typeof this.options.persistentContext === 'string'
             ? this.options.persistentContext
             : './node_modules/.cache/vitest-playwright-user-data'
-        const contextOptions: BrowserContextOptions = {
-          ...this.options.contextOptions,
-          ignoreHTTPSErrors: true,
-        } satisfies BrowserContextOptions
-        if (this.project.config.browser.ui) {
-          contextOptions.viewport = null
-        }
         // TODO: how to avoid default "about" page?
         this.persistentContext = await playwright[this.browserName].launchPersistentContext(
           userDataDir,
           {
             ...launchOptions,
-            ...contextOptions,
+            ...this.getContextOptions(),
           },
         )
         this.browser = this.persistentContext.browser()!
@@ -394,14 +387,7 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
     const browser = await this.openBrowser()
     await this._throwIfClosing(browser)
     const actionTimeout = this.options.actionTimeout
-    const contextOptions = this.options.contextOptions ?? {}
-    const options = {
-      ...contextOptions,
-      ignoreHTTPSErrors: true,
-    } satisfies BrowserContextOptions
-    if (this.project.config.browser.ui) {
-      options.viewport = null
-    }
+    const options = this.getContextOptions()
     // TODO: investigate the consequences for Vitest 5
     // else {
     // if UI is disabled, keep the iframe scale to 1
@@ -415,6 +401,18 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
     debug?.('[%s][%s] the context is ready', sessionId, this.browserName)
     this.contexts.set(sessionId, context)
     return context
+  }
+
+  private getContextOptions(): BrowserContextOptions {
+    const contextOptions = this.options.contextOptions ?? {}
+    const options = {
+      ...contextOptions,
+      ignoreHTTPSErrors: true,
+    } satisfies BrowserContextOptions
+    if (this.project.config.browser.ui) {
+      options.viewport = null
+    }
+    return options
   }
 
   public getPage(sessionId: string): Page {
