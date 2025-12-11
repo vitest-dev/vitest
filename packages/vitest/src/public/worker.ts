@@ -1,2 +1,2 @@
-export { runBaseTests, setupEnvironment } from '../runtime/workers/base'
+export { runBaseTests, setupEnvironment, startModuleRunner } from '../runtime/workers/base'
 export { init } from '../runtime/workers/init'

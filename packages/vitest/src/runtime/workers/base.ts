@@ -18,7 +18,7 @@ let _moduleRunner: VitestModuleRunner
 const evaluatedModules = new VitestEvaluatedModules()
 const moduleExecutionInfo = new Map()
 
-function startModuleRunner(options: ContextModuleRunnerOptions) {
+export function startModuleRunner(options: ContextModuleRunnerOptions): VitestModuleRunner {
   if (_moduleRunner) {
     return _moduleRunner
   }
