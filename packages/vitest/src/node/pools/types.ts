@@ -24,8 +24,9 @@ export interface PoolWorker {
   readonly reportMemory?: boolean
   readonly cacheFs?: boolean
 
-  on: (event: string, callback: (arg: any) => void) => void
-  off: (event: string, callback: (arg: any) => void) => void
+  on: ((event: 'error', callback: (maybeError: unknown) => void) => void) & ((event: 'exit', callback: () => void) => void) & ((event: 'message', callback: (response: WorkerResponse) => void) => void)
+
+  off: ((event: 'exit', callback: () => void) => void)
   send: (message: WorkerRequest) => void
   deserialize: (data: unknown) => unknown
 
