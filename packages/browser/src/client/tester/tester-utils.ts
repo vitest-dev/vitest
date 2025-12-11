@@ -137,14 +137,6 @@ export class CommandsManager {
           throw clientError
         }),
     )
-    // return rpc.triggerCommand<T>(sessionId, command, filepath, args).catch((err) => {
-    //   // rethrow an error to keep the stack trace in browser
-    //   // const clientError = new Error(err.message)
-    //   clientError.message = err.message
-    //   clientError.name = err.name
-    //   clientError.stack = clientError.stack?.replace(clientError.message, err.message)
-    //   throw clientError
-    // })
   }
 }
 
