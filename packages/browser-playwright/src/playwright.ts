@@ -78,7 +78,10 @@ export interface PlaywrightProviderOptions {
   actionTimeout?: number
 
   /**
-   * TODO
+   * Use a persistent context instead of a regular browser context.
+   * This allows browser state (cookies, localStorage, DevTools settings, etc.) to persist between test runs.
+   * When set to `true`, the user data is stored in `./node_modules/.cache/vitest-playwright-user-data`.
+   * When set to a string, the value is used as the path to the user data directory.
    * @default false
    * @see {@link https://playwright.dev/docs/api/class-browsertype#browser-type-launch-persistent-context}
    */
@@ -214,7 +217,7 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
         const userDataDir
           = typeof this.options.persistentContext === 'string'
             ? this.options.persistentContext
-            : './node_modules/.cache/vite-playwright-user-data'
+            : './node_modules/.cache/vitest-playwright-user-data'
         const contextOptions: BrowserContextOptions = {
           ...this.options.contextOptions,
           ignoreHTTPSErrors: true,
@@ -222,7 +225,7 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
         if (this.project.config.browser.ui) {
           contextOptions.viewport = null
         }
-        // TODO: avoid default "about" page?
+        // TODO: how to avoid default "about" page?
         this.persistentContext = await playwright[this.browserName].launchPersistentContext(
           userDataDir,
           {
