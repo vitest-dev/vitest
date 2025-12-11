@@ -23,3 +23,9 @@ test('custom', async () => {
   // however the context is dropped on browser mode.
   // console.log(context.active())
 })
+
+test.runIf(typeof document !== 'undefined')('browser test', async () => {
+  const { page } = await import('vitest/browser')
+  document.body.innerHTML = `<button>Hello Vitest</button>`
+  await page.getByRole('button', { name: 'Hello Vitest' }).click()
+})

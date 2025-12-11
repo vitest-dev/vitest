@@ -32,6 +32,7 @@ const traces = new Traces({
   sdkPath: `/@fs/${otelConfig?.browserSdkPath}`,
 })
 let rootTesterSpan: ReturnType<Traces['startContextSpan']>
+getBrowserState().traces = traces
 
 channel.addEventListener('message', async (e) => {
   await client.waitForConnection()

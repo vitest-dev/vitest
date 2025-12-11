@@ -113,20 +113,38 @@ export class CommandsManager {
   ): Promise<T> {
     const state = getWorkerState()
     const rpc = state.rpc as any as BrowserRPC
-    const { sessionId } = getBrowserState()
+    const { sessionId, traces } = getBrowserState()
     const filepath = state.filepath || state.current?.file?.filepath
     args = args.filter(arg => arg !== undefined) // remove optional fields
     if (this._listeners.length) {
       await Promise.all(this._listeners.map(listener => listener(command, args)))
     }
-    return rpc.triggerCommand<T>(sessionId, command, filepath, args).catch((err) => {
-      // rethrow an error to keep the stack trace in browser
-      // const clientError = new Error(err.message)
-      clientError.message = err.message
-      clientError.name = err.name
-      clientError.stack = clientError.stack?.replace(clientError.message, err.message)
-      throw clientError
-    })
+    return traces.$(
+      'vitest.browser.tester.command',
+      {
+        attributes: {
+          'vitest.browser.command': command,
+          'code.file.path': filepath,
+        },
+      },
+      () =>
+        rpc.triggerCommand<T>(sessionId, command, filepath, args).catch((err) => {
+          // rethrow an error to keep the stack trace in browser
+          // const clientError = new Error(err.message)
+          clientError.message = err.message
+          clientError.name = err.name
+          clientError.stack = clientError.stack?.replace(clientError.message, err.message)
+          throw clientError
+        }),
+    )
+    // return rpc.triggerCommand<T>(sessionId, command, filepath, args).catch((err) => {
+    //   // rethrow an error to keep the stack trace in browser
+    //   // const clientError = new Error(err.message)
+    //   clientError.message = err.message
+    //   clientError.name = err.name
+    //   clientError.stack = clientError.stack?.replace(clientError.message, err.message)
+    //   throw clientError
+    // })
   }
 }
 
