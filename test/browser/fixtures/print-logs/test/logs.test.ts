@@ -2,8 +2,6 @@
 import { test, vi } from 'vitest'
 
 test('logging to stdout', () => {
-  const placeholderVar = "placeholder"
-  console.log('hello from %s', placeholderVar)
   console.log('hello from console.log')
   console.info('hello from console.info')
   console.debug('hello from console.debug')
@@ -69,4 +67,9 @@ test('console.time', async () => {
   console.time('[console-time-fake]')
   await new Promise(r => setTimeout(r, 500))
   console.timeEnd('[console-time-fake]')
+})
+
+test('log with placeholders', () => {
+  console.log('hello from %s', "one")
+  console.log('hello from %s', "two", { hello: 'object' })
 })
