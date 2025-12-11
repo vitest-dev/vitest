@@ -375,6 +375,9 @@ importers:
       '@opentelemetry/api':
         specifier: ^1.9.0
         version: 1.9.0
+      '@opentelemetry/context-zone':
+        specifier: ^2.2.0
+        version: 2.2.0(@opentelemetry/api@1.9.0)
       '@opentelemetry/exporter-trace-otlp-proto':
         specifier: ^0.208.0
         version: 0.208.0(@opentelemetry/api@1.9.0)
@@ -3118,6 +3121,17 @@ packages:
     engines: {node: ^18.19.0 || >=20.6.0}
     peerDependencies:
       '@opentelemetry/api': '>=1.0.0 <1.10.0'
+
+  '@opentelemetry/context-zone-peer-dep@2.2.0':
+    resolution: {integrity: sha512-/jSqc9MDpI7abRYNoM77G7xrJL8RhvOoQzmWg4Exj642NN1+ZwsqW0EODgaR99/w06nS2IGgY7AJRt5eZY/6QQ==}
+    engines: {node: ^18.19.0 || >=20.6.0}
+    peerDependencies:
+      '@opentelemetry/api': '>=1.0.0 <1.10.0'
+      zone.js: ^0.10.2 || ^0.11.0 || ^0.12.0 || ^0.13.0 || ^0.14.0 || ^0.15.0
+
+  '@opentelemetry/context-zone@2.2.0':
+    resolution: {integrity: sha512-Wq0nUuRyVBmXIeISO1Sg9yTz+mUypCGjwGHSPR9iaY4f+n+F728+5hh85lko6fnm/oJAiKhmSmvvH/o8PhSUnw==}
+    engines: {node: ^18.19.0 || >=20.6.0}
 
   '@opentelemetry/core@2.2.0':
     resolution: {integrity: sha512-FuabnnUm8LflnieVxs6eP7Z383hgQU4W1e3KJS6aOG3RxWxcHyBxH8fDMHNgu/gFx/M2jvTOW/4/PHhLz6bjWw==}
@@ -9720,6 +9734,9 @@ packages:
     resolution: {integrity: sha512-zK7YHHz4ZXpW89AHXUPbQVGKI7uvkd3hzusTdotCg1UxyaVtg0zFJSTfW/Dq5f7OBBVnq6cZIaC8Ti4hb6dtCA==}
     engines: {node: '>= 14'}
 
+  zone.js@0.15.1:
+    resolution: {integrity: sha512-XE96n56IQpJM7NAoXswY3XRLcWFW83xe0BiAOeMD7K5k5xecOeul3Qcpx6GqEeeHNkW5DWL5zOyTbEfB4eti8w==}
+
   zustand@4.5.7:
     resolution: {integrity: sha512-CHOUy7mu3lbD6o6LJLfllpjkzhHXSBlX8B9+qPddUsIfeF5S/UZ5q0kmCsnRqT1UHFQZchNFDDzMbQsuesHWlw==}
     engines: {node: '>=12.7.0'}
@@ -11306,6 +11323,18 @@ snapshots:
   '@opentelemetry/context-async-hooks@2.2.0(@opentelemetry/api@1.9.0)':
     dependencies:
       '@opentelemetry/api': 1.9.0
+
+  '@opentelemetry/context-zone-peer-dep@2.2.0(@opentelemetry/api@1.9.0)(zone.js@0.15.1)':
+    dependencies:
+      '@opentelemetry/api': 1.9.0
+      zone.js: 0.15.1
+
+  '@opentelemetry/context-zone@2.2.0(@opentelemetry/api@1.9.0)':
+    dependencies:
+      '@opentelemetry/context-zone-peer-dep': 2.2.0(@opentelemetry/api@1.9.0)(zone.js@0.15.1)
+      zone.js: 0.15.1
+    transitivePeerDependencies:
+      - '@opentelemetry/api'
 
   '@opentelemetry/core@2.2.0(@opentelemetry/api@1.9.0)':
     dependencies:
@@ -18804,6 +18833,8 @@ snapshots:
       archiver-utils: 5.0.2
       compress-commons: 6.0.2
       readable-stream: 4.1.0
+
+  zone.js@0.15.1: {}
 
   zustand@4.5.7(@types/react@19.2.7)(react@19.2.0):
     dependencies:

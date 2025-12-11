@@ -16,15 +16,15 @@ const provider = new WebTracerProvider({
     'service.name': 'vitest-browser',
   }),
   spanProcessors: [
-    // new SimpleSpanProcessor(new ConsoleSpanExporter()),
     new BatchSpanProcessor(new OTLPTraceExporter()),
+    // new SimpleSpanProcessor(new ConsoleSpanExporter()),
   ],
 })
 
 provider.register({
   // https://github.com/open-telemetry/opentelemetry-js/discussions/2060
-  // contextManager: new ZoneContextManager(),
-  // contextManager: new StackContextManager(), // this is default
+  // contextManager: new StackContextManager(), // this is the default
+  // contextManager: new ZoneContextManager(), // doesn't seem to help
 })
 
 export default provider
