@@ -810,6 +810,13 @@ export function resolveConfig(
     )
     resolved.experimental.openTelemetry.sdkPath = pathToFileURL(sdkPath).toString()
   }
+  if (resolved.experimental.openTelemetry?.browserSdkPath) {
+    const browserSdkPath = resolve(
+      resolved.root,
+      resolved.experimental.openTelemetry.browserSdkPath,
+    )
+    resolved.experimental.openTelemetry.browserSdkPath = browserSdkPath
+  }
   if (resolved.experimental.fsModuleCachePath) {
     resolved.experimental.fsModuleCachePath = resolve(
       resolved.root,

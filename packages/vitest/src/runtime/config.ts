@@ -120,6 +120,11 @@ export interface SerializedConfig {
   experimental: {
     fsModuleCache: boolean
     printImportBreakdown: boolean | undefined
+    openTelemetry: {
+      enabled: boolean
+      sdkPath?: string
+      browserSdkPath?: string
+    } | undefined
   }
 }
 

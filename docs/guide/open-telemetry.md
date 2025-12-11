@@ -25,7 +25,7 @@ Make sure to export the SDK as a default export, so that Vitest can flush the ne
 Before previewing your application traces, install required packages and specify the path to your instrumentation file in the config.
 
 ```shell
-npm i @opentelemetry/sdk-node @opentelemetry/auto-instrumentations-node @opentelemetry/exporter-trace-otlp-proto
+npm i @opentelemetry/api @opentelemetry/sdk-node @opentelemetry/auto-instrumentations-node @opentelemetry/exporter-trace-otlp-proto
 ```
 
 ::: code-group
@@ -83,6 +83,59 @@ test('db connects properly', async () => {
   await tracer.startActiveSpan('db.connect', () => db.connect())
 })
 ```
+
+## Browser Mode
+
+When running tests in [browser mode](/guide/browser/), Vitest propagates trace context between Node.js and the browser. Node.js side traces (test orchestration, browser driver communication) are available without additional configuration.
+
+To capture traces from the browser runtime, provide a browser-compatible SDK via `browserSdkPath`:
+
+```shell
+npm i @opentelemetry/api @opentelemetry/sdk-trace-web @opentelemetry/exporter-trace-otlp-proto
+```
+
+::: code-group
+```js [otel-browser.js]
+import {
+  BatchSpanProcessor,
+  WebTracerProvider,
+} from '@opentelemetry/sdk-trace-web'
+import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-proto'
+
+const provider = new WebTracerProvider({
+  spanProcessors: [
+    new BatchSpanProcessor(new OTLPTraceExporter()),
+  ],
+})
+
+provider.register()
+export default provider
+```
+```js [vitest.config.js]
+import { defineConfig } from 'vitest/config'
+
+export default defineConfig({
+  test: {
+    browser: {
+      enabled: true,
+      provider: 'playwright',
+      instances: [{ browser: 'chromium' }],
+    },
+    experimental: {
+      openTelemetry: {
+        enabled: true,
+        sdkPath: './otel.js',
+        browserSdkPath: './otel-browser.js',
+      },
+    },
+  },
+})
+```
+:::
+
+::: warning ASYNC CONTEXT
+Unlike Node.js, browsers do not have automatic async context propagation. Vitest handles this internally for test execution, but custom spans in deeply nested async code may not propagate context automatically.
+:::
 
 ## View Traces
 

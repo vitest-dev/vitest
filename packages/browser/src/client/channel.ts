@@ -1,4 +1,5 @@
 import type { CancelReason, FileSpecification } from '@vitest/runner'
+import type { OTELCarrier } from 'vitest/internal/browser'
 import { getBrowserState } from './utils'
 
 export interface IframeViewportEvent {
@@ -41,6 +42,7 @@ export interface IframePrepareEvent {
   event: 'prepare'
   iframeId: string
   startTime: number
+  otelCarrier?: OTELCarrier
 }
 
 export type GlobalChannelIncomingEvent = GlobalChannelTestRunCanceledEvent
