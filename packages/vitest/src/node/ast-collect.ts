@@ -1,6 +1,7 @@
 import type { File, Suite, Task, Test } from '@vitest/runner'
 import type { TestError } from '../types/general'
 import type { TestProject } from './project'
+import type { AstConfig } from './types/config'
 import { originalPositionFor, TraceMap } from '@jridgewell/trace-mapping'
 import {
   calculateSuiteHash,
@@ -14,7 +15,6 @@ import { relative } from 'pathe'
 import { parseAst } from 'vite'
 import { createIndexLocationsMap } from '../utils/base'
 import { createDebugger } from '../utils/debugger'
-import { AstConfig } from './types/config'
 
 interface ParsedFile extends File {
   start: number
