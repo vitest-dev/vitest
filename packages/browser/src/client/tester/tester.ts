@@ -31,7 +31,7 @@ const traces = new Traces({
   enabled: !!(otelConfig?.enabled && otelConfig?.browserSdkPath),
   sdkPath: `/@fs/${otelConfig?.browserSdkPath}`,
 })
-let rootTesterSpan: ReturnType<Traces['startContextSpan']>
+let rootTesterSpan: ReturnType<Traces['startContextSpan']> | undefined
 getBrowserState().traces = traces
 
 channel.addEventListener('message', async (e) => {
@@ -70,7 +70,7 @@ channel.addEventListener('message', async (e) => {
     }
     case 'cleanup': {
       await cleanup().catch(err => unhandledError(err, 'Cleanup Error'))
-      rootTesterSpan.span.end()
+      rootTesterSpan?.span.end()
       await traces.finish()
       break
     }
