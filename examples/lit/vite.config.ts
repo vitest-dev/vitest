@@ -10,9 +10,7 @@ export default defineConfig({
     // https://lit.dev/docs/tools/testing/#testing-in-the-browser
     browser: {
       enabled: true,
-      provider: playwright({
-        persistentContext: true,
-      }),
+      provider: playwright(),
       instances: [
         { browser: 'chromium' },
       ],
