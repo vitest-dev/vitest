@@ -82,6 +82,8 @@ export interface PlaywrightProviderOptions {
    * This allows browser state (cookies, localStorage, DevTools settings, etc.) to persist between test runs.
    * When set to `true`, the user data is stored in `./node_modules/.cache/vitest-playwright-user-data`.
    * When set to a string, the value is used as the path to the user data directory.
+   *
+   * Note: This option is ignored when `headless` is enabled because headless mode runs tests in parallel sessions.
    * @default false
    * @see {@link https://playwright.dev/docs/api/class-browsertype#browser-type-launch-persistent-context}
    */
@@ -213,7 +215,7 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
       }
 
       debug?.('[%s] initializing the browser with launch options: %O', this.browserName, launchOptions)
-      if (this.options.persistentContext) {
+      if (this.options.persistentContext && !options.headless) {
         const userDataDir
           = typeof this.options.persistentContext === 'string'
             ? this.options.persistentContext
