@@ -139,7 +139,7 @@ async function prepareTestEnvironment(options: PrepareOptions) {
   setupConsoleLogSpy()
   setupDialogsSpy()
 
-  const runner = await initiateRunner(state, mocker, config, traces)
+  const runner = await initiateRunner(state, mocker, config)
   getBrowserState().runner = runner
 
   // webdiverio context depends on the iframe state, so we need to switch the context,

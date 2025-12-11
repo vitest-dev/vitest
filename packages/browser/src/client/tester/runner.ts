@@ -34,7 +34,6 @@ import { VitestBrowserSnapshotEnvironment } from './snapshot'
 
 interface BrowserRunnerOptions {
   config: SerializedConfig
-  traces: Traces
 }
 
 export const browserHashMap: Map<string, string> = new Map()
@@ -61,14 +60,14 @@ export function createBrowserRunner(
     public sourceMapCache = new Map<string, any>()
     public method = 'run' as TestExecutionMethod
     private commands: CommandsManager
-    private otelTraces_!: Traces
+    private _otel!: Traces
 
     constructor(options: BrowserRunnerOptions) {
       super(options.config)
       this.config = options.config
       this.commands = getBrowserState().commands
       this.viteEnvironment = '__browser__'
-      this.otelTraces_ = options.traces
+      this._otel = getBrowserState().traces
     }
 
     setMethod(method: TestExecutionMethod) {
@@ -304,7 +303,7 @@ export function createBrowserRunner(
 
     trace = <T>(name: string, attributes: Record<string, any> | (() => T), cb?: () => T): T => {
       const options: import('@opentelemetry/api').SpanOptions = typeof attributes === 'object' ? { attributes } : {}
-      return this.otelTraces_.$(`vitest.test.runner.${name}`, options, cb || attributes as () => T)
+      return this._otel.$(`vitest.test.runner.${name}`, options, cb || attributes as () => T)
     }
   }
 }
@@ -319,7 +318,6 @@ export async function initiateRunner(
   state: WorkerGlobalState,
   mocker: VitestBrowserClientMocker,
   config: SerializedConfig,
-  traces: Traces,
 ): Promise<BrowserVitestRunner> {
   if (cachedRunner) {
     return cachedRunner
@@ -336,7 +334,6 @@ export async function initiateRunner(
   }
   const runner = new BrowserRunner({
     config,
-    traces,
   })
   cachedRunner = runner
 
