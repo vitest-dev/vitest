@@ -207,7 +207,7 @@
     "@types/node": "^24.10.1",
     "@types/picomatch": "^4.0.2",
     "@types/prompts": "^2.4.9",
-    "@types/sinonjs__fake-timers": "^8.1.5",
+    "@types/sinonjs__fake-timers": "^15.0.1",
     "acorn-walk": "catalog:",
     "birpc": "catalog:",
     "cac": "catalog:",
