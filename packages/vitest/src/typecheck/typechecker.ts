@@ -371,6 +371,8 @@ export class Typechecker {
         this.project.config.typecheck.spawnTimeout,
       )
 
+      let winTimeout: NodeJS.Timeout | undefined
+
       function onError(cause: Error) {
         if (resolved) {
           return
@@ -380,8 +382,6 @@ export class Typechecker {
         resolved = true
         reject(new Error('Spawning typechecker failed - is typescript installed?', { cause }))
       }
-
-      let winTimeout: NodeJS.Timeout | undefined
 
       child.process.once('spawn', () => {
         this._onParseStart?.()
