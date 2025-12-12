@@ -49,6 +49,7 @@ export const createBrowserServer: BrowserServerFactory = async (options) => {
   let cacheDir: string
   const vite = await createViteServer({
     ...project.options, // spread project config inlined in root workspace config
+    define: project.config.viteDefine,
     base: '/',
     root: project.config.root,
     logLevel,
@@ -79,6 +80,16 @@ export const createBrowserServer: BrowserServerFactory = async (options) => {
       {
         name: 'vitest-internal:browser-cacheDir',
         configResolved(config) {
+          // console.log("🔶 browser", {
+          //   configFile: config.configFile,
+          //   define: config.define,
+          //   env: config.env,
+          //   testEnv: config.test?.env,
+          //   projectOptions: project.options,
+          //   viteConfigDefine: project.vite.config.define,
+          //   viteConfigEnv: project.vite.config.env,
+          // });
+          // project.vite.config.define;
           cacheDir = config.cacheDir
         },
       },
