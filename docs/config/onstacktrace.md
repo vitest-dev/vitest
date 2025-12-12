@@ -7,7 +7,7 @@ outline: deep
 
 - **Type**: `(error: Error, frame: ParsedStack) => boolean | void`
 
-Apply a filtering function to each frame of each stack trace when handling errors. This does not apply to stack traces printed by [`printConsoleTrace`](#printConsoleTrace). The first argument, `error`, is a `TestError`.
+Apply a filtering function to each frame of each stack trace when handling errors. This does not apply to stack traces printed by [`printConsoleTrace`](/config/printconsoletrace#printconsoletrace). The first argument, `error`, is a `TestError`.
 
 Can be useful for filtering out stack trace frames from third-party libraries.
 
