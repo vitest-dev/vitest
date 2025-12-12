@@ -3,7 +3,7 @@
   "type": "module",
   "version": "4.0.15",
   "private": true,
-  "packageManager": "pnpm@10.24.0",
+  "packageManager": "pnpm@10.25.0",
   "description": "Next generation testing framework powered by Vite",
   "engines": {
     "node": "^20.0.0 || ^22.0.0 || >=24.0.0"
@@ -44,7 +44,7 @@
     "@rollup/plugin-commonjs": "^29.0.0",
     "@rollup/plugin-json": "^6.1.0",
     "@rollup/plugin-node-resolve": "^16.0.3",
-    "@types/node": "^24.10.1",
+    "@types/node": "^24.10.3",
     "@types/ws": "catalog:",
     "@vitest/browser": "workspace:*",
     "@vitest/coverage-istanbul": "workspace:*",
@@ -52,7 +52,7 @@
     "@vitest/ui": "workspace:*",
     "bumpp": "^10.3.2",
     "changelogithub": "^13.16.1",
-    "esbuild": "^0.27.0",
+    "esbuild": "^0.27.1",
     "eslint": "^9.39.1",
     "magic-string": "^0.30.21",
     "pathe": "^2.0.3",
