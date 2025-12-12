@@ -1,25 +1,48 @@
 import type { Environment } from '../../types/environment'
 import type { WorkerGlobalState, WorkerSetupContext } from '../../types/worker'
-import type { Traces } from '../../utils/traces'
-import type { VitestModuleRunner } from '../moduleRunner/moduleRunner'
-import type { ContextModuleRunnerOptions } from '../moduleRunner/startModuleRunner'
+import type { ContextModuleRunnerOptions } from '../moduleRunner/startVitestModuleRunner'
+import type { TestModuleRunner } from '../moduleRunner/testModuleRunner'
 import { runInThisContext } from 'node:vm'
 import * as spyModule from '@vitest/spy'
 import { setupChaiConfig } from '../../integrations/chai/config'
 import { loadEnvironment } from '../../integrations/env/loader'
+import { NativeModuleRunner } from '../../utils/nativeModuleRunner'
+import { Traces } from '../../utils/traces'
 import { VitestEvaluatedModules } from '../moduleRunner/evaluatedModules'
 import { createNodeImportMeta } from '../moduleRunner/moduleRunner'
-import { startVitestModuleRunner } from '../moduleRunner/startModuleRunner'
+import { NativeModuleMocker } from '../moduleRunner/nativeModuleMocker'
+import { startVitestModuleRunner } from '../moduleRunner/startVitestModuleRunner'
 import { run } from '../runBaseTests'
-import { provideWorkerState } from '../utils'
+import { getSafeWorkerState, provideWorkerState } from '../utils'
 
-let _moduleRunner: VitestModuleRunner
+let _moduleRunner: TestModuleRunner
 
 const evaluatedModules = new VitestEvaluatedModules()
 const moduleExecutionInfo = new Map()
 
-function startModuleRunner(options: ContextModuleRunnerOptions) {
+function startModuleRunner(options: ContextModuleRunnerOptions): TestModuleRunner {
   if (_moduleRunner) {
+    return _moduleRunner
+  }
+
+  if (options.state.config.experimental.viteModuleRunner === false) {
+    const root = options.state.config.root
+    const state = () => getSafeWorkerState() || options.state
+    _moduleRunner = new NativeModuleRunner(
+      root,
+      new NativeModuleMocker({
+        resolveId(id, importer) {
+          return state().rpc.resolve(id, importer, '__vitest__')
+        },
+        root,
+        moduleDirectories: state().config.deps.moduleDirectories || ['/node_modules/'],
+        traces: options.traces || new Traces({ enabled: false }),
+        getCurrentTestFilepath() {
+          return state().filepath
+        },
+        spyModule,
+      }),
+    )
     return _moduleRunner
   }
 
@@ -31,7 +54,12 @@ let _currentEnvironment!: Environment
 let _environmentTime: number
 
 /** @experimental */
-export async function setupEnvironment(context: WorkerSetupContext): Promise<() => Promise<void>> {
+export async function setupBaseEnvironment(context: WorkerSetupContext): Promise<() => Promise<void>> {
+  if (context.config.experimental.viteModuleRunner === false) {
+    const { setupNodeLoaderHooks } = await import('./native')
+    setupNodeLoaderHooks(context)
+  }
+
   const startTime = performance.now()
   const {
     environment: { name: environmentName, options: environmentOptions },

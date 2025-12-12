@@ -44,7 +44,11 @@
       "types": "./dist/register.d.ts",
       "default": "./dist/register.js"
     },
-    "./*": "./*"
+    "./transforms": {
+      "types": "./dist/transforms.d.ts",
+      "default": "./dist/transforms.js"
+    },
+    "./package.json": "./package.json"
   },
   "main": "./dist/index.js",
   "module": "./dist/index.js",

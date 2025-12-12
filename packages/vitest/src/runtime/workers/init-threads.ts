@@ -9,7 +9,7 @@ if (isMainThread || !parentPort) {
 
 export default function workerInit(options: {
   runTests: (method: 'run' | 'collect', state: WorkerGlobalState, traces: Traces) => Promise<void>
-  setup?: (context: WorkerSetupContext) => Promise<() => Promise<unknown>>
+  setup?: (context: WorkerSetupContext) => void | Promise<() => Promise<unknown>>
 }): void {
   const { runTests } = options
 

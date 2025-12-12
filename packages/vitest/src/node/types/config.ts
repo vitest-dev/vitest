@@ -854,6 +854,21 @@ export interface InlineConfig {
      * Enabling this will also show a breakdown by default in UI, but you can always press a button to toggle it.
      */
     printImportBreakdown?: boolean
+
+    /**
+     * Controls whether Vitest uses Vite's module runner to run the code or fallback to the native `import`.
+     *
+     * If Node.js cannot process the code, consider registering [module loader](https://nodejs.org/api/module.html#customization-hooks) via `execArgv`.
+     * @default true
+     */
+    viteModuleRunner?: boolean
+    /**
+     * If module runner is disabled, Vitest uses a module loader to transform files to support
+     * `import.meta.vitest` and `vi.mock`.
+     *
+     * If you don't use these features, you can disable this.
+     */
+    nodeLoader?: boolean
   }
 }
 

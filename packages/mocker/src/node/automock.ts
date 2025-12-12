@@ -148,7 +148,7 @@ const __vitest_current_es_module__ = {
   __esModule: true,
   ${allSpecifiers.map(({ name }) => `["${name}"]: ${name},`).join('\n  ')}
 }
-const __vitest_mocked_module__ = globalThis[${globalThisAccessor}].mockObject(__vitest_current_es_module__, "${mockType}")
+const __vitest_mocked_module__ = globalThis[${globalThisAccessor}].mockObject(__vitest_current_es_module__, undefined, "${mockType}")
 `
   const assigning = allSpecifiers
     .map(({ name }, index) => {
