@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs'
 import module, { createRequire, isBuiltin } from 'node:module'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { automockModule, createManualModuleSource } from '@vitest/mocker/transforms'
-import { cleanUrl } from '@vitest/utils/helpers'
+import { cleanUrl, filterOutComments } from '@vitest/utils/helpers'
 import { parse } from 'acorn'
 import { parse as parseCjsSyntax } from 'cjs-module-lexer'
 import { parse as parseModuleSyntax } from 'es-module-lexer'
@@ -215,10 +215,11 @@ function transformCode(code: string, filename: string): string {
   if (!module.stripTypeScriptTypes) {
     throw new Error(`Cannot parse '${filename}' because "module.stripTypeScriptTypes" is not supported. Module mocking requires Node.js 22.15 or higher.`)
   }
-  return module.stripTypeScriptTypes(filename)
+  return module.stripTypeScriptTypes(code)
 }
 
-// TODO: caching for better perf
+const cachedFileExports = new Map<string, string[]>()
+
 function collectModuleExports(
   filename: string,
   code: string,
@@ -227,28 +228,33 @@ function collectModuleExports(
 ): string[] {
   if (format === 'module') {
     const [imports_, exports_] = parseModuleSyntax(code, filename)
-    exports.push(...exports_.map(p => p.n))
+    const fileExports = [...exports_.map(p => p.n)]
     imports_.forEach(({ ss: start, se: end, n: name }) => {
       const substring = code.substring(start, end).replace(/ +/g, ' ')
       if (name && substring.startsWith('export *') && !substring.startsWith('export * as')) {
-        tryParseModule(name)
+        fileExports.push(...tryParseModule(name))
       }
     })
+    cachedFileExports.set(filename, fileExports)
+    exports.push(...fileExports)
   }
   else {
     const { exports: exports_, reexports } = parseCjsSyntax(code, filename)
-    exports.push(...exports_)
+    const fileExports = [...exports_]
     reexports.forEach((name) => {
-      tryParseModule(name)
+      fileExports.push(...tryParseModule(name))
     })
+    cachedFileExports.set(filename, fileExports)
+    exports.push(...fileExports)
   }
 
-  function tryParseModule(name: string) {
+  function tryParseModule(name: string): string[] {
     try {
-      parseModule(name)
+      return parseModule(name)
     }
     catch (error) {
       console.warn(`[module mocking] Failed to parse '${name}' imported from ${filename}:`, error)
+      return []
     }
   }
 
@@ -257,24 +263,38 @@ function collectModuleExports(
     return (__require ??= createRequire(filename))
   }
 
-  function parseModule(name: string) {
+  function parseModule(name: string): string[] {
     if (isBuiltin(name)) {
+      if (cachedFileExports.has(name)) {
+        const cachedExports = cachedFileExports.get(name)!
+        return cachedExports
+      }
+
       const builtinModule = getBuiltinModule(name)
-      exports.push(...Object.keys(builtinModule), 'default')
-      return
+      const builtinExports = Object.keys(builtinModule)
+      cachedFileExports.set(name, builtinExports)
+      return builtinExports
     }
 
     const resolvedModuleUrl = format === 'module'
-      ? import.meta.resolve(name, pathToFileURL(filename))
+      ? import.meta.resolve(name, pathToFileURL(filename).toString())
       : getModuleRequire().resolve(name)
+
     const resolveModulePath = format === 'commonjs'
       ? resolvedModuleUrl
       : fileURLToPath(resolvedModuleUrl)
+
+    if (cachedFileExports.has(resolveModulePath)) {
+      const cachedExports = cachedFileExports.get(resolveModulePath)!
+      return cachedExports
+    }
+
     const fileContent = readFileSync(resolveModulePath, 'utf-8')
     const ext = extname(resolveModulePath)
     const code = transformCode(fileContent, resolveModulePath)
     if (code == null) {
-      return
+      cachedFileExports.set(resolveModulePath, [])
+      return []
     }
 
     let resolvedModuleFormat: 'module' | 'commonjs' | undefined
@@ -284,29 +304,45 @@ function collectModuleExports(
     else if (ext === '.mjs' || ext === '.mts') {
       resolvedModuleFormat = 'module'
     }
-    else if (ext === '.js' || ext === '.ts') {
-      // TODO: node has a flag to switch the behavior
-      // module.findPackageJSON() exists since 22.14, and sync hooks require Node 22.15
+    // https://nodejs.org/api/packages.html#syntax-detection
+    else if (ext === '.js' || ext === '.ts' || ext === '') {
       const pkgJsonPath = module.findPackageJSON(resolvedModuleUrl)
       const pkgJson = pkgJsonPath ? JSON.parse(readFileSync(pkgJsonPath, 'utf-8')) : {}
       if (pkgJson?.type === 'module') {
         resolvedModuleFormat = 'module'
       }
-      else {
+      else if (pkgJson?.type === 'commonjs') {
         resolvedModuleFormat = 'commonjs'
+      }
+      else {
+        // Ambiguous input! Check if it has ESM syntax. Node.js is much smarter here
+        if (hasESM(filterOutComments(code))) {
+          resolvedModuleFormat = 'module'
+        }
+        else {
+          resolvedModuleFormat = 'commonjs'
+        }
       }
     }
     else if (ext === '.json') {
-      exports.push('default')
+      return ['default']
     }
     else {
       // can't do wasm, for example
       console.warn(`Cannot process '${resolvedModuleFormat}' imported from ${filename} because of unknown file extension: ${ext}.`)
     }
     if (resolvedModuleFormat) {
-      collectModuleExports(resolveModulePath, code, resolvedModuleFormat, exports)
+      return collectModuleExports(resolveModulePath, code, resolvedModuleFormat, exports)
     }
+    return []
   }
 
   return Array.from(new Set(exports))
+}
+
+const ESM_RE
+  = /(?:[\s;]|^)(?:import[\s\w*,{}]*from|import\s*["'*{]|export\b\s*(?:[*{]|default|class|type|function|const|var|let|async function)|import\.meta\b)/m
+
+function hasESM(code: string) {
+  return ESM_RE.test(code)
 }

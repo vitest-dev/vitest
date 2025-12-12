@@ -48,7 +48,7 @@ export async function setupNodeLoaderHooks(worker: WorkerSetupContext): Promise<
         if (
           worker.config.experimental.nodeLoader === false
           || result.url.includes(distDir)
-          || context.parentURL?.includes(distDir)
+          || context.parentURL?.toString().includes(distDir)
         ) {
           return result
         }
@@ -117,6 +117,7 @@ function replaceInSourceMarker(url: string, source: string, ms: () => MagicStrin
     }
     const { index, '0': code } = match
     overriden = true
+    // should it support process.vitest for CJS modules?
     ms().overwrite(index, index + code.length, 'IMPORT_META_VITEST') // the length is the same
   }
   if (overriden) {

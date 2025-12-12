@@ -9,7 +9,7 @@ vi.mock(import('node:fs'), () => {
 })
 
 // TODO: test async, js/ts, node_modules
-vi.mock(import('../src/basic.ts'), () => {
+vi.mock(import('../src/basic.ts'), async () => {
   return {
     squared() {
       return 42
