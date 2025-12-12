@@ -34,6 +34,7 @@ async function startModuleRunner(options: ContextModuleRunnerOptions): Promise<T
       const { NativeModuleMocker } = await import('../moduleRunner/nativeModuleMocker')
       mocker = new NativeModuleMocker({
         resolveId(id, importer) {
+          // TODO: use import.meta.resolve instead
           return state().rpc.resolve(id, importer, '__vitest__')
         },
         root,

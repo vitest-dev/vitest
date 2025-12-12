@@ -12,6 +12,7 @@
   "devDependencies": {
     "@types/node": "^24.10.1",
     "@vitest/ui": "latest",
+    "tinyspy": "^4.0.4",
     "vite": "latest",
     "vitest": "latest"
   },

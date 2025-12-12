@@ -1,8 +1,12 @@
 import { readFileSync } from 'node:fs'
+import * as tinyspy from 'tinyspy'
 import { expect, test, vi } from 'vitest'
 // import * as vscode from 'vscode'
 import { add, hello, helloMe, squared } from '../src/index.ts' // TODO: import from basic in a separate test
 import { minus } from '../src/minus.ts'
+
+// automocked
+vi.mock(import('tinyspy'))
 
 // TODO: support virtual ones somehow
 // vi.mock('vscode', () => {
@@ -48,11 +52,14 @@ vi.mock(import('../src/index.ts'), async (importOriginal) => {
   } as const
 })
 
-// TODO: cli test that export * from './dep' doesn't work
 // TODO: test errors in the factory
 
 test('builtin node modules are mocked', () => {
   expect(vi.isMockFunction(readFileSync)).toBe(true)
+})
+
+test('deps in node_modules are mocked', () => {
+  expect(vi.isMockFunction(tinyspy.createInternalSpy)).toBe(true)
 })
 
 test('squared is mocked', () => {

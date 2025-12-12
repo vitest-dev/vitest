@@ -148,8 +148,6 @@ function createLoadHook(_worker: WorkerSetupContext): module.LoadHookSync {
       : nextLoad(url, context)
     if (
       (result.format && ignoreFormats.has(result.format))
-      // ignore node_modules for performance reasons
-      || url.includes('/node_modules/')
       || url.includes(distDir)
     ) {
       return result
