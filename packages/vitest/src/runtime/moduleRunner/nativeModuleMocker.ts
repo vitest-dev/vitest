@@ -7,7 +7,7 @@ import { cleanUrl, filterOutComments } from '@vitest/utils/helpers'
 import { parse } from 'acorn'
 import { parse as parseCjsSyntax } from 'cjs-module-lexer'
 import { parse as parseModuleSyntax } from 'es-module-lexer'
-import { extname } from 'pathe'
+import { extname, isAbsolute } from 'pathe'
 import { BareModuleMocker, normalizeModuleId } from './bareModuleMocker'
 
 export class NativeModuleMocker extends BareModuleMocker {
@@ -112,7 +112,7 @@ ${exports.map((key, index) => {
     // should not be possible
     if (mockedModule?.type !== 'manual') {
       console.warn(`Vitest detected unregistered manual mock ${moduleId}. This is a bug in Vitest. Please, open a new issue with reproduction.`)
-      return result
+      return
     }
 
     if (isBuiltin(moduleId)) {
@@ -160,10 +160,32 @@ ${exports.map((key, index) => {
     return mock.resolve()
   }
 
-  public importActual<T>(rawId: string, importer: string, _callstack?: string[] | null): Promise<T> {
+  public importActual<T>(rawId: string, importer: string): Promise<T> {
     const resolvedId = import.meta.resolve(rawId, pathToFileURL(importer).toString())
     const url = new URL(resolvedId)
     url.searchParams.set('mock', 'actual')
+    return import(url.toString())
+  }
+
+  public importMock<T>(rawId: string, importer: string): Promise<T> {
+    const resolvedId = import.meta.resolve(rawId, pathToFileURL(importer).toString())
+    // file is already mocked
+    if (resolvedId.includes('mock=')) {
+      return import(resolvedId)
+    }
+
+    const filename = fileURLToPath(resolvedId)
+    const external = !isAbsolute(filename) || this.isModuleDirectory(resolvedId)
+      ? normalizeModuleId(rawId)
+      : null
+    // file is not mocked, automock or redirect it
+    const redirect = this.findMockRedirect(filename, external)
+    if (redirect) {
+      return import(pathToFileURL(redirect).toString())
+    }
+
+    const url = new URL(resolvedId)
+    url.searchParams.set('mock', 'automock')
     return import(url.toString())
   }
 }

@@ -32,7 +32,7 @@ export async function setupNodeLoaderHooks(worker: WorkerSetupContext): Promise<
         if (specifier.includes('mock=actual')) {
           // url is already resolved by `importActual`
           return {
-            url: specifier,
+            url: specifier.replace(/\?mock=actual/, ''), // TODO: normalize work with queries
             shortCircuit: true,
           }
         }
@@ -143,10 +143,6 @@ const ignoreFormats = new Set<string>([
 
 function createLoadHook(_worker: WorkerSetupContext): module.LoadHookSync {
   return (url, context, nextLoad) => {
-    if (url.includes('mock=actual')) {
-      return nextLoad(url.replace(/\?mock=actual/, ''), context)
-    }
-
     const result: module.LoadFnOutput = url.includes('mock=manual') && isBuiltin(cleanUrl(url))
       ? { format: 'module' } // avoid resolving the builtin module that is supposed to be mocked
       : nextLoad(url, context)

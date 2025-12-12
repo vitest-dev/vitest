@@ -1,11 +1,21 @@
 import { readFileSync } from 'node:fs'
 import { expect, test, vi } from 'vitest'
+// import * as vscode from 'vscode'
 import { add, hello, helloMe, squared } from '../src/index.ts' // TODO: import from basic in a separate test
 import { minus } from '../src/minus.ts'
 
-vi.mock(import('node:fs'), () => {
+// TODO: support virtual ones somehow
+// vi.mock('vscode', () => {
+//   return {
+//     window: null,
+//   }
+// })
+
+vi.mock('node:fs', async (importOriginal) => {
+  // can import actual built-in module
+  const _originalModule = await importOriginal()
   return {
-    readFileSync: vi.fn(),
+    readFileSync: vi.fn<() => string>(() => 'mock'),
   }
 })
 
@@ -19,7 +29,7 @@ vi.mock(import('../src/minus.ts'), async (importOriginal) => {
   }
 })
 
-// TODO: test async, js/ts, node_modules
+// TODO: test async, sync, js/ts, node_modules
 // TODO: mock(import('../src/basic.ts'))
 vi.mock(import('../src/index.ts'), async (importOriginal) => {
   // doesn't hang because of the recursion!
@@ -52,3 +62,27 @@ test('squared is mocked', () => {
   expect(squared(2)).toBe(42)
   expect(minus(1, 2)).toBe(42)
 })
+
+test('importMock works', async () => {
+  // wasnt't mocked by vi.mock, but importMock did
+  const mockedUnmocked = await vi.importMock<typeof import('../src/no-mock.ts')>('../src/no-mock.ts')
+  expect(vi.isMockFunction(mockedUnmocked.notMocked)).toBe(true)
+  expect(mockedUnmocked.notMocked()).toBeUndefined()
+
+  // redirects to correct vi.mock
+  const mockedFs = await vi.importMock<typeof import('node:fs')>('node:fs')
+  expect(mockedFs.readFileSync('return-value-is-mocked')).toBe('mock')
+
+  // automocks to correct vi.mock
+  const mockedIndex = await vi.importMock<typeof import('../src/index.ts')>('../src/index.ts')
+  expect(mockedIndex.squared(2)).toBe(42)
+  expect(mockedIndex.hello).toBe('mock')
+
+  // redirects to __mocks__ even though vi.mock is not present in this file
+  const mockedRedirect = await vi.importMock<typeof import('../src/redirect.ts')>('../src/redirect.ts')
+  expect(mockedRedirect.default).toBe(true)
+})
+
+// test('can import non-existing vscode', () => {
+//   expect(vscode.window).toBe(null)
+// })
