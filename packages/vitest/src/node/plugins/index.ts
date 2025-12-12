@@ -210,11 +210,6 @@ export async function VitestPlugin(
         return config
       },
       async configResolved(viteConfig) {
-        // console.log("🔶 main", {
-        //   define: viteConfig.define,
-        //   env: viteConfig.env,
-        //   testEnv: viteConfig.test?.env
-        // })
         const viteConfigTest = (viteConfig.test as UserConfig) || {}
         if (viteConfigTest.watch === false) {
           ;(viteConfigTest as any).run = true
