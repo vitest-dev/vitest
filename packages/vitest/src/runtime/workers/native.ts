@@ -1,6 +1,7 @@
 import type { SourceMap } from 'node:module'
 import type { WorkerSetupContext } from '../../types/worker'
 import type { NativeModuleMocker } from '../moduleRunner/nativeModuleMocker'
+import { readFileSync } from 'node:fs'
 import module from 'node:module'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { MessageChannel } from 'node:worker_threads'
@@ -10,9 +11,10 @@ import { parse } from 'acorn'
 import { initSync as initCjsLexer, parse as parseCjsSyntax } from 'cjs-module-lexer'
 import { initSync as initModuleLexer, parse as parseModuleSyntax } from 'es-module-lexer'
 import MagicString from 'magic-string'
-import { resolve } from 'pathe'
+import { extname, resolve } from 'pathe'
 import { distDir } from '../../paths'
 
+// module.findPackageJSON() TODO: exists since 22.14
 const NOW_LENGTH = Date.now().toString().length
 const REGEXP_VITEST = new RegExp(`%3Fvitest=\\d{${NOW_LENGTH}}`)
 
@@ -157,7 +159,7 @@ function createLoadHook(_worker: WorkerSetupContext): module.LoadHookSync {
     if (typeof source === 'string') {
       if (url.includes('mock=automock') || url.includes('mock=autospy')) {
         const mockType = url.includes('mock=automock') ? 'automock' : 'autospy'
-        const transformedCode = result.format === 'module-typescript' || result.format === 'commonjs-typescript'
+        const transformedCode = result.format === 'module-typescript' || result.format === 'commonjs-typescript' || result.format === 'typescript'
           ? module.stripTypeScriptTypes(source)
           : source
         const ms = automockModule(transformedCode, mockType, code => parse(code, {
@@ -196,41 +198,20 @@ function createLoadHook(_worker: WorkerSetupContext): module.LoadHookSync {
             shortCircuit: true,
           }
         }
-        // noop the error handling
+        // noop the error handling to avoid unhandled rejections
+        // it will still throw an error when importing the module
         mockedFactoryResult.then(() => {}, () => {})
 
         // since the factory returned an async result, we have to figure out keys synchronosly somehow
         // so we parse the module with es/cjs-module-lexer to find the original exports -- we assume the same ones are returned
         // injecting new keys is not supported (and should not be advised anyway)
 
-        const transformedCode = result.format === 'module-typescript' || result.format === 'commonjs-typescript'
+        const transformedCode = result.format === 'module-typescript' || result.format === 'commonjs-typescript' || result.format === 'typescript'
           ? module.stripTypeScriptTypes(source)
           : source
 
-        let exports: string[]
-        if (result.format === 'module' || result.format === 'module-typescript') {
-          if (!moduleLexerReady) {
-            initModuleLexer()
-            moduleLexerReady = true
-          }
-          const [imports_, exports_] = parseModuleSyntax(transformedCode, filename)
-          exports = exports_.map(p => p.n)
-          imports_.forEach(({ ss: start, se: end }) => {
-            const substring = transformedCode.substring(start, end)
-            if (substring.startsWith('export *')) {
-              console.warn(`[mocking] Vitest found a namespace export (${substring}) inside ${filename} that it cannot analyze for performance reasons. The manual mock will omit all exports from this module.`)
-            }
-          })
-        }
-        else {
-          if (!cjsLexerReady) {
-            initCjsLexer()
-            cjsLexerReady = true
-          }
-          const { exports: exports_ } = parseCjsSyntax(transformedCode, filename)
-          exports = exports_
-        }
-
+        const format = result.format?.startsWith('module') ? 'module' : 'commonjs'
+        const exports = collectModuleExports(filename, transformedCode, format)
         // TODO: what about re-exports? is it better to require `vi.mock` factory to be sync?
         // for performance reasons we can go one deep inside, _maybe_?
         const manualMockedModule = createManualModuleSource(filename, exports)
@@ -309,4 +290,72 @@ function injectQuery(url: string, importer: string, queryToInject: string): stri
   return `${pathname}?${queryToInject}${search ? `&${search.slice(1)}` : ''}${
     hash ?? ''
   }`
+}
+
+// this is a bit too much for a small feature -- maybe just allow only sync
+// TODO: caching for better perf
+function collectModuleExports(
+  filename: string,
+  code: string,
+  format: 'module' | 'commonjs',
+  exports: string[] = [],
+): string[] {
+  if (format === 'module') {
+    if (!moduleLexerReady) {
+      initModuleLexer()
+      moduleLexerReady = true
+    }
+    const [imports_, exports_] = parseModuleSyntax(code, filename)
+    exports.push(...exports_.map(p => p.n))
+    imports_.forEach(({ ss: start, se: end, n: name }) => {
+      const substring = code.substring(start, end).replace(/ +/g, ' ')
+      if (name && substring.startsWith('export *') && !substring.startsWith('export * as')) {
+        parseModule(name)
+      }
+    })
+  }
+  else {
+    if (!cjsLexerReady) {
+      initCjsLexer()
+      cjsLexerReady = true
+    }
+    const { exports: exports_, reexports } = parseCjsSyntax(code, filename)
+    exports.push(...exports_)
+    reexports.forEach((name) => {
+      parseModule(name)
+    })
+  }
+
+  function parseModule(name: string) {
+    const resolvedModuleUrl = import.meta.resolve(name, pathToFileURL(filename))
+    const resolveModulePath = fileURLToPath(resolvedModuleUrl)
+    const fileContent = readFileSync(resolveModulePath, 'utf-8')
+    const ext = extname(resolvedModuleUrl)
+    const isTs = ext === '.ts' || ext === '.cts' || ext === '.mts'
+    // TODO: check if in node_modules, what if it should be processed by another module loader? -- >:((((
+    const code = isTs
+      ? module.stripTypeScriptTypes(fileContent)
+      : fileContent
+    let format: 'module' | 'commonjs'
+    if (ext === '.cjs' || ext === '.cts') {
+      format = 'commonjs'
+    }
+    else if (ext === '.mjs' || ext === '.mts') {
+      format = 'module'
+    }
+    else {
+      // TODO: node has a flag to switch the behavior
+      const pkgJsonPath = module.findPackageJSON(resolvedModuleUrl) // min Node 22.14
+      const pkgJson = pkgJsonPath ? JSON.parse(readFileSync(pkgJsonPath, 'utf-8')) : {}
+      if (pkgJson?.type === 'module') {
+        format = 'module'
+      }
+      else {
+        format = 'commonjs'
+      }
+    }
+    collectModuleExports(resolveModulePath, code, format, exports)
+  }
+
+  return Array.from(new Set(exports))
 }
