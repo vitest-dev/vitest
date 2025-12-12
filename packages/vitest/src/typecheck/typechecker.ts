@@ -335,6 +335,8 @@ export class Typechecker {
         return
       }
 
+      let resolved = false
+
       child.process.stdout.on('data', (chunk) => {
         dataReceived = true
         this._output += chunk
@@ -361,7 +363,6 @@ export class Typechecker {
 
       // Also capture stderr for configuration errors like missing tsconfig
       child.process.stderr?.on('data', (chunk) => {
-        dataReceived = true
         this._output += chunk
       })
 
@@ -371,9 +372,16 @@ export class Typechecker {
       )
 
       function onError(cause: Error) {
+        if (resolved) {
+          return
+        }
         clearTimeout(timeout)
+        clearTimeout(winTimeout)
+        resolved = true
         reject(new Error('Spawning typechecker failed - is typescript installed?', { cause }))
       }
+
+      let winTimeout: NodeJS.Timeout | undefined
 
       child.process.once('spawn', () => {
         this._onParseStart?.()
@@ -383,11 +391,13 @@ export class Typechecker {
           // on Windows, the process might be spawned but fail to start
           // we wait for a potential error here. if "close" event didn't trigger,
           // we resolve the promise
-          setTimeout(() => {
+          winTimeout = setTimeout(() => {
+            resolved = true
             resolve({ result: child })
           }, 200)
         }
         else {
+          resolved = true
           resolve({ result: child })
         }
       })
