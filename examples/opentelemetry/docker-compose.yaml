@@ -2,7 +2,7 @@ services:
   # for testing open-telemetry integration locally
   # https://www.jaegertracing.io/docs/2.12/getting-started/
   jaeger:
-    image: cr.jaegertracing.io/jaegertracing/jaeger:2.12.0
+    image: cr.jaegertracing.io/jaegertracing/jaeger:2.13.0
     # Assign ports for Jaeger UI and OTLP receiver
     ports:
       # UI http://localhost:16686

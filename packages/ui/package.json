@@ -83,11 +83,11 @@
     "typescript": "^5.9.3",
     "unocss": "catalog:",
     "vite": "^5.0.0",
-    "vite-plugin-pages": "^0.33.1",
+    "vite-plugin-pages": "^0.33.2",
     "vitest-browser-vue": "2.0.1",
     "vue": "catalog:",
-    "vue-router": "^4.6.3",
-    "vue-tsc": "^3.1.5",
+    "vue-router": "^4.6.4",
+    "vue-tsc": "^3.1.8",
     "vue-virtual-scroller": "2.0.0-beta.8"
   }
 }
