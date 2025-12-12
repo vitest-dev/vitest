@@ -125,6 +125,7 @@ export function WorkspaceVitestPlugin(
         this.meta.watchMode = false
       },
       config(viteConfig) {
+        const originalDefine = { ...viteConfig.define } // stash original defines for browser mode
         const defines: Record<string, any> = deleteDefineConfig(viteConfig)
 
         const testConfig = viteConfig.test || {}
@@ -197,6 +198,7 @@ export function WorkspaceVitestPlugin(
         }
 
         ;(config.test as ResolvedConfig).defines = defines
+        ;(config.test as ResolvedConfig).viteDefine = originalDefine
 
         const classNameStrategy
           = (typeof testConfig.css !== 'boolean'
