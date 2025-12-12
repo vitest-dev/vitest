@@ -235,6 +235,26 @@ Some features will not work due to the nature of `viteModuleRunner`, including:
 - no `plugins`: plugins are not applied because there is no transformation phase
 - no `alias`: aliases are not applied because there is no transformation phase
 
+With regards to mocking, it is also important to point out that ES modules do not support property override. This means that code like this won't work anymore:
+
+```ts
+import * as module from './some-module.js'
+import { vi } from 'vitest'
+
+vi.spyOn(module, 'function').mockImplementation(() => 42)
+```
+
+However, Vitest supports autospying on modules without overriding their implementation. When `vi.mock` is called with a `spy: true` argument, the module is mocked in a way that preserves original implementations, but all exported functions are wrapped in a `vi.fn()` spy:
+
+```ts
+import * as module from './some-module.js'
+import { vi } from 'vitest'
+
+vi.mock('./some-module.js', { spy: true })
+
+module.function.mockImplementation(() => 42)
+```
+
 ### TypeScript
 
 If you are using Node.js 22.18/23.6 or higher, then TypeScript will be [transformed natively](https://nodejs.org/en/learn/typescript/run-natively) by Node.js.

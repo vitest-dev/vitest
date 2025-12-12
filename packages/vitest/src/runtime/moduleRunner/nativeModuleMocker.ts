@@ -130,23 +130,6 @@ ${exports.map((key, index) => {
       return
     }
 
-    const mockedFactoryResult = mockedModule.resolve()
-    // the factory is _not_ a promise, we can just take returned exports without
-    // parsing the original file
-    if (typeof mockedFactoryResult.then !== 'function') {
-      const keys = Object.keys(mockedFactoryResult)
-      const manualMockedModule = createManualModuleSource(moduleId, keys)
-
-      return {
-        format: 'module',
-        source: manualMockedModule,
-        shortCircuit: true,
-      }
-    }
-    // noop the error handling to avoid unhandled rejections
-    // it will still throw an error when importing the module
-    mockedFactoryResult.then(() => {}, () => {})
-
     // since the factory returned an async result, we have to figure out keys synchronosly somehow
     // so we parse the module with es/cjs-module-lexer to find the original exports -- we assume the same ones are returned
     // injecting new keys is not supported (and should not be advised anyway)
@@ -175,6 +158,13 @@ ${exports.map((key, index) => {
       throw new Error(`Mock ${id} wasn't registered. This is probably a Vitest error. Please, open a new issue with reproduction.`)
     }
     return mock.resolve()
+  }
+
+  public importActual<T>(rawId: string, importer: string, _callstack?: string[] | null): Promise<T> {
+    const resolvedId = import.meta.resolve(rawId, pathToFileURL(importer).toString())
+    const url = new URL(resolvedId)
+    url.searchParams.set('mock', 'actual')
+    return import(url.toString())
   }
 }
 

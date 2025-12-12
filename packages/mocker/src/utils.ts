@@ -6,15 +6,24 @@ export function cleanUrl(url: string): string {
 export function createManualModuleSource(moduleUrl: string, exports: string[], globalAccessor = '"__vitest_mocker__"'): string {
   const source = `
 const __factoryModule__ = globalThis[${globalAccessor}].getFactoryModule("${moduleUrl}");
-const module = typeof __factoryModule__.then === 'function' ? await __factoryModule__ : __factoryModule__
+const module = typeof __factoryModule__.then === 'function' ? {} : __factoryModule__
   `
   const keys = exports
     .map((name) => {
-      if (name === 'default') {
-        return `export default module["default"];`
-      }
-      return `export const ${name} = module["${name}"];`
+      return `let __${name} = module["${name}"]
+export { __${name} as "${name}" }`
     })
     .join('\n')
-  return `${source}\n${keys}`
+  let code = `${source}\n${keys}`
+  // this prevents recursion
+  code += `
+if (typeof __factoryModule__.then === 'function') {
+  __factoryModule__.then((resolvedModule) => {
+    ${exports.map((name) => {
+      return `__${name} = resolvedModule["${name}"];`
+    }).join('\n')}
+  })
+}
+  `
+  return code
 }

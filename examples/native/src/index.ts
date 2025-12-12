@@ -1,1 +1,2 @@
-export { add, squared } from './basic.ts'
+export { add, hello, squared } from './basic.ts'
+export const helloMe = 'world'

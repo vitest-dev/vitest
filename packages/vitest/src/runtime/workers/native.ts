@@ -29,8 +29,19 @@ export async function setupNodeLoaderHooks(worker: WorkerSetupContext): Promise<
   if (typeof module.registerHooks === 'function') {
     module.registerHooks({
       resolve(specifier, context, nextResolve) {
+        if (specifier.includes('mock=actual')) {
+          // url is already resolved by `importActual`
+          return {
+            url: specifier,
+            shortCircuit: true,
+          }
+        }
+
         const isVitest = specifier.includes('%3Fvitest=')
-        const result = nextResolve(isVitest ? specifier.replace(REGEXP_VITEST, '') : specifier, context)
+        const result = nextResolve(
+          isVitest ? specifier.replace(REGEXP_VITEST, '') : specifier,
+          context,
+        )
 
         // avoid /node_modules/ for performance reasons
         if (context.parentURL && result.url && !result.url.includes('/node_modules/')) {
@@ -47,6 +58,7 @@ export async function setupNodeLoaderHooks(worker: WorkerSetupContext): Promise<
         // TODO: better distDir check
         if (
           worker.config.experimental.nodeLoader === false
+          || !context.parentURL
           || result.url.includes(distDir)
           || context.parentURL?.toString().includes(distDir)
         ) {
@@ -54,10 +66,7 @@ export async function setupNodeLoaderHooks(worker: WorkerSetupContext): Promise<
         }
 
         const mocker = getNativeMocker()
-        if (!mocker || !context.parentURL) {
-          return result
-        }
-        const mockedResult = mocker.resolveMockedModule(result.url, context.parentURL)
+        const mockedResult = mocker?.resolveMockedModule(result.url, context.parentURL)
         if (mockedResult != null) {
           return mockedResult
         }
@@ -134,6 +143,10 @@ const ignoreFormats = new Set<string>([
 
 function createLoadHook(_worker: WorkerSetupContext): module.LoadHookSync {
   return (url, context, nextLoad) => {
+    if (url.includes('mock=actual')) {
+      return nextLoad(url.replace(/\?mock=actual/, ''), context)
+    }
+
     const result: module.LoadFnOutput = url.includes('mock=manual') && isBuiltin(cleanUrl(url))
       ? { format: 'module' } // avoid resolving the builtin module that is supposed to be mocked
       : nextLoad(url, context)
@@ -170,6 +183,9 @@ function createLoadHook(_worker: WorkerSetupContext): module.LoadHookSync {
 
     const filename = url.startsWith('file://') ? fileURLToPath(url) : url
     const source = result.source.toString()
+    const transformedCode = result.format?.includes('typescript')
+      ? module.stripTypeScriptTypes(source)
+      : source
 
     let _ms: MagicString | undefined
     const ms = () => _ms || (_ms = new MagicString(source))
@@ -179,7 +195,7 @@ function createLoadHook(_worker: WorkerSetupContext): module.LoadHookSync {
     }
 
     hoistMocks(
-      source,
+      transformedCode,
       filename,
       code => parse(code, {
         ecmaVersion: 'latest',
