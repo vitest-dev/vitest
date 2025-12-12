@@ -1,6 +1,5 @@
 import type { ManualMockedModule, MockedModule } from '@vitest/mocker'
 import type { EvaluatedModuleNode } from 'vite/module-runner'
-import type { PendingSuiteMock } from '../../types/mocker'
 import type { BareModuleMockerOptions } from './bareModuleMocker'
 import type { VitestModuleRunner } from './moduleRunner'
 import { resolve } from 'node:path'
@@ -16,7 +15,6 @@ export interface VitestMockerOptions extends BareModuleMockerOptions {
 }
 
 export class VitestMocker extends BareModuleMocker {
-  static pendingIds: PendingSuiteMock[] = []
   private filterPublicKeys: (symbol | string)[]
 
   constructor(public moduleRunner: VitestModuleRunner, protected options: VitestMockerOptions) {

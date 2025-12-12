@@ -325,7 +325,7 @@ const isWindows = process.platform === 'win32'
 // C:/root/id.js -> /id.js
 // C:\root\id.js -> /id.js
 // TODO: expose this in vite/module-runner
-function normalizeModuleId(file: string): string {
+export function normalizeModuleId(file: string): string {
   if (prefixedBuiltins.has(file)) {
     return file
   }

@@ -11,6 +11,7 @@ export default defineConfig({
     includeSource: ['./src/in-source/*'],
     experimental: {
       viteModuleRunner: false,
+      // nodeLoader: false,
     },
   },
 })

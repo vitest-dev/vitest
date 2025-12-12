@@ -1,8 +1,6 @@
 import type { Declaration, ExportDefaultDeclaration, ExportNamedDeclaration, Expression, Pattern, Positioned, Program } from './esmWalker'
 import MagicString from 'magic-string'
-import {
-  getArbitraryModuleIdentifier,
-} from './esmWalker'
+import { getArbitraryModuleIdentifier } from './esmWalker'
 
 export interface AutomockOptions {
   /**
@@ -28,7 +26,7 @@ export function automockModule(
   for (const _node of ast.body) {
     if (_node.type === 'ExportAllDeclaration') {
       throw new Error(
-        `automocking files with \`export *\` is not supported in browser mode because it cannot be statically analysed`,
+        `automocking files with \`export *\` is not supported because it cannot be easily statically analysed`,
       )
     }
 

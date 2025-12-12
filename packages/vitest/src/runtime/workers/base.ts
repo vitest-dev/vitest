@@ -1,3 +1,4 @@
+import type { TestModuleMocker } from '@vitest/mocker'
 import type { Environment } from '../../types/environment'
 import type { WorkerGlobalState, WorkerSetupContext } from '../../types/worker'
 import type { ContextModuleRunnerOptions } from '../moduleRunner/startVitestModuleRunner'
@@ -10,7 +11,6 @@ import { NativeModuleRunner } from '../../utils/nativeModuleRunner'
 import { Traces } from '../../utils/traces'
 import { VitestEvaluatedModules } from '../moduleRunner/evaluatedModules'
 import { createNodeImportMeta } from '../moduleRunner/moduleRunner'
-import { NativeModuleMocker } from '../moduleRunner/nativeModuleMocker'
 import { startVitestModuleRunner } from '../moduleRunner/startVitestModuleRunner'
 import { run } from '../runBaseTests'
 import { getSafeWorkerState, provideWorkerState } from '../utils'
@@ -20,7 +20,7 @@ let _moduleRunner: TestModuleRunner
 const evaluatedModules = new VitestEvaluatedModules()
 const moduleExecutionInfo = new Map()
 
-function startModuleRunner(options: ContextModuleRunnerOptions): TestModuleRunner {
+async function startModuleRunner(options: ContextModuleRunnerOptions): Promise<TestModuleRunner> {
   if (_moduleRunner) {
     return _moduleRunner
   }
@@ -28,9 +28,11 @@ function startModuleRunner(options: ContextModuleRunnerOptions): TestModuleRunne
   if (options.state.config.experimental.viteModuleRunner === false) {
     const root = options.state.config.root
     const state = () => getSafeWorkerState() || options.state
-    _moduleRunner = new NativeModuleRunner(
-      root,
-      new NativeModuleMocker({
+    let mocker: TestModuleMocker | undefined
+    if (options.state.config.experimental.nodeLoader !== false) {
+      // this additionally imports acorn/magic-string
+      const { NativeModuleMocker } = await import('../moduleRunner/nativeModuleMocker')
+      mocker = new NativeModuleMocker({
         resolveId(id, importer) {
           return state().rpc.resolve(id, importer, '__vitest__')
         },
@@ -41,7 +43,11 @@ function startModuleRunner(options: ContextModuleRunnerOptions): TestModuleRunne
           return state().filepath
         },
         spyModule,
-      }),
+      })
+    }
+    _moduleRunner = new NativeModuleRunner(
+      root,
+      mocker,
     )
     return _moduleRunner
   }
@@ -57,7 +63,7 @@ let _environmentTime: number
 export async function setupBaseEnvironment(context: WorkerSetupContext): Promise<() => Promise<void>> {
   if (context.config.experimental.viteModuleRunner === false) {
     const { setupNodeLoaderHooks } = await import('./native')
-    setupNodeLoaderHooks(context)
+    await setupNodeLoaderHooks(context)
   }
 
   const startTime = performance.now()
@@ -136,7 +142,7 @@ export async function runBaseTests(method: 'run' | 'collect', state: WorkerGloba
     })
   })
 
-  const moduleRunner = startModuleRunner({
+  const moduleRunner = await startModuleRunner({
     state,
     evaluatedModules: state.evaluatedModules,
     spyModule,

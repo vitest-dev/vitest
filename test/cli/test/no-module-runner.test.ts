@@ -177,6 +177,7 @@ test('no esm globals', () => {
   `)
 })
 
+// TODO: test that in-souce is imported by another test and doesn't run there
 test('in-source tests in CJS work', async () => {
   const { stderr, testTree } = await runInlineTests({
     'in-source.js': `

@@ -3,7 +3,7 @@
     "target": "es2020",
     "module": "nodenext",
     "moduleResolution": "node16",
-    "types": ["vitest/importMeta"],
+    "types": ["vitest/importMeta", "@types/node"],
     "allowImportingTsExtensions": true,
     "strict": true,
     "declaration": true,

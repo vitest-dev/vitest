@@ -867,6 +867,8 @@ export interface InlineConfig {
      * `import.meta.vitest` and `vi.mock`.
      *
      * If you don't use these features, you can disable this.
+     *
+     * This option only affects `loader.load` method, Vitest always defines a `loader.resolve` to populate the module graph.
      */
     nodeLoader?: boolean
   }

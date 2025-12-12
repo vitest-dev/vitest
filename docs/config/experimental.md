@@ -218,10 +218,14 @@ While running JSDOM/happy-dom tests in a permissive fake environment might be ju
 
 ### Limitations
 
-Some Vitest features rely on files being transformed. Vitest uses [Node.js Loaders API](https://nodejs.org/api/module.html#customization-hooks) to transform certain files to support these features:
+Some Vitest features rely on files being transformed. Vitest uses synchronous [Node.js Loaders API](https://nodejs.org/api/module.html#customization-hooks) to transform certain files to support these features:
 
 - [`import.meta.vitest`](/guide/in-source)
-- partial [`vi.mock`](/api/vi#vi-mock) support
+- [`vi.mock`](/api/vi#vi-mock)
+
+::: warning
+This means that Vitest requires at least Node 22.15 for those features to work. At the moment, they also do not work in Deno or Bun.
+:::
 
 This could affect performance because Vitest needs to read the file and process it. If you do not use these features, you can disable them by setting `experimental.nodeLoader` to `false`.
 
