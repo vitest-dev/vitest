@@ -828,11 +828,11 @@ export interface TestAnnotationArtifact extends TestArtifactBase {
   annotation: TestAnnotation
 }
 
-type VisualRegressionArtifactAttachment = TestAttachment & ({
-  name: 'reference' | 'actual'
+interface VisualRegressionArtifactAttachment extends TestAttachment {
+  name: 'reference' | 'actual' | 'diff'
   width: number
   height: number
-} | { name: 'diff' })
+}
 
 /**
  * @experimental
