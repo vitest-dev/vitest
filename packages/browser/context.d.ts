@@ -2,7 +2,6 @@ import { SerializedConfig } from 'vitest'
 import { StringifyOptions, BrowserCommands } from 'vitest/internal/browser'
 import { ARIARole } from './aria-role.js'
 import {} from './matchers.js'
-import { AtLeastOneOf, ExactlyOneOf } from '@vitest/utils' // @todo fix these
 
 export type BufferEncoding =
   | 'ascii'
@@ -209,12 +208,13 @@ export interface UserEvent {
    */
   tripleClick: (element: Element | Locator, options?: UserEventTripleClickOptions) => Promise<void>
   /**
-   * Simulates wheel events on an element.
+   * Triggers a {@link https://developer.mozilla.org/en-US/docs/Web/API/Element/wheel_event|`wheel` event} on an element.
    *
    * @param element - The target element to receive wheel events.
    * @param options - Scroll configuration using `delta` or `direction`.
    * @returns A promise that resolves when all wheel events have been dispatched.
    *
+   * @since 4.1.0
    * @see {@link https://vitest.dev/api/browser/interactivity#userevent-wheel}
    *
    * @example
@@ -225,24 +225,7 @@ export interface UserEvent {
    * // Scroll up 5 times
    * await userEvent.wheel(container, { direction: 'up', times: 5 })
    */
-  wheel(element: Element | Locator, options: WheelOptions): Promise<void>
-  /**
-   * Simulates wheel events at the current pointer position.
-   *
-   * @param options - Scroll configuration using `delta` or `direction`.
-   * @returns A promise that resolves when all wheel events have been dispatched.
-   *
-   * @see {@link https://vitest.dev/api/browser/interactivity#userevent-wheel}
-   *
-   * @example
-   * // Scroll down by 100 pixels
-   * await userEvent.wheel({ delta: { y: 100 } })
-   *
-   * @example
-   * // Scroll up 5 times
-   * await userEvent.wheel({ direction: 'up', times: 5 })
-   */
-  wheel(options: WheelOptions): Promise<void>
+  wheel(element: Element | Locator, options: UserEventWheelOptions): Promise<void>
   /**
    * Choose one or more values from a select element. Uses provider's API under the hood.
    * If select doesn't have `multiple` attribute, only the first value will be selected.
@@ -380,43 +363,58 @@ export interface UserEventDoubleClickOptions {}
 export interface UserEventTripleClickOptions {}
 export interface UserEventDragAndDropOptions {}
 export interface UserEventUploadOptions {}
+
 /**
- * Options for simulating wheel events.
+ * Base options shared by all wheel event configurations.
+ *
+ * @since 4.1.0
+ */
+export interface UserEventWheelBaseOptions {
+  /**
+   * Number of wheel events to fire. Defaults to `1`.
+   *
+   * Useful for triggering multiple scroll steps in a single call.
+   */
+  times?: number
+}
+
+/**
+ * Wheel options using pixel-based `delta` values for precise scroll control.
+ *
+ * @since 4.1.0
+ */
+export interface UserEventWheelDeltaOptions extends UserEventWheelBaseOptions {
+  /**
+   * Precise scroll delta values in pixels. At least one axis must be specified.
+   *
+   * - Positive `y` scrolls down, negative `y` scrolls up.
+   * - Positive `x` scrolls right, negative `x` scrolls left.
+   */
+  delta: { x: number; y?: number } | { x?: number; y: number }
+  direction?: undefined
+}
+
+/**
+ * Wheel options using semantic `direction` values for simpler scroll control.
+ *
+ * @since 4.1.0
+ */
+export interface UserEventWheelDirectionOptions extends UserEventWheelBaseOptions {
+  /**
+   * Semantic scroll direction. Use this for readable tests when exact pixel values don't matter.
+   */
+  direction: 'up' | 'down' | 'left' | 'right'
+  delta?: undefined
+}
+
+/**
+ * Options for triggering wheel events.
  *
  * Specify scrolling using either `delta` for precise pixel values, or `direction` for semantic scrolling. These are mutually exclusive.
  *
- * @example
- * // Precise control with delta
- * { delta: { y: -100 } }
- *
- * @example
- * // Semantic scrolling with direction
- * { direction: 'down', times: 3 }
+ * @since 4.1.0
  */
-export type WheelOptions = ExactlyOneOf<
-  {
-    /**
-     * Precise scroll delta values in pixels. At least one axis must be specified.
-     *
-     * - Positive `y` scrolls down, negative `y` scrolls up.
-     * - Positive `x` scrolls right, negative `x` scrolls left.
-     */
-    delta: AtLeastOneOf<{ x: number, y: number }>,
-    /**
-     * Semantic scroll direction. Use this for readable tests when exact pixel values don't matter.
-     */
-    direction: 'up' | 'down' | 'left' | 'right',
-    /**
-     * Number of wheel events to fire. Defaults to `1`.
-     *
-     * Useful for simulating multiple scroll steps in a single call.
-     */
-    times?: number,
-  },
-  'delta' | 'direction'
->
-
-export type WheelOptionsWithDelta = Extract<WheelOptions, { delta: { x?: number; y?: number } }>
+export type UserEventWheelOptions = UserEventWheelDeltaOptions | UserEventWheelDirectionOptions
 
 export interface LocatorOptions {
   /**
@@ -563,12 +561,12 @@ export interface Locator extends LocatorSelectors {
    */
   tripleClick(options?: UserEventTripleClickOptions): Promise<void>
   /**
-   * Simulates wheel events on an element.
+   * Triggers a {@link https://developer.mozilla.org/en-US/docs/Web/API/Element/wheel_event|`wheel` event} on an element.
    *
-   * @param element - The target element to receive wheel events.
    * @param options - Scroll configuration using `delta` or `direction`.
    * @returns A promise that resolves when all wheel events have been dispatched.
    *
+   * @since 4.1.0
    * @see {@link https://vitest.dev/api/browser/interactivity#userevent-wheel}
    *
    * @example
@@ -579,7 +577,7 @@ export interface Locator extends LocatorSelectors {
    * // Scroll up 5 times
    * await container.wheel({ direction: 'up', times: 5 })
    */
-  wheel(options: WheelOptions): Promise<void>
+  wheel(options: UserEventWheelOptions): Promise<void>
   /**
    * Clears the input element content
    * @see {@link https://vitest.dev/api/browser/interactivity#userevent-clear}

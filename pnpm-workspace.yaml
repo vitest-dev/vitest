@@ -48,7 +48,7 @@ catalog:
   '@vitejs/plugin-vue': ^6.0.2
   '@vueuse/core': ^12.8.2
   acorn-walk: ^8.3.4
-  birpc: ^2.8.0
+  birpc: ^3.0.0
   cac: ^6.7.14
   chai: ^6.2.1
   flatted: ^3.3.3

@@ -88,28 +88,30 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider<ResolvedCover
       sourceMap as any,
     )
 
-    const transformMap = new GenMapping(sourceMap)
+    if (!id.includes('vitest-uncovered-coverage=true')) {
+      const transformMap = new GenMapping(sourceMap)
 
-    eachMapping(new TraceMap(sourceMap as any), (mapping) => {
-      addMapping(transformMap, {
-        generated: { line: mapping.generatedLine, column: mapping.generatedColumn },
-        original: { line: mapping.generatedLine, column: mapping.generatedColumn },
-        content: sourceCode,
-        name: mapping.name || '',
-        source: mapping.source || '',
+      eachMapping(new TraceMap(sourceMap as any), (mapping) => {
+        addMapping(transformMap, {
+          generated: { line: mapping.generatedLine, column: mapping.generatedColumn },
+          original: { line: mapping.generatedLine, column: mapping.generatedColumn },
+          content: sourceCode,
+          name: mapping.name || '',
+          source: mapping.source || '',
+        })
       })
-    })
 
-    const encodedMap = toEncodedMap(transformMap)
-    delete encodedMap.file
-    delete encodedMap.ignoreList
-    delete encodedMap.sourceRoot
+      const encodedMap = toEncodedMap(transformMap)
+      delete encodedMap.file
+      delete encodedMap.ignoreList
+      delete encodedMap.sourceRoot
 
-    this.instrumenter.instrumentSync(
-      sourceCode,
-      id,
-      encodedMap as any,
-    )
+      this.instrumenter.instrumentSync(
+        sourceCode,
+        id,
+        encodedMap as any,
+      )
+    }
 
     const map = this.instrumenter.lastSourceMap() as any
     this.transformedModuleIds.add(id)
@@ -225,7 +227,7 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider<ResolvedCover
       }
 
       // Make sure file is not served from cache so that instrumenter loads up requested file coverage
-      await transform(`${filename}?cache=${cacheKey}`)
+      await transform(`${filename}?cache=${cacheKey}&vitest-uncovered-coverage=true`)
       const lastCoverage = this.instrumenter.lastFileCoverage()
       coverageMap.addFileCoverage(lastCoverage)
 
