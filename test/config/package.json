@@ -7,6 +7,7 @@
   },
   "devDependencies": {
     "@test/test-dep-config": "link:./deps/test-dep-config",
+    "@vitejs/test-dep-virtual": "file:./deps/test-dep-virtual",
     "@vitest/browser-playwright": "workspace:*",
     "@vitest/browser-preview": "workspace:*",
     "@vitest/browser-webdriverio": "workspace:*",
