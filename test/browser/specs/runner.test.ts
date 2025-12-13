@@ -128,6 +128,10 @@ describe('console logging tests', async () => {
     expect(stdout).toMatch(/time: [\d.]+ ms/)
     expect(stdout).toMatch(/\[console-time-fake\]: [\d.]+ ms/)
     expect(stdout).not.toContain('[console-time-fake]: 0 ms')
+    expect(stdout).toContain('hello from one')
+    expect(stdout).toContain(`hello from two {
+  "hello": "object",
+}`)
   })
 
   test('logs are redirected to stderr', () => {
