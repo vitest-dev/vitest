@@ -129,6 +129,10 @@ If you are developing a custom integration on top of Vitest, you can use [`vites
 
 ### Import Breakdown
 
+::: tip FEEDBACK
+Please, leave feedback regarding this feature in a [GitHub Discussion](https://github.com/vitest-dev/vitest/discussions/9224).
+:::
+
 The Module Graph tab also provides an Import Breakdown with a list of modules that take the longest time to load (top 10 by default, but you can press "Show more" to load 10 more), sorted by Total Time.
 
 <img alt="Import breakdown with a list of top 10 modules that take the longest time to load" img-light src="/ui/light-import-breakdown.png">

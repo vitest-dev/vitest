@@ -101,7 +101,7 @@ export default class HTMLReporter implements Reporter {
       processAttachments(file)
       const projectName = file.projectName || ''
       const resolvedConfig = this.ctx.getProjectByName(projectName).config
-      const browser = resolvedConfig.browser.enabled && resolvedConfig.browser.ui
+      const browser = resolvedConfig.browser.enabled
       result.moduleGraph[projectName] ??= {}
       result.moduleGraph[projectName][file.filepath] = await getModuleGraph(
         this.ctx,

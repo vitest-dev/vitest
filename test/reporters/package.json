@@ -6,6 +6,7 @@
     "test": "vitest"
   },
   "devDependencies": {
+    "@vitest/browser-playwright": "workspace:*",
     "@vitest/runner": "workspace:*",
     "flatted": "^3.3.3",
     "pkg-reporter": "./reportPkg/",

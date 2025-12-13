@@ -538,6 +538,12 @@ function createSuite() {
     factoryOrOptions?: SuiteFactory | TestOptions,
     optionsOrFactory?: number | SuiteFactory,
   ) {
+    if (getCurrentTest()) {
+      throw new Error(
+        'Calling the suite function inside test function is not allowed. It can be only called at the top level or inside another suite function.',
+      )
+    }
+
     let mode: RunMode = this.only
       ? 'only'
       : this.skip

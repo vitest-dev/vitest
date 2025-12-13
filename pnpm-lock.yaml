@@ -52,8 +52,8 @@ catalogs:
       specifier: ^8.3.4
       version: 8.3.4
     birpc:
-      specifier: ^2.8.0
-      version: 2.8.0
+      specifier: ^3.0.0
+      version: 3.0.0
     cac:
       specifier: ^6.7.14
       version: 6.7.14
@@ -152,8 +152,8 @@ importers:
         specifier: ^6.2.0
         version: 6.2.0(@vue/compiler-sfc@3.5.25)(eslint@9.39.1(jiti@2.6.1))(typescript@5.9.3)(vitest@packages+vitest)
       '@antfu/ni':
-        specifier: ^27.0.1
-        version: 27.0.1
+        specifier: ^28.0.0
+        version: 28.0.0
       '@playwright/test':
         specifier: ^1.57.0
         version: 1.57.0
@@ -370,6 +370,21 @@ importers:
         specifier: workspace:*
         version: link:../../packages/vitest
 
+  examples/opentelemetry:
+    devDependencies:
+      '@opentelemetry/sdk-node':
+        specifier: ^0.208.0
+        version: 0.208.0(@opentelemetry/api@1.9.0)
+      '@vitest/browser-playwright':
+        specifier: workspace:*
+        version: link:../../packages/browser-playwright
+      vite:
+        specifier: ^7.1.5
+        version: 7.1.5(@types/node@24.10.1)(jiti@2.6.1)(lightningcss@1.30.1)(sass-embedded@1.93.3)(sass@1.93.3)(terser@5.44.0)(tsx@4.21.0)(yaml@2.8.1)
+      vitest:
+        specifier: workspace:*
+        version: link:../../packages/vitest
+
   examples/profiling:
     devDependencies:
       vite:
@@ -480,7 +495,7 @@ importers:
         version: link:../runner
       birpc:
         specifier: 'catalog:'
-        version: 2.8.0
+        version: 3.0.0
       flatted:
         specifier: 'catalog:'
         version: 3.3.3
@@ -843,7 +858,7 @@ importers:
         version: 0.7.2
       birpc:
         specifier: 'catalog:'
-        version: 2.8.0
+        version: 3.0.0
       codemirror:
         specifier: ^5.65.18
         version: 5.65.18
@@ -1037,7 +1052,7 @@ importers:
         version: 8.3.4
       birpc:
         specifier: 'catalog:'
-        version: 2.8.0
+        version: 3.0.0
       cac:
         specifier: 'catalog:'
         version: 6.7.14(patch_hash=a8f0f3517a47ce716ed90c0cfe6ae382ab763b021a664ada2a608477d0621588)
@@ -1089,7 +1104,7 @@ importers:
     dependencies:
       birpc:
         specifier: 'catalog:'
-        version: 2.8.0
+        version: 3.0.0
       flatted:
         specifier: 'catalog:'
         version: 3.3.3
@@ -1214,6 +1229,9 @@ importers:
       '@test/test-dep-config':
         specifier: link:./deps/test-dep-config
         version: link:deps/test-dep-config
+      '@vitejs/test-dep-virtual':
+        specifier: file:./deps/test-dep-virtual
+        version: file:test/config/deps/test-dep-virtual
       '@vitest/browser-playwright':
         specifier: workspace:*
         version: link:../../packages/browser-playwright
@@ -1463,6 +1481,9 @@ importers:
 
   test/reporters:
     devDependencies:
+      '@vitest/browser-playwright':
+        specifier: workspace:*
+        version: link:../../packages/browser-playwright
       '@vitest/runner':
         specifier: workspace:*
         version: link:../../packages/runner
@@ -1645,8 +1666,8 @@ packages:
   '@antfu/install-pkg@1.1.0':
     resolution: {integrity: sha512-MGQsmw10ZyI+EJo45CdSER4zEb+p31LpDAFp2Z3gkSd1yqVZGi0Ebx++YTEMonJy4oChEMLsxZ64j8FH6sSqtQ==}
 
-  '@antfu/ni@27.0.1':
-    resolution: {integrity: sha512-I6SOlwJ0MN73ECYcr7VJHpqSseyd7bpshx6JAaD0zNowS4kSWzFsqg8ikQT7DnCLiD4AZ+FaQJQ8WAk0Qi89Vw==}
+  '@antfu/ni@28.0.0':
+    resolution: {integrity: sha512-GhP4MRAitPXH4pCG+XMHUnAUb9H+Jg/tC4XjD/siB3qwDjgVilKj4uoJP92K2zj6Av6lzsEvZosxRXpLt4IYGA==}
     engines: {node: '>=20'}
     hasBin: true
 
@@ -4541,6 +4562,9 @@ packages:
       vite: ^7.1.5
       vue: ^3.2.25
 
+  '@vitejs/test-dep-virtual@file:test/config/deps/test-dep-virtual':
+    resolution: {directory: test/config/deps/test-dep-virtual, type: directory}
+
   '@vitest/cjs-lib@file:test/browser/cjs-lib':
     resolution: {directory: test/browser/cjs-lib, type: directory}
 
@@ -5048,6 +5072,9 @@ packages:
 
   birpc@2.8.0:
     resolution: {integrity: sha512-Bz2a4qD/5GRhiHSwj30c/8kC8QGj12nNDwz3D4ErQ4Xhy35dsSDvF+RA/tWpjyU0pdGtSDiEk6B5fBGE1qNVhw==}
+
+  birpc@3.0.0:
+    resolution: {integrity: sha512-by+04pHuxpCEQcucAXqzopqfhyI8TLK5Qg5MST0cB6MP+JhHna9ollrtK9moVh27aq6Q6MEJgebD0cVm//yBkg==}
 
   body-parser@1.20.0:
     resolution: {integrity: sha512-DfJ+q6EPcGKZD1QWUjSpqp+Q7bDQTsQIF4zfUAtZ6qk+H/3/QRhg9CEp39ss+/T2vw0+HaidC0ecJj/DRLIaKg==}
@@ -7721,6 +7748,9 @@ packages:
   package-manager-detector@1.5.0:
     resolution: {integrity: sha512-uBj69dVlYe/+wxj8JOpr97XfsxH/eumMt6HqjNTmJDf/6NO9s+0uxeOneIz3AsPt2m6y9PqzDzd3ATcU17MNfw==}
 
+  package-manager-detector@1.6.0:
+    resolution: {integrity: sha512-61A5ThoTiDG/C8s8UMZwSorAGwMJ0ERVGj2OjoW5pAalsNOg15+iQiPzrLJ4jhZ1HJzmC2PIHT2oEiH3R5fzNA==}
+
   package-name-regex@2.0.6:
     resolution: {integrity: sha512-gFL35q7kbE/zBaPA3UKhp2vSzcPYx2ecbYuwv1ucE9Il6IIgBDweBlH8D68UFGZic2MkllKa2KHCfC1IQBQUYA==}
     engines: {node: '>=12'}
@@ -9727,11 +9757,11 @@ snapshots:
       package-manager-detector: 1.3.0
       tinyexec: 1.0.2
 
-  '@antfu/ni@27.0.1':
+  '@antfu/ni@28.0.0':
     dependencies:
       ansis: 4.2.0
       fzf: 0.5.2
-      package-manager-detector: 1.5.0
+      package-manager-detector: 1.6.0
       tinyexec: 1.0.2
       tinyglobby: 0.2.15
 
@@ -12655,6 +12685,8 @@ snapshots:
       vite: 7.1.5(@types/node@24.10.1)(jiti@2.6.1)(lightningcss@1.30.1)(sass-embedded@1.93.3)(sass@1.93.3)(terser@5.44.0)(tsx@4.21.0)(yaml@2.8.1)
       vue: 3.5.25(typescript@5.9.3)
 
+  '@vitejs/test-dep-virtual@file:test/config/deps/test-dep-virtual': {}
+
   '@vitest/cjs-lib@file:test/browser/cjs-lib': {}
 
   '@vitest/eslint-plugin@1.4.1(eslint@9.39.1(jiti@2.6.1))(typescript@5.9.3)(vitest@packages+vitest)':
@@ -13198,6 +13230,8 @@ snapshots:
   binary-extensions@2.2.0: {}
 
   birpc@2.8.0: {}
+
+  birpc@3.0.0: {}
 
   body-parser@1.20.0:
     dependencies:
@@ -16439,6 +16473,8 @@ snapshots:
   package-manager-detector@1.3.0: {}
 
   package-manager-detector@1.5.0: {}
+
+  package-manager-detector@1.6.0: {}
 
   package-name-regex@2.0.6: {}
 

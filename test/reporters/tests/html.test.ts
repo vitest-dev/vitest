@@ -1,10 +1,10 @@
 import fs from 'node:fs'
 import zlib from 'node:zlib'
+import { playwright } from '@vitest/browser-playwright'
 import { parse } from 'flatted'
 import { resolve } from 'pathe'
 import { describe, expect, it } from 'vitest'
-
-import { runVitest } from '../../test-utils'
+import { runInlineTests, runVitest } from '../../test-utils'
 
 describe('html reporter', async () => {
   const vitestRoot = resolve(import.meta.dirname, '../../..')
@@ -99,4 +99,34 @@ describe('html reporter', async () => {
     expect(resultJson).toMatchSnapshot(`tests are failing`)
     expect(indexHtml).toMatch('window.METADATA_PATH="html.meta.json.gz"')
   }, 120000)
+})
+
+it('browser mode headless', async () => {
+  const result = await runInlineTests({
+    'basic.test.ts': /* ts */`
+import { test } from "vitest";
+test('basic', () => {});
+`,
+  }, {
+    reporters: ['default', 'html'],
+  }, {}, {
+    test: {
+      browser: {
+        enabled: true,
+        provider: playwright(),
+        headless: true,
+        instances: [
+          { browser: 'chromium' as const },
+        ],
+      },
+    },
+  })
+  expect(result.errorTree()).toMatchInlineSnapshot(`
+    {
+      "basic.test.ts": {
+        "basic": "passed",
+      },
+    }
+  `)
+  expect(result.fs.statFile('html/index.html').isFile()).toBe(true)
 })
