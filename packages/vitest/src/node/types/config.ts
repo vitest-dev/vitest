@@ -683,10 +683,10 @@ export interface InlineConfig {
   slowTestThreshold?: number
 
   /**
- * Number of times to repeat the tests.
- * @default 0
- *
- */
+   * Number of times to repeat the tests.
+   * @default 0
+   *
+   */
   repeats?: number
 
   /**

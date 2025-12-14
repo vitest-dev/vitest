@@ -525,6 +525,13 @@ Stop test execution when given number of tests have failed (default: `0`)
 
 Retry the test specific number of times if it fails (default: `0`)
 
+### repeats
+
+- **CLI:** `--repeats <number>`
+- **Config:** [repeats](/config/repeats)
+
+Repeat the test a specific number of times regardless of the result (default: `0`)
+
 ### diff.aAnnotation
 
 - **CLI:** `--diff.aAnnotation <annotation>`

@@ -134,6 +134,6 @@ export function serializeConfig(project: TestProject): SerializedConfig {
       fsModuleCache: config.experimental.fsModuleCache ?? false,
       printImportBreakdown: config.experimental.printImportBreakdown,
     },
-    repeats: config.repeats
+    repeats: config.repeats,
   }
 }
