@@ -35,6 +35,7 @@ export function serializeConfig(project: TestProject): SerializedConfig {
     // TODO: non serializable function?
     diff: config.diff,
     retry: config.retry,
+    repeats: config.repeats,
     disableConsoleIntercept: config.disableConsoleIntercept,
     root: config.root,
     name: config.name,
@@ -134,6 +135,5 @@ export function serializeConfig(project: TestProject): SerializedConfig {
       fsModuleCache: config.experimental.fsModuleCache ?? false,
       printImportBreakdown: config.experimental.printImportBreakdown,
     },
-    repeats: config.repeats,
   }
 }
