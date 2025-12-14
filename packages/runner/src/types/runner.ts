@@ -39,6 +39,7 @@ export interface VitestRunnerConfig {
   retry: number
   includeTaskLocation?: boolean
   diffOptions?: DiffOptions
+  repeats?: number
 }
 
 /**

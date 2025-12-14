@@ -651,6 +651,10 @@ export const cliOptionsConfig: VitestCLIOptions = {
       'Threshold in milliseconds for a test or suite to be considered slow (default: `300`)',
     argument: '<threshold>',
   },
+  repeats: {
+    description: 'Number of times to repeat each test',
+    argument: '<repeats>',
+  },
   teardownTimeout: {
     description:
       'Default timeout of a teardown function in milliseconds (default: `10000`)',
