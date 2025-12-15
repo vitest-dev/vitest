@@ -231,6 +231,7 @@ it('exports snapshot', async ({ skip, task }) => {
             "DecodedMap": "function",
             "SpyModule": "object",
             "__INTERNAL": "object",
+            "browserFormat": "function",
             "collectTests": "function",
             "format": "function",
             "getOriginalPosition": "function",
