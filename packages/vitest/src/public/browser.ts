@@ -12,6 +12,7 @@ export { collectTests, startTests } from '@vitest/runner'
 export * as SpyModule from '@vitest/spy'
 export type { LoupeOptions, ParsedStack, StringifyOptions } from '@vitest/utils'
 export {
+  browserFormat,
   format,
   inspect,
   stringify,
