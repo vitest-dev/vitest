@@ -212,7 +212,7 @@ Disabling this flag will disable _all_ file transforms:
 - test files and your source code are not processed by Vite
 - your global setup files are not processed
 - your custom runner/pool/environment files are not processed
-- your config file is still processed by Vite's config resolution mechanism (this happens before Vitest knows the flag)
+- your config file is still processed by Vite (this happens before Vitest knows the `viteModuleRunner` flag)
 
 ::: warning
 At the moment, Vitest still requires Vite for certain functionality like the module graph or watch mode.
@@ -234,12 +234,13 @@ Some Vitest features rely on files being transformed. Vitest uses synchronous [N
 
 - [`import.meta.vitest`](/guide/in-source)
 - [`vi.mock`](/api/vi#vi-mock)
+- [`vi.hoisted`](/api/vi#vi-hoisted)
 
 ::: warning
 This means that Vitest requires at least Node 22.15 for those features to work. At the moment, they also do not work in Deno or Bun.
 :::
 
-This could affect performance because Vitest needs to read the file and process it. If you do not use these features, you can disable them by setting `experimental.nodeLoader` to `false`. Vitest only tries to read the test file or a setup file while looking for `vi.mock` or `vi.hoisted`. Using these in other files won't hoist them to the top of the file and can lead to unexpected results.
+This could affect performance because Vitest needs to read the file and process it. If you do not use these features, you can disable the transforms by setting `experimental.nodeLoader` to `false`. Vitest only reads test files and setup files while looking for `vi.mock` or `vi.hoisted`. Using these in other files won't hoist them to the top of the file and can lead to unexpected results.
 
 Some features will not work due to the nature of `viteModuleRunner`, including:
 
@@ -269,7 +270,7 @@ module.function.mockImplementation(() => 42)
 
 ### TypeScript
 
-If you are using Node.js 22.18/23.6 or higher, then TypeScript will be [transformed natively](https://nodejs.org/en/learn/typescript/run-natively) by Node.js.
+If you are using Node.js 22.18/23.6 or higher, TypeScript will be [transformed natively](https://nodejs.org/en/learn/typescript/run-natively) by Node.js.
 
 ::: warning TypeScript with Node.js 22.6-22.18
 If you are using Node.js version between 22.6 and 22.18, you can also enable native TypeScript support via `--experimental-strip-types` flag:
@@ -314,6 +315,6 @@ If you are running tests in Deno, TypeScript files are processed by the runtime 
 - **Type:** `boolean`
 - **Default:** `true`
 
-If module runner is disabled, Vitest uses a module loader to transform files to support `import.meta.vitest` and `vi.mock`.
+If module runner is disabled, Vitest uses a module loader to transform files to support `import.meta.vitest`, `vi.mock` and `vi.hoisted`.
 
 If you don't use these features, you can disable this.

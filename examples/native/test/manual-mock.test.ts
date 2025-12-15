@@ -43,7 +43,6 @@ vi.mock(import('../src/mock-sync.ts'), () => {
   }
 })
 
-// TODO: test js/ts, node_modules
 vi.mock(import('../src/index.ts'), async (importOriginal) => {
   // doesn't hang even though it's circular!
   const originalModule = await importOriginal()
@@ -98,7 +97,3 @@ test('importMock works', async () => {
   const mockedRedirect = await vi.importMock<typeof import('../src/redirect.ts')>('../src/redirect.ts')
   expect(mockedRedirect.default).toBe(true)
 })
-
-// test('can import non-existing vscode', () => {
-//   expect(vscode.window).toBe(null)
-// })
