@@ -1,0 +1,25 @@
+diff --git a/dist/encode.js b/dist/encode.js
+index b597f63b4e2165b4652bbeaf0d5df5be94607f68..a7c1c47c00bf9fe72c4610a87d3dda673ff309fd 100644
+--- a/dist/encode.js
++++ b/dist/encode.js
+@@ -20,9 +20,17 @@ function encode(value, { plugins = [], redactErrors = true, signal } = {}) {
+             let wg = new shared_js_1.WaitGroup();
+             let chunks = [];
+             let encode = (value) => {
+-                encodeSync(value, chunks, refCache, asyncCache, promises, counters, plugins, redactErrors);
+-                controller.enqueue(chunks.join("") + "\n");
+-                chunks.length = 0;
++                // https://github.com/jacob-ebey/turbo-stream/pull/78
++                const chunks = {
++                    push(...items) {
++                        controller.enqueue(items.join("") + "\n");
++                    }
++                }
++                encodeSync(value, chunks, refCache, asyncCache, promises, counters, plugins, redactErrors)
++                controller.enqueue("\n");
++                // encodeSync(value, chunks, refCache, asyncCache, promises, counters, plugins, redactErrors);
++                // controller.enqueue(chunks.join("") + "\n");
++                // chunks.length = 0;
+             };
+             let handlePromiseResolved = (id, value) => {
+                 wg.done();

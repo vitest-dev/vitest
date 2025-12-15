@@ -54,8 +54,7 @@
     "pathe": "catalog:",
     "sirv": "catalog:",
     "tinyglobby": "catalog:",
-    "tinyrainbow": "catalog:",
-    "turbo-stream": "^3.1.0"
+    "tinyrainbow": "catalog:"
   },
   "devDependencies": {
     "@faker-js/faker": "^10.1.0",
@@ -81,6 +80,7 @@
     "mime": "^4.1.0",
     "rollup": "^4.53.3",
     "splitpanes": "^4.0.4",
+    "turbo-stream": "^3.1.0",
     "typescript": "^5.9.3",
     "unocss": "catalog:",
     "vite": "^5.0.0",
