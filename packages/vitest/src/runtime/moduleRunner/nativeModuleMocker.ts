@@ -6,7 +6,6 @@ import {
   automockModule,
   collectModuleExports,
   createManualModuleSource,
-  transformCode,
 } from '@vitest/mocker/transforms'
 import { cleanUrl, createDefer } from '@vitest/utils/helpers'
 import { parse } from 'acorn'
@@ -80,7 +79,7 @@ export { __${index} as "${key}" }`.trim()
     }
 
     const mockType = url.includes('mock=automock') ? 'automock' : 'autospy'
-    const transformedCode = transformCode(source, moduleId)
+    const transformedCode = transformCode(source, result.format || 'module', moduleId)
     // failed to transform ts file
     if (transformedCode == null) {
       return
@@ -136,7 +135,7 @@ export { __${index} as "${key}" }`.trim()
     // injecting new keys is not supported (and should not be advised anyway)
 
     const source = result.source.toString()
-    const transformedCode = transformCode(source, moduleId)
+    const transformedCode = transformCode(source, result.format || 'module', moduleId)
     if (transformedCode == null) {
       return
     }
@@ -249,4 +248,14 @@ function genSourceMapUrl(map: SourceMap | string): string {
     map = JSON.stringify(map)
   }
   return `data:application/json;base64,${Buffer.from(map).toString('base64')}`
+}
+
+function transformCode(code: string, format: string, filename: string) {
+  if (format.includes('typescript')) {
+    if (!module.stripTypeScriptTypes) {
+      throw new Error(`Cannot parse '${filename}' because "module.stripTypeScriptTypes" is not supported. Module mocking requires Node.js 22.15 or higher. This is NOT a bug of Vitest.`)
+    }
+    return module.stripTypeScriptTypes(code)
+  }
+  return code
 }

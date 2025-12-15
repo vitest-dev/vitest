@@ -9,6 +9,7 @@ import { setupChaiConfig } from '../../integrations/chai/config'
 import { loadEnvironment } from '../../integrations/env/loader'
 import { NativeModuleRunner } from '../../utils/nativeModuleRunner'
 import { Traces } from '../../utils/traces'
+import { listenForErrors } from '../moduleRunner/errorCatcher'
 import { VitestEvaluatedModules } from '../moduleRunner/evaluatedModules'
 import { createNodeImportMeta } from '../moduleRunner/moduleRunner'
 import { startVitestModuleRunner } from '../moduleRunner/startVitestModuleRunner'
@@ -25,9 +26,15 @@ async function startModuleRunner(options: ContextModuleRunnerOptions): Promise<T
     return _moduleRunner
   }
 
+  process.exit = (code = process.exitCode || 0): never => {
+    throw new Error(`process.exit unexpectedly called with "${code}"`)
+  }
+  const state = () => getSafeWorkerState() || options.state
+
+  listenForErrors(state)
+
   if (options.state.config.experimental.viteModuleRunner === false) {
     const root = options.state.config.root
-    const state = () => getSafeWorkerState() || options.state
     let mocker: TestModuleMocker | undefined
     if (options.state.config.experimental.nodeLoader !== false) {
       // this additionally imports acorn/magic-string

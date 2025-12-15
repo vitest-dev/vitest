@@ -9,6 +9,7 @@ import { cleanUrl } from '@vitest/utils/helpers'
 import { parse } from 'acorn'
 import MagicString from 'magic-string'
 import { resolve } from 'pathe'
+import c from 'tinyrainbow'
 import { distDir } from '../../paths'
 
 const NOW_LENGTH = Date.now().toString().length
@@ -16,7 +17,9 @@ const REGEXP_VITEST = new RegExp(`%3Fvitest=\\d{${NOW_LENGTH}}`)
 const REGEXP_MOCK_ACTUAL = /\?mock=actual/
 
 export async function setupNodeLoaderHooks(worker: WorkerSetupContext): Promise<void> {
-  module.setSourceMapsSupport(true)
+  if (module.setSourceMapsSupport) {
+    module.setSourceMapsSupport(true)
+  }
 
   if (worker.config.experimental.nodeLoader !== false) {
     await initSyntaxLexers()
@@ -79,7 +82,7 @@ export async function setupNodeLoaderHooks(worker: WorkerSetupContext): Promise<
   else if (module.register) {
     if (worker.config.experimental.nodeLoader !== false) {
       console.warn(
-        `"module.registerHooks" is not supported in Node.js ${process.version}. This means that some features like module mocking or in-source testing are not supported. Upgrade your Node.js version to at least 22.15 or disable "experimental.nodeLoader" flag manually.`,
+        `${c.bgYellow(' WARNING ')} "module.registerHooks" is not supported in Node.js ${process.version}. This means that some features like module mocking or in-source testing are not supported. Upgrade your Node.js version to at least 22.15 or disable "experimental.nodeLoader" flag manually.\n`,
       )
     }
     const { port1, port2 } = new MessageChannel()

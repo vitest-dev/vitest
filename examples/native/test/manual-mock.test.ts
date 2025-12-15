@@ -1,19 +1,13 @@
 import { readFileSync } from 'node:fs'
 import * as tinyspy from 'tinyspy'
 import { expect, test, vi } from 'vitest'
-// import * as vscode from 'vscode'
-import { add, hello, helloMe, squared } from '../src/index.ts' // TODO: import from basic in a separate test
+import { add, hello, helloMe, squared } from '../src/index.ts'
 import { minus } from '../src/minus.ts'
+import { mockJs } from '../src/mock-js.js'
+import { syncMock } from '../src/mock-sync.ts'
 
 // automocked
 vi.mock(import('tinyspy'))
-
-// TODO: support virtual ones somehow
-// vi.mock('vscode', () => {
-//   return {
-//     window: null,
-//   }
-// })
 
 vi.mock('node:fs', async (importOriginal) => {
   // can import actual built-in module
@@ -33,10 +27,25 @@ vi.mock(import('../src/minus.ts'), async (importOriginal) => {
   }
 })
 
-// TODO: test async, sync, js/ts, node_modules
-// TODO: mock(import('../src/basic.ts'))
+vi.mock(import('../src/mock-js.js'), async () => {
+  return {
+    mockJs() {
+      return 42
+    },
+  }
+})
+
+vi.mock(import('../src/mock-sync.ts'), () => {
+  return {
+    syncMock() {
+      return 42
+    },
+  }
+})
+
+// TODO: test js/ts, node_modules
 vi.mock(import('../src/index.ts'), async (importOriginal) => {
-  // doesn't hang because of the recursion!
+  // doesn't hang even though it's circular!
   const originalModule = await importOriginal()
   // doesn't have the "hello" value yet because this factory is not resolved
   expect(originalModule.hello).toBe(undefined)
@@ -52,8 +61,6 @@ vi.mock(import('../src/index.ts'), async (importOriginal) => {
   } as const
 })
 
-// TODO: test errors in the factory
-
 test('builtin node modules are mocked', () => {
   expect(vi.isMockFunction(readFileSync)).toBe(true)
 })
@@ -62,12 +69,14 @@ test('deps in node_modules are mocked', () => {
   expect(vi.isMockFunction(tinyspy.createInternalSpy)).toBe(true)
 })
 
-test('squared is mocked', () => {
+test('exports are mocked', () => {
   expect(hello).toBe('mock')
   expect(helloMe).toBe('world')
   expect(add(1, 1)).toBe(42)
   expect(squared(2)).toBe(42)
   expect(minus(1, 2)).toBe(42)
+  expect(syncMock()).toBe(42)
+  expect(mockJs()).toBe(42)
 })
 
 test('importMock works', async () => {

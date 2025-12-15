@@ -13,8 +13,15 @@ export const initialize: InitializeHook = async ({
   port = _port
 }
 
+const NOW_LENGTH = Date.now().toString().length
+const REGEXP_VITEST = new RegExp(`%3Fvitest=\\d{${NOW_LENGTH}}`)
+
 export const resolve: ResolveHook = (specifier, context, defaultResolve) => {
-  const result = defaultResolve(specifier, context)
+  const isVitest = specifier.includes('%3Fvitest=')
+  const result = defaultResolve(
+    isVitest ? specifier.replace(REGEXP_VITEST, '') : specifier,
+    context,
+  )
   if (!port || !context?.parentURL) {
     return result
   }
@@ -22,8 +29,15 @@ export const resolve: ResolveHook = (specifier, context, defaultResolve) => {
   if (typeof result === 'object' && 'then' in result) {
     return result.then((resolved) => {
       ensureModuleGraphEntry(resolved.url, context.parentURL!)
+      if (isVitest) {
+        resolved.url = `${resolved.url}?vitest=${Date.now()}`
+      }
       return resolved
     })
+  }
+
+  if (isVitest) {
+    result.url = `${result.url}?vitest=${Date.now()}`
   }
   ensureModuleGraphEntry(result.url, context.parentURL)
   return result

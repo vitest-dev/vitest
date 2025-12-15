@@ -281,10 +281,13 @@ If you are using TypeScript and Node.js version lower than 22.6, then you will n
 ```ts
 import { defineConfig } from 'vitest/config'
 
+const tsxApi = import.meta.resolve('tsx/esm/api')
+
 export default defineConfig({
   test: {
-    // TODO: validate
-    execArgv: ['--require=tsx/esm'],
+    execArgv: [
+      `--import=data:text/javascript,import * as tsx from "${tsxCli}";tsx.register()`,
+    ],
     experimental: {
       viteModuleRunner: false,
     },
