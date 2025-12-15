@@ -532,11 +532,7 @@ describe.runIf(!module.registerHooks)('when module.registerHooks is not supporte
         viteModuleRunner: false,
       },
     })
-    expect(stderr).toMatchInlineSnapshot(`
-    " WARNING  "module.registerHooks" is not supported in Node.js v20.19.5. This means that some features like module mocking or in-source testing are not supported. Upgrade your Node.js version to at least 22.15 or disable "experimental.nodeLoader" flag manually.
-
-    "
-  `)
+    expect(stderr).toContain(`WARNING  "module.registerHooks" is not supported in Node.js ${process.version}. This means that some features like module mocking or in-source testing are not supported. Upgrade your Node.js version to at least 22.15 or disable "experimental.nodeLoader" flag manually.`)
   })
 })
 
