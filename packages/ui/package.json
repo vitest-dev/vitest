@@ -54,7 +54,8 @@
     "pathe": "catalog:",
     "sirv": "catalog:",
     "tinyglobby": "catalog:",
-    "tinyrainbow": "catalog:"
+    "tinyrainbow": "catalog:",
+    "turbo-stream": "^3.1.0"
   },
   "devDependencies": {
     "@faker-js/faker": "^10.1.0",

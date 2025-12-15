@@ -7,8 +7,7 @@ import type {
   WebSocketEvents,
   WebSocketHandlers,
 } from 'vitest'
-import { decompressSync, strFromU8 } from 'fflate'
-import { parse } from 'flatted'
+import { decode } from 'turbo-stream'
 import { reactive } from 'vue'
 import { StateManager } from '../../../../ws-client/src/state'
 
@@ -98,19 +97,10 @@ export function createStaticClient(): VitestClient {
 
   async function registerMetadata() {
     const res = await fetch(window.METADATA_PATH!)
-    const contentType = res.headers.get('content-type')?.toLowerCase() || ''
-    // TODO: parse
-    if (
-      contentType.includes('application/gzip')
-      || contentType.includes('application/x-gzip')
-    ) {
-      const compressed = new Uint8Array(await res.arrayBuffer())
-      const decompressed = strFromU8(decompressSync(compressed))
-      metadata = parse(decompressed) as HTMLReportMetadata
-    }
-    else {
-      metadata = parse(await res.text()) as HTMLReportMetadata
-    }
+    const contentStream = res.body!
+      .pipeThrough(new DecompressionStream('gzip'))
+      .pipeThrough(new TextDecoderStream())
+    metadata = await decode(contentStream)
     const event = new Event('open')
     ctx.ws.dispatchEvent(event)
   }

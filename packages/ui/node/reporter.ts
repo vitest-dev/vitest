@@ -5,14 +5,13 @@ import type { Reporter } from 'vitest/reporters'
 import crypto from 'node:crypto'
 import { promises as fs } from 'node:fs'
 import { readFile, writeFile } from 'node:fs/promises'
+import { Readable } from 'node:stream'
 import { fileURLToPath } from 'node:url'
-import { promisify } from 'node:util'
-import { gzip, constants as zlibConstants } from 'node:zlib'
-import { stringify } from 'flatted'
 import mime from 'mime/lite'
 import { dirname, extname, relative, resolve } from 'pathe'
 import { globSync } from 'tinyglobby'
 import c from 'tinyrainbow'
+import { encode } from 'turbo-stream'
 import { getModuleGraph } from '../../vitest/src/utils/graph'
 
 interface PotentialConfig {
@@ -122,8 +121,7 @@ export default class HTMLReporter implements Reporter {
     }))
 
     await Promise.all(promises)
-    // TODO
-    await this.writeReport(stringify(result))
+    await this.writeReport(result)
   }
 
   async processAttachment(attachment: TestAttachment): Promise<void> {
@@ -162,14 +160,14 @@ export default class HTMLReporter implements Reporter {
     }
   }
 
-  async writeReport(report: string): Promise<void> {
-    const metaFile = resolve(this.reporterDir, 'html.meta.json.gz')
+  async writeReport(report: unknown): Promise<void> {
+    const metaFile = resolve(this.reporterDir, 'html.meta.bin')
+    const contentStream = encode(report)
+    const rawStream = contentStream
+      .pipeThrough(new TextEncoderStream())
+      .pipeThrough(new CompressionStream('gzip'))
+    await writeFile(metaFile, Readable.fromWeb(rawStream as any))
 
-    const promiseGzip = promisify(gzip)
-    const data = await promiseGzip(report, {
-      level: zlibConstants.Z_BEST_COMPRESSION,
-    })
-    await fs.writeFile(metaFile, data, 'base64')
     const ui = resolve(distDir, 'client')
     // copy ui
     const files = globSync(['**/*'], { cwd: ui, expandDirectories: false })
