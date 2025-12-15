@@ -177,7 +177,6 @@ test('no esm globals', () => {
   `)
 })
 
-// TODO: test that in-souce is imported by another test and doesn't run there
 test('in-source tests in CJS work', async () => {
   const { stderr, testTree } = await runInlineTests({
     'in-source.js': `
@@ -243,6 +242,118 @@ if (import.meta.vitest) {
         "works": "passed",
       },
     }
+  `)
+})
+
+test('in-source test doesn\'t run when imported by actual test', async () => {
+  const { stderr, testTree } = await runInlineTests({
+    'add.js': /* js */`
+export function add(a, b) {
+  return a + b
+}
+
+if (import.meta.vitest) {
+  const { test, expect } = import.meta.vitest
+  test('adds', () => {
+    expect(add(1, 1)).toBe(2)
+  })
+}
+    `,
+    'add.test.js': /* js */`
+import { add } from './add.js'
+import { test, expect } from 'vitest'
+test('add is only once', () => {
+  expect(add(1, 1)).toBe(2)
+})
+    `,
+    'package.json': JSON.stringify({
+      name: '@test/native-module-runner',
+      type: 'module',
+    }),
+    'vitest.config.js': {
+      test: {
+        includeSource: ['./in-source.js'],
+        experimental: {
+          viteModuleRunner: false,
+        },
+      },
+    },
+  })
+  expect(stderr).toBe('')
+  expect(testTree()).toMatchInlineSnapshot(`
+    {
+      "add.test.js": {
+        "add is only once": "passed",
+      },
+    }
+  `)
+})
+
+test('cannot import JS file without extension in ESM', async () => {
+  const { stderr, root } = await runInlineTests({
+    'add.js': /* js */`
+export function add(a, b) {
+  return a + b
+}
+    `,
+    'add.test.js': /* js */`
+import { add } from './add' // no extension
+test('not reported')
+    `,
+    'vitest.config.js': {
+      test: {
+        globals: true,
+        experimental: {
+          viteModuleRunner: false,
+        },
+      },
+    },
+  })
+  expect(stderr.replace(new RegExp(root, 'g'), '<root>')).toMatchInlineSnapshot(`
+    "
+    ⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+     FAIL  add.test.js [ add.test.js ]
+    Error: Cannot find module '<root>/add' imported from <root>/add.test.js
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
+    Serialized Error: { code: 'ERR_MODULE_NOT_FOUND', url: 'file://<root>/add' }
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+    "
+  `)
+})
+
+test('cannot import TS without extension in ESM', async () => {
+  const { stderr, root } = await runInlineTests({
+    'add.ts': /* js */`
+export function add(a, b) {
+  return a + b
+}
+    `,
+    'add.test.js': /* js */`
+import { add } from './add.js' // JS extension is NOT valid
+test('not reported')
+    `,
+    'vitest.config.js': {
+      test: {
+        globals: true,
+        experimental: {
+          viteModuleRunner: false,
+        },
+      },
+    },
+  })
+  expect(stderr.replace(new RegExp(root, 'g'), '<root>')).toMatchInlineSnapshot(`
+    "
+    ⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+     FAIL  add.test.js [ add.test.js ]
+    Error: Cannot find module '<root>/add.js' imported from <root>/add.test.js
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
+    Serialized Error: { code: 'ERR_MODULE_NOT_FOUND', url: 'file://<root>/add.js' }
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+    "
   `)
 })
 
