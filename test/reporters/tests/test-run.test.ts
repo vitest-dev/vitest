@@ -836,7 +836,7 @@ describe('hooks', () => {
 describe('merge reports', () => {
   test('correctly reports events for a single test module', async () => {
     const blobsOutputDirectory = resolve(import.meta.dirname, 'fixtures-blobs')
-    const blobOutputFile = resolve(blobsOutputDirectory, 'blob.json')
+    const blobOutputFile = resolve(blobsOutputDirectory, 'blob.bin')
     onTestFinished(() => {
       rmSync(blobOutputFile)
     })
@@ -880,8 +880,8 @@ describe('merge reports', () => {
 
   test('correctly reports multiple test modules', async () => {
     const blobsOutputDirectory = resolve(import.meta.dirname, 'fixtures-blobs')
-    const blobOutputFile1 = resolve(blobsOutputDirectory, 'blob-1.json')
-    const blobOutputFile2 = resolve(blobsOutputDirectory, 'blob-2.json')
+    const blobOutputFile1 = resolve(blobsOutputDirectory, 'blob-1.bin')
+    const blobOutputFile2 = resolve(blobsOutputDirectory, 'blob-2.bin')
     onTestFinished(() => {
       rmSync(blobOutputFile1)
       rmSync(blobOutputFile2)
