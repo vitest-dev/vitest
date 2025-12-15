@@ -143,6 +143,9 @@ patchedDependencies:
   cac@6.7.14:
     hash: a8f0f3517a47ce716ed90c0cfe6ae382ab763b021a664ada2a608477d0621588
     path: patches/cac@6.7.14.patch
+  turbo-stream:
+    hash: 5a172ca3616429b9941b06a78256f8e091d76d65bf9df6304ec5d1fb1af805ef
+    path: patches/turbo-stream.patch
 
 importers:
 
@@ -882,7 +885,7 @@ importers:
         version: 4.0.4(vue@3.5.25(typescript@5.9.3))
       turbo-stream:
         specifier: ^3.1.0
-        version: 3.1.0
+        version: 3.1.0(patch_hash=5a172ca3616429b9941b06a78256f8e091d76d65bf9df6304ec5d1fb1af805ef)
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
@@ -1085,7 +1088,7 @@ importers:
         version: 3.1.0
       turbo-stream:
         specifier: ^3.1.0
-        version: 3.1.0
+        version: 3.1.0(patch_hash=5a172ca3616429b9941b06a78256f8e091d76d65bf9df6304ec5d1fb1af805ef)
       ws:
         specifier: 'catalog:'
         version: 8.18.3
@@ -17889,7 +17892,7 @@ snapshots:
     optionalDependencies:
       fsevents: 2.3.3
 
-  turbo-stream@3.1.0: {}
+  turbo-stream@3.1.0(patch_hash=5a172ca3616429b9941b06a78256f8e091d76d65bf9df6304ec5d1fb1af805ef): {}
 
   twoslash-protocol@0.3.4: {}
 
