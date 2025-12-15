@@ -743,6 +743,12 @@ importers:
       acorn-walk:
         specifier: 'catalog:'
         version: 8.3.4
+      cjs-module-lexer:
+        specifier: ^2.1.1
+        version: 2.1.1
+      es-module-lexer:
+        specifier: ^2.0.0
+        version: 2.0.0
       msw:
         specifier: 'catalog:'
         version: 2.12.3(@types/node@24.10.1)(typescript@5.9.3)
@@ -986,9 +992,6 @@ importers:
       '@vitest/utils':
         specifier: workspace:*
         version: link:../utils
-      cjs-module-lexer:
-        specifier: ^2.1.1
-        version: 2.1.1
       es-module-lexer:
         specifier: ^2.0.0
         version: 2.0.0

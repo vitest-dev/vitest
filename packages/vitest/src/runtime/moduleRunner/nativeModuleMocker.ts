@@ -1,14 +1,16 @@
 import type { DeferPromise } from '@vitest/utils/helpers'
 import type { SourceMap } from 'magic-string'
-import { readFileSync } from 'node:fs'
-import module, { createRequire, isBuiltin } from 'node:module'
+import module, { isBuiltin } from 'node:module'
 import { fileURLToPath, pathToFileURL } from 'node:url'
-import { automockModule, createManualModuleSource } from '@vitest/mocker/transforms'
-import { cleanUrl, createDefer, filterOutComments } from '@vitest/utils/helpers'
+import {
+  automockModule,
+  collectModuleExports,
+  createManualModuleSource,
+  transformCode,
+} from '@vitest/mocker/transforms'
+import { cleanUrl, createDefer } from '@vitest/utils/helpers'
 import { parse } from 'acorn'
-import { parse as parseCjsSyntax } from 'cjs-module-lexer'
-import { parse as parseModuleSyntax } from 'es-module-lexer'
-import { extname, isAbsolute } from 'pathe'
+import { isAbsolute } from 'pathe'
 import { BareModuleMocker, normalizeModuleId } from './bareModuleMocker'
 
 export class NativeModuleMocker extends BareModuleMocker {
@@ -65,8 +67,8 @@ import * as builtinModule from '${url}'
 
 ${exports.map((key, index) => {
   return `
-const __val_${index} = builtinModule["${key}"]
-export { __val_${index} as "${key}" }`.trim()
+const __${index} = builtinModule["${key}"]
+export { __${index} as "${key}" }`.trim()
 })}`
     }
     else {
@@ -88,11 +90,10 @@ export { __val_${index} as "${key}" }`.trim()
       transformedCode,
       mockType,
       code => parse(code, {
-        sourceType: result.format === 'module' || result.format === 'module-typescript' || result.format === 'typescript'
-          ? 'module'
-          : 'script',
+        sourceType: 'module',
         ecmaVersion: 'latest',
       }),
+      { id: moduleId },
     )
     const transformed = ms.toString()
     const map = ms.generateMap({ hires: 'boundary', source: moduleId })
@@ -163,6 +164,8 @@ export { __val_${index} as "${key}" }`.trim()
   private originalModulePromises = new Map<string, DeferPromise<any>>()
   private factoryPromises = new Map<string, Promise<any>>()
 
+  // potential performance improvement:
+  // store by URL, not ids, no need to call url.*to* methods and normalizeModuleId
   public getFactoryModule(id: string): any {
     const registry = this.getMockerRegistry()
     const mock = registry.getById(id)
@@ -246,145 +249,4 @@ function genSourceMapUrl(map: SourceMap | string): string {
     map = JSON.stringify(map)
   }
   return `data:application/json;base64,${Buffer.from(map).toString('base64')}`
-}
-
-function transformCode(code: string, filename: string): string {
-  const ext = extname(filename)
-  const isTs = ext === '.ts' || ext === '.cts' || ext === '.mts'
-  if (!isTs) {
-    return code
-  }
-  if (!module.stripTypeScriptTypes) {
-    throw new Error(`Cannot parse '${filename}' because "module.stripTypeScriptTypes" is not supported. Module mocking requires Node.js 22.15 or higher.`)
-  }
-  return module.stripTypeScriptTypes(code)
-}
-
-const cachedFileExports = new Map<string, string[]>()
-
-function collectModuleExports(
-  filename: string,
-  code: string,
-  format: 'module' | 'commonjs',
-  exports: string[] = [],
-): string[] {
-  if (format === 'module') {
-    const [imports_, exports_] = parseModuleSyntax(code, filename)
-    const fileExports = [...exports_.map(p => p.n)]
-    imports_.forEach(({ ss: start, se: end, n: name }) => {
-      const substring = code.substring(start, end).replace(/ +/g, ' ')
-      if (name && substring.startsWith('export *') && !substring.startsWith('export * as')) {
-        fileExports.push(...tryParseModule(name))
-      }
-    })
-    cachedFileExports.set(filename, fileExports)
-    exports.push(...fileExports)
-  }
-  else {
-    const { exports: exports_, reexports } = parseCjsSyntax(code, filename)
-    const fileExports = [...exports_]
-    reexports.forEach((name) => {
-      fileExports.push(...tryParseModule(name))
-    })
-    cachedFileExports.set(filename, fileExports)
-    exports.push(...fileExports)
-  }
-
-  function tryParseModule(name: string): string[] {
-    try {
-      return parseModule(name)
-    }
-    catch (error) {
-      console.warn(`[module mocking] Failed to parse '${name}' imported from ${filename}:`, error)
-      return []
-    }
-  }
-
-  let __require: NodeJS.Require | undefined
-  function getModuleRequire() {
-    return (__require ??= createRequire(filename))
-  }
-
-  function parseModule(name: string): string[] {
-    if (isBuiltin(name)) {
-      if (cachedFileExports.has(name)) {
-        const cachedExports = cachedFileExports.get(name)!
-        return cachedExports
-      }
-
-      const builtinModule = getBuiltinModule(name)
-      const builtinExports = Object.keys(builtinModule)
-      cachedFileExports.set(name, builtinExports)
-      return builtinExports
-    }
-
-    const resolvedModuleUrl = format === 'module'
-      ? import.meta.resolve(name, pathToFileURL(filename).toString())
-      : getModuleRequire().resolve(name)
-
-    const resolveModulePath = format === 'commonjs'
-      ? resolvedModuleUrl
-      : fileURLToPath(resolvedModuleUrl)
-
-    if (cachedFileExports.has(resolveModulePath)) {
-      const cachedExports = cachedFileExports.get(resolveModulePath)!
-      return cachedExports
-    }
-
-    const fileContent = readFileSync(resolveModulePath, 'utf-8')
-    const ext = extname(resolveModulePath)
-    const code = transformCode(fileContent, resolveModulePath)
-    if (code == null) {
-      cachedFileExports.set(resolveModulePath, [])
-      return []
-    }
-
-    let resolvedModuleFormat: 'module' | 'commonjs' | undefined
-    if (ext === '.cjs' || ext === '.cts') {
-      resolvedModuleFormat = 'commonjs'
-    }
-    else if (ext === '.mjs' || ext === '.mts') {
-      resolvedModuleFormat = 'module'
-    }
-    // https://nodejs.org/api/packages.html#syntax-detection
-    else if (ext === '.js' || ext === '.ts' || ext === '') {
-      const pkgJsonPath = module.findPackageJSON(resolvedModuleUrl)
-      const pkgJson = pkgJsonPath ? JSON.parse(readFileSync(pkgJsonPath, 'utf-8')) : {}
-      if (pkgJson?.type === 'module') {
-        resolvedModuleFormat = 'module'
-      }
-      else if (pkgJson?.type === 'commonjs') {
-        resolvedModuleFormat = 'commonjs'
-      }
-      else {
-        // Ambiguous input! Check if it has ESM syntax. Node.js is much smarter here
-        if (hasESM(filterOutComments(code))) {
-          resolvedModuleFormat = 'module'
-        }
-        else {
-          resolvedModuleFormat = 'commonjs'
-        }
-      }
-    }
-    else if (ext === '.json') {
-      return ['default']
-    }
-    else {
-      // can't do wasm, for example
-      console.warn(`Cannot process '${resolvedModuleFormat}' imported from ${filename} because of unknown file extension: ${ext}.`)
-    }
-    if (resolvedModuleFormat) {
-      return collectModuleExports(resolveModulePath, code, resolvedModuleFormat, exports)
-    }
-    return []
-  }
-
-  return Array.from(new Set(exports))
-}
-
-const ESM_RE
-  = /(?:[\s;]|^)(?:import[\s\w*,{}]*from|import\s*["'*{]|export\b\s*(?:[*{]|default|class|type|function|const|var|let|async function)|import\.meta\b)/m
-
-function hasESM(code: string) {
-  return ESM_RE.test(code)
 }

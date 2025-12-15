@@ -83,6 +83,8 @@
     "@vitest/spy": "workspace:*",
     "@vitest/utils": "workspace:*",
     "acorn-walk": "catalog:",
+    "cjs-module-lexer": "^2.1.1",
+    "es-module-lexer": "^2.0.0",
     "msw": "catalog:",
     "pathe": "catalog:",
     "vite": "^6.3.5"

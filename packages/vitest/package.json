@@ -181,7 +181,6 @@
     "@vitest/snapshot": "workspace:*",
     "@vitest/spy": "workspace:*",
     "@vitest/utils": "workspace:*",
-    "cjs-module-lexer": "^2.1.1",
     "es-module-lexer": "^2.0.0",
     "expect-type": "^1.2.2",
     "magic-string": "catalog:",

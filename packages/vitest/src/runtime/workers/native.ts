@@ -4,26 +4,22 @@ import type { NativeModuleMocker } from '../moduleRunner/nativeModuleMocker'
 import module, { isBuiltin } from 'node:module'
 import { fileURLToPath } from 'node:url'
 import { MessageChannel } from 'node:worker_threads'
-import { hoistMocks } from '@vitest/mocker/transforms'
+import { hoistMocks, initSyntaxLexers } from '@vitest/mocker/transforms'
 import { cleanUrl } from '@vitest/utils/helpers'
 import { parse } from 'acorn'
-import { init as initCjsLexer } from 'cjs-module-lexer'
-import { init as initModuleLexer } from 'es-module-lexer'
 import MagicString from 'magic-string'
 import { resolve } from 'pathe'
 import { distDir } from '../../paths'
 
 const NOW_LENGTH = Date.now().toString().length
 const REGEXP_VITEST = new RegExp(`%3Fvitest=\\d{${NOW_LENGTH}}`)
+const REGEXP_MOCK_ACTUAL = /\?mock=actual/
 
 export async function setupNodeLoaderHooks(worker: WorkerSetupContext): Promise<void> {
   module.setSourceMapsSupport(true)
 
   if (worker.config.experimental.nodeLoader !== false) {
-    await Promise.all([
-      initCjsLexer(),
-      initModuleLexer,
-    ])
+    await initSyntaxLexers()
   }
 
   if (typeof module.registerHooks === 'function') {
@@ -32,7 +28,7 @@ export async function setupNodeLoaderHooks(worker: WorkerSetupContext): Promise<
         if (specifier.includes('mock=actual')) {
           // url is already resolved by `importActual`
           return {
-            url: specifier.replace(/\?mock=actual/, ''), // TODO: normalize work with queries
+            url: specifier.replace(REGEXP_MOCK_ACTUAL, ''),
             shortCircuit: true,
           }
         }
@@ -55,10 +51,12 @@ export async function setupNodeLoaderHooks(worker: WorkerSetupContext): Promise<
         if (isVitest) {
           result.url = `${result.url}?vitest=${Date.now()}`
         }
-        // TODO: better distDir check
         if (
+          // nodeLoader disables mocking and `importmeta.vitest`
           worker.config.experimental.nodeLoader === false
+          // something is wrong if there is no parent, we should not mock anything
           || !context.parentURL
+          // ignore any transforms inside of `vitest` module
           || result.url.includes(distDir)
           || context.parentURL?.toString().includes(distDir)
         ) {
@@ -153,10 +151,12 @@ function createLoadHook(_worker: WorkerSetupContext): module.LoadHookSync {
       return result
     }
 
-    getNativeMocker()?.checkCircularManualMock(url)
+    const mocker = getNativeMocker()
+
+    mocker?.checkCircularManualMock(url)
 
     if (url.includes('mock=automock') || url.includes('mock=autospy')) {
-      const automockedResult = getNativeMocker()?.loadAutomock(url, result)
+      const automockedResult = mocker?.loadAutomock(url, result)
       if (automockedResult != null) {
         return automockedResult
       }
@@ -164,7 +164,7 @@ function createLoadHook(_worker: WorkerSetupContext): module.LoadHookSync {
     }
 
     if (url.includes('mock=manual')) {
-      const mockedResult = getNativeMocker()?.loadManualMock(url, result)
+      const mockedResult = mocker?.loadManualMock(url, result)
       if (mockedResult != null) {
         return mockedResult
       }

@@ -227,7 +227,7 @@ Some Vitest features rely on files being transformed. Vitest uses synchronous [N
 This means that Vitest requires at least Node 22.15 for those features to work. At the moment, they also do not work in Deno or Bun.
 :::
 
-This could affect performance because Vitest needs to read the file and process it. If you do not use these features, you can disable them by setting `experimental.nodeLoader` to `false`.
+This could affect performance because Vitest needs to read the file and process it. If you do not use these features, you can disable them by setting `experimental.nodeLoader` to `false`. Vitest only tries to read the test file or a setup file while looking for `vi.mock` or `vi.hoisted`. Using these in other files won't hoist them to the top of the file and can lead to unexpected results.
 
 Some features will not work due to the nature of `viteModuleRunner`, including:
 
