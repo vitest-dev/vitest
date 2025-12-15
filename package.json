@@ -38,7 +38,7 @@
     "test:browser:playwright": "pnpm -C test/browser run test:playwright"
   },
   "devDependencies": {
-    "@antfu/eslint-config": "^6.2.0",
+    "@antfu/eslint-config": "^6.7.1",
     "@antfu/ni": "^28.0.0",
     "@playwright/test": "^1.57.0",
     "@rollup/plugin-commonjs": "^29.0.0",
@@ -53,7 +53,7 @@
     "bumpp": "^10.3.2",
     "changelogithub": "^14.0.0",
     "esbuild": "^0.27.0",
-    "eslint": "^9.39.1",
+    "eslint": "^9.39.2",
     "magic-string": "^0.30.21",
     "pathe": "^2.0.3",
     "premove": "^4.0.0",
@@ -68,30 +68,5 @@
     "vite": "^7.1.5",
     "vitest": "workspace:*",
     "zx": "^8.8.5"
-  },
-  "pnpm": {
-    "peerDependencyRules": {
-      "ignoreMissing": [
-        "@algolia/client-search"
-      ]
-    },
-    "patchedDependencies": {
-      "@sinonjs/fake-timers@14.0.0": "patches/@sinonjs__fake-timers@14.0.0.patch",
-      "cac@6.7.14": "patches/cac@6.7.14.patch",
-      "@types/sinonjs__fake-timers@8.1.5": "patches/@types__sinonjs__fake-timers@8.1.5.patch",
-      "acorn@8.11.3": "patches/acorn@8.11.3.patch"
-    },
-    "onlyBuiltDependencies": [
-      "@sveltejs/kit",
-      "@swc/core",
-      "edgedriver",
-      "esbuild",
-      "geckodriver",
-      "msw",
-      "rolldown",
-      "sharp",
-      "svelte-preprocess",
-      "vue-demi"
-    ]
   }
 }
