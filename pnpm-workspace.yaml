@@ -1,9 +1,6 @@
-packages:
-  - docs
-  - packages/*
-  - examples/*
-  - test/*
-  - test/config/fixtures/conditions-pkg
+catalogMode: prefer
+
+shellEmulator: true
 
 trustPolicy: no-downgrade
 trustPolicyExclude:
@@ -21,6 +18,13 @@ trustPolicyExclude:
   - undici@6.21.3
   - rxjs@7.8.2
 
+packages:
+  - docs
+  - packages/*
+  - examples/*
+  - test/*
+  - test/config/fixtures/conditions-pkg
+
 overrides:
   '@vitest/browser': 'workspace:*'
   '@vitest/browser-playwright': 'workspace:*'
@@ -32,6 +36,11 @@ overrides:
   rollup: $rollup
   vite: $vite
   vitest: 'workspace:*'
+patchedDependencies:
+  '@sinonjs/fake-timers@14.0.0': patches/@sinonjs__fake-timers@14.0.0.patch
+  '@types/sinonjs__fake-timers@8.1.5': patches/@types__sinonjs__fake-timers@8.1.5.patch
+  acorn@8.11.3: patches/acorn@8.11.3.patch
+  cac@6.7.14: patches/cac@6.7.14.patch
 catalog:
   '@iconify-json/carbon': ^1.2.14
   '@iconify-json/logos': ^1.2.10
@@ -70,3 +79,17 @@ catalog:
   unplugin-vue-components: ^0.28.0
   vue: ^3.5.25
   ws: ^8.18.3
+onlyBuiltDependencies:
+  - '@sveltejs/kit'
+  - '@swc/core'
+  - edgedriver
+  - esbuild
+  - geckodriver
+  - msw
+  - rolldown
+  - sharp
+  - svelte-preprocess
+  - vue-demi
+peerDependencyRules:
+  ignoreMissing:
+    - '@algolia/client-search'
