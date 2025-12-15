@@ -99,6 +99,7 @@ export function createStaticClient(): VitestClient {
   async function registerMetadata() {
     const res = await fetch(window.METADATA_PATH!)
     const contentType = res.headers.get('content-type')?.toLowerCase() || ''
+    // TODO: parse
     if (
       contentType.includes('application/gzip')
       || contentType.includes('application/x-gzip')

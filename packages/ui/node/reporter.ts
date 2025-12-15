@@ -122,6 +122,7 @@ export default class HTMLReporter implements Reporter {
     }))
 
     await Promise.all(promises)
+    // TODO
     await this.writeReport(stringify(result))
   }
 
