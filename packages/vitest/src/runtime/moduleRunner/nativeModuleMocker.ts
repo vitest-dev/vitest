@@ -1,9 +1,10 @@
+import type { DeferPromise } from '@vitest/utils/helpers'
 import type { SourceMap } from 'magic-string'
 import { readFileSync } from 'node:fs'
 import module, { createRequire, isBuiltin } from 'node:module'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { automockModule, createManualModuleSource } from '@vitest/mocker/transforms'
-import { cleanUrl, filterOutComments } from '@vitest/utils/helpers'
+import { cleanUrl, createDefer, filterOutComments } from '@vitest/utils/helpers'
 import { parse } from 'acorn'
 import { parse as parseCjsSyntax } from 'cjs-module-lexer'
 import { parse as parseModuleSyntax } from 'es-module-lexer'
@@ -64,9 +65,8 @@ import * as builtinModule from '${url}'
 
 ${exports.map((key, index) => {
   return `
-    const __val_${index} = builtinModule["${key}"]
-    export { __val_${index} as "${key}" }
-      `
+const __val_${index} = builtinModule["${key}"]
+export { __val_${index} as "${key}" }`.trim()
 })}`
     }
     else {
@@ -151,13 +151,43 @@ ${exports.map((key, index) => {
     }
   }
 
+  public checkCircularManualMock(url: string): void {
+    const filename = url.startsWith('file://') ? fileURLToPath(url) : url
+    const id = cleanUrl(normalizeModuleId(filename))
+    if (this.originalModulePromises.has(id)) {
+      const factoryPromise = this.factoryPromises.get(id)
+      this.originalModulePromises.get(id)?.resolve({ __factoryPromise: factoryPromise })
+    }
+  }
+
+  private originalModulePromises = new Map<string, DeferPromise<any>>()
+  private factoryPromises = new Map<string, Promise<any>>()
+
   public getFactoryModule(id: string): any {
     const registry = this.getMockerRegistry()
     const mock = registry.getById(id)
     if (!mock || mock.type !== 'manual') {
       throw new Error(`Mock ${id} wasn't registered. This is probably a Vitest error. Please, open a new issue with reproduction.`)
     }
-    return mock.resolve()
+
+    const mockResult = mock.resolve()
+    if (mockResult instanceof Promise) {
+      // to avoid circular dependency, we resolve this function as {__factoryPromise}
+      // when it's requested the second time. then the exports are exposed as `undefined`,
+      // but later redefined when the promise is actually resolved
+      const promise = createDefer()
+      promise.finally(() => {
+        this.originalModulePromises.delete(id)
+      })
+      mockResult.then(promise.resolve, promise.reject).finally(() => {
+        this.factoryPromises.delete(id)
+      })
+      this.factoryPromises.set(id, mockResult)
+      this.originalModulePromises.set(id, promise)
+      return promise
+    }
+
+    return mockResult
   }
 
   public importActual<T>(rawId: string, importer: string): Promise<T> {

@@ -33,7 +33,7 @@ async function startModuleRunner(options: ContextModuleRunnerOptions): Promise<T
       // this additionally imports acorn/magic-string
       const { NativeModuleMocker } = await import('../moduleRunner/nativeModuleMocker')
       mocker = new NativeModuleMocker({
-        resolveId(id, importer) {
+        async resolveId(id, importer) {
           // TODO: use import.meta.resolve instead
           return state().rpc.resolve(id, importer, '__vitest__')
         },

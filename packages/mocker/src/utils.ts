@@ -5,22 +5,21 @@ export function cleanUrl(url: string): string {
 
 export function createManualModuleSource(moduleUrl: string, exports: string[], globalAccessor = '"__vitest_mocker__"'): string {
   const source = `
-const __factoryModule__ = globalThis[${globalAccessor}].getFactoryModule("${moduleUrl}");
-const module = typeof __factoryModule__.then === 'function' ? {} : __factoryModule__
-  `
+const __factoryModule__ = await globalThis[${globalAccessor}].getFactoryModule("${moduleUrl}");
+`
   const keys = exports
-    .map((name) => {
-      return `let __${name} = module["${name}"]
-export { __${name} as "${name}" }`
+    .map((name, index) => {
+      return `let __${index} = __factoryModule__["${name}"]
+export { __${index} as "${name}" }`
     })
     .join('\n')
   let code = `${source}\n${keys}`
   // this prevents recursion
   code += `
-if (typeof __factoryModule__.then === 'function') {
-  __factoryModule__.then((resolvedModule) => {
-    ${exports.map((name) => {
-      return `__${name} = resolvedModule["${name}"];`
+if (__factoryModule__.__factoryPromise != null) {
+  __factoryModule__.__factoryPromise.then((resolvedModule) => {
+    ${exports.map((name, index) => {
+      return `__${index} = resolvedModule["${name}"];`
     }).join('\n')}
   })
 }

@@ -153,6 +153,8 @@ function createLoadHook(_worker: WorkerSetupContext): module.LoadHookSync {
       return result
     }
 
+    getNativeMocker()?.checkCircularManualMock(url)
+
     if (url.includes('mock=automock') || url.includes('mock=autospy')) {
       const automockedResult = getNativeMocker()?.loadAutomock(url, result)
       if (automockedResult != null) {
