@@ -1,11 +1,12 @@
 import type { Reporter, TestRunEndReason } from '../types/reporter'
-import type { BaseOptions, BaseReporter } from './base'
+import type { BaseOptions } from './base'
 import type { BlobOptions } from './blob'
 import type { DefaultReporterOptions } from './default'
 import type { GithubActionsReporterOptions } from './github-actions'
 import type { HTMLOptions } from './html'
 import type { JsonOptions } from './json'
 import type { JUnitOptions } from './junit'
+import { BaseReporter } from './base'
 import { BlobReporter } from './blob'
 import { DefaultReporter } from './default'
 import { DotReporter } from './dot'
@@ -19,6 +20,7 @@ import { TreeReporter } from './tree'
 import { VerboseReporter } from './verbose'
 
 export {
+  BaseReporter,
   DefaultReporter,
   DotReporter,
   GithubActionsReporter,
@@ -30,7 +32,7 @@ export {
   TreeReporter,
   VerboseReporter,
 }
-export type { BaseReporter, Reporter, TestRunEndReason }
+export type { Reporter, TestRunEndReason }
 
 export type { BenchmarkBuiltinReporters } from './benchmark'
 export {

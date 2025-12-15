@@ -1,10 +1,11 @@
 import type { Reporter, Vitest } from 'vitest/node'
+import { BaseReporter } from 'vitest/reporters'
 
-export default class TestReporter implements Reporter {
-  ctx!: Vitest
+export default class TestReporter extends BaseReporter implements Reporter {
   options?: unknown
 
   constructor(options?: unknown) {
+    super()
     this.options = options
   }
 

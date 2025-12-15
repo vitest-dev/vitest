@@ -305,6 +305,7 @@ it('exports snapshot', async ({ skip, task }) => {
             "viteVersion": "string",
           },
           "./reporters": {
+            "BaseReporter": "function",
             "BenchmarkReporter": "function",
             "BenchmarkReportsMap": "object",
             "DefaultReporter": "function",

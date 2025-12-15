@@ -1,4 +1,5 @@
 export {
+  BaseReporter,
   BenchmarkReporter,
   BenchmarkReportsMap,
   DefaultReporter,
@@ -14,7 +15,6 @@ export {
   VerboseReporter,
 } from '../node/reporters'
 export type {
-  BaseReporter,
   BenchmarkBuiltinReporters,
   BuiltinReporterOptions,
   BuiltinReporters,
