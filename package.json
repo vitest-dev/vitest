@@ -51,7 +51,7 @@
     "@vitest/coverage-v8": "workspace:*",
     "@vitest/ui": "workspace:*",
     "bumpp": "^10.3.2",
-    "changelogithub": "^13.16.1",
+    "changelogithub": "^14.0.0",
     "esbuild": "^0.27.0",
     "eslint": "^9.39.1",
     "magic-string": "^0.30.21",
