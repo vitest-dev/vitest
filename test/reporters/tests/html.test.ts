@@ -6,7 +6,8 @@ import { resolve } from 'pathe'
 import { describe, expect, it } from 'vitest'
 import { runInlineTests, runVitest } from '../../test-utils'
 
-describe('html reporter', async () => {
+// test/ui has integration tests
+describe.skip('html reporter', async () => {
   const vitestRoot = resolve(import.meta.dirname, '../../..')
   const root = resolve(import.meta.dirname, '../fixtures')
 

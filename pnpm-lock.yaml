@@ -143,6 +143,9 @@ patchedDependencies:
   cac@6.7.14:
     hash: a8f0f3517a47ce716ed90c0cfe6ae382ab763b021a664ada2a608477d0621588
     path: patches/cac@6.7.14.patch
+  turbo-stream:
+    hash: dc2c8a95bd157b5c3250f343a016377f56b394a29ff2ca70358a0a87dd3758ed
+    path: patches/turbo-stream.patch
 
 importers:
 
@@ -880,6 +883,9 @@ importers:
       splitpanes:
         specifier: ^4.0.4
         version: 4.0.4(vue@3.5.25(typescript@5.9.3))
+      turbo-stream:
+        specifier: ^3.1.0
+        version: 3.1.0(patch_hash=dc2c8a95bd157b5c3250f343a016377f56b394a29ff2ca70358a0a87dd3758ed)
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
@@ -1080,6 +1086,9 @@ importers:
       strip-literal:
         specifier: 'catalog:'
         version: 3.1.0
+      turbo-stream:
+        specifier: ^3.1.0
+        version: 3.1.0(patch_hash=dc2c8a95bd157b5c3250f343a016377f56b394a29ff2ca70358a0a87dd3758ed)
       ws:
         specifier: 'catalog:'
         version: 8.18.3
@@ -8965,6 +8974,9 @@ packages:
     resolution: {integrity: sha512-5C1sg4USs1lfG0GFb2RLXsdpXqBSEhAaA/0kPL01wxzpMqLILNxIxIOKiILz+cdg/pLnOUxFYOR5yhHU666wbw==}
     engines: {node: '>=18.0.0'}
     hasBin: true
+
+  turbo-stream@3.1.0:
+    resolution: {integrity: sha512-tVI25WEXl4fckNEmrq70xU1XumxUwEx/FZD5AgEcV8ri7Wvrg2o7GEq8U7htrNx3CajciGm+kDyhRf5JB6t7/A==}
 
   twoslash-protocol@0.3.4:
     resolution: {integrity: sha512-HHd7lzZNLUvjPzG/IE6js502gEzLC1x7HaO1up/f72d8G8ScWAs9Yfa97igelQRDl5h9tGcdFsRp+lNVre1EeQ==}
@@ -17835,6 +17847,8 @@ snapshots:
       get-tsconfig: 4.10.0
     optionalDependencies:
       fsevents: 2.3.3
+
+  turbo-stream@3.1.0(patch_hash=dc2c8a95bd157b5c3250f343a016377f56b394a29ff2ca70358a0a87dd3758ed): {}
 
   twoslash-protocol@0.3.4: {}
 

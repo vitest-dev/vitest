@@ -60,7 +60,7 @@ export default defineConfig({
     //   name: 'debug-html-report',
     //   apply: 'serve',
     //   transformIndexHtml(html) {
-    //     return html.replace('<!-- !LOAD_METADATA! -->', `<script>window.METADATA_PATH="${debugLink}/html.meta.json.gz"</script>`)
+    //     return html.replace('<!-- !LOAD_METADATA! -->', `<script>window.METADATA_PATH="${debugLink}/html.meta.bin"</script>`)
     //   },
     // },
 
