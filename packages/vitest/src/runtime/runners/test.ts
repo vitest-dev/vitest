@@ -227,6 +227,10 @@ export class VitestTestRunner implements VitestRunner {
   }
 
   getImportDurations(): Record<string, ImportDuration> {
+    if (!this.config.includeImportDurations) {
+      return {}
+    }
+
     const importDurations: Record<string, ImportDuration> = {}
     const entries = this.workerState.moduleExecutionInfo?.entries() || []
 

@@ -94,6 +94,9 @@ export function serializeConfig(project: TestProject): SerializedConfig {
     includeTaskLocation:
       config.includeTaskLocation
       ?? globalConfig.includeTaskLocation,
+    includeImportDurations:
+      config.includeImportDurations
+      ?? globalConfig.includeImportDurations,
     env: {
       ...viteConfig?.env,
       ...config.env,

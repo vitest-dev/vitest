@@ -820,6 +820,13 @@ export interface InlineConfig {
   includeTaskLocation?: boolean
 
   /**
+   * Include "importDurations" property inside the test definition
+   *
+   * @default true
+   */
+  includeImportDurations?: boolean
+
+  /**
    * Directory path for storing attachments created by `context.annotate`
    *
    * @default '.vitest-attachments'
