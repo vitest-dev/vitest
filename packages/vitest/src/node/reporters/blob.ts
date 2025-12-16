@@ -277,7 +277,6 @@ class StringInterner {
     let index = this.stringToIndex.get(s)
     if (typeof index === 'undefined') {
       index = this.indexToString.length
-      this.indexToString.push(s)
       this.stringToIndex.set(s, index)
     }
     return index
@@ -286,95 +285,4 @@ class StringInterner {
   retrieve(index: number): string {
     return this.indexToString[index]
   }
-}
-
-// Compact JSON serialization with string interning
-// Format: string table (JSON array) + newline + data (JSON with markers)
-// Markers:
-// - ["!s", index] for interned strings
-// - ["!o", keyIdx, val, keyIdx, val, ...] for objects (flat key-value pairs)
-// - Numbers are reduced to toPrecision(3) for non-integers
-// - ["!", ...] escape for arrays that start with "!"
-// Slightly based on https://github.com/hi-ogawa/js-utils/tree/main/packages/json-extra
-
-export function compactJsonStringify(obj: unknown): string {
-  const strings: string[] = []
-  const indexMap = new Map<string, number>()
-
-  const intern = (s: string): number => {
-    let idx = indexMap.get(s)
-    if (idx === undefined) {
-      idx = strings.length
-      strings.push(s)
-      indexMap.set(s, idx)
-    }
-    return idx
-  }
-
-  const replacer = (_key: string, value: unknown): unknown => {
-    // Escape collision: arrays starting with "!"
-    if (
-      Array.isArray(value)
-      && value.length >= 2
-      && typeof value[0] === 'string'
-      && value[0][0] === '!'
-    ) {
-      return ['!', ...value]
-    }
-    // Numbers: reduce precision (no wrapper to avoid recursion)
-    if (typeof value === 'number') {
-      if (Number.isFinite(value) && !Number.isInteger(value)) {
-        return Number(value.toPrecision(3))
-      }
-      return value
-    }
-    // Strings: intern (but not our markers which start with "!")
-    if (typeof value === 'string') {
-      if (value[0] === '!') {
-        return value
-      }
-      return ['!s', intern(value)]
-    }
-    // Objects: convert to flat key-value pairs with interned keys
-    if (value && typeof value === 'object' && !Array.isArray(value)) {
-      const flat = Object.entries(value)
-        .filter(([_k, v]) => typeof v !== 'undefined')
-        .flatMap(([k, v]) => [intern(k), v])
-      return ['!o', ...flat]
-    }
-    return value
-  }
-
-  const dataJson = JSON.stringify(obj, replacer)
-  return `${JSON.stringify(strings)}\n${dataJson}`
-}
-
-export function compactJsonParse(str: string): unknown {
-  const newlineIdx = str.indexOf('\n')
-  const strings: string[] = JSON.parse(str.slice(0, newlineIdx))
-
-  const reviver = (_key: string, value: unknown): unknown => {
-    if (!Array.isArray(value)) {
-      return value
-    }
-    // Unescape collision
-    if (value.length >= 3 && value[0] === '!') {
-      return value.slice(1)
-    }
-    // String reference
-    if (value.length === 2 && value[0] === '!s') {
-      return strings[value[1] as number]
-    }
-    // Object from flat key-value pairs
-    if (value.length >= 1 && value[0] === '!o') {
-      const obj: Record<string, unknown> = {}
-      for (let i = 1; i < value.length; i += 2) {
-        obj[strings[value[i] as number]] = value[i + 1]
-      }
-      return obj
-    }
-    return value
-  }
-
-  return JSON.parse(str.slice(newlineIdx + 1), reviver)
 }
