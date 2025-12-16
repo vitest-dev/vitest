@@ -258,6 +258,7 @@ export function restoreOptimizedFilesReport(data: CompactFiles): File[] {
 // Markers:
 // - ["!s", index] for interned strings
 // - ["!o", keyIdx, val, keyIdx, val, ...] for objects (flat key-value pairs)
+// - Numbers are reduced to toPrecision(3) for non-integers
 // - ["!", ...] escape for arrays that start with "!"
 // Slightly based on https://github.com/hi-ogawa/js-utils/tree/main/packages/json-extra
 
@@ -284,6 +285,13 @@ export function compactJsonStringify(obj: unknown): string {
       && value[0][0] === '!'
     ) {
       return ['!', ...value]
+    }
+    // Numbers: reduce precision (no wrapper to avoid recursion)
+    if (typeof value === 'number') {
+      if (Number.isFinite(value) && !Number.isInteger(value)) {
+        return Number(value.toPrecision(3))
+      }
+      return value
     }
     // Strings: intern (but not our markers which start with "!")
     if (typeof value === 'string') {
