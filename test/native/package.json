@@ -1,5 +1,5 @@
 {
-  "name": "@vitest/example-native",
+  "name": "@vitest/test-native",
   "type": "module",
   "private": true,
   "license": "MIT",

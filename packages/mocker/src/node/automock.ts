@@ -21,7 +21,16 @@ export function automockModule(
   options: AutomockOptions = {},
 ): MagicString {
   const globalThisAccessor = options.globalThisAccessor || '"__vitest_mocker__"'
-  const ast = parse(code) as Program
+  let ast: Program
+  try {
+    ast = parse(code) as Program
+  }
+  catch (cause) {
+    if (options.id) {
+      throw new Error(`failed to parse ${options.id}`, { cause })
+    }
+    throw cause
+  }
 
   const m = new MagicString(code)
 

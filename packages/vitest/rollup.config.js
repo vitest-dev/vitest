@@ -80,7 +80,7 @@ const external = [
   'vitest/browser',
   'vite/module-runner',
   '@vitest/mocker',
-  '@vitest/mocker/node',
+  /@vitest\/mocker\/\w+/,
   '@vitest/utils/diff',
   '@vitest/utils/error',
   '@vitest/utils/source-map',

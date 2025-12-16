@@ -41,14 +41,12 @@ export class NativeModuleMocker extends BareModuleMocker {
     if (mockedModule.type === 'automock' || mockedModule.type === 'autospy') {
       return {
         url: injectQuery(url, parentURL, `mock=${mockedModule.type}`),
-        format: 'module',
         shortCircuit: true,
       }
     }
     if (mockedModule.type === 'manual') {
       return {
         url: injectQuery(url, parentURL, 'mock=manual'),
-        format: 'module',
         shortCircuit: true,
       }
     }
