@@ -38,7 +38,7 @@ export class ModuleDebug {
   private executionStack: ExecutionStack = []
 
   startCalculateModuleExecutionInfo(filename: string, options: ExecutionInfoOptions): () => ModuleExecutionInfoEntry {
-    if (options.includeImportDurations) {
+    if (!options.includeImportDurations) {
       return () => ({
         startOffset: options.startOffset,
         duration: 0,
