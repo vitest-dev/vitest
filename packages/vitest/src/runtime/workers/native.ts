@@ -119,7 +119,7 @@ export async function setupNodeLoaderHooks(worker: WorkerSetupContext): Promise<
 function replaceInSourceMarker(url: string, source: string, ms: () => MagicString) {
   const re = /import\.meta\.vitest/g
   let match: RegExpExecArray | null
-  let overriden = true
+  let overriden = false
   // eslint-disable-next-line no-cond-assign
   while ((match = re.exec(source))) {
     if (!match) {
