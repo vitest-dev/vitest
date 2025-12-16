@@ -216,15 +216,25 @@ type MergeReportModuleKeys = [
 
 export interface CompactFiles {
   files: File[]
-  compactImportDurations: string
+  compactImportDurations: [string[], unknown]
 }
 
 export function optimizeFilesReport(files: File[]): CompactFiles {
   const newFiles: File[] = []
-  const flatImportDurations: Record<string, NonNullable<File['importDurations']>> = {}
+  const flatImportDurations: { [id: string]: unknown[] } = {}
+  const interner = new StringInterner()
   for (const file of files) {
     if (file.importDurations) {
-      flatImportDurations[file.id] = file.importDurations
+      flatImportDurations[file.id]
+        = Object.entries(file.importDurations).flatMap(([k, v]) => {
+          return [
+            interner.intern(k),
+            v.selfTime.toPrecision(3),
+            v.totalTime.toPrecision(3),
+            v.external ? 1 : 0,
+            v.importer ? interner.intern(v.importer) : 0,
+          ]
+        })
     }
     // mutate File report itself to avoid `flatted` serialization
     // to pick up File/importDurations referenced elsewhere in nested objects
@@ -233,20 +243,49 @@ export function optimizeFilesReport(files: File[]): CompactFiles {
   }
   return {
     files: newFiles,
-    compactImportDurations: compactJsonStringify(flatImportDurations),
+    compactImportDurations: [interner.indexToString, flatImportDurations],
   }
 }
 
 export function restoreOptimizedFilesReport(data: CompactFiles): File[] {
   const { files, compactImportDurations } = data
-  const flatImportDurations
-    = compactJsonParse(compactImportDurations) as Record<string, NonNullable<File['importDurations']>>
+  const intener = new StringInterner(compactImportDurations[0])
+  const flatImportDurations = compactImportDurations[1] as { [id: string]: any[] }
   for (const file of files) {
-    if (flatImportDurations[file.id]) {
-      file.importDurations = flatImportDurations[file.id]
+    const v = flatImportDurations[file.id]
+    if (v) {
+      file.importDurations = {}
+      for (let i = 0; i < v.length; i += 5) {
+        const key = intener.retrieve(v[i] as number)
+        file.importDurations[key] = {
+          selfTime: Number(v[i + 1]),
+          totalTime: Number(v[i + 2]),
+          external: Boolean(v[i + 3]),
+          importer: v[i + 4] ? intener.retrieve(v[i + 4] as number) : undefined,
+        }
+      }
     }
   }
   return files
+}
+
+class StringInterner {
+  private stringToIndex = new Map<string, number>()
+  constructor(public indexToString: string[] = []) {}
+
+  intern(s: string): number {
+    let index = this.stringToIndex.get(s)
+    if (typeof index === 'undefined') {
+      index = this.indexToString.length
+      this.indexToString.push(s)
+      this.stringToIndex.set(s, index)
+    }
+    return index
+  }
+
+  retrieve(index: number): string {
+    return this.indexToString[index]
+  }
 }
 
 // Compact JSON serialization with string interning
