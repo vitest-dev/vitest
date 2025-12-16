@@ -8,7 +8,7 @@ outline: deep
 ## experimental.fsModuleCache <Version type="experimental">4.0.11</Version> {#experimental-fsmodulecache}
 
 ::: tip FEEDBACK
-Please, leave feedback regarding this feature in a [GitHub Discussion](https://github.com/vitest-dev/vitest/discussions/9221).
+Please leave feedback regarding this feature in a [GitHub Discussion](https://github.com/vitest-dev/vitest/discussions/9221).
 :::
 
 - **Type:** `boolean`
@@ -30,9 +30,9 @@ DEBUG=vitest:cache:fs vitest --experimental.fsModuleCache
 
 ### Known Issues
 
-Vitest creates persistent file hash based on file content, its id, vite's environment configuration and coverage status. Vitest tries to use as much information it has about the configuration, but it is still incomplete. At the moment, it is not possible to track your plugin options because there is no standard interface for it.
+Vitest creates a persistent file hash based on file content, its id, Vite's environment configuration and coverage status. Vitest tries to use as much information as it has about the configuration, but it is still incomplete. At the moment, it is not possible to track your plugin options because there is no standard interface for it.
 
-If you have a plugin that relies on things outside the file content or the public configuration (like reading another file or a folder), it's possible that the cache will get stale. To workaround that, you can define a [cache key generator](/api/advanced/plugin#definecachekeygenerator) to specify dynamic option or to opt-out of caching for that module:
+If you have a plugin that relies on things outside the file content or the public configuration (like reading another file or a folder), it's possible that the cache will get stale. To work around that, you can define a [cache key generator](/api/advanced/plugin#definecachekeygenerator) to specify a dynamic option or to opt out of caching for that module:
 
 ```js [vitest.config.js]
 import { defineConfig } from 'vitest/config'
@@ -66,7 +66,7 @@ export default defineConfig({
 
 If you are a plugin author, consider defining a [cache key generator](/api/advanced/plugin#definecachekeygenerator) in your plugin if it can be registered with different options that affect the transform result.
 
-On the other hand, if your plugin should not affect the cache key, you can opt-out by setting `api.vitest.experimental.ignoreFsModuleCache` to `true`:
+On the other hand, if your plugin should not affect the cache key, you can opt out by setting `api.vitest.experimental.ignoreFsModuleCache` to `true`:
 
 ```js [vitest.config.js]
 import { defineConfig } from 'vitest/config'
@@ -92,7 +92,7 @@ export default defineConfig({
 })
 ```
 
-Note that you can still define the cache key generator even the plugin opt-out of module caching.
+Note that you can still define the cache key generator even if the plugin opts out of module caching.
 
 ## experimental.fsModuleCachePath <Version type="experimental">4.0.11</Version> {#experimental-fsmodulecachepath}
 
@@ -108,7 +108,7 @@ At the moment, Vitest ignores the [test.cache.dir](/config/cache) or [cacheDir](
 ## experimental.openTelemetry <Version type="experimental">4.0.11</Version> {#experimental-opentelemetry}
 
 ::: tip FEEDBACK
-Please, leave feedback regarding this feature in a [GitHub Discussion](https://github.com/vitest-dev/vitest/discussions/9222).
+Please leave feedback regarding this feature in a [GitHub Discussion](https://github.com/vitest-dev/vitest/discussions/9222).
 :::
 
 - **Type:**
@@ -177,7 +177,7 @@ It's important that Node can process `sdkPath` content because it is not transfo
 ## experimental.printImportBreakdown <Version type="experimental">4.0.15</Version> {#experimental-printimportbreakdown}
 
 ::: tip FEEDBACK
-Please, leave feedback regarding this feature in a [GitHub Discussion](https://github.com/vitest-dev/vitest/discussions/9224).
+Please leave feedback regarding this feature in a [GitHub Discussion](https://github.com/vitest-dev/vitest/discussions/9224).
 :::
 
 - **Type:** `boolean`
@@ -205,7 +205,7 @@ Controls whether Vitest uses Vite's [module runner](https://vite.dev/guide/api-e
 
 If this option is defined in the root config, all [projects](/guide/projects) will inherit it automatically.
 
-We recommend disabling the module runner if you are running tests in the same environment as your code (server backend or simple scripts, for example). However, we still recommend running `jsdom`/`happy-dom` tests with the module runner or in [the browser](/guide/browser/) as it doesn't require any additional configuration.
+We recommend disabling the module runner if you are running tests in the same environment as your code (server backend or simple scripts, for example). However, we still recommend running `jsdom`/`happy-dom` tests with the module runner or in [the browser](/guide/browser/) since it doesn't require any additional configuration.
 
 Disabling this flag will disable _all_ file transforms:
 
@@ -228,9 +228,9 @@ All "external" modules run in native mode, meaning they are executed outside of 
 
 While running JSDOM/happy-dom tests in a permissive fake environment might be justified, running Node.js tests in a non-Node.js environment is counter-productive as it can hide and silence potential errors you may encounter in production, especially if your code doesn't require any additional transformations provided by Vite plugins.
 
-### Limitations
+### Known Limitations
 
-Some Vitest features rely on files being transformed. Vitest uses synchronous [Node.js Loaders API](https://nodejs.org/api/module.html#customization-hooks) to transform certain files to support these features:
+Some Vitest features rely on files being transformed. Vitest uses synchronous [Node.js Loaders API](https://nodejs.org/api/module.html#customization-hooks) to transform test files and setup files to support these features:
 
 - [`import.meta.vitest`](/guide/in-source)
 - [`vi.mock`](/api/vi#vi-mock)
@@ -240,7 +240,7 @@ Some Vitest features rely on files being transformed. Vitest uses synchronous [N
 This means that Vitest requires at least Node 22.15 for those features to work. At the moment, they also do not work in Deno or Bun.
 :::
 
-This could affect performance because Vitest needs to read the file and process it. If you do not use these features, you can disable the transforms by setting `experimental.nodeLoader` to `false`. Vitest only reads test files and setup files while looking for `vi.mock` or `vi.hoisted`. Using these in other files won't hoist them to the top of the file and can lead to unexpected results.
+This could affect performance because Vitest needs to read the file and process it. If you do not use these features, you can disable the transforms by setting `experimental.nodeLoader` to `false`. Vitest only reads test files and setup files while looking for `vi.mock` or `vi.hoisted`. Using these in other files won't hoist them to the top of the file and can lead to unexpected behavior.
 
 Some features will not work due to the nature of `viteModuleRunner`, including:
 
@@ -257,7 +257,7 @@ import { vi } from 'vitest'
 vi.spyOn(module, 'function').mockImplementation(() => 42)
 ```
 
-However, Vitest supports autospying on modules without overriding their implementation. When `vi.mock` is called with a `spy: true` argument, the module is mocked in a way that preserves original implementations, but all exported functions are wrapped in a `vi.fn()` spy:
+However, Vitest supports auto-spying on modules without overriding their implementation. When `vi.mock` is called with a `spy: true` argument, the module is mocked in a way that preserves original implementations, but all exported functions are wrapped in a `vi.fn()` spy:
 
 ```ts
 import * as module from './some-module.js'
