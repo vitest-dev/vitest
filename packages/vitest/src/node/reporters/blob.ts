@@ -226,14 +226,10 @@ export function optimizeFilesReport(files: File[]): CompactFiles {
     if (file.importDurations) {
       flatImportDurations[file.id] = file.importDurations
     }
-    // TODO:
-    // need to mutate File report itself to avoid flatted serialization
-    // to not include importDurations referenced in nested objects
+    // mutate File report itself to avoid `flatted` serialization
+    // to pick up File/importDurations referenced elsewhere in nested objects
     delete file.importDurations
     newFiles.push(file)
-    // const newFile = { ...file }
-    // delete newFile.importDurations
-    // newFiles.push(newFile)
   }
   return {
     files: newFiles,
@@ -243,11 +239,11 @@ export function optimizeFilesReport(files: File[]): CompactFiles {
 
 export function restoreOptimizedFilesReport(data: CompactFiles): File[] {
   const { files, compactImportDurations } = data
-  const importDurationsMap
+  const flatImportDurations
     = compactJsonParse(compactImportDurations) as Record<string, NonNullable<File['importDurations']>>
   for (const file of files) {
-    if (importDurationsMap[file.id]) {
-      file.importDurations = importDurationsMap[file.id]
+    if (flatImportDurations[file.id]) {
+      file.importDurations = flatImportDurations[file.id]
     }
   }
   return files
