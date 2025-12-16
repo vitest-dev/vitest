@@ -70,7 +70,7 @@ export class BlobReporter implements Reporter {
 
     const report = [
       this.ctx.version,
-      files,
+      optimizeFilesReport(files),
       errors,
       modules,
       coverage,
@@ -169,7 +169,7 @@ export async function readBlobs(
   })
 
   const files = blobs
-    .flatMap(blob => blob.files)
+    .flatMap(blob => restoreOptimizedFilesReport(blob.files))
     .sort((f1, f2) => {
       const time1 = f1.result?.startTime || 0
       const time2 = f2.result?.startTime || 0
@@ -196,7 +196,7 @@ export interface MergedBlobs {
 
 type MergeReport = [
   vitestVersion: string,
-  files: File[],
+  files: CompactFiles,
   errors: unknown[],
   modules: MergeReportModuleKeys[],
   coverage: unknown,
