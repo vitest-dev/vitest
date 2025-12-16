@@ -299,7 +299,7 @@ const tsxApi = import.meta.resolve('tsx/esm/api')
 export default defineConfig({
   test: {
     execArgv: [
-      `--import=data:text/javascript,import * as tsx from "${tsxCli}";tsx.register()`,
+      `--import=data:text/javascript,import * as tsx from "${tsxApi}";tsx.register()`,
     ],
     experimental: {
       viteModuleRunner: false,

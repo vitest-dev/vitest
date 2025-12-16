@@ -119,18 +119,15 @@ export async function setupNodeLoaderHooks(worker: WorkerSetupContext): Promise<
 function replaceInSourceMarker(url: string, source: string, ms: () => MagicString) {
   const re = /import\.meta\.vitest/g
   let match: RegExpExecArray | null
-  let overriden = false
+  let overridden = false
   // eslint-disable-next-line no-cond-assign
   while ((match = re.exec(source))) {
-    if (!match) {
-      return
-    }
     const { index, '0': code } = match
-    overriden = true
+    overridden = true
     // should it support process.vitest for CJS modules?
     ms().overwrite(index, index + code.length, 'IMPORT_META_VITEST') // the length is the same
   }
-  if (overriden) {
+  if (overridden) {
     const filename = resolve(fileURLToPath(url))
     ms().prepend(`const IMPORT_META_VITEST = typeof __vitest_worker__ !== 'undefined' && __vitest_worker__.filepath === "${filename.replace(/"/g, '\\"')}" ? __vitest_index__ : undefined;`)
   }
