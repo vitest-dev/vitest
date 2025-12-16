@@ -26,7 +26,6 @@
     "@vite-pwa/assets-generator": "^1.0.2",
     "@vite-pwa/vitepress": "^1.1.0",
     "@vitejs/plugin-vue": "catalog:",
-    "https-localhost": "^4.7.1",
     "tinyglobby": "catalog:",
     "unocss": "catalog:",
     "unplugin-vue-components": "catalog:",
