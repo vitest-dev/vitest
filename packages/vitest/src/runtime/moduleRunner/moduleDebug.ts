@@ -29,6 +29,7 @@ export interface ExecutionInfoOptions {
   startOffset: number
   external?: boolean
   importer?: string
+  includeImportDurations?: boolean
 }
 
 const performanceNow = performance.now.bind(performance)
@@ -37,6 +38,13 @@ export class ModuleDebug {
   private executionStack: ExecutionStack = []
 
   startCalculateModuleExecutionInfo(filename: string, options: ExecutionInfoOptions): () => ModuleExecutionInfoEntry {
+    if (options.includeImportDurations) {
+      return () => ({
+        startOffset: options.startOffset,
+        duration: 0,
+        selfTime: 0,
+      })
+    }
     const startTime = performanceNow()
 
     this.executionStack.push({
