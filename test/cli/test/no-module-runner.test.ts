@@ -1,6 +1,6 @@
 import module from 'node:module'
 import { expect, test } from 'vitest'
-import { runInlineTests } from '../../test-utils'
+import { replaceRoot, runInlineTests } from '../../test-utils'
 
 describe.runIf(module.registerHooks)('when module.registerHooks is supported', () => {
   test.skip('cannot run viteModuleRunner: false in "vmForks"', async () => {
@@ -311,18 +311,18 @@ test('not reported')
         },
       },
     })
-    expect(stderr.replace(new RegExp(root, 'g'), '<root>')).toMatchInlineSnapshot(`
-    "
-    ⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+    expect(replaceRoot(stderr, root)).toMatchInlineSnapshot(`
+      "
+      ⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
 
-     FAIL  add.test.js [ add.test.js ]
-    Error: Cannot find module '<root>/add' imported from <root>/add.test.js
-    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
-    Serialized Error: { code: 'ERR_MODULE_NOT_FOUND', url: 'file://<root>/add' }
-    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+       FAIL  add.test.js [ add.test.js ]
+      Error: Cannot find module '<root>/add' imported from <root>/add.test.js
+      ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
+      Serialized Error: { code: 'ERR_MODULE_NOT_FOUND', url: '<urlRoot>/add' }
+      ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
 
-    "
-  `)
+      "
+    `)
   })
 
   test('cannot import TS without extension in ESM', async () => {
@@ -345,18 +345,18 @@ test('not reported')
         },
       },
     })
-    expect(stderr.replace(new RegExp(root, 'g'), '<root>')).toMatchInlineSnapshot(`
-    "
-    ⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+    expect(replaceRoot(stderr, root)).toMatchInlineSnapshot(`
+      "
+      ⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
 
-     FAIL  add.test.js [ add.test.js ]
-    Error: Cannot find module '<root>/add.js' imported from <root>/add.test.js
-    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
-    Serialized Error: { code: 'ERR_MODULE_NOT_FOUND', url: 'file://<root>/add.js' }
-    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+       FAIL  add.test.js [ add.test.js ]
+      Error: Cannot find module '<root>/add.js' imported from <root>/add.test.js
+      ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
+      Serialized Error: { code: 'ERR_MODULE_NOT_FOUND', url: '<urlRoot>/add.js' }
+      ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
 
-    "
-  `)
+      "
+    `)
   })
 
   test.runIf(process.features.typescript)('an error in in-source tests is shown correctly', async () => {

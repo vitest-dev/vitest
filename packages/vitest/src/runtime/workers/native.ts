@@ -30,8 +30,10 @@ export async function setupNodeLoaderHooks(worker: WorkerSetupContext): Promise<
       resolve(specifier, context, nextResolve) {
         if (specifier.includes('mock=actual')) {
           // url is already resolved by `importActual`
+          const moduleId = specifier.replace(REGEXP_MOCK_ACTUAL, '')
           return {
-            url: specifier.replace(REGEXP_MOCK_ACTUAL, ''),
+            url: moduleId,
+            format: isBuiltin(moduleId) ? 'builtin' : undefined,
             shortCircuit: true,
           }
         }

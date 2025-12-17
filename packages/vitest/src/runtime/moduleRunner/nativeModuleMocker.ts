@@ -10,6 +10,7 @@ import {
 import { cleanUrl, createDefer } from '@vitest/utils/helpers'
 import { parse } from 'acorn'
 import { isAbsolute } from 'pathe'
+import { toBuiltin } from '../../utils/modules'
 import { BareModuleMocker, normalizeModuleId } from './bareModuleMocker'
 
 export class NativeModuleMocker extends BareModuleMocker {
@@ -26,7 +27,8 @@ export class NativeModuleMocker extends BareModuleMocker {
   }
 
   public resolveMockedModule(url: string, parentURL: string): module.ResolveFnOutput | undefined {
-    const moduleId = normalizeModuleId(url)
+    const filename = url.startsWith('file://') ? fileURLToPath(url) : url
+    const moduleId = normalizeModuleId(filename)
 
     const mockedModule = this.getDependencyMock(moduleId)
     if (!mockedModule) {
@@ -119,7 +121,7 @@ export { __${index} as "${key}" }`.trim()
     }
 
     if (isBuiltin(moduleId)) {
-      const builtinModule = getBuiltinModule(moduleId)
+      const builtinModule = getBuiltinModule(toBuiltin(moduleId))
       const exports = Object.keys(builtinModule)
       const manualMockedModule = createManualModuleSource(moduleId, exports)
 
@@ -157,9 +159,12 @@ export { __${index} as "${key}" }`.trim()
     }
   }
 
+  private processedModules = new Map<string, number>()
+
   public checkCircularManualMock(url: string): void {
     const filename = url.startsWith('file://') ? fileURLToPath(url) : url
     const id = cleanUrl(normalizeModuleId(filename))
+    this.processedModules.set(id, (this.processedModules.get(id) ?? 0) + 1)
     // the module is mocked and requested a second time, let's resolve
     // the factory function that will redefine the exports later
     if (this.originalModulePromises.has(id)) {
@@ -194,6 +199,17 @@ export { __${index} as "${key}" }`.trim()
       })
       this.factoryPromises.set(id, mockResult)
       this.originalModulePromises.set(id, promise)
+      // Node.js on windows processes all the files first, and then runs them
+      // unlike Node.js logic on Mac and Unix where it also runs the code while evaluating
+      // So on Linux/Mac this `if` won't be hit because `checkCircularManualMock` will resolve it
+      // And on Windows, the `checkCircularManualMock` will never have `originalModulePromises`
+      // because `getFactoryModule` is not called until the evaluation phase
+      // But if we track how many times the module was transformed,
+      // we can deduce when to return `__factoryPromise` to support circular modules
+      if ((this.processedModules.get(id) ?? 0) > 1) {
+        this.processedModules.set(id, (this.processedModules.get(id) ?? 1) - 1)
+        promise.resolve({ __factoryPromise: mockResult })
+      }
       return promise
     }
 
@@ -248,7 +264,7 @@ function injectQuery(url: string, importer: string, queryToInject: string): stri
 let __require: NodeJS.Require | undefined
 function getBuiltinModule(moduleId: string) {
   __require ??= module.createRequire(import.meta.url)
-  return __require(moduleId)
+  return __require(`${moduleId}?mock=actual`)
 }
 
 function genSourceMapUrl(map: SourceMap | string): string {
