@@ -25,7 +25,7 @@ Make sure to export the SDK as a default export, so that Vitest can flush the ne
 Before previewing your application traces, install required packages and specify the path to your instrumentation file in the config.
 
 ```shell
-npm i @opentelemetry/api @opentelemetry/sdk-node @opentelemetry/auto-instrumentations-node @opentelemetry/exporter-trace-otlp-proto
+npm i @opentelemetry/sdk-node @opentelemetry/auto-instrumentations-node @opentelemetry/exporter-trace-otlp-proto
 ```
 
 ::: code-group
@@ -91,7 +91,7 @@ When running tests in [browser mode](/guide/browser/), Vitest propagates trace c
 To capture traces from the browser runtime, provide a browser-compatible SDK via `browserSdkPath`:
 
 ```shell
-npm i @opentelemetry/api @opentelemetry/sdk-trace-web @opentelemetry/exporter-trace-otlp-proto
+npm i @opentelemetry/sdk-trace-web @opentelemetry/exporter-trace-otlp-proto
 ```
 
 ::: code-group
