@@ -3,6 +3,16 @@ import { runInlineTests } from '../../test-utils'
 
 describe('Typechecker Error Handling', () => {
   it('throws helpful error when tsc outputs help text (missing config)', async () => {
+    // TESTING APPROACH:
+    // We cannot reliably trigger tsc's help text output in normal usage because:
+    // 1. tsc only shows help when called with NO arguments or INVALID arguments
+    // 2. Vitest always calls tsc with proper arguments (--noEmit, --pretty, etc.)
+    // 3. Invalid tsconfig causes ERROR output, not help text
+    //
+    // SOLUTION: Use a test executable that mimics tsc help output
+    // This is NOT a mock (no jest.mock or similar), but a real executable script
+    // that Vitest spawns and executes, validating the error handling logic works.
+
     const fs = await import('node:fs')
     const path = await import('node:path')
     const os = await import('node:os')
