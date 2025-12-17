@@ -1,6 +1,6 @@
 import type { File, RunMode, Suite, Test } from '@vitest/runner'
-import { describe, expect, it } from 'vitest'
 import { interpretTaskModes, someTasksAreOnly } from '@vitest/runner/utils'
+import { describe, expect, it } from 'vitest'
 
 function createFile(name: string): File {
   const file: File = {
@@ -34,7 +34,7 @@ function createSuite(name: string, mode: RunMode = 'run', parent?: Suite): Suite
   return suite
 }
 
-function createTest(name: string, mode: RunMode = 'run', suite?: Suite, location?: { line: number, column: number }): Test {
+function createTest(name: string, mode: RunMode = 'run', suite?: Suite, location?: { line: number; column: number }): Test {
   const test: Test = {
     id: suite ? `${suite.id}_${suite.tasks.length}` : '1_0',
     name,
