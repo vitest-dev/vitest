@@ -7,7 +7,6 @@ import type {
   WebSocketEvents,
   WebSocketHandlers,
 } from 'vitest'
-import { decompressSync, strFromU8 } from 'fflate'
 import { parse } from 'flatted'
 import { reactive } from 'vue'
 import { StateManager } from '../../../../ws-client/src/state'
@@ -98,18 +97,12 @@ export function createStaticClient(): VitestClient {
 
   async function registerMetadata() {
     const res = await fetch(window.METADATA_PATH!)
-    const contentType = res.headers.get('content-type')?.toLowerCase() || ''
-    if (
-      contentType.includes('application/gzip')
-      || contentType.includes('application/x-gzip')
-    ) {
-      const compressed = new Uint8Array(await res.arrayBuffer())
-      const decompressed = strFromU8(decompressSync(compressed))
-      metadata = parse(decompressed) as HTMLReportMetadata
-    }
-    else {
-      metadata = parse(await res.text()) as HTMLReportMetadata
-    }
+    const stream
+      = res.body!
+        .pipeThrough(new DecompressionStream('gzip'))
+        .pipeThrough(new TextDecoderStream())
+    const decompressed = await streamToString(stream)
+    metadata = parse(decompressed) as HTMLReportMetadata
     const event = new Event('open')
     ctx.ws.dispatchEvent(event)
   }
@@ -121,4 +114,16 @@ export function createStaticClient(): VitestClient {
   }
 
   return ctx
+}
+
+async function streamToString(stream: ReadableStream<string>): Promise<string> {
+  let result = ''
+  await stream.pipeTo(
+    new WritableStream({
+      write(chunk) {
+        result += chunk
+      },
+    }),
+  )
+  return result
 }

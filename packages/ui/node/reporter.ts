@@ -162,7 +162,7 @@ export default class HTMLReporter implements Reporter {
   }
 
   async writeReport(report: string): Promise<void> {
-    const metaFile = resolve(this.reporterDir, 'html.meta.json.gz')
+    const metaFile = resolve(this.reporterDir, 'html.meta.bin')
 
     const promiseGzip = promisify(gzip)
     const data = await promiseGzip(report, {

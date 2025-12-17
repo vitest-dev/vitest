@@ -25,7 +25,7 @@ describe('html reporter', async () => {
 
     expect(stderr).toBe('')
 
-    const metaJsonGzipped = fs.readFileSync(resolve(root, `${basePath}/html.meta.json.gz`))
+    const metaJsonGzipped = fs.readFileSync(resolve(root, `${basePath}/html.meta.bin`))
     const metaJson = zlib.gunzipSync(metaJsonGzipped).toString('utf-8')
     const indexHtml = fs.readFileSync(resolve(root, `${basePath}/index.html`), { encoding: 'utf-8' })
     const resultJson = parse(metaJson.replace(new RegExp(vitestRoot, 'g'), '<rootDir>'))
@@ -50,7 +50,7 @@ describe('html reporter', async () => {
     expect(task.result.logs).not.toBeDefined()
 
     expect(resultJson).toMatchSnapshot(`tests are passing`)
-    expect(indexHtml).toMatch('window.METADATA_PATH="html.meta.json.gz"')
+    expect(indexHtml).toMatch('window.METADATA_PATH="html.meta.bin"')
   }, 120000)
 
   it('resolves to "failing" status for test file "json-fail"', async () => {
@@ -68,7 +68,7 @@ describe('html reporter', async () => {
 
     expect(stderr).toBe('')
 
-    const metaJsonGzipped = fs.readFileSync(resolve(root, `${basePath}/html.meta.json.gz`))
+    const metaJsonGzipped = fs.readFileSync(resolve(root, `${basePath}/html.meta.bin`))
     const metaJson = zlib.gunzipSync(metaJsonGzipped).toString('utf-8')
     const indexHtml = fs.readFileSync(resolve(root, `${basePath}/index.html`), { encoding: 'utf-8' })
     const resultJson = parse(metaJson.replace(new RegExp(vitestRoot, 'g'), '<rootDir>'))
@@ -97,7 +97,7 @@ describe('html reporter', async () => {
     task.logs[0].time = 0
 
     expect(resultJson).toMatchSnapshot(`tests are failing`)
-    expect(indexHtml).toMatch('window.METADATA_PATH="html.meta.json.gz"')
+    expect(indexHtml).toMatch('window.METADATA_PATH="html.meta.bin"')
   }, 120000)
 })
 
