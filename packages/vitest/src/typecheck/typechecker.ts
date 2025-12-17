@@ -53,7 +53,7 @@ export class Typechecker {
 
   protected files: string[] = []
 
-  constructor(protected project: TestProject) {}
+  constructor(protected project: TestProject) { }
 
   public setFiles(files: string[]): void {
     this.files = files
@@ -128,15 +128,16 @@ export class Typechecker {
     if (output.includes('The TypeScript Compiler - Version') || output.includes('COMMON COMMANDS')) {
       const { typecheck } = this.project.config
       const tsconfigPath = typecheck.tsconfig || 'tsconfig.json'
-      throw new Error(
-        `TypeScript compiler returned help text instead of type checking results.\n`
+      const msg = `TypeScript compiler returned help text instead of type checking results.\n`
         + `This usually means the tsconfig file was not found.\n\n`
         + `Possible solutions:\n`
         + `  1. Ensure '${tsconfigPath}' exists in your project root\n`
         + `  2. If using a custom tsconfig, verify the path in your Vitest config:\n`
         + `     test: { typecheck: { tsconfig: 'path/to/tsconfig.json' } }\n`
-        + `  3. Check that the tsconfig file is valid JSON`,
-      )
+        + `  3. Check that the tsconfig file is valid JSON`
+
+      console.error(msg)
+      throw new Error(msg)
     }
 
     const typeErrors = await this.parseTscLikeOutput(output)
@@ -178,19 +179,19 @@ export class Typechecker {
       errors.forEach(({ error, originalError }) => {
         const processedPos = traceMap
           ? findGeneratedPosition(traceMap, {
-              line: originalError.line,
-              column: originalError.column,
-              source: basename(path),
-            })
+            line: originalError.line,
+            column: originalError.column,
+            source: basename(path),
+          })
           : originalError
         const line = processedPos.line ?? originalError.line
         const column = processedPos.column ?? originalError.column
         const index = indexMap.get(`${line}:${column}`)
         const definition
           = index != null
-            && sortedDefinitions.find(
-              def => def.start <= index && def.end >= index,
-            )
+          && sortedDefinitions.find(
+            def => def.start <= index && def.end >= index,
+          )
         const suite = definition ? definition.task : file
         const state: TaskState
           = suite.mode === 'run' || suite.mode === 'only' ? 'fail' : suite.mode
@@ -423,6 +424,7 @@ export class Typechecker {
 
     if (!watch) {
       await child
+      console.error('DEBUG_TYPECHECKER_CHILD_EXITED')
       this._result = await this.prepareResults(this._output)
       await this._onParseEnd?.(this._result)
     }
