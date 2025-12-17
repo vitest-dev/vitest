@@ -18,7 +18,7 @@ export function interpretTaskModes(
   const matchedLocations: number[] = []
   const testLocationsSet = testLocations?.length ? new Set(testLocations) : undefined
 
-  const traverseSuite = (suite: Suite, parentIsOnly: boolean, parentMatchedWithLocation: boolean): void => {
+  const traverseSuite = (suite: Suite, parentIsOnly = false, parentMatchedWithLocation = false): void => {
     const suiteIsOnly = parentIsOnly || suite.mode === 'only'
 
     // Pre-compute which tasks have `.only` set (directly or in nested suites)
@@ -34,8 +34,8 @@ export function interpretTaskModes(
     }
 
     // Check if any direct children have `.only` - if so, only those should run
-    const hasSomeTasksOnly = onlyMode && suite.tasks.some(
-      t => t.mode === 'only' || (t.type === 'suite' && hasOnlyChild!.get(t)),
+    const hasSomeTasksOnly = hasOnlyChild && suite.tasks.some(
+      t => t.mode === 'only' || (t.type === 'suite' && hasOnlyChild.get(t)),
     )
 
     for (const task of suite.tasks) {
@@ -104,7 +104,7 @@ export function interpretTaskModes(
     }
   }
 
-  traverseSuite(file, parentIsOnly ?? false, false)
+  traverseSuite(file, parentIsOnly, false)
 
   // Report errors for unmatched test locations
   if (testLocationsSet) {
