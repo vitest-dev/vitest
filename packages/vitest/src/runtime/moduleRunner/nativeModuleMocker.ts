@@ -83,23 +83,28 @@ export { __${index} as "${key}" }`.trim()
       return
     }
 
-    const ms = automockModule(
-      transformedCode,
-      mockType,
-      code => parse(code, {
-        sourceType: 'module',
-        ecmaVersion: 'latest',
-      }),
-      { id: moduleId },
-    )
-    const transformed = ms.toString()
-    const map = ms.generateMap({ hires: 'boundary', source: moduleId })
-    const code = `${transformed}\n//# sourceMappingURL=${genSourceMapUrl(map)}`
+    try {
+      const ms = automockModule(
+        transformedCode,
+        mockType,
+        code => parse(code, {
+          sourceType: 'module',
+          ecmaVersion: 'latest',
+        }),
+        { id: moduleId },
+      )
+      const transformed = ms.toString()
+      const map = ms.generateMap({ hires: 'boundary', source: moduleId })
+      const code = `${transformed}\n//# sourceMappingURL=${genSourceMapUrl(map)}`
 
-    return {
-      format: 'module',
-      source: code,
-      shortCircuit: true,
+      return {
+        format: 'module',
+        source: code,
+        shortCircuit: true,
+      }
+    }
+    catch (cause) {
+      throw new Error(`Cannot automock '${url}' because it failed to parse.`, { cause })
     }
   }
 
@@ -128,10 +133,6 @@ export { __${index} as "${key}" }`.trim()
       return
     }
 
-    // since the factory returned an async result, we have to figure out keys synchronosly somehow
-    // so we parse the module with es/cjs-module-lexer to find the original exports -- we assume the same ones are returned
-    // injecting new keys is not supported (and should not be advised anyway)
-
     const source = result.source.toString()
     const transformedCode = transformCode(source, result.format || 'module', moduleId)
     if (transformedCode == null) {
@@ -139,19 +140,28 @@ export { __${index} as "${key}" }`.trim()
     }
 
     const format = result.format?.startsWith('module') ? 'module' : 'commonjs'
-    const exports = collectModuleExports(moduleId, transformedCode, format)
-    const manualMockedModule = createManualModuleSource(moduleId, exports)
+    try {
+      // we parse the module with es/cjs-module-lexer to find the original exports -- we assume the same ones are returned from the factory
+      // injecting new keys is not supported (and should not be advised anyway)
+      const exports = collectModuleExports(moduleId, transformedCode, format)
+      const manualMockedModule = createManualModuleSource(moduleId, exports)
 
-    return {
-      format: 'module',
-      source: manualMockedModule,
-      shortCircuit: true,
+      return {
+        format: 'module',
+        source: manualMockedModule,
+        shortCircuit: true,
+      }
+    }
+    catch (cause) {
+      throw new Error(`Failed to mock '${url}'. See the cause for more information.`, { cause })
     }
   }
 
   public checkCircularManualMock(url: string): void {
     const filename = url.startsWith('file://') ? fileURLToPath(url) : url
     const id = cleanUrl(normalizeModuleId(filename))
+    // the module is mocked and requested a second time, let's resolve
+    // the factory function that will redefine the exports later
     if (this.originalModulePromises.has(id)) {
       const factoryPromise = this.factoryPromises.get(id)
       this.originalModulePromises.get(id)?.resolve({ __factoryPromise: factoryPromise })
@@ -172,7 +182,7 @@ export { __${index} as "${key}" }`.trim()
 
     const mockResult = mock.resolve()
     if (mockResult instanceof Promise) {
-      // to avoid circular dependency, we resolve this function as {__factoryPromise}
+      // to avoid circular dependency, we resolve this function as {__factoryPromise} in `checkCircularManualMock`
       // when it's requested the second time. then the exports are exposed as `undefined`,
       // but later redefined when the promise is actually resolved
       const promise = createDefer()

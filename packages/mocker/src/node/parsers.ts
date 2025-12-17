@@ -144,7 +144,8 @@ export function resolveModuleFormat(url: string, code: string): 'module' | 'comm
       return 'commonjs'
     }
     else {
-      // Ambiguous input! Check if it has ESM syntax. Node.js is much smarter here
+      // Ambiguous input! Check if it has ESM syntax. Node.js is much smarter here,
+      // but we don't need to run the code, so we can be more relaxed
       if (hasESM(filterOutComments(code))) {
         return 'module'
       }
@@ -156,10 +157,10 @@ export function resolveModuleFormat(url: string, code: string): 'module' | 'comm
   return undefined
 }
 
-let __require: NodeJS.Require | undefined
+let __globalRequire: NodeJS.Require | undefined
 function getBuiltinModule(moduleId: string) {
-  __require ??= module.createRequire(import.meta.url)
-  return __require(moduleId)
+  __globalRequire ??= module.createRequire(import.meta.url)
+  return __globalRequire(moduleId)
 }
 
 const ESM_RE
