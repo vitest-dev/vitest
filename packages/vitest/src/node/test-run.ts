@@ -182,6 +182,13 @@ export class TestRun {
 
     assert(task && entity, `Entity must be found for task ${task?.name || id}`)
 
+    if (event === 'suite-failed-early' && entity.type === 'module') {
+      // the file failed during import
+      await this.vitest.report('onTestModuleStart', entity)
+      await this.vitest.report('onTestModuleEnd', entity)
+      return
+    }
+
     if (event === 'suite-prepare' && entity.type === 'suite') {
       return await this.vitest.report('onTestSuiteReady', entity)
     }
