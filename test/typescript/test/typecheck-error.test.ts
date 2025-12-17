@@ -30,18 +30,19 @@ export default defineConfig({
 
     const { stderr, stdout } = await runInlineTests({
       'vitest.config.ts': configContent,
-      'test.ts': `import { test } from 'vitest'\ntest('placeholder', () => { })`
+      'test.ts': `import { test } from 'vitest'\ntest('placeholder', () => { })`,
     })
 
     // Cleanup
     try {
       fs.rmSync(tmpDir, { recursive: true, force: true })
-    } catch { }
+    }
+    catch { }
 
     // Assert that Vitest caught the help text and threw the descriptive error
     const output = stderr + stdout
     expect(output).toContain('TypeScript compiler returned help text instead of type checking results')
     expect(output).toContain('This usually means the tsconfig file was not found')
-    expect(output).toContain("Ensure 'tsconfig.json' exists in your project root")
+    expect(output).toContain('Ensure \'tsconfig.json\' exists in your project root')
   })
 })
