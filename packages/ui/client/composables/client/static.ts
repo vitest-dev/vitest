@@ -98,17 +98,16 @@ export function createStaticClient(): VitestClient {
 
   async function registerMetadata() {
     const res = await fetch(window.METADATA_PATH!)
-    const contentType = res.headers.get('content-type')?.toLowerCase() || ''
-    if (
-      contentType.includes('application/gzip')
-      || contentType.includes('application/x-gzip')
-    ) {
-      const compressed = new Uint8Array(await res.arrayBuffer())
-      const decompressed = strFromU8(decompressSync(compressed))
+    const content = new Uint8Array(await res.arrayBuffer())
+
+    // Check for gzip magic numbers (0x1f 0x8b) to determine if content is compressed
+    // This handles cases where Content-Encoding: gzip causes browser to auto-decompress
+    if (content.length >= 2 && content[0] === 0x1F && content[1] === 0x8B) {
+      const decompressed = strFromU8(decompressSync(content))
       metadata = parse(decompressed) as HTMLReportMetadata
     }
     else {
-      metadata = parse(await res.text()) as HTMLReportMetadata
+      metadata = parse(strFromU8(content)) as HTMLReportMetadata
     }
     const event = new Event('open')
     ctx.ws.dispatchEvent(event)
