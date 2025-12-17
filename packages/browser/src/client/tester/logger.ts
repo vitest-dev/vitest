@@ -1,4 +1,4 @@
-import { format, stringify } from 'vitest/internal/browser'
+import { browserFormat } from 'vitest/internal/browser'
 import { getConfig } from '../utils'
 import { rpc } from './rpc'
 import { getBrowserRunner } from './runner'
@@ -30,7 +30,7 @@ export function setupConsoleLogSpy(): void {
 
   console.dir = (item, options) => {
     dir(item, options)
-    sendLog('stdout', formatInput(item))
+    sendLog('stdout', browserFormat(item))
   }
 
   console.dirxml = (...args) => {
@@ -113,18 +113,8 @@ function stderr(base: (...args: unknown[]) => void) {
   }
 }
 
-function formatInput(input: unknown) {
-  if (typeof input === 'object') {
-    return stringify(input, undefined, {
-      printBasicPrototype: false,
-      escapeString: false,
-    })
-  }
-  return format(input)
-}
-
 function processLog(args: unknown[]) {
-  return args.map(formatInput).join(' ')
+  return browserFormat(...args)
 }
 
 function sendLog(
