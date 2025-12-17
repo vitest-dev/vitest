@@ -8,6 +8,7 @@ import { loadEnvironment } from '../../integrations/env/loader'
 import { distDir } from '../../paths'
 import { createCustomConsole } from '../console'
 import { ExternalModulesExecutor } from '../external-executor'
+import { listenForErrors } from '../moduleRunner/errorCatcher'
 import { getDefaultRequestStubs } from '../moduleRunner/moduleEvaluator'
 import { createNodeImportMeta } from '../moduleRunner/moduleRunner'
 import { startVitestModuleRunner, VITEST_VM_CONTEXT_SYMBOL } from '../moduleRunner/startVitestModuleRunner'
@@ -88,6 +89,12 @@ export async function runVmTests(method: 'run' | 'collect', state: WorkerGlobalS
     transform: rpc.transform,
     viteClientModule: stubs['/@vite/client'],
   })
+
+  process.exit = (code = process.exitCode || 0): never => {
+    throw new Error(`process.exit unexpectedly called with "${code}"`)
+  }
+
+  listenForErrors(() => state)
 
   const moduleRunner = startVitestModuleRunner({
     context,
