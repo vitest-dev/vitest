@@ -89,16 +89,16 @@ Check `.vitest-dump/root/vitest-metadata.json` - you'll see that ALL files in th
 {
   "outline": {
     "externalized": 0,
-    "inlined": 7  // 7 files transformed!
+    "inlined": 7 // 7 files transformed!
   },
   "duration": {
-    "/test/barrel-import.test.ts": [...],
-    "/src/utils/index.ts": [...],        // barrel file
-    "/src/utils/currency.ts": [...],      // ✓ needed
-    "/src/utils/time.ts": [...],          // ✗ not needed
-    "/src/utils/math.ts": [...],          // ✗ not needed
-    "/src/utils/location.ts": [...],      // ✗ not needed
-    "/src/utils/users.ts": [...]          // ✗ not needed
+    "/test/barrel-import.test.ts": [/* timing data */],
+    "/src/utils/index.ts": [/* timing data */], // barrel file
+    "/src/utils/currency.ts": [/* timing data */], // ✓ needed
+    "/src/utils/time.ts": [/* timing data */], // ✗ not needed
+    "/src/utils/math.ts": [/* timing data */], // ✗ not needed
+    "/src/utils/location.ts": [/* timing data */], // ✗ not needed
+    "/src/utils/users.ts": [/* timing data */] // ✗ not needed
   }
 }
 ```
@@ -115,11 +115,11 @@ Check `.vitest-dump/root/vitest-metadata.json` - you'll see that ONLY the necess
 {
   "outline": {
     "externalized": 0,
-    "inlined": 2  // Only 2 files!
+    "inlined": 2 // Only 2 files!
   },
   "duration": {
-    "/test/direct-import.test.ts": [...],
-    "/src/utils/currency.ts": [...]  // ✓ only what's needed
+    "/test/direct-import.test.ts": [/* timing data */],
+    "/src/utils/currency.ts": [/* timing data */] // ✓ only what's needed
   }
 }
 ```
