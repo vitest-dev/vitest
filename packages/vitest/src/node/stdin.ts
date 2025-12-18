@@ -1,10 +1,12 @@
 import type { File, Task } from '@vitest/runner'
+import type { SerializedError } from '@vitest/utils'
 import type { Writable } from 'node:stream'
 import type { Vitest } from './core'
+import type { TestRunEndReason } from './reporters'
 import type { TestSpecification } from './spec'
 import type { FilterObject } from './watch-filter'
 import readline from 'node:readline'
-import { getTests, isTestCase } from '@vitest/runner/utils'
+import { getTests, hasFailed, isTestCase } from '@vitest/runner/utils'
 import { relative, resolve } from 'pathe'
 import prompt from 'prompts'
 import c from 'tinyrainbow'
@@ -259,6 +261,16 @@ export function registerConsoleShortcuts(
     off()
 
     const files = ctx.state.getFiles()
+    const testModules = ctx.state.getTestModules()
+    const errors = ctx.state.getUnhandledErrors()
+    const state: TestRunEndReason = ctx.isCancelling
+      ? 'interrupted'
+      // by this point, the run will be marked as failed if there are any errors,
+      // should it be done by testRun.end?
+      : hasFailed(files)
+        ? 'failed'
+        : 'passed'
+
     const tests = getTests(files)
 
     const specs: TestSpecification[] = []
@@ -297,6 +309,9 @@ export function registerConsoleShortcuts(
           project.createSpecification(test.file.filepath, [test.location!.line], test.file.pool),
         )
       }
+      else if (action === 'q' || action === undefined) {
+        break
+      }
     }
 
     if (specs.length) {
@@ -309,10 +324,11 @@ export function registerConsoleShortcuts(
         ctx.resetSnapshotUpdate()
       }
     }
-    // else {
-    //   // TODO: This is a hack to trigger report summary again
-    //   ctx.report('onFinished')
-    // }
+    else {
+      stdout.write('\x1Bc')
+      // TODO: This is a hack to trigger report summary again
+      ctx.report('onTestRunEnd', testModules, errors as SerializedError[], state)
+    }
 
     on()
   }
