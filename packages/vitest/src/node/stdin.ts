@@ -135,65 +135,7 @@ export function registerConsoleShortcuts(
     }
     // update snapshot
     if (name === 'i') {
-      off()
-
-      const files = ctx.state.getFiles()
-      const tests = getTests(files)
-
-      const specs: TestSpecification[] = []
-      for (const test of tests) {
-        stdout.write('\x1Bc')
-
-        const snapshotErrors = test.result?.errors?.filter(
-          e => typeof e?.message === 'string'
-            && e.message.match(/Snapshot .* mismatched/),
-        )
-
-        if (!snapshotErrors?.length) {
-          continue
-        }
-
-        snapshotErrors.forEach((e) => {
-          ctx.logger.printError(e)
-        })
-
-        printPrompt('', [
-          ['u', 'update snapshots for this test'],
-          ['s', 'skip current test'],
-          ['q', 'quit interactive snapshot mode'],
-        ])
-
-        const { action } = await prompt({
-          type: 'text',
-          message: '',
-          name: 'action',
-        })
-
-        if (action === 'u') {
-          const project = ctx.getProjectByName(test.file.projectName || '')
-
-          specs.push(
-            project.createSpecification(test.file.filepath, [test.location!.line], test.file.pool),
-          )
-        }
-      }
-
-      if (specs.length) {
-        ctx.enableSnapshotUpdate()
-
-        try {
-          await ctx.rerunTestSpecifications(specs)
-        }
-        finally {
-          ctx.resetSnapshotUpdate()
-        }
-      }
-      else {
-        // TODO: This is a hack to trigger report summary again
-        ctx.report('onFinished')
-      }
-
-      on()
+      return interactiveSnapshotUpdate()
     }
     // rerun all tests
     if (name === 'a' || name === 'return') {
@@ -311,6 +253,68 @@ export function registerConsoleShortcuts(
         ? lastResults.map(i => resolve(ctx.config.root, i))
         : undefined,
     )
+  }
+
+  async function interactiveSnapshotUpdate() {
+    off()
+
+    const files = ctx.state.getFiles()
+    const tests = getTests(files)
+
+    const specs: TestSpecification[] = []
+    for (const test of tests) {
+      stdout.write('\x1Bc')
+
+      const snapshotErrors = test.result?.errors?.filter(
+        e => typeof e?.message === 'string'
+          && e.message.match(/Snapshot .* mismatched/),
+      )
+
+      if (!snapshotErrors?.length) {
+        continue
+      }
+
+      snapshotErrors.forEach((e) => {
+        ctx.logger.printError(e)
+      })
+
+      printPrompt('', [
+        ['u', 'update snapshots for this test'],
+        ['s', 'skip current test'],
+        ['q', 'quit interactive snapshot mode'],
+      ])
+
+      const { action } = await prompt({
+        type: 'text',
+        message: '',
+        name: 'action',
+      })
+
+      if (action === 'u') {
+        const project = ctx.getProjectByName(test.file.projectName || '')
+
+        specs.push(
+          project.createSpecification(test.file.filepath, [test.location!.line], test.file.pool),
+        )
+      }
+    }
+
+    if (specs.length) {
+      ctx.enableSnapshotUpdate()
+
+      try {
+        await ctx.rerunTestSpecifications(specs)
+      }
+      finally {
+        ctx.resetSnapshotUpdate()
+      }
+    }
+    // else {
+    //   // TODO: This is a hack to trigger report summary again
+    //   ctx.report('onFinished')
+    // }
+
+    on()
   }
 
   let rl: readline.Interface | undefined
