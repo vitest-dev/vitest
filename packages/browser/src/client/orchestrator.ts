@@ -50,6 +50,8 @@ export class IframeOrchestrator {
     })
     const endSpan = async () => {
       orchestratorSpan.span.end()
+      // orchestrator doesn't know specific timing when it gets torn down,
+      // so we ensure flushing traces here after each run
       await this.traces.flush()
     }
 
