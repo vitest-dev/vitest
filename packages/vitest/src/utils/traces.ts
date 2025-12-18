@@ -47,6 +47,7 @@ export class Traces {
   #noopContext = createNoopContext()
   #initStartTime = performance.now()
   #initEndTime = 0
+  #initRecorded = false
 
   constructor(options: TracesOptions) {
     if (options.enabled) {
@@ -100,6 +101,10 @@ export class Traces {
    * @internal
    */
   recordInitSpan(context: Context): void {
+    if (this.#initRecorded) {
+      return
+    }
+    this.#initRecorded = true
     this
       .startSpan('vitest.runtime.traces', { startTime: this.#initStartTime }, context)
       .end(this.#initEndTime)
