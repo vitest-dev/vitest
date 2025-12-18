@@ -27,7 +27,7 @@
       "types": "./dist/module-evaluator.d.ts",
       "default": "./dist/module-evaluator.js"
     },
-    "#test-loader": "./dist/nodejs-worker-loader.js"
+    "#nodejs-worker-loader": "./dist/nodejs-worker-loader.js"
   },
   "exports": {
     ".": {

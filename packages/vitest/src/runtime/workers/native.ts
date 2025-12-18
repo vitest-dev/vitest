@@ -105,7 +105,7 @@ export async function setupNodeLoaderHooks(worker: WorkerSetupContext): Promise<
         }
       }
     })
-    module.register('#test-loader', {
+    module.register('#nodejs-worker-loader', {
       parentURL: import.meta.url,
       data: { port: port2 },
       transferList: [port2],
