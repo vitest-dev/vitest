@@ -24,7 +24,7 @@ export async function runVmTests(method: 'run' | 'collect', state: WorkerGlobalS
   const { ctx, rpc } = state
 
   const beforeEnvironmentTime = performance.now()
-  const { environment } = await loadEnvironment(ctx.environment.name, ctx.config.root, rpc, traces)
+  const { environment } = await loadEnvironment(ctx.environment.name, ctx.config.root, rpc, traces, false)
   state.environment = environment
 
   if (!environment.setupVM) {
