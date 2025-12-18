@@ -59,7 +59,7 @@ export async function loadNativeEnvironment(
   traces: Traces,
 ): Promise<Environment> {
   const packageId = name[0] === '.' || name[0] === '/'
-    ? resolve(root, name)
+    ? pathToFileURL(resolve(root, name)).toString()
     : import.meta.resolve(`vitest-environment-${name}`, pathToFileURL(root).toString())
   const pkg = await traces.$(
     'vitest.runtime.environment.import',
