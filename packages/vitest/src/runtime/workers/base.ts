@@ -95,8 +95,13 @@ export async function setupBaseEnvironment(context: WorkerSetupContext): Promise
   }
   const otel = context.traces
 
-  // TODO: if viteModuleRunner is disabled, disable this
-  const { environment, loader } = await loadEnvironment(environmentName, config.root, rpc, otel)
+  const { environment, loader } = await loadEnvironment(
+    environmentName,
+    config.root,
+    rpc,
+    otel,
+    context.config.experimental.viteModuleRunner,
+  )
   _currentEnvironment = environment
   const env = await otel.$(
     'vitest.runtime.environment.setup',

@@ -520,6 +520,50 @@ test('not reported')
     Error: [vitest] There was an error when mocking a module. If you are using "vi.mock" factory, make sure there are no top level variables inside, since this call is hoisted to top of the file. Read more: https://vitest.dev/api/vi.html#vi-mock"
   `)
   })
+
+  test('can load a custom environment', async () => {
+    const { stderr, testTree } = await runInlineTests({
+      './env.js': /* js */`
+export default {
+  name: 'custom',
+  viteEnvironment: 'client', // this is actually not used, but kept for consistency
+  setup() {
+    if (typeof __vite_ssr_import__ !== 'undefined') {
+      throw new Error('expected no module runner')
+    }
+    globalThis.CUSTOM_ENV = true
+    return {
+      teardown() {
+        delete globalThis.CUSTOM_ENV
+      }
+    }
+  }
+}
+      `,
+      'basic.test.js': /* js */ `
+test('custom env is set', () => {
+  expect(globalThis.CUSTOM_ENV).toBe(true)
+})
+      `,
+      'vitest.config.js': {
+        test: {
+          globals: true,
+          environment: './env.js',
+          experimental: {
+            viteModuleRunner: false,
+          },
+        },
+      },
+    })
+    expect(stderr).toBe('')
+    expect(testTree()).toMatchInlineSnapshot(`
+      {
+        "basic.test.js": {
+          "custom env is set": "passed",
+        },
+      }
+    `)
+  })
 })
 
 describe.runIf(!module.registerHooks)('when module.registerHooks is not supported', () => {
