@@ -278,11 +278,14 @@ class BrowserPool {
       sessionId,
       this.project,
       this,
-      this._traces.getContextCarrier(),
     )
     const browser = this.project.browser!
     const url = new URL('/__vitest_test__/', this.options.origin)
     url.searchParams.set('sessionId', sessionId)
+    const otelCarrier = this._traces.getContextCarrier()
+    if (otelCarrier) {
+      url.searchParams.set('otelCarrier', JSON.stringify(otelCarrier))
+    }
     const pagePromise = browser.provider.openPage(
       sessionId,
       url.toString(),
