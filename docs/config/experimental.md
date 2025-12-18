@@ -216,6 +216,8 @@ Disabling this flag will disable _all_ file transforms:
 
 ::: warning
 At the moment, Vitest still requires Vite for certain functionality like the module graph or watch mode.
+
+Also note that this option only works with `forks` or `threads` [pools](/config/pool).
 :::
 
 ### Module Runner
