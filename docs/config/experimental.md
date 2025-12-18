@@ -279,13 +279,6 @@ If you are using Node.js version between 22.6 and 22.18, you can also enable nat
 NODE_OPTIONS="--experimental-strip-types" vitest
 ```
 
-Note that Node.js will print an experimental warning for every test file; you can silence the warning by providing `--no-warnings` flag:
-
-```shell
-NODE_OPTIONS="--experimental-strip-types --no-warnings" vitest
-```
-:::
-
 If you are using TypeScript and Node.js version lower than 22.6, then you will need to either:
 
 - build your test files and source code and run those files directly
