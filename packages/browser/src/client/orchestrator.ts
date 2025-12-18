@@ -41,13 +41,12 @@ export class IframeOrchestrator {
 
   public async createTesters(options: BrowserTesterOptions): Promise<void> {
     await this.traces.waitInit()
-    // TODO: initSpan should be parented with vitest.browser.open
-    // browser pool needs to pass `otelCarrier` like `sessionId` to orchestrator.
-    const tracesContext = this.traces.getContextFromCarrier(options.otelCarrier)
-    this.traces.recordInitSpan(tracesContext)
+    this.traces.recordInitSpan(
+      this.traces.getContextFromCarrier(getBrowserState().otelCarrier),
+    )
     const orchestratorSpan = this.traces.startContextSpan(
       'vitest.browser.orchestrator.run',
-      tracesContext,
+      this.traces.getContextFromCarrier(options.otelCarrier),
     )
     orchestratorSpan.span.setAttributes({
       'vitest.browser.files': options.files.map(f => f.filepath),

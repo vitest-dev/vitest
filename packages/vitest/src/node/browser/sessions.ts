@@ -1,3 +1,4 @@
+import type { OTELCarrier } from '../../utils/traces'
 import type { TestProject } from '../project'
 import type { BrowserServerStateSession } from '../types/browser'
 import { createDefer } from '@vitest/utils/helpers'
@@ -15,7 +16,7 @@ export class BrowserSessions {
     this.sessions.delete(sessionId)
   }
 
-  createSession(sessionId: string, project: TestProject, pool: { reject: (error: Error) => void }): Promise<void> {
+  createSession(sessionId: string, project: TestProject, pool: { reject: (error: Error) => void }, otelCarrier?: OTELCarrier): Promise<void> {
     // this promise only waits for the WS connection with the orhcestrator to be established
     const defer = createDefer<void>()
 
@@ -35,6 +36,7 @@ export class BrowserSessions {
         clearTimeout(timeout)
         pool.reject(error)
       },
+      otelCarrier,
     })
     return defer
   }
