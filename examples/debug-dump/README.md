@@ -34,10 +34,10 @@ test/
 ### Enable dump via environment variable (recommended):
 
 ```bash
-VITEST_DEBUG_DUMP=true pnpm test
+VITEST_DEBUG_DUMP=true pnpm test --run
 ```
 
-This will create a `.vitest-dump` folder in the project root with all transformed files.
+This will create a `.vitest-dump/root/` folder in the project root with a `vitest-metadata.json` file containing information about transformed files.
 
 ### Enable dump via config:
 
@@ -80,36 +80,68 @@ export default defineConfig({
 ### Test with barrel import:
 
 ```bash
-VITEST_DEBUG_DUMP=true pnpm test barrel-import
+VITEST_DEBUG_DUMP=true pnpm test --run barrel-import
 ```
 
-Check `.vitest-dump/` - you'll see that ALL files in the utils directory are transformed, even though only `currency.ts` is needed.
+Check `.vitest-dump/root/vitest-metadata.json` - you'll see that ALL files in the utils directory are transformed:
+
+```json
+{
+  "outline": {
+    "externalized": 0,
+    "inlined": 7  // 7 files transformed!
+  },
+  "duration": {
+    "/test/barrel-import.test.ts": [...],
+    "/src/utils/index.ts": [...],        // barrel file
+    "/src/utils/currency.ts": [...],      // ✓ needed
+    "/src/utils/time.ts": [...],          // ✗ not needed
+    "/src/utils/math.ts": [...],          // ✗ not needed
+    "/src/utils/location.ts": [...],      // ✗ not needed
+    "/src/utils/users.ts": [...]          // ✗ not needed
+  }
+}
+```
 
 ### Test with direct import:
 
 ```bash
-VITEST_DEBUG_DUMP=true pnpm test direct-import
+VITEST_DEBUG_DUMP=true pnpm test --run direct-import
 ```
 
-Check `.vitest-dump/` - you'll see that ONLY the necessary files are transformed.
+Check `.vitest-dump/root/vitest-metadata.json` - you'll see that ONLY the necessary files are transformed:
+
+```json
+{
+  "outline": {
+    "externalized": 0,
+    "inlined": 2  // Only 2 files!
+  },
+  "duration": {
+    "/test/direct-import.test.ts": [...],
+    "/src/utils/currency.ts": [...]  // ✓ only what's needed
+  }
+}
+```
 
 ## Expected Behavior
 
 When using the barrel file import (`../src/utils`):
-- ✅ All utility files are transformed (currency, time, math, location, users)
-- ⚠️ This causes unnecessary overhead
+- ⚠️ All utility files are transformed (currency, time, math, location, users) = **7 files**
+- ⚠️ This causes unnecessary overhead and slower test execution
 
 When using direct imports (`../src/utils/currency`):
-- ✅ Only the needed file is transformed (currency)
-- ✅ Better performance
+- ✅ Only the needed file is transformed (currency) = **2 files** (test + source)
+- ✅ Better performance (71% fewer files transformed in this example)
 
 ## Debugging Tips
 
 1. Run tests with `VITEST_DEBUG_DUMP=true`
-2. Inspect the `.vitest-dump` directory
-3. Look for files that shouldn't be there
-4. Refactor imports to avoid barrel files where possible
-5. Use the Vitest UI to visualize the module graph
+2. Inspect the `.vitest-dump/root/vitest-metadata.json` file
+3. Look at the `"inlined"` count and `"duration"` entries to see which files were transformed
+4. Files that shouldn't be there indicate barrel file issues
+5. Refactor imports to avoid barrel files where possible
+6. Use the Vitest UI to visualize the module graph
 
 ## Clean Up
 
