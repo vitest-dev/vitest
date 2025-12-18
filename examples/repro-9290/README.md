@@ -1,4 +1,4 @@
-# Reproduction for Issue 9290
+# Reproduction for Discussion 9290
 
 Related to: https://github.com/vitest-dev/vitest/discussions/9290
 
