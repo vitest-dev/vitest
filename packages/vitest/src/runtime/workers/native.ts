@@ -11,6 +11,7 @@ import MagicString from 'magic-string'
 import { resolve } from 'pathe'
 import c from 'tinyrainbow'
 import { distDir } from '../../paths'
+import { toBuiltin } from '../../utils/modules'
 
 const NOW_LENGTH = Date.now().toString().length
 const REGEXP_VITEST = new RegExp(`%3Fvitest=\\d{${NOW_LENGTH}}`)
@@ -31,9 +32,11 @@ export async function setupNodeLoaderHooks(worker: WorkerSetupContext): Promise<
         if (specifier.includes('mock=actual')) {
           // url is already resolved by `importActual`
           const moduleId = specifier.replace(REGEXP_MOCK_ACTUAL, '')
+          const builtin = isBuiltin(moduleId)
+          const url = builtin ? toBuiltin(moduleId) : moduleId
           return {
-            url: moduleId,
-            format: isBuiltin(moduleId) ? 'builtin' : undefined,
+            url,
+            format: builtin ? 'builtin' : undefined,
             shortCircuit: true,
           }
         }
@@ -143,8 +146,8 @@ const ignoreFormats = new Set<string>([
 
 function createLoadHook(_worker: WorkerSetupContext): module.LoadHookSync {
   return (url, context, nextLoad) => {
-    const result: module.LoadFnOutput = url.includes('mock=manual') && isBuiltin(cleanUrl(url))
-      ? { format: 'module' } // avoid resolving the builtin module that is supposed to be mocked
+    const result: module.LoadFnOutput = url.includes('mock=') && isBuiltin(cleanUrl(url))
+      ? { format: 'commonjs' } // avoid resolving the builtin module that is supposed to be mocked
       : nextLoad(url, context)
     if (
       (result.format && ignoreFormats.has(result.format))

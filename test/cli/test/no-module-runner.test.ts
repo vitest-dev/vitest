@@ -3,6 +3,7 @@ import { expect, test } from 'vitest'
 import { replaceRoot, runInlineTests } from '../../test-utils'
 
 describe.runIf(module.registerHooks)('when module.registerHooks is supported', () => {
+  // TODO: hangs because of https://github.com/vitest-dev/vitest/issues/9271
   test.skip('cannot run viteModuleRunner: false in "vmForks"', async () => {
     const { stderr } = await runInlineTests({
       'base.test.js': ``,
@@ -499,7 +500,7 @@ test('not reported')
       },
     })
 
-    // "slice" remove the stack from unhandled error because it referenced built artifacts
+    // "slice" removes the stack from unhandled error because it references built artifacts
     expect(stderr.split('\n').slice(0, 17).join('\n')).toMatchInlineSnapshot(`
     "
     ⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯

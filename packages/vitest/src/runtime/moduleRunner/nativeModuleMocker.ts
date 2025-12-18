@@ -62,13 +62,14 @@ export class NativeModuleMocker extends BareModuleMocker {
       const builtinModule = getBuiltinModule(moduleId)
       const exports = Object.keys(builtinModule)
       source = `
-import * as builtinModule from '${url}'
+import * as builtinModule from '${toBuiltin(moduleId)}?mock=actual'
 
 ${exports.map((key, index) => {
   return `
 const __${index} = builtinModule["${key}"]
-export { __${index} as "${key}" }`.trim()
-})}`
+export { __${index} as "${key}" }
+`
+}).join('')}`
     }
     else {
       source = result.source?.toString()
