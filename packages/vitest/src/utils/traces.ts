@@ -45,6 +45,8 @@ export class Traces {
   #init: Promise<unknown> | null = null
   #noopSpan = createNoopSpan()
   #noopContext = createNoopContext()
+  #initStartTime = performance.now()
+  #initEndTime = 0
 
   constructor(options: TracesOptions) {
     if (options.enabled) {
@@ -74,6 +76,7 @@ export class Traces {
           }
         }
       }).finally(() => {
+        this.#initEndTime = performance.now()
         this.#init = null
       })
     }
@@ -91,6 +94,15 @@ export class Traces {
       await this.#init
     }
     return this
+  }
+
+  /**
+   * @internal
+   */
+  recordInitSpan(context: Context): void {
+    this
+      .startSpan('vitest.runtime.traces', { startTime: this.#initStartTime }, context)
+      .end(this.#initEndTime)
   }
 
   /**

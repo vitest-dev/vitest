@@ -76,9 +76,11 @@ channel.addEventListener('message', async (e) => {
     }
     case 'prepare': {
       await traces.waitInit()
+      const tracesContext = traces.getContextFromCarrier(data.otelCarrier)
+      traces.recordInitSpan(tracesContext)
       rootTesterSpan = traces.startContextSpan(
         `vitest.browser.tester.run`,
-        traces.getContextFromCarrier(data.otelCarrier),
+        tracesContext,
       )
       traces.bind(rootTesterSpan.context)
       await prepare(data).catch(err => unhandledError(err, 'Prepare Error'))
