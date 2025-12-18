@@ -135,7 +135,7 @@ export function registerConsoleShortcuts(
     if (name === 'u') {
       return ctx.updateSnapshot()
     }
-    // update snapshot
+    // update snapshot interactively
     if (name === 'i') {
       return interactiveSnapshotUpdate()
     }
