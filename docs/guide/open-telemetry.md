@@ -1,5 +1,13 @@
 # Open Telemetry Support <Experimental /> {#open-telemetry-support}
 
+::: tip FEEDBACK
+Please, leave feedback regarding this feature in a [GitHub Discussion](https://github.com/vitest-dev/vitest/discussions/9222).
+:::
+
+::: tip Example Project
+[GitHub](https://github.com/vitest-dev/vitest/tree/main/examples/opentelemetry)
+:::
+
 [OpenTelemetry](https://opentelemetry.io/) traces can be a useful tool to debug the performance and behavior of your application inside tests.
 
 If enabled, Vitest integration generates spans that are scoped to your test's worker.

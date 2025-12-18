@@ -12,6 +12,7 @@ import { isExternalUrl, unwrapId } from '@vitest/utils/helpers'
 import { join } from 'pathe'
 import { fetchModule } from 'vite'
 import { hash } from '../hash'
+import { normalizeResolvedIdToUrl } from './normalizeUrl'
 
 const saveCachePromises = new Map<string, Promise<FetchResult>>()
 const readFilePromises = new Map<string, Promise<string | null>>()
@@ -52,6 +53,14 @@ class ModuleFetcher {
     if (isExternalUrl(url) && !isFileUrl) {
       trace.setAttribute('vitest.module.external', url)
       return { externalize: url, type: 'network' }
+    }
+
+    // handle unresolved id of dynamic import skipped by Vite import analysis
+    if (url[0] !== '/') {
+      const resolved = await environment.pluginContainer.resolveId(url, importer)
+      if (resolved) {
+        url = normalizeResolvedIdToUrl(environment, resolved.id)
+      }
     }
 
     const moduleGraphModule = await environment.moduleGraph.ensureEntryFromUrl(unwrapId(url))
