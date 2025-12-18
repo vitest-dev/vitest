@@ -651,7 +651,24 @@ export class Vitest {
    * @param filters String filters to match the test files
    */
   async start(filters?: string[]): Promise<TestRunResult> {
-    return this._traces.$('vitest.start', async (startSpan) => {
+    // Extract context from TRACEPARENT and TRACESTATE environment variables
+    // as per OpenTelemetry specification:
+    // https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/context/env-carriers.md
+    const traceparent = process.env.TRACEPARENT
+    const tracestate = process.env.TRACESTATE
+    let context
+    if (traceparent || tracestate) {
+      const carrier: { traceparent?: string; tracestate?: string } = {}
+      if (traceparent) {
+        carrier.traceparent = traceparent
+      }
+      if (tracestate) {
+        carrier.tracestate = tracestate
+      }
+      context = this._traces.getContextFromCarrier(carrier)
+    }
+
+    return this._traces.$('vitest.start', { context }, async (startSpan) => {
       startSpan.setAttributes({
         config: this.vite.config.configFile,
       })

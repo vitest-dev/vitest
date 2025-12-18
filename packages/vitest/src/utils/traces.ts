@@ -45,7 +45,6 @@ export class Traces {
   #init: Promise<unknown> | null = null
   #noopSpan = createNoopSpan()
   #noopContext = createNoopContext()
-  #rootContext: Context | null = null
 
   constructor(options: TracesOptions) {
     if (options.enabled) {
@@ -59,22 +58,6 @@ export class Traces {
           SpanStatusCode: api.SpanStatusCode,
         }
         this.#otel = otel
-
-        // Extract context from TRACEPARENT and TRACESTATE environment variables
-        // as per OpenTelemetry specification:
-        // https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/context/env-carriers.md
-        const traceparent = process.env.TRACEPARENT
-        const tracestate = process.env.TRACESTATE
-        if (traceparent || tracestate) {
-          const carrier: OTELCarrier = {}
-          if (traceparent) {
-            carrier.traceparent = traceparent
-          }
-          if (tracestate) {
-            carrier.tracestate = tracestate
-          }
-          this.#rootContext = otel.propagation.extract(api.ROOT_CONTEXT, carrier)
-        }
       }).catch(() => {
         throw new Error(`"@opentelemetry/api" is not installed locally. Make sure you have setup OpenTelemetry instrumentation: https://vitest.dev/guide/open-telemetry`)
       })
@@ -225,7 +208,7 @@ export class Traces {
 
     const otel = this.#otel
     const options = typeof optionsOrFn === 'function' ? {} : optionsOrFn
-    const context = options.context || this.#rootContext
+    const context = options.context
     if (context) {
       return otel.tracer.startActiveSpan(
         name,

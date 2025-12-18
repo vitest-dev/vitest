@@ -68,7 +68,7 @@ test('supports TRACEPARENT environment variable', async () => {
       },
     },
   })
-  
+
   expect(exitCode).toBe(0)
   expect(stderr).toBe('')
 })
@@ -91,7 +91,7 @@ test('supports TRACESTATE environment variable', async () => {
       },
     },
   })
-  
+
   expect(exitCode).toBe(0)
   expect(stderr).toBe('')
 })
