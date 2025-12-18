@@ -80,10 +80,6 @@ export { __${index} as "${key}" }`.trim()
 
     const mockType = url.includes('mock=automock') ? 'automock' : 'autospy'
     const transformedCode = transformCode(source, result.format || 'module', moduleId)
-    // failed to transform ts file
-    if (transformedCode == null) {
-      return
-    }
 
     try {
       const ms = automockModule(

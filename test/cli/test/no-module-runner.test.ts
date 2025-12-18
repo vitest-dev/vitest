@@ -421,7 +421,7 @@ if (import.meta.vitest) {
   `)
   })
 
-  test('error in the sync mock factory is reporter', async () => {
+  test('error in the sync mock factory is reported', async () => {
     const { stderr } = await runInlineTests({
       'add.js': /* js */`
 export function add(a, b) {
@@ -470,11 +470,11 @@ test('not reported')
   `)
   })
 
-  test('error in the async mock factory is reporter', async () => {
-  // async error is reported also as unhandled exception
-  // I wasn't able to figure out what doesn't handle it properly
-  // and assume it is something internal in Node.js
-  // If it wasn't caught by us, we wouldn't have gotten the "suite" issue
+  test('error in the async mock factory is reported', async () => {
+    // async error is reported also as unhandled exception
+    // I wasn't able to figure out what doesn't handle it properly
+    // and assume it is something internal in Node.js
+    // If it wasn't caught by us, we wouldn't have gotten the "suite" issue
     const { stderr } = await runInlineTests({
       'add.js': /* js */`
 export function add(a, b) {

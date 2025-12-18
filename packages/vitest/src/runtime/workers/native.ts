@@ -44,7 +44,7 @@ export async function setupNodeLoaderHooks(worker: WorkerSetupContext): Promise<
           context,
         )
 
-        // avoid /node_modules/ for performance reasons
+        // avoid tracking /node_modules/ module graph for performance reasons
         if (context.parentURL && result.url && !result.url.includes('/node_modules/')) {
           worker.rpc.ensureModuleGraphEntry(result.url, context.parentURL).catch(() => {
             // ignore errors
@@ -57,7 +57,7 @@ export async function setupNodeLoaderHooks(worker: WorkerSetupContext): Promise<
           result.url = `${result.url}?vitest=${Date.now()}`
         }
         if (
-          // nodeLoader disables mocking and `importmeta.vitest`
+          // nodeLoader disables mocking and `import.meta.vitest`
           worker.config.experimental.nodeLoader === false
           // something is wrong if there is no parent, we should not mock anything
           || !context.parentURL
