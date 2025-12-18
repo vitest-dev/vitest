@@ -275,8 +275,6 @@ export function registerConsoleShortcuts(
 
     const specs: TestSpecification[] = []
     for (const test of tests) {
-      ctx.logger.clearFullScreen()
-
       const snapshotErrors = test.result?.errors?.filter(
         e => typeof e?.message === 'string'
           && e.message.match(/Snapshot .* mismatched/),
@@ -325,7 +323,6 @@ export function registerConsoleShortcuts(
       }
     }
     else {
-      ctx.logger.clearFullScreen()
       // TODO: This is a hack to trigger report summary again
       ctx.report('onTestRunEnd', testModules, errors as SerializedError[], state)
     }
