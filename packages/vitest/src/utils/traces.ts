@@ -137,14 +137,20 @@ export class Traces {
   /**
    * @internal
    */
-  getContextFromEnv(env: Record<string, unknown>): Context | undefined {
-    // https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/context/env-carriers.md
-    if (this.#otel && typeof env.TRACEPARENT === 'string' && typeof env.TRACESTATE === 'string') {
-      const carrier: OTELCarrier = {}
-      carrier.traceparent = env.TRACEPARENT
-      carrier.tracestate = env.TRACESTATE
-      return this.getContextFromCarrier(carrier)
+  getContextFromEnv(env: Record<string, unknown>): Context {
+    if (!this.#otel) {
+      return this.#noopContext
     }
+    // https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/context/env-carriers.md
+    // some tools sets only `TRACEPARENT` but not `TRACESTATE`
+    const carrier: OTELCarrier = {}
+    if (typeof env.TRACEPARENT === 'string') {
+      carrier.traceparent = env.TRACEPARENT
+    }
+    if (typeof env.TRACESTATE === 'string') {
+      carrier.tracestate = env.TRACESTATE
+    }
+    return this.getContextFromCarrier(carrier)
   }
 
   /**
