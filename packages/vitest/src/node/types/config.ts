@@ -847,6 +847,7 @@ export interface InlineConfig {
     openTelemetry?: {
       enabled: boolean
       sdkPath?: string
+      browserSdkPath?: string
     }
     /**
      * Show imports (top 10) that take a long time.

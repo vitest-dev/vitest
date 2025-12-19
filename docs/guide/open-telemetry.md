@@ -84,6 +84,59 @@ test('db connects properly', async () => {
 })
 ```
 
+## Browser Mode
+
+When running tests in [browser mode](/guide/browser/), Vitest propagates trace context between Node.js and the browser. Node.js side traces (test orchestration, browser driver communication) are available without additional configuration.
+
+To capture traces from the browser runtime, provide a browser-compatible SDK via `browserSdkPath`:
+
+```shell
+npm i @opentelemetry/sdk-trace-web @opentelemetry/exporter-trace-otlp-proto
+```
+
+::: code-group
+```js [otel-browser.js]
+import {
+  BatchSpanProcessor,
+  WebTracerProvider,
+} from '@opentelemetry/sdk-trace-web'
+import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-proto'
+
+const provider = new WebTracerProvider({
+  spanProcessors: [
+    new BatchSpanProcessor(new OTLPTraceExporter()),
+  ],
+})
+
+provider.register()
+export default provider
+```
+```js [vitest.config.js]
+import { defineConfig } from 'vitest/config'
+
+export default defineConfig({
+  test: {
+    browser: {
+      enabled: true,
+      provider: 'playwright',
+      instances: [{ browser: 'chromium' }],
+    },
+    experimental: {
+      openTelemetry: {
+        enabled: true,
+        sdkPath: './otel.js',
+        browserSdkPath: './otel-browser.js',
+      },
+    },
+  },
+})
+```
+:::
+
+::: warning ASYNC CONTEXT
+Unlike Node.js, browsers do not have automatic async context propagation. Vitest handles this internally for test execution, but custom spans in deeply nested async code may not propagate context automatically.
+:::
+
 ## View Traces
 
 To generate traces, run Vitest as usual. You can run Vitest in either watch mode or run mode. Vitest will call `sdk.shutdown()` manually after everything is finished to make sure traces are handled properly.

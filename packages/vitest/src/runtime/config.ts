@@ -122,6 +122,11 @@ export interface SerializedConfig {
     printImportBreakdown: boolean | undefined
     viteModuleRunner: boolean
     nodeLoader: boolean
+    openTelemetry: {
+      enabled: boolean
+      sdkPath?: string
+      browserSdkPath?: string
+    } | undefined
   }
 }
 

@@ -895,6 +895,7 @@ describe('uploading files', async () => {
     const uploadedFile = input.files[0]
     expect(uploadedFile.name).toBe('hello.png')
     expect(uploadedFile.type).toBe('image/png')
+    expect(await uploadedFile.text()).toBe('hello')
   })
 
   test.skipIf(server.provider === 'webdriverio')('can upload several instances of File', async () => {
