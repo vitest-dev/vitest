@@ -1,5 +1,6 @@
 import type { VitestRunner } from '@vitest/runner'
 import type { SerializedConfig, WorkerGlobalState } from 'vitest'
+import type { OTELCarrier, Traces } from 'vitest/internal/browser'
 import type { IframeOrchestrator } from './orchestrator'
 import type { CommandsManager } from './tester/tester-utils'
 
@@ -78,9 +79,11 @@ export interface BrowserRunnerState {
   iframeId?: string
   sessionId: string
   testerId: string
+  otelCarrier?: OTELCarrier
   method: 'run' | 'collect'
   orchestrator?: IframeOrchestrator
   commands: CommandsManager
+  traces: Traces
   cleanups: Array<() => unknown>
   cdp?: {
     on: (event: string, listener: (payload: any) => void) => void

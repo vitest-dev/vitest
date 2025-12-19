@@ -41,10 +41,13 @@ export class Traces {
    * otel stands for OpenTelemetry
    */
   #otel: OTEL | null = null
-  #sdk: { shutdown: () => Promise<void> } | null = null
+  #sdk: { shutdown: () => Promise<void>; forceFlush?: () => Promise<void> } | null = null
   #init: Promise<unknown> | null = null
   #noopSpan = createNoopSpan()
   #noopContext = createNoopContext()
+  #initStartTime = performance.now()
+  #initEndTime = 0
+  #initRecorded = false
 
   constructor(options: TracesOptions) {
     if (options.enabled) {
@@ -61,7 +64,7 @@ export class Traces {
       }).catch(() => {
         throw new Error(`"@opentelemetry/api" is not installed locally. Make sure you have setup OpenTelemetry instrumentation: https://vitest.dev/guide/open-telemetry`)
       })
-      const sdkInit = (options.sdkPath ? import(options.sdkPath!) : Promise.resolve()).catch((cause) => {
+      const sdkInit = (options.sdkPath ? import(/* @vite-ignore */ options.sdkPath!) : Promise.resolve()).catch((cause) => {
         throw new Error(`Failed to import custom OpenTelemetry SDK script (${options.sdkPath}): ${cause.message}`)
       })
       this.#init = Promise.all([sdkInit, apiInit]).then(([sdk]) => {
@@ -74,6 +77,7 @@ export class Traces {
           }
         }
       }).finally(() => {
+        this.#initEndTime = performance.now()
         this.#init = null
       })
     }
@@ -91,6 +95,19 @@ export class Traces {
       await this.#init
     }
     return this
+  }
+
+  /**
+   * @internal
+   */
+  recordInitSpan(context: Context): void {
+    if (this.#initRecorded) {
+      return
+    }
+    this.#initRecorded = true
+    this
+      .startSpan('vitest.runtime.traces', { startTime: this.#initStartTime }, context)
+      .end(this.#initEndTime)
   }
 
   /**
@@ -235,11 +252,33 @@ export class Traces {
     return tracer.startSpan(name, options, context)
   }
 
+  // On browser mode, async context is not automatically propagated,
+  // so we manually bind the `$` calls to the provided context.
+  // TODO: this doesn't bind to user land's `@optelemetry/api` calls
+  /**
+   * @internal
+   */
+  bind(context: Context) {
+    if (!this.#otel) {
+      return
+    }
+    const original = (this.$ as any).__original ?? this.$
+    this.$ = this.#otel.context.bind(context, original)
+    ;(this.$ as any).__original = original
+  }
+
   /**
    * @internal
    */
   async finish(): Promise<void> {
     await this.#sdk?.shutdown()
+  }
+
+  /**
+   * @internal
+   */
+  async flush(): Promise<void> {
+    await this.#sdk?.forceFlush?.()
   }
 }
 
