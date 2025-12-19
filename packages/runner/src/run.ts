@@ -197,7 +197,7 @@ function sendTasksUpdate(runner: VitestRunner): void {
       // but keep rejections so finishSendTasksUpdate can handle them
       p.then(
         () => pendingTasksUpdates.splice(pendingTasksUpdates.indexOf(p), 1),
-        () => {},
+        () => { },
       )
     }
     eventsPacks.length = 0
@@ -438,7 +438,9 @@ export async function runTest(test: Test, runner: VitestRunner): Promise<void> {
   cleanupRunningTest()
   setCurrentTest(undefined)
 
-  test.result.duration = now() - start
+  // Exclude scoped fixture initialization time from test duration
+  const fixtureDuration = (test.context as any).__vitest_fixture_duration || 0
+  test.result.duration = now() - start - fixtureDuration
 
   await runner.onAfterRunTask?.(test)
 

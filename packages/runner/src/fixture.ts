@@ -179,14 +179,19 @@ export function withFixtures(runner: VitestRunner, fn: Function, testContext?: T
           continue
         }
 
-        const resolvedValue = await resolveFixtureValue(
+        const result = await resolveFixtureValue(
           runner,
           fixture,
           context!,
           cleanupFnArray,
         )
-        context![fixture.prop] = resolvedValue
-        fixtureValueMap.set(fixture, resolvedValue)
+        context![fixture.prop] = result.value
+        fixtureValueMap.set(fixture, result.value)
+
+        // Track scoped fixture initialization time to exclude from test duration
+        if (result.initDuration && (fixture.scope === 'worker' || fixture.scope === 'file')) {
+          (context! as any).__vitest_fixture_duration = ((context! as any).__vitest_fixture_duration || 0) + result.initDuration
+        }
 
         if (fixture.scope === 'test') {
           cleanupFnArray.unshift(() => {
@@ -207,7 +212,7 @@ function resolveFixtureValue(
   fixture: FixtureItem,
   context: TestContext & { [key: string]: any },
   cleanupFnArray: (() => void | Promise<void>)[],
-) {
+): Promise<{ value: any; initDuration?: number }> | { value: any; initDuration?: number } {
   const fileContext = getFileContext(context.task.file)
   const workerContext = runner.getWorkerContext?.()
 
@@ -216,7 +221,7 @@ function resolveFixtureValue(
     if (workerContext) {
       workerContext[fixture.prop] ??= fixture.value
     }
-    return fixture.value
+    return { value: fixture.value }
   }
 
   if (fixture.scope === 'test') {
@@ -224,12 +229,12 @@ function resolveFixtureValue(
       fixture.value,
       context,
       cleanupFnArray,
-    )
+    ).then(value => ({ value }))
   }
 
   // in case the test runs in parallel
   if (globalFixturePromise.has(fixture)) {
-    return globalFixturePromise.get(fixture)!
+    return globalFixturePromise.get(fixture)!.then(value => ({ value }))
   }
 
   let fixtureContext: Record<string, unknown>
@@ -245,7 +250,7 @@ function resolveFixtureValue(
   }
 
   if (fixture.prop in fixtureContext) {
-    return fixtureContext[fixture.prop]
+    return { value: fixtureContext[fixture.prop] }
   }
 
   if (!cleanupFnArrayMap.has(fixtureContext)) {
@@ -253,17 +258,21 @@ function resolveFixtureValue(
   }
   const cleanupFnFileArray = cleanupFnArrayMap.get(fixtureContext)!
 
+  const now = globalThis.performance ? globalThis.performance.now.bind(globalThis.performance) : Date.now
+  const start = now()
+
   const promise = resolveFixtureFunction(
     fixture.value,
     fixtureContext,
     cleanupFnFileArray,
   ).then((value) => {
+    const initDuration = now() - start
     fixtureContext[fixture.prop] = value
     globalFixturePromise.delete(fixture)
-    return value
+    return { value, initDuration }
   })
 
-  globalFixturePromise.set(fixture, promise)
+  globalFixturePromise.set(fixture, promise.then(result => result.value))
   return promise
 }
 
