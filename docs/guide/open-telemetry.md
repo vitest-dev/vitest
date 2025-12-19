@@ -67,21 +67,6 @@ Vitest doesn't process the `sdkPath` module, so it is important that the SDK can
 
 If you want to provide a TypeScript file, make sure to familiarize yourself with [TypeScript](https://nodejs.org/api/typescript.html#type-stripping) page in the Node.js documentation.
 
-## Context Propagation
-
-Vitest supports automatic context propagation from parent processes via the `TRACEPARENT` and `TRACESTATE` environment variables as defined in the [OpenTelemetry specification](https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/context/env-carriers.md). This is particularly useful when running Vitest as part of a larger distributed tracing system (e.g., CI/CD pipelines with OpenTelemetry instrumentation).
-
-When these environment variables are set, Vitest will automatically extract the trace context and use it as the parent context for all generated spans:
-
-```bash
-# Example: Running Vitest with trace context from a parent process
-TRACEPARENT="00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01" \
-TRACESTATE="vendor1=value1,vendor2=value2" \
-vitest run
-```
-
-This allows your test traces to be correctly linked to their parent spans in your distributed tracing system without any additional configuration.
-
 ## Custom Traces
 
 You can use the OpenTelemetry API yourself to track certain operations in your code. Custom traces automatically inherit the Vitest OpenTelemetry context:
@@ -112,3 +97,7 @@ You can view traces using any of the open source or commercial products that sup
 Vitest declares `@opentelemetry/api` as an optional peer dependency, which it uses internally to generate spans. When trace collection is not enabled, Vitest will not attempt to use this dependency.
 
 When configuring Vitest to use OpenTelemetry, you will typically install `@opentelemetry/sdk-node`, which includes `@opentelemetry/api` as a transitive dependency, thereby satisfying Vitest's peer dependency requirement. If you encounter an error indicating that `@opentelemetry/api` cannot be found, this typically means trace collection has not been enabled. If the error persists after proper configuration, you may need to install `@opentelemetry/api` explicitly.
+
+## Inter-Process Context Propagation
+
+Vitest supports automatic context propagation from parent processes via the `TRACEPARENT` and `TRACESTATE` environment variables as defined in the [OpenTelemetry specification](https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/context/env-carriers.md). This is particularly useful when running Vitest as part of a larger distributed tracing system (e.g., CI/CD pipelines with OpenTelemetry instrumentation).
