@@ -7,7 +7,9 @@
     "stacktraces": "vitest --root=./fixtures/stacktraces --watch=false"
   },
   "devDependencies": {
+    "@opentelemetry/api": "^1.9.0",
     "@opentelemetry/sdk-node": "^0.208.0",
+    "@opentelemetry/sdk-trace-web": "^2.2.0",
     "@test/test-dep-error": "file:./deps/error",
     "@test/test-dep-linked": "link:./deps/linked",
     "@types/ws": "catalog:",

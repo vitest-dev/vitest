@@ -45,21 +45,16 @@ export function init(worker: Options): void {
         process.env.VITEST_WORKER_ID = String(message.workerId)
         reportMemory = message.options.reportMemory
 
-        const tracesStart = performance.now()
-
         traces ??= await new Traces({
           enabled: message.traces.enabled,
           sdkPath: message.traces.sdkPath,
         }).waitInit()
-        const tracesEnd = performance.now()
 
         const { environment, config, pool } = message.context
         const context = traces.getContextFromCarrier(message.traces.otelCarrier)
 
         // record telemetry as part of "start"
-        traces
-          .startSpan('vitest.runtime.traces', { startTime: tracesStart }, context)
-          .end(tracesEnd)
+        traces.recordInitSpan(context)
 
         try {
           const rpc = createRuntimeRpc(worker)
