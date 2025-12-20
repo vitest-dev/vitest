@@ -9,6 +9,7 @@ import type {
   Task,
   TaskMeta,
   TaskResult,
+  TaskResultPack,
   TaskState,
   TaskUpdateEvent,
   Test,
@@ -186,7 +187,7 @@ const pendingTasksUpdates: Promise<void>[] = []
 
 function sendTasksUpdate(runner: VitestRunner): void {
   if (packs.size) {
-    const taskPacks = Array.from(packs, ([id, task]) => {
+    const taskPacks = Array.from(packs, ([id, task]): TaskResultPack => {
       return [id, task[0], task[1]]
     })
     const p = runner.onTaskUpdate?.(taskPacks, eventsPacks)

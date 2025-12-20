@@ -92,13 +92,13 @@ export function* filterNode(
 
   const filesToShow = new Set<string>()
 
-  const entries = filterParents(
+  const entries = [...filterParents(
     list,
     filter.onlyTests,
     treeNodes,
     filesToShow,
     fileId,
-  ).toReversed()
+  )].toReversed()
 
   // We show only the files and parents whose parent is expanded.
   // Filtering will return all the nodes matching the filter and their parents.
@@ -109,11 +109,11 @@ export function* filterNode(
   const map = explorerTree.nodes
   // collect files and all suites whose parent is expanded
   const parents = new Set(
-    entries.filter(e => isFileNode(e) || (isParentNode(e) && map.get(e.parentId)?.expanded)).map(e => e.id),
+    entries.filter((e: UITaskTreeNode) => isFileNode(e) || (isParentNode(e) && map.get(e.parentId)?.expanded)).map((e: UITaskTreeNode) => e.id),
   )
 
   // collect files, and suites and tests whose parent is expanded
-  yield* entries.filter((node) => {
+  yield* entries.filter((node: UITaskTreeNode) => {
     // all file nodes or children of expanded parents
     return isFileNode(node) || (parents.has(node.parentId) && map.get(node.parentId)?.expanded)
   })

@@ -321,9 +321,7 @@ function resolveDeps(
     }
     if (depSet.has(fixture)) {
       throw new Error(
-        `Circular fixture dependency detected: ${fixture.prop} <- ${depSet.toReversed()
-          .map(d => d.prop)
-          .join(' <- ')}`,
+        `Circular fixture dependency detected: ${fixture.prop} <- ${[...depSet].toReversed().map((d: FixtureItem) => d.prop).join(' <- ')}`,
       )
     }
 

@@ -58,12 +58,12 @@ export class BlobReporter implements Reporter {
       (project) => {
         return [
           project.name,
-          Array.from(project.vite.moduleGraph.idToModuleMap.entries(), (mod) => {
+          Array.from(project.vite.moduleGraph.idToModuleMap.entries(), (mod): SerializedModuleNode | null => {
             if (!mod[1].file) {
               return null
             }
             return [mod[0], mod[1].file, mod[1].url]
-          }).filter(x => x != null),
+          }).filter((x): x is SerializedModuleNode => x != null),
         ]
       },
     )

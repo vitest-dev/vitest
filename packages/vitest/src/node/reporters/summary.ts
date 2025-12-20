@@ -275,7 +275,7 @@ export class SummaryReporter implements Reporter {
   private createSummary() {
     const summary = ['']
 
-    for (const testFile of this.runningModules.values().toSorted(sortRunningModules)) {
+    for (const testFile of [...this.runningModules.values()].toSorted(sortRunningModules)) {
       const typecheck = testFile.typecheck ? `${c.bgBlue(c.bold(' TS '))} ` : ''
       summary.push(
         c.bold(c.yellow(` ${F_POINTER} `))
