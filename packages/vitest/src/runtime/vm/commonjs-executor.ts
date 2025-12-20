@@ -229,7 +229,7 @@ export class CommonjsExecutor {
       set: () => true,
       get: (_, key: string) => this.requireCache.get(key),
       has: (_, key: string) => this.requireCache.has(key),
-      ownKeys: () => Array.from(this.requireCache.keys()),
+      ownKeys: () => [...this.requireCache.keys()],
       getOwnPropertyDescriptor() {
         return {
           configurable: true,

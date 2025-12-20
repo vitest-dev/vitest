@@ -68,7 +68,7 @@ export function hoistMocksPlugin(options: HoistMocksPluginOptions = {}): Plugin 
   ])
 
   const regexpHoistable = new RegExp(
-    `\\b(?:${utilsObjectNames.join('|')})\\s*\.\\s*(?:${Array.from(methods).join('|')})\\s*\\(`,
+    `\\b(?:${utilsObjectNames.join('|')})\\s*\.\\s*(?:${[...methods].join('|')})\\s*\\(`,
   )
 
   return {

@@ -28,6 +28,6 @@ export const type: UserEventCommand<UserEvent['type']> = async (
   )
 
   return {
-    unreleased: Array.from(unreleased),
+    unreleased: [...unreleased],
   }
 }

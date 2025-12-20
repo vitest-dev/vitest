@@ -380,7 +380,7 @@ describe('parseSingleFFOrSafariStack', () => {
     const size = 40
 
     const obj = Object.fromEntries(
-      [...Array.from({ length: size }).keys()].map(i => [`prop${i}`, i]),
+      Array.from(Array.from({ length: size }).keys(), i => [`prop${i}`, i]),
     )
 
     class PrettyError extends globalThis.Error {

@@ -32,7 +32,7 @@ export const keyboard: UserEventCommand<(
   )
 
   return {
-    unreleased: Array.from(pressed),
+    unreleased: [...pressed],
   }
 }
 

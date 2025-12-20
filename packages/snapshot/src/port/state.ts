@@ -247,7 +247,7 @@ export default class SnapshotState {
   }
 
   getUncheckedKeys(): Array<string> {
-    return Array.from(this._uncheckedKeys)
+    return [...this._uncheckedKeys]
   }
 
   removeUncheckedKeys(): void {
@@ -469,7 +469,7 @@ export default class SnapshotState {
     snapshot.unmatched = this.unmatched.total()
     snapshot.updated = this.updated.total()
     snapshot.unchecked = !status.deleted ? uncheckedCount : 0
-    snapshot.uncheckedKeys = Array.from(uncheckedKeys)
+    snapshot.uncheckedKeys = [...uncheckedKeys]
 
     return snapshot
   }

@@ -257,23 +257,21 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject, defaultMocke
           if (!provider) {
             throw new Error('Commands are only available for browser tests.')
           }
-          const context = Object.assign(
-            {
-              testPath,
-              project,
-              provider,
-              contextId: sessionId,
-              sessionId,
-              triggerCommand: (name: string, ...args: any[]) => {
-                return project.browser!.triggerCommand(
-                  name as any,
-                  context,
-                  ...args,
-                )
-              },
+          const context = {
+            testPath,
+            project,
+            provider,
+            contextId: sessionId,
+            sessionId,
+            triggerCommand: (name: string, ...args: any[]) => {
+              return project.browser!.triggerCommand(
+                name as any,
+                context,
+                ...args,
+              )
             },
-            provider.getCommandsContext(sessionId),
-          ) as any as BrowserCommandContext
+            ...provider.getCommandsContext(sessionId),
+          } as any as BrowserCommandContext
           return await project.browser!.triggerCommand(
             command as any,
             context,

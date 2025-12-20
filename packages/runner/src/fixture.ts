@@ -78,7 +78,7 @@ export function mergeContextFixtures<T extends { fixtures?: FixtureItem[] }>(
   )
 
   if (Array.isArray(context.fixtures)) {
-    context.fixtures = context.fixtures.concat(fixtureArray)
+    context.fixtures = [...context.fixtures, ...fixtureArray]
   }
   else {
     context.fixtures = fixtureArray
@@ -321,8 +321,7 @@ function resolveDeps(
     }
     if (depSet.has(fixture)) {
       throw new Error(
-        `Circular fixture dependency detected: ${fixture.prop} <- ${[...depSet]
-          .reverse()
+        `Circular fixture dependency detected: ${fixture.prop} <- ${depSet.toReversed()
           .map(d => d.prop)
           .join(' <- ')}`,
       )

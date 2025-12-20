@@ -33,7 +33,7 @@ let PLUGINS: PrettyFormatPlugins = [
 ]
 
 export function addSerializer(plugin: PrettyFormatPlugin): void {
-  PLUGINS = [plugin].concat(PLUGINS)
+  PLUGINS = [...[plugin], ...PLUGINS]
 }
 
 export function getSerializers(): PrettyFormatPlugins {

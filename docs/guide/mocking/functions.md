@@ -37,7 +37,7 @@ it('should get the latest message with a spy', () => {
   expect(spy.getMockName()).toEqual('getLatest')
 
   expect(messages.getLatest()).toEqual(
-    messages.items[messages.items.length - 1],
+    messages.items.at(-1),
   )
 
   expect(spy).toHaveBeenCalledTimes(1)

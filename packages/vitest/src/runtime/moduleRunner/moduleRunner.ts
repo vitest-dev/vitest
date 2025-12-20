@@ -188,7 +188,7 @@ export class VitestModuleRunner extends viteModuleRunner.ModuleRunner {
         continue
       }
       invalidated.add(id)
-      const subIds = Array.from(this.evaluatedModules.idToModuleMap)
+      const subIds = [...this.evaluatedModules.idToModuleMap]
         .filter(([, mod]) => mod.importers.has(id))
         .map(([key]) => key)
       if (subIds.length) {

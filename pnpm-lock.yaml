@@ -6,6 +6,9 @@ settings:
 
 catalogs:
   default:
+    '@e18e/eslint-plugin':
+      specifier: ^0.1.2
+      version: 0.1.2
     '@iconify-json/carbon':
       specifier: ^1.2.14
       version: 1.2.14
@@ -154,6 +157,9 @@ importers:
       '@antfu/ni':
         specifier: ^28.0.0
         version: 28.0.0
+      '@e18e/eslint-plugin':
+        specifier: 'catalog:'
+        version: 0.1.2(eslint@9.39.2(jiti@2.6.1))
       '@playwright/test':
         specifier: ^1.57.0
         version: 1.57.0
@@ -2371,6 +2377,11 @@ packages:
 
   '@docsearch/js@4.3.2':
     resolution: {integrity: sha512-xdfpPXMgKRY9EW7U1vtY7gLKbLZFa9ed+t0Dacquq8zXBqAlH9HlUf0h4Mhxm0xatsVeMaIR2wr/u6g0GsZyQw==}
+
+  '@e18e/eslint-plugin@0.1.2':
+    resolution: {integrity: sha512-QJ44h5WI91F3DqHTTlDsfOoDE14yWEeWLgd36AB2hyR6ZSnsCpafzpPeaJLVUh7gPGAHcgay1knA8O8ZB5w2vQ==}
+    peerDependencies:
+      eslint: ^9.0.0
 
   '@edge-runtime/primitives@6.0.0':
     resolution: {integrity: sha512-FqoxaBT+prPBHBwE1WXS1ocnu/VLTQyZ6NMUBAdbP7N2hsFTTxMC/jMu2D/8GAlMQfxeuppcPuCUk/HO3fpIvA==}
@@ -5927,6 +5938,9 @@ packages:
     peerDependencies:
       eslint: '*'
 
+  eslint-plugin-depend@1.4.0:
+    resolution: {integrity: sha512-MQs+m4nHSfgAO9bJDsBzqw0ofK/AOA0vfeY/6ahofqcUMLeM6/D1sTYs21fOhc17kNU/gn58YCtj20XaAssh2A==}
+
   eslint-plugin-es-x@7.8.0:
     resolution: {integrity: sha512-7Ds8+wAAoV3T+LAKeu39Y5BzXCrGKrcISfgKEqTS4BDN8SFEDQd0S43jiQ8vIa3wUKD07qitZdfzlenSi8/0qQ==}
     engines: {node: ^14.18.0 || >=16.0.0}
@@ -7579,6 +7593,9 @@ packages:
 
   module-details-from-path@1.0.4:
     resolution: {integrity: sha512-EGWKgxALGMgzvxYF1UyGTy0HXX/2vHLkw6+NvDKW2jypWbHpjQuj4UMcqQWXHERJhVGKikolT06G3bcKe4fi7w==}
+
+  module-replacements@2.10.1:
+    resolution: {integrity: sha512-qkKuLpMHDqRSM676OPL7HUpCiiP3NSxgf8NNR1ga2h/iJLNKTsOSjMEwrcT85DMSti2vmOqxknOVBGWj6H6etQ==}
 
   moment@2.30.1:
     resolution: {integrity: sha512-uEmtNhbDOrWPFS+hdjFCBfy9f2YoyzRpwcl+DqpC6taX21FzsTLQVbMV/W7PzNSX6x/bhC1zA3c2UQ5NzH6how==}
@@ -10735,6 +10752,11 @@ snapshots:
   '@docsearch/js@4.3.2':
     dependencies:
       htm: 3.1.1
+
+  '@e18e/eslint-plugin@0.1.2(eslint@9.39.2(jiti@2.6.1))':
+    dependencies:
+      eslint: 9.39.2(jiti@2.6.1)
+      eslint-plugin-depend: 1.4.0
 
   '@edge-runtime/primitives@6.0.0': {}
 
@@ -14289,6 +14311,12 @@ snapshots:
       '@es-joy/jsdoccomment': 0.78.0
       eslint: 9.39.2(jiti@2.6.1)
 
+  eslint-plugin-depend@1.4.0:
+    dependencies:
+      empathic: 2.0.0
+      module-replacements: 2.10.1
+      semver: 7.7.3
+
   eslint-plugin-es-x@7.8.0(eslint@9.39.2(jiti@2.6.1)):
     dependencies:
       '@eslint-community/eslint-utils': 4.9.0(eslint@9.39.2(jiti@2.6.1))
@@ -16291,6 +16319,8 @@ snapshots:
       ufo: 1.6.1
 
   module-details-from-path@1.0.4: {}
+
+  module-replacements@2.10.1: {}
 
   moment@2.30.1: {}
 

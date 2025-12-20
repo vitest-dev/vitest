@@ -48,7 +48,7 @@ export class DotReporter extends BaseReporter {
     reason: TestRunEndReason,
   ): void {
     if (this.isTTY) {
-      const finalLog = formatTests(Array.from(this.tests.values()))
+      const finalLog = formatTests([...this.tests.values()])
       this.ctx.logger.log(finalLog)
     }
     else {
@@ -104,7 +104,7 @@ export class DotReporter extends BaseReporter {
       return
     }
 
-    const finishedTests = Array.from(this.tests).filter(entry => entry[1] !== 'pending')
+    const finishedTests = [...this.tests].filter(entry => entry[1] !== 'pending')
 
     if (finishedTests.length < columns) {
       return
@@ -129,7 +129,7 @@ export class DotReporter extends BaseReporter {
 
   private createSummary() {
     return [
-      formatTests(Array.from(this.tests.values())),
+      formatTests([...this.tests.values()]),
       '',
     ]
   }

@@ -98,7 +98,7 @@ export class ResultsCache {
       return
     }
 
-    const results = Array.from(this.cache.entries())
+    const results = [...this.cache.entries()]
 
     const cacheDirname = dirname(this.cachePath)
 

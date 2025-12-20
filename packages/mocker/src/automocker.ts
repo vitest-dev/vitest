@@ -227,7 +227,7 @@ function getAllMockableProperties(
   isModule: boolean,
   constructors: GlobalConstructors,
 ) {
-  const { Map, Object, Function, RegExp, Array } = constructors
+  const { Map, Object, Function, RegExp } = constructors
 
   const allProps = new Map<
     string | symbol,
@@ -259,7 +259,7 @@ function getAllMockableProperties(
       allProps.set('default', { key: 'default', descriptor })
     }
   }
-  return Array.from(allProps.values())
+  return [...allProps.values()]
 }
 
 function collectOwnProperties(
@@ -286,5 +286,5 @@ function collectFunctionProperties(prototype: any) {
       properties.add(prop)
     }
   })
-  return Array.from(properties)
+  return [...properties]
 }

@@ -391,7 +391,7 @@ function createSuiteCollector(
 
     // inherit repeats, retry, timeout from suite
     if (typeof suiteOptions === 'object') {
-      options = Object.assign({}, suiteOptions, options)
+      options = { ...suiteOptions, ...options }
     }
 
     // inherit concurrent / sequential from suite

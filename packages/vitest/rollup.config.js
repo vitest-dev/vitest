@@ -203,13 +203,13 @@ function licensePlugin() {
               names.add(author.name)
             }
 
-            for (const person of maintainers.concat(contributors)) {
+            for (const person of [...maintainers, ...contributors]) {
               if (person && person.name) {
                 names.add(person.name)
               }
             }
             if (names.size > 0) {
-              text += `By: ${Array.from(names).join(', ')}\n`
+              text += `By: ${[...names].join(', ')}\n`
             }
 
             if (repository) {

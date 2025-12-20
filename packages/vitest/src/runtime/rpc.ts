@@ -57,7 +57,7 @@ export async function rpcDone(): Promise<unknown[] | undefined> {
   if (!promises.size) {
     return
   }
-  const awaitable = Array.from(promises)
+  const awaitable = [...promises]
   return Promise.all(awaitable)
 }
 

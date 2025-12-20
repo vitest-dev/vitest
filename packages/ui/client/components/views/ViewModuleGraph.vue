@@ -142,8 +142,7 @@ function filterGraphByLevels(
   }
 
   const nodeMap = new Map(sourceGraph.nodes.map(node => [node.id, node]))
-  const filteredNodes = Array.from(visitedNodes)
-    .map(id => nodeMap.get(id))
+  const filteredNodes = Array.from(visitedNodes, id => nodeMap.get(id))
     .filter(node => node !== undefined) as ModuleNode[]
 
   const filteredNodeMap = new Map(filteredNodes.map(node => [node.id, node]))

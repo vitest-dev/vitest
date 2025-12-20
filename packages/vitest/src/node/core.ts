@@ -822,7 +822,7 @@ export class Vitest {
             this.pool = createPool(this)
           }
 
-          const invalidates = Array.from(this.watcher.invalidates)
+          const invalidates = [...this.watcher.invalidates]
           this.watcher.invalidates.clear()
           this.snapshot.clear()
           this.state.clearErrors()
@@ -964,7 +964,7 @@ export class Vitest {
         this.pool = createPool(this)
       }
 
-      const invalidates = Array.from(this.watcher.invalidates)
+      const invalidates = [...this.watcher.invalidates]
       this.watcher.invalidates.clear()
       this.snapshot.clear()
       this.state.clearErrors()
@@ -1007,7 +1007,7 @@ export class Vitest {
    */
   async cancelCurrentRun(reason: CancelReason): Promise<void> {
     this.isCancelling = true
-    this.cancelPromise = Promise.all([...this._onCancelListeners].map(listener => listener(reason)))
+    this.cancelPromise = Promise.all(Array.from(this._onCancelListeners, listener => listener(reason)))
 
     await this.cancelPromise.finally(() => (this.cancelPromise = undefined))
     await this.runningPromise
@@ -1218,7 +1218,7 @@ export class Vitest {
       this.isFirstRun = false
 
       this.snapshot.clear()
-      let files = Array.from(this.watcher.changedTests)
+      let files = [...this.watcher.changedTests]
 
       if (this.filenamePattern) {
         const filteredFiles = await this.globTestSpecifications(this.filenamePattern)
@@ -1397,7 +1397,7 @@ export class Vitest {
   /** @internal */
   public async _globTestFilepaths() {
     const specifications = await this.globTestSpecifications()
-    return Array.from(new Set(specifications.map(spec => spec.moduleId)))
+    return [...new Set(specifications.map(spec => spec.moduleId))]
   }
 
   /**

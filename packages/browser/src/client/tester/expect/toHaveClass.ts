@@ -28,11 +28,9 @@ export default function toHaveClass(
   const received = splitClassNames(htmlElement.getAttribute('class'))
   const expected = expectedClassNames.reduce(
     (acc, className) => {
-      return acc.concat(
-        typeof className === 'string' || !className
-          ? splitClassNames(className)
-          : className,
-      )
+      return [...acc, ...typeof className === 'string' || !className
+        ? splitClassNames(className)
+        : className]
     },
     [] as (string | RegExp)[],
   )
@@ -115,7 +113,7 @@ function getExpectedClassNamesAndOptions(
     options = lastParam
   }
   else {
-    expectedClassNames = params.concat(lastParam)
+    expectedClassNames = [...params, ...lastParam]
     options = { exact: false }
   }
   return { expectedClassNames: expectedClassNames as string[], options }

@@ -121,7 +121,7 @@ export class SummaryReporter implements Reporter {
       this.runningModules.set(module.id, stats)
     }
 
-    const total = Array.from(module.children.allTests()).length
+    const total = [...module.children.allTests()].length
     this.tests.total += total
     stats.total = total
 
@@ -275,7 +275,7 @@ export class SummaryReporter implements Reporter {
   private createSummary() {
     const summary = ['']
 
-    for (const testFile of Array.from(this.runningModules.values()).sort(sortRunningModules)) {
+    for (const testFile of this.runningModules.values().toSorted(sortRunningModules)) {
       const typecheck = testFile.typecheck ? `${c.bgBlue(c.bold(' TS '))} ` : ''
       summary.push(
         c.bold(c.yellow(` ${F_POINTER} `))

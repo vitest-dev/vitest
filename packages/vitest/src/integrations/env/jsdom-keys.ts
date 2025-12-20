@@ -250,4 +250,4 @@ const OTHER_KEYS = [
   'window',
 ]
 
-export const KEYS: string[] = LIVING_KEYS.concat(OTHER_KEYS)
+export const KEYS: string[] = [...LIVING_KEYS, ...OTHER_KEYS]

@@ -185,8 +185,7 @@ function traverseReceivedFiles(collect: boolean) {
 
   // add missing files: now we have only files with running tests on the initial ws open event
   const currentFiles = explorerTree.nodes
-  const missingFiles = Array
-    .from(updatedFiles.keys())
+  const missingFiles = [...updatedFiles.keys()]
     .filter(id => !currentFiles.has(id))
     .map(id => findById(id))
     .filter(Boolean) as File[]

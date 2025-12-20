@@ -14,7 +14,7 @@ function createSmallTabs(children: number) {
           SmallTabs,
           null,
           {
-            default: () => Array.from({ length: children }, () => h(
+            default: () => Array.from({ length: children }).fill(h(
               SmallTabsPane,
               { title: faker.lorem.word() },
               () => faker.lorem.words(2),

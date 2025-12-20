@@ -310,9 +310,7 @@ async function start(mode: VitestRunMode, cliFilters: string[], options: CliOpti
     console.error(e)
     console.error('\n\n')
 
-    if (process.exitCode == null) {
-      process.exitCode = 1
-    }
+    process.exitCode ??= 1
 
     process.exit()
   }
@@ -362,9 +360,7 @@ async function collect(mode: VitestRunMode, cliFilters: string[], options: CliOp
     console.error(e)
     console.error('\n\n')
 
-    if (process.exitCode == null) {
-      process.exitCode = 1
-    }
+    process.exitCode ??= 1
 
     process.exit()
   }

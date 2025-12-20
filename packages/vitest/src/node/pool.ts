@@ -75,7 +75,7 @@ export function createPool(ctx: Vitest): ProcessPool {
           + `Resolved ${specs.length} test files for --shard=${ctx.config.shard.index}/${ctx.config.shard.count}.`,
         )
       }
-      specs = await sequencer.shard(Array.from(specs))
+      specs = await sequencer.shard([...specs])
     }
 
     const taskGroups: {

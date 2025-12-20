@@ -60,7 +60,7 @@ export class FileSystemModuleCache {
     const fsCachePaths = this.vitest.projects.map((r) => {
       return r.config.experimental.fsModuleCachePath || this.rootCache
     })
-    const uniquePaths = Array.from(new Set(fsCachePaths))
+    const uniquePaths = [...new Set(fsCachePaths)]
     await Promise.all(
       uniquePaths.map(directory => rm(directory, { force: true, recursive: true })),
     )

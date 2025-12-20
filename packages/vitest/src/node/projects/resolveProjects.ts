@@ -414,7 +414,7 @@ async function resolveTestProjectConfigs(
     })
   }
 
-  const projectConfigFiles = Array.from(new Set(projectsConfigFiles))
+  const projectConfigFiles = [...new Set(projectsConfigFiles)]
 
   return {
     projectConfigs: projectsOptions,

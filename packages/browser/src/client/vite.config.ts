@@ -54,10 +54,7 @@ export default vite.defineConfig({
         const uiEntryPoint = resolve(ui, 'index.html')
         const browser = resolve(root, 'browser/dist/client/__vitest__/')
 
-        const timeout = setTimeout(
-          () => console.log('[copy-ui-plugin] Waiting for UI to be built...'),
-          1000,
-        )
+        const timeout = setTimeout(console.log, 1000, '[copy-ui-plugin] Waiting for UI to be built...')
         await waitFor(() => fs.existsSync(ui) && fs.existsSync(uiEntryPoint))
         clearTimeout(timeout)
 

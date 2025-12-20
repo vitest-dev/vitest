@@ -22,7 +22,7 @@ export async function saveInlineSnapshots(
   const MagicString = (await import('magic-string')).default
   const files = new Set(snapshots.map(i => i.file))
   await Promise.all(
-    Array.from(files).map(async (file) => {
+    Array.from(files, async (file) => {
       const snaps = snapshots.filter(i => i.file === file)
       const code = await environment.readSnapshotFile(file) as string
       const s = new MagicString(code)

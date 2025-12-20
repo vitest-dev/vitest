@@ -87,11 +87,11 @@ export class StateManager {
   }
 
   getUnhandledErrors(): unknown[] {
-    return Array.from(this.errorsSet)
+    return [...this.errorsSet]
   }
 
   getPaths(): string[] {
-    return Array.from(this.pathsSet)
+    return [...this.pathsSet]
   }
 
   /**
@@ -104,7 +104,7 @@ export class StateManager {
         .flat()
         .filter(file => file && !file.local)
     }
-    return Array.from(this.filesMap.values()).flat().filter(file => !file.local).sort((f1, f2) => {
+    return [...this.filesMap.values()].flat().filter(file => !file.local).sort((f1, f2) => {
       // print typecheck files first
       if (f1.meta?.typecheck && f2.meta?.typecheck) {
         return 0
@@ -121,7 +121,7 @@ export class StateManager {
   }
 
   getFilepaths(): string[] {
-    return Array.from(this.filesMap.keys())
+    return [...this.filesMap.keys()]
   }
 
   getFailedFilepaths(): string[] {
@@ -244,7 +244,7 @@ export class StateManager {
   }
 
   getCountOfFailedTests(): number {
-    return Array.from(this.idMap.values()).filter(
+    return [...this.idMap.values()].filter(
       t => t.result?.state === 'fail',
     ).length
   }

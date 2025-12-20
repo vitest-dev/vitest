@@ -61,7 +61,7 @@ export function hasAsymmetric(obj: any, seen: Set<any> = new Set()): boolean {
     return obj.some(i => hasAsymmetric(i, seen))
   }
   if (obj instanceof Set) {
-    return Array.from(obj).some(i => hasAsymmetric(i, seen))
+    return [...obj].some(i => hasAsymmetric(i, seen))
   }
   if (isObject(obj)) {
     return Object.values(obj).some(v => hasAsymmetric(v, seen))
@@ -282,13 +282,11 @@ function keys(obj: object, hasKey: (obj: object, key: string) => boolean) {
       keys.push(key)
     }
   }
-  return keys.concat(
-    (Object.getOwnPropertySymbols(obj) as Array<any>).filter(
-      symbol =>
-        (Object.getOwnPropertyDescriptor(obj, symbol) as PropertyDescriptor)
-          .enumerable,
-    ),
-  )
+  return [...keys, ...(Object.getOwnPropertySymbols(obj) as Array<any>).filter(
+    symbol =>
+      (Object.getOwnPropertyDescriptor(obj, symbol) as PropertyDescriptor)
+        .enumerable,
+  )]
 }
 
 function hasDefinedKey(obj: any, key: string) {

@@ -55,7 +55,7 @@ export async function getModuleGraph(
     }
     inlined.add(id)
     // TODO: cached modules don't have that!
-    const mods = Array.from(mod.importedModules).filter(
+    const mods = [...mod.importedModules].filter(
       i => i.id && !i.id.includes('/vitest/dist/'),
     )
     graph[id] = mods.map(m => get(m)).filter(
@@ -71,8 +71,8 @@ export async function getModuleGraph(
 
   return {
     graph,
-    externalized: Array.from(externalized),
-    inlined: Array.from(inlined),
+    externalized: [...externalized],
+    inlined: [...inlined],
   }
 }
 

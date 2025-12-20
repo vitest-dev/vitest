@@ -109,7 +109,7 @@ export class IframeOrchestrator {
     const config = getConfig()
     if (config.browser.isolate) {
       // isolated mode assigns filepaths as ids
-      const files = Array.from(this.iframes.keys())
+      const files = [...this.iframes.keys()]
       // when the run is completed, show the last file in the UI
       const ui = getUiAPI()
       if (ui && files[0]) {

@@ -258,7 +258,7 @@ export class TestProject {
     if (!this._globalSetups) {
       return
     }
-    for (const globalSetupFile of [...this._globalSetups].reverse()) {
+    for (const globalSetupFile of this._globalSetups.toReversed()) {
       await globalSetupFile.teardown?.()
     }
   }

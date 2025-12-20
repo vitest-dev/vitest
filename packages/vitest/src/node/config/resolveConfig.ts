@@ -506,13 +506,11 @@ export function resolveConfig(
     resolved.include = resolved.benchmark.include
     resolved.exclude = resolved.benchmark.exclude
     resolved.includeSource = resolved.benchmark.includeSource
-    const reporters = Array.from(
-      new Set<BenchmarkBuiltinReporters>([
-        ...toArray(resolved.benchmark.reporters),
-        // @ts-expect-error reporter is CLI flag
-        ...toArray(options.reporter),
-      ]),
-    ).filter(Boolean)
+    const reporters = [...new Set<BenchmarkBuiltinReporters>([
+      ...toArray(resolved.benchmark.reporters),
+      // @ts-expect-error reporter is CLI flag
+      ...toArray(options.reporter),
+    ])].filter(Boolean)
     if (reporters.length) {
       resolved.benchmark.reporters = reporters
     }
@@ -618,7 +616,7 @@ export function resolveConfig(
         }
       }
 
-      resolved.reporters = Array.from(new Set(toArray(cliReporters)))
+      resolved.reporters = [...new Set(toArray(cliReporters))]
         .filter(Boolean)
         .map(reporter => [reporter, configReportersMap.get(reporter) || {}])
     }

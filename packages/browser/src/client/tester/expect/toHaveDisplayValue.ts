@@ -71,7 +71,7 @@ export default function toHaveDisplayValue(
 
 function getValues(tagName: string, htmlElement: HTMLElement | SVGElement) {
   return tagName === 'SELECT'
-    ? Array.from(htmlElement as HTMLSelectElement)
+    ? [...htmlElement as HTMLSelectElement]
         .filter(option => (option as HTMLOptionElement).selected)
         .map(option => option.textContent || '')
     : [(htmlElement as HTMLInputElement).value]

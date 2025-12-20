@@ -12,7 +12,7 @@ export class StateManager {
   idMap: Map<string, Task> = new Map()
 
   getPaths(): string[] {
-    return Array.from(this.pathsSet)
+    return [...this.pathsSet]
   }
 
   /**
@@ -25,11 +25,11 @@ export class StateManager {
         .flat()
         .filter(file => file && !file.local)
     }
-    return Array.from(this.filesMap.values()).flat().filter(file => !file.local)
+    return [...this.filesMap.values()].flat().filter(file => !file.local)
   }
 
   getFilepaths(): string[] {
-    return Array.from(this.filesMap.keys())
+    return [...this.filesMap.keys()]
   }
 
   getFailedFilepaths(): string[] {

@@ -27,7 +27,7 @@ export function interopCommonJsModule(
     const allKeys = new Set([...defaultKets, ...moduleKeys])
     allKeys.delete('default')
     return {
-      keys: Array.from(allKeys),
+      keys: [...allKeys],
       moduleExports: new Proxy(mod, {
         get(mod, prop) {
           return mod[prop] ?? mod.default?.[prop]

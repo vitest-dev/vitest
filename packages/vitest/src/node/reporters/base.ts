@@ -245,7 +245,7 @@ export abstract class BaseReporter implements Reporter {
     }
 
     const indentation = '  '.repeat(getIndentation(testSuite.task))
-    const tests = Array.from(testSuite.children.allTests())
+    const tests = [...testSuite.children.allTests()]
     const state = this.getStateSymbol(testSuite)
 
     this.log(` ${indentation}${state} ${testSuite.name} ${c.dim(`(${tests.length})`)}`)

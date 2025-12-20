@@ -73,7 +73,7 @@ export function collect(ctx: ContextRPC, worker: VitestWorker, traces: Traces): 
 }
 
 export async function teardown(): Promise<void> {
-  await Promise.all([...globalListeners].map(l => l()))
+  await Promise.all(Array.from(globalListeners, l => l()))
 }
 
 const env = process.env

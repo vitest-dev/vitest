@@ -397,7 +397,7 @@ function getElementLocatorSelectors(element: Element): LocatorSelectors {
     getByTestId: testId => locator.getByTestId(testId),
     getByText: (text, options) => locator.getByText(text, options),
     getByTitle: (title, options) => locator.getByTitle(title, options),
-    ...Array.from(__INTERNAL._extendedMethods).reduce((methods, method) => {
+    ...[...__INTERNAL._extendedMethods].reduce((methods, method) => {
       methods[method] = (...args: any[]) => (locator as any)[method](...args)
       return methods
     }, {} as any),

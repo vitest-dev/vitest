@@ -130,7 +130,7 @@ export class VitestSpecifications {
         process.exitCode = 1
         throw new GitNotFoundError()
       }
-      this.vitest.config.related = Array.from(new Set(related))
+      this.vitest.config.related = [...new Set(related)]
     }
 
     const related = this.vitest.config.related

@@ -30,7 +30,7 @@ export const keyboard: UserEventCommand<(text: string, state: KeyboardState) => 
   )
 
   return {
-    unreleased: Array.from(pressed),
+    unreleased: [...pressed],
   }
 }
 

@@ -32,7 +32,7 @@ test('basic', () => {
       )}`
     },
     test(val) {
-      return val && Object.prototype.hasOwnProperty.call(val, 'foo')
+      return val && Object.hasOwn(val, 'foo')
     },
   })
 

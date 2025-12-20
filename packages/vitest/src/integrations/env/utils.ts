@@ -9,7 +9,7 @@ export function getWindowKeys(
 ): Set<string> {
   const keysArray = [...additionalKeys, ...KEYS]
   const keys = new Set(
-    keysArray.concat(Object.getOwnPropertyNames(win)).filter((k) => {
+    [...keysArray, ...Object.getOwnPropertyNames(win)].filter((k) => {
       if (skipKeys.includes(k)) {
         return false
       }

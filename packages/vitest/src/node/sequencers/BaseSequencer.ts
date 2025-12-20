@@ -17,15 +17,14 @@ export class BaseSequencer implements TestSequencer {
     const { config } = this.ctx
     const { index, count } = config.shard!
     const [shardStart, shardEnd] = this.calculateShardRange(files.length, index, count)
-    return [...files]
-      .map((spec) => {
-        const fullPath = resolve(slash(config.root), slash(spec.moduleId))
-        const specPath = fullPath?.slice(config.root.length)
-        return {
-          spec,
-          hash: hash('sha1', specPath, 'hex'),
-        }
-      })
+    return Array.from(files, (spec) => {
+      const fullPath = resolve(slash(config.root), slash(spec.moduleId))
+      const specPath = fullPath?.slice(config.root.length)
+      return {
+        spec,
+        hash: hash('sha1', specPath, 'hex'),
+      }
+    })
       .sort((a, b) => (a.hash < b.hash ? -1 : a.hash > b.hash ? 1 : 0))
       .slice(shardStart, shardEnd)
       .map(({ spec }) => spec)
@@ -34,7 +33,7 @@ export class BaseSequencer implements TestSequencer {
   // async so it can be extended by other sequelizers
   public async sort(files: TestSpecification[]): Promise<TestSpecification[]> {
     const cache = this.ctx.cache
-    return [...files].sort((a, b) => {
+    return files.toSorted((a, b) => {
       // "sequence.groupOrder" is higher priority
       const groupOrderDiff = a.project.config.sequence.groupOrder - b.project.config.sequence.groupOrder
       if (groupOrderDiff !== 0) {

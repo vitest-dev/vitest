@@ -42,6 +42,7 @@ patchedDependencies:
   acorn@8.11.3: patches/acorn@8.11.3.patch
   cac@6.7.14: patches/cac@6.7.14.patch
 catalog:
+  '@e18e/eslint-plugin': ^0.1.2
   '@iconify-json/carbon': ^1.2.14
   '@iconify-json/logos': ^1.2.10
   '@jridgewell/remapping': ^2.3.5

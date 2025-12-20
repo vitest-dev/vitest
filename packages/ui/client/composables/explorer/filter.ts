@@ -92,13 +92,13 @@ export function* filterNode(
 
   const filesToShow = new Set<string>()
 
-  const entries = [...filterParents(
+  const entries = filterParents(
     list,
     filter.onlyTests,
     treeNodes,
     filesToShow,
     fileId,
-  )].reverse()
+  ).toReversed()
 
   // We show only the files and parents whose parent is expanded.
   // Filtering will return all the nodes matching the filter and their parents.

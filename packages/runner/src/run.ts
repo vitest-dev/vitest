@@ -9,7 +9,6 @@ import type {
   Task,
   TaskMeta,
   TaskResult,
-  TaskResultPack,
   TaskState,
   TaskUpdateEvent,
   Test,
@@ -71,7 +70,7 @@ function getSuiteHooks(
 ) {
   const hooks = getHooks(suite)[name]
   if (sequence === 'stack' && (name === 'afterAll' || name === 'afterEach')) {
-    return hooks.slice().reverse()
+    return hooks.toReversed()
   }
   return hooks
 }
@@ -83,7 +82,7 @@ async function callTestHooks(
   sequence: SequenceHooks,
 ) {
   if (sequence === 'stack') {
-    hooks = hooks.slice().reverse()
+    hooks = hooks.toReversed()
   }
 
   if (!hooks.length) {
@@ -187,7 +186,7 @@ const pendingTasksUpdates: Promise<void>[] = []
 
 function sendTasksUpdate(runner: VitestRunner): void {
   if (packs.size) {
-    const taskPacks = Array.from(packs).map<TaskResultPack>(([id, task]) => {
+    const taskPacks = Array.from(packs, ([id, task]) => {
       return [id, task[0], task[1]]
     })
     const p = runner.onTaskUpdate?.(taskPacks, eventsPacks)
@@ -226,7 +225,7 @@ function throttle<T extends (...args: any[]) => void>(fn: T, ms: number): T {
     }
 
     // Make sure fn is still called even if there are no further calls
-    pendingCall ??= setTimeout(() => call.bind(this)(...args), ms)
+    pendingCall ??= setTimeout(call.bind(this), ms, ...args)
   } as any
 }
 
@@ -243,7 +242,7 @@ async function callCleanupHooks(runner: VitestRunner, cleanups: unknown[]) {
   const sequence = runner.config.sequence.hooks
 
   if (sequence === 'stack') {
-    cleanups = cleanups.slice().reverse()
+    cleanups = cleanups.toReversed()
   }
 
   if (sequence === 'parallel') {

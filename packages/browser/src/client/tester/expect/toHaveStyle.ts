@@ -52,14 +52,14 @@ export default function toHaveStyle(
     ? getStyleFromObjectCSS(css)
     : computeCSSStyleDeclaration(css)
   const received = getComputedStyle(htmlElement)
-  const receivedCustomKeys = new Set(Array.from(htmlElement.style))
+  const receivedCustomKeys = new Set([...htmlElement.style])
 
   return {
     pass: isSubset(expected, htmlElement, received, receivedCustomKeys),
     message: () => {
       const matcher = `${this.isNot ? '.not' : ''}.toHaveStyle`
       const expectedKeys = new Set(Object.keys(expected))
-      const receivedObject = Array.from(received)
+      const receivedObject = [...received]
         .filter(prop => expectedKeys.has(prop))
         .reduce(
           (obj, prop) => {
@@ -128,7 +128,7 @@ function computeCSSStyleDeclaration(css: string): Record<string, unknown> {
 
   const computedStyle = window.getComputedStyle(rootElement)
 
-  const styleDeclaration = Array.from(rootElement.style).reduce((acc, prop) => {
+  const styleDeclaration = [...rootElement.style].reduce((acc, prop) => {
     acc[prop] = usedValuesProps.has(prop)
       ? rootElement.style.getPropertyValue(prop)
       : computedStyle.getPropertyValue(prop)

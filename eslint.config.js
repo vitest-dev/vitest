@@ -1,4 +1,5 @@
 import antfu, { GLOB_SRC } from '@antfu/eslint-config'
+import e18e from '@e18e/eslint-plugin'
 
 export default antfu(
   {
@@ -134,6 +135,13 @@ export default antfu(
     rules: {
       'antfu/no-top-level-await': 'off',
       'unicorn/consistent-function-scoping': 'off',
+    },
+  },
+  e18e.configs.recommended,
+  {
+    rules: {
+      'e18e/ban-dependencies': 'off',
+      'e18e/prefer-timer-args': 'off',
     },
   },
 )

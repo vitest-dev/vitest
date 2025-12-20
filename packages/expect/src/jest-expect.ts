@@ -286,13 +286,13 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     }
     // make "actual" indexable to have compatibility with jest
     if (actual != null && typeof actual !== 'string') {
-      utils.flag(this, 'object', Array.from(actual as Iterable<unknown>))
+      utils.flag(this, 'object', [...actual as Iterable<unknown>])
     }
     return this.contain(item)
   })
   def('toContainEqual', function (expected) {
     const obj = utils.flag(this, 'object')
-    const index = Array.from(obj).findIndex((item) => {
+    const index = [...obj].findIndex((item) => {
       return jestEquals(item, expected, customTesters)
     })
 

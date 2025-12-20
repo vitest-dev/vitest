@@ -502,9 +502,9 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
     }
     const browser = this.browser
     this.browser = null
-    await Promise.all([...this.pages.values()].map(p => p.close()))
+    await Promise.all(Array.from(this.pages.values(), p => p.close()))
     this.pages.clear()
-    await Promise.all([...this.contexts.values()].map(c => c.close()))
+    await Promise.all(Array.from(this.contexts.values(), c => c.close()))
     this.contexts.clear()
     await browser?.close()
     debug?.('[%s] provider is closed', this.browserName)

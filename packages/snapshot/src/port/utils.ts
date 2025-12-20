@@ -176,7 +176,7 @@ export async function saveSnapshotFileRaw(
 }
 
 function deepMergeArray(target: any[] = [], source: any[] = []) {
-  const mergedOutput = Array.from(target)
+  const mergedOutput = [...target]
 
   source.forEach((sourceElement, index) => {
     const targetElement = mergedOutput[index]

@@ -9,11 +9,11 @@ function runVitest(config: TestUserConfig, root = './fixtures/shard') {
 }
 
 function parsePaths(stdout: string) {
-  return Array.from(new Set(stdout
+  return [...new Set(stdout
     .split('\n')
     .filter(line => line && line.includes('.test.js'))
     .map(file => basename(file.trim().split(' ')[1]))
-    .sort()))
+    .sort())]
 }
 
 test('--shard=1/1', async () => {

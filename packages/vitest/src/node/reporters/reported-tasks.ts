@@ -251,7 +251,7 @@ class TestCollection {
    * Returns the collection in array form for easier manipulation.
    */
   array(): (TestCase | TestSuite)[] {
-    return Array.from(this)
+    return [...this]
   }
 
   /**

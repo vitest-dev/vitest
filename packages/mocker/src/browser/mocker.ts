@@ -49,7 +49,7 @@ export class ModuleMocker {
   }
 
   public async invalidate(): Promise<void> {
-    const ids = Array.from(this.mockedIds)
+    const ids = [...this.mockedIds]
     if (!ids.length) {
       return
     }

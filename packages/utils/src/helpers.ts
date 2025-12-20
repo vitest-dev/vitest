@@ -102,9 +102,7 @@ export function isBareImport(id: string): boolean {
 }
 
 export function toArray<T>(array?: Nullable<Arrayable<T>>): Array<T> {
-  if (array === null || array === undefined) {
-    array = []
-  }
+  array ??= []
 
   if (Array.isArray(array)) {
     return array
@@ -147,7 +145,7 @@ export function getOwnProperties(obj: any): (string | symbol)[] {
     return []
   }
   collectOwnProperties(obj, ownProps)
-  return Array.from(ownProps)
+  return [...ownProps]
 }
 
 const defaultCloneOptions: CloneOptions = { forceWritable: false }

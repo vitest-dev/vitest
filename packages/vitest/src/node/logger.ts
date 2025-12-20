@@ -319,7 +319,7 @@ export class Logger {
       }
 
       // Timeout to flush stderr
-      setTimeout(() => process.exit(), 1)
+      setTimeout(process.exit, 1)
     }
 
     process.once('SIGINT', onExit)

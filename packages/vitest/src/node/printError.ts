@@ -164,7 +164,7 @@ function printErrorInner(
   }
   printErrorMessage(e, logger)
   if (options.screenshotPaths?.length) {
-    const uniqueScreenshots = Array.from(new Set(options.screenshotPaths))
+    const uniqueScreenshots = [...new Set(options.screenshotPaths)]
     const length = uniqueScreenshots.length
     logger.error(`\nFailure screenshot${length > 1 ? 's' : ''}:`)
     logger.error(uniqueScreenshots.map(p => `  - ${c.dim(relative(process.cwd(), p))}`).join('\n'))
