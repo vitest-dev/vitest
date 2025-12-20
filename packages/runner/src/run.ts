@@ -226,7 +226,7 @@ function throttle<T extends (...args: any[]) => void>(fn: T, ms: number): T {
     }
 
     // Make sure fn is still called even if there are no further calls
-    pendingCall ??= setTimeout(call.bind(this), ms, ...args)
+    pendingCall ??= setTimeout(() => call.bind(this)(...args), ms)
   } as any
 }
 
