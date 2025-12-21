@@ -62,7 +62,7 @@ const result = calculator(1, 2)
 
 expect(result).toBe(3)
 expect(calculator).toHaveBeenCalledWith(1, 2)
-expect(calculator).toHaveReturned(3)
+expect(calculator).toHaveReturnedWith(3)
 ```
 
 Vitest also supports a module promise instead of a string in the `vi.mock` and `vi.doMock` methods for better IDE support. When the file is moved, the path will be updated, and `importOriginal` inherits the type automatically. Using this signature will also enforce factory return type to be compatible with the original module (keeping exports optional).
