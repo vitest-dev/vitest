@@ -10,7 +10,7 @@ import { vitestSponsors } from './.vitepress/sponsors'
 </script>
 
 <Hero/>
-<TrustedBy :logos="['cloudflare', 'mercedes', 'hugging-face']" />
+<TrustedBy :logos="['paramount', 'cloudflare', 'mercedes', 'hugging-face', 'get-your-guide']" />
 <Intro/>
 <HeadingSection
     heading="Fast. Lightweight. Integrated."
