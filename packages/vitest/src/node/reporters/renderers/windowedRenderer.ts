@@ -60,7 +60,7 @@ export class WindowRenderer {
   start(): void {
     this.started = true
     this.finished = false
-    this.renderInterval = setInterval(this.schedule, this.options.interval).unref()
+    this.renderInterval = setInterval(() => this.schedule(), this.options.interval).unref()
   }
 
   stop(): void {
