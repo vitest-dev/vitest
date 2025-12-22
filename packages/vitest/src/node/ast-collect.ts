@@ -1,7 +1,6 @@
 import type { File, Suite, Task, Test } from '@vitest/runner'
 import type { TestError } from '../types/general'
 import type { TestProject } from './project'
-import type { AstConfig } from './types/config'
 import { originalPositionFor, TraceMap } from '@jridgewell/trace-mapping'
 import {
   calculateSuiteHash,
@@ -46,9 +45,16 @@ interface LocalCallDefinition {
 const debug = createDebugger('vitest:ast-collect-info')
 const verbose = createDebugger('vitest:ast-collect-verbose')
 
-function astParseFile(filepath: string, code: string, config: AstConfig = {}) {
+function isTestFunctionName(name: string) {
+  return name === 'it' || name === 'test' || name.endsWith('Test')
+}
+
+function isVitestFunctionName(name: string) {
+  return name === 'describe' || name === 'suite' || isTestFunctionName(name)
+}
+
+function astParseFile(filepath: string, code: string) {
   const ast = parseAst(code)
-  const testNames = config.test ?? ['it', 'test']
 
   if (verbose) {
     verbose(
@@ -77,7 +83,7 @@ function astParseFile(filepath: string, code: string, config: AstConfig = {}) {
     if (callee.type === 'MemberExpression') {
       if (
         callee.object?.type === 'Identifier'
-        && [...testNames, 'describe', 'suite'].includes(callee.object.name)
+        && isVitestFunctionName(callee.object.name)
       ) {
         return callee.object?.name
       }
@@ -110,7 +116,7 @@ function astParseFile(filepath: string, code: string, config: AstConfig = {}) {
       if (!name) {
         return
       }
-      if (![...testNames, 'describe', 'suite'].includes(name)) {
+      if (!isVitestFunctionName(name)) {
         verbose?.(`Skipping ${name} (unknown call)`)
         return
       }
@@ -177,7 +183,7 @@ function astParseFile(filepath: string, code: string, config: AstConfig = {}) {
         start,
         end,
         name: message,
-        type: testNames.includes(name) ? 'test' : 'suite',
+        type: isTestFunctionName(name) ? 'test' : 'suite',
         mode,
         task: null as any,
         dynamic: isDynamicEach,
@@ -243,7 +249,6 @@ interface ParseOptions {
   allowOnly: boolean
   pool: string
   testNamePattern?: RegExp | undefined
-  ast?: AstConfig
 }
 
 function createFileTask(
@@ -252,7 +257,7 @@ function createFileTask(
   requestMap: any,
   options: ParseOptions,
 ) {
-  const { definitions, ast } = astParseFile(testFilepath, code, options.ast)
+  const { definitions, ast } = astParseFile(testFilepath, code)
   const file: ParsedFile = {
     filepath: options.filepath,
     type: 'suite',
@@ -411,7 +416,6 @@ export async function astCollectTests(
     allowOnly: project.config.allowOnly,
     testNamePattern: project.config.testNamePattern,
     pool: project.browser ? 'browser' : project.config.pool,
-    ast: project.config.ast ?? {},
   })
 }
 

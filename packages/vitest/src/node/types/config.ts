@@ -994,13 +994,6 @@ export interface UserConfig extends InlineConfig {
 
 export type OnUnhandledErrorCallback = (error: (TestError | Error) & { type: string }) => boolean | void
 
-/**
- * Configuration options for the AST static parser.
- */
-export interface AstConfig {
-  test?: string[]
-}
-
 export interface ResolvedConfig
   extends Omit<
     Required<UserConfig>,
