@@ -142,6 +142,7 @@ export default antfu(
     rules: {
       'e18e/ban-dependencies': 'off',
       'e18e/prefer-timer-args': 'off',
+      'e18e/prefer-array-to-reversed': 'off',
     },
   },
 )

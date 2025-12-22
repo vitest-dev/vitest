@@ -98,7 +98,7 @@ export function* filterNode(
     treeNodes,
     filesToShow,
     fileId,
-  )].toReversed()
+  )].reverse()
 
   // We show only the files and parents whose parent is expanded.
   // Filtering will return all the nodes matching the filter and their parents.

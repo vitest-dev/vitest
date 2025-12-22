@@ -71,7 +71,7 @@ function getSuiteHooks(
 ) {
   const hooks = getHooks(suite)[name]
   if (sequence === 'stack' && (name === 'afterAll' || name === 'afterEach')) {
-    return hooks.toReversed()
+    return hooks.slice().reverse()
   }
   return hooks
 }
@@ -83,7 +83,7 @@ async function callTestHooks(
   sequence: SequenceHooks,
 ) {
   if (sequence === 'stack') {
-    hooks = hooks.toReversed()
+    hooks = hooks.slice().reverse()
   }
 
   if (!hooks.length) {
@@ -243,7 +243,7 @@ async function callCleanupHooks(runner: VitestRunner, cleanups: unknown[]) {
   const sequence = runner.config.sequence.hooks
 
   if (sequence === 'stack') {
-    cleanups = cleanups.toReversed()
+    cleanups = cleanups.slice().reverse()
   }
 
   if (sequence === 'parallel') {
