@@ -5,6 +5,10 @@ outline: deep
 
 # Features
 
+<script setup>
+import FeaturesList from '../.vitepress/components/FeaturesList.vue'
+</script>
+
 <FeaturesList class="!gap-1 text-lg" />
 
 <div h-2 />
