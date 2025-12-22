@@ -9,6 +9,8 @@ import Version from '../components/Version.vue'
 import CRoot from '../components/CRoot.vue'
 import Deprecated from '../components/Deprecated.vue'
 import Experimental from '../components/Experimental.vue'
+import Advanced from '../components/Advanced.vue'
+import CourseLink from '../components/CourseLink.vue'
 import '../style/main.css'
 import '../style/vars.css'
 import 'uno.css'
@@ -50,6 +52,8 @@ export default {
     app.component('CRoot', CRoot)
     app.component('Experimental', Experimental)
     app.component('Deprecated', Deprecated)
+    app.component('Advanced', Advanced)
+    app.component('CourseLink', CourseLink)
     app.use(TwoslashFloatingVue)
     enhanceAppWithTabs(app)
   },
