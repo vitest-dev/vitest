@@ -1,3 +1,4 @@
+import type { Span } from '@opentelemetry/api'
 import type { ContextTestEnvironment } from '../../types/worker'
 import type { Logger } from '../logger'
 import type { StateManager } from '../state'
@@ -118,21 +119,27 @@ export class Pool {
           WORKER_START_TIMEOUT,
         )
 
-        await runner.start({ workerId: task.context.workerId }).finally(() => clearTimeout(id))
+        await runner.start({ workerId: task.context.workerId })
+          .catch(error =>
+            resolver.reject(
+              new Error(`[vitest-pool]: Failed to start ${task.worker} worker for test files ${formatFiles(task)}.`, { cause: error }),
+            ),
+          )
+          .finally(() => clearTimeout(id))
       }
 
-      const span = runner.startTracesSpan(`vitest.worker.${method}`)
-      // Start running the test in the worker
-      runner.request(method, task.context)
+      let span: Span | undefined
+
+      if (!resolver.isRejected) {
+        span = runner.startTracesSpan(`vitest.worker.${method}`)
+
+        // Start running the test in the worker
+        runner.request(method, task.context)
+      }
 
       await resolver.promise
-        .catch((error) => {
-          span.recordException(error)
-          throw error
-        })
-        .finally(() => {
-          span.end()
-        })
+        .catch(error => span?.recordException(error))
+        .finally(() => span?.end())
 
       const index = this.activeTasks.indexOf(activeTask)
       if (index !== -1) {
@@ -158,7 +165,7 @@ export class Pool {
         )
 
         this.exitPromises.push(
-          runner.stop()
+          runner.stop({ force: resolver.isRejected })
             .then(() => clearTimeout(id))
             .catch(error => this.logger.error(`[vitest-pool]: Failed to terminate ${task.worker} worker for test files ${formatFiles(task)}.`, error)),
         )
@@ -281,7 +288,17 @@ function withResolvers() {
     reject = rej
   })
 
-  return { resolve, reject, promise }
+  const resolver = {
+    promise,
+    resolve,
+    reject: (reason: unknown) => {
+      resolver.isRejected = true
+      reject(reason)
+    },
+    isRejected: false,
+  }
+
+  return resolver
 }
 
 function formatFiles(task: PoolTask) {

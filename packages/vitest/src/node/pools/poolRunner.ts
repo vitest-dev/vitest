@@ -254,7 +254,7 @@ export class PoolRunner {
 
     this._otel?.span.setAttribute('vitest.worker.files', this._otel.files)
 
-    if (this._state === RunnerState.IDLE) {
+    if (this._state === RunnerState.IDLE && !options?.force) {
       this._otel?.span.end()
       this._state = RunnerState.STOPPED
       return
