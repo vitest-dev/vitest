@@ -524,7 +524,7 @@ interface Hooks<ExtraContext> {
   afterEach: typeof afterEach<ExtraContext>
 }
 
-export type TestAPI<ExtraContext extends Record<string, any> = object> = ChainableTestAPI<ExtraContext>
+export type TestAPI<ExtraContext = object> = ChainableTestAPI<ExtraContext>
   & ExtendedAPI<ExtraContext> & Hooks<ExtraContext> & {
     extend: <T extends Record<string, any> = object>(
       fixtures: Fixtures<T, ExtraContext>,
@@ -577,7 +577,7 @@ export type Fixture<T, K extends keyof T, ExtraContext = object> = ((
     | (T[K] extends any
       ? FixtureFn<T, K, Omit<ExtraContext, Exclude<keyof T, K>>>
       : never)
-export type Fixtures<T extends Record<string, any>, ExtraContext = object> = {
+export type Fixtures<T, ExtraContext = object> = {
   [K in keyof T]:
     | Fixture<T, K, ExtraContext & TestContext>
     | [Fixture<T, K, ExtraContext & TestContext>, FixtureOptions?];
@@ -585,7 +585,7 @@ export type Fixtures<T extends Record<string, any>, ExtraContext = object> = {
 
 export type InferFixturesTypes<T> = T extends TestAPI<infer C> ? C : T
 
-interface SuiteCollectorCallable<ExtraContext extends Record<string, any> = object> {
+interface SuiteCollectorCallable<ExtraContext = object> {
   <OverrideExtraContext extends ExtraContext = ExtraContext>(
     name: string | Function,
     fn?: SuiteFactory<OverrideExtraContext>,
@@ -598,7 +598,7 @@ interface SuiteCollectorCallable<ExtraContext extends Record<string, any> = obje
   ): SuiteCollector<OverrideExtraContext>
 }
 
-type ChainableSuiteAPI<ExtraContext extends Record<string, any> = object> = ChainableFunction<
+type ChainableSuiteAPI<ExtraContext = object> = ChainableFunction<
   'concurrent' | 'sequential' | 'only' | 'skip' | 'todo' | 'shuffle',
   SuiteCollectorCallable<ExtraContext>,
   {
@@ -607,7 +607,7 @@ type ChainableSuiteAPI<ExtraContext extends Record<string, any> = object> = Chai
   }
 >
 
-export type SuiteAPI<ExtraContext extends Record<string, any> = object> = ChainableSuiteAPI<ExtraContext> & {
+export type SuiteAPI<ExtraContext = object> = ChainableSuiteAPI<ExtraContext> & {
   skipIf: (condition: any) => ChainableSuiteAPI<ExtraContext>
   runIf: (condition: any) => ChainableSuiteAPI<ExtraContext>
 }
@@ -662,7 +662,7 @@ export interface TaskCustomOptions extends TestOptions {
   handler?: (context: TestContext) => Awaitable<void>
 }
 
-export interface SuiteCollector<ExtraContext extends Record<string, any> = object> {
+export interface SuiteCollector<ExtraContext = object> {
   readonly name: string
   readonly mode: RunMode
   options?: TestOptions
@@ -686,7 +686,7 @@ export interface SuiteCollector<ExtraContext extends Record<string, any> = objec
   ) => void
 }
 
-export type SuiteFactory<ExtraContext extends Record<string, any> = object> = (
+export type SuiteFactory<ExtraContext = object> = (
   test: TestAPI<ExtraContext>,
 ) => Awaitable<void>
 
