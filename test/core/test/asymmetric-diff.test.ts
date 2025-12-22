@@ -1,3 +1,5 @@
+import { stripVTControlCharacters } from 'node:util'
+import { processError } from '@vitest/utils/error'
 import { describe, expect, it } from 'vitest'
 
 describe('asymmetric matcher diff display', () => {
@@ -11,7 +13,7 @@ describe('asymmetric matcher diff display', () => {
     }
 
     // Test should fail - name doesn't contain "Jane"
-    expect(() => {
+    try {
       expect(actual).toMatchObject({
         user: expect.objectContaining({
           name: expect.stringContaining('Jane'),
@@ -19,7 +21,24 @@ describe('asymmetric matcher diff display', () => {
           email: expect.stringContaining('example.com'),
         }),
       })
-    }).toThrowError()
+      expect.unreachable()
+    }
+    catch (err) {
+      const error = processError(err)
+      expect(stripVTControlCharacters(error.diff)).toMatchInlineSnapshot(`
+        "- Expected
+        + Received
+
+          {
+            "user": {
+              "age": 25,
+              "email": "john@example.com",
+        -     "name": StringContaining "Jane",
+        +     "name": "John",
+            },
+          }"
+      `)
+    }
   })
 
   it('shows clear diff with nested objectContaining - complex case', () => {
@@ -55,7 +74,7 @@ describe('asymmetric matcher diff display', () => {
     }
 
     // This should fail with multiple mismatches
-    expect(() => {
+    try {
       expect(actual).toMatchObject({
         model: expect.stringMatching(/^veo-3\.1-(fast-)?generate-preview$/),
         instances: expect.arrayContaining([
@@ -85,6 +104,48 @@ describe('asymmetric matcher diff display', () => {
           generateAudio: expect.any(Boolean),
         }),
       })
-    }).toThrowError()
+      expect.unreachable()
+    }
+    catch (err) {
+      const error = processError(err)
+      expect(stripVTControlCharacters(error.diff)).toMatchInlineSnapshot(`
+          "- Expected
+          + Received
+
+            {
+              "instances": [
+                {
+          -       "prompt": StringMatching /^(?=.*walking)(?=.*together)(?=.*park).*/i,
+          +       "prompt": "walk",
+                  "referenceImages": [
+                    {
+                      "image": {
+                        "gcsUri": "gs://example/person1.jpg",
+          -             "mimeType": "image/jpeg",
+          +             "mimeType": "image/png",
+                      },
+                      "referenceType": "asset",
+                    },
+                    {
+                      "image": {
+          -             "gcsUri": StringContaining "person2.png",
+          +             "gcsUri": "gs://example/person.jpg",
+                        "mimeType": "image/png",
+                      },
+                      "referenceType": "asset",
+                    },
+                  ],
+                },
+              ],
+              "model": "veo-3.1-generate-preview",
+              "parameters": {
+                "aspectRatio": "16:9",
+          -     "durationSeconds": Any<Number>,
+          +     "durationSeconds": "8",
+                "generateAudio": true,
+              },
+            }"
+        `)
+    }
   })
 })
