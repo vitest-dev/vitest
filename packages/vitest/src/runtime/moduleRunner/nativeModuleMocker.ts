@@ -34,6 +34,13 @@ export class NativeModuleMocker extends BareModuleMocker {
     if (!mockedModule) {
       return
     }
+    // don't mock builtin modules inside of packages because there is
+    // a very high chance that is uses `require` which is not mockable
+    // because we use top-level await in that case for "manual" mock.
+    // for the sake of consistency we don't support mocking builtins at all
+    if (isBuiltin(moduleId) && parentURL.includes('/node_modules/')) {
+      return
+    }
     if (mockedModule.type === 'redirect') {
       return {
         url: pathToFileURL(mockedModule.redirect).toString(),

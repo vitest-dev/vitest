@@ -272,6 +272,21 @@ vi.mock('./some-module.js', { spy: true })
 module.function.mockImplementation(() => 42)
 ```
 
+Factory mocking is implemented using a top-level await. This means that mocked modules cannot be `required` in your source code:
+
+```ts
+vi.mock('node:fs', async (importOriginal) => {
+  return {
+    ...await importOriginal(),
+    readFileSync: vi.fn(),
+  }
+})
+
+const fs = require('node:fs') // throws an error
+```
+
+This limitation exists because factories can be asynchronous. This should not be a problem because Vitest doesn't mock builtin modules inside `node_modules`, which is simillar to how Vitest works by default.
+
 ### TypeScript
 
 If you are using Node.js 22.18/23.6 or higher, TypeScript will be [transformed natively](https://nodejs.org/en/learn/typescript/run-natively) by Node.js.
