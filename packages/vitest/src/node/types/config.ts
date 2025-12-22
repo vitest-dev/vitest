@@ -1091,8 +1091,6 @@ export interface ResolvedConfig
 
   vmMemoryLimit?: UserConfig['vmMemoryLimit']
   dumpDir?: string
-
-  ast?: AstConfig
 }
 
 type NonProjectOptions
