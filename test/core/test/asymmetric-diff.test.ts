@@ -11,7 +11,7 @@ describe('asymmetric matcher diff display', () => {
     }
 
     // Test should fail - name doesn't contain "Jane"
-    try {
+    expect(() => {
       expect(actual).toMatchObject({
         user: expect.objectContaining({
           name: expect.stringContaining('Jane'),
@@ -19,12 +19,7 @@ describe('asymmetric matcher diff display', () => {
           email: expect.stringContaining('example.com'),
         }),
       })
-    }
-    catch (error: any) {
-      console.log('Mismatch with objectContaining:')
-      console.log(error.message)
-      throw error
-    }
+    }).toThrowError()
   })
 
   it('shows clear diff with nested objectContaining - complex case', () => {
@@ -33,18 +28,18 @@ describe('asymmetric matcher diff display', () => {
       model: 'veo-3.1-generate-preview',
       instances: [
         {
-          prompt: 'walk',  // This doesn't match the expected regex
+          prompt: 'walk', // This doesn't match the expected regex
           referenceImages: [
             {
               image: {
                 gcsUri: 'gs://example/person1.jpg',
-                mimeType: 'image/png',  // Mismatch: expected jpeg
+                mimeType: 'image/png', // Mismatch: expected jpeg
               },
               referenceType: 'asset',
             },
             {
               image: {
-                gcsUri: 'gs://example/person.jpg',  // Mismatch: doesn't contain "person2.png"
+                gcsUri: 'gs://example/person.jpg', // Mismatch: doesn't contain "person2.png"
                 mimeType: 'image/png',
               },
               referenceType: 'asset',
@@ -53,14 +48,14 @@ describe('asymmetric matcher diff display', () => {
         },
       ],
       parameters: {
-        durationSeconds: '8',  // Mismatch: string instead of number
+        durationSeconds: '8', // Mismatch: string instead of number
         aspectRatio: '16:9',
         generateAudio: true,
       },
     }
 
     // This should fail with multiple mismatches
-    try {
+    expect(() => {
       expect(actual).toMatchObject({
         model: expect.stringMatching(/^veo-3\.1-(fast-)?generate-preview$/),
         instances: expect.arrayContaining([
@@ -90,12 +85,6 @@ describe('asymmetric matcher diff display', () => {
           generateAudio: expect.any(Boolean),
         }),
       })
-    }
-    catch (error: any) {
-      console.log('Complex nested structure diff:')
-      console.log(error.message)
-      throw error
-    }
+    }).toThrowError()
   })
 })
-
