@@ -539,24 +539,28 @@ export default ({ mode }: { mode: string }) => {
                   },
                 ],
               },
-              // {
-              //   text: 'Render Function',
-              //   collapsed: true,
-              //   items: [
-              //     {
-              //       text: 'react',
-              //       link: '/config/browser/react',
-              //     },
-              //     {
-              //       text: 'vue',
-              //       link: '/config/browser/vue',
-              //     },
-              //     {
-              //       text: 'svelte',
-              //       link: '/config/browser/svelte',
-              //     },
-              //   ],
-              // },
+              {
+                text: 'Render Function',
+                collapsed: false,
+                items: [
+                  {
+                    text: 'react',
+                    link: '/config/browser/react',
+                  },
+                  {
+                    text: 'vue',
+                    link: '/config/browser/vue',
+                  },
+                  {
+                    text: 'svelte',
+                    link: '/config/browser/svelte',
+                  },
+                  {
+                    text: 'angular',
+                    link: '/config/browser/angular',
+                  },
+                ],
+              },
               {
                 text: 'browser.enabled',
                 link: '/config/browser/enabled',
