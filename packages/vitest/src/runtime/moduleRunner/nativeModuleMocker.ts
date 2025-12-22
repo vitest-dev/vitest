@@ -27,18 +27,19 @@ export class NativeModuleMocker extends BareModuleMocker {
   }
 
   public resolveMockedModule(url: string, parentURL: string): module.ResolveFnOutput | undefined {
+    // don't mock modules inside of packages because there is
+    // a high chance that is uses `require` which is not mockable
+    // because we use top-level await in "manual" mocks.
+    // for the sake of consistency we don't support mocking anything at all
+    if (parentURL.includes('/node_modules/')) {
+      return
+    }
+
     const filename = url.startsWith('file://') ? fileURLToPath(url) : url
     const moduleId = normalizeModuleId(filename)
 
     const mockedModule = this.getDependencyMock(moduleId)
     if (!mockedModule) {
-      return
-    }
-    // don't mock builtin modules inside of packages because there is
-    // a very high chance that is uses `require` which is not mockable
-    // because we use top-level await in that case for "manual" mock.
-    // for the sake of consistency we don't support mocking builtins at all
-    if (isBuiltin(moduleId) && parentURL.includes('/node_modules/')) {
       return
     }
     if (mockedModule.type === 'redirect') {
