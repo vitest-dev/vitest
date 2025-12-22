@@ -21,6 +21,9 @@ export async function setupNodeLoaderHooks(worker: WorkerSetupContext): Promise<
   if (module.setSourceMapsSupport) {
     module.setSourceMapsSupport(true)
   }
+  else if (process.setSourceMapsEnabled) {
+    process.setSourceMapsEnabled(true)
+  }
 
   if (worker.config.experimental.nodeLoader !== false) {
     await initSyntaxLexers()
