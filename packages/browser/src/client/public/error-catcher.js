@@ -35,7 +35,7 @@ function catchWindowErrors(errorEvent, prop, cb) {
       // but some has `ErrorEvent.message` defined, e.g. ResizeObserver error.
       // https://developer.mozilla.org/en-US/docs/Web/API/ErrorEvent/error
       // https://developer.mozilla.org/en-US/docs/Web/API/ResizeObserver#observation_errors
-      console.error(new Error(e.message || 'Unknown Unhandled Errors'))
+      console.error(e.message ? new Error(e.message) : e)
     }
   }
   const addEventListener = window.addEventListener.bind(window)
