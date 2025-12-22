@@ -76,7 +76,7 @@ catalog:
   tinyglobby: ^0.2.15
   tinyrainbow: ^3.0.3
   unocss: ^66.5.9
-  unplugin-vue-components: ^0.28.0
+  unplugin-vue-components: ^30.0.0
   vue: ^3.5.25
   ws: ^8.18.3
 onlyBuiltDependencies:
