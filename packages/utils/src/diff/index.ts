@@ -338,7 +338,7 @@ export function replaceAsymmetricMatcher(
     if (isAsymmetricMatcher(expectedValue)) {
       const matches = expectedValue.asymmetricMatch(actualValue)
       // For container matchers (ArrayContaining, ObjectContaining), unwrap and recursively process
-      if (expectedValue.sample !== undefined && isReplaceable(actualValue, expectedValue.sample)) {
+      if ('sample' in expectedValue && expectedValue.sample !== undefined && isReplaceable(actualValue, expectedValue.sample)) {
         if (matches) {
           // Matcher matches: unwrap and recursively process to show actual structure
           const replaced = replaceAsymmetricMatcher(
@@ -375,7 +375,7 @@ export function replaceAsymmetricMatcher(
     else if (isAsymmetricMatcher(actualValue)) {
       const matches = actualValue.asymmetricMatch(expectedValue)
       // For container matchers in actual (rare case)
-      if (actualValue.sample !== undefined && isReplaceable(actualValue.sample, expectedValue)) {
+      if ('sample' in actualValue && actualValue.sample !== undefined && isReplaceable(actualValue.sample, expectedValue)) {
         const replaced = replaceAsymmetricMatcher(
           actualValue.sample,
           expectedValue,
