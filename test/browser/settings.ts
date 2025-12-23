@@ -20,7 +20,8 @@ const devInstances: BrowserInstanceOption[] = [
 const playwrightInstances: BrowserInstanceOption[] = [
   { browser: 'chromium' },
   { browser: 'firefox' },
-  // hard to run webkit on some linux distributions
+  // hard to setup playwright webkit on some machines (e.g. ArchLinux)
+  // this allows skipping it locally by BROWSER_NO_WEBKIT=true
   ...(process.env.BROWSER_NO_WEBKIT ? [] : [{ browser: 'webkit' as const }]),
 ]
 
