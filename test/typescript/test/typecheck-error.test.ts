@@ -1,5 +1,8 @@
+import fs from 'node:fs'
+import os from 'node:os'
+import path from 'node:path'
 import { describe, expect, it } from 'vitest'
-import { runInlineTests } from '../../test-utils'
+import { createFile, runInlineTests } from '../../test-utils'
 
 describe('Typechecker Error Handling', () => {
   it('throws helpful error when tsc outputs help text (missing config)', async () => {
@@ -13,19 +16,16 @@ describe('Typechecker Error Handling', () => {
     // This is NOT a mock (no jest.mock or similar), but a real executable script
     // that Vitest spawns and executes, validating the error handling logic works.
 
-    const fs = await import('node:fs')
-    const path = await import('node:path')
-    const os = await import('node:os')
-
     // Create a temporary directory for our fake tsc
     const tmpDir = path.join(os.tmpdir(), `vitest-test-${Date.now()}`)
     fs.mkdirSync(tmpDir, { recursive: true })
 
     // Create fake tsc script - cross-platform executable
+    // Using createFile ensures cleanup even if test fails
     const fakeTscPath = path.join(tmpDir, 'fake-tsc')
     const scriptContent = '#!/usr/bin/env node\nconsole.log(\'Version 5.3.3\');\nconsole.log(\'tsc: The TypeScript Compiler - Version 5.3.3\');\nconsole.log(\'\');\nconsole.log(\'COMMON COMMANDS\');\n'
 
-    fs.writeFileSync(fakeTscPath, scriptContent)
+    createFile(fakeTscPath, scriptContent)
     fs.chmodSync(fakeTscPath, '755')
 
     const configContent = `import { defineConfig } from 'vitest/config'
@@ -42,12 +42,6 @@ export default defineConfig({
       'vitest.config.ts': configContent,
       'example.test-d.ts': 'import { expectTypeOf, test } from \'vitest\'\ntest(\'dummy type test\', () => { expectTypeOf(1).toEqualTypeOf<number>() })',
     })
-
-    // Cleanup
-    try {
-      fs.rmSync(tmpDir, { recursive: true, force: true })
-    }
-    catch { }
 
     // Assert that Vitest caught the help text and threw the descriptive error
     const output = stderr + stdout
