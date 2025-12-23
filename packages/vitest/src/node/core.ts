@@ -651,7 +651,7 @@ export class Vitest {
    * @param filters String filters to match the test files
    */
   async start(filters?: string[]): Promise<TestRunResult> {
-    return this._traces.$('vitest.start', async (startSpan) => {
+    return this._traces.$('vitest.start', { context: this._traces.getContextFromEnv(process.env) }, async (startSpan) => {
       startSpan.setAttributes({
         config: this.vite.config.configFile,
       })
