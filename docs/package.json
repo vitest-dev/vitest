@@ -14,10 +14,10 @@
     "generate-pwa-icons": "pwa-assets-generator"
   },
   "dependencies": {
-    "@vueuse/core": "catalog:",
-    "vue": "catalog:",
     "@docsearch/css": "^4.3.2",
-    "@docsearch/js": "^4.3.2"
+    "@docsearch/js": "^4.3.2",
+    "@vueuse/core": "catalog:",
+    "vue": "catalog:"
   },
   "devDependencies": {
     "@iconify-json/carbon": "catalog:",
@@ -28,7 +28,7 @@
     "@vite-pwa/assets-generator": "^1.0.2",
     "@vite-pwa/vitepress": "^1.1.0",
     "@vitejs/plugin-vue": "catalog:",
-    "@voidzero-dev/vitepress-theme": "latest",
+    "@voidzero-dev/vitepress-theme": "catalog:",
     "https-localhost": "^4.7.1",
     "tinyglobby": "catalog:",
     "unocss": "catalog:",
