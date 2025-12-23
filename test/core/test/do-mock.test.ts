@@ -30,3 +30,27 @@ test('the second doMock can override the first doMock', async () => {
 
   expect(incrementWith20(1)).toBe(21)
 })
+
+test('doMock works with using', async () => {
+  vi.doUnmock('./fixtures/increment')
+
+  {
+    const { increment: incrementWith1 } = await import('./fixtures/increment')
+    expect(incrementWith1(1)).toBe(2)
+  }
+
+  {
+    using _incrementMock = vi.doMock('./fixtures/increment', () => ({
+      increment: (num: number) => num + 10,
+    }))
+
+    const { increment: incrementWith10 } = await import('./fixtures/increment')
+
+    expect(incrementWith10(1)).toBe(11)
+  }
+
+  {
+    const { increment: incrementWith1 } = await import('./fixtures/increment')
+    expect(incrementWith1(1)).toBe(2)
+  }
+})
