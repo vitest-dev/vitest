@@ -142,6 +142,7 @@ export default ({ mode }: { mode: string }) => {
       ],
 
       footer: {
+        copyright: `© 2025 VoidZero Inc. and Vitest contributors.`,
         nav: [
           {
             title: 'Vitest',

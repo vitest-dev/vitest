@@ -19,7 +19,7 @@ catalog:
   '@types/ws': ^8.18.1
   '@unocss/reset': ^66.5.9
   '@vitejs/plugin-vue': ^6.0.2
-  '@voidzero-dev/vitepress-theme': latest
+  '@voidzero-dev/vitepress-theme': ^1.1.63
   '@vueuse/core': ^12.8.2
   acorn-walk: ^8.3.4
   birpc: ^4.0.0

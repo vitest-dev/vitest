@@ -4,8 +4,6 @@ import { inBrowser } from 'vitepress'
 import VoidZeroTheme from '@voidzero-dev/vitepress-theme'
 import '@voidzero-dev/vitepress-theme/index.css'
 import { enhanceAppWithTabs } from 'vitepress-plugin-tabs/client'
-import { h } from 'vue'
-import HomePage from '../components/HomePage.vue'
 import Version from '../components/Version.vue'
 import CRoot from '../components/CRoot.vue'
 import Deprecated from '../components/Deprecated.vue'
@@ -21,11 +19,6 @@ if (inBrowser) {
 
 export default {
   extends: VoidZeroTheme,
-  Layout() {
-    return h(VoidZeroTheme.Layout, null, {
-      'home-features-after': () => h(HomePage),
-    })
-  },
   enhanceApp({ app, router }) {
     router.onBeforeRouteChange = (to) => {
       if (typeof location === 'undefined') {
