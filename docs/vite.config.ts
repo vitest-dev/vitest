@@ -1,7 +1,7 @@
 import { presetAttributify, presetIcons, presetUno } from 'unocss'
 import Unocss from 'unocss/vite'
 import { defineConfig } from 'vite'
-import {resolve} from "node:path";
+import { resolve } from 'node:path'
 
 export default defineConfig({
   optimizeDeps: {
