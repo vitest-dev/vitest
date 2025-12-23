@@ -147,7 +147,12 @@ export function createPool(ctx: Vitest): ProcessPool {
 
         taskGroup.push({
           context: {
-            files: specs.map(spec => ({ filepath: spec.moduleId, testLocations: spec.testLines })),
+            files: specs.map(spec => ({
+              filepath: spec.moduleId,
+              testLocations: spec.testLines,
+              testNamePattern: spec.testNamePattern,
+              testIds: spec.testIds,
+            })),
             invalidates,
             providedContext: project.getProvidedContext(),
             workerId: workerId++,

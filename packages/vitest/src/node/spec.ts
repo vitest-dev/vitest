@@ -5,9 +5,15 @@ import type { Pool } from './types/config'
 import { generateFileHash } from '@vitest/runner/utils'
 import { relative } from 'pathe'
 
+export interface TestSpecificationOptions {
+  testNamePattern?: RegExp
+  testIds?: string[]
+  testLines?: number[]
+}
+
 export class TestSpecification {
   /**
-   * The task ID associated with the test module.
+   * The task id associated with the test module.
    */
   public readonly taskId: string
   /**
@@ -15,7 +21,7 @@ export class TestSpecification {
    */
   public readonly project: TestProject
   /**
-   * The ID of the module in the Vite module graph. It is usually an absolute file path.
+   * The id of the module in the Vite module graph. It is usually an absolute file path.
    */
   public readonly moduleId: string
   /**
@@ -27,12 +33,20 @@ export class TestSpecification {
    * Line numbers of the test locations to run.
    */
   public readonly testLines: number[] | undefined
+  /**
+   * Regular expression pattern to filter test names.
+   */
+  public readonly testNamePattern: RegExp | undefined
+  /**
+   * The ids of tasks inside of this specification to run.
+   */
+  public readonly testIds: string[] | undefined
 
   constructor(
     project: TestProject,
     moduleId: string,
     pool: Pool,
-    testLines?: number[] | undefined,
+    testLinesOrOptions?: number[] | TestSpecificationOptions | undefined,
   ) {
     const name = project.config.name
     const hashName = pool !== 'typescript'
@@ -48,7 +62,14 @@ export class TestSpecification {
     this.project = project
     this.moduleId = moduleId
     this.pool = pool
-    this.testLines = testLines
+    if (Array.isArray(testLinesOrOptions)) {
+      this.testLines = testLinesOrOptions
+    }
+    else if (testLinesOrOptions && typeof testLinesOrOptions === 'object') {
+      this.testLines = testLinesOrOptions.testLines
+      this.testNamePattern = testLinesOrOptions.testNamePattern
+      this.testIds = testLinesOrOptions.testIds
+    }
   }
 
   /**

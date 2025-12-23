@@ -11,6 +11,7 @@ export function interpretTaskModes(
   file: Suite,
   namePattern?: string | RegExp,
   testLocations?: number[] | undefined,
+  testIds?: string[] | undefined,
   onlyMode?: boolean,
   parentIsOnly?: boolean,
   allowOnly?: boolean,
@@ -68,6 +69,9 @@ export function interpretTaskModes(
 
       if (t.type === 'test') {
         if (namePattern && !getTaskFullName(t).match(namePattern)) {
+          t.mode = 'skip'
+        }
+        if (testIds && !testIds.includes(t.id)) {
           t.mode = 'skip'
         }
       }

@@ -7,11 +7,15 @@ You can only create a specification by calling [`createSpecification`](/api/adva
 ```ts
 const specification = project.createSpecification(
   resolve('./example.test.ts'),
-  [20, 40], // optional test lines
+  {
+    testLines: [20, 40],
+    testNamePattern: /hello world/,
+    taskIds: ['1223128da3_0_0_0', '1223128da3_0_0'],
+  } // optional test filters
 )
 ```
 
-`createSpecification` expects resolved module ID. It doesn't auto-resolve the file or check that it exists on the file system.
+`createSpecification` expects resolved module identifier. It doesn't auto-resolve the file or check that it exists on the file system.
 
 ## taskId
 
@@ -69,6 +73,14 @@ describe('a group of tests', () => { // [!code error]
 })
 ```
 :::
+
+## testNamePattern <Version>4.1.0</Version> {#testnamepattern}
+
+A regexp that matches the name of the test in this module. This value will override the global [`testNamePattern`](/config/testnamepattern) option if it's set.
+
+## taskIds <Version>4.1.0</Version> {#taskids}
+
+The ids of tasks inside of this specification to run.
 
 ## toJSON
 
