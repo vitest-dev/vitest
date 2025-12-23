@@ -4,9 +4,8 @@ import ListItem from './ListItem.vue'
 
 <template>
   <ul
-    class="features-list"
+    class="features-list un-flex un-flex-col un-gap-2 md:un-gap-0"
     dir="auto"
-    flex="~ col gap2 md:gap-3"
   >
     <ListItem><a target="_blank" href="https://vitejs.dev" rel="noopener noreferrer">Vite</a>'s config, transformers, resolvers, and plugins</ListItem>
     <ListItem>Use the same setup from your app to run the tests!</ListItem>

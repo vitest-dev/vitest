@@ -12,6 +12,7 @@ import Advanced from '../components/Advanced.vue'
 import CourseLink from '../components/CourseLink.vue'
 import '@shikijs/vitepress-twoslash/style.css'
 import 'virtual:group-icons.css'
+import 'uno.css'
 
 if (inBrowser) {
   import('./pwa')

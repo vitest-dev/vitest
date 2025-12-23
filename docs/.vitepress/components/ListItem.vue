@@ -41,21 +41,16 @@ onMounted(async () => {
   <li :style="color">
     <div
       ref="el"
-      relative
-      m="ya r-1"
-      w-5
-      h-5
-      flex-none
-      align-mid
+      class="un-relative un-w-5 un-h-5 un-flex-none un-my-auto un-mr-1 un-align-middle"
     >
-      <div absolute transition duration-300 :class="state ? 'flip' : ''">
-        <div i-carbon:circle-dash animate-spin animate-2s text-yellow4 />
+      <div class="un-absolute un-transition un-duration-300" :class="state ? 'flip' : ''">
+        <div i-carbon:circle-dash class="un-animate-spin un-text-yellow-400" />
       </div>
-      <div absolute transition duration-300 :class="state === 2 ? '' : 'flip'">
-        <div i-carbon:close-outline text-red4 />
+      <div class="un-absolute un-transition un-duration-300" :class="state === 2 ? '' : 'flip'">
+        <div i-carbon:close-outline class="un-text-red-400" />
       </div>
-      <div absolute transition duration-300 :class="state === 1 ? '' : 'flip'">
-        <div i-carbon:checkmark-outline class="text-$vp-c-brand-1" />
+      <div class="un-absolute un-transition un-duration-300" :class="state === 1 ? '' : 'flip'">
+        <div i-carbon:checkmark-outline class="un-text-$vp-c-brand-1" />
       </div>
     </div>
     <div>
