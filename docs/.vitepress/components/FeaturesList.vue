@@ -4,7 +4,7 @@ import ListItem from './ListItem.vue'
 
 <template>
   <ul
-    class="features-list un-flex un-flex-col un-gap-2 md:un-gap-0"
+    class="features-list"
     dir="auto"
   >
     <ListItem><a target="_blank" href="https://vitejs.dev" rel="noopener noreferrer">Vite</a>'s config, transformers, resolvers, and plugins</ListItem>
@@ -43,5 +43,8 @@ import ListItem from './ListItem.vue'
 
 .features-list {
   padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
 }
 </style>

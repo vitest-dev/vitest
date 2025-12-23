@@ -22,6 +22,7 @@
   "devDependencies": {
     "@iconify-json/carbon": "catalog:",
     "@iconify-json/logos": "catalog:",
+    "@iconify/vue": "catalog:",
     "@shikijs/transformers": "^3.17.1",
     "@shikijs/vitepress-twoslash": "^3.17.1",
     "@unocss/reset": "catalog:",

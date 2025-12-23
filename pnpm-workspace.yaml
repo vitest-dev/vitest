@@ -46,6 +46,7 @@ patchedDependencies:
 catalog:
   '@iconify-json/carbon': ^1.2.14
   '@iconify-json/logos': ^1.2.10
+  '@iconify/vue': ^5.0.0
   '@jridgewell/remapping': ^2.3.5
   '@jridgewell/trace-mapping': 0.3.31
   '@types/chai': ^5.2.2
