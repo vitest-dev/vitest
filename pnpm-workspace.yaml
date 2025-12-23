@@ -25,12 +25,12 @@ packages:
   - test/*
   - test/config/fixtures/conditions-pkg
 overrides:
+  '@types/node': $@types/node
   '@vitest/browser': workspace:*
   '@vitest/browser-playwright': workspace:*
   '@vitest/browser-preview': workspace:*
   '@vitest/browser-webdriverio': workspace:*
   '@vitest/ui': workspace:*
-  '@types/node': "$@types/node"
   acorn: 8.11.3
   mlly: ^1.8.0
   rollup: $rollup
