@@ -136,7 +136,6 @@ export class Typechecker {
         + `     test: { typecheck: { tsconfig: 'path/to/tsconfig.json' } }\n`
         + `  3. Check that the tsconfig file is valid JSON`
 
-      console.error(msg)
       throw new Error(msg)
     }
 
@@ -179,19 +178,19 @@ export class Typechecker {
       errors.forEach(({ error, originalError }) => {
         const processedPos = traceMap
           ? findGeneratedPosition(traceMap, {
-              line: originalError.line,
-              column: originalError.column,
-              source: basename(path),
-            })
+            line: originalError.line,
+            column: originalError.column,
+            source: basename(path),
+          })
           : originalError
         const line = processedPos.line ?? originalError.line
         const column = processedPos.column ?? originalError.column
         const index = indexMap.get(`${line}:${column}`)
         const definition
           = index != null
-            && sortedDefinitions.find(
-              def => def.start <= index && def.end >= index,
-            )
+          && sortedDefinitions.find(
+            def => def.start <= index && def.end >= index,
+          )
         const suite = definition ? definition.task : file
         const state: TaskState
           = suite.mode === 'run' || suite.mode === 'only' ? 'fail' : suite.mode

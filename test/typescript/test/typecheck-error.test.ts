@@ -18,7 +18,6 @@ describe('Typechecker Error Handling', () => {
 
     // Create a temporary directory for our fake tsc
     const tmpDir = path.join(os.tmpdir(), `vitest-test-${Date.now()}`)
-    fs.mkdirSync(tmpDir, { recursive: true })
 
     // Create fake tsc script - cross-platform executable
     // Using createFile ensures cleanup even if test fails
