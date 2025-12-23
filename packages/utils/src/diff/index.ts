@@ -8,14 +8,14 @@
 // This is a fork of Jest's jest-diff package, but it doesn't depend on Node environment (like chalk).
 
 import type { PrettyFormatOptions } from '@vitest/pretty-format'
-import type { DiffOptions } from './types'
+import type { DiffOptions, DiffOptionsNormalized } from './types'
 import {
   format as prettyFormat,
   plugins as prettyFormatPlugins,
 } from '@vitest/pretty-format'
 import c from 'tinyrainbow'
 import { stringify } from '../display'
-import { deepClone, getOwnProperties, getType as getSimpleType } from '../helpers'
+import { getOwnProperties, getType as getSimpleType } from '../helpers'
 import { Diff, DIFF_DELETE, DIFF_EQUAL, DIFF_INSERT } from './cleanupSemantic'
 import { NO_DIFF_MESSAGE, SIMILAR_MESSAGE } from './constants'
 import { diffLinesRaw, diffLinesUnified, diffLinesUnified2 } from './diffLines'
@@ -28,11 +28,6 @@ export type { DiffOptions, DiffOptionsColor, SerializedDiffOptions } from './typ
 export { diffLinesRaw, diffLinesUnified, diffLinesUnified2 }
 export { diffStringsRaw, diffStringsUnified }
 export { Diff, DIFF_DELETE, DIFF_EQUAL, DIFF_INSERT }
-
-function getCommonMessage(message: string, options?: DiffOptions) {
-  const { commonColor } = normalizeDiffOptions(options)
-  return commonColor(message)
-}
 
 const {
   AsymmetricMatcher,
@@ -95,9 +90,10 @@ export function diff(a: any, b: any, options?: DiffOptions): string | undefined 
   }
 
   if (expectedType !== getType(b)) {
-    const { aAnnotation, aColor, aIndicator, bAnnotation, bColor, bIndicator }
-      = normalizeDiffOptions(options)
-    const formatOptions = getFormatOptions(FALLBACK_FORMAT_OPTIONS, options)
+    // Normalize once at the top level
+    const normalizedOptions = normalizeDiffOptions(options)
+    const { aAnnotation, aColor, aIndicator, bAnnotation, bColor, bIndicator } = normalizedOptions
+    const formatOptions = getFormatOptions(FALLBACK_FORMAT_OPTIONS, normalizedOptions)
     let aDisplay = prettyFormat(a, formatOptions)
     let bDisplay = prettyFormat(b, formatOptions)
     // even if prettyFormat prints successfully big objects,
@@ -159,29 +155,28 @@ function compareObjects(
   b: Record<string, any>,
   options?: DiffOptions,
 ) {
+  // Normalize options once at the start
+  const normalizedOptions = normalizeDiffOptions(options)
   let difference
   let hasThrown = false
 
   try {
-    const formatOptions = getFormatOptions(FORMAT_OPTIONS, options)
-    difference = getObjectsDifference(a, b, formatOptions, options)
+    const formatOptions = getFormatOptions(FORMAT_OPTIONS, normalizedOptions)
+    difference = getObjectsDifference(a, b, formatOptions, normalizedOptions)
   }
   catch {
     hasThrown = true
   }
 
-  const noDiffMessage = getCommonMessage(NO_DIFF_MESSAGE, options)
+  const noDiffMessage = normalizedOptions.commonColor(NO_DIFF_MESSAGE)
   // If the comparison yields no results, compare again but this time
   // without calling `toJSON`. It's also possible that toJSON might throw.
   if (difference === undefined || difference === noDiffMessage) {
-    const formatOptions = getFormatOptions(FALLBACK_FORMAT_OPTIONS, options)
-    difference = getObjectsDifference(a, b, formatOptions, options)
+    const formatOptions = getFormatOptions(FALLBACK_FORMAT_OPTIONS, normalizedOptions)
+    difference = getObjectsDifference(a, b, formatOptions, normalizedOptions)
 
     if (difference !== noDiffMessage && !hasThrown) {
-      difference = `${getCommonMessage(
-        SIMILAR_MESSAGE,
-        options,
-      )}\n\n${difference}`
+      difference = `${normalizedOptions.commonColor(SIMILAR_MESSAGE)}\n\n${difference}`
     }
   }
 
@@ -190,9 +185,9 @@ function compareObjects(
 
 function getFormatOptions(
   formatOptions: PrettyFormatOptions,
-  options?: DiffOptions,
+  normalizedOptions: DiffOptionsNormalized,
 ): PrettyFormatOptions {
-  const { compareKeys, printBasicPrototype, maxDepth } = normalizeDiffOptions(options)
+  const { compareKeys, printBasicPrototype, maxDepth } = normalizedOptions
 
   return {
     ...formatOptions,
@@ -206,14 +201,14 @@ function getObjectsDifference(
   a: Record<string, any>,
   b: Record<string, any>,
   formatOptions: PrettyFormatOptions,
-  options?: DiffOptions,
+  normalizedOptions: DiffOptionsNormalized,
 ): string {
   const formatOptionsZeroIndent = { ...formatOptions, indent: 0 }
   const aCompare = prettyFormat(a, formatOptionsZeroIndent)
   const bCompare = prettyFormat(b, formatOptionsZeroIndent)
 
   if (aCompare === bCompare) {
-    return getCommonMessage(NO_DIFF_MESSAGE, options)
+    return normalizedOptions.commonColor(NO_DIFF_MESSAGE)
   }
   else {
     const aDisplay = prettyFormat(a, formatOptions)
@@ -224,7 +219,7 @@ function getObjectsDifference(
       bDisplay.split('\n'),
       aCompare.split('\n'),
       bCompare.split('\n'),
-      options,
+      normalizedOptions,
     )
   }
 }
@@ -242,6 +237,31 @@ function isReplaceable(obj1: any, obj2: any) {
   return (
     obj1Type === obj2Type && (obj1Type === 'Object' || obj1Type === 'Array')
   )
+}
+
+function hasAsymmetricMatcher(obj: any, seen = new WeakSet()): boolean {
+  if (obj == null || typeof obj !== 'object') {
+    return false
+  }
+  if (seen.has(obj)) {
+    return false
+  }
+  if (isAsymmetricMatcher(obj)) {
+    return true
+  }
+  seen.add(obj)
+
+  const type = getSimpleType(obj)
+  if (type === 'Object' || type === 'Array') {
+    const values = type === 'Array' ? obj : Object.values(obj)
+    for (const value of values) {
+      if (hasAsymmetricMatcher(value, seen)) {
+        return true
+      }
+    }
+  }
+
+  return false
 }
 
 export function printDiffOrStringify(
@@ -283,10 +303,20 @@ export function printDiffOrStringify(
   }
 
   // if (isLineDiffable(expected, received)) {
-  const clonedExpected = deepClone(expected, { forceWritable: true })
-  const clonedReceived = deepClone(received, { forceWritable: true })
-  const { replacedExpected, replacedActual } = replaceAsymmetricMatcher(clonedReceived, clonedExpected)
-  const difference = diff(replacedExpected, replacedActual, options)
+  // Only run replaceAsymmetricMatcher if there are actually matchers present.
+  // This avoids expensive object copying in the common case.
+  const needsReplacement = hasAsymmetricMatcher(expected) || hasAsymmetricMatcher(received)
+
+  let finalExpected = expected
+  let finalReceived = received
+
+  if (needsReplacement) {
+    const { replacedExpected, replacedActual } = replaceAsymmetricMatcher(received, expected)
+    finalExpected = replacedExpected
+    finalReceived = replacedActual
+  }
+
+  const difference = diff(finalExpected, finalReceived, options)
 
   return difference
   // }
