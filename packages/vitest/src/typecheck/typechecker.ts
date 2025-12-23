@@ -178,19 +178,19 @@ export class Typechecker {
       errors.forEach(({ error, originalError }) => {
         const processedPos = traceMap
           ? findGeneratedPosition(traceMap, {
-            line: originalError.line,
-            column: originalError.column,
-            source: basename(path),
-          })
+              line: originalError.line,
+              column: originalError.column,
+              source: basename(path),
+            })
           : originalError
         const line = processedPos.line ?? originalError.line
         const column = processedPos.column ?? originalError.column
         const index = indexMap.get(`${line}:${column}`)
         const definition
           = index != null
-          && sortedDefinitions.find(
-            def => def.start <= index && def.end >= index,
-          )
+            && sortedDefinitions.find(
+              def => def.start <= index && def.end >= index,
+            )
         const suite = definition ? definition.task : file
         const state: TaskState
           = suite.mode === 'run' || suite.mode === 'only' ? 'fail' : suite.mode
