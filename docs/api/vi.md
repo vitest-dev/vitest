@@ -247,8 +247,6 @@ it('uses the normal version of my-module again', () => {
 ```
 :::
 
-::: tip
-
 ### vi.mocked
 
 ```ts
