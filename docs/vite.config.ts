@@ -24,11 +24,11 @@ export default defineConfig({
   plugins: [
     Unocss({
       presets: [
-        presetUno({
-          dark: 'media',
-          // use prefix to avoid conflicting tailwind class used by voidzero theme
-          prefix: 'un-',
-        }),
+        // presetUno({
+        //   dark: 'media',
+        //   // use prefix to avoid conflicting tailwind class used by voidzero theme
+        //   prefix: 'un-',
+        // }),
         presetIcons({
           scale: 1.2,
         }),
