@@ -544,6 +544,7 @@ export class TestProject {
       },
       server.config,
     )
+    this._config.api.token = this.vitest.config.api.token
     this._setHash()
     for (const _providedKey in this.config.provide) {
       const providedKey = _providedKey as keyof ProvidedContext

@@ -325,6 +325,12 @@ export default (parentServer: ParentBrowserProject, base = '/'): Plugin[] => {
           include.push('@vue/test-utils')
         }
 
+        const otelConfig = project.config.experimental.openTelemetry
+        if (otelConfig?.enabled && otelConfig.browserSdkPath) {
+          entries.push(otelConfig.browserSdkPath)
+          include.push('@opentelemetry/api')
+        }
+
         return {
           define,
           resolve: {
