@@ -46,8 +46,8 @@ catalogs:
       specifier: ^6.0.2
       version: 6.0.2
     '@voidzero-dev/vitepress-theme':
-      specifier: ^1.1.63
-      version: 1.1.63
+      specifier: ^1.1.64
+      version: 1.1.64
     '@vueuse/core':
       specifier: ^12.8.2
       version: 12.8.2
@@ -280,7 +280,7 @@ importers:
         version: 6.0.2(vite@7.1.5(@types/node@25.0.3)(jiti@2.6.1)(lightningcss@1.30.2)(sass-embedded@1.93.3)(sass@1.93.3)(terser@5.44.1)(tsx@4.21.0)(yaml@2.8.2))(vue@3.5.25(typescript@5.9.3))
       '@voidzero-dev/vitepress-theme':
         specifier: 'catalog:'
-        version: 1.1.63(@docsearch/css@4.3.2)(@docsearch/js@4.3.2)(axios@1.13.2)(change-case@5.4.4)(embla-carousel@8.6.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(typescript@5.9.3)(vite@7.1.5(@types/node@25.0.3)(jiti@2.6.1)(lightningcss@1.30.2)(sass-embedded@1.93.3)(sass@1.93.3)(terser@5.44.1)(tsx@4.21.0)(yaml@2.8.2))(vitepress@2.0.0-alpha.15(@types/node@25.0.3)(axios@1.13.2)(change-case@5.4.4)(jiti@2.6.1)(lightningcss@1.30.2)(oxc-minify@0.99.0)(postcss@8.5.6)(sass-embedded@1.93.3)(sass@1.93.3)(terser@5.44.1)(tsx@4.21.0)(typescript@5.9.3)(yaml@2.8.2))(vue@3.5.25(typescript@5.9.3))
+        version: 1.1.64(@docsearch/css@4.3.2)(@docsearch/js@4.3.2)(axios@1.13.2)(change-case@5.4.4)(embla-carousel@8.6.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(typescript@5.9.3)(vite@7.1.5(@types/node@25.0.3)(jiti@2.6.1)(lightningcss@1.30.2)(sass-embedded@1.93.3)(sass@1.93.3)(terser@5.44.1)(tsx@4.21.0)(yaml@2.8.2))(vitepress@2.0.0-alpha.15(@types/node@25.0.3)(axios@1.13.2)(change-case@5.4.4)(jiti@2.6.1)(lightningcss@1.30.2)(oxc-minify@0.99.0)(postcss@8.5.6)(sass-embedded@1.93.3)(sass@1.93.3)(terser@5.44.1)(tsx@4.21.0)(typescript@5.9.3)(yaml@2.8.2))(vue@3.5.25(typescript@5.9.3))
       https-localhost:
         specifier: ^4.7.1
         version: 4.7.1
@@ -5064,8 +5064,8 @@ packages:
   '@vitest/test-deps-url@file:test/optimize-deps/dep-url':
     resolution: {directory: test/optimize-deps/dep-url, type: directory}
 
-  '@voidzero-dev/vitepress-theme@1.1.63':
-    resolution: {integrity: sha512-+/EwD/rtJ24rLPpZJRyDT4TRYKSGjIJ1gI7LdaF0jUPi8nmS7qWt7E0xjuopWKJ+d4YElgHgm+XxmyeT05emJw==}
+  '@voidzero-dev/vitepress-theme@1.1.64':
+    resolution: {integrity: sha512-aKYNMKXM8XAd0kg9WvwxOMCImI+J/3RO0Jf9yuAdfa8NsjxXRSOJL2TRvg225xwrDhzwzovATPeKKE9LduY7pg==}
     peerDependencies:
       '@docsearch/css': ^4.3.2
       '@docsearch/js': ^4.3.2
@@ -13656,7 +13656,7 @@ snapshots:
 
   '@vitest/test-deps-url@file:test/optimize-deps/dep-url': {}
 
-  '@voidzero-dev/vitepress-theme@1.1.63(@docsearch/css@4.3.2)(@docsearch/js@4.3.2)(axios@1.13.2)(change-case@5.4.4)(embla-carousel@8.6.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(typescript@5.9.3)(vite@7.1.5(@types/node@25.0.3)(jiti@2.6.1)(lightningcss@1.30.2)(sass-embedded@1.93.3)(sass@1.93.3)(terser@5.44.1)(tsx@4.21.0)(yaml@2.8.2))(vitepress@2.0.0-alpha.15(@types/node@25.0.3)(axios@1.13.2)(change-case@5.4.4)(jiti@2.6.1)(lightningcss@1.30.2)(oxc-minify@0.99.0)(postcss@8.5.6)(sass-embedded@1.93.3)(sass@1.93.3)(terser@5.44.1)(tsx@4.21.0)(typescript@5.9.3)(yaml@2.8.2))(vue@3.5.25(typescript@5.9.3))':
+  '@voidzero-dev/vitepress-theme@1.1.64(@docsearch/css@4.3.2)(@docsearch/js@4.3.2)(axios@1.13.2)(change-case@5.4.4)(embla-carousel@8.6.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(typescript@5.9.3)(vite@7.1.5(@types/node@25.0.3)(jiti@2.6.1)(lightningcss@1.30.2)(sass-embedded@1.93.3)(sass@1.93.3)(terser@5.44.1)(tsx@4.21.0)(yaml@2.8.2))(vitepress@2.0.0-alpha.15(@types/node@25.0.3)(axios@1.13.2)(change-case@5.4.4)(jiti@2.6.1)(lightningcss@1.30.2)(oxc-minify@0.99.0)(postcss@8.5.6)(sass-embedded@1.93.3)(sass@1.93.3)(terser@5.44.1)(tsx@4.21.0)(typescript@5.9.3)(yaml@2.8.2))(vue@3.5.25(typescript@5.9.3))':
     dependencies:
       '@number-flow/vue': 0.4.8(vue@3.5.25(typescript@5.9.3))
       '@rive-app/canvas': 2.33.0
