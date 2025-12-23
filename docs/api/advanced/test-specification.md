@@ -10,7 +10,7 @@ const specification = project.createSpecification(
   {
     testLines: [20, 40],
     testNamePattern: /hello world/,
-    taskIds: ['1223128da3_0_0_0', '1223128da3_0_0'],
+    testIds: ['1223128da3_0_0_0', '1223128da3_0_0'],
   } // optional test filters
 )
 ```
@@ -78,7 +78,7 @@ describe('a group of tests', () => { // [!code error]
 
 A regexp that matches the name of the test in this module. This value will override the global [`testNamePattern`](/config/testnamepattern) option if it's set.
 
-## taskIds <Version>4.1.0</Version> {#taskids}
+## testIds <Version>4.1.0</Version> {#testids}
 
 The ids of tasks inside of this specification to run.
 
