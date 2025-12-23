@@ -30,6 +30,7 @@ overrides:
   '@vitest/browser-preview': workspace:*
   '@vitest/browser-webdriverio': workspace:*
   '@vitest/ui': workspace:*
+  '@types/node': "$@types/node"
   acorn: 8.11.3
   mlly: ^1.8.0
   rollup: $rollup
