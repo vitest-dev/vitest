@@ -486,3 +486,50 @@ test('asymmetric matcher with nested objectContaining and arrayContaining', () =
       }"
   `)
 })
+
+test('asymmetric matcher recursion - nested matchers in container', () => {
+  // This test demonstrates why recursion is needed when container matchers match.
+  // If we simply did `expected[key] = actualValue` without recursion,
+  // nested asymmetric matchers wouldn't be processed, and the diff would show
+  // the entire nested structure even when some nested matchers match.
+  const actual = {
+    data: {
+      id: 1,
+      name: 'John',
+      metadata: {
+        created: '2024-01-01',
+        updated: '2024-01-02',
+      },
+    },
+  }
+
+  const expected = {
+    data: expect.objectContaining({
+      id: expect.any(Number), // This nested matcher matches - should show actual value
+      name: expect.stringContaining('Jane'), // This nested matcher doesn't match - should show mismatch
+      metadata: expect.objectContaining({
+        created: expect.any(String), // This nested matcher matches - should show actual value
+        updated: expect.any(String), // This nested matcher matches - should show actual value
+      }),
+    }),
+  }
+
+  // With recursion, nested matchers are properly processed:
+  // - Matching matchers (id, created, updated) are replaced with actual values
+  // - Non-matching matchers (name) show the mismatch clearly
+  expect(stripVTControlCharacters(getErrorDiff(actual, expected))).toMatchInlineSnapshot(`
+    "- Expected
+    + Received
+
+    @@ -3,8 +3,8 @@
+          "id": 1,
+          "metadata": {
+            "created": "2024-01-01",
+            "updated": "2024-01-02",
+          },
+    -     "name": StringContaining "Jane",
+    +     "name": "John",
+        },
+      }"
+  `)
+})
