@@ -336,38 +336,29 @@ export function replaceAsymmetricMatcher(
     const expectedValue = expected[key]
     const actualValue = actual[key]
     if (isAsymmetricMatcher(expectedValue)) {
-      const matches = expectedValue.asymmetricMatch(actualValue)
-      // For container matchers (ArrayContaining, ObjectContaining), unwrap and recursively process
-      if ('sample' in expectedValue && expectedValue.sample !== undefined && isReplaceable(actualValue, expectedValue.sample)) {
-        if (matches) {
-          expected[key] = actualValue
-        }
-        else {
-          // Matcher doesn't match: unwrap but keep structure to show mismatch
-          const replaced = replaceAsymmetricMatcher(
-            actualValue,
-            expectedValue.sample,
-            actualReplaced,
-            expectedReplaced,
-          )
-          actual[key] = replaced.replacedActual
-          expected[key] = replaced.replacedExpected
-        }
+      if (expectedValue.asymmetricMatch(actualValue)) {
+        // When matcher matches, replace expected with actual value
+        // so they appear the same in the diff
+        expected[key] = actualValue
       }
-      else {
-        // Simple matchers (StringContaining, Any, etc.)
-        if (matches) {
-          // When matcher matches, replace expected with actual value
-          // so they appear the same in the diff
-          expected[key] = actualValue
-        }
-        // When matcher doesn't match, keep both as-is to show the difference
+      else if ('sample' in expectedValue && expectedValue.sample !== undefined && isReplaceable(actualValue, expectedValue.sample)) {
+        // For container matchers (ArrayContaining, ObjectContaining), unwrap and recursively process
+        // Matcher doesn't match: unwrap but keep structure to show mismatch
+        const replaced = replaceAsymmetricMatcher(
+          actualValue,
+          expectedValue.sample,
+          actualReplaced,
+          expectedReplaced,
+        )
+        actual[key] = replaced.replacedActual
+        expected[key] = replaced.replacedExpected
       }
     }
     else if (isAsymmetricMatcher(actualValue)) {
-      const matches = actualValue.asymmetricMatch(expectedValue)
-      // For container matchers in actual (rare case)
-      if ('sample' in actualValue && actualValue.sample !== undefined && isReplaceable(actualValue.sample, expectedValue)) {
+      if (actualValue.asymmetricMatch(expectedValue)) {
+        actual[key] = expectedValue
+      }
+      else if ('sample' in actualValue && actualValue.sample !== undefined && isReplaceable(actualValue.sample, expectedValue)) {
         const replaced = replaceAsymmetricMatcher(
           actualValue.sample,
           expectedValue,
@@ -376,12 +367,6 @@ export function replaceAsymmetricMatcher(
         )
         actual[key] = replaced.replacedActual
         expected[key] = replaced.replacedExpected
-      }
-      else {
-        if (matches) {
-          // When matcher matches, replace actual with expected value
-          actual[key] = expectedValue
-        }
       }
     }
     else if (isReplaceable(actualValue, expectedValue)) {
