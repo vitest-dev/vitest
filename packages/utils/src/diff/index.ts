@@ -340,15 +340,7 @@ export function replaceAsymmetricMatcher(
       // For container matchers (ArrayContaining, ObjectContaining), unwrap and recursively process
       if ('sample' in expectedValue && expectedValue.sample !== undefined && isReplaceable(actualValue, expectedValue.sample)) {
         if (matches) {
-          // Matcher matches: unwrap and recursively process to show actual structure
-          const replaced = replaceAsymmetricMatcher(
-            actualValue,
-            expectedValue.sample,
-            actualReplaced,
-            expectedReplaced,
-          )
-          actual[key] = replaced.replacedActual
-          expected[key] = replaced.replacedExpected
+          expected[key] = actualValue
         }
         else {
           // Matcher doesn't match: unwrap but keep structure to show mismatch
