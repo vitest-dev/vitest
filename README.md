@@ -119,3 +119,8 @@ See [Contributing Guide](https://github.com/vitest-dev/vitest/blob/main/CONTRIBU
 ## License
 
 [MIT](./LICENSE) License © 2021-Present VoidZero Inc. and Vitest contributors
+
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
