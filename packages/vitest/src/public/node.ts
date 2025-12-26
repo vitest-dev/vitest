@@ -189,11 +189,6 @@ export type {
   RunnerTestFile,
   RunnerTestSuite,
 } from './index'
-export type {
-  ReportedHookContext,
-  Reporter,
-  TestRunEndReason,
-} from './reporters'
 export { generateFileHash } from '@vitest/runner/utils'
 export type { SerializedError } from '@vitest/utils'
 
