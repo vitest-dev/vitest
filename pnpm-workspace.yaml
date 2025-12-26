@@ -3,6 +3,7 @@ catalogMode: prefer
 shellEmulator: true
 
 trustPolicy: no-downgrade
+
 trustPolicyExclude:
   - semver@6.3.1
   - chokidar@4.0.3
@@ -17,33 +18,35 @@ trustPolicyExclude:
   - undici-types@6.21.0
   - undici@6.21.3
   - rxjs@7.8.2
-
 packages:
   - docs
   - packages/*
   - examples/*
   - test/*
   - test/config/fixtures/conditions-pkg
-
 overrides:
-  '@vitest/browser': 'workspace:*'
-  '@vitest/browser-playwright': 'workspace:*'
-  '@vitest/browser-preview': 'workspace:*'
-  '@vitest/browser-webdriverio': 'workspace:*'
-  '@vitest/ui': 'workspace:*'
+  '@types/node': $@types/node
+  '@vitest/browser': workspace:*
+  '@vitest/browser-playwright': workspace:*
+  '@vitest/browser-preview': workspace:*
+  '@vitest/browser-webdriverio': workspace:*
+  '@vitest/ui': workspace:*
   acorn: 8.11.3
   mlly: ^1.8.0
   rollup: $rollup
   vite: $vite
-  vitest: 'workspace:*'
+  vitest: workspace:*
+
 patchedDependencies:
   '@sinonjs/fake-timers@14.0.0': patches/@sinonjs__fake-timers@14.0.0.patch
   '@types/sinonjs__fake-timers@8.1.5': patches/@types__sinonjs__fake-timers@8.1.5.patch
   acorn@8.11.3: patches/acorn@8.11.3.patch
   cac@6.7.14: patches/cac@6.7.14.patch
+
 catalog:
   '@iconify-json/carbon': ^1.2.14
   '@iconify-json/logos': ^1.2.10
+  '@iconify/vue': ^5.0.0
   '@jridgewell/remapping': ^2.3.5
   '@jridgewell/trace-mapping': 0.3.31
   '@types/chai': ^5.2.2

@@ -44,7 +44,7 @@
     "@rollup/plugin-commonjs": "^29.0.0",
     "@rollup/plugin-json": "^6.1.0",
     "@rollup/plugin-node-resolve": "^16.0.3",
-    "@types/node": "^24.10.1",
+    "@types/node": "24.10.1",
     "@types/ws": "catalog:",
     "@vitest/browser": "workspace:*",
     "@vitest/coverage-istanbul": "workspace:*",
@@ -65,7 +65,7 @@
     "typescript": "^5.9.3",
     "unplugin-isolated-decl": "^0.15.6",
     "unplugin-oxc": "^0.5.5",
-    "vite": "^7.1.5",
+    "vite": "7.1.5",
     "vitest": "workspace:*",
     "zx": "^8.8.5"
   }

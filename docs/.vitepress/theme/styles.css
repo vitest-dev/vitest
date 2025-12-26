@@ -1,0 +1,17 @@
+@import "@voidzero-dev/vitepress-theme/src/styles/index.css";
+
+@source "./**/*.vue";
+
+/* Vitest */
+:root[data-variant="vitest"] {
+  --color-brand: #008039;
+}
+
+:root.dark:not([data-theme])[data-variant="vitest"],
+:root[data-theme="dark"][data-variant="vitest"] {
+  --color-brand: var(--color-zest);
+}
+
+:root[data-theme="light"][data-variant="vitest"] {
+  --color-brand: #008039;
+}
