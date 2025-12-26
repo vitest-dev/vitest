@@ -81,21 +81,6 @@ it('exports snapshot', async ({ skip, task }) => {
           "stringify": "function",
           "takeCoverageInsideWorker": "function",
         },
-        "./internal/module-runner": {
-          "VITEST_VM_CONTEXT_SYMBOL": "string",
-          "VitestModuleEvaluator": "function",
-          "VitestModuleRunner": "function",
-          "getWorkerState": "function",
-          "startVitestModuleRunner": "function",
-        },
-        "./mocker": {
-          "AutomockedModule": "function",
-          "AutospiedModule": "function",
-          "ManualMockedModule": "function",
-          "MockerRegistry": "function",
-          "RedirectedModule": "function",
-          "mockObject": "function",
-        },
         "./node": {
           "BaseRuntime": "function",
           "BaseSequencer": "function",
@@ -249,21 +234,6 @@ it('exports snapshot', async ({ skip, task }) => {
             "stopCoverageInsideWorker": "function",
             "stringify": "function",
             "takeCoverageInsideWorker": "function",
-          },
-          "./internal/module-runner": {
-            "VITEST_VM_CONTEXT_SYMBOL": "string",
-            "VitestModuleEvaluator": "function",
-            "VitestModuleRunner": "function",
-            "getWorkerState": "function",
-            "startVitestModuleRunner": "function",
-          },
-          "./mocker": {
-            "AutomockedModule": "function",
-            "AutospiedModule": "function",
-            "ManualMockedModule": "function",
-            "MockerRegistry": "function",
-            "RedirectedModule": "function",
-            "mockObject": "function",
           },
           "./node": {
             "BaseSequencer": "function",

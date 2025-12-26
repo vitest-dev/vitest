@@ -68,10 +68,6 @@
       "types": "./dist/browser.d.ts",
       "default": "./dist/browser.js"
     },
-    "./internal/module-runner": {
-      "types": "./dist/module-runner.d.ts",
-      "default": "./dist/module-runner.js"
-    },
     "./runners": {
       "types": "./dist/runners.d.ts",
       "default": "./dist/runners.js"

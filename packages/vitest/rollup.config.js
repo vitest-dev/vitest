@@ -30,7 +30,6 @@ const entries = {
   'coverage': 'src/public/coverage.ts',
   'reporters': 'src/public/reporters.ts',
   'worker': 'src/public/worker.ts',
-  'module-runner': 'src/public/module-runner.ts',
   'module-evaluator': 'src/runtime/moduleRunner/moduleEvaluator.ts',
 
   // for performance reasons we bundle them separately so we don't import everything at once
