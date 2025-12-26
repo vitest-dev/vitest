@@ -160,12 +160,20 @@ export default ({ mode }: { mode: string }) => {
                   link: 'https://main.vitest.dev/',
                 },
                 {
-                  text: 'v0.x',
-                  link: 'https://v0.vitest.dev/',
+                  text: 'v4.x',
+                  link: 'https://v4.vitest.dev/',
+                },
+                {
+                  text: 'v3.x',
+                  link: 'https://v3.vitest.dev/',
                 },
                 {
                   text: 'v1.x',
                   link: 'https://v1.vitest.dev/',
+                },
+                {
+                  text: 'v0.x',
+                  link: 'https://v0.vitest.dev/',
                 },
               ],
             },
