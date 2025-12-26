@@ -24,7 +24,7 @@
     </div>
     <div class="flex flex-col min-h-[22rem] sm:min-h-[30rem]">
       <div class="relative pl-6 sm:pl-16 h-full flex flex-col justify-center overflow-clip py-8 sm:py-16 hero-background">
-        <img src="@assets/vitest/hero-terminal.svg" alt="Vitest terminal" class="w-full h-full object-contain">
+        <img src="@assets/vitest/hero-terminal.png" alt="Vitest terminal" class="w-full h-full object-contain">
       </div>
     </div>
   </div>

@@ -13,24 +13,16 @@
       </div>
       <div class="lg:max-w-lg">
         <p class="text-pretty mb-5">
-          <a href="https://vite.dev" target="_blank"><code
+          Vitest was created to make testing just work for <a href="https://vite.dev" target="_blank"><code
             class="mr-1 outline-none bg-nickel/50 text-vite"
-          >Vite</code></a> has become the shared foundation for
-          modern
-          web development - but test runners like <a href="https://jestjs.io/" target="_blank"><code
-            class="mr-1 outline-none bg-nickel/50 text-zest"
-          >Jest</code></a>
-          cannot reuse its resolution and transform
-          pipeline, resulting in duplicated configurations and compatibility issues.
-        </p>
-        <p class="text-pretty mb-5">
-          Vitest was born to solve this problem: by building on top of Vite, Vitest natively
-          understands everything you have configured for your Vite app, and the tests just work.
+          >Vite</code></a> apps. By building on top of Vite, Vitest
+          natively
+          understands your Vite config and is able to reuse the same resolve and
+          transform pipelines.
         </p>
         <p class="text-pretty">
-          That said, you can totally use Vitest without using Vite - even for backend code. It's a
-          great test runner in
-          its own right.
+          You can also use Vitest even if you are not using Vite. It is Jest-comptible
+          and works for backend code too.
         </p>
         <a href="/guide/why" target="_blank" class="button w-fit mt-8 block lg:hidden">Learn more</a>
       </div>
