@@ -164,11 +164,11 @@ export default ({ mode }: { mode: string }) => {
           {
             title: 'Versions',
             items: [
-              { text: 'Unreleased', link: 'https://main.vitest.dev/' },
-              { text: 'v0.x', link: 'https://v0.vitest.dev/' },
-              { text: 'v1.x', link: 'https://v1.vitest.dev/' },
-              { text: 'v2.x', link: 'https://v2.vitest.dev/' },
-              { text: 'v3.x', link: 'https://v3.vitest.dev/' },
+              { text: 'Unreleased Docs', link: 'https://main.vitest.dev/' },
+              { text: 'Vitest 3 Docs', link: 'https://v3.vitest.dev/' },
+              { text: 'Vitest 2 Docs', link: 'https://v2.vitest.dev/' },
+              { text: 'Vitest 1 Docs', link: 'https://v1.vitest.dev/' },
+              { text: 'Vitest Beta Docs', link: 'https://v0.vitest.dev/' },
             ],
           },
           /* {
@@ -226,20 +226,20 @@ export default ({ mode }: { mode: string }) => {
                   link: 'https://main.vitest.dev/',
                 },
                 {
-                  text: 'v0.x',
-                  link: 'https://v0.vitest.dev/',
-                },
-                {
-                  text: 'v1.x',
-                  link: 'https://v1.vitest.dev/',
+                  text: 'v3.x',
+                  link: 'https://v3.vitest.dev/',
                 },
                 {
                   text: 'v2.x',
                   link: 'https://v2.vitest.dev/',
                 },
                 {
-                  text: 'v3.x',
-                  link: 'https://v3.vitest.dev/',
+                  text: 'v1.x',
+                  link: 'https://v1.vitest.dev/',
+                },
+                {
+                  text: 'v0.x',
+                  link: 'https://v0.vitest.dev/',
                 },
               ],
             },
