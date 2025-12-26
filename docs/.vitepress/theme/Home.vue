@@ -4,10 +4,10 @@ import Footer from '@components/oss/Footer.vue'
 import HeadingSection from '@components/oss/HeadingSection.vue'
 import Sponsors from '@components/oss/Sponsors.vue'
 import Spacer from '@components/shared/Spacer.vue'
-import VitestFeatureGrid from '@components/vitest/FeatureGrid.vue'
-import Hero from '@components/vitest/Hero.vue'
-import Intro from '@components/vitest/Intro.vue'
 import { sponsors } from '../sponsors'
+import VitestFeatureGrid from './FeatureGrid.vue'
+import Hero from './Hero.vue'
+import Intro from './Intro.vue'
 </script>
 
 <template>
