@@ -14,8 +14,6 @@
     "generate-pwa-icons": "pwa-assets-generator"
   },
   "dependencies": {
-    "@docsearch/css": "^4.3.2",
-    "@docsearch/js": "^4.3.2",
     "@vueuse/core": "catalog:",
     "vue": "catalog:"
   },
@@ -29,7 +27,7 @@
     "@vite-pwa/assets-generator": "^1.0.2",
     "@vite-pwa/vitepress": "^1.1.0",
     "@vitejs/plugin-vue": "catalog:",
-    "@voidzero-dev/vitepress-theme": "catalog:",
+    "@voidzero-dev/vitepress-theme": "^3.2.1",
     "https-localhost": "^4.7.1",
     "tinyglobby": "catalog:",
     "unocss": "catalog:",

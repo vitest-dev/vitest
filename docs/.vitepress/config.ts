@@ -25,9 +25,10 @@ import {
 } from './meta'
 import { pwa } from './scripts/pwa'
 import { transformHead } from './scripts/transformHead'
+import { extendConfig } from '@voidzero-dev/vitepress-theme/config'
 
 export default ({ mode }: { mode: string }) => {
-  return withPwa(defineConfig({
+  return withPwa(extendConfig(defineConfig({
     lang: 'en-US',
     title: vitestName,
     description: vitestDescription,
@@ -1129,5 +1130,5 @@ export default ({ mode }: { mode: string }) => {
     },
     pwa,
     transformHead,
-  }))
+  })))
 }
