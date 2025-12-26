@@ -117,12 +117,20 @@ export default withPwa(defineConfig({
                 link: 'https://main.vitest.dev/',
               },
               {
-                text: 'v1.x',
-                link: 'https://v1.vitest.dev/',
+                text: 'v4.x',
+                link: 'https://v4.vitest.dev/',
+              },
+              {
+                text: 'v3.x',
+                link: 'https://v3.vitest.dev/',
               },
               {
                 text: 'v2.x',
-                link: 'https://vitest.dev/',
+                link: 'https://v2.vitest.dev/',
+              },
+              {
+                text: 'v1.x',
+                link: 'https://v1.vitest.dev/',
               },
             ],
           },
