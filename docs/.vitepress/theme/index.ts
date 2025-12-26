@@ -9,6 +9,7 @@ import Deprecated from '../components/Deprecated.vue'
 import Experimental from '../components/Experimental.vue'
 import Advanced from '../components/Advanced.vue'
 import CourseLink from '../components/CourseLink.vue'
+import './styles.css'
 import 'virtual:group-icons.css'
 
 if (inBrowser) {

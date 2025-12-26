@@ -277,8 +277,8 @@ importers:
         specifier: 'catalog:'
         version: 6.0.2(vite@7.1.5(@types/node@24.10.1)(jiti@2.6.1)(lightningcss@1.30.2)(sass-embedded@1.93.3)(sass@1.93.3)(terser@5.44.1)(tsx@4.21.0)(yaml@2.8.2))(vue@3.5.25(typescript@5.9.3))
       '@voidzero-dev/vitepress-theme':
-        specifier: ^3.3.1
-        version: 3.3.1(axios@1.13.2)(change-case@5.4.4)(focus-trap@7.6.6)(typescript@5.9.3)(vite@7.1.5(@types/node@24.10.1)(jiti@2.6.1)(lightningcss@1.30.2)(sass-embedded@1.93.3)(sass@1.93.3)(terser@5.44.1)(tsx@4.21.0)(yaml@2.8.2))(vitepress@2.0.0-alpha.15(@types/node@24.10.1)(axios@1.13.2)(change-case@5.4.4)(jiti@2.6.1)(lightningcss@1.30.2)(oxc-minify@0.99.0)(postcss@8.5.6)(sass-embedded@1.93.3)(sass@1.93.3)(terser@5.44.1)(tsx@4.21.0)(typescript@5.9.3)(yaml@2.8.2))(vue@3.5.25(typescript@5.9.3))
+        specifier: ^4.0.0
+        version: 4.0.0(axios@1.13.2)(change-case@5.4.4)(focus-trap@7.6.6)(typescript@5.9.3)(vite@7.1.5(@types/node@24.10.1)(jiti@2.6.1)(lightningcss@1.30.2)(sass-embedded@1.93.3)(sass@1.93.3)(terser@5.44.1)(tsx@4.21.0)(yaml@2.8.2))(vitepress@2.0.0-alpha.15(@types/node@24.10.1)(axios@1.13.2)(change-case@5.4.4)(jiti@2.6.1)(lightningcss@1.30.2)(oxc-minify@0.99.0)(postcss@8.5.6)(sass-embedded@1.93.3)(sass@1.93.3)(terser@5.44.1)(tsx@4.21.0)(typescript@5.9.3)(yaml@2.8.2))(vue@3.5.25(typescript@5.9.3))
       https-localhost:
         specifier: ^4.7.1
         version: 4.7.1
@@ -4897,8 +4897,8 @@ packages:
   '@vitest/test-deps-url@file:test/optimize-deps/dep-url':
     resolution: {directory: test/optimize-deps/dep-url, type: directory}
 
-  '@voidzero-dev/vitepress-theme@3.3.1':
-    resolution: {integrity: sha512-2I8zJUjF2ahe8SycBmqVGG4ho4TWT6vH1Yb3MWRuTImjqKIbOJc3ApQ+2rUcFDYTYa+WPzBRf2rrR84nLbus4g==}
+  '@voidzero-dev/vitepress-theme@4.0.0':
+    resolution: {integrity: sha512-9EZH/mp/Jwhs0al/9BIMDX3n6oDb3cvvL4MQSOJSIXCYccPGSaiQ9dApyBWiPpaVdBaXNFde8I46GpBMhBdeFA==}
     peerDependencies:
       vitepress: ^2.0.0-alpha.12
       vue: ^3.5.0
@@ -13281,7 +13281,7 @@ snapshots:
 
   '@vitest/test-deps-url@file:test/optimize-deps/dep-url': {}
 
-  '@voidzero-dev/vitepress-theme@3.3.1(axios@1.13.2)(change-case@5.4.4)(focus-trap@7.6.6)(typescript@5.9.3)(vite@7.1.5(@types/node@24.10.1)(jiti@2.6.1)(lightningcss@1.30.2)(sass-embedded@1.93.3)(sass@1.93.3)(terser@5.44.1)(tsx@4.21.0)(yaml@2.8.2))(vitepress@2.0.0-alpha.15(@types/node@24.10.1)(axios@1.13.2)(change-case@5.4.4)(jiti@2.6.1)(lightningcss@1.30.2)(oxc-minify@0.99.0)(postcss@8.5.6)(sass-embedded@1.93.3)(sass@1.93.3)(terser@5.44.1)(tsx@4.21.0)(typescript@5.9.3)(yaml@2.8.2))(vue@3.5.25(typescript@5.9.3))':
+  '@voidzero-dev/vitepress-theme@4.0.0(axios@1.13.2)(change-case@5.4.4)(focus-trap@7.6.6)(typescript@5.9.3)(vite@7.1.5(@types/node@24.10.1)(jiti@2.6.1)(lightningcss@1.30.2)(sass-embedded@1.93.3)(sass@1.93.3)(terser@5.44.1)(tsx@4.21.0)(yaml@2.8.2))(vitepress@2.0.0-alpha.15(@types/node@24.10.1)(axios@1.13.2)(change-case@5.4.4)(jiti@2.6.1)(lightningcss@1.30.2)(oxc-minify@0.99.0)(postcss@8.5.6)(sass-embedded@1.93.3)(sass@1.93.3)(terser@5.44.1)(tsx@4.21.0)(typescript@5.9.3)(yaml@2.8.2))(vue@3.5.25(typescript@5.9.3))':
     dependencies:
       '@docsearch/css': 4.3.2
       '@docsearch/js': 4.3.2
