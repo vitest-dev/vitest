@@ -148,29 +148,27 @@ export default ({ mode }: { mode: string }) => {
           {
             title: 'Vitest',
             items: [
-              { text: 'Guide & API', link: '/guide/' },
+              { text: 'Guides', link: '/guide/' },
+              { text: 'API', link: '/api/' },
               { text: 'Config', link: '/config/' },
-              { text: 'Browser Mode', link: '/guide/browser/' },
             ],
           },
           {
             title: 'Resources',
             items: [
-              { text: 'Advanced API', link: '/api/advanced/vitest' },
-              { text: 'Blog', link: '/blog' },
               { text: 'Team', link: '/team' },
+              { text: 'Blog', link: '/blog' },
+              { text: 'Releases', link: releases },
             ],
           },
           {
             title: 'Versions',
             items: [
-              { text: `v${version}`, link: `https://github.com/vitest-dev/vitest/releases/tag/v${version}` },
-              { text: 'Releases Notes', link: releases },
-              { text: 'Contributing', link: contributing },
               { text: 'Unreleased', link: 'https://main.vitest.dev/' },
               { text: 'v0.x', link: 'https://v0.vitest.dev/' },
               { text: 'v1.x', link: 'https://v1.vitest.dev/' },
               { text: 'v2.x', link: 'https://v2.vitest.dev/' },
+              { text: 'v3.x', link: 'https://v3.vitest.dev/' },
             ],
           },
           /* {
@@ -185,8 +183,8 @@ export default ({ mode }: { mode: string }) => {
         social: [
           { icon: 'github', link: github },
           { icon: 'discord', link: discord },
+          // { icon: 'mastodon', link: mastodon }, -- the link shows github
           { icon: 'bluesky', link: bluesky },
-          { icon: 'x', link: 'https://x.com/vitest_dev' },
         ],
       },
 
