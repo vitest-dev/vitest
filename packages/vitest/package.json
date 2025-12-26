@@ -101,9 +101,9 @@
       "types": "./dist/snapshot.d.ts",
       "default": "./dist/snapshot.js"
     },
-    "./mocker": {
-      "types": "./dist/mocker.d.ts",
-      "default": "./dist/mocker.js"
+    "./runtime": {
+      "types": "./dist/runtime.d.ts",
+      "default": "./dist/runtime.js"
     },
     "./worker": {
       "types": "./worker.d.ts",
