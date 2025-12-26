@@ -50,7 +50,7 @@ export const pwa: PwaOptions = {
       },
     ],
     screenshots: [{
-      src: 'og.png',
+      src: 'og.jpg',
       sizes: '2258x1185',
       type: 'image/png',
       label: `Screenshot of ${vitestName}`,
