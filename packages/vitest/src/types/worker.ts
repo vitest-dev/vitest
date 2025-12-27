@@ -24,6 +24,7 @@ export interface WorkerExecuteContext {
   files: FileSpecification[]
   providedContext: Record<string, any>
   invalidates?: string[]
+  environment: ContextTestEnvironment
 
   /** Exposed to test runner as `VITEST_WORKER_ID`. Value is unique per each isolated worker. */
   workerId: number

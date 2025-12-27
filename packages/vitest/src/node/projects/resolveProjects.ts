@@ -253,6 +253,7 @@ function cloneConfig(project: TestProject, { browser, ...config }: BrowserInstan
     headless,
     screenshotDirectory,
     screenshotFailures,
+    fileParallelism,
     // @ts-expect-error remove just in case
     browser: _browser,
     name,
@@ -276,6 +277,7 @@ function cloneConfig(project: TestProject, { browser, ...config }: BrowserInstan
       screenshotFailures: screenshotFailures ?? currentConfig.screenshotFailures,
       headless: headless ?? currentConfig.headless,
       provider: provider ?? currentConfig.provider,
+      fileParallelism: fileParallelism ?? currentConfig.fileParallelism,
       name: browser,
       instances: [], // projects cannot spawn more configs
     },

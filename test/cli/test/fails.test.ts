@@ -116,14 +116,12 @@ it('prints a warning if the assertion is not awaited in the browser mode', async
       expect(Promise.resolve(1)).resolves.toBe(1)
     })
     `,
-  }, {}, {}, {
-    test: {
-      browser: {
-        enabled: true,
-        instances: [{ browser: 'chromium' }],
-        provider: playwright(),
-        headless: true,
-      },
+  }, {
+    browser: {
+      enabled: true,
+      instances: [{ browser: 'chromium' }],
+      provider: playwright(),
+      headless: true,
     },
   })
   expect(stderr).toContain('Promise returned by \`expect(actual).resolves.toBe(expected)\` was not awaited')
