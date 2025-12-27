@@ -87,7 +87,30 @@ export async function runVitest(
   let ctx: Vitest | undefined
   let thrown = false
 
-  const { reporters, root, watch, $cliOptions: cliOptions, $viteConfig: viteConfig = {}, ...rest } = config
+  const {
+    reporters,
+    root,
+    watch,
+    // #region cli-only options
+    config: configFile,
+    standalone,
+    dom,
+    related,
+    mode,
+    changed,
+    shard,
+    project,
+    cliExclude,
+    clearScreen,
+    compare,
+    outputJson,
+    mergeReports,
+    clearCache,
+    // #endregion
+    $cliOptions: cliOptions,
+    $viteConfig: viteConfig = {},
+    ...rest
+  } = config
 
   if (viteConfig.test) {
     throw new Error(`Don't pass down "viteConfig" with "test" property. Use the rest of the first argument.`)
@@ -98,6 +121,20 @@ export async function runVitest(
   try {
     ctx = await startVitest(runnerOptions.mode || 'test', cliFilters, {
       root,
+      config: configFile,
+      standalone,
+      dom,
+      related,
+      mode,
+      changed,
+      shard,
+      project,
+      cliExclude,
+      clearScreen,
+      compare,
+      outputJson,
+      mergeReports,
+      clearCache,
 
       // Test cases are already run with multiple forks/threads
       maxWorkers: 1,
