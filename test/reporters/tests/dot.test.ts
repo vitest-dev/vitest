@@ -6,7 +6,7 @@ describe.each([true, false])('{ isTTY: %s }', (isTTY) => {
     const { stdout, stderr } = await runVitest({
       include: ['./fixtures/ok.test.ts'],
       reporters: [['dot', { isTTY }]],
-      typecheck: undefined,
+      $cliOptions: { typecheck: { enabled: false } },
     })
 
     expect(stdout).toContain('\n·\n')
@@ -19,7 +19,7 @@ describe.each([true, false])('{ isTTY: %s }', (isTTY) => {
     const { stdout, stderr } = await runVitest({
       include: ['./fixtures/some-failing.test.ts'],
       reporters: [['dot', { isTTY }]],
-      typecheck: undefined,
+      $cliOptions: { typecheck: { enabled: false } },
     })
 
     expect(stdout).toContain('\n·x\n')
@@ -33,7 +33,7 @@ describe.each([true, false])('{ isTTY: %s }', (isTTY) => {
     const { stdout, stderr } = await runVitest({
       include: ['./fixtures/all-skipped.test.ts'],
       reporters: [['dot', { isTTY }]],
-      typecheck: undefined,
+      $cliOptions: { typecheck: { enabled: false } },
     })
 
     expect(stdout).toContain('\n--\n')
