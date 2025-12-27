@@ -394,7 +394,7 @@ export function resolveConfig(
 
   // Add hard-coded default coverage exclusions. These cannot be overidden by user config.
   // Override original exclude array for cases where user re-uses same object in test.exclude.
-  resolved.coverage.exclude = [
+  resolved.coverage.exclude = [...new Set([
     ...resolved.coverage.exclude,
 
     // Exclude setup files
@@ -418,7 +418,7 @@ export function resolveConfig(
     '**\/__x00__*',
 
     '**/node_modules/**',
-  ].filter(pattern => typeof pattern === 'string')
+  ])].filter(pattern => typeof pattern === 'string')
 
   resolved.forceRerunTriggers = [
     ...resolved.forceRerunTriggers,
