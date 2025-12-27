@@ -4,6 +4,7 @@ import { replaceRoot, runInlineTests } from '../../test-utils'
 
 describe.runIf(module.registerHooks)('when module.registerHooks is supported', () => {
   // TODO: hangs because of https://github.com/vitest-dev/vitest/issues/9271
+  // FIXED in https://github.com/vitest-dev/vitest/pull/9337
   test.skip('cannot run viteModuleRunner: false in "vmForks"', async () => {
     const { stderr } = await runInlineTests({
       'base.test.js': ``,
