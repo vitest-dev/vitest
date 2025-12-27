@@ -37,7 +37,7 @@ export interface VitestRunnerCLIOptions {
 }
 
 export interface RunVitestConfig extends TestUserConfig {
-  $viteConfig?: ViteUserConfig
+  $viteConfig?: Omit<ViteUserConfig, 'test'>
   $cliOptions?: TestUserConfig
 }
 
@@ -91,6 +91,7 @@ export async function runVitest(
     reporters,
     root,
     watch,
+    maxWorkers,
     // #region cli-only options
     config: configFile,
     standalone,
@@ -112,11 +113,11 @@ export async function runVitest(
     ...rest
   } = config
 
-  if (viteConfig.test) {
+  if ((viteConfig as any).test) {
     throw new Error(`Don't pass down "viteConfig" with "test" property. Use the rest of the first argument.`)
   }
 
-  viteConfig.test = rest
+  ;(viteConfig as any).test = rest
 
   try {
     ctx = await startVitest(runnerOptions.mode || 'test', cliFilters, {
@@ -137,7 +138,7 @@ export async function runVitest(
       clearCache,
 
       // Test cases are already run with multiple forks/threads
-      maxWorkers: 1,
+      maxWorkers: maxWorkers ?? 1,
 
       watch: watch ?? false,
       // "none" can be used to disable passing "reporter" option so that default value is used (it's not same as reporters: ["default"])
@@ -437,18 +438,14 @@ export function useFS<T extends TestFsStructure>(root: string, structure: T, ens
 
 export async function runInlineTests(
   structure: TestFsStructure,
-  cliOptions?: TestUserConfig,
+  config?: RunVitestConfig,
   options?: VitestRunnerCLIOptions,
-  viteOverrides: ViteUserConfig = {},
 ) {
   const root = resolve(process.cwd(), `vitest-test-${crypto.randomUUID()}`)
   const fs = useFS(root, structure)
   const vitest = await runVitest({
-    $cliOptions: {
-      root,
-      ...cliOptions,
-    },
-    $viteConfig: viteOverrides,
+    root,
+    ...config,
   }, [], options)
   return {
     fs,
