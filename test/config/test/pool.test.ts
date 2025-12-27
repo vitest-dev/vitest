@@ -108,11 +108,12 @@ async function getConfig<T = SerializedConfig>(options: Partial<TestUserConfig>,
   await runVitest({
     root: './fixtures/pool',
     include: ['print-config.test.ts'],
-    ...cliOptions,
+    $cliOptions: cliOptions,
     onConsoleLog(log) {
       config = JSON.parse(log)
     },
-  }, undefined, undefined, { test: options }, { })
+    ...options,
+  })
 
   assert(config)
   return config
