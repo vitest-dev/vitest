@@ -1,5 +1,5 @@
 import type { RunnerTestFile } from 'vitest'
-import type { WorkspaceProject } from 'vitest/node'
+import type { TestProject } from 'vitest/node'
 import type { StateManager } from 'vitest/src/node/state.js'
 import type { TestCase, TestCollection, TestModule } from '../../../packages/vitest/src/node/reporters/reported-tasks'
 import { resolve } from 'pathe'
@@ -7,10 +7,9 @@ import { beforeAll, expect, it } from 'vitest'
 import { runVitest } from '../../test-utils'
 
 const now = new Date()
-// const finishedFiles: File[] = []
-const collectedFiles: RunnerTestFile[] = []
+const collectedTestModules: TestModule[] = []
 let state: StateManager
-let project: WorkspaceProject
+let project: TestProject
 let files: RunnerTestFile[]
 let testModule: TestModule
 
@@ -23,11 +22,8 @@ beforeAll(async () => {
     reporters: [
       'verbose',
       {
-        // onFinished(files) {
-        //   finishedFiles.push(...files || [])
-        // },
-        onCollected(files) {
-          collectedFiles.push(...files || [])
+        onTestModuleCollected(testModule) {
+          collectedTestModules.push(testModule)
         },
       },
     ],
@@ -40,6 +36,7 @@ beforeAll(async () => {
   expect(files).toHaveLength(1)
   testModule = state.getReportedEntity(files[0])! as TestModule
   expect(testModule).toBeDefined()
+  expect(testModule).toBe(collectedTestModules[0])
 })
 
 it('correctly reports a file', () => {

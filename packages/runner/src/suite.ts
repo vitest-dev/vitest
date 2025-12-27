@@ -17,15 +17,13 @@ import type {
   TestFunction,
   TestOptions,
 } from './types/tasks'
+import { format, formatRegExp, objDisplay } from '@vitest/utils/display'
 import {
-  format,
   isNegativeNaN,
   isObject,
-  objDisplay,
   objectAttr,
   toArray,
-} from '@vitest/utils'
-import { parseSingleStack } from '@vitest/utils/source-map'
+} from '@vitest/utils/helpers'
 import {
   abortIfTimeout,
   collectorContext,
@@ -35,9 +33,12 @@ import {
   withTimeout,
 } from './context'
 import { mergeContextFixtures, mergeScopedFixtures, withFixtures } from './fixture'
+import { afterAll, afterEach, beforeAll, beforeEach } from './hooks'
 import { getHooks, setFn, setHooks, setTestFixture } from './map'
 import { getCurrentTest } from './test-state'
+import { findTestFileStackTrace } from './utils'
 import { createChainable } from './utils/chain'
+import { createTaskName } from './utils/tasks'
 
 /**
  * Creates a suite of tests, allowing for grouping and hierarchical organization of tests.
@@ -186,7 +187,13 @@ let currentTestFilepath: string
 
 function assert(condition: any, message: string) {
   if (!condition) {
-    throw new Error(`Vitest failed to find ${message}. This is a bug in Vitest. Please, open an issue with reproduction.`)
+    throw new Error(
+      `Vitest failed to find ${message}. One of the following is possible:`
+      + '\n- "vitest" is imported directly without running "vitest" command'
+      + '\n- "vitest" is imported inside "globalSetup" (to fix this, use "setupFiles" instead, because "globalSetup" runs in a different context)'
+      + '\n- "vitest" is imported inside Vite / Vitest config file'
+      + '\n- Otherwise, it might be a Vitest bug. Please report it to https://github.com/vitest-dev/vitest/issues\n',
+    )
   }
 }
 
@@ -213,14 +220,15 @@ function createDefaultSuite(runner: VitestRunner) {
 }
 
 export function clearCollectorContext(
-  filepath: string,
+  file: File,
   currentRunner: VitestRunner,
 ): void {
   if (!defaultSuite) {
     defaultSuite = createDefaultSuite(currentRunner)
   }
+  defaultSuite.file = file
   runner = currentRunner
-  currentTestFilepath = filepath
+  currentTestFilepath = file.filepath
   collectorContext.tasks.length = 0
   defaultSuite.clear()
   collectorContext.currentSuite = defaultSuite
@@ -244,27 +252,18 @@ export function createSuiteHooks(): SuiteHooks {
 
 function parseArguments<T extends (...args: any[]) => any>(
   optionsOrFn: T | object | undefined,
-  optionsOrTest: object | T | number | undefined,
+  timeoutOrTest: T | number | undefined,
 ) {
-  let options: TestOptions = {}
-  let fn: T = (() => {}) as T
-
-  // it('', () => {}, { retry: 2 })
-  if (typeof optionsOrTest === 'object') {
-    // it('', { retry: 2 }, { retry: 3 })
-    if (typeof optionsOrFn === 'object') {
-      throw new TypeError(
-        'Cannot use two objects as arguments. Please provide options and a function callback in that order.',
-      )
-    }
-    console.warn(
-      'Using an object as a third argument is deprecated. Vitest 4 will throw an error if the third argument is not a timeout number. Please use the second argument for options. See more at https://vitest.dev/guide/migration',
-    )
-    options = optionsOrTest
+  if (timeoutOrTest != null && typeof timeoutOrTest === 'object') {
+    throw new TypeError(`Signature "test(name, fn, { ... })" was deprecated in Vitest 3 and removed in Vitest 4. Please, provide options as a second argument instead.`)
   }
+
+  let options: TestOptions = {}
+  let fn: T | undefined
+
   // it('', () => {}, 1000)
-  else if (typeof optionsOrTest === 'number') {
-    options = { timeout: optionsOrTest }
+  if (typeof timeoutOrTest === 'number') {
+    options = { timeout: timeoutOrTest }
   }
   // it('', { retry: 2 }, () => {})
   else if (typeof optionsOrFn === 'object') {
@@ -272,15 +271,15 @@ function parseArguments<T extends (...args: any[]) => any>(
   }
 
   if (typeof optionsOrFn === 'function') {
-    if (typeof optionsOrTest === 'function') {
+    if (typeof timeoutOrTest === 'function') {
       throw new TypeError(
         'Cannot use two functions as arguments. Please use the second argument for options.',
       )
     }
     fn = optionsOrFn as T
   }
-  else if (typeof optionsOrTest === 'function') {
-    fn = optionsOrTest as T
+  else if (typeof timeoutOrTest === 'function') {
+    fn = timeoutOrTest as T
   }
 
   return {
@@ -306,15 +305,21 @@ function createSuiteCollector(
 
   const task = function (name = '', options: TaskCustomOptions = {}) {
     const timeout = options?.timeout ?? runner.config.testTimeout
+    const currentSuite = collectorContext.currentSuite?.suite
     const task: Test = {
       id: '',
       name,
-      suite: collectorContext.currentSuite?.suite,
+      fullName: createTaskName([
+        currentSuite?.fullName ?? collectorContext.currentSuite?.file?.fullName,
+        name,
+      ]),
+      fullTestName: createTaskName([currentSuite?.fullTestName, name]),
+      suite: currentSuite,
       each: options.each,
       fails: options.fails,
       context: undefined!,
       type: 'test',
-      file: undefined!,
+      file: (currentSuite?.file ?? collectorContext.currentSuite?.file)!,
       timeout,
       retry: options.retry ?? runner.config.retry,
       repeats: options.repeats,
@@ -327,8 +332,12 @@ function createSuiteCollector(
             : 'run',
       meta: options.meta ?? Object.create(null),
       annotations: [],
+      artifacts: [],
     }
     const handler = options.handler
+    if (task.mode === 'run' && !handler) {
+      task.mode = 'todo'
+    }
     if (
       options.concurrent
       || (!options.sequential && runner.config.sequence.concurrent)
@@ -366,9 +375,12 @@ function createSuiteCollector(
 
     if (runner.config.includeTaskLocation) {
       const error = stackTraceError.stack!
-      const stack = findTestFileStackTrace(error)
+      const stack = findTestFileStackTrace(currentTestFilepath, error)
       if (stack) {
-        task.location = stack
+        task.location = {
+          line: stack.line,
+          column: stack.column,
+        }
       }
     }
 
@@ -379,9 +391,9 @@ function createSuiteCollector(
   const test = createTest(function (
     name: string | Function,
     optionsOrFn?: TestOptions | TestFunction,
-    optionsOrTest?: number | TestOptions | TestFunction,
+    timeoutOrTest?: number | TestFunction,
   ) {
-    let { options, handler } = parseArguments(optionsOrFn, optionsOrTest)
+    let { options, handler } = parseArguments(optionsOrFn, timeoutOrTest)
 
     // inherit repeats, retry, timeout from suite
     if (typeof suiteOptions === 'object') {
@@ -441,14 +453,21 @@ function createSuiteCollector(
       suiteOptions = { timeout: suiteOptions }
     }
 
+    const currentSuite = collectorContext.currentSuite?.suite
+
     suite = {
       id: '',
       type: 'suite',
       name,
-      suite: collectorContext.currentSuite?.suite,
+      fullName: createTaskName([
+        currentSuite?.fullName ?? collectorContext.currentSuite?.file?.fullName,
+        name,
+      ]),
+      fullTestName: createTaskName([currentSuite?.fullTestName, name]),
+      suite: currentSuite,
       mode,
       each,
-      file: undefined!,
+      file: (currentSuite?.file ?? collectorContext.currentSuite?.file)!,
       shuffle: suiteOptions?.shuffle,
       tasks: [],
       meta: Object.create(null),
@@ -460,9 +479,12 @@ function createSuiteCollector(
       Error.stackTraceLimit = 15
       const error = new Error('stacktrace').stack!
       Error.stackTraceLimit = limit
-      const stack = findTestFileStackTrace(error)
+      const stack = findTestFileStackTrace(currentTestFilepath, error)
       if (stack) {
-        suite.location = stack
+        suite.location = {
+          line: stack.line,
+          column: stack.column,
+        }
       }
     }
 
@@ -489,12 +511,7 @@ function createSuiteCollector(
       allChildren.push(i.type === 'collector' ? await i.collect(file) : i)
     }
 
-    suite.file = file
     suite.tasks = allChildren
-
-    allChildren.forEach((task) => {
-      task.file = file
-    })
 
     return suite
   }
@@ -525,9 +542,15 @@ function createSuite() {
     this: Record<string, boolean | undefined>,
     name: string | Function,
     factoryOrOptions?: SuiteFactory | TestOptions,
-    optionsOrFactory?: number | TestOptions | SuiteFactory,
+    optionsOrFactory?: number | SuiteFactory,
   ) {
-    const mode: RunMode = this.only
+    if (getCurrentTest()) {
+      throw new Error(
+        'Calling the suite function inside test function is not allowed. It can be only called at the top level or inside another suite function.',
+      )
+    }
+
+    let mode: RunMode = this.only
       ? 'only'
       : this.skip
         ? 'skip'
@@ -540,6 +563,10 @@ function createSuite() {
       factoryOrOptions,
       optionsOrFactory,
     )
+
+    if (mode === 'run' && !factory) {
+      mode = 'todo'
+    }
 
     const isConcurrentSpecified = options.concurrent || this.concurrent || options.sequential === false
     const isSequentialSpecified = options.sequential || this.sequential || options.concurrent === false
@@ -585,14 +612,14 @@ function createSuite() {
     return (
       name: string | Function,
       optionsOrFn: ((...args: T[]) => void) | TestOptions,
-      fnOrOptions?: ((...args: T[]) => void) | number | TestOptions,
+      fnOrOptions?: ((...args: T[]) => void) | number,
     ) => {
       const _name = formatName(name)
       const arrayOnlyCases = cases.every(Array.isArray)
 
       const { options, handler } = parseArguments(optionsOrFn, fnOrOptions)
 
-      const fnFirst = typeof optionsOrFn === 'function' && typeof fnOrOptions === 'object'
+      const fnFirst = typeof optionsOrFn === 'function'
 
       cases.forEach((i, idx) => {
         const items = Array.isArray(i) ? i : [i]
@@ -600,20 +627,20 @@ function createSuite() {
           if (arrayOnlyCases) {
             suite(
               formatTitle(_name, items, idx),
-              () => handler(...items),
-              options,
+              handler ? () => handler(...items) : undefined,
+              options.timeout,
             )
           }
           else {
-            suite(formatTitle(_name, items, idx), () => handler(i), options)
+            suite(formatTitle(_name, items, idx), handler ? () => handler(i) : undefined, options.timeout)
           }
         }
         else {
           if (arrayOnlyCases) {
-            suite(formatTitle(_name, items, idx), options, () => handler(...items))
+            suite(formatTitle(_name, items, idx), options, handler ? () => handler(...items) : undefined)
           }
           else {
-            suite(formatTitle(_name, items, idx), options, () => handler(i))
+            suite(formatTitle(_name, items, idx), options, handler ? () => handler(i) : undefined)
           }
         }
       })
@@ -637,12 +664,12 @@ function createSuite() {
     return (
       name: string | Function,
       optionsOrFn: ((...args: T[]) => void) | TestOptions,
-      fnOrOptions?: ((...args: T[]) => void) | number | TestOptions,
+      fnOrOptions?: ((...args: T[]) => void) | number,
     ) => {
       const name_ = formatName(name)
       const { options, handler } = parseArguments(optionsOrFn, fnOrOptions)
       cases.forEach((item, idx) => {
-        suite(formatTitle(name_, toArray(item), idx), options, () => handler(item))
+        suite(formatTitle(name_, toArray(item), idx), options, handler ? () => handler(item) : undefined)
       })
     }
   }
@@ -682,14 +709,14 @@ export function createTaskCollector(
     return (
       name: string | Function,
       optionsOrFn: ((...args: T[]) => void) | TestOptions,
-      fnOrOptions?: ((...args: T[]) => void) | number | TestOptions,
+      fnOrOptions?: ((...args: T[]) => void) | number,
     ) => {
       const _name = formatName(name)
       const arrayOnlyCases = cases.every(Array.isArray)
 
       const { options, handler } = parseArguments(optionsOrFn, fnOrOptions)
 
-      const fnFirst = typeof optionsOrFn === 'function' && typeof fnOrOptions === 'object'
+      const fnFirst = typeof optionsOrFn === 'function'
 
       cases.forEach((i, idx) => {
         const items = Array.isArray(i) ? i : [i]
@@ -698,20 +725,20 @@ export function createTaskCollector(
           if (arrayOnlyCases) {
             test(
               formatTitle(_name, items, idx),
-              () => handler(...items),
-              options,
+              handler ? () => handler(...items) : undefined,
+              options.timeout,
             )
           }
           else {
-            test(formatTitle(_name, items, idx), () => handler(i), options)
+            test(formatTitle(_name, items, idx), handler ? () => handler(i) : undefined, options.timeout)
           }
         }
         else {
           if (arrayOnlyCases) {
-            test(formatTitle(_name, items, idx), options, () => handler(...items))
+            test(formatTitle(_name, items, idx), options, handler ? () => handler(...items) : undefined)
           }
           else {
-            test(formatTitle(_name, items, idx), options, () => handler(i))
+            test(formatTitle(_name, items, idx), options, handler ? () => handler(i) : undefined)
           }
         }
       })
@@ -737,15 +764,17 @@ export function createTaskCollector(
     return (
       name: string | Function,
       optionsOrFn: ((...args: T[]) => void) | TestOptions,
-      fnOrOptions?: ((...args: T[]) => void) | number | TestOptions,
+      fnOrOptions?: ((...args: T[]) => void) | number,
     ) => {
       const _name = formatName(name)
       const { options, handler } = parseArguments(optionsOrFn, fnOrOptions)
       cases.forEach((item, idx) => {
         // monkey-patch handler to allow parsing fixture
-        const handlerWrapper = (ctx: any) => handler(item, ctx);
-        (handlerWrapper as any).__VITEST_FIXTURE_INDEX__ = 1;
-        (handlerWrapper as any).toString = () => handler.toString()
+        const handlerWrapper = handler ? (ctx: any) => handler(item, ctx) : undefined
+        if (handlerWrapper) {
+          (handlerWrapper as any).__VITEST_FIXTURE_INDEX__ = 1;
+          (handlerWrapper as any).toString = () => handler!.toString()
+        }
         test(formatTitle(_name, toArray(item), idx), options, handlerWrapper)
       })
     }
@@ -770,10 +799,11 @@ export function createTaskCollector(
       runner,
     )
 
-    return createTest(function fn(
+    const originalWrapper = fn
+    return createTest(function (
       name: string | Function,
       optionsOrFn?: TestOptions | TestFunction,
-      optionsOrTest?: number | TestOptions | TestFunction,
+      optionsOrTest?: number | TestFunction,
     ) {
       const collector = getCurrentSuite()
       const scopedFixtures = collector.fixtures()
@@ -784,14 +814,14 @@ export function createTaskCollector(
           scopedFixtures,
         )
       }
-      collector.test.fn.call(
-        context,
-        formatName(name),
-        optionsOrFn as TestOptions,
-        optionsOrTest as TestFunction,
-      )
+      originalWrapper.call(context, formatName(name), optionsOrFn, optionsOrTest)
     }, _context)
   }
+
+  taskFn.beforeEach = beforeEach
+  taskFn.afterEach = afterEach
+  taskFn.beforeAll = beforeAll
+  taskFn.afterAll = afterAll
 
   const _test = createChainable(
     ['concurrent', 'sequential', 'skip', 'only', 'todo', 'fails'],
@@ -813,7 +843,7 @@ function createTest(
     > & { fixtures?: FixtureItem[] },
     title: string,
     optionsOrFn?: TestOptions | TestFunction,
-    optionsOrTest?: number | TestOptions | TestFunction
+    optionsOrTest?: number | TestFunction,
   ) => void,
   context?: Record<string, any>,
 ) {
@@ -853,11 +883,9 @@ function formatTitle(template: string, items: any[], idx: number) {
     })
   }
 
-  let formatted = format(template, ...items.slice(0, count))
   const isObjectItem = isObject(items[0])
-  formatted = formatted.replace(
-    /\$([$\w.]+)/g,
-    (_, key: string) => {
+  function formatAttribute(s: string) {
+    return s.replace(/\$([$\w.]+)/g, (_, key: string) => {
       const isArrayKey = /^\d+$/.test(key)
       if (!isObjectItem && !isArrayKey) {
         return `$${key}`
@@ -866,10 +894,50 @@ function formatTitle(template: string, items: any[], idx: number) {
       const value = isObjectItem ? objectAttr(items[0], key, arrayElement) : arrayElement
       return objDisplay(value, {
         truncate: runner?.config?.chaiConfig?.truncateThreshold,
-      }) as unknown as string
+      })
+    })
+  }
+
+  let output = ''
+  let i = 0
+  handleRegexMatch(
+    template,
+    formatRegExp,
+    // format "%"
+    (match) => {
+      if (i < count) {
+        output += format(match[0], items[i++])
+      }
+      else {
+        output += match[0]
+      }
+    },
+    // format "$"
+    (nonMatch) => {
+      output += formatAttribute(nonMatch)
     },
   )
-  return formatted
+  return output
+}
+
+// based on https://github.com/unocss/unocss/blob/2e74b31625bbe3b9c8351570749aa2d3f799d919/packages/autocomplete/src/parse.ts#L11
+function handleRegexMatch(
+  input: string,
+  regex: RegExp,
+  onMatch: (match: RegExpMatchArray) => void,
+  onNonMatch: (nonMatch: string) => void,
+) {
+  let lastIndex = 0
+  for (const m of input.matchAll(regex)) {
+    if (lastIndex < m.index) {
+      onNonMatch(input.slice(lastIndex, m.index))
+    }
+    onMatch(m)
+    lastIndex = m.index + m[0].length
+  }
+  if (lastIndex < input.length) {
+    onNonMatch(input.slice(lastIndex))
+  }
 }
 
 function formatTemplateString(cases: any[], args: any[]): any[] {
@@ -888,19 +956,4 @@ function formatTemplateString(cases: any[], args: any[]): any[] {
     res.push(oneCase)
   }
   return res
-}
-
-function findTestFileStackTrace(error: string) {
-  const testFilePath = getTestFilepath()
-  // first line is the error message
-  const lines = error.split('\n').slice(1)
-  for (const line of lines) {
-    const stack = parseSingleStack(line)
-    if (stack && stack.file === testFilePath) {
-      return {
-        line: stack.line,
-        column: stack.column,
-      }
-    }
-  }
 }

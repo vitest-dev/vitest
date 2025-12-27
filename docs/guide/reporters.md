@@ -141,38 +141,27 @@ Final output after tests have finished:
    Duration  1.26s (transform 35ms, setup 1ms, collect 90ms, tests 1.47s, environment 0ms, prepare 267ms)
 ```
 
-### Basic Reporter
+If there is only one test file running, Vitest will output the full test tree of that file, similar to the [`tree`](#tree-reporter) reporter. The default reporter will also print the test tree if there is at least one failed test in the file.
 
-The `basic` reporter is equivalent to `default` reporter without `summary`.
-
-:::code-group
-```bash [CLI]
-npx vitest --reporter=basic
-```
-
-```ts [vitest.config.ts]
-export default defineConfig({
-  test: {
-    reporters: ['basic']
-  },
-})
-```
-:::
-
-Example output using basic reporter:
 ```bash
 ✓ __tests__/file1.test.ts (2) 725ms
-✓ __tests__/file2.test.ts (2) 746ms
+   ✓ first test file (2) 725ms
+     ✓ 2 + 2 should equal 4
+     ✓ 4 - 2 should equal 2
 
- Test Files  2 passed (2)
-      Tests  4 passed (4)
+ Test Files  1 passed (1)
+      Tests  2 passed (2)
    Start at  12:34:32
    Duration  1.26s (transform 35ms, setup 1ms, collect 90ms, tests 1.47s, environment 0ms, prepare 267ms)
 ```
 
 ### Verbose Reporter
 
-Verbose reporter is same as `default` reporter, but it also displays each individual test after the suite has finished. It also displays currently running tests that are taking longer than [`slowTestThreshold`](/config/#slowtestthreshold). Similar to `default` reporter, you can disable the summary by configuring the reporter.
+The verbose reporter prints every test case once it is finished. It does not report suites or files separately. If `--includeTaskLocation` is enabled, it will also include the location of each test in the output. Similar to `default` reporter, you can disable the summary by configuring the reporter.
+
+In addition to this, the `verbose` reporter prints test error messages right away. The full test error is reported when the test run is finished.
+
+This is the only terminal reporter that reports [annotations](/guide/test-annotations) when the test doesn't fail.
 
 :::code-group
 ```bash [CLI]
@@ -184,6 +173,54 @@ export default defineConfig({
   test: {
     reporters: [
       ['verbose', { summary: false }]
+    ]
+  },
+})
+```
+:::
+
+Example output:
+
+```bash
+✓ __tests__/file1.test.ts > first test file > 2 + 2 should equal 4 1ms
+✓ __tests__/file1.test.ts > first test file > 4 - 2 should equal 2 1ms
+✓ __tests__/file2.test.ts > second test file > 1 + 1 should equal 2 1ms
+✓ __tests__/file2.test.ts > second test file > 2 - 1 should equal 1 1ms
+
+ Test Files  2 passed (2)
+      Tests  4 passed (4)
+   Start at  12:34:32
+   Duration  1.26s (transform 35ms, setup 1ms, collect 90ms, tests 1.47s, environment 0ms, prepare 267ms)
+```
+
+An example with `--includeTaskLocation`:
+
+```bash
+✓ __tests__/file1.test.ts:2:1 > first test file > 2 + 2 should equal 4 1ms
+✓ __tests__/file1.test.ts:3:1 > first test file > 4 - 2 should equal 2 1ms
+✓ __tests__/file2.test.ts:2:1 > second test file > 1 + 1 should equal 2 1ms
+✓ __tests__/file2.test.ts:3:1 > second test file > 2 - 1 should equal 1 1ms
+
+ Test Files  2 passed (2)
+      Tests  4 passed (4)
+   Start at  12:34:32
+   Duration  1.26s (transform 35ms, setup 1ms, collect 90ms, tests 1.47s, environment 0ms, prepare 267ms)
+```
+
+### Tree Reporter
+
+The tree reporter is same as `default` reporter, but it also displays each individual test after the suite has finished. Similar to `default` reporter, you can disable the summary by configuring the reporter.
+
+:::code-group
+```bash [CLI]
+npx vitest --reporter=tree
+```
+
+```ts [vitest.config.ts]
+export default defineConfig({
+  test: {
+    reporters: [
+      ['tree', { summary: false }]
     ]
   },
 })
@@ -228,7 +265,7 @@ Example of final terminal output for a passing test suite:
 
 ### Dot Reporter
 
-Prints a single dot for each completed test to provide minimal output while still showing all tests that have run. Details are only provided for failed tests, along with the `basic` reporter summary for the suite.
+Prints a single dot for each completed test to provide minimal output while still showing all tests that have run. Details are only provided for failed tests, along with the summary for the suite.
 
 :::code-group
 ```bash [CLI]
@@ -492,13 +529,13 @@ export default defineConfig({
 ```
 :::
 
-### Github Actions Reporter {#github-actions-reporter}
+### GitHub Actions Reporter {#github-actions-reporter}
 
 Output [workflow commands](https://docs.github.com/en/actions/using-workflows/workflow-commands-for-github-actions#setting-an-error-message)
 to provide annotations for test failures. This reporter is automatically enabled with a [`default`](#default-reporter) reporter when `process.env.GITHUB_ACTIONS === 'true'`.
 
-<img alt="Github Actions" img-dark src="https://github.com/vitest-dev/vitest/assets/4232207/336cddc2-df6b-4b8a-8e72-4d00010e37f5">
-<img alt="Github Actions" img-light src="https://github.com/vitest-dev/vitest/assets/4232207/ce8447c1-0eab-4fe1-abef-d0d322290dca">
+<img alt="GitHub Actions" img-dark src="https://github.com/vitest-dev/vitest/assets/4232207/336cddc2-df6b-4b8a-8e72-4d00010e37f5">
+<img alt="GitHub Actions" img-light src="https://github.com/vitest-dev/vitest/assets/4232207/ce8447c1-0eab-4fe1-abef-d0d322290dca">
 
 If you configure non-default reporters, you need to explicitly add `github-actions`.
 
@@ -523,6 +560,18 @@ export default defineConfig({
           } }],
         ]
       : ['default'],
+  },
+})
+```
+
+If you are using [Annotations API](/guide/test-annotations), the reporter will automatically inline them in the GitHub UI. You can disable this by setting `displayAnnotations` option to `false`:
+
+```ts
+export default defineConfig({
+  test: {
+    reporters: [
+      ['github-actions', { displayAnnotations: false }],
+    ],
   },
 })
 ```
@@ -565,7 +614,7 @@ export default defineConfig({
 ```
 :::
 
-Additionally, you can define your own [custom reporters](/advanced/reporters) and use them by specifying their file path:
+Additionally, you can define your own [custom reporters](/guide/advanced/reporters) and use them by specifying their file path:
 
 ```bash
 npx vitest --reporter=./path/to/reporter.ts

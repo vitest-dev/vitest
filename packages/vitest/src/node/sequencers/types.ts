@@ -1,4 +1,4 @@
-import type { Awaitable } from '../../types/general'
+import type { Awaitable } from '@vitest/utils'
 import type { Vitest } from '../core'
 import type { TestSpecification } from '../spec'
 

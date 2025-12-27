@@ -48,7 +48,6 @@ test('negated top level nested options return boolean', async () => {
 
 test('nested coverage options have correct types', async () => {
   expect(getCLIOptions(`
-    --coverage.all
     --coverage.enabled=true
     --coverage.clean false
     --coverage.cleanOnRerun true
@@ -81,7 +80,6 @@ test('nested coverage options have correct types', async () => {
   `).coverage).toEqual({
     enabled: true,
     reporter: ['text'],
-    all: true,
     provider: 'v8',
     clean: false,
     cleanOnRerun: true,
@@ -124,15 +122,16 @@ test('correctly normalizes methods to be an array', async () => {
   })
 })
 
-test('all coverage enable options are working correctly', () => {
-  expect(getCLIOptions('--coverage').coverage).toEqual({ enabled: true })
-  expect(getCLIOptions('--coverage.enabled --coverage.all=false').coverage).toEqual({ enabled: true, all: false })
-  expect(getCLIOptions('--coverage.enabled --coverage.all').coverage).toEqual({ enabled: true, all: true })
-})
-
 test('fails when an array is passed down for a single value', async () => {
   expect(() => getCLIOptions('--coverage.provider v8 --coverage.provider istanbul'))
     .toThrowErrorMatchingInlineSnapshot(`[Error: Expected a single value for option "--coverage.provider <name>", received ["v8", "istanbul"]]`)
+})
+
+test('coverage autoUpdate accepts boolean values from CLI', async () => {
+  expect(getCLIOptions('--coverage.thresholds.autoUpdate true').coverage.thresholds.autoUpdate).toBe(true)
+  expect(getCLIOptions('--coverage.thresholds.autoUpdate false').coverage.thresholds.autoUpdate).toBe(false)
+  expect(getCLIOptions('--coverage.thresholds.autoUpdate yes').coverage.thresholds.autoUpdate).toBe(true)
+  expect(getCLIOptions('--coverage.thresholds.autoUpdate no').coverage.thresholds.autoUpdate).toBe(false)
 })
 
 test('bench only options', async () => {
@@ -161,11 +160,11 @@ test('even if coverage is boolean, don\'t fail', () => {
 })
 
 test('array options', () => {
-  expect(getCLIOptions('--reporter json --coverage.reporter=html --coverage.extension ts')).toMatchInlineSnapshot(`
+  expect(getCLIOptions('--reporter json --coverage.reporter=html --coverage.exclude utils')).toMatchInlineSnapshot(`
     {
       "coverage": {
-        "extension": [
-          "ts",
+        "exclude": [
+          "utils",
         ],
         "reporter": [
           "html",
@@ -182,14 +181,14 @@ test('array options', () => {
   --reporter=default
   --coverage.reporter=json
   --coverage.reporter html
-  --coverage.extension=ts
-  --coverage.extension=tsx
+  --coverage.exclude=utils
+  --coverage.exclude=components
   `)).toMatchInlineSnapshot(`
     {
       "coverage": {
-        "extension": [
-          "ts",
-          "tsx",
+        "exclude": [
+          "utils",
+          "components",
         ],
         "reporter": [
           "json",
@@ -511,4 +510,14 @@ test('should include builtin reporters list', () => {
   const listed = match![1].split(',').map(s => s.trim()).filter(Boolean)
   const expected = Object.keys(ReportersMap)
   expect(new Set(listed)).toEqual(new Set(expected))
+})
+
+test('execArgv can be passed', async () => {
+  expect(getCLIOptions('--execArgv=--cpu-prof')).toEqual({
+    execArgv: ['--cpu-prof'],
+  })
+
+  expect(getCLIOptions('--execArgv=--cpu-prof --execArgv=--cpu-prof-dir=./cpu')).toEqual({
+    execArgv: ['--cpu-prof', '--cpu-prof-dir=./cpu'],
+  })
 })

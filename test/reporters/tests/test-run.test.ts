@@ -8,7 +8,7 @@ import type {
   TestRunEndReason,
   TestSpecification,
   TestSuite,
-  UserConfig,
+  TestUserConfig,
   Vitest,
 } from 'vitest/node'
 import { rmSync } from 'node:fs'
@@ -161,21 +161,26 @@ describe('TestCase', () => {
     const report = await run({
       'example.test.ts': ts`
         test('single test case', async () => {
-          await new Promise(resolve => setTimeout(resolve, 150))
+          await new Promise(resolve => setTimeout(resolve, 300))
           console.log("Test running!")
         });
       `,
-    })
+    }, {}, { printTestRunEvents: true })
 
+    // console.log is reported outside of the test run cycle
     expect(report).toMatchInlineSnapshot(`
       "
+      onTestRunStart (1 specifications)
       onTestModuleQueued    (example.test.ts)
       onTestModuleCollected (example.test.ts)
       onTestModuleStart     (example.test.ts)
         onTestCaseReady     (example.test.ts) |single test case|
-        onUserConsoleLog    (example.test.ts) |single test case| > Test running!
         onTestCaseResult    (example.test.ts) |single test case|
-      onTestModuleEnd       (example.test.ts)"
+      onTestModuleEnd       (example.test.ts)
+
+      onTestRunEnd   (passed, 1 modules, 0 errors)
+
+      onUserConsoleLog (example.test.ts) |single test case| > Test running!"
     `)
   })
 
@@ -1036,8 +1041,8 @@ describe('test run result', () => {
           onInit(ctx) {
             vitest = ctx
           },
-          async onTestModuleCollected() {
-            await vitest.cancelCurrentRun('keyboard-input')
+          onTestModuleCollected() {
+            vitest.cancelCurrentRun('keyboard-input')
           },
           onTestRunEnd(_, __, reason_) {
             reason = reason_
@@ -1110,12 +1115,12 @@ interface ReporterOptions {
 
 async function run(
   structure: Parameters<typeof runInlineTests>[0],
-  customConfig?: UserConfig,
+  customConfig?: TestUserConfig,
   reporterOptions?: ReporterOptions,
 ) {
   const reporter = new CustomReporter(reporterOptions)
 
-  const config: UserConfig = {
+  const config: TestUserConfig = {
     config: false,
     fileParallelism: false,
     globals: true,
@@ -1146,6 +1151,7 @@ async function run(
 
 class CustomReporter implements Reporter {
   calls: string[] = []
+  logs: string[] = []
   ctx!: Vitest
 
   constructor(private options: ReporterOptions = {}) {}
@@ -1163,6 +1169,9 @@ class CustomReporter implements Reporter {
   onTestRunEnd(modules: ReadonlyArray<TestModule>, errors: ReadonlyArray<SerializedError>, state: TestRunEndReason) {
     if (this.options.printTestRunEvents) {
       this.calls.push(`onTestRunEnd   (${state}, ${modules.length} modules, ${errors.length} errors)`)
+      if (this.logs.length) {
+        this.calls.push('', ...this.logs)
+      }
     }
   }
 
@@ -1202,7 +1211,7 @@ class CustomReporter implements Reporter {
     const task = this.ctx.state.idMap.get(log.taskId!)
     const test = task && this.ctx.state.getReportedEntity(task) as TestCase
 
-    this.calls.push(`${padded(test!, 'onUserConsoleLog')} (${this.normalizeFilename(test!.module)}) |${test!.name}| > ${log.content.replaceAll('\n', '')}`)
+    this.logs.push(`onUserConsoleLog (${this.normalizeFilename(test!.module)}) |${test!.name}| > ${log.content.replaceAll('\n', '')}`)
   }
 
   onHookStart(hook: ReportedHookContext) {

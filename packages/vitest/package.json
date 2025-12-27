@@ -1,12 +1,12 @@
 {
   "name": "vitest",
   "type": "module",
-  "version": "3.2.3",
+  "version": "4.0.16",
   "description": "Next generation testing framework powered by Vite",
   "author": "Anthony Fu <anthonyfu117@hotmail.com>",
   "license": "MIT",
   "funding": "https://opencollective.com/vitest",
-  "homepage": "https://github.com/vitest-dev/vitest#readme",
+  "homepage": "https://vitest.dev",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/vitest-dev/vitest.git",
@@ -22,6 +22,12 @@
     "jest"
   ],
   "sideEffects": false,
+  "imports": {
+    "#module-evaluator": {
+      "types": "./dist/module-evaluator.d.ts",
+      "default": "./dist/module-evaluator.js"
+    }
+  },
   "exports": {
     ".": {
       "import": {
@@ -33,7 +39,15 @@
         "default": "./index.cjs"
       }
     },
-    "./*": "./*",
+    "./browser": {
+      "types": "./browser/context.d.ts",
+      "default": "./browser/context.js"
+    },
+    "./package.json": "./package.json",
+    "./optional-types.js": {
+      "types": "./optional-types.d.ts"
+    },
+    "./src/*": "./src/*",
     "./globals": {
       "types": "./globals.d.ts"
     },
@@ -50,17 +64,13 @@
       "types": "./dist/node.d.ts",
       "default": "./dist/node.js"
     },
-    "./execute": {
-      "types": "./dist/execute.d.ts",
-      "default": "./dist/execute.js"
-    },
-    "./workers": {
-      "types": "./dist/workers.d.ts",
-      "import": "./dist/workers.js"
-    },
     "./internal/browser": {
       "types": "./dist/browser.d.ts",
       "default": "./dist/browser.js"
+    },
+    "./internal/module-runner": {
+      "types": "./dist/module-runner.d.ts",
+      "default": "./dist/module-runner.js"
     },
     "./runners": {
       "types": "./dist/runners.d.ts",
@@ -94,6 +104,10 @@
     "./mocker": {
       "types": "./dist/mocker.d.ts",
       "default": "./dist/mocker.js"
+    },
+    "./worker": {
+      "types": "./worker.d.ts",
+      "default": "./dist/worker.js"
     }
   },
   "main": "./dist/index.js",
@@ -108,20 +122,23 @@
     "*.d.ts",
     "*.mjs",
     "bin",
+    "browser",
     "dist"
   ],
   "engines": {
-    "node": "^18.0.0 || ^20.0.0 || >=22.0.0"
+    "node": "^20.0.0 || ^22.0.0 || >=24.0.0"
   },
   "scripts": {
-    "build": "rimraf dist && rollup -c",
+    "build": "premove dist && rollup -c",
     "dev": "NODE_OPTIONS=\"--max-old-space-size=8192\" rollup -c --watch -m inline"
   },
   "peerDependencies": {
     "@edge-runtime/vm": "*",
-    "@types/debug": "^4.1.12",
-    "@types/node": "^18.0.0 || ^20.0.0 || >=22.0.0",
-    "@vitest/browser": "workspace:*",
+    "@opentelemetry/api": "^1.9.0",
+    "@types/node": "^20.0.0 || ^22.0.0 || >=24.0.0",
+    "@vitest/browser-playwright": "workspace:*",
+    "@vitest/browser-preview": "workspace:*",
+    "@vitest/browser-webdriverio": "workspace:*",
     "@vitest/ui": "workspace:*",
     "happy-dom": "*",
     "jsdom": "*"
@@ -130,13 +147,19 @@
     "@edge-runtime/vm": {
       "optional": true
     },
-    "@types/debug": {
+    "@opentelemetry/api": {
       "optional": true
     },
     "@types/node": {
       "optional": true
     },
-    "@vitest/browser": {
+    "@vitest/browser-playwright": {
+      "optional": true
+    },
+    "@vitest/browser-preview": {
+      "optional": true
+    },
+    "@vitest/browser-webdriverio": {
       "optional": true
     },
     "@vitest/ui": {
@@ -150,56 +173,50 @@
     }
   },
   "dependencies": {
-    "@types/chai": "catalog:",
     "@vitest/expect": "workspace:*",
     "@vitest/mocker": "workspace:*",
-    "@vitest/pretty-format": "workspace:^",
+    "@vitest/pretty-format": "workspace:*",
     "@vitest/runner": "workspace:*",
     "@vitest/snapshot": "workspace:*",
     "@vitest/spy": "workspace:*",
     "@vitest/utils": "workspace:*",
-    "chai": "catalog:",
-    "debug": "catalog:",
-    "expect-type": "^1.2.1",
+    "es-module-lexer": "^1.7.0",
+    "expect-type": "^1.2.2",
     "magic-string": "catalog:",
+    "obug": "catalog:",
     "pathe": "catalog:",
-    "picomatch": "^4.0.2",
+    "picomatch": "^4.0.3",
     "std-env": "catalog:",
     "tinybench": "^2.9.0",
-    "tinyexec": "^0.3.2",
+    "tinyexec": "^1.0.2",
     "tinyglobby": "catalog:",
-    "tinypool": "^1.1.0",
     "tinyrainbow": "catalog:",
-    "vite": "^5.0.0 || ^6.0.0 || ^7.0.0-0",
-    "vite-node": "workspace:*",
+    "vite": "^6.0.0 || ^7.0.0",
     "why-is-node-running": "^2.3.0"
   },
   "devDependencies": {
-    "@ampproject/remapping": "catalog:",
     "@antfu/install-pkg": "^1.1.0",
     "@edge-runtime/vm": "^5.0.0",
+    "@jridgewell/trace-mapping": "catalog:",
+    "@opentelemetry/api": "^1.9.0",
     "@sinonjs/fake-timers": "14.0.0",
-    "@types/debug": "catalog:",
     "@types/estree": "catalog:",
     "@types/istanbul-lib-coverage": "catalog:",
     "@types/istanbul-reports": "catalog:",
-    "@types/jsdom": "^21.1.7",
-    "@types/mime": "^4.0.0",
-    "@types/node": "^22.15.29",
-    "@types/picomatch": "^4.0.0",
+    "@types/jsdom": "^27.0.0",
+    "@types/node": "^24.10.1",
+    "@types/picomatch": "^4.0.2",
     "@types/prompts": "^2.4.9",
     "@types/sinonjs__fake-timers": "^8.1.5",
     "acorn-walk": "catalog:",
     "birpc": "catalog:",
     "cac": "catalog:",
-    "chai-subset": "^1.6.0",
-    "find-up": "^6.3.0",
+    "empathic": "^2.0.0",
     "flatted": "catalog:",
-    "happy-dom": "^17.5.6",
-    "jsdom": "^26.1.0",
-    "local-pkg": "^1.1.1",
-    "mime": "^4.0.7",
-    "pretty-format": "^29.7.0",
+    "happy-dom": "^20.0.11",
+    "jsdom": "^27.2.0",
+    "local-pkg": "^1.1.2",
+    "mime": "^4.1.0",
     "prompts": "^2.4.2",
     "strip-literal": "catalog:",
     "ws": "catalog:"

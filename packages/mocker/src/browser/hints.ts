@@ -1,7 +1,7 @@
 import type { MaybeMockedDeep } from '@vitest/spy'
 import type { ModuleMockFactoryWithHelper, ModuleMockOptions } from '../types'
 import type { ModuleMocker } from './mocker'
-import { createSimpleStackTrace } from '@vitest/utils'
+import { createSimpleStackTrace } from '@vitest/utils/helpers'
 import { parseSingleStack } from '@vitest/utils/source-map'
 
 export interface CompilerHintsOptions {
@@ -37,16 +37,16 @@ export function createCompilerHints(options?: CompilerHintsOptions): ModuleMocke
       // @ts-expect-error injected by the plugin
       ? globalThis[globalThisAccessor]
       : new Proxy(
-        {} as any,
-        {
-          get(_, name) {
-            throw new Error(
-              'Vitest mocker was not initialized in this environment. '
-              + `vi.${String(name)}() is forbidden.`,
-            )
+          {} as any,
+          {
+            get(_, name) {
+              throw new Error(
+                'Vitest mocker was not initialized in this environment. '
+                + `vi.${String(name)}() is forbidden.`,
+              )
+            },
           },
-        },
-      )
+        )
   }
 
   return {

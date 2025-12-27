@@ -1,15 +1,14 @@
 import libCoverage from 'istanbul-lib-coverage'
 import { expect } from 'vitest'
 import * as transpiled from '../fixtures/src/pre-bundle/bundle.js'
-import { coverageTest, formatSummary, isV8Provider, normalizeURL, readCoverageJson, runVitest, test } from '../utils.js'
+import { coverageTest, formatSummary, normalizeURL, readCoverageJson, runVitest, test } from '../utils.js'
 
 test('bundled code with source maps to originals', async () => {
   await runVitest({
     include: [normalizeURL(import.meta.url)],
     coverage: {
-      include: ['fixtures/src/**'],
       reporter: 'json',
-      all: false,
+      exclude: ['./utils.ts'],
     },
   })
 
@@ -32,42 +31,22 @@ test('bundled code with source maps to originals', async () => {
     [second.path]: formatSummary(second.toSummary()),
   }
 
-  if (isV8Provider()) {
-    expect(summary).toMatchInlineSnapshot(`
-      {
-        "<process-cwd>/fixtures/src/pre-bundle/first.ts": {
-          "branches": "1/1 (100%)",
-          "functions": "1/2 (50%)",
-          "lines": "4/6 (66.66%)",
-          "statements": "4/6 (66.66%)",
-        },
-        "<process-cwd>/fixtures/src/pre-bundle/second.ts": {
-          "branches": "1/1 (100%)",
-          "functions": "1/2 (50%)",
-          "lines": "4/6 (66.66%)",
-          "statements": "4/6 (66.66%)",
-        },
-      }
-    `)
-  }
-  else {
-    expect(summary).toMatchInlineSnapshot(`
-      {
-        "<process-cwd>/fixtures/src/pre-bundle/first.ts": {
-          "branches": "0/0 (100%)",
-          "functions": "1/2 (50%)",
-          "lines": "1/2 (50%)",
-          "statements": "1/2 (50%)",
-        },
-        "<process-cwd>/fixtures/src/pre-bundle/second.ts": {
-          "branches": "0/0 (100%)",
-          "functions": "1/2 (50%)",
-          "lines": "1/2 (50%)",
-          "statements": "1/2 (50%)",
-        },
-      }
-    `)
-  }
+  expect(summary).toMatchInlineSnapshot(`
+    {
+      "<process-cwd>/fixtures/src/pre-bundle/first.ts": {
+        "branches": "0/0 (100%)",
+        "functions": "1/2 (50%)",
+        "lines": "1/2 (50%)",
+        "statements": "1/2 (50%)",
+      },
+      "<process-cwd>/fixtures/src/pre-bundle/second.ts": {
+        "branches": "0/0 (100%)",
+        "functions": "1/2 (50%)",
+        "lines": "1/2 (50%)",
+        "statements": "1/2 (50%)",
+      },
+    }
+  `)
 })
 
 coverageTest('run bundled sources', () => {

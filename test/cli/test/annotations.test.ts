@@ -1,15 +1,28 @@
+import type { TestArtifact } from '@vitest/runner'
 import type { TestAnnotation } from 'vitest'
+import { playwright } from '@vitest/browser-playwright'
 import { describe, expect, test } from 'vitest'
 import { runInlineTests } from '../../test-utils'
 
+const test3Content = /* ts */`
+export async function externalAnnotate(annotate) {
+  await annotate('external')
+}
+`
+
 const annotationTest = /* ts */`
 import { test, describe } from 'vitest'
+import { externalAnnotate } from './test-3.js'
 
 test('simple', async ({ annotate }) => {
   await annotate('1')
   await annotate('2', 'warning')
   await annotate('3', { path: './test-3.js' })
   await annotate('4', 'warning', { path: './test-4.js' })
+  await externalAnnotate(annotate)
+  await annotate('with base64 body', { body: 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/' })
+  await annotate('with Uint8Array body', { body: new Uint8Array(Array.from({ length: 256 }).map((_, i) => i)) })
+  await annotate('with contentType', { body: '', contentType: 'text/plain' })
 })
 
 describe('suite', () => {
@@ -28,21 +41,22 @@ describe('API', () => {
       name: 'browser',
       browser: {
         enabled: true,
-        provider: 'playwright',
+        provider: playwright(),
         headless: true,
         instances: [
-          { browser: 'chromium' },
+          { browser: 'chromium' as const },
         ],
       },
     },
   ])('annotations are exposed correctly in $name', async (options) => {
     const events: string[] = []
     const annotations: Record<string, ReadonlyArray<TestAnnotation>> = {}
+    const artifacts: Record<string, ReadonlyArray<TestArtifact>> = {}
 
     const { stderr } = await runInlineTests(
       {
         'basic.test.ts': annotationTest,
-        'test-3.js': '',
+        'test-3.js': test3Content,
         'test-4.js': '',
         'vitest.config.js': { test: options },
       },
@@ -53,7 +67,10 @@ describe('API', () => {
           {
             onTestCaseAnnotate(testCase, annotation) {
               const path = annotation.attachment?.path?.replace(testCase.project.config.root, '<root>').replace(/\w+\.js$/, '<hash>.js')
-              events.push(`[annotate] ${testCase.name} ${annotation.message} ${annotation.type} ${path}`)
+              events.push(`[annotate] ${testCase.name} ${annotation.message} ${annotation.type} path=${path} contentType=${annotation.attachment?.contentType} body=${annotation.attachment?.body}`)
+            },
+            onTestCaseArtifactRecord() {
+              events.push('[artifact]')
             },
             onTestCaseReady(testCase) {
               events.push(`[ready] ${testCase.name}`)
@@ -75,6 +92,8 @@ describe('API', () => {
                 }
                 return annotation
               })
+              // artifacts should be empty until next major so no handling needed
+              artifacts[testCase.name] = testCase.artifacts()
             },
           },
         ],
@@ -85,18 +104,28 @@ describe('API', () => {
     expect(events).toMatchInlineSnapshot(`
       [
         "[ready] simple",
-        "[annotate] simple 1 notice undefined",
-        "[annotate] simple 2 warning undefined",
-        "[annotate] simple 3 notice <root>/.vitest-attachments/3-<hash>.js",
-        "[annotate] simple 4 warning <root>/.vitest-attachments/4-<hash>.js",
+        "[annotate] simple 1 notice path=undefined contentType=undefined body=undefined",
+        "[annotate] simple 2 warning path=undefined contentType=undefined body=undefined",
+        "[annotate] simple 3 notice path=<root>/.vitest-attachments/3-<hash>.js contentType=text/javascript body=undefined",
+        "[annotate] simple 4 warning path=<root>/.vitest-attachments/4-<hash>.js contentType=text/javascript body=undefined",
+        "[annotate] simple external notice path=undefined contentType=undefined body=undefined",
+        "[annotate] simple with base64 body notice path=undefined contentType=undefined body=ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/",
+        "[annotate] simple with Uint8Array body notice path=undefined contentType=undefined body=AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8gISIjJCUmJygpKissLS4vMDEyMzQ1Njc4OTo7PD0+P0BBQkNERUZHSElKS0xNTk9QUVJTVFVWV1hZWltcXV5fYGFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6e3x9fn+AgYKDhIWGh4iJiouMjY6PkJGSk5SVlpeYmZqbnJ2en6ChoqOkpaanqKmqq6ytrq+wsbKztLW2t7i5uru8vb6/wMHCw8TFxsfIycrLzM3Oz9DR0tPU1dbX2Nna29zd3t/g4eLj5OXm5+jp6uvs7e7v8PHy8/T19vf4+fr7/P3+/w==",
+        "[annotate] simple with contentType notice path=undefined contentType=text/plain body=",
         "[result] simple",
         "[ready] second",
-        "[annotate] second 5 notice undefined",
-        "[annotate] second 6 notice https://absolute-path.com",
+        "[annotate] second 5 notice path=undefined contentType=undefined body=undefined",
+        "[annotate] second 6 notice path=https://absolute-path.com contentType=undefined body=undefined",
         "[result] second",
       ]
     `)
 
+    expect(artifacts).toMatchInlineSnapshot(`
+      {
+        "second": [],
+        "simple": [],
+      }
+    `)
     expect(annotations).toMatchInlineSnapshot(`
       {
         "second": [
@@ -104,7 +133,7 @@ describe('API', () => {
             "location": {
               "column": 11,
               "file": "<root>/basic.test.ts",
-              "line": 13,
+              "line": 18,
             },
             "message": "5",
             "type": "notice",
@@ -116,7 +145,7 @@ describe('API', () => {
             "location": {
               "column": 11,
               "file": "<root>/basic.test.ts",
-              "line": 14,
+              "line": 19,
             },
             "message": "6",
             "type": "notice",
@@ -127,7 +156,7 @@ describe('API', () => {
             "location": {
               "column": 9,
               "file": "<root>/basic.test.ts",
-              "line": 5,
+              "line": 6,
             },
             "message": "1",
             "type": "notice",
@@ -136,7 +165,7 @@ describe('API', () => {
             "location": {
               "column": 9,
               "file": "<root>/basic.test.ts",
-              "line": 6,
+              "line": 7,
             },
             "message": "2",
             "type": "warning",
@@ -149,7 +178,7 @@ describe('API', () => {
             "location": {
               "column": 9,
               "file": "<root>/basic.test.ts",
-              "line": 7,
+              "line": 8,
             },
             "message": "3",
             "type": "notice",
@@ -162,10 +191,56 @@ describe('API', () => {
             "location": {
               "column": 9,
               "file": "<root>/basic.test.ts",
-              "line": 8,
+              "line": 9,
             },
             "message": "4",
             "type": "warning",
+          },
+          {
+            "location": {
+              "column": 9,
+              "file": "<root>/basic.test.ts",
+              "line": 10,
+            },
+            "message": "external",
+            "type": "notice",
+          },
+          {
+            "attachment": {
+              "body": "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/",
+            },
+            "location": {
+              "column": 9,
+              "file": "<root>/basic.test.ts",
+              "line": 11,
+            },
+            "message": "with base64 body",
+            "type": "notice",
+          },
+          {
+            "attachment": {
+              "body": "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8gISIjJCUmJygpKissLS4vMDEyMzQ1Njc4OTo7PD0+P0BBQkNERUZHSElKS0xNTk9QUVJTVFVWV1hZWltcXV5fYGFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6e3x9fn+AgYKDhIWGh4iJiouMjY6PkJGSk5SVlpeYmZqbnJ2en6ChoqOkpaanqKmqq6ytrq+wsbKztLW2t7i5uru8vb6/wMHCw8TFxsfIycrLzM3Oz9DR0tPU1dbX2Nna29zd3t/g4eLj5OXm5+jp6uvs7e7v8PHy8/T19vf4+fr7/P3+/w==",
+            },
+            "location": {
+              "column": 9,
+              "file": "<root>/basic.test.ts",
+              "line": 12,
+            },
+            "message": "with Uint8Array body",
+            "type": "notice",
+          },
+          {
+            "attachment": {
+              "body": "",
+              "contentType": "text/plain",
+            },
+            "location": {
+              "column": 9,
+              "file": "<root>/basic.test.ts",
+              "line": 13,
+            },
+            "message": "with contentType",
+            "type": "notice",
           },
         ],
       }
@@ -195,7 +270,7 @@ describe('reporters', () => {
     const { stdout } = await runInlineTests(
       {
         'basic.test.ts': annotationTest,
-        'test-3.js': '',
+        'test-3.js': test3Content,
         'test-4.js': '',
       },
       { reporters: ['tap'] },
@@ -211,6 +286,10 @@ describe('reporters', () => {
               # warning: 2
               # notice: 3
               # warning: 4
+              # notice: external
+              # notice: with base64 body
+              # notice: with Uint8Array body
+              # notice: with contentType
           ok 2 - suite # time=<time> {
               1..1
               ok 1 - second # time=<time>
@@ -226,7 +305,7 @@ describe('reporters', () => {
     const { stdout } = await runInlineTests(
       {
         'basic.test.ts': annotationTest,
-        'test-3.js': '',
+        'test-3.js': test3Content,
         'test-4.js': '',
       },
       { reporters: ['tap-flat'] },
@@ -240,6 +319,10 @@ describe('reporters', () => {
           # warning: 2
           # notice: 3
           # warning: 4
+          # notice: external
+          # notice: with base64 body
+          # notice: with Uint8Array body
+          # notice: with contentType
       ok 2 - basic.test.ts > suite > second # time=<time>
           # notice: 5
           # notice: 6
@@ -251,7 +334,7 @@ describe('reporters', () => {
     const { stdout } = await runInlineTests(
       {
         'basic.test.ts': annotationTest,
-        'test-3.js': '',
+        'test-3.js': test3Content,
         'test-4.js': '',
       },
       { reporters: ['junit'] },
@@ -276,6 +359,14 @@ describe('reporters', () => {
                       </property>
                       <property name="warning" value="4">
                       </property>
+                      <property name="notice" value="external">
+                      </property>
+                      <property name="notice" value="with base64 body">
+                      </property>
+                      <property name="notice" value="with Uint8Array body">
+                      </property>
+                      <property name="notice" value="with contentType">
+                      </property>
                   </properties>
               </testcase>
               <testcase classname="basic.test.ts" name="suite &gt; second" time="0">
@@ -296,7 +387,7 @@ describe('reporters', () => {
     const { stdout, ctx } = await runInlineTests(
       {
         'basic.test.ts': annotationTest,
-        'test-3.js': '',
+        'test-3.js': test3Content,
         'test-4.js': '',
       },
       { reporters: ['github-actions'] },
@@ -310,17 +401,25 @@ describe('reporters', () => {
       .replace(new RegExp(ctx!.config.root, 'g'), '<root>')
     expect(result).toMatchInlineSnapshot(`
       "
-      ::notice file=<root>/basic.test.ts,line=5,column=9::1
+      ::notice file=<root>/basic.test.ts,line=6,column=9::1
 
-      ::warning file=<root>/basic.test.ts,line=6,column=9::2
+      ::warning file=<root>/basic.test.ts,line=7,column=9::2
 
-      ::notice file=<root>/basic.test.ts,line=7,column=9::3
+      ::notice file=<root>/basic.test.ts,line=8,column=9::3
 
-      ::warning file=<root>/basic.test.ts,line=8,column=9::4
+      ::warning file=<root>/basic.test.ts,line=9,column=9::4
 
-      ::notice file=<root>/basic.test.ts,line=13,column=11::5
+      ::notice file=<root>/basic.test.ts,line=10,column=9::external
 
-      ::notice file=<root>/basic.test.ts,line=14,column=11::6
+      ::notice file=<root>/basic.test.ts,line=11,column=9::with base64 body
+
+      ::notice file=<root>/basic.test.ts,line=12,column=9::with Uint8Array body
+
+      ::notice file=<root>/basic.test.ts,line=13,column=9::with contentType
+
+      ::notice file=<root>/basic.test.ts,line=18,column=11::5
+
+      ::notice file=<root>/basic.test.ts,line=19,column=11::6
       "
     `)
   })
@@ -329,7 +428,7 @@ describe('reporters', () => {
     const { stdout } = await runInlineTests(
       {
         'basic.test.ts': annotationTest,
-        'test-3.js': '',
+        'test-3.js': test3Content,
         'test-4.js': '',
       },
       { reporters: [['verbose', { isTTY: false }]] },
@@ -345,20 +444,28 @@ describe('reporters', () => {
     expect(result).toMatchInlineSnapshot(`
       " ✓ basic.test.ts > simple <time>
 
-         ❯ basic.test.ts:5:9 notice
+         ❯ basic.test.ts:6:9 notice
            ↳ 1
-         ❯ basic.test.ts:6:9 warning
+         ❯ basic.test.ts:7:9 warning
            ↳ 2
-         ❯ basic.test.ts:7:9 notice
+         ❯ basic.test.ts:8:9 notice
            ↳ 3
-         ❯ basic.test.ts:8:9 warning
+         ❯ basic.test.ts:9:9 warning
            ↳ 4
+         ❯ basic.test.ts:10:9 notice
+           ↳ external
+         ❯ basic.test.ts:11:9 notice
+           ↳ with base64 body
+         ❯ basic.test.ts:12:9 notice
+           ↳ with Uint8Array body
+         ❯ basic.test.ts:13:9 notice
+           ↳ with contentType
 
        ✓ basic.test.ts > suite > second <time>
 
-         ❯ basic.test.ts:13:11 notice
+         ❯ basic.test.ts:18:11 notice
            ↳ 5
-         ❯ basic.test.ts:14:11 notice
+         ❯ basic.test.ts:19:11 notice
            ↳ 6
 
       "

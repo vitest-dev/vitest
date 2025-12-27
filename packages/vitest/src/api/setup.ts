@@ -1,28 +1,31 @@
-import type { File, TaskEventPack, TaskResultPack, TestAnnotation } from '@vitest/runner'
-
+import type { File, TaskEventPack, TaskResultPack, TestAnnotation, TestArtifact } from '@vitest/runner'
+import type { SerializedError } from '@vitest/utils'
 import type { IncomingMessage } from 'node:http'
 import type { ViteDevServer } from 'vite'
 import type { WebSocket } from 'ws'
 import type { Vitest } from '../node/core'
-import type { TestCase } from '../node/reporters/reported-tasks'
+import type { TestCase, TestModule } from '../node/reporters/reported-tasks'
+import type { TestSpecification } from '../node/spec'
 import type { Reporter } from '../node/types/reporter'
-import type { SerializedTestSpecification } from '../runtime/types/utils'
-import type { Awaitable, LabelColor, ModuleGraphData, UserConsoleLog } from '../types/general'
+import type { LabelColor, ModuleGraphData, UserConsoleLog } from '../types/general'
 import type {
+  ExternalResult,
   TransformResultWithSource,
   WebSocketEvents,
   WebSocketHandlers,
   WebSocketRPC,
 } from './types'
 import { existsSync, promises as fs } from 'node:fs'
-import { isPrimitive, noop } from '@vitest/utils'
+import { performance } from 'node:perf_hooks'
+import { noop } from '@vitest/utils/helpers'
 import { createBirpc } from 'birpc'
 import { parse, stringify } from 'flatted'
+import { isFileServingAllowed } from 'vite'
 import { WebSocketServer } from 'ws'
 import { API_PATH } from '../constants'
+import { getTestFileEnvironment } from '../utils/environments'
 import { getModuleGraph } from '../utils/graph'
 import { stringifyReplace } from '../utils/serialization'
-import { parseErrorStacktrace } from '../utils/source-map'
 import { isValidApiRequest } from './check'
 
 export function setup(ctx: Vitest, _server?: ViteDevServer): void {
@@ -30,7 +33,7 @@ export function setup(ctx: Vitest, _server?: ViteDevServer): void {
 
   const clients = new Map<WebSocket, WebSocketRPC>()
 
-  const server = _server || ctx.server
+  const server = _server || ctx.vite
 
   server.httpServer?.on('upgrade', (request: IncomingMessage, socket, head) => {
     if (!request.url) {
@@ -88,24 +91,60 @@ export function setup(ctx: Vitest, _server?: ViteDevServer): void {
         getConfig() {
           return ctx.getRootProject().serializedConfig
         },
-        getResolvedProjectNames(): string[] {
-          return ctx.projects.map(p => p.name)
-        },
         getResolvedProjectLabels(): { name: string; color?: LabelColor }[] {
           return ctx.projects.map(p => ({ name: p.name, color: p.color }))
         },
-        async getTransformResult(projectName: string, id, browser = false) {
-          const project = ctx.getProjectByName(projectName)
-          const result: TransformResultWithSource | null | undefined = browser
-            ? await project.browser!.vite.transformRequest(id)
-            : await project.vitenode.transformRequest(id)
-          if (result) {
-            try {
-              result.source = result.source || (await fs.readFile(id, 'utf-8'))
-            }
-            catch {}
-            return result
+        async getExternalResult(moduleId: string, testFileTaskId: string) {
+          const testModule = ctx.state.getReportedEntityById(testFileTaskId) as TestModule | undefined
+          if (!testModule) {
+            return undefined
           }
+
+          if (!isFileServingAllowed(testModule.project.vite.config, moduleId)) {
+            return undefined
+          }
+
+          const result: ExternalResult = {}
+
+          try {
+            result.source = await fs.readFile(moduleId, 'utf-8')
+          }
+          catch {}
+
+          return result
+        },
+        async getTransformResult(projectName: string, moduleId, testFileTaskId, browser = false) {
+          const project = ctx.getProjectByName(projectName)
+          const testModule = ctx.state.getReportedEntityById(testFileTaskId) as TestModule | undefined
+          if (!testModule || !isFileServingAllowed(project.vite.config, moduleId)) {
+            return
+          }
+
+          const environment = getTestFileEnvironment(project, testModule.moduleId, browser)
+
+          const moduleNode = environment?.moduleGraph.getModuleById(moduleId)
+          if (!environment || !moduleNode?.transformResult) {
+            return
+          }
+
+          const result: TransformResultWithSource = moduleNode.transformResult
+          try {
+            result.source = result.source || (moduleNode.file ? await fs.readFile(moduleNode.file, 'utf-8') : undefined)
+          }
+          catch {}
+
+          // TODO: store this in HTML reporter separetly
+          const transformDuration = ctx.state.metadata[projectName]?.duration[moduleNode.url]?.[0]
+          if (transformDuration != null) {
+            result.transformTime = transformDuration
+          }
+          try {
+            const diagnostic = await ctx.experimental_getSourceModuleDiagnostic(moduleId, testModule)
+            result.modules = diagnostic.modules
+            result.untrackedModules = diagnostic.untrackedModules
+          }
+          catch {}
+          return result
         },
         async getModuleGraph(project, id, browser): Promise<ModuleGraphData> {
           return getModuleGraph(ctx, project, id, browser)
@@ -145,9 +184,7 @@ export function setup(ctx: Vitest, _server?: ViteDevServer): void {
         ],
         serialize: (data: any) => stringify(data, stringifyReplace),
         deserialize: parse,
-        onTimeoutError(functionName) {
-          throw new Error(`[vitest-api]: Timeout calling "${functionName}"`)
-        },
+        timeout: -1,
       },
     )
 
@@ -155,6 +192,7 @@ export function setup(ctx: Vitest, _server?: ViteDevServer): void {
 
     ws.on('close', () => {
       clients.delete(ws)
+      rpc.$close(new Error('[vitest-api]: Pending methods while closing rpc'))
     })
   }
 
@@ -162,27 +200,33 @@ export function setup(ctx: Vitest, _server?: ViteDevServer): void {
 }
 
 export class WebSocketReporter implements Reporter {
+  private start = 0
+  private end = 0
   constructor(
     public ctx: Vitest,
     public wss: WebSocketServer,
     public clients: Map<WebSocket, WebSocketRPC>,
   ) {}
 
-  onCollected(files?: File[]): void {
+  onTestModuleCollected(testModule: TestModule): void {
     if (this.clients.size === 0) {
       return
     }
+
     this.clients.forEach((client) => {
-      client.onCollected?.(files)?.catch?.(noop)
+      client.onCollected?.([testModule.task])?.catch?.(noop)
     })
   }
 
-  onSpecsCollected(specs?: SerializedTestSpecification[] | undefined): Awaitable<void> {
+  onTestRunStart(specifications: ReadonlyArray<TestSpecification>): void {
     if (this.clients.size === 0) {
       return
     }
+
+    this.start = performance.now()
+    const serializedSpecs = specifications.map(spec => spec.toJSON())
     this.clients.forEach((client) => {
-      client.onSpecsCollected?.(specs)?.catch?.(noop)
+      client.onSpecsCollected?.(serializedSpecs)?.catch?.(noop)
     })
   }
 
@@ -196,38 +240,47 @@ export class WebSocketReporter implements Reporter {
     })
   }
 
-  async onTaskUpdate(packs: TaskResultPack[], events: TaskEventPack[]): Promise<void> {
+  async onTestCaseArtifactRecord(testCase: TestCase, artifact: TestArtifact): Promise<void> {
     if (this.clients.size === 0) {
       return
     }
 
-    packs.forEach(([taskId, result]) => {
-      const task = this.ctx.state.idMap.get(taskId)
-      const isBrowser = task && task.file.pool === 'browser'
-
-      result?.errors?.forEach((error) => {
-        if (isPrimitive(error)) {
-          return
-        }
-
-        if (isBrowser) {
-          const project = this.ctx.getProjectByName(task!.file.projectName || '')
-          error.stacks = project.browser?.parseErrorStacktrace(error)
-        }
-        else {
-          error.stacks = parseErrorStacktrace(error)
-        }
-      })
+    this.clients.forEach((client) => {
+      client.onTestArtifactRecord?.(testCase.id, artifact)?.catch?.(noop)
     })
+  }
+
+  async onTaskUpdate(packs: TaskResultPack[], events: TaskEventPack[]): Promise<void> {
+    if (this.clients.size === 0) {
+      return
+    }
 
     this.clients.forEach((client) => {
       client.onTaskUpdate?.(packs, events)?.catch?.(noop)
     })
   }
 
-  onFinished(files: File[], errors: unknown[]): void {
+  private sum<T>(items: T[], cb: (_next: T) => number | undefined) {
+    return items.reduce((total, next) => {
+      return total + Math.max(cb(next) || 0, 0)
+    }, 0)
+  }
+
+  onTestRunEnd(testModules: ReadonlyArray<TestModule>, unhandledErrors: ReadonlyArray<SerializedError>): void {
+    if (!this.clients.size) {
+      return
+    }
+
+    const files = testModules.map(testModule => testModule.task)
+    const errors = [...unhandledErrors]
+
+    this.end = performance.now()
+    const blobs = this.ctx.state.blobs
+    // Execution time is either sum of all runs of `--merge-reports` or the current run's time
+    const executionTime = blobs?.executionTimes ? this.sum(blobs.executionTimes, time => time) : this.end - this.start
+
     this.clients.forEach((client) => {
-      client.onFinished?.(files, errors)?.catch?.(noop)
+      client.onFinished?.(files, errors, undefined, executionTime)?.catch?.(noop)
     })
   }
 

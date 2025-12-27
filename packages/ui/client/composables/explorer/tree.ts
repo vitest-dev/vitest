@@ -1,4 +1,4 @@
-import type { File, TaskResultPack, TestAnnotation } from '@vitest/runner'
+import type { File, TaskResultPack, TestArtifact } from '@vitest/runner'
 import type { RunnerTaskEventPack } from 'vitest'
 import type {
   CollectorInfo,
@@ -6,8 +6,10 @@ import type {
   RootTreeNode,
   UITaskTreeNode,
 } from '~/composables/explorer/types'
+import { useRafFn } from '@vueuse/core'
+import { reactive } from 'vue'
 import { runCollapseAllTask, runCollapseNode } from '~/composables/explorer/collapse'
-import { annotateTest, collectTestsTotalData, preparePendingTasks, runCollect, runLoadFiles } from '~/composables/explorer/collector'
+import { collectTestsTotalData, preparePendingTasks, recordTestArtifact, runCollect, runLoadFiles } from '~/composables/explorer/collector'
 import { runExpandAll, runExpandNode } from '~/composables/explorer/expand'
 import { runFilter } from '~/composables/explorer/filter'
 import {
@@ -18,6 +20,8 @@ import {
 export class ExplorerTree {
   private rafCollector: ReturnType<typeof useRafFn>
   private resumeEndRunId: ReturnType<typeof setTimeout> | undefined
+  public startTime: number = 0
+  public executionTime: number = 0
   constructor(
     public projects: string[] = [],
     public colors = new Map<string, string | undefined>(),
@@ -74,12 +78,13 @@ export class ExplorerTree {
   }
 
   startRun() {
+    this.startTime = performance.now()
     this.resumeEndRunId = setTimeout(() => this.endRun(), this.resumeEndTimeout)
     this.collect(true, false)
   }
 
-  annotateTest(testId: string, annotation: TestAnnotation) {
-    annotateTest(testId, annotation)
+  recordTestArtifact(testId: string, artifact: TestArtifact) {
+    recordTestArtifact(testId, artifact)
     if (!this.onTaskUpdateCalled) {
       clearTimeout(this.resumeEndRunId)
       this.onTaskUpdateCalled = true
@@ -98,7 +103,8 @@ export class ExplorerTree {
     }
   }
 
-  endRun() {
+  endRun(executionTime = performance.now() - this.startTime) {
+    this.executionTime = executionTime
     this.rafCollector.pause()
     this.onTaskUpdateCalled = false
     this.collect(false, true)
@@ -122,6 +128,7 @@ export class ExplorerTree {
             skipped: filter.skipped,
             onlyTests: filter.onlyTests,
           },
+          end ? this.executionTime : performance.now() - this.startTime,
         )
       })
     }
@@ -137,6 +144,7 @@ export class ExplorerTree {
           skipped: filter.skipped,
           onlyTests: filter.onlyTests,
         },
+        end ? this.executionTime : performance.now() - this.startTime,
       )
     }
   }

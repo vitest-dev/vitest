@@ -1,5 +1,6 @@
-import type { File, Task } from '@vitest/runner'
+import type { Task } from '@vitest/runner'
 import type { Vitest } from '../core'
+import type { TestModule } from './reported-tasks'
 import { TapReporter } from './tap'
 
 function flattenTasks(task: Task, baseName = ''): Task[] {
@@ -25,10 +26,10 @@ export class TapFlatReporter extends TapReporter {
     super.onInit(ctx)
   }
 
-  onFinished(files: File[] = this.ctx.state.getFiles()): void {
+  onTestRunEnd(testModules: ReadonlyArray<TestModule>): void {
     this.ctx.logger.log('TAP version 13')
 
-    const flatTasks = files.flatMap(task => flattenTasks(task))
+    const flatTasks = testModules.flatMap(testModule => flattenTasks(testModule.task))
 
     this.logTasks(flatTasks)
   }

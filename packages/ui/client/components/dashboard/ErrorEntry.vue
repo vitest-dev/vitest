@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import type { ErrorWithDiff } from '@vitest/utils'
+import type { TestError } from '@vitest/utils'
 
 defineProps<{
-  error: ErrorWithDiff
+  error: TestError
 }>()
 </script>
 
@@ -27,17 +27,6 @@ defineProps<{
       </li>
       <li>
         If the error occurred after the test had been completed, this was the last documented test before it was thrown.
-      </li>
-    </ul>
-  </div>
-  <div v-if="error.VITEST_AFTER_ENV_TEARDOWN" text="sm" font-thin>
-    This error was caught after test environment was torn down. Make sure to cancel any running tasks before test finishes:<br>
-    <ul>
-      <li>
-        Cancel timeouts using clearTimeout and clearInterval.
-      </li>
-      <li>
-        Wait for promises to resolve using the await keyword.
       </li>
     </ul>
   </div>

@@ -37,7 +37,7 @@ export default defineConfig({
 /**
  * Plugin for transforming `.custom-1` and/or `.custom-2` files to Javascript
  */
-function customFilePlugin(postfix: "1" | "2"): Plugin {
+export function customFilePlugin(postfix: "1" | "2"): Plugin {
   function transform(code: MagicString) {
     code.replaceAll(
       "<function covered>",

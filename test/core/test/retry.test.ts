@@ -64,3 +64,16 @@ describe.each([
     expect(flag3).toBe(false)
   })
 })
+
+describe('extended tests keep the options', () => {
+  const test$ = it.extend({
+    extended: true,
+  })
+
+  test$('inherits all options', { retry: 2, repeats: 1, timeout: 3456 }, ({ task, extended }) => {
+    expect(task.retry).toBe(2)
+    expect(task.repeats).toBe(1)
+    expect(task.timeout).toBe(3456)
+    expect(extended).toBe(true)
+  })
+})

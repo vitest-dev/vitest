@@ -1,5 +1,5 @@
+import type { BrowserCommands } from 'vitest/browser'
 import type { BrowserCommand, TestProject } from 'vitest/node'
-import type { BrowserCommands } from '../../../context'
 import fs, { promises as fsp } from 'node:fs'
 import { basename, dirname, resolve } from 'node:path'
 import mime from 'mime/lite'
@@ -8,7 +8,7 @@ import { isFileServingAllowed } from 'vitest/node'
 function assertFileAccess(path: string, project: TestProject) {
   if (
     !isFileServingAllowed(path, project.vite)
-    && !isFileServingAllowed(path, project.vitest.server)
+    && !isFileServingAllowed(path, project.vitest.vite)
   ) {
     throw new Error(
       `Access denied to "${path}". See Vite config documentation for "server.fs": https://vitejs.dev/config/server-options.html#server-fs-strict.`,

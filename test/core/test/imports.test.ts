@@ -1,11 +1,17 @@
 import { mkdir, writeFile } from 'node:fs/promises'
 import { fileURLToPath } from 'node:url'
+import { NonExported } from '@test/dep-esm-non-existing'
 import { resolve } from 'pathe'
 import { describe, expect, test, vi } from 'vitest'
 // @ts-expect-error module is not typed
 import promiseExport from '../src/cjs/promise-export'
 
 import { dynamicRelativeImport } from '../src/relative-import'
+
+test('can import type from an ESM dependency', () => {
+  // @ts-expect-error NonExported is type
+  expect(NonExported).toBe(undefined)
+})
 
 test('promise export works correctly', async () => {
   await expect(promiseExport).resolves.toEqual({ value: 42 })
@@ -82,9 +88,9 @@ test('dynamic import has null prototype', async () => {
 test('dynamic import throws an error', async () => {
   const path = './some-unknown-path'
   const imported = import(path)
-  await expect(imported).rejects.toThrowError(/Cannot find module '\.\/some-unknown-path' imported/)
+  await expect(imported).rejects.toThrowError(`Cannot find module '/test/some-unknown-path' imported from '${resolve(import.meta.filename)}'`)
   // @ts-expect-error path does not exist
-  await expect(() => import('./some-unknown-path')).rejects.toThrowError(/Cannot find module/)
+  await expect(() => import('./some-unknown-path')).rejects.toThrowError(`Cannot find module '/test/some-unknown-path' imported from '${resolve(import.meta.filename)}'`)
 })
 
 test('can import @vite/client', async () => {
@@ -94,7 +100,7 @@ test('can import @vite/client', async () => {
 })
 
 describe('importing special files from node_modules', async () => {
-  const dir = resolve(__dirname, '../src/node_modules')
+  const dir = resolve(import.meta.dirname, '../src/node_modules')
   const wasm = resolve(dir, 'file.wasm')
   const css = resolve(dir, 'file.css')
   const mp3 = resolve(dir, 'file.mp3')

@@ -16,6 +16,23 @@
 import type { MatcherState } from '@vitest/expect'
 import { Locator } from '../locators'
 
+export function queryElementFromUserInput(
+  elementOrLocator: Element | Locator | null,
+  // TODO: minifier doesn't keep names, so we need to update this
+  matcherFn: (...args: any) => any,
+  context: MatcherState,
+): HTMLElement | SVGElement | null {
+  if (elementOrLocator instanceof Locator) {
+    elementOrLocator = elementOrLocator.query()
+  }
+
+  if (elementOrLocator == null) {
+    return null
+  }
+
+  return getElementFromUserInput(elementOrLocator, matcherFn, context)
+}
+
 export function getElementFromUserInput(
   elementOrLocator: Element | Locator | null,
   // TODO: minifier doesn't keep names, so we need to update this
@@ -26,9 +43,11 @@ export function getElementFromUserInput(
     elementOrLocator = elementOrLocator.element()
   }
 
+  const defaultView = elementOrLocator?.ownerDocument?.defaultView || window
+
   if (
-    elementOrLocator instanceof HTMLElement
-    || elementOrLocator instanceof SVGElement
+    elementOrLocator instanceof defaultView.HTMLElement
+    || elementOrLocator instanceof defaultView.SVGElement
   ) {
     return elementOrLocator
   }
@@ -49,8 +68,10 @@ export function getNodeFromUserInput(
     elementOrLocator = elementOrLocator.element()
   }
 
+  const defaultView = elementOrLocator.ownerDocument?.defaultView || window
+
   if (
-    elementOrLocator instanceof Node
+    elementOrLocator instanceof defaultView.Node
   ) {
     return elementOrLocator
   }
@@ -128,7 +149,7 @@ export function toSentence(
   array: string[],
   { wordConnector = ', ', lastWordConnector = ' and ' }: ToSentenceOptions = {},
 ): string {
-  return [array.slice(0, -1).join(wordConnector), array[array.length - 1]].join(
+  return [array.slice(0, -1).join(wordConnector), array.at(-1)].join(
     array.length > 1 ? lastWordConnector : '',
   )
 }

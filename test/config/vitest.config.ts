@@ -7,14 +7,7 @@ export default defineConfig({
     reporters: ['verbose'],
     testTimeout: 60_000,
     pool: 'forks',
-    poolOptions: {
-      forks: {
-        singleFork: true,
-      },
-      threads: {
-        singleThread: true,
-      },
-    },
+    fileParallelism: false,
     chaiConfig: {
       truncateThreshold: 999,
     },

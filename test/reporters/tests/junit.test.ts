@@ -1,31 +1,39 @@
-import type { File, Suite, Task, TaskResult } from 'vitest'
+import type { RunnerTaskResult, RunnerTestCase, RunnerTestFile, RunnerTestSuite } from 'vitest'
 import { createFileTask } from '@vitest/runner/utils'
 import { resolve } from 'pathe'
 import { expect, test } from 'vitest'
 import { getDuration } from '../../../packages/vitest/src/node/reporters/junit'
 import { runVitest, runVitestCli } from '../../test-utils'
 
-const root = resolve(__dirname, '../fixtures')
+const root = resolve(import.meta.dirname, '../fixtures')
 
 test('calc the duration used by junit', () => {
-  const result: TaskResult = { state: 'pass', duration: 0 }
-  const file: File = createFileTask('/test.ts', '/', 'test')
-  const suite: Suite = {
+  const result: RunnerTaskResult = { state: 'pass', duration: 0 }
+  const file: RunnerTestFile = createFileTask('/test.ts', '/', 'test')
+  const suiteName
+    = 'suite'
+  const suite: RunnerTestSuite = {
     id: '1_0',
     type: 'suite',
-    name: 'suite',
+    name: suiteName,
+    fullName: `${file.fullName} > ${suiteName}`,
+    fullTestName: `${file.fullTestName} > ${suiteName}`,
     mode: 'run',
     tasks: [],
     file,
     meta: {},
   }
-  const task: Task = {
+  const taskName = 'timeout'
+  const task: RunnerTestCase = {
     id: '1_0_0',
     type: 'test',
-    name: 'timeout',
+    name: taskName,
+    fullName: `${suite.fullName} > ${suiteName}`,
+    fullTestName: `${suite.fullTestName} > ${suiteName}`,
     mode: 'run',
     result,
     annotations: [],
+    artifacts: [],
     file,
     timeout: 0,
     context: null as any,
@@ -100,21 +108,6 @@ test('write testsuite name relative to root config', async () => {
   expect(xml).toContain('<testsuite name="space-2/test/base.test.ts" timestamp="..." hostname="..." tests="1" failures="0" errors="0" skipped="0" time="...">')
 })
 
-test('options.classname changes classname property', async () => {
-  const { stdout } = await runVitest({
-    reporters: [['junit', { classname: 'some-custom-classname' }]],
-    root: './fixtures/default',
-    include: ['a.test.ts'],
-  })
-
-  const xml = stabilizeReport(stdout)
-
-  // All classname attributes should have the custom value
-  expect(xml.match(/<testcase classname="a\.test\.ts"/g)).toBeNull()
-  expect(xml.match(/<testcase classname="/g)).toHaveLength(16)
-  expect(xml.match(/<testcase classname="some-custom-classname"/g)).toHaveLength(16)
-})
-
 test('options.suiteName changes name property', async () => {
   const { stdout } = await runVitest({
     reporters: [['junit', { suiteName: 'some-custom-suiteName' }]],
@@ -170,4 +163,22 @@ test('many errors without warning', async () => {
     resolve(import.meta.dirname, '../fixtures/many-errors'),
   )
   expect(stderr).not.toContain('MaxListenersExceededWarning')
+})
+
+test('CLI reporter option preserves config file options', async () => {
+  const { stdout } = await runVitestCli(
+    'run',
+    '--reporter=junit',
+    '--root',
+    resolve(import.meta.dirname, '../fixtures/junit-cli-options'),
+  )
+
+  const xml = stabilizeReport(stdout)
+
+  // Verify that suiteName from config is preserved
+  expect(xml).not.toContain('<testsuites name="vitest tests"')
+  expect(xml).toContain('<testsuites name="custom-suite-name"')
+
+  // Verify that addFileAttribute from config is preserved
+  expect(xml).toContain('file="')
 })

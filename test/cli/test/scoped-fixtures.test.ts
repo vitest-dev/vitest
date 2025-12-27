@@ -2,8 +2,9 @@
 
 import type { TestAPI } from 'vitest'
 import type { ViteUserConfig } from 'vitest/config'
-import type { TestSpecification, UserConfig } from 'vitest/node'
+import type { TestSpecification, TestUserConfig } from 'vitest/node'
 import type { TestFsStructure } from '../../test-utils'
+import { playwright } from '@vitest/browser-playwright'
 import { runInlineTests } from '../../test-utils'
 
 interface TestContext {
@@ -253,7 +254,6 @@ test('worker fixtures in isolated tests init and teardown twice', async () => {
   }, {
     globals: true,
     maxWorkers: 1,
-    minWorkers: 1,
     pool: 'vmThreads',
   })
 
@@ -291,7 +291,6 @@ test('worker fixture initiates and torn down in different workers', async () => 
     globals: true,
     isolate: false,
     maxWorkers: 2,
-    minWorkers: 2,
     pool: 'threads',
   })
 
@@ -329,7 +328,6 @@ test('worker fixture initiates and torn down in one non-isolated worker', async 
     globals: true,
     isolate: false,
     maxWorkers: 1,
-    minWorkers: 1,
     pool: 'threads',
   })
 
@@ -554,10 +552,10 @@ describe.for([
     name: 'core',
     browser: {
       enabled: true,
-      provider: 'playwright',
+      provider: playwright(),
       headless: true,
       instances: [
-        { browser: 'chromium', name: '' },
+        { browser: 'chromium' as const, name: '' },
       ],
     },
   },
@@ -672,7 +670,7 @@ describe('browser tests', () => {
         test: {
           browser: {
             enabled: true,
-            provider: 'playwright',
+            provider: playwright(),
             headless: true,
             isolate: false,
             instances: [
@@ -702,7 +700,7 @@ describe('browser tests', () => {
 async function runFixtureTests<T>(
   extendedTest: ({ log }: { log: typeof console.log }) => TestAPI<T>,
   fs: Record<string, ((context: { extendedTest: TestAPI<T> }) => unknown) | ViteUserConfig>,
-  config?: UserConfig,
+  config?: TestUserConfig,
 ) {
   if (typeof fs['vitest.config.js'] === 'object') {
     fs['vitest.config.js'].test!.globals = true
@@ -735,7 +733,7 @@ function getSuccessTests(stdout: string) {
   return stdout
     .split('\n')
     .filter(f => f.startsWith(' ✓ '))
-    .map(f => f.replace(/\dms/, '<time>'))
+    .map(f => f.replace(/\d+ms/, '<time>'))
     .join('\n')
 }
 

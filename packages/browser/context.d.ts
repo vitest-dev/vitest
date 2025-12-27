@@ -1,4 +1,5 @@
 import { SerializedConfig } from 'vitest'
+import { StringifyOptions, BrowserCommands } from 'vitest/internal/browser'
 import { ARIARole } from './aria-role.js'
 import {} from './matchers.js'
 
@@ -15,11 +16,6 @@ export type BufferEncoding =
   | 'latin1'
   | 'binary'
   | 'hex'
-
-export interface FsOptions {
-  encoding?: BufferEncoding
-  flag?: string | number
-}
 
 export interface CDPSession {
   // methods are defined by the provider type augmentation
@@ -44,17 +40,134 @@ export interface ScreenshotOptions {
   save?: boolean
 }
 
-export interface BrowserCommands {
-  readFile: (
-    path: string,
-    options?: BufferEncoding | FsOptions
-  ) => Promise<string>
-  writeFile: (
-    path: string,
-    content: string,
-    options?: BufferEncoding | (FsOptions & { mode?: number | string })
-  ) => Promise<void>
-  removeFile: (path: string) => Promise<void>
+interface StandardScreenshotComparators {
+  pixelmatch: {
+    /**
+     * The maximum number of pixels that are allowed to differ between the captured
+     * screenshot and the stored reference image.
+     *
+     * If set to `undefined`, any non-zero difference will cause the test to fail.
+     *
+     * For example, `allowedMismatchedPixels: 10` means the test will pass if 10
+     * or fewer pixels differ, but fail if 11 or more differ.
+     *
+     * If both this and `allowedMismatchedPixelRatio` are set, the more restrictive
+     * value (i.e., fewer allowed mismatches) will be used.
+     *
+     * @default undefined
+     */
+    allowedMismatchedPixels?: number | undefined
+    /**
+     * The maximum allowed ratio of differing pixels between the captured screenshot
+     * and the reference image.
+     *
+     * Must be a value between `0` and `1`.
+     *
+     * For example, `allowedMismatchedPixelRatio: 0.02` means the test will pass
+     * if up to 2% of pixels differ, but fail if more than 2% differ.
+     *
+     * If both this and `allowedMismatchedPixels` are set, the more restrictive
+     * value (i.e., fewer allowed mismatches) will be used.
+     *
+     * @default undefined
+     */
+    allowedMismatchedPixelRatio?: number | undefined
+    /**
+     * Acceptable perceived color difference between the same pixel in two images.
+     *
+     * Value ranges from `0` (strict) to `1` (very lenient). Lower values mean
+     * small differences will be detected.
+     *
+     * The comparison uses the {@link https://en.wikipedia.org/wiki/YIQ | YIQ color space}.
+     *
+     * @default 0.1
+     */
+    threshold?: number | undefined
+    /**
+     * If `true`, disables detection and ignoring of anti-aliased pixels.
+     *
+     * @default false
+     */
+    includeAA?: boolean | undefined
+    /**
+     * Blending level of unchanged pixels in the diff image.
+     *
+     * Ranges from `0` (white) to `1` (original brightness).
+     *
+     * @default 0.1
+     */
+    alpha?: number | undefined
+    /**
+     * Color used for anti-aliased pixels in the diff image.
+     *
+     * Format: `[R, G, B]`
+     *
+     * @default [255, 255, 0]
+     */
+    aaColor?: [r: number, g: number, b: number] | undefined
+    /**
+     * Color used for differing pixels in the diff image.
+     *
+     * Format: `[R, G, B]`
+     *
+     * @default [255, 0, 0]
+     */
+    diffColor?: [r: number, g: number, b: number] | undefined
+    /**
+     * Optional alternative color for dark-on-light differences, to help show
+     * what's added vs. removed.
+     *
+     * If not set, `diffColor` is used for all differences.
+     *
+     * Format: `[R, G, B]`
+     *
+     * @default undefined
+     */
+    diffColorAlt?: [r: number, g: number, b: number] | undefined
+    /**
+     * If `true`, shows only the diff as a mask on a transparent background,
+     * instead of overlaying it on the original image.
+     *
+     * Anti-aliased pixels won't be shown (if detected).
+     *
+     * @default false
+     */
+    diffMask?: boolean | undefined
+  }
+}
+
+export interface ScreenshotComparatorRegistry extends StandardScreenshotComparators {}
+
+export type NonStandardScreenshotComparators = Omit<
+  ScreenshotComparatorRegistry,
+  keyof StandardScreenshotComparators
+>
+
+export interface ScreenshotMatcherOptions<
+  ComparatorName extends keyof ScreenshotComparatorRegistry = keyof ScreenshotComparatorRegistry
+> {
+  /**
+   * The name of the comparator to use for visual diffing.
+   *
+   * Must be one of the keys from {@linkcode ScreenshotComparatorRegistry}.
+   *
+   * @defaultValue `'pixelmatch'`
+   */
+  comparatorName?: ComparatorName
+  comparatorOptions?: ScreenshotComparatorRegistry[ComparatorName]
+  screenshotOptions?: Omit<
+    ScreenshotOptions,
+    'element' | 'base64' | 'path' | 'save' | 'type'
+  >
+  /**
+   * Time to wait until a stable screenshot is found.
+   *
+   * Setting this value to `0` disables the timeout, but if a stable screenshot
+   * can't be determined the process will not end.
+   *
+   * @default 5000
+   */
+  timeout?: number
 }
 
 export interface UserEvent {
@@ -63,8 +176,8 @@ export interface UserEvent {
    * state of keyboard to press and release buttons correctly.
    *
    * **Note:** Unlike `@testing-library/user-event`, the default `userEvent` instance
-   * from `@vitest/browser/context` is created once, not every time its methods are called!
-   * @see {@link https://vitest.dev/guide/browser/interactivity-api.html#userevent-setup}
+   * from `vitest/browser` is created once, not every time its methods are called!
+   * @see {@link https://vitest.dev/api/browser/interactivity.html#userevent-setup}
    */
   setup: () => UserEvent
   /**
@@ -114,7 +227,7 @@ export interface UserEvent {
    * @see {@link https://testing-library.com/docs/user-event/utility/#-selectoptions-deselectoptions} testing-library API
    */
   selectOptions: (
-    element: Element,
+    element: HTMLElement | SVGElement | Locator,
     values: HTMLElement | HTMLElement[] | Locator | Locator[] | string | string[],
     options?: UserEventSelectOptions,
   ) => Promise<void>
@@ -238,6 +351,10 @@ export interface LocatorOptions {
    * regular expression. Note that exact match still trims whitespace.
    */
   exact?: boolean
+  hasText?: string | RegExp
+  hasNotText?: string | RegExp
+  has?: Locator
+  hasNot?: Locator
 }
 
 export interface LocatorByRoleOptions extends LocatorOptions {
@@ -293,44 +410,46 @@ export interface LocatorByRoleOptions extends LocatorOptions {
 
 interface LocatorScreenshotOptions extends Omit<ScreenshotOptions, 'element'> {}
 
-interface LocatorSelectors {
+export interface LocatorSelectors {
   /**
    * Creates a way to locate an element by its [ARIA role](https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Roles), [ARIA attributes](https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Attributes) and [accessible name](https://developer.mozilla.org/en-US/docs/Glossary/Accessible_name).
-   * @see {@link https://vitest.dev/guide/browser/locators#getbyrole}
+   * @see {@link https://vitest.dev/api/browser/locators#getbyrole}
    */
   getByRole: (role: ARIARole | ({} & string), options?: LocatorByRoleOptions) => Locator
   /**
-   * @see {@link https://vitest.dev/guide/browser/locators#getbylabeltext}
+   * @see {@link https://vitest.dev/api/browser/locators#getbylabeltext}
    */
   getByLabelText: (text: string | RegExp, options?: LocatorOptions) => Locator
   /**
    * Creates a locator capable of finding an element with an `alt` attribute that matches the text. Unlike testing-library's implementation, Vitest will match any element that has an `alt` attribute.
-   * @see {@link https://vitest.dev/guide/browser/locators#getbyalttext}
+   * @see {@link https://vitest.dev/api/browser/locators#getbyalttext}
    */
   getByAltText: (text: string | RegExp, options?: LocatorOptions) => Locator
   /**
    * Creates a locator capable of finding an element that has the specified placeholder text. Vitest will match any element that has a matching `placeholder` attribute, not just `input`.
-   * @see {@link https://vitest.dev/guide/browser/locators#getbyplaceholder}
+   * @see {@link https://vitest.dev/api/browser/locators#getbyplaceholder}
    */
   getByPlaceholder: (text: string | RegExp, options?: LocatorOptions) => Locator
   /**
    * Creates a locator capable of finding an element that contains the specified text. The text will be matched against TextNode's [`nodeValue`](https://developer.mozilla.org/en-US/docs/Web/API/Node/nodeValue) or input's value if the type is `button` or `reset`.
    * Matching by text always normalizes whitespace, even with exact match.
    * For example, it turns multiple spaces into one, turns line breaks into spaces and ignores leading and trailing whitespace.
-   * @see {@link https://vitest.dev/guide/browser/locators#getbytext}
+   * @see {@link https://vitest.dev/api/browser/locators#getbytext}
    */
   getByText: (text: string | RegExp, options?: LocatorOptions) => Locator
   /**
    * Creates a locator capable of finding an element that has the specified `title` attribute. Unlike testing-library's `getByTitle`, Vitest cannot find `title` elements within an SVG.
-   * @see {@link https://vitest.dev/guide/browser/locators#getbytitle}
+   * @see {@link https://vitest.dev/api/browser/locators#getbytitle}
    */
   getByTitle: (text: string | RegExp, options?: LocatorOptions) => Locator
   /**
    * Creates a locator capable of finding an element that matches the specified test id attribute. You can configure the attribute name with [`browser.locators.testIdAttribute`](/config/#browser-locators-testidattribute).
-   * @see {@link https://vitest.dev/guide/browser/locators#getbytestid}
+   * @see {@link https://vitest.dev/api/browser/locators#getbytestid}
    */
   getByTestId: (text: string | RegExp) => Locator
 }
+
+export interface FrameLocator extends LocatorSelectors {}
 
 export interface Locator extends LocatorSelectors {
   /**
@@ -346,52 +465,58 @@ export interface Locator extends LocatorSelectors {
    *   await browser.$(selector).click()
    * }
    * ```
-   * @see {@link https://vitest.dev/guide/browser/locators#selector}
+   * @see {@link https://vitest.dev/api/browser/locators#selector}
    */
   readonly selector: string
 
   /**
+   * The number of elements that this locator is matching.
+   * @see {@link https://vitest.dev/api/browser/locators#length}
+   */
+  readonly length: number
+
+  /**
    * Click on an element. You can use the options to set the cursor position.
-   * @see {@link https://vitest.dev/guide/browser/interactivity-api#userevent-click}
+   * @see {@link https://vitest.dev/api/browser/interactivity#userevent-click}
    */
   click(options?: UserEventClickOptions): Promise<void>
   /**
    * Triggers a double click event on an element. You can use the options to set the cursor position.
-   * @see {@link https://vitest.dev/guide/browser/interactivity-api#userevent-dblclick}
+   * @see {@link https://vitest.dev/api/browser/interactivity#userevent-dblclick}
    */
   dblClick(options?: UserEventDoubleClickOptions): Promise<void>
   /**
-   * @see {@link https://vitest.dev/guide/browser/interactivity-api#userevent-tripleclick}
+   * @see {@link https://vitest.dev/api/browser/interactivity#userevent-tripleclick}
    */
   tripleClick(options?: UserEventTripleClickOptions): Promise<void>
   /**
    * Clears the input element content
-   * @see {@link https://vitest.dev/guide/browser/interactivity-api#userevent-clear}
+   * @see {@link https://vitest.dev/api/browser/interactivity#userevent-clear}
    */
   clear(options?: UserEventClearOptions): Promise<void>
   /**
    * Moves the cursor position to the selected element
-   * @see {@link https://vitest.dev/guide/browser/interactivity-api#userevent-hover}
+   * @see {@link https://vitest.dev/api/browser/interactivity#userevent-hover}
    */
   hover(options?: UserEventHoverOptions): Promise<void>
   /**
    * This works the same as `locator.hover`, but moves the cursor to the `document.body` element instead.
-   * @see {@link https://vitest.dev/guide/browser/interactivity-api#userevent-unhover}
+   * @see {@link https://vitest.dev/api/browser/interactivity#userevent-unhover}
    */
   unhover(options?: UserEventHoverOptions): Promise<void>
   /**
    * Sets the value of the current `input`, `textarea` or `contenteditable` element.
-   * @see {@link https://vitest.dev/guide/browser/interactivity-api#userevent-fill}
+   * @see {@link https://vitest.dev/api/browser/interactivity#userevent-fill}
    */
   fill(text: string, options?: UserEventFillOptions): Promise<void>
   /**
    * Drags the current element to the target location.
-   * @see {@link https://vitest.dev/guide/browser/interactivity-api#userevent-dropto}
+   * @see {@link https://vitest.dev/api/browser/interactivity#userevent-dropto}
    */
   dropTo(target: Locator, options?: UserEventDragAndDropOptions): Promise<void>
   /**
    * Choose one or more values from a `<select>` element.
-   * @see {@link https://vitest.dev/guide/browser/interactivity-api#userevent-selectoptions}
+   * @see {@link https://vitest.dev/api/browser/interactivity#userevent-selectoptions}
    */
   selectOptions(
     values: HTMLElement | HTMLElement[] | Locator | Locator[] | string | string[],
@@ -399,13 +524,13 @@ export interface Locator extends LocatorSelectors {
   ): Promise<void>
   /**
    * Change a file input element to have the specified files. Uses provider's API under the hood.
-   * @see {@link https://vitest.dev/guide/browser/interactivity-api#userevent-upload}
+   * @see {@link https://vitest.dev/api/browser/interactivity#userevent-upload}
    */
   upload(files: File | File[] | string | string[], options?: UserEventUploadOptions): Promise<void>
 
   /**
    * Make a screenshot of an element matching the locator.
-   * @see {@link https://vitest.dev/guide/browser/locators#screenshot}
+   * @see {@link https://vitest.dev/api/browser/locators#screenshot}
    */
   screenshot(options: Omit<LocatorScreenshotOptions, 'base64'> & { base64: true }): Promise<{
     path: string
@@ -419,60 +544,60 @@ export interface Locator extends LocatorSelectors {
    * - If multiple elements match the selector, an error is thrown.
    * - If no elements match the selector, an error is thrown.
    *
-   * @see {@link https://vitest.dev/guide/browser/locators#element}
+   * @see {@link https://vitest.dev/api/browser/locators#element}
    */
-  element(): Element
+  element(): HTMLElement | SVGElement
   /**
    * Returns an array of elements matching the selector.
    *
    * If no elements match the selector, an empty array is returned.
    *
-   * @see {@link https://vitest.dev/guide/browser/locators#elements}
+   * @see {@link https://vitest.dev/api/browser/locators#elements}
    */
-  elements(): Element[]
+  elements(): (HTMLElement | SVGElement)[]
   /**
    * Returns an element matching the selector.
    *
    * - If multiple elements match the selector, an error is thrown.
    * - If no elements match the selector, returns `null`.
    *
-   * @see {@link https://vitest.dev/guide/browser/locators#query}
+   * @see {@link https://vitest.dev/api/browser/locators#query}
    */
-  query(): Element | null
+  query(): HTMLElement | SVGElement | null
   /**
    * Wraps an array of `.elements()` matching the selector in a new `Locator`.
    *
-   * @see {@link https://vitest.dev/guide/browser/locators#all}
+   * @see {@link https://vitest.dev/api/browser/locators#all}
    */
   all(): Locator[]
   /**
    * Returns a locator for the nth element matching the selector.
-   * @see {@link https://vitest.dev/guide/browser/locators#nth}
+   * @see {@link https://vitest.dev/api/browser/locators#nth}
    */
   nth(index: number): Locator
   /**
    * Returns a locator for the first element matching the selector.
-   * @see {@link https://vitest.dev/guide/browser/locators#first}
+   * @see {@link https://vitest.dev/api/browser/locators#first}
    */
   first(): Locator
   /**
    * Returns a locator for the last element matching the selector.
-   * @see {@link https://vitest.dev/guide/browser/locators#last}
+   * @see {@link https://vitest.dev/api/browser/locators#last}
    */
   last(): Locator
   /**
    * Returns a locator that matches both the current locator and the provided locator.
-   * @see {@link https://vitest.dev/guide/browser/locators#and}
+   * @see {@link https://vitest.dev/api/browser/locators#and}
    */
   and(locator: Locator): Locator
   /**
    * Returns a locator that matches either the current locator or the provided locator.
-   * @see {@link https://vitest.dev/guide/browser/locators#or}
+   * @see {@link https://vitest.dev/api/browser/locators#or}
    */
   or(locator: Locator): Locator
   /**
    * Narrows existing locator according to the options.
-   * @see {@link https://vitest.dev/guide/browser/locators#filter}
+   * @see {@link https://vitest.dev/api/browser/locators#filter}
    */
   filter(options: LocatorOptions): Locator
 }
@@ -520,20 +645,13 @@ export const server: {
   browser: string
   /**
    * Available commands for the browser.
-   * @see {@link https://vitest.dev/guide/browser/commands}
+   * @see {@link https://vitest.dev/api/browser/commands}
    */
   commands: BrowserCommands
   /**
    * Serialized test config.
    */
   config: SerializedConfig
-}
-
-export interface LocatorOptions {
-  hasText?: string | RegExp
-  hasNotText?: string | RegExp
-  has?: Locator
-  hasNot?: Locator
 }
 
 /**
@@ -546,7 +664,7 @@ export const userEvent: UserEvent
 /**
  * Available commands for the browser.
  * A shortcut to `server.commands`.
- * @see {@link https://vitest.dev/guide/browser/commands}
+ * @see {@link https://vitest.dev/api/browser/commands}
  */
 export const commands: BrowserCommands
 
@@ -575,16 +693,97 @@ export interface BrowserPage extends LocatorSelectors {
   extend(methods: Partial<BrowserPage>): BrowserPage
   /**
    * Wrap an HTML element in a `Locator`. When querying for elements, the search will always return this element.
-   * @see {@link https://vitest.dev/guide/browser/locators}
+   * @see {@link https://vitest.dev/api/browser/locators}
    */
   elementLocator(element: Element): Locator
+  /**
+   * The iframe locator. This is a document locator that enters the iframe body
+   * and works similarly to the `page` object.
+   *
+   * As the first argument, pass down the locator to the `<iframe>` element itself.
+   *
+   * **Warning:** At the moment, this is supported only by the `playwright` provider.
+   * @example
+   * ```ts
+   * const frame = page.frameLocator(
+   *   page.getByTestId('iframe')
+   * )
+   *
+   * await frame.getByText('Hello World').click()
+   * ```
+   * @param locator The locator object.
+   * @see {@link https://vitest.dev/api/browser/locators}
+   */
+  frameLocator(locator: Locator): FrameLocator
 }
 
 export interface BrowserLocators {
   createElementLocators(element: Element): LocatorSelectors
+  // TODO: enhance docs
+  /**
+   * Extends `page.*` and `locator.*` interfaces.
+   * @see {@link}
+   *
+   * @example
+   * ```ts
+   * import { locators } from 'vitest/browser'
+   *
+   * declare module 'vitest/browser' {
+   *   interface LocatorSelectors {
+   *     getByCSS(css: string): Locator
+   *   }
+   * }
+   *
+   * locators.extend({
+   *   getByCSS(css: string) {
+   *     return `css=${css}`
+   *   }
+   * })
+   * ```
+   */
   extend(methods: {
-    [K in keyof LocatorSelectors]?: (this: BrowserPage | Locator, ...args: Parameters<LocatorSelectors[K]>) => ReturnType<LocatorSelectors[K]> | string
+    [K in keyof LocatorSelectors]?: (
+      this: BrowserPage | Locator,
+      ...args: Parameters<LocatorSelectors[K]>
+    ) => ReturnType<LocatorSelectors[K]> | string
   }): void
+}
+
+
+export type PrettyDOMOptions = Omit<StringifyOptions, 'maxLength'>
+
+export const utils: {
+  /**
+   * This is simillar to calling `page.elementLocator`, but it returns only
+   * locator selectors.
+   */
+  getElementLocatorSelectors(element: Element): LocatorSelectors
+  /**
+   * Prints prettified HTML of an element.
+   */
+  debug(
+    el?: Element | Locator | null | (Element | Locator)[],
+    maxLength?: number,
+    options?: PrettyDOMOptions,
+  ): void
+  /**
+   * Returns prettified HTML of an element.
+   */
+  prettyDOM(
+    dom?: Element | Locator | undefined | null,
+    maxLength?: number,
+    prettyFormatOptions?: PrettyDOMOptions,
+  ): string
+  /**
+   * Configures default options of `prettyDOM` and `debug` functions.
+   * This will also affect `vitest-browser-{framework}` package.
+   * @experimental
+   */
+  configurePrettyDOM(options: StringifyOptions): void
+  /**
+   * Creates "Cannot find element" error. Useful for custom locators.
+   */
+  getElementError(selector: string, container?: Element): Error
 }
 
 export const locators: BrowserLocators

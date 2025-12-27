@@ -1,13 +1,14 @@
-import type { ModuleDiagnostic as _FileDiagnostic } from '../node/reporters/reported-tasks'
 import * as vite from 'vite'
 import { Vitest } from '../node/core'
-import { TestModule as _TestFile } from '../node/reporters/reported-tasks'
 
 export const version: string = Vitest.version
 
 export { isValidApiRequest } from '../api/check'
+export { escapeTestName } from '../node/ast-collect'
+export type { CacheKeyIdGenerator, CacheKeyIdGeneratorContext } from '../node/cache/fsModuleCache'
 export { parseCLI } from '../node/cli/cac'
 export type { CliParseOptions } from '../node/cli/cac'
+export type { CliOptions } from '../node/cli/cli-api'
 export { startVitest } from '../node/cli/cli-api'
 export { resolveApiServerConfig } from '../node/config/resolveConfig'
 export type {
@@ -18,16 +19,27 @@ export type {
 } from '../node/core'
 export { createVitest } from '../node/create'
 export { GitNotFoundError, FilesNotFoundError as TestsNotFoundError } from '../node/errors'
-export type { GlobalSetupContext } from '../node/globalSetup'
 export { VitestPackageInstaller } from '../node/packageInstaller'
 export { VitestPlugin } from '../node/plugins'
 export { resolveConfig } from '../node/plugins/publicConfig'
 export { resolveFsAllow } from '../node/plugins/utils'
-export type { ProcessPool, WorkspaceSpec } from '../node/pool'
+export type { ProcessPool } from '../node/pool'
 export { getFilePoolName } from '../node/pool'
 export { createMethodsRPC } from '../node/pools/rpc'
+export type {
+  PoolOptions,
+  PoolRunnerInitializer,
+  PoolTask,
+  PoolWorker,
+  WorkerRequest,
+  WorkerResponse,
+} from '../node/pools/types'
+export { ForksPoolWorker } from '../node/pools/workers/forksWorker'
+export { ThreadsPoolWorker } from '../node/pools/workers/threadsWorker'
+export { TypecheckPoolWorker } from '../node/pools/workers/typecheckWorker'
+export { VmForksPoolWorker } from '../node/pools/workers/vmForksWorker'
+export { VmThreadsPoolWorker } from '../node/pools/workers/vmThreadsWorker'
 export type { SerializedTestProject, TestProject } from '../node/project'
-export type { WorkspaceProject } from '../node/project'
 export type { HTMLOptions } from '../node/reporters/html'
 export type { JsonOptions } from '../node/reporters/json'
 
@@ -50,6 +62,7 @@ export type {
   TestSuite,
   TestSuiteState,
 } from '../node/reporters/reported-tasks'
+export { experimental_getRunnerTask } from '../node/reporters/reported-tasks'
 export { BaseSequencer } from '../node/sequencers/BaseSequencer'
 
 export type {
@@ -61,6 +74,7 @@ export { registerConsoleShortcuts } from '../node/stdin'
 export type { BenchmarkUserOptions } from '../node/types/benchmark'
 
 export type {
+  _BrowserNames,
   BrowserBuiltinProvider,
   BrowserCommand,
   BrowserCommandContext,
@@ -69,19 +83,19 @@ export type {
   BrowserModuleMocker,
   BrowserOrchestrator,
   BrowserProvider,
-  BrowserProviderInitializationOptions,
-  BrowserProviderModule,
-  BrowserProviderOptions,
+  BrowserProviderOption,
   BrowserScript,
+  BrowserServerFactory,
+  BrowserServerOptions,
   BrowserServerState,
   BrowserServerStateSession,
   CDPSession,
   ParentProjectBrowser,
   ProjectBrowser,
   ResolvedBrowserOptions,
+  ToMatchScreenshotComparators,
+  ToMatchScreenshotOptions,
 } from '../node/types/browser'
-/** @deprecated use `createViteServer` instead */
-export const createServer: typeof vite.createServer = vite.createServer
 export const createViteServer: typeof vite.createServer = vite.createServer
 export type {
   ApiConfig,
@@ -89,11 +103,8 @@ export type {
   CSSModuleScopeStrategy,
   DepsOptimizationOptions,
   EnvironmentOptions,
-  HappyDOMOptions,
   InlineConfig,
-  JSDOMOptions,
   Pool,
-  PoolOptions,
   ProjectConfig,
   ResolvedConfig,
   ResolvedProjectConfig,
@@ -102,9 +113,8 @@ export type {
   RuntimeConfig,
   SequenceHooks,
   SequenceSetupFiles,
-  TransformModePatterns,
+  UserConfig as TestUserConfig,
   TypecheckConfig,
-  UserConfig,
   UserWorkspaceConfig,
   VitestEnvironment,
   VitestRunMode,
@@ -124,18 +134,10 @@ export type {
 
 export type { VitestPluginContext } from '../node/types/plugin'
 export type { TestRunResult } from '../node/types/tests'
-/**
- * @deprecated Use `TestModule` instead
- */
-export const TestFile: typeof _TestFile = _TestFile
 export type { WorkerContext } from '../node/types/worker'
+export { isFileServingAllowed } from '../node/vite'
 export { createViteLogger } from '../node/viteLogger'
 export type { WatcherTriggerPattern } from '../node/watcher'
-
-/**
- * @deprecated Use `ModuleDiagnostic` instead
- */
-export type FileDiagnostic = _FileDiagnostic
 
 export { distDir, rootDir } from '../paths'
 
@@ -168,7 +170,8 @@ export type { SerializedError } from '@vitest/utils'
 
 export {
   esbuildVersion,
-  isFileServingAllowed,
+  isCSSRequest,
+  isFileLoadingAllowed,
   parseAst,
   parseAstAsync,
   rollupVersion,

@@ -1,11 +1,16 @@
-import type { MockedModuleType } from './registry'
-
 type Key = string | symbol
 
+export type CreateMockInstanceProcedure = (options?: {
+  prototypeMembers?: (string | symbol)[]
+  name?: string | symbol
+  originalImplementation?: (...args: any[]) => any
+  keepMembersImplementation?: boolean
+}) => any
+
 export interface MockObjectOptions {
-  type: MockedModuleType
+  type: 'automock' | 'autospy'
   globalConstructors: GlobalConstructors
-  spyOn: (obj: any, prop: Key) => any
+  createMockInstance: CreateMockInstanceProcedure
 }
 
 export function mockObject(
@@ -26,6 +31,24 @@ export function mockObject(
     }
   }
 
+  const createMock = (currentValue: (...args: any[]) => any) => {
+    if (!options.createMockInstance) {
+      throw new Error(
+        '[@vitest/mocker] `createMockInstance` is not defined. This is a Vitest error. Please open a new issue with reproduction.',
+      )
+    }
+    const createMockInstance = options.createMockInstance
+    const prototypeMembers = currentValue.prototype
+      ? collectFunctionProperties(currentValue.prototype)
+      : []
+    return createMockInstance({
+      name: currentValue.name,
+      prototypeMembers,
+      originalImplementation: options.type === 'autospy' ? currentValue : undefined,
+      keepMembersImplementation: options.type === 'autospy',
+    })
+  }
+
   const mockPropertiesOf = (
     container: Record<Key, any>,
     newContainer: Record<Key, any>,
@@ -40,7 +63,19 @@ export function mockObject(
       // Modules define their exports as getters. We want to process those.
       if (!isModule && descriptor.get) {
         try {
-          Object.defineProperty(newContainer, property, descriptor)
+          if (options.type === 'autospy') {
+            Object.defineProperty(newContainer, property, descriptor)
+          }
+          else {
+            Object.defineProperty(newContainer, property, {
+              configurable: descriptor.configurable,
+              enumerable: descriptor.enumerable,
+              // automatically mock getters and setters
+              // https://github.com/vitest-dev/vitest/issues/8345
+              get: () => {},
+              set: descriptor.set ? () => {} : undefined,
+            })
+          }
         }
         catch {
           // Ignore errors, just move on to the next prop.
@@ -49,7 +84,7 @@ export function mockObject(
       }
 
       // Skip special read-only props, we don't want to mess with those.
-      if (isSpecialProp(property, containerType)) {
+      if (isReadonlyProp(container[property], property)) {
         continue
       }
 
@@ -68,7 +103,23 @@ export function mockObject(
       const type = getType(value)
 
       if (Array.isArray(value)) {
-        define(newContainer, property, [])
+        if (options.type === 'automock') {
+          define(newContainer, property, [])
+        }
+        else {
+          const array = value.map((value) => {
+            if (value && typeof value === 'object') {
+              const newObject = {}
+              mockPropertiesOf(value, newObject)
+              return newObject
+            }
+            if (typeof value === 'function') {
+              return createMock(value)
+            }
+            return value
+          })
+          define(newContainer, property, array)
+        }
         continue
       }
 
@@ -85,63 +136,13 @@ export function mockObject(
 
       // Sometimes this assignment fails for some unknown reason. If it does,
       // just move along.
-      if (!define(newContainer, property, isFunction ? value : {})) {
+      if (!define(newContainer, property, isFunction || options.type === 'autospy' ? value : {})) {
         continue
       }
 
       if (isFunction) {
-        if (!options.spyOn) {
-          throw new Error(
-            '[@vitest/mocker] `spyOn` is not defined. This is a Vitest error. Please open a new issue with reproduction.',
-          )
-        }
-        const spyOn = options.spyOn
-        function mockFunction(this: any) {
-          // detect constructor call and mock each instance's methods
-          // so that mock states between prototype/instances don't affect each other
-          // (jest reference https://github.com/jestjs/jest/blob/2c3d2409879952157433de215ae0eee5188a4384/packages/jest-mock/src/index.ts#L678-L691)
-          if (this instanceof newContainer[property]) {
-            for (const { key, descriptor } of getAllMockableProperties(
-              this,
-              false,
-              options.globalConstructors,
-            )) {
-              // skip getter since it's not mocked on prototype as well
-              if (descriptor.get) {
-                continue
-              }
-
-              const value = this[key]
-              const type = getType(value)
-              const isFunction
-                = type.includes('Function') && typeof value === 'function'
-              if (isFunction) {
-                // mock and delegate calls to original prototype method, which should be also mocked already
-                const original = this[key]
-                const mock = spyOn(this, key as string)
-                  .mockImplementation(original)
-                const origMockReset = mock.mockReset
-                mock.mockRestore = mock.mockReset = () => {
-                  origMockReset.call(mock)
-                  mock.mockImplementation(original)
-                  return mock
-                }
-              }
-            }
-          }
-        }
-        const mock = spyOn(newContainer, property)
-        if (options.type === 'automock') {
-          mock.mockImplementation(mockFunction)
-          const origMockReset = mock.mockReset
-          mock.mockRestore = mock.mockReset = () => {
-            origMockReset.call(mock)
-            mock.mockImplementation(mockFunction)
-            return mock
-          }
-        }
-        // tinyspy retains length, but jest doesn't.
-        Object.defineProperty(newContainer[property], 'length', { value: 0 })
+        const mock = createMock(newContainer[property])
+        newContainer[property] = mock
       }
 
       refs.track(value, newContainer[property])
@@ -184,12 +185,33 @@ function getType(value: unknown): string {
   return Object.prototype.toString.apply(value).slice(8, -1)
 }
 
-function isSpecialProp(prop: Key, parentType: string) {
-  return (
-    parentType.includes('Function')
-    && typeof prop === 'string'
-    && ['arguments', 'callee', 'caller', 'length', 'name'].includes(prop)
-  )
+function isReadonlyProp(object: unknown, prop: string | symbol) {
+  if (
+    prop === 'arguments'
+    || prop === 'caller'
+    || prop === 'callee'
+    || prop === 'name'
+    || prop === 'length'
+  ) {
+    const typeName = getType(object)
+    return (
+      typeName === 'Function'
+      || typeName === 'AsyncFunction'
+      || typeName === 'GeneratorFunction'
+      || typeName === 'AsyncGeneratorFunction'
+    )
+  }
+
+  if (
+    prop === 'source'
+    || prop === 'global'
+    || prop === 'ignoreCase'
+    || prop === 'multiline'
+  ) {
+    return getType(object) === 'RegExp'
+  }
+
+  return false
 }
 
 export interface GlobalConstructors {
@@ -250,4 +272,19 @@ function collectOwnProperties(
       : (key: string | symbol) => collector.add(key)
   Object.getOwnPropertyNames(obj).forEach(collect)
   Object.getOwnPropertySymbols(obj).forEach(collect)
+}
+
+function collectFunctionProperties(prototype: any) {
+  const properties = new Set<string | symbol>()
+  collectOwnProperties(prototype, (prop) => {
+    const descriptor = Object.getOwnPropertyDescriptor(prototype, prop)
+    if (!descriptor || descriptor.get) {
+      return
+    }
+    const type = getType(descriptor.value)
+    if (type.includes('Function') && !isReadonlyProp(descriptor.value, prop)) {
+      properties.add(prop)
+    }
+  })
+  return Array.from(properties)
 }

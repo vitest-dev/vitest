@@ -1,7 +1,7 @@
 {
   "name": "@vitest/browser",
   "type": "module",
-  "version": "3.2.3",
+  "version": "4.0.16",
   "description": "Browser running for Vitest",
   "license": "MIT",
   "funding": "https://opencollective.com/vitest",
@@ -20,10 +20,6 @@
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     },
-    "./providers": {
-      "types": "./providers.d.ts",
-      "default": "./dist/providers.js"
-    },
     "./context": {
       "types": "./context.d.ts",
       "default": "./context.js"
@@ -35,23 +31,14 @@
       "types": "./matchers.d.ts",
       "default": "./dummy.js"
     },
-    "./providers/webdriverio": {
-      "types": "./providers/webdriverio.d.ts",
-      "default": "./dummy.js"
-    },
-    "./providers/playwright": {
-      "types": "./providers/playwright.d.ts",
-      "default": "./dummy.js"
-    },
-    "./locator": {
-      "types": "./dist/locators/index.d.ts",
-      "default": "./dist/locators/index.js"
+    "./locators": {
+      "types": "./dist/locators.d.ts",
+      "default": "./dist/locators.js"
     },
     "./utils": {
-      "types": "./utils.d.ts",
-      "default": "./dist/utils.js"
+      "default": "./dummy.js"
     },
-    "./*": "./*"
+    "./package.json": "./package.json"
   },
   "main": "./dist/index.js",
   "module": "./dist/index.js",
@@ -64,56 +51,39 @@
     "providers"
   ],
   "scripts": {
-    "build": "rimraf dist && pnpm build:node && pnpm build:client",
+    "typecheck": "tsc -p ./src/client/tsconfig.json --noEmit",
+    "typecheck:why": "tsc -p ./src/client/tsconfig.json --noEmit --explainFiles > explainTypes.txt",
+    "build": "premove dist && pnpm build:node && pnpm build:client",
     "build:client": "vite build src/client",
     "build:node": "rollup -c",
-    "dev:client": "vite build src/client --watch",
+    "dev:client": "node --watch-preserve-output --watch-path src/client scripts/build-client.js",
     "dev:node": "rollup -c --watch --watch.include 'src/**'",
-    "dev": "rimraf dist && pnpm run --stream '/^dev:/'"
+    "dev": "premove dist && pnpm run --stream '/^dev:/'"
   },
   "peerDependencies": {
-    "playwright": "*",
-    "vitest": "workspace:*",
-    "webdriverio": "^7.0.0 || ^8.0.0 || ^9.0.0"
-  },
-  "peerDependenciesMeta": {
-    "playwright": {
-      "optional": true
-    },
-    "safaridriver": {
-      "optional": true
-    },
-    "webdriverio": {
-      "optional": true
-    }
+    "vitest": "workspace:*"
   },
   "dependencies": {
-    "@testing-library/dom": "^10.4.0",
-    "@testing-library/user-event": "^14.6.1",
     "@vitest/mocker": "workspace:*",
     "@vitest/utils": "workspace:*",
     "magic-string": "catalog:",
+    "pixelmatch": "7.1.0",
+    "pngjs": "^7.0.0",
     "sirv": "catalog:",
     "tinyrainbow": "catalog:",
     "ws": "catalog:"
   },
   "devDependencies": {
+    "@opentelemetry/api": "^1.9.0",
+    "@testing-library/user-event": "^14.6.1",
+    "@types/pngjs": "^6.0.5",
     "@types/ws": "catalog:",
     "@vitest/runner": "workspace:*",
-    "@vitest/ui": "workspace:*",
-    "@vitest/ws-client": "workspace:*",
-    "@wdio/protocols": "^9.15.0",
-    "@wdio/types": "^9.15.0",
     "birpc": "catalog:",
     "flatted": "catalog:",
-    "ivya": "^1.6.0",
-    "mime": "^4.0.7",
+    "ivya": "^1.7.0",
+    "mime": "^4.1.0",
     "pathe": "catalog:",
-    "periscopic": "^4.0.2",
-    "playwright": "^1.52.0",
-    "playwright-core": "^1.52.0",
-    "safaridriver": "^1.0.0",
-    "vitest": "workspace:*",
-    "webdriverio": "^9.15.0"
+    "vitest": "workspace:*"
   }
 }

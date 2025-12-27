@@ -1,18 +1,17 @@
 import type { MockerRegistry } from '@vitest/mocker'
 import type { Duplex } from 'node:stream'
-import type { ErrorWithDiff } from 'vitest'
+import type { TestError } from 'vitest'
 import type { BrowserCommandContext, ResolveSnapshotPathHandlerContext, TestProject } from 'vitest/node'
 import type { WebSocket } from 'ws'
+import type { WebSocketBrowserEvents, WebSocketBrowserHandlers } from '../types'
 import type { ParentBrowserProject } from './projectParent'
-import type { WebdriverBrowserProvider } from './providers/webdriver'
 import type { BrowserServerState } from './state'
-import type { WebSocketBrowserEvents, WebSocketBrowserHandlers } from './types'
-import { existsSync, promises as fs } from 'node:fs'
+import { existsSync, promises as fs, readFileSync } from 'node:fs'
 import { AutomockedModule, AutospiedModule, ManualMockedModule, RedirectedModule } from '@vitest/mocker'
 import { ServerMockResolver } from '@vitest/mocker/node'
 import { createBirpc } from 'birpc'
 import { parse, stringify } from 'flatted'
-import { dirname, join } from 'pathe'
+import { dirname, join, resolve } from 'pathe'
 import { createDebugger, isFileServingAllowed, isValidApiRequest } from 'vitest/node'
 import { WebSocketServer } from 'ws'
 
@@ -58,15 +57,17 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject, defaultMocke
       )
     }
 
-    if (!vitest._browserSessions.sessionIds.has(sessionId)) {
-      const ids = [...vitest._browserSessions.sessionIds].join(', ')
+    const sessions = vitest._browserSessions
+
+    if (!sessions.sessionIds.has(sessionId)) {
+      const ids = [...sessions.sessionIds].join(', ')
       return error(
         new Error(`[vitest] Unknown session id "${sessionId}". Expected one of ${ids}.`),
       )
     }
 
     if (type === 'orchestrator') {
-      const session = vitest._browserSessions.getSession(sessionId)
+      const session = sessions.getSession(sessionId)
       // it's possible the session was already resolved by the preview provider
       session?.connected()
     }
@@ -82,7 +83,7 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject, defaultMocke
     wss.handleUpgrade(request, socket, head, (ws) => {
       wss.emit('connection', ws, request)
 
-      const rpc = setupClient(project, rpcId, ws)
+      const { rpc, offCancel } = setupClient(project, rpcId, ws)
       const state = project.browser!.state as BrowserServerState
       const clients = type === 'tester' ? state.testers : state.orchestrators
       clients.set(rpcId, rpc)
@@ -91,10 +92,11 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject, defaultMocke
 
       ws.on('close', () => {
         debug?.('[%s] Browser API disconnected from %s', rpcId, type)
+        offCancel()
         clients.delete(rpcId)
         globalServer.removeCDPHandler(rpcId)
         if (type === 'orchestrator') {
-          vitest._browserSessions.destroySession(sessionId)
+          sessions.destroySession(sessionId)
         }
         // this will reject any hanging methods if there are any
         rpc.$close(
@@ -120,7 +122,7 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject, defaultMocke
 
   function setupClient(project: TestProject, rpcId: string, ws: WebSocket) {
     const mockResolver = new ServerMockResolver(globalServer.vite, {
-      moduleDirectories: project.config.server?.deps?.moduleDirectories,
+      moduleDirectories: project.config?.deps?.moduleDirectories,
     })
     const mocker = project.browser?.provider.mocker
 
@@ -128,7 +130,7 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject, defaultMocke
       {
         async onUnhandledError(error, type) {
           if (error && typeof error === 'object') {
-            const _error = error as ErrorWithDiff
+            const _error = error as TestError
             _error.stacks = globalServer.parseErrorStacktrace(_error)
           }
           vitest.state.catchError(error, type)
@@ -149,8 +151,8 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject, defaultMocke
             await vitest._testRun.collected(project, files)
           }
         },
-        async onTaskAnnotate(id, annotation) {
-          return vitest._testRun.annotate(id, annotation)
+        async onTaskArtifactRecord(id, artifact) {
+          return vitest._testRun.recordArtifact(id, artifact)
         },
         async onTaskUpdate(method, packs, events) {
           if (method === 'collect') {
@@ -203,7 +205,24 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject, defaultMocke
         },
         getBrowserFileSourceMap(id) {
           const mod = globalServer.vite.moduleGraph.getModuleById(id)
-          return mod?.transformResult?.map
+          const result = mod?.transformResult
+          // this can happen for bundled dependencies in node_modules/.vite
+          if (result && !result.map) {
+            const sourceMapUrl = retrieveSourceMapURL(result.code)
+            if (!sourceMapUrl) {
+              return null
+            }
+            const filepathDir = dirname(id)
+            const sourceMapPath = resolve(filepathDir, sourceMapUrl)
+            try {
+              const map = JSON.parse(readFileSync(sourceMapPath, 'utf-8'))
+              return map
+            }
+            catch {
+              return null
+            }
+          }
+          return result?.map
         },
         cancelCurrentRun(reason) {
           vitest.cancelCurrentRun(reason)
@@ -218,7 +237,7 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject, defaultMocke
           return vitest.state.getCountOfFailedTests()
         },
         async wdioSwitchContext(direction) {
-          const provider = project.browser!.provider as WebdriverBrowserProvider
+          const provider = project.browser!.provider
           if (!provider) {
             throw new Error('Commands are only available for browser tests.')
           }
@@ -226,10 +245,10 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject, defaultMocke
             throw new Error('Switch context is only available for WebDriverIO provider.')
           }
           if (direction === 'iframe') {
-            await provider.switchToTestFrame()
+            await (provider as any).switchToTestFrame()
           }
           else {
-            await provider.switchToMainFrame()
+            await (provider as any).switchToMainFrame()
           }
         },
         async triggerCommand(sessionId, command, testPath, payload) {
@@ -238,10 +257,6 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject, defaultMocke
           if (!provider) {
             throw new Error('Commands are only available for browser tests.')
           }
-          const commands = globalServer.commands
-          if (!commands || !commands[command]) {
-            throw new Error(`Unknown command "${command}".`)
-          }
           const context = Object.assign(
             {
               testPath,
@@ -249,10 +264,21 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject, defaultMocke
               provider,
               contextId: sessionId,
               sessionId,
+              triggerCommand: (name: string, ...args: any[]) => {
+                return project.browser!.triggerCommand(
+                  name as any,
+                  context,
+                  ...args,
+                )
+              },
             },
             provider.getCommandsContext(sessionId),
           ) as any as BrowserCommandContext
-          return await commands[command](context, ...payload)
+          return await project.browser!.triggerCommand(
+            command as any,
+            context,
+            ...payload,
+          )
         },
         resolveMock(rawId, importer, options) {
           return mockResolver.resolveMock(rawId, importer, options)
@@ -335,18 +361,30 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject, defaultMocke
         on: fn => ws.on('message', fn),
         eventNames: ['onCancel', 'cdpEvent'],
         serialize: (data: any) => stringify(data, stringifyReplace),
-        timeout: -1, // createTesters can take a long time
         deserialize: parse,
-        onTimeoutError(functionName) {
-          throw new Error(`[vitest-api]: Timeout calling "${functionName}"`)
-        },
+        timeout: -1, // createTesters can take a long time
       },
     )
 
-    vitest.onCancel(reason => rpc.onCancel(reason))
+    const offCancel = vitest.onCancel(reason => rpc.onCancel(reason))
 
-    return rpc
+    return { rpc, offCancel }
   }
+}
+
+function retrieveSourceMapURL(source: string): string | null {
+  const re = /\/\/[@#]\s*sourceMappingURL=([^\s'"]+)\s*$|\/\*[@#]\s*sourceMappingURL=[^\s*'"]+\s*\*\/\s*$/gm
+  // keep executing the search to find the *last* sourceMappingURL to avoid
+  // picking up sourceMappingURLs from comments, strings, etc.
+  let lastMatch, match
+  // eslint-disable-next-line no-cond-assign
+  while ((match = re.exec(source))) {
+    lastMatch = match
+  }
+  if (!lastMatch) {
+    return null
+  }
+  return lastMatch[1]
 }
 
 // Serialization support utils.

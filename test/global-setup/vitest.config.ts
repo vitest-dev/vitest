@@ -20,6 +20,8 @@ export default defineConfig({
       './globalSetup/named-exports.js',
       './globalSetup/ts-with-imports.ts',
       './globalSetup/another-vite-instance.ts',
+      './globalSetup/update-env.ts',
+      './globalSetup/failing.ts',
     ],
   },
 })

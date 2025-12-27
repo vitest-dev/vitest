@@ -1,8 +1,9 @@
 import type { Profiler } from 'node:inspector'
 import type { CoverageProviderModule } from 'vitest/node'
 import type { ScriptCoverageWithOffset, V8CoverageProvider } from './provider'
-import inspector from 'node:inspector'
+import inspector from 'node:inspector/promises'
 import { fileURLToPath } from 'node:url'
+import { normalize } from 'pathe'
 import { provider } from 'std-env'
 import { loadProvider } from './load-provider'
 
@@ -18,41 +19,29 @@ const mod: CoverageProviderModule = {
     enabled = true
 
     session.connect()
-    await new Promise(resolve => session.post('Profiler.enable', resolve))
-    await new Promise(resolve =>
-      session.post(
-        'Profiler.startPreciseCoverage',
-        { callCount: true, detailed: true },
-        resolve,
-      ))
+    await session.post('Profiler.enable')
+    await session.post('Profiler.startPreciseCoverage', { callCount: true, detailed: true })
   },
 
-  takeCoverage(options): Promise<{ result: ScriptCoverageWithOffset[] }> {
-    return new Promise((resolve, reject) => {
-      session.post('Profiler.takePreciseCoverage', async (error, coverage) => {
-        if (error) {
-          return reject(error)
-        }
+  async takeCoverage(options): Promise<{ result: ScriptCoverageWithOffset[] }> {
+    if (provider === 'stackblitz') {
+      return { result: [] }
+    }
 
-        try {
-          const result = coverage.result
-            .filter(filterResult)
-            .map(res => ({
-              ...res,
-              startOffset: options?.moduleExecutionInfo?.get(fileURLToPath(res.url))?.startOffset || 0,
-            }))
+    const coverage = await session.post('Profiler.takePreciseCoverage')
+    const result: ScriptCoverageWithOffset[] = []
 
-          resolve({ result })
-        }
-        catch (e) {
-          reject(e)
-        }
-      })
-
-      if (provider === 'stackblitz') {
-        resolve({ result: [] })
+    // Reduce amount of data sent over rpc by doing some early result filtering
+    for (const entry of coverage.result) {
+      if (filterResult(entry)) {
+        result.push({
+          ...entry,
+          startOffset: options?.moduleExecutionInfo?.get(normalize(fileURLToPath(entry.url)))?.startOffset || 0,
+        })
       }
-    })
+    }
+
+    return { result }
   },
 
   async stopCoverage({ isolate }) {
@@ -60,8 +49,8 @@ const mod: CoverageProviderModule = {
       return
     }
 
-    await new Promise(resolve => session.post('Profiler.stopPreciseCoverage', resolve))
-    await new Promise(resolve => session.post('Profiler.disable', resolve))
+    await session.post('Profiler.stopPreciseCoverage')
+    await session.post('Profiler.disable')
     session.disconnect()
   },
 

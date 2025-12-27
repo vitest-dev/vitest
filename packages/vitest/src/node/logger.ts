@@ -1,11 +1,10 @@
 import type { Task } from '@vitest/runner'
-import type { ErrorWithDiff } from '@vitest/utils'
 import type { Writable } from 'node:stream'
 import type { TypeCheckError } from '../typecheck/typechecker'
 import type { Vitest } from './core'
 import type { TestProject } from './project'
 import { Console } from 'node:console'
-import { toArray } from '@vitest/utils'
+import { toArray } from '@vitest/utils/helpers'
 import c from 'tinyrainbow'
 import { highlightCode } from '../utils/colors'
 import { printError } from './printError'
@@ -208,13 +207,13 @@ export class Logger {
 
     if (this.ctx.config.ui) {
       const host = this.ctx.config.api?.host || 'localhost'
-      const port = this.ctx.server.config.server.port
+      const port = this.ctx.vite.config.server.port
       const base = this.ctx.config.uiBase
 
       this.log(PAD + c.dim(c.green(`UI started at http://${host}:${c.bold(port)}${base}`)))
     }
     else if (this.ctx.config.api?.port) {
-      const resolvedUrls = this.ctx.server.resolvedUrls
+      const resolvedUrls = this.ctx.vite.resolvedUrls
       // workaround for https://github.com/vitejs/vite/issues/15438, it was fixed in vite 5.1
       const fallbackUrl = `http://${this.ctx.config.api.host || 'localhost'}:${this.ctx.config.api.port}`
       const origin = resolvedUrls?.local[0] ?? resolvedUrls?.network[0] ?? fallbackUrl
@@ -248,7 +247,7 @@ export class Logger {
     const output = project.isRootProject()
       ? ''
       : formatProjectName(project)
-    const provider = project.browser.provider.name
+    const provider = project.browser.provider?.name
     const providerString = provider === 'preview' ? '' : ` by ${c.reset(c.bold(provider))}`
     this.log(
       c.dim(
@@ -257,7 +256,7 @@ export class Logger {
     )
   }
 
-  printUnhandledErrors(errors: unknown[]): void {
+  printUnhandledErrors(errors: ReadonlyArray<unknown>): void {
     const errorMessage = c.red(
       c.bold(
         `\nVitest caught ${errors.length} unhandled error${
@@ -271,7 +270,7 @@ export class Logger {
     errors.forEach((err) => {
       this.printError(err, {
         fullStack: true,
-        type: (err as ErrorWithDiff).type || 'Unhandled Error',
+        type: (err as any).type || 'Unhandled Error',
       })
     })
     this.error(c.red(divider()))
@@ -319,7 +318,8 @@ export class Logger {
         process.exitCode = exitCode !== undefined ? (128 + exitCode) : Number(signal)
       }
 
-      process.exit()
+      // Timeout to flush stderr
+      setTimeout(() => process.exit(), 1)
     }
 
     process.once('SIGINT', onExit)

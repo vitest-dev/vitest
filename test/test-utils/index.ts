@@ -1,14 +1,21 @@
 import type { Options } from 'tinyexec'
 import type { UserConfig as ViteUserConfig } from 'vite'
-import type { WorkerGlobalState } from 'vitest'
-import type { WorkspaceProjectConfiguration } from 'vitest/config'
-import type { TestModule, UserConfig, Vitest } from 'vitest/node'
+import type { SerializedConfig, WorkerGlobalState } from 'vitest'
+import type { TestProjectConfiguration } from 'vitest/config'
+import type {
+  TestCollection,
+  TestModule,
+  TestResult,
+  TestSpecification,
+  TestUserConfig,
+  Vitest,
+} from 'vitest/node'
 import { webcrypto as crypto } from 'node:crypto'
 import fs from 'node:fs'
 import { Readable, Writable } from 'node:stream'
 import { fileURLToPath } from 'node:url'
 import { inspect } from 'node:util'
-import { dirname, resolve } from 'pathe'
+import { dirname, relative, resolve } from 'pathe'
 import { x } from 'tinyexec'
 import * as tinyrainbow from 'tinyrainbow'
 import { afterEach, onTestFinished } from 'vitest'
@@ -29,9 +36,9 @@ export interface VitestRunnerCLIOptions {
   mode?: 'test' | 'benchmark'
 }
 
-export interface RunVitestConfig extends UserConfig {
+export interface RunVitestConfig extends TestUserConfig {
   $viteConfig?: ViteUserConfig
-  $cliOptions?: UserConfig
+  $cliOptions?: TestUserConfig
 }
 
 export async function runVitest(
@@ -74,6 +81,8 @@ export async function runVitest(
   stdin.isTTY = true
   stdin.setRawMode = () => stdin
   const cli = new Cli({ stdin, stdout, stderr, preserveAnsi: runnerOptions.preserveAnsi })
+  // @ts-expect-error not typed global
+  const currentConfig: SerializedConfig = __vitest_worker__.ctx.config
 
   let ctx: Vitest | undefined
   let thrown = false
@@ -92,7 +101,6 @@ export async function runVitest(
 
       // Test cases are already run with multiple forks/threads
       maxWorkers: 1,
-      minWorkers: 1,
 
       watch: watch ?? false,
       // "none" can be used to disable passing "reporter" option so that default value is used (it's not same as reporters: ["default"])
@@ -101,6 +109,11 @@ export async function runVitest(
       env: {
         NO_COLOR: 'true',
         ...cliOptions?.env,
+      },
+      // override cache config with the one that was used to run `vitest` formt the CLI
+      experimental: {
+        fsModuleCache: currentConfig.experimental.fsModuleCache,
+        ...rest.experimental,
       },
     }, {
       ...viteConfig,
@@ -156,6 +169,20 @@ export async function runVitest(
     vitest: cli,
     stdout: cli.stdout,
     stderr: cli.stderr,
+    get results() {
+      return ctx?.state.getTestModules() || []
+    },
+    errorTree() {
+      return buildTestTree(ctx?.state.getTestModules() || [], (result) => {
+        if (result.state === 'failed') {
+          return result.errors.map(e => e.message)
+        }
+        return result.state
+      })
+    },
+    testTree() {
+      return buildTestTree(ctx?.state.getTestModules() || [])
+    },
     waitForClose: async () => {
       await new Promise<void>(resolve => ctx!.onClose(resolve))
       return ctx?.closingPromise
@@ -168,7 +195,7 @@ interface CliOptions extends Partial<Options> {
   preserveAnsi?: boolean
 }
 
-async function runCli(command: 'vitest' | 'vite-node', _options?: CliOptions | string, ...args: string[]) {
+async function runCli(command: 'vitest', _options?: CliOptions | string, ...args: string[]) {
   let options = _options
 
   if (typeof _options === 'string') {
@@ -178,7 +205,6 @@ async function runCli(command: 'vitest' | 'vite-node', _options?: CliOptions | s
 
   if (command === 'vitest') {
     args.push('--maxWorkers=1')
-    args.push('--minWorkers=1')
   }
 
   const subprocess = x(command, args, options as Options).process!
@@ -222,8 +248,11 @@ async function runCli(command: 'vitest' | 'vite-node', _options?: CliOptions | s
 
   if (args[0] !== 'list' && (args.includes('--watch') || args[0] === 'watch')) {
     if (command === 'vitest') {
-      // Wait for initial test run to complete
-      await cli.waitForStdout('Waiting for file changes')
+      // Waiting for either success or failure
+      await Promise.race([
+        cli.waitForStdout('Waiting for file changes'),
+        cli.waitForStdout('Tests failed. Watching for file changes'),
+      ])
     }
     // make sure watcher is ready
     await cli.waitForStdout('[debug] watcher is ready')
@@ -239,13 +268,6 @@ async function runCli(command: 'vitest' | 'vite-node', _options?: CliOptions | s
 export async function runVitestCli(_options?: CliOptions | string, ...args: string[]) {
   process.env.VITE_TEST_WATCHER_DEBUG = 'true'
   return runCli('vitest', _options, ...args)
-}
-
-export async function runViteNodeCli(_options?: CliOptions | string, ...args: string[]) {
-  process.env.VITE_TEST_WATCHER_DEBUG = 'true'
-  const { vitest, ...rest } = await runCli('vite-node', _options, ...args)
-
-  return { viteNode: vitest, ...rest }
 }
 
 export function getInternalState(): WorkerGlobalState {
@@ -291,7 +313,7 @@ export type TestFsStructure = Record<
   string,
   | string
   | ViteUserConfig
-  | WorkspaceProjectConfiguration[]
+  | TestProjectConfiguration[]
   | ((...args: any[]) => unknown)
   | [(...args: any[]) => unknown, { exports?: string[]; imports?: Record<string, string[]> }]
 >
@@ -311,13 +333,22 @@ const results = await (${content[0]})({ ${imports.flatMap(([_, is]) => is).join(
 ${(content[1].exports || []).map(e => `export const ${e} = results["${e}"]`)}
     `
   }
+  if ('test' in content && content.test?.browser?.enabled && content.test?.browser?.provider?.name) {
+    const name = content.test.browser.provider.name
+    return `
+import { ${name} } from '@vitest/browser-${name}'
+const config = ${JSON.stringify(content)}
+config.test.browser.provider = ${name}(${JSON.stringify(content.test.browser.provider.options || {})})
+export default config
+    `
+  }
   return `export default ${JSON.stringify(content)}`
 }
 
-export function useFS<T extends TestFsStructure>(root: string, structure: T) {
+export function useFS<T extends TestFsStructure>(root: string, structure: T, ensureConfig = true) {
   const files = new Set<string>()
   const hasConfig = Object.keys(structure).some(file => file.includes('.config.'))
-  if (!hasConfig) {
+  if (ensureConfig && !hasConfig) {
     ;(structure as any)['./vitest.config.js'] = {}
   }
   for (const file in structure) {
@@ -346,17 +377,30 @@ export function useFS<T extends TestFsStructure>(root: string, structure: T) {
         throw new Error(`file ${file} is outside of the test file system`)
       }
       const filepath = resolve(root, file)
-      if (!files.has(filepath)) {
+      if (files.has(filepath)) {
         throw new Error(`file ${file} already exists in the test file system`)
       }
+      files.add(filepath)
       createFile(filepath, content)
+    },
+    statFile: (file: string): fs.Stats => {
+      const filepath = resolve(root, file)
+
+      if (relative(root, filepath).startsWith('..')) {
+        throw new Error(`file ${file} is outside of the test file system`)
+      }
+
+      return fs.statSync(filepath)
+    },
+    resolveFile: (file: string): string => {
+      return resolve(root, file)
     },
   }
 }
 
 export async function runInlineTests(
   structure: TestFsStructure,
-  cliOptions?: UserConfig,
+  cliOptions?: TestUserConfig,
   options?: VitestRunnerCLIOptions,
   viteOverrides: ViteUserConfig = {},
 ) {
@@ -374,9 +418,59 @@ export async function runInlineTests(
     root,
     ...vitest,
     get results() {
-      return (vitest.ctx?.state.getFiles() || []).map(file => vitest.ctx?.state.getReportedEntity(file) as TestModule)
+      return vitest.ctx?.state.getTestModules() || []
+    },
+    testTree() {
+      return buildTestTree(vitest.ctx?.state.getTestModules() || [])
     },
   }
 }
 
 export const ts = String.raw
+
+export class StableTestFileOrderSorter {
+  sort(files: TestSpecification[]) {
+    return files.sort((a, b) => a.moduleId.localeCompare(b.moduleId))
+  }
+
+  shard(files: TestSpecification[]) {
+    return files
+  }
+}
+
+function buildTestTree(testModules: TestModule[], onResult?: (result: TestResult) => unknown) {
+  type TestTree = Record<string, any>
+
+  function walkCollection(collection: TestCollection): TestTree {
+    const node: TestTree = {}
+
+    for (const child of collection) {
+      if (child.type === 'suite') {
+        // Recursively walk suite children
+        const suiteChildren = walkCollection(child.children)
+        node[child.name] = suiteChildren
+      }
+      else if (child.type === 'test') {
+        const result = child.result()
+        if (onResult) {
+          node[child.name] = onResult(result)
+        }
+        else {
+          node[child.name] = result.state
+        }
+      }
+    }
+
+    return node
+  }
+
+  const tree: TestTree = {}
+
+  for (const module of testModules) {
+    // Use relative module ID for cleaner output
+    const key = module.relativeModuleId
+    tree[key] = walkCollection(module.children)
+  }
+
+  return tree
+}

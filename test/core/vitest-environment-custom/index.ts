@@ -1,20 +1,24 @@
-import type { Environment } from 'vitest'
+import type { Environment } from 'vitest/environments'
 import vm from 'node:vm'
-import debug from 'debug'
+import { createDebug } from 'obug'
 
-// test that external packages (debug) are loaded correctly
-const log = debug('test:env')
+// test that external packages (obug) are loaded correctly
+const log = createDebug('test:env')
 
 export default <Environment>{
   name: 'custom',
-  transformMode: 'ssr',
+  viteEnvironment: 'ssr',
   setupVM({ custom }) {
     const context = vm.createContext({
       testEnvironment: 'custom',
       option: custom.option,
+      POOL_ID_DURING_ENV_SETUP: process.env.VITEST_POOL_ID,
+      WORKER_ID_DURING_ENV_SETUP: process.env.VITEST_WORKER_ID,
       setTimeout,
       clearTimeout,
       AbortController,
+      EventTarget,
+      Event,
     })
     return {
       getVmContext() {
@@ -29,6 +33,9 @@ export default <Environment>{
   setup(global, { custom }) {
     global.testEnvironment = 'custom'
     global.option = custom.option
+    global.POOL_ID_DURING_ENV_SETUP = process.env.VITEST_POOL_ID
+    global.WORKER_ID_DURING_ENV_SETUP = process.env.VITEST_WORKER_ID
+
     return {
       teardown() {
         delete global.testEnvironment

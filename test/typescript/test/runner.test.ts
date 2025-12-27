@@ -46,7 +46,7 @@ describe('should fail', async () => {
   it('typechecks with custom tsconfig', async () => {
     const { stderr } = await runVitest({
       root,
-      dir: resolve(__dirname, '..', './failing'),
+      dir: resolve(import.meta.dirname, '..', './failing'),
       config: resolve('./test/vitest.custom.config.ts'),
       typecheck: { enabled: true },
     })
@@ -78,20 +78,21 @@ describe('should fail', async () => {
   it('typechecks empty "include" but with tests', async () => {
     const { stderr } = await runVitest({
       root,
-      dir: resolve(__dirname, '..', './failing'),
-      config: resolve(__dirname, './vitest.empty.config.ts'),
+      dir: resolve(import.meta.dirname, '..', './failing'),
+      config: resolve(import.meta.dirname, './vitest.empty.config.ts'),
       typecheck: { enabled: true },
-    },
-    )
+    })
 
-    expect(stderr.replace(resolve(__dirname, '..'), '<root>')).toMatchSnapshot()
+    const message = removeLines(stderr.replace(resolve(import.meta.dirname, '..'), '<root>'))
+
+    expect(message).toMatchSnapshot()
   })
 })
 
 describe('ignoreSourceErrors', () => {
   it('disabled', async () => {
     const vitest = await runVitest({
-      root: resolve(__dirname, '../fixtures/source-error'),
+      root: resolve(import.meta.dirname, '../fixtures/source-error'),
     })
     expect(vitest.stderr).toContain('Unhandled Errors')
     expect(vitest.stderr).toContain('Unhandled Source Error')
@@ -101,7 +102,7 @@ describe('ignoreSourceErrors', () => {
   it('enabled', async () => {
     const vitest = await runVitest(
       {
-        root: resolve(__dirname, '../fixtures/source-error'),
+        root: resolve(import.meta.dirname, '../fixtures/source-error'),
         typecheck: {
           ignoreSourceErrors: true,
           enabled: true,
@@ -117,7 +118,7 @@ describe('ignoreSourceErrors', () => {
 describe('when the title is dynamic', () => {
   it('works correctly', async () => {
     const vitest = await runVitest({
-      root: resolve(__dirname, '../fixtures/dynamic-title'),
+      root: resolve(import.meta.dirname, '../fixtures/dynamic-title'),
       reporters: [['default', { isTTY: true }]],
     })
 
@@ -137,7 +138,7 @@ describe('when the title is dynamic', () => {
 
 it('throws an error if typechecker process exists', async () => {
   const { stderr } = await runVitest({
-    root: resolve(__dirname, '../fixtures/source-error'),
+    root: resolve(import.meta.dirname, '../fixtures/source-error'),
     typecheck: {
       enabled: true,
       checker: 'non-existing-command',
@@ -151,3 +152,7 @@ it('throws an error if typechecker process exists', async () => {
     expect(stderr).toContain('Error: spawn non-existing-command ENOENT')
   }
 })
+
+function removeLines(log: string) {
+  return log.replace(/⎯{2,}/g, '⎯⎯')
+}

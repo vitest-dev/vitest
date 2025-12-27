@@ -54,11 +54,14 @@ export function createClient(url: string, options: VitestClientOptions = {}): Vi
     onTestAnnotate(testId, annotation) {
       handlers.onTestAnnotate?.(testId, annotation)
     },
-    onSpecsCollected(specs) {
+    onTestArtifactRecord(testId, artifact) {
+      handlers.onTestArtifactRecord?.(testId, artifact)
+    },
+    onSpecsCollected(specs, startTime) {
       specs?.forEach(([config, file]) => {
         ctx.state.clearFiles({ config }, [file])
       })
-      handlers.onSpecsCollected?.(specs)
+      handlers.onSpecsCollected?.(specs, startTime)
     },
     onPathsCollected(paths) {
       ctx.state.collectPaths(paths)
@@ -76,15 +79,15 @@ export function createClient(url: string, options: VitestClientOptions = {}): Vi
       ctx.state.updateUserLog(log)
       handlers.onUserConsoleLog?.(log)
     },
-    onFinished(files, errors) {
-      handlers.onFinished?.(files, errors)
+    onFinished(files, errors, coverage, executionTime) {
+      handlers.onFinished?.(files, errors, coverage, executionTime)
     },
     onFinishedReportCoverage() {
       handlers.onFinishedReportCoverage?.()
     },
   }
 
-  const birpcHandlers: BirpcOptions<WebSocketHandlers> = {
+  const birpcHandlers = {
     post: msg => ctx.ws.send(msg),
     on: fn => (onMessage = fn),
     serialize: e =>
@@ -99,10 +102,8 @@ export function createClient(url: string, options: VitestClientOptions = {}): Vi
         return v
       }),
     deserialize: parse,
-    onTimeoutError(functionName) {
-      throw new Error(`[vitest-ws-client]: Timeout calling "${functionName}"`)
-    },
-  }
+    timeout: -1,
+  } satisfies BirpcOptions<WebSocketHandlers>
 
   ctx.rpc = createBirpc<WebSocketHandlers, WebSocketEvents>(
     functions,

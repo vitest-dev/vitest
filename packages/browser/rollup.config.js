@@ -14,9 +14,13 @@ const external = [
   ...Object.keys(pkg.peerDependencies || {}),
   /^@?vitest(\/|$)/,
   '@vitest/browser/utils',
+  '@vitest/browser/context',
+  '@vitest/browser/client',
+  'vitest/browser',
   'worker_threads',
   'node:worker_threads',
   'vite',
+  'vitest/internal/browser',
 ]
 
 const dtsUtils = createDtsUtils()
@@ -39,7 +43,6 @@ const plugins = [
 
 const input = {
   index: './src/node/index.ts',
-  providers: './src/node/providers/index.ts',
 }
 
 export default () =>
@@ -72,12 +75,8 @@ export default () =>
     },
     {
       input: {
-        'locators/playwright': './src/client/tester/locators/playwright.ts',
-        'locators/webdriverio': './src/client/tester/locators/webdriverio.ts',
-        'locators/preview': './src/client/tester/locators/preview.ts',
-        'locators/index': './src/client/tester/locators/index.ts',
+        'locators': './src/client/tester/locators/index.ts',
         'expect-element': './src/client/tester/expect-element.ts',
-        'utils': './src/client/tester/public-utils.ts',
       },
       output: {
         dir: 'dist',
@@ -99,7 +98,7 @@ export default () =>
         file: 'dist/context.js',
         format: 'esm',
       },
-      external: ['@vitest/browser/utils'],
+      external: ['vitest/internal/browser'],
       plugins: [
         oxc({
           transform: { target: 'node18' },
@@ -135,7 +134,7 @@ export default () =>
       ],
     },
     {
-      input: dtsUtils.dtsInput(input.index),
+      input: dtsUtils.dtsInput(input),
       output: {
         dir: 'dist',
         entryFileNames: '[name].d.ts',
@@ -147,7 +146,7 @@ export default () =>
     },
     {
       input: dtsUtilsClient.dtsInput({
-        'locators/index': './src/client/tester/locators/index.ts',
+        locators: './src/client/tester/locators/index.ts',
       }),
       output: {
         dir: 'dist',
@@ -158,17 +157,4 @@ export default () =>
       external,
       plugins: dtsUtilsClient.dts(),
     },
-    // {
-    //   input: './src/client/tester/jest-dom.ts',
-    //   output: {
-    //     file: './jest-dom.d.ts',
-    //     format: 'esm',
-    //   },
-    //   external: [],
-    //   plugins: [
-    //     dts({
-    //       respectExternal: true,
-    //     }),
-    //   ],
-    // },
   ])

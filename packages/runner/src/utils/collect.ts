@@ -1,7 +1,8 @@
+import type { ParsedStack } from '@vitest/utils'
 import type { File, Suite, TaskBase } from '../types/tasks'
 import { processError } from '@vitest/utils/error'
+import { parseSingleStack } from '@vitest/utils/source-map'
 import { relative } from 'pathe'
-import { setFileContext } from '../context'
 
 /**
  * If any tasks been marked as `only`, mark all other tasks as `skip`.
@@ -19,9 +20,17 @@ export function interpretTaskModes(
   const traverseSuite = (suite: Suite, parentIsOnly?: boolean, parentMatchedWithLocation?: boolean) => {
     const suiteIsOnly = parentIsOnly || suite.mode === 'only'
 
+    // Check if any tasks in this suite have `.only` - if so, only those should run
+    const hasSomeTasksOnly = onlyMode && suite.tasks.some(
+      t => t.mode === 'only' || (t.type === 'suite' && someTasksAreOnly(t)),
+    )
+
     suite.tasks.forEach((t) => {
       // Check if either the parent suite or the task itself are marked as included
-      const includeTask = suiteIsOnly || t.mode === 'only'
+      // If there are tasks with `.only` in this suite, only include those (not all tasks from describe.only)
+      const includeTask = hasSomeTasksOnly
+        ? (t.mode === 'only' || (t.type === 'suite' && someTasksAreOnly(t)))
+        : (suiteIsOnly || t.mode === 'only')
       if (onlyMode) {
         if (t.type === 'suite' && (includeTask || someTasksAreOnly(t))) {
           // Don't skip this suite
@@ -153,6 +162,7 @@ function checkAllowOnly(task: TaskBase, allowOnly?: boolean) {
   }
 }
 
+/* @__NO_SIDE_EFFECTS__ */
 export function generateHash(str: string): string {
   let hash = 0
   if (str.length === 0) {
@@ -180,11 +190,13 @@ export function createFileTask(
   root: string,
   projectName: string | undefined,
   pool?: string,
+  viteEnvironment?: string,
 ): File {
   const path = relative(root, filepath)
   const file: File = {
     id: generateFileHash(path, projectName),
     name: path,
+    fullName: path,
     type: 'suite',
     mode: 'queued',
     filepath,
@@ -193,9 +205,9 @@ export function createFileTask(
     projectName,
     file: undefined!,
     pool,
+    viteEnvironment,
   }
   file.file = file
-  setFileContext(file, Object.create(null))
   return file
 }
 
@@ -204,9 +216,21 @@ export function createFileTask(
  * @param file File relative to the root of the project to keep ID the same between different machines
  * @param projectName The name of the test project
  */
+/* @__NO_SIDE_EFFECTS__ */
 export function generateFileHash(
   file: string,
   projectName: string | undefined,
 ): string {
-  return generateHash(`${file}${projectName || ''}`)
+  return /* @__PURE__ */ generateHash(`${file}${projectName || ''}`)
+}
+
+export function findTestFileStackTrace(testFilePath: string, error: string): ParsedStack | undefined {
+  // first line is the error message
+  const lines = error.split('\n').slice(1)
+  for (const line of lines) {
+    const stack = parseSingleStack(line)
+    if (stack && stack.file === testFilePath) {
+      return stack
+    }
+  }
 }

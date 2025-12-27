@@ -176,8 +176,8 @@ export class VitestSpecifications {
       }
       deps.add(filepath)
 
-      const mod = project.vite.moduleGraph.getModuleById(filepath)
-      const transformed = mod?.ssrTransformResult || await project.vitenode.transformRequest(filepath)
+      const mod = project.vite.environments.ssr.moduleGraph.getModuleById(filepath)
+      const transformed = mod?.transformResult || await project.vite.environments.ssr.transformRequest(filepath)
       if (!transformed) {
         return
       }

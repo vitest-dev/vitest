@@ -28,13 +28,13 @@ const entries = {
   'mocker': 'src/public/mocker.ts',
   'spy': 'src/integrations/spy.ts',
   'coverage': 'src/public/coverage.ts',
-  'execute': 'src/public/execute.ts',
   'reporters': 'src/public/reporters.ts',
-  // TODO: advanced docs
-  'workers': 'src/public/workers.ts',
+  'worker': 'src/public/worker.ts',
+  'module-runner': 'src/public/module-runner.ts',
+  'module-evaluator': 'src/runtime/moduleRunner/moduleEvaluator.ts',
 
   // for performance reasons we bundle them separately so we don't import everything at once
-  'worker': 'src/runtime/worker.ts',
+  // 'worker': 'src/runtime/worker.ts',
   'workers/forks': 'src/runtime/workers/forks.ts',
   'workers/threads': 'src/runtime/workers/threads.ts',
   'workers/vmThreads': 'src/runtime/workers/vmThreads.ts',
@@ -46,19 +46,19 @@ const entries = {
 }
 
 const dtsEntries = {
-  index: 'src/public/index.ts',
-  node: 'src/public/node.ts',
-  environments: 'src/public/environments.ts',
-  browser: 'src/public/browser.ts',
-  runners: 'src/public/runners.ts',
-  suite: 'src/public/suite.ts',
-  config: 'src/public/config.ts',
-  coverage: 'src/public/coverage.ts',
-  execute: 'src/public/execute.ts',
-  reporters: 'src/public/reporters.ts',
-  mocker: 'src/public/mocker.ts',
-  workers: 'src/public/workers.ts',
-  snapshot: 'src/public/snapshot.ts',
+  'index': 'src/public/index.ts',
+  'node': 'src/public/node.ts',
+  'environments': 'src/public/environments.ts',
+  'browser': 'src/public/browser.ts',
+  'runners': 'src/public/runners.ts',
+  'suite': 'src/public/suite.ts',
+  'config': 'src/public/config.ts',
+  'coverage': 'src/public/coverage.ts',
+  'reporters': 'src/public/reporters.ts',
+  'mocker': 'src/public/mocker.ts',
+  'snapshot': 'src/public/snapshot.ts',
+  'worker': 'src/public/worker.ts',
+  'module-evaluator': 'src/runtime/moduleRunner/moduleEvaluator.ts',
 }
 
 const external = [
@@ -73,23 +73,24 @@ const external = [
   'node:vm',
   'node:http',
   'node:console',
+  'node:events',
   'inspector',
   'vitest/optional-types.js',
-  'vite-node/source-map',
-  'vite-node/client',
-  'vite-node/server',
-  'vite-node/constants',
-  'vite-node/utils',
+  'vitest/browser',
+  'vite/module-runner',
   '@vitest/mocker',
   '@vitest/mocker/node',
   '@vitest/utils/diff',
-  '@vitest/utils/ast',
   '@vitest/utils/error',
   '@vitest/utils/source-map',
   '@vitest/runner/utils',
   '@vitest/runner/types',
   '@vitest/snapshot/environment',
   '@vitest/snapshot/manager',
+  /@vitest\/utils\/\w+/,
+
+  '#module-evaluator',
+  '@opentelemetry/api',
 ]
 
 const dir = dirname(fileURLToPath(import.meta.url))
@@ -108,6 +109,7 @@ const plugins = [
       define: {
         // __VITEST_GENERATE_UI_TOKEN__ is set as a global to catch accidental leaking,
         // in the release version the "if" with this condition should not be present
+        // To test strict token locally, build by e.g. `VITEST_GENERATE_UI_TOKEN=true pnpm build`
         __VITEST_GENERATE_UI_TOKEN__: process.env.VITEST_GENERATE_UI_TOKEN === 'true' ? 'true' : 'false',
         ...(process.env.VITE_TEST_WATCHER_DEBUG === 'false'
           ? {

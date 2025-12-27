@@ -1,8 +1,11 @@
-import type { File, Task, TaskResultPack } from '@vitest/runner'
+import type { File, FileSpecification, Task, TaskResultPack } from '@vitest/runner'
 import type { UserConsoleLog } from '../types/general'
 import type { TestProject } from './project'
 import type { MergedBlobs } from './reporters/blob'
-import { createFileTask } from '@vitest/runner/utils'
+import type { OnUnhandledErrorCallback } from './types/config'
+import { createFileTask, generateFileHash } from '@vitest/runner/utils'
+import { relative } from 'pathe'
+import { defaultBrowserPort } from '../constants'
 import { TestCase, TestModule, TestSuite } from './reporters/reported-tasks'
 
 function isAggregateError(err: unknown): err is AggregateError {
@@ -19,35 +22,64 @@ export class StateManager {
   idMap: Map<string, Task> = new Map()
   taskFileMap: WeakMap<Task, File> = new WeakMap()
   errorsSet: Set<unknown> = new Set()
-  processTimeoutCauses: Set<string> = new Set()
   reportedTasksMap: WeakMap<Task, TestModule | TestCase | TestSuite> = new WeakMap()
   blobs?: MergedBlobs
+  transformTime = 0
 
-  catchError(err: unknown, type: string): void {
-    if (isAggregateError(err)) {
-      return err.errors.forEach(error => this.catchError(error, type))
+  metadata: Record<string, {
+    externalized: Record<string, string>
+    duration: Record<string, number[]>
+    tmps: Record<string, string>
+    dumpDir?: string
+    outline?: {
+      externalized: number
+      inlined: number
+    }
+  }> = {}
+
+  onUnhandledError?: OnUnhandledErrorCallback
+
+  /** @internal */
+  _data = {
+    browserLastPort: defaultBrowserPort,
+    timeoutIncreased: false,
+  }
+
+  constructor(
+    options: {
+      onUnhandledError?: OnUnhandledErrorCallback
+    },
+  ) {
+    this.onUnhandledError = options.onUnhandledError
+  }
+
+  catchError(error: unknown, type: string): void {
+    if (isAggregateError(error)) {
+      return error.errors.forEach(error => this.catchError(error, type))
     }
 
-    if (err === Object(err)) {
-      (err as Record<string, unknown>).type = type
+    if (typeof error === 'object' && error !== null) {
+      (error as Record<string, unknown>).type = type
     }
     else {
-      err = { type, message: err }
+      error = { type, message: error }
     }
 
-    const _err = err as Record<string, any>
-    if (_err && typeof _err === 'object' && _err.code === 'VITEST_PENDING') {
-      const task = this.idMap.get(_err.taskId)
+    const _error = error as Record<string, any>
+    if (_error && typeof _error === 'object' && _error.code === 'VITEST_PENDING') {
+      const task = this.idMap.get(_error.taskId)
       if (task) {
         task.mode = 'skip'
         task.result ??= { state: 'skip' }
         task.result.state = 'skip'
-        task.result.note = _err.note
+        task.result.note = _error.note
       }
       return
     }
 
-    this.errorsSet.add(err)
+    if (!this.onUnhandledError || this.onUnhandledError(error as any) !== false) {
+      this.errorsSet.add(error)
+    }
   }
 
   clearErrors(): void {
@@ -55,15 +87,7 @@ export class StateManager {
   }
 
   getUnhandledErrors(): unknown[] {
-    return Array.from(this.errorsSet.values())
-  }
-
-  addProcessTimeoutCause(cause: string): void {
-    this.processTimeoutCauses.add(cause)
-  }
-
-  getProcessTimeoutCauses(): string[] {
-    return Array.from(this.processTimeoutCauses.values())
+    return Array.from(this.errorsSet)
   }
 
   getPaths(): string[] {
@@ -190,6 +214,11 @@ export class StateManager {
     return this.reportedTasksMap.get(task)
   }
 
+  getReportedEntityById(taskId: string): TestModule | TestCase | TestSuite | undefined {
+    const task = this.idMap.get(taskId)
+    return task ? this.reportedTasksMap.get(task) : undefined
+  }
+
   updateTasks(packs: TaskResultPack[]): void {
     for (const [id, result, meta] of packs) {
       const task = this.idMap.get(id)
@@ -220,11 +249,18 @@ export class StateManager {
     ).length
   }
 
-  cancelFiles(files: string[], project: TestProject): void {
+  cancelFiles(files: FileSpecification[], project: TestProject): void {
+    // if we don't filter existing modules, they will be overriden by `collectFiles`
+    const nonRegisteredFiles = files.filter(({ filepath }) => {
+      const relativePath = relative(project.config.root, filepath)
+      const id = generateFileHash(relativePath, project.name)
+      return !this.idMap.has(id)
+    })
+
     this.collectFiles(
       project,
-      files.map(filepath =>
-        createFileTask(filepath, project.config.root, project.config.name),
+      nonRegisteredFiles.map(file =>
+        createFileTask(file.filepath, project.config.root, project.config.name),
       ),
     )
   }

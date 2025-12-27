@@ -4,7 +4,7 @@ const { promises, readFileSync } = fs
 
 export class FileMap {
   private fsCache = new Map<string, string>()
-  private fsBufferCache = new Map<string, Buffer>()
+  private fsBufferCache = new Map<string, Buffer<ArrayBuffer>>()
 
   public async readFileAsync(path: string): Promise<string> {
     const cached = this.fsCache.get(path)
@@ -26,7 +26,7 @@ export class FileMap {
     return source
   }
 
-  public readBuffer(path: string): Buffer {
+  public readBuffer(path: string): Buffer<ArrayBuffer> {
     const cached = this.fsBufferCache.get(path)
     if (cached != null) {
       return cached

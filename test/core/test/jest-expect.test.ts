@@ -34,6 +34,9 @@ describe('jest-expect', () => {
     expect(1).toBe(1)
     expect(null).toBeNull()
     expect(1).not.toBeNull()
+    expect(null).toBeNullable()
+    expect(undefined).toBeNullable()
+    expect(0).not.toBeNullable()
     expect(null).toBeDefined()
     expect(undefined).not.toBeDefined()
     expect(undefined).toBeUndefined()
@@ -147,6 +150,10 @@ describe('jest-expect', () => {
     expect(undefined).not.toEqual(expect.anything())
     expect({ a: 0, b: 0 }).toEqual(expect.objectContaining({ a: 0 }))
     expect({ a: 0, b: 0 }).not.toEqual(expect.objectContaining({ z: 0 }))
+    // objectContaining with symbol key
+    const symbolForObjectContaining = Symbol('symbolForObjectContaining')
+    expect({ [symbolForObjectContaining]: 0 }).toEqual(expect.objectContaining({ [symbolForObjectContaining]: 0 }))
+    expect({ [symbolForObjectContaining]: 0 }).not.toEqual(expect.objectContaining({ [symbolForObjectContaining]: 1 }))
     expect(0).toEqual(expect.any(Number))
     expect('string').toEqual(expect.any(String))
     expect('string').not.toEqual(expect.any(Number))
@@ -194,6 +201,36 @@ describe('jest-expect', () => {
         sum: expect.closeTo(0.4),
       })
     }).toThrowErrorMatchingInlineSnapshot(`[AssertionError: expected { sum: 0.30000000000000004 } to deeply equal { sum: NumberCloseTo 0.4 (2 digits) }]`)
+  })
+
+  it('asymmetric matchers and equality testers', () => {
+    // iterable equality testers
+    expect([new Set(['x'])]).toEqual(
+      expect.arrayContaining([new Set(['x'])]),
+    )
+    expect([new Set()]).not.toEqual(
+      expect.arrayContaining([new Set(['x'])]),
+    )
+    expect({ foo: new Set(['x']) }).toEqual(
+      expect.objectContaining({ foo: new Set(['x']) }),
+    )
+    expect({ foo: new Set() }).not.toEqual(
+      expect.objectContaining({ foo: new Set(['x']) }),
+    )
+
+    // `toStrictEqual` testers
+    class Stock {
+      constructor(public type: string) {}
+    }
+    expect([new Stock('x')]).toEqual(
+      expect.arrayContaining([{ type: 'x' }]),
+    )
+    expect([new Stock('x')]).not.toStrictEqual(
+      expect.arrayContaining([{ type: 'x' }]),
+    )
+    expect([new Stock('x')]).toStrictEqual(
+      expect.arrayContaining([new Stock('x')]),
+    )
   })
 
   it('asymmetric matchers negate', () => {
@@ -599,7 +636,9 @@ describe('toBeOneOf()', () => {
     expect(0).toBeOneOf([0, 1, 2])
     expect(0).toBeOneOf([expect.any(Number)])
     expect('apple').toBeOneOf(['apple', 'banana', 'orange'])
+    expect('apple').toBeOneOf(new Set(['apple', 'banana', 'orange']))
     expect('apple').toBeOneOf([expect.any(String)])
+    expect('apple').toBeOneOf(new Set([expect.any(String)]))
     expect(true).toBeOneOf([true, false])
     expect(true).toBeOneOf([expect.any(Boolean)])
     expect(null).toBeOneOf([expect.any(Object)])
@@ -610,7 +649,9 @@ describe('toBeOneOf()', () => {
     expect(3).not.toBeOneOf([0, 1, 2])
     expect(3).not.toBeOneOf([expect.any(String)])
     expect('mango').not.toBeOneOf(['apple', 'banana', 'orange'])
+    expect('mango').not.toBeOneOf(new Set(['apple', 'banana', 'orange']))
     expect('mango').not.toBeOneOf([expect.any(Number)])
+    expect('mango').not.toBeOneOf(new Set([expect.any(Number)]))
     expect(null).not.toBeOneOf([undefined])
   })
 
@@ -618,7 +659,9 @@ describe('toBeOneOf()', () => {
     expect(3).toBeOneOf([0, 1, 2])
     expect(3).toBeOneOf([expect.any(String)])
     expect('mango').toBeOneOf(['apple', 'banana', 'orange'])
+    expect('mango').toBeOneOf(new Set(['apple', 'banana', 'orange']))
     expect('mango').toBeOneOf([expect.any(Number)])
+    expect('mango').toBeOneOf(new Set([expect.any(Number)]))
     expect(null).toBeOneOf([undefined])
   })
 
@@ -707,7 +750,7 @@ describe('toSatisfy()', () => {
 describe('toHaveBeenCalled', () => {
   describe('negated', () => {
     it('fails if called', () => {
-      const mock = vi.fn()
+      const mock = vi.fn().mockName('spy')
       mock()
 
       expect(() => {
@@ -746,7 +789,7 @@ describe('toHaveBeenCalled', () => {
 describe('toHaveBeenCalledWith', () => {
   describe('negated', () => {
     it('fails if called', () => {
-      const mock = vi.fn()
+      const mock = vi.fn().mockName('spy')
       mock(3)
 
       expect(() => {
@@ -759,7 +802,7 @@ describe('toHaveBeenCalledWith', () => {
 describe('toHaveBeenCalledExactlyOnceWith', () => {
   describe('negated', () => {
     it('fails if called', () => {
-      const mock = vi.fn()
+      const mock = vi.fn().mockName('spy')
       mock(3)
 
       expect(() => {
@@ -789,7 +832,7 @@ describe('toHaveBeenCalledExactlyOnceWith', () => {
   })
 
   it('fails if not called or called too many times', () => {
-    const mock = vi.fn()
+    const mock = vi.fn().mockName('spy')
 
     expect(() => {
       expect(mock).toHaveBeenCalledExactlyOnceWith(3)
@@ -809,7 +852,7 @@ describe('toHaveBeenCalledExactlyOnceWith', () => {
 
     expect(() => {
       expect(mock).toHaveBeenCalledExactlyOnceWith(3)
-    }).toThrow(/^expected "spy" to be called once with arguments: \[ 3 \][^e]/)
+    }).toThrow(/^expected "vi\.fn\(\)" to be called once with arguments: \[ 3 \][^e]/)
   })
 
   it('passes if called exactly once with args', () => {
@@ -822,8 +865,8 @@ describe('toHaveBeenCalledExactlyOnceWith', () => {
 
 describe('toHaveBeenCalledBefore', () => {
   it('success if expect mock is called before result mock', () => {
-    const expectMock = vi.fn()
-    const resultMock = vi.fn()
+    const expectMock = vi.fn().mockName('expectMock')
+    const resultMock = vi.fn().mockName('resultMock')
 
     expectMock()
     resultMock()
@@ -852,7 +895,7 @@ describe('toHaveBeenCalledBefore', () => {
 
     expect(() => {
       expect(expectMock).toHaveBeenCalledBefore(resultMock)
-    }).toThrow(/^expected "spy" to have been called before "spy"/)
+    }).toThrow(/^expected "vi\.fn\(\)" to have been called before "vi\.fn\(\)"/)
   })
 
   it('throws with correct mock name if failed', () => {
@@ -868,13 +911,13 @@ describe('toHaveBeenCalledBefore', () => {
   })
 
   it('fails if expect mock is not called', () => {
-    const resultMock = vi.fn()
+    const resultMock = vi.fn().mockName('resultMock')
 
     resultMock()
 
     expect(() => {
       expect(vi.fn()).toHaveBeenCalledBefore(resultMock)
-    }).toThrow(/^expected "spy" to have been called before "spy"/)
+    }).toThrow(/^expected "vi\.fn\(\)" to have been called before "resultMock"/)
   })
 
   it('not fails if expect mock is not called with option `failIfNoFirstInvocation` set to false', () => {
@@ -886,13 +929,13 @@ describe('toHaveBeenCalledBefore', () => {
   })
 
   it('fails if result mock is not called', () => {
-    const expectMock = vi.fn()
+    const expectMock = vi.fn().mockName('expectMock')
 
     expectMock()
 
     expect(() => {
       expect(expectMock).toHaveBeenCalledBefore(vi.fn())
-    }).toThrow(/^expected "spy" to have been called before "spy"/)
+    }).toThrow(/^expected "expectMock" to have been called before "vi\.fn\(\)"/)
   })
 })
 
@@ -928,7 +971,7 @@ describe('toHaveBeenCalledAfter', () => {
 
     expect(() => {
       expect(expectMock).toHaveBeenCalledAfter(resultMock)
-    }).toThrow(/^expected "spy" to have been called after "spy"/)
+    }).toThrow(/^expected "vi\.fn\(\)" to have been called after "vi\.fn\(\)"/)
   })
 
   it('throws with correct mock name if failed', () => {
@@ -944,13 +987,13 @@ describe('toHaveBeenCalledAfter', () => {
   })
 
   it('fails if result mock is not called', () => {
-    const expectMock = vi.fn()
+    const expectMock = vi.fn().mockName('expectMock')
 
     expectMock()
 
     expect(() => {
       expect(expectMock).toHaveBeenCalledAfter(vi.fn())
-    }).toThrow(/^expected "spy" to have been called after "spy"/)
+    }).toThrow(/^expected "expectMock" to have been called after "vi\.fn\(\)"/)
   })
 
   it('not fails if result mock is not called with option `failIfNoFirstInvocation` set to false', () => {
@@ -962,13 +1005,13 @@ describe('toHaveBeenCalledAfter', () => {
   })
 
   it('fails if expect mock is not called', () => {
-    const resultMock = vi.fn()
+    const resultMock = vi.fn().mockName('resultMock')
 
     resultMock()
 
     expect(() => {
       expect(vi.fn()).toHaveBeenCalledAfter(resultMock)
-    }).toThrow(/^expected "spy" to have been called after "spy"/)
+    }).toThrow(/^expected "vi\.fn\(\)" to have been called after "resultMock"/)
   })
 })
 
@@ -1275,7 +1318,7 @@ it('correctly prints diff with asymmetric matchers', () => {
       + Received
 
         {
-          "a": Any<Number>,
+          "a": 1,
       -   "b": Any<Function>,
       +   "b": "string",
         }"

@@ -1,7 +1,7 @@
 import type { File, Suite, Task, TaskEventPack, TaskResultPack } from '@vitest/runner'
-import type { Arrayable } from '../types/general'
+import type { Arrayable } from '@vitest/utils'
 import { getTests } from '@vitest/runner/utils'
-import { toArray } from '@vitest/utils'
+import { toArray } from '@vitest/utils/helpers'
 
 export function hasBenchmark(suite: Arrayable<Suite>): boolean {
   return toArray(suite).some(s =>
@@ -42,6 +42,9 @@ export function convertTasksToEvents(file: File, onTask?: (task: Task) => void):
           events.push([task.id, 'test-prepare', undefined])
           task.annotations.forEach((annotation) => {
             events.push([task.id, 'test-annotation', { annotation }])
+          })
+          task.artifacts.forEach((artifact) => {
+            events.push([task.id, 'test-artifact', { artifact }])
           })
           events.push([task.id, 'test-finished', undefined])
         }

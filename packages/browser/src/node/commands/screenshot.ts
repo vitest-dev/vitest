@@ -1,92 +1,41 @@
-import type { BrowserCommand, ResolvedConfig } from 'vitest/node'
+import type { BrowserCommand } from 'vitest/node'
 import type { ScreenshotOptions } from '../../../context'
-import { mkdir, rm } from 'node:fs/promises'
-import { normalize } from 'node:path'
-import { basename, dirname, relative, resolve } from 'pathe'
-import { PlaywrightBrowserProvider } from '../providers/playwright'
-import { WebdriverBrowserProvider } from '../providers/webdriver'
 
-export const screenshot: BrowserCommand<[string, ScreenshotOptions]> = async (
+interface ScreenshotCommandOptions extends Omit<ScreenshotOptions, 'element' | 'mask'> {
+  element?: string
+  mask?: readonly string[]
+}
+
+declare module 'vitest/browser' {
+  interface BrowserCommands {
+    /**
+     * @internal
+     */
+    __vitest_takeScreenshot: (name: string, options: ScreenshotCommandOptions) => Promise<{
+      buffer: Buffer
+      path: string
+    }>
+  }
+}
+
+export const screenshot: BrowserCommand<[string, ScreenshotCommandOptions]> = async (
   context,
   name: string,
   options = {},
 ) => {
-  if (!context.testPath) {
-    throw new Error(`Cannot take a screenshot without a test path`)
-  }
-
   options.save ??= true
 
   if (!options.save) {
     options.base64 = true
   }
 
-  const path = options.path
-    ? resolve(dirname(context.testPath), options.path)
-    : resolveScreenshotPath(
-        context.testPath,
-        name,
-        context.project.config,
-      )
-  const savePath = normalize(path)
-  await mkdir(dirname(path), { recursive: true })
+  const { buffer, path } = await context.triggerCommand('__vitest_takeScreenshot', name, options)
 
-  if (context.provider instanceof PlaywrightBrowserProvider) {
-    if (options.element) {
-      const { element: selector, ...config } = options
-      const element = context.iframe.locator(`${selector}`)
-      const buffer = await element.screenshot({
-        ...config,
-        path: options.save ? savePath : undefined,
-      })
-      return returnResult(options, path, buffer)
-    }
-
-    const buffer = await context.iframe.locator('body').screenshot({
-      ...options,
-      path: options.save ? savePath : undefined,
-    })
-    return returnResult(options, path, buffer)
-  }
-
-  if (context.provider instanceof WebdriverBrowserProvider) {
-    const page = context.provider.browser!
-    const element = !options.element
-      ? await page.$('body')
-      : await page.$(`${options.element}`)
-
-    const buffer = await element.saveScreenshot(savePath)
-    if (!options.save) {
-      await rm(savePath, { force: true })
-    }
-    return returnResult(options, path, buffer)
-  }
-
-  throw new Error(
-    `Provider "${context.provider.name}" does not support screenshots`,
-  )
-}
-
-function resolveScreenshotPath(
-  testPath: string,
-  name: string,
-  config: ResolvedConfig,
-) {
-  const dir = dirname(testPath)
-  const base = basename(testPath)
-  if (config.browser.screenshotDirectory) {
-    return resolve(
-      config.browser.screenshotDirectory,
-      relative(config.root, dir),
-      base,
-      name,
-    )
-  }
-  return resolve(dir, '__screenshots__', base, name)
+  return returnResult(options, path, buffer)
 }
 
 function returnResult(
-  options: ScreenshotOptions,
+  options: ScreenshotCommandOptions,
   path: string,
   buffer: Buffer,
 ) {

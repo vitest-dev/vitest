@@ -2,8 +2,6 @@ import Vue from '@vitejs/plugin-vue'
 import { resolve } from 'pathe'
 import { presetAttributify, presetIcons, presetUno, transformerDirectives } from 'unocss'
 import Unocss from 'unocss/vite'
-import AutoImport from 'unplugin-auto-import/vite'
-import Components from 'unplugin-vue-components/vite'
 import { defineConfig } from 'vite'
 import Pages from 'vite-plugin-pages'
 
@@ -54,23 +52,8 @@ export default defineConfig({
       ],
       safelist: 'absolute origin-top mt-[8px]'.split(' '),
     }),
-    Components({
-      dirs: ['client/components'],
-      dts: resolve(import.meta.dirname, './client/components.d.ts'),
-    }),
     Pages({
       dirs: ['client/pages'],
-    }),
-    AutoImport({
-      dts: resolve(import.meta.dirname, './client/auto-imports.d.ts'),
-      dirs: ['./client/composables'],
-      imports: ['vue', 'vue-router', '@vueuse/core'],
-      injectAtEnd: true,
-      exclude: [
-        /node_modules/,
-        /dist/,
-        /\.git/,
-      ],
     }),
     // uncomment to see the HTML reporter preview
     // {
@@ -105,11 +88,5 @@ export default defineConfig({
   ],
   build: {
     outDir: './dist/client',
-  },
-  test: {
-    browser: {
-      name: 'chromium',
-      provider: 'playwright',
-    },
   },
 })

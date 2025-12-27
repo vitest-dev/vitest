@@ -1,3 +1,4 @@
+import type { SpanOptions } from '@opentelemetry/api'
 import type { ExpectStatic } from '@vitest/expect'
 import type {
   CancelReason,
@@ -10,10 +11,12 @@ import type {
   VitestRunner,
   VitestRunnerImportSource,
 } from '@vitest/runner'
+import type { ModuleRunner } from 'vite/module-runner'
+import type { Traces } from '../../utils/traces'
 import type { SerializedConfig } from '../config'
-import type { VitestExecutor } from '../execute'
 import { getState, GLOBAL_EXPECT, setState } from '@vitest/expect'
 import { getNames, getTestName, getTests } from '@vitest/runner/utils'
+import { processError } from '@vitest/utils/error'
 import { normalize } from 'pathe'
 import { createExpect } from '../../integrations/chai/index'
 import { inject } from '../../integrations/inject'
@@ -28,20 +31,36 @@ const workerContext = Object.create(null)
 export class VitestTestRunner implements VitestRunner {
   private snapshotClient = getSnapshotClient()
   private workerState = getWorkerState()
-  private __vitest_executor!: VitestExecutor
+  private moduleRunner!: ModuleRunner
   private cancelRun = false
 
   private assertionsErrors = new WeakMap<Readonly<Task>, Error>()
 
   public pool: string = this.workerState.ctx.pool
+  private _otel!: Traces
+  public viteEnvironment: string
 
-  constructor(public config: SerializedConfig) {}
+  constructor(public config: SerializedConfig) {
+    const environment = this.workerState.environment
+    this.viteEnvironment = environment.viteEnvironment || environment.name
+  }
 
   importFile(filepath: string, source: VitestRunnerImportSource): unknown {
     if (source === 'setup') {
-      this.workerState.moduleCache.delete(filepath)
+      const moduleNode = this.workerState.evaluatedModules.getModuleById(filepath)
+      if (moduleNode) {
+        this.workerState.evaluatedModules.invalidateModule(moduleNode)
+      }
     }
-    return this.__vitest_executor.executeId(filepath)
+    return this._otel.$(
+      `vitest.module.import_${source === 'setup' ? 'setup' : 'spec'}`,
+      {
+        attributes: {
+          'code.file.path': filepath,
+        },
+      },
+      () => this.moduleRunner.import(filepath),
+    )
   }
 
   onCollectStart(file: File): void {
@@ -76,6 +95,18 @@ export class VitestTestRunner implements VitestRunner {
       }
 
       const result = await this.snapshotClient.finish(suite.file.filepath)
+      if (
+        this.workerState.config.snapshotOptions.updateSnapshot === 'none'
+        && result.unchecked
+      ) {
+        let message = `Obsolete snapshots found when no snapshot update is expected.\n`
+        for (const key of result.uncheckedKeys) {
+          message += `· ${key}\n`
+        }
+        suite.result!.errors ??= []
+        suite.result!.errors.push(processError(new Error(message)))
+        suite.result!.state = 'fail'
+      }
       await rpc().snapshotSaved(result)
     }
 
@@ -196,14 +227,28 @@ export class VitestTestRunner implements VitestRunner {
   }
 
   getImportDurations(): Record<string, ImportDuration> {
-    const entries = [...(this.workerState.moduleExecutionInfo?.entries() ?? [])]
-    return Object.fromEntries(entries.map(([filepath, { duration, selfTime }]) => [
-      normalize(filepath),
-      {
+    const importDurations: Record<string, ImportDuration> = {}
+    const entries = this.workerState.moduleExecutionInfo?.entries() || []
+
+    for (const [filepath, { duration, selfTime, external, importer }] of entries) {
+      importDurations[normalize(filepath)] = {
         selfTime,
         totalTime: duration,
-      },
-    ]))
+        external,
+        importer,
+      }
+    }
+
+    return importDurations
+  }
+
+  trace = <T>(name: string, attributes: Record<string, any> | (() => T), cb?: () => T): T => {
+    const options: SpanOptions = typeof attributes === 'object' ? { attributes } : {}
+    return this._otel.$(`vitest.test.runner.${name}`, options, cb || attributes as () => T)
+  }
+
+  __setTraces(traces: Traces): void {
+    this._otel = traces
   }
 }
 
@@ -211,14 +256,13 @@ function clearModuleMocks(config: SerializedConfig) {
   const { clearMocks, mockReset, restoreMocks, unstubEnvs, unstubGlobals }
     = config
 
-  // since each function calls another, we can just call one
   if (restoreMocks) {
     vi.restoreAllMocks()
   }
-  else if (mockReset) {
+  if (mockReset) {
     vi.resetAllMocks()
   }
-  else if (clearMocks) {
+  if (clearMocks) {
     vi.clearAllMocks()
   }
 

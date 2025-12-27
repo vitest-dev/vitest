@@ -1,13 +1,10 @@
+import type { Debugger } from 'obug'
 import type { WorkerGlobalState } from 'vitest'
 import type { CloneOption } from './types'
-import { readFileSync as _readFileSync } from 'node:fs'
 import ponyfillStructuredClone from '@ungap/structured-clone'
-import createDebug from 'debug'
+import { createDebug } from 'obug'
 
-// keep the reference in case it was mocked
-const readFileSync = _readFileSync
-
-export const debug: createDebug.Debugger = createDebug('vitest:web-worker')
+export const debug: Debugger = createDebug('vitest:web-worker')
 
 export function getWorkerState(): WorkerGlobalState {
   // @ts-expect-error untyped global
@@ -33,12 +30,17 @@ function createClonedMessageEvent(
 
   debug('clone worker message %o', data)
   const origin = typeof location === 'undefined' ? undefined : location.origin
+  const ports = transfer?.filter((t): t is MessagePort => t instanceof MessagePort)
+  const transferWithoutPorts = transfer?.filter( // `ports` must be excluded from the `transfer` option passed to `structuredClone` to keep the MessagePort objects working correctly in the same thread.
+    t => !(t instanceof MessagePort),
+  )
 
   if (typeof structuredClone === 'function' && clone === 'native') {
     debug('create message event, using native structured clone')
     return new MessageEvent('message', {
-      data: structuredClone(data, { transfer }),
+      data: structuredClone(data, { transfer: transferWithoutPorts }),
       origin,
+      ports,
     })
   }
   if (clone !== 'none') {
@@ -54,12 +56,14 @@ function createClonedMessageEvent(
     return new MessageEvent('message', {
       data: ponyfillStructuredClone(data, { lossy: true } as any),
       origin,
+      ports,
     })
   }
   debug('create message event without cloning an object')
   return new MessageEvent('message', {
     data,
     origin,
+    ports,
   })
 }
 
@@ -76,32 +80,6 @@ export function createMessageEvent(
     return new MessageEvent('messageerror', {
       data: error,
     })
-  }
-}
-
-export function getRunnerOptions(): any {
-  const state = getWorkerState()
-  const { config, rpc, moduleCache, moduleExecutionInfo } = state
-
-  return {
-    async fetchModule(id: string) {
-      const result = await rpc.fetch(id, 'web')
-      if (result.id && !result.externalize) {
-        const code = readFileSync(result.id, 'utf-8')
-        return { code }
-      }
-      return result
-    },
-    resolveId(id: string, importer?: string) {
-      return rpc.resolveId(id, importer, 'web')
-    },
-    moduleCache,
-    moduleExecutionInfo,
-    interopDefault: config.deps.interopDefault ?? true,
-    moduleDirectories: config.deps.moduleDirectories,
-    root: config.root,
-    base: config.base,
-    state,
   }
 }
 

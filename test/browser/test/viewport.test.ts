@@ -1,5 +1,5 @@
-import { server } from '@vitest/browser/context'
 import { describe, expect, it } from 'vitest'
+import { server } from 'vitest/browser'
 
 describe.skipIf(
   // preview cannot control viewport

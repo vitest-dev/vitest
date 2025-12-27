@@ -97,19 +97,17 @@ test('merge reports', async () => {
      ❯ first.test.ts (2 tests | 1 failed) <time>
        ✓ test 1-1 <time>
        × test 1-2 <time>
-         → expected 1 to be 2 // Object.is equality
     stdout | second.test.ts > test 2-1
     test 2-1
 
      ❯ second.test.ts (3 tests | 1 failed) <time>
        × test 2-1 <time>
-         → expected 1 to be 2 // Object.is equality
-       ✓ group > test 2-2 <time>
-       ✓ group > test 2-3 <time>
+         ✓ test 2-2 <time>
+         ✓ test 2-3 <time>
 
      Test Files  2 failed (2)
           Tests  2 failed | 3 passed (5)
-       Duration  <time> (transform <time>, setup <time>, collect <time>, tests <time>, environment <time>, prepare <time>)
+       Duration  <time> (transform <time>, setup <time>, import <time>, tests <time>, environment <time>)
        Per blob  <time> <time>"
   `)
 
@@ -288,11 +286,14 @@ function createTest(name: string, file: File): Test {
   return {
     type: 'test',
     name,
+    fullName: `${file.fullName} > ${name}`,
+    fullTestName: `${file.fullTestName} > ${name}`,
     id: `${file.id}_0`,
     mode: 'run',
     file,
     suite: file,
     annotations: [],
+    artifacts: [],
     timeout: 0,
     result: { state: 'pass' },
     meta: {},

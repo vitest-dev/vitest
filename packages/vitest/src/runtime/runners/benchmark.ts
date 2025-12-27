@@ -5,15 +5,17 @@ import type {
   VitestRunner,
   VitestRunnerImportSource,
 } from '@vitest/runner'
+import type { ModuleRunner } from 'vite/module-runner'
 import type { SerializedConfig } from '../config'
-import type { VitestExecutor } from '../execute'
+// import type { VitestExecutor } from '../execute'
 import type {
   Benchmark,
   BenchmarkResult,
   BenchTask,
 } from '../types/benchmark'
 import { updateTask as updateRunnerTask } from '@vitest/runner'
-import { createDefer, getSafeTimers } from '@vitest/utils'
+import { createDefer } from '@vitest/utils/helpers'
+import { getSafeTimers } from '@vitest/utils/timers'
 import { getBenchFn, getBenchOptions } from '../benchmark'
 import { getWorkerState } from '../utils'
 
@@ -150,7 +152,7 @@ async function runBenchmarkSuite(suite: Suite, runner: NodeBenchmarkRunner) {
 }
 
 export class NodeBenchmarkRunner implements VitestRunner {
-  private __vitest_executor!: VitestExecutor
+  private moduleRunner!: ModuleRunner
 
   constructor(public config: SerializedConfig) {}
 
@@ -160,9 +162,12 @@ export class NodeBenchmarkRunner implements VitestRunner {
 
   importFile(filepath: string, source: VitestRunnerImportSource): unknown {
     if (source === 'setup') {
-      getWorkerState().moduleCache.delete(filepath)
+      const moduleNode = getWorkerState().evaluatedModules.getModuleById(filepath)
+      if (moduleNode) {
+        getWorkerState().evaluatedModules.invalidateModule(moduleNode)
+      }
     }
-    return this.__vitest_executor.executeId(filepath)
+    return this.moduleRunner.import(filepath)
   }
 
   async runSuite(suite: Suite): Promise<void> {

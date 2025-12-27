@@ -22,7 +22,7 @@ expect.extend({
       pass,
       message: () => {
         const includePattern = checks?.length
-          ? checks.map(check => `✓ |${check}| ${testName}`).join('\n')
+          ? checks.map(check => `✓ |${check.browser}| ${testName}`).join('\n')
           : `✓ ${testName}`
         return `expected ${pass ? 'not ' : ''}to have "${includePattern}" in the report.\n\nstdout:\n${stdout}`
       },
@@ -54,8 +54,7 @@ expect.extend({
 })
 
 declare module 'vitest' {
-  // eslint-disable-next-line unused-imports/no-unused-vars
-  interface Assertion<T = any> {
+  interface Matchers {
     // eslint-disable-next-line ts/method-signature-style
     toReportPassedTest(testName: string, testProject?: string | BrowserInstanceOption[]): void
     // eslint-disable-next-line ts/method-signature-style

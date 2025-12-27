@@ -1,7 +1,8 @@
 import type { VitestRunner } from '@vitest/runner'
 import type { SerializedConfig, WorkerGlobalState } from 'vitest'
+import type { OTELCarrier, Traces } from 'vitest/internal/browser'
 import type { IframeOrchestrator } from './orchestrator'
-import type { CommandsManager } from './tester/utils'
+import type { CommandsManager } from './tester/tester-utils'
 
 export async function importId(id: string): Promise<any> {
   const name = `/@id/${id}`.replace(/\\/g, '/')
@@ -13,10 +14,10 @@ export async function importFs(id: string): Promise<any> {
   return getBrowserState().wrapModule(() => import(/* @vite-ignore */ name))
 }
 
-export const executor = {
+export const moduleRunner = {
   isBrowser: true,
 
-  executeId: (id: string): Promise<any> => {
+  import: (id: string): Promise<any> => {
     if (id[0] === '/' || id[1] === ':') {
       return importFs(id)
     }
@@ -65,7 +66,6 @@ export function ensureAwaited<T>(promise: (error?: Error) => Promise<T>): Promis
 export interface BrowserRunnerState {
   files: string[]
   runningFiles: string[]
-  moduleCache: WorkerGlobalState['moduleCache']
   config: SerializedConfig
   provider: string
   runner: VitestRunner
@@ -74,13 +74,16 @@ export interface BrowserRunnerState {
   }
   providedContext: string
   type: 'tester' | 'orchestrator'
+  disposeExceptionTracker: () => void
   wrapModule: <T>(module: () => T) => T
   iframeId?: string
   sessionId: string
   testerId: string
+  otelCarrier?: OTELCarrier
   method: 'run' | 'collect'
   orchestrator?: IframeOrchestrator
   commands: CommandsManager
+  traces: Traces
   cleanups: Array<() => unknown>
   cdp?: {
     on: (event: string, listener: (payload: any) => void) => void

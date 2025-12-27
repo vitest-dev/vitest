@@ -1,9 +1,10 @@
+import { playwright } from '@vitest/browser-playwright'
 import { chromium } from 'playwright'
 import { expect, test } from 'vitest'
 import { provider } from '../settings'
 import { runBrowserTests } from './utils'
 
-test.runIf(provider === 'playwright')('[playwright] runs in connect mode', async () => {
+test.runIf(provider.name === 'playwright')('[playwright] runs in connect mode', async () => {
   const browserServer = await chromium.launchServer()
   const wsEndpoint = browserServer.wsEndpoint()
 
@@ -14,9 +15,11 @@ test.runIf(provider === 'playwright')('[playwright] runs in connect mode', async
         {
           browser: 'chromium',
           name: 'chromium',
-          connect: {
-            wsEndpoint,
-          },
+          provider: playwright({
+            connectOptions: {
+              wsEndpoint,
+            },
+          }),
         },
       ],
     },
@@ -24,12 +27,12 @@ test.runIf(provider === 'playwright')('[playwright] runs in connect mode', async
 
   await browserServer.close()
 
+  expect(stderr).toBe('')
   expect(stdout).toContain('Tests  2 passed')
   expect(exitCode).toBe(0)
-  expect(stderr).toBe('')
 })
 
-test.runIf(provider === 'playwright')('[playwright] warns if both connect and launch mode are configured', async () => {
+test.runIf(provider.name === 'playwright')('[playwright] warns if both connect and launch mode are configured', async () => {
   const browserServer = await chromium.launchServer()
   const wsEndpoint = browserServer.wsEndpoint()
 
@@ -40,10 +43,12 @@ test.runIf(provider === 'playwright')('[playwright] warns if both connect and la
         {
           browser: 'chromium',
           name: 'chromium',
-          connect: {
-            wsEndpoint,
-          },
-          launch: {},
+          provider: playwright({
+            connectOptions: {
+              wsEndpoint,
+            },
+            launchOptions: {},
+          }),
         },
       ],
     },
@@ -51,7 +56,7 @@ test.runIf(provider === 'playwright')('[playwright] warns if both connect and la
 
   await browserServer.close()
 
+  expect(stderr).toContain('Found both connect and launch options in browser instance configuration.')
   expect(stdout).toContain('Tests  2 passed')
   expect(exitCode).toBe(0)
-  expect(stderr).toContain('Found both connect and launch options in browser instance configuration.')
 })

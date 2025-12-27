@@ -1,4 +1,4 @@
-import type { Locator } from '@vitest/browser/context'
+import type { Locator } from './context.js'
 import type { TestingLibraryMatchers } from './jest-dom.js'
 import type { Assertion, ExpectPollOptions } from 'vitest'
 
@@ -22,7 +22,7 @@ declare module 'vitest' {
      * You can set default timeout via `expect.poll.timeout` option in the config.
      * @see {@link https://vitest.dev/api/expect#poll}
      */
-    element: <T extends Element | Locator | null>(element: T, options?: ExpectPollOptions) => PromisifyDomAssertion<Awaited<Element | null>>
+    element: <T extends HTMLElement | SVGElement | null | Locator>(element: T, options?: ExpectPollOptions) => PromisifyDomAssertion<Awaited<HTMLElement | SVGElement | null>>
   }
 }
 

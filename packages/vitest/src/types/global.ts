@@ -4,18 +4,6 @@ import type { SnapshotState } from '@vitest/snapshot'
 import type { BenchmarkResult } from '../runtime/types/benchmark'
 import type { UserConsoleLog } from './general'
 
-declare global {
-  // eslint-disable-next-line ts/no-namespace
-  namespace Chai {
-    interface Assertion {
-      containSubset: (expected: any) => Assertion
-    }
-    interface Assert {
-      containSubset: (val: any, exp: any, msg?: string) => void
-    }
-  }
-}
-
 interface SnapshotMatcher<T> {
   <U extends { [P in keyof T]: any }>(
     snapshot: Partial<U>,
@@ -46,11 +34,12 @@ declare module '@vitest/expect' {
   }
 
   interface ExpectStatic {
+    assert: Chai.AssertStatic
     unreachable: (message?: string) => never
     soft: <T>(actual: T, message?: string) => Assertion<T>
     poll: <T>(
       actual: () => T,
-      options?: ExpectPollOptions
+      options?: ExpectPollOptions,
     ) => PromisifyAssertion<Awaited<T>>
     addEqualityTesters: (testers: Array<Tester>) => void
     assertions: (expected: number) => void
@@ -87,7 +76,7 @@ declare module '@vitest/expect' {
      */
     toThrowErrorMatchingInlineSnapshot: (
       snapshot?: string,
-      hint?: string
+      hint?: string,
     ) => void
 
     /**

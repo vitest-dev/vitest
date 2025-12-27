@@ -1,10 +1,4 @@
 import type { ApiConfig } from '../types/config'
-import type {
-  ForksOptions,
-  ThreadsOptions,
-  VmOptions,
-  WorkerContextOptions,
-} from '../types/pool-options'
 import type { CliOptions } from './cli-api'
 import { defaultBrowserPort, defaultPort } from '../../constants'
 import { ReportersMap } from '../reporters'
@@ -26,9 +20,9 @@ export type CLIOption<Value> = {
   normalize?: boolean
 } & (NestedOption<Value> extends never // require subcommands for nested options
   ? object
-  : { subcommands: CLIOptions<NestedOption<Value>> | null }) &
+  : { subcommands: CLIOptions<NestedOption<Value>> | null })
   // require argument for non-boolean options
-  (NonNullable<Value> extends boolean ? object : { argument: string })
+& (NonNullable<Value> extends boolean ? object : { argument: string })
 
 export type CLIOptions<Config extends object> = {
   [Key in keyof Config as NonNullable<Config[Key]> extends Function
@@ -54,46 +48,6 @@ const apiConfig: (port: number) => CLIOptions<ApiConfig> = (port: number) => ({
   },
   middlewareMode: null,
 })
-
-const poolThreadsCommands: CLIOptions<ThreadsOptions & WorkerContextOptions> = {
-  isolate: {
-    description: 'Isolate tests in threads pool (default: `true`)',
-  },
-  singleThread: {
-    description: 'Run tests inside a single thread (default: `false`)',
-  },
-  maxThreads: {
-    description: 'Maximum number or percentage of threads to run tests in',
-    argument: '<workers>',
-  },
-  minThreads: {
-    description: 'Minimum number or percentage of threads to run tests in',
-    argument: '<workers>',
-  },
-  useAtomics: {
-    description:
-      'Use Atomics to synchronize threads. This can improve performance in some cases, but might cause segfault in older Node versions (default: `false`)',
-  },
-  execArgv: null,
-}
-
-const poolForksCommands: CLIOptions<ForksOptions & WorkerContextOptions> = {
-  isolate: {
-    description: 'Isolate tests in forks pool (default: `true`)',
-  },
-  singleFork: {
-    description: 'Run tests inside a single child_process (default: `false`)',
-  },
-  maxForks: {
-    description: 'Maximum number or percentage of processes to run tests in',
-    argument: '<workers>',
-  },
-  minForks: {
-    description: 'Minimum number or percentage of processes to run tests in',
-    argument: '<workers>',
-  },
-  execArgv: null,
-}
 
 function watermarkTransform(value: unknown) {
   if (typeof value === 'string') {
@@ -190,11 +144,6 @@ export const cliOptionsConfig: VitestCLIOptions = {
     argument: '', // empty string means boolean
     transform: transformNestedBoolean,
     subcommands: {
-      all: {
-        description:
-          'Whether to include all files, including the untested ones into report',
-        default: true,
-      },
       provider: {
         description:
           'Select the tool for coverage collection, available values are: "v8", "istanbul" and "custom"',
@@ -206,20 +155,14 @@ export const cliOptionsConfig: VitestCLIOptions = {
       },
       include: {
         description:
-          'Files included in coverage as glob patterns. May be specified more than once when using multiple patterns (default: `**`)',
+          'Files included in coverage as glob patterns. May be specified more than once when using multiple patterns. By default only files covered by tests are included.',
         argument: '<pattern>',
         array: true,
       },
       exclude: {
         description:
-          'Files to be excluded in coverage. May be specified more than once when using multiple extensions (default: Visit [`coverage.exclude`](https://vitest.dev/config/#coverage-exclude))',
+          'Files to be excluded in coverage. May be specified more than once when using multiple extensions.',
         argument: '<pattern>',
-        array: true,
-      },
-      extension: {
-        description:
-          'Extension to be included in coverage. May be specified more than once when using multiple extensions (default: `[".js", ".cjs", ".mjs", ".ts", ".mts", ".tsx", ".jsx", ".vue", ".svelte"]`)',
-        argument: '<extension>',
         array: true,
       },
       clean: {
@@ -265,6 +208,17 @@ export const cliOptionsConfig: VitestCLIOptions = {
           autoUpdate: {
             description:
               'Update threshold values: "lines", "functions", "branches" and "statements" to configuration file when current coverage is above the configured thresholds (default: `false`)',
+            argument: '<boolean|function>',
+            subcommands: null,
+            transform(value) {
+              if (value === 'true' || value === 'yes' || value === true) {
+                return true
+              }
+              if (value === 'false' || value === 'no' || value === false) {
+                return false
+              }
+              return value
+            },
           },
           lines: {
             description:
@@ -345,11 +299,6 @@ export const cliOptionsConfig: VitestCLIOptions = {
     description: 'Override Vite mode (default: `test` or `benchmark`)',
     argument: '<name>',
   },
-  workspace: {
-    description: '[deprecated] Path to a workspace configuration file',
-    argument: '<path>',
-    normalize: true,
-  },
   isolate: {
     description:
       'Run every test file in isolation. To disable isolation, use `--no-isolate` (default: `true`)',
@@ -386,7 +335,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
       },
       name: {
         description:
-          'Run all tests in a specific browser. Some browsers are only available for specific providers (see `--browser.provider`). Visit [`browser.name`](https://vitest.dev/guide/browser/config/#browser-name) for more information',
+          'Run all tests in a specific browser. Some browsers are only available for specific providers (see `--browser.provider`).',
         argument: '<name>',
       },
       headless: {
@@ -398,18 +347,6 @@ export const cliOptionsConfig: VitestCLIOptions = {
           'Specify options for the browser API server. Does not affect the --api option',
         argument: '[port]',
         subcommands: apiConfig(defaultBrowserPort),
-      },
-      provider: {
-        description:
-          'Provider used to run browser tests. Some browsers are only available for specific providers. Can be "webdriverio", "playwright", "preview", or the path to a custom provider. Visit [`browser.provider`](https://vitest.dev/guide/browser/config.html#browser-provider) for more information (default: `"preview"`)',
-        argument: '<name>',
-        subcommands: null, // don't support custom objects
-      },
-      providerOptions: {
-        description:
-          'Options that are passed down to a browser provider. Visit [`browser.providerOptions`](https://vitest.dev/config/#browser-provideroptions) for more information',
-        argument: '<options>',
-        subcommands: null, // don't support custom objects
       },
       isolate: {
         description:
@@ -427,8 +364,18 @@ export const cliOptionsConfig: VitestCLIOptions = {
         description: 'If connection to the browser takes longer, the test suite will fail (default: `60_000`)',
         argument: '<timeout>',
       },
+      trackUnhandledErrors: {
+        description: 'Control if Vitest catches uncaught exceptions so they can be reported (default: `true`)',
+      },
+      trace: {
+        description: 'Enable trace view mode. Supported: "on", "off", "on-first-retry", "on-all-retries", "retain-on-failure".',
+        argument: '<mode>',
+        subcommands: null, // don't support subcommands
+        transform(value) {
+          return { mode: value }
+        },
+      },
       orchestratorScripts: null,
-      testerScripts: null,
       commands: null,
       viewport: null,
       screenshotDirectory: null,
@@ -436,6 +383,8 @@ export const cliOptionsConfig: VitestCLIOptions = {
       locators: null,
       testerHtmlPath: null,
       instances: null,
+      expect: null,
+      provider: null,
     },
   },
   pool: {
@@ -444,47 +393,15 @@ export const cliOptionsConfig: VitestCLIOptions = {
     argument: '<pool>',
     subcommands: null, // don't support custom objects
   },
-  poolOptions: {
-    description: 'Specify pool options',
-    argument: '<options>',
-    // we use casting here because TypeScript (for some reason) makes this into CLIOption<unknown>
-    // even when using casting, these types fail if the new option is added which is good
-    subcommands: {
-      threads: {
-        description: 'Specify threads pool options',
-        argument: '<options>',
-        subcommands: poolThreadsCommands,
-      } as CLIOption<ThreadsOptions & WorkerContextOptions>,
-      vmThreads: {
-        description: 'Specify VM threads pool options',
-        argument: '<options>',
-        subcommands: {
-          ...poolThreadsCommands,
-          memoryLimit: {
-            description:
-              'Memory limit for VM threads pool. If you see memory leaks, try to tinker this value.',
-            argument: '<limit>',
-          },
-        },
-      } as CLIOption<ThreadsOptions & VmOptions>,
-      forks: {
-        description: 'Specify forks pool options',
-        argument: '<options>',
-        subcommands: poolForksCommands,
-      } as CLIOption<ForksOptions & WorkerContextOptions>,
-      vmForks: {
-        description: 'Specify VM forks pool options',
-        argument: '<options>',
-        subcommands: {
-          ...poolForksCommands,
-          memoryLimit: {
-            description:
-              'Memory limit for VM forks pool. If you see memory leaks, try to tinker this value.',
-            argument: '<limit>',
-          },
-        },
-      } as CLIOption<ForksOptions & VmOptions>,
-    },
+  execArgv: {
+    description: 'Pass additional arguments to `node` process when spawning `worker_threads` or `child_process`.',
+    argument: '<option>',
+    array: true,
+  },
+  vmMemoryLimit: {
+    description:
+      'Memory limit for VM pools. If you see memory leaks, try to tinker this value.',
+    argument: '<limit>',
   },
   fileParallelism: {
     description:
@@ -492,10 +409,6 @@ export const cliOptionsConfig: VitestCLIOptions = {
   },
   maxWorkers: {
     description: 'Maximum number or percentage of workers to run tests in',
-    argument: '<workers>',
-  },
-  minWorkers: {
-    description: 'Minimum number or percentage of workers to run tests in',
     argument: '<workers>',
   },
   environment: {
@@ -836,7 +749,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
   },
   standalone: {
     description:
-      'Start Vitest without running tests. File filters will be ignored, tests will be running only on change (default: `false`)',
+      'Start Vitest without running tests. Tests will be running only on change. This option is ignored when CLI file filters are passed. (default: `false`)',
   },
   mergeReports: {
     description:
@@ -849,7 +762,24 @@ export const cliOptionsConfig: VitestCLIOptions = {
       return value
     },
   },
+  clearCache: {
+    description: 'Delete all Vitest caches, including `experimental.fsModuleCache`, without running any tests. This will reduce the performance in the subsequent test run.',
+  },
 
+  experimental: {
+    description: 'Experimental features.',
+    argument: '<features>',
+    subcommands: {
+      fsModuleCache: {
+        description: 'Enable caching of modules on the file system between reruns.',
+      },
+      fsModuleCachePath: null,
+      openTelemetry: null,
+      printImportBreakdown: {
+        description: 'Print import breakdown after the summary. If the reporter doesn\'t support summary, this will have no effect. Note that UI\'s "Module Graph" tab always has an import breakdown.',
+      },
+    },
+  },
   // disable CLI options
   cliExclude: null,
   server: null,
@@ -860,7 +790,6 @@ export const cliOptionsConfig: VitestCLIOptions = {
   includeSource: null,
   alias: null,
   env: null,
-  environmentMatchGlobs: null,
   environmentOptions: null,
   unstubEnvs: null,
   related: null,
@@ -872,12 +801,10 @@ export const cliOptionsConfig: VitestCLIOptions = {
   uiBase: null,
   benchmark: null,
   include: null,
-  testTransformMode: null,
   fakeTimers: null,
   chaiConfig: null,
   clearMocks: null,
   css: null,
-  poolMatchGlobs: null,
   deps: null,
   name: null,
   snapshotEnvironment: null,
@@ -904,15 +831,17 @@ export const benchCliOptionsConfig: Pick<
   },
 }
 
-export const collectCliOptionsConfig: Pick<
-  VitestCLIOptions,
-  'json' | 'filesOnly'
-> = {
+export const collectCliOptionsConfig: VitestCLIOptions = {
+  ...cliOptionsConfig,
   json: {
     description: 'Print collected tests as JSON or write to a file (Default: false)',
     argument: '[true/path]',
   },
   filesOnly: {
     description: 'Print only test files with out the test cases',
+  },
+  changed: {
+    description: 'Print only tests that are affected by the changed files (default: `false`)',
+    argument: '[since]',
   },
 }

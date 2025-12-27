@@ -6,8 +6,10 @@ import type {
   Suite as RunnerTestSuite,
   TaskMeta,
   TestAnnotation,
+  TestArtifact,
 } from '@vitest/runner'
 import type { SerializedError, TestError } from '@vitest/utils'
+import type { DevEnvironment } from 'vite'
 import type { TestProject } from '../project'
 
 class ReportedTaskImplementation {
@@ -184,6 +186,15 @@ export class TestCase extends ReportedTaskImplementation {
    */
   public annotations(): ReadonlyArray<TestAnnotation> {
     return [...this.task.annotations]
+  }
+
+  /**
+   * @experimental
+   *
+   * Test artifacts recorded via the `recordArtifact` API during the test execution.
+   */
+  public artifacts(): ReadonlyArray<TestArtifact> {
+    return [...this.task.artifacts]
   }
 
   /**
@@ -431,16 +442,35 @@ export class TestModule extends SuiteImplementation {
   public readonly type = 'module'
 
   /**
+   * The Vite environment that processes files on the server.
+   *
+   * Can be empty if test module did not run yet.
+   */
+  public readonly viteEnvironment: DevEnvironment | undefined
+
+  /**
    * This is usually an absolute UNIX file path.
    * It can be a virtual ID if the file is not on the disk.
    * This value corresponds to the ID in the Vite's module graph.
    */
   public readonly moduleId: string
 
+  /**
+   * Module id relative to the project. This is the same as `task.name`.
+   */
+  public readonly relativeModuleId: string
+
   /** @internal */
   protected constructor(task: RunnerTestFile, project: TestProject) {
     super(task, project)
     this.moduleId = task.filepath
+    this.relativeModuleId = task.name
+    if (task.viteEnvironment === '__browser__') {
+      this.viteEnvironment = project.browser?.vite.environments.client
+    }
+    else if (typeof task.viteEnvironment === 'string') {
+      this.viteEnvironment = project.vite.environments[task.viteEnvironment]
+    }
   }
 
   /**
@@ -520,11 +550,11 @@ export type TestSuiteState = 'skipped' | 'pending' | 'failed' | 'passed'
 export type TestModuleState = TestSuiteState | 'queued'
 export type TestState = TestResult['state']
 
-export type TestResult =
-  | TestResultPassed
-  | TestResultFailed
-  | TestResultSkipped
-  | TestResultPending
+export type TestResult
+  = | TestResultPassed
+    | TestResultFailed
+    | TestResultSkipped
+    | TestResultPending
 
 export interface TestResultPending {
   /**
@@ -680,4 +710,12 @@ function getSuiteState(task: RunnerTestSuite | RunnerTestFile): TestSuiteState {
     return 'passed'
   }
   throw new Error(`Unknown suite state: ${state}`)
+}
+
+export function experimental_getRunnerTask(entity: TestCase): RunnerTestCase
+export function experimental_getRunnerTask(entity: TestSuite): RunnerTestSuite
+export function experimental_getRunnerTask(entity: TestModule): RunnerTestFile
+export function experimental_getRunnerTask(entity: TestCase | TestSuite | TestModule): RunnerTestSuite | RunnerTestFile | RunnerTestCase
+export function experimental_getRunnerTask(entity: TestCase | TestSuite | TestModule): RunnerTestSuite | RunnerTestFile | RunnerTestCase {
+  return entity.task
 }

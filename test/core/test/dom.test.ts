@@ -8,7 +8,7 @@
 import { expect, it, vi } from 'vitest'
 
 declare global {
-  // eslint-disable-next-line no-var
+
   var __property_jsdom: unknown
 }
 

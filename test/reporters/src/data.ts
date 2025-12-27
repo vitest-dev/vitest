@@ -1,4 +1,4 @@
-import type { ErrorWithDiff, Suite, Task } from 'vitest'
+import type { RunnerTestCase, RunnerTestSuite, TestError } from 'vitest'
 import { createFileTask } from '@vitest/runner/utils'
 
 const file = createFileTask(
@@ -12,10 +12,13 @@ file.result = {
   duration: 145.99284195899963,
 }
 
-const suite: Suite = {
+const suiteName = 'suite'
+const suite: RunnerTestSuite = {
   id: `${file.id}_0`,
   type: 'suite',
-  name: 'suite',
+  name: suiteName,
+  fullName: `${file.fullName} > ${suiteName}`,
+  fullTestName: `${file.fullTestName} > ${suiteName}`,
   mode: 'run',
   meta: {},
   file,
@@ -34,6 +37,8 @@ passedFile.tasks.push({
   id: `${file.id}_1`,
   type: 'test',
   name: 'Math.sqrt()',
+  fullName: `${suite.fullName} > Math.sqrt()`,
+  fullTestName: `${suite.fullTestName} > Math.sqrt()`,
   mode: 'run',
   fails: undefined,
   suite,
@@ -41,6 +46,7 @@ passedFile.tasks.push({
   file: passedFile,
   timeout: 0,
   annotations: [],
+  artifacts: [],
   result: {
     state: 'pass',
     duration: 1.4422860145568848,
@@ -48,12 +54,13 @@ passedFile.tasks.push({
   context: null as any,
 })
 
-const error: ErrorWithDiff = {
+const error: TestError = {
   name: 'AssertionError',
   message: 'expected 2.23606797749979 to equal 2',
   actual: '2.23606797749979',
   expected: '2',
   operator: 'strictEqual',
+  stacks: undefined!,
 }
 error.showDiff = true
 error.stack = 'AssertionError: expected 2.23606797749979 to equal 2\n'
@@ -68,17 +75,20 @@ error.stack = 'AssertionError: expected 2.23606797749979 to equal 2\n'
   + '    at async run (/vitest/packages/vitest/dist/entry.js:1797:5)\n'
   + '    at async file:///vitest/node_modules/.pnpm/tinypool@0.1.1/node_modules/tinypool/dist/esm/worker.js:96:20'
 
-const tasks: Task[] = [
+const tasks: RunnerTestCase[] = [
   {
     id: `${suite.id}_0`,
     type: 'test',
     name: 'Math.sqrt()',
+    fullName: `${suite.fullName} > Math.sqrt()`,
+    fullTestName: `${suite.fullTestName} > Math.sqrt()`,
     mode: 'run',
     fails: undefined,
     meta: {},
     file,
     suite,
     annotations: [],
+    artifacts: [],
     result: {
       state: 'fail',
       errors: [error],
@@ -95,8 +105,11 @@ const tasks: Task[] = [
     id: `${suite.id}_1`,
     type: 'test',
     name: 'JSON',
+    fullName: `${suite.fullName} > JSON`,
+    fullTestName: `${suite.fullTestName} > JSON`,
     mode: 'run',
     annotations: [],
+    artifacts: [],
     suite,
     fails: undefined,
     timeout: 0,
@@ -109,6 +122,8 @@ const tasks: Task[] = [
     id: `${suite.id}_3`,
     type: 'test',
     name: 'async with timeout',
+    fullName: `${suite.fullName} > async with timeout`,
+    fullTestName: `${suite.fullTestName} > async with timeout`,
     mode: 'skip',
     suite,
     fails: undefined,
@@ -116,6 +131,7 @@ const tasks: Task[] = [
     timeout: 0,
     file,
     annotations: [],
+    artifacts: [],
     result: undefined,
     context: null as any,
   },
@@ -123,7 +139,10 @@ const tasks: Task[] = [
     id: `${suite.id}_4`,
     type: 'test',
     name: 'timeout',
+    fullName: `${suite.fullName} > timeout`,
+    fullTestName: `${suite.fullTestName} > timeout`,
     annotations: [],
+    artifacts: [],
     mode: 'run',
     suite,
     fails: undefined,
@@ -137,10 +156,13 @@ const tasks: Task[] = [
     id: `${suite.id}_5`,
     type: 'test',
     name: 'callback setup success ',
+    fullName: `${suite.fullName} > callback setup success `,
+    fullTestName: `${suite.fullTestName} > callback setup success `,
     mode: 'run',
     suite,
     fails: undefined,
     annotations: [],
+    artifacts: [],
     meta: {},
     timeout: 0,
     file,
@@ -151,12 +173,15 @@ const tasks: Task[] = [
     id: `${suite.id}_6`,
     type: 'test',
     name: 'callback test success ',
+    fullName: `${suite.fullName} > callback test success `,
+    fullTestName: `${suite.fullTestName} > callback test success `,
     mode: 'run',
     suite,
     fails: undefined,
     meta: {},
     timeout: 0,
     annotations: [],
+    artifacts: [],
     file,
     result: { state: 'pass', duration: 0.33245420455932617 },
     context: null as any,
@@ -165,10 +190,13 @@ const tasks: Task[] = [
     id: `${suite.id}_7`,
     type: 'test',
     name: 'callback setup success done(false)',
+    fullName: `${suite.fullName} > callback setup success done(false)`,
+    fullTestName: `${suite.fullTestName} > callback setup success done(false)`,
     mode: 'run',
     suite,
     fails: undefined,
     annotations: [],
+    artifacts: [],
     meta: {},
     timeout: 0,
     file,
@@ -179,10 +207,13 @@ const tasks: Task[] = [
     id: `${suite.id}_8`,
     type: 'test',
     name: 'callback test success done(false)',
+    fullName: `${suite.fullName} > callback test success done(false)`,
+    fullTestName: `${suite.fullTestName} > callback test success done(false)`,
     mode: 'run',
     suite,
     fails: undefined,
     annotations: [],
+    artifacts: [],
     meta: {},
     timeout: 0,
     file,
@@ -201,11 +232,14 @@ const tasks: Task[] = [
     id: `${suite.id}_9`,
     type: 'test',
     name: 'todo test',
+    fullName: `${suite.fullName} > todo test`,
+    fullTestName: `${suite.fullTestName} > todo test`,
     mode: 'todo',
     suite,
     timeout: 0,
     fails: undefined,
     annotations: [],
+    artifacts: [],
     meta: {},
     file,
     result: undefined,

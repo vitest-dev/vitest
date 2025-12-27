@@ -1,13 +1,12 @@
 import { readdirSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { beforeAll, expect } from 'vitest'
-import { rolldownVersion } from 'vitest/node'
-import { isV8Provider, readCoverageMap, runVitest, test } from '../utils'
+import { readCoverageMap, runVitest, test } from '../utils'
 
 beforeAll(async () => {
   await runVitest({
     include: ['fixtures/test/vue-fixture.test.ts'],
-    coverage: { reporter: ['json', 'html'], all: false },
+    coverage: { reporter: ['json', 'html'] },
   })
 })
 
@@ -24,34 +23,12 @@ test('files should not contain query parameters', () => {
 test('coverage results matches snapshot', async () => {
   const coverageMap = await readCoverageMap()
 
-  if (isV8Provider() && !rolldownVersion) {
-    expect(coverageMap).toMatchInlineSnapshot(`
-      {
-        "branches": "5/7 (71.42%)",
-        "functions": "3/5 (60%)",
-        "lines": "36/45 (80%)",
-        "statements": "36/45 (80%)",
-      }
-    `)
-  }
-  else if (isV8Provider() && rolldownVersion) {
-    expect(coverageMap).toMatchInlineSnapshot(`
-      {
-        "branches": "7/9 (77.77%)",
-        "functions": "4/6 (66.66%)",
-        "lines": "36/45 (80%)",
-        "statements": "36/45 (80%)",
-      }
-    `)
-  }
-  else {
-    expect(coverageMap).toMatchInlineSnapshot(`
-      {
-        "branches": "6/8 (75%)",
-        "functions": "5/7 (71.42%)",
-        "lines": "13/16 (81.25%)",
-        "statements": "14/17 (82.35%)",
-      }
-    `)
-  }
+  expect(coverageMap).toMatchInlineSnapshot(`
+    {
+      "branches": "6/8 (75%)",
+      "functions": "5/7 (71.42%)",
+      "lines": "13/16 (81.25%)",
+      "statements": "14/17 (82.35%)",
+    }
+  `)
 })

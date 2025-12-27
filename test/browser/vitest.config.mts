@@ -2,12 +2,20 @@ import type { BrowserCommand, BrowserInstanceOption } from 'vitest/node'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import * as util from 'node:util'
+import { playwright } from '@vitest/browser-playwright'
+import { preview } from '@vitest/browser-preview'
+import { webdriverio } from '@vitest/browser-webdriverio'
 import { defineConfig } from 'vitest/config'
 
 const dir = dirname(fileURLToPath(import.meta.url))
 
-const provider = process.env.PROVIDER || 'playwright'
-const browser = process.env.BROWSER || (provider === 'playwright' ? 'chromium' : 'chrome')
+const providerName = process.env.PROVIDER || 'playwright'
+const browser = process.env.BROWSER as 'firefox' || (providerName === 'playwright' ? 'chromium' : 'chrome')
+const provider = {
+  playwright,
+  preview,
+  webdriverio,
+}[providerName]
 
 const myCustomCommand: BrowserCommand<[arg1: string, arg2: string]> = ({ testPath }, arg1, arg2) => {
   return { testPath, arg1, arg2 }
@@ -44,40 +52,28 @@ export default defineConfig({
   optimizeDeps: {
     include: ['@vitest/cjs-lib', '@vitest/bundled-lib', 'react/jsx-dev-runtime'],
   },
+  define: {
+    'import.meta.env.DEFINE_CUSTOM_ENV': JSON.stringify('define-custom-env'),
+  },
   test: {
     include: ['test/**.test.{ts,js,tsx}'],
     includeSource: ['src/*.ts'],
     // having a snapshot environment doesn't affect browser tests
     snapshotEnvironment: './custom-snapshot-env.ts',
+    env: {
+      CUSTOM_ENV: 'foo',
+    },
     browser: {
       enabled: true,
       headless: false,
       instances: process.env.BROWSER
         ? devInstances
-        : provider === 'playwright'
+        : providerName === 'playwright'
           ? playwrightInstances
           : webdriverioInstances,
-      provider,
+      provider: provider(),
       // isolate: false,
-      testerScripts: [
-        {
-          content: 'globalThis.__injected = []',
-          type: 'text/javascript',
-        },
-        {
-          content: '__injected.push(1)',
-        },
-        {
-          id: 'ts.ts',
-          content: '(__injected as string[]).push(2)',
-        },
-        {
-          src: './injected.ts',
-        },
-        {
-          src: '@vitest/injected-lib',
-        },
-      ],
+      testerHtmlPath: './custom-tester.html',
       orchestratorScripts: [
         {
           content: 'console.log("Hello, World");globalThis.__injected = []',
@@ -87,7 +83,7 @@ export default defineConfig({
           content: 'import "./injected.ts"',
         },
         {
-          content: 'if(__injected[0] !== 3) throw new Error("injected not working")',
+          content: 'if(__injected[0] !== 2) throw new Error("injected not working")',
         },
       ],
       commands: {
@@ -109,9 +105,6 @@ export default defineConfig({
     outputFile: {
       html: './html/index.html',
       json: './browser.json',
-    },
-    env: {
-      BROWSER: browser,
     },
     onConsoleLog(log) {
       if (log.includes('MESSAGE ADDED')) {

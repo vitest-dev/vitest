@@ -1,5 +1,5 @@
 import { expect } from 'vitest'
-import { formatSummary, isV8Provider, readCoverageMap, runVitest, test } from '../utils'
+import { formatSummary, readCoverageMap, runVitest, test } from '../utils'
 
 test('web worker coverage is correct', async () => {
   await runVitest({
@@ -28,40 +28,20 @@ test('web worker coverage is correct', async () => {
   }
 
   // Check HTML report if these change unexpectedly
-  if (isV8Provider()) {
-    expect(summary).toMatchInlineSnapshot(`
-      {
-        "<process-cwd>/fixtures/src/worker-wrapper.ts": {
-          "branches": "3/3 (100%)",
-          "functions": "2/4 (50%)",
-          "lines": "18/22 (81.81%)",
-          "statements": "18/22 (81.81%)",
-        },
-        "<process-cwd>/fixtures/src/worker.ts": {
-          "branches": "2/4 (50%)",
-          "functions": "2/3 (66.66%)",
-          "lines": "11/19 (57.89%)",
-          "statements": "11/19 (57.89%)",
-        },
-      }
-    `)
-  }
-  else {
-    expect(summary).toMatchInlineSnapshot(`
-      {
-        "<process-cwd>/fixtures/src/worker-wrapper.ts": {
-          "branches": "0/0 (100%)",
-          "functions": "3/5 (60%)",
-          "lines": "9/11 (81.81%)",
-          "statements": "9/11 (81.81%)",
-        },
-        "<process-cwd>/fixtures/src/worker.ts": {
-          "branches": "2/4 (50%)",
-          "functions": "2/3 (66.66%)",
-          "lines": "7/12 (58.33%)",
-          "statements": "7/12 (58.33%)",
-        },
-      }
-    `)
-  }
+  expect(summary).toMatchInlineSnapshot(`
+    {
+      "<process-cwd>/fixtures/src/worker-wrapper.ts": {
+        "branches": "0/0 (100%)",
+        "functions": "3/5 (60%)",
+        "lines": "9/11 (81.81%)",
+        "statements": "9/11 (81.81%)",
+      },
+      "<process-cwd>/fixtures/src/worker.ts": {
+        "branches": "2/4 (50%)",
+        "functions": "2/3 (66.66%)",
+        "lines": "7/12 (58.33%)",
+        "statements": "7/12 (58.33%)",
+      },
+    }
+  `)
 })

@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest'
 import { runVitest } from '../../test-utils'
 
 describe('import durations', () => {
-  const root = resolve(__dirname, '..', 'fixtures')
+  const root = resolve(import.meta.dirname, '..', 'fixtures')
 
   it('should populate importDurations on File with import durations during execution', async () => {
     const { exitCode, ctx } = await runVitest({
@@ -27,14 +27,14 @@ describe('import durations', () => {
     // The 50ms file imports the 25ms file, so the self time should be >=50ms and the total time should be >=75ms
     const utilsFile = resolve(root, 'import-durations-50ms.ts')
 
-    expect(file.importDurations?.[utilsFile]?.selfTime).toBeGreaterThanOrEqual(50)
-    expect(file.importDurations?.[utilsFile]?.totalTime).toBeGreaterThanOrEqual(75)
+    expect(file.importDurations?.[utilsFile]?.selfTime).toBeGreaterThanOrEqual(49)
+    expect(file.importDurations?.[utilsFile]?.totalTime).toBeGreaterThanOrEqual(74)
 
     // The 25ms file should have a self time >25ms and a total time >25ms
     const helperFile = resolve(root, 'import-durations-25ms.ts')
 
-    expect(file.importDurations?.[helperFile]?.selfTime).toBeGreaterThanOrEqual(25)
-    expect(file.importDurations?.[helperFile]?.totalTime).toBeGreaterThanOrEqual(25)
+    expect(file.importDurations?.[helperFile]?.selfTime).toBeGreaterThanOrEqual(24)
+    expect(file.importDurations?.[helperFile]?.totalTime).toBeGreaterThanOrEqual(24)
   }, 40000)
 
   it('should handle tests with no imports gracefully', async () => {

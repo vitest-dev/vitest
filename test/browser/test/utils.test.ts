@@ -1,6 +1,5 @@
-import { commands } from '@vitest/browser/context'
-import { prettyDOM } from '@vitest/browser/utils'
 import { afterEach, expect, it, test } from 'vitest'
+import { commands, utils } from 'vitest/browser'
 
 import { inspect } from 'vitest/internal/browser'
 
@@ -13,13 +12,13 @@ it('utils package correctly uses loupe', async () => {
 })
 
 test('prints default document', async () => {
-  expect(await commands.stripVTControlCharacters(prettyDOM())).toMatchSnapshot()
+  expect(await commands.stripVTControlCharacters(utils.prettyDOM())).toMatchSnapshot()
 
   const div = document.createElement('div')
   div.innerHTML = '<span>hello</span>'
   document.body.append(div)
 
-  expect(await commands.stripVTControlCharacters(prettyDOM())).toMatchSnapshot()
+  expect(await commands.stripVTControlCharacters(utils.prettyDOM())).toMatchSnapshot()
 })
 
 test('prints the element', async () => {
@@ -27,7 +26,7 @@ test('prints the element', async () => {
   div.innerHTML = '<span>hello</span>'
   document.body.append(div)
 
-  expect(await commands.stripVTControlCharacters(prettyDOM())).toMatchSnapshot()
+  expect(await commands.stripVTControlCharacters(utils.prettyDOM())).toMatchSnapshot()
 })
 
 test('prints the element with attributes', async () => {
@@ -35,11 +34,11 @@ test('prints the element with attributes', async () => {
   div.innerHTML = '<span class="some-name" data-test-id="33" id="5">hello</span>'
   document.body.append(div)
 
-  expect(await commands.stripVTControlCharacters(prettyDOM())).toMatchSnapshot()
+  expect(await commands.stripVTControlCharacters(utils.prettyDOM())).toMatchSnapshot()
 })
 
 test('should handle DOM content bigger than maxLength', async () => {
-  const depth = 200
+  const depth = 100
   const maxContent = 150
 
   const openingTags = '<div>'.repeat(depth)
@@ -50,5 +49,63 @@ test('should handle DOM content bigger than maxLength', async () => {
   parentDiv.innerHTML = domString
 
   document.body.appendChild(parentDiv)
-  expect(await commands.stripVTControlCharacters(prettyDOM(undefined, maxContent))).toMatchSnapshot()
+  expect(await commands.stripVTControlCharacters(utils.prettyDOM(undefined, maxContent))).toMatchSnapshot()
+})
+
+test('should handle shadow DOM content', async () => {
+  class CustomElement extends HTMLElement {
+    connectedCallback() {
+      const shadowRoot = this.attachShadow({ mode: 'open' })
+      const span = document.createElement('span')
+      span.classList.add('some-name')
+      span.setAttribute('data-test-id', '33')
+      span.setAttribute('id', '5')
+      span.textContent = 'hello'
+      shadowRoot.appendChild(span)
+    }
+  }
+  customElements.define('custom-element', CustomElement)
+
+  const div = document.createElement('div')
+  div.innerHTML = '<custom-element></custom-element>'
+  document.body.append(div)
+
+  expect(await commands.stripVTControlCharacters(utils.prettyDOM())).toMatchSnapshot()
+})
+
+test('should be able to opt out of shadow DOM content', async () => {
+  class CustomElement extends HTMLElement {
+    connectedCallback() {
+      const shadowRoot = this.attachShadow({ mode: 'open' })
+      const span = document.createElement('span')
+      span.classList.add('some-name')
+      span.setAttribute('data-test-id', '33')
+      span.setAttribute('id', '5')
+      span.textContent = 'hello'
+      shadowRoot.appendChild(span)
+    }
+  }
+  customElements.define('no-shadow-root', CustomElement)
+
+  const div = document.createElement('div')
+  div.innerHTML = '<no-shadow-root></no-shadow-root>'
+  document.body.append(div)
+
+  expect(await commands.stripVTControlCharacters(utils.prettyDOM(undefined, undefined, { printShadowRoot: false }))).toMatchSnapshot()
+})
+
+test('changing the defaults works', async () => {
+  utils.configurePrettyDOM({
+    maxDepth: 1,
+  })
+
+  const div = document.createElement('div')
+  div.innerHTML = '<div><div><div><div></div></div></div></div>'
+  document.body.append(div)
+
+  expect(await commands.stripVTControlCharacters(utils.prettyDOM(div))).toMatchInlineSnapshot(`
+    "<div>
+      <div … />
+    </div>"
+  `)
 })

@@ -1,5 +1,5 @@
-import type { RunnerTaskResultPack, RunnerTestFile } from 'vitest'
-import type { UserConfig } from 'vitest/node'
+import type { TaskMeta } from '@vitest/runner'
+import type { TestModule, TestUserConfig } from 'vitest/node'
 import { resolve } from 'pathe'
 import { expect, it } from 'vitest'
 import { rolldownVersion } from 'vitest/node'
@@ -14,24 +14,29 @@ it.each([
       enabled: true,
     },
   },
-] as UserConfig[])('passes down metadata when $name', { timeout: 60_000, retry: 1 }, async (config) => {
-  const taskUpdate: RunnerTaskResultPack[] = []
-  const finishedFiles: RunnerTestFile[] = []
-  const collectedFiles: RunnerTestFile[] = []
+] as TestUserConfig[])('passes down metadata when $name', { timeout: 60_000, retry: 1 }, async (config) => {
+  const finishedTestCaseMetas: TaskMeta[] = []
+  const finishedTestModuleMetas: TaskMeta[] = []
+
+  const finishedTestModules: TestModule[] = []
+  const collectedTestModules: TestModule[] = []
   const { ctx, stdout, stderr } = await runVitest({
     root: resolve(__dirname, '..', 'fixtures', 'public-api'),
     include: ['**/*.spec.ts'],
     reporters: [
       ['verbose', { isTTY: false }],
       {
-        onTaskUpdate(packs) {
-          taskUpdate.push(...packs.filter(i => i[1]?.state === 'pass'))
+        onTestCaseResult(testCase) {
+          finishedTestCaseMetas.push(testCase.meta())
         },
-        onFinished(files) {
-          finishedFiles.push(...files || [])
+        onTestModuleEnd(testModule) {
+          finishedTestModuleMetas.push(testModule.meta())
         },
-        onCollected(files) {
-          collectedFiles.push(...files || [])
+        onTestRunEnd(testModules) {
+          finishedTestModules.push(...testModules)
+        },
+        onTestModuleCollected(testModule) {
+          collectedTestModules.push(testModule)
         },
       },
     ],
@@ -41,44 +46,35 @@ it.each([
 
   expect(stderr).toBe('')
 
-  expect(stdout).toContain('custom.spec.ts > custom')
+  expect(stdout).toContain('custom.spec.ts:14:1 > custom')
 
   const suiteMeta = { done: true }
   const testMeta = { custom: 'some-custom-hanlder' }
 
-  expect(taskUpdate).toHaveLength(4)
-  expect(finishedFiles).toHaveLength(1)
+  expect(finishedTestCaseMetas).toHaveLength(3)
+  expect(finishedTestModuleMetas).toHaveLength(1)
+  expect(finishedTestModules).toHaveLength(1)
 
   const files = ctx?.state.getFiles() || []
   expect(files).toHaveLength(1)
 
-  expect(taskUpdate).toContainEqual(
-    [
-      expect.any(String),
-      expect.anything(),
-      suiteMeta,
-    ],
-  )
+  expect(finishedTestModuleMetas).toContainEqual(suiteMeta)
 
-  expect(taskUpdate).toContainEqual(
-    [
-      expect.any(String),
-      expect.anything(),
-      testMeta,
-    ],
-  )
+  expect(finishedTestCaseMetas).toContainEqual(testMeta)
 
-  expect(finishedFiles[0].meta).toEqual(suiteMeta)
-  expect(finishedFiles[0].tasks[0].meta).toEqual(testMeta)
+  const test = finishedTestModules[0].children.tests().next().value!
+
+  expect(finishedTestModules[0].meta()).toEqual(suiteMeta)
+  expect(test.meta()).toEqual(testMeta)
 
   expect(files[0].meta).toEqual(suiteMeta)
   expect(files[0].tasks[0].meta).toEqual(testMeta)
 
-  expect(finishedFiles[0].tasks[0].location).toEqual({
+  expect(test.location).toEqual({
     line: 14,
     column: 1,
   })
-  expect(collectedFiles[0].tasks[0].location).toEqual({
+  expect(collectedTestModules[0].task.tasks[0].location).toEqual({
     line: 14,
     column: 1,
   })
@@ -97,4 +93,23 @@ it.each([
       column: rolldownVersion || config.browser?.enabled ? 18 : 17,
     })
   })
+})
+
+it('can modify the global test name pattern', async () => {
+  const { ctx } = await runVitest({
+    testNamePattern: 'custom',
+    include: ['non-existing'],
+  })
+
+  expect(ctx?.getGlobalTestNamePattern()).toEqual(/custom/)
+
+  // reset just removes the override, user config is not touched
+  ctx?.resetGlobalTestNamePattern()
+  expect(ctx?.getGlobalTestNamePattern()).toEqual(/custom/)
+
+  ctx?.setGlobalTestNamePattern(/new pattern/)
+  expect(ctx?.getGlobalTestNamePattern()).toEqual(/new pattern/)
+
+  ctx?.resetGlobalTestNamePattern()
+  expect(ctx?.getGlobalTestNamePattern()).toEqual(/custom/)
 })

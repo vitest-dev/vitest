@@ -1,9 +1,16 @@
 import type { WebSocketStatus } from '@vueuse/core'
-import type { File, RunnerTaskEventPack, SerializedConfig, Task, TaskResultPack, TestAnnotation } from 'vitest'
+import type {
+  RunnerTask,
+  RunnerTaskEventPack,
+  RunnerTaskResultPack,
+  RunnerTestFile,
+  SerializedConfig,
+  TestAnnotation,
+} from 'vitest'
 import type { BrowserRunnerState } from '../../../types'
 import { createFileTask } from '@vitest/runner/utils'
 import { createClient, getTasks } from '@vitest/ws-client'
-import { reactive as reactiveVue } from 'vue'
+import { computed, reactive as reactiveVue, ref, shallowRef, watch } from 'vue'
 import { explorerTree } from '~/composables/explorer'
 import { isFileNode } from '~/composables/explorer/utils'
 import { isSuite as isTaskSuite } from '~/utils/task'
@@ -27,14 +34,20 @@ export const client = (function createVitestClient() {
       },
       handlers: {
         onTestAnnotate(testId: string, annotation: TestAnnotation) {
-          explorerTree.annotateTest(testId, annotation)
+          explorerTree.recordTestArtifact(testId, { type: 'internal:annotation', annotation, location: annotation.location })
         },
-        onTaskUpdate(packs: TaskResultPack[], events: RunnerTaskEventPack[]) {
+        onTestArtifactRecord(testId, artifact) {
+          explorerTree.recordTestArtifact(testId, artifact)
+        },
+        onTaskUpdate(packs: RunnerTaskResultPack[], events: RunnerTaskEventPack[]) {
           explorerTree.resumeRun(packs, events)
           testRunState.value = 'running'
         },
-        onFinished(_files, errors) {
-          explorerTree.endRun()
+        onSpecsCollected(_specs, startTime) {
+          explorerTree.startTime = startTime || performance.now()
+        },
+        onFinished(_files, errors, _coverage, executionTime) {
+          explorerTree.endRun(executionTime)
           // don't change the testRunState.value here:
           // - when saving the file in the codemirror requires explorer tree endRun to finish (multiple microtasks)
           // - if we change here the state before the tasks states are updated, the cursor position will be lost
@@ -65,7 +78,7 @@ export const currentLogs = computed(() => getTasks(current.value).map(i => i?.lo
 
 export function findById(id: string) {
   const file = client.state.idMap.get(id)
-  return file ? file as File : undefined
+  return file ? file as RunnerTestFile : undefined
 }
 
 export const isConnected = computed(() => status.value === 'OPEN')
@@ -76,7 +89,7 @@ export function runAll() {
   return runFiles(client.state.getFiles())
 }
 
-function clearTaskResult(task: Task) {
+function clearTaskResult(task: RunnerTask) {
   delete task.result
   const node = explorerTree.nodes.get(task.id)
   if (node) {
@@ -90,7 +103,7 @@ function clearTaskResult(task: Task) {
   }
 }
 
-function clearResults(useFiles: File[]) {
+function clearResults(useFiles: RunnerTestFile[]) {
   const map = explorerTree.nodes
   useFiles.forEach((f) => {
     delete f.result
@@ -115,7 +128,7 @@ function clearResults(useFiles: File[]) {
   })
 }
 
-export function runFiles(useFiles: File[]) {
+export function runFiles(useFiles: RunnerTestFile[]) {
   clearResults(useFiles)
 
   explorerTree.startRun()
@@ -123,7 +136,7 @@ export function runFiles(useFiles: File[]) {
   return client.rpc.rerun(useFiles.map(i => i.filepath), true)
 }
 
-export function runTask(task: Task) {
+export function runTask(task: RunnerTask) {
   clearTaskResult(task)
 
   explorerTree.startRun()

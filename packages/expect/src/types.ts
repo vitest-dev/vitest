@@ -6,6 +6,7 @@
  *
  */
 
+import type { Test } from '@vitest/runner'
 import type { MockInstance } from '@vitest/spy'
 import type { Constructable } from '@vitest/utils'
 import type { Formatter } from 'tinyrainbow'
@@ -18,7 +19,7 @@ export type Tester = (
   this: TesterContext,
   a: any,
   b: any,
-  customTesters: Array<Tester>
+  customTesters: Array<Tester>,
 ) => boolean | undefined
 
 export interface TesterContext {
@@ -26,7 +27,7 @@ export interface TesterContext {
     a: unknown,
     b: unknown,
     customTesters?: Array<Tester>,
-    strictCheck?: boolean
+    strictCheck?: boolean,
   ) => boolean
 }
 export type { DiffOptions } from '@vitest/utils/diff'
@@ -52,7 +53,7 @@ export interface MatcherState {
     a: unknown,
     b: unknown,
     customTesters?: Array<Tester>,
-    strictCheck?: boolean
+    strictCheck?: boolean,
   ) => boolean
   expand?: boolean
   expectedAssertionsNumber?: number | null
@@ -73,6 +74,7 @@ export interface MatcherState {
   }
   soft?: boolean
   poll?: boolean
+  task?: Readonly<Test>
 }
 
 export interface SyncExpectationResult {
@@ -129,14 +131,14 @@ interface CustomMatcher {
   toSatisfy: (matcher: (value: any) => boolean, message?: string) => any
 
   /**
-   * Matches if the received value is one of the values in the expected array.
+   * Matches if the received value is one of the values in the expected array or set.
    *
    * @example
    * expect(1).toBeOneOf([1, 2, 3])
    * expect('foo').toBeOneOf([expect.any(String)])
    * expect({ a: 1 }).toEqual({ a: expect.toBeOneOf(['1', '2', '3']) })
    */
-  toBeOneOf: <T>(sample: Array<T>) => any
+  toBeOneOf: <T>(sample: Array<T> | Set<T>) => any
 }
 
 export interface AsymmetricMatchersContaining extends CustomMatcher {
@@ -184,6 +186,17 @@ export interface AsymmetricMatchersContaining extends CustomMatcher {
    * expect(5.11).toEqual(expect.closeTo(5.12)); // with default precision
    */
   closeTo: (expected: number, precision?: number) => any
+
+  /**
+   * Matches if the received value validates against a Standard Schema.
+   *
+   * @param schema - A Standard Schema V1 compatible schema object
+   *
+   * @example
+   * expect(user).toEqual(expect.schemaMatching(z.object({ name: z.string() })))
+   * expect(['hello', 'world']).toEqual([expect.schemaMatching(z.string()), expect.schemaMatching(z.string())])
+   */
+  schemaMatching: (schema: unknown) => any
 }
 
 type WithAsymmetricMatcher<T> = T | AsymmetricMatcher<unknown>
@@ -339,6 +352,14 @@ export interface JestAssertion<T = any> extends jest.Matchers<void, T>, CustomMa
   toBeNull: () => void
 
   /**
+   * Used to check that a variable is nullable (null or undefined).
+   *
+   * @example
+   * expect(value).toBeNullable();
+   */
+  toBeNullable: () => void
+
+  /**
    * Ensure that a variable is not undefined.
    *
    * @example
@@ -380,13 +401,13 @@ export interface JestAssertion<T = any> extends jest.Matchers<void, T>, CustomMa
    */
   toHaveProperty: <E>(
     property: string | (string | number)[],
-    value?: E
+    value?: E,
   ) => void
 
   /**
    * Using exact equality with floating point numbers is a bad idea.
    * Rounding means that intuitive things fail.
-   * The default for `precision` is 2.
+   * The default for `numDigits` is 2.
    *
    * @example
    * expect(price).toBeCloseTo(9.99, 2);
@@ -665,7 +686,7 @@ export interface Assertion<T = any>
       | 'object'
       | 'string'
       | 'symbol'
-      | 'undefined'
+      | 'undefined',
   ) => void
 
   /**

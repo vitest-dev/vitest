@@ -62,6 +62,23 @@ export function printChildren(children: Array<unknown>, config: Config, indentat
     .join('')
 }
 
+export function printShadowRoot(children: Array<unknown>, config: Config, indentation: string, depth: number, refs: Refs, printer: Printer): string {
+  if (config.printShadowRoot === false) {
+    return ''
+  }
+  return [
+    `${config.spacingOuter + indentation}#shadow-root`,
+    printChildren(
+      children,
+      config,
+      indentation + config.indent,
+      depth,
+      refs,
+      printer,
+    ),
+  ].join('')
+}
+
 export function printText(text: string, config: Config): string {
   const contentColor = config.colors.content
   return contentColor.open + escapeHTML(text) + contentColor.close

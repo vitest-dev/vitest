@@ -1,19 +1,21 @@
 import type { UserConfig as ViteConfig, Plugin as VitePlugin } from 'vite'
 import type { TestProject } from '../project'
-import type { ResolvedConfig, TestProjectInlineConfiguration } from '../types/config'
+import type { BrowserConfigOptions, ResolvedConfig, TestProjectInlineConfiguration, UserConfig } from '../types/config'
 import { existsSync, readFileSync } from 'node:fs'
-import { deepMerge } from '@vitest/utils'
+import { deepMerge } from '@vitest/utils/helpers'
 import { basename, dirname, relative, resolve } from 'pathe'
+import * as vite from 'vite'
 import { configDefaults } from '../../defaults'
 import { generateScopedClassName } from '../../integrations/css/css-modules'
 import { VitestFilteredOutProjectError } from '../errors'
 import { createViteLogger, silenceImportViteIgnoreWarning } from '../viteLogger'
 import { CoverageTransform } from './coverageTransform'
 import { CSSEnablerPlugin } from './cssEnabler'
+import { MetaEnvReplacerPlugin } from './metaEnvReplacer'
 import { MocksPlugins } from './mocks'
 import { NormalizeURLPlugin } from './normalizeURL'
 import { VitestOptimizer } from './optimizer'
-import { SsrReplacerPlugin } from './ssrReplacer'
+import { ModuleRunnerTransform } from './runnerTransform'
 import {
   deleteDefineConfig,
   getDefaultResolveOptions,
@@ -64,7 +66,7 @@ export function WorkspaceVitestPlugin(
         const isBrowserEnabled = isUserBrowserEnabled ?? (viteConfig.test?.browser && project.vitest._cliOptions.browser?.enabled)
         // keep project names to potentially filter it out
         const workspaceNames = [name]
-        const browser = viteConfig.test!.browser || {}
+        const browser = (viteConfig.test!.browser || {}) as BrowserConfigOptions
         if (isBrowserEnabled && browser.name && !browser.instances?.length) {
           // vitest injects `instances` in this case later on
           workspaceNames.push(name ? `${name} (${browser.name})` : browser.name)
@@ -91,10 +93,28 @@ export function WorkspaceVitestPlugin(
           }
         }
 
+        const vitestConfig: UserConfig = {
+          name: { label: name, color },
+        }
+
+        // always inherit the global `fsModuleCache` value even without `extends: true`
+        if (testConfig.experimental?.fsModuleCache == null && project.vitest.config.experimental?.fsModuleCache !== null) {
+          vitestConfig.experimental ??= {}
+          vitestConfig.experimental.fsModuleCache = project.vitest.config.experimental.fsModuleCache
+        }
+        if (testConfig.experimental?.fsModuleCachePath == null && project.vitest.config.experimental?.fsModuleCachePath !== null) {
+          vitestConfig.experimental ??= {}
+          vitestConfig.experimental.fsModuleCachePath = project.vitest.config.experimental.fsModuleCachePath
+        }
+
         return {
-          test: {
-            name: { label: name, color },
+          base: '/',
+          environments: {
+            __vitest__: {
+              dev: {},
+            },
           },
+          test: vitestConfig,
         }
       },
     },
@@ -105,13 +125,14 @@ export function WorkspaceVitestPlugin(
         this.meta.watchMode = false
       },
       config(viteConfig) {
+        const originalDefine = { ...viteConfig.define } // stash original defines for browser mode
         const defines: Record<string, any> = deleteDefineConfig(viteConfig)
 
         const testConfig = viteConfig.test || {}
         const root = testConfig.root || viteConfig.root || options.root
 
         const resolveOptions = getDefaultResolveOptions()
-        const config: ViteConfig = {
+        let config: ViteConfig = {
           root,
           define: {
             // disable replacing `process.env.NODE_ENV` with static string by vite:client-inject
@@ -121,15 +142,6 @@ export function WorkspaceVitestPlugin(
             ...resolveOptions,
             alias: testConfig.alias,
           },
-          esbuild: viteConfig.esbuild === false
-            ? false
-            : {
-                // Lowest target Vitest supports is Node18
-                target: viteConfig.esbuild?.target || 'node18',
-                sourcemap: 'external',
-                // Enables using ignore hint for coverage providers with @preserve keyword
-                legalComments: 'inline',
-              },
           server: {
             // disable watch mode in workspaces,
             // because it is handled by the top-level watcher
@@ -156,7 +168,37 @@ export function WorkspaceVitestPlugin(
           test: {},
         }
 
+        if ('rolldownVersion' in vite) {
+          config = {
+            ...config,
+            // eslint-disable-next-line ts/ban-ts-comment
+            // @ts-ignore rolldown-vite only
+            oxc: viteConfig.oxc === false
+              ? false
+              : {
+                  // eslint-disable-next-line ts/ban-ts-comment
+                  // @ts-ignore rolldown-vite only
+                  target: viteConfig.oxc?.target || 'node18',
+                },
+          }
+        }
+        else {
+          config = {
+            ...config,
+            esbuild: viteConfig.esbuild === false
+              ? false
+              : {
+                  // Lowest target Vitest supports is Node18
+                  target: viteConfig.esbuild?.target || 'node18',
+                  sourcemap: 'external',
+                  // Enables using ignore hint for coverage providers with @preserve keyword
+                  legalComments: 'inline',
+                },
+          }
+        }
+
         ;(config.test as ResolvedConfig).defines = defines
+        ;(config.test as ResolvedConfig).viteDefine = originalDefine
 
         const classNameStrategy
           = (typeof testConfig.css !== 'boolean'
@@ -202,12 +244,13 @@ export function WorkspaceVitestPlugin(
         await server.watcher.close()
       },
     },
-    SsrReplacerPlugin(),
+    MetaEnvReplacerPlugin(),
     ...CSSEnablerPlugin(project),
     CoverageTransform(project.vitest),
     ...MocksPlugins(),
     VitestProjectResolver(project.vitest),
     VitestOptimizer(),
     NormalizeURLPlugin(),
+    ModuleRunnerTransform(),
   ]
 }

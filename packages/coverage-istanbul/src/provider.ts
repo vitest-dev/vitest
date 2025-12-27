@@ -1,22 +1,22 @@
 import type { CoverageMap } from 'istanbul-lib-coverage'
 import type { Instrumenter } from 'istanbul-lib-instrument'
 import type { ProxifiedModule } from 'magicast'
-import type { CoverageProvider, ReportContext, ResolvedCoverageOptions, Vitest } from 'vitest/node'
-import { promises as fs } from 'node:fs'
+import type { CoverageProvider, ReportContext, ResolvedCoverageOptions, Vite, Vitest } from 'vitest/node'
+import { existsSync, promises as fs } from 'node:fs'
 // @ts-expect-error missing types
 import { defaults as istanbulDefaults } from '@istanbuljs/schema'
-import createDebug from 'debug'
+import { addMapping, GenMapping, toEncodedMap } from '@jridgewell/gen-mapping'
+import { eachMapping, TraceMap } from '@jridgewell/trace-mapping'
 import libCoverage from 'istanbul-lib-coverage'
 import { createInstrumenter } from 'istanbul-lib-instrument'
 import libReport from 'istanbul-lib-report'
 import libSourceMaps from 'istanbul-lib-source-maps'
 import reports from 'istanbul-reports'
 import { parseModule } from 'magicast'
-import { resolve } from 'pathe'
-import TestExclude from 'test-exclude'
+import { createDebug } from 'obug'
 import c from 'tinyrainbow'
 import { BaseCoverageProvider } from 'vitest/coverage'
-
+import { isCSSRequest } from 'vitest/node'
 import { version } from '../package.json' with { type: 'json' }
 import { COVERAGE_STORE_KEY } from './constants'
 
@@ -26,19 +26,11 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider<ResolvedCover
   name = 'istanbul' as const
   version: string = version
   instrumenter!: Instrumenter
-  testExclude!: InstanceType<typeof TestExclude>
+
+  private transformedModuleIds = new Set<string>()
 
   initialize(ctx: Vitest): void {
     this._initialize(ctx)
-
-    this.testExclude = new TestExclude({
-      cwd: ctx.config.root,
-      include: this.options.include,
-      exclude: this.options.exclude,
-      excludeNodeModules: true,
-      extension: this.options.extension,
-      relativePath: !this.options.allowExternal,
-    })
 
     this.instrumenter = createInstrumenter({
       produceSourceMap: true,
@@ -46,7 +38,6 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider<ResolvedCover
       esModules: true,
       compact: false,
       coverageVariable: COVERAGE_STORE_KEY,
-      // @ts-expect-error missing type
       coverageGlobalScope: 'globalThis',
       coverageGlobalScopeFunc: false,
       ignoreClassMethods: this.options.ignoreClassMethods,
@@ -55,20 +46,29 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider<ResolvedCover
         ['importAttributes', { deprecatedAssertSyntax: true }],
       ],
       generatorOpts: {
+        // @ts-expect-error missing type
         importAttributesKeyword: 'with',
       },
     })
   }
 
-  onFileTransform(sourceCode: string, id: string, pluginCtx: any): { code: string; map: any } | undefined {
+  requiresTransform(id: string): boolean {
     // Istanbul/babel cannot instrument CSS - e.g. Vue imports end up here.
     // File extension itself is .vue, but it contains CSS.
     // e.g. "Example.vue?vue&type=style&index=0&scoped=f7f04e08&lang.css"
-    if (id.endsWith('.css')) {
-      return
+    if (isCSSRequest(id)) {
+      return false
     }
 
-    if (!this.testExclude.shouldInstrument(removeQueryParameters(id))) {
+    if (!this.isIncluded(removeQueryParameters(id))) {
+      return false
+    }
+
+    return true
+  }
+
+  onFileTransform(sourceCode: string, id: string, pluginCtx: Vite.Rollup.TransformPluginContext): { code: string; map: any } | undefined {
+    if (!this.requiresTransform(id)) {
       return
     }
 
@@ -87,7 +87,34 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider<ResolvedCover
       id,
       sourceMap as any,
     )
+
+    if (!id.includes('vitest-uncovered-coverage=true')) {
+      const transformMap = new GenMapping(sourceMap)
+
+      eachMapping(new TraceMap(sourceMap as any), (mapping) => {
+        addMapping(transformMap, {
+          generated: { line: mapping.generatedLine, column: mapping.generatedColumn },
+          original: { line: mapping.generatedLine, column: mapping.generatedColumn },
+          content: sourceCode,
+          name: mapping.name || '',
+          source: mapping.source || '',
+        })
+      })
+
+      const encodedMap = toEncodedMap(transformMap)
+      delete encodedMap.file
+      delete encodedMap.ignoreList
+      delete encodedMap.sourceRoot
+
+      this.instrumenter.instrumentSync(
+        sourceCode,
+        id,
+        encodedMap as any,
+      )
+    }
+
     const map = this.instrumenter.lastSourceMap() as any
+    this.transformedModuleIds.add(id)
 
     return { code, map }
   }
@@ -100,35 +127,41 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider<ResolvedCover
     const start = debug.enabled ? performance.now() : 0
 
     const coverageMap = this.createCoverageMap()
-    let coverageMapByTransformMode = this.createCoverageMap()
+    let coverageMapByEnvironment = this.createCoverageMap()
 
     await this.readCoverageFiles<CoverageMap>({
       onFileRead(coverage) {
-        coverageMapByTransformMode.merge(coverage)
+        coverageMapByEnvironment.merge(coverage)
       },
       onFinished: async () => {
         // Source maps can change based on projectName and transform mode.
         // Coverage transform re-uses source maps so we need to separate transforms from each other.
-        const transformedCoverage = await transformCoverage(coverageMapByTransformMode)
+        const transformedCoverage = await transformCoverage(coverageMapByEnvironment)
         coverageMap.merge(transformedCoverage)
 
-        coverageMapByTransformMode = this.createCoverageMap()
+        coverageMapByEnvironment = this.createCoverageMap()
       },
       onDebug: debug,
     })
 
     // Include untested files when all tests were run (not a single file re-run)
     // or if previous results are preserved by "cleanOnRerun: false"
-    if (this.options.all && (allTestsRun || !this.options.cleanOnRerun)) {
+    if (this.options.include != null && (allTestsRun || !this.options.cleanOnRerun)) {
       const coveredFiles = coverageMap.files()
       const uncoveredCoverage = await this.getCoverageMapForUncoveredFiles(coveredFiles)
 
       coverageMap.merge(await transformCoverage(uncoveredCoverage))
     }
 
-    if (this.options.excludeAfterRemap) {
-      coverageMap.filter(filename => this.testExclude.shouldInstrument(filename))
-    }
+    coverageMap.filter((filename) => {
+      const exists = existsSync(filename)
+
+      if (this.options.excludeAfterRemap) {
+        return exists && this.isIncluded(filename)
+      }
+
+      return exists
+    })
 
     if (debug.enabled) {
       debug('Generate coverage total time %d ms', (performance.now() - start!).toFixed())
@@ -173,20 +206,7 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider<ResolvedCover
   }
 
   private async getCoverageMapForUncoveredFiles(coveredFiles: string[]) {
-    const allFiles = await this.testExclude.glob(this.ctx.config.root)
-    let includedFiles = allFiles.map(file =>
-      resolve(this.ctx.config.root, file),
-    )
-
-    if (this.ctx.config.changed) {
-      includedFiles = (this.ctx.config.related || []).filter(file =>
-        includedFiles.includes(file),
-      )
-    }
-
-    const uncoveredFiles = includedFiles
-      .filter(file => !coveredFiles.includes(file))
-      .sort()
+    const uncoveredFiles = await this.getUntestedFiles(coveredFiles)
 
     const cacheKey = new Date().getTime()
     const coverageMap = this.createCoverageMap()
@@ -207,7 +227,7 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider<ResolvedCover
       }
 
       // Make sure file is not served from cache so that instrumenter loads up requested file coverage
-      await transform(`${filename}?cache=${cacheKey}`)
+      await transform(`${filename}?cache=${cacheKey}&vitest-uncovered-coverage=true`)
       const lastCoverage = this.instrumenter.lastFileCoverage()
       coverageMap.addFileCoverage(lastCoverage)
 
@@ -221,6 +241,36 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider<ResolvedCover
     }
 
     return coverageMap
+  }
+
+  // the coverage can be enabled after the tests are run
+  // this means the coverage will not be injected because the modules are cached,
+  // so we are invalidating all modules that don't have the istanbul coverage injected
+  onEnabled(): void {
+    const environments = this.ctx.projects.flatMap(project => [
+      ...Object.values(project.vite.environments),
+      ...Object.values(project.browser?.vite.environments || {}),
+    ])
+
+    const seen = new Set<Vite.EnvironmentModuleNode>()
+    environments.forEach((environment) => {
+      environment.moduleGraph.idToModuleMap.forEach((node) => {
+        this.invalidateTree(node, environment.moduleGraph, seen)
+      })
+    })
+  }
+
+  private invalidateTree(node: Vite.EnvironmentModuleNode, moduleGraph: Vite.EnvironmentModuleGraph, seen: Set<Vite.EnvironmentModuleNode>) {
+    if (seen.has(node)) {
+      return
+    }
+    if (node.id && !this.transformedModuleIds.has(node.id)) {
+      moduleGraph.invalidateModule(node, seen)
+    }
+    seen.add(node) // to avoid infinite loops in circular dependencies
+    node.importedModules.forEach((mod) => {
+      this.invalidateTree(mod, moduleGraph, seen)
+    })
   }
 }
 

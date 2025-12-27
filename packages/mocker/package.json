@@ -1,7 +1,7 @@
 {
   "name": "@vitest/mocker",
   "type": "module",
-  "version": "3.2.3",
+  "version": "4.0.16",
   "description": "Vitest module mocker implementation",
   "license": "MIT",
   "funding": "https://opencollective.com/vitest",
@@ -32,6 +32,10 @@
       "types": "./dist/redirect.d.ts",
       "default": "./dist/redirect.js"
     },
+    "./automock": {
+      "types": "./dist/automock.d.ts",
+      "default": "./dist/automock.js"
+    },
     "./register": {
       "types": "./dist/register.d.ts",
       "default": "./dist/register.js"
@@ -50,12 +54,12 @@
     "dist"
   ],
   "scripts": {
-    "build": "rimraf dist && rollup -c",
+    "build": "premove dist && rollup -c",
     "dev": "rollup -c --watch"
   },
   "peerDependencies": {
     "msw": "^2.4.9",
-    "vite": "^5.0.0 || ^6.0.0 || ^7.0.0-0"
+    "vite": "^6.0.0 || ^7.0.0-0"
   },
   "peerDependenciesMeta": {
     "msw": {
@@ -77,6 +81,6 @@
     "acorn-walk": "catalog:",
     "msw": "catalog:",
     "pathe": "catalog:",
-    "vite": "^5.4.0"
+    "vite": "^6.3.5"
   }
 }

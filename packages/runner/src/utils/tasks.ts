@@ -1,13 +1,6 @@
 import type { Arrayable } from '@vitest/utils'
 import type { Suite, Task, Test } from '../types/tasks'
-import { toArray } from '@vitest/utils'
-
-/**
- * @deprecated use `isTestCase` instead
- */
-export function isAtomTest(s: Task): s is Test {
-  return isTestCase(s)
-}
+import { toArray } from '@vitest/utils/helpers'
 
 export function isTestCase(s: Task): s is Test {
   return s.type === 'test'
@@ -86,4 +79,8 @@ export function getFullName(task: Task, separator = ' > '): string {
 
 export function getTestName(task: Task, separator = ' > '): string {
   return getNames(task).slice(1).join(separator)
+}
+
+export function createTaskName(names: readonly (string | undefined)[], separator = ' > '): string {
+  return names.filter(name => name !== undefined).join(separator)
 }

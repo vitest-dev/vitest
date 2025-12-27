@@ -6,7 +6,6 @@ test('mocking in JS test file should not crash source map lookup (#3514)', async
     include: ['fixtures/test/mocking-in-js-file.test.js'],
     coverage: {
       reporter: 'json',
-      all: false,
     },
   })
 

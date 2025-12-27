@@ -1,12 +1,8 @@
 import type { UserConfig as ViteConfig, Plugin as VitePlugin } from 'vite'
 import type { ResolvedConfig, UserConfig } from '../types/config'
-import {
-  deepClone,
-  deepMerge,
-  notNullish,
-  toArray,
-} from '@vitest/utils'
+import { deepClone, deepMerge, notNullish } from '@vitest/utils/helpers'
 import { relative } from 'pathe'
+import * as vite from 'vite'
 import { defaultPort } from '../../constants'
 import { configDefaults } from '../../defaults'
 import { generateScopedClassName } from '../../integrations/css/css-modules'
@@ -15,10 +11,11 @@ import { Vitest } from '../core'
 import { createViteLogger, silenceImportViteIgnoreWarning } from '../viteLogger'
 import { CoverageTransform } from './coverageTransform'
 import { CSSEnablerPlugin } from './cssEnabler'
+import { MetaEnvReplacerPlugin } from './metaEnvReplacer'
 import { MocksPlugins } from './mocks'
 import { NormalizeURLPlugin } from './normalizeURL'
 import { VitestOptimizer } from './optimizer'
-import { SsrReplacerPlugin } from './ssrReplacer'
+import { ModuleRunnerTransform } from './runnerTransform'
 import {
   deleteDefineConfig,
   getDefaultResolveOptions,
@@ -64,9 +61,11 @@ export async function VitestPlugin(
 
         // store defines for globalThis to make them
         // reassignable when running in worker in src/runtime/setup.ts
+        const originalDefine = { ...viteConfig.define } // stash original defines for browser mode
         const defines: Record<string, any> = deleteDefineConfig(viteConfig)
 
         ;(options as unknown as ResolvedConfig).defines = defines
+        ;(options as unknown as ResolvedConfig).viteDefine = originalDefine
 
         let open: string | boolean | undefined = false
 
@@ -76,22 +75,13 @@ export async function VitestPlugin(
 
         const resolveOptions = getDefaultResolveOptions()
 
-        const config: ViteConfig = {
+        let config: ViteConfig = {
+          base: '/',
           root: viteConfig.test?.root || options.root,
           define: {
             // disable replacing `process.env.NODE_ENV` with static string by vite:client-inject
             'process.env.NODE_ENV': 'process.env.NODE_ENV',
           },
-          esbuild:
-            viteConfig.esbuild === false
-              ? false
-              : {
-                  // Lowest target Vitest supports is Node18
-                  target: viteConfig.esbuild?.target || 'node18',
-                  sourcemap: 'external',
-                  // Enables using ignore hint for coverage providers with @preserve keyword
-                  legalComments: 'inline',
-                },
           resolve: {
             ...resolveOptions,
             alias: testConfig.alias,
@@ -121,27 +111,43 @@ export async function VitestPlugin(
             ssr: {
               resolve: resolveOptions,
             },
+            __vitest__: {
+              dev: {},
+            },
           },
           test: {
-            poolOptions: {
-              threads: {
-                isolate:
-                  options.poolOptions?.threads?.isolate
-                  ?? options.isolate
-                  ?? testConfig.poolOptions?.threads?.isolate
-                  ?? viteConfig.test?.isolate,
-              },
-              forks: {
-                isolate:
-                  options.poolOptions?.forks?.isolate
-                  ?? options.isolate
-                  ?? testConfig.poolOptions?.forks?.isolate
-                  ?? viteConfig.test?.isolate,
-              },
-            },
             root: testConfig.root ?? viteConfig.test?.root,
             deps: testConfig.deps ?? viteConfig.test?.deps,
           },
+        }
+
+        if ('rolldownVersion' in vite) {
+          config = {
+            ...config,
+            // eslint-disable-next-line ts/ban-ts-comment
+            // @ts-ignore rolldown-vite only
+            oxc: viteConfig.oxc === false
+              ? false
+              : {
+                  // eslint-disable-next-line ts/ban-ts-comment
+                  // @ts-ignore rolldown-vite only
+                  target: viteConfig.oxc?.target || 'node18',
+                },
+          }
+        }
+        else {
+          config = {
+            ...config,
+            esbuild: viteConfig.esbuild === false
+              ? false
+              : {
+                  // Lowest target Vitest supports is Node18
+                  target: viteConfig.esbuild?.target || 'node18',
+                  sourcemap: 'external',
+                  // Enables using ignore hint for coverage providers with @preserve keyword
+                  legalComments: 'inline',
+                },
+          }
         }
 
         // inherit so it's available in VitestOptimizer
@@ -163,29 +169,6 @@ export async function VitestPlugin(
           },
         )
         config.customLogger = silenceImportViteIgnoreWarning(config.customLogger)
-
-        // we want inline dependencies to be resolved by analyser plugin so module graph is populated correctly
-        if (viteConfig.ssr?.noExternal !== true) {
-          const inline = testConfig.server?.deps?.inline
-          if (inline === true) {
-            config.ssr = { noExternal: true }
-          }
-          else {
-            const noExternal = viteConfig.ssr?.noExternal
-            const noExternalArray
-              = typeof noExternal !== 'undefined'
-                ? toArray(noExternal)
-                : undefined
-            // filter the same packages
-            const uniqueInline
-              = inline && noExternalArray
-                ? inline.filter(dep => !noExternalArray.includes(dep))
-                : inline
-            config.ssr = {
-              noExternal: uniqueInline,
-            }
-          }
-        }
 
         // chokidar fsevents is unstable on macos when emitting "ready" event
         if (
@@ -258,6 +241,11 @@ export async function VitestPlugin(
           viteConfig.server.watch = null
         }
 
+        if (options.ui) {
+          // @ts-expect-error mutate readonly
+          viteConfig.plugins.push(await UIPlugin())
+        }
+
         Object.defineProperty(viteConfig, '_vitest', {
           value: options,
           enumerable: false,
@@ -293,14 +281,14 @@ export async function VitestPlugin(
         },
       },
     },
-    SsrReplacerPlugin(),
+    MetaEnvReplacerPlugin(),
     ...CSSEnablerPlugin(vitest),
     CoverageTransform(vitest),
     VitestCoreResolver(vitest),
-    options.ui ? await UIPlugin() : null,
     ...MocksPlugins(),
     VitestOptimizer(),
     NormalizeURLPlugin(),
+    ModuleRunnerTransform(),
   ].filter(notNullish)
 }
 function removeUndefinedValues<T extends Record<string, any>>(

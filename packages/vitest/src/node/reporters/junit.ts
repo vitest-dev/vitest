@@ -1,6 +1,7 @@
-import type { File, Task } from '@vitest/runner'
+import type { Task } from '@vitest/runner'
 import type { Vitest } from '../core'
 import type { Reporter } from '../types/reporter'
+import type { TestModule } from './reported-tasks'
 import { existsSync, promises as fs } from 'node:fs'
 
 import { hostname } from 'node:os'
@@ -18,8 +19,6 @@ interface ClassnameTemplateVariables {
 
 export interface JUnitOptions {
   outputFile?: string
-  /** @deprecated Use `classnameTemplate` instead. */
-  classname?: string
 
   /**
    * Template for the classname attribute. Can be either a string or a function. The string can contain placeholders {filename} and {filepath}.
@@ -221,9 +220,6 @@ export class JUnitReporter implements Reporter {
           .replace(/\{filename\}/g, templateVars.filename)
           .replace(/\{filepath\}/g, templateVars.filepath)
       }
-      else if (typeof this.options.classname === 'string') {
-        classname = this.options.classname
-      }
 
       await this.writeElement(
         'testcase',
@@ -289,7 +285,9 @@ export class JUnitReporter implements Reporter {
     }
   }
 
-  async onFinished(files: File[] = this.ctx.state.getFiles()): Promise<void> {
+  async onTestRunEnd(testModules: ReadonlyArray<TestModule>): Promise<void> {
+    const files = testModules.map(testModule => testModule.task)
+
     await this.logger.log('<?xml version="1.0" encoding="UTF-8" ?>')
 
     const transformed = files.map((file) => {
@@ -329,6 +327,8 @@ export class JUnitReporter implements Reporter {
           id: file.id,
           type: 'test',
           name: file.name,
+          fullName: file.name,
+          fullTestName: file.name,
           mode: 'run',
           result: file.result,
           meta: {},
@@ -338,6 +338,7 @@ export class JUnitReporter implements Reporter {
           suite: null as any,
           file: null as any,
           annotations: [],
+          artifacts: [],
         } satisfies Task)
       }
 

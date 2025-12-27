@@ -2,6 +2,7 @@ export { type ChainableFunction, createChainable } from './chain'
 export {
   calculateSuiteHash,
   createFileTask,
+  findTestFileStackTrace,
   generateFileHash,
   generateHash,
   interpretTaskModes,
@@ -10,6 +11,7 @@ export {
 export { limitConcurrency } from './limit-concurrency'
 export { partitionSuiteChildren } from './suite'
 export {
+  createTaskName,
   getFullName,
   getNames,
   getSuites,
@@ -18,6 +20,5 @@ export {
   getTests,
   hasFailed,
   hasTests,
-  isAtomTest,
   isTestCase,
 } from './tasks'

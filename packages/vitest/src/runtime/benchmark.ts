@@ -2,7 +2,7 @@ import type { Test } from '@vitest/runner'
 import type { BenchFunction, BenchmarkAPI, BenchOptions } from './types/benchmark'
 import { getCurrentSuite } from '@vitest/runner'
 import { createChainable } from '@vitest/runner/utils'
-import { noop } from '@vitest/utils'
+import { noop } from '@vitest/utils/helpers'
 import { getWorkerState } from './utils'
 
 const benchFns = new WeakMap<Test, BenchFunction>()
@@ -33,6 +33,11 @@ export const bench: BenchmarkAPI = createBenchmark(function (
   })
   benchFns.set(task, fn)
   benchOptsMap.set(task, options)
+  // vitest runner sets mode to `todo` if handler is not passed down
+  // but we store handler separetly
+  if (!this.todo && task.mode === 'todo') {
+    task.mode = 'run'
+  }
 })
 
 function createBenchmark(
@@ -40,7 +45,7 @@ function createBenchmark(
     this: Record<'skip' | 'only' | 'todo', boolean | undefined>,
     name: string | Function,
     fn?: BenchFunction,
-    options?: BenchOptions
+    options?: BenchOptions,
   ) => void,
 ) {
   const benchmark = createChainable(

@@ -1,6 +1,4 @@
-import type { Awaitable } from './general'
-import type { HappyDOMOptions } from './happy-dom-options'
-import type { JSDOMOptions } from './jsdom-options'
+import type { Awaitable } from '@vitest/utils'
 
 export interface EnvironmentReturn {
   teardown: (global: any) => Awaitable<void>
@@ -13,21 +11,22 @@ export interface VmEnvironmentReturn {
 
 export interface Environment {
   name: string
-  transformMode: 'web' | 'ssr'
+  /**
+   * @deprecated use `viteEnvironment` instead. Uses `name` by default
+   */
+  transformMode?: 'web' | 'ssr'
+  /**
+   * Environment initiated by the Vite server. It is usually available
+   * as `vite.server.environments.${name}`.
+   *
+   * By default, fallbacks to `name`.
+   */
+  viteEnvironment?: 'client' | 'ssr' | ({} & string)
   setupVM?: (options: Record<string, any>) => Awaitable<VmEnvironmentReturn>
   setup: (
     global: any,
-    options: Record<string, any>
+    options: Record<string, any>,
   ) => Awaitable<EnvironmentReturn>
-}
-
-export interface EnvironmentOptions {
-  /**
-   * jsdom options.
-   */
-  jsdom?: JSDOMOptions
-  happyDOM?: HappyDOMOptions
-  [x: string]: unknown
 }
 
 export interface ResolvedTestEnvironment {

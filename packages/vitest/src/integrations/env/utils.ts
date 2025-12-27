@@ -43,14 +43,16 @@ export function populateGlobal(
   win: any,
   options: PopulateOptions = {},
 ): {
-    keys: Set<string>
-    skipKeys: string[]
-    originals: Map<string | symbol, any>
-  } {
+  keys: Set<string>
+  skipKeys: string[]
+  originals: Map<string | symbol, any>
+} {
   const { bindFunctions = false } = options
   const keys = getWindowKeys(global, win, options.additionalKeys)
 
   const originals = new Map<string | symbol, any>()
+
+  const overridenKeys = new Set([...KEYS, ...options.additionalKeys || []])
 
   const overrideObject = new Map<string | symbol, any>()
   for (const key of keys) {
@@ -60,7 +62,7 @@ export function populateGlobal(
         && !isClassLikeName(key)
         && win[key].bind(win)
 
-    if (KEYS.includes(key) && key in global) {
+    if (overridenKeys.has(key) && key in global) {
       originals.set(key, global[key])
     }
 

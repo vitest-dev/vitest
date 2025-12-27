@@ -110,7 +110,7 @@ export default defineConfig({
 
 ## Custom Browser Locators API
 
-Built-in locators might not be enough to express your application’s needs. Instead of falling back to CSS and losing the retry-ability protection that Vitest provides through its locator API, we now recommend extending locators using the new [`locators.extend` API](/guide/browser/locators#custom-locators).
+Built-in locators might not be enough to express your application’s needs. Instead of falling back to CSS and losing the retry-ability protection that Vitest provides through its locator API, we now recommend extending locators using the new [`locators.extend` API](/api/browser/locators#custom-locators).
 
 ```ts
 import { locators } from '@vitest/browser/context'
@@ -172,7 +172,7 @@ locators.extend({
 await page.getByRole('textbox').clickAndFill('Hello World')
 ```
 
-Please, refer to the [`locators.extend` API](/guide/browser/locators#custom-locators) for more information.
+Please, refer to the [`locators.extend` API](/api/browser/locators#custom-locators) for more information.
 
 ## Explicit Resource Management in `vi.spyOn` and `vi.fn`
 

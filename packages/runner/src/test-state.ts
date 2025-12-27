@@ -1,4 +1,4 @@
-import type { Test } from './types/tasks.ts'
+import type { Test } from './types/tasks'
 
 let _test: Test | undefined
 

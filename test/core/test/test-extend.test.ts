@@ -411,7 +411,7 @@ describe('scoping variables to suite', () => {
       })
     })
 
-    describe('override nested overriden scope', () => {
+    describe('override nested overridden scope', () => {
       testAPI.scoped({ dependency: 'override' })
 
       testAPI('keeps using new values', ({ pkg }) => {
@@ -485,5 +485,69 @@ describe('test.scoped repro #7813', () => {
     extendedTest('foo is false', ({ foo }) => {
       expect(foo).toBe(false)
     })
+  })
+})
+
+describe('test.scoped repro #9305', () => {
+  const extendedTest = test.extend<{
+    a: number
+    b: number
+    numbers: number[]
+  }>({
+    a: 1,
+    b: 2,
+    numbers: async ({ a }, use) => use([a]),
+  })
+
+  describe('suite fails', () => {
+    extendedTest.scoped({
+      numbers: async ({ a, b }, use) => use([a, b]),
+    })
+
+    extendedTest.fails('test fails', async ({
+      numbers,
+    }) => {
+      expect(numbers).toStrictEqual([1, 2]) // fails because numbers is [undefined, undefined]
+    })
+  })
+})
+
+describe('suite with timeout', () => {
+  test.extend({})('timeout is inherited from suite', ({ task }) => {
+    expect(task.timeout).toBe(100)
+  })
+
+  test.extend({})('timeout is inherited from options', { timeout: 1_000 }, ({ task }) => {
+    expect(task.timeout).toBe(1_000)
+  })
+}, 100)
+
+describe('type-safe fixture hooks', () => {
+  const counterTest = test.extend<{
+    counter: { value: number }
+    fileCounter: { value: number }
+  }>({
+    counter: async ({}, use) => { await use({ value: 0 }) },
+    fileCounter: [async ({}, use) => { await use({ value: 0 }) }, { scope: 'file' }],
+  })
+
+  counterTest.beforeEach(({ counter }) => {
+    // shouldn't have typescript error because of 'counter' here
+    counter.value += 1
+  })
+
+  counterTest.afterEach(({ fileCounter }) => {
+    // shouldn't have typescript error because of 'fileCounter' here
+    fileCounter.value += 2
+  })
+
+  // beforeAll and afterAll hooks are not tested here, because they don't provide an extra context
+
+  counterTest('beforeEach fixture hook can adapt type-safe context', ({ counter }) => {
+    expect(counter.value).toBe(1)
+  })
+
+  counterTest('afterEach fixture hook can adapt type-safe context', ({ fileCounter }) => {
+    expect(fileCounter.value).toBe(2)
   })
 })

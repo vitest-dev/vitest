@@ -8,9 +8,15 @@ test('rollup error node', async () => {
     environment: 'node',
     reporters: ['junit'],
   })
-  expect(stdout).toContain(`Error: Missing &quot;./no-such-export&quot; specifier in &quot;${rolldownVersion ? 'rolldown-vite' : 'vite'}&quot; package`)
-  expect(stdout).toContain(`Plugin: vite:import-analysis`)
-  expect(stdout).toContain(`Error: Failed to load url @vitejs/no-such-package`)
+  if (rolldownVersion) {
+    expect(stdout).toContain('&quot;./no-such-export&quot; is not exported')
+    expect(stdout).toContain(`Plugin: builtin:vite-resolve`)
+  }
+  else {
+    expect(stdout).toContain(`Error: Missing &quot;./no-such-export&quot; specifier in &quot;vite&quot; package`)
+    expect(stdout).toContain(`Plugin: vite:import-analysis`)
+  }
+  expect(stdout).toContain(`Error: Cannot find package &apos;@vitejs/no-such-package&apos;`)
 })
 
 test('rollup error web', async () => {
@@ -19,7 +25,13 @@ test('rollup error web', async () => {
     environment: 'jsdom',
     reporters: ['junit'],
   })
-  expect(stdout).toContain(`Error: Missing &quot;./no-such-export&quot; specifier in &quot;${rolldownVersion ? 'rolldown-vite' : 'vite'}&quot; package`)
+  if (rolldownVersion) {
+    expect(stdout).toContain('&quot;./no-such-export&quot; is not exported')
+    expect(stdout).toContain(`Plugin: builtin:vite-resolve`)
+  }
+  else {
+    expect(stdout).toContain(`Error: Missing &quot;./no-such-export&quot; specifier in &quot;vite&quot; package`)
+  }
   expect(stdout).toContain(`Plugin: vite:import-analysis`)
   expect(stdout).toContain(`Error: Failed to resolve import &quot;@vitejs/no-such-package&quot; from &quot;fixtures/rollup-error/not-found-package.test.ts&quot;. Does the file exist?`)
 })

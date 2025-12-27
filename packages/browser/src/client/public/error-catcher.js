@@ -31,7 +31,11 @@ function catchWindowErrors(errorEvent, prop, cb) {
       cb(e)
     }
     else {
-      console.error(e[prop])
+      // `ErrorEvent` doesn't necessary have `ErrotEvent.error` defined
+      // but some has `ErrorEvent.message` defined, e.g. ResizeObserver error.
+      // https://developer.mozilla.org/en-US/docs/Web/API/ErrorEvent/error
+      // https://developer.mozilla.org/en-US/docs/Web/API/ResizeObserver#observation_errors
+      console.error(e.message ? new Error(e.message) : e)
     }
   }
   const addEventListener = window.addEventListener.bind(window)
@@ -55,10 +59,14 @@ function catchWindowErrors(errorEvent, prop, cb) {
 }
 
 function registerUnexpectedErrors() {
-  catchWindowErrors('error', 'error', event =>
+  const offError = catchWindowErrors('error', 'error', event =>
     reportUnexpectedError('Error', event.error))
-  catchWindowErrors('unhandledrejection', 'reason', event =>
+  const offRejection = catchWindowErrors('unhandledrejection', 'reason', event =>
     reportUnexpectedError('Unhandled Rejection', event.reason))
+  return () => {
+    offError()
+    offRejection()
+  }
 }
 
 async function reportUnexpectedError(
@@ -71,4 +79,4 @@ async function reportUnexpectedError(
   }).catch(console.error)
 }
 
-registerUnexpectedErrors()
+globalThis.__vitest_browser_runner__.disposeExceptionTracker = registerUnexpectedErrors()

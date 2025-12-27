@@ -1,5 +1,5 @@
 /* eslint-disable prefer-template */
-import type { ErrorWithDiff, ParsedStack } from '@vitest/utils'
+import type { ParsedStack, TestError } from '@vitest/utils'
 import type { Vitest } from './core'
 import type { ErrorOptions, Logger } from './logger'
 import type { TestProject } from './project'
@@ -7,11 +7,13 @@ import { Console } from 'node:console'
 import { existsSync, readFileSync } from 'node:fs'
 import { Writable } from 'node:stream'
 import { stripVTControlCharacters } from 'node:util'
-import { inspect, isPrimitive } from '@vitest/utils'
+import { inspect } from '@vitest/utils/display'
+import { isPrimitive } from '@vitest/utils/helpers'
 import { normalize, relative } from 'pathe'
 import c from 'tinyrainbow'
 import { TypeCheckError } from '../typecheck/typechecker'
 import {
+  defaultStackIgnorePatterns,
   lineSplitRE,
   parseErrorStacktrace,
   positionToOffset,
@@ -27,7 +29,7 @@ interface PrintErrorOptions {
   showCodeFrame?: boolean
   printProperties?: boolean
   screenshotPaths?: string[]
-  parseErrorStacktrace: (error: ErrorWithDiff) => ParsedStack[]
+  parseErrorStacktrace: (error: TestError) => ParsedStack[]
 }
 
 interface PrintErrorResult {
@@ -75,10 +77,22 @@ export function printError(
     screenshotPaths: options.screenshotPaths,
     printProperties: options.verbose,
     parseErrorStacktrace(error) {
+      if (error.stacks) {
+        if (options.fullStack) {
+          return error.stacks
+        }
+        else {
+          return error.stacks.filter((stack) => {
+            return !defaultStackIgnorePatterns.some(p => stack.file.match(p))
+          })
+        }
+      }
+
       // browser stack trace needs to be processed differently,
       // so there is a separate method for that
       if (options.task?.file.pool === 'browser' && project.browser) {
         return project.browser.parseErrorStacktrace(error, {
+          frameFilter: project.config.onStackTrace,
           ignoreStackEntries: options.fullStack ? [] : undefined,
         })
       }
@@ -99,7 +113,7 @@ function printErrorInner(
 ): PrintErrorResult | undefined {
   const { showCodeFrame = true, type, printProperties = true } = options
   const logger = options.logger
-  let e = error as ErrorWithDiff
+  let e = error as TestError
 
   if (isPrimitive(e)) {
     e = {
@@ -128,12 +142,17 @@ function printErrorInner(
     = error instanceof TypeCheckError
       ? error.stacks[0]
       : stacks.find((stack) => {
+          // we are checking that this module was processed by us at one point
           try {
-            return (
-              project._vite
-              && project.getModuleById(stack.file)
-              && existsSync(stack.file)
-            )
+            const environments = [
+              ...Object.values(project._vite?.environments || {}),
+              ...Object.values(project.browser?.vite.environments || {}),
+            ]
+            const hasResult = environments.some((environment) => {
+              const modules = environment.moduleGraph.getModulesByFile(stack.file)
+              return [...modules?.values() || []].some(module => !!module.transformResult)
+            })
+            return hasResult && existsSync(stack.file)
           }
           catch {
             return false
@@ -145,9 +164,10 @@ function printErrorInner(
   }
   printErrorMessage(e, logger)
   if (options.screenshotPaths?.length) {
-    const length = options.screenshotPaths.length
+    const uniqueScreenshots = Array.from(new Set(options.screenshotPaths))
+    const length = uniqueScreenshots.length
     logger.error(`\nFailure screenshot${length > 1 ? 's' : ''}:`)
-    logger.error(options.screenshotPaths.map(p => `  - ${c.dim(relative(process.cwd(), p))}`).join('\n'))
+    logger.error(uniqueScreenshots.map(p => `  - ${c.dim(relative(process.cwd(), p))}`).join('\n'))
     if (!e.diff) {
       logger.error()
     }
@@ -199,7 +219,6 @@ function printErrorInner(
 
   const testPath = (e as any).VITEST_TEST_PATH
   const testName = (e as any).VITEST_TEST_NAME
-  const afterEnvTeardown = (e as any).VITEST_AFTER_ENV_TEARDOWN
   // testName has testPath inside
   if (testPath) {
     logger.error(
@@ -218,15 +237,6 @@ function printErrorInner(
         )}". It might mean one of the following:`
         + '\n- The error was thrown, while Vitest was running this test.'
         + '\n- If the error occurred after the test had been completed, this was the last documented test before it was thrown.',
-      ),
-    )
-  }
-  if (afterEnvTeardown) {
-    logger.error(
-      c.red(
-        'This error was caught after test environment was torn down. Make sure to cancel any running tasks before test finishes:'
-        + '\n- cancel timeouts using clearTimeout and clearInterval'
-        + '\n- wait for promises to resolve using the await keyword',
       ),
     )
   }
@@ -261,6 +271,7 @@ const skipErrorProperties = new Set([
   'actual',
   'expected',
   'diffOptions',
+  'runnerError',
   // webkit props
   'sourceURL',
   'column',
@@ -271,13 +282,12 @@ const skipErrorProperties = new Set([
   'columnNumber',
   'VITEST_TEST_NAME',
   'VITEST_TEST_PATH',
-  'VITEST_AFTER_ENV_TEARDOWN',
   '__vitest_rollup_error__',
   ...Object.getOwnPropertyNames(Error.prototype),
   ...Object.getOwnPropertyNames(Object.prototype),
 ])
 
-function getErrorProperties(e: ErrorWithDiff) {
+function getErrorProperties(e: TestError) {
   const errorObject = Object.create(null)
   if (e.name === 'AssertionError') {
     return errorObject
@@ -289,7 +299,7 @@ function getErrorProperties(e: ErrorWithDiff) {
       errorObject[key] = e[key]
     }
     else if (key !== 'stack' && !skipErrorProperties.has(key)) {
-      errorObject[key] = e[key as keyof ErrorWithDiff]
+      errorObject[key] = e[key as keyof TestError]
     }
   }
 
@@ -308,7 +318,7 @@ function handleImportOutsideModuleError(stack: string, logger: ErrorLogger) {
 
   const path = normalize(stack.split('\n')[0].trim())
   let name = path.split('/node_modules/').pop() || ''
-  if (name?.startsWith('@')) {
+  if (name[0] === '@') {
     name = name.split('/').slice(0, 2).join('/')
   }
   else {
@@ -364,7 +374,7 @@ function printModuleWarningForSourceCode(logger: ErrorLogger, path: string) {
   )
 }
 
-function printErrorMessage(error: ErrorWithDiff, logger: ErrorLogger) {
+function printErrorMessage(error: TestError, logger: ErrorLogger) {
   const errorName = error.name || 'Unknown Error'
   if (!error.message) {
     logger.error(error)
@@ -448,9 +458,14 @@ export function generateCodeFrame(
         }
 
         const lineLength = lines[j].length
+        const strippedContent = stripVTControlCharacters(lines[j])
+
+        if (strippedContent.startsWith('//# sourceMappingURL')) {
+          continue
+        }
 
         // too long, maybe it's a minified file, skip for codeframe
-        if (stripVTControlCharacters(lines[j]).length > 200) {
+        if (strippedContent.length > 200) {
           return ''
         }
 

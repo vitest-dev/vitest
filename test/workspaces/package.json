@@ -8,9 +8,9 @@
     "test:coverage": "vitest run --root coverage-report-tests"
   },
   "devDependencies": {
-    "@ampproject/remapping": "^2.3.0",
+    "@jridgewell/remapping": "catalog:",
     "@types/istanbul-lib-coverage": "catalog:",
-    "istanbul-lib-coverage": "^3.2.2",
+    "istanbul-lib-coverage": "catalog:",
     "jsdom": "latest",
     "vitest": "workspace:*"
   }

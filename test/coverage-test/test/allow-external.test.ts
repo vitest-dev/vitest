@@ -4,7 +4,14 @@ import { readCoverageMap, runVitest, test } from '../utils'
 test('{ allowExternal: true } includes files outside project root', async () => {
   await runVitest({
     include: ['fixtures/test/allow-external-fixture.test.ts'],
-    coverage: { allowExternal: true, reporter: 'json', include: ['**/fixtures/**'], all: false },
+    coverage: {
+      allowExternal: true,
+      reporter: 'json',
+      include: [
+        '**/fixtures/src/math.ts',
+        '**/fixtures/external-math.ts',
+      ],
+    },
   })
   const coverageMap = await readCoverageMap()
   const files = coverageMap.files()
@@ -19,7 +26,14 @@ test('{ allowExternal: true } includes files outside project root', async () => 
 test('{ allowExternal: false } excludes files outside project root', async () => {
   await runVitest({
     include: ['fixtures/test/allow-external-fixture.test.ts'],
-    coverage: { allowExternal: false, reporter: 'json', include: ['**/fixtures/**'] },
+    coverage: {
+      allowExternal: false,
+      reporter: 'json',
+      include: [
+        '**/fixtures/src/math.ts',
+        '**/fixtures/external-math.ts',
+      ],
+    },
   })
   const coverageMap = await readCoverageMap()
   const files = coverageMap.files()

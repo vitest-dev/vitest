@@ -3,15 +3,16 @@ import type { RuntimeRPC } from '../types/rpc'
 import type { FileMap } from './vm/file-map'
 import type { VMModule } from './vm/types'
 import fs from 'node:fs'
-import { dirname } from 'node:path'
+import { isBuiltin } from 'node:module'
 import { fileURLToPath, pathToFileURL } from 'node:url'
-import { extname, join, normalize } from 'pathe'
-import { getCachedData, isBareImport, isNodeBuiltin, setCacheData } from 'vite-node/utils'
+import { isBareImport } from '@vitest/utils/helpers'
+import { findNearestPackageData } from '@vitest/utils/resolver'
+import { extname, normalize } from 'pathe'
 import { CommonjsExecutor } from './vm/commonjs-executor'
 import { EsmExecutor } from './vm/esm-executor'
 import { ViteExecutor } from './vm/vite-executor'
 
-const { existsSync, statSync } = fs
+const { existsSync } = fs
 
 // always defined when we use vm pool
 const nativeResolve = import.meta.resolve!
@@ -119,48 +120,13 @@ export class ExternalModulesExecutor {
     return nativeResolve(specifier, parent)
   }
 
-  private findNearestPackageData(basedir: string): {
-    type?: 'module' | 'commonjs'
-  } {
-    const originalBasedir = basedir
-    const packageCache = this.options.packageCache
-    while (basedir) {
-      const cached = getCachedData(packageCache, basedir, originalBasedir)
-      if (cached) {
-        return cached
-      }
-
-      const pkgPath = join(basedir, 'package.json')
-      try {
-        if (statSync(pkgPath, { throwIfNoEntry: false })?.isFile()) {
-          const pkgData = JSON.parse(this.fs.readFile(pkgPath))
-
-          if (packageCache) {
-            setCacheData(packageCache, pkgData, basedir, originalBasedir)
-          }
-
-          return pkgData
-        }
-      }
-      catch {}
-
-      const nextBasedir = dirname(basedir)
-      if (nextBasedir === basedir) {
-        break
-      }
-      basedir = nextBasedir
-    }
-
-    return {}
-  }
-
   private getModuleInformation(identifier: string): ModuleInformation {
     if (identifier.startsWith('data:')) {
       return { type: 'data', url: identifier, path: identifier }
     }
 
     const extension = extname(identifier)
-    if (extension === '.node' || isNodeBuiltin(identifier)) {
+    if (extension === '.node' || isBuiltin(identifier)) {
       return { type: 'builtin', url: identifier, path: identifier }
     }
 
@@ -193,7 +159,7 @@ export class ExternalModulesExecutor {
       type = 'wasm'
     }
     else {
-      const pkgData = this.findNearestPackageData(normalize(pathUrl))
+      const pkgData = findNearestPackageData(normalize(pathUrl))
       type = pkgData.type === 'module' ? 'module' : 'commonjs'
     }
 

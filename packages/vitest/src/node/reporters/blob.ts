@@ -1,7 +1,9 @@
 import type { File } from '@vitest/runner'
+import type { SerializedError } from '@vitest/utils'
 import type { Vitest } from '../core'
 import type { TestProject } from '../project'
 import type { Reporter } from '../types/reporter'
+import type { TestModule } from './reported-tasks'
 import { existsSync } from 'node:fs'
 import { mkdir, readdir, readFile, stat, writeFile } from 'node:fs/promises'
 import { parse, stringify } from 'flatted'
@@ -16,6 +18,7 @@ export class BlobReporter implements Reporter {
   start = 0
   ctx!: Vitest
   options: BlobOptions
+  coverage: unknown | undefined
 
   constructor(options: BlobOptions) {
     this.options = options
@@ -28,14 +31,19 @@ export class BlobReporter implements Reporter {
 
     this.ctx = ctx
     this.start = performance.now()
+    this.coverage = undefined
   }
 
-  async onFinished(
-    files: File[] = [],
-    errors: unknown[] = [],
-    coverage: unknown,
-  ): Promise<void> {
+  onCoverage(coverage: unknown): void {
+    this.coverage = coverage
+  }
+
+  async onTestRunEnd(testModules: ReadonlyArray<TestModule>, unhandledErrors: ReadonlyArray<SerializedError>): Promise<void> {
     const executionTime = performance.now() - this.start
+
+    const files = testModules.map(testModule => testModule.task)
+    const errors = [...unhandledErrors]
+    const coverage = this.coverage
 
     let outputFile
       = this.options.outputFile ?? getOutputFile(this.ctx.config, 'blob')
@@ -150,6 +158,11 @@ export async function readBlobs(
         const moduleNode = project.vite.moduleGraph.createFileOnlyEntry(file)
         moduleNode.url = url
         moduleNode.id = moduleId
+        moduleNode.transformResult = {
+          // print error checks that transformResult is set
+          code: ' ',
+          map: null,
+        }
         project.vite.moduleGraph.idToModuleMap.set(moduleId, moduleNode)
       })
     })

@@ -1,8 +1,9 @@
 import type { File, RunMode, Suite, Test } from '@vitest/runner'
-import type { RawSourceMap } from 'vite-node'
+import type { Rollup } from 'vite'
 import type { TestProject } from '../node/project'
 import {
   calculateSuiteHash,
+  createTaskName,
   generateHash,
   interpretTaskModes,
   someTasksAreOnly,
@@ -39,7 +40,7 @@ export interface FileInformation {
   file: File
   filepath: string
   parsed: string
-  map: RawSourceMap | null
+  map: Rollup.SourceMap | null
   definitions: LocalCallDefinition[]
 }
 
@@ -47,7 +48,7 @@ export async function collectTests(
   ctx: TestProject,
   filepath: string,
 ): Promise<null | FileInformation> {
-  const request = await ctx.vitenode.transformRequest(filepath, filepath)
+  const request = await ctx.vite.environments.ssr.transformRequest(filepath)
   if (!request) {
     return null
   }
@@ -60,6 +61,7 @@ export async function collectTests(
     type: 'suite',
     id: generateHash(`${testFilepath}${typecheckSubprojectName}`),
     name: testFilepath,
+    fullName: testFilepath,
     mode: 'run',
     tasks: [],
     start: ast.start,
@@ -185,6 +187,8 @@ export async function collectTests(
           tasks: [],
           mode,
           name: definition.name,
+          fullName: createTaskName([lastSuite.fullName, definition.name]),
+          fullTestName: createTaskName([lastSuite.fullTestName, definition.name]),
           end: definition.end,
           start: definition.start,
           meta: {
@@ -205,9 +209,12 @@ export async function collectTests(
         timeout: 0,
         context: {} as any, // not used in typecheck
         name: definition.name,
+        fullName: createTaskName([lastSuite.fullName, definition.name]),
+        fullTestName: createTaskName([lastSuite.fullTestName, definition.name]),
         end: definition.end,
         start: definition.start,
         annotations: [],
+        artifacts: [],
         meta: {
           typecheck: true,
         },
@@ -229,7 +236,7 @@ export async function collectTests(
     file,
     parsed: request.code,
     filepath,
-    map: request.map as RawSourceMap | null,
+    map: request.map as Rollup.SourceMap | null,
     definitions,
   }
 }

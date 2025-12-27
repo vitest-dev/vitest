@@ -1,12 +1,14 @@
-import type { File, TaskResultPack } from '@vitest/runner'
+import type { TaskResultPack } from '@vitest/runner'
+import type { SerializedError } from '@vitest/utils'
 import type { Vitest } from '../../core'
+import type { TestRunEndReason } from '../../types/reporter'
 import type { TestModule, TestSuite } from '../reported-tasks'
 import fs from 'node:fs'
 import { getFullName } from '@vitest/runner/utils'
 import * as pathe from 'pathe'
 import c from 'tinyrainbow'
 import { DefaultReporter } from '../default'
-import { formatProjectName, getStateSymbol } from '../renderers/utils'
+import { formatProjectName, getStateSymbol, separator } from '../renderers/utils'
 import { createBenchmarkJsonReport, flattenFormattedBenchmarkReport } from './json-formatter'
 import { renderTable } from './tableRender'
 
@@ -65,7 +67,7 @@ export class BenchmarkReporter extends DefaultReporter {
     const duration = testTask.task.result?.duration || 0
 
     if (benches.length > 0 && benches.every(t => t.result?.state !== 'run' && t.result?.state !== 'queued')) {
-      let title = `\n ${getStateSymbol(testTask.task)} ${formatProjectName(testTask.project)}${getFullName(testTask.task, c.dim(' > '))}`
+      let title = `\n ${getStateSymbol(testTask.task)} ${formatProjectName(testTask.project)}${getFullName(testTask.task, separator)}`
 
       if (duration != null && duration > this.ctx.config.slowTestThreshold) {
         title += c.yellow(` ${Math.round(duration)}${c.dim('ms')}`)
@@ -84,8 +86,12 @@ export class BenchmarkReporter extends DefaultReporter {
     }
   }
 
-  async onFinished(files: File[] = this.ctx.state.getFiles(), errors: unknown[] = this.ctx.state.getUnhandledErrors()): Promise<void> {
-    super.onFinished(files, errors)
+  async onTestRunEnd(
+    testModules: ReadonlyArray<TestModule>,
+    unhandledErrors: ReadonlyArray<SerializedError>,
+    reason: TestRunEndReason,
+  ): Promise<void> {
+    super.onTestRunEnd(testModules, unhandledErrors, reason)
 
     // write output for future comparison
     let outputFile = this.ctx.config.benchmark?.outputJson
@@ -98,7 +104,9 @@ export class BenchmarkReporter extends DefaultReporter {
         await fs.promises.mkdir(outputDirectory, { recursive: true })
       }
 
+      const files = testModules.map(t => t.task.file)
       const output = createBenchmarkJsonReport(files)
+
       await fs.promises.writeFile(outputFile, JSON.stringify(output, null, 2))
       this.log(`Benchmark report written to ${outputFile}`)
     }

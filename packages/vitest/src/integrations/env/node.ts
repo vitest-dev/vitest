@@ -11,30 +11,40 @@ const denyList = new Set([
   'Uint8Array',
 ])
 
-const nodeGlobals = new Map(
-  Object.getOwnPropertyNames(globalThis)
-    .filter(global => !denyList.has(global))
-    .map((nodeGlobalsKey) => {
+const nodeGlobals = new Map<string, PropertyDescriptor>()
+
+function populateNodeGlobals() {
+  if (nodeGlobals.size !== 0) {
+    return
+  }
+
+  const names = Object.getOwnPropertyNames(globalThis)
+  const length = names.length
+  for (let i = 0; i < length; i++) {
+    const globalName = names[i]
+    if (!denyList.has(globalName)) {
       const descriptor = Object.getOwnPropertyDescriptor(
         globalThis,
-        nodeGlobalsKey,
+        globalName,
       )
 
       if (!descriptor) {
         throw new Error(
-          `No property descriptor for ${nodeGlobalsKey}, this is a bug in Vitest.`,
+          `No property descriptor for ${globalName}, this is a bug in Vitest.`,
         )
       }
-
-      return [nodeGlobalsKey, descriptor]
-    }),
-)
+      nodeGlobals.set(globalName, descriptor)
+    }
+  }
+}
 
 export default <Environment>{
   name: 'node',
-  transformMode: 'ssr',
+  viteEnvironment: 'ssr',
   // this is largely copied from jest's node environment
   async setupVM() {
+    populateNodeGlobals()
+
     const vm = await import('node:vm')
     let context = vm.createContext()
     let global = vm.runInContext('this', context)

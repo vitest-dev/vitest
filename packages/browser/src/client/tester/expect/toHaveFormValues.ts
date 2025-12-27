@@ -25,7 +25,9 @@ export default function toHaveFormValues(
 ): ExpectationResult {
   const formElement = getElementFromUserInput(actual, toHaveFormValues, this)
 
-  if (!(formElement instanceof HTMLFieldSetElement) && !(formElement instanceof HTMLFormElement)) {
+  const defaultView = formElement.ownerDocument.defaultView || window
+
+  if (!(formElement instanceof defaultView.HTMLFieldSetElement) && !(formElement instanceof defaultView.HTMLFormElement)) {
     throw new TypeError(`toHaveFormValues must be called on a form or a fieldset, instead got ${getTag(formElement)}`)
   }
 
@@ -64,13 +66,16 @@ export default function toHaveFormValues(
 // Returns the combined value of several elements that have the same name
 // e.g. radio buttons or groups of checkboxes
 function getMultiElementValue(elements: HTMLInputElement[]) {
-  const types = [...new Set(elements.map(element => element.type))]
-  if (types.length !== 1) {
-    throw new Error(
-      'Multiple form elements with the same name must be of the same type',
-    )
+  let type = ''
+  for (const element of elements) {
+    if (type && type !== element.type) {
+      throw new Error(
+        'Multiple form elements with the same name must be of the same type',
+      )
+    }
+    type = element.type
   }
-  switch (types[0]) {
+  switch (type) {
     case 'radio': {
       const selected = elements.find(radio => radio.checked)
       return selected ? selected.value : undefined

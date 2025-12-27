@@ -1,8 +1,7 @@
 import type { FakeTimerInstallOpts } from '@sinonjs/fake-timers'
 import type { PrettyFormatOptions } from '@vitest/pretty-format'
 import type { SequenceHooks, SequenceSetupFiles } from '@vitest/runner'
-import type { SnapshotUpdateState } from '@vitest/snapshot'
-import type { SnapshotEnvironment } from '@vitest/snapshot/environment'
+import type { SnapshotEnvironment, SnapshotUpdateState } from '@vitest/snapshot'
 import type { SerializedDiffOptions } from '@vitest/utils/diff'
 
 /**
@@ -16,6 +15,7 @@ export interface SerializedConfig {
   disableConsoleIntercept: boolean | undefined
   runner: string | undefined
   isolate: boolean
+  maxWorkers: number
   mode: 'test' | 'benchmark'
   bail: number | undefined
   environmentOptions?: Record<string, any>
@@ -50,36 +50,13 @@ export interface SerializedConfig {
     hooks: SequenceHooks
     setupFiles: SequenceSetupFiles
   }
-  poolOptions: {
-    forks: {
-      singleFork: boolean
-      isolate: boolean
-    }
-    threads: {
-      singleThread: boolean
-      isolate: boolean
-    }
-    vmThreads: {
-      singleThread: boolean
-    }
-    vmForks: {
-      singleFork: boolean
-    }
-  }
   deps: {
     web: {
       transformAssets?: boolean
       transformCss?: boolean
       transformGlobPattern?: RegExp | RegExp[]
     }
-    optimizer: {
-      web: {
-        enabled: boolean
-      }
-      ssr: {
-        enabled: boolean
-      }
-    }
+    optimizer: Record<string, { enabled: boolean }>
     interopDefault: boolean | undefined
     moduleDirectories: string[] | undefined
   }
@@ -130,6 +107,8 @@ export interface SerializedConfig {
       // for playwright
       actionTimeout?: number
     }
+    trace: BrowserTraceViewMode
+    trackUnhandledErrors: boolean
   }
   standalone: boolean
   logHeapUsage: boolean | undefined
@@ -137,6 +116,16 @@ export interface SerializedConfig {
   benchmark: {
     includeSamples: boolean
   } | undefined
+  serializedDefines: string
+  experimental: {
+    fsModuleCache: boolean
+    printImportBreakdown: boolean | undefined
+    openTelemetry: {
+      enabled: boolean
+      sdkPath?: string
+      browserSdkPath?: string
+    } | undefined
+  }
 }
 
 export interface SerializedCoverageConfig {
@@ -168,3 +157,4 @@ export type RuntimeConfig = Pick<
 }
 
 export type RuntimeOptions = Partial<RuntimeConfig>
+export type BrowserTraceViewMode = 'on' | 'off' | 'on-first-retry' | 'on-all-retries' | 'retain-on-failure'

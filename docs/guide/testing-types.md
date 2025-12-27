@@ -30,7 +30,7 @@ import { mount } from './mount.js'
 
 test('my types work properly', () => {
   expectTypeOf(mount).toBeFunction()
-  expectTypeOf(mount).parameter(0).toMatchTypeOf<{ name: string }>()
+  expectTypeOf(mount).parameter(0).toExtend<{ name: string }>()
 
   // @ts-expect-error name is a string
   assertType(mount({ name: 42 }))
@@ -45,7 +45,7 @@ You can see a list of possible matchers in [API section](/api/expect-typeof).
 
 If you are using `expectTypeOf` API, refer to the [expect-type documentation on its error messages](https://github.com/mmkal/expect-type#error-messages).
 
-When types don't match, `.toEqualTypeOf` and `.toMatchTypeOf` use a special helper type to produce error messages that are as actionable as possible. But there's a bit of an nuance to understanding them. Since the assertions are written "fluently", the failure should be on the "expected" type, not the "actual" type (`expect<Actual>().toEqualTypeOf<Expected>()`). This means that type errors can be a little confusing - so this library produces a `MismatchInfo` type to try to make explicit what the expectation is. For example:
+When types don't match, `.toEqualTypeOf` and `.toExtend` use a special helper type to produce error messages that are as actionable as possible. But there's a bit of an nuance to understanding them. Since the assertions are written "fluently", the failure should be on the "expected" type, not the "actual" type (`expect<Actual>().toEqualTypeOf<Expected>()`). This means that type errors can be a little confusing - so this library produces a `MismatchInfo` type to try to make explicit what the expectation is. For example:
 
 ```ts
 expectTypeOf({ a: 1 }).toEqualTypeOf<{ a: string }>()
@@ -91,7 +91,7 @@ Will be less helpful than for an assertion like this:
 expectTypeOf({ a: 1 }).toEqualTypeOf<{ a: string }>()
 ```
 
-This is because the TypeScript compiler needs to infer the typearg for the `.toEqualTypeOf({a: ''})` style, and this library can only mark it as a failure by comparing it against a generic `Mismatch` type. So, where possible, use a typearg rather than a concrete type for `.toEqualTypeOf` and `toMatchTypeOf`. If it's much more convenient to compare two concrete types, you can use `typeof`:
+This is because the TypeScript compiler needs to infer the typearg for the `.toEqualTypeOf({a: ''})` style, and this library can only mark it as a failure by comparing it against a generic `Mismatch` type. So, where possible, use a typearg rather than a concrete type for `.toEqualTypeOf` and `.toExtend`. If it's much more convenient to compare two concrete types, you can use `typeof`:
 
 ```ts
 const one = valueFromFunctionOne({ some: { complex: inputs } })

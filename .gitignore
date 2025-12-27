@@ -16,6 +16,7 @@ dist
 .vite-node
 ltex*
 .DS_Store
+.zed
 bench/test/*/*/
 **/bench.json
 **/browser/browser.json
@@ -25,6 +26,7 @@ docs/public/sponsors
 docs/.vitepress/cache/
 !test/cli/fixtures/dotted-files/**/.cache
 test/**/__screenshots__/**/*
+test/**/__traces__/**/*
 test/browser/fixtures/update-snapshot/basic.test.ts
 test/cli/fixtures/browser-multiple/basic-*
 .vitest-reports
@@ -33,3 +35,5 @@ test/cli/fixtures/browser-multiple/basic-*
 test/browser/html/
 test/core/html/
 .vitest-attachments
+explainFiles.txt
+.vitest-dump

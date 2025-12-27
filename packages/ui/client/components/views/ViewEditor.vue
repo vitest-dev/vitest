@@ -1,17 +1,20 @@
 <script setup lang="ts">
 import type { Task } from '@vitest/runner'
 import type CodeMirror from 'codemirror'
-import type { ErrorWithDiff, File, TestAnnotation, TestError } from 'vitest'
+import type { RunnerTestFile, TestAnnotation, TestError } from 'vitest'
+import { until, useResizeObserver, watchDebounced } from '@vueuse/core'
 import { createTooltip, destroyTooltip } from 'floating-vue'
+import { computed, nextTick, onBeforeUnmount, ref, shallowRef, watch } from 'vue'
 import { getAttachmentUrl, sanitizeFilePath } from '~/composables/attachments'
 import { client, isReport } from '~/composables/client'
 import { finished } from '~/composables/client/state'
 import { codemirrorRef } from '~/composables/codemirror'
 import { openInEditor } from '~/composables/error'
 import { columnNumber, lineNumber } from '~/composables/params'
+import CodeMirrorContainer from '../CodeMirrorContainer.vue'
 
 const props = defineProps<{
-  file?: File
+  file?: RunnerTestFile
 }>()
 
 const emit = defineEmits<{ (event: 'draft', value: boolean): void }>()
@@ -144,7 +147,7 @@ watch(
   { immediate: true },
 )
 
-function createErrorElement(e: ErrorWithDiff) {
+function createErrorElement(e: TestError) {
   const stacks = (e?.stacks || []).filter(
     i => i.file && i.file === props.file?.filepath,
   )

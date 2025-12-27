@@ -1,11 +1,12 @@
 import type { TestCase } from 'vitest/node'
-import { resolve } from 'pathe'
+import { playwright } from '@vitest/browser-playwright'
 
+import { resolve } from 'pathe'
 import { glob } from 'tinyglobby'
 import { expect, it } from 'vitest'
 import { runInlineTests, runVitest, ts } from '../../test-utils'
 
-const root = resolve(__dirname, '../fixtures/fails')
+const root = resolve(import.meta.dirname, '../fixtures/fails')
 const files = await glob(['**/*.test.ts'], { cwd: root, dot: true, expandDirectories: false })
 
 it.each(files)('should fail %s', async (file) => {
@@ -108,16 +109,6 @@ it('prints a warning if the assertion is not awaited', async () => {
 
 it('prints a warning if the assertion is not awaited in the browser mode', async () => {
   const { stderr } = await runInlineTests({
-    './vitest.config.js': {
-      test: {
-        browser: {
-          enabled: true,
-          instances: [{ browser: 'chromium' }],
-          provider: 'playwright',
-          headless: true,
-        },
-      },
-    },
     'base.test.js': ts`
     import { expect, test } from 'vitest';
 
@@ -125,7 +116,50 @@ it('prints a warning if the assertion is not awaited in the browser mode', async
       expect(Promise.resolve(1)).resolves.toBe(1)
     })
     `,
+  }, {}, {}, {
+    test: {
+      browser: {
+        enabled: true,
+        instances: [{ browser: 'chromium' }],
+        provider: playwright(),
+        headless: true,
+      },
+    },
   })
   expect(stderr).toContain('Promise returned by \`expect(actual).resolves.toBe(expected)\` was not awaited')
   expect(stderr).toContain('base.test.js:5:33')
+})
+
+it('reports test file if it failed to load', async () => {
+  const hooks: string[] = []
+  await runInlineTests({
+    'basic.test.js': `throw new Error('fail')`,
+  }, {
+    reporters: [
+      'default',
+      {
+        onTestModuleQueued(testModule) {
+          hooks.push(`onTestModuleQueued:${testModule.relativeModuleId}`)
+        },
+        onTestModuleStart(testModule) {
+          hooks.push(`onTestModuleStart:${testModule.relativeModuleId}`)
+        },
+        onTestModuleCollected(testModule) {
+          hooks.push(`onTestModuleCollected:${testModule.relativeModuleId}`)
+        },
+        onTestModuleEnd(testModule) {
+          hooks.push(`onTestModuleEnd:${testModule.relativeModuleId}`)
+        },
+      },
+    ],
+  })
+
+  expect(hooks).toMatchInlineSnapshot(`
+    [
+      "onTestModuleQueued:basic.test.js",
+      "onTestModuleCollected:basic.test.js",
+      "onTestModuleStart:basic.test.js",
+      "onTestModuleEnd:basic.test.js",
+    ]
+  `)
 })

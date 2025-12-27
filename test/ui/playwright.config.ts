@@ -8,6 +8,9 @@ export default defineConfig({
       use: devices['Desktop Chrome'],
     },
   ],
+  use: {
+    trace: process.env.CI ? 'on-first-retry' : 'on',
+  },
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
 })

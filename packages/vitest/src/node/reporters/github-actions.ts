@@ -1,14 +1,19 @@
 import type { File, TestAnnotation } from '@vitest/runner'
+import type { SerializedError } from '@vitest/utils'
 import type { Vitest } from '../core'
 import type { TestProject } from '../project'
 import type { Reporter } from '../types/reporter'
-import type { TestCase } from './reported-tasks'
+import type { TestCase, TestModule } from './reported-tasks'
 import { stripVTControlCharacters } from 'node:util'
 import { getFullName, getTasks } from '@vitest/runner/utils'
 import { capturePrintError } from '../printError'
 
 export interface GithubActionsReporterOptions {
   onWritePath?: (path: string) => string
+  /**
+   * @default true
+   */
+  displayAnnotations?: boolean
 }
 
 export class GithubActionsReporter implements Reporter {
@@ -24,7 +29,7 @@ export class GithubActionsReporter implements Reporter {
   }
 
   onTestCaseAnnotate(testCase: TestCase, annotation: TestAnnotation): void {
-    if (!annotation.location) {
+    if (!annotation.location || this.options.displayAnnotations === false) {
       return
     }
 
@@ -42,7 +47,13 @@ export class GithubActionsReporter implements Reporter {
     this.ctx.logger.log(`\n${formatted}`)
   }
 
-  onFinished(files: File[] = [], errors: unknown[] = []): void {
+  onTestRunEnd(
+    testModules: ReadonlyArray<TestModule>,
+    unhandledErrors: ReadonlyArray<SerializedError>,
+  ): void {
+    const files = testModules.map(testModule => testModule.task)
+    const errors = [...unhandledErrors]
+
     // collect all errors and associate them with projects
     const projectErrors = new Array<{
       project: TestProject
@@ -69,7 +80,7 @@ export class GithubActionsReporter implements Reporter {
         for (const error of task.result?.errors ?? []) {
           projectErrors.push({
             project,
-            title,
+            title: project.name ? `[${project.name}] ${title}` : title,
             error,
             file,
           })

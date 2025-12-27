@@ -129,8 +129,8 @@ it('adding a new test file matching project specific config triggers re-run', as
 it('editing a setup file inside the project reruns tests', async () => {
   const { fs, vitest } = await runInlineTests({
     'setupFile.js': '',
-    'project-1/basic.test.js': `test("[p1] reruns")`,
-    'project-2/basic.test.js': `test("[p2] doesn\'t rerun")`,
+    'project-1/basic.test.js': `test("[p1] reruns", () => {})`,
+    'project-2/basic.test.js': `test("[p2] doesn\'t rerun", () => {})`,
     'vitest.config.js': {
       test: {
         projects: [

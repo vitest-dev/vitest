@@ -444,12 +444,13 @@ export const DEFAULT_OPTIONS: Options = {
   plugins: [],
   printBasicPrototype: true,
   printFunctionName: true,
+  printShadowRoot: true,
   theme: DEFAULT_THEME,
 } satisfies Options
 
 function validateOptions(options: OptionsReceived) {
   for (const key of Object.keys(options)) {
-    if (!Object.prototype.hasOwnProperty.call(DEFAULT_OPTIONS, key)) {
+    if (!Object.hasOwn(DEFAULT_OPTIONS, key)) {
       throw new Error(`pretty-format: Unknown option "${key}".`)
     }
   }
@@ -519,6 +520,7 @@ function getConfig(options?: OptionsReceived): Config {
     plugins: options?.plugins ?? DEFAULT_OPTIONS.plugins,
     printBasicPrototype: options?.printBasicPrototype ?? true,
     printFunctionName: getPrintFunctionName(options),
+    printShadowRoot: options?.printShadowRoot ?? true,
     spacingInner: options?.min ? ' ' : '\n',
     spacingOuter: options?.min ? '' : '\n',
   }

@@ -4,6 +4,7 @@ import toBeEmptyDOMElement from './toBeEmptyDOMElement'
 import { toBeDisabled, toBeEnabled } from './toBeEnabled'
 import toBeInTheDocument from './toBeInTheDocument'
 import { toBeInvalid, toBeValid } from './toBeInvalid'
+import toBeInViewport from './toBeInViewport'
 import toBePartiallyChecked from './toBePartiallyChecked'
 import toBeRequired from './toBeRequired'
 import toBeVisible from './toBeVisible'
@@ -22,12 +23,14 @@ import toHaveSelection from './toHaveSelection'
 import toHaveStyle from './toHaveStyle'
 import toHaveTextContent from './toHaveTextContent'
 import toHaveValue from './toHaveValue'
+import toMatchScreenshot from './toMatchScreenshot'
 
 export const matchers: MatchersObject = {
   toBeDisabled,
   toBeEnabled,
   toBeEmptyDOMElement,
   toBeInTheDocument,
+  toBeInViewport,
   toBeInvalid,
   toBeRequired,
   toBeValid,
@@ -49,4 +52,5 @@ export const matchers: MatchersObject = {
   toBePartiallyChecked,
   toHaveRole,
   toHaveSelection,
+  toMatchScreenshot,
 }

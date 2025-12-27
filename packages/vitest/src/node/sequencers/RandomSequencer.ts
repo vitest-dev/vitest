@@ -1,5 +1,5 @@
 import type { TestSpecification } from '../spec'
-import { shuffle } from '@vitest/utils'
+import { shuffle } from '@vitest/utils/helpers'
 import { BaseSequencer } from './BaseSequencer'
 
 export class RandomSequencer extends BaseSequencer {

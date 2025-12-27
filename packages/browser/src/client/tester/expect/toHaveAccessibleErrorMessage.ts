@@ -25,6 +25,7 @@ export default function toHaveAccessibleErrorMessage(
 ): ExpectationResult {
   const htmlElement = getElementFromUserInput(actual, toHaveAccessibleErrorMessage, this)
   const actualAccessibleErrorMessage = getElementAccessibleErrorMessage(htmlElement) ?? ''
+  const defaultView = htmlElement.ownerDocument.defaultView || window
 
   const missingExpectedValue = arguments.length === 1
 
@@ -36,7 +37,7 @@ export default function toHaveAccessibleErrorMessage(
   }
   else {
     pass
-      = expectedAccessibleErrorMessage instanceof RegExp
+      = expectedAccessibleErrorMessage instanceof defaultView.RegExp
         ? expectedAccessibleErrorMessage.test(actualAccessibleErrorMessage)
         : this.equals(
             actualAccessibleErrorMessage,

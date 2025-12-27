@@ -29,12 +29,18 @@ test(`mocked class are not affected by restoreAllMocks`, () => {
   expect(vi.mocked(instance0.testFn).mock.calls).toMatchInlineSnapshot(`
     [
       [
+        "a",
+      ],
+      [
         "b",
       ],
     ]
   `)
   expect(vi.mocked(MockedE.prototype.testFn).mock.calls).toMatchInlineSnapshot(`
     [
+      [
+        "a",
+      ],
       [
         "b",
       ],
@@ -53,6 +59,9 @@ test(`mocked class are not affected by restoreAllMocks`, () => {
   expect(vi.mocked(instance0.testFn).mock.calls).toMatchInlineSnapshot(`
     [
       [
+        "a",
+      ],
+      [
         "b",
       ],
     ]
@@ -67,6 +76,9 @@ test(`mocked class are not affected by restoreAllMocks`, () => {
   expect(vi.mocked(instance2.testFn).mock.calls).toMatchInlineSnapshot(`[]`)
   expect(vi.mocked(MockedE.prototype.testFn).mock.calls).toMatchInlineSnapshot(`
     [
+      [
+        "a",
+      ],
       [
         "b",
       ],

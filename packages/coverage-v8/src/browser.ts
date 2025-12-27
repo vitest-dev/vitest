@@ -1,6 +1,6 @@
 import type { CoverageProviderModule } from 'vitest/node'
 import type { V8CoverageProvider } from './provider'
-import { cdp } from '@vitest/browser/context'
+import { cdp } from 'vitest/browser'
 import { loadProvider } from './load-provider'
 
 const session = cdp()

@@ -7,7 +7,6 @@ import { runVitest } from '../../test-utils'
 
 class LogReporter extends DefaultReporter {
   isTTY = true
-  onTaskUpdate() {}
 }
 
 test('should print logs correctly', async () => {

@@ -1,6 +1,6 @@
 import { createNode } from '#src/createNode'
-import { page } from '@vitest/browser/context'
 import { afterAll, beforeEach, describe, expect, test } from 'vitest'
+import { page, server } from 'vitest/browser'
 import '../src/button.css'
 
 afterAll(() => {
@@ -114,6 +114,25 @@ describe('dom related activity', () => {
     expect(screenshotPath).toMatch(
       /__screenshots__\/dom.test.ts\/dom-related-activity-svg-screenshot-1.png/,
     )
+  })
+
+  test.runIf(server.provider === 'webdriverio')('shadow dom works with multiple elements', async () => {
+    const wrapper = createWrapper()
+    const div = createNode()
+    wrapper.appendChild(div)
+
+    const shadow = div.attachShadow({ mode: 'open' })
+    const shadowDiv1 = createNode()
+    shadowDiv1.role = 'tab'
+    const shadowDiv2 = createNode()
+    shadowDiv2.role = 'tab'
+    shadow.appendChild(shadowDiv1)
+    shadow.appendChild(shadowDiv2)
+
+    expect(
+      page.getByRole('tab').selector,
+      'there is only a single >>> in the selector',
+    ).toBe('>>>html > body > div > div > div, html > body > div > div > div')
   })
 })
 

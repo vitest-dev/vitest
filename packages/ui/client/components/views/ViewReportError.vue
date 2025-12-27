@@ -1,14 +1,16 @@
 <script setup lang="ts">
-import type { ErrorWithDiff, ParsedStack } from 'vitest'
+import type { ParsedStack, TestError } from 'vitest'
+import { computed } from 'vue'
 import { showLocationSource } from '~/composables/codemirror'
-import { isTestFile, openInEditor } from '~/composables/error'
+import { isDark } from '~/composables/dark'
+import { createAnsiToHtmlFilter, isTestFile, openInEditor } from '~/composables/error'
 import { escapeHtml } from '~/utils/escape'
 
 const props = defineProps<{
   fileId: string
   root: string
   filename?: string
-  error: ErrorWithDiff
+  error: TestError
 }>()
 
 function relative(p: string) {

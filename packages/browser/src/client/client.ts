@@ -1,7 +1,7 @@
 import type { ModuleMocker } from '@vitest/mocker/browser'
 import type { CancelReason } from '@vitest/runner'
 import type { BirpcReturn } from 'birpc'
-import type { WebSocketBrowserEvents, WebSocketBrowserHandlers } from '../node/types'
+import type { WebSocketBrowserEvents, WebSocketBrowserHandlers } from '../types'
 import type { IframeOrchestrator } from './orchestrator'
 import { createBirpc } from 'birpc'
 import { parse, stringify } from 'flatted'
@@ -20,10 +20,11 @@ export const ENTRY_URL: string = `${
   location.protocol === 'https:' ? 'wss:' : 'ws:'
 }//${HOST}/__vitest_browser_api__?type=${PAGE_TYPE}&rpcId=${RPC_ID}&sessionId=${getBrowserState().sessionId}&projectName=${getBrowserState().config.name || ''}&method=${METHOD}&token=${(window as any).VITEST_API_TOKEN || '0'}`
 
-let setCancel = (_: CancelReason) => {}
-export const onCancel: Promise<CancelReason> = new Promise((resolve) => {
-  setCancel = resolve
-})
+const onCancelCallbacks: ((reason: CancelReason) => void)[] = []
+
+export function onCancel(callback: (reason: CancelReason) => void): void {
+  onCancelCallbacks.push(callback)
+}
 
 export interface VitestBrowserClient {
   rpc: BrowserRPC
@@ -74,7 +75,9 @@ function createClient() {
 
   ctx.rpc = createBirpc<WebSocketBrowserHandlers, WebSocketBrowserEvents>(
     {
-      onCancel: setCancel,
+      async onCancel(reason) {
+        await Promise.all(onCancelCallbacks.map(fn => fn(reason)))
+      },
       async createTesters(options) {
         const orchestrator = await waitForOrchestrator()
         return orchestrator.createTesters(options)
@@ -109,7 +112,6 @@ function createClient() {
     {
       post: msg => ctx.ws.send(msg),
       on: fn => (onMessage = fn),
-      timeout: -1, // createTesters can take a while
       serialize: e =>
         stringify(e, (_, v) => {
           if (v instanceof Error) {
@@ -122,9 +124,7 @@ function createClient() {
           return v
         }),
       deserialize: parse,
-      onTimeoutError(functionName) {
-        throw new Error(`[vitest-browser]: Timeout calling "${functionName}"`)
-      },
+      timeout: -1, // createTesters can take a while
     },
   )
 
@@ -146,7 +146,7 @@ function createClient() {
             `Cannot connect to the server in ${connectTimeout / 1000} seconds`,
           ),
         )
-      }, connectTimeout)?.unref?.()
+      }, connectTimeout)
       if (ctx.ws.OPEN === ctx.ws.readyState) {
         resolve()
       }

@@ -15,3 +15,11 @@ defineExpose(props)
     x1
   </button>
 </template>
+
+<!-- Style block triggers a specific condition where sourcemaps used to break randomly -->
+<!-- https://github.com/vitest-dev/vitest/issues/8154 -->
+<style lang="scss">
+body {
+  background-color: #FFF;
+}
+</style>

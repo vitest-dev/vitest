@@ -4,49 +4,17 @@ inputs:
   node-version:
     required: false
     description: Node version for setup-node
-    default: 20.x
+    default: 24.x
 
 runs:
   using: composite
 
   steps:
     - name: Install pnpm
-      uses: pnpm/action-setup@a7487c7e89a18df4991f7f222e4898a00d66ddda # v4.1.0
+      uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061 # v4.2.0
 
     - name: Set node version to ${{ inputs.node-version }}
-      uses: actions/setup-node@v4
+      uses: actions/setup-node@v6
       with:
         node-version: ${{ inputs.node-version }}
-
-    - name: Resolve package versions
-      id: resolve-package-versions
-      shell: bash
-      run: >
-        echo "$(
-          node -e "
-            const fs = require('fs');
-            const lockfile = fs.readFileSync('./pnpm-lock.yaml', 'utf8');
-            const pattern = (name) => new RegExp(name + ':\\\s+specifier: [\\\s\\\w\\\.^]+version: (\\\d+\\\.\\\d+\\\.\\\d+)');
-            const playwrightVersion = lockfile.match(pattern('playwright'))[1];
-            console.log('PLAYWRIGHT_VERSION=' + playwrightVersion);
-          "
-        )" >> $GITHUB_OUTPUT
-
-    - name: Print versions
-      shell: bash
-      run: echo "${{ toJson(steps.resolve-package-versions.outputs) }}"
-
-    - name: Check resolved package versions
-      shell: bash
-      if: |
-        contains(fromJSON('[null, "", "undefined"]'), steps.resolve-package-versions.outputs.PLAYWRIGHT_VERSION)
-      run: echo "Failed to resolve package versions. See log above." && exit 1
-
-    - name: Cache Playwright v${{ steps.resolve-package-versions.outputs.PLAYWRIGHT_VERSION }}
-      uses: actions/cache@v4
-      id: playwright-cache
-      with:
-        path: ${{ env.PLAYWRIGHT_BROWSERS_PATH }}
-        key: ${{ runner.os }}-playwright-${{ steps.resolve-package-versions.outputs.PLAYWRIGHT_VERSION }}
-        restore-keys: |
-          ${{ runner.os }}-playwright-
+        cache: pnpm

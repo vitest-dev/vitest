@@ -1,6 +1,6 @@
 import type { ExpectationResult, MatcherState } from '@vitest/expect'
 import type { Locator } from '../locators'
-import { server } from '@vitest/browser/context'
+import { server } from 'vitest/browser'
 import { getElementFromUserInput } from './utils'
 
 const browser = server.config.browser.name

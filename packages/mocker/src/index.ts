@@ -22,4 +22,6 @@ export type {
   ModuleMockFactory,
   ModuleMockFactoryWithHelper,
   ModuleMockOptions,
+  ServerIdResolution,
+  ServerMockResolution,
 } from './types'

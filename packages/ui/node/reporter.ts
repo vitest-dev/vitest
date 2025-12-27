@@ -71,7 +71,7 @@ export default class HTMLReporter implements Reporter {
     await fs.mkdir(resolve(this.reporterDir, 'assets'), { recursive: true })
   }
 
-  async onFinished(): Promise<void> {
+  async onTestRunEnd(): Promise<void> {
     const result: HTMLReportData = {
       paths: this.ctx.state.getPaths(),
       files: this.ctx.state.getFiles(),
@@ -101,7 +101,7 @@ export default class HTMLReporter implements Reporter {
       processAttachments(file)
       const projectName = file.projectName || ''
       const resolvedConfig = this.ctx.getProjectByName(projectName).config
-      const browser = resolvedConfig.browser.enabled && resolvedConfig.browser.ui
+      const browser = resolvedConfig.browser.enabled
       result.moduleGraph[projectName] ??= {}
       result.moduleGraph[projectName][file.filepath] = await getModuleGraph(
         this.ctx,

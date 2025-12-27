@@ -1,14 +1,12 @@
-import type { RawSourceMap } from 'vite-node'
 import type { RuntimeRPC } from '../../types/rpc'
 import type { TestProject } from '../project'
 import type { ResolveSnapshotPathHandlerContext } from '../types/config'
-import { mkdirSync } from 'node:fs'
-import { rename, stat, unlink, writeFile } from 'node:fs/promises'
-import { dirname, join } from 'pathe'
-import { hash } from '../hash'
-
-const created = new Set()
-const promises = new Map<string, Promise<void>>()
+import { existsSync, mkdirSync } from 'node:fs'
+import { fileURLToPath } from 'node:url'
+import { cleanUrl } from '@vitest/utils/helpers'
+import { isBuiltin, toBuiltin } from '../../utils/modules'
+import { handleRollupError } from '../environments/fetchModule'
+import { normalizeResolvedIdToUrl } from '../environments/normalizeUrl'
 
 interface MethodsOptions {
   cacheFs?: boolean
@@ -16,172 +14,140 @@ interface MethodsOptions {
   collect?: boolean
 }
 
-export function createMethodsRPC(project: TestProject, options: MethodsOptions = {}): RuntimeRPC {
-  const ctx = project.vitest
-  const cacheFs = options.cacheFs ?? false
+export function createMethodsRPC(project: TestProject, methodsOptions: MethodsOptions = {}): RuntimeRPC {
+  const vitest = project.vitest
+  const cacheFs = methodsOptions.cacheFs ?? false
+  project.vitest.state.metadata[project.name] ??= {
+    externalized: {},
+    duration: {},
+    tmps: {},
+  }
+  if (project.config.dumpDir && !existsSync(project.config.dumpDir)) {
+    mkdirSync(project.config.dumpDir, { recursive: true })
+  }
+  project.vitest.state.metadata[project.name].dumpDir = project.config.dumpDir
   return {
+    async fetch(
+      url,
+      importer,
+      environmentName,
+      options,
+      otelCarrier,
+    ) {
+      const environment = project.vite.environments[environmentName]
+      if (!environment) {
+        throw new Error(`The environment ${environmentName} was not defined in the Vite config.`)
+      }
+
+      const start = performance.now()
+
+      return await project._fetcher(url, importer, environment, cacheFs, options, otelCarrier).then((result) => {
+        const duration = performance.now() - start
+        project.vitest.state.transformTime += duration
+        const metadata = project.vitest.state.metadata[project.name]
+        if ('externalize' in result) {
+          metadata.externalized[url] = result.externalize
+        }
+        if ('tmp' in result) {
+          metadata.tmps[url] = result.tmp
+        }
+        metadata.duration[url] ??= []
+        metadata.duration[url].push(duration)
+        return result
+      })
+    },
+    async resolve(id, importer, environmentName) {
+      const environment = project.vite.environments[environmentName]
+      if (!environment) {
+        throw new Error(`The environment ${environmentName} was not defined in the Vite config.`)
+      }
+      const resolved = await environment.pluginContainer.resolveId(id, importer)
+      if (!resolved) {
+        return null
+      }
+      const file = cleanUrl(resolved.id)
+      if (resolved.external) {
+        return {
+          file,
+          // this is only used by the module mocker and it always
+          // standardizes the id to mock "node:url" and "url" at the same time
+          url: isBuiltin(resolved.id)
+            ? toBuiltin(resolved.id)
+            : resolved.id,
+          id: resolved.id,
+        }
+      }
+      return {
+        file: cleanUrl(resolved.id),
+        url: normalizeResolvedIdToUrl(environment, resolved.id),
+        id: resolved.id,
+      }
+    },
+
     snapshotSaved(snapshot) {
-      ctx.snapshot.add(snapshot)
+      vitest.snapshot.add(snapshot)
     },
     resolveSnapshotPath(testPath: string) {
-      return ctx.snapshot.resolvePath<ResolveSnapshotPathHandlerContext>(testPath, {
+      return vitest.snapshot.resolvePath<ResolveSnapshotPathHandlerContext>(testPath, {
         config: project.serializedConfig,
       })
     },
-    async getSourceMap(id, force) {
-      if (force) {
-        const mod = project.vite.moduleGraph.getModuleById(id)
-        if (mod) {
-          project.vite.moduleGraph.invalidateModule(mod)
-        }
-      }
-      const r = await project.vitenode.transformRequest(id)
-      return r?.map as RawSourceMap | undefined
-    },
-    async fetch(id, transformMode) {
-      const result = await project.vitenode.fetchResult(id, transformMode).catch(handleRollupError)
-      const code = result.code
-      if (!cacheFs || result.externalize) {
-        return result
-      }
-      if ('id' in result && typeof result.id === 'string') {
-        return { id: result.id }
+    async transform(id) {
+      const environment = project.vite.environments.__vitest_vm__
+      if (!environment) {
+        throw new Error(`The VM environment was not defined in the Vite config. This is a bug in Vitest. Please, open a new issue with reproduction.`)
       }
 
-      if (code == null) {
-        throw new Error(`Failed to fetch module ${id}`)
-      }
-
-      const dir = join(project.tmpDir, transformMode)
-      const name = hash('sha1', id, 'hex')
-      const tmp = join(dir, name)
-      if (!created.has(dir)) {
-        mkdirSync(dir, { recursive: true })
-        created.add(dir)
-      }
-      if (promises.has(tmp)) {
-        await promises.get(tmp)
-        return { id: tmp }
-      }
-      promises.set(
-        tmp,
-
-        atomicWriteFile(tmp, code)
-        // Fallback to non-atomic write for windows case where file already exists:
-          .catch(() => writeFile(tmp, code, 'utf-8'))
-          .finally(() => promises.delete(tmp)),
-      )
-      await promises.get(tmp)
-      Object.assign(result, { id: tmp })
-      return { id: tmp }
-    },
-    resolveId(id, importer, transformMode) {
-      return project.vitenode.resolveId(id, importer, transformMode).catch(handleRollupError)
-    },
-    transform(id, environment) {
-      return project.vitenode.transformModule(id, environment).catch(handleRollupError)
+      const url = normalizeResolvedIdToUrl(environment, fileURLToPath(id))
+      const result = await environment.transformRequest(url).catch(handleRollupError)
+      return { code: result?.code }
     },
     async onQueued(file) {
-      if (options.collect) {
-        ctx.state.collectFiles(project, [file])
+      if (methodsOptions.collect) {
+        vitest.state.collectFiles(project, [file])
       }
       else {
-        await ctx._testRun.enqueued(project, file)
+        await vitest._testRun.enqueued(project, file)
       }
     },
     async onCollected(files) {
-      if (options.collect) {
-        ctx.state.collectFiles(project, files)
+      if (methodsOptions.collect) {
+        vitest.state.collectFiles(project, files)
       }
       else {
-        await ctx._testRun.collected(project, files)
+        await vitest._testRun.collected(project, files)
       }
     },
     onAfterSuiteRun(meta) {
-      ctx.coverageProvider?.onAfterSuiteRun(meta)
+      vitest.coverageProvider?.onAfterSuiteRun(meta)
     },
-    async onTaskAnnotate(testId, annotation) {
-      return ctx._testRun.annotate(testId, annotation)
+    async onTaskArtifactRecord(testId, artifact) {
+      return vitest._testRun.recordArtifact(testId, artifact)
     },
     async onTaskUpdate(packs, events) {
-      if (options.collect) {
-        ctx.state.updateTasks(packs)
+      if (methodsOptions.collect) {
+        vitest.state.updateTasks(packs)
       }
       else {
-        await ctx._testRun.updated(packs, events)
+        await vitest._testRun.updated(packs, events)
       }
     },
     async onUserConsoleLog(log) {
-      if (options.collect) {
-        ctx.state.updateUserLog(log)
+      if (methodsOptions.collect) {
+        vitest.state.updateUserLog(log)
       }
       else {
-        await ctx._testRun.log(log)
+        await vitest._testRun.log(log)
       }
     },
     onUnhandledError(err, type) {
-      ctx.state.catchError(err, type)
+      vitest.state.catchError(err, type)
     },
     onCancel(reason) {
-      ctx.cancelCurrentRun(reason)
+      vitest.cancelCurrentRun(reason)
     },
     getCountOfFailedTests() {
-      return ctx.state.getCountOfFailedTests()
+      return vitest.state.getCountOfFailedTests()
     },
-  }
-}
-
-// serialize rollup error on server to preserve details as a test error
-function handleRollupError(e: unknown): never {
-  if (
-    e instanceof Error
-    && ('plugin' in e || 'frame' in e || 'id' in e)
-  ) {
-    // eslint-disable-next-line no-throw-literal
-    throw {
-      name: e.name,
-      message: e.message,
-      stack: e.stack,
-      cause: e.cause,
-      __vitest_rollup_error__: {
-        plugin: (e as any).plugin,
-        id: (e as any).id,
-        loc: (e as any).loc,
-        frame: (e as any).frame,
-      },
-    }
-  }
-  throw e
-}
-
-/**
- * Performs an atomic write operation using the write-then-rename pattern.
- *
- * Why we need this:
- * - Ensures file integrity by never leaving partially written files on disk
- * - Prevents other processes from reading incomplete data during writes
- * - Particularly important for test files where incomplete writes could cause test failures
- *
- * The implementation writes to a temporary file first, then renames it to the target path.
- * This rename operation is atomic on most filesystems (including POSIX-compliant ones),
- * guaranteeing that other processes will only ever see the complete file.
- *
- * Added in https://github.com/vitest-dev/vitest/pull/7531
- */
-async function atomicWriteFile(realFilePath: string, data: string): Promise<void> {
-  const dir = dirname(realFilePath)
-  const tmpFilePath = join(dir, `.tmp-${Date.now()}-${Math.random().toString(36).slice(2)}`)
-
-  try {
-    await writeFile(tmpFilePath, data, 'utf-8')
-    await rename(tmpFilePath, realFilePath)
-  }
-  finally {
-    try {
-      if (await stat(tmpFilePath)) {
-        await unlink(tmpFilePath)
-      }
-    }
-    catch {}
   }
 }

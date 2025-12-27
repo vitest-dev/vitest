@@ -1,11 +1,15 @@
-import type { File, Task } from '@vitest/runner'
-import type { ErrorWithDiff, ParsedStack } from '@vitest/utils'
+import type { Task } from '@vitest/runner'
+import type { ParsedStack, TestError } from '@vitest/utils'
 import type { Vitest } from '../core'
 import type { Reporter } from '../types/reporter'
+import type { TestModule } from './reported-tasks'
 import { parseErrorStacktrace } from '../../utils/source-map'
 import { IndentedLogger } from './renderers/indented-logger'
 
-function yamlString(str: string): string {
+function yamlString(str: string | undefined): string {
+  if (!str) {
+    return ''
+  }
   return `"${str.replace(/"/g, '\\"')}"`
 }
 
@@ -40,7 +44,7 @@ export class TapReporter implements Reporter {
     }
   }
 
-  private logErrorDetails(error: ErrorWithDiff, stack?: ParsedStack) {
+  private logErrorDetails(error: TestError, stack?: ParsedStack) {
     const errorName = error.name || 'Unknown Error'
     this.logger.log(`name: ${yamlString(String(errorName))}`)
     this.logger.log(`message: ${yamlString(String(error.message))}`)
@@ -129,7 +133,9 @@ export class TapReporter implements Reporter {
     }
   }
 
-  onFinished(files: File[] = this.ctx.state.getFiles()): void {
+  onTestRunEnd(testModules: ReadonlyArray<TestModule>): void {
+    const files = testModules.map(testModule => testModule.task)
+
     this.logger.log('TAP version 13')
 
     this.logTasks(files)

@@ -1,8 +1,8 @@
-import type { File } from 'vitest'
+import type { RunnerTestFile } from 'vitest'
 import { faker } from '@faker-js/faker'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { config } from '~/composables/client'
-import { render, screen, within } from '~/test'
+import { page, render } from '~/test'
 import ViewReport from './ViewReport.vue'
 
 config.value.root = ''
@@ -42,12 +42,13 @@ const error = {
   diff,
 }
 
-const fileWithTextStacks: File = {
+const fileWithTextStacks: RunnerTestFile = {
   id: 'f-1',
   name: 'test/plain-stack-trace.ts',
   type: 'suite',
   mode: 'run',
   filepath: 'test/plain-stack-trace.ts',
+  fullName: 'test/plain-stack-trace.ts',
   meta: {},
   result: {
     state: 'fail',
@@ -60,7 +61,7 @@ const fileWithTextStacks: File = {
 fileWithTextStacks.file = fileWithTextStacks
 
 describe('ViewReport', () => {
-  describe('File where stacks are in text', () => {
+  describe('RunnerTestFile where stacks are in text', () => {
     beforeEach(() => {
       render(ViewReport, {
         props: {
@@ -74,36 +75,38 @@ describe('ViewReport', () => {
 
     it('renders all of the stacks', () => {
       const stacks = error.stacks
-      const stacksElements = screen.queryAllByTestId(stackRowTestId)
+      const stacksElements = page.getByTestId(stackRowTestId)
       expect(stacksElements).toHaveLength(stacks.length)
 
-      stacksElements.forEach((stack, idx) => {
+      for (let idx = 0; idx < stacks.length; idx++) {
         const { column, line, file: fileName } = stacks[idx]
-        expect(stack.textContent).toContain(`${line}:${column}`)
-        expect(stack.textContent).toContain(`- ${fileName}`)
-      })
+        expect(stacksElements.nth(idx)).toHaveTextContent(`${line}:${column}`)
+        expect(stacksElements.nth(idx)).toHaveTextContent(`- ${fileName}`)
+      }
     })
 
     it('renders the error message', () => {
-      const report = screen.getByTestId(viewReportTestId)
-      expect(report.textContent).toContain(error.message)
-      expect(report.textContent).toContain(error.name)
+      const report = page.getByTestId(viewReportTestId)
+      expect(report).toHaveTextContent(error.message)
+      expect(report).toHaveTextContent(error.name)
     })
   })
 
   it('test html stack trace without html message', () => {
-    const file: File = {
+    const file: RunnerTestFile = {
       id: 'f-1',
       name: 'test/plain-stack-trace.ts',
       type: 'suite',
       mode: 'run',
       filepath: 'test/plain-stack-trace.ts',
+      fullName: 'test/plain-stack-trace.ts',
       meta: {},
       result: {
         state: 'fail',
         errors: [
           {
             name: 'Do some test',
+            stacks: [],
             stack: '\x1B[33mtest/plain-stack-trace.ts\x1B[0m',
             message: 'Error: Transform failed with 1 error:',
             diff,
@@ -119,7 +122,7 @@ describe('ViewReport', () => {
       props: { file },
     })
     const taskError = container.getByTestId(taskErrorTestId)
-    const preElements = taskError.querySelectorAll('pre')
+    const preElements = taskError.element().querySelectorAll('pre')
     expect(preElements).toHaveLength(1)
 
     expect(preElements[0].textContent, 'error has the correct plain text').toBe(
@@ -150,12 +153,13 @@ describe('ViewReport', () => {
   })
 
   it('test html stack trace and message', () => {
-    const file: File = {
+    const file: RunnerTestFile = {
       id: 'f-1',
       name: 'test/plain-stack-trace.ts',
       type: 'suite',
       mode: 'run',
       filepath: 'test/plain-stack-trace.ts',
+      fullName: 'test/plain-stack-trace.ts',
       meta: {},
       result: {
         state: 'fail',
@@ -163,6 +167,7 @@ describe('ViewReport', () => {
           {
             name: 'Do some test',
             stack: '\x1B[33mtest/plain-stack-trace.ts\x1B[0m',
+            stacks: [],
             message: '\x1B[44mError: Transform failed with 1 error:\x1B[0m',
             diff,
           },
@@ -177,7 +182,7 @@ describe('ViewReport', () => {
       props: { file },
     })
     const taskError = container.getByTestId(taskErrorTestId)
-    const preElements = taskError.querySelectorAll('pre')
+    const preElements = taskError.element().querySelectorAll('pre')
     expect(preElements).toHaveLength(1)
 
     expect(preElements[0].textContent, 'error has the correct plain text').toBe(
@@ -222,10 +227,10 @@ describe('ViewReport', () => {
       },
     })
 
-    const diffElement = within(component.getByTestId('diff'))
+    const diffElement = component.getByTestId('diff')
 
-    expect(diffElement.getByText(/Expected/)).toBeTruthy()
-    expect(diffElement.getByText(/Received/)).toBeTruthy()
-    expect(diffElement.queryByText(/\\x1B/)).toBeFalsy()
+    expect(diffElement.getByText(/Expected/)).toBeInTheDocument()
+    expect(diffElement.getByText(/Received/)).toBeInTheDocument()
+    expect(diffElement.getByText(/\\x1B/)).not.toBeInTheDocument()
   })
 })

@@ -24,6 +24,9 @@ export type Theme = Required<{
   value?: string
 }>
 
+/**
+ * compare function used when sorting object keys, `null` can be used to skip over sorting.
+ */
 export type CompareKeys = ((a: string, b: string) => number) | null | undefined
 
 type RequiredOptions = Required<PrettyFormatOptions>
@@ -45,6 +48,7 @@ export interface PrettyFormatOptions {
   min?: boolean
   printBasicPrototype?: boolean
   printFunctionName?: boolean
+  printShadowRoot?: boolean
   compareKeys?: CompareKeys
   plugins?: Plugins
 }
@@ -64,6 +68,7 @@ export interface Config {
   plugins: Plugins
   printBasicPrototype: boolean
   printFunctionName: boolean
+  printShadowRoot: boolean
   spacingInner: string
   spacingOuter: string
 }

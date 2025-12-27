@@ -1,12 +1,16 @@
 import type { Context } from 'node:vm'
 import type { WorkerGlobalState } from '../../types/worker'
+import type { Traces } from '../../utils/traces'
 import { pathToFileURL } from 'node:url'
-import { isContext } from 'node:vm'
+import { isContext, runInContext } from 'node:vm'
 import { resolve } from 'pathe'
+import { loadEnvironment } from '../../integrations/env/loader'
 import { distDir } from '../../paths'
 import { createCustomConsole } from '../console'
-import { getDefaultRequestStubs, startVitestExecutor } from '../execute'
 import { ExternalModulesExecutor } from '../external-executor'
+import { getDefaultRequestStubs } from '../moduleRunner/moduleEvaluator'
+import { createNodeImportMeta } from '../moduleRunner/moduleRunner'
+import { startVitestModuleRunner, VITEST_VM_CONTEXT_SYMBOL } from '../moduleRunner/startModuleRunner'
 import { provideWorkerState } from '../utils'
 import { FileMap } from '../vm/file-map'
 
@@ -15,8 +19,12 @@ const entryFile = pathToFileURL(resolve(distDir, 'workers/runVmTests.js')).href
 const fileMap = new FileMap()
 const packageCache = new Map<string, string>()
 
-export async function runVmTests(method: 'run' | 'collect', state: WorkerGlobalState): Promise<void> {
-  const { environment, ctx, rpc } = state
+export async function runVmTests(method: 'run' | 'collect', state: WorkerGlobalState, traces: Traces): Promise<void> {
+  const { ctx, rpc } = state
+
+  const beforeEnvironmentTime = performance.now()
+  const { environment } = await loadEnvironment(ctx.environment.name, ctx.config.root, rpc, traces)
+  state.environment = environment
 
   if (!environment.setupVM) {
     const envName = ctx.environment.name
@@ -28,11 +36,18 @@ export async function runVmTests(method: 'run' | 'collect', state: WorkerGlobalS
     )
   }
 
-  const vm = await environment.setupVM(
-    ctx.environment.options || ctx.config.environmentOptions || {},
+  const vm = await traces.$(
+    'vitest.runtime.environment.setup',
+    {
+      attributes: {
+        'vitest.environment': environment.name,
+        'vitest.environment.vite_environment': environment.viteEnvironment || environment.name,
+      },
+    },
+    () => environment.setupVM!(ctx.environment.options || ctx.config.environmentOptions || {}),
   )
 
-  state.durations.environment = performance.now() - state.durations.environment
+  state.durations.environment = performance.now() - beforeEnvironmentTime
 
   process.env.VITEST_VM_POOL = '1'
 
@@ -74,17 +89,39 @@ export async function runVmTests(method: 'run' | 'collect', state: WorkerGlobalS
     viteClientModule: stubs['/@vite/client'],
   })
 
-  const executor = await startVitestExecutor({
+  const moduleRunner = startVitestModuleRunner({
     context,
-    moduleCache: state.moduleCache,
+    evaluatedModules: state.evaluatedModules,
     state,
     externalModulesExecutor,
-    requestStubs: stubs,
+    createImportMeta: createNodeImportMeta,
+    traces,
   })
 
-  context.__vitest_mocker__ = executor.mocker
+  Object.defineProperty(context, VITEST_VM_CONTEXT_SYMBOL, {
+    value: {
+      context,
+      externalModulesExecutor,
+    },
+    configurable: true,
+    enumerable: false,
+    writable: false,
+  })
+  context.__vitest_mocker__ = moduleRunner.mocker
 
-  const { run } = (await executor.importExternalModule(
+  if (ctx.config.serializedDefines) {
+    try {
+      runInContext(ctx.config.serializedDefines, context, {
+        filename: 'virtual:load-defines.js',
+      })
+    }
+    catch (error: any) {
+      throw new Error(`Failed to load custom "defines": ${error.message}`)
+    }
+  }
+  await moduleRunner.mocker.initializeSpyModule()
+
+  const { run } = (await moduleRunner.import(
     entryFile,
   )) as typeof import('../runVmTests')
   const fileSpecs = ctx.files.map(f =>
@@ -98,11 +135,14 @@ export async function runVmTests(method: 'run' | 'collect', state: WorkerGlobalS
       method,
       fileSpecs,
       ctx.config,
-      executor,
+      moduleRunner,
+      traces,
     )
   }
   finally {
-    await vm.teardown?.()
-    state.environmentTeardownRun = true
+    await traces.$(
+      'vitest.runtime.environment.teardown',
+      () => vm.teardown?.(),
+    )
   }
 }

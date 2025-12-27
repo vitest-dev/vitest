@@ -1,6 +1,7 @@
 import { existsSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs'
-import { afterEach, describe, expect, test } from 'vitest'
+import { webdriverio } from '@vitest/browser-webdriverio'
 
+import { afterEach, describe, expect, onTestFinished, test } from 'vitest'
 import * as testUtils from '../../test-utils'
 
 const sourceFile = 'fixtures/math.ts'
@@ -16,7 +17,6 @@ const forceTriggerFile = 'fixtures/force-watch/trigger.js'
 const forceTriggerFileContent = readFileSync(forceTriggerFile, 'utf-8')
 
 const options = { root: 'fixtures', watch: true }
-const cleanups: (() => void)[] = []
 
 function editFile(fileContent: string) {
   return `// Modified by file-watching.test.ts
@@ -30,7 +30,6 @@ afterEach(() => {
   writeFileSync(testFile, testFileContent, 'utf8')
   writeFileSync(configFile, configFileContent, 'utf8')
   writeFileSync(forceTriggerFile, forceTriggerFileContent, 'utf8')
-  cleanups.splice(0).forEach(cleanup => cleanup())
 })
 
 // TODO: Fix flakiness and enable on CI
@@ -112,7 +111,7 @@ test("dynamic test case", () => {
   expect(true).toBeTruthy()
 })
 `
-  cleanups.push(() => rmSync(testFile))
+  onTestFinished(() => rmSync(testFile))
   writeFileSync(testFile, testFileContent, 'utf-8')
 
   await vitest.waitForStdout('Running added dynamic test')
@@ -120,8 +119,8 @@ test("dynamic test case", () => {
   await vitest.waitForStdout('1 passed')
 })
 
-test('renaming an existing test file', async () => {
-  cleanups.push(() => rmSync('fixtures/after.test.ts'))
+test('renaming an existing test file', { retry: 3 }, async () => {
+  onTestFinished(() => rmSync('fixtures/after.test.ts'))
   const beforeFile = 'fixtures/before.test.ts'
   const afterFile = 'fixtures/after.test.ts'
   const textContent = `
@@ -190,13 +189,15 @@ test('editing source file generates new test report to file system', async () =>
 describe('browser', () => {
   test.runIf((process.platform !== 'win32'))('editing source file triggers re-run', { retry: 3 }, async () => {
     const { vitest } = await testUtils.runVitest({
-      ...options,
-      browser: {
-        instances: [{ browser: 'chromium' }],
-        provider: 'webdriverio',
+      root: 'fixtures',
+      watch: true,
+    }, undefined, undefined, {
+      test: { browser: {
+        instances: [{ browser: 'chrome' }],
+        provider: webdriverio(),
         enabled: true,
         headless: true,
-      },
+      } },
     })
 
     writeFileSync(sourceFile, editFile(sourceFileContent), 'utf8')

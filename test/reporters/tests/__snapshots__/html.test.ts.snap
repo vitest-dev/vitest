@@ -9,6 +9,7 @@ exports[`html reporter > resolves to "failing" status for test file "json-fail" 
       "environmentLoad": 0,
       "file": [Circular],
       "filepath": "<rootDir>/test/reporters/fixtures/json-fail.test.ts",
+      "fullName": "json-fail.test.ts",
       "id": 0,
       "importDurations": {},
       "meta": {},
@@ -26,7 +27,10 @@ exports[`html reporter > resolves to "failing" status for test file "json-fail" 
       "tasks": [
         {
           "annotations": [],
+          "artifacts": [],
           "file": [Circular],
+          "fullName": "json-fail.test.ts > should fail",
+          "fullTestName": "should fail",
           "id": 0,
           "location": {
             "column": 1,
@@ -62,6 +66,14 @@ exports[`html reporter > resolves to "failing" status for test file "json-fail" 
                 "operator": "strictEqual",
                 "showDiff": true,
                 "stack": "AssertionError: expected 2 to deeply equal 1",
+                "stacks": [
+                  {
+                    "column": 13,
+                    "file": "<rootDir>/test/reporters/fixtures/json-fail.test.ts",
+                    "line": 8,
+                    "method": "",
+                  },
+                ],
               },
             ],
             "repeatCount": 0,
@@ -74,6 +86,7 @@ exports[`html reporter > resolves to "failing" status for test file "json-fail" 
         },
       ],
       "type": "suite",
+      "viteEnvironment": "ssr",
     },
   ],
   "moduleGraph": {
@@ -120,6 +133,7 @@ exports[`html reporter > resolves to "passing" status for test file "all-passing
       "environmentLoad": 0,
       "file": [Circular],
       "filepath": "<rootDir>/test/reporters/fixtures/all-passing-or-skipped.test.ts",
+      "fullName": "all-passing-or-skipped.test.ts",
       "id": 0,
       "importDurations": {},
       "meta": {},
@@ -137,7 +151,10 @@ exports[`html reporter > resolves to "passing" status for test file "all-passing
       "tasks": [
         {
           "annotations": [],
+          "artifacts": [],
           "file": [Circular],
+          "fullName": "all-passing-or-skipped.test.ts > 2 + 3 = 5",
+          "fullTestName": "2 + 3 = 5",
           "id": 0,
           "location": {
             "column": 1,
@@ -158,7 +175,10 @@ exports[`html reporter > resolves to "passing" status for test file "all-passing
         },
         {
           "annotations": [],
+          "artifacts": [],
           "file": [Circular],
+          "fullName": "all-passing-or-skipped.test.ts > 3 + 3 = 6",
+          "fullTestName": "3 + 3 = 6",
           "id": "1111755131_1",
           "location": {
             "column": 6,
@@ -172,6 +192,7 @@ exports[`html reporter > resolves to "passing" status for test file "all-passing
         },
       ],
       "type": "suite",
+      "viteEnvironment": "ssr",
     },
   ],
   "moduleGraph": {

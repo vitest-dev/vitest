@@ -501,7 +501,7 @@ function diff_cleanupMerge(diffs: Array<Diff>) {
         break
     }
   }
-  if (diffs[diffs.length - 1][1] === '') {
+  if (diffs.at(-1)?.[1] === '') {
     diffs.pop()
   } // Remove the dummy entry at the end.
 

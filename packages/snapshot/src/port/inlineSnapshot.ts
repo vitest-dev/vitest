@@ -1,11 +1,11 @@
 import type MagicString from 'magic-string'
 import type { SnapshotEnvironment } from '../types'
+import { getCallLastIndex } from '../../../utils/src/helpers'
 import {
-  getCallLastIndex,
   lineSplitRE,
   offsetToLineNumber,
   positionToOffset,
-} from '../../../utils/src/index'
+} from '../../../utils/src/offset'
 
 export interface InlineSnapshot {
   snapshot: string
@@ -198,7 +198,7 @@ export function stripSnapshotIndentation(inlineSnapshot: string): string {
     return inlineSnapshot
   }
 
-  if (lines[0].trim() !== '' || lines[lines.length - 1].trim() !== '') {
+  if (lines[0].trim() !== '' || lines.at(-1)?.trim() !== '') {
     // If not blank first and last lines, abort.
     return inlineSnapshot
   }

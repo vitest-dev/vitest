@@ -1,5 +1,6 @@
+import { playwright } from '@vitest/browser-playwright';
 import { resolve } from 'pathe';
-import { defineConfig, defineWorkspace } from 'vitest/config';
+import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
   test: {
@@ -13,7 +14,7 @@ export default defineConfig({
           browser: {
             enabled: true,
             instances: [{ browser: 'chromium' }],
-            provider: 'playwright',
+            provider: playwright(),
             headless: true,
           }
         }
@@ -27,7 +28,7 @@ export default defineConfig({
           browser: {
             enabled: true,
             instances: [{ browser: 'chromium' }],
-            provider: 'playwright',
+            provider: playwright(),
             headless: true,
           }
         }

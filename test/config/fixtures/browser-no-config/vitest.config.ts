@@ -4,6 +4,7 @@ export default defineConfig({
   test: {
     browser: {
       headless: true,
+      // testing that instances is required
     },
   },
 })

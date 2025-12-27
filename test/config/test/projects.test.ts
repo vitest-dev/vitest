@@ -1,17 +1,6 @@
 import { resolve } from 'pathe'
-import { expect, it } from 'vitest'
-import { runVitest } from '../../test-utils'
-
-it('correctly runs workspace tests when workspace config path is specified', async () => {
-  // TODO: remove the test in Vitest 4
-  const { stderr, stdout } = await runVitest({
-    root: 'fixtures/workspace',
-    workspace: 'nested/e2e.projects.js',
-  })
-  expect(stderr).toContain('The workspace file is deprecated and will be removed in the next major')
-  expect(stdout).toContain('1 + 1 = 2')
-  expect(stdout).not.toContain('2 + 2 = 4')
-})
+import { describe, expect, it } from 'vitest'
+import { runInlineTests, runVitest } from '../../test-utils'
 
 it('runs the workspace if there are several vitest config files', async () => {
   const { stderr, stdout } = await runVitest({
@@ -49,11 +38,11 @@ it('fails if project names are identical with a nice error message', async () =>
     root: 'fixtures/workspace/invalid-duplicate-configs',
   }, [], { fails: true })
   expect(stderr).toContain(
-    `Project name "test" from "vitest2.config.js" is not unique. The project is already defined by "vitest1.config.js".
+    `Project name "test" from "vitest.config.two.js" is not unique. The project is already defined by "vitest.config.one.js".
 
 Your config matched these files:
- - vitest1.config.js
- - vitest2.config.js
+ - vitest.config.one.js
+ - vitest.config.two.js
 
 All projects should have unique names. Make sure your configuration is correct.`,
   )
@@ -148,4 +137,61 @@ it('fails if workspace is filtered by the project', async () => {
   expect(stderr).toContain(`No projects were found. Make sure your configuration is correct. The filter matched no projects: non-existing. The projects definition: [
     "./vitest.config.js"
 ].`)
+})
+
+describe('the config file names', () => {
+  it('[glob] the name has "unit" between "vitest" and "config" and works', async () => {
+    const { exitCode } = await runInlineTests({
+      'vitest.unit.config.js': {},
+      'vitest.config.js': {
+        test: {
+          passWithNoTests: true,
+          projects: ['./vitest.*.config.js'],
+        },
+      },
+    })
+
+    expect(exitCode).toBe(0)
+  })
+
+  it('[glob] the name does not start with "vite"/"vitest" and throws an error', async () => {
+    const { stderr } = await runInlineTests({
+      'unit.config.js': {},
+      'vitest.config.js': {
+        test: {
+          projects: ['./*.config.js'],
+        },
+      },
+    }, {}, { fails: true })
+
+    expect(stderr).toContain('The projects glob matched a file "unit.config.js", but it should also either start with "vitest.config"/"vite.config" or match the pattern "(vitest|vite).*.config.*".')
+  })
+
+  it('[file] the name has "unit" between "vitest" and "config" and works', async () => {
+    const { exitCode } = await runInlineTests({
+      'vitest.unit.config.js': {},
+      'vitest.config.js': {
+        test: {
+          passWithNoTests: true,
+          projects: ['./vitest.unit.config.js'],
+        },
+      },
+    })
+
+    expect(exitCode).toBe(0)
+  })
+
+  it('[file] the name does not start with "vite"/"vitest" and throws an error', async () => {
+    const { stderr } = await runInlineTests({
+      'unit.config.js': {},
+      'vitest.config.js': {
+        test: {
+          passWithNoTests: true,
+          projects: ['./unit.config.js'],
+        },
+      },
+    }, {}, { fails: true })
+
+    expect(stderr).toContain('The file "unit.config.js" must start with "vitest.config"/"vite.config" or match the pattern "(vitest|vite).*.config.*" to be a valid project config.')
+  })
 })

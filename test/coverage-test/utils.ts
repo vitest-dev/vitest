@@ -1,13 +1,17 @@
 import type { CoverageSummary, FileCoverageData } from 'istanbul-lib-coverage'
+import type { UserConfig as ViteUserConfig } from 'vite'
 import type { TestFunction } from 'vitest'
-import type { UserConfig } from 'vitest/node'
-import { readFileSync } from 'node:fs'
+import type { TestUserConfig } from 'vitest/node'
+import { existsSync, readFileSync } from 'node:fs'
+import { unlink } from 'node:fs/promises'
 import { resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { stripVTControlCharacters } from 'node:util'
+import { playwright } from '@vitest/browser-playwright'
 import libCoverage from 'istanbul-lib-coverage'
 import { normalize } from 'pathe'
-import { vi, describe as vitestDescribe, test as vitestTest } from 'vitest'
+import { onTestFailed, vi, describe as vitestDescribe, test as vitestTest } from 'vitest'
+import { getCurrentTest } from 'vitest/suite'
 import * as testUtils from '../test-utils'
 
 export function test(name: string, fn: TestFunction, skip = false) {
@@ -28,7 +32,7 @@ export function coverageTest(name: string, fn: TestFunction) {
   }
 }
 
-export async function runVitest(config: UserConfig, options = { throwOnError: true }) {
+export async function runVitest(config: TestUserConfig, options = { throwOnError: true }, viteOverrides: ViteUserConfig = {}) {
   const provider = process.env.COVERAGE_PROVIDER as any
 
   const result = await testUtils.runVitest({
@@ -43,18 +47,25 @@ export async function runVitest(config: UserConfig, options = { throwOnError: tr
       enabled: true,
       reporter: [],
       ...config.coverage,
-      provider: provider === 'v8-ast-aware' ? 'v8' : provider,
-      experimentalAstAwareRemapping: provider === 'v8-ast-aware',
+      provider,
       customProviderModule: provider === 'custom' ? 'fixtures/custom-provider' : undefined,
     },
     browser: {
       enabled: process.env.COVERAGE_BROWSER === 'true',
       headless: true,
       instances: [{ browser: 'chromium' }],
-      provider: 'playwright',
+      provider: playwright(),
       ...config.browser,
     },
+    $viteConfig: viteOverrides,
   })
+
+  if (getCurrentTest()) {
+    onTestFailed(() => {
+      console.error('stderr:', result.stderr)
+      console.error('stdout:', result.stdout)
+    })
+  }
 
   if (options.throwOnError) {
     if (result.stderr !== '') {
@@ -63,6 +74,12 @@ export async function runVitest(config: UserConfig, options = { throwOnError: tr
   }
 
   return result
+}
+
+export async function cleanupCoverageJson(name = './coverage/coverage-final.json') {
+  if (existsSync(name)) {
+    await unlink(name)
+  }
 }
 
 /**
@@ -105,10 +122,6 @@ export function normalizeFilename(filename: string) {
 
 export function isV8Provider() {
   return process.env.COVERAGE_PROVIDER === 'v8'
-}
-
-export function isExperimentalV8Provider() {
-  return process.env.COVERAGE_PROVIDER === 'v8-ast-aware'
 }
 
 export function isBrowser() {

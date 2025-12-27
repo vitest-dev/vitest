@@ -12,7 +12,5 @@ test('unhandled rejections of main thread are reported even when no reporter is 
   expect(exitCode).toBe(1)
   expect(stderr).toContain('Unhandled Rejection')
   expect(stderr).toContain('Error: intentional unhandled rejection')
-  // TODO: fix source map of global setup
-  // expect(stderr).toContain('setup-unhandled-rejections.ts:2:42')
-  expect(stderr).toContain('setup-unhandled-rejections.ts')
+  expect(stderr).toContain('setup-unhandled-rejections.ts:2:42')
 })

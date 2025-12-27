@@ -1,6 +1,7 @@
 // Disable automatic exports.
 
 import { ARIARole } from './aria-role.ts'
+import { Locator, ScreenshotComparatorRegistry, ScreenshotMatcherOptions } from './context.js'
 
 export interface TestingLibraryMatchers<E, R> {
   /**
@@ -11,9 +12,55 @@ export interface TestingLibraryMatchers<E, R> {
    *
    * await expect.element(page.getByTestId('svg-element')).toBeInTheDocument()
    * await expect.element(page.getByTestId('does-not-exist')).not.toBeInTheDocument()
-   * @see https://vitest.dev/guide/browser/assertion-api#tobeinthedocument
+   * @see https://vitest.dev/api/browser/assertions#tobeinthedocument
    */
   toBeInTheDocument(): R
+  /**
+   * @description
+   * Assert whether an element is within the viewport or not.
+   *
+   * An element is considered to be in the viewport if any part of it intersects with the current viewport bounds.
+   * This matcher calculates the intersection ratio between the element and the viewport, similar to the
+   * IntersectionObserver API.
+   *
+   * The element must be in the document and have visible dimensions. Elements with display: none or
+   * visibility: hidden are considered not in viewport.
+   * @example
+   * <div
+   *   data-testid="visible-element"
+   *   style="position: absolute; top: 10px; left: 10px; width: 50px; height: 50px;"
+   * >
+   *   Visible Element
+   * </div>
+   *
+   * <div
+   *   data-testid="hidden-element"
+   *   style="position: fixed; top: -100px; left: 10px; width: 50px; height: 50px;"
+   * >
+   *   Hidden Element
+   * </div>
+   *
+   * <div
+   *   data-testid="large-element"
+   *   style="height: 400vh;"
+   * >
+   *   Large Element
+   * </div>
+   *
+   * // Check if any part of element is in viewport
+   * await expect.element(page.getByTestId('visible-element')).toBeInViewport()
+   *
+   * // Check if element is outside viewport
+   * await expect.element(page.getByTestId('hidden-element')).not.toBeInViewport()
+   *
+   * // Check if at least 50% of element is visible
+   * await expect.element(page.getByTestId('large-element')).toBeInViewport({ ratio: 0.5 })
+   *
+   * // Check if element is completely visible
+   * await expect.element(page.getByTestId('visible-element')).toBeInViewport({ ratio: 1 })
+   * @see https://vitest.dev/api/browser/assertions#tobeinviewport
+   */
+  toBeInViewport(options?: { ratio?: number }): R
   /**
    * @description
    * This allows you to check if an element is currently visible to the user.
@@ -37,7 +84,7 @@ export interface TestingLibraryMatchers<E, R> {
    *
    * await expect.element(page.getByTestId('zero-opacity')).not.toBeVisible()
    * await expect.element(page.getByTestId('visible')).toBeVisible()
-   * @see https://vitest.dev/guide/browser/assertion-api#tobevisible
+   * @see https://vitest.dev/api/browser/assertions#tobevisible
    */
   toBeVisible(): R
   /**
@@ -50,7 +97,7 @@ export interface TestingLibraryMatchers<E, R> {
    *
    * await expect.element(page.getByTestId('empty')).toBeEmptyDOMElement()
    * await expect.element(page.getByTestId('not-empty')).not.toBeEmptyDOMElement()
-   * @see https://vitest.dev/guide/browser/assertion-api#tobeemptydomelement
+   * @see https://vitest.dev/api/browser/assertions#tobeemptydomelement
    */
   toBeEmptyDOMElement(): R
   /**
@@ -69,7 +116,7 @@ export interface TestingLibraryMatchers<E, R> {
    * </button>
    *
    * await expect.element(page.getByTestId('button')).toBeDisabled()
-   * @see https://vitest.dev/guide/browser/assertion-api#tobedisabled
+   * @see https://vitest.dev/api/browser/assertions#tobedisabled
    */
   toBeDisabled(): R
   /**
@@ -88,7 +135,7 @@ export interface TestingLibraryMatchers<E, R> {
    * </button>
    *
    * await expect.element(page.getByTestId('button')).toBeEnabled()
-   * @see https://vitest.dev/guide/browser/assertion-api#tobeenabled
+   * @see https://vitest.dev/api/browser/assertions#tobeenabled
    */
   toBeEnabled(): R
   /**
@@ -106,7 +153,7 @@ export interface TestingLibraryMatchers<E, R> {
    *
    * await expect(page.getByTestId('no-aria-invalid')).not.toBeInvalid()
    * await expect(page.getByTestId('invalid-form')).toBeInvalid()
-   * @see https://vitest.dev/guide/browser/assertion-api#tobeinvalid
+   * @see https://vitest.dev/api/browser/assertions#tobeinvalid
    */
   toBeInvalid(): R
   /**
@@ -123,7 +170,7 @@ export interface TestingLibraryMatchers<E, R> {
    *
    * await expect.element(page.getByTestId('required-input')).toBeRequired()
    * await expect.element(page.getByTestId('supported-role')).not.toBeRequired()
-   * @see https://vitest.dev/guide/browser/assertion-api#toberequired
+   * @see https://vitest.dev/api/browser/assertions#toberequired
    */
   toBeRequired(): R
   /**
@@ -141,7 +188,7 @@ export interface TestingLibraryMatchers<E, R> {
    *
    * await expect.element(page.getByTestId('no-aria-invalid')).not.toBeValid()
    * await expect.element(page.getByTestId('invalid-form')).toBeInvalid()
-   * @see https://vitest.dev/guide/browser/assertion-api#tobevalid
+   * @see https://vitest.dev/api/browser/assertions#tobevalid
    */
   toBeValid(): R
   /**
@@ -158,9 +205,9 @@ export interface TestingLibraryMatchers<E, R> {
    * await expect.element(ancestor).toContainElement(descendant)
    * await expect.element(descendant).not.toContainElement(ancestor)
    * await expect.element(ancestor).not.toContainElement(nonExistentElement)
-   * @see https://vitest.dev/guide/browser/assertion-api#tocontainelement
+   * @see https://vitest.dev/api/browser/assertions#tocontainelement
    */
-  toContainElement(element: HTMLElement | SVGElement | null): R
+  toContainElement(element: HTMLElement | SVGElement | Locator | null): R
   /**
    * @description
    * Assert whether a string representing a HTML element is contained in another element.
@@ -169,7 +216,7 @@ export interface TestingLibraryMatchers<E, R> {
    *
    * const parent = page.getByTestId('parent')
    * await expect.element(parent).toContainHTML('<span data-testid="child"></span>')
-   * @see https://vitest.dev/guide/browser/assertion-api#tocontainhtml
+   * @see https://vitest.dev/api/browser/assertions#tocontainhtml
    */
   toContainHTML(htmlText: string): R
   /**
@@ -191,7 +238,7 @@ export interface TestingLibraryMatchers<E, R> {
    * await expect.element(button).toHaveAttribute('disabled')
    * await expect.element(button).toHaveAttribute('type', 'submit')
    * await expect.element(button).not.toHaveAttribute('type', 'button')
-   * @see https://vitest.dev/guide/browser/assertion-api#tohaveattribute
+   * @see https://vitest.dev/api/browser/assertions#tohaveattribute
    */
   toHaveAttribute(attr: string, value?: unknown): R
   /**
@@ -217,7 +264,7 @@ export interface TestingLibraryMatchers<E, R> {
    * await expect.element(deleteButton).toHaveClass('btn xs btn-danger', {exact: true})
    * await expect.element(deleteButton).not.toHaveClass('btn xs btn-danger', {exact: true})
    * await expect.element(noClasses).not.toHaveClass()
-   * @see https://vitest.dev/guide/browser/assertion-api#tohaveclass
+   * @see https://vitest.dev/api/browser/assertions#tohaveclass
    */
   toHaveClass(...classNames:
    | (string | RegExp)[]
@@ -269,7 +316,7 @@ export interface TestingLibraryMatchers<E, R> {
    * await expect.element(selectSingle).toHaveDisplayValue('Select a fruit...')
    * await expect.element(selectMultiple).toHaveDisplayValue(['Banana', 'Avocado'])
    *
-   * @see https://vitest.dev/guide/browser/assertion-api#tohavedisplayvalue
+   * @see https://vitest.dev/api/browser/assertions#tohavedisplayvalue
    */
   toHaveDisplayValue(value: string | number | RegExp | Array<string | RegExp | number>): R
   /**
@@ -285,7 +332,7 @@ export interface TestingLibraryMatchers<E, R> {
    * await expect.element(input).toHaveFocus()
    * input.element().blur()
    * await expect.element(input).not.toHaveFocus()
-   * @see https://vitest.dev/guide/browser/assertion-api#tohavefocus
+   * @see https://vitest.dev/api/browser/assertions#tohavefocus
    */
   toHaveFocus(): R
   /**
@@ -305,7 +352,7 @@ export interface TestingLibraryMatchers<E, R> {
    *   username: 'jane.doe',
    *   rememberMe: true,
    * })
-   * @see https://vitest.dev/guide/browser/assertion-api#tohaveformvalues
+   * @see https://vitest.dev/api/browser/assertions#tohaveformvalues
    */
   toHaveFormValues(expectedValues: Record<string, unknown>): R
   /**
@@ -327,7 +374,7 @@ export interface TestingLibraryMatchers<E, R> {
    *   'background-color': 'green',
    *   display: 'none'
    * })
-   * @see https://vitest.dev/guide/browser/assertion-api#tohavestyle
+   * @see https://vitest.dev/api/browser/assertions#tohavestyle
    */
   toHaveStyle(css: string | Partial<CSSStyleDeclaration>): R
   /**
@@ -350,7 +397,7 @@ export interface TestingLibraryMatchers<E, R> {
    * // to use case-insensitive match
    * await expect.element(element).toHaveTextContent(/content$/i)
    * await expect.element(element).not.toHaveTextContent('content')
-   * @see https://vitest.dev/guide/browser/assertion-api#tohavetextcontent
+   * @see https://vitest.dev/api/browser/assertions#tohavetextcontent
    */
   toHaveTextContent(
     text: string | number | RegExp,
@@ -362,8 +409,8 @@ export interface TestingLibraryMatchers<E, R> {
    *
    * Accepts `<input>`, `<select>`, and `<textarea>` elements with the exception of `<input type="checkbox">` and
    * `<input type="radiobox">`, which can be matched only using
-   * [toBeChecked](https://vitest.dev/guide/browser/assertion-api#tobechecked) or
-   * [toHaveFormValues](https://vitest.dev/guide/browser/assertion-api#tohaveformvalues).
+   * [toBeChecked](https://vitest.dev/api/browser/assertions#tobechecked) or
+   * [toHaveFormValues](https://vitest.dev/api/browser/assertions#tohaveformvalues).
    * @example
    * <input
    *   type="number"
@@ -372,7 +419,7 @@ export interface TestingLibraryMatchers<E, R> {
    *
    * const numberInput = page.getByTestId('input-number')
    * await expect.element(numberInput).toHaveValue(5)
-   * @see https://vitest.dev/guide/browser/assertion-api#tohavevalue
+   * @see https://vitest.dev/api/browser/assertions#tohavevalue
    */
   toHaveValue(value?: string | string[] | number | null): R
   /**
@@ -395,7 +442,7 @@ export interface TestingLibraryMatchers<E, R> {
    * const inputRadio = page.getByTestId('input-radio')
    * await expect.element(inputCheckbox).toBeChecked()
    * await expect.element(inputRadio).not.toBeChecked()
-   * @see https://vitest.dev/guide/browser/assertion-api#tobechecked
+   * @see https://vitest.dev/api/browser/assertions#tobechecked
    */
   toBeChecked(): R
   /**
@@ -420,7 +467,7 @@ export interface TestingLibraryMatchers<E, R> {
    * await expect.element(page.getByTestId('avatar')).not.toHaveAccessibleDescription()
    * await expect.element(page.getByTestId('logo')).not.toHaveAccessibleDescription('Company logo')
    * await expect.element(page.getByTestId('logo')).toHaveAccessibleDescription('The logo of Our Company')
-   * @see https://vitest.dev/guide/browser/assertion-api#tohaveaccessibledescription
+   * @see https://vitest.dev/api/browser/assertions#tohaveaccessibledescription
    */
   toHaveAccessibleDescription(text?: string | RegExp | E): R
 
@@ -459,7 +506,7 @@ export interface TestingLibraryMatchers<E, R> {
    *   page.getByRole('textbox', {name: 'Not Invalid'}),
    * ).not.toHaveAccessibleErrorMessage()
    *
-   * @see https://vitest.dev/guide/browser/assertion-api#tohaveaccessibleerrormessage
+   * @see https://vitest.dev/api/browser/assertions#tohaveaccessibleerrormessage
    */
   toHaveAccessibleErrorMessage(text?: string | RegExp | E): R
 
@@ -490,7 +537,7 @@ export interface TestingLibraryMatchers<E, R> {
    * await expect.element(page.getByTestId('svg-button')).toHaveAccessibleName()
    * await expect.element(page.getByTestId('svg-without-title')).not.toHaveAccessibleName()
    * await expect.element(page.getByTestId('input-title')).toHaveAccessibleName()
-   * @see https://vitest.dev/guide/browser/assertion-api#tohaveaccessiblename
+   * @see https://vitest.dev/api/browser/assertions#tohaveaccessiblename
    */
   toHaveAccessibleName(text?: string | RegExp | E): R
   /**
@@ -526,7 +573,7 @@ export interface TestingLibraryMatchers<E, R> {
    * await expect.element(page.getByTestId('link-invalid')).not.toHaveRole('link')
    * await expect.element(page.getByTestId('link-invalid')).toHaveRole('generic')
    *
-   * @see https://vitest.dev/guide/browser/assertion-api#tohaverole
+   * @see https://vitest.dev/api/browser/assertions#tohaverole
    */
   toHaveRole(
     // Get autocomplete for ARIARole union types, while still supporting another string
@@ -567,7 +614,7 @@ export interface TestingLibraryMatchers<E, R> {
    *
    * inputCheckboxIndeterminate.indeterminate = true
    * await expect.element(inputCheckboxIndeterminate).toBePartiallyChecked()
-   * @see https://vitest.dev/guide/browser/assertion-api#tobepartiallychecked
+   * @see https://vitest.dev/api/browser/assertions#tobepartiallychecked
    */
   toBePartiallyChecked(): R
   /**
@@ -580,7 +627,7 @@ export interface TestingLibraryMatchers<E, R> {
    * other element that contains text, such as a paragraph, span, div etc.
    *
    * NOTE: the expected selection is a string, it does not allow to check for
-   * selection range indeces.
+   * selection range indices.
    *
    * @example
    * <div>
@@ -624,7 +671,54 @@ export interface TestingLibraryMatchers<E, R> {
    * await expect.element(page.queryByTestId('prev')).not.toHaveSelection()
    * await expect.element(page.queryByTestId('next')).toHaveSelection('ne')
    *
-   * @see https://vitest.dev/guide/browser/assertion-api#tohaveselection
+   * @see https://vitest.dev/api/browser/assertions#tohaveselection
    */
   toHaveSelection(selection?: string): R
+
+  /**
+   * @description
+   * This assertion allows you to perform visual regression testing by comparing
+   * screenshots of elements or pages against stored reference images.
+   *
+   * When differences are detected beyond the configured threshold, the test fails.
+   * To help identify the changes, the assertion generates:
+   *
+   * - The actual screenshot captured during the test
+   * - The expected reference screenshot
+   * - A diff image highlighting the differences (when possible)
+   *
+   * @example
+   * <button data-testid="button">Fancy Button</button>
+   *
+   * // basic usage, auto-generates screenshot name
+   * await expect.element(getByTestId('button')).toMatchScreenshot()
+   *
+   * // with custom name
+   * await expect.element(getByTestId('button')).toMatchScreenshot('fancy-button')
+   *
+   * // with options
+   * await expect.element(getByTestId('button')).toMatchScreenshot({
+   *   comparatorName: 'pixelmatch',
+   *   comparatorOptions: {
+   *     allowedMismatchedPixelRatio: 0.01,
+   *   },
+   * })
+   *
+   * // with both name and options
+   * await expect.element(getByTestId('button')).toMatchScreenshot('fancy-button', {
+   *   comparatorName: 'pixelmatch',
+   *   comparatorOptions: {
+   *     allowedMismatchedPixelRatio: 0.01,
+   *   },
+   * })
+   *
+   * @see https://vitest.dev/api/browser/assertions#tomatchscreenshot
+   */
+  toMatchScreenshot<ComparatorName extends keyof ScreenshotComparatorRegistry>(
+    options?: ScreenshotMatcherOptions<ComparatorName>,
+  ): Promise<R>
+  toMatchScreenshot<ComparatorName extends keyof ScreenshotComparatorRegistry>(
+    name?: string,
+    options?: ScreenshotMatcherOptions<ComparatorName>,
+  ): Promise<R>
 }

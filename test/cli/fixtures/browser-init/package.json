@@ -6,6 +6,6 @@
     "vitest": "latest"
   },
   "devDependencies": {
-    "@vitest/browser": "latest"
+    "@vitest/browser-preview": "latest"
   }
 }

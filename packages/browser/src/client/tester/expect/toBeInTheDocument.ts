@@ -15,7 +15,7 @@
 
 import type { ExpectationResult, MatcherState } from '@vitest/expect'
 import type { Locator } from '../locators'
-import { getElementFromUserInput } from './utils'
+import { queryElementFromUserInput } from './utils'
 
 export default function toBeInTheDocument(
   this: MatcherState,
@@ -24,7 +24,7 @@ export default function toBeInTheDocument(
   let htmlElement: null | HTMLElement | SVGElement = null
 
   if (actual !== null || !this.isNot) {
-    htmlElement = getElementFromUserInput(actual, toBeInTheDocument, this)
+    htmlElement = queryElementFromUserInput(actual, toBeInTheDocument, this)
   }
 
   const pass

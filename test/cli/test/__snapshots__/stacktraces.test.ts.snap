@@ -28,8 +28,8 @@ exports[`stacktrace in dependency package > external 1`] = `
 
  FAIL  error-in-package.test.js > js
 Error: __TEST_STACK__
- ❯ innerTestStack (NODE_MODULES)/@vitest/test-dep-error/index.js:10:9
- ❯ testStack (NODE_MODULES)/@vitest/test-dep-error/index.js:4:3
+ ❯ innerTestStack (NODE_MODULES)/@test/test-dep-error/index.js:10:9
+ ❯ testStack (NODE_MODULES)/@test/test-dep-error/index.js:4:3
  ❯ error-in-package.test.js:8:12
       6| 
       7| test('js', () => {
@@ -42,22 +42,22 @@ Error: __TEST_STACK__
 
  FAIL  error-in-package.test.js > ts
 Error: __TEST_STACK_TS__
- ❯ innerTestStack (NODE_MODULES)/@vitest/test-dep-error/ts.ts:22:9
+ ❯ innerTestStack (NODE_MODULES)/@test/test-dep-error/ts.ts:22:9
      20|  */
      21| function innerTestStack() {
      22|   throw new Error('__TEST_STACK_TS__')
        |         ^
      23| }
      24| 
- ❯ testStack (NODE_MODULES)/@vitest/test-dep-error/ts.ts:12:3
+ ❯ testStack (NODE_MODULES)/@test/test-dep-error/ts.ts:12:3
  ❯ error-in-package.test.js:12:14
 
 ⎯⎯[2/4]⎯
 
  FAIL  error-in-package.test.js > transpiled
 Error: __TEST_STACK_TRANSPILED__
- ❯ innerTestStack (NODE_MODULES)/@vitest/test-dep-error/transpiled.ts:22:9
- ❯ testStack (NODE_MODULES)/@vitest/test-dep-error/transpiled.ts:12:3
+ ❯ innerTestStack (NODE_MODULES)/@test/test-dep-error/transpiled.js:7:9
+ ❯ testStack (NODE_MODULES)/@test/test-dep-error/transpiled.js:3:3
  ❯ error-in-package.test.js:16:22
      14| 
      15| test('transpiled', () => {
@@ -70,8 +70,8 @@ Error: __TEST_STACK_TRANSPILED__
 
  FAIL  error-in-package.test.js > transpiled inline
 Error: __TEST_STACK_TRANSPILED_INLINE__
- ❯ innerTestStack (NODE_MODULES)/@vitest/test-dep-error/transpiled-inline.ts:22:9
- ❯ testStack (NODE_MODULES)/@vitest/test-dep-error/transpiled-inline.ts:12:3
+ ❯ innerTestStack (NODE_MODULES)/@test/test-dep-error/transpiled-inline.js:7:9
+ ❯ testStack (NODE_MODULES)/@test/test-dep-error/transpiled-inline.js:3:3
  ❯ error-in-package.test.js:20:28
      18| 
      19| test('transpiled inline', () => {
@@ -91,36 +91,36 @@ exports[`stacktrace in dependency package > inline 1`] = `
 
  FAIL  error-in-package.test.js > js
 Error: __TEST_STACK__
- ❯ innerTestStack (NODE_MODULES)/@vitest/test-dep-error/index.js:10:9
+ ❯ innerTestStack (NODE_MODULES)/@test/test-dep-error/index.js:10:9
       8| 
       9| function innerTestStack() {
      10|   throw new Error('__TEST_STACK__')
        |         ^
      11| }
      12| 
- ❯ testStack (NODE_MODULES)/@vitest/test-dep-error/index.js:4:3
+ ❯ testStack (NODE_MODULES)/@test/test-dep-error/index.js:4:3
  ❯ error-in-package.test.js:8:12
 
 ⎯⎯[1/4]⎯
 
  FAIL  error-in-package.test.js > ts
 Error: __TEST_STACK_TS__
- ❯ innerTestStack (NODE_MODULES)/@vitest/test-dep-error/ts.ts:22:9
+ ❯ innerTestStack (NODE_MODULES)/@test/test-dep-error/ts.ts:22:9
      20|  */
      21| function innerTestStack() {
      22|   throw new Error('__TEST_STACK_TS__')
        |         ^
      23| }
      24| 
- ❯ testStack (NODE_MODULES)/@vitest/test-dep-error/ts.ts:12:3
+ ❯ testStack (NODE_MODULES)/@test/test-dep-error/ts.ts:12:3
  ❯ error-in-package.test.js:12:14
 
 ⎯⎯[2/4]⎯
 
  FAIL  error-in-package.test.js > transpiled
 Error: __TEST_STACK_TRANSPILED__
- ❯ innerTestStack (NODE_MODULES)/@vitest/test-dep-error/transpiled.ts:22:9
- ❯ testStack (NODE_MODULES)/@vitest/test-dep-error/transpiled.ts:12:3
+ ❯ innerTestStack (NODE_MODULES)/@test/test-dep-error/transpiled.ts:22:9
+ ❯ testStack (NODE_MODULES)/@test/test-dep-error/transpiled.ts:12:3
  ❯ error-in-package.test.js:16:22
      14| 
      15| test('transpiled', () => {
@@ -133,8 +133,8 @@ Error: __TEST_STACK_TRANSPILED__
 
  FAIL  error-in-package.test.js > transpiled inline
 Error: __TEST_STACK_TRANSPILED_INLINE__
- ❯ innerTestStack (NODE_MODULES)/@vitest/test-dep-error/transpiled-inline.ts:22:9
- ❯ testStack (NODE_MODULES)/@vitest/test-dep-error/transpiled-inline.ts:12:3
+ ❯ innerTestStack (NODE_MODULES)/@test/test-dep-error/transpiled-inline.ts:22:9
+ ❯ testStack (NODE_MODULES)/@test/test-dep-error/transpiled-inline.ts:12:3
  ❯ error-in-package.test.js:20:28
      18| 
      19| test('transpiled inline', () => {

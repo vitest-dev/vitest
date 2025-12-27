@@ -2,7 +2,7 @@ import type { CAC, Command } from 'cac'
 import type { VitestRunMode } from '../types/config'
 import type { CliOptions } from './cli-api'
 import type { CLIOption, CLIOptions as CLIOptionsConfig } from './cli-config'
-import { toArray } from '@vitest/utils'
+import { toArray } from '@vitest/utils/helpers'
 import cac from 'cac'
 import { normalize } from 'pathe'
 import c from 'tinyrainbow'
@@ -205,7 +205,7 @@ function removeQuotes<T>(str: T): T {
     }
     return str
   }
-  if (str.startsWith('"') && str.endsWith('"')) {
+  if (str[0] === '"' && str.endsWith('"')) {
     return str.slice(1, -1) as unknown as T
   }
   if (str.startsWith(`'`) && str.endsWith(`'`)) {
@@ -288,16 +288,15 @@ function normalizeCliOptions(cliFilters: string[], argv: CliOptions): CliOptions
   if (typeof argv.typecheck?.only === 'boolean') {
     argv.typecheck.enabled ??= true
   }
+  if (argv.clearCache) {
+    argv.watch = false
+    argv.run = true
+  }
 
   return argv
 }
 
 async function start(mode: VitestRunMode, cliFilters: string[], options: CliOptions): Promise<void> {
-  try {
-    process.title = 'node (vitest)'
-  }
-  catch {}
-
   try {
     const { startVitest } = await import('./cli-api')
     const ctx = await startVitest(mode, cliFilters.map(normalize), normalizeCliOptions(cliFilters, options))
@@ -331,17 +330,12 @@ async function init(project: string) {
 
 async function collect(mode: VitestRunMode, cliFilters: string[], options: CliOptions): Promise<void> {
   try {
-    process.title = 'node (vitest)'
-  }
-  catch {}
-
-  try {
     const { prepareVitest, processCollected, outputFileList } = await import('./cli-api')
     const ctx = await prepareVitest(mode, {
       ...normalizeCliOptions(cliFilters, options),
       watch: false,
       run: true,
-    })
+    }, undefined, undefined, cliFilters)
     if (!options.filesOnly) {
       const { testModules: tests, unhandledErrors: errors } = await ctx.collect(cliFilters.map(normalize))
 

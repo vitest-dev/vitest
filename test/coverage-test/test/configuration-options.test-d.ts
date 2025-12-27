@@ -1,5 +1,5 @@
-import type { CoverageProviderModule, ResolvedCoverageOptions, Vitest } from 'vitest'
 import type { defineConfig } from 'vitest/config'
+import type { CoverageProviderModule, ResolvedCoverageOptions, Vitest } from 'vitest/node'
 import { assertType, test } from 'vitest'
 
 type NarrowToTestConfig<T> = T extends { test?: any } ? NonNullable<T['test']> : never
@@ -72,23 +72,6 @@ test('provider options, generic', () => {
   })
 })
 
-test('provider specific options, v8', () => {
-  assertType<Coverage>({
-    provider: 'v8',
-    experimentalAstAwareRemapping: true,
-  })
-})
-
-test('provider specific options, istanbul', () => {
-  assertType<Coverage>({
-    provider: 'istanbul',
-    ignoreClassMethods: ['string'],
-
-    // @ts-expect-error -- v8 specific error
-    experimentalAstAwareRemapping: true,
-  })
-})
-
 test('provider specific options, custom', () => {
   assertType<Coverage>({
     provider: 'custom',
@@ -121,7 +104,6 @@ test('provider module', () => {
             cleanOnRerun: true,
             enabled: true,
             exclude: ['string'],
-            extension: ['string'],
             reporter: [['html', {}], ['json', { file: 'string' }]],
             reportsDirectory: 'string',
             reportOnFailure: true,

@@ -1,102 +1,51 @@
 import type { ContextRPC, WorkerGlobalState } from '../types/worker'
+import type { Traces } from '../utils/traces'
 import type { VitestWorker } from './workers/types'
-import { pathToFileURL } from 'node:url'
 import { createStackString, parseStacktrace } from '@vitest/utils/source-map'
-import { workerId as poolId } from 'tinypool'
-import { ModuleCacheMap } from 'vite-node/client'
-import { loadEnvironment } from '../integrations/env/loader'
-import { addCleanupListener, cleanup as cleanupWorker } from './cleanup'
 import { setupInspect } from './inspector'
-import { createRuntimeRpc, rpcDone } from './rpc'
-import { isChildProcess, setProcessTitle } from './utils'
-import { disposeInternalListeners } from './workers/utils'
+import { VitestEvaluatedModules } from './moduleRunner/evaluatedModules'
+import { onCancel, rpcDone } from './rpc'
 
-if (isChildProcess()) {
-  setProcessTitle(`vitest ${poolId}`)
+const resolvingModules = new Set<string>()
+const globalListeners = new Set<() => unknown>()
 
-  const isProfiling = process.execArgv.some(
-    execArg =>
-      execArg.startsWith('--prof')
-      || execArg.startsWith('--cpu-prof')
-      || execArg.startsWith('--heap-prof')
-      || execArg.startsWith('--diagnostic-dir'),
-  )
-
-  if (isProfiling) {
-    // Work-around for nodejs/node#55094
-    process.on('SIGTERM', () => {
-      process.exit()
-    })
-  }
-}
-
-// this is what every pool executes when running tests
-async function execute(method: 'run' | 'collect', ctx: ContextRPC) {
-  disposeInternalListeners()
-
+async function execute(method: 'run' | 'collect', ctx: ContextRPC, worker: VitestWorker, traces: Traces) {
   const prepareStart = performance.now()
 
-  const inspectorCleanup = setupInspect(ctx)
+  const cleanups: (() => void | Promise<void>)[] = [setupInspect(ctx)]
 
-  process.env.VITEST_WORKER_ID = String(ctx.workerId)
-  process.env.VITEST_POOL_ID = String(poolId)
+  // RPC is used to communicate between worker (be it a thread worker or child process or a custom implementation) and the main thread
+  const rpc = ctx.rpc
 
   try {
-    // worker is a filepath or URL to a file that exposes a default export with "getRpcOptions" and "runTests" methods
-    if (ctx.worker[0] === '.') {
-      throw new Error(
-        `Path to the test runner cannot be relative, received "${ctx.worker}"`,
-      )
-    }
-
-    const file = ctx.worker.startsWith('file:')
-      ? ctx.worker
-      : pathToFileURL(ctx.worker).toString()
-    const testRunnerModule = await import(file)
-
-    if (
-      !testRunnerModule.default
-      || typeof testRunnerModule.default !== 'object'
-    ) {
-      throw new TypeError(
-        `Test worker object should be exposed as a default export. Received "${typeof testRunnerModule.default}"`,
-      )
-    }
-
-    const worker = testRunnerModule.default as VitestWorker
-    if (!worker.getRpcOptions || typeof worker.getRpcOptions !== 'function') {
-      throw new TypeError(
-        `Test worker should expose "getRpcOptions" method. Received "${typeof worker.getRpcOptions}".`,
-      )
-    }
-
-    // RPC is used to communicate between worker (be it a thread worker or child process or a custom implementation) and the main thread
-    const { rpc, onCancel } = createRuntimeRpc(worker.getRpcOptions(ctx))
-
-    const beforeEnvironmentTime = performance.now()
-    const environment = await loadEnvironment(ctx, rpc)
-    if (ctx.environment.transformMode) {
-      environment.transformMode = ctx.environment.transformMode
-    }
+    // do not close the RPC channel so that we can get the error messages sent to the main thread
+    cleanups.push(async () => {
+      await Promise.all(rpc.$rejectPendingCalls(({ method, reject }) => {
+        reject(new Error(`[vitest-worker]: Closing rpc while "${method}" was pending`))
+      }))
+    })
 
     const state = {
       ctx,
       // here we create a new one, workers can reassign this if they need to keep it non-isolated
-      moduleCache: new ModuleCacheMap(),
+      evaluatedModules: new VitestEvaluatedModules(),
+      resolvingModules,
       moduleExecutionInfo: new Map(),
       config: ctx.config,
-      onCancel,
-      environment,
+      // this is set later by vm or base
+      environment: null!,
       durations: {
-        environment: beforeEnvironmentTime,
+        environment: 0,
         prepare: prepareStart,
       },
       rpc,
-      onCleanup: listener => addCleanupListener(listener),
+      onCancel,
+      onCleanup: listener => globalListeners.add(listener),
       providedContext: ctx.providedContext,
       onFilterStackTrace(stack) {
         return createStackString(parseStacktrace(stack))
       },
+      metaEnv: createImportMetaEnvProxy(),
     } satisfies WorkerGlobalState
 
     const methodName = method === 'collect' ? 'collectTests' : 'runTests'
@@ -107,22 +56,54 @@ async function execute(method: 'run' | 'collect', ctx: ContextRPC) {
       )
     }
 
-    await worker[methodName](state)
+    await worker[methodName](state, traces)
   }
   finally {
     await rpcDone().catch(() => {})
-    inspectorCleanup()
+    await Promise.all(cleanups.map(fn => fn())).catch(() => {})
   }
 }
 
-export function run(ctx: ContextRPC): Promise<void> {
-  return execute('run', ctx)
+export function run(ctx: ContextRPC, worker: VitestWorker, traces: Traces): Promise<void> {
+  return execute('run', ctx, worker, traces)
 }
 
-export function collect(ctx: ContextRPC): Promise<void> {
-  return execute('collect', ctx)
+export function collect(ctx: ContextRPC, worker: VitestWorker, traces: Traces): Promise<void> {
+  return execute('collect', ctx, worker, traces)
 }
 
 export async function teardown(): Promise<void> {
-  return cleanupWorker()
+  await Promise.all([...globalListeners].map(l => l()))
+}
+
+const env = process.env
+
+function createImportMetaEnvProxy(): WorkerGlobalState['metaEnv'] {
+  // packages/vitest/src/node/plugins/index.ts:146
+  const booleanKeys = ['DEV', 'PROD', 'SSR']
+  return new Proxy(env, {
+    get(_, key) {
+      if (typeof key !== 'string') {
+        return undefined
+      }
+      if (booleanKeys.includes(key)) {
+        return !!process.env[key]
+      }
+      return process.env[key]
+    },
+    set(_, key, value) {
+      if (typeof key !== 'string') {
+        return true
+      }
+
+      if (booleanKeys.includes(key)) {
+        process.env[key] = value ? '1' : ''
+      }
+      else {
+        process.env[key] = value
+      }
+
+      return true
+    },
+  }) as WorkerGlobalState['metaEnv']
 }

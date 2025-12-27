@@ -1,20 +1,36 @@
-import { VitestExecutor } from 'vitest/execute'
+import type { VitestModuleRunner } from 'vitest/internal/module-runner'
+import {
+  getWorkerState,
+  startVitestModuleRunner,
+  VITEST_VM_CONTEXT_SYMBOL,
+  VitestModuleEvaluator,
+} from 'vitest/internal/module-runner'
 
-export class InlineWorkerRunner extends VitestExecutor {
-  constructor(options: any, private context: any) {
-    // share the same mocker as main executor
-    const mocker = (globalThis as any).__vitest_mocker__
-    super(options)
-    this.mocker = (globalThis as any).__vitest_mocker__ = mocker
-  }
+export function startWebWorkerModuleRunner(context: Record<string, unknown>): VitestModuleRunner {
+  const state = getWorkerState()
+  const mocker = (globalThis as any).__vitest_mocker__
 
-  prepareContext(context: Record<string, any>): any {
-    const ctx = super.prepareContext(context)
-    // not supported for now, we can't synchronously load modules
-    return Object.assign(ctx, this.context, {
-      importScripts,
-    })
-  }
+  const compiledFunctionArgumentsNames = Object.keys(context)
+  const compiledFunctionArgumentsValues = Object.values(context)
+  compiledFunctionArgumentsNames.push('importScripts')
+  compiledFunctionArgumentsValues.push(importScripts)
+
+  const vm = (globalThis as any)[VITEST_VM_CONTEXT_SYMBOL]
+
+  const evaluator = new VitestModuleEvaluator(vm, {
+    interopDefault: state.config.deps.interopDefault,
+    moduleExecutionInfo: state.moduleExecutionInfo,
+    getCurrentTestFilepath: () => state.filepath,
+    compiledFunctionArgumentsNames,
+    compiledFunctionArgumentsValues,
+  })
+
+  return startVitestModuleRunner({
+    evaluator,
+    evaluatedModules: state.evaluatedModules,
+    mocker,
+    state,
+  })
 }
 
 function importScripts() {

@@ -1,5 +1,5 @@
 import type Convert from 'ansi-to-html'
-import type { ErrorWithDiff, RunnerTask } from 'vitest'
+import type { RunnerTask, TestError } from 'vitest'
 import { parseStacktrace } from '@vitest/utils/source-map'
 import Filter from 'ansi-to-html'
 import { escapeHtml } from '~/utils/escape'
@@ -33,13 +33,14 @@ function isPrimitive(value: unknown) {
 }
 
 export function parseError(e: unknown) {
-  let error = e as ErrorWithDiff
+  let error = e as TestError
 
   if (isPrimitive(e)) {
     error = {
       message: String(error).split(/\n/g)[0],
       stack: String(error),
       name: '',
+      stacks: [],
     }
   }
 
@@ -49,6 +50,7 @@ export function parseError(e: unknown) {
       message: err.message,
       stack: err.stack,
       name: '',
+      stacks: [],
     }
   }
 
@@ -59,7 +61,7 @@ export function parseError(e: unknown) {
   return error
 }
 
-function createHtmlError(filter: Convert, error: ErrorWithDiff) {
+function createHtmlError(filter: Convert, error: TestError) {
   let htmlError = ''
   if (error.message?.includes('\x1B')) {
     htmlError = `<b>${error.name}</b>: ${filter.toHtml(

@@ -3,7 +3,7 @@ import type { MockedModuleType } from '@vitest/mocker'
 type Promisable<T> = T | Promise<T>
 
 export type MockFactoryWithHelper<M = unknown> = (
-  importOriginal: <T extends M = M>() => Promise<T>
+  importOriginal: <T extends M = M>() => Promise<T>,
 ) => Promisable<Partial<M>>
 export type MockFactory = () => any
 export interface MockOptions {

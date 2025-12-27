@@ -1,3 +1,4 @@
+import { playwright } from '@vitest/browser-playwright'
 import { fileURLToPath } from 'node:url'
 import { defineConfig } from 'vitest/config'
 
@@ -7,7 +8,7 @@ export default defineConfig({
     include: ['basic.test.ts', 'math.test.ts'],
     browser: {
       instances: [{ browser: 'chromium' }],
-      provider: 'playwright',
+      provider: playwright(),
       headless: true,
       api: 7523,
     }

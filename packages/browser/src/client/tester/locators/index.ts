@@ -1,3 +1,4 @@
+import type { ParsedSelector } from 'ivya'
 import type {
   LocatorByRoleOptions,
   LocatorOptions,
@@ -9,10 +10,9 @@ import type {
   UserEventHoverOptions,
   UserEventSelectOptions,
   UserEventUploadOptions,
-} from '@vitest/browser/context'
-import type { ParsedSelector } from 'ivya'
-import { page, server } from '@vitest/browser/context'
+} from 'vitest/browser'
 import {
+  asLocator,
   getByAltTextSelector,
   getByLabelSelector,
   getByPlaceholderSelector,
@@ -21,11 +21,24 @@ import {
   getByTextSelector,
   getByTitleSelector,
   Ivya,
-
 } from 'ivya'
+import { page, server, utils } from 'vitest/browser'
+import { __INTERNAL } from 'vitest/internal/browser'
 import { ensureAwaited, getBrowserState } from '../../utils'
-import { getElementError } from '../public-utils'
-import { escapeForTextSelector } from '../utils'
+import { escapeForTextSelector, isLocator } from '../tester-utils'
+
+export { convertElementToCssSelector, getIframeScale, processTimeoutOptions } from '../tester-utils'
+export {
+  getByAltTextSelector,
+  getByLabelSelector,
+  getByPlaceholderSelector,
+  getByRoleSelector,
+  getByTestIdSelector,
+  getByTextSelector,
+  getByTitleSelector,
+} from 'ivya'
+
+__INTERNAL._asLocator = asLocator
 
 // we prefer using playwright locators because they are more powerful and support Shadow DOM
 export const selectorEngine: Ivya = Ivya.create({
@@ -43,6 +56,8 @@ export const selectorEngine: Ivya = Ivya.create({
   testIdAttribute: server.config.browser.locators.testIdAttribute,
 })
 
+const kLocator = Symbol.for('$$vitest:locator')
+
 export abstract class Locator {
   public abstract selector: string
 
@@ -50,15 +65,24 @@ export abstract class Locator {
   protected _container?: Element | undefined
   protected _pwSelector?: string | undefined
 
-  public click(options: UserEventClickOptions = {}): Promise<void> {
+  constructor() {
+    Object.defineProperty(this, kLocator, {
+      enumerable: false,
+      writable: false,
+      configurable: false,
+      value: kLocator,
+    })
+  }
+
+  public click(options?: UserEventClickOptions): Promise<void> {
     return this.triggerCommand<void>('__vitest_click', this.selector, options)
   }
 
-  public dblClick(options: UserEventClickOptions = {}): Promise<void> {
+  public dblClick(options?: UserEventClickOptions): Promise<void> {
     return this.triggerCommand<void>('__vitest_dblClick', this.selector, options)
   }
 
-  public tripleClick(options: UserEventClickOptions = {}): Promise<void> {
+  public tripleClick(options?: UserEventClickOptions): Promise<void> {
     return this.triggerCommand<void>('__vitest_tripleClick', this.selector, options)
   }
 
@@ -93,7 +117,8 @@ export abstract class Locator {
       return {
         name: file.name,
         mimeType: file.type,
-        base64: bas64String,
+        // strip prefix `data:[<media-type>][;base64],`
+        base64: bas64String.slice(bas64String.indexOf(',') + 1),
       }
     })
     return this.triggerCommand<void>('__vitest_upload', this.selector, await Promise.all(filesPromise), options)
@@ -114,7 +139,7 @@ export abstract class Locator {
   ): Promise<void> {
     const values = (Array.isArray(value) ? value : [value]).map((v) => {
       if (typeof v !== 'string') {
-        const selector = 'element' in v ? v.selector : selectorEngine.generateSelectorSimple(v)
+        const selector = isLocator(v) ? v.selector : selectorEngine.generateSelectorSimple(v)
         return { element: selector }
       }
       return v
@@ -204,22 +229,26 @@ export abstract class Locator {
     return this.locator(`internal:or=${JSON.stringify(locator._pwSelector || locator.selector)}`)
   }
 
-  public query(): Element | null {
+  public query(): HTMLElement | SVGElement | null {
     const parsedSelector = this._parsedSelector || (this._parsedSelector = selectorEngine.parseSelector(this._pwSelector || this.selector))
-    return selectorEngine.querySelector(parsedSelector, document.documentElement, true)
+    return selectorEngine.querySelector(parsedSelector, document.documentElement, true) as HTMLElement | SVGElement
   }
 
-  public element(): Element {
+  public element(): HTMLElement | SVGElement {
     const element = this.query()
     if (!element) {
-      throw getElementError(this._pwSelector || this.selector, this._container || document.body)
+      throw utils.getElementError(this._pwSelector || this.selector, this._container || document.body)
     }
     return element
   }
 
-  public elements(): Element[] {
+  public elements(): (HTMLElement | SVGElement)[] {
     const parsedSelector = this._parsedSelector || (this._parsedSelector = selectorEngine.parseSelector(this._pwSelector || this.selector))
-    return selectorEngine.querySelectorAll(parsedSelector, document.documentElement)
+    return selectorEngine.querySelectorAll(parsedSelector, document.documentElement) as (HTMLElement | SVGElement)[]
+  }
+
+  public get length(): number {
+    return this.elements().length
   }
 
   public all(): Locator[] {

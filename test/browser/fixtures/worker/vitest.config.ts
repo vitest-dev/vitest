@@ -1,9 +1,6 @@
 import { fileURLToPath } from 'node:url'
 import { defineConfig } from 'vitest/config'
-
-const provider = process.env.PROVIDER || 'playwright'
-const browser =
-  process.env.BROWSER || (provider === 'playwright' ? 'chromium' : 'chrome')
+import { provider, instances } from '../../settings'
 
 export default defineConfig({
   cacheDir: fileURLToPath(new URL("./node_modules/.vite", import.meta.url)),
@@ -11,7 +8,7 @@ export default defineConfig({
     browser: {
       enabled: true,
       provider,
-      instances: [{ browser }],
+      instances,
     },
   },
 })

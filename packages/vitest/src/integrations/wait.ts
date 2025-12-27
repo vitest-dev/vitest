@@ -1,4 +1,4 @@
-import { getSafeTimers } from '@vitest/utils'
+import { getSafeTimers } from '@vitest/utils/timers'
 import { vi } from './vi'
 
 // The waitFor function was inspired by https://github.com/testing-library/web-testing-library/pull/2

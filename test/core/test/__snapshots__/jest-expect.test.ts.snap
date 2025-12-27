@@ -813,7 +813,7 @@ exports[`toHaveBeenNthCalledWith error 1`] = `
   "expected": "Array [
   "hey",
 ]",
-  "message": "expected 2nd "spy" call to have been called with [ 'hey' ]",
+  "message": "expected 2nd "vi.fn()" call to have been called with [ 'hey' ]",
 }
 `;
 
@@ -824,7 +824,7 @@ exports[`toHaveBeenNthCalledWith error 2`] = `
   "expected": "Array [
   "hey",
 ]",
-  "message": "expected 3rd "spy" call to have been called with [ 'hey' ], but called only 2 times",
+  "message": "expected 3rd "vi.fn()" call to have been called with [ 'hey' ], but called only 2 times",
 }
 `;
 

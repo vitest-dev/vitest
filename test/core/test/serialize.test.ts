@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 
-import { serializeValue } from '@vitest/utils/error'
+import { serializeValue } from '@vitest/utils/serialize'
 import { describe, expect, it } from 'vitest'
 
 describe('error serialize', () => {

@@ -1,6 +1,7 @@
 /* eslint-disable unicorn/no-instanceof-builtins -- we check both */
 
-import type { ChaiPlugin, MatcherState } from './types'
+import type { StandardSchemaV1 } from '@standard-schema/spec'
+import type { ChaiPlugin, MatcherState, Tester } from './types'
 import { GLOBAL_EXPECT } from './constants'
 import {
   diff,
@@ -8,18 +9,19 @@ import {
   getMatcherUtils,
   stringify,
 } from './jest-matcher-utils'
+
 import {
   equals,
   isA,
+  isStandardSchema,
   iterableEquality,
   pluralize,
   subsetEquality,
 } from './jest-utils'
-
 import { getState } from './state'
 
 export interface AsymmetricMatcherInterface {
-  asymmetricMatch: (other: unknown) => boolean
+  asymmetricMatch: (other: unknown, customTesters?: Array<Tester>) => boolean
   toString: () => string
   getExpectedType?: () => string
   toAsymmetricMatcher?: () => string
@@ -50,7 +52,7 @@ export abstract class AsymmetricMatcher<
     }
   }
 
-  abstract asymmetricMatch(other: unknown): boolean
+  abstract asymmetricMatch(other: unknown, customTesters?: Array<Tester>): boolean
   abstract toString(): string
   getExpectedType?(): string
   toAsymmetricMatcher?(): string
@@ -108,7 +110,7 @@ export class Anything extends AsymmetricMatcher<void> {
 }
 
 export class ObjectContaining extends AsymmetricMatcher<
-  Record<string, unknown>
+  Record<string | symbol | number, unknown>
 > {
   constructor(sample: Record<string, unknown>, inverse = false) {
     super(sample, inverse)
@@ -126,19 +128,28 @@ export class ObjectContaining extends AsymmetricMatcher<
     return obj.constructor.prototype
   }
 
-  hasProperty(obj: object | null, property: string): boolean {
+  hasProperty(obj: object | null, property: string | symbol): boolean {
     if (!obj) {
       return false
     }
 
-    if (Object.prototype.hasOwnProperty.call(obj, property)) {
+    if (Object.hasOwn(obj, property)) {
       return true
     }
 
     return this.hasProperty(this.getPrototype(obj), property)
   }
 
-  asymmetricMatch(other: any): boolean {
+  getProperties(obj: object): (string | symbol)[] {
+    return [
+      ...Object.keys(obj),
+      ...Object.getOwnPropertySymbols(obj).filter(
+        s => Object.getOwnPropertyDescriptor(obj, s)?.enumerable,
+      ),
+    ]
+  }
+
+  asymmetricMatch(other: any, customTesters?: Array<Tester>): boolean {
     if (typeof this.sample !== 'object') {
       throw new TypeError(
         `You must provide an object to ${this.toString()}, not '${typeof this
@@ -148,15 +159,21 @@ export class ObjectContaining extends AsymmetricMatcher<
 
     let result = true
 
-    const matcherContext = this.getMatcherContext()
-    for (const property in this.sample) {
+    const properties = this.getProperties(this.sample)
+    for (const property of properties) {
       if (
         !this.hasProperty(other, property)
-        || !equals(
-          this.sample[property],
-          other[property],
-          matcherContext.customTesters,
-        )
+      ) {
+        result = false
+        break
+      }
+      const value = Object.getOwnPropertyDescriptor(this.sample, property)?.value ?? this.sample[property]
+      const otherValue = Object.getOwnPropertyDescriptor(other, property)?.value ?? other[property]
+      if (!equals(
+        value,
+        otherValue,
+        customTesters,
+      )
       ) {
         result = false
         break
@@ -180,7 +197,7 @@ export class ArrayContaining<T = unknown> extends AsymmetricMatcher<Array<T>> {
     super(sample, inverse)
   }
 
-  asymmetricMatch(other: Array<T>): boolean {
+  asymmetricMatch(other: Array<T>, customTesters?: Array<Tester>): boolean {
     if (!Array.isArray(this.sample)) {
       throw new TypeError(
         `You must provide an array to ${this.toString()}, not '${typeof this
@@ -188,13 +205,12 @@ export class ArrayContaining<T = unknown> extends AsymmetricMatcher<Array<T>> {
       )
     }
 
-    const matcherContext = this.getMatcherContext()
     const result
       = this.sample.length === 0
         || (Array.isArray(other)
           && this.sample.every(item =>
             other.some(another =>
-              equals(item, another, matcherContext.customTesters),
+              equals(item, another, customTesters),
             ),
           ))
 
@@ -381,6 +397,50 @@ class CloseTo extends AsymmetricMatcher<number> {
   }
 }
 
+export class SchemaMatching extends AsymmetricMatcher<StandardSchemaV1<unknown, unknown>> {
+  private result: StandardSchemaV1.Result<unknown> | undefined
+
+  constructor(sample: StandardSchemaV1<unknown, unknown>, inverse = false) {
+    if (!isStandardSchema(sample)) {
+      throw new TypeError(
+        'SchemaMatching expected to receive a Standard Schema.',
+      )
+    }
+    super(sample, inverse)
+  }
+
+  asymmetricMatch(other: unknown): boolean {
+    const result = this.sample['~standard'].validate(other)
+
+    // Check if the result is a Promise (async validation)
+    if (result instanceof Promise) {
+      throw new TypeError('Async schema validation is not supported in asymmetric matchers.')
+    }
+
+    this.result = result
+    const pass = !this.result.issues || this.result.issues.length === 0
+
+    return this.inverse ? !pass : pass
+  }
+
+  toString() {
+    return `Schema${this.inverse ? 'Not' : ''}Matching`
+  }
+
+  getExpectedType() {
+    return 'object'
+  }
+
+  toAsymmetricMatcher(): string {
+    const { utils } = this.getMatcherContext()
+    const issues = this.result?.issues || []
+    if (issues.length > 0) {
+      return `${this.toString()} ${utils.stringify(this.result, undefined, { printBasicPrototype: false })}`
+    }
+    return this.toString()
+  }
+}
+
 export const JestAsymmetricMatchers: ChaiPlugin = (chai, utils) => {
   utils.addMethod(chai.expect, 'anything', () => new Anything())
 
@@ -414,6 +474,12 @@ export const JestAsymmetricMatchers: ChaiPlugin = (chai, utils) => {
     chai.expect,
     'closeTo',
     (expected: any, precision?: number) => new CloseTo(expected, precision),
+  )
+
+  utils.addMethod(
+    chai.expect,
+    'schemaMatching',
+    (expected: any) => new SchemaMatching(expected),
   );
 
   // defineProperty does not work
@@ -427,5 +493,6 @@ export const JestAsymmetricMatchers: ChaiPlugin = (chai, utils) => {
       new StringMatching(expected, true),
     closeTo: (expected: any, precision?: number) =>
       new CloseTo(expected, precision, true),
+    schemaMatching: (expected: any) => new SchemaMatching(expected, true),
   }
 }

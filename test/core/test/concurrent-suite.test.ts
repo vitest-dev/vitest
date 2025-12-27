@@ -1,4 +1,4 @@
-import { createDefer } from '@vitest/utils'
+import { createDefer } from '@vitest/utils/helpers'
 import { afterAll, describe, expect, test } from 'vitest'
 
 describe('basic', () => {

@@ -5,7 +5,7 @@ import type { TestModule, TestSuite } from '../reporters/reported-tasks'
 import type { TestSpecification } from '../spec'
 import type { UserConfig, VitestEnvironment, VitestRunMode } from '../types/config'
 import { mkdirSync, writeFileSync } from 'node:fs'
-import { dirname, relative, resolve } from 'pathe'
+import { dirname, isAbsolute, relative, resolve } from 'pathe'
 import { CoverageProviderMap } from '../../utils/coverage'
 import { createVitest } from '../create'
 import { FilesNotFoundError, GitNotFoundError, IncludeTaskLocationDisabledError, LocationFilterFileNotFoundError, RangeLocationFilterProvidedError } from '../errors'
@@ -57,10 +57,11 @@ export async function startVitest(
     options,
     viteOverrides,
     vitestOptions,
+    cliFilters,
   )
 
-  if (mode === 'test' && ctx.config.coverage.enabled) {
-    const provider = ctx.config.coverage.provider || 'v8'
+  if (mode === 'test' && ctx._coverageOptions.enabled) {
+    const provider = ctx._coverageOptions.provider || 'v8'
     const requiredPackages = CoverageProviderMap[provider]
 
     if (requiredPackages) {
@@ -90,7 +91,10 @@ export async function startVitest(
   })
 
   try {
-    if (ctx.config.mergeReports) {
+    if (ctx.config.clearCache) {
+      await ctx.experimental_clearCache()
+    }
+    else if (ctx.config.mergeReports) {
       await ctx.mergeReports()
     }
     else if (ctx.config.standalone) {
@@ -139,6 +143,7 @@ export async function prepareVitest(
   options: CliOptions = {},
   viteOverrides?: ViteUserConfig,
   vitestOptions?: VitestOptions,
+  cliFilters?: string[],
 ): Promise<Vitest> {
   process.env.TEST = 'true'
   process.env.VITEST = 'true'
@@ -146,6 +151,10 @@ export async function prepareVitest(
 
   if (options.run) {
     options.watch = false
+  }
+
+  if (options.standalone && (cliFilters?.length || 0) > 0) {
+    options.standalone = false
   }
 
   // this shouldn't affect _application root_ that can be changed inside config
@@ -317,7 +326,7 @@ function getEnvPackageName(env: VitestEnvironment) {
   if (env in envPackageNames) {
     return (envPackageNames as any)[env]
   }
-  if (env[0] === '.' || env[0] === '/') {
+  if (env[0] === '.' || isAbsolute(env)) {
     return null
   }
   return `vitest-environment-${env}`

@@ -27,7 +27,7 @@ jobs:
     runs-on: ubuntu-latest
     name: 'Lint: node-latest, ubuntu-latest'
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - uses: ./.github/actions/setup-and-cache
 
@@ -47,6 +47,9 @@ jobs:
       - name: Typecheck
         run: pnpm run typecheck
 
+      - name: Typecheck UI
+        run: pnpm run -C packages/ui typecheck:client
+
       # From https://github.com/rhysd/actionlint/blob/main/docs/usage.md#use-actionlint-on-github-actions
       - name: Check workflow files
         run: |
@@ -60,7 +63,7 @@ jobs:
       should_skip: ${{ steps.changed-files.outputs.only_changed == 'true' }}
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Get changed files
         id: changed-files
@@ -83,28 +86,27 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest]
-        node_version: [18, 20, 22]
+        node_version: [20, 22, 24]
         include:
           - os: macos-latest
-            node_version: 20
+            node_version: 24
           - os: windows-latest
-            node_version: 20
+            node_version: 24
       fail-fast: false
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - uses: ./.github/actions/setup-and-cache
         with:
           node-version: ${{ matrix.node_version }}
 
-      - uses: browser-actions/setup-chrome@c785b87e244131f27c9f19c1a33e2ead956ab7ce # v1.7.3
+      - uses: browser-actions/setup-chrome@b94431e051d1c52dcbe9a7092a4f10f827795416 # v2.1.0
 
       - name: Install
         run: pnpm i
 
-      - name: Install Playwright Dependencies
-        run: pnpm exec playwright install chromium --with-deps --only-shell
+      - uses: ./.github/actions/setup-playwright
 
       - name: Build
         run: pnpm run build
@@ -118,14 +120,58 @@ jobs:
       - name: Unit Test UI
         run: pnpm run -C packages/ui test:ui
 
+      - uses: actions/upload-artifact@v6
+        if: ${{ !cancelled() }}
+        with:
+          name: playwright-report-${{ matrix.os }}-node-${{ matrix.node_version }}
+          path: test/ui/test-results/
+          retention-days: 30
+
+  test-cached:
+    needs: changed
+    name: 'Cache&Test: node-${{ matrix.node_version }}, ${{ matrix.os }}'
+    if: needs.changed.outputs.should_skip != 'true'
+    runs-on: ${{ matrix.os }}
+
+    timeout-minutes: 30
+
+    strategy:
+      matrix:
+        node_version: [24]
+        os:
+          - macos-latest
+          - windows-latest
+      fail-fast: false
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: ./.github/actions/setup-and-cache
+        with:
+          node-version: ${{ matrix.node_version }}
+
+      - uses: browser-actions/setup-chrome@b94431e051d1c52dcbe9a7092a4f10f827795416 # v2.1.0
+
+      - name: Install
+        run: pnpm i
+
+      - uses: ./.github/actions/setup-playwright
+
+      - name: Build
+        run: pnpm run build
+
+      - name: Test
+        run: pnpm run test:ci:cache
+
   test-browser:
     needs: changed
-    name: 'Browsers: node-20, ${{ matrix.os }}'
+    name: 'Browsers: node-${{ matrix.node_version }}, ${{ matrix.os }}'
     if: needs.changed.outputs.should_skip != 'true'
 
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
+        node_version: [24]
         os:
           - macos-latest
           - windows-latest
@@ -134,20 +180,19 @@ jobs:
     timeout-minutes: 30
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - uses: ./.github/actions/setup-and-cache
         with:
-          node-version: 20
+          node-version: ${{ matrix.node_version }}
 
-      - uses: browser-actions/setup-chrome@c785b87e244131f27c9f19c1a33e2ead956ab7ce # v1.7.3
-      - uses: browser-actions/setup-firefox@634a60ccd6599686158cf5a570481b4cd30455a2 # v1.5.4
+      - uses: browser-actions/setup-chrome@b94431e051d1c52dcbe9a7092a4f10f827795416 # v2.1.0
+      - uses: browser-actions/setup-firefox@5914774dda97099441f02628f8d46411fcfbd208 # v1.7.0
 
       - name: Install
         run: pnpm i
 
-      - name: Install Playwright Dependencies
-        run: pnpm exec playwright install --with-deps --only-shell
+      - uses: ./.github/actions/setup-playwright
 
       - name: Build
         run: pnpm run build
@@ -160,27 +205,28 @@ jobs:
 
   test-rolldown:
     needs: changed
-    # macos-latest is the fastes one
-    name: 'Rolldown&Test: node-20, macos-latest'
+    # macos-latest is the fastest one
+    name: 'Rolldown&Test: node-22, macos-latest'
     if: needs.changed.outputs.should_skip != 'true'
     runs-on: macos-latest
 
     timeout-minutes: 30
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - uses: ./.github/actions/setup-and-cache
         with:
-          node-version: 20
+          node-version: 22
 
-      - uses: browser-actions/setup-chrome@c785b87e244131f27c9f19c1a33e2ead956ab7ce # v1.7.3
+      - uses: browser-actions/setup-chrome@b94431e051d1c52dcbe9a7092a4f10f827795416 # v2.1.0
 
       - name: Install
-        run: pnpm add vite@npm:rolldown-vite && git add . && git commit -m "ci" && pnpm i --prefer-offline --no-frozen-lockfile
+        run: |
+          yq -i '.overrides.vite = "npm:rolldown-vite"' pnpm-workspace.yaml
+          git add . && git commit -m "ci" && pnpm i --prefer-offline --no-frozen-lockfile
 
-      - name: Install Playwright Dependencies
-        run: pnpm exec playwright install --with-deps --only-shell
+      - uses: ./.github/actions/setup-playwright
 
       - name: Build
         run: pnpm run build
@@ -193,3 +239,10 @@ jobs:
 
       - name: Test Browser (playwright)
         run: pnpm run test:browser:playwright
+
+      - uses: actions/upload-artifact@v6
+        if: ${{ !cancelled() }}
+        with:
+          name: playwright-report-rolldown
+          path: rolldown/test/ui/test-results/
+          retention-days: 30

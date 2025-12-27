@@ -2,7 +2,7 @@ import type { CoverageMap } from 'istanbul-lib-coverage'
 import { createCoverageSummary } from 'istanbul-lib-coverage'
 import { parseModule } from 'magicast'
 
-import { expect, test } from 'vitest'
+import { expect, test, vi } from 'vitest'
 import { defineConfig } from 'vitest/config'
 import { BaseCoverageProvider } from 'vitest/coverage'
 
@@ -130,7 +130,33 @@ export default config
   await expect(updateThresholds(config)).rejects.toThrowErrorMatchingInlineSnapshot(`[Error: Failed to update coverage thresholds. Configuration file is too complex.]`)
 })
 
-async function updateThresholds(configurationFile: ReturnType<typeof parseModule>) {
+test('formats values with custom formatter', async () => {
+  const config = parseModule(`export default ${initialConfig}`)
+
+  const autoUpdate = vi.fn().mockImplementation(value => value + 10_000)
+  const updatedConfig = await updateThresholds(config, { thresholds: { autoUpdate } })
+
+  expect(updatedConfig).toMatchInlineSnapshot(`
+    "export default {
+      "test": {
+        "coverage": {
+          "thresholds": {
+            "lines": 10050,
+            "branches": 10060,
+            "functions": 10070,
+            "statements": 10080
+          }
+        }
+      }
+    }"
+  `)
+
+  const calls = autoUpdate.mock.calls.flatMap(call => call[0])
+
+  expect(calls.sort()).toEqual([50, 60, 70, 80])
+})
+
+async function updateThresholds(configurationFile: ReturnType<typeof parseModule>, _coverageOptions: Partial<(InstanceType<typeof BaseCoverageProvider>)['options']> = {}) {
   const summaryData = { total: 0, covered: 0, skipped: 0 }
   const thresholds = [{
     name: 'global',
@@ -151,6 +177,7 @@ async function updateThresholds(configurationFile: ReturnType<typeof parseModule
     provider._initialize({
       config: { coverage: { } },
       logger: { log: () => {} },
+      _coverageOptions,
     } as any)
 
     provider.updateThresholds({

@@ -1,3 +1,4 @@
+import type { TestModule } from '../../../packages/vitest/src/node/reporters/reported-tasks'
 import { existsSync, readFileSync, rmSync } from 'node:fs'
 import { normalize, resolve } from 'pathe'
 import { beforeEach, expect, test, vi } from 'vitest'
@@ -9,6 +10,9 @@ import { getContext } from '../src/context'
 import { files, passedFiles } from '../src/data'
 
 const beautify = (json: string) => JSON.parse(json)
+function getTestModules(_files = files) {
+  return _files.map(task => ({ task }) as TestModule)
+}
 
 vi.mock('os', () => ({
   hostname: () => 'hostname',
@@ -25,10 +29,11 @@ test('tap reporter', async () => {
   // Arrange
   const reporter = new TapReporter()
   const context = getContext()
+  const testModules = getTestModules()
 
   // Act
   reporter.onInit(context.vitest)
-  await reporter.onFinished(files)
+  reporter.onTestRunEnd(testModules)
 
   // Assert
   expect(context.output).toMatchSnapshot()
@@ -38,10 +43,11 @@ test('tap-flat reporter', async () => {
   // Arrange
   const reporter = new TapFlatReporter()
   const context = getContext()
+  const testModules = getTestModules()
 
   // Act
   reporter.onInit(context.vitest)
-  await reporter.onFinished(files)
+  reporter.onTestRunEnd(testModules)
 
   // Assert
   expect(context.output).toMatchSnapshot()
@@ -54,7 +60,7 @@ test('JUnit reporter', async () => {
 
   // Act
   await reporter.onInit(context.vitest)
-  await reporter.onFinished([])
+  await reporter.onTestRunEnd([])
 
   // Assert
   expect(context.output).toMatchSnapshot()
@@ -64,11 +70,12 @@ test('JUnit reporter without classname', async () => {
   // Arrange
   const reporter = new JUnitReporter({})
   const context = getContext()
+  const testModules = getTestModules(passedFiles)
 
   // Act
   await reporter.onInit(context.vitest)
 
-  await reporter.onFinished(passedFiles)
+  await reporter.onTestRunEnd(testModules)
 
   // Assert
   expect(context.output).toMatchSnapshot()
@@ -76,13 +83,14 @@ test('JUnit reporter without classname', async () => {
 
 test('JUnit reporter with custom string classname', async () => {
   // Arrange
-  const reporter = new JUnitReporter({ classname: 'my-custom-classname' })
+  const reporter = new JUnitReporter({ classnameTemplate: 'my-custom-classname' })
   const context = getContext()
+  const testModules = getTestModules(passedFiles)
 
   // Act
   await reporter.onInit(context.vitest)
 
-  await reporter.onFinished(passedFiles)
+  await reporter.onTestRunEnd(testModules)
 
   // Assert
   expect(context.output).toMatchSnapshot()
@@ -92,11 +100,12 @@ test('JUnit reporter with custom function classnameTemplate', async () => {
   // Arrange
   const reporter = new JUnitReporter({ classnameTemplate: task => `filename:${task.filename} - filepath:${task.filepath}` })
   const context = getContext()
+  const testModules = getTestModules(passedFiles)
 
   // Act
   await reporter.onInit(context.vitest)
 
-  await reporter.onFinished(passedFiles)
+  await reporter.onTestRunEnd(testModules)
 
   // Assert
   expect(context.output).toMatchSnapshot()
@@ -105,11 +114,12 @@ test('JUnit reporter with custom string classnameTemplate', async () => {
   // Arrange
   const reporter = new JUnitReporter({ classnameTemplate: `filename:{filename} - filepath:{filepath}` })
   const context = getContext()
+  const testModules = getTestModules(passedFiles)
 
   // Act
   await reporter.onInit(context.vitest)
 
-  await reporter.onFinished(passedFiles)
+  await reporter.onTestRunEnd(testModules)
 
   // Assert
   expect(context.output).toMatchSnapshot()
@@ -123,7 +133,7 @@ test('JUnit reporter (no outputFile entry)', async () => {
 
   // Act
   await reporter.onInit(context.vitest)
-  await reporter.onFinished([])
+  await reporter.onTestRunEnd([])
 
   // Assert
   expect(context.output).toMatchSnapshot()
@@ -138,7 +148,7 @@ test('JUnit reporter with outputFile', async () => {
 
   // Act
   await reporter.onInit(context.vitest)
-  await reporter.onFinished([])
+  await reporter.onTestRunEnd([])
 
   // Assert
   expect(normalizeCwd(context.output)).toMatchSnapshot()
@@ -160,7 +170,7 @@ test('JUnit reporter with outputFile object', async () => {
 
   // Act
   await reporter.onInit(context.vitest)
-  await reporter.onFinished([])
+  await reporter.onTestRunEnd([])
 
   // Assert
   expect(normalizeCwd(context.output)).toMatchSnapshot()
@@ -181,7 +191,7 @@ test('JUnit reporter with outputFile in non-existing directory', async () => {
 
   // Act
   await reporter.onInit(context.vitest)
-  await reporter.onFinished([])
+  await reporter.onTestRunEnd([])
 
   // Assert
   expect(normalizeCwd(context.output)).toMatchSnapshot()
@@ -204,7 +214,7 @@ test('JUnit reporter with outputFile object in non-existing directory', async ()
 
   // Act
   await reporter.onInit(context.vitest)
-  await reporter.onFinished([])
+  await reporter.onTestRunEnd([])
 
   // Assert
   expect(normalizeCwd(context.output)).toMatchSnapshot()
@@ -219,12 +229,13 @@ test('json reporter', async () => {
   // Arrange
   const reporter = new JsonReporter({})
   const context = getContext()
+  const testModules = getTestModules()
 
   vi.setSystemTime(1642587001759)
 
   // Act
   reporter.onInit(context.vitest)
-  await reporter.onFinished(files)
+  await reporter.onTestRunEnd(testModules)
 
   // Assert
   expect(JSON.parse(context.output)).toMatchSnapshot()
@@ -235,12 +246,13 @@ test('json reporter (no outputFile entry)', async () => {
   const reporter = new JsonReporter({})
   const context = getContext()
   context.vitest.config.outputFile = {}
+  const testModules = getTestModules()
 
   vi.setSystemTime(1642587001759)
 
   // Act
   reporter.onInit(context.vitest)
-  await reporter.onFinished(files)
+  await reporter.onTestRunEnd(testModules)
 
   // Assert
   expect(JSON.parse(context.output)).toMatchSnapshot()
@@ -252,12 +264,13 @@ test('json reporter with outputFile', async () => {
   const outputFile = resolve('report.json')
   const context = getContext()
   context.vitest.config.outputFile = outputFile
+  const testModules = getTestModules()
 
   vi.setSystemTime(1642587001759)
 
   // Act
   reporter.onInit(context.vitest)
-  await reporter.onFinished(files)
+  await reporter.onTestRunEnd(testModules)
 
   // Assert
   expect(normalizeCwd(context.output)).toMatchSnapshot()
@@ -276,12 +289,13 @@ test('json reporter with outputFile object', async () => {
   context.vitest.config.outputFile = {
     json: outputFile,
   }
+  const testModules = getTestModules()
 
   vi.setSystemTime(1642587001759)
 
   // Act
   reporter.onInit(context.vitest)
-  await reporter.onFinished(files)
+  await reporter.onTestRunEnd(testModules)
 
   // Assert
   expect(normalizeCwd(context.output)).toMatchSnapshot()
@@ -299,12 +313,13 @@ test('json reporter with outputFile in non-existing directory', async () => {
   const outputFile = `${rootDirectory}/deeply/nested/report.json`
   const context = getContext()
   context.vitest.config.outputFile = outputFile
+  const testModules = getTestModules()
 
   vi.setSystemTime(1642587001759)
 
   // Act
   reporter.onInit(context.vitest)
-  await reporter.onFinished(files)
+  await reporter.onTestRunEnd(testModules)
 
   // Assert
   expect(normalizeCwd(context.output)).toMatchSnapshot()
@@ -324,12 +339,13 @@ test('json reporter with outputFile object in non-existing directory', async () 
   context.vitest.config.outputFile = {
     json: outputFile,
   }
+  const testModules = getTestModules()
 
   vi.setSystemTime(1642587001759)
 
   // Act
   reporter.onInit(context.vitest)
-  await reporter.onFinished(files)
+  await reporter.onTestRunEnd(testModules)
 
   // Assert
   expect(normalizeCwd(context.output)).toMatchSnapshot()

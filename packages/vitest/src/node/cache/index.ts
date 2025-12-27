@@ -1,5 +1,6 @@
+import type { Logger } from '../logger'
 import type { SuiteResultCache } from './results'
-import { slash } from '@vitest/utils'
+import { slash } from '@vitest/utils/helpers'
 import { resolve } from 'pathe'
 import { hash } from '../hash'
 import { FilesStatsCache } from './files'
@@ -9,8 +10,8 @@ export class VitestCache {
   results: ResultsCache
   stats: FilesStatsCache = new FilesStatsCache()
 
-  constructor(version: string) {
-    this.results = new ResultsCache(version)
+  constructor(logger: Logger) {
+    this.results = new ResultsCache(logger)
   }
 
   getFileTestResults(key: string): SuiteResultCache | undefined {

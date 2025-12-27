@@ -1,8 +1,11 @@
+import type { Context as OTELContext } from '@opentelemetry/api'
 import type { GlobalChannelIncomingEvent, IframeChannelIncomingEvent, IframeChannelOutgoingEvent, IframeViewportDoneEvent, IframeViewportFailEvent } from '@vitest/browser/client'
+import type { FileSpecification } from '@vitest/runner'
 import type { BrowserTesterOptions, SerializedConfig } from 'vitest'
 import { channel, client, globalChannel } from '@vitest/browser/client'
-import { generateHash } from '@vitest/runner/utils'
+import { generateFileHash } from '@vitest/runner/utils'
 import { relative } from 'pathe'
+import { Traces } from 'vitest/internal/browser'
 import { getUiAPI } from './ui'
 import { getBrowserState, getConfig } from './utils'
 
@@ -13,8 +16,18 @@ export class IframeOrchestrator {
   private recreateNonIsolatedIframe = false
   private iframes = new Map<string, HTMLIFrameElement>()
 
+  public eventTarget: EventTarget = new EventTarget()
+
+  private traces: Traces
+
   constructor() {
     debug('init orchestrator', getBrowserState().sessionId)
+
+    const otelConfig = getBrowserState().config.experimental.openTelemetry
+    this.traces = new Traces({
+      enabled: !!(otelConfig?.enabled && otelConfig.browserSdkPath),
+      sdkPath: `/@fs/${otelConfig?.browserSdkPath}`,
+    })
 
     channel.addEventListener(
       'message',
@@ -27,10 +40,30 @@ export class IframeOrchestrator {
   }
 
   public async createTesters(options: BrowserTesterOptions): Promise<void> {
+    await this.traces.waitInit()
+    this.traces.recordInitSpan(
+      this.traces.getContextFromCarrier(getBrowserState().otelCarrier),
+    )
+    const orchestratorSpan = this.traces.startContextSpan(
+      'vitest.browser.orchestrator.run',
+      this.traces.getContextFromCarrier(options.otelCarrier),
+    )
+    orchestratorSpan.span.setAttributes({
+      'vitest.browser.files': options.files.map(f => f.filepath),
+    })
+    const endSpan = async () => {
+      orchestratorSpan.span.end()
+      // orchestrator doesn't know specific timing when it gets torn down,
+      // so we ensure flushing traces here after each run
+      await this.traces.flush()
+    }
+
+    const startTime = performance.now()
+
     this.cancelled = false
 
     const config = getConfig()
-    debug('create testers', options.files.join(', '))
+    debug('create testers', ...options.files.join(', '))
     const container = await getContainer(config)
 
     if (config.browser.ui) {
@@ -44,7 +77,8 @@ export class IframeOrchestrator {
     }
 
     if (config.browser.isolate === false) {
-      await this.runNonIsolatedTests(container, options)
+      await this.runNonIsolatedTests(container, options, startTime, orchestratorSpan.context)
+      await endSpan()
       return
     }
 
@@ -53,24 +87,28 @@ export class IframeOrchestrator {
 
     for (let i = 0; i < options.files.length; i++) {
       if (this.cancelled) {
+        await endSpan()
         return
       }
 
       const file = options.files[i]
-      debug('create iframe', file)
+      debug('create iframe', file.filepath)
 
       await this.runIsolatedTestInIframe(
         container,
         file,
         options,
+        startTime,
+        orchestratorSpan.context,
       )
     }
+    await endSpan()
   }
 
   public async cleanupTesters(): Promise<void> {
     const config = getConfig()
     if (config.browser.isolate) {
-      // isolated mode assignes filepaths as ids
+      // isolated mode assigns filepaths as ids
       const files = Array.from(this.iframes.keys())
       // when the run is completed, show the last file in the UI
       const ui = getUiAPI()
@@ -93,7 +131,12 @@ export class IframeOrchestrator {
     this.recreateNonIsolatedIframe = true
   }
 
-  private async runNonIsolatedTests(container: HTMLDivElement, options: BrowserTesterOptions) {
+  private async runNonIsolatedTests(
+    container: HTMLDivElement,
+    options: BrowserTesterOptions,
+    startTime: number,
+    otelContext: OTELContext,
+  ) {
     if (this.recreateNonIsolatedIframe) {
       // recreate a new non-isolated iframe during watcher reruns
       // because we called "cleanup" in the previous run
@@ -106,7 +149,7 @@ export class IframeOrchestrator {
 
     if (!this.iframes.has(ID_ALL)) {
       debug('preparing non-isolated iframe')
-      await this.prepareIframe(container, ID_ALL, options.startTime)
+      await this.prepareIframe(container, ID_ALL, startTime, otelContext)
     }
 
     const config = getConfig()
@@ -122,29 +165,39 @@ export class IframeOrchestrator {
       method: options.method,
       context: options.providedContext,
     })
+    debug('finished running tests', options.files.join(', '))
     // we don't cleanup here because in non-isolated mode
     // it is done after all tests finished running
   }
 
   private async runIsolatedTestInIframe(
     container: HTMLDivElement,
-    file: string,
+    spec: FileSpecification,
     options: BrowserTesterOptions,
+    startTime: number,
+    otelContext: OTELContext,
   ) {
     const config = getConfig()
     const { width, height } = config.browser.viewport
+
+    const file = spec.filepath
 
     if (this.iframes.has(file)) {
       this.iframes.get(file)!.remove()
       this.iframes.delete(file)
     }
 
-    const iframe = await this.prepareIframe(container, file, options.startTime)
+    const iframe = await this.prepareIframe(
+      container,
+      file,
+      startTime,
+      otelContext,
+    )
     await setIframeViewport(iframe, width, height)
     // running tests after the "prepare" event
     await sendEventToIframe({
       event: 'execute',
-      files: [file],
+      files: [spec],
       method: options.method,
       iframeId: file,
       context: options.providedContext,
@@ -156,32 +209,69 @@ export class IframeOrchestrator {
     })
   }
 
-  private async prepareIframe(container: HTMLDivElement, iframeId: string, startTime: number) {
+  private dispatchIframeError(error: Error) {
+    const event = new CustomEvent('iframeerror', { detail: error })
+    this.eventTarget.dispatchEvent(event)
+    return error
+  }
+
+  private async prepareIframe(
+    container: HTMLDivElement,
+    iframeId: string,
+    startTime: number,
+    otelContext: OTELContext,
+  ) {
     const iframe = this.createTestIframe(iframeId)
     container.appendChild(iframe)
 
     await new Promise<void>((resolve, reject) => {
       iframe.onload = () => {
-        this.iframes.set(iframeId, iframe)
-        sendEventToIframe({
-          event: 'prepare',
-          iframeId,
-          startTime,
-        }).then(resolve, reject)
+        const href = this.getIframeHref(iframe)
+        debug('iframe loaded with href', href)
+        if (href !== iframe.src) {
+          reject(this.dispatchIframeError(new Error(
+            `Cannot connect to the iframe. `
+            + `Did you change the location or submitted a form? `
+            + 'If so, don\'t forget to call `event.preventDefault()` to avoid reloading the page.\n\n'
+            + `Received URL: ${href || 'unknown'}\nExpected: ${iframe.src}`,
+          )))
+        }
+        else {
+          this.iframes.set(iframeId, iframe)
+          sendEventToIframe({
+            event: 'prepare',
+            iframeId,
+            startTime,
+            otelCarrier: this.traces.getContextCarrier(otelContext),
+          }).then(resolve, error => reject(this.dispatchIframeError(error)))
+        }
       }
       iframe.onerror = (e) => {
         if (typeof e === 'string') {
-          reject(new Error(e))
+          reject(this.dispatchIframeError(new Error(e)))
         }
         else if (e instanceof ErrorEvent) {
-          reject(e.error)
+          reject(this.dispatchIframeError(e.error))
         }
         else {
-          reject(new Error(`Cannot load the iframe ${iframeId}.`))
+          reject(this.dispatchIframeError(new Error(`Cannot load the iframe ${iframeId}.`)))
         }
       }
     })
     return iframe
+  }
+
+  private getIframeHref(iframe: HTMLIFrameElement) {
+    try {
+      // same origin iframe has contentWindow
+      // same origin trusted iframe (where tests can run)
+      // also allows accessing "location"
+      return iframe.contentWindow?.location.href
+    }
+    catch {
+      // looks like this iframe is not a tester.html
+      return undefined
+    }
   }
 
   private createTestIframe(iframeId: string) {
@@ -257,7 +347,8 @@ export class IframeOrchestrator {
   }
 }
 
-getBrowserState().orchestrator = new IframeOrchestrator()
+const orchestrator = new IframeOrchestrator()
+getBrowserState().orchestrator = orchestrator
 
 async function getContainer(config: SerializedConfig): Promise<HTMLDivElement> {
   if (config.browser.ui) {
@@ -276,24 +367,33 @@ async function getContainer(config: SerializedConfig): Promise<HTMLDivElement> {
 
 async function sendEventToIframe(event: IframeChannelOutgoingEvent) {
   channel.postMessage(event)
-  return new Promise<void>((resolve) => {
-    channel.addEventListener(
-      'message',
-      function handler(e) {
-        if (e.data.iframeId === event.iframeId && e.data.event === `response:${event.event}`) {
-          resolve()
-          channel.removeEventListener('message', handler)
-        }
-      },
-    )
+  return new Promise<void>((resolve, reject) => {
+    function cleanupEvents() {
+      channel.removeEventListener('message', onReceived)
+      orchestrator.eventTarget.removeEventListener('iframeerror', onError)
+    }
+
+    function onReceived(e: MessageEvent) {
+      if (e.data.iframeId === event.iframeId && e.data.event === `response:${event.event}`) {
+        resolve()
+        cleanupEvents()
+      }
+    }
+
+    function onError(e: Event) {
+      reject((e as CustomEvent).detail)
+      cleanupEvents()
+    }
+
+    orchestrator.eventTarget.addEventListener('iframeerror', onError)
+    channel.addEventListener('message', onReceived)
   })
 }
 
 function generateFileId(file: string) {
   const config = getConfig()
-  const project = config.name || ''
   const path = relative(config.root, file)
-  return generateHash(`${path}${project}`)
+  return generateFileHash(path, config.name)
 }
 
 async function setIframeViewport(

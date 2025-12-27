@@ -9,7 +9,7 @@ import type {
   TaskPopulated,
   TestContext,
 } from './types/tasks'
-import { assertTypes } from '@vitest/utils'
+import { assertTypes } from '@vitest/utils/helpers'
 import { abortContextSignal, abortIfTimeout, withTimeout } from './context'
 import { withFixtures } from './fixture'
 import { getCurrentSuite, getRunner } from './suite'

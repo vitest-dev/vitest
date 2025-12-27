@@ -25,6 +25,7 @@ export default function toHaveAccessibleDescription(
 ): ExpectationResult {
   const htmlElement = getElementFromUserInput(actual, toHaveAccessibleDescription, this)
   const actualAccessibleDescription = getElementAccessibleDescription(htmlElement, false)
+  const defaultView = htmlElement.ownerDocument.defaultView || window
 
   const missingExpectedValue = arguments.length === 1
 
@@ -36,7 +37,7 @@ export default function toHaveAccessibleDescription(
   }
   else {
     pass
-      = expectedAccessibleDescription instanceof RegExp
+      = expectedAccessibleDescription instanceof defaultView.RegExp
         ? expectedAccessibleDescription.test(actualAccessibleDescription)
         : this.equals(
             actualAccessibleDescription,

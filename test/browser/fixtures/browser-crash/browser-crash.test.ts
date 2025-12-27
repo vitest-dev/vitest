@@ -1,7 +1,7 @@
-import { commands } from '@vitest/browser/context'
+import { commands } from 'vitest/browser'
 import { it } from 'vitest'
 
-declare module '@vitest/browser/context' {
+declare module 'vitest/browser' {
   interface BrowserCommands {
     forceCrash: () => Promise<void>
   }

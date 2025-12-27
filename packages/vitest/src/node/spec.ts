@@ -1,24 +1,11 @@
 import type { SerializedTestSpecification } from '../runtime/types/utils'
 import type { TestProject } from './project'
 import type { TestModule } from './reporters/reported-tasks'
-import type { Pool } from './types/pool-options'
+import type { Pool } from './types/config'
 import { generateFileHash } from '@vitest/runner/utils'
 import { relative } from 'pathe'
 
 export class TestSpecification {
-  /**
-   * @deprecated use `project` instead
-   */
-  public readonly 0: TestProject
-  /**
-   * @deprecated use `moduleId` instead
-   */
-  public readonly 1: string
-  /**
-   * @deprecated use `pool` instead
-   */
-  public readonly 2: { pool: Pool }
-
   /**
    * The task ID associated with the test module.
    */
@@ -47,9 +34,6 @@ export class TestSpecification {
     pool: Pool,
     testLines?: number[] | undefined,
   ) {
-    this[0] = project
-    this[1] = moduleId
-    this[2] = { pool }
     const name = project.config.name
     const hashName = pool !== 'typescript'
       ? name
@@ -87,15 +71,5 @@ export class TestSpecification {
       this.moduleId,
       { pool: this.pool, testLines: this.testLines },
     ]
-  }
-
-  /**
-   * for backwards compatibility
-   * @deprecated
-   */
-  * [Symbol.iterator](): Generator<string | TestProject, void, unknown> {
-    yield this.project
-    yield this.moduleId
-    yield this.pool
   }
 }

@@ -2,7 +2,7 @@ import type { CancelReason } from '@vitest/runner'
 import type { BirpcOptions, BirpcReturn } from 'birpc'
 import type { RunnerRPC, RuntimeRPC } from '../types/rpc'
 import type { WorkerRPC } from '../types/worker'
-import { getSafeTimers } from '@vitest/utils'
+import { getSafeTimers } from '@vitest/utils/timers'
 import { createBirpc } from 'birpc'
 import { getWorkerState } from './utils'
 
@@ -22,10 +22,15 @@ function withSafeTimers(fn: () => void) {
   try {
     globalThis.setTimeout = setTimeout
     globalThis.clearTimeout = clearTimeout
-    globalThis.setImmediate = setImmediate
-    globalThis.clearImmediate = clearImmediate
 
-    if (globalThis.process) {
+    if (setImmediate) {
+      globalThis.setImmediate = setImmediate
+    }
+    if (clearImmediate) {
+      globalThis.clearImmediate = clearImmediate
+    }
+
+    if (globalThis.process && nextTick) {
       globalThis.process.nextTick = nextTick
     }
 
@@ -38,7 +43,7 @@ function withSafeTimers(fn: () => void) {
     globalThis.setImmediate = currentSetImmediate
     globalThis.clearImmediate = currentClearImmediate
 
-    if (globalThis.process) {
+    if (globalThis.process && nextTick) {
       nextTick(() => {
         globalThis.process.nextTick = currentNextTick
       })
@@ -56,21 +61,24 @@ export async function rpcDone(): Promise<unknown[] | undefined> {
   return Promise.all(awaitable)
 }
 
+const onCancelCallbacks: ((reason: CancelReason) => void)[] = []
+
+export function onCancel(callback: (reason: CancelReason) => void): void {
+  onCancelCallbacks.push(callback)
+}
+
 export function createRuntimeRpc(
   options: Pick<
     BirpcOptions<RuntimeRPC>,
     'on' | 'post' | 'serialize' | 'deserialize'
   >,
-): { rpc: WorkerRPC; onCancel: Promise<CancelReason> } {
-  let setCancel = (_reason: CancelReason) => {}
-  const onCancel = new Promise<CancelReason>((resolve) => {
-    setCancel = resolve
-  })
-
-  const rpc = createSafeRpc(
+): WorkerRPC {
+  return createSafeRpc(
     createBirpc<RuntimeRPC, RunnerRPC>(
       {
-        onCancel: setCancel,
+        async onCancel(reason) {
+          await Promise.all(onCancelCallbacks.map(fn => fn(reason)))
+        },
       },
       {
         eventNames: [
@@ -78,38 +86,21 @@ export function createRuntimeRpc(
           'onCollected',
           'onCancel',
         ],
-        onTimeoutError(functionName, args) {
-          let message = `[vitest-worker]: Timeout calling "${functionName}"`
-
-          if (
-            functionName === 'fetch'
-            || functionName === 'transform'
-            || functionName === 'resolveId'
-          ) {
-            message += ` with "${JSON.stringify(args)}"`
-          }
-
-          // JSON.stringify cannot serialize Error instances
-          if (functionName === 'onUnhandledError') {
-            message += ` with "${args[0]?.message || args[0]}"`
-          }
-
-          throw new Error(message)
-        },
+        timeout: -1,
         ...options,
       },
     ),
   )
-
-  return {
-    rpc,
-    onCancel,
-  }
 }
 
 export function createSafeRpc(rpc: WorkerRPC): WorkerRPC {
   return new Proxy(rpc, {
     get(target, p, handler) {
+      // keep $rejectPendingCalls as sync function
+      if (p === '$rejectPendingCalls') {
+        return rpc.$rejectPendingCalls
+      }
+
       const sendCall = get(target, p, handler)
       const safeSendCall = (...args: any[]) =>
         withSafeTimers(async () => {

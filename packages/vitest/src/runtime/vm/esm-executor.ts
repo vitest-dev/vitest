@@ -96,7 +96,7 @@ export class EsmExecutor {
     return m
   }
 
-  public async createWebAssemblyModule(fileUrl: string, getCode: () => Buffer): Promise<VMModule> {
+  public async createWebAssemblyModule(fileUrl: string, getCode: () => Buffer<ArrayBuffer>): Promise<VMModule> {
     const cached = this.moduleCache.get(fileUrl)
     if (cached) {
       return cached
@@ -127,7 +127,7 @@ export class EsmExecutor {
       fetch(fileUrl).then(r => r.text()))
   }
 
-  public async loadWebAssemblyModule(source: Buffer, identifier: string): Promise<VMModule> {
+  public async loadWebAssemblyModule(source: Buffer<ArrayBuffer>, identifier: string): Promise<VMModule> {
     const cached = this.moduleCache.get(identifier)
     if (cached) {
       return cached
