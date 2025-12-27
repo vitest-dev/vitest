@@ -9,7 +9,6 @@ import { mergeProcessCovs } from '@bcoe/v8-coverage'
 import astV8ToIstanbul from 'ast-v8-to-istanbul'
 import libCoverage from 'istanbul-lib-coverage'
 import libReport from 'istanbul-lib-report'
-import libSourceMaps from 'istanbul-lib-source-maps'
 import reports from 'istanbul-reports'
 import { parseModule } from 'magicast'
 import { createDebug } from 'obug'
@@ -60,16 +59,15 @@ export class V8CoverageProvider extends BaseCoverageProvider<ResolvedCoverageOpt
         })
       },
       onFinished: async (project, environment) => {
+        // Source maps can change based on projectName and transform mode.
+        // Coverage transform re-uses source maps so we need to separate transforms from each other.
         const converted = await this.convertCoverage(
           merged,
           project,
           environment,
         )
 
-        // Source maps can change based on projectName and transform mode.
-        // Coverage transform re-uses source maps so we need to separate transforms from each other.
-        const transformedCoverage = await transformCoverage(converted)
-        coverageMap.merge(transformedCoverage)
+        coverageMap.merge(converted)
 
         merged = { result: [] }
       },
@@ -82,7 +80,7 @@ export class V8CoverageProvider extends BaseCoverageProvider<ResolvedCoverageOpt
       const coveredFiles = coverageMap.files()
       const untestedCoverage = await this.getCoverageMapForUncoveredFiles(coveredFiles)
 
-      coverageMap.merge(await transformCoverage(untestedCoverage))
+      coverageMap.merge(untestedCoverage)
     }
 
     coverageMap.filter((filename) => {
@@ -455,11 +453,6 @@ export class V8CoverageProvider extends BaseCoverageProvider<ResolvedCoverageOpt
 
     return coverageMap
   }
-}
-
-async function transformCoverage(coverageMap: CoverageMap) {
-  const sourceMapStore = libSourceMaps.createSourceMapStore()
-  return await sourceMapStore.transformCoverage(coverageMap)
 }
 
 /**
