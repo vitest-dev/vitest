@@ -113,8 +113,13 @@ export class PoolRunner {
     this._offCancel = vitest.onCancel(reason => this._rpc.onCancel(reason))
   }
 
+  /**
+   * "reconfigure" can only be called if `environment` is different, since different project always
+   * requires a new PoolRunner instance.
+   */
   public reconfigure(task: PoolTask): void {
     this.environment = task.context.environment
+    this._otel?.span.setAttribute('vitest.environment', this.environment.name)
   }
 
   postMessage(message: WorkerRequest): void {
