@@ -5,7 +5,7 @@ import type { RunnerRPC, RuntimeRPC } from '../../types/rpc'
 import type { ContextTestEnvironment, WorkerExecuteContext } from '../../types/worker'
 import type { Traces } from '../../utils/traces'
 import type { TestProject } from '../project'
-import type { PoolOptions, PoolRunnerOTEL, PoolWorker, WorkerRequest, WorkerResponse } from './types'
+import type { PoolOptions, PoolRunnerOTEL, PoolTask, PoolWorker, WorkerRequest, WorkerResponse } from './types'
 import { EventEmitter } from 'node:events'
 import { createDefer } from '@vitest/utils/helpers'
 import { createBirpc } from 'birpc'
@@ -43,7 +43,7 @@ export class PoolRunner {
   public poolId: number | undefined = undefined
 
   public readonly project: TestProject
-  public readonly environment: ContextTestEnvironment
+  public environment: ContextTestEnvironment
 
   private _state: RunnerState = RunnerState.IDLE
   private _operationLock: DeferPromise<void> | null = null
@@ -111,6 +111,10 @@ export class PoolRunner {
     )
 
     this._offCancel = vitest.onCancel(reason => this._rpc.onCancel(reason))
+  }
+
+  public reconfigure(task: PoolTask): void {
+    this.environment = task.context.environment
   }
 
   postMessage(message: WorkerRequest): void {

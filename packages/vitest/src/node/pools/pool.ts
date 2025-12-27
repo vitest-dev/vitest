@@ -1,3 +1,4 @@
+import type { ContextTestEnvironment } from '../../types/worker'
 import type { Logger } from '../logger'
 import type { StateManager } from '../state'
 import type { PoolOptions, PoolTask, WorkerResponse } from './types'
@@ -213,7 +214,9 @@ export class Pool {
       const index = this.sharedRunners.findIndex(runner => isEqualRunner(runner, task))
 
       if (index !== -1) {
-        return this.sharedRunners.splice(index, 1)[0]
+        const runner = this.sharedRunners.splice(index, 1)[0]
+        runner.reconfigure(task)
+        return runner
       }
     }
 
@@ -221,7 +224,7 @@ export class Pool {
       distPath: this.options.distPath,
       project: task.project,
       method,
-      environment: task.environment,
+      environment: task.context.environment,
       env: task.env,
       execArgv: task.execArgv,
     }
@@ -289,11 +292,47 @@ function isEqualRunner(runner: PoolRunner, task: PoolTask) {
   if (task.isolate) {
     throw new Error('Isolated tasks should not share runners')
   }
+  if (runner.worker.name !== task.worker || runner.project !== task.project) {
+    return false
+  }
+  // by default, check that the environments are the same
+  // some workers (like vmThreads/vmForks) do not need this check
+  if (!runner.worker.canReuse) {
+    return isEnvironmentEqual(task.context.environment, runner.environment)
+  }
+  return runner.worker.canReuse(task)
+}
 
-  return (
-    runner.worker.name === task.worker
-    && runner.project === task.project
-    && runner.environment.name === task.environment.name
-    && (!runner.worker.canReuse || runner.worker.canReuse(task))
-  )
+function isEnvironmentEqual(env1: ContextTestEnvironment, env2: ContextTestEnvironment): boolean {
+  if (env1.name !== env2.name) {
+    return false
+  }
+  return deepEqual(env1.options, env2.options)
+}
+
+function deepEqual(obj1: any, obj2: any): boolean {
+  if (obj1 === obj2) {
+    return true
+  }
+  if (obj1 == null || obj2 == null) {
+    return obj1 === obj2
+  }
+  if (typeof obj1 !== 'object' || typeof obj2 !== 'object') {
+    return false
+  }
+
+  const keys1 = Object.keys(obj1)
+  const keys2 = Object.keys(obj2)
+
+  if (keys1.length !== keys2.length) {
+    return false
+  }
+
+  for (const key of keys1) {
+    if (!keys2.includes(key) || !deepEqual(obj1[key], obj2[key])) {
+      return false
+    }
+  }
+
+  return true
 }
