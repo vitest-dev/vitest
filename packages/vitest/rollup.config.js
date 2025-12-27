@@ -110,6 +110,7 @@ const plugins = [
       define: {
         // __VITEST_GENERATE_UI_TOKEN__ is set as a global to catch accidental leaking,
         // in the release version the "if" with this condition should not be present
+        // To test strict token locally, build by e.g. `VITEST_GENERATE_UI_TOKEN=true pnpm build`
         __VITEST_GENERATE_UI_TOKEN__: process.env.VITEST_GENERATE_UI_TOKEN === 'true' ? 'true' : 'false',
         ...(process.env.VITE_TEST_WATCHER_DEBUG === 'false'
           ? {
