@@ -46,6 +46,10 @@ export interface RunVitestConfig extends TestUserConfig {
  * (Note that CLI only options like "standalone" are passed as CLI options, not config options)
  * - To pass options as CLI, provide `$cliOptions` in the config object.
  * - To pass other Vite config properties, provide `$viteConfig` in the config object.
+ *
+ * **WARNING**
+ * If the fixture in `root` has a config file, its options **WILL TAKE PRIORITY** over the ones provided here,
+ * except for the ones provided in `$cliOptions`.
  */
 export async function runVitest(
   config: RunVitestConfig,
