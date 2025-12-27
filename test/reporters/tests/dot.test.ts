@@ -4,9 +4,9 @@ import { runVitest } from '../../test-utils'
 describe.each([true, false])('{ isTTY: %s }', (isTTY) => {
   test('renders successful tests', async () => {
     const { stdout, stderr } = await runVitest({
-      include: ['./fixtures/ok.test.ts'],
+      root: './fixtures',
+      include: ['./ok.test.ts'],
       reporters: [['dot', { isTTY }]],
-      $cliOptions: { typecheck: { enabled: false } },
     })
 
     expect(stdout).toContain('\n·\n')
@@ -17,9 +17,9 @@ describe.each([true, false])('{ isTTY: %s }', (isTTY) => {
 
   test('renders failing tests', async () => {
     const { stdout, stderr } = await runVitest({
-      include: ['./fixtures/some-failing.test.ts'],
+      root: './fixtures',
+      include: ['./some-failing.test.ts'],
       reporters: [['dot', { isTTY }]],
-      $cliOptions: { typecheck: { enabled: false } },
     })
 
     expect(stdout).toContain('\n·x\n')
@@ -31,9 +31,9 @@ describe.each([true, false])('{ isTTY: %s }', (isTTY) => {
 
   test('renders skipped tests', async () => {
     const { stdout, stderr } = await runVitest({
-      include: ['./fixtures/all-skipped.test.ts'],
+      root: './fixtures',
+      include: ['./all-skipped.test.ts'],
       reporters: [['dot', { isTTY }]],
-      $cliOptions: { typecheck: { enabled: false } },
     })
 
     expect(stdout).toContain('\n--\n')
