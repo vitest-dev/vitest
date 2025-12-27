@@ -110,7 +110,7 @@ export async function collectTests(
         const hasOnlyTasks = someTasksAreOnly(file)
         interpretTaskModes(
           file,
-          testNamePattern,
+          testNamePattern ?? config.testNamePattern,
           testLocations,
           testIds,
           hasOnlyTasks,
