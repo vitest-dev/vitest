@@ -6,7 +6,7 @@ import type { ProvidedContext } from '../types/general'
 import type { OnTestsRerunHandler, Vitest } from './core'
 import type { VitestFetchFunction } from './environments/fetchModule'
 import type { GlobalSetupFile } from './globalSetup'
-import type { TestSpecificationOptions } from './spec'
+import type { TestSpecificationOptions } from './test-specification'
 import type { ParentProjectBrowser, ProjectBrowser } from './types/browser'
 import type {
   ProjectName,
@@ -36,7 +36,7 @@ import { MocksPlugins } from './plugins/mocks'
 import { WorkspaceVitestPlugin } from './plugins/workspace'
 import { getFilePoolName } from './pool'
 import { VitestResolver } from './resolver'
-import { TestSpecification } from './spec'
+import { TestSpecification } from './test-specification'
 import { createViteServer } from './vite'
 
 export class TestProject {
