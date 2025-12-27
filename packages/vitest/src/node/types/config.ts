@@ -44,7 +44,22 @@ export type CSSModuleScopeStrategy = 'stable' | 'scoped' | 'non-scoped'
 export type ApiConfig = Pick<
   ServerOptions,
   'port' | 'strictPort' | 'host' | 'middlewareMode'
->
+> & {
+  /**
+   * Allow any write operations from the API server.
+   *
+   * @default true if `api.host` is exposed to network, false otherwise
+   */
+  allowWrite?: boolean
+  /**
+   * Allow running test files via the API.
+   * If `api.host` is exposed to network and `allowWrite` is true,
+   * anyone connected to the API server can run arbitrary code on your machine.
+   *
+   * @default true if `api.host` is exposed to network, false otherwise
+   */
+  allowExec?: boolean
+}
 
 export interface EnvironmentOptions {
   /**

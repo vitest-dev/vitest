@@ -31,6 +31,10 @@ export const readFile: BrowserCommand<
 export const writeFile: BrowserCommand<
   Parameters<BrowserCommands['writeFile']>
 > = async ({ project }, path, data, options) => {
+  // silently ignore write attempts if not allowed
+  if (!project.vitest.config.browser.api.allowWrite || !project.vitest.config.api.allowWrite) {
+    return
+  }
   const filepath = resolve(project.config.root, path)
   assertFileAccess(filepath, project)
   const dir = dirname(filepath)
@@ -43,6 +47,10 @@ export const writeFile: BrowserCommand<
 export const removeFile: BrowserCommand<
   Parameters<BrowserCommands['removeFile']>
 > = async ({ project }, path) => {
+  // silently ignore write attempts if not allowed
+  if (!project.vitest.config.browser.api.allowWrite || !project.vitest.config.api.allowWrite) {
+    return
+  }
   const filepath = resolve(project.config.root, path)
   assertFileAccess(filepath, project)
   await fsp.rm(filepath)
