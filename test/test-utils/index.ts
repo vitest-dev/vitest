@@ -146,12 +146,14 @@ export async function runVitest(
       ...cliOptions,
       env: {
         NO_COLOR: 'true',
+        ...rest.env,
         ...cliOptions?.env,
       },
       // override cache config with the one that was used to run `vitest` formt the CLI
       experimental: {
         fsModuleCache: currentConfig.experimental.fsModuleCache,
         ...rest.experimental,
+        ...cliOptions?.experimental,
       },
     }, {
       ...viteConfig,
