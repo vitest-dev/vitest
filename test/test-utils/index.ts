@@ -41,6 +41,12 @@ export interface RunVitestConfig extends TestUserConfig {
   $cliOptions?: TestUserConfig
 }
 
+/**
+ * The config is assumed to be the config on the fille system, not CLI options
+ * (Note that CLI only options like "standalone" are passed as CLI options, not config options)
+ * - To pass options as CLI, provide `$cliOptions` in the config object.
+ * - To pass other Vite config properties, provide `$viteConfig` in the config object.
+ */
 export async function runVitest(
   config: RunVitestConfig,
   cliFilters: string[] = [],
