@@ -44,7 +44,7 @@ Instance of [`TestModule`](/api/advanced/test-module) associated with the specif
 The [`pool`](/config/#pool) in which the test module will run.
 
 ::: danger
-It's possible to have multiple pools in a single test project with [`poolMatchGlob`](/config/#poolmatchglob) and [`typecheck.enabled`](/config/#typecheck-enabled). This means it's possible to have several specifications with the same `moduleId` but different `pool`. In Vitest 4, the project will only support a single pool, and this property will be removed.
+It's possible to have multiple pools in a single test project with [`typecheck.enabled`](/config/#typecheck-enabled). This means it's possible to have several specifications with the same `moduleId` but different `pool`. In later versions, the project will only support a single pool.
 :::
 
 ## testLines

@@ -25,8 +25,8 @@ export class TestSpecification {
    */
   public readonly moduleId: string
   /**
-   * The current test pool. It's possible to have multiple pools in a single test project with `poolMatchGlob` and `typecheck.enabled`.
-   * @experimental In Vitest 4, the project will only support a single pool and this property will be removed.
+   * The current test pool. It's possible to have multiple pools in a single test project with `typecheck.enabled`.
+   * @experimental In later versions, the project will only support a single pool.
    */
   public readonly pool: Pool
   /**
@@ -42,18 +42,22 @@ export class TestSpecification {
    */
   public readonly testIds: string[] | undefined
 
+  /**
+   * This class represents a test suite for a test module within a single project.
+   * @internal
+   */
   constructor(
     project: TestProject,
     moduleId: string,
     pool: Pool,
     testLinesOrOptions?: number[] | TestSpecificationOptions | undefined,
   ) {
-    const name = project.config.name
+    const projectName = project.config.name
     const hashName = pool !== 'typescript'
-      ? name
-      : name
+      ? projectName
+      : projectName
       // https://github.com/vitest-dev/vitest/blob/main/packages/vitest/src/typecheck/collect.ts#L58
-        ? `${name}:__typecheck__`
+        ? `${projectName}:__typecheck__`
         : '__typecheck__'
     this.taskId = generateFileHash(
       relative(project.config.root, moduleId),
@@ -73,7 +77,7 @@ export class TestSpecification {
   }
 
   /**
-   * Test module associated with the specification.
+   * Test module associated with the specification. This will be `undefined` if tests have not been run yet.
    */
   get testModule(): TestModule | undefined {
     const task = this.project.vitest.state.idMap.get(this.taskId)
@@ -90,7 +94,12 @@ export class TestSpecification {
         root: this.project.config.root,
       },
       this.moduleId,
-      { pool: this.pool, testLines: this.testLines },
+      {
+        pool: this.pool,
+        testLines: this.testLines,
+        testIds: this.testIds,
+        testNamePattern: this.testNamePattern,
+      },
     ]
   }
 }

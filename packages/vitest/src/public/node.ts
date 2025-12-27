@@ -70,7 +70,7 @@ export type {
   TestSequencerConstructor,
 } from '../node/sequencers/types'
 export { registerConsoleShortcuts } from '../node/stdin'
-export type { TestSpecification } from '../node/test-specification'
+export type { TestSpecification, TestSpecificationOptions } from '../node/test-specification'
 export type { BenchmarkUserOptions } from '../node/types/benchmark'
 
 export type {
