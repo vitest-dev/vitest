@@ -26,4 +26,4 @@ export type {
   TestRunEndReason,
 } from '../node/reporters'
 
-process.emitWarning('Importing from "vitest/reporters" is deprecated since Vitest 4.1. Please use "vitest/node" instead.', 'DeprecationWarning')
+console.warn('Importing from "vitest/reporters" is deprecated since Vitest 4.1. Please use "vitest/node" instead.')
