@@ -43,7 +43,7 @@ test('use cacheDir', async () => {
     {
       root,
       include: ['*.test.ts'],
-      viteConfig: {
+      $viteConfig: {
         cacheDir: 'node_modules/.vite-custom',
       },
     },
@@ -132,7 +132,7 @@ describe('with optimizer enabled', () => {
         root,
         include: ['*.test.ts'],
         deps,
-        viteConfig: {
+        $viteConfig: {
           cacheDir: 'node_modules/.vite-custom',
         },
       },

@@ -10,7 +10,7 @@ test('correctly imports external dependencies with a development condition', asy
         external: [/conditions-pkg/],
       },
     },
-    viteConfig: {
+    $viteConfig: {
       define: {
         TEST_CONDITION: '"development"',
       },
@@ -31,7 +31,7 @@ test('correctly imports external dependencies with a production condition', asyn
         external: [/conditions-pkg/],
       },
     },
-    viteConfig: {
+    $viteConfig: {
       define: {
         TEST_CONDITION: '"production"',
       },
@@ -51,7 +51,7 @@ test('correctly imports external dependencies with a custom condition', async ()
         external: [/conditions-pkg/],
       },
     },
-    viteConfig: {
+    $viteConfig: {
       resolve: {
         conditions: ['custom'],
       },

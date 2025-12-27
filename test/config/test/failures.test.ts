@@ -12,7 +12,7 @@ const names = ['edge', 'chromium', 'webkit', 'chrome', 'firefox', 'safari'] as c
 const browsers = providers.map(provider => names.map(name => ({ name, provider }))).flat()
 
 function runVitest(config: NonNullable<UserConfig> & { shard?: any }, viteOverrides: ViteUserConfig = {}, runnerOptions?: VitestRunnerCLIOptions) {
-  return testUtils.runVitest({ root: './fixtures/test', ...config, viteConfig: viteOverrides }, [], runnerOptions)
+  return testUtils.runVitest({ root: './fixtures/test', ...config, $viteConfig: viteOverrides }, [], runnerOptions)
 }
 
 function runVitestCli(...cliArgs: string[]) {

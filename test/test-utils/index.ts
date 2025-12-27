@@ -30,8 +30,8 @@ export interface VitestRunnerCLIOptions {
 }
 
 export interface RunVitestConfig extends UserConfig {
-  viteConfig?: ViteUserConfig
-  cliOptions?: UserConfig
+  $viteConfig?: ViteUserConfig
+  $cliOptions?: UserConfig
 }
 
 export async function runVitest(
@@ -78,7 +78,7 @@ export async function runVitest(
   let ctx: Vitest | undefined
   let thrown = false
 
-  const { reporters, root, watch, cliOptions, viteConfig = {}, ...rest } = config
+  const { reporters, root, watch, $cliOptions: cliOptions, $viteConfig: viteConfig = {}, ...rest } = config
 
   if (viteConfig.test) {
     throw new Error(`Don't pass down "viteConfig" with "test" property. Use the rest of the first argument.`)
@@ -363,11 +363,11 @@ export async function runInlineTests(
   const root = resolve(process.cwd(), `vitest-test-${crypto.randomUUID()}`)
   const fs = useFS(root, structure)
   const vitest = await runVitest({
-    cliOptions: {
+    $cliOptions: {
       root,
       ...cliOptions,
     },
-    viteConfig: viteOverrides,
+    $viteConfig: viteOverrides,
   }, [], options)
   return {
     fs,
