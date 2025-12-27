@@ -4,7 +4,7 @@ import { runVitest } from '../../test-utils'
 const IS_PLAYWRIGHT = process.env.PROVIDER === 'playwright'
 
 test('benchmark', async () => {
-  const result = await runVitest({ root: 'fixtures/benchmark' }, [], 'benchmark')
+  const result = await runVitest({ root: 'fixtures/benchmark' }, [], { mode: 'benchmark' })
   expect(result.stderr).toReportNoErrors()
 
   if (IS_PLAYWRIGHT) {

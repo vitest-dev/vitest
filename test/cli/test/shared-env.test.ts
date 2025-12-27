@@ -24,7 +24,10 @@ test('document is the same', () => {
         isolate: false,
       },
     },
-  }, { sequence: { sequencer: StableTestFileOrderSorter }, maxWorkers })
+  }, {
+    sequence: { sequencer: StableTestFileOrderSorter },
+    maxWorkers,
+  })
 
   expect(stderr).toBe('')
 })
