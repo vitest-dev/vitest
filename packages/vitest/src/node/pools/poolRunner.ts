@@ -15,6 +15,7 @@ enum RunnerState {
   IDLE = 'idle',
   STARTING = 'starting',
   STARTED = 'started',
+  START_FAILURE = 'start_failure',
   STOPPING = 'stopping',
   STOPPED = 'stopped',
 }
@@ -231,7 +232,7 @@ export class PoolRunner {
       this._state = RunnerState.STARTED
     }
     catch (error: any) {
-      this._state = RunnerState.IDLE
+      this._state = RunnerState.START_FAILURE
       startSpan?.recordException(error)
       throw error
     }
@@ -254,7 +255,7 @@ export class PoolRunner {
 
     this._otel?.span.setAttribute('vitest.worker.files', this._otel.files)
 
-    if (this._state === RunnerState.IDLE && !options?.force) {
+    if (this._state === RunnerState.IDLE) {
       this._otel?.span.end()
       this._state = RunnerState.STOPPED
       return
