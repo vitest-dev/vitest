@@ -124,11 +124,17 @@ A path to the HTML entry point. Can be relative to the root of the project. This
 
 ## browser.api
 
-- **Type:** `number | { port?, strictPort?, host? }`
+- **Type:** `number | { port?, strictPort?, host?, allowWrite? }`
 - **Default:** `63315`
 - **CLI:** `--browser.api=63315`, `--browser.api.port=1234, --browser.api.host=example.com`
 
-Configure options for Vite server that serves code in the browser. Does not affect [`test.api`](#api) option. By default, Vitest assigns port `63315` to avoid conflicts with the development server, allowing you to run both in parallel.
+Configure options for Vite server that serves code in the browser. Does not affect [`test.api`](/config/api) option. By default, Vitest assigns port `63315` to avoid conflicts with the development server, allowing you to run both in parallel.
+
+::: danger SECURITY ADVICE
+Vitest does not expose the API to the internet by default and only listens on `localhost`. However if `host` is manually exposed to the network, anyone who connects to it can save arbitrary code on your machine by sending the event to [`fs.saveFile`](/api/browser/commands#files-handling) command, unless `api.allowWrite` is set to `false`.
+
+If the host is set to anything other than `localhost` or `127.0.0.1`, Vitest will set `api.allowWrite` to `false` by default. This means that any write operations (like changing the code in the UI) will not work. However, if you understand the security implications, you can override it.
+:::
 
 ## browser.provider {#browser-provider}
 

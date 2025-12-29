@@ -97,6 +97,16 @@ export function resolveApiServerConfig<Options extends ApiConfig & Omit<UserConf
     api = { middlewareMode: true }
   }
 
+  // if the API server is exposed to network, disable write operations by default
+  if (!api.middlewareMode && api.host && api.host !== 'localhost' && api.host !== '127.0.0.1') {
+    api.allowWrite ??= false
+    api.allowExec ??= false
+  }
+  else {
+    api.allowWrite ??= true
+    api.allowExec ??= true
+  }
+
   return api
 }
 
