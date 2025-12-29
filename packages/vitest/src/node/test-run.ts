@@ -15,13 +15,13 @@ import type { TestSpecification } from './spec'
 import type { TestRunEndReason } from './types/reporter'
 import assert from 'node:assert'
 import { createHash } from 'node:crypto'
-import { existsSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
 import { copyFile, mkdir, writeFile } from 'node:fs/promises'
 import { isPrimitive } from '@vitest/utils/helpers'
 import { serializeValue } from '@vitest/utils/serialize'
-import { parseErrorStacktrace } from '@vitest/utils/source-map'
+import { parseErrorStacktrace, retrieveSourceMapURL } from '@vitest/utils/source-map'
 import mime from 'mime/lite'
-import { basename, extname, resolve } from 'pathe'
+import { basename, dirname, extname, resolve } from 'pathe'
 
 export class TestRun {
   constructor(private vitest: Vitest) {}
@@ -170,6 +170,26 @@ export class TestRun {
         else {
           error.stacks = parseErrorStacktrace(error, {
             frameFilter: project.config.onStackTrace,
+            getSourceMap: (id) => {
+              const result = project.vite.moduleGraph.getModuleById(id)?.transformResult
+              // this could happen for bundled dependencies in node_modules/.vite
+              if (result && !result.map) {
+                const sourceMapUrl = retrieveSourceMapURL(result.code)
+                if (!sourceMapUrl) {
+                  return null
+                }
+                const filepathDir = dirname(id)
+                const sourceMapPath = resolve(filepathDir, sourceMapUrl)
+                try {
+                  const map = JSON.parse(readFileSync(sourceMapPath, 'utf-8'))
+                  return map
+                }
+                catch {
+                  return null
+                }
+              }
+              return result?.map
+            },
           })
         }
       })
