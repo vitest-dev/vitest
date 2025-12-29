@@ -340,7 +340,6 @@ it('exports snapshot', async ({ skip, task }) => {
           "./worker": {
             "init": "function",
             "runBaseTests": "function",
-            "setupEnvironment": "function",
           },
         }
       `)

@@ -3,7 +3,7 @@ import type { VisualRegressionArtifact } from '@vitest/runner'
 import type { ScreenshotMatcherOptions } from '../../../../context'
 import type { ScreenshotMatcherArguments, ScreenshotMatcherOutput } from '../../../shared/screenshotMatcher/types'
 import type { Locator } from '../locators'
-import { recordArtifact } from 'vitest'
+import { recordArtifact } from '@vitest/runner'
 import { getBrowserState } from '../../utils'
 import { convertToSelector } from '../tester-utils'
 
