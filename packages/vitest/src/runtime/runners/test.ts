@@ -8,27 +8,35 @@ import type {
   Task,
   Test,
   TestContext,
-  VitestRunner,
   VitestRunnerImportSource,
+  VitestRunner as VitestTestRunner,
 } from '@vitest/runner'
 import type { ModuleRunner } from 'vite/module-runner'
 import type { Traces } from '../../utils/traces'
 import type { SerializedConfig } from '../config'
 import { getState, GLOBAL_EXPECT, setState } from '@vitest/expect'
-import { getNames, getTestName, getTests } from '@vitest/runner/utils'
+import {
+  createTaskCollector,
+  getCurrentSuite,
+  getCurrentTest,
+  getFn,
+  getHooks,
+} from '@vitest/runner'
+import { createChainable, getNames, getTestName, getTests } from '@vitest/runner/utils'
 import { processError } from '@vitest/utils/error'
 import { normalize } from 'pathe'
 import { createExpect } from '../../integrations/chai/index'
 import { inject } from '../../integrations/inject'
 import { getSnapshotClient } from '../../integrations/snapshot/chai'
 import { vi } from '../../integrations/vi'
+import { getBenchFn, getBenchOptions } from '../benchmark'
 import { rpc } from '../rpc'
 import { getWorkerState } from '../utils'
 
 // worker context is shared between all tests
 const workerContext = Object.create(null)
 
-export class VitestTestRunner implements VitestRunner {
+export class TestRunner implements VitestTestRunner {
   private snapshotClient = getSnapshotClient()
   private workerState = getWorkerState()
   private moduleRunner!: ModuleRunner
@@ -250,6 +258,24 @@ export class VitestTestRunner implements VitestRunner {
   __setTraces(traces: Traces): void {
     this._otel = traces
   }
+
+  static createTaskCollector: typeof createTaskCollector = createTaskCollector
+  static getCurrentSuite: typeof getCurrentSuite = getCurrentSuite
+  static getCurrentTest: typeof getCurrentTest = getCurrentTest
+  static createChainable: typeof createChainable = createChainable
+  static getSuiteHooks: typeof getHooks = getHooks
+  static getTestFn: typeof getFn = getFn
+  static setSuiteHooks: typeof getHooks = getHooks
+  static setTestFn: typeof getFn = getFn
+
+  /**
+   * @deprecated
+   */
+  static getBenchFn: typeof getBenchFn = getBenchFn
+  /**
+   * @deprecated
+   */
+  static getBenchOptions: typeof getBenchOptions = getBenchOptions
 }
 
 function clearModuleMocks(config: SerializedConfig) {

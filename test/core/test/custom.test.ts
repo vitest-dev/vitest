@@ -6,13 +6,13 @@ import {
   describe,
   expect,
   test,
+  TestRunner,
 } from 'vitest'
-import { createChainable, getCurrentSuite } from 'vitest/suite'
 import { Gardener } from '../src/custom/gardener.js'
 
 // this function will be called, when Vitest collects tasks
-const myCustomTask = createChainable(['todo'], function (name: string, fn: () => void) {
-  getCurrentSuite().task(name, {
+const myCustomTask = TestRunner.createChainable(['todo'], function (name: string, fn: () => void) {
+  TestRunner.getCurrentSuite().task(name, {
     ...this,
     meta: {
       customPropertyToDifferentiateTask: true,

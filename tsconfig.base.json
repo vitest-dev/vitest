@@ -25,7 +25,6 @@
       "~/*": ["./packages/ui/client/*"],
       "vitest": ["./packages/vitest/src/public/index.ts"],
       "vitest/internal/browser": ["./packages/vitest/src/public/browser.ts"],
-      "vitest/internal/module-runner": ["./packages/vitest/src/public/module-runner.ts"],
       "vitest/globals": ["./packages/vitest/globals.d.ts"],
       "vitest/browser": ["./packages/vitest/browser/context.d.ts"],
       "vitest/*": ["./packages/vitest/src/public/*"]

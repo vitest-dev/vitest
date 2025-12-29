@@ -1,7 +1,6 @@
 import type { TestUserConfig } from 'vitest/node'
 import { resolve } from 'node:path'
-import { describe, expect, test } from 'vitest'
-import { getCurrentTest } from 'vitest/suite'
+import { describe, expect, test, TestRunner } from 'vitest'
 import { runVitest } from '../../test-utils'
 
 describe('expect.soft', () => {
@@ -9,7 +8,7 @@ describe('expect.soft', () => {
     root: resolve('./fixtures/expect-soft'),
     include: ['expects/soft.test.ts'],
     setupFiles: [],
-    testNamePattern: getCurrentTest()?.name,
+    testNamePattern: TestRunner.getCurrentTest()?.name,
     testTimeout: 4000,
     ...config,
   }, ['soft'])

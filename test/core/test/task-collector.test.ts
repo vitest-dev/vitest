@@ -1,10 +1,9 @@
 import type { RunnerTestCase, RunnerTestSuite } from 'vitest'
-import { assert, describe, expect, test, vi } from 'vitest'
-import { createTaskCollector, getCurrentSuite } from 'vitest/suite'
+import { assert, describe, expect, test, TestRunner, vi } from 'vitest'
 
 test('collector keeps the order of arguments', () => {
   const fn = vi.fn()
-  const collector = createTaskCollector(fn)
+  const collector = TestRunner.createTaskCollector(fn)
   const cb = vi.fn()
   const options = { timeout: 100 }
 
@@ -28,7 +27,7 @@ test('collector keeps the order of arguments', () => {
 describe('collector.extend should preserve handler wrapping', () => {
   let flag = false
 
-  const flagTest = createTaskCollector(function (
+  const flagTest = TestRunner.createTaskCollector(function (
     this: object,
     name: string,
     fn: () => void,
@@ -38,7 +37,7 @@ describe('collector.extend should preserve handler wrapping', () => {
       await fn()
       assert(flag)
     }
-    getCurrentSuite().task(name, { ...this, handler })
+    TestRunner.getCurrentSuite().task(name, { ...this, handler })
   })
 
   const extendedTest = flagTest.extend({})

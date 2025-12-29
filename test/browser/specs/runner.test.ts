@@ -1,5 +1,4 @@
-import type { Vitest } from 'vitest/node'
-import type { JsonTestResults } from 'vitest/reporters'
+import type { JsonTestResults, Vitest } from 'vitest/node'
 import { readdirSync } from 'node:fs'
 import { readFile } from 'node:fs/promises'
 import { beforeAll, describe, expect, onTestFailed, test } from 'vitest'

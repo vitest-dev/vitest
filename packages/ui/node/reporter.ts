@@ -1,7 +1,6 @@
 import type { Task, TestAttachment } from '@vitest/runner'
 import type { ModuleGraphData, RunnerTestFile, SerializedConfig } from 'vitest'
-import type { HTMLOptions, Vitest } from 'vitest/node'
-import type { Reporter } from 'vitest/reporters'
+import type { HTMLOptions, Reporter, Vitest } from 'vitest/node'
 import crypto from 'node:crypto'
 import { promises as fs } from 'node:fs'
 import { readFile, writeFile } from 'node:fs/promises'
