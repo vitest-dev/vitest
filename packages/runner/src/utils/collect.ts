@@ -1,5 +1,5 @@
 import type { ParsedStack } from '@vitest/utils'
-import type { File, Suite, TaskBase } from '../types/tasks'
+import type { File, RunMode, Suite, TaskBase } from '../types/tasks'
 import { processError } from '@vitest/utils/error'
 import { parseSingleStack } from '@vitest/utils/source-map'
 import { relative } from 'pathe'
@@ -16,77 +16,89 @@ export function interpretTaskModes(
   allowOnly?: boolean,
 ): void {
   const matchedLocations: number[] = []
+  const testLocationsSet = testLocations?.length ? new Set(testLocations) : undefined
 
-  const traverseSuite = (suite: Suite, parentIsOnly?: boolean, parentMatchedWithLocation?: boolean) => {
+  const traverseSuite = (suite: Suite, parentIsOnly = false, parentMatchedWithLocation = false): void => {
     const suiteIsOnly = parentIsOnly || suite.mode === 'only'
 
-    // Check if any tasks in this suite have `.only` - if so, only those should run
-    const hasSomeTasksOnly = onlyMode && suite.tasks.some(
-      t => t.mode === 'only' || (t.type === 'suite' && someTasksAreOnly(t)),
+    // Pre-compute which tasks have `.only` set (directly or in nested suites)
+    // This avoids calling someTasksAreOnly multiple times for the same task
+    let hasOnlyChild: Map<Suite, boolean> | undefined
+    if (onlyMode) {
+      hasOnlyChild = new Map()
+      for (const task of suite.tasks) {
+        if (task.type === 'suite') {
+          hasOnlyChild.set(task, someTasksAreOnly(task))
+        }
+      }
+    }
+
+    // Check if any direct children have `.only` - if so, only those should run
+    const hasSomeTasksOnly = hasOnlyChild && suite.tasks.some(
+      t => t.mode === 'only' || (t.type === 'suite' && hasOnlyChild.get(t)),
     )
 
-    suite.tasks.forEach((t) => {
-      // Check if either the parent suite or the task itself are marked as included
-      // If there are tasks with `.only` in this suite, only include those (not all tasks from describe.only)
+    for (const task of suite.tasks) {
+      const taskHasOnlyDescendants = task.type === 'suite' && (hasOnlyChild?.get(task) ?? false)
+
+      // Determine if this task should be included based on `.only` logic
       const includeTask = hasSomeTasksOnly
-        ? (t.mode === 'only' || (t.type === 'suite' && someTasksAreOnly(t)))
-        : (suiteIsOnly || t.mode === 'only')
+        ? (task.mode === 'only' || taskHasOnlyDescendants)
+        : (suiteIsOnly || task.mode === 'only')
+
+      // Handle `.only` mode
       if (onlyMode) {
-        if (t.type === 'suite' && (includeTask || someTasksAreOnly(t))) {
-          // Don't skip this suite
-          if (t.mode === 'only') {
-            checkAllowOnly(t, allowOnly)
-            t.mode = 'run'
-          }
+        if (task.mode === 'only') {
+          checkAllowOnly(task, allowOnly)
+          task.mode = 'run'
         }
-        else if (t.mode === 'run' && !includeTask) {
-          t.mode = 'skip'
+        else if (task.type === 'suite' && taskHasOnlyDescendants) {
+          // Don't skip suites that contain `.only` tasks
         }
-        else if (t.mode === 'only') {
-          checkAllowOnly(t, allowOnly)
-          t.mode = 'run'
+        else if (task.mode === 'run' && !includeTask) {
+          task.mode = 'skip'
         }
       }
 
+      // Handle test location filtering
       let hasLocationMatch = parentMatchedWithLocation
-      // Match test location against provided locations, only run if present
-      // in `testLocations`. Note: if `includeTaskLocations` is not enabled,
-      // all test will be skipped.
-      if (testLocations !== undefined && testLocations.length !== 0) {
-        if (t.location && testLocations?.includes(t.location.line)) {
-          t.mode = 'run'
-          matchedLocations.push(t.location.line)
+      if (testLocationsSet) {
+        if (task.location && testLocationsSet.has(task.location.line)) {
+          task.mode = 'run'
+          matchedLocations.push(task.location.line)
           hasLocationMatch = true
         }
         else if (parentMatchedWithLocation) {
-          t.mode = 'run'
+          task.mode = 'run'
         }
-        else if (t.type === 'test') {
-          t.mode = 'skip'
+        else if (task.type === 'test') {
+          task.mode = 'skip'
         }
       }
 
-      if (t.type === 'test') {
-        if (namePattern && !getTaskFullName(t).match(namePattern)) {
-          t.mode = 'skip'
+      // Handle name pattern filtering for tests
+      if (task.type === 'test') {
+        if (namePattern && !getTaskFullName(task).match(namePattern)) {
+          task.mode = 'skip'
         }
       }
-      else if (t.type === 'suite') {
-        if (t.mode === 'skip') {
-          skipAllTasks(t)
+      else if (task.type === 'suite') {
+        // Recurse into suites or propagate skip/todo
+        if (task.mode === 'skip') {
+          setModeForAllTasks(task, 'skip')
         }
-        else if (t.mode === 'todo') {
-          todoAllTasks(t)
+        else if (task.mode === 'todo') {
+          setModeForAllTasks(task, 'todo')
         }
         else {
-          traverseSuite(t, includeTask, hasLocationMatch)
+          traverseSuite(task, includeTask, hasLocationMatch)
         }
       }
-    })
+    }
 
-    // if all subtasks are skipped, mark as skip
+    // If all subtasks are skipped, mark the suite as skip
     if (suite.mode === 'run' || suite.mode === 'queued') {
-      if (suite.tasks.length && suite.tasks.every(i => i.mode !== 'run' && i.mode !== 'queued')) {
+      if (suite.tasks.length && suite.tasks.every(t => t.mode !== 'run' && t.mode !== 'queued')) {
         suite.mode = 'skip'
       }
     }
@@ -94,25 +106,20 @@ export function interpretTaskModes(
 
   traverseSuite(file, parentIsOnly, false)
 
-  const nonMatching = testLocations?.filter(loc => !matchedLocations.includes(loc))
-  if (nonMatching && nonMatching.length !== 0) {
-    const message = nonMatching.length === 1
-      ? `line ${nonMatching[0]}`
-      : `lines ${nonMatching.join(', ')}`
+  // Report errors for unmatched test locations
+  if (testLocationsSet) {
+    const nonMatching = testLocations!.filter(loc => !matchedLocations.includes(loc))
+    if (nonMatching.length > 0) {
+      const message = nonMatching.length === 1
+        ? `line ${nonMatching[0]}`
+        : `lines ${nonMatching.join(', ')}`
 
-    if (file.result === undefined) {
-      file.result = {
-        state: 'fail',
-        errors: [],
-      }
+      file.result ??= { state: 'fail', errors: [] }
+      file.result.errors ??= []
+      file.result.errors.push(
+        processError(new Error(`No test found in ${file.name} in ${message}`)),
+      )
     }
-    if (file.result.errors === undefined) {
-      file.result.errors = []
-    }
-
-    file.result.errors.push(
-      processError(new Error(`No test found in ${file.name} in ${message}`)),
-    )
   }
 }
 
@@ -126,25 +133,15 @@ export function someTasksAreOnly(suite: Suite): boolean {
   )
 }
 
-function skipAllTasks(suite: Suite) {
-  suite.tasks.forEach((t) => {
-    if (t.mode === 'run' || t.mode === 'queued') {
-      t.mode = 'skip'
-      if (t.type === 'suite') {
-        skipAllTasks(t)
+function setModeForAllTasks(suite: Suite, mode: RunMode): void {
+  for (const task of suite.tasks) {
+    if (task.mode === 'run' || task.mode === 'queued') {
+      task.mode = mode
+      if (task.type === 'suite') {
+        setModeForAllTasks(task, mode)
       }
     }
-  })
-}
-function todoAllTasks(suite: Suite) {
-  suite.tasks.forEach((t) => {
-    if (t.mode === 'run' || t.mode === 'queued') {
-      t.mode = 'todo'
-      if (t.type === 'suite') {
-        todoAllTasks(t)
-      }
-    }
-  })
+  }
 }
 
 function checkAllowOnly(task: TaskBase, allowOnly?: boolean) {
