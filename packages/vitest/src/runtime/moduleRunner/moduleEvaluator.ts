@@ -273,7 +273,7 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
       'code.file.path': filename,
     })
 
-    const require = this.createRequire(filename)
+    const require = this.createRequire(meta.url)
 
     const argumentsList = [
       ssrModuleExportsKey,
@@ -355,7 +355,7 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
   private createRequire(filename: string) {
     // \x00 is a rollup convention for virtual files,
     // it is not allowed in actual file names
-    if (filename[0] === '\x00' || !isAbsolute(filename)) {
+    if ((filename[0] === '\x00' || !isAbsolute(filename))) {
       return () => ({})
     }
     return this.vm
