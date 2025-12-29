@@ -1322,6 +1322,9 @@ importers:
       '@vitest/test-dep2':
         specifier: file:./deps/dep2
         version: file:test/core/deps/dep2
+      '@vitest/test-fn':
+        specifier: file:./deps/dep-fn
+        version: file:test/core/deps/dep-fn
       '@vitest/utils':
         specifier: workspace:*
         version: link:../../packages/utils
@@ -4656,6 +4659,9 @@ packages:
 
   '@vitest/test-deps-url@file:test/optimize-deps/dep-url':
     resolution: {directory: test/optimize-deps/dep-url, type: directory}
+
+  '@vitest/test-fn@file:test/core/deps/dep-fn':
+    resolution: {directory: test/core/deps/dep-fn, type: directory}
 
   '@volar/language-core@1.11.1':
     resolution: {integrity: sha512-dOcNn3i9GgZAcJt43wuaEykSluAuOkQgzni1cuxLxTV0nJKanQztp7FxyswdRILaKH+P2XZMPRp2S4MV/pElCw==}
@@ -12781,6 +12787,8 @@ snapshots:
       '@vitest/test-dep1': file:test/core/deps/dep1
 
   '@vitest/test-deps-url@file:test/optimize-deps/dep-url': {}
+
+  '@vitest/test-fn@file:test/core/deps/dep-fn': {}
 
   '@volar/language-core@1.11.1':
     dependencies:
