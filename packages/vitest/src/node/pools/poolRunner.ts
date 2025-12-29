@@ -15,6 +15,7 @@ enum RunnerState {
   IDLE = 'idle',
   STARTING = 'starting',
   STARTED = 'started',
+  START_FAILURE = 'start_failure',
   STOPPING = 'stopping',
   STOPPED = 'stopped',
 }
@@ -231,7 +232,7 @@ export class PoolRunner {
       this._state = RunnerState.STARTED
     }
     catch (error: any) {
-      this._state = RunnerState.IDLE
+      this._state = RunnerState.START_FAILURE
       startSpan?.recordException(error)
       throw error
     }
