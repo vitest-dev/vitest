@@ -1,0 +1,5 @@
+{
+  "name": "@vitest/test-fn",
+  "type": "module",
+  "exports": "./index.js"
+}

@@ -1319,6 +1319,9 @@ importers:
       '@vitest/test-dep2':
         specifier: file:./deps/dep2
         version: file:test/core/deps/dep2
+      '@vitest/test-fn':
+        specifier: file:./deps/dep-fn
+        version: file:test/core/deps/dep-fn
       '@vitest/utils':
         specifier: workspace:*
         version: link:../../packages/utils
@@ -1370,9 +1373,6 @@ importers:
       vue:
         specifier: 'catalog:'
         version: 3.5.25(typescript@5.9.3)
-      zustand:
-        specifier: ^4.5.7
-        version: 4.5.7(@types/react@19.2.7)(react@19.2.0)
 
   test/coverage-test:
     devDependencies:
@@ -4653,6 +4653,9 @@ packages:
 
   '@vitest/test-deps-url@file:test/optimize-deps/dep-url':
     resolution: {directory: test/optimize-deps/dep-url, type: directory}
+
+  '@vitest/test-fn@file:test/core/deps/dep-fn':
+    resolution: {directory: test/core/deps/dep-fn, type: directory}
 
   '@volar/language-core@1.11.1':
     resolution: {integrity: sha512-dOcNn3i9GgZAcJt43wuaEykSluAuOkQgzni1cuxLxTV0nJKanQztp7FxyswdRILaKH+P2XZMPRp2S4MV/pElCw==}
@@ -9205,11 +9208,6 @@ packages:
   urlpattern-polyfill@10.0.0:
     resolution: {integrity: sha512-H/A06tKD7sS1O1X2SshBVeA5FLycRpjqiBeqGKmBwBDBy28EnRjORxTNe269KSSr5un5qyWi1iL61wLxpd+ZOg==}
 
-  use-sync-external-store@1.4.0:
-    resolution: {integrity: sha512-9WXSPC5fMv61vaupRkCKCxsPxBocVnwakBEkMIHHpkTTg6icbJtg6jzgtLDm4bl3cSHAca52rYWih0k4K3PfHw==}
-    peerDependencies:
-      react: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
-
   userhome@1.0.0:
     resolution: {integrity: sha512-ayFKY3H+Pwfy4W98yPdtH1VqH4psDeyW8lYYFzfecR9d6hqLpqhecktvYR3SEEXt7vG0S1JEpciI3g94pMErig==}
     engines: {node: '>= 0.8.0'}
@@ -9691,21 +9689,6 @@ packages:
 
   zone.js@0.15.1:
     resolution: {integrity: sha512-XE96n56IQpJM7NAoXswY3XRLcWFW83xe0BiAOeMD7K5k5xecOeul3Qcpx6GqEeeHNkW5DWL5zOyTbEfB4eti8w==}
-
-  zustand@4.5.7:
-    resolution: {integrity: sha512-CHOUy7mu3lbD6o6LJLfllpjkzhHXSBlX8B9+qPddUsIfeF5S/UZ5q0kmCsnRqT1UHFQZchNFDDzMbQsuesHWlw==}
-    engines: {node: '>=12.7.0'}
-    peerDependencies:
-      '@types/react': '>=16.8'
-      immer: '>=9.0.6'
-      react: '>=16.8'
-    peerDependenciesMeta:
-      '@types/react':
-        optional: true
-      immer:
-        optional: true
-      react:
-        optional: true
 
   zwitch@2.0.4:
     resolution: {integrity: sha512-bXE4cR/kVZhKZX/RjPEflHaKVhUVl85noU3v6b8apfQEc1x4A+zBxjZ4lN8LqGd6WZ3dl98pY4o717VFmoPp+A==}
@@ -12778,6 +12761,8 @@ snapshots:
       '@vitest/test-dep1': file:test/core/deps/dep1
 
   '@vitest/test-deps-url@file:test/optimize-deps/dep-url': {}
+
+  '@vitest/test-fn@file:test/core/deps/dep-fn': {}
 
   '@volar/language-core@1.11.1':
     dependencies:
@@ -18101,10 +18086,6 @@ snapshots:
 
   urlpattern-polyfill@10.0.0: {}
 
-  use-sync-external-store@1.4.0(react@19.2.0):
-    dependencies:
-      react: 19.2.0
-
   userhome@1.0.0: {}
 
   util-deprecate@1.0.2: {}
@@ -18722,13 +18703,6 @@ snapshots:
       readable-stream: 4.1.0
 
   zone.js@0.15.1: {}
-
-  zustand@4.5.7(@types/react@19.2.7)(react@19.2.0):
-    dependencies:
-      use-sync-external-store: 1.4.0(react@19.2.0)
-    optionalDependencies:
-      '@types/react': 19.2.7
-      react: 19.2.0
 
   zwitch@2.0.4: {}
 
