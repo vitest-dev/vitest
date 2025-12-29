@@ -1130,9 +1130,6 @@ importers:
 
   test/browser:
     devDependencies:
-      '@testing-library/react':
-        specifier: ^13.4.0
-        version: 13.4.0(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
       '@types/react':
         specifier: ^19.2.7
         version: 19.2.7
