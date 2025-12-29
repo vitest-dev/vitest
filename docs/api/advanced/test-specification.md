@@ -7,11 +7,15 @@ You can only create a specification by calling [`createSpecification`](/api/adva
 ```ts
 const specification = project.createSpecification(
   resolve('./example.test.ts'),
-  [20, 40], // optional test lines
+  {
+    testLines: [20, 40],
+    testNamePattern: /hello world/,
+    testIds: ['1223128da3_0_0_0', '1223128da3_0_0'],
+  } // optional test filters
 )
 ```
 
-`createSpecification` expects resolved module ID. It doesn't auto-resolve the file or check that it exists on the file system.
+`createSpecification` expects resolved module identifier. It doesn't auto-resolve the file or check that it exists on the file system.
 
 ## taskId
 
@@ -40,7 +44,7 @@ Instance of [`TestModule`](/api/advanced/test-module) associated with the specif
 The [`pool`](/config/#pool) in which the test module will run.
 
 ::: danger
-It's possible to have multiple pools in a single test project with [`poolMatchGlob`](/config/#poolmatchglob) and [`typecheck.enabled`](/config/#typecheck-enabled). This means it's possible to have several specifications with the same `moduleId` but different `pool`. In Vitest 4, the project will only support a single pool, and this property will be removed.
+It's possible to have multiple pools in a single test project with [`typecheck.enabled`](/config/#typecheck-enabled). This means it's possible to have several specifications with the same `moduleId` but different `pool`. In later versions, the project will only support a single pool.
 :::
 
 ## testLines
@@ -69,6 +73,14 @@ describe('a group of tests', () => { // [!code error]
 })
 ```
 :::
+
+## testNamePattern <Version>4.1.0</Version> {#testnamepattern}
+
+A regexp that matches the name of the test in this module. This value will override the global [`testNamePattern`](/config/testnamepattern) option if it's set.
+
+## testIds <Version>4.1.0</Version> {#testids}
+
+The ids of tasks inside of this specification to run.
 
 ## toJSON
 

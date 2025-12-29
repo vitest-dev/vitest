@@ -2,7 +2,7 @@ import type { InlineConfig as ViteInlineConfig, UserConfig as ViteUserConfig } f
 import type { environments } from '../../integrations/env'
 import type { Vitest, VitestOptions } from '../core'
 import type { TestModule, TestSuite } from '../reporters/reported-tasks'
-import type { TestSpecification } from '../spec'
+import type { TestSpecification } from '../test-specification'
 import type { UserConfig, VitestEnvironment, VitestRunMode } from '../types/config'
 import { mkdirSync, writeFileSync } from 'node:fs'
 import { dirname, isAbsolute, relative, resolve } from 'pathe'

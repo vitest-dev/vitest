@@ -1,5 +1,5 @@
 import type { Vitest } from '../core'
-import type { TestSpecification } from '../spec'
+import type { TestSpecification } from '../test-specification'
 import type { Reporter } from '../types/reporter'
 import type { ReportedHookContext, TestCase, TestModule } from './reported-tasks'
 import c from 'tinyrainbow'

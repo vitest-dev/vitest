@@ -124,16 +124,11 @@ export async function runVmTests(method: 'run' | 'collect', state: WorkerGlobalS
   const { run } = (await moduleRunner.import(
     entryFile,
   )) as typeof import('../runVmTests')
-  const fileSpecs = ctx.files.map(f =>
-    typeof f === 'string'
-      ? { filepath: f, testLocations: undefined }
-      : f,
-  )
 
   try {
     await run(
       method,
-      fileSpecs,
+      ctx.files,
       ctx.config,
       moduleRunner,
       traces,

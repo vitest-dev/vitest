@@ -5,7 +5,7 @@ import type { ViteDevServer } from 'vite'
 import type { WebSocket } from 'ws'
 import type { Vitest } from '../node/core'
 import type { TestCase, TestModule } from '../node/reporters/reported-tasks'
-import type { TestSpecification } from '../node/spec'
+import type { TestSpecification } from '../node/test-specification'
 import type { Reporter } from '../node/types/reporter'
 import type { LabelColor, ModuleGraphData, UserConsoleLog } from '../types/general'
 import type {
