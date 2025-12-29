@@ -187,7 +187,13 @@ let currentTestFilepath: string
 
 function assert(condition: any, message: string) {
   if (!condition) {
-    throw new Error(`Vitest failed to find ${message}. This is a bug in Vitest. Please, open an issue with reproduction.`)
+    throw new Error(
+      `Vitest failed to find ${message}. One of the following is possible:`
+      + '\n- "vitest" is imported directly without running "vitest" command'
+      + '\n- "vitest" is imported inside "globalSetup" (to fix this, use "setupFiles" instead, because "globalSetup" runs in a different context)'
+      + '\n- "vitest" is imported inside Vite / Vitest config file'
+      + '\n- Otherwise, it might be a Vitest bug. Please report it to https://github.com/vitest-dev/vitest/issues\n',
+    )
   }
 }
 
@@ -538,6 +544,12 @@ function createSuite() {
     factoryOrOptions?: SuiteFactory | TestOptions,
     optionsOrFactory?: number | SuiteFactory,
   ) {
+    if (getCurrentTest()) {
+      throw new Error(
+        'Calling the suite function inside test function is not allowed. It can be only called at the top level or inside another suite function.',
+      )
+    }
+
     let mode: RunMode = this.only
       ? 'only'
       : this.skip

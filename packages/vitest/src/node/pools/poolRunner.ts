@@ -5,7 +5,7 @@ import type { RunnerRPC, RuntimeRPC } from '../../types/rpc'
 import type { ContextTestEnvironment, WorkerExecuteContext } from '../../types/worker'
 import type { Traces } from '../../utils/traces'
 import type { TestProject } from '../project'
-import type { PoolOptions, PoolRunnerOTEL, PoolWorker, WorkerRequest, WorkerResponse } from './types'
+import type { PoolOptions, PoolRunnerOTEL, PoolTask, PoolWorker, WorkerRequest, WorkerResponse } from './types'
 import { EventEmitter } from 'node:events'
 import { createDefer } from '@vitest/utils/helpers'
 import { createBirpc } from 'birpc'
@@ -15,6 +15,7 @@ enum RunnerState {
   IDLE = 'idle',
   STARTING = 'starting',
   STARTED = 'started',
+  START_FAILURE = 'start_failure',
   STOPPING = 'stopping',
   STOPPED = 'stopped',
 }
@@ -43,7 +44,7 @@ export class PoolRunner {
   public poolId: number | undefined = undefined
 
   public readonly project: TestProject
-  public readonly environment: ContextTestEnvironment
+  public environment: ContextTestEnvironment
 
   private _state: RunnerState = RunnerState.IDLE
   private _operationLock: DeferPromise<void> | null = null
@@ -111,6 +112,15 @@ export class PoolRunner {
     )
 
     this._offCancel = vitest.onCancel(reason => this._rpc.onCancel(reason))
+  }
+
+  /**
+   * "reconfigure" can only be called if `environment` is different, since different project always
+   * requires a new PoolRunner instance.
+   */
+  public reconfigure(task: PoolTask): void {
+    this.environment = task.context.environment
+    this._otel?.span.setAttribute('vitest.environment', this.environment.name)
   }
 
   postMessage(message: WorkerRequest): void {
@@ -222,7 +232,7 @@ export class PoolRunner {
       this._state = RunnerState.STARTED
     }
     catch (error: any) {
-      this._state = RunnerState.IDLE
+      this._state = RunnerState.START_FAILURE
       startSpan?.recordException(error)
       throw error
     }

@@ -7,6 +7,10 @@ outline: deep
 
 ## experimental.fsModuleCache <Version type="experimental">4.0.11</Version> {#experimental-fsmodulecache}
 
+::: tip FEEDBACK
+Please, leave feedback regarding this feature in a [GitHub Discussion](https://github.com/vitest-dev/vitest/discussions/9221).
+:::
+
 - **Type:** `boolean`
 - **Default:** `false`
 
@@ -103,15 +107,23 @@ At the moment, Vitest ignores the [test.cache.dir](/config/cache) or [cacheDir](
 
 ## experimental.openTelemetry <Version type="experimental">4.0.11</Version> {#experimental-opentelemetry}
 
+::: tip FEEDBACK
+Please, leave feedback regarding this feature in a [GitHub Discussion](https://github.com/vitest-dev/vitest/discussions/9222).
+:::
+
 - **Type:**
 
 ```ts
 interface OpenTelemetryOptions {
   enabled: boolean
   /**
-   * A path to a file that exposes an OpenTelemetry SDK.
+   * A path to a file that exposes an OpenTelemetry SDK for Node.js.
    */
   sdkPath?: string
+  /**
+   * A path to a file that exposes an OpenTelemetry SDK for the browser.
+   */
+  browserSdkPath?: string
 }
 ```
 
@@ -125,9 +137,7 @@ OpenTelemetry may significantly impact Vitest performance; enable it only for lo
 
 You can use a [custom service](/guide/open-telemetry) together with Vitest to pinpoint which tests or files are slowing down your test suite.
 
-::: warning BROWSER SUPPORT
-At the moment, Vitest does not start any spans when running in [the browser](/guide/browser/).
-:::
+For browser mode, see the [Browser Mode](/guide/open-telemetry#browser-mode) section of the OpenTelemetry guide.
 
 An `sdkPath` is resolved relative to the [`root`](/config/root) of the project and should point to a module that exposes a started SDK instance as a default export. For example:
 
@@ -167,6 +177,10 @@ It's important that Node can process `sdkPath` content because it is not transfo
 :::
 
 ## experimental.printImportBreakdown <Version type="experimental">4.0.15</Version> {#experimental-printimportbreakdown}
+
+::: tip FEEDBACK
+Please, leave feedback regarding this feature in a [GitHub Discussion](https://github.com/vitest-dev/vitest/discussions/9224).
+:::
 
 - **Type:** `boolean`
 - **Default:** `false`

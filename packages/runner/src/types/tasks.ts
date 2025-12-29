@@ -536,7 +536,7 @@ export type TestAPI<ExtraContext = object> = ChainableTestAPI<ExtraContext>
           : never;
     }>
     scoped: (
-      fixtures: Fixtures<Partial<ExtraContext>>,
+      fixtures: Partial<Fixtures<ExtraContext>>,
     ) => void
   }
 
@@ -577,7 +577,7 @@ export type Fixture<T, K extends keyof T, ExtraContext = object> = ((
     | (T[K] extends any
       ? FixtureFn<T, K, Omit<ExtraContext, Exclude<keyof T, K>>>
       : never)
-export type Fixtures<T extends Record<string, any>, ExtraContext = object> = {
+export type Fixtures<T, ExtraContext = object> = {
   [K in keyof T]:
     | Fixture<T, K, ExtraContext & TestContext>
     | [Fixture<T, K, ExtraContext & TestContext>, FixtureOptions?];
@@ -712,13 +712,15 @@ export interface TestContext {
   readonly signal: AbortSignal
 
   /**
-   * Extract hooks on test failed
+   * Register a callback to run when this specific test fails.
+   * Useful when tests run concurrently.
    * @see {@link https://vitest.dev/guide/test-context#ontestfailed}
    */
   readonly onTestFailed: (fn: OnTestFailedHandler, timeout?: number) => void
 
   /**
-   * Extract hooks on test failed
+   * Register a callback to run when this specific test finishes.
+   * Useful when tests run concurrently.
    * @see {@link https://vitest.dev/guide/test-context#ontestfinished}
    */
   readonly onTestFinished: (fn: OnTestFinishedHandler, timeout?: number) => void
@@ -826,11 +828,11 @@ export interface TestAnnotationArtifact extends TestArtifactBase {
   annotation: TestAnnotation
 }
 
-type VisualRegressionArtifactAttachment = TestAttachment & ({
-  name: 'reference' | 'actual'
+interface VisualRegressionArtifactAttachment extends TestAttachment {
+  name: 'reference' | 'actual' | 'diff'
   width: number
   height: number
-} | { name: 'diff' })
+}
 
 /**
  * @experimental

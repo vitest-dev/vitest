@@ -20,9 +20,17 @@ export function interpretTaskModes(
   const traverseSuite = (suite: Suite, parentIsOnly?: boolean, parentMatchedWithLocation?: boolean) => {
     const suiteIsOnly = parentIsOnly || suite.mode === 'only'
 
+    // Check if any tasks in this suite have `.only` - if so, only those should run
+    const hasSomeTasksOnly = onlyMode && suite.tasks.some(
+      t => t.mode === 'only' || (t.type === 'suite' && someTasksAreOnly(t)),
+    )
+
     suite.tasks.forEach((t) => {
       // Check if either the parent suite or the task itself are marked as included
-      const includeTask = suiteIsOnly || t.mode === 'only'
+      // If there are tasks with `.only` in this suite, only include those (not all tasks from describe.only)
+      const includeTask = hasSomeTasksOnly
+        ? (t.mode === 'only' || (t.type === 'suite' && someTasksAreOnly(t)))
+        : (suiteIsOnly || t.mode === 'only')
       if (onlyMode) {
         if (t.type === 'suite' && (includeTask || someTasksAreOnly(t))) {
           // Don't skip this suite

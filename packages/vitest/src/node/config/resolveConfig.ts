@@ -147,6 +147,10 @@ export function resolveConfig(
     resolved.poolRunner = options.pool
   }
 
+  if ('poolOptions' in resolved) {
+    logger.deprecate('`test.poolOptions` was removed in Vitest 4. All previous `poolOptions` are now top-level options. Please, refer to the migration guide: https://vitest.dev/guide/migration#pool-rework')
+  }
+
   resolved.pool ??= 'forks'
 
   resolved.project = toArray(resolved.project)
@@ -805,6 +809,13 @@ export function resolveConfig(
       resolved.experimental.openTelemetry.sdkPath,
     )
     resolved.experimental.openTelemetry.sdkPath = pathToFileURL(sdkPath).toString()
+  }
+  if (resolved.experimental.openTelemetry?.browserSdkPath) {
+    const browserSdkPath = resolve(
+      resolved.root,
+      resolved.experimental.openTelemetry.browserSdkPath,
+    )
+    resolved.experimental.openTelemetry.browserSdkPath = browserSdkPath
   }
   if (resolved.experimental.fsModuleCachePath) {
     resolved.experimental.fsModuleCachePath = resolve(

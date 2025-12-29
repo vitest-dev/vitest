@@ -62,7 +62,7 @@ const result = calculator(1, 2)
 
 expect(result).toBe(3)
 expect(calculator).toHaveBeenCalledWith(1, 2)
-expect(calculator).toHaveReturned(3)
+expect(calculator).toHaveReturnedWith(3)
 ```
 
 Vitest also supports a module promise instead of a string in the `vi.mock` and `vi.doMock` methods for better IDE support. When the file is moved, the path will be updated, and `importOriginal` inherits the type automatically. Using this signature will also enforce factory return type to be compatible with the original module (keeping exports optional).
@@ -452,7 +452,7 @@ expect(Cart).toHaveBeenCalled()
 ### vi.mockObject <Version>3.2.0</Version>
 
 ```ts
-function mockObject<T>(value: T): MaybeMockedDeep<T>
+function mockObject<T>(value: T, options?: MockOptions): MaybeMockedDeep<T>
 ```
 
 Deeply mocks properties and methods of a given object in the same way as `vi.mock()` mocks module exports. See [automocking](/guide/mocking.html#automocking-algorithm) for the detail.
