@@ -353,7 +353,7 @@ importers:
         version: link:../../packages/browser-playwright
       jsdom:
         specifier: latest
-        version: 27.3.0(postcss@8.5.6)
+        version: 27.4.0(postcss@8.5.6)
       playwright:
         specifier: ^1.57.0
         version: 1.57.0
@@ -1509,8 +1509,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/vitest
       vitest-sonar-reporter:
-        specifier: 0.5.0
-        version: 0.5.0(vitest@packages+vitest)
+        specifier: 3.0.0
+        version: 3.0.0(vitest@packages+vitest)
 
   test/snapshots:
     dependencies:
@@ -1590,7 +1590,7 @@ importers:
         version: 3.2.2
       jsdom:
         specifier: latest
-        version: 27.3.0(postcss@8.5.6)
+        version: 27.4.0(postcss@8.5.6)
       vitest:
         specifier: workspace:*
         version: link:../../packages/vitest
@@ -2754,6 +2754,15 @@ packages:
   '@eslint/plugin-kit@0.4.1':
     resolution: {integrity: sha512-43/qtrDUokr7LJqoF2c3+RInu/t4zfrpYdoSDfYyhg52rwLV6TnOvdG4fXm7IkSB3wErkcmJS9iEhjVtOSEjjA==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
+
+  '@exodus/bytes@1.7.0':
+    resolution: {integrity: sha512-5i+BtvujK/vM07YCGDyz4C4AyDzLmhxHMtM5HpUyPRtJPBdFPsj290ffXW+UXY21/G7GtXeHD2nRmq0T1ShyQQ==}
+    engines: {node: ^20.19.0 || ^22.12.0 || >=24.0.0}
+    peerDependencies:
+      '@exodus/crypto': ^1.0.0-rc.4
+    peerDependenciesMeta:
+      '@exodus/crypto':
+        optional: true
 
   '@faker-js/faker@10.1.0':
     resolution: {integrity: sha512-C3mrr3b5dRVlKPJdfrAXS8+dq+rq8Qm5SNRazca0JKgw1HQERFmrVb0towvMmw5uu8hHKNiQasMaR/tydf3Zsg==}
@@ -6527,6 +6536,10 @@ packages:
     resolution: {integrity: sha512-Y22oTqIU4uuPgEemfz7NDJz6OeKf12Lsu+QC+s3BVpda64lTiMYCyGwg5ki4vFxkMwQdeZDl2adZoqUgdFuTgQ==}
     engines: {node: '>=18'}
 
+  html-encoding-sniffer@6.0.0:
+    resolution: {integrity: sha512-CV9TW3Y3f8/wT0BRFc1/KAVQ3TUHiXmaAb6VW9vtiMFf7SLoMd1PdAc4W3KFOFETBJUb90KatHqlsZMWV+R9Gg==}
+    engines: {node: ^20.19.0 || ^22.12.0 || >=24.0.0}
+
   html-entities@2.6.0:
     resolution: {integrity: sha512-kig+rMn/QOVRvr7c86gQ8lWXq+Hkv6CbAH1hLu+RG338StTpE8Z0b44SDVaqVu7HGKf27frdmUYEs9hTUX/cLQ==}
 
@@ -7000,8 +7013,8 @@ packages:
       canvas:
         optional: true
 
-  jsdom@27.3.0:
-    resolution: {integrity: sha512-GtldT42B8+jefDUC4yUKAvsaOrH7PDHmZxZXNgF2xMmymjUbRYJvpAybZAKEmXDGTM0mCsz8duOa4vTm5AY2Kg==}
+  jsdom@27.4.0:
+    resolution: {integrity: sha512-mjzqwWRD9Y1J1KUi7W97Gja1bwOOM5Ug0EZ6UDK3xS7j7mndrkwozHtSblfomlzyB4NepioNt+B2sOSzczVgtQ==}
     engines: {node: ^20.19.0 || ^22.12.0 || >=24.0.0}
     peerDependencies:
       canvas: ^3.0.0
@@ -9355,8 +9368,8 @@ packages:
   vitest-package-exports@0.1.1:
     resolution: {integrity: sha512-rXgU5noxaaMA5VJXgVPhXRzPiQ1WFmWwgo8dQFPg9j/yFM028scO0IAylFHVI8XMRevhozEt1usa6RQYQY26lg==}
 
-  vitest-sonar-reporter@0.5.0:
-    resolution: {integrity: sha512-6BQlx89502l/Z1NVWxN13ir0jCmC8e4/dit5YhoP6U+rX2Cs+CHt3vHnDDSrBwJTVc8QaAaC/hi9XnIH5I28AA==}
+  vitest-sonar-reporter@3.0.0:
+    resolution: {integrity: sha512-QRT5m9Z/3Kt0WVDVcFHm5LC9Ba89yDP4twlX2QUAJ9PdqfJBkLAh/kXj7m6U3i0k6GxnIEiwCc295bmAYokmZg==}
     engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
     peerDependencies:
       vitest: workspace:*
@@ -9472,6 +9485,7 @@ packages:
   whatwg-encoding@3.1.1:
     resolution: {integrity: sha512-6qN4hJdMwfYBtE3YBTTHhoeuUrDBPZmbQaxWAqSALV/MeEnR5z1xd8UKud2RAkFoPkmB+hli1TZSnyi84xz1vQ==}
     engines: {node: '>=18'}
+    deprecated: Use @exodus/bytes instead for a more spec-conformant and faster implementation
 
   whatwg-mimetype@3.0.0:
     resolution: {integrity: sha512-nt+N2dzIutVRxARx1nghPKGv1xHikU7HKdfafKkLNLindmPU/ch3U31NOCGGA/dmPcmb1VlofO0vnKAcsm0o/Q==}
@@ -10938,6 +10952,8 @@ snapshots:
     dependencies:
       '@eslint/core': 0.17.0
       levn: 0.4.1
+
+  '@exodus/bytes@1.7.0': {}
 
   '@faker-js/faker@10.1.0': {}
 
@@ -15013,6 +15029,12 @@ snapshots:
     dependencies:
       whatwg-encoding: 3.1.1
 
+  html-encoding-sniffer@6.0.0:
+    dependencies:
+      '@exodus/bytes': 1.7.0
+    transitivePeerDependencies:
+      - '@exodus/crypto'
+
   html-entities@2.6.0: {}
 
   html-escaper@2.0.2: {}
@@ -15483,14 +15505,15 @@ snapshots:
       - supports-color
       - utf-8-validate
 
-  jsdom@27.3.0(postcss@8.5.6):
+  jsdom@27.4.0(postcss@8.5.6):
     dependencies:
       '@acemir/cssom': 0.9.29
       '@asamuzakjp/dom-selector': 6.7.6
+      '@exodus/bytes': 1.7.0
       cssstyle: 5.3.4(postcss@8.5.6)
       data-urls: 6.0.0
       decimal.js: 10.6.0
-      html-encoding-sniffer: 4.0.0
+      html-encoding-sniffer: 6.0.0
       http-proxy-agent: 7.0.2
       https-proxy-agent: 7.0.6
       is-potential-custom-element-name: 1.0.1
@@ -15500,12 +15523,12 @@ snapshots:
       tough-cookie: 6.0.0
       w3c-xmlserializer: 5.0.0
       webidl-conversions: 8.0.0
-      whatwg-encoding: 3.1.1
       whatwg-mimetype: 4.0.0
       whatwg-url: 15.1.0
       ws: 8.18.3
       xml-name-validator: 5.0.0
     transitivePeerDependencies:
+      - '@exodus/crypto'
       - bufferutil
       - postcss
       - supports-color
@@ -18263,7 +18286,7 @@ snapshots:
       find-up-simple: 1.0.1
       pathe: 2.0.3
 
-  vitest-sonar-reporter@0.5.0(vitest@packages+vitest):
+  vitest-sonar-reporter@3.0.0(vitest@packages+vitest):
     dependencies:
       vitest: link:packages/vitest
 
