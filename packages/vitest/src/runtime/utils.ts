@@ -20,6 +20,11 @@ export function getWorkerState(): WorkerGlobalState {
   return workerState
 }
 
+export function getSafeWorkerState(): WorkerGlobalState | undefined {
+  // @ts-expect-error untyped global
+  return globalThis[NAME_WORKER_STATE]
+}
+
 export function provideWorkerState(context: any, state: WorkerGlobalState): WorkerGlobalState {
   Object.defineProperty(context, NAME_WORKER_STATE, {
     value: state,

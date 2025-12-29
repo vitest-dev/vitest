@@ -179,8 +179,9 @@ export class VitestWatcher {
     }
 
     const projects = this.vitest.projects.filter((project) => {
-      const moduleGraph = project.browser?.vite.moduleGraph || project.vite.moduleGraph
-      return moduleGraph.getModulesByFile(filepath)?.size
+      return project._getViteEnvironments().some(({ moduleGraph }) => {
+        return moduleGraph.getModulesByFile(filepath)?.size
+      })
     })
     if (!projects.length) {
       // if there are no modules it's possible that server was restarted
@@ -195,9 +196,8 @@ export class VitestWatcher {
     const files: string[] = []
 
     for (const project of projects) {
-      const mods = project.browser?.vite.moduleGraph.getModulesByFile(filepath)
-        || project.vite.moduleGraph.getModulesByFile(filepath)
-      if (!mods || !mods.size) {
+      const environmentMods = project._getViteEnvironments().map(({ moduleGraph }) => moduleGraph.getModulesByFile(filepath))
+      if (!environmentMods.length) {
         continue
       }
 
@@ -211,17 +211,19 @@ export class VitestWatcher {
       }
 
       let rerun = false
-      for (const mod of mods) {
-        mod.importers.forEach((i) => {
-          if (!i.file) {
-            return
-          }
+      for (const mods of environmentMods) {
+        for (const mod of mods || []) {
+          mod.importers.forEach((i) => {
+            if (!i.file) {
+              return
+            }
 
-          const needsRerun = this.handleFileChanged(i.file)
-          if (needsRerun) {
-            rerun = true
-          }
-        })
+            const needsRerun = this.handleFileChanged(i.file)
+            if (needsRerun) {
+              rerun = true
+            }
+          })
+        }
       }
 
       if (rerun) {

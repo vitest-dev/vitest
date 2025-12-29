@@ -1,5 +1,5 @@
 import type { Context } from 'node:vm'
-import type { WorkerGlobalState } from '../../types/worker'
+import type { WorkerGlobalState, WorkerSetupContext } from '../../types/worker'
 import type { Traces } from '../../utils/traces'
 import { pathToFileURL } from 'node:url'
 import { isContext, runInContext } from 'node:vm'
@@ -8,9 +8,10 @@ import { loadEnvironment } from '../../integrations/env/loader'
 import { distDir } from '../../paths'
 import { createCustomConsole } from '../console'
 import { ExternalModulesExecutor } from '../external-executor'
+import { listenForErrors } from '../moduleRunner/errorCatcher'
 import { getDefaultRequestStubs } from '../moduleRunner/moduleEvaluator'
 import { createNodeImportMeta } from '../moduleRunner/moduleRunner'
-import { startVitestModuleRunner, VITEST_VM_CONTEXT_SYMBOL } from '../moduleRunner/startModuleRunner'
+import { startVitestModuleRunner, VITEST_VM_CONTEXT_SYMBOL } from '../moduleRunner/startVitestModuleRunner'
 import { provideWorkerState } from '../utils'
 import { FileMap } from '../vm/file-map'
 
@@ -23,7 +24,7 @@ export async function runVmTests(method: 'run' | 'collect', state: WorkerGlobalS
   const { ctx, rpc } = state
 
   const beforeEnvironmentTime = performance.now()
-  const { environment } = await loadEnvironment(ctx.environment.name, ctx.config.root, rpc, traces)
+  const { environment } = await loadEnvironment(ctx.environment.name, ctx.config.root, rpc, traces, true)
   state.environment = environment
 
   if (!environment.setupVM) {
@@ -89,6 +90,12 @@ export async function runVmTests(method: 'run' | 'collect', state: WorkerGlobalS
     viteClientModule: stubs['/@vite/client'],
   })
 
+  process.exit = (code = process.exitCode || 0): never => {
+    throw new Error(`process.exit unexpectedly called with "${code}"`)
+  }
+
+  listenForErrors(() => state)
+
   const moduleRunner = startVitestModuleRunner({
     context,
     evaluatedModules: state.evaluatedModules,
@@ -144,5 +151,11 @@ export async function runVmTests(method: 'run' | 'collect', state: WorkerGlobalS
       'vitest.runtime.environment.teardown',
       () => vm.teardown?.(),
     )
+  }
+}
+
+export function setupVmWorker(context: WorkerSetupContext): void {
+  if (context.config.experimental.viteModuleRunner === false) {
+    throw new Error(`Pool "${context.pool}" cannot run with "experimental.viteModuleRunner: false". Please, use "threads" or "forks" instead.`)
   }
 }

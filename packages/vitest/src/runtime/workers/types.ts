@@ -13,5 +13,5 @@ export interface VitestWorker extends WorkerRpcOptions {
   runTests: (state: WorkerGlobalState, traces: Traces) => Awaitable<unknown>
   collectTests: (state: WorkerGlobalState, traces: Traces) => Awaitable<unknown>
 
-  setup?: (context: WorkerSetupContext) => Promise<() => Promise<unknown>>
+  setup?: (context: WorkerSetupContext) => void | Promise<() => Promise<unknown>>
 }
