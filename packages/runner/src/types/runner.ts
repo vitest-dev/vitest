@@ -38,6 +38,7 @@ export interface VitestRunnerConfig {
   hookTimeout: number
   retry: number
   includeTaskLocation?: boolean
+  includeImportDurations?: boolean
   diffOptions?: DiffOptions
 }
 

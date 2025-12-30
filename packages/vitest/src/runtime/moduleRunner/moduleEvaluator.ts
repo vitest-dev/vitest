@@ -31,6 +31,7 @@ export interface VitestModuleEvaluatorOptions {
   getCurrentTestFilepath?: () => string | undefined
   compiledFunctionArgumentsNames?: string[]
   compiledFunctionArgumentsValues?: unknown[]
+  includeImportDurations?: boolean
   /**
    * @internal
    */
@@ -113,6 +114,7 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
     const finishModuleExecutionInfo = this.debug.startCalculateModuleExecutionInfo(
       filename,
       {
+        includeImportDurations: this.options.includeImportDurations,
         startOffset: 0,
         external: true,
         importer,
@@ -313,6 +315,7 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
     // this will always be 1 element because it's cached after load
     const importer = module.importers.values().next().value
     const finishModuleExecutionInfo = this.debug.startCalculateModuleExecutionInfo(options.filename, {
+      includeImportDurations: this.options.includeImportDurations,
       startOffset: codeDefinition.length,
       importer,
     })

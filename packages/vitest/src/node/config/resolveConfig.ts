@@ -785,6 +785,8 @@ export function resolveConfig(
     resolved.includeTaskLocation ??= true
   }
 
+  resolved.includeImportDurations ??= true
+
   resolved.server ??= {}
   resolved.server.deps ??= {}
 

@@ -725,6 +725,9 @@ export const cliOptionsConfig: VitestCLIOptions = {
   includeTaskLocation: {
     description: 'Collect test and suite locations in the `location` property',
   },
+  includeImportDurations: {
+    description: 'Collect `importDurtaions`',
+  },
   attachmentsDir: {
     description: 'The directory where attachments from `context.annotate` are stored in (default: `.vitest-attachments`)',
     argument: '<dir>',

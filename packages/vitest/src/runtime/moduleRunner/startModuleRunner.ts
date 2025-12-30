@@ -72,6 +72,7 @@ export function startVitestModuleRunner(options: ContextModuleRunnerOptions): Vi
         return state().config.deps.interopDefault
       },
       getCurrentTestFilepath: () => state().filepath,
+      includeImportDurations: state().config.includeImportDurations,
     },
   )
 

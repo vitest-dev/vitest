@@ -79,6 +79,7 @@ export interface SerializedConfig {
   diff: string | SerializedDiffOptions | undefined
   retry: number
   includeTaskLocation: boolean | undefined
+  includeImportDurations: boolean | undefined
   inspect: boolean | string | undefined
   inspectBrk: boolean | string | undefined
   inspector: {
