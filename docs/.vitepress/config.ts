@@ -80,6 +80,7 @@ export default ({ mode }: { mode: string }) => {
             'marko': 'vscode-icons:file-type-marko',
             'qwik': 'logos:qwik-icon',
             'next': '',
+            'vite.config': localIconLoader(import.meta.url, '../public/logo-without-border-vite.svg'),
           },
         }),
         llmstxt(),
