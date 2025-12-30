@@ -630,7 +630,7 @@ describe('Standard Schema', () => {
           -   ],
           - },
           +     "age": "thirty",
-                "name": SchemaMatching,
+                "name": "John",
               },
             }"
         `)

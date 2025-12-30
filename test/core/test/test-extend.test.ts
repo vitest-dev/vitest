@@ -488,6 +488,30 @@ describe('test.scoped repro #7813', () => {
   })
 })
 
+describe('test.scoped repro #9305', () => {
+  const extendedTest = test.extend<{
+    a: number
+    b: number
+    numbers: number[]
+  }>({
+    a: 1,
+    b: 2,
+    numbers: async ({ a }, use) => use([a]),
+  })
+
+  describe('suite fails', () => {
+    extendedTest.scoped({
+      numbers: async ({ a, b }, use) => use([a, b]),
+    })
+
+    extendedTest.fails('test fails', async ({
+      numbers,
+    }) => {
+      expect(numbers).toStrictEqual([1, 2]) // fails because numbers is [undefined, undefined]
+    })
+  })
+})
+
 describe('suite with timeout', () => {
   test.extend({})('timeout is inherited from suite', ({ task }) => {
     expect(task.timeout).toBe(100)

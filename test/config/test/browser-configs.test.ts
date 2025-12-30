@@ -533,6 +533,29 @@ test('provider options can be changed dynamically in CLI', async () => {
   })
 })
 
+test('fileParallelism on the instance works properly', async () => {
+  const v = await vitest({}, {
+    fileParallelism: true,
+    browser: {
+      enabled: true,
+      provider: playwright(),
+      instances: [
+        {
+          browser: 'chromium',
+          fileParallelism: false,
+        },
+        {
+          browser: 'firefox',
+          fileParallelism: true,
+        },
+      ],
+    },
+  })
+  expect(v.projects).toHaveLength(2)
+  expect(v.projects[0].config.browser.fileParallelism).toBe(false)
+  expect(v.projects[1].config.browser.fileParallelism).toBe(true)
+})
+
 function getCliConfig(options: TestUserConfig, cli: string[], fs: TestFsStructure = {}) {
   const root = resolve(process.cwd(), `vitest-test-${crypto.randomUUID()}`)
   useFS(root, {

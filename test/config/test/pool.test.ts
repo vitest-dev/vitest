@@ -1,7 +1,7 @@
 import type { SerializedConfig } from 'vitest'
 import type { TestUserConfig } from 'vitest/node'
 import { normalize } from 'pathe'
-import { assert, describe, expect, test } from 'vitest'
+import { assert, describe, expect, test, vi } from 'vitest'
 import { runVitest, StableTestFileOrderSorter } from '../../test-utils'
 
 describe.each(['forks', 'threads', 'vmThreads', 'vmForks'])('%s', async (pool) => {
@@ -102,17 +102,45 @@ test('non-isolated happy-dom worker pool receives all testfiles at once', async 
   `)
 })
 
+test('worker start failure should not hang', async () => {
+  const stop = vi.fn()
+
+  const { stdout, stderr } = await runVitest({
+    root: './fixtures/pool',
+    include: ['a.test.ts'],
+    pool: {
+      name: 'pool-with-crashing-workers',
+      // @ts-expect-error -- intentional
+      createPoolWorker: () => ({
+        start: () => Promise.reject(new Error('Mock')),
+        stop,
+        on() {},
+        off() {},
+        send() {},
+      }),
+    },
+  })
+
+  expect(stderr).toContain('Error: [vitest-pool]: Failed to start pool-with-crashing-workers worker for test files')
+  expect(stderr).toContain('a.test.ts')
+  expect(stderr).toContain('Caused by: Error: Mock')
+  expect(stdout).toContain('Errors  1 error')
+
+  expect(stop).toHaveBeenCalled()
+})
+
 async function getConfig<T = SerializedConfig>(options: Partial<TestUserConfig>, cliOptions: Partial<TestUserConfig> = {}): Promise<T> {
   let config: T | undefined
 
   await runVitest({
     root: './fixtures/pool',
     include: ['print-config.test.ts'],
-    ...cliOptions,
+    $cliOptions: cliOptions,
     onConsoleLog(log) {
       config = JSON.parse(log)
     },
-  }, undefined, undefined, { test: options }, { })
+    ...options,
+  })
 
   assert(config)
   return config

@@ -34,8 +34,8 @@ export interface PoolWorker {
 
   /**
    * This is called on workers that already satisfy certain constraints:
+   * - The task has the same worker name
    * - The task has the same project
-   * - The task has the same environment
    */
   canReuse?: (task: PoolTask) => boolean
 }
@@ -55,7 +55,6 @@ export interface PoolTask {
    */
   execArgv: string[]
   context: WorkerExecuteContext
-  environment: ContextTestEnvironment
   memoryLimit: number | null
 }
 

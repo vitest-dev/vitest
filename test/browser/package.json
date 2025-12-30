@@ -29,7 +29,6 @@
     "test:browser:playwright:html": "PROVIDER=playwright vitest --reporter=html"
   },
   "devDependencies": {
-    "@testing-library/react": "^13.4.0",
     "@types/react": "^19.2.7",
     "@vitejs/plugin-basic-ssl": "^2.1.0",
     "@vitest/browser": "workspace:*",

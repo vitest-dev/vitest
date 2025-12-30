@@ -14,4 +14,8 @@ export class VmThreadsPoolWorker extends ThreadsPoolWorker {
     /** Loads {@link file://./../../../runtime/workers/vmThreads.ts} */
     this.entrypoint = resolve(options.distPath, 'workers/vmThreads.js')
   }
+
+  canReuse(): boolean {
+    return true
+  }
 }

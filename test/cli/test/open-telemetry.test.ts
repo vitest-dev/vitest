@@ -48,8 +48,7 @@ describe.for([
       // root needs to be set before vitest sets up,
       // but browser options need to be in the config already
       root: './fixtures/otel-tests',
-    }, [], 'test', {
-      test: (type === 'root'
+      ...(type === 'root'
         ? config
         : { projects: [{ test: config }] }),
     })

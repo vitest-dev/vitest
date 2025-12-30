@@ -39,28 +39,25 @@ export async function runVitest(config: TestUserConfig, options = { throwOnError
     config: 'fixtures/configs/vitest.config.ts',
     pool: 'threads',
     ...config,
-    browser: config.browser,
-  }, [], 'test', {
-    ...viteOverrides,
-    test: {
-      env: {
-        COVERAGE_TEST: 'true',
-        ...config.env,
-      },
-      coverage: {
-        enabled: true,
-        reporter: [],
-        ...config.coverage,
-        provider,
-        customProviderModule: provider === 'custom' ? 'fixtures/custom-provider' : undefined,
-      },
-      browser: {
-        enabled: process.env.COVERAGE_BROWSER === 'true',
-        headless: true,
-        instances: [{ browser: 'chromium' }],
-        provider: playwright(),
-      },
+    env: {
+      COVERAGE_TEST: 'true',
+      ...config.env,
     },
+    coverage: {
+      enabled: true,
+      reporter: [],
+      ...config.coverage,
+      provider,
+      customProviderModule: provider === 'custom' ? 'fixtures/custom-provider' : undefined,
+    },
+    browser: {
+      enabled: process.env.COVERAGE_BROWSER === 'true',
+      headless: true,
+      instances: [{ browser: 'chromium' }],
+      provider: playwright(),
+      ...config.browser,
+    },
+    $viteConfig: viteOverrides,
   })
 
   if (getCurrentTest()) {

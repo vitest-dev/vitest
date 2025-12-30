@@ -36,7 +36,7 @@ it('supports glob negation pattern', async () => {
 it('fails if project names are identical with a nice error message', async () => {
   const { stderr } = await runVitest({
     root: 'fixtures/workspace/invalid-duplicate-configs',
-  }, [], 'test', {}, { fails: true })
+  }, [], { fails: true })
   expect(stderr).toContain(
     `Project name "test" from "vitest.config.two.js" is not unique. The project is already defined by "vitest.config.one.js".
 
@@ -51,7 +51,7 @@ All projects should have unique names. Make sure your configuration is correct.`
 it('fails if project names are identical inside the inline config', async () => {
   const { stderr } = await runVitest({
     root: 'fixtures/workspace/invalid-duplicate-inline',
-  }, [], 'test', {}, { fails: true })
+  }, [], { fails: true })
   expect(stderr).toContain(
     'Project name "test" is not unique. All projects should have unique names. Make sure your configuration is correct.',
   )
@@ -60,7 +60,7 @@ it('fails if project names are identical inside the inline config', async () => 
 it('fails if referenced file doesnt exist', async () => {
   const { stderr } = await runVitest({
     root: 'fixtures/workspace/invalid-non-existing-config',
-  }, [], 'test', {}, { fails: true })
+  }, [], { fails: true })
   expect(stderr).toContain(
     `Projects definition references a non-existing file or a directory: ${resolve('fixtures/workspace/invalid-non-existing-config/vitest.config.js')}`,
   )

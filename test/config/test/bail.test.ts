@@ -69,14 +69,11 @@ for (const config of configs) {
       const { exitCode, stdout, ctx } = await runVitest({
         root: './fixtures/bail',
         bail: 1,
-      }, [], 'test', {
-        test: {
-          ...config,
-          env: {
-            THREADS: process.env.THREADS,
-          },
+        ...config,
+        env: {
+          THREADS: process.env.THREADS,
         },
-      })
+      }, [])
 
       expect(ctx?.config.pool).toBe(config.pool || 'forks')
       expect(ctx?.config.browser.enabled).toBe(config.browser?.enabled ?? false)

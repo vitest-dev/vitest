@@ -11,6 +11,6 @@
     "flatted": "^3.3.3",
     "pkg-reporter": "./reportPkg/",
     "vitest": "workspace:*",
-    "vitest-sonar-reporter": "0.5.0"
+    "vitest-sonar-reporter": "3.0.0"
   }
 }

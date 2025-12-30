@@ -58,6 +58,7 @@ describe('API', () => {
         'test-4.js': '',
       },
       {
+        ...options,
         includeTaskLocation: true,
         reporters: [
           'default',
@@ -99,10 +100,6 @@ describe('API', () => {
             },
           },
         ],
-      },
-      {},
-      {
-        test: options,
       },
     )
 

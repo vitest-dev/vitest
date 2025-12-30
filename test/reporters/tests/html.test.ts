@@ -109,16 +109,13 @@ test('basic', () => {});
 `,
   }, {
     reporters: ['default', 'html'],
-  }, {}, {
-    test: {
-      browser: {
-        enabled: true,
-        provider: playwright(),
-        headless: true,
-        instances: [
-          { browser: 'chromium' as const },
-        ],
-      },
+    browser: {
+      enabled: true,
+      provider: playwright(),
+      headless: true,
+      instances: [
+        { browser: 'chromium' as const },
+      ],
     },
   })
   expect(result.errorTree()).toMatchInlineSnapshot(`
