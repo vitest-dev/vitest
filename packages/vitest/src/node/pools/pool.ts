@@ -1,3 +1,5 @@
+import type { Span } from '@opentelemetry/api'
+import type { ContextTestEnvironment } from '../../types/worker'
 import type { Logger } from '../logger'
 import type { StateManager } from '../state'
 import type { PoolOptions, PoolTask, WorkerResponse } from './types'
@@ -117,21 +119,27 @@ export class Pool {
           WORKER_START_TIMEOUT,
         )
 
-        await runner.start({ workerId: task.context.workerId }).finally(() => clearTimeout(id))
+        await runner.start({ workerId: task.context.workerId })
+          .catch(error =>
+            resolver.reject(
+              new Error(`[vitest-pool]: Failed to start ${task.worker} worker for test files ${formatFiles(task)}.`, { cause: error }),
+            ),
+          )
+          .finally(() => clearTimeout(id))
       }
 
-      const span = runner.startTracesSpan(`vitest.worker.${method}`)
-      // Start running the test in the worker
-      runner.request(method, task.context)
+      let span: Span | undefined
+
+      if (!resolver.isRejected) {
+        span = runner.startTracesSpan(`vitest.worker.${method}`)
+
+        // Start running the test in the worker
+        runner.request(method, task.context)
+      }
 
       await resolver.promise
-        .catch((error) => {
-          span.recordException(error)
-          throw error
-        })
-        .finally(() => {
-          span.end()
-        })
+        .catch(error => span?.recordException(error))
+        .finally(() => span?.end())
 
       const index = this.activeTasks.indexOf(activeTask)
       if (index !== -1) {
@@ -157,7 +165,7 @@ export class Pool {
         )
 
         this.exitPromises.push(
-          runner.stop()
+          runner.stop({ force: resolver.isRejected })
             .then(() => clearTimeout(id))
             .catch(error => this.logger.error(`[vitest-pool]: Failed to terminate ${task.worker} worker for test files ${formatFiles(task)}.`, error)),
         )
@@ -213,7 +221,9 @@ export class Pool {
       const index = this.sharedRunners.findIndex(runner => isEqualRunner(runner, task))
 
       if (index !== -1) {
-        return this.sharedRunners.splice(index, 1)[0]
+        const runner = this.sharedRunners.splice(index, 1)[0]
+        runner.reconfigure(task)
+        return runner
       }
     }
 
@@ -221,7 +231,7 @@ export class Pool {
       distPath: this.options.distPath,
       project: task.project,
       method,
-      environment: task.environment,
+      environment: task.context.environment,
       env: task.env,
       execArgv: task.execArgv,
     }
@@ -278,7 +288,17 @@ function withResolvers() {
     reject = rej
   })
 
-  return { resolve, reject, promise }
+  const resolver = {
+    promise,
+    resolve,
+    reject: (reason: unknown) => {
+      resolver.isRejected = true
+      reject(reason)
+    },
+    isRejected: false,
+  }
+
+  return resolver
 }
 
 function formatFiles(task: PoolTask) {
@@ -289,11 +309,47 @@ function isEqualRunner(runner: PoolRunner, task: PoolTask) {
   if (task.isolate) {
     throw new Error('Isolated tasks should not share runners')
   }
+  if (runner.worker.name !== task.worker || runner.project !== task.project) {
+    return false
+  }
+  // by default, check that the environments are the same
+  // some workers (like vmThreads/vmForks) do not need this check
+  if (!runner.worker.canReuse) {
+    return isEnvironmentEqual(task.context.environment, runner.environment)
+  }
+  return runner.worker.canReuse(task)
+}
 
-  return (
-    runner.worker.name === task.worker
-    && runner.project === task.project
-    && runner.environment.name === task.environment.name
-    && (!runner.worker.canReuse || runner.worker.canReuse(task))
-  )
+function isEnvironmentEqual(env1: ContextTestEnvironment, env2: ContextTestEnvironment): boolean {
+  if (env1.name !== env2.name) {
+    return false
+  }
+  return deepEqual(env1.options, env2.options)
+}
+
+function deepEqual(obj1: any, obj2: any): boolean {
+  if (obj1 === obj2) {
+    return true
+  }
+  if (obj1 == null || obj2 == null) {
+    return obj1 === obj2
+  }
+  if (typeof obj1 !== 'object' || typeof obj2 !== 'object') {
+    return false
+  }
+
+  const keys1 = Object.keys(obj1)
+  const keys2 = Object.keys(obj2)
+
+  if (keys1.length !== keys2.length) {
+    return false
+  }
+
+  for (const key of keys1) {
+    if (!keys2.includes(key) || !deepEqual(obj1[key], obj2[key])) {
+      return false
+    }
+  }
+
+  return true
 }
