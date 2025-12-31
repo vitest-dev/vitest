@@ -1,0 +1,7 @@
+{
+  "name": "@test/node-runner",
+  "type": "module",
+  "scripts": {
+    "test": "node --test './test/*'"
+  }
+}

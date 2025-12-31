@@ -63,7 +63,7 @@ it.for([true, false])('includeSamples %s', async (includeSamples) => {
   }
 })
 
-test('compare', { timeout: 60_000 }, async () => {
+test('compare', async () => {
   await fs.promises.rm('./fixtures/benchmarking/compare/bench.json', { force: true })
 
   // --outputJson

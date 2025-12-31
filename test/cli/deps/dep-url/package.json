@@ -1,5 +1,5 @@
 {
-  "name": "@vitest/test-deps-url",
+  "name": "@test/test-dep-url",
   "type": "module",
   "exports": "./index.js"
 }

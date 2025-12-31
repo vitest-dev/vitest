@@ -16,7 +16,7 @@ beforeAll(async () => {
 
 it('default server manual mocker works correctly', async () => {
   const { page } = await createTestServer({
-    root: 'fixtures/manual-mock',
+    root: './fixtures/mocker/manual-mock',
   })
 
   await expect.poll(() => page.locator('css=#mocked').textContent()).toBe('true')
@@ -24,7 +24,7 @@ it('default server manual mocker works correctly', async () => {
 
 it('automock works correctly', async () => {
   const { page } = await createTestServer({
-    root: 'fixtures/automock',
+    root: './fixtures/mocker/automock',
   })
 
   await expect.poll(() => page.locator('css=#mocked').textContent()).toBe('42')
@@ -32,7 +32,7 @@ it('automock works correctly', async () => {
 
 it('autospy works correctly', async () => {
   const { page } = await createTestServer({
-    root: 'fixtures/autospy',
+    root: './fixtures/mocker/autospy',
   })
 
   await expect.poll(() => page.locator('css=#mocked').textContent()).toBe('3, 42')
@@ -40,7 +40,7 @@ it('autospy works correctly', async () => {
 
 it('redirect works correctly', async () => {
   const { page } = await createTestServer({
-    root: 'fixtures/redirect',
+    root: './fixtures/mocker/redirect',
   })
 
   await expect.poll(() => page.locator('css=#mocked').textContent()).toBe('42')

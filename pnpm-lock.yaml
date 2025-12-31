@@ -90,6 +90,9 @@ catalogs:
     pathe:
       specifier: ^2.0.3
       version: 2.0.3
+    playwright:
+      specifier: ^1.57.0
+      version: 1.57.0
     sirv:
       specifier: ^3.0.2
       version: 3.0.2
@@ -1122,12 +1125,6 @@ importers:
         specifier: workspace:*
         version: link:../runner
 
-  test/benchmark:
-    devDependencies:
-      vitest:
-        specifier: workspace:*
-        version: link:../../packages/vitest
-
   test/browser:
     devDependencies:
       '@types/react':
@@ -1176,12 +1173,6 @@ importers:
         specifier: 'catalog:'
         version: 8.18.3
 
-  test/cache:
-    devDependencies:
-      vitest:
-        specifier: workspace:*
-        version: link:../../packages/vitest
-
   test/cli:
     devDependencies:
       '@opentelemetry/api':
@@ -1199,6 +1190,9 @@ importers:
       '@test/test-dep-linked':
         specifier: link:./deps/linked
         version: link:deps/linked
+      '@test/test-dep-url':
+        specifier: link:./deps/dep-url
+        version: link:deps/dep-url
       '@types/ws':
         specifier: 'catalog:'
         version: 8.18.1
@@ -1211,8 +1205,11 @@ importers:
       '@vitest/browser-preview':
         specifier: workspace:*
         version: link:../../packages/browser-preview
+      '@vitest/mocker':
+        specifier: workspace:*
+        version: link:../../packages/mocker
       '@vitest/runner':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../packages/runner
       '@vitest/utils':
         specifier: workspace:*
@@ -1220,6 +1217,9 @@ importers:
       obug:
         specifier: ^2.1.1
         version: 2.1.1
+      playwright:
+        specifier: 'catalog:'
+        version: 1.57.0
       unplugin-swc:
         specifier: ^1.5.9
         version: 1.5.9(@swc/core@1.4.1)(rollup@4.53.3)
@@ -1469,21 +1469,6 @@ importers:
       '@vitest/test-dep-url':
         specifier: file:./dep-url
         version: '@vitest/test-deps-url@file:test/optimize-deps/dep-url'
-      vitest:
-        specifier: workspace:*
-        version: link:../../packages/vitest
-
-  test/public-mocker:
-    devDependencies:
-      '@vitest/browser':
-        specifier: workspace:*
-        version: link:../../packages/browser
-      '@vitest/mocker':
-        specifier: workspace:*
-        version: link:../../packages/mocker
-      playwright:
-        specifier: ^1.57.0
-        version: 1.57.0
       vitest:
         specifier: workspace:*
         version: link:../../packages/vitest
