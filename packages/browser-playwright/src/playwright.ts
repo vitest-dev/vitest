@@ -76,6 +76,18 @@ export interface PlaywrightProviderOptions {
    * @default 0 (no timeout)
    */
   actionTimeout?: number
+
+  /**
+   * Use a persistent context instead of a regular browser context.
+   * This allows browser state (cookies, localStorage, DevTools settings, etc.) to persist between test runs.
+   * When set to `true`, the user data is stored in `./node_modules/.cache/vitest-playwright-user-data`.
+   * When set to a string, the value is used as the path to the user data directory.
+   *
+   * Note: This option is ignored when `headless` is enabled because headless mode runs tests in parallel sessions.
+   * @default false
+   * @see {@link https://playwright.dev/docs/api/class-browsertype#browser-type-launch-persistent-context}
+   */
+  persistentContext?: boolean | string
 }
 
 export function playwright(options: PlaywrightProviderOptions = {}): BrowserProviderOption<PlaywrightProviderOptions> {
@@ -94,6 +106,7 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
   public supportsParallelism = true
 
   public browser: Browser | null = null
+  public persistentContext: BrowserContext | null = null
 
   public contexts: Map<string, BrowserContext> = new Map()
   public pages: Map<string, Page> = new Map()
@@ -202,7 +215,24 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
       }
 
       debug?.('[%s] initializing the browser with launch options: %O', this.browserName, launchOptions)
-      this.browser = await playwright[this.browserName].launch(launchOptions)
+      if (this.options.persistentContext && !options.headless) {
+        const userDataDir
+          = typeof this.options.persistentContext === 'string'
+            ? this.options.persistentContext
+            : './node_modules/.cache/vitest-playwright-user-data'
+        // TODO: how to avoid default "about" page?
+        this.persistentContext = await playwright[this.browserName].launchPersistentContext(
+          userDataDir,
+          {
+            ...launchOptions,
+            ...this.getContextOptions(),
+          },
+        )
+        this.browser = this.persistentContext.browser()!
+      }
+      else {
+        this.browser = await playwright[this.browserName].launch(launchOptions)
+      }
       this.browserPromise = null
       return this.browser
     })()
@@ -357,6 +387,23 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
     const browser = await this.openBrowser()
     await this._throwIfClosing(browser)
     const actionTimeout = this.options.actionTimeout
+    const options = this.getContextOptions()
+    // TODO: investigate the consequences for Vitest 5
+    // else {
+    // if UI is disabled, keep the iframe scale to 1
+    // options.viewport ??= this.project.config.browser.viewport
+    // }
+    const context = this.persistentContext ?? await browser.newContext(options)
+    await this._throwIfClosing(context)
+    if (actionTimeout != null) {
+      context.setDefaultTimeout(actionTimeout)
+    }
+    debug?.('[%s][%s] the context is ready', sessionId, this.browserName)
+    this.contexts.set(sessionId, context)
+    return context
+  }
+
+  private getContextOptions(): BrowserContextOptions {
     const contextOptions = this.options.contextOptions ?? {}
     const options = {
       ...contextOptions,
@@ -365,19 +412,7 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
     if (this.project.config.browser.ui) {
       options.viewport = null
     }
-    // TODO: investigate the consequences for Vitest 5
-    // else {
-    // if UI is disabled, keep the iframe scale to 1
-    // options.viewport ??= this.project.config.browser.viewport
-    // }
-    const context = await browser.newContext(options)
-    await this._throwIfClosing(context)
-    if (actionTimeout != null) {
-      context.setDefaultTimeout(actionTimeout)
-    }
-    debug?.('[%s][%s] the context is ready', sessionId, this.browserName)
-    this.contexts.set(sessionId, context)
-    return context
+    return options
   }
 
   public getPage(sessionId: string): Page {
@@ -504,7 +539,12 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
     this.browser = null
     await Promise.all([...this.pages.values()].map(p => p.close()))
     this.pages.clear()
-    await Promise.all([...this.contexts.values()].map(c => c.close()))
+    if (this.persistentContext) {
+      await this.persistentContext.close()
+    }
+    else {
+      await Promise.all([...this.contexts.values()].map(c => c.close()))
+    }
     this.contexts.clear()
     await browser?.close()
     debug?.('[%s] provider is closed', this.browserName)
