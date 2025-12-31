@@ -1458,20 +1458,7 @@ importers:
         specifier: workspace:*
         version: link:../../packages/vitest
 
-  test/global-setup:
-    devDependencies:
-      vitest:
-        specifier: workspace:*
-        version: link:../../packages/vitest
-
-  test/optimize-deps:
-    devDependencies:
-      '@vitest/test-dep-url':
-        specifier: file:./dep-url
-        version: '@vitest/test-deps-url@file:test/optimize-deps/dep-url'
-      vitest:
-        specifier: workspace:*
-        version: link:../../packages/vitest
+  test/node-runner: {}
 
   test/reporters:
     devDependencies:
@@ -1540,21 +1527,6 @@ importers:
       happy-dom:
         specifier: latest
         version: 20.0.11
-      vitest:
-        specifier: workspace:*
-        version: link:../../packages/vitest
-
-  test/watch:
-    devDependencies:
-      '@vitest/browser-playwright':
-        specifier: workspace:*
-        version: link:../../packages/browser-playwright
-      '@vitest/browser-webdriverio':
-        specifier: workspace:*
-        version: link:../../packages/browser-webdriverio
-      vite:
-        specifier: ^7.1.5
-        version: 7.1.5(@types/node@24.10.1)(jiti@2.6.1)(lightningcss@1.30.1)(sass-embedded@1.93.3)(sass@1.93.3)(terser@5.44.0)(tsx@4.21.0)(yaml@2.8.2)
       vitest:
         specifier: workspace:*
         version: link:../../packages/vitest
@@ -4628,9 +4600,6 @@ packages:
 
   '@vitest/test-dep2@file:test/core/deps/dep2':
     resolution: {directory: test/core/deps/dep2, type: directory}
-
-  '@vitest/test-deps-url@file:test/optimize-deps/dep-url':
-    resolution: {directory: test/optimize-deps/dep-url, type: directory}
 
   '@vitest/test-fn@file:test/core/deps/dep-fn':
     resolution: {directory: test/core/deps/dep-fn, type: directory}
@@ -12580,8 +12549,6 @@ snapshots:
   '@vitest/test-dep2@file:test/core/deps/dep2':
     dependencies:
       '@vitest/test-dep1': file:test/core/deps/dep1
-
-  '@vitest/test-deps-url@file:test/optimize-deps/dep-url': {}
 
   '@vitest/test-fn@file:test/core/deps/dep-fn': {}
 
