@@ -32,11 +32,6 @@ afterEach(() => {
   writeFileSync(forceTriggerFile, forceTriggerFileContent, 'utf8')
 })
 
-// TODO: Fix flakiness and enable on CI
-if (process.env.GITHUB_ACTIONS) {
-  test.only('skip tests on CI', () => {})
-}
-
 test('editing source file triggers re-run', async () => {
   const { vitest } = await testUtils.runVitest(options)
 
