@@ -87,16 +87,16 @@ function expandTests() {
         />
         <VueTooltip
           v-if="coverageConfigured && !coverageEnabled"
-          title="Coverage enabled but missing html reporter"
+          title="Coverage enabled but missing html or lcov reporter"
           class="w-1.4em h-1.4em op100 rounded flex color-red5 dark:color-#f43f5e cursor-help"
         >
           <div class="i-carbon:folder-off ma" />
           <template #popper>
             <div class="op100 gap-1 p-y-1" grid="~ items-center cols-[1.5em_1fr]">
               <div class="i-carbon:information-square w-1.5em h-1.5em" />
-              <div>Coverage enabled but missing html reporter.</div>
+              <div>Coverage enabled but missing html or lcov reporter.</div>
               <div style="grid-column: 2">
-                Add html reporter to your configuration to see coverage here.
+                Add html or lcov reporter to your configuration to see coverage here.
               </div>
             </div>
           </template>

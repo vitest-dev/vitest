@@ -191,3 +191,62 @@ test.describe('html report', () => {
     await expect(annotations.nth(3).getByRole('link')).toHaveAttribute('href', /data\/\w+/)
   })
 })
+
+test.describe('lcov coverage reporter', () => {
+  let previewServer: PreviewServer
+
+  test.beforeAll(async () => {
+    // silence Vitest logs
+    const stdout = new Writable({ write: (_, __, callback) => callback() })
+    const stderr = new Writable({ write: (_, __, callback) => callback() })
+    // generate vitest html report with lcov coverage reporter
+    await startVitest(
+      'test',
+      [],
+      {
+        run: true,
+        reporters: [['html', { outputFile: 'html-lcov/index.html' }]],
+        coverage: {
+          enabled: true,
+          reportsDirectory: 'html-lcov/coverage',
+          reporter: ['lcov'],
+        },
+      },
+      {},
+      {
+        stdout,
+        stderr,
+      },
+    )
+
+    // run vite preview server
+    previewServer = await preview({
+      build: { outDir: 'html-lcov' },
+      preview: { port, strictPort: true },
+    })
+  })
+
+  test.afterAll(async () => {
+    await new Promise<void>((resolve, reject) => {
+      // if there is no preview server, `startVitest` failed already
+      if (!previewServer) {
+        resolve()
+        return
+      }
+      previewServer.httpServer.close((err) => {
+        if (err) {
+          reject(err)
+        }
+        else {
+          resolve()
+        }
+      })
+    })
+  })
+
+  test('coverage with lcov reporter', async ({ page }) => {
+    await page.goto(pageUrl)
+    await page.getByLabel('Show coverage').click()
+    await page.frameLocator('#vitest-ui-coverage').getByRole('heading', { name: 'All files' }).click()
+  })
+})

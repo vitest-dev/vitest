@@ -291,6 +291,38 @@ test.describe('ui', () => {
   })
 })
 
+test.describe('ui with lcov coverage', () => {
+  let vitest: Vitest | undefined
+
+  test.beforeAll(async () => {
+    // silence Vitest logs
+    const stdout = new Writable({ write: (_, __, callback) => callback() })
+    const stderr = new Writable({ write: (_, __, callback) => callback() })
+    vitest = await startVitest('test', [], {
+      watch: true,
+      ui: true,
+      open: false,
+      api: { port },
+      coverage: { enabled: true, reporter: ['lcov'] },
+      reporters: [],
+    }, {}, {
+      stdout,
+      stderr,
+    })
+    expect(vitest).toBeDefined()
+  })
+
+  test.afterAll(async () => {
+    await vitest?.close()
+  })
+
+  test('coverage with lcov reporter', async ({ page }) => {
+    await page.goto(pageUrl)
+    await page.getByLabel('Show coverage').click()
+    await page.frameLocator('#vitest-ui-coverage').getByRole('heading', { name: 'All files' }).click()
+  })
+})
+
 test.describe('standalone', () => {
   let vitest: Vitest | undefined
 

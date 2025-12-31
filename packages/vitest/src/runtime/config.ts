@@ -129,6 +129,9 @@ export interface SerializedCoverageConfig {
   htmlReporter: {
     subdir: string | undefined
   } | undefined
+  lcovReporter: {
+    subdir: string | undefined
+  } | undefined
   enabled: boolean
   customProviderModule: string | undefined
 }
