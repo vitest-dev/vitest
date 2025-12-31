@@ -9,7 +9,6 @@ await test('importing vitest in the global setup is reported as an error', async
     ],
     reporters: [{}],
   })
-  process.exitCode = undefined
   const modules = vitest.state.getTestModules()
   t.assert.equal(modules.length, 1)
   t.assert.equal(modules[0].state(), 'passed')
