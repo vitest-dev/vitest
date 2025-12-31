@@ -1,4 +1,4 @@
-import type { CoverageMap } from 'istanbul-lib-coverage'
+import type { CoverageMap, FileCoverageData } from 'istanbul-lib-coverage'
 import type { ProxifiedModule } from 'magicast'
 import type { Profiler } from 'node:inspector'
 import type { CoverageProvider, ReportContext, ResolvedCoverageOptions, TestProject, Vite, Vitest } from 'vitest/node'
@@ -18,6 +18,149 @@ import c from 'tinyrainbow'
 import { BaseCoverageProvider } from 'vitest/coverage'
 import { parseAstAsync } from 'vitest/node'
 import { version } from '../package.json' with { type: 'json' }
+
+// Types for location-based coverage matching
+interface Location {
+  start: { line: number; column: number | null }
+  end: { line: number; column: number | null }
+}
+
+interface FnMapEntry {
+  name: string
+  decl: Location
+  loc: Location
+}
+
+interface BranchMapEntry {
+  type: string
+  loc: Location
+  locations: Location[]
+}
+
+/**
+ * Create a unique key for a location using only start position.
+ * This ignores end column differences that occur between different transform modes
+ * (SSR vs browser), which produce slightly different source map positions.
+ */
+function locationKey(loc: Location): string {
+  return `${loc.start.line}:${loc.start.column}`
+}
+
+/**
+ * Get the line number from a location for fallback matching
+ */
+function lineKey(loc: Location): number {
+  return loc.start.line
+}
+
+interface CoverageLookups {
+  stmts: Map<string, number>
+  stmtsByLine: Map<number, number>
+  fns: Map<string, number>
+  fnsByLine: Map<number, number>
+  branches: Map<string, number[]>
+  branchesByLine: Map<number, number[]>
+}
+
+/**
+ * Build lookup maps from file coverage data for efficient merging.
+ * Creates maps keyed by exact location and by line number for fallback matching.
+ */
+function buildLookups(data: FileCoverageData): CoverageLookups {
+  const stmts = new Map<string, number>()
+  const stmtsByLine = new Map<number, number>()
+  for (const [key, loc] of Object.entries(data.statementMap || {}) as [string, Location][]) {
+    const count = data.s[key] || 0
+    stmts.set(locationKey(loc), count)
+    const line = lineKey(loc)
+    stmtsByLine.set(line, Math.max(stmtsByLine.get(line) || 0, count))
+  }
+
+  const fns = new Map<string, number>()
+  const fnsByLine = new Map<number, number>()
+  for (const [key, fn] of Object.entries(data.fnMap || {}) as [string, FnMapEntry][]) {
+    const count = data.f[key] || 0
+    fns.set(locationKey(fn.loc), count)
+    const line = lineKey(fn.loc)
+    fnsByLine.set(line, Math.max(fnsByLine.get(line) || 0, count))
+  }
+
+  const branches = new Map<string, number[]>()
+  const branchesByLine = new Map<number, number[]>()
+  for (const [key, branch] of Object.entries(data.branchMap || {}) as [string, BranchMapEntry][]) {
+    const counts = data.b[key] || []
+    branches.set(locationKey(branch.loc), counts)
+    const line = lineKey(branch.loc)
+    if (!branchesByLine.has(line)) {
+      branchesByLine.set(line, counts)
+    }
+  }
+
+  return { stmts, stmtsByLine, fns, fnsByLine, branches, branchesByLine }
+}
+
+/**
+ * Smart merge of coverage maps that handles different source map positions.
+ *
+ * When the same file is covered by multiple projects with different transform modes
+ * (e.g., SSR vs browser), the source maps can produce slightly different statement
+ * end positions. Istanbul's native merge() treats these as different statements,
+ * causing inflated counts.
+ *
+ * This function uses start position-based matching (ignoring end column differences)
+ * to correctly merge execution counts without duplicating statements.
+ */
+function smartMergeCoverageMaps(target: CoverageMap, source: CoverageMap): void {
+  for (const filename of source.files()) {
+    if (!target.files().includes(filename)) {
+      // File only in source - add as-is
+      target.addFileCoverage(source.fileCoverageFor(filename))
+      continue
+    }
+
+    // File exists in both - smart merge using location-based matching
+    const targetData = target.fileCoverageFor(filename).toJSON() as FileCoverageData
+    const sourceData = source.fileCoverageFor(filename).toJSON() as FileCoverageData
+    const sourceLookups = buildLookups(sourceData)
+
+    // Merge statement counts using start position matching
+    for (const [key, loc] of Object.entries(targetData.statementMap) as [string, Location][]) {
+      const locKey = locationKey(loc)
+      const line = lineKey(loc)
+      // Try exact location match first, then fallback to line-based match
+      const sourceCount = sourceLookups.stmts.get(locKey) ?? sourceLookups.stmtsByLine.get(line)
+      if (sourceCount !== undefined) {
+        targetData.s[key] = Math.max(targetData.s[key] || 0, sourceCount)
+      }
+    }
+
+    // Merge function counts
+    for (const [key, fn] of Object.entries(targetData.fnMap) as [string, FnMapEntry][]) {
+      const locKey = locationKey(fn.loc)
+      const line = lineKey(fn.loc)
+      const sourceCount = sourceLookups.fns.get(locKey) ?? sourceLookups.fnsByLine.get(line)
+      if (sourceCount !== undefined) {
+        targetData.f[key] = Math.max(targetData.f[key] || 0, sourceCount)
+      }
+    }
+
+    // Merge branch counts
+    for (const [key, branch] of Object.entries(targetData.branchMap) as [string, BranchMapEntry][]) {
+      const locKey = locationKey(branch.loc)
+      const line = lineKey(branch.loc)
+      const sourceCounts = sourceLookups.branches.get(locKey) ?? sourceLookups.branchesByLine.get(line)
+      if (sourceCounts !== undefined) {
+        const targetCounts = targetData.b[key] || []
+        targetData.b[key] = targetCounts.map((c: number, i: number) =>
+          Math.max(c, sourceCounts[i] || 0),
+        )
+      }
+    }
+
+    // Update target with merged data
+    target.addFileCoverage(libCoverage.createFileCoverage(targetData))
+  }
+}
 
 export interface ScriptCoverageWithOffset extends Profiler.ScriptCoverage {
   startOffset: number
@@ -68,7 +211,11 @@ export class V8CoverageProvider extends BaseCoverageProvider<ResolvedCoverageOpt
           environment,
         )
 
-        coverageMap.merge(converted)
+        // Use smart merge to handle different source map positions across projects.
+        // Different transform modes (SSR vs browser) can produce slightly different
+        // statement end positions for the same source location. Istanbul's native
+        // merge() would treat these as different statements, inflating counts.
+        smartMergeCoverageMaps(coverageMap, converted)
 
         merged = { result: [] }
       },
@@ -81,7 +228,7 @@ export class V8CoverageProvider extends BaseCoverageProvider<ResolvedCoverageOpt
       const coveredFiles = coverageMap.files()
       const untestedCoverage = await this.getCoverageMapForUncoveredFiles(coveredFiles)
 
-      coverageMap.merge(untestedCoverage)
+      smartMergeCoverageMaps(coverageMap, untestedCoverage)
     }
 
     coverageMap.filter((filename) => {
