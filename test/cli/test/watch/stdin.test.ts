@@ -1,9 +1,8 @@
 import { rmSync, writeFileSync } from 'node:fs'
+import { runVitest } from '#test-utils'
 import { describe, expect, onTestFinished, test } from 'vitest'
 
-import { runVitest } from '../../test-utils'
-
-const _options = { root: 'fixtures', watch: true }
+const _options = { root: 'fixtures/watch', watch: true }
 
 describe.each([true, false])('standalone mode is %s', (standalone) => {
   const options = { ..._options, standalone }
@@ -94,7 +93,7 @@ describe.each([true, false])('standalone mode is %s', (standalone) => {
   test.skipIf(process.env.GITHUB_ACTIONS)('cancel test run', async () => {
     const { vitest } = await runVitest(options)
 
-    const testPath = 'fixtures/cancel.test.ts'
+    const testPath = 'fixtures/watch/cancel.test.ts'
     const testCase = `// Dynamic test case
 import { afterAll, afterEach, test } from 'vitest'
 

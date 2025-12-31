@@ -1,8 +1,8 @@
 import { readFileSync, writeFileSync } from 'node:fs'
+import { runVitest } from '#test-utils'
 import { afterEach, test } from 'vitest'
-import { runVitest } from '../../test-utils'
 
-const testFile = 'fixtures/math.test.ts'
+const testFile = 'fixtures/watch/math.test.ts'
 const testFileContent = readFileSync(testFile, 'utf-8')
 
 afterEach(() => {
@@ -10,7 +10,7 @@ afterEach(() => {
 })
 
 test('console.log is visible on test re-run', async () => {
-  const { vitest } = await runVitest({ root: 'fixtures', watch: true })
+  const { vitest } = await runVitest({ root: 'fixtures/watch', watch: true })
 
   const testCase = `
 test('test with logging', () => {

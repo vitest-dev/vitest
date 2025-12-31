@@ -1,13 +1,13 @@
 import { readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
+import { runInlineTests, runVitestCli } from '#test-utils'
 import { dirname, resolve } from 'pathe'
-import { afterAll, afterEach, expect, it } from 'vitest'
 
-import { runInlineTests, runVitestCli } from '../../test-utils'
+import { afterAll, afterEach, expect, it } from 'vitest'
 
 const file = fileURLToPath(import.meta.url)
 const dir = dirname(file)
-const root = resolve(dir, '..', '..', 'workspaces')
+const root = resolve(dir, '..', '..', '..', 'workspaces')
 const config = resolve(root, 'vitest.config.watch.ts')
 const cleanups: (() => void)[] = []
 

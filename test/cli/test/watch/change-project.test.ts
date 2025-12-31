@@ -1,5 +1,5 @@
+import { runInlineTests } from '#test-utils'
 import { expect, test } from 'vitest'
-import { runInlineTests } from '../../test-utils'
 
 test('reruns tests when config changes', async () => {
   const { vitest, ctx } = await runInlineTests({

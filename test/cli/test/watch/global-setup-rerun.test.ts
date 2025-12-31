@@ -1,12 +1,12 @@
+import { editFile, runVitest } from '#test-utils'
 import { expect, test } from 'vitest'
-import { editFile, runVitest } from '../../test-utils'
 
-const testFile = 'fixtures/math.test.ts'
+const testFile = 'fixtures/watch/math.test.ts'
 
 test('global setup calls hooks correctly when file changes', async () => {
   process.env.TEST_GLOBAL_SETUP = 'true'
   const { vitest, ctx } = await runVitest({
-    root: 'fixtures',
+    root: 'fixtures/watch',
     watch: true,
     include: ['math.test.ts'],
   })
@@ -29,7 +29,7 @@ test('global setup calls hooks correctly when file changes', async () => {
 test('global setup calls hooks correctly with a manual rerun', async () => {
   process.env.TEST_GLOBAL_SETUP = 'true'
   const { vitest, ctx } = await runVitest({
-    root: 'fixtures',
+    root: 'fixtures/watch',
     watch: true,
     include: ['math.test.ts'],
   })

@@ -1,22 +1,22 @@
 import { existsSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs'
-import { webdriverio } from '@vitest/browser-webdriverio'
+import * as testUtils from '#test-utils'
 
+import { playwright } from '@vitest/browser-playwright'
 import { afterEach, describe, expect, onTestFinished, test } from 'vitest'
-import * as testUtils from '../../test-utils'
 
-const sourceFile = 'fixtures/math.ts'
+const sourceFile = 'fixtures/watch/math.ts'
 const sourceFileContent = readFileSync(sourceFile, 'utf-8')
 
-const testFile = 'fixtures/math.test.ts'
+const testFile = 'fixtures/watch/math.test.ts'
 const testFileContent = readFileSync(testFile, 'utf-8')
 
-const configFile = 'fixtures/vitest.config.ts'
+const configFile = 'fixtures/watch/vitest.config.ts'
 const configFileContent = readFileSync(configFile, 'utf-8')
 
-const forceTriggerFile = 'fixtures/force-watch/trigger.js'
+const forceTriggerFile = 'fixtures/watch/force-watch/trigger.js'
 const forceTriggerFileContent = readFileSync(forceTriggerFile, 'utf-8')
 
-const options = { root: 'fixtures', watch: true }
+const options = { root: 'fixtures/watch', watch: true }
 
 function editFile(fileContent: string) {
   return `// Modified by file-watching.test.ts
@@ -43,7 +43,7 @@ test('editing source file triggers re-run', async () => {
   writeFileSync(sourceFile, editFile(sourceFileContent), 'utf8')
 
   await vitest.waitForStdout('New code running')
-  await vitest.waitForStdout('RERUN  ../math.ts')
+  await vitest.waitForStdout('RERUN  ../../math.ts')
   await vitest.waitForStdout('1 passed')
 })
 
@@ -51,11 +51,11 @@ test('editing file that was imported with a query reruns suite', async () => {
   const { vitest } = await testUtils.runVitest(options)
 
   testUtils.editFile(
-    testUtils.resolvePath(import.meta.url, '../fixtures/42.txt'),
+    testUtils.resolvePath(import.meta.url, '../../fixtures/watch/42.txt'),
     file => `${file}\n`,
   )
 
-  await vitest.waitForStdout('RERUN  ../42.txt')
+  await vitest.waitForStdout('RERUN  ../../42.txt')
   await vitest.waitForStdout('1 passed')
 })
 
@@ -65,7 +65,7 @@ test('editing force rerun trigger reruns all tests', async () => {
   writeFileSync(forceTriggerFile, editFile(forceTriggerFileContent), 'utf8')
 
   await vitest.waitForStdout('Waiting for file changes...')
-  await vitest.waitForStdout('RERUN  ../force-watch/trigger.js')
+  await vitest.waitForStdout('RERUN  ../../force-watch/trigger.js')
   await vitest.waitForStdout('example.test.ts')
   await vitest.waitForStdout('math.test.ts')
   await vitest.waitForStdout('2 passed')
@@ -77,7 +77,7 @@ test('editing test file triggers re-run', async () => {
   writeFileSync(testFile, editFile(testFileContent), 'utf8')
 
   await vitest.waitForStdout('New code running')
-  await vitest.waitForStdout('RERUN  ../math.test.ts')
+  await vitest.waitForStdout('RERUN  ../../math.test.ts')
   await vitest.waitForStdout('1 passed')
 })
 
@@ -102,7 +102,7 @@ test('editing config file reloads new changes', async () => {
 test('adding a new test file triggers re-run', async () => {
   const { vitest } = await testUtils.runVitest(options)
 
-  const testFile = 'fixtures/new-dynamic.test.ts'
+  const testFile = 'fixtures/watch/new-dynamic.test.ts'
   const testFileContent = `
 import { expect, test } from "vitest";
 
@@ -115,14 +115,14 @@ test("dynamic test case", () => {
   writeFileSync(testFile, testFileContent, 'utf-8')
 
   await vitest.waitForStdout('Running added dynamic test')
-  await vitest.waitForStdout('RERUN  ../new-dynamic.test.ts')
+  await vitest.waitForStdout('RERUN  ../../new-dynamic.test.ts')
   await vitest.waitForStdout('1 passed')
 })
 
 test('renaming an existing test file', { retry: 3 }, async () => {
-  onTestFinished(() => rmSync('fixtures/after.test.ts'))
-  const beforeFile = 'fixtures/before.test.ts'
-  const afterFile = 'fixtures/after.test.ts'
+  onTestFinished(() => rmSync('fixtures/watch/after.test.ts'))
+  const beforeFile = 'fixtures/watch/before.test.ts'
+  const afterFile = 'fixtures/watch/after.test.ts'
   const textContent = `
 import { expect, test } from "vitest";
 
@@ -132,7 +132,7 @@ test("test case", () => {
 })
 `
   writeFileSync(beforeFile, textContent, 'utf-8')
-  const { vitest } = await testUtils.runVitest({ root: 'fixtures', watch: true })
+  const { vitest } = await testUtils.runVitest({ root: 'fixtures/watch', watch: true })
   await vitest.waitForStdout('Running existing test')
 
   renameSync(beforeFile, afterFile)
@@ -156,7 +156,7 @@ test("test case", () => {
 })
 
 test('editing source file generates new test report to file system', async () => {
-  const report = 'fixtures/test-results/junit.xml'
+  const report = 'fixtures/watch/test-results/junit.xml'
   if (existsSync(report)) {
     rmSync(report)
   }
@@ -189,11 +189,11 @@ test('editing source file generates new test report to file system', async () =>
 describe('browser', () => {
   test.runIf((process.platform !== 'win32'))('editing source file triggers re-run', { retry: 3 }, async () => {
     const { vitest } = await testUtils.runVitest({
-      root: 'fixtures',
+      root: 'fixtures/watch',
       watch: true,
       browser: {
-        instances: [{ browser: 'chrome' }],
-        provider: webdriverio(),
+        instances: [{ browser: 'chromium' }],
+        provider: playwright(),
         enabled: true,
         headless: true,
       },
@@ -202,7 +202,7 @@ describe('browser', () => {
     writeFileSync(sourceFile, editFile(sourceFileContent), 'utf8')
 
     await vitest.waitForStdout('New code running')
-    await vitest.waitForStdout('RERUN  ../math.ts')
+    await vitest.waitForStdout('RERUN  ../../math.ts')
     await vitest.waitForStdout('1 passed')
 
     vitest.write('q')

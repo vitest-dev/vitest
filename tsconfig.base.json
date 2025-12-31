@@ -28,7 +28,8 @@
       "vitest/internal/module-runner": ["./packages/vitest/src/public/module-runner.ts"],
       "vitest/globals": ["./packages/vitest/globals.d.ts"],
       "vitest/browser": ["./packages/vitest/browser/context.d.ts"],
-      "vitest/*": ["./packages/vitest/src/public/*"]
+      "vitest/*": ["./packages/vitest/src/public/*"],
+      "#test-utils": ["./test/test-utils/index.ts"]
     },
     "strict": true,
     "declaration": true,

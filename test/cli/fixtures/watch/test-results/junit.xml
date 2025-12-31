@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<testsuites name="vitest tests" tests="1" failures="0" errors="0" time="0.001451292">
+    <testsuite name="math.test.ts" timestamp="2025-12-31T13:10:29.473Z" hostname="Vladimirs-MacBook-Pro.local" tests="1" failures="0" errors="0" skipped="0" time="0.001451292">
+        <testcase classname="math.test.ts" name="sum" time="0.000759292">
+        </testcase>
+    </testsuite>
+</testsuites>

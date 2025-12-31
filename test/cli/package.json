@@ -2,6 +2,9 @@
   "name": "@vitest/test-cli",
   "type": "module",
   "private": true,
+  "imports": {
+    "#test-utils": "../test-utils/index.ts"
+  },
   "scripts": {
     "test": "vitest",
     "stacktraces": "vitest --root=./fixtures/stacktraces --watch=false"

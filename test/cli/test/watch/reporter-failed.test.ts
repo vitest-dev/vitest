@@ -1,5 +1,5 @@
+import { editFile, runVitest } from '#test-utils'
 import { describe, expect, it } from 'vitest'
-import { editFile, runVitest } from '../../test-utils'
 
 describe.each([
   ['default', true],
@@ -9,7 +9,7 @@ describe.each([
     const { vitest } = await runVitest({
       watch: true,
       fileParallelism: false,
-      root: './fixtures/single-failed',
+      root: './fixtures/watch/single-failed',
       reporters: [[reporter, { isTTY }]],
     })
 
@@ -21,9 +21,9 @@ describe.each([
 
     vitest.resetOutput()
 
-    editFile('./fixtures/single-failed/basic.test.ts', file => `${file}\n`)
+    editFile('./fixtures/watch/single-failed/basic.test.ts', file => `${file}\n`)
 
-    await vitest.waitForStdout('RERUN  ../../basic.test.ts')
+    await vitest.waitForStdout('RERUN  ../../../basic.test.ts')
     await vitest.waitForStdout('Waiting for file changes...')
 
     expect(vitest.stdout).not.toContain('log fail')
@@ -37,7 +37,7 @@ describe.each([
     const { vitest } = await runVitest({
       watch: true,
       fileParallelism: false,
-      root: './fixtures/single-failed',
+      root: './fixtures/watch/single-failed',
       reporters: [[reporter, { isTTY }]],
     })
 
@@ -48,9 +48,9 @@ describe.each([
 
     vitest.resetOutput()
 
-    editFile('./fixtures/single-failed/failed.test.ts', file => `${file}\n`)
+    editFile('./fixtures/watch/single-failed/failed.test.ts', file => `${file}\n`)
 
-    await vitest.waitForStdout('RERUN  ../../failed.test.ts')
+    await vitest.waitForStdout('RERUN  ../../../failed.test.ts')
     await vitest.waitForStdout('Watching for file changes...')
 
     expect(vitest.stdout).toContain('❯ failed.test.ts')
