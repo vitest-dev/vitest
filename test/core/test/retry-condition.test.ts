@@ -1,3 +1,4 @@
+import type { TestError } from 'vitest'
 import { describe, expect, it } from 'vitest'
 
 // Test with string regex condition that eventually passes
@@ -32,7 +33,7 @@ it('verify no condition retried all attempts', () => {
 
 // Test with function condition
 let functionCount = 0
-const condition = (error: Error) => error.name === 'TimeoutError'
+const condition = (error: TestError) => error.name === 'TimeoutError'
 
 it('retry with function condition', {
   retry: {
