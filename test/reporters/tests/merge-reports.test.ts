@@ -4,7 +4,7 @@ import { resolve } from 'node:path'
 import { createFileTask } from '@vitest/runner/utils'
 import { beforeEach, expect, test } from 'vitest'
 import { version } from 'vitest/package.json'
-import { writeBlob } from 'vitest/src/node/reporters/blob.js'
+import { optimizeFilesReport, writeBlob } from 'vitest/src/node/reporters/blob.js'
 import { runVitest } from '../../test-utils'
 
 // always relative to CWD because it's used only from the CLI,
@@ -249,7 +249,7 @@ test('total and merged execution times are shown', async () => {
     file.tasks.push(createTest('some test', file))
 
     await writeBlob(
-      [version, [file], [], [], undefined, 1500 * index],
+      [version, optimizeFilesReport([file]), [], [], undefined, 1500 * index],
       resolve(`./fixtures/merge-reports/.vitest-reports/blob-${index}-2.json`),
     )
   }
