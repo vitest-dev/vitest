@@ -1,6 +1,6 @@
 import type { FakeTimerInstallOpts } from '@sinonjs/fake-timers'
 import type { PrettyFormatOptions } from '@vitest/pretty-format'
-import type { SequenceHooks, SequenceSetupFiles } from '@vitest/runner'
+import type { SequenceHooks, SequenceSetupFiles, SerializableRetry } from '@vitest/runner'
 import type { SnapshotStateOptions } from '@vitest/snapshot'
 import type { Arrayable } from '@vitest/utils'
 import type { SerializedDiffOptions } from '@vitest/utils/diff'
@@ -787,40 +787,13 @@ export interface InlineConfig {
    * - If a number, specifies how many times to retry failed tests
    * - If an object, allows fine-grained retry control
    *
-   * @default 0
+   * ⚠️ WARNING: Function form is NOT supported in vitest.config.ts
+   * because configurations are serialized when passed to worker threads.
+   * Use the function form only in test files directly.
+   *
+   * @default 0 (retry on all errors)
    */
-  retry?: number | {
-    /**
-     * The number of times to retry the test if it fails.
-     * @default 0
-     */
-    count?: number
-    /**
-     * Delay in milliseconds between retry attempts.
-     * Useful for tests that interact with rate-limited APIs or need time to recover.
-     * @default 0
-     */
-    delay?: number
-    /**
-     * Condition to determine if a test should be retried based on the error.
-     * - If a string, treated as a regular expression to match against error message
-     *
-     * ⚠️ WARNING: Function form is NOT supported in vitest.config.ts
-     * because configurations are serialized when passed to worker threads.
-     * Use the function form only in test files directly.
-     *
-     * @default undefined (retry on all errors)
-     */
-    condition?: string
-    /**
-     * Strategy for when to retry failed tests.
-     * - 'immediate': Retry immediately after failure (default)
-     * - 'test-file': Defer retries until after all tests in the file complete
-     * - 'deferred': Defer retries until after all test files complete
-     * @default 'immediate'
-     */
-    strategy?: 'immediate' | 'test-file' | 'deferred'
-  }
+  retry?: SerializableRetry
 
   /**
    * Show full diff when snapshot fails instead of a patch.

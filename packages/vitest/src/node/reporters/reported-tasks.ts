@@ -4,6 +4,7 @@ import type {
   Test as RunnerTestCase,
   File as RunnerTestFile,
   Suite as RunnerTestSuite,
+  SerializableRetry,
   TaskMeta,
   TestAnnotation,
   TestArtifact,
@@ -524,14 +525,26 @@ export interface TaskOptions {
   readonly fails: boolean | undefined
   readonly concurrent: boolean | undefined
   readonly shuffle: boolean | undefined
-  readonly retry: number | {
-    count?: number
-    delay?: number
-    condition?: string | ((error: Error) => boolean)
-    strategy?: 'immediate' | 'test-file' | 'deferred'
-  } | undefined
+  readonly retry: SerializableRetry | undefined
   readonly repeats: number | undefined
   readonly mode: 'run' | 'only' | 'skip' | 'todo'
+}
+
+function sanitizeRetryForReporters(retry: unknown): SerializableRetry | undefined {
+  if (retry === undefined || typeof retry === 'number') {
+    return retry as SerializableRetry | undefined
+  }
+
+  if (typeof retry === 'object' && retry) {
+    const r = retry as { count?: number; delay?: number; condition?: unknown }
+    return {
+      count: r.count,
+      delay: r.delay,
+      condition: typeof r.condition === 'string' ? r.condition : undefined,
+    }
+  }
+
+  return undefined
 }
 
 function buildOptions(
@@ -542,7 +555,7 @@ function buildOptions(
     fails: task.type === 'test' && task.fails,
     concurrent: task.concurrent,
     shuffle: task.shuffle,
-    retry: task.retry,
+    retry: sanitizeRetryForReporters(task.retry),
     repeats: task.repeats,
     // runner types are too broad, but the public API should be more strict
     // the queued state exists only on Files and this method is called
