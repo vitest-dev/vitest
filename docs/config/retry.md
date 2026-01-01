@@ -5,8 +5,127 @@ outline: deep
 
 # retry
 
-- **Type:** `number`
-- **Default:** `0`
-- **CLI:** `--retry=<value>`
-
 Retry the test specific number of times if it fails.
+
+- **Type:** `number | { count?: number, delay?: number, condition?: string }`
+- **Default:** `0`
+- **CLI:** `--retry=<value>` (accepts number only, for advanced options use config file)
+
+## Basic Usage
+
+Specify a number to retry failed tests:
+
+```ts
+export default defineConfig({
+  test: {
+    retry: 3,
+  },
+})
+```
+
+## Advanced Options
+
+Use an object to configure retry behavior:
+
+```ts
+export default defineConfig({
+  test: {
+    retry: {
+      count: 3, // Number of times to retry
+      delay: 1000, // Delay in milliseconds between retries
+      condition: 'ECONNREFUSED|timeout', // Regex to match errors that should trigger retry
+    },
+  },
+})
+```
+
+### count
+
+Number of times to retry a test if it fails. Default is `0`.
+
+```ts
+export default defineConfig({
+  test: {
+    retry: {
+      count: 2,
+    },
+  },
+})
+```
+
+### delay
+
+Delay in milliseconds between retry attempts. Useful for tests that interact with rate-limited APIs or need time to recover. Default is `0`.
+
+```ts
+export default defineConfig({
+  test: {
+    retry: {
+      count: 3,
+      delay: 500, // Wait 500ms between retries
+    },
+  },
+})
+```
+
+### condition
+
+A string pattern or a function to determine if a test should be retried based on the error.
+
+- When a **string**, it's treated as a regular expression pattern to match against the error message
+- When a **function**, it receives the error and returns a boolean
+
+**Note:** When defining `condition` as a function, it must be done in a test file directly, not in `vitest.config.ts` (configurations are serialized for worker threads).
+
+#### String condition (in config file):
+
+```ts
+export default defineConfig({
+  test: {
+    retry: {
+      count: 2,
+      condition: 'ECONNREFUSED|ETIMEDOUT', // Retry on connection/timeout errors
+    },
+  },
+})
+```
+
+#### Function condition (in test file):
+
+```ts
+import { describe, test } from 'vitest'
+
+describe('tests with advanced retry condition', () => {
+  test('with function condition', { retry: { count: 2, condition: error => error.message.includes('Network') } }, () => {
+    // test code
+  })
+})
+```
+
+## Test File Override
+
+You can also define retry options per test or suite in test files:
+
+```ts
+import { describe, test } from 'vitest'
+
+describe('flaky tests', {
+  retry: {
+    count: 2,
+    delay: 100,
+  },
+}, () => {
+  test('network request', () => {
+    // test code
+  })
+})
+
+test('another test', {
+  retry: {
+    count: 3,
+    condition: error => error.message.includes('timeout'),
+  },
+}, () => {
+  // test code
+})
+```

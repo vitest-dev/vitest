@@ -1,4 +1,4 @@
-import type { Awaitable } from '@vitest/utils'
+import type { Awaitable, TestError } from '@vitest/utils'
 import type { DiffOptions } from '@vitest/utils/diff'
 import type { FileSpecification, VitestRunner } from './types/runner'
 import type {
@@ -33,6 +33,42 @@ import { hasFailed, hasTests } from './utils/tasks'
 const now = globalThis.performance ? globalThis.performance.now.bind(globalThis.performance) : Date.now
 const unixNow = Date.now
 const { clearTimeout, setTimeout } = getSafeTimers()
+
+/**
+ * Normalizes retry configuration to extract individual values.
+ * Handles both number and object forms.
+ */
+function getRetryCount(retry: number | { count?: number } | undefined): number {
+  if (retry === undefined) {
+    return 0
+  }
+  if (typeof retry === 'number') {
+    return retry
+  }
+  return retry.count ?? 0
+}
+
+function getRetryDelay(retry: number | { delay?: number } | undefined): number {
+  if (retry === undefined) {
+    return 0
+  }
+  if (typeof retry === 'number') {
+    return 0
+  }
+  return retry.delay ?? 0
+}
+
+function getRetryCondition(
+  retry: number | { condition?: string | ((error: TestError) => boolean) } | undefined,
+): string | ((error: TestError) => boolean) | undefined {
+  if (retry === undefined) {
+    return undefined
+  }
+  if (typeof retry === 'number') {
+    return undefined
+  }
+  return retry.condition
+}
 
 function updateSuiteHookState(
   task: Task,
@@ -266,6 +302,45 @@ async function callCleanupHooks(runner: VitestRunner, cleanups: unknown[]) {
   }
 }
 
+/**
+ * Determines if a test should be retried based on its retryCondition configuration
+ */
+function shouldRetryTest(test: Test, errors: TestError[] | undefined): boolean {
+  const condition = getRetryCondition(test.retry)
+
+  // No errors means test passed, shouldn't get here but handle it
+  if (!errors || errors.length === 0) {
+    return false
+  }
+
+  // No condition means always retry
+  if (!condition) {
+    return true
+  }
+
+  // Check only the most recent error (last in array) against the condition
+  const error = errors[errors.length - 1]
+
+  if (typeof condition === 'string') {
+    // String condition is treated as regex pattern
+    const regex = new RegExp(condition, 'i')
+    return regex.test(error.message || '')
+  }
+  else if (typeof condition === 'function') {
+    // Function condition is called with TestError
+    try {
+      return condition(error)
+    }
+    catch (e) {
+      // If condition function throws, treat as no match
+      console.error('retryCondition function threw error:', e)
+      return false
+    }
+  }
+
+  return false
+}
+
 export async function runTest(test: Test, runner: VitestRunner): Promise<void> {
   await runner.onBeforeRunTask?.(test)
 
@@ -300,7 +375,7 @@ export async function runTest(test: Test, runner: VitestRunner): Promise<void> {
 
   const repeats = test.repeats ?? 0
   for (let repeatCount = 0; repeatCount <= repeats; repeatCount++) {
-    const retry = test.retry ?? 0
+    const retry = getRetryCount(test.retry)
     for (let retryCount = 0; retryCount <= retry; retryCount++) {
       let beforeEachCleanups: unknown[] = []
       try {
@@ -412,9 +487,23 @@ export async function runTest(test: Test, runner: VitestRunner): Promise<void> {
       }
 
       if (retryCount < retry) {
-        // reset state when retry test
+        // Check if we should retry based on the error condition
+        const shouldRetry = shouldRetryTest(test, test.result.errors)
+
+        if (!shouldRetry) {
+          // Error doesn't match retry condition, stop retrying
+          break
+        }
+
+        // Retry immediately - reset state when retry test
         test.result.state = 'run'
         test.result.retryCount = (test.result.retryCount ?? 0) + 1
+
+        // Apply retry delay if configured
+        const delay = getRetryDelay(test.retry)
+        if (delay > 0) {
+          await new Promise(resolve => setTimeout(resolve, delay))
+        }
       }
 
       // update retry info
