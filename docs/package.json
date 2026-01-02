@@ -20,8 +20,8 @@
   "devDependencies": {
     "@iconify-json/carbon": "catalog:",
     "@iconify-json/logos": "catalog:",
-    "@shikijs/transformers": "^3.17.1",
-    "@shikijs/vitepress-twoslash": "^3.17.1",
+    "@shikijs/transformers": "^3.20.0",
+    "@shikijs/vitepress-twoslash": "^3.20.0",
     "@unocss/reset": "catalog:",
     "@vite-pwa/assets-generator": "^1.0.2",
     "@vite-pwa/vitepress": "^1.1.0",
@@ -33,7 +33,7 @@
     "vite-plugin-pwa": "^0.21.2",
     "vitepress": "2.0.0-alpha.15",
     "vitepress-plugin-group-icons": "^1.6.5",
-    "vitepress-plugin-llms": "^1.9.3",
+    "vitepress-plugin-llms": "^1.10.0",
     "vitepress-plugin-tabs": "^0.7.3",
     "workbox-window": "^7.4.0"
   }
