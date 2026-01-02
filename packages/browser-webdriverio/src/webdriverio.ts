@@ -117,14 +117,19 @@ export class WebdriverBrowserProvider implements BrowserProvider {
     if (this.topLevelContext == null || !this.browser) {
       throw new Error(`The browser has no open pages.`)
     }
-    await this.browser.send({
-      method: 'browsingContext.setViewport',
-      params: {
-        context: this.topLevelContext,
-        devicePixelRatio: 1,
-        viewport: options,
-      },
-    })
+    if (this.browser.isBidi) {
+      await this.browser.send({
+        method: 'browsingContext.setViewport',
+        params: {
+          context: this.topLevelContext,
+          devicePixelRatio: 1,
+          viewport: options,
+        },
+      })
+    }
+    else {
+      await this.browser.setWindowSize(options.width, options.height)
+    }
   }
 
   getCommandsContext(): {
