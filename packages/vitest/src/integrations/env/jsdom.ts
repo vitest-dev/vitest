@@ -328,7 +328,7 @@ function patchAddEventListener(window: DOMWindow) {
     callback: EventListenerOrEventListenerObject | null,
     options?: AddEventListenerOptions | boolean,
   ) {
-    if (typeof options === 'object' && options.signal != null) {
+    if (typeof options === 'object' && options?.signal != null) {
       const { signal, ...otherOptions } = options
       // - this happens because AbortSignal is provided by Node.js,
       // but jsdom APIs require jsdom's AbortSignal, while Node APIs
