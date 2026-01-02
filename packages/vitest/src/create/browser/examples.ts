@@ -274,6 +274,10 @@ function getExampleTest(framework: string) {
         test: jsxExample.test.replace('@testing-library/jsx', `@testing-library/${framework}`),
       }
     case 'preact':
+      return {
+        ...jsxExample,
+        test: jsxExample.test.replace('@testing-library/jsx', `vitest-browser-${framework}`).replace('const { getByText } = await render(<HelloWorld name="Vitest" />)', 'const { getByText } = render(<HelloWorld name="Vitest" />)'),
+      }
     case 'react':
       return {
         ...jsxExample,
