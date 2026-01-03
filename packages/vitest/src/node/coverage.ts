@@ -240,7 +240,11 @@ export class BaseCoverageProvider<Options extends ResolvedCoverageOptions<'istan
       })
     }
 
+    const dirExistedBefore = existsSync(this.coverageFilesDirectory)
+    console.log(`[vitest:coverage] clean() mkdir: path=${this.coverageFilesDirectory}, existedBefore=${dirExistedBefore}`)
     await fs.mkdir(this.coverageFilesDirectory, { recursive: true })
+    const dirExistsAfter = existsSync(this.coverageFilesDirectory)
+    console.log(`[vitest:coverage] clean() mkdir complete: existsAfter=${dirExistsAfter}`)
 
     this.coverageFiles = new Map()
     this.pendingPromises = []
@@ -268,11 +272,9 @@ export class BaseCoverageProvider<Options extends ResolvedCoverageOptions<'istan
     // If there's a result from previous run, overwrite it
     entry[environment][testFilenames] = filename
 
-    // Ensure directory exists before writing. This prevents ENOENT errors
-    // when onAfterSuiteRun fires before clean() finishes creating the directory.
-    // This can happen in environments with slower I/O (e.g., Docker with volume mounts).
-    const promise = fs.mkdir(this.coverageFilesDirectory, { recursive: true })
-      .then(() => fs.writeFile(filename, JSON.stringify(coverage), 'utf-8'))
+    const dirExists = existsSync(this.coverageFilesDirectory)
+    console.log(`[vitest:coverage] onAfterSuiteRun() writeFile: path=${filename}, dirExists=${dirExists}`)
+    const promise = fs.writeFile(filename, JSON.stringify(coverage), 'utf-8')
     this.pendingPromises.push(promise)
   }
 
