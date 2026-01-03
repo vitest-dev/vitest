@@ -268,7 +268,11 @@ export class BaseCoverageProvider<Options extends ResolvedCoverageOptions<'istan
     // If there's a result from previous run, overwrite it
     entry[environment][testFilenames] = filename
 
-    const promise = fs.writeFile(filename, JSON.stringify(coverage), 'utf-8')
+    // Ensure directory exists before writing. This prevents ENOENT errors
+    // when onAfterSuiteRun fires before clean() finishes creating the directory.
+    // This can happen in environments with slower I/O (e.g., Docker with volume mounts).
+    const promise = fs.mkdir(this.coverageFilesDirectory, { recursive: true })
+      .then(() => fs.writeFile(filename, JSON.stringify(coverage), 'utf-8'))
     this.pendingPromises.push(promise)
   }
 
