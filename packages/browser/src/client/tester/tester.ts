@@ -51,6 +51,10 @@ channel.addEventListener('message', async (e) => {
     return
   }
 
+  if (data.event.startsWith('response:')) {
+    return
+  }
+
   switch (data.event) {
     case 'execute': {
       const { method, files, context } = data
