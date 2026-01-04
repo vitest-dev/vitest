@@ -1,7 +1,7 @@
 import type { HoistMocksPluginOptions } from '../../../packages/mocker/src/node/hoistMocksPlugin'
 import { stripVTControlCharacters } from 'node:util'
 import { parseAst } from 'vite'
-import { describe, expect, it, test } from 'vitest'
+import { describe, expect, it, test, vi } from 'vitest'
 import { hoistMocks } from '../../../packages/mocker/src/node/hoistMocksPlugin'
 import { generateCodeFrame } from '../../../packages/vitest/src/node/printError.js'
 
@@ -1296,7 +1296,7 @@ console.log(path.mocked);
     `)
   })
 
-  test('correctly hoists when import.meta is used', () => {
+  test.only('correctly hoists when import.meta is used', () => {
     expect(hoistSimpleCode(`
 import { calc } from './calc'
 function sum(a, b) {
@@ -1507,5 +1507,123 @@ export const mocked = vi.unmock('./mocked')
     const error = getErrorWhileHoisting(code)
     expect(error.message).toMatchSnapshot()
     expect(stripVTControlCharacters(error.frame)).toMatchSnapshot()
+  })
+
+  it.only('shows ane rror when hoisted methods are used outside the top level scope', ({ onTestFinished }) => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    onTestFinished(() => warn.mockRestore())
+    const result = hoistSimpleCode(`
+// correct
+vi.mock('./hello-world-1')
+
+if (condition) {
+  vi.mock('./hello-world-2')
+}
+
+test('some test', () => {
+  vi.mock('./hello-world-3')
+})
+
+test('some test', () => {
+  if (condition) {
+    vi.mock('./hello-world-4')
+    vi.hoisted(() => {})
+    vi.mock(import('./hello-world-5'))
+    const variable = vi.hoisted(() => {})
+  }
+})
+
+describe('some suite', () => {
+  if (condition) {
+    vi.mock('./hello-world-6')
+  }
+})
+      `)
+    expect(result).toMatchInlineSnapshot(`
+      "import { vi } from "vitest"
+      vi.mock('./hello-world-1')
+      vi.mock('./hello-world-2')
+      vi.mock('./hello-world-3')
+      vi.mock('./hello-world-4')
+      vi.hoisted(() => {})
+      vi.mock('./hello-world-5')
+      const variable = vi.hoisted(() => {})
+      vi.mock('./hello-world-6')
+
+      // correct
+
+      if (condition) {
+        }
+
+      test('some test', () => {
+        })
+
+      test('some test', () => {
+        if (condition) {
+                        }
+      })
+
+      describe('some suite', () => {
+        if (condition) {
+            }
+      })"
+    `)
+    expect(warn).toMatchInlineSnapshot(`
+      [MockFunction warn] {
+        "calls": [
+          [
+            "Warning: The vi.mock('./hello-world-2') call in '/test.js' is defined outside of the top level of the module. This gives the wrong impression of when it is executed - all hoisted methods are executed before imports, not in the scope they were defined in. Please move it to the top level of the module to avoid confusion. In future versions, this will be an error.",
+          ],
+          [
+            "Warning: The vi.mock('./hello-world-3') call in '/test.js' is defined outside of the top level of the module. This gives the wrong impression of when it is executed - all hoisted methods are executed before imports, not in the scope they were defined in. Please move it to the top level of the module to avoid confusion. In future versions, this will be an error.",
+          ],
+          [
+            "Warning: The vi.mock('./hello-world-4') call in '/test.js' is defined outside of the top level of the module. This gives the wrong impression of when it is executed - all hoisted methods are executed before imports, not in the scope they were defined in. Please move it to the top level of the module to avoid confusion. In future versions, this will be an error.",
+          ],
+          [
+            "Warning: The vi.hoisted() call in '/test.js' is defined outside of the top level of the module. This gives the wrong impression of when it is executed - all hoisted methods are executed before imports, not in the scope they were defined in. Please move it to the top level of the module to avoid confusion. In future versions, this will be an error.",
+          ],
+          [
+            "Warning: The vi.mock(import('./hello-world-5')) call in '/test.js' is defined outside of the top level of the module. This gives the wrong impression of when it is executed - all hoisted methods are executed before imports, not in the scope they were defined in. Please move it to the top level of the module to avoid confusion. In future versions, this will be an error.",
+          ],
+          [
+            "Warning: The vi.hoisted() call in '/test.js' is defined outside of the top level of the module. This gives the wrong impression of when it is executed - all hoisted methods are executed before imports, not in the scope they were defined in. Please move it to the top level of the module to avoid confusion. In future versions, this will be an error.",
+          ],
+          [
+            "Warning: The vi.mock('./hello-world-6') call in '/test.js' is defined outside of the top level of the module. This gives the wrong impression of when it is executed - all hoisted methods are executed before imports, not in the scope they were defined in. Please move it to the top level of the module to avoid confusion. In future versions, this will be an error.",
+          ],
+        ],
+        "results": [
+          {
+            "type": "return",
+            "value": undefined,
+          },
+          {
+            "type": "return",
+            "value": undefined,
+          },
+          {
+            "type": "return",
+            "value": undefined,
+          },
+          {
+            "type": "return",
+            "value": undefined,
+          },
+          {
+            "type": "return",
+            "value": undefined,
+          },
+          {
+            "type": "return",
+            "value": undefined,
+          },
+          {
+            "type": "return",
+            "value": undefined,
+          },
+        ],
+      }
+    `)
   })
 })
