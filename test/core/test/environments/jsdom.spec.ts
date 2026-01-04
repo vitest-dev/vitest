@@ -226,6 +226,20 @@ test('can pass down the same abort signal many times without a warning', ({ onTe
   }))
 })
 
+test('DOM APIs addEventListener allow null as third parameter', () => {
+  const element = document.createElement('div')
+  document.body.append(element)
+  const spy = vi.fn()
+
+  // eslint-disable-next-line ts/ban-ts-comment
+  // @ts-expect-error
+  element.addEventListener('click', spy, null)
+
+  element.click()
+
+  expect(spy).toHaveBeenCalledTimes(1)
+})
+
 test('atob and btoa are available', () => {
   expect(atob('aGVsbG8gd29ybGQ=')).toBe('hello world')
   expect(btoa('hello world')).toBe('aGVsbG8gd29ybGQ=')
