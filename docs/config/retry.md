@@ -9,7 +9,7 @@ Retry the test specific number of times if it fails.
 
 - **Type:** `number | { count?: number, delay?: number, condition?: string }`
 - **Default:** `0`
-- **CLI:** `--retry=<value>` (accepts number only, for advanced options use config file)
+- **CLI:** `--retry <times>`, `--retry.count <times>`, `--retry.delay <ms>`, `--retry.condition <pattern>`
 
 ## Basic Usage
 
@@ -21,6 +21,18 @@ export default defineConfig({
     retry: 3,
   },
 })
+```
+
+## CLI Usage
+
+You can also configure retry options from the command line:
+
+```bash
+# Simple retry count
+vitest --retry 3
+
+# Advanced options using dot notation
+vitest --retry.count 3 --retry.delay 500 --retry.condition 'ECONNREFUSED|timeout'
 ```
 
 ## Advanced Options

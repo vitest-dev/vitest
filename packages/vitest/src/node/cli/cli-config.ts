@@ -528,9 +528,25 @@ export const cliOptionsConfig: VitestCLIOptions = {
   },
   retry: {
     description:
-      'Retry the test specific number of times if it fails (default: `0`). For advanced retry options (count, delay, condition), use the config file.',
+      'Retry the test specific number of times if it fails (default: `0`)',
     argument: '<times>',
-    subcommands: null,
+    subcommands: {
+      count: {
+        description:
+          'Number of times to retry a test if it fails (default: `0`)',
+        argument: '<times>',
+      },
+      delay: {
+        description:
+          'Delay in milliseconds between retry attempts (default: `0`)',
+        argument: '<ms>',
+      },
+      condition: {
+        description:
+          'String pattern to match error messages that should trigger a retry. Only errors matching this pattern will cause a retry (default: retry on all errors)',
+        argument: '<pattern>',
+      },
+    },
   },
   diff: {
     description:
