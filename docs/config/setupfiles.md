@@ -29,10 +29,10 @@ For example, you may rely on a global variable:
 ```ts
 import { config } from '@some-testing-lib'
 
-if (!globalThis.__definedSetup__) {
+if (!globalThis.setupInitialized) {
   config.plugins = [myCoolPlugin]
   computeHeavyThing()
-  globalThis.__definedSetup__ = true
+  globalThis.setupInitialized = true
 }
 
 // hooks reset before each test file

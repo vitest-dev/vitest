@@ -62,7 +62,7 @@ declare module 'vitest' {
 If you need to execute code in the same process as tests, use [`setupFiles`](/config/setupfiles) instead, but note that it runs before every test file.
 :::
 
-### Reconfigure on Rerun
+### Handling Test Reruns
 
 You can define a custom callback function to be called when Vitest reruns tests. The test runner will wait for it to complete before executing tests. Note that you cannot destruct the `project` like `{ onTestsRerun }` because it relies on the context.
 

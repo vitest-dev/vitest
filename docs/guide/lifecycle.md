@@ -19,7 +19,7 @@ A typical Vitest test run goes through these main phases:
 6. **Reporting** - Results are collected and reported
 7. **Global Teardown** - Final cleanup after all tests complete
 
-Phases 4-6 run per test file, so they will happen multiple times per test file, and they can also run in parallel if there are more than [1 worker](/config/maxworkers).
+Phases 4–6 run once for each test file, so across your test suite they will execute multiple times and may also run in parallel across different files when you use more than [1 worker](/config/maxworkers).
 
 ## Detailed Lifecycle Phases
 
