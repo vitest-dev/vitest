@@ -13,22 +13,13 @@ import { plugins as prettyFormatPlugins } from '@vitest/pretty-format'
 
 import MockSerializer from './mockSerializer'
 
-const {
-  DOMCollection,
-  DOMElement,
-  Immutable,
-  ReactElement,
-  ReactTestComponent,
-  AsymmetricMatcher,
-} = prettyFormatPlugins
-
 let PLUGINS: PrettyFormatPlugins = [
-  ReactTestComponent,
-  ReactElement,
-  DOMElement,
-  DOMCollection,
-  Immutable,
-  AsymmetricMatcher,
+  prettyFormatPlugins.ReactTestComponent,
+  prettyFormatPlugins.ReactElement,
+  prettyFormatPlugins.DOMElement,
+  prettyFormatPlugins.DOMCollection,
+  prettyFormatPlugins.Immutable,
+  prettyFormatPlugins.AsymmetricMatcher,
   MockSerializer,
 ]
 

@@ -22,22 +22,13 @@ interface Options {
 
 export type LoupeOptions = Partial<Options>
 
-const {
-  AsymmetricMatcher,
-  DOMCollection,
-  DOMElement,
-  Immutable,
-  ReactElement,
-  ReactTestComponent,
-} = prettyFormatPlugins
-
 const PLUGINS = [
-  ReactTestComponent,
-  ReactElement,
-  DOMElement,
-  DOMCollection,
-  Immutable,
-  AsymmetricMatcher,
+  prettyFormatPlugins.ReactTestComponent,
+  prettyFormatPlugins.ReactElement,
+  prettyFormatPlugins.DOMElement,
+  prettyFormatPlugins.DOMCollection,
+  prettyFormatPlugins.Immutable,
+  prettyFormatPlugins.AsymmetricMatcher,
 ]
 
 export interface StringifyOptions extends PrettyFormatOptions {

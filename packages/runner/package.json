@@ -17,18 +17,21 @@
   "sideEffects": true,
   "exports": {
     ".": {
+      "__vitest__": "./src/index.ts",
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     },
     "./utils": {
+      "__vitest__": "./src/utils/index.ts",
       "types": "./dist/utils.d.ts",
       "default": "./dist/utils.js"
     },
     "./types": {
+      "__vitest__": "./src/types.ts",
       "types": "./dist/types.d.ts",
       "default": "./dist/types.js"
     },
-    "./*": "./*"
+    "./package.json": "./package.json"
   },
   "main": "./dist/index.js",
   "module": "./dist/index.js",

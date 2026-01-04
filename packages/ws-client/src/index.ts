@@ -3,6 +3,8 @@ import type { BirpcOptions, BirpcReturn } from 'birpc'
 import type { WebSocketEvents, WebSocketHandlers } from 'vitest'
 import { createBirpc } from 'birpc'
 
+// TODO: deprecate this package, investigate why utils pull in so much
+
 import { parse, stringify } from 'flatted'
 import { StateManager } from './state'
 

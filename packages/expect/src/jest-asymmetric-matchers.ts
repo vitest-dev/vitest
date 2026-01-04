@@ -34,7 +34,18 @@ export abstract class AsymmetricMatcher<
   // should have "jest" to be compatible with its ecosystem
   $$typeof: symbol = Symbol.for('jest.asymmetricMatcher')
 
-  constructor(protected sample: T, protected inverse = false) {}
+  constructor(protected sample: T, protected inverse = false) {
+    // implement custom chai/loupe inspect for better AssertionError.message formatting
+    // https://github.com/chaijs/loupe/blob/9b8a6deabcd50adc056a64fb705896194710c5c6/src/index.ts#L29
+    (this as any)[Symbol.for('chai/inspect')] = (options: { depth: number; truncate: number }): string => {
+      // minimal pretty-format with simple manual truncation
+      const result = stringify(this, options.depth, { min: true })
+      if (result.length <= options.truncate) {
+        return result
+      }
+      return `${this.toString()}{…}`
+    }
+  }
 
   protected getMatcherContext(expect?: Chai.ExpectStatic): State {
     return {
@@ -56,19 +67,6 @@ export abstract class AsymmetricMatcher<
   abstract toString(): string
   getExpectedType?(): string
   toAsymmetricMatcher?(): string
-}
-
-// implement custom chai/loupe inspect for better AssertionError.message formatting
-// https://github.com/chaijs/loupe/blob/9b8a6deabcd50adc056a64fb705896194710c5c6/src/index.ts#L29
-// @ts-expect-error computed properties is not supported when isolatedDeclarations is enabled
-// FIXME: https://github.com/microsoft/TypeScript/issues/61068
-AsymmetricMatcher.prototype[Symbol.for('chai/inspect')] = function (options: { depth: number; truncate: number }): string {
-  // minimal pretty-format with simple manual truncation
-  const result = stringify(this, options.depth, { min: true })
-  if (result.length <= options.truncate) {
-    return result
-  }
-  return `${this.toString()}{…}`
 }
 
 export class StringContaining extends AsymmetricMatcher<string> {

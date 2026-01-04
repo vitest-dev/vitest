@@ -17,14 +17,16 @@
   "sideEffects": false,
   "exports": {
     ".": {
+      "__vitest__": "./node/index.ts",
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     },
     "./reporter": {
+      "__vitest__": "./node/reporter.ts",
       "types": "./reporter.d.ts",
       "default": "./dist/reporter.js"
     },
-    "./*": "./*"
+    "./package.json": "./package.json"
   },
   "main": "./dist/index.js",
   "module": "./dist/index.js",

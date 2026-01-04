@@ -17,34 +17,41 @@
   "sideEffects": false,
   "exports": {
     ".": {
+      "__vitest__": "./src/index.ts",
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     },
     "./node": {
+      "__vitest__": "./src/node/index.ts",
       "types": "./dist/node.d.ts",
       "default": "./dist/node.js"
     },
     "./browser": {
+      "__vitest__": "./src/browser/index.ts",
       "types": "./dist/browser.d.ts",
       "default": "./dist/browser.js"
     },
     "./redirect": {
+      "__vitest__": "./src/node/redirect.ts",
       "types": "./dist/redirect.d.ts",
       "default": "./dist/redirect.js"
     },
     "./automock": {
+      "__vitest__": "./src/automock.ts",
       "types": "./dist/automock.d.ts",
       "default": "./dist/automock.js"
     },
     "./register": {
+      "__vitest__": "./src/browser/register.ts",
       "types": "./dist/register.d.ts",
       "default": "./dist/register.js"
     },
     "./auto-register": {
+      "__vitest__": "./src/browser/auto-register.ts",
       "types": "./dist/register.d.ts",
       "default": "./dist/register.js"
     },
-    "./*": "./*"
+    "./package.json": "./package.json"
   },
   "main": "./dist/index.js",
   "module": "./dist/index.js",

@@ -85,17 +85,22 @@ export async function recordArtifact<Artifact extends TestArtifact>(task: Test, 
   return resolvedArtifact as typeof artifact
 }
 
-const table: string[] = []
-for (let i = 65; i < 91; i++) {
-  table.push(String.fromCharCode(i)) // A-Z
+function cacheTable() {
+  const table: string[] = []
+  for (let i = 65; i < 91; i++) {
+    table.push(String.fromCharCode(i)) // A-Z
+  }
+  for (let i = 97; i < 123; i++) {
+    table.push(String.fromCharCode(i)) // a-z
+  }
+  for (let i = 0; i < 10; i++) {
+    table.push(i.toString(10)) // 0-9
+  }
+  table.push('+', '/')
+  return table
 }
-for (let i = 97; i < 123; i++) {
-  table.push(String.fromCharCode(i)) // a-z
-}
-for (let i = 0; i < 10; i++) {
-  table.push(i.toString(10)) // 0-9
-}
-table.push('+', '/')
+
+const table = cacheTable()
 
 function encodeUint8Array(bytes: Uint8Array): string {
   let base64 = ''

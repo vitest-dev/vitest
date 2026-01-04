@@ -25,7 +25,6 @@ const entries = {
   'browser': 'src/public/browser.ts',
   'runners': 'src/public/runners.ts',
   'environments': 'src/public/environments.ts',
-  'mocker': 'src/public/mocker.ts',
   'spy': 'src/integrations/spy.ts',
   'coverage': 'src/public/coverage.ts',
   'reporters': 'src/public/reporters.ts',
@@ -49,13 +48,11 @@ const dtsEntries = {
   'index': 'src/public/index.ts',
   'node': 'src/public/node.ts',
   'environments': 'src/public/environments.ts',
-  'browser': 'src/public/browser.ts',
   'runners': 'src/public/runners.ts',
   'suite': 'src/public/suite.ts',
   'config': 'src/public/config.ts',
   'coverage': 'src/public/coverage.ts',
   'reporters': 'src/public/reporters.ts',
-  'mocker': 'src/public/mocker.ts',
   'snapshot': 'src/public/snapshot.ts',
   'worker': 'src/public/worker.ts',
   'module-evaluator': 'src/runtime/moduleRunner/moduleEvaluator.ts',
@@ -65,32 +62,11 @@ const external = [
   ...builtinModules,
   ...Object.keys(pkg.dependencies),
   ...Object.keys(pkg.peerDependencies),
-  'worker_threads',
-  'node:worker_threads',
-  'node:fs',
-  'node:os',
-  'node:stream',
-  'node:vm',
-  'node:http',
-  'node:console',
-  'node:events',
-  'inspector',
+  /^node:/,
   'vitest/optional-types.js',
   'vitest/browser',
   'vite/module-runner',
-  '@vitest/mocker',
-  '@vitest/mocker/node',
-  '@vitest/utils/diff',
-  '@vitest/utils/error',
-  '@vitest/utils/source-map',
-  '@vitest/runner/utils',
-  '@vitest/runner/types',
-  '@vitest/snapshot/environment',
-  '@vitest/snapshot/manager',
-  /@vitest\/utils\/\w+/,
-
   '#module-evaluator',
-  '@opentelemetry/api',
 ]
 
 const dir = dirname(fileURLToPath(import.meta.url))
@@ -100,6 +76,7 @@ const dtsUtils = createDtsUtils()
 const plugins = [
   nodeResolve({
     preferBuiltins: true,
+    exportConditions: ['__vitest__'],
   }),
   json(),
   commonjs(),
@@ -168,6 +145,8 @@ export default ({ watch }) =>
       },
       watch: false,
       external,
+      // dts requires other packages to be built already
+      // TODO: figure out if it's possible to avoid -- use rolldown? (its dts plugin is bugged)
       plugins: dtsUtils.dts(),
     },
   ])
