@@ -191,13 +191,12 @@ describe('browser', () => {
     const { vitest } = await testUtils.runVitest({
       root: 'fixtures',
       watch: true,
-    }, undefined, undefined, {
-      test: { browser: {
+      browser: {
         instances: [{ browser: 'chrome' }],
         provider: webdriverio(),
         enabled: true,
         headless: true,
-      } },
+      },
     })
 
     writeFileSync(sourceFile, editFile(sourceFileContent), 'utf8')

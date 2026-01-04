@@ -9,7 +9,7 @@
     }
 
     const { evaluatedModules } = __vitest_worker__
-    const moduleId = crypto.randomUUID()
+    const moduleId = `${Math.random()}`
     const viteModule = evaluatedModules.ensureModule(moduleId, moduleId)
 
     viteModule.evaluated = false

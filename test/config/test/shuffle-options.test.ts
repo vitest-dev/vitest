@@ -6,6 +6,8 @@ function run(sequence: InlineConfig['sequence']) {
   return runVitest({
     sequence,
     include: [],
+    standalone: true,
+    watch: true,
   })
 }
 
