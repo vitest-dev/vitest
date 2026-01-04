@@ -32,6 +32,8 @@ When you run `vitest`, the framework first loads your configuration and prepares
 - [Configuration file](/config/) is loaded
 - Project structure is validated
 
+This phase can run again if the config file or one of its imports changes.
+
 **Scope:** Main process (before any test workers are created)
 
 ### 2. Global Setup Phase
@@ -272,13 +274,14 @@ Understanding where code executes is crucial for avoiding common pitfalls:
 
 | Phase | Scope | Access to Test Context | Runs |
 |-------|-------|----------------------|------|
-| Global Setup | Main process | ❌ No (use `provide`/`inject`) | Once per test run |
+| Config File | Main process | ❌ No | Once per Vitest run |
+| Global Setup | Main process | ❌ No (use `provide`/`inject`) | Once per Vitest run |
 | Setup Files | Worker (same as tests) | ✅ Yes | Before each test file |
 | File-level code | Worker | ✅ Yes | Once per test file |
 | `beforeAll` / `afterAll` | Worker | ✅ Yes | Once per suite |
 | `beforeEach` / `afterEach` | Worker | ✅ Yes | Per test |
 | Test function | Worker | ✅ Yes | Once (or more with retries/repeats) |
-| Global Teardown | Main process | ❌ No | Once per test run |
+| Global Teardown | Main process | ❌ No | Once per Vitest run |
 
 ## Watch Mode Lifecycle
 
@@ -286,9 +289,10 @@ In watch mode, the lifecycle repeats with some differences:
 
 1. **Initial run** - Full lifecycle as described above
 2. **On file change:**
+   - New [test run](/api/advanced/reporters#ontestrunstart) starts
    - Only affected test files are re-run
    - [Setup files](/config/setupfiles) run again for those test files
-   - [Global setup](/config/globalsetup) does **not** re-run (use [`project.onTestsRerun`](/config/globalsetup#reconfigure-on-rerun) for rerun-specific logic)
+   - [Global setup](/config/globalsetup) does **not** re-run (use [`project.onTestsRerun`](/config/globalsetup#handling-test-reruns) for rerun-specific logic)
 3. **On exit:**
    - Global teardown executes
    - Process terminates
