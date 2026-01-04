@@ -10,6 +10,7 @@ import Experimental from '../components/Experimental.vue'
 import Advanced from '../components/Advanced.vue'
 import CourseLink from '../components/CourseLink.vue'
 import './styles.css'
+import '@shikijs/vitepress-twoslash/style.css'
 import 'virtual:group-icons.css'
 
 if (inBrowser) {
