@@ -1509,7 +1509,7 @@ export const mocked = vi.unmock('./mocked')
     expect(stripVTControlCharacters(error.frame)).toMatchSnapshot()
   })
 
-  it.only('shows ane rror when hoisted methods are used outside the top level scope', ({ onTestFinished }) => {
+  it('shows ane rror when hoisted methods are used outside the top level scope', ({ onTestFinished }) => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
     onTestFinished(() => warn.mockRestore())
     const result = hoistSimpleCode(`
