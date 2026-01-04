@@ -530,23 +530,6 @@ export interface TaskOptions {
   readonly mode: 'run' | 'only' | 'skip' | 'todo'
 }
 
-function sanitizeRetryForReporters(retry: unknown): SerializableRetry | undefined {
-  if (retry === undefined || typeof retry === 'number') {
-    return retry as SerializableRetry | undefined
-  }
-
-  if (typeof retry === 'object' && retry) {
-    const r = retry as { count?: number; delay?: number; condition?: unknown }
-    return {
-      count: r.count,
-      delay: r.delay,
-      condition: typeof r.condition === 'string' ? r.condition : undefined,
-    }
-  }
-
-  return undefined
-}
-
 function buildOptions(
   task: RunnerTestCase | RunnerTestSuite,
 ): TaskOptions {
@@ -555,7 +538,7 @@ function buildOptions(
     fails: task.type === 'test' && task.fails,
     concurrent: task.concurrent,
     shuffle: task.shuffle,
-    retry: sanitizeRetryForReporters(task.retry),
+    retry: task.retry as SerializableRetry | undefined,
     repeats: task.repeats,
     // runner types are too broad, but the public API should be more strict
     // the queued state exists only on Files and this method is called

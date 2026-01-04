@@ -1,5 +1,6 @@
 import type { TestProject } from '../project'
 import type { SerializedConfig } from '../types/config'
+import c from 'tinyrainbow'
 
 export function serializeConfig(project: TestProject): SerializedConfig {
   const { config, globalConfig } = project
@@ -9,10 +10,11 @@ export function serializeConfig(project: TestProject): SerializedConfig {
   // Handle retry configuration serialization
   let retry = config.retry
   if (retry && typeof retry === 'object' && typeof retry.condition === 'function') {
-    console.warn(
-      'Warning: retry.condition function cannot be used in vitest.config.ts. '
-      + 'Use a string pattern instead, or define the function in your test file.',
+    project.vitest.logger.warn(
+      c.yellow('Warning: retry.condition function cannot be used in vitest.config.ts. '
+        + 'Use a string pattern instead, or define the function in your test file.'),
     )
+
     // Remove the function from serialized config
     retry = {
       ...retry,

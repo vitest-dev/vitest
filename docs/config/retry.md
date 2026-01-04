@@ -75,7 +75,8 @@ A string pattern or a function to determine if a test should be retried based on
 - When a **string**, it's treated as a regular expression pattern to match against the error message
 - When a **function**, it receives the error and returns a boolean
 
-**Note:** When defining `condition` as a function, it must be done in a test file directly, not in `vitest.config.ts` (configurations are serialized for worker threads).
+> [!WARNING]
+When defining `condition` as a function, it must be done in a test file directly, not in `vitest.config.ts` (configurations are serialized for worker threads).
 
 #### String condition (in config file):
 

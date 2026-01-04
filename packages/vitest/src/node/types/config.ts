@@ -791,7 +791,7 @@ export interface InlineConfig {
    * because configurations are serialized when passed to worker threads.
    * Use the function form only in test files directly.
    *
-   * @default 0 (retry on all errors)
+   * @default 0 // Don't retry
    */
   retry?: SerializableRetry
 

@@ -328,14 +328,7 @@ function shouldRetryTest(test: Test, errors: TestError[] | undefined): boolean {
   }
   else if (typeof condition === 'function') {
     // Function condition is called with TestError
-    try {
-      return condition(error)
-    }
-    catch (e) {
-      // If condition function throws, treat as no match
-      console.error('retryCondition function threw error:', e)
-      return false
-    }
+    return condition(error)
   }
 
   return false
