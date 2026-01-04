@@ -185,7 +185,7 @@ Returns a `DocumentFragment` of your rendered component. This can be useful if y
 ## cleanup
 
 ```ts
-export function cleanup(): Promise<RenderResult>
+export function cleanup(): Promise<void>
 ```
 
 Remove all components rendered with [`render`](#render).
