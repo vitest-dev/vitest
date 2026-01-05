@@ -34,6 +34,10 @@ To get TypeScript working with the global APIs, add `vitest/globals` to the `typ
 }
 ```
 
+::: tip
+If you create a project using `create vue`, the `tsconfig.app.json` file should be used to place these configurations; only then will they take effect in the project.
+:::
+
 If you have redefined your [`typeRoots`](https://www.typescriptlang.org/tsconfig/#typeRoots) to include additional types in your compilation, you will need to add back the `node_modules` to make `vitest/globals` discoverable:
 
 ```json [tsconfig.json]
