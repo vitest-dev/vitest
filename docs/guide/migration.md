@@ -319,7 +319,7 @@ New pool architecture allows Vitest to simplify many previously complex configur
 
 - `maxThreads` and `maxForks` are now `maxWorkers`.
 - Environment variables `VITEST_MAX_THREADS` and `VITEST_MAX_FORKS` are now `VITEST_MAX_WORKERS`.
-- `singleThread` and `singleFork` are now `maxWorkers: 1, isolate: false`. If your tests were relying on module reset between tests, you'll need to add [setupFile](/config/#setupfiles) that calls [`vi.resetModules()`](/api/vi.html#vi-resetmodules) in [`beforeAll` test hook](/api/#beforeall).
+- `singleThread` and `singleFork` are now `maxWorkers: 1, isolate: false`. If your tests were relying on module reset between tests, you'll need to add [setupFile](/config/setupfiles) that calls [`vi.resetModules()`](/api/vi.html#vi-resetmodules) in [`beforeAll` test hook](/api/#beforeall).
 - `poolOptions` is removed. All previous `poolOptions` are now top-level options. The `memoryLimit` of VM pools is renamed to `vmMemoryLimit`.
 - `threads.useAtomics` is removed. If you have a use case for this, feel free to open a new feature request.
 - Custom pool interface has been rewritten, see [Custom Pool](/guide/advanced/pool#custom-pool)
@@ -539,7 +539,7 @@ For more details please refer to the [`vi.mock` api section](/api/vi#vi-mock).
 
 ### Auto-Mocking Behaviour
 
-Unlike Jest, mocked modules in `<root>/__mocks__` are not loaded unless `vi.mock()` is called. If you need them to be mocked in every test, like in Jest, you can mock them inside [`setupFiles`](/config/#setupfiles).
+Unlike Jest, mocked modules in `<root>/__mocks__` are not loaded unless `vi.mock()` is called. If you need them to be mocked in every test, like in Jest, you can mock them inside [`setupFiles`](/config/setupfiles).
 
 ### Importing the Original of a Mocked Package
 
