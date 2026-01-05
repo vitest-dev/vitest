@@ -64,6 +64,63 @@ vitest --pool=forks
 ```
 :::
 
+## Subpath imports with custom conditions are not resolved
+
+If you are using [Node.js subpath imports](https://nodejs.org/api/packages.html#subpath-imports) with custom conditions in your `package.json`, you may find that Vitest does not respect these conditions by default.
+
+For example, if you have the following in your `package.json`:
+
+```json
+{
+  "imports": {
+    "#my-lib": {
+      "custom": "./lib/custom_lib.js",
+      "import": "./lib/node_lib.js"
+    }
+  }
+}
+```
+
+By default, Vitest will only use the `import` and `default` conditions. To make Vitest respect custom conditions, you need to configure [`ssr.resolve.conditions`](https://vite.dev/config/ssr-options#ssr-resolve-conditions) in your Vitest config:
+
+```ts [vitest.config.js]
+import { defineConfig } from 'vitest/config'
+
+export default defineConfig({
+  ssr: {
+    resolve: {
+      conditions: ['custom', 'import', 'default'],
+    },
+  },
+})
+```
+
+::: tip Why `ssr.resolve.conditions` and not `resolve.conditions`?
+Vitest inherits Vite's configuration convention where:
+- `resolve.conditions` is used for client-side application code (browser environments)
+- `ssr.resolve.conditions` is used for server-side application code (Node.js environments)
+
+Since Vitest runs tests in a Node.js environment (unless using browser mode), it uses `ssr.resolve.conditions` for module resolution. This applies to both package exports and subpath imports.
+
+For more information, see [Vite's SSR documentation](https://vite.dev/guide/ssr#ssr-externals).
+:::
+
+If you need to conditionally set conditions based on the runtime environment:
+
+```ts [vitest.config.js]
+import { defineConfig } from 'vitest/config'
+
+const isBun = 'bun' in process.versions
+
+export default defineConfig({
+  ssr: {
+    resolve: {
+      conditions: isBun ? ['bun', 'import'] : ['import'],
+    },
+  },
+})
+```
+
 ## Segfaults and native code errors
 
 Running [native NodeJS modules](https://nodejs.org/api/addons.html) in `pool: 'threads'` can run into cryptic errors coming from the native code.
