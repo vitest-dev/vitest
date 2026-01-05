@@ -12,7 +12,7 @@ export function serializeConfig(project: TestProject): SerializedConfig {
   if (retry && typeof retry === 'object' && typeof retry.condition === 'function') {
     project.vitest.logger.warn(
       c.yellow('Warning: retry.condition function cannot be used in vitest.config.ts. '
-        + 'Use a string pattern instead, or define the function in your test file.'),
+        + 'Use a RegExp pattern instead, or define the function in your test file.'),
     )
 
     // Remove the function from serialized config

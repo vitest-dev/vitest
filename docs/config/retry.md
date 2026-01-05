@@ -7,7 +7,7 @@ outline: deep
 
 Retry the test specific number of times if it fails.
 
-- **Type:** `number | { count?: number, delay?: number, condition?: string }`
+- **Type:** `number | { count?: number, delay?: number, condition?: RegExp }`
 - **Default:** `0`
 - **CLI:** `--retry <times>`, `--retry.count <times>`, `--retry.delay <ms>`, `--retry.condition <pattern>`
 
@@ -45,7 +45,7 @@ export default defineConfig({
     retry: {
       count: 3, // Number of times to retry
       delay: 1000, // Delay in milliseconds between retries
-      condition: 'ECONNREFUSED|timeout', // Regex to match errors that should trigger retry
+      condition: /ECONNREFUSED|timeout/i, // RegExp to match errors that should trigger retry
     },
   },
 })
@@ -82,22 +82,22 @@ export default defineConfig({
 
 ### condition
 
-A string pattern or a function to determine if a test should be retried based on the error.
+A RegExp pattern or a function to determine if a test should be retried based on the error.
 
-- When a **string**, it's treated as a regular expression pattern to match against the error message
+- When a **RegExp**, it's tested against the error message
 - When a **function**, it receives the error and returns a boolean
 
 > [!WARNING]
 When defining `condition` as a function, it must be done in a test file directly, not in `vitest.config.ts` (configurations are serialized for worker threads).
 
-#### String condition (in config file):
+#### RegExp condition (in config file):
 
 ```ts
 export default defineConfig({
   test: {
     retry: {
       count: 2,
-      condition: 'ECONNREFUSED|ETIMEDOUT', // Retry on connection/timeout errors
+      condition: /ECONNREFUSED|ETIMEDOUT/i, // Retry on connection/timeout errors
     },
   },
 })

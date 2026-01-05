@@ -59,8 +59,8 @@ function getRetryDelay(retry: number | { delay?: number } | undefined): number {
 }
 
 function getRetryCondition(
-  retry: number | { condition?: string | ((error: TestError) => boolean) } | undefined,
-): string | ((error: TestError) => boolean) | undefined {
+  retry: number | { condition?: RegExp | ((error: TestError) => boolean) } | undefined,
+): RegExp | ((error: TestError) => boolean) | undefined {
   if (retry === undefined) {
     return undefined
   }
@@ -321,10 +321,9 @@ function shouldRetryTest(test: Test, errors: TestError[] | undefined): boolean {
   // Check only the most recent error (last in array) against the condition
   const error = errors[errors.length - 1]
 
-  if (typeof condition === 'string') {
-    // String condition is treated as regex pattern
-    const regex = new RegExp(condition, 'i')
-    return regex.test(error.message || '')
+  if (condition instanceof RegExp) {
+    // RegExp condition tests against error message
+    return condition.test(error.message || '')
   }
   else if (typeof condition === 'function') {
     // Function condition is called with TestError

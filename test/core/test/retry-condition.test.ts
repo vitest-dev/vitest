@@ -1,12 +1,12 @@
 import type { TestError } from 'vitest'
 import { describe, expect, it } from 'vitest'
 
-// Test with string regex condition that eventually passes
+// Test with RegExp condition that eventually passes
 let matchingCount = 0
 it('retry with matching condition', {
   retry: {
     count: 5,
-    condition: 'retry',
+    condition: /retry/i,
   },
 }, () => {
   matchingCount += 1
@@ -57,7 +57,7 @@ it('verify function condition worked', () => {
 describe('retry condition with describe', {
   retry: {
     count: 2,
-    condition: 'flaky',
+    condition: /flaky/i,
   },
 }, () => {
   let describeCount = 0

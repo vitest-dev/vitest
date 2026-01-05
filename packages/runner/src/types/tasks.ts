@@ -480,7 +480,7 @@ export type Retry = number | {
   delay?: number
   /**
    * Condition to determine if a test should be retried based on the error.
-   * - If a string, treated as a regular expression to match against error message
+   * - If a RegExp, it is tested against the error message
    * - If a function, called with the TestError object; return true to retry
    *
    * NOTE: Functions can only be used in test files, not in vitest.config.ts,
@@ -488,7 +488,7 @@ export type Retry = number | {
    *
    * @default undefined (retry on all errors)
    */
-  condition?: string | ((error: TestError) => boolean)
+  condition?: RegExp | ((error: TestError) => boolean)
 }
 
 /**
@@ -508,11 +508,11 @@ export type SerializableRetry = number | {
   delay?: number
   /**
    * Condition to determine if a test should be retried based on the error.
-   * Must be a string treated as a regular expression to match against error message.
+   * Must be a RegExp tested against the error message.
    *
    * @default undefined (retry on all errors)
    */
-  condition?: string
+  condition?: RegExp
 }
 
 export interface TestOptions {
