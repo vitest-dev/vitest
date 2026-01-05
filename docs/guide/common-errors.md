@@ -110,12 +110,12 @@ If you need to conditionally set conditions based on the runtime environment:
 ```ts [vitest.config.js]
 import { defineConfig } from 'vitest/config'
 
-const isBun = 'bun' in process.versions
+const isRunningOnBun = 'bun' in process.versions
 
 export default defineConfig({
   ssr: {
     resolve: {
-      conditions: isBun ? ['bun', 'import'] : ['import'],
+      conditions: isRunningOnBun ? ['bun', 'import', 'default'] : ['import', 'default'],
     },
   },
 })
