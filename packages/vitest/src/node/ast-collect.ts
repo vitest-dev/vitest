@@ -46,7 +46,7 @@ const debug = createDebugger('vitest:ast-collect-info')
 const verbose = createDebugger('vitest:ast-collect-verbose')
 
 function isTestFunctionName(name: string) {
-  return name === 'it' || name === 'test' || name.endsWith('Test')
+  return name === 'it' || name === 'test' || name.startsWith('test') || name.endsWith('Test')
 }
 
 function isVitestFunctionName(name: string) {
