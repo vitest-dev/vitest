@@ -4,7 +4,7 @@ title: Common Errors | Guide
 
 # Common Errors
 
-## Cannot find module './relative-path'
+## Cannot Find Module './relative-path'
 
 If you receive an error that module cannot be found, it might mean several different things:
 
@@ -43,7 +43,7 @@ export default defineConfig({
 })
 ```
 
-## Failed to terminate worker
+## Failed to Terminate Worker
 
 This error can happen when NodeJS's `fetch` is used with default [`pool: 'threads'`](/config/#threads). This issue is tracked on issue [Timeout abort can leave process(es) running in the background #3077](https://github.com/vitest-dev/vitest/issues/3077).
 
@@ -64,10 +64,9 @@ vitest --pool=forks
 ```
 :::
 
-## Segfaults and native code errors
+## Segfaults and Native Code Errors
 
 Running [native NodeJS modules](https://nodejs.org/api/addons.html) in `pool: 'threads'` can run into cryptic errors coming from the native code.
-
 - `Segmentation fault (core dumped)`
 - `thread '<unnamed>' panicked at 'assertion failed`
 - `Abort trap: 6`
