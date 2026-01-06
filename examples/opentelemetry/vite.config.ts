@@ -8,6 +8,7 @@ export default defineConfig({
         // enable via CLI flag --experimental.openTelemetry.enabled=true
         enabled: false,
         sdkPath: './otel.js',
+        browserSdkPath: './otel-browser.js',
       },
     },
     browser: {

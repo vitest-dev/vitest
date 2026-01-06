@@ -10,7 +10,7 @@
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^6.9.1",
-    "@testing-library/react": "^13.4.0",
+    "@testing-library/react": "^16.3.1",
     "@testing-library/user-event": "^14.6.1",
     "@types/react": "^19.2.7",
     "@vitejs/plugin-react": "^5.1.1",
@@ -18,7 +18,7 @@
     "fastify": "^5.6.2",
     "jsdom": "^27.2.0",
     "react": "^19.2.0",
-    "supertest": "^6.3.4",
+    "supertest": "^7.1.4",
     "tsx": "^4.21.0",
     "vite": "latest",
     "vitest": "latest"

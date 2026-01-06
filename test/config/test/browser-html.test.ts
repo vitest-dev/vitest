@@ -8,7 +8,7 @@ test('throws an error with non-existing path', async () => {
   const { stderr } = await runVitest({
     root,
     config: './vitest.config.non-existing.ts',
-  }, [], 'test', {}, { fails: true })
+  }, [], { fails: true })
   expect(stderr).toContain(`Tester HTML file "${resolve(root, './some-non-existing-path')}" doesn't exist.`)
 })
 
