@@ -102,11 +102,13 @@ export default defineConfig({
 ```
 
 ::: tip Why `ssr.resolve.conditions` and not `resolve.conditions`?
-Vitest inherits Vite's configuration convention where:
-- [`resolve.conditions`](https://vite.dev/config/shared-options#resolve-conditions) is used for browser-like environments (jsdom, happy-dom, or custom environments with `transformMode: 'web'`)
-- [`ssr.resolve.conditions`](https://vite.dev/config/ssr-options#ssr-resolve-conditions) is used for Node-like environments (node, or custom environments with `transformMode: 'ssr'`)
+Vitest follows Vite's configuration convention:
+- [`resolve.conditions`](https://vite.dev/config/shared-options#resolve-conditions) applies to Vite's `client` environment, which corresponds to Vitest's browser mode, jsdom, happy-dom, or custom environments with `viteEnvironment: 'client'`.
+- [`ssr.resolve.conditions`](https://vite.dev/config/ssr-options#ssr-resolve-conditions) applies to Vite's `ssr` environment, which corresponds to Vitest's node environment or custom environments with `viteEnvironment: 'ssr'`.
 
-By default, Vitest uses the `node` environment which has `transformMode: 'ssr'`, so it uses `ssr.resolve.conditions` for module resolution. This applies to both package exports and subpath imports.
+Since Vitest defaults to the `node` environment (which uses `viteEnvironment: 'ssr'`), module resolution uses `ssr.resolve.conditions`. This applies to both package exports and subpath imports.
+
+You can learn more about Vite environments and Vitest environments in [`environment`](/config/environment).
 :::
 
 ## Segfaults and native code errors
