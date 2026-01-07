@@ -103,29 +103,11 @@ export default defineConfig({
 
 ::: tip Why `ssr.resolve.conditions` and not `resolve.conditions`?
 Vitest inherits Vite's configuration convention where:
-- `resolve.conditions` is used for browser-like environments (jsdom, happy-dom, or custom environments with `transformMode: 'web'`)
-- `ssr.resolve.conditions` is used for Node-like environments (node, or custom environments with `transformMode: 'ssr'`)
+- [`resolve.conditions`](https://vite.dev/config/shared-options#resolve-conditions) is used for browser-like environments (jsdom, happy-dom, or custom environments with `transformMode: 'web'`)
+- [`ssr.resolve.conditions`](https://vite.dev/config/ssr-options#ssr-resolve-conditions) is used for Node-like environments (node, or custom environments with `transformMode: 'ssr'`)
 
 By default, Vitest uses the `node` environment which has `transformMode: 'ssr'`, so it uses `ssr.resolve.conditions` for module resolution. This applies to both package exports and subpath imports.
-
-For more information, see [Vite's SSR documentation](https://vite.dev/guide/ssr#ssr-externals).
 :::
-
-If you need to conditionally set conditions based on the runtime environment:
-
-```ts [vitest.config.js]
-import { defineConfig } from 'vitest/config'
-
-const isRunningOnBun = 'bun' in process.versions
-
-export default defineConfig({
-  ssr: {
-    resolve: {
-      conditions: isRunningOnBun ? ['bun', 'import', 'default'] : ['import', 'default'],
-    },
-  },
-})
-```
 
 ## Segfaults and native code errors
 
