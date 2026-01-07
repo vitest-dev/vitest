@@ -42,7 +42,7 @@ patchedDependencies:
   acorn@8.11.3: patches/acorn@8.11.3.patch
   cac@6.7.14: patches/cac@6.7.14.patch
 catalog:
-  '@iconify-json/carbon': ^1.2.14
+  '@iconify-json/carbon': ^1.2.15
   '@iconify-json/logos': ^1.2.10
   '@jridgewell/remapping': ^2.3.5
   '@jridgewell/trace-mapping': 0.3.31
@@ -53,13 +53,13 @@ catalog:
   '@types/istanbul-lib-source-maps': ^4.0.4
   '@types/istanbul-reports': ^3.0.4
   '@types/ws': ^8.18.1
-  '@unocss/reset': ^66.5.9
-  '@vitejs/plugin-vue': ^6.0.2
+  '@unocss/reset': ^66.5.12
+  '@vitejs/plugin-vue': ^6.0.3
   '@vueuse/core': ^12.8.2
   acorn-walk: ^8.3.4
   birpc: ^4.0.0
   cac: ^6.7.14
-  chai: ^6.2.1
+  chai: ^6.2.2
   flatted: ^3.3.3
   istanbul-lib-coverage: ^3.2.2
   istanbul-lib-report: ^3.0.1
@@ -67,7 +67,7 @@ catalog:
   istanbul-reports: ^3.2.0
   magic-string: ^0.30.21
   magicast: ^0.5.1
-  msw: ^2.12.3
+  msw: ^2.12.7
   obug: ^2.1.1
   pathe: ^2.0.3
   sirv: ^3.0.2
@@ -75,9 +75,9 @@ catalog:
   strip-literal: ^3.1.0
   tinyglobby: ^0.2.15
   tinyrainbow: ^3.0.3
-  unocss: ^66.5.9
-  vue: ^3.5.25
-  ws: ^8.18.3
+  unocss: ^66.5.12
+  vue: ^3.5.26
+  ws: ^8.19.0
 onlyBuiltDependencies:
   - '@sveltejs/kit'
   - '@swc/core'

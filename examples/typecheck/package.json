@@ -10,7 +10,7 @@
     "test:run": "vitest run"
   },
   "devDependencies": {
-    "@types/node": "^24.10.1",
+    "@types/node": "^24.10.4",
     "@vitest/ui": "latest",
     "typescript": "^5.9.3",
     "vite": "latest",
