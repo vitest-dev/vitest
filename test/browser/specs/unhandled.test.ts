@@ -37,3 +37,17 @@ test('disables tracking', async () => {
   })
   expect(stderr).toBe('')
 })
+
+test('print unhandled non error', async () => {
+  const { testTree, stderr } = await runBrowserTests({
+    root: './fixtures/unhandled-non-error',
+  })
+  expect(stderr).toContain('[Error: ResizeObserver loop completed with undelivered notifications.]')
+  expect(testTree()).toMatchInlineSnapshot(`
+    {
+      "basic.test.ts": {
+        "ResizeObserver error": "passed",
+      },
+    }
+  `)
+})

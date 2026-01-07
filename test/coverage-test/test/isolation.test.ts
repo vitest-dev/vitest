@@ -27,7 +27,6 @@ for (const isolate of [true, false]) {
 
         browser: {
           isolate,
-          instances: [],
         },
       })
 

@@ -198,13 +198,13 @@ img.resizable-img {
 }
 
 /* credit goes to https://dylanatsmith.com/wrote/styling-the-kbd-element */
-html:not(.dark) kbd {
+html:not(.dark) .VPContent kbd {
   --kbd-color-background: #f7f7f7;
   --kbd-color-border: #cbcccd;
   --kbd-color-text: #222325;
 }
 
-kbd {
+.VPContent kbd {
   --kbd-color-background: #898b90;
   --kbd-color-border: #3d3e42;
   --kbd-color-text: #222325;

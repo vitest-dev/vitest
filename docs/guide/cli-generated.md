@@ -804,3 +804,10 @@ Delete all Vitest caches, including `experimental.fsModuleCache`, without runnin
 - **Config:** [experimental.fsModuleCache](/config/experimental#experimental-fsmodulecache)
 
 Enable caching of modules on the file system between reruns.
+
+### experimental.printImportBreakdown
+
+- **CLI:** `--experimental.printImportBreakdown`
+- **Config:** [experimental.printImportBreakdown](/config/experimental#experimental-printimportbreakdown)
+
+Print import breakdown after the summary. If the reporter doesn't support summary, this will have no effect. Note that UI's "Module Graph" tab always has an import breakdown.
