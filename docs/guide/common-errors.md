@@ -4,7 +4,7 @@ title: Common Errors | Guide
 
 # Common Errors
 
-## Cannot Find Module './relative-path'
+## Cannot find module './relative-path'
 
 If you receive an error that module cannot be found, it might mean several different things:
 
