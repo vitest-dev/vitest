@@ -289,6 +289,7 @@ class BrowserPool {
     const pagePromise = browser.provider.openPage(
       sessionId,
       url.toString(),
+      { parallel: this.options.maxWorkers > 1 },
     )
     await Promise.all([sessionPromise, pagePromise])
   }
