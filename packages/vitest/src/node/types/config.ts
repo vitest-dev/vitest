@@ -850,11 +850,23 @@ export interface InlineConfig {
       browserSdkPath?: string
     }
     /**
-     * Show imports (top 10) that take a long time.
+     * Show imports that take a long time.
      *
      * Enabling this will also show a breakdown by default in UI, but you can always press a button to toggle it.
      */
-    printImportBreakdown?: boolean
+    printImportBreakdown?: {
+      /**
+       * Enable import breakdown display in CLI output.
+       * @default false
+       */
+      enabled?: boolean
+      /**
+       * Number of imports to show in CLI output.
+       * Set to 0 to disable import duration collection entirely.
+       * @default 10
+       */
+      limit?: number
+    }
   }
 }
 
@@ -1093,6 +1105,13 @@ export interface ResolvedConfig
 
   vmMemoryLimit?: UserConfig['vmMemoryLimit']
   dumpDir?: string
+
+  experimental: Omit<Required<UserConfig>['experimental'], 'printImportBreakdown'> & {
+    printImportBreakdown: {
+      enabled: boolean
+      limit: number
+    }
+  }
 }
 
 type NonProjectOptions

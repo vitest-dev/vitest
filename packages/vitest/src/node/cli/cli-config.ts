@@ -777,6 +777,22 @@ export const cliOptionsConfig: VitestCLIOptions = {
       openTelemetry: null,
       printImportBreakdown: {
         description: 'Print import breakdown after the summary. If the reporter doesn\'t support summary, this will have no effect. Note that UI\'s "Module Graph" tab always has an import breakdown.',
+        argument: '',
+        transform(value) {
+          if (typeof value === 'boolean') {
+            return { enabled: value }
+          }
+          return value
+        },
+        subcommands: {
+          enabled: {
+            description: 'Enable import breakdown display (default: false).',
+          },
+          limit: {
+            description: 'Number of imports to show in CLI output (default: 10). Set to 0 to disable import duration collection entirely.',
+            argument: '<number>',
+          },
+        },
       },
     },
   },
