@@ -60,6 +60,11 @@ Coverage collection is performed during runtime by instructing V8 using [`node:i
 - ⚠️ There are some minor limitations set by V8 engine. See [`ast-v8-to-istanbul` | Limitations](https://github.com/AriPerkkio/ast-v8-to-istanbul?tab=readme-ov-file#limitations).
 - ❌ Does not work on environments that don't use V8, such as Firefox or Bun. Or on environments that don't expose V8 coverage via profiler, such as Cloudflare Workers.
 
+<script setup>
+import ArrowDown from '../.vitepress/components/ArrowDown.vue'
+import Box from '../.vitepress/components/Box.vue'
+</script>
+
 <div style="display: flex; flex-direction: column; align-items: center; padding: 2rem 0; max-width: 20rem;">
   <Box>Test file</Box>
   <ArrowDown />

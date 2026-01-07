@@ -854,6 +854,7 @@ export interface InlineConfig {
     openTelemetry?: {
       enabled: boolean
       sdkPath?: string
+      browserSdkPath?: string
     }
     /**
      * Show imports (top 10) that take a long time.
@@ -1056,6 +1057,7 @@ export interface ResolvedConfig
   reporters: (InlineReporter | ReporterWithOptions)[]
 
   defines: Record<string, any>
+  viteDefine: Record<string, any>
 
   api: ApiConfig & { token: string }
   cliExclude?: string[]

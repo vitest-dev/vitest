@@ -136,6 +136,7 @@ export function serializeConfig(project: TestProject): SerializedConfig {
     experimental: {
       fsModuleCache: config.experimental.fsModuleCache ?? false,
       printImportBreakdown: config.experimental.printImportBreakdown,
+      openTelemetry: config.experimental.openTelemetry,
     },
   }
 }
