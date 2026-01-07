@@ -64,18 +64,24 @@ vitest --pool=forks
 ```
 :::
 
-## Subpath imports with custom conditions are not resolved
+## Custom package conditions are not resolved
 
-If you are using [Node.js subpath imports](https://nodejs.org/api/packages.html#subpath-imports) with custom conditions in your `package.json`, you may find that Vitest does not respect these conditions by default.
+If you are using custom conditions in your `package.json` [exports](https://nodejs.org/api/packages.html#package-entry-points) or [subpath imports](https://nodejs.org/api/packages.html#subpath-imports), you may find that Vitest does not respect these conditions by default.
 
 For example, if you have the following in your `package.json`:
 
 ```json
 {
+  "exports": {
+    ".": {
+      "custom": "./lib/custom.js",
+      "import": "./lib/index.js"
+    }
+  },
   "imports": {
-    "#my-lib": {
-      "custom": "./lib/custom_lib.js",
-      "import": "./lib/node_lib.js"
+    "#internal": {
+      "custom": "./src/internal.js",
+      "default": "./lib/internal.js"
     }
   }
 }
@@ -97,10 +103,10 @@ export default defineConfig({
 
 ::: tip Why `ssr.resolve.conditions` and not `resolve.conditions`?
 Vitest inherits Vite's configuration convention where:
-- `resolve.conditions` is used for client-side application code (browser environments)
-- `ssr.resolve.conditions` is used for server-side application code (Node.js environments)
+- `resolve.conditions` is used for browser-like environments (jsdom, happy-dom, or custom environments with `transformMode: 'web'`)
+- `ssr.resolve.conditions` is used for Node-like environments (node, or custom environments with `transformMode: 'ssr'`)
 
-Since Vitest runs tests in a Node.js environment (unless using browser mode), it uses `ssr.resolve.conditions` for module resolution. This applies to both package exports and subpath imports.
+By default, Vitest uses the `node` environment which has `transformMode: 'ssr'`, so it uses `ssr.resolve.conditions` for module resolution. This applies to both package exports and subpath imports.
 
 For more information, see [Vite's SSR documentation](https://vite.dev/guide/ssr#ssr-externals).
 :::
