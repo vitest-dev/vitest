@@ -692,6 +692,11 @@ export function resolveConfig(
 
   resolved.browser.enabled ??= false
   resolved.browser.headless ??= isCI
+  if (resolved.browser.isolate) {
+    logger.console.warn(
+      c.yellow('`browser.isolate` is deprecated. Use top-level `isolate` instead.'),
+    )
+  }
   resolved.browser.isolate ??= resolved.isolate ?? true
   resolved.browser.fileParallelism
     ??= options.fileParallelism ?? mode !== 'benchmark'
