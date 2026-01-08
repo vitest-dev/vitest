@@ -4,7 +4,7 @@ import { defineConfig } from "vitest/config";
 
 export default defineConfig({
   define: {
-    'import.meta.env.TEST_PERSISTENT_CONTEXT': JSON.stringify(String(process.env.TEST_PERSISTENT_CONTEXT)),
+    'import.meta.env.TEST_EXPECTED_VALUE': JSON.stringify(String(process.env.TEST_EXPECTED_VALUE)),
   },
   test: {
     browser: {

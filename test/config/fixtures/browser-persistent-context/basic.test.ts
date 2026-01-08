@@ -1,6 +1,8 @@
 import { expect, test } from "vitest";
 
-test("basic", () => {
+const expectedValue = import.meta.env.TEST_EXPECTED_VALUE || "0";
+
+test(`expectedValue = ${expectedValue}`, () => {
   // increment localStorage to test persistent context between test runs
   const value = localStorage.getItem("test-persistent-context") || "0";
   const nextValue = String(Number(value) + 1);
@@ -11,5 +13,5 @@ test("basic", () => {
   div.textContent = `localStorage: value = ${value}, nextValue = ${nextValue}`;
   document.body.appendChild(div);
 
-  expect(value).toBe(import.meta.env.TEST_PERSISTENT_CONTEXT || "0")
+  expect(value).toBe(expectedValue)
 });

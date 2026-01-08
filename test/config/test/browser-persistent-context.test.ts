@@ -10,27 +10,30 @@ test('persistent context works', async () => {
   rmSync(userDataDir, { recursive: true, force: true })
 
   // first run
-  process.env.TEST_PERSISTENT_CONTEXT = '0'
+  process.env.TEST_EXPECTED_VALUE = '0'
   const result1 = await runVitest({ root })
   expect(result1.errorTree()).toMatchInlineSnapshot(`
     {
       "basic.test.ts": {
-        "basic": "passed",
+        "expectedValue = 0": "passed",
       },
     }
   `)
+  // check user data
+  expect(existsSync(userDataDir)).toBe(true)
 
-  // 2nd run (localStorage is incremented and persisted)
-  process.env.TEST_PERSISTENT_CONTEXT = '1'
+  // 2nd run
+  // localStorage is incremented during 1st run and
+  // 2nd run should pick that up from persistent context
+  process.env.TEST_EXPECTED_VALUE = '1'
   const result2 = await runVitest({ root })
   expect(result2.errorTree()).toMatchInlineSnapshot(`
     {
       "basic.test.ts": {
-        "basic": "passed",
+        "expectedValue = 1": "passed",
       },
     }
   `)
-
   // check user data
   expect(existsSync(userDataDir)).toBe(true)
 })
