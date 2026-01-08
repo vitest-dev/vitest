@@ -23,6 +23,17 @@ export const sponsors: SponsorTier[] = [
     ],
   },
   {
+    tier: 'Platinum Sponsors',
+    size: 'big',
+    items: [
+      {
+        name: 'Chromatic',
+        url: 'https://www.chromatic.com/',
+        img: '/chromatic.svg',
+      },
+    ],
+  },
+  {
     tier: 'Gold',
     size: 'medium',
     items: [
@@ -45,11 +56,6 @@ export const sponsors: SponsorTier[] = [
         name: 'Liminity',
         url: 'https://www.liminity.se/',
         img: '/liminity.svg',
-      },
-      {
-        name: 'Bytebase',
-        url: 'https://www.bytebase.com/',
-        img: '/bytebase.svg',
       },
     ],
   },
