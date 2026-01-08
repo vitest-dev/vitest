@@ -42,13 +42,13 @@ onMounted(async () => {
   <li :style="color">
     <div ref="el" class="icon-container">
       <div class="icon-wrapper" :class="state ? 'flip' : ''">
-        <Icon icon="carbon:circle-dash" class="icon-spinner" />
+        <Icon icon="carbon:circle-dash" class="icon-spinner" width="1.2em" height="1.2em" />
       </div>
       <div class="icon-wrapper" :class="state === 2 ? '' : 'flip'">
-        <Icon icon="carbon:close-outline" class="icon-error" />
+        <Icon icon="carbon:close-outline" class="icon-error" width="1.2em" height="1.2em" />
       </div>
       <div class="icon-wrapper" :class="state === 1 ? '' : 'flip'">
-        <Icon icon="carbon:checkmark-outline" class="icon-success" />
+        <Icon icon="carbon:checkmark-outline" class="icon-success" width="1.2em" height="1.2em" />
       </div>
     </div>
     <div>
@@ -60,12 +60,11 @@ onMounted(async () => {
 <style scoped>
 .icon-container {
   position: relative;
-  width: 1.25rem;
-  height: 1.25rem;
+  width: 1.2em;
+  height: 1.2em;
   flex: none;
   margin-top: auto;
   margin-bottom: auto;
-  margin-right: 0.25rem;
   vertical-align: middle;
 }
 
