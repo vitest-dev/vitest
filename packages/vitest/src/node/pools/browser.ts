@@ -273,7 +273,7 @@ class BrowserPool {
     return this._promise
   }
 
-  private async openPage(sessionId: string, options: { parallel?: boolean }): Promise<void> {
+  private async openPage(sessionId: string, options: { parallel: boolean }): Promise<void> {
     const sessionPromise = this.project.vitest._browserSessions.createSession(
       sessionId,
       this.project,

@@ -151,7 +151,7 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
     })
   }
 
-  private async openBrowser(openBrowserOptions?: { parallel?: boolean }) {
+  private async openBrowser(openBrowserOptions: { parallel: boolean }) {
     await this._throwIfClosing()
 
     if (this.browserPromise) {
@@ -217,7 +217,7 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
 
       debug?.('[%s] initializing the browser with launch options: %O', this.browserName, launchOptions)
       let persistentContextOption = this.options.persistentContext
-      if (persistentContextOption && openBrowserOptions?.parallel) {
+      if (persistentContextOption && openBrowserOptions.parallel) {
         persistentContextOption = false
         this.project.vitest.logger.warn(
           c.yellow(`The persistentContext option is ignored because tests are running in parallel.`),
@@ -384,7 +384,7 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
     }
   }
 
-  private async createContext(sessionId: string, openBrowserOptions?: { parallel?: boolean }) {
+  private async createContext(sessionId: string, openBrowserOptions: { parallel: boolean }) {
     await this._throwIfClosing()
 
     if (this.contexts.has(sessionId)) {
@@ -464,7 +464,7 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
     }
   }
 
-  private async openBrowserPage(sessionId: string, options?: { parallel?: boolean }) {
+  private async openBrowserPage(sessionId: string, options: { parallel: boolean }) {
     await this._throwIfClosing()
 
     if (this.pages.has(sessionId)) {
@@ -496,7 +496,7 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
     return page
   }
 
-  async openPage(sessionId: string, url: string, options?: { parallel?: boolean }): Promise<void> {
+  async openPage(sessionId: string, url: string, options: { parallel: boolean }): Promise<void> {
     debug?.('[%s][%s] creating the browser page for %s', sessionId, this.browserName, url)
     const browserPage = await this.openBrowserPage(sessionId, options)
     debug?.('[%s][%s] browser page is created, opening %s', sessionId, this.browserName, url)
