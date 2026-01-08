@@ -1051,8 +1051,8 @@ importers:
         specifier: ^2.4.9
         version: 2.4.9
       '@types/sinonjs__fake-timers':
-        specifier: ^8.1.5
-        version: 8.1.5(patch_hash=0218b33f433e26861380c2b90c757bde6fea871cb988083c0bd4a9a1f6c00252)
+        specifier: ^15.0.1
+        version: 15.0.1
       acorn-walk:
         specifier: 'catalog:'
         version: 8.3.4
@@ -1408,7 +1408,7 @@ importers:
         version: 2.4.6
       happy-dom:
         specifier: latest
-        version: 20.0.11
+        version: 20.1.0
       istanbul-lib-coverage:
         specifier: 'catalog:'
         version: 3.2.2
@@ -1554,7 +1554,7 @@ importers:
         version: 10.4.1
       happy-dom:
         specifier: latest
-        version: 20.0.11
+        version: 20.1.0
       vitest:
         specifier: workspace:*
         version: link:../../packages/vitest
@@ -4332,6 +4332,9 @@ packages:
   '@types/resolve@1.20.2':
     resolution: {integrity: sha512-60BCwRFOZCQhDncwQdxxeOEEkbc5dIMccYLwbxsS4TUNeVECQ/pBJ0j09mrHOl/JJvpRPGwO9SvE4nR2Nb/a4Q==}
 
+  '@types/sinonjs__fake-timers@15.0.1':
+    resolution: {integrity: sha512-Ko2tjWJq8oozHzHV+reuvS5KYIRAokHnGbDwGh/J64LntgpbuylF74ipEL24HCyRjf9FOlBiBHWBR1RlVKsI1w==}
+
   '@types/sinonjs__fake-timers@8.1.5':
     resolution: {integrity: sha512-mQkU2jY8jJEF7YHjHvsQO8+3ughTL1mcnn96igfhONmR+fUPSKIkefQYpSe8bsly2Ep7oQbn/6VG5/9/0qcArQ==}
 
@@ -6439,6 +6442,10 @@ packages:
 
   happy-dom@20.0.11:
     resolution: {integrity: sha512-QsCdAUHAmiDeKeaNojb1OHOPF7NjcWPBR7obdu3NwH2a/oyQaLg5d0aaCy/9My6CdPChYF07dvz5chaXBGaD4g==}
+    engines: {node: '>=20.0.0'}
+
+  happy-dom@20.1.0:
+    resolution: {integrity: sha512-ebvqjBqzenBk2LjzNEAzoj7yhw7rW/R2/wVevMu6Mrq3MXtcI/RUz4+ozpcOcqVLEWPqLfg2v9EAU7fFXZUUJw==}
     engines: {node: '>=20.0.0'}
 
   has-bigints@1.1.0:
@@ -12185,6 +12192,8 @@ snapshots:
 
   '@types/resolve@1.20.2': {}
 
+  '@types/sinonjs__fake-timers@15.0.1': {}
+
   '@types/sinonjs__fake-timers@8.1.5(patch_hash=0218b33f433e26861380c2b90c757bde6fea871cb988083c0bd4a9a1f6c00252)': {}
 
   '@types/statuses@2.0.6': {}
@@ -14722,6 +14731,17 @@ snapshots:
       '@types/node': 20.19.24
       '@types/whatwg-mimetype': 3.0.2
       whatwg-mimetype: 3.0.0
+
+  happy-dom@20.1.0:
+    dependencies:
+      '@types/node': 20.19.24
+      '@types/whatwg-mimetype': 3.0.2
+      '@types/ws': 8.18.1
+      whatwg-mimetype: 3.0.0
+      ws: 8.18.3
+    transitivePeerDependencies:
+      - bufferutil
+      - utf-8-validate
 
   has-bigints@1.1.0: {}
 
