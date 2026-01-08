@@ -78,6 +78,28 @@ $ npx vitest
 
 ## Sponsors
 
+<a href="https://www.chromatic.com/">
+  <img src="https://raw.githubusercontent.com/vitest-dev/vitest/refs/heads/main/docs/public/logo-chromatic.svg" width="300" />
+</a>
+
+<div style="display:flex;gap:10px;flex-wrap:wrap;">
+  <a href="https://vital.io/">
+    <img src="https://raw.githubusercontent.com/vitest-dev/vitest/refs/heads/main/docs/public/vital.svg" width="100" />
+  </a>
+
+  <a href="https://oomol.com/">
+    <img src="https://raw.githubusercontent.com/vitest-dev/vitest/refs/heads/main/docs/public/oomol.svg" width="100" />
+  </a>
+
+  <a href="https://mailmeteor.com/">
+    <img src="https://raw.githubusercontent.com/vitest-dev/vitest/refs/heads/main/docs/public/mailmeteor.svg" width="100" />
+  </a>
+
+  <a href="https://www.liminity.se/">
+    <img src="https://raw.githubusercontent.com/vitest-dev/vitest/refs/heads/main/docs/public/liminity.svg" width="100" />
+  </a>
+</div>
+
 ### Vladimir Sponsors
 
 <p align="center">
