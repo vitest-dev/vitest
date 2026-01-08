@@ -598,9 +598,6 @@ importers:
       istanbul-lib-report:
         specifier: 'catalog:'
         version: 3.0.1
-      istanbul-lib-source-maps:
-        specifier: 'catalog:'
-        version: 5.0.6
       istanbul-reports:
         specifier: 'catalog:'
         version: 3.2.0
@@ -629,6 +626,9 @@ importers:
       '@types/istanbul-reports':
         specifier: 'catalog:'
         version: 3.0.4
+      istanbul-lib-source-maps:
+        specifier: 'catalog:'
+        version: 5.0.6(patch_hash=be977704c4b9838da456619fe2421b5e24df2103a25967bd383b2246c88ddf6e)
       pathe:
         specifier: 'catalog:'
         version: 2.0.3
