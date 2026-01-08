@@ -305,28 +305,23 @@ async function callCleanupHooks(runner: VitestRunner, cleanups: unknown[]) {
 /**
  * Determines if a test should be retried based on its retryCondition configuration
  */
-function shouldRetryTest(test: Test, errors: TestError[] | undefined): boolean {
+function passesRetryCondition(test: Test, errors: TestError[] | undefined): boolean {
   const condition = getRetryCondition(test.retry)
 
-  // No errors means test passed, shouldn't get here but handle it
   if (!errors || errors.length === 0) {
     return false
   }
 
-  // No condition means always retry
   if (!condition) {
     return true
   }
 
-  // Check only the most recent error (last in array) against the condition
   const error = errors[errors.length - 1]
 
   if (condition instanceof RegExp) {
-    // RegExp condition tests against error message
     return condition.test(error.message || '')
   }
   else if (typeof condition === 'function') {
-    // Function condition is called with TestError
     return condition(error)
   }
 
@@ -479,19 +474,15 @@ export async function runTest(test: Test, runner: VitestRunner): Promise<void> {
       }
 
       if (retryCount < retry) {
-        // Check if we should retry based on the error condition
-        const shouldRetry = shouldRetryTest(test, test.result.errors)
+        const shouldRetry = passesRetryCondition(test, test.result.errors)
 
         if (!shouldRetry) {
-          // Error doesn't match retry condition, stop retrying
           break
         }
 
-        // Retry immediately - reset state when retry test
         test.result.state = 'run'
         test.result.retryCount = (test.result.retryCount ?? 0) + 1
 
-        // Apply retry delay if configured
         const delay = getRetryDelay(test.retry)
         if (delay > 0) {
           await new Promise(resolve => setTimeout(resolve, delay))

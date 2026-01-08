@@ -1,26 +1,10 @@
 import type { TestProject } from '../project'
 import type { SerializedConfig } from '../types/config'
-import c from 'tinyrainbow'
 
 export function serializeConfig(project: TestProject): SerializedConfig {
   const { config, globalConfig } = project
   const viteConfig = project._vite?.config
   const optimizer = config.deps?.optimizer || {}
-
-  // Handle retry configuration serialization
-  let retry = config.retry
-  if (retry && typeof retry === 'object' && typeof retry.condition === 'function') {
-    project.vitest.logger.warn(
-      c.yellow('Warning: retry.condition function cannot be used in vitest.config.ts. '
-        + 'Use a RegExp pattern instead, or define the function in your test file.'),
-    )
-
-    // Remove the function from serialized config
-    retry = {
-      ...retry,
-      condition: undefined,
-    }
-  }
 
   return {
     // TODO: remove functions from environmentOptions
@@ -50,7 +34,7 @@ export function serializeConfig(project: TestProject): SerializedConfig {
     snapshotSerializers: config.snapshotSerializers,
     // TODO: non serializable function?
     diff: config.diff,
-    retry,
+    retry: config.retry,
     disableConsoleIntercept: config.disableConsoleIntercept,
     root: config.root,
     name: config.name,
