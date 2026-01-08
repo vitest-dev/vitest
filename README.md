@@ -79,8 +79,8 @@ $ npx vitest
 ## Sponsors
 
 <p align="center">
-  <a href="https://raw.githubusercontent.com/sheremet-va/static/refs/heads/main/vitest/sponsors.svg">
-    <img src='https://raw.githubusercontent.com/sheremet-va/static/refs/heads/main/vitest/sponsors.svg'/>
+  <a href="https://cdn.jsdelivr.net/gh/sheremet-va/static/vitest/sponsors.svg">
+    <img src='https://cdn.jsdelivr.net/gh/sheremet-va/static/vitest/sponsors.svg'/>
   </a>
 </p>
 
