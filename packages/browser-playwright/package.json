@@ -25,6 +25,7 @@
   "sideEffects": false,
   "exports": {
     ".": {
+      "__vitest__": "./src/index.ts",
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     },

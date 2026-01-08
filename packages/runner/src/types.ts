@@ -32,6 +32,7 @@ export type {
   Task,
   TaskBase,
   TaskCustomOptions,
+  TaskEventData,
   TaskEventPack,
   TaskHook,
   TaskMeta,

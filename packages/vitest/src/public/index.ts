@@ -59,6 +59,8 @@ export { expectTypeOf } from '../typecheck/expectTypeOf'
 export type { ExpectTypeOf } from '../typecheck/expectTypeOf'
 
 export type { BrowserTesterOptions } from '../types/browser'
+export type { ExpectPollOptions } from '../types/expect'
+
 // export type * as Experimental from '../types/experimental'
 export type {
   AfterSuiteRunMeta,
@@ -76,7 +78,6 @@ export type {
 } from '../types/rpc'
 
 export type { BrowserUI } from '../types/ui'
-
 export type {
   ContextRPC,
   ContextTestEnvironment,
@@ -87,7 +88,6 @@ export type {
   Assertion,
   AsymmetricMatchersContaining,
   DeeplyAllowMatchers,
-  ExpectPollOptions,
   ExpectStatic,
   JestAssertion,
   Matchers,

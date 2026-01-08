@@ -24,12 +24,14 @@
   "sideEffects": false,
   "imports": {
     "#module-evaluator": {
+      "__vitest__": "./src/runtime/moduleRunner/moduleEvaluator.ts",
       "types": "./dist/module-evaluator.d.ts",
       "default": "./dist/module-evaluator.js"
     }
   },
   "exports": {
     ".": {
+      "__vitest__": "./src/public/index.ts",
       "import": {
         "types": "./dist/index.d.ts",
         "default": "./dist/index.js"
@@ -61,51 +63,57 @@
       "types": "./import-meta.d.ts"
     },
     "./node": {
+      "__vitest__": "./src/public/node.ts",
       "types": "./dist/node.d.ts",
       "default": "./dist/node.js"
     },
     "./internal/browser": {
-      "types": "./dist/browser.d.ts",
+      "__vitest__": "./src/public/browser.ts",
       "default": "./dist/browser.js"
     },
     "./internal/module-runner": {
+      "__vitest__": "./src/public/module-runner.ts",
       "types": "./dist/module-runner.d.ts",
       "default": "./dist/module-runner.js"
     },
     "./runners": {
+      "__vitest__": "./src/public/runners.ts",
       "types": "./dist/runners.d.ts",
       "default": "./dist/runners.js"
     },
     "./suite": {
+      "__vitest__": "./src/public/suite.ts",
       "types": "./dist/suite.d.ts",
       "default": "./dist/suite.js"
     },
     "./environments": {
+      "__vitest__": "./src/public/environments.ts",
       "types": "./dist/environments.d.ts",
       "default": "./dist/environments.js"
     },
     "./config": {
+      "__vitest__": "./src/public/config.ts",
       "types": "./config.d.ts",
       "require": "./dist/config.cjs",
       "default": "./dist/config.js"
     },
     "./coverage": {
+      "__vitest__": "./src/public/coverage.ts",
       "types": "./coverage.d.ts",
       "default": "./dist/coverage.js"
     },
     "./reporters": {
+      "__vitest__": "./src/public/reporters.ts",
       "types": "./dist/reporters.d.ts",
       "default": "./dist/reporters.js"
     },
     "./snapshot": {
+      "__vitest__": "./src/public/snapshot.ts",
       "types": "./dist/snapshot.d.ts",
       "default": "./dist/snapshot.js"
     },
-    "./mocker": {
-      "types": "./dist/mocker.d.ts",
-      "default": "./dist/mocker.js"
-    },
     "./worker": {
+      "__vitest__": "./src/public/worker.ts",
       "types": "./worker.d.ts",
       "default": "./dist/worker.js"
     }
@@ -173,18 +181,14 @@
     }
   },
   "dependencies": {
-    "@vitest/expect": "workspace:*",
-    "@vitest/mocker": "workspace:*",
-    "@vitest/pretty-format": "workspace:*",
-    "@vitest/runner": "workspace:*",
-    "@vitest/snapshot": "workspace:*",
-    "@vitest/spy": "workspace:*",
-    "@vitest/utils": "workspace:*",
+    "@standard-schema/spec": "catalog:",
+    "@types/chai": "catalog:",
+    "chai": "catalog:",
     "es-module-lexer": "^1.7.0",
+    "estree-walker": "catalog:",
     "expect-type": "^1.2.2",
     "magic-string": "catalog:",
     "obug": "catalog:",
-    "pathe": "catalog:",
     "picomatch": "^4.0.3",
     "std-env": "catalog:",
     "tinybench": "^2.9.0",
@@ -208,6 +212,13 @@
     "@types/picomatch": "^4.0.2",
     "@types/prompts": "^2.4.9",
     "@types/sinonjs__fake-timers": "^8.1.5",
+    "@vitest/expect": "workspace:*",
+    "@vitest/mocker": "workspace:*",
+    "@vitest/pretty-format": "workspace:*",
+    "@vitest/runner": "workspace:*",
+    "@vitest/snapshot": "workspace:*",
+    "@vitest/spy": "workspace:*",
+    "@vitest/utils": "workspace:*",
     "acorn-walk": "catalog:",
     "birpc": "catalog:",
     "cac": "catalog:",
@@ -217,7 +228,10 @@
     "jsdom": "^27.2.0",
     "local-pkg": "^1.1.2",
     "mime": "^4.1.0",
+    "pathe": "catalog:",
     "prompts": "^2.4.2",
+    "rolldown": "catalog:",
+    "rolldown-plugin-dts": "catalog:",
     "strip-literal": "catalog:",
     "ws": "catalog:"
   }

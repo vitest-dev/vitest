@@ -2,6 +2,7 @@ import type { ExpectStatic, PromisifyAssertion, Tester } from '@vitest/expect'
 import type { Plugin as PrettyFormatPlugin } from '@vitest/pretty-format'
 import type { SnapshotState } from '@vitest/snapshot'
 import type { BenchmarkResult } from '../runtime/types/benchmark'
+import type { ExpectPollOptions } from './expect'
 import type { UserConsoleLog } from './general'
 
 interface SnapshotMatcher<T> {
@@ -25,12 +26,6 @@ declare module '@vitest/expect' {
   interface MatcherState {
     environment: string
     snapshotState: SnapshotState
-  }
-
-  interface ExpectPollOptions {
-    interval?: number
-    timeout?: number
-    message?: string
   }
 
   interface ExpectStatic {

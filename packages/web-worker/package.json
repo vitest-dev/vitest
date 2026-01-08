@@ -17,13 +17,16 @@
   "sideEffects": false,
   "exports": {
     ".": {
+      "__vitest__": "./src/index.ts",
       "types": "./index.d.ts",
       "default": "./dist/index.js"
     },
     "./pure": {
+      "__vitest__": "./src/pure.ts",
       "types": "./pure.d.ts",
       "default": "./dist/pure.js"
-    }
+    },
+    "./package.json": "./package.json"
   },
   "main": "./dist/index.js",
   "module": "./dist/index.js",

@@ -17,6 +17,7 @@
   "sideEffects": false,
   "exports": {
     ".": {
+      "__vitest__": "./src/node/index.ts",
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     },
@@ -25,6 +26,7 @@
       "default": "./context.js"
     },
     "./client": {
+      "__vitest__": "./src/client/client.ts",
       "default": "./dist/client.js"
     },
     "./matchers": {
@@ -32,6 +34,7 @@
       "default": "./dummy.js"
     },
     "./locators": {
+      "__vitest__": "./src/client/tester/locators/index.ts",
       "types": "./dist/locators.d.ts",
       "default": "./dist/locators.js"
     },
@@ -78,6 +81,7 @@
     "@testing-library/user-event": "^14.6.1",
     "@types/pngjs": "^6.0.5",
     "@types/ws": "catalog:",
+    "@vitest/expect": "workspace:*",
     "@vitest/runner": "workspace:*",
     "birpc": "catalog:",
     "flatted": "catalog:",

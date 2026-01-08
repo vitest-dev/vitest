@@ -17,54 +17,66 @@
   "sideEffects": false,
   "exports": {
     ".": {
+      "__vitest__": "./src/index.ts",
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     },
     "./diff": {
+      "__vitest__": "./src/diff/index.ts",
       "types": "./dist/diff.d.ts",
       "default": "./dist/diff.js"
     },
     "./resolver": {
+      "__vitest__": "./src/resolver.ts",
       "types": "./dist/resolver.d.ts",
       "default": "./dist/resolver.js"
     },
     "./error": {
+      "__vitest__": "./src/error.ts",
       "types": "./dist/error.d.ts",
       "default": "./dist/error.js"
     },
     "./helpers": {
+      "__vitest__": "./src/helpers.ts",
       "types": "./dist/helpers.d.ts",
       "default": "./dist/helpers.js"
     },
     "./offset": {
+      "__vitest__": "./src/offset.ts",
       "types": "./dist/offset.d.ts",
       "default": "./dist/offset.js"
     },
     "./constants": {
+      "__vitest__": "./src/constants.ts",
       "types": "./dist/constants.d.ts",
       "default": "./dist/constants.js"
     },
     "./timers": {
+      "__vitest__": "./src/timers.ts",
       "types": "./dist/timers.d.ts",
       "default": "./dist/timers.js"
     },
     "./display": {
+      "__vitest__": "./src/display.ts",
       "types": "./dist/display.d.ts",
       "default": "./dist/display.js"
     },
     "./highlight": {
+      "__vitest__": "./src/highlight.ts",
       "types": "./dist/highlight.d.ts",
       "default": "./dist/highlight.js"
     },
     "./source-map": {
+      "__vitest__": "./src/source-map.ts",
       "types": "./dist/source-map.d.ts",
       "default": "./dist/source-map.js"
     },
     "./serialize": {
+      "__vitest__": "./src/serialize.ts",
       "types": "./dist/serialize.d.ts",
       "default": "./dist/serialize.js"
     },
-    "./*": "./*"
+    "./package.json": "./package.json"
   },
   "main": "./dist/index.js",
   "module": "./dist/index.js",

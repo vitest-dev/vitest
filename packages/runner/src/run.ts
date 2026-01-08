@@ -32,7 +32,7 @@ import { hasFailed, hasTests } from './utils/tasks'
 
 const now = globalThis.performance ? globalThis.performance.now.bind(globalThis.performance) : Date.now
 const unixNow = Date.now
-const { clearTimeout, setTimeout } = getSafeTimers()
+const safeTimers = getSafeTimers()
 
 function updateSuiteHookState(
   task: Task,
@@ -219,14 +219,14 @@ function throttle<T extends (...args: any[]) => void>(fn: T, ms: number): T {
     if (now - last > ms) {
       last = now
 
-      clearTimeout(pendingCall)
+      safeTimers.clearTimeout(pendingCall)
       pendingCall = undefined
 
       return fn.apply(this, args)
     }
 
     // Make sure fn is still called even if there are no further calls
-    pendingCall ??= setTimeout(() => call.bind(this)(...args), ms)
+    pendingCall ??= safeTimers.setTimeout(() => call.bind(this)(...args), ms)
   } as any
 }
 

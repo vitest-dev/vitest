@@ -5,7 +5,7 @@ import type {
   TaskUpdateEvent,
   TestAttachment,
 } from '@vitest/runner'
-import type { TaskEventData, TestArtifact } from '@vitest/runner/types/tasks'
+import type { TaskEventData, TestArtifact } from '@vitest/runner/types'
 import type { SerializedError } from '@vitest/utils'
 import type { UserConsoleLog } from '../types/general'
 import type { Vitest } from './core'
