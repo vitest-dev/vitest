@@ -83,7 +83,8 @@ export interface PlaywrightProviderOptions {
    * When set to `true`, the user data is stored in `./node_modules/.cache/vitest-playwright-user-data`.
    * When set to a string, the value is used as the path to the user data directory.
    *
-   * Note: This option is ignored when running tests in parallel (multiple workers) because persistent context cannot be shared across parallel sessions.
+   * Note: This option is ignored when running tests in parallel (e.g. headless with fileParallelism enabled)
+   * because persistent context cannot be shared across parallel sessions.
    * @default false
    * @see {@link https://playwright.dev/docs/api/class-browsertype#browser-type-launch-persistent-context}
    */
@@ -150,7 +151,7 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
     })
   }
 
-  private async openBrowser(parallel?: boolean) {
+  private async openBrowser(openBrowserOptions?: { parallel?: boolean }) {
     await this._throwIfClosing()
 
     if (this.browserPromise) {
@@ -216,7 +217,7 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
 
       debug?.('[%s] initializing the browser with launch options: %O', this.browserName, launchOptions)
       let persistentContextOption = this.options.persistentContext
-      if (persistentContextOption && parallel) {
+      if (persistentContextOption && openBrowserOptions?.parallel) {
         persistentContextOption = false
         this.project.vitest.logger.warn(
           c.yellow(`The persistentContext option is ignored because tests are running in parallel.`),
@@ -383,7 +384,7 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
     }
   }
 
-  private async createContext(sessionId: string, parallel?: boolean) {
+  private async createContext(sessionId: string, openBrowserOptions?: { parallel?: boolean }) {
     await this._throwIfClosing()
 
     if (this.contexts.has(sessionId)) {
@@ -391,7 +392,7 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
       return this.contexts.get(sessionId)!
     }
 
-    const browser = await this.openBrowser(parallel)
+    const browser = await this.openBrowser(openBrowserOptions)
     await this._throwIfClosing(browser)
     const actionTimeout = this.options.actionTimeout
     const options = this.getContextOptions()
@@ -463,7 +464,7 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
     }
   }
 
-  private async openBrowserPage(sessionId: string, parallel?: boolean) {
+  private async openBrowserPage(sessionId: string, options?: { parallel?: boolean }) {
     await this._throwIfClosing()
 
     if (this.pages.has(sessionId)) {
@@ -473,7 +474,7 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
       this.pages.delete(sessionId)
     }
 
-    const context = await this.createContext(sessionId, parallel)
+    const context = await this.createContext(sessionId, options)
     const page = await context.newPage()
     debug?.('[%s][%s] the page is ready', sessionId, this.browserName)
     await this._throwIfClosing(page)
@@ -497,7 +498,7 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
 
   async openPage(sessionId: string, url: string, options?: { parallel?: boolean }): Promise<void> {
     debug?.('[%s][%s] creating the browser page for %s', sessionId, this.browserName, url)
-    const browserPage = await this.openBrowserPage(sessionId, options?.parallel)
+    const browserPage = await this.openBrowserPage(sessionId, options)
     debug?.('[%s][%s] browser page is created, opening %s', sessionId, this.browserName, url)
     await browserPage.goto(url, { timeout: 0 })
     await this._throwIfClosing(browserPage)
