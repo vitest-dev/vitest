@@ -78,6 +78,12 @@ $ npx vitest
 
 ## Sponsors
 
+<p align="center">
+  <a href="https://raw.githubusercontent.com/sheremet-va/static/refs/heads/main/vitest/sponsors.svg">
+    <img src='https://raw.githubusercontent.com/sheremet-va/static/refs/heads/main/vitest/sponsors.svg'/>
+  </a>
+</p>
+
 ### Vladimir Sponsors
 
 <p align="center">
