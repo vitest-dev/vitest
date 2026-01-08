@@ -42,11 +42,11 @@ export default defineConfig({
     projects: [
       {
         name: 'Parallel',
-        exclude: ['**.sequantial.test.ts'],
+        exclude: ['**.sequential.test.ts'],
       },
       {
         name: 'Sequential',
-        include: ['**.sequantial.test.ts'],
+        include: ['**.sequential.test.ts'],
         fileParallelism: false,
       },
     ],
