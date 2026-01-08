@@ -21,11 +21,11 @@ export default defineConfig({
       presets: [
         presetUno({
           dark: 'media',
-        }),
-        presetAttributify(),
+        }) as any,
+        presetAttributify() as any,
         presetIcons({
           scale: 1.2,
-        }),
+        }) as any,
       ],
     }),
   ],
