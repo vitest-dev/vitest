@@ -32,7 +32,7 @@ const vitestSponsors = {
   platinum: [
     {
       name: 'Chromatic',
-      url: 'https://www.chromatic.com/',
+      url: 'https://www.chromatic.com/?utm_source=vitest&utm_medium=sponsorship&utm_campaign=vitestSponsorship',
       img: '/logo-chromatic.svg',
     },
   ],
