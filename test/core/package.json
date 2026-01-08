@@ -40,7 +40,7 @@
     "url": "^0.11.4",
     "vitest": "workspace:*",
     "vitest-environment-custom": "file:./vitest-environment-custom",
-    "vitest-package-exports": "^0.1.1",
+    "vitest-package-exports": "^1.1.2",
     "vue": "catalog:"
   }
 }
