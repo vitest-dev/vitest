@@ -775,6 +775,10 @@ export default ({ mode }: { mode: string }) => {
                 link: '/guide/environment',
               },
               {
+                text: 'Test Run Lifecycle',
+                link: '/guide/lifecycle',
+              },
+              {
                 text: 'Snapshot',
                 link: '/guide/snapshot',
               },
@@ -902,7 +906,7 @@ export default ({ mode }: { mode: string }) => {
           },
           {
             text: 'Advanced',
-            collapsed: true,
+            collapsed: false,
             items: [
               {
                 text: 'Getting Started',
@@ -991,7 +995,7 @@ export default ({ mode }: { mode: string }) => {
           },
           {
             text: 'Advanced',
-            collapsed: true,
+            collapsed: false,
             items: [
               {
                 text: 'Vitest',

@@ -22,7 +22,7 @@ This allows V8 reports to be as accurate as `@vitest/coverage-istanbul` reports.
 - `coverage.experimentalAstAwareRemapping` is removed. This option is now enabled by default, and is the only supported remapping method.
 - `coverage.ignoreClassMethods` is now supported by V8 provider too.
 
-### Removed options `coverage.all` and `coverage.extensions`
+### Removed Options `coverage.all` and `coverage.extensions`
 
 In previous versions Vitest included all uncovered files in coverage report by default.
 This was due to `coverage.all` defaulting to `true`, and `coverage.include` defaulting to `**`.
@@ -174,7 +174,7 @@ expect(AutoMockedClass.prototype.method).toHaveBeenCalledTimes(4)
 - The mock `vi.fn(implementation).mockReset()` now correctly returns the mock implementation in `.getMockImplementation()`
 - `vi.fn().mock.invocationCallOrder` now starts with `1`, like Jest does, instead of `0`
 
-### Standalone mode with filename filter
+### Standalone Mode with Filename Filter
 
 To improve user experience, Vitest will now start running the matched files when [`--standalone`](/guide/cli#standalone) is used with filename filter.
 
@@ -437,7 +437,7 @@ export default defineConfig({
 })
 ```
 
-### Snapshots using custom elements print the shadow root
+### Snapshots using Custom Elements Print the Shadow Root
 
 In Vitest 4.0 snapshots that include custom elements will print the shadow root contents. To restore the previous behavior, set the [`printShadowRoot` option](/config/#snapshotformat) to `false`.
 

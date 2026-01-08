@@ -43,7 +43,7 @@ export default defineConfig({
 })
 ```
 
-## Failed to terminate worker
+## Failed to Terminate Worker
 
 This error can happen when NodeJS's `fetch` is used with default [`pool: 'threads'`](/config/#threads). This issue is tracked on issue [Timeout abort can leave process(es) running in the background #3077](https://github.com/vitest-dev/vitest/issues/3077).
 
@@ -111,7 +111,7 @@ Since Vitest defaults to the `node` environment (which uses `viteEnvironment: 's
 You can learn more about Vite environments and Vitest environments in [`environment`](/config/environment).
 :::
 
-## Segfaults and native code errors
+## Segfaults and Native Code Errors
 
 Running [native NodeJS modules](https://nodejs.org/api/addons.html) in `pool: 'threads'` can run into cryptic errors coming from the native code.
 
