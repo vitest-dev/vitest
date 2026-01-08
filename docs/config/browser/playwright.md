@@ -105,7 +105,7 @@ await userEvent.click(page.getByRole('button'), {
 })
 ```
 
-## `persistentContext`
+## `persistentContext` <Version>4.1.0</Version> {#persistentcontext}
 
 - **Type:** `boolean | string`
 - **Default:** `false`
