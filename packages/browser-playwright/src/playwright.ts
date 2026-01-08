@@ -215,7 +215,14 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
       }
 
       debug?.('[%s] initializing the browser with launch options: %O', this.browserName, launchOptions)
-      if (this.options.persistentContext && !parallel) {
+      let persistentContextOption = this.options.persistentContext
+      if (persistentContextOption && parallel) {
+        persistentContextOption = false
+        this.project.vitest.logger.warn(
+          c.yellow(`The persistentContext option is ignored because tests are running in parallel.`),
+        )
+      }
+      if (persistentContextOption) {
         const userDataDir
           = typeof this.options.persistentContext === 'string'
             ? this.options.persistentContext
