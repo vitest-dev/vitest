@@ -3,6 +3,9 @@ import path from "node:path";
 import { defineConfig } from "vitest/config";
 
 export default defineConfig({
+  define: {
+    'import.meta.env.TEST_PERSISTENT_CONTEXT': JSON.stringify(String(process.env.TEST_PERSISTENT_CONTEXT)),
+  },
   test: {
     browser: {
       enabled: true,
