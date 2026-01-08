@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { Icon } from '@iconify/vue'
 import { until, useElementVisibility } from '@vueuse/core'
 import { computed, effectScope, onMounted, ref } from 'vue'
 
@@ -39,23 +40,15 @@ onMounted(async () => {
 
 <template>
   <li :style="color">
-    <div
-      ref="el"
-      relative
-      m="ya r-1"
-      w-5
-      h-5
-      flex-none
-      align-mid
-    >
-      <div absolute transition duration-300 :class="state ? 'flip' : ''">
-        <div i-carbon:circle-dash animate-spin animate-2s text-yellow4 />
+    <div ref="el" class="icon-container">
+      <div class="icon-wrapper" :class="state ? 'flip' : ''">
+        <Icon icon="carbon:circle-dash" class="icon-spinner" width="1.2em" height="1.2em" />
       </div>
-      <div absolute transition duration-300 :class="state === 2 ? '' : 'flip'">
-        <div i-carbon:close-outline text-red4 />
+      <div class="icon-wrapper" :class="state === 2 ? '' : 'flip'">
+        <Icon icon="carbon:close-outline" class="icon-error" width="1.2em" height="1.2em" />
       </div>
-      <div absolute transition duration-300 :class="state === 1 ? '' : 'flip'">
-        <div i-carbon:checkmark-outline class="text-$vp-c-brand-1" />
+      <div class="icon-wrapper" :class="state === 1 ? '' : 'flip'">
+        <Icon icon="carbon:checkmark-outline" class="icon-success" width="1.2em" height="1.2em" />
       </div>
     </div>
     <div>
@@ -64,8 +57,45 @@ onMounted(async () => {
   </li>
 </template>
 
-<style>
+<style scoped>
+.icon-container {
+  position: relative;
+  width: 1.2em;
+  height: 1.2em;
+  flex: none;
+  margin-top: auto;
+  margin-bottom: auto;
+  vertical-align: middle;
+}
+
+.icon-wrapper {
+  position: absolute;
+  transition: all 300ms;
+}
+
 .flip {
   transform: rotateY(90deg);
+}
+
+.icon-spinner {
+  animation: spin 1s linear infinite;
+  color: rgb(250, 204, 21);
+}
+
+.icon-error {
+  color: rgb(248, 113, 113);
+}
+
+.icon-success {
+  color: var(--vp-c-brand-1);
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 </style>
