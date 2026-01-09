@@ -1,61 +1,76 @@
-import { editFile, runVitest } from '#test-utils'
+import { runInlineTests } from '#test-utils'
 import { describe, expect, it } from 'vitest'
 
-describe.each([
-  ['default', true],
-  ['default', false],
-])('%s reporter with %s tty', (reporter, isTTY) => {
+describe.for([
+  true,
+  false,
+])('%s reporter with %s tty', (isTTY) => {
   it('prints previously failed tests on rerun', async () => {
-    const { vitest } = await runVitest({
-      watch: true,
-      fileParallelism: false,
-      root: './fixtures/watch/single-failed',
-      reporters: [[reporter, { isTTY }]],
-    })
+    const { vitest, fs } = await runReporterTests(isTTY)
 
-    expect(vitest.stderr).toContain('failed.test.ts > fails')
-    expect(vitest.stdout).toContain('❯ failed.test.ts')
+    expect(vitest.stderr).toContain('failed.test.js > fails')
+    expect(vitest.stdout).toContain('❯ failed.test.js')
     expect(vitest.stdout).toContain('× fails')
     expect(vitest.stdout).toContain('1 failed')
     expect(vitest.stdout).toContain('1 passed')
 
     vitest.resetOutput()
 
-    editFile('./fixtures/watch/single-failed/basic.test.ts', file => `${file}\n`)
+    fs.editFile('./basic.test.js', code => `${code}\n`)
 
-    await vitest.waitForStdout('RERUN  ../../../basic.test.ts')
+    await vitest.waitForStdout('RERUN  ../basic.test.js')
     await vitest.waitForStdout('Waiting for file changes...')
 
     expect(vitest.stdout).not.toContain('log fail')
-    expect(vitest.stdout).toContain('❯ failed.test.ts')
+    expect(vitest.stdout).toContain('❯ failed.test.js')
     expect(vitest.stdout).toContain('× fails')
     expect(vitest.stdout).toContain('1 failed')
     expect(vitest.stdout).toContain('1 passed')
   })
 
   it('prints tests once if changed test is the same', async () => {
-    const { vitest } = await runVitest({
-      watch: true,
-      fileParallelism: false,
-      root: './fixtures/watch/single-failed',
-      reporters: [[reporter, { isTTY }]],
-    })
+    const { vitest, fs } = await runReporterTests(isTTY)
 
-    expect(vitest.stderr).toContain('failed.test.ts > fails')
-    expect(vitest.stdout).toContain('❯ failed.test.ts')
+    expect(vitest.stderr).toContain('failed.test.js > fails')
+    expect(vitest.stdout).toContain('❯ failed.test.js')
     expect(vitest.stdout).toContain('× fails')
     expect(vitest.stdout).toContain('1 failed')
 
     vitest.resetOutput()
 
-    editFile('./fixtures/watch/single-failed/failed.test.ts', file => `${file}\n`)
+    fs.editFile('./failed.test.js', code => `${code}\n`)
 
-    await vitest.waitForStdout('RERUN  ../../../failed.test.ts')
+    await vitest.waitForStdout('RERUN  ../failed.test.js')
     await vitest.waitForStdout('Watching for file changes...')
 
-    expect(vitest.stdout).toContain('❯ failed.test.ts')
+    expect(vitest.stdout).toContain('❯ failed.test.js')
     expect(vitest.stdout).toContain('× fails')
     expect(vitest.stdout).toContain('1 failed')
     expect(vitest.stdout).not.toContain('1 passed')
   })
 })
+
+async function runReporterTests(isTTY: boolean) {
+  return await runInlineTests({
+    'basic.test.js': /* js */`
+      import { expect, it } from 'vitest';
+
+      it('works correctly', () => {
+        console.log('log basic')
+        expect(1).toBe(1)
+      })
+    `,
+    'failed.test.js': /* js */`
+      import { it } from 'vitest';
+
+      it('fails', () => {
+        console.log('log fail')
+        throw new Error('failed')
+      })
+    `,
+  }, {
+    watch: true,
+    fileParallelism: false,
+    reporters: [['default', { isTTY }]],
+  })
+}
