@@ -69,6 +69,7 @@ async function runReporterTests(isTTY: boolean) {
       })
     `,
   }, {
+    config: false,
     watch: true,
     fileParallelism: false,
     reporters: [['default', { isTTY }]],
