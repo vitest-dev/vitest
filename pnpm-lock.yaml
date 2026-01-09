@@ -140,6 +140,9 @@ patchedDependencies:
   cac@6.7.14:
     hash: a8f0f3517a47ce716ed90c0cfe6ae382ab763b021a664ada2a608477d0621588
     path: patches/cac@6.7.14.patch
+  istanbul-lib-source-maps:
+    hash: be977704c4b9838da456619fe2421b5e24df2103a25967bd383b2246c88ddf6e
+    path: patches/istanbul-lib-source-maps.patch
 
 importers:
 
@@ -595,9 +598,6 @@ importers:
       istanbul-lib-report:
         specifier: 'catalog:'
         version: 3.0.1
-      istanbul-lib-source-maps:
-        specifier: 'catalog:'
-        version: 5.0.6
       istanbul-reports:
         specifier: 'catalog:'
         version: 3.2.0
@@ -626,6 +626,9 @@ importers:
       '@types/istanbul-reports':
         specifier: 'catalog:'
         version: 3.0.4
+      istanbul-lib-source-maps:
+        specifier: 'catalog:'
+        version: 5.0.6(patch_hash=be977704c4b9838da456619fe2421b5e24df2103a25967bd383b2246c88ddf6e)
       pathe:
         specifier: 'catalog:'
         version: 2.0.3
@@ -15091,7 +15094,7 @@ snapshots:
       make-dir: 4.0.0
       supports-color: 7.2.0
 
-  istanbul-lib-source-maps@5.0.6:
+  istanbul-lib-source-maps@5.0.6(patch_hash=be977704c4b9838da456619fe2421b5e24df2103a25967bd383b2246c88ddf6e):
     dependencies:
       '@jridgewell/trace-mapping': 0.3.31
       debug: 4.4.3
