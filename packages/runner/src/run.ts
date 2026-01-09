@@ -298,7 +298,7 @@ export async function runTest(test: Test, runner: VitestRunner): Promise<void> {
   const suite = test.suite || test.file
   const $ = runner.trace!
 
-  const repeats = test.repeats ?? 0
+  const repeats = (test.repeats || runner.config.repeats) ?? 0
   for (let repeatCount = 0; repeatCount <= repeats; repeatCount++) {
     const retry = test.retry ?? 0
     for (let retryCount = 0; retryCount <= retry; retryCount++) {
