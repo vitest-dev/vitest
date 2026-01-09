@@ -18,6 +18,8 @@ export default defineConfig({
       shortcuts: [
         ['btn', 'px-4 py-1 rounded inline-flex justify-center gap-2 text-white leading-30px children:mya !no-underline cursor-pointer disabled:cursor-default disabled:bg-gray-600 disabled:opacity-50'],
       ],
+      // silence type error
+      // https://github.com/unocss/unocss/issues/5050
       presets: [
         presetUno({
           dark: 'media',
@@ -26,7 +28,7 @@ export default defineConfig({
         presetIcons({
           scale: 1.2,
         }),
-      ],
+      ] as any,
     }),
   ],
 })

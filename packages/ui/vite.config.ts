@@ -33,7 +33,9 @@ export default defineConfig({
       },
     }),
     Unocss({
-      presets: [presetUno(), presetAttributify(), presetIcons()],
+      // silence type error
+      // https://github.com/unocss/unocss/issues/5050
+      presets: [presetUno(), presetAttributify(), presetIcons()] as any,
       shortcuts: {
         'bg-base': 'bg-white dark:bg-[#111]',
         'bg-overlay': 'bg-[#eee]:50 dark:bg-[#222]:50',
@@ -49,7 +51,7 @@ export default defineConfig({
       },
       transformers: [
         transformerDirectives(),
-      ],
+      ] as any,
       safelist: 'absolute origin-top mt-[8px]'.split(' '),
     }),
     Pages({
