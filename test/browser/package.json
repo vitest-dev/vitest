@@ -22,6 +22,7 @@
     "test-setup-file": "vitest --root ./fixtures/setup-file",
     "test-snapshots": "vitest --root ./fixtures/update-snapshot",
     "test-broken-iframe": "vitest --root ./fixtures/broken-iframe",
+    "test-response-event-loop": "vitest --root ./fixtures/response-event-loop",
     "coverage": "vitest --coverage.enabled --coverage.provider=istanbul --browser.headless=yes",
     "test:browser:preview": "PROVIDER=preview vitest",
     "test:browser:playwright": "PROVIDER=playwright vitest",
