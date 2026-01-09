@@ -152,9 +152,11 @@ test("test case", () => {
 
 test('editing source file generates new test report to file system', async () => {
   const report = 'fixtures/watch/test-results/junit.xml'
-  if (existsSync(report)) {
-    rmSync(report)
-  }
+  onTestFinished(() => {
+    if (existsSync(report)) {
+      rmSync(report)
+    }
+  })
 
   // Test report should not be present before test run
   expect(existsSync(report)).toBe(false)
@@ -163,8 +165,7 @@ test('editing source file generates new test report to file system', async () =>
     ...options,
     reporters: ['verbose', 'junit'],
     outputFile: './test-results/junit.xml',
-  },
-  )
+  })
 
   // Test report should be generated on initial test run
   expect(existsSync(report)).toBe(true)

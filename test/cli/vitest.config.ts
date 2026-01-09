@@ -2,11 +2,10 @@ import { defineConfig } from 'vite'
 
 export default defineConfig({
   test: {
-    include: ['test/*/**.test.ts'],
+    include: ['test/**/**.test.ts'],
     includeTaskLocation: true,
     reporters: ['verbose'],
     testTimeout: 60_000,
-    globals: true,
     fileParallelism: false,
     chaiConfig: {
       truncateThreshold: 999,

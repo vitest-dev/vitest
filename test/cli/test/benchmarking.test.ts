@@ -1,7 +1,7 @@
 import type { createBenchmarkJsonReport } from 'vitest/src/node/reporters/benchmark/json-formatter.js'
 import fs from 'node:fs'
 import * as pathe from 'pathe'
-import { expect, it } from 'vitest'
+import { assert, expect, it } from 'vitest'
 import { runVitest } from '../../test-utils'
 
 it('sequential', async () => {
@@ -63,7 +63,7 @@ it.for([true, false])('includeSamples %s', async (includeSamples) => {
   }
 })
 
-test('compare', async () => {
+it('compare', async () => {
   await fs.promises.rm('./fixtures/benchmarking/compare/bench.json', { force: true })
 
   // --outputJson
