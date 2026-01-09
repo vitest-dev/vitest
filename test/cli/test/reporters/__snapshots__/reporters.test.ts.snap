@@ -17,7 +17,7 @@ exports[`JUnit reporter 1`] = `
 exports[`JUnit reporter with custom function classnameTemplate 1`] = `
 "<?xml version="1.0" encoding="UTF-8" ?>
 <testsuites name="vitest tests" tests="1" failures="0" errors="0" time="0.145992842">
-    <testsuite name="test/core/test/basic.test.ts" timestamp="2022-01-19T10:10:01.759Z" hostname="Mac.fritz.box" tests="1" failures="0" errors="0" skipped="0" time="0.145992842">
+    <testsuite name="test/core/test/basic.test.ts" timestamp="2022-01-19T10:10:01.759Z" hostname="hostname" tests="1" failures="0" errors="0" skipped="0" time="0.145992842">
         <testcase classname="filename:basic.test.ts - filepath:/vitest/test/core/test/basic.test.ts" name="Math.sqrt()" time="0.001442286">
         </testcase>
     </testsuite>
@@ -28,7 +28,7 @@ exports[`JUnit reporter with custom function classnameTemplate 1`] = `
 exports[`JUnit reporter with custom string classname 1`] = `
 "<?xml version="1.0" encoding="UTF-8" ?>
 <testsuites name="vitest tests" tests="1" failures="0" errors="0" time="0.145992842">
-    <testsuite name="test/core/test/basic.test.ts" timestamp="2022-01-19T10:10:01.759Z" hostname="Mac.fritz.box" tests="1" failures="0" errors="0" skipped="0" time="0.145992842">
+    <testsuite name="test/core/test/basic.test.ts" timestamp="2022-01-19T10:10:01.759Z" hostname="hostname" tests="1" failures="0" errors="0" skipped="0" time="0.145992842">
         <testcase classname="my-custom-classname" name="Math.sqrt()" time="0.001442286">
         </testcase>
     </testsuite>
@@ -39,7 +39,7 @@ exports[`JUnit reporter with custom string classname 1`] = `
 exports[`JUnit reporter with custom string classnameTemplate 1`] = `
 "<?xml version="1.0" encoding="UTF-8" ?>
 <testsuites name="vitest tests" tests="1" failures="0" errors="0" time="0.145992842">
-    <testsuite name="test/core/test/basic.test.ts" timestamp="2022-01-19T10:10:01.759Z" hostname="Mac.fritz.box" tests="1" failures="0" errors="0" skipped="0" time="0.145992842">
+    <testsuite name="test/core/test/basic.test.ts" timestamp="2022-01-19T10:10:01.759Z" hostname="hostname" tests="1" failures="0" errors="0" skipped="0" time="0.145992842">
         <testcase classname="filename:basic.test.ts - filepath:/vitest/test/core/test/basic.test.ts" name="Math.sqrt()" time="0.001442286">
         </testcase>
     </testsuite>
@@ -98,7 +98,7 @@ exports[`JUnit reporter with outputFile object in non-existing directory 2`] = `
 exports[`JUnit reporter without classname 1`] = `
 "<?xml version="1.0" encoding="UTF-8" ?>
 <testsuites name="vitest tests" tests="1" failures="0" errors="0" time="0.145992842">
-    <testsuite name="test/core/test/basic.test.ts" timestamp="2022-01-19T10:10:01.759Z" hostname="Mac.fritz.box" tests="1" failures="0" errors="0" skipped="0" time="0.145992842">
+    <testsuite name="test/core/test/basic.test.ts" timestamp="2022-01-19T10:10:01.759Z" hostname="hostname" tests="1" failures="0" errors="0" skipped="0" time="0.145992842">
         <testcase classname="test/core/test/basic.test.ts" name="Math.sqrt()" time="0.001442286">
         </testcase>
     </testsuite>

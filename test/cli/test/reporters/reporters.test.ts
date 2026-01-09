@@ -10,10 +10,6 @@ function getTestModules(_files = files) {
   return _files.map(task => ({ task }) as TestModule)
 }
 
-vi.mock('os', () => ({
-  hostname: () => 'hostname',
-}))
-
 beforeEach(() => {
   vi.setSystemTime(1642587001759)
   return () => {
@@ -51,7 +47,7 @@ test('tap-flat reporter', async () => {
 
 test('JUnit reporter', async () => {
   // Arrange
-  const reporter = new JUnitReporter({})
+  const reporter = new JUnitReporter({ hostname: 'hostname' })
   const context = getContext()
 
   // Act
@@ -64,7 +60,7 @@ test('JUnit reporter', async () => {
 
 test('JUnit reporter without classname', async () => {
   // Arrange
-  const reporter = new JUnitReporter({})
+  const reporter = new JUnitReporter({ hostname: 'hostname' })
   const context = getContext()
   const testModules = getTestModules(passedFiles)
 
@@ -79,7 +75,7 @@ test('JUnit reporter without classname', async () => {
 
 test('JUnit reporter with custom string classname', async () => {
   // Arrange
-  const reporter = new JUnitReporter({ classnameTemplate: 'my-custom-classname' })
+  const reporter = new JUnitReporter({ classnameTemplate: 'my-custom-classname', hostname: 'hostname' })
   const context = getContext()
   const testModules = getTestModules(passedFiles)
 
@@ -94,7 +90,10 @@ test('JUnit reporter with custom string classname', async () => {
 
 test('JUnit reporter with custom function classnameTemplate', async () => {
   // Arrange
-  const reporter = new JUnitReporter({ classnameTemplate: task => `filename:${task.filename} - filepath:${task.filepath}` })
+  const reporter = new JUnitReporter({
+    classnameTemplate: task => `filename:${task.filename} - filepath:${task.filepath}`,
+    hostname: 'hostname',
+  })
   const context = getContext()
   const testModules = getTestModules(passedFiles)
 
@@ -108,7 +107,10 @@ test('JUnit reporter with custom function classnameTemplate', async () => {
 })
 test('JUnit reporter with custom string classnameTemplate', async () => {
   // Arrange
-  const reporter = new JUnitReporter({ classnameTemplate: `filename:{filename} - filepath:{filepath}` })
+  const reporter = new JUnitReporter({
+    classnameTemplate: `filename:{filename} - filepath:{filepath}`,
+    hostname: 'hostname',
+  })
   const context = getContext()
   const testModules = getTestModules(passedFiles)
 
@@ -123,7 +125,7 @@ test('JUnit reporter with custom string classnameTemplate', async () => {
 
 test('JUnit reporter (no outputFile entry)', async () => {
   // Arrange
-  const reporter = new JUnitReporter({})
+  const reporter = new JUnitReporter({ hostname: 'hostname' })
   const context = getContext()
   context.vitest.config.outputFile = {}
 
@@ -137,7 +139,7 @@ test('JUnit reporter (no outputFile entry)', async () => {
 
 test('JUnit reporter with outputFile', async () => {
   // Arrange
-  const reporter = new JUnitReporter({})
+  const reporter = new JUnitReporter({ hostname: 'hostname' })
   const outputFile = resolve('report.xml')
   const context = getContext()
   context.vitest.config.outputFile = outputFile
@@ -157,7 +159,7 @@ test('JUnit reporter with outputFile', async () => {
 
 test('JUnit reporter with outputFile object', async () => {
   // Arrange
-  const reporter = new JUnitReporter({})
+  const reporter = new JUnitReporter({ hostname: 'hostname' })
   const outputFile = resolve('report_object.xml')
   const context = getContext()
   context.vitest.config.outputFile = {
@@ -179,7 +181,7 @@ test('JUnit reporter with outputFile object', async () => {
 
 test('JUnit reporter with outputFile in non-existing directory', async () => {
   // Arrange
-  const reporter = new JUnitReporter({})
+  const reporter = new JUnitReporter({ hostname: 'hostname' })
   const rootDirectory = resolve('junitReportDirectory')
   const outputFile = `${rootDirectory}/deeply/nested/report.xml`
   const context = getContext()
@@ -200,7 +202,7 @@ test('JUnit reporter with outputFile in non-existing directory', async () => {
 
 test('JUnit reporter with outputFile object in non-existing directory', async () => {
   // Arrange
-  const reporter = new JUnitReporter({})
+  const reporter = new JUnitReporter({ hostname: 'hostname' })
   const rootDirectory = resolve('junitReportDirectory_object')
   const outputFile = `${rootDirectory}/deeply/nested/report.xml`
   const context = getContext()
