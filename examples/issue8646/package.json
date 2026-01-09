@@ -1,0 +1,16 @@
+{
+  "name": "@vitest/example-issue-8646",
+  "type": "module",
+  "private": true,
+  "license": "MIT",
+  "scripts": {
+    "test": "vitest",
+    "test:ui": "vitest --ui"
+  },
+  "devDependencies": {
+    "@vitest/browser": "workspace:*",
+    "@vitest/browser-playwright": "workspace:*",
+    "playwright": "^1.57.0",
+    "vitest": "workspace:*"
+  }
+}
