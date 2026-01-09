@@ -13,6 +13,7 @@
     "@opentelemetry/api": "^1.9.0",
     "@opentelemetry/sdk-node": "^0.208.0",
     "@opentelemetry/sdk-trace-web": "^2.2.0",
+    "@test/pkg-reporter": "link:./deps/pkg-reporter",
     "@test/test-dep-error": "file:./deps/error",
     "@test/test-dep-linked": "link:./deps/linked",
     "@test/test-dep-url": "link:./deps/dep-url",
@@ -23,11 +24,14 @@
     "@vitest/mocker": "workspace:*",
     "@vitest/runner": "workspace:*",
     "@vitest/utils": "workspace:*",
+    "flatted": "catalog:",
     "obug": "^2.1.1",
     "playwright": "catalog:",
+    "typescript": "catalog:",
     "unplugin-swc": "^1.5.9",
     "vite": "latest",
     "vitest": "workspace:*",
+    "vitest-sonar-reporter": "catalog:",
     "ws": "catalog:"
   }
 }
