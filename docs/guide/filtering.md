@@ -116,7 +116,7 @@ describe('another suite', () => {
 })
 ```
 
-Run Vitest with a filter and a line number:
+Run Vitest with a file filter and a line number:
 
 ```shell
 vitest ./test/example.test.ts:5
