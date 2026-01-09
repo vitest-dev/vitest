@@ -200,12 +200,11 @@ function meta(): TaskMeta
 Custom [metadata](/api/advanced/metadata) that was attached to the suite during its execution or collection. The meta can be attached by assigning a property to the `suite.meta` object during a test run:
 
 ```ts {7,12}
-import { test } from 'vitest'
-import { getCurrentSuite } from 'vitest/suite'
+import { describe, test, TestRunner } from 'vitest'
 
 describe('the validation works correctly', () => {
   // assign "decorated" during collection
-  const { suite } = getCurrentSuite()
+  const { suite } = TestRunner.getCurrentSuite()
   suite!.meta.decorated = true
 
   test('some test', ({ task }) => {

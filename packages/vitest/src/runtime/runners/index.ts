@@ -7,7 +7,7 @@ import { rpc } from '../rpc'
 import { loadDiffConfig, loadSnapshotSerializers } from '../setup-common'
 import { getWorkerState } from '../utils'
 import { NodeBenchmarkRunner } from './benchmark'
-import { VitestTestRunner } from './test'
+import { TestRunner } from './test'
 
 async function getTestRunnerConstructor(
   config: SerializedConfig,
@@ -15,7 +15,7 @@ async function getTestRunnerConstructor(
 ): Promise<VitestRunnerConstructor> {
   if (!config.runner) {
     return (
-      config.mode === 'test' ? VitestTestRunner : NodeBenchmarkRunner
+      config.mode === 'test' ? TestRunner : NodeBenchmarkRunner
     ) as any as VitestRunnerConstructor
   }
   const mod = await moduleRunner.import(config.runner)

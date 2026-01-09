@@ -18,6 +18,7 @@ import type { VitestBrowserClientMocker } from './mocker'
 import type { CommandsManager } from './tester-utils'
 import { globalChannel, onCancel } from '@vitest/browser/client'
 import { getTestName } from '@vitest/runner/utils'
+import { BenchmarkRunner, TestRunner } from 'vitest'
 import { page, userEvent } from 'vitest/browser'
 import {
   DecodedMap,
@@ -26,7 +27,6 @@ import {
   loadSnapshotSerializers,
   takeCoverageInsideWorker,
 } from 'vitest/internal/browser'
-import { NodeBenchmarkRunner, VitestTestRunner } from 'vitest/runners'
 import { createStackString, parseStacktrace } from '../../../../utils/src/source-map'
 import { getBrowserState, getWorkerState, moduleRunner } from '../utils'
 import { rpc } from './rpc'
@@ -323,7 +323,7 @@ export async function initiateRunner(
     return cachedRunner
   }
   const runnerClass
-    = config.mode === 'test' ? VitestTestRunner : NodeBenchmarkRunner
+    = config.mode === 'test' ? TestRunner : BenchmarkRunner
 
   const BrowserRunner = createBrowserRunner(runnerClass, mocker, state, {
     takeCoverage: () =>

@@ -11,7 +11,7 @@ You can import reporters from `vitest/reporters` and extend them to create your 
 In general, you don't need to create your reporter from scratch. `vitest` comes with several default reporting programs that you can extend.
 
 ```ts
-import { DefaultReporter } from 'vitest/reporters'
+import { DefaultReporter } from 'vitest/node'
 
 export default class MyDefaultReporter extends DefaultReporter {
   // do something
@@ -23,7 +23,7 @@ Of course, you can create your reporter from scratch. Just extend the `BaseRepor
 And here is an example of a custom reporter:
 
 ```ts [custom-reporter.js]
-import { BaseReporter } from 'vitest/reporters'
+import { BaseReporter } from 'vitest/node'
 
 export default class CustomReporter extends BaseReporter {
   onTestModuleCollected() {
