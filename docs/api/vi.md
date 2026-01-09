@@ -179,11 +179,11 @@ If there is no `__mocks__` folder or a factory provided, Vitest will import the 
 function doMock(
   path: string,
   factory?: MockOptions | MockFactory<unknown>
-): void
+): Disposable
 function doMock<T>(
   module: Promise<T>,
   factory?: MockOptions | MockFactory<T>
-): void
+): Disposable
 ```
 
 The same as [`vi.mock`](#vi-mock), but it's not hoisted to the top of the file, so you can reference variables in the global file scope. The next [dynamic import](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/import) of the module will be mocked.
@@ -228,6 +228,24 @@ test('importing the next module imports mocked one', async () => {
   expect(mockedIncrement(1)).toBe(103)
 })
 ```
+
+::: tip
+In environments that support [Explicit Resource Management](https://github.com/tc39/proposal-explicit-resource-management), you can use `using` on the value returned from `vi.doMock()` to automatically call [`vi.doUnmock()`](#vi-dounmock) on the mocked module when the containing block is exited. This is especially useful when mocking a dynamically imported module for a single test case.
+
+```ts
+it('uses a mocked version of my-module', () => {
+  using _mockDisposable = vi.doMock('my-module')
+
+  const myModule = await import('my-module') // mocked
+
+  // my-module is restored here
+})
+
+it('uses the normal version of my-module again', () => {
+  const myModule = await import('my-module') // not mocked
+})
+```
+:::
 
 ### vi.mocked
 
