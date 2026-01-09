@@ -8,9 +8,9 @@
     "test:ui": "vitest --ui"
   },
   "devDependencies": {
-    "@vitest/browser": "latest",
-    "@vitest/browser-playwright": "latest",
-    "playwright": "latest",
-    "vitest": "latest"
+    "@vitest/browser": "workspace:*",
+    "@vitest/browser-playwright": "workspace:*",
+    "playwright": "^1.57.0",
+    "vitest": "workspace:*"
   }
 }
