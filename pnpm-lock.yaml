@@ -1481,27 +1481,6 @@ importers:
 
   test/node-runner: {}
 
-  test/reporters:
-    devDependencies:
-      '@vitest/browser-playwright':
-        specifier: workspace:*
-        version: link:../../packages/browser-playwright
-      '@vitest/runner':
-        specifier: workspace:*
-        version: link:../../packages/runner
-      flatted:
-        specifier: ^3.3.3
-        version: 3.3.3
-      pkg-reporter:
-        specifier: ./reportPkg/
-        version: link:reportPkg
-      vitest:
-        specifier: workspace:*
-        version: link:../../packages/vitest
-      vitest-sonar-reporter:
-        specifier: 3.0.0
-        version: 3.0.0(vitest@packages+vitest)
-
   test/snapshots:
     dependencies:
       vitest:
