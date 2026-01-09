@@ -1,4 +1,4 @@
-import type { Locator } from 'vitest/browser'
+import type { Locator, UserEventWheelDeltaOptions, UserEventWheelOptions } from 'vitest/browser'
 import type { BrowserRPC } from '../client'
 import { getBrowserState, getWorkerState } from '../utils'
 
@@ -226,4 +226,42 @@ const kLocator = Symbol.for('$$vitest:locator')
 
 export function isLocator(element: unknown): element is Locator {
   return (!!element && typeof element === 'object' && kLocator in element)
+}
+
+const DEFAULT_WHEEL_DELTA = 100
+
+export function resolveUserEventWheelOptions(options: UserEventWheelOptions): UserEventWheelDeltaOptions {
+  let delta: UserEventWheelDeltaOptions['delta']
+
+  if (options.delta) {
+    delta = options.delta
+  }
+  else {
+    switch (options.direction) {
+      case 'up': {
+        delta = { y: -DEFAULT_WHEEL_DELTA }
+        break
+      }
+
+      case 'down': {
+        delta = { y: DEFAULT_WHEEL_DELTA }
+        break
+      }
+
+      case 'left': {
+        delta = { x: -DEFAULT_WHEEL_DELTA }
+        break
+      }
+
+      case 'right': {
+        delta = { x: DEFAULT_WHEEL_DELTA }
+        break
+      }
+    }
+  }
+
+  return {
+    delta,
+    times: options.times,
+  }
 }
