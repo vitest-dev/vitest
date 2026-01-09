@@ -5,10 +5,11 @@ import { expect, test } from 'vitest'
 
 test('should print correct indicator position', async () => {
   const filename = resolve('./fixtures/reporters/indicator-position.test.js')
-  const { stderr } = await runVitest({ root: './fixtures/reporters' }, [filename])
   const code = readFileSync(filename, 'utf-8')
-
   expect(code).toMatch(/\r\n/)
+
+  const { stderr } = await runVitest({ root: './fixtures/reporters' }, [filename])
+
   expect(stderr).toBeTruthy()
   expect(stderr).toMatchInlineSnapshot(`
     "
