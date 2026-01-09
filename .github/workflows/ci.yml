@@ -223,7 +223,7 @@ jobs:
 
       - name: Install
         run: |
-          yq -i '.overrides.vite = "npm:rolldown-vite"' pnpm-workspace.yaml
+          yq -i '.overrides.vite = "npm:vite@beta"' pnpm-workspace.yaml
           git add . && git commit -m "ci" && pnpm i --prefer-offline --no-frozen-lockfile
 
       - uses: ./.github/actions/setup-playwright
