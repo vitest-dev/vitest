@@ -1,0 +1,8 @@
+{
+  "name": "@test/node-runner",
+  "type": "module",
+  "description": "Tests that should have no access to Vitest APIs in the test process.",
+  "scripts": {
+    "test": "node --test './test/*'"
+  }
+}
