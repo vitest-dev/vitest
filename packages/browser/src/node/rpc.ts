@@ -193,6 +193,10 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject, defaultMocke
         },
         async saveSnapshotFile(id, content) {
           checkFileAccess(id)
+          // silently ignore write attempts if not allowed
+          if (!project.vitest.config.api.allowWrite || !project.vitest.config.browser.api.allowWrite) {
+            return
+          }
           await fs.mkdir(dirname(id), { recursive: true })
           return fs.writeFile(id, content, 'utf-8')
         },
@@ -200,6 +204,10 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject, defaultMocke
           checkFileAccess(id)
           if (!existsSync(id)) {
             throw new Error(`Snapshot file "${id}" does not exist.`)
+          }
+          // silently ignore write attempts if not allowed
+          if (!project.vitest.config.api.allowWrite || !project.vitest.config.browser.api.allowWrite) {
+            return
           }
           return fs.unlink(id)
         },
