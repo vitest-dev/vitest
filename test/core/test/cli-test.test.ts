@@ -275,7 +275,12 @@ test('browser by name', () => {
   expect(options).toEqual({ browser: { name: 'firefox' } })
 })
 
-test('clearScreen', async () => {
+test('clearScreen', async (ctx) => {
+  // skip vm since rolldown native modules break due to RegExp instance
+  // https://github.com/vitest-dev/vitest/issues/8754#issuecomment-3727583957
+  const vite = await import('vite')
+  ctx.skip('rolldownVersion' in vite && ctx.task.file.projectName === 'vmThreads')
+
   const examples = [
     // vitest cli | vite clearScreen
     ['--clearScreen', undefined],

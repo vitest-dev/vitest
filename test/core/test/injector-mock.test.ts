@@ -1117,6 +1117,52 @@ const Baz = class extends Foo {}
     `)
   })
 
+  test('classDeclaration shadowing import', () => {
+    const input = `\
+import { Bar } from "./repro.js"
+{
+  class Bar {
+    test() {}
+  }
+  const Zoo = class Zoo extends Bar {}
+}
+`
+    expect(hoistSimpleCodeWithoutMocks(input)).toMatchInlineSnapshot(`
+      "vi.mock('faker');
+      const __vi_import_0__ = await import("./repro.js");
+      import {vi} from "vitest";
+
+      {
+        class Bar {
+          test() {}
+        }
+        const Zoo = class Zoo extends Bar {}
+      }"
+    `)
+  })
+
+  test('classExpression name shadowing import', () => {
+    const input = `\
+import { Foo } from "./foo.js"
+const Bar = class Foo {
+  static create() {
+    return new Foo()
+  }
+}
+`
+    expect(hoistSimpleCodeWithoutMocks(input)).toMatchInlineSnapshot(`
+      "vi.mock('faker');
+      const __vi_import_0__ = await import("./foo.js");
+      import {vi} from "vitest";
+
+      const Bar = class Foo {
+        static create() {
+          return new Foo()
+        }
+      }"
+    `)
+  })
+
   test('import assertion attribute', () => {
     expect(
       hoistSimpleCodeWithoutMocks(`
