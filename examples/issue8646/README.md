@@ -2,6 +2,10 @@
 
 This example demonstrates the issue reported in [#8646](https://github.com/vitest-dev/vitest/issues/8646) and its solutions.
 
+## Summary
+
+**This is not a bug in vitest or ivya.** This is a user error caused by not following accessibility best practices combined with a behavior change in Chromium 136+.
+
 ## The Problem
 
 When using `userEvent.upload()` with a file input element that has **low semantic specificity**, the test fails with:
@@ -76,13 +80,19 @@ await userEvent.upload(input, file)  // ✅ Works!
 
 ## Why This Happens
 
-This is not a bug in vitest/browser itself. The behavior change occurred at the browser level:
+**This is not a bug in vitest/browser or ivya.** The behavior change occurred at the browser level:
 
 1. **Playwright 1.51.0 and earlier**: Shipped with Chromium versions that exposed `<input type="file">` as a "textbox" in the accessibility tree
-2. **Playwright 1.52.0+**: Ships with Chromium 136+, which no longer exposes file inputs as textboxes
-3. **vitest/browser**: Relies on the accessibility tree to locate elements, so it's affected by this Chromium change
+2. **Playwright 1.52.0+**: Ships with Chromium 136+, which no longer exposes file inputs as textboxes in the accessibility tree
+3. **vitest/browser and ivya**: Rely on the accessibility tree to locate elements (following Playwright's pattern), so they are affected by this Chromium change
 
-The solution is to follow accessibility best practices: always provide semantic specificity to form elements so they can be reliably located and are accessible to assistive technologies.
+The solution is to follow **accessibility best practices**: always provide semantic specificity to form elements so they can be reliably located and are accessible to assistive technologies.
+
+### Why the change in Chromium matters
+
+When an input element lacks semantic specificity (no id, no label, no testid, etc.), vitest/browser's locator generation creates a generic selector. For a bare `<input type="file">` without any identifying features, this often results in a selector equivalent to `role="textbox"`. This worked in older Chromium versions because file inputs were exposed as textboxes in the accessibility tree. In Chromium 136+, file inputs are no longer exposed this way, so the generic locator fails to find the element.
+
+By adding an `id`, `data-testid`, or associating with a `<label>`, the element becomes uniquely identifiable, and vitest/browser can generate a specific, stable selector that doesn't rely on the element's role in the accessibility tree.
 
 ## Running This Example
 

@@ -345,6 +345,21 @@ importers:
         specifier: workspace:*
         version: link:../../packages/vitest
 
+  examples/issue8646:
+    devDependencies:
+      '@vitest/browser':
+        specifier: workspace:*
+        version: link:../../packages/browser
+      '@vitest/browser-playwright':
+        specifier: workspace:*
+        version: link:../../packages/browser-playwright
+      playwright:
+        specifier: latest
+        version: 1.57.0
+      vitest:
+        specifier: workspace:*
+        version: link:../../packages/vitest
+
   examples/lit:
     dependencies:
       lit:

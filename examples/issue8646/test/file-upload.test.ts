@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { userEvent } from '@vitest/browser/context'
+import { userEvent } from 'vitest/browser'
 
 describe('Issue 8646 - userEvent.upload with file inputs', () => {
   it('fails without semantic specificity (original issue)', async () => {
