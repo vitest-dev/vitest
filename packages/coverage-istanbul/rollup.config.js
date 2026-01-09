@@ -27,7 +27,10 @@ const plugins = [
   ...dtsUtils.isolatedDecl(),
   nodeResolve(),
   json(),
-  commonjs(),
+  commonjs({
+    // "istanbul-lib-source-maps > @jridgewell/trace-mapping" is not CJS
+    esmExternals: ['@jridgewell/trace-mapping'],
+  }),
   oxc({
     transform: { target: 'node18' },
   }),
