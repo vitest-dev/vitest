@@ -5,6 +5,7 @@ import type {
   Identifier,
   ImportExpression,
   Literal,
+  MetaProperty,
   Pattern,
   Property,
   VariableDeclaration,
@@ -43,7 +44,7 @@ interface Visitors {
     info: IdentifierInfo,
     parentStack: Node[],
   ) => void
-  onImportMeta?: (node: Node) => void
+  onImportMeta?: (node: Positioned<MetaProperty>) => void
   onDynamicImport?: (node: Positioned<ImportExpression>) => void
   onCallExpression?: (node: Positioned<CallExpression>) => void
 }
@@ -142,7 +143,7 @@ export function esmWalker(
       }
 
       if (node.type === 'MetaProperty' && node.meta.name === 'import') {
-        onImportMeta?.(node as Node)
+        onImportMeta?.(node as Positioned<MetaProperty>)
       }
       else if (node.type === 'ImportExpression') {
         onDynamicImport?.(node as Positioned<ImportExpression>)
