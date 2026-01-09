@@ -325,24 +325,15 @@ export function getInternalState(): WorkerGlobalState {
 }
 
 const originalFiles = new Map<string, string>()
-const createdFiles = new Set<string>()
-afterEach(() => {
-  originalFiles.forEach((content, file) => {
-    fs.writeFileSync(file, content, 'utf-8')
-  })
-  createdFiles.forEach((file) => {
+
+export function createFile(file: string, content: string) {
+  fs.mkdirSync(dirname(file), { recursive: true })
+  fs.writeFileSync(file, content, 'utf-8')
+  onTestFinished(() => {
     if (fs.existsSync(file)) {
       fs.unlinkSync(file)
     }
   })
-  originalFiles.clear()
-  createdFiles.clear()
-})
-
-export function createFile(file: string, content: string) {
-  createdFiles.add(file)
-  fs.mkdirSync(dirname(file), { recursive: true })
-  fs.writeFileSync(file, content, 'utf-8')
 }
 
 export function editFile(file: string, callback: (content: string) => string) {
@@ -351,6 +342,13 @@ export function editFile(file: string, callback: (content: string) => string) {
     originalFiles.set(file, content)
   }
   fs.writeFileSync(file, callback(content), 'utf-8')
+  onTestFinished(() => {
+    const original = originalFiles.get(file)
+    if (original !== undefined) {
+      fs.writeFileSync(file, original, 'utf-8')
+      originalFiles.delete(file)
+    }
+  })
 }
 
 export function resolvePath(baseUrl: string, path: string) {
