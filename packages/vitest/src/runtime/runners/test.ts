@@ -227,10 +227,25 @@ export class VitestTestRunner implements VitestRunner {
   }
 
   getImportDurations(): Record<string, ImportDuration> {
-    const importDurations: Record<string, ImportDuration> = {}
-    const entries = this.workerState.moduleExecutionInfo?.entries() || []
+    const { limit } = this.config.experimental.printImportBreakdown
+    // limit = 0 means opt-out from collection entirely
+    if (limit === 0) {
+      return {}
+    }
 
-    for (const [filepath, { duration, selfTime, external, importer }] of entries) {
+    const entries = [...(this.workerState.moduleExecutionInfo?.entries() || [])]
+
+    // Trim to top N by duration to reduce IPC payload
+    // Keep enough entries for UI "show more" and aggregation
+    const retention = Math.max(50, limit * 5)
+
+    // Sort by duration descending and keep top entries
+    const sortedEntries = entries
+      .sort(([, a], [, b]) => b.duration - a.duration)
+      .slice(0, retention)
+
+    const importDurations: Record<string, ImportDuration> = {}
+    for (const [filepath, { duration, selfTime, external, importer }] of sortedEntries) {
       importDurations[normalize(filepath)] = {
         selfTime,
         totalTime: duration,

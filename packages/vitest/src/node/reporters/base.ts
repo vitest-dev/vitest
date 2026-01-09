@@ -607,7 +607,7 @@ export abstract class BaseReporter implements Reporter {
       }
     }
 
-    if (this.ctx.config.experimental.printImportBreakdown) {
+    if (this.ctx.config.experimental.printImportBreakdown.enabled) {
       this.printImportsBreakdown()
     }
 
@@ -649,14 +649,15 @@ export abstract class BaseReporter implements Reporter {
 
     const sortedImports = allImports.sort((a, b) => b.totalTime - a.totalTime)
     const maxTotalTime = sortedImports[0].totalTime
-    const topImports = sortedImports.slice(0, 10)
+    const limit = this.ctx.config.experimental.printImportBreakdown.limit
+    const topImports = sortedImports.slice(0, limit)
 
     const totalSelfTime = allImports.reduce((sum, imp) => sum + imp.selfTime, 0)
     const totalTotalTime = allImports.reduce((sum, imp) => sum + imp.totalTime, 0)
     const slowestImport = sortedImports[0]
 
     this.log()
-    this.log(c.bold('Import Duration Breakdown') + c.dim(' (ordered by Total Time) (Top 10)'))
+    this.log(c.bold('Import Duration Breakdown') + c.dim(` (ordered by Total Time) (Top ${limit})`))
 
     // if there are multiple files, it's highly possible that some of them will import the same large file
     // we group them to show the distinction between those files more easily
