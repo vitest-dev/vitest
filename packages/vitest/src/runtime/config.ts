@@ -1,6 +1,6 @@
 import type { FakeTimerInstallOpts } from '@sinonjs/fake-timers'
 import type { PrettyFormatOptions } from '@vitest/pretty-format'
-import type { SequenceHooks, SequenceSetupFiles } from '@vitest/runner'
+import type { SequenceHooks, SequenceSetupFiles, SerializableRetry } from '@vitest/runner'
 import type { SnapshotEnvironment, SnapshotUpdateState } from '@vitest/snapshot'
 import type { SerializedDiffOptions } from '@vitest/utils/diff'
 
@@ -77,7 +77,7 @@ export interface SerializedConfig {
     truncateThreshold?: number
   } | undefined
   diff: string | SerializedDiffOptions | undefined
-  retry: number
+  retry: SerializableRetry
   includeTaskLocation: boolean | undefined
   inspect: boolean | string | undefined
   inspectBrk: boolean | string | undefined
