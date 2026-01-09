@@ -1217,6 +1217,9 @@ importers:
       '@vitest/browser-preview':
         specifier: workspace:*
         version: link:../../packages/browser-preview
+      '@vitest/browser-webdriverio':
+        specifier: workspace:*
+        version: link:../../packages/browser-webdriverio
       '@vitest/mocker':
         specifier: workspace:*
         version: link:../../packages/mocker

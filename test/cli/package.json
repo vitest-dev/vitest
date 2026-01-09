@@ -21,6 +21,7 @@
     "@vitejs/plugin-basic-ssl": "^2.1.0",
     "@vitest/browser-playwright": "workspace:*",
     "@vitest/browser-preview": "workspace:*",
+    "@vitest/browser-webdriverio": "workspace:*",
     "@vitest/mocker": "workspace:*",
     "@vitest/runner": "workspace:*",
     "@vitest/utils": "workspace:*",

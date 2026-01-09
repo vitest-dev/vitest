@@ -1,8 +1,7 @@
 import type { TestUserConfig } from 'vitest/node'
-
+import { runVitest } from '#test-utils'
 import { playwright } from '@vitest/browser-playwright'
 import { expect, test } from 'vitest'
-import { runVitest } from '../../test-utils'
 
 const configs: TestUserConfig[] = []
 const pools: TestUserConfig[] = [

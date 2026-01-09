@@ -1,6 +1,6 @@
+import { runVitest } from '#test-utils'
 import { expect, test } from 'vitest'
 import { rolldownVersion } from 'vitest/node'
-import { runVitest } from '../../test-utils'
 
 test('rollup error node', async () => {
   const { stdout } = await runVitest({

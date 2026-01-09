@@ -1,9 +1,9 @@
+import { runInlineTests } from '#test-utils'
 import { expect, test } from 'vitest'
-import { runInlineTests, ts } from '../../test-utils'
 
 const nodeMajor = Number(process.version.slice(1).split('.')[0])
 
-test.runIf(nodeMajor >= 22)('import node:sqlite', async () => {
+test.runIf(nodeMajor >= 22)('can import node:sqlite', async () => {
   const { vitest, results } = await runInlineTests({
     'vitest.config.ts': {
       test: {
@@ -11,7 +11,7 @@ test.runIf(nodeMajor >= 22)('import node:sqlite', async () => {
         execArgv: ['--experimental-sqlite', '--no-warnings=ExperimentalWarning'],
       },
     },
-    'basic.test.ts': ts`
+    'basic.test.ts': /* ts */`
       import { test, expect } from 'vitest'
       import sqlite from 'node:sqlite'
 

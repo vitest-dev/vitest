@@ -4,7 +4,7 @@ import { expect, onTestFinished, test } from 'vitest'
 import { createVitest } from 'vitest/node'
 
 async function vitest(cliOptions: TestUserConfig, configValue: TestUserConfig = {}, viteConfig: ViteUserConfig = {}, vitestOptions: VitestOptions = {}) {
-  const vitest = await createVitest('test', { ...cliOptions, watch: false }, { ...viteConfig, test: configValue as any }, vitestOptions)
+  const vitest = await createVitest('test', { ...cliOptions, config: false, watch: false }, { ...viteConfig, test: configValue as any }, vitestOptions)
   onTestFinished(() => vitest.close())
   return vitest
 }

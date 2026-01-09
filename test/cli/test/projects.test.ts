@@ -1,6 +1,6 @@
+import { runInlineTests, runVitest } from '#test-utils'
 import { resolve } from 'pathe'
 import { describe, expect, it } from 'vitest'
-import { runInlineTests, runVitest } from '../../test-utils'
 
 it('runs the workspace if there are several vitest config files', async () => {
   const { stderr, stdout } = await runVitest({
@@ -193,5 +193,40 @@ describe('the config file names', () => {
     }, {}, { fails: true })
 
     expect(stderr).toContain('The file "unit.config.js" must start with "vitest.config"/"vite.config" or match the pattern "(vitest|vite).*.config.*" to be a valid project config.')
+  })
+})
+
+describe('project filtering', () => {
+  const allProjects = ['project_1', 'project_2', 'space_1']
+
+  it.for([
+    { pattern: 'project_1', expected: ['project_1'] },
+    { pattern: '*', expected: allProjects },
+    { pattern: '*j*', expected: ['project_1', 'project_2'] },
+    { pattern: 'project*', expected: ['project_1', 'project_2'] },
+    { pattern: 'space*', expected: ['space_1'] },
+    { pattern: '!project_1', expected: ['project_2', 'space_1'] },
+    { pattern: '!project*', expected: ['space_1'] },
+    { pattern: '!project', expected: allProjects },
+  ])('should match projects correctly: $pattern', async ({ pattern, expected }) => {
+    const { ctx, stderr, stdout } = await runVitest({
+      root: 'fixtures/project',
+      reporters: ['default'],
+      project: pattern,
+    })
+
+    expect(stderr).toBeFalsy()
+    expect(stdout).toBeTruthy()
+
+    for (const project of allProjects) {
+      if (expected.includes(project)) {
+        expect(stdout).toContain(project)
+      }
+      else {
+        expect(stdout).not.toContain(project)
+      }
+    }
+
+    expect(ctx?.projects.map(p => p.name).sort()).toEqual(expected)
   })
 })
