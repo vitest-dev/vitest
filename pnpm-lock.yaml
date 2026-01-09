@@ -1371,8 +1371,8 @@ importers:
         specifier: file:./vitest-environment-custom
         version: file:test/core/vitest-environment-custom
       vitest-package-exports:
-        specifier: ^0.1.1
-        version: 0.1.1
+        specifier: ^1.1.2
+        version: 1.1.2
       vue:
         specifier: 'catalog:'
         version: 3.5.25(typescript@5.9.3)
@@ -1411,7 +1411,7 @@ importers:
         version: 2.4.6
       happy-dom:
         specifier: latest
-        version: 20.0.11
+        version: 20.1.0
       istanbul-lib-coverage:
         specifier: 'catalog:'
         version: 3.2.2
@@ -1557,7 +1557,7 @@ importers:
         version: 10.4.1
       happy-dom:
         specifier: latest
-        version: 20.0.11
+        version: 20.1.0
       vitest:
         specifier: workspace:*
         version: link:../../packages/vitest
@@ -6444,6 +6444,10 @@ packages:
     resolution: {integrity: sha512-QsCdAUHAmiDeKeaNojb1OHOPF7NjcWPBR7obdu3NwH2a/oyQaLg5d0aaCy/9My6CdPChYF07dvz5chaXBGaD4g==}
     engines: {node: '>=20.0.0'}
 
+  happy-dom@20.1.0:
+    resolution: {integrity: sha512-ebvqjBqzenBk2LjzNEAzoj7yhw7rW/R2/wVevMu6Mrq3MXtcI/RUz4+ozpcOcqVLEWPqLfg2v9EAU7fFXZUUJw==}
+    engines: {node: '>=20.0.0'}
+
   has-bigints@1.1.0:
     resolution: {integrity: sha512-R3pbpkcIqv2Pm3dUwgjclDRVmWpTJW2DcMzcIhEXEx1oh/CEMObMm3KLmRJOdvhM7o4uQBnwr8pzRK2sJWIqfg==}
     engines: {node: '>= 0.4'}
@@ -9239,8 +9243,8 @@ packages:
   vitest-environment-custom@file:test/core/vitest-environment-custom:
     resolution: {directory: test/core/vitest-environment-custom, type: directory}
 
-  vitest-package-exports@0.1.1:
-    resolution: {integrity: sha512-rXgU5noxaaMA5VJXgVPhXRzPiQ1WFmWwgo8dQFPg9j/yFM028scO0IAylFHVI8XMRevhozEt1usa6RQYQY26lg==}
+  vitest-package-exports@1.1.2:
+    resolution: {integrity: sha512-895iRrbcsZIDMhJSftGcQkuOPZcbCbHEQHXG0MnPKsSkpJhMRYuVtjA8dcjokyygJd/IQDDO8gyKo01AIkudHQ==}
 
   vitest-sonar-reporter@3.0.0:
     resolution: {integrity: sha512-QRT5m9Z/3Kt0WVDVcFHm5LC9Ba89yDP4twlX2QUAJ9PdqfJBkLAh/kXj7m6U3i0k6GxnIEiwCc295bmAYokmZg==}
@@ -14726,6 +14730,17 @@ snapshots:
       '@types/whatwg-mimetype': 3.0.2
       whatwg-mimetype: 3.0.0
 
+  happy-dom@20.1.0:
+    dependencies:
+      '@types/node': 20.19.24
+      '@types/whatwg-mimetype': 3.0.2
+      '@types/ws': 8.18.1
+      whatwg-mimetype: 3.0.0
+      ws: 8.18.3
+    transitivePeerDependencies:
+      - bufferutil
+      - utf-8-validate
+
   has-bigints@1.1.0: {}
 
   has-flag@4.0.0: {}
@@ -17943,7 +17958,7 @@ snapshots:
 
   vitest-environment-custom@file:test/core/vitest-environment-custom: {}
 
-  vitest-package-exports@0.1.1:
+  vitest-package-exports@1.1.2:
     dependencies:
       find-up-simple: 1.0.1
       pathe: 2.0.3
