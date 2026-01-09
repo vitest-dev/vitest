@@ -18,7 +18,7 @@ const forceTriggerFileContent = readFileSync(forceTriggerFile, 'utf-8')
 
 const options = { root: 'fixtures/watch', watch: true }
 
-function editFile(fileContent: string) {
+function modifyContent(fileContent: string) {
   return `// Modified by file-watching.test.ts
 ${fileContent}
 console.log("New code running"); // This is used to check that edited changes are actually run, and cached files are not run instead
@@ -35,7 +35,7 @@ afterEach(() => {
 test('editing source file triggers re-run', async () => {
   const { vitest } = await testUtils.runVitest(options)
 
-  writeFileSync(sourceFile, editFile(sourceFileContent), 'utf8')
+  writeFileSync(sourceFile, modifyContent(sourceFileContent), 'utf8')
 
   await vitest.waitForStdout('New code running')
   await vitest.waitForStdout('RERUN  ../../math.ts')
@@ -57,7 +57,7 @@ test('editing file that was imported with a query reruns suite', async () => {
 test('editing force rerun trigger reruns all tests', async () => {
   const { vitest } = await testUtils.runVitest(options)
 
-  writeFileSync(forceTriggerFile, editFile(forceTriggerFileContent), 'utf8')
+  writeFileSync(forceTriggerFile, modifyContent(forceTriggerFileContent), 'utf8')
 
   await vitest.waitForStdout('Waiting for file changes...')
   await vitest.waitForStdout('RERUN  ../../force-watch/trigger.js')
@@ -69,7 +69,7 @@ test('editing force rerun trigger reruns all tests', async () => {
 test('editing test file triggers re-run', async () => {
   const { vitest } = await testUtils.runVitest(options)
 
-  writeFileSync(testFile, editFile(testFileContent), 'utf8')
+  writeFileSync(testFile, modifyContent(testFileContent), 'utf8')
 
   await vitest.waitForStdout('New code running')
   await vitest.waitForStdout('RERUN  ../../math.test.ts')
@@ -79,7 +79,7 @@ test('editing test file triggers re-run', async () => {
 test('editing config file triggers re-run', async () => {
   const { vitest } = await testUtils.runVitest(options)
 
-  writeFileSync(configFile, editFile(configFileContent), 'utf8')
+  writeFileSync(configFile, modifyContent(configFileContent), 'utf8')
 
   await vitest.waitForStdout('Restarting due to config changes')
   await vitest.waitForStdout('2 passed')
@@ -106,6 +106,9 @@ test("dynamic test case", () => {
   expect(true).toBeTruthy()
 })
 `
+
+  await vitest.waitForStdout('press h to show help')
+
   onTestFinished(() => rmSync(testFile))
   writeFileSync(testFile, testFileContent, 'utf-8')
 
@@ -115,22 +118,22 @@ test("dynamic test case", () => {
 })
 
 test('renaming an existing test file', { retry: 3 }, async () => {
-  onTestFinished(() => rmSync('fixtures/watch/after.test.ts'))
-  const beforeFile = 'fixtures/watch/before.test.ts'
-  const afterFile = 'fixtures/watch/after.test.ts'
-  const textContent = `
-import { expect, test } from "vitest";
+  const { vitest, fs } = await testUtils.runInlineTests({
+    'before.test.js': /* js */`
+      import { expect, test } from "vitest";
 
-test("test case", () => {
-  console.log("Running existing test")
-  expect(true).toBeTruthy()
-})
-`
-  writeFileSync(beforeFile, textContent, 'utf-8')
-  const { vitest } = await testUtils.runVitest({ root: 'fixtures/watch', watch: true })
+      test("test case", () => {
+        console.log("Running existing test")
+        expect(true).toBeTruthy()
+      })
+    `,
+  }, { watch: true })
+
   await vitest.waitForStdout('Running existing test')
+  await vitest.waitForStdout('press h to show help')
 
-  renameSync(beforeFile, afterFile)
+  fs.renameFile('before.test.js', 'after.test.js')
+
   await vitest.waitForStdout('Test removed')
   await vitest.waitForStdout('Waiting for file changes...')
 
@@ -175,7 +178,7 @@ test('editing source file generates new test report to file system', async () =>
   expect(existsSync(report)).toBe(false)
 
   vitest.resetOutput()
-  writeFileSync(sourceFile, editFile(sourceFileContent), 'utf8')
+  writeFileSync(sourceFile, modifyContent(sourceFileContent), 'utf8')
 
   await vitest.waitForStdout('JUNIT report written')
   await vitest.waitForStdout(report)
@@ -195,7 +198,7 @@ describe('browser', () => {
       },
     })
 
-    writeFileSync(sourceFile, editFile(sourceFileContent), 'utf8')
+    writeFileSync(sourceFile, modifyContent(sourceFileContent), 'utf8')
 
     await vitest.waitForStdout('New code running')
     await vitest.waitForStdout('RERUN  ../../math.ts')

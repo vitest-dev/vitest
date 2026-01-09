@@ -442,6 +442,11 @@ export function useFS<T extends TestFsStructure>(root: string, structure: T, ens
     resolveFile: (file: string): string => {
       return resolve(root, file)
     },
+    renameFile: (oldFile: string, newFile: string) => {
+      const oldFilepath = resolve(root, oldFile)
+      const newFilepath = resolve(root, newFile)
+      return fs.renameSync(oldFilepath, newFilepath)
+    },
   }
 }
 
