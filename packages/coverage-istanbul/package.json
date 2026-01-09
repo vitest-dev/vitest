@@ -50,7 +50,6 @@
     "istanbul-lib-coverage": "catalog:",
     "istanbul-lib-instrument": "^6.0.3",
     "istanbul-lib-report": "catalog:",
-    "istanbul-lib-source-maps": "catalog:",
     "istanbul-reports": "catalog:",
     "magicast": "catalog:",
     "obug": "catalog:",
@@ -62,6 +61,7 @@
     "@types/istanbul-lib-report": "catalog:",
     "@types/istanbul-lib-source-maps": "catalog:",
     "@types/istanbul-reports": "catalog:",
+    "istanbul-lib-source-maps": "catalog:",
     "pathe": "catalog:",
     "vitest": "workspace:*"
   }

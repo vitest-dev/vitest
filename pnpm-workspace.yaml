@@ -41,6 +41,7 @@ patchedDependencies:
   '@types/sinonjs__fake-timers@8.1.5': patches/@types__sinonjs__fake-timers@8.1.5.patch
   acorn@8.11.3: patches/acorn@8.11.3.patch
   cac@6.7.14: patches/cac@6.7.14.patch
+  istanbul-lib-source-maps: patches/istanbul-lib-source-maps.patch
 catalog:
   '@iconify-json/carbon': ^1.2.14
   '@iconify-json/logos': ^1.2.10
