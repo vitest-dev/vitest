@@ -26,6 +26,7 @@ import { isCI, stdProvider } from '../../utils/env'
 import { getWorkersCountByPercentage } from '../../utils/workers'
 import { BaseSequencer } from '../sequencers/BaseSequencer'
 import { RandomSequencer } from '../sequencers/RandomSequencer'
+import { basename } from 'node:path'
 
 function resolvePath(path: string, root: string) {
   return normalize(
@@ -394,7 +395,7 @@ export function resolveConfig(
 
   // Add hard-coded default coverage exclusions. These cannot be overidden by user config.
   // Override original exclude array for cases where user re-uses same object in test.exclude.
-  resolved.coverage.exclude = [
+  resolved.coverage.exclude = [...new Set([
     ...resolved.coverage.exclude,
 
     // Exclude setup files
@@ -410,7 +411,7 @@ export function resolveConfig(
     ...resolved.include,
 
     // Configs
-    resolved.config && slash(resolved.config),
+    resolved.config && basename(slash(resolved.config)),
     ...configFiles,
 
     // Vite internal
@@ -418,7 +419,7 @@ export function resolveConfig(
     '**\/__x00__*',
 
     '**/node_modules/**',
-  ].filter(pattern => typeof pattern === 'string')
+  ])].filter(pattern => typeof pattern === 'string')
 
   resolved.forceRerunTriggers = [
     ...resolved.forceRerunTriggers,
