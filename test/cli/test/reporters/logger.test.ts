@@ -1,7 +1,7 @@
 import { runVitest } from '#test-utils'
 import { expect, test } from 'vitest'
 
-test.only('cursor is hidden during test run in TTY', async () => {
+test('cursor is hidden during test run in TTY', async () => {
   const { stdout } = await runVitest({
     include: ['b1.test.ts'],
     root: 'fixtures/reporters/default',
