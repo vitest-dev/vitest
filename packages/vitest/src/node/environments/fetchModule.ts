@@ -269,6 +269,7 @@ class ModuleFetcher {
     await Promise.all(cachedModule.importedUrls.map(async (url) => {
       const moduleNode = await environment.moduleGraph.ensureEntryFromUrl(url).catch(() => null)
       if (moduleNode) {
+        moduleNode.importers.add(moduleGraphModule)
         moduleGraphModule.importedModules.add(moduleNode)
       }
     }))
