@@ -1,0 +1,16 @@
+{
+  "name": "@vitest/example-issue-8646",
+  "type": "module",
+  "private": true,
+  "license": "MIT",
+  "scripts": {
+    "test": "vitest",
+    "test:ui": "vitest --ui"
+  },
+  "devDependencies": {
+    "@vitest/browser": "latest",
+    "@vitest/browser-playwright": "latest",
+    "playwright": "latest",
+    "vitest": "latest"
+  }
+}
