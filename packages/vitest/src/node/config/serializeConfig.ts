@@ -46,13 +46,23 @@ export function serializeConfig(project: TestProject): SerializedConfig {
         'html',
         { subdir?: string },
       ] | undefined
-      const subdir = htmlReporter && htmlReporter[1]?.subdir
+      const htmlSubdir = htmlReporter && htmlReporter[1]?.subdir
+
+      const lcovReporter = coverage.reporter.find(([reporterName]) => reporterName === 'lcov') as [
+        'lcov',
+        { subdir?: string },
+      ] | undefined
+      const lcovSubdir = lcovReporter && lcovReporter[1]?.subdir
+
       return {
         reportsDirectory: coverage.reportsDirectory,
         provider: coverage.provider,
         enabled: coverage.enabled,
         htmlReporter: htmlReporter
-          ? { subdir }
+          ? { subdir: htmlSubdir }
+          : undefined,
+        lcovReporter: lcovReporter
+          ? { subdir: lcovSubdir }
           : undefined,
         customProviderModule: 'customProviderModule' in coverage
           ? coverage.customProviderModule

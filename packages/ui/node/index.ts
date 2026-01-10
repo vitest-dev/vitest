@@ -140,7 +140,20 @@ function resolveCoverageFolder(ctx: Vitest) {
         })
       : undefined
 
-  if (!htmlReporter) {
+  // If no HTML reporter, try to find LCOV reporter
+  const lcovReporter = !htmlReporter && options.api?.port && options.coverage?.enabled
+    ? toArray(options.coverage.reporter).find((reporter) => {
+        if (typeof reporter === 'string') {
+          return reporter === 'lcov'
+        }
+
+        return reporter[0] === 'lcov'
+      })
+    : undefined
+
+  const reporter = htmlReporter || lcovReporter
+
+  if (!reporter) {
     return undefined
   }
 
@@ -151,15 +164,18 @@ function resolveCoverageFolder(ctx: Vitest) {
   )
 
   const subdir
-    = Array.isArray(htmlReporter)
-      && htmlReporter.length > 1
-      && 'subdir' in htmlReporter[1]
-      ? htmlReporter[1].subdir
+    = Array.isArray(reporter)
+      && reporter.length > 1
+      && 'subdir' in reporter[1]
+      ? reporter[1].subdir
       : undefined
 
-  if (!subdir || typeof subdir !== 'string') {
+  // LCOV defaults to 'lcov-report' subdirectory if no custom subdir is specified
+  const resolvedSubdir = subdir || (lcovReporter ? 'lcov-report' : undefined)
+
+  if (!resolvedSubdir || typeof resolvedSubdir !== 'string') {
     return [root, `/${basename(root)}/`]
   }
 
-  return [resolve(root, subdir), `/${basename(root)}/${subdir}/`]
+  return [resolve(root, resolvedSubdir), `/${basename(root)}/${resolvedSubdir}/`]
 }
