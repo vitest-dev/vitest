@@ -169,7 +169,7 @@ export class BaseCoverageProvider<Options extends ResolvedCoverageOptions<'istan
         continue
       }
 
-      if (pm.isMatch(matchTarget, includeGlobs, { dot: true })) {
+      if (pm.isMatch(matchTarget, includeGlobs, { dot: true, contains: true })) {
         this.globCache.set(cacheKey, true)
         return true
       }
