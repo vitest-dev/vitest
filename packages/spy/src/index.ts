@@ -121,11 +121,17 @@ export function createMockInstance(options: MockInstanceOption = {}): Mock<Proce
   }
 
   mock.mockReturnValue = function mockReturnValue(value) {
-    return mock.mockImplementation(() => value)
+    // eslint-disable-next-line prefer-arrow-callback
+    return mock.mockImplementation(function () {
+      return value
+    })
   }
 
   mock.mockReturnValueOnce = function mockReturnValueOnce(value) {
-    return mock.mockImplementationOnce(() => value)
+    // eslint-disable-next-line prefer-arrow-callback
+    return mock.mockImplementationOnce(function () {
+      return value
+    })
   }
 
   mock.mockResolvedValue = function mockResolvedValue(value) {

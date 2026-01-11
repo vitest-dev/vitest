@@ -30,4 +30,11 @@ describe('spyOn', () => {
 
     expect(hw.hello()).toEqual('hello world')
   })
+
+  test('mock return value for constructor', () => {
+    vi.spyOn(mock, 'HelloWorld').mockReturnValueOnce({ hello: () => 'hello world' })
+
+    const mockedHelloWorld = new mock.HelloWorld()
+    expect(mockedHelloWorld.hello()).toEqual('hello world')
+  })
 })
