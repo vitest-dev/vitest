@@ -375,3 +375,22 @@ test('includes covered and uncovered with ] in filenames', async () => {
     ]
   `)
 })
+
+test('exclude pattern without globstar excludes only top-level files', async () => {
+  await runVitest({
+    include: ['fixtures/test/exclude-globstar.test.ts'],
+    coverage: {
+      reporter: 'json',
+      include: ['fixtures/src/root-level.ts', 'fixtures/src/nested/*.ts'],
+      exclude: ['fixtures/src/*.ts'],
+    },
+  })
+
+  const coverageMap = await readCoverageMap()
+
+  expect(coverageMap.files()).toMatchInlineSnapshot(`
+    [
+      "<process-cwd>/fixtures/src/nested/nested-level.ts",
+    ]
+  `)
+})
