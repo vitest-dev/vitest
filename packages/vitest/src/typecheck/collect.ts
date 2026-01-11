@@ -3,6 +3,7 @@ import type { Rollup } from 'vite'
 import type { TestProject } from '../node/project'
 import {
   calculateSuiteHash,
+  createTaskName,
   generateHash,
   interpretTaskModes,
   someTasksAreOnly,
@@ -60,6 +61,7 @@ export async function collectTests(
     type: 'suite',
     id: generateHash(`${testFilepath}${typecheckSubprojectName}`),
     name: testFilepath,
+    fullName: testFilepath,
     mode: 'run',
     tasks: [],
     start: ast.start,
@@ -185,6 +187,8 @@ export async function collectTests(
           tasks: [],
           mode,
           name: definition.name,
+          fullName: createTaskName([lastSuite.fullName, definition.name]),
+          fullTestName: createTaskName([lastSuite.fullTestName, definition.name]),
           end: definition.end,
           start: definition.start,
           meta: {
@@ -205,9 +209,12 @@ export async function collectTests(
         timeout: 0,
         context: {} as any, // not used in typecheck
         name: definition.name,
+        fullName: createTaskName([lastSuite.fullName, definition.name]),
+        fullTestName: createTaskName([lastSuite.fullTestName, definition.name]),
         end: definition.end,
         start: definition.start,
         annotations: [],
+        artifacts: [],
         meta: {
           typecheck: true,
         },

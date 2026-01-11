@@ -9,6 +9,8 @@
   "exclude": [
     "**/dist/**",
     "./packages/vitest/dist/**",
+    "./packages/ui/**/*.spec.ts",
+    "./packages/ui/client/test.ts",
     "./packages/*/*.d.ts",
     "./packages/*/*.d.cts",
     "./examples/**/*.*",

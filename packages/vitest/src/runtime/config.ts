@@ -15,7 +15,6 @@ export interface SerializedConfig {
   disableConsoleIntercept: boolean | undefined
   runner: string | undefined
   isolate: boolean
-  fileParallelism: boolean
   maxWorkers: number
   mode: 'test' | 'benchmark'
   bail: number | undefined
@@ -118,6 +117,15 @@ export interface SerializedConfig {
     includeSamples: boolean
   } | undefined
   serializedDefines: string
+  experimental: {
+    fsModuleCache: boolean
+    printImportBreakdown: boolean | undefined
+    openTelemetry: {
+      enabled: boolean
+      sdkPath?: string
+      browserSdkPath?: string
+    } | undefined
+  }
 }
 
 export interface SerializedCoverageConfig {

@@ -74,15 +74,15 @@ export abstract class Locator {
     })
   }
 
-  public click(options: UserEventClickOptions = {}): Promise<void> {
+  public click(options?: UserEventClickOptions): Promise<void> {
     return this.triggerCommand<void>('__vitest_click', this.selector, options)
   }
 
-  public dblClick(options: UserEventClickOptions = {}): Promise<void> {
+  public dblClick(options?: UserEventClickOptions): Promise<void> {
     return this.triggerCommand<void>('__vitest_dblClick', this.selector, options)
   }
 
-  public tripleClick(options: UserEventClickOptions = {}): Promise<void> {
+  public tripleClick(options?: UserEventClickOptions): Promise<void> {
     return this.triggerCommand<void>('__vitest_tripleClick', this.selector, options)
   }
 
@@ -117,7 +117,8 @@ export abstract class Locator {
       return {
         name: file.name,
         mimeType: file.type,
-        base64: bas64String,
+        // strip prefix `data:[<media-type>][;base64],`
+        base64: bas64String.slice(bas64String.indexOf(',') + 1),
       }
     })
     return this.triggerCommand<void>('__vitest_upload', this.selector, await Promise.all(filesPromise), options)

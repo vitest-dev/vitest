@@ -1,7 +1,7 @@
 {
   "name": "vitest",
   "type": "module",
-  "version": "4.0.0-beta.19",
+  "version": "4.0.16",
   "description": "Next generation testing framework powered by Vite",
   "author": "Anthony Fu <anthonyfu117@hotmail.com>",
   "license": "MIT",
@@ -134,7 +134,7 @@
   },
   "peerDependencies": {
     "@edge-runtime/vm": "*",
-    "@types/debug": "^4.1.12",
+    "@opentelemetry/api": "^1.9.0",
     "@types/node": "^20.0.0 || ^22.0.0 || >=24.0.0",
     "@vitest/browser-playwright": "workspace:*",
     "@vitest/browser-preview": "workspace:*",
@@ -147,7 +147,7 @@
     "@edge-runtime/vm": {
       "optional": true
     },
-    "@types/debug": {
+    "@opentelemetry/api": {
       "optional": true
     },
     "@types/node": {
@@ -180,15 +180,15 @@
     "@vitest/snapshot": "workspace:*",
     "@vitest/spy": "workspace:*",
     "@vitest/utils": "workspace:*",
-    "debug": "catalog:",
     "es-module-lexer": "^1.7.0",
     "expect-type": "^1.2.2",
     "magic-string": "catalog:",
+    "obug": "catalog:",
     "pathe": "catalog:",
     "picomatch": "^4.0.3",
     "std-env": "catalog:",
     "tinybench": "^2.9.0",
-    "tinyexec": "^0.3.2",
+    "tinyexec": "^1.0.2",
     "tinyglobby": "catalog:",
     "tinyrainbow": "catalog:",
     "vite": "^6.0.0 || ^7.0.0",
@@ -198,13 +198,13 @@
     "@antfu/install-pkg": "^1.1.0",
     "@edge-runtime/vm": "^5.0.0",
     "@jridgewell/trace-mapping": "catalog:",
+    "@opentelemetry/api": "^1.9.0",
     "@sinonjs/fake-timers": "14.0.0",
-    "@types/debug": "catalog:",
     "@types/estree": "catalog:",
     "@types/istanbul-lib-coverage": "catalog:",
     "@types/istanbul-reports": "catalog:",
-    "@types/jsdom": "^21.1.7",
-    "@types/node": "^22.18.6",
+    "@types/jsdom": "^27.0.0",
+    "@types/node": "^24.10.1",
     "@types/picomatch": "^4.0.2",
     "@types/prompts": "^2.4.9",
     "@types/sinonjs__fake-timers": "^8.1.5",
@@ -213,8 +213,8 @@
     "cac": "catalog:",
     "empathic": "^2.0.0",
     "flatted": "catalog:",
-    "happy-dom": "^20.0.0",
-    "jsdom": "^26.1.0",
+    "happy-dom": "^20.0.11",
+    "jsdom": "^27.2.0",
     "local-pkg": "^1.1.2",
     "mime": "^4.1.0",
     "prompts": "^2.4.2",

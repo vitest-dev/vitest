@@ -7,10 +7,11 @@ import type { ModuleExecutionInfo } from './moduleDebug'
 import type { VitestModuleEvaluator } from './moduleEvaluator'
 import type { VitestTransportOptions } from './moduleTransport'
 import * as viteModuleRunner from 'vite/module-runner'
+import { Traces } from '../../utils/traces'
 import { VitestMocker } from './moduleMocker'
 import { VitestTransport } from './moduleTransport'
 
-export type CreateImportMeta = NonNullable<viteModuleRunner.ModuleRunnerOptions['createImportMeta']>
+export type CreateImportMeta = (modulePath: string) => viteModuleRunner.ModuleRunnerImportMeta | Promise<viteModuleRunner.ModuleRunnerImportMeta>
 export const createNodeImportMeta: CreateImportMeta = (modulePath: string) => {
   if (!viteModuleRunner.createDefaultImportMeta) {
     throw new Error(`createNodeImportMeta is not supported in this version of Vite.`)
@@ -44,6 +45,7 @@ function createImportMetaResolver() {
 export class VitestModuleRunner extends viteModuleRunner.ModuleRunner {
   public mocker: VitestMocker
   public moduleExecutionInfo: ModuleExecutionInfo
+  private _otel: Traces
 
   constructor(private vitestOptions: VitestModuleRunnerOptions) {
     const options = vitestOptions
@@ -59,10 +61,12 @@ export class VitestModuleRunner extends viteModuleRunner.ModuleRunner {
       },
       options.evaluator,
     )
+    this._otel = vitestOptions.traces || new Traces({ enabled: false })
     this.moduleExecutionInfo = options.getWorkerState().moduleExecutionInfo
     this.mocker = options.mocker || new VitestMocker(this, {
       spyModule: options.spyModule,
       context: options.vm?.context,
+      traces: this._otel,
       resolveId: options.transport.resolveId,
       get root() {
         return options.getWorkerState().config.root
@@ -87,8 +91,37 @@ export class VitestModuleRunner extends viteModuleRunner.ModuleRunner {
     }
   }
 
+  /**
+   * Vite checks that the module has exports emulating the Node.js behaviour,
+   * but Vitest is more relaxed.
+   *
+   * We should keep the Vite behavour when there is a `strict` flag.
+   * @internal
+   */
+  processImport(exports: Record<string, any>): Record<string, any> {
+    return exports
+  }
+
   public async import(rawId: string): Promise<any> {
-    const resolved = await this.vitestOptions.transport.resolveId(rawId)
+    const resolved = await this._otel.$(
+      'vitest.module.resolve_id',
+      {
+        attributes: {
+          'vitest.module.raw_id': rawId,
+        },
+      },
+      async (span) => {
+        const result = await this.vitestOptions.transport.resolveId(rawId)
+        if (result) {
+          span.setAttributes({
+            'vitest.module.url': result.url,
+            'vitest.module.file': result.file,
+            'vitest.module.id': result.id,
+          })
+        }
+        return result
+      },
+    )
     return super.import(resolved ? resolved.url : rawId)
   }
 
@@ -173,6 +206,10 @@ export interface VitestModuleRunnerOptions {
   getWorkerState: () => WorkerGlobalState
   mocker?: VitestMocker
   vm?: VitestVmOptions
+  /**
+   * @internal
+   */
+  traces?: Traces
   spyModule?: typeof import('@vitest/spy')
   createImportMeta?: CreateImportMeta
 }

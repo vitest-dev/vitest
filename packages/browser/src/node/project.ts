@@ -106,8 +106,8 @@ export class ProjectBrowser implements IProjectBrowser {
     if (this.provider.initScripts) {
       this.parent.initScripts = this.provider.initScripts
       // make sure the script can be imported
+      const allow = this.parent.vite.config.server.fs.allow
       this.provider.initScripts.forEach((script) => {
-        const allow = this.parent.vite.config.server.fs.allow
         if (!allow.includes(script)) {
           allow.push(script)
         }

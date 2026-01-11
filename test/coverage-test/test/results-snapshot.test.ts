@@ -39,4 +39,34 @@ test('coverage results matches snapshot', async () => {
       },
     }
   `)
+
+  const lineCoverages = coverageMap.files().reduce((all, file) => ({
+    [file]: coverageMap.fileCoverageFor(file).getLineCoverage(),
+    ...all,
+  }), {})
+
+  expect(lineCoverages).toMatchInlineSnapshot(`
+    {
+      "<process-cwd>/fixtures/src/even.ts": {
+        "2": 1,
+        "6": 0,
+      },
+      "<process-cwd>/fixtures/src/math.ts": {
+        "10": 0,
+        "14": 0,
+        "2": 1,
+        "6": 0,
+      },
+      "<process-cwd>/fixtures/src/untested-file.ts": {
+        "14": 0,
+        "21": 0,
+        "33": 0,
+        "35": 0,
+        "39": 0,
+        "41": 0,
+        "46": 0,
+        "9": 0,
+      },
+    }
+  `)
 })

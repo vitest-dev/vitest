@@ -1,0 +1,5 @@
+{
+  "name": "@test/dep-esm-non-existing",
+  "type": "module",
+  "main": "./index.mjs"
+}

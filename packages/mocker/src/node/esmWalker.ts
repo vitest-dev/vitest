@@ -41,7 +41,7 @@ interface Visitors {
   onIdentifier?: (
     node: Positioned<Identifier>,
     info: IdentifierInfo,
-    parentStack: Node[]
+    parentStack: Node[],
   ) => void
   onImportMeta?: (node: Node) => void
   onDynamicImport?: (node: Positioned<ImportExpression>) => void
@@ -156,6 +156,17 @@ export function esmWalker(
           // record the identifier, for DFS -> BFS
           identifiers.push([node, parentStack.slice(0)])
         }
+      }
+      else if (node.type === 'ClassDeclaration' && node.id) {
+        // A class declaration name could shadow an import, so add its name to the parent scope
+        const parentScope = findParentScope(parentStack)
+        if (parentScope) {
+          setScope(parentScope, node.id.name)
+        }
+      }
+      else if (node.type === 'ClassExpression' && node.id) {
+        // A class expression name could shadow an import, so add its name to the scope
+        setScope(node, node.id.name)
       }
       else if (isFunctionNode(node)) {
         // If it is a function declaration, it could be shadowing an import

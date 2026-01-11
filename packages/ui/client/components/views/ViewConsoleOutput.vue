@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { getNames } from '@vitest/ws-client'
+import { computed } from 'vue'
 import { client, currentLogs as logs } from '~/composables/client'
 import { isDark } from '~/composables/dark'
 import { createAnsiToHtmlFilter } from '~/composables/error'
 import { escapeHtml } from '~/utils/escape'
+import ViewConsoleOutputEntry from './ViewConsoleOutputEntry.vue'
 
 const formattedLogs = computed(() => {
   const data = logs.value

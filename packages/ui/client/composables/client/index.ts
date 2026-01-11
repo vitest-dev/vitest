@@ -10,7 +10,7 @@ import type {
 import type { BrowserRunnerState } from '../../../types'
 import { createFileTask } from '@vitest/runner/utils'
 import { createClient, getTasks } from '@vitest/ws-client'
-import { reactive as reactiveVue } from 'vue'
+import { computed, reactive as reactiveVue, ref, shallowRef, watch } from 'vue'
 import { explorerTree } from '~/composables/explorer'
 import { isFileNode } from '~/composables/explorer/utils'
 import { isSuite as isTaskSuite } from '~/utils/task'
@@ -34,14 +34,20 @@ export const client = (function createVitestClient() {
       },
       handlers: {
         onTestAnnotate(testId: string, annotation: TestAnnotation) {
-          explorerTree.annotateTest(testId, annotation)
+          explorerTree.recordTestArtifact(testId, { type: 'internal:annotation', annotation, location: annotation.location })
+        },
+        onTestArtifactRecord(testId, artifact) {
+          explorerTree.recordTestArtifact(testId, artifact)
         },
         onTaskUpdate(packs: RunnerTaskResultPack[], events: RunnerTaskEventPack[]) {
           explorerTree.resumeRun(packs, events)
           testRunState.value = 'running'
         },
-        onFinished(_files, errors) {
-          explorerTree.endRun()
+        onSpecsCollected(_specs, startTime) {
+          explorerTree.startTime = startTime || performance.now()
+        },
+        onFinished(_files, errors, _coverage, executionTime) {
+          explorerTree.endRun(executionTime)
           // don't change the testRunState.value here:
           // - when saving the file in the codemirror requires explorer tree endRun to finish (multiple microtasks)
           // - if we change here the state before the tasks states are updated, the cursor position will be lost

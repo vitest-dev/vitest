@@ -27,20 +27,26 @@ ${printReceived(actual)}`,
     }
   },
 
-  toBeOneOf(actual: unknown, expected: Array<unknown>) {
+  toBeOneOf(actual: unknown, expected: Array<unknown> | Set<unknown>) {
     const { equals, customTesters } = this
     const { printReceived, printExpected, matcherHint } = this.utils
 
-    if (!Array.isArray(expected)) {
+    let pass: boolean
+
+    if (Array.isArray(expected)) {
+      pass = expected.length === 0
+        || expected.some(item =>
+          equals(item, actual, customTesters),
+        )
+    }
+    else if (expected instanceof Set) {
+      pass = expected.size === 0 || expected.has(actual) || [...expected].some(item => equals(item, actual, customTesters))
+    }
+    else {
       throw new TypeError(
-        `You must provide an array to ${matcherHint('.toBeOneOf')}, not '${typeof expected}'.`,
+        `You must provide an array or set to ${matcherHint('.toBeOneOf')}, not '${typeof expected}'.`,
       )
     }
-
-    const pass = expected.length === 0
-      || expected.some(item =>
-        equals(item, actual, customTesters),
-      )
 
     return {
       pass,

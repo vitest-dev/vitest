@@ -13,15 +13,11 @@ import { Typechecker } from '../../../typecheck/typechecker'
 /** @experimental */
 export class TypecheckPoolWorker implements PoolWorker {
   public readonly name: string = 'typecheck'
-  public readonly execArgv: string[]
-  public readonly env: Record<string, string>
   private readonly project: TestProject
 
   private _eventEmitter = new EventEmitter()
 
   constructor(options: PoolOptions) {
-    this.execArgv = options.execArgv
-    this.env = options.env
     this.project = options.project
   }
 
@@ -31,6 +27,10 @@ export class TypecheckPoolWorker implements PoolWorker {
 
   async stop(): Promise<void> {
     // noop, onMessage handles it
+  }
+
+  canReuse(): boolean {
+    return true
   }
 
   send(message: WorkerRequest): void {
@@ -93,7 +93,6 @@ async function onMessage(message: WorkerRequest, project: TestProject): Promise<
 
     case 'stop': {
       await runPromise
-      await project.typechecker?.stop()
       return { type: 'stopped', __vitest_worker_response__ }
     }
   }
@@ -221,8 +220,9 @@ function createRunner(vitest: Vitest) {
 
     const files = specs.map(spec => spec.filepath)
     const promise = createDefer<void>()
+
     // check that watcher actually triggered rerun
-    const _p = new Promise<boolean>((resolve) => {
+    const triggered = await new Promise<boolean>((resolve) => {
       const _i = setInterval(() => {
         if (!project.typechecker || rerunTriggered.has(project)) {
           resolve(true)
@@ -234,15 +234,23 @@ function createRunner(vitest: Vitest) {
         clearInterval(_i)
       }, 500).unref()
     })
-    const triggered = await _p
+
+    // Re-run but wasn't triggered by tsc
+    if (promisesMap.has(project) && !triggered) {
+      return promisesMap.get(project)
+    }
+
     if (project.typechecker && !triggered) {
       const testFiles = project.typechecker.getTestFiles()
+
       for (const file of testFiles) {
         await vitest._testRun.enqueued(project, file)
       }
+
       await vitest._testRun.collected(project, testFiles)
       await onParseEnd(project, project.typechecker.getResult())
     }
+
     promises.push(promise)
     promisesMap.set(project, promise)
     promises.push(startTypechecker(project, files))

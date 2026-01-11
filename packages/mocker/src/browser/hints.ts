@@ -37,16 +37,16 @@ export function createCompilerHints(options?: CompilerHintsOptions): ModuleMocke
       // @ts-expect-error injected by the plugin
       ? globalThis[globalThisAccessor]
       : new Proxy(
-        {} as any,
-        {
-          get(_, name) {
-            throw new Error(
-              'Vitest mocker was not initialized in this environment. '
-              + `vi.${String(name)}() is forbidden.`,
-            )
+          {} as any,
+          {
+            get(_, name) {
+              throw new Error(
+                'Vitest mocker was not initialized in this environment. '
+                + `vi.${String(name)}() is forbidden.`,
+              )
+            },
           },
-        },
-      )
+        )
   }
 
   return {

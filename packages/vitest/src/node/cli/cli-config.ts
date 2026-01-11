@@ -335,7 +335,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
       },
       name: {
         description:
-          'Run all tests in a specific browser. Some browsers are only available for specific providers (see `--browser.provider`). Visit [`browser.name`](https://vitest.dev/guide/browser/config/#browser-name) for more information',
+          'Run all tests in a specific browser. Some browsers are only available for specific providers (see `--browser.provider`).',
         argument: '<name>',
       },
       headless: {
@@ -347,19 +347,6 @@ export const cliOptionsConfig: VitestCLIOptions = {
           'Specify options for the browser API server. Does not affect the --api option',
         argument: '[port]',
         subcommands: apiConfig(defaultBrowserPort),
-      },
-      provider: {
-        description:
-          'Provider used to run browser tests. Some browsers are only available for specific providers. Can be "webdriverio", "playwright", "preview", or the path to a custom provider. Visit [`browser.provider`](https://vitest.dev/guide/browser/config.html#browser-provider) for more information (default: `"preview"`)',
-        argument: '<name>',
-        subcommands: null, // don't support custom objects
-        transform(value) {
-          const supported = ['playwright', 'webdriverio', 'preview']
-          if (typeof value !== 'string' || !supported.includes(value)) {
-            throw new Error(`Unsupported browser provider: ${value}. Supported providers are: ${supported.join(', ')}`)
-          }
-          return { name: value, _cli: true }
-        },
       },
       isolate: {
         description:
@@ -397,6 +384,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
       testerHtmlPath: null,
       instances: null,
       expect: null,
+      provider: null,
     },
   },
   pool: {
@@ -408,6 +396,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
   execArgv: {
     description: 'Pass additional arguments to `node` process when spawning `worker_threads` or `child_process`.',
     argument: '<option>',
+    array: true,
   },
   vmMemoryLimit: {
     description:
@@ -773,7 +762,24 @@ export const cliOptionsConfig: VitestCLIOptions = {
       return value
     },
   },
+  clearCache: {
+    description: 'Delete all Vitest caches, including `experimental.fsModuleCache`, without running any tests. This will reduce the performance in the subsequent test run.',
+  },
 
+  experimental: {
+    description: 'Experimental features.',
+    argument: '<features>',
+    subcommands: {
+      fsModuleCache: {
+        description: 'Enable caching of modules on the file system between reruns.',
+      },
+      fsModuleCachePath: null,
+      openTelemetry: null,
+      printImportBreakdown: {
+        description: 'Print import breakdown after the summary. If the reporter doesn\'t support summary, this will have no effect. Note that UI\'s "Module Graph" tab always has an import breakdown.',
+      },
+    },
+  },
   // disable CLI options
   cliExclude: null,
   server: null,

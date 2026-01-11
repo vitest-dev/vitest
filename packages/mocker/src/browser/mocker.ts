@@ -253,7 +253,7 @@ export interface ModuleMockerRPC {
   resolveMock: (
     id: string,
     importer: string,
-    options: { mock: 'spy' | 'factory' | 'auto' }
+    options: { mock: 'spy' | 'factory' | 'auto' },
   ) => Promise<ResolveMockResult>
 }
 

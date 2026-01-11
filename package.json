@@ -1,9 +1,9 @@
 {
   "name": "@vitest/monorepo",
   "type": "module",
-  "version": "4.0.0-beta.19",
+  "version": "4.0.16",
   "private": true,
-  "packageManager": "pnpm@10.17.0",
+  "packageManager": "pnpm@10.24.0",
   "description": "Next generation testing framework powered by Vite",
   "engines": {
     "node": "^20.0.0 || ^22.0.0 || >=24.0.0"
@@ -25,6 +25,7 @@
     "release": "tsx scripts/release.ts",
     "test": "pnpm --filter test-core test:threads",
     "test:ci": "CI=true pnpm -r --reporter-hide-prefix --stream --sequential --filter '@vitest/test-*' --filter !test-browser run test",
+    "test:ci:cache": "CI=true pnpm -r --reporter-hide-prefix --stream --sequential --filter '@vitest/test-*' --filter !test-browser --filter !test-dts-config --filter !test-dts-fixture --filter !test-dts-playwright --filter !test-ui --filter !test-cache run test --experimental.fsModuleCache",
     "test:examples": "CI=true pnpm -r --reporter-hide-prefix --stream --filter '@vitest/example-*' run test",
     "test:ecosystem-ci": "ECOSYSTEM_CI=true pnpm test:ci",
     "typebuild": "tsx ./scripts/explain-types.ts",
@@ -37,72 +38,35 @@
     "test:browser:playwright": "pnpm -C test/browser run test:playwright"
   },
   "devDependencies": {
-    "@antfu/eslint-config": "^5.4.1",
-    "@antfu/ni": "^26.1.0",
-    "@playwright/test": "^1.55.0",
-    "@rollup/plugin-commonjs": "^28.0.6",
+    "@antfu/eslint-config": "^6.7.3",
+    "@antfu/ni": "^28.0.0",
+    "@playwright/test": "^1.57.0",
+    "@rollup/plugin-commonjs": "^29.0.0",
     "@rollup/plugin-json": "^6.1.0",
-    "@rollup/plugin-node-resolve": "^16.0.1",
-    "@types/node": "^22.18.6",
+    "@rollup/plugin-node-resolve": "^16.0.3",
+    "@types/node": "^24.10.1",
     "@types/ws": "catalog:",
     "@vitest/browser": "workspace:*",
     "@vitest/coverage-istanbul": "workspace:*",
     "@vitest/coverage-v8": "workspace:*",
     "@vitest/ui": "workspace:*",
-    "bumpp": "^10.2.3",
-    "changelogithub": "^13.16.0",
-    "esbuild": "^0.25.10",
-    "eslint": "^9.38.0",
-    "magic-string": "^0.30.19",
+    "bumpp": "^10.3.2",
+    "changelogithub": "^14.0.0",
+    "esbuild": "^0.27.0",
+    "eslint": "^9.39.2",
+    "magic-string": "^0.30.21",
     "pathe": "^2.0.3",
     "premove": "^4.0.0",
-    "rollup": "^4.52.0",
-    "rollup-plugin-dts": "^6.2.3",
+    "rollup": "^4.53.3",
+    "rollup-plugin-dts": "^6.3.0",
     "rollup-plugin-license": "^3.6.0",
     "tinyglobby": "catalog:",
-    "tsx": "^4.20.5",
-    "typescript": "^5.9.2",
-    "unplugin-isolated-decl": "^0.15.2",
-    "unplugin-oxc": "^0.5.2",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3",
+    "unplugin-isolated-decl": "^0.15.6",
+    "unplugin-oxc": "^0.5.5",
     "vite": "^7.1.5",
     "vitest": "workspace:*",
-    "zx": "^8.8.3"
-  },
-  "pnpm": {
-    "overrides": {
-      "@vitest/browser": "workspace:*",
-      "@vitest/browser-playwright": "workspace:*",
-      "@vitest/browser-preview": "workspace:*",
-      "@vitest/browser-webdriverio": "workspace:*",
-      "@vitest/ui": "workspace:*",
-      "acorn": "8.11.3",
-      "mlly": "^1.8.0",
-      "rollup": "$rollup",
-      "vite": "$vite",
-      "vitest": "workspace:*"
-    },
-    "peerDependencyRules": {
-      "ignoreMissing": [
-        "@algolia/client-search"
-      ]
-    },
-    "patchedDependencies": {
-      "@sinonjs/fake-timers@14.0.0": "patches/@sinonjs__fake-timers@14.0.0.patch",
-      "cac@6.7.14": "patches/cac@6.7.14.patch",
-      "@types/sinonjs__fake-timers@8.1.5": "patches/@types__sinonjs__fake-timers@8.1.5.patch",
-      "acorn@8.11.3": "patches/acorn@8.11.3.patch"
-    },
-    "onlyBuiltDependencies": [
-      "@sveltejs/kit",
-      "@swc/core",
-      "edgedriver",
-      "esbuild",
-      "geckodriver",
-      "msw",
-      "rolldown",
-      "sharp",
-      "svelte-preprocess",
-      "vue-demi"
-    ]
+    "zx": "^8.8.5"
   }
 }

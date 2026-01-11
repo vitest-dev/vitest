@@ -10,22 +10,30 @@ const root = resolve(import.meta.dirname, '../fixtures')
 test('calc the duration used by junit', () => {
   const result: RunnerTaskResult = { state: 'pass', duration: 0 }
   const file: RunnerTestFile = createFileTask('/test.ts', '/', 'test')
+  const suiteName
+    = 'suite'
   const suite: RunnerTestSuite = {
     id: '1_0',
     type: 'suite',
-    name: 'suite',
+    name: suiteName,
+    fullName: `${file.fullName} > ${suiteName}`,
+    fullTestName: `${file.fullTestName} > ${suiteName}`,
     mode: 'run',
     tasks: [],
     file,
     meta: {},
   }
+  const taskName = 'timeout'
   const task: RunnerTestCase = {
     id: '1_0_0',
     type: 'test',
-    name: 'timeout',
+    name: taskName,
+    fullName: `${suite.fullName} > ${suiteName}`,
+    fullTestName: `${suite.fullTestName} > ${suiteName}`,
     mode: 'run',
     result,
     annotations: [],
+    artifacts: [],
     file,
     timeout: 0,
     context: null as any,
@@ -155,4 +163,22 @@ test('many errors without warning', async () => {
     resolve(import.meta.dirname, '../fixtures/many-errors'),
   )
   expect(stderr).not.toContain('MaxListenersExceededWarning')
+})
+
+test('CLI reporter option preserves config file options', async () => {
+  const { stdout } = await runVitestCli(
+    'run',
+    '--reporter=junit',
+    '--root',
+    resolve(import.meta.dirname, '../fixtures/junit-cli-options'),
+  )
+
+  const xml = stabilizeReport(stdout)
+
+  // Verify that suiteName from config is preserved
+  expect(xml).not.toContain('<testsuites name="vitest tests"')
+  expect(xml).toContain('<testsuites name="custom-suite-name"')
+
+  // Verify that addFileAttribute from config is preserved
+  expect(xml).toContain('file="')
 })

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { explorerTree } from '~/composables/explorer'
 import { filter } from '~/composables/explorer/state'
+import DashboardEntry from './DashboardEntry.vue'
 
 function toggleFilter(type: 'success' | 'failed' | 'skipped' | 'total') {
   // Reset all filters first

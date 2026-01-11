@@ -511,3 +511,13 @@ test('should include builtin reporters list', () => {
   const expected = Object.keys(ReportersMap)
   expect(new Set(listed)).toEqual(new Set(expected))
 })
+
+test('execArgv can be passed', async () => {
+  expect(getCLIOptions('--execArgv=--cpu-prof')).toEqual({
+    execArgv: ['--cpu-prof'],
+  })
+
+  expect(getCLIOptions('--execArgv=--cpu-prof --execArgv=--cpu-prof-dir=./cpu')).toEqual({
+    execArgv: ['--cpu-prof', '--cpu-prof-dir=./cpu'],
+  })
+})

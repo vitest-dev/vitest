@@ -1,27 +1,15 @@
-import { expect, test, vi } from 'vitest'
+import { expect, test } from 'vitest'
 import { instances, runBrowserTests } from './utils'
 
 test('locators work correctly', async () => {
-  const log = vi.fn()
   const { stderr, stdout } = await runBrowserTests({
     root: './fixtures/locators',
     reporters: [
       ['verbose', { isTTY: false }],
-      {
-        onInit(vitest) {
-          vitest.logger.deprecate = log
-        },
-      },
     ],
   })
 
   expect(stderr).toReportNoErrors()
-  expect(log).toHaveBeenCalledWith(
-    expect.stringContaining(
-      `tries to load a deprecated "@vitest/browser/context" module. `
-      + `This import will stop working in the next major version. Please, use "vitest/browser" instead.`,
-    ),
-  )
 
   instances.forEach(({ browser }) => {
     expect(stdout).toReportPassedTest('blog.test.tsx', browser)

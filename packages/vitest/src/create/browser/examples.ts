@@ -25,7 +25,7 @@ export default function HelloWorld({ name }: { name: string }) {
   test: `
 import { expect, test } from 'vitest'
 import { render } from '@testing-library/jsx'
-import HelloWorld from './HelloWorld.jsx'
+import HelloWorld from './HelloWorld.<EXT>x'
 
 test('renders name', async () => {
   const { getByText } = await render(<HelloWorld name="Vitest" />)
@@ -311,6 +311,8 @@ export async function generateExampleFiles(framework: string, lang: 'ts' | 'js')
   else if (fileName.endsWith('.js') && lang === 'ts') {
     fileName = fileName.replace('.js', '.ts')
   }
+
+  example.test = example.test.replace('<EXT>', lang)
 
   const filePath = resolve(folder, fileName)
   const testPath = resolve(folder, `HelloWorld.test.${isJSX ? `${lang}x` : lang}`)

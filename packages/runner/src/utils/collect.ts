@@ -20,9 +20,17 @@ export function interpretTaskModes(
   const traverseSuite = (suite: Suite, parentIsOnly?: boolean, parentMatchedWithLocation?: boolean) => {
     const suiteIsOnly = parentIsOnly || suite.mode === 'only'
 
+    // Check if any tasks in this suite have `.only` - if so, only those should run
+    const hasSomeTasksOnly = onlyMode && suite.tasks.some(
+      t => t.mode === 'only' || (t.type === 'suite' && someTasksAreOnly(t)),
+    )
+
     suite.tasks.forEach((t) => {
       // Check if either the parent suite or the task itself are marked as included
-      const includeTask = suiteIsOnly || t.mode === 'only'
+      // If there are tasks with `.only` in this suite, only include those (not all tasks from describe.only)
+      const includeTask = hasSomeTasksOnly
+        ? (t.mode === 'only' || (t.type === 'suite' && someTasksAreOnly(t)))
+        : (suiteIsOnly || t.mode === 'only')
       if (onlyMode) {
         if (t.type === 'suite' && (includeTask || someTasksAreOnly(t))) {
           // Don't skip this suite
@@ -182,11 +190,13 @@ export function createFileTask(
   root: string,
   projectName: string | undefined,
   pool?: string,
+  viteEnvironment?: string,
 ): File {
   const path = relative(root, filepath)
   const file: File = {
     id: generateFileHash(path, projectName),
     name: path,
+    fullName: path,
     type: 'suite',
     mode: 'queued',
     filepath,
@@ -195,6 +205,7 @@ export function createFileTask(
     projectName,
     file: undefined!,
     pool,
+    viteEnvironment,
   }
   file.file = file
   return file

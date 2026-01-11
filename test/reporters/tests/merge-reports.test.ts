@@ -107,7 +107,7 @@ test('merge reports', async () => {
 
      Test Files  2 failed (2)
           Tests  2 failed | 3 passed (5)
-       Duration  <time> (transform <time>, setup <time>, collect <time>, tests <time>, environment <time>, prepare <time>)
+       Duration  <time> (transform <time>, setup <time>, import <time>, tests <time>, environment <time>)
        Per blob  <time> <time>"
   `)
 
@@ -286,11 +286,14 @@ function createTest(name: string, file: File): Test {
   return {
     type: 'test',
     name,
+    fullName: `${file.fullName} > ${name}`,
+    fullTestName: `${file.fullTestName} > ${name}`,
     id: `${file.id}_0`,
     mode: 'run',
     file,
     suite: file,
     annotations: [],
+    artifacts: [],
     timeout: 0,
     result: { state: 'pass' },
     meta: {},

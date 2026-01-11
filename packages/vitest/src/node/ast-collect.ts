@@ -4,6 +4,7 @@ import type { TestProject } from './project'
 import { originalPositionFor, TraceMap } from '@jridgewell/trace-mapping'
 import {
   calculateSuiteHash,
+  createTaskName,
   generateHash,
   interpretTaskModes,
   someTasksAreOnly,
@@ -11,6 +12,7 @@ import {
 import { ancestor as walkAst } from 'acorn-walk'
 import { relative } from 'pathe'
 import { parseAst } from 'vite'
+import { createIndexLocationsMap } from '../utils/base'
 import { createDebugger } from '../utils/debugger'
 
 interface ParsedFile extends File {
@@ -193,6 +195,7 @@ export function createFailedFileTask(project: TestProject, filepath: string, err
     type: 'suite',
     id: /* @__PURE__ */ generateHash(`${testFilepath}${project.config.name || ''}`),
     name: testFilepath,
+    fullName: testFilepath,
     mode: 'run',
     tasks: [],
     start: 0,
@@ -252,6 +255,7 @@ function createFileTask(
     type: 'suite',
     id: /* @__PURE__ */ generateHash(`${testFilepath}${options.name || ''}`),
     name: testFilepath,
+    fullName: testFilepath,
     mode: 'run',
     tasks: [],
     start: ast.start,
@@ -262,7 +266,7 @@ function createFileTask(
     file: null!,
   }
   file.file = file
-  const indexMap = createIndexMap(code)
+  const indexMap = createIndexLocationsMap(code)
   const map = requestMap && new TraceMap(requestMap)
   let lastSuite: ParsedSuite = file as any
   const updateLatestSuite = (index: number) => {
@@ -324,6 +328,8 @@ function createFileTask(
           tasks: [],
           mode,
           name: definition.name,
+          fullName: createTaskName([latestSuite.fullName, definition.name]),
+          fullTestName: createTaskName([latestSuite.fullTestName, definition.name]),
           end: definition.end,
           start: definition.start,
           location,
@@ -343,6 +349,8 @@ function createFileTask(
         mode,
         context: {} as any, // not used on the server
         name: definition.name,
+        fullName: createTaskName([latestSuite.fullName, definition.name]),
+        fullTestName: createTaskName([latestSuite.fullTestName, definition.name]),
         end: definition.end,
         start: definition.start,
         location,
@@ -350,6 +358,7 @@ function createFileTask(
         meta: {},
         timeout: 0,
         annotations: [],
+        artifacts: [],
       }
       definition.task = task
       latestSuite.tasks.push(task)
@@ -408,24 +417,6 @@ async function transformSSR(project: TestProject, filepath: string) {
     return null
   }
   return await project.vite.ssrTransform(request.code, request.map, filepath)
-}
-
-function createIndexMap(source: string) {
-  const map = new Map<number, { line: number; column: number }>()
-  let index = 0
-  let line = 1
-  let column = 1
-  for (const char of source) {
-    map.set(index++, { line, column })
-    if (char === '\n' || char === '\r\n') {
-      line++
-      column = 0
-    }
-    else {
-      column++
-    }
-  }
-  return map
 }
 
 function markDynamicTests(tasks: Task[]) {

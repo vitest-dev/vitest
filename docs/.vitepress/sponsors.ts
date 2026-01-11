@@ -31,9 +31,9 @@ const vitestSponsors = {
   ],
   platinum: [
     {
-      name: 'mintlify',
-      url: 'https://www.mintlify.com/',
-      img: '/mintlify.svg',
+      name: 'Chromatic',
+      url: 'https://www.chromatic.com/?utm_source=vitest&utm_medium=sponsorship&utm_campaign=vitestSponsorship',
+      img: '/logo-chromatic.svg',
     },
   ],
   gold: [

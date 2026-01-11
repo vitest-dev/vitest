@@ -201,7 +201,7 @@ export interface ResolveSnapshotPathHandlerContext { config: SerializedConfig }
 export type ResolveSnapshotPathHandler = (
   testPath: string,
   snapExtension: string,
-  context: ResolveSnapshotPathHandlerContext
+  context: ResolveSnapshotPathHandlerContext,
 ) => string
 
 export type BuiltinPool
@@ -228,9 +228,10 @@ export interface InlineConfig {
   benchmark?: BenchmarkUserOptions
 
   /**
-   * Include globs for test files
+   * A list of [glob patterns](https://superchupu.dev/tinyglobby/comparison) that match your test files.
    *
    * @default ['**\/*.{test,spec}.?(c|m)[jt]s?(x)']
+   * @see {@link https://vitest.dev/config/include}
    */
   include?: string[]
 
@@ -824,6 +825,37 @@ export interface InlineConfig {
    * @default '.vitest-attachments'
    */
   attachmentsDir?: string
+
+  /**
+   * Experimental features
+   *
+   * @experimental
+   */
+  experimental?: {
+    /**
+     * Enable caching of modules on the file system between reruns.
+     */
+    fsModuleCache?: boolean
+    /**
+     * Path relative to the root of the project where the fs module cache will be stored.
+     * @default node_modules/.experimental-vitest-cache
+     */
+    fsModuleCachePath?: string
+    /**
+     * {@link https://vitest.dev/guide/open-telemetry}
+     */
+    openTelemetry?: {
+      enabled: boolean
+      sdkPath?: string
+      browserSdkPath?: string
+    }
+    /**
+     * Show imports (top 10) that take a long time.
+     *
+     * Enabling this will also show a breakdown by default in UI, but you can always press a button to toggle it.
+     */
+    printImportBreakdown?: boolean
+  }
 }
 
 export interface TypecheckConfig {
@@ -953,6 +985,12 @@ export interface UserConfig extends InlineConfig {
    * @default '.vitest-reports'
    */
   mergeReports?: string
+
+  /**
+   * Delete all Vitest caches, including `experimental.fsModuleCache`.
+   * @experimental
+   */
+  clearCache?: boolean
 }
 
 export type OnUnhandledErrorCallback = (error: (TestError | Error) & { type: string }) => boolean | void
@@ -984,6 +1022,7 @@ export interface ResolvedConfig
     | 'bail'
     | 'name'
     | 'vmMemoryLimit'
+    | 'fileParallelism'
   > {
   mode: VitestRunMode
 
@@ -1011,6 +1050,7 @@ export interface ResolvedConfig
   reporters: (InlineReporter | ReporterWithOptions)[]
 
   defines: Record<string, any>
+  viteDefine: Record<string, any>
 
   api: ApiConfig & { token: string }
   cliExclude?: string[]
@@ -1117,7 +1157,6 @@ export type ProjectConfig = Omit<
   mode?: string
   sequencer?: Omit<SequenceOptions, 'sequencer' | 'seed'>
   deps?: Omit<DepsOptions, 'moduleDirectories'>
-  fileParallelism?: boolean
 }
 
 export type ResolvedProjectConfig = Omit<
@@ -1132,7 +1171,7 @@ export interface UserWorkspaceConfig extends ViteUserConfig {
 
 // TODO: remove types when "workspace" support is removed
 export type UserProjectConfigFn = (
-  env: ConfigEnv
+  env: ConfigEnv,
 ) => UserWorkspaceConfig | Promise<UserWorkspaceConfig>
 export type UserProjectConfigExport
   = | UserWorkspaceConfig

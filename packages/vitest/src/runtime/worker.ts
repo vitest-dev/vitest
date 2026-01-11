@@ -1,24 +1,21 @@
-import type { ModuleRunner } from 'vite/module-runner'
 import type { ContextRPC, WorkerGlobalState } from '../types/worker'
+import type { Traces } from '../utils/traces'
 import type { VitestWorker } from './workers/types'
 import { createStackString, parseStacktrace } from '@vitest/utils/source-map'
-import { loadEnvironment } from '../integrations/env/loader'
 import { setupInspect } from './inspector'
 import { VitestEvaluatedModules } from './moduleRunner/evaluatedModules'
-import { createRuntimeRpc, rpcDone } from './rpc'
+import { onCancel, rpcDone } from './rpc'
 
 const resolvingModules = new Set<string>()
 const globalListeners = new Set<() => unknown>()
 
-async function execute(method: 'run' | 'collect', ctx: ContextRPC, worker: VitestWorker) {
+async function execute(method: 'run' | 'collect', ctx: ContextRPC, worker: VitestWorker, traces: Traces) {
   const prepareStart = performance.now()
 
   const cleanups: (() => void | Promise<void>)[] = [setupInspect(ctx)]
 
-  let environmentLoader: ModuleRunner | undefined
-
   // RPC is used to communicate between worker (be it a thread worker or child process or a custom implementation) and the main thread
-  const { rpc, onCancel } = createRuntimeRpc(worker)
+  const rpc = ctx.rpc
 
   try {
     // do not close the RPC channel so that we can get the error messages sent to the main thread
@@ -28,10 +25,6 @@ async function execute(method: 'run' | 'collect', ctx: ContextRPC, worker: Vites
       }))
     })
 
-    const beforeEnvironmentTime = performance.now()
-    const { environment, loader } = await loadEnvironment(ctx, rpc)
-    environmentLoader = loader
-
     const state = {
       ctx,
       // here we create a new one, workers can reassign this if they need to keep it non-isolated
@@ -39,13 +32,14 @@ async function execute(method: 'run' | 'collect', ctx: ContextRPC, worker: Vites
       resolvingModules,
       moduleExecutionInfo: new Map(),
       config: ctx.config,
-      onCancel,
-      environment,
+      // this is set later by vm or base
+      environment: null!,
       durations: {
-        environment: beforeEnvironmentTime,
+        environment: 0,
         prepare: prepareStart,
       },
       rpc,
+      onCancel,
       onCleanup: listener => globalListeners.add(listener),
       providedContext: ctx.providedContext,
       onFilterStackTrace(stack) {
@@ -62,33 +56,32 @@ async function execute(method: 'run' | 'collect', ctx: ContextRPC, worker: Vites
       )
     }
 
-    await worker[methodName](state)
+    await worker[methodName](state, traces)
   }
   finally {
-    await Promise.all(cleanups.map(fn => fn()))
-
     await rpcDone().catch(() => {})
-    await environmentLoader?.close()
-    rpc.$close()
+    await Promise.all(cleanups.map(fn => fn())).catch(() => {})
   }
 }
 
-export function run(ctx: ContextRPC, worker: VitestWorker): Promise<void> {
-  return execute('run', ctx, worker)
+export function run(ctx: ContextRPC, worker: VitestWorker, traces: Traces): Promise<void> {
+  return execute('run', ctx, worker, traces)
 }
 
-export function collect(ctx: ContextRPC, worker: VitestWorker): Promise<void> {
-  return execute('collect', ctx, worker)
+export function collect(ctx: ContextRPC, worker: VitestWorker, traces: Traces): Promise<void> {
+  return execute('collect', ctx, worker, traces)
 }
 
 export async function teardown(): Promise<void> {
   await Promise.all([...globalListeners].map(l => l()))
 }
 
+const env = process.env
+
 function createImportMetaEnvProxy(): WorkerGlobalState['metaEnv'] {
   // packages/vitest/src/node/plugins/index.ts:146
   const booleanKeys = ['DEV', 'PROD', 'SSR']
-  return new Proxy(process.env, {
+  return new Proxy(env, {
     get(_, key) {
       if (typeof key !== 'string') {
         return undefined

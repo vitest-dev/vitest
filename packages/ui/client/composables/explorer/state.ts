@@ -1,5 +1,7 @@
 import type { File } from '@vitest/runner'
 import type { FileTreeNode, Filter, FilteredTests, TreeFilterState, UITaskTreeNode } from './types'
+import { useLocalStorage } from '@vueuse/core'
+import { computed, reactive, ref, shallowRef } from 'vue'
 import { explorerTree } from './index'
 
 export const uiFiles = shallowRef<FileTreeNode[]>([])

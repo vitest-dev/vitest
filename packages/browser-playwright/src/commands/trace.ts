@@ -106,20 +106,25 @@ export const annotateTraces: BrowserCommand<[{ traces: string[]; testId: string 
   const vitest = project.vitest
   await Promise.all(traces.map((trace) => {
     const entity = vitest.state.getReportedEntityById(testId)
-    return vitest._testRun.annotate(testId, {
-      message: relative(project.config.root, trace),
-      type: 'traces',
-      attachment: {
-        path: trace,
-        contentType: 'application/octet-stream',
+    const location = entity?.location
+      ? {
+          file: entity.module.moduleId,
+          line: entity.location.line,
+          column: entity.location.column,
+        }
+      : undefined
+    return vitest._testRun.recordArtifact(testId, {
+      type: 'internal:annotation',
+      annotation: {
+        message: relative(project.config.root, trace),
+        type: 'traces',
+        attachment: {
+          path: trace,
+          contentType: 'application/octet-stream',
+        },
+        location,
       },
-      location: entity?.location
-        ? {
-            file: entity.module.moduleId,
-            line: entity.location.line,
-            column: entity.location.column,
-          }
-        : undefined,
+      location,
     })
   }))
 }

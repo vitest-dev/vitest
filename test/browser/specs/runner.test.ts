@@ -83,6 +83,11 @@ describe('running browser tests', async () => {
     expect(actionsTest).toBeDefined()
     expect(actionsTest.assertionResults).toHaveLength(1)
   })
+
+  test('unsubscribes cancel listeners after run', async () => {
+    // should not throw birpc closing errors
+    await expect(vitest.cancelCurrentRun('keyboard-input')).resolves.not.toThrow()
+  })
 })
 
 describe('console logging tests', async () => {
@@ -123,6 +128,10 @@ describe('console logging tests', async () => {
     expect(stdout).toMatch(/time: [\d.]+ ms/)
     expect(stdout).toMatch(/\[console-time-fake\]: [\d.]+ ms/)
     expect(stdout).not.toContain('[console-time-fake]: 0 ms')
+    expect(stdout).toContain('hello from one')
+    expect(stdout).toContain(`hello from two {
+  "hello": "object",
+}`)
   })
 
   test('logs are redirected to stderr', () => {
@@ -288,6 +297,19 @@ test('in-source tests run correctly when filtered', async () => {
   // there is only one file with one test inside
   expect(stdout).toContain(`Test Files  ${instances.length} passed`)
   expect(stdout).toContain(`Tests  ${instances.length} passed`)
+})
+
+test('re-evaluate setupFiles on each test run even when isolate is false', async () => {
+  const { exitCode, stderr, stdout } = await runBrowserTests({
+    root: './fixtures/isolate-and-setup-file',
+  })
+
+  expect(stderr).toBe('')
+  expect(exitCode).toBe(0)
+  instances.forEach(({ browser }) => {
+    expect(stdout).toReportPassedTest('a.test.ts', browser)
+    expect(stdout).toReportPassedTest('b.test.ts', browser)
+  })
 })
 
 test.runIf(provider.name === 'playwright')('timeout hooks', async ({ onTestFailed }) => {

@@ -1,3 +1,23 @@
+catalogMode: prefer
+
+shellEmulator: true
+
+trustPolicy: no-downgrade
+trustPolicyExclude:
+  - semver@6.3.1
+  - chokidar@4.0.3
+  - webdriverio@9.20.0
+  - webdriver@9.20.0
+  - '@wdio/types@9.20.0'
+  - '@wdio/repl@9.16.2'
+  - '@wdio/utils@9.20.0'
+  - '@wdio/config@9.20.0'
+  - '@wdio/logger@9.18.0'
+  - '@wdio/protocols@9.16.2'
+  - undici-types@6.21.0
+  - undici@6.21.3
+  - rxjs@7.8.2
+
 packages:
   - docs
   - packages/*
@@ -5,44 +25,71 @@ packages:
   - test/*
   - test/config/fixtures/conditions-pkg
 
+overrides:
+  '@vitest/browser': 'workspace:*'
+  '@vitest/browser-playwright': 'workspace:*'
+  '@vitest/browser-preview': 'workspace:*'
+  '@vitest/browser-webdriverio': 'workspace:*'
+  '@vitest/ui': 'workspace:*'
+  acorn: 8.11.3
+  mlly: ^1.8.0
+  rollup: $rollup
+  vite: $vite
+  vitest: 'workspace:*'
+patchedDependencies:
+  '@sinonjs/fake-timers@14.0.0': patches/@sinonjs__fake-timers@14.0.0.patch
+  '@types/sinonjs__fake-timers@8.1.5': patches/@types__sinonjs__fake-timers@8.1.5.patch
+  acorn@8.11.3: patches/acorn@8.11.3.patch
+  cac@6.7.14: patches/cac@6.7.14.patch
+  istanbul-lib-source-maps: patches/istanbul-lib-source-maps.patch
 catalog:
-  '@iconify-json/carbon': ^1.2.13
-  '@iconify-json/logos': ^1.2.9
+  '@iconify-json/carbon': ^1.2.14
+  '@iconify-json/logos': ^1.2.10
   '@jridgewell/remapping': ^2.3.5
   '@jridgewell/trace-mapping': 0.3.31
   '@types/chai': ^5.2.2
-  '@types/debug': ^4.1.12
   '@types/estree': ^1.0.8
   '@types/istanbul-lib-coverage': ^2.0.6
   '@types/istanbul-lib-report': ^3.0.3
   '@types/istanbul-lib-source-maps': ^4.0.4
   '@types/istanbul-reports': ^3.0.4
-  '@types/test-exclude': ^6.0.2
   '@types/ws': ^8.18.1
-  '@unocss/reset': ^66.5.1
-  '@vitejs/plugin-vue': ^6.0.1
+  '@unocss/reset': ^66.5.9
+  '@vitejs/plugin-vue': ^6.0.2
   '@vueuse/core': ^12.8.2
   acorn-walk: ^8.3.4
-  birpc: ^2.5.0
+  birpc: ^4.0.0
   cac: ^6.7.14
-  chai: ^6.0.1
-  debug: ^4.4.3
+  chai: ^6.2.1
   flatted: ^3.3.3
   istanbul-lib-coverage: ^3.2.2
   istanbul-lib-report: ^3.0.1
   istanbul-lib-source-maps: ^5.0.6
   istanbul-reports: ^3.2.0
-  magic-string: ^0.30.19
-  magicast: ^0.3.5
-  msw: ^2.11.3
+  magic-string: ^0.30.21
+  magicast: ^0.5.1
+  msw: ^2.12.3
+  obug: ^2.1.1
   pathe: ^2.0.3
   sirv: ^3.0.2
-  std-env: ^3.9.0
-  strip-literal: ^3.0.0
-  test-exclude: ^7.0.1
+  std-env: ^3.10.0
+  strip-literal: ^3.1.0
   tinyglobby: ^0.2.15
   tinyrainbow: ^3.0.3
-  unocss: ^66.5.1
-  unplugin-vue-components: ^0.28.0
-  vue: ^3.5.21
+  unocss: ^66.5.9
+  vue: ^3.5.25
   ws: ^8.18.3
+onlyBuiltDependencies:
+  - '@sveltejs/kit'
+  - '@swc/core'
+  - edgedriver
+  - esbuild
+  - geckodriver
+  - msw
+  - rolldown
+  - sharp
+  - svelte-preprocess
+  - vue-demi
+peerDependencyRules:
+  ignoreMissing:
+    - '@algolia/client-search'

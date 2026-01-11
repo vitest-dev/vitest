@@ -1,3 +1,5 @@
+import type { Span } from '@opentelemetry/api'
+import type { ContextTestEnvironment } from '../../types/worker'
 import type { Logger } from '../logger'
 import type { StateManager } from '../state'
 import type { PoolOptions, PoolTask, WorkerResponse } from './types'
@@ -8,7 +10,7 @@ import { TypecheckPoolWorker } from './workers/typecheckWorker'
 import { VmForksPoolWorker } from './workers/vmForksWorker'
 import { VmThreadsPoolWorker } from './workers/vmThreadsWorker'
 
-const WORKER_START_TIMEOUT = 5_000
+const WORKER_START_TIMEOUT = 90_000
 
 interface Options {
   distPath: string
@@ -23,7 +25,7 @@ interface QueuedTask {
 }
 
 interface ActiveTask extends QueuedTask {
-  cancelTask: () => Promise<void>
+  cancelTask: (options?: { force: boolean }) => Promise<void>
 }
 
 export class Pool {
@@ -73,17 +75,19 @@ export class Pool {
       let isMemoryLimitReached = false
       const runner = this.getPoolRunner(task, method)
 
+      const poolId = runner.poolId ?? this.getWorkerId()
+      runner.poolId = poolId
+
       const activeTask = { task, resolver, method, cancelTask }
       this.activeTasks.push(activeTask)
 
-      runner.on('error', (error) => {
-        resolver.reject(
-          new Error(`[vitest-pool]: Worker ${task.worker} emitted error.`, { cause: error }),
-        )
-      })
+      // active tasks receive cancel signal and shut down gracefully
+      async function cancelTask(options?: { force: boolean }) {
+        if (options?.force) {
+          await runner.stop({ force: true })
+        }
 
-      async function cancelTask() {
-        await runner.stop()
+        await runner.waitForTerminated()
         resolver.reject(new Error('Cancelled'))
       }
 
@@ -104,26 +108,38 @@ export class Pool {
       runner.on('message', onFinished)
 
       if (!runner.isStarted) {
+        runner.on('error', (error) => {
+          resolver.reject(
+            new Error(`[vitest-pool]: Worker ${task.worker} emitted error.`, { cause: error }),
+          )
+        })
+
         const id = setTimeout(
           () => resolver.reject(new Error(`[vitest-pool]: Timeout starting ${task.worker} runner.`)),
           WORKER_START_TIMEOUT,
         )
 
-        await runner.start().finally(() => clearTimeout(id))
+        await runner.start({ workerId: task.context.workerId })
+          .catch(error =>
+            resolver.reject(
+              new Error(`[vitest-pool]: Failed to start ${task.worker} worker for test files ${formatFiles(task)}.`, { cause: error }),
+            ),
+          )
+          .finally(() => clearTimeout(id))
       }
 
-      const poolId = runner.poolId ?? this.getWorkerId()
-      runner.poolId = poolId
+      let span: Span | undefined
 
-      // Start running the test in the worker
-      runner.postMessage({
-        __vitest_worker_request__: true,
-        type: method,
-        context: task.context,
-        poolId,
-      })
+      if (!resolver.isRejected) {
+        span = runner.startTracesSpan(`vitest.worker.${method}`)
+
+        // Start running the test in the worker
+        runner.request(method, task.context)
+      }
 
       await resolver.promise
+        .catch(error => span?.recordException(error))
+        .finally(() => span?.end())
 
       const index = this.activeTasks.indexOf(activeTask)
       if (index !== -1) {
@@ -149,7 +165,7 @@ export class Pool {
         )
 
         this.exitPromises.push(
-          runner.stop()
+          runner.stop({ force: resolver.isRejected })
             .then(() => clearTimeout(id))
             .catch(error => this.logger.error(`[vitest-pool]: Failed to terminate ${task.worker} worker for test files ${formatFiles(task)}.`, error)),
         )
@@ -167,6 +183,10 @@ export class Pool {
   }
 
   async cancel(): Promise<void> {
+    // Force exit if previous cancel is still on-going
+    // for example when user does 'CTRL+c' twice in row
+    const force = this._isCancelling
+
     // Set flag to prevent new tasks from being queued
     this._isCancelling = true
 
@@ -177,13 +197,14 @@ export class Pool {
       pendingTasks.forEach(task => task.resolver.reject(error))
     }
 
-    const activeTasks = this.activeTasks.splice(0)
-    await Promise.all(activeTasks.map(task => task.cancelTask()))
+    await Promise.all(this.activeTasks.map(task => task.cancelTask({ force })))
+    this.activeTasks = []
 
-    const sharedRunners = this.sharedRunners.splice(0)
-    await Promise.all(sharedRunners.map(runner => runner.stop()))
+    await Promise.all(this.sharedRunners.map(runner => runner.stop()))
+    this.sharedRunners = []
 
-    await Promise.all(this.exitPromises.splice(0))
+    await Promise.all(this.exitPromises)
+    this.exitPromises = []
 
     this.workerIds.forEach((_, id) => this.freeWorkerId(id))
 
@@ -200,7 +221,9 @@ export class Pool {
       const index = this.sharedRunners.findIndex(runner => isEqualRunner(runner, task))
 
       if (index !== -1) {
-        return this.sharedRunners.splice(index, 1)[0]
+        const runner = this.sharedRunners.splice(index, 1)[0]
+        runner.reconfigure(task)
+        return runner
       }
     }
 
@@ -208,7 +231,7 @@ export class Pool {
       distPath: this.options.distPath,
       project: task.project,
       method,
-      environment: task.context.environment.name,
+      environment: task.context.environment,
       env: task.env,
       execArgv: task.execArgv,
     }
@@ -265,7 +288,17 @@ function withResolvers() {
     reject = rej
   })
 
-  return { resolve, reject, promise }
+  const resolver = {
+    promise,
+    resolve,
+    reject: (reason: unknown) => {
+      resolver.isRejected = true
+      reject(reason)
+    },
+    isRejected: false,
+  }
+
+  return resolver
 }
 
 function formatFiles(task: PoolTask) {
@@ -276,22 +309,47 @@ function isEqualRunner(runner: PoolRunner, task: PoolTask) {
   if (task.isolate) {
     throw new Error('Isolated tasks should not share runners')
   }
-
-  return (
-    runner.worker.name === task.worker
-    && runner.project === task.project
-    && runner.environment === task.context.environment.name
-    && runner.worker.execArgv.every((arg, index) => task.execArgv[index] === arg)
-    && isEnvEqual(runner.worker.env, task.env)
-  )
+  if (runner.worker.name !== task.worker || runner.project !== task.project) {
+    return false
+  }
+  // by default, check that the environments are the same
+  // some workers (like vmThreads/vmForks) do not need this check
+  if (!runner.worker.canReuse) {
+    return isEnvironmentEqual(task.context.environment, runner.environment)
+  }
+  return runner.worker.canReuse(task)
 }
 
-function isEnvEqual(a: PoolOptions['env'], b: PoolTask['env']) {
-  const keys = Object.keys(a)
+function isEnvironmentEqual(env1: ContextTestEnvironment, env2: ContextTestEnvironment): boolean {
+  if (env1.name !== env2.name) {
+    return false
+  }
+  return deepEqual(env1.options, env2.options)
+}
 
-  if (keys.length !== Object.keys(b).length) {
+function deepEqual(obj1: any, obj2: any): boolean {
+  if (obj1 === obj2) {
+    return true
+  }
+  if (obj1 == null || obj2 == null) {
+    return obj1 === obj2
+  }
+  if (typeof obj1 !== 'object' || typeof obj2 !== 'object') {
     return false
   }
 
-  return keys.every(key => a[key] === b[key])
+  const keys1 = Object.keys(obj1)
+  const keys2 = Object.keys(obj2)
+
+  if (keys1.length !== keys2.length) {
+    return false
+  }
+
+  for (const key of keys1) {
+    if (!keys2.includes(key) || !deepEqual(obj1[key], obj2[key])) {
+      return false
+    }
+  }
+
+  return true
 }

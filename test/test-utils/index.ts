@@ -1,8 +1,15 @@
 import type { Options } from 'tinyexec'
 import type { UserConfig as ViteUserConfig } from 'vite'
-import type { WorkerGlobalState } from 'vitest'
+import type { SerializedConfig, WorkerGlobalState } from 'vitest'
 import type { TestProjectConfiguration } from 'vitest/config'
-import type { TestSpecification, TestUserConfig, Vitest, VitestRunMode } from 'vitest/node'
+import type {
+  TestCollection,
+  TestModule,
+  TestResult,
+  TestSpecification,
+  TestUserConfig,
+  Vitest,
+} from 'vitest/node'
 import { webcrypto as crypto } from 'node:crypto'
 import fs from 'node:fs'
 import { Readable, Writable } from 'node:stream'
@@ -26,13 +33,27 @@ export interface VitestRunnerCLIOptions {
   fails?: boolean
   preserveAnsi?: boolean
   tty?: boolean
+  mode?: 'test' | 'benchmark'
 }
 
+export interface RunVitestConfig extends TestUserConfig {
+  $viteConfig?: Omit<ViteUserConfig, 'test'>
+  $cliOptions?: TestUserConfig
+}
+
+/**
+ * The config is assumed to be the config on the fille system, not CLI options
+ * (Note that CLI only options like "standalone" are passed as CLI options, not config options)
+ * - To pass options as CLI, provide `$cliOptions` in the config object.
+ * - To pass other Vite config properties, provide `$viteConfig` in the config object.
+ *
+ * **WARNING**
+ * If the fixture in `root` has a config file, its options **WILL TAKE PRIORITY** over the ones provided here,
+ * except for the ones provided in `$cliOptions`.
+ */
 export async function runVitest(
-  cliOptions: TestUserConfig,
+  config: RunVitestConfig,
   cliFilters: string[] = [],
-  mode: VitestRunMode = 'test',
-  viteOverrides: ViteUserConfig = {},
   runnerOptions: VitestRunnerCLIOptions = {},
 ) {
   // Reset possible previous runs
@@ -70,26 +91,81 @@ export async function runVitest(
   stdin.isTTY = true
   stdin.setRawMode = () => stdin
   const cli = new Cli({ stdin, stdout, stderr, preserveAnsi: runnerOptions.preserveAnsi })
+  // @ts-expect-error not typed global
+  const currentConfig: SerializedConfig = __vitest_worker__.ctx.config
 
   let ctx: Vitest | undefined
   let thrown = false
+
+  const {
+    reporters,
+    root,
+    watch,
+    maxWorkers,
+    // #region cli-only options
+    config: configFile,
+    standalone,
+    dom,
+    related,
+    mode,
+    changed,
+    shard,
+    project,
+    cliExclude,
+    clearScreen,
+    compare,
+    outputJson,
+    mergeReports,
+    clearCache,
+    // #endregion
+    $cliOptions: cliOptions,
+    $viteConfig: viteConfig = {},
+    ...rest
+  } = config
+
+  if ((viteConfig as any).test) {
+    throw new Error(`Don't pass down "viteConfig" with "test" property. Use the rest of the first argument.`)
+  }
+
+  ;(viteConfig as any).test = rest
+
   try {
-    const { reporters, ...rest } = cliOptions
+    ctx = await startVitest(runnerOptions.mode || 'test', cliFilters, {
+      root,
+      config: configFile,
+      standalone,
+      dom,
+      related,
+      mode,
+      changed,
+      shard,
+      project,
+      cliExclude,
+      clearScreen,
+      compare,
+      outputJson,
+      mergeReports,
+      clearCache,
 
-    ctx = await startVitest(mode, cliFilters, {
       // Test cases are already run with multiple forks/threads
-      maxWorkers: 1,
+      maxWorkers: maxWorkers ?? 1,
 
-      watch: false,
+      watch: watch ?? false,
       // "none" can be used to disable passing "reporter" option so that default value is used (it's not same as reporters: ["default"])
       ...(reporters === 'none' ? {} : reporters ? { reporters } : { reporters: ['verbose'] }),
-      ...rest,
+      ...cliOptions,
       env: {
         NO_COLOR: 'true',
         ...rest.env,
+        ...cliOptions?.env,
+      },
+      // override cache config with the one that was used to run `vitest` formt the CLI
+      experimental: {
+        fsModuleCache: rest.experimental?.fsModuleCache ?? currentConfig.experimental.fsModuleCache,
+        ...cliOptions?.experimental,
       },
     }, {
-      ...viteOverrides,
+      ...viteConfig,
       server: {
         // we never need a websocket connection for the root config because it doesn't connect to the browser
         // browser mode uses a separate config that doesn't inherit CLI overrides
@@ -100,8 +176,9 @@ export async function runVitest(
           // https://github.com/vitejs/vite/blob/b723a753ced0667470e72b4853ecda27b17f546a/playground/vitestSetup.ts#L211
           usePolling: true,
           interval: 100,
+          ...viteConfig.server?.watch,
         },
-        ...viteOverrides?.server,
+        ...viteConfig?.server,
       },
     }, {
       stdin,
@@ -141,6 +218,20 @@ export async function runVitest(
     vitest: cli,
     stdout: cli.stdout,
     stderr: cli.stderr,
+    get results() {
+      return ctx?.state.getTestModules() || []
+    },
+    errorTree() {
+      return buildTestTree(ctx?.state.getTestModules() || [], (result) => {
+        if (result.state === 'failed') {
+          return result.errors.map(e => e.message)
+        }
+        return result.state
+      })
+    },
+    testTree() {
+      return buildTestTree(ctx?.state.getTestModules() || [])
+    },
     waitForClose: async () => {
       await new Promise<void>(resolve => ctx!.onClose(resolve))
       return ctx?.closingPromise
@@ -153,7 +244,7 @@ interface CliOptions extends Partial<Options> {
   preserveAnsi?: boolean
 }
 
-async function runCli(command: 'vitest' | 'vite-node', _options?: CliOptions | string, ...args: string[]) {
+async function runCli(command: 'vitest', _options?: CliOptions | string, ...args: string[]) {
   let options = _options
 
   if (typeof _options === 'string') {
@@ -226,13 +317,6 @@ async function runCli(command: 'vitest' | 'vite-node', _options?: CliOptions | s
 export async function runVitestCli(_options?: CliOptions | string, ...args: string[]) {
   process.env.VITE_TEST_WATCHER_DEBUG = 'true'
   return runCli('vitest', _options, ...args)
-}
-
-export async function runViteNodeCli(_options?: CliOptions | string, ...args: string[]) {
-  process.env.VITE_TEST_WATCHER_DEBUG = 'true'
-  const { vitest, ...rest } = await runCli('vite-node', _options, ...args)
-
-  return { viteNode: vitest, ...rest }
 }
 
 export function getInternalState(): WorkerGlobalState {
@@ -310,10 +394,10 @@ export default config
   return `export default ${JSON.stringify(content)}`
 }
 
-export function useFS<T extends TestFsStructure>(root: string, structure: T) {
+export function useFS<T extends TestFsStructure>(root: string, structure: T, ensureConfig = true) {
   const files = new Set<string>()
   const hasConfig = Object.keys(structure).some(file => file.includes('.config.'))
-  if (!hasConfig) {
+  if (ensureConfig && !hasConfig) {
     ;(structure as any)['./vitest.config.js'] = {}
   }
   for (const file in structure) {
@@ -342,9 +426,10 @@ export function useFS<T extends TestFsStructure>(root: string, structure: T) {
         throw new Error(`file ${file} is outside of the test file system`)
       }
       const filepath = resolve(root, file)
-      if (!files.has(filepath)) {
+      if (files.has(filepath)) {
         throw new Error(`file ${file} already exists in the test file system`)
       }
+      files.add(filepath)
       createFile(filepath, content)
     },
     statFile: (file: string): fs.Stats => {
@@ -356,27 +441,32 @@ export function useFS<T extends TestFsStructure>(root: string, structure: T) {
 
       return fs.statSync(filepath)
     },
+    resolveFile: (file: string): string => {
+      return resolve(root, file)
+    },
   }
 }
 
 export async function runInlineTests(
   structure: TestFsStructure,
-  config?: TestUserConfig,
+  config?: RunVitestConfig,
   options?: VitestRunnerCLIOptions,
-  viteOverrides: ViteUserConfig = {},
 ) {
   const root = resolve(process.cwd(), `vitest-test-${crypto.randomUUID()}`)
   const fs = useFS(root, structure)
   const vitest = await runVitest({
     root,
     ...config,
-  }, [], 'test', viteOverrides, options)
+  }, [], options)
   return {
     fs,
     root,
     ...vitest,
     get results() {
       return vitest.ctx?.state.getTestModules() || []
+    },
+    testTree() {
+      return buildTestTree(vitest.ctx?.state.getTestModules() || [])
     },
   }
 }
@@ -391,4 +481,41 @@ export class StableTestFileOrderSorter {
   shard(files: TestSpecification[]) {
     return files
   }
+}
+
+function buildTestTree(testModules: TestModule[], onResult?: (result: TestResult) => unknown) {
+  type TestTree = Record<string, any>
+
+  function walkCollection(collection: TestCollection): TestTree {
+    const node: TestTree = {}
+
+    for (const child of collection) {
+      if (child.type === 'suite') {
+        // Recursively walk suite children
+        const suiteChildren = walkCollection(child.children)
+        node[child.name] = suiteChildren
+      }
+      else if (child.type === 'test') {
+        const result = child.result()
+        if (onResult) {
+          node[child.name] = onResult(result)
+        }
+        else {
+          node[child.name] = result.state
+        }
+      }
+    }
+
+    return node
+  }
+
+  const tree: TestTree = {}
+
+  for (const module of testModules) {
+    // Use relative module ID for cleaner output
+    const key = module.relativeModuleId
+    tree[key] = walkCollection(module.children)
+  }
+
+  return tree
 }

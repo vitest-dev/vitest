@@ -1,13 +1,10 @@
 import type { FetchFunction, ModuleRunnerTransport } from 'vite/module-runner'
 import type { ResolveFunctionResult } from '../../types/general'
-import { builtinModules } from 'node:module'
 
 export interface VitestTransportOptions {
   fetchModule: FetchFunction
   resolveId: (id: string, importer?: string) => Promise<ResolveFunctionResult | null>
 }
-
-const nodeBuiltins = builtinModules.filter(id => !id.includes(':'))
 
 export class VitestTransport implements ModuleRunnerTransport {
   constructor(private options: VitestTransportOptions) {}
@@ -20,11 +17,13 @@ export class VitestTransport implements ModuleRunnerTransport {
       return { error: new Error(`Vitest Module Runner doesn't support ${event.event} event.`) }
     }
     const { name, data } = event.data
+    if (name === 'getBuiltins') {
+      // we return an empty array here to avoid client-side builtin check,
+      // as we need builtins to go through `fetchModule`
+      return { result: [] }
+    }
     if (name !== 'fetchModule') {
       return { error: new Error(`Unknown method: ${name}. Expected "fetchModule".`) }
-    }
-    if (name === 'getBuiltins') {
-      return { result: [...nodeBuiltins, /^node:/] }
     }
     try {
       const result = await this.options.fetchModule(...data as Parameters<FetchFunction>)

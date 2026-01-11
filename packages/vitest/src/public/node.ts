@@ -5,8 +5,10 @@ export const version: string = Vitest.version
 
 export { isValidApiRequest } from '../api/check'
 export { escapeTestName } from '../node/ast-collect'
+export type { CacheKeyIdGenerator, CacheKeyIdGeneratorContext } from '../node/cache/fsModuleCache'
 export { parseCLI } from '../node/cli/cac'
 export type { CliParseOptions } from '../node/cli/cac'
+export type { CliOptions } from '../node/cli/cli-api'
 export { startVitest } from '../node/cli/cli-api'
 export { resolveApiServerConfig } from '../node/config/resolveConfig'
 export type {
@@ -133,6 +135,7 @@ export type {
 export type { VitestPluginContext } from '../node/types/plugin'
 export type { TestRunResult } from '../node/types/tests'
 export type { WorkerContext } from '../node/types/worker'
+export { isFileServingAllowed } from '../node/vite'
 export { createViteLogger } from '../node/viteLogger'
 export type { WatcherTriggerPattern } from '../node/watcher'
 
@@ -168,7 +171,7 @@ export type { SerializedError } from '@vitest/utils'
 export {
   esbuildVersion,
   isCSSRequest,
-  isFileServingAllowed,
+  isFileLoadingAllowed,
   parseAst,
   parseAstAsync,
   rollupVersion,

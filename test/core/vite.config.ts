@@ -5,6 +5,8 @@ import { defaultExclude, defineConfig } from 'vitest/config'
 import { rolldownVersion } from 'vitest/node'
 
 export default defineConfig({
+  // tests should not fail when base is set
+  base: '/some-url/',
   plugins: [
     {
       name: 'example',
@@ -89,6 +91,7 @@ export default defineConfig({
           /packages\/web-worker/,
           /\.wasm$/,
           /\/wasm-bindgen-no-cyclic\/index_bg.js/,
+          /dep-esm-non-existing/,
         ],
         inline: ['inline-lib'],
       },

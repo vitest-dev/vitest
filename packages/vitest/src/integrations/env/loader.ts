@@ -1,6 +1,7 @@
 import type { BuiltinEnvironment, VitestEnvironment } from '../../node/types/config'
 import type { Environment } from '../../types/environment'
-import type { ContextRPC, WorkerRPC } from '../../types/worker'
+import type { WorkerRPC } from '../../types/worker'
+import type { Traces } from '../../utils/traces'
 import { readFileSync } from 'node:fs'
 import { isBuiltin } from 'node:module'
 import { pathToFileURL } from 'node:url'
@@ -18,7 +19,7 @@ function isBuiltinEnvironment(
 const isWindows = process.platform === 'win32'
 const _loaders = new Map<string, ModuleRunner>()
 
-export async function createEnvironmentLoader(root: string, rpc: WorkerRPC): Promise<ModuleRunner> {
+export function createEnvironmentLoader(root: string, rpc: WorkerRPC): ModuleRunner {
   const cachedLoader = _loaders.get(root)
   if (!cachedLoader || cachedLoader.isClosed()) {
     _loaders.delete(root)
@@ -48,27 +49,32 @@ export async function createEnvironmentLoader(root: string, rpc: WorkerRPC): Pro
       }),
     })
     _loaders.set(root, moduleRunner)
-    await moduleRunner.import('/@vite/env')
   }
   return _loaders.get(root)!
 }
 
 export async function loadEnvironment(
-  ctx: ContextRPC,
+  name: string,
+  root: string,
   rpc: WorkerRPC,
+  traces: Traces,
 ): Promise<{ environment: Environment; loader?: ModuleRunner }> {
-  const name = ctx.environment.name
   if (isBuiltinEnvironment(name)) {
     return { environment: environments[name] }
   }
-  const root = ctx.config.root
-  const loader = await createEnvironmentLoader(root, rpc)
+  const loader = createEnvironmentLoader(root, rpc)
   const packageId
     = name[0] === '.' || name[0] === '/'
       ? resolve(root, name)
-      : (await rpc.resolve(`vitest-environment-${name}`, undefined, '__vitest__'))
+      : (await traces.$(
+          'vitest.runtime.environment.resolve',
+          () => rpc.resolve(`vitest-environment-${name}`, undefined, '__vitest__'),
+        ))
           ?.id ?? resolve(root, name)
-  const pkg = await loader.import(packageId) as { default: Environment }
+  const pkg = await traces.$(
+    'vitest.runtime.environment.import',
+    () => loader.import(packageId) as Promise<{ default: Environment }>,
+  )
   if (!pkg || !pkg.default || typeof pkg.default !== 'object') {
     throw new TypeError(
       `Environment "${name}" is not a valid environment. `

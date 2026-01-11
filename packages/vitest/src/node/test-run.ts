@@ -3,10 +3,9 @@ import type {
   TaskEventPack,
   TaskResultPack,
   TaskUpdateEvent,
-  TestAnnotation,
   TestAttachment,
 } from '@vitest/runner'
-import type { TaskEventData } from '@vitest/runner/types/tasks'
+import type { TaskEventData, TestArtifact } from '@vitest/runner/types/tasks'
 import type { SerializedError } from '@vitest/utils'
 import type { UserConsoleLog } from '../types/general'
 import type { Vitest } from './core'
@@ -55,19 +54,35 @@ export class TestRun {
     await this.vitest.report('onUserConsoleLog', log)
   }
 
-  async annotate(testId: string, annotation: TestAnnotation): Promise<TestAnnotation> {
+  async recordArtifact<Artifact extends TestArtifact>(testId: string, artifact: Artifact): Promise<Artifact> {
     const task = this.vitest.state.idMap.get(testId)
     const entity = task && this.vitest.state.getReportedEntity(task)
 
     assert(task && entity, `Entity must be found for task ${task?.name || testId}`)
-    assert(entity.type === 'test', `Annotation can only be added to a test, instead got ${entity.type}`)
+    assert(entity.type === 'test', `Artifacts can only be recorded on a test, instead got ${entity.type}`)
 
-    await this.resolveTestAttachment(entity, annotation)
+    // annotations won't resolve as artifacts for backwards compatibility until next major
+    if (artifact.type === 'internal:annotation') {
+      await this.resolveTestAttachment(entity, artifact.annotation.attachment, artifact.annotation.message)
 
-    entity.task.annotations.push(annotation)
+      entity.task.annotations.push(artifact.annotation)
 
-    await this.vitest.report('onTestCaseAnnotate', entity, annotation)
-    return annotation
+      await this.vitest.report('onTestCaseAnnotate', entity, artifact.annotation)
+
+      return artifact
+    }
+
+    if (Array.isArray(artifact.attachments)) {
+      await Promise.all(
+        artifact.attachments.map(attachment => this.resolveTestAttachment(entity, attachment)),
+      )
+    }
+
+    entity.task.artifacts.push(artifact)
+
+    await this.vitest.report('onTestCaseArtifactRecord', entity, artifact)
+
+    return artifact
   }
 
   async updated(update: TaskResultPack[], events: TaskEventPack[]): Promise<void> {
@@ -167,6 +182,13 @@ export class TestRun {
 
     assert(task && entity, `Entity must be found for task ${task?.name || id}`)
 
+    if (event === 'suite-failed-early' && entity.type === 'module') {
+      // the file failed during import
+      await this.vitest.report('onTestModuleStart', entity)
+      await this.vitest.report('onTestModuleEnd', entity)
+      return
+    }
+
     if (event === 'suite-prepare' && entity.type === 'suite') {
       return await this.vitest.report('onTestSuiteReady', entity)
     }
@@ -232,9 +254,8 @@ export class TestRun {
     }
   }
 
-  private async resolveTestAttachment(test: TestCase, annotation: TestAnnotation): Promise<TestAttachment | undefined> {
+  private async resolveTestAttachment(test: TestCase, attachment: TestAttachment | undefined, filename?: string): Promise<TestAttachment | undefined> {
     const project = test.project
-    const attachment = annotation.attachment
     if (!attachment) {
       return attachment
     }
@@ -244,7 +265,7 @@ export class TestRun {
       const hash = createHash('sha1').update(currentPath).digest('hex')
       const newPath = resolve(
         project.config.attachmentsDir,
-        `${sanitizeFilePath(annotation.message)}-${hash}${extname(currentPath)}`,
+        `${filename ? `${sanitizeFilePath(filename)}-` : ''}${hash}${extname(currentPath)}`,
       )
       if (!existsSync(project.config.attachmentsDir)) {
         await mkdir(project.config.attachmentsDir, { recursive: true })

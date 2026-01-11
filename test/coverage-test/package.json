@@ -6,7 +6,7 @@
     "test": "vitest"
   },
   "devDependencies": {
-    "@jridgewell/remapping": "^2.3.5",
+    "@jridgewell/remapping": "catalog:",
     "@types/istanbul-lib-coverage": "catalog:",
     "@types/istanbul-lib-report": "catalog:",
     "@vitejs/plugin-vue": "latest",
@@ -17,12 +17,12 @@
     "@vitest/web-worker": "workspace:*",
     "@vue/test-utils": "latest",
     "happy-dom": "latest",
-    "istanbul-lib-coverage": "^3.2.2",
+    "istanbul-lib-coverage": "catalog:",
     "istanbul-lib-report": "catalog:",
-    "magic-string": "^0.30.19",
-    "magicast": "^0.3.5",
-    "sass-embedded": "^1.93.0",
-    "unplugin-swc": "^1.5.7",
+    "magic-string": "^0.30.21",
+    "magicast": "^0.5.1",
+    "sass-embedded": "^1.93.3",
+    "unplugin-swc": "^1.5.9",
     "vite": "latest",
     "vitest": "workspace:*",
     "vue": "catalog:"
