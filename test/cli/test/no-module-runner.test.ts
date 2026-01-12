@@ -1,54 +1,35 @@
+import type { RunVitestConfig, TestFsStructure } from '#test-utils'
 import module from 'node:module'
 import { replaceRoot, runInlineTests } from '#test-utils'
 import { describe, expect, test } from 'vitest'
 
 describe.runIf(module.registerHooks)('supported', () => {
   test('cannot run viteModuleRunner: false in "vmForks"', async () => {
-    const { stderr } = await runInlineTests({
-      'base.test.js': ``,
-      'vitest.config.js': {
-        test: {
-          pool: 'vmForks',
-          experimental: {
-            viteModuleRunner: false,
-          },
-        },
-      },
-    })
+    const { stderr } = await runNoViteModuleRunnerTests(
+      { 'base.test.js': `` },
+      { pool: 'vmForks' },
+    )
 
     expect(stderr).toContain(`Pool "vmForks" cannot run with "experimental.viteModuleRunner: false". Please, use "threads" or "forks" instead.`)
   })
 
   test('cannot run viteModuleRunner: false in "vmThreads"', async () => {
-    const { stderr } = await runInlineTests({
-      'base.test.js': ``,
-      'vitest.config.js': {
-        test: {
-          pool: 'vmThreads',
-          experimental: {
-            viteModuleRunner: false,
-          },
-        },
-      },
-    })
+    const { stderr } = await runNoViteModuleRunnerTests(
+      { 'base.test.js': `` },
+      { pool: 'vmThreads' },
+    )
 
     expect(stderr).toContain(`Pool "vmThreads" cannot run with "experimental.viteModuleRunner: false". Please, use "threads" or "forks" instead.`)
   })
 
   test('can run tests in threads worker', async () => {
-    const { stderr, testTree } = await runInlineTests({
-      'base1.test.js': `test('hello world', () => {})`,
-      'base2.test.js': `test('hello world', () => {})`,
-      'vitest.config.js': {
-        test: {
-          globals: true,
-          pool: 'threads',
-          experimental: {
-            viteModuleRunner: false,
-          },
-        },
+    const { stderr, testTree } = await runNoViteModuleRunnerTests(
+      {
+        'base1.test.js': `test('hello world', () => {})`,
+        'base2.test.js': `test('hello world', () => {})`,
       },
-    })
+      { pool: 'threads' },
+    )
 
     expect(stderr).toBe('')
     expect(testTree()).toMatchInlineSnapshot(`
@@ -64,19 +45,13 @@ describe.runIf(module.registerHooks)('supported', () => {
   })
 
   test('can run tests in forks worker', async () => {
-    const { stderr, testTree } = await runInlineTests({
-      'base1.test.js': `test('hello world', () => {})`,
-      'base2.test.js': `test('hello world', () => {})`,
-      'vitest.config.js': {
-        test: {
-          globals: true,
-          pool: 'forks',
-          experimental: {
-            viteModuleRunner: false,
-          },
-        },
+    const { stderr, testTree } = await runNoViteModuleRunnerTests(
+      {
+        'base1.test.js': `test('hello world', () => {})`,
+        'base2.test.js': `test('hello world', () => {})`,
       },
-    })
+      { pool: 'forks' },
+    )
 
     expect(stderr).toBe('')
     expect(testTree()).toMatchInlineSnapshot(`
@@ -92,7 +67,7 @@ describe.runIf(module.registerHooks)('supported', () => {
   })
 
   test('ESM files don\'t have access to CJS globals', async () => {
-    const { stderr, testTree } = await runInlineTests({
+    const { stderr, testTree } = await runNoViteModuleRunnerTests({
       'base.test.js': `
 test('no globals', () => {
   expect(typeof __dirname).toBe('undefined')
@@ -110,14 +85,6 @@ test('no vite globals', () => {
         name: '@test/no-globals-cjs-esm-native-module-runner',
         type: 'module',
       }),
-      'vitest.config.js': {
-        test: {
-          globals: true,
-          experimental: {
-            viteModuleRunner: false,
-          },
-        },
-      },
     })
 
     expect(stderr).toBe('')
@@ -132,7 +99,7 @@ test('no vite globals', () => {
   })
 
   test('CJS files don\'t have access to ESM globals', async () => {
-    const { stderr, testTree } = await runInlineTests({
+    const { stderr, testTree } = await runNoViteModuleRunnerTests({
       'base.test.js': `
 test('has CJS globals', () => {
   expect(typeof __dirname).toBe('string')
@@ -150,14 +117,6 @@ test('no esm globals', () => {
         name: '@test/no-globals-esm-cjs-native-module-runner',
         type: 'commonjs',
       }),
-      'vitest.config.js': {
-        test: {
-          globals: true,
-          experimental: {
-            viteModuleRunner: false,
-          },
-        },
-      },
     })
 
     expect(stderr).toContain('Cannot use \'import.meta\' outside a module')
@@ -172,8 +131,9 @@ test('no esm globals', () => {
   })
 
   test('in-source tests in CJS work', async () => {
-    const { stderr, testTree } = await runInlineTests({
-      'in-source.js': `
+    const { stderr, testTree } = await runNoViteModuleRunnerTests(
+      {
+        'in-source.js': /* js */`
 if (import.meta.vitest) {
   const { test, expect } = import.meta.vitest
   test('works', () => {
@@ -181,20 +141,15 @@ if (import.meta.vitest) {
   })
 }
     `,
-      'package.json': JSON.stringify({
-        name: '@test/no-globals-esm-cjs-native-module-runner',
-        type: 'commonjs',
-      }),
-      'vitest.config.js': {
-        test: {
-          globals: true,
-          includeSource: ['./in-source.js'],
-          experimental: {
-            viteModuleRunner: false,
-          },
-        },
+        'package.json': JSON.stringify({
+          name: '@test/no-globals-esm-cjs-native-module-runner',
+          type: 'commonjs',
+        }),
       },
-    })
+      {
+        includeSource: ['./in-source.js'],
+      },
+    )
     expect(stderr).toBe('')
     expect(testTree()).toMatchInlineSnapshot(`
       {
@@ -206,8 +161,9 @@ if (import.meta.vitest) {
   })
 
   test('in-source tests in ESM work', async () => {
-    const { stderr, testTree } = await runInlineTests({
-      'in-source.js': `
+    const { stderr, testTree } = await runNoViteModuleRunnerTests(
+      {
+        'in-source.js': `
 if (import.meta.vitest) {
   const { test, expect } = import.meta.vitest
   test('works', () => {
@@ -215,20 +171,15 @@ if (import.meta.vitest) {
   })
 }
     `,
-      'package.json': JSON.stringify({
-        name: '@test/no-globals-cjs-esm-native-module-runner',
-        type: 'module',
-      }),
-      'vitest.config.js': {
-        test: {
-          globals: true,
-          includeSource: ['./in-source.js'],
-          experimental: {
-            viteModuleRunner: false,
-          },
-        },
+        'package.json': JSON.stringify({
+          name: '@test/no-globals-cjs-esm-native-module-runner',
+          type: 'module',
+        }),
       },
-    })
+      {
+        includeSource: ['./in-source.js'],
+      },
+    )
     expect(stderr).toBe('')
     expect(testTree()).toMatchInlineSnapshot(`
       {
@@ -240,8 +191,9 @@ if (import.meta.vitest) {
   })
 
   test('in-source test doesn\'t run when imported by actual test', async () => {
-    const { stderr, testTree } = await runInlineTests({
-      'add.js': /* js */`
+    const { stderr, testTree } = await runNoViteModuleRunnerTests(
+      {
+        'add.js': /* js */`
 export function add(a, b) {
   return a + b
 }
@@ -253,26 +205,22 @@ if (import.meta.vitest) {
   })
 }
     `,
-      'add.test.js': /* js */`
+        'add.test.js': /* js */`
 import { add } from './add.js'
 import { test, expect } from 'vitest'
 test('add is only once', () => {
   expect(add(1, 1)).toBe(2)
 })
     `,
-      'package.json': JSON.stringify({
-        name: '@test/native-module-runner',
-        type: 'module',
-      }),
-      'vitest.config.js': {
-        test: {
-          includeSource: ['./in-source.js'],
-          experimental: {
-            viteModuleRunner: false,
-          },
-        },
+        'package.json': JSON.stringify({
+          name: '@test/native-module-runner',
+          type: 'module',
+        }),
       },
-    })
+      {
+        includeSource: ['./in-source.js'],
+      },
+    )
     expect(stderr).toBe('')
     expect(testTree()).toMatchInlineSnapshot(`
       {
@@ -284,7 +232,7 @@ test('add is only once', () => {
   })
 
   test('cannot import JS file without extension in ESM', async () => {
-    const { stderr, root } = await runInlineTests({
+    const { stderr, root } = await runNoViteModuleRunnerTests({
       'add.js': /* js */`
 export function add(a, b) {
   return a + b
@@ -294,14 +242,6 @@ export function add(a, b) {
 import { add } from './add' // [!] no extension
 test('not reported')
     `,
-      'vitest.config.js': {
-        test: {
-          globals: true,
-          experimental: {
-            viteModuleRunner: false,
-          },
-        },
-      },
     })
     expect(replaceRoot(stderr, root)).toMatchInlineSnapshot(`
       "
@@ -318,7 +258,7 @@ test('not reported')
   })
 
   test('cannot import TS without extension in ESM', async () => {
-    const { stderr, root } = await runInlineTests({
+    const { stderr, root } = await runNoViteModuleRunnerTests({
       'add.ts': /* ts */`
 export function add(a: number, b: number): number {
   return a + b
@@ -328,14 +268,6 @@ export function add(a: number, b: number): number {
 import { add } from './add.js' // [!] JS extension is NOT valid
 test('not reported')
     `,
-      'vitest.config.js': {
-        test: {
-          globals: true,
-          experimental: {
-            viteModuleRunner: false,
-          },
-        },
-      },
     })
     expect(replaceRoot(stderr, root)).toMatchInlineSnapshot(`
       "
@@ -352,8 +284,9 @@ test('not reported')
   })
 
   test.runIf(process.features.typescript)('an error in in-source tests is shown correctly', async () => {
-    const { stderr, errorTree } = await runInlineTests({
-      'in-source.ts': `
+    const { stderr, errorTree } = await runNoViteModuleRunnerTests(
+      {
+        'in-source.ts': `
 interface HelloWorld {
   isStripped: true
 }
@@ -369,21 +302,16 @@ if (import.meta.vitest) {
   })
 }
     `,
-      'package.json': JSON.stringify({
-        name: '@test/no-globals-cjs-esm-native-module-runner',
-        type: 'module',
-      }),
-      'vitest.config.js': {
-        test: {
-          globals: true,
-          includeTaskLocation: true,
-          includeSource: ['./in-source.ts'],
-          experimental: {
-            viteModuleRunner: false,
-          },
-        },
+        'package.json': JSON.stringify({
+          name: '@test/no-globals-cjs-esm-native-module-runner',
+          type: 'module',
+        }),
       },
-    })
+      {
+        includeTaskLocation: true,
+        includeSource: ['./in-source.ts'],
+      },
+    )
     expect(stderr).toMatchInlineSnapshot(`
       "
       ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
@@ -414,7 +342,7 @@ if (import.meta.vitest) {
   })
 
   test('error in the sync mock factory is reported', async () => {
-    const { stderr } = await runInlineTests({
+    const { stderr } = await runNoViteModuleRunnerTests({
       'add.js': /* js */`
 export function add(a, b) {
   return a + b
@@ -427,14 +355,6 @@ vi.mock('./add.js', () => {
 })
 test('not reported')
     `,
-      'vitest.config.js': {
-        test: {
-          globals: true,
-          experimental: {
-            viteModuleRunner: false,
-          },
-        },
-      },
     })
 
     expect(stderr).toMatchInlineSnapshot(`
@@ -467,7 +387,7 @@ test('not reported')
     // I wasn't able to figure out what doesn't handle it properly
     // and assume it is something internal in Node.js
     // If it wasn't caught by us, we wouldn't have gotten the "suite" issue
-    const { stderr } = await runInlineTests({
+    const { stderr } = await runNoViteModuleRunnerTests({
       'add.js': /* js */`
 export function add(a, b) {
   return a + b
@@ -481,14 +401,6 @@ vi.mock('./add.js', async () => {
 })
 test('not reported')
     `,
-      'vitest.config.js': {
-        test: {
-          globals: true,
-          experimental: {
-            viteModuleRunner: false,
-          },
-        },
-      },
     })
 
     // "slice" removes the stack from unhandled error because it references built artifacts
@@ -514,8 +426,9 @@ test('not reported')
   })
 
   test('can load a custom environment', async () => {
-    const { stderr, testTree } = await runInlineTests({
-      './env.js': /* js */`
+    const { stderr, testTree } = await runNoViteModuleRunnerTests(
+      {
+        './env.js': /* js */`
 export default {
   name: 'custom',
   viteEnvironment: 'client', // this is actually not used, but kept for consistency
@@ -532,21 +445,16 @@ export default {
   }
 }
       `,
-      'basic.test.js': /* js */ `
+        'basic.test.js': /* js */ `
 test('custom env is set', () => {
   expect(globalThis.CUSTOM_ENV).toBe(true)
 })
       `,
-      'vitest.config.js': {
-        test: {
-          globals: true,
-          environment: './env.js',
-          experimental: {
-            viteModuleRunner: false,
-          },
-        },
       },
-    })
+      {
+        environment: './env.js',
+      },
+    )
     expect(stderr).toBe('')
     expect(testTree()).toMatchInlineSnapshot(`
       {
@@ -559,7 +467,7 @@ test('custom env is set', () => {
 
   describe('.cts', () => {
     test('as esm is not supported', async () => {
-      const { stderr } = await runInlineTests({
+      const { stderr } = await runNoViteModuleRunnerTests({
         'add.cts': /* ts */`
 export function add(a: number, b: number): number {
   return a + b
@@ -571,20 +479,12 @@ test('2+2=4', () => {
   expect(_.add(2, 2)).toBe(4)
 })
 `,
-        'vitest.config.js': {
-          test: {
-            globals: true,
-            experimental: {
-              viteModuleRunner: false,
-            },
-          },
-        },
       })
       expect(stderr).toContain('Cannot use import statement outside a module')
     })
 
     test('by default with type stripping is not supported', async () => {
-      const { stderr } = await runInlineTests({
+      const { stderr } = await runNoViteModuleRunnerTests({
         'add.cts': /* ts */`
 export = function add(a: number, b: number): number {
   return a + b
@@ -596,14 +496,6 @@ test('2+2=4', () => {
   expect(_.add(2, 2)).toBe(4)
 })
 `,
-        'vitest.config.js': {
-          test: {
-            globals: true,
-            experimental: {
-              viteModuleRunner: false,
-            },
-          },
-        },
       })
       expect(stderr).toMatchInlineSnapshot(`
         "
@@ -620,28 +512,24 @@ test('2+2=4', () => {
     })
 
     test('with --experimental-transform-types is supported', async () => {
-      const { errorTree } = await runInlineTests({
-        'add.cts': /* ts */`
+      const { errorTree } = await runNoViteModuleRunnerTests(
+        {
+          'add.cts': /* ts */`
 export = function add(a: number, b: number): number {
   return a + b
 }
       `,
-        'add.test.mts': /* ts */`
+          'add.test.mts': /* ts */`
 import add from './add.cts'
 test('2+2=4', () => {
   expect(add(2, 2)).toBe(4)
 })
 `,
-        'vitest.config.js': {
-          test: {
-            globals: true,
-            experimental: {
-              viteModuleRunner: false,
-            },
-            execArgv: ['--experimental-transform-types'],
-          },
         },
-      })
+        {
+          execArgv: ['--experimental-transform-types'],
+        },
+      )
       expect(errorTree()).toMatchInlineSnapshot(`
         {
           "add.test.mts": {
@@ -655,14 +543,8 @@ test('2+2=4', () => {
 
 describe.runIf(!module.registerHooks)('unsupported', () => {
   test('prints a warning if nodeLoader is not enabled', async () => {
-    const { stderr } = await runInlineTests(
+    const { stderr } = await runNoViteModuleRunnerTests(
       { 'basic.test.js': `test('skip')` },
-      {
-        globals: true,
-        experimental: {
-          viteModuleRunner: false,
-        },
-      },
     )
     expect(stderr).toContain(`WARNING  "module.registerHooks" is not supported in Node.js ${process.version}. This means that some features like module mocking or in-source testing are not supported. Upgrade your Node.js version to at least 22.15 or disable "experimental.nodeLoader" flag manually.`)
   })
@@ -672,3 +554,14 @@ describe.runIf(!module.registerHooks)('unsupported', () => {
 // TODO: inline snapshot tests
 // TODO: test https://github.com/vitest-dev/vitest/issues/3987
 // TODO: test v8 coverage (at least basic)
+
+function runNoViteModuleRunnerTests(structure: TestFsStructure, vitestConfig?: RunVitestConfig) {
+  return runInlineTests(structure, {
+    globals: true,
+    ...vitestConfig,
+    experimental: {
+      ...vitestConfig?.experimental,
+      viteModuleRunner: false,
+    },
+  })
+}
