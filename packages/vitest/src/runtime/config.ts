@@ -78,6 +78,7 @@ export interface SerializedConfig {
   } | undefined
   diff: string | SerializedDiffOptions | undefined
   retry: number
+  repeats?: number
   includeTaskLocation: boolean | undefined
   inspect: boolean | string | undefined
   inspectBrk: boolean | string | undefined

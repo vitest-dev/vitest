@@ -531,6 +531,10 @@ export const cliOptionsConfig: VitestCLIOptions = {
       'Retry the test specific number of times if it fails (default: `0`)',
     argument: '<times>',
   },
+  repeats: {
+    description: 'Repeat the test a specific number of times regardless of the result (default: `0`)',
+    argument: '<number>',
+  },
   diff: {
     description:
       'DiffOptions object or a path to a module which exports DiffOptions object',
