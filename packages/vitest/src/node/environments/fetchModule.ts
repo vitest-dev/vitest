@@ -125,19 +125,18 @@ class ModuleFetcher {
       })
     }
 
-    const cachedModule = await this.getCachedModule(cachePath, environment, moduleGraphModule)
+    const cachedModule = await this.getCachedModule(cachePath, environment, moduleGraphModule, importer)
     if (cachedModule) {
       this.recordResult(trace, cachedModule)
       return cachedModule
     }
 
     const result = await this.fetchAndProcess(environment, url, importer, moduleGraphModule, options)
-    const importers = this.getSerializedDependencies(moduleGraphModule)
     const importedUrls = this.getSerializedImports(moduleGraphModule)
     const map = moduleGraphModule.transformResult?.map
     const mappings = map && !('version' in map) && map.mappings === ''
 
-    return this.cacheResult(result, cachePath, importers, importedUrls, !!mappings)
+    return this.cacheResult(result, cachePath, importedUrls, !!mappings)
   }
 
   // we need this for UI to be able to show a module graph
@@ -147,17 +146,6 @@ class ModuleFetcher {
       imports.push(importer.url)
     })
     return imports
-  }
-
-  // we need this for the watcher to be able to find the related test file
-  private getSerializedDependencies(node: EnvironmentModuleNode): string[] {
-    const dependencies: string[] = []
-    node.importers.forEach((importer) => {
-      if (importer.id) {
-        dependencies.push(importer.id)
-      }
-    })
-    return dependencies
   }
 
   private recordResult(trace: Span, result: FetchResult | FetchCachedFileSystemResult): void {
@@ -235,6 +223,7 @@ class ModuleFetcher {
     cachePath: string,
     environment: DevEnvironment,
     moduleGraphModule: EnvironmentModuleNode,
+    importer: string | undefined,
   ): Promise<FetchResult | FetchCachedFileSystemResult | undefined> {
     if (moduleGraphModule.transformResult?.__vitestTmp) {
       return {
@@ -270,16 +259,17 @@ class ModuleFetcher {
     }
 
     // we populate the module graph to make the watch mode work because it relies on importers
-    cachedModule.importers.forEach((importer) => {
+    if (importer) {
       const environmentNode = environment.moduleGraph.getModuleById(importer)
       if (environmentNode) {
         moduleGraphModule.importers.add(environmentNode)
       }
-    })
+    }
 
     await Promise.all(cachedModule.importedUrls.map(async (url) => {
       const moduleNode = await environment.moduleGraph.ensureEntryFromUrl(url).catch(() => null)
       if (moduleNode) {
+        moduleNode.importers.add(moduleGraphModule)
         moduleGraphModule.importedModules.add(moduleNode)
       }
     }))
@@ -317,7 +307,6 @@ class ModuleFetcher {
   private async cacheResult(
     result: FetchResult,
     cachePath: string,
-    importers: string[] = [],
     importedUrls: string[] = [],
     mappings = false,
   ): Promise<FetchResult | FetchCachedFileSystemResult> {
@@ -331,7 +320,7 @@ class ModuleFetcher {
     }
 
     const savePromise = this.fsCache
-      .saveCachedModule(cachePath, result, importers, importedUrls, mappings)
+      .saveCachedModule(cachePath, result, importedUrls, mappings)
       .then(() => result)
       .finally(() => {
         saveCachePromises.delete(cachePath)

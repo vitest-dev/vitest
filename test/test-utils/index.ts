@@ -9,7 +9,6 @@ import type {
   TestSpecification,
   TestUserConfig,
   Vitest,
-  VitestRunMode,
 } from 'vitest/node'
 import { webcrypto as crypto } from 'node:crypto'
 import fs from 'node:fs'
@@ -19,9 +18,8 @@ import { inspect } from 'node:util'
 import { dirname, relative, resolve } from 'pathe'
 import { x } from 'tinyexec'
 import * as tinyrainbow from 'tinyrainbow'
-import { afterEach, onTestFinished } from 'vitest'
+import { afterEach, onTestFinished, TestRunner } from 'vitest'
 import { startVitest } from 'vitest/node'
-import { getCurrentTest } from 'vitest/suite'
 import { Cli } from './cli'
 
 // override default colors to disable them in tests
@@ -34,13 +32,27 @@ export interface VitestRunnerCLIOptions {
   fails?: boolean
   preserveAnsi?: boolean
   tty?: boolean
+  mode?: 'test' | 'benchmark'
 }
 
+export interface RunVitestConfig extends TestUserConfig {
+  $viteConfig?: Omit<ViteUserConfig, 'test'>
+  $cliOptions?: TestUserConfig
+}
+
+/**
+ * The config is assumed to be the config on the fille system, not CLI options
+ * (Note that CLI only options like "standalone" are passed as CLI options, not config options)
+ * - To pass options as CLI, provide `$cliOptions` in the config object.
+ * - To pass other Vite config properties, provide `$viteConfig` in the config object.
+ *
+ * **WARNING**
+ * If the fixture in `root` has a config file, its options **WILL TAKE PRIORITY** over the ones provided here,
+ * except for the ones provided in `$cliOptions`.
+ */
 export async function runVitest(
-  cliOptions: TestUserConfig,
+  config: RunVitestConfig,
   cliFilters: string[] = [],
-  mode: VitestRunMode = 'test',
-  viteOverrides: ViteUserConfig = {},
   runnerOptions: VitestRunnerCLIOptions = {},
 ) {
   // Reset possible previous runs
@@ -83,28 +95,76 @@ export async function runVitest(
 
   let ctx: Vitest | undefined
   let thrown = false
+
+  const {
+    reporters,
+    root,
+    watch,
+    maxWorkers,
+    // #region cli-only options
+    config: configFile,
+    standalone,
+    dom,
+    related,
+    mode,
+    changed,
+    shard,
+    project,
+    cliExclude,
+    clearScreen,
+    compare,
+    outputJson,
+    mergeReports,
+    clearCache,
+    // #endregion
+    $cliOptions: cliOptions,
+    $viteConfig: viteConfig = {},
+    ...rest
+  } = config
+
+  if ((viteConfig as any).test) {
+    throw new Error(`Don't pass down "viteConfig" with "test" property. Use the rest of the first argument.`)
+  }
+
+  ;(viteConfig as any).test = rest
+
   try {
-    const { reporters, ...rest } = cliOptions
+    ctx = await startVitest(runnerOptions.mode || 'test', cliFilters, {
+      root,
+      config: configFile,
+      standalone,
+      dom,
+      related,
+      mode,
+      changed,
+      shard,
+      project,
+      cliExclude,
+      clearScreen,
+      compare,
+      outputJson,
+      mergeReports,
+      clearCache,
 
-    ctx = await startVitest(mode, cliFilters, {
       // Test cases are already run with multiple forks/threads
-      maxWorkers: 1,
+      maxWorkers: maxWorkers ?? 1,
 
-      watch: false,
+      watch: watch ?? false,
       // "none" can be used to disable passing "reporter" option so that default value is used (it's not same as reporters: ["default"])
       ...(reporters === 'none' ? {} : reporters ? { reporters } : { reporters: ['verbose'] }),
-      ...rest,
+      ...cliOptions,
       env: {
         NO_COLOR: 'true',
         ...rest.env,
+        ...cliOptions?.env,
       },
       // override cache config with the one that was used to run `vitest` formt the CLI
       experimental: {
-        fsModuleCache: currentConfig.experimental.fsModuleCache,
-        ...rest.experimental,
+        fsModuleCache: rest.experimental?.fsModuleCache ?? currentConfig.experimental.fsModuleCache,
+        ...cliOptions?.experimental,
       },
     }, {
-      ...viteOverrides,
+      ...viteConfig,
       server: {
         // we never need a websocket connection for the root config because it doesn't connect to the browser
         // browser mode uses a separate config that doesn't inherit CLI overrides
@@ -115,8 +175,9 @@ export async function runVitest(
           // https://github.com/vitejs/vite/blob/b723a753ced0667470e72b4853ecda27b17f546a/playground/vitestSetup.ts#L211
           usePolling: true,
           interval: 100,
+          ...viteConfig.server?.watch,
         },
-        ...viteOverrides?.server,
+        ...viteConfig?.server,
       },
     }, {
       stdin,
@@ -135,7 +196,7 @@ export async function runVitest(
     exitCode = process.exitCode
     process.exitCode = 0
 
-    if (getCurrentTest()) {
+    if (TestRunner.getCurrentTest()) {
       onTestFinished(async () => {
         await ctx?.close()
         process.exit = exit
@@ -258,24 +319,15 @@ export function getInternalState(): WorkerGlobalState {
 }
 
 const originalFiles = new Map<string, string>()
-const createdFiles = new Set<string>()
-afterEach(() => {
-  originalFiles.forEach((content, file) => {
-    fs.writeFileSync(file, content, 'utf-8')
-  })
-  createdFiles.forEach((file) => {
+
+export function createFile(file: string, content: string) {
+  fs.mkdirSync(dirname(file), { recursive: true })
+  fs.writeFileSync(file, content, 'utf-8')
+  onTestFinished(() => {
     if (fs.existsSync(file)) {
       fs.unlinkSync(file)
     }
   })
-  originalFiles.clear()
-  createdFiles.clear()
-})
-
-export function createFile(file: string, content: string) {
-  createdFiles.add(file)
-  fs.mkdirSync(dirname(file), { recursive: true })
-  fs.writeFileSync(file, content, 'utf-8')
 }
 
 export function editFile(file: string, callback: (content: string) => string) {
@@ -284,6 +336,13 @@ export function editFile(file: string, callback: (content: string) => string) {
     originalFiles.set(file, content)
   }
   fs.writeFileSync(file, callback(content), 'utf-8')
+  onTestFinished(() => {
+    const original = originalFiles.get(file)
+    if (original !== undefined) {
+      fs.writeFileSync(file, original, 'utf-8')
+      originalFiles.delete(file)
+    }
+  })
 }
 
 export function resolvePath(baseUrl: string, path: string) {
@@ -377,21 +436,25 @@ export function useFS<T extends TestFsStructure>(root: string, structure: T, ens
     resolveFile: (file: string): string => {
       return resolve(root, file)
     },
+    renameFile: (oldFile: string, newFile: string) => {
+      const oldFilepath = resolve(root, oldFile)
+      const newFilepath = resolve(root, newFile)
+      return fs.renameSync(oldFilepath, newFilepath)
+    },
   }
 }
 
 export async function runInlineTests(
   structure: TestFsStructure,
-  config?: TestUserConfig,
+  config?: RunVitestConfig,
   options?: VitestRunnerCLIOptions,
-  viteOverrides: ViteUserConfig = {},
 ) {
   const root = resolve(process.cwd(), `vitest-test-${crypto.randomUUID()}`)
   const fs = useFS(root, structure)
   const vitest = await runVitest({
     root,
     ...config,
-  }, [], 'test', viteOverrides, options)
+  }, [], options)
   return {
     fs,
     root,

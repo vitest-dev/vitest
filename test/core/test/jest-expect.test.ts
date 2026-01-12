@@ -1318,7 +1318,7 @@ it('correctly prints diff with asymmetric matchers', () => {
       + Received
 
         {
-          "a": Any<Number>,
+          "a": 1,
       -   "b": Any<Function>,
       +   "b": "string",
         }"

@@ -29,7 +29,13 @@ const vitestSponsors = {
       img: '/zammad.svg',
     },
   ],
-  // platinum: [],
+  platinum: [
+    {
+      name: 'Chromatic',
+      url: 'https://www.chromatic.com/?utm_source=vitest&utm_medium=sponsorship&utm_campaign=vitestSponsorship',
+      img: '/logo-chromatic.svg',
+    },
+  ],
   gold: [
     {
       name: 'vital',
@@ -51,11 +57,6 @@ const vitestSponsors = {
       url: 'https://www.liminity.se/',
       img: '/liminity.svg',
     },
-    {
-      name: 'Bytebase',
-      url: 'https://www.bytebase.com/',
-      img: '/bytebase.svg',
-    },
   ],
 } satisfies Record<string, Sponsor[]>
 
@@ -70,11 +71,11 @@ export const sponsors = [
     size: 'big',
     items: vitestSponsors.special,
   },
-  // {
-  //   tier: 'Platinum Sponsors',
-  //   size: 'big',
-  //   items: vitestSponsors.platinum,
-  // },
+  {
+    tier: 'Platinum Sponsors',
+    size: 'big',
+    items: vitestSponsors.platinum,
+  },
   {
     tier: 'Gold Sponsors',
     size: 'medium',
