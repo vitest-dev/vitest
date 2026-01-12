@@ -14,7 +14,7 @@ export async function initSyntaxLexers(): Promise<void> {
 }
 
 export function transformCode(code: string, filename: string): string {
-  const ext = extname(filename)
+  const ext = extname(filename.split('?')[0])
   const isTs = ext === '.ts' || ext === '.cts' || ext === '.mts'
   if (!isTs) {
     return code
@@ -92,8 +92,7 @@ export function collectModuleExports(
       : fileURLToPath(resolvedModuleUrl)
 
     if (cachedFileExports.has(resolvedModulePath)) {
-      const cachedExports = cachedFileExports.get(resolvedModulePath)!
-      return cachedExports
+      return cachedFileExports.get(resolvedModulePath)!
     }
 
     const fileContent = readFileSync(resolvedModulePath, 'utf-8')
