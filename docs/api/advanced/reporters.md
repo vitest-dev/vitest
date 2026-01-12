@@ -36,7 +36,7 @@ Note that since test modules can run in parallel, Vitest will report them in par
 This guide lists all supported reporter methods. However, don't forget that instead of creating your own reporter, you can [extend existing one](/guide/advanced/reporters) instead:
 
 ```ts [custom-reporter.js]
-import { BaseReporter } from 'vitest/reporters'
+import { BaseReporter } from 'vitest/node'
 
 export default class CustomReporter extends BaseReporter {
   onTestRunEnd(testModules, errors) {

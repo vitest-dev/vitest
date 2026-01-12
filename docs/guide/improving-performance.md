@@ -1,6 +1,6 @@
 # Improving Performance
 
-## Test isolation
+## Test Isolation
 
 By default Vitest runs every test file in an isolated environment based on the [pool](/config/#pool):
 
@@ -69,7 +69,7 @@ export default defineConfig({
 ```
 :::
 
-## Limiting directory search
+## Limiting Directory Search
 
 You can limit the working directory when Vitest searches for files using [`test.dir`](/config/#test-dir) option. This should make the search faster if you have unrelated folders and files in the root directory.
 

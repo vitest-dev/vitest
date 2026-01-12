@@ -1,7 +1,7 @@
 {
   "name": "vitest",
   "type": "module",
-  "version": "4.0.16",
+  "version": "4.0.17",
   "description": "Next generation testing framework powered by Vite",
   "author": "Anthony Fu <anthonyfu117@hotmail.com>",
   "license": "MIT",
@@ -69,10 +69,6 @@
       "types": "./dist/browser.d.ts",
       "default": "./dist/browser.js"
     },
-    "./internal/module-runner": {
-      "types": "./dist/module-runner.d.ts",
-      "default": "./dist/module-runner.js"
-    },
     "./runners": {
       "types": "./dist/runners.d.ts",
       "default": "./dist/runners.js"
@@ -102,9 +98,9 @@
       "types": "./dist/snapshot.d.ts",
       "default": "./dist/snapshot.js"
     },
-    "./mocker": {
-      "types": "./dist/mocker.d.ts",
-      "default": "./dist/mocker.js"
+    "./runtime": {
+      "types": "./dist/runtime.d.ts",
+      "default": "./dist/runtime.js"
     },
     "./worker": {
       "types": "./worker.d.ts",
