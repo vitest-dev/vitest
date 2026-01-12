@@ -35,7 +35,7 @@ vitest --retry 3
 vitest --retry.count 3 --retry.delay 500 --retry.condition 'ECONNREFUSED|timeout'
 ```
 
-## Advanced Options
+## Advanced Options <Version>4.1.0</Version> {#advanced-options}
 
 Use an object to configure retry behavior:
 
