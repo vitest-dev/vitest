@@ -37,12 +37,8 @@ describe.runIf(module.registerHooks)('when module.registerHooks is supported', (
 
   test('can run tests in threads worker', async () => {
     const { stderr, testTree } = await runInlineTests({
-      'base1.test.js': `
-test('hello world', () => {})
-    `,
-      'base2.test.js': `
-test('hello world', () => {})
-    `,
+      'base1.test.js': `test('hello world', () => {})`,
+      'base2.test.js': `test('hello world', () => {})`,
       'vitest.config.js': {
         test: {
           globals: true,
@@ -56,25 +52,21 @@ test('hello world', () => {})
 
     expect(stderr).toBe('')
     expect(testTree()).toMatchInlineSnapshot(`
-    {
-      "base1.test.js": {
-        "hello world": "passed",
-      },
-      "base2.test.js": {
-        "hello world": "passed",
-      },
-    }
-  `)
+      {
+        "base1.test.js": {
+          "hello world": "passed",
+        },
+        "base2.test.js": {
+          "hello world": "passed",
+        },
+      }
+    `)
   })
 
   test('can run tests in forks worker', async () => {
     const { stderr, testTree } = await runInlineTests({
-      'base1.test.js': `
-test('hello world', () => {})
-    `,
-      'base2.test.js': `
-test('hello world', () => {})
-    `,
+      'base1.test.js': `test('hello world', () => {})`,
+      'base2.test.js': `test('hello world', () => {})`,
       'vitest.config.js': {
         test: {
           globals: true,
@@ -88,15 +80,15 @@ test('hello world', () => {})
 
     expect(stderr).toBe('')
     expect(testTree()).toMatchInlineSnapshot(`
-    {
-      "base1.test.js": {
-        "hello world": "passed",
-      },
-      "base2.test.js": {
-        "hello world": "passed",
-      },
-    }
-  `)
+      {
+        "base1.test.js": {
+          "hello world": "passed",
+        },
+        "base2.test.js": {
+          "hello world": "passed",
+        },
+      }
+    `)
   })
 
   test('ESM files don\'t have access to CJS globals', async () => {
@@ -130,13 +122,13 @@ test('no vite globals', () => {
 
     expect(stderr).toBe('')
     expect(testTree()).toMatchInlineSnapshot(`
-    {
-      "base.test.js": {
-        "no globals": "passed",
-        "no vite globals": "passed",
-      },
-    }
-  `)
+      {
+        "base.test.js": {
+          "no globals": "passed",
+          "no vite globals": "passed",
+        },
+      }
+    `)
   })
 
   test('CJS files don\'t have access to ESM globals', async () => {
@@ -170,13 +162,13 @@ test('no esm globals', () => {
 
     expect(stderr).toContain('Cannot use \'import.meta\' outside a module')
     expect(testTree()).toMatchInlineSnapshot(`
-    {
-      "base.test.js": {
-        "has CJS globals": "passed",
-      },
-      "esm.test.js": {},
-    }
-  `)
+      {
+        "base.test.js": {
+          "has CJS globals": "passed",
+        },
+        "esm.test.js": {},
+      }
+    `)
   })
 
   test('in-source tests in CJS work', async () => {
@@ -205,12 +197,12 @@ if (import.meta.vitest) {
     })
     expect(stderr).toBe('')
     expect(testTree()).toMatchInlineSnapshot(`
-    {
-      "in-source.js": {
-        "works": "passed",
-      },
-    }
-  `)
+      {
+        "in-source.js": {
+          "works": "passed",
+        },
+      }
+    `)
   })
 
   test('in-source tests in ESM work', async () => {
@@ -239,12 +231,12 @@ if (import.meta.vitest) {
     })
     expect(stderr).toBe('')
     expect(testTree()).toMatchInlineSnapshot(`
-    {
-      "in-source.js": {
-        "works": "passed",
-      },
-    }
-  `)
+      {
+        "in-source.js": {
+          "works": "passed",
+        },
+      }
+    `)
   })
 
   test('in-source test doesn\'t run when imported by actual test', async () => {
@@ -283,12 +275,12 @@ test('add is only once', () => {
     })
     expect(stderr).toBe('')
     expect(testTree()).toMatchInlineSnapshot(`
-    {
-      "add.test.js": {
-        "add is only once": "passed",
-      },
-    }
-  `)
+      {
+        "add.test.js": {
+          "add is only once": "passed",
+        },
+      }
+    `)
   })
 
   test('cannot import JS file without extension in ESM', async () => {
@@ -299,7 +291,7 @@ export function add(a, b) {
 }
     `,
       'add.test.js': /* js */`
-import { add } from './add' // no extension
+import { add } from './add' // [!] no extension
 test('not reported')
     `,
       'vitest.config.js': {
@@ -327,13 +319,13 @@ test('not reported')
 
   test('cannot import TS without extension in ESM', async () => {
     const { stderr, root } = await runInlineTests({
-      'add.ts': /* js */`
-export function add(a, b) {
+      'add.ts': /* ts */`
+export function add(a: number, b: number): number {
   return a + b
 }
     `,
       'add.test.js': /* js */`
-import { add } from './add.js' // JS extension is NOT valid
+import { add } from './add.js' // [!] JS extension is NOT valid
 test('not reported')
     `,
       'vitest.config.js': {
@@ -393,32 +385,32 @@ if (import.meta.vitest) {
       },
     })
     expect(stderr).toMatchInlineSnapshot(`
-    "
-    ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+      "
+      ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
 
-     FAIL  in-source.ts:12:3 > works
-    Error: test throws correctly
-     ❯ <anonymous> in-source.ts:13:11
-         11| 
-         12|   test('works', () => {
-         13|     throw new Error('test throws correctly')
-           |           ^
-         14|   })
-         15| }
+       FAIL  in-source.ts:12:3 > works
+      Error: test throws correctly
+       ❯ <anonymous> in-source.ts:13:11
+           11| 
+           12|   test('works', () => {
+           13|     throw new Error('test throws correctly')
+             |           ^
+           14|   })
+           15| }
 
-    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+      ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
 
-    "
-  `)
+      "
+    `)
     expect(errorTree()).toMatchInlineSnapshot(`
-    {
-      "in-source.ts": {
-        "works": [
-          "test throws correctly",
-        ],
-      },
-    }
-  `)
+      {
+        "in-source.ts": {
+          "works": [
+            "test throws correctly",
+          ],
+        },
+      }
+    `)
   })
 
   test('error in the sync mock factory is reported', async () => {
@@ -446,28 +438,28 @@ test('not reported')
     })
 
     expect(stderr).toMatchInlineSnapshot(`
-    "
-    ⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+      "
+      ⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
 
-     FAIL  add.test.js [ add.test.js ]
-    Error: [vitest] There was an error when mocking a module. If you are using "vi.mock" factory, make sure there are no top level variables inside, since this call is hoisted to top of the file. Read more: https://vitest.dev/api/vi.html#vi-mock
-     ❯ add.js?mock=manual:2:65
-     ❯ <anonymous> add.test.js:2:1
-          1| 
-          2| import { add } from './add.js'
-           | ^
-          3| vi.mock('./add.js', () => {
-          4|   throw new Error('error from factory')
+       FAIL  add.test.js [ add.test.js ]
+      Error: [vitest] There was an error when mocking a module. If you are using "vi.mock" factory, make sure there are no top level variables inside, since this call is hoisted to top of the file. Read more: https://vitest.dev/api/vi.html#vi-mock
+       ❯ add.js?mock=manual:2:65
+       ❯ <anonymous> add.test.js:2:1
+            1| 
+            2| import { add } from './add.js'
+             | ^
+            3| vi.mock('./add.js', () => {
+            4|   throw new Error('error from factory')
 
-    Caused by: Error: error from factory
-     ❯ <anonymous> add.test.js:4:9
-     ❯ add.js?mock=manual:2:65
-     ❯ <anonymous> add.test.js:2:1
+      Caused by: Error: error from factory
+       ❯ <anonymous> add.test.js:4:9
+       ❯ add.js?mock=manual:2:65
+       ❯ <anonymous> add.test.js:2:1
 
-    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+      ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
 
-    "
-  `)
+      "
+    `)
   })
 
   test('error in the async mock factory is reported', async () => {
@@ -501,24 +493,24 @@ test('not reported')
 
     // "slice" removes the stack from unhandled error because it references built artifacts
     expect(stderr.split('\n').slice(0, 17).join('\n')).toMatchInlineSnapshot(`
-    "
-    ⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+      "
+      ⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
 
-     FAIL  add.test.js [ add.test.js ]
-    Error: [vitest] There was an error when mocking a module. If you are using "vi.mock" factory, make sure there are no top level variables inside, since this call is hoisted to top of the file. Read more: https://vitest.dev/api/vi.html#vi-mock
-    Caused by: Error: error from factory
-     ❯ <anonymous> add.test.js:5:9
+       FAIL  add.test.js [ add.test.js ]
+      Error: [vitest] There was an error when mocking a module. If you are using "vi.mock" factory, make sure there are no top level variables inside, since this call is hoisted to top of the file. Read more: https://vitest.dev/api/vi.html#vi-mock
+      Caused by: Error: error from factory
+       ❯ <anonymous> add.test.js:5:9
 
-    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+      ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
 
-    ⎯⎯⎯⎯⎯⎯ Unhandled Errors ⎯⎯⎯⎯⎯⎯
+      ⎯⎯⎯⎯⎯⎯ Unhandled Errors ⎯⎯⎯⎯⎯⎯
 
-    Vitest caught 1 unhandled error during the test run.
-    This might cause false positive tests. Resolve unhandled errors to make sure your tests are not affected.
+      Vitest caught 1 unhandled error during the test run.
+      This might cause false positive tests. Resolve unhandled errors to make sure your tests are not affected.
 
-    ⎯⎯⎯⎯ Unhandled Rejection ⎯⎯⎯⎯⎯
-    Error: [vitest] There was an error when mocking a module. If you are using "vi.mock" factory, make sure there are no top level variables inside, since this call is hoisted to top of the file. Read more: https://vitest.dev/api/vi.html#vi-mock"
-  `)
+      ⎯⎯⎯⎯ Unhandled Rejection ⎯⎯⎯⎯⎯
+      Error: [vitest] There was an error when mocking a module. If you are using "vi.mock" factory, make sure there are no top level variables inside, since this call is hoisted to top of the file. Read more: https://vitest.dev/api/vi.html#vi-mock"
+    `)
   })
 
   test('can load a custom environment', async () => {
@@ -568,14 +560,15 @@ test('custom env is set', () => {
 
 describe.runIf(!module.registerHooks)('when module.registerHooks is not supported', () => {
   test('prints a warning if nodeLoader is not enabled', async () => {
-    const { stderr } = await runInlineTests({
-      'basic.test.js': `test('skip')`,
-    }, {
-      globals: true,
-      experimental: {
-        viteModuleRunner: false,
+    const { stderr } = await runInlineTests(
+      { 'basic.test.js': `test('skip')` },
+      {
+        globals: true,
+        experimental: {
+          viteModuleRunner: false,
+        },
       },
-    })
+    )
     expect(stderr).toContain(`WARNING  "module.registerHooks" is not supported in Node.js ${process.version}. This means that some features like module mocking or in-source testing are not supported. Upgrade your Node.js version to at least 22.15 or disable "experimental.nodeLoader" flag manually.`)
   })
 })
@@ -583,4 +576,4 @@ describe.runIf(!module.registerHooks)('when module.registerHooks is not supporte
 // TODO: watch mode tests
 // TODO: inline snapshot tests
 // TODO: test https://github.com/vitest-dev/vitest/issues/3987
-// TDOO: test v8 coverage (at least basic)
+// TODO: test v8 coverage (at least basic)
