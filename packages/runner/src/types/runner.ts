@@ -4,6 +4,7 @@ import type {
   ImportDuration,
   SequenceHooks,
   SequenceSetupFiles,
+  SerializableRetry,
   Suite,
   TaskEventPack,
   TaskResultPack,
@@ -36,7 +37,7 @@ export interface VitestRunnerConfig {
   maxConcurrency: number
   testTimeout: number
   hookTimeout: number
-  retry: number
+  retry: SerializableRetry
   includeTaskLocation?: boolean
   diffOptions?: DiffOptions
 }
