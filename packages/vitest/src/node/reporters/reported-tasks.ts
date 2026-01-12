@@ -4,6 +4,7 @@ import type {
   Test as RunnerTestCase,
   File as RunnerTestFile,
   Suite as RunnerTestSuite,
+  SerializableRetry,
   TaskMeta,
   TestAnnotation,
   TestArtifact,
@@ -524,7 +525,7 @@ export interface TaskOptions {
   readonly fails: boolean | undefined
   readonly concurrent: boolean | undefined
   readonly shuffle: boolean | undefined
-  readonly retry: number | undefined
+  readonly retry: SerializableRetry | undefined
   readonly repeats: number | undefined
   readonly mode: 'run' | 'only' | 'skip' | 'todo'
 }
@@ -537,7 +538,7 @@ function buildOptions(
     fails: task.type === 'test' && task.fails,
     concurrent: task.concurrent,
     shuffle: task.shuffle,
-    retry: task.retry,
+    retry: task.retry as SerializableRetry | undefined,
     repeats: task.repeats,
     // runner types are too broad, but the public API should be more strict
     // the queued state exists only on Files and this method is called

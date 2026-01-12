@@ -1,16 +1,13 @@
-/// <reference types="vitest/globals" />
-
-import type { TestAPI } from 'vitest'
+import type { ExpectStatic, SuiteAPI, TestAPI } from 'vitest'
 import type { ViteUserConfig } from 'vitest/config'
 import type { TestSpecification, TestUserConfig } from 'vitest/node'
 import type { TestFsStructure } from '../../test-utils'
 import { playwright } from '@vitest/browser-playwright'
+import { describe, expect, test } from 'vitest'
 import { runInlineTests } from '../../test-utils'
 
-interface TestContext {
-  file: string
-  worker: string
-}
+// "it" is used inside subtests, we can't "import" it because vitest will inject __vite_ssr_import__
+declare const it: TestAPI
 
 test('test fixture cannot import from file fixture', async () => {
   const { stderr } = await runInlineTests({
@@ -85,7 +82,7 @@ test('can import worker fixture inside the local fixture', async () => {
       { scope: 'worker' },
     ],
   }), {
-    'basic.test.ts': ({ extendedTest }) => {
+    'basic.test.ts': ({ extendedTest, expect }) => {
       extendedTest('test1', ({ local }) => {
         expect(local).toBe('worker')
       })
@@ -155,19 +152,17 @@ test('auto worker fixture is initialised always before the first test', async ()
 })
 
 test('worker fixture can import a static value from test fixture', async () => {
-  const { stderr, stdout } = await runInlineTests({
-    'basic.test.ts': () => {
-      const extendedTest = it.extend<{
-        worker: string
-        local: string
-      }>({
-        local: 'local',
-        worker: [
-          ({ local }, use) => use(local),
-          { scope: 'worker' },
-        ],
-      })
-
+  const { stderr, stdout } = await runFixtureTests(() => it.extend<{
+    worker: string
+    local: string
+  }>({
+    local: 'local',
+    worker: [
+      ({ local }, use) => use(local),
+      { scope: 'worker' },
+    ],
+  }), {
+    'basic.test.ts': ({ extendedTest, expect }) => {
       extendedTest('working', ({ worker, local }) => {
         expect(worker).toBe(local)
         expect(worker).toBe('local')
@@ -179,19 +174,17 @@ test('worker fixture can import a static value from test fixture', async () => {
 })
 
 test('file fixture can import a static value from test fixture', async () => {
-  const { stderr, stdout } = await runInlineTests({
-    'basic.test.ts': () => {
-      const extendedTest = it.extend<{
-        file: string
-        local: string
-      }>({
-        local: 'local',
-        file: [
-          ({ local }, use) => use(local),
-          { scope: 'file' },
-        ],
-      })
-
+  const { stderr, stdout } = await runFixtureTests(() => it.extend<{
+    file: string
+    local: string
+  }>({
+    local: 'local',
+    file: [
+      ({ local }, use) => use(local),
+      { scope: 'file' },
+    ],
+  }), {
+    'basic.test.ts': ({ extendedTest, expect }) => {
       extendedTest('working', ({ file, local }) => {
         expect(file).toBe(local)
         expect(file).toBe('local')
@@ -354,10 +347,10 @@ test('worker fixtures are available in beforeEach and afterEach', async () => {
     ],
   }), {
     'basic.test.ts': ({ extendedTest }) => {
-      beforeEach<TestContext>(({ worker }) => {
+      extendedTest.beforeEach(({ worker }) => {
         console.log('>> fixture | beforeEach |', worker)
       })
-      afterEach<TestContext>(({ worker }) => {
+      extendedTest.afterEach(({ worker }) => {
         console.log('>> fixture | afterEach |', worker)
       })
       extendedTest('test1', ({}) => {})
@@ -394,10 +387,10 @@ test('file fixtures are available in beforeEach and afterEach', async () => {
     ],
   }), {
     'basic.test.ts': ({ extendedTest }) => {
-      beforeEach<TestContext>(({ file }) => {
+      extendedTest.beforeEach(({ file }) => {
         console.log('>> fixture | beforeEach |', file)
       })
-      afterEach<TestContext>(({ file }) => {
+      extendedTest.afterEach(({ file }) => {
         console.log('>> fixture | afterEach |', file)
       })
       extendedTest('test1', ({}) => {})
@@ -468,7 +461,7 @@ test.for([
       { scope: 'file' },
     ],
   }), {
-    'basic.test.js': ({ extendedTest }) => {
+    'basic.test.js': ({ extendedTest, expect, describe }) => {
       extendedTest('[first] test 1', ({ file }) => {
         expect(file).toBe('file')
       })
@@ -498,7 +491,7 @@ test.for([
       })
     },
 
-    'second.test.js': ({ extendedTest }) => {
+    'second.test.js': ({ extendedTest, describe }) => {
       // doesn't access "file", not initialised
       extendedTest('[second] test 0', ({}) => {})
       // accesses "file" for the first time, initialised
@@ -699,7 +692,7 @@ describe('browser tests', () => {
 
 async function runFixtureTests<T>(
   extendedTest: ({ log }: { log: typeof console.log }) => TestAPI<T>,
-  fs: Record<string, ((context: { extendedTest: TestAPI<T> }) => unknown) | ViteUserConfig>,
+  fs: Record<string, ((context: { extendedTest: TestAPI<T>; expect: ExpectStatic; describe: SuiteAPI }) => unknown) | ViteUserConfig>,
   config?: TestUserConfig,
 ) {
   if (typeof fs['vitest.config.js'] === 'object') {
@@ -707,6 +700,8 @@ async function runFixtureTests<T>(
   }
   const { stderr, stdout } = await runInlineTests({
     'test.js': `
+    export const describe = globalThis.describe
+    export const expect = globalThis.expect
     export const extendedTest = (${extendedTest.toString()})({ log: (...args) => console.log('>> fixture |', ...args, '| ' + expect.getState().currentTestName) })
     `,
     'vitest.config.js': { test: { globals: true } },
@@ -715,7 +710,7 @@ async function runFixtureTests<T>(
         acc[key] = value
       }
       if (typeof value === 'function') {
-        acc[key] = [value, { imports: { './test.js': ['extendedTest'] } }]
+        acc[key] = [value, { imports: { './test.js': ['extendedTest', 'expect', 'describe'] } }]
       }
       return acc
     }, {} as TestFsStructure),

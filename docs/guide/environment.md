@@ -44,7 +44,7 @@ test('test', () => {
 You can create your own package to extend Vitest environment. To do so, create package with the name `vitest-environment-${name}` or specify a path to a valid JS/TS file. That package should export an object with the shape of `Environment`:
 
 ```ts
-import type { Environment } from 'vitest/environments'
+import type { Environment } from 'vitest/runtime'
 
 export default <Environment>{
   name: 'custom',
@@ -77,10 +77,10 @@ export default <Environment>{
 Vitest requires `viteEnvironment` option on environment object (fallbacks to the Vitest environment name by default). It should be equal to `ssr`, `client` or any custom [Vite environment](https://vite.dev/guide/api-environment) name. This value determines which environment is used to process file.
 :::
 
-You also have access to default Vitest environments through `vitest/environments` entry:
+You also have access to default Vitest environments through `vitest/runtime` entry:
 
 ```ts
-import { builtinEnvironments, populateGlobal } from 'vitest/environments'
+import { builtinEnvironments, populateGlobal } from 'vitest/runtime'
 
 console.log(builtinEnvironments) // { jsdom, happy-dom, node, edge-runtime }
 ```

@@ -396,6 +396,7 @@ However, Vitest also provides packages to render components for several popular 
 - [`vitest-browser-vue`](https://github.com/vitest-dev/vitest-browser-vue) to render [vue](https://vuejs.org) components
 - [`vitest-browser-svelte`](https://github.com/vitest-dev/vitest-browser-svelte) to render [svelte](https://svelte.dev) components
 - [`vitest-browser-react`](https://github.com/vitest-dev/vitest-browser-react) to render [react](https://react.dev) components
+- [`vitest-browser-angular`](https://github.com/vitest-community/vitest-browser-angular) to render [Angular](https://angular.dev) components
 
 Community packages are available for other frameworks:
 

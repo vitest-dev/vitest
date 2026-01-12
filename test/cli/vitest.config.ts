@@ -2,14 +2,23 @@ import { defineConfig } from 'vite'
 
 export default defineConfig({
   test: {
-    include: ['test/**.test.ts'],
+    include: ['test/**/**.{test,spec}.ts'],
     includeTaskLocation: true,
     reporters: ['verbose'],
     testTimeout: 60_000,
-    globals: true,
+    isolate: false,
     fileParallelism: false,
     chaiConfig: {
       truncateThreshold: 999,
+    },
+    typecheck: {
+      enabled: true,
+      include: ['./test/reporters/configuration-options.test-d.ts'],
+    },
+    onConsoleLog(log) {
+      if (log.includes('watcher is ready')) {
+        return false
+      }
     },
   },
   server: {
@@ -17,6 +26,7 @@ export default defineConfig({
       ignored: [
         '**/fixtures/browser-multiple/**/*',
         '**/fixtures/browser-init/**/*',
+        '**/package.json',
       ],
     },
   },

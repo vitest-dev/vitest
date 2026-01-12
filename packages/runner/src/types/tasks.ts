@@ -87,10 +87,12 @@ export interface TaskBase {
    */
   result?: TaskResult
   /**
-   * The amount of times the task should be retried if it fails.
+   * Retry configuration for the task.
+   * - If a number, specifies how many times to retry
+   * - If an object, allows fine-grained retry control
    * @default 0
    */
-  retry?: number
+  retry?: Retry
   /**
    * The amount of times the task should be repeated after the successful run.
    * If the task fails, it will not be retried unless `retry` is specified.
@@ -461,18 +463,70 @@ type ChainableTestAPI<ExtraContext = object> = ChainableFunction<
 
 type TestCollectorOptions = Omit<TestOptions, 'shuffle'>
 
+/**
+ * Retry configuration for tests.
+ * Can be a number for simple retry count, or an object for advanced retry control.
+ */
+export type Retry = number | {
+  /**
+   * The number of times to retry the test if it fails.
+   * @default 0
+   */
+  count?: number
+  /**
+   * Delay in milliseconds between retry attempts.
+   * @default 0
+   */
+  delay?: number
+  /**
+   * Condition to determine if a test should be retried based on the error.
+   * - If a RegExp, it is tested against the error message
+   * - If a function, called with the TestError object; return true to retry
+   *
+   * NOTE: Functions can only be used in test files, not in vitest.config.ts,
+   * because the configuration is serialized when passed to worker threads.
+   *
+   * @default undefined (retry on all errors)
+   */
+  condition?: RegExp | ((error: TestError) => boolean)
+}
+
+/**
+ * Serializable retry configuration (used in config files).
+ * Functions cannot be serialized, so only string conditions are allowed.
+ */
+export type SerializableRetry = number | {
+  /**
+   * The number of times to retry the test if it fails.
+   * @default 0
+   */
+  count?: number
+  /**
+   * Delay in milliseconds between retry attempts.
+   * @default 0
+   */
+  delay?: number
+  /**
+   * Condition to determine if a test should be retried based on the error.
+   * Must be a RegExp tested against the error message.
+   *
+   * @default undefined (retry on all errors)
+   */
+  condition?: RegExp
+}
+
 export interface TestOptions {
   /**
    * Test timeout.
    */
   timeout?: number
   /**
-   * Times to retry the test if fails. Useful for making flaky tests more stable.
-   * When retries is up, the last test error will be thrown.
-   *
+   * Retry configuration for the test.
+   * - If a number, specifies how many times to retry
+   * - If an object, allows fine-grained retry control
    * @default 0
    */
-  retry?: number
+  retry?: Retry
   /**
    * How many times the test will run again.
    * Only inner tests will repeat if set on `describe()`, nested `describe()` will inherit parent's repeat by default.

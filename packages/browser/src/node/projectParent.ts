@@ -147,10 +147,10 @@ export class ParentBrowserProject {
       throw new Error(`Cannot spawn child server without a parent dev server.`)
     }
     const clone = new ProjectBrowser(
+      this,
       project,
       '/',
     )
-    clone.parent = this
     this.children.add(clone)
     return clone
   }

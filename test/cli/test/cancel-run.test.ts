@@ -1,7 +1,7 @@
 import { Readable, Writable } from 'node:stream'
 import { stripVTControlCharacters } from 'node:util'
 import { createDefer } from '@vitest/utils/helpers'
-import { expect, test } from 'vitest'
+import { expect, onTestFinished, test, vi } from 'vitest'
 import { createVitest, registerConsoleShortcuts } from 'vitest/node'
 
 test('can force cancel a run', async () => {

@@ -14,8 +14,8 @@ import type {
 import type { ParentBrowserProject } from './projectParent'
 import { existsSync } from 'node:fs'
 import { readFile } from 'node:fs/promises'
-import { fileURLToPath } from 'node:url'
 import { resolve } from 'pathe'
+import { distRoot } from './constants'
 import { BrowserServerState } from './state'
 import { getBrowserProvider } from './utils'
 
@@ -25,39 +25,33 @@ export class ProjectBrowser implements IProjectBrowser {
 
   public provider!: BrowserProvider
   public vitest: Vitest
+  public vite: ViteDevServer
   public config: ResolvedConfig
-  public children: Set<ProjectBrowser> = new Set<ProjectBrowser>()
-
-  public parent!: ParentBrowserProject
 
   public state: BrowserServerState = new BrowserServerState()
 
   constructor(
+    public parent: ParentBrowserProject,
     public project: TestProject,
     public base: string,
   ) {
     this.vitest = project.vitest
     this.config = project.config
+    this.vite = parent.vite
 
-    const pkgRoot = resolve(fileURLToPath(import.meta.url), '../..')
-    const distRoot = resolve(pkgRoot, 'dist')
-
+    // instances can override testerHtmlPath
     const testerHtmlPath = project.config.browser.testerHtmlPath
       ? resolve(project.config.root, project.config.browser.testerHtmlPath)
       : resolve(distRoot, 'client/tester/tester.html')
+    // TODO: when config resolution is rewritten, project and parentProject should be created before the vite server is started
     if (!existsSync(testerHtmlPath)) {
       throw new Error(`Tester HTML file "${testerHtmlPath}" doesn't exist.`)
     }
     this.testerFilepath = testerHtmlPath
-
     this.testerHtml = readFile(
-      testerHtmlPath,
+      this.testerFilepath,
       'utf8',
     ).then(html => (this.testerHtml = html))
-  }
-
-  get vite(): ViteDevServer {
-    return this.parent.vite
   }
 
   private commands = {} as Record<string, BrowserCommand<any, any>>
@@ -130,7 +124,7 @@ export class ProjectBrowser implements IProjectBrowser {
   }
 
   async close(): Promise<void> {
-    await this.parent.vite.close()
+    await this.vite.close()
   }
 }
 
