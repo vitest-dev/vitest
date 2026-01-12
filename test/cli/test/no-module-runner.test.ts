@@ -571,10 +571,6 @@ test('2+2=4', () => {
   expect(_.add(2, 2)).toBe(4)
 })
 `,
-        'package.json': JSON.stringify({
-          name: '@test/cts-example',
-          type: 'commonjs',
-        }),
         'vitest.config.js': {
           test: {
             globals: true,
@@ -600,10 +596,6 @@ test('2+2=4', () => {
   expect(_.add(2, 2)).toBe(4)
 })
 `,
-        'package.json': JSON.stringify({
-          name: '@test/cts-example',
-          type: 'commonjs',
-        }),
         'vitest.config.js': {
           test: {
             globals: true,
@@ -640,10 +632,6 @@ test('2+2=4', () => {
   expect(add(2, 2)).toBe(4)
 })
 `,
-        'package.json': JSON.stringify({
-          name: '@test/cts-example',
-          type: 'commonjs',
-        }),
         'vitest.config.js': {
           test: {
             globals: true,
