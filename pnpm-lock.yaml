@@ -64,7 +64,7 @@ catalogs:
       specifier: ^6.2.1
       version: 6.2.1
     flatted:
-      specifier: ^3.3.3
+      specifier: 3.3.3
       version: 3.3.3
     istanbul-lib-coverage:
       specifier: ^3.2.2
@@ -93,6 +93,9 @@ catalogs:
     pathe:
       specifier: ^2.0.3
       version: 2.0.3
+    playwright:
+      specifier: ^1.57.0
+      version: 1.57.0
     sirv:
       specifier: ^3.0.2
       version: 3.0.2
@@ -108,9 +111,15 @@ catalogs:
     tinyrainbow:
       specifier: ^3.0.3
       version: 3.0.3
+    typescript:
+      specifier: ^5.9.3
+      version: 5.9.3
     unocss:
       specifier: ^66.5.9
       version: 66.5.9
+    vitest-sonar-reporter:
+      specifier: 3.0.0
+      version: 3.0.0
     vue:
       specifier: ^3.5.25
       version: 3.5.25
@@ -144,6 +153,9 @@ patchedDependencies:
   cac@6.7.14:
     hash: a8f0f3517a47ce716ed90c0cfe6ae382ab763b021a664ada2a608477d0621588
     path: patches/cac@6.7.14.patch
+  istanbul-lib-source-maps:
+    hash: be977704c4b9838da456619fe2421b5e24df2103a25967bd383b2246c88ddf6e
+    path: patches/istanbul-lib-source-maps.patch
 
 importers:
 
@@ -605,9 +617,6 @@ importers:
       istanbul-lib-report:
         specifier: 'catalog:'
         version: 3.0.1
-      istanbul-lib-source-maps:
-        specifier: 'catalog:'
-        version: 5.0.6
       istanbul-reports:
         specifier: 'catalog:'
         version: 3.2.0
@@ -636,6 +645,9 @@ importers:
       '@types/istanbul-reports':
         specifier: 'catalog:'
         version: 3.0.4
+      istanbul-lib-source-maps:
+        specifier: 'catalog:'
+        version: 5.0.6(patch_hash=be977704c4b9838da456619fe2421b5e24df2103a25967bd383b2246c88ddf6e)
       pathe:
         specifier: 'catalog:'
         version: 2.0.3
@@ -652,8 +664,8 @@ importers:
         specifier: workspace:*
         version: link:../utils
       ast-v8-to-istanbul:
-        specifier: ^0.3.8
-        version: 0.3.8
+        specifier: ^0.3.10
+        version: 0.3.10
       istanbul-lib-coverage:
         specifier: 'catalog:'
         version: 3.2.2
@@ -1132,12 +1144,6 @@ importers:
         specifier: workspace:*
         version: link:../runner
 
-  test/benchmark:
-    devDependencies:
-      vitest:
-        specifier: workspace:*
-        version: link:../../packages/vitest
-
   test/browser:
     devDependencies:
       '@types/react':
@@ -1186,12 +1192,6 @@ importers:
         specifier: 'catalog:'
         version: 8.18.3
 
-  test/cache:
-    devDependencies:
-      vitest:
-        specifier: workspace:*
-        version: link:../../packages/vitest
-
   test/cli:
     devDependencies:
       '@opentelemetry/api':
@@ -1203,12 +1203,18 @@ importers:
       '@opentelemetry/sdk-trace-web':
         specifier: ^2.2.0
         version: 2.2.0(@opentelemetry/api@1.9.0)
+      '@test/pkg-reporter':
+        specifier: link:./deps/pkg-reporter
+        version: link:deps/pkg-reporter
       '@test/test-dep-error':
         specifier: file:./deps/error
         version: file:test/cli/deps/error
       '@test/test-dep-linked':
         specifier: link:./deps/linked
         version: link:deps/linked
+      '@test/test-dep-url':
+        specifier: link:./deps/dep-url
+        version: link:deps/dep-url
       '@types/ws':
         specifier: 'catalog:'
         version: 8.18.1
@@ -1221,15 +1227,30 @@ importers:
       '@vitest/browser-preview':
         specifier: workspace:*
         version: link:../../packages/browser-preview
+      '@vitest/browser-webdriverio':
+        specifier: workspace:*
+        version: link:../../packages/browser-webdriverio
+      '@vitest/mocker':
+        specifier: workspace:*
+        version: link:../../packages/mocker
       '@vitest/runner':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../packages/runner
       '@vitest/utils':
         specifier: workspace:*
         version: link:../../packages/utils
+      flatted:
+        specifier: 'catalog:'
+        version: 3.3.3
       obug:
         specifier: ^2.1.1
         version: 2.1.1
+      playwright:
+        specifier: 'catalog:'
+        version: 1.57.0
+      typescript:
+        specifier: 'catalog:'
+        version: 5.9.3
       unplugin-swc:
         specifier: ^1.5.9
         version: 1.5.9(@swc/core@1.4.1(@swc/helpers@0.5.17))(rollup@4.53.3)
@@ -1239,6 +1260,9 @@ importers:
       vitest:
         specifier: workspace:*
         version: link:../../packages/vitest
+      vitest-sonar-reporter:
+        specifier: 'catalog:'
+        version: 3.0.0(vitest@packages+vitest)
       ws:
         specifier: 'catalog:'
         version: 8.18.3
@@ -1378,8 +1402,8 @@ importers:
         specifier: file:./vitest-environment-custom
         version: file:test/core/vitest-environment-custom
       vitest-package-exports:
-        specifier: ^0.1.1
-        version: 0.1.1
+        specifier: ^1.1.2
+        version: 1.1.2
       vue:
         specifier: 'catalog:'
         version: 3.5.25(typescript@5.9.3)
@@ -1418,7 +1442,7 @@ importers:
         version: 2.4.6
       happy-dom:
         specifier: latest
-        version: 20.0.11
+        version: 20.1.0
       istanbul-lib-coverage:
         specifier: 'catalog:'
         version: 3.2.2
@@ -1468,56 +1492,7 @@ importers:
         specifier: workspace:*
         version: link:../../packages/vitest
 
-  test/global-setup:
-    devDependencies:
-      vitest:
-        specifier: workspace:*
-        version: link:../../packages/vitest
-
-  test/optimize-deps:
-    devDependencies:
-      '@vitest/test-dep-url':
-        specifier: file:./dep-url
-        version: '@vitest/test-deps-url@file:test/optimize-deps/dep-url'
-      vitest:
-        specifier: workspace:*
-        version: link:../../packages/vitest
-
-  test/public-mocker:
-    devDependencies:
-      '@vitest/browser':
-        specifier: workspace:*
-        version: link:../../packages/browser
-      '@vitest/mocker':
-        specifier: workspace:*
-        version: link:../../packages/mocker
-      playwright:
-        specifier: ^1.57.0
-        version: 1.57.0
-      vitest:
-        specifier: workspace:*
-        version: link:../../packages/vitest
-
-  test/reporters:
-    devDependencies:
-      '@vitest/browser-playwright':
-        specifier: workspace:*
-        version: link:../../packages/browser-playwright
-      '@vitest/runner':
-        specifier: workspace:*
-        version: link:../../packages/runner
-      flatted:
-        specifier: ^3.3.3
-        version: 3.3.3
-      pkg-reporter:
-        specifier: ./reportPkg/
-        version: link:reportPkg
-      vitest:
-        specifier: workspace:*
-        version: link:../../packages/vitest
-      vitest-sonar-reporter:
-        specifier: 3.0.0
-        version: 3.0.0(vitest@packages+vitest)
+  test/node-runner: {}
 
   test/snapshots:
     dependencies:
@@ -1564,22 +1539,7 @@ importers:
         version: 10.4.1
       happy-dom:
         specifier: latest
-        version: 20.0.11
-      vitest:
-        specifier: workspace:*
-        version: link:../../packages/vitest
-
-  test/watch:
-    devDependencies:
-      '@vitest/browser-playwright':
-        specifier: workspace:*
-        version: link:../../packages/browser-playwright
-      '@vitest/browser-webdriverio':
-        specifier: workspace:*
-        version: link:../../packages/browser-webdriverio
-      vite:
-        specifier: 7.1.5
-        version: 7.1.5(@types/node@24.10.1)(jiti@2.6.1)(lightningcss@1.30.2)(sass-embedded@1.93.3)(sass@1.93.3)(terser@5.44.1)(tsx@4.21.0)(yaml@2.8.2)
+        version: 20.1.0
       vitest:
         specifier: workspace:*
         version: link:../../packages/vitest
@@ -4725,9 +4685,6 @@ packages:
   '@vitest/test-dep2@file:test/core/deps/dep2':
     resolution: {directory: test/core/deps/dep2, type: directory}
 
-  '@vitest/test-deps-url@file:test/optimize-deps/dep-url':
-    resolution: {directory: test/optimize-deps/dep-url, type: directory}
-
   '@vitest/test-fn@file:test/core/deps/dep-fn':
     resolution: {directory: test/core/deps/dep-fn, type: directory}
 
@@ -5098,8 +5055,8 @@ packages:
     resolution: {integrity: sha512-x1FCFnFifvYDDzTaLII71vG5uvDwgtmDTEVWAxrgeiR8VjMONcCXJx7E+USjDtHlwFmt9MysbqgF9b9Vjr6w+w==}
     engines: {node: '>=4'}
 
-  ast-v8-to-istanbul@0.3.8:
-    resolution: {integrity: sha512-szgSZqUxI5T8mLKvS7WTjF9is+MVbOeLADU73IseOcrqhxr/VAvy6wfoVE39KnKzA7JRhjF5eUagNlHwvZPlKQ==}
+  ast-v8-to-istanbul@0.3.10:
+    resolution: {integrity: sha512-p4K7vMz2ZSk3wN8l5o3y2bJAoZXT3VuJI5OLTATY/01CYWumWvwkUw0SqDBnNq6IiTO3qDa1eSQDibAV8g7XOQ==}
 
   async-function@1.0.0:
     resolution: {integrity: sha512-hsU18Ae8CDTR6Kgu9DYf0EbCr/a5iGL0rytQDobUcdpYOKokk8LEjVphnXkDkgpi0wYVsqrXuP0bZxJaTqdgoA==}
@@ -6547,6 +6504,10 @@ packages:
 
   happy-dom@20.0.11:
     resolution: {integrity: sha512-QsCdAUHAmiDeKeaNojb1OHOPF7NjcWPBR7obdu3NwH2a/oyQaLg5d0aaCy/9My6CdPChYF07dvz5chaXBGaD4g==}
+    engines: {node: '>=20.0.0'}
+
+  happy-dom@20.1.0:
+    resolution: {integrity: sha512-ebvqjBqzenBk2LjzNEAzoj7yhw7rW/R2/wVevMu6Mrq3MXtcI/RUz4+ozpcOcqVLEWPqLfg2v9EAU7fFXZUUJw==}
     engines: {node: '>=20.0.0'}
 
   has-bigints@1.1.0:
@@ -9414,8 +9375,8 @@ packages:
   vitest-environment-custom@file:test/core/vitest-environment-custom:
     resolution: {directory: test/core/vitest-environment-custom, type: directory}
 
-  vitest-package-exports@0.1.1:
-    resolution: {integrity: sha512-rXgU5noxaaMA5VJXgVPhXRzPiQ1WFmWwgo8dQFPg9j/yFM028scO0IAylFHVI8XMRevhozEt1usa6RQYQY26lg==}
+  vitest-package-exports@1.1.2:
+    resolution: {integrity: sha512-895iRrbcsZIDMhJSftGcQkuOPZcbCbHEQHXG0MnPKsSkpJhMRYuVtjA8dcjokyygJd/IQDDO8gyKo01AIkudHQ==}
 
   vitest-sonar-reporter@3.0.0:
     resolution: {integrity: sha512-QRT5m9Z/3Kt0WVDVcFHm5LC9Ba89yDP4twlX2QUAJ9PdqfJBkLAh/kXj7m6U3i0k6GxnIEiwCc295bmAYokmZg==}
@@ -12783,8 +12744,6 @@ snapshots:
     dependencies:
       '@vitest/test-dep1': file:test/core/deps/dep1
 
-  '@vitest/test-deps-url@file:test/optimize-deps/dep-url': {}
-
   '@vitest/test-fn@file:test/core/deps/dep-fn': {}
 
   '@voidzero-dev/vitepress-theme@4.0.3(axios@1.13.2)(change-case@5.4.4)(focus-trap@7.6.6)(typescript@5.9.3)(vite@7.1.5(@types/node@24.10.1)(jiti@2.6.1)(lightningcss@1.30.2)(sass-embedded@1.93.3)(sass@1.93.3)(terser@5.44.1)(tsx@4.21.0)(yaml@2.8.2))(vitepress@2.0.0-alpha.15(@types/node@24.10.1)(axios@1.13.2)(change-case@5.4.4)(jiti@2.6.1)(lightningcss@1.30.2)(oxc-minify@0.99.0)(postcss@8.5.6)(sass-embedded@1.93.3)(sass@1.93.3)(terser@5.44.1)(tsx@4.21.0)(typescript@5.9.3)(yaml@2.8.2))(vue@3.5.25(typescript@5.9.3))':
@@ -13209,7 +13168,7 @@ snapshots:
     dependencies:
       tslib: 2.8.1
 
-  ast-v8-to-istanbul@0.3.8:
+  ast-v8-to-istanbul@0.3.10:
     dependencies:
       '@jridgewell/trace-mapping': 0.3.31
       estree-walker: 3.0.3
@@ -14959,6 +14918,17 @@ snapshots:
       '@types/whatwg-mimetype': 3.0.2
       whatwg-mimetype: 3.0.0
 
+  happy-dom@20.1.0:
+    dependencies:
+      '@types/node': 20.19.24
+      '@types/whatwg-mimetype': 3.0.2
+      '@types/ws': 8.18.1
+      whatwg-mimetype: 3.0.0
+      ws: 8.18.3
+    transitivePeerDependencies:
+      - bufferutil
+      - utf-8-validate
+
   has-bigints@1.1.0: {}
 
   has-flag@4.0.0: {}
@@ -15328,7 +15298,7 @@ snapshots:
       make-dir: 4.0.0
       supports-color: 7.2.0
 
-  istanbul-lib-source-maps@5.0.6:
+  istanbul-lib-source-maps@5.0.6(patch_hash=be977704c4b9838da456619fe2421b5e24df2103a25967bd383b2246c88ddf6e):
     dependencies:
       '@jridgewell/trace-mapping': 0.3.31
       debug: 4.4.3
@@ -18305,7 +18275,7 @@ snapshots:
 
   vitest-environment-custom@file:test/core/vitest-environment-custom: {}
 
-  vitest-package-exports@0.1.1:
+  vitest-package-exports@1.1.2:
     dependencies:
       find-up-simple: 1.0.1
       pathe: 2.0.3

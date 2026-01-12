@@ -1,5 +1,5 @@
+import { editFile, resolvePath, runVitestCli } from '#test-utils'
 import { test as baseTest, expect } from 'vitest'
-import { editFile, resolvePath, runVitestCli } from '../../test-utils'
 
 // ecosystem-ci updated package.json and make this test fail
 const test = baseTest.skipIf(!!process.env.ECOSYSTEM_CI)
