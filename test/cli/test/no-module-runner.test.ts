@@ -2,7 +2,7 @@ import module from 'node:module'
 import { replaceRoot, runInlineTests } from '#test-utils'
 import { describe, expect, test } from 'vitest'
 
-describe.runIf(module.registerHooks)('when module.registerHooks is supported', () => {
+describe.runIf(module.registerHooks)('supported', () => {
   test('cannot run viteModuleRunner: false in "vmForks"', async () => {
     const { stderr } = await runInlineTests({
       'base.test.js': ``,
@@ -556,9 +556,116 @@ test('custom env is set', () => {
       }
     `)
   })
+
+  describe('.cts', () => {
+    test('as esm is not supported', async () => {
+      const { stderr } = await runInlineTests({
+        'add.cts': /* ts */`
+export function add(a: number, b: number): number {
+  return a + b
+}
+      `,
+        'add.test.cts': /* ts */`
+import * as _ from './add.cts'
+test('2+2=4', () => {
+  expect(_.add(2, 2)).toBe(4)
+})
+`,
+        'package.json': JSON.stringify({
+          name: '@test/cts-example',
+          type: 'commonjs',
+        }),
+        'vitest.config.js': {
+          test: {
+            globals: true,
+            experimental: {
+              viteModuleRunner: false,
+            },
+          },
+        },
+      })
+      expect(stderr).toContain('Cannot use import statement outside a module')
+    })
+
+    test('by default with type stripping is not supported', async () => {
+      const { stderr } = await runInlineTests({
+        'add.cts': /* ts */`
+export = function add(a: number, b: number): number {
+  return a + b
+}
+      `,
+        'add.test.cts': /* ts */`
+import _ = require('./add.cts')
+test('2+2=4', () => {
+  expect(_.add(2, 2)).toBe(4)
+})
+`,
+        'package.json': JSON.stringify({
+          name: '@test/cts-example',
+          type: 'commonjs',
+        }),
+        'vitest.config.js': {
+          test: {
+            globals: true,
+            experimental: {
+              viteModuleRunner: false,
+            },
+          },
+        },
+      })
+      expect(stderr).toMatchInlineSnapshot(`
+        "
+        ⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+         FAIL  add.test.cts [ add.test.cts ]
+        SyntaxError: TypeScript import equals declaration is not supported in strip-only mode
+        ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
+        Serialized Error: { code: 'ERR_UNSUPPORTED_TYPESCRIPT_SYNTAX' }
+        ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+        "
+      `)
+    })
+
+    test('with --experimental-transform-types is supported', async () => {
+      const { errorTree } = await runInlineTests({
+        'add.cts': /* ts */`
+export = function add(a: number, b: number): number {
+  return a + b
+}
+      `,
+        'add.test.mts': /* ts */`
+import add from './add.cts'
+test('2+2=4', () => {
+  expect(add(2, 2)).toBe(4)
+})
+`,
+        'package.json': JSON.stringify({
+          name: '@test/cts-example',
+          type: 'commonjs',
+        }),
+        'vitest.config.js': {
+          test: {
+            globals: true,
+            experimental: {
+              viteModuleRunner: false,
+            },
+            execArgv: ['--experimental-transform-types'],
+          },
+        },
+      })
+      expect(errorTree()).toMatchInlineSnapshot(`
+        {
+          "add.test.mts": {
+            "2+2=4": "passed",
+          },
+        }
+      `)
+    })
+  })
 })
 
-describe.runIf(!module.registerHooks)('when module.registerHooks is not supported', () => {
+describe.runIf(!module.registerHooks)('unsupported', () => {
   test('prints a warning if nodeLoader is not enabled', async () => {
     const { stderr } = await runInlineTests(
       { 'basic.test.js': `test('skip')` },
