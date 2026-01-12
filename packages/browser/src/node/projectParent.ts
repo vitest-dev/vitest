@@ -11,7 +11,7 @@ import type {
   Vitest,
 } from 'vitest/node'
 import type { BrowserServerState } from './state'
-import { readFileSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
 import { readFile } from 'node:fs/promises'
 import { parseErrorStacktrace, parseStacktrace } from '@vitest/utils/source-map'
 import { dirname, join, resolve } from 'pathe'
@@ -36,6 +36,7 @@ export class ParentBrowserProject {
   public errorCatcherUrl: string
   public locatorsUrl: string | undefined
   public matchersUrl: string
+  public testerFilepath: string
   public stateJs: Promise<string> | string
 
   public initScripts: string[] = []
@@ -53,6 +54,13 @@ export class ParentBrowserProject {
     public project: TestProject,
     public base: string,
   ) {
+    const testerHtmlPath = project.config.browser.testerHtmlPath
+      ? resolve(project.config.root, project.config.browser.testerHtmlPath)
+      : resolve(distRoot, 'client/tester/tester.html')
+    if (!existsSync(testerHtmlPath)) {
+      throw new Error(`Tester HTML file "${testerHtmlPath}" doesn't exist.`)
+    }
+    this.testerFilepath = testerHtmlPath
     this.vitest = project.vitest
     this.config = project.config
     this.stackTraceOptions = {
@@ -147,10 +155,10 @@ export class ParentBrowserProject {
       throw new Error(`Cannot spawn child server without a parent dev server.`)
     }
     const clone = new ProjectBrowser(
+      this,
       project,
       '/',
     )
-    clone.parent = this
     this.children.add(clone)
     return clone
   }

@@ -18,9 +18,5 @@ export default defineConfig({
     forceRerunTriggers: [
       '**/force-watch/**',
     ],
-
-    globalSetup: process.env.TEST_GLOBAL_SETUP
-      ? './global-setup.ts'
-      : undefined,
   },
 })

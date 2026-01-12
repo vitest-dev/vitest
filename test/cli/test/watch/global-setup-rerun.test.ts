@@ -4,11 +4,11 @@ import { expect, test } from 'vitest'
 const testFile = 'fixtures/watch/math.test.ts'
 
 test('global setup calls hooks correctly when file changes', async () => {
-  process.env.TEST_GLOBAL_SETUP = 'true'
   const { vitest, ctx } = await runVitest({
     root: 'fixtures/watch',
     watch: true,
     include: ['math.test.ts'],
+    globalSetup: ['./global-setup.ts'],
   })
 
   await vitest.waitForStdout('Waiting for file changes')
@@ -27,11 +27,11 @@ test('global setup calls hooks correctly when file changes', async () => {
 })
 
 test('global setup calls hooks correctly with a manual rerun', async () => {
-  process.env.TEST_GLOBAL_SETUP = 'true'
   const { vitest, ctx } = await runVitest({
     root: 'fixtures/watch',
     watch: true,
     include: ['math.test.ts'],
+    globalSetup: ['./global-setup.ts'],
   })
 
   await vitest.waitForStdout('Waiting for file changes')

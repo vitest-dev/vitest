@@ -66,7 +66,7 @@ for (const config of configs) {
       process.env.THREADS = isParallel ? 'true' : 'false'
 
       const { exitCode, stdout, ctx } = await runVitest({
-        root: './fixtures/bail',
+        root: './fixtures/config/bail',
         bail: 1,
         ...config,
         env: {

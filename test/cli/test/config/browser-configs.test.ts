@@ -5,13 +5,12 @@ import crypto from 'node:crypto'
 import { runVitest, runVitestCli, useFS } from '#test-utils'
 import { playwright } from '@vitest/browser-playwright'
 import { preview } from '@vitest/browser-preview'
-import { webdriverio } from '@vitest/browser-webdriverio'
 import { resolve } from 'pathe'
 import { describe, expect, onTestFinished, test } from 'vitest'
 import { createVitest } from 'vitest/node'
 
 async function vitest(cliOptions: TestUserConfig, configValue: TestUserConfig = {}, viteConfig: ViteUserConfig = {}, vitestOptions: VitestOptions = {}) {
-  const vitest = await createVitest('test', { ...cliOptions, watch: false }, { ...viteConfig, test: configValue as any }, vitestOptions)
+  const vitest = await createVitest('test', { ...cliOptions, watch: false, config: false }, { ...viteConfig, test: configValue as any }, vitestOptions)
   onTestFinished(() => vitest.close())
   return vitest
 }
@@ -243,7 +242,7 @@ test('coverage provider v8 works correctly in workspaced browser mode if instanc
 })
 
 test('browser instances with include/exclude/includeSource option override parent that patterns', async () => {
-  const { projects } = await vitest({}, {
+  const { projects } = await vitest({ config: false }, {
     include: ['**/*.global.test.{js,ts}', '**/*.shared.test.{js,ts}'],
     exclude: ['**/*.skip.test.{js,ts}'],
     includeSource: ['src/**/*.{js,ts}'],
@@ -262,7 +261,6 @@ test('browser instances with include/exclude/includeSource option override paren
   // Chromium should inherit parent include/exclude/includeSource patterns (plus default test pattern)
   expect(projects[0].name).toEqual('chromium')
   expect(projects[0].config.include).toEqual([
-    'test/**.test.ts',
     '**/*.global.test.{js,ts}',
     '**/*.shared.test.{js,ts}',
   ])
@@ -301,7 +299,7 @@ test('browser instances with include/exclude/includeSource option override paren
 })
 
 test('browser instances with empty include array should get parent include patterns', async () => {
-  const { projects } = await vitest({}, {
+  const { projects } = await vitest({ config: false }, {
     include: ['**/*.test.{js,ts}'],
     browser: {
       enabled: true,
@@ -315,8 +313,8 @@ test('browser instances with empty include array should get parent include patte
   })
 
   // Both instances should inherit parent include patterns when include is empty or not specified
-  expect(projects[0].config.include).toEqual(['test/**.test.ts', '**/*.test.{js,ts}'])
-  expect(projects[1].config.include).toEqual(['test/**.test.ts', '**/*.test.{js,ts}'])
+  expect(projects[0].config.include).toEqual(['**/*.test.{js,ts}'])
+  expect(projects[1].config.include).toEqual(['**/*.test.{js,ts}'])
 })
 
 test('filter for the global browser project includes all browser instances', async () => {
@@ -414,14 +412,14 @@ test('core provider has options if `provider` is wdio', async () => {
   const v = await vitest({}, {
     browser: {
       enabled: true,
-      provider: webdriverio({ cacheDir: './test' }),
+      provider: playwright({ contextOptions: { hasTouch: true } }),
       instances: [
         { browser: 'chrome' },
       ],
     },
   })
   expect(v.config.browser.provider?.options).toEqual({
-    cacheDir: './test',
+    contextOptions: { hasTouch: true },
   })
 })
 
@@ -948,7 +946,7 @@ test('browser root', async () => {
   `)
 })
 
-test('browser proejct', async () => {
+test('browser project', async () => {
   process.env.BROWSER_DEFINE_TEST_PROEJCT = 'true'
   const { testTree, stderr } = await runVitest({
     root: './fixtures/config/browser-define',
