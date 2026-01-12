@@ -2,7 +2,7 @@ import { runInlineTests } from '#test-utils'
 import { expect, test } from 'vitest'
 
 test('import a generated file', async () => {
-  const { stderr, exitCode } = await runInlineTests({
+  const { stderr, stdout, testTree } = await runInlineTests({
     'basic.test.js': /* js */ `
       import { expect, test } from "vitest"
       import fs from "node:fs"
@@ -19,6 +19,13 @@ test('import a generated file', async () => {
       })
     `,
   })
+  expect(stdout).not.toContain('generated.js')
   expect(stderr).toBe('')
-  expect(exitCode).toBe(0)
+  expect(testTree()).toMatchInlineSnapshot(`
+    {
+      "basic.test.js": {
+        "import a generated file": "passed",
+      },
+    }
+  `)
 })
