@@ -27,7 +27,8 @@
       "vitest/internal/browser": ["./packages/vitest/src/public/browser.ts"],
       "vitest/globals": ["./packages/vitest/globals.d.ts"],
       "vitest/browser": ["./packages/vitest/browser/context.d.ts"],
-      "vitest/*": ["./packages/vitest/src/public/*"]
+      "vitest/*": ["./packages/vitest/src/public/*"],
+      "#test-utils": ["./test/test-utils/index.ts"]
     },
     "strict": true,
     "declaration": true,

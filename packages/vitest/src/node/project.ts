@@ -505,7 +505,7 @@ export class TestProject {
         [
           this.vite?.close(),
           this.typechecker?.stop(),
-          this.browser?.close(),
+          (this.browser || this._parent?._parentBrowser?.vite)?.close(),
           this.clearTmpDir(),
         ].filter(Boolean),
       ).then(() => {

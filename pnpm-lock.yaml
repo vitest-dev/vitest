@@ -61,7 +61,7 @@ catalogs:
       specifier: ^6.2.1
       version: 6.2.1
     flatted:
-      specifier: ^3.3.3
+      specifier: 3.3.3
       version: 3.3.3
     istanbul-lib-coverage:
       specifier: ^3.2.2
@@ -90,6 +90,9 @@ catalogs:
     pathe:
       specifier: ^2.0.3
       version: 2.0.3
+    playwright:
+      specifier: ^1.57.0
+      version: 1.57.0
     sirv:
       specifier: ^3.0.2
       version: 3.0.2
@@ -105,9 +108,15 @@ catalogs:
     tinyrainbow:
       specifier: ^3.0.3
       version: 3.0.3
+    typescript:
+      specifier: ^5.9.3
+      version: 5.9.3
     unocss:
       specifier: ^66.5.9
       version: 66.5.9
+    vitest-sonar-reporter:
+      specifier: 3.0.0
+      version: 3.0.0
     vue:
       specifier: ^3.5.25
       version: 3.5.25
@@ -1125,12 +1134,6 @@ importers:
         specifier: workspace:*
         version: link:../runner
 
-  test/benchmark:
-    devDependencies:
-      vitest:
-        specifier: workspace:*
-        version: link:../../packages/vitest
-
   test/browser:
     devDependencies:
       '@types/react':
@@ -1179,12 +1182,6 @@ importers:
         specifier: 'catalog:'
         version: 8.18.3
 
-  test/cache:
-    devDependencies:
-      vitest:
-        specifier: workspace:*
-        version: link:../../packages/vitest
-
   test/cli:
     devDependencies:
       '@opentelemetry/api':
@@ -1196,12 +1193,18 @@ importers:
       '@opentelemetry/sdk-trace-web':
         specifier: ^2.2.0
         version: 2.2.0(@opentelemetry/api@1.9.0)
+      '@test/pkg-reporter':
+        specifier: link:./deps/pkg-reporter
+        version: link:deps/pkg-reporter
       '@test/test-dep-error':
         specifier: file:./deps/error
         version: file:test/cli/deps/error
       '@test/test-dep-linked':
         specifier: link:./deps/linked
         version: link:deps/linked
+      '@test/test-dep-url':
+        specifier: link:./deps/dep-url
+        version: link:deps/dep-url
       '@types/ws':
         specifier: 'catalog:'
         version: 8.18.1
@@ -1214,15 +1217,30 @@ importers:
       '@vitest/browser-preview':
         specifier: workspace:*
         version: link:../../packages/browser-preview
+      '@vitest/browser-webdriverio':
+        specifier: workspace:*
+        version: link:../../packages/browser-webdriverio
+      '@vitest/mocker':
+        specifier: workspace:*
+        version: link:../../packages/mocker
       '@vitest/runner':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../packages/runner
       '@vitest/utils':
         specifier: workspace:*
         version: link:../../packages/utils
+      flatted:
+        specifier: 'catalog:'
+        version: 3.3.3
       obug:
         specifier: ^2.1.1
         version: 2.1.1
+      playwright:
+        specifier: 'catalog:'
+        version: 1.57.0
+      typescript:
+        specifier: 'catalog:'
+        version: 5.9.3
       unplugin-swc:
         specifier: ^1.5.9
         version: 1.5.9(@swc/core@1.4.1)(rollup@4.53.3)
@@ -1232,6 +1250,9 @@ importers:
       vitest:
         specifier: workspace:*
         version: link:../../packages/vitest
+      vitest-sonar-reporter:
+        specifier: 'catalog:'
+        version: 3.0.0(vitest@packages+vitest)
       ws:
         specifier: 'catalog:'
         version: 8.18.3
@@ -1461,56 +1482,7 @@ importers:
         specifier: workspace:*
         version: link:../../packages/vitest
 
-  test/global-setup:
-    devDependencies:
-      vitest:
-        specifier: workspace:*
-        version: link:../../packages/vitest
-
-  test/optimize-deps:
-    devDependencies:
-      '@vitest/test-dep-url':
-        specifier: file:./dep-url
-        version: '@vitest/test-deps-url@file:test/optimize-deps/dep-url'
-      vitest:
-        specifier: workspace:*
-        version: link:../../packages/vitest
-
-  test/public-mocker:
-    devDependencies:
-      '@vitest/browser':
-        specifier: workspace:*
-        version: link:../../packages/browser
-      '@vitest/mocker':
-        specifier: workspace:*
-        version: link:../../packages/mocker
-      playwright:
-        specifier: ^1.57.0
-        version: 1.57.0
-      vitest:
-        specifier: workspace:*
-        version: link:../../packages/vitest
-
-  test/reporters:
-    devDependencies:
-      '@vitest/browser-playwright':
-        specifier: workspace:*
-        version: link:../../packages/browser-playwright
-      '@vitest/runner':
-        specifier: workspace:*
-        version: link:../../packages/runner
-      flatted:
-        specifier: ^3.3.3
-        version: 3.3.3
-      pkg-reporter:
-        specifier: ./reportPkg/
-        version: link:reportPkg
-      vitest:
-        specifier: workspace:*
-        version: link:../../packages/vitest
-      vitest-sonar-reporter:
-        specifier: 3.0.0
-        version: 3.0.0(vitest@packages+vitest)
+  test/node-runner: {}
 
   test/snapshots:
     dependencies:
@@ -1558,21 +1530,6 @@ importers:
       happy-dom:
         specifier: latest
         version: 20.1.0
-      vitest:
-        specifier: workspace:*
-        version: link:../../packages/vitest
-
-  test/watch:
-    devDependencies:
-      '@vitest/browser-playwright':
-        specifier: workspace:*
-        version: link:../../packages/browser-playwright
-      '@vitest/browser-webdriverio':
-        specifier: workspace:*
-        version: link:../../packages/browser-webdriverio
-      vite:
-        specifier: ^7.1.5
-        version: 7.1.5(@types/node@24.10.1)(jiti@2.6.1)(lightningcss@1.30.1)(sass-embedded@1.93.3)(sass@1.93.3)(terser@5.44.0)(tsx@4.21.0)(yaml@2.8.2)
       vitest:
         specifier: workspace:*
         version: link:../../packages/vitest
@@ -4646,9 +4603,6 @@ packages:
 
   '@vitest/test-dep2@file:test/core/deps/dep2':
     resolution: {directory: test/core/deps/dep2, type: directory}
-
-  '@vitest/test-deps-url@file:test/optimize-deps/dep-url':
-    resolution: {directory: test/optimize-deps/dep-url, type: directory}
 
   '@vitest/test-fn@file:test/core/deps/dep-fn':
     resolution: {directory: test/core/deps/dep-fn, type: directory}
@@ -12602,8 +12556,6 @@ snapshots:
   '@vitest/test-dep2@file:test/core/deps/dep2':
     dependencies:
       '@vitest/test-dep1': file:test/core/deps/dep1
-
-  '@vitest/test-deps-url@file:test/optimize-deps/dep-url': {}
 
   '@vitest/test-fn@file:test/core/deps/dep-fn': {}
 

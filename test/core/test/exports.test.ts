@@ -12,8 +12,7 @@ it('exports snapshot', async ({ skip, task }) => {
       return entries.filter(([key]) => key !== './browser')
     },
   })
-
-  manifest.exports['./node'].rolldownVersion = 'custom'
+  manifest.exports['./node'].rolldownVersion = 'conditional'
 
   expect(manifest.exports).toMatchInlineSnapshot(`
     {
@@ -131,7 +130,7 @@ it('exports snapshot', async ({ skip, task }) => {
         "resolveApiServerConfig": "function",
         "resolveConfig": "function",
         "resolveFsAllow": "function",
-        "rolldownVersion": "custom",
+        "rolldownVersion": "conditional",
         "rollupVersion": "string",
         "rootDir": "string",
         "startVitest": "function",
