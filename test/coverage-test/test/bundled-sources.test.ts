@@ -8,7 +8,7 @@ test('bundled code with source maps to originals', async () => {
     include: [normalizeURL(import.meta.url)],
     coverage: {
       reporter: 'json',
-      exclude: ['./utils.ts'],
+      exclude: ['**/utils.ts', '**/test/**'],
     },
   })
 

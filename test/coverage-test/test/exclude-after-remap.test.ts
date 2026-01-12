@@ -6,7 +6,7 @@ test('{ excludeAfterRemap: true } should exclude files that come up after remapp
   await runVitest({
     include: [normalizeURL(import.meta.url)],
     coverage: {
-      exclude: ['fixtures/src/pre-bundle/second.ts', './utils.ts'],
+      exclude: ['**/pre-bundle/second.ts', '**/utils.ts', '**/test/**'],
       excludeAfterRemap: true,
       reporter: 'json',
     },
@@ -26,7 +26,7 @@ test('{ excludeAfterRemap: false } should not exclude files that come up after r
   await runVitest({
     include: [normalizeURL(import.meta.url)],
     coverage: {
-      exclude: ['fixtures/src/pre-bundle/second.ts', './utils.ts'],
+      exclude: ['**/pre-bundle/second.ts', '**/utils.ts', '**/test/**'],
       reporter: 'json',
     },
   })
@@ -47,7 +47,7 @@ test('{ excludeAfterRemap: true } should exclude uncovered files that come up af
     include: ['fixtures/test/math.test.ts'],
     coverage: {
       include: ['fixtures/src/pre-bundle/**.ts'],
-      exclude: ['fixtures/src/pre-bundle/second.ts'],
+      exclude: ['**/pre-bundle/second.ts'],
       excludeAfterRemap: true,
       reporter: 'json',
     },
