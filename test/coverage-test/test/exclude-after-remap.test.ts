@@ -26,7 +26,7 @@ test('{ excludeAfterRemap: false } should not exclude files that come up after r
   await runVitest({
     include: [normalizeURL(import.meta.url)],
     coverage: {
-      exclude: ['**/pre-bundle/second.ts', '**/utils.ts', '**/test/**'],
+      exclude: ['fixtures/src/pre-bundle/second.ts', './utils.ts', '**/test/**'],
       reporter: 'json',
     },
   })
