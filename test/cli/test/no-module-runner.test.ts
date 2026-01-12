@@ -1,6 +1,6 @@
 import module from 'node:module'
-import { expect, test } from 'vitest'
-import { replaceRoot, runInlineTests } from '../../test-utils'
+import { replaceRoot, runInlineTests } from '#test-utils'
+import { describe, expect, test } from 'vitest'
 
 describe.runIf(module.registerHooks)('when module.registerHooks is supported', () => {
   test('cannot run viteModuleRunner: false in "vmForks"', async () => {
@@ -582,3 +582,5 @@ describe.runIf(!module.registerHooks)('when module.registerHooks is not supporte
 
 // TODO: watch mode tests
 // TODO: inline snapshot tests
+// TODO: test https://github.com/vitest-dev/vitest/issues/3987
+// TDOO: test v8 coverage (at least basic)
