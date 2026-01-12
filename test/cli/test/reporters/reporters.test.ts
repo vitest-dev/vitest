@@ -2,7 +2,7 @@ import type { TestModule } from 'vitest/node'
 import { existsSync, readFileSync, rmSync } from 'node:fs'
 import { normalize, resolve } from 'pathe'
 import { beforeEach, expect, test, vi } from 'vitest'
-import { JsonReporter, JUnitReporter, TapFlatReporter, TapReporter } from 'vitest/reporters'
+import { JsonReporter, JUnitReporter, TapFlatReporter, TapReporter } from 'vitest/node'
 import { files, getContext, passedFiles } from './utils'
 
 const beautify = (json: string) => JSON.parse(json)
