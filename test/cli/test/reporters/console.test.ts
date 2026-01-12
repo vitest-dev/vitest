@@ -1,9 +1,9 @@
 import type { UserConsoleLog } from 'vitest'
-import type { Reporter } from 'vitest/reporters'
+import type { Reporter } from 'vitest/node'
 import { runVitest } from '#test-utils'
 import { resolve } from 'pathe'
 import { expect, test } from 'vitest'
-import { DefaultReporter } from 'vitest/reporters'
+import { DefaultReporter } from 'vitest/node'
 
 class LogReporter extends DefaultReporter {
   isTTY = true

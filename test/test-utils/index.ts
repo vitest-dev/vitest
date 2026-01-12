@@ -18,9 +18,8 @@ import { inspect } from 'node:util'
 import { dirname, relative, resolve } from 'pathe'
 import { x } from 'tinyexec'
 import * as tinyrainbow from 'tinyrainbow'
-import { afterEach, onTestFinished } from 'vitest'
+import { afterEach, onTestFinished, TestRunner } from 'vitest'
 import { startVitest } from 'vitest/node'
-import { getCurrentTest } from 'vitest/suite'
 import { Cli } from './cli'
 
 // override default colors to disable them in tests
@@ -197,7 +196,7 @@ export async function runVitest(
     exitCode = process.exitCode
     process.exitCode = 0
 
-    if (getCurrentTest()) {
+    if (TestRunner.getCurrentTest()) {
       onTestFinished(async () => {
         await ctx?.close()
         process.exit = exit
