@@ -19,7 +19,7 @@ export type ScreenshotMatcherOutput = Promise<
     pass: false
     reference: ScreenshotData | null
     actual: ScreenshotData | null
-    diff: string | null
+    diff: ScreenshotData | null
     message: string
   }
   | {

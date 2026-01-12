@@ -60,6 +60,11 @@ Coverage collection is performed during runtime by instructing V8 using [`node:i
 - ⚠️ There are some minor limitations set by V8 engine. See [`ast-v8-to-istanbul` | Limitations](https://github.com/AriPerkkio/ast-v8-to-istanbul?tab=readme-ov-file#limitations).
 - ❌ Does not work on environments that don't use V8, such as Firefox or Bun. Or on environments that don't expose V8 coverage via profiler, such as Cloudflare Workers.
 
+<script setup>
+import ArrowDown from '../.vitepress/components/ArrowDown.vue'
+import Box from '../.vitepress/components/Box.vue'
+</script>
+
 <div style="display: flex; flex-direction: column; align-items: center; padding: 2rem 0; max-width: 20rem;">
   <Box>Test file</Box>
   <ArrowDown />
@@ -74,7 +79,7 @@ Coverage collection is performed during runtime by instructing V8 using [`node:i
   <Box>Coverage report</Box>
 </div>
 
-## Istanbul provider
+## Istanbul Provider
 
 [Istanbul code coverage tooling](https://istanbul.js.org/) has existed since 2012 and is very well battle-tested.
 This provider works on any Javascript runtime as coverage tracking is done by instrumenting user's source files.
@@ -160,7 +165,7 @@ export default defineConfig({
 ```
 :::
 
-## Including and excluding files from coverage report
+## Including and Excluding Files from Coverage Report
 
 You can define what files are shown in coverage report by configuring [`coverage.include`](/config/#coverage-include) and [`coverage.exclude`](/config/#coverage-exclude).
 

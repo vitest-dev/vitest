@@ -49,6 +49,7 @@ export const createBrowserServer: BrowserServerFactory = async (options) => {
   let cacheDir: string
   const vite = await createViteServer({
     ...project.options, // spread project config inlined in root workspace config
+    define: project.config.viteDefine,
     base: '/',
     root: project.config.root,
     logLevel,

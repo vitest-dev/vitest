@@ -14,4 +14,8 @@ export class VmForksPoolWorker extends ForksPoolWorker {
     /** Loads {@link file://./../../../runtime/workers/vmForks.ts} */
     this.entrypoint = resolve(options.distPath, 'workers/vmForks.js')
   }
+
+  canReuse(): boolean {
+    return true
+  }
 }

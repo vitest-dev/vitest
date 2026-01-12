@@ -1,3 +1,7 @@
+<script setup>
+import ListItem from './ListItem.vue'
+</script>
+
 <template>
   <ul
     class="features-list"

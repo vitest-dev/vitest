@@ -29,7 +29,6 @@
     "https-localhost": "^4.7.1",
     "tinyglobby": "catalog:",
     "unocss": "catalog:",
-    "unplugin-vue-components": "catalog:",
     "vite": "^6.3.5",
     "vite-plugin-pwa": "^0.21.2",
     "vitepress": "2.0.0-alpha.15",

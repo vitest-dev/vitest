@@ -6,7 +6,7 @@ Mock Service Worker (MSW) works by intercepting the requests your tests make, al
 
 ## Configuration
 
-You can use it like below in your [setup file](/config/#setupfiles)
+You can use it like below in your [setup file](/config/setupfiles)
 
 ::: code-group
 

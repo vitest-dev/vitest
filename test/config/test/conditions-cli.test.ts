@@ -10,9 +10,10 @@ test('correctly imports external dependencies with a development condition', asy
         external: [/conditions-pkg/],
       },
     },
-  }, [], 'test', {
-    define: {
-      TEST_CONDITION: '"development"',
+    $viteConfig: {
+      define: {
+        TEST_CONDITION: '"development"',
+      },
     },
   })
 
@@ -30,9 +31,10 @@ test('correctly imports external dependencies with a production condition', asyn
         external: [/conditions-pkg/],
       },
     },
-  }, [], 'test', {
-    define: {
-      TEST_CONDITION: '"production"',
+    $viteConfig: {
+      define: {
+        TEST_CONDITION: '"production"',
+      },
     },
   })
 
@@ -49,17 +51,18 @@ test('correctly imports external dependencies with a custom condition', async ()
         external: [/conditions-pkg/],
       },
     },
-  }, [], 'test', {
-    resolve: {
-      conditions: ['custom'],
-    },
-    ssr: {
+    $viteConfig: {
       resolve: {
         conditions: ['custom'],
       },
-    },
-    define: {
-      TEST_CONDITION: '"custom"',
+      ssr: {
+        resolve: {
+          conditions: ['custom'],
+        },
+      },
+      define: {
+        TEST_CONDITION: '"custom"',
+      },
     },
   })
 

@@ -16,12 +16,12 @@ When you run Vitest it reports multiple time metrics of your tests:
 > ```
 
 - Transform: How much time was spent transforming the files. See [File Transform](#file-transform).
-- Setup: Time spent for running the [`setupFiles`](/config/#setupfiles) files.
+- Setup: Time spent for running the [`setupFiles`](/config/setupfiles) files.
 - Import: Time it took to import your test files and their dependencies. This also includes the time spent collecting all tests. Note that this doesn't include dynamic imports inside of tests.
 - Tests: Time spent for actually running the test cases.
 - Environment: Time spent for setting up the test [`environment`](/config/#environment), for example JSDOM.
 
-## Test runner
+## Test Runner
 
 In cases where your test execution time is high, you can generate a profile of the test runner. See NodeJS documentation for following options:
 
@@ -55,7 +55,7 @@ After the tests have run there should be a `test-runner-profile/*.cpuprofile` an
 
 See [Profiling | Examples](https://github.com/vitest-dev/vitest/tree/main/examples/profiling) for example.
 
-## Main thread
+## Main Thread
 
 Profiling main thread is useful for debugging Vitest's Vite usage and [`globalSetup`](/config/#globalsetup) files.
 This is also where your Vite plugins are running.
@@ -76,7 +76,7 @@ $ node --cpu-prof --cpu-prof-dir=main-profile ./node_modules/vitest/vitest.mjs -
 
 After the tests have run there should be a `main-profile/*.cpuprofile` file generated. See [Inspecting profiling records](#inspecting-profiling-records) for instructions how to analyze these files.
 
-## File transform
+## File Transform
 
 This profiling strategy is a good way to identify unnecessary transforms caused by [barrel files](https://vitejs.dev/guide/performance.html#avoid-barrel-files).
 If these logs contain files that should not be loaded when your test is run, you might have barrel files that are importing files unnecessarily.
@@ -126,7 +126,7 @@ _x_examples_profiling_test_prime-number_test_ts-1413378098.js
 _src_prime-number_ts-525172412.js
 ```
 
-## Code coverage
+## Code Coverage
 
 If code coverage generation is slow on your project you can use `DEBUG=vitest:coverage` environment variable to enable performance logging.
 
@@ -152,7 +152,7 @@ This profiling approach is great for detecting large files that are accidentally
 For example if your configuration is accidentally including large built minified Javascript files in code coverage, they should appear in logs.
 In these cases you might want to adjust your [`coverage.include`](/config/#coverage-include) and [`coverage.exclude`](/config/#coverage-exclude) options.
 
-## Inspecting profiling records
+## Inspecting Profiling Records
 
 You can inspect the contents of `*.cpuprofile` and `*.heapprofile` with various tools. See list below for examples.
 
