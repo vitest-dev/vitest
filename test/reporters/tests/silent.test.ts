@@ -1,5 +1,5 @@
 import { expect, test } from 'vitest'
-import { DefaultReporter } from 'vitest/reporters'
+import { DefaultReporter } from 'vitest/node'
 import { runVitest } from '../../test-utils'
 
 test('{ silent: true } hides all console logs', async () => {
