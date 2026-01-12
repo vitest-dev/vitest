@@ -88,7 +88,7 @@ A RegExp pattern or a function to determine if a test should be retried based on
 - When a **function**, it receives the error and returns a boolean
 
 ::: warning
-When defining `condition` as a function, it must be done in a test file directly, not in `vitest.config.ts` (configurations are serialized for worker threads).
+When defining `condition` as a function, it must be done in a test file directly, not in a configuration file (configurations are serialized for worker threads).
 :::
 
 #### RegExp condition (in config file):

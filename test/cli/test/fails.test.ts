@@ -167,5 +167,5 @@ it('should warn if retry.condition is a function in config', async () => {
     root: 'fixtures/retry-config',
   })
 
-  expect(stderr).toContain('Warning: retry.condition function cannot be used in vitest.config.ts')
+  expect(stderr).toContain('Warning: retry.condition function cannot be used inside a config file.')
 })

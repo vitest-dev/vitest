@@ -787,7 +787,7 @@ export interface InlineConfig {
    * - If a number, specifies how many times to retry failed tests
    * - If an object, allows fine-grained retry control
    *
-   * ⚠️ WARNING: Function form is NOT supported in vitest.config.ts
+   * ⚠️ WARNING: Function form is NOT supported in a config file
    * because configurations are serialized when passed to worker threads.
    * Use the function form only in test files directly.
    *

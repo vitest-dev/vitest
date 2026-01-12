@@ -144,7 +144,7 @@ export function resolveConfig(
 
   if (resolved.retry && typeof resolved.retry === 'object' && typeof resolved.retry.condition === 'function') {
     logger.console.warn(
-      c.yellow('Warning: retry.condition function cannot be used in vitest.config.ts. '
+      c.yellow('Warning: retry.condition function cannot be used inside a config file. '
         + 'Use a RegExp pattern instead, or define the function in your test file.'),
     )
 
