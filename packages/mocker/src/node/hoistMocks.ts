@@ -46,7 +46,7 @@ const API_NOT_FOUND_ERROR = `There are some problems in resolving the mocks API.
 You may encounter this issue when importing the mocks API from another module other than 'vitest'.
 To fix this issue you can either:
 - import the mocks API directly from 'vitest'
-- enable the 'globals' options`
+- enable the 'globals' option`
 
 function API_NOT_FOUND_CHECK(names: string[]) {
   return `\nif (${names.map(name => `typeof globalThis["${name}"] === "undefined"`).join(' && ')}) `

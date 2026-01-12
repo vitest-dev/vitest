@@ -28,7 +28,7 @@ export class NativeModuleMocker extends BareModuleMocker {
 
   public resolveMockedModule(url: string, parentURL: string): module.ResolveFnOutput | undefined {
     // don't mock modules inside of packages because there is
-    // a high chance that is uses `require` which is not mockable
+    // a high chance that it uses `require` which is not mockable
     // because we use top-level await in "manual" mocks.
     // for the sake of consistency we don't support mocking anything at all
     if (parentURL.includes('/node_modules/')) {

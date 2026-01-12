@@ -3,9 +3,7 @@ import { expect, test } from 'vitest'
 import { replaceRoot, runInlineTests } from '../../test-utils'
 
 describe.runIf(module.registerHooks)('when module.registerHooks is supported', () => {
-  // TODO: hangs because of https://github.com/vitest-dev/vitest/issues/9271
-  // FIXED in https://github.com/vitest-dev/vitest/pull/9337
-  test.skip('cannot run viteModuleRunner: false in "vmForks"', async () => {
+  test('cannot run viteModuleRunner: false in "vmForks"', async () => {
     const { stderr } = await runInlineTests({
       'base.test.js': ``,
       'vitest.config.js': {
@@ -21,7 +19,7 @@ describe.runIf(module.registerHooks)('when module.registerHooks is supported', (
     expect(stderr).toContain(`Pool "vmForks" cannot run with "experimental.viteModuleRunner: false". Please, use "threads" or "forks" instead.`)
   })
 
-  test.skip('cannot run viteModuleRunner: false in "vmThreads"', async () => {
+  test('cannot run viteModuleRunner: false in "vmThreads"', async () => {
     const { stderr } = await runInlineTests({
       'base.test.js': ``,
       'vitest.config.js': {

@@ -198,7 +198,7 @@ Note that if the file path is too long, Vitest will truncate it at the start unt
 [Vitest UI](/guide/ui#import-breakdown) shows a breakdown of imports automatically if at least one file took longer than 500 milliseconds to load. You can manually set this option to `false` to disable this.
 :::
 
-## experimental.viteModuleRunner <Version type="experimental">4.0.16</Version> {#experimental-vitemodulerunner}
+## experimental.viteModuleRunner <Version type="experimental">4.1.0</Version> {#experimental-vitemodulerunner}
 
 - **Type:** `boolean`
 - **Default:** `true`
@@ -249,30 +249,31 @@ This could affect performance because Vitest needs to read the file and process 
 Some features will not work due to the nature of `viteModuleRunner`, including:
 
 - no `import.meta.env`: `import.meta.env` is a Vite feature, use `process.env` instead
-- no `plugins`: plugins are not applied because there is no transformation phase
+- no `plugins`: plugins are not applied because there is no transformation phase, use [customization hooks](https://nodejs.org/api/module.html#customization-hooks) via [`execArgv`](/config/execargv) instead
 - no `alias`: aliases are not applied because there is no transformation phase
+- `istanbul` coverage provider doesn't work because there is no transformation phase, use `v8` instead
 
 With regards to mocking, it is also important to point out that ES modules do not support property override. This means that code like this won't work anymore:
 
 ```ts
-import * as module from './some-module.js'
+import * as fs from 'node:fs'
 import { vi } from 'vitest'
 
-vi.spyOn(module, 'function').mockImplementation(() => 42)
+vi.spyOn(fs, 'readFileSync').mockImplementation(() => '42') // ❌
 ```
 
 However, Vitest supports auto-spying on modules without overriding their implementation. When `vi.mock` is called with a `spy: true` argument, the module is mocked in a way that preserves original implementations, but all exported functions are wrapped in a `vi.fn()` spy:
 
 ```ts
-import * as module from './some-module.js'
+import * as fs from 'node:fs'
 import { vi } from 'vitest'
 
-vi.mock('./some-module.js', { spy: true })
+vi.mock('node:fs', { spy: true })
 
-module.function.mockImplementation(() => 42)
+fs.readFileSync.mockImplementation(() => '42') // ✅
 ```
 
-Factory mocking is implemented using a top-level await. This means that mocked modules cannot be `required` in your source code:
+Factory mocking is implemented using a top-level await. This means that mocked modules cannot be loaded with `require()` in your source code:
 
 ```ts
 vi.mock('node:fs', async (importOriginal) => {
@@ -322,11 +323,11 @@ export default defineConfig({
 
 If you are running tests in Deno, TypeScript files are processed by the runtime without any additional configurations.
 
-## experimental.nodeLoader <Version type="experimental">4.0.16</Version> {#experimental-nodeloader}
+## experimental.nodeLoader <Version type="experimental">4.1.0</Version> {#experimental-nodeloader}
 
 - **Type:** `boolean`
 - **Default:** `true`
 
-If module runner is disabled, Vitest uses a module loader to transform files to support `import.meta.vitest`, `vi.mock` and `vi.hoisted`.
+If module runner is disabled, Vitest uses a native [Node.js module loader](https://nodejs.org/api/module.html#customization-hooks) to transform files to support `import.meta.vitest`, `vi.mock` and `vi.hoisted`.
 
-If you don't use these features, you can disable this.
+If you don't use these features, you can disable this to improve performance.

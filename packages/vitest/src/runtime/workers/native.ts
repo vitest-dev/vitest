@@ -111,6 +111,7 @@ export async function setupNodeLoaderHooks(worker: WorkerSetupContext): Promise<
         }
       }
     })
+    /** Registers {@link file://./../nodejsWorkerLoader.ts} */
     module.register('#nodejs-worker-loader', {
       parentURL: import.meta.url,
       data: { port: port2 },
