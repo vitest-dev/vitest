@@ -12,7 +12,10 @@ import type {
   Vitest,
 } from 'vitest/node'
 import type { ParentBrowserProject } from './projectParent'
+import { existsSync } from 'node:fs'
 import { readFile } from 'node:fs/promises'
+import { resolve } from 'pathe'
+import { distRoot } from './constants'
 import { BrowserServerState } from './state'
 import { getBrowserProvider } from './utils'
 
@@ -22,6 +25,7 @@ export class ProjectBrowser implements IProjectBrowser {
 
   public provider!: BrowserProvider
   public vitest: Vitest
+  public vite: ViteDevServer
   public config: ResolvedConfig
 
   public state: BrowserServerState = new BrowserServerState()
@@ -33,16 +37,21 @@ export class ProjectBrowser implements IProjectBrowser {
   ) {
     this.vitest = project.vitest
     this.config = project.config
+    this.vite = parent.vite
 
-    this.testerFilepath = parent.testerFilepath
+    // instances can override testerHtmlPath
+    const testerHtmlPath = project.config.browser.testerHtmlPath
+      ? resolve(project.config.root, project.config.browser.testerHtmlPath)
+      : resolve(distRoot, 'client/tester/tester.html')
+    // TODO: when config resolution is rewritten, project and parentProject should be created before the vite server is started
+    if (!existsSync(testerHtmlPath)) {
+      throw new Error(`Tester HTML file "${testerHtmlPath}" doesn't exist.`)
+    }
+    this.testerFilepath = testerHtmlPath
     this.testerHtml = readFile(
       this.testerFilepath,
       'utf8',
     ).then(html => (this.testerHtml = html))
-  }
-
-  get vite(): ViteDevServer {
-    return this.parent.vite
   }
 
   private commands = {} as Record<string, BrowserCommand<any, any>>
@@ -115,7 +124,7 @@ export class ProjectBrowser implements IProjectBrowser {
   }
 
   async close(): Promise<void> {
-    await this.parent.vite.close()
+    await this.vite.close()
   }
 }
 
