@@ -199,9 +199,9 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider<ResolvedCover
   }
 
   async parseConfigModule(configFilePath: string): Promise<ProxifiedModule<any>> {
-    return parseModule(
-      await fs.readFile(configFilePath, 'utf8'),
-    )
+    const contents = await fs.readFile(configFilePath, 'utf8')
+
+    return parseModule(`${contents}${this.autoUpdateMarker}`)
   }
 
   private async getCoverageMapForUncoveredFiles(coveredFiles: string[]) {
