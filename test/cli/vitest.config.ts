@@ -26,6 +26,7 @@ export default defineConfig({
       ignored: [
         '**/fixtures/browser-multiple/**/*',
         '**/fixtures/browser-init/**/*',
+        '**/package.json',
       ],
     },
   },
