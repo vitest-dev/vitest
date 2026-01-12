@@ -95,9 +95,12 @@ test('editing config file reloads new changes', async () => {
 })
 
 test('adding a new test file triggers re-run', async () => {
-  const { vitest } = await testUtils.runVitest(options)
+  const { vitest, fs } = await testUtils.runInlineTests({
+    'base.test.js': /* js */`test("base test", () => {})`,
+  }, { watch: true, globals: true })
 
-  const testFile = 'fixtures/watch/new-dynamic.test.ts'
+  await vitest.waitForStdout('press h to show help')
+
   const testFileContent = `
 import { expect, test } from "vitest";
 
@@ -107,13 +110,10 @@ test("dynamic test case", () => {
 })
 `
 
-  await vitest.waitForStdout('press h to show help')
-
-  onTestFinished(() => rmSync(testFile))
-  writeFileSync(testFile, testFileContent, 'utf-8')
+  fs.createFile('new-dynamic.test.ts', testFileContent)
 
   await vitest.waitForStdout('Running added dynamic test')
-  await vitest.waitForStdout('RERUN  ../../new-dynamic.test.ts')
+  await vitest.waitForStdout('RERUN  ../new-dynamic.test.ts')
   await vitest.waitForStdout('1 passed')
 })
 
