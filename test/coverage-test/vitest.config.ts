@@ -8,22 +8,16 @@ const UNIT_TESTS = 'test/**.unit.test.ts'
 const BROWSER_TESTS = 'test/**.browser.test.ts'
 const FIXTURES = '**/fixtures/**'
 
-const config = defineConfig({
-  test: {
-    pool: 'threads',
-    setupFiles: ['./setup.ts'],
-  },
-})
-
 export default defineConfig({
   test: {
     reporters: 'verbose',
     isolate: false,
+    setupFiles: ['./setup.ts'],
     projects: [
       // Test cases for v8-provider
       {
+        extends: true,
         test: {
-          ...config.test,
           name: { label: 'v8', color: 'green' },
           env: { COVERAGE_PROVIDER: 'v8' },
           include: [GENERIC_TESTS, V8_TESTS],
@@ -39,8 +33,8 @@ export default defineConfig({
 
       // Test cases for istanbul-provider
       {
+        extends: true,
         test: {
-          ...config.test,
           name: { label: 'istanbul', color: 'magenta' },
           env: { COVERAGE_PROVIDER: 'istanbul' },
           include: [GENERIC_TESTS, ISTANBUL_TESTS],
@@ -56,8 +50,8 @@ export default defineConfig({
 
       // Test cases for custom-provider
       {
+        extends: true,
         test: {
-          ...config.test,
           name: { label: 'custom', color: 'yellow' },
           env: { COVERAGE_PROVIDER: 'custom' },
           include: [CUSTOM_TESTS],
@@ -67,8 +61,8 @@ export default defineConfig({
 
       // Test cases for browser. Browser mode itself is activated by COVERAGE_BROWSER env var.
       {
+        extends: true,
         test: {
-          ...config.test,
           name: { label: 'istanbul-browser', color: 'blue' },
           env: { COVERAGE_PROVIDER: 'istanbul', COVERAGE_BROWSER: 'true' },
           testTimeout: 15_000,
@@ -93,13 +87,14 @@ export default defineConfig({
             '**/in-source.test.ts',
             '**/query-param-transforms.test.ts',
             '**/test/cjs-dependency.test.ts',
+            '**/test/source-maps.test.ts',
           ],
           exclude: [FIXTURES],
         },
       },
       {
+        extends: true,
         test: {
-          ...config.test,
           name: { label: 'v8-browser', color: 'red' },
           env: { COVERAGE_PROVIDER: 'v8', COVERAGE_BROWSER: 'true' },
           testTimeout: 15_000,
@@ -124,6 +119,7 @@ export default defineConfig({
             '**/in-source.test.ts',
             '**/query-param-transforms.test.ts',
             '**/test/cjs-dependency.test.ts',
+            '**/test/source-maps.test.ts',
           ],
           exclude: [FIXTURES],
         },
@@ -131,8 +127,8 @@ export default defineConfig({
 
       // Test cases that aren't provider specific
       {
+        extends: true,
         test: {
-          ...config.test,
           name: { label: 'unit', color: 'cyan' },
           include: [UNIT_TESTS],
           typecheck: {

@@ -6,7 +6,7 @@ import type { SerializedCoverageConfig } from '../runtime/config'
 import type { AfterSuiteRunMeta } from '../types/general'
 import { existsSync, promises as fs, readdirSync, writeFileSync } from 'node:fs'
 import path from 'node:path'
-import { cleanUrl, slash } from '@vitest/utils/helpers'
+import { slash } from '@vitest/utils/helpers'
 import { relative, resolve } from 'pathe'
 import pm from 'picomatch'
 import { glob } from 'tinyglobby'
@@ -161,18 +161,11 @@ export class BaseCoverageProvider<Options extends ResolvedCoverageOptions<'istan
     // By default `coverage.include` matches all files, except "coverage.exclude"
     const glob = this.options.include || '**'
 
-    let included = roots.some((root) => {
-      const options: pm.PicomatchOptions = {
-        contains: true,
-        dot: true,
-        cwd: root,
-        ignore: this.options.exclude,
-      }
-
-      return pm.isMatch(filename, glob, options)
+    const included = pm.isMatch(filename, glob, {
+      contains: true,
+      dot: true,
+      ignore: this.options.exclude,
     })
-
-    included &&= existsSync(cleanUrl(filename))
 
     this.globCache.set(filename, included)
 
@@ -641,15 +634,16 @@ export class BaseCoverageProvider<Options extends ResolvedCoverageOptions<'istan
         root: project.config.root,
         isBrowserEnabled: project.isBrowserEnabled(),
         vite: project.vite,
+        environment: project.config.environment,
       })),
       // Check core last as it will match all files anyway
-      { root: ctx.config.root, vite: ctx.vite, isBrowserEnabled: ctx.getRootProject().isBrowserEnabled() },
+      { root: ctx.config.root, vite: ctx.vite, isBrowserEnabled: ctx.getRootProject().isBrowserEnabled(), environment: ctx.config.environment },
     ]
 
     return async function transformFile(filename: string): Promise<TransformResult | null | undefined> {
       let lastError
 
-      for (const { root, vite, isBrowserEnabled } of servers) {
+      for (const { root, vite, isBrowserEnabled, environment } of servers) {
         // On Windows root doesn't start with "/" while filenames do
         if (!filename.startsWith(root) && !filename.startsWith(`/${root}`)) {
           continue
@@ -664,6 +658,10 @@ export class BaseCoverageProvider<Options extends ResolvedCoverageOptions<'istan
         }
 
         try {
+          if (environment === 'jsdom' || environment === 'happy-dom') {
+            return await vite.environments.client.transformRequest(filename)
+          }
+
           return await vite.environments.ssr.transformRequest(filename)
         }
         catch (error) {
@@ -671,7 +669,7 @@ export class BaseCoverageProvider<Options extends ResolvedCoverageOptions<'istan
         }
       }
 
-      // All vite-node servers failed to transform the file
+      // All vite servers failed to transform the file
       throw lastError
     }
   }

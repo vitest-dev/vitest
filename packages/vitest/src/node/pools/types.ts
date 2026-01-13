@@ -1,5 +1,8 @@
-import type { ContextRPC } from '../../types/worker'
+import type { Context, Span } from '@opentelemetry/api'
+import type { ContextTestEnvironment, WorkerExecuteContext, WorkerTestEnvironment } from '../../types/worker'
+import type { OTELCarrier } from '../../utils/traces'
 import type { TestProject } from '../project'
+import type { SerializedConfig } from '../types/config'
 
 export interface PoolRunnerInitializer {
   readonly name: string
@@ -11,7 +14,7 @@ export interface PoolOptions {
   project: TestProject
   method: 'run' | 'collect'
   cacheFs?: boolean
-  environment: string
+  environment: ContextTestEnvironment
   execArgv: string[]
   env: Partial<NodeJS.ProcessEnv>
 }
@@ -31,8 +34,8 @@ export interface PoolWorker {
 
   /**
    * This is called on workers that already satisfy certain constraints:
+   * - The task has the same worker name
    * - The task has the same project
-   * - The task has the same environment
    */
   canReuse?: (task: PoolTask) => boolean
 }
@@ -51,22 +54,55 @@ export interface PoolTask {
    * so modifying it once will modify it for every task.
    */
   execArgv: string[]
-  context: ContextRPC
+  context: WorkerExecuteContext
   memoryLimit: number | null
+}
+
+export interface PoolRunnerOTEL {
+  span: Span
+  workerContext: Context
+  currentContext?: Context
+  files: string[]
 }
 
 export type WorkerRequest
   = { __vitest_worker_request__: true } & (
-    | { type: 'start'; options: { reportMemory: boolean } }
-    | { type: 'stop' }
-    | { type: 'run'; context: ContextRPC; poolId: number }
-    | { type: 'collect'; context: ContextRPC; poolId: number }
+    | {
+      type: 'start'
+      poolId: number
+      workerId: WorkerExecuteContext['workerId'] // Initial worker ID, may change when non-isolated worker runs multiple test files
+      options: { reportMemory: boolean }
+      context: {
+        environment: WorkerTestEnvironment
+        config: SerializedConfig
+        pool: string
+      }
+      traces: {
+        enabled: boolean
+        sdkPath?: string
+        otelCarrier?: OTELCarrier
+      }
+    }
+    | {
+      type: 'stop'
+      otelCarrier?: OTELCarrier
+    }
+    | {
+      type: 'run'
+      context: WorkerExecuteContext
+      otelCarrier?: OTELCarrier
+    }
+    | {
+      type: 'collect'
+      context: WorkerExecuteContext
+      otelCarrier?: OTELCarrier
+    }
     | { type: 'cancel' }
 )
 
 export type WorkerResponse
   = { __vitest_worker_response__: true } & (
-    | { type: 'started' }
+    | { type: 'started'; error?: unknown }
     | { type: 'stopped'; error?: unknown }
     | { type: 'testfileFinished'; usedMemory?: number; error?: unknown }
 )

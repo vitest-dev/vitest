@@ -1,3 +1,4 @@
+import type { SpanOptions } from '@opentelemetry/api'
 import type { ExpectStatic } from '@vitest/expect'
 import type {
   CancelReason,
@@ -7,26 +8,35 @@ import type {
   Task,
   Test,
   TestContext,
-  VitestRunner,
   VitestRunnerImportSource,
+  VitestRunner as VitestTestRunner,
 } from '@vitest/runner'
 import type { ModuleRunner } from 'vite/module-runner'
+import type { Traces } from '../../utils/traces'
 import type { SerializedConfig } from '../config'
 import { getState, GLOBAL_EXPECT, setState } from '@vitest/expect'
-import { getNames, getTestName, getTests } from '@vitest/runner/utils'
+import {
+  createTaskCollector,
+  getCurrentSuite,
+  getCurrentTest,
+  getFn,
+  getHooks,
+} from '@vitest/runner'
+import { createChainable, getNames, getTestName, getTests } from '@vitest/runner/utils'
 import { processError } from '@vitest/utils/error'
 import { normalize } from 'pathe'
 import { createExpect } from '../../integrations/chai/index'
 import { inject } from '../../integrations/inject'
 import { getSnapshotClient } from '../../integrations/snapshot/chai'
 import { vi } from '../../integrations/vi'
+import { getBenchFn, getBenchOptions } from '../benchmark'
 import { rpc } from '../rpc'
 import { getWorkerState } from '../utils'
 
 // worker context is shared between all tests
 const workerContext = Object.create(null)
 
-export class VitestTestRunner implements VitestRunner {
+export class TestRunner implements VitestTestRunner {
   private snapshotClient = getSnapshotClient()
   private workerState = getWorkerState()
   private moduleRunner!: ModuleRunner
@@ -35,8 +45,13 @@ export class VitestTestRunner implements VitestRunner {
   private assertionsErrors = new WeakMap<Readonly<Task>, Error>()
 
   public pool: string = this.workerState.ctx.pool
+  private _otel!: Traces
+  public viteEnvironment: string
 
-  constructor(public config: SerializedConfig) {}
+  constructor(public config: SerializedConfig) {
+    const environment = this.workerState.environment
+    this.viteEnvironment = environment.viteEnvironment || environment.name
+  }
 
   importFile(filepath: string, source: VitestRunnerImportSource): unknown {
     if (source === 'setup') {
@@ -45,7 +60,15 @@ export class VitestTestRunner implements VitestRunner {
         this.workerState.evaluatedModules.invalidateModule(moduleNode)
       }
     }
-    return this.moduleRunner.import(filepath)
+    return this._otel.$(
+      `vitest.module.import_${source === 'setup' ? 'setup' : 'spec'}`,
+      {
+        attributes: {
+          'code.file.path': filepath,
+        },
+      },
+      () => this.moduleRunner.import(filepath),
+    )
   }
 
   onCollectStart(file: File): void {
@@ -212,15 +235,47 @@ export class VitestTestRunner implements VitestRunner {
   }
 
   getImportDurations(): Record<string, ImportDuration> {
-    const entries = [...(this.workerState.moduleExecutionInfo?.entries() ?? [])]
-    return Object.fromEntries(entries.map(([filepath, { duration, selfTime }]) => [
-      normalize(filepath),
-      {
+    const importDurations: Record<string, ImportDuration> = {}
+    const entries = this.workerState.moduleExecutionInfo?.entries() || []
+
+    for (const [filepath, { duration, selfTime, external, importer }] of entries) {
+      importDurations[normalize(filepath)] = {
         selfTime,
         totalTime: duration,
-      },
-    ]))
+        external,
+        importer,
+      }
+    }
+
+    return importDurations
   }
+
+  trace = <T>(name: string, attributes: Record<string, any> | (() => T), cb?: () => T): T => {
+    const options: SpanOptions = typeof attributes === 'object' ? { attributes } : {}
+    return this._otel.$(`vitest.test.runner.${name}`, options, cb || attributes as () => T)
+  }
+
+  __setTraces(traces: Traces): void {
+    this._otel = traces
+  }
+
+  static createTaskCollector: typeof createTaskCollector = createTaskCollector
+  static getCurrentSuite: typeof getCurrentSuite = getCurrentSuite
+  static getCurrentTest: typeof getCurrentTest = getCurrentTest
+  static createChainable: typeof createChainable = createChainable
+  static getSuiteHooks: typeof getHooks = getHooks
+  static getTestFn: typeof getFn = getFn
+  static setSuiteHooks: typeof getHooks = getHooks
+  static setTestFn: typeof getFn = getFn
+
+  /**
+   * @deprecated
+   */
+  static getBenchFn: typeof getBenchFn = getBenchFn
+  /**
+   * @deprecated
+   */
+  static getBenchOptions: typeof getBenchOptions = getBenchOptions
 }
 
 function clearModuleMocks(config: SerializedConfig) {

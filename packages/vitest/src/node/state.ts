@@ -87,7 +87,7 @@ export class StateManager {
   }
 
   getUnhandledErrors(): unknown[] {
-    return Array.from(this.errorsSet.values())
+    return Array.from(this.errorsSet)
   }
 
   getPaths(): string[] {

@@ -123,9 +123,6 @@ Error: Test timed out in 10ms.
 Error: Hook timed out in 16ms."
 `;
 
-exports[`should fail unhandled.test.ts 1`] = `
-"Error: some error
-Error: Uncaught [Error: some error]"
-`;
+exports[`should fail unhandled.test.ts 1`] = `"Error: some error"`;
 
 exports[`should fail unhandled-suite.test.ts 1`] = `"Unknown Error: promise error"`;

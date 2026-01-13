@@ -4,10 +4,13 @@ import type {
   Test as RunnerTestCase,
   File as RunnerTestFile,
   Suite as RunnerTestSuite,
+  SerializableRetry,
   TaskMeta,
   TestAnnotation,
+  TestArtifact,
 } from '@vitest/runner'
 import type { SerializedError, TestError } from '@vitest/utils'
+import type { DevEnvironment } from 'vite'
 import type { TestProject } from '../project'
 
 class ReportedTaskImplementation {
@@ -184,6 +187,15 @@ export class TestCase extends ReportedTaskImplementation {
    */
   public annotations(): ReadonlyArray<TestAnnotation> {
     return [...this.task.annotations]
+  }
+
+  /**
+   * @experimental
+   *
+   * Test artifacts recorded via the `recordArtifact` API during the test execution.
+   */
+  public artifacts(): ReadonlyArray<TestArtifact> {
+    return [...this.task.artifacts]
   }
 
   /**
@@ -431,6 +443,13 @@ export class TestModule extends SuiteImplementation {
   public readonly type = 'module'
 
   /**
+   * The Vite environment that processes files on the server.
+   *
+   * Can be empty if test module did not run yet.
+   */
+  public readonly viteEnvironment: DevEnvironment | undefined
+
+  /**
    * This is usually an absolute UNIX file path.
    * It can be a virtual ID if the file is not on the disk.
    * This value corresponds to the ID in the Vite's module graph.
@@ -447,6 +466,12 @@ export class TestModule extends SuiteImplementation {
     super(task, project)
     this.moduleId = task.filepath
     this.relativeModuleId = task.name
+    if (task.viteEnvironment === '__browser__') {
+      this.viteEnvironment = project.browser?.vite.environments.client
+    }
+    else if (typeof task.viteEnvironment === 'string') {
+      this.viteEnvironment = project.vite.environments[task.viteEnvironment]
+    }
   }
 
   /**
@@ -500,7 +525,7 @@ export interface TaskOptions {
   readonly fails: boolean | undefined
   readonly concurrent: boolean | undefined
   readonly shuffle: boolean | undefined
-  readonly retry: number | undefined
+  readonly retry: SerializableRetry | undefined
   readonly repeats: number | undefined
   readonly mode: 'run' | 'only' | 'skip' | 'todo'
 }
@@ -513,7 +538,7 @@ function buildOptions(
     fails: task.type === 'test' && task.fails,
     concurrent: task.concurrent,
     shuffle: task.shuffle,
-    retry: task.retry,
+    retry: task.retry as SerializableRetry | undefined,
     repeats: task.repeats,
     // runner types are too broad, but the public API should be more strict
     // the queued state exists only on Files and this method is called

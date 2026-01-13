@@ -1,4 +1,4 @@
-import type { Locator } from 'vitest/browser'
+import type { Locator, UserEventWheelDeltaOptions, UserEventWheelOptions } from 'vitest/browser'
 import type { BrowserRPC } from '../client'
 import { getBrowserState, getWorkerState } from '../utils'
 
@@ -113,20 +113,30 @@ export class CommandsManager {
   ): Promise<T> {
     const state = getWorkerState()
     const rpc = state.rpc as any as BrowserRPC
-    const { sessionId } = getBrowserState()
+    const { sessionId, traces } = getBrowserState()
     const filepath = state.filepath || state.current?.file?.filepath
     args = args.filter(arg => arg !== undefined) // remove optional fields
     if (this._listeners.length) {
       await Promise.all(this._listeners.map(listener => listener(command, args)))
     }
-    return rpc.triggerCommand<T>(sessionId, command, filepath, args).catch((err) => {
-      // rethrow an error to keep the stack trace in browser
-      // const clientError = new Error(err.message)
-      clientError.message = err.message
-      clientError.name = err.name
-      clientError.stack = clientError.stack?.replace(clientError.message, err.message)
-      throw clientError
-    })
+    return traces.$(
+      'vitest.browser.tester.command',
+      {
+        attributes: {
+          'vitest.browser.command': command,
+          'code.file.path': filepath,
+        },
+      },
+      () =>
+        rpc.triggerCommand<T>(sessionId, command, filepath, args).catch((err) => {
+          // rethrow an error to keep the stack trace in browser
+          // const clientError = new Error(err.message)
+          clientError.message = err.message
+          clientError.name = err.name
+          clientError.stack = clientError.stack?.replace(clientError.message, err.message)
+          throw clientError
+        }),
+    )
   }
 }
 
@@ -216,4 +226,42 @@ const kLocator = Symbol.for('$$vitest:locator')
 
 export function isLocator(element: unknown): element is Locator {
   return (!!element && typeof element === 'object' && kLocator in element)
+}
+
+const DEFAULT_WHEEL_DELTA = 100
+
+export function resolveUserEventWheelOptions(options: UserEventWheelOptions): UserEventWheelDeltaOptions {
+  let delta: UserEventWheelDeltaOptions['delta']
+
+  if (options.delta) {
+    delta = options.delta
+  }
+  else {
+    switch (options.direction) {
+      case 'up': {
+        delta = { y: -DEFAULT_WHEEL_DELTA }
+        break
+      }
+
+      case 'down': {
+        delta = { y: DEFAULT_WHEEL_DELTA }
+        break
+      }
+
+      case 'left': {
+        delta = { x: -DEFAULT_WHEEL_DELTA }
+        break
+      }
+
+      case 'right': {
+        delta = { x: DEFAULT_WHEEL_DELTA }
+        break
+      }
+    }
+  }
+
+  return {
+    delta,
+    times: options.times,
+  }
 }

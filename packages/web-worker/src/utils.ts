@@ -1,9 +1,10 @@
+import type { Debugger } from 'obug'
 import type { WorkerGlobalState } from 'vitest'
 import type { CloneOption } from './types'
 import ponyfillStructuredClone from '@ungap/structured-clone'
-import createDebug from 'debug'
+import { createDebug } from 'obug'
 
-export const debug: createDebug.Debugger = createDebug('vitest:web-worker')
+export const debug: Debugger = createDebug('vitest:web-worker')
 
 export function getWorkerState(): WorkerGlobalState {
   // @ts-expect-error untyped global
@@ -29,12 +30,17 @@ function createClonedMessageEvent(
 
   debug('clone worker message %o', data)
   const origin = typeof location === 'undefined' ? undefined : location.origin
+  const ports = transfer?.filter((t): t is MessagePort => t instanceof MessagePort)
+  const transferWithoutPorts = transfer?.filter( // `ports` must be excluded from the `transfer` option passed to `structuredClone` to keep the MessagePort objects working correctly in the same thread.
+    t => !(t instanceof MessagePort),
+  )
 
   if (typeof structuredClone === 'function' && clone === 'native') {
     debug('create message event, using native structured clone')
     return new MessageEvent('message', {
-      data: structuredClone(data, { transfer }),
+      data: structuredClone(data, { transfer: transferWithoutPorts }),
       origin,
+      ports,
     })
   }
   if (clone !== 'none') {
@@ -50,12 +56,14 @@ function createClonedMessageEvent(
     return new MessageEvent('message', {
       data: ponyfillStructuredClone(data, { lossy: true } as any),
       origin,
+      ports,
     })
   }
   debug('create message event without cloning an object')
   return new MessageEvent('message', {
     data,
     origin,
+    ports,
   })
 }
 

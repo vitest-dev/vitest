@@ -630,7 +630,7 @@ describe('Standard Schema', () => {
           -   ],
           - },
           +     "age": "thirty",
-                "name": SchemaMatching,
+                "name": "John",
               },
             }"
         `)
@@ -787,6 +787,11 @@ describe('Standard Schema', () => {
             }"
         `)
       }
+    })
+
+    test('function', () => {
+      const stringSchemaFn = Object.assign(() => {}, stringSchema)
+      expect('hello').toEqual(expect.schemaMatching(stringSchemaFn))
     })
   })
 })

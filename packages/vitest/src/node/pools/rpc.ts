@@ -4,6 +4,7 @@ import type { ResolveSnapshotPathHandlerContext } from '../types/config'
 import { existsSync, mkdirSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { cleanUrl } from '@vitest/utils/helpers'
+import { isBuiltin, toBuiltin } from '../../utils/modules'
 import { handleRollupError } from '../environments/fetchModule'
 import { normalizeResolvedIdToUrl } from '../environments/normalizeUrl'
 
@@ -13,9 +14,9 @@ interface MethodsOptions {
   collect?: boolean
 }
 
-export function createMethodsRPC(project: TestProject, options: MethodsOptions = {}): RuntimeRPC {
+export function createMethodsRPC(project: TestProject, methodsOptions: MethodsOptions = {}): RuntimeRPC {
   const vitest = project.vitest
-  const cacheFs = options.cacheFs ?? false
+  const cacheFs = methodsOptions.cacheFs ?? false
   project.vitest.state.metadata[project.name] ??= {
     externalized: {},
     duration: {},
@@ -31,6 +32,7 @@ export function createMethodsRPC(project: TestProject, options: MethodsOptions =
       importer,
       environmentName,
       options,
+      otelCarrier,
     ) {
       const environment = project.vite.environments[environmentName]
       if (!environment) {
@@ -39,7 +41,7 @@ export function createMethodsRPC(project: TestProject, options: MethodsOptions =
 
       const start = performance.now()
 
-      return await project._fetcher(url, importer, environment, cacheFs, options).then((result) => {
+      return await project._fetcher(url, importer, environment, cacheFs, options, otelCarrier).then((result) => {
         const duration = performance.now() - start
         project.vitest.state.transformTime += duration
         const metadata = project.vitest.state.metadata[project.name]
@@ -62,6 +64,18 @@ export function createMethodsRPC(project: TestProject, options: MethodsOptions =
       const resolved = await environment.pluginContainer.resolveId(id, importer)
       if (!resolved) {
         return null
+      }
+      const file = cleanUrl(resolved.id)
+      if (resolved.external) {
+        return {
+          file,
+          // this is only used by the module mocker and it always
+          // standardizes the id to mock "node:url" and "url" at the same time
+          url: isBuiltin(resolved.id)
+            ? toBuiltin(resolved.id)
+            : resolved.id,
+          id: resolved.id,
+        }
       }
       return {
         file: cleanUrl(resolved.id),
@@ -89,7 +103,7 @@ export function createMethodsRPC(project: TestProject, options: MethodsOptions =
       return { code: result?.code }
     },
     async onQueued(file) {
-      if (options.collect) {
+      if (methodsOptions.collect) {
         vitest.state.collectFiles(project, [file])
       }
       else {
@@ -97,7 +111,7 @@ export function createMethodsRPC(project: TestProject, options: MethodsOptions =
       }
     },
     async onCollected(files) {
-      if (options.collect) {
+      if (methodsOptions.collect) {
         vitest.state.collectFiles(project, files)
       }
       else {
@@ -107,11 +121,11 @@ export function createMethodsRPC(project: TestProject, options: MethodsOptions =
     onAfterSuiteRun(meta) {
       vitest.coverageProvider?.onAfterSuiteRun(meta)
     },
-    async onTaskAnnotate(testId, annotation) {
-      return vitest._testRun.annotate(testId, annotation)
+    async onTaskArtifactRecord(testId, artifact) {
+      return vitest._testRun.recordArtifact(testId, artifact)
     },
     async onTaskUpdate(packs, events) {
-      if (options.collect) {
+      if (methodsOptions.collect) {
         vitest.state.updateTasks(packs)
       }
       else {
@@ -119,7 +133,7 @@ export function createMethodsRPC(project: TestProject, options: MethodsOptions =
       }
     },
     async onUserConsoleLog(log) {
-      if (options.collect) {
+      if (methodsOptions.collect) {
         vitest.state.updateUserLog(log)
       }
       else {

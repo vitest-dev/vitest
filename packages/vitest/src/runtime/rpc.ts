@@ -61,28 +61,24 @@ export async function rpcDone(): Promise<unknown[] | undefined> {
   return Promise.all(awaitable)
 }
 
-let previousRpc: undefined | WorkerRPC
+const onCancelCallbacks: ((reason: CancelReason) => void)[] = []
+
+export function onCancel(callback: (reason: CancelReason) => void): void {
+  onCancelCallbacks.push(callback)
+}
 
 export function createRuntimeRpc(
   options: Pick<
     BirpcOptions<RuntimeRPC>,
     'on' | 'post' | 'serialize' | 'deserialize'
   >,
-): { rpc: WorkerRPC; onCancel: Promise<CancelReason> } {
-  if (previousRpc) {
-    previousRpc.$close()
-    previousRpc = undefined
-  }
-
-  let setCancel = (_reason: CancelReason) => {}
-  const onCancel = new Promise<CancelReason>((resolve) => {
-    setCancel = resolve
-  })
-
-  const rpc = createSafeRpc(
+): WorkerRPC {
+  return createSafeRpc(
     createBirpc<RuntimeRPC, RunnerRPC>(
       {
-        onCancel: setCancel,
+        async onCancel(reason) {
+          await Promise.all(onCancelCallbacks.map(fn => fn(reason)))
+        },
       },
       {
         eventNames: [
@@ -95,13 +91,6 @@ export function createRuntimeRpc(
       },
     ),
   )
-
-  previousRpc = rpc
-
-  return {
-    rpc,
-    onCancel,
-  }
 }
 
 export function createSafeRpc(rpc: WorkerRPC): WorkerRPC {

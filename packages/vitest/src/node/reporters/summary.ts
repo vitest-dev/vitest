@@ -1,5 +1,5 @@
 import type { Vitest } from '../core'
-import type { TestSpecification } from '../spec'
+import type { TestSpecification } from '../test-specification'
 import type { Reporter } from '../types/reporter'
 import type { ReportedHookContext, TestCase, TestModule } from './reported-tasks'
 import c from 'tinyrainbow'
@@ -289,7 +289,7 @@ export class SummaryReporter implements Reporter {
 
       const slowTasks = [
         testFile.hook,
-        ...Array.from(testFile.tests.values()),
+        ...testFile.tests.values(),
       ].filter((t): t is SlowTask => t != null && t.visible)
 
       for (const [index, task] of slowTasks.entries()) {

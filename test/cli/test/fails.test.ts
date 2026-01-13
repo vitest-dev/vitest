@@ -116,16 +116,56 @@ it('prints a warning if the assertion is not awaited in the browser mode', async
       expect(Promise.resolve(1)).resolves.toBe(1)
     })
     `,
-  }, {}, {}, {
-    test: {
-      browser: {
-        enabled: true,
-        instances: [{ browser: 'chromium' }],
-        provider: playwright(),
-        headless: true,
-      },
+  }, {
+    browser: {
+      enabled: true,
+      instances: [{ browser: 'chromium' }],
+      provider: playwright(),
+      headless: true,
     },
   })
   expect(stderr).toContain('Promise returned by \`expect(actual).resolves.toBe(expected)\` was not awaited')
   expect(stderr).toContain('base.test.js:5:33')
+})
+
+it('reports test file if it failed to load', async () => {
+  const hooks: string[] = []
+  await runInlineTests({
+    'basic.test.js': `throw new Error('fail')`,
+  }, {
+    reporters: [
+      'default',
+      {
+        onTestModuleQueued(testModule) {
+          hooks.push(`onTestModuleQueued:${testModule.relativeModuleId}`)
+        },
+        onTestModuleStart(testModule) {
+          hooks.push(`onTestModuleStart:${testModule.relativeModuleId}`)
+        },
+        onTestModuleCollected(testModule) {
+          hooks.push(`onTestModuleCollected:${testModule.relativeModuleId}`)
+        },
+        onTestModuleEnd(testModule) {
+          hooks.push(`onTestModuleEnd:${testModule.relativeModuleId}`)
+        },
+      },
+    ],
+  })
+
+  expect(hooks).toMatchInlineSnapshot(`
+    [
+      "onTestModuleQueued:basic.test.js",
+      "onTestModuleCollected:basic.test.js",
+      "onTestModuleStart:basic.test.js",
+      "onTestModuleEnd:basic.test.js",
+    ]
+  `)
+})
+
+it('should warn if retry.condition is a function in config', async () => {
+  const { stderr } = await runVitest({
+    root: 'fixtures/retry-config',
+  })
+
+  expect(stderr).toContain('Warning: retry.condition function cannot be used inside a config file.')
 })

@@ -83,15 +83,19 @@ async function onMessage(message: WorkerRequest, project: TestProject, options: 
         )
         taskFile.mode = 'run'
         taskFile.result = { state: 'pass' }
+        const taskName = 'custom test'
         const taskTest: RunnerTestCase = {
           type: 'test',
-          name: 'custom test',
+          name: taskName,
+          fullName: `${taskFile.fullName} > ${taskName}`,
+          fullTestName: `${taskFile.fullTestName} > ${taskName}`,
           id: `${taskFile.id}_0`,
           context: {} as any,
           suite: taskFile,
           mode: 'run',
           meta: {},
           annotations: [],
+          artifacts: [],
           timeout: 0,
           file: taskFile,
           result: {

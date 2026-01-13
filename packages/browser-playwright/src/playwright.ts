@@ -365,6 +365,11 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
     if (this.project.config.browser.ui) {
       options.viewport = null
     }
+    // TODO: investigate the consequences for Vitest 5
+    // else {
+    // if UI is disabled, keep the iframe scale to 1
+    // options.viewport ??= this.project.config.browser.viewport
+    // }
     const context = await browser.newContext(options)
     await this._throwIfClosing(context)
     if (actionTimeout != null) {

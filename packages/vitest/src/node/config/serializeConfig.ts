@@ -11,7 +11,6 @@ export function serializeConfig(project: TestProject): SerializedConfig {
     environmentOptions: config.environmentOptions,
     mode: config.mode,
     isolate: config.isolate,
-    fileParallelism: config.fileParallelism,
     maxWorkers: config.maxWorkers,
     base: config.base,
     logHeapUsage: config.logHeapUsage,
@@ -131,5 +130,10 @@ export function serializeConfig(project: TestProject): SerializedConfig {
     serializedDefines: config.browser.enabled
       ? ''
       : project._serializedDefines || '',
+    experimental: {
+      fsModuleCache: config.experimental.fsModuleCache ?? false,
+      printImportBreakdown: config.experimental.printImportBreakdown,
+      openTelemetry: config.experimental.openTelemetry,
+    },
   }
 }

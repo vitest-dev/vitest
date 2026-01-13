@@ -66,6 +66,20 @@ type SupportedCodecs = Parameters<typeof getCodec>[0]
 
 const supportedExtensions = ['png'] satisfies SupportedCodecs[]
 
+export interface ResolvedOptions {
+  codec: ReturnType<typeof getCodec>
+  comparator: ReturnType<typeof getComparator>
+  resolvedOptions: GlobalOptions
+  paths: {
+    reference: string
+    diffs: {
+      reference: string
+      actual: string
+      diff: string
+    }
+  }
+}
+
 export function resolveOptions(
   {
     context,
@@ -78,19 +92,7 @@ export function resolveOptions(
     testName: string
     options: ScreenshotMatcherOptions
   },
-): {
-  codec: ReturnType<typeof getCodec>
-  comparator: ReturnType<typeof getComparator>
-  resolvedOptions: GlobalOptions
-  paths: {
-    reference: string
-    diffs: {
-      reference: string
-      actual: string
-      diff: string
-    }
-  }
-} {
+): ResolvedOptions {
   if (context.testPath === undefined) {
     throw new Error('`resolveOptions` has to be used in a test file')
   }

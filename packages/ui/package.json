@@ -1,7 +1,7 @@
 {
   "name": "@vitest/ui",
   "type": "module",
-  "version": "4.0.3",
+  "version": "4.0.17",
   "description": "UI for Vitest",
   "license": "MIT",
   "funding": "https://opencollective.com/vitest",
@@ -57,10 +57,10 @@
     "tinyrainbow": "catalog:"
   },
   "devDependencies": {
-    "@faker-js/faker": "^10.0.0",
+    "@faker-js/faker": "^10.2.0",
     "@iconify-json/carbon": "catalog:",
     "@iconify-json/logos": "catalog:",
-    "@types/codemirror": "^5.60.16",
+    "@types/codemirror": "^5.60.17",
     "@types/d3-force": "^3.0.10",
     "@types/d3-selection": "^3.0.11",
     "@types/ws": "catalog:",
@@ -75,19 +75,19 @@
     "birpc": "catalog:",
     "codemirror": "^5.65.18",
     "codemirror-theme-vars": "^0.1.2",
-    "d3-graph-controller": "^3.1.2",
+    "d3-graph-controller": "^3.1.6",
     "floating-vue": "^5.2.2",
     "mime": "^4.1.0",
-    "rollup": "^4.52.0",
-    "splitpanes": "^3.2.0",
+    "rollup": "^4.55.1",
+    "splitpanes": "^4.0.4",
     "typescript": "^5.9.3",
     "unocss": "catalog:",
     "vite": "^5.0.0",
-    "vite-plugin-pages": "^0.33.1",
-    "vitest-browser-vue": "2.0.0-beta.1",
+    "vite-plugin-pages": "^0.33.2",
+    "vitest-browser-vue": "2.0.1",
     "vue": "catalog:",
-    "vue-router": "^4.5.1",
-    "vue-tsc": "^3.1.1",
+    "vue-router": "^4.6.4",
+    "vue-tsc": "^3.2.2",
     "vue-virtual-scroller": "2.0.0-beta.8"
   }
 }

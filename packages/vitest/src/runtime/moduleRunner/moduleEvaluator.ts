@@ -1,15 +1,16 @@
+import type { Span } from '@opentelemetry/api'
 import type {
   EvaluatedModuleNode,
   ModuleEvaluator,
   ModuleRunnerContext,
   ModuleRunnerImportMeta,
 } from 'vite/module-runner'
+import type { VitestEvaluatedModules } from './evaluatedModules'
 import type { ModuleExecutionInfo } from './moduleDebug'
 import type { VitestVmOptions } from './moduleRunner'
 import { createRequire, isBuiltin } from 'node:module'
-import { pathToFileURL } from 'node:url'
+import { fileURLToPath, pathToFileURL } from 'node:url'
 import vm from 'node:vm'
-import { isAbsolute } from 'pathe'
 import {
   ssrDynamicImportKey,
   ssrExportAllKey,
@@ -17,16 +18,22 @@ import {
   ssrImportMetaKey,
   ssrModuleExportsKey,
 } from 'vite/module-runner'
+import { Traces } from '../../utils/traces'
 import { ModuleDebug } from './moduleDebug'
 
 const isWindows = process.platform === 'win32'
 
 export interface VitestModuleEvaluatorOptions {
+  evaluatedModules?: VitestEvaluatedModules
   interopDefault?: boolean | undefined
   moduleExecutionInfo?: ModuleExecutionInfo
   getCurrentTestFilepath?: () => string | undefined
   compiledFunctionArgumentsNames?: string[]
   compiledFunctionArgumentsValues?: unknown[]
+  /**
+   * @internal
+   */
+  traces?: Traces
 }
 
 export class VitestModuleEvaluator implements ModuleEvaluator {
@@ -44,13 +51,17 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
   }
 
   private debug = new ModuleDebug()
+  private _otel: Traces
+  private _evaluatedModules?: VitestEvaluatedModules
 
   constructor(
     vmOptions?: VitestVmOptions | undefined,
     private options: VitestModuleEvaluatorOptions = {},
   ) {
+    this._otel = options.traces || new Traces({ enabled: false })
     this.vm = vmOptions
     this.stubs = getDefaultRequestStubs(vmOptions?.context)
+    this._evaluatedModules = options.evaluatedModules
     if (options.compiledFunctionArgumentsNames) {
       this.compiledFunctionArgumentsNames = options.compiledFunctionArgumentsNames
     }
@@ -74,6 +85,7 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
 
   private convertIdToImportUrl(id: string) {
     // TODO: vitest returns paths for external modules, but Vite returns file://
+    // REMOVE WHEN VITE 6 SUPPORT IS OVER
     // unfortunetly, there is a bug in Vite where ID is resolved incorrectly, so we can't return files until the fix is merged
     // https://github.com/vitejs/vite/pull/20449
     if (!isWindows || isBuiltin(id) || /^(?:node:|data:|http:|https:|file:)/.test(id)) {
@@ -93,9 +105,29 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
 
     const file = this.convertIdToImportUrl(id)
 
-    const namespace = this.vm
-      ? await this.vm.externalModulesExecutor.import(file)
-      : await import(file)
+    // this will always be 1 element because it's cached after load
+    const importers = this._evaluatedModules?.getModuleById(id)?.importers
+    const importer = importers?.values().next().value
+    const filename = id.startsWith('file://') ? fileURLToPath(id) : id
+    const finishModuleExecutionInfo = this.debug.startCalculateModuleExecutionInfo(
+      filename,
+      {
+        startOffset: 0,
+        external: true,
+        importer,
+      },
+    )
+    const namespace = await this._otel.$(
+      'vitest.module.external',
+      {
+        attributes: { 'code.file.path': file },
+      },
+      () => this.vm
+        ? this.vm.externalModulesExecutor.import(file)
+        : import(file),
+    ).finally(() => {
+      this.options.moduleExecutionInfo?.set(filename, finishModuleExecutionInfo())
+    })
 
     if (!this.shouldInterop(file, namespace)) {
       return namespace
@@ -139,6 +171,18 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
     code: string,
     module: Readonly<EvaluatedModuleNode>,
   ): Promise<any> {
+    return this._otel.$(
+      'vitest.module.inline',
+      span => this._runInlinedModule(context, code, module, span),
+    )
+  }
+
+  private async _runInlinedModule(
+    context: ModuleRunnerContext,
+    code: string,
+    module: Readonly<EvaluatedModuleNode>,
+    span: Span,
+  ): Promise<any> {
     context.__vite_ssr_import_meta__.env = this.env
 
     const { Reflect, Proxy, Object } = this.primitives
@@ -157,6 +201,7 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
       },
       getPrototypeOf: () => Object.prototype,
       set: (_, p, value) => {
+        span.addEvent(`cjs export proxy is triggered for ${String(p)}`)
         // treat "module.exports =" the same as "exports.default =" to not have nested "default.default",
         // so "exports.default" becomes the actual module
         if (
@@ -164,6 +209,7 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
           && this.shouldInterop(module.file, { default: value })
           && cjsExports !== value
         ) {
+          span.addEvent('`exports.default` is assigned, copying values')
           exportAll(cjsExports, value)
           exportsObject.default = value
           return true
@@ -179,6 +225,7 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
           moduleExports !== SYMBOL_NOT_DEFINED
           && isPrimitive(moduleExports)
         ) {
+          span.addEvent(`\`exports.${String(p)}\` is assigned, but module.exports is a primitive. assigning "undefined" values instead to comply with ESM`)
           defineExport(exportsObject, p, () => undefined)
           return true
         }
@@ -197,6 +244,7 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
 
     const moduleProxy = {
       set exports(value) {
+        span.addEvent('`module.exports` is assigned directly, copying all properties to `exports`')
         exportAll(cjsExports, value)
         exportsObject.default = value
         moduleExports = value
@@ -220,7 +268,11 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
     const filename = meta.filename
     const dirname = meta.dirname
 
-    const require = this.createRequire(filename)
+    span.setAttributes({
+      'code.file.path': filename,
+    })
+
+    const require = this.createRequire(meta.url)
 
     const argumentsList = [
       ssrModuleExportsKey,
@@ -244,6 +296,8 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
       argumentsList.push(...this.compiledFunctionArgumentsNames)
     }
 
+    span.setAttribute('vitest.module.arguments', argumentsList)
+
     // add 'use strict' since ESM enables it by default
     const codeDefinition = `'use strict';async (${argumentsList.join(
       ',',
@@ -255,28 +309,23 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
       columnOffset: -codeDefinition.length,
     }
 
-    const finishModuleExecutionInfo = this.debug.startCalculateModuleExecutionInfo(options.filename, codeDefinition.length)
+    // this will always be 1 element because it's cached after load
+    const importer = module.importers.values().next().value
+    const finishModuleExecutionInfo = this.debug.startCalculateModuleExecutionInfo(options.filename, {
+      startOffset: codeDefinition.length,
+      importer,
+    })
 
     try {
       const initModule = this.vm
         ? vm.runInContext(wrappedCode, this.vm.context, options)
         : vm.runInThisContext(wrappedCode, options)
 
-      const dynamicRequest = async (dep: string, options: ImportCallOptions) => {
-        dep = String(dep)
-        // TODO: support more edge cases?
-        // vite doesn't support dynamic modules by design, but we have to
-        if (dep[0] === '#') {
-          return context[ssrDynamicImportKey](wrapId(dep), options)
-        }
-        return context[ssrDynamicImportKey](dep, options)
-      }
-
       await initModule(
         context[ssrModuleExportsKey],
         context[ssrImportMetaKey],
         context[ssrImportKey],
-        dynamicRequest,
+        context[ssrDynamicImportKey],
         context[ssrExportAllKey],
         // vite 7 support, remove when vite 7+ is supported
         (context as any).__vite_ssr_exportName__
@@ -303,11 +352,6 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
   }
 
   private createRequire(filename: string) {
-    // \x00 is a rollup convention for virtual files,
-    // it is not allowed in actual file names
-    if (filename[0] === '\x00' || !isAbsolute(filename)) {
-      return () => ({})
-    }
     return this.vm
       ? this.vm.externalModulesExecutor.createRequire(filename)
       : createRequire(filename)

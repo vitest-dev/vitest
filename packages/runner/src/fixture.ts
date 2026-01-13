@@ -270,7 +270,7 @@ function resolveFixtureValue(
 async function resolveFixtureFunction(
   fixtureFn: (
     context: unknown,
-    useFn: (arg: unknown) => Promise<void>
+    useFn: (arg: unknown) => Promise<void>,
   ) => Promise<void>,
   context: unknown,
   cleanupFnArray: (() => void | Promise<void>)[],

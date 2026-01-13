@@ -42,7 +42,7 @@ Substitutes all imported modules from provided `path` with another module. You c
 
 In order to hoist `vi.mock`, Vitest statically analyzes your files. It indicates that `vi` that was not directly imported from the `vitest` package (for example, from some utility file) cannot be used. Use `vi.mock` with `vi` imported from `vitest`, or enable [`globals`](/config/#globals) config option.
 
-Vitest will not mock modules that were imported inside a [setup file](/config/#setupfiles) because they are cached by the time a test file is running. You can call [`vi.resetModules()`](#vi-resetmodules) inside [`vi.hoisted`](#vi-hoisted) to clear all module caches before running a test file.
+Vitest will not mock modules that were imported inside a [setup file](/config/setupfiles) because they are cached by the time a test file is running. You can call [`vi.resetModules()`](#vi-resetmodules) inside [`vi.hoisted`](#vi-hoisted) to clear all module caches before running a test file.
 :::
 
 If the `factory` function is defined, all imports will return its result. Vitest calls factory only once and caches results for all subsequent imports until [`vi.unmock`](#vi-unmock) or [`vi.doUnmock`](#vi-dounmock) is called.
@@ -62,7 +62,7 @@ const result = calculator(1, 2)
 
 expect(result).toBe(3)
 expect(calculator).toHaveBeenCalledWith(1, 2)
-expect(calculator).toHaveReturned(3)
+expect(calculator).toHaveReturnedWith(3)
 ```
 
 Vitest also supports a module promise instead of a string in the `vi.mock` and `vi.doMock` methods for better IDE support. When the file is moved, the path will be updated, and `importOriginal` inherits the type automatically. Using this signature will also enforce factory return type to be compatible with the original module (keeping exports optional).
@@ -168,7 +168,7 @@ axios.get(`/apples/${increment(1)}`)
 ```
 
 ::: warning
-Beware that if you don't call `vi.mock`, modules **are not** mocked automatically. To replicate Jest's automocking behaviour, you can call `vi.mock` for each required module inside [`setupFiles`](/config/#setupfiles).
+Beware that if you don't call `vi.mock`, modules **are not** mocked automatically. To replicate Jest's automocking behaviour, you can call `vi.mock` for each required module inside [`setupFiles`](/config/setupfiles).
 :::
 
 If there is no `__mocks__` folder or a factory provided, Vitest will import the original module and auto-mock all its exports. For the rules applied, see [algorithm](/guide/mocking/modules#automocking-algorithm).
@@ -179,11 +179,11 @@ If there is no `__mocks__` folder or a factory provided, Vitest will import the 
 function doMock(
   path: string,
   factory?: MockOptions | MockFactory<unknown>
-): void
+): Disposable
 function doMock<T>(
   module: Promise<T>,
   factory?: MockOptions | MockFactory<T>
-): void
+): Disposable
 ```
 
 The same as [`vi.mock`](#vi-mock), but it's not hoisted to the top of the file, so you can reference variables in the global file scope. The next [dynamic import](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/import) of the module will be mocked.
@@ -228,6 +228,24 @@ test('importing the next module imports mocked one', async () => {
   expect(mockedIncrement(1)).toBe(103)
 })
 ```
+
+::: tip
+In environments that support [Explicit Resource Management](https://github.com/tc39/proposal-explicit-resource-management), you can use `using` on the value returned from `vi.doMock()` to automatically call [`vi.doUnmock()`](#vi-dounmock) on the mocked module when the containing block is exited. This is especially useful when mocking a dynamically imported module for a single test case.
+
+```ts
+it('uses a mocked version of my-module', () => {
+  using _mockDisposable = vi.doMock('my-module')
+
+  const myModule = await import('my-module') // mocked
+
+  // my-module is restored here
+})
+
+it('uses the normal version of my-module again', () => {
+  const myModule = await import('my-module') // not mocked
+})
+```
+:::
 
 ### vi.mocked
 
@@ -452,7 +470,7 @@ expect(Cart).toHaveBeenCalled()
 ### vi.mockObject <Version>3.2.0</Version>
 
 ```ts
-function mockObject<T>(value: T): MaybeMockedDeep<T>
+function mockObject<T>(value: T, options?: MockOptions): MaybeMockedDeep<T>
 ```
 
 Deeply mocks properties and methods of a given object in the same way as `vi.mock()` mocks module exports. See [automocking](/guide/mocking.html#automocking-algorithm) for the detail.
@@ -850,7 +868,7 @@ await vi.advanceTimersToNextTimerAsync() // log: 3
 function advanceTimersToNextFrame(): Vitest
 ```
 
-Similar to [`vi.advanceTimersByTime`](https://vitest.dev/api/vi#vi-advancetimersbytime), but will advance timers by the milliseconds needed to execute callbacks currently scheduled with `requestAnimationFrame`.
+Similar to [`vi.advanceTimersByTime`](/api/vi#vi-advancetimersbytime), but will advance timers by the milliseconds needed to execute callbacks currently scheduled with `requestAnimationFrame`.
 
 ```ts
 let frameRendered = false

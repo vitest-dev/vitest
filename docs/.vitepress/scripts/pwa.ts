@@ -50,7 +50,7 @@ export const pwa: PwaOptions = {
       },
     ],
     screenshots: [{
-      src: 'og.png',
+      src: 'og.jpg',
       sizes: '2258x1185',
       type: 'image/png',
       label: `Screenshot of ${vitestName}`,
@@ -65,7 +65,6 @@ export const pwa: PwaOptions = {
   },
   workbox: {
     navigateFallbackDenylist: [/^\/new$/],
-    // warning: sponsors/antfu.svg is 2.51 MB, and won't be precached
     maximumFileSizeToCacheInBytes: 3 * 1024 * 1024, // <== 3MB
     globPatterns: ['**/*.{css,js,html,png,svg,ico,txt,woff2,json}'],
     // Rollup 4 change the layout: don't calculate revision (hash)

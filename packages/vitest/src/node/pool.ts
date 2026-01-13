@@ -1,8 +1,9 @@
 import type { Awaitable } from '@vitest/utils'
+import type { ContextTestEnvironment } from '../types/worker'
 import type { Vitest } from './core'
 import type { PoolTask } from './pools/types'
 import type { TestProject } from './project'
-import type { TestSpecification } from './spec'
+import type { TestSpecification } from './test-specification'
 import type { BuiltinPool, ResolvedConfig } from './types/config'
 import * as nodeos from 'node:os'
 import { isatty } from 'node:tty'
@@ -19,7 +20,7 @@ const suppressWarningsPath = resolve(rootDir, './suppress-warnings.cjs')
 
 type RunWithFiles = (
   files: TestSpecification[],
-  invalidates?: string[]
+  invalidates?: string[],
 ) => Promise<void>
 
 export interface ProcessPool {
@@ -87,7 +88,7 @@ export function createPool(ctx: Vitest): ProcessPool {
 
     const sorted = await sequencer.sort(specs)
     const environments = await getSpecificationsEnvironments(specs)
-    const groups = groupSpecs(sorted)
+    const groups = groupSpecs(sorted, environments)
 
     const projectEnvs = new WeakMap<TestProject, Partial<NodeJS.ProcessEnv>>()
     const projectExecArgvs = new WeakMap<TestProject, string[]>()
@@ -146,14 +147,16 @@ export function createPool(ctx: Vitest): ProcessPool {
 
         taskGroup.push({
           context: {
-            pool,
-            config: project.serializedConfig,
-            files: specs.map(spec => ({ filepath: spec.moduleId, testLocations: spec.testLines })),
+            files: specs.map(spec => ({
+              filepath: spec.moduleId,
+              testLocations: spec.testLines,
+              testNamePattern: spec.testNamePattern,
+              testIds: spec.testIds,
+            })),
             invalidates,
-            environment,
-            projectName: project.name,
             providedContext: project.getProvidedContext(),
             workerId: workerId++,
+            environment,
           },
           project,
           env,
@@ -221,7 +224,11 @@ export function createPool(ctx: Vitest): ProcessPool {
     runTests: (files, invalidates) => executeTests('run', files, invalidates),
     collectTests: (files, invalidates) => executeTests('collect', files, invalidates),
     async close() {
-      await Promise.all([pool.close(), browserPool?.close?.()])
+      await Promise.all([
+        pool.close(),
+        browserPool?.close?.(),
+        ...ctx.projects.map(project => project.typechecker?.stop()),
+      ])
     },
   }
 }
@@ -271,8 +278,8 @@ function resolveOptions(ctx: Vitest) {
       ...execArgv,
       ...conditions,
       '--experimental-import-meta-resolve',
-      '--require',
-      suppressWarningsPath,
+      // https://github.com/vitest-dev/vitest/issues/8896
+      ...((globalThis as any).Deno ? [] : ['--require', suppressWarningsPath]),
     ],
     env: {
       TEST: 'true',
@@ -330,9 +337,8 @@ function getMemoryLimit(config: ResolvedConfig, pool: string) {
   return null
 }
 
-function groupSpecs(specs: TestSpecification[]) {
-  // Test files are passed to test runner one at a time, except Typechecker.
-  // TODO: Should non-isolated test files be passed to test runner all at once?
+function groupSpecs(specs: TestSpecification[], environments: Awaited<ReturnType<typeof getSpecificationsEnvironments>>) {
+  // Test files are passed to test runner one at a time, except for Typechecker or when "--maxWorker=1 --no-isolate"
   type SpecsForRunner = TestSpecification[]
 
   // Tests in a single group are executed with `maxWorkers` parallelism.
@@ -346,6 +352,43 @@ function groupSpecs(specs: TestSpecification[]) {
   // Type tests are run in a single group, per project
   const typechecks: Record<string, TestSpecification[]> = {}
 
+  const serializedEnvironmentOptions = new Map<ContextTestEnvironment, string>()
+
+  function getSerializedOptions(env: ContextTestEnvironment) {
+    const options = serializedEnvironmentOptions.get(env)
+
+    if (options) {
+      return options
+    }
+
+    const serialized = JSON.stringify(env.options)
+    serializedEnvironmentOptions.set(env, serialized)
+    return serialized
+  }
+
+  function isEqualEnvironments(a: TestSpecification, b: TestSpecification) {
+    const aEnv = environments.get(a)
+    const bEnv = environments.get(b)
+
+    if (!aEnv && !bEnv) {
+      return true
+    }
+
+    if (!aEnv || !bEnv || aEnv.name !== bEnv.name) {
+      return false
+    }
+
+    if (!aEnv.options && !bEnv.options) {
+      return true
+    }
+
+    if (!aEnv.options || !bEnv.options) {
+      return false
+    }
+
+    return getSerializedOptions(aEnv) === getSerializedOptions(bEnv)
+  }
+
   specs.forEach((spec) => {
     if (spec.pool === 'typescript') {
       typechecks[spec.project.name] ||= []
@@ -354,20 +397,30 @@ function groupSpecs(specs: TestSpecification[]) {
     }
 
     const order = spec.project.config.sequence.groupOrder
+    const isolate = spec.project.config.isolate
 
-    // Files that have disabled parallelism and default groupId are set into their own group
-    if (order === 0 && spec.project.config.fileParallelism === false) {
+    // Files that have disabled parallelism and default groupOrder are set into their own group
+    if (isolate === true && order === 0 && spec.project.config.maxWorkers === 1) {
       return sequential.specs.push([spec])
     }
 
     const maxWorkers = resolveMaxWorkers(spec.project)
     groups[order] ||= { specs: [], maxWorkers }
 
-    // Multiple projects with different maxWorkers but same groupId
+    // Multiple projects with different maxWorkers but same groupOrder
     if (groups[order].maxWorkers !== maxWorkers) {
       const last = groups[order].specs.at(-1)?.at(-1)?.project.name
 
-      throw new Error(`Projects "${last}" and "${spec.project.name}" have different 'maxWorkers' but same 'sequence.groupId'.\nProvide unique 'sequence.groupId' for them.`)
+      throw new Error(`Projects "${last}" and "${spec.project.name}" have different 'maxWorkers' but same 'sequence.groupOrder'.\nProvide unique 'sequence.groupOrder' for them.`)
+    }
+
+    // Non-isolated single worker can receive all files at once
+    if (isolate === false && maxWorkers === 1) {
+      const previous = groups[order].specs[0]?.[0]
+
+      if (previous && previous.project.name === spec.project.name && isEqualEnvironments(spec, previous)) {
+        return groups[order].specs[0].push(spec)
+      }
     }
 
     groups[order].specs.push([spec])
