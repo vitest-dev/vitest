@@ -9,6 +9,7 @@ import { setupChaiConfig } from '../../integrations/chai/config'
 import { loadEnvironment } from '../../integrations/env/loader'
 import { NativeModuleRunner } from '../../utils/nativeModuleRunner'
 import { Traces } from '../../utils/traces'
+import { emitModuleRunner } from '../listeners'
 import { listenForErrors } from '../moduleRunner/errorCatcher'
 import { VitestEvaluatedModules } from '../moduleRunner/evaluatedModules'
 import { createNodeImportMeta } from '../moduleRunner/moduleRunner'
@@ -163,6 +164,8 @@ export async function runBaseTests(method: 'run' | 'collect', state: WorkerGloba
     createImportMeta: createNodeImportMeta,
     traces,
   })
+
+  emitModuleRunner(moduleRunner as any)
 
   await run(
     method,

@@ -35,6 +35,8 @@ export async function collectTests(
       { 'code.file.path': filepath },
       async () => {
         const testLocations = typeof spec === 'string' ? undefined : spec.testLocations
+        const testNamePattern = typeof spec === 'string' ? undefined : spec.testNamePattern
+        const testIds = typeof spec === 'string' ? undefined : spec.testIds
 
         const file = createFileTask(filepath, config.root, config.name, runner.pool, runner.viteEnvironment)
         setFileContext(file, Object.create(null))
@@ -108,8 +110,9 @@ export async function collectTests(
         const hasOnlyTasks = someTasksAreOnly(file)
         interpretTaskModes(
           file,
-          config.testNamePattern,
+          testNamePattern ?? config.testNamePattern,
           testLocations,
+          testIds,
           hasOnlyTasks,
           false,
           config.allowOnly,

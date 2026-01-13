@@ -2,7 +2,7 @@ import type { TestProject, Vitest } from 'vitest/node'
 import { describe, expect, test, vi } from 'vitest'
 import { BaseSequencer } from '../../../packages/vitest/src/node/sequencers/BaseSequencer'
 import { RandomSequencer } from '../../../packages/vitest/src/node/sequencers/RandomSequencer'
-import { TestSpecification } from '../../../packages/vitest/src/node/spec'
+import { TestSpecification } from '../../../packages/vitest/src/node/test-specification'
 
 function buildCtx(config?: Partial<Vitest['config']>) {
   return {

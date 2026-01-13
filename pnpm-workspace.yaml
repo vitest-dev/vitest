@@ -25,6 +25,7 @@ packages:
   - test/*
   - test/config/fixtures/conditions-pkg
 overrides:
+  '@types/node': $@types/node
   '@vitest/browser': workspace:*
   '@vitest/browser-playwright': workspace:*
   '@vitest/browser-preview': workspace:*
@@ -44,8 +45,9 @@ patchedDependencies:
   istanbul-lib-source-maps: patches/istanbul-lib-source-maps.patch
 
 catalog:
-  '@iconify-json/carbon': ^1.2.14
+  '@iconify-json/carbon': ^1.2.16
   '@iconify-json/logos': ^1.2.10
+  '@iconify/vue': ^5.0.0
   '@jridgewell/remapping': ^2.3.5
   '@jridgewell/trace-mapping': 0.3.31
   '@types/chai': ^5.2.2
@@ -55,13 +57,13 @@ catalog:
   '@types/istanbul-lib-source-maps': ^4.0.4
   '@types/istanbul-reports': ^3.0.4
   '@types/ws': ^8.18.1
-  '@unocss/reset': ^66.5.9
-  '@vitejs/plugin-vue': ^6.0.2
+  '@unocss/reset': ^66.5.12
+  '@vitejs/plugin-vue': ^6.0.3
   '@vueuse/core': ^12.8.2
   acorn-walk: ^8.3.4
   birpc: ^4.0.0
   cac: ^6.7.14
-  chai: ^6.2.1
+  chai: ^6.2.2
   flatted: 3.3.3
   istanbul-lib-coverage: ^3.2.2
   istanbul-lib-report: ^3.0.1
@@ -69,7 +71,7 @@ catalog:
   istanbul-reports: ^3.2.0
   magic-string: ^0.30.21
   magicast: ^0.5.1
-  msw: ^2.12.3
+  msw: ^2.12.7
   obug: ^2.1.1
   pathe: ^2.0.3
   playwright: ^1.57.0
@@ -79,10 +81,10 @@ catalog:
   tinyglobby: ^0.2.15
   tinyrainbow: ^3.0.3
   typescript: ^5.9.3
-  unocss: ^66.5.9
+  unocss: ^66.5.12
   vitest-sonar-reporter: 3.0.0
-  vue: ^3.5.25
-  ws: ^8.18.3
+  vue: ^3.5.26
+  ws: ^8.19.0
 onlyBuiltDependencies:
   - '@sveltejs/kit'
   - '@swc/core'

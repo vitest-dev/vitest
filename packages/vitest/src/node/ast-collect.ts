@@ -45,6 +45,14 @@ interface LocalCallDefinition {
 const debug = createDebugger('vitest:ast-collect-info')
 const verbose = createDebugger('vitest:ast-collect-verbose')
 
+function isTestFunctionName(name: string) {
+  return name === 'it' || name === 'test' || name.startsWith('test') || name.endsWith('Test')
+}
+
+function isVitestFunctionName(name: string) {
+  return name === 'describe' || name === 'suite' || isTestFunctionName(name)
+}
+
 function astParseFile(filepath: string, code: string) {
   const ast = parseAst(code)
 
@@ -75,7 +83,7 @@ function astParseFile(filepath: string, code: string) {
     if (callee.type === 'MemberExpression') {
       if (
         callee.object?.type === 'Identifier'
-        && ['it', 'test', 'describe', 'suite'].includes(callee.object.name)
+        && isVitestFunctionName(callee.object.name)
       ) {
         return callee.object?.name
       }
@@ -108,7 +116,7 @@ function astParseFile(filepath: string, code: string) {
       if (!name) {
         return
       }
-      if (!['it', 'test', 'describe', 'suite'].includes(name)) {
+      if (!isVitestFunctionName(name)) {
         verbose?.(`Skipping ${name} (unknown call)`)
         return
       }
@@ -175,7 +183,7 @@ function astParseFile(filepath: string, code: string) {
         start,
         end,
         name: message,
-        type: name === 'it' || name === 'test' ? 'test' : 'suite',
+        type: isTestFunctionName(name) ? 'test' : 'suite',
         mode,
         task: null as any,
         dynamic: isDynamicEach,
@@ -368,6 +376,7 @@ function createFileTask(
   interpretTaskModes(
     file,
     options.testNamePattern,
+    undefined,
     undefined,
     hasOnly,
     false,
