@@ -792,25 +792,6 @@ spy.mockRestore()
 vi.restoreAllMocks() // restore all
 ```
 
-### Module Mocking
-
-Vitest uses a different approach for module mocking:
-
-```ts
-// Sinon (not directly supported)
-// Usually required manual module replacement
-
-// Vitest
-import { vi } from 'vitest'
-
-vi.mock('./module', () => ({
-  namedExport: vi.fn(),
-  default: vi.fn(),
-}))
-```
-
-See the [Mocking guide](/guide/mocking) for more details.
-
 ### Timers
 
 Both Sinon and Vitest use `@sinonjs/fake-timers` internally:
@@ -833,70 +814,6 @@ vi.useRealTimers()
 1. **Globals**: Mocha provides globals by default. In Vitest, either import from `vitest` or enable [`globals`](/config/#globals) config
 2. **Assertion style**: You can use both Chai-style (`expect(spy).to.have.been.called`) and Jest-style (`expect(spy).toHaveBeenCalled()`)
 3. **Parallel execution**: Vitest runs tests in parallel by default, Mocha runs sequentially
-
-### Example Migration
-
-::: code-group
-```ts [Before (Mocha + Chai + Sinon)]
-const { expect } = require('chai')
-const sinon = require('sinon')
-const sinonChai = require('sinon-chai')
-const chai = require('chai')
-chai.use(sinonChai)
-
-describe('Calculator', () => {
-  let calculator
-  let spy
-
-  beforeEach(() => {
-    calculator = {
-      add: (a, b) => a + b
-    }
-    spy = sinon.spy(calculator, 'add')
-  })
-
-  afterEach(() => {
-    spy.restore()
-  })
-
-  it('should add numbers', () => {
-    const result = calculator.add(2, 3)
-
-    expect(result).to.equal(5)
-    expect(spy).to.have.been.calledOnce
-    expect(spy).to.have.been.calledWith(2, 3)
-  })
-})
-```
-
-```ts [After (Vitest)]
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-
-describe('Calculator', () => {
-  let calculator
-  let spy
-
-  beforeEach(() => {
-    calculator = {
-      add: (a, b) => a + b
-    }
-    spy = vi.spyOn(calculator, 'add')
-  })
-
-  afterEach(() => {
-    spy.mockRestore()
-  })
-
-  it('should add numbers', () => {
-    const result = calculator.add(2, 3)
-
-    expect(result).to.equal(5)
-    expect(spy).to.have.been.calledOnce
-    expect(spy).to.have.been.calledWith(2, 3)
-  })
-})
-```
-:::
 
 For more information, see:
 - [Chai-Style Spy Assertions](/api/expect#chai-style-spy-assertions)
