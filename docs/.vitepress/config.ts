@@ -882,6 +882,10 @@ export default ({ mode }: { mode: string }) => {
                     text: 'Migrating from Jest',
                     link: '/guide/migration#jest',
                   },
+                  {
+                    text: 'Migrating from Mocha + Chai + Sinon',
+                    link: '/guide/migration#mocha-chai-sinon',
+                  },
                 ],
               },
               {
