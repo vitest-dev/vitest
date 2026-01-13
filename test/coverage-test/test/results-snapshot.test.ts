@@ -5,7 +5,7 @@ test('coverage results matches snapshot', async () => {
   await runVitest({
     include: ['fixtures/test/math.test.ts', 'fixtures/test/even.test.ts'],
     coverage: {
-      reporter: ['json', 'html'],
+      reporter: 'json',
       include: [
         'fixtures/src/math.ts',
         'fixtures/src/even.ts',
