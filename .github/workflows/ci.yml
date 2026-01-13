@@ -232,14 +232,12 @@ jobs:
         run: pnpm run build
 
       - name: Test
-        run: CI=true pnpm -r --no-bail --reporter-hide-prefix --stream --sequential --filter '@vitest/test-*' --filter !test-browser run test
+        run: pnpm run test:ci
 
       - name: Test Examples
-        if: ${{ !cancelled() }}
         run: pnpm run test:examples
 
       - name: Test Browser (playwright)
-        if: ${{ !cancelled() }}
         run: pnpm run test:browser:playwright
 
       - uses: actions/upload-artifact@v6
