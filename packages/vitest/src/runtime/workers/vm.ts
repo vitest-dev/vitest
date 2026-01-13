@@ -99,7 +99,7 @@ export async function runVmTests(method: 'run' | 'collect', state: WorkerGlobalS
     traces,
   })
 
-  await emitModuleRunner(moduleRunner as any)
+  emitModuleRunner(moduleRunner as any)
 
   Object.defineProperty(context, VITEST_VM_CONTEXT_SYMBOL, {
     value: {

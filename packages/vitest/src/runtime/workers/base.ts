@@ -117,7 +117,7 @@ export async function runBaseTests(method: 'run' | 'collect', state: WorkerGloba
     traces,
   })
 
-  await emitModuleRunner(moduleRunner as any)
+  emitModuleRunner(moduleRunner as any)
 
   await run(
     method,

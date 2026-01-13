@@ -15,6 +15,6 @@ export function onModuleRunner(cb: (runner: ModuleRunner) => unknown): void {
   moduleRunnerListeners.add(cb)
 }
 
-export async function emitModuleRunner(moduleRunner: ModuleRunner): Promise<void> {
-  await Promise.all([...moduleRunnerListeners].map(l => l(moduleRunner)))
+export function emitModuleRunner(moduleRunner: ModuleRunner): void {
+  moduleRunnerListeners.forEach(l => l(moduleRunner))
 }
