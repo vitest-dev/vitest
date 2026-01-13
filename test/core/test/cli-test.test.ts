@@ -1,6 +1,6 @@
 import { resolveConfig as viteResolveConfig } from 'vite'
 import { expect, test } from 'vitest'
-import { ReportersMap } from 'vitest/reporters'
+import { ReportersMap } from 'vitest/node'
 import { createCLI, parseCLI } from '../../../packages/vitest/src/node/cli/cac.js'
 import { resolveConfig } from '../../../packages/vitest/src/node/config/resolveConfig.js'
 

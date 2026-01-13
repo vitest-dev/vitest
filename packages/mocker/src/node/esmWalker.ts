@@ -158,16 +158,14 @@ export function esmWalker(
         }
       }
       else if (node.type === 'ClassDeclaration' && node.id) {
-        // If it is a class declaration, it could be shadowing an import
-        // Add its name to the scope so it won't get replaced
+        // A class declaration name could shadow an import, so add its name to the parent scope
         const parentScope = findParentScope(parentStack)
         if (parentScope) {
           setScope(parentScope, node.id.name)
         }
       }
       else if (node.type === 'ClassExpression' && node.id) {
-        // A class expression name could shadow an import
-        // Add its name to its own scope (visible only inside the class body)
+        // A class expression name could shadow an import, so add its name to the scope
         setScope(node, node.id.name)
       }
       else if (isFunctionNode(node)) {
