@@ -9,11 +9,11 @@
   },
   "devDependencies": {
     "@opentelemetry/api": "^1.9.0",
-    "@opentelemetry/context-zone": "^2.2.0",
-    "@opentelemetry/exporter-trace-otlp-proto": "^0.208.0",
-    "@opentelemetry/resources": "^2.2.0",
-    "@opentelemetry/sdk-node": "^0.208.0",
-    "@opentelemetry/sdk-trace-web": "^2.2.0",
+    "@opentelemetry/context-zone": "^2.3.0",
+    "@opentelemetry/exporter-trace-otlp-proto": "^0.209.0",
+    "@opentelemetry/resources": "^2.3.0",
+    "@opentelemetry/sdk-node": "^0.209.0",
+    "@opentelemetry/sdk-trace-web": "^2.3.0",
     "@vitest/browser-playwright": "latest",
     "vite": "latest",
     "vitest": "latest"
