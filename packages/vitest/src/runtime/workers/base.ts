@@ -7,6 +7,7 @@ import { runInThisContext } from 'node:vm'
 import * as spyModule from '@vitest/spy'
 import { setupChaiConfig } from '../../integrations/chai/config'
 import { loadEnvironment } from '../../integrations/env/loader'
+import { emitModuleRunner } from '../listeners'
 import { VitestEvaluatedModules } from '../moduleRunner/evaluatedModules'
 import { createNodeImportMeta } from '../moduleRunner/moduleRunner'
 import { startVitestModuleRunner } from '../moduleRunner/startModuleRunner'
@@ -115,6 +116,8 @@ export async function runBaseTests(method: 'run' | 'collect', state: WorkerGloba
     createImportMeta: createNodeImportMeta,
     traces,
   })
+
+  emitModuleRunner(moduleRunner as any)
 
   await run(
     method,
