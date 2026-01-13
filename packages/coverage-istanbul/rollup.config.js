@@ -31,6 +31,7 @@ const plugins = [
   nodeResolve(),
   json(),
   commonjs({
+    // "istanbul-lib-source-maps > @jridgewell/trace-mapping" is not CJS
     // "istanbul-lib-instrument > @jridgewell/trace-mapping" is not CJS
     esmExternals: ['@jridgewell/trace-mapping'],
   }),
