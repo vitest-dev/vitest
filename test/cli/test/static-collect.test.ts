@@ -776,6 +776,7 @@ async function collectTests(code: string, options?: CliOptions) {
     {
       config: false,
       includeTaskLocation: true,
+      allowOnly: true,
       ...options,
     },
     {
