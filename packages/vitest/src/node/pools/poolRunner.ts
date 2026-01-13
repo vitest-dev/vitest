@@ -1,9 +1,11 @@
+import type { Span, TimeInput } from '@opentelemetry/api'
 import type { DeferPromise } from '@vitest/utils/helpers'
 import type { BirpcReturn } from 'birpc'
 import type { RunnerRPC, RuntimeRPC } from '../../types/rpc'
-import type { ContextTestEnvironment } from '../../types/worker'
+import type { ContextTestEnvironment, WorkerExecuteContext } from '../../types/worker'
+import type { Traces } from '../../utils/traces'
 import type { TestProject } from '../project'
-import type { PoolOptions, PoolWorker, WorkerRequest, WorkerResponse } from './types'
+import type { PoolOptions, PoolRunnerOTEL, PoolTask, PoolWorker, WorkerRequest, WorkerResponse } from './types'
 import { EventEmitter } from 'node:events'
 import { createDefer } from '@vitest/utils/helpers'
 import { createBirpc } from 'birpc'
@@ -13,12 +15,28 @@ enum RunnerState {
   IDLE = 'idle',
   STARTING = 'starting',
   STARTED = 'started',
+  START_FAILURE = 'start_failure',
   STOPPING = 'stopping',
   STOPPED = 'stopped',
 }
 
-const START_TIMEOUT = 10_000
-const STOP_TIMEOUT = 10_000
+interface StopOptions {
+  /**
+   * **Do not use unless you have good reason to.**
+   *
+   * Indicates whether to skip waiting for worker's response for `{ type: 'stop' }` message or not.
+   * By default `.stop()` terminates the workers gracefully by sending them stop-message
+   * and waiting for workers response, so that workers can do proper teardown.
+   *
+   * Force exit is used when user presses `CTRL+c` twice in row and intentionally does
+   * non-graceful exit. For example in cases where worker is stuck on synchronous thread
+   * blocking function call and it won't response to `{ type: 'stop' }` messages.
+   */
+  force: boolean
+}
+
+const START_TIMEOUT = 60_000
+const STOP_TIMEOUT = 60_000
 
 /** @experimental */
 export class PoolRunner {
@@ -26,10 +44,11 @@ export class PoolRunner {
   public poolId: number | undefined = undefined
 
   public readonly project: TestProject
-  public readonly environment: ContextTestEnvironment
+  public environment: ContextTestEnvironment
 
   private _state: RunnerState = RunnerState.IDLE
   private _operationLock: DeferPromise<void> | null = null
+  private _terminatePromise: DeferPromise<void> = createDefer()
 
   private _eventEmitter: EventEmitter<{
     message: [WorkerResponse]
@@ -37,10 +56,18 @@ export class PoolRunner {
     rpc: [unknown]
   }> = new EventEmitter()
 
+  private _offCancel: () => void
   private _rpc: BirpcReturn<RunnerRPC, RuntimeRPC>
+
+  private _otel: PoolRunnerOTEL | null = null
+  private _traces: Traces
 
   public get isTerminated(): boolean {
     return this._state === RunnerState.STOPPED
+  }
+
+  public waitForTerminated(): Promise<void> {
+    return this._terminatePromise
   }
 
   public get isStarted(): boolean {
@@ -50,6 +77,23 @@ export class PoolRunner {
   constructor(options: PoolOptions, public worker: PoolWorker) {
     this.project = options.project
     this.environment = options.environment
+
+    const vitest = this.project.vitest
+    this._traces = vitest._traces
+    if (this._traces.isEnabled()) {
+      const { span: workerSpan, context } = this._traces.startContextSpan('vitest.worker')
+      this._otel = {
+        span: workerSpan,
+        workerContext: context,
+        files: [],
+      }
+      this._otel.span.setAttributes({
+        'vitest.worker.name': this.worker.name,
+        'vitest.project': this.project.name,
+        'vitest.environment': this.environment.name,
+      })
+    }
+
     this._rpc = createBirpc<RunnerRPC, RuntimeRPC>(
       createMethodsRPC(this.project, {
         collect: options.method === 'collect',
@@ -57,13 +101,26 @@ export class PoolRunner {
       }),
       {
         eventNames: ['onCancel'],
-        post: request => this.postMessage(request),
+        post: (request) => {
+          if (this._state !== RunnerState.STOPPING && this._state !== RunnerState.STOPPED) {
+            this.postMessage(request)
+          }
+        },
         on: callback => this._eventEmitter.on('rpc', callback),
         timeout: -1,
       },
     )
 
-    this.project.vitest.onCancel(reason => this._rpc.onCancel(reason))
+    this._offCancel = vitest.onCancel(reason => this._rpc.onCancel(reason))
+  }
+
+  /**
+   * "reconfigure" can only be called if `environment` is different, since different project always
+   * requires a new PoolRunner instance.
+   */
+  public reconfigure(task: PoolTask): void {
+    this.environment = task.context.environment
+    this._otel?.span.setAttribute('vitest.environment', this.environment.name)
   }
 
   postMessage(message: WorkerRequest): void {
@@ -74,7 +131,39 @@ export class PoolRunner {
     }
   }
 
-  async start(): Promise<void> {
+  startTracesSpan(name: string): Span {
+    const traces = this._traces
+    if (!this._otel) {
+      return traces.startSpan(name)
+    }
+    const { span, context } = traces.startContextSpan(name, this._otel.workerContext)
+    this._otel.currentContext = context
+    const end = span.end.bind(span)
+    span.end = (endTime?: TimeInput) => {
+      this._otel!.currentContext = undefined
+      return end(endTime)
+    }
+    return span
+  }
+
+  request(method: 'run' | 'collect', context: WorkerExecuteContext): void {
+    this._otel?.files.push(...context.files.map(f => f.filepath))
+    return this.postMessage({
+      __vitest_worker_request__: true,
+      type: method,
+      context,
+      otelCarrier: this.getOTELCarrier(),
+    } satisfies WorkerRequest)
+  }
+
+  private getOTELCarrier() {
+    const activeContext = this._otel?.currentContext || this._otel?.workerContext
+    return activeContext
+      ? this._traces.getContextCarrier(activeContext)
+      : undefined
+  }
+
+  async start(options: { workerId: number }): Promise<void> {
     // Wait for any ongoing operation to complete
     if (this._operationLock) {
       await this._operationLock
@@ -91,10 +180,15 @@ export class PoolRunner {
     // Create operation lock to prevent concurrent start/stop
     this._operationLock = createDefer()
 
+    let startSpan: Span | undefined
     try {
       this._state = RunnerState.STARTING
 
-      await this.worker.start()
+      await this._traces.$(
+        `vitest.${this.worker.name}.start`,
+        { context: this._otel?.workerContext },
+        () => this.worker.start(),
+      )
 
       // Attach event listeners AFTER starting worker to avoid issues
       // if worker.start() fails
@@ -102,10 +196,18 @@ export class PoolRunner {
       this.worker.on('exit', this.emitUnexpectedExit)
       this.worker.on('message', this.emitWorkerMessage)
 
+      startSpan = this.startTracesSpan('vitest.worker.start')
       const startPromise = this.withTimeout(this.waitForStart(), START_TIMEOUT)
+      const globalConfig = this.project.vitest.config.experimental.openTelemetry
+      const projectConfig = this.project.config.experimental.openTelemetry
+
+      const tracesEnabled = projectConfig?.enabled ?? globalConfig?.enabled === true
+      const tracesSdk = projectConfig?.sdkPath ?? globalConfig?.sdkPath
 
       this.postMessage({
         type: 'start',
+        poolId: this.poolId!,
+        workerId: options.workerId,
         __vitest_worker_request__: true,
         options: {
           reportMemory: this.worker.reportMemory ?? false,
@@ -118,23 +220,30 @@ export class PoolRunner {
           config: this.project.serializedConfig,
           pool: this.worker.name,
         },
+        traces: {
+          enabled: tracesEnabled,
+          sdkPath: tracesSdk,
+          otelCarrier: this.getOTELCarrier(),
+        },
       })
 
       await startPromise
 
       this._state = RunnerState.STARTED
     }
-    catch (error) {
-      this._state = RunnerState.IDLE
+    catch (error: any) {
+      this._state = RunnerState.START_FAILURE
+      startSpan?.recordException(error)
       throw error
     }
     finally {
+      startSpan?.end()
       this._operationLock.resolve()
       this._operationLock = null
     }
   }
 
-  async stop(): Promise<void> {
+  async stop(options?: StopOptions): Promise<void> {
     // Wait for any ongoing operation to complete
     if (this._operationLock) {
       await this._operationLock
@@ -144,7 +253,10 @@ export class PoolRunner {
       return
     }
 
+    this._otel?.span.setAttribute('vitest.worker.files', this._otel.files)
+
     if (this._state === RunnerState.IDLE) {
+      this._otel?.span.end()
       this._state = RunnerState.STOPPED
       return
     }
@@ -158,11 +270,13 @@ export class PoolRunner {
       // Remove exit listener early to avoid "unexpected exit" errors during shutdown
       this.worker.off('exit', this.emitUnexpectedExit)
 
+      const stopSpan = this.startTracesSpan('vitest.worker.stop')
       await this.withTimeout(
         new Promise<void>((resolve) => {
           const onStop = (response: WorkerResponse) => {
             if (response.type === 'stopped') {
               if (response.error) {
+                stopSpan.recordException(response.error as Error)
                 this.project.vitest.state.catchError(
                   response.error,
                   'Teardown Error',
@@ -174,18 +288,34 @@ export class PoolRunner {
             }
           }
 
+          // Don't wait for graceful exit's response when force exiting
+          if (options?.force) {
+            return onStop({ type: 'stopped', __vitest_worker_response__: true })
+          }
+
           this.on('message', onStop)
-          this.postMessage({ type: 'stop', __vitest_worker_request__: true })
+          this.postMessage({
+            type: 'stop',
+            __vitest_worker_request__: true,
+            otelCarrier: this.getOTELCarrier(),
+          })
         }),
         STOP_TIMEOUT,
-      )
+      ).finally(() => {
+        stopSpan.end()
+      })
 
       this._eventEmitter.removeAllListeners()
+      this._offCancel()
       this._rpc.$close(new Error('[vitest-pool-runner]: Pending methods while closing rpc'))
 
       // Stop the worker process (this sets _fork/_thread to undefined)
       // Worker's event listeners (error, message) are implicitly removed when worker terminates
-      await this.worker.stop()
+      await this._traces.$(
+        `vitest.${this.worker.name}.stop`,
+        { context: this._otel?.workerContext },
+        () => this.worker.stop(),
+      )
 
       this._state = RunnerState.STOPPED
     }
@@ -197,6 +327,8 @@ export class PoolRunner {
     finally {
       this._operationLock.resolve()
       this._operationLock = null
+      this._otel?.span.end()
+      this._terminatePromise.resolve()
     }
   }
 

@@ -27,7 +27,7 @@ jobs:
     runs-on: ubuntu-latest
     name: 'Lint: node-latest, ubuntu-latest'
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       - uses: ./.github/actions/setup-and-cache
 
@@ -63,11 +63,11 @@ jobs:
       should_skip: ${{ steps.changed-files.outputs.only_changed == 'true' }}
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       - name: Get changed files
         id: changed-files
-        uses: tj-actions/changed-files@a284dc1814e3fd07f2e34267fc8f81227ed29fb8 # v45.0.9
+        uses: tj-actions/changed-files@e0021407031f5be11a464abee9a0776171c79891 # v47.0.1
         with:
           files: |
             docs/**
@@ -95,7 +95,7 @@ jobs:
       fail-fast: false
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       - uses: ./.github/actions/setup-and-cache
         with:
@@ -120,12 +120,48 @@ jobs:
       - name: Unit Test UI
         run: pnpm run -C packages/ui test:ui
 
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@v6
         if: ${{ !cancelled() }}
         with:
-          name: playwright-report
+          name: playwright-report-${{ matrix.os }}-node-${{ matrix.node_version }}
           path: test/ui/test-results/
           retention-days: 30
+
+  test-cached:
+    needs: changed
+    name: 'Cache&Test: node-${{ matrix.node_version }}, ${{ matrix.os }}'
+    if: needs.changed.outputs.should_skip != 'true'
+    runs-on: ${{ matrix.os }}
+
+    timeout-minutes: 30
+
+    strategy:
+      matrix:
+        node_version: [24]
+        os:
+          - macos-latest
+          - windows-latest
+      fail-fast: false
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: ./.github/actions/setup-and-cache
+        with:
+          node-version: ${{ matrix.node_version }}
+
+      - uses: browser-actions/setup-chrome@b94431e051d1c52dcbe9a7092a4f10f827795416 # v2.1.0
+
+      - name: Install
+        run: pnpm i
+
+      - uses: ./.github/actions/setup-playwright
+
+      - name: Build
+        run: pnpm run build
+
+      - name: Test
+        run: pnpm run test:ci:cache
 
   test-browser:
     needs: changed
@@ -144,7 +180,7 @@ jobs:
     timeout-minutes: 30
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       - uses: ./.github/actions/setup-and-cache
         with:
@@ -177,7 +213,7 @@ jobs:
     timeout-minutes: 30
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       - uses: ./.github/actions/setup-and-cache
         with:
@@ -186,7 +222,9 @@ jobs:
       - uses: browser-actions/setup-chrome@b94431e051d1c52dcbe9a7092a4f10f827795416 # v2.1.0
 
       - name: Install
-        run: pnpm add vite@npm:rolldown-vite && git add . && git commit -m "ci" && pnpm i --prefer-offline --no-frozen-lockfile
+        run: |
+          yq -i '.overrides.vite = "npm:vite@beta"' pnpm-workspace.yaml
+          git add . && git commit -m "ci" && pnpm i --prefer-offline --no-frozen-lockfile
 
       - uses: ./.github/actions/setup-playwright
 
@@ -202,7 +240,7 @@ jobs:
       - name: Test Browser (playwright)
         run: pnpm run test:browser:playwright
 
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@v6
         if: ${{ !cancelled() }}
         with:
           name: playwright-report-rolldown

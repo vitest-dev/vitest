@@ -38,6 +38,7 @@ import { getHooks, setFn, setHooks, setTestFixture } from './map'
 import { getCurrentTest } from './test-state'
 import { findTestFileStackTrace } from './utils'
 import { createChainable } from './utils/chain'
+import { createTaskName } from './utils/tasks'
 
 /**
  * Creates a suite of tests, allowing for grouping and hierarchical organization of tests.
@@ -186,7 +187,13 @@ let currentTestFilepath: string
 
 function assert(condition: any, message: string) {
   if (!condition) {
-    throw new Error(`Vitest failed to find ${message}. This is a bug in Vitest. Please, open an issue with reproduction.`)
+    throw new Error(
+      `Vitest failed to find ${message}. One of the following is possible:`
+      + '\n- "vitest" is imported directly without running "vitest" command'
+      + '\n- "vitest" is imported inside "globalSetup" (to fix this, use "setupFiles" instead, because "globalSetup" runs in a different context)'
+      + '\n- "vitest" is imported inside Vite / Vitest config file'
+      + '\n- Otherwise, it might be a Vitest bug. Please report it to https://github.com/vitest-dev/vitest/issues\n',
+    )
   }
 }
 
@@ -213,14 +220,15 @@ function createDefaultSuite(runner: VitestRunner) {
 }
 
 export function clearCollectorContext(
-  filepath: string,
+  file: File,
   currentRunner: VitestRunner,
 ): void {
   if (!defaultSuite) {
     defaultSuite = createDefaultSuite(currentRunner)
   }
+  defaultSuite.file = file
   runner = currentRunner
-  currentTestFilepath = filepath
+  currentTestFilepath = file.filepath
   collectorContext.tasks.length = 0
   defaultSuite.clear()
   collectorContext.currentSuite = defaultSuite
@@ -297,15 +305,21 @@ function createSuiteCollector(
 
   const task = function (name = '', options: TaskCustomOptions = {}) {
     const timeout = options?.timeout ?? runner.config.testTimeout
+    const currentSuite = collectorContext.currentSuite?.suite
     const task: Test = {
       id: '',
       name,
-      suite: collectorContext.currentSuite?.suite,
+      fullName: createTaskName([
+        currentSuite?.fullName ?? collectorContext.currentSuite?.file?.fullName,
+        name,
+      ]),
+      fullTestName: createTaskName([currentSuite?.fullTestName, name]),
+      suite: currentSuite,
       each: options.each,
       fails: options.fails,
       context: undefined!,
       type: 'test',
-      file: undefined!,
+      file: (currentSuite?.file ?? collectorContext.currentSuite?.file)!,
       timeout,
       retry: options.retry ?? runner.config.retry,
       repeats: options.repeats,
@@ -318,6 +332,7 @@ function createSuiteCollector(
             : 'run',
       meta: options.meta ?? Object.create(null),
       annotations: [],
+      artifacts: [],
     }
     const handler = options.handler
     if (task.mode === 'run' && !handler) {
@@ -438,14 +453,21 @@ function createSuiteCollector(
       suiteOptions = { timeout: suiteOptions }
     }
 
+    const currentSuite = collectorContext.currentSuite?.suite
+
     suite = {
       id: '',
       type: 'suite',
       name,
-      suite: collectorContext.currentSuite?.suite,
+      fullName: createTaskName([
+        currentSuite?.fullName ?? collectorContext.currentSuite?.file?.fullName,
+        name,
+      ]),
+      fullTestName: createTaskName([currentSuite?.fullTestName, name]),
+      suite: currentSuite,
       mode,
       each,
-      file: undefined!,
+      file: (currentSuite?.file ?? collectorContext.currentSuite?.file)!,
       shuffle: suiteOptions?.shuffle,
       tasks: [],
       meta: Object.create(null),
@@ -489,12 +511,7 @@ function createSuiteCollector(
       allChildren.push(i.type === 'collector' ? await i.collect(file) : i)
     }
 
-    suite.file = file
     suite.tasks = allChildren
-
-    allChildren.forEach((task) => {
-      task.file = file
-    })
 
     return suite
   }
@@ -527,6 +544,12 @@ function createSuite() {
     factoryOrOptions?: SuiteFactory | TestOptions,
     optionsOrFactory?: number | SuiteFactory,
   ) {
+    if (getCurrentTest()) {
+      throw new Error(
+        'Calling the suite function inside test function is not allowed. It can be only called at the top level or inside another suite function.',
+      )
+    }
+
     let mode: RunMode = this.only
       ? 'only'
       : this.skip

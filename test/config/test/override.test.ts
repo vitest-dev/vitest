@@ -1,5 +1,6 @@
 import type { UserConfig as ViteUserConfig } from 'vite'
 import type { TestUserConfig } from 'vitest/node'
+import { resolve } from 'pathe'
 import { describe, expect, it, onTestFinished } from 'vitest'
 import { createVitest, parseCLI } from 'vitest/node'
 
@@ -88,4 +89,50 @@ describe.each([
       await config(rawConfig.options)
     }).rejects.toThrowError(`Inspector host cannot be a URL. Use "host:port" instead of "${url}"`)
   })
+})
+
+it('experimental fsModuleCache is inherited in a project', async () => {
+  const v = await vitest({}, {
+    experimental: {
+      fsModuleCache: true,
+      fsModuleCachePath: './node_modules/custom-cache-path',
+    },
+    projects: [
+      {
+        test: {
+          name: 'project',
+        },
+      },
+    ],
+  })
+  expect(v.config.experimental.fsModuleCache).toBe(true)
+  expect(v.projects[0].config.experimental.fsModuleCache).toBe(true)
+
+  expect(v.config.experimental.fsModuleCachePath).toBe(resolve('./node_modules/custom-cache-path'))
+  expect(v.projects[0].config.experimental.fsModuleCachePath).toBe(resolve('./node_modules/custom-cache-path'))
+})
+
+it('project overrides experimental fsModuleCache', async () => {
+  const v = await vitest({}, {
+    experimental: {
+      fsModuleCache: true,
+      fsModuleCachePath: './node_modules/custom-cache-path',
+    },
+    projects: [
+      {
+        test: {
+          name: 'project',
+          experimental: {
+            fsModuleCache: false,
+            fsModuleCachePath: './node_modules/project-cache-path',
+          },
+        },
+      },
+    ],
+  })
+  expect(v.config.experimental.fsModuleCache).toBe(true)
+  expect(v.projects[0].config.experimental.fsModuleCache).toBe(false)
+
+  expect(v.config.experimental.fsModuleCachePath).toBe(resolve('./node_modules/custom-cache-path'))
+  expect(v.projects[0].config.experimental.fsModuleCachePath).toBe(resolve('./node_modules/project-cache-path'))
 })

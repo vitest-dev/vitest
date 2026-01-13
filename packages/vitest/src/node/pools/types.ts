@@ -1,4 +1,6 @@
+import type { Context, Span } from '@opentelemetry/api'
 import type { ContextTestEnvironment, WorkerExecuteContext, WorkerTestEnvironment } from '../../types/worker'
+import type { OTELCarrier } from '../../utils/traces'
 import type { TestProject } from '../project'
 import type { SerializedConfig } from '../types/config'
 
@@ -32,8 +34,8 @@ export interface PoolWorker {
 
   /**
    * This is called on workers that already satisfy certain constraints:
+   * - The task has the same worker name
    * - The task has the same project
-   * - The task has the same environment
    */
   canReuse?: (task: PoolTask) => boolean
 }
@@ -53,24 +55,48 @@ export interface PoolTask {
    */
   execArgv: string[]
   context: WorkerExecuteContext
-  environment: ContextTestEnvironment
   memoryLimit: number | null
+}
+
+export interface PoolRunnerOTEL {
+  span: Span
+  workerContext: Context
+  currentContext?: Context
+  files: string[]
 }
 
 export type WorkerRequest
   = { __vitest_worker_request__: true } & (
     | {
       type: 'start'
+      poolId: number
+      workerId: WorkerExecuteContext['workerId'] // Initial worker ID, may change when non-isolated worker runs multiple test files
       options: { reportMemory: boolean }
       context: {
         environment: WorkerTestEnvironment
         config: SerializedConfig
         pool: string
       }
+      traces: {
+        enabled: boolean
+        sdkPath?: string
+        otelCarrier?: OTELCarrier
+      }
     }
-    | { type: 'stop' }
-    | { type: 'run'; context: WorkerExecuteContext; poolId: number }
-    | { type: 'collect'; context: WorkerExecuteContext; poolId: number }
+    | {
+      type: 'stop'
+      otelCarrier?: OTELCarrier
+    }
+    | {
+      type: 'run'
+      context: WorkerExecuteContext
+      otelCarrier?: OTELCarrier
+    }
+    | {
+      type: 'collect'
+      context: WorkerExecuteContext
+      otelCarrier?: OTELCarrier
+    }
     | { type: 'cancel' }
 )
 

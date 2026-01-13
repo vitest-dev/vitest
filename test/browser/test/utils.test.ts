@@ -38,7 +38,7 @@ test('prints the element with attributes', async () => {
 })
 
 test('should handle DOM content bigger than maxLength', async () => {
-  const depth = 200
+  const depth = 100
   const maxContent = 150
 
   const openingTags = '<div>'.repeat(depth)
@@ -92,4 +92,20 @@ test('should be able to opt out of shadow DOM content', async () => {
   document.body.append(div)
 
   expect(await commands.stripVTControlCharacters(utils.prettyDOM(undefined, undefined, { printShadowRoot: false }))).toMatchSnapshot()
+})
+
+test('changing the defaults works', async () => {
+  utils.configurePrettyDOM({
+    maxDepth: 1,
+  })
+
+  const div = document.createElement('div')
+  div.innerHTML = '<div><div><div><div></div></div></div></div>'
+  document.body.append(div)
+
+  expect(await commands.stripVTControlCharacters(utils.prettyDOM(div))).toMatchInlineSnapshot(`
+    "<div>
+      <div … />
+    </div>"
+  `)
 })

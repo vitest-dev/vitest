@@ -3,18 +3,29 @@ import { existsSync, promises as fsp } from 'node:fs'
 import { isBuiltin } from 'node:module'
 import { pathToFileURL } from 'node:url'
 import { KNOWN_ASSET_RE } from '@vitest/utils/constants'
+import { cleanUrl } from '@vitest/utils/helpers'
 import { findNearestPackageData } from '@vitest/utils/resolver'
 import * as esModuleLexer from 'es-module-lexer'
 import { dirname, extname, join, resolve } from 'pathe'
 import { isWindows } from '../utils/env'
 
 export class VitestResolver {
-  private options: ExternalizeOptions
-  private externalizeCache = new Map<string, Promise<string | false>>()
+  public readonly options: ExternalizeOptions
+  private externalizeConcurrentCache = new Map<string, Promise<string | false | undefined>>()
+  private externalizeCache = new Map<string, string | false | undefined>()
 
   constructor(cacheDir: string, config: ResolvedConfig) {
+    // sorting to make cache consistent
+    const inline = config.server.deps?.inline
+    if (Array.isArray(inline)) {
+      inline.sort()
+    }
+    const external = config.server.deps?.external
+    if (Array.isArray(external)) {
+      external.sort()
+    }
     this.options = {
-      moduleDirectories: config.deps.moduleDirectories,
+      moduleDirectories: config.deps.moduleDirectories?.sort(),
       inlineFiles: config.setupFiles.flatMap((file) => {
         if (file.startsWith('file://')) {
           return file
@@ -23,13 +34,31 @@ export class VitestResolver {
         return [resolvedId, pathToFileURL(resolvedId).href]
       }),
       cacheDir,
-      inline: config.server.deps?.inline,
-      external: config.server.deps?.external,
+      inline,
+      external,
     }
   }
 
-  public shouldExternalize(file: string): Promise<string | false> {
-    return shouldExternalize(normalizeId(file), this.options, this.externalizeCache)
+  public wasExternalized(file: string): string | false {
+    const normalizedFile = normalizeId(file)
+    if (!this.externalizeCache.has(normalizedFile)) {
+      return false
+    }
+    return this.externalizeCache.get(normalizedFile) ?? false
+  }
+
+  public async shouldExternalize(file: string): Promise<string | false | undefined> {
+    const normalizedFile = normalizeId(file)
+    if (this.externalizeCache.has(normalizedFile)) {
+      return this.externalizeCache.get(normalizedFile)!
+    }
+
+    return shouldExternalize(normalizeId(file), this.options, this.externalizeConcurrentCache).then((result) => {
+      this.externalizeCache.set(normalizedFile, result)
+      return result
+    }).finally(() => {
+      this.externalizeConcurrentCache.delete(normalizedFile)
+    })
   }
 }
 
@@ -100,6 +129,10 @@ export function guessCJSversion(id: string): string | undefined {
 
 // The code from https://github.com/unjs/mlly/blob/c5bcca0cda175921344fd6de1bc0c499e73e5dac/src/syntax.ts#L51-L98
 async function isValidNodeImport(id: string) {
+  // clean url to strip off `?v=...` query etc.
+  // node can natively import files with query params, so externalizing them is safe.
+  id = cleanUrl(id)
+
   const extension = extname(id)
 
   if (BUILTIN_EXTENSIONS.has(extension)) {
@@ -136,8 +169,8 @@ async function isValidNodeImport(id: string) {
 export async function shouldExternalize(
   id: string,
   options: ExternalizeOptions,
-  cache: Map<string, Promise<string | false>>,
-): Promise<string | false> {
+  cache: Map<string, Promise<string | false | undefined>>,
+): Promise<string | false | undefined> {
   if (!cache.has(id)) {
     cache.set(id, _shouldExternalize(id, options))
   }
@@ -147,7 +180,7 @@ export async function shouldExternalize(
 async function _shouldExternalize(
   id: string,
   options?: ExternalizeOptions,
-): Promise<string | false> {
+): Promise<string | false | undefined> {
   if (isBuiltin(id)) {
     return id
   }
@@ -191,8 +224,6 @@ async function _shouldExternalize(
   if (isLibraryModule && (await isValidNodeImport(id))) {
     return id
   }
-
-  return false
 }
 
 function matchPattern(

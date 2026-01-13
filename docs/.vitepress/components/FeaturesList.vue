@@ -1,8 +1,11 @@
+<script setup>
+import ListItem from './ListItem.vue'
+</script>
+
 <template>
   <ul
     class="features-list"
     dir="auto"
-    flex="~ col gap2 md:gap-3"
   >
     <ListItem><a target="_blank" href="https://vitejs.dev" rel="noopener noreferrer">Vite</a>'s config, transformers, resolvers, and plugins</ListItem>
     <ListItem>Use the same setup from your app to run the tests!</ListItem>
@@ -40,5 +43,8 @@
 
 .features-list {
   padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
 }
 </style>

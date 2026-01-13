@@ -1,3 +1,4 @@
+import type { TestArtifact } from '@vitest/runner'
 import type { TestAnnotation } from 'vitest'
 import { playwright } from '@vitest/browser-playwright'
 import { describe, expect, test } from 'vitest'
@@ -50,12 +51,14 @@ describe('API', () => {
   ])('annotations are exposed correctly in $name', async (options) => {
     const events: string[] = []
     const annotations: Record<string, ReadonlyArray<TestAnnotation>> = {}
+    const artifacts: Record<string, ReadonlyArray<TestArtifact>> = {}
 
     const { stderr } = await runInlineTests(
       {
         'basic.test.ts': annotationTest,
         'test-3.js': test3Content,
         'test-4.js': '',
+        'vitest.config.js': { test: options },
       },
       {
         includeTaskLocation: true,
@@ -65,6 +68,9 @@ describe('API', () => {
             onTestCaseAnnotate(testCase, annotation) {
               const path = annotation.attachment?.path?.replace(testCase.project.config.root, '<root>').replace(/\w+\.js$/, '<hash>.js')
               events.push(`[annotate] ${testCase.name} ${annotation.message} ${annotation.type} path=${path} contentType=${annotation.attachment?.contentType} body=${annotation.attachment?.body}`)
+            },
+            onTestCaseArtifactRecord() {
+              events.push('[artifact]')
             },
             onTestCaseReady(testCase) {
               events.push(`[ready] ${testCase.name}`)
@@ -86,13 +92,11 @@ describe('API', () => {
                 }
                 return annotation
               })
+              // artifacts should be empty until next major so no handling needed
+              artifacts[testCase.name] = testCase.artifacts()
             },
           },
         ],
-      },
-      {},
-      {
-        test: options,
       },
     )
 
@@ -116,6 +120,12 @@ describe('API', () => {
       ]
     `)
 
+    expect(artifacts).toMatchInlineSnapshot(`
+      {
+        "second": [],
+        "simple": [],
+      }
+    `)
     expect(annotations).toMatchInlineSnapshot(`
       {
         "second": [

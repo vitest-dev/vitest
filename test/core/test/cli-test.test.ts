@@ -1,6 +1,6 @@
 import { resolveConfig as viteResolveConfig } from 'vite'
 import { expect, test } from 'vitest'
-import { ReportersMap } from 'vitest/reporters'
+import { ReportersMap, rolldownVersion } from 'vitest/node'
 import { createCLI, parseCLI } from '../../../packages/vitest/src/node/cli/cac.js'
 import { resolveConfig } from '../../../packages/vitest/src/node/config/resolveConfig.js'
 
@@ -275,7 +275,11 @@ test('browser by name', () => {
   expect(options).toEqual({ browser: { name: 'firefox' } })
 })
 
-test('clearScreen', async () => {
+test('clearScreen', async (ctx) => {
+  // skip vm since rolldown native modules break due to RegExp instance
+  // https://github.com/vitest-dev/vitest/issues/8754#issuecomment-3727583957
+  ctx.skip(!!rolldownVersion && ctx.task.file.projectName === 'vmThreads')
+
   const examples = [
     // vitest cli | vite clearScreen
     ['--clearScreen', undefined],

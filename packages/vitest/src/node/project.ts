@@ -6,6 +6,7 @@ import type { ProvidedContext } from '../types/general'
 import type { OnTestsRerunHandler, Vitest } from './core'
 import type { VitestFetchFunction } from './environments/fetchModule'
 import type { GlobalSetupFile } from './globalSetup'
+import type { TestSpecificationOptions } from './test-specification'
 import type { ParentProjectBrowser, ProjectBrowser } from './types/browser'
 import type {
   ProjectName,
@@ -35,7 +36,7 @@ import { MocksPlugins } from './plugins/mocks'
 import { WorkspaceVitestPlugin } from './plugins/workspace'
 import { getFilePoolName } from './pool'
 import { VitestResolver } from './resolver'
-import { TestSpecification } from './spec'
+import { TestSpecification } from './test-specification'
 import { createViteServer } from './vite'
 
 export class TestProject {
@@ -144,7 +145,7 @@ export class TestProject {
    */
   public createSpecification(
     moduleId: string,
-    locations?: number[] | undefined,
+    locationsOrOptions?: number[] | TestSpecificationOptions | undefined,
     /** @internal */
     pool?: string,
   ): TestSpecification {
@@ -152,7 +153,7 @@ export class TestProject {
       this,
       moduleId,
       pool || getFilePoolName(this),
-      locations,
+      locationsOrOptions,
     )
   }
 
@@ -277,34 +278,43 @@ export class TestProject {
      */
     typecheckTestFiles: string[]
   }> {
-    const dir = this.config.dir || this.config.root
+    return this.vitest._traces.$('vitest.config.resolve_include_project', async (span) => {
+      const dir = this.config.dir || this.config.root
 
-    const { include, exclude, includeSource } = this.config
-    const typecheck = this.config.typecheck
+      const { include, exclude, includeSource } = this.config
+      const typecheck = this.config.typecheck
+      span.setAttributes({
+        cwd: dir,
+        include,
+        exclude,
+        includeSource,
+        typecheck: typecheck.enabled ? typecheck.include : [],
+      })
 
-    const [testFiles, typecheckTestFiles] = await Promise.all([
-      typecheck.enabled && typecheck.only
-        ? []
-        : this.globAllTestFiles(include, exclude, includeSource, dir),
-      typecheck.enabled
-        ? (this.typecheckFilesList || this.globFiles(typecheck.include, typecheck.exclude, dir))
-        : [],
-    ])
+      const [testFiles, typecheckTestFiles] = await Promise.all([
+        typecheck.enabled && typecheck.only
+          ? []
+          : this.globAllTestFiles(include, exclude, includeSource, dir),
+        typecheck.enabled
+          ? (this.typecheckFilesList || this.globFiles(typecheck.include, typecheck.exclude, dir))
+          : [],
+      ])
 
-    this.typecheckFilesList = typecheckTestFiles
+      this.typecheckFilesList = typecheckTestFiles
 
-    return {
-      testFiles: this.filterFiles(
-        testFiles,
-        filters,
-        dir,
-      ),
-      typecheckTestFiles: this.filterFiles(
-        typecheckTestFiles,
-        filters,
-        dir,
-      ),
-    }
+      return {
+        testFiles: this.filterFiles(
+          testFiles,
+          filters,
+          dir,
+        ),
+        typecheckTestFiles: this.filterFiles(
+          typecheckTestFiles,
+          filters,
+          dir,
+        ),
+      }
+    })
   }
 
   private async globAllTestFiles(
@@ -459,7 +469,7 @@ export class TestProject {
     }
     const provider = this.config.browser.provider || childProject.config.browser.provider
     if (provider == null) {
-      throw new Error(`Proider was not specified in the "browser.provider" setting. Please, pass down playwright(), webdriverio() or preview() from "@vitest/browser-playwright", "@vitest/browser-webdriverio" or "@vitest/browser-preview" package respectively.`)
+      throw new Error(`Provider was not specified in the "browser.provider" setting. Please, pass down playwright(), webdriverio() or preview() from "@vitest/browser-playwright", "@vitest/browser-webdriverio" or "@vitest/browser-preview" package respectively.`)
     }
     if (typeof provider.serverFactory !== 'function') {
       throw new TypeError(`The browser provider options do not return a "serverFactory" function. Are you using the latest "@vitest/browser-${provider.name}" package?`)
@@ -496,7 +506,7 @@ export class TestProject {
         [
           this.vite?.close(),
           this.typechecker?.stop(),
-          this.browser?.close(),
+          (this.browser || this._parent?._parentBrowser?.vite)?.close(),
           this.clearTmpDir(),
         ].filter(Boolean),
       ).then(() => {
@@ -535,6 +545,7 @@ export class TestProject {
       },
       server.config,
     )
+    this._config.api.token = this.vitest.config.api.token
     this._setHash()
     for (const _providedKey in this.config.provide) {
       const providedKey = _providedKey as keyof ProvidedContext
@@ -552,11 +563,10 @@ export class TestProject {
     this._serializedDefines = createDefinesScript(server.config.define)
     this._fetcher = createFetchModuleFunction(
       this._resolver,
+      this._config,
+      this.vitest._fsCache,
+      this.vitest._traces,
       this.tmpDir,
-      {
-        dumpFolder: this.config.dumpDir,
-        readFromDump: this.config.server.debug?.load ?? process.env.VITEST_DEBUG_LOAD_DUMP != null,
-      },
     )
 
     const environment = server.environments.__vitest__

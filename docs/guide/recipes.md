@@ -4,7 +4,7 @@ title: Recipes | Guide
 
 # Recipes
 
-## Disabling isolation for specific test files only
+## Disabling Isolation for Specific Test Files Only
 
 You can speed up your test run by disabling isolation for specific set of files by specifying `isolate` per `projects` entries:
 
@@ -30,7 +30,7 @@ export default defineConfig({
 })
 ```
 
-## Parallel and Sequential test files
+## Parallel and Sequential Test Files
 
 You can split test files into parallel and sequential groups by using `projects` option:
 
@@ -42,11 +42,11 @@ export default defineConfig({
     projects: [
       {
         name: 'Parallel',
-        exclude: ['**.sequantial.test.ts'],
+        exclude: ['**.sequential.test.ts'],
       },
       {
         name: 'Sequential',
-        include: ['**.sequantial.test.ts'],
+        include: ['**.sequential.test.ts'],
         fileParallelism: false,
       },
     ],

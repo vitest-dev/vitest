@@ -9,6 +9,7 @@ import type {
 } from '../types/config'
 import type { BaseCoverageOptions, CoverageReporterWithOptions } from '../types/coverage'
 import crypto from 'node:crypto'
+import { pathToFileURL } from 'node:url'
 import { slash, toArray } from '@vitest/utils/helpers'
 import { resolveModule } from 'local-pkg'
 import { normalize, relative, resolve } from 'pathe'
@@ -141,9 +142,25 @@ export function resolveConfig(
     mode,
   } as any as ResolvedConfig
 
+  if (resolved.retry && typeof resolved.retry === 'object' && typeof resolved.retry.condition === 'function') {
+    logger.console.warn(
+      c.yellow('Warning: retry.condition function cannot be used inside a config file. '
+        + 'Use a RegExp pattern instead, or define the function in your test file.'),
+    )
+
+    resolved.retry = {
+      ...resolved.retry,
+      condition: undefined,
+    }
+  }
+
   if (options.pool && typeof options.pool !== 'string') {
     resolved.pool = options.pool.name
     resolved.poolRunner = options.pool
+  }
+
+  if ('poolOptions' in resolved) {
+    logger.deprecate('`test.poolOptions` was removed in Vitest 4. All previous `poolOptions` are now top-level options. Please, refer to the migration guide: https://vitest.dev/guide/migration#pool-rework')
   }
 
   resolved.pool ??= 'forks'
@@ -794,8 +811,30 @@ export function resolveConfig(
     )
   }
 
-  resolved.testTimeout ??= resolved.browser.enabled ? 30_000 : 5_000
+  resolved.testTimeout ??= resolved.browser.enabled ? 15_000 : 5_000
   resolved.hookTimeout ??= resolved.browser.enabled ? 30_000 : 10_000
+
+  resolved.experimental ??= {}
+  if (resolved.experimental.openTelemetry?.sdkPath) {
+    const sdkPath = resolve(
+      resolved.root,
+      resolved.experimental.openTelemetry.sdkPath,
+    )
+    resolved.experimental.openTelemetry.sdkPath = pathToFileURL(sdkPath).toString()
+  }
+  if (resolved.experimental.openTelemetry?.browserSdkPath) {
+    const browserSdkPath = resolve(
+      resolved.root,
+      resolved.experimental.openTelemetry.browserSdkPath,
+    )
+    resolved.experimental.openTelemetry.browserSdkPath = browserSdkPath
+  }
+  if (resolved.experimental.fsModuleCachePath) {
+    resolved.experimental.fsModuleCachePath = resolve(
+      resolved.root,
+      resolved.experimental.fsModuleCachePath,
+    )
+  }
 
   return resolved
 }

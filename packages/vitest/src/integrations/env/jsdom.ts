@@ -307,16 +307,28 @@ function createCompatUtils(window: DOMWindow): CompatUtils {
 }
 
 function patchAddEventListener(window: DOMWindow) {
+  const abortControllers = new WeakMap<AbortSignal, AbortController>()
   const JSDOMAbortSignal = window.AbortSignal
   const JSDOMAbortController = window.AbortController
   const originalAddEventListener = window.EventTarget.prototype.addEventListener
+
+  function getJsdomAbortController(signal: AbortSignal) {
+    if (!abortControllers.has(signal)) {
+      const jsdomAbortController = new JSDOMAbortController()
+      signal.addEventListener('abort', () => {
+        jsdomAbortController.abort(signal.reason)
+      })
+      abortControllers.set(signal, jsdomAbortController)
+    }
+    return abortControllers.get(signal)!
+  }
 
   window.EventTarget.prototype.addEventListener = function addEventListener(
     type: string,
     callback: EventListenerOrEventListenerObject | null,
     options?: AddEventListenerOptions | boolean,
   ) {
-    if (typeof options === 'object' && options.signal != null) {
+    if (typeof options === 'object' && options?.signal != null) {
       const { signal, ...otherOptions } = options
       // - this happens because AbortSignal is provided by Node.js,
       // but jsdom APIs require jsdom's AbortSignal, while Node APIs
@@ -328,10 +340,7 @@ function patchAddEventListener(window: DOMWindow) {
 
         // use jsdom-native abort controller instead and forward the
         // previous one with `addEventListener`
-        const jsdomAbortController = new JSDOMAbortController()
-        signal.addEventListener('abort', () => {
-          jsdomAbortController.abort(signal.reason)
-        })
+        const jsdomAbortController = getJsdomAbortController(signal)
 
         jsdomCompatOptions.signal = jsdomAbortController.signal
         return originalAddEventListener.call(this, type, callback, jsdomCompatOptions)

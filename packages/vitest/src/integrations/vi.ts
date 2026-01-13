@@ -783,7 +783,7 @@ function getImporter(name: string) {
   const stackArray = stackTrace.split('\n')
   // if there is no message in a stack trace, use the item - 1
   const importerStackIndex = stackArray.findLastIndex((stack) => {
-    return stack.includes(` at Object.${name}`) || stack.includes(`${name}@`)
+    return stack.includes(` at Object.${name}`) || stack.includes(`${name}@`) || stack.includes(` at ${name} (`)
   })
   const stack = parseSingleStack(stackArray[importerStackIndex + 1])
   return stack?.file || ''

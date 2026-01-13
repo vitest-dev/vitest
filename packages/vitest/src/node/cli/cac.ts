@@ -290,6 +290,10 @@ function normalizeCliOptions(cliFilters: string[], argv: CliOptions): CliOptions
   if (typeof argv.typecheck?.only === 'boolean') {
     argv.typecheck.enabled ??= true
   }
+  if (argv.clearCache) {
+    argv.watch = false
+    argv.run = true
+  }
 
   return argv
 }

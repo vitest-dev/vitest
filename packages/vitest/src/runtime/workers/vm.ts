@@ -1,5 +1,6 @@
 import type { Context } from 'node:vm'
 import type { WorkerGlobalState } from '../../types/worker'
+import type { Traces } from '../../utils/traces'
 import { pathToFileURL } from 'node:url'
 import { isContext, runInContext } from 'node:vm'
 import { resolve } from 'pathe'
@@ -7,6 +8,7 @@ import { loadEnvironment } from '../../integrations/env/loader'
 import { distDir } from '../../paths'
 import { createCustomConsole } from '../console'
 import { ExternalModulesExecutor } from '../external-executor'
+import { emitModuleRunner } from '../listeners'
 import { getDefaultRequestStubs } from '../moduleRunner/moduleEvaluator'
 import { createNodeImportMeta } from '../moduleRunner/moduleRunner'
 import { startVitestModuleRunner, VITEST_VM_CONTEXT_SYMBOL } from '../moduleRunner/startModuleRunner'
@@ -18,11 +20,11 @@ const entryFile = pathToFileURL(resolve(distDir, 'workers/runVmTests.js')).href
 const fileMap = new FileMap()
 const packageCache = new Map<string, string>()
 
-export async function runVmTests(method: 'run' | 'collect', state: WorkerGlobalState): Promise<void> {
+export async function runVmTests(method: 'run' | 'collect', state: WorkerGlobalState, traces: Traces): Promise<void> {
   const { ctx, rpc } = state
 
   const beforeEnvironmentTime = performance.now()
-  const { environment } = await loadEnvironment(ctx.environment.name, ctx.config.root, rpc)
+  const { environment } = await loadEnvironment(ctx.environment.name, ctx.config.root, rpc, traces)
   state.environment = environment
 
   if (!environment.setupVM) {
@@ -35,8 +37,15 @@ export async function runVmTests(method: 'run' | 'collect', state: WorkerGlobalS
     )
   }
 
-  const vm = await environment.setupVM(
-    ctx.environment.options || ctx.config.environmentOptions || {},
+  const vm = await traces.$(
+    'vitest.runtime.environment.setup',
+    {
+      attributes: {
+        'vitest.environment': environment.name,
+        'vitest.environment.vite_environment': environment.viteEnvironment || environment.name,
+      },
+    },
+    () => environment.setupVM!(ctx.environment.options || ctx.config.environmentOptions || {}),
   )
 
   state.durations.environment = performance.now() - beforeEnvironmentTime
@@ -87,7 +96,10 @@ export async function runVmTests(method: 'run' | 'collect', state: WorkerGlobalS
     state,
     externalModulesExecutor,
     createImportMeta: createNodeImportMeta,
+    traces,
   })
+
+  emitModuleRunner(moduleRunner as any)
 
   Object.defineProperty(context, VITEST_VM_CONTEXT_SYMBOL, {
     value: {
@@ -115,21 +127,20 @@ export async function runVmTests(method: 'run' | 'collect', state: WorkerGlobalS
   const { run } = (await moduleRunner.import(
     entryFile,
   )) as typeof import('../runVmTests')
-  const fileSpecs = ctx.files.map(f =>
-    typeof f === 'string'
-      ? { filepath: f, testLocations: undefined }
-      : f,
-  )
 
   try {
     await run(
       method,
-      fileSpecs,
+      ctx.files,
       ctx.config,
       moduleRunner,
+      traces,
     )
   }
   finally {
-    await vm.teardown?.()
+    await traces.$(
+      'vitest.runtime.environment.teardown',
+      () => vm.teardown?.(),
+    )
   }
 }

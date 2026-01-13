@@ -1,8 +1,28 @@
 import type { SerializedTestSpecification } from '../runtime/types/utils'
-
+import type {
+  ModuleDefinitionDiagnostic,
+  ModuleDefinitionDurationsDiagnostic,
+  ModuleDefinitionLocation,
+  SourceModuleDiagnostic,
+  SourceModuleLocations,
+  UntrackedModuleDefinitionDiagnostic,
+} from '../types/module-locations'
 import '../types/global'
 
+// eslint-disable-next-line ts/no-namespace
+export declare namespace Experimental {
+  export {
+    ModuleDefinitionDiagnostic,
+    ModuleDefinitionDurationsDiagnostic,
+    ModuleDefinitionLocation,
+    SourceModuleDiagnostic,
+    SourceModuleLocations,
+    UntrackedModuleDefinitionDiagnostic,
+  }
+}
+
 export type {
+  ExternalResult,
   TransformResultWithSource,
   WebSocketEvents,
   WebSocketHandlers,
@@ -22,6 +42,9 @@ export type {
 } from '../runtime/config'
 
 export { VitestEvaluatedModules as EvaluatedModules } from '../runtime/moduleRunner/evaluatedModules'
+
+export { NodeBenchmarkRunner as BenchmarkRunner } from '../runtime/runners/benchmark'
+export { TestRunner } from '../runtime/runners/test'
 export type {
   BenchFactory,
   BenchFunction,
@@ -80,6 +103,7 @@ export {
   it,
   onTestFailed,
   onTestFinished,
+  recordArtifact,
   suite,
   test,
 } from '@vitest/runner'
@@ -103,10 +127,19 @@ export type {
   TaskMeta,
   TaskState,
   TestAnnotation,
+  TestAnnotationArtifact,
   TestAPI,
+  TestArtifact,
+  TestArtifactBase,
+  TestArtifactLocation,
+  TestArtifactRegistry,
+  TestAttachment,
   TestContext,
   TestFunction,
   TestOptions,
+
+  VitestRunnerConfig as TestRunnerConfig,
+  VitestRunner as VitestTestRunner,
 } from '@vitest/runner'
 
 export type { CancelReason } from '@vitest/runner'

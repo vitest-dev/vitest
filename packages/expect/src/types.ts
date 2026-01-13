@@ -6,6 +6,7 @@
  *
  */
 
+import type { Test } from '@vitest/runner'
 import type { MockInstance } from '@vitest/spy'
 import type { Constructable } from '@vitest/utils'
 import type { Formatter } from 'tinyrainbow'
@@ -73,6 +74,7 @@ export interface MatcherState {
   }
   soft?: boolean
   poll?: boolean
+  task?: Readonly<Test>
 }
 
 export interface SyncExpectationResult {
@@ -129,14 +131,14 @@ interface CustomMatcher {
   toSatisfy: (matcher: (value: any) => boolean, message?: string) => any
 
   /**
-   * Matches if the received value is one of the values in the expected array.
+   * Matches if the received value is one of the values in the expected array or set.
    *
    * @example
    * expect(1).toBeOneOf([1, 2, 3])
    * expect('foo').toBeOneOf([expect.any(String)])
    * expect({ a: 1 }).toEqual({ a: expect.toBeOneOf(['1', '2', '3']) })
    */
-  toBeOneOf: <T>(sample: Array<T>) => any
+  toBeOneOf: <T>(sample: Array<T> | Set<T>) => any
 }
 
 export interface AsymmetricMatchersContaining extends CustomMatcher {

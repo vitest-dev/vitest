@@ -41,6 +41,7 @@ const skipConfig = new Set([
   'ui',
   'browser.name',
   'browser.fileParallelism',
+  'clearCache',
 ])
 
 function resolveOptions(options: CLIOptions<any>, parentName?: string) {

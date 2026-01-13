@@ -26,6 +26,39 @@ test('enableCoverage() collects coverage after being called', async () => {
   expect(coverageMap.files()).toContain('<process-cwd>/fixtures/src/math.ts')
 })
 
+test('enableCoverage() invalidates circular modules', async () => {
+  await cleanupCoverageJson()
+
+  await expect(readCoverageMap(), 'coverage map should not be on the disk').rejects.toThrowError(/no such file/)
+
+  // Simulating user actions in the VSCode Vitest extension:
+  // 1. User clicks "Run Test with Coverage" to generate coverage files normally
+  const { ctx } = await runVitest({
+    include: ['fixtures/test/circular.test.ts'],
+    watch: false,
+    coverage: {
+      enabled: true,
+      reporter: 'json',
+    },
+  })
+
+  const coverageMap = await readCoverageMap()
+  expect(coverageMap.files()).toEqual([
+    '<process-cwd>/fixtures/src/circularA.ts',
+    '<process-cwd>/fixtures/src/circularB.ts',
+  ])
+
+  // 2. User reruns tests with coverage
+  await ctx!.enableCoverage()
+  await ctx!.rerunFiles()
+
+  const coverageMap2 = await readCoverageMap()
+  expect(coverageMap2.files()).toEqual([
+    '<process-cwd>/fixtures/src/circularA.ts',
+    '<process-cwd>/fixtures/src/circularB.ts',
+  ])
+})
+
 test('disableCoverage() stops collecting coverage going forward', async () => {
   const { ctx } = await runVitest({
     include: ['fixtures/test/math.test.ts'],

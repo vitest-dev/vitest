@@ -332,13 +332,6 @@ Specify which IP addresses the server should listen on. Set this to `0.0.0.0` or
 
 Set to true to exit if port is already in use, instead of automatically trying the next available port
 
-### browser.provider
-
-- **CLI:** `--browser.provider <name>`
-- **Config:** [browser.provider](/config/browser/provider)
-
-Provider used to run browser tests. Some browsers are only available for specific providers. Can be "webdriverio", "playwright", "preview", or the path to a custom provider. Visit [`browser.provider`](/config/browser/provider) for more information
-
 ### browser.isolate
 
 - **CLI:** `--browser.isolate`
@@ -798,3 +791,23 @@ Use `bundle` to bundle the config with esbuild or `runner` (experimental) to pro
 - **CLI:** `--standalone`
 
 Start Vitest without running tests. Tests will be running only on change. This option is ignored when CLI file filters are passed. (default: `false`)
+
+### clearCache
+
+- **CLI:** `--clearCache`
+
+Delete all Vitest caches, including `experimental.fsModuleCache`, without running any tests. This will reduce the performance in the subsequent test run.
+
+### experimental.fsModuleCache
+
+- **CLI:** `--experimental.fsModuleCache`
+- **Config:** [experimental.fsModuleCache](/config/experimental#experimental-fsmodulecache)
+
+Enable caching of modules on the file system between reruns.
+
+### experimental.printImportBreakdown
+
+- **CLI:** `--experimental.printImportBreakdown`
+- **Config:** [experimental.printImportBreakdown](/config/experimental#experimental-printimportbreakdown)
+
+Print import breakdown after the summary. If the reporter doesn't support summary, this will have no effect. Note that UI's "Module Graph" tab always has an import breakdown.

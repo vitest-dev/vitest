@@ -7,13 +7,18 @@ import type {
   TaskResultPack,
   Test,
   TestAnnotation,
+  TestArtifact,
   VitestRunner,
 } from '@vitest/runner'
 import type { SerializedConfig, TestExecutionMethod, WorkerGlobalState } from 'vitest'
+import type {
+  Traces,
+} from 'vitest/internal/browser'
 import type { VitestBrowserClientMocker } from './mocker'
 import type { CommandsManager } from './tester-utils'
 import { globalChannel, onCancel } from '@vitest/browser/client'
 import { getTestName } from '@vitest/runner/utils'
+import { BenchmarkRunner, TestRunner } from 'vitest'
 import { page, userEvent } from 'vitest/browser'
 import {
   DecodedMap,
@@ -22,7 +27,6 @@ import {
   loadSnapshotSerializers,
   takeCoverageInsideWorker,
 } from 'vitest/internal/browser'
-import { NodeBenchmarkRunner, VitestTestRunner } from 'vitest/runners'
 import { createStackString, parseStacktrace } from '../../../../utils/src/source-map'
 import { getBrowserState, getWorkerState, moduleRunner } from '../utils'
 import { rpc } from './rpc'
@@ -56,11 +60,14 @@ export function createBrowserRunner(
     public sourceMapCache = new Map<string, any>()
     public method = 'run' as TestExecutionMethod
     private commands: CommandsManager
+    private _otel!: Traces
 
     constructor(options: BrowserRunnerOptions) {
       super(options.config)
       this.config = options.config
       this.commands = getBrowserState().commands
+      this.viteEnvironment = '__browser__'
+      this._otel = getBrowserState().traces
     }
 
     setMethod(method: TestExecutionMethod) {
@@ -227,28 +234,41 @@ export function createBrowserRunner(
     }
 
     onTestAnnotate = (test: Test, annotation: TestAnnotation): Promise<TestAnnotation> => {
-      if (annotation.location) {
+      const artifact: TestArtifact = { type: 'internal:annotation', annotation, location: annotation.location }
+
+      return this.onTestArtifactRecord(test, artifact).then(({ annotation }) => annotation)
+    }
+
+    onTestArtifactRecord = <Artifact extends TestArtifact>(test: Test, artifact: Artifact): Promise<Artifact> => {
+      if (artifact.location) {
         // the file should be the test file
         // tests from other files are not supported
-        const map = this.sourceMapCache.get(annotation.location.file)
+        const map = this.sourceMapCache.get(artifact.location.file)
+
         if (!map) {
-          return rpc().onTaskAnnotate(test.id, annotation)
+          return rpc().onTaskArtifactRecord(test.id, artifact)
         }
 
-        const traceMap = new DecodedMap(map as any, annotation.location.file)
-        const position = getOriginalPosition(traceMap, annotation.location)
+        const traceMap = new DecodedMap(map as any, artifact.location.file)
+        const position = getOriginalPosition(traceMap, artifact.location)
+
         if (position) {
           const { source, column, line } = position
-          const file = source || annotation.location.file
-          annotation.location = {
+          const file = source || artifact.location.file
+          artifact.location = {
             line,
             column: column + 1,
             // if the file path is on windows, we need to remove the starting slash
             file: file.match(/\/\w:\//) ? file.slice(1) : file,
           }
+
+          if (artifact.type === 'internal:annotation') {
+            artifact.annotation.location = artifact.location
+          }
         }
       }
-      return rpc().onTaskAnnotate(test.id, annotation)
+
+      return rpc().onTaskArtifactRecord(test.id, artifact)
     }
 
     onTaskUpdate = (task: TaskResultPack[], events: TaskEventPack[]): Promise<void> => {
@@ -280,6 +300,11 @@ export function createBrowserRunner(
         throw new Error(`Failed to import test file ${filepath}`, { cause: err })
       }
     }
+
+    trace = <T>(name: string, attributes: Record<string, any> | (() => T), cb?: () => T): T => {
+      const options: import('@opentelemetry/api').SpanOptions = typeof attributes === 'object' ? { attributes } : {}
+      return this._otel.$(`vitest.test.runner.${name}`, options, cb || attributes as () => T)
+    }
   }
 }
 
@@ -298,7 +323,7 @@ export async function initiateRunner(
     return cachedRunner
   }
   const runnerClass
-    = config.mode === 'test' ? VitestTestRunner : NodeBenchmarkRunner
+    = config.mode === 'test' ? TestRunner : BenchmarkRunner
 
   const BrowserRunner = createBrowserRunner(runnerClass, mocker, state, {
     takeCoverage: () =>

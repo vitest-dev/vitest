@@ -2,6 +2,7 @@ import type { File, Task, TestAnnotation } from '@vitest/runner'
 import type { SerializedError } from '@vitest/utils'
 import type { TestError, UserConsoleLog } from '../../types/general'
 import type { Vitest } from '../core'
+import type { TestSpecification } from '../test-specification'
 import type { Reporter, TestRunEndReason } from '../types/reporter'
 import type { TestCase, TestCollection, TestModule, TestModuleState, TestResult, TestSuite, TestSuiteState } from './reported-tasks'
 import { performance } from 'node:perf_hooks'
@@ -10,6 +11,7 @@ import { toArray } from '@vitest/utils/helpers'
 import { parseStacktrace } from '@vitest/utils/source-map'
 import { relative } from 'pathe'
 import c from 'tinyrainbow'
+import { groupBy } from '../../utils/base'
 import { isTTY } from '../../utils/env'
 import { hasFailedSnapshot } from '../../utils/tasks'
 import { F_CHECK, F_DOWN_RIGHT, F_POINTER } from './renderers/figures'
@@ -57,7 +59,6 @@ export abstract class BaseReporter implements Reporter {
     this.ctx = ctx
 
     this.ctx.logger.printBanner()
-    this.start = performance.now()
   }
 
   log(...messages: any): void {
@@ -70,6 +71,11 @@ export abstract class BaseReporter implements Reporter {
 
   relative(path: string): string {
     return relative(this.ctx.config.root, path)
+  }
+
+  onTestRunStart(_specifications: ReadonlyArray<TestSpecification>): void {
+    this.start = performance.now()
+    this._timeStart = formatTimeString(new Date())
   }
 
   onTestRunEnd(
@@ -419,9 +425,6 @@ export abstract class BaseReporter implements Reporter {
     for (const testModule of this.failedUnwatchedFiles) {
       this.printTestModule(testModule)
     }
-
-    this._timeStart = formatTimeString(new Date())
-    this.start = performance.now()
   }
 
   onUserConsoleLog(log: UserConsoleLog, taskState?: TestResult['state']): void {
@@ -585,17 +588,15 @@ export abstract class BaseReporter implements Reporter {
       const executionTime = blobs?.executionTimes ? sum(blobs.executionTimes, time => time) : this.end - this.start
 
       const environmentTime = sum(files, file => file.environmentLoad)
-      const prepareTime = sum(files, file => file.prepareDuration)
       const transformTime = this.ctx.state.transformTime
       const typecheck = sum(this.ctx.projects, project => project.typechecker?.getResult().time)
 
       const timers = [
         `transform ${formatTime(transformTime)}`,
         `setup ${formatTime(setupTime)}`,
-        `collect ${formatTime(collectTime)}`,
+        `import ${formatTime(collectTime)}`,
         `tests ${formatTime(testsTime)}`,
         `environment ${formatTime(environmentTime)}`,
-        `prepare ${formatTime(prepareTime)}`,
         typecheck && `typecheck ${formatTime(typecheck)}`,
       ].filter(Boolean).join(', ')
 
@@ -606,7 +607,115 @@ export abstract class BaseReporter implements Reporter {
       }
     }
 
+    if (this.ctx.config.experimental.printImportBreakdown) {
+      this.printImportsBreakdown()
+    }
+
     this.log()
+  }
+
+  private printImportsBreakdown() {
+    const testModules = this.ctx.state.getTestModules()
+
+    interface ImportEntry {
+      importedModuleId: string
+      selfTime: number
+      external?: boolean
+      totalTime: number
+      testModule: TestModule
+    }
+
+    const allImports: ImportEntry[] = []
+
+    for (const testModule of testModules) {
+      const diagnostic = testModule.diagnostic()
+      const importDurations = diagnostic.importDurations
+
+      for (const filePath in importDurations) {
+        const duration = importDurations[filePath]
+        allImports.push({
+          importedModuleId: filePath,
+          testModule,
+          selfTime: duration.selfTime,
+          totalTime: duration.totalTime,
+          external: duration.external,
+        })
+      }
+    }
+
+    if (allImports.length === 0) {
+      return
+    }
+
+    const sortedImports = allImports.sort((a, b) => b.totalTime - a.totalTime)
+    const maxTotalTime = sortedImports[0].totalTime
+    const topImports = sortedImports.slice(0, 10)
+
+    const totalSelfTime = allImports.reduce((sum, imp) => sum + imp.selfTime, 0)
+    const totalTotalTime = allImports.reduce((sum, imp) => sum + imp.totalTime, 0)
+    const slowestImport = sortedImports[0]
+
+    this.log()
+    this.log(c.bold('Import Duration Breakdown') + c.dim(' (ordered by Total Time) (Top 10)'))
+
+    // if there are multiple files, it's highly possible that some of them will import the same large file
+    // we group them to show the distinction between those files more easily
+    //     Import Duration Breakdown (ordered by Total Time) (Top 10)
+    // .../fields/FieldFile/__tests__/FieldFile.spec.ts   self:    7ms total:  1.01s ████████████████████
+    //  ↳ tests/support/components/index.ts               self:    0ms total:  861ms █████████████████░░░
+    //  ↳ tests/support/components/renderComponent.ts     self:   59ms total:  861ms █████████████████░░░
+    // ...s__/apps/desktop/form-updater.desktop.spec.ts   self:    8ms total:  991ms ████████████████████
+    // ...sts__/apps/mobile/form-updater.mobile.spec.ts   self:   11ms total:  990ms ████████████████████
+    // shared/components/Form/__tests__/Form.spec.ts      self:    5ms total:  988ms ████████████████████
+    //  ↳ tests/support/components/index.ts               self:    0ms total:  935ms ███████████████████░
+    //  ↳ tests/support/components/renderComponent.ts     self:   61ms total:  935ms ███████████████████░
+    // ...ditor/features/link/__test__/LinkForm.spec.ts   self:    7ms total:  972ms ███████████████████░
+    //  ↳ tests/support/components/renderComponent.ts     self:   56ms total:  936ms ███████████████████░
+
+    const groupedImports = Object.entries(
+      groupBy(topImports, i => i.testModule.id),
+      // the first one is always the highest because the modules are already sorted
+    ).sort(([, imps1], [, imps2]) => imps2[0].totalTime - imps1[0].totalTime)
+
+    for (const [_, group] of groupedImports) {
+      group.forEach((imp, index) => {
+        const barWidth = 20
+        const filledWidth = Math.round((imp.totalTime / maxTotalTime) * barWidth)
+        const bar = c.cyan('█'.repeat(filledWidth)) + c.dim('░'.repeat(barWidth - filledWidth))
+
+        // only show the arrow if there is more than 1 group
+        const pathDisplay = this.ellipsisPath(imp.importedModuleId, imp.external, groupedImports.length > 1 && index > 0)
+
+        this.log(
+          `${pathDisplay} ${c.dim('self:')} ${this.importDurationTime(imp.selfTime)} ${c.dim('total:')} ${this.importDurationTime(imp.totalTime)} ${bar}`,
+        )
+      })
+    }
+
+    this.log()
+    this.log(c.dim('Total imports: ') + allImports.length)
+    this.log(c.dim('Slowest import (total-time): ') + formatTime(slowestImport.totalTime))
+    this.log(c.dim('Total import time (self/total): ') + formatTime(totalSelfTime) + c.dim(' / ') + formatTime(totalTotalTime))
+  }
+
+  private importDurationTime(duration: number) {
+    const color = duration >= 500 ? c.red : duration >= 100 ? c.yellow : (c: string) => c
+    return color(formatTime(duration).padStart(6))
+  }
+
+  private ellipsisPath(path: string, external: boolean | undefined, nested: boolean) {
+    const pathDisplay = this.relative(path)
+    const color = external ? c.magenta : (c: string) => c
+    const slicedPath = pathDisplay.slice(-44)
+    let title = ''
+    if (pathDisplay.length > slicedPath.length) {
+      title += '...'
+    }
+    if (nested) {
+      title = ` ${F_DOWN_RIGHT} ${title}`
+    }
+    title += slicedPath
+    return color(title.padEnd(50))
   }
 
   private printErrorsSummary(files: File[], errors: unknown[]) {

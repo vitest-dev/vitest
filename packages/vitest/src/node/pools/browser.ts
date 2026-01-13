@@ -1,9 +1,11 @@
+import type { Context, Span } from '@opentelemetry/api'
 import type { FileSpecification } from '@vitest/runner'
 import type { DeferPromise } from '@vitest/utils/helpers'
+import type { Traces } from '../../utils/traces'
 import type { Vitest } from '../core'
 import type { ProcessPool } from '../pool'
 import type { TestProject } from '../project'
-import type { TestSpecification } from '../spec'
+import type { TestSpecification } from '../test-specification'
 import type { BrowserProvider } from '../types/browser'
 import crypto from 'node:crypto'
 import * as nodeos from 'node:os'
@@ -60,11 +62,13 @@ export function createBrowserPool(vitest: Vitest): ProcessPool {
 
   const runWorkspaceTests = async (method: 'run' | 'collect', specs: TestSpecification[]) => {
     const groupedFiles = new Map<TestProject, FileSpecification[]>()
-    for (const { project, moduleId, testLines } of specs) {
+    for (const { project, moduleId, testLines, testIds, testNamePattern } of specs) {
       const files = groupedFiles.get(project) || []
       files.push({
         filepath: moduleId,
         testLocations: testLines,
+        testIds,
+        testNamePattern,
       })
       groupedFiles.set(project, files)
     }
@@ -176,16 +180,30 @@ class BrowserPool {
 
   private readySessions = new Set<string>()
 
+  private _traces: Traces
+  private _otel: {
+    span: Span
+    context: Context
+  }
+
   constructor(
     private project: TestProject,
     private options: {
       maxWorkers: number
       origin: string
     },
-  ) {}
+  ) {
+    this._traces = project.vitest._traces
+    this._otel = this._traces.startContextSpan('vitest.browser')
+    this._otel.span.setAttributes({
+      'vitest.project': project.name,
+      'vitest.browser.provider': this.project.browser!.provider.name,
+    })
+  }
 
   public cancel(): void {
     this._queue = []
+    this._otel.span.end()
   }
 
   public reject(error: Error): void {
@@ -236,7 +254,17 @@ class BrowserPool {
       this.project.vitest._browserSessions.sessionIds.add(sessionId)
       const project = this.project.name
       debug?.('[%s] creating session for %s', sessionId, project)
-      const page = this.openPage(sessionId).then(() => {
+      let page = this._traces.$(
+        `vitest.browser.open`,
+        {
+          context: this._otel.context,
+          attributes: {
+            'vitest.browser.session_id': sessionId,
+          },
+        },
+        () => this.openPage(sessionId),
+      )
+      page = page.then(() => {
         // start running tests on the page when it's ready
         this.runNextTest(method, sessionId)
       })
@@ -256,6 +284,10 @@ class BrowserPool {
     const browser = this.project.browser!
     const url = new URL('/__vitest_test__/', this.options.origin)
     url.searchParams.set('sessionId', sessionId)
+    const otelCarrier = this._traces.getContextCarrier()
+    if (otelCarrier) {
+      url.searchParams.set('otelCarrier', JSON.stringify(otelCarrier))
+    }
     const pagePromise = browser.provider.openPage(
       sessionId,
       url.toString(),
@@ -276,6 +308,7 @@ class BrowserPool {
 
     // the last worker finished running tests
     if (this.readySessions.size === this.orchestrators.size) {
+      this._otel.span.end()
       this._promise?.resolve()
       this._promise = undefined
       debug?.('[%s] all tests finished running', sessionId)
@@ -320,15 +353,28 @@ class BrowserPool {
 
     this.setBreakpoint(sessionId, file.filepath).then(() => {
       // this starts running tests inside the orchestrator
-      orchestrator.createTesters(
+      const testersPromise = this._traces.$(
+        `vitest.browser.run`,
         {
-          method,
-          files: [file],
-          // this will be parsed by the test iframe, not the orchestrator
-          // so we need to stringify it first to avoid double serialization
-          providedContext: this._providedContext || '[{}]',
+          context: this._otel.context,
+          attributes: {
+            'code.file.path': file.filepath,
+          },
+        },
+        async () => {
+          return orchestrator.createTesters(
+            {
+              method,
+              files: [file],
+              // this will be parsed by the test iframe, not the orchestrator
+              // so we need to stringify it first to avoid double serialization
+              providedContext: this._providedContext || '[{}]',
+              otelCarrier: this._traces.getContextCarrier(),
+            },
+          )
         },
       )
+      testersPromise
         .then(() => {
           debug?.('[%s] test %s finished running', sessionId, file)
           this.runNextTest(method, sessionId)
@@ -347,7 +393,9 @@ class BrowserPool {
             return
           }
           debug?.('[%s] error during %s test run: %s', sessionId, file, error)
-          this.reject(error)
+          this.reject(
+            new Error(`Failed to run the test ${file.filepath}.`, { cause: error }),
+          )
         })
     }).catch(err => this.reject(err))
   }

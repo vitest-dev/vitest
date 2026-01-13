@@ -225,7 +225,7 @@ test('overridden exclude should still apply defaults', async () => {
   expect(coverageMap.files()).toMatchInlineSnapshot(`{}`)
 })
 
-test('uncovered files are transformed correctly', async () => {
+test('uncovered files are transformed correctly (node and browser)', async () => {
   await runVitest({
     config: 'fixtures/configs/vitest.config.conditional.ts',
     include: ['fixtures/test/math.test.ts'],
@@ -242,7 +242,7 @@ test('uncovered files are transformed correctly', async () => {
     expect(files).toMatchInlineSnapshot(`
       [
         "<process-cwd>/fixtures/src/math.ts",
-        "<process-cwd>/fixtures/src/conditional/browser.ts",
+        "<process-cwd>/fixtures/src/conditional/web.ts",
       ]
     `)
   }
@@ -250,10 +250,34 @@ test('uncovered files are transformed correctly', async () => {
     expect(files).toMatchInlineSnapshot(`
       [
         "<process-cwd>/fixtures/src/math.ts",
-        "<process-cwd>/fixtures/src/conditional/node.ts",
+        "<process-cwd>/fixtures/src/conditional/ssr.ts",
       ]
     `)
   }
+})
+
+test('uncovered files are transformed correctly (jsdom)', async ({ skip }) => {
+  skip(isBrowser(), 'node relevant test')
+
+  await runVitest({
+    config: 'fixtures/configs/vitest.config.conditional.ts',
+    include: ['fixtures/test/math.test.ts'],
+    environment: 'jsdom',
+    coverage: {
+      include: ['fixtures/src/math.ts', 'fixtures/src/conditional/*'],
+      reporter: 'json',
+    },
+  })
+
+  const coverageMap = await readCoverageMap()
+  const files = coverageMap.files()
+
+  expect(files).toMatchInlineSnapshot(`
+      [
+        "<process-cwd>/fixtures/src/math.ts",
+        "<process-cwd>/fixtures/src/conditional/web.ts",
+      ]
+    `)
 })
 
 test('files included and excluded in plugin\'s configureVitest are excluded', async () => {

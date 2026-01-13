@@ -26,95 +26,105 @@ export async function collectTests(
   const files: File[] = []
 
   const config = runner.config
+  const $ = runner.trace!
 
   for (const spec of specs) {
     const filepath = typeof spec === 'string' ? spec : spec.filepath
-    const testLocations = typeof spec === 'string' ? undefined : spec.testLocations
+    await $(
+      'collect_spec',
+      { 'code.file.path': filepath },
+      async () => {
+        const testLocations = typeof spec === 'string' ? undefined : spec.testLocations
+        const testNamePattern = typeof spec === 'string' ? undefined : spec.testNamePattern
+        const testIds = typeof spec === 'string' ? undefined : spec.testIds
 
-    const file = createFileTask(filepath, config.root, config.name, runner.pool)
-    setFileContext(file, Object.create(null))
-    file.shuffle = config.sequence.shuffle
+        const file = createFileTask(filepath, config.root, config.name, runner.pool, runner.viteEnvironment)
+        setFileContext(file, Object.create(null))
+        file.shuffle = config.sequence.shuffle
 
-    runner.onCollectStart?.(file)
+        runner.onCollectStart?.(file)
 
-    clearCollectorContext(filepath, runner)
+        clearCollectorContext(file, runner)
 
-    try {
-      const setupFiles = toArray(config.setupFiles)
-      if (setupFiles.length) {
-        const setupStart = now()
-        await runSetupFiles(config, setupFiles, runner)
-        const setupEnd = now()
-        file.setupDuration = setupEnd - setupStart
-      }
-      else {
-        file.setupDuration = 0
-      }
+        try {
+          const setupFiles = toArray(config.setupFiles)
+          if (setupFiles.length) {
+            const setupStart = now()
+            await runSetupFiles(config, setupFiles, runner)
+            const setupEnd = now()
+            file.setupDuration = setupEnd - setupStart
+          }
+          else {
+            file.setupDuration = 0
+          }
 
-      const collectStart = now()
+          const collectStart = now()
 
-      await runner.importFile(filepath, 'collect')
+          await runner.importFile(filepath, 'collect')
 
-      const durations = runner.getImportDurations?.()
-      if (durations) {
-        file.importDurations = durations
-      }
+          const durations = runner.getImportDurations?.()
+          if (durations) {
+            file.importDurations = durations
+          }
 
-      const defaultTasks = await getDefaultSuite().collect(file)
+          const defaultTasks = await getDefaultSuite().collect(file)
 
-      const fileHooks = createSuiteHooks()
-      mergeHooks(fileHooks, getHooks(defaultTasks))
+          const fileHooks = createSuiteHooks()
+          mergeHooks(fileHooks, getHooks(defaultTasks))
 
-      for (const c of [...defaultTasks.tasks, ...collectorContext.tasks]) {
-        if (c.type === 'test' || c.type === 'suite') {
-          file.tasks.push(c)
+          for (const c of [...defaultTasks.tasks, ...collectorContext.tasks]) {
+            if (c.type === 'test' || c.type === 'suite') {
+              file.tasks.push(c)
+            }
+            else if (c.type === 'collector') {
+              const suite = await c.collect(file)
+              if (suite.name || suite.tasks.length) {
+                mergeHooks(fileHooks, getHooks(suite))
+                file.tasks.push(suite)
+              }
+            }
+            else {
+              // check that types are exhausted
+              c satisfies never
+            }
+          }
+
+          setHooks(file, fileHooks)
+          file.collectDuration = now() - collectStart
         }
-        else if (c.type === 'collector') {
-          const suite = await c.collect(file)
-          if (suite.name || suite.tasks.length) {
-            mergeHooks(fileHooks, getHooks(suite))
-            file.tasks.push(suite)
+        catch (e) {
+          const error = processError(e)
+          file.result = {
+            state: 'fail',
+            errors: [error],
+          }
+
+          const durations = runner.getImportDurations?.()
+          if (durations) {
+            file.importDurations = durations
           }
         }
-        else {
-          // check that types are exhausted
-          c satisfies never
+
+        calculateSuiteHash(file)
+
+        const hasOnlyTasks = someTasksAreOnly(file)
+        interpretTaskModes(
+          file,
+          testNamePattern ?? config.testNamePattern,
+          testLocations,
+          testIds,
+          hasOnlyTasks,
+          false,
+          config.allowOnly,
+        )
+
+        if (file.mode === 'queued') {
+          file.mode = 'run'
         }
-      }
 
-      setHooks(file, fileHooks)
-      file.collectDuration = now() - collectStart
-    }
-    catch (e) {
-      const error = processError(e)
-      file.result = {
-        state: 'fail',
-        errors: [error],
-      }
-
-      const durations = runner.getImportDurations?.()
-      if (durations) {
-        file.importDurations = durations
-      }
-    }
-
-    calculateSuiteHash(file)
-
-    const hasOnlyTasks = someTasksAreOnly(file)
-    interpretTaskModes(
-      file,
-      config.testNamePattern,
-      testLocations,
-      hasOnlyTasks,
-      false,
-      config.allowOnly,
+        files.push(file)
+      },
     )
-
-    if (file.mode === 'queued') {
-      file.mode = 'run'
-    }
-
-    files.push(file)
   }
 
   return files

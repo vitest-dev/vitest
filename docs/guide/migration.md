@@ -22,7 +22,7 @@ This allows V8 reports to be as accurate as `@vitest/coverage-istanbul` reports.
 - `coverage.experimentalAstAwareRemapping` is removed. This option is now enabled by default, and is the only supported remapping method.
 - `coverage.ignoreClassMethods` is now supported by V8 provider too.
 
-### Removed options `coverage.all` and `coverage.extensions`
+### Removed Options `coverage.all` and `coverage.extensions`
 
 In previous versions Vitest included all uncovered files in coverage report by default.
 This was due to `coverage.all` defaulting to `true`, and `coverage.include` defaulting to `**`.
@@ -70,6 +70,44 @@ export default defineConfig({
 See also new guides:
 - [Including and excluding files from coverage report](/guide/coverage.html#including-and-excluding-files-from-coverage-report) for examples
 - [Profiling Test Performance | Code coverage](/guide/profiling-test-performance.html#code-coverage) for tips about debugging coverage generation
+
+### Simplified `exclude`
+
+By default, Vitest now only excludes tests from `node_modules` and `.git` folders. This means that Vitest no longer excludes:
+
+- `dist` and `cypress` folders
+- `.idea`, `.cache`, `.output`, `.temp` folders
+- config files like `rollup.config.js`, `prettier.config.js`, `ava.config.js` and so on
+
+If you need to limit the directory where your tests files are located, use the [`test.dir`](/config/dir) option instead because it is more performant than excluding files:
+
+```ts
+import { configDefaults, defineConfig } from 'vitest/config'
+
+export default defineConfig({
+  test: {
+    dir: './frontend/tests', // [!code ++]
+  },
+})
+```
+
+To restore the previous behaviour, specify old `excludes` manually:
+
+```ts
+import { configDefaults, defineConfig } from 'vitest/config'
+
+export default defineConfig({
+  test: {
+    exclude: [
+      ...configDefaults.exclude,
+      '**/dist/**', // [!code ++]
+      '**/cypress/**', // [!code ++]
+      '**/.{idea,git,cache,output,temp}/**', // [!code ++]
+      '**/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress,tsup,build,eslint,prettier}.config.*' // [!code ++]
+    ],
+  },
+})
+```
 
 ### `spyOn` and `fn` Support Constructors
 
@@ -136,7 +174,7 @@ expect(AutoMockedClass.prototype.method).toHaveBeenCalledTimes(4)
 - The mock `vi.fn(implementation).mockReset()` now correctly returns the mock implementation in `.getMockImplementation()`
 - `vi.fn().mock.invocationCallOrder` now starts with `1`, like Jest does, instead of `0`
 
-### Standalone mode with filename filter
+### Standalone Mode with Filename Filter
 
 To improve user experience, Vitest will now start running the matched files when [`--standalone`](/guide/cli#standalone) is used with filename filter.
 
@@ -281,7 +319,7 @@ New pool architecture allows Vitest to simplify many previously complex configur
 
 - `maxThreads` and `maxForks` are now `maxWorkers`.
 - Environment variables `VITEST_MAX_THREADS` and `VITEST_MAX_FORKS` are now `VITEST_MAX_WORKERS`.
-- `singleThread` and `singleFork` are now `maxWorkers: 1, isolate: false`. If your tests were relying on module reset between tests, you'll need to add [setupFile](/config/#setupfiles) that calls [`vi.resetModules()`](/api/vi.html#vi-resetmodules) in [`beforeAll` test hook](/api/#beforeall).
+- `singleThread` and `singleFork` are now `maxWorkers: 1, isolate: false`. If your tests were relying on module reset between tests, you'll need to add [setupFile](/config/setupfiles) that calls [`vi.resetModules()`](/api/vi.html#vi-resetmodules) in [`beforeAll` test hook](/api/#beforeall).
 - `poolOptions` is removed. All previous `poolOptions` are now top-level options. The `memoryLimit` of VM pools is renamed to `vmMemoryLimit`.
 - `threads.useAtomics` is removed. If you have a use case for this, feel free to open a new feature request.
 - Custom pool interface has been rewritten, see [Custom Pool](/guide/advanced/pool#custom-pool)
@@ -339,11 +377,11 @@ export default defineConfig({
     projects: [
       {
         name: 'Parallel',
-        exclude: ['**.sequantial.test.ts'],
+        exclude: ['**.sequential.test.ts'],
       },
       {
         name: 'Sequential',
-        include: ['**.sequantial.test.ts'],
+        include: ['**.sequential.test.ts'],
         fileParallelism: false,
       },
     ],
@@ -399,7 +437,7 @@ export default defineConfig({
 })
 ```
 
-### Snapshots using custom elements print the shadow root
+### Snapshots using Custom Elements Print the Shadow Root
 
 In Vitest 4.0 snapshots that include custom elements will print the shadow root contents. To restore the previous behavior, set the [`printShadowRoot` option](/config/#snapshotformat) to `false`.
 
@@ -501,7 +539,7 @@ For more details please refer to the [`vi.mock` api section](/api/vi#vi-mock).
 
 ### Auto-Mocking Behaviour
 
-Unlike Jest, mocked modules in `<root>/__mocks__` are not loaded unless `vi.mock()` is called. If you need them to be mocked in every test, like in Jest, you can mock them inside [`setupFiles`](/config/#setupfiles).
+Unlike Jest, mocked modules in `<root>/__mocks__` are not loaded unless `vi.mock()` is called. If you need them to be mocked in every test, like in Jest, you can mock them inside [`setupFiles`](/config/setupfiles).
 
 ### Importing the Original of a Mocked Package
 

@@ -348,19 +348,6 @@ export const cliOptionsConfig: VitestCLIOptions = {
         argument: '[port]',
         subcommands: apiConfig(defaultBrowserPort),
       },
-      provider: {
-        description:
-          'Provider used to run browser tests. Some browsers are only available for specific providers. Can be "webdriverio", "playwright", "preview", or the path to a custom provider. Visit [`browser.provider`](https://vitest.dev/config/browser/provider) for more information',
-        argument: '<name>',
-        subcommands: null, // don't support custom objects
-        transform(value) {
-          const supported = ['playwright', 'webdriverio', 'preview']
-          if (typeof value !== 'string' || !supported.includes(value)) {
-            throw new Error(`Unsupported browser provider: ${value}. Supported providers are: ${supported.join(', ')}`)
-          }
-          return { name: value, _cli: true }
-        },
-      },
       isolate: {
         description:
           'Run every browser test file in isolation. To disable isolation, use `--browser.isolate=false` (default: `true`)',
@@ -397,6 +384,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
       testerHtmlPath: null,
       instances: null,
       expect: null,
+      provider: null,
     },
   },
   pool: {
@@ -542,6 +530,29 @@ export const cliOptionsConfig: VitestCLIOptions = {
     description:
       'Retry the test specific number of times if it fails (default: `0`)',
     argument: '<times>',
+    subcommands: {
+      count: {
+        description:
+          'Number of times to retry a test if it fails (default: `0`)',
+        argument: '<times>',
+      },
+      delay: {
+        description:
+          'Delay in milliseconds between retry attempts (default: `0`)',
+        argument: '<ms>',
+      },
+      condition: {
+        description:
+          'Regex pattern to match error messages that should trigger a retry. Only errors matching this pattern will cause a retry (default: retry on all errors)',
+        argument: '<pattern>',
+        transform: (value) => {
+          if (typeof value === 'string') {
+            return new RegExp(value, 'i')
+          }
+          return value
+        },
+      },
+    },
   },
   diff: {
     description:
@@ -774,7 +785,24 @@ export const cliOptionsConfig: VitestCLIOptions = {
       return value
     },
   },
+  clearCache: {
+    description: 'Delete all Vitest caches, including `experimental.fsModuleCache`, without running any tests. This will reduce the performance in the subsequent test run.',
+  },
 
+  experimental: {
+    description: 'Experimental features.',
+    argument: '<features>',
+    subcommands: {
+      fsModuleCache: {
+        description: 'Enable caching of modules on the file system between reruns.',
+      },
+      fsModuleCachePath: null,
+      openTelemetry: null,
+      printImportBreakdown: {
+        description: 'Print import breakdown after the summary. If the reporter doesn\'t support summary, this will have no effect. Note that UI\'s "Module Graph" tab always has an import breakdown.',
+      },
+    },
+  },
   // disable CLI options
   cliExclude: null,
   server: null,
