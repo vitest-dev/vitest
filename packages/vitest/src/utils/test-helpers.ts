@@ -1,4 +1,4 @@
-import type { TestSpecification } from '../node/spec'
+import type { TestSpecification } from '../node/test-specification'
 import type { EnvironmentOptions, VitestEnvironment } from '../node/types/config'
 import type { ContextTestEnvironment } from '../types/worker'
 import { promises as fs } from 'node:fs'

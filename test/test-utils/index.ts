@@ -18,9 +18,8 @@ import { inspect } from 'node:util'
 import { dirname, relative, resolve } from 'pathe'
 import { x } from 'tinyexec'
 import * as tinyrainbow from 'tinyrainbow'
-import { afterEach, onTestFinished } from 'vitest'
+import { afterEach, onTestFinished, TestRunner } from 'vitest'
 import { startVitest } from 'vitest/node'
-import { getCurrentTest } from 'vitest/suite'
 import { Cli } from './cli'
 
 // override default colors to disable them in tests
@@ -197,7 +196,7 @@ export async function runVitest(
     exitCode = process.exitCode
     process.exitCode = 0
 
-    if (getCurrentTest()) {
+    if (TestRunner.getCurrentTest()) {
       onTestFinished(async () => {
         await ctx?.close()
         process.exit = exit
@@ -222,12 +221,7 @@ export async function runVitest(
       return ctx?.state.getTestModules() || []
     },
     errorTree() {
-      return buildTestTree(ctx?.state.getTestModules() || [], (result) => {
-        if (result.state === 'failed') {
-          return result.errors.map(e => e.message)
-        }
-        return result.state
-      })
+      return buildErrorTree(ctx?.state.getTestModules() || [])
     },
     testTree() {
       return buildTestTree(ctx?.state.getTestModules() || [])
@@ -325,24 +319,15 @@ export function getInternalState(): WorkerGlobalState {
 }
 
 const originalFiles = new Map<string, string>()
-const createdFiles = new Set<string>()
-afterEach(() => {
-  originalFiles.forEach((content, file) => {
-    fs.writeFileSync(file, content, 'utf-8')
-  })
-  createdFiles.forEach((file) => {
+
+export function createFile(file: string, content: string) {
+  fs.mkdirSync(dirname(file), { recursive: true })
+  fs.writeFileSync(file, content, 'utf-8')
+  onTestFinished(() => {
     if (fs.existsSync(file)) {
       fs.unlinkSync(file)
     }
   })
-  originalFiles.clear()
-  createdFiles.clear()
-})
-
-export function createFile(file: string, content: string) {
-  createdFiles.add(file)
-  fs.mkdirSync(dirname(file), { recursive: true })
-  fs.writeFileSync(file, content, 'utf-8')
 }
 
 export function editFile(file: string, callback: (content: string) => string) {
@@ -351,6 +336,13 @@ export function editFile(file: string, callback: (content: string) => string) {
     originalFiles.set(file, content)
   }
   fs.writeFileSync(file, callback(content), 'utf-8')
+  onTestFinished(() => {
+    const original = originalFiles.get(file)
+    if (original !== undefined) {
+      fs.writeFileSync(file, original, 'utf-8')
+      originalFiles.delete(file)
+    }
+  })
 }
 
 export function resolvePath(baseUrl: string, path: string) {
@@ -444,6 +436,11 @@ export function useFS<T extends TestFsStructure>(root: string, structure: T, ens
     resolveFile: (file: string): string => {
       return resolve(root, file)
     },
+    renameFile: (oldFile: string, newFile: string) => {
+      const oldFilepath = resolve(root, oldFile)
+      const newFilepath = resolve(root, newFile)
+      return fs.renameSync(oldFilepath, newFilepath)
+    },
   }
 }
 
@@ -483,7 +480,16 @@ export class StableTestFileOrderSorter {
   }
 }
 
-function buildTestTree(testModules: TestModule[], onResult?: (result: TestResult) => unknown) {
+export function buildErrorTree(testModules: TestModule[]) {
+  return buildTestTree(testModules, (result) => {
+    if (result.state === 'failed') {
+      return result.errors.map(e => e.message)
+    }
+    return result.state
+  })
+}
+
+export function buildTestTree(testModules: TestModule[], onResult?: (result: TestResult) => unknown) {
   type TestTree = Record<string, any>
 
   function walkCollection(collection: TestCollection): TestTree {

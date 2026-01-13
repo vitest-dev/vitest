@@ -15,8 +15,7 @@ import { createDebug } from 'obug'
 import { normalize } from 'pathe'
 import { provider } from 'std-env'
 import c from 'tinyrainbow'
-import { BaseCoverageProvider } from 'vitest/coverage'
-import { parseAstAsync } from 'vitest/node'
+import { BaseCoverageProvider, parseAstAsync } from 'vitest/node'
 import { version } from '../package.json' with { type: 'json' }
 
 export interface ScriptCoverageWithOffset extends Profiler.ScriptCoverage {

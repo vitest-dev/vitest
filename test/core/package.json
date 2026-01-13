@@ -13,7 +13,7 @@
     "collect": "vitest list"
   },
   "devDependencies": {
-    "@standard-schema/spec": "^1.0.0",
+    "@standard-schema/spec": "^1.1.0",
     "@test/dep-esm-non-existing": "link:./deps/dep-esm-non-existing",
     "@test/vite-environment-external": "link:./projects/vite-environment-external",
     "@test/vite-external": "link:./projects/vite-external",
@@ -32,7 +32,7 @@
     "immutable": "5.1.4",
     "memfs": "^4.51.1",
     "obug": "^2.1.1",
-    "react": "^19.2.0",
+    "react": "^19.2.3",
     "react-18": "npm:react@18.3.1",
     "temporal-polyfill": "~0.3.0",
     "tinyrainbow": "catalog:",
@@ -40,7 +40,7 @@
     "url": "^0.11.4",
     "vitest": "workspace:*",
     "vitest-environment-custom": "file:./vitest-environment-custom",
-    "vitest-package-exports": "^0.1.1",
+    "vitest-package-exports": "^1.1.2",
     "vue": "catalog:"
   }
 }
