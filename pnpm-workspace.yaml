@@ -26,11 +26,12 @@ packages:
   - test/config/fixtures/conditions-pkg
 
 overrides:
-  '@vitest/browser': 'workspace:*'
-  '@vitest/browser-playwright': 'workspace:*'
-  '@vitest/browser-preview': 'workspace:*'
-  '@vitest/browser-webdriverio': 'workspace:*'
-  '@vitest/ui': 'workspace:*'
+  '@types/node': $@types/node
+  '@vitest/browser': workspace:*
+  '@vitest/browser-playwright': workspace:*
+  '@vitest/browser-preview': workspace:*
+  '@vitest/browser-webdriverio': workspace:*
+  '@vitest/ui': workspace:*
   acorn: 8.11.3
   mlly: ^1.8.0
   rollup: $rollup
@@ -45,6 +46,7 @@ patchedDependencies:
 catalog:
   '@iconify-json/carbon': ^1.2.14
   '@iconify-json/logos': ^1.2.10
+  '@iconify/vue': ^5.0.0
   '@jridgewell/remapping': ^2.3.5
   '@jridgewell/trace-mapping': 0.3.31
   '@types/chai': ^5.2.2
