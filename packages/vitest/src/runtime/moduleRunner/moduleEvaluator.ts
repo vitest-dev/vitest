@@ -11,7 +11,6 @@ import type { VitestVmOptions } from './moduleRunner'
 import { createRequire, isBuiltin } from 'node:module'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import vm from 'node:vm'
-import { isAbsolute } from 'pathe'
 import {
   ssrDynamicImportKey,
   ssrExportAllKey,
@@ -273,7 +272,7 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
       'code.file.path': filename,
     })
 
-    const require = this.createRequire(filename)
+    const require = this.createRequire(meta.url)
 
     const argumentsList = [
       ssrModuleExportsKey,
@@ -353,11 +352,6 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
   }
 
   private createRequire(filename: string) {
-    // \x00 is a rollup convention for virtual files,
-    // it is not allowed in actual file names
-    if (filename[0] === '\x00' || !isAbsolute(filename)) {
-      return () => ({})
-    }
     return this.vm
       ? this.vm.externalModulesExecutor.createRequire(filename)
       : createRequire(filename)
