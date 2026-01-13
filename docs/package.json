@@ -32,7 +32,7 @@
     "tinyglobby": "catalog:",
     "unocss": "catalog:",
     "vite": "^6.3.5",
-    "vite-plugin-pwa": "^0.21.2",
+    "vite-plugin-pwa": "^1.2.0",
     "vitepress": "2.0.0-alpha.15",
     "vitepress-plugin-group-icons": "^1.6.5",
     "vitepress-plugin-llms": "^1.10.0",
