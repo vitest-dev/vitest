@@ -1052,7 +1052,7 @@ The implementation is based internally on [`@sinonjs/fake-timers`](https://githu
 But you can enable it by specifying the option in `toFake` argument: `vi.useFakeTimers({ toFake: ['nextTick', 'queueMicrotask'] })`.
 :::
 
-### vi.setTimerTickMode
+### vi.setTimerTickMode <Version>4.1.0</Version> {#vi-settimertickmode}
 
 - **Type:** `(mode: 'manual' | 'nextTimerAsync') => Vitest | (mode: 'interval', interval?: number) => Vitest`
 
