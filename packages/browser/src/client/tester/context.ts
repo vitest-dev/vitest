@@ -9,6 +9,7 @@ import type {
   Locator,
   LocatorSelectors,
   UserEvent,
+  UserEventWheelOptions,
 } from 'vitest/browser'
 import type { StringifyOptions } from 'vitest/internal/browser'
 import type { IframeViewportEvent } from '../client'
@@ -16,7 +17,7 @@ import type { BrowserRunnerState } from '../utils'
 import type { Locator as LocatorAPI } from './locators/index'
 import { __INTERNAL, stringify } from 'vitest/internal/browser'
 import { ensureAwaited, getBrowserState, getWorkerState } from '../utils'
-import { convertToSelector, processTimeoutOptions } from './tester-utils'
+import { convertToSelector, isLocator, processTimeoutOptions, resolveUserEventWheelOptions } from './tester-utils'
 
 // this file should not import anything directly, only types and utils
 
@@ -68,6 +69,9 @@ export function createUserEvent(__tl_user_event_base__?: TestingLibraryUserEvent
     },
     tripleClick(element, options) {
       return convertToLocator(element).tripleClick(options)
+    },
+    wheel(elementOrOptions: Element | Locator, options: UserEventWheelOptions) {
+      return convertToLocator(elementOrOptions).wheel(options)
     },
     selectOptions(element, value, options) {
       return convertToLocator(element).selectOptions(value, options)
@@ -229,6 +233,31 @@ function createPreviewUserEvent(userEventBase: TestingLibraryUserEvent, options:
     },
     async paste() {
       await userEvent.paste(clipboardData)
+    },
+    async wheel(element: Element | Locator, options: UserEventWheelOptions) {
+      const resolvedElement = isLocator(element) ? element.element() : element
+      const resolvedOptions = resolveUserEventWheelOptions(options)
+
+      const rect = resolvedElement.getBoundingClientRect()
+
+      const centerX = rect.left + rect.width / 2
+      const centerY = rect.top + rect.height / 2
+
+      const wheelEvent = new WheelEvent('wheel', {
+        clientX: centerX,
+        clientY: centerY,
+        deltaY: resolvedOptions.delta.y ?? 0,
+        deltaX: resolvedOptions.delta.x ?? 0,
+        deltaMode: 0,
+        bubbles: true,
+        cancelable: true,
+      })
+
+      const times = options.times ?? 1
+
+      for (let count = 0; count < times; count += 1) {
+        resolvedElement.dispatchEvent(wheelEvent)
+      }
     },
   }
 
