@@ -98,6 +98,16 @@ export interface VitestUtils {
   clearAllTimers: () => VitestUtils
 
   /**
+   * Controls how fake timers are advanced.
+   * @param mode The mode to use for advancing timers.
+   * - `manual`: The default behavior. Timers will only advance when you call one of `vi.advanceTimers...()` methods.
+   * - `nextTimerAsync`: Timers will be advanced automatically to the next available timer after each macrotask.
+   * - `interval`: Timers are advanced automatically by a specified interval.
+   * @param interval The interval in milliseconds to use when `mode` is `'interval'`.
+   */
+  setTimerTickMode: ((mode: 'manual' | 'nextTimerAsync') => VitestUtils) & ((mode: 'interval', interval?: number) => VitestUtils)
+
+  /**
    * Creates a spy on a method or getter/setter of an object similar to [`vi.fn()`](https://vitest.dev/api/vi#vi-fn). It returns a [mock function](https://vitest.dev/api/mock).
    * @example
    * ```ts
@@ -552,6 +562,11 @@ function createVitest(): VitestUtils {
 
     clearAllTimers() {
       timers().clearAllTimers()
+      return utils
+    },
+
+    setTimerTickMode(mode: 'manual' | 'nextTimerAsync' | 'interval', interval?: number) {
+      timers().setTimerTickMode(mode, interval)
       return utils
     },
 
