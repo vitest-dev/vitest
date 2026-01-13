@@ -11,10 +11,14 @@ import type {
   VitestRunner,
 } from '@vitest/runner'
 import type { SerializedConfig, TestExecutionMethod, WorkerGlobalState } from 'vitest'
+import type {
+  Traces,
+} from 'vitest/internal/browser'
 import type { VitestBrowserClientMocker } from './mocker'
 import type { CommandsManager } from './tester-utils'
 import { globalChannel, onCancel } from '@vitest/browser/client'
 import { getTestName } from '@vitest/runner/utils'
+import { BenchmarkRunner, TestRunner } from 'vitest'
 import { page, userEvent } from 'vitest/browser'
 import {
   DecodedMap,
@@ -23,7 +27,6 @@ import {
   loadSnapshotSerializers,
   takeCoverageInsideWorker,
 } from 'vitest/internal/browser'
-import { NodeBenchmarkRunner, VitestTestRunner } from 'vitest/runners'
 import { createStackString, parseStacktrace } from '../../../../utils/src/source-map'
 import { getBrowserState, getWorkerState, moduleRunner } from '../utils'
 import { rpc } from './rpc'
@@ -57,12 +60,14 @@ export function createBrowserRunner(
     public sourceMapCache = new Map<string, any>()
     public method = 'run' as TestExecutionMethod
     private commands: CommandsManager
+    private _otel!: Traces
 
     constructor(options: BrowserRunnerOptions) {
       super(options.config)
       this.config = options.config
       this.commands = getBrowserState().commands
       this.viteEnvironment = '__browser__'
+      this._otel = getBrowserState().traces
     }
 
     setMethod(method: TestExecutionMethod) {
@@ -296,9 +301,10 @@ export function createBrowserRunner(
       }
     }
 
-    // disable tracing in the browser for now
-    trace = undefined
-    __setTraces = undefined
+    trace = <T>(name: string, attributes: Record<string, any> | (() => T), cb?: () => T): T => {
+      const options: import('@opentelemetry/api').SpanOptions = typeof attributes === 'object' ? { attributes } : {}
+      return this._otel.$(`vitest.test.runner.${name}`, options, cb || attributes as () => T)
+    }
   }
 }
 
@@ -317,7 +323,7 @@ export async function initiateRunner(
     return cachedRunner
   }
   const runnerClass
-    = config.mode === 'test' ? VitestTestRunner : NodeBenchmarkRunner
+    = config.mode === 'test' ? TestRunner : BenchmarkRunner
 
   const BrowserRunner = createBrowserRunner(runnerClass, mocker, state, {
     takeCoverage: () =>

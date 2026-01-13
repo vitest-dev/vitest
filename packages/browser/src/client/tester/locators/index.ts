@@ -117,7 +117,8 @@ export abstract class Locator {
       return {
         name: file.name,
         mimeType: file.type,
-        base64: bas64String,
+        // strip prefix `data:[<media-type>][;base64],`
+        base64: bas64String.slice(bas64String.indexOf(',') + 1),
       }
     })
     return this.triggerCommand<void>('__vitest_upload', this.selector, await Promise.all(filesPromise), options)

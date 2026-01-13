@@ -468,7 +468,7 @@ export class TestProject {
     }
     const provider = this.config.browser.provider || childProject.config.browser.provider
     if (provider == null) {
-      throw new Error(`Proider was not specified in the "browser.provider" setting. Please, pass down playwright(), webdriverio() or preview() from "@vitest/browser-playwright", "@vitest/browser-webdriverio" or "@vitest/browser-preview" package respectively.`)
+      throw new Error(`Provider was not specified in the "browser.provider" setting. Please, pass down playwright(), webdriverio() or preview() from "@vitest/browser-playwright", "@vitest/browser-webdriverio" or "@vitest/browser-preview" package respectively.`)
     }
     if (typeof provider.serverFactory !== 'function') {
       throw new TypeError(`The browser provider options do not return a "serverFactory" function. Are you using the latest "@vitest/browser-${provider.name}" package?`)
@@ -505,7 +505,7 @@ export class TestProject {
         [
           this.vite?.close(),
           this.typechecker?.stop(),
-          this.browser?.close(),
+          (this.browser || this._parent?._parentBrowser?.vite)?.close(),
           this.clearTmpDir(),
         ].filter(Boolean),
       ).then(() => {
@@ -544,6 +544,7 @@ export class TestProject {
       },
       server.config,
     )
+    this._config.api.token = this.vitest.config.api.token
     this._setHash()
     for (const _providedKey in this.config.provide) {
       const providedKey = _providedKey as keyof ProvidedContext

@@ -42,6 +42,9 @@ export type {
 } from '../runtime/config'
 
 export { VitestEvaluatedModules as EvaluatedModules } from '../runtime/moduleRunner/evaluatedModules'
+
+export { NodeBenchmarkRunner as BenchmarkRunner } from '../runtime/runners/benchmark'
+export { TestRunner } from '../runtime/runners/test'
 export type {
   BenchFactory,
   BenchFunction,
@@ -59,7 +62,6 @@ export { expectTypeOf } from '../typecheck/expectTypeOf'
 export type { ExpectTypeOf } from '../typecheck/expectTypeOf'
 
 export type { BrowserTesterOptions } from '../types/browser'
-// export type * as Experimental from '../types/experimental'
 export type {
   AfterSuiteRunMeta,
   LabelColor,
@@ -135,6 +137,9 @@ export type {
   TestContext,
   TestFunction,
   TestOptions,
+
+  VitestRunnerConfig as TestRunnerConfig,
+  VitestRunner as VitestTestRunner,
 } from '@vitest/runner'
 
 export type { CancelReason } from '@vitest/runner'

@@ -1,6 +1,6 @@
 import { relative, resolve } from 'pathe'
 import { expect, test } from 'vitest'
-import { DefaultReporter } from 'vitest/reporters'
+import { DefaultReporter } from 'vitest/node'
 import { runInlineTests, runVitest } from '../../test-utils'
 
 test('can run custom pools with Vitest', async () => {

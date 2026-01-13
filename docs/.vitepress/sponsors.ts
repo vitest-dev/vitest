@@ -1,83 +1,62 @@
-interface Sponsor {
-  name: string
-  img: string
-  url: string
-}
+import type { SponsorTier } from '@voidzero-dev/vitepress-theme/src/types/sponsors'
 
-const vitestSponsors = {
-  provided: [
-    {
-      name: 'VoidZero',
-      url: 'https://voidzero.dev',
-      img: '/voidzero.svg',
-    },
-  ],
-  special: [
-    {
-      name: 'NuxtLabs',
-      url: 'https://nuxtlabs.com',
-      img: '/nuxtlabs.svg',
-    },
-    {
-      name: 'Bolt',
-      url: 'https://bolt.new',
-      img: '/bolt.svg',
-    },
-    {
-      name: 'Zammad',
-      url: 'https://zammad.com',
-      img: '/zammad.svg',
-    },
-  ],
-  // platinum: [],
-  gold: [
-    {
-      name: 'vital',
-      url: 'https://vital.io/',
-      img: '/vital.svg',
-    },
-    {
-      name: 'OOMOL',
-      url: 'https://oomol.com/',
-      img: '/oomol.svg',
-    },
-    {
-      name: 'Mailmeteor',
-      url: 'https://mailmeteor.com/',
-      img: '/mailmeteor.svg',
-    },
-    {
-      name: 'Liminity',
-      url: 'https://www.liminity.se/',
-      img: '/liminity.svg',
-    },
-    {
-      name: 'Bytebase',
-      url: 'https://www.bytebase.com/',
-      img: '/bytebase.svg',
-    },
-  ],
-} satisfies Record<string, Sponsor[]>
-
-export const sponsors = [
+export const sponsors: SponsorTier[] = [
   {
-    tier: 'Brought to you by',
+    tier: 'Special',
     size: 'big',
-    items: vitestSponsors.provided,
+    items: [
+      {
+        name: 'NuxtLabs',
+        url: 'https://nuxtlabs.com',
+        img: '/nuxtlabs.svg',
+      },
+      {
+        name: 'Bolt',
+        url: 'https://bolt.new',
+        img: '/bolt.svg',
+      },
+      {
+        name: 'Zammad',
+        url: 'https://zammad.com',
+        img: '/zammad.svg',
+      },
+    ],
   },
   {
-    tier: 'Special Sponsors',
+    tier: 'Platinum Sponsors',
     size: 'big',
-    items: vitestSponsors.special,
+    items: [
+      {
+        name: 'Chromatic',
+        url: 'https://www.chromatic.com/?utm_source=vitest&utm_medium=sponsorship&utm_campaign=vitestSponsorship',
+        img: '/chromatic.svg',
+      },
+    ],
   },
-  // {
-  //   tier: 'Platinum Sponsors',
-  //   size: 'big',
-  //   items: vitestSponsors.platinum,
-  // },
   {
-    tier: 'Gold Sponsors',
+    tier: 'Gold',
     size: 'medium',
-    items: vitestSponsors.gold,
+    items: [
+      {
+        name: 'vital',
+        url: 'https://vital.io/',
+        img: '/vital.svg',
+      },
+      {
+        name: 'OOMOL',
+        url: 'https://oomol.com/',
+        img: '/oomol.svg',
+      },
+      {
+        name: 'Mailmeteor',
+        url: 'https://mailmeteor.com/',
+        img: '/mailmeteor.svg',
+      },
+      {
+        name: 'Liminity',
+        url: 'https://www.liminity.se/',
+        img: '/liminity.svg',
+      },
+    ],
   },
 ]

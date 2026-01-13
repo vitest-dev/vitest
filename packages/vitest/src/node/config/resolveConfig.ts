@@ -142,6 +142,18 @@ export function resolveConfig(
     mode,
   } as any as ResolvedConfig
 
+  if (resolved.retry && typeof resolved.retry === 'object' && typeof resolved.retry.condition === 'function') {
+    logger.console.warn(
+      c.yellow('Warning: retry.condition function cannot be used inside a config file. '
+        + 'Use a RegExp pattern instead, or define the function in your test file.'),
+    )
+
+    resolved.retry = {
+      ...resolved.retry,
+      condition: undefined,
+    }
+  }
+
   if (options.pool && typeof options.pool !== 'string') {
     resolved.pool = options.pool.name
     resolved.poolRunner = options.pool
@@ -809,6 +821,13 @@ export function resolveConfig(
       resolved.experimental.openTelemetry.sdkPath,
     )
     resolved.experimental.openTelemetry.sdkPath = pathToFileURL(sdkPath).toString()
+  }
+  if (resolved.experimental.openTelemetry?.browserSdkPath) {
+    const browserSdkPath = resolve(
+      resolved.root,
+      resolved.experimental.openTelemetry.browserSdkPath,
+    )
+    resolved.experimental.openTelemetry.browserSdkPath = browserSdkPath
   }
   if (resolved.experimental.fsModuleCachePath) {
     resolved.experimental.fsModuleCachePath = resolve(
