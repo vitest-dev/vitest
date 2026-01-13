@@ -1,6 +1,6 @@
 import { resolveConfig as viteResolveConfig } from 'vite'
 import { expect, test } from 'vitest'
-import { ReportersMap } from 'vitest/node'
+import { ReportersMap, rolldownVersion } from 'vitest/node'
 import { createCLI, parseCLI } from '../../../packages/vitest/src/node/cli/cac.js'
 import { resolveConfig } from '../../../packages/vitest/src/node/config/resolveConfig.js'
 
@@ -278,8 +278,7 @@ test('browser by name', () => {
 test('clearScreen', async (ctx) => {
   // skip vm since rolldown native modules break due to RegExp instance
   // https://github.com/vitest-dev/vitest/issues/8754#issuecomment-3727583957
-  const vite = await import('vite')
-  ctx.skip('rolldownVersion' in vite && ctx.task.file.projectName === 'vmThreads')
+  ctx.skip(!!rolldownVersion && ctx.task.file.projectName === 'vmThreads')
 
   const examples = [
     // vitest cli | vite clearScreen
