@@ -308,7 +308,10 @@ function createFileTask(
             '->',
             `${originalLocation.line}:${originalLocation.column}`,
           )
-          location = originalLocation
+          location = {
+            line: originalLocation.line,
+            column: originalLocation.column,
+          }
         }
         else {
           debug?.(

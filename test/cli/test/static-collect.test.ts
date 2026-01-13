@@ -22,34 +22,16 @@ test('correctly collects a simple test', async () => {
         "adds numbers": {
           "fullName": "math operations > adds numbers",
           "id": "-1732721377_0_0",
-          "location": {
-            "column": 6,
-            "line": 5,
-            "name": null,
-            "source": "simple.test.ts",
-          },
-          "options": {
-            "mode": "run",
-          },
-          "result": {
-            "state": "pending",
-          },
+          "location": "5:6",
+          "mode": "run",
+          "result": "pending",
         },
         "subtracts numbers": {
           "fullName": "math operations > subtracts numbers",
           "id": "-1732721377_0_1",
-          "location": {
-            "column": 6,
-            "line": 9,
-            "name": null,
-            "source": "simple.test.ts",
-          },
-          "options": {
-            "mode": "skip",
-          },
-          "result": {
-            "state": "skipped",
-          },
+          "location": "9:6",
+          "mode": "skip",
+          "result": "skipped",
         },
       },
     }
@@ -71,34 +53,16 @@ test('collects tests starting with "test"', async () => {
         "works with testAnother": {
           "fullName": "custom test functions > works with testAnother",
           "id": "-1732721377_0_1",
-          "location": {
-            "column": 6,
-            "line": 6,
-            "name": null,
-            "source": "simple.test.ts",
-          },
-          "options": {
-            "mode": "run",
-          },
-          "result": {
-            "state": "pending",
-          },
+          "location": "6:6",
+          "mode": "run",
+          "result": "pending",
         },
         "works with testSomething": {
           "fullName": "custom test functions > works with testSomething",
           "id": "-1732721377_0_0",
-          "location": {
-            "column": 6,
-            "line": 5,
-            "name": null,
-            "source": "simple.test.ts",
-          },
-          "options": {
-            "mode": "run",
-          },
-          "result": {
-            "state": "pending",
-          },
+          "location": "5:6",
+          "mode": "run",
+          "result": "pending",
         },
       },
     }
@@ -120,34 +84,16 @@ test('collects tests ending with "Test"', async () => {
         "works with integrationTest": {
           "fullName": "custom test functions > works with integrationTest",
           "id": "-1732721377_0_1",
-          "location": {
-            "column": 6,
-            "line": 6,
-            "name": null,
-            "source": "simple.test.ts",
-          },
-          "options": {
-            "mode": "run",
-          },
-          "result": {
-            "state": "pending",
-          },
+          "location": "6:6",
+          "mode": "run",
+          "result": "pending",
         },
         "works with unitTest": {
           "fullName": "custom test functions > works with unitTest",
           "id": "-1732721377_0_0",
-          "location": {
-            "column": 6,
-            "line": 5,
-            "name": null,
-            "source": "simple.test.ts",
-          },
-          "options": {
-            "mode": "run",
-          },
-          "result": {
-            "state": "pending",
-          },
+          "location": "5:6",
+          "mode": "run",
+          "result": "pending",
         },
       },
     }
@@ -170,50 +116,23 @@ test('collects tests with only modifier', async () => {
         "barTest with only": {
           "fullName": "only tests > barTest with only",
           "id": "-1732721377_0_2",
-          "location": {
-            "column": 6,
-            "line": 7,
-            "name": null,
-            "source": "simple.test.ts",
-          },
-          "options": {
-            "mode": "run",
-          },
-          "result": {
-            "state": "pending",
-          },
+          "location": "7:6",
+          "mode": "run",
+          "result": "pending",
         },
         "regular test with only": {
           "fullName": "only tests > regular test with only",
           "id": "-1732721377_0_0",
-          "location": {
-            "column": 6,
-            "line": 5,
-            "name": null,
-            "source": "simple.test.ts",
-          },
-          "options": {
-            "mode": "run",
-          },
-          "result": {
-            "state": "pending",
-          },
+          "location": "5:6",
+          "mode": "run",
+          "result": "pending",
         },
         "testFoo with only": {
           "fullName": "only tests > testFoo with only",
           "id": "-1732721377_0_1",
-          "location": {
-            "column": 6,
-            "line": 6,
-            "name": null,
-            "source": "simple.test.ts",
-          },
-          "options": {
-            "mode": "run",
-          },
-          "result": {
-            "state": "pending",
-          },
+          "location": "6:6",
+          "mode": "run",
+          "result": "pending",
         },
       },
     }
@@ -236,50 +155,23 @@ test('collects tests with skip modifier', async () => {
         "barTest with skip": {
           "fullName": "skip tests > barTest with skip",
           "id": "-1732721377_0_2",
-          "location": {
-            "column": 6,
-            "line": 7,
-            "name": null,
-            "source": "simple.test.ts",
-          },
-          "options": {
-            "mode": "skip",
-          },
-          "result": {
-            "state": "skipped",
-          },
+          "location": "7:6",
+          "mode": "skip",
+          "result": "skipped",
         },
         "regular test with skip": {
           "fullName": "skip tests > regular test with skip",
           "id": "-1732721377_0_0",
-          "location": {
-            "column": 6,
-            "line": 5,
-            "name": null,
-            "source": "simple.test.ts",
-          },
-          "options": {
-            "mode": "skip",
-          },
-          "result": {
-            "state": "skipped",
-          },
+          "location": "5:6",
+          "mode": "skip",
+          "result": "skipped",
         },
         "testFoo with skip": {
           "fullName": "skip tests > testFoo with skip",
           "id": "-1732721377_0_1",
-          "location": {
-            "column": 6,
-            "line": 6,
-            "name": null,
-            "source": "simple.test.ts",
-          },
-          "options": {
-            "mode": "skip",
-          },
-          "result": {
-            "state": "skipped",
-          },
+          "location": "6:6",
+          "mode": "skip",
+          "result": "skipped",
         },
       },
     }
@@ -302,50 +194,23 @@ test('collects tests with todo modifier', async () => {
         "barTest with todo": {
           "fullName": "todo tests > barTest with todo",
           "id": "-1732721377_0_2",
-          "location": {
-            "column": 6,
-            "line": 7,
-            "name": null,
-            "source": "simple.test.ts",
-          },
-          "options": {
-            "mode": "todo",
-          },
-          "result": {
-            "state": "skipped",
-          },
+          "location": "7:6",
+          "mode": "todo",
+          "result": "skipped",
         },
         "regular test with todo": {
           "fullName": "todo tests > regular test with todo",
           "id": "-1732721377_0_0",
-          "location": {
-            "column": 6,
-            "line": 5,
-            "name": null,
-            "source": "simple.test.ts",
-          },
-          "options": {
-            "mode": "todo",
-          },
-          "result": {
-            "state": "skipped",
-          },
+          "location": "5:6",
+          "mode": "todo",
+          "result": "skipped",
         },
         "testFoo with todo": {
           "fullName": "todo tests > testFoo with todo",
           "id": "-1732721377_0_1",
-          "location": {
-            "column": 6,
-            "line": 6,
-            "name": null,
-            "source": "simple.test.ts",
-          },
-          "options": {
-            "mode": "todo",
-          },
-          "result": {
-            "state": "skipped",
-          },
+          "location": "6:6",
+          "mode": "todo",
+          "result": "skipped",
         },
       },
     }
@@ -376,52 +241,25 @@ test('collects nested suites with custom test functions', async () => {
             "integration test": {
               "fullName": "outer suite > inner suite > deeply nested > integration test",
               "id": "-1732721377_0_1_1_0",
-              "location": {
-                "column": 10,
-                "line": 11,
-                "name": null,
-                "source": "simple.test.ts",
-              },
-              "options": {
-                "mode": "run",
-              },
-              "result": {
-                "state": "pending",
-              },
+              "location": "11:10",
+              "mode": "run",
+              "result": "pending",
             },
           },
           "unit test": {
             "fullName": "outer suite > inner suite > unit test",
             "id": "-1732721377_0_1_0",
-            "location": {
-              "column": 8,
-              "line": 8,
-              "name": null,
-              "source": "simple.test.ts",
-            },
-            "options": {
-              "mode": "run",
-            },
-            "result": {
-              "state": "pending",
-            },
+            "location": "8:8",
+            "mode": "run",
+            "result": "pending",
           },
         },
         "regular test": {
           "fullName": "outer suite > regular test",
           "id": "-1732721377_0_0",
-          "location": {
-            "column": 6,
-            "line": 5,
-            "name": null,
-            "source": "simple.test.ts",
-          },
-          "options": {
-            "mode": "run",
-          },
-          "result": {
-            "state": "pending",
-          },
+          "location": "5:6",
+          "mode": "run",
+          "result": "pending",
         },
       },
     }
@@ -450,50 +288,23 @@ test('collects tests from test.extend', async () => {
         "only extended test": {
           "fullName": "extended tests > only extended test",
           "id": "-1732721377_0_2",
-          "location": {
-            "column": 6,
-            "line": 13,
-            "name": null,
-            "source": "simple.test.ts",
-          },
-          "options": {
-            "mode": "run",
-          },
-          "result": {
-            "state": "pending",
-          },
+          "location": "13:6",
+          "mode": "run",
+          "result": "pending",
         },
         "skips extended test": {
           "fullName": "extended tests > skips extended test",
           "id": "-1732721377_0_1",
-          "location": {
-            "column": 6,
-            "line": 12,
-            "name": null,
-            "source": "simple.test.ts",
-          },
-          "options": {
-            "mode": "skip",
-          },
-          "result": {
-            "state": "skipped",
-          },
+          "location": "12:6",
+          "mode": "skip",
+          "result": "skipped",
         },
         "uses extended test": {
           "fullName": "extended tests > uses extended test",
           "id": "-1732721377_0_0",
-          "location": {
-            "column": 6,
-            "line": 11,
-            "name": null,
-            "source": "simple.test.ts",
-          },
-          "options": {
-            "mode": "skip",
-          },
-          "result": {
-            "state": "skipped",
-          },
+          "location": "11:6",
+          "mode": "skip",
+          "result": "skipped",
         },
       },
     }
@@ -516,50 +327,23 @@ test('collects tests imported from another file', async () => {
         "only imported test": {
           "fullName": "imported test function > only imported test",
           "id": "-1732721377_0_2",
-          "location": {
-            "column": 6,
-            "line": 7,
-            "name": null,
-            "source": "simple.test.ts",
-          },
-          "options": {
-            "mode": "run",
-          },
-          "result": {
-            "state": "pending",
-          },
+          "location": "7:6",
+          "mode": "run",
+          "result": "pending",
         },
         "skips imported test": {
           "fullName": "imported test function > skips imported test",
           "id": "-1732721377_0_1",
-          "location": {
-            "column": 6,
-            "line": 6,
-            "name": null,
-            "source": "simple.test.ts",
-          },
-          "options": {
-            "mode": "skip",
-          },
-          "result": {
-            "state": "skipped",
-          },
+          "location": "6:6",
+          "mode": "skip",
+          "result": "skipped",
         },
         "uses imported test": {
           "fullName": "imported test function > uses imported test",
           "id": "-1732721377_0_0",
-          "location": {
-            "column": 6,
-            "line": 5,
-            "name": null,
-            "source": "simple.test.ts",
-          },
-          "options": {
-            "mode": "skip",
-          },
-          "result": {
-            "state": "skipped",
-          },
+          "location": "5:6",
+          "mode": "skip",
+          "result": "skipped",
         },
       },
     }
@@ -583,66 +367,30 @@ test('collects mixed test function names', async () => {
         "classic it syntax": {
           "fullName": "mixed tests > classic it syntax",
           "id": "-1732721377_0_0",
-          "location": {
-            "column": 6,
-            "line": 5,
-            "name": null,
-            "source": "simple.test.ts",
-          },
-          "options": {
-            "mode": "run",
-          },
-          "result": {
-            "state": "pending",
-          },
+          "location": "5:6",
+          "mode": "run",
+          "result": "pending",
         },
         "ends with Test": {
           "fullName": "mixed tests > ends with Test",
           "id": "-1732721377_0_3",
-          "location": {
-            "column": 6,
-            "line": 8,
-            "name": null,
-            "source": "simple.test.ts",
-          },
-          "options": {
-            "mode": "run",
-          },
-          "result": {
-            "state": "pending",
-          },
+          "location": "8:6",
+          "mode": "run",
+          "result": "pending",
         },
         "standard test": {
           "fullName": "mixed tests > standard test",
           "id": "-1732721377_0_1",
-          "location": {
-            "column": 6,
-            "line": 6,
-            "name": null,
-            "source": "simple.test.ts",
-          },
-          "options": {
-            "mode": "run",
-          },
-          "result": {
-            "state": "pending",
-          },
+          "location": "6:6",
+          "mode": "run",
+          "result": "pending",
         },
         "starts with test": {
           "fullName": "mixed tests > starts with test",
           "id": "-1732721377_0_2",
-          "location": {
-            "column": 6,
-            "line": 7,
-            "name": null,
-            "source": "simple.test.ts",
-          },
-          "options": {
-            "mode": "run",
-          },
-          "result": {
-            "state": "pending",
-          },
+          "location": "7:6",
+          "mode": "run",
+          "result": "pending",
         },
       },
     }
@@ -666,66 +414,30 @@ test('collects tests with all modifiers on custom functions', async () => {
         "normal custom test": {
           "fullName": "custom test with modifiers > normal custom test",
           "id": "-1732721377_0_0",
-          "location": {
-            "column": 6,
-            "line": 5,
-            "name": null,
-            "source": "simple.test.ts",
-          },
-          "options": {
-            "mode": "skip",
-          },
-          "result": {
-            "state": "skipped",
-          },
+          "location": "5:6",
+          "mode": "skip",
+          "result": "skipped",
         },
         "only custom test": {
           "fullName": "custom test with modifiers > only custom test",
           "id": "-1732721377_0_2",
-          "location": {
-            "column": 6,
-            "line": 7,
-            "name": null,
-            "source": "simple.test.ts",
-          },
-          "options": {
-            "mode": "run",
-          },
-          "result": {
-            "state": "pending",
-          },
+          "location": "7:6",
+          "mode": "run",
+          "result": "pending",
         },
         "skipped custom test": {
           "fullName": "custom test with modifiers > skipped custom test",
           "id": "-1732721377_0_1",
-          "location": {
-            "column": 6,
-            "line": 6,
-            "name": null,
-            "source": "simple.test.ts",
-          },
-          "options": {
-            "mode": "skip",
-          },
-          "result": {
-            "state": "skipped",
-          },
+          "location": "6:6",
+          "mode": "skip",
+          "result": "skipped",
         },
         "todo custom test": {
           "fullName": "custom test with modifiers > todo custom test",
           "id": "-1732721377_0_3",
-          "location": {
-            "column": 6,
-            "line": 8,
-            "name": null,
-            "source": "simple.test.ts",
-          },
-          "options": {
-            "mode": "todo",
-          },
-          "result": {
-            "state": "skipped",
-          },
+          "location": "8:6",
+          "mode": "todo",
+          "result": "skipped",
         },
       },
     }
@@ -748,50 +460,23 @@ test('collects tests in skipped suites', async () => {
         "barTest in skipped suite": {
           "fullName": "skipped suite > barTest in skipped suite",
           "id": "-1732721377_0_2",
-          "location": {
-            "column": 6,
-            "line": 7,
-            "name": null,
-            "source": "simple.test.ts",
-          },
-          "options": {
-            "mode": "skip",
-          },
-          "result": {
-            "state": "skipped",
-          },
+          "location": "7:6",
+          "mode": "skip",
+          "result": "skipped",
         },
         "regular test in skipped suite": {
           "fullName": "skipped suite > regular test in skipped suite",
           "id": "-1732721377_0_0",
-          "location": {
-            "column": 6,
-            "line": 5,
-            "name": null,
-            "source": "simple.test.ts",
-          },
-          "options": {
-            "mode": "skip",
-          },
-          "result": {
-            "state": "skipped",
-          },
+          "location": "5:6",
+          "mode": "skip",
+          "result": "skipped",
         },
         "testFoo in skipped suite": {
           "fullName": "skipped suite > testFoo in skipped suite",
           "id": "-1732721377_0_1",
-          "location": {
-            "column": 6,
-            "line": 6,
-            "name": null,
-            "source": "simple.test.ts",
-          },
-          "options": {
-            "mode": "skip",
-          },
-          "result": {
-            "state": "skipped",
-          },
+          "location": "6:6",
+          "mode": "skip",
+          "result": "skipped",
         },
       },
     }
@@ -814,50 +499,23 @@ test('collects tests in only suites', async () => {
         "barTest in only suite": {
           "fullName": "only suite > barTest in only suite",
           "id": "-1732721377_0_2",
-          "location": {
-            "column": 6,
-            "line": 7,
-            "name": null,
-            "source": "simple.test.ts",
-          },
-          "options": {
-            "mode": "run",
-          },
-          "result": {
-            "state": "pending",
-          },
+          "location": "7:6",
+          "mode": "run",
+          "result": "pending",
         },
         "regular test in only suite": {
           "fullName": "only suite > regular test in only suite",
           "id": "-1732721377_0_0",
-          "location": {
-            "column": 6,
-            "line": 5,
-            "name": null,
-            "source": "simple.test.ts",
-          },
-          "options": {
-            "mode": "run",
-          },
-          "result": {
-            "state": "pending",
-          },
+          "location": "5:6",
+          "mode": "run",
+          "result": "pending",
         },
         "testFoo in only suite": {
           "fullName": "only suite > testFoo in only suite",
           "id": "-1732721377_0_1",
-          "location": {
-            "column": 6,
-            "line": 6,
-            "name": null,
-            "source": "simple.test.ts",
-          },
-          "options": {
-            "mode": "run",
-          },
-          "result": {
-            "state": "pending",
-          },
+          "location": "6:6",
+          "mode": "run",
+          "result": "pending",
         },
       },
     }
@@ -881,52 +539,25 @@ test('collects tests with each modifier', async () => {
           "dynamic": true,
           "fullName": "each tests > barTest with each %i",
           "id": "-1732721377_0_2-dynamic",
-          "location": {
-            "column": 28,
-            "line": 7,
-            "name": null,
-            "source": "simple.test.ts",
-          },
-          "options": {
-            "mode": "run",
-          },
-          "result": {
-            "state": "pending",
-          },
+          "location": "7:28",
+          "mode": "run",
+          "result": "pending",
         },
         "test with each %i": {
           "dynamic": true,
           "fullName": "each tests > test with each %i",
           "id": "-1732721377_0_0-dynamic",
-          "location": {
-            "column": 25,
-            "line": 5,
-            "name": null,
-            "source": "simple.test.ts",
-          },
-          "options": {
-            "mode": "run",
-          },
-          "result": {
-            "state": "pending",
-          },
+          "location": "5:25",
+          "mode": "run",
+          "result": "pending",
         },
         "testFoo with each %i": {
           "dynamic": true,
           "fullName": "each tests > testFoo with each %i",
           "id": "-1732721377_0_1-dynamic",
-          "location": {
-            "column": 28,
-            "line": 6,
-            "name": null,
-            "source": "simple.test.ts",
-          },
-          "options": {
-            "mode": "run",
-          },
-          "result": {
-            "state": "pending",
-          },
+          "location": "6:28",
+          "mode": "run",
+          "result": "pending",
         },
       },
     }
@@ -963,118 +594,55 @@ test('collects complex nested structure with custom functions', async () => {
           "first integration": {
             "fullName": "root suite > integration tests > first integration",
             "id": "-1732721377_0_2_0",
-            "location": {
-              "column": 8,
-              "line": 17,
-              "name": null,
-              "source": "simple.test.ts",
-            },
-            "options": {
-              "mode": "run",
-            },
-            "result": {
-              "state": "pending",
-            },
+            "location": "17:8",
+            "mode": "run",
+            "result": "pending",
           },
           "focused integration": {
             "fullName": "root suite > integration tests > focused integration",
             "id": "-1732721377_0_2_1",
-            "location": {
-              "column": 8,
-              "line": 18,
-              "name": null,
-              "source": "simple.test.ts",
-            },
-            "options": {
-              "mode": "run",
-            },
-            "result": {
-              "state": "pending",
-            },
+            "location": "18:8",
+            "mode": "run",
+            "result": "pending",
           },
           "planned integration": {
             "fullName": "root suite > integration tests > planned integration",
             "id": "-1732721377_0_2_2",
-            "location": {
-              "column": 8,
-              "line": 19,
-              "name": null,
-              "source": "simple.test.ts",
-            },
-            "options": {
-              "mode": "run",
-            },
-            "result": {
-              "state": "pending",
-            },
+            "location": "19:8",
+            "mode": "run",
+            "result": "pending",
           },
         },
         "root test": {
           "fullName": "root suite > root test",
           "id": "-1732721377_0_0",
-          "location": {
-            "column": 6,
-            "line": 5,
-            "name": null,
-            "source": "simple.test.ts",
-          },
-          "options": {
-            "mode": "skip",
-          },
-          "result": {
-            "state": "skipped",
-          },
+          "location": "5:6",
+          "mode": "skip",
+          "result": "skipped",
         },
         "unit tests": {
           "first unit test": {
             "fullName": "root suite > unit tests > first unit test",
             "id": "-1732721377_0_1_0",
-            "location": {
-              "column": 8,
-              "line": 8,
-              "name": null,
-              "source": "simple.test.ts",
-            },
-            "options": {
-              "mode": "skip",
-            },
-            "result": {
-              "state": "skipped",
-            },
+            "location": "8:8",
+            "mode": "skip",
+            "result": "skipped",
           },
           "skipped nested": {
             "test in skipped suite": {
               "fullName": "root suite > unit tests > skipped nested > test in skipped suite",
               "id": "-1732721377_0_1_2_0",
-              "location": {
-                "column": 10,
-                "line": 12,
-                "name": null,
-                "source": "simple.test.ts",
-              },
-              "options": {
-                "mode": "skip",
-              },
-              "result": {
-                "state": "skipped",
-              },
+              "location": "12:10",
+              "mode": "skip",
+              "result": "skipped",
             },
           },
           "skipped unit test": {
             "fullName": "root suite > unit tests > skipped unit test",
             "id": "-1732721377_0_1_1",
-            "location": {
-              "column": 8,
-              "line": 9,
-              "name": null,
-              "source": "simple.test.ts",
-            },
-            "options": {
-              "mode": "skip",
-            },
-            "result": {
-              "state": "skipped",
-            },
+            "location": "9:8",
+            "mode": "skip",
+            "result": "skipped",
           },
         },
       },
@@ -1102,100 +670,46 @@ test('collects tests when test functions are globals', async () => {
         "it as global": {
           "fullName": "global test functions > it as global",
           "id": "-1732721377_0_1",
-          "location": {
-            "column": 6,
-            "line": 4,
-            "name": null,
-            "source": "simple.test.ts",
-          },
-          "options": {
-            "mode": "skip",
-          },
-          "result": {
-            "state": "skipped",
-          },
+          "location": "4:6",
+          "mode": "skip",
+          "result": "skipped",
         },
         "myTest as global": {
           "fullName": "global test functions > myTest as global",
           "id": "-1732721377_0_3",
-          "location": {
-            "column": 6,
-            "line": 6,
-            "name": null,
-            "source": "simple.test.ts",
-          },
-          "options": {
-            "mode": "skip",
-          },
-          "result": {
-            "state": "skipped",
-          },
+          "location": "6:6",
+          "mode": "skip",
+          "result": "skipped",
         },
         "nested": {
           "skipped global test": {
             "fullName": "global test functions > nested > skipped global test",
             "id": "-1732721377_0_4_0",
-            "location": {
-              "column": 8,
-              "line": 9,
-              "name": null,
-              "source": "simple.test.ts",
-            },
-            "options": {
-              "mode": "skip",
-            },
-            "result": {
-              "state": "skipped",
-            },
+            "location": "9:8",
+            "mode": "skip",
+            "result": "skipped",
           },
           "testUnit.only as global": {
             "fullName": "global test functions > nested > testUnit.only as global",
             "id": "-1732721377_0_4_1",
-            "location": {
-              "column": 8,
-              "line": 10,
-              "name": null,
-              "source": "simple.test.ts",
-            },
-            "options": {
-              "mode": "run",
-            },
-            "result": {
-              "state": "pending",
-            },
+            "location": "10:8",
+            "mode": "run",
+            "result": "pending",
           },
         },
         "test as global": {
           "fullName": "global test functions > test as global",
           "id": "-1732721377_0_0",
-          "location": {
-            "column": 6,
-            "line": 3,
-            "name": null,
-            "source": "simple.test.ts",
-          },
-          "options": {
-            "mode": "skip",
-          },
-          "result": {
-            "state": "skipped",
-          },
+          "location": "3:6",
+          "mode": "skip",
+          "result": "skipped",
         },
         "testSomething as global": {
           "fullName": "global test functions > testSomething as global",
           "id": "-1732721377_0_2",
-          "location": {
-            "column": 6,
-            "line": 5,
-            "name": null,
-            "source": "simple.test.ts",
-          },
-          "options": {
-            "mode": "skip",
-          },
-          "result": {
-            "state": "skipped",
-          },
+          "location": "5:6",
+          "mode": "skip",
+          "result": "skipped",
         },
       },
     }
@@ -1245,20 +759,12 @@ function testTree(module: TestModule | TestSuite, tree: any = {}) {
 function testItem(testCase: TestCase) {
   return {
     id: testCase.id,
-    location: testCase.location,
-    options: removeUndefined(testCase.options),
+    location: testCase.location
+      ? `${testCase.location.line}:${testCase.location.column}`
+      : undefined,
+    mode: testCase.options.mode,
     fullName: testCase.fullName,
-    result: removeUndefined(testCase.result()),
+    result: testCase.result().state,
     ...(testCase.task.dynamic ? { dynamic: true } : {}),
   }
-}
-
-function removeUndefined<T extends Record<string, any>>(obj: T) {
-  const newObj = {} as T
-  for (const key in obj) {
-    if (obj[key] !== undefined) {
-      newObj[key] = obj[key]
-    }
-  }
-  return newObj
 }
