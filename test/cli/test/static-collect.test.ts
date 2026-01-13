@@ -20,18 +20,20 @@ test('correctly collects a simple test', async () => {
     {
       "math operations": {
         "adds numbers": {
+          "errors": [],
           "fullName": "math operations > adds numbers",
           "id": "-1732721377_0_0",
           "location": "5:6",
           "mode": "run",
-          "result": "pending",
+          "state": "pending",
         },
         "subtracts numbers": {
+          "errors": [],
           "fullName": "math operations > subtracts numbers",
           "id": "-1732721377_0_1",
           "location": "9:6",
           "mode": "skip",
-          "result": "skipped",
+          "state": "skipped",
         },
       },
     }
@@ -51,18 +53,20 @@ test('collects tests starting with "test"', async () => {
     {
       "custom test functions": {
         "works with testAnother": {
+          "errors": [],
           "fullName": "custom test functions > works with testAnother",
           "id": "-1732721377_0_1",
           "location": "6:6",
           "mode": "run",
-          "result": "pending",
+          "state": "pending",
         },
         "works with testSomething": {
+          "errors": [],
           "fullName": "custom test functions > works with testSomething",
           "id": "-1732721377_0_0",
           "location": "5:6",
           "mode": "run",
-          "result": "pending",
+          "state": "pending",
         },
       },
     }
@@ -82,18 +86,20 @@ test('collects tests ending with "Test"', async () => {
     {
       "custom test functions": {
         "works with integrationTest": {
+          "errors": [],
           "fullName": "custom test functions > works with integrationTest",
           "id": "-1732721377_0_1",
           "location": "6:6",
           "mode": "run",
-          "result": "pending",
+          "state": "pending",
         },
         "works with unitTest": {
+          "errors": [],
           "fullName": "custom test functions > works with unitTest",
           "id": "-1732721377_0_0",
           "location": "5:6",
           "mode": "run",
-          "result": "pending",
+          "state": "pending",
         },
       },
     }
@@ -114,25 +120,28 @@ test('collects tests with only modifier', async () => {
     {
       "only tests": {
         "barTest with only": {
+          "errors": [],
           "fullName": "only tests > barTest with only",
           "id": "-1732721377_0_2",
           "location": "7:6",
           "mode": "run",
-          "result": "pending",
+          "state": "pending",
         },
         "regular test with only": {
+          "errors": [],
           "fullName": "only tests > regular test with only",
           "id": "-1732721377_0_0",
           "location": "5:6",
           "mode": "run",
-          "result": "pending",
+          "state": "pending",
         },
         "testFoo with only": {
+          "errors": [],
           "fullName": "only tests > testFoo with only",
           "id": "-1732721377_0_1",
           "location": "6:6",
           "mode": "run",
-          "result": "pending",
+          "state": "pending",
         },
       },
     }
@@ -153,25 +162,28 @@ test('collects tests with skip modifier', async () => {
     {
       "skip tests": {
         "barTest with skip": {
+          "errors": [],
           "fullName": "skip tests > barTest with skip",
           "id": "-1732721377_0_2",
           "location": "7:6",
           "mode": "skip",
-          "result": "skipped",
+          "state": "skipped",
         },
         "regular test with skip": {
+          "errors": [],
           "fullName": "skip tests > regular test with skip",
           "id": "-1732721377_0_0",
           "location": "5:6",
           "mode": "skip",
-          "result": "skipped",
+          "state": "skipped",
         },
         "testFoo with skip": {
+          "errors": [],
           "fullName": "skip tests > testFoo with skip",
           "id": "-1732721377_0_1",
           "location": "6:6",
           "mode": "skip",
-          "result": "skipped",
+          "state": "skipped",
         },
       },
     }
@@ -192,25 +204,28 @@ test('collects tests with todo modifier', async () => {
     {
       "todo tests": {
         "barTest with todo": {
+          "errors": [],
           "fullName": "todo tests > barTest with todo",
           "id": "-1732721377_0_2",
           "location": "7:6",
           "mode": "todo",
-          "result": "skipped",
+          "state": "skipped",
         },
         "regular test with todo": {
+          "errors": [],
           "fullName": "todo tests > regular test with todo",
           "id": "-1732721377_0_0",
           "location": "5:6",
           "mode": "todo",
-          "result": "skipped",
+          "state": "skipped",
         },
         "testFoo with todo": {
+          "errors": [],
           "fullName": "todo tests > testFoo with todo",
           "id": "-1732721377_0_1",
           "location": "6:6",
           "mode": "todo",
-          "result": "skipped",
+          "state": "skipped",
         },
       },
     }
@@ -239,27 +254,30 @@ test('collects nested suites with custom test functions', async () => {
         "inner suite": {
           "deeply nested": {
             "integration test": {
+              "errors": [],
               "fullName": "outer suite > inner suite > deeply nested > integration test",
               "id": "-1732721377_0_1_1_0",
               "location": "11:10",
               "mode": "run",
-              "result": "pending",
+              "state": "pending",
             },
           },
           "unit test": {
+            "errors": [],
             "fullName": "outer suite > inner suite > unit test",
             "id": "-1732721377_0_1_0",
             "location": "8:8",
             "mode": "run",
-            "result": "pending",
+            "state": "pending",
           },
         },
         "regular test": {
+          "errors": [],
           "fullName": "outer suite > regular test",
           "id": "-1732721377_0_0",
           "location": "5:6",
           "mode": "run",
-          "result": "pending",
+          "state": "pending",
         },
       },
     }
@@ -286,25 +304,28 @@ test('collects tests from test.extend', async () => {
     {
       "extended tests": {
         "only extended test": {
+          "errors": [],
           "fullName": "extended tests > only extended test",
           "id": "-1732721377_0_2",
           "location": "13:6",
           "mode": "run",
-          "result": "pending",
+          "state": "pending",
         },
         "skips extended test": {
+          "errors": [],
           "fullName": "extended tests > skips extended test",
           "id": "-1732721377_0_1",
           "location": "12:6",
           "mode": "skip",
-          "result": "skipped",
+          "state": "skipped",
         },
         "uses extended test": {
+          "errors": [],
           "fullName": "extended tests > uses extended test",
           "id": "-1732721377_0_0",
           "location": "11:6",
           "mode": "skip",
-          "result": "skipped",
+          "state": "skipped",
         },
       },
     }
@@ -325,25 +346,28 @@ test('collects tests imported from another file', async () => {
     {
       "imported test function": {
         "only imported test": {
+          "errors": [],
           "fullName": "imported test function > only imported test",
           "id": "-1732721377_0_2",
           "location": "7:6",
           "mode": "run",
-          "result": "pending",
+          "state": "pending",
         },
         "skips imported test": {
+          "errors": [],
           "fullName": "imported test function > skips imported test",
           "id": "-1732721377_0_1",
           "location": "6:6",
           "mode": "skip",
-          "result": "skipped",
+          "state": "skipped",
         },
         "uses imported test": {
+          "errors": [],
           "fullName": "imported test function > uses imported test",
           "id": "-1732721377_0_0",
           "location": "5:6",
           "mode": "skip",
-          "result": "skipped",
+          "state": "skipped",
         },
       },
     }
@@ -365,32 +389,36 @@ test('collects mixed test function names', async () => {
     {
       "mixed tests": {
         "classic it syntax": {
+          "errors": [],
           "fullName": "mixed tests > classic it syntax",
           "id": "-1732721377_0_0",
           "location": "5:6",
           "mode": "run",
-          "result": "pending",
+          "state": "pending",
         },
         "ends with Test": {
+          "errors": [],
           "fullName": "mixed tests > ends with Test",
           "id": "-1732721377_0_3",
           "location": "8:6",
           "mode": "run",
-          "result": "pending",
+          "state": "pending",
         },
         "standard test": {
+          "errors": [],
           "fullName": "mixed tests > standard test",
           "id": "-1732721377_0_1",
           "location": "6:6",
           "mode": "run",
-          "result": "pending",
+          "state": "pending",
         },
         "starts with test": {
+          "errors": [],
           "fullName": "mixed tests > starts with test",
           "id": "-1732721377_0_2",
           "location": "7:6",
           "mode": "run",
-          "result": "pending",
+          "state": "pending",
         },
       },
     }
@@ -412,32 +440,36 @@ test('collects tests with all modifiers on custom functions', async () => {
     {
       "custom test with modifiers": {
         "normal custom test": {
+          "errors": [],
           "fullName": "custom test with modifiers > normal custom test",
           "id": "-1732721377_0_0",
           "location": "5:6",
           "mode": "skip",
-          "result": "skipped",
+          "state": "skipped",
         },
         "only custom test": {
+          "errors": [],
           "fullName": "custom test with modifiers > only custom test",
           "id": "-1732721377_0_2",
           "location": "7:6",
           "mode": "run",
-          "result": "pending",
+          "state": "pending",
         },
         "skipped custom test": {
+          "errors": [],
           "fullName": "custom test with modifiers > skipped custom test",
           "id": "-1732721377_0_1",
           "location": "6:6",
           "mode": "skip",
-          "result": "skipped",
+          "state": "skipped",
         },
         "todo custom test": {
+          "errors": [],
           "fullName": "custom test with modifiers > todo custom test",
           "id": "-1732721377_0_3",
           "location": "8:6",
           "mode": "todo",
-          "result": "skipped",
+          "state": "skipped",
         },
       },
     }
@@ -458,25 +490,28 @@ test('collects tests in skipped suites', async () => {
     {
       "skipped suite": {
         "barTest in skipped suite": {
+          "errors": [],
           "fullName": "skipped suite > barTest in skipped suite",
           "id": "-1732721377_0_2",
           "location": "7:6",
           "mode": "skip",
-          "result": "skipped",
+          "state": "skipped",
         },
         "regular test in skipped suite": {
+          "errors": [],
           "fullName": "skipped suite > regular test in skipped suite",
           "id": "-1732721377_0_0",
           "location": "5:6",
           "mode": "skip",
-          "result": "skipped",
+          "state": "skipped",
         },
         "testFoo in skipped suite": {
+          "errors": [],
           "fullName": "skipped suite > testFoo in skipped suite",
           "id": "-1732721377_0_1",
           "location": "6:6",
           "mode": "skip",
-          "result": "skipped",
+          "state": "skipped",
         },
       },
     }
@@ -497,25 +532,28 @@ test('collects tests in only suites', async () => {
     {
       "only suite": {
         "barTest in only suite": {
+          "errors": [],
           "fullName": "only suite > barTest in only suite",
           "id": "-1732721377_0_2",
           "location": "7:6",
           "mode": "run",
-          "result": "pending",
+          "state": "pending",
         },
         "regular test in only suite": {
+          "errors": [],
           "fullName": "only suite > regular test in only suite",
           "id": "-1732721377_0_0",
           "location": "5:6",
           "mode": "run",
-          "result": "pending",
+          "state": "pending",
         },
         "testFoo in only suite": {
+          "errors": [],
           "fullName": "only suite > testFoo in only suite",
           "id": "-1732721377_0_1",
           "location": "6:6",
           "mode": "run",
-          "result": "pending",
+          "state": "pending",
         },
       },
     }
@@ -537,27 +575,30 @@ test('collects tests with each modifier', async () => {
       "each tests": {
         "barTest with each %i": {
           "dynamic": true,
+          "errors": [],
           "fullName": "each tests > barTest with each %i",
           "id": "-1732721377_0_2-dynamic",
           "location": "7:28",
           "mode": "run",
-          "result": "pending",
+          "state": "pending",
         },
         "test with each %i": {
           "dynamic": true,
+          "errors": [],
           "fullName": "each tests > test with each %i",
           "id": "-1732721377_0_0-dynamic",
           "location": "5:25",
           "mode": "run",
-          "result": "pending",
+          "state": "pending",
         },
         "testFoo with each %i": {
           "dynamic": true,
+          "errors": [],
           "fullName": "each tests > testFoo with each %i",
           "id": "-1732721377_0_1-dynamic",
           "location": "6:28",
           "mode": "run",
-          "result": "pending",
+          "state": "pending",
         },
       },
     }
@@ -592,57 +633,64 @@ test('collects complex nested structure with custom functions', async () => {
       "root suite": {
         "integration tests": {
           "first integration": {
+            "errors": [],
             "fullName": "root suite > integration tests > first integration",
             "id": "-1732721377_0_2_0",
             "location": "17:8",
             "mode": "run",
-            "result": "pending",
+            "state": "pending",
           },
           "focused integration": {
+            "errors": [],
             "fullName": "root suite > integration tests > focused integration",
             "id": "-1732721377_0_2_1",
             "location": "18:8",
             "mode": "run",
-            "result": "pending",
+            "state": "pending",
           },
           "planned integration": {
+            "errors": [],
             "fullName": "root suite > integration tests > planned integration",
             "id": "-1732721377_0_2_2",
             "location": "19:8",
             "mode": "run",
-            "result": "pending",
+            "state": "pending",
           },
         },
         "root test": {
+          "errors": [],
           "fullName": "root suite > root test",
           "id": "-1732721377_0_0",
           "location": "5:6",
           "mode": "skip",
-          "result": "skipped",
+          "state": "skipped",
         },
         "unit tests": {
           "first unit test": {
+            "errors": [],
             "fullName": "root suite > unit tests > first unit test",
             "id": "-1732721377_0_1_0",
             "location": "8:8",
             "mode": "skip",
-            "result": "skipped",
+            "state": "skipped",
           },
           "skipped nested": {
             "test in skipped suite": {
+              "errors": [],
               "fullName": "root suite > unit tests > skipped nested > test in skipped suite",
               "id": "-1732721377_0_1_2_0",
               "location": "12:10",
               "mode": "skip",
-              "result": "skipped",
+              "state": "skipped",
             },
           },
           "skipped unit test": {
+            "errors": [],
             "fullName": "root suite > unit tests > skipped unit test",
             "id": "-1732721377_0_1_1",
             "location": "9:8",
             "mode": "skip",
-            "result": "skipped",
+            "state": "skipped",
           },
         },
       },
@@ -668,48 +716,54 @@ test('collects tests when test functions are globals', async () => {
     {
       "global test functions": {
         "it as global": {
+          "errors": [],
           "fullName": "global test functions > it as global",
           "id": "-1732721377_0_1",
           "location": "4:6",
           "mode": "skip",
-          "result": "skipped",
+          "state": "skipped",
         },
         "myTest as global": {
+          "errors": [],
           "fullName": "global test functions > myTest as global",
           "id": "-1732721377_0_3",
           "location": "6:6",
           "mode": "skip",
-          "result": "skipped",
+          "state": "skipped",
         },
         "nested": {
           "skipped global test": {
+            "errors": [],
             "fullName": "global test functions > nested > skipped global test",
             "id": "-1732721377_0_4_0",
             "location": "9:8",
             "mode": "skip",
-            "result": "skipped",
+            "state": "skipped",
           },
           "testUnit.only as global": {
+            "errors": [],
             "fullName": "global test functions > nested > testUnit.only as global",
             "id": "-1732721377_0_4_1",
             "location": "10:8",
             "mode": "run",
-            "result": "pending",
+            "state": "pending",
           },
         },
         "test as global": {
+          "errors": [],
           "fullName": "global test functions > test as global",
           "id": "-1732721377_0_0",
           "location": "3:6",
           "mode": "skip",
-          "result": "skipped",
+          "state": "skipped",
         },
         "testSomething as global": {
+          "errors": [],
           "fullName": "global test functions > testSomething as global",
           "id": "-1732721377_0_2",
           "location": "5:6",
           "mode": "skip",
-          "result": "skipped",
+          "state": "skipped",
         },
       },
     }
@@ -764,7 +818,8 @@ function testItem(testCase: TestCase) {
       : undefined,
     mode: testCase.options.mode,
     fullName: testCase.fullName,
-    result: testCase.result().state,
+    state: testCase.result().state,
+    errors: testCase.result().errors || [],
     ...(testCase.task.dynamic ? { dynamic: true } : {}),
   }
 }
