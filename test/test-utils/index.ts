@@ -221,12 +221,7 @@ export async function runVitest(
       return ctx?.state.getTestModules() || []
     },
     errorTree() {
-      return buildTestTree(ctx?.state.getTestModules() || [], (result) => {
-        if (result.state === 'failed') {
-          return result.errors.map(e => e.message)
-        }
-        return result.state
-      })
+      return buildErrorTree(ctx?.state.getTestModules() || [])
     },
     testTree() {
       return buildTestTree(ctx?.state.getTestModules() || [])
@@ -485,7 +480,16 @@ export class StableTestFileOrderSorter {
   }
 }
 
-function buildTestTree(testModules: TestModule[], onResult?: (result: TestResult) => unknown) {
+export function buildErrorTree(testModules: TestModule[]) {
+  return buildTestTree(testModules, (result) => {
+    if (result.state === 'failed') {
+      return result.errors.map(e => e.message)
+    }
+    return result.state
+  })
+}
+
+export function buildTestTree(testModules: TestModule[], onResult?: (result: TestResult) => unknown) {
   type TestTree = Record<string, any>
 
   function walkCollection(collection: TestCollection): TestTree {
