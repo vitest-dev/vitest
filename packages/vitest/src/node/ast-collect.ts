@@ -123,7 +123,7 @@ function astParseFile(filepath: string, code: string) {
       const property = callee?.property?.name
       let mode = !property || property === name ? 'run' : property
       // they will be picked up in the next iteration
-      if (['each', 'for', 'skipIf', 'runIf'].includes(mode)) {
+      if (['each', 'for', 'skipIf', 'runIf', 'extend', 'scoped'].includes(mode)) {
         return
       }
 
@@ -420,11 +420,11 @@ export async function astCollectTests(
 }
 
 async function transformSSR(project: TestProject, filepath: string) {
-  const request = await project.vite.transformRequest(filepath, { ssr: false })
-  if (!request) {
-    return null
+  const environment = project.config.environment
+  if (environment === 'jsdom' || environment === 'happy-dom') {
+    return project.vite.environments.client.transformRequest(filepath)
   }
-  return await project.vite.ssrTransform(request.code, request.map, filepath)
+  return project.vite.environments.ssr.transformRequest(filepath)
 }
 
 function markDynamicTests(tasks: Task[]) {
