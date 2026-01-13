@@ -348,7 +348,7 @@ test('coverage.autoUpdate cannot update thresholds when configuration file doesn
   expect(stderr).toMatch('Error: Unable to parse thresholds from configuration file: Expected config.test.coverage.thresholds to be an object')
 })
 
-test.skip('boolean flag 100 should not crash CLI', async () => {
+test('boolean flag 100 should not crash CLI', async () => {
   let { stderr } = await runVitestCli('--coverage.enabled', '--coverage.thresholds.100', '--coverage.include=fixtures/coverage-test', '--passWithNoTests')
   // non-zero coverage shows up, which is non-deterministic, so strip it.
   stderr = stderr.replace(/\([0-9.]+%\) does/g, '(0%) does')
