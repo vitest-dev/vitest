@@ -247,6 +247,7 @@ export function createSuiteHooks(): SuiteHooks {
     afterAll: [],
     beforeEach: [],
     afterEach: [],
+    aroundEach: [],
   }
 }
 

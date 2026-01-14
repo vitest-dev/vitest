@@ -1,6 +1,7 @@
 import type {
   AfterAllListener,
   AfterEachListener,
+  AroundEachListener,
   BeforeAllListener,
   BeforeEachListener,
   OnTestFailedHandler,
@@ -265,6 +266,46 @@ export const onTestFinished: TaskHook<OnTestFinishedHandler> = createTestHook(
     )
   },
 )
+
+/**
+ * Registers a callback function that wraps around each test within the current suite.
+ * The callback receives a `runTest` function that must be called to run the test.
+ * This hook is useful for scenarios where you need to wrap tests in a context (e.g., database transactions).
+ *
+ * **Note:** When multiple `aroundEach` hooks are registered, they are nested inside each other.
+ * The first registered hook is the outermost wrapper.
+ *
+ * @param {Function} fn - The callback function that wraps the test. Must call `runTest()` to run the test.
+ * @param {number} [timeout] - Optional timeout in milliseconds for the hook. If not provided, the default hook timeout from the runner's configuration is used.
+ * @returns {void}
+ * @example
+ * ```ts
+ * // Example of using aroundEach to wrap tests in a database transaction
+ * aroundEach(async (runTest) => {
+ *   await database.beginTransaction();
+ *   await runTest(); // Run the test
+ *   await database.rollback();
+ * });
+ * ```
+ */
+export function aroundEach<ExtraContext = object>(
+  fn: AroundEachListener<ExtraContext>,
+  timeout?: number,
+): void {
+  assertTypes(fn, '"aroundEach" callback', ['function'])
+  const runner = getRunner()
+  return getCurrentSuite<ExtraContext>().on(
+    'aroundEach',
+    withTimeout(
+      fn,
+      // TODO: what should be the timeout? it runs _every_ hook inside (+a test)
+      timeout ?? (getDefaultHookTimeout() + runner.config.testTimeout + getDefaultHookTimeout()),
+      true,
+      new Error('STACK_TRACE_ERROR'),
+      ([, context], error) => abortContextSignal(context, error),
+    ),
+  )
+}
 
 function createTestHook<T>(
   name: string,

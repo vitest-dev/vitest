@@ -97,6 +97,7 @@ export type {
 export {
   afterAll,
   afterEach,
+  aroundEach,
   beforeAll,
   beforeEach,
   describe,

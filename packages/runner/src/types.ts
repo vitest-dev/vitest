@@ -9,6 +9,7 @@ export type {
 export type {
   AfterAllListener,
   AfterEachListener,
+  AroundEachListener,
   BeforeAllListener,
   BeforeEachListener,
   File,

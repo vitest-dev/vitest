@@ -2,6 +2,7 @@ import type { Awaitable, TestError } from '@vitest/utils'
 import type { DiffOptions } from '@vitest/utils/diff'
 import type { FileSpecification, VitestRunner } from './types/runner'
 import type {
+  AroundEachListener,
   File,
   SequenceHooks,
   Suite,
@@ -217,6 +218,51 @@ export async function callSuiteHook<T extends keyof SuiteHooks>(
   return callbacks
 }
 
+function getAroundEachHooks(suite: Suite): AroundEachListener[] {
+  const hooks: AroundEachListener[] = []
+  const parentSuite: Suite | null = 'filepath' in suite ? null : suite.suite || suite.file
+  if (parentSuite) {
+    hooks.push(...getAroundEachHooks(parentSuite))
+  }
+  hooks.push(...getHooks(suite).aroundEach)
+  return hooks
+}
+
+async function callAroundEachHooks(
+  suite: Suite,
+  test: Test,
+  runTest: () => Promise<void>,
+): Promise<void> {
+  const hooks = getAroundEachHooks(suite)
+
+  if (!hooks.length) {
+    await runTest()
+    return
+  }
+
+  const runNextHook = async (index: number): Promise<void> => {
+    if (index >= hooks.length) {
+      return runTest()
+    }
+
+    const hook = hooks[index]
+    let useCalled = false
+    const use = () => {
+      useCalled = true
+      return runNextHook(index + 1)
+    }
+    await hook(use, test.context, suite)
+    if (!useCalled) {
+      throw new Error(
+        'The `runTest()` callback was not called in the `aroundEach` hook. '
+        + 'Make sure to call `runTest()` to run the test.',
+      )
+    }
+  }
+
+  await runNextHook(0)
+}
+
 const packs = new Map<string, [TaskResult | undefined, TaskMeta]>()
 const eventsPacks: [string, TaskUpdateEvent, undefined][] = []
 const pendingTasksUpdates: Promise<void>[] = []
@@ -365,93 +411,95 @@ export async function runTest(test: Test, runner: VitestRunner): Promise<void> {
     const retry = getRetryCount(test.retry)
     for (let retryCount = 0; retryCount <= retry; retryCount++) {
       let beforeEachCleanups: unknown[] = []
-      try {
-        await runner.onBeforeTryTask?.(test, {
+      await callAroundEachHooks(suite, test, async () => {
+        try {
+          await runner.onBeforeTryTask?.(test, {
+            retry: retryCount,
+            repeats: repeatCount,
+          })
+
+          test.result!.repeatCount = repeatCount
+
+          beforeEachCleanups = await $('test.beforeEach', () => callSuiteHook(
+            suite,
+            test,
+            'beforeEach',
+            runner,
+            [test.context, suite],
+          ))
+
+          if (runner.runTask) {
+            await $('test.callback', () => runner.runTask!(test))
+          }
+          else {
+            const fn = getFn(test)
+            if (!fn) {
+              throw new Error(
+                'Test function is not found. Did you add it using `setFn`?',
+              )
+            }
+            await $('test.callback', () => fn())
+          }
+
+          await runner.onAfterTryTask?.(test, {
+            retry: retryCount,
+            repeats: repeatCount,
+          })
+
+          if (test.result!.state !== 'fail') {
+            if (!test.repeats) {
+              test.result!.state = 'pass'
+            }
+            else if (test.repeats && retry === retryCount) {
+              test.result!.state = 'pass'
+            }
+          }
+        }
+        catch (e) {
+          failTask(test.result!, e, runner.config.diffOptions)
+        }
+
+        try {
+          await runner.onTaskFinished?.(test)
+        }
+        catch (e) {
+          failTask(test.result!, e, runner.config.diffOptions)
+        }
+
+        try {
+          await $('test.afterEach', () => callSuiteHook(suite, test, 'afterEach', runner, [
+            test.context,
+            suite,
+          ]))
+          if (beforeEachCleanups.length) {
+            await $('test.cleanup', () => callCleanupHooks(runner, beforeEachCleanups))
+          }
+          await callFixtureCleanup(test.context)
+        }
+        catch (e) {
+          failTask(test.result!, e, runner.config.diffOptions)
+        }
+
+        if (test.onFinished?.length) {
+          await $('test.onFinished', () => callTestHooks(runner, test, test.onFinished!, 'stack'))
+        }
+
+        if (test.result!.state === 'fail' && test.onFailed?.length) {
+          await $('test.onFailed', () => callTestHooks(
+            runner,
+            test,
+            test.onFailed!,
+            runner.config.sequence.hooks,
+          ))
+        }
+
+        test.onFailed = undefined
+        test.onFinished = undefined
+
+        await runner.onAfterRetryTask?.(test, {
           retry: retryCount,
           repeats: repeatCount,
         })
-
-        test.result.repeatCount = repeatCount
-
-        beforeEachCleanups = await $('test.beforeEach', () => callSuiteHook(
-          suite,
-          test,
-          'beforeEach',
-          runner,
-          [test.context, suite],
-        ))
-
-        if (runner.runTask) {
-          await $('test.callback', () => runner.runTask!(test))
-        }
-        else {
-          const fn = getFn(test)
-          if (!fn) {
-            throw new Error(
-              'Test function is not found. Did you add it using `setFn`?',
-            )
-          }
-          await $('test.callback', () => fn())
-        }
-
-        await runner.onAfterTryTask?.(test, {
-          retry: retryCount,
-          repeats: repeatCount,
-        })
-
-        if (test.result.state !== 'fail') {
-          if (!test.repeats) {
-            test.result.state = 'pass'
-          }
-          else if (test.repeats && retry === retryCount) {
-            test.result.state = 'pass'
-          }
-        }
-      }
-      catch (e) {
-        failTask(test.result, e, runner.config.diffOptions)
-      }
-
-      try {
-        await runner.onTaskFinished?.(test)
-      }
-      catch (e) {
-        failTask(test.result, e, runner.config.diffOptions)
-      }
-
-      try {
-        await $('test.afterEach', () => callSuiteHook(suite, test, 'afterEach', runner, [
-          test.context,
-          suite,
-        ]))
-        if (beforeEachCleanups.length) {
-          await $('test.cleanup', () => callCleanupHooks(runner, beforeEachCleanups))
-        }
-        await callFixtureCleanup(test.context)
-      }
-      catch (e) {
-        failTask(test.result, e, runner.config.diffOptions)
-      }
-
-      if (test.onFinished?.length) {
-        await $('test.onFinished', () => callTestHooks(runner, test, test.onFinished!, 'stack'))
-      }
-
-      if (test.result.state === 'fail' && test.onFailed?.length) {
-        await $('test.onFailed', () => callTestHooks(
-          runner,
-          test,
-          test.onFailed!,
-          runner.config.sequence.hooks,
-        ))
-      }
-
-      test.onFailed = undefined
-      test.onFinished = undefined
-
-      await runner.onAfterRetryTask?.(test, {
-        retry: retryCount,
-        repeats: repeatCount,
       })
 
       // skipped with new PendingError
