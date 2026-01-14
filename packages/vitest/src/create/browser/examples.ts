@@ -250,11 +250,10 @@ export default function HelloWorld({ name }: { name: string }) {
   test: `
 import { expect, test } from 'vitest'
 import { render } from 'vitest-browser-preact'
-import HelloWorld from '../src/HelloWorld'
+import HelloWorld from './HelloWorld.<EXT>x'
 
-test('renders name', () => {
+test('renders name', async () => {
   const { getByText } = render(<HelloWorld name="Vitest" />)
-  const element = getByText('Hello Vitest!')
   await expect.element(getByText('Hello Vitest!')).toBeInTheDocument()
 })
 `,
