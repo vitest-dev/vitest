@@ -634,15 +634,16 @@ export class BaseCoverageProvider<Options extends ResolvedCoverageOptions<'istan
         root: project.config.root,
         isBrowserEnabled: project.isBrowserEnabled(),
         vite: project.vite,
+        environment: project.config.environment,
       })),
       // Check core last as it will match all files anyway
-      { root: ctx.config.root, vite: ctx.vite, isBrowserEnabled: ctx.getRootProject().isBrowserEnabled() },
+      { root: ctx.config.root, vite: ctx.vite, isBrowserEnabled: ctx.getRootProject().isBrowserEnabled(), environment: ctx.config.environment },
     ]
 
     return async function transformFile(filename: string): Promise<TransformResult | null | undefined> {
       let lastError
 
-      for (const { root, vite, isBrowserEnabled } of servers) {
+      for (const { root, vite, isBrowserEnabled, environment } of servers) {
         // On Windows root doesn't start with "/" while filenames do
         if (!filename.startsWith(root) && !filename.startsWith(`/${root}`)) {
           continue
@@ -657,6 +658,10 @@ export class BaseCoverageProvider<Options extends ResolvedCoverageOptions<'istan
         }
 
         try {
+          if (environment === 'jsdom' || environment === 'happy-dom') {
+            return await vite.environments.client.transformRequest(filename)
+          }
+
           return await vite.environments.ssr.transformRequest(filename)
         }
         catch (error) {
@@ -664,7 +669,7 @@ export class BaseCoverageProvider<Options extends ResolvedCoverageOptions<'istan
         }
       }
 
-      // All vite-node servers failed to transform the file
+      // All vite servers failed to transform the file
       throw lastError
     }
   }

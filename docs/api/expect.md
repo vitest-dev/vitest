@@ -6,7 +6,7 @@ The following types are used in the type signatures below
 type Awaitable<T> = T | PromiseLike<T>
 ```
 
-`expect` is used to create assertions. In this context `assertions` are functions that can be called to assert a statement. Vitest provides `chai` assertions by default and also `Jest` compatible assertions built on top of `chai`. Unlike `Jest`, Vitest supports a message as the second argument - if the assertion fails, the error message will be equal to it.
+`expect` is used to create assertions. In this context `assertions` are functions that can be called to assert a statement. Vitest provides `chai` assertions by default and also `Jest` compatible assertions built on top of `chai`. Since Vitest 4.1, for spy/mock testing, Vitest also provides [Chai-style assertions](#chai-style-spy-assertions) (e.g., `expect(spy).to.have.been.called()`) alongside Jest-style assertions (e.g., `expect(spy).toHaveBeenCalled()`). Unlike `Jest`, Vitest supports a message as the second argument - if the assertion fails, the error message will be equal to it.
 
 ```ts
 export interface ExpectStatic extends Chai.ExpectStatic, AsymmetricMatchersContaining {
@@ -1357,6 +1357,347 @@ test('spy function returns bananas on second call', async () => {
 })
 ```
 
+## called
+
+- **Type:** `Assertion` (property, not a method)
+
+Chai-style assertion that checks if a spy was called at least once. This is equivalent to `toHaveBeenCalled()`.
+
+::: tip
+This is a property assertion following sinon-chai conventions. Access it without parentheses: `expect(spy).to.have.been.called`
+:::
+
+```ts
+import { expect, test, vi } from 'vitest'
+
+test('spy was called', () => {
+  const spy = vi.fn()
+
+  spy()
+
+  expect(spy).to.have.been.called
+  expect(spy).to.not.have.been.called // negation
+})
+```
+
+## callCount
+
+- **Type:** `(count: number) => void`
+
+Chai-style assertion that checks if a spy was called a specific number of times. This is equivalent to `toHaveBeenCalledTimes(count)`.
+
+```ts
+import { expect, test, vi } from 'vitest'
+
+test('spy call count', () => {
+  const spy = vi.fn()
+
+  spy()
+  spy()
+  spy()
+
+  expect(spy).to.have.callCount(3)
+})
+```
+
+## calledWith
+
+- **Type:** `(...args: any[]) => void`
+
+Chai-style assertion that checks if a spy was called with specific arguments at least once. This is equivalent to `toHaveBeenCalledWith(...args)`.
+
+```ts
+import { expect, test, vi } from 'vitest'
+
+test('spy called with arguments', () => {
+  const spy = vi.fn()
+
+  spy('apple', 10)
+  spy('banana', 20)
+
+  expect(spy).to.have.been.calledWith('apple', 10)
+  expect(spy).to.have.been.calledWith('banana', 20)
+})
+```
+
+## calledOnce
+
+- **Type:** `Assertion` (property, not a method)
+
+Chai-style assertion that checks if a spy was called exactly once. This is equivalent to `toHaveBeenCalledOnce()`.
+
+::: tip
+This is a property assertion following sinon-chai conventions. Access it without parentheses: `expect(spy).to.have.been.calledOnce`
+:::
+
+```ts
+import { expect, test, vi } from 'vitest'
+
+test('spy called once', () => {
+  const spy = vi.fn()
+
+  spy()
+
+  expect(spy).to.have.been.calledOnce
+})
+```
+
+## calledOnceWith
+
+- **Type:** `(...args: any[]) => void`
+
+Chai-style assertion that checks if a spy was called exactly once with specific arguments. This is equivalent to `toHaveBeenCalledExactlyOnceWith(...args)`.
+
+```ts
+import { expect, test, vi } from 'vitest'
+
+test('spy called once with arguments', () => {
+  const spy = vi.fn()
+
+  spy('apple', 10)
+
+  expect(spy).to.have.been.calledOnceWith('apple', 10)
+})
+```
+
+## calledTwice
+
+- **Type:** `Assertion` (property, not a method)
+
+Chai-style assertion that checks if a spy was called exactly twice. This is equivalent to `toHaveBeenCalledTimes(2)`.
+
+::: tip
+This is a property assertion following sinon-chai conventions. Access it without parentheses: `expect(spy).to.have.been.calledTwice`
+:::
+
+```ts
+import { expect, test, vi } from 'vitest'
+
+test('spy called twice', () => {
+  const spy = vi.fn()
+
+  spy()
+  spy()
+
+  expect(spy).to.have.been.calledTwice
+})
+```
+
+## calledThrice
+
+- **Type:** `Assertion` (property, not a method)
+
+Chai-style assertion that checks if a spy was called exactly three times. This is equivalent to `toHaveBeenCalledTimes(3)`.
+
+::: tip
+This is a property assertion following sinon-chai conventions. Access it without parentheses: `expect(spy).to.have.been.calledThrice`
+:::
+
+```ts
+import { expect, test, vi } from 'vitest'
+
+test('spy called thrice', () => {
+  const spy = vi.fn()
+
+  spy()
+  spy()
+  spy()
+
+  expect(spy).to.have.been.calledThrice
+})
+```
+
+## lastCalledWith
+
+- **Type:** `(...args: any[]) => void`
+
+Chai-style assertion that checks if the last call to a spy was made with specific arguments. This is equivalent to `toHaveBeenLastCalledWith(...args)`.
+
+```ts
+import { expect, test, vi } from 'vitest'
+
+test('spy last called with', () => {
+  const spy = vi.fn()
+
+  spy('apple', 10)
+  spy('banana', 20)
+
+  expect(spy).to.have.been.lastCalledWith('banana', 20)
+})
+```
+
+## nthCalledWith
+
+- **Type:** `(n: number, ...args: any[]) => void`
+
+Chai-style assertion that checks if the nth call to a spy was made with specific arguments. This is equivalent to `toHaveBeenNthCalledWith(n, ...args)`.
+
+```ts
+import { expect, test, vi } from 'vitest'
+
+test('spy nth called with', () => {
+  const spy = vi.fn()
+
+  spy('apple', 10)
+  spy('banana', 20)
+  spy('cherry', 30)
+
+  expect(spy).to.have.been.nthCalledWith(2, 'banana', 20)
+})
+```
+
+## returned
+
+- **Type:** `Assertion` (property, not a method)
+
+Chai-style assertion that checks if a spy returned successfully at least once. This is equivalent to `toHaveReturned()`.
+
+::: tip
+This is a property assertion following sinon-chai conventions. Access it without parentheses: `expect(spy).to.have.returned`
+:::
+
+```ts
+import { expect, test, vi } from 'vitest'
+
+test('spy returned', () => {
+  const spy = vi.fn(() => 'result')
+
+  spy()
+
+  expect(spy).to.have.returned
+})
+```
+
+## returnedWith
+
+- **Type:** `(value: any) => void`
+
+Chai-style assertion that checks if a spy returned a specific value at least once. This is equivalent to `toHaveReturnedWith(value)`.
+
+```ts
+import { expect, test, vi } from 'vitest'
+
+test('spy returned with value', () => {
+  const spy = vi.fn()
+    .mockReturnValueOnce('apple')
+    .mockReturnValueOnce('banana')
+
+  spy()
+  spy()
+
+  expect(spy).to.have.returnedWith('apple')
+  expect(spy).to.have.returnedWith('banana')
+})
+```
+
+## returnedTimes
+
+- **Type:** `(count: number) => void`
+
+Chai-style assertion that checks if a spy returned successfully a specific number of times. This is equivalent to `toHaveReturnedTimes(count)`.
+
+```ts
+import { expect, test, vi } from 'vitest'
+
+test('spy returned times', () => {
+  const spy = vi.fn(() => 'result')
+
+  spy()
+  spy()
+  spy()
+
+  expect(spy).to.have.returnedTimes(3)
+})
+```
+
+## lastReturnedWith
+
+- **Type:** `(value: any) => void`
+
+Chai-style assertion that checks if the last return value of a spy matches the expected value. This is equivalent to `toHaveLastReturnedWith(value)`.
+
+```ts
+import { expect, test, vi } from 'vitest'
+
+test('spy last returned with', () => {
+  const spy = vi.fn()
+    .mockReturnValueOnce('apple')
+    .mockReturnValueOnce('banana')
+
+  spy()
+  spy()
+
+  expect(spy).to.have.lastReturnedWith('banana')
+})
+```
+
+## nthReturnedWith
+
+- **Type:** `(n: number, value: any) => void`
+
+Chai-style assertion that checks if the nth return value of a spy matches the expected value. This is equivalent to `toHaveNthReturnedWith(n, value)`.
+
+```ts
+import { expect, test, vi } from 'vitest'
+
+test('spy nth returned with', () => {
+  const spy = vi.fn()
+    .mockReturnValueOnce('apple')
+    .mockReturnValueOnce('banana')
+    .mockReturnValueOnce('cherry')
+
+  spy()
+  spy()
+  spy()
+
+  expect(spy).to.have.nthReturnedWith(2, 'banana')
+})
+```
+
+## calledBefore
+
+- **Type:** `(mock: MockInstance, failIfNoFirstInvocation?: boolean) => void`
+
+Chai-style assertion that checks if a spy was called before another spy. This is equivalent to `toHaveBeenCalledBefore(mock, failIfNoFirstInvocation)`.
+
+```ts
+import { expect, test, vi } from 'vitest'
+
+test('spy called before another', () => {
+  const spy1 = vi.fn()
+  const spy2 = vi.fn()
+
+  spy1()
+  spy2()
+
+  expect(spy1).to.have.been.calledBefore(spy2)
+})
+```
+
+## calledAfter
+
+- **Type:** `(mock: MockInstance, failIfNoFirstInvocation?: boolean) => void`
+
+Chai-style assertion that checks if a spy was called after another spy. This is equivalent to `toHaveBeenCalledAfter(mock, failIfNoFirstInvocation)`.
+
+```ts
+import { expect, test, vi } from 'vitest'
+
+test('spy called after another', () => {
+  const spy1 = vi.fn()
+  const spy2 = vi.fn()
+
+  spy1()
+  spy2()
+
+  expect(spy2).to.have.been.calledAfter(spy1)
+})
+```
+
+::: tip Migration Guide
+For a complete guide on migrating from Mocha+Chai+Sinon to Vitest, see the [Migration Guide](/guide/migration#mocha-chai-sinon).
+:::
+
 ## toSatisfy
 
 - **Type:** `(predicate: (value: any) => boolean) => Awaitable<void>`
@@ -1758,7 +2099,7 @@ You can use `expect.not` with this matcher to negate the expected value.
 
 This method adds custom serializers that are called when creating a snapshot. This is an advanced feature - if you want to know more, please read a [guide on custom serializers](/guide/snapshot#custom-serializer).
 
-If you are adding custom serializers, you should call this method inside [`setupFiles`](/config/#setupfiles). This will affect every snapshot.
+If you are adding custom serializers, you should call this method inside [`setupFiles`](/config/setupfiles). This will affect every snapshot.
 
 :::tip
 If you previously used Vue CLI with Jest, you might want to install [jest-serializer-vue](https://www.npmjs.com/package/jest-serializer-vue). Otherwise, your snapshots will be wrapped in a string, which cases `"` to be escaped.
@@ -1793,7 +2134,7 @@ test('custom matchers', () => {
 ```
 
 ::: tip
-If you want your matchers to appear in every test, you should call this method inside [`setupFiles`](/config/#setupfiles).
+If you want your matchers to appear in every test, you should call this method inside [`setupFiles`](/config/setupfiles).
 :::
 
 This function is compatible with Jest's `expect.extend`, so any library that uses it to create custom matchers will work with Vitest.

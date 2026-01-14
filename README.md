@@ -1,7 +1,16 @@
 <p align="center">
-<a href="https://vitest.dev">
-<img src="https://user-images.githubusercontent.com/11247099/145112184-a9ff6727-661c-439d-9ada-963124a281f7.png" height="150">
-</a>
+  <br>
+  <br>
+  <a href="https://vitest.dev" target="_blank" rel="noopener noreferrer">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="https://vitest.dev/vitest-light.svg">
+      <source media="(prefers-color-scheme: light)" srcset="https://vitest.dev/vitest-dark.svg">
+      <img alt="rolldown logo" src="https://vitest.dev/vitest-dark.svg" height="60">
+    </picture>
+  </a>
+  <br>
+  <br>
+  <br>
 </p>
 
 <h1 align="center">
@@ -77,6 +86,12 @@ $ npx vitest
 ```
 
 ## Sponsors
+
+<p align="center">
+  <a href="https://cdn.jsdelivr.net/gh/sheremet-va/static/vitest/sponsors.svg">
+    <img src='https://cdn.jsdelivr.net/gh/sheremet-va/static/vitest/sponsors.svg'/>
+  </a>
+</p>
 
 ### Vladimir Sponsors
 

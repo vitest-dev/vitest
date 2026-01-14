@@ -79,7 +79,7 @@ import Box from '../.vitepress/components/Box.vue'
   <Box>Coverage report</Box>
 </div>
 
-## Istanbul provider
+## Istanbul Provider
 
 [Istanbul code coverage tooling](https://istanbul.js.org/) has existed since 2012 and is very well battle-tested.
 This provider works on any Javascript runtime as coverage tracking is done by instrumenting user's source files.
@@ -165,7 +165,7 @@ export default defineConfig({
 ```
 :::
 
-## Including and excluding files from coverage report
+## Including and Excluding Files from Coverage Report
 
 You can define what files are shown in coverage report by configuring [`coverage.include`](/config/#coverage-include) and [`coverage.exclude`](/config/#coverage-exclude).
 

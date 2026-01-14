@@ -1,4 +1,4 @@
-import { join, resolve } from 'node:path'
+import { resolve } from 'node:path'
 import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
@@ -9,9 +9,9 @@ export default defineConfig({
         replacement: "$1",
         customResolver(_, __, options) {
           if ('ssr' in options && options.ssr) {
-            return { id: resolve('fixtures/src/conditional/node.ts') }
+            return { id: resolve('fixtures/src/conditional/ssr.ts') }
           }
-          return { id: resolve('fixtures/src/conditional/browser.ts') }
+          return { id: resolve('fixtures/src/conditional/web.ts') }
         },
       },
     ],

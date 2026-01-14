@@ -98,6 +98,16 @@ export interface VitestUtils {
   clearAllTimers: () => VitestUtils
 
   /**
+   * Controls how fake timers are advanced.
+   * @param mode The mode to use for advancing timers.
+   * - `manual`: The default behavior. Timers will only advance when you call one of `vi.advanceTimers...()` methods.
+   * - `nextTimerAsync`: Timers will be advanced automatically to the next available timer after each macrotask.
+   * - `interval`: Timers are advanced automatically by a specified interval.
+   * @param interval The interval in milliseconds to use when `mode` is `'interval'`.
+   */
+  setTimerTickMode: ((mode: 'manual' | 'nextTimerAsync') => VitestUtils) & ((mode: 'interval', interval?: number) => VitestUtils)
+
+  /**
    * Creates a spy on a method or getter/setter of an object similar to [`vi.fn()`](https://vitest.dev/api/vi#vi-fn). It returns a [mock function](https://vitest.dev/api/mock).
    * @example
    * ```ts
@@ -220,11 +230,13 @@ export interface VitestUtils {
    * Mocking algorithm is described in [documentation](https://vitest.dev/guide/mocking/modules).
    * @param path Path to the module. Can be aliased, if your Vitest config supports it
    * @param factory Mocked module factory. The result of this function will be an exports object
+   *
+   * @returns A disposable object that calls {@link doUnmock()} when disposed
    */
   // eslint-disable-next-line ts/method-signature-style
-  doMock(path: string, factory?: MockFactoryWithHelper | MockOptions): void
+  doMock(path: string, factory?: MockFactoryWithHelper | MockOptions): Disposable
   // eslint-disable-next-line ts/method-signature-style
-  doMock<T>(module: Promise<T>, factory?: MockFactoryWithHelper<T> | MockOptions): void
+  doMock<T>(module: Promise<T>, factory?: MockFactoryWithHelper<T> | MockOptions): Disposable
   /**
    * Removes module from mocked registry. All subsequent calls to import will return original module.
    *
@@ -553,6 +565,11 @@ function createVitest(): VitestUtils {
       return utils
     },
 
+    setTimerTickMode(mode: 'manual' | 'nextTimerAsync' | 'interval', interval?: number) {
+      timers().setTimerTickMode(mode, interval)
+      return utils
+    },
+
     // mocks
 
     spyOn,
@@ -617,6 +634,14 @@ function createVitest(): VitestUtils {
               )
           : factory,
       )
+
+      const rv = {} as Disposable
+      if (Symbol.dispose) {
+        rv[Symbol.dispose] = () => {
+          _mocker().queueUnmock(path, importer)
+        }
+      }
+      return rv
     },
 
     doUnmock(path: string | Promise<unknown>) {

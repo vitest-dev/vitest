@@ -1,4 +1,4 @@
-import { test } from 'vitest'
+import { describe, test } from 'vitest'
 import { runInlineTests } from '../../test-utils'
 
 const toMatchTest = /* ts */`

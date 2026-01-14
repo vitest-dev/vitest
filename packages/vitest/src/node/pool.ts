@@ -3,7 +3,7 @@ import type { ContextTestEnvironment } from '../types/worker'
 import type { Vitest } from './core'
 import type { PoolTask } from './pools/types'
 import type { TestProject } from './project'
-import type { TestSpecification } from './spec'
+import type { TestSpecification } from './test-specification'
 import type { BuiltinPool, ResolvedConfig } from './types/config'
 import * as nodeos from 'node:os'
 import { isatty } from 'node:tty'
@@ -147,7 +147,12 @@ export function createPool(ctx: Vitest): ProcessPool {
 
         taskGroup.push({
           context: {
-            files: specs.map(spec => ({ filepath: spec.moduleId, testLocations: spec.testLines })),
+            files: specs.map(spec => ({
+              filepath: spec.moduleId,
+              testLocations: spec.testLines,
+              testNamePattern: spec.testNamePattern,
+              testIds: spec.testIds,
+            })),
             invalidates,
             providedContext: project.getProvidedContext(),
             workerId: workerId++,

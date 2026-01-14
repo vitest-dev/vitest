@@ -8,6 +8,7 @@ import { loadEnvironment } from '../../integrations/env/loader'
 import { distDir } from '../../paths'
 import { createCustomConsole } from '../console'
 import { ExternalModulesExecutor } from '../external-executor'
+import { emitModuleRunner } from '../listeners'
 import { getDefaultRequestStubs } from '../moduleRunner/moduleEvaluator'
 import { createNodeImportMeta } from '../moduleRunner/moduleRunner'
 import { startVitestModuleRunner, VITEST_VM_CONTEXT_SYMBOL } from '../moduleRunner/startModuleRunner'
@@ -98,6 +99,8 @@ export async function runVmTests(method: 'run' | 'collect', state: WorkerGlobalS
     traces,
   })
 
+  emitModuleRunner(moduleRunner as any)
+
   Object.defineProperty(context, VITEST_VM_CONTEXT_SYMBOL, {
     value: {
       context,
@@ -124,16 +127,11 @@ export async function runVmTests(method: 'run' | 'collect', state: WorkerGlobalS
   const { run } = (await moduleRunner.import(
     entryFile,
   )) as typeof import('../runVmTests')
-  const fileSpecs = ctx.files.map(f =>
-    typeof f === 'string'
-      ? { filepath: f, testLocations: undefined }
-      : f,
-  )
 
   try {
     await run(
       method,
-      fileSpecs,
+      ctx.files,
       ctx.config,
       moduleRunner,
       traces,
