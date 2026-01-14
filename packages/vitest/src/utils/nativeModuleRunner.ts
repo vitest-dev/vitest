@@ -35,7 +35,7 @@ export class NativeModuleRunner extends ModuleRunner {
     if (isBareImport(moduleId)) {
       const path = resolveModule(moduleId, { paths: [this.root] })
         ?? resolve(this.root, moduleId)
-      return import(path)
+      return import(pathToFileURL(path).toString())
     }
     if (!isAbsolute(moduleId)) {
       moduleId = resolve(this.root, moduleId)
