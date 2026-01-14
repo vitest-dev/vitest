@@ -10,5 +10,10 @@ export default defineConfig({
     experimental: {
       viteModuleRunner: false,
     },
+    coverage: {
+      provider: 'v8',
+      include: ['./src/**'],
+      exclude: ['**/__mocks__/**']
+    },
   },
 })

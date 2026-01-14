@@ -7,7 +7,8 @@
   },
   "scripts": {
     "test": "vitest",
-    "stacktraces": "vitest --root=./fixtures/stacktraces --watch=false"
+    "stacktraces": "vitest --root=./fixtures/stacktraces --watch=false",
+    "native": "vitest --root=./fixtures/no-module-runner --watch=false --no-isolate --max-workers=1"
   },
   "devDependencies": {
     "@opentelemetry/api": "^1.9.0",

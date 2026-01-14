@@ -4,7 +4,9 @@ import type { Vitest } from '../node/core'
 import type { BaseCoverageOptions, CoverageModuleLoader, CoverageProvider, ReportContext, ResolvedCoverageOptions } from '../node/types/coverage'
 import type { SerializedCoverageConfig } from '../runtime/config'
 import type { AfterSuiteRunMeta } from '../types/general'
-import { existsSync, promises as fs, readdirSync, writeFileSync } from 'node:fs'
+import type { TestProject } from './project'
+import { existsSync, promises as fs, readdirSync, readFileSync, writeFileSync } from 'node:fs'
+import module from 'node:module'
 import path from 'node:path'
 import { slash } from '@vitest/utils/helpers'
 import { relative, resolve } from 'pathe'
@@ -629,44 +631,71 @@ export class BaseCoverageProvider<Options extends ResolvedCoverageOptions<'istan
     }, [])
   }
 
-  createUncoveredFileTransformer(ctx: Vitest) {
-    const servers = [
-      ...ctx.projects.map(project => ({
-        root: project.config.root,
-        isBrowserEnabled: project.isBrowserEnabled(),
-        vite: project.vite,
-        environment: project.config.environment,
-      })),
-      // Check core last as it will match all files anyway
-      { root: ctx.config.root, vite: ctx.vite, isBrowserEnabled: ctx.getRootProject().isBrowserEnabled(), environment: ctx.config.environment },
-    ]
+  // TODO: should this be abstracted in `project`/`vitest` instead?
+  // if we decide to keep `viteModuleRunner: false`, we will need to abstract transformation in both main thread and tests
+  // custom --import=module.registerHooks need to be transformed as well somehow
+  async transformFile(url: string, project: TestProject, viteEnvironment: string): Promise<TransformResult | null | undefined> {
+    const config = project.config
 
-    return async function transformFile(filename: string): Promise<TransformResult | null | undefined> {
+    // vite is disabled, should transform manually if possible
+    // TODO: should this be abstracted?
+    if (config.experimental.viteModuleRunner === false) {
+      const filename = url.split('?')[0]
+      const extension = path.extname(filename)
+      const isTypeScript = extension === '.ts' || extension === '.mts' || extension === '.cts'
+      if (!isTypeScript) {
+        const code = readFileSync(filename, 'utf-8')
+        return { code, map: null }
+      }
+      if (!module.stripTypeScriptTypes) {
+        throw new Error(`Cannot parse '${url}' because "module.stripTypeScriptTypes" is not supported. TypeScript coverage requires Node.js 22.15 or higher. This is NOT a bug of Vitest.`)
+      }
+      const isTransform = process.execArgv.includes('--experimental-transform-types') || config.execArgv.includes('--experimental-transform-types')
+      const code = readFileSync(filename, 'utf-8')
+      return {
+        code: module.stripTypeScriptTypes(code, { mode: isTransform ? 'transform' : 'strip' }),
+        // TODO: if transform, should the source map be generated? -- need a test case first
+        map: null,
+      }
+    }
+
+    if (project.isBrowserEnabled() || viteEnvironment === '__browser__') {
+      const client = project.browser?.vite.environments.client || project.vite.environments.client
+      const result = await client.transformRequest(url).catch(() => null)
+
+      if (result) {
+        return result
+      }
+    }
+
+    return await project.vite.environments[viteEnvironment].transformRequest(url)
+  }
+
+  createUncoveredFileTransformer(ctx: Vitest) {
+    const projects = new Set([
+      ...ctx.projects,
+      // Check core last as it will match all files anyway
+      ctx.getRootProject(),
+    ])
+
+    return async (filename: string): Promise<TransformResult | null | undefined> => {
       let lastError
 
-      for (const { root, vite, isBrowserEnabled, environment } of servers) {
+      for (const project of projects) {
+        const root = project.config.root
+
         // On Windows root doesn't start with "/" while filenames do
         if (!filename.startsWith(root) && !filename.startsWith(`/${root}`)) {
           continue
         }
 
-        if (isBrowserEnabled) {
-          const result = await vite.environments.client.transformRequest(filename).catch(() => null)
-
-          if (result) {
-            return result
-          }
-        }
-
         try {
-          if (environment === 'jsdom' || environment === 'happy-dom') {
-            return await vite.environments.client.transformRequest(filename)
-          }
-
-          return await vite.environments.ssr.transformRequest(filename)
+          const environment = project.config.environment
+          const viteEnvironment = environment === 'jsdom' || environment === 'happy-dom' ? 'client' : 'ssr'
+          return await this.transformFile(filename, project, viteEnvironment)
         }
-        catch (error) {
-          lastError = error
+        catch (err) {
+          lastError = err
         }
       }
 
