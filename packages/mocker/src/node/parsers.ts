@@ -13,6 +13,9 @@ export async function initSyntaxLexers(): Promise<void> {
   ])
 }
 
+const isTransform = process.execArgv.includes('--experimental-transform-types')
+  || process.env.NODE_OPTIONS?.includes('--experimental-transform-types')
+
 export function transformCode(code: string, filename: string): string {
   const ext = extname(filename.split('?')[0])
   const isTs = ext === '.ts' || ext === '.cts' || ext === '.mts'
@@ -22,7 +25,7 @@ export function transformCode(code: string, filename: string): string {
   if (!module.stripTypeScriptTypes) {
     throw new Error(`Cannot parse '${filename}' because "module.stripTypeScriptTypes" is not supported. Module mocking requires Node.js 22.15 or higher. This is NOT a bug of Vitest.`)
   }
-  return module.stripTypeScriptTypes(code)
+  return module.stripTypeScriptTypes(code, { mode: isTransform ? 'transform' : 'strip' })
 }
 
 const cachedFileExports = new Map<string, string[]>()

@@ -650,7 +650,10 @@ export class BaseCoverageProvider<Options extends ResolvedCoverageOptions<'istan
       if (!module.stripTypeScriptTypes) {
         throw new Error(`Cannot parse '${url}' because "module.stripTypeScriptTypes" is not supported. TypeScript coverage requires Node.js 22.15 or higher. This is NOT a bug of Vitest.`)
       }
-      const isTransform = process.execArgv.includes('--experimental-transform-types') || config.execArgv.includes('--experimental-transform-types')
+      const isTransform = process.execArgv.includes('--experimental-transform-types')
+        || config.execArgv.includes('--experimental-transform-types')
+        || process.env.NODE_OPTIONS?.includes('--experimental-transform-types')
+        || config.env?.NODE_OPTIONS?.includes('--experimental-transform-types')
       const code = readFileSync(filename, 'utf-8')
       return {
         code: module.stripTypeScriptTypes(code, { mode: isTransform ? 'transform' : 'strip' }),
