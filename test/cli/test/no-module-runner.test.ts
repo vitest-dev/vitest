@@ -99,6 +99,112 @@ describe.runIf(module.registerHooks)('supported', () => {
     expect(stderr).toContain('"Istanbul" coverage provider is not compatible with "experimental.viteModuleRunner: false". Please, enable "viteModuleRunner" or switch to "v8" coverage provider.')
   })
 
+  test('editing test file in watch mode triggers rerun', async () => {
+    const { fs, vitest } = await runNoViteModuleRunnerTests({
+      'base.test.js': `
+        test('hello world', () => {})
+      `,
+    }, { watch: true })
+
+    await vitest.waitForStdout('1 passed')
+
+    fs.editFile('base.test.js', code => code.replace('hello world', 'hello vitest'))
+
+    await vitest.waitForStdout('RERUN  ../base.test.js')
+    await vitest.waitForStdout('hello vitest')
+    await vitest.waitForStdout('1 passed')
+  })
+
+  test('editing imported file in watch mode triggers rerun', async () => {
+    const { fs, vitest } = await runNoViteModuleRunnerTests({
+      'imported.js': `
+        export function greet() { return 'hello world' }
+      `,
+      'base.test.js': `
+        import { greet } from './imported.js'
+        test(greet(), () => {})
+      `,
+    }, { watch: true })
+
+    await vitest.waitForStdout('1 passed')
+
+    fs.editFile('imported.js', code => code.replace('hello world', 'hello vitest'))
+
+    await vitest.waitForStdout('RERUN  ../imported.js')
+    await vitest.waitForStdout('hello vitest')
+    await vitest.waitForStdout('1 passed')
+  })
+
+  test('editing mocked imported file in watch mode triggers rerun', async () => {
+    const { fs, vitest } = await runNoViteModuleRunnerTests({
+      'imported.js': `
+        export function greet() { return 'hello world' }
+      `,
+      'base.test.js': `
+        import { greet } from './imported.js'
+        vi.mock('./imported.js', { spy: true })
+        test(greet(), () => {
+          expect(greet).toHaveBeenCalledOnce()
+        })
+      `,
+    }, { watch: true })
+
+    await vitest.waitForStdout('1 passed')
+
+    fs.editFile('imported.js', code => code.replace('hello world', 'hello vitest'))
+
+    await vitest.waitForStdout('RERUN  ../imported.js')
+    await vitest.waitForStdout('hello vitest')
+    await vitest.waitForStdout('1 passed')
+  })
+
+  test.only('updating inline snapshots works', async () => {
+    const { fs, stdout } = await runNoViteModuleRunnerTests({
+      'base.test.ts': `
+        interface HelloWorld {
+          hello: string
+        }
+
+        test('inline snapshot', (context: any) => {
+          expect({ hello: 'world' }).toMatchInlineSnapshot()
+        })
+
+        test('second snapshot', () => {
+          expect({
+            hello: 'vitest',
+          }).toMatchInlineSnapshot()
+        })
+      `,
+    }, { update: true })
+    const updatedContent = fs.readFile('base.test.ts')
+    expect(stdout).toContain('Snapshots  2 written')
+    expect(updatedContent).toMatchInlineSnapshot(`
+      "
+              interface HelloWorld {
+                hello: string
+              }
+
+              test('inline snapshot', (context: any) => {
+                expect({ hello: 'world' }).toMatchInlineSnapshot(\`
+                  {
+                    "hello": "world",
+                  }
+                \`)
+              })
+
+              test('second snapshot', () => {
+                expect({
+                  hello: 'vitest',
+                }).toMatchInlineSnapshot(\`
+                  {
+                    "hello": "vitest",
+                  }
+                \`)
+              })
+            "
+    `)
+  })
+
   test('cannot run viteModuleRunner: false in "vmForks"', async () => {
     const { stderr } = await runNoViteModuleRunnerTests(
       { 'base.test.js': `` },
@@ -644,9 +750,6 @@ describe.runIf(!module.registerHooks)('unsupported', () => {
     expect(stderr).toContain(`WARNING  "module.registerHooks" is not supported in Node.js ${process.version}. This means that some features like module mocking or in-source testing are not supported. Upgrade your Node.js version to at least 22.15 or disable "experimental.nodeLoader" flag manually.`)
   })
 })
-
-// TODO: watch mode tests
-// TODO: inline snapshot tests
 
 function runNoViteModuleRunnerTests(structure: TestFsStructure, vitestConfig?: RunVitestConfig, options?: VitestRunnerCLIOptions) {
   return runInlineTests(structure, {

@@ -405,6 +405,13 @@ export function useFS<T extends TestFsStructure>(root: string, structure: T, ens
     }
   })
   return {
+    readFile: (file: string): string => {
+      const filepath = resolve(root, file)
+      if (relative(root, filepath).startsWith('..')) {
+        throw new Error(`file ${file} is outside of the test file system`)
+      }
+      return fs.readFileSync(filepath, 'utf-8')
+    },
     editFile: (file: string, callback: (content: string) => string) => {
       const filepath = resolve(root, file)
       if (!files.has(filepath)) {
