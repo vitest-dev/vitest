@@ -297,6 +297,7 @@ export function aroundEach<ExtraContext = object>(
   return getCurrentSuite<ExtraContext>().on(
     'aroundEach',
     withTimeout(
+      // TODO: it passes `context`, but it's not wrapped with fixtures
       fn,
       // TODO: what should be the timeout? it runs _every_ hook inside (+a test)
       timeout ?? (getDefaultHookTimeout() + runner.config.testTimeout + getDefaultHookTimeout()),
