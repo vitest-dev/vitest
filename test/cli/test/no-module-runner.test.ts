@@ -1,10 +1,12 @@
 import type { RunVitestConfig, TestFsStructure } from '#test-utils'
+import { rmSync } from 'node:fs'
 import module from 'node:module'
 import { replaceRoot, runInlineTests, runVitest } from '#test-utils'
-import { describe, expect, test } from 'vitest'
+import { describe, expect, onTestFinished, test } from 'vitest'
+import { readCoverageJson } from '../../coverage-test/utils'
 
 describe.runIf(module.registerHooks)('supported', () => {
-  test.only.for([
+  test.for([
     {
       isolate: false,
       maxWorkers: 1,
@@ -68,6 +70,31 @@ describe.runIf(module.registerHooks)('supported', () => {
         },
       }
     `)
+  })
+
+  test('v8 coverage works', async () => {
+    const { stderr } = await runVitest({
+      root: './fixtures/no-module-runner',
+      isolate: false,
+      maxWorkers: 1,
+      coverage: {
+        enabled: true,
+        reporter: [['json', { file: './coverage-final.json' }]],
+      },
+    })
+    onTestFinished(() => {
+      rmSync('./fixtures/no-module-runner/coverage', { recursive: true, force: true })
+    })
+    expect(stderr).toBe('')
+    expect(await readCoverageJson('./fixtures/no-module-runner/coverage/coverage-final.json')).toMatchSnapshot()
+  })
+
+  test('istanbul coverage throws an error', async () => {
+    const { stderr } = await runNoViteModuleRunnerTests(
+      { 'base.test.js': `` },
+      { coverage: { provider: 'istanbul', enabled: true } },
+    )
+    expect(stderr).toContain('"Istanbul" coverage provider is not compatible with "experimental.viteModuleRunner: false". Please, enable "viteModuleRunner" or switch to "v8" coverage provider.')
   })
 
   test('cannot run viteModuleRunner: false in "vmForks"', async () => {
