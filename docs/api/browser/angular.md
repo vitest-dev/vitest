@@ -16,7 +16,7 @@ import { render } from 'vitest-browser-angular'
   template: '<h1>Hello, {{ name() }}!</h1>',
 })
 export class HelloWorldComponent {
-  name = input<string>()
+  name = input.required<string>()
 }
 
 test('renders name', async () => {
