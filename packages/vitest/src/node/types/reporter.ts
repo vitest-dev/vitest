@@ -4,7 +4,7 @@ import type { UserConsoleLog } from '../../types/general'
 import type { Vitest } from '../core'
 import type { TestProject } from '../project'
 import type { ReportedHookContext, TestCase, TestModule, TestSuite } from '../reporters/reported-tasks'
-import type { TestSpecification } from '../spec'
+import type { TestSpecification } from '../test-specification'
 
 export type TestRunEndReason = 'passed' | 'interrupted' | 'failed'
 

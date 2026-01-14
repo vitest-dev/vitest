@@ -98,8 +98,8 @@ export type {
   TestSequencer,
   TestSequencerConstructor,
 } from '../node/sequencers/types'
-export type { TestSpecification } from '../node/spec'
 export { registerConsoleShortcuts } from '../node/stdin'
+export type { TestSpecification, TestSpecificationOptions } from '../node/test-specification'
 export type { BenchmarkUserOptions } from '../node/types/benchmark'
 
 export type {

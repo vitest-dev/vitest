@@ -5,7 +5,7 @@ import type { Traces } from '../../utils/traces'
 import type { Vitest } from '../core'
 import type { ProcessPool } from '../pool'
 import type { TestProject } from '../project'
-import type { TestSpecification } from '../spec'
+import type { TestSpecification } from '../test-specification'
 import type { BrowserProvider } from '../types/browser'
 import crypto from 'node:crypto'
 import * as nodeos from 'node:os'
@@ -62,11 +62,13 @@ export function createBrowserPool(vitest: Vitest): ProcessPool {
 
   const runWorkspaceTests = async (method: 'run' | 'collect', specs: TestSpecification[]) => {
     const groupedFiles = new Map<TestProject, FileSpecification[]>()
-    for (const { project, moduleId, testLines } of specs) {
+    for (const { project, moduleId, testLines, testIds, testNamePattern } of specs) {
       const files = groupedFiles.get(project) || []
       files.push({
         filepath: moduleId,
         testLocations: testLines,
+        testIds,
+        testNamePattern,
       })
       groupedFiles.set(project, files)
     }

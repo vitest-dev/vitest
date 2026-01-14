@@ -11,6 +11,7 @@ export function interpretTaskModes(
   file: Suite,
   namePattern?: string | RegExp,
   testLocations?: number[] | undefined,
+  testIds?: string[] | undefined,
   onlyMode?: boolean,
   parentIsOnly?: boolean,
   allowOnly?: boolean,
@@ -50,7 +51,7 @@ export function interpretTaskModes(
 
       let hasLocationMatch = parentMatchedWithLocation
       // Match test location against provided locations, only run if present
-      // in `testLocations`. Note: if `includeTaskLocations` is not enabled,
+      // in `testLocations`. Note: if `includeTaskLocation` is not enabled,
       // all test will be skipped.
       if (testLocations !== undefined && testLocations.length !== 0) {
         if (t.location && testLocations?.includes(t.location.line)) {
@@ -68,6 +69,9 @@ export function interpretTaskModes(
 
       if (t.type === 'test') {
         if (namePattern && !getTaskFullName(t).match(namePattern)) {
+          t.mode = 'skip'
+        }
+        if (testIds && !testIds.includes(t.id)) {
           t.mode = 'skip'
         }
       }

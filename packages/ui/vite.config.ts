@@ -33,7 +33,7 @@ export default defineConfig({
       },
     }),
     Unocss({
-      presets: [presetUno(), presetAttributify(), presetIcons()],
+      presets: [presetUno(), presetAttributify(), presetIcons()] as any,
       shortcuts: {
         'bg-base': 'bg-white dark:bg-[#111]',
         'bg-overlay': 'bg-[#eee]:50 dark:bg-[#222]:50',
@@ -48,7 +48,7 @@ export default defineConfig({
         'tab-button-active': 'op100 bg-gray-500:10',
       },
       transformers: [
-        transformerDirectives(),
+        transformerDirectives() as any,
       ],
       safelist: 'absolute origin-top mt-[8px]'.split(' '),
     }),
