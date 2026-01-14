@@ -8,6 +8,7 @@ import type { TestProject } from './project'
 import { existsSync, promises as fs, readdirSync, readFileSync, writeFileSync } from 'node:fs'
 import module from 'node:module'
 import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { slash } from '@vitest/utils/helpers'
 import { relative, resolve } from 'pathe'
 import pm from 'picomatch'
@@ -640,7 +641,8 @@ export class BaseCoverageProvider<Options extends ResolvedCoverageOptions<'istan
     // vite is disabled, should transform manually if possible
     // TODO: should this be abstracted?
     if (config.experimental.viteModuleRunner === false) {
-      const filename = url.split('?')[0]
+      const pathname = url.split('?')[0]
+      const filename = pathname.startsWith('file://') ? fileURLToPath(pathname) : pathname
       const extension = path.extname(filename)
       const isTypeScript = extension === '.ts' || extension === '.mts' || extension === '.cts'
       if (!isTypeScript) {
