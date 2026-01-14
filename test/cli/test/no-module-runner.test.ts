@@ -158,7 +158,7 @@ describe.runIf(module.registerHooks)('supported', () => {
     await vitest.waitForStdout('1 passed')
   })
 
-  test.only('updating inline snapshots works', async () => {
+  test('updating inline snapshots works', async () => {
     const { fs, stdout } = await runNoViteModuleRunnerTests({
       'base.test.ts': `
         interface HelloWorld {
