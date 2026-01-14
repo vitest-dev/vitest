@@ -45,6 +45,14 @@ interface LocalCallDefinition {
 const debug = createDebugger('vitest:ast-collect-info')
 const verbose = createDebugger('vitest:ast-collect-verbose')
 
+function isTestFunctionName(name: string) {
+  return name === 'it' || name === 'test' || name.startsWith('test') || name.endsWith('Test')
+}
+
+function isVitestFunctionName(name: string) {
+  return name === 'describe' || name === 'suite' || isTestFunctionName(name)
+}
+
 function astParseFile(filepath: string, code: string) {
   const ast = parseAst(code)
 
@@ -75,7 +83,7 @@ function astParseFile(filepath: string, code: string) {
     if (callee.type === 'MemberExpression') {
       if (
         callee.object?.type === 'Identifier'
-        && ['it', 'test', 'describe', 'suite'].includes(callee.object.name)
+        && isVitestFunctionName(callee.object.name)
       ) {
         return callee.object?.name
       }
@@ -108,14 +116,14 @@ function astParseFile(filepath: string, code: string) {
       if (!name) {
         return
       }
-      if (!['it', 'test', 'describe', 'suite'].includes(name)) {
+      if (!isVitestFunctionName(name)) {
         verbose?.(`Skipping ${name} (unknown call)`)
         return
       }
       const property = callee?.property?.name
       let mode = !property || property === name ? 'run' : property
       // they will be picked up in the next iteration
-      if (['each', 'for', 'skipIf', 'runIf'].includes(mode)) {
+      if (['each', 'for', 'skipIf', 'runIf', 'extend', 'scoped'].includes(mode)) {
         return
       }
 
@@ -175,7 +183,7 @@ function astParseFile(filepath: string, code: string) {
         start,
         end,
         name: message,
-        type: name === 'it' || name === 'test' ? 'test' : 'suite',
+        type: isTestFunctionName(name) ? 'test' : 'suite',
         mode,
         task: null as any,
         dynamic: isDynamicEach,
@@ -300,7 +308,10 @@ function createFileTask(
             '->',
             `${originalLocation.line}:${originalLocation.column}`,
           )
-          location = originalLocation
+          location = {
+            line: originalLocation.line,
+            column: originalLocation.column,
+          }
         }
         else {
           debug?.(
@@ -369,6 +380,7 @@ function createFileTask(
     file,
     options.testNamePattern,
     undefined,
+    undefined,
     hasOnly,
     false,
     options.allowOnly,
@@ -412,11 +424,11 @@ export async function astCollectTests(
 }
 
 async function transformSSR(project: TestProject, filepath: string) {
-  const request = await project.vite.transformRequest(filepath, { ssr: false })
-  if (!request) {
-    return null
+  const environment = project.config.environment
+  if (environment === 'jsdom' || environment === 'happy-dom') {
+    return project.vite.environments.client.transformRequest(filepath)
   }
-  return await project.vite.ssrTransform(request.code, request.map, filepath)
+  return project.vite.environments.ssr.transformRequest(filepath)
 }
 
 function markDynamicTests(tasks: Task[]) {

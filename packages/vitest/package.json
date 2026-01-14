@@ -1,7 +1,7 @@
 {
   "name": "vitest",
   "type": "module",
-  "version": "4.0.16",
+  "version": "4.1.0-beta.1",
   "description": "Next generation testing framework powered by Vite",
   "author": "Anthony Fu <anthonyfu117@hotmail.com>",
   "license": "MIT",
@@ -68,10 +68,6 @@
       "types": "./dist/browser.d.ts",
       "default": "./dist/browser.js"
     },
-    "./internal/module-runner": {
-      "types": "./dist/module-runner.d.ts",
-      "default": "./dist/module-runner.js"
-    },
     "./runners": {
       "types": "./dist/runners.d.ts",
       "default": "./dist/runners.js"
@@ -101,9 +97,9 @@
       "types": "./dist/snapshot.d.ts",
       "default": "./dist/snapshot.js"
     },
-    "./mocker": {
-      "types": "./dist/mocker.d.ts",
-      "default": "./dist/mocker.js"
+    "./runtime": {
+      "types": "./dist/runtime.d.ts",
+      "default": "./dist/runtime.js"
     },
     "./worker": {
       "types": "./worker.d.ts",
@@ -181,7 +177,7 @@
     "@vitest/spy": "workspace:*",
     "@vitest/utils": "workspace:*",
     "es-module-lexer": "^1.7.0",
-    "expect-type": "^1.2.2",
+    "expect-type": "^1.3.0",
     "magic-string": "catalog:",
     "obug": "catalog:",
     "pathe": "catalog:",
@@ -199,22 +195,22 @@
     "@edge-runtime/vm": "^5.0.0",
     "@jridgewell/trace-mapping": "catalog:",
     "@opentelemetry/api": "^1.9.0",
-    "@sinonjs/fake-timers": "14.0.0",
+    "@sinonjs/fake-timers": "15.0.0",
     "@types/estree": "catalog:",
     "@types/istanbul-lib-coverage": "catalog:",
     "@types/istanbul-reports": "catalog:",
     "@types/jsdom": "^27.0.0",
-    "@types/node": "^24.10.1",
+    "@types/node": "^24.10.7",
     "@types/picomatch": "^4.0.2",
     "@types/prompts": "^2.4.9",
-    "@types/sinonjs__fake-timers": "^8.1.5",
+    "@types/sinonjs__fake-timers": "^15.0.0",
     "acorn-walk": "catalog:",
     "birpc": "catalog:",
     "cac": "catalog:",
     "empathic": "^2.0.0",
     "flatted": "catalog:",
-    "happy-dom": "^20.0.11",
-    "jsdom": "^27.2.0",
+    "happy-dom": "^20.1.0",
+    "jsdom": "^27.4.0",
     "local-pkg": "^1.1.2",
     "mime": "^4.1.0",
     "prompts": "^2.4.2",

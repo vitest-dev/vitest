@@ -242,7 +242,6 @@ export default (parentServer: ParentBrowserProject, base = '/'): Plugin[] => {
           'vitest',
           'vitest/browser',
           'vitest/internal/browser',
-          'vitest/runners',
           'vite/module-runner',
           '@vitest/browser/utils',
           '@vitest/browser/context',

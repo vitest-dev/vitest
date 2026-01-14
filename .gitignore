@@ -21,7 +21,6 @@ bench/test/*/*/
 **/bench.json
 **/browser/browser.json
 docs/public/user-avatars
-docs/public/sponsors
 .eslintcache
 docs/.vitepress/cache/
 !test/cli/fixtures/dotted-files/**/.cache

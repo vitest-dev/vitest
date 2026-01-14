@@ -116,6 +116,23 @@ describe('another suite', () => {
 })
 ```
 
+Run Vitest with a file filter and a line number:
+
+```shell
+vitest ./test/example.test.ts:5
+```
+
+```ts:line-numbers
+import { assert, describe, it } from 'vitest'
+
+describe('suite', () => {
+  // Run only this test
+  it('test', () => {
+    assert.equal(Math.sqrt(4), 3)
+  })
+})
+```
+
 ## Unimplemented Suites and Tests
 
 Use `.todo` to stub suites and tests that should be implemented

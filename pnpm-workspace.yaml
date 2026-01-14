@@ -3,6 +3,7 @@ catalogMode: prefer
 shellEmulator: true
 
 trustPolicy: no-downgrade
+
 trustPolicyExclude:
   - semver@6.3.1
   - chokidar@4.0.3
@@ -17,33 +18,36 @@ trustPolicyExclude:
   - undici-types@6.21.0
   - undici@6.21.3
   - rxjs@7.8.2
-
 packages:
   - docs
   - packages/*
   - examples/*
   - test/*
   - test/config/fixtures/conditions-pkg
-
 overrides:
-  '@vitest/browser': 'workspace:*'
-  '@vitest/browser-playwright': 'workspace:*'
-  '@vitest/browser-preview': 'workspace:*'
-  '@vitest/browser-webdriverio': 'workspace:*'
-  '@vitest/ui': 'workspace:*'
+  '@types/node': $@types/node
+  '@vitest/browser': workspace:*
+  '@vitest/browser-playwright': workspace:*
+  '@vitest/browser-preview': workspace:*
+  '@vitest/browser-webdriverio': workspace:*
+  '@vitest/ui': workspace:*
   acorn: 8.11.3
   mlly: ^1.8.0
   rollup: $rollup
   vite: $vite
-  vitest: 'workspace:*'
+  vitest: workspace:*
+
 patchedDependencies:
-  '@sinonjs/fake-timers@14.0.0': patches/@sinonjs__fake-timers@14.0.0.patch
-  '@types/sinonjs__fake-timers@8.1.5': patches/@types__sinonjs__fake-timers@8.1.5.patch
+  '@sinonjs/fake-timers@15.0.0': patches/@sinonjs__fake-timers@15.0.0.patch
   acorn@8.11.3: patches/acorn@8.11.3.patch
   cac@6.7.14: patches/cac@6.7.14.patch
+  istanbul-lib-instrument: patches/istanbul-lib-instrument.patch
+  istanbul-lib-source-maps: patches/istanbul-lib-source-maps.patch
+
 catalog:
-  '@iconify-json/carbon': ^1.2.14
+  '@iconify-json/carbon': ^1.2.16
   '@iconify-json/logos': ^1.2.10
+  '@iconify/vue': ^5.0.0
   '@jridgewell/remapping': ^2.3.5
   '@jridgewell/trace-mapping': 0.3.31
   '@types/chai': ^5.2.2
@@ -53,31 +57,34 @@ catalog:
   '@types/istanbul-lib-source-maps': ^4.0.4
   '@types/istanbul-reports': ^3.0.4
   '@types/ws': ^8.18.1
-  '@unocss/reset': ^66.5.9
-  '@vitejs/plugin-vue': ^6.0.2
+  '@unocss/reset': ^66.5.12
+  '@vitejs/plugin-vue': ^6.0.3
   '@vueuse/core': ^12.8.2
   acorn-walk: ^8.3.4
   birpc: ^4.0.0
   cac: ^6.7.14
-  chai: ^6.2.1
-  flatted: ^3.3.3
+  chai: ^6.2.2
+  flatted: 3.3.3
   istanbul-lib-coverage: ^3.2.2
   istanbul-lib-report: ^3.0.1
   istanbul-lib-source-maps: ^5.0.6
   istanbul-reports: ^3.2.0
   magic-string: ^0.30.21
   magicast: ^0.5.1
-  msw: ^2.12.3
+  msw: ^2.12.7
   obug: ^2.1.1
   pathe: ^2.0.3
+  playwright: ^1.57.0
   sirv: ^3.0.2
   std-env: ^3.10.0
   strip-literal: ^3.1.0
   tinyglobby: ^0.2.15
   tinyrainbow: ^3.0.3
-  unocss: ^66.5.9
-  vue: ^3.5.25
-  ws: ^8.18.3
+  typescript: ^5.9.3
+  unocss: ^66.5.12
+  vitest-sonar-reporter: 3.0.0
+  vue: ^3.5.26
+  ws: ^8.19.0
 onlyBuiltDependencies:
   - '@sveltejs/kit'
   - '@swc/core'

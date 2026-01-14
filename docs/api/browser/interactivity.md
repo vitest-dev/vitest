@@ -162,6 +162,58 @@ References:
 - [WebdriverIO `browser.action` API](https://webdriver.io/docs/api/browser/action/): implemented via actions api with `move` plus three `down + up + pause` events in a row
 - [testing-library `tripleClick` API](https://testing-library.com/docs/user-event/convenience/#tripleClick)
 
+## userEvent.wheel <Version>4.1.0</Version> {#userevent-wheel}
+
+```ts
+function wheel(
+  element: Element | Locator,
+  options: UserEventWheelOptions,
+): Promise<void>
+```
+
+Triggers a [`wheel` event](https://developer.mozilla.org/en-US/docs/Web/API/Element/wheel_event) on an element.
+
+You can specify the scroll amount using either `delta` for precise pixel-based control, or `direction` for simpler directional scrolling (`up`, `down`, `left`, `right`). When you need to trigger multiple wheel events, use the `times` option rather than calling the method multiple times for better performance.
+
+```ts
+import { page, userEvent } from 'vitest/browser'
+
+test('scroll using delta values', async () => {
+  const tablist = page.getByRole('tablist')
+
+  // Scroll right by 100 pixels
+  await userEvent.wheel(tablist, { delta: { x: 100 } })
+
+  // Scroll down by 50 pixels
+  await userEvent.wheel(tablist, { delta: { y: 50 } })
+
+  // Scroll diagonally 2 times
+  await userEvent.wheel(tablist, { delta: { x: 50, y: 100 }, times: 2 })
+})
+
+test('scroll using direction', async () => {
+  const tablist = page.getByRole('tablist')
+
+  // Scroll right 5 times
+  await userEvent.wheel(tablist, { direction: 'right', times: 5 })
+
+  // Scroll left once
+  await userEvent.wheel(tablist, { direction: 'left' })
+})
+```
+
+Wheel events can also be triggered directly from [locators](/api/browser/locators#wheel):
+
+```ts
+import { page } from 'vitest/browser'
+
+await page.getByRole('tablist').wheel({ direction: 'right' })
+```
+
+::: warning
+This method is intended for testing UI that explicitly listens to `wheel` events (e.g., custom zoom controls, horizontal tab scrolling, canvas interactions). If you need to scroll the page to bring an element into view, rely on the built-in automatic scrolling functionality provided by other `userEvent` methods or [locator actions](/api/browser/locators#methods) instead.
+:::
+
 ## userEvent.fill
 
 ```ts

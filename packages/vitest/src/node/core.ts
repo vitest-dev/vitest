@@ -10,7 +10,7 @@ import type { CliOptions } from './cli/cli-api'
 import type { VitestFetchFunction } from './environments/fetchModule'
 import type { ProcessPool } from './pool'
 import type { TestModule } from './reporters/reported-tasks'
-import type { TestSpecification } from './spec'
+import type { TestSpecification } from './test-specification'
 import type { ResolvedConfig, TestProjectConfiguration, UserConfig, VitestRunMode } from './types/config'
 import type { CoverageProvider, ResolvedCoverageOptions } from './types/coverage'
 import type { Reporter } from './types/reporter'
@@ -668,7 +668,7 @@ export class Vitest {
 
       this.filenamePattern = filters && filters?.length > 0 ? filters : undefined
       startSpan.setAttribute('vitest.start.filters', this.filenamePattern || [])
-      const files = await this._traces.$(
+      const specifications = await this._traces.$(
         'vitest.config.resolve_include_glob',
         async () => {
           const specifications = await this.specifications.getRelevantTestSpecifications(filters)
@@ -687,7 +687,7 @@ export class Vitest {
       )
 
       // if run with --changed, don't exit if no tests are found
-      if (!files.length) {
+      if (!specifications.length) {
         await this._traces.$('vitest.test_run', async () => {
           await this._testRun.start([])
           const coverage = await this.coverageProvider?.generateCoverage?.({ allTestsRun: true })
@@ -707,11 +707,11 @@ export class Vitest {
         unhandledErrors: [],
       }
 
-      if (files.length) {
+      if (specifications.length) {
         // populate once, update cache on watch
-        await this.cache.stats.populateStats(this.config.root, files)
+        await this.cache.stats.populateStats(this.config.root, specifications)
 
-        testModules = await this.runFiles(files, true)
+        testModules = await this.runFiles(specifications, true)
       }
 
       if (this.config.watch) {
@@ -785,6 +785,19 @@ export class Vitest {
    */
   public runTestSpecifications(specifications: TestSpecification[], allTestsRun = false): Promise<TestRunResult> {
     specifications.forEach(spec => this.specifications.ensureSpecificationCached(spec))
+    return this.runFiles(specifications, allTestsRun)
+  }
+
+  /**
+   * Runs tests for the given file paths. This does not trigger `onWatcher*` events.
+   * @param filepaths A list of file paths to run tests for.
+   * @param allTestsRun Indicates whether all tests were run. This only matters for coverage.
+   */
+  public async runTestFiles(filepaths: string[], allTestsRun = false): Promise<TestRunResult> {
+    const specifications = await this.specifications.getRelevantTestSpecifications(filepaths)
+    if (!specifications.length) {
+      return { testModules: [], unhandledErrors: [] }
+    }
     return this.runFiles(specifications, allTestsRun)
   }
 

@@ -15,8 +15,7 @@ import reports from 'istanbul-reports'
 import { parseModule } from 'magicast'
 import { createDebug } from 'obug'
 import c from 'tinyrainbow'
-import { BaseCoverageProvider } from 'vitest/coverage'
-import { isCSSRequest } from 'vitest/node'
+import { BaseCoverageProvider, isCSSRequest } from 'vitest/node'
 import { version } from '../package.json' with { type: 'json' }
 import { COVERAGE_STORE_KEY } from './constants'
 
@@ -49,6 +48,9 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider<ResolvedCover
         // @ts-expect-error missing type
         importAttributesKeyword: 'with',
       },
+
+      // Custom option from the patched istanbul-lib-instrument: https://github.com/istanbuljs/istanbuljs/pull/835
+      ignoreLines: true,
     })
   }
 

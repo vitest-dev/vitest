@@ -7,7 +7,7 @@ import { rpc } from '../rpc'
 import { loadDiffConfig, loadSnapshotSerializers } from '../setup-common'
 import { getWorkerState } from '../utils'
 import { NodeBenchmarkRunner } from './benchmark'
-import { VitestTestRunner } from './test'
+import { TestRunner } from './test'
 
 async function getTestRunnerConstructor(
   config: SerializedConfig,
@@ -15,7 +15,7 @@ async function getTestRunnerConstructor(
 ): Promise<VitestRunnerConstructor> {
   if (!config.runner) {
     return (
-      config.mode === 'test' ? VitestTestRunner : NodeBenchmarkRunner
+      config.mode === 'test' ? TestRunner : NodeBenchmarkRunner
     ) as any as VitestRunnerConstructor
   }
   const mod = await moduleRunner.import(config.runner)
@@ -103,6 +103,20 @@ export async function resolveTestRunner(
       state.durations.prepare = 0
       state.durations.environment = 0
     })
+
+    // Strip function conditions from retry config before sending via RPC
+    // Functions cannot be cloned by structured clone algorithm
+    const sanitizeRetryConditions = (task: any) => {
+      if (task.retry && typeof task.retry === 'object' && typeof task.retry.condition === 'function') {
+        // Remove function condition - it can't be serialized
+        task.retry = { ...task.retry, condition: undefined }
+      }
+      if (task.tasks) {
+        task.tasks.forEach(sanitizeRetryConditions)
+      }
+    }
+    files.forEach(sanitizeRetryConditions)
+
     rpc().onCollected(files)
     await originalOnCollected?.call(testRunner, files)
   }

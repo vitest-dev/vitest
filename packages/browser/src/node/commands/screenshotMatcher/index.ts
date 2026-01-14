@@ -148,7 +148,7 @@ async function determineOutcome(
   }
 
   // no reference to compare against - create one based on update settings
-  if (reference === null || updateSnapshot === 'all') {
+  if (reference === null) {
     if (updateSnapshot === 'all') {
       return {
         type: 'update-reference',
@@ -188,6 +188,16 @@ async function determineOutcome(
 
   if (comparisonResult.pass) {
     return { type: 'matched-after-comparison' }
+  }
+
+  if (updateSnapshot === 'all') {
+    return {
+      type: 'update-reference',
+      reference: {
+        image: screenshot,
+        path: paths.reference,
+      },
+    }
   }
 
   return {

@@ -79,7 +79,7 @@ import Box from '../.vitepress/components/Box.vue'
   <Box>Coverage report</Box>
 </div>
 
-## Istanbul provider
+## Istanbul Provider
 
 [Istanbul code coverage tooling](https://istanbul.js.org/) has existed since 2012 and is very well battle-tested.
 This provider works on any Javascript runtime as coverage tracking is done by instrumenting user's source files.
@@ -165,7 +165,7 @@ export default defineConfig({
 ```
 :::
 
-## Including and excluding files from coverage report
+## Including and Excluding Files from Coverage Report
 
 You can define what files are shown in coverage report by configuring [`coverage.include`](/config/#coverage-include) and [`coverage.exclude`](/config/#coverage-exclude).
 
@@ -350,6 +350,10 @@ Comments which are considered as [legal comments](https://esbuild.github.io/api/
 You can include a `@preserve` keyword in the ignore hint.
 Beware that these ignore hints may now be included in final production build as well.
 
+::: tip
+Follow https://github.com/vitest-dev/vitest/issues/2021 for updates about `@preserve` usage.
+:::
+
 ```diff
 -/* istanbul ignore if */
 +/* istanbul ignore if -- @preserve */
@@ -363,6 +367,30 @@ if (condition) {
 ### Examples
 
 ::: code-group
+
+```ts [lines: start/stop]
+/* istanbul ignore start -- @preserve */
+if (parameter) { // [!code error]
+  console.log('Ignored') // [!code error]
+} // [!code error]
+else { // [!code error]
+  console.log('Ignored') // [!code error]
+} // [!code error]
+/* istanbul ignore stop -- @preserve */
+
+console.log('Included')
+
+/* v8 ignore start -- @preserve */
+if (parameter) { // [!code error]
+  console.log('Ignored') // [!code error]
+} // [!code error]
+else { // [!code error]
+  console.log('Ignored') // [!code error]
+} // [!code error]
+/* v8 ignore stop -- @preserve */
+
+console.log('Included')
+```
 
 ```ts [if else]
 /* v8 ignore if -- @preserve */
