@@ -259,6 +259,26 @@ export function cleanup(): void
 
 Remove all components rendered with [`render`](#render).
 
+## Extend Queries
+
+To extend locator queries, see [`"Custom Locators"`](/api/browser/locators#custom-locators). For example, to make `render` return a new custom locator, define it using the `locators.extend` API:
+
+```ts {5-7,12}
+import { locators } from 'vitest/browser'
+import { render } from 'vitest-browser-angular'
+
+locators.extend({
+  getByArticleTitle(title) {
+    return `[data-title="${title}"]`
+  },
+})
+
+const screen = await render(Component)
+await expect.element(
+  screen.getByArticleTitle('Hello World')
+).toBeVisible()
+```
+
 ## Example: Testing a Form Component
 
 ```ts
