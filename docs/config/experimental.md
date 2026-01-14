@@ -253,6 +253,10 @@ Some features will not work due to the nature of `viteModuleRunner`, including:
 - no `alias`: aliases are not applied because there is no transformation phase
 - `istanbul` coverage provider doesn't work because there is no transformation phase, use `v8` instead
 
+::: warning Coverage Support
+At the momemnt Vitest supports coverage via `v8` provider as long as files can be transformed into JavaScript. To transform TypeScript, Vitest uses [`module.stripTypeScriptTypes`](https://nodejs.org/api/module.html#modulestriptypescripttypescode-options) which is available in Node.js since v22.13. If you are using a custom [module loader](https://nodejs.org/api/module.html#customization-hooks), Vitest is not able to reuse it to transform files for analysis.
+:::
+
 With regards to mocking, it is also important to point out that ES modules do not support property override. This means that code like this won't work anymore:
 
 ```ts
