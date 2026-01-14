@@ -289,8 +289,8 @@ importers:
         specifier: 'catalog:'
         version: 6.0.3(vite@7.1.5(@types/node@24.10.7)(jiti@2.6.1)(lightningcss@1.30.2)(sass-embedded@1.97.2)(sass@1.97.2)(terser@5.44.1)(tsx@4.21.0)(yaml@2.8.2))(vue@3.5.26(typescript@5.9.3))
       '@voidzero-dev/vitepress-theme':
-        specifier: ^4.0.4
-        version: 4.0.4(axios@1.13.2)(change-case@5.4.4)(focus-trap@7.6.6)(typescript@5.9.3)(vite@7.1.5(@types/node@24.10.7)(jiti@2.6.1)(lightningcss@1.30.2)(sass-embedded@1.97.2)(sass@1.97.2)(terser@5.44.1)(tsx@4.21.0)(yaml@2.8.2))(vitepress@2.0.0-alpha.15(@types/node@24.10.7)(axios@1.13.2)(change-case@5.4.4)(jiti@2.6.1)(lightningcss@1.30.2)(oxc-minify@0.108.0)(postcss@8.5.6)(sass-embedded@1.97.2)(sass@1.97.2)(terser@5.44.1)(tsx@4.21.0)(typescript@5.9.3)(yaml@2.8.2))(vue@3.5.26(typescript@5.9.3))
+        specifier: ^4.1.1
+        version: 4.1.1(axios@1.13.2)(change-case@5.4.4)(focus-trap@7.6.6)(typescript@5.9.3)(vite@7.1.5(@types/node@24.10.7)(jiti@2.6.1)(lightningcss@1.30.2)(sass-embedded@1.97.2)(sass@1.97.2)(terser@5.44.1)(tsx@4.21.0)(yaml@2.8.2))(vitepress@2.0.0-alpha.15(@types/node@24.10.7)(axios@1.13.2)(change-case@5.4.4)(jiti@2.6.1)(lightningcss@1.30.2)(oxc-minify@0.108.0)(postcss@8.5.6)(sass-embedded@1.97.2)(sass@1.97.2)(terser@5.44.1)(tsx@4.21.0)(typescript@5.9.3)(yaml@2.8.2))(vue@3.5.26(typescript@5.9.3))
       https-localhost:
         specifier: ^4.7.1
         version: 4.7.1
@@ -4924,8 +4924,8 @@ packages:
   '@vitest/test-fn@file:test/core/deps/dep-fn':
     resolution: {directory: test/core/deps/dep-fn, type: directory}
 
-  '@voidzero-dev/vitepress-theme@4.0.4':
-    resolution: {integrity: sha512-xDCxo49GD86Z5Y3FEnVKXXtiwiJoKvaBiXuAfFVKrURDZVGnkYP2GNknaqy6TdlFlDIrWww9oBaLEbQ5OPO5DA==}
+  '@voidzero-dev/vitepress-theme@4.1.1':
+    resolution: {integrity: sha512-RpR4upcIjpG/nWm0/uNQGeX8UOKMBZEcmIOMpNbxlvU586x8kUnZrBE+LrQO30zflo6S5pThxMA2rp5pl+a9PQ==}
     peerDependencies:
       vitepress: ^2.0.0-alpha.15
       vue: ^3.5.0
@@ -4985,9 +4985,6 @@ packages:
 
   '@vue/shared@3.5.24':
     resolution: {integrity: sha512-9cwHL2EsJBdi8NY22pngYYWzkTDhld6fAD6jlaeloNGciNSJL6bLpbxVgXl96X00Jtc6YWQv96YA/0sxex/k1A==}
-
-  '@vue/shared@3.5.25':
-    resolution: {integrity: sha512-AbOPdQQnAnzs58H2FrrDxYj/TJfmeS2jdfEEhgiKINy+bnOANmVizIEgq1r+C5zsbs6l1CCQxtcj71rwNQ4jWg==}
 
   '@vue/shared@3.5.26':
     resolution: {integrity: sha512-7Z6/y3uFI5PRoKeorTOSXKcDj0MSasfNNltcslbFrPpcw6aXRUALq4IfJlaTRspiWIUOEZbrpM+iQGmCOiWe4A==}
@@ -12937,14 +12934,14 @@ snapshots:
 
   '@vitest/test-fn@file:test/core/deps/dep-fn': {}
 
-  '@voidzero-dev/vitepress-theme@4.0.4(axios@1.13.2)(change-case@5.4.4)(focus-trap@7.6.6)(typescript@5.9.3)(vite@7.1.5(@types/node@24.10.7)(jiti@2.6.1)(lightningcss@1.30.2)(sass-embedded@1.97.2)(sass@1.97.2)(terser@5.44.1)(tsx@4.21.0)(yaml@2.8.2))(vitepress@2.0.0-alpha.15(@types/node@24.10.7)(axios@1.13.2)(change-case@5.4.4)(jiti@2.6.1)(lightningcss@1.30.2)(oxc-minify@0.108.0)(postcss@8.5.6)(sass-embedded@1.97.2)(sass@1.97.2)(terser@5.44.1)(tsx@4.21.0)(typescript@5.9.3)(yaml@2.8.2))(vue@3.5.26(typescript@5.9.3))':
+  '@voidzero-dev/vitepress-theme@4.1.1(axios@1.13.2)(change-case@5.4.4)(focus-trap@7.6.6)(typescript@5.9.3)(vite@7.1.5(@types/node@24.10.7)(jiti@2.6.1)(lightningcss@1.30.2)(sass-embedded@1.97.2)(sass@1.97.2)(terser@5.44.1)(tsx@4.21.0)(yaml@2.8.2))(vitepress@2.0.0-alpha.15(@types/node@24.10.7)(axios@1.13.2)(change-case@5.4.4)(jiti@2.6.1)(lightningcss@1.30.2)(oxc-minify@0.108.0)(postcss@8.5.6)(sass-embedded@1.97.2)(sass@1.97.2)(terser@5.44.1)(tsx@4.21.0)(typescript@5.9.3)(yaml@2.8.2))(vue@3.5.26(typescript@5.9.3))':
     dependencies:
       '@docsearch/css': 4.3.2
       '@docsearch/js': 4.3.2
       '@rive-app/canvas-lite': 2.33.3
       '@tailwindcss/typography': 0.5.19(tailwindcss@4.1.18)
       '@tailwindcss/vite': 4.1.18(vite@7.1.5(@types/node@24.10.7)(jiti@2.6.1)(lightningcss@1.30.2)(sass-embedded@1.97.2)(sass@1.97.2)(terser@5.44.1)(tsx@4.21.0)(yaml@2.8.2))
-      '@vue/shared': 3.5.25
+      '@vue/shared': 3.5.26
       '@vueuse/core': 14.0.0(vue@3.5.26(typescript@5.9.3))
       '@vueuse/integrations': 14.0.0(axios@1.13.2)(change-case@5.4.4)(focus-trap@7.6.6)(vue@3.5.26(typescript@5.9.3))
       '@vueuse/shared': 14.0.0(vue@3.5.26(typescript@5.9.3))
@@ -13076,8 +13073,6 @@ snapshots:
       vue: 3.5.26(typescript@5.9.3)
 
   '@vue/shared@3.5.24': {}
-
-  '@vue/shared@3.5.25': {}
 
   '@vue/shared@3.5.26': {}
 
