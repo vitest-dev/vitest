@@ -48,6 +48,9 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider<ResolvedCover
         // @ts-expect-error missing type
         importAttributesKeyword: 'with',
       },
+
+      // Custom option from the patched istanbul-lib-instrument: https://github.com/istanbuljs/istanbuljs/pull/835
+      ignoreLines: true,
     })
   }
 
