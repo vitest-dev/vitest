@@ -55,30 +55,31 @@ const screen = render(Component, {
 })
 ```
 
-### Render Options
+#### props
 
-#### container
+Component props.
+
+#### target
 
 By default, Vitest will create a `div`, append it to `document.body`, and render your component there. If you provide your own `HTMLElement` container, it will not be appended automatically — you'll need to call `document.body.appendChild(container)` before `render`.
 
-For example, if you are unit testing a `tablebody` element, it cannot be a child of a `div`. In this case, you can specify a `table` as the render container.
+For example, if you are unit testing a `tbody` element, it cannot be a child of a `div`. In this case, you can specify a `table` as the render container.
 
 ```ts
 const table = document.createElement('table')
 
-const screen = render(TableBody, props, {
+const screen = render(TableBody, {
+  props,
   // ⚠️ appending the element to `body` manually before rendering
-  container: document.body.appendChild(table),
+  target: document.body.appendChild(table),
 })
 ```
 
 #### baseElement
 
-If the `container` is specified, then this defaults to that, otherwise this defaults to `document.body`. This is used as the base element for the queries as well as what is printed when you use `debug()`.
+This can be passed down in a third argument. You should rarely, if ever, need to use this option.
 
-#### mountOptions
-
-Options to pass down to [`mount`](https://svelte.dev/docs/svelte/imperative-component-api#mount).
+If the `target` is specified, then this defaults to that, otherwise this defaults to `document.body`. This is used as the base element for the queries as well as what is printed when you use `debug()`.
 
 ### Locators
 
@@ -271,3 +272,4 @@ test('renders greeting in message snippet', async () => {
 ## See also
 
 - [Svelte Testing Library documentation](https://testing-library.com/docs/svelte-testing-library/intro)
+- [Svelte Testing Library examples](https://github.com/testing-library/svelte-testing-library/tree/main/examples)
