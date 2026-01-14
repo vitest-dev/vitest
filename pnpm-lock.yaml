@@ -111,6 +111,9 @@ catalogs:
     tinyrainbow:
       specifier: ^3.0.3
       version: 3.0.3
+    tinyspy:
+      specifier: ^4.0.4
+      version: 4.0.4
     typescript:
       specifier: ^5.9.3
       version: 5.9.3
@@ -1260,6 +1263,9 @@ importers:
       playwright:
         specifier: 'catalog:'
         version: 1.57.0
+      tinyspy:
+        specifier: 'catalog:'
+        version: 4.0.4
       typescript:
         specifier: 'catalog:'
         version: 5.9.3
@@ -1500,24 +1506,6 @@ importers:
       '@vitest/browser-playwright':
         specifier: workspace:*
         version: link:../../packages/browser-playwright
-      vitest:
-        specifier: workspace:*
-        version: link:../../packages/vitest
-
-  test/native:
-    devDependencies:
-      '@types/node':
-        specifier: 24.10.7
-        version: 24.10.7
-      '@vitest/ui':
-        specifier: workspace:*
-        version: link:../../packages/ui
-      tinyspy:
-        specifier: ^4.0.4
-        version: 4.0.4
-      vite:
-        specifier: 7.1.5
-        version: 7.1.5(@types/node@24.10.7)(jiti@2.6.1)(lightningcss@1.30.2)(sass-embedded@1.97.2)(sass@1.97.2)(terser@5.44.1)(tsx@4.21.0)(yaml@2.8.2)
       vitest:
         specifier: workspace:*
         version: link:../../packages/vitest

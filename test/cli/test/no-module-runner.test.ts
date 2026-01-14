@@ -1,9 +1,75 @@
 import type { RunVitestConfig, TestFsStructure } from '#test-utils'
 import module from 'node:module'
-import { replaceRoot, runInlineTests } from '#test-utils'
+import { replaceRoot, runInlineTests, runVitest } from '#test-utils'
 import { describe, expect, test } from 'vitest'
 
 describe.runIf(module.registerHooks)('supported', () => {
+  test.only.for([
+    {
+      isolate: false,
+      maxWorkers: 1,
+    },
+    {
+      isolate: false,
+      maxWorkers: 4,
+      fileParallelism: true, // default
+    },
+    {
+      isolate: true,
+      maxWorkers: 1,
+    },
+  ] satisfies RunVitestConfig[])('runs tests inside correctly with %o', async (options) => {
+    const { stderr, testTree } = await runVitest({
+      root: './fixtures/no-module-runner',
+      ...options,
+    })
+    expect(stderr).toBe('')
+    expect(testTree()).toMatchInlineSnapshot(`
+      {
+        "src/in-source/add.ts": {
+          "add": "passed",
+        },
+        "src/in-source/fibonacci.ts": {
+          "fibonacci": "passed",
+        },
+        "test/automock.test.ts": {
+          "fs is mocked": "passed",
+          "squared is mocked": "passed",
+        },
+        "test/autospy.test.ts": {
+          "fs is mocked": "passed",
+          "squared is mocked": "passed",
+        },
+        "test/basic.test.ts": {
+          "JSON": "passed",
+          "Math.sqrt()": "passed",
+          "Squared": "passed",
+          "add": "passed",
+        },
+        "test/manual-mock.test.ts": {
+          "builtin node modules are mocked": "passed",
+          "deps in node_modules are mocked": "passed",
+          "exports are mocked": "passed",
+          "importMock works": "passed",
+        },
+        "test/mock-async-factory.test.ts": {
+          "imported value is defined": "passed",
+        },
+        "test/redirect-mock.test.ts": {
+          "squared is mocked": "passed",
+        },
+        "test/suite.test.ts": {
+          "suite name": {
+            "foo": "passed",
+            "inline snapshot": "passed",
+            "setups work": "passed",
+            "snapshot": "passed",
+          },
+        },
+      }
+    `)
+  })
+
   test('cannot run viteModuleRunner: false in "vmForks"', async () => {
     const { stderr } = await runNoViteModuleRunnerTests(
       { 'base.test.js': `` },

@@ -28,6 +28,7 @@
     "flatted": "catalog:",
     "obug": "^2.1.1",
     "playwright": "catalog:",
+    "tinyspy": "catalog:",
     "typescript": "catalog:",
     "unplugin-swc": "^1.5.9",
     "vite": "latest",
