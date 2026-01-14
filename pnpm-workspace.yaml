@@ -38,10 +38,10 @@ overrides:
   vitest: workspace:*
 
 patchedDependencies:
-  '@sinonjs/fake-timers@14.0.0': patches/@sinonjs__fake-timers@14.0.0.patch
-  '@types/sinonjs__fake-timers@8.1.5': patches/@types__sinonjs__fake-timers@8.1.5.patch
+  '@sinonjs/fake-timers@15.0.0': patches/@sinonjs__fake-timers@15.0.0.patch
   acorn@8.11.3: patches/acorn@8.11.3.patch
   cac@6.7.14: patches/cac@6.7.14.patch
+  istanbul-lib-instrument: patches/istanbul-lib-instrument.patch
   istanbul-lib-source-maps: patches/istanbul-lib-source-maps.patch
 
 catalog:

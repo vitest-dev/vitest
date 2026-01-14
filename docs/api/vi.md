@@ -1052,6 +1052,46 @@ The implementation is based internally on [`@sinonjs/fake-timers`](https://githu
 But you can enable it by specifying the option in `toFake` argument: `vi.useFakeTimers({ toFake: ['nextTick', 'queueMicrotask'] })`.
 :::
 
+### vi.setTimerTickMode <Version>4.1.0</Version> {#vi-settimertickmode}
+
+- **Type:** `(mode: 'manual' | 'nextTimerAsync') => Vitest | (mode: 'interval', interval?: number) => Vitest`
+
+Controls how fake timers are advanced.
+
+- `manual`: The default behavior. Timers will only advance when you call one of `vi.advanceTimers...()` methods.
+- `nextTimerAsync`: Timers will be advanced automatically to the next available timer after each macrotask.
+- `interval`: Timers are advanced automatically by a specified interval.
+
+When `mode` is `'interval'`, you can also provide an `interval` in milliseconds.
+
+**Example:**
+
+```ts
+import { vi } from 'vitest'
+
+vi.useFakeTimers()
+
+// Manual mode (default)
+vi.setTimerTickMode({ mode: 'manual' })
+
+let i = 0
+setInterval(() => console.log(++i), 50)
+
+vi.advanceTimersByTime(150) // logs 1, 2, 3
+
+// nextTimerAsync mode
+vi.setTimerTickMode({ mode: 'nextTimerAsync' })
+
+// Timers will advance automatically after each macrotask
+await new Promise(resolve => setTimeout(resolve, 150)) // logs 4, 5, 6
+
+// interval mode (default when 'fakeTimers.shouldAdvanceTime' is `true`)
+vi.setTimerTickMode({ mode: 'interval', interval: 50 })
+
+// Timers will advance automatically every 50ms
+await new Promise(resolve => setTimeout(resolve, 150)) // logs 7, 8, 9
+```
+
 ### vi.isFakeTimers {#vi-isfaketimers}
 
 ```ts
