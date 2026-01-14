@@ -1,9 +1,48 @@
+catalogMode: prefer
+
+shellEmulator: true
+
+trustPolicy: no-downgrade
+
+trustPolicyExclude:
+  - semver@6.3.1
+  - chokidar@4.0.3
+  - webdriverio@9.20.0
+  - webdriver@9.20.0
+  - '@wdio/types@9.20.0'
+  - '@wdio/repl@9.16.2'
+  - '@wdio/utils@9.20.0'
+  - '@wdio/config@9.20.0'
+  - '@wdio/logger@9.18.0'
+  - '@wdio/protocols@9.16.2'
+  - undici-types@6.21.0
+  - undici@6.21.3
+  - rxjs@7.8.2
 packages:
   - docs
   - packages/*
   - examples/*
   - test/*
   - test/config/fixtures/conditions-pkg
+overrides:
+  '@types/node': $@types/node
+  '@vitest/browser': workspace:*
+  '@vitest/browser-playwright': workspace:*
+  '@vitest/browser-preview': workspace:*
+  '@vitest/browser-webdriverio': workspace:*
+  '@vitest/ui': workspace:*
+  acorn: 8.11.3
+  mlly: ^1.8.0
+  rollup: $rollup
+  vite: $vite
+  vitest: workspace:*
+
+patchedDependencies:
+  '@sinonjs/fake-timers@15.0.0': patches/@sinonjs__fake-timers@15.0.0.patch
+  acorn@8.11.3: patches/acorn@8.11.3.patch
+  cac@6.7.14: patches/cac@6.7.14.patch
+  istanbul-lib-instrument: patches/istanbul-lib-instrument.patch
+  istanbul-lib-source-maps: patches/istanbul-lib-source-maps.patch
 
 catalog:
   '@iconify-json/carbon': ^1.2.16
@@ -47,9 +86,6 @@ catalog:
   vitest-sonar-reporter: 3.0.0
   vue: ^3.5.26
   ws: ^8.19.0
-
-catalogMode: prefer
-
 onlyBuiltDependencies:
   - '@sveltejs/kit'
   - '@swc/core'
@@ -61,46 +97,6 @@ onlyBuiltDependencies:
   - sharp
   - svelte-preprocess
   - vue-demi
-
-overrides:
-  '@types/node': $@types/node
-  '@vitest/browser': workspace:*
-  '@vitest/browser-playwright': workspace:*
-  '@vitest/browser-preview': workspace:*
-  '@vitest/browser-webdriverio': workspace:*
-  '@vitest/ui': workspace:*
-  acorn: 8.11.3
-  mlly: ^1.8.0
-  rollup: $rollup
-  vite: $vite
-  vitest: workspace:*
-
-patchedDependencies:
-  '@sinonjs/fake-timers@15.0.0': patches/@sinonjs__fake-timers@15.0.0.patch
-  acorn@8.11.3: patches/acorn@8.11.3.patch
-  cac@6.7.14: patches/cac@6.7.14.patch
-  istanbul-lib-instrument: patches/istanbul-lib-instrument.patch
-  istanbul-lib-source-maps: patches/istanbul-lib-source-maps.patch
-
 peerDependencyRules:
   ignoreMissing:
     - '@algolia/client-search'
-
-shellEmulator: true
-
-trustPolicy: no-downgrade
-
-trustPolicyExclude:
-  - semver@6.3.1
-  - chokidar@4.0.3
-  - webdriverio@9.20.0
-  - webdriver@9.20.0
-  - '@wdio/types@9.20.0'
-  - '@wdio/repl@9.16.2'
-  - '@wdio/utils@9.20.0'
-  - '@wdio/config@9.20.0'
-  - '@wdio/logger@9.18.0'
-  - '@wdio/protocols@9.16.2'
-  - undici-types@6.21.0
-  - undici@6.21.3
-  - rxjs@7.8.2
