@@ -53,14 +53,15 @@ const screen = await render(<Component />) // [!code ++]
 
 #### container
 
-By default, Vitest will create a `div` and append it to the `document.body` and this is where your component will be rendered. If you provide your own `HTMLElement` container via this option, it will not be appended to the `document.body` automatically.
+By default, Vitest will create a `div`, append it to `document.body`, and render your component there. If you provide your own `HTMLElement` container, it will not be appended automatically — you'll need to call `document.body.appendChild(container)` before `render`.
 
-For example, if you are unit testing a `tablebody` element, it cannot be a child of a `div`. In this case, you can specify a `table` as the render container.
+For example, if you are unit testing a `tbody` element, it cannot be a child of a `div`. In this case, you can specify a `table` as the render container.
 
 ```jsx
 const table = document.createElement('table')
 
 const { container } = await render(<TableBody {...props} />, {
+  // ⚠️ appending the element to `body` manually before rendering
   container: document.body.appendChild(table),
 })
 ```
