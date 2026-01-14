@@ -1,4 +1,4 @@
-import type { RunVitestConfig, TestFsStructure } from '#test-utils'
+import type { RunVitestConfig, TestFsStructure, VitestRunnerCLIOptions } from '#test-utils'
 import { rmSync } from 'node:fs'
 import module from 'node:module'
 import { replaceRoot, runInlineTests, runVitest } from '#test-utils'
@@ -72,6 +72,7 @@ describe.runIf(module.registerHooks)('supported', () => {
     `)
   })
 
+  // TODO: adapt coverage-test tests to support `viteModuleRunner: false`
   test('v8 coverage works', async () => {
     const { stderr } = await runVitest({
       root: './fixtures/no-module-runner',
@@ -93,6 +94,7 @@ describe.runIf(module.registerHooks)('supported', () => {
     const { stderr } = await runNoViteModuleRunnerTests(
       { 'base.test.js': `` },
       { coverage: { provider: 'istanbul', enabled: true } },
+      { fails: true },
     )
     expect(stderr).toContain('"Istanbul" coverage provider is not compatible with "experimental.viteModuleRunner: false". Please, enable "viteModuleRunner" or switch to "v8" coverage provider.')
   })
@@ -645,10 +647,8 @@ describe.runIf(!module.registerHooks)('unsupported', () => {
 
 // TODO: watch mode tests
 // TODO: inline snapshot tests
-// TODO: test https://github.com/vitest-dev/vitest/issues/3987
-// TODO: test v8 coverage (at least basic)
 
-function runNoViteModuleRunnerTests(structure: TestFsStructure, vitestConfig?: RunVitestConfig) {
+function runNoViteModuleRunnerTests(structure: TestFsStructure, vitestConfig?: RunVitestConfig, options?: VitestRunnerCLIOptions) {
   return runInlineTests(structure, {
     globals: true,
     ...vitestConfig,
@@ -656,5 +656,5 @@ function runNoViteModuleRunnerTests(structure: TestFsStructure, vitestConfig?: R
       ...vitestConfig?.experimental,
       viteModuleRunner: false,
     },
-  })
+  }, options)
 }
