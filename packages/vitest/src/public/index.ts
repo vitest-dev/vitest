@@ -92,7 +92,10 @@ export type {
   ExpectPollOptions,
   ExpectStatic,
   JestAssertion,
+  RawMatcherFn as Matcher,
+  ExpectationResult as MatcherResult,
   Matchers,
+  MatcherState,
 } from '@vitest/expect'
 export {
   afterAll,
