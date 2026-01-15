@@ -1071,13 +1071,19 @@ export class Vitest {
       throw new Error(`Task ${id} was not found`)
     }
 
-    const taskNamePattern = task.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    const files = [task.file.filepath]
+    const specification = this.state.getReportedEntityById(id)?.toTestSpecification()
+    if (!specification) {
+      throw new Error(`Test specification for task ${id} was not found`)
+    }
 
-    await this.changeNamePattern(
-      taskNamePattern,
-      [task.file.filepath],
-      'tasks' in task ? 'rerun suite' : 'rerun test',
-    )
+    const specifications = [specification]
+    await Promise.all([
+      this.report('onWatcherRerun', files, 'tasks' in task ? 'rerun suite' : 'rerun test'),
+      ...this._onUserTestsRerun.map(fn => fn(specifications)),
+    ])
+    await this.runFiles(specifications, false)
+    await this.report('onWatcherStart', this.state.getFiles(files))
   }
 
   /** @internal */
