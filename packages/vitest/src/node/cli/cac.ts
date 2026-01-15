@@ -300,12 +300,13 @@ function normalizeCliOptions(cliFilters: string[], argv: CliOptions): CliOptions
 async function start(mode: VitestRunMode, cliFilters: string[], options: CliOptions): Promise<void> {
   try {
     const { startVitest } = await import('./cli-api')
+    if (process.env.VITEST_FILTERS) {
+      cliFilters.push(...process.env.VITEST_FILTERS.split(' '))
+    }
     let normalizedOptions = normalizeCliOptions(cliFilters, options)
     if (process.env.VITEST_OPTIONS) {
-      const vitestConfig = parseCLI(process.env.VITEST_OPTIONS)
-      const vitestFilters = process.env.VITEST_FILTERS?.split(' ') || []
-      normalizedOptions = mergeConfig(normalizedOptions, normalizeCliOptions(vitestFilters, vitestConfig.options)) as CliOptions
-      cliFilters.push(...vitestFilters)
+      const vitestConfig = parseCLI(`vitest ${process.env.VITEST_OPTIONS}`).options
+      normalizedOptions = mergeConfig(normalizedOptions, normalizeCliOptions([], vitestConfig)) as CliOptions
     }
     const ctx = await startVitest(mode, cliFilters.map(normalize), normalizedOptions)
     if (!ctx.shouldKeepServer()) {
