@@ -1296,7 +1296,7 @@ console.log(path.mocked);
     `)
   })
 
-  test.only('correctly hoists when import.meta is used', () => {
+  test('correctly hoists when import.meta is used', () => {
     expect(hoistSimpleCode(`
 import { calc } from './calc'
 function sum(a, b) {
@@ -1572,25 +1572,32 @@ describe('some suite', () => {
       [MockFunction warn] {
         "calls": [
           [
-            "Warning: The vi.mock('./hello-world-2') call in '/test.js' is defined outside of the top level of the module. This gives the wrong impression of when it is executed - all hoisted methods are executed before imports, not in the scope they were defined in. Please move it to the top level of the module to avoid confusion. In future versions, this will be an error.",
+            "Warning: A vi.mock('./hello-world-2') call in "/test.js" is not at the top level of the module. Although it appears nested, it will be hoisted and executed before any tests run. Move it to the top level to reflect its actual execution order. This will become an error in a future version.
+      See: https://vitest.dev/guide/mocking/modules#how-it-works",
           ],
           [
-            "Warning: The vi.mock('./hello-world-3') call in '/test.js' is defined outside of the top level of the module. This gives the wrong impression of when it is executed - all hoisted methods are executed before imports, not in the scope they were defined in. Please move it to the top level of the module to avoid confusion. In future versions, this will be an error.",
+            "Warning: A vi.mock('./hello-world-3') call in "/test.js" is not at the top level of the module. Although it appears nested, it will be hoisted and executed before any tests run. Move it to the top level to reflect its actual execution order. This will become an error in a future version.
+      See: https://vitest.dev/guide/mocking/modules#how-it-works",
           ],
           [
-            "Warning: The vi.mock('./hello-world-4') call in '/test.js' is defined outside of the top level of the module. This gives the wrong impression of when it is executed - all hoisted methods are executed before imports, not in the scope they were defined in. Please move it to the top level of the module to avoid confusion. In future versions, this will be an error.",
+            "Warning: A vi.mock('./hello-world-4') call in "/test.js" is not at the top level of the module. Although it appears nested, it will be hoisted and executed before any tests run. Move it to the top level to reflect its actual execution order. This will become an error in a future version.
+      See: https://vitest.dev/guide/mocking/modules#how-it-works",
           ],
           [
-            "Warning: The vi.hoisted() call in '/test.js' is defined outside of the top level of the module. This gives the wrong impression of when it is executed - all hoisted methods are executed before imports, not in the scope they were defined in. Please move it to the top level of the module to avoid confusion. In future versions, this will be an error.",
+            "Warning: A vi.hoisted() call in "/test.js" is not at the top level of the module. Although it appears nested, it will be hoisted and executed before any tests run. Move it to the top level to reflect its actual execution order. This will become an error in a future version.
+      See: https://vitest.dev/guide/mocking/modules#how-it-works",
           ],
           [
-            "Warning: The vi.mock(import('./hello-world-5')) call in '/test.js' is defined outside of the top level of the module. This gives the wrong impression of when it is executed - all hoisted methods are executed before imports, not in the scope they were defined in. Please move it to the top level of the module to avoid confusion. In future versions, this will be an error.",
+            "Warning: A vi.mock(import('./hello-world-5')) call in "/test.js" is not at the top level of the module. Although it appears nested, it will be hoisted and executed before any tests run. Move it to the top level to reflect its actual execution order. This will become an error in a future version.
+      See: https://vitest.dev/guide/mocking/modules#how-it-works",
           ],
           [
-            "Warning: The vi.hoisted() call in '/test.js' is defined outside of the top level of the module. This gives the wrong impression of when it is executed - all hoisted methods are executed before imports, not in the scope they were defined in. Please move it to the top level of the module to avoid confusion. In future versions, this will be an error.",
+            "Warning: A vi.hoisted() call in "/test.js" is not at the top level of the module. Although it appears nested, it will be hoisted and executed before any tests run. Move it to the top level to reflect its actual execution order. This will become an error in a future version.
+      See: https://vitest.dev/guide/mocking/modules#how-it-works",
           ],
           [
-            "Warning: The vi.mock('./hello-world-6') call in '/test.js' is defined outside of the top level of the module. This gives the wrong impression of when it is executed - all hoisted methods are executed before imports, not in the scope they were defined in. Please move it to the top level of the module to avoid confusion. In future versions, this will be an error.",
+            "Warning: A vi.mock('./hello-world-6') call in "/test.js" is not at the top level of the module. Although it appears nested, it will be hoisted and executed before any tests run. Move it to the top level to reflect its actual execution order. This will become an error in a future version.
+      See: https://vitest.dev/guide/mocking/modules#how-it-works",
           ],
         ],
         "results": [
