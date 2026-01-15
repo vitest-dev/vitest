@@ -42,6 +42,7 @@ const skipConfig = new Set([
   'browser.name',
   'browser.fileParallelism',
   'clearCache',
+  'injectReporter',
 ])
 
 function resolveOptions(options: CLIOptions<any>, parentName?: string) {
