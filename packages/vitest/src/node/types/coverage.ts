@@ -67,6 +67,8 @@ export interface CoverageProvider {
 export interface ReportContext {
   /** Indicates whether all tests were run. False when only specific tests were run. */
   allTestsRun?: boolean
+  /** Absolute paths for files changed since a given commit/branch. */
+  changedFiles?: string[]
 }
 
 export interface CoverageModuleLoader extends RuntimeCoverageModuleLoader {
@@ -266,6 +268,14 @@ export interface BaseCoverageOptions {
    * @default []
    */
   ignoreClassMethods?: string[]
+
+  /**
+   * Collect coverage only for files changed since a specified commit or branch.
+   * Inherits the default value from `test.changed`.
+   *
+   * @default false
+   */
+  changed?: boolean | string
 }
 
 export interface CoverageIstanbulOptions extends BaseCoverageOptions {}
@@ -273,7 +283,7 @@ export interface CoverageIstanbulOptions extends BaseCoverageOptions {}
 export interface CoverageV8Options extends BaseCoverageOptions {}
 
 export interface CustomProviderOptions
-  extends Pick<BaseCoverageOptions, FieldsWithDefaultValues> {
+  extends Pick<BaseCoverageOptions, FieldsWithDefaultValues | 'changed'> {
   /** Name of the module or path to a file to load the custom provider from */
   customProviderModule: string
 }

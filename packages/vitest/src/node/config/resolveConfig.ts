@@ -389,6 +389,9 @@ export function resolveConfig(
   }
 
   resolved.coverage.reporter = resolveCoverageReporters(resolved.coverage.reporter)
+  if (resolved.coverage.changed === undefined && resolved.changed !== undefined) {
+    resolved.coverage.changed = resolved.changed
+  }
 
   if (resolved.coverage.enabled && resolved.coverage.reportsDirectory) {
     const reportsDirectory = resolve(
