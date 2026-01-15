@@ -1509,7 +1509,7 @@ export const mocked = vi.unmock('./mocked')
     expect(stripVTControlCharacters(error.frame)).toMatchSnapshot()
   })
 
-  it('shows ane rror when hoisted methods are used outside the top level scope', ({ onTestFinished }) => {
+  it('shows an error when hoisted methods are used outside the top level scope', ({ onTestFinished }) => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
     onTestFinished(() => warn.mockRestore())
     const result = hoistSimpleCode(`
@@ -1632,5 +1632,23 @@ describe('some suite', () => {
         ],
       }
     `)
+  })
+
+  it('ignores vi.mock position if import.meta.vitest is present', ({ onTestFinished }) => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    onTestFinished(() => warn.mockRestore())
+    const result = hoistSimpleCode(`
+if (import.meta.vitest) {
+  vi.mock('./hello-world-1')
+}
+      `)
+    expect(result).toMatchInlineSnapshot(`
+      "import { vi } from "vitest"
+      vi.mock('./hello-world-1')
+
+      if (import.meta.vitest) {
+        }"
+    `)
+    expect(warn).not.toHaveBeenCalled()
   })
 })

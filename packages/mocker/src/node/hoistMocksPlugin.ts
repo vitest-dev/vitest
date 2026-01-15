@@ -308,8 +308,8 @@ export function hoistMocks(
 
   esmWalker(ast, {
     onImportMeta(node) {
-      const property = code.slice(node.end)
-      if (property.startsWith('.vitest')) {
+      const property = code.slice(node.end, node.end + 7) // '.vitest'.length
+      if (property === '.vitest') {
         hasImportMetaVitest = true
       }
     },
