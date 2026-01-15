@@ -63,6 +63,15 @@ export default ({ mode }: { mode: string }) => {
       ['link', { rel: 'me', href: 'https://m.webtoo.ls/@vitest' }],
       ['link', { rel: 'mask-icon', href: '/logo.svg', color: '#ffffff' }],
       ['link', { rel: 'apple-touch-icon', href: '/apple-touch-icon.png', sizes: '180x180' }],
+      [
+        'script',
+        {
+          'src': 'https://cdn.usefathom.com/script.js',
+          'data-site': 'BEAFAKYG',
+          'data-spa': 'auto',
+          'defer': '',
+        },
+      ],
     ],
     lastUpdated: true,
     vite: {
