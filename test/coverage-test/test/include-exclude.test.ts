@@ -137,7 +137,7 @@ test('uncovered files are included after watch-mode re-run', async () => {
   await vitest.waitForStdout('Waiting for file changes')
 
   // make sure coverage report is done, we need text output for this message to appear
-  await vitest.waitForStdout('Coverage report from istanbul')
+  await vitest.waitForStdout('Coverage report from')
 
   {
     const coverageMap = await readCoverageMap()
