@@ -31,8 +31,12 @@ export class NativeModuleRunner extends ModuleRunner {
   }
 
   override import(moduleId: string): Promise<any> {
-    const path = resolveModule(moduleId, { paths: [this.root] })
+    let path = resolveModule(moduleId, { paths: [this.root] })
       ?? resolve(this.root, moduleId)
+    // resolveModule doesn't keep the query params, so we need to add them back
+    if (moduleId.includes('?') && !path.includes('?')) {
+      path += moduleId.slice(moduleId.indexOf('?'))
+    }
     return import(pathToFileURL(path).toString())
   }
 }
