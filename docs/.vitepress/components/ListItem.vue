@@ -19,10 +19,10 @@ function reset() {
 const color = computed(() => {
   return {
     '--vp-c-brand-1': state.value === 1
-      ? '#66ba1c'
+      ? 'var(--vp-c-brand-1)'
       : state.value === 2
-        ? 'rgba(248, 113, 113)'
-        : 'rgba(250, 204, 21)',
+        ? 'var(--vp-c-red-1)'
+        : 'var(--vp-c-yellow-1)',
   } as any
 })
 
@@ -79,11 +79,11 @@ onMounted(async () => {
 
 .icon-spinner {
   animation: spin 1s linear infinite;
-  color: rgb(250, 204, 21);
+  color: var(--vp-c-yellow-1);
 }
 
 .icon-error {
-  color: rgb(248, 113, 113);
+  color: var(--vp-c-red-1);
 }
 
 .icon-success {
