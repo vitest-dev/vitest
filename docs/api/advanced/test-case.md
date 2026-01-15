@@ -280,3 +280,11 @@ function artifacts(): ReadonlyArray<TestArtifact>
 ```
 
 [Test artifacts](/api/advanced/artifacts) recorded via the `recordArtifact` API during the test execution.
+
+## toTestSpecification <Version>4.1.0</Version> {#totestspecification}
+
+```ts
+function toTestSpecification(): TestSpecification
+```
+
+Returns a new [test specification](/api/advanced/test-specification) that can be used to filter or run this specific test case.
