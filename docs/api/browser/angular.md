@@ -20,13 +20,13 @@ export class HelloWorldComponent {
 }
 
 test('renders name', async () => {
-  const { component } = await render(HelloWorldComponent, {
+  const { locator } = await render(HelloWorldComponent, {
     inputs: {
       name: 'World',
     },
   })
 
-  await expect.element(component).toHaveTextContent('Hello, World!')
+  await expect.element(locator).toHaveTextContent('Hello, World!')
 })
 ```
 
@@ -76,7 +76,7 @@ For detailed setup instructions for both Zone.js and Zoneless configurations, pl
 ```ts
 export function render<T>(
   componentClass: Type<T>,
-  config?: RenderConfig<T>,
+  options?: ComponentRenderOptions<T>,
 ): Promise<RenderResult<T>>
 ```
 
@@ -109,7 +109,7 @@ export class ProductComponent {
   price = input<number>(0)
 }
 
-const { component } = await render(ProductComponent, {
+const { locator } = await render(ProductComponent, {
   inputs: {
     name: 'Laptop',
     price: 1299.99,
@@ -122,7 +122,7 @@ const { component } = await render(ProductComponent, {
 An array of providers to add to the test module. Use this for global services or dependencies.
 
 ```ts
-const { component } = await render(UserComponent, {
+const { locator } = await render(UserComponent, {
   providers: [
     { provide: UserService, useValue: mockUserService },
   ],
@@ -134,7 +134,7 @@ const { component } = await render(UserComponent, {
 An array of providers to add at the component level. Use this to override or add providers specific to the component being tested.
 
 ```ts
-const { component } = await render(DataComponent, {
+const { locator } = await render(DataComponent, {
   componentProviders: [
     { provide: DataService, useClass: MockDataService },
   ],
@@ -146,10 +146,25 @@ const { component } = await render(DataComponent, {
 Additional modules or standalone components to import into the test module.
 
 ```ts
-const { component } = await render(FormComponent, {
+const { locator } = await render(FormComponent, {
   imports: [ReactiveFormsModule, CommonModule],
 })
 ```
+
+#### baseElement
+
+Customize the root element for queries. Defaults to `document.body`. This is useful when testing components that render content outside their host element, such as modals or overlays. This is also used as the base element for the queries as well as what is printed when you use `debug()`.
+
+```ts
+const customRoot = document.createElement('div')
+document.body.appendChild(customRoot)
+
+const { locator } = await render(ModalComponent, {
+  baseElement: customRoot,
+})
+```
+
+You should rarely, if ever, need to use this option.
 
 #### withRouting
 
@@ -158,7 +173,7 @@ Enable routing features for components that use the Angular Router. Can be a boo
 **Simple routing:**
 
 ```ts
-const { component, router } = await render(NavComponent, {
+const { locator, router } = await render(NavComponent, {
   withRouting: true,
 })
 ```
@@ -173,7 +188,7 @@ const routes: Routes = [
   { path: 'about', component: AboutComponent },
 ]
 
-const { component, router, routerHarness } = await render(AppComponent, {
+const { locator, router, routerHarness } = await render(AppComponent, {
   withRouting: {
     routes,
     initialRoute: '/about',
@@ -181,18 +196,33 @@ const { component, router, routerHarness } = await render(AppComponent, {
 })
 ```
 
-### component
+### locator
 
-A [locator](/api/browser/locators) pointing to the rendered component element. Use this for DOM queries and assertions.
+A [locator](/api/browser/locators) scoped to the component's host element. Use this for DOM queries and assertions.
 
 ```ts
-const { component } = await render(HelloWorldComponent, {
+const { locator } = await render(HelloWorldComponent, {
   inputs: { name: 'World' },
 })
 
-await expect.element(component).toHaveTextContent('Hello, World!')
-await component.getByRole('button').click()
+await expect.element(locator).toHaveTextContent('Hello, World!')
+await locator.getByRole('button').click()
 ```
+
+### container
+
+Direct access to the component's host element (equivalent to `fixture.nativeElement`).
+
+```ts
+const { container } = await render(MyComponent)
+
+// Access the raw DOM element
+console.log(container.innerHTML)
+```
+
+:::danger
+If you find yourself using `container` to query for rendered elements then you should reconsider! The [locators](/api/browser/locators) are designed to be more resilient to changes that will be made to the component you're testing. Avoid using `container` to query for elements!
+:::
 
 ### componentClassInstance
 
@@ -273,9 +303,9 @@ locators.extend({
   },
 })
 
-const screen = await render(Component)
+const { locator } = await render(Component)
 await expect.element(
-  screen.getByArticleTitle('Hello World')
+  locator.getByArticleTitle('Hello World')
 ).toBeVisible()
 ```
 
@@ -320,14 +350,14 @@ export class LoginFormComponent {
 }
 
 test('submits login form with credentials', async () => {
-  const { component } = await render(LoginFormComponent)
+  const { locator } = await render(LoginFormComponent)
 
-  await component.getByPlaceholder('Email').fill('user@example.com')
-  await component.getByPlaceholder('Password').fill('password123')
-  await component.getByRole('button', { name: 'Login' }).click()
+  await locator.getByPlaceholder('Email').fill('user@example.com')
+  await locator.getByPlaceholder('Password').fill('password123')
+  await locator.getByRole('button', { name: 'Login' }).click()
 
   // Assert form values were updated
-  await expect.element(component.getByPlaceholder('Email')).toHaveValue('user@example.com')
+  await expect.element(locator.getByPlaceholder('Email')).toHaveValue('user@example.com')
 })
 ```
 
@@ -371,18 +401,18 @@ const routes: Routes = [
 ]
 
 test('navigates between routes', async () => {
-  const { component, router } = await render(AppComponent, {
+  const { locator } = await render(AppComponent, {
     withRouting: {
       routes,
       initialRoute: '/',
     },
   })
 
-  await expect.element(component.getByText('Home')).toBeVisible()
+  await expect.element(locator.getByText('Home')).toBeVisible()
 
-  await component.getByRole('link', { name: 'About' }).click()
+  await locator.getByRole('link', { name: 'About' }).click()
 
-  await expect.element(component.getByText('About')).toBeVisible()
+  await expect.element(locator.getByText('About')).toBeVisible()
 })
 ```
 
