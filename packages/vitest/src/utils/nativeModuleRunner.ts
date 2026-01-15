@@ -1,8 +1,7 @@
 import type { TestModuleMocker } from '@vitest/mocker'
 import { pathToFileURL } from 'node:url'
-import { isBareImport } from '@vitest/utils/helpers'
 import { resolveModule } from 'local-pkg'
-import { isAbsolute, resolve } from 'pathe'
+import { resolve } from 'pathe'
 import { ModuleRunner } from 'vite/module-runner'
 
 export class NativeModuleRunner extends ModuleRunner {
@@ -32,17 +31,8 @@ export class NativeModuleRunner extends ModuleRunner {
   }
 
   override import(moduleId: string): Promise<any> {
-    if (isBareImport(moduleId)) {
-      const path = resolveModule(moduleId, { paths: [this.root] })
-        ?? resolve(this.root, moduleId)
-      return import(pathToFileURL(path).toString())
-    }
-    if (!isAbsolute(moduleId)) {
-      moduleId = resolve(this.root, moduleId)
-    }
-    if (!moduleId.startsWith('file://')) {
-      moduleId = pathToFileURL(moduleId).toString()
-    }
-    return import(moduleId)
+    const path = resolveModule(moduleId, { paths: [this.root] })
+      ?? resolve(this.root, moduleId)
+    return import(pathToFileURL(path).toString())
   }
 }
