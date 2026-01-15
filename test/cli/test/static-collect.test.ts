@@ -575,6 +575,7 @@ test('collects tests with each modifier', async () => {
       "each tests": {
         "barTest with each %i": {
           "dynamic": true,
+          "each": true,
           "errors": [],
           "fullName": "each tests > barTest with each %i",
           "id": "-1732721377_0_2-dynamic",
@@ -584,6 +585,7 @@ test('collects tests with each modifier', async () => {
         },
         "test with each %i": {
           "dynamic": true,
+          "each": true,
           "errors": [],
           "fullName": "each tests > test with each %i",
           "id": "-1732721377_0_0-dynamic",
@@ -593,6 +595,7 @@ test('collects tests with each modifier', async () => {
         },
         "testFoo with each %i": {
           "dynamic": true,
+          "each": true,
           "errors": [],
           "fullName": "each tests > testFoo with each %i",
           "id": "-1732721377_0_1-dynamic",
@@ -828,5 +831,6 @@ function testItem(testCase: TestCase) {
     state: testCase.result().state,
     errors: testCase.result().errors || [],
     ...(testCase.task.dynamic ? { dynamic: true } : {}),
+    ...(testCase.options.each ? { each: true } : {}),
   }
 }
