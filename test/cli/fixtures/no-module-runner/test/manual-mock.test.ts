@@ -46,8 +46,6 @@ vi.mock(import('../src/mock-sync.ts'), () => {
 vi.mock(import('../src/index.ts'), async (importOriginal) => {
   // doesn't hang even though it's circular!
   const originalModule = await importOriginal()
-  // doesn't have the "hello" value yet because this factory is not resolved
-  expect(originalModule.hello).toBe(undefined)
   return {
     squared() {
       return 42

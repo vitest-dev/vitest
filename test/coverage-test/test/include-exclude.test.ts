@@ -132,7 +132,8 @@ test('uncovered files are included after watch-mode re-run', async () => {
   await vitest.waitForStdout('RERUN')
   await vitest.waitForStdout('rerun all tests')
   await vitest.waitForStdout('Waiting for file changes')
-  await ctx!.close()
+
+  ctx?.watcher.close()
 
   {
     const coverageMap = await readCoverageMap()

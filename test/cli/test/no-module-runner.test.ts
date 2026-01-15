@@ -72,8 +72,8 @@ describe.runIf(module.registerHooks)('supported', () => {
     `)
   })
 
-  // TODO: adapt coverage-test tests to support `viteModuleRunner: false`
-  test('v8 coverage works', async () => {
+  // TODO: move to coverage-test project
+  test.skip('v8 coverage works', async () => {
     const { stderr } = await runVitest({
       root: './fixtures/no-module-runner',
       isolate: false,

@@ -507,6 +507,7 @@ export class TestProject {
         [
           this.vite?.close(),
           this.typechecker?.stop(),
+          // browser might not be set if it threw an error during initialization
           (this.browser || this._parent?._parentBrowser?.vite)?.close(),
           this.clearTmpDir(),
         ].filter(Boolean),

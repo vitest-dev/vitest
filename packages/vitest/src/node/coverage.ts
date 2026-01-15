@@ -5,7 +5,7 @@ import type { BaseCoverageOptions, CoverageModuleLoader, CoverageProvider, Repor
 import type { SerializedCoverageConfig } from '../runtime/config'
 import type { AfterSuiteRunMeta } from '../types/general'
 import type { TestProject } from './project'
-import { existsSync, promises as fs, readdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { existsSync, promises as fs, readdirSync, writeFileSync } from 'node:fs'
 import module from 'node:module'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -639,14 +639,13 @@ export class BaseCoverageProvider<Options extends ResolvedCoverageOptions<'istan
     const config = project.config
 
     // vite is disabled, should transform manually if possible
-    // TODO: should this be abstracted?
     if (config.experimental.viteModuleRunner === false) {
       const pathname = url.split('?')[0]
       const filename = pathname.startsWith('file://') ? fileURLToPath(pathname) : pathname
       const extension = path.extname(filename)
       const isTypeScript = extension === '.ts' || extension === '.mts' || extension === '.cts'
       if (!isTypeScript) {
-        const code = readFileSync(filename, 'utf-8')
+        const code = await fs.readFile(filename, 'utf-8')
         return { code, map: null }
       }
       if (!module.stripTypeScriptTypes) {
@@ -656,10 +655,10 @@ export class BaseCoverageProvider<Options extends ResolvedCoverageOptions<'istan
         || config.execArgv.includes('--experimental-transform-types')
         || process.env.NODE_OPTIONS?.includes('--experimental-transform-types')
         || config.env?.NODE_OPTIONS?.includes('--experimental-transform-types')
-      const code = readFileSync(filename, 'utf-8')
+      const code = await fs.readFile(filename, 'utf-8')
       return {
+        // `transform` mode will inject source maps comment at the end
         code: module.stripTypeScriptTypes(code, { mode: isTransform ? 'transform' : 'strip' }),
-        // TODO: if transform, should the source map be generated? -- need a test case first
         map: null,
       }
     }
@@ -673,7 +672,7 @@ export class BaseCoverageProvider<Options extends ResolvedCoverageOptions<'istan
       }
     }
 
-    return await project.vite.environments[viteEnvironment].transformRequest(url)
+    return project.vite.environments[viteEnvironment].transformRequest(url)
   }
 
   createUncoveredFileTransformer(ctx: Vitest) {

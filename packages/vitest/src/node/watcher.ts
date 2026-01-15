@@ -30,6 +30,10 @@ export class VitestWatcher {
     return this
   }
 
+  public close(): void {
+    this.vitest.vite.watcher.close()
+  }
+
   public unregisterWatcher: () => void = noop
   public registerWatcher(): this {
     const watcher = this.vitest.vite.watcher
