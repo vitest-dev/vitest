@@ -6,6 +6,7 @@ import { toArray } from '@vitest/utils/helpers'
 import cac from 'cac'
 import { normalize } from 'pathe'
 import c from 'tinyrainbow'
+import { mergeConfig } from 'vite'
 import { version } from '../../../package.json' with { type: 'json' }
 import { benchCliOptionsConfig, cliOptionsConfig, collectCliOptionsConfig } from './cli-config'
 
@@ -299,7 +300,14 @@ function normalizeCliOptions(cliFilters: string[], argv: CliOptions): CliOptions
 async function start(mode: VitestRunMode, cliFilters: string[], options: CliOptions): Promise<void> {
   try {
     const { startVitest } = await import('./cli-api')
-    const ctx = await startVitest(mode, cliFilters.map(normalize), normalizeCliOptions(cliFilters, options))
+    let normalizedOptions = normalizeCliOptions(cliFilters, options)
+    if (process.env.VITEST_OPTIONS) {
+      const vitestConfig = parseCLI(process.env.VITEST_OPTIONS)
+      const vitestFilters = process.env.VITEST_FILTERS?.split(' ') || []
+      normalizedOptions = mergeConfig(normalizedOptions, normalizeCliOptions(vitestFilters, vitestConfig.options)) as CliOptions
+      cliFilters.push(...vitestFilters)
+    }
+    const ctx = await startVitest(mode, cliFilters.map(normalize), normalizedOptions)
     if (!ctx.shouldKeepServer()) {
       await ctx.exit()
     }
