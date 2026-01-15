@@ -338,6 +338,7 @@ function createFileTask(
           file,
           tasks: [],
           mode,
+          each: definition.dynamic,
           name: definition.name,
           fullName: createTaskName([latestSuite.fullName, definition.name]),
           fullTestName: createTaskName([latestSuite.fullTestName, definition.name]),
@@ -357,6 +358,7 @@ function createFileTask(
         id: '',
         suite: latestSuite,
         file,
+        each: definition.dynamic,
         mode,
         context: {} as any, // not used on the server
         name: definition.name,
