@@ -52,7 +52,7 @@ export const pwa: PwaOptions = {
     screenshots: [{
       src: 'og.jpg',
       sizes: '2258x1185',
-      type: 'image/png',
+      type: 'image/jpeg',
       label: `Screenshot of ${vitestName}`,
     }],
     handle_links: 'preferred',
