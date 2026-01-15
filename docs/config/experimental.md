@@ -242,6 +242,8 @@ Some Vitest features rely on files being transformed. Vitest uses synchronous [N
 
 ::: warning
 This means that Vitest requires at least Node 22.15 for those features to work. At the moment, they also do not work in Deno or Bun.
+
+Vitest will only detect `vi.mock` and `vi.hoisted` inside of test files, they will not be hoisted inside imported modules.
 :::
 
 This could affect performance because Vitest needs to read the file and process it. If you do not use these features, you can disable the transforms by setting `experimental.nodeLoader` to `false`. Vitest only reads test files and setup files while looking for `vi.mock` or `vi.hoisted`. Using these in other files won't hoist them to the top of the file and can lead to unexpected behavior.
