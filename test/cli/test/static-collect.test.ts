@@ -1,6 +1,6 @@
 import type { CliOptions, TestCase, TestModule, TestSuite } from 'vitest/node'
 import { expect, test } from 'vitest'
-import { createVitest } from 'vitest/node'
+import { createVitest, rolldownVersion } from 'vitest/node'
 
 test('correctly collects a simple test', async () => {
   const testModule = await collectTests(`
@@ -812,11 +812,17 @@ function testTree(module: TestModule | TestSuite, tree: any = {}) {
 }
 
 function testItem(testCase: TestCase) {
+  let location: string | undefined
+  if (testCase.location) {
+    // rolldown's column is moved by 1 when using test.each/test.for
+    const column = rolldownVersion && testCase.options.each
+      ? testCase.location.column + 1
+      : testCase.location.column
+    location = `${testCase.location.line}:${column}`
+  }
   return {
     id: testCase.id,
-    location: testCase.location
-      ? `${testCase.location.line}:${testCase.location.column}`
-      : undefined,
+    location,
     mode: testCase.options.mode,
     fullName: testCase.fullName,
     state: testCase.result().state,
