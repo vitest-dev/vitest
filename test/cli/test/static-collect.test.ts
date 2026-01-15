@@ -819,7 +819,7 @@ function testItem(testCase: TestCase) {
   if (testCase.location) {
     // rolldown's column is moved by 1 when using test.each/test.for
     const column = rolldownVersion && testCase.options.each
-      ? testCase.location.column + 1
+      ? testCase.location.column - 1
       : testCase.location.column
     location = `${testCase.location.line}:${column}`
   }
