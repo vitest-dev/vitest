@@ -23,8 +23,6 @@ vitest --tag="unit/*"
 You can use a wildcard (*) to match any number of symbols. To ignore a tag, add an exclamation mark (!) at the start of the tag.
 :::
 
-<!-- TODO: guide about tags, include that you can add tags as @tag pragma to mark all tests in a file with that tag, and mention `project.createSpecification` -->
-
 ## Example
 
 ```ts [vitest.config.js]

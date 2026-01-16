@@ -29,6 +29,10 @@ interface TestOptions {
    * @default 0
    */
   repeats?: number
+  /**
+   * Custom tags of the test. Useful for filtering tests.
+   */
+  tags?: string[]
 }
 ```
 

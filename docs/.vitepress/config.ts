@@ -777,6 +777,10 @@ export default ({ mode }: { mode: string }) => {
                 link: '/guide/filtering',
               },
               {
+                text: 'Test Tags',
+                link: '/guide/test-tags',
+              },
+              {
                 text: 'Test Context',
                 link: '/guide/test-context',
               },

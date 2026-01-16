@@ -4,7 +4,7 @@
 
 ## Defining Tags
 
-Tags must be defined in your configuration file. Vitest will throw an error if a test uses a tag that is not defined in the config.
+Tags must be defined in your configuration file. Vitest does not provide any built-in tags. The test runner will throw an error if a test uses a tag not defined in the config.
 
 ```ts [vitest.config.js]
 import { defineConfig } from 'vitest/config'
@@ -71,6 +71,31 @@ To run only tests with specific tags, use the [`--tag`](/guide/cli#tag) CLI opti
 vitest --tag=frontend
 vitest --tag=frontend --tag=backend
 ```
+
+If you are using a programmatic API, you can pass down a `tag` option to [`startVitest`](/guide/advanced/#startvitest) or [`createVitest`](/guide/advanced/#createvitest):
+
+```ts
+import { startVitest } from 'vitest/node'
+
+await startVitest('test', [], {
+  tag: ['frontend', 'backend'],
+})
+```
+
+Or you can create a [test specification](/api/advanced/test-specification) with tags of your choice:
+
+```ts
+const specification = vitest.getRootProject().createSpecification(
+  '/path-to-file.js',
+  {
+    testTags: ['frontend', 'backend'],
+  },
+)
+```
+
+::: warning
+Note that `createSpecification` does not support wildcards and will not validate if the tags are defined in the config.
+:::
 
 ### Wildcards
 
