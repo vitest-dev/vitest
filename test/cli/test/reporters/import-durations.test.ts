@@ -74,4 +74,37 @@ describe('import durations', () => {
     expect(file.importDurations?.[throwsFile]?.totalTime).toBeGreaterThanOrEqual(24)
     expect(file.importDurations?.[throwsFile]?.selfTime).toBeGreaterThanOrEqual(24)
   })
+
+  it('should print import breakdown when enabled', async () => {
+    const { stdout } = await runVitest({
+      root,
+      include: ['**/import-durations.test.ts'],
+      experimental: {
+        printImportBreakdown: {
+          enabled: true,
+          limit: 5,
+        },
+      },
+    })
+
+    expect(stdout).toContain('Import Duration Breakdown')
+    expect(stdout).toContain('(ordered by Total Time)')
+    expect(stdout).toContain('Total imports:')
+    expect(stdout).toContain('(Top 5)')
+  })
+
+  it('should not collect importDurations when limit is 0', async () => {
+    const { ctx } = await runVitest({
+      root,
+      include: ['**/import-durations.test.ts'],
+      experimental: {
+        printImportBreakdown: {
+          limit: 0,
+        },
+      },
+    })
+
+    const file = ctx!.state.getFiles()[0]
+    expect(file.importDurations).toEqual({})
+  })
 })
