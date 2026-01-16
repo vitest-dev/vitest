@@ -313,7 +313,7 @@ it('can create new test specifications', ({ testModule }) => {
   const testSuite = [...testModule.children.suites()][0]
   const suiteSpec = testSuite.toTestSpecification()
   expect(suiteSpec.moduleId).toBe(testModule.moduleId)
-  expect(suiteSpec.testIds).toMatchInlineSnapshot([
+  expect(suiteSpec.testIds).toEqual([
     '-1008553841_11_0',
     '-1008553841_11_1',
     '-1008553841_11_2_0',
