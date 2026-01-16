@@ -47,7 +47,7 @@ export type MockParameters<T extends Procedure | Constructable> = T extends Cons
     ? Parameters<T> : never
 
 export type MockReturnType<T extends Procedure | Constructable> = T extends Constructable
-  ? void
+  ? InstanceType<T>
   : T extends Procedure
     ? ReturnType<T> : never
 
