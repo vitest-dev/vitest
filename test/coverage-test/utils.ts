@@ -10,7 +10,7 @@ import { stripVTControlCharacters } from 'node:util'
 import { playwright } from '@vitest/browser-playwright'
 import libCoverage from 'istanbul-lib-coverage'
 import { normalize } from 'pathe'
-import { vi, describe as vitestDescribe, test as vitestTest } from 'vitest'
+import { onTestFailed, TestRunner, vi, describe as vitestDescribe, test as vitestTest } from 'vitest'
 import * as testUtils from '../test-utils'
 
 export function test(name: string, fn: TestFunction, skip = false) {
@@ -38,29 +38,33 @@ export async function runVitest(config: TestUserConfig, options = { throwOnError
     config: 'fixtures/configs/vitest.config.ts',
     pool: 'threads',
     ...config,
-    browser: config.browser,
-  }, [], 'test', {
-    ...viteOverrides,
-    test: {
-      env: {
-        COVERAGE_TEST: 'true',
-        ...config.env,
-      },
-      coverage: {
-        enabled: true,
-        reporter: [],
-        ...config.coverage,
-        provider,
-        customProviderModule: provider === 'custom' ? 'fixtures/custom-provider' : undefined,
-      },
-      browser: {
-        enabled: process.env.COVERAGE_BROWSER === 'true',
-        headless: true,
-        instances: [{ browser: 'chromium' }],
-        provider: playwright(),
-      },
+    env: {
+      COVERAGE_TEST: 'true',
+      ...config.env,
     },
+    coverage: {
+      enabled: true,
+      reporter: [],
+      ...config.coverage,
+      provider,
+      customProviderModule: provider === 'custom' ? 'fixtures/custom-provider' : undefined,
+    },
+    browser: {
+      enabled: process.env.COVERAGE_BROWSER === 'true',
+      headless: true,
+      instances: [{ browser: 'chromium' }],
+      provider: playwright(),
+      ...config.browser,
+    },
+    $viteConfig: viteOverrides,
   })
+
+  if (TestRunner.getCurrentTest()) {
+    onTestFailed(() => {
+      console.error('stderr:', result.stderr)
+      console.error('stdout:', result.stdout)
+    })
+  }
 
   if (options.throwOnError) {
     if (result.stderr !== '') {

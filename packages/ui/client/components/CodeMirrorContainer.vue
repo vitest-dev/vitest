@@ -1,5 +1,8 @@
 <script setup lang="ts">
-import { codemirrorRef } from '~/composables/codemirror'
+import type { EditorFromTextArea } from 'codemirror'
+import type { Ref } from 'vue'
+import { onMounted, ref, useAttrs } from 'vue'
+import { codemirrorRef, useCodeMirror } from '~/composables/codemirror'
 
 const { mode, readOnly } = defineProps<{
   mode?: string
@@ -9,6 +12,7 @@ const { mode, readOnly } = defineProps<{
 
 const emit = defineEmits<{
   (event: 'save', content: string): void
+  (event: 'codemirror', codemirror: EditorFromTextArea): void
 }>()
 
 const modelValue = defineModel<string>()
@@ -16,9 +20,9 @@ const modelValue = defineModel<string>()
 const attrs = useAttrs()
 
 const modeMap: Record<string, any> = {
-  // html: 'htmlmixed',
-  // vue: 'htmlmixed',
-  // svelte: 'htmlmixed',
+  html: 'htmlmixed',
+  vue: 'htmlmixed',
+  svelte: 'htmlmixed',
   js: 'javascript',
   mjs: 'javascript',
   cjs: 'javascript',
@@ -52,10 +56,17 @@ onMounted(async () => {
       },
     },
   })
+
+  codemirror.on('refresh', () => {
+    emit('codemirror', codemirror)
+  })
+  codemirror.on('change', () => {
+    emit('codemirror', codemirror)
+  })
   codemirror.setSize('100%', '100%')
   codemirror.clearHistory()
   codemirrorRef.value = codemirror
-  setTimeout(() => codemirrorRef.value!.refresh(), 100)
+  setTimeout(() => codemirrorRef.value?.refresh(), 100)
 })
 </script>
 

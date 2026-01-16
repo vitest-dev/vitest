@@ -237,6 +237,6 @@ export interface WatcherTriggerPattern {
   pattern: RegExp
   testsToRun: (
     file: string,
-    match: RegExpMatchArray
+    match: RegExpMatchArray,
   ) => string[] | string | null | undefined | void
 }

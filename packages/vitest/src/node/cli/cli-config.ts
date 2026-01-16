@@ -1,10 +1,4 @@
 import type { ApiConfig } from '../types/config'
-import type {
-  ForksOptions,
-  ThreadsOptions,
-  VmOptions,
-  WorkerContextOptions,
-} from '../types/pool-options'
 import type { CliOptions } from './cli-api'
 import { defaultBrowserPort, defaultPort } from '../../constants'
 import { ReportersMap } from '../reporters'
@@ -54,38 +48,6 @@ const apiConfig: (port: number) => CLIOptions<ApiConfig> = (port: number) => ({
   },
   middlewareMode: null,
 })
-
-const poolThreadsCommands: CLIOptions<ThreadsOptions & WorkerContextOptions> = {
-  isolate: {
-    description: 'Isolate tests in threads pool (default: `true`)',
-  },
-  singleThread: {
-    description: 'Run tests inside a single thread (default: `false`)',
-  },
-  maxThreads: {
-    description: 'Maximum number or percentage of threads to run tests in',
-    argument: '<workers>',
-  },
-  useAtomics: {
-    description:
-      'Use Atomics to synchronize threads. This can improve performance in some cases, but might cause segfault in older Node versions (default: `false`)',
-  },
-  execArgv: null,
-}
-
-const poolForksCommands: CLIOptions<ForksOptions & WorkerContextOptions> = {
-  isolate: {
-    description: 'Isolate tests in forks pool (default: `true`)',
-  },
-  singleFork: {
-    description: 'Run tests inside a single child_process (default: `false`)',
-  },
-  maxForks: {
-    description: 'Maximum number or percentage of processes to run tests in',
-    argument: '<workers>',
-  },
-  execArgv: null,
-}
 
 function watermarkTransform(value: unknown) {
   if (typeof value === 'string') {
@@ -373,7 +335,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
       },
       name: {
         description:
-          'Run all tests in a specific browser. Some browsers are only available for specific providers (see `--browser.provider`). Visit [`browser.name`](https://vitest.dev/guide/browser/config/#browser-name) for more information',
+          'Run all tests in a specific browser. Some browsers are only available for specific providers (see `--browser.provider`).',
         argument: '<name>',
       },
       headless: {
@@ -385,19 +347,6 @@ export const cliOptionsConfig: VitestCLIOptions = {
           'Specify options for the browser API server. Does not affect the --api option',
         argument: '[port]',
         subcommands: apiConfig(defaultBrowserPort),
-      },
-      provider: {
-        description:
-          'Provider used to run browser tests. Some browsers are only available for specific providers. Can be "webdriverio", "playwright", "preview", or the path to a custom provider. Visit [`browser.provider`](https://vitest.dev/guide/browser/config.html#browser-provider) for more information (default: `"preview"`)',
-        argument: '<name>',
-        subcommands: null, // don't support custom objects
-        transform(value) {
-          const supported = ['playwright', 'webdriverio', 'preview']
-          if (typeof value !== 'string' || !supported.includes(value)) {
-            throw new Error(`Unsupported browser provider: ${value}. Supported providers are: ${supported.join(', ')}`)
-          }
-          return { name: value, _cli: true }
-        },
       },
       isolate: {
         description:
@@ -435,6 +384,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
       testerHtmlPath: null,
       instances: null,
       expect: null,
+      provider: null,
     },
   },
   pool: {
@@ -443,47 +393,15 @@ export const cliOptionsConfig: VitestCLIOptions = {
     argument: '<pool>',
     subcommands: null, // don't support custom objects
   },
-  poolOptions: {
-    description: 'Specify pool options',
-    argument: '<options>',
-    // we use casting here because TypeScript (for some reason) makes this into CLIOption<unknown>
-    // even when using casting, these types fail if the new option is added which is good
-    subcommands: {
-      threads: {
-        description: 'Specify threads pool options',
-        argument: '<options>',
-        subcommands: poolThreadsCommands,
-      } as CLIOption<ThreadsOptions & WorkerContextOptions>,
-      vmThreads: {
-        description: 'Specify VM threads pool options',
-        argument: '<options>',
-        subcommands: {
-          ...poolThreadsCommands,
-          memoryLimit: {
-            description:
-              'Memory limit for VM threads pool. If you see memory leaks, try to tinker this value.',
-            argument: '<limit>',
-          },
-        },
-      } as CLIOption<ThreadsOptions & VmOptions>,
-      forks: {
-        description: 'Specify forks pool options',
-        argument: '<options>',
-        subcommands: poolForksCommands,
-      } as CLIOption<ForksOptions & WorkerContextOptions>,
-      vmForks: {
-        description: 'Specify VM forks pool options',
-        argument: '<options>',
-        subcommands: {
-          ...poolForksCommands,
-          memoryLimit: {
-            description:
-              'Memory limit for VM forks pool. If you see memory leaks, try to tinker this value.',
-            argument: '<limit>',
-          },
-        },
-      } as CLIOption<ForksOptions & VmOptions>,
-    },
+  execArgv: {
+    description: 'Pass additional arguments to `node` process when spawning `worker_threads` or `child_process`.',
+    argument: '<option>',
+    array: true,
+  },
+  vmMemoryLimit: {
+    description:
+      'Memory limit for VM pools. If you see memory leaks, try to tinker this value.',
+    argument: '<limit>',
   },
   fileParallelism: {
     description:
@@ -612,6 +530,29 @@ export const cliOptionsConfig: VitestCLIOptions = {
     description:
       'Retry the test specific number of times if it fails (default: `0`)',
     argument: '<times>',
+    subcommands: {
+      count: {
+        description:
+          'Number of times to retry a test if it fails (default: `0`)',
+        argument: '<times>',
+      },
+      delay: {
+        description:
+          'Delay in milliseconds between retry attempts (default: `0`)',
+        argument: '<ms>',
+      },
+      condition: {
+        description:
+          'Regex pattern to match error messages that should trigger a retry. Only errors matching this pattern will cause a retry (default: retry on all errors)',
+        argument: '<pattern>',
+        transform: (value) => {
+          if (typeof value === 'string') {
+            return new RegExp(value, 'i')
+          }
+          return value
+        },
+      },
+    },
   },
   diff: {
     description:
@@ -844,7 +785,24 @@ export const cliOptionsConfig: VitestCLIOptions = {
       return value
     },
   },
+  clearCache: {
+    description: 'Delete all Vitest caches, including `experimental.fsModuleCache`, without running any tests. This will reduce the performance in the subsequent test run.',
+  },
 
+  experimental: {
+    description: 'Experimental features.',
+    argument: '<features>',
+    subcommands: {
+      fsModuleCache: {
+        description: 'Enable caching of modules on the file system between reruns.',
+      },
+      fsModuleCachePath: null,
+      openTelemetry: null,
+      printImportBreakdown: {
+        description: 'Print import breakdown after the summary. If the reporter doesn\'t support summary, this will have no effect. Note that UI\'s "Module Graph" tab always has an import breakdown.',
+      },
+    },
+  },
   // disable CLI options
   cliExclude: null,
   server: null,

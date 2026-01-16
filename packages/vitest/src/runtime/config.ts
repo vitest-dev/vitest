@@ -1,6 +1,6 @@
 import type { FakeTimerInstallOpts } from '@sinonjs/fake-timers'
 import type { PrettyFormatOptions } from '@vitest/pretty-format'
-import type { SequenceHooks, SequenceSetupFiles } from '@vitest/runner'
+import type { SequenceHooks, SequenceSetupFiles, SerializableRetry } from '@vitest/runner'
 import type { SnapshotEnvironment, SnapshotUpdateState } from '@vitest/snapshot'
 import type { SerializedDiffOptions } from '@vitest/utils/diff'
 
@@ -15,6 +15,7 @@ export interface SerializedConfig {
   disableConsoleIntercept: boolean | undefined
   runner: string | undefined
   isolate: boolean
+  maxWorkers: number
   mode: 'test' | 'benchmark'
   bail: number | undefined
   environmentOptions?: Record<string, any>
@@ -49,22 +50,6 @@ export interface SerializedConfig {
     hooks: SequenceHooks
     setupFiles: SequenceSetupFiles
   }
-  poolOptions: {
-    forks: {
-      singleFork: boolean
-      isolate: boolean
-    }
-    threads: {
-      singleThread: boolean
-      isolate: boolean
-    }
-    vmThreads: {
-      singleThread: boolean
-    }
-    vmForks: {
-      singleFork: boolean
-    }
-  }
   deps: {
     web: {
       transformAssets?: boolean
@@ -92,7 +77,7 @@ export interface SerializedConfig {
     truncateThreshold?: number
   } | undefined
   diff: string | SerializedDiffOptions | undefined
-  retry: number
+  retry: SerializableRetry
   includeTaskLocation: boolean | undefined
   inspect: boolean | string | undefined
   inspectBrk: boolean | string | undefined
@@ -132,6 +117,15 @@ export interface SerializedConfig {
     includeSamples: boolean
   } | undefined
   serializedDefines: string
+  experimental: {
+    fsModuleCache: boolean
+    printImportBreakdown: boolean | undefined
+    openTelemetry: {
+      enabled: boolean
+      sdkPath?: string
+      browserSdkPath?: string
+    } | undefined
+  }
 }
 
 export interface SerializedCoverageConfig {

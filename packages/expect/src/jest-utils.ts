@@ -22,6 +22,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 */
 
+import type { StandardSchemaV1 } from '@standard-schema/spec'
 import type { AsymmetricMatcher } from './jest-asymmetric-matchers'
 import type { Tester, TesterContext } from './types'
 import { isObject } from '@vitest/utils/helpers'
@@ -798,4 +799,16 @@ export function getObjectSubset(
       }
 
   return { subset: getObjectSubsetWithContext()(object, subset), stripped }
+}
+
+/**
+ * Detects if an object is a Standard Schema V1 compatible schema
+ */
+export function isStandardSchema(obj: any): obj is StandardSchemaV1 {
+  return (
+    !!obj
+    && (typeof obj === 'object' || typeof obj === 'function')
+    && obj['~standard']
+    && typeof obj['~standard'].validate === 'function'
+  )
 }

@@ -1,6 +1,6 @@
 import type { Vitest } from './core'
 import type { TestProject } from './project'
-import type { TestSpecification } from './spec'
+import type { TestSpecification } from './test-specification'
 import { existsSync } from 'node:fs'
 import { join, relative, resolve } from 'pathe'
 import pm from 'picomatch'

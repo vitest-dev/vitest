@@ -20,10 +20,11 @@ export const ENTRY_URL: string = `${
   location.protocol === 'https:' ? 'wss:' : 'ws:'
 }//${HOST}/__vitest_browser_api__?type=${PAGE_TYPE}&rpcId=${RPC_ID}&sessionId=${getBrowserState().sessionId}&projectName=${getBrowserState().config.name || ''}&method=${METHOD}&token=${(window as any).VITEST_API_TOKEN || '0'}`
 
-let setCancel = (_: CancelReason) => {}
-export const onCancel: Promise<CancelReason> = new Promise((resolve) => {
-  setCancel = resolve
-})
+const onCancelCallbacks: ((reason: CancelReason) => void)[] = []
+
+export function onCancel(callback: (reason: CancelReason) => void): void {
+  onCancelCallbacks.push(callback)
+}
 
 export interface VitestBrowserClient {
   rpc: BrowserRPC
@@ -74,7 +75,9 @@ function createClient() {
 
   ctx.rpc = createBirpc<WebSocketBrowserHandlers, WebSocketBrowserEvents>(
     {
-      onCancel: setCancel,
+      async onCancel(reason) {
+        await Promise.all(onCancelCallbacks.map(fn => fn(reason)))
+      },
       async createTesters(options) {
         const orchestrator = await waitForOrchestrator()
         return orchestrator.createTesters(options)

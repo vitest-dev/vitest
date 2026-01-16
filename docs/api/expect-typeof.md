@@ -549,3 +549,23 @@ expectTypeOf(obj).toHaveProperty('a').toBeNumber()
 expectTypeOf(obj).toHaveProperty('b').toBeString()
 expectTypeOf(obj).toHaveProperty('a').not.toBeString()
 ```
+
+## branded
+
+- **Type:** `ExpectTypeOf<BrandedType>`
+
+You can use `.branded` to allow type assertions to succeed for types that are semantically equivalent but differ in representation.
+
+```ts
+import { expectTypeOf } from 'vitest'
+
+// Without .branded, this fails even though the types are effectively the same
+expectTypeOf<{ a: { b: 1 } & { c: 1 } }>().toEqualTypeOf<{ a: { b: 1; c: 1 } }>()
+
+// With .branded, the assertion succeeds
+expectTypeOf<{ a: { b: 1 } & { c: 1 } }>().branded.toEqualTypeOf<{ a: { b: 1; c: 1 } }>()
+```
+
+::: warning
+This helper comes at a performance cost and can cause the TypeScript compiler to 'give up' if used with excessively deep types. Use it sparingly and only when necessary.
+:::

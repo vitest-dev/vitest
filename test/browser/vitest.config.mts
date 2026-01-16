@@ -52,6 +52,9 @@ export default defineConfig({
   optimizeDeps: {
     include: ['@vitest/cjs-lib', '@vitest/bundled-lib', 'react/jsx-dev-runtime'],
   },
+  define: {
+    'import.meta.env.DEFINE_CUSTOM_ENV': JSON.stringify('define-custom-env'),
+  },
   test: {
     include: ['test/**.test.{ts,js,tsx}'],
     includeSource: ['src/*.ts'],

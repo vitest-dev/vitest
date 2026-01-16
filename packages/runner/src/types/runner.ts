@@ -4,11 +4,13 @@ import type {
   ImportDuration,
   SequenceHooks,
   SequenceSetupFiles,
+  SerializableRetry,
   Suite,
   TaskEventPack,
   TaskResultPack,
   Test,
   TestAnnotation,
+  TestArtifact,
   TestContext,
 } from './tasks'
 
@@ -35,7 +37,7 @@ export interface VitestRunnerConfig {
   maxConcurrency: number
   testTimeout: number
   hookTimeout: number
-  retry: number
+  retry: SerializableRetry
   includeTaskLocation?: boolean
   diffOptions?: DiffOptions
 }
@@ -46,6 +48,8 @@ export interface VitestRunnerConfig {
 export interface FileSpecification {
   filepath: string
   testLocations: number[] | undefined
+  testNamePattern: RegExp | undefined
+  testIds: string[] | undefined
 }
 
 export type VitestRunnerImportSource = 'collect' | 'setup'
@@ -89,7 +93,7 @@ export interface VitestRunner {
    */
   onBeforeTryTask?: (
     test: Test,
-    options: { retry: number; repeats: number }
+    options: { retry: number; repeats: number },
   ) => unknown
   /**
    * When the task has finished running, but before cleanup hooks are called
@@ -104,7 +108,7 @@ export interface VitestRunner {
    */
   onAfterTryTask?: (
     test: Test,
-    options: { retry: number; repeats: number }
+    options: { retry: number; repeats: number },
   ) => unknown
   /**
    * Called after the retry resolution happend. Unlike `onAfterTryTask`, the test now has a new state.
@@ -112,7 +116,7 @@ export interface VitestRunner {
    */
   onAfterRetryTask?: (
     test: Test,
-    options: { retry: number; repeats: number }
+    options: { retry: number; repeats: number },
   ) => unknown
 
   /**
@@ -144,6 +148,13 @@ export interface VitestRunner {
    * Called when annotation is added via the `context.annotate` method.
    */
   onTestAnnotate?: (test: Test, annotation: TestAnnotation) => Promise<TestAnnotation>
+
+  /**
+   * @experimental
+   *
+   * Called when artifacts are recorded on tests via the `recordArtifact` utility.
+   */
+  onTestArtifactRecord?: <Artifact extends TestArtifact>(test: Test, artifact: Artifact) => Promise<Artifact>
 
   /**
    * Called before running all tests in collected paths.
@@ -180,12 +191,21 @@ export interface VitestRunner {
    * The name of the current pool. Can affect how stack trace is inferred on the server side.
    */
   pool?: string
+  /**
+   * The current Vite environment that processes the files on the server.
+   */
+  viteEnvironment?: string
 
   /**
    * Return the worker context for fixtures specified with `scope: 'worker'`
    */
   getWorkerContext?: () => Record<string, unknown>
   onCleanupWorkerContext?: (cleanup: () => unknown) => void
+
+  // eslint-disable-next-line ts/method-signature-style
+  trace?<T>(name: string, cb: () => T): T
+  // eslint-disable-next-line ts/method-signature-style
+  trace?<T>(name: string, attributes: Record<string, any>, cb: () => T): T
 
   /** @private */
   _currentTaskStartTime?: number

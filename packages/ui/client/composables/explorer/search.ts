@@ -1,5 +1,7 @@
 import type { Ref } from 'vue'
 import type { ProjectSortUIType } from '~/composables/explorer/types'
+import { debouncedWatch } from '@vueuse/core'
+import { computed, ref, watch } from 'vue'
 import { explorerTree } from '~/composables/explorer'
 import {
   ALL_PROJECTS,

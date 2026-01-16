@@ -1,5 +1,6 @@
 /* eslint-disable ts/method-signature-style */
 
+import type { CustomComparatorsRegistry } from '@vitest/browser'
 import type { MockedModule } from '@vitest/mocker'
 import type {
   Browser,
@@ -10,8 +11,8 @@ import type {
   FrameLocator,
   LaunchOptions,
   Page,
+  CDPSession as PlaywrightCDPSession,
 } from 'playwright'
-import type { Protocol } from 'playwright-core/types/protocol'
 import type { SourceMap } from 'rollup'
 import type { ResolvedConfig } from 'vite'
 import type {
@@ -39,6 +40,10 @@ const debug = createDebugger('vitest:browser:playwright')
 
 const playwrightBrowsers = ['firefox', 'webkit', 'chromium'] as const
 type PlaywrightBrowser = (typeof playwrightBrowsers)[number]
+
+// Enable intercepting of requests made by service workers - experimental API is only available in Chromium based browsers
+// Requests from service workers are only available on context.route() https://playwright.dev/docs/service-workers-experimental
+process.env.PW_EXPERIMENTAL_SERVICE_WORKER_NETWORK_EVENTS ??= '1'
 
 export interface PlaywrightProviderOptions {
   /**
@@ -253,7 +258,7 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
     return {
       register: async (sessionId: string, module: MockedModule): Promise<void> => {
         const page = this.getPage(sessionId)
-        await page.route(createPredicate(sessionId, module.url), async (route) => {
+        await page.context().route(createPredicate(sessionId, module.url), async (route) => {
           if (module.type === 'manual') {
             const exports = Object.keys(await module.resolve())
             const body = createManualModuleSource(module.url, exports)
@@ -322,7 +327,7 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
         const key = predicateKey(sessionId, id)
         const predicate = idPreficates.get(key)
         if (predicate) {
-          await page.unroute(predicate).finally(() => idPreficates.delete(key))
+          await page.context().unroute(predicate).finally(() => idPreficates.delete(key))
         }
       },
       clear: async (sessionId: string): Promise<void> => {
@@ -332,7 +337,7 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
           const key = predicateKey(sessionId, id)
           const predicate = idPreficates.get(key)
           if (predicate) {
-            return page.unroute(predicate).finally(() => idPreficates.delete(key))
+            return page.context().unroute(predicate).finally(() => idPreficates.delete(key))
           }
           return null
         })
@@ -360,6 +365,11 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
     if (this.project.config.browser.ui) {
       options.viewport = null
     }
+    // TODO: investigate the consequences for Vitest 5
+    // else {
+    // if UI is disabled, keep the iframe scale to 1
+    // options.viewport ??= this.project.config.browser.viewport
+    // }
     const context = await browser.newContext(options)
     await this._throwIfClosing(context)
     if (actionTimeout != null) {
@@ -556,7 +566,7 @@ declare module 'vitest/node' {
     extends Omit<
       ScreenshotMatcherOptions,
       'comparatorName' | 'comparatorOptions'
-    > {}
+    >, CustomComparatorsRegistry {}
 
   export interface ToMatchScreenshotComparators
     extends ScreenshotComparatorRegistry {}
@@ -570,6 +580,8 @@ type PWScreenshotOptions = NonNullable<Parameters<Page['screenshot']>[0]>
 type PWSelectOptions = NonNullable<Parameters<Page['selectOption']>[2]>
 type PWDragAndDropOptions = NonNullable<Parameters<Page['dragAndDrop']>[2]>
 type PWSetInputFiles = NonNullable<Parameters<Page['setInputFiles']>[2]>
+// Must be re-aliased here or rollup-plugin-dts removes the import alias and you end up with a circular reference
+type PWCDPSession = PlaywrightCDPSession
 
 declare module 'vitest/browser' {
   export interface UserEventHoverOptions extends PWHoverOptions {}
@@ -585,22 +597,5 @@ declare module 'vitest/browser' {
     mask?: ReadonlyArray<Element | Locator> | undefined
   }
 
-  export interface CDPSession {
-    send<T extends keyof Protocol.CommandParameters>(
-      method: T,
-      params?: Protocol.CommandParameters[T]
-    ): Promise<Protocol.CommandReturnValues[T]>
-    on<T extends keyof Protocol.Events>(
-      event: T,
-      listener: (payload: Protocol.Events[T]) => void
-    ): this
-    once<T extends keyof Protocol.Events>(
-      event: T,
-      listener: (payload: Protocol.Events[T]) => void
-    ): this
-    off<T extends keyof Protocol.Events>(
-      event: T,
-      listener: (payload: Protocol.Events[T]) => void
-    ): this
-  }
+  export interface CDPSession extends PWCDPSession {}
 }

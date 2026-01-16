@@ -1,8 +1,11 @@
 import type { File, Task } from '@vitest/runner'
 import type { Params } from './params'
+import { useLocalStorage, watchOnce } from '@vueuse/core'
+import { computed, reactive, ref, watch } from 'vue'
 import { viewport } from './browser'
 import { browserState, client, config, findById } from './client'
 import { testRunState } from './client/state'
+import { showTaskSource } from './codemirror'
 import { activeFileId, columnNumber, lineNumber, selectedTest, viewMode } from './params'
 
 export const currentModule = ref<File>()

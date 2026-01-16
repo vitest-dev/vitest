@@ -1,28 +1,22 @@
-import type { TestProject } from '../node/project'
-import type { TestSpecification } from '../node/spec'
+import type { TestSpecification } from '../node/test-specification'
 import type { EnvironmentOptions, VitestEnvironment } from '../node/types/config'
 import type { ContextTestEnvironment } from '../types/worker'
 import { promises as fs } from 'node:fs'
-import { groupBy } from './base'
 
-export const envsOrder: string[] = ['node', 'jsdom', 'happy-dom', 'edge-runtime']
-
-export interface FileByEnv {
-  file: string
-  env: VitestEnvironment
-  envOptions: EnvironmentOptions | null
-}
-
-export async function groupFilesByEnv(
-  files: Array<TestSpecification>,
-): Promise<Record<string, {
-  file: { filepath: string; testLocations: number[] | undefined }
-  project: TestProject
-  environment: ContextTestEnvironment
-}[]>> {
-  const filesWithEnv = await Promise.all(
-    files.map(async ({ moduleId: filepath, project, testLines }) => {
-      const code = await fs.readFile(filepath, 'utf-8')
+export async function getSpecificationsEnvironments(
+  specifications: Array<TestSpecification>,
+): Promise<WeakMap<TestSpecification, ContextTestEnvironment>> {
+  const environments = new WeakMap<TestSpecification, ContextTestEnvironment>()
+  const cache = new Map<string, string>()
+  await Promise.all(
+    specifications.map(async (spec) => {
+      const { moduleId: filepath, project } = spec
+      // reuse if projects have the same test files
+      let code = cache.get(filepath)
+      if (!code) {
+        code = await fs.readFile(filepath, 'utf-8')
+        cache.set(filepath, code)
+      }
 
       // 1. Check for control comments in the file
       let env = code.match(/@(?:vitest|jest)-environment\s+([\w-]+)\b/)?.[1]
@@ -43,16 +37,8 @@ export async function groupFilesByEnv(
           ? ({ [envKey]: envOptions } as EnvironmentOptions)
           : null,
       }
-      return {
-        file: {
-          filepath,
-          testLocations: testLines,
-        },
-        project,
-        environment,
-      }
+      environments.set(spec, environment)
     }),
   )
-
-  return groupBy(filesWithEnv, ({ environment }) => environment.name)
+  return environments
 }

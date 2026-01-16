@@ -1,11 +1,12 @@
 import type vm from 'node:vm'
 import type { EvaluatedModules } from 'vite/module-runner'
 import type { WorkerGlobalState } from '../../types/worker'
+import type { Traces } from '../../utils/traces'
 import type { ExternalModulesExecutor } from '../external-executor'
 import type { CreateImportMeta } from './moduleRunner'
 import fs from 'node:fs'
-import { isBuiltin } from 'node:module'
 import { isBareImport } from '@vitest/utils/helpers'
+import { isBrowserExternal, isBuiltin, toBuiltin } from '../../utils/modules'
 import { getCachedVitestImport } from './cachedResolver'
 import { listenForErrors } from './errorCatcher'
 import { unwrapId, VitestModuleEvaluator } from './moduleEvaluator'
@@ -13,9 +14,6 @@ import { VitestMocker } from './moduleMocker'
 import { VitestModuleRunner } from './moduleRunner'
 
 const { readFileSync } = fs
-
-const browserExternalId = '__vite-browser-external'
-const browserExternalLength = browserExternalId.length + 1 // 1 is ":"
 
 export const VITEST_VM_CONTEXT_SYMBOL: string = '__vitest_vm_context__'
 
@@ -26,6 +24,10 @@ export interface ContextModuleRunnerOptions {
   context?: vm.Context
   externalModulesExecutor?: ExternalModulesExecutor
   state: WorkerGlobalState
+  /**
+   * @internal
+   */
+  traces?: Traces // optional to keep backwards compat
   spyModule?: typeof import('@vitest/spy')
   createImportMeta?: CreateImportMeta
 }
@@ -34,6 +36,7 @@ const cwd = process.cwd()
 const isWindows = process.platform === 'win32'
 
 export function startVitestModuleRunner(options: ContextModuleRunnerOptions): VitestModuleRunner {
+  const traces = options.traces
   const state = (): WorkerGlobalState =>
     // @ts-expect-error injected untyped global
     globalThis.__vitest_worker__ || options.state
@@ -60,6 +63,8 @@ export function startVitestModuleRunner(options: ContextModuleRunnerOptions): Vi
   const evaluator = options.evaluator || new VitestModuleEvaluator(
     vm,
     {
+      traces,
+      evaluatedModules: options.evaluatedModules,
       get moduleExecutionInfo() {
         return state().moduleExecutionInfo
       },
@@ -74,6 +79,7 @@ export function startVitestModuleRunner(options: ContextModuleRunnerOptions): Vi
     spyModule: options.spyModule,
     evaluatedModules: options.evaluatedModules,
     evaluator,
+    traces,
     mocker: options.mocker,
     transport: {
       async fetchModule(id, importer, options) {
@@ -116,15 +122,27 @@ export function startVitestModuleRunner(options: ContextModuleRunnerOptions): Vi
             }
           }
 
-          if (isBuiltin(rawId) || rawId.startsWith(browserExternalId)) {
+          if (isBuiltin(rawId)) {
+            return { externalize: rawId, type: 'builtin' }
+          }
+
+          if (isBrowserExternal(rawId)) {
             return { externalize: toBuiltin(rawId), type: 'builtin' }
           }
 
+          // if module is invalidated, the worker will be recreated,
+          // so cached is always true in a single worker
+          if (options?.cached) {
+            return { cache: true }
+          }
+
+          const otelCarrier = traces?.getContextCarrier()
           const result = await rpc().fetch(
             id,
             importer,
             environment(),
             options,
+            otelCarrier,
           )
           if ('cached' in result) {
             const code = readFileSync(result.tmp, 'utf-8')
@@ -167,15 +185,4 @@ export function startVitestModuleRunner(options: ContextModuleRunnerOptions): Vi
   })
 
   return moduleRunner
-}
-
-export function toBuiltin(id: string): string {
-  if (id.startsWith(browserExternalId)) {
-    id = id.slice(browserExternalLength)
-  }
-
-  if (!id.startsWith('node:')) {
-    id = `node:${id}`
-  }
-  return id
 }

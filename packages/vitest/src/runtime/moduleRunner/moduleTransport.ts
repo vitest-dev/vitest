@@ -17,6 +17,11 @@ export class VitestTransport implements ModuleRunnerTransport {
       return { error: new Error(`Vitest Module Runner doesn't support ${event.event} event.`) }
     }
     const { name, data } = event.data
+    if (name === 'getBuiltins') {
+      // we return an empty array here to avoid client-side builtin check,
+      // as we need builtins to go through `fetchModule`
+      return { result: [] }
+    }
     if (name !== 'fetchModule') {
       return { error: new Error(`Unknown method: ${name}. Expected "fetchModule".`) }
     }

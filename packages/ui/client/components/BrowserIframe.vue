@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import type { ViewportSize } from '~/composables/browser'
+import { useWindowSize } from '@vueuse/core'
+import { computed } from 'vue'
 import { viewport } from '~/composables/browser'
 import { browserState } from '~/composables/client'
 import {
@@ -9,6 +11,7 @@ import {
   showRightPanel,
   updateBrowserPanel,
 } from '~/composables/navigation'
+import IconButton from './IconButton.vue'
 
 const sizes: Record<ViewportSize, [width: number, height: number]> = {
   'small-mobile': [320, 568],

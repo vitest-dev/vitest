@@ -1,3 +1,4 @@
+import type { Test } from '@vitest/runner'
 import type {
   ChaiPlugin,
   ExpectStatic,
@@ -14,9 +15,7 @@ import {
   getMatcherUtils,
   stringify,
 } from './jest-matcher-utils'
-
 import { equals, iterableEquality, subsetEquality } from './jest-utils'
-
 import { getState } from './state'
 import { wrapAssertion } from './utils'
 
@@ -35,9 +34,17 @@ function getMatcherState(
     iterableEquality,
     subsetEquality,
   }
+  let task: Test | undefined = util.flag(assertion, 'vitest-test')
+  const currentTestName = task?.fullTestName ?? ''
+
+  if (task?.type !== 'test') {
+    task = undefined
+  }
 
   const matcherState: MatcherState = {
     ...getState(expect),
+    task,
+    currentTestName,
     customTesters: getCustomEqualityTesters(),
     isNot,
     utils: jestUtils,

@@ -5,8 +5,10 @@ export const version: string = Vitest.version
 
 export { isValidApiRequest } from '../api/check'
 export { escapeTestName } from '../node/ast-collect'
+export type { CacheKeyIdGenerator, CacheKeyIdGeneratorContext } from '../node/cache/fsModuleCache'
 export { parseCLI } from '../node/cli/cac'
 export type { CliParseOptions } from '../node/cli/cac'
+export type { CliOptions } from '../node/cli/cli-api'
 export { startVitest } from '../node/cli/cli-api'
 export { resolveApiServerConfig } from '../node/config/resolveConfig'
 export type {
@@ -15,6 +17,7 @@ export type {
   Vitest,
   VitestOptions,
 } from '../node/core'
+export { BaseCoverageProvider } from '../node/coverage'
 export { createVitest } from '../node/create'
 export { GitNotFoundError, FilesNotFoundError as TestsNotFoundError } from '../node/errors'
 export { VitestPackageInstaller } from '../node/packageInstaller'
@@ -24,7 +27,48 @@ export { resolveFsAllow } from '../node/plugins/utils'
 export type { ProcessPool } from '../node/pool'
 export { getFilePoolName } from '../node/pool'
 export { createMethodsRPC } from '../node/pools/rpc'
+export type {
+  PoolOptions,
+  PoolRunnerInitializer,
+  PoolTask,
+  PoolWorker,
+  WorkerRequest,
+  WorkerResponse,
+} from '../node/pools/types'
+export { ForksPoolWorker } from '../node/pools/workers/forksWorker'
+export { ThreadsPoolWorker } from '../node/pools/workers/threadsWorker'
+export { TypecheckPoolWorker } from '../node/pools/workers/typecheckWorker'
+export { VmForksPoolWorker } from '../node/pools/workers/vmForksWorker'
+export { VmThreadsPoolWorker } from '../node/pools/workers/vmThreadsWorker'
 export type { SerializedTestProject, TestProject } from '../node/project'
+
+export {
+  BenchmarkReporter,
+  BenchmarkReportsMap,
+  DefaultReporter,
+  DotReporter,
+  GithubActionsReporter,
+  HangingProcessReporter,
+  JsonReporter,
+  JUnitReporter,
+  ReportersMap,
+  TapFlatReporter,
+  TapReporter,
+  VerboseBenchmarkReporter,
+  VerboseReporter,
+} from '../node/reporters'
+export type {
+  BaseReporter,
+  BenchmarkBuiltinReporters,
+  BuiltinReporterOptions,
+  BuiltinReporters,
+  JsonAssertionResult,
+  JsonTestResult,
+  JsonTestResults,
+  ReportedHookContext,
+  Reporter,
+  TestRunEndReason,
+} from '../node/reporters'
 export type { HTMLOptions } from '../node/reporters/html'
 export type { JsonOptions } from '../node/reporters/json'
 
@@ -54,8 +98,8 @@ export type {
   TestSequencer,
   TestSequencerConstructor,
 } from '../node/sequencers/types'
-export type { TestSpecification } from '../node/spec'
 export { registerConsoleShortcuts } from '../node/stdin'
+export type { TestSpecification, TestSpecificationOptions } from '../node/test-specification'
 export type { BenchmarkUserOptions } from '../node/types/benchmark'
 
 export type {
@@ -90,7 +134,6 @@ export type {
   EnvironmentOptions,
   InlineConfig,
   Pool,
-  PoolOptions,
   ProjectConfig,
   ResolvedConfig,
   ResolvedProjectConfig,
@@ -121,6 +164,7 @@ export type {
 export type { VitestPluginContext } from '../node/types/plugin'
 export type { TestRunResult } from '../node/types/tests'
 export type { WorkerContext } from '../node/types/worker'
+export { isFileServingAllowed } from '../node/vite'
 export { createViteLogger } from '../node/viteLogger'
 export type { WatcherTriggerPattern } from '../node/watcher'
 
@@ -145,18 +189,13 @@ export type {
   RunnerTestFile,
   RunnerTestSuite,
 } from './index'
-export type {
-  ReportedHookContext,
-  Reporter,
-  TestRunEndReason,
-} from './reporters'
 export { generateFileHash } from '@vitest/runner/utils'
 export type { SerializedError } from '@vitest/utils'
 
 export {
   esbuildVersion,
   isCSSRequest,
-  isFileServingAllowed,
+  isFileLoadingAllowed,
   parseAst,
   parseAstAsync,
   rollupVersion,

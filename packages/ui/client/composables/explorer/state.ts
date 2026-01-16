@@ -1,5 +1,7 @@
 import type { File } from '@vitest/runner'
 import type { FileTreeNode, Filter, FilteredTests, ProjectSortUIType, TreeFilterState, UITaskTreeNode } from './types'
+import { useLocalStorage } from '@vueuse/core'
+import { computed, reactive, ref, shallowRef } from 'vue'
 import { availableProjects } from '~/composables/client'
 import { explorerTree } from './index'
 

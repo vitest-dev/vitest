@@ -141,7 +141,7 @@ Final output after tests have finished:
    Duration  1.26s (transform 35ms, setup 1ms, collect 90ms, tests 1.47s, environment 0ms, prepare 267ms)
 ```
 
-If there is only one test file running, Vitest will output the full test tree of that file, simillar to the [`tree`](#tree-reporter) reporter. The default reporter will also print the test tree if there is at least one failed test in the file.
+If there is only one test file running, Vitest will output the full test tree of that file, similar to the [`tree`](#tree-reporter) reporter. The default reporter will also print the test tree if there is at least one failed test in the file.
 
 ```bash
 ✓ __tests__/file1.test.ts (2) 725ms
@@ -564,6 +564,18 @@ export default defineConfig({
 })
 ```
 
+If you are using [Annotations API](/guide/test-annotations), the reporter will automatically inline them in the GitHub UI. You can disable this by setting `displayAnnotations` option to `false`:
+
+```ts
+export default defineConfig({
+  test: {
+    reporters: [
+      ['github-actions', { displayAnnotations: false }],
+    ],
+  },
+})
+```
+
 ### Blob Reporter
 
 Stores test results on the machine so they can be later merged using [`--merge-reports`](/guide/cli#merge-reports) command.
@@ -602,7 +614,7 @@ export default defineConfig({
 ```
 :::
 
-Additionally, you can define your own [custom reporters](/advanced/reporters) and use them by specifying their file path:
+Additionally, you can define your own [custom reporters](/guide/advanced/reporters) and use them by specifying their file path:
 
 ```bash
 npx vitest --reporter=./path/to/reporter.ts

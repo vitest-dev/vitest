@@ -6,11 +6,18 @@
     "test": "vitest --typecheck.enabled"
   },
   "devDependencies": {
+    "@test/test-dep-config": "link:./deps/test-dep-config",
+    "@vitejs/test-dep-virtual": "file:./deps/test-dep-virtual",
     "@vitest/browser-playwright": "workspace:*",
     "@vitest/browser-preview": "workspace:*",
     "@vitest/browser-webdriverio": "workspace:*",
     "@vitest/test-dep-conditions": "file:./deps/test-dep-conditions",
-    "tinyexec": "^0.3.2",
+    "@vitest/test-dep-optimizer-external": "file:./deps/optimizer/external",
+    "@vitest/test-dep-optimizer-optimized": "file:./deps/optimizer/optimized",
+    "inline-dep": "file:./deps/vite-ssr-resolve/inline-dep",
+    "other-dep": "file:./deps/vite-ssr-resolve/other-dep",
+    "ssr-no-external-dep": "file:./deps/vite-ssr-resolve/ssr-no-external-dep",
+    "tinyexec": "^1.0.2",
     "vite": "latest",
     "vitest": "workspace:*"
   }

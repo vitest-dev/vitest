@@ -61,9 +61,11 @@ export async function VitestPlugin(
 
         // store defines for globalThis to make them
         // reassignable when running in worker in src/runtime/setup.ts
+        const originalDefine = { ...viteConfig.define } // stash original defines for browser mode
         const defines: Record<string, any> = deleteDefineConfig(viteConfig)
 
         ;(options as unknown as ResolvedConfig).defines = defines
+        ;(options as unknown as ResolvedConfig).viteDefine = originalDefine
 
         let open: string | boolean | undefined = false
 
@@ -74,6 +76,7 @@ export async function VitestPlugin(
         const resolveOptions = getDefaultResolveOptions()
 
         let config: ViteConfig = {
+          base: '/',
           root: viteConfig.test?.root || options.root,
           define: {
             // disable replacing `process.env.NODE_ENV` with static string by vite:client-inject
@@ -113,22 +116,6 @@ export async function VitestPlugin(
             },
           },
           test: {
-            poolOptions: {
-              threads: {
-                isolate:
-                  options.poolOptions?.threads?.isolate
-                  ?? options.isolate
-                  ?? testConfig.poolOptions?.threads?.isolate
-                  ?? viteConfig.test?.isolate,
-              },
-              forks: {
-                isolate:
-                  options.poolOptions?.forks?.isolate
-                  ?? options.isolate
-                  ?? testConfig.poolOptions?.forks?.isolate
-                  ?? viteConfig.test?.isolate,
-              },
-            },
             root: testConfig.root ?? viteConfig.test?.root,
             deps: testConfig.deps ?? viteConfig.test?.deps,
           },

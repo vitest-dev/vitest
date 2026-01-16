@@ -1,6 +1,6 @@
 import type { UserConfig as ViteConfig, Plugin as VitePlugin } from 'vite'
 import type { TestProject } from '../project'
-import type { BrowserConfigOptions, ResolvedConfig, TestProjectInlineConfiguration } from '../types/config'
+import type { BrowserConfigOptions, ResolvedConfig, TestProjectInlineConfiguration, UserConfig } from '../types/config'
 import { existsSync, readFileSync } from 'node:fs'
 import { deepMerge } from '@vitest/utils/helpers'
 import { basename, dirname, relative, resolve } from 'pathe'
@@ -93,15 +93,28 @@ export function WorkspaceVitestPlugin(
           }
         }
 
+        const vitestConfig: UserConfig = {
+          name: { label: name, color },
+        }
+
+        // always inherit the global `fsModuleCache` value even without `extends: true`
+        if (testConfig.experimental?.fsModuleCache == null && project.vitest.config.experimental?.fsModuleCache !== null) {
+          vitestConfig.experimental ??= {}
+          vitestConfig.experimental.fsModuleCache = project.vitest.config.experimental.fsModuleCache
+        }
+        if (testConfig.experimental?.fsModuleCachePath == null && project.vitest.config.experimental?.fsModuleCachePath !== null) {
+          vitestConfig.experimental ??= {}
+          vitestConfig.experimental.fsModuleCachePath = project.vitest.config.experimental.fsModuleCachePath
+        }
+
         return {
+          base: '/',
           environments: {
             __vitest__: {
               dev: {},
             },
           },
-          test: {
-            name: { label: name, color },
-          },
+          test: vitestConfig,
         }
       },
     },
@@ -112,6 +125,7 @@ export function WorkspaceVitestPlugin(
         this.meta.watchMode = false
       },
       config(viteConfig) {
+        const originalDefine = { ...viteConfig.define } // stash original defines for browser mode
         const defines: Record<string, any> = deleteDefineConfig(viteConfig)
 
         const testConfig = viteConfig.test || {}
@@ -184,6 +198,7 @@ export function WorkspaceVitestPlugin(
         }
 
         ;(config.test as ResolvedConfig).defines = defines
+        ;(config.test as ResolvedConfig).viteDefine = originalDefine
 
         const classNameStrategy
           = (typeof testConfig.css !== 'boolean'

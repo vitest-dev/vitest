@@ -67,7 +67,7 @@ export function createOrUpdateFileNode(
     fileNode.typecheck = !!file.meta && 'typecheck' in file.meta
     fileNode.state = file.result?.state
     fileNode.mode = file.mode
-    fileNode.duration = file.result?.duration
+    fileNode.duration = typeof file.result?.duration === 'number' ? Math.round(file.result.duration) : undefined
     fileNode.collectDuration = file.collectDuration
     fileNode.setupDuration = file.setupDuration
     fileNode.environmentLoad = file.environmentLoad
@@ -87,7 +87,7 @@ export function createOrUpdateFileNode(
       tasks: [],
       typecheck: !!file.meta && 'typecheck' in file.meta,
       indent: 0,
-      duration: file.result?.duration != null ? Math.round(file.result?.duration) : undefined,
+      duration: typeof file.result?.duration === 'number' ? Math.round(file.result.duration) : undefined,
       filepath: file.filepath,
       projectName: file.projectName || '',
       projectNameColor: explorerTree.colors.get(file.projectName || '') || getProjectNameColor(file.projectName),
@@ -150,8 +150,8 @@ export function createOrUpdateNode(
 ) {
   const node = explorerTree.nodes.get(parentId) as ParentTreeNode | undefined
   let taskNode: UITaskTreeNode | undefined
-  const duration = task.result?.duration != null
-    ? Math.round(task.result?.duration)
+  const duration = typeof task.result?.duration === 'number'
+    ? Math.round(task.result.duration)
     : undefined
   if (node) {
     taskNode = explorerTree.nodes.get(task.id)
