@@ -251,6 +251,7 @@ function matchesTags(filterTags: string[], testTags: string[]) {
   }
 
   let hasPositiveTag = false
+  let allNegative = true
   for (const tag of filterTags) {
     if (tag.startsWith('!')) {
       const ignoreTag = tag.slice(1)
@@ -258,9 +259,17 @@ function matchesTags(filterTags: string[], testTags: string[]) {
         return false
       }
     }
-    else if (testTags.includes(tag)) {
-      hasPositiveTag = true
+    else {
+      allNegative = false
+
+      if (testTags.includes(tag)) {
+        hasPositiveTag = true
+      }
     }
+  }
+  // if all tags are negative, and none matched, the test passes
+  if (hasPositiveTag || allNegative) {
+    return true
   }
   return hasPositiveTag
 }

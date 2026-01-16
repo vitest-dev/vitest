@@ -177,16 +177,16 @@ export function resolveConfig(
     })
 
     const availableTags: string[] = []
-    resolved.tags.forEach((tag) => {
+    resolved.tags?.forEach((tag) => {
       const match = filterTags.find(({ pattern }) => pattern.test(tag.name))
       if (match) {
         availableTags.push(match.negated ? `!${tag.name}` : tag.name)
       }
     })
+    if (!availableTags.length) {
+      throw new Error(`Cannot find any tags to filter based on the ${resolved.tag.map(t => `--tag ${t}`).join(' ')} option. Did you define them in "test.tags" in your config?`)
+    }
     resolved.tag = availableTags
-  }
-  else {
-    resolved.tag = []
   }
 
   resolved.name = typeof options.name === 'string'

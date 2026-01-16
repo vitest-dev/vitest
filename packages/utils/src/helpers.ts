@@ -368,3 +368,7 @@ export function deepMerge<T extends object = object>(
 
   return deepMerge(target, ...sources)
 }
+
+export function unique<T>(array: T[]): T[] {
+  return Array.from(new Set(array))
+}

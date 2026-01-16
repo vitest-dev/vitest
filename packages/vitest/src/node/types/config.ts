@@ -1041,6 +1041,7 @@ export interface ResolvedConfig
     | 'name'
     | 'vmMemoryLimit'
     | 'fileParallelism'
+    | 'tag'
   > {
   mode: VitestRunMode
 
@@ -1111,6 +1112,7 @@ export interface ResolvedConfig
 
   vmMemoryLimit?: UserConfig['vmMemoryLimit']
   dumpDir?: string
+  tag?: string[]
 }
 
 type NonProjectOptions

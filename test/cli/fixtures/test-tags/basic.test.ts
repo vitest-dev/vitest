@@ -1,0 +1,11 @@
+import { describe, test } from 'vitest'
+
+describe('suite 1', { tags: ['suite'] }, () => {
+  test('test 1', () => {})
+  test('test 2', { tags: ['test'] }, () => {})
+
+  describe('suite 2', { tags: ['suite 2', 'suite'] }, () => {
+    test('test 3', () => {})
+    test('test 4', { tags: ['test 2'] }, () => {})
+  })
+})
