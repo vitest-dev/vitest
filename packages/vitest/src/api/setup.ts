@@ -147,6 +147,13 @@ export function setup(ctx: Vitest, _server?: ViteDevServer): void {
           return result
         },
         async getModuleGraph(project, id, browser): Promise<ModuleGraphData> {
+          // If we're in merge-reports mode and have cached module graph data, return it
+          if (ctx.state.blobs?.moduleGraphData) {
+            const cachedData = ctx.state.blobs.moduleGraphData[project]?.[id]
+            if (cachedData) {
+              return cachedData
+            }
+          }
           return getModuleGraph(ctx, project, id, browser)
         },
         async updateSnapshot(file?: File) {

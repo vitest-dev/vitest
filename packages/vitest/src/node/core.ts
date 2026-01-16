@@ -542,8 +542,8 @@ export class Vitest {
         throw new Error('Cannot merge reports when `--reporter=blob` is used. Remove blob reporter from the config first.')
       }
 
-      const { files, errors, coverages, executionTimes } = await readBlobs(this.version, directory || this.config.mergeReports, this.projects)
-      this.state.blobs = { files, errors, coverages, executionTimes }
+      const { files, errors, coverages, executionTimes, moduleGraphData } = await readBlobs(this.version, directory || this.config.mergeReports, this.projects)
+      this.state.blobs = { files, errors, coverages, executionTimes, moduleGraphData }
 
       await this.report('onInit', this)
 
