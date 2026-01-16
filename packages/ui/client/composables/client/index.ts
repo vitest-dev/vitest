@@ -69,6 +69,7 @@ export const client = (function createVitestClient() {
 
 export const config = shallowRef<SerializedConfig>({} as any)
 export const status = ref<WebSocketStatus>('CONNECTING')
+export const availableProjects = shallowRef<string[]>([])
 
 export const current = computed(() => {
   const currentFileId = activeFileId.value
@@ -184,6 +185,7 @@ watch(
           return file
         })
       }
+      availableProjects.value = projects.map(p => p.name)
       explorerTree.loadFiles(files, projects)
       client.state.collectFiles(files)
       explorerTree.startRun()

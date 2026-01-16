@@ -2,6 +2,7 @@ import type { File, Task } from '@vitest/runner'
 import type {
   FileTreeNode,
   ParentTreeNode,
+  ProjectSortUIType,
   SuiteTreeNode,
   TestTreeNode,
   UITaskTreeNode,
@@ -32,10 +33,28 @@ export function isParentNode(node: UITaskTreeNode): node is FileTreeNode | Suite
   return node.type === 'file' || node.type === 'suite'
 }
 
-export function sortedRootTasks(tasks = explorerTree.root.tasks) {
-  return tasks.sort((a, b) => {
+export function getSortedRootTasks(sort: ProjectSortUIType, tasks = explorerTree.root.tasks) {
+  const sorted = [...tasks]
+
+  sorted.sort((a, b) => {
+    if (sort === 'asc' || sort === 'desc') {
+      const projectA = a.projectName || ''
+      const projectB = b.projectName || ''
+      if (projectA !== projectB) {
+        if (sort === 'asc') {
+          return projectA.localeCompare(projectB)
+        }
+        else {
+          return projectB.localeCompare(projectA)
+        }
+      }
+    }
+    // Default sort (by filepath, then project) is the fallback for project sort
+    // and the primary for default sort
     return `${a.filepath}:${a.projectName}`.localeCompare(`${b.filepath}:${b.projectName}`)
   })
+
+  return sorted
 }
 
 export function createOrUpdateFileNode(
