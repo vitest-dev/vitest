@@ -50,6 +50,7 @@ export class ExplorerTree {
       testsIgnore: 0,
       testsSkipped: 0,
       testsTodo: 0,
+      testsExpectedFail: 0,
       totalTests: 0,
       failedSnapshot: false,
       failedSnapshotEnabled: false,

@@ -293,6 +293,7 @@ export function resetCollectorInfo(summary: CollectorInfo) {
   summary.testsIgnore = 0
   summary.testsSkipped = 0
   summary.testsTodo = 0
+  summary.testsExpectedFail = 0
   summary.totalTests = 0
   summary.failedSnapshotEnabled = false
 }
@@ -319,6 +320,7 @@ function collectData(
     testsIgnore: 0,
     testsSkipped: 0,
     testsTodo: 0,
+    testsExpectedFail: 0,
     totalTests: 0,
     failedSnapshot: false,
     failedSnapshotEnabled: false,
@@ -353,6 +355,7 @@ function collectData(
       total,
       ignored,
       todo,
+      expectedFail,
     } = collectTests(f)
 
     data.totalTests += total
@@ -360,6 +363,7 @@ function collectData(
     data.testsSuccess += success
     data.testsSkipped += skipped
     data.testsTodo += todo
+    data.testsExpectedFail += expectedFail
     data.testsIgnore += ignored
   }
 
@@ -373,8 +377,8 @@ function collectData(
   summary.filesTodo = data.filesTodo
   summary.testsFailed = data.testsFailed
   summary.testsSuccess = data.testsSuccess
-  summary.testsFailed = data.testsFailed
   summary.testsTodo = data.testsTodo
+  summary.testsExpectedFail = data.testsExpectedFail
   summary.testsIgnore = data.testsIgnore
   summary.testsSkipped = data.testsSkipped
   summary.totalTests = data.totalTests
@@ -389,6 +393,7 @@ function collectTests(file: File, search = '', filter?: Filter) {
     total: 0,
     ignored: 0,
     todo: 0,
+    expectedFail: 0,
   } satisfies CollectFilteredTests
 
   for (const t of testsCollector(file)) {
@@ -398,7 +403,13 @@ function collectTests(file: File, search = '', filter?: Filter) {
         data.failed++
       }
       else if (t.result?.state === 'pass') {
-        data.success++
+        // Check if this is an expected failure
+        if (t.fails) {
+          data.expectedFail++
+        }
+        else {
+          data.success++
+        }
       }
       else if (t.mode === 'skip') {
         data.ignored++
@@ -411,7 +422,7 @@ function collectTests(file: File, search = '', filter?: Filter) {
     }
   }
 
-  data.running = data.total - data.failed - data.success - data.ignored
+  data.running = data.total - data.failed - data.success - data.ignored - data.expectedFail
 
   return data
 }
