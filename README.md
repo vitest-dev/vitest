@@ -5,7 +5,7 @@
     <picture>
       <source media="(prefers-color-scheme: dark)" srcset="https://vitest.dev/vitest-light.svg">
       <source media="(prefers-color-scheme: light)" srcset="https://vitest.dev/vitest-dark.svg">
-      <img alt="rolldown logo" src="https://vitest.dev/vitest-dark.svg" height="60">
+      <img alt="Vitest logo" src="https://vitest.dev/vitest-dark.svg" height="60">
     </picture>
   </a>
   <br>

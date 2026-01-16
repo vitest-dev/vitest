@@ -19,6 +19,9 @@ const external = [
   ...Object.keys(pkg.dependencies || {}),
   ...Object.keys(pkg.peerDependencies || {}),
   /^@?vitest(\/|$)/,
+
+  // We bundle istanbul-lib-instrument but don't want to bundle its babel dependency
+  '@babel/core',
 ]
 
 const dtsUtils = createDtsUtils()
@@ -29,6 +32,7 @@ const plugins = [
   json(),
   commonjs({
     // "istanbul-lib-source-maps > @jridgewell/trace-mapping" is not CJS
+    // "istanbul-lib-instrument > @jridgewell/trace-mapping" is not CJS
     esmExternals: ['@jridgewell/trace-mapping'],
   }),
   oxc({

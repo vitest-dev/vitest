@@ -118,10 +118,6 @@ export default new MyReporter()
 ```
 :::
 
-::: tip DEPRECATION NOTICE
-This method was added in Vitest 3, replacing `onPathsCollected` and `onSpecsCollected`, both of which are now deprecated.
-:::
-
 ## onTestRunEnd
 
 ```ts
@@ -183,10 +179,6 @@ class MyReporter implements Reporter {
 
 export default new MyReporter()
 ```
-:::
-
-::: tip DEPRECATION NOTICE
-This method was added in Vitest 3, replacing `onFinished`, which is now deprecated.
 :::
 
 ## onCoverage

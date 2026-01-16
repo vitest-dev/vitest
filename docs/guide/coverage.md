@@ -350,6 +350,10 @@ Comments which are considered as [legal comments](https://esbuild.github.io/api/
 You can include a `@preserve` keyword in the ignore hint.
 Beware that these ignore hints may now be included in final production build as well.
 
+::: tip
+Follow https://github.com/vitest-dev/vitest/issues/2021 for updates about `@preserve` usage.
+:::
+
 ```diff
 -/* istanbul ignore if */
 +/* istanbul ignore if -- @preserve */
@@ -363,6 +367,30 @@ if (condition) {
 ### Examples
 
 ::: code-group
+
+```ts [lines: start/stop]
+/* istanbul ignore start -- @preserve */
+if (parameter) { // [!code error]
+  console.log('Ignored') // [!code error]
+} // [!code error]
+else { // [!code error]
+  console.log('Ignored') // [!code error]
+} // [!code error]
+/* istanbul ignore stop -- @preserve */
+
+console.log('Included')
+
+/* v8 ignore start -- @preserve */
+if (parameter) { // [!code error]
+  console.log('Ignored') // [!code error]
+} // [!code error]
+else { // [!code error]
+  console.log('Ignored') // [!code error]
+} // [!code error]
+/* v8 ignore stop -- @preserve */
+
+console.log('Included')
+```
 
 ```ts [if else]
 /* v8 ignore if -- @preserve */

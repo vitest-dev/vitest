@@ -139,9 +139,9 @@ export class V8CoverageProvider extends BaseCoverageProvider<ResolvedCoverageOpt
   }
 
   async parseConfigModule(configFilePath: string): Promise<ProxifiedModule<any>> {
-    return parseModule(
-      await fs.readFile(configFilePath, 'utf8'),
-    )
+    const contents = await fs.readFile(configFilePath, 'utf8')
+
+    return parseModule(`${contents}${this.autoUpdateMarker}`)
   }
 
   private async getCoverageMapForUncoveredFiles(testedFiles: string[]): Promise<CoverageMap> {

@@ -302,6 +302,21 @@ function rerunTestSpecifications(
 
 This method emits `reporter.onWatcherRerun` and `onTestsRerun` events, then it runs tests with [`runTestSpecifications`](#runtestspecifications). If there were no errors in the main process, it will emit `reporter.onWatcherStart` event.
 
+## runTestFiles <Version>4.1.0</Version> {#runtestfiles}
+
+```ts
+function runTestFiles(
+  filepaths: string[],
+  allTestsRun = false
+): Promise<TestRunResult>
+```
+
+This automatically creates specifications to run based on filepaths filters.
+
+This is different from [`start`](#start) because it does not create a coverage provider, trigger `onInit` and `onWatcherStart` events, or throw an error if there are no files to run (in this case, the function will return empty arrays without triggering a test run).
+
+This function accepts the same filters as [`start`](#start) and the CLI.
+
 ## updateSnapshot
 
 ```ts

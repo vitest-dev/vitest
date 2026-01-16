@@ -123,7 +123,7 @@ function astParseFile(filepath: string, code: string) {
       const property = callee?.property?.name
       let mode = !property || property === name ? 'run' : property
       // they will be picked up in the next iteration
-      if (['each', 'for', 'skipIf', 'runIf'].includes(mode)) {
+      if (['each', 'for', 'skipIf', 'runIf', 'extend', 'scoped'].includes(mode)) {
         return
       }
 
@@ -308,7 +308,10 @@ function createFileTask(
             '->',
             `${originalLocation.line}:${originalLocation.column}`,
           )
-          location = originalLocation
+          location = {
+            line: originalLocation.line,
+            column: originalLocation.column,
+          }
         }
         else {
           debug?.(
@@ -335,6 +338,7 @@ function createFileTask(
           file,
           tasks: [],
           mode,
+          each: definition.dynamic,
           name: definition.name,
           fullName: createTaskName([latestSuite.fullName, definition.name]),
           fullTestName: createTaskName([latestSuite.fullTestName, definition.name]),
@@ -354,6 +358,7 @@ function createFileTask(
         id: '',
         suite: latestSuite,
         file,
+        each: definition.dynamic,
         mode,
         context: {} as any, // not used on the server
         name: definition.name,
@@ -421,11 +426,11 @@ export async function astCollectTests(
 }
 
 async function transformSSR(project: TestProject, filepath: string) {
-  const request = await project.vite.transformRequest(filepath, { ssr: false })
-  if (!request) {
-    return null
+  const environment = project.config.environment
+  if (environment === 'jsdom' || environment === 'happy-dom') {
+    return project.vite.environments.client.transformRequest(filepath)
   }
-  return await project.vite.ssrTransform(request.code, request.map, filepath)
+  return project.vite.environments.ssr.transformRequest(filepath)
 }
 
 function markDynamicTests(tasks: Task[]) {

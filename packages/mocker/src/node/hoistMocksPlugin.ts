@@ -237,9 +237,9 @@ export function hoistMocks(
   }
 
   const declaredConst = new Set<string>()
-  const hoistedNodes: Positioned<
+  const hoistedNodes: Set<Positioned<
   CallExpression | VariableDeclaration | AwaitExpression
-  >[] = []
+  >> = new Set()
 
   function createSyntaxError(node: Positioned<Node>, message: string) {
     const _error = new SyntaxError(message)
@@ -304,8 +304,15 @@ export function hoistMocks(
   }
 
   const usedUtilityExports = new Set<string>()
+  let hasImportMetaVitest = false
 
   esmWalker(ast, {
+    onImportMeta(node) {
+      const property = code.slice(node.end, node.end + 7) // '.vitest'.length
+      if (property === '.vitest') {
+        hasImportMetaVitest = true
+      }
+    },
     onIdentifier(id, info, parentStack) {
       const binding = idToImportMap.get(id.name)
       if (!binding) {
@@ -382,7 +389,7 @@ export function hoistMocks(
               )
             }
           }
-          hoistedNodes.push(node)
+          hoistedNodes.add(node)
         }
         // vi.doMock(import('./path')) -> vi.doMock('./path')
         // vi.doMock(await import('./path')) -> vi.doMock('./path')
@@ -420,7 +427,7 @@ export function hoistMocks(
               'Cannot export hoisted variable. You can control hoisting behavior by placing the import from this file first.',
             )
             // hoist "const variable = vi.hoisted(() => {})"
-            hoistedNodes.push(declarationNode)
+            hoistedNodes.add(declarationNode)
           }
           else {
             const awaitedExpression = findNodeAround(
@@ -430,7 +437,7 @@ export function hoistMocks(
             )?.node as Positioned<AwaitExpression> | undefined
             // hoist "await vi.hoisted(async () => {})" or "vi.hoisted(() => {})"
             const moveNode = awaitedExpression?.argument === node ? awaitedExpression : node
-            hoistedNodes.push(moveNode)
+            hoistedNodes.add(moveNode)
           }
         }
       }
@@ -444,7 +451,11 @@ export function hoistMocks(
       && isIdentifier(callee.property)
       && isIdentifier(callee.object)
     ) {
-      return `${callee.object.name}.${callee.property.name}()`
+      const argument = node.arguments[0] as Positioned<Expression>
+      const argStr = argument.type === 'Literal' || argument.type === 'ImportExpression'
+        ? code.slice(argument.start, argument.end)
+        : ''
+      return `${callee.object.name}.${callee.property.name}(${argStr})`
     }
     return '"hoisted method"'
   }
@@ -481,10 +492,11 @@ export function hoistMocks(
   }
 
   // validate hoistedNodes doesn't have nodes inside other nodes
-  for (let i = 0; i < hoistedNodes.length; i++) {
-    const node = hoistedNodes[i]
-    for (let j = i + 1; j < hoistedNodes.length; j++) {
-      const otherNode = hoistedNodes[j]
+  const arrayNodes = Array.from(hoistedNodes)
+  for (let i = 0; i < arrayNodes.length; i++) {
+    const node = arrayNodes[i]
+    for (let j = i + 1; j < arrayNodes.length; j++) {
+      const otherNode = arrayNodes[j]
 
       if (node.start >= otherNode.start && node.end <= otherNode.end) {
         throw createError(otherNode, node)
@@ -495,8 +507,29 @@ export function hoistMocks(
     }
   }
 
+  // validate that hoisted nodes are defined on the top level
+  // ignore `import.meta.vitest` because it needs to be inside an IfStatement
+  // and it can be used anywhere in the code (inside methods too)
+  if (!hasImportMetaVitest) {
+    for (const node of ast.body as Node[]) {
+      hoistedNodes.delete(node as any)
+      if (node.type === 'ExpressionStatement') {
+        hoistedNodes.delete(node.expression as any)
+      }
+    }
+
+    for (const invalidNode of hoistedNodes) {
+      console.warn(
+        `Warning: A ${getNodeName(getNodeCall(invalidNode))} call in "${id}" is not at the top level of the module. `
+        + `Although it appears nested, it will be hoisted and executed before any tests run. `
+        + `Move it to the top level to reflect its actual execution order. This will become an error in a future version.\n`
+        + `See: https://vitest.dev/guide/mocking/modules#how-it-works`,
+      )
+    }
+  }
+
   // hoist vi.mock/vi.hoisted
-  for (const node of hoistedNodes) {
+  for (const node of arrayNodes) {
     const end = getNodeTail(code, node)
     // don't hoist into itself if it's already at the top
     if (hoistIndex === end || hoistIndex === node.start) {
@@ -530,7 +563,7 @@ export function hoistMocks(
     }
   }
 
-  if (!hoistedModuleImported && hoistedNodes.length) {
+  if (!hoistedModuleImported && arrayNodes.length > 0) {
     const utilityImports = [...usedUtilityExports]
     // "vi" or "vitest" is imported from a module other than "vitest"
     if (utilityImports.some(name => idToImportMap.has(name))) {

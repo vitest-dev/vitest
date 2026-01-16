@@ -47,7 +47,13 @@ export interface MatcherState {
   customTesters: Array<Tester>
   assertionCalls: number
   currentTestName?: string
+  /**
+   * @deprecated exists only in types
+   */
   dontThrow?: () => void
+  /**
+   * @deprecated exists only in types
+   */
   error?: Error
   equals: (
     a: unknown,
@@ -55,15 +61,19 @@ export interface MatcherState {
     customTesters?: Array<Tester>,
     strictCheck?: boolean,
   ) => boolean
+  /**
+   * @deprecated exists only in types
+   */
   expand?: boolean
   expectedAssertionsNumber?: number | null
   expectedAssertionsNumberErrorGen?: (() => Error) | null
   isExpectingAssertions?: boolean
   isExpectingAssertionsError?: Error | null
   isNot: boolean
-  // environment: VitestEnvironment
   promise: string
-  // snapshotState: SnapshotState
+  /**
+   * @deprecated exists only in types
+   */
   suppressedErrors: Array<Error>
   testPath?: string
   utils: ReturnType<typeof getMatcherUtils> & {
