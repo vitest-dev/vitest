@@ -1,6 +1,5 @@
 import type { File } from '@vitest/runner'
 import type { SerializedError } from '@vitest/utils'
-import type { ModuleGraphData } from '../../types/general'
 import type { Vitest } from '../core'
 import type { TestProject } from '../project'
 import type { Reporter } from '../types/reporter'
@@ -245,75 +244,11 @@ export async function readBlobs(
   const coverages = blobs.map(blob => blob.coverage)
   const executionTimes = blobs.map(blob => blob.executionTime)
 
-  // Build moduleGraphData for API compatibility
-  const moduleGraphData: Record<string, Record<string, ModuleGraphData>> = {}
-
-  // Collect all edges from all blobs
-  const allEdges: number[][] = []
-  blobs.forEach((blob) => {
-    if (blob.graphEdges && blob.graphEdges.length > 0) {
-      allEdges.push(...blob.graphEdges)
-    }
-  })
-
-  // Only build moduleGraphData if we have edges
-  if (allEdges.length > 0) {
-    // Build a graph from edges: moduleId -> [dependency IDs]
-    const edgeGraph = new Map<string, Set<string>>()
-    allEdges.forEach(([sourceIdx, targetIdx]) => {
-      const sourceModule = allModules[sourceIdx]
-      const targetModule = allModules[targetIdx]
-      if (sourceModule && targetModule) {
-        const sourceId = sourceModule[0]
-        const targetId = targetModule[0]
-        if (!edgeGraph.has(sourceId)) {
-          edgeGraph.set(sourceId, new Set())
-        }
-        edgeGraph.get(sourceId)!.add(targetId)
-      }
-    })
-
-    // Build moduleGraphData for each test file
-    files.forEach((file) => {
-      const projectName = file.projectName || ''
-      moduleGraphData[projectName] ??= {}
-
-      const graph: Record<string, string[]> = {}
-      const inlinedSet = new Set<string>()
-      const externalizedSet = new Set<string>()
-
-      // Walk the graph from the test file
-      const seen = new Set<string>()
-      const walk = (moduleId: string) => {
-        if (seen.has(moduleId)) {
-          return
-        }
-        seen.add(moduleId)
-        inlinedSet.add(moduleId)
-
-        const deps = edgeGraph.get(moduleId)
-        if (deps && deps.size > 0) {
-          graph[moduleId] = Array.from(deps)
-          deps.forEach(depId => walk(depId))
-        }
-      }
-
-      walk(file.filepath)
-
-      moduleGraphData[projectName][file.filepath] = {
-        graph,
-        externalized: Array.from(externalizedSet),
-        inlined: Array.from(inlinedSet),
-      }
-    })
-  }
-
   return {
     files,
     errors,
     coverages,
     executionTimes,
-    moduleGraphData,
   }
 }
 
@@ -322,7 +257,6 @@ export interface MergedBlobs {
   errors: unknown[]
   coverages: unknown[]
   executionTimes: number[]
-  moduleGraphData: Record<string, Record<string, ModuleGraphData>>
 }
 
 type MergeReport = [
