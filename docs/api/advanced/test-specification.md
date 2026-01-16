@@ -83,7 +83,7 @@ A regexp that matches the name of the test in this module. This value will overr
 
 The ids of tasks inside of this specification to run.
 
-## testTags <Version>4.1.0</Version> {#testids}
+## testTags <Version>4.1.0</Version> {#testtags}
 
 The [tags](/guide/test-tags) that a test must have in order to be included in the run.
 

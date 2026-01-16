@@ -474,6 +474,10 @@ export default ({ mode }: { mode: string }) => {
                 link: '/config/sequence',
               },
               {
+                text: 'tags',
+                link: '/config/tags',
+              },
+              {
                 text: 'typecheck',
                 link: '/config/typecheck',
               },
