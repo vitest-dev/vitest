@@ -113,7 +113,7 @@ await userEvent.click(page.getByRole('button'), {
 When enabled, Vitest uses Playwright's [persistent context](https://playwright.dev/docs/api/class-browsertype#browser-type-launch-persistent-context) instead of a regular browser context. This allows browser state (cookies, localStorage, DevTools settings, etc.) to persist between test runs.
 
 ::: warning
-This option is ignored when running tests in parallel (e.g. when headless with [`fileParallelism`](/config/file-parallelism) enalbed) since persistent context cannot be shared across parallel sessions.
+This option is ignored when running tests in parallel (e.g. when headless with [`fileParallelism`](/config/fileparallelism) enalbed) since persistent context cannot be shared across parallel sessions.
 :::
 
 - When set to `true`, the user data is stored in `./node_modules/.cache/vitest-playwright-user-data`
