@@ -94,6 +94,8 @@ function clearTaskResult(task: RunnerTask) {
   const node = explorerTree.nodes.get(task.id)
   if (node) {
     node.state = undefined
+    // update task mode to allow change icon on skipped tests
+    task.mode = 'run'
     node.duration = undefined
     if (isTaskSuite(task)) {
       for (const t of task.tasks) {
