@@ -226,8 +226,85 @@ export const utils: {
    */
   configurePrettyDOM(options: StringifyOptions): void
   /**
+   * Creates a filter function for prettyDOM that filters out nodes based on CSS selectors.
+   * This is similar to Testing Library's defaultIgnore configuration.
+   * @experimental
+   */
+  createNodeFilter(selector: string): (node: any) => boolean
+  /**
    * Creates "Cannot find element" error. Useful for custom locators.
    */
   getElementError(selector: string, container?: Element): Error
 }
 ```
+
+### configurePrettyDOM
+
+<Version>4.1.0</Version>
+
+The `configurePrettyDOM` function allows you to configure default options for the `prettyDOM` and `debug` functions. This is useful for customizing how HTML is formatted in test failure messages.
+
+```ts
+import { utils } from 'vitest/browser'
+
+utils.configurePrettyDOM({
+  maxDepth: 3,
+  filterNode: utils.createNodeFilter('script, style')
+})
+```
+
+#### Options
+
+- **`maxDepth`** - Maximum depth to print nested elements (default: `Infinity`)
+- **`maxLength`** - Maximum length of the output string (default: `7000`)
+- **`filterNode`** - A function to filter out nodes from the output. Return `false` to exclude a node.
+- **`highlight`** - Enable syntax highlighting (default: `true`)
+- And other options from [`pretty-format`](https://www.npmjs.com/package/@vitest/pretty-format)
+
+### createNodeFilter
+
+<Version>4.1.0</Version>
+
+The `createNodeFilter` function creates a filter function that can be used with `configurePrettyDOM` or passed directly to `prettyDOM`/`debug`. It filters out DOM nodes based on CSS selectors.
+
+This is particularly useful for hiding irrelevant markup (like scripts, styles, or hidden elements) from test failure messages, making it easier to identify the actual cause of failures.
+
+```ts
+import { utils } from 'vitest/browser'
+
+// Filter out common noise elements
+const filterNode = utils.createNodeFilter('script, style, [data-test-hide]')
+
+// Use with configurePrettyDOM (affects all debug/prettyDOM calls)
+utils.configurePrettyDOM({ filterNode })
+
+// Or use directly with prettyDOM
+const html = utils.prettyDOM(element, undefined, { filterNode })
+```
+
+#### Common Patterns
+
+**Filter out scripts and styles:**
+```ts
+utils.createNodeFilter('script, style')
+```
+
+**Hide specific elements with data attributes:**
+```ts
+utils.createNodeFilter('[data-test-hide]')
+```
+
+**Hide nested content within an element:**
+```ts
+// Hides all children of elements with data-test-hide-content
+utils.createNodeFilter('[data-test-hide-content] *')
+```
+
+**Combine multiple selectors:**
+```ts
+utils.createNodeFilter('script, style, [data-test-hide], svg')
+```
+
+::: tip
+This feature is inspired by Testing Library's [`defaultIgnore`](https://testing-library.com/docs/dom-testing-library/api-configuration/#defaultignore) configuration.
+:::

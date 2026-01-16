@@ -131,6 +131,7 @@ test('filterNode option filters out matching elements', async () => {
   expect(result).not.toContain('color: red')
   expect(result).not.toContain('hidden content')
   expect(result).toContain('visible content')
+  expect(result).toMatchInlineSnapshot()
 })
 
 test('filterNode with configurePrettyDOM affects default behavior', async () => {

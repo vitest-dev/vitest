@@ -515,6 +515,7 @@ function configurePrettyDOM(options: StringifyOptions) {
  *
  * @param selector - CSS selector to filter out (e.g., 'script, style, [data-test-hide]')
  * @returns A filter function that can be used with configurePrettyDOM
+ * @experimental
  */
 function createNodeFilter(selector: string): (node: any) => boolean {
   const ELEMENT_NODE = 1
