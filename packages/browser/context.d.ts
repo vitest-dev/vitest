@@ -870,25 +870,6 @@ export const utils: {
    */
   configurePrettyDOM(options: StringifyOptions): void
   /**
-   * Creates a filter function for prettyDOM that filters out nodes based on CSS selectors.
-   * This is similar to Testing Library's defaultIgnore configuration.
-   * 
-   * @example
-   * ```ts
-   * import { utils } from 'vitest/browser'
-   * 
-   * // Filter out script, style, and elements with data-test-hide attribute
-   * utils.configurePrettyDOM({
-   *   filterNode: utils.createNodeFilter('script, style, [data-test-hide]')
-   * })
-   * ```
-   * 
-   * @param selector - CSS selector to filter out (e.g., 'script, style, [data-test-hide]')
-   * @returns A filter function that can be used with configurePrettyDOM
-   * @experimental
-   */
-  createNodeFilter(selector: string): (node: any) => boolean
-  /**
    * Creates "Cannot find element" error. Useful for custom locators.
    */
   getElementError(selector: string, container?: Element): Error

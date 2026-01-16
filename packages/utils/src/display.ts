@@ -43,7 +43,7 @@ const PLUGINS = [
 
 export interface StringifyOptions extends PrettyFormatOptions {
   maxLength?: number
-  filterNode?: (node: any) => boolean
+  filterNode?: string | ((node: any) => boolean)
 }
 
 export function stringify(
@@ -54,11 +54,16 @@ export function stringify(
   const MAX_LENGTH = maxLength ?? 10000
   let result
 
-  const plugins = filterNode
+  // Convert string selector to filter function
+  const filterFn = typeof filterNode === 'string'
+    ? createNodeFilterFromSelector(filterNode)
+    : filterNode
+
+  const plugins = filterFn
     ? [
         ReactTestComponent,
         ReactElement,
-        createDOMElementFilter(filterNode),
+        createDOMElementFilter(filterFn),
         DOMCollection,
         Immutable,
         AsymmetricMatcher,
@@ -89,6 +94,30 @@ export function stringify(
   return result.length >= MAX_LENGTH && maxDepth > 1
     ? stringify(object, Math.floor(Math.min(maxDepth, Number.MAX_SAFE_INTEGER) / 2), { maxLength, filterNode, ...options })
     : result
+}
+
+function createNodeFilterFromSelector(selector: string): (node: any) => boolean {
+  const ELEMENT_NODE = 1
+  const COMMENT_NODE = 8
+
+  return (node: any) => {
+    // Filter out comments
+    if (node.nodeType === COMMENT_NODE) {
+      return false
+    }
+
+    // Filter out elements matching the selector
+    if (node.nodeType === ELEMENT_NODE && node.matches) {
+      try {
+        return !node.matches(selector)
+      }
+      catch {
+        return true
+      }
+    }
+
+    return true
+  }
 }
 
 export const formatRegExp: RegExp = /%[sdjifoOc%]/g
