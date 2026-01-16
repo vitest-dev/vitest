@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import type { File, Task } from '@vitest/runner'
+import { useResizeObserver } from '@vueuse/core'
 import { hideAllPoppers } from 'floating-vue'
+import { computed, ref } from 'vue'
 
 // @ts-expect-error missing types
 import { RecycleScroller } from 'vue-virtual-scroller'
-
 import { availableProjects, config } from '~/composables/client'
 import { useSearch } from '~/composables/explorer/search'
 import { ALL_PROJECTS, projectSort } from '~/composables/explorer/state'
