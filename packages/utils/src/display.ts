@@ -1,5 +1,6 @@
 import type { PrettyFormatOptions } from '@vitest/pretty-format'
 import {
+  createDOMElementFilter,
   format as prettyFormat,
   plugins as prettyFormatPlugins,
 } from '@vitest/pretty-format'
@@ -42,22 +43,34 @@ const PLUGINS = [
 
 export interface StringifyOptions extends PrettyFormatOptions {
   maxLength?: number
+  filterNode?: (node: any) => boolean
 }
 
 export function stringify(
   object: unknown,
   maxDepth = 10,
-  { maxLength, ...options }: StringifyOptions = {},
+  { maxLength, filterNode, ...options }: StringifyOptions = {},
 ): string {
   const MAX_LENGTH = maxLength ?? 10000
   let result
+
+  const plugins = filterNode
+    ? [
+        ReactTestComponent,
+        ReactElement,
+        createDOMElementFilter(filterNode),
+        DOMCollection,
+        Immutable,
+        AsymmetricMatcher,
+      ]
+    : PLUGINS
 
   try {
     result = prettyFormat(object, {
       maxDepth,
       escapeString: false,
       // min: true,
-      plugins: PLUGINS,
+      plugins,
       ...options,
     })
   }
@@ -67,14 +80,14 @@ export function stringify(
       maxDepth,
       escapeString: false,
       // min: true,
-      plugins: PLUGINS,
+      plugins,
       ...options,
     })
   }
 
   // Prevents infinite loop https://github.com/vitest-dev/vitest/issues/7249
   return result.length >= MAX_LENGTH && maxDepth > 1
-    ? stringify(object, Math.floor(Math.min(maxDepth, Number.MAX_SAFE_INTEGER) / 2), { maxLength, ...options })
+    ? stringify(object, Math.floor(Math.min(maxDepth, Number.MAX_SAFE_INTEGER) / 2), { maxLength, filterNode, ...options })
     : result
 }
 
