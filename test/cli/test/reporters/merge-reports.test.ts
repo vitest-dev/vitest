@@ -5,7 +5,7 @@ import { runVitest } from '#test-utils'
 import { createFileTask } from '@vitest/runner/utils'
 import { beforeEach, expect, test } from 'vitest'
 import { version } from 'vitest/package.json'
-import { writeBlob } from 'vitest/src/node/reporters/blob.js'
+import { readBlobs, writeBlob } from 'vitest/src/node/reporters/blob.js'
 
 // always relative to CWD because it's used only from the CLI,
 // so we need to correctly resolve it here
@@ -265,6 +265,76 @@ test('total and merged execution times are shown', async () => {
 
   expect(stdout).toContain('Duration  4.50s')
   expect(stdout).toContain('Per blob  1.50s 3.00s')
+})
+
+test('module graph data is stored in blob and restored', async () => {
+  // Create blob reports with module graph data
+  await runVitest({
+    root: './fixtures/reporters/merge-reports',
+    include: ['first.test.ts'],
+    reporters: [['blob', { outputFile: './.vitest-reports/first-run.json' }]],
+  })
+
+  await runVitest({
+    root: './fixtures/reporters/merge-reports',
+    include: ['second.test.ts'],
+    reporters: [['blob', { outputFile: './.vitest-reports/second-run.json' }]],
+  })
+
+  // Read blobs and verify module graph data is present
+  const { moduleGraphData, files } = await readBlobs(
+    version,
+    reportsDir,
+    [] as any, // We don't need actual projects for this test
+  )
+
+  // Verify module graph data exists
+  expect(moduleGraphData).toBeDefined()
+  expect(typeof moduleGraphData).toBe('object')
+
+  // Verify each test file has module graph data
+  const testFiles = files.filter(f => f.filepath.endsWith('.test.ts'))
+  for (const file of testFiles) {
+    const projectName = file.projectName || ''
+    const graphData = moduleGraphData[projectName]?.[file.filepath]
+
+    expect(graphData).toBeDefined()
+    expect(graphData).toHaveProperty('graph')
+    expect(graphData).toHaveProperty('externalized')
+    expect(graphData).toHaveProperty('inlined')
+    expect(Array.isArray(graphData.externalized)).toBe(true)
+    expect(Array.isArray(graphData.inlined)).toBe(true)
+    expect(typeof graphData.graph).toBe('object')
+  }
+})
+
+test('backward compatibility: blobs without module graph data still work', async () => {
+  // Create a blob report in the old format (without module graph data)
+  const file = createFileTask(
+    resolve('./fixtures/reporters/merge-reports', 'first.test.ts'),
+    resolve('./fixtures/reporters/merge-reports'),
+    '',
+  )
+  file.tasks.push(createTest('some test', file))
+
+  // Write blob in old format (without module graph data - only 6 elements)
+  await writeBlob(
+    [version, [file], [], [], undefined, 1000] as any,
+    resolve('./fixtures/reporters/merge-reports/.vitest-reports/blob-old.json'),
+  )
+
+  // Read blobs should handle missing module graph data gracefully
+  const { moduleGraphData, files } = await readBlobs(
+    version,
+    reportsDir,
+    [] as any,
+  )
+
+  expect(files).toHaveLength(1)
+  expect(moduleGraphData).toBeDefined()
+  expect(typeof moduleGraphData).toBe('object')
+  // Old blobs should result in empty module graph data
+  expect(Object.keys(moduleGraphData).length).toBe(0)
 })
 
 function trimReporterOutput(report: string) {
