@@ -132,7 +132,15 @@ test('filterNode option filters out matching elements', async () => {
   expect(result).not.toContain('color: red')
   expect(result).not.toContain('hidden content')
   expect(result).toContain('visible content')
-  expect(result).toMatchInlineSnapshot()
+  expect(result).toMatchInlineSnapshot(`
+    "<div>
+      <div>
+        <span>
+          visible content
+        </span>
+      </div>
+    </div>"
+  `)
 })
 
 test('filterNode with configurePrettyDOM affects default behavior', async () => {
@@ -155,7 +163,15 @@ test('filterNode with configurePrettyDOM affects default behavior', async () => 
   expect(result).not.toContain('color: red')
   expect(result).not.toContain('hidden content')
   expect(result).toContain('visible content')
-  expect(result).toMatchInlineSnapshot()
+  expect(result).toMatchInlineSnapshot(`
+    "<div>
+      <div>
+        <span>
+          visible content
+        </span>
+      </div>
+    </div>"
+  `)
 })
 
 test('filterNode with wildcard selector filters nested content', async () => {
@@ -177,5 +193,16 @@ test('filterNode with wildcard selector filters nested content', async () => {
   expect(result).not.toContain('deeply nested hidden')
   expect(result).toContain('visible')
   expect(result).toContain('data-test-hide-content')
-  expect(result).toMatchInlineSnapshot()
+  expect(result).toMatchInlineSnapshot(`
+    "<div>
+      <div>
+        <div
+          data-test-hide-content=\"\"
+        />
+        <span>
+          visible
+        </span>
+      </div>
+    </div>"
+  `)
 })
