@@ -1,10 +1,14 @@
-import { afterEach, expect, it, test } from 'vitest'
+import { afterEach, beforeEach, expect, it, test } from 'vitest'
 import { commands, utils } from 'vitest/browser'
 
 import { inspect } from 'vitest/internal/browser'
 
 afterEach(() => {
   document.body.innerHTML = ''
+})
+
+beforeEach(() => {
+  utils.configurePrettyDOM({})
 })
 
 it('utils package correctly uses loupe', async () => {
@@ -106,6 +110,99 @@ test('changing the defaults works', async () => {
   expect(await commands.stripVTControlCharacters(utils.prettyDOM(div))).toMatchInlineSnapshot(`
     "<div>
       <div … />
+    </div>"
+  `)
+})
+
+test('filterNode option filters out matching elements', async () => {
+  const div = document.createElement('div')
+  div.innerHTML = `
+    <div>
+      <script>console.log('test')</script>
+      <style>.test { color: red; }</style>
+      <span data-test-hide="true">hidden content</span>
+      <span>visible content</span>
+    </div>
+  `
+  document.body.append(div)
+
+  const result = await commands.stripVTControlCharacters(utils.prettyDOM(div, undefined, { filterNode: 'script, style, [data-test-hide]' }))
+
+  expect(result).not.toContain('console.log')
+  expect(result).not.toContain('color: red')
+  expect(result).not.toContain('hidden content')
+  expect(result).toContain('visible content')
+  expect(result).toMatchInlineSnapshot(`
+    "<div>
+      <div>
+        <span>
+          visible content
+        </span>
+      </div>
+    </div>"
+  `)
+})
+
+test('filterNode with configurePrettyDOM affects default behavior', async () => {
+  utils.configurePrettyDOM({ filterNode: 'script, style, [data-test-hide]' })
+
+  const div = document.createElement('div')
+  div.innerHTML = `
+    <div>
+      <script>console.log('test')</script>
+      <style>.test { color: red; }</style>
+      <span data-test-hide="true">hidden content</span>
+      <span>visible content</span>
+    </div>
+  `
+  document.body.append(div)
+
+  const result = await commands.stripVTControlCharacters(utils.prettyDOM(div))
+
+  expect(result).not.toContain('console.log')
+  expect(result).not.toContain('color: red')
+  expect(result).not.toContain('hidden content')
+  expect(result).toContain('visible content')
+  expect(result).toMatchInlineSnapshot(`
+    "<div>
+      <div>
+        <span>
+          visible content
+        </span>
+      </div>
+    </div>"
+  `)
+})
+
+test('filterNode with wildcard selector filters nested content', async () => {
+  const div = document.createElement('div')
+  div.innerHTML = `
+    <div>
+      <div data-test-hide-content>
+        <span>nested hidden</span>
+        <div>deeply nested hidden</div>
+      </div>
+      <span>visible</span>
+    </div>
+  `
+  document.body.append(div)
+
+  const result = await commands.stripVTControlCharacters(utils.prettyDOM(div, undefined, { filterNode: '[data-test-hide-content] *' }))
+
+  expect(result).not.toContain('nested hidden')
+  expect(result).not.toContain('deeply nested hidden')
+  expect(result).toContain('visible')
+  expect(result).toContain('data-test-hide-content')
+  expect(result).toMatchInlineSnapshot(`
+    "<div>
+      <div>
+        <div
+          data-test-hide-content=\"\"
+        />
+        <span>
+          visible
+        </span>
+      </div>
     </div>"
   `)
 })
