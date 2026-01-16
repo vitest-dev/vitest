@@ -87,8 +87,10 @@ export class BlobReporter implements Reporter {
             browser,
           )
         }
-        catch {
+        catch (error) {
           // If module graph generation fails, use empty graph
+          // This can happen if the test file or its dependencies are not accessible
+          this.ctx.logger.error('Failed to generate module graph for', file.filepath, error)
           moduleGraphData[projectName][file.filepath] = {
             graph: {},
             externalized: [],
