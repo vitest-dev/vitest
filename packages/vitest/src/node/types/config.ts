@@ -997,6 +997,11 @@ export interface UserConfig extends InlineConfig {
    * @experimental
    */
   clearCache?: boolean
+
+  /**
+   * Inject custom reporter(s) into the reporters list without overriding existing ones.
+   */
+  injectReporter?: string[]
 }
 
 export type OnUnhandledErrorCallback = (error: (TestError | Error) & { type: string }) => boolean | void

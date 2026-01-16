@@ -788,6 +788,11 @@ export const cliOptionsConfig: VitestCLIOptions = {
   clearCache: {
     description: 'Delete all Vitest caches, including `experimental.fsModuleCache`, without running any tests. This will reduce the performance in the subsequent test run.',
   },
+  injectReporter: {
+    description: 'Inject custom reporter(s) into the reporters list without overriding existing ones.',
+    argument: '<name>',
+    array: true,
+  },
 
   experimental: {
     description: 'Experimental features.',

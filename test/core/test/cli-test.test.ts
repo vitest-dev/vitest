@@ -321,6 +321,13 @@ test('clearScreen', async (ctx) => {
   `)
 })
 
+test('--injectReporter', () => {
+  expect(getCLIOptions('--injectReporter=./my-reporter.js')).toEqual({ injectReporter: ['./my-reporter.js'] })
+  expect(getCLIOptions('--injectReporter ./my-reporter.js --injectReporter ./another-reporter.js')).toEqual({
+    injectReporter: ['./my-reporter.js', './another-reporter.js'],
+  })
+})
+
 test('merge-reports', () => {
   expect(getCLIOptions('--merge-reports')).toEqual({ mergeReports: '.vitest-reports' })
   expect(getCLIOptions('--merge-reports=different-folder')).toEqual({ mergeReports: 'different-folder' })
