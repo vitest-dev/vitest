@@ -81,12 +81,12 @@ function filterChildren(children: any[], filterNode?: (node: any) => boolean): a
     }
     return true
   })
-  
+
   // Apply additional user-provided filter if specified
   if (filterNode) {
     filtered = filtered.filter(filterNode)
   }
-  
+
   return filtered
 }
 
