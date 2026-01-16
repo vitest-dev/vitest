@@ -42,7 +42,9 @@ onMounted(async () => {
   <li :style="color">
     <div ref="el" class="icon-container">
       <div class="icon-wrapper" :class="state ? 'flip' : ''">
-        <Icon icon="carbon:circle-dash" class="icon-spinner" width="1.2em" height="1.2em" />
+        <svg xmlns="http://www.w3.org/2000/svg" width="1.2em" height="1.2em" viewBox="0 0 32 32" class="icon-spinner">
+          <circle cx="16" cy="16" r="13" fill="none" stroke="currentColor" stroke-width="2" stroke-dasharray="8 4" />
+        </svg>
       </div>
       <div class="icon-wrapper" :class="state === 2 ? '' : 'flip'">
         <Icon icon="carbon:close-outline" class="icon-error" width="1.2em" height="1.2em" />
