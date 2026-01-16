@@ -232,7 +232,7 @@ export const utils: {
 }
 ```
 
-### configurePrettyDOM <Version>4.1.0</Version> {#configureprettydom}
+### configurePrettyDOM <Version>4.0.0</Version> {#configureprettydom}
 
 The `configurePrettyDOM` function allows you to configure default options for the `prettyDOM` and `debug` functions. This is useful for customizing how HTML is formatted in test failure messages.
 
