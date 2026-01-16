@@ -15,6 +15,21 @@ import 'virtual:group-icons.css'
 
 if (inBrowser) {
   import('./pwa')
+
+  const handleSearchHotkey = (e: KeyboardEvent) => {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+      setTimeout(() => {
+        const input = document.querySelector<HTMLInputElement>('.VPLocalSearchBox input')
+        if (input) {
+          input.focus()
+          input.select()
+        }
+      }, 100)
+    }
+  }
+
+  window.removeEventListener('keydown', handleSearchHotkey)
+  window.addEventListener('keydown', handleSearchHotkey)
 }
 
 export default {
