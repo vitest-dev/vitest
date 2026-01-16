@@ -19,7 +19,7 @@ function reset() {
 const color = computed(() => {
   return {
     '--vp-c-brand-1': state.value === 1
-      ? 'var(--vp-c-brand-1)'
+      ? 'var(--color-brand)'
       : state.value === 2
         ? 'var(--vp-c-red-1)'
         : 'var(--vp-c-yellow-1)',
@@ -87,7 +87,7 @@ onMounted(async () => {
 }
 
 .icon-success {
-  color: var(--vp-c-brand-1);
+  color: var(--color-brand);
 }
 
 @keyframes spin {
