@@ -232,9 +232,7 @@ export const utils: {
 }
 ```
 
-### configurePrettyDOM
-
-<Version>4.1.0</Version>
+### configurePrettyDOM <Version>4.1.0</Version> {#configureprettydom}
 
 The `configurePrettyDOM` function allows you to configure default options for the `prettyDOM` and `debug` functions. This is useful for customizing how HTML is formatted in test failure messages.
 
@@ -255,9 +253,7 @@ utils.configurePrettyDOM({
 - **`highlight`** - Enable syntax highlighting (default: `true`)
 - And other options from [`pretty-format`](https://www.npmjs.com/package/@vitest/pretty-format)
 
-#### Filtering with CSS Selectors
-
-<Version>4.1.0</Version>
+#### Filtering with CSS Selectors <Version>4.1.0</Version> {#filtering-with-css-selectors}
 
 The `filterNode` option allows you to hide irrelevant markup (like scripts, styles, or hidden elements) from test failure messages, making it easier to identify the actual cause of failures.
 
