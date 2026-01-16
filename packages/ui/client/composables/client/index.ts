@@ -115,6 +115,7 @@ function clearResults(useFiles: RunnerTestFile[]) {
         const task = map.get(i.id)
         if (task) {
           task.state = undefined
+          task.mode = 'run'
           task.duration = undefined
         }
       }
@@ -122,6 +123,7 @@ function clearResults(useFiles: RunnerTestFile[]) {
     const file = map.get(f.id)
     if (file) {
       file.state = undefined
+      file.mode = 'run'
       file.duration = undefined
       if (isFileNode(file)) {
         file.collectDuration = undefined
