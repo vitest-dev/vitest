@@ -100,6 +100,7 @@ useResizeObserver(() => testExplorerRef.value, ([{ contentRect }]) => {
             w-full
             appearance-none
             bg-base
+            text-base
             border="~ base rounded"
             pl-2
             pr-8
@@ -107,14 +108,16 @@ useResizeObserver(() => testExplorerRef.value, ([{ contentRect }]) => {
             text-sm
             cursor-pointer
             hover:bg-active
+            class="outline-none"
           >
-            <option :value="ALL_PROJECTS">
+            <option :value="ALL_PROJECTS" class="text-base bg-base">
               All Projects
             </option>
             <option
               v-for="project in availableProjects"
               :key="project"
               :value="project"
+              class="text-base bg-base"
             >
               {{ project }}
             </option>
@@ -143,6 +146,7 @@ useResizeObserver(() => testExplorerRef.value, ([{ contentRect }]) => {
             w-full
             appearance-none
             bg-base
+            text-base
             border="~ base rounded"
             pl-2
             pr-8
@@ -150,15 +154,16 @@ useResizeObserver(() => testExplorerRef.value, ([{ contentRect }]) => {
             text-sm
             cursor-pointer
             hover:bg-active
+            class="outline-none"
             :disabled="disableProjectSort"
           >
-            <option value="default">
+            <option value="default" class="text-base bg-base">
               Default
             </option>
-            <option value="asc">
+            <option value="asc" class="text-base bg-base">
               Project A-Z
             </option>
-            <option value="desc">
+            <option value="desc" class="text-base bg-base">
               Project Z-A
             </option>
           </select>
