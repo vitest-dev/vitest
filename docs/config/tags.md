@@ -22,24 +22,3 @@ vitest --tag="unit/*"
 ::: tip FILTERING
 You can use a wildcard (*) to match any number of symbols. To ignore a tag, add an exclamation mark (!) at the start of the tag.
 :::
-
-## Example
-
-```ts [vitest.config.js]
-import { defineConfig } from 'vitest/config'
-
-export default defineConfig({
-  test: {
-    tags: [
-      {
-        name: 'frontend',
-        description: 'Tests written for frontend.',
-      },
-      {
-        name: 'backend',
-        description: 'Tests written for backend.',
-      },
-    ],
-  },
-})
-```
