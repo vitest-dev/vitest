@@ -12,6 +12,7 @@ export function interpretTaskModes(
   namePattern?: string | RegExp,
   testLocations?: number[] | undefined,
   testIds?: string[] | undefined,
+  testTags?: string[] | undefined,
   onlyMode?: boolean,
   parentIsOnly?: boolean,
   allowOnly?: boolean,
@@ -72,6 +73,10 @@ export function interpretTaskModes(
           t.mode = 'skip'
         }
         if (testIds && !testIds.includes(t.id)) {
+          t.mode = 'skip'
+        }
+        // match at least one tag
+        if (testTags && !testTags.some(tag => t.tags?.includes(tag))) {
           t.mode = 'skip'
         }
       }

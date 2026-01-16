@@ -37,6 +37,7 @@ export async function collectTests(
         const testLocations = typeof spec === 'string' ? undefined : spec.testLocations
         const testNamePattern = typeof spec === 'string' ? undefined : spec.testNamePattern
         const testIds = typeof spec === 'string' ? undefined : spec.testIds
+        const testTags = typeof spec === 'string' ? undefined : spec.testTags
 
         const file = createFileTask(filepath, config.root, config.name, runner.pool, runner.viteEnvironment)
         setFileContext(file, Object.create(null))
@@ -113,6 +114,7 @@ export async function collectTests(
           testNamePattern ?? config.testNamePattern,
           testLocations,
           testIds,
+          testTags,
           hasOnlyTasks,
           false,
           config.allowOnly,

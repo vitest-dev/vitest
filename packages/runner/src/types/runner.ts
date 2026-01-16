@@ -40,6 +40,7 @@ export interface VitestRunnerConfig {
   retry: SerializableRetry
   includeTaskLocation?: boolean
   diffOptions?: DiffOptions
+  tags: TestTagDefinition[]
 }
 
 /**
@@ -47,9 +48,19 @@ export interface VitestRunnerConfig {
  */
 export interface FileSpecification {
   filepath: string
+  // file can be marked via a jsdoc comment to have tags,
+  // these are _not_ tags to filter tests by
+  fileTags?: string[]
   testLocations: number[] | undefined
   testNamePattern: RegExp | undefined
+  testTags: string[] | undefined
   testIds: string[] | undefined
+}
+
+export interface TestTagDefinition {
+  name: string
+  description?: string
+  // TODO: repeats/retry/timeout/... options?
 }
 
 export type VitestRunnerImportSource = 'collect' | 'setup'

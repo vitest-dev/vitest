@@ -9,6 +9,7 @@ export interface TestSpecificationOptions {
   testNamePattern?: RegExp
   testIds?: string[]
   testLines?: number[]
+  testTags?: string[]
 }
 
 export class TestSpecification {
@@ -41,6 +42,10 @@ export class TestSpecification {
    * The ids of tasks inside of this specification to run.
    */
   public readonly testIds: string[] | undefined
+  /**
+   * The tags of tests to run.
+   */
+  public readonly testTags: string[] | undefined
 
   /**
    * This class represents a test suite for a test module within a single project.
@@ -73,6 +78,7 @@ export class TestSpecification {
       this.testLines = testLinesOrOptions.testLines
       this.testNamePattern = testLinesOrOptions.testNamePattern
       this.testIds = testLinesOrOptions.testIds
+      this.testTags = testLinesOrOptions.testTags
     }
   }
 

@@ -114,6 +114,10 @@ export interface TaskBase {
    * @experimental
    */
   dynamic?: boolean
+  /**
+   * Custom tags of the task. Useful for filtering tasks.
+   */
+  tags?: string[]
 }
 
 export interface TaskPopulated extends TaskBase {
@@ -564,6 +568,10 @@ export interface TestOptions {
    * Whether the test is expected to fail. If it does, the test will pass, otherwise it will fail.
    */
   fails?: boolean
+  /**
+   * Custom tags of the test. Useful for filtering tests.
+   */
+  tags?: string[]
 }
 
 interface ExtendedAPI<ExtraContext> {

@@ -1,6 +1,6 @@
 import type { FakeTimerInstallOpts } from '@sinonjs/fake-timers'
 import type { PrettyFormatOptions } from '@vitest/pretty-format'
-import type { SequenceHooks, SequenceSetupFiles, SerializableRetry } from '@vitest/runner'
+import type { SequenceHooks, SequenceSetupFiles, SerializableRetry, TestTagDefinition } from '@vitest/runner'
 import type { SnapshotStateOptions } from '@vitest/snapshot'
 import type { Arrayable } from '@vitest/utils'
 import type { SerializedDiffOptions } from '@vitest/utils/diff'
@@ -862,6 +862,13 @@ export interface InlineConfig {
      */
     printImportBreakdown?: boolean
   }
+
+  /**
+   * Define tags available in your test files.
+   *
+   * If test defines a tag that is not listed here, an error will be thrown.
+   */
+  tags?: TestTagDefinition[]
 }
 
 export interface TypecheckConfig {
@@ -997,6 +1004,11 @@ export interface UserConfig extends InlineConfig {
    * @experimental
    */
   clearCache?: boolean
+
+  /**
+   * Tags to filter tests with.
+   */
+  tag?: string[]
 }
 
 export type OnUnhandledErrorCallback = (error: (TestError | Error) & { type: string }) => boolean | void
@@ -1128,6 +1140,7 @@ type NonProjectOptions
     | 'inspectBrk'
     | 'coverage'
     | 'watchTriggerPatterns'
+    | 'tag' // CLI option only
 
 export interface ServerDepsOptions {
   /**

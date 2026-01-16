@@ -149,9 +149,11 @@ export function createPool(ctx: Vitest): ProcessPool {
           context: {
             files: specs.map(spec => ({
               filepath: spec.moduleId,
+              fileTags: [], // TODO: read from @tag
               testLocations: spec.testLines,
               testNamePattern: spec.testNamePattern,
               testIds: spec.testIds,
+              testTags: spec.testTags,
             })),
             invalidates,
             providedContext: project.getProvidedContext(),

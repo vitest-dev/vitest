@@ -1,6 +1,6 @@
 import type { FakeTimerInstallOpts } from '@sinonjs/fake-timers'
 import type { PrettyFormatOptions } from '@vitest/pretty-format'
-import type { SequenceHooks, SequenceSetupFiles, SerializableRetry } from '@vitest/runner'
+import type { SequenceHooks, SequenceSetupFiles, SerializableRetry, TagDefinition } from '@vitest/runner'
 import type { SnapshotEnvironment, SnapshotUpdateState } from '@vitest/snapshot'
 import type { SerializedDiffOptions } from '@vitest/utils/diff'
 
@@ -126,6 +126,7 @@ export interface SerializedConfig {
       browserSdkPath?: string
     } | undefined
   }
+  tags: TagDefinition[]
 }
 
 export interface SerializedCoverageConfig {

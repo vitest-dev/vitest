@@ -18,6 +18,8 @@ export async function getSpecificationsEnvironments(
         cache.set(filepath, code)
       }
 
+      // TODO: parse @tag to inject test tags into test files, and validate against config.tags
+
       // 1. Check for control comments in the file
       let env = code.match(/@(?:vitest|jest)-environment\s+([\w-]+)\b/)?.[1]
       // 2. Fallback to global env
