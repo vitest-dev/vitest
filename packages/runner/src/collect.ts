@@ -114,7 +114,7 @@ export async function collectTests(
           testNamePattern ?? config.testNamePattern,
           testLocations,
           testIds,
-          testTags,
+          testTags ?? config.tagsFilter,
           hasOnlyTasks,
           false,
           config.allowOnly,

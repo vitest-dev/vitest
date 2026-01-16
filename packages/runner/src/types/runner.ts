@@ -41,6 +41,7 @@ export interface VitestRunnerConfig {
   includeTaskLocation?: boolean
   diffOptions?: DiffOptions
   tags: TestTagDefinition[]
+  tagsFilter?: string[]
 }
 
 /**

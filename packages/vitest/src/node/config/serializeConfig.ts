@@ -136,5 +136,6 @@ export function serializeConfig(project: TestProject): SerializedConfig {
       openTelemetry: config.experimental.openTelemetry,
     },
     tags: config.tags || [],
+    tagsFilter: config.tag,
   }
 }

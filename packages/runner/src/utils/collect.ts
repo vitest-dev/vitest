@@ -76,7 +76,7 @@ export function interpretTaskModes(
           t.mode = 'skip'
         }
         // match at least one tag
-        if (testTags && !testTags.some(tag => t.tags?.includes(tag))) {
+        if (testTags && !matchesTags(testTags, t.tags || [])) {
           t.mode = 'skip'
         }
       }
@@ -242,4 +242,25 @@ export function findTestFileStackTrace(testFilePath: string, error: string): Par
       return stack
     }
   }
+}
+
+function matchesTags(filterTags: string[], testTags: string[]) {
+  if (testTags.length === 0) {
+    // test has no tags, cannot match any filter
+    return false
+  }
+
+  let hasPositiveTag = false
+  for (const tag of filterTags) {
+    if (tag.startsWith('!')) {
+      const ignoreTag = tag.slice(1)
+      if (testTags.includes(ignoreTag)) {
+        return false
+      }
+    }
+    else if (testTags.includes(tag)) {
+      hasPositiveTag = true
+    }
+  }
+  return hasPositiveTag
 }
