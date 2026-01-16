@@ -70,10 +70,24 @@ export interface FilterConfig extends Config {
 }
 
 function filterChildren(children: any[], filterNode?: (node: any) => boolean): any[] {
-  if (!filterNode) {
-    return children
+  // Filter out text nodes that only contain whitespace to prevent empty lines
+  // This is done regardless of whether a filterNode is provided
+  let filtered = children.filter((node) => {
+    // Filter out text nodes that are only whitespace
+    if (node.nodeType === TEXT_NODE) {
+      const text = node.data || ''
+      // Keep text nodes that have non-whitespace content
+      return text.trim().length > 0
+    }
+    return true
+  })
+  
+  // Apply additional user-provided filter if specified
+  if (filterNode) {
+    filtered = filtered.filter(filterNode)
   }
-  return children.filter(filterNode)
+  
+  return filtered
 }
 
 export function createDOMElementFilter(filterNode?: (node: any) => boolean): NewPlugin {
