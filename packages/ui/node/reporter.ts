@@ -90,6 +90,14 @@ export default class HTMLReporter implements Reporter {
             promises.push(this.processAttachment(attachment))
           }
         })
+        task.artifacts.forEach((artifact) => {
+          const attachments = artifact.attachments
+          if (attachments) {
+            attachments.forEach((attachment) => {
+              promises.push(this.processAttachment(attachment))
+            })
+          }
+        })
       }
       else {
         task.tasks.forEach(processAttachments)

@@ -66,7 +66,7 @@ test.describe('html report', () => {
     await page.goto(pageUrl)
 
     // dashboard
-    await expect(page.locator('[aria-labelledby=tests]')).toContainText('13 Pass 1 Fail 14 Total')
+    await expect(page.locator('[aria-labelledby=tests]')).toContainText('14 Pass 1 Fail 15 Total')
 
     // unhandled errors
     await expect(page.getByTestId('unhandled-errors')).toContainText(
@@ -189,5 +189,24 @@ test.describe('html report', () => {
 
     await expect(annotations.last().getByRole('link')).toHaveAttribute('href', /data\/\w+/)
     await expect(annotations.nth(3).getByRole('link')).toHaveAttribute('href', /data\/\w+/)
+  })
+
+  test('visual regression in the report tab', async ({ page }) => {
+    await page.goto(pageUrl)
+
+    await test.step('attachments get processed', async () => {
+      const item = page.getByLabel('visual regression test')
+      await item.click({ force: true })
+      await page.getByTestId('btn-report').click({ force: true })
+
+      const artifact = page.getByRole('note')
+      await expect(artifact).toHaveCount(1)
+
+      await expect(artifact.getByRole('heading')).toContainText('Visual Regression')
+      await expect(artifact).toContainText('fixtures-browser/visual-regression.test.ts:13:3')
+      await expect(artifact.getByRole('tablist')).toHaveText('Reference')
+      await expect(artifact.getByRole('tabpanel').getByRole('link')).toHaveAttribute('href', /data\/\w+\.png/)
+      await expect(artifact.getByRole('tabpanel').getByRole('img')).toHaveAttribute('src', /data\/\w+\.png/)
+    })
   })
 })
