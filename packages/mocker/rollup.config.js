@@ -17,6 +17,7 @@ const entries = {
   'browser': 'src/browser/index.ts',
   'register': 'src/browser/register.ts',
   'auto-register': 'src/browser/auto-register.ts',
+  'transforms': 'src/node/transforms.ts',
 }
 
 const external = [

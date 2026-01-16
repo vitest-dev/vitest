@@ -1,4 +1,4 @@
-import { runBaseTests, setupEnvironment } from './base'
+import { runBaseTests, setupBaseEnvironment } from './base'
 import workerInit from './init-threads'
 
-workerInit({ runTests: runBaseTests, setup: setupEnvironment })
+workerInit({ runTests: runBaseTests, setup: setupBaseEnvironment })

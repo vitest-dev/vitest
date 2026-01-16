@@ -8,6 +8,11 @@ export default defineConfig({
     testTimeout: 60_000,
     isolate: false,
     fileParallelism: false,
+    // TODO: should enabled when support for older node is dropped?
+    // experimental: {
+    //   viteModuleRunner: false,
+    //   nodeLoader: false,
+    // },
     chaiConfig: {
       truncateThreshold: 999,
     },

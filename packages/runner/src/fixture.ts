@@ -1,6 +1,6 @@
 import type { VitestRunner } from './types'
 import type { FixtureOptions, TestContext } from './types/tasks'
-import { createDefer, isObject } from '@vitest/utils/helpers'
+import { createDefer, filterOutComments, isObject } from '@vitest/utils/helpers'
 import { getFileContext } from './context'
 import { getTestFixture } from './map'
 
@@ -384,36 +384,6 @@ function getUsedProps(fn: Function) {
   }
 
   return props
-}
-
-function filterOutComments(s: string): string {
-  const result: string[] = []
-  let commentState: 'none' | 'singleline' | 'multiline' = 'none'
-  for (let i = 0; i < s.length; ++i) {
-    if (commentState === 'singleline') {
-      if (s[i] === '\n') {
-        commentState = 'none'
-      }
-    }
-    else if (commentState === 'multiline') {
-      if (s[i - 1] === '*' && s[i] === '/') {
-        commentState = 'none'
-      }
-    }
-    else if (commentState === 'none') {
-      if (s[i] === '/' && s[i + 1] === '/') {
-        commentState = 'singleline'
-      }
-      else if (s[i] === '/' && s[i + 1] === '*') {
-        commentState = 'multiline'
-        i += 2
-      }
-      else {
-        result.push(s[i])
-      }
-    }
-  }
-  return result.join('')
 }
 
 function splitByComma(s: string) {

@@ -296,6 +296,10 @@ export function resolveConfig(
     }
   }
 
+  if (resolved.coverage.enabled && resolved.coverage.provider === 'istanbul' && resolved.experimental?.viteModuleRunner === false) {
+    throw new Error(`"Istanbul" coverage provider is not compatible with "experimental.viteModuleRunner: false". Please, enable "viteModuleRunner" or switch to "v8" coverage provider.`)
+  }
+
   const containsChromium = hasBrowserChromium(vitest, resolved)
   const hasOnlyChromium = hasOnlyBrowserChromium(vitest, resolved)
 

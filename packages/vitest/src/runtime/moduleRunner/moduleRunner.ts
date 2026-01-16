@@ -6,6 +6,7 @@ import type { ExternalModulesExecutor } from '../external-executor'
 import type { ModuleExecutionInfo } from './moduleDebug'
 import type { VitestModuleEvaluator } from './moduleEvaluator'
 import type { VitestTransportOptions } from './moduleTransport'
+import type { TestModuleRunner } from './testModuleRunner'
 import * as viteModuleRunner from 'vite/module-runner'
 import { Traces } from '../../utils/traces'
 import { VitestMocker } from './moduleMocker'
@@ -42,7 +43,9 @@ function createImportMetaResolver() {
 }
 
 // @ts-expect-error overriding private method
-export class VitestModuleRunner extends viteModuleRunner.ModuleRunner {
+export class VitestModuleRunner
+  extends viteModuleRunner.ModuleRunner
+  implements TestModuleRunner {
   public mocker: VitestMocker
   public moduleExecutionInfo: ModuleExecutionInfo
   private _otel: Traces

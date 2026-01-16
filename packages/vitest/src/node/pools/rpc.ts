@@ -149,5 +149,36 @@ export function createMethodsRPC(project: TestProject, methodsOptions: MethodsOp
     getCountOfFailedTests() {
       return vitest.state.getCountOfFailedTests()
     },
+
+    ensureModuleGraphEntry(id, importer) {
+      const filepath = id.startsWith('file:') ? fileURLToPath(id) : id
+      const importerPath = importer.startsWith('file:') ? fileURLToPath(importer) : importer
+      // environment itself doesn't matter
+      const moduleGraph = project.vite.environments.__vitest__?.moduleGraph
+      if (!moduleGraph) {
+        // TODO: is it possible?
+        console.error('no module graph for', id)
+        return
+      }
+      const importerNode = moduleGraph.getModuleById(importerPath) || moduleGraph.createFileOnlyEntry(importerPath)
+      const moduleNode = moduleGraph.getModuleById(filepath) || moduleGraph.createFileOnlyEntry(filepath)
+
+      if (!moduleGraph.idToModuleMap.has(importerPath)) {
+        importerNode.id = importerPath
+        moduleGraph.idToModuleMap.set(importerPath, importerNode)
+      }
+      if (!moduleGraph.idToModuleMap.has(filepath)) {
+        moduleNode.id = filepath
+        moduleGraph.idToModuleMap.set(filepath, moduleNode)
+      }
+
+      // this is checked by the "printError" function - TODO: is there a better way?
+      moduleNode.transformResult = {
+        code: ' ',
+        map: null,
+      }
+      importerNode.importedModules.add(moduleNode)
+      moduleNode.importers.add(importerNode)
+    },
   }
 }

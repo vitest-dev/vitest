@@ -47,10 +47,12 @@ export class TestRunner implements VitestTestRunner {
   public pool: string = this.workerState.ctx.pool
   private _otel!: Traces
   public viteEnvironment: string
+  private viteModuleRunner: boolean
 
   constructor(public config: SerializedConfig) {
     const environment = this.workerState.environment
     this.viteEnvironment = environment.viteEnvironment || environment.name
+    this.viteModuleRunner = config.experimental.viteModuleRunner
   }
 
   importFile(filepath: string, source: VitestRunnerImportSource): unknown {
@@ -67,7 +69,12 @@ export class TestRunner implements VitestTestRunner {
           'code.file.path': filepath,
         },
       },
-      () => this.moduleRunner.import(filepath),
+      () => {
+        if (!this.viteModuleRunner) {
+          filepath = `${filepath}?vitest=${Date.now()}`
+        }
+        return this.moduleRunner.import(filepath)
+      },
     )
   }
 
