@@ -328,6 +328,8 @@ export class Vitest {
       ...this._onSetServer.map(fn => fn()),
       this._traces.waitInit(),
     ])
+
+    // validate tags
   }
 
   /** @internal */

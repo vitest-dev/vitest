@@ -23,6 +23,7 @@ import {
   isObject,
   objectAttr,
   toArray,
+  unique,
 } from '@vitest/utils/helpers'
 import {
   abortIfTimeout,
@@ -306,6 +307,11 @@ function createSuiteCollector(
   const task = function (name = '', options: TaskCustomOptions = {}) {
     const timeout = options?.timeout ?? runner.config.testTimeout
     const currentSuite = collectorContext.currentSuite?.suite
+    const parentTask = currentSuite ?? collectorContext.currentSuite?.file
+    const parentTags = parentTask?.tags || []
+    if (options?.tags) {
+      validateTags(runner, options.tags)
+    }
     const task: Test = {
       id: '',
       name,
@@ -333,6 +339,7 @@ function createSuiteCollector(
       meta: options.meta ?? Object.create(null),
       annotations: [],
       artifacts: [],
+      tags: unique([...parentTags, ...(options.tags || [])]),
     }
     const handler = options.handler
     if (task.mode === 'run' && !handler) {
@@ -454,6 +461,10 @@ function createSuiteCollector(
     }
 
     const currentSuite = collectorContext.currentSuite?.suite
+    const parentTask = currentSuite ?? collectorContext.currentSuite?.file
+    if (suiteOptions?.tags) {
+      validateTags(runner, suiteOptions.tags)
+    }
 
     suite = {
       id: '',
@@ -472,6 +483,7 @@ function createSuiteCollector(
       tasks: [],
       meta: Object.create(null),
       concurrent: suiteOptions?.concurrent,
+      tags: unique([...parentTask?.tags || [], ...(suiteOptions?.tags || [])]),
     }
 
     if (runner && includeLocation && runner.config.includeTaskLocation) {
@@ -956,4 +968,24 @@ function formatTemplateString(cases: any[], args: any[]): any[] {
     res.push(oneCase)
   }
   return res
+}
+
+function validateTags(runner: VitestRunner, tags: string[]) {
+  const availableTags = new Set(runner.config.tags.map(tag => tag.name))
+  for (const tag of tags) {
+    if (!availableTags.has(tag)) {
+      let message: string
+
+      if (!runner.config.tags.length) {
+        message = `The Vitest config does't define any "tags", cannot apply "${tag}" tag for this test. See: https://vitest.dev/guide/test-tags`
+      }
+      else {
+        message = `Tag "${tag}" is not defined in the configuration. Available tags are: \n${runner.config.tags
+          .map(t => `- ${t.name}${t.description ? `: ${t.description}` : ''}`)
+          .join('\n')}`
+      }
+
+      throw new Error(message)
+    }
+  }
 }

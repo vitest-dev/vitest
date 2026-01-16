@@ -22,6 +22,7 @@ import {
   defaultPort,
 } from '../../constants'
 import { benchmarkConfigDefaults, configDefaults } from '../../defaults'
+import { wildcardPatternToRegExp } from '../../utils/base'
 import { isCI, stdProvider } from '../../utils/env'
 import { getWorkersCountByPercentage } from '../../utils/workers'
 import { BaseSequencer } from '../sequencers/BaseSequencer'
@@ -167,6 +168,26 @@ export function resolveConfig(
 
   resolved.project = toArray(resolved.project)
   resolved.provide ??= {}
+
+  if (resolved.tag?.length) {
+    const filterTags = resolved.tag.map((tag) => {
+      const negated = tag[0] === '!'
+      const actualTag = negated ? tag.slice(1) : tag
+      return { pattern: wildcardPatternToRegExp(actualTag), negated }
+    })
+
+    const availableTags: string[] = []
+    resolved.tags?.forEach((tag) => {
+      const match = filterTags.find(({ pattern }) => pattern.test(tag.name))
+      if (match) {
+        availableTags.push(match.negated ? `!${tag.name}` : tag.name)
+      }
+    })
+    if (!availableTags.length) {
+      throw new Error(`Cannot find any tags to filter based on the ${resolved.tag.map(t => `--tag ${t}`).join(' ')} option. Did you define them in "test.tags" in your config?`)
+    }
+    resolved.tag = availableTags
+  }
 
   resolved.name = typeof options.name === 'string'
     ? options.name
