@@ -11,12 +11,36 @@ export class BrowserSessions {
     return this.sessions.get(sessionId)
   }
 
+  findSessionByBrowser(project: TestProject): string | undefined {
+    const name = project.config.browser.name
+    for (const [sessionId, session] of this.sessions.entries()) {
+      if (session.project.config.browser.name === name) {
+        return sessionId
+      }
+    }
+  }
+
+  getPreviewProviderSessions(project: TestProject): string | undefined {
+    if (project.config.browser.provider?.name !== 'preview') {
+      return undefined
+    }
+
+    const name = project.config.browser.name
+    for (const [sessionId, session] of this.sessions.entries()) {
+      if (session.project.config.browser.name === name) {
+        return sessionId
+      }
+    }
+
+    return undefined
+  }
+
   destroySession(sessionId: string): void {
     this.sessions.delete(sessionId)
   }
 
   createSession(sessionId: string, project: TestProject, pool: { reject: (error: Error) => void }): Promise<void> {
-    // this promise only waits for the WS connection with the orhcestrator to be established
+    // this promise only waits for the WS connection with the orchestrator to be established
     const defer = createDefer<void>()
 
     const timeout = setTimeout(() => {

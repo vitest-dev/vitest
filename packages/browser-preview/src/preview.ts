@@ -47,6 +47,9 @@ export class PreviewBrowserProvider implements BrowserProvider {
   }
 
   async openPage(_sessionId: string, url: string): Promise<void> {
+    if (this.open) {
+      return
+    }
     this.open = true
     if (!this.project.browser) {
       throw new Error('Browser is not initialized')
