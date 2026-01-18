@@ -166,7 +166,7 @@ export class BaseCoverageProvider<Options extends ResolvedCoverageOptions<'istan
 
       const matchTarget = isExternal ? filename : relativePath
 
-      if (excludes.length && pm.isMatch(matchTarget, excludes, { dot: true })) {
+      if (pm.isMatch(matchTarget, excludes, { dot: true })) {
         continue
       }
 
