@@ -1,0 +1,3 @@
+coverage
+.vitest-dump
+node_modules
