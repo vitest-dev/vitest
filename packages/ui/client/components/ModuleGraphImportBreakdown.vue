@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { ModuleType } from '~/composables/module-graph'
 import { relative } from 'pathe'
-import { computed, ref } from 'vue'
+import { computed } from 'vue'
 import { config } from '~/composables/client'
 import { currentModule } from '~/composables/navigation'
 import { formatTime, getDurationClass, getExternalModuleName } from '~/utils/task'
@@ -22,9 +22,7 @@ const emit = defineEmits<{
   select: [moduleId: string, type: ModuleType]
 }>()
 
-const maxAmount = ref(10)
-
-const sortedImports = computed(() => {
+const imports = computed(() => {
   const file = currentModule.value
   const importDurations = file?.importDurations
   if (!importDurations) {
@@ -50,11 +48,8 @@ const sortedImports = computed(() => {
       external: duration.external,
     })
   }
-  const sortedImports = allImports.sort((a, b) => b.totalTime - a.totalTime)
-  return sortedImports
+  return allImports.sort((a, b) => b.totalTime - a.totalTime)
 })
-
-const imports = computed(() => sortedImports.value.slice(0, maxAmount.value))
 
 function ellipsisFile(moduleId: string) {
   if (moduleId.length <= 45) {
@@ -67,7 +62,7 @@ function ellipsisFile(moduleId: string) {
 <template>
   <div class="overflow-auto max-h-120">
     <h1 my-2 mx-4>
-      Import Duration Breakdown <span op-70>(ordered by Total Time) (Top {{ Math.min(maxAmount, imports.length) }})</span>
+      Import Duration Breakdown <span op-70>(ordered by Total Time)</span>
     </h1>
     <table my-2 mx-4 text-sm font-light op-90>
       <thead>
@@ -102,17 +97,10 @@ function ellipsisFile(moduleId: string) {
             {{ row.formattedTotalTime }}
           </td>
           <td pr-2 :class="row.totalTimeClass">
-            {{ Math.round((row.totalTime / sortedImports[0].totalTime) * 100) }}%
+            {{ Math.round((row.totalTime / imports[0].totalTime) * 100) }}%
           </td>
         </tr>
       </tbody>
     </table>
-    <button
-      v-if="maxAmount < sortedImports.length"
-      class="flex w-full justify-center h-8 text-sm z-10 relative font-light"
-      @click="maxAmount += 5"
-    >
-      Show more
-    </button>
   </div>
 </template>

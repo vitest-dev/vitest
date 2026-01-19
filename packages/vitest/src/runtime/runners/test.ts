@@ -243,14 +243,10 @@ export class TestRunner implements VitestTestRunner {
 
     const entries = [...(this.workerState.moduleExecutionInfo?.entries() || [])]
 
-    // Trim to top N by duration to reduce IPC payload
-    // Keep enough entries for UI "show more" and aggregation
-    const retention = Math.max(50, limit * 5)
-
     // Sort by duration descending and keep top entries
     const sortedEntries = entries
       .sort(([, a], [, b]) => b.duration - a.duration)
-      .slice(0, retention)
+      .slice(0, limit)
 
     const importDurations: Record<string, ImportDuration> = {}
     for (const [filepath, { duration, selfTime, external, importer }] of sortedEntries) {

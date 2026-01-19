@@ -195,5 +195,5 @@ Show import duration breakdown after tests have finished running. This option on
 Note that if the file path is too long, Vitest will truncate it at the start until it fits 45 character limit.
 
 ::: info
-[Vitest UI](/guide/ui#import-breakdown) shows a breakdown of imports automatically if at least one file took longer than 500 milliseconds to load. You can manually set this option to `false` to disable this.
+Enable this option to see import breakdown in [Vitest UI](/guide/ui#import-breakdown).
 :::
