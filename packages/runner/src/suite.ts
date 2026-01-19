@@ -256,6 +256,8 @@ export function createSuiteHooks(): SuiteHooks {
   }
 }
 
+const POSITIVE_INFINITY = Number.POSITIVE_INFINITY
+
 function parseArguments<T extends (...args: any[]) => any>(
   optionsOrFn: T | object | undefined,
   timeoutOrTest: T | number | undefined,
@@ -323,7 +325,7 @@ function createSuiteCollector(
         return tagDefinition
       })
       // higher priority should be last, run 1, 2, 3, ... etc
-      .sort((tag1, tag2) => (tag2.priority ?? Number.POSITIVE_INFINITY) - (tag1.priority ?? Number.POSITIVE_INFINITY))
+      .sort((tag1, tag2) => (tag2.priority ?? POSITIVE_INFINITY) - (tag1.priority ?? POSITIVE_INFINITY))
       .reduce((acc, tag) => {
         const { name, description, priority, ...options } = tag
         Object.assign(acc, options)

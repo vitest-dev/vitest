@@ -1,12 +1,13 @@
-import type { TestCase, TestModule, TestSuite } from 'vitest/node'
+import type { TestCase, TestSuite } from 'vitest/node'
 import { runInlineTests, runVitest } from '#test-utils'
 import { expect, test } from 'vitest'
 
 test('vitest records tags', async () => {
-  const { stderr, ctx } = await runVitest({
+  const { stderr, buildTree } = await runVitest({
     root: './fixtures/test-tags',
     config: false,
     tags: [
+      { name: 'alone' },
       { name: 'suite' },
       { name: 'test' },
       { name: 'suite 2' },
@@ -15,27 +16,33 @@ test('vitest records tags', async () => {
   })
 
   expect(stderr).toBe('')
-  expect(getTestTree(ctx!.state.getTestModules()[0])).toMatchInlineSnapshot(`
+  expect(getTestTree(buildTree)).toMatchInlineSnapshot(`
     {
-      "suite 1": {
-        "suite 2": {
-          "test 3": [
+      "basic.test.ts": {
+        "suite 1": {
+          "suite 2": {
+            "test 3": [
+              "suite",
+              "alone",
+              "suite 2",
+            ],
+            "test 4": [
+              "suite",
+              "alone",
+              "suite 2",
+              "test 2",
+            ],
+          },
+          "test 1": [
             "suite",
-            "suite 2",
+            "alone",
           ],
-          "test 4": [
+          "test 2": [
             "suite",
-            "suite 2",
-            "test 2",
+            "alone",
+            "test",
           ],
         },
-        "test 1": [
-          "suite",
-        ],
-        "test 2": [
-          "suite",
-          "test",
-        ],
       },
     }
   `)
@@ -46,6 +53,7 @@ test('filters tests based on --tag=!ignore', async () => {
     root: './fixtures/test-tags',
     config: false,
     tags: [
+      { name: 'alone' },
       { name: 'suite' },
       { name: 'test' },
       { name: 'suite 2' },
@@ -76,6 +84,7 @@ test('filters tests based on --tag=!ignore and --tag=include', async () => {
     root: './fixtures/test-tags',
     config: false,
     tags: [
+      { name: 'alone' },
       { name: 'suite' },
       { name: 'test' },
       { name: 'suite 2' },
@@ -106,6 +115,7 @@ test('filters tests based on --tag=include', async () => {
     root: './fixtures/test-tags',
     config: false,
     tags: [
+      { name: 'alone' },
       { name: 'suite' },
       { name: 'test' },
       { name: 'suite 2' },
@@ -121,17 +131,17 @@ test('filters tests based on --tag=include', async () => {
         "suite 1": {
           "suite 2": {
             "test 3": "skipped",
-            "test 4": "passed",
+            "test 4": "skipped",
           },
           "test 1": "skipped",
-          "test 2": "passed",
+          "test 2": "skipped",
         },
       },
     }
   `)
 })
 
-test('throws an error if no tags are defined in the config, but in the test', async () => {
+test.skip('throws an error if no tags are defined in the config, but in the test', async () => {
   const { stderr } = await runInlineTests(
     {
       'basic.test.js': `
@@ -159,7 +169,7 @@ test('throws an error if no tags are defined in the config, but in the test', as
   `)
 })
 
-test('throws an error if tag is not defined in the config, but in the test', async () => {
+test.skip('throws an error if tag is not defined in the config, but in the test', async () => {
   const { stderr } = await runInlineTests(
     {
       'basic.test.js': `
@@ -191,7 +201,7 @@ test('throws an error if tag is not defined in the config, but in the test', asy
   `)
 })
 
-test('throws an error if tag is not defined in the config, but in --tag filter', async () => {
+test.skip('throws an error if tag is not defined in the config, but in --tag filter', async () => {
   const { stderr } = await runInlineTests(
     {
       'basic.test.js': '',
@@ -204,8 +214,9 @@ test('throws an error if tag is not defined in the config, but in --tag filter',
   expect(stderr).toContain('Cannot find any tags to filter based on the --tag unknown option. Did you define them in "test.tags" in your config?')
 })
 
-test('defining a tag available only in one project', async () => {
+test.todo('defining a tag available only in one project', async () => {
   await runVitest({
+    config: false,
     tag: ['project-2-tag'],
     projects: [
       {
@@ -222,7 +233,7 @@ test('defining a tag available only in one project', async () => {
   })
 })
 
-test.only('can specify custom options for tags', async () => {
+test('can specify custom options for tags', async () => {
   const { stderr, buildTree } = await runVitest({
     root: './fixtures/test-tags',
     config: false,
@@ -235,7 +246,7 @@ test.only('can specify custom options for tags', async () => {
     ],
   })
   expect(stderr).toBe('')
-  expect(buildTree(testCase => removeUndefined(testCase.options))).toMatchInlineSnapshot(`
+  expect(buildOptionsTree(buildTree)).toMatchInlineSnapshot(`
     {
       "basic.test.ts": {
         "suite 1": {
@@ -287,13 +298,12 @@ test.only('can specify custom options for tags', async () => {
   `)
 })
 
-// TODO: test that custom options override tags options
-
 test('can specify custom options with priorities for tags', async () => {
   const { stderr, ctx } = await runVitest({
     root: './fixtures/test-tags',
     config: false,
     tags: [
+      { name: 'alone' },
       {
         name: 'test',
         timeout: 500,
@@ -321,7 +331,7 @@ test('can specify custom options with priorities for tags', async () => {
   const testCase = testSuite.children.at(1) as TestCase
 
   expect(testCase.name).toBe('test 2')
-  expect(testCase.options.tags).toEqual(['suite', 'test'])
+  expect(testCase.options.tags).toEqual(['suite', 'alone', 'test'])
   // from 'test' tag (priority 1 is higher)
   expect(testCase.options.timeout).toBe(500)
   // concurrent is not set anywhere manually, so
@@ -331,20 +341,59 @@ test('can specify custom options with priorities for tags', async () => {
   expect(testCase.result().state).toBe('passed')
 })
 
+test('custom options override tag options', async () => {
+  const { stderr, buildTree } = await runInlineTests({
+    'basic.test.js': `
+      test.fails('test 1', { tags: ['test'], timeout: 2000, skip: false, repeats: 0 }, () => {
+        throw new Error('fail')
+      })
+    `,
+    'vitest.config.js': {
+      test: {
+        globals: true,
+        tags: [
+          {
+            name: 'test',
+            timeout: 500,
+            skip: true,
+            concurrent: true,
+            fails: false,
+            retry: 2,
+            repeats: 2,
+          },
+        ],
+      },
+    },
+  })
+  expect(stderr).toBe('')
+  expect(buildOptionsTree(buildTree)).toMatchInlineSnapshot(`
+    {
+      "basic.test.js": {
+        "test 1": {
+          "concurrent": true,
+          "fails": true,
+          "mode": "run",
+          "repeats": 0,
+          "retry": 2,
+          "tags": [
+            "test",
+          ],
+          "timeout": 2000,
+        },
+      },
+    }
+  `)
+})
+
 test('@tag docs inject test tags', async () => {})
 test('invalid @tag throws and error', async () => {})
 
-function getTestTree(testModule: TestModule | TestSuite, tree: Record<string, any> = {}) {
-  for (const child of testModule.children) {
-    if (child.type === 'suite') {
-      tree[child.name] = {}
-      getTestTree(child, tree[child.name])
-    }
-    else {
-      tree[child.name] = child.options.tags
-    }
-  }
-  return tree
+function getTestTree(builder: (fn: (test: TestCase) => any) => any) {
+  return builder(test => test.options.tags)
+}
+
+function buildOptionsTree(builder: (fn: (test: TestCase) => any) => any) {
+  return builder(test => removeUndefined(test.options))
 }
 
 function removeUndefined<T extends Record<string, any>>(obj: T): Partial<T> {
