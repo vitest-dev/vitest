@@ -92,9 +92,12 @@ it('correctly reports a passed test', () => {
     each: undefined,
     concurrent: undefined,
     shuffle: undefined,
+    fails: undefined,
     retry: undefined,
     repeats: undefined,
     mode: 'run',
+    tags: [],
+    timeout: 5000,
   })
   expect(passedTest.meta()).toEqual({})
 
@@ -128,6 +131,9 @@ it('correctly reports failed test', () => {
     retry: undefined,
     repeats: undefined,
     mode: 'run',
+    fails: undefined,
+    tags: [],
+    timeout: 5000,
   })
   expect(passedTest.meta()).toEqual({})
 
