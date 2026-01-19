@@ -262,7 +262,7 @@ class BrowserPool {
             'vitest.browser.session_id': sessionId,
           },
         },
-        () => this.openPage(sessionId),
+        () => this.openPage(sessionId, { parallel: workerCount > 1 }),
       )
       page = page.then(() => {
         // start running tests on the page when it's ready
@@ -275,7 +275,7 @@ class BrowserPool {
     return this._promise
   }
 
-  private async openPage(sessionId: string) {
+  private async openPage(sessionId: string, options: { parallel: boolean }): Promise<void> {
     const sessionPromise = this.project.vitest._browserSessions.createSession(
       sessionId,
       this.project,
@@ -291,6 +291,7 @@ class BrowserPool {
     const pagePromise = browser.provider.openPage(
       sessionId,
       url.toString(),
+      options,
     )
     await Promise.all([sessionPromise, pagePromise])
   }

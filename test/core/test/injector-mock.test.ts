@@ -1,7 +1,7 @@
 import type { HoistMocksPluginOptions } from '../../../packages/mocker/src/node/hoistMocksPlugin'
 import { stripVTControlCharacters } from 'node:util'
 import { parseAst } from 'vite'
-import { describe, expect, it, test } from 'vitest'
+import { describe, expect, it, test, vi } from 'vitest'
 import { hoistMockAndResolve } from '../../../packages/mocker/src/node/hoistMocksPlugin'
 import { generateCodeFrame } from '../../../packages/vitest/src/node/printError.js'
 
@@ -1553,5 +1553,148 @@ export const mocked = vi.unmock('./mocked')
     const error = getErrorWhileHoisting(code)
     expect(error.message).toMatchSnapshot()
     expect(stripVTControlCharacters(error.frame)).toMatchSnapshot()
+  })
+
+  it('shows an error when hoisted methods are used outside the top level scope', ({ onTestFinished }) => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    onTestFinished(() => warn.mockRestore())
+    const result = hoistSimpleCode(`
+// correct
+vi.mock('./hello-world-1')
+
+if (condition) {
+  vi.mock('./hello-world-2')
+}
+
+test('some test', () => {
+  vi.mock('./hello-world-3')
+})
+
+test('some test', () => {
+  if (condition) {
+    vi.mock('./hello-world-4')
+    vi.hoisted(() => {})
+    vi.mock(import('./hello-world-5'))
+    const variable = vi.hoisted(() => {})
+  }
+})
+
+describe('some suite', () => {
+  if (condition) {
+    vi.mock('./hello-world-6')
+  }
+})
+      `)
+    expect(result).toMatchInlineSnapshot(`
+      "import { vi } from "vitest"
+      vi.mock('./hello-world-1')
+      vi.mock('./hello-world-2')
+      vi.mock('./hello-world-3')
+      vi.mock('./hello-world-4')
+      vi.hoisted(() => {})
+      vi.mock('./hello-world-5')
+      const variable = vi.hoisted(() => {})
+      vi.mock('./hello-world-6')
+
+      // correct
+
+      if (condition) {
+        }
+
+      test('some test', () => {
+        })
+
+      test('some test', () => {
+        if (condition) {
+                        }
+      })
+
+      describe('some suite', () => {
+        if (condition) {
+            }
+      })"
+    `)
+    expect(warn).toMatchInlineSnapshot(`
+      [MockFunction warn] {
+        "calls": [
+          [
+            "Warning: A vi.mock('./hello-world-2') call in "/test.js" is not at the top level of the module. Although it appears nested, it will be hoisted and executed before any tests run. Move it to the top level to reflect its actual execution order. This will become an error in a future version.
+      See: https://vitest.dev/guide/mocking/modules#how-it-works",
+          ],
+          [
+            "Warning: A vi.mock('./hello-world-3') call in "/test.js" is not at the top level of the module. Although it appears nested, it will be hoisted and executed before any tests run. Move it to the top level to reflect its actual execution order. This will become an error in a future version.
+      See: https://vitest.dev/guide/mocking/modules#how-it-works",
+          ],
+          [
+            "Warning: A vi.mock('./hello-world-4') call in "/test.js" is not at the top level of the module. Although it appears nested, it will be hoisted and executed before any tests run. Move it to the top level to reflect its actual execution order. This will become an error in a future version.
+      See: https://vitest.dev/guide/mocking/modules#how-it-works",
+          ],
+          [
+            "Warning: A vi.hoisted() call in "/test.js" is not at the top level of the module. Although it appears nested, it will be hoisted and executed before any tests run. Move it to the top level to reflect its actual execution order. This will become an error in a future version.
+      See: https://vitest.dev/guide/mocking/modules#how-it-works",
+          ],
+          [
+            "Warning: A vi.mock(import('./hello-world-5')) call in "/test.js" is not at the top level of the module. Although it appears nested, it will be hoisted and executed before any tests run. Move it to the top level to reflect its actual execution order. This will become an error in a future version.
+      See: https://vitest.dev/guide/mocking/modules#how-it-works",
+          ],
+          [
+            "Warning: A vi.hoisted() call in "/test.js" is not at the top level of the module. Although it appears nested, it will be hoisted and executed before any tests run. Move it to the top level to reflect its actual execution order. This will become an error in a future version.
+      See: https://vitest.dev/guide/mocking/modules#how-it-works",
+          ],
+          [
+            "Warning: A vi.mock('./hello-world-6') call in "/test.js" is not at the top level of the module. Although it appears nested, it will be hoisted and executed before any tests run. Move it to the top level to reflect its actual execution order. This will become an error in a future version.
+      See: https://vitest.dev/guide/mocking/modules#how-it-works",
+          ],
+        ],
+        "results": [
+          {
+            "type": "return",
+            "value": undefined,
+          },
+          {
+            "type": "return",
+            "value": undefined,
+          },
+          {
+            "type": "return",
+            "value": undefined,
+          },
+          {
+            "type": "return",
+            "value": undefined,
+          },
+          {
+            "type": "return",
+            "value": undefined,
+          },
+          {
+            "type": "return",
+            "value": undefined,
+          },
+          {
+            "type": "return",
+            "value": undefined,
+          },
+        ],
+      }
+    `)
+  })
+
+  it('ignores vi.mock position if import.meta.vitest is present', ({ onTestFinished }) => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    onTestFinished(() => warn.mockRestore())
+    const result = hoistSimpleCode(`
+if (import.meta.vitest) {
+  vi.mock('./hello-world-1')
+}
+      `)
+    expect(result).toMatchInlineSnapshot(`
+      "import { vi } from "vitest"
+      vi.mock('./hello-world-1')
+
+      if (import.meta.vitest) {
+        }"
+    `)
+    expect(warn).not.toHaveBeenCalled()
   })
 })
