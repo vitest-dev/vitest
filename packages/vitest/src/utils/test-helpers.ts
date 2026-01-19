@@ -53,7 +53,7 @@ function detectBlockLine(content: string) {
   const tags: string[] = []
   let tagMatch: RegExpMatchArray | null
   // eslint-disable-next-line no-cond-assign
-  while (tagMatch = content.match(/(\/\/|\*)\s*@tag\s+([\w\-/]+)\b/)) {
+  while (tagMatch = content.match(/(\/\/|\*)\s*@module-tag\s+([\w\-/]+)\b/)) {
     tags.push(tagMatch[2])
     content = content.slice(tagMatch.index! + tagMatch[0].length)
   }

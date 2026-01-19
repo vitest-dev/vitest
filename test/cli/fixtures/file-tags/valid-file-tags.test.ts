@@ -1,7 +1,7 @@
 /**
- * @tag file
- * @tag file-2
- * @tag file/slash
+ * @module-tag file
+ * @module-tag file-2
+ * @module-tag file/slash
  */
 
 import { describe, test } from 'vitest'

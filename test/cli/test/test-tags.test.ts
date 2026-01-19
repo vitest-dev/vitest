@@ -404,7 +404,7 @@ test('strictFlag: false does not throw an error if test has an undefined tag', a
   expect(stderr).toBe('')
 })
 
-test('@tag docs inject test tags', async () => {
+test('@module-tag docs inject test tags', async () => {
   const { stderr, buildTree } = await runVitest({
     config: false,
     root: './fixtures/file-tags',
@@ -433,7 +433,7 @@ test('@tag docs inject test tags', async () => {
   `)
 })
 
-test('invalid @tag throws and error', async () => {
+test('invalid @module-tag throws and error', async () => {
   const { stderr } = await runVitest({
     config: false,
     root: './fixtures/file-tags',

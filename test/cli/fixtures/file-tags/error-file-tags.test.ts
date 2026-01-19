@@ -1,6 +1,6 @@
 /**
- * @tag invalid
- * @tag unknown
+ * @module-tag invalid
+ * @module-tag unknown
  */
 
 import { describe, test } from 'vitest'

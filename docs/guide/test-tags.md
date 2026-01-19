@@ -45,10 +45,10 @@ export default defineConfig({
 ```
 
 ::: warning
-If several tags have the same options and are applied to the same test, they will be resolved in order of application or sorted by `properity` first (the lower the number, the higher the priority is):
+If several tags have the same options and are applied to the same test, they will be resolved in order of application or sorted by `priority` first (the lower the number, the higher the priority is):
 
 ```ts
-tet('flaky database test', { tags: ['flaky', 'db'] })
+test('flaky database test', { tags: ['flaky', 'db'] })
 // { timeout: 30_000, retry: 3 }
 ```
 
@@ -57,7 +57,7 @@ Note that the `timeout` is 30 seconds (and not 60) because `flaky` tag has a pri
 If test defines its own options, they will have the highest priority:
 
 ```ts
-tet('flaky database test', { tags: ['flaky', 'db'], timeout: 120_000 })
+test('flaky database test', { tags: ['flaky', 'db'], timeout: 120_000 })
 // { timeout: 120_000, retry: 3 }
 ```
 :::
@@ -102,13 +102,13 @@ describe('API endpoints', { tags: ['backend'] }, () => {
 
 Tags are inherited from parent suites, so all tests inside a tagged `describe` block will automatically have that tag.
 
-It's also possible to define `tags` for every test in the file by using JSDoc's `@tag` at the top of the file:
+It's also possible to define `tags` for every test in the file by using JSDoc's `@module-tag` at the top of the file:
 
 ```ts
 /**
  * Auth tests
- * @tag admin/pages/dashboard
- * @tag acceptance
+ * @module-tag admin/pages/dashboard
+ * @module-tag acceptance
  */
 
 test('dashboard renders items', () => {
@@ -117,19 +117,19 @@ test('dashboard renders items', () => {
 ```
 
 ::: danger
-Any JSDoc comment with a `@tag` will add that tag to all tests in that file. Putting it before the test does not mark that test with a tag:
+Any JSDoc comment with a `@module-tag` will add that tag to all tests in that file. Putting it before the test does not mark that test with a tag:
 
 ```js{3,10}
 describe('forms', () => {
   /**
-   * @tag frontend
+   * @module-tag frontend
    */
   test('renders a form', () => {
     // ...
   })
 
   /**
-   * @tag db
+   * @module-tag db
    */
   test('db returns users', () => {
     // ...
