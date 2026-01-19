@@ -34,7 +34,7 @@
     "vite": "^6.3.5",
     "vite-plugin-pwa": "^1.2.0",
     "vitepress": "2.0.0-alpha.15",
-    "vitepress-plugin-group-icons": "^1.6.5",
+    "vitepress-plugin-group-icons": "^1.7.1",
     "vitepress-plugin-llms": "^1.10.0",
     "vitepress-plugin-tabs": "^0.7.3",
     "workbox-window": "^7.4.0"
