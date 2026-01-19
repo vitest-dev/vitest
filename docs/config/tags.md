@@ -37,9 +37,11 @@ export default defineConfig({
 ```
 
 ::: tip
-If you are using TypeScript, you can enforce what tags are available by augmenting the `TestTags` type with a property that containst a union of strings:
+If you are using TypeScript, you can enforce what tags are available by augmenting the `TestTags` type with a property that containst a union of strings (make sure this file is included by your `tsconfig`):
 
-```ts
+```ts [vitest.shims.ts]
+import 'vitest'
+
 declare module 'vitest' {
   interface TestTags {
     tags:
