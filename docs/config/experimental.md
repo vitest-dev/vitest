@@ -182,8 +182,23 @@ It's important that Node can process `sdkPath` content because it is not transfo
 Please, leave feedback regarding this feature in a [GitHub Discussion](https://github.com/vitest-dev/vitest/discussions/9224).
 :::
 
-- **Type:** `boolean`
-- **Default:** `false`
+- **Type:**
+
+```ts
+interface PrintImportBreakdownOptions {
+  /**
+   * Enable import breakdown display in CLI output.
+   */
+  enabled?: boolean
+  /**
+   * Number of imports to show in CLI and UI output.
+   * Set to 0 to disable import duration collection entirely.
+   */
+  limit?: number
+}
+```
+
+- **Default:** `{ enabled: false, limit: 10 }`
 
 Show import duration breakdown after tests have finished running. This option only works with [`default`](/guide/reporters#default), [`verbose`](/guide/reporters#verbose), or [`tree`](/guide/reporters#tree) reporters.
 
@@ -194,6 +209,16 @@ Show import duration breakdown after tests have finished running. This option on
 
 Note that if the file path is too long, Vitest will truncate it at the start until it fits 45 character limit.
 
-::: info
-Enable this option to see import breakdown in [Vitest UI](/guide/ui#import-breakdown).
-:::
+### experimental.printImportBreakdown.enabled {#experimental-printimportbreakdownenabled}
+
+- **Type:** `boolean`
+- **Default:** `false`
+
+Enable import breakdown display in CLI output. This will also show the breakdown panel by default in [Vitest UI](/guide/ui#import-breakdown), but you can always toggle it manually.
+
+### experimental.printImportBreakdown.limit {#experimental-printimportbreakdownlimit}
+
+- **Type:** `number`
+- **Default:** `10`
+
+Number of imports to show in CLI and UI output. Set to 0 to disable import duration collection entirely (the breakdown will not be available in UI either).
