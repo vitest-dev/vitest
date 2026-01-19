@@ -12,7 +12,7 @@ Defines all [available tags](/guide/test-tags) in your test project. By default,
 
 If you are using [`projects`](/config/projects), they will inherit all global tags definitions automatically.
 
-Use [`--tags-expr`](/guide/test-tags#syntax) to filter tests by their tags.
+Use [`--tags-filter`](/guide/test-tags#syntax) to filter tests by their tags.
 
 ::: tip FILTERING
 You can use a wildcard (*) to match any number of symbols. To ignore a tag, add an exclamation mark (!) at the start of the tag.

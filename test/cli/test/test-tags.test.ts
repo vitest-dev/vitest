@@ -48,7 +48,7 @@ test('vitest records tags', async () => {
   `)
 })
 
-test('filters tests based on --tags-expr=!ignore', async () => {
+test('filters tests based on --tags-filter=!ignore', async () => {
   const { stderr, testTree } = await runVitest({
     root: './fixtures/test-tags',
     config: false,
@@ -59,7 +59,7 @@ test('filters tests based on --tags-expr=!ignore', async () => {
       { name: 'suite_2' },
       { name: 'test_2' },
     ],
-    tagsExpr: ['!suite_2'],
+    tagsFilter: ['!suite_2'],
   })
 
   expect(stderr).toBe('')
@@ -79,7 +79,7 @@ test('filters tests based on --tags-expr=!ignore', async () => {
   `)
 })
 
-test('filters tests based on --tags-expr=!ignore and --tags-expr=include', async () => {
+test('filters tests based on --tags-filter=!ignore and --tags-filter=include', async () => {
   const { stderr, testTree } = await runVitest({
     root: './fixtures/test-tags',
     config: false,
@@ -90,7 +90,7 @@ test('filters tests based on --tags-expr=!ignore and --tags-expr=include', async
       { name: 'suite_2' },
       { name: 'test_2' },
     ],
-    tagsExpr: ['!suite_2', 'test'],
+    tagsFilter: ['!suite_2', 'test'],
   })
 
   expect(stderr).toBe('')
@@ -110,7 +110,7 @@ test('filters tests based on --tags-expr=!ignore and --tags-expr=include', async
   `)
 })
 
-test('filters tests based on --tags-expr=include', async () => {
+test('filters tests based on --tags-filter=include', async () => {
   const { stderr, testTree } = await runVitest({
     root: './fixtures/test-tags',
     config: false,
@@ -121,7 +121,7 @@ test('filters tests based on --tags-expr=include', async () => {
       { name: 'suite_2' },
       { name: 'test_2' },
     ],
-    tagsExpr: ['test*'],
+    tagsFilter: ['test*'],
   })
 
   expect(stderr).toBe('')
@@ -201,13 +201,13 @@ test('throws an error if tag is not defined in the config, but in the test', asy
   `)
 })
 
-test('throws an error if tag is not defined in the config, but in --tags-expr filter', async () => {
+test('throws an error if tag is not defined in the config, but in --tags-filter filter', async () => {
   const { stderr } = await runInlineTests(
     {
       'basic.test.js': '',
     },
     {
-      tagsExpr: ['unknown'],
+      tagsFilter: ['unknown'],
     },
     { fails: true },
   )
@@ -217,7 +217,7 @@ test('throws an error if tag is not defined in the config, but in --tags-expr fi
 test.todo('defining a tag available only in one project', async () => {
   await runVitest({
     config: false,
-    tagsExpr: ['project-2-tag'],
+    tagsFilter: ['project-2-tag'],
     projects: [
       {
         test: {

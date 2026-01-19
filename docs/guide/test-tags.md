@@ -152,20 +152,20 @@ describe('forms', () => {
 
 ## Filtering Tests by Tag
 
-To run only tests with specific tags, use the [`--tags-expr`](/guide/cli#tagsexpr) CLI option:
+To run only tests with specific tags, use the [`--tags-filter`](/guide/cli#tagsfilter) CLI option:
 
 ```shell
-vitest --tags-expr=frontend
-vitest --tags-expr="frontend and backend"
+vitest --tags-filter=frontend
+vitest --tags-filter="frontend and backend"
 ```
 
-If you are using a programmatic API, you can pass down a `tagsExpr` option to [`startVitest`](/guide/advanced/#startvitest) or [`createVitest`](/guide/advanced/#createvitest):
+If you are using a programmatic API, you can pass down a `tagsFilter` option to [`startVitest`](/guide/advanced/#startvitest) or [`createVitest`](/guide/advanced/#createvitest):
 
 ```ts
 import { startVitest } from 'vitest/node'
 
 await startVitest('test', [], {
-  tagsExpr: ['frontend and backend'],
+  tagsFilter: ['frontend and backend'],
 })
 ```
 
@@ -175,7 +175,7 @@ Or you can create a [test specification](/api/advanced/test-specification) with 
 const specification = vitest.getRootProject().createSpecification(
   '/path-to-file.js',
   {
-    testTagsExpr: ['frontend and backend'],
+    testTagsFilter: ['frontend and backend'],
   },
 )
 ```
@@ -201,7 +201,7 @@ The parser follows standard [operator precedence](https://developer.mozilla.org/
 You can use a wildcard (`*`) to match any number of characters:
 
 ```shell
-vitest --tags-expr="unit/*"
+vitest --tags-filter="unit/*"
 ```
 
 This will match tags like `unit/components`, `unit/utils`, etc.
@@ -211,7 +211,7 @@ This will match tags like `unit/components`, `unit/utils`, etc.
 To exclude tests with a specific tag, add an exclamation mark (`!`) at the start or a "not" keyword:
 
 ```shell
-vitest --tags-expr="!slow and not flaky"
+vitest --tags-filter="!slow and not flaky"
 ```
 
 ### Examples
@@ -220,33 +220,33 @@ Here are some common filtering patterns:
 
 ```shell
 # Run only unit tests
-vitest --tags-expr="unit"
+vitest --tags-filter="unit"
 
 # Run tests that are both frontend AND fast
-vitest --tags-expr="frontend and fast"
+vitest --tags-filter="frontend and fast"
 
 # Run tests that are either unit OR e2e
-vitest --tags-expr="unit or e2e"
+vitest --tags-filter="unit or e2e"
 
 # Run all tests except slow ones
-vitest --tags-expr="!slow"
+vitest --tags-filter="!slow"
 
 # Run frontend tests that are not flaky
-vitest --tags-expr="frontend && !flaky"
+vitest --tags-filter="frontend && !flaky"
 
 # Run tests matching a wildcard pattern
-vitest --tags-expr="api/*"
+vitest --tags-filter="api/*"
 
 # Complex expression with parentheses
-vitest --tags-expr="(unit || e2e) && !slow"
+vitest --tags-filter="(unit || e2e) && !slow"
 
 # Run database tests that are either postgres or mysql, but not slow
-vitest --tags-expr="db && (postgres || mysql) && !slow"
+vitest --tags-filter="db && (postgres || mysql) && !slow"
 ```
 
-You can also pass multiple `--tags-expr` flags. They are combined with AND logic:
+You can also pass multiple `--tags-filter` flags. They are combined with AND logic:
 
 ```shell
 # Run tests that match (unit OR e2e) AND are NOT slow
-vitest --tags-expr="unit || e2e" --tags-expr="!slow"
+vitest --tags-filter="unit || e2e" --tags-filter="!slow"
 ```

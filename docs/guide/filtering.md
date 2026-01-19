@@ -91,7 +91,7 @@ describe('suite', () => {
 
 ## Filtering Tags
 
-If your test defines a [tag](/guide/test-tags), you can filter your tests with a `--tags-expr` option:
+If your test defines a [tag](/guide/test-tags), you can filter your tests with a `--tags-filter` option:
 
 ```ts
 test('renders a form', { tags: ['frontend'] }, () => {
@@ -104,7 +104,7 @@ test('calls an external API', { tags: ['backend'] }, () => {
 ```
 
 ```shell
-vitest --tags-expr=frontend
+vitest --tags-filter=frontend
 ```
 
 ## Selecting Suites and Tests to Run

@@ -43,7 +43,7 @@ export interface VitestRunnerConfig {
   includeTaskLocation?: boolean
   diffOptions?: DiffOptions
   tags: TestTagDefinition[]
-  tagsExpr?: string[]
+  tagsFilter?: string[]
   strictTags: boolean
 }
 
@@ -57,7 +57,7 @@ export interface FileSpecification {
   fileTags?: string[]
   testLocations: number[] | undefined
   testNamePattern: RegExp | undefined
-  testTagsExpr: string[] | undefined
+  testTagsFilter: string[] | undefined
   testIds: string[] | undefined
 }
 

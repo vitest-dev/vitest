@@ -1014,7 +1014,7 @@ export interface UserConfig extends InlineConfig {
   /**
    * Tags to filter tests with.
    */
-  tagsExpr?: string[]
+  tagsFilter?: string[]
 }
 
 export type OnUnhandledErrorCallback = (error: (TestError | Error) & { type: string }) => boolean | void
@@ -1047,7 +1047,7 @@ export interface ResolvedConfig
     | 'name'
     | 'vmMemoryLimit'
     | 'fileParallelism'
-    | 'tagsExpr'
+    | 'tagsFilter'
   > {
   mode: VitestRunMode
 
@@ -1118,7 +1118,7 @@ export interface ResolvedConfig
 
   vmMemoryLimit?: UserConfig['vmMemoryLimit']
   dumpDir?: string
-  tagsExpr?: string[]
+  tagsFilter?: string[]
 }
 
 type NonProjectOptions

@@ -12,7 +12,7 @@ export function interpretTaskModes(
   namePattern?: string | RegExp,
   testLocations?: number[] | undefined,
   testIds?: string[] | undefined,
-  testTagsExpr?: ((testTags: string[]) => boolean) | undefined,
+  testTagsFilter?: ((testTags: string[]) => boolean) | undefined,
   onlyMode?: boolean,
   parentIsOnly?: boolean,
   allowOnly?: boolean,
@@ -75,7 +75,7 @@ export function interpretTaskModes(
         if (testIds && !testIds.includes(t.id)) {
           t.mode = 'skip'
         }
-        if (testTagsExpr && !testTagsExpr(t.tags || [])) {
+        if (testTagsFilter && !testTagsFilter(t.tags || [])) {
           t.mode = 'skip'
         }
       }
