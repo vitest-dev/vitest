@@ -128,6 +128,7 @@ export interface SerializedConfig {
   }
   tags: TestTagDefinition[]
   tagsFilter: string[] | undefined
+  strictTags: boolean
 }
 
 export interface SerializedCoverageConfig {

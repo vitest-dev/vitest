@@ -137,5 +137,6 @@ export function serializeConfig(project: TestProject): SerializedConfig {
     },
     tags: config.tags || [],
     tagsFilter: config.tag,
+    strictTags: config.strictTags ?? true,
   }
 }

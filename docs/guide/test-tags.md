@@ -4,7 +4,7 @@
 
 ## Defining Tags
 
-Tags must be defined in your configuration file. Vitest does not provide any built-in tags. The test runner will throw an error if a test uses a tag not defined in the config in order to avoid silently doing something surprising due to mistyped names.
+Tags must be defined in your configuration file. Vitest does not provide any built-in tags. The test runner will throw an error if a test uses a tag not defined in the config in order to avoid silently doing something surprising due to mistyped names, but you can disable this behaviour via a [`strictTags`](/config/stricttags) option.
 
 You must define a `name` of the tag, and you may define additional options that will be applied to every test marked with the tag, e.g., a `timeout`, or `retry`. For the full list of available options, see [`tags`](/config/tags).
 

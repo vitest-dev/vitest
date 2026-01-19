@@ -385,6 +385,25 @@ test('custom options override tag options', async () => {
   `)
 })
 
+test('strictFlag: false does not throw an error if test has an undefined tag', async () => {
+  const { stderr } = await runInlineTests(
+    {
+      'basic.test.js': `
+        test('test 1', { tags: ['unknown'] }, () => {})
+      `,
+      'vitest.config.js': {
+        test: {
+          globals: true,
+          strictTags: false,
+          tags: [{ name: 'known' }],
+        },
+      },
+    },
+  )
+
+  expect(stderr).toBe('')
+})
+
 test('@tag docs inject test tags', async () => {})
 test('invalid @tag throws and error', async () => {})
 

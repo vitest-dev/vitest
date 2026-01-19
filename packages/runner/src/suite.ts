@@ -319,11 +319,12 @@ function createSuiteCollector(
     const tagsOptions = testTags
       .map((tag) => {
         const tagDefinition = runner.config.tags?.find(t => t.name === tag)
-        if (!tagDefinition) {
+        if (!tagDefinition && runner.config.strictTags) {
           throw createNoTagsError(runner, tag)
         }
         return tagDefinition
       })
+      .filter(r => r != null)
       // higher priority should be last, run 1, 2, 3, ... etc
       .sort((tag1, tag2) => (tag2.priority ?? POSITIVE_INFINITY) - (tag1.priority ?? POSITIVE_INFINITY))
       .reduce((acc, tag) => {
@@ -492,7 +493,7 @@ function createSuiteCollector(
     const currentSuite = collectorContext.currentSuite?.suite
     const parentTask = currentSuite ?? collectorContext.currentSuite?.file
     const suiteTags = toArray(suiteOptions?.tags)
-    if (suiteTags.length) {
+    if (suiteTags.length && runner.config.strictTags) {
       validateTags(runner, suiteTags)
     }
 

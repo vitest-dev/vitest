@@ -478,6 +478,10 @@ export default ({ mode }: { mode: string }) => {
                 link: '/config/tags',
               },
               {
+                text: 'strictTags',
+                link: '/config/stricttags',
+              },
+              {
                 text: 'typecheck',
                 link: '/config/typecheck',
               },

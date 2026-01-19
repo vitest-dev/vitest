@@ -43,6 +43,7 @@ export interface VitestRunnerConfig {
   diffOptions?: DiffOptions
   tags: TestTagDefinition[]
   tagsFilter?: string[]
+  strictTags: boolean
 }
 
 /**

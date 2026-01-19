@@ -793,6 +793,9 @@ export const cliOptionsConfig: VitestCLIOptions = {
     argument: '<tag>',
     array: true,
   },
+  strictTags: {
+    description: 'Should Vitest throw an error if test has a tag that is not defined in the config. (default: `true`)',
+  },
 
   experimental: {
     description: 'Experimental features.',

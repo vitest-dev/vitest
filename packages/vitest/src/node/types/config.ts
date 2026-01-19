@@ -869,6 +869,12 @@ export interface InlineConfig {
    * If test defines a tag that is not listed here, an error will be thrown.
    */
   tags?: TestTagDefinition[]
+
+  /**
+   * Should Vitest throw an error if test has a tag that is not defined in the config.
+   * @default true
+   */
+  strictTags?: boolean
 }
 
 export interface TypecheckConfig {
