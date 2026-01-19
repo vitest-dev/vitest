@@ -13,7 +13,7 @@ Should Vitest throw an error if test has a [`tag`](/config/tags) that is not def
 
 Note that Vitest will always throw an error if `--tags-filter` flag defines a tag not present in the config.
 
-For examle, this test will throw an error because the tag `fortnend` has a typo (it should be `frontend`):
+For example, this test will throw an error because the tag `fortnend` has a typo (it should be `frontend`):
 
 ::: code-group
 ```js [form.test.js]

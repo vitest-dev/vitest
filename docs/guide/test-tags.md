@@ -45,7 +45,7 @@ export default defineConfig({
 ```
 
 ::: warning
-If several tags have the same options and are applied to the same test, they will be resolved in order of application or sorted by `priority` first (the lower the number, the higher the priority is):
+If several tags have the same options and are applied to the same test, they will be resolved in order of application or sorted by `priority` first (the lower the number, the higher the priority). Tags without a defined priority are resolved last:
 
 ```ts
 test('flaky database test', { tags: ['flaky', 'db'] })
@@ -62,7 +62,7 @@ test('flaky database test', { tags: ['flaky', 'db'], timeout: 120_000 })
 ```
 :::
 
-If you are using TypeScript, you can enforce what tags are available by augmenting the `TestTags` type with a property that containst a union of strings (make sure this file is included by your `tsconfig`):
+If you are using TypeScript, you can enforce what tags are available by augmenting the `TestTags` type with a property that contains a union of strings (make sure this file is included by your `tsconfig`):
 
 ```ts [vitest.shims.ts]
 import 'vitest'
