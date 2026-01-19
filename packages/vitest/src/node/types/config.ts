@@ -1012,7 +1012,8 @@ export interface UserConfig extends InlineConfig {
   clearCache?: boolean
 
   /**
-   * Tags to filter tests with.
+   * Tags expression to filter tests to run. Multiple filters will be applied using AND logic.
+   * @see {@link https://vitest.dev/guide/test-tags#syntax}
    */
   tagsFilter?: string[]
 }

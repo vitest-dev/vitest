@@ -11,7 +11,7 @@ const specification = project.createSpecification(
     testLines: [20, 40],
     testNamePattern: /hello world/,
     testIds: ['1223128da3_0_0_0', '1223128da3_0_0'],
-    testTags: ['frontend', 'backend'],
+    testTagsFilter: ['frontend and backend'],
   } // optional test filters
 )
 ```
@@ -83,9 +83,9 @@ A regexp that matches the name of the test in this module. This value will overr
 
 The ids of tasks inside of this specification to run.
 
-## testTags <Version>4.1.0</Version> {#testtags}
+## testTagsFilter <Version>4.1.0</Version> {#testtagsfilter}
 
-The [tags](/guide/test-tags) that a test must have in order to be included in the run.
+The [tags filter](/guide/test-tags#syntax) that a test must pass in order to be included in the run. Multiple filters are treated as `AND`.
 
 ## toJSON
 
