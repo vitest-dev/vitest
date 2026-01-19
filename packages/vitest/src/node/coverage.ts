@@ -170,6 +170,13 @@ export class BaseCoverageProvider<Options extends ResolvedCoverageOptions<'istan
         continue
       }
 
+      if (!isExternal) {
+        const absoluteExcludes = excludes.filter(pattern => path.isAbsolute(pattern))
+        if (absoluteExcludes.length > 0 && pm.isMatch(filename, absoluteExcludes, { dot: true })) {
+          continue
+        }
+      }
+
       if (pm.isMatch(matchTarget, includeGlobs, { dot: true, contains: true })) {
         this.globCache.set(cacheKey, true)
         return true
