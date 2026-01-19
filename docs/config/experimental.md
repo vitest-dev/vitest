@@ -192,7 +192,6 @@ interface PrintImportBreakdownOptions {
   enabled?: boolean
   /**
    * Number of imports to show in CLI and UI output.
-   * Set to 0 to disable import duration collection entirely.
    */
   limit?: number
 }
@@ -221,4 +220,4 @@ Enable import breakdown display in CLI output. This will also show the breakdown
 - **Type:** `number`
 - **Default:** `10`
 
-Number of imports to show in CLI and UI output. Set to 0 to disable import duration collection entirely (the breakdown will not be available in UI either).
+Number of imports to show in CLI and UI output.

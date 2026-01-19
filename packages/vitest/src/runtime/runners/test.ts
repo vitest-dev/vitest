@@ -236,7 +236,7 @@ export class TestRunner implements VitestTestRunner {
 
   getImportDurations(): Record<string, ImportDuration> {
     const { limit } = this.config.experimental.printImportBreakdown
-    // limit = 0 means opt-out from collection entirely
+    // skip sorting if limit is 0
     if (limit === 0) {
       return {}
     }

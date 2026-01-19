@@ -812,7 +812,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
             description: 'Enable import breakdown display (default: false).',
           },
           limit: {
-            description: 'Number of imports to show in CLI output (default: 10). Set to 0 to disable import duration collection entirely.',
+            description: 'Number of imports to show in CLI output (default: 10).',
             argument: '<number>',
           },
         },
