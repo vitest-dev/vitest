@@ -1,3 +1,7 @@
+---
+title: Test Tags | Guide
+---
+
 # Test Tags <Version>4.1.0</Version>
 
 [`Tags`](/config/tags) allow you to mark tests and change their options based on the tag's definition.
@@ -81,7 +85,7 @@ describe('API endpoints', { tags: ['backend'] }, () => {
 
 Tags are inherited from parent suites, so all tests inside a tagged `describe` block will automatically have that tag.
 
-It's also possible to define `tags` for every test in the file by using JSDoc's `@tag`:
+It's also possible to define `tags` for every test in the file by using JSDoc's `@tag` at the top of the file:
 
 ```ts
 /**
@@ -94,6 +98,42 @@ test('dashboard renders items', () => {
   // ...
 })
 ```
+
+::: danger
+Any JSDoc comment with a `@tag` will add that tag to all tests in that file. Putting it before the test does not mark that test with a tag:
+
+```js{3,10}
+describe('forms', () => {
+  /**
+   * @tag frontend
+   */
+  test('renders a form', () => {
+    // ...
+  })
+
+  /**
+   * @tag db
+   */
+  test('db returns users', () => {
+    // ...
+  })
+})
+```
+
+This test file will mark all tests with a `frontend` and a `db` tag, you should pass an object instead:
+
+```js{2,6}
+describe('forms', () => {
+  test('renders a form', { tags: 'frontend' }, () => {
+    // ...
+  })
+
+  test('db returns users', { tags: 'db' }, () => {
+    // ...
+  })
+})
+```
+:::
 
 ## Filtering Tests by Tag
 

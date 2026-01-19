@@ -1,3 +1,8 @@
+---
+title: strictTags | Config
+outline: deep
+---
+
 # strictTags <Version>4.1.0</Version> {#stricttags}
 
 - **Type:** `boolean`

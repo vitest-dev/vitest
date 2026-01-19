@@ -40,7 +40,7 @@ import { getHooks, setFn, setHooks, setTestFixture } from './map'
 import { getCurrentTest } from './test-state'
 import { findTestFileStackTrace } from './utils'
 import { createChainable } from './utils/chain'
-import { createTaskName } from './utils/tasks'
+import { createNoTagsError, createTaskName, validateTags } from './utils/tasks'
 
 /**
  * Creates a suite of tests, allowing for grouping and hierarchical organization of tests.
@@ -493,9 +493,7 @@ function createSuiteCollector(
     const currentSuite = collectorContext.currentSuite?.suite
     const parentTask = currentSuite ?? collectorContext.currentSuite?.file
     const suiteTags = toArray(suiteOptions?.tags)
-    if (suiteTags.length && runner.config.strictTags) {
-      validateTags(runner, suiteTags)
-    }
+    validateTags(runner, suiteTags)
 
     suite = {
       id: '',
@@ -1010,22 +1008,4 @@ function formatTemplateString(cases: any[], args: any[]): any[] {
     res.push(oneCase)
   }
   return res
-}
-
-function validateTags(runner: VitestRunner, tags: string[]) {
-  const availableTags = new Set(runner.config.tags.map(tag => tag.name))
-  for (const tag of tags) {
-    if (!availableTags.has(tag)) {
-      throw createNoTagsError(runner, tag)
-    }
-  }
-}
-
-function createNoTagsError(runner: VitestRunner, tag: string) {
-  if (!runner.config.tags.length) {
-    throw new Error(`The Vitest config does't define any "tags", cannot apply "${tag}" tag for this test. See: https://vitest.dev/guide/test-tags`)
-  }
-  throw new Error(`Tag "${tag}" is not defined in the configuration. Available tags are: \n${runner.config.tags
-    .map(t => `- ${t.name}${t.description ? `: ${t.description}` : ''}`)
-    .join('\n')}`)
 }

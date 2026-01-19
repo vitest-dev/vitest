@@ -404,8 +404,62 @@ test('strictFlag: false does not throw an error if test has an undefined tag', a
   expect(stderr).toBe('')
 })
 
-test('@tag docs inject test tags', async () => {})
-test('invalid @tag throws and error', async () => {})
+test('@tag docs inject test tags', async () => {
+  const { stderr, buildTree } = await runVitest({
+    config: false,
+    root: './fixtures/file-tags',
+    include: ['./valid-file-tags.test.ts'],
+    tags: [
+      { name: 'file' },
+      { name: 'file-2' },
+      { name: 'file/slash' },
+      { name: 'test' },
+    ],
+  })
+  expect(stderr).toBe('')
+  expect(getTestTree(buildTree)).toMatchInlineSnapshot(`
+    {
+      "valid-file-tags.test.ts": {
+        "suite 1": {
+          "test 1": [
+            "file",
+            "file-2",
+            "file/slash",
+            "test",
+          ],
+        },
+      },
+    }
+  `)
+})
+
+test('invalid @tag throws and error', async () => {
+  const { stderr } = await runVitest({
+    config: false,
+    root: './fixtures/file-tags',
+    include: ['./error-file-tags.test.ts'],
+    tags: [
+      { name: 'file' },
+      { name: 'file-2' },
+      { name: 'file/slash' },
+      { name: 'test' },
+    ],
+  })
+  expect(stderr).toMatchInlineSnapshot(`
+    "
+    ⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+     FAIL  error-file-tags.test.ts [ error-file-tags.test.ts ]
+    Error: Tag "invalid" is not defined in the configuration. Available tags are:
+    - file
+    - file-2
+    - file/slash
+    - test
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+    "
+  `)
+})
 
 function getTestTree(builder: (fn: (test: TestCase) => any) => any) {
   return builder(test => test.options.tags)

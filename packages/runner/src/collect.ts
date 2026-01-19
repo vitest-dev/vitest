@@ -16,6 +16,7 @@ import {
   interpretTaskModes,
   someTasksAreOnly,
 } from './utils/collect'
+import { validateTags } from './utils/tasks'
 
 const now = globalThis.performance ? globalThis.performance.now.bind(globalThis.performance) : Date.now
 
@@ -39,15 +40,20 @@ export async function collectTests(
         const testIds = typeof spec === 'string' ? undefined : spec.testIds
         const testTags = typeof spec === 'string' ? undefined : spec.testTags
 
+        const fileTags: string[] = typeof spec === 'string' ? [] : (spec.fileTags || [])
+
         const file = createFileTask(filepath, config.root, config.name, runner.pool, runner.viteEnvironment)
         setFileContext(file, Object.create(null))
+        file.tags = fileTags
         file.shuffle = config.sequence.shuffle
-
-        runner.onCollectStart?.(file)
 
         clearCollectorContext(file, runner)
 
         try {
+          validateTags(runner, fileTags)
+
+          runner.onCollectStart?.(file)
+
           const setupFiles = toArray(config.setupFiles)
           if (setupFiles.length) {
             const setupStart = now()
