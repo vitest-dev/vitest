@@ -77,7 +77,7 @@ describe('running browser tests', async () => {
     expect(failedTests).toHaveLength(0)
   })
 
-  test.only('tags are collected', () => {
+  test('tags are collected', () => {
     expect(vitest.config.tags).toEqual([
       { name: 'e2e', priority: 10 },
       { name: 'test', priority: 5 },
