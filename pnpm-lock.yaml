@@ -1452,6 +1452,9 @@ importers:
       '@vitest/coverage-v8':
         specifier: workspace:*
         version: link:../../packages/coverage-v8
+      '@vitest/utils':
+        specifier: workspace:*
+        version: link:../../packages/utils
       '@vitest/web-worker':
         specifier: workspace:*
         version: link:../../packages/web-worker

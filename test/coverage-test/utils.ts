@@ -8,10 +8,11 @@ import { resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { stripVTControlCharacters } from 'node:util'
 import { playwright } from '@vitest/browser-playwright'
+import { toArray } from '@vitest/utils/helpers'
 import libCoverage from 'istanbul-lib-coverage'
 import { normalize } from 'pathe'
 import { onTestFailed, TestRunner, vi, describe as vitestDescribe, test as vitestTest } from 'vitest'
-import * as testUtils from '../test-utils'
+import * as testUtils from '../test-utils/index'
 
 export function test(name: string, fn: TestFunction, skip = false) {
   if (process.env.COVERAGE_TEST !== 'true') {
@@ -56,6 +57,25 @@ export async function runVitest(config: TestUserConfig, options = { throwOnError
       provider: playwright(),
       ...config.browser,
     },
+    experimental: {
+      ...config.experimental,
+      viteModuleRunner: process.env.VITE_MODULE_RUNNER === 'false' ? false : config.experimental?.viteModuleRunner,
+    },
+    setupFiles: [
+      resolve(import.meta.dirname, 'setup.native.ts'),
+      ...config.setupFiles ?? [],
+    ],
+
+    projects: config.projects?.map((project) => {
+      if (typeof project !== 'string' && 'test' in project) {
+        project.test ||= {}
+        project.test.setupFiles = toArray(project.test.setupFiles)
+        project.test.setupFiles.push(resolve(import.meta.dirname, 'setup.native.ts'))
+      }
+
+      return project
+    }),
+
     $viteConfig: viteOverrides,
   })
 
@@ -125,6 +145,10 @@ export function isV8Provider() {
 
 export function isBrowser() {
   return process.env.COVERAGE_BROWSER === 'true'
+}
+
+export function isNativeRunner() {
+  return process.env.VITE_MODULE_RUNNER === 'false'
 }
 
 export function normalizeURL(importMetaURL: string) {

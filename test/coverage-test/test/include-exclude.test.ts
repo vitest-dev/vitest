@@ -1,6 +1,6 @@
 import assert from 'node:assert'
 import { expect, onTestFinished, vi } from 'vitest'
-import { isBrowser, readCoverageMap, runVitest, test } from '../utils'
+import { isBrowser, isNativeRunner, readCoverageMap, runVitest, test } from '../utils'
 
 test('default include should show only covered files', async () => {
   await runVitest({
@@ -230,7 +230,9 @@ test('overridden exclude should still apply defaults', async () => {
   expect(coverageMap.files()).toMatchInlineSnapshot(`{}`)
 })
 
-test('uncovered files are transformed correctly (node and browser)', async () => {
+test('uncovered files are transformed correctly (node and browser)', async ({ skip }) => {
+  skip(isNativeRunner(), 'native runner does not support plugins')
+
   await runVitest({
     config: 'fixtures/configs/vitest.config.conditional.ts',
     include: ['fixtures/test/math.test.ts'],
@@ -263,6 +265,7 @@ test('uncovered files are transformed correctly (node and browser)', async () =>
 
 test('uncovered files are transformed correctly (jsdom)', async ({ skip }) => {
   skip(isBrowser(), 'node relevant test')
+  skip(isNativeRunner(), 'native runner does not support plugins')
 
   await runVitest({
     config: 'fixtures/configs/vitest.config.conditional.ts',
@@ -285,7 +288,9 @@ test('uncovered files are transformed correctly (jsdom)', async ({ skip }) => {
     `)
 })
 
-test('files included and excluded in plugin\'s configureVitest are excluded', async () => {
+test('files included and excluded in plugin\'s configureVitest are excluded', async ({ skip }) => {
+  skip(isNativeRunner(), 'native runner does not support plugins')
+
   await runVitest({
     config: 'fixtures/configs/vitest.config.configure-vitest-hook.ts',
     include: ['fixtures/test/math.test.ts', 'fixtures/test/even.test.ts'],
@@ -307,7 +312,9 @@ test('files included and excluded in plugin\'s configureVitest are excluded', as
   `)
 })
 
-test('files included and excluded in project\'s plugin\'s configureVitest are excluded', async () => {
+test('files included and excluded in project\'s plugin\'s configureVitest are excluded', async ({ skip }) => {
+  skip(isNativeRunner(), 'native runner does not support plugins')
+
   await runVitest({
     coverage: {
       // Include math.ts by default, exclude it in plugin config

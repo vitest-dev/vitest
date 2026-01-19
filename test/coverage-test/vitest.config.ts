@@ -125,6 +125,37 @@ export default defineConfig({
         },
       },
 
+      // Test cases for native runner
+      {
+        extends: true,
+        test: {
+          name: { label: 'native', color: 'green' },
+          env: { COVERAGE_PROVIDER: 'v8', VITE_MODULE_RUNNER: 'false' },
+          include: [GENERIC_TESTS, V8_TESTS],
+          exclude: [
+            ISTANBUL_TESTS,
+            UNIT_TESTS,
+            CUSTOM_TESTS,
+            BROWSER_TESTS,
+            FIXTURES,
+
+            // Unsupported features
+            '**/vue.test.ts',
+            '**/workspace.multi-transform.test.ts',
+            '**/web-worker.test.ts',
+            '**/virtual-files.test.ts',
+            '**/query-param-transforms.test.ts',
+            '**/multi-environment.test.ts',
+            '**/import-meta-env.test.ts',
+            '**/decorators.test.ts',
+            '**/import-attributes.test.ts',
+
+            // TODO: Fix this
+            '**/import-meta-env.test.ts',
+          ],
+        },
+      },
+
       // Test cases that aren't provider specific
       {
         extends: true,
