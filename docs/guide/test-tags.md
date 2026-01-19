@@ -171,7 +171,7 @@ await startVitest('test', [], {
 })
 ```
 
-Or you can create a [test specification](/api/advanced/test-specification) with tags of your choice:
+Or you can create a [test specification](/api/advanced/test-specification) with your custom filters:
 
 ```ts
 const specification = vitest.getRootProject().createSpecification(
@@ -181,10 +181,6 @@ const specification = vitest.getRootProject().createSpecification(
   },
 )
 ```
-
-::: warning
-Note that `createSpecification` does not support wildcards and will not validate if the tags are defined in the config.
-:::
 
 ### Syntax
 

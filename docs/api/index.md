@@ -32,7 +32,7 @@ interface TestOptions {
   /**
    * Custom tags of the test. Useful for filtering tests.
    */
-  tags?: string[]
+  tags?: string[] | string
 }
 ```
 

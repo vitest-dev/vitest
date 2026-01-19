@@ -58,7 +58,7 @@ declare module 'vitest' {
 
 - **Type:** `string`
 
-A human-readable description for the tag. This will be shown in error messages when a tag is not found and in UI.
+A human-readable description for the tag. This will be shown in UI and inside error messages when a tag is not found.
 
 ```ts
 export default defineConfig({
