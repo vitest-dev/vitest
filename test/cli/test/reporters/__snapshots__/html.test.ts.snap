@@ -82,7 +82,9 @@ exports[`html reporter > resolves to "failing" status for test file "json-fail" 
             "startTime": 0,
             "state": "fail",
           },
-          "tags": [],
+          "tags": [
+            "fail",
+          ],
           "timeout": 5000,
           "type": "test",
         },
@@ -115,7 +117,7 @@ exports[`html reporter > resolves to "failing" status for test file "json-fail" 
 
 // I am comment1
 // I am comment2
-test('should fail', () => {
+test('should fail', { tags: ['fail'] }, () => {
   // eslint-disable-next-line no-console
   console.log('json-fail>should fail')
   expect(2).toEqual(1)

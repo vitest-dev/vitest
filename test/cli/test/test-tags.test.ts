@@ -682,6 +682,7 @@ test('only tag option marks tests as only', async () => {
         tags: [
           { name: 'only-tag', only: true },
         ],
+        allowOnly: true,
       },
     },
   })
