@@ -94,6 +94,8 @@ function clearTaskResult(task: RunnerTask) {
   const node = explorerTree.nodes.get(task.id)
   if (node) {
     node.state = undefined
+    // update task mode to allow change icon on skipped tests
+    task.mode = 'run'
     node.duration = undefined
     if (isTaskSuite(task)) {
       for (const t of task.tasks) {
@@ -113,6 +115,7 @@ function clearResults(useFiles: RunnerTestFile[]) {
         const task = map.get(i.id)
         if (task) {
           task.state = undefined
+          task.mode = 'run'
           task.duration = undefined
         }
       }
@@ -120,6 +123,7 @@ function clearResults(useFiles: RunnerTestFile[]) {
     const file = map.get(f.id)
     if (file) {
       file.state = undefined
+      file.mode = 'run'
       file.duration = undefined
       if (isFileNode(file)) {
         file.collectDuration = undefined

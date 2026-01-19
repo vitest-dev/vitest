@@ -50,6 +50,7 @@ export default ({ mode }: { mode: string }) => {
     },
     head: [
       ['meta', { name: 'theme-color', content: '#22FF84' }],
+      ['link', { rel: 'icon', href: '/favicon.ico', sizes: '48x48' }],
       ['link', { rel: 'icon', href: '/logo-without-border.svg', type: 'image/svg+xml' }],
       ['meta', { name: 'author', content: `${teamMembers.map(c => c.name).join(', ')} and ${vitestName} contributors` }],
       ['meta', { name: 'keywords', content: 'vitest, vite, test, coverage, snapshot, react, vue, preact, svelte, solid, lit, marko, ruby, cypress, puppeteer, jsdom, happy-dom, test-runner, jest, typescript, esm, tinyspy, node' }],
@@ -63,6 +64,15 @@ export default ({ mode }: { mode: string }) => {
       ['link', { rel: 'me', href: 'https://m.webtoo.ls/@vitest' }],
       ['link', { rel: 'mask-icon', href: '/logo.svg', color: '#ffffff' }],
       ['link', { rel: 'apple-touch-icon', href: '/apple-touch-icon.png', sizes: '180x180' }],
+      [
+        'script',
+        {
+          'src': 'https://cdn.usefathom.com/script.js',
+          'data-site': 'BEAFAKYG',
+          'data-spa': 'auto',
+          'defer': '',
+        },
+      ],
     ],
     lastUpdated: true,
     vite: {

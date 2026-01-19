@@ -668,7 +668,7 @@ export class Vitest {
 
       this.filenamePattern = filters && filters?.length > 0 ? filters : undefined
       startSpan.setAttribute('vitest.start.filters', this.filenamePattern || [])
-      const files = await this._traces.$(
+      const specifications = await this._traces.$(
         'vitest.config.resolve_include_glob',
         async () => {
           const specifications = await this.specifications.getRelevantTestSpecifications(filters)
@@ -687,7 +687,7 @@ export class Vitest {
       )
 
       // if run with --changed, don't exit if no tests are found
-      if (!files.length) {
+      if (!specifications.length) {
         await this._traces.$('vitest.test_run', async () => {
           await this._testRun.start([])
           const coverage = await this.coverageProvider?.generateCoverage?.({ allTestsRun: true })
@@ -707,11 +707,11 @@ export class Vitest {
         unhandledErrors: [],
       }
 
-      if (files.length) {
+      if (specifications.length) {
         // populate once, update cache on watch
-        await this.cache.stats.populateStats(this.config.root, files)
+        await this.cache.stats.populateStats(this.config.root, specifications)
 
-        testModules = await this.runFiles(files, true)
+        testModules = await this.runFiles(specifications, true)
       }
 
       if (this.config.watch) {
@@ -785,6 +785,19 @@ export class Vitest {
    */
   public runTestSpecifications(specifications: TestSpecification[], allTestsRun = false): Promise<TestRunResult> {
     specifications.forEach(spec => this.specifications.ensureSpecificationCached(spec))
+    return this.runFiles(specifications, allTestsRun)
+  }
+
+  /**
+   * Runs tests for the given file paths. This does not trigger `onWatcher*` events.
+   * @param filepaths A list of file paths to run tests for.
+   * @param allTestsRun Indicates whether all tests were run. This only matters for coverage.
+   */
+  public async runTestFiles(filepaths: string[], allTestsRun = false): Promise<TestRunResult> {
+    const specifications = await this.specifications.getRelevantTestSpecifications(filepaths)
+    if (!specifications.length) {
+      return { testModules: [], unhandledErrors: [] }
+    }
     return this.runFiles(specifications, allTestsRun)
   }
 
@@ -1058,12 +1071,24 @@ export class Vitest {
       throw new Error(`Task ${id} was not found`)
     }
 
-    const taskNamePattern = task.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    const reportedTask = this.state.getReportedEntityById(id)
+    if (!reportedTask) {
+      throw new Error(`Test specification for task ${id} was not found`)
+    }
 
-    await this.changeNamePattern(
-      taskNamePattern,
-      [task.file.filepath],
-      'tasks' in task ? 'rerun suite' : 'rerun test',
+    const specifications = [reportedTask.toTestSpecification()]
+    await Promise.all([
+      this.report(
+        'onWatcherRerun',
+        [task.file.filepath],
+        'tasks' in task ? 'rerun suite' : 'rerun test',
+      ),
+      ...this._onUserTestsRerun.map(fn => fn(specifications)),
+    ])
+    await this.runFiles(specifications, false)
+    await this.report(
+      'onWatcherStart',
+      ['module' in reportedTask ? reportedTask.module.task : reportedTask.task],
     )
   }
 

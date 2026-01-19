@@ -77,6 +77,7 @@ export class BaseCoverageProvider<Options extends ResolvedCoverageOptions<'istan
   version!: string
   options!: Options
   globCache: Map<string, boolean> = new Map()
+  autoUpdateMarker = '\n// __VITEST_COVERAGE_MARKER__'
 
   coverageFiles: CoverageFiles = new Map()
   pendingPromises: Promise<void>[] = []
@@ -360,7 +361,7 @@ export class BaseCoverageProvider<Options extends ResolvedCoverageOptions<'istan
         onUpdate: () =>
           writeFileSync(
             configFilePath,
-            configModule.generate().code,
+            configModule.generate().code.replace(this.autoUpdateMarker, ''),
             'utf-8',
           ),
 
