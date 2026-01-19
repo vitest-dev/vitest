@@ -1,5 +1,6 @@
 ---
 title: Test Tags | Guide
+outline: deep
 ---
 
 # Test Tags <Version>4.1.0</Version>
@@ -60,6 +61,20 @@ tet('flaky database test', { tags: ['flaky', 'db'], timeout: 120_000 })
 // { timeout: 120_000, retry: 3 }
 ```
 :::
+
+If you are using TypeScript, you can enforce what tags are available by augmenting the `TestTags` type with a property that containst a union of strings:
+
+```ts
+declare module 'vitest' {
+  interface TestTags {
+    tags:
+      | 'frontend'
+      | 'backend'
+      | 'db'
+      | 'flaky'
+  }
+}
+```
 
 ## Using Tags in Tests
 
@@ -137,20 +152,20 @@ describe('forms', () => {
 
 ## Filtering Tests by Tag
 
-To run only tests with specific tags, use the [`--tag`](/guide/cli#tag) CLI option:
+To run only tests with specific tags, use the [`--tags-expr`](/guide/cli#tagsexpr) CLI option:
 
 ```shell
-vitest --tag=frontend
-vitest --tag=frontend --tag=backend
+vitest --tags-expr=frontend
+vitest --tags-expr="frontend and backend"
 ```
 
-If you are using a programmatic API, you can pass down a `tag` option to [`startVitest`](/guide/advanced/#startvitest) or [`createVitest`](/guide/advanced/#createvitest):
+If you are using a programmatic API, you can pass down a `tagsExpr` option to [`startVitest`](/guide/advanced/#startvitest) or [`createVitest`](/guide/advanced/#createvitest):
 
 ```ts
 import { startVitest } from 'vitest/node'
 
 await startVitest('test', [], {
-  tag: ['frontend', 'backend'],
+  tagsExpr: ['frontend and backend'],
 })
 ```
 
@@ -160,7 +175,7 @@ Or you can create a [test specification](/api/advanced/test-specification) with 
 const specification = vitest.getRootProject().createSpecification(
   '/path-to-file.js',
   {
-    testTags: ['frontend', 'backend'],
+    testTagsExpr: ['frontend and backend'],
   },
 )
 ```
@@ -169,26 +184,69 @@ const specification = vitest.getRootProject().createSpecification(
 Note that `createSpecification` does not support wildcards and will not validate if the tags are defined in the config.
 :::
 
+### Syntax
+
+You can combine tags in different ways. Vitest supports these keywords:
+
+- `and` or `&&` to include both expressions
+- `or` or `||` to include at least one expression
+- `not` or `!` to exclude the expression
+- `*` to match any number of characters (0 or more)
+- `()` to group expressions and override precedence
+
+The parser follows standard [operator precedence](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Operator_precedence): `not`/`!` has the highest priority, then `and`/`&&`, then `or`/`||`. Use parentheses to override default precedence.
+
 ### Wildcards
 
 You can use a wildcard (`*`) to match any number of characters:
 
 ```shell
-vitest --tag="unit/*"
+vitest --tags-expr="unit/*"
 ```
 
 This will match tags like `unit/components`, `unit/utils`, etc.
 
 ### Excluding Tags
 
-To exclude tests with a specific tag, add an exclamation mark (`!`) at the start:
+To exclude tests with a specific tag, add an exclamation mark (`!`) at the start or a "not" keyword:
 
 ```shell
-vitest --tag=frontend --tag=!slow
+vitest --tags-expr="!slow and not flaky"
 ```
 
-This runs all tests tagged with `frontend` except those also tagged with `slow`. Note that wildcard syntax is also supported for excluded tags:
+### Examples
+
+Here are some common filtering patterns:
 
 ```shell
-vitest --tag="!unit/*"
+# Run only unit tests
+vitest --tags-expr="unit"
+
+# Run tests that are both frontend AND fast
+vitest --tags-expr="frontend and fast"
+
+# Run tests that are either unit OR e2e
+vitest --tags-expr="unit or e2e"
+
+# Run all tests except slow ones
+vitest --tags-expr="!slow"
+
+# Run frontend tests that are not flaky
+vitest --tags-expr="frontend && !flaky"
+
+# Run tests matching a wildcard pattern
+vitest --tags-expr="api/*"
+
+# Complex expression with parentheses
+vitest --tags-expr="(unit || e2e) && !slow"
+
+# Run database tests that are either postgres or mysql, but not slow
+vitest --tags-expr="db && (postgres || mysql) && !slow"
+```
+
+You can also pass multiple `--tags-expr` flags. They are combined with AND logic:
+
+```shell
+# Run tests that match (unit OR e2e) AND are NOT slow
+vitest --tags-expr="unit || e2e" --tags-expr="!slow"
 ```

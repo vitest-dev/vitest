@@ -6,5 +6,6 @@ export type SerializedTestSpecification = [
     testLines?: number[] | undefined
     testIds?: string[] | undefined
     testNamePattern?: RegExp | undefined
+    testTagsExpr?: string[] | undefined
   },
 ]

@@ -127,7 +127,7 @@ export interface SerializedConfig {
     } | undefined
   }
   tags: TestTagDefinition[]
-  tagsFilter: string[] | undefined
+  tagsExpr: string[] | undefined
   strictTags: boolean
 }
 

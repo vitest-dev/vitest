@@ -10,14 +10,9 @@ outline: deep
 
 Defines all [available tags](/guide/test-tags) in your test project. By default, if test defines a name not listed here, Vitest will throw an error, but this can be configured via a [`strictTags`](/config/stricttags) option.
 
-If you are using [`projects`](/config/projects), they will inherit all global tags automatically.
+If you are using [`projects`](/config/projects), they will inherit all global tags definitions automatically.
 
-To filter tags, you can pass them down as [`--tag`](/guide/cli#tag):
-
-```shell
-vitest --tag=frontend --tag=!backend
-vitest --tag="unit/*"
-```
+Use [`--tags-expr`](/guide/test-tags#syntax) to filter tests by their tags.
 
 ::: tip FILTERING
 You can use a wildcard (*) to match any number of symbols. To ignore a tag, add an exclamation mark (!) at the start of the tag.

@@ -10,8 +10,8 @@ test('vitest records tags', async () => {
       { name: 'alone' },
       { name: 'suite' },
       { name: 'test' },
-      { name: 'suite 2' },
-      { name: 'test 2' },
+      { name: 'suite_2' },
+      { name: 'test_2' },
     ],
   })
 
@@ -24,13 +24,13 @@ test('vitest records tags', async () => {
             "test 3": [
               "suite",
               "alone",
-              "suite 2",
+              "suite_2",
             ],
             "test 4": [
               "suite",
               "alone",
-              "suite 2",
-              "test 2",
+              "suite_2",
+              "test_2",
             ],
           },
           "test 1": [
@@ -48,7 +48,7 @@ test('vitest records tags', async () => {
   `)
 })
 
-test('filters tests based on --tag=!ignore', async () => {
+test('filters tests based on --tags-expr=!ignore', async () => {
   const { stderr, testTree } = await runVitest({
     root: './fixtures/test-tags',
     config: false,
@@ -56,10 +56,10 @@ test('filters tests based on --tag=!ignore', async () => {
       { name: 'alone' },
       { name: 'suite' },
       { name: 'test' },
-      { name: 'suite 2' },
-      { name: 'test 2' },
+      { name: 'suite_2' },
+      { name: 'test_2' },
     ],
-    tag: ['!suite 2'],
+    tagsExpr: ['!suite_2'],
   })
 
   expect(stderr).toBe('')
@@ -79,7 +79,7 @@ test('filters tests based on --tag=!ignore', async () => {
   `)
 })
 
-test('filters tests based on --tag=!ignore and --tag=include', async () => {
+test('filters tests based on --tags-expr=!ignore and --tags-expr=include', async () => {
   const { stderr, testTree } = await runVitest({
     root: './fixtures/test-tags',
     config: false,
@@ -87,10 +87,10 @@ test('filters tests based on --tag=!ignore and --tag=include', async () => {
       { name: 'alone' },
       { name: 'suite' },
       { name: 'test' },
-      { name: 'suite 2' },
-      { name: 'test 2' },
+      { name: 'suite_2' },
+      { name: 'test_2' },
     ],
-    tag: ['!suite 2', 'test'],
+    tagsExpr: ['!suite_2', 'test'],
   })
 
   expect(stderr).toBe('')
@@ -110,7 +110,7 @@ test('filters tests based on --tag=!ignore and --tag=include', async () => {
   `)
 })
 
-test('filters tests based on --tag=include', async () => {
+test('filters tests based on --tags-expr=include', async () => {
   const { stderr, testTree } = await runVitest({
     root: './fixtures/test-tags',
     config: false,
@@ -118,10 +118,10 @@ test('filters tests based on --tag=include', async () => {
       { name: 'alone' },
       { name: 'suite' },
       { name: 'test' },
-      { name: 'suite 2' },
-      { name: 'test 2' },
+      { name: 'suite_2' },
+      { name: 'test_2' },
     ],
-    tag: ['test*'],
+    tagsExpr: ['test*'],
   })
 
   expect(stderr).toBe('')
@@ -131,17 +131,17 @@ test('filters tests based on --tag=include', async () => {
         "suite 1": {
           "suite 2": {
             "test 3": "skipped",
-            "test 4": "skipped",
+            "test 4": "passed",
           },
           "test 1": "skipped",
-          "test 2": "skipped",
+          "test 2": "passed",
         },
       },
     }
   `)
 })
 
-test.skip('throws an error if no tags are defined in the config, but in the test', async () => {
+test('throws an error if no tags are defined in the config, but in the test', async () => {
   const { stderr } = await runInlineTests(
     {
       'basic.test.js': `
@@ -169,7 +169,7 @@ test.skip('throws an error if no tags are defined in the config, but in the test
   `)
 })
 
-test.skip('throws an error if tag is not defined in the config, but in the test', async () => {
+test('throws an error if tag is not defined in the config, but in the test', async () => {
   const { stderr } = await runInlineTests(
     {
       'basic.test.js': `
@@ -187,7 +187,7 @@ test.skip('throws an error if tag is not defined in the config, but in the test'
     ⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
 
      FAIL  basic.test.js [ basic.test.js ]
-    Error: Tag "unknown" is not defined in the configuration. Available tags are: 
+    Error: The tag "unknown" is not defined in the configuration. Available tags are:
     - known
      ❯ basic.test.js:2:9
           1| 
@@ -201,23 +201,23 @@ test.skip('throws an error if tag is not defined in the config, but in the test'
   `)
 })
 
-test.skip('throws an error if tag is not defined in the config, but in --tag filter', async () => {
+test('throws an error if tag is not defined in the config, but in --tags-expr filter', async () => {
   const { stderr } = await runInlineTests(
     {
       'basic.test.js': '',
     },
     {
-      tag: ['unknown'],
+      tagsExpr: ['unknown'],
     },
     { fails: true },
   )
-  expect(stderr).toContain('Cannot find any tags to filter based on the --tag unknown option. Did you define them in "test.tags" in your config?')
+  expect(stderr).toContain('The Vitest config does\'t define any "tags", cannot apply "unknown" tag pattern for this test. See: https://vitest.dev/guide/test-tags')
 })
 
 test.todo('defining a tag available only in one project', async () => {
   await runVitest({
     config: false,
-    tag: ['project-2-tag'],
+    tagsExpr: ['project-2-tag'],
     projects: [
       {
         test: {
@@ -241,8 +241,8 @@ test('can specify custom options for tags', async () => {
       { name: 'alone' },
       { name: 'suite', timeout: 1000 },
       { name: 'test', retry: 2, skip: true },
-      { name: 'suite 2', repeats: 3 },
-      { name: 'test 2', timeout: 500, retry: 1 },
+      { name: 'suite_2', repeats: 3 },
+      { name: 'test_2', timeout: 500, retry: 1 },
     ],
   })
   expect(stderr).toBe('')
@@ -257,7 +257,7 @@ test('can specify custom options for tags', async () => {
               "tags": [
                 "suite",
                 "alone",
-                "suite 2",
+                "suite_2",
               ],
               "timeout": 1000,
             },
@@ -268,8 +268,8 @@ test('can specify custom options for tags', async () => {
               "tags": [
                 "suite",
                 "alone",
-                "suite 2",
-                "test 2",
+                "suite_2",
+                "test_2",
               ],
               "timeout": 500,
             },
@@ -320,8 +320,8 @@ test('can specify custom options with priorities for tags', async () => {
         fails: true,
         priority: 2,
       },
-      { name: 'suite 2' },
-      { name: 'test 2' },
+      { name: 'suite_2' },
+      { name: 'test_2' },
     ],
   })
 
@@ -450,7 +450,7 @@ test('invalid @tag throws and error', async () => {
     ⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
 
      FAIL  error-file-tags.test.ts [ error-file-tags.test.ts ]
-    Error: Tag "invalid" is not defined in the configuration. Available tags are:
+    Error: The tag "invalid" is not defined in the configuration. Available tags are:
     - file
     - file-2
     - file/slash

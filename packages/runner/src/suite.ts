@@ -40,7 +40,8 @@ import { getHooks, setFn, setHooks, setTestFixture } from './map'
 import { getCurrentTest } from './test-state'
 import { findTestFileStackTrace } from './utils'
 import { createChainable } from './utils/chain'
-import { createNoTagsError, createTaskName, validateTags } from './utils/tasks'
+import { createNoTagsError, validateTags } from './utils/tags'
+import { createTaskName } from './utils/tasks'
 
 /**
  * Creates a suite of tests, allowing for grouping and hierarchical organization of tests.
@@ -229,12 +230,12 @@ export function clearCollectorContext(
   file: File,
   currentRunner: VitestRunner,
 ): void {
+  currentTestFilepath = file.filepath
+  runner = currentRunner
   if (!defaultSuite) {
     defaultSuite = createDefaultSuite(currentRunner)
   }
   defaultSuite.file = file
-  runner = currentRunner
-  currentTestFilepath = file.filepath
   collectorContext.tasks.length = 0
   defaultSuite.clear()
   collectorContext.currentSuite = defaultSuite
@@ -320,7 +321,7 @@ function createSuiteCollector(
       .map((tag) => {
         const tagDefinition = runner.config.tags?.find(t => t.name === tag)
         if (!tagDefinition && runner.config.strictTags) {
-          throw createNoTagsError(runner, tag)
+          throw createNoTagsError(runner.config.tags, tag)
         }
         return tagDefinition
       })

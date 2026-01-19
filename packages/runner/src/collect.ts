@@ -16,7 +16,7 @@ import {
   interpretTaskModes,
   someTasksAreOnly,
 } from './utils/collect'
-import { validateTags } from './utils/tasks'
+import { createTagsFilter, validateTags } from './utils/tags'
 
 const now = globalThis.performance ? globalThis.performance.now.bind(globalThis.performance) : Date.now
 
@@ -28,6 +28,7 @@ export async function collectTests(
 
   const config = runner.config
   const $ = runner.trace!
+  let defaultTagsFilter: ((testTags: string[]) => boolean) | undefined
 
   for (const spec of specs) {
     const filepath = typeof spec === 'string' ? spec : spec.filepath
@@ -38,7 +39,9 @@ export async function collectTests(
         const testLocations = typeof spec === 'string' ? undefined : spec.testLocations
         const testNamePattern = typeof spec === 'string' ? undefined : spec.testNamePattern
         const testIds = typeof spec === 'string' ? undefined : spec.testIds
-        const testTags = typeof spec === 'string' ? undefined : spec.testTags
+        const testTagsExpr = typeof spec === 'object' && spec.testTagsExpr
+          ? createTagsFilter(spec.testTagsExpr, config.tags)
+          : undefined
 
         const fileTags: string[] = typeof spec === 'string' ? [] : (spec.fileTags || [])
 
@@ -47,12 +50,12 @@ export async function collectTests(
         file.tags = fileTags
         file.shuffle = config.sequence.shuffle
 
-        clearCollectorContext(file, runner)
-
         try {
           validateTags(runner, fileTags)
 
           runner.onCollectStart?.(file)
+
+          clearCollectorContext(file, runner)
 
           const setupFiles = toArray(config.setupFiles)
           if (setupFiles.length) {
@@ -120,7 +123,10 @@ export async function collectTests(
           testNamePattern ?? config.testNamePattern,
           testLocations,
           testIds,
-          testTags ?? config.tagsFilter,
+          testTagsExpr
+          ?? (defaultTagsFilter ??= config.tagsExpr
+            ? createTagsFilter(config.tagsExpr, config.tags)
+            : undefined),
           hasOnlyTasks,
           false,
           config.allowOnly,

@@ -788,9 +788,9 @@ export const cliOptionsConfig: VitestCLIOptions = {
   clearCache: {
     description: 'Delete all Vitest caches, including `experimental.fsModuleCache`, without running any tests. This will reduce the performance in the subsequent test run.',
   },
-  tag: {
-    description: 'Run only tests with the specified tags. Multiple tags can be specified by repeating the option. To exclude tags, prefix the tag with an exclamation mark (!). Use "*" in the name as a wildcard to match any sequence of characters, e.g., "unit/*".',
-    argument: '<tag>',
+  tagsExpr: {
+    description: 'Run only tests with the specified tags. You can use logical operators `&&` (and), `||` (or) and `!` (not) to create complex expressions, see: https://vitest.dev/guide/test-tags#syntax for more information.',
+    argument: '<expression>',
     array: true,
   },
   strictTags: {

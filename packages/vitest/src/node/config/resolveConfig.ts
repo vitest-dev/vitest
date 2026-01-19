@@ -173,6 +173,9 @@ export function resolveConfig(
     if (!tag.name || typeof tag.name !== 'string') {
       throw new Error(`Each tag defined in "test.tags" must have a "name" property, received: ${JSON.stringify(tag)}`)
     }
+    if (tag.name.match(/\s/)) {
+      throw new Error(`Tag name "${tag.name}" is invalid. Tag names cannot contain spaces.`)
+    }
     if (tag.name.startsWith('!')) {
       throw new Error(`Tag name "${tag.name}" cannot start with "!".`)
     }

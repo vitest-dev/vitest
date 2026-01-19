@@ -10,6 +10,7 @@ export {
 } from './collect'
 export { limitConcurrency } from './limit-concurrency'
 export { partitionSuiteChildren } from './suite'
+export { createTagsFilter } from './tags'
 export {
   createTaskName,
   getFullName,

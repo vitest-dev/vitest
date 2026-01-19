@@ -1,5 +1,4 @@
 import type { Arrayable } from '@vitest/utils'
-import type { VitestRunner } from '../types/runner'
 import type { Suite, Task, Test } from '../types/tasks'
 import { toArray } from '@vitest/utils/helpers'
 
@@ -84,26 +83,4 @@ export function getTestName(task: Task, separator = ' > '): string {
 
 export function createTaskName(names: readonly (string | undefined)[], separator = ' > '): string {
   return names.filter(name => name !== undefined).join(separator)
-}
-
-export function validateTags(runner: VitestRunner, tags: string[]): void {
-  if (!runner.config.strictTags) {
-    return
-  }
-
-  const availableTags = new Set(runner.config.tags.map(tag => tag.name))
-  for (const tag of tags) {
-    if (!availableTags.has(tag)) {
-      throw createNoTagsError(runner, tag)
-    }
-  }
-}
-
-export function createNoTagsError(runner: VitestRunner, tag: string): never {
-  if (!runner.config.tags.length) {
-    throw new Error(`The Vitest config does't define any "tags", cannot apply "${tag}" tag for this test. See: https://vitest.dev/guide/test-tags`)
-  }
-  throw new Error(`Tag "${tag}" is not defined in the configuration. Available tags are:\n${runner.config.tags
-    .map(t => `- ${t.name}${t.description ? `: ${t.description}` : ''}`)
-    .join('\n')}`)
 }

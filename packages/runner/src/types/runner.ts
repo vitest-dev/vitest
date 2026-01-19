@@ -13,6 +13,7 @@ import type {
   TestArtifact,
   TestContext,
   TestOptions,
+  TestTags,
 } from './tasks'
 
 /**
@@ -42,7 +43,7 @@ export interface VitestRunnerConfig {
   includeTaskLocation?: boolean
   diffOptions?: DiffOptions
   tags: TestTagDefinition[]
-  tagsFilter?: string[]
+  tagsExpr?: string[]
   strictTags: boolean
 }
 
@@ -56,7 +57,7 @@ export interface FileSpecification {
   fileTags?: string[]
   testLocations: number[] | undefined
   testNamePattern: RegExp | undefined
-  testTags: string[] | undefined
+  testTagsExpr: string[] | undefined
   testIds: string[] | undefined
 }
 
@@ -64,7 +65,9 @@ export interface TestTagDefinition extends Omit<TestOptions, 'tags' | 'shuffle'>
   /**
    * The name of the tag. This is what you use in the `tags` array in tests.
    */
-  name: string
+  name: keyof TestTags extends never
+    ? string
+    : TestTags[keyof TestTags]
   /**
    * A description for the tag. This will be shown in the CLI help and UI.
    */

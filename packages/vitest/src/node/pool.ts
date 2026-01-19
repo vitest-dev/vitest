@@ -153,7 +153,7 @@ export function createPool(ctx: Vitest): ProcessPool {
               testLocations: spec.testLines,
               testNamePattern: spec.testNamePattern,
               testIds: spec.testIds,
-              testTags: spec.testTags,
+              testTags: spec.testTagsExpr,
             })),
             invalidates,
             providedContext: project.getProvidedContext(),

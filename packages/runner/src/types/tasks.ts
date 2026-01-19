@@ -567,8 +567,12 @@ export interface TestOptions {
   /**
    * Custom tags of the test. Useful for filtering tests.
    */
-  tags?: string[] | string
+  tags?: keyof TestTags extends never
+    ? string[] | string
+    : TestTags[keyof TestTags] | TestTags[keyof TestTags][]
 }
+
+export interface TestTags {}
 
 export interface SuiteOptions extends TestOptions {
   /**

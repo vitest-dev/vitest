@@ -56,6 +56,7 @@ export type {
   TestContext,
   TestFunction,
   TestOptions,
+  TestTags,
   Use,
   VisualRegressionArtifact,
 } from './types/tasks'
