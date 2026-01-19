@@ -106,11 +106,16 @@ interface TaskOptions {
   readonly retry: number | undefined
   readonly repeats: number | undefined
   readonly tags: string[] | undefined
+  readonly timeout: number | undefined
   readonly mode: 'run' | 'only' | 'skip' | 'todo'
 }
 ```
 
 The options that test was collected with.
+
+## tags <Version>4.1.0</Version>
+
+[Tags](/guide/test-tags) that were implicitly or explicitly assigned to the test.
 
 ## ok
 

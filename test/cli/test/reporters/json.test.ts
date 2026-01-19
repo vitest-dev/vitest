@@ -13,6 +13,7 @@ describe('json reporter', async () => {
       root,
       include: ['**/json-fail-import.test.ts', '**/json-fail.test.ts'],
       includeTaskLocation: true,
+      tags: [{ name: 'fail' }],
     }, ['json-fail'])
 
     const data = JSON.parse(stdout)

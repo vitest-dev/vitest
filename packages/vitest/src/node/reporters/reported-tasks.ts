@@ -103,6 +103,11 @@ export class TestCase extends ReportedTaskImplementation {
    */
   public readonly parent: TestSuite | TestModule
 
+  /**
+   * Tags associated with the test.
+   */
+  public readonly tags: string[]
+
   /** @internal */
   protected constructor(task: RunnerTestCase, project: TestProject) {
     super(task, project)
@@ -117,6 +122,7 @@ export class TestCase extends ReportedTaskImplementation {
       this.parent = this.module
     }
     this.options = buildOptions(task)
+    this.tags = this.options.tags || []
   }
 
   /**

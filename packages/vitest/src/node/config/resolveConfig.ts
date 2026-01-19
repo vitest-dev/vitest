@@ -183,6 +183,9 @@ export function resolveConfig(
     if (typeof tag.retry === 'object' && typeof tag.retry.condition === 'function') {
       throw new TypeError(`Tag "${tag.name}": retry.condition function cannot be used inside a config file. Use a RegExp pattern instead, or define the function in your test file.`)
     }
+    if (tag.priority != null && (typeof tag.priority !== 'number' || !Number.isInteger(tag.priority) || tag.priority < 0)) {
+      throw new TypeError(`Tag "${tag.name}": priority must be a non-negative integer.`)
+    }
   })
 
   resolved.name = typeof options.name === 'string'

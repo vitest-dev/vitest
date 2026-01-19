@@ -14,7 +14,12 @@ export async function getSpecificationsOptions(
   const tags = new WeakMap<TestSpecification, string[]>()
   await Promise.all(
     specifications.map(async (spec) => {
-      const { moduleId: filepath, project } = spec
+      const { moduleId: filepath, project, pool } = spec
+      // browser pool handles its own environment
+      if (pool === 'browser') {
+        return
+      }
+
       // reuse if projects have the same test files
       let code = cache.get(filepath)
       if (!code) {
@@ -26,7 +31,7 @@ export async function getSpecificationsOptions(
         env = project.config.environment || 'node',
         envOptions,
         tags: specTags = [],
-      } = detectBlockLine(code)
+      } = detectCodeBlock(code)
       tags.set(spec, specTags)
 
       const envKey = env === 'happy-dom' ? 'happyDOM' : env
@@ -42,7 +47,11 @@ export async function getSpecificationsOptions(
   return { environments, tags }
 }
 
-function detectBlockLine(content: string) {
+export function detectCodeBlock(content: string): {
+  env?: string
+  envOptions?: Record<string, any>
+  tags: string[]
+} {
   const env = content.match(/@(?:vitest|jest)-environment\s+([\w-]+)\b/)?.[1]
   let envOptionsJson = content.match(/@(?:vitest|jest)-environment-options\s+(.+)/)?.[1]
   if (envOptionsJson?.endsWith('*/')) {

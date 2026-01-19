@@ -3,6 +3,7 @@ import { readdirSync } from 'node:fs'
 import { readFile } from 'node:fs/promises'
 import { beforeAll, describe, expect, onTestFailed, test } from 'vitest'
 import { rolldownVersion } from 'vitest/node'
+import { buildTestTree } from '../../test-utils'
 import { instances, provider, runBrowserTests } from './utils'
 
 function noop() {}
@@ -74,6 +75,35 @@ describe('running browser tests', async () => {
     expect(browserResultJson.testResults).toHaveLength(testFilesCount * instances.length)
     expect(passedTests).toHaveLength(browserResultJson.testResults.length)
     expect(failedTests).toHaveLength(0)
+  })
+
+  test.only('tags are collected', () => {
+    expect(vitest.config.tags).toEqual([
+      { name: 'e2e', priority: 10 },
+      { name: 'test', priority: 5 },
+      { name: 'browser', priority: 1 },
+    ])
+
+    const testModule = vitest.state.getTestModules().find(m => m.moduleId.includes('tags.test.ts'))
+    expect.assert(testModule)
+    expect(buildTestTree([testModule], t => t.tags)).toMatchInlineSnapshot(`
+      {
+        "test/tags.test.ts": {
+          "suite 1": {
+            "suite 2": {
+              "test 2": [
+                "browser",
+                "e2e",
+              ],
+            },
+            "test 1": [
+              "browser",
+              "test",
+            ],
+          },
+        },
+      }
+    `)
   })
 
   test('runs in-source tests', () => {

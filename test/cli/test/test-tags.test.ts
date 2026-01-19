@@ -545,6 +545,404 @@ test('invalid @module-tag throws and error', async () => {
   `)
 })
 
+test('@module-tag on one line docs inject test tags', async () => {
+  const { stderr, buildTree } = await runVitest({
+    config: false,
+    root: './fixtures/file-tags',
+    include: ['./valid-file-one-line-comment.test.ts'],
+    tags: [
+      { name: 'file' },
+      { name: 'file-2' },
+      { name: 'file/slash' },
+      { name: 'test' },
+    ],
+  })
+  expect(stderr).toBe('')
+  expect(getTestTree(buildTree)).toMatchInlineSnapshot(`
+    {
+      "valid-file-one-line-comment.test.ts": {
+        "suite 1": {
+          "test 1": [
+            "file",
+            "file-2",
+            "file/slash",
+            "test",
+          ],
+        },
+      },
+    }
+  `)
+})
+
+test('invalid @module-tag on one line throws and error', async () => {
+  const { stderr } = await runVitest({
+    config: false,
+    root: './fixtures/file-tags',
+    include: ['./error-file-one-line-comment.test.ts'],
+    tags: [
+      { name: 'file' },
+      { name: 'file-2' },
+      { name: 'file/slash' },
+      { name: 'test' },
+    ],
+  })
+  expect(stderr).toMatchInlineSnapshot(`
+    "
+    ⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+     FAIL  error-file-one-line-comment.test.ts [ error-file-one-line-comment.test.ts ]
+    Error: The tag "invalid" is not defined in the configuration. Available tags are:
+    - file
+    - file-2
+    - file/slash
+    - test
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+    "
+  `)
+})
+
+test('@module-tag with strictTags: false allows undefined tags', async () => {
+  const { stderr, buildTree } = await runVitest({
+    config: false,
+    root: './fixtures/file-tags',
+    include: ['./error-file-tags.test.ts'],
+    strictTags: false,
+    tags: [
+      { name: 'file' },
+      { name: 'file-2' },
+      { name: 'file/slash' },
+      { name: 'test' },
+    ],
+  })
+  expect(stderr).toBe('')
+  expect(getTestTree(buildTree)).toMatchInlineSnapshot(`
+    {
+      "error-file-tags.test.ts": {
+        "suite 1": {
+          "test 1": [
+            "invalid",
+            "unknown",
+            "test",
+          ],
+        },
+      },
+    }
+  `)
+})
+
+test('sequential tag option makes tests run sequentially', async () => {
+  const { stderr, buildTree } = await runInlineTests({
+    'basic.test.js': `
+      test('test 1', { tags: ['sequential-tag'] }, () => {})
+      test('test 2', { tags: ['sequential-tag'] }, () => {})
+    `,
+    'vitest.config.js': {
+      test: {
+        globals: true,
+        tags: [
+          { name: 'sequential-tag', sequential: true },
+        ],
+      },
+    },
+  })
+  expect(stderr).toBe('')
+  // sequential is not visible in options, it affect "concurrent" only, which is not set if false
+  expect(buildOptionsTree(buildTree)).toMatchInlineSnapshot(`
+    {
+      "basic.test.js": {
+        "test 1": {
+          "mode": "run",
+          "tags": [
+            "sequential-tag",
+          ],
+          "timeout": 5000,
+        },
+        "test 2": {
+          "mode": "run",
+          "tags": [
+            "sequential-tag",
+          ],
+          "timeout": 5000,
+        },
+      },
+    }
+  `)
+})
+
+test('only tag option marks tests as only', async () => {
+  const { stderr, buildTree } = await runInlineTests({
+    'basic.test.js': `
+      test('test 1', { tags: ['only-tag'] }, () => {})
+      test('test 2', () => {})
+    `,
+    'vitest.config.js': {
+      test: {
+        globals: true,
+        tags: [
+          { name: 'only-tag', only: true },
+        ],
+      },
+    },
+  })
+  expect(stderr).toBe('')
+  expect(buildOptionsTree(buildTree)).toMatchInlineSnapshot(`
+    {
+      "basic.test.js": {
+        "test 1": {
+          "mode": "run",
+          "tags": [
+            "only-tag",
+          ],
+          "timeout": 5000,
+        },
+        "test 2": {
+          "mode": "skip",
+          "tags": [],
+          "timeout": 5000,
+        },
+      },
+    }
+  `)
+})
+
+test('tags without explicit priority use definition order (last wins)', async () => {
+  const { stderr, ctx } = await runInlineTests({
+    'basic.test.js': `
+      test('test 1', { tags: ['tag-a', 'tag-b'] }, () => {})
+    `,
+    'vitest.config.js': {
+      test: {
+        globals: true,
+        tags: [
+          { name: 'tag-a', timeout: 1000 },
+          { name: 'tag-b', timeout: 2000 },
+        ],
+      },
+    },
+  })
+  expect(stderr).toBe('')
+  const testModule = ctx!.state.getTestModules()[0]
+  const testCase = testModule.children.at(0) as TestCase
+  expect(testCase.options.timeout).toBe(2000)
+})
+
+test('equal priority tags use definition order (last wins)', async () => {
+  const { stderr, ctx } = await runInlineTests({
+    'basic.test.js': `
+      test('test 1', { tags: ['tag-a', 'tag-b'] }, () => {})
+    `,
+    'vitest.config.js': {
+      test: {
+        globals: true,
+        tags: [
+          { name: 'tag-a', timeout: 1000, priority: 1 },
+          { name: 'tag-b', timeout: 2000, priority: 1 },
+        ],
+      },
+    },
+  })
+  expect(stderr).toBe('')
+  const testModule = ctx!.state.getTestModules()[0]
+  const testCase = testModule.children.at(0) as TestCase
+  expect(testCase.options.timeout).toBe(2000)
+})
+
+test('negative priority values is not allowed', async () => {
+  const { stderr } = await runInlineTests({
+    'basic.test.js': `
+      test('test 1', { tags: ['low-priority', 'high-priority'] }, () => {})
+    `,
+    'vitest.config.js': {
+      test: {
+        globals: true,
+        tags: [
+          { name: 'low-priority', timeout: 1000, priority: -10 },
+        ],
+      },
+    },
+  }, {}, { fails: true })
+  expect(stderr).toContain('Tag "low-priority": priority must be a non-negative integer.')
+})
+
+test('strictTags: false does not allow undefined tags in filter, it only affects test definition', async () => {
+  const { stderr } = await runInlineTests({
+    'basic.test.js': `
+      test('test 1', { tags: ['known'] }, () => {})
+      test('test 2', () => {})
+    `,
+    'vitest.config.js': {
+      test: {
+        globals: true,
+        strictTags: false,
+        tags: [{ name: 'known' }],
+      },
+    },
+  }, {
+    tagsFilter: ['unknown'],
+  })
+  expect(stderr).toContain(`The tag pattern "unknown" is not defined in the configuration. Available tags are:
+- known`)
+})
+
+test('duplicate tags from suite and test are deduplicated', async () => {
+  const { stderr, buildTree } = await runInlineTests({
+    'basic.test.js': `
+      describe('suite', { tags: ['shared'] }, () => {
+        test('test 1', { tags: ['shared', 'unique'] }, () => {})
+      })
+    `,
+    'vitest.config.js': {
+      test: {
+        globals: true,
+        tags: [
+          { name: 'shared' },
+          { name: 'unique' },
+        ],
+      },
+    },
+  })
+  expect(stderr).toBe('')
+  expect(getTestTree(buildTree)).toMatchInlineSnapshot(`
+    {
+      "basic.test.js": {
+        "suite": {
+          "test 1": [
+            "shared",
+            "unique",
+          ],
+        },
+      },
+    }
+  `)
+})
+
+test('empty tags array on test is handled correctly', async () => {
+  const { stderr, buildTree } = await runInlineTests({
+    'basic.test.js': `
+      test('test 1', { tags: [] }, () => {})
+    `,
+    'vitest.config.js': {
+      test: {
+        globals: true,
+        tags: [{ name: 'unused' }],
+      },
+    },
+  })
+  expect(stderr).toBe('')
+  expect(getTestTree(buildTree)).toMatchInlineSnapshot(`
+    {
+      "basic.test.js": {
+        "test 1": [],
+      },
+    }
+  `)
+})
+
+test('filters tests with complex AND/OR expressions', async () => {
+  const { stderr, testTree } = await runInlineTests({
+    'basic.test.js': `
+      test('test 1', { tags: ['unit', 'fast'] }, () => {})
+      test('test 2', { tags: ['unit', 'slow'] }, () => {})
+      test('test 3', { tags: ['e2e', 'fast'] }, () => {})
+      test('test 4', { tags: ['e2e', 'slow'] }, () => {})
+    `,
+    'vitest.config.js': {
+      test: {
+        globals: true,
+        tags: [
+          { name: 'unit' },
+          { name: 'e2e' },
+          { name: 'fast' },
+          { name: 'slow' },
+        ],
+      },
+    },
+  }, {
+    tagsFilter: ['(unit || e2e) && fast'],
+  })
+  expect(stderr).toBe('')
+  expect(testTree()).toMatchInlineSnapshot(`
+    {
+      "basic.test.js": {
+        "test 1": "passed",
+        "test 2": "skipped",
+        "test 3": "passed",
+        "test 4": "skipped",
+      },
+    }
+  `)
+})
+
+test('filters tests with NOT and parentheses', async () => {
+  const { stderr, testTree } = await runInlineTests({
+    'basic.test.js': `
+      test('test 1', { tags: ['browser', 'chrome'] }, () => {})
+      test('test 2', { tags: ['browser', 'firefox'] }, () => {})
+      test('test 3', { tags: ['browser', 'edge'] }, () => {})
+      test('test 4', { tags: ['node'] }, () => {})
+    `,
+    'vitest.config.js': {
+      test: {
+        globals: true,
+        tags: [
+          { name: 'browser' },
+          { name: 'chrome' },
+          { name: 'firefox' },
+          { name: 'edge' },
+          { name: 'node' },
+        ],
+      },
+    },
+  }, {
+    tagsFilter: ['browser && !(edge)'],
+  })
+  expect(stderr).toBe('')
+  expect(testTree()).toMatchInlineSnapshot(`
+    {
+      "basic.test.js": {
+        "test 1": "passed",
+        "test 2": "passed",
+        "test 3": "skipped",
+        "test 4": "skipped",
+      },
+    }
+  `)
+})
+
+test('multiple filter expressions act as AND', async () => {
+  const { stderr, testTree } = await runInlineTests({
+    'basic.test.js': `
+      test('test 1', { tags: ['unit', 'fast'] }, () => {})
+      test('test 2', { tags: ['unit', 'slow'] }, () => {})
+      test('test 3', { tags: ['e2e', 'fast'] }, () => {})
+    `,
+    'vitest.config.js': {
+      test: {
+        globals: true,
+        tags: [
+          { name: 'unit' },
+          { name: 'e2e' },
+          { name: 'fast' },
+          { name: 'slow' },
+        ],
+      },
+    },
+  }, {
+    tagsFilter: ['unit || e2e', '!slow'],
+  })
+  expect(stderr).toBe('')
+  expect(testTree()).toMatchInlineSnapshot(`
+    {
+      "basic.test.js": {
+        "test 1": "passed",
+        "test 2": "skipped",
+        "test 3": "passed",
+      },
+    }
+  `)
+})
+
 function getTestTree(builder: (fn: (test: TestCase) => any) => any) {
   return builder(test => test.options.tags)
 }
