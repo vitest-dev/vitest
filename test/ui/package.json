@@ -10,6 +10,7 @@
   },
   "devDependencies": {
     "@testing-library/dom": "^10.4.1",
+    "@vitest/browser-playwright": "workspace:*",
     "happy-dom": "latest",
     "vitest": "workspace:*"
   }
