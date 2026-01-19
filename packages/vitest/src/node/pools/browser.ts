@@ -62,13 +62,14 @@ export function createBrowserPool(vitest: Vitest): ProcessPool {
 
   const runWorkspaceTests = async (method: 'run' | 'collect', specs: TestSpecification[]) => {
     const groupedFiles = new Map<TestProject, FileSpecification[]>()
-    for (const { project, moduleId, testLines, testIds, testNamePattern } of specs) {
+    for (const { project, moduleId, testLines, testIds, testNamePattern, testTagsFilter } of specs) {
       const files = groupedFiles.get(project) || []
       files.push({
         filepath: moduleId,
         testLocations: testLines,
         testIds,
         testNamePattern,
+        testTagsFilter,
       })
       groupedFiles.set(project, files)
     }
