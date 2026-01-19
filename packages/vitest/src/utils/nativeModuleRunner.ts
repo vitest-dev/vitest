@@ -1,4 +1,5 @@
 import type { TestModuleMocker } from '@vitest/mocker'
+import type { ModuleExecutionInfo } from '../runtime/moduleRunner/moduleDebug'
 import { pathToFileURL } from 'node:url'
 import { resolveModule } from 'local-pkg'
 import { resolve } from 'pathe'
@@ -9,6 +10,7 @@ export class NativeModuleRunner extends ModuleRunner {
    * @internal
    */
   public mocker?: TestModuleMocker
+  public moduleExecutionInfo: ModuleExecutionInfo = new Map()
 
   constructor(private root: string, mocker?: TestModuleMocker) {
     super({
@@ -30,13 +32,22 @@ export class NativeModuleRunner extends ModuleRunner {
     }
   }
 
-  override import(moduleId: string): Promise<any> {
-    let path = resolveModule(moduleId, { paths: [this.root] })
+  override async import(moduleId: string): Promise<any> {
+    const path = resolveModule(moduleId, { paths: [this.root] })
       ?? resolve(this.root, moduleId)
+
     // resolveModule doesn't keep the query params, so we need to add them back
+    let queryParams = ''
     if (moduleId.includes('?') && !path.includes('?')) {
-      path += moduleId.slice(moduleId.indexOf('?'))
+      queryParams = moduleId.slice(moduleId.indexOf('?'))
     }
-    return import(pathToFileURL(path).toString())
+
+    const result = await import(pathToFileURL(path + queryParams).toString())
+
+    if (result.__VITEST_START_OFFSET__) {
+      this.moduleExecutionInfo.set(path, { startOffset: result.__VITEST_START_OFFSET__, duration: 0, selfTime: 0 })
+    }
+
+    return result
   }
 }

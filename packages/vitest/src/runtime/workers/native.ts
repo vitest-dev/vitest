@@ -138,7 +138,10 @@ function replaceInSourceMarker(url: string, source: string, ms: () => MagicStrin
   }
   if (overridden) {
     const filename = resolve(fileURLToPath(url))
-    ms().prepend(`const IMPORT_META_VITEST = typeof __vitest_worker__ !== 'undefined' && __vitest_worker__.filepath === "${filename.replace(/"/g, '\\"')}" ? __vitest_index__ : undefined;`)
+    const code = `const IMPORT_META_VITEST = typeof __vitest_worker__ !== 'undefined' && __vitest_worker__.filepath === "${filename.replace(/"/g, '\\"')}" ? __vitest_index__ : undefined;`
+
+    ms().prepend(code)
+    ms().append(`\nexport const __VITEST_START_OFFSET__ = ${code.length};\n`)
   }
 }
 

@@ -149,9 +149,6 @@ export default defineConfig({
             '**/import-meta-env.test.ts',
             '**/decorators.test.ts',
             '**/import-attributes.test.ts',
-
-            // TODO: Fix this
-            '**/import-meta-env.test.ts',
           ],
         },
       },
