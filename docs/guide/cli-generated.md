@@ -518,12 +518,26 @@ Default hook timeout in milliseconds (default: `10000`). Use `0` to disable time
 
 Stop test execution when given number of tests have failed (default: `0`)
 
-### retry
+### retry.count
 
-- **CLI:** `--retry <times>`
-- **Config:** [retry](/config/retry)
+- **CLI:** `--retry.count <times>`
+- **Config:** [retry.count](/config/retry#retry-count)
 
-Retry the test specific number of times if it fails (default: `0`)
+Number of times to retry a test if it fails (default: `0`)
+
+### retry.delay
+
+- **CLI:** `--retry.delay <ms>`
+- **Config:** [retry.delay](/config/retry#retry-delay)
+
+Delay in milliseconds between retry attempts (default: `0`)
+
+### retry.condition
+
+- **CLI:** `--retry.condition <pattern>`
+- **Config:** [retry.condition](/config/retry#retry-condition)
+
+Regex pattern to match error messages that should trigger a retry. Only errors matching this pattern will cause a retry (default: retry on all errors)
 
 ### diff.aAnnotation
 
@@ -797,6 +811,19 @@ Start Vitest without running tests. Tests will be running only on change. This o
 - **CLI:** `--clearCache`
 
 Delete all Vitest caches, including `experimental.fsModuleCache`, without running any tests. This will reduce the performance in the subsequent test run.
+
+### tagsFilter
+
+- **CLI:** `--tagsFilter <expression>`
+
+Run only tests with the specified tags. You can use logical operators `&&` (and), `||` (or) and `!` (not) to create complex expressions, see [Test Tags](/guide/test-tags#syntax) for more information.
+
+### strictTags
+
+- **CLI:** `--strictTags`
+- **Config:** [strictTags](/config/stricttags)
+
+Should Vitest throw an error if test has a tag that is not defined in the config. (default: `true`)
 
 ### experimental.fsModuleCache
 
