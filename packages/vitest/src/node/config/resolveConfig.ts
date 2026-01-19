@@ -168,7 +168,8 @@ export function resolveConfig(
   resolved.project = toArray(resolved.project)
   resolved.provide ??= {}
 
-  resolved.tags ??= []
+  // shallow copy tags array to avoid mutating user config
+  resolved.tags = [...resolved.tags || []]
   resolved.tags.forEach((tag) => {
     if (!tag.name || typeof tag.name !== 'string') {
       throw new Error(`Each tag defined in "test.tags" must have a "name" property, received: ${JSON.stringify(tag)}`)

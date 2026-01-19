@@ -47,6 +47,7 @@ import { createBenchmarkReporters, createReporters } from './reporters/utils'
 import { VitestResolver } from './resolver'
 import { VitestSpecifications } from './specifications'
 import { StateManager } from './state'
+import { validateProjectsTags } from './tags'
 import { TestRun } from './test-run'
 import { VitestWatcher } from './watcher'
 
@@ -318,6 +319,8 @@ export class Vitest {
       this.configOverride.testNamePattern = this.config.testNamePattern
     }
 
+    validateProjectsTags(this.coreWorkspaceProject, this.projects)
+
     this.reporters = resolved.mode === 'benchmark'
       ? await createBenchmarkReporters(toArray(resolved.benchmark?.reporters), this.runner)
       : await createReporters(resolved.reporters, this)
@@ -328,8 +331,6 @@ export class Vitest {
       ...this._onSetServer.map(fn => fn()),
       this._traces.waitInit(),
     ])
-
-    // validate tags
   }
 
   /** @internal */

@@ -214,23 +214,107 @@ test('throws an error if tag is not defined in the config, but in --tags-filter 
   expect(stderr).toContain('The Vitest config does\'t define any "tags", cannot apply "unknown" tag pattern for this test. See: https://vitest.dev/guide/test-tags')
 })
 
-test.todo('defining a tag available only in one project', async () => {
-  await runVitest({
-    config: false,
+test('defining a tag available only in one project', async () => {
+  const { stderr, buildTree, ctx } = await runInlineTests({
+    'basic-1.test.js': `
+      test('test 1', { tags: ['project-1-tag'] }, () => {})
+    `,
+    'basic-2.test.js': `
+      test('test 2', { tags: ['global-tag', 'project-2-tag'] }, () => {})
+    `,
+    'vitest.config.js': {
+      test: {
+        globals: true,
+        tags: [
+          { name: 'global-tag' },
+        ],
+        projects: [
+          {
+            extends: true,
+            test: {
+              name: 'project-1',
+              include: ['basic-1.test.js'],
+              tags: [
+                { name: 'project-1-tag' },
+                { name: 'override', timeout: 100 },
+              ],
+            },
+          },
+          {
+            extends: true,
+            test: {
+              name: 'project-2',
+              include: ['basic-2.test.js'],
+              tags: [
+                { name: 'project-2-tag' },
+                { name: 'override', timeout: 200 },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  }, {
     tagsFilter: ['project-2-tag'],
-    projects: [
-      {
-        test: {
-          tags: [{ name: 'project-1-tag' }],
-        },
-      },
-      {
-        test: {
-          tags: [{ name: 'project-2-tag' }],
-        },
-      },
-    ],
   })
+  expect(stderr).toBe('')
+  expect(Object.fromEntries(ctx!.projects.map(p => [p.name, p.config.tags]))).toMatchInlineSnapshot(`
+    {
+      "project-1": [
+        {
+          "name": "global-tag",
+        },
+        {
+          "name": "project-1-tag",
+        },
+        {
+          "name": "override",
+          "timeout": 100,
+        },
+        {
+          "name": "project-2-tag",
+        },
+      ],
+      "project-2": [
+        {
+          "name": "global-tag",
+        },
+        {
+          "name": "project-2-tag",
+        },
+        {
+          "name": "override",
+          "timeout": 200,
+        },
+        {
+          "name": "project-1-tag",
+        },
+      ],
+    }
+  `)
+  expect(buildOptionsTree(buildTree)).toMatchInlineSnapshot(`
+    {
+      "basic-1.test.js": {
+        "test 1": {
+          "mode": "run",
+          "tags": [
+            "project-1-tag",
+          ],
+          "timeout": 5000,
+        },
+      },
+      "basic-2.test.js": {
+        "test 2": {
+          "mode": "run",
+          "tags": [
+            "global-tag",
+            "project-2-tag",
+          ],
+          "timeout": 5000,
+        },
+      },
+    }
+  `)
 })
 
 test('can specify custom options for tags', async () => {
