@@ -12,6 +12,7 @@ import type {
   TestAnnotation,
   TestArtifact,
   TestContext,
+  TestOptions,
 } from './tasks'
 
 /**
@@ -58,10 +59,21 @@ export interface FileSpecification {
   testIds: string[] | undefined
 }
 
-export interface TestTagDefinition {
+export interface TestTagDefinition extends Omit<TestOptions, 'tags' | 'shuffle'> {
+  /**
+   * The name of the tag. This is what you use in the `tags` array in tests.
+   */
   name: string
+  /**
+   * A description for the tag. This will be shown in the CLI help and UI.
+   */
   description?: string
-  // TODO: repeats/retry/timeout/... options?
+  /**
+   * Priority for merging options when multiple tags with the same options are applied to a test.
+   *
+   * Lower number means higher priority. E.g., priority 1 takes precedence over priority 3.
+   */
+  priority?: number
 }
 
 export type VitestRunnerImportSource = 'collect' | 'setup'

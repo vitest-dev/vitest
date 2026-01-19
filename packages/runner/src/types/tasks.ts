@@ -549,10 +549,6 @@ export interface TestOptions {
    */
   sequential?: boolean
   /**
-   * Whether the tasks of the suite run in a random order.
-   */
-  shuffle?: boolean
-  /**
    * Whether the test should be skipped.
    */
   skip?: boolean
@@ -571,7 +567,14 @@ export interface TestOptions {
   /**
    * Custom tags of the test. Useful for filtering tests.
    */
-  tags?: string[]
+  tags?: string[] | string
+}
+
+export interface SuiteOptions extends TestOptions {
+  /**
+   * Whether the tasks of the suite run in a random order.
+   */
+  shuffle?: boolean
 }
 
 interface ExtendedAPI<ExtraContext> {
@@ -655,7 +658,7 @@ interface SuiteCollectorCallable<ExtraContext = object> {
   ): SuiteCollector<OverrideExtraContext>
   <OverrideExtraContext extends ExtraContext = ExtraContext>(
     name: string | Function,
-    options: TestOptions,
+    options: SuiteOptions,
     fn?: SuiteFactory<OverrideExtraContext>
   ): SuiteCollector<OverrideExtraContext>
 }
@@ -727,7 +730,7 @@ export interface TaskCustomOptions extends TestOptions {
 export interface SuiteCollector<ExtraContext = object> {
   readonly name: string
   readonly mode: RunMode
-  options?: TestOptions
+  options?: SuiteOptions
   type: 'collector'
   test: TestAPI<ExtraContext>
   tasks: (

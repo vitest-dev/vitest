@@ -3,9 +3,9 @@ import type { UserConfig as ViteUserConfig } from 'vite'
 import type { SerializedConfig, WorkerGlobalState } from 'vitest'
 import type { TestProjectConfiguration } from 'vitest/config'
 import type {
+  TestCase,
   TestCollection,
   TestModule,
-  TestResult,
   TestSpecification,
   TestUserConfig,
   Vitest,
@@ -225,6 +225,9 @@ export async function runVitest(
     },
     testTree() {
       return buildTestTree(ctx?.state.getTestModules() || [])
+    },
+    buildTree(onResult: (testResult: TestCase) => any) {
+      return buildTestTree(ctx?.state.getTestModules() || [], onResult)
     },
     waitForClose: async () => {
       await new Promise<void>(resolve => ctx!.onClose(resolve))
@@ -465,6 +468,9 @@ export async function runInlineTests(
     testTree() {
       return buildTestTree(vitest.ctx?.state.getTestModules() || [])
     },
+    buildTree(onResult: (testResult: TestCase) => any) {
+      return buildTestTree(vitest.ctx?.state.getTestModules() || [], onResult)
+    },
   }
 }
 
@@ -481,7 +487,8 @@ export class StableTestFileOrderSorter {
 }
 
 export function buildErrorTree(testModules: TestModule[]) {
-  return buildTestTree(testModules, (result) => {
+  return buildTestTree(testModules, (testCase) => {
+    const result = testCase.result()
     if (result.state === 'failed') {
       return result.errors.map(e => e.message)
     }
@@ -489,7 +496,7 @@ export function buildErrorTree(testModules: TestModule[]) {
   })
 }
 
-export function buildTestTree(testModules: TestModule[], onResult?: (result: TestResult) => unknown) {
+export function buildTestTree(testModules: TestModule[], onTestCase?: (result: TestCase) => unknown) {
   type TestTree = Record<string, any>
 
   function walkCollection(collection: TestCollection): TestTree {
@@ -503,8 +510,8 @@ export function buildTestTree(testModules: TestModule[], onResult?: (result: Tes
       }
       else if (child.type === 'test') {
         const result = child.result()
-        if (onResult) {
-          node[child.name] = onResult(result)
+        if (onTestCase) {
+          node[child.name] = onTestCase(child)
         }
         else {
           node[child.name] = result.state

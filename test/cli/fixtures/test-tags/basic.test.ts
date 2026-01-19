@@ -1,6 +1,6 @@
 import { describe, test } from 'vitest'
 
-describe('suite 1', { tags: ['suite'] }, () => {
+describe('suite 1', { tags: ['suite', 'alone'] }, () => {
   test('test 1', () => {})
   test('test 2', { tags: ['test'] }, () => {})
 

@@ -383,6 +383,7 @@ function createFileTask(
     options.testNamePattern,
     undefined,
     undefined,
+    undefined,
     hasOnly,
     false,
     options.allowOnly,

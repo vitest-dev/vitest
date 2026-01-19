@@ -4,7 +4,9 @@
 
 ## Defining Tags
 
-Tags must be defined in your configuration file. Vitest does not provide any built-in tags. The test runner will throw an error if a test uses a tag not defined in the config.
+Tags must be defined in your configuration file. Vitest does not provide any built-in tags. The test runner will throw an error if a test uses a tag not defined in the config in order to avoid silently doing something surprising due to mistyped names.
+
+You must define a `name` of the tag, and you may define additional options that will be applied to every test marked with the tag, e.g., a `timeout`, or `retry`. For the full list of available options, see [`tags`](/config/tags).
 
 ```ts [vitest.config.js]
 import { defineConfig } from 'vitest/config'
@@ -20,10 +22,40 @@ export default defineConfig({
         name: 'backend',
         description: 'Tests written for backend.',
       },
+      {
+        name: 'db',
+        description: 'Tests for database queries.',
+        timeout: 60_000,
+      },
+      {
+        name: 'flaky',
+        description: 'Flaky CI tests.',
+        retry: process.env.CI ? 3 : 0,
+        timeout: 30_000,
+        priority: 1,
+      },
     ],
   },
 })
 ```
+
+::: warning
+If several tags have the same options and are applied to the same test, they will be resolved in order of application or sorted by `properity` first (the lower the number, the higher the priority is):
+
+```ts
+tet('flaky database test', { tags: ['flaky', 'db'] })
+// { timeout: 30_000, retry: 3 }
+```
+
+Note that the `timeout` is 30 seconds (and not 60) because `flaky` tag has a priority of `1` while `db` (that defines 60 second timeout) has no priority.
+
+If test defines its own options, they will have the highest priority:
+
+```ts
+tet('flaky database test', { tags: ['flaky', 'db'], timeout: 120_000 })
+// { timeout: 120_000, retry: 3 }
+```
+:::
 
 ## Using Tags in Tests
 

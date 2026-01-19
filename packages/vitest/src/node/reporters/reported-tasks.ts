@@ -566,6 +566,10 @@ export interface TaskOptions {
   readonly retry: SerializableRetry | undefined
   readonly repeats: number | undefined
   readonly tags: string[] | undefined
+  /**
+   * Only tests have a `timeout` option.
+   */
+  readonly timeout: number | undefined
   readonly mode: 'run' | 'only' | 'skip' | 'todo'
 }
 
@@ -580,6 +584,7 @@ function buildOptions(
     retry: task.retry as SerializableRetry | undefined,
     repeats: task.repeats,
     tags: task.tags,
+    timeout: task.type === 'test' ? task.timeout : undefined,
     // runner types are too broad, but the public API should be more strict
     // the queued state exists only on Files and this method is called
     // only for tests and suites

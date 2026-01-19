@@ -111,6 +111,7 @@ export class Vitest {
   /** @internal */ reporters: Reporter[] = []
   /** @internal */ runner!: ModuleRunner
   /** @internal */ _testRun: TestRun = undefined!
+  /** @internal */ _config?: ResolvedConfig
   /** @internal */ _resolver!: VitestResolver
   /** @internal */ _fetcher!: VitestFetchFunction
   /** @internal */ _fsCache!: FileSystemModuleCache
@@ -122,7 +123,6 @@ export class Vitest {
 
   private readonly specifications: VitestSpecifications
   private pool: ProcessPool | undefined
-  private _config?: ResolvedConfig
   private _vite?: ViteDevServer
   private _state?: StateManager
   private _cache?: VitestCache
