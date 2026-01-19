@@ -766,6 +766,54 @@ test('negative priority values is not allowed', async () => {
   expect(stderr).toContain('Tag "low-priority": priority must be a non-negative integer.')
 })
 
+test.for([
+  '!invalid',
+  'inv*alid',
+  'inv&alid',
+  'inv|alid',
+  'inv(alid',
+  'inv)alid',
+])('tag name "%s" containing special character "%s" is not allowed', async (tagName) => {
+  const { stderr } = await runInlineTests({
+    'basic.test.js': `
+      test('test 1', () => {})
+    `,
+    'vitest.config.js': {
+      test: {
+        globals: true,
+        tags: [
+          { name: tagName },
+        ],
+      },
+    },
+  }, {}, { fails: true })
+  expect(stderr).toContain(`Tag name "${tagName}" is invalid. Tag names cannot contain "!", "*", "&", "|", "(", or ")".`)
+})
+
+test.for([
+  'and',
+  'or',
+  'not',
+  'AND',
+  'OR',
+  'NOT',
+])('tag name "%s" is a reserved keyword and is not allowed', async (tagName) => {
+  const { stderr } = await runInlineTests({
+    'basic.test.js': `
+      test('test 1', () => {})
+    `,
+    'vitest.config.js': {
+      test: {
+        globals: true,
+        tags: [
+          { name: tagName },
+        ],
+      },
+    },
+  }, {}, { fails: true })
+  expect(stderr).toContain(`Tag name "${tagName}" is invalid. Tag names cannot be a logical operator like "and", "or", "not".`)
+})
+
 test('strictTags: false does not allow undefined tags in filter, it only affects test definition', async () => {
   const { stderr } = await runInlineTests({
     'basic.test.js': `

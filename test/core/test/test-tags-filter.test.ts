@@ -322,6 +322,62 @@ describe('createTagsFilter', () => {
       expect(filter(['v1.0'])).toBe(true)
       expect(filter(['v2.0'])).toBe(false)
     })
+
+    test('tags with @ symbol and non-alphanumeric characters', () => {
+      const filter = createTagsFilter(['@scope/tag'], tags('@scope/tag', '@other/tag'))
+      expect(filter(['@scope/tag'])).toBe(true)
+      expect(filter(['@other/tag'])).toBe(false)
+    })
+
+    test('tags with UTF-8 characters', () => {
+      const filter = createTagsFilter(['测试'], tags('测试', '测试2', 'test'))
+      expect(filter(['测试'])).toBe(true)
+      expect(filter(['测试2'])).toBe(false)
+      expect(filter(['test'])).toBe(false)
+    })
+
+    test('tags with @ followed by UTF-8 characters', () => {
+      const filter = createTagsFilter(['@日本語'], tags('@日本語', '@中文', 'english'))
+      expect(filter(['@日本語'])).toBe(true)
+      expect(filter(['@中文'])).toBe(false)
+      expect(filter(['english'])).toBe(false)
+    })
+
+    test('tags with mixed special characters and UTF-8', () => {
+      const filter = createTagsFilter(['@tag-名前_v1.0'], tags('@tag-名前_v1.0', '@tag-other_v1.0'))
+      expect(filter(['@tag-名前_v1.0'])).toBe(true)
+      expect(filter(['@tag-other_v1.0'])).toBe(false)
+    })
+
+    test('tags with emoji characters', () => {
+      const filter = createTagsFilter(['test-🚀'], tags('test-🚀', 'test-💚', 'test'))
+      expect(filter(['test-🚀'])).toBe(true)
+      expect(filter(['test-💚'])).toBe(false)
+    })
+
+    test('tags with special chars containing operator keywords', () => {
+      const filter = createTagsFilter(['or@tag || and@test || not@feature'], tags('or@tag', 'and@test', 'not@feature', 'other'))
+      expect(filter(['or@tag'])).toBe(true)
+      expect(filter(['and@test'])).toBe(true)
+      expect(filter(['not@feature'])).toBe(true)
+      expect(filter(['other'])).toBe(false)
+    })
+
+    test('tags with UTF-8 chars containing operator keywords', () => {
+      const filter = createTagsFilter(['or日本語 || and中文 || not한국어'], tags('or日本語', 'and中文', 'not한국어', 'english'))
+      expect(filter(['or日本語'])).toBe(true)
+      expect(filter(['and中文'])).toBe(true)
+      expect(filter(['not한국어'])).toBe(true)
+      expect(filter(['english'])).toBe(false)
+    })
+
+    test('operator keywords with @ and UTF-8 in complex expressions', () => {
+      const filter = createTagsFilter(['(or@tag || and@test) && not@feature'], tags('or@tag', 'and@test', 'not@feature', 'other'))
+      expect(filter(['or@tag', 'not@feature'])).toBe(true)
+      expect(filter(['and@test', 'not@feature'])).toBe(true)
+      expect(filter(['or@tag'])).toBe(false)
+      expect(filter(['other'])).toBe(false)
+    })
   })
 
   describe('edge cases', () => {
@@ -357,6 +413,51 @@ describe('createTagsFilter', () => {
       const filter = createTagsFilter(['nothing'], tags('nothing', 'something'))
       expect(filter(['nothing'])).toBe(true)
       expect(filter(['something'])).toBe(false)
+    })
+
+    test('tag containing "and" in the middle', () => {
+      const filter = createTagsFilter(['standalone'], tags('standalone', 'other'))
+      expect(filter(['standalone'])).toBe(true)
+      expect(filter(['other'])).toBe(false)
+    })
+
+    test('tag containing "or" in the middle', () => {
+      const filter = createTagsFilter(['priority'], tags('priority', 'other'))
+      expect(filter(['priority'])).toBe(true)
+      expect(filter(['other'])).toBe(false)
+    })
+
+    test('tag containing "not" in the middle', () => {
+      const filter = createTagsFilter(['annotation'], tags('annotation', 'other'))
+      expect(filter(['annotation'])).toBe(true)
+      expect(filter(['other'])).toBe(false)
+    })
+
+    test('tag ending with "and"', () => {
+      const filter = createTagsFilter(['demand'], tags('demand', 'other'))
+      expect(filter(['demand'])).toBe(true)
+      expect(filter(['other'])).toBe(false)
+    })
+
+    test('tag ending with "or"', () => {
+      const filter = createTagsFilter(['editor'], tags('editor', 'other'))
+      expect(filter(['editor'])).toBe(true)
+      expect(filter(['other'])).toBe(false)
+    })
+
+    test('tag ending with "not"', () => {
+      const filter = createTagsFilter(['cannot'], tags('cannot', 'other'))
+      expect(filter(['cannot'])).toBe(true)
+      expect(filter(['other'])).toBe(false)
+    })
+
+    test('complex expression with tags containing operator substrings', () => {
+      const filter = createTagsFilter(['android and editor or nothing'], tags('android', 'editor', 'nothing'))
+      // Parsed as: android AND editor OR nothing
+      expect(filter(['android', 'editor'])).toBe(true)
+      expect(filter(['nothing'])).toBe(true)
+      expect(filter(['android'])).toBe(false)
+      expect(filter(['editor'])).toBe(false)
     })
   })
 

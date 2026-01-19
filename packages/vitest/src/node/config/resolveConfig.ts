@@ -177,8 +177,11 @@ export function resolveConfig(
     if (tag.name.match(/\s/)) {
       throw new Error(`Tag name "${tag.name}" is invalid. Tag names cannot contain spaces.`)
     }
-    if (tag.name.startsWith('!')) {
-      throw new Error(`Tag name "${tag.name}" cannot start with "!".`)
+    if (tag.name.match(/([!()*|&])/)) {
+      throw new Error(`Tag name "${tag.name}" is invalid. Tag names cannot contain "!", "*", "&", "|", "(", or ")".`)
+    }
+    if (tag.name.match(/^\s*(and|or|not)\s*$/i)) {
+      throw new Error(`Tag name "${tag.name}" is invalid. Tag names cannot be a logical operator like "and", "or", "not".`)
     }
     if (typeof tag.retry === 'object' && typeof tag.retry.condition === 'function') {
       throw new TypeError(`Tag "${tag.name}": retry.condition function cannot be used inside a config file. Use a RegExp pattern instead, or define the function in your test file.`)

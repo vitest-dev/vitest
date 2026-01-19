@@ -123,7 +123,9 @@ function tokenize(expr: string): Token[] {
     let tag = ''
     while (i < expr.length && expr[i] !== ' ' && expr[i] !== '\t' && expr[i] !== '(' && expr[i] !== ')' && expr[i] !== '!' && expr[i] !== '&' && expr[i] !== '|') {
       const remaining = expr.slice(i)
-      if (/^and(?:\s|\)|$)/i.test(remaining) || /^or(?:\s|\)|$)/i.test(remaining) || /^not\s/i.test(remaining)) {
+      // Only treat and/or/not as operators if we're at the start of a tag (after whitespace)
+      // This allows tags like "demand", "editor", "cannot" to work correctly
+      if (tag === '' && (/^and(?:\s|\)|$)/i.test(remaining) || /^or(?:\s|\)|$)/i.test(remaining) || /^not\s/i.test(remaining))) {
         break
       }
       tag += expr[i]

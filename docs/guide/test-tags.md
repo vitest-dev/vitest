@@ -194,6 +194,10 @@ You can combine tags in different ways. Vitest supports these keywords:
 
 The parser follows standard [operator precedence](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Operator_precedence): `not`/`!` has the highest priority, then `and`/`&&`, then `or`/`||`. Use parentheses to override default precedence.
 
+::: warning Reserved Names
+Tag names cannot be `and`, `or`, or `not` (case-insensitive) as these are reserved keywords. Tag names also cannot contain special characters (`(`, `)`, `&`, `|`, `!`, `*`, spaces) as these are used by the expression parser.
+:::
+
 ### Wildcards
 
 You can use a wildcard (`*`) to match any number of characters:
