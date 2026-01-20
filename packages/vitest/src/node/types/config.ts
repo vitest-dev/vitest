@@ -858,13 +858,13 @@ export interface InlineConfig {
     /**
      * Configure import duration collection and display.
      *
-     * The `limit` option controls data collection (set to 0 to disable).
-     * The `print` option controls CLI terminal output independently.
+     * The `limit` option controls how many imports to collect and display.
+     * The `print` option controls CLI terminal output.
      * UI can always toggle the breakdown display regardless of `print` setting.
      */
     importDurations?: {
       /**
-       * Number of imports to collect. Set to 0 to disable collection entirely.
+       * Maximum number of imports to collect and display.
        * @default 10
        */
       limit?: number

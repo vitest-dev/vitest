@@ -824,7 +824,7 @@ Enable caching of modules on the file system between reruns.
 - **CLI:** `--experimental.importDurations.limit <number>`
 - **Config:** [experimental.importDurations.limit](/config/experimental#experimental-importdurations-limit)
 
-Number of imports to collect. Set to 0 to disable collection entirely (default: 10).
+Maximum number of imports to collect and display (default: 10).
 
 ### experimental.importDurations.print
 

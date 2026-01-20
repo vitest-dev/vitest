@@ -215,7 +215,7 @@ Note that if the file path is too long, Vitest will truncate it at the start unt
 - **Type:** `number`
 - **Default:** `10`
 
-Number of imports to collect. Set to 0 to disable collection entirely. This affects data available to CLI output, [Vitest UI](/guide/ui#import-breakdown), and third-party reporters.
+Maximum number of imports to collect and display in CLI output, [Vitest UI](/guide/ui#import-breakdown), and third-party reporters.
 
 ### experimental.importDurations.print {#experimental-importdurationsprint}
 
