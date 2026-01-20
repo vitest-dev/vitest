@@ -1,14 +1,14 @@
-import type { TestTagDefinition, VitestRunner } from '../types/runner'
+import type { TestTagDefinition, VitestRunnerConfig } from '../types/runner'
 
-export function validateTags(runner: VitestRunner, tags: string[]): void {
-  if (!runner.config.strictTags) {
+export function validateTags(config: VitestRunnerConfig, tags: string[]): void {
+  if (!config.strictTags) {
     return
   }
 
-  const availableTags = new Set(runner.config.tags.map(tag => tag.name))
+  const availableTags = new Set(config.tags.map(tag => tag.name))
   for (const tag of tags) {
     if (!availableTags.has(tag)) {
-      throw createNoTagsError(runner.config.tags, tag)
+      throw createNoTagsError(config.tags, tag)
     }
   }
 }
