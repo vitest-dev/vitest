@@ -107,6 +107,17 @@ export function* filterNode(
   // we still need to show the suite, but the test must be removed from the list to render.
 
   const map = explorerTree.nodes
+
+  // When searching, expand parent nodes of matching tests so they are visible
+  if (search.length > 0) {
+    for (const id of treeNodes) {
+      const treeNode = map.get(id)
+      if (treeNode && 'expanded' in treeNode) {
+        treeNode.expanded = true
+      }
+    }
+  }
+
   // collect files and all suites whose parent is expanded
   const parents = new Set(
     entries.filter(e => isFileNode(e) || (isParentNode(e) && map.get(e.parentId)?.expanded)).map(e => e.id),
