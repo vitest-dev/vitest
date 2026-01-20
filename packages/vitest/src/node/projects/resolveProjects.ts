@@ -106,6 +106,7 @@ export async function resolveProjects(
               },
             },
           },
+          ...options.plugins || [],
         ],
         test: { ...options.test, ...cliOverrides },
       },
