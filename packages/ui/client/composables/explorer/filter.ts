@@ -2,12 +2,12 @@ import type { Task } from '@vitest/runner'
 import type { FileTreeNode, Filter, FilterResult, ParentTreeNode, SearchMatcher, UITaskTreeNode } from '~/composables/explorer/types'
 import { client, findById } from '~/composables/client'
 import { explorerTree } from '~/composables/explorer/index'
-import { filteredFiles, uiEntries } from '~/composables/explorer/state'
+import { currentProjectName, filteredFiles, projectSort, uiEntries } from '~/composables/explorer/state'
 import {
+  getSortedRootTasks,
   isFileNode,
   isParentNode,
   isTestNode,
-  sortedRootTasks,
 } from '~/composables/explorer/utils'
 
 export function testMatcher(task: Task, search: SearchMatcher, filter: Filter) {
@@ -35,7 +35,13 @@ export function* filterAll(
   search: SearchMatcher,
   filter: Filter,
 ) {
-  for (const node of sortedRootTasks()) {
+  const project = currentProjectName.value
+  const tasks = getSortedRootTasks(projectSort.value)
+
+  for (const node of tasks) {
+    if (project && node.projectName !== project) {
+      continue
+    }
     yield* filterNode(node, search, filter)
   }
 }

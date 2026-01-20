@@ -1,45 +1,67 @@
 import type { RunnerTestFile } from 'vitest'
-import type { TestProject } from 'vitest/node'
-import type { StateManager } from 'vitest/src/node/state.js'
-import type { TestCase, TestCollection, TestModule } from '../../../packages/vitest/src/node/reporters/reported-tasks'
+import type { TestCase, TestCollection, TestModule, TestProject, Vitest } from 'vitest/node'
 import { resolve } from 'pathe'
-import { beforeAll, expect, it } from 'vitest'
+import { it as baseTest, expect } from 'vitest'
 import { runVitest } from '../../test-utils'
-
-const now = new Date()
-const collectedTestModules: TestModule[] = []
-let state: StateManager
-let project: TestProject
-let files: RunnerTestFile[]
-let testModule: TestModule
 
 const root = resolve(__dirname, '..', 'fixtures', 'reported-tasks')
 
-beforeAll(async () => {
-  const { ctx } = await runVitest({
-    root,
-    include: ['**/*.test.ts'],
-    reporters: [
-      'verbose',
-      {
-        onTestModuleCollected(testModule) {
-          collectedTestModules.push(testModule)
-        },
-      },
-    ],
-    includeTaskLocation: true,
-    logHeapUsage: true,
-  })
-  state = ctx!.state
-  project = ctx!.getRootProject()
-  files = state.getFiles()
-  expect(files).toHaveLength(1)
-  testModule = state.getReportedEntity(files[0])! as TestModule
-  expect(testModule).toBeDefined()
-  expect(testModule).toBe(collectedTestModules[0])
+const it = baseTest.extend<{
+  ctx: Vitest
+  files: RunnerTestFile[]
+  testModule: TestModule
+  project: TestProject
+}>({
+  ctx: [
+    async ({}, use) => {
+      const collectedTestModules: TestModule[] = []
+      const { ctx } = await runVitest({
+        root,
+        include: ['**/*.test.ts'],
+        reporters: [
+          'verbose',
+          {
+            onTestModuleCollected(testModule) {
+              collectedTestModules.push(testModule)
+            },
+          },
+        ],
+        includeTaskLocation: true,
+        logHeapUsage: true,
+      })
+      expect(collectedTestModules).toHaveLength(1)
+      await use(ctx!)
+    },
+    { scope: 'file' },
+  ],
+  files: [
+    async ({ ctx }, use) => {
+      const state = ctx!.state
+      const files = state.getFiles()
+      await use(files)
+    },
+    { scope: 'file' },
+  ],
+  testModule: [
+    async ({ ctx, files }, use) => {
+      const state = ctx!.state
+      const testModule = state.getReportedEntity(files[0])! as TestModule
+      await use(testModule)
+    },
+    { scope: 'file' },
+  ],
+  project: [
+    async ({ ctx }, use) => {
+      const project = ctx!.getRootProject()
+      await use(project)
+    },
+    { scope: 'file' },
+  ],
 })
 
-it('correctly reports a file', () => {
+const now = new Date()
+
+it('correctly reports a file', ({ testModule, files, project }) => {
   // suite properties not available on file
   expect(testModule).not.toHaveProperty('parent')
   expect(testModule).not.toHaveProperty('options')
@@ -80,7 +102,7 @@ it('correctly reports a file', () => {
   expect(diagnostic.setupDuration).toBe(0)
 })
 
-it('correctly reports a passed test', () => {
+it('correctly reports a passed test', ({ testModule, files }) => {
   const passedTest = findTest(testModule.children, 'runs a test')
   expect(passedTest.type).toBe('test')
   expect(passedTest.task).toBe(files[0].tasks[0])
@@ -116,7 +138,7 @@ it('correctly reports a passed test', () => {
   expect(diagnostic.repeatCount).toBe(0)
 })
 
-it('correctly reports failed test', () => {
+it('correctly reports failed test', ({ testModule, files }) => {
   const passedTest = findTest(testModule.children, 'fails a test')
   expect(passedTest.type).toBe('test')
   expect(passedTest.task).toBe(files[0].tasks[1])
@@ -166,7 +188,7 @@ it('correctly reports failed test', () => {
   expect(diagnostic.repeatCount).toBe(0)
 })
 
-it('correctly reports a skipped test', () => {
+it('correctly reports a skipped test', ({ testModule }) => {
   const optionTestCase = findTest(testModule.children, 'skips an option test')
   expect(optionTestCase.result()).toEqual({
     state: 'skipped',
@@ -203,7 +225,7 @@ it('correctly reports a skipped test', () => {
   })
 })
 
-it('correctly reports multiple failures', () => {
+it('correctly reports multiple failures', ({ testModule }) => {
   const testCase = findTest(testModule.children, 'fails multiple times')
   const result = testCase.result()!
   expect(result).toBeDefined()
@@ -217,7 +239,7 @@ it('correctly reports multiple failures', () => {
   })
 })
 
-it('correctly reports test assigned options', () => {
+it('correctly reports test assigned options', ({ testModule }) => {
   const testOptionSkip = findTest(testModule.children, 'skips an option test')
   expect(testOptionSkip.options.mode).toBe('skip')
   const testModifierSkip = findTest(testModule.children, 'skips a .modifier test')
@@ -235,14 +257,14 @@ it('correctly reports test assigned options', () => {
   expect(testInsideSkippedDescribe.options.mode).toBe('skip')
 })
 
-it('correctly reports retried tests', () => {
+it('correctly reports retried tests', ({ testModule }) => {
   const testRetry = findTest(testModule.children, 'retries a test')
   expect(testRetry.options.retry).toBe(5)
   expect(testRetry.options.repeats).toBeUndefined()
   expect(testRetry.result()!.state).toBe('failed')
 })
 
-it('correctly reports flaky tests', () => {
+it('correctly reports flaky tests', ({ testModule }) => {
   const testFlaky = findTest(testModule.children, 'retries a test with success')
   const diagnostic = testFlaky.diagnostic()!
   expect(diagnostic.flaky).toBe(true)
@@ -253,7 +275,7 @@ it('correctly reports flaky tests', () => {
   expect(result.errors).toHaveLength(2)
 })
 
-it('correctly reports repeated tests', () => {
+it('correctly reports repeated tests', ({ testModule }) => {
   const testRepeated = findTest(testModule.children, 'repeats a test')
   const diagnostic = testRepeated.diagnostic()!
   expect(diagnostic.flaky).toBe(false)
@@ -264,13 +286,13 @@ it('correctly reports repeated tests', () => {
   expect(result.errors).toHaveLength(6)
 })
 
-it('correctly passed down metadata', () => {
+it('correctly passed down metadata', ({ testModule }) => {
   const testMetadata = findTest(testModule.children, 'registers a metadata')
   const meta = testMetadata.meta()
   expect(meta).toHaveProperty('key', 'value')
 })
 
-it('correctly builds the full name', () => {
+it('correctly builds the full name', ({ testModule }) => {
   const suiteTopLevel = testModule.children.suites().next().value!
   const suiteSecondLevel = suiteTopLevel.children.suites().next().value!
   const test = suiteSecondLevel.children.at(0) as TestCase
@@ -279,13 +301,39 @@ it('correctly builds the full name', () => {
   expect(suiteSecondLevel.fullName).toBe('a group > a nested group')
 })
 
-it('correctly reports import durations', () => {
+it('correctly reports import durations', ({ testModule }) => {
   const diagnostic = testModule.diagnostic()
 
   const filePath = resolve(root, './1_first.test.ts')
   const importDuration = diagnostic.importDurations[filePath]
   expect(importDuration.selfTime).toBeGreaterThan(0)
   expect(importDuration.totalTime).toBeGreaterThan(0)
+})
+
+it('can create new test specifications', ({ testModule }) => {
+  const moduleSpec = testModule.toTestSpecification()
+  expect(moduleSpec.moduleId).toBe(testModule.moduleId)
+  expect(moduleSpec.testIds).toBeUndefined()
+  expect(moduleSpec.project).toBe(testModule.project)
+
+  const testSuite = [...testModule.children.suites()][0]
+  const suiteSpec = testSuite.toTestSpecification()
+  expect(suiteSpec.moduleId).toBe(testModule.moduleId)
+  expect(suiteSpec.testIds).toEqual([
+    '-1008553841_11_0',
+    '-1008553841_11_1',
+    '-1008553841_11_2_0',
+    '-1008553841_11_2_1',
+    '-1008553841_11_2_2',
+    '-1008553841_11_2_3',
+  ])
+  expect(suiteSpec.project).toBe(testModule.project)
+
+  const testCase = testSuite.children.at(0) as TestCase
+  const caseSpec = testCase.toTestSpecification()
+  expect(caseSpec.moduleId).toBe(testModule.moduleId)
+  expect(caseSpec.testIds).toEqual(['-1008553841_11_0'])
+  expect(caseSpec.project).toBe(testModule.project)
 })
 
 function date(time: Date) {

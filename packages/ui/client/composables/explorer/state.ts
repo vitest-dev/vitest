@@ -1,8 +1,9 @@
 import type { File, Task } from '@vitest/runner'
-import type { FileTreeNode, Filter, FilteredTests, TreeFilterState, UITaskTreeNode } from './types'
+import type { FileTreeNode, Filter, FilteredTests, ProjectSortUIType, TreeFilterState, UITaskTreeNode } from './types'
 import { createTagsFilter } from '@vitest/runner/utils'
 import { useLocalStorage } from '@vueuse/core'
 import { computed, reactive, ref, shallowRef } from 'vue'
+import { availableProjects } from '~/composables/client'
 import { caseInsensitiveMatch } from '~/utils/task'
 import { config } from '../client'
 import { explorerTree } from './index'
@@ -14,6 +15,7 @@ export const openedTreeItems = useLocalStorage<string[]>(
   [],
   { shallow: true },
 )
+export const ALL_PROJECTS = '__vitest_ui_all_projects__'
 export const openedTreeItemsSet = computed(() => new Set(openedTreeItems.value))
 export const treeFilter = useLocalStorage<TreeFilterState>(
   'vitest-ui_task-tree-filter',
@@ -24,8 +26,17 @@ export const treeFilter = useLocalStorage<TreeFilterState>(
     skipped: false,
     onlyTests: false,
     search: '',
+    project: ALL_PROJECTS,
+    projectSort: undefined,
   },
 )
+export const projectSort = ref<ProjectSortUIType>(treeFilter.value.projectSort || 'default')
+export const currentProject = shallowRef(treeFilter.value?.project || ALL_PROJECTS)
+export const enableProjects = computed(() => availableProjects.value.length > 1)
+export const disableClearProjects = computed(() => currentProject.value === ALL_PROJECTS)
+export const currentProjectName = computed(() => {
+  return !enableProjects.value || currentProject.value === ALL_PROJECTS ? undefined : currentProject.value
+})
 export const search = ref<string>(treeFilter.value.search)
 const tagExpressionsCache = new Map<string, { error?: string; matcher: (tags: string[]) => boolean }>()
 export const searchMatcher = computed(() => {
@@ -113,6 +124,7 @@ export const shouldShowExpandAll = computed(() => {
 export const testsTotal = computed<FilteredTests>(() => {
   const filtered = isFiltered.value
   const filteredByStatus = isFilteredByStatus.value
+  const project = currentProjectName.value
   const onlyTests = filter.onlyTests
   const failed = explorerTree.summary.filesFailed
   const success = explorerTree.summary.filesSuccess
@@ -120,7 +132,7 @@ export const testsTotal = computed<FilteredTests>(() => {
   const running = explorerTree.summary.filesRunning
   const files = filteredFiles.value
   return explorerTree.collectTestsTotal(
-    filtered || filteredByStatus,
+    filtered || filteredByStatus || !!project,
     onlyTests,
     files,
     {
