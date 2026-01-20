@@ -763,7 +763,7 @@ test('negative priority values is not allowed', async () => {
       },
     },
   }, {}, { fails: true })
-  expect(stderr).toContain('Tag "low-priority": priority must be a non-negative integer.')
+  expect(stderr).toContain('Tag "low-priority": priority must be a non-negative number.')
 })
 
 test.for([

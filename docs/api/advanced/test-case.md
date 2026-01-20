@@ -113,7 +113,7 @@ interface TaskOptions {
 
 The options that test was collected with.
 
-## tags <Version>4.1.0</Version>
+## tags <Version>4.1.0</Version> {#tags}
 
 [Tags](/guide/test-tags) that were implicitly or explicitly assigned to the test.
 

@@ -14,10 +14,6 @@ If you are using [`projects`](/config/projects), they will inherit all global ta
 
 Use [`--tags-filter`](/guide/test-tags#syntax) to filter tests by their tags.
 
-::: tip FILTERING
-You can use a wildcard (*) to match any number of symbols. To ignore a tag, add an exclamation mark (!) at the start of the tag.
-:::
-
 ## name
 
 - **Type:** `string`
@@ -76,7 +72,7 @@ export default defineConfig({
 ## priority
 
 - **Type:** `number`
-- **Default:** `undefined`
+- **Default:** `Infinity`
 
 Priority for merging options when multiple tags with the same options are applied to a test. Lower number means higher priority (e.g., priority `1` takes precedence over priority `3`).
 

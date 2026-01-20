@@ -621,8 +621,7 @@ function createSuite() {
               ? 'todo'
               : 'run'
 
-    // passed not factory, but also didn't tag it as todo or skip
-    // assume it's todo
+    // passed as test(name), assume it's a "todo"
     if (mode === 'run' && !factory) {
       mode = 'todo'
     }
