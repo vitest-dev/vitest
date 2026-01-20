@@ -202,6 +202,11 @@ vitest --tags-filter=frontend
 vitest --tags-filter="frontend and backend"
 ```
 
+If you are running Vitest UI, you can start a filter with a `tag:` prefix to filter out tests by tags:
+
+<img alt="The tags filter in Vitest UI" img-light src="/ui/light-ui-tags.png">
+<img alt="The tags filter in Vitest UI" img-dark src="/ui/dark-ui-tags.png">
+
 If you are using a programmatic API, you can pass down a `tagsFilter` option to [`startVitest`](/guide/advanced/#startvitest) or [`createVitest`](/guide/advanced/#createvitest):
 
 ```ts
