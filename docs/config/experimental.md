@@ -223,5 +223,3 @@ Number of imports to collect. Set to 0 to disable collection entirely. This affe
 - **Default:** `false`
 
 Print import breakdown to CLI terminal after tests finish. This only works with [`default`](/guide/reporters#default), [`verbose`](/guide/reporters#verbose), or [`tree`](/guide/reporters#tree) reporters.
-
-This will also show the breakdown panel by default in [Vitest UI](/guide/ui#import-breakdown), but you can always toggle it manually.
