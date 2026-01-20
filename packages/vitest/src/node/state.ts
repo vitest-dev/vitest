@@ -16,6 +16,31 @@ function isAggregateError(err: unknown): err is AggregateError {
   return err instanceof Error && 'errors' in err
 }
 
+const IGNORED_NETWORK_ERROR_CODES = new Set<string>([
+  'ECONNRESET',
+])
+
+const IGNORED_NETWORK_ERROR_MESSAGES = [
+  'socket hang up',
+]
+
+function isIgnoredNetworkError(error: Record<string, any>): boolean {
+  if (!error || typeof error !== 'object') {
+    return false
+  }
+
+  if (error.code && IGNORED_NETWORK_ERROR_CODES.has(error.code)) {
+    return true
+  }
+
+  if (error.message && typeof error.message === 'string') {
+    const message = error.message.toLowerCase()
+    return IGNORED_NETWORK_ERROR_MESSAGES.some(pattern => message.includes(pattern.toLowerCase()))
+  }
+
+  return false
+}
+
 export class StateManager {
   filesMap: Map<string, File[]> = new Map()
   pathsSet: Set<string> = new Set()
@@ -74,6 +99,10 @@ export class StateManager {
         task.result.state = 'skip'
         task.result.note = _error.note
       }
+      return
+    }
+
+    if (_error && typeof _error === 'object' && isIgnoredNetworkError(_error)) {
       return
     }
 
