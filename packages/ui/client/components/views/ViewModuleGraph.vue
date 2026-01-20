@@ -17,7 +17,7 @@ import {
   PositionInitializers,
 } from 'd3-graph-controller'
 import { computed, onMounted, onUnmounted, ref, shallowRef, toRefs, watch } from 'vue'
-import { config, isReport } from '~/composables/client'
+import { isReport } from '~/composables/client'
 import { currentModule } from '~/composables/navigation'
 import IconButton from '../IconButton.vue'
 import Modal from '../Modal.vue'
