@@ -220,7 +220,7 @@ const tags = computed(() => {
 
           <span
             v-for="tag of tags"
-            :key="tag"
+            :key="tag.name"
             v-tooltip.bottom="tag.description"
             class="rounded-full ml-2 px-2 text-xs font-light"
             :style="{ backgroundColor: tag.bg, color: tag.text, border: `1px solid ${tag.border}` }"
