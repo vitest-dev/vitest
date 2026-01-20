@@ -786,7 +786,8 @@ export const cliOptionsConfig: VitestCLIOptions = {
     },
   },
   listTags: {
-    description: 'List all available tags instead of running tests.',
+    description: 'List all available tags instead of running tests. If --list-tags=json is used, the output will be in JSON format, unless there are no tags.',
+    argument: '[type]',
   },
   clearCache: {
     description: 'Delete all Vitest caches, including `experimental.fsModuleCache`, without running any tests. This will reduce the performance in the subsequent test run.',

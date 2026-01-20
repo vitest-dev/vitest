@@ -131,6 +131,10 @@ export class Logger {
     return code
   }
 
+  printNoTestTagsFound(): void {
+    this.error(c.bgRed(' ERROR '), c.red('No test tags found in any project. Exiting with code 1.'))
+  }
+
   printTags(): void {
     const vitest = this.ctx
     const rootProject = vitest.getRootProject()
@@ -143,7 +147,7 @@ export class Logger {
 
     if (!hasTags) {
       process.exitCode = 1
-      return this.error(c.bgRed(' ERROR '), c.red('No test tags defined in any project. Exiting with code 1.'))
+      return this.printNoTestTagsFound()
     }
 
     for (const project of projects) {

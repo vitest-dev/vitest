@@ -89,6 +89,36 @@ db: Tests for database queries.
 flaky: Flaky CI tests.
 ```
 
+To print it in JSON, pass down `--list-tags=json`:
+
+```json
+{
+  "tags": [
+    {
+      "name": "frontend",
+      "description": "Tests written for frontend."
+    },
+    {
+      "name": "backend",
+      "description": "Tests written for backend."
+    },
+    {
+      "name": "db",
+      "description": "Tests for database queries.",
+      "timeout": 60000
+    },
+    {
+      "name": "flaky",
+      "description": "Flaky CI tests.",
+      "retry": 0,
+      "timeout": 30000,
+      "priority": 1
+    }
+  ],
+  "projects": []
+}
+```
+
 ## Using Tags in Tests
 
 You can apply tags to individual tests or entire suites using the `tags` option:

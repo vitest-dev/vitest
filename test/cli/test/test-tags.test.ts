@@ -842,7 +842,7 @@ test('--list-tags prints error if no tags are defined', async () => {
   expect(stdout).toBe('')
   expect(exitCode).toBe(1)
   expect(stderr).toMatchInlineSnapshot(`
-    " ERROR  No test tags defined in any project. Exiting with code 1.
+    " ERROR  No test tags found in any project. Exiting with code 1.
     "
   `)
 })
@@ -998,6 +998,84 @@ test('--list-tags aligns tags with different project name lengths', async () => 
       tag-5
     "
   `)
+})
+
+test('--list-tags=json prints error if no tags are defined', async () => {
+  const { stdout, stderr } = await runVitest({
+    config: false,
+    listTags: 'json',
+  })
+  expect(stdout).toBe('')
+  expect(stderr).toContain('No test tags found in any project. Exiting with code 1.')
+})
+
+test('--list-tags=json prints tags as JSON', async () => {
+  const { stdout, stderr } = await runVitest({
+    config: false,
+    listTags: 'json',
+    tags: [
+      { name: 'unit' },
+      { name: 'e2e', description: 'End-to-end tests' },
+    ],
+  })
+  expect(stderr).toBe('')
+  const json = JSON.parse(stdout)
+  expect(json).toEqual({
+    tags: [
+      { name: 'unit' },
+      { name: 'e2e', description: 'End-to-end tests' },
+    ],
+    projects: [],
+  })
+})
+
+test('--list-tags=json prints tags from multiple projects', async () => {
+  const { stdout, stderr } = await runVitest({
+    config: false,
+    listTags: 'json',
+    tags: [
+      { name: 'global-tag' },
+    ],
+    projects: [
+      {
+        test: {
+          name: 'project-1',
+          tags: [
+            { name: 'project-1-tag' },
+          ],
+        },
+      },
+      {
+        test: {
+          name: 'project-2',
+          tags: [
+            { name: 'project-2-tag', description: 'Only in project 2' },
+          ],
+        },
+      },
+    ],
+  })
+  expect(stderr).toBe('')
+  const json = JSON.parse(stdout)
+  expect(json).toEqual({
+    tags: [
+      { name: 'global-tag' },
+    ],
+    projects: [
+      {
+        name: 'project-1',
+        tags: [
+          { name: 'project-1-tag' },
+        ],
+      },
+      {
+        name: 'project-2',
+        tags: [
+          { name: 'project-2-tag', description: 'Only in project 2' },
+        ],
+      },
+    ],
+  })
 })
 
 test('duplicate tags from suite and test are deduplicated', async () => {
