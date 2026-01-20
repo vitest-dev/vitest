@@ -607,7 +607,7 @@ export abstract class BaseReporter implements Reporter {
       }
     }
 
-    if (this.ctx.config.experimental.printImportBreakdown.enabled) {
+    if (this.ctx.config.experimental.importDurations.print) {
       this.printImportsBreakdown()
     }
 
@@ -649,7 +649,7 @@ export abstract class BaseReporter implements Reporter {
 
     const sortedImports = allImports.sort((a, b) => b.totalTime - a.totalTime)
     const maxTotalTime = sortedImports[0].totalTime
-    const limit = this.ctx.config.experimental.printImportBreakdown.limit
+    const limit = this.ctx.config.experimental.importDurations.limit
     const topImports = sortedImports.slice(0, limit)
 
     const totalSelfTime = allImports.reduce((sum, imp) => sum + imp.selfTime, 0)

@@ -75,13 +75,13 @@ describe('import durations', () => {
     expect(file.importDurations?.[throwsFile]?.selfTime).toBeGreaterThanOrEqual(24)
   })
 
-  it('should print import breakdown when enabled', async () => {
+  it('should print import breakdown when print is enabled', async () => {
     const { stdout } = await runVitest({
       root,
       include: ['**/import-durations.test.ts'],
       experimental: {
-        printImportBreakdown: {
-          enabled: true,
+        importDurations: {
+          print: true,
           limit: 5,
         },
       },
@@ -98,7 +98,7 @@ describe('import durations', () => {
       root,
       include: ['**/import-durations.test.ts'],
       experimental: {
-        printImportBreakdown: {
+        importDurations: {
           limit: 0,
         },
       },

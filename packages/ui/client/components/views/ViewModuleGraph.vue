@@ -56,7 +56,7 @@ const breakdownIconClass = computed(() => {
   }
   return textClass
 })
-const breakdownShow = ref(config.value?.experimental?.printImportBreakdown?.enabled ?? breakdownIconClass.value === 'text-red')
+const breakdownShow = ref(config.value?.experimental?.importDurations?.print ?? breakdownIconClass.value === 'text-red')
 
 onMounted(() => {
   filteredGraph.value = filterGraphByLevels(graph.value, null, 2)

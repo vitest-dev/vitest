@@ -835,9 +835,9 @@ export function resolveConfig(
       resolved.experimental.fsModuleCachePath,
     )
   }
-  resolved.experimental.printImportBreakdown ??= {} as any
-  resolved.experimental.printImportBreakdown.enabled ??= false
-  resolved.experimental.printImportBreakdown.limit ??= 10
+  resolved.experimental.importDurations ??= {} as any
+  resolved.experimental.importDurations.limit ??= 10
+  resolved.experimental.importDurations.print ??= false
 
   return resolved
 }

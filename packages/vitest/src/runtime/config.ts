@@ -119,9 +119,9 @@ export interface SerializedConfig {
   serializedDefines: string
   experimental: {
     fsModuleCache: boolean
-    printImportBreakdown: {
-      enabled: boolean
+    importDurations: {
       limit: number
+      print: boolean
     }
     openTelemetry: {
       enabled: boolean

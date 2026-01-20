@@ -176,7 +176,7 @@ export default defineConfig({
 It's important that Node can process `sdkPath` content because it is not transformed by Vitest. See [the guide](/guide/open-telemetry) on how to work with OpenTelemetry inside of Vitest.
 :::
 
-## experimental.printImportBreakdown <Version type="experimental">4.0.15</Version> {#experimental-printimportbreakdown}
+## experimental.importDurations <Version type="experimental">4.0.15</Version> {#experimental-importdurations}
 
 ::: tip FEEDBACK
 Please, leave feedback regarding this feature in a [GitHub Discussion](https://github.com/vitest-dev/vitest/discussions/9224).
@@ -185,21 +185,23 @@ Please, leave feedback regarding this feature in a [GitHub Discussion](https://g
 - **Type:**
 
 ```ts
-interface PrintImportBreakdownOptions {
+interface ImportDurationsOptions {
   /**
-   * Enable import breakdown display in CLI output.
-   */
-  enabled?: boolean
-  /**
-   * Number of imports to show in CLI and UI output.
+   * Number of imports to collect. Set to 0 to disable collection entirely.
    */
   limit?: number
+  /**
+   * Print import breakdown to CLI terminal after tests finish.
+   */
+  print?: boolean
 }
 ```
 
-- **Default:** `{ enabled: false, limit: 10 }`
+- **Default:** `{ limit: 10, print: false }`
 
-Show import duration breakdown after tests have finished running. This option only works with [`default`](/guide/reporters#default), [`verbose`](/guide/reporters#verbose), or [`tree`](/guide/reporters#tree) reporters.
+Configure import duration collection and display.
+
+The `limit` option controls data collection - set to 0 to disable collection entirely. The `print` option controls CLI terminal output independently. [Vitest UI](/guide/ui#import-breakdown) can always toggle the breakdown display regardless of the `print` setting.
 
 - Self: the time it took to import the module, excluding static imports;
 - Total: the time it took to import the module, including static imports. Note that this does not include `transform` time of the current module.
@@ -208,16 +210,18 @@ Show import duration breakdown after tests have finished running. This option on
 
 Note that if the file path is too long, Vitest will truncate it at the start until it fits 45 character limit.
 
-### experimental.printImportBreakdown.enabled {#experimental-printimportbreakdownenabled}
-
-- **Type:** `boolean`
-- **Default:** `false`
-
-Enable import breakdown display in CLI output. This will also show the breakdown panel by default in [Vitest UI](/guide/ui#import-breakdown), but you can always toggle it manually.
-
-### experimental.printImportBreakdown.limit {#experimental-printimportbreakdownlimit}
+### experimental.importDurations.limit {#experimental-importdurationslimit}
 
 - **Type:** `number`
 - **Default:** `10`
 
-Number of imports to show in CLI and UI output.
+Number of imports to collect. Set to 0 to disable collection entirely. This affects data available to CLI output, [Vitest UI](/guide/ui#import-breakdown), and third-party reporters.
+
+### experimental.importDurations.print {#experimental-importdurationsprint}
+
+- **Type:** `boolean`
+- **Default:** `false`
+
+Print import breakdown to CLI terminal after tests finish. This only works with [`default`](/guide/reporters#default), [`verbose`](/guide/reporters#verbose), or [`tree`](/guide/reporters#tree) reporters.
+
+This will also show the breakdown panel by default in [Vitest UI](/guide/ui#import-breakdown), but you can always toggle it manually.
