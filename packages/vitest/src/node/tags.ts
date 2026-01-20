@@ -1,7 +1,7 @@
 import type { TestTagDefinition } from '@vitest/runner'
 import type { TestProject } from './project'
 
-export function validateProjectsTags(rootProject: TestProject, projects: TestProject[]): void {
+export function populateProjectsTags(rootProject: TestProject, projects: TestProject[]): void {
   // Include root project if not already in the list
   const allProjects = projects.includes(rootProject) ? projects : [rootProject, ...projects]
 

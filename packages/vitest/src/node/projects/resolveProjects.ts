@@ -88,7 +88,27 @@ export async function resolveProjects(
     projectPromises.push(concurrent(() => initializeProject(
       index,
       vitest,
-      { ...options, root, configFile, test: { ...options.test, ...cliOverrides } },
+      {
+        ...options,
+        root,
+        configFile,
+        plugins: [
+          {
+            name: 'vitest:tags',
+            // don't inherit tags from workspace config, they are merged separately
+            configResolved(config) {
+              ;(config as any).test ??= {}
+              config.test!.tags = options.test?.tags
+            },
+            api: {
+              vitest: {
+                experimental: { ignoreFsModuleCache: true },
+              },
+            },
+          },
+        ],
+        test: { ...options.test, ...cliOverrides },
+      },
     )))
   })
 

@@ -43,6 +43,7 @@ const skipConfig = new Set([
   'browser.fileParallelism',
   'clearCache',
   'tagsFilter',
+  'listTags',
 ])
 
 function resolveOptions(options: CLIOptions<any>, parentName?: string) {

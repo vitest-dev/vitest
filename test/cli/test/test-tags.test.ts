@@ -262,9 +262,6 @@ test('defining a tag available only in one project', async () => {
     {
       "project-1": [
         {
-          "name": "global-tag",
-        },
-        {
           "name": "project-1-tag",
         },
         {
@@ -272,19 +269,22 @@ test('defining a tag available only in one project', async () => {
           "timeout": 100,
         },
         {
+          "name": "global-tag",
+        },
+        {
           "name": "project-2-tag",
         },
       ],
       "project-2": [
-        {
-          "name": "global-tag",
-        },
         {
           "name": "project-2-tag",
         },
         {
           "name": "override",
           "timeout": 200,
+        },
+        {
+          "name": "global-tag",
         },
         {
           "name": "project-1-tag",
@@ -834,6 +834,172 @@ test('strictTags: false does not allow undefined tags in filter, it only affects
 - known`)
 })
 
+test('--list-tags prints error if no tags are defined', async () => {
+  const { stdout, stderr, exitCode } = await runVitest({
+    config: false,
+    listTags: true,
+  })
+  expect(stdout).toBe('')
+  expect(exitCode).toBe(1)
+  expect(stderr).toMatchInlineSnapshot(`
+    " ERROR  No test tags defined in any project. Exiting with code 1.
+    "
+  `)
+})
+
+test('--list-tags prints tags defined in config', async () => {
+  const { stdout, stderr } = await runVitest({
+    config: false,
+    listTags: true,
+    tags: [
+      { name: 'unit' },
+      { name: 'e2e', description: 'End-to-end tests' },
+      { name: 'slow' },
+    ],
+  })
+  expect(stderr).toBe('')
+  expect(`\n${stdout}`).toMatchInlineSnapshot(`
+    "
+      unit
+      e2e: End-to-end tests
+      slow
+    "
+  `)
+})
+
+test('--list-tags prints tags from multiple projects', async () => {
+  const { stdout, stderr } = await runInlineTests({
+    'vitest.config.js': {
+      test: {
+        tags: [
+          { name: 'global-tag', description: 'Available in all projects' },
+        ],
+        projects: [
+          {
+            extends: true,
+            test: {
+              name: 'project-1',
+              tags: [
+                { name: 'project-1-tag' },
+              ],
+            },
+          },
+          {
+            extends: true,
+            test: {
+              name: 'project-2',
+              tags: [
+                { name: 'project-2-tag', description: 'Only in project 2' },
+                { name: 'project-2-again' },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  }, {
+    listTags: true,
+  })
+  expect(stderr).toBe('')
+  expect(`\n${stdout}`).toMatchInlineSnapshot(`
+    "
+      global-tag: Available in all projects
+    |project-1|
+      project-1-tag
+    |project-2|
+      project-2-tag: Only in project 2
+      project-2-again
+    "
+  `)
+})
+
+test('--list-tags prints tags with named root project', async () => {
+  const { stdout, stderr } = await runInlineTests({
+    'vitest.config.js': {
+      test: {
+        name: 'root',
+        tags: [
+          { name: 'root-tag' },
+          { name: 'another-tag', description: 'From root' },
+        ],
+        projects: [
+          {
+            extends: true,
+            test: {
+              name: 'child',
+              tags: [
+                { name: 'child-tag' },
+                { name: 'child-2-tag' },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  }, {
+    listTags: true,
+  })
+  expect(stderr).toBe('')
+  expect(`\n${stdout}`).toMatchInlineSnapshot(`
+    "
+    |root|
+      root-tag
+      another-tag: From root
+    |child|
+      child-tag
+      child-2-tag
+    "
+  `)
+})
+
+test('--list-tags aligns tags with different project name lengths', async () => {
+  const { stdout, stderr } = await runVitest({
+    config: false,
+    listTags: true,
+    projects: [
+      {
+        test: {
+          name: 'a',
+          tags: [
+            { name: 'tag-1' },
+            { name: 'tag-2' },
+          ],
+        },
+      },
+      {
+        test: {
+          name: 'long-project-name',
+          tags: [
+            { name: 'tag-3' },
+            { name: 'tag-4' },
+          ],
+        },
+      },
+      {
+        test: {
+          name: 'medium',
+          tags: [
+            { name: 'tag-5' },
+          ],
+        },
+      },
+    ],
+  })
+  expect(stderr).toBe('')
+  expect(`\n${stdout}`).toMatchInlineSnapshot(`
+    "
+    |a|
+      tag-1
+      tag-2
+    |long-project-name|
+      tag-3
+      tag-4
+    |medium|
+      tag-5
+    "
+  `)
+})
+
 test('duplicate tags from suite and test are deduplicated', async () => {
   const { stderr, buildTree } = await runInlineTests({
     'basic.test.js': `
@@ -957,6 +1123,25 @@ test('filters tests with NOT and parentheses', async () => {
       },
     }
   `)
+})
+
+test('throws an error when several tags with the same name are defined', async () => {
+  const { stderr } = await runInlineTests({
+    'basic.test.js': `
+      test('test 1', () => {})
+    `,
+    'vitest.config.js': {
+      test: {
+        globals: true,
+        tags: [
+          { name: 'duplicate', timeout: 1000 },
+          { name: 'unique' },
+          { name: 'duplicate', timeout: 2000 },
+        ],
+      },
+    },
+  }, {}, { fails: true })
+  expect(stderr).toContain('Tag name "duplicate" is already defined in "test.tags". Tag names must be unique.')
 })
 
 test('multiple filter expressions act as AND', async () => {

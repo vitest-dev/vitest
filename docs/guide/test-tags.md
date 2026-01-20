@@ -78,6 +78,17 @@ declare module 'vitest' {
 }
 ```
 
+To see all your tags, you can use [`--list-tags`](/guide/cli#listtags) command:
+
+```shell
+vitest --list-tags
+
+frontend: Tests written for frontend.
+backend: Tests written for backend.
+db: Tests for database queries.
+flaky: Flaky CI tests.
+```
+
 ## Using Tags in Tests
 
 You can apply tags to individual tests or entire suites using the `tags` option:

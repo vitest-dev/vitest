@@ -170,9 +170,13 @@ export function resolveConfig(
 
   // shallow copy tags array to avoid mutating user config
   resolved.tags = [...resolved.tags || []]
+  const definedTags = new Set<string>()
   resolved.tags.forEach((tag) => {
     if (!tag.name || typeof tag.name !== 'string') {
       throw new Error(`Each tag defined in "test.tags" must have a "name" property, received: ${JSON.stringify(tag)}`)
+    }
+    if (definedTags.has(tag.name)) {
+      throw new Error(`Tag name "${tag.name}" is already defined in "test.tags". Tag names must be unique.`)
     }
     if (tag.name.match(/\s/)) {
       throw new Error(`Tag name "${tag.name}" is invalid. Tag names cannot contain spaces.`)
@@ -189,6 +193,7 @@ export function resolveConfig(
     if (tag.priority != null && (typeof tag.priority !== 'number' || tag.priority < 0)) {
       throw new TypeError(`Tag "${tag.name}": priority must be a non-negative number.`)
     }
+    definedTags.add(tag.name)
   })
 
   resolved.name = typeof options.name === 'string'

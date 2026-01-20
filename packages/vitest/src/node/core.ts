@@ -47,7 +47,7 @@ import { createBenchmarkReporters, createReporters } from './reporters/utils'
 import { VitestResolver } from './resolver'
 import { VitestSpecifications } from './specifications'
 import { StateManager } from './state'
-import { validateProjectsTags } from './tags'
+import { populateProjectsTags } from './tags'
 import { TestRun } from './test-run'
 import { VitestWatcher } from './watcher'
 
@@ -319,7 +319,11 @@ export class Vitest {
       this.configOverride.testNamePattern = this.config.testNamePattern
     }
 
-    validateProjectsTags(this.coreWorkspaceProject, this.projects)
+    // populate will merge all configs into every project,
+    // we don't want that when just listing tags
+    if (!this.config.listTags) {
+      populateProjectsTags(this.coreWorkspaceProject, this.projects)
+    }
 
     this.reporters = resolved.mode === 'benchmark'
       ? await createBenchmarkReporters(toArray(resolved.benchmark?.reporters), this.runner)
@@ -339,6 +343,10 @@ export class Vitest {
       return null
     }
     return this._coverageProvider
+  }
+
+  public async listTags(): Promise<void> {
+    this.logger.printTags()
   }
 
   public async enableCoverage(): Promise<void> {

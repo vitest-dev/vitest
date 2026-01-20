@@ -1016,6 +1016,11 @@ export interface UserConfig extends InlineConfig {
    * @see {@link https://vitest.dev/guide/test-tags#syntax}
    */
   tagsFilter?: string[]
+
+  /**
+   * Log all available tags instead of running tests.
+   */
+  listTags?: boolean
 }
 
 export type OnUnhandledErrorCallback = (error: (TestError | Error) & { type: string }) => boolean | void
