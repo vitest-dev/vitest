@@ -1,4 +1,5 @@
 import type { RunnerTask, RunnerTestSuite } from 'vitest'
+import { isDark } from '~/composables'
 
 export function isSuite(task: RunnerTask): task is RunnerTestSuite {
   return Object.hasOwn(task, 'tasks')
@@ -140,9 +141,12 @@ export function getBadgeNameColor(name: string | undefined, transparent = false)
   const index = name
     .split('')
     .reduce((acc, v, idx) => acc + v.charCodeAt(0) + idx, 0)
-  const colors = ['yellow', 'cyan', 'green', 'magenta']
-  const transparentColors = ['#ffff0091', '#0ff6', '#5dbb5dc9', '#ff00ff80']
-  // const transparentColors = ['#ffff0091', '#137577', '#5dbb5dc9', '#8b108d'] -- for dark mode without opacity affecting bg
+  const colors = isDark.value
+    ? ['yellow', 'cyan', '#006800', 'magenta']
+    : ['#ff5400', '#02a4a4', 'green', 'magenta']
+  const transparentColors = isDark.value
+    ? ['#ffff0091', '#0ff6', '#5dbb5dc9', '#ff00ff80']
+    : ['#ff540091', '#00828266', '#5dbb5dc9', '#ff00ff80']
   return (transparent ? transparentColors : colors)[index % colors.length]
 }
 

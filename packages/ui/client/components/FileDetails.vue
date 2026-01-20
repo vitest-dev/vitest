@@ -226,6 +226,8 @@ const tags = computed(() => {
             :style="{ backgroundColor: tag.bg, color: tag.text, border: `1px solid ${tag.border}` }"
             :title="tag.description"
             cursor-default
+            flex
+            items-center
           >
             {{ tag.name }}
           </span>
