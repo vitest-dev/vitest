@@ -187,21 +187,21 @@ Please, leave feedback regarding this feature in a [GitHub Discussion](https://g
 ```ts
 interface ImportDurationsOptions {
   /**
-   * Number of imports to collect. Set to 0 to disable collection entirely.
-   */
-  limit?: number
-  /**
    * Print import breakdown to CLI terminal after tests finish.
    */
   print?: boolean
+  /**
+   * Maximum number of imports to collect and display.
+   */
+  limit?: number
 }
 ```
 
-- **Default:** `{ limit: 10, print: false }`
+- **Default:** `{ print: false, limit: 10 }`
 
 Configure import duration collection and display.
 
-The `limit` option controls data collection - set to 0 to disable collection entirely. The `print` option controls CLI terminal output independently. [Vitest UI](/guide/ui#import-breakdown) can always toggle the breakdown display regardless of the `print` setting.
+The `print` option controls CLI terminal output. The `limit` option controls how many imports to collect and display. [Vitest UI](/guide/ui#import-breakdown) can always toggle the breakdown display regardless of the `print` setting.
 
 - Self: the time it took to import the module, excluding static imports;
 - Total: the time it took to import the module, including static imports. Note that this does not include `transform` time of the current module.
@@ -210,16 +210,16 @@ The `limit` option controls data collection - set to 0 to disable collection ent
 
 Note that if the file path is too long, Vitest will truncate it at the start until it fits 45 character limit.
 
-### experimental.importDurations.limit {#experimental-importdurationslimit}
-
-- **Type:** `number`
-- **Default:** `10`
-
-Maximum number of imports to collect and display in CLI output, [Vitest UI](/guide/ui#import-breakdown), and third-party reporters.
-
 ### experimental.importDurations.print {#experimental-importdurationsprint}
 
 - **Type:** `boolean`
 - **Default:** `false`
 
 Print import breakdown to CLI terminal after tests finish. This only works with [`default`](/guide/reporters#default), [`verbose`](/guide/reporters#verbose), or [`tree`](/guide/reporters#tree) reporters.
+
+### experimental.importDurations.limit {#experimental-importdurationslimit}
+
+- **Type:** `number`
+- **Default:** `10`
+
+Maximum number of imports to collect and display in CLI output, [Vitest UI](/guide/ui#import-breakdown), and third-party reporters.

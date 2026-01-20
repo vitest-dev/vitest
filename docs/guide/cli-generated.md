@@ -819,16 +819,16 @@ Delete all Vitest caches, including `experimental.fsModuleCache`, without runnin
 
 Enable caching of modules on the file system between reruns.
 
-### experimental.importDurations.limit
-
-- **CLI:** `--experimental.importDurations.limit <number>`
-- **Config:** [experimental.importDurations.limit](/config/experimental#experimental-importdurations-limit)
-
-Maximum number of imports to collect and display (default: 10).
-
 ### experimental.importDurations.print
 
 - **CLI:** `--experimental.importDurations.print`
 - **Config:** [experimental.importDurations.print](/config/experimental#experimental-importdurations-print)
 
 Print import breakdown to CLI terminal after tests finish (default: false).
+
+### experimental.importDurations.limit
+
+- **CLI:** `--experimental.importDurations.limit <number>`
+- **Config:** [experimental.importDurations.limit](/config/experimental#experimental-importdurations-limit)
+
+Maximum number of imports to collect and display (default: 10).

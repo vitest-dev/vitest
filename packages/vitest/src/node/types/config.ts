@@ -864,15 +864,15 @@ export interface InlineConfig {
      */
     importDurations?: {
       /**
-       * Maximum number of imports to collect and display.
-       * @default 10
-       */
-      limit?: number
-      /**
        * Print import breakdown to CLI terminal after tests finish.
        * @default false
        */
       print?: boolean
+      /**
+       * Maximum number of imports to collect and display.
+       * @default 10
+       */
+      limit?: number
     }
   }
 }
@@ -1115,8 +1115,8 @@ export interface ResolvedConfig
 
   experimental: Omit<Required<UserConfig>['experimental'], 'importDurations'> & {
     importDurations: {
-      limit: number
       print: boolean
+      limit: number
     }
   }
 }

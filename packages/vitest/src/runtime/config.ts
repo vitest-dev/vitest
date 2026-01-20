@@ -120,8 +120,8 @@ export interface SerializedConfig {
   experimental: {
     fsModuleCache: boolean
     importDurations: {
-      limit: number
       print: boolean
+      limit: number
     }
     openTelemetry: {
       enabled: boolean

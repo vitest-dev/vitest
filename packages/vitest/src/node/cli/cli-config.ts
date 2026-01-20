@@ -808,12 +808,12 @@ export const cliOptionsConfig: VitestCLIOptions = {
           return value
         },
         subcommands: {
+          print: {
+            description: 'Print import breakdown to CLI terminal after tests finish (default: false).',
+          },
           limit: {
             description: 'Maximum number of imports to collect and display (default: 10).',
             argument: '<number>',
-          },
-          print: {
-            description: 'Print import breakdown to CLI terminal after tests finish (default: false).',
           },
         },
       },
