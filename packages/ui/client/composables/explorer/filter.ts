@@ -1,5 +1,5 @@
 import type { Task } from '@vitest/runner'
-import type { FileTreeNode, Filter, FilterResult, ParentTreeNode, UITaskTreeNode } from '~/composables/explorer/types'
+import type { FileTreeNode, Filter, FilterResult, ParentTreeNode, SearchMatcher, UITaskTreeNode } from '~/composables/explorer/types'
 import { client, findById } from '~/composables/client'
 import { explorerTree } from '~/composables/explorer/index'
 import { filteredFiles, uiEntries } from '~/composables/explorer/state'
@@ -9,9 +9,8 @@ import {
   isTestNode,
   sortedRootTasks,
 } from '~/composables/explorer/utils'
-import { caseInsensitiveMatch } from '~/utils/task'
 
-export function testMatcher(task: Task, search: string, filter: Filter) {
+export function testMatcher(task: Task, search: SearchMatcher, filter: Filter) {
   return task ? matchTask(task, search, filter) : false
 }
 /**
@@ -21,7 +20,7 @@ export function testMatcher(task: Task, search: string, filter: Filter) {
  * @param filter The filter applied.
  */
 export function runFilter(
-  search: string,
+  search: SearchMatcher,
   filter: Filter,
 ) {
   const entries = [...filterAll(
@@ -33,7 +32,7 @@ export function runFilter(
 }
 
 export function* filterAll(
-  search: string,
+  search: SearchMatcher,
   filter: Filter,
 ) {
   for (const node of sortedRootTasks()) {
@@ -43,7 +42,7 @@ export function* filterAll(
 
 export function* filterNode(
   node: UITaskTreeNode,
-  search: string,
+  search: SearchMatcher,
   filter: Filter,
 ) {
   const treeNodes = new Set<string>()
@@ -109,12 +108,10 @@ export function* filterNode(
   const map = explorerTree.nodes
 
   // When searching, expand parent nodes of matching tests so they are visible
-  if (search.length > 0) {
-    for (const id of treeNodes) {
-      const treeNode = map.get(id)
-      if (treeNode && 'expanded' in treeNode) {
-        treeNode.expanded = true
-      }
+  for (const id of treeNodes) {
+    const treeNode = map.get(id)
+    if (treeNode && 'expanded' in treeNode) {
+      treeNode.expanded = true
     }
   }
 
@@ -237,10 +234,11 @@ function matchState(task: Task, filter: Filter) {
 
 function matchTask(
   task: Task,
-  search: string,
+  search: SearchMatcher,
   filter: Filter,
 ) {
-  const match = search.length === 0 || caseInsensitiveMatch(task.name, search)
+  const match = search(task)
+  // const match = search.length === 0 || caseInsensitiveMatch(task.name, search)
 
   // search and filter will apply together
   if (match) {
@@ -293,7 +291,7 @@ function* visitNode(
   }
 }
 
-function matcher(node: UITaskTreeNode, search: string, filter: Filter) {
+function matcher(node: UITaskTreeNode, search: SearchMatcher, filter: Filter) {
   const task = client.state.idMap.get(node.id)
   return task ? matchTask(task, search, filter) : false
 }

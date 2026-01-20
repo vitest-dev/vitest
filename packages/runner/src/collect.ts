@@ -51,7 +51,7 @@ export async function collectTests(
         file.shuffle = config.sequence.shuffle
 
         try {
-          validateTags(runner, fileTags)
+          validateTags(runner.config, fileTags)
 
           runner.onCollectStart?.(file)
 

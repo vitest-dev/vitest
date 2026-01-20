@@ -10,6 +10,7 @@ import {
   isFilteredByStatus,
   openedTreeItems,
   search,
+  searchMatcher,
   testsTotal,
   treeFilter,
   uiEntries,
@@ -105,5 +106,6 @@ export function useSearch(searchBox: Ref<HTMLDivElement | undefined>) {
     filteredFiles,
     testsTotal,
     uiEntries,
+    searchMatcher,
   }
 }

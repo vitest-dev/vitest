@@ -316,7 +316,7 @@ function createSuiteCollector(
     const currentSuite = collectorContext.currentSuite?.suite
     const parentTask = currentSuite ?? collectorContext.currentSuite?.file
     const parentTags = parentTask?.tags || []
-    const testTags = toArray(unique([...parentTags, ...options.tags || []]))
+    const testTags = unique([...parentTags, ...toArray(options.tags)])
     const tagsOptions = testTags
       .map((tag) => {
         const tagDefinition = runner.config.tags?.find(t => t.name === tag)
@@ -494,7 +494,7 @@ function createSuiteCollector(
     const currentSuite = collectorContext.currentSuite?.suite
     const parentTask = currentSuite ?? collectorContext.currentSuite?.file
     const suiteTags = toArray(suiteOptions?.tags)
-    validateTags(runner, suiteTags)
+    validateTags(runner.config, suiteTags)
 
     suite = {
       id: '',

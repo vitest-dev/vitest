@@ -11,7 +11,7 @@ import { RecycleScroller } from 'vue-virtual-scroller'
 import { config } from '~/composables/client'
 
 import { useSearch } from '~/composables/explorer/search'
-import { activeFileId } from '~/composables/params'
+import { activeFileId, selectedTest } from '~/composables/params'
 import DetailsPanel from '../DetailsPanel.vue'
 import FilterStatus from '../FilterStatus.vue'
 import IconButton from '../IconButton.vue'
@@ -47,6 +47,7 @@ const {
   filteredFiles,
   testsTotal,
   uiEntries,
+  searchMatcher,
 } = useSearch(searchBox)
 
 const filterClass = ref<string>('grid-cols-2')
@@ -82,7 +83,7 @@ useResizeObserver(() => testExplorerRef.value, ([{ contentRect }]) => {
         <input
           ref="searchBox"
           v-model="search"
-          placeholder="Search..."
+          placeholder="Search... (e.g. test name, tag:expression)"
           outline="none"
           bg="transparent"
           font="light"
@@ -151,7 +152,10 @@ useResizeObserver(() => testExplorerRef.value, ([{ contentRect }]) => {
         <!-- empty-state -->
         <template v-if="(isFiltered || isFilteredByStatus) && uiEntries.length === 0">
           <div v-if="initialized" flex="~ col" items-center p="x4 y4" font-light>
-            <div op30>
+            <div v-if="searchMatcher.error" text-red text-center>
+              {{ searchMatcher.error }}
+            </div>
+            <div v-else op30>
               No matched test
             </div>
             <button
@@ -226,7 +230,7 @@ useResizeObserver(() => testExplorerRef.value, ([{ contentRect }]) => {
                 :duration="item.duration"
                 :opened="item.expanded"
                 :disable-task-location="!includeTaskLocation"
-                :class="activeFileId === item.id ? 'bg-active' : ''"
+                :class="selectedTest === item.id || (!selectedTest && activeFileId === item.id) ? 'bg-active' : ''"
                 :on-item-click="onItemClick"
               />
             </template>

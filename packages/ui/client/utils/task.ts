@@ -133,7 +133,7 @@ export function getDurationClass(duration: number) {
   }
 }
 
-export function getProjectNameColor(name: string | undefined) {
+export function getBadgeNameColor(name: string | undefined, transparent = false) {
   if (!name) {
     return ''
   }
@@ -141,10 +141,12 @@ export function getProjectNameColor(name: string | undefined) {
     .split('')
     .reduce((acc, v, idx) => acc + v.charCodeAt(0) + idx, 0)
   const colors = ['yellow', 'cyan', 'green', 'magenta']
-  return colors[index % colors.length]
+  const transparentColors = ['#ffff0091', '#0ff6', '#5dbb5dc9', '#ff00ff80']
+  // const transparentColors = ['#ffff0091', '#137577', '#5dbb5dc9', '#8b108d'] -- for dark mode without opacity affecting bg
+  return (transparent ? transparentColors : colors)[index % colors.length]
 }
 
-export function getProjectTextColor(color: string) {
+export function getBadgeTextColor(color: string) {
   switch (color) {
     case 'blue':
     case 'green':
