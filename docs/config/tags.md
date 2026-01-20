@@ -12,7 +12,7 @@ Defines all [available tags](/guide/test-tags) in your test project. By default,
 
 If you are using [`projects`](/config/projects), they will inherit all global tags definitions automatically.
 
-Use [`--tags-filter`](/guide/test-tags#syntax) to filter tests by their tags.
+Use [`--tags-filter`](/guide/test-tags#syntax) to filter tests by their tags. Use [`--list-tags`](/guide/cli#listtags) to print every tag in your Vitest workspace.
 
 ## name
 
