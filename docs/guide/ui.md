@@ -144,4 +144,4 @@ The breakdown shows a list of modules with self time, total time, and a percenta
 
 The "Show Import Breakdown" icon will have a red color if there is at least one file that took longer than 500 milliseconds to load, and it will be orange if there is at least one file that took longer than 100 milliseconds.
 
-You can use [`experimental.importDurations.limit`](/config/experimental#experimental-importdurationslimit) to control the number of imports collected, and [`experimental.importDurations.print`](/config/experimental#experimental-importdurationsprint) to show the breakdown panel by default.
+You can use [`experimental.importDurations.limit`](/config/experimental#experimental-importdurationslimit) to control the number of imports displayed.
