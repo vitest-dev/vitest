@@ -134,14 +134,12 @@ function replaceInSourceMarker(url: string, source: string, ms: () => MagicStrin
     const { index, '0': code } = match
     overridden = true
     // should it support process.vitest for CJS modules?
-    ms().overwrite(index, index + code.length, 'IMPORT_META_VITEST') // the length is the same
+    ms().overwrite(index, index + code.length, 'IMPORT_META_TEST()') // the length is the same
   }
   if (overridden) {
     const filename = resolve(fileURLToPath(url))
-    const code = `const IMPORT_META_VITEST = typeof __vitest_worker__ !== 'undefined' && __vitest_worker__.filepath === "${filename.replace(/"/g, '\\"')}" ? __vitest_index__ : undefined;`
-
-    ms().prepend(code)
-    ms().append(`\nexport const __VITEST_START_OFFSET__ = ${code.length};\n`)
+    // appending instead of prepending because functions are hoisted and we don't change the offset
+    ms().append(`;\nfunction IMPORT_META_TEST() { return typeof __vitest_worker__ !== 'undefined' && __vitest_worker__.filepath === "${filename.replace(/"/g, '\\"')}" ? __vitest_index__ : undefined; }`)
   }
 }
 
