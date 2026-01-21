@@ -70,7 +70,7 @@ test.describe('ui', () => {
     await page.goto(pageUrl)
 
     // dashboard
-    await expect(page.locator('[aria-labelledby=tests]')).toContainText('14 Pass 1 Fail 15 Total')
+    await expect(page.locator('[aria-labelledby=tests]')).toContainText('15 Pass 1 Fail 16 Total')
 
     // unhandled errors
     await expect(page.getByTestId('unhandled-errors')).toContainText(
@@ -273,6 +273,9 @@ test.describe('ui', () => {
 
     await page.getByPlaceholder('Search...').fill('tag:db && !flaky')
     await expect(page.getByText('No matched test')).toBeVisible()
+
+    await page.getByPlaceholder('Search...').fill('tag:unknown')
+    await expect(page.getByText('The tag pattern "unknown" is not defined in the configuration')).toBeVisible()
   })
 
   test('dashboard entries filter tests correctly', async ({ page }) => {
