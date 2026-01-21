@@ -151,7 +151,7 @@ export function getStateString(
 
   const passed = tasks.reduce((acc, i) => {
     // Exclude expected failures from passed count
-    if (i.result?.state === 'pass' && i.type === 'test' && (i as any).fails) {
+    if (i.result?.state === 'pass' && i.type === 'test' && i.fails) {
       return acc
     }
     return i.result?.state === 'pass' ? acc + 1 : acc
@@ -161,7 +161,7 @@ export function getStateString(
   const todo = tasks.reduce((acc, i) => i.mode === 'todo' ? acc + 1 : acc, 0)
   const expectedFail = tasks.reduce((acc, i) => {
     // Count tests that are marked as .fails and passed (which means they failed as expected)
-    if (i.result?.state === 'pass' && i.type === 'test' && (i as any).fails) {
+    if (i.result?.state === 'pass' && i.type === 'test' && i.fails) {
       return acc + 1
     }
     return acc
