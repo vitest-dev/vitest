@@ -1,14 +1,16 @@
-import type { Declaration, ExportDefaultDeclaration, ExportNamedDeclaration, Expression, Pattern, Positioned, Program } from './esmWalker'
+import type { Declaration, ExportAllDeclaration, ExportDefaultDeclaration, ExportNamedDeclaration, Expression, Pattern, Positioned, Program } from './esmWalker'
+import { readFileSync } from 'node:fs'
+import { fileURLToPath, pathToFileURL } from 'node:url'
 import MagicString from 'magic-string'
-import {
-  getArbitraryModuleIdentifier,
-} from './esmWalker'
+import { getArbitraryModuleIdentifier } from './esmWalker'
+import { collectModuleExports, resolveModuleFormat, transformCode } from './parsers'
 
 export interface AutomockOptions {
   /**
    * @default "__vitest_mocker__"
    */
   globalThisAccessor?: string
+  id?: string
 }
 
 // TODO: better source map replacement
@@ -19,17 +21,57 @@ export function automockModule(
   options: AutomockOptions = {},
 ): MagicString {
   const globalThisAccessor = options.globalThisAccessor || '"__vitest_mocker__"'
-  const ast = parse(code) as Program
+  let ast: Program
+  try {
+    ast = parse(code) as Program
+  }
+  catch (cause) {
+    if (options.id) {
+      throw new Error(`failed to parse ${options.id}`, { cause })
+    }
+    throw cause
+  }
 
   const m = new MagicString(code)
 
   const allSpecifiers: { name: string; alias?: string }[] = []
+  const replacers: (() => void)[] = []
   let importIndex = 0
   for (const _node of ast.body) {
     if (_node.type === 'ExportAllDeclaration') {
-      throw new Error(
-        `automocking files with \`export *\` is not supported in browser mode because it cannot be statically analysed`,
-      )
+      const node = _node as Positioned<ExportAllDeclaration>
+      // TODO: pass it down in the browser mode
+      if (!options.id) {
+        throw new Error(
+          `automocking files with \`export *\` is not supported because it cannot be easily statically analysed`,
+        )
+      }
+
+      const source = node.source.value
+      if (typeof source !== 'string') {
+        throw new TypeError(`unknown source type while automocking: ${source}`)
+      }
+
+      const moduleUrl = import.meta.resolve(source, pathToFileURL(options.id).toString())
+      const modulePath = fileURLToPath(moduleUrl)
+      const moduleContent = readFileSync(modulePath, 'utf-8')
+      const transformedCode = transformCode(moduleContent, moduleUrl)
+      const moduleFormat = resolveModuleFormat(moduleUrl, transformedCode)
+      const moduleExports = collectModuleExports(modulePath, transformedCode, moduleFormat || 'module')
+      replacers.push(() => {
+        const importNames: string[] = []
+        moduleExports.forEach((exportName) => {
+          const isReexported = allSpecifiers.some(({ name, alias }) => name === exportName || alias === exportName)
+          if (!isReexported) {
+            importNames.push(exportName)
+            allSpecifiers.push({ name: exportName })
+          }
+        })
+
+        const importString = `import { ${importNames.join(', ')} } from '${source}';`
+
+        m.overwrite(node.start, node.end, importString)
+      })
     }
 
     if (_node.type === 'ExportNamedDeclaration') {
@@ -143,12 +185,13 @@ export function automockModule(
       m.overwrite(node.start, declaration.start, `const __vitest_default = `)
     }
   }
+  replacers.forEach(cb => cb())
   const moduleObject = `
 const __vitest_current_es_module__ = {
   __esModule: true,
   ${allSpecifiers.map(({ name }) => `["${name}"]: ${name},`).join('\n  ')}
 }
-const __vitest_mocked_module__ = globalThis[${globalThisAccessor}].mockObject(__vitest_current_es_module__, "${mockType}")
+const __vitest_mocked_module__ = globalThis[${globalThisAccessor}].mockObject(__vitest_current_es_module__, undefined, "${mockType}")
 `
   const assigning = allSpecifiers
     .map(({ name }, index) => {

@@ -13,7 +13,7 @@ import type {
 import { webcrypto as crypto } from 'node:crypto'
 import fs from 'node:fs'
 import { Readable, Writable } from 'node:stream'
-import { fileURLToPath } from 'node:url'
+import { fileURLToPath, pathToFileURL } from 'node:url'
 import { inspect } from 'node:util'
 import { dirname, relative, resolve } from 'pathe'
 import { x } from 'tinyexec'
@@ -405,6 +405,13 @@ export function useFS<T extends TestFsStructure>(root: string, structure: T, ens
     }
   })
   return {
+    readFile: (file: string): string => {
+      const filepath = resolve(root, file)
+      if (relative(root, filepath).startsWith('..')) {
+        throw new Error(`file ${file} is outside of the test file system`)
+      }
+      return fs.readFileSync(filepath, 'utf-8')
+    },
     editFile: (file: string, callback: (content: string) => string) => {
       const filepath = resolve(root, file)
       if (!files.has(filepath)) {
@@ -466,6 +473,23 @@ export async function runInlineTests(
       return buildTestTree(vitest.ctx?.state.getTestModules() || [])
     },
   }
+}
+
+export function replaceRoot(string: string, root: string) {
+  const schemaRoot = root.startsWith('file://') ? root : pathToFileURL(root).toString()
+  if (!root.endsWith('/')) {
+    root += process.platform !== 'win32' ? '?/' : '?\\\\'
+  }
+  if (process.platform !== 'win32') {
+    return string
+      .replace(new RegExp(schemaRoot, 'g'), '<urlRoot>')
+      .replace(new RegExp(root, 'g'), '<root>/')
+  }
+  const normalizedRoot = root.replaceAll('/', '\\\\')
+  return string
+    .replace(new RegExp(schemaRoot, 'g'), '<urlRoot>')
+    .replace(new RegExp(root, 'g'), '<root>/')
+    .replace(new RegExp(normalizedRoot, 'g'), '<root>/')
 }
 
 export const ts = String.raw

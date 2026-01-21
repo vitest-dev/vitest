@@ -37,6 +37,8 @@ function mock<T>(
 
 Substitutes all imported modules from provided `path` with another module. You can use configured Vite aliases inside a path. The call to `vi.mock` is hoisted, so it doesn't matter where you call it. It will always be executed before all imports. If you need to reference some variables outside of its scope, you can define them inside [`vi.hoisted`](#vi-hoisted) and reference them inside `vi.mock`.
 
+It is recommended to use `vi.mock` or `vi.hoisted` only inside test files. If Vite's [module runner](/config/experimental#experimental-vitemodulerunner) is disabled, they will not be hoisted. This is a performance optimisation to avoid ready unnecessary files.
+
 ::: warning
 `vi.mock` works only for modules that were imported with the `import` keyword. It doesn't work with `require`.
 

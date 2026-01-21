@@ -2,7 +2,7 @@ import type { HoistMocksPluginOptions } from '../../../packages/mocker/src/node/
 import { stripVTControlCharacters } from 'node:util'
 import { parseAst } from 'vite'
 import { describe, expect, it, test, vi } from 'vitest'
-import { hoistMocks } from '../../../packages/mocker/src/node/hoistMocksPlugin'
+import { hoistMockAndResolve } from '../../../packages/mocker/src/node/hoistMocksPlugin'
 import { generateCodeFrame } from '../../../packages/vitest/src/node/printError.js'
 
 function parse(code: string, options: any): any {
@@ -20,11 +20,11 @@ const hoistMocksOptions: HoistMocksPluginOptions = {
 }
 
 function hoistSimple(code: string, url = '') {
-  return hoistMocks(code, url, parse, hoistMocksOptions)
+  return hoistMockAndResolve(code, url, parse, hoistMocksOptions)
 }
 
 function hoistSimpleCode(code: string) {
-  return hoistMocks(code, '/test.js', parse, hoistMocksOptions)?.code.trim()
+  return hoistMockAndResolve(code, '/test.js', parse, hoistMocksOptions)?.code.trim()
 }
 
 test('hoists mock, unmock, hoisted', () => {
@@ -111,7 +111,7 @@ test('correctly access import', () => {
 
 describe('transform', () => {
   const hoistSimpleCodeWithoutMocks = (code: string) => {
-    return hoistMocks(`import {vi} from "vitest";\n${code}\nvi.mock('faker');\n`, '/test.js', parse, hoistMocksOptions)?.code.trim()
+    return hoistMockAndResolve(`import {vi} from "vitest";\n${code}\nvi.mock('faker');\n`, '/test.js', parse, hoistMocksOptions)?.code.trim()
   }
   test('default import', () => {
     expect(
@@ -126,7 +126,7 @@ describe('transform', () => {
 
   test('can use imported variables inside the mock', () => {
     expect(
-      hoistMocks(`
+      hoistMockAndResolve(`
 import { vi } from 'vitest'
 import user from './user'
 import { admin } from './admin'
@@ -153,7 +153,7 @@ vi.mock('./mock.js', () => ({
 
   test('can use hoisted variables inside the mock', () => {
     expect(
-      hoistMocks(`
+      hoistMockAndResolve(`
 import { vi } from 'vitest'
 const { user, admin } = await vi.hoisted(async () => {
   const { default: user } = await import('./user')
@@ -1383,7 +1383,7 @@ test('hi', () => {
   expect(1 + 1).toEqual(2)
 })
       `)).toMatchInlineSnapshot(`
-        "if (typeof globalThis["vi"] === "undefined") { throw new Error("There are some problems in resolving the mocks API.\\nYou may encounter this issue when importing the mocks API from another module other than 'vitest'.\\nTo fix this issue you can either:\\n- import the mocks API directly from 'vitest'\\n- enable the 'globals' options") }
+        "if (typeof globalThis["vi"] === "undefined") { throw new Error("There are some problems in resolving the mocks API.\\nYou may encounter this issue when importing the mocks API from another module other than 'vitest'.\\nTo fix this issue you can either:\\n- import the mocks API directly from 'vitest'\\n- enable the 'globals' option") }
         __vi_import_0__.vi.mock('vite')
         const __vi_import_0__ = await import("./proxy-module");
 
@@ -1398,7 +1398,7 @@ test('hi', () => {
 describe('throws an error when nodes are incompatible', () => {
   const getErrorWhileHoisting = (code: string) => {
     try {
-      hoistMocks(code, '/test.js', parse, hoistMocksOptions)?.code.trim()
+      hoistMockAndResolve(code, '/test.js', parse, hoistMocksOptions)?.code.trim()
     }
     catch (err: any) {
       return err

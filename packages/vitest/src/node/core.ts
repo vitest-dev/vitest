@@ -24,6 +24,7 @@ import { version } from '../../package.json' with { type: 'json' }
 import { WebSocketReporter } from '../api/setup'
 import { distDir } from '../paths'
 import { wildcardPatternToRegExp } from '../utils/base'
+import { NativeModuleRunner } from '../utils/nativeModuleRunner'
 import { convertTasksToEvents } from '../utils/tasks'
 import { Traces } from '../utils/traces'
 import { astCollectTests, createFailedFileTask } from './ast-collect'
@@ -238,11 +239,13 @@ export class Vitest {
       this._tmpDir,
     )
     const environment = server.environments.__vitest__
-    this.runner = new ServerModuleRunner(
-      environment,
-      this._fetcher,
-      resolved,
-    )
+    this.runner = resolved.experimental.viteModuleRunner === false
+      ? new NativeModuleRunner(resolved.root)
+      : new ServerModuleRunner(
+          environment,
+          this._fetcher,
+          resolved,
+        )
 
     if (this.config.watch) {
       // hijack server restart
