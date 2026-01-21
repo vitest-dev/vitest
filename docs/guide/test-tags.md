@@ -45,7 +45,7 @@ export default defineConfig({
 ```
 
 ::: warning
-If several tags have the same options and are used on the same test, they will be resolved in the order they were specified, or sorted by priority first (the lower the number, the higher the priority). Tags without a defined priority are resolved last:
+If several tags have the same options and are used on the same test, they will be resolved in the order they were specified, or sorted by priority first (the lower the number, the higher the priority). Tags without a defined priority are merged first and will be overriden by higher priority ones:
 
 ```ts
 test('flaky database test', { tags: ['flaky', 'db'] })
