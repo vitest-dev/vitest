@@ -54,17 +54,31 @@ export class BlobReporter implements Reporter {
         : '.vitest-reports/blob.json'
     }
 
-    const modules = this.ctx.projects.map<MergeReportModuleKeys>(
+    // Store modules organized by project and environment
+    const modules = this.ctx.projects.flatMap<MergeReportModuleKeys>(
       (project) => {
-        return [
-          project.name,
-          [...project.vite.moduleGraph.idToModuleMap.entries()].map<SerializedModuleNode | null>((mod) => {
+        const environmentModules: MergeReportModuleKeys[] = []
+
+        // Iterate through all environments for this project
+        for (const envName in project.vite.environments) {
+          const env = project.vite.environments[envName]
+          const envModules = [...env.moduleGraph.idToModuleMap.entries()].map<SerializedModuleNode | null>((mod) => {
             if (!mod[1].file) {
               return null
             }
             return [mod[0], mod[1].file, mod[1].url]
-          }).filter(x => x != null),
-        ]
+          }).filter(x => x != null)
+
+          if (envModules.length > 0) {
+            environmentModules.push([
+              project.name,
+              envName,
+              envModules,
+            ])
+          }
+        }
+
+        return environmentModules
       },
     )
 
@@ -72,35 +86,38 @@ export class BlobReporter implements Reporter {
     const moduleIdToIndex = new Map<string, number>()
     let globalModuleIndex = 0
 
-    modules.forEach(([_projectName, projectModules]) => {
+    modules.forEach(([_projectName, _envName, projectModules]) => {
       projectModules.forEach((mod) => {
         moduleIdToIndex.set(mod[0], globalModuleIndex++)
       })
     })
 
-    // Extract graph relationships directly from module graph
+    // Extract graph relationships directly from module graph for all environments
     const graphEdges: number[][] = []
     this.ctx.projects.forEach((project) => {
-      project.vite.moduleGraph.idToModuleMap.forEach((moduleNode, _moduleId) => {
-        if (!moduleNode.file) {
-          return
-        }
-        const sourceIdx = moduleIdToIndex.get(moduleNode.id!)
-        if (sourceIdx === undefined) {
-          return
-        }
-
-        // Store importedModules relationships
-        moduleNode.importedModules.forEach((importedModule) => {
-          if (!importedModule.id) {
+      for (const envName in project.vite.environments) {
+        const env = project.vite.environments[envName]
+        env.moduleGraph.idToModuleMap.forEach((moduleNode, _moduleId) => {
+          if (!moduleNode.file) {
             return
           }
-          const targetIdx = moduleIdToIndex.get(importedModule.id)
-          if (targetIdx !== undefined) {
-            graphEdges.push([sourceIdx, targetIdx])
+          const sourceIdx = moduleIdToIndex.get(moduleNode.id!)
+          if (sourceIdx === undefined) {
+            return
           }
+
+          // Store importedModules relationships
+          moduleNode.importedModules.forEach((importedModule) => {
+            if (!importedModule.id) {
+              return
+            }
+            const targetIdx = moduleIdToIndex.get(importedModule.id)
+            if (targetIdx !== undefined) {
+              graphEdges.push([sourceIdx, targetIdx])
+            }
+          })
         })
-      })
+      }
     })
 
     const report = [
@@ -185,21 +202,25 @@ export async function readBlobs(
   // Build a global module index to ID map
   const allModules: SerializedModuleNode[] = []
   blobs.forEach((blob) => {
-    blob.moduleKeys.forEach(([_projectName, moduleIds]) => {
+    blob.moduleKeys.forEach(([_projectName, _envName, moduleIds]) => {
       allModules.push(...moduleIds)
     })
   })
 
-  // Create module nodes in the module graph
+  // Create module nodes in the module graph for each environment
   const moduleNodesById = new Map<string, any>()
   blobs.forEach((blob) => {
-    blob.moduleKeys.forEach(([projectName, moduleIds]) => {
+    blob.moduleKeys.forEach(([projectName, envName, moduleIds]) => {
       const project = projects[projectName]
       if (!project) {
         return
       }
+      const env = project.vite.environments[envName]
+      if (!env) {
+        return
+      }
       moduleIds.forEach(([moduleId, file, url]) => {
-        const moduleNode = project.vite.moduleGraph.createFileOnlyEntry(file)
+        const moduleNode = env.moduleGraph.createFileOnlyEntry(file)
         moduleNode.url = url
         moduleNode.id = moduleId
         moduleNode.transformResult = {
@@ -207,7 +228,7 @@ export async function readBlobs(
           code: ' ',
           map: null,
         }
-        project.vite.moduleGraph.idToModuleMap.set(moduleId, moduleNode)
+        env.moduleGraph.idToModuleMap.set(moduleId, moduleNode)
         moduleNodesById.set(moduleId, moduleNode)
       })
     })
@@ -277,5 +298,6 @@ type SerializedModuleNode = [
 
 type MergeReportModuleKeys = [
   projectName: string,
+  environmentName: string,
   modules: SerializedModuleNode[],
 ]
