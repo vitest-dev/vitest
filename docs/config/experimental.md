@@ -176,7 +176,7 @@ export default defineConfig({
 It's important that Node can process `sdkPath` content because it is not transformed by Vitest. See [the guide](/guide/open-telemetry) on how to work with OpenTelemetry inside of Vitest.
 :::
 
-## experimental.importDurations <Version type="experimental">4.0.15</Version> {#experimental-importdurations}
+## experimental.importDurations <Version type="experimental">4.1.0</Version> {#experimental-importdurations}
 
 ::: tip FEEDBACK
 Please, leave feedback regarding this feature in a [GitHub Discussion](https://github.com/vitest-dev/vitest/discussions/9224).
