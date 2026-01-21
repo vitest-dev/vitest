@@ -90,7 +90,18 @@ const screen = await render(Component) // [!code ++]
 ```
 :::
 
+The render result returns a [standard set of locators](/api/browser/locators) and some extra utilities covered this documentation:
+
+```ts
+const screen = await render(Component)
+
+await screen.getByRole('button', { name: 'Submit' }).click()
+await expect.element(screen.getByText('Form submitted')).toBeVisible()
+```
+
 ### Options
+
+The `render` function accepts these options:
 
 #### inputs
 
@@ -131,7 +142,7 @@ const { locator } = await render(UserComponent, {
 
 #### componentProviders
 
-An array of providers to add at the component level. Use this to override or add providers specific to the component being tested.
+An array of providers to add at the component level. Use this to override or add providers configured on the component's decorator.
 
 ```ts
 const { locator } = await render(DataComponent, {
@@ -303,9 +314,9 @@ locators.extend({
   },
 })
 
-const { locator } = await render(Component)
+const screen = await render(Component)
 await expect.element(
-  locator.getByArticleTitle('Hello World')
+  screen.getByArticleTitle('Hello World')
 ).toBeVisible()
 ```
 
