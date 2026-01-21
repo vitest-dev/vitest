@@ -9,7 +9,7 @@ outline: deep
 
 ## Defining Tags
 
-Tags must be defined in your configuration file. Vitest does not provide any built-in tags. The test runner will throw an error if a test uses a tag not defined in the config in order to avoid silently doing something surprising due to mistyped names, but you can disable this behaviour via a [`strictTags`](/config/stricttags) option.
+Tags must be defined in your configuration file — Vitest does not provide any built-in tags. If a test uses a tag that isn't defined in the config, the test runner will throw an error. This prevents unexpected behavior from mistyped tag names. You can disable this check with the [`strictTags`](/config/stricttags) option.
 
 You must define a `name` of the tag, and you may define additional options that will be applied to every test marked with the tag, e.g., a `timeout`, or `retry`. For the full list of available options, see [`tags`](/config/tags).
 
@@ -158,7 +158,9 @@ test('dashboard renders items', () => {
 ```
 
 ::: danger
-Any JSDoc comment with a `@module-tag` will add that tag to all tests in that file. Putting it before the test does not mark that test with a tag:
+A `@module-tag` in a JSDoc comment applies to all tests in that file, not just the test it precedes.
+
+Consider this example:
 
 ```js{3,10}
 describe('forms', () => {
@@ -178,7 +180,7 @@ describe('forms', () => {
 })
 ```
 
-This test file will mark all tests with a `frontend` and a `db` tag, you should pass an object instead:
+In this example, every test in the file will have both the `frontend` and `db` tags. To tag individual tests, use the options argument instead:
 
 ```js{2,6}
 describe('forms', () => {
