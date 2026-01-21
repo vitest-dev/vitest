@@ -665,7 +665,7 @@ export class BaseCoverageProvider<Options extends ResolvedCoverageOptions<'istan
 
     if (project.isBrowserEnabled() || viteEnvironment === '__browser__') {
       const client = project.browser?.vite.environments.client || project.vite.environments.client
-      const result = await client.transformRequest(url).catch(() => null)
+      const result = await client.transformRequest(url)
 
       if (result) {
         return result

@@ -334,7 +334,11 @@ export class V8CoverageProvider extends BaseCoverageProvider<ResolvedCoverageOpt
     code: string
     map?: Vite.Rollup.SourceMap
   }> {
-    const transformResult = await onTransform(removeStartsWith(url, FILE_PROTOCOL)).catch(() => undefined)
+    const filepath = removeStartsWith(url, FILE_PROTOCOL)
+    const transformResult = await onTransform(filepath).catch((error) => {
+      this.ctx.logger.error(`Failed to transform "${url}" (treated as "${filepath}") for coverage. Falling back to native resolution.`, error)
+      return null
+    })
 
     const map = transformResult?.map as Vite.Rollup.SourceMap | undefined
     const code = transformResult?.code

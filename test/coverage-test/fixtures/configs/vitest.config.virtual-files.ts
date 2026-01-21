@@ -14,7 +14,7 @@ export default mergeConfig(
 )
 
 // Simulates Vite's virtual files: https://vitejs.dev/guide/api-plugin.html#virtual-modules-convention
-function VirtualFilesPlugin(): Plugin {
+export function VirtualFilesPlugin(): Plugin {
   return {
     name: 'vitest-custom-virtual-files',
     resolveId(id) {

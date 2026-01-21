@@ -1,5 +1,6 @@
 import assert from 'node:assert'
 import { expect, onTestFinished, vi } from 'vitest'
+import { VirtualFilesPlugin } from '../fixtures/configs/vitest.config.virtual-files'
 import { cleanupCoverageJson, isBrowser, isNativeRunner, readCoverageMap, runVitest, test } from '../utils'
 
 test('default include should show only covered files', async () => {
@@ -120,6 +121,8 @@ test('uncovered files are included after watch-mode re-run', async () => {
       include: ['fixtures/src/**.ts'],
       reporter: ['json', 'text-summary'],
     },
+  }, { throwOnError: true }, {
+    plugins: [VirtualFilesPlugin()],
   })
 
   {

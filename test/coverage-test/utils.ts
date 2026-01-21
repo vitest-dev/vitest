@@ -1,6 +1,6 @@
 import type { CoverageSummary, FileCoverageData } from 'istanbul-lib-coverage'
 import type { UserConfig as ViteUserConfig } from 'vite'
-import type { TestFunction } from 'vitest'
+import type { SuiteAPI, TestAPI } from 'vitest'
 import type { TestUserConfig } from 'vitest/node'
 import { existsSync, readFileSync } from 'node:fs'
 import { unlink } from 'node:fs/promises'
@@ -14,23 +14,17 @@ import { normalize } from 'pathe'
 import { onTestFailed, TestRunner, vi, describe as vitestDescribe, test as vitestTest } from 'vitest'
 import * as testUtils from '../test-utils/index'
 
-export function test(name: string, fn: TestFunction, skip = false) {
-  if (process.env.COVERAGE_TEST !== 'true') {
-    return vitestTest.skipIf(skip)(name, fn)
-  }
-}
+export const test: TestAPI = process.env.COVERAGE_TEST !== 'true'
+  ? vitestTest
+  : (() => {}) as any as TestAPI
 
-export function describe(name: string, fn: () => void) {
-  if (process.env.COVERAGE_TEST !== 'true') {
-    return vitestDescribe(name, () => fn())
-  }
-}
+export const describe: SuiteAPI = process.env.COVERAGE_TEST !== 'true'
+  ? vitestDescribe
+  : (() => {}) as any as SuiteAPI
 
-export function coverageTest(name: string, fn: TestFunction) {
-  if (process.env.COVERAGE_TEST === 'true') {
-    return vitestTest(name, fn)
-  }
-}
+export const coverageTest: TestAPI = process.env.COVERAGE_TEST !== 'true'
+  ? (() => {}) as any as TestAPI
+  : vitestTest
 
 export async function runVitest(config: TestUserConfig, options = { throwOnError: true }, viteOverrides: ViteUserConfig = {}) {
   const provider = process.env.COVERAGE_PROVIDER as any
