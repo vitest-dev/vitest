@@ -201,37 +201,40 @@ export async function readBlobs(
 
   // Build a global module index to ID map
   const allModules: SerializedModuleNode[] = []
+  const moduleContextByIndex: Array<{ projectName: string; envName: string }> = []
   blobs.forEach((blob) => {
-    blob.moduleKeys.forEach(([_projectName, _envName, moduleIds]) => {
-      allModules.push(...moduleIds)
+    blob.moduleKeys.forEach(([projectName, envName, moduleIds]) => {
+      moduleIds.forEach((moduleId) => {
+        allModules.push(moduleId)
+        moduleContextByIndex.push({ projectName, envName })
+      })
     })
   })
 
-  // Create module nodes in the module graph for each environment
-  const moduleNodesById = new Map<string, any>()
-  blobs.forEach((blob) => {
-    blob.moduleKeys.forEach(([projectName, envName, moduleIds]) => {
-      const project = projects[projectName]
-      if (!project) {
-        return
-      }
-      const env = project.vite.environments[envName]
-      if (!env) {
-        return
-      }
-      moduleIds.forEach(([moduleId, file, url]) => {
-        const moduleNode = env.moduleGraph.createFileOnlyEntry(file)
-        moduleNode.url = url
-        moduleNode.id = moduleId
-        moduleNode.transformResult = {
-          // print error checks that transformResult is set
-          code: ' ',
-          map: null,
-        }
-        env.moduleGraph.idToModuleMap.set(moduleId, moduleNode)
-        moduleNodesById.set(moduleId, moduleNode)
-      })
-    })
+  // Create module nodes in the module graph for each environment, indexed by their position
+  const moduleNodesByIndex = new Map<number, any>()
+  allModules.forEach((moduleData, index) => {
+    const [moduleId, file, url] = moduleData
+    const context = moduleContextByIndex[index]
+    const project = projects[context.projectName]
+    if (!project) {
+      return
+    }
+    const env = project.vite.environments[context.envName]
+    if (!env) {
+      return
+    }
+
+    const moduleNode = env.moduleGraph.createFileOnlyEntry(file)
+    moduleNode.url = url
+    moduleNode.id = moduleId
+    moduleNode.transformResult = {
+      // print error checks that transformResult is set
+      code: ' ',
+      map: null,
+    }
+    env.moduleGraph.idToModuleMap.set(moduleId, moduleNode)
+    moduleNodesByIndex.set(index, moduleNode)
   })
 
   // Populate importers and importedModules from graph edges
@@ -241,15 +244,11 @@ export async function readBlobs(
     }
 
     blob.graphEdges.forEach(([sourceIdx, targetIdx]) => {
-      const sourceModule = allModules[sourceIdx]
-      const targetModule = allModules[targetIdx]
-      if (sourceModule && targetModule) {
-        const sourceNode = moduleNodesById.get(sourceModule[0])
-        const targetNode = moduleNodesById.get(targetModule[0])
-        if (sourceNode && targetNode) {
-          sourceNode.importedModules.add(targetNode)
-          targetNode.importers.add(sourceNode)
-        }
+      const sourceNode = moduleNodesByIndex.get(sourceIdx)
+      const targetNode = moduleNodesByIndex.get(targetIdx)
+      if (sourceNode && targetNode) {
+        sourceNode.importedModules.add(targetNode)
+        targetNode.importers.add(sourceNode)
       }
     })
   })
