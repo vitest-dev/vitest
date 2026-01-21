@@ -262,6 +262,19 @@ test.describe('ui', () => {
     await expect(page.getByText('The test has passed without any errors')).toBeVisible()
   })
 
+  test('tags filter', async ({ page }) => {
+    await page.goto(pageUrl)
+
+    await page.getByPlaceholder('Search...').fill('tag:db')
+
+    // only one test with the tag "db"
+    await expect(page.getByText('PASS (1)')).toBeVisible()
+    await expect(page.getByTestId('explorer-item').filter({ hasText: 'has tags' })).toBeVisible()
+
+    await page.getByPlaceholder('Search...').fill('tag:db && !flaky')
+    await expect(page.getByText('No matched test')).toBeVisible()
+  })
+
   test('dashboard entries filter tests correctly', async ({ page }) => {
     await page.goto(pageUrl)
 
