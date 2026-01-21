@@ -256,9 +256,10 @@ test.describe('ui', () => {
     // pass files with special chars
     await page.getByPlaceholder('Search...').fill('char () - Square root of nine (9)')
     await expect(page.getByText('char () - Square root of nine (9)')).toBeVisible()
-    await page.getByText('char () - Square root of nine (9)').hover()
-    await page.getByLabel('Run current test').click()
-    await expect(page.getByText('All tests passed in this file')).toBeVisible()
+    const testItem = page.getByTestId('explorer-item').filter({ hasText: 'char () - Square root of nine (9)' })
+    await testItem.hover()
+    await testItem.getByLabel('Run current test').click()
+    await expect(page.getByText('The test has passed without any errors')).toBeVisible()
   })
 
   test('dashboard entries filter tests correctly', async ({ page }) => {
