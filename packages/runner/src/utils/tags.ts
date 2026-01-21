@@ -44,12 +44,7 @@ function parseTagsExpression(expr: string, availableTags: TestTagDefinition[]): 
 function formatToken(token: Token): string {
   switch (token.type) {
     case 'TAG': return token.value
-    case 'AND': return 'and'
-    case 'OR': return 'or'
-    case 'NOT': return 'not'
-    case 'LPAREN': return '('
-    case 'RPAREN': return ')'
-    case 'EOF': return 'end of expression'
+    default: return formatTokenType(token.type)
   }
 }
 
