@@ -1,7 +1,7 @@
 import type { VitestRunner, VitestRunnerConstructor } from '@vitest/runner'
 import type { Traces } from '../../utils/traces'
 import type { SerializedConfig } from '../config'
-import type { VitestModuleRunner } from '../moduleRunner/moduleRunner'
+import type { TestModuleRunner } from '../moduleRunner/testModuleRunner'
 import { takeCoverageInsideWorker } from '../../integrations/coverage'
 import { rpc } from '../rpc'
 import { loadDiffConfig, loadSnapshotSerializers } from '../setup-common'
@@ -11,7 +11,7 @@ import { TestRunner } from './test'
 
 async function getTestRunnerConstructor(
   config: SerializedConfig,
-  moduleRunner: VitestModuleRunner,
+  moduleRunner: TestModuleRunner,
 ): Promise<VitestRunnerConstructor> {
   if (!config.runner) {
     return (
@@ -31,7 +31,7 @@ async function getTestRunnerConstructor(
 
 export async function resolveTestRunner(
   config: SerializedConfig,
-  moduleRunner: VitestModuleRunner,
+  moduleRunner: TestModuleRunner,
   traces: Traces,
 ): Promise<VitestRunner> {
   const TestRunner = await getTestRunnerConstructor(config, moduleRunner)

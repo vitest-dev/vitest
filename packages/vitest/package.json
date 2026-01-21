@@ -26,7 +26,8 @@
     "#module-evaluator": {
       "types": "./dist/module-evaluator.d.ts",
       "default": "./dist/module-evaluator.js"
-    }
+    },
+    "#nodejs-worker-loader": "./dist/nodejs-worker-loader.js"
   },
   "exports": {
     ".": {
@@ -176,7 +177,7 @@
     "@vitest/snapshot": "workspace:*",
     "@vitest/spy": "workspace:*",
     "@vitest/utils": "workspace:*",
-    "es-module-lexer": "^1.7.0",
+    "es-module-lexer": "^2.0.0",
     "expect-type": "^1.3.0",
     "magic-string": "catalog:",
     "obug": "catalog:",
@@ -192,6 +193,7 @@
   },
   "devDependencies": {
     "@antfu/install-pkg": "^1.1.0",
+    "@bomb.sh/tab": "^0.0.9",
     "@edge-runtime/vm": "^5.0.0",
     "@jridgewell/trace-mapping": "catalog:",
     "@opentelemetry/api": "^1.9.0",
@@ -204,6 +206,7 @@
     "@types/picomatch": "^4.0.2",
     "@types/prompts": "^2.4.9",
     "@types/sinonjs__fake-timers": "^15.0.0",
+    "acorn": "8.11.3",
     "acorn-walk": "catalog:",
     "birpc": "catalog:",
     "cac": "catalog:",

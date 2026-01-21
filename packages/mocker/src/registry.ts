@@ -258,40 +258,42 @@ export interface RedirectedModuleSerialized {
   redirect: string
 }
 
-export class ManualMockedModule {
-  public cache: Record<string | symbol, any> | undefined
+export class ManualMockedModule<T = any> {
+  public cache: T | undefined
   public readonly type = 'manual'
 
   constructor(
     public raw: string,
     public id: string,
     public url: string,
-    public factory: () => any,
+    public factory: () => T,
   ) {}
 
-  async resolve(): Promise<Record<string | symbol, any>> {
+  resolve(): T {
     if (this.cache) {
       return this.cache
     }
     let exports: any
     try {
-      exports = await this.factory()
+      exports = this.factory()
     }
-    catch (err) {
-      const vitestError = new Error(
-        '[vitest] There was an error when mocking a module. '
-        + 'If you are using "vi.mock" factory, make sure there are no top level variables inside, since this call is hoisted to top of the file. '
-        + 'Read more: https://vitest.dev/api/vi.html#vi-mock',
-      )
-      vitestError.cause = err
-      throw vitestError
+    catch (err: any) {
+      throw createHelpfulError(err)
     }
 
-    if (exports === null || typeof exports !== 'object' || Array.isArray(exports)) {
-      throw new TypeError(
-        `[vitest] vi.mock("${this.raw}", factory?: () => unknown) is not returning an object. Did you mean to return an object with a "default" key?`,
+    if (typeof exports === 'object' && typeof exports?.then === 'function') {
+      return exports.then(
+        (result: T) => {
+          assertValidExports(this.raw, result)
+          return (this.cache = result)
+        },
+        (error: any) => {
+          throw createHelpfulError(error)
+        },
       )
     }
+
+    assertValidExports(this.raw, exports)
 
     return (this.cache = exports)
   }
@@ -307,6 +309,24 @@ export class ManualMockedModule {
       id: this.id,
       raw: this.raw,
     }
+  }
+}
+
+function createHelpfulError(cause: Error) {
+  const error = new Error(
+    '[vitest] There was an error when mocking a module. '
+    + 'If you are using "vi.mock" factory, make sure there are no top level variables inside, since this call is hoisted to top of the file. '
+    + 'Read more: https://vitest.dev/api/vi.html#vi-mock',
+  )
+  error.cause = cause
+  return error
+}
+
+function assertValidExports(raw: string, exports: any) {
+  if (exports === null || typeof exports !== 'object' || Array.isArray(exports)) {
+    throw new TypeError(
+      `[vitest] vi.mock("${raw}", factory?: () => unknown) is not returning an object. Did you mean to return an object with a "default" key?`,
+    )
   }
 }
 

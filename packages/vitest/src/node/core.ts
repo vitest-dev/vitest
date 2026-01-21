@@ -24,6 +24,7 @@ import { version } from '../../package.json' with { type: 'json' }
 import { WebSocketReporter } from '../api/setup'
 import { distDir } from '../paths'
 import { wildcardPatternToRegExp } from '../utils/base'
+import { NativeModuleRunner } from '../utils/nativeModuleRunner'
 import { convertTasksToEvents } from '../utils/tasks'
 import { Traces } from '../utils/traces'
 import { astCollectTests, createFailedFileTask } from './ast-collect'
@@ -238,11 +239,13 @@ export class Vitest {
       this._tmpDir,
     )
     const environment = server.environments.__vitest__
-    this.runner = new ServerModuleRunner(
-      environment,
-      this._fetcher,
-      resolved,
-    )
+    this.runner = resolved.experimental.viteModuleRunner === false
+      ? new NativeModuleRunner(resolved.root)
+      : new ServerModuleRunner(
+          environment,
+          this._fetcher,
+          resolved,
+        )
 
     if (this.config.watch) {
       // hijack server restart
@@ -1071,12 +1074,24 @@ export class Vitest {
       throw new Error(`Task ${id} was not found`)
     }
 
-    const taskNamePattern = task.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    const reportedTask = this.state.getReportedEntityById(id)
+    if (!reportedTask) {
+      throw new Error(`Test specification for task ${id} was not found`)
+    }
 
-    await this.changeNamePattern(
-      taskNamePattern,
-      [task.file.filepath],
-      'tasks' in task ? 'rerun suite' : 'rerun test',
+    const specifications = [reportedTask.toTestSpecification()]
+    await Promise.all([
+      this.report(
+        'onWatcherRerun',
+        [task.file.filepath],
+        'tasks' in task ? 'rerun suite' : 'rerun test',
+      ),
+      ...this._onUserTestsRerun.map(fn => fn(specifications)),
+    ])
+    await this.runFiles(specifications, false)
+    await this.report(
+      'onWatcherStart',
+      ['module' in reportedTask ? reportedTask.module.task : reportedTask.task],
     )
   }
 
