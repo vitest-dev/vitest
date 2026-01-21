@@ -1154,7 +1154,7 @@ type NonProjectOptions
     | 'inspectBrk'
     | 'coverage'
     | 'watchTriggerPatterns'
-    | 'tag' // CLI option only
+    | 'tagsFilter' // CLI option only
 
 export interface ServerDepsOptions {
   /**

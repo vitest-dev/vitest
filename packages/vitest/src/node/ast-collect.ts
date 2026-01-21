@@ -1,4 +1,5 @@
 import type { File, Suite, Task, Test } from '@vitest/runner'
+import type { Property } from 'estree'
 import type { SerializedConfig } from '../runtime/config'
 import type { TestError } from '../types/general'
 import type { TestProject } from './project'
@@ -189,7 +190,7 @@ function astParseFile(filepath: string, code: string) {
       if (secondArg?.type === 'ObjectExpression') {
         const tagsProperty = secondArg.properties?.find(
           (p: any) => p.type === 'Property' && p.key?.type === 'Identifier' && p.key.name === 'tags',
-        ) as any
+        ) as Property | undefined
         if (tagsProperty) {
           const tagsValue = tagsProperty.value
           if (tagsValue?.type === 'Literal' && typeof tagsValue.value === 'string') {
