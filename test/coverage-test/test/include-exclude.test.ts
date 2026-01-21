@@ -1,6 +1,6 @@
 import assert from 'node:assert'
 import { expect, onTestFinished, vi } from 'vitest'
-import { isBrowser, isNativeRunner, readCoverageMap, runVitest, test } from '../utils'
+import { cleanupCoverageJson, isBrowser, isNativeRunner, readCoverageMap, runVitest, test } from '../utils'
 
 test('default include should show only covered files', async () => {
   await runVitest({
@@ -130,6 +130,8 @@ test('uncovered files are included after watch-mode re-run', async () => {
     expect(files.length).toBeGreaterThanOrEqual(3)
   }
 
+  await cleanupCoverageJson()
+
   vitest.write('a')
 
   await vitest.waitForStdout('RERUN')
@@ -140,7 +142,7 @@ test('uncovered files are included after watch-mode re-run', async () => {
   await vitest.waitForStdout('Coverage report from')
 
   {
-    const coverageMap = await readCoverageMap()
+    const coverageMap = await vi.waitFor(() => readCoverageMap())
     const files = coverageMap.files()
 
     expect(files).toContain('<process-cwd>/fixtures/src/untested-file.ts')
