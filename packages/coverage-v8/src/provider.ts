@@ -334,7 +334,10 @@ export class V8CoverageProvider extends BaseCoverageProvider<ResolvedCoverageOpt
     code: string
     map?: Vite.Rollup.SourceMap
   }> {
-    const filepath = url.replace(/file:\/\/\/?/, '') // Windows will have file:///C:, unix will have file://
+    // TODO: need to standardize file urls before this call somehow, this is messy
+    const filepath = url.match(/^file:\/\/\/\w:\//)
+      ? url.slice(8)
+      : removeStartsWith(url, FILE_PROTOCOL)
     // TODO: do we still need to "catch" here? why would it fail?
     const transformResult = await onTransform(filepath).catch(() => null)
 
