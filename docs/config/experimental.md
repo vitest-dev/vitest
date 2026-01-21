@@ -207,7 +207,7 @@ Controls whether Vitest uses Vite's [module runner](https://vite.dev/guide/api-e
 
 If this option is defined in the root config, all [projects](/guide/projects) will inherit it automatically.
 
-We recommend disabling the module runner if you are running tests in the same environment as your code (server backend or simple scripts, for example). However, we still recommend running `jsdom`/`happy-dom` tests with the module runner or in [the browser](/guide/browser/) since it doesn't require any additional configuration.
+Consider disabling the module runner if you are running tests in the same environment as your code (server backend or simple scripts, for example). However, we still recommend running `jsdom`/`happy-dom` tests with Vite's module runner or in [the browser](/guide/browser/) since it doesn't require any additional configuration.
 
 Disabling this flag will disable _all_ file transforms:
 
@@ -226,11 +226,11 @@ Also note that this option only works with `forks` or `threads` [pools](/config/
 
 By default, Vitest runs tests in a very permissive module runner sandbox powered by Vite's [Environment API](https://vite.dev/guide/api-environment.html#environment-api). Every file is categorized as either an "inline" module or an "external" module.
 
-Module runner runs all "inline" modules. It provides `import.meta.env`, `require`, `__dirname`, `__filename`, static `import`, and has its own module resolution mechanism. This makes it very easy to run code when you don't want to configure the environment and just need to test that the bare JavaScript logic you wrote works as intended.
+Module runner runs all "inlined" modules. It provides `import.meta.env`, `require`, `__dirname`, `__filename`, static `import`, and has its own module resolution mechanism. This makes it very easy to run code when you don't want to configure the environment and just need to test that the bare JavaScript logic you wrote works as intended.
 
 All "external" modules run in native mode, meaning they are executed outside of the module runner sandbox. If you are running tests in Node.js, these files are imported with the native `import` keyword and processed by Node.js directly.
 
-While running JSDOM/happy-dom tests in a permissive fake environment might be justified, running Node.js tests in a non-Node.js environment is counter-productive as it can hide and silence potential errors you may encounter in production, especially if your code doesn't require any additional transformations provided by Vite plugins.
+While running JSDOM/happy-dom tests in a permissive fake environment might be justified, running Node.js tests in a non-Node.js environment can hide and silence potential errors you may encounter in production, especially if your code doesn't require any additional transformations provided by Vite plugins.
 
 ### Known Limitations
 
@@ -328,6 +328,7 @@ export default defineConfig({
 ```
 
 If you are running tests in Deno, TypeScript files are processed by the runtime without any additional configurations.
+:::
 
 ## experimental.nodeLoader <Version type="experimental">4.1.0</Version> {#experimental-nodeloader}
 
