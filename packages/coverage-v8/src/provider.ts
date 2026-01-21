@@ -334,11 +334,9 @@ export class V8CoverageProvider extends BaseCoverageProvider<ResolvedCoverageOpt
     code: string
     map?: Vite.Rollup.SourceMap
   }> {
-    const filepath = removeStartsWith(url, FILE_PROTOCOL)
-    const transformResult = await onTransform(filepath).catch((error) => {
-      this.ctx.logger.error(`Failed to transform "${url}" (treated as "${filepath}") for coverage. Falling back to native resolution.`, error)
-      return null
-    })
+    const filepath = url.replace(/file:\/\/\/?/, '') // Windows will have file:///C:, unix will have file://
+    // TODO: do we still need to "catch" here? why would it fail?
+    const transformResult = await onTransform(filepath).catch(() => null)
 
     const map = transformResult?.map as Vite.Rollup.SourceMap | undefined
     const code = transformResult?.code
