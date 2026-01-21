@@ -118,15 +118,15 @@ export async function collectTests(
         calculateSuiteHash(file)
 
         const hasOnlyTasks = someTasksAreOnly(file)
+        if (!testTagsFilter && !defaultTagsFilter && config.tagsFilter) {
+          defaultTagsFilter = createTagsFilter(config.tagsFilter, config.tags)
+        }
         interpretTaskModes(
           file,
           testNamePattern ?? config.testNamePattern,
           testLocations,
           testIds,
-          testTagsFilter
-          ?? (defaultTagsFilter ??= config.tagsFilter
-            ? createTagsFilter(config.tagsFilter, config.tags)
-            : undefined),
+          testTagsFilter ?? defaultTagsFilter,
           hasOnlyTasks,
           false,
           config.allowOnly,
