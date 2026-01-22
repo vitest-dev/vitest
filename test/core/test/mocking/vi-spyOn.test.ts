@@ -1,6 +1,17 @@
 import type { MockContext } from 'vitest'
 import { describe, expect, test, vi } from 'vitest'
 
+function createNonConfigurableModuleNamespace(exportName: string) {
+  const moduleNamespace: any = {}
+  Object.defineProperty(moduleNamespace, Symbol.toStringTag, { value: 'Module' })
+  Object.defineProperty(moduleNamespace, exportName, {
+    value: () => {},
+    configurable: false,
+  })
+  Object.preventExtensions(moduleNamespace)
+  return moduleNamespace
+}
+
 test('vi.fn() has correct length', () => {
   const fn0 = vi.spyOn({ fn: () => {} }, 'fn')
   expect(fn0.length).toBe(0)
@@ -16,6 +27,79 @@ test('vi.fn() has correct length', () => {
 
   const fn3 = vi.spyOn({ fn: (_arg1: any, _arg2: any, _arg3: any) => {} }, 'fn')
   expect(fn3.length).toBe(3)
+})
+
+test('spying on a native module namespace prints actionable error', () => {
+  const hadBrowserRunner = Object.prototype.hasOwnProperty.call(globalThis, '__vitest_browser_runner__')
+  const previousBrowserRunner = (globalThis as any).__vitest_browser_runner__
+  delete (globalThis as any).__vitest_browser_runner__
+
+  try {
+    const moduleNamespace = createNonConfigurableModuleNamespace('after')
+
+    const error: Error = (() => {
+      try {
+        vi.spyOn(moduleNamespace, 'after')
+        expect.unreachable()
+      }
+      catch (err) {
+        return err
+      }
+    })()
+
+    expect(error.name).toBe('TypeError')
+    expect(error.message).toContain('Module namespace is not configurable in ESM')
+    expect(error.message).toContain('"test.server.deps.inline"')
+    expect(error.message).toContain('https://vitest.dev/config/#server-deps-inline')
+    expect(error.message).toContain('https://vitest.dev/guide/mocking/modules')
+    expect(error.message).not.toContain('https://vitest.dev/guide/browser/#spying-on-module-exports')
+
+    expect(error.cause).toBeInstanceOf(TypeError)
+  }
+  finally {
+    if (hadBrowserRunner) {
+      ;(globalThis as any).__vitest_browser_runner__ = previousBrowserRunner
+    }
+    else {
+      delete (globalThis as any).__vitest_browser_runner__
+    }
+  }
+})
+
+test('spying on a module namespace in browser mode prints browser limitations link', () => {
+  const hadBrowserRunner = Object.prototype.hasOwnProperty.call(globalThis, '__vitest_browser_runner__')
+  const previousBrowserRunner = (globalThis as any).__vitest_browser_runner__
+  ;(globalThis as any).__vitest_browser_runner__ = {}
+
+  try {
+    const moduleNamespace = createNonConfigurableModuleNamespace('calculator')
+
+    const error: Error = (() => {
+      try {
+        vi.spyOn(moduleNamespace, 'calculator')
+        expect.unreachable()
+      }
+      catch (err) {
+        return err
+      }
+    })()
+
+    expect(error.name).toBe('TypeError')
+    expect(error.message).toContain('Module namespace is not configurable in ESM')
+    expect(error.message).toContain('https://vitest.dev/guide/browser/#spying-on-module-exports')
+    expect(error.message).not.toContain('https://vitest.dev/config/#server-deps-inline')
+    expect(error.message).not.toContain('https://vitest.dev/guide/mocking/modules')
+
+    expect(error.cause).toBeInstanceOf(TypeError)
+  }
+  finally {
+    if (hadBrowserRunner) {
+      ;(globalThis as any).__vitest_browser_runner__ = previousBrowserRunner
+    }
+    else {
+      delete (globalThis as any).__vitest_browser_runner__
+    }
+  }
 })
 
 describe('vi.spyOn() copies static properties', () => {

@@ -335,8 +335,13 @@ export function spyOn<T extends object, K extends keyof T>(
         || error.message.includes('Cannot replace module namespace')
         || error.message.includes('can\'t redefine non-configurable property'))
     ) {
+      const browserRunner = (globalThis as any).__vitest_browser_runner__
+      const isBrowserMode = browserRunner !== null && typeof browserRunner === 'object'
+      const docsHint = isBrowserMode
+        ? 'See: https://vitest.dev/guide/browser/#spying-on-module-exports'
+        : 'Inline dependencies with "test.server.deps.inline": https://vitest.dev/config/#server-deps-inline. Otherwise, use module mocking: https://vitest.dev/guide/mocking/modules.'
       throw new TypeError(
-        `Cannot spy on export "${String(key)}". Module namespace is not configurable in ESM. See: https://vitest.dev/guide/browser/#limitations`,
+        `Cannot spy on export "${String(key)}". Module namespace is not configurable in ESM. ${docsHint}`,
         { cause: error },
       )
     }
