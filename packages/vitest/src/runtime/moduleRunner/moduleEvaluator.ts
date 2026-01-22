@@ -177,14 +177,11 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
     )
   }
 
-  private async _runInlinedModule(
+  private _createCJSGlobals(
     context: ModuleRunnerContext,
-    code: string,
     module: Readonly<EvaluatedModuleNode>,
     span: Span,
-  ): Promise<any> {
-    context.__vite_ssr_import_meta__.env = this.env
-
+  ) {
     const { Reflect, Proxy, Object } = this.primitives
 
     const exportsObject = context[ssrModuleExportsKey]
@@ -254,7 +251,25 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
       },
     }
 
+    const require = this.createRequire(context[ssrImportMetaKey].url)
+
+    return {
+      exports: cjsExports,
+      module: moduleProxy,
+      require,
+      __filename: context[ssrImportMetaKey].filename,
+      __dirname: context[ssrImportMetaKey].dirname,
+    }
+  }
+
+  private async _runInlinedModule(
+    context: ModuleRunnerContext,
+    code: string,
+    module: Readonly<EvaluatedModuleNode>,
+    span: Span,
+  ): Promise<any> {
     const meta = context[ssrImportMetaKey]
+    meta.env = this.env
 
     const testFilepath = this.options.getCurrentTestFilepath?.()
     if (testFilepath === module.file) {
@@ -265,14 +280,7 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
       })
     }
 
-    const filename = meta.filename
-    const dirname = meta.dirname
-
-    span.setAttributes({
-      'code.file.path': filename,
-    })
-
-    const require = this.createRequire(meta.url)
+    span.setAttribute('code.file.path', meta.filename)
 
     const argumentsList = [
       ssrModuleExportsKey,
@@ -282,7 +290,10 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
       ssrExportAllKey,
       // vite 7 support
       '__vite_ssr_exportName__',
+    ]
 
+    const cjsGlobals = this._createCJSGlobals(context, module, span)
+    argumentsList.push(
       // TODO@discuss deprecate in Vitest 5, remove in Vitest 6(?)
       // backwards compat for vite-node
       '__filename',
@@ -290,7 +301,7 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
       'module',
       'exports',
       'require',
-    ]
+    )
 
     if (this.compiledFunctionArgumentsNames) {
       argumentsList.push(...this.compiledFunctionArgumentsNames)
@@ -328,18 +339,18 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
         context[ssrDynamicImportKey],
         context[ssrExportAllKey],
         // vite 7 support, remove when vite 7+ is supported
-        (context as any).__vite_ssr_exportName__
-        || ((name: string, getter: () => unknown) => Object.defineProperty(exportsObject, name, {
+        context.__vite_ssr_exportName__
+        || ((name: string, getter: () => unknown) => Object.defineProperty(context[ssrModuleExportsKey], name, {
           enumerable: true,
           configurable: true,
           get: getter,
         })),
 
-        filename,
-        dirname,
-        moduleProxy,
-        cjsExports,
-        require,
+        cjsGlobals.__filename,
+        cjsGlobals.__dirname,
+        cjsGlobals.module,
+        cjsGlobals.exports,
+        cjsGlobals.require,
 
         ...this.compiledFunctionArgumentsValues,
       )
@@ -351,10 +362,10 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
     }
   }
 
-  private createRequire(filename: string) {
+  private createRequire(url: string) {
     return this.vm
-      ? this.vm.externalModulesExecutor.createRequire(filename)
-      : createRequire(filename)
+      ? this.vm.externalModulesExecutor.createRequire(url)
+      : createRequire(url)
   }
 
   private shouldInterop(path: string, mod: any): boolean {
