@@ -23,7 +23,13 @@ export function printProps(
   return keys
     .map((key) => {
       const value = props[key]
-      if (typeof value === 'string' && value.startsWith('__vitest_') && value.match(/__vitest_\d+__/)) {
+      // hidden injected value that should not be printed
+      if (
+        typeof value === 'string'
+        && value[0] === '_'
+        && value.startsWith('__vitest_')
+        && value.match(/__vitest_\d+__/)
+      ) {
         return ''
       }
 
