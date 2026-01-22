@@ -1,6 +1,10 @@
 import type { MockContext } from 'vitest'
 import { describe, expect, test, vi } from 'vitest'
 
+function ensureError(error: unknown): Error {
+  return error instanceof Error ? error : new Error(String(error))
+}
+
 function createNonConfigurableModuleNamespace(exportName: string) {
   const moduleNamespace: any = {}
   Object.defineProperty(moduleNamespace, Symbol.toStringTag, { value: 'Module' })
@@ -43,7 +47,7 @@ test('spying on a native module namespace prints actionable error', () => {
         expect.unreachable()
       }
       catch (err) {
-        return err
+        return ensureError(err)
       }
     })()
 
@@ -80,7 +84,7 @@ test('spying on a module namespace in browser mode prints browser limitations li
         expect.unreachable()
       }
       catch (err) {
-        return err
+        return ensureError(err)
       }
     })()
 

@@ -1,6 +1,10 @@
 import { expect, test, vi } from 'vitest'
 import * as module from '../src/calculator'
 
+function ensureError(error: unknown): Error {
+  return error instanceof Error ? error : new Error(String(error))
+}
+
 const browserRunner = (globalThis as any).__vitest_browser_runner__
 const isBrowserMode = browserRunner !== null && typeof browserRunner === 'object'
 
@@ -11,7 +15,7 @@ test.runIf(isBrowserMode)('spying on an esm module prints an error', () => {
       expect.unreachable()
     }
     catch (err) {
-      return err
+      return ensureError(err)
     }
   })()
   expect(error.name).toBe('TypeError')
