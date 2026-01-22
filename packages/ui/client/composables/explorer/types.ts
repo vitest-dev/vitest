@@ -13,6 +13,7 @@ export interface CollectFilteredTests extends FilteredTests {
   total: number
   ignored: number
   todo: number
+  expectedFail: number
 }
 
 export interface TaskTreeNode {
@@ -96,6 +97,7 @@ export interface CollectorInfo {
   testsIgnore: number
   testsSkipped: number
   testsTodo: number
+  testsExpectedFail: number
   totalTests: number
   failedSnapshot: boolean
   failedSnapshotEnabled: boolean

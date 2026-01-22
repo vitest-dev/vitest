@@ -48,6 +48,18 @@ function toggleFilter(type: 'success' | 'failed' | 'skipped' | 'total') {
       </template>
     </DashboardEntry>
     <DashboardEntry
+      v-if="explorerTree.summary.testsExpectedFail"
+      text-cyan5
+      data-testid="expected-fail-entry"
+    >
+      <template #header>
+        Expected Fail
+      </template>
+      <template #body>
+        {{ explorerTree.summary.testsExpectedFail }}
+      </template>
+    </DashboardEntry>
+    <DashboardEntry
       v-if="explorerTree.summary.testsSkipped"
       op50
       data-testid="skipped-entry"
