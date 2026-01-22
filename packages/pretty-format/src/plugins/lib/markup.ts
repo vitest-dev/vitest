@@ -23,6 +23,10 @@ export function printProps(
   return keys
     .map((key) => {
       const value = props[key]
+      if (typeof value === 'string' && value.startsWith('__vitest_') && value.match(/__vitest_\d+__/)) {
+        return ''
+      }
+
       let printed = printer(value, config, indentationNext, depth, refs)
 
       if (typeof value !== 'string') {
