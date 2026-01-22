@@ -2,8 +2,6 @@ import { resolve } from 'pathe'
 import { expect, it, test } from 'vitest'
 import { createVitest } from 'vitest/node'
 
-import { runVitest } from '../../test-utils'
-
 test('can pass down the config as a module', async () => {
   const vitest = await createVitest('test', {
     config: '@test/test-dep-config',
@@ -15,25 +13,23 @@ test('can pass down the config as a module', async () => {
 })
 
 it('correctly inherit from the cli', async () => {
-  const { ctx } = await runVitest({
-    $cliOptions: {
-      root: 'fixtures/workspace-flags',
-      logHeapUsage: true,
-      allowOnly: true,
-      sequence: {
-        seed: 123,
-      },
-      testTimeout: 5321,
-      pool: 'forks',
-      globals: true,
-      expandSnapshotDiff: true,
-      retry: 6,
-      testNamePattern: 'math',
-      passWithNoTests: true,
-      bail: 100,
+  const vitest = await createVitest('test', {
+    root: 'fixtures/workspace-flags',
+    logHeapUsage: true,
+    allowOnly: true,
+    sequence: {
+      seed: 123,
     },
+    testTimeout: 5321,
+    pool: 'forks',
+    globals: true,
+    expandSnapshotDiff: true,
+    retry: 6,
+    testNamePattern: 'math',
+    passWithNoTests: true,
+    bail: 100,
   })
-  const project = ctx!.projects[0]
+  const project = vitest.projects[0]
   const config = project.config
   expect(config).toMatchObject({
     logHeapUsage: true,
@@ -50,4 +46,37 @@ it('correctly inherit from the cli', async () => {
     bail: 100,
   })
   expect(config.testNamePattern?.test('math')).toBe(true)
+})
+
+it('inject reporter injects reporters', async () => {
+  const vitest = await createVitest('test', {
+    config: false,
+    reporters: ['verbose'],
+    injectReporter: [
+      './my-reporter.js',
+      '@org/another-reporter',
+      '.reporters/custom.js',
+      '/absolute/path/to/reporter.js',
+    ],
+  }, {
+    plugins: [
+      {
+        name: 'import-reporter',
+        load() {
+          // vitest always loads a reporter, fake it
+          return `export default class Reporter {}`
+        },
+      },
+    ],
+  })
+
+  expect(vitest.config.reporters).toEqual([
+    // doesn't override verbose reporter
+    ['verbose', {}],
+    // correctly resolves relative path
+    [resolve(process.cwd(), './my-reporter.js'), {}],
+    ['@org/another-reporter', {}],
+    ['.reporters/custom.js', {}],
+    ['/absolute/path/to/reporter.js', {}],
+  ])
 })

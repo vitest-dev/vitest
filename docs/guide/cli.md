@@ -183,6 +183,20 @@ Boolean options can be negated with `no-` prefix. Specifying the value as `false
 vitest --no-api
 vitest --api=false
 ```
+
+Since Vitest 4.1, CLI also accepts options via `VITEST_OPTIONS` environmental variable, similar to [`NODE_OPTIONS`](https://nodejs.org/api/cli.html#node_optionsoptions):
+
+```
+VITEST_OPTIONS=--reporter=dot vitest
+```
+
+This can be useful if you spawn `vitest` manually in a custom script. `VITEST_OPTIONS` will be merged with other CLI options.
+
+Vitest also accepts `VITEST_FILTERS` environment variable to pass down additional filters:
+
+```
+VITEST_FILTERS=basic.test.ts vitest advanced.test.ts
+```
 :::
 
 <!--@include: ./cli-generated.md-->

@@ -649,6 +649,15 @@ export function resolveConfig(
     }
   }
 
+  if (resolved.injectReporter) {
+    resolved.injectReporter.forEach((reporter) => {
+      const path = /^\.\.?\//.test(reporter)
+        ? resolve(process.cwd(), reporter)
+        : reporter
+      resolved.reporters.push([path, {}])
+    })
+  }
+
   if (resolved.changed) {
     resolved.passWithNoTests ??= true
   }
