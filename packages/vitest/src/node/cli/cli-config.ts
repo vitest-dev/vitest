@@ -786,7 +786,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
     },
   },
   listTags: {
-    description: 'List all available tags instead of running tests. If --list-tags=json is used, the output will be in JSON format, unless there are no tags.',
+    description: 'List all available tags instead of running tests. `--list-tags=json` will output tags in JSON format, unless there are no tags.',
     argument: '[type]',
   },
   clearCache: {

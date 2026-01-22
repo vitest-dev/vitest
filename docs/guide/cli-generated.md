@@ -806,6 +806,12 @@ Use `bundle` to bundle the config with esbuild or `runner` (experimental) to pro
 
 Start Vitest without running tests. Tests will be running only on change. This option is ignored when CLI file filters are passed. (default: `false`)
 
+### listTags
+
+- **CLI:** `--listTags [type]`
+
+List all available tags instead of running tests. `--list-tags=json` will output tags in JSON format, unless there are no tags.
+
 ### clearCache
 
 - **CLI:** `--clearCache`
