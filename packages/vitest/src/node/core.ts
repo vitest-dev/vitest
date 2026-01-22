@@ -48,6 +48,7 @@ import { createBenchmarkReporters, createReporters } from './reporters/utils'
 import { VitestResolver } from './resolver'
 import { VitestSpecifications } from './specifications'
 import { StateManager } from './state'
+import { populateProjectsTags } from './tags'
 import { TestRun } from './test-run'
 import { VitestWatcher } from './watcher'
 
@@ -112,6 +113,7 @@ export class Vitest {
   /** @internal */ reporters: Reporter[] = []
   /** @internal */ runner!: ModuleRunner
   /** @internal */ _testRun: TestRun = undefined!
+  /** @internal */ _config?: ResolvedConfig
   /** @internal */ _resolver!: VitestResolver
   /** @internal */ _fetcher!: VitestFetchFunction
   /** @internal */ _fsCache!: FileSystemModuleCache
@@ -123,7 +125,6 @@ export class Vitest {
 
   private readonly specifications: VitestSpecifications
   private pool: ProcessPool | undefined
-  private _config?: ResolvedConfig
   private _vite?: ViteDevServer
   private _state?: StateManager
   private _cache?: VitestCache
@@ -321,6 +322,12 @@ export class Vitest {
       this.configOverride.testNamePattern = this.config.testNamePattern
     }
 
+    // populate will merge all configs into every project,
+    // we don't want that when just listing tags
+    if (!this.config.listTags) {
+      populateProjectsTags(this.coreWorkspaceProject, this.projects)
+    }
+
     this.reporters = resolved.mode === 'benchmark'
       ? await createBenchmarkReporters(toArray(resolved.benchmark?.reporters), this.runner)
       : await createReporters(resolved.reporters, this)
@@ -339,6 +346,33 @@ export class Vitest {
       return null
     }
     return this._coverageProvider
+  }
+
+  public async listTags(): Promise<void> {
+    const listTags = this.config.listTags
+    if (typeof listTags === 'boolean') {
+      this.logger.printTags()
+    }
+    else if (listTags === 'json') {
+      const hasTags = [this.getRootProject(), ...this.projects].some(p => p.config.tags && p.config.tags.length > 0)
+      if (!hasTags) {
+        process.exitCode = 1
+        this.logger.printNoTestTagsFound()
+      }
+      else {
+        const manifest = {
+          tags: this.config.tags,
+          projects: this.projects.filter(p => p !== this.coreWorkspaceProject).map(p => ({
+            name: p.name,
+            tags: p.config.tags,
+          })),
+        }
+        this.logger.log(JSON.stringify(manifest, null, 2))
+      }
+    }
+    else {
+      throw new Error(`Unknown value for "test.listTags": ${listTags}`)
+    }
   }
 
   public async enableCoverage(): Promise<void> {

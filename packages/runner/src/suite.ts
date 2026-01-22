@@ -9,6 +9,7 @@ import type {
   SuiteCollector,
   SuiteFactory,
   SuiteHooks,
+  SuiteOptions,
   Task,
   TaskCustomOptions,
   TaskPopulated,
@@ -23,6 +24,7 @@ import {
   isObject,
   objectAttr,
   toArray,
+  unique,
 } from '@vitest/utils/helpers'
 import {
   abortIfTimeout,
@@ -38,6 +40,7 @@ import { getHooks, setFn, setHooks, setTestFixture } from './map'
 import { getCurrentTest } from './test-state'
 import { findTestFileStackTrace } from './utils'
 import { createChainable } from './utils/chain'
+import { createNoTagsError, validateTags } from './utils/tags'
 import { createTaskName } from './utils/tasks'
 
 /**
@@ -213,7 +216,11 @@ export function getRunner(): VitestRunner {
 
 function createDefaultSuite(runner: VitestRunner) {
   const config = runner.config.sequence
-  const collector = suite('', { concurrent: config.concurrent }, () => {})
+  const options: SuiteOptions = {}
+  if (config.concurrent != null) {
+    options.concurrent = config.concurrent
+  }
+  const collector = suite('', options, () => {})
   // no parent suite for top-level tests
   delete collector.suite
   return collector
@@ -223,12 +230,12 @@ export function clearCollectorContext(
   file: File,
   currentRunner: VitestRunner,
 ): void {
+  currentTestFilepath = file.filepath
+  runner = currentRunner
   if (!defaultSuite) {
     defaultSuite = createDefaultSuite(currentRunner)
   }
   defaultSuite.file = file
-  runner = currentRunner
-  currentTestFilepath = file.filepath
   collectorContext.tasks.length = 0
   defaultSuite.clear()
   collectorContext.currentSuite = defaultSuite
@@ -249,6 +256,8 @@ export function createSuiteHooks(): SuiteHooks {
     afterEach: [],
   }
 }
+
+const POSITIVE_INFINITY = Number.POSITIVE_INFINITY
 
 function parseArguments<T extends (...args: any[]) => any>(
   optionsOrFn: T | object | undefined,
@@ -294,7 +303,7 @@ function createSuiteCollector(
   factory: SuiteFactory = () => {},
   mode: RunMode,
   each?: boolean,
-  suiteOptions?: TestOptions,
+  suiteOptions?: SuiteOptions,
   parentCollectorFixtures?: FixtureItem[],
 ) {
   const tasks: (Test | Suite | SuiteCollector)[] = []
@@ -304,8 +313,32 @@ function createSuiteCollector(
   initSuite(true)
 
   const task = function (name = '', options: TaskCustomOptions = {}) {
-    const timeout = options?.timeout ?? runner.config.testTimeout
     const currentSuite = collectorContext.currentSuite?.suite
+    const parentTask = currentSuite ?? collectorContext.currentSuite?.file
+    const parentTags = parentTask?.tags || []
+    const testTags = unique([...parentTags, ...toArray(options.tags)])
+    const tagsOptions = testTags
+      .map((tag) => {
+        const tagDefinition = runner.config.tags?.find(t => t.name === tag)
+        if (!tagDefinition && runner.config.strictTags) {
+          throw createNoTagsError(runner.config.tags, tag)
+        }
+        return tagDefinition
+      })
+      .filter(r => r != null)
+      // higher priority should be last, run 1, 2, 3, ... etc
+      .sort((tag1, tag2) => (tag2.priority ?? POSITIVE_INFINITY) - (tag1.priority ?? POSITIVE_INFINITY))
+      .reduce((acc, tag) => {
+        const { name, description, priority, ...options } = tag
+        Object.assign(acc, options)
+        return acc
+      }, {} as TestOptions)
+
+    options = {
+      ...tagsOptions,
+      ...options,
+    }
+    const timeout = options.timeout ?? runner.config.testTimeout
     const task: Test = {
       id: '',
       name,
@@ -333,6 +366,7 @@ function createSuiteCollector(
       meta: options.meta ?? Object.create(null),
       annotations: [],
       artifacts: [],
+      tags: testTags,
     }
     const handler = options.handler
     if (task.mode === 'run' && !handler) {
@@ -345,7 +379,6 @@ function createSuiteCollector(
       task.concurrent = true
     }
     task.shuffle = suiteOptions?.shuffle
-
     const context = createTestContext(task, runner)
     // create test context
     Object.defineProperty(task, 'context', {
@@ -401,10 +434,15 @@ function createSuiteCollector(
     }
 
     // inherit concurrent / sequential from suite
-    options.concurrent
-      = this.concurrent || (!this.sequential && options?.concurrent)
-    options.sequential
-      = this.sequential || (!this.concurrent && options?.sequential)
+    const concurrent = this.concurrent ?? (!this.sequential && options?.concurrent)
+    if (options.concurrent != null && concurrent != null) {
+      options.concurrent = concurrent
+    }
+
+    const sequential = this.sequential ?? (!this.concurrent && options?.sequential)
+    if (options.sequential != null && sequential != null) {
+      options.sequential = sequential
+    }
 
     const test = task(formatName(name), {
       ...this,
@@ -454,6 +492,9 @@ function createSuiteCollector(
     }
 
     const currentSuite = collectorContext.currentSuite?.suite
+    const parentTask = currentSuite ?? collectorContext.currentSuite?.file
+    const suiteTags = toArray(suiteOptions?.tags)
+    validateTags(runner.config, suiteTags)
 
     suite = {
       id: '',
@@ -472,6 +513,7 @@ function createSuiteCollector(
       tasks: [],
       meta: Object.create(null),
       concurrent: suiteOptions?.concurrent,
+      tags: unique([...parentTask?.tags || [], ...suiteTags]),
     }
 
     if (runner && includeLocation && runner.config.includeTaskLocation) {
@@ -541,7 +583,7 @@ function createSuite() {
   function suiteFn(
     this: Record<string, boolean | undefined>,
     name: string | Function,
-    factoryOrOptions?: SuiteFactory | TestOptions,
+    factoryOrOptions?: SuiteFactory | SuiteOptions,
     optionsOrFactory?: number | SuiteFactory,
   ) {
     if (getCurrentTest()) {
@@ -550,23 +592,12 @@ function createSuite() {
       )
     }
 
-    let mode: RunMode = this.only
-      ? 'only'
-      : this.skip
-        ? 'skip'
-        : this.todo
-          ? 'todo'
-          : 'run'
     const currentSuite: SuiteCollector | undefined = collectorContext.currentSuite || defaultSuite
 
     let { options, handler: factory } = parseArguments(
       factoryOrOptions,
       optionsOrFactory,
-    )
-
-    if (mode === 'run' && !factory) {
-      mode = 'todo'
-    }
+    ) as { options: SuiteOptions; handler: SuiteFactory | undefined }
 
     const isConcurrentSpecified = options.concurrent || this.concurrent || options.sequential === false
     const isSequentialSpecified = options.sequential || this.sequential || options.concurrent === false
@@ -575,14 +606,35 @@ function createSuite() {
     options = {
       ...currentSuite?.options,
       ...options,
-      shuffle: this.shuffle ?? options.shuffle ?? currentSuite?.options?.shuffle ?? runner?.config.sequence.shuffle,
+    }
+
+    const shuffle = this.shuffle ?? options.shuffle ?? currentSuite?.options?.shuffle ?? runner?.config.sequence.shuffle
+    if (shuffle != null) {
+      options.shuffle = shuffle
+    }
+
+    let mode: RunMode = (this.only ?? options.only)
+      ? 'only'
+      : (this.skip ?? options.skip)
+          ? 'skip'
+          : (this.todo ?? options.todo)
+              ? 'todo'
+              : 'run'
+
+    // passed as test(name), assume it's a "todo"
+    if (mode === 'run' && !factory) {
+      mode = 'todo'
     }
 
     // inherit concurrent / sequential from suite
     const isConcurrent = isConcurrentSpecified || (options.concurrent && !isSequentialSpecified)
     const isSequential = isSequentialSpecified || (options.sequential && !isConcurrentSpecified)
-    options.concurrent = isConcurrent && !isSequential
-    options.sequential = isSequential && !isConcurrent
+    if (isConcurrent != null) {
+      options.concurrent = isConcurrent && !isSequential
+    }
+    if (isSequential != null) {
+      options.sequential = isSequential && !isConcurrent
+    }
 
     return createSuiteCollector(
       formatName(name),

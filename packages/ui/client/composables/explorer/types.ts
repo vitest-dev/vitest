@@ -1,4 +1,4 @@
-import type { RunMode, TaskState } from '@vitest/runner'
+import type { RunMode, Task, TaskState } from '@vitest/runner'
 
 export type FilterResult = [match: boolean, node: UITaskTreeNode]
 
@@ -7,6 +7,10 @@ export interface FilteredTests {
   success: number
   skipped: number
   running: number
+}
+
+export interface SearchMatcher {
+  (task: Task): boolean
 }
 
 export interface CollectFilteredTests extends FilteredTests {

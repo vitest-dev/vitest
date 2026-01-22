@@ -1,8 +1,11 @@
-import type { File } from '@vitest/runner'
+import type { File, Task } from '@vitest/runner'
 import type { FileTreeNode, Filter, FilteredTests, ProjectSortUIType, TreeFilterState, UITaskTreeNode } from './types'
+import { createTagsFilter } from '@vitest/runner/utils'
 import { useLocalStorage } from '@vueuse/core'
 import { computed, reactive, ref, shallowRef } from 'vue'
 import { availableProjects } from '~/composables/client'
+import { caseInsensitiveMatch } from '~/utils/task'
+import { config } from '../client'
 import { explorerTree } from './index'
 
 export const uiFiles = shallowRef<FileTreeNode[]>([])
@@ -35,6 +38,41 @@ export const currentProjectName = computed(() => {
   return !enableProjects.value || currentProject.value === ALL_PROJECTS ? undefined : currentProject.value
 })
 export const search = ref<string>(treeFilter.value.search)
+const tagExpressionsCache = new Map<string, { error?: string; matcher: (tags: string[]) => boolean }>()
+export const searchMatcher = computed(() => {
+  if (search.value.startsWith('tag:')) {
+    if (!config.value.tags) { // config is not loaded yet
+      return { matcher: () => true }
+    }
+    const tagQuery = search.value.slice(4).trim()
+    let filter = tagExpressionsCache.get(tagQuery)
+    if (!filter) {
+      filter = createSafeFilter(tagQuery)
+      tagExpressionsCache.set(tagQuery, filter)
+    }
+    return {
+      matcher: (task: Task) => filter.matcher(task.tags || []),
+      error: filter.error,
+    }
+  }
+  return {
+    matcher: (task: Task) => search.value === '' || caseInsensitiveMatch(task.name, search.value),
+  }
+})
+
+function createSafeFilter(
+  query: string,
+) {
+  if (!query) {
+    return { matcher: () => true }
+  }
+  try {
+    return { matcher: createTagsFilter([query], config.value.tags) }
+  }
+  catch (error: any) {
+    return { matcher: () => false, error: error.message }
+  }
+}
 const htmlEntities: Record<string, string> = {
   '&': '&amp;',
   '<': '&lt;',

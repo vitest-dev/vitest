@@ -467,6 +467,14 @@ export default ({ mode }: { mode: string }) => {
                 link: '/config/sequence',
               },
               {
+                text: 'tags',
+                link: '/config/tags',
+              },
+              {
+                text: 'strictTags',
+                link: '/config/stricttags',
+              },
+              {
                 text: 'typecheck',
                 link: '/config/typecheck',
               },
@@ -768,6 +776,10 @@ export default ({ mode }: { mode: string }) => {
               {
                 text: 'Test Filtering',
                 link: '/guide/filtering',
+              },
+              {
+                text: 'Test Tags',
+                link: '/guide/test-tags',
               },
               {
                 text: 'Test Context',

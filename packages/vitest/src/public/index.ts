@@ -140,8 +140,9 @@ export type {
   TestContext,
   TestFunction,
   TestOptions,
-
   VitestRunnerConfig as TestRunnerConfig,
+
+  TestTags,
   VitestRunner as VitestTestRunner,
 } from '@vitest/runner'
 

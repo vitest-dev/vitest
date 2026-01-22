@@ -14,7 +14,7 @@ import { runExpandAll, runExpandNode } from '~/composables/explorer/expand'
 import { runFilter } from '~/composables/explorer/filter'
 import {
   filter,
-  search,
+  searchMatcher,
 } from '~/composables/explorer/state'
 
 export class ExplorerTree {
@@ -68,7 +68,7 @@ export class ExplorerTree {
     runLoadFiles(
       remoteFiles,
       true,
-      search.value.trim(),
+      searchMatcher.value.matcher,
       {
         failed: filter.failed,
         success: filter.success,
@@ -122,7 +122,7 @@ export class ExplorerTree {
           start,
           end,
           this.summary,
-          search.value.trim(),
+          searchMatcher.value.matcher,
           {
             failed: filter.failed,
             success: filter.success,
@@ -138,7 +138,7 @@ export class ExplorerTree {
         start,
         end,
         this.summary,
-        search.value.trim(),
+        searchMatcher.value.matcher,
         {
           failed: filter.failed,
           success: filter.success,
@@ -156,7 +156,7 @@ export class ExplorerTree {
     tests: File[],
     filesSummary: FilteredTests,
   ) {
-    return collectTestsTotalData(filtered, onlyTests, tests, filesSummary, search.value.trim(), {
+    return collectTestsTotalData(filtered, onlyTests, tests, filesSummary, searchMatcher.value.matcher, {
       failed: filter.failed,
       success: filter.success,
       skipped: filter.skipped,
@@ -172,7 +172,7 @@ export class ExplorerTree {
 
   expandNode(id: string) {
     queueMicrotask(() => {
-      runExpandNode(id, search.value.trim(), {
+      runExpandNode(id, searchMatcher.value.matcher, {
         failed: filter.failed,
         success: filter.success,
         skipped: filter.skipped,
@@ -189,7 +189,7 @@ export class ExplorerTree {
 
   expandAllNodes() {
     queueMicrotask(() => {
-      runExpandAll(search.value.trim(), {
+      runExpandAll(searchMatcher.value.matcher, {
         failed: filter.failed,
         success: filter.success,
         skipped: filter.skipped,
@@ -200,7 +200,7 @@ export class ExplorerTree {
 
   filterNodes() {
     queueMicrotask(() => {
-      runFilter(search.value.trim(), {
+      runFilter(searchMatcher.value.matcher, {
         failed: filter.failed,
         success: filter.success,
         skipped: filter.skipped,

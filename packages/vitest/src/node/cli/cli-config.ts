@@ -785,8 +785,20 @@ export const cliOptionsConfig: VitestCLIOptions = {
       return value
     },
   },
+  listTags: {
+    description: 'List all available tags instead of running tests. `--list-tags=json` will output tags in JSON format, unless there are no tags.',
+    argument: '[type]',
+  },
   clearCache: {
     description: 'Delete all Vitest caches, including `experimental.fsModuleCache`, without running any tests. This will reduce the performance in the subsequent test run.',
+  },
+  tagsFilter: {
+    description: 'Run only tests with the specified tags. You can use logical operators `&&` (and), `||` (or) and `!` (not) to create complex expressions, see [Test Tags](https://vitest.dev/guide/test-tags#syntax) for more information.',
+    argument: '<expression>',
+    array: true,
+  },
+  strictTags: {
+    description: 'Should Vitest throw an error if test has a tag that is not defined in the config. (default: `true`)',
   },
 
   experimental: {
@@ -844,6 +856,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
   filesOnly: null,
   projects: null,
   watchTriggerPatterns: null,
+  tags: null,
 }
 
 export const benchCliOptionsConfig: Pick<

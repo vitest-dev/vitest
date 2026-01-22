@@ -1,6 +1,7 @@
 export type {
   CancelReason,
   FileSpecification,
+  TestTagDefinition,
   VitestRunner,
   VitestRunnerConfig,
   VitestRunnerConstructor,
@@ -55,6 +56,7 @@ export type {
   TestContext,
   TestFunction,
   TestOptions,
+  TestTags,
   Use,
   VisualRegressionArtifact,
 } from './types/tasks'

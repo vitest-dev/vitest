@@ -97,6 +97,11 @@ export default defineConfig({
         },
       },
     },
+    tags: [
+      { name: 'e2e', priority: 10 },
+      { name: 'test', priority: 5 },
+      { name: 'browser', priority: 1 },
+    ],
     alias: {
       '#src': resolve(dir, './src'),
     },

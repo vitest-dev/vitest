@@ -1,6 +1,6 @@
 import type { FakeTimerInstallOpts } from '@sinonjs/fake-timers'
 import type { PrettyFormatOptions } from '@vitest/pretty-format'
-import type { SequenceHooks, SequenceSetupFiles, SerializableRetry } from '@vitest/runner'
+import type { SequenceHooks, SequenceSetupFiles, SerializableRetry, TestTagDefinition } from '@vitest/runner'
 import type { SnapshotStateOptions } from '@vitest/snapshot'
 import type { Arrayable } from '@vitest/utils'
 import type { SerializedDiffOptions } from '@vitest/utils/diff'
@@ -879,6 +879,19 @@ export interface InlineConfig {
      */
     nodeLoader?: boolean
   }
+
+  /**
+   * Define tags available in your test files.
+   *
+   * If test defines a tag that is not listed here, an error will be thrown.
+   */
+  tags?: TestTagDefinition[]
+
+  /**
+   * Should Vitest throw an error if test has a tag that is not defined in the config.
+   * @default true
+   */
+  strictTags?: boolean
 }
 
 export interface TypecheckConfig {
@@ -1014,6 +1027,17 @@ export interface UserConfig extends InlineConfig {
    * @experimental
    */
   clearCache?: boolean
+
+  /**
+   * Tags expression to filter tests to run. Multiple filters will be applied using AND logic.
+   * @see {@link https://vitest.dev/guide/test-tags#syntax}
+   */
+  tagsFilter?: string[]
+
+  /**
+   * Log all available tags instead of running tests.
+   */
+  listTags?: boolean | 'json'
 }
 
 export type OnUnhandledErrorCallback = (error: (TestError | Error) & { type: string }) => boolean | void
@@ -1046,6 +1070,7 @@ export interface ResolvedConfig
     | 'name'
     | 'vmMemoryLimit'
     | 'fileParallelism'
+    | 'tagsFilter'
   > {
   mode: VitestRunMode
 
@@ -1116,6 +1141,7 @@ export interface ResolvedConfig
 
   vmMemoryLimit?: UserConfig['vmMemoryLimit']
   dumpDir?: string
+  tagsFilter?: string[]
 }
 
 type NonProjectOptions
@@ -1145,6 +1171,7 @@ type NonProjectOptions
     | 'inspectBrk'
     | 'coverage'
     | 'watchTriggerPatterns'
+    | 'tagsFilter' // CLI option only
 
 export interface ServerDepsOptions {
   /**

@@ -1,6 +1,6 @@
 import type { File, Task, TaskResultPack, Test, TestArtifact } from '@vitest/runner'
 import type { Arrayable } from '@vitest/utils'
-import type { CollectFilteredTests, CollectorInfo, Filter, FilteredTests } from '~/composables/explorer/types'
+import type { CollectFilteredTests, CollectorInfo, Filter, FilteredTests, SearchMatcher } from '~/composables/explorer/types'
 import { isTestCase } from '@vitest/runner/utils'
 import { toArray } from '@vitest/utils/helpers'
 import { client, findById } from '~/composables/client'
@@ -29,7 +29,7 @@ export { hasFailedSnapshot }
 export function runLoadFiles(
   remoteFiles: File[],
   collect: boolean,
-  search: string,
+  search: SearchMatcher,
   filter: Filter,
 ) {
   remoteFiles.map(f => [`${f.filepath}:${f.projectName || ''}`, f] as const)
@@ -37,7 +37,7 @@ export function runLoadFiles(
     .map(([, f]) => createOrUpdateFileNode(f, collect))
 
   uiFiles.value = [...explorerTree.root.tasks]
-  runFilter(search.trim(), {
+  runFilter(search, {
     failed: filter.failed,
     success: filter.success,
     skipped: filter.skipped,
@@ -94,7 +94,7 @@ export function runCollect(
   start: boolean,
   end: boolean,
   summary: CollectorInfo,
-  search: string,
+  search: SearchMatcher,
   filter: Filter,
   executionTime: number,
 ) {
@@ -219,7 +219,7 @@ function traverseReceivedFiles(collect: boolean) {
 }
 
 function doRunFilter(
-  search: string,
+  search: SearchMatcher,
   filter: Filter,
   end = false,
 ) {
@@ -257,7 +257,7 @@ function doRunFilter(
   }
 }
 
-function refreshExplorer(search: string, filter: Filter, end: boolean) {
+function refreshExplorer(search: SearchMatcher, filter: Filter, end: boolean) {
   runFilter(search, filter)
   // update only at the end
   if (end) {
@@ -384,7 +384,7 @@ function collectData(
   summary.totalTests = data.totalTests
 }
 
-function collectTests(file: File, search = '', filter?: Filter) {
+function collectTests(file: File, search: SearchMatcher = () => true, filter?: Filter) {
   const data = {
     failed: 0,
     success: 0,
@@ -432,7 +432,7 @@ export function collectTestsTotalData(
   onlyTests: boolean,
   tests: File[],
   filesSummary: FilteredTests,
-  search: string,
+  search: SearchMatcher,
   filter: Filter,
 ) {
   if (onlyTests) {

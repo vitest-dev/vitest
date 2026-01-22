@@ -1,4 +1,6 @@
 import type { CliOptions, TestCase, TestModule, TestSuite } from 'vitest/node'
+import { runVitest } from '#test-utils'
+import { resolve } from 'pathe'
 import { expect, test } from 'vitest'
 import { createVitest, rolldownVersion } from 'vitest/node'
 
@@ -773,7 +775,283 @@ test('collects tests when test functions are globals', async () => {
   `)
 })
 
-async function collectTests(code: string, options?: CliOptions) {
+test('collects tests with tags as a string', async () => {
+  const testModule = await collectTests(`
+    import { test } from 'vitest'
+
+    describe('tagged tests', () => {
+      test('test with single tag', { tags: 'slow' }, () => {})
+      test('test without tags', () => {})
+    })
+`)
+  expect(testModule).toMatchInlineSnapshot(`
+    {
+      "tagged tests": {
+        "test with single tag": {
+          "errors": [],
+          "fullName": "tagged tests > test with single tag",
+          "id": "-1732721377_0_0",
+          "location": "5:6",
+          "mode": "run",
+          "state": "pending",
+          "tags": [
+            "slow",
+          ],
+        },
+        "test without tags": {
+          "errors": [],
+          "fullName": "tagged tests > test without tags",
+          "id": "-1732721377_0_1",
+          "location": "6:6",
+          "mode": "run",
+          "state": "pending",
+        },
+      },
+    }
+  `)
+})
+
+test('collects tests with tags as an array', async () => {
+  const testModule = await collectTests(`
+    import { test } from 'vitest'
+
+    describe('tagged tests', () => {
+      test('test with multiple tags', { tags: ['slow', 'integration'] }, () => {})
+      test('test with empty tags', { tags: [] }, () => {})
+    })
+`)
+  expect(testModule).toMatchInlineSnapshot(`
+    {
+      "tagged tests": {
+        "test with empty tags": {
+          "errors": [],
+          "fullName": "tagged tests > test with empty tags",
+          "id": "-1732721377_0_1",
+          "location": "6:6",
+          "mode": "run",
+          "state": "pending",
+        },
+        "test with multiple tags": {
+          "errors": [],
+          "fullName": "tagged tests > test with multiple tags",
+          "id": "-1732721377_0_0",
+          "location": "5:6",
+          "mode": "run",
+          "state": "pending",
+          "tags": [
+            "slow",
+            "integration",
+          ],
+        },
+      },
+    }
+  `)
+})
+
+test('collects suites with tags', async () => {
+  const testModule = await collectTests(`
+    import { test, describe } from 'vitest'
+
+    describe('tagged suite', { tags: ['unit'] }, () => {
+      test('test in tagged suite', () => {})
+    })
+`)
+  expect(testModule).toMatchInlineSnapshot(`
+    {
+      "tagged suite": {
+        "test in tagged suite": {
+          "errors": [],
+          "fullName": "tagged suite > test in tagged suite",
+          "id": "-1732721377_0_0",
+          "location": "5:6",
+          "mode": "run",
+          "state": "pending",
+          "tags": [
+            "unit",
+          ],
+        },
+      },
+    }
+  `)
+})
+
+test('inherits tags from parent suites', async () => {
+  const testModule = await collectTests(`
+    import { test, describe } from 'vitest'
+
+    describe('outer suite', { tags: ['slow'] }, () => {
+      test('test inherits parent tag', () => {})
+
+      describe('inner suite', { tags: ['integration'] }, () => {
+        test('test inherits both tags', () => {})
+        test('test with own tag', { tags: ['unit'] }, () => {})
+      })
+    })
+`)
+  expect(testModule).toMatchInlineSnapshot(`
+    {
+      "outer suite": {
+        "inner suite": {
+          "test inherits both tags": {
+            "errors": [],
+            "fullName": "outer suite > inner suite > test inherits both tags",
+            "id": "-1732721377_0_1_0",
+            "location": "8:8",
+            "mode": "run",
+            "state": "pending",
+            "tags": [
+              "slow",
+              "integration",
+            ],
+          },
+          "test with own tag": {
+            "errors": [],
+            "fullName": "outer suite > inner suite > test with own tag",
+            "id": "-1732721377_0_1_1",
+            "location": "9:8",
+            "mode": "run",
+            "state": "pending",
+            "tags": [
+              "slow",
+              "integration",
+              "unit",
+            ],
+          },
+        },
+        "test inherits parent tag": {
+          "errors": [],
+          "fullName": "outer suite > test inherits parent tag",
+          "id": "-1732721377_0_0",
+          "location": "5:6",
+          "mode": "run",
+          "state": "pending",
+          "tags": [
+            "slow",
+          ],
+        },
+      },
+    }
+  `)
+})
+
+test('collects tags with other options', async () => {
+  const testModule = await collectTests(`
+    import { test } from 'vitest'
+
+    describe('tests with options', () => {
+      test('test with tags and timeout', { tags: ['slow'], timeout: 5000 }, () => {})
+      test.skip('skipped test with tags', { tags: ['unit'] }, () => {})
+    })
+`)
+  expect(testModule).toMatchInlineSnapshot(`
+    {
+      "tests with options": {
+        "skipped test with tags": {
+          "errors": [],
+          "fullName": "tests with options > skipped test with tags",
+          "id": "-1732721377_0_1",
+          "location": "6:6",
+          "mode": "skip",
+          "state": "skipped",
+          "tags": [
+            "unit",
+          ],
+        },
+        "test with tags and timeout": {
+          "errors": [],
+          "fullName": "tests with options > test with tags and timeout",
+          "id": "-1732721377_0_0",
+          "location": "5:6",
+          "mode": "run",
+          "state": "pending",
+          "tags": [
+            "slow",
+          ],
+        },
+      },
+    }
+  `)
+})
+
+test('reports error when using undefined tag', async () => {
+  const testModule = await collectTestModule(`
+    import { test } from 'vitest'
+
+    describe('tests with undefined tag', () => {
+      test('test with undefined tag', { tags: ['undefined-tag'] }, () => {})
+    })
+`)
+  expect(testModule.errors()[0].message).toMatchInlineSnapshot(`
+    "The tag "undefined-tag" is not defined in the configuration. Available tags are:
+    - slow
+    - integration
+    - unit"
+  `)
+})
+
+test('@module-tag docs inject test tags', async () => {
+  const { ctx } = await runVitest({
+    config: false,
+    root: './fixtures/file-tags',
+    standalone: true,
+    watch: true,
+    tags: [
+      { name: 'file' },
+      { name: 'file-2' },
+      { name: 'file/slash' },
+      { name: 'test' },
+    ],
+  })
+  const testModule = await ctx!.experimental_parseSpecification(
+    ctx!.getRootProject().createSpecification(resolve(ctx!.config.root, './valid-file-tags.test.ts')),
+  )
+  expect(testTree(testModule)).toMatchInlineSnapshot(`
+    {
+      "suite 1": {
+        "test 1": {
+          "errors": [],
+          "fullName": "suite 1 > test 1",
+          "id": "492646822_0_0",
+          "location": "10:2",
+          "mode": "run",
+          "state": "pending",
+          "tags": [
+            "file",
+            "file-2",
+            "file/slash",
+            "test",
+          ],
+        },
+      },
+    }
+  `)
+})
+
+test('invalid @module-tag throws and error', async () => {
+  const { ctx } = await runVitest({
+    config: false,
+    root: './fixtures/file-tags',
+    include: ['./error-file-tags.test.ts'],
+    tags: [
+      { name: 'file' },
+      { name: 'file-2' },
+      { name: 'file/slash' },
+      { name: 'test' },
+    ],
+  })
+  const testModule = await ctx!.experimental_parseSpecification(
+    ctx!.getRootProject().createSpecification(resolve(ctx!.config.root, './error-file-tags.test.ts')),
+  )
+  expect(testModule.errors()[0].message).toMatchInlineSnapshot(`
+    "The tag "invalid" is not defined in the configuration. Available tags are:
+    - file
+    - file-2
+    - file/slash
+    - test"
+  `)
+})
+
+async function collectTestModule(code: string, options?: CliOptions) {
   const vitest = await createVitest(
     'test',
     {
@@ -781,6 +1059,11 @@ async function collectTests(code: string, options?: CliOptions) {
       includeTaskLocation: true,
       allowOnly: true,
       ...options,
+      tags: [
+        { name: 'slow' },
+        { name: 'integration' },
+        { name: 'unit' },
+      ],
     },
     {
       plugins: [
@@ -795,10 +1078,13 @@ async function collectTests(code: string, options?: CliOptions) {
       ],
     },
   )
-  const testModule = await vitest.experimental_parseSpecification(
+  return vitest.experimental_parseSpecification(
     vitest.getRootProject().createSpecification('simple.test.ts'),
   )
-  return testTree(testModule)
+}
+
+async function collectTests(code: string, options?: CliOptions) {
+  return testTree(await collectTestModule(code, options))
 }
 
 function testTree(module: TestModule | TestSuite, tree: any = {}) {
@@ -832,5 +1118,6 @@ function testItem(testCase: TestCase) {
     errors: testCase.result().errors || [],
     ...(testCase.task.dynamic ? { dynamic: true } : {}),
     ...(testCase.options.each ? { each: true } : {}),
+    ...(testCase.task.tags?.length ? { tags: testCase.task.tags } : {}),
   }
 }

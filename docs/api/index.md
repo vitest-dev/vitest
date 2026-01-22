@@ -29,8 +29,14 @@ interface TestOptions {
    * @default 0
    */
   repeats?: number
+  /**
+   * Custom tags of the test. Useful for filtering tests.
+   */
+  tags?: string[] | string
 }
 ```
+
+<!-- TODO: rewrite this into separate test files with options highlighted -->
 
 When a test function returns a promise, the runner will wait until it is resolved to collect async expectations. If the promise is rejected, the test will fail.
 
