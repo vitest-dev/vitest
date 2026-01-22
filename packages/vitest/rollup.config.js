@@ -31,6 +31,7 @@ const entries = {
   'reporters': 'src/public/reporters.ts',
   'worker': 'src/public/worker.ts',
   'module-evaluator': 'src/runtime/moduleRunner/moduleEvaluator.ts',
+  'nodejs-worker-loader': 'src/runtime/nodejsWorkerLoader.ts',
 
   // for performance reasons we bundle them separately so we don't import everything at once
   // 'worker': 'src/runtime/worker.ts',
@@ -78,7 +79,7 @@ const external = [
   'vitest/browser',
   'vite/module-runner',
   '@vitest/mocker',
-  '@vitest/mocker/node',
+  /@vitest\/mocker\/\w+/,
   '@vitest/utils/diff',
   '@vitest/utils/error',
   '@vitest/utils/source-map',

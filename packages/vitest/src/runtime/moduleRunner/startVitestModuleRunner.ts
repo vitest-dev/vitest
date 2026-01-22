@@ -7,8 +7,8 @@ import type { CreateImportMeta } from './moduleRunner'
 import fs from 'node:fs'
 import { isBareImport } from '@vitest/utils/helpers'
 import { isBrowserExternal, isBuiltin, toBuiltin } from '../../utils/modules'
+import { getSafeWorkerState } from '../utils'
 import { getCachedVitestImport } from './cachedResolver'
-import { listenForErrors } from './errorCatcher'
 import { unwrapId, VitestModuleEvaluator } from './moduleEvaluator'
 import { VitestMocker } from './moduleMocker'
 import { VitestModuleRunner } from './moduleRunner'
@@ -38,15 +38,8 @@ const isWindows = process.platform === 'win32'
 export function startVitestModuleRunner(options: ContextModuleRunnerOptions): VitestModuleRunner {
   const traces = options.traces
   const state = (): WorkerGlobalState =>
-    // @ts-expect-error injected untyped global
-    globalThis.__vitest_worker__ || options.state
+    getSafeWorkerState() || options.state
   const rpc = () => state().rpc
-
-  process.exit = (code = process.exitCode || 0): never => {
-    throw new Error(`process.exit unexpectedly called with "${code}"`)
-  }
-
-  listenForErrors(state)
 
   const environment = () => {
     const environment = state().environment
@@ -158,7 +151,7 @@ export function startVitestModuleRunner(options: ContextModuleRunnerOptions): Vi
             || (typeof cause?.message === 'string' && cause.message.startsWith('Cannot find module \''))
           ) {
             const error = new Error(
-              `Cannot find ${isBareImport(id) ? 'package' : 'module'} '${id}'${importer ? ` imported from '${importer}'` : ''}`,
+              `Cannot find ${isBareImport(id) ? 'package' : 'module'} '${id}'${importer ? ` imported from ${importer}` : ''}`,
               { cause },
             ) as Error & { code: string }
             error.code = 'ERR_MODULE_NOT_FOUND'

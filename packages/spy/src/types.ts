@@ -406,6 +406,37 @@ export type PartialMock<T extends Procedure | Constructable = Procedure> = Mock<
   >
 >
 
+type DeepPartial<T> = T extends Procedure
+  ? T
+  : T extends Array<infer U>
+    ? Array<DeepPartial<U>>
+    : T extends object
+      ? { [K in keyof T]?: DeepPartial<T[K]> }
+      : T
+
+type DeepPartialMaybePromise<T> = T extends Promise<Awaited<T>>
+  ? Promise<DeepPartial<Awaited<T>>>
+  : DeepPartial<T>
+
+type DeepPartialResultFunction<T> = T extends Constructable
+  ? ({
+    new (...args: ConstructorParameters<T>): InstanceType<T>
+  })
+  | ({
+    (this: InstanceType<T>, ...args: ConstructorParameters<T>): void
+  })
+  : T extends Procedure
+    ? (...args: Parameters<T>) => DeepPartialMaybePromise<ReturnType<T>>
+    : T
+
+type DeepPartialMock<T extends Procedure | Constructable = Procedure> = Mock<
+  DeepPartialResultFunction<
+    T extends Mock
+      ? NonNullable<ReturnType<T['getMockImplementation']>>
+      : T
+  >
+>
+
 export type MaybeMockedConstructor<T> = T extends Constructable
   ? Mock<T>
   : T
@@ -417,7 +448,7 @@ export type PartiallyMockedFunction<T extends Procedure | Constructable> = Parti
 }
 export type MockedFunctionDeep<T extends Procedure | Constructable> = Mock<T>
   & MockedObjectDeep<T>
-export type PartiallyMockedFunctionDeep<T extends Procedure | Constructable> = PartialMock<T>
+export type PartiallyMockedFunctionDeep<T extends Procedure | Constructable> = DeepPartialMock<T>
   & MockedObjectDeep<T>
 export type MockedObject<T> = MaybeMockedConstructor<T> & {
   [K in Methods<T>]: T[K] extends Procedure ? MockedFunction<T[K]> : T[K];

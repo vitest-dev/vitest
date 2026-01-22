@@ -1,5 +1,6 @@
 import type { PrettyFormatOptions } from '@vitest/pretty-format'
 import {
+  createDOMElementFilter,
   format as prettyFormat,
   plugins as prettyFormatPlugins,
 } from '@vitest/pretty-format'
@@ -42,22 +43,39 @@ const PLUGINS = [
 
 export interface StringifyOptions extends PrettyFormatOptions {
   maxLength?: number
+  filterNode?: string | ((node: any) => boolean)
 }
 
 export function stringify(
   object: unknown,
   maxDepth = 10,
-  { maxLength, ...options }: StringifyOptions = {},
+  { maxLength, filterNode, ...options }: StringifyOptions = {},
 ): string {
   const MAX_LENGTH = maxLength ?? 10000
   let result
+
+  // Convert string selector to filter function
+  const filterFn = typeof filterNode === 'string'
+    ? createNodeFilterFromSelector(filterNode)
+    : filterNode
+
+  const plugins = filterFn
+    ? [
+        ReactTestComponent,
+        ReactElement,
+        createDOMElementFilter(filterFn),
+        DOMCollection,
+        Immutable,
+        AsymmetricMatcher,
+      ]
+    : PLUGINS
 
   try {
     result = prettyFormat(object, {
       maxDepth,
       escapeString: false,
       // min: true,
-      plugins: PLUGINS,
+      plugins,
       ...options,
     })
   }
@@ -67,15 +85,39 @@ export function stringify(
       maxDepth,
       escapeString: false,
       // min: true,
-      plugins: PLUGINS,
+      plugins,
       ...options,
     })
   }
 
   // Prevents infinite loop https://github.com/vitest-dev/vitest/issues/7249
   return result.length >= MAX_LENGTH && maxDepth > 1
-    ? stringify(object, Math.floor(Math.min(maxDepth, Number.MAX_SAFE_INTEGER) / 2), { maxLength, ...options })
+    ? stringify(object, Math.floor(Math.min(maxDepth, Number.MAX_SAFE_INTEGER) / 2), { maxLength, filterNode, ...options })
     : result
+}
+
+function createNodeFilterFromSelector(selector: string): (node: any) => boolean {
+  const ELEMENT_NODE = 1
+  const COMMENT_NODE = 8
+
+  return (node: any) => {
+    // Filter out comments
+    if (node.nodeType === COMMENT_NODE) {
+      return false
+    }
+
+    // Filter out elements matching the selector
+    if (node.nodeType === ELEMENT_NODE && node.matches) {
+      try {
+        return !node.matches(selector)
+      }
+      catch {
+        return true
+      }
+    }
+
+    return true
+  }
 }
 
 export const formatRegExp: RegExp = /%[sdjifoOc%]/g

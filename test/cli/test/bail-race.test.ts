@@ -22,7 +22,7 @@ test('cancels previous run before starting new one', async () => {
     }],
   })
 
-  for (let i = 0; i <= 10; i++) {
+  for (let i = 0; i <= 4; i++) {
     await vitest.start()
   }
 

@@ -108,6 +108,40 @@ describe('testing vi utils', () => {
       vi.mocked(fetchSomething).mockResolvedValue(new Response(null))
       vi.mocked(fetchSomething, { partial: true }).mockResolvedValue({ ok: false })
     }
+
+    // #8152
+    if (0) {
+      interface NestedObject {
+        level1: {
+          level2: {
+            value: string
+            count: number
+          }
+          name: string
+        }
+        items: string[]
+      }
+
+      const mockNestedFactory = vi.fn<() => NestedObject>()
+
+      vi.mocked(mockNestedFactory, { partial: true, deep: true }).mockReturnValue({
+        level1: { level2: {} },
+      })
+      vi.mocked(mockNestedFactory, { partial: true, deep: true }).mockReturnValue({
+        level1: {},
+      })
+      vi.mocked(mockNestedFactory, { partial: true, deep: true }).mockReturnValue({})
+      vi.mocked(mockNestedFactory, { partial: true, deep: true }).mockReturnValue({
+        items: ['a', 'b'],
+      })
+
+      const mockNestedAsyncFactory = vi.fn<() => Promise<NestedObject>>()
+
+      vi.mocked(mockNestedAsyncFactory, { partial: true, deep: true }).mockResolvedValue({
+        level1: { level2: {} },
+      })
+      vi.mocked(mockNestedAsyncFactory, { partial: true, deep: true }).mockResolvedValue({})
+    }
   })
 
   test('vi.mocked with classes', () => {

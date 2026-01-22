@@ -104,7 +104,7 @@ const meta = computed(() => {
     </div>
     <template v-else>
       <div bg="green-500/10" text="green-500 sm" p="x4 y2" m-2 rounded>
-        All tests passed in this file
+        The test has passed without any errors
       </div>
     </template>
     <template v-if="test.annotations.length">

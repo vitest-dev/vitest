@@ -114,6 +114,10 @@ export interface TaskBase {
    * @experimental
    */
   dynamic?: boolean
+  /**
+   * Custom tags of the task. Useful for filtering tasks.
+   */
+  tags?: string[]
 }
 
 export interface TaskPopulated extends TaskBase {
@@ -545,10 +549,6 @@ export interface TestOptions {
    */
   sequential?: boolean
   /**
-   * Whether the tasks of the suite run in a random order.
-   */
-  shuffle?: boolean
-  /**
    * Whether the test should be skipped.
    */
   skip?: boolean
@@ -564,6 +564,21 @@ export interface TestOptions {
    * Whether the test is expected to fail. If it does, the test will pass, otherwise it will fail.
    */
   fails?: boolean
+  /**
+   * Custom tags of the test. Useful for filtering tests.
+   */
+  tags?: keyof TestTags extends never
+    ? string[] | string
+    : TestTags[keyof TestTags] | TestTags[keyof TestTags][]
+}
+
+export interface TestTags {}
+
+export interface SuiteOptions extends TestOptions {
+  /**
+   * Whether the tasks of the suite run in a random order.
+   */
+  shuffle?: boolean
 }
 
 interface ExtendedAPI<ExtraContext> {
@@ -647,7 +662,7 @@ interface SuiteCollectorCallable<ExtraContext = object> {
   ): SuiteCollector<OverrideExtraContext>
   <OverrideExtraContext extends ExtraContext = ExtraContext>(
     name: string | Function,
-    options: TestOptions,
+    options: SuiteOptions,
     fn?: SuiteFactory<OverrideExtraContext>
   ): SuiteCollector<OverrideExtraContext>
 }
@@ -728,7 +743,7 @@ export interface TaskCustomOptions extends TestOptions {
 export interface SuiteCollector<ExtraContext = object> {
   readonly name: string
   readonly mode: RunMode
-  options?: TestOptions
+  options?: SuiteOptions
   type: 'collector'
   test: TestAPI<ExtraContext>
   tasks: (

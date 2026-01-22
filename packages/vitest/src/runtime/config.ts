@@ -1,6 +1,6 @@
 import type { FakeTimerInstallOpts } from '@sinonjs/fake-timers'
 import type { PrettyFormatOptions } from '@vitest/pretty-format'
-import type { SequenceHooks, SequenceSetupFiles, SerializableRetry } from '@vitest/runner'
+import type { SequenceHooks, SequenceSetupFiles, SerializableRetry, TestTagDefinition } from '@vitest/runner'
 import type { SnapshotEnvironment, SnapshotUpdateState } from '@vitest/snapshot'
 import type { SerializedDiffOptions } from '@vitest/utils/diff'
 
@@ -120,12 +120,17 @@ export interface SerializedConfig {
   experimental: {
     fsModuleCache: boolean
     printImportBreakdown: boolean | undefined
+    viteModuleRunner: boolean
+    nodeLoader: boolean
     openTelemetry: {
       enabled: boolean
       sdkPath?: string
       browserSdkPath?: string
     } | undefined
   }
+  tags: TestTagDefinition[]
+  tagsFilter: string[] | undefined
+  strictTags: boolean
 }
 
 export interface SerializedCoverageConfig {
