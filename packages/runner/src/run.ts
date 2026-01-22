@@ -24,7 +24,7 @@ import { collectTests } from './collect'
 import { abortContextSignal, getFileContext } from './context'
 import { PendingError, TestRunAbortError } from './errors'
 import { callFixtureCleanup } from './fixture'
-import { getBeforeHookCleanupCallback } from './hooks'
+import { getAroundEachHookStackTrace, getAroundEachHookTimeout, getBeforeHookCleanupCallback } from './hooks'
 import { getFn, getHooks } from './map'
 import { addRunningTest, getRunningTests, setCurrentTest } from './test-state'
 import { limitConcurrency } from './utils/limit-concurrency'
@@ -228,6 +228,45 @@ function getAroundEachHooks(suite: Suite): AroundEachListener[] {
   return hooks
 }
 
+function makeAroundEachTimeoutError(phase: 'setup' | 'teardown', timeout: number, stackTraceError?: Error) {
+  const message = `The ${phase} phase of "aroundEach" hook timed out after ${timeout}ms.`
+  const error = new Error(message)
+  if (stackTraceError?.stack) {
+    error.stack = stackTraceError.stack.replace(stackTraceError.message, error.message)
+  }
+  return error
+}
+
+function createTimeoutPromise(
+  timeout: number,
+  phase: 'setup' | 'teardown',
+  stackTraceError: Error | undefined,
+  test: Test,
+  timers: { setTimeout: typeof globalThis.setTimeout; clearTimeout: typeof globalThis.clearTimeout },
+): { promise: Promise<never>; clear: () => void } {
+  let timer: ReturnType<typeof timers.setTimeout> | undefined
+
+  const promise = new Promise<never>((_, reject) => {
+    if (timeout > 0 && timeout !== Number.POSITIVE_INFINITY) {
+      timer = timers.setTimeout(() => {
+        const error = makeAroundEachTimeoutError(phase, timeout, stackTraceError)
+        abortContextSignal(test.context, error)
+        reject(error)
+      }, timeout)
+      timer.unref?.()
+    }
+  })
+
+  const clear = () => {
+    if (timer) {
+      timers.clearTimeout(timer)
+      timer = undefined
+    }
+  }
+
+  return { promise, clear }
+}
+
 async function callAroundEachHooks(
   suite: Suite,
   test: Test,
@@ -240,23 +279,106 @@ async function callAroundEachHooks(
     return
   }
 
+  const timers = getSafeTimers()
+
   const runNextHook = async (index: number): Promise<void> => {
     if (index >= hooks.length) {
       return runTest()
     }
 
     const hook = hooks[index]
+    const timeout = getAroundEachHookTimeout(hook)
+    const stackTraceError = getAroundEachHookStackTrace(hook)
+
     let useCalled = false
-    const use = () => {
+    let setupTimeout: { promise: Promise<never>; clear: () => void } | undefined
+    let teardownTimeout: { promise: Promise<never>; clear: () => void } | undefined
+
+    // Promise that resolves when use() is called (setup phase complete)
+    let resolveUseCalled!: () => void
+    const useCalledPromise = new Promise<void>((resolve) => {
+      resolveUseCalled = resolve
+    })
+
+    // Promise that resolves when use() returns (inner hooks complete, teardown phase starts)
+    let resolveUseReturned!: () => void
+    const useReturnedPromise = new Promise<void>((resolve) => {
+      resolveUseReturned = resolve
+    })
+
+    // Promise that resolves when hook completes
+    let resolveHookComplete!: () => void
+    let rejectHookComplete!: (error: Error) => void
+    const hookCompletePromise = new Promise<void>((resolve, reject) => {
+      resolveHookComplete = resolve
+      rejectHookComplete = reject
+    })
+
+    const use = async () => {
       useCalled = true
-      return runNextHook(index + 1)
+      resolveUseCalled()
+
+      // Setup phase completed - clear setup timer
+      setupTimeout?.clear()
+
+      // Run inner hooks - don't time this against our teardown timeout
+      await runNextHook(index + 1)
+
+      // Start teardown timer after inner hooks complete - only times this hook's teardown code
+      teardownTimeout = createTimeoutPromise(timeout, 'teardown', stackTraceError, test, timers)
+
+      // Signal that use() is returning (teardown phase starting)
+      resolveUseReturned()
     }
-    await hook(use, test.context, suite)
-    if (!useCalled) {
-      throw new Error(
-        'The `runTest()` callback was not called in the `aroundEach` hook. '
-        + 'Make sure to call `runTest()` to run the test.',
-      )
+
+    // Start setup timeout
+    setupTimeout = createTimeoutPromise(timeout, 'setup', stackTraceError, test, timers)
+
+    // Run the hook in the background
+    ;(async () => {
+      try {
+        await hook(use, test.context, suite)
+        if (!useCalled) {
+          throw new Error(
+            'The `runTest()` callback was not called in the `aroundEach` hook. '
+            + 'Make sure to call `runTest()` to run the test.',
+          )
+        }
+        resolveHookComplete()
+      }
+      catch (error) {
+        rejectHookComplete(error as Error)
+      }
+    })()
+
+    // Wait for either: use() to be called OR hook to complete (error) OR setup timeout
+    try {
+      await Promise.race([
+        useCalledPromise,
+        hookCompletePromise,
+        setupTimeout.promise,
+      ])
+    }
+    finally {
+      setupTimeout.clear()
+    }
+
+    // Wait for use() to return (inner hooks complete) OR hook to complete (error during inner hooks)
+    await Promise.race([
+      useReturnedPromise,
+      hookCompletePromise,
+    ])
+
+    // Now teardownTimeout is guaranteed to be set
+    // Wait for hook to complete (teardown) OR teardown timeout
+    try {
+      await Promise.race([
+        hookCompletePromise,
+        teardownTimeout!.promise,
+      ])
+    }
+    finally {
+      teardownTimeout?.clear()
     }
   }
 
@@ -500,6 +622,8 @@ export async function runTest(test: Test, runner: VitestRunner): Promise<void> {
           retry: retryCount,
           repeats: repeatCount,
         })
+      }).catch((error) => {
+        failTask(test.result!, error, runner.config.diffOptions)
       })
 
       // skipped with new PendingError

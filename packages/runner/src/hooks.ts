@@ -22,6 +22,8 @@ function getDefaultHookTimeout() {
 
 const CLEANUP_TIMEOUT_KEY = Symbol.for('VITEST_CLEANUP_TIMEOUT')
 const CLEANUP_STACK_TRACE_KEY = Symbol.for('VITEST_CLEANUP_STACK_TRACE')
+const AROUND_EACH_TIMEOUT_KEY = Symbol.for('VITEST_AROUND_EACH_TIMEOUT')
+const AROUND_EACH_STACK_TRACE_KEY = Symbol.for('VITEST_AROUND_EACH_STACK_TRACE')
 
 export function getBeforeHookCleanupCallback(hook: Function, result: any, context?: TestContext): Function | undefined {
   if (typeof result === 'function') {
@@ -293,19 +295,29 @@ export function aroundEach<ExtraContext = object>(
   timeout?: number,
 ): void {
   assertTypes(fn, '"aroundEach" callback', ['function'])
-  const runner = getRunner()
+  const stackTraceError = new Error('STACK_TRACE_ERROR')
+  const resolvedTimeout = timeout ?? getDefaultHookTimeout()
+  // Store timeout and stack trace on the function for use in callAroundEachHooks
+  // Setup and teardown phases will each have their own timeout
   return getCurrentSuite<ExtraContext>().on(
     'aroundEach',
-    withTimeout(
-      // TODO: it passes `context`, but it's not wrapped with fixtures
-      fn,
-      // TODO: what should be the timeout? it runs _every_ hook inside (+a test)
-      timeout ?? (getDefaultHookTimeout() + runner.config.testTimeout + getDefaultHookTimeout()),
-      true,
-      new Error('STACK_TRACE_ERROR'),
-      ([, context], error) => abortContextSignal(context, error),
-    ),
+    Object.assign(fn, {
+      [AROUND_EACH_TIMEOUT_KEY]: resolvedTimeout,
+      [AROUND_EACH_STACK_TRACE_KEY]: stackTraceError,
+    }),
   )
+}
+
+export function getAroundEachHookTimeout(hook: Function): number {
+  return AROUND_EACH_TIMEOUT_KEY in hook && typeof hook[AROUND_EACH_TIMEOUT_KEY] === 'number'
+    ? hook[AROUND_EACH_TIMEOUT_KEY]
+    : getDefaultHookTimeout()
+}
+
+export function getAroundEachHookStackTrace(hook: Function): Error | undefined {
+  return AROUND_EACH_STACK_TRACE_KEY in hook && hook[AROUND_EACH_STACK_TRACE_KEY] instanceof Error
+    ? hook[AROUND_EACH_STACK_TRACE_KEY]
+    : undefined
 }
 
 function createTestHook<T>(
