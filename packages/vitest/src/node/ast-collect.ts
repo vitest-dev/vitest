@@ -13,6 +13,7 @@ import {
   someTasksAreOnly,
   validateTags,
 } from '@vitest/runner/utils'
+import { unique } from '@vitest/utils/helpers'
 import { ancestor as walkAst } from 'acorn-walk'
 import { relative } from 'pathe'
 import { parseAst } from 'vite'
@@ -358,7 +359,7 @@ function createFileTask(
       }
       // Inherit tags from parent suite and merge with own tags
       const parentTags = latestSuite.tags || []
-      const taskTags = [...new Set([...parentTags, ...definition.tags])]
+      const taskTags = unique([...parentTags, ...definition.tags])
 
       if (definition.type === 'suite') {
         const task: ParsedSuite = {

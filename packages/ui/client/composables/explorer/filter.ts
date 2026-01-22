@@ -243,11 +243,8 @@ function matchTask(
   search: SearchMatcher,
   filter: Filter,
 ) {
-  const match = search(task)
-  // const match = search.length === 0 || caseInsensitiveMatch(task.name, search)
-
   // search and filter will apply together
-  if (match) {
+  if (search(task)) {
     if (filter.success || filter.failed || filter.skipped) {
       if (matchState(task, filter)) {
         return true

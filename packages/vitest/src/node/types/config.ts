@@ -1020,7 +1020,7 @@ export interface UserConfig extends InlineConfig {
   /**
    * Log all available tags instead of running tests.
    */
-  listTags?: boolean | string
+  listTags?: boolean | 'json'
 }
 
 export type OnUnhandledErrorCallback = (error: (TestError | Error) & { type: string }) => boolean | void
