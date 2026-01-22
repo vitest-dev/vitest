@@ -264,7 +264,7 @@ function mocked<T>(
 
 Type helper for TypeScript. Just returns the object that was passed.
 
-When `partial` is `true` it will expect a `Partial<T>` as a return value. By default, this will only make TypeScript believe that the first level values are mocked. You can pass down `{ deep: true }` as a second argument to tell TypeScript that the whole object is mocked, if it actually is.
+When `partial` is `true` it will expect a `Partial<T>` as a return value. By default, this will only make TypeScript believe that the first level values are mocked. You can pass down `{ deep: true }` as a second argument to tell TypeScript that the whole object is mocked, if it actually is. You can pass down `{ partial: true, deep: true }` to make nested objects also partial recursively.
 
 ```ts [example.ts]
 export function add(x: number, y: number): number {
@@ -273,6 +273,10 @@ export function add(x: number, y: number): number {
 
 export function fetchSomething(): Promise<Response> {
   return fetch('https://vitest.dev/')
+}
+
+export function getUser(): { name: string; address: { city: string; zip: string } } {
+  return { name: 'John', address: { city: 'New York', zip: '10001' } }
 }
 ```
 
@@ -290,6 +294,13 @@ test('mock return value with only partially correct typing', async () => {
   vi.mocked(example.fetchSomething).mockResolvedValue(new Response('hello'))
   vi.mocked(example.fetchSomething, { partial: true }).mockResolvedValue({ ok: false })
   // vi.mocked(example.someFn).mockResolvedValue({ ok: false }) // this is a type error
+})
+
+test('mock return value with deep partial typing', async () => {
+  vi.mocked(example.getUser, { partial: true, deep: true }).mockReturnValue({
+    address: { city: 'Los Angeles' },
+  })
+  expect(example.getUser().address.city).toBe('Los Angeles')
 })
 ```
 
