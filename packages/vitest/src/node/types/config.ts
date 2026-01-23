@@ -870,7 +870,8 @@ export interface InlineConfig {
       print?: boolean
       /**
        * Maximum number of imports to collect and display.
-       * @default 10
+       * Defaults to 0, but inferred as 10 if `print` is true or UI is enabled.
+       * @default 0
        */
       limit?: number
     }
