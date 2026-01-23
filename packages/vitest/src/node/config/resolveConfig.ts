@@ -869,7 +869,6 @@ export function resolveConfig(
   }
   resolved.experimental.importDurations ??= {} as any
   resolved.experimental.importDurations.print ??= false
-  // Default limit to 0, but infer 10 if print or ui is enabled
   if (resolved.experimental.importDurations.limit == null) {
     const shouldCollect = resolved.experimental.importDurations.print || resolved.ui
     resolved.experimental.importDurations.limit = shouldCollect ? 10 : 0

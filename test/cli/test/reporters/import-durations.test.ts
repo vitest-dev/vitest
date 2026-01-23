@@ -9,6 +9,7 @@ describe('import durations', () => {
     const { exitCode, ctx } = await runVitest({
       root,
       include: ['**/import-durations.test.ts'],
+      experimental: { importDurations: { limit: 10 } },
     })
 
     expect(exitCode).toBe(0)
@@ -41,6 +42,7 @@ describe('import durations', () => {
     const { exitCode, ctx } = await runVitest({
       root,
       include: ['**/ok.test.ts'],
+      experimental: { importDurations: { limit: 10 } },
     })
 
     expect(exitCode).toBe(0)
@@ -59,6 +61,7 @@ describe('import durations', () => {
     const { exitCode, ctx } = await runVitest({
       root,
       include: ['**/import-durations-throws.test.ts'],
+      experimental: { importDurations: { limit: 10 } },
     })
 
     expect(exitCode).toBe(1)
@@ -93,15 +96,10 @@ describe('import durations', () => {
     expect(stdout).toContain('(Top 5)')
   })
 
-  it('should not collect importDurations when limit is 0', async () => {
+  it('should not collect importDurations by default', async () => {
     const { ctx } = await runVitest({
       root,
       include: ['**/import-durations.test.ts'],
-      experimental: {
-        importDurations: {
-          limit: 0,
-        },
-      },
     })
 
     const file = ctx!.state.getFiles()[0]

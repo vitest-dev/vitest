@@ -197,11 +197,11 @@ interface ImportDurationsOptions {
 }
 ```
 
-- **Default:** `{ print: false, limit: 0 }`
+- **Default:** `{ print: false, limit: 0 }` (`limit` is 10 if `print` or UI is enabled)
 
 Configure import duration collection and display.
 
-The `print` option controls CLI terminal output. The `limit` option controls how many imports to collect and display. By default, `limit` is `0`, but it is inferred as `10` when `print` is `true` or UI is enabled. [Vitest UI](/guide/ui#import-breakdown) can always toggle the breakdown display regardless of the `print` setting.
+The `print` option controls CLI terminal output. The `limit` option controls how many imports to collect and display. [Vitest UI](/guide/ui#import-breakdown) can always toggle the breakdown display regardless of the `print` setting.
 
 - Self: the time it took to import the module, excluding static imports;
 - Total: the time it took to import the module, including static imports. Note that this does not include `transform` time of the current module.
@@ -220,7 +220,7 @@ Print import breakdown to CLI terminal after tests finish. This only works with 
 ### experimental.importDurations.limit {#experimental-importdurationslimit}
 
 - **Type:** `number`
-- **Default:** `0` (inferred as `10` if `print` is `true` or UI is enabled)
+- **Default:** `0` (or `10` if `print` or UI is enabled)
 
 Maximum number of imports to collect and display in CLI output, [Vitest UI](/guide/ui#import-breakdown), and third-party reporters.
 
