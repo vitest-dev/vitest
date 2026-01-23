@@ -1,6 +1,6 @@
 import type { FakeTimerInstallOpts } from '@sinonjs/fake-timers'
 import type { PrettyFormatOptions } from '@vitest/pretty-format'
-import type { SequenceHooks, SequenceSetupFiles, SerializableRetry } from '@vitest/runner'
+import type { SequenceHooks, SequenceSetupFiles, SerializableRetry, TestTagDefinition } from '@vitest/runner'
 import type { SnapshotStateOptions } from '@vitest/snapshot'
 import type { Arrayable } from '@vitest/utils'
 import type { SerializedDiffOptions } from '@vitest/utils/diff'
@@ -874,7 +874,37 @@ export interface InlineConfig {
        */
       limit?: number
     }
+
+    /**
+     * Controls whether Vitest uses Vite's module runner to run the code or fallback to the native `import`.
+     *
+     * If Node.js cannot process the code, consider registering [module loader](https://nodejs.org/api/module.html#customization-hooks) via `execArgv`.
+     * @default true
+     */
+    viteModuleRunner?: boolean
+    /**
+     * If module runner is disabled, Vitest uses a module loader to transform files to support
+     * `import.meta.vitest` and `vi.mock`.
+     *
+     * If you don't use these features, you can disable this.
+     *
+     * This option only affects `loader.load` method, Vitest always defines a `loader.resolve` to populate the module graph.
+     */
+    nodeLoader?: boolean
   }
+
+  /**
+   * Define tags available in your test files.
+   *
+   * If test defines a tag that is not listed here, an error will be thrown.
+   */
+  tags?: TestTagDefinition[]
+
+  /**
+   * Should Vitest throw an error if test has a tag that is not defined in the config.
+   * @default true
+   */
+  strictTags?: boolean
 }
 
 export interface TypecheckConfig {
@@ -1010,6 +1040,17 @@ export interface UserConfig extends InlineConfig {
    * @experimental
    */
   clearCache?: boolean
+
+  /**
+   * Tags expression to filter tests to run. Multiple filters will be applied using AND logic.
+   * @see {@link https://vitest.dev/guide/test-tags#syntax}
+   */
+  tagsFilter?: string[]
+
+  /**
+   * Log all available tags instead of running tests.
+   */
+  listTags?: boolean | 'json'
 }
 
 export type OnUnhandledErrorCallback = (error: (TestError | Error) & { type: string }) => boolean | void
@@ -1042,6 +1083,7 @@ export interface ResolvedConfig
     | 'name'
     | 'vmMemoryLimit'
     | 'fileParallelism'
+    | 'tagsFilter'
   > {
   mode: VitestRunMode
 
@@ -1112,6 +1154,7 @@ export interface ResolvedConfig
 
   vmMemoryLimit?: UserConfig['vmMemoryLimit']
   dumpDir?: string
+  tagsFilter?: string[]
 
   experimental: Omit<Required<UserConfig>['experimental'], 'importDurations'> & {
     importDurations: {
@@ -1148,6 +1191,7 @@ type NonProjectOptions
     | 'inspectBrk'
     | 'coverage'
     | 'watchTriggerPatterns'
+    | 'tagsFilter' // CLI option only
 
 export interface ServerDepsOptions {
   /**

@@ -1,4 +1,4 @@
 import workerInit from './init-threads'
-import { runVmTests } from './vm'
+import { runVmTests, setupVmWorker } from './vm'
 
-workerInit({ runTests: runVmTests })
+workerInit({ runTests: runVmTests, setup: setupVmWorker })

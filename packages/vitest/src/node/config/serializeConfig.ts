@@ -133,7 +133,12 @@ export function serializeConfig(project: TestProject): SerializedConfig {
     experimental: {
       fsModuleCache: config.experimental.fsModuleCache ?? false,
       importDurations: config.experimental.importDurations,
+      viteModuleRunner: config.experimental.viteModuleRunner ?? true,
+      nodeLoader: config.experimental.nodeLoader ?? true,
       openTelemetry: config.experimental.openTelemetry,
     },
+    tags: config.tags || [],
+    tagsFilter: config.tagsFilter,
+    strictTags: config.strictTags ?? true,
   }
 }

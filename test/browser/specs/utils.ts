@@ -20,5 +20,6 @@ export async function runBrowserTests(
       headless: browser !== 'safari',
       ...config?.browser,
     } as TestUserConfig['browser'],
-  }, include, 'test', viteOverrides, runnerOptions)
+    $viteConfig: viteOverrides,
+  }, include, runnerOptions)
 }

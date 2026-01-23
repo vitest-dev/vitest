@@ -12,6 +12,8 @@ import type {
   TestAnnotation,
   TestArtifact,
   TestContext,
+  TestOptions,
+  TestTags,
 } from './tasks'
 
 /**
@@ -40,6 +42,9 @@ export interface VitestRunnerConfig {
   retry: SerializableRetry
   includeTaskLocation?: boolean
   diffOptions?: DiffOptions
+  tags: TestTagDefinition[]
+  tagsFilter?: string[]
+  strictTags: boolean
 }
 
 /**
@@ -47,9 +52,32 @@ export interface VitestRunnerConfig {
  */
 export interface FileSpecification {
   filepath: string
+  // file can be marked via a jsdoc comment to have tags,
+  // these are _not_ tags to filter tests by
+  fileTags?: string[]
   testLocations: number[] | undefined
   testNamePattern: RegExp | undefined
+  testTagsFilter: string[] | undefined
   testIds: string[] | undefined
+}
+
+export interface TestTagDefinition extends Omit<TestOptions, 'tags' | 'shuffle'> {
+  /**
+   * The name of the tag. This is what you use in the `tags` array in tests.
+   */
+  name: keyof TestTags extends never
+    ? string
+    : TestTags[keyof TestTags]
+  /**
+   * A description for the tag. This will be shown in the CLI help and UI.
+   */
+  description?: string
+  /**
+   * Priority for merging options when multiple tags with the same options are applied to a test.
+   *
+   * Lower number means higher priority. E.g., priority 1 takes precedence over priority 3.
+   */
+  priority?: number
 }
 
 export type VitestRunnerImportSource = 'collect' | 'setup'

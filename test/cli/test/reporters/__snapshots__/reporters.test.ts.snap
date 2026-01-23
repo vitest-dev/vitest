@@ -151,6 +151,7 @@ exports[`json reporter (no outputFile entry) 1`] = `
           },
           "meta": {},
           "status": "failed",
+          "tags": [],
           "title": "Math.sqrt()",
         },
         {
@@ -162,6 +163,7 @@ exports[`json reporter (no outputFile entry) 1`] = `
           "fullName": "suite JSON",
           "meta": {},
           "status": "passed",
+          "tags": [],
           "title": "JSON",
         },
         {
@@ -172,6 +174,7 @@ exports[`json reporter (no outputFile entry) 1`] = `
           "fullName": "suite async with timeout",
           "meta": {},
           "status": "skipped",
+          "tags": [],
           "title": "async with timeout",
         },
         {
@@ -183,6 +186,7 @@ exports[`json reporter (no outputFile entry) 1`] = `
           "fullName": "suite timeout",
           "meta": {},
           "status": "passed",
+          "tags": [],
           "title": "timeout",
         },
         {
@@ -194,6 +198,7 @@ exports[`json reporter (no outputFile entry) 1`] = `
           "fullName": "suite callback setup success ",
           "meta": {},
           "status": "passed",
+          "tags": [],
           "title": "callback setup success ",
         },
         {
@@ -205,6 +210,7 @@ exports[`json reporter (no outputFile entry) 1`] = `
           "fullName": "suite callback test success ",
           "meta": {},
           "status": "passed",
+          "tags": [],
           "title": "callback test success ",
         },
         {
@@ -216,6 +222,7 @@ exports[`json reporter (no outputFile entry) 1`] = `
           "fullName": "suite callback setup success done(false)",
           "meta": {},
           "status": "passed",
+          "tags": [],
           "title": "callback setup success done(false)",
         },
         {
@@ -227,6 +234,7 @@ exports[`json reporter (no outputFile entry) 1`] = `
           "fullName": "suite callback test success done(false)",
           "meta": {},
           "status": "passed",
+          "tags": [],
           "title": "callback test success done(false)",
         },
         {
@@ -237,6 +245,7 @@ exports[`json reporter (no outputFile entry) 1`] = `
           "fullName": "suite todo test",
           "meta": {},
           "status": "todo",
+          "tags": [],
           "title": "todo test",
         },
       ],
@@ -295,6 +304,7 @@ exports[`json reporter 1`] = `
           },
           "meta": {},
           "status": "failed",
+          "tags": [],
           "title": "Math.sqrt()",
         },
         {
@@ -306,6 +316,7 @@ exports[`json reporter 1`] = `
           "fullName": "suite JSON",
           "meta": {},
           "status": "passed",
+          "tags": [],
           "title": "JSON",
         },
         {
@@ -316,6 +327,7 @@ exports[`json reporter 1`] = `
           "fullName": "suite async with timeout",
           "meta": {},
           "status": "skipped",
+          "tags": [],
           "title": "async with timeout",
         },
         {
@@ -327,6 +339,7 @@ exports[`json reporter 1`] = `
           "fullName": "suite timeout",
           "meta": {},
           "status": "passed",
+          "tags": [],
           "title": "timeout",
         },
         {
@@ -338,6 +351,7 @@ exports[`json reporter 1`] = `
           "fullName": "suite callback setup success ",
           "meta": {},
           "status": "passed",
+          "tags": [],
           "title": "callback setup success ",
         },
         {
@@ -349,6 +363,7 @@ exports[`json reporter 1`] = `
           "fullName": "suite callback test success ",
           "meta": {},
           "status": "passed",
+          "tags": [],
           "title": "callback test success ",
         },
         {
@@ -360,6 +375,7 @@ exports[`json reporter 1`] = `
           "fullName": "suite callback setup success done(false)",
           "meta": {},
           "status": "passed",
+          "tags": [],
           "title": "callback setup success done(false)",
         },
         {
@@ -371,6 +387,7 @@ exports[`json reporter 1`] = `
           "fullName": "suite callback test success done(false)",
           "meta": {},
           "status": "passed",
+          "tags": [],
           "title": "callback test success done(false)",
         },
         {
@@ -381,6 +398,7 @@ exports[`json reporter 1`] = `
           "fullName": "suite todo test",
           "meta": {},
           "status": "todo",
+          "tags": [],
           "title": "todo test",
         },
       ],
@@ -444,6 +462,7 @@ exports[`json reporter with outputFile 2`] = `
           },
           "meta": {},
           "status": "failed",
+          "tags": [],
           "title": "Math.sqrt()",
         },
         {
@@ -455,6 +474,7 @@ exports[`json reporter with outputFile 2`] = `
           "fullName": "suite JSON",
           "meta": {},
           "status": "passed",
+          "tags": [],
           "title": "JSON",
         },
         {
@@ -465,6 +485,7 @@ exports[`json reporter with outputFile 2`] = `
           "fullName": "suite async with timeout",
           "meta": {},
           "status": "skipped",
+          "tags": [],
           "title": "async with timeout",
         },
         {
@@ -476,6 +497,7 @@ exports[`json reporter with outputFile 2`] = `
           "fullName": "suite timeout",
           "meta": {},
           "status": "passed",
+          "tags": [],
           "title": "timeout",
         },
         {
@@ -487,6 +509,7 @@ exports[`json reporter with outputFile 2`] = `
           "fullName": "suite callback setup success ",
           "meta": {},
           "status": "passed",
+          "tags": [],
           "title": "callback setup success ",
         },
         {
@@ -498,6 +521,7 @@ exports[`json reporter with outputFile 2`] = `
           "fullName": "suite callback test success ",
           "meta": {},
           "status": "passed",
+          "tags": [],
           "title": "callback test success ",
         },
         {
@@ -509,6 +533,7 @@ exports[`json reporter with outputFile 2`] = `
           "fullName": "suite callback setup success done(false)",
           "meta": {},
           "status": "passed",
+          "tags": [],
           "title": "callback setup success done(false)",
         },
         {
@@ -520,6 +545,7 @@ exports[`json reporter with outputFile 2`] = `
           "fullName": "suite callback test success done(false)",
           "meta": {},
           "status": "passed",
+          "tags": [],
           "title": "callback test success done(false)",
         },
         {
@@ -530,6 +556,7 @@ exports[`json reporter with outputFile 2`] = `
           "fullName": "suite todo test",
           "meta": {},
           "status": "todo",
+          "tags": [],
           "title": "todo test",
         },
       ],
@@ -593,6 +620,7 @@ exports[`json reporter with outputFile in non-existing directory 2`] = `
           },
           "meta": {},
           "status": "failed",
+          "tags": [],
           "title": "Math.sqrt()",
         },
         {
@@ -604,6 +632,7 @@ exports[`json reporter with outputFile in non-existing directory 2`] = `
           "fullName": "suite JSON",
           "meta": {},
           "status": "passed",
+          "tags": [],
           "title": "JSON",
         },
         {
@@ -614,6 +643,7 @@ exports[`json reporter with outputFile in non-existing directory 2`] = `
           "fullName": "suite async with timeout",
           "meta": {},
           "status": "skipped",
+          "tags": [],
           "title": "async with timeout",
         },
         {
@@ -625,6 +655,7 @@ exports[`json reporter with outputFile in non-existing directory 2`] = `
           "fullName": "suite timeout",
           "meta": {},
           "status": "passed",
+          "tags": [],
           "title": "timeout",
         },
         {
@@ -636,6 +667,7 @@ exports[`json reporter with outputFile in non-existing directory 2`] = `
           "fullName": "suite callback setup success ",
           "meta": {},
           "status": "passed",
+          "tags": [],
           "title": "callback setup success ",
         },
         {
@@ -647,6 +679,7 @@ exports[`json reporter with outputFile in non-existing directory 2`] = `
           "fullName": "suite callback test success ",
           "meta": {},
           "status": "passed",
+          "tags": [],
           "title": "callback test success ",
         },
         {
@@ -658,6 +691,7 @@ exports[`json reporter with outputFile in non-existing directory 2`] = `
           "fullName": "suite callback setup success done(false)",
           "meta": {},
           "status": "passed",
+          "tags": [],
           "title": "callback setup success done(false)",
         },
         {
@@ -669,6 +703,7 @@ exports[`json reporter with outputFile in non-existing directory 2`] = `
           "fullName": "suite callback test success done(false)",
           "meta": {},
           "status": "passed",
+          "tags": [],
           "title": "callback test success done(false)",
         },
         {
@@ -679,6 +714,7 @@ exports[`json reporter with outputFile in non-existing directory 2`] = `
           "fullName": "suite todo test",
           "meta": {},
           "status": "todo",
+          "tags": [],
           "title": "todo test",
         },
       ],
@@ -742,6 +778,7 @@ exports[`json reporter with outputFile object 2`] = `
           },
           "meta": {},
           "status": "failed",
+          "tags": [],
           "title": "Math.sqrt()",
         },
         {
@@ -753,6 +790,7 @@ exports[`json reporter with outputFile object 2`] = `
           "fullName": "suite JSON",
           "meta": {},
           "status": "passed",
+          "tags": [],
           "title": "JSON",
         },
         {
@@ -763,6 +801,7 @@ exports[`json reporter with outputFile object 2`] = `
           "fullName": "suite async with timeout",
           "meta": {},
           "status": "skipped",
+          "tags": [],
           "title": "async with timeout",
         },
         {
@@ -774,6 +813,7 @@ exports[`json reporter with outputFile object 2`] = `
           "fullName": "suite timeout",
           "meta": {},
           "status": "passed",
+          "tags": [],
           "title": "timeout",
         },
         {
@@ -785,6 +825,7 @@ exports[`json reporter with outputFile object 2`] = `
           "fullName": "suite callback setup success ",
           "meta": {},
           "status": "passed",
+          "tags": [],
           "title": "callback setup success ",
         },
         {
@@ -796,6 +837,7 @@ exports[`json reporter with outputFile object 2`] = `
           "fullName": "suite callback test success ",
           "meta": {},
           "status": "passed",
+          "tags": [],
           "title": "callback test success ",
         },
         {
@@ -807,6 +849,7 @@ exports[`json reporter with outputFile object 2`] = `
           "fullName": "suite callback setup success done(false)",
           "meta": {},
           "status": "passed",
+          "tags": [],
           "title": "callback setup success done(false)",
         },
         {
@@ -818,6 +861,7 @@ exports[`json reporter with outputFile object 2`] = `
           "fullName": "suite callback test success done(false)",
           "meta": {},
           "status": "passed",
+          "tags": [],
           "title": "callback test success done(false)",
         },
         {
@@ -828,6 +872,7 @@ exports[`json reporter with outputFile object 2`] = `
           "fullName": "suite todo test",
           "meta": {},
           "status": "todo",
+          "tags": [],
           "title": "todo test",
         },
       ],
@@ -891,6 +936,7 @@ exports[`json reporter with outputFile object in non-existing directory 2`] = `
           },
           "meta": {},
           "status": "failed",
+          "tags": [],
           "title": "Math.sqrt()",
         },
         {
@@ -902,6 +948,7 @@ exports[`json reporter with outputFile object in non-existing directory 2`] = `
           "fullName": "suite JSON",
           "meta": {},
           "status": "passed",
+          "tags": [],
           "title": "JSON",
         },
         {
@@ -912,6 +959,7 @@ exports[`json reporter with outputFile object in non-existing directory 2`] = `
           "fullName": "suite async with timeout",
           "meta": {},
           "status": "skipped",
+          "tags": [],
           "title": "async with timeout",
         },
         {
@@ -923,6 +971,7 @@ exports[`json reporter with outputFile object in non-existing directory 2`] = `
           "fullName": "suite timeout",
           "meta": {},
           "status": "passed",
+          "tags": [],
           "title": "timeout",
         },
         {
@@ -934,6 +983,7 @@ exports[`json reporter with outputFile object in non-existing directory 2`] = `
           "fullName": "suite callback setup success ",
           "meta": {},
           "status": "passed",
+          "tags": [],
           "title": "callback setup success ",
         },
         {
@@ -945,6 +995,7 @@ exports[`json reporter with outputFile object in non-existing directory 2`] = `
           "fullName": "suite callback test success ",
           "meta": {},
           "status": "passed",
+          "tags": [],
           "title": "callback test success ",
         },
         {
@@ -956,6 +1007,7 @@ exports[`json reporter with outputFile object in non-existing directory 2`] = `
           "fullName": "suite callback setup success done(false)",
           "meta": {},
           "status": "passed",
+          "tags": [],
           "title": "callback setup success done(false)",
         },
         {
@@ -967,6 +1019,7 @@ exports[`json reporter with outputFile object in non-existing directory 2`] = `
           "fullName": "suite callback test success done(false)",
           "meta": {},
           "status": "passed",
+          "tags": [],
           "title": "callback test success done(false)",
         },
         {
@@ -977,6 +1030,7 @@ exports[`json reporter with outputFile object in non-existing directory 2`] = `
           "fullName": "suite todo test",
           "meta": {},
           "status": "todo",
+          "tags": [],
           "title": "todo test",
         },
       ],

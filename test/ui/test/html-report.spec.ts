@@ -66,7 +66,7 @@ test.describe('html report', () => {
     await page.goto(pageUrl)
 
     // dashboard
-    await expect(page.locator('[aria-labelledby=tests]')).toContainText('14 Pass 1 Fail 15 Total')
+    await expect(page.locator('[aria-labelledby=tests]')).toContainText('15 Pass 1 Fail 16 Total')
 
     // unhandled errors
     await expect(page.getByTestId('unhandled-errors')).toContainText(
@@ -189,6 +189,22 @@ test.describe('html report', () => {
 
     await expect(annotations.last().getByRole('link')).toHaveAttribute('href', /data\/\w+/)
     await expect(annotations.nth(3).getByRole('link')).toHaveAttribute('href', /data\/\w+/)
+  })
+
+  test('tags filter', async ({ page }) => {
+    await page.goto(pageUrl)
+
+    await page.getByPlaceholder('Search...').fill('tag:db')
+
+    // only one test with the tag "db"
+    await expect(page.getByText('PASS (1)')).toBeVisible()
+    await expect(page.getByTestId('explorer-item').filter({ hasText: 'has tags' })).toBeVisible()
+
+    await page.getByPlaceholder('Search...').fill('tag:db && !flaky')
+    await expect(page.getByText('No matched test')).toBeVisible()
+
+    await page.getByPlaceholder('Search...').fill('tag:unknown')
+    await expect(page.getByText('The tag pattern "unknown" is not defined in the configuration')).toBeVisible()
   })
 
   test('visual regression in the report tab', async ({ page }) => {

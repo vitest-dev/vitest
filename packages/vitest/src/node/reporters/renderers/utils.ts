@@ -149,15 +149,29 @@ export function getStateString(
     return c.dim(`no ${name}`)
   }
 
-  const passed = tasks.reduce((acc, i) => i.result?.state === 'pass' ? acc + 1 : acc, 0)
+  const passed = tasks.reduce((acc, i) => {
+    // Exclude expected failures from passed count
+    if (i.result?.state === 'pass' && i.type === 'test' && i.fails) {
+      return acc
+    }
+    return i.result?.state === 'pass' ? acc + 1 : acc
+  }, 0)
   const failed = tasks.reduce((acc, i) => i.result?.state === 'fail' ? acc + 1 : acc, 0)
   const skipped = tasks.reduce((acc, i) => i.mode === 'skip' ? acc + 1 : acc, 0)
   const todo = tasks.reduce((acc, i) => i.mode === 'todo' ? acc + 1 : acc, 0)
+  const expectedFail = tasks.reduce((acc, i) => {
+    // Count tests that are marked as .fails and passed (which means they failed as expected)
+    if (i.result?.state === 'pass' && i.type === 'test' && i.fails) {
+      return acc + 1
+    }
+    return acc
+  }, 0)
 
   return (
     [
       failed ? c.bold(c.red(`${failed} failed`)) : null,
       passed ? c.bold(c.green(`${passed} passed`)) : null,
+      expectedFail ? c.cyan(`${expectedFail} expected fail`) : null,
       skipped ? c.yellow(`${skipped} skipped`) : null,
       todo ? c.gray(`${todo} todo`) : null,
     ]

@@ -7,6 +7,10 @@ export default defineConfig({
     coverage: {
       reportOnFailure: true,
     },
+    tags: [
+      { name: 'db' },
+      { name: 'flaky' },
+    ],
     projects: [{
       extends: true,
       test: {
