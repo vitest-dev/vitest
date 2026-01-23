@@ -238,7 +238,9 @@ const test = base.extend<{ db: Database; user: User }>({
   },
 })
 
-aroundEach(async (runTest, { db }) => {
+// note that `aroundEach` is available on test
+// for a better TypeScript support of fixtures
+test.aroundEach(async (runTest, { db }) => {
   await db.transaction(runTest)
 })
 
