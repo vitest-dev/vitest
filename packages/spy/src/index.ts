@@ -263,6 +263,12 @@ export function spyOn<T extends object, K extends keyof T>(
 
   if (originalDescriptor) {
     original = originalDescriptor[accessType]
+    // weird Proxy edge case where descriptor's value is undefined,
+    // but there's still a value on the object when called
+    // https://github.com/vitest-dev/vitest/issues/9439
+    if (original == null && accessType === 'value') {
+      original = object[key] as unknown as Procedure
+    }
   }
   else if (accessType !== 'value') {
     original = () => object[key]
