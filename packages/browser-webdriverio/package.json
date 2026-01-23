@@ -58,7 +58,7 @@
     "@vitest/browser": "workspace:*"
   },
   "devDependencies": {
-    "@wdio/types": "^9.20.0",
+    "@wdio/types": "^9.23.2",
     "vitest": "workspace:*",
     "webdriverio": "^9.20.0"
   }

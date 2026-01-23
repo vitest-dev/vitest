@@ -3,7 +3,7 @@
   "type": "module",
   "version": "4.1.0-beta.2",
   "private": true,
-  "packageManager": "pnpm@10.28.0",
+  "packageManager": "pnpm@10.28.1",
   "description": "Next generation testing framework powered by Vite",
   "engines": {
     "node": "^20.0.0 || ^22.0.0 || >=24.0.0"
@@ -39,12 +39,12 @@
   },
   "devDependencies": {
     "@antfu/eslint-config": "^7.2.0",
-    "@antfu/ni": "^28.1.0",
-    "@playwright/test": "^1.57.0",
+    "@antfu/ni": "^28.2.0",
+    "@playwright/test": "^1.58.0",
     "@rollup/plugin-commonjs": "^29.0.0",
     "@rollup/plugin-json": "^6.1.0",
     "@rollup/plugin-node-resolve": "^16.0.3",
-    "@types/node": "24.10.7",
+    "@types/node": "24.10.9",
     "@types/ws": "catalog:",
     "@vitest/browser": "workspace:*",
     "@vitest/coverage-istanbul": "workspace:*",
@@ -57,7 +57,7 @@
     "magic-string": "^0.30.21",
     "pathe": "^2.0.3",
     "premove": "^4.0.0",
-    "rollup": "^4.55.1",
+    "rollup": "^4.56.0",
     "rollup-plugin-dts": "^6.3.0",
     "rollup-plugin-license": "^3.6.0",
     "tinyglobby": "catalog:",
