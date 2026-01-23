@@ -356,7 +356,6 @@ async function callAroundHooks<THook extends Function>(
           throw new AroundSetupError(
             `The \`${callbackName}\` callback was not called in the \`${hookName}\` hook. `
             + `Make sure to call \`${callbackName}\` to run the ${hookName === 'aroundEach' ? 'test' : 'suite'}.`,
-            undefined,
           )
         }
         resolveHookComplete()
