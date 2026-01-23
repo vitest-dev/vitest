@@ -1152,10 +1152,9 @@ await expect.element(getByTestId('button')).toMatchScreenshot('fancy-button', {
 
 - `comparatorName: "pixelmatch" = "pixelmatch"`
 
-  The name of the algorithm/library used for comparing images.
+  The algorithm/library used for comparing images.
 
-  Currently, [`"pixelmatch"`](https://github.com/mapbox/pixelmatch) is the only
-  supported comparator.
+  `"pixelmatch"` is the only built-in comparator, but you can use custom ones by [registering them in the config file](/config/browser/expect#browser-expect-tomatchscreenshot-comparators).
 
 - `comparatorOptions: object`
 
@@ -1210,7 +1209,7 @@ await expect.element(getByTestId('button')).toMatchScreenshot('fancy-button', {
 
 #### `"pixelmatch"` comparator options
 
-The following options are available when using the `"pixelmatch"` comparator:
+The `"pixelmatch"` comparator uses [`@blazediff/core`](https://blazediff.dev/docs/core) under the hood. The following options are available when using it:
 
 - `allowedMismatchedPixelRatio: number | undefined = undefined`
 
