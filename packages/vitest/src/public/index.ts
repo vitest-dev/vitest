@@ -100,6 +100,7 @@ export type {
 export {
   afterAll,
   afterEach,
+  aroundAll,
   aroundEach,
   beforeAll,
   beforeEach,

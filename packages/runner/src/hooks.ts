@@ -270,6 +270,10 @@ export const onTestFinished: TaskHook<OnTestFinishedHandler> = createTestHook(
   },
 )
 
+export function aroundAll(): void {
+  throw new Error('not implemented: aroundAll hook')
+}
+
 /**
  * Registers a callback function that wraps around each test within the current suite.
  * The callback receives a `runTest` function that must be called to run the test.
