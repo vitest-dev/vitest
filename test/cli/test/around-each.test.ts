@@ -136,7 +136,7 @@ test('throws error when runTest is not called', async () => {
 })
 
 test('aroundEach with async operations', async () => {
-  const { stdout, stderr, testTree } = await runInlineTests({
+  const { stdout, stderr, errorTree } = await runInlineTests({
     'async.test.ts': `
       import { aroundEach, test } from 'vitest'
 
@@ -159,7 +159,7 @@ test('aroundEach with async operations', async () => {
   })
 
   expect(stderr).toBe('')
-  expect(testTree()).toMatchInlineSnapshot(`
+  expect(errorTree()).toMatchInlineSnapshot(`
     {
       "async.test.ts": {
         "async test": "passed",
@@ -250,7 +250,7 @@ test('aroundEach with beforeEach and afterEach', async () => {
 })
 
 test('aroundEach receives test context', async () => {
-  const { stdout, stderr, testTree } = await runInlineTests({
+  const { stdout, stderr, errorTree } = await runInlineTests({
     'context.test.ts': `
       import { aroundEach, test, expect } from 'vitest'
 
@@ -267,7 +267,7 @@ test('aroundEach receives test context', async () => {
 
   expect(stderr).toBe('')
   expect(stdout).toContain('>> test name: my test name')
-  expect(testTree()).toMatchInlineSnapshot(`
+  expect(errorTree()).toMatchInlineSnapshot(`
     {
       "context.test.ts": {
         "my test name": "passed",
@@ -277,7 +277,7 @@ test('aroundEach receives test context', async () => {
 })
 
 test('aroundEach cleanup runs even on test failure', async () => {
-  const { stdout, stderr, testTree } = await runInlineTests({
+  const { stdout, stderr, errorTree } = await runInlineTests({
     'test-failure.test.ts': `
       import { aroundEach, test, expect } from 'vitest'
 
@@ -299,10 +299,12 @@ test('aroundEach cleanup runs even on test failure', async () => {
   expect(stdout).toContain('>> setup')
   expect(stdout).toContain('>> test running')
   expect(stdout).toContain('>> cleanup (should run)')
-  expect(testTree()).toMatchInlineSnapshot(`
+  expect(errorTree()).toMatchInlineSnapshot(`
     {
       "test-failure.test.ts": {
-        "failing test": "failed",
+        "failing test": [
+          "expected 1 to be 2 // Object.is equality",
+        ],
       },
     }
   `)
@@ -389,7 +391,7 @@ test('aroundEach cleanup error is reported', async () => {
 })
 
 test('aroundEach with database transaction pattern', async () => {
-  const { stderr, testTree } = await runInlineTests({
+  const { stderr, errorTree } = await runInlineTests({
     'transaction.test.ts': `
       import { aroundEach, test, expect } from 'vitest'
 
@@ -440,7 +442,7 @@ test('aroundEach with database transaction pattern', async () => {
   })
 
   expect(stderr).toBe('')
-  expect(testTree()).toMatchInlineSnapshot(`
+  expect(errorTree()).toMatchInlineSnapshot(`
     {
       "transaction.test.ts": {
         "data is rolled back": "passed",
@@ -451,7 +453,7 @@ test('aroundEach with database transaction pattern', async () => {
 })
 
 test('aroundEach with globals: true', async () => {
-  const { stdout, stderr, testTree } = await runInlineTests({
+  const { stdout, stderr, errorTree } = await runInlineTests({
     'globals.test.ts': `
       aroundEach(async (runTest) => {
         console.log('>> aroundEach global')
@@ -469,7 +471,7 @@ test('aroundEach with globals: true', async () => {
   expect(stdout).toContain('>> aroundEach global')
   expect(stdout).toContain('>> test')
   expect(stdout).toContain('>> aroundEach global done')
-  expect(testTree()).toMatchInlineSnapshot(`
+  expect(errorTree()).toMatchInlineSnapshot(`
     {
       "globals.test.ts": {
         "test with globals": "passed",
@@ -479,7 +481,7 @@ test('aroundEach with globals: true', async () => {
 })
 
 test('aroundEach with test.each', async () => {
-  const { stdout, stderr, testTree } = await runInlineTests({
+  const { stdout, stderr, errorTree } = await runInlineTests({
     'test-each.test.ts': `
       import { aroundEach, test } from 'vitest'
 
@@ -498,7 +500,7 @@ test('aroundEach with test.each', async () => {
   expect(stdout).toContain('>> aroundEach for: test 1')
   expect(stdout).toContain('>> aroundEach for: test 2')
   expect(stdout).toContain('>> aroundEach for: test 3')
-  expect(testTree()).toMatchInlineSnapshot(`
+  expect(errorTree()).toMatchInlineSnapshot(`
     {
       "test-each.test.ts": {
         "test 1": "passed",
@@ -510,7 +512,7 @@ test('aroundEach with test.each', async () => {
 })
 
 test('aroundEach with concurrent tests', async () => {
-  const { stderr, testTree } = await runInlineTests({
+  const { stderr, errorTree } = await runInlineTests({
     'concurrent.test.ts': `
       import { aroundEach, describe, test } from 'vitest'
 
@@ -539,7 +541,7 @@ test('aroundEach with concurrent tests', async () => {
   })
 
   expect(stderr).toBe('')
-  expect(testTree()).toMatchInlineSnapshot(`
+  expect(errorTree()).toMatchInlineSnapshot(`
     {
       "concurrent.test.ts": {
         "concurrent suite": {
@@ -553,7 +555,7 @@ test('aroundEach with concurrent tests', async () => {
 })
 
 test('aroundEach with retry', async () => {
-  const { stdout, stderr, testTree } = await runInlineTests({
+  const { stdout, stderr, errorTree } = await runInlineTests({
     'retry.test.ts': `
       import { aroundEach, test, expect } from 'vitest'
 
@@ -578,7 +580,7 @@ test('aroundEach with retry', async () => {
   expect(stdout).toContain('>> aroundEach attempt: 1')
   expect(stdout).toContain('>> aroundEach attempt: 2')
   expect(stdout).toContain('>> aroundEach attempt: 3')
-  expect(testTree()).toMatchInlineSnapshot(`
+  expect(errorTree()).toMatchInlineSnapshot(`
     {
       "retry.test.ts": {
         "retried test": "passed",
@@ -588,7 +590,7 @@ test('aroundEach with retry', async () => {
 })
 
 test('aroundEach receives suite as third argument', async () => {
-  const { stdout, stderr, testTree } = await runInlineTests({
+  const { stdout, stderr, errorTree } = await runInlineTests({
     'suite-arg.test.ts': `
       import { aroundEach, describe, test } from 'vitest'
 
@@ -607,7 +609,7 @@ test('aroundEach receives suite as third argument', async () => {
 
   expect(stderr).toBe('')
   expect(stdout).toContain('>> suite name: my suite')
-  expect(testTree()).toMatchInlineSnapshot(`
+  expect(errorTree()).toMatchInlineSnapshot(`
     {
       "suite-arg.test.ts": {
         "my suite": {
@@ -619,7 +621,7 @@ test('aroundEach receives suite as third argument', async () => {
 })
 
 test('aroundEach skipped when test is skipped', async () => {
-  const { stdout, stderr, testTree } = await runInlineTests({
+  const { stdout, stderr, errorTree } = await runInlineTests({
     'skipped.test.ts': `
       import { aroundEach, test } from 'vitest'
 
@@ -642,7 +644,7 @@ test('aroundEach skipped when test is skipped', async () => {
   expect(stdout).toContain('>> aroundEach for: normal test')
   expect(stdout).not.toContain('>> aroundEach for: skipped test')
   expect(stdout).not.toContain('>> skipped test')
-  expect(testTree()).toMatchInlineSnapshot(`
+  expect(errorTree()).toMatchInlineSnapshot(`
     {
       "skipped.test.ts": {
         "normal test": "passed",
@@ -736,7 +738,7 @@ test('aroundEach teardown phase timeout', async () => {
 })
 
 test('aroundEach setup and teardown have independent timeouts', async () => {
-  const { stdout, stderr, testTree } = await runInlineTests({
+  const { stdout, stderr, errorTree } = await runInlineTests({
     'independent-timeouts.test.ts': `
       import { aroundEach, test } from 'vitest'
 
@@ -765,7 +767,7 @@ test('aroundEach setup and teardown have independent timeouts', async () => {
   expect(stdout).toContain('>> test')
   expect(stdout).toContain('>> teardown start')
   expect(stdout).toContain('>> teardown end')
-  expect(testTree()).toMatchInlineSnapshot(`
+  expect(errorTree()).toMatchInlineSnapshot(`
     {
       "independent-timeouts.test.ts": {
         "test with slow but valid phases": "passed",
@@ -810,7 +812,7 @@ test('aroundEach default timeout uses hookTimeout config', async () => {
 })
 
 test('multiple aroundEach hooks with different timeouts', async () => {
-  const { stdout, stderr, testTree } = await runInlineTests({
+  const { stdout, stderr, errorTree } = await runInlineTests({
     'multiple-timeouts.test.ts': `
       import { aroundEach, test } from 'vitest'
 
@@ -856,17 +858,19 @@ test('multiple aroundEach hooks with different timeouts', async () => {
 
     "
   `)
-  expect(testTree()).toMatchInlineSnapshot(`
+  expect(errorTree()).toMatchInlineSnapshot(`
     {
       "multiple-timeouts.test.ts": {
-        "test": "failed",
+        "test": [
+          "The setup phase of "aroundEach" hook timed out after 50ms.",
+        ],
       },
     }
   `)
 })
 
 test('multiple aroundEach hooks where inner teardown times out', async () => {
-  const { stdout, stderr, testTree } = await runInlineTests({
+  const { stdout, stderr, errorTree } = await runInlineTests({
     'multiple-teardown-timeout.test.ts': `
       import { aroundEach, test } from 'vitest'
 
@@ -914,17 +918,19 @@ test('multiple aroundEach hooks where inner teardown times out', async () => {
 
     "
   `)
-  expect(testTree()).toMatchInlineSnapshot(`
+  expect(errorTree()).toMatchInlineSnapshot(`
     {
       "multiple-teardown-timeout.test.ts": {
-        "test": "failed",
+        "test": [
+          "The teardown phase of "aroundEach" hook timed out after 50ms.",
+        ],
       },
     }
   `)
 })
 
 test('aroundEach hook timeouts are independent of each other', async () => {
-  const { stdout, stderr, testTree } = await runInlineTests({
+  const { stdout, stderr, errorTree } = await runInlineTests({
     'independent-hook-timeouts.test.ts': `
       import { aroundEach, test } from 'vitest'
 
@@ -961,10 +967,55 @@ test('aroundEach hook timeouts are independent of each other', async () => {
   expect(stdout).toContain('>> second hook teardown start')
   expect(stdout).toContain('>> second hook teardown end')
   expect(stdout).toContain('>> first hook teardown')
-  expect(testTree()).toMatchInlineSnapshot(`
+  expect(errorTree()).toMatchInlineSnapshot(`
     {
       "independent-hook-timeouts.test.ts": {
         "test": "passed",
+      },
+    }
+  `)
+})
+
+test('aroundEach with AsyncLocalStorage', async () => {
+  const { stdout, stderr, errorTree } = await runInlineTests({
+    'async-local-storage.test.ts': `
+      import { AsyncLocalStorage } from 'node:async_hooks'
+      import { aroundEach, test, expect } from 'vitest'
+
+      const requestContext = new AsyncLocalStorage<{ requestId: number }>()
+      let requestIdx = 0
+
+      aroundEach(async (runTest) => {
+        const ctx = { requestId: ++requestIdx }
+        console.log('>> setting context:', ctx.requestId)
+        await requestContext.run(ctx, runTest)
+        console.log('>> context cleared')
+      })
+
+      test('first test gets requestId 1', () => {
+        const ctx = requestContext.getStore()
+        console.log('>> test got context:', ctx?.requestId)
+        expect(ctx).toBeDefined()
+        expect(ctx?.requestId).toBe(1)
+      })
+
+      test('second test gets fresh context with requestId 2', () => {
+        const ctx = requestContext.getStore()
+        console.log('>> test got context:', ctx?.requestId)
+        expect(ctx?.requestId).toBe(2)
+      })
+    `,
+  })
+
+  expect(stderr).toBe('')
+  expect(stdout).toContain('>> setting context: 1')
+  expect(stdout).toContain('>> setting context: 2')
+  expect(stdout).toContain('>> context cleared')
+  expect(errorTree()).toMatchInlineSnapshot(`
+    {
+      "async-local-storage.test.ts": {
+        "first test gets requestId 1": "passed",
+        "second test gets fresh context with requestId 2": "passed",
       },
     }
   `)
