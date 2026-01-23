@@ -250,7 +250,6 @@ export class Vitest {
         )
     // patch default ssr runnable environment so third-party usage of `runner.import`
     // still works with Vite's external/noExternal configuration.
-    // TODO: if other plugins use runner during `configureServer` (not post), it can still break
     const ssrEnvironment = server.environments.ssr
     if (isRunnableDevEnvironment(ssrEnvironment)) {
       const ssrRunner = new ServerModuleRunner(
