@@ -59,7 +59,7 @@ catalog:
   '@types/ws': ^8.18.1
   '@unocss/reset': ^66.5.12
   '@vitejs/plugin-vue': ^6.0.3
-  '@vueuse/core': ^12.8.2
+  '@vueuse/core': ^14.1.0
   acorn-walk: ^8.3.4
   birpc: ^4.0.0
   cac: ^6.7.14
