@@ -11,9 +11,9 @@ export default defineConfig({
       async configureServer(server) {
         const ssr = server.environments.ssr
         assert(isRunnableDevEnvironment(ssr))
-        const m = await ssr.runner.import<{ default: typeof import("vite") }>('./test-runner.js')
-        assert(m.default.createServer === createServer)
-        ;(globalThis as any).__testSsrRunner = m.default.version
+        const mod = await ssr.runner.import<{ vite: typeof import("vite") }>('./test-runner.js')
+        assert(mod.vite.createServer === createServer)
+        ;(globalThis as any).__testSsrRunner = mod.vite.version
       },
     },
   ],
