@@ -30,8 +30,8 @@ exports[`should fail expect-unreachable.test.ts 1`] = `"AssertionError: expected
 exports[`should fail hook-timeout.test.ts 1`] = `"Error: Hook timed out in 10ms."`;
 
 exports[`should fail hooks-called.test.ts 1`] = `
-"Error: after all
-Error: before all"
+"Error: before all
+Error: after all"
 `;
 
 exports[`should fail hooks-fail-afterAll.test.ts 1`] = `"TypeError: "afterAll" callback value must be function, received "string""`;

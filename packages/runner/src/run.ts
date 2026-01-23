@@ -793,23 +793,23 @@ export async function runSuite(suite: Suite, runner: VitestRunner): Promise<void
   else {
     try {
       await callAroundAllHooks(suite, async () => {
-        // beforeAll
         try {
-          beforeAllCleanups = await $('suite.beforeAll', () => callSuiteHook(
-            suite,
-            suite,
-            'beforeAll',
-            runner,
-            [suite],
-          ))
-        }
-        catch (e) {
-          markTasksAsSkipped(suite, runner)
-          throw e
-        }
+          // beforeAll
+          try {
+            beforeAllCleanups = await $('suite.beforeAll', () => callSuiteHook(
+              suite,
+              suite,
+              'beforeAll',
+              runner,
+              [suite],
+            ))
+          }
+          catch (e) {
+            markTasksAsSkipped(suite, runner)
+            throw e
+          }
 
-        // run suite children
-        try {
+          // run suite children
           if (runner.runSuite) {
             await runner.runSuite(suite)
           }
@@ -839,7 +839,7 @@ export async function runSuite(suite: Suite, runner: VitestRunner): Promise<void
           }
         }
         finally {
-          // afterAll runs even if suite children fail
+          // afterAll runs even if beforeAll or suite children fail
           try {
             await $('suite.afterAll', () => callSuiteHook(suite, suite, 'afterAll', runner, [suite]))
             if (beforeAllCleanups.length) {
