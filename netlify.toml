@@ -85,6 +85,11 @@ from = "/guide/browser/webdriverio"
 to = "/config/browser/webdriverio"
 status = 301
 
+[[redirects]]
+from = "/api/"
+to = "/api/test"
+status = 301
+
 [[headers]]
 for = "/manifest.webmanifest"
 
