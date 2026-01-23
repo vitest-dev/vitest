@@ -20,6 +20,7 @@ import { getTasks, hasFailed, limitConcurrency } from '@vitest/runner/utils'
 import { SnapshotManager } from '@vitest/snapshot/manager'
 import { deepClone, deepMerge, nanoid, noop, toArray } from '@vitest/utils/helpers'
 import { join, normalize, relative } from 'pathe'
+import { isRunnableDevEnvironment } from 'vite'
 import { version } from '../../package.json' with { type: 'json' }
 import { WebSocketReporter } from '../api/setup'
 import { distDir } from '../paths'
@@ -247,6 +248,22 @@ export class Vitest {
           this._fetcher,
           resolved,
         )
+    // patch default ssr runnable environment so third-party usage of `runner.import`
+    // still works with Vite's external/noExternal configuration.
+    // TODO: if other plugins use runner during `configureServer` (not post), it can still break
+    const ssrEnvironment = server.environments.ssr
+    if (isRunnableDevEnvironment(ssrEnvironment)) {
+      const ssrRunner = new ServerModuleRunner(
+        ssrEnvironment,
+        this._fetcher,
+        resolved,
+      )
+      Object.defineProperty(ssrEnvironment, 'runner', {
+        value: ssrRunner,
+        writable: true,
+        configurable: true,
+      })
+    }
 
     if (this.config.watch) {
       // hijack server restart
