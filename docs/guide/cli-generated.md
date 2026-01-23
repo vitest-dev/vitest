@@ -850,4 +850,18 @@ Print import breakdown to CLI terminal after tests finish (default: false).
 - **CLI:** `--experimental.importDurations.limit <number>`
 - **Config:** [experimental.importDurations.limit](/config/experimental#experimental-importdurations-limit)
 
-Maximum number of imports to collect and display (default: 10).
+Maximum number of imports to collect and display (default: 0, or 10 if print or UI is enabled).
+
+### experimental.viteModuleRunner
+
+- **CLI:** `--experimental.viteModuleRunner`
+- **Config:** [experimental.viteModuleRunner](/config/experimental#experimental-vitemodulerunner)
+
+Control whether Vitest uses Vite's module runner to run the code or fallback to the native `import`. (default: `true`)
+
+### experimental.nodeLoader
+
+- **CLI:** `--experimental.nodeLoader`
+- **Config:** [experimental.nodeLoader](/config/experimental#experimental-nodeloader)
+
+Controls whether Vitest will use Node.js Loader API to process in-source or mocked files. This has no effect if `viteModuleRunner` is enabled. Disabling this can increase performance. (default: `true`)

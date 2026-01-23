@@ -824,7 +824,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
             description: 'Print import breakdown to CLI terminal after tests finish (default: false).',
           },
           limit: {
-            description: 'Maximum number of imports to collect and display (default: 10).',
+            description: 'Maximum number of imports to collect and display (default: 0, or 10 if print or UI is enabled).',
             argument: '<number>',
           },
         },
