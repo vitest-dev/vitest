@@ -872,6 +872,7 @@ export function createTaskCollector(
     }, _context)
   }
 
+  taskFn.describe = suite
   taskFn.beforeEach = beforeEach
   taskFn.afterEach = afterEach
   taskFn.beforeAll = beforeAll
