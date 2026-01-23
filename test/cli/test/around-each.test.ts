@@ -1020,3 +1020,112 @@ test('aroundEach with AsyncLocalStorage', async () => {
     }
   `)
 })
+
+test('aroundEach with fixtures', async () => {
+  const { stdout, stderr, errorTree } = await runInlineTests({
+    'fixtures.test.ts': `
+      import { test as base, aroundEach, expect } from 'vitest'
+
+      const test = base.extend<{ db: { query: (sql: string) => string } }>({
+        db: async ({}, use) => {
+          console.log('>> db fixture setup')
+          await use({
+            query: (sql: string) => \`result of: \${sql}\`
+          })
+          console.log('>> db fixture teardown')
+        }
+      })
+
+      test.aroundEach(async (runTest, { db }) => {
+        console.log('>> aroundEach setup, db available:', !!db)
+        const result = db.query('SELECT 1')
+        console.log('>> query result:', result)
+        await runTest()
+        console.log('>> aroundEach teardown')
+      })
+
+      test('test with fixture in aroundEach', ({ db }) => {
+        console.log('>> test running, db available:', !!db)
+        expect(db.query('SELECT 2')).toBe('result of: SELECT 2')
+      })
+    `,
+  })
+
+  expect(stderr).toBe('')
+  expect(stdout).toContain('>> db fixture setup')
+  expect(stdout).toContain('>> aroundEach setup, db available: true')
+  expect(stdout).toContain('>> query result: result of: SELECT 1')
+  expect(stdout).toContain('>> test running, db available: true')
+  expect(stdout).toContain('>> aroundEach teardown')
+  expect(stdout).toContain('>> db fixture teardown')
+  expect(errorTree()).toMatchInlineSnapshot(`
+    {
+      "fixtures.test.ts": {
+        "test with fixture in aroundEach": "passed",
+      },
+    }
+  `)
+})
+
+test('aroundEach with AsyncLocalStorage fixture and value fixture', async () => {
+  const { stdout, stderr, errorTree } = await runInlineTests({
+    'als-fixtures.test.ts': `
+      import { test as base, aroundEach, expect } from 'vitest'
+      import { AsyncLocalStorage } from 'node:async_hooks'
+
+      interface RequestContext {
+        requestId: number
+      }
+
+      let requestIdx = 0
+
+      const test = base.extend<{
+        requestContext: AsyncLocalStorage<RequestContext>
+        currentRequestId: number
+      }>({
+        requestContext: async ({}, use) => {
+          const als = new AsyncLocalStorage<RequestContext>()
+          await use(als)
+        },
+        currentRequestId: async ({ requestContext }, use) => {
+          const store = requestContext.getStore()
+          await use(store?.requestId)
+        }
+      })
+
+      aroundEach(async (runTest, { requestContext }) => {
+        const id = ++requestIdx
+        console.log('>> setting context:', id)
+        await requestContext.run({ requestId: id }, async () => {
+          await runTest()
+        })
+        console.log('>> context cleared')
+      })
+
+      test('first test gets requestId 1 via fixture', ({ currentRequestId }) => {
+        console.log('>> test got requestId:', currentRequestId)
+        expect(currentRequestId).toBe(1)
+      })
+
+      test('second test gets requestId 2 via fixture', ({ currentRequestId }) => {
+        console.log('>> test got requestId:', currentRequestId)
+        expect(currentRequestId).toBe(2)
+      })
+    `,
+  })
+
+  expect(stderr).toBe('')
+  expect(stdout).toContain('>> setting context: 1')
+  expect(stdout).toContain('>> setting context: 2')
+  expect(stdout).toContain('>> test got requestId: 1')
+  expect(stdout).toContain('>> test got requestId: 2')
+  expect(stdout).toContain('>> context cleared')
+  expect(errorTree()).toMatchInlineSnapshot(`
+    {
+      "als-fixtures.test.ts": {
+        "first test gets requestId 1 via fixture": "passed",
+        "second test gets requestId 2 via fixture": "passed",
+      },
+    }
+  `)
+})
