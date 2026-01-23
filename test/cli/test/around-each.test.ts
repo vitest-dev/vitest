@@ -132,7 +132,16 @@ test('throws error when runTest is not called', async () => {
     `,
   })
 
-  expect(stderr).toContain('The `runTest()` callback was not called in the `aroundEach` hook')
+  expect(stderr).toMatchInlineSnapshot(`
+    "
+    ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+     FAIL  no-runtest.test.ts > test 1
+    Error: The \`runTest()\` callback was not called in the \`aroundEach\` hook. Make sure to call \`runTest()\` to run the test.
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+    "
+  `)
 })
 
 test('aroundEach with async operations', async () => {
@@ -782,27 +791,27 @@ test('aroundEach default timeout uses hookTimeout config', async () => {
       import { aroundEach, test } from 'vitest'
 
       aroundEach(async (runTest) => {
-        // Setup takes longer than hookTimeout (50ms)
+        // Setup takes longer than hookTimeout (10ms)
         await new Promise(r => setTimeout(r, 200))
         await runTest()
       })
 
       test('test', () => {})
     `,
-  }, { hookTimeout: 50 })
+  }, { hookTimeout: 10 })
 
   expect(stderr).toMatchInlineSnapshot(`
     "
     ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
 
      FAIL  default-timeout.test.ts > test
-    Error: The setup phase of "aroundEach" hook timed out after 50ms.
+    Error: The setup phase of "aroundEach" hook timed out after 10ms.
      ❯ default-timeout.test.ts:4:7
           2|       import { aroundEach, test } from 'vitest'
           3| 
           4|       aroundEach(async (runTest) => {
            |       ^
-          5|         // Setup takes longer than hookTimeout (50ms)
+          5|         // Setup takes longer than hookTimeout (10ms)
           6|         await new Promise(r => setTimeout(r, 200))
 
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
@@ -830,7 +839,7 @@ test('multiple aroundEach hooks with different timeouts', async () => {
         console.log('>> inner setup end (should not reach)')
         await runTest()
         console.log('>> inner teardown')
-      }, 50)
+      }, 10)
 
       test('test', () => {
         console.log('>> test (should not run)')
@@ -845,7 +854,7 @@ test('multiple aroundEach hooks with different timeouts', async () => {
     ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
 
      FAIL  multiple-timeouts.test.ts > test
-    Error: The setup phase of "aroundEach" hook timed out after 50ms.
+    Error: The setup phase of "aroundEach" hook timed out after 10ms.
      ❯ multiple-timeouts.test.ts:12:7
          10| 
          11|       // Inner hook with 50ms timeout - this should timeout during set…
@@ -862,7 +871,7 @@ test('multiple aroundEach hooks with different timeouts', async () => {
     {
       "multiple-timeouts.test.ts": {
         "test": [
-          "The setup phase of "aroundEach" hook timed out after 50ms.",
+          "The setup phase of "aroundEach" hook timed out after 10ms.",
         ],
       },
     }
@@ -888,7 +897,7 @@ test('multiple aroundEach hooks where inner teardown times out', async () => {
         console.log('>> inner teardown start')
         await new Promise(r => setTimeout(r, 100)) // 100ms > 50ms timeout
         console.log('>> inner teardown end (should not reach)')
-      }, 50)
+      }, 10)
 
       test('test', () => {
         console.log('>> test')
@@ -905,7 +914,7 @@ test('multiple aroundEach hooks where inner teardown times out', async () => {
     ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
 
      FAIL  multiple-teardown-timeout.test.ts > test
-    Error: The teardown phase of "aroundEach" hook timed out after 50ms.
+    Error: The teardown phase of "aroundEach" hook timed out after 10ms.
      ❯ multiple-teardown-timeout.test.ts:12:7
          10| 
          11|       // Inner hook with 50ms timeout - this should timeout during tea…
@@ -922,7 +931,7 @@ test('multiple aroundEach hooks where inner teardown times out', async () => {
     {
       "multiple-teardown-timeout.test.ts": {
         "test": [
-          "The teardown phase of "aroundEach" hook timed out after 50ms.",
+          "The teardown phase of "aroundEach" hook timed out after 10ms.",
         ],
       },
     }
@@ -939,7 +948,7 @@ test('aroundEach hook timeouts are independent of each other', async () => {
         console.log('>> first hook setup')
         await runTest()
         console.log('>> first hook teardown')
-      }, 50)
+      }, 10)
 
       // Second hook with 200ms timeout - takes 100ms which is longer than
       // the first hook's 50ms timeout, but within its own 200ms timeout
@@ -1125,6 +1134,569 @@ test('aroundEach with AsyncLocalStorage fixture and value fixture', async () => 
       "als-fixtures.test.ts": {
         "first test gets requestId 1 via fixture": "passed",
         "second test gets requestId 2 via fixture": "passed",
+      },
+    }
+  `)
+})
+
+// aroundAll tests
+
+test('basic aroundAll wraps the suite', async () => {
+  const { stdout, stderr, errorTree } = await runInlineTests({
+    'basic.test.ts': `
+      import { test, aroundAll } from 'vitest'
+
+      aroundAll(async (runSuite) => {
+        console.log('>> aroundAll setup')
+        await runSuite()
+        console.log('>> aroundAll teardown')
+      })
+
+      test('first test', () => {
+        console.log('>> first test running')
+      })
+
+      test('second test', () => {
+        console.log('>> second test running')
+      })
+    `,
+  })
+
+  expect(stderr).toBe('')
+  expect(stdout).toContain('>> aroundAll setup')
+  expect(stdout).toContain('>> first test running')
+  expect(stdout).toContain('>> second test running')
+  expect(stdout).toContain('>> aroundAll teardown')
+  expect(errorTree()).toMatchInlineSnapshot(`
+    {
+      "basic.test.ts": {
+        "first test": "passed",
+        "second test": "passed",
+      },
+    }
+  `)
+})
+
+test('multiple aroundAll hooks are nested (first is outermost)', async () => {
+  const { stdout, stderr, errorTree } = await runInlineTests({
+    'nested.test.ts': `
+      import { test, aroundAll } from 'vitest'
+
+      aroundAll(async (runSuite) => {
+        console.log('>> outer setup')
+        await runSuite()
+        console.log('>> outer teardown')
+      })
+
+      aroundAll(async (runSuite) => {
+        console.log('>> inner setup')
+        await runSuite()
+        console.log('>> inner teardown')
+      })
+
+      test('test', () => {
+        console.log('>> test running')
+      })
+    `,
+  })
+
+  expect(stderr).toBe('')
+  const lines = stdout.split('\n').filter(l => l.includes('>>')).join('\n')
+  expect(lines).toContain('>> outer setup')
+  expect(lines).toContain('>> inner setup')
+  expect(lines).toContain('>> test running')
+  expect(lines).toContain('>> inner teardown')
+  expect(lines).toContain('>> outer teardown')
+  expect(errorTree()).toMatchInlineSnapshot(`
+    {
+      "nested.test.ts": {
+        "test": "passed",
+      },
+    }
+  `)
+})
+
+test('aroundAll in nested suites wraps correctly', async () => {
+  const { stdout, stderr, errorTree } = await runInlineTests({
+    'nested-suite.test.ts': `
+      import { test, describe, aroundAll } from 'vitest'
+
+      aroundAll(async (runSuite) => {
+        console.log('>> root aroundAll setup')
+        await runSuite()
+        console.log('>> root aroundAll teardown')
+      })
+
+      test('root test', () => {
+        console.log('>> root test running')
+      })
+
+      describe('nested suite', () => {
+        aroundAll(async (runSuite) => {
+          console.log('>> nested aroundAll setup')
+          await runSuite()
+          console.log('>> nested aroundAll teardown')
+        })
+
+        test('nested test', () => {
+          console.log('>> nested test running')
+        })
+      })
+    `,
+  })
+
+  expect(stderr).toBe('')
+  expect(stdout).toContain('>> root aroundAll setup')
+  expect(stdout).toContain('>> root test running')
+  expect(stdout).toContain('>> nested aroundAll setup')
+  expect(stdout).toContain('>> nested test running')
+  expect(stdout).toContain('>> nested aroundAll teardown')
+  expect(stdout).toContain('>> root aroundAll teardown')
+  expect(errorTree()).toMatchInlineSnapshot(`
+    {
+      "nested-suite.test.ts": {
+        "nested suite": {
+          "nested test": "passed",
+        },
+        "root test": "passed",
+      },
+    }
+  `)
+})
+
+test('aroundAll throws error when runSuite is not called', async () => {
+  const { stderr, errorTree } = await runInlineTests({
+    'no-run.test.ts': `
+      import { test, aroundAll } from 'vitest'
+
+      aroundAll(async (runSuite) => {
+        console.log('>> aroundAll setup but not calling runSuite')
+      })
+
+      test('test', () => {
+        console.log('>> test running')
+      })
+    `,
+  })
+
+  expect(stderr).toContain('runSuite()')
+  expect(errorTree()).toMatchInlineSnapshot(`
+    {
+      "no-run.test.ts": {
+        "test": "skipped",
+      },
+    }
+  `)
+})
+
+test('aroundAll cleanup runs even on test failure', async () => {
+  const { stdout, errorTree } = await runInlineTests({
+    'cleanup.test.ts': `
+      import { test, aroundAll, expect } from 'vitest'
+
+      aroundAll(async (runSuite) => {
+        console.log('>> aroundAll setup')
+        await runSuite()
+        console.log('>> aroundAll teardown')
+      })
+
+      test('failing test', () => {
+        console.log('>> failing test running')
+        expect(true).toBe(false)
+      })
+    `,
+  })
+
+  expect(stdout).toContain('>> aroundAll setup')
+  expect(stdout).toContain('>> failing test running')
+  expect(stdout).toContain('>> aroundAll teardown')
+  expect(errorTree()).toMatchInlineSnapshot(`
+    {
+      "cleanup.test.ts": {
+        "failing test": [
+          "expected true to be false // Object.is equality",
+        ],
+      },
+    }
+  `)
+})
+
+test('aroundAll with beforeAll and afterAll', async () => {
+  const { stdout, stderr, errorTree } = await runInlineTests({
+    'with-hooks.test.ts': `
+      import { test, beforeAll, afterAll, aroundAll } from 'vitest'
+
+      beforeAll(() => {
+        console.log('>> beforeAll')
+      })
+
+      aroundAll(async (runSuite) => {
+        console.log('>> aroundAll setup')
+        await runSuite()
+        console.log('>> aroundAll teardown')
+      })
+
+      afterAll(() => {
+        console.log('>> afterAll')
+      })
+
+      test('test', () => {
+        console.log('>> test running')
+      })
+    `,
+  })
+
+  expect(stderr).toBe('')
+  // beforeAll runs first, then aroundAll setup, then test, then aroundAll teardown, then afterAll
+  expect(stdout).toContain('>> beforeAll')
+  expect(stdout).toContain('>> aroundAll setup')
+  expect(stdout).toContain('>> test running')
+  expect(stdout).toContain('>> aroundAll teardown')
+  expect(stdout).toContain('>> afterAll')
+  expect(errorTree()).toMatchInlineSnapshot(`
+    {
+      "with-hooks.test.ts": {
+        "test": "passed",
+      },
+    }
+  `)
+})
+
+test('aroundAll setup phase timeout', async () => {
+  const { stderr, errorTree } = await runInlineTests({
+    'timeout.test.ts': `
+      import { test, aroundAll } from 'vitest'
+
+      aroundAll(async (runSuite) => {
+        console.log('>> aroundAll setup starting')
+        await new Promise(resolve => setTimeout(resolve, 200))
+        console.log('>> aroundAll setup done')
+        await runSuite()
+      }, 10)
+
+      test('test', () => {
+        console.log('>> test running')
+      })
+    `,
+  })
+
+  expect(stderr).toMatchInlineSnapshot(`
+    "
+    ⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+     FAIL  timeout.test.ts [ timeout.test.ts ]
+    Error: The setup phase of "aroundAll" hook timed out after 10ms.
+     ❯ timeout.test.ts:4:7
+          2|       import { test, aroundAll } from 'vitest'
+          3| 
+          4|       aroundAll(async (runSuite) => {
+           |       ^
+          5|         console.log('>> aroundAll setup starting')
+          6|         await new Promise(resolve => setTimeout(resolve, 200))
+
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+    "
+  `)
+  expect(errorTree()).toMatchInlineSnapshot(`
+    {
+      "timeout.test.ts": {
+        "test": "skipped",
+      },
+    }
+  `)
+})
+
+test('aroundAll teardown phase timeout', async () => {
+  const { stdout, stderr, errorTree } = await runInlineTests({
+    'teardown-timeout.test.ts': `
+      import { test, aroundAll } from 'vitest'
+
+      aroundAll(async (runSuite) => {
+        console.log('>> aroundAll setup')
+        await runSuite()
+        console.log('>> aroundAll teardown starting')
+        await new Promise(resolve => setTimeout(resolve, 200))
+        console.log('>> aroundAll teardown done')
+      }, 10)
+
+      test('test', () => {
+        console.log('>> test running')
+      })
+    `,
+  })
+
+  expect(stdout).toContain('>> aroundAll setup')
+  expect(stdout).toContain('>> test running')
+  expect(stdout).toContain('>> aroundAll teardown starting')
+  expect(stderr).toMatchInlineSnapshot(`
+    "
+    ⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+     FAIL  teardown-timeout.test.ts [ teardown-timeout.test.ts ]
+    Error: The teardown phase of "aroundAll" hook timed out after 10ms.
+     ❯ teardown-timeout.test.ts:4:7
+          2|       import { test, aroundAll } from 'vitest'
+          3| 
+          4|       aroundAll(async (runSuite) => {
+           |       ^
+          5|         console.log('>> aroundAll setup')
+          6|         await runSuite()
+
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+    "
+  `)
+  expect(errorTree()).toMatchInlineSnapshot(`
+    {
+      "teardown-timeout.test.ts": {
+        "test": "passed",
+      },
+    }
+  `)
+})
+
+test('aroundAll receives suite as second argument', async () => {
+  const { stdout, stderr, errorTree } = await runInlineTests({
+    'suite-arg.test.ts': `
+      import { test, describe, aroundAll } from 'vitest'
+
+      describe('my suite', () => {
+        aroundAll(async (runSuite, suite) => {
+          console.log('>> suite name:', suite.name)
+          await runSuite()
+        })
+
+        test('test', () => {
+          console.log('>> test running')
+        })
+      })
+    `,
+  })
+
+  expect(stderr).toBe('')
+  expect(stdout).toContain('>> suite name: my suite')
+  expect(errorTree()).toMatchInlineSnapshot(`
+    {
+      "suite-arg.test.ts": {
+        "my suite": {
+          "test": "passed",
+        },
+      },
+    }
+  `)
+})
+
+test('aroundAll with server start/stop pattern', async () => {
+  const { stdout, stderr, errorTree } = await runInlineTests({
+    'server.test.ts': `
+      import { test, aroundAll, expect } from 'vitest'
+
+      let serverPort: number | null = null
+
+      aroundAll(async (runSuite) => {
+        // Simulate server start
+        serverPort = 3000
+        console.log('>> server started on port', serverPort)
+        await runSuite()
+        // Simulate server stop
+        console.log('>> server stopping')
+        serverPort = null
+      })
+
+      test('first request', () => {
+        console.log('>> making request to port', serverPort)
+        expect(serverPort).toBe(3000)
+      })
+
+      test('second request', () => {
+        console.log('>> making request to port', serverPort)
+        expect(serverPort).toBe(3000)
+      })
+    `,
+  })
+
+  expect(stderr).toBe('')
+  expect(stdout).toContain('>> server started on port 3000')
+  expect(stdout).toContain('>> making request to port 3000')
+  expect(stdout).toContain('>> server stopping')
+  expect(errorTree()).toMatchInlineSnapshot(`
+    {
+      "server.test.ts": {
+        "first request": "passed",
+        "second request": "passed",
+      },
+    }
+  `)
+})
+
+test('aroundAll with multiple suites and multiple hooks in same suite', async () => {
+  const { stdout, stderr, errorTree } = await runInlineTests({
+    'multi-suite.test.ts': `
+      import { test, describe, aroundAll } from 'vitest'
+
+      aroundAll(async (runSuite) => {
+        console.log('>> root aroundAll 1 setup')
+        await runSuite()
+        console.log('>> root aroundAll 1 teardown')
+      })
+
+      aroundAll(async (runSuite) => {
+        console.log('>> root aroundAll 2 setup')
+        await runSuite()
+        console.log('>> root aroundAll 2 teardown')
+      })
+
+      test('root test', () => {
+        console.log('>> root test')
+      })
+
+      describe('suite A', () => {
+        aroundAll(async (runSuite) => {
+          console.log('>> suite A aroundAll 1 setup')
+          await runSuite()
+          console.log('>> suite A aroundAll 1 teardown')
+        })
+
+        aroundAll(async (runSuite) => {
+          console.log('>> suite A aroundAll 2 setup')
+          await runSuite()
+          console.log('>> suite A aroundAll 2 teardown')
+        })
+
+        test('test A1', () => {
+          console.log('>> test A1')
+        })
+
+        test('test A2', () => {
+          console.log('>> test A2')
+        })
+      })
+
+      describe('suite B', () => {
+        aroundAll(async (runSuite) => {
+          console.log('>> suite B aroundAll setup')
+          await runSuite()
+          console.log('>> suite B aroundAll teardown')
+        })
+
+        test('test B1', () => {
+          console.log('>> test B1')
+        })
+
+        describe('nested suite', () => {
+          aroundAll(async (runSuite) => {
+            console.log('>> nested aroundAll setup')
+            await runSuite()
+            console.log('>> nested aroundAll teardown')
+          })
+
+          test('nested test', () => {
+            console.log('>> nested test')
+          })
+        })
+      })
+    `,
+  })
+
+  expect(stderr).toBe('')
+  // Root hooks wrap everything
+  expect(stdout).toContain('>> root aroundAll 1 setup')
+  expect(stdout).toContain('>> root aroundAll 2 setup')
+  expect(stdout).toContain('>> root test')
+  // Suite A has its own hooks
+  expect(stdout).toContain('>> suite A aroundAll 1 setup')
+  expect(stdout).toContain('>> suite A aroundAll 2 setup')
+  expect(stdout).toContain('>> test A1')
+  expect(stdout).toContain('>> test A2')
+  expect(stdout).toContain('>> suite A aroundAll 2 teardown')
+  expect(stdout).toContain('>> suite A aroundAll 1 teardown')
+  // Suite B has its own hooks
+  expect(stdout).toContain('>> suite B aroundAll setup')
+  expect(stdout).toContain('>> test B1')
+  // Nested suite has its own hooks
+  expect(stdout).toContain('>> nested aroundAll setup')
+  expect(stdout).toContain('>> nested test')
+  expect(stdout).toContain('>> nested aroundAll teardown')
+  expect(stdout).toContain('>> suite B aroundAll teardown')
+  // Root hooks teardown
+  expect(stdout).toContain('>> root aroundAll 2 teardown')
+  expect(stdout).toContain('>> root aroundAll 1 teardown')
+  expect(errorTree()).toMatchInlineSnapshot(`
+    {
+      "multi-suite.test.ts": {
+        "root test": "passed",
+        "suite A": {
+          "test A1": "passed",
+          "test A2": "passed",
+        },
+        "suite B": {
+          "nested suite": {
+            "nested test": "passed",
+          },
+          "test B1": "passed",
+        },
+      },
+    }
+  `)
+})
+
+test('aroundAll with module-level AsyncLocalStorage and test fixture', async () => {
+  const { stdout, stderr, errorTree } = await runInlineTests({
+    'module-als.test.ts': `
+      import { test as base, aroundAll, expect } from 'vitest'
+      import { AsyncLocalStorage } from 'node:async_hooks'
+
+      interface RequestContext {
+        requestId: number
+      }
+
+      // Module-level AsyncLocalStorage shared between aroundAll and fixtures
+      const requestContext = new AsyncLocalStorage<RequestContext>()
+      let suiteRequestId = 0
+
+      const test = base.extend<{
+        currentRequestId: number
+      }>({
+        currentRequestId: async ({}, use) => {
+          const store = requestContext.getStore()
+          console.log('>> currentRequestId fixture reading store:', store?.requestId)
+          await use(store?.requestId)
+        }
+      })
+
+      aroundAll(async (runSuite) => {
+        suiteRequestId++
+        console.log('>> aroundAll setup, setting requestId:', suiteRequestId)
+        await requestContext.run({ requestId: suiteRequestId }, async () => {
+          await runSuite()
+        })
+        console.log('>> aroundAll teardown')
+      })
+
+      test('first test gets requestId from aroundAll context', ({ currentRequestId }) => {
+        console.log('>> first test, currentRequestId:', currentRequestId)
+        expect(currentRequestId).toBe(1)
+      })
+
+      test('second test gets same requestId from aroundAll context', ({ currentRequestId }) => {
+        console.log('>> second test, currentRequestId:', currentRequestId)
+        expect(currentRequestId).toBe(1)
+      })
+    `,
+  })
+
+  expect(stderr).toBe('')
+  expect(stdout).toContain('>> aroundAll setup, setting requestId: 1')
+  expect(stdout).toContain('>> currentRequestId fixture reading store: 1')
+  expect(stdout).toContain('>> first test, currentRequestId: 1')
+  expect(stdout).toContain('>> second test, currentRequestId: 1')
+  expect(stdout).toContain('>> aroundAll teardown')
+  expect(errorTree()).toMatchInlineSnapshot(`
+    {
+      "module-als.test.ts": {
+        "first test gets requestId from aroundAll context": "passed",
+        "second test gets same requestId from aroundAll context": "passed",
       },
     }
   `)

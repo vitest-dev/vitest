@@ -2,6 +2,7 @@ import type { VitestRunner } from './types'
 import type {
   AfterAllListener,
   AfterEachListener,
+  AroundAllListener,
   AroundEachListener,
   BeforeAllListener,
   BeforeEachListener,
@@ -23,8 +24,8 @@ function getDefaultHookTimeout() {
 
 const CLEANUP_TIMEOUT_KEY = Symbol.for('VITEST_CLEANUP_TIMEOUT')
 const CLEANUP_STACK_TRACE_KEY = Symbol.for('VITEST_CLEANUP_STACK_TRACE')
-const AROUND_EACH_TIMEOUT_KEY = Symbol.for('VITEST_AROUND_EACH_TIMEOUT')
-const AROUND_EACH_STACK_TRACE_KEY = Symbol.for('VITEST_AROUND_EACH_STACK_TRACE')
+const AROUND_TIMEOUT_KEY = Symbol.for('VITEST_AROUND_TIMEOUT')
+const AROUND_STACK_TRACE_KEY = Symbol.for('VITEST_AROUND_STACK_TRACE')
 
 export function getBeforeHookCleanupCallback(hook: Function, result: any, context?: TestContext): Function | undefined {
   if (typeof result === 'function') {
@@ -270,8 +271,56 @@ export const onTestFinished: TaskHook<OnTestFinishedHandler> = createTestHook(
   },
 )
 
-export function aroundAll(): void {
-  throw new Error('not implemented: aroundAll hook')
+/**
+ * Registers a callback function that wraps around all tests within the current suite.
+ * The callback receives a `runSuite` function that must be called to run the suite's tests.
+ * This hook is useful for scenarios where you need to wrap an entire suite in a context
+ * (e.g., starting a server, opening a database connection that all tests share).
+ *
+ * **Note:** When multiple `aroundAll` hooks are registered, they are nested inside each other.
+ * The first registered hook is the outermost wrapper.
+ *
+ * **Note:** Unlike `aroundEach`, the `aroundAll` hook does not receive test context or support fixtures,
+ * as it runs at the suite level before any individual test context is created.
+ *
+ * @param {Function} fn - The callback function that wraps the suite. Must call `runSuite()` to run the tests.
+ * @param {number} [timeout] - Optional timeout in milliseconds for the hook. If not provided, the default hook timeout from the runner's configuration is used.
+ * @returns {void}
+ * @example
+ * ```ts
+ * // Example of using aroundAll to start a server for all tests
+ * aroundAll(async (runSuite) => {
+ *   const server = await startServer();
+ *   await runSuite();
+ *   await server.close();
+ * });
+ * ```
+ * @example
+ * ```ts
+ * // Example of using aroundAll with a database connection
+ * aroundAll(async (runSuite) => {
+ *   const db = await connectToDatabase();
+ *   globalThis.testDb = db;
+ *   await runSuite();
+ *   await db.close();
+ * });
+ * ```
+ */
+export function aroundAll(
+  fn: AroundAllListener,
+  timeout?: number,
+): void {
+  assertTypes(fn, '"aroundAll" callback', ['function'])
+  const stackTraceError = new Error('STACK_TRACE_ERROR')
+  const resolvedTimeout = timeout ?? getDefaultHookTimeout()
+
+  return getCurrentSuite().on(
+    'aroundAll',
+    Object.assign(fn, {
+      [AROUND_TIMEOUT_KEY]: resolvedTimeout,
+      [AROUND_STACK_TRACE_KEY]: stackTraceError,
+    }),
+  )
 }
 
 /**
@@ -318,8 +367,8 @@ export function aroundEach<ExtraContext = object>(
   return getCurrentSuite<ExtraContext>().on(
     'aroundEach',
     Object.assign(wrappedFn, {
-      [AROUND_EACH_TIMEOUT_KEY]: resolvedTimeout,
-      [AROUND_EACH_STACK_TRACE_KEY]: stackTraceError,
+      [AROUND_TIMEOUT_KEY]: resolvedTimeout,
+      [AROUND_STACK_TRACE_KEY]: stackTraceError,
     }),
   )
 }
@@ -353,15 +402,15 @@ function withAroundEachFixtures<ExtraContext>(
   return wrapper
 }
 
-export function getAroundEachHookTimeout(hook: Function): number {
-  return AROUND_EACH_TIMEOUT_KEY in hook && typeof hook[AROUND_EACH_TIMEOUT_KEY] === 'number'
-    ? hook[AROUND_EACH_TIMEOUT_KEY]
+export function getAroundHookTimeout(hook: Function): number {
+  return AROUND_TIMEOUT_KEY in hook && typeof hook[AROUND_TIMEOUT_KEY] === 'number'
+    ? hook[AROUND_TIMEOUT_KEY]
     : getDefaultHookTimeout()
 }
 
-export function getAroundEachHookStackTrace(hook: Function): Error | undefined {
-  return AROUND_EACH_STACK_TRACE_KEY in hook && hook[AROUND_EACH_STACK_TRACE_KEY] instanceof Error
-    ? hook[AROUND_EACH_STACK_TRACE_KEY]
+export function getAroundHookStackTrace(hook: Function): Error | undefined {
+  return AROUND_STACK_TRACE_KEY in hook && hook[AROUND_STACK_TRACE_KEY] instanceof Error
+    ? hook[AROUND_STACK_TRACE_KEY]
     : undefined
 }
 

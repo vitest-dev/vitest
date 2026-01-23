@@ -10,6 +10,7 @@ export type {
 export type {
   AfterAllListener,
   AfterEachListener,
+  AroundAllListener,
   AroundEachListener,
   BeforeAllListener,
   BeforeEachListener,

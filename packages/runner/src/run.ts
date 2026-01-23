@@ -2,6 +2,7 @@ import type { Awaitable, TestError } from '@vitest/utils'
 import type { DiffOptions } from '@vitest/utils/diff'
 import type { FileSpecification, VitestRunner } from './types/runner'
 import type {
+  AroundAllListener,
   AroundEachListener,
   File,
   SequenceHooks,
@@ -24,7 +25,7 @@ import { collectTests } from './collect'
 import { abortContextSignal, getFileContext } from './context'
 import { PendingError, TestRunAbortError } from './errors'
 import { callFixtureCleanup } from './fixture'
-import { getAroundEachHookStackTrace, getAroundEachHookTimeout, getBeforeHookCleanupCallback } from './hooks'
+import { getAroundHookStackTrace, getAroundHookTimeout, getBeforeHookCleanupCallback } from './hooks'
 import { getFn, getHooks } from './map'
 import { addRunningTest, getRunningTests, setCurrentTest } from './test-state'
 import { limitConcurrency } from './utils/limit-concurrency'
@@ -228,8 +229,25 @@ function getAroundEachHooks(suite: Suite): AroundEachListener[] {
   return hooks
 }
 
-function makeAroundEachTimeoutError(phase: 'setup' | 'teardown', timeout: number, stackTraceError?: Error) {
-  const message = `The ${phase} phase of "aroundEach" hook timed out after ${timeout}ms.`
+function getAroundAllHooks(suite: Suite): AroundAllListener[] {
+  return getHooks(suite).aroundAll
+}
+
+interface AroundHooksOptions<THook extends Function> {
+  hooks: THook[]
+  hookName: 'aroundEach' | 'aroundAll'
+  callbackName: 'runTest()' | 'runSuite()'
+  onTimeout?: (error: Error) => void
+  invokeHook: (hook: THook, use: () => Promise<void>) => Awaitable<unknown>
+}
+
+function makeAroundHookTimeoutError(
+  hookName: string,
+  phase: 'setup' | 'teardown',
+  timeout: number,
+  stackTraceError?: Error,
+) {
+  const message = `The ${phase} phase of "${hookName}" hook timed out after ${timeout}ms.`
   const error = new Error(message)
   if (stackTraceError?.stack) {
     error.stack = stackTraceError.stack.replace(stackTraceError.message, error.message)
@@ -237,61 +255,56 @@ function makeAroundEachTimeoutError(phase: 'setup' | 'teardown', timeout: number
   return error
 }
 
-function createTimeoutPromise(
-  timeout: number,
-  phase: 'setup' | 'teardown',
-  stackTraceError: Error | undefined,
-  test: Test,
-  timers: { setTimeout: typeof globalThis.setTimeout; clearTimeout: typeof globalThis.clearTimeout },
-): { promise: Promise<never>; clear: () => void } {
-  let timer: ReturnType<typeof timers.setTimeout> | undefined
-
-  const promise = new Promise<never>((_, reject) => {
-    if (timeout > 0 && timeout !== Number.POSITIVE_INFINITY) {
-      timer = timers.setTimeout(() => {
-        const error = makeAroundEachTimeoutError(phase, timeout, stackTraceError)
-        abortContextSignal(test.context, error)
-        reject(error)
-      }, timeout)
-      timer.unref?.()
-    }
-  })
-
-  const clear = () => {
-    if (timer) {
-      timers.clearTimeout(timer)
-      timer = undefined
-    }
-  }
-
-  return { promise, clear }
-}
-
-async function callAroundEachHooks(
-  suite: Suite,
-  test: Test,
-  runTest: () => Promise<void>,
+async function callAroundHooks<THook extends Function>(
+  runInner: () => Promise<void>,
+  options: AroundHooksOptions<THook>,
 ): Promise<void> {
-  const hooks = getAroundEachHooks(suite)
+  const { hooks, hookName, callbackName, onTimeout, invokeHook } = options
 
   if (!hooks.length) {
-    await runTest()
+    await runInner()
     return
   }
 
-  const timers = getSafeTimers()
+  const createTimeoutPromise = (
+    timeout: number,
+    phase: 'setup' | 'teardown',
+    stackTraceError: Error | undefined,
+  ): { promise: Promise<never>; clear: () => void } => {
+    let timer: ReturnType<typeof setTimeout> | undefined
+
+    const promise = new Promise<never>((_, reject) => {
+      if (timeout > 0 && timeout !== Number.POSITIVE_INFINITY) {
+        timer = setTimeout(() => {
+          const error = makeAroundHookTimeoutError(hookName, phase, timeout, stackTraceError)
+          onTimeout?.(error)
+          reject(error)
+        }, timeout)
+        timer.unref?.()
+      }
+    })
+
+    const clear = () => {
+      if (timer) {
+        clearTimeout(timer)
+        timer = undefined
+      }
+    }
+
+    return { promise, clear }
+  }
 
   const runNextHook = async (index: number): Promise<void> => {
     if (index >= hooks.length) {
-      return runTest()
+      return runInner()
     }
 
     const hook = hooks[index]
-    const timeout = getAroundEachHookTimeout(hook)
-    const stackTraceError = getAroundEachHookStackTrace(hook)
+    const timeout = getAroundHookTimeout(hook)
+    const stackTraceError = getAroundHookStackTrace(hook)
 
     let useCalled = false
-    let setupTimeout: { promise: Promise<never>; clear: () => void } | undefined
+    let setupTimeout: { promise: Promise<never>; clear: () => void }
     let teardownTimeout: { promise: Promise<never>; clear: () => void } | undefined
 
     // Promise that resolves when use() is called (setup phase complete)
@@ -319,29 +332,29 @@ async function callAroundEachHooks(
       resolveUseCalled()
 
       // Setup phase completed - clear setup timer
-      setupTimeout?.clear()
+      setupTimeout.clear()
 
       // Run inner hooks - don't time this against our teardown timeout
       await runNextHook(index + 1)
 
       // Start teardown timer after inner hooks complete - only times this hook's teardown code
-      teardownTimeout = createTimeoutPromise(timeout, 'teardown', stackTraceError, test, timers)
+      teardownTimeout = createTimeoutPromise(timeout, 'teardown', stackTraceError)
 
       // Signal that use() is returning (teardown phase starting)
       resolveUseReturned()
     }
 
     // Start setup timeout
-    setupTimeout = createTimeoutPromise(timeout, 'setup', stackTraceError, test, timers)
+    setupTimeout = createTimeoutPromise(timeout, 'setup', stackTraceError)
 
     // Run the hook in the background
     ;(async () => {
       try {
-        await hook(use, test.context, suite)
+        await invokeHook(hook, use)
         if (!useCalled) {
           throw new Error(
-            'The `runTest()` callback was not called in the `aroundEach` hook. '
-            + 'Make sure to call `runTest()` to run the test.',
+            `The \`${callbackName}\` callback was not called in the \`${hookName}\` hook. `
+            + `Make sure to call \`${callbackName}\` to run the ${hookName === 'aroundEach' ? 'test' : 'suite'}.`,
           )
         }
         resolveHookComplete()
@@ -378,11 +391,37 @@ async function callAroundEachHooks(
       ])
     }
     finally {
-      teardownTimeout?.clear()
+      teardownTimeout!.clear()
     }
   }
 
   await runNextHook(0)
+}
+
+async function callAroundAllHooks(
+  suite: Suite,
+  runSuiteInner: () => Promise<void>,
+): Promise<void> {
+  await callAroundHooks(runSuiteInner, {
+    hooks: getAroundAllHooks(suite),
+    hookName: 'aroundAll',
+    callbackName: 'runSuite()',
+    invokeHook: (hook, use) => hook(use, suite),
+  })
+}
+
+async function callAroundEachHooks(
+  suite: Suite,
+  test: Test,
+  runTest: () => Promise<void>,
+): Promise<void> {
+  await callAroundHooks(runTest, {
+    hooks: getAroundEachHooks(suite),
+    hookName: 'aroundEach',
+    callbackName: 'runTest()',
+    onTimeout: error => abortContextSignal(test.context, error),
+    invokeHook: (hook, use) => hook(use, test.context, suite),
+  })
 }
 
 const packs = new Map<string, [TaskResult | undefined, TaskMeta]>()
@@ -753,64 +792,77 @@ export async function runSuite(suite: Suite, runner: VitestRunner): Promise<void
   }
   else {
     try {
-      try {
-        beforeAllCleanups = await $('suite.beforeAll', () => callSuiteHook(
-          suite,
-          suite,
-          'beforeAll',
-          runner,
-          [suite],
-        ))
-      }
-      catch (e) {
-        markTasksAsSkipped(suite, runner)
-        throw e
-      }
+      await callAroundAllHooks(suite, async () => {
+        // beforeAll
+        try {
+          beforeAllCleanups = await $('suite.beforeAll', () => callSuiteHook(
+            suite,
+            suite,
+            'beforeAll',
+            runner,
+            [suite],
+          ))
+        }
+        catch (e) {
+          markTasksAsSkipped(suite, runner)
+          throw e
+        }
 
-      if (runner.runSuite) {
-        await runner.runSuite(suite)
-      }
-      else {
-        for (let tasksGroup of partitionSuiteChildren(suite)) {
-          if (tasksGroup[0].concurrent === true) {
-            await Promise.all(tasksGroup.map(c => runSuiteChild(c, runner)))
+        // run suite children
+        try {
+          if (runner.runSuite) {
+            await runner.runSuite(suite)
           }
           else {
-            const { sequence } = runner.config
-            if (suite.shuffle) {
-              // run describe block independently from tests
-              const suites = tasksGroup.filter(
-                group => group.type === 'suite',
-              )
-              const tests = tasksGroup.filter(group => group.type === 'test')
-              const groups = shuffle<Task[]>([suites, tests], sequence.seed)
-              tasksGroup = groups.flatMap(group =>
-                shuffle(group, sequence.seed),
-              )
-            }
-            for (const c of tasksGroup) {
-              await runSuiteChild(c, runner)
+            for (let tasksGroup of partitionSuiteChildren(suite)) {
+              if (tasksGroup[0].concurrent === true) {
+                await Promise.all(tasksGroup.map(c => runSuiteChild(c, runner)))
+              }
+              else {
+                const { sequence } = runner.config
+                if (suite.shuffle) {
+                  // run describe block independently from tests
+                  const suites = tasksGroup.filter(
+                    group => group.type === 'suite',
+                  )
+                  const tests = tasksGroup.filter(group => group.type === 'test')
+                  const groups = shuffle<Task[]>([suites, tests], sequence.seed)
+                  tasksGroup = groups.flatMap(group =>
+                    shuffle(group, sequence.seed),
+                  )
+                }
+                for (const c of tasksGroup) {
+                  await runSuiteChild(c, runner)
+                }
+              }
             }
           }
         }
-      }
+        finally {
+          // afterAll runs even if suite children fail
+          try {
+            await $('suite.afterAll', () => callSuiteHook(suite, suite, 'afterAll', runner, [suite]))
+            if (beforeAllCleanups.length) {
+              await $('suite.cleanup', () => callCleanupHooks(runner, beforeAllCleanups))
+            }
+            if (suite.file === suite) {
+              const context = getFileContext(suite as File)
+              await callFixtureCleanup(context)
+            }
+          }
+          catch (e) {
+            failTask(suite.result!, e, runner.config.diffOptions)
+          }
+        }
+      })
     }
     catch (e) {
-      failTask(suite.result, e, runner.config.diffOptions)
-    }
-
-    try {
-      await $('suite.afterAll', () => callSuiteHook(suite, suite, 'afterAll', runner, [suite]))
-      if (beforeAllCleanups.length) {
-        await $('suite.cleanup', () => callCleanupHooks(runner, beforeAllCleanups))
+      // Only mark tasks as skipped if aroundAll setup phase failed (before runSuite was called)
+      const error = e instanceof Error ? e : new Error(String(e))
+      if (error.message.includes('setup phase') || error.message.includes('runSuite()')) {
+        markTasksAsSkipped(suite, runner)
       }
-      if (suite.file === suite) {
-        const context = getFileContext(suite as File)
-        await callFixtureCleanup(context)
-      }
-    }
-    catch (e) {
-      failTask(suite.result, e, runner.config.diffOptions)
+      failTask(suite.result!, e, runner.config.diffOptions)
     }
 
     if (suite.mode === 'run' || suite.mode === 'queued') {

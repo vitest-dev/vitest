@@ -712,12 +712,20 @@ export interface AroundEachListener<ExtraContext = object> {
   ): Awaitable<unknown>
 }
 
+export interface AroundAllListener {
+  (
+    runSuite: () => Promise<void>,
+    suite: Readonly<Suite | File>
+  ): Awaitable<unknown>
+}
+
 export interface SuiteHooks<ExtraContext = object> {
   beforeAll: BeforeAllListener[]
   afterAll: AfterAllListener[]
   beforeEach: BeforeEachListener<ExtraContext>[]
   afterEach: AfterEachListener<ExtraContext>[]
   aroundEach: AroundEachListener<ExtraContext>[]
+  aroundAll: AroundAllListener[]
 }
 
 export interface TaskCustomOptions extends TestOptions {
