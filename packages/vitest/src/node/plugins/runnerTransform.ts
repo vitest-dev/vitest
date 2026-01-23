@@ -5,11 +5,10 @@ import { escapeRegExp } from '../../utils/base'
 import { resolveOptimizerConfig } from './utils'
 
 export function ModuleRunnerTransform(): VitePlugin {
-  // Closure-scoped state to collect values across hooks
+  let testConfig: NonNullable<UserConfig['test']>
   const noExternal: (string | RegExp)[] = []
   const external: (string | RegExp)[] = []
   let noExternalAll = false
-  let testConfig: NonNullable<UserConfig['test']>
 
   // make sure Vite always applies the module runner transform
   return {
@@ -57,12 +56,6 @@ export function ModuleRunnerTransform(): VitePlugin {
 
         testConfig.deps ??= {}
         testConfig.deps.moduleDirectories = moduleDirectories
-
-        // TODO: where?
-        // // Workaround `noExternal` merging bug on Vite 6
-        // // https://github.com/vitejs/vite/pull/20502
-        // delete config.ssr?.noExternal
-        // delete config.ssr?.external
 
         for (const name of names) {
           config.environments[name] ??= {}
