@@ -17,7 +17,7 @@ type GlobalOptions = Required<Omit<
 >>
 
 const defaultOptions = {
-  comparatorName: 'pixelmatch',
+  comparatorName: '@blazediff/core',
   // these are handled by each comparator on its own
   comparatorOptions: {},
   screenshotOptions: {
