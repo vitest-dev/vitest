@@ -288,21 +288,16 @@ export const onTestFinished: TaskHook<OnTestFinishedHandler> = createTestHook(
  * @returns {void}
  * @example
  * ```ts
- * // Example of using aroundAll to start a server for all tests
+ * // Example of using aroundAll to wrap suite in a tracing span
  * aroundAll(async (runSuite) => {
- *   const server = await startServer();
- *   await runSuite();
- *   await server.close();
+ *   await tracer.trace('test-suite', runSuite);
  * });
  * ```
  * @example
  * ```ts
- * // Example of using aroundAll with a database connection
+ * // Example of using aroundAll with AsyncLocalStorage context
  * aroundAll(async (runSuite) => {
- *   const db = await connectToDatabase();
- *   globalThis.testDb = db;
- *   await runSuite();
- *   await db.close();
+ *   await asyncLocalStorage.run({ suiteId: 'my-suite' }, runSuite);
  * });
  * ```
  */
