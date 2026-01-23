@@ -19,3 +19,11 @@ export class TestRunAbortError extends Error {
     this.reason = reason
   }
 }
+
+export class AroundSetupError extends Error {
+  public name = 'AroundSetupError'
+}
+
+export class AroundTeardownError extends Error {
+  public name = 'AroundTeardownError'
+}

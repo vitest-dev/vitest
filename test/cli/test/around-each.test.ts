@@ -141,7 +141,7 @@ test('throws error when runTest is not called', async () => {
     ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
 
      FAIL  no-runtest.test.ts > test 1
-    Error: The \`runTest()\` callback was not called in the \`aroundEach\` hook. Make sure to call \`runTest()\` to run the test.
+    AroundSetupError: The \`runTest()\` callback was not called in the \`aroundEach\` hook. Make sure to call \`runTest()\` to run the test.
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
 
     "
@@ -719,7 +719,7 @@ test('aroundEach setup phase timeout', async () => {
     ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
 
      FAIL  setup-timeout.test.ts > test with slow setup
-    Error: The setup phase of "aroundEach" hook timed out after 100ms.
+    AroundSetupError: The setup phase of "aroundEach" hook timed out after 100ms.
      ❯ setup-timeout.test.ts:4:7
           2|       import { aroundEach, test } from 'vitest'
           3| 
@@ -759,7 +759,7 @@ test('aroundEach teardown phase timeout', async () => {
     ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
 
      FAIL  teardown-timeout.test.ts > test with slow teardown
-    Error: The teardown phase of "aroundEach" hook timed out after 100ms.
+    AroundTeardownError: The teardown phase of "aroundEach" hook timed out after 100ms.
      ❯ teardown-timeout.test.ts:4:7
           2|       import { aroundEach, test } from 'vitest'
           3| 
@@ -840,7 +840,7 @@ test('aroundEach default timeout uses hookTimeout config', async () => {
     ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
 
      FAIL  default-timeout.test.ts > test
-    Error: The setup phase of "aroundEach" hook timed out after 10ms.
+    AroundSetupError: The setup phase of "aroundEach" hook timed out after 10ms.
      ❯ default-timeout.test.ts:4:7
           2|       import { aroundEach, test } from 'vitest'
           3| 
@@ -891,7 +891,7 @@ test('multiple aroundEach hooks with different timeouts', async () => {
     ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
 
      FAIL  multiple-timeouts.test.ts > test
-    Error: The setup phase of "aroundEach" hook timed out after 10ms.
+    AroundSetupError: The setup phase of "aroundEach" hook timed out after 10ms.
      ❯ multiple-timeouts.test.ts:12:7
          10| 
          11|       // Inner hook with 50ms timeout - this should timeout during set…
@@ -953,7 +953,7 @@ test('multiple aroundEach hooks where inner teardown times out', async () => {
     ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
 
      FAIL  multiple-teardown-timeout.test.ts > test
-    Error: The teardown phase of "aroundEach" hook timed out after 10ms.
+    AroundTeardownError: The teardown phase of "aroundEach" hook timed out after 10ms.
      ❯ multiple-teardown-timeout.test.ts:12:7
          10| 
          11|       // Inner hook with 50ms timeout - this should timeout during tea…
@@ -1444,7 +1444,7 @@ test('aroundAll setup phase timeout', async () => {
     ⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
 
      FAIL  timeout.test.ts [ timeout.test.ts ]
-    Error: The setup phase of "aroundAll" hook timed out after 10ms.
+    AroundSetupError: The setup phase of "aroundAll" hook timed out after 10ms.
      ❯ timeout.test.ts:4:7
           2|       import { test, aroundAll } from 'vitest'
           3| 
@@ -1495,7 +1495,7 @@ test('aroundAll teardown phase timeout', async () => {
     ⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
 
      FAIL  teardown-timeout.test.ts [ teardown-timeout.test.ts ]
-    Error: The teardown phase of "aroundAll" hook timed out after 10ms.
+    AroundTeardownError: The teardown phase of "aroundAll" hook timed out after 10ms.
      ❯ teardown-timeout.test.ts:4:7
           2|       import { test, aroundAll } from 'vitest'
           3| 

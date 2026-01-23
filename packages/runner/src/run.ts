@@ -23,7 +23,7 @@ import { shuffle } from '@vitest/utils/helpers'
 import { getSafeTimers } from '@vitest/utils/timers'
 import { collectTests } from './collect'
 import { abortContextSignal, getFileContext } from './context'
-import { PendingError, TestRunAbortError } from './errors'
+import { AroundSetupError, AroundTeardownError, PendingError, TestRunAbortError } from './errors'
 import { callFixtureCleanup, callFixtureCleanupFrom, getFixtureCleanupCount } from './fixture'
 import { getAroundHookStackTrace, getAroundHookTimeout, getBeforeHookCleanupCallback } from './hooks'
 import { getFn, getHooks } from './map'
@@ -248,7 +248,8 @@ function makeAroundHookTimeoutError(
   stackTraceError?: Error,
 ) {
   const message = `The ${phase} phase of "${hookName}" hook timed out after ${timeout}ms.`
-  const error = new Error(message)
+  const ErrorClass = phase === 'setup' ? AroundSetupError : AroundTeardownError
+  const error = new ErrorClass(message)
   if (stackTraceError?.stack) {
     error.stack = stackTraceError.stack.replace(stackTraceError.message, error.message)
   }
@@ -352,9 +353,10 @@ async function callAroundHooks<THook extends Function>(
       try {
         await invokeHook(hook, use)
         if (!useCalled) {
-          throw new Error(
+          throw new AroundSetupError(
             `The \`${callbackName}\` callback was not called in the \`${hookName}\` hook. `
             + `Make sure to call \`${callbackName}\` to run the ${hookName === 'aroundEach' ? 'test' : 'suite'}.`,
+            undefined,
           )
         }
         resolveHookComplete()
@@ -879,8 +881,7 @@ export async function runSuite(suite: Suite, runner: VitestRunner): Promise<void
     }
     catch (e) {
       // Only mark tasks as skipped if aroundAll setup phase failed (before runSuite was called)
-      const error = e instanceof Error ? e : new Error(String(e))
-      if (error.message.includes('setup phase') || error.message.includes('runSuite()')) {
+      if (e instanceof AroundSetupError) {
         markTasksAsSkipped(suite, runner)
       }
       failTask(suite.result!, e, runner.config.diffOptions)
