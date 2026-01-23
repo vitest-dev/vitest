@@ -609,6 +609,7 @@ export type TestAPI<ExtraContext = object> = ChainableTestAPI<ExtraContext>
     scoped: (
       fixtures: Partial<Fixtures<ExtraContext>>,
     ) => void
+    describe: SuiteAPI<ExtraContext>
   }
 
 export interface FixtureOptions {

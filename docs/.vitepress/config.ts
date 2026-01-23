@@ -961,7 +961,20 @@ export default ({ mode }: { mode: string }) => {
         '/api': [
           {
             text: 'Test API Reference',
-            link: '/api/',
+            items: [
+              {
+                text: 'Test',
+                link: '/api/test',
+              },
+              {
+                text: 'Describe',
+                link: '/api/describe',
+              },
+              {
+                text: 'Hooks',
+                link: '/api/hooks',
+              },
+            ],
           },
           {
             text: 'Mocks',

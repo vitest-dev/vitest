@@ -128,6 +128,7 @@ export type {
   SuiteAPI,
   SuiteCollector,
   SuiteFactory,
+  SuiteOptions,
   TaskCustomOptions,
   TaskMeta,
   TaskState,

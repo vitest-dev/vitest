@@ -99,61 +99,13 @@ When a test has both tags, the `timeout` will be `30_000` because `flaky` has a 
 
 ## Test Options
 
-Tags can define test options that will be applied to every test marked with the tag. These options are merged with the test's own options, with the test's options taking precedence.
+Tags can define [test options](/api/test#test-options) that will be applied to every test marked with the tag. These options are merged with the test's own options, with the test's options taking precedence.
 
-### timeout
+::: warning
+The [`retry.condition`](/api/test#retry) can onle be a regexp because the config values need to be serialised.
 
-- **Type:** `number`
-
-Test timeout in milliseconds.
-
-### retry
-
-- **Type:** `number | { count?: number, delay?: number, condition?: RegExp }`
-
-Retry configuration for the test. If a number, specifies how many times to retry. If an object, allows fine-grained retry control.
-
-### repeats
-
-- **Type:** `number`
-
-How many times the test will run again.
-
-### concurrent
-
-- **Type:** `boolean`
-
-Whether suites and tests run concurrently.
-
-### sequential
-
-- **Type:** `boolean`
-
-Whether tests run sequentially.
-
-### skip
-
-- **Type:** `boolean`
-
-Whether the test should be skipped.
-
-### only
-
-- **Type:** `boolean`
-
-Should this test be the only one running in a suite.
-
-### todo
-
-- **Type:** `boolean`
-
-Whether the test should be skipped and marked as a todo.
-
-### fails
-
-- **Type:** `boolean`
-
-Whether the test is expected to fail. If it does, the test will pass, otherwise it will fail.
+Tags also cannot apply other [tags](/api/test#tags) via these options.
+:::
 
 ## Example
 

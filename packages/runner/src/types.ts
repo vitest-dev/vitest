@@ -34,6 +34,7 @@ export type {
   SuiteCollector,
   SuiteFactory,
   SuiteHooks,
+  SuiteOptions,
   Task,
   TaskBase,
   TaskCustomOptions,
