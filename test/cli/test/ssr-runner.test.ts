@@ -1,5 +1,5 @@
-import { expect, it } from 'vitest'
 import { version } from 'vite'
+import { expect, it } from 'vitest'
 import { runVitest } from '../../test-utils'
 
 // https://github.com/vitest-dev/vitest/issues/9324
