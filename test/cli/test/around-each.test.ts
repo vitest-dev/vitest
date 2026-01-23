@@ -1,6 +1,10 @@
 import { expect, test } from 'vitest'
 import { runInlineTests } from '../../test-utils'
 
+function extractLogs(stdout: string): string {
+  return stdout.split('\n').filter(l => l.includes('>>')).join('\n')
+}
+
 test('basic aroundEach wraps the test', async () => {
   const { stdout, stderr } = await runInlineTests({
     'basic.test.ts': `
@@ -19,16 +23,11 @@ test('basic aroundEach wraps the test', async () => {
   })
 
   expect(stderr).toBe('')
-  expect(stdout).toContain('>> before test')
-  expect(stdout).toContain('>> inside test')
-  expect(stdout).toContain('>> after test')
-
-  // Verify order
-  const beforeIndex = stdout.indexOf('>> before test')
-  const insideIndex = stdout.indexOf('>> inside test')
-  const afterIndex = stdout.indexOf('>> after test')
-  expect(beforeIndex).toBeLessThan(insideIndex)
-  expect(insideIndex).toBeLessThan(afterIndex)
+  expect(extractLogs(stdout)).toMatchInlineSnapshot(`
+    ">> before test
+    >> inside test
+    >> after test"
+  `)
 })
 
 test('multiple aroundEach hooks are nested (first is outermost)', async () => {
@@ -105,15 +104,20 @@ test('aroundEach in nested suites wraps correctly', async () => {
   })
 
   expect(stderr).toBe('')
-
-  // Check that suite 1 test has root and suite1 hooks
-  const suite1TestLogs = stdout.substring(
-    stdout.indexOf('>> root before'),
-    stdout.indexOf('>> root after') + '>> root after'.length,
-  )
-  expect(suite1TestLogs).toContain('>> root before')
-  expect(suite1TestLogs).toContain('>> suite1 before')
-  expect(suite1TestLogs).toContain('>> test suite1')
+  expect(extractLogs(stdout)).toMatchInlineSnapshot(`
+    ">> root before
+    >> suite1 before
+    >> test suite1
+    >> suite1 after
+    >> root after
+    >> root before
+    >> suite1 before
+    >> nested before
+    >> test nested
+    >> nested after
+    >> suite1 after
+    >> root after"
+  `)
 })
 
 test('throws error when runTest is not called', async () => {
@@ -215,9 +219,14 @@ test('aroundEach runs for each test', async () => {
   })
 
   expect(stderr).toBe('')
-  expect(stdout).toContain('>> aroundEach run 1')
-  expect(stdout).toContain('>> aroundEach run 2')
-  expect(stdout).toContain('>> aroundEach run 3')
+  expect(extractLogs(stdout)).toMatchInlineSnapshot(`
+    ">> aroundEach run 1
+    >> test 1
+    >> aroundEach run 2
+    >> test 2
+    >> aroundEach run 3
+    >> test 3"
+  `)
 })
 
 test('aroundEach with beforeEach and afterEach', async () => {
@@ -275,7 +284,10 @@ test('aroundEach receives test context', async () => {
   })
 
   expect(stderr).toBe('')
-  expect(stdout).toContain('>> test name: my test name')
+  expect(extractLogs(stdout)).toMatchInlineSnapshot(`
+    ">> test name: my test name
+    >> inside test"
+  `)
   expect(errorTree()).toMatchInlineSnapshot(`
     {
       "context.test.ts": {
@@ -305,9 +317,11 @@ test('aroundEach cleanup runs even on test failure', async () => {
 
   // Cleanup should still run even when test fails
   expect(stderr).toContain('expected 1 to be 2')
-  expect(stdout).toContain('>> setup')
-  expect(stdout).toContain('>> test running')
-  expect(stdout).toContain('>> cleanup (should run)')
+  expect(extractLogs(stdout)).toMatchInlineSnapshot(`
+    ">> setup
+    >> test running
+    >> cleanup (should run)"
+  `)
   expect(errorTree()).toMatchInlineSnapshot(`
     {
       "test-failure.test.ts": {
@@ -354,8 +368,7 @@ test('aroundEach error prevents test from running', async () => {
 
     "
   `)
-  expect(stdout).toContain('>> before error')
-  expect(stdout).not.toContain('>> test should not run')
+  expect(extractLogs(stdout)).toMatchInlineSnapshot(`">> before error"`)
 })
 
 test('aroundEach cleanup error is reported', async () => {
@@ -376,9 +389,11 @@ test('aroundEach cleanup error is reported', async () => {
     `,
   })
 
-  expect(stdout).toContain('>> setup')
-  expect(stdout).toContain('>> test ran')
-  expect(stdout).toContain('>> cleanup before error')
+  expect(extractLogs(stdout)).toMatchInlineSnapshot(`
+    ">> setup
+    >> test ran
+    >> cleanup before error"
+  `)
   expect(stderr).toMatchInlineSnapshot(`
     "
     ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
@@ -477,9 +492,11 @@ test('aroundEach with globals: true', async () => {
   }, { globals: true })
 
   expect(stderr).toBe('')
-  expect(stdout).toContain('>> aroundEach global')
-  expect(stdout).toContain('>> test')
-  expect(stdout).toContain('>> aroundEach global done')
+  expect(extractLogs(stdout)).toMatchInlineSnapshot(`
+    ">> aroundEach global
+    >> test
+    >> aroundEach global done"
+  `)
   expect(errorTree()).toMatchInlineSnapshot(`
     {
       "globals.test.ts": {
@@ -506,9 +523,14 @@ test('aroundEach with test.each', async () => {
   })
 
   expect(stderr).toBe('')
-  expect(stdout).toContain('>> aroundEach for: test 1')
-  expect(stdout).toContain('>> aroundEach for: test 2')
-  expect(stdout).toContain('>> aroundEach for: test 3')
+  expect(extractLogs(stdout)).toMatchInlineSnapshot(`
+    ">> aroundEach for: test 1
+    >> test value: 1
+    >> aroundEach for: test 2
+    >> test value: 2
+    >> aroundEach for: test 3
+    >> test value: 3"
+  `)
   expect(errorTree()).toMatchInlineSnapshot(`
     {
       "test-each.test.ts": {
@@ -586,9 +608,14 @@ test('aroundEach with retry', async () => {
   })
 
   expect(stderr).toBe('')
-  expect(stdout).toContain('>> aroundEach attempt: 1')
-  expect(stdout).toContain('>> aroundEach attempt: 2')
-  expect(stdout).toContain('>> aroundEach attempt: 3')
+  expect(extractLogs(stdout)).toMatchInlineSnapshot(`
+    ">> aroundEach attempt: 1
+    >> test attempt: 1
+    >> aroundEach attempt: 2
+    >> test attempt: 2
+    >> aroundEach attempt: 3
+    >> test attempt: 3"
+  `)
   expect(errorTree()).toMatchInlineSnapshot(`
     {
       "retry.test.ts": {
@@ -617,7 +644,10 @@ test('aroundEach receives suite as third argument', async () => {
   })
 
   expect(stderr).toBe('')
-  expect(stdout).toContain('>> suite name: my suite')
+  expect(extractLogs(stdout)).toMatchInlineSnapshot(`
+    ">> suite name: my suite
+    >> test"
+  `)
   expect(errorTree()).toMatchInlineSnapshot(`
     {
       "suite-arg.test.ts": {
@@ -650,9 +680,10 @@ test('aroundEach skipped when test is skipped', async () => {
   })
 
   expect(stderr).toBe('')
-  expect(stdout).toContain('>> aroundEach for: normal test')
-  expect(stdout).not.toContain('>> aroundEach for: skipped test')
-  expect(stdout).not.toContain('>> skipped test')
+  expect(extractLogs(stdout)).toMatchInlineSnapshot(`
+    ">> aroundEach for: normal test
+    >> normal test"
+  `)
   expect(errorTree()).toMatchInlineSnapshot(`
     {
       "skipped.test.ts": {
@@ -741,9 +772,11 @@ test('aroundEach teardown phase timeout', async () => {
 
     "
   `)
-  expect(stdout).toContain('>> setup')
-  expect(stdout).toContain('>> test')
-  expect(stdout).toContain('>> teardown start')
+  expect(extractLogs(stdout)).toMatchInlineSnapshot(`
+    ">> setup
+    >> test
+    >> teardown start"
+  `)
 })
 
 test('aroundEach setup and teardown have independent timeouts', async () => {
@@ -771,11 +804,13 @@ test('aroundEach setup and teardown have independent timeouts', async () => {
 
   // Both phases complete within their individual timeouts
   expect(stderr).toBe('')
-  expect(stdout).toContain('>> setup start')
-  expect(stdout).toContain('>> setup end')
-  expect(stdout).toContain('>> test')
-  expect(stdout).toContain('>> teardown start')
-  expect(stdout).toContain('>> teardown end')
+  expect(extractLogs(stdout)).toMatchInlineSnapshot(`
+    ">> setup start
+    >> setup end
+    >> test
+    >> teardown start
+    >> teardown end"
+  `)
   expect(errorTree()).toMatchInlineSnapshot(`
     {
       "independent-timeouts.test.ts": {
@@ -847,8 +882,10 @@ test('multiple aroundEach hooks with different timeouts', async () => {
     `,
   })
 
-  expect(stdout).toContain('>> outer setup')
-  expect(stdout).toContain('>> inner setup start')
+  expect(extractLogs(stdout)).toMatchInlineSnapshot(`
+    ">> outer setup
+    >> inner setup start"
+  `)
   expect(stderr).toMatchInlineSnapshot(`
     "
     ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
@@ -905,10 +942,12 @@ test('multiple aroundEach hooks where inner teardown times out', async () => {
     `,
   })
 
-  expect(stdout).toContain('>> outer setup')
-  expect(stdout).toContain('>> inner setup')
-  expect(stdout).toContain('>> test')
-  expect(stdout).toContain('>> inner teardown start')
+  expect(extractLogs(stdout)).toMatchInlineSnapshot(`
+    ">> outer setup
+    >> inner setup
+    >> test
+    >> inner teardown start"
+  `)
   expect(stderr).toMatchInlineSnapshot(`
     "
     ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
@@ -969,13 +1008,15 @@ test('aroundEach hook timeouts are independent of each other', async () => {
   })
 
   expect(stderr).toBe('')
-  expect(stdout).toContain('>> first hook setup')
-  expect(stdout).toContain('>> second hook setup start')
-  expect(stdout).toContain('>> second hook setup end')
-  expect(stdout).toContain('>> test')
-  expect(stdout).toContain('>> second hook teardown start')
-  expect(stdout).toContain('>> second hook teardown end')
-  expect(stdout).toContain('>> first hook teardown')
+  expect(extractLogs(stdout)).toMatchInlineSnapshot(`
+    ">> first hook setup
+    >> second hook setup start
+    >> second hook setup end
+    >> test
+    >> second hook teardown start
+    >> second hook teardown end
+    >> first hook teardown"
+  `)
   expect(errorTree()).toMatchInlineSnapshot(`
     {
       "independent-hook-timeouts.test.ts": {
@@ -1017,9 +1058,14 @@ test('aroundEach with AsyncLocalStorage', async () => {
   })
 
   expect(stderr).toBe('')
-  expect(stdout).toContain('>> setting context: 1')
-  expect(stdout).toContain('>> setting context: 2')
-  expect(stdout).toContain('>> context cleared')
+  expect(extractLogs(stdout)).toMatchInlineSnapshot(`
+    ">> setting context: 1
+    >> test got context: 1
+    >> context cleared
+    >> setting context: 2
+    >> test got context: 2
+    >> context cleared"
+  `)
   expect(errorTree()).toMatchInlineSnapshot(`
     {
       "async-local-storage.test.ts": {
@@ -1061,12 +1107,14 @@ test('aroundEach with fixtures', async () => {
   })
 
   expect(stderr).toBe('')
-  expect(stdout).toContain('>> db fixture setup')
-  expect(stdout).toContain('>> aroundEach setup, db available: true')
-  expect(stdout).toContain('>> query result: result of: SELECT 1')
-  expect(stdout).toContain('>> test running, db available: true')
-  expect(stdout).toContain('>> aroundEach teardown')
-  expect(stdout).toContain('>> db fixture teardown')
+  expect(extractLogs(stdout)).toMatchInlineSnapshot(`
+    ">> db fixture setup
+    >> aroundEach setup, db available: true
+    >> query result: result of: SELECT 1
+    >> test running, db available: true
+    >> aroundEach teardown
+    >> db fixture teardown"
+  `)
   expect(errorTree()).toMatchInlineSnapshot(`
     {
       "fixtures.test.ts": {
@@ -1124,11 +1172,14 @@ test('aroundEach with AsyncLocalStorage fixture and value fixture', async () => 
   })
 
   expect(stderr).toBe('')
-  expect(stdout).toContain('>> setting context: 1')
-  expect(stdout).toContain('>> setting context: 2')
-  expect(stdout).toContain('>> test got requestId: 1')
-  expect(stdout).toContain('>> test got requestId: 2')
-  expect(stdout).toContain('>> context cleared')
+  expect(extractLogs(stdout)).toMatchInlineSnapshot(`
+    ">> setting context: 1
+    >> test got requestId: 1
+    >> context cleared
+    >> setting context: 2
+    >> test got requestId: 2
+    >> context cleared"
+  `)
   expect(errorTree()).toMatchInlineSnapshot(`
     {
       "als-fixtures.test.ts": {
@@ -1163,10 +1214,12 @@ test('basic aroundAll wraps the suite', async () => {
   })
 
   expect(stderr).toBe('')
-  expect(stdout).toContain('>> aroundAll setup')
-  expect(stdout).toContain('>> first test running')
-  expect(stdout).toContain('>> second test running')
-  expect(stdout).toContain('>> aroundAll teardown')
+  expect(extractLogs(stdout)).toMatchInlineSnapshot(`
+    ">> aroundAll setup
+    >> first test running
+    >> second test running
+    >> aroundAll teardown"
+  `)
   expect(errorTree()).toMatchInlineSnapshot(`
     {
       "basic.test.ts": {
@@ -1201,12 +1254,13 @@ test('multiple aroundAll hooks are nested (first is outermost)', async () => {
   })
 
   expect(stderr).toBe('')
-  const lines = stdout.split('\n').filter(l => l.includes('>>')).join('\n')
-  expect(lines).toContain('>> outer setup')
-  expect(lines).toContain('>> inner setup')
-  expect(lines).toContain('>> test running')
-  expect(lines).toContain('>> inner teardown')
-  expect(lines).toContain('>> outer teardown')
+  expect(extractLogs(stdout)).toMatchInlineSnapshot(`
+    ">> outer setup
+    >> inner setup
+    >> test running
+    >> inner teardown
+    >> outer teardown"
+  `)
   expect(errorTree()).toMatchInlineSnapshot(`
     {
       "nested.test.ts": {
@@ -1246,12 +1300,14 @@ test('aroundAll in nested suites wraps correctly', async () => {
   })
 
   expect(stderr).toBe('')
-  expect(stdout).toContain('>> root aroundAll setup')
-  expect(stdout).toContain('>> root test running')
-  expect(stdout).toContain('>> nested aroundAll setup')
-  expect(stdout).toContain('>> nested test running')
-  expect(stdout).toContain('>> nested aroundAll teardown')
-  expect(stdout).toContain('>> root aroundAll teardown')
+  expect(extractLogs(stdout)).toMatchInlineSnapshot(`
+    ">> root aroundAll setup
+    >> root test running
+    >> nested aroundAll setup
+    >> nested test running
+    >> nested aroundAll teardown
+    >> root aroundAll teardown"
+  `)
   expect(errorTree()).toMatchInlineSnapshot(`
     {
       "nested-suite.test.ts": {
@@ -1307,9 +1363,11 @@ test('aroundAll cleanup runs even on test failure', async () => {
     `,
   })
 
-  expect(stdout).toContain('>> aroundAll setup')
-  expect(stdout).toContain('>> failing test running')
-  expect(stdout).toContain('>> aroundAll teardown')
+  expect(extractLogs(stdout)).toMatchInlineSnapshot(`
+    ">> aroundAll setup
+    >> failing test running
+    >> aroundAll teardown"
+  `)
   expect(errorTree()).toMatchInlineSnapshot(`
     {
       "cleanup.test.ts": {
@@ -1347,12 +1405,13 @@ test('aroundAll with beforeAll and afterAll', async () => {
   })
 
   expect(stderr).toBe('')
-  // beforeAll runs first, then aroundAll setup, then test, then aroundAll teardown, then afterAll
-  expect(stdout).toContain('>> beforeAll')
-  expect(stdout).toContain('>> aroundAll setup')
-  expect(stdout).toContain('>> test running')
-  expect(stdout).toContain('>> aroundAll teardown')
-  expect(stdout).toContain('>> afterAll')
+  expect(extractLogs(stdout)).toMatchInlineSnapshot(`
+    ">> aroundAll setup
+    >> beforeAll
+    >> test running
+    >> afterAll
+    >> aroundAll teardown"
+  `)
   expect(errorTree()).toMatchInlineSnapshot(`
     {
       "with-hooks.test.ts": {
@@ -1426,9 +1485,11 @@ test('aroundAll teardown phase timeout', async () => {
     `,
   })
 
-  expect(stdout).toContain('>> aroundAll setup')
-  expect(stdout).toContain('>> test running')
-  expect(stdout).toContain('>> aroundAll teardown starting')
+  expect(extractLogs(stdout)).toMatchInlineSnapshot(`
+    ">> aroundAll setup
+    >> test running
+    >> aroundAll teardown starting"
+  `)
   expect(stderr).toMatchInlineSnapshot(`
     "
     ⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
@@ -1475,7 +1536,10 @@ test('aroundAll receives suite as second argument', async () => {
   })
 
   expect(stderr).toBe('')
-  expect(stdout).toContain('>> suite name: my suite')
+  expect(extractLogs(stdout)).toMatchInlineSnapshot(`
+    ">> suite name: my suite
+    >> test running"
+  `)
   expect(errorTree()).toMatchInlineSnapshot(`
     {
       "suite-arg.test.ts": {
@@ -1517,9 +1581,12 @@ test('aroundAll with server start/stop pattern', async () => {
   })
 
   expect(stderr).toBe('')
-  expect(stdout).toContain('>> server started on port 3000')
-  expect(stdout).toContain('>> making request to port 3000')
-  expect(stdout).toContain('>> server stopping')
+  expect(extractLogs(stdout)).toMatchInlineSnapshot(`
+    ">> server started on port 3000
+    >> making request to port 3000
+    >> making request to port 3000
+    >> server stopping"
+  `)
   expect(errorTree()).toMatchInlineSnapshot(`
     {
       "server.test.ts": {
@@ -1600,28 +1667,25 @@ test('aroundAll with multiple suites and multiple hooks in same suite', async ()
   })
 
   expect(stderr).toBe('')
-  // Root hooks wrap everything
-  expect(stdout).toContain('>> root aroundAll 1 setup')
-  expect(stdout).toContain('>> root aroundAll 2 setup')
-  expect(stdout).toContain('>> root test')
-  // Suite A has its own hooks
-  expect(stdout).toContain('>> suite A aroundAll 1 setup')
-  expect(stdout).toContain('>> suite A aroundAll 2 setup')
-  expect(stdout).toContain('>> test A1')
-  expect(stdout).toContain('>> test A2')
-  expect(stdout).toContain('>> suite A aroundAll 2 teardown')
-  expect(stdout).toContain('>> suite A aroundAll 1 teardown')
-  // Suite B has its own hooks
-  expect(stdout).toContain('>> suite B aroundAll setup')
-  expect(stdout).toContain('>> test B1')
-  // Nested suite has its own hooks
-  expect(stdout).toContain('>> nested aroundAll setup')
-  expect(stdout).toContain('>> nested test')
-  expect(stdout).toContain('>> nested aroundAll teardown')
-  expect(stdout).toContain('>> suite B aroundAll teardown')
-  // Root hooks teardown
-  expect(stdout).toContain('>> root aroundAll 2 teardown')
-  expect(stdout).toContain('>> root aroundAll 1 teardown')
+  expect(extractLogs(stdout)).toMatchInlineSnapshot(`
+    ">> root aroundAll 1 setup
+    >> root aroundAll 2 setup
+    >> root test
+    >> suite A aroundAll 1 setup
+    >> suite A aroundAll 2 setup
+    >> test A1
+    >> test A2
+    >> suite A aroundAll 2 teardown
+    >> suite A aroundAll 1 teardown
+    >> suite B aroundAll setup
+    >> test B1
+    >> nested aroundAll setup
+    >> nested test
+    >> nested aroundAll teardown
+    >> suite B aroundAll teardown
+    >> root aroundAll 2 teardown
+    >> root aroundAll 1 teardown"
+  `)
   expect(errorTree()).toMatchInlineSnapshot(`
     {
       "multi-suite.test.ts": {
@@ -1687,11 +1751,14 @@ test('aroundAll with module-level AsyncLocalStorage and test fixture', async () 
   })
 
   expect(stderr).toBe('')
-  expect(stdout).toContain('>> aroundAll setup, setting requestId: 1')
-  expect(stdout).toContain('>> currentRequestId fixture reading store: 1')
-  expect(stdout).toContain('>> first test, currentRequestId: 1')
-  expect(stdout).toContain('>> second test, currentRequestId: 1')
-  expect(stdout).toContain('>> aroundAll teardown')
+  expect(extractLogs(stdout)).toMatchInlineSnapshot(`
+    ">> aroundAll setup, setting requestId: 1
+    >> currentRequestId fixture reading store: 1
+    >> first test, currentRequestId: 1
+    >> currentRequestId fixture reading store: 1
+    >> second test, currentRequestId: 1
+    >> aroundAll teardown"
+  `)
   expect(errorTree()).toMatchInlineSnapshot(`
     {
       "module-als.test.ts": {

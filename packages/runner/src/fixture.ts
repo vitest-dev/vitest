@@ -132,6 +132,34 @@ export async function callFixtureCleanup(context: object): Promise<void> {
   cleanupFnArrayMap.delete(context)
 }
 
+/**
+ * Returns the current number of cleanup functions registered for the context.
+ * This can be used as a checkpoint to later clean up only fixtures added after this point.
+ */
+export function getFixtureCleanupCount(context: object): number {
+  return cleanupFnArrayMap.get(context)?.length ?? 0
+}
+
+/**
+ * Cleans up only fixtures that were added after the given checkpoint index.
+ * This is used by aroundEach to clean up fixtures created inside runTest()
+ * while preserving fixtures that were created for aroundEach itself.
+ */
+export async function callFixtureCleanupFrom(context: object, fromIndex: number): Promise<void> {
+  const cleanupFnArray = cleanupFnArrayMap.get(context)
+  if (!cleanupFnArray || cleanupFnArray.length <= fromIndex) {
+    return
+  }
+  // Get items added after the checkpoint
+  const toCleanup = cleanupFnArray.slice(fromIndex)
+  // Clean up in reverse order
+  for (const cleanup of toCleanup.reverse()) {
+    await cleanup()
+  }
+  // Remove cleaned up items from the array, keeping items before checkpoint
+  cleanupFnArray.length = fromIndex
+}
+
 export function withFixtures(runner: VitestRunner, fn: Function, testContext?: TestContext) {
   return (hookContext?: TestContext): any => {
     const context: (TestContext & { [key: string]: any }) | undefined

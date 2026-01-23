@@ -24,7 +24,7 @@ import { getSafeTimers } from '@vitest/utils/timers'
 import { collectTests } from './collect'
 import { abortContextSignal, getFileContext } from './context'
 import { PendingError, TestRunAbortError } from './errors'
-import { callFixtureCleanup } from './fixture'
+import { callFixtureCleanup, callFixtureCleanupFrom, getFixtureCleanupCount } from './fixture'
 import { getAroundHookStackTrace, getAroundHookTimeout, getBeforeHookCleanupCallback } from './hooks'
 import { getFn, getHooks } from './map'
 import { addRunningTest, getRunningTests, setCurrentTest } from './test-state'
@@ -413,15 +413,21 @@ async function callAroundAllHooks(
 async function callAroundEachHooks(
   suite: Suite,
   test: Test,
-  runTest: () => Promise<void>,
+  runTest: (fixtureCheckpoint: number) => Promise<void>,
 ): Promise<void> {
-  await callAroundHooks(runTest, {
-    hooks: getAroundEachHooks(suite),
-    hookName: 'aroundEach',
-    callbackName: 'runTest()',
-    onTimeout: error => abortContextSignal(test.context, error),
-    invokeHook: (hook, use) => hook(use, test.context, suite),
-  })
+  await callAroundHooks(
+    // Take checkpoint right before runTest - at this point all aroundEach fixtures
+    // have been resolved, so we can correctly identify which fixtures belong to
+    // aroundEach (before checkpoint) vs inside runTest (after checkpoint)
+    () => runTest(getFixtureCleanupCount(test.context)),
+    {
+      hooks: getAroundEachHooks(suite),
+      hookName: 'aroundEach',
+      callbackName: 'runTest()',
+      onTimeout: error => abortContextSignal(test.context, error),
+      invokeHook: (hook, use) => hook(use, test.context, suite),
+    },
+  )
 }
 
 const packs = new Map<string, [TaskResult | undefined, TaskMeta]>()
@@ -572,7 +578,11 @@ export async function runTest(test: Test, runner: VitestRunner): Promise<void> {
     const retry = getRetryCount(test.retry)
     for (let retryCount = 0; retryCount <= retry; retryCount++) {
       let beforeEachCleanups: unknown[] = []
-      await callAroundEachHooks(suite, test, async () => {
+      // fixtureCheckpoint is passed by callAroundEachHooks - it represents the count
+      // of fixture cleanup functions AFTER all aroundEach fixtures have been resolved
+      // but BEFORE the test runs. This allows us to clean up only fixtures created
+      // inside runTest while preserving aroundEach fixtures for teardown.
+      await callAroundEachHooks(suite, test, async (fixtureCheckpoint) => {
         try {
           await runner.onBeforeTryTask?.(test, {
             retry: retryCount,
@@ -635,7 +645,9 @@ export async function runTest(test: Test, runner: VitestRunner): Promise<void> {
           if (beforeEachCleanups.length) {
             await $('test.cleanup', () => callCleanupHooks(runner, beforeEachCleanups))
           }
-          await callFixtureCleanup(test.context)
+          // Only clean up fixtures created inside runTest (after the checkpoint)
+          // Fixtures created for aroundEach will be cleaned up after aroundEach teardown
+          await callFixtureCleanupFrom(test.context, fixtureCheckpoint)
         }
         catch (e) {
           failTask(test.result!, e, runner.config.diffOptions)
@@ -664,6 +676,15 @@ export async function runTest(test: Test, runner: VitestRunner): Promise<void> {
       }).catch((error) => {
         failTask(test.result!, error, runner.config.diffOptions)
       })
+
+      // Clean up fixtures that were created for aroundEach (before the checkpoint)
+      // This runs after aroundEach teardown has completed
+      try {
+        await callFixtureCleanup(test.context)
+      }
+      catch (e) {
+        failTask(test.result!, e, runner.config.diffOptions)
+      }
 
       // skipped with new PendingError
       if (test.result?.pending || test.result?.state === 'skip') {
