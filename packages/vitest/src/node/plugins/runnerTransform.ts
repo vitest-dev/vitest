@@ -114,24 +114,27 @@ export function ModuleRunnerTransform(): VitePlugin {
         )
       },
     },
-    configResolved(config) {
-      const testConfig = config.test!
-      testConfig.server ??= {}
-      testConfig.server.deps ??= {}
+    configResolved: {
+      order: 'pre',
+      handler(config) {
+        const testConfig = config.test!
+        testConfig.server ??= {}
+        testConfig.server.deps ??= {}
 
-      if (testConfig.server.deps.inline !== true) {
-        if (noExternalAll) {
-          testConfig.server.deps.inline = true
+        if (testConfig.server.deps.inline !== true) {
+          if (noExternalAll) {
+            testConfig.server.deps.inline = true
+          }
+          else if (noExternal.length) {
+            testConfig.server.deps.inline ??= []
+            testConfig.server.deps.inline.push(...noExternal)
+          }
         }
-        else if (noExternal.length) {
-          testConfig.server.deps.inline ??= []
-          testConfig.server.deps.inline.push(...noExternal)
+        if (external.length) {
+          testConfig.server.deps.external ??= []
+          testConfig.server.deps.external.push(...external)
         }
-      }
-      if (external.length) {
-        testConfig.server.deps.external ??= []
-        testConfig.server.deps.external.push(...external)
-      }
+      },
     },
   }
 }
