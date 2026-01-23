@@ -269,7 +269,7 @@ export interface BrowserConfigOptions {
         /**
          * The name of the comparator to use for visual diffing.
          *
-         * @defaultValue `'pixelmatch'`
+         * @defaultValue `'@blazediff/core'`
          */
         comparatorName?: ComparatorName
         comparatorOptions?: ToMatchScreenshotComparators[ComparatorName]

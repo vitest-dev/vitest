@@ -17,7 +17,7 @@ type GlobalOptions = Required<Omit<
 >>
 
 const defaultOptions = {
-  comparatorName: 'pixelmatch',
+  comparatorName: '@blazediff/core',
   // these are handled by each comparator on its own
   comparatorOptions: {},
   screenshotOptions: {
@@ -120,6 +120,8 @@ export function resolveOptions(
 
   const { root } = context.project.serializedConfig
 
+  // console.log('context.project.config.attachmentsDir', context.project.config.attachmentsDir)
+
   const resolvePathData = {
     arg: sanitizeArg(
       // remove the extension only if it ends up being used
@@ -131,8 +133,8 @@ export function resolveOptions(
     platform: platform(),
     root,
     screenshotDirectory: relative(
-      root,
-      join(root, context.project.config.browser.screenshotDirectory ?? '__screenshots__'),
+      '/',
+      resolve('/', relative(root, context.project.config.browser.screenshotDirectory ?? '__screenshots__')),
     ),
     attachmentsDir: relative(root, context.project.config.attachmentsDir),
     testFileDirectory: relative(root, dirname(context.testPath)),

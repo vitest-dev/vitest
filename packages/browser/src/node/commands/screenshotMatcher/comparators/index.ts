@@ -1,14 +1,15 @@
 import type { BrowserCommandContext } from 'vitest/node'
 import type { ScreenshotComparatorRegistry } from '../../../../../context'
 import type { Comparator } from '../types'
-import { pixelmatch } from './pixelmatch'
+import { blazediffCore } from './blazediff-core'
 
 const comparators: {
   [ComparatorName in keyof ScreenshotComparatorRegistry]: Comparator<
     ScreenshotComparatorRegistry[ComparatorName]
   >
 } = {
-  pixelmatch,
+  '@blazediff/core': blazediffCore,
+  'pixelmatch': blazediffCore,
 }
 
 export function getComparator<ComparatorName extends keyof ScreenshotComparatorRegistry>(
