@@ -119,7 +119,10 @@ export interface SerializedConfig {
   serializedDefines: string
   experimental: {
     fsModuleCache: boolean
-    printImportBreakdown: boolean | undefined
+    importDurations: {
+      print: boolean
+      limit: number
+    }
     viteModuleRunner: boolean
     nodeLoader: boolean
     openTelemetry: {
