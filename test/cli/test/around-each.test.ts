@@ -120,6 +120,42 @@ test('aroundEach in nested suites wraps correctly', async () => {
   `)
 })
 
+test('throws error when runTest is called multiple times', async () => {
+  const { stderr } = await runInlineTests({
+    'multiple-calls.test.ts': `
+      import { aroundEach, test } from 'vitest'
+
+      aroundEach(async (runTest) => {
+        await runTest()
+        await runTest() // second call should throw
+      })
+
+      test('test 1', () => {
+        console.log('>> test ran')
+      })
+    `,
+  })
+
+  expect(stderr).toMatchInlineSnapshot(`
+    "
+    ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+     FAIL  multiple-calls.test.ts > test 1
+    AroundHookMultipleCallsError: The \`runTest()\` callback was called multiple times in the \`aroundEach\` hook. The callback can only be called once per hook.
+     ❯ multiple-calls.test.ts:6:15
+          4|       aroundEach(async (runTest) => {
+          5|         await runTest()
+          6|         await runTest() // second call should throw
+           |               ^
+          7|       })
+          8| 
+
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+    "
+  `)
+})
+
 test('throws error when runTest is not called', async () => {
   const { stderr } = await runInlineTests({
     'no-runtest.test.ts': `
@@ -1317,6 +1353,42 @@ test('aroundAll in nested suites wraps correctly', async () => {
         "root test": "passed",
       },
     }
+  `)
+})
+
+test('aroundAll throws error when runSuite is called multiple times', async () => {
+  const { stderr } = await runInlineTests({
+    'multiple-calls.test.ts': `
+      import { test, aroundAll } from 'vitest'
+
+      aroundAll(async (runSuite) => {
+        await runSuite()
+        await runSuite() // second call should throw
+      })
+
+      test('test', () => {
+        console.log('>> test running')
+      })
+    `,
+  })
+
+  expect(stderr).toMatchInlineSnapshot(`
+    "
+    ⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+     FAIL  multiple-calls.test.ts [ multiple-calls.test.ts ]
+    AroundHookMultipleCallsError: The \`runSuite()\` callback was called multiple times in the \`aroundAll\` hook. The callback can only be called once per hook.
+     ❯ multiple-calls.test.ts:6:15
+          4|       aroundAll(async (runSuite) => {
+          5|         await runSuite()
+          6|         await runSuite() // second call should throw
+           |               ^
+          7|       })
+          8| 
+
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+    "
   `)
 })
 

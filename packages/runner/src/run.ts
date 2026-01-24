@@ -23,7 +23,7 @@ import { shuffle } from '@vitest/utils/helpers'
 import { getSafeTimers } from '@vitest/utils/timers'
 import { collectTests } from './collect'
 import { abortContextSignal, getFileContext } from './context'
-import { AroundSetupError, AroundTeardownError, PendingError, TestRunAbortError } from './errors'
+import { AroundHookMultipleCallsError, AroundSetupError, AroundTeardownError, PendingError, TestRunAbortError } from './errors'
 import { callFixtureCleanup, callFixtureCleanupFrom, getFixtureCleanupCount } from './fixture'
 import { getAroundHookStackTrace, getAroundHookTimeout, getBeforeHookCleanupCallback } from './hooks'
 import { getFn, getHooks } from './map'
@@ -329,6 +329,12 @@ async function callAroundHooks<THook extends Function>(
     })
 
     const use = async () => {
+      if (useCalled) {
+        throw new AroundHookMultipleCallsError(
+          `The \`${callbackName}\` callback was called multiple times in the \`${hookName}\` hook. `
+          + `The callback can only be called once per hook.`,
+        )
+      }
       useCalled = true
       resolveUseCalled()
 

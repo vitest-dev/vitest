@@ -27,3 +27,7 @@ export class AroundSetupError extends Error {
 export class AroundTeardownError extends Error {
   public name = 'AroundTeardownError'
 }
+
+export class AroundHookMultipleCallsError extends Error {
+  public name = 'AroundHookMultipleCallsError'
+}
