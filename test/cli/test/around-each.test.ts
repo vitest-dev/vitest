@@ -1124,7 +1124,12 @@ test('aroundEach with fixtures', async () => {
             query: (sql: string) => \`result of: \${sql}\`
           })
           console.log('>> db fixture teardown')
-        }
+        },
+        user: async ({}, use) => {
+          console.log('>> user fixture setup')
+          await use({ name: 'test-user' })
+          console.log('>> user fixture teardown')
+        },
       })
 
       test.aroundEach(async (runTest, { db }) => {
@@ -1135,9 +1140,10 @@ test('aroundEach with fixtures', async () => {
         console.log('>> aroundEach teardown')
       })
 
-      test('test with fixture in aroundEach', ({ db }) => {
+      test('test with fixture in aroundEach', ({ db, user }) => {
         console.log('>> test running, db available:', !!db)
         expect(db.query('SELECT 2')).toBe('result of: SELECT 2')
+        expect(user.name).toBe('test-user')
       })
     `,
   })
@@ -1147,9 +1153,11 @@ test('aroundEach with fixtures', async () => {
     ">> db fixture setup
     >> aroundEach setup, db available: true
     >> query result: result of: SELECT 1
+    >> user fixture setup
     >> test running, db available: true
-    >> aroundEach teardown
-    >> db fixture teardown"
+    >> user fixture teardown
+    >> db fixture teardown
+    >> aroundEach teardown"
   `)
   expect(errorTree()).toMatchInlineSnapshot(`
     {
