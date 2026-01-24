@@ -263,7 +263,7 @@ Register a callback function that wraps around all tests within the current suit
 The `runSuite()` function runs all tests in the suite, including `beforeAll`/`afterAll`/`beforeEach`/`afterEach` hooks, `aroundEach` hooks, and fixtures.
 
 ::: warning
-You **must** call `runSuite()` within your callback. If `runSuite()` is not called, all tests in the suite will be skipped.
+You **must** call `runSuite()` within your callback. If `runSuite()` is not called, the hook will fail with an error and all tests in the suite will be skipped.
 :::
 
 Optionally, you can provide a timeout (in milliseconds) for specifying how long to wait before terminating. The timeout applies independently to the setup phase (before `runSuite()`) and teardown phase (after `runSuite()`). The default is 10 seconds, and can be configured globally with [`hookTimeout`](/config/hooktimeout).
