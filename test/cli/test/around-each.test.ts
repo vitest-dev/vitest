@@ -1840,3 +1840,47 @@ test('aroundAll with module-level AsyncLocalStorage and test fixture', async () 
     }
   `)
 })
+
+test('tests are skipped when aroundAll setup fails', async () => {
+  const { stderr, errorTree } = await runInlineTests({
+    'aroundAll-setup-error.test.ts': `
+      import { test, aroundAll } from 'vitest'
+
+      aroundAll(async () => {
+        throw new Error('aroundAll setup error')
+      })
+
+      test('test should be skipped', () => {
+        console.log('>> test should not run')
+      })
+    `,
+  })
+
+  expect(stderr).toMatchInlineSnapshot(`
+    "
+    ⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+     FAIL  aroundAll-setup-error.test.ts [ aroundAll-setup-error.test.ts ]
+    Error: aroundAll setup error
+     ❯ aroundAll-setup-error.test.ts:5:15
+          3| 
+          4|       aroundAll(async () => {
+          5|         throw new Error('aroundAll setup error')
+           |               ^
+          6|       })
+          7| 
+
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+    "
+  `)
+
+  // Test should be skipped because aroundAll setup failed
+  expect(errorTree()).toMatchInlineSnapshot(`
+    {
+      "aroundAll-setup-error.test.ts": {
+        "test should be skipped": "skipped",
+      },
+    }
+  `)
+})

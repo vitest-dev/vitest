@@ -819,8 +819,12 @@ export async function runSuite(suite: Suite, runner: VitestRunner): Promise<void
     updateTask('suite-finished', suite, runner)
   }
   else {
+    let beforeAllError: unknown
+    let suiteRan = false
+
     try {
       await callAroundAllHooks(suite, async () => {
+        suiteRan = true
         try {
           // beforeAll
           try {
@@ -833,6 +837,8 @@ export async function runSuite(suite: Suite, runner: VitestRunner): Promise<void
             ))
           }
           catch (e) {
+            beforeAllError = e
+            failTask(suite.result!, beforeAllError, runner.config.diffOptions)
             markTasksAsSkipped(suite, runner)
             throw e
           }
@@ -885,11 +891,14 @@ export async function runSuite(suite: Suite, runner: VitestRunner): Promise<void
       })
     }
     catch (e) {
-      // Only mark tasks as skipped if aroundAll setup phase failed (before runSuite was called)
-      if (e instanceof AroundHookSetupError) {
+      // mark tasks as skipped if aroundAll failed before the suite callback was executed
+      if (!suiteRan) {
         markTasksAsSkipped(suite, runner)
       }
-      failTask(suite.result!, e, runner.config.diffOptions)
+      // don't push beforeAll error again - it was already pushed to preserve the order of beforeAll/afterAll
+      if (e !== beforeAllError) {
+        failTask(suite.result!, e, runner.config.diffOptions)
+      }
     }
 
     if (suite.mode === 'run' || suite.mode === 'queued') {
