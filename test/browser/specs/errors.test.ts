@@ -1,5 +1,5 @@
 import { expect, test } from 'vitest'
-import { instances, runBrowserTests } from './utils'
+import { instances, runBrowserTests, runInlineBrowserTests } from './utils'
 
 test('prints correct unhandled error stack', async () => {
   const { stderr } = await runBrowserTests({
@@ -50,4 +50,19 @@ test('print unhandled non error', async () => {
       },
     }
   `)
+})
+
+test('throws an error if test reloads the iframe during a test run', async () => {
+  const { stderr, fs } = await runInlineBrowserTests({
+    'iframe-reload.test.ts': `
+      import { test } from 'vitest';
+
+      test('reload iframe', () => {
+        location.reload();
+      });
+    `,
+  })
+  expect(stderr).toContain(
+    `The iframe for "${fs.resolveFile('./iframe-reload.test.ts')}" was reloaded during a test.`,
+  )
 })
