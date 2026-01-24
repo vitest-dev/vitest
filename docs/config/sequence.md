@@ -148,7 +148,7 @@ Changes the order in which hooks are executed.
 - `parallel` will run hooks in a single group in parallel (hooks in parent suites will still run before the current suite's hooks)
 
 ::: tip
-This option doesn't affect [`onTestFinished`](/api/#ontestfinished). It is always called in reverse order.
+This option doesn't affect [`onTestFinished`](/api/hooks#ontestfinished). It is always called in reverse order.
 :::
 
 ## sequence.setupFiles {#sequence-setupfiles}

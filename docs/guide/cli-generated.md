@@ -844,3 +844,17 @@ Enable caching of modules on the file system between reruns.
 - **Config:** [experimental.printImportBreakdown](/config/experimental#experimental-printimportbreakdown)
 
 Print import breakdown after the summary. If the reporter doesn't support summary, this will have no effect. Note that UI's "Module Graph" tab always has an import breakdown.
+
+### experimental.viteModuleRunner
+
+- **CLI:** `--experimental.viteModuleRunner`
+- **Config:** [experimental.viteModuleRunner](/config/experimental#experimental-vitemodulerunner)
+
+Control whether Vitest uses Vite's module runner to run the code or fallback to the native `import`. (default: `true`)
+
+### experimental.nodeLoader
+
+- **CLI:** `--experimental.nodeLoader`
+- **Config:** [experimental.nodeLoader](/config/experimental#experimental-nodeloader)
+
+Controls whether Vitest will use Node.js Loader API to process in-source or mocked files. This has no effect if `viteModuleRunner` is enabled. Disabling this can increase performance. (default: `true`)

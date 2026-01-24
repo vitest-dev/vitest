@@ -35,7 +35,7 @@ import {
   withTimeout,
 } from './context'
 import { mergeContextFixtures, mergeScopedFixtures, withFixtures } from './fixture'
-import { afterAll, afterEach, beforeAll, beforeEach } from './hooks'
+import { afterAll, afterEach, aroundAll, aroundEach, beforeAll, beforeEach } from './hooks'
 import { getHooks, setFn, setHooks, setTestFixture } from './map'
 import { getCurrentTest } from './test-state'
 import { findTestFileStackTrace } from './utils'
@@ -254,6 +254,8 @@ export function createSuiteHooks(): SuiteHooks {
     afterAll: [],
     beforeEach: [],
     afterEach: [],
+    aroundEach: [],
+    aroundAll: [],
   }
 }
 
@@ -870,10 +872,13 @@ export function createTaskCollector(
     }, _context)
   }
 
+  taskFn.describe = suite
   taskFn.beforeEach = beforeEach
   taskFn.afterEach = afterEach
   taskFn.beforeAll = beforeAll
   taskFn.afterAll = afterAll
+  taskFn.aroundEach = aroundEach
+  taskFn.aroundAll = aroundAll
 
   const _test = createChainable(
     ['concurrent', 'sequential', 'skip', 'only', 'todo', 'fails'],
