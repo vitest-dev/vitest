@@ -20,12 +20,12 @@ export class TestRunAbortError extends Error {
   }
 }
 
-export class AroundSetupError extends Error {
-  public name = 'AroundSetupError'
+export class AroundHookSetupError extends Error {
+  public name = 'AroundHookSetupError'
 }
 
-export class AroundTeardownError extends Error {
-  public name = 'AroundTeardownError'
+export class AroundHookTeardownError extends Error {
+  public name = 'AroundHookTeardownError'
 }
 
 export class AroundHookMultipleCallsError extends Error {

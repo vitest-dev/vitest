@@ -23,7 +23,7 @@ import { shuffle } from '@vitest/utils/helpers'
 import { getSafeTimers } from '@vitest/utils/timers'
 import { collectTests } from './collect'
 import { abortContextSignal, getFileContext } from './context'
-import { AroundHookMultipleCallsError, AroundSetupError, AroundTeardownError, PendingError, TestRunAbortError } from './errors'
+import { AroundHookMultipleCallsError, AroundHookSetupError, AroundHookTeardownError, PendingError, TestRunAbortError } from './errors'
 import { callFixtureCleanup, callFixtureCleanupFrom, getFixtureCleanupCount } from './fixture'
 import { getAroundHookStackTrace, getAroundHookTimeout, getBeforeHookCleanupCallback } from './hooks'
 import { getFn, getHooks } from './map'
@@ -248,7 +248,7 @@ function makeAroundHookTimeoutError(
   stackTraceError?: Error,
 ) {
   const message = `The ${phase} phase of "${hookName}" hook timed out after ${timeout}ms.`
-  const ErrorClass = phase === 'setup' ? AroundSetupError : AroundTeardownError
+  const ErrorClass = phase === 'setup' ? AroundHookSetupError : AroundHookTeardownError
   const error = new ErrorClass(message)
   if (stackTraceError?.stack) {
     error.stack = stackTraceError.stack.replace(stackTraceError.message, error.message)
@@ -359,7 +359,7 @@ async function callAroundHooks<THook extends Function>(
       try {
         await invokeHook(hook, use)
         if (!useCalled) {
-          throw new AroundSetupError(
+          throw new AroundHookSetupError(
             `The \`${callbackName}\` callback was not called in the \`${hookName}\` hook. `
             + `Make sure to call \`${callbackName}\` to run the ${hookName === 'aroundEach' ? 'test' : 'suite'}.`,
           )
@@ -886,7 +886,7 @@ export async function runSuite(suite: Suite, runner: VitestRunner): Promise<void
     }
     catch (e) {
       // Only mark tasks as skipped if aroundAll setup phase failed (before runSuite was called)
-      if (e instanceof AroundSetupError) {
+      if (e instanceof AroundHookSetupError) {
         markTasksAsSkipped(suite, runner)
       }
       failTask(suite.result!, e, runner.config.diffOptions)
