@@ -28,6 +28,7 @@ const it = baseTest.extend<{
         ],
         includeTaskLocation: true,
         logHeapUsage: true,
+        experimental: { importDurations: { limit: 10 } },
       })
       expect(collectedTestModules).toHaveLength(1)
       await use(ctx!)
