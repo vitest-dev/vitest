@@ -92,7 +92,7 @@ Test Files  1 passed (1)
 If you are using Bun as your package manager, make sure to use `bun run test` command instead of `bun test`, otherwise Bun will run its own test runner.
 :::
 
-Learn more about the usage of Vitest, see the [API](/api/) section.
+Learn more about the usage of Vitest, see the [API](/api/test) section.
 
 ## Configuring Vitest
 

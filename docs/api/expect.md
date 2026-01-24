@@ -31,7 +31,7 @@ expect(input).to.equal(2) // chai API
 expect(input).toBe(2) // jest API
 ```
 
-Technically this example doesn't use [`test`](/api/#test) function, so in the console you will see Node.js error instead of Vitest output. To learn more about `test`, please read [Test API Reference](/api/).
+Technically this example doesn't use [`test`](/api/test) function, so in the console you will see Node.js error instead of Vitest output. To learn more about `test`, please read [Test API Reference](/api/test).
 
 Also, `expect` can be used statically to access matcher functions, described later, and more.
 
@@ -98,7 +98,7 @@ test('expect.soft test', () => {
 ```
 
 ::: warning
-`expect.soft` can only be used inside the [`test`](/api/#test) function.
+`expect.soft` can only be used inside the [`test`](/api/test) function.
 :::
 
 ## poll

@@ -131,8 +131,8 @@ The execution follows this order:
    - `beforeEach` hooks execute (in order defined, or based on [`sequence.hooks`](/config/sequence#sequence-hooks))
    - Test function executes
    - `afterEach` hooks execute (reverse order by default with `sequence.hooks: 'stack'`)
-   - [`onTestFinished`](/api/#ontestfinished) callbacks run (always in reverse order)
-   - If test failed: [`onTestFailed`](/api/#ontestfailed) callbacks run
+   - [`onTestFinished`](/api/hooks#ontestfinished) callbacks run (always in reverse order)
+   - If test failed: [`onTestFailed`](/api/hooks#ontestfailed) callbacks run
    - Note: if `repeats` or `retry` are set, all of these steps are executed again
 5. **`afterAll` hooks** - Run once after all tests in the suite complete
 
@@ -317,4 +317,4 @@ For tips on how to improve performance, read the [Improving Performance](/guide/
 - [Isolation Configuration](/config/isolate)
 - [Pool Configuration](/config/pool)
 - [Extending Reporters](/guide/advanced/reporters) - for reporter lifecycle events
-- [Test API Reference](/api/) - for hook APIs and test functions
+- [Test API Reference](/api/hooks) - for hook APIs

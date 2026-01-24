@@ -10,6 +10,8 @@ export type {
 export type {
   AfterAllListener,
   AfterEachListener,
+  AroundAllListener,
+  AroundEachListener,
   BeforeAllListener,
   BeforeEachListener,
   File,
@@ -32,6 +34,7 @@ export type {
   SuiteCollector,
   SuiteFactory,
   SuiteHooks,
+  SuiteOptions,
   Task,
   TaskBase,
   TaskCustomOptions,
