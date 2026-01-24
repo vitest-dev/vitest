@@ -11,7 +11,7 @@ interface ModuleEvaluateOptions {
 type ModuleLinker = (
   specifier: string,
   referencingModule: VMModule,
-  extra: { assert: object }
+  extra: { assert: object },
 ) => VMModule | Promise<VMModule>
 type ModuleStatus
   = | 'unlinked'

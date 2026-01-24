@@ -8,10 +8,12 @@ export {
   loadSnapshotSerializers,
   setupCommonEnv,
 } from '../runtime/setup-common'
+export { type OTELCarrier, Traces } from '../utils/traces'
 export { collectTests, startTests } from '@vitest/runner'
 export * as SpyModule from '@vitest/spy'
 export type { LoupeOptions, ParsedStack, StringifyOptions } from '@vitest/utils'
 export {
+  browserFormat,
   format,
   inspect,
   stringify,
@@ -32,12 +34,12 @@ export interface FsOptions {
 export interface BrowserCommands {
   readFile: (
     path: string,
-    options?: BufferEncoding | FsOptions
+    options?: BufferEncoding | FsOptions,
   ) => Promise<string>
   writeFile: (
     path: string,
     content: string,
-    options?: BufferEncoding | (FsOptions & { mode?: number | string })
+    options?: BufferEncoding | (FsOptions & { mode?: number | string }),
   ) => Promise<void>
   removeFile: (path: string) => Promise<void>
 }

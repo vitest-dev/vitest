@@ -23,11 +23,7 @@ test.each([
     root,
     include: [fileToTest],
     pool,
-    poolOptions: {
-      [pool]: {
-        execArgv,
-      },
-    },
+    execArgv: [...execArgv],
   })
 
   expect(vitest.stdout).toContain(`✓ ${fileToTest}`)

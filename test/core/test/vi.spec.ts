@@ -2,7 +2,7 @@
  * @vitest-environment jsdom
  */
 
-import type { Mock, MockedFunction, MockedObject, MockInstance } from 'vitest'
+import type { Mock, Mocked, MockedFunction, MockedObject, MockInstance } from 'vitest'
 import { describe, expect, expectTypeOf, test, vi } from 'vitest'
 import { getWorkerState } from '../../../packages/vitest/src/runtime/utils'
 
@@ -56,33 +56,49 @@ describe('testing vi utils', () => {
       baz: string
     }
 
-    const mockFactory = vi.fn<() => FooBar>()
+    const mockFnFactory = vi.fn<() => FooBar>()
 
-    vi.mocked(mockFactory, { partial: true }).mockReturnValue({
+    vi.mocked(mockFnFactory, { partial: true }).mockReturnValue({
       foo: vi.fn(),
     })
 
-    vi.mocked(mockFactory, { partial: true, deep: false }).mockReturnValue({
+    vi.mocked(mockFnFactory, { partial: true, deep: false }).mockReturnValue({
       bar: vi.fn<FooBar['bar']>(),
     })
 
-    vi.mocked(mockFactory, { partial: true, deep: true }).mockReturnValue({
+    vi.mocked(mockFnFactory, { partial: true, deep: true }).mockReturnValue({
       baz: 'baz',
     })
 
-    const mockFactoryAsync = vi.fn<() => Promise<FooBar>>()
+    if (0) {
+      const mockFactory = (): FooBar => ({} as FooBar)
 
-    vi.mocked(mockFactoryAsync, { partial: true }).mockResolvedValue({
-      foo: vi.fn(),
-    })
+      vi.mocked(mockFactory, { partial: true }).mockReturnValue({
+        foo: vi.fn(),
+      })
 
-    vi.mocked(mockFactoryAsync, { partial: true, deep: false }).mockResolvedValue({
-      bar: vi.fn<FooBar['bar']>(),
-    })
+      vi.mocked(mockFactory, { partial: true, deep: false }).mockReturnValue({
+        bar: vi.fn<FooBar['bar']>(),
+      })
 
-    vi.mocked(mockFactoryAsync, { partial: true, deep: true }).mockResolvedValue({
-      baz: 'baz',
-    })
+      vi.mocked(mockFactory, { partial: true, deep: true }).mockReturnValue({
+        baz: 'baz',
+      })
+
+      const mockFactoryAsync = async (): Promise<FooBar> => ({} as FooBar)
+
+      vi.mocked(mockFactoryAsync, { partial: true }).mockResolvedValue({
+        foo: vi.fn(),
+      })
+
+      vi.mocked(mockFactoryAsync, { partial: true, deep: false }).mockResolvedValue({
+        bar: vi.fn<FooBar['bar']>(),
+      })
+
+      vi.mocked(mockFactoryAsync, { partial: true, deep: true }).mockResolvedValue({
+        baz: 'baz',
+      })
+    }
 
     function fetchSomething(): Promise<Response> {
       return fetch('https://vitest.dev/')
@@ -91,6 +107,67 @@ describe('testing vi utils', () => {
       // type check only
       vi.mocked(fetchSomething).mockResolvedValue(new Response(null))
       vi.mocked(fetchSomething, { partial: true }).mockResolvedValue({ ok: false })
+    }
+
+    // #8152
+    if (0) {
+      interface NestedObject {
+        level1: {
+          level2: {
+            value: string
+            count: number
+          }
+          name: string
+        }
+        items: string[]
+      }
+
+      const mockNestedFactory = vi.fn<() => NestedObject>()
+
+      vi.mocked(mockNestedFactory, { partial: true, deep: true }).mockReturnValue({
+        level1: { level2: {} },
+      })
+      vi.mocked(mockNestedFactory, { partial: true, deep: true }).mockReturnValue({
+        level1: {},
+      })
+      vi.mocked(mockNestedFactory, { partial: true, deep: true }).mockReturnValue({})
+      vi.mocked(mockNestedFactory, { partial: true, deep: true }).mockReturnValue({
+        items: ['a', 'b'],
+      })
+
+      const mockNestedAsyncFactory = vi.fn<() => Promise<NestedObject>>()
+
+      vi.mocked(mockNestedAsyncFactory, { partial: true, deep: true }).mockResolvedValue({
+        level1: { level2: {} },
+      })
+      vi.mocked(mockNestedAsyncFactory, { partial: true, deep: true }).mockResolvedValue({})
+    }
+  })
+
+  test('vi.mocked with classes', () => {
+    class Foo {
+      constructor(public readonly bar: string) {}
+
+      public getBar(): string {
+        return this.bar
+      }
+    }
+    class FooMock implements Mocked<Foo> {
+      readonly barMock: Mock<() => string> = vi.fn()
+
+      public get bar(): string {
+        return this.barMock()
+      }
+
+      public getBar: Mock<() => string> = vi
+        .fn()
+        .mockImplementation(() => this.barMock())
+    }
+
+    // type check only
+    if (0) {
+      vi.mocked(Foo).mockImplementation(FooMock)
+      vi.mocked(Foo).mockImplementation(Foo)
     }
   })
 

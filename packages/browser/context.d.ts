@@ -40,7 +40,7 @@ export interface ScreenshotOptions {
   save?: boolean
 }
 
-export interface ScreenshotComparatorRegistry {
+interface StandardScreenshotComparators {
   pixelmatch: {
     /**
      * The maximum number of pixels that are allowed to differ between the captured
@@ -136,6 +136,13 @@ export interface ScreenshotComparatorRegistry {
   }
 }
 
+export interface ScreenshotComparatorRegistry extends StandardScreenshotComparators {}
+
+export type NonStandardScreenshotComparators = Omit<
+  ScreenshotComparatorRegistry,
+  keyof StandardScreenshotComparators
+>
+
 export interface ScreenshotMatcherOptions<
   ComparatorName extends keyof ScreenshotComparatorRegistry = keyof ScreenshotComparatorRegistry
 > {
@@ -170,7 +177,7 @@ export interface UserEvent {
    *
    * **Note:** Unlike `@testing-library/user-event`, the default `userEvent` instance
    * from `vitest/browser` is created once, not every time its methods are called!
-   * @see {@link https://vitest.dev/guide/browser/interactivity-api.html#userevent-setup}
+   * @see {@link https://vitest.dev/api/browser/interactivity.html#userevent-setup}
    */
   setup: () => UserEvent
   /**
@@ -201,6 +208,25 @@ export interface UserEvent {
    */
   tripleClick: (element: Element | Locator, options?: UserEventTripleClickOptions) => Promise<void>
   /**
+   * Triggers a {@link https://developer.mozilla.org/en-US/docs/Web/API/Element/wheel_event|`wheel` event} on an element.
+   *
+   * @param element - The target element to receive wheel events.
+   * @param options - Scroll configuration using `delta` or `direction`.
+   * @returns A promise that resolves when all wheel events have been dispatched.
+   *
+   * @since 4.1.0
+   * @see {@link https://vitest.dev/api/browser/interactivity#userevent-wheel}
+   *
+   * @example
+   * // Scroll down by 100 pixels
+   * await userEvent.wheel(container, { delta: { y: 100 } })
+   *
+   * @example
+   * // Scroll up 5 times
+   * await userEvent.wheel(container, { direction: 'up', times: 5 })
+   */
+  wheel(element: Element | Locator, options: UserEventWheelOptions): Promise<void>
+  /**
    * Choose one or more values from a select element. Uses provider's API under the hood.
    * If select doesn't have `multiple` attribute, only the first value will be selected.
    * @example
@@ -220,7 +246,7 @@ export interface UserEvent {
    * @see {@link https://testing-library.com/docs/user-event/utility/#-selectoptions-deselectoptions} testing-library API
    */
   selectOptions: (
-    element: Element,
+    element: HTMLElement | SVGElement | Locator,
     values: HTMLElement | HTMLElement[] | Locator | Locator[] | string | string[],
     options?: UserEventSelectOptions,
   ) => Promise<void>
@@ -338,6 +364,58 @@ export interface UserEventTripleClickOptions {}
 export interface UserEventDragAndDropOptions {}
 export interface UserEventUploadOptions {}
 
+/**
+ * Base options shared by all wheel event configurations.
+ *
+ * @since 4.1.0
+ */
+export interface UserEventWheelBaseOptions {
+  /**
+   * Number of wheel events to fire. Defaults to `1`.
+   *
+   * Useful for triggering multiple scroll steps in a single call.
+   */
+  times?: number
+}
+
+/**
+ * Wheel options using pixel-based `delta` values for precise scroll control.
+ *
+ * @since 4.1.0
+ */
+export interface UserEventWheelDeltaOptions extends UserEventWheelBaseOptions {
+  /**
+   * Precise scroll delta values in pixels. At least one axis must be specified.
+   *
+   * - Positive `y` scrolls down, negative `y` scrolls up.
+   * - Positive `x` scrolls right, negative `x` scrolls left.
+   */
+  delta: { x: number; y?: number } | { x?: number; y: number }
+  direction?: undefined
+}
+
+/**
+ * Wheel options using semantic `direction` values for simpler scroll control.
+ *
+ * @since 4.1.0
+ */
+export interface UserEventWheelDirectionOptions extends UserEventWheelBaseOptions {
+  /**
+   * Semantic scroll direction. Use this for readable tests when exact pixel values don't matter.
+   */
+  direction: 'up' | 'down' | 'left' | 'right'
+  delta?: undefined
+}
+
+/**
+ * Options for triggering wheel events.
+ *
+ * Specify scrolling using either `delta` for precise pixel values, or `direction` for semantic scrolling. These are mutually exclusive.
+ *
+ * @since 4.1.0
+ */
+export type UserEventWheelOptions = UserEventWheelDeltaOptions | UserEventWheelDirectionOptions
+
 export interface LocatorOptions {
   /**
    * Whether to find an exact match: case-sensitive and whole-string. Default to false. Ignored when locating by a
@@ -406,38 +484,38 @@ interface LocatorScreenshotOptions extends Omit<ScreenshotOptions, 'element'> {}
 export interface LocatorSelectors {
   /**
    * Creates a way to locate an element by its [ARIA role](https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Roles), [ARIA attributes](https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Attributes) and [accessible name](https://developer.mozilla.org/en-US/docs/Glossary/Accessible_name).
-   * @see {@link https://vitest.dev/guide/browser/locators#getbyrole}
+   * @see {@link https://vitest.dev/api/browser/locators#getbyrole}
    */
   getByRole: (role: ARIARole | ({} & string), options?: LocatorByRoleOptions) => Locator
   /**
-   * @see {@link https://vitest.dev/guide/browser/locators#getbylabeltext}
+   * @see {@link https://vitest.dev/api/browser/locators#getbylabeltext}
    */
   getByLabelText: (text: string | RegExp, options?: LocatorOptions) => Locator
   /**
    * Creates a locator capable of finding an element with an `alt` attribute that matches the text. Unlike testing-library's implementation, Vitest will match any element that has an `alt` attribute.
-   * @see {@link https://vitest.dev/guide/browser/locators#getbyalttext}
+   * @see {@link https://vitest.dev/api/browser/locators#getbyalttext}
    */
   getByAltText: (text: string | RegExp, options?: LocatorOptions) => Locator
   /**
    * Creates a locator capable of finding an element that has the specified placeholder text. Vitest will match any element that has a matching `placeholder` attribute, not just `input`.
-   * @see {@link https://vitest.dev/guide/browser/locators#getbyplaceholder}
+   * @see {@link https://vitest.dev/api/browser/locators#getbyplaceholder}
    */
   getByPlaceholder: (text: string | RegExp, options?: LocatorOptions) => Locator
   /**
    * Creates a locator capable of finding an element that contains the specified text. The text will be matched against TextNode's [`nodeValue`](https://developer.mozilla.org/en-US/docs/Web/API/Node/nodeValue) or input's value if the type is `button` or `reset`.
    * Matching by text always normalizes whitespace, even with exact match.
    * For example, it turns multiple spaces into one, turns line breaks into spaces and ignores leading and trailing whitespace.
-   * @see {@link https://vitest.dev/guide/browser/locators#getbytext}
+   * @see {@link https://vitest.dev/api/browser/locators#getbytext}
    */
   getByText: (text: string | RegExp, options?: LocatorOptions) => Locator
   /**
    * Creates a locator capable of finding an element that has the specified `title` attribute. Unlike testing-library's `getByTitle`, Vitest cannot find `title` elements within an SVG.
-   * @see {@link https://vitest.dev/guide/browser/locators#getbytitle}
+   * @see {@link https://vitest.dev/api/browser/locators#getbytitle}
    */
   getByTitle: (text: string | RegExp, options?: LocatorOptions) => Locator
   /**
    * Creates a locator capable of finding an element that matches the specified test id attribute. You can configure the attribute name with [`browser.locators.testIdAttribute`](/config/#browser-locators-testidattribute).
-   * @see {@link https://vitest.dev/guide/browser/locators#getbytestid}
+   * @see {@link https://vitest.dev/api/browser/locators#getbytestid}
    */
   getByTestId: (text: string | RegExp) => Locator
 }
@@ -458,58 +536,76 @@ export interface Locator extends LocatorSelectors {
    *   await browser.$(selector).click()
    * }
    * ```
-   * @see {@link https://vitest.dev/guide/browser/locators#selector}
+   * @see {@link https://vitest.dev/api/browser/locators#selector}
    */
   readonly selector: string
 
   /**
    * The number of elements that this locator is matching.
-   * @see {@link https://vitest.dev/guide/browser/locators#length}
+   * @see {@link https://vitest.dev/api/browser/locators#length}
    */
   readonly length: number
 
   /**
    * Click on an element. You can use the options to set the cursor position.
-   * @see {@link https://vitest.dev/guide/browser/interactivity-api#userevent-click}
+   * @see {@link https://vitest.dev/api/browser/interactivity#userevent-click}
    */
   click(options?: UserEventClickOptions): Promise<void>
   /**
    * Triggers a double click event on an element. You can use the options to set the cursor position.
-   * @see {@link https://vitest.dev/guide/browser/interactivity-api#userevent-dblclick}
+   * @see {@link https://vitest.dev/api/browser/interactivity#userevent-dblclick}
    */
   dblClick(options?: UserEventDoubleClickOptions): Promise<void>
   /**
-   * @see {@link https://vitest.dev/guide/browser/interactivity-api#userevent-tripleclick}
+   * @see {@link https://vitest.dev/api/browser/interactivity#userevent-tripleclick}
    */
   tripleClick(options?: UserEventTripleClickOptions): Promise<void>
   /**
+   * Triggers a {@link https://developer.mozilla.org/en-US/docs/Web/API/Element/wheel_event|`wheel` event} on an element.
+   *
+   * @param options - Scroll configuration using `delta` or `direction`.
+   * @returns A promise that resolves when all wheel events have been dispatched.
+   *
+   * @since 4.1.0
+   * @see {@link https://vitest.dev/api/browser/interactivity#userevent-wheel}
+   *
+   * @example
+   * // Scroll down by 100 pixels
+   * await container.wheel({ delta: { y: 100 } })
+   *
+   * @example
+   * // Scroll up 5 times
+   * await container.wheel({ direction: 'up', times: 5 })
+   */
+  wheel(options: UserEventWheelOptions): Promise<void>
+  /**
    * Clears the input element content
-   * @see {@link https://vitest.dev/guide/browser/interactivity-api#userevent-clear}
+   * @see {@link https://vitest.dev/api/browser/interactivity#userevent-clear}
    */
   clear(options?: UserEventClearOptions): Promise<void>
   /**
    * Moves the cursor position to the selected element
-   * @see {@link https://vitest.dev/guide/browser/interactivity-api#userevent-hover}
+   * @see {@link https://vitest.dev/api/browser/interactivity#userevent-hover}
    */
   hover(options?: UserEventHoverOptions): Promise<void>
   /**
    * This works the same as `locator.hover`, but moves the cursor to the `document.body` element instead.
-   * @see {@link https://vitest.dev/guide/browser/interactivity-api#userevent-unhover}
+   * @see {@link https://vitest.dev/api/browser/interactivity#userevent-unhover}
    */
   unhover(options?: UserEventHoverOptions): Promise<void>
   /**
    * Sets the value of the current `input`, `textarea` or `contenteditable` element.
-   * @see {@link https://vitest.dev/guide/browser/interactivity-api#userevent-fill}
+   * @see {@link https://vitest.dev/api/browser/interactivity#userevent-fill}
    */
   fill(text: string, options?: UserEventFillOptions): Promise<void>
   /**
    * Drags the current element to the target location.
-   * @see {@link https://vitest.dev/guide/browser/interactivity-api#userevent-dropto}
+   * @see {@link https://vitest.dev/api/browser/interactivity#userevent-dropto}
    */
   dropTo(target: Locator, options?: UserEventDragAndDropOptions): Promise<void>
   /**
    * Choose one or more values from a `<select>` element.
-   * @see {@link https://vitest.dev/guide/browser/interactivity-api#userevent-selectoptions}
+   * @see {@link https://vitest.dev/api/browser/interactivity#userevent-selectoptions}
    */
   selectOptions(
     values: HTMLElement | HTMLElement[] | Locator | Locator[] | string | string[],
@@ -517,13 +613,13 @@ export interface Locator extends LocatorSelectors {
   ): Promise<void>
   /**
    * Change a file input element to have the specified files. Uses provider's API under the hood.
-   * @see {@link https://vitest.dev/guide/browser/interactivity-api#userevent-upload}
+   * @see {@link https://vitest.dev/api/browser/interactivity#userevent-upload}
    */
   upload(files: File | File[] | string | string[], options?: UserEventUploadOptions): Promise<void>
 
   /**
    * Make a screenshot of an element matching the locator.
-   * @see {@link https://vitest.dev/guide/browser/locators#screenshot}
+   * @see {@link https://vitest.dev/api/browser/locators#screenshot}
    */
   screenshot(options: Omit<LocatorScreenshotOptions, 'base64'> & { base64: true }): Promise<{
     path: string
@@ -537,7 +633,7 @@ export interface Locator extends LocatorSelectors {
    * - If multiple elements match the selector, an error is thrown.
    * - If no elements match the selector, an error is thrown.
    *
-   * @see {@link https://vitest.dev/guide/browser/locators#element}
+   * @see {@link https://vitest.dev/api/browser/locators#element}
    */
   element(): HTMLElement | SVGElement
   /**
@@ -545,7 +641,7 @@ export interface Locator extends LocatorSelectors {
    *
    * If no elements match the selector, an empty array is returned.
    *
-   * @see {@link https://vitest.dev/guide/browser/locators#elements}
+   * @see {@link https://vitest.dev/api/browser/locators#elements}
    */
   elements(): (HTMLElement | SVGElement)[]
   /**
@@ -554,43 +650,43 @@ export interface Locator extends LocatorSelectors {
    * - If multiple elements match the selector, an error is thrown.
    * - If no elements match the selector, returns `null`.
    *
-   * @see {@link https://vitest.dev/guide/browser/locators#query}
+   * @see {@link https://vitest.dev/api/browser/locators#query}
    */
   query(): HTMLElement | SVGElement | null
   /**
    * Wraps an array of `.elements()` matching the selector in a new `Locator`.
    *
-   * @see {@link https://vitest.dev/guide/browser/locators#all}
+   * @see {@link https://vitest.dev/api/browser/locators#all}
    */
   all(): Locator[]
   /**
    * Returns a locator for the nth element matching the selector.
-   * @see {@link https://vitest.dev/guide/browser/locators#nth}
+   * @see {@link https://vitest.dev/api/browser/locators#nth}
    */
   nth(index: number): Locator
   /**
    * Returns a locator for the first element matching the selector.
-   * @see {@link https://vitest.dev/guide/browser/locators#first}
+   * @see {@link https://vitest.dev/api/browser/locators#first}
    */
   first(): Locator
   /**
    * Returns a locator for the last element matching the selector.
-   * @see {@link https://vitest.dev/guide/browser/locators#last}
+   * @see {@link https://vitest.dev/api/browser/locators#last}
    */
   last(): Locator
   /**
    * Returns a locator that matches both the current locator and the provided locator.
-   * @see {@link https://vitest.dev/guide/browser/locators#and}
+   * @see {@link https://vitest.dev/api/browser/locators#and}
    */
   and(locator: Locator): Locator
   /**
    * Returns a locator that matches either the current locator or the provided locator.
-   * @see {@link https://vitest.dev/guide/browser/locators#or}
+   * @see {@link https://vitest.dev/api/browser/locators#or}
    */
   or(locator: Locator): Locator
   /**
    * Narrows existing locator according to the options.
-   * @see {@link https://vitest.dev/guide/browser/locators#filter}
+   * @see {@link https://vitest.dev/api/browser/locators#filter}
    */
   filter(options: LocatorOptions): Locator
 }
@@ -638,7 +734,7 @@ export const server: {
   browser: string
   /**
    * Available commands for the browser.
-   * @see {@link https://vitest.dev/guide/browser/commands}
+   * @see {@link https://vitest.dev/api/browser/commands}
    */
   commands: BrowserCommands
   /**
@@ -657,7 +753,7 @@ export const userEvent: UserEvent
 /**
  * Available commands for the browser.
  * A shortcut to `server.commands`.
- * @see {@link https://vitest.dev/guide/browser/commands}
+ * @see {@link https://vitest.dev/api/browser/commands}
  */
 export const commands: BrowserCommands
 
@@ -686,7 +782,7 @@ export interface BrowserPage extends LocatorSelectors {
   extend(methods: Partial<BrowserPage>): BrowserPage
   /**
    * Wrap an HTML element in a `Locator`. When querying for elements, the search will always return this element.
-   * @see {@link https://vitest.dev/guide/browser/locators}
+   * @see {@link https://vitest.dev/api/browser/locators}
    */
   elementLocator(element: Element): Locator
   /**
@@ -705,7 +801,7 @@ export interface BrowserPage extends LocatorSelectors {
    * await frame.getByText('Hello World').click()
    * ```
    * @param locator The locator object.
-   * @see {@link https://vitest.dev/guide/browser/locators}
+   * @see {@link https://vitest.dev/api/browser/locators}
    */
   frameLocator(locator: Locator): FrameLocator
 }
@@ -746,17 +842,36 @@ export interface BrowserLocators {
 export type PrettyDOMOptions = Omit<StringifyOptions, 'maxLength'>
 
 export const utils: {
+  /**
+   * This is simillar to calling `page.elementLocator`, but it returns only
+   * locator selectors.
+   */
   getElementLocatorSelectors(element: Element): LocatorSelectors
+  /**
+   * Prints prettified HTML of an element.
+   */
   debug(
     el?: Element | Locator | null | (Element | Locator)[],
     maxLength?: number,
     options?: PrettyDOMOptions,
   ): void
+  /**
+   * Returns prettified HTML of an element.
+   */
   prettyDOM(
     dom?: Element | Locator | undefined | null,
     maxLength?: number,
     prettyFormatOptions?: PrettyDOMOptions,
   ): string
+  /**
+   * Configures default options of `prettyDOM` and `debug` functions.
+   * This will also affect `vitest-browser-{framework}` package.
+   * @experimental
+   */
+  configurePrettyDOM(options: StringifyOptions): void
+  /**
+   * Creates "Cannot find element" error. Useful for custom locators.
+   */
   getElementError(selector: string, container?: Element): Error
 }
 

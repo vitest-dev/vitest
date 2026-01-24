@@ -1,5 +1,5 @@
 import type { Vitest } from '../core'
-import type { TestSpecification } from '../spec'
+import type { TestSpecification } from '../test-specification'
 import type { TestSequencer } from './types'
 import { slash } from '@vitest/utils/helpers'
 import { relative, resolve } from 'pathe'
@@ -35,6 +35,25 @@ export class BaseSequencer implements TestSequencer {
   public async sort(files: TestSpecification[]): Promise<TestSpecification[]> {
     const cache = this.ctx.cache
     return [...files].sort((a, b) => {
+      // "sequence.groupOrder" is higher priority
+      const groupOrderDiff = a.project.config.sequence.groupOrder - b.project.config.sequence.groupOrder
+      if (groupOrderDiff !== 0) {
+        return groupOrderDiff
+      }
+
+      // Projects run sequential
+      if (a.project.name !== b.project.name) {
+        return a.project.name < b.project.name ? -1 : 1
+      }
+
+      // Isolated run first
+      if (a.project.config.isolate && !b.project.config.isolate) {
+        return -1
+      }
+      if (!a.project.config.isolate && b.project.config.isolate) {
+        return 1
+      }
+
       const keyA = `${a.project.name}:${relative(this.ctx.config.root, a.moduleId)}`
       const keyB = `${b.project.name}:${relative(this.ctx.config.root, b.moduleId)}`
 

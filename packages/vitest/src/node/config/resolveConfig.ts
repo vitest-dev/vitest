@@ -8,8 +8,8 @@ import type {
   UserConfig,
 } from '../types/config'
 import type { BaseCoverageOptions, CoverageReporterWithOptions } from '../types/coverage'
-import type { BuiltinPool, ForksOptions, PoolOptions, ThreadsOptions } from '../types/pool-options'
 import crypto from 'node:crypto'
+import { pathToFileURL } from 'node:url'
 import { slash, toArray } from '@vitest/utils/helpers'
 import { resolveModule } from 'local-pkg'
 import { normalize, relative, resolve } from 'pathe'
@@ -24,7 +24,6 @@ import {
 import { benchmarkConfigDefaults, configDefaults } from '../../defaults'
 import { isCI, stdProvider } from '../../utils/env'
 import { getWorkersCountByPercentage } from '../../utils/workers'
-import { builtinPools } from '../pool'
 import { BaseSequencer } from '../sequencers/BaseSequencer'
 import { RandomSequencer } from '../sequencers/RandomSequencer'
 
@@ -143,8 +142,59 @@ export function resolveConfig(
     mode,
   } as any as ResolvedConfig
 
+  if (resolved.retry && typeof resolved.retry === 'object' && typeof resolved.retry.condition === 'function') {
+    logger.console.warn(
+      c.yellow('Warning: retry.condition function cannot be used inside a config file. '
+        + 'Use a RegExp pattern instead, or define the function in your test file.'),
+    )
+
+    resolved.retry = {
+      ...resolved.retry,
+      condition: undefined,
+    }
+  }
+
+  if (options.pool && typeof options.pool !== 'string') {
+    resolved.pool = options.pool.name
+    resolved.poolRunner = options.pool
+  }
+
+  if ('poolOptions' in resolved) {
+    logger.deprecate('`test.poolOptions` was removed in Vitest 4. All previous `poolOptions` are now top-level options. Please, refer to the migration guide: https://vitest.dev/guide/migration#pool-rework')
+  }
+
+  resolved.pool ??= 'forks'
+
   resolved.project = toArray(resolved.project)
   resolved.provide ??= {}
+
+  // shallow copy tags array to avoid mutating user config
+  resolved.tags = [...resolved.tags || []]
+  const definedTags = new Set<string>()
+  resolved.tags.forEach((tag) => {
+    if (!tag.name || typeof tag.name !== 'string') {
+      throw new Error(`Each tag defined in "test.tags" must have a "name" property, received: ${JSON.stringify(tag)}`)
+    }
+    if (definedTags.has(tag.name)) {
+      throw new Error(`Tag name "${tag.name}" is already defined in "test.tags". Tag names must be unique.`)
+    }
+    if (tag.name.match(/\s/)) {
+      throw new Error(`Tag name "${tag.name}" is invalid. Tag names cannot contain spaces.`)
+    }
+    if (tag.name.match(/([!()*|&])/)) {
+      throw new Error(`Tag name "${tag.name}" is invalid. Tag names cannot contain "!", "*", "&", "|", "(", or ")".`)
+    }
+    if (tag.name.match(/^\s*(and|or|not)\s*$/i)) {
+      throw new Error(`Tag name "${tag.name}" is invalid. Tag names cannot be a logical operator like "and", "or", "not".`)
+    }
+    if (typeof tag.retry === 'object' && typeof tag.retry.condition === 'function') {
+      throw new TypeError(`Tag "${tag.name}": retry.condition function cannot be used inside a config file. Use a RegExp pattern instead, or define the function in your test file.`)
+    }
+    if (tag.priority != null && (typeof tag.priority !== 'number' || tag.priority < 0)) {
+      throw new TypeError(`Tag "${tag.name}": priority must be a non-negative number.`)
+    }
+    definedTags.add(tag.name)
+  })
 
   resolved.name = typeof options.name === 'string'
     ? options.name
@@ -153,7 +203,7 @@ export function resolveConfig(
   resolved.color = typeof options.name !== 'string' ? options.name?.color : undefined
 
   if (resolved.environment === 'browser') {
-    throw new Error(`Looks like you set "test.environment" to "browser". To enabled Browser Mode, use "test.browser.enabled" instead.`)
+    throw new Error(`Looks like you set "test.environment" to "browser". To enable Browser Mode, use "test.browser.enabled" instead.`)
   }
 
   const inspector = resolved.inspect || resolved.inspectBrk
@@ -207,9 +257,9 @@ export function resolveConfig(
   }
 
   // run benchmark sequentially by default
-  resolved.fileParallelism ??= mode !== 'benchmark'
+  const fileParallelism = options.fileParallelism ?? mode !== 'benchmark'
 
-  if (!resolved.fileParallelism) {
+  if (!fileParallelism) {
     // ignore user config, parallelism cannot be implemented without limiting workers
     resolved.maxWorkers = 1
   }
@@ -222,16 +272,10 @@ export function resolveConfig(
   }
 
   if (resolved.inspect || resolved.inspectBrk) {
-    const isSingleThread
-      = resolved.pool === 'threads'
-        && resolved.poolOptions?.threads?.singleThread
-    const isSingleFork
-      = resolved.pool === 'forks' && resolved.poolOptions?.forks?.singleFork
-
-    if (resolved.fileParallelism && !isSingleThread && !isSingleFork) {
+    if (resolved.maxWorkers !== 1) {
       const inspectOption = `--inspect${resolved.inspectBrk ? '-brk' : ''}`
       throw new Error(
-        `You cannot use ${inspectOption} without "--no-file-parallelism", "poolOptions.threads.singleThread" or "poolOptions.forks.singleFork"`,
+        `You cannot use ${inspectOption} without "--no-file-parallelism"`,
       )
     }
   }
@@ -278,6 +322,10 @@ export function resolveConfig(
         ].join(''))
       }
     }
+  }
+
+  if (resolved.coverage.enabled && resolved.coverage.provider === 'istanbul' && resolved.experimental?.viteModuleRunner === false) {
+    throw new Error(`"Istanbul" coverage provider is not compatible with "experimental.viteModuleRunner: false". Please, enable "viteModuleRunner" or switch to "v8" coverage provider.`)
   }
 
   const containsChromium = hasBrowserChromium(vitest, resolved)
@@ -370,29 +418,6 @@ export function resolveConfig(
   resolved.deps ??= {}
   resolved.deps.moduleDirectories ??= []
 
-  const envModuleDirectories
-    = process.env.VITEST_MODULE_DIRECTORIES
-      || process.env.npm_config_VITEST_MODULE_DIRECTORIES
-
-  if (envModuleDirectories) {
-    resolved.deps.moduleDirectories.push(...envModuleDirectories.split(','))
-  }
-
-  resolved.deps.moduleDirectories = resolved.deps.moduleDirectories.map(
-    (dir) => {
-      if (dir[0] !== '/') {
-        dir = `/${dir}`
-      }
-      if (!dir.endsWith('/')) {
-        dir += '/'
-      }
-      return normalize(dir)
-    },
-  )
-  if (!resolved.deps.moduleDirectories.includes('/node_modules/')) {
-    resolved.deps.moduleDirectories.push('/node_modules/')
-  }
-
   resolved.deps.optimizer ??= {}
   resolved.deps.optimizer.ssr ??= {}
   resolved.deps.optimizer.ssr.enabled ??= false
@@ -437,7 +462,7 @@ export function resolveConfig(
     '**\/__x00__*',
 
     '**/node_modules/**',
-  ].filter(pattern => pattern != null)
+  ].filter(pattern => typeof pattern === 'string')
 
   resolved.forceRerunTriggers = [
     ...resolved.forceRerunTriggers,
@@ -499,60 +524,19 @@ export function resolveConfig(
     delete (resolved as any).resolveSnapshotPath
   }
 
+  resolved.execArgv ??= []
   resolved.pool ??= 'threads'
 
-  if (process.env.VITEST_MAX_THREADS) {
-    resolved.poolOptions = {
-      ...resolved.poolOptions,
-      threads: {
-        ...resolved.poolOptions?.threads,
-        maxThreads: Number.parseInt(process.env.VITEST_MAX_THREADS),
-      },
-      vmThreads: {
-        ...resolved.poolOptions?.vmThreads,
-        maxThreads: Number.parseInt(process.env.VITEST_MAX_THREADS),
-      },
-    }
+  if (
+    resolved.pool === 'vmForks'
+    || resolved.pool === 'vmThreads'
+    || resolved.pool === 'typescript'
+  ) {
+    resolved.isolate = false
   }
 
-  if (process.env.VITEST_MAX_FORKS) {
-    resolved.poolOptions = {
-      ...resolved.poolOptions,
-      forks: {
-        ...resolved.poolOptions?.forks,
-        maxForks: Number.parseInt(process.env.VITEST_MAX_FORKS),
-      },
-      vmForks: {
-        ...resolved.poolOptions?.vmForks,
-        maxForks: Number.parseInt(process.env.VITEST_MAX_FORKS),
-      },
-    }
-  }
-
-  const poolThreadsOptions = [
-    ['threads', 'maxThreads'],
-    ['vmThreads', 'maxThreads'],
-  ] as const satisfies [keyof PoolOptions, keyof ThreadsOptions][]
-
-  for (const [poolOptionKey, workerOptionKey] of poolThreadsOptions) {
-    if (resolved.poolOptions?.[poolOptionKey]?.[workerOptionKey]) {
-      resolved.poolOptions[poolOptionKey]![workerOptionKey] = resolveInlineWorkerOption(resolved.poolOptions[poolOptionKey]![workerOptionKey]!)
-    }
-  }
-
-  const poolForksOptions = [
-    ['forks', 'maxForks'],
-    ['vmForks', 'maxForks'],
-  ] as const satisfies [keyof PoolOptions, keyof ForksOptions][]
-
-  for (const [poolOptionKey, workerOptionKey] of poolForksOptions) {
-    if (resolved.poolOptions?.[poolOptionKey]?.[workerOptionKey]) {
-      resolved.poolOptions[poolOptionKey]![workerOptionKey] = resolveInlineWorkerOption(resolved.poolOptions[poolOptionKey]![workerOptionKey]!)
-    }
-  }
-
-  if (!builtinPools.includes(resolved.pool as BuiltinPool)) {
-    resolved.pool = resolvePath(resolved.pool, resolved.root)
+  if (process.env.VITEST_MAX_WORKERS) {
+    resolved.maxWorkers = Number.parseInt(process.env.VITEST_MAX_WORKERS)
   }
 
   if (mode === 'benchmark') {
@@ -665,9 +649,22 @@ export function resolveConfig(
     )
 
     if (cliReporters.length) {
+      // When CLI reporters are specified, preserve options from config file
+      const configReportersMap = new Map<string, Record<string, unknown>>()
+
+      // Build a map of reporter names to their options from the config
+      for (const reporter of resolved.reporters) {
+        if (Array.isArray(reporter)) {
+          const [reporterName, reporterOptions] = reporter
+          if (typeof reporterName === 'string') {
+            configReportersMap.set(reporterName, reporterOptions as Record<string, unknown>)
+          }
+        }
+      }
+
       resolved.reporters = Array.from(new Set(toArray(cliReporters)))
         .filter(Boolean)
-        .map(reporter => [reporter, {}])
+        .map(reporter => [reporter, configReportersMap.get(reporter) || {}])
     }
   }
 
@@ -739,7 +736,7 @@ export function resolveConfig(
 
   resolved.browser.enabled ??= false
   resolved.browser.headless ??= isCI
-  resolved.browser.isolate ??= true
+  resolved.browser.isolate ??= resolved.isolate ?? true
   resolved.browser.fileParallelism
     ??= options.fileParallelism ?? mode !== 'benchmark'
   // disable in headless mode by default, and if CI is detected
@@ -750,6 +747,10 @@ export function resolveConfig(
       resolved.root,
       resolved.browser.screenshotDirectory,
     )
+  }
+
+  if (resolved.inspector.enabled) {
+    resolved.browser.trackUnhandledErrors ??= false
   }
 
   resolved.browser.viewport ??= {} as any
@@ -763,7 +764,7 @@ export function resolveConfig(
     const source = `@vitest/browser-${resolved.browser.provider}`
     throw new TypeError(
       'The `browser.provider` configuration was changed to accept a factory instead of a string. '
-      + `Add an import of "${resolved.browser.provider}" from "${source}" instead. See: https://vitest.dev/guide/browser/config#provider`,
+      + `Add an import of "${resolved.browser.provider}" from "${source}" instead. See: https://vitest.dev/config/browser/provider`,
     )
   }
 
@@ -831,8 +832,47 @@ export function resolveConfig(
   resolved.server ??= {}
   resolved.server.deps ??= {}
 
-  resolved.testTimeout ??= resolved.browser.enabled ? 15000 : 5000
-  resolved.hookTimeout ??= resolved.browser.enabled ? 30000 : 10000
+  if (resolved.server.debug?.dump || process.env.VITEST_DEBUG_DUMP) {
+    const userFolder = resolved.server.debug?.dump || process.env.VITEST_DEBUG_DUMP
+    resolved.dumpDir = resolve(
+      resolved.root,
+      typeof userFolder === 'string' && userFolder !== 'true'
+        ? userFolder
+        : '.vitest-dump',
+      resolved.name || 'root',
+    )
+  }
+
+  resolved.testTimeout ??= resolved.browser.enabled ? 15_000 : 5_000
+  resolved.hookTimeout ??= resolved.browser.enabled ? 30_000 : 10_000
+
+  resolved.experimental ??= {} as any
+  if (resolved.experimental.openTelemetry?.sdkPath) {
+    const sdkPath = resolve(
+      resolved.root,
+      resolved.experimental.openTelemetry.sdkPath,
+    )
+    resolved.experimental.openTelemetry.sdkPath = pathToFileURL(sdkPath).toString()
+  }
+  if (resolved.experimental.openTelemetry?.browserSdkPath) {
+    const browserSdkPath = resolve(
+      resolved.root,
+      resolved.experimental.openTelemetry.browserSdkPath,
+    )
+    resolved.experimental.openTelemetry.browserSdkPath = browserSdkPath
+  }
+  if (resolved.experimental.fsModuleCachePath) {
+    resolved.experimental.fsModuleCachePath = resolve(
+      resolved.root,
+      resolved.experimental.fsModuleCachePath,
+    )
+  }
+  resolved.experimental.importDurations ??= {} as any
+  resolved.experimental.importDurations.print ??= false
+  if (resolved.experimental.importDurations.limit == null) {
+    const shouldCollect = resolved.experimental.importDurations.print || resolved.ui
+    resolved.experimental.importDurations.limit = shouldCollect ? 10 : 0
+  }
 
   return resolved
 }

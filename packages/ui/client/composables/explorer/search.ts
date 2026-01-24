@@ -1,19 +1,33 @@
 import type { Ref } from 'vue'
+import type { ProjectSortUIType } from '~/composables/explorer/types'
+import { debouncedWatch } from '@vueuse/core'
+import { computed, ref, watch } from 'vue'
 import { explorerTree } from '~/composables/explorer'
 import {
+  ALL_PROJECTS,
+  currentProject,
+  currentProjectName,
+  disableClearProjects,
+  enableProjects,
   filter,
   filteredFiles,
   initialized,
   isFiltered,
   isFilteredByStatus,
   openedTreeItems,
+  projectSort,
   search,
+  searchMatcher,
   testsTotal,
   treeFilter,
   uiEntries,
 } from './state'
 
-export function useSearch(searchBox: Ref<HTMLDivElement | undefined>) {
+export function useSearch(
+  searchBox: Ref<HTMLInputElement | undefined>,
+  selectProject: Ref<HTMLSelectElement | undefined>,
+  sortProject: Ref<HTMLSelectElement | undefined>,
+) {
   const disableFilter = computed(() => {
     if (isFilteredByStatus.value) {
       return false
@@ -21,8 +35,11 @@ export function useSearch(searchBox: Ref<HTMLDivElement | undefined>) {
 
     return !filter.onlyTests
   })
+
   const disableClearSearch = computed(() => search.value === '')
   const debouncedSearch = ref(search.value)
+  const disableProjectSort = computed(() => currentProject.value !== ALL_PROJECTS)
+  const disableClearProjectSort = computed(() => disableProjectSort.value || projectSort.value === 'default')
 
   debouncedWatch(() => search.value, (value) => {
     debouncedSearch.value = value?.trim() ?? ''
@@ -45,9 +62,25 @@ export function useSearch(searchBox: Ref<HTMLDivElement | undefined>) {
     }
   }
 
+  function clearProject(focus: boolean) {
+    currentProject.value = ALL_PROJECTS
+    if (focus) {
+      selectProject.value?.focus()
+    }
+  }
+
+  function clearProjectSort(focus: boolean) {
+    projectSort.value = 'default'
+    if (focus) {
+      sortProject.value?.focus()
+    }
+  }
+
   function clearAll() {
     clearFilter(false)
     clearSearch(true)
+    clearProject(false)
+    clearProjectSort(false)
   }
 
   function updateFilterStorage(
@@ -56,6 +89,8 @@ export function useSearch(searchBox: Ref<HTMLDivElement | undefined>) {
     successValue: boolean,
     skippedValue: boolean,
     onlyTestsValue: boolean,
+    projectValue: string,
+    projectSortValue: ProjectSortUIType,
   ) {
     if (!initialized.value) {
       return
@@ -66,6 +101,8 @@ export function useSearch(searchBox: Ref<HTMLDivElement | undefined>) {
     treeFilter.value.success = successValue
     treeFilter.value.skipped = skippedValue
     treeFilter.value.onlyTests = onlyTestsValue
+    treeFilter.value.project = projectValue
+    treeFilter.value.projectSort = projectSortValue === 'default' ? undefined : projectSortValue
   }
 
   watch(
@@ -75,9 +112,19 @@ export function useSearch(searchBox: Ref<HTMLDivElement | undefined>) {
       filter.success,
       filter.skipped,
       filter.onlyTests,
+      currentProject.value,
+      projectSort.value,
     ] as const,
-    ([search, failed, success, skipped, onlyTests]) => {
-      updateFilterStorage(search, failed, success, skipped, onlyTests)
+    ([search, failed, success, skipped, onlyTests, project, projectSort]) => {
+      updateFilterStorage(
+        search,
+        failed,
+        success,
+        skipped,
+        onlyTests,
+        project,
+        projectSort,
+      )
       explorerTree.filterNodes()
     },
     { flush: 'post' },
@@ -103,5 +150,15 @@ export function useSearch(searchBox: Ref<HTMLDivElement | undefined>) {
     filteredFiles,
     testsTotal,
     uiEntries,
+    searchMatcher,
+    enableProjects,
+    disableClearProjects,
+    currentProject,
+    currentProjectName,
+    clearProject,
+    projectSort,
+    disableProjectSort,
+    clearProjectSort,
+    disableClearProjectSort,
   }
 }

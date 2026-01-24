@@ -2,8 +2,6 @@ import Vue from '@vitejs/plugin-vue'
 import { resolve } from 'pathe'
 import { presetAttributify, presetIcons, presetUno, transformerDirectives } from 'unocss'
 import Unocss from 'unocss/vite'
-import AutoImport from 'unplugin-auto-import/vite'
-import Components from 'unplugin-vue-components/vite'
 import { defineConfig } from 'vite'
 import Pages from 'vite-plugin-pages'
 
@@ -35,7 +33,7 @@ export default defineConfig({
       },
     }),
     Unocss({
-      presets: [presetUno(), presetAttributify(), presetIcons()],
+      presets: [presetUno(), presetAttributify(), presetIcons()] as any,
       shortcuts: {
         'bg-base': 'bg-white dark:bg-[#111]',
         'bg-overlay': 'bg-[#eee]:50 dark:bg-[#222]:50',
@@ -50,27 +48,12 @@ export default defineConfig({
         'tab-button-active': 'op100 bg-gray-500:10',
       },
       transformers: [
-        transformerDirectives(),
+        transformerDirectives() as any,
       ],
       safelist: 'absolute origin-top mt-[8px]'.split(' '),
     }),
-    Components({
-      dirs: ['client/components'],
-      dts: resolve(import.meta.dirname, './client/components.d.ts'),
-    }),
     Pages({
       dirs: ['client/pages'],
-    }),
-    AutoImport({
-      dts: resolve(import.meta.dirname, './client/auto-imports.d.ts'),
-      dirs: ['./client/composables'],
-      imports: ['vue', 'vue-router', '@vueuse/core'],
-      injectAtEnd: true,
-      exclude: [
-        /node_modules/,
-        /dist/,
-        /\.git/,
-      ],
     }),
     // uncomment to see the HTML reporter preview
     // {

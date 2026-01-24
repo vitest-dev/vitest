@@ -2,14 +2,17 @@
 import type { Task, TaskState } from '@vitest/runner'
 import type { TaskTreeNodeType } from '~/composables/explorer/types'
 import { Tooltip as VueTooltip } from 'floating-vue'
-import { nextTick } from 'vue'
+import { computed, nextTick } from 'vue'
 import { client, isReport, runFiles, runTask } from '~/composables/client'
 import { showTaskSource } from '~/composables/codemirror'
 import { explorerTree } from '~/composables/explorer'
 import { hasFailedSnapshot } from '~/composables/explorer/collector'
 import { escapeHtml, highlightRegex } from '~/composables/explorer/state'
-import { coverageEnabled } from '~/composables/navigation'
-import { getProjectTextColor } from '~/utils/task'
+import { coverageEnabled, disableCoverage } from '~/composables/navigation'
+import { getBadgeTextColor } from '~/utils/task'
+import IconAction from '../IconAction.vue'
+import IconButton from '../IconButton.vue'
+import StatusIcon from '../StatusIcon.vue'
 
 // TODO: better handling of "opened" - it means to forcefully open the tree item and set in TasksList right now
 const {
@@ -154,7 +157,31 @@ function showDetails() {
   }
 }
 
-const projectNameTextColor = computed(() => getProjectTextColor(projectNameColor))
+const projectNameTextColor = computed(() => getBadgeTextColor(projectNameColor))
+
+/**
+experiments trying to show tags compactly
+const tagsBorderGradient = computed(() => {
+  const t = task.value!
+  if (!t || t.type !== 'test' || !t.tags?.length) {
+    return null
+  }
+  const colors = t.tags.map(t => getBadgeNameColor(t)).reverse()
+  const percent = 100 / colors.length
+  const res = `linear-gradient(to bottom left, ${colors.map(c => `${c} ${percent}%`).join(', ')})`
+  return res
+})
+const tagsBgGradient = computed(() => {
+  const t = task.value!
+  if (!t || t.type !== 'test' || !t.tags?.length) {
+    return null
+  }
+  const colors = t.tags.map(t => getBadgeNameColor(t, true)).reverse()
+  const percent = 100 / colors.length
+  const res = `linear-gradient(to bottom left, ${colors.map(c => `${c} ${percent}%`).join(', ')})`
+  return res
+})
+ */
 </script>
 
 <template>
@@ -172,6 +199,7 @@ const projectNameTextColor = computed(() => getProjectTextColor(projectNameColor
     :style="gridStyles"
     :aria-label="name"
     :data-current="current"
+    data-testid="explorer-item"
     @click="toggleOpen()"
   >
     <template v-if="indent > 0">
@@ -193,7 +221,21 @@ const projectNameTextColor = computed(() => getProjectTextColor(projectNameColor
         {{ duration > 0 ? duration : '< 1' }}ms
       </span>
     </div>
-    <div gap-1 justify-end flex-grow-1 pl-1 class="test-actions">
+    <div gap-1 justify-end items-center flex-grow-1 pl-1 class="test-actions">
+      <!-- <div
+        v-if="tagsBorderGradient"
+        text-xs
+        rounded-full
+        flex
+        justify-center
+        items-center
+        class="w-[1.1rem] h-[1.1rem]"
+        :style="{
+          background: tagsBorderGradient,
+        }"
+      >
+        <div :style="{ background: tagsBgGradient }" class="w-[0.9rem] h-[0.9rem]" rounded-full />
+      </div> -->
       <IconAction
         v-if="!isReport && failedSnapshot"
         v-tooltip.bottom="'Fix failed snapshot(s)'"

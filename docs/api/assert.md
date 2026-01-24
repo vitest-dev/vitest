@@ -35,7 +35,7 @@ test('assert.fail', () => {
 
 ## isOk
 
-- **Type:** `<T>(value: T, message?: string) => void`
+- **Type:** `<T>(value: T, message?: string) => asserts value`
 - **Alias** `ok`
 
 Assert that the given `value` is truthy.
@@ -195,7 +195,7 @@ test('assert.isAtMost', () => {
 
 ## isTrue
 
-- **Type:** `<T>(value: T, message?: string) => void`
+- **Type:** `<T>(value: T, message?: string) => asserts value is true`
 
 Asserts that `value` is true.
 
@@ -211,7 +211,7 @@ test('assert.isTrue', () => {
 
 ## isNotTrue
 
-- **Type:** `<T>(value: T, message?: string) => void`
+- **Type:** `<T>(value: T, message?: string) => asserts value is Exclude<T, true>`
 
 Asserts that `value` is not true.
 
@@ -227,7 +227,7 @@ test('assert.isNotTrue', () => {
 
 ## isFalse
 
-- **Type:** `<T>(value: T, message?: string) => void`
+- **Type:** `<T>(value: T, message?: string) => asserts value is false`
 
 Asserts that `value` is false.
 
@@ -243,7 +243,7 @@ test('assert.isFalse', () => {
 
 ## isNotFalse
 
-- **Type:** `<T>(value: T, message?: string) => void`
+- **Type:** `<T>(value: T, message?: string) => asserts value is Exclude<T, false>`
 
 Asserts that `value` is not false.
 
@@ -259,7 +259,7 @@ test('assert.isNotFalse', () => {
 
 ## isNull
 
-- **Type:** `<T>(value: T, message?: string) => void`
+- **Type:** `<T>(value: T, message?: string) => asserts value is null`
 
 Asserts that `value` is null.
 
@@ -275,7 +275,7 @@ test('assert.isNull', () => {
 
 ## isNotNull
 
-- **Type:** `<T>(value: T, message?: string) => void`
+- **Type:** `<T>(value: T, message?: string) => asserts value is Exclude<T, null>`
 
 Asserts that `value` is not null.
 
@@ -323,7 +323,7 @@ test('assert.isNotNaN', () => {
 
 ## exists
 
-- **Type:** `<T>(value: T, message?: string) => void`
+- **Type:** `<T>(value: T, message?: string) => asserts value is NonNullable<T>`
 
 Asserts that `value` is neither null nor undefined.
 
@@ -339,7 +339,7 @@ test('assert.exists', () => {
 
 ## notExists
 
-- **Type:** `<T>(value: T, message?: string) => void`
+- **Type:** `<T>(value: T, message?: string) => asserts value is null | undefined`
 
 Asserts that `value` is either null nor undefined.
 
@@ -357,7 +357,7 @@ test('assert.notExists', () => {
 
 ## isUndefined
 
-- **Type:** `<T>(value: T, message?: string) => void`
+- **Type:** `<T>(value: T, message?: string) => asserts value is undefined`
 
 Asserts that `value` is undefined.
 
@@ -373,7 +373,7 @@ test('assert.isUndefined', () => {
 
 ## isDefined
 
-- **Type:** `<T>(value: T, message?: string) => void`
+- **Type:** `<T>(value: T, message?: string) => asserts value is Exclude<T, undefined>`
 
 Asserts that `value` is not undefined.
 
@@ -631,7 +631,7 @@ test('assert.notTypeOf', () => {
 
 ## instanceOf
 
-- **Type:** `<T>(value: T, constructor: Function, message?: string) => void`
+- **Type:** `<T>(value: T, constructor: Function, message?: string) => asserts value is T`
 
 Asserts that `value` is an instance of `constructor`.
 
@@ -656,7 +656,7 @@ test('assert.instanceOf', () => {
 
 ## notInstanceOf
 
-- **Type:** `<T>(value: T, constructor: Function, message?: string) => void`
+- **Type:** `<T>(value: T, constructor: Function, message?: string) => asserts value is Exclude<T, U>`
 
 Asserts that `value` is not an instance of `constructor`.
 

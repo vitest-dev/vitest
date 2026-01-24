@@ -5,6 +5,10 @@ outline: deep
 
 # Features
 
+<script setup>
+import FeaturesList from '../.vitepress/components/FeaturesList.vue'
+</script>
+
 <FeaturesList class="!gap-1 text-lg" />
 
 <div h-2 />
@@ -34,9 +38,8 @@ Out-of-the-box ES Module / TypeScript / JSX support / PostCSS
 
 ## Threads
 
-By default Vitest runs test files in [multiple processes](/guide/parallelism) using [`node:child_process`](https://nodejs.org/api/child_process.html) via [Tinypool](https://github.com/tinylibs/tinypool) (a lightweight fork of [Piscina](https://github.com/piscinajs/piscina)), allowing tests to run simultaneously. If you want to speed up your test suite even further, consider enabling `--pool=threads` to run tests using [`node:worker_threads`](https://nodejs.org/api/worker_threads.html) (beware that some packages might not work with this setup).
-
-To run tests in a single thread or process, see [`poolOptions`](/config/#pooloptions).
+By default Vitest runs test files in [multiple processes](/guide/parallelism) using [`node:child_process`](https://nodejs.org/api/child_process.html), allowing tests to run simultaneously. If you want to speed up your test suite even further, consider enabling `--pool=threads` to run tests using [`node:worker_threads`](https://nodejs.org/api/worker_threads.html) (beware that some packages might not work with this setup).
+To run tests in a single thread or process, see [`fileParallelism`](/config/#fileParallelism).
 
 Vitest also isolates each file's environment so env mutations in one file don't affect others. Isolation can be disabled by passing `--no-isolate` to the CLI (trading correctness for run performance).
 
@@ -74,7 +77,7 @@ describe.concurrent('suite', () => {
 })
 ```
 
-You can also use `.skip`, `.only`, and `.todo` with concurrent suites and tests. Read more in the [API Reference](/api/#test-concurrent).
+You can also use `.skip`, `.only`, and `.todo` with concurrent suites and tests. Read more in the [API Reference](/api/test#test-concurrent).
 
 ::: warning
 When running concurrent tests, Snapshots and Assertions must use `expect` from the local [Test Context](/guide/test-context) to ensure the right test is detected.
@@ -189,7 +192,7 @@ Learn more at [In-source testing](/guide/in-source).
 
 ## Benchmarking <Badge type="warning">Experimental</Badge> {#benchmarking}
 
-You can run benchmark tests with [`bench`](/api/#bench) function via [Tinybench](https://github.com/tinylibs/tinybench) to compare performance results.
+You can run benchmark tests with [`bench`](/api/test#bench) function via [Tinybench](https://github.com/tinylibs/tinybench) to compare performance results.
 
 ```ts [sort.bench.ts]
 import { bench, describe } from 'vitest'

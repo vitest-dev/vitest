@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { explorerTree } from '~/composables/explorer'
 import { filter } from '~/composables/explorer/state'
+import DashboardEntry from './DashboardEntry.vue'
 
 function toggleFilter(type: 'success' | 'failed' | 'skipped' | 'total') {
   // Reset all filters first
@@ -44,6 +45,18 @@ function toggleFilter(type: 'success' | 'failed' | 'skipped' | 'total') {
       </template>
       <template #body>
         {{ explorerTree.summary.testsFailed }}
+      </template>
+    </DashboardEntry>
+    <DashboardEntry
+      v-if="explorerTree.summary.testsExpectedFail"
+      text-cyan5
+      data-testid="expected-fail-entry"
+    >
+      <template #header>
+        Expected Fail
+      </template>
+      <template #body>
+        {{ explorerTree.summary.testsExpectedFail }}
       </template>
     </DashboardEntry>
     <DashboardEntry

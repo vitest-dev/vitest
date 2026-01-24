@@ -31,7 +31,7 @@ export default antfu(
       // contains technically invalid code to display pretty diff
       'docs/guide/snapshot.md',
       // uses invalid js example
-      'docs/advanced/api/import-example.md',
+      'docs/api/advanced/import-example.md',
       'docs/guide/examples/*.md',
     ],
   },
@@ -43,6 +43,7 @@ export default antfu(
       'no-empty-pattern': 'off',
       'antfu/indent-binary-ops': 'off',
       'unused-imports/no-unused-imports': 'error',
+      'pnpm/json-enforce-catalog': 'off',
       'style/member-delimiter-style': [
         'error',
         {
@@ -106,6 +107,7 @@ export default antfu(
       `**/*.md/${GLOB_SRC}`,
     ],
     rules: {
+      'prefer-arrow-callback': 'off',
       'perfectionist/sort-imports': 'off',
       'style/max-statements-per-line': 'off',
       'import/newline-after-import': 'off',
@@ -133,13 +135,6 @@ export default antfu(
     rules: {
       'antfu/no-top-level-await': 'off',
       'unicorn/consistent-function-scoping': 'off',
-    },
-  },
-  {
-    files: [`packages/vite-node/${GLOB_SRC}`],
-    rules: {
-      // false positive on "exports" variable
-      'antfu/no-cjs-exports': 'off',
     },
   },
 )

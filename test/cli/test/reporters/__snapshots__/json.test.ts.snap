@@ -1,0 +1,22 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`json reporter > generates correct report 1`] = `
+{
+  "ancestorTitles": [],
+  "failureMessages": [
+    "AssertionError: expected 2 to deeply equal 1
+    at <root>/test/cli/fixtures/reporters/json-fail.test.ts:8:13",
+  ],
+  "fullName": "should fail",
+  "location": {
+    "column": 1,
+    "line": 5,
+  },
+  "meta": {},
+  "status": "failed",
+  "tags": [
+    "fail",
+  ],
+  "title": "should fail",
+}
+`;

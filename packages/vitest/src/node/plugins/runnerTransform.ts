@@ -1,16 +1,22 @@
-import type { ResolvedConfig, UserConfig, Plugin as VitePlugin } from 'vite'
+import type { ResolveOptions, UserConfig, Plugin as VitePlugin } from 'vite'
 import { builtinModules } from 'node:module'
-import { mergeConfig } from 'vite'
+import { normalize } from 'pathe'
+import { escapeRegExp } from '../../utils/base'
 import { resolveOptimizerConfig } from './utils'
 
 export function ModuleRunnerTransform(): VitePlugin {
+  let testConfig: NonNullable<UserConfig['test']>
+  const noExternal: (string | RegExp)[] = []
+  const external: (string | RegExp)[] = []
+  let noExternalAll = false
+
   // make sure Vite always applies the module runner transform
   return {
     name: 'vitest:environments-module-runner',
     config: {
       order: 'post',
       handler(config) {
-        const testConfig = config.test || {}
+        testConfig = config.test || {}
 
         config.environments ??= {}
 
@@ -23,10 +29,33 @@ export function ModuleRunnerTransform(): VitePlugin {
           names.add('__vitest_vm__')
         }
 
-        const external: (string | RegExp)[] = []
-        const noExternal: (string | RegExp)[] = []
+        let moduleDirectories = testConfig.deps?.moduleDirectories || []
 
-        let noExternalAll: true | undefined
+        const envModuleDirectories
+          = process.env.VITEST_MODULE_DIRECTORIES
+            || process.env.npm_config_VITEST_MODULE_DIRECTORIES
+
+        if (envModuleDirectories) {
+          moduleDirectories.push(...envModuleDirectories.split(','))
+        }
+
+        moduleDirectories = moduleDirectories.map(
+          (dir) => {
+            if (dir[0] !== '/') {
+              dir = `/${dir}`
+            }
+            if (!dir.endsWith('/')) {
+              dir += '/'
+            }
+            return normalize(dir)
+          },
+        )
+        if (!moduleDirectories.includes('/node_modules/')) {
+          moduleDirectories.push('/node_modules/')
+        }
+
+        testConfig.deps ??= {}
+        testConfig.deps.moduleDirectories = moduleDirectories
 
         for (const name of names) {
           config.environments[name] ??= {}
@@ -43,85 +72,52 @@ export function ModuleRunnerTransform(): VitePlugin {
           }
           environment.dev.preTransformRequests = false
           environment.keepProcessEnv = true
-
-          const resolveExternal = name === 'client'
-            ? config.resolve?.external
-            : []
-          const resolveNoExternal = name === 'client'
-            ? config.resolve?.noExternal
-            : []
-
-          const topLevelResolveOptions: UserConfig['resolve'] = {}
-          if (resolveExternal != null) {
-            topLevelResolveOptions.external = resolveExternal
-          }
-          if (resolveNoExternal != null) {
-            topLevelResolveOptions.noExternal = resolveNoExternal
-          }
-
-          const currentResolveOptions = mergeConfig(
-            topLevelResolveOptions,
-            environment.resolve || {},
-          ) as ResolvedConfig['resolve']
-
-          const envNoExternal = resolveViteResolveOptions('noExternal', currentResolveOptions)
-          if (envNoExternal === true) {
-            noExternalAll = true
-          }
-          else {
-            noExternal.push(...envNoExternal)
-          }
-
-          const envExternal = resolveViteResolveOptions('external', currentResolveOptions)
-          if (envExternal !== true) {
-            external.push(...envExternal)
-          }
-
-          // remove Vite's externalization logic because we have our own (unfortunetly)
-          environment.resolve ??= {}
-
-          environment.resolve.external = [
-            ...builtinModules,
-            ...builtinModules.map(m => `node:${m}`),
-          ]
-          // by setting `noExternal` to `true`, we make sure that
-          // Vite will never use its own externalization mechanism
-          // to externalize modules and always resolve static imports
-          // in both SSR and Client environments
-          environment.resolve.noExternal = true
-
-          if (name === '__vitest_vm__' || name === '__vitest__') {
-            continue
-          }
-
-          const currentOptimizeDeps = environment.optimizeDeps || (
-            name === 'client'
-              ? config.optimizeDeps
-              : name === 'ssr'
-                ? config.ssr?.optimizeDeps
-                : undefined
-          )
-
-          const optimizeDeps = resolveOptimizerConfig(
-            testConfig.deps?.optimizer?.[name],
-            currentOptimizeDeps,
-          )
-
-          // Vite respects the root level optimize deps, so we override it instead
-          if (name === 'client') {
-            config.optimizeDeps = optimizeDeps
-            environment.optimizeDeps = undefined
-          }
-          else if (name === 'ssr') {
-            config.ssr ??= {}
-            config.ssr.optimizeDeps = optimizeDeps
-            environment.optimizeDeps = undefined
-          }
-          else {
-            environment.optimizeDeps = optimizeDeps
-          }
+        }
+      },
+    },
+    configEnvironment: {
+      order: 'post',
+      handler(name, config) {
+        if (name === '__vitest_vm__' || name === '__vitest__') {
+          return
         }
 
+        config.resolve ??= {}
+        const envNoExternal = resolveViteResolveOptions('noExternal', config.resolve, testConfig.deps?.moduleDirectories)
+        if (envNoExternal === true) {
+          noExternalAll = true
+        }
+        else if (envNoExternal.length) {
+          noExternal.push(...envNoExternal)
+        }
+
+        const envExternal = resolveViteResolveOptions('external', config.resolve, testConfig.deps?.moduleDirectories)
+        if (envExternal !== true && envExternal.length) {
+          external.push(...envExternal)
+        }
+
+        // remove Vite's externalization logic because we have our own (unfortunately)
+        config.resolve.external = [
+          ...builtinModules,
+          ...builtinModules.map(m => `node:${m}`),
+        ]
+
+        // by setting `noExternal` to `true`, we make sure that
+        // Vite will never use its own externalization mechanism
+        // to externalize modules and always resolve static imports
+        // in both SSR and Client environments
+        config.resolve.noExternal = true
+
+        config.optimizeDeps = resolveOptimizerConfig(
+          testConfig?.deps?.optimizer?.[name],
+          config.optimizeDeps,
+        )
+      },
+    },
+    configResolved: {
+      order: 'pre',
+      handler(config) {
+        const testConfig = config.test!
         testConfig.server ??= {}
         testConfig.server.deps ??= {}
 
@@ -145,19 +141,37 @@ export function ModuleRunnerTransform(): VitePlugin {
 
 function resolveViteResolveOptions(
   key: 'noExternal' | 'external',
-  options: ResolvedConfig['resolve'],
+  options: Pick<ResolveOptions, 'noExternal' | 'external'>,
+  moduleDirectories: string[] | undefined,
 ): true | (string | RegExp)[] {
   if (Array.isArray(options[key])) {
-    return options[key]
+    // mergeConfig will merge a custom `true` into an array
+    if (options[key].some(p => (p as any) === true)) {
+      return true
+    }
+    return options[key].map(dep => processWildcard(dep, moduleDirectories))
   }
   else if (
     typeof options[key] === 'string'
     || options[key] instanceof RegExp
   ) {
-    return [options[key]]
+    return [options[key]].map(dep => processWildcard(dep, moduleDirectories))
   }
   else if (typeof options[key] === 'boolean') {
     return true
   }
   return []
+}
+
+function processWildcard(dep: string | RegExp, moduleDirectories: string[] | undefined) {
+  if (typeof dep !== 'string') {
+    return dep
+  }
+  if (typeof dep === 'string' && dep.includes('*')) {
+    const directories = (moduleDirectories || ['/node_modules/']).map(r => escapeRegExp(r))
+    return new RegExp(
+      `(${directories.join('|')})${dep.replace(/\*/g, '[\\w/]+')}`,
+    )
+  }
+  return dep
 }

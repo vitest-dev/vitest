@@ -38,7 +38,7 @@ export interface BrowserServerOptions {
 }
 
 export interface BrowserServerFactory {
-  (otpions: BrowserServerOptions): Promise<ParentProjectBrowser>
+  (options: BrowserServerOptions): Promise<ParentProjectBrowser>
 }
 
 export interface BrowserProvider {
@@ -50,7 +50,7 @@ export interface BrowserProvider {
    */
   supportsParallelism: boolean
   getCommandsContext: (sessionId: string) => Record<string, unknown>
-  openPage: (sessionId: string, url: string) => Promise<void>
+  openPage: (sessionId: string, url: string, options: { parallel: boolean }) => Promise<void>
   getCDPSession?: (sessionId: string) => Promise<CDPSession>
   close: () => Awaitable<void>
 }
@@ -65,7 +65,6 @@ type UnsupportedProperties
     | 'sequence'
     | 'root'
     | 'pool'
-    | 'poolOptions'
   // browser mode doesn't support a custom runner
     | 'runner'
   // non-browser options
@@ -153,6 +152,7 @@ export interface BrowserConfigOptions {
    * Isolate test environment after each test
    *
    * @default true
+   * @deprecated use top-level `isolate` instead
    */
   isolate?: boolean
 
@@ -161,6 +161,7 @@ export interface BrowserConfigOptions {
    * This option only has effect in headless mode (enabled in CI by default)
    *
    * @default // Same as "test.fileParallelism"
+   * @deprecated use top-level `fileParallelism` instead
    */
   fileParallelism?: boolean
 
@@ -251,7 +252,7 @@ export interface BrowserConfigOptions {
   /**
    * Commands that will be executed on the server
    * via the browser `import("vitest/browser").commands` API.
-   * @see {@link https://vitest.dev/guide/browser/commands}
+   * @see {@link https://vitest.dev/api/browser/commands}
    */
   commands?: Record<string, BrowserCommand<any>>
 
@@ -333,7 +334,7 @@ export interface ProjectBrowser {
     cb: BrowserCommand<
       Parameters<BrowserCommands[K]>,
       ReturnType<BrowserCommands[K]>
-    >
+    >,
   ) => void
   triggerCommand: <K extends keyof BrowserCommands>(
     name: K,
@@ -440,7 +441,7 @@ type ToMatchScreenshotResolvePath = (data: {
   platform: NodeJS.Platform
   /**
    * The value provided to
-   * {@linkcode https://vitest.dev/guide/browser/config#browser-screenshotdirectory|browser.screenshotDirectory},
+   * {@linkcode https://vitest.dev/config/browser/screenshotdirectory|browser.screenshotDirectory},
    * if none is provided, its default value.
    */
   screenshotDirectory: string

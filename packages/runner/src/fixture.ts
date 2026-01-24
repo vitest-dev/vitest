@@ -1,6 +1,6 @@
 import type { VitestRunner } from './types'
 import type { FixtureOptions, TestContext } from './types/tasks'
-import { createDefer, isObject } from '@vitest/utils/helpers'
+import { createDefer, filterOutComments, isObject } from '@vitest/utils/helpers'
 import { getFileContext } from './context'
 import { getTestFixture } from './map'
 
@@ -130,6 +130,34 @@ export async function callFixtureCleanup(context: object): Promise<void> {
     await cleanup()
   }
   cleanupFnArrayMap.delete(context)
+}
+
+/**
+ * Returns the current number of cleanup functions registered for the context.
+ * This can be used as a checkpoint to later clean up only fixtures added after this point.
+ */
+export function getFixtureCleanupCount(context: object): number {
+  return cleanupFnArrayMap.get(context)?.length ?? 0
+}
+
+/**
+ * Cleans up only fixtures that were added after the given checkpoint index.
+ * This is used by aroundEach to clean up fixtures created inside runTest()
+ * while preserving fixtures that were created for aroundEach itself.
+ */
+export async function callFixtureCleanupFrom(context: object, fromIndex: number): Promise<void> {
+  const cleanupFnArray = cleanupFnArrayMap.get(context)
+  if (!cleanupFnArray || cleanupFnArray.length <= fromIndex) {
+    return
+  }
+  // Get items added after the checkpoint
+  const toCleanup = cleanupFnArray.slice(fromIndex)
+  // Clean up in reverse order
+  for (const cleanup of toCleanup.reverse()) {
+    await cleanup()
+  }
+  // Remove cleaned up items from the array, keeping items before checkpoint
+  cleanupFnArray.length = fromIndex
 }
 
 export function withFixtures(runner: VitestRunner, fn: Function, testContext?: TestContext) {
@@ -270,7 +298,7 @@ function resolveFixtureValue(
 async function resolveFixtureFunction(
   fixtureFn: (
     context: unknown,
-    useFn: (arg: unknown) => Promise<void>
+    useFn: (arg: unknown) => Promise<void>,
   ) => Promise<void>,
   context: unknown,
   cleanupFnArray: (() => void | Promise<void>)[],
@@ -384,36 +412,6 @@ function getUsedProps(fn: Function) {
   }
 
   return props
-}
-
-function filterOutComments(s: string): string {
-  const result: string[] = []
-  let commentState: 'none' | 'singleline' | 'multiline' = 'none'
-  for (let i = 0; i < s.length; ++i) {
-    if (commentState === 'singleline') {
-      if (s[i] === '\n') {
-        commentState = 'none'
-      }
-    }
-    else if (commentState === 'multiline') {
-      if (s[i - 1] === '*' && s[i] === '/') {
-        commentState = 'none'
-      }
-    }
-    else if (commentState === 'none') {
-      if (s[i] === '/' && s[i + 1] === '/') {
-        commentState = 'singleline'
-      }
-      else if (s[i] === '/' && s[i + 1] === '*') {
-        commentState = 'multiline'
-        i += 2
-      }
-      else {
-        result.push(s[i])
-      }
-    }
-  }
-  return result.join('')
 }
 
 function splitByComma(s: string) {

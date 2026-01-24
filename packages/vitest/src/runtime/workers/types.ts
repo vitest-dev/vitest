@@ -1,15 +1,18 @@
 import type { Awaitable } from '@vitest/utils'
 import type { BirpcOptions } from 'birpc'
+import type { ModuleRunner } from 'vite/module-runner'
 import type { RuntimeRPC } from '../../types/rpc'
-import type { ContextRPC, WorkerGlobalState } from '../../types/worker'
+import type { WorkerGlobalState, WorkerSetupContext } from '../../types/worker'
+import type { Traces } from '../../utils/traces'
 
-export type WorkerRpcOptions = Pick<
+type WorkerRpcOptions = Pick<
   BirpcOptions<RuntimeRPC>,
-  'on' | 'post' | 'serialize' | 'deserialize'
+  'on' | 'off' | 'post' | 'serialize' | 'deserialize'
 >
 
-export interface VitestWorker {
-  getRpcOptions: (ctx: ContextRPC) => WorkerRpcOptions
-  runTests: (state: WorkerGlobalState) => Awaitable<unknown>
-  collectTests: (state: WorkerGlobalState) => Awaitable<unknown>
+export interface VitestWorker extends WorkerRpcOptions {
+  runTests: (state: WorkerGlobalState, traces: Traces) => Awaitable<unknown>
+  collectTests: (state: WorkerGlobalState, traces: Traces) => Awaitable<unknown>
+  onModuleRunner?: (moduleRunner: ModuleRunner) => Awaitable<unknown>
+  setup?: (context: WorkerSetupContext) => void | Promise<() => Promise<unknown>>
 }

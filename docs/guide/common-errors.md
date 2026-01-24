@@ -43,7 +43,7 @@ export default defineConfig({
 })
 ```
 
-## Failed to terminate worker
+## Failed to Terminate Worker
 
 This error can happen when NodeJS's `fetch` is used with default [`pool: 'threads'`](/config/#threads). This issue is tracked on issue [Timeout abort can leave process(es) running in the background #3077](https://github.com/vitest-dev/vitest/issues/3077).
 
@@ -64,7 +64,54 @@ vitest --pool=forks
 ```
 :::
 
-## Segfaults and native code errors
+## Custom package conditions are not resolved
+
+If you are using custom conditions in your `package.json` [exports](https://nodejs.org/api/packages.html#package-entry-points) or [subpath imports](https://nodejs.org/api/packages.html#subpath-imports), you may find that Vitest does not respect these conditions by default.
+
+For example, if you have the following in your `package.json`:
+
+```json
+{
+  "exports": {
+    ".": {
+      "custom": "./lib/custom.js",
+      "import": "./lib/index.js"
+    }
+  },
+  "imports": {
+    "#internal": {
+      "custom": "./src/internal.js",
+      "default": "./lib/internal.js"
+    }
+  }
+}
+```
+
+By default, Vitest will only use the `import` and `default` conditions. To make Vitest respect custom conditions, you need to configure [`ssr.resolve.conditions`](https://vite.dev/config/ssr-options#ssr-resolve-conditions) in your Vitest config:
+
+```ts [vitest.config.js]
+import { defineConfig } from 'vitest/config'
+
+export default defineConfig({
+  ssr: {
+    resolve: {
+      conditions: ['custom', 'import', 'default'],
+    },
+  },
+})
+```
+
+::: tip Why `ssr.resolve.conditions` and not `resolve.conditions`?
+Vitest follows Vite's configuration convention:
+- [`resolve.conditions`](https://vite.dev/config/shared-options#resolve-conditions) applies to Vite's `client` environment, which corresponds to Vitest's browser mode, jsdom, happy-dom, or custom environments with `viteEnvironment: 'client'`.
+- [`ssr.resolve.conditions`](https://vite.dev/config/ssr-options#ssr-resolve-conditions) applies to Vite's `ssr` environment, which corresponds to Vitest's node environment or custom environments with `viteEnvironment: 'ssr'`.
+
+Since Vitest defaults to the `node` environment (which uses `viteEnvironment: 'ssr'`), module resolution uses `ssr.resolve.conditions`. This applies to both package exports and subpath imports.
+
+You can learn more about Vite environments and Vitest environments in [`environment`](/config/environment).
+:::
+
+## Segfaults and Native Code Errors
 
 Running [native NodeJS modules](https://nodejs.org/api/addons.html) in `pool: 'threads'` can run into cryptic errors coming from the native code.
 

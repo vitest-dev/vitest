@@ -1,15 +1,17 @@
-import type { Task, TestAnnotation } from '@vitest/runner'
+import type { Task, TestArtifactLocation } from '@vitest/runner'
 import type { RunnerTestCase } from 'vitest'
 import type { Ref, WritableComputedRef } from 'vue'
 import CodeMirror from 'codemirror'
 
-import { watch } from 'vue'
+import { markRaw, onUnmounted, shallowRef, watch } from 'vue'
 
 import { navigateTo } from '~/composables/navigation'
+import { openInEditor } from './error'
+import { selectedTest } from './params'
 import 'codemirror/mode/javascript/javascript'
 // import 'codemirror/mode/css/css'
 import 'codemirror/mode/xml/xml'
-// import 'codemirror/mode/htmlmixed/htmlmixed'
+import 'codemirror/mode/htmlmixed/htmlmixed'
 import 'codemirror/mode/jsx/jsx'
 import 'codemirror/addon/display/placeholder'
 import 'codemirror/addon/scroll/simplescrollbars'
@@ -65,7 +67,7 @@ export function useCodeMirror(
 export async function showTaskSource(task: Task) {
   navigateTo({
     file: task.file.id,
-    line: task.location?.line ?? 0,
+    line: task.location?.line ?? 1,
     view: 'editor',
     test: task.id,
     column: null,
@@ -82,11 +84,11 @@ export function showLocationSource(fileId: string, location: { line: number; col
   })
 }
 
-export function showAnnotationSource(task: RunnerTestCase, annotation: TestAnnotation) {
-  if (!annotation.location) {
+export function showAttachmentSource(task: RunnerTestCase, location?: TestArtifactLocation) {
+  if (!location) {
     return
   }
-  const { line, column, file } = annotation.location
+  const { line, column, file } = location
   if (task.file.filepath !== file) {
     return openInEditor(file, line, column)
   }

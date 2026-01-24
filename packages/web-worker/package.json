@@ -1,7 +1,7 @@
 {
   "name": "@vitest/web-worker",
   "type": "module",
-  "version": "4.0.0-beta.17",
+  "version": "4.1.0-beta.2",
   "description": "Web Worker support for testing in Vitest",
   "license": "MIT",
   "funding": "https://opencollective.com/vitest",
@@ -41,10 +41,9 @@
     "vitest": "workspace:*"
   },
   "dependencies": {
-    "debug": "catalog:"
+    "obug": "catalog:"
   },
   "devDependencies": {
-    "@types/debug": "catalog:",
     "@types/ungap__structured-clone": "^1.2.0",
     "@ungap/structured-clone": "^1.3.0"
   }

@@ -1,10 +1,10 @@
-import type { File, TaskEventPack, TaskResultPack, TestAnnotation } from '@vitest/runner'
+import type { File, TaskEventPack, TaskResultPack, TestAnnotation, TestArtifact } from '@vitest/runner'
 import type { Awaitable, SerializedError } from '@vitest/utils'
 import type { UserConsoleLog } from '../../types/general'
 import type { Vitest } from '../core'
 import type { TestProject } from '../project'
 import type { ReportedHookContext, TestCase, TestModule, TestSuite } from '../reporters/reported-tasks'
-import type { TestSpecification } from '../spec'
+import type { TestSpecification } from '../test-specification'
 
 export type TestRunEndReason = 'passed' | 'interrupted' | 'failed'
 
@@ -35,7 +35,7 @@ export interface Reporter {
   onTestRunEnd?: (
     testModules: ReadonlyArray<TestModule>,
     unhandledErrors: ReadonlyArray<SerializedError>,
-    reason: TestRunEndReason
+    reason: TestRunEndReason,
   ) => Awaitable<void>
 
   /**
@@ -70,6 +70,11 @@ export interface Reporter {
    * Called when annotation is added via the `task.annotate` API.
    */
   onTestCaseAnnotate?: (testCase: TestCase, annotation: TestAnnotation) => Awaitable<void>
+
+  /**
+   * Called when artifacts are recorded on tests via the `recordArtifact` utility.
+   */
+  onTestCaseArtifactRecord?: (testCase: TestCase, artifact: TestArtifact) => Awaitable<void>
 
   /**
    * Called when test suite is ready to run.

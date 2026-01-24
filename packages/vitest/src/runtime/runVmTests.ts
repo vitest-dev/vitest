@@ -1,6 +1,7 @@
 import type { FileSpecification } from '@vitest/runner'
+import type { Traces } from '../utils/traces'
 import type { SerializedConfig } from './config'
-import type { VitestModuleRunner } from './moduleRunner/moduleRunner'
+import type { TestModuleRunner } from './moduleRunner/testModuleRunner'
 import { createRequire } from 'node:module'
 import { performance } from 'node:perf_hooks'
 import timers from 'node:timers'
@@ -24,11 +25,12 @@ export async function run(
   method: 'run' | 'collect',
   files: FileSpecification[],
   config: SerializedConfig,
-  moduleRunner: VitestModuleRunner,
+  moduleRunner: TestModuleRunner,
+  traces: Traces,
 ): Promise<void> {
   const workerState = getWorkerState()
 
-  await setupCommonEnv(config)
+  await traces.$('vitest.runtime.global_env', () => setupCommonEnv(config))
 
   Object.defineProperty(globalThis, '__vitest_index__', {
     value: VitestIndex,
@@ -63,24 +65,24 @@ export async function run(
     timersPromises,
   }
 
-  await startCoverageInsideWorker(config.coverage, moduleRunner, { isolate: false })
+  await traces.$('vitest.runtime.coverage.start', () => startCoverageInsideWorker(config.coverage, moduleRunner, { isolate: false }))
 
   if (config.chaiConfig) {
     setupChaiConfig(config.chaiConfig)
   }
 
-  const [runner, snapshotEnvironment] = await Promise.all([
-    resolveTestRunner(config, moduleRunner),
-    resolveSnapshotEnvironment(config, moduleRunner),
+  const [testRunner, snapshotEnvironment] = await Promise.all([
+    traces.$('vitest.runtime.runner', () => resolveTestRunner(config, moduleRunner, traces)),
+    traces.$('vitest.runtime.snapshot.environment', () => resolveSnapshotEnvironment(config, moduleRunner)),
   ])
 
   config.snapshotOptions.snapshotEnvironment = snapshotEnvironment
 
-  runner.getWorkerContext = undefined
+  testRunner.getWorkerContext = undefined
 
-  workerState.onCancel.then((reason) => {
+  workerState.onCancel((reason) => {
     closeInspector(config)
-    runner.cancel?.(reason)
+    testRunner.cancel?.(reason)
   })
 
   workerState.durations.prepare
@@ -88,23 +90,36 @@ export async function run(
 
   const { vi } = VitestIndex
 
-  for (const file of files) {
-    workerState.filepath = file.filepath
+  await traces.$(
+    `vitest.test.runner.${method}`,
+    async () => {
+      for (const file of files) {
+        workerState.filepath = file.filepath
 
-    if (method === 'run') {
-      await startTests([file], runner)
-    }
-    else {
-      await collectTests([file], runner)
-    }
+        if (method === 'run') {
+          await traces.$(
+            `vitest.test.runner.${method}.module`,
+            { attributes: { 'code.file.path': file.filepath } },
+            () => startTests([file], testRunner),
+          )
+        }
+        else {
+          await traces.$(
+            `vitest.test.runner.${method}.module`,
+            { attributes: { 'code.file.path': file.filepath } },
+            () => collectTests([file], testRunner),
+          )
+        }
 
-    // reset after tests, because user might call `vi.setConfig` in setupFile
-    vi.resetConfig()
-    // mocks should not affect different files
-    vi.restoreAllMocks()
-  }
+        // reset after tests, because user might call `vi.setConfig` in setupFile
+        vi.resetConfig()
+        // mocks should not affect different files
+        vi.restoreAllMocks()
+      }
+    },
+  )
 
-  await stopCoverageInsideWorker(config.coverage, moduleRunner, { isolate: false })
+  await traces.$('vitest.runtime.coverage.stop', () => stopCoverageInsideWorker(config.coverage, moduleRunner, { isolate: false }))
 }
 
 function resolveCss(mod: NodeJS.Module) {

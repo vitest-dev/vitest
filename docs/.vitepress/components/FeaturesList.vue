@@ -1,8 +1,11 @@
+<script setup>
+import ListItem from './ListItem.vue'
+</script>
+
 <template>
   <ul
     class="features-list"
     dir="auto"
-    flex="~ col gap2 md:gap-3"
   >
     <ListItem><a target="_blank" href="https://vitejs.dev" rel="noopener noreferrer">Vite</a>'s config, transformers, resolvers, and plugins</ListItem>
     <ListItem>Use the same setup from your app to run the tests!</ListItem>
@@ -10,7 +13,6 @@
     <ListItem>Component testing for Vue, React, Svelte, Lit, Marko and more</ListItem>
     <ListItem>Out-of-the-box TypeScript / JSX support</ListItem>
     <ListItem>ESM first, top level await</ListItem>
-    <ListItem>Workers multi-threading via <a target="_blank" href="https://github.com/tinylibs/tinypool" rel="noopener noreferrer">Tinypool</a></ListItem>
     <ListItem>Benchmarking support with <a target="_blank" href="https://github.com/tinylibs/tinybench" rel="noopener noreferrer">Tinybench</a></ListItem>
     <ListItem>Filtering, timeouts, concurrent for suite and tests</ListItem>
     <ListItem><a href="/guide/projects">Projects</a> support</ListItem>
@@ -41,5 +43,8 @@
 
 .features-list {
   padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
 }
 </style>

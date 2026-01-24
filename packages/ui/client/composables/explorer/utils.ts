@@ -2,6 +2,7 @@ import type { File, Task } from '@vitest/runner'
 import type {
   FileTreeNode,
   ParentTreeNode,
+  ProjectSortUIType,
   SuiteTreeNode,
   TestTreeNode,
   UITaskTreeNode,
@@ -10,7 +11,7 @@ import { isTestCase } from '@vitest/runner/utils'
 import { client } from '~/composables/client'
 import { explorerTree } from '~/composables/explorer/index'
 import { openedTreeItemsSet } from '~/composables/explorer/state'
-import { getProjectNameColor, isSuite as isTaskSuite } from '~/utils/task'
+import { getBadgeNameColor, isSuite as isTaskSuite } from '~/utils/task'
 
 export function isTestNode(node: UITaskTreeNode): node is TestTreeNode {
   return node.type === 'test'
@@ -32,10 +33,28 @@ export function isParentNode(node: UITaskTreeNode): node is FileTreeNode | Suite
   return node.type === 'file' || node.type === 'suite'
 }
 
-export function sortedRootTasks(tasks = explorerTree.root.tasks) {
-  return tasks.sort((a, b) => {
+export function getSortedRootTasks(sort: ProjectSortUIType, tasks = explorerTree.root.tasks) {
+  const sorted = [...tasks]
+
+  sorted.sort((a, b) => {
+    if (sort === 'asc' || sort === 'desc') {
+      const projectA = a.projectName || ''
+      const projectB = b.projectName || ''
+      if (projectA !== projectB) {
+        if (sort === 'asc') {
+          return projectA.localeCompare(projectB)
+        }
+        else {
+          return projectB.localeCompare(projectA)
+        }
+      }
+    }
+    // Default sort (by filepath, then project) is the fallback for project sort
+    // and the primary for default sort
     return `${a.filepath}:${a.projectName}`.localeCompare(`${b.filepath}:${b.projectName}`)
   })
+
+  return sorted
 }
 
 export function createOrUpdateFileNode(
@@ -48,7 +67,7 @@ export function createOrUpdateFileNode(
     fileNode.typecheck = !!file.meta && 'typecheck' in file.meta
     fileNode.state = file.result?.state
     fileNode.mode = file.mode
-    fileNode.duration = file.result?.duration
+    fileNode.duration = typeof file.result?.duration === 'number' ? Math.round(file.result.duration) : undefined
     fileNode.collectDuration = file.collectDuration
     fileNode.setupDuration = file.setupDuration
     fileNode.environmentLoad = file.environmentLoad
@@ -68,10 +87,10 @@ export function createOrUpdateFileNode(
       tasks: [],
       typecheck: !!file.meta && 'typecheck' in file.meta,
       indent: 0,
-      duration: file.result?.duration != null ? Math.round(file.result?.duration) : undefined,
+      duration: typeof file.result?.duration === 'number' ? Math.round(file.result.duration) : undefined,
       filepath: file.filepath,
       projectName: file.projectName || '',
-      projectNameColor: explorerTree.colors.get(file.projectName || '') || getProjectNameColor(file.projectName),
+      projectNameColor: explorerTree.colors.get(file.projectName || '') || getBadgeNameColor(file.projectName),
       collectDuration: file.collectDuration,
       setupDuration: file.setupDuration,
       environmentLoad: file.environmentLoad,
@@ -131,8 +150,8 @@ export function createOrUpdateNode(
 ) {
   const node = explorerTree.nodes.get(parentId) as ParentTreeNode | undefined
   let taskNode: UITaskTreeNode | undefined
-  const duration = task.result?.duration != null
-    ? Math.round(task.result?.duration)
+  const duration = typeof task.result?.duration === 'number'
+    ? Math.round(task.result.duration)
     : undefined
   if (node) {
     taskNode = explorerTree.nodes.get(task.id)

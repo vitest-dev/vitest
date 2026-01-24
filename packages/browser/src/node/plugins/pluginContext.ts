@@ -25,7 +25,7 @@ export default function BrowserContext(globalServer: ParentBrowserProject): Plug
         return VIRTUAL_ID_CONTEXT
       }
       if (id === DEPRECATED_ID_CONTEXT) {
-        if (importer) {
+        if (importer && !importer.includes('/node_modules/')) {
           globalServer.vitest.logger.deprecate(
             `${importer} tries to load a deprecated "${id}" module. `
             + `This import will stop working in the next major version. `

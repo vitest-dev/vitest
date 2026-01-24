@@ -9,6 +9,7 @@ import type {
   SuiteCollector,
   SuiteFactory,
   SuiteHooks,
+  SuiteOptions,
   Task,
   TaskCustomOptions,
   TaskPopulated,
@@ -23,6 +24,7 @@ import {
   isObject,
   objectAttr,
   toArray,
+  unique,
 } from '@vitest/utils/helpers'
 import {
   abortIfTimeout,
@@ -33,11 +35,13 @@ import {
   withTimeout,
 } from './context'
 import { mergeContextFixtures, mergeScopedFixtures, withFixtures } from './fixture'
-import { afterAll, afterEach, beforeAll, beforeEach } from './hooks'
+import { afterAll, afterEach, aroundAll, aroundEach, beforeAll, beforeEach } from './hooks'
 import { getHooks, setFn, setHooks, setTestFixture } from './map'
 import { getCurrentTest } from './test-state'
 import { findTestFileStackTrace } from './utils'
 import { createChainable } from './utils/chain'
+import { createNoTagsError, validateTags } from './utils/tags'
+import { createTaskName } from './utils/tasks'
 
 /**
  * Creates a suite of tests, allowing for grouping and hierarchical organization of tests.
@@ -186,7 +190,13 @@ let currentTestFilepath: string
 
 function assert(condition: any, message: string) {
   if (!condition) {
-    throw new Error(`Vitest failed to find ${message}. This is a bug in Vitest. Please, open an issue with reproduction.`)
+    throw new Error(
+      `Vitest failed to find ${message}. One of the following is possible:`
+      + '\n- "vitest" is imported directly without running "vitest" command'
+      + '\n- "vitest" is imported inside "globalSetup" (to fix this, use "setupFiles" instead, because "globalSetup" runs in a different context)'
+      + '\n- "vitest" is imported inside Vite / Vitest config file'
+      + '\n- Otherwise, it might be a Vitest bug. Please report it to https://github.com/vitest-dev/vitest/issues\n',
+    )
   }
 }
 
@@ -206,21 +216,26 @@ export function getRunner(): VitestRunner {
 
 function createDefaultSuite(runner: VitestRunner) {
   const config = runner.config.sequence
-  const collector = suite('', { concurrent: config.concurrent }, () => {})
+  const options: SuiteOptions = {}
+  if (config.concurrent != null) {
+    options.concurrent = config.concurrent
+  }
+  const collector = suite('', options, () => {})
   // no parent suite for top-level tests
   delete collector.suite
   return collector
 }
 
 export function clearCollectorContext(
-  filepath: string,
+  file: File,
   currentRunner: VitestRunner,
 ): void {
+  currentTestFilepath = file.filepath
+  runner = currentRunner
   if (!defaultSuite) {
     defaultSuite = createDefaultSuite(currentRunner)
   }
-  runner = currentRunner
-  currentTestFilepath = filepath
+  defaultSuite.file = file
   collectorContext.tasks.length = 0
   defaultSuite.clear()
   collectorContext.currentSuite = defaultSuite
@@ -239,15 +254,19 @@ export function createSuiteHooks(): SuiteHooks {
     afterAll: [],
     beforeEach: [],
     afterEach: [],
+    aroundEach: [],
+    aroundAll: [],
   }
 }
+
+const POSITIVE_INFINITY = Number.POSITIVE_INFINITY
 
 function parseArguments<T extends (...args: any[]) => any>(
   optionsOrFn: T | object | undefined,
   timeoutOrTest: T | number | undefined,
 ) {
   if (timeoutOrTest != null && typeof timeoutOrTest === 'object') {
-    throw new TypeError(`Siganture "test(name, fn, { ... })" was deprecated in Vitest 3 and removed in Vitest 4. Please, provide options as a second argument instead.`)
+    throw new TypeError(`Signature "test(name, fn, { ... })" was deprecated in Vitest 3 and removed in Vitest 4. Please, provide options as a second argument instead.`)
   }
 
   let options: TestOptions = {}
@@ -286,7 +305,7 @@ function createSuiteCollector(
   factory: SuiteFactory = () => {},
   mode: RunMode,
   each?: boolean,
-  suiteOptions?: TestOptions,
+  suiteOptions?: SuiteOptions,
   parentCollectorFixtures?: FixtureItem[],
 ) {
   const tasks: (Test | Suite | SuiteCollector)[] = []
@@ -296,16 +315,46 @@ function createSuiteCollector(
   initSuite(true)
 
   const task = function (name = '', options: TaskCustomOptions = {}) {
-    const timeout = options?.timeout ?? runner.config.testTimeout
+    const currentSuite = collectorContext.currentSuite?.suite
+    const parentTask = currentSuite ?? collectorContext.currentSuite?.file
+    const parentTags = parentTask?.tags || []
+    const testTags = unique([...parentTags, ...toArray(options.tags)])
+    const tagsOptions = testTags
+      .map((tag) => {
+        const tagDefinition = runner.config.tags?.find(t => t.name === tag)
+        if (!tagDefinition && runner.config.strictTags) {
+          throw createNoTagsError(runner.config.tags, tag)
+        }
+        return tagDefinition
+      })
+      .filter(r => r != null)
+      // higher priority should be last, run 1, 2, 3, ... etc
+      .sort((tag1, tag2) => (tag2.priority ?? POSITIVE_INFINITY) - (tag1.priority ?? POSITIVE_INFINITY))
+      .reduce((acc, tag) => {
+        const { name, description, priority, ...options } = tag
+        Object.assign(acc, options)
+        return acc
+      }, {} as TestOptions)
+
+    options = {
+      ...tagsOptions,
+      ...options,
+    }
+    const timeout = options.timeout ?? runner.config.testTimeout
     const task: Test = {
       id: '',
       name,
-      suite: collectorContext.currentSuite?.suite,
+      fullName: createTaskName([
+        currentSuite?.fullName ?? collectorContext.currentSuite?.file?.fullName,
+        name,
+      ]),
+      fullTestName: createTaskName([currentSuite?.fullTestName, name]),
+      suite: currentSuite,
       each: options.each,
       fails: options.fails,
       context: undefined!,
       type: 'test',
-      file: undefined!,
+      file: (currentSuite?.file ?? collectorContext.currentSuite?.file)!,
       timeout,
       retry: options.retry ?? runner.config.retry,
       repeats: options.repeats,
@@ -318,6 +367,8 @@ function createSuiteCollector(
             : 'run',
       meta: options.meta ?? Object.create(null),
       annotations: [],
+      artifacts: [],
+      tags: testTags,
     }
     const handler = options.handler
     if (task.mode === 'run' && !handler) {
@@ -330,7 +381,6 @@ function createSuiteCollector(
       task.concurrent = true
     }
     task.shuffle = suiteOptions?.shuffle
-
     const context = createTestContext(task, runner)
     // create test context
     Object.defineProperty(task, 'context', {
@@ -386,10 +436,15 @@ function createSuiteCollector(
     }
 
     // inherit concurrent / sequential from suite
-    options.concurrent
-      = this.concurrent || (!this.sequential && options?.concurrent)
-    options.sequential
-      = this.sequential || (!this.concurrent && options?.sequential)
+    const concurrent = this.concurrent ?? (!this.sequential && options?.concurrent)
+    if (options.concurrent != null && concurrent != null) {
+      options.concurrent = concurrent
+    }
+
+    const sequential = this.sequential ?? (!this.concurrent && options?.sequential)
+    if (options.sequential != null && sequential != null) {
+      options.sequential = sequential
+    }
 
     const test = task(formatName(name), {
       ...this,
@@ -438,18 +493,29 @@ function createSuiteCollector(
       suiteOptions = { timeout: suiteOptions }
     }
 
+    const currentSuite = collectorContext.currentSuite?.suite
+    const parentTask = currentSuite ?? collectorContext.currentSuite?.file
+    const suiteTags = toArray(suiteOptions?.tags)
+    validateTags(runner.config, suiteTags)
+
     suite = {
       id: '',
       type: 'suite',
       name,
-      suite: collectorContext.currentSuite?.suite,
+      fullName: createTaskName([
+        currentSuite?.fullName ?? collectorContext.currentSuite?.file?.fullName,
+        name,
+      ]),
+      fullTestName: createTaskName([currentSuite?.fullTestName, name]),
+      suite: currentSuite,
       mode,
       each,
-      file: undefined!,
+      file: (currentSuite?.file ?? collectorContext.currentSuite?.file)!,
       shuffle: suiteOptions?.shuffle,
       tasks: [],
       meta: Object.create(null),
       concurrent: suiteOptions?.concurrent,
+      tags: unique([...parentTask?.tags || [], ...suiteTags]),
     }
 
     if (runner && includeLocation && runner.config.includeTaskLocation) {
@@ -489,12 +555,7 @@ function createSuiteCollector(
       allChildren.push(i.type === 'collector' ? await i.collect(file) : i)
     }
 
-    suite.file = file
     suite.tasks = allChildren
-
-    allChildren.forEach((task) => {
-      task.file = file
-    })
 
     return suite
   }
@@ -524,26 +585,21 @@ function createSuite() {
   function suiteFn(
     this: Record<string, boolean | undefined>,
     name: string | Function,
-    factoryOrOptions?: SuiteFactory | TestOptions,
+    factoryOrOptions?: SuiteFactory | SuiteOptions,
     optionsOrFactory?: number | SuiteFactory,
   ) {
-    let mode: RunMode = this.only
-      ? 'only'
-      : this.skip
-        ? 'skip'
-        : this.todo
-          ? 'todo'
-          : 'run'
+    if (getCurrentTest()) {
+      throw new Error(
+        'Calling the suite function inside test function is not allowed. It can be only called at the top level or inside another suite function.',
+      )
+    }
+
     const currentSuite: SuiteCollector | undefined = collectorContext.currentSuite || defaultSuite
 
     let { options, handler: factory } = parseArguments(
       factoryOrOptions,
       optionsOrFactory,
-    )
-
-    if (mode === 'run' && !factory) {
-      mode = 'todo'
-    }
+    ) as { options: SuiteOptions; handler: SuiteFactory | undefined }
 
     const isConcurrentSpecified = options.concurrent || this.concurrent || options.sequential === false
     const isSequentialSpecified = options.sequential || this.sequential || options.concurrent === false
@@ -552,14 +608,35 @@ function createSuite() {
     options = {
       ...currentSuite?.options,
       ...options,
-      shuffle: this.shuffle ?? options.shuffle ?? currentSuite?.options?.shuffle ?? runner?.config.sequence.shuffle,
+    }
+
+    const shuffle = this.shuffle ?? options.shuffle ?? currentSuite?.options?.shuffle ?? runner?.config.sequence.shuffle
+    if (shuffle != null) {
+      options.shuffle = shuffle
+    }
+
+    let mode: RunMode = (this.only ?? options.only)
+      ? 'only'
+      : (this.skip ?? options.skip)
+          ? 'skip'
+          : (this.todo ?? options.todo)
+              ? 'todo'
+              : 'run'
+
+    // passed as test(name), assume it's a "todo"
+    if (mode === 'run' && !factory) {
+      mode = 'todo'
     }
 
     // inherit concurrent / sequential from suite
     const isConcurrent = isConcurrentSpecified || (options.concurrent && !isSequentialSpecified)
     const isSequential = isSequentialSpecified || (options.sequential && !isConcurrentSpecified)
-    options.concurrent = isConcurrent && !isSequential
-    options.sequential = isSequential && !isConcurrent
+    if (isConcurrent != null) {
+      options.concurrent = isConcurrent && !isSequential
+    }
+    if (isSequential != null) {
+      options.sequential = isSequential && !isConcurrent
+    }
 
     return createSuiteCollector(
       formatName(name),
@@ -795,10 +872,13 @@ export function createTaskCollector(
     }, _context)
   }
 
+  taskFn.describe = suite
   taskFn.beforeEach = beforeEach
   taskFn.afterEach = afterEach
   taskFn.beforeAll = beforeAll
   taskFn.afterAll = afterAll
+  taskFn.aroundEach = aroundEach
+  taskFn.aroundAll = aroundAll
 
   const _test = createChainable(
     ['concurrent', 'sequential', 'skip', 'only', 'todo', 'fails'],
@@ -820,7 +900,7 @@ function createTest(
     > & { fixtures?: FixtureItem[] },
     title: string,
     optionsOrFn?: TestOptions | TestFunction,
-    optionsOrTest?: number | TestFunction
+    optionsOrTest?: number | TestFunction,
   ) => void,
   context?: Record<string, any>,
 ) {
