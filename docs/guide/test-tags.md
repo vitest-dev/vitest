@@ -5,7 +5,7 @@ outline: deep
 
 # Test Tags <Version>4.1.0</Version> {#test-tags}
 
-Allow you to add specified [`tags`](/config/tags) on tests or test suites, and configure them to run tests based on the definitions of the tags.
+[`Tags`](/config/tags) allow you to mark tests. These tags can be used to filter tests and also override options for tests.
 
 ## Defining Tags
 
