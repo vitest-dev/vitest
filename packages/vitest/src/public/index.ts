@@ -100,6 +100,8 @@ export type {
 export {
   afterAll,
   afterEach,
+  aroundAll,
+  aroundEach,
   beforeAll,
   beforeEach,
   describe,
@@ -126,6 +128,7 @@ export type {
   SuiteAPI,
   SuiteCollector,
   SuiteFactory,
+  SuiteOptions,
   TaskCustomOptions,
   TaskMeta,
   TaskState,

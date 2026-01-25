@@ -27,7 +27,7 @@ test('${testName}', async ({ expect }) => {
 
 const browser = 'chromium'
 
-export async function runInlineTests(
+async function runInlineTests(
   structure: TestFsStructure,
   config: ViteUserConfig['test'] = {},
 ) {

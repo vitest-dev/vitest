@@ -154,7 +154,7 @@ export default ({ mode }: { mode: string }) => {
             title: 'Vitest',
             items: [
               { text: 'Guides', link: '/guide/' },
-              { text: 'API', link: '/api/' },
+              { text: 'API', link: '/api/test' },
               { text: 'Config', link: '/config/' },
             ],
           },
@@ -195,7 +195,7 @@ export default ({ mode }: { mode: string }) => {
 
       nav: [
         { text: 'Guides', link: '/guide/', activeMatch: '^/guide/' },
-        { text: 'API', link: '/api/', activeMatch: '^/api/' },
+        { text: 'API', link: '/api/test', activeMatch: '^/api/' },
         { text: 'Config', link: '/config/', activeMatch: '^/config/' },
         {
           text: 'Blog',
@@ -961,7 +961,20 @@ export default ({ mode }: { mode: string }) => {
         '/api': [
           {
             text: 'Test API Reference',
-            link: '/api/',
+            items: [
+              {
+                text: 'Test',
+                link: '/api/test',
+              },
+              {
+                text: 'Describe',
+                link: '/api/describe',
+              },
+              {
+                text: 'Hooks',
+                link: '/api/hooks',
+              },
+            ],
           },
           {
             text: 'Mocks',

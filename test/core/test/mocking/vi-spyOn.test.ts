@@ -16,122 +16,141 @@ function createNonConfigurableModuleNamespace(exportName: string) {
   return moduleNamespace
 }
 
-test('vi.fn() has correct length', () => {
-  const fn0 = vi.spyOn({ fn: () => {} }, 'fn')
-  expect(fn0.length).toBe(0)
+describe('vi.spyOn() edge cases', () => {
+  test('vi.spyOn() has correct length', () => {
+    const fn0 = vi.spyOn({ fn: () => {} }, 'fn')
+    expect(fn0.length).toBe(0)
 
-  const fnArgs = vi.spyOn({ fn: (..._args: any[]) => {} }, 'fn')
-  expect(fnArgs.length).toBe(0)
+    const fnArgs = vi.spyOn({ fn: (..._args: any[]) => {} }, 'fn')
+    expect(fnArgs.length).toBe(0)
 
-  const fn1 = vi.spyOn({ fn: (_arg1: any) => {} }, 'fn')
-  expect(fn1.length).toBe(1)
+    const fn1 = vi.spyOn({ fn: (_arg1: any) => {} }, 'fn')
+    expect(fn1.length).toBe(1)
 
-  const fn2 = vi.spyOn({ fn: (_arg1: any, _arg2: any) => {} }, 'fn')
-  expect(fn2.length).toBe(2)
+    const fn2 = vi.spyOn({ fn: (_arg1: any, _arg2: any) => {} }, 'fn')
+    expect(fn2.length).toBe(2)
 
-  const fn3 = vi.spyOn({ fn: (_arg1: any, _arg2: any, _arg3: any) => {} }, 'fn')
-  expect(fn3.length).toBe(3)
-})
+    const fn3 = vi.spyOn({ fn: (_arg1: any, _arg2: any, _arg3: any) => {} }, 'fn')
+    expect(fn3.length).toBe(3)
+  })
 
-test('spying on a native module namespace prints actionable error', () => {
-  const hadBrowserRunner = Object.prototype.hasOwnProperty.call(globalThis, '__vitest_browser_runner__')
-  const previousBrowserRunner = (globalThis as any).__vitest_browser_runner__
-  delete (globalThis as any).__vitest_browser_runner__
+  test('spying on a native module namespace prints actionable error', () => {
+    const hadBrowserRunner = Object.prototype.hasOwnProperty.call(globalThis, '__vitest_browser_runner__')
+    const previousBrowserRunner = (globalThis as any).__vitest_browser_runner__
+    delete (globalThis as any).__vitest_browser_runner__
 
-  try {
-    const moduleNamespace = createNonConfigurableModuleNamespace('after')
+    try {
+      const moduleNamespace = createNonConfigurableModuleNamespace('after')
 
-    const error: Error = (() => {
-      try {
-        vi.spyOn(moduleNamespace, 'after')
-        expect.unreachable()
-      }
-      catch (err) {
-        return ensureError(err)
-      }
-    })()
+      const error: Error = (() => {
+        try {
+          vi.spyOn(moduleNamespace, 'after')
+          expect.unreachable()
+        }
+        catch (err) {
+          return ensureError(err)
+        }
+      })()
 
-    expect(error.name).toBe('TypeError')
-    expect(error.message).toContain('Module namespace is not configurable in ESM')
-    expect(error.message).toContain('"test.server.deps.inline"')
-    expect(error.message).toContain('https://vitest.dev/config/#server-deps-inline')
-    expect(error.message).toContain('https://vitest.dev/guide/mocking/modules')
-    expect(error.message).not.toContain('https://vitest.dev/guide/browser/#spying-on-module-exports')
+      expect(error.name).toBe('TypeError')
+      expect(error.message).toContain('Module namespace is not configurable in ESM')
+      expect(error.message).toContain('"test.server.deps.inline"')
+      expect(error.message).toContain('https://vitest.dev/config/#server-deps-inline')
+      expect(error.message).toContain('https://vitest.dev/guide/mocking/modules')
+      expect(error.message).not.toContain('https://vitest.dev/guide/browser/#spying-on-module-exports')
 
-    expect(error.cause).toBeInstanceOf(TypeError)
-  }
-  finally {
-    if (hadBrowserRunner) {
-      ;(globalThis as any).__vitest_browser_runner__ = previousBrowserRunner
+      expect(error.cause).toBeInstanceOf(TypeError)
     }
-    else {
-      delete (globalThis as any).__vitest_browser_runner__
-    }
-  }
-})
-
-test('spying on a module namespace in browser mode prints browser limitations link', () => {
-  const hadBrowserRunner = Object.prototype.hasOwnProperty.call(globalThis, '__vitest_browser_runner__')
-  const previousBrowserRunner = (globalThis as any).__vitest_browser_runner__
-  ;(globalThis as any).__vitest_browser_runner__ = {}
-
-  try {
-    const moduleNamespace = createNonConfigurableModuleNamespace('calculator')
-
-    const error: Error = (() => {
-      try {
-        vi.spyOn(moduleNamespace, 'calculator')
-        expect.unreachable()
+    finally {
+      if (hadBrowserRunner) {
+        ;(globalThis as any).__vitest_browser_runner__ = previousBrowserRunner
       }
-      catch (err) {
-        return ensureError(err)
+      else {
+        delete (globalThis as any).__vitest_browser_runner__
       }
-    })()
-
-    expect(error.name).toBe('TypeError')
-    expect(error.message).toContain('Module namespace is not configurable in ESM')
-    expect(error.message).toContain('https://vitest.dev/guide/browser/#spying-on-module-exports')
-    expect(error.message).not.toContain('https://vitest.dev/config/#server-deps-inline')
-    expect(error.message).not.toContain('https://vitest.dev/guide/mocking/modules')
-
-    expect(error.cause).toBeInstanceOf(TypeError)
-  }
-  finally {
-    if (hadBrowserRunner) {
-      ;(globalThis as any).__vitest_browser_runner__ = previousBrowserRunner
     }
-    else {
-      delete (globalThis as any).__vitest_browser_runner__
+  })
+
+  test('spying on a module namespace in browser mode prints browser limitations link', () => {
+    const hadBrowserRunner = Object.prototype.hasOwnProperty.call(globalThis, '__vitest_browser_runner__')
+    const previousBrowserRunner = (globalThis as any).__vitest_browser_runner__
+    ;(globalThis as any).__vitest_browser_runner__ = {}
+
+    try {
+      const moduleNamespace = createNonConfigurableModuleNamespace('calculator')
+
+      const error: Error = (() => {
+        try {
+          vi.spyOn(moduleNamespace, 'calculator')
+          expect.unreachable()
+        }
+        catch (err) {
+          return ensureError(err)
+        }
+      })()
+
+      expect(error.name).toBe('TypeError')
+      expect(error.message).toContain('Module namespace is not configurable in ESM')
+      expect(error.message).toContain('https://vitest.dev/guide/browser/#spying-on-module-exports')
+      expect(error.message).not.toContain('https://vitest.dev/config/#server-deps-inline')
+      expect(error.message).not.toContain('https://vitest.dev/guide/mocking/modules')
+
+      expect(error.cause).toBeInstanceOf(TypeError)
     }
-  }
+    finally {
+      if (hadBrowserRunner) {
+        ;(globalThis as any).__vitest_browser_runner__ = previousBrowserRunner
+      }
+      else {
+        delete (globalThis as any).__vitest_browser_runner__
+      }
+    }
+  })
+
+  test('can spy on a proxy with undefined descriptor\'s value', () => {
+    const obj = new Proxy<{ fn: () => number }>({} as any, {
+      get(_, prop) {
+        if (prop === 'fn')
+          return () => 42
+      },
+      getOwnPropertyDescriptor(_, prop) {
+        if (prop === 'fn') {
+          return {
+            configurable: true,
+            enumerable: true,
+            value: undefined,
+            writable: true,
+          }
+        }
+      },
+    })
+    const spy = vi.spyOn(obj, 'fn')
+    expect(spy()).toBe(42)
+  })
 })
 
 describe('vi.spyOn() copies static properties', () => {
   test('vi.spyOn() copies properties from functions', () => {
     function a() {}
-    a.HELLO_WORLD = true
-    const obj = {
-      a,
-    }
+    ;(a as any).HELLO_WORLD = true
 
+    const obj = { a }
     const spy = vi.spyOn(obj, 'a')
 
-    expect(obj.a.HELLO_WORLD).toBe(true)
-    expect(spy.HELLO_WORLD).toBe(true)
+    expect((obj.a as any).HELLO_WORLD).toBe(true)
+    expect((spy as any).HELLO_WORLD).toBe(true)
   })
 
   test('vi.spyOn() copies properties from classes', () => {
     class A {
       static HELLO_WORLD = true
     }
-    const obj = {
-      A,
-    }
 
+    const obj = { A }
     const spy = vi.spyOn(obj, 'A')
 
     expect(obj.A.HELLO_WORLD).toBe(true)
-    expect(spy.HELLO_WORLD).toBe(true)
+    expect((spy as any).HELLO_WORLD).toBe(true)
   })
 
   test('vi.spyOn() ignores node.js.promisify symbol', () => {
@@ -139,11 +158,11 @@ describe('vi.spyOn() copies static properties', () => {
     class Example {
       static [promisifySymbol] = () => Promise.resolve(42)
     }
-    const obj = { Example }
 
+    const obj = { Example }
     const spy = vi.spyOn(obj, 'Example')
 
-    expect(spy[promisifySymbol]).toBe(undefined)
+    expect((spy as any)[promisifySymbol]).toBe(undefined)
   })
 })
 

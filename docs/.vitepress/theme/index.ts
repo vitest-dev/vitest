@@ -25,6 +25,10 @@ export default {
         return true
       }
       const url = new URL(to, location.href)
+      if (url.pathname === '/api/' || url.pathname === '/api' || url.pathname === '/api/index.html') {
+        setTimeout(() => { router.go(`/api/test`) })
+        return false
+      }
       if (!url.hash) {
         return true
       }

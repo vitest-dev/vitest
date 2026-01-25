@@ -846,7 +846,7 @@ export function resolveConfig(
   resolved.testTimeout ??= resolved.browser.enabled ? 15_000 : 5_000
   resolved.hookTimeout ??= resolved.browser.enabled ? 30_000 : 10_000
 
-  resolved.experimental ??= {}
+  resolved.experimental ??= {} as any
   if (resolved.experimental.openTelemetry?.sdkPath) {
     const sdkPath = resolve(
       resolved.root,
@@ -866,6 +866,12 @@ export function resolveConfig(
       resolved.root,
       resolved.experimental.fsModuleCachePath,
     )
+  }
+  resolved.experimental.importDurations ??= {} as any
+  resolved.experimental.importDurations.print ??= false
+  if (resolved.experimental.importDurations.limit == null) {
+    const shouldCollect = resolved.experimental.importDurations.print || resolved.ui
+    resolved.experimental.importDurations.limit = shouldCollect ? 10 : 0
   }
 
   return resolved

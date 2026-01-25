@@ -810,8 +810,24 @@ export const cliOptionsConfig: VitestCLIOptions = {
       },
       fsModuleCachePath: null,
       openTelemetry: null,
-      printImportBreakdown: {
-        description: 'Print import breakdown after the summary. If the reporter doesn\'t support summary, this will have no effect. Note that UI\'s "Module Graph" tab always has an import breakdown.',
+      importDurations: {
+        description: 'Configure import duration collection and CLI display. Note that UI\'s "Module Graph" tab can always show import breakdown regardless of the `print` setting.',
+        argument: '',
+        transform(value) {
+          if (typeof value === 'boolean') {
+            return { print: value }
+          }
+          return value
+        },
+        subcommands: {
+          print: {
+            description: 'Print import breakdown to CLI terminal after tests finish (default: false).',
+          },
+          limit: {
+            description: 'Maximum number of imports to collect and display (default: 0, or 10 if print or UI is enabled).',
+            argument: '<number>',
+          },
+        },
       },
       viteModuleRunner: {
         description: 'Control whether Vitest uses Vite\'s module runner to run the code or fallback to the native `import`. (default: `true`)',

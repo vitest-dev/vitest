@@ -23,6 +23,7 @@ import { deepMerge, nanoid, slash } from '@vitest/utils/helpers'
 import { isAbsolute, join, relative } from 'pathe'
 import pm from 'picomatch'
 import { glob } from 'tinyglobby'
+import { isRunnableDevEnvironment } from 'vite'
 import { setup } from '../api/setup'
 import { createDefinesScript } from '../utils/config-helpers'
 import { NativeModuleRunner } from '../utils/nativeModuleRunner'
@@ -579,6 +580,20 @@ export class TestProject {
           this._fetcher,
           this._config,
         )
+
+    const ssrEnvironment = server.environments.ssr
+    if (isRunnableDevEnvironment(ssrEnvironment)) {
+      const ssrRunner = new ServerModuleRunner(
+        ssrEnvironment,
+        this._fetcher,
+        this._config,
+      )
+      Object.defineProperty(ssrEnvironment, 'runner', {
+        value: ssrRunner,
+        writable: true,
+        configurable: true,
+      })
+    }
   }
 
   /** @internal */

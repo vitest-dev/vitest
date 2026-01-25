@@ -9,6 +9,7 @@ describe('import durations', () => {
     const { exitCode, ctx } = await runVitest({
       root,
       include: ['**/import-durations.test.ts'],
+      experimental: { importDurations: { limit: 10 } },
     })
 
     expect(exitCode).toBe(0)
@@ -41,6 +42,7 @@ describe('import durations', () => {
     const { exitCode, ctx } = await runVitest({
       root,
       include: ['**/ok.test.ts'],
+      experimental: { importDurations: { limit: 10 } },
     })
 
     expect(exitCode).toBe(0)
@@ -59,6 +61,7 @@ describe('import durations', () => {
     const { exitCode, ctx } = await runVitest({
       root,
       include: ['**/import-durations-throws.test.ts'],
+      experimental: { importDurations: { limit: 10 } },
     })
 
     expect(exitCode).toBe(1)
@@ -73,5 +76,33 @@ describe('import durations', () => {
 
     expect(file.importDurations?.[throwsFile]?.totalTime).toBeGreaterThanOrEqual(24)
     expect(file.importDurations?.[throwsFile]?.selfTime).toBeGreaterThanOrEqual(24)
+  })
+
+  it('should print import breakdown when print is enabled', async () => {
+    const { stdout } = await runVitest({
+      root,
+      include: ['**/import-durations.test.ts'],
+      experimental: {
+        importDurations: {
+          print: true,
+          limit: 5,
+        },
+      },
+    })
+
+    expect(stdout).toContain('Import Duration Breakdown')
+    expect(stdout).toContain('(ordered by Total Time)')
+    expect(stdout).toContain('Total imports:')
+    expect(stdout).toContain('(Top 5)')
+  })
+
+  it('should not collect importDurations by default', async () => {
+    const { ctx } = await runVitest({
+      root,
+      include: ['**/import-durations.test.ts'],
+    })
+
+    const file = ctx!.state.getFiles()[0]
+    expect(file.importDurations).toEqual({})
   })
 })

@@ -242,10 +242,21 @@ export class TestRunner implements VitestTestRunner {
   }
 
   getImportDurations(): Record<string, ImportDuration> {
-    const importDurations: Record<string, ImportDuration> = {}
-    const entries = this.workerState.moduleExecutionInfo?.entries() || []
+    const { limit } = this.config.experimental.importDurations
+    // skip sorting if limit is 0
+    if (limit === 0) {
+      return {}
+    }
 
-    for (const [filepath, { duration, selfTime, external, importer }] of entries) {
+    const entries = [...(this.workerState.moduleExecutionInfo?.entries() || [])]
+
+    // Sort by duration descending and keep top entries
+    const sortedEntries = entries
+      .sort(([, a], [, b]) => b.duration - a.duration)
+      .slice(0, limit)
+
+    const importDurations: Record<string, ImportDuration> = {}
+    for (const [filepath, { duration, selfTime, external, importer }] of sortedEntries) {
       importDurations[normalize(filepath)] = {
         selfTime,
         totalTime: duration,

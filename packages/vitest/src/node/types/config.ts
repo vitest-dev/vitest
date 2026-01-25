@@ -856,11 +856,24 @@ export interface InlineConfig {
       browserSdkPath?: string
     }
     /**
-     * Show imports (top 10) that take a long time.
+     * Configure import duration collection and display.
      *
-     * Enabling this will also show a breakdown by default in UI, but you can always press a button to toggle it.
+     * The `limit` option controls how many imports to collect and display.
+     * The `print` option controls CLI terminal output.
+     * UI can always toggle the breakdown display regardless of `print` setting.
      */
-    printImportBreakdown?: boolean
+    importDurations?: {
+      /**
+       * Print import breakdown to CLI terminal after tests finish.
+       * @default false
+       */
+      print?: boolean
+      /**
+       * Maximum number of imports to collect and display.
+       * @default 0 (or 10 if `print` or UI is enabled)
+       */
+      limit?: number
+    }
 
     /**
      * Controls whether Vitest uses Vite's module runner to run the code or fallback to the native `import`.
@@ -1142,6 +1155,13 @@ export interface ResolvedConfig
   vmMemoryLimit?: UserConfig['vmMemoryLimit']
   dumpDir?: string
   tagsFilter?: string[]
+
+  experimental: Omit<Required<UserConfig>['experimental'], 'importDurations'> & {
+    importDurations: {
+      print: boolean
+      limit: number
+    }
+  }
 }
 
 type NonProjectOptions
