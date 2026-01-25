@@ -110,8 +110,9 @@ describe('vi.spyOn() edge cases', () => {
   test('can spy on a proxy with undefined descriptor\'s value', () => {
     const obj = new Proxy<{ fn: () => number }>({} as any, {
       get(_, prop) {
-        if (prop === 'fn')
+        if (prop === 'fn') {
           return () => 42
+        }
       },
       getOwnPropertyDescriptor(_, prop) {
         if (prop === 'fn') {
