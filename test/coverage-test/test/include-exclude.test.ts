@@ -1,6 +1,6 @@
 import assert from 'node:assert'
-import { expect } from 'vitest'
-import { isBrowser, readCoverageMap, runVitest, test } from '../utils'
+import { expect, onTestFinished, vi } from 'vitest'
+import { cleanupCoverageJson, isBrowser, isNativeRunner, readCoverageMap, runVitest, test } from '../utils'
 
 test('default include should show only covered files', async () => {
   await runVitest({
@@ -109,12 +109,19 @@ test('exclude can exclude covered files #2', async () => {
 })
 
 test('uncovered files are included after watch-mode re-run', async () => {
-  const { vitest, ctx } = await runVitest({
+  // to avoid printing coverage report to stdout
+  const stdout = vi.spyOn(process.stdout, 'write').mockImplementation(() => true)
+  onTestFinished(() => stdout.mockRestore())
+  const { vitest } = await runVitest({
     watch: true,
     include: ['fixtures/test/math.test.ts', 'fixtures/test/even.test.ts'],
     coverage: {
-      include: ['fixtures/src/**.ts'],
-      reporter: 'json',
+      include: [
+        'fixtures/src/math.ts',
+        'fixtures/src/even.ts',
+        'fixtures/src/untested-file.ts',
+      ],
+      reporter: ['json', 'text-summary'],
     },
   })
 
@@ -126,15 +133,19 @@ test('uncovered files are included after watch-mode re-run', async () => {
     expect(files.length).toBeGreaterThanOrEqual(3)
   }
 
+  await cleanupCoverageJson()
+
   vitest.write('a')
 
   await vitest.waitForStdout('RERUN')
   await vitest.waitForStdout('rerun all tests')
   await vitest.waitForStdout('Waiting for file changes')
-  await ctx!.close()
+
+  // make sure coverage report is done, we need text output for this message to appear
+  await vitest.waitForStdout('Coverage report from')
 
   {
-    const coverageMap = await readCoverageMap()
+    const coverageMap = await vi.waitFor(() => readCoverageMap())
     const files = coverageMap.files()
 
     expect(files).toContain('<process-cwd>/fixtures/src/untested-file.ts')
@@ -224,7 +235,9 @@ test('overridden exclude should still apply defaults', async () => {
   expect(coverageMap.files()).toMatchInlineSnapshot(`{}`)
 })
 
-test('uncovered files are transformed correctly (node and browser)', async () => {
+test('uncovered files are transformed correctly (node and browser)', async ({ skip }) => {
+  skip(isNativeRunner(), 'native runner does not support plugins')
+
   await runVitest({
     config: 'fixtures/configs/vitest.config.conditional.ts',
     include: ['fixtures/test/math.test.ts'],
@@ -257,6 +270,7 @@ test('uncovered files are transformed correctly (node and browser)', async () =>
 
 test('uncovered files are transformed correctly (jsdom)', async ({ skip }) => {
   skip(isBrowser(), 'node relevant test')
+  skip(isNativeRunner(), 'native runner does not support plugins')
 
   await runVitest({
     config: 'fixtures/configs/vitest.config.conditional.ts',
@@ -279,7 +293,9 @@ test('uncovered files are transformed correctly (jsdom)', async ({ skip }) => {
     `)
 })
 
-test('files included and excluded in plugin\'s configureVitest are excluded', async () => {
+test('files included and excluded in plugin\'s configureVitest are excluded', async ({ skip }) => {
+  skip(isNativeRunner(), 'native runner does not support plugins')
+
   await runVitest({
     config: 'fixtures/configs/vitest.config.configure-vitest-hook.ts',
     include: ['fixtures/test/math.test.ts', 'fixtures/test/even.test.ts'],
@@ -301,7 +317,9 @@ test('files included and excluded in plugin\'s configureVitest are excluded', as
   `)
 })
 
-test('files included and excluded in project\'s plugin\'s configureVitest are excluded', async () => {
+test('files included and excluded in project\'s plugin\'s configureVitest are excluded', async ({ skip }) => {
+  skip(isNativeRunner(), 'native runner does not support plugins')
+
   await runVitest({
     coverage: {
       // Include math.ts by default, exclude it in plugin config

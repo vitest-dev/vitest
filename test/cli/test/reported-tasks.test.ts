@@ -28,6 +28,7 @@ const it = baseTest.extend<{
         ],
         includeTaskLocation: true,
         logHeapUsage: true,
+        experimental: { importDurations: { limit: 10 } },
       })
       expect(collectedTestModules).toHaveLength(1)
       await use(ctx!)
@@ -114,9 +115,12 @@ it('correctly reports a passed test', ({ testModule, files }) => {
     each: undefined,
     concurrent: undefined,
     shuffle: undefined,
+    fails: undefined,
     retry: undefined,
     repeats: undefined,
     mode: 'run',
+    tags: [],
+    timeout: 5000,
   })
   expect(passedTest.meta()).toEqual({})
 
@@ -150,6 +154,9 @@ it('correctly reports failed test', ({ testModule, files }) => {
     retry: undefined,
     repeats: undefined,
     mode: 'run',
+    fails: undefined,
+    tags: [],
+    timeout: 5000,
   })
   expect(passedTest.meta()).toEqual({})
 

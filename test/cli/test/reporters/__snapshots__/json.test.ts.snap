@@ -14,6 +14,9 @@ exports[`json reporter > generates correct report 1`] = `
   },
   "meta": {},
   "status": "failed",
+  "tags": [
+    "fail",
+  ],
   "title": "should fail",
 }
 `;

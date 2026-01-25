@@ -70,7 +70,7 @@ test.describe('ui', () => {
     await page.goto(pageUrl)
 
     // dashboard
-    await expect(page.locator('[aria-labelledby=tests]')).toContainText('14 Pass 1 Fail 15 Total')
+    await expect(page.locator('[aria-labelledby=tests]')).toContainText('15 Pass 1 Fail 16 Total')
 
     // unhandled errors
     await expect(page.getByTestId('unhandled-errors')).toContainText(
@@ -256,9 +256,26 @@ test.describe('ui', () => {
     // pass files with special chars
     await page.getByPlaceholder('Search...').fill('char () - Square root of nine (9)')
     await expect(page.getByText('char () - Square root of nine (9)')).toBeVisible()
-    await page.getByText('char () - Square root of nine (9)').hover()
-    await page.getByLabel('Run current test').click()
-    await expect(page.getByText('All tests passed in this file')).toBeVisible()
+    const testItem = page.getByTestId('explorer-item').filter({ hasText: 'char () - Square root of nine (9)' })
+    await testItem.hover()
+    await testItem.getByLabel('Run current test').click()
+    await expect(page.getByText('The test has passed without any errors')).toBeVisible()
+  })
+
+  test('tags filter', async ({ page }) => {
+    await page.goto(pageUrl)
+
+    await page.getByPlaceholder('Search...').fill('tag:db')
+
+    // only one test with the tag "db"
+    await expect(page.getByText('PASS (1)')).toBeVisible()
+    await expect(page.getByTestId('explorer-item').filter({ hasText: 'has tags' })).toBeVisible()
+
+    await page.getByPlaceholder('Search...').fill('tag:db && !flaky')
+    await expect(page.getByText('No matched test')).toBeVisible()
+
+    await page.getByPlaceholder('Search...').fill('tag:unknown')
+    await expect(page.getByText('The tag pattern "unknown" is not defined in the configuration')).toBeVisible()
   })
 
   test('dashboard entries filter tests correctly', async ({ page }) => {

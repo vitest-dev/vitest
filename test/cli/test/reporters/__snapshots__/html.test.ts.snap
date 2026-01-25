@@ -24,6 +24,7 @@ exports[`html reporter > resolves to "failing" status for test file "json-fail" 
         "state": "fail",
       },
       "setupDuration": 0,
+      "tags": [],
       "tasks": [
         {
           "annotations": [],
@@ -81,6 +82,9 @@ exports[`html reporter > resolves to "failing" status for test file "json-fail" 
             "startTime": 0,
             "state": "fail",
           },
+          "tags": [
+            "fail",
+          ],
           "timeout": 5000,
           "type": "test",
         },
@@ -113,7 +117,7 @@ exports[`html reporter > resolves to "failing" status for test file "json-fail" 
 
 // I am comment1
 // I am comment2
-test('should fail', () => {
+test('should fail', { tags: ['fail'] }, () => {
   // eslint-disable-next-line no-console
   console.log('json-fail>should fail')
   expect(2).toEqual(1)
@@ -148,6 +152,7 @@ exports[`html reporter > resolves to "passing" status for test file "all-passing
         "state": "pass",
       },
       "setupDuration": 0,
+      "tags": [],
       "tasks": [
         {
           "annotations": [],
@@ -170,6 +175,7 @@ exports[`html reporter > resolves to "passing" status for test file "all-passing
             "startTime": 0,
             "state": "pass",
           },
+          "tags": [],
           "timeout": 5000,
           "type": "test",
         },
@@ -187,6 +193,7 @@ exports[`html reporter > resolves to "passing" status for test file "all-passing
           "meta": {},
           "mode": "skip",
           "name": "3 + 3 = 6",
+          "tags": [],
           "timeout": 5000,
           "type": "test",
         },

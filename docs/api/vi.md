@@ -37,6 +37,8 @@ function mock<T>(
 
 Substitutes all imported modules from provided `path` with another module. You can use configured Vite aliases inside a path. The call to `vi.mock` is hoisted, so it doesn't matter where you call it. It will always be executed before all imports. If you need to reference some variables outside of its scope, you can define them inside [`vi.hoisted`](#vi-hoisted) and reference them inside `vi.mock`.
 
+It is recommended to use `vi.mock` or `vi.hoisted` only inside test files. If Vite's [module runner](/config/experimental#experimental-vitemodulerunner) is disabled, they will not be hoisted. This is a performance optimisation to avoid ready unnecessary files.
+
 ::: warning
 `vi.mock` works only for modules that were imported with the `import` keyword. It doesn't work with `require`.
 
@@ -262,7 +264,7 @@ function mocked<T>(
 
 Type helper for TypeScript. Just returns the object that was passed.
 
-When `partial` is `true` it will expect a `Partial<T>` as a return value. By default, this will only make TypeScript believe that the first level values are mocked. You can pass down `{ deep: true }` as a second argument to tell TypeScript that the whole object is mocked, if it actually is.
+When `partial` is `true` it will expect a `Partial<T>` as a return value. By default, this will only make TypeScript believe that the first level values are mocked. You can pass down `{ deep: true }` as a second argument to tell TypeScript that the whole object is mocked, if it actually is. You can pass down `{ partial: true, deep: true }` to make nested objects also partial recursively.
 
 ```ts [example.ts]
 export function add(x: number, y: number): number {
@@ -271,6 +273,10 @@ export function add(x: number, y: number): number {
 
 export function fetchSomething(): Promise<Response> {
   return fetch('https://vitest.dev/')
+}
+
+export function getUser(): { name: string; address: { city: string; zip: string } } {
+  return { name: 'John', address: { city: 'New York', zip: '10001' } }
 }
 ```
 
@@ -288,6 +294,13 @@ test('mock return value with only partially correct typing', async () => {
   vi.mocked(example.fetchSomething).mockResolvedValue(new Response('hello'))
   vi.mocked(example.fetchSomething, { partial: true }).mockResolvedValue({ ok: false })
   // vi.mocked(example.someFn).mockResolvedValue({ ok: false }) // this is a type error
+})
+
+test('mock return value with deep partial typing', async () => {
+  vi.mocked(example.getUser, { partial: true, deep: true }).mockReturnValue({
+    address: { city: 'Los Angeles' },
+  })
+  expect(example.getUser().address.city).toBe('Los Angeles')
 })
 ```
 
@@ -615,7 +628,7 @@ it('calls console.log', () => {
 :::
 
 ::: tip
-You can call [`vi.restoreAllMocks`](#vi-restoreallmocks) inside [`afterEach`](/api/#aftereach) (or enable [`test.restoreMocks`](/config/#restoreMocks)) to restore all methods to their original implementations after every test. This will restore the original [object descriptor](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/defineProperty), so you won't be able to change method's implementation anymore, unless you spy again:
+You can call [`vi.restoreAllMocks`](#vi-restoreallmocks) inside [`afterEach`](/api/hooks#aftereach) (or enable [`test.restoreMocks`](/config/#restoreMocks)) to restore all methods to their original implementations after every test. This will restore the original [object descriptor](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/defineProperty), so you won't be able to change method's implementation anymore, unless you spy again:
 
 ```ts
 const cart = {

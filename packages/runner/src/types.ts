@@ -1,6 +1,7 @@
 export type {
   CancelReason,
   FileSpecification,
+  TestTagDefinition,
   VitestRunner,
   VitestRunnerConfig,
   VitestRunnerConstructor,
@@ -9,6 +10,8 @@ export type {
 export type {
   AfterAllListener,
   AfterEachListener,
+  AroundAllListener,
+  AroundEachListener,
   BeforeAllListener,
   BeforeEachListener,
   File,
@@ -31,6 +34,7 @@ export type {
   SuiteCollector,
   SuiteFactory,
   SuiteHooks,
+  SuiteOptions,
   Task,
   TaskBase,
   TaskCustomOptions,
@@ -55,6 +59,7 @@ export type {
   TestContext,
   TestFunction,
   TestOptions,
+  TestTags,
   Use,
   VisualRegressionArtifact,
 } from './types/tasks'

@@ -1,6 +1,6 @@
 import type { Awaitable, TestError } from '@vitest/utils'
 import type { FixtureItem } from '../fixture'
-import type { afterAll, afterEach, beforeAll, beforeEach } from '../hooks'
+import type { afterAll, afterEach, aroundAll, aroundEach, beforeAll, beforeEach } from '../hooks'
 import type { ChainableFunction } from '../utils/chain'
 
 export type RunMode = 'run' | 'skip' | 'only' | 'todo' | 'queued'
@@ -114,6 +114,10 @@ export interface TaskBase {
    * @experimental
    */
   dynamic?: boolean
+  /**
+   * Custom tags of the task. Useful for filtering tasks.
+   */
+  tags?: string[]
 }
 
 export interface TaskPopulated extends TaskBase {
@@ -545,10 +549,6 @@ export interface TestOptions {
    */
   sequential?: boolean
   /**
-   * Whether the tasks of the suite run in a random order.
-   */
-  shuffle?: boolean
-  /**
    * Whether the test should be skipped.
    */
   skip?: boolean
@@ -564,6 +564,21 @@ export interface TestOptions {
    * Whether the test is expected to fail. If it does, the test will pass, otherwise it will fail.
    */
   fails?: boolean
+  /**
+   * Custom tags of the test. Useful for filtering tests.
+   */
+  tags?: keyof TestTags extends never
+    ? string[] | string
+    : TestTags[keyof TestTags] | TestTags[keyof TestTags][]
+}
+
+export interface TestTags {}
+
+export interface SuiteOptions extends TestOptions {
+  /**
+   * Whether the tasks of the suite run in a random order.
+   */
+  shuffle?: boolean
 }
 
 interface ExtendedAPI<ExtraContext> {
@@ -576,6 +591,8 @@ interface Hooks<ExtraContext> {
   afterAll: typeof afterAll
   beforeEach: typeof beforeEach<ExtraContext>
   afterEach: typeof afterEach<ExtraContext>
+  aroundEach: typeof aroundEach<ExtraContext>
+  aroundAll: typeof aroundAll
 }
 
 export type TestAPI<ExtraContext = object> = ChainableTestAPI<ExtraContext>
@@ -592,6 +609,7 @@ export type TestAPI<ExtraContext = object> = ChainableTestAPI<ExtraContext>
     scoped: (
       fixtures: Partial<Fixtures<ExtraContext>>,
     ) => void
+    describe: SuiteAPI<ExtraContext>
   }
 
 export interface FixtureOptions {
@@ -647,7 +665,7 @@ interface SuiteCollectorCallable<ExtraContext = object> {
   ): SuiteCollector<OverrideExtraContext>
   <OverrideExtraContext extends ExtraContext = ExtraContext>(
     name: string | Function,
-    options: TestOptions,
+    options: SuiteOptions,
     fn?: SuiteFactory<OverrideExtraContext>
   ): SuiteCollector<OverrideExtraContext>
 }
@@ -688,11 +706,28 @@ export interface AfterEachListener<ExtraContext = object> {
   ): Awaitable<unknown>
 }
 
+export interface AroundEachListener<ExtraContext = object> {
+  (
+    runTest: () => Promise<void>,
+    context: TestContext & ExtraContext,
+    suite: Readonly<Suite>
+  ): Awaitable<unknown>
+}
+
+export interface AroundAllListener {
+  (
+    runSuite: () => Promise<void>,
+    suite: Readonly<Suite | File>
+  ): Awaitable<unknown>
+}
+
 export interface SuiteHooks<ExtraContext = object> {
   beforeAll: BeforeAllListener[]
   afterAll: AfterAllListener[]
   beforeEach: BeforeEachListener<ExtraContext>[]
   afterEach: AfterEachListener<ExtraContext>[]
+  aroundEach: AroundEachListener<ExtraContext>[]
+  aroundAll: AroundAllListener[]
 }
 
 export interface TaskCustomOptions extends TestOptions {
@@ -719,7 +754,7 @@ export interface TaskCustomOptions extends TestOptions {
 export interface SuiteCollector<ExtraContext = object> {
   readonly name: string
   readonly mode: RunMode
-  options?: TestOptions
+  options?: SuiteOptions
   type: 'collector'
   test: TestAPI<ExtraContext>
   tasks: (

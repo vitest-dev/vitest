@@ -3,9 +3,9 @@ import type { UserConfig as ViteUserConfig } from 'vite'
 import type { SerializedConfig, WorkerGlobalState } from 'vitest'
 import type { TestProjectConfiguration } from 'vitest/config'
 import type {
+  TestCase,
   TestCollection,
   TestModule,
-  TestResult,
   TestSpecification,
   TestUserConfig,
   Vitest,
@@ -13,7 +13,7 @@ import type {
 import { webcrypto as crypto } from 'node:crypto'
 import fs from 'node:fs'
 import { Readable, Writable } from 'node:stream'
-import { fileURLToPath } from 'node:url'
+import { fileURLToPath, pathToFileURL } from 'node:url'
 import { inspect } from 'node:util'
 import { dirname, relative, resolve } from 'pathe'
 import { x } from 'tinyexec'
@@ -226,6 +226,9 @@ export async function runVitest(
     testTree() {
       return buildTestTree(ctx?.state.getTestModules() || [])
     },
+    buildTree(onResult: (testResult: TestCase) => any) {
+      return buildTestTree(ctx?.state.getTestModules() || [], onResult)
+    },
     waitForClose: async () => {
       await new Promise<void>(resolve => ctx!.onClose(resolve))
       return ctx?.closingPromise
@@ -405,6 +408,13 @@ export function useFS<T extends TestFsStructure>(root: string, structure: T, ens
     }
   })
   return {
+    readFile: (file: string): string => {
+      const filepath = resolve(root, file)
+      if (relative(root, filepath).startsWith('..')) {
+        throw new Error(`file ${file} is outside of the test file system`)
+      }
+      return fs.readFileSync(filepath, 'utf-8')
+    },
     editFile: (file: string, callback: (content: string) => string) => {
       const filepath = resolve(root, file)
       if (!files.has(filepath)) {
@@ -465,7 +475,27 @@ export async function runInlineTests(
     testTree() {
       return buildTestTree(vitest.ctx?.state.getTestModules() || [])
     },
+    buildTree(onResult: (testResult: TestCase) => any) {
+      return buildTestTree(vitest.ctx?.state.getTestModules() || [], onResult)
+    },
   }
+}
+
+export function replaceRoot(string: string, root: string) {
+  const schemaRoot = root.startsWith('file://') ? root : pathToFileURL(root).toString()
+  if (!root.endsWith('/')) {
+    root += process.platform !== 'win32' ? '?/' : '?\\\\'
+  }
+  if (process.platform !== 'win32') {
+    return string
+      .replace(new RegExp(schemaRoot, 'g'), '<urlRoot>')
+      .replace(new RegExp(root, 'g'), '<root>/')
+  }
+  const normalizedRoot = root.replaceAll('/', '\\\\')
+  return string
+    .replace(new RegExp(schemaRoot, 'g'), '<urlRoot>')
+    .replace(new RegExp(root, 'g'), '<root>/')
+    .replace(new RegExp(normalizedRoot, 'g'), '<root>/')
 }
 
 export const ts = String.raw
@@ -481,7 +511,8 @@ export class StableTestFileOrderSorter {
 }
 
 export function buildErrorTree(testModules: TestModule[]) {
-  return buildTestTree(testModules, (result) => {
+  return buildTestTree(testModules, (testCase) => {
+    const result = testCase.result()
     if (result.state === 'failed') {
       return result.errors.map(e => e.message)
     }
@@ -489,7 +520,7 @@ export function buildErrorTree(testModules: TestModule[]) {
   })
 }
 
-export function buildTestTree(testModules: TestModule[], onResult?: (result: TestResult) => unknown) {
+export function buildTestTree(testModules: TestModule[], onTestCase?: (result: TestCase) => unknown) {
   type TestTree = Record<string, any>
 
   function walkCollection(collection: TestCollection): TestTree {
@@ -503,8 +534,8 @@ export function buildTestTree(testModules: TestModule[], onResult?: (result: Tes
       }
       else if (child.type === 'test') {
         const result = child.result()
-        if (onResult) {
-          node[child.name] = onResult(result)
+        if (onTestCase) {
+          node[child.name] = onTestCase(child)
         }
         else {
           node[child.name] = result.state

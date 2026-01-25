@@ -232,12 +232,14 @@ jobs:
         run: pnpm run build
 
       - name: Test
-        run: pnpm run test:ci
+        run: pnpm run test:ci:no-bail
 
       - name: Test Examples
+        if: ${{ !cancelled() }}
         run: pnpm run test:examples
 
       - name: Test Browser (playwright)
+        if: ${{ !cancelled() }}
         run: pnpm run test:browser:playwright
 
       - uses: actions/upload-artifact@v6

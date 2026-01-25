@@ -320,7 +320,7 @@ export interface VitestUtils {
    * Type helper for TypeScript. Just returns the object that was passed.
    *
    * When `partial` is `true` it will expect a `Partial<T>` as a return value. By default, this will only make TypeScript believe that
-   * the first level values are mocked. You can pass down `{ deep: true }` as a second argument to tell TypeScript that the whole object is mocked, if it actually is.
+   * the first level values are mocked. You can pass down `{ partial: true, deep: true }` to make nested objects also partial recursively.
    * @example
    * ```ts
    * import example from './example.js'

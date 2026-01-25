@@ -6,7 +6,10 @@ const pools = ['forks']
 
 if (!process.env.COVERAGE_BROWSER) {
   pools.push('threads')
-  pools.push('vmForks', 'vmThreads')
+
+  if (process.env.VITE_MODULE_RUNNER !== 'false') {
+    pools.push('vmForks', 'vmThreads')
+  }
 }
 
 for (const isolate of [true, false]) {

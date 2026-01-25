@@ -173,6 +173,7 @@ test('merge reports', async () => {
               "fullName": "test 1-1",
               "meta": {},
               "status": "passed",
+              "tags": [],
               "title": "test 1-1",
             },
             {
@@ -184,6 +185,7 @@ test('merge reports', async () => {
               "fullName": "test 1-2",
               "meta": {},
               "status": "failed",
+              "tags": [],
               "title": "test 1-2",
             },
           ],
@@ -204,6 +206,7 @@ test('merge reports', async () => {
               "fullName": "test 2-1",
               "meta": {},
               "status": "failed",
+              "tags": [],
               "title": "test 2-1",
             },
             {
@@ -214,6 +217,7 @@ test('merge reports', async () => {
               "fullName": "group test 2-2",
               "meta": {},
               "status": "passed",
+              "tags": [],
               "title": "test 2-2",
             },
             {
@@ -224,6 +228,7 @@ test('merge reports', async () => {
               "fullName": "group test 2-3",
               "meta": {},
               "status": "passed",
+              "tags": [],
               "title": "test 2-3",
             },
           ],

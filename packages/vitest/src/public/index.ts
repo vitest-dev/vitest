@@ -100,6 +100,8 @@ export type {
 export {
   afterAll,
   afterEach,
+  aroundAll,
+  aroundEach,
   beforeAll,
   beforeEach,
   describe,
@@ -126,6 +128,7 @@ export type {
   SuiteAPI,
   SuiteCollector,
   SuiteFactory,
+  SuiteOptions,
   TaskCustomOptions,
   TaskMeta,
   TaskState,
@@ -140,8 +143,9 @@ export type {
   TestContext,
   TestFunction,
   TestOptions,
-
   VitestRunnerConfig as TestRunnerConfig,
+
+  TestTags,
   VitestRunner as VitestTestRunner,
 } from '@vitest/runner'
 

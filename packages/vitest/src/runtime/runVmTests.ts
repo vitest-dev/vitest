@@ -1,7 +1,7 @@
 import type { FileSpecification } from '@vitest/runner'
 import type { Traces } from '../utils/traces'
 import type { SerializedConfig } from './config'
-import type { VitestModuleRunner } from './moduleRunner/moduleRunner'
+import type { TestModuleRunner } from './moduleRunner/testModuleRunner'
 import { createRequire } from 'node:module'
 import { performance } from 'node:perf_hooks'
 import timers from 'node:timers'
@@ -25,7 +25,7 @@ export async function run(
   method: 'run' | 'collect',
   files: FileSpecification[],
   config: SerializedConfig,
-  moduleRunner: VitestModuleRunner,
+  moduleRunner: TestModuleRunner,
   traces: Traces,
 ): Promise<void> {
   const workerState = getWorkerState()
