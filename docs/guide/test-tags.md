@@ -5,7 +5,7 @@ outline: deep
 
 # Test Tags <Version>4.1.0</Version> {#test-tags}
 
-[`Tags`](/config/tags) allow you to mark tests. These tags can be used to filter tests and also override options for tests.
+[`Tags`](/config/tags) let you label tests so you can filter what runs and override their options when needed.
 
 ## Defining Tags
 
