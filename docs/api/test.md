@@ -247,6 +247,31 @@ test('add item', ({ todos }) => {
 })
 ```
 
+## test.scoped <Version>3.1.0</Version> {#test-scoped}
+
+- **Alias:** `it.scoped`
+
+Use `test.scoped` to override fixture values for all tests within the current suite and its nested suites. This must be called at the top level of a `describe` block. See [Scoping Values to Suite](/guide/test-context.html#scoping-values-to-suite) for more information.
+
+```ts
+import { test as baseTest, describe, expect } from 'vitest'
+
+const test = baseTest.extend({
+  dependency: 'default',
+  dependant: ({ dependency }, use) => use({ dependency }),
+})
+
+describe('use scoped values', () => {
+  test.scoped({ dependency: 'new' })
+
+  test('uses scoped value', ({ dependant }) => {
+    // `dependant` uses the new overridden value that is scoped
+    // to all tests in this suite
+    expect(dependant).toEqual({ dependency: 'new' })
+  })
+})
+```
+
 ## test.skip
 
 - **Alias:** `it.skip`
