@@ -222,7 +222,6 @@ export const utils: {
   /**
    * Configures default options of `prettyDOM` and `debug` functions.
    * This will also affect `vitest-browser-{framework}` package.
-   * @experimental
    */
   configurePrettyDOM(options: StringifyOptions): void
   /**

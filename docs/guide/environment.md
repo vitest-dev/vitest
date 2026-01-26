@@ -49,7 +49,7 @@ import type { Environment } from 'vitest/runtime'
 export default <Environment>{
   name: 'custom',
   viteEnvironment: 'ssr',
-  // optional - only if you support "experimental-vm" pool
+  // optional - only if you support "vmForks" or "vmThreads" pools
   async setupVM() {
     const vm = await import('node:vm')
     const context = vm.createContext()
