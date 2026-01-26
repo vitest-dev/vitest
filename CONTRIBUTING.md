@@ -25,6 +25,10 @@ To develop and test `vitest` package:
 
 > 💡 If you use VS Code, you can hit `⇧ ⌘ B` or `Ctrl + Shift + B` to launch all the necessary dev tasks.
 
+### UI Development
+
+If you want to improve Vitest Browser Mode, see the [Browser Mode development guide](./packages/ui/README.md) for setup instructions and development workflow.
+
 ## Debugging
 
 ### VS Code
