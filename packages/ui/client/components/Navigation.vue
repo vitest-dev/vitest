@@ -3,7 +3,7 @@ import type { RunnerTestFile } from 'vitest'
 import { Tooltip as VueTooltip } from 'floating-vue'
 import { computed, nextTick } from 'vue'
 import { isDark, toggleDark } from '~/composables'
-import { client, isReport, runAll, runFiles } from '~/composables/client'
+import { client, config, isReport, runAll, runFiles } from '~/composables/client'
 import { explorerTree } from '~/composables/explorer'
 import { initialized, shouldShowExpandAll } from '~/composables/explorer/state'
 import {
@@ -26,6 +26,10 @@ function updateSnapshot() {
 const toggleMode = computed(() => isDark.value ? 'light' : 'dark')
 
 async function onRunAll(files?: RunnerTestFile[]) {
+  if (config.value.api.allowExec === false) {
+    return
+  }
+
   if (coverageEnabled.value) {
     disableCoverage.value = true
     await nextTick()
@@ -48,6 +52,13 @@ function collapseTests() {
 
 function expandTests() {
   explorerTree.expandAllNodes()
+}
+
+function getRerunTooltip(filteredFiles: RunnerTestFile[] | undefined) {
+  if (config.value.api.allowExec === false) {
+    return 'Cannot run tests when `api.allowExec` is `false`. Did you expose UI to the internet?'
+  }
+  return filteredFiles ? (filteredFiles.length === 0 ? 'No test to run (clear filter)' : 'Rerun filtered') : 'Rerun all'
 }
 </script>
 
@@ -113,7 +124,7 @@ function expandTests() {
           @click="showCoverage()"
         />
         <IconButton
-          v-if="(explorerTree.summary.failedSnapshot && !isReport)"
+          v-if="(explorerTree.summary.failedSnapshot && !isReport && config.api?.allowExec && config.api?.allowWrite)"
           v-tooltip.bottom="'Update all failed snapshot(s)'"
           icon="i-carbon:result-old"
           :disabled="!explorerTree.summary.failedSnapshotEnabled"
@@ -121,8 +132,8 @@ function expandTests() {
         />
         <IconButton
           v-if="!isReport"
-          v-tooltip.bottom="filteredFiles ? (filteredFiles.length === 0 ? 'No test to run (clear filter)' : 'Rerun filtered') : 'Rerun all'"
-          :disabled="filteredFiles?.length === 0"
+          v-tooltip.bottom="getRerunTooltip(filteredFiles)"
+          :disabled="filteredFiles?.length === 0 || !config.api.allowExec"
           icon="i-carbon:play"
           @click="onRunAll(filteredFiles)"
         />

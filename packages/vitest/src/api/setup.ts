@@ -59,9 +59,6 @@ export function setup(ctx: Vitest, _server?: ViteDevServer): void {
   function setupClient(ws: WebSocket) {
     const rpc = createBirpc<WebSocketEvents, WebSocketHandlers>(
       {
-        async onTaskUpdate(packs, events) {
-          await ctx._testRun.updated(packs, events)
-        },
         getFiles() {
           return ctx.state.getFiles()
         },
@@ -162,8 +159,9 @@ export function setup(ctx: Vitest, _server?: ViteDevServer): void {
           return getModuleGraph(ctx, project, id, browser)
         },
         async updateSnapshot(file?: File) {
-          // silently ignore exec attempts if not allowed
-          if (!ctx.config.api.allowExec) {
+          // silently ignore exec/write attempts if not allowed
+          // this function both executes the code and write snapshots
+          if (!ctx.config.api.allowExec || !ctx.config.api.allowWrite) {
             return
           }
           if (!file) {
