@@ -135,6 +135,7 @@ function getRerunTooltip(filteredFiles: RunnerTestFile[] | undefined) {
           v-tooltip.bottom="getRerunTooltip(filteredFiles)"
           :disabled="filteredFiles?.length === 0 || !config.api.allowExec"
           icon="i-carbon:play"
+          data-testid="btn-run-all"
           @click="onRunAll(filteredFiles)"
         />
         <IconButton
