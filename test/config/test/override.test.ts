@@ -27,6 +27,8 @@ describe('correctly defines api flag', () => {
     })
     expect(c.vite.config.server.middlewareMode).toBe(true)
     expect(c.config.api).toEqual({
+      allowExec: true,
+      allowWrite: true,
       middlewareMode: true,
       token: expect.any(String),
     })
@@ -42,6 +44,8 @@ describe('correctly defines api flag', () => {
     expect(c.vite.config.server.port).toBe(4321)
     expect(c.config.api).toEqual({
       port: 4321,
+      allowWrite: true,
+      allowExec: true,
       token: expect.any(String),
     })
   })
@@ -50,6 +54,42 @@ describe('correctly defines api flag', () => {
     const c = await vitest({ isolate: false }, {})
     expect(c.config.isolate).toBe(false)
     expect(c.config.browser.isolate).toBe(false)
+  })
+
+  it('allowWrite and allowExec default to true when not exposed to network', async () => {
+    const c = await config({ api: { port: 5555 } }, {})
+    expect(c.api.allowWrite).toBe(true)
+    expect(c.api.allowExec).toBe(true)
+  })
+
+  it('allowWrite and allowExec default to true for localhost', async () => {
+    const c = await config({ api: { port: 5555, host: 'localhost' } }, {})
+    expect(c.api.allowWrite).toBe(true)
+    expect(c.api.allowExec).toBe(true)
+  })
+
+  it('allowWrite and allowExec default to true for 127.0.0.1', async () => {
+    const c = await config({ api: { port: 5555, host: '127.0.0.1' } }, {})
+    expect(c.api.allowWrite).toBe(true)
+    expect(c.api.allowExec).toBe(true)
+  })
+
+  it('allowWrite and allowExec default to false when exposed to network', async () => {
+    const c = await config({ api: { port: 5555, host: '0.0.0.0' } }, {})
+    expect(c.api.allowWrite).toBe(false)
+    expect(c.api.allowExec).toBe(false)
+  })
+
+  it('allowWrite and allowExec can be explicitly overridden when exposed to network', async () => {
+    const c = await config({ api: { port: 5555, host: '0.0.0.0', allowWrite: true, allowExec: true } }, {})
+    expect(c.api.allowWrite).toBe(true)
+    expect(c.api.allowExec).toBe(true)
+  })
+
+  it('allowWrite and allowExec can be explicitly disabled', async () => {
+    const c = await config({ api: { port: 5555, allowWrite: false, allowExec: false } }, {})
+    expect(c.api.allowWrite).toBe(false)
+    expect(c.api.allowExec).toBe(false)
   })
 })
 
