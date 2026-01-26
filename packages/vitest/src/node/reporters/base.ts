@@ -519,6 +519,7 @@ export abstract class BaseReporter implements Reporter {
 
   reportSummary(files: File[], errors: unknown[]): void {
     this.printErrorsSummary(files, errors)
+    this.printLeaksSummary()
 
     if (this.ctx.config.mode === 'benchmark') {
       this.reportBenchmarkSummary(files)
@@ -570,6 +571,12 @@ export abstract class BaseReporter implements Reporter {
         padSummaryTitle('Errors'),
         c.bold(c.red(`${errors.length} error${errors.length > 1 ? 's' : ''}`)),
       )
+    }
+
+    const leaks = this.ctx.state.leakSet.size
+
+    if (leaks) {
+      this.log(padSummaryTitle('Leaks'), c.bold(c.red(`${leaks} leak${leaks > 1 ? 's' : ''}`)))
     }
 
     this.log(padSummaryTitle('Start at'), this._timeStart)
@@ -744,6 +751,20 @@ export abstract class BaseReporter implements Reporter {
     if (errors.length) {
       this.ctx.logger.printUnhandledErrors(errors)
       this.error()
+    }
+  }
+
+  private printLeaksSummary() {
+    const leaks = this.ctx.state.leakSet
+
+    if (leaks.size) {
+      this.error(`\n${errorBanner(`Async leaks ${leaks.size}`)}\n`)
+
+      for (const leak of leaks) {
+        const filename = this.relative(leak.filename)
+
+        this.ctx.logger.error(`${c.bgRed(c.bold(` ${leak.type} `))} ${filename}`)
+      }
     }
   }
 
