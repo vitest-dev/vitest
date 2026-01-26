@@ -13,7 +13,6 @@ export interface Reporter {
   /**
    * Called when the project initiated the browser instance.
    * project.browser will always be defined.
-   * @experimental
    */
   onBrowserInit?: (project: TestProject) => Awaitable<void>
   /** @internal   */

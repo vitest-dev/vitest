@@ -478,9 +478,7 @@ function onCancel(fn: (reason: CancelReason) => Awaitable<void>): () => void
 
 Register a handler that will be called when the test run is cancelled with [`vitest.cancelCurrentRun`](#cancelcurrentrun).
 
-::: warning EXPERIMENTAL
-Since 4.0.10, `onCancel` returns a teardown function that will remove the listener.
-:::
+Since 4.0.10, `onCancel` experimentally returns a teardown function that will remove the listener. Since 4.1.0 this behaviour is considered stable.
 
 ## onClose
 

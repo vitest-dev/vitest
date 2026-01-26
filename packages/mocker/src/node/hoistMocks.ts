@@ -35,7 +35,6 @@ export interface HoistMocksOptions {
    * @default ["hoisted"]
    */
   hoistedMethodNames?: string[]
-  // @experimental, TODO
   globalThisAccessor?: string
   regexpHoistable?: RegExp
   codeFrameGenerator?: CodeFrameGenerator

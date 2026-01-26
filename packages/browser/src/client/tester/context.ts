@@ -492,9 +492,6 @@ function getElementError(selector: string, container: Element): Error {
   return error
 }
 
-/**
- * @experimental
- */
 function configurePrettyDOM(options: StringifyOptions) {
   defaultOptions = options
 }

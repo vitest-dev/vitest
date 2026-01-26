@@ -40,7 +40,7 @@ The ID of the module in Vite's module graph. Usually, it's an absolute file path
 
 Instance of [`TestModule`](/api/advanced/test-module) associated with the specification. If test wasn't queued yet, this will be `undefined`.
 
-## pool <Badge type="warning">experimental</Badge> {#pool}
+## pool {#pool}
 
 The [`pool`](/config/#pool) in which the test module will run.
 
