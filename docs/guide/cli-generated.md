@@ -464,6 +464,13 @@ Pass when no tests are found
 
 Show the size of heap for each test when running in node
 
+### detectAsyncLeaks
+
+- **CLI:** `--detectAsyncLeaks`
+- **Config:** [detectAsyncLeaks](/config/detectasyncleaks)
+
+Detect asynchronous resources leaking from the test file (default: `false`)
+
 ### allowOnly
 
 - **CLI:** `--allowOnly`

@@ -354,6 +354,10 @@ export function resolveConfig(
     throw new Error(`"Istanbul" coverage provider is not compatible with "experimental.viteModuleRunner: false". Please, enable "viteModuleRunner" or switch to "v8" coverage provider.`)
   }
 
+  if (browser.enabled && resolved.detectAsyncLeaks) {
+    logger.console.warn(c.yellow('The option "detectAsyncLeaks" is not supported in browser mode and will be ignored.'))
+  }
+
   const containsChromium = hasBrowserChromium(vitest, resolved)
   const hasOnlyChromium = hasOnlyBrowserChromium(vitest, resolved)
 

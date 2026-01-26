@@ -5,6 +5,7 @@ import type { Vitest } from '../core'
 import type { TestSpecification } from '../test-specification'
 import type { Reporter, TestRunEndReason } from '../types/reporter'
 import type { TestCase, TestCollection, TestModule, TestModuleState, TestResult, TestSuite, TestSuiteState } from './reported-tasks'
+import { readFileSync } from 'node:fs'
 import { performance } from 'node:perf_hooks'
 import { getSuites, getTestName, getTests, hasFailed } from '@vitest/runner/utils'
 import { toArray } from '@vitest/utils/helpers'
@@ -14,6 +15,7 @@ import c from 'tinyrainbow'
 import { groupBy } from '../../utils/base'
 import { isTTY } from '../../utils/env'
 import { hasFailedSnapshot } from '../../utils/tasks'
+import { generateCodeFrame, printStack } from '../printError'
 import { F_CHECK, F_DOWN_RIGHT, F_POINTER } from './renderers/figures'
 import {
   countTestErrors,
@@ -519,6 +521,7 @@ export abstract class BaseReporter implements Reporter {
 
   reportSummary(files: File[], errors: unknown[]): void {
     this.printErrorsSummary(files, errors)
+    this.printLeaksSummary()
 
     if (this.ctx.config.mode === 'benchmark') {
       this.reportBenchmarkSummary(files)
@@ -570,6 +573,12 @@ export abstract class BaseReporter implements Reporter {
         padSummaryTitle('Errors'),
         c.bold(c.red(`${errors.length} error${errors.length > 1 ? 's' : ''}`)),
       )
+    }
+
+    const leaks = this.ctx.state.leakSet.size
+
+    if (leaks) {
+      this.log(padSummaryTitle('Leaks'), c.bold(c.red(`${leaks} leak${leaks > 1 ? 's' : ''}`)))
     }
 
     this.log(padSummaryTitle('Start at'), this._timeStart)
@@ -773,6 +782,45 @@ export abstract class BaseReporter implements Reporter {
     if (errors.length) {
       this.ctx.logger.printUnhandledErrors(errors)
       this.error()
+    }
+  }
+
+  private printLeaksSummary() {
+    const leaks = this.ctx.state.leakSet
+
+    if (leaks.size === 0) {
+      return
+    }
+
+    this.error(`\n${errorBanner(`Async Leaks ${leaks.size}`)}\n`)
+
+    for (const leak of leaks) {
+      const filename = this.relative(leak.filename)
+
+      this.ctx.logger.error(c.red(`${leak.type} leaking in ${filename}`))
+
+      const stacks = parseStacktrace(leak.stack)
+
+      if (stacks.length === 0) {
+        continue
+      }
+
+      const sourceCode = readFileSync(stacks[0].file, 'utf-8')
+      this.ctx.logger.error(generateCodeFrame(
+        sourceCode.length > 100_000
+          ? sourceCode
+          : this.ctx.logger.highlight(stacks[0].file, sourceCode),
+        undefined,
+        stacks[0],
+      ))
+
+      printStack(
+        this.ctx.logger,
+        this.ctx.getProjectByName(leak.projectName),
+        stacks,
+        stacks[0],
+        {},
+      )
     }
   }
 
