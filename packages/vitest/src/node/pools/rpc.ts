@@ -143,6 +143,9 @@ export function createMethodsRPC(project: TestProject, methodsOptions: MethodsOp
     onUnhandledError(err, type) {
       vitest.state.catchError(err, type)
     },
+    onAsyncLeaks(leaks) {
+      vitest.state.catchLeaks(leaks)
+    },
     onCancel(reason) {
       vitest.cancelCurrentRun(reason)
     },
