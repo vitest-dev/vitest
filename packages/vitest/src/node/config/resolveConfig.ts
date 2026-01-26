@@ -58,6 +58,7 @@ function parseInspector(inspect: string | undefined | boolean | number) {
 export function resolveApiServerConfig<Options extends ApiConfig & Omit<UserConfig, 'expect'>>(
   options: Options,
   defaultPort: number,
+  parentApi?: ApiConfig,
 ): ApiConfig | undefined {
   let api: ApiConfig | undefined
 
@@ -99,12 +100,12 @@ export function resolveApiServerConfig<Options extends ApiConfig & Omit<UserConf
 
   // if the API server is exposed to network, disable write operations by default
   if (!api.middlewareMode && api.host && api.host !== 'localhost' && api.host !== '127.0.0.1') {
-    api.allowWrite ??= false
-    api.allowExec ??= false
+    api.allowWrite ??= parentApi?.allowWrite ?? false
+    api.allowExec ??= parentApi?.allowExec ?? false
   }
   else {
-    api.allowWrite ??= true
-    api.allowExec ??= true
+    api.allowWrite ??= parentApi?.allowWrite ?? true
+    api.allowExec ??= parentApi?.allowExec ?? true
   }
 
   return api
@@ -803,6 +804,7 @@ export function resolveConfig(
   resolved.browser.api = resolveApiServerConfig(
     resolved.browser,
     defaultBrowserPort,
+    resolved.api,
   ) || {
     port: defaultBrowserPort,
   }

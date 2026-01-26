@@ -91,6 +91,25 @@ describe('correctly defines api flag', () => {
     expect(c.api.allowWrite).toBe(false)
     expect(c.api.allowExec).toBe(false)
   })
+
+  it('browser.api inherits allowWrite and allowExec from api', async () => {
+    const c = await config({ api: { port: 5555, allowWrite: false, allowExec: false } }, {})
+    expect(c.browser.api.allowWrite).toBe(false)
+    expect(c.browser.api.allowExec).toBe(false)
+  })
+
+  it('browser.api can override inherited allowWrite and allowExec', async () => {
+    const c = await config({
+      api: { port: 5555, allowWrite: false, allowExec: false },
+      browser: { api: { allowWrite: true, allowExec: true } },
+    }, {
+      browser: {},
+    })
+    expect(c.api.allowWrite).toBe(false)
+    expect(c.api.allowExec).toBe(false)
+    expect(c.browser.api.allowWrite).toBe(true)
+    expect(c.browser.api.allowExec).toBe(true)
+  })
 })
 
 describe.each([
