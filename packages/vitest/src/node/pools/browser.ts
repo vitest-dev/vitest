@@ -5,13 +5,15 @@ import type { Traces } from '../../utils/traces'
 import type { Vitest } from '../core'
 import type { ProcessPool } from '../pool'
 import type { TestProject } from '../project'
-import type { TestSpecification } from '../spec'
+import type { TestSpecification } from '../test-specification'
 import type { BrowserProvider } from '../types/browser'
 import crypto from 'node:crypto'
+import { readFile } from 'node:fs/promises'
 import * as nodeos from 'node:os'
 import { createDefer } from '@vitest/utils/helpers'
 import { stringify } from 'flatted'
 import { createDebugger } from '../../utils/debugger'
+import { detectCodeBlock } from '../../utils/test-helpers'
 
 const debug = createDebugger('vitest:browser:pool')
 
@@ -62,11 +64,31 @@ export function createBrowserPool(vitest: Vitest): ProcessPool {
 
   const runWorkspaceTests = async (method: 'run' | 'collect', specs: TestSpecification[]) => {
     const groupedFiles = new Map<TestProject, FileSpecification[]>()
-    for (const { project, moduleId, testLines } of specs) {
+    const testFilesCode = new Map<string, string>()
+    const testFileTags = new WeakMap<TestSpecification, string[]>()
+
+    await Promise.all(specs.map(async (spec) => {
+      let code = testFilesCode.get(spec.moduleId)
+      // TODO: this really should be done only once when collecting specifications
+      if (code == null) {
+        code = await readFile(spec.moduleId, 'utf-8').catch(() => '')
+        testFilesCode.set(spec.moduleId, code)
+      }
+      const { tags } = detectCodeBlock(code)
+      testFileTags.set(spec, tags)
+    }))
+
+    // to keep the sorting, we need to iterate over specs separately
+    for (const spec of specs) {
+      const { project, moduleId, testLines, testIds, testNamePattern, testTagsFilter } = spec
       const files = groupedFiles.get(project) || []
       files.push({
         filepath: moduleId,
         testLocations: testLines,
+        testIds,
+        testNamePattern,
+        testTagsFilter,
+        fileTags: testFileTags.get(spec),
       })
       groupedFiles.set(project, files)
     }
@@ -260,7 +282,7 @@ class BrowserPool {
             'vitest.browser.session_id': sessionId,
           },
         },
-        () => this.openPage(sessionId),
+        () => this.openPage(sessionId, { parallel: workerCount > 1 }),
       )
       page = page.then(() => {
         // start running tests on the page when it's ready
@@ -273,7 +295,7 @@ class BrowserPool {
     return this._promise
   }
 
-  private async openPage(sessionId: string) {
+  private async openPage(sessionId: string, options: { parallel: boolean }): Promise<void> {
     const sessionPromise = this.project.vitest._browserSessions.createSession(
       sessionId,
       this.project,
@@ -289,6 +311,7 @@ class BrowserPool {
     const pagePromise = browser.provider.openPage(
       sessionId,
       url.toString(),
+      options,
     )
     await Promise.all([sessionPromise, pagePromise])
   }

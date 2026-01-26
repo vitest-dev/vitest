@@ -133,7 +133,7 @@ If you are developing a custom integration on top of Vitest, you can use [`vites
 Please, leave feedback regarding this feature in a [GitHub Discussion](https://github.com/vitest-dev/vitest/discussions/9224).
 :::
 
-The Module Graph tab also provides an Import Breakdown with a list of modules that take the longest time to load (top 10 by default, but you can press "Show more" to load 10 more), sorted by Total Time.
+The Module Graph tab also provides an Import Breakdown with a list of modules that take the longest time to load (top 10 by default), sorted by Total Time.
 
 <img alt="Import breakdown with a list of top 10 modules that take the longest time to load" img-light src="/ui/light-import-breakdown.png">
 <img alt="Import breakdown with a list of top 10 modules that take the longest time to load" img-dark src="/ui/dark-import-breakdown.png">
@@ -144,4 +144,4 @@ The breakdown shows a list of modules with self time, total time, and a percenta
 
 The "Show Import Breakdown" icon will have a red color if there is at least one file that took longer than 500 milliseconds to load, and it will be orange if there is at least one file that took longer than 100 milliseconds.
 
-By default, Vitest shows the breakdown automatically if there is at least one module that took longer than 500 milliseconds to load. You can control the behaviour by setting the [`experimental.printImportBreakdown`](/config/experimental#experimental-printimportbreakdown) option.
+You can use [`experimental.importDurations.limit`](/config/experimental#experimental-importdurationslimit) to control the number of imports displayed.

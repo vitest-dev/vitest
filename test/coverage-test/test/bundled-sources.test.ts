@@ -1,7 +1,7 @@
 import libCoverage from 'istanbul-lib-coverage'
 import { expect } from 'vitest'
 import * as transpiled from '../fixtures/src/pre-bundle/bundle.js'
-import { coverageTest, formatSummary, normalizeURL, readCoverageJson, runVitest, test } from '../utils.js'
+import { coverageTest, formatSummary, normalizeURL, readCoverageJson, runVitest, test } from '../utils'
 
 test('bundled code with source maps to originals', async () => {
   await runVitest({

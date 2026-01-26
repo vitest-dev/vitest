@@ -28,7 +28,7 @@ beforeAll(() => {
   }
 })
 
-test('{ changed: "HEAD" }', async () => {
+test('{ changed: "HEAD" }', { skip: SKIP }, async () => {
   await runVitest({
     include: ['fixtures/test/**'],
     exclude: ['**/custom-1-syntax**'],
@@ -67,4 +67,4 @@ test('{ changed: "HEAD" }', async () => {
       },
     }
   `)
-}, SKIP)
+})

@@ -1,5 +1,5 @@
 import type { Vitest } from '../core'
-import type { TestSpecification } from '../spec'
+import type { TestSpecification } from '../test-specification'
 import type { Reporter } from '../types/reporter'
 import type { ReportedHookContext, TestCase, TestModule } from './reported-tasks'
 import c from 'tinyrainbow'
@@ -21,6 +21,7 @@ interface Counter {
   failed: number
   skipped: number
   todo: number
+  expectedFail: number
 }
 
 interface SlowTask {
@@ -208,7 +209,13 @@ export class SummaryReporter implements Reporter {
     const result = test.result()
 
     if (result?.state === 'passed') {
-      this.tests.passed++
+      // Check if this is an expected failure (test.fails && passed)
+      if (test.options.fails) {
+        this.tests.expectedFail++
+      }
+      else {
+        this.tests.passed++
+      }
     }
     else if (result?.state === 'failed') {
       this.tests.failed++
@@ -349,7 +356,7 @@ export class SummaryReporter implements Reporter {
 }
 
 function emptyCounters(): Counter {
-  return { completed: 0, passed: 0, failed: 0, skipped: 0, todo: 0, total: 0 }
+  return { completed: 0, passed: 0, failed: 0, skipped: 0, todo: 0, expectedFail: 0, total: 0 }
 }
 
 function getStateString(entry: Counter) {
@@ -357,6 +364,7 @@ function getStateString(entry: Counter) {
     [
       entry.failed ? c.bold(c.red(`${entry.failed} failed`)) : null,
       c.bold(c.green(`${entry.passed} passed`)),
+      entry.expectedFail ? c.cyan(`${entry.expectedFail} expected fail`) : null,
       entry.skipped ? c.yellow(`${entry.skipped} skipped`) : null,
       entry.todo ? c.gray(`${entry.todo} todo`) : null,
     ]

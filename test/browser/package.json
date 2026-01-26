@@ -29,21 +29,20 @@
     "test:browser:playwright:html": "PROVIDER=playwright vitest --reporter=html"
   },
   "devDependencies": {
-    "@testing-library/react": "^13.4.0",
-    "@types/react": "^19.2.7",
-    "@vitejs/plugin-basic-ssl": "^2.1.0",
+    "@types/react": "^19.2.9",
+    "@vitejs/plugin-basic-ssl": "^2.1.4",
     "@vitest/browser": "workspace:*",
     "@vitest/browser-playwright": "workspace:*",
     "@vitest/browser-preview": "workspace:*",
     "@vitest/browser-webdriverio": "workspace:*",
     "@vitest/bundled-lib": "link:./bundled-lib",
     "@vitest/cjs-lib": "link:./cjs-lib",
-    "playwright": "^1.57.0",
-    "react": "^19.2.0",
-    "react-dom": "^19.2.0",
+    "playwright": "^1.58.0",
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3",
     "url": "^0.11.4",
     "vitest": "workspace:*",
-    "vitest-browser-react": "^2.0.2",
+    "vitest-browser-react": "^2.0.4",
     "ws": "catalog:"
   }
 }

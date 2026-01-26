@@ -4,6 +4,7 @@ import type { WorkerSetupContext } from '../../types/worker'
 import type { VitestWorker } from './types'
 import { serializeError } from '@vitest/utils/error'
 import { Traces } from '../../utils/traces'
+import * as listeners from '../listeners'
 import { createRuntimeRpc } from '../rpc'
 import * as entrypoint from '../worker'
 
@@ -20,10 +21,13 @@ let traces!: Traces
 /** @experimental */
 export function init(worker: Options): void {
   worker.on(onMessage)
+  if (worker.onModuleRunner) {
+    listeners.onModuleRunner(worker.onModuleRunner)
+  }
 
   let runPromise: Promise<unknown> | undefined
   let isRunning = false
-  let workerTeardown: (() => Promise<unknown>) | undefined
+  let workerTeardown: (() => Promise<unknown>) | undefined | void
   let setupContext!: WorkerSetupContext
 
   function send(response: WorkerResponse) {

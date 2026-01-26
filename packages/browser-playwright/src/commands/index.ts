@@ -16,12 +16,14 @@ import {
 } from './trace'
 import { type } from './type'
 import { upload } from './upload'
+import { wheel } from './wheel'
 
 export default {
   __vitest_upload: upload as typeof upload,
   __vitest_click: click as typeof click,
   __vitest_dblClick: dblClick as typeof dblClick,
   __vitest_tripleClick: tripleClick as typeof tripleClick,
+  __vitest_wheel: wheel as typeof wheel,
   __vitest_takeScreenshot: takeScreenshot as typeof takeScreenshot,
   __vitest_type: type as typeof type,
   __vitest_clear: clear as typeof clear,

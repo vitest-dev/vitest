@@ -97,14 +97,20 @@ export function WorkspaceVitestPlugin(
           name: { label: name, color },
         }
 
+        vitestConfig.experimental ??= {}
+
         // always inherit the global `fsModuleCache` value even without `extends: true`
-        if (testConfig.experimental?.fsModuleCache == null && project.vitest.config.experimental?.fsModuleCache !== null) {
-          vitestConfig.experimental ??= {}
+        if (testConfig.experimental?.fsModuleCache == null && project.vitest.config.experimental?.fsModuleCache != null) {
           vitestConfig.experimental.fsModuleCache = project.vitest.config.experimental.fsModuleCache
         }
-        if (testConfig.experimental?.fsModuleCachePath == null && project.vitest.config.experimental?.fsModuleCachePath !== null) {
-          vitestConfig.experimental ??= {}
+        if (testConfig.experimental?.fsModuleCachePath == null && project.vitest.config.experimental?.fsModuleCachePath != null) {
           vitestConfig.experimental.fsModuleCachePath = project.vitest.config.experimental.fsModuleCachePath
+        }
+        if (testConfig.experimental?.viteModuleRunner == null && project.vitest.config.experimental?.viteModuleRunner != null) {
+          vitestConfig.experimental.viteModuleRunner = project.vitest.config.experimental.viteModuleRunner
+        }
+        if (testConfig.experimental?.nodeLoader == null && project.vitest.config.experimental?.nodeLoader != null) {
+          vitestConfig.experimental.nodeLoader = project.vitest.config.experimental.nodeLoader
         }
 
         return {
@@ -236,7 +242,6 @@ export function WorkspaceVitestPlugin(
     },
     {
       name: 'vitest:project:server',
-      enforce: 'post',
       async configureServer(server) {
         const options = deepMerge({}, configDefaults, server.config.test || {})
         await project._configureServer(options, server)

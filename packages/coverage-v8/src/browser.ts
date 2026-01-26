@@ -71,5 +71,13 @@ function filterResult(coverage: ScriptCoverage['result'][number]): boolean {
     return false
   }
 
+  if (coverage.url.includes('/@id/@vitest/')) {
+    return false
+  }
+
+  if (coverage.url.includes('/@vite/client')) {
+    return false
+  }
+
   return true
 }
