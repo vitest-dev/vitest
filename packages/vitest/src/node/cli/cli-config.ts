@@ -356,6 +356,11 @@ export const cliOptionsConfig: VitestCLIOptions = {
         description:
           'Show Vitest UI when running tests (default: `!process.env.CI`)',
       },
+      detailsPanelPosition: {
+        description:
+          'Default position for the details panel in browser mode. Either `right` (horizontal split) or `bottom` (vertical split) (default: `right`)',
+        argument: '<position>',
+      },
       fileParallelism: {
         description:
           'Should browser test files run in parallel. Use `--browser.fileParallelism=false` to disable (default: `true`)',

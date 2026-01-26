@@ -82,7 +82,7 @@ test.describe('ui', () => {
     await expect(page.getByTestId('unhandled-errors-details')).toContainText('Unknown Error: 1')
 
     // report
-    const sample = page.getByTestId('details-panel').getByLabel('sample.test.ts')
+    const sample = page.getByTestId('results-panel').getByLabel('sample.test.ts')
     await sample.hover()
     await sample.getByTestId('btn-open-details').click({ force: true })
     await page.getByText('All tests passed in this file').click()
@@ -213,7 +213,7 @@ test.describe('ui', () => {
     // match all files when no filter
     await page.getByPlaceholder('Search...').fill('')
     await page.getByText('PASS (6)').click()
-    await expect(page.getByTestId('details-panel').getByText('fixtures/sample.test.ts', { exact: true })).toBeVisible()
+    await expect(page.getByTestId('results-panel').getByText('fixtures/sample.test.ts', { exact: true })).toBeVisible()
 
     // match nothing
     await page.getByPlaceholder('Search...').fill('nothing')
@@ -222,22 +222,22 @@ test.describe('ui', () => {
     // searching "add" will match "sample.test.ts" since it includes a test case named "add"
     await page.getByPlaceholder('Search...').fill('add')
     await page.getByText('PASS (1)').click()
-    await expect(page.getByTestId('details-panel').getByText('fixtures/sample.test.ts', { exact: true })).toBeVisible()
+    await expect(page.getByTestId('results-panel').getByText('fixtures/sample.test.ts', { exact: true })).toBeVisible()
 
     // match only failing files when fail filter applied
     await page.getByPlaceholder('Search...').fill('')
     await page.getByText(/^Fail$/, { exact: true }).click()
     await page.getByText('FAIL (1)').click()
-    await expect(page.getByTestId('details-panel').getByText('fixtures/error.test.ts', { exact: true })).toBeVisible()
-    await expect(page.getByTestId('details-panel').getByText('fixtures/sample.test.ts', { exact: true })).toBeHidden()
+    await expect(page.getByTestId('results-panel').getByText('fixtures/error.test.ts', { exact: true })).toBeVisible()
+    await expect(page.getByTestId('results-panel').getByText('fixtures/sample.test.ts', { exact: true })).toBeHidden()
 
     // match only pass files when fail filter applied
     await page.getByPlaceholder('Search...').fill('console')
     await page.getByText(/^Fail$/, { exact: true }).click()
     await page.locator('span').filter({ hasText: /^Pass$/ }).click()
     await page.getByText('PASS (1)').click()
-    await expect(page.getByTestId('details-panel').getByText('fixtures/console.test.ts', { exact: true })).toBeVisible()
-    await expect(page.getByTestId('details-panel').getByText('fixtures/sample.test.ts', { exact: true })).toBeHidden()
+    await expect(page.getByTestId('results-panel').getByText('fixtures/console.test.ts', { exact: true })).toBeVisible()
+    await expect(page.getByTestId('results-panel').getByText('fixtures/sample.test.ts', { exact: true })).toBeHidden()
 
     // html entities in task names are escaped
     await page.locator('span').filter({ hasText: /^Pass$/ }).click()
@@ -246,12 +246,12 @@ test.describe('ui', () => {
     await page.getByTestId('collapse-all').click()
     await page.getByTestId('expand-all').click()
     await expect(page.getByText('<MyComponent />')).toBeVisible()
-    await expect(page.getByTestId('details-panel').getByText('fixtures/task-name.test.ts', { exact: true })).toBeVisible()
+    await expect(page.getByTestId('results-panel').getByText('fixtures/task-name.test.ts', { exact: true })).toBeVisible()
 
     // html entities in task names are escaped
     await page.getByPlaceholder('Search...').fill('<>\'"')
     await expect(page.getByText('<>\'"')).toBeVisible()
-    await expect(page.getByTestId('details-panel').getByText('fixtures/task-name.test.ts', { exact: true })).toBeVisible()
+    await expect(page.getByTestId('results-panel').getByText('fixtures/task-name.test.ts', { exact: true })).toBeVisible()
 
     // pass files with special chars
     await page.getByPlaceholder('Search...').fill('char () - Square root of nine (9)')

@@ -346,6 +346,13 @@ Run every browser test file in isolation. To disable isolation, use `--browser.i
 
 Show Vitest UI when running tests (default: `!process.env.CI`)
 
+### browser.detailsPanelPosition
+
+- **CLI:** `--browser.detailsPanelPosition <position>`
+- **Config:** [browser.detailsPanelPosition](/config/browser/detailspanelposition)
+
+Default position for the details panel in browser mode. Either `right` (horizontal split) or `bottom` (vertical split) (default: `right`)
+
 ### browser.fileParallelism
 
 - **CLI:** `--browser.fileParallelism`
