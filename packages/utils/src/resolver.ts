@@ -5,7 +5,7 @@ const packageCache = new Map<string, { type?: 'module' | 'commonjs' }>()
 
 export function findNearestPackageData(
   basedir: string,
-): { type?: 'module' | 'commonjs' } {
+): { type?: 'module' | 'commonjs' } | null {
   const originalBasedir = basedir
   while (basedir) {
     const cached = getCachedData(packageCache, basedir, originalBasedir)
@@ -31,7 +31,7 @@ export function findNearestPackageData(
     basedir = nextBasedir
   }
 
-  return {}
+  return null
 }
 
 function stripBomTag(content: string): string {
