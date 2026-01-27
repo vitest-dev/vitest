@@ -19,7 +19,7 @@ export default class MyDefaultReporter extends DefaultReporter {
 ```
 
 ::: warning
-However, note that exposed reports are not considered stable and can change within a minor version.
+However, note that exposed reports are not considered stable and can change the shape of their API within a minor version.
 :::
 
 Of course, you can create your reporter from scratch. Just implement the [`Reporter`](/api/advanced/reporters) interface:
