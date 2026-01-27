@@ -200,7 +200,7 @@ function meta(): TaskMeta
 
 Custom [metadata](/api/advanced/metadata) that was attached to the suite during its execution or collection. Since Vitest 4.1, the meta can be attached by providing a `meta` object during test collection:
 
-```ts {6,11}
+```ts {7,10}
 import { describe, test, TestRunner } from 'vitest'
 
 describe('the validation works correctly', { meta: { decorated: true } }, () => {
