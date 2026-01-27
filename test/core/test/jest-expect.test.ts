@@ -338,19 +338,6 @@ describe('jest-expect', () => {
     expect(complex).toMatchObject({ bar: { bar: 100 } })
     expect(complex).toMatchObject({ foo: expect.any(Number) })
 
-    // https://github.com/vitest-dev/vitest/issues/9522
-    // Map/Set should not match plain objects
-    expect(() => expect({}).toMatchObject(new Set())).toThrow()
-    expect(() => expect({}).toMatchObject(new Map())).toThrow()
-    expect(() => expect({ a: 1 }).toMatchObject(new Set([1]))).toThrow()
-    expect(() => expect({ a: 1 }).toMatchObject(new Map([[1, 2]]))).toThrow()
-    // Set/Map matching Set/Map should work
-    expect(new Set([{ x: 1 }])).toMatchObject(new Set([{}]))
-    expect(new Map([[1, { a: 1 }]])).toMatchObject(new Map([[1, {}]]))
-    // Set/Map matching empty object should pass (object shape match)
-    expect(new Set()).toMatchObject({})
-    expect(new Map()).toMatchObject({})
-
     expect(complex).toHaveProperty('a-b')
     expect(complex).toHaveProperty('a-b-1.0.0')
     expect(complex).toHaveProperty('0')
@@ -1354,6 +1341,29 @@ function getError(f: () => unknown) {
   }
   return expect.unreachable()
 }
+
+it('toMatchObject', () => {
+  expect(() => expect(null).toMatchObject(new Set()))
+    .toThrowErrorMatchingInlineSnapshot(`[AssertionError: expected null to match object Set{}]`)
+  expect(() => expect(undefined).toMatchObject(new Set()))
+    .toThrowErrorMatchingInlineSnapshot(`[AssertionError: expected undefined to match object Set{}]`)
+  expect(() => expect(1234).toMatchObject(new Set()))
+    .toThrowErrorMatchingInlineSnapshot(`[AssertionError: expected 1234 to match object Set{}]`)
+  expect(() => expect('hello').toMatchObject(new Set()))
+    .toThrowErrorMatchingInlineSnapshot(`[AssertionError: expected 'hello' to match object Set{}]`)
+  expect(() => expect({}).toMatchObject(new Set()))
+    .toThrowErrorMatchingInlineSnapshot(`[AssertionError: expected {} to match object Set{}]`)
+  expect(() => expect({}).toMatchObject(new Map()))
+    .toThrowErrorMatchingInlineSnapshot(`[AssertionError: expected {} to match object Map{}]`)
+
+  // subset equality works inside Set/Map
+  expect(new Set([{ x: 1 }])).toMatchObject(new Set([{}]))
+  expect(new Map([[1, { a: 1 }]])).toMatchObject(new Map([[1, {}]]))
+
+  // Set/Map matches against empty object shape
+  expect(new Set()).toMatchObject({})
+  expect(new Map()).toMatchObject({})
+})
 
 it('toMatchObject error diff', () => {
   // single property on root (3 total properties, 1 expected)
