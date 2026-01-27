@@ -3,25 +3,25 @@ import type {
   TaskEventPack,
   TaskResultPack,
   TaskUpdateEvent,
-  TestAnnotation,
   TestAttachment,
 } from '@vitest/runner'
-import type { TaskEventData } from '@vitest/runner/types/tasks'
+import type { TaskEventData, TestArtifact } from '@vitest/runner/types/tasks'
 import type { SerializedError } from '@vitest/utils'
 import type { UserConsoleLog } from '../types/general'
 import type { Vitest } from './core'
 import type { TestProject } from './project'
 import type { ReportedHookContext, TestCase, TestCollection, TestModule } from './reporters/reported-tasks'
-import type { TestSpecification } from './spec'
+import type { TestSpecification } from './test-specification'
 import type { TestRunEndReason } from './types/reporter'
 import assert from 'node:assert'
 import { createHash } from 'node:crypto'
-import { copyFile, mkdir } from 'node:fs/promises'
-import { isPrimitive } from '@vitest/utils'
-import { serializeError } from '@vitest/utils/error'
+import { existsSync } from 'node:fs'
+import { copyFile, mkdir, writeFile } from 'node:fs/promises'
+import { isPrimitive } from '@vitest/utils/helpers'
+import { serializeValue } from '@vitest/utils/serialize'
 import { parseErrorStacktrace } from '@vitest/utils/source-map'
 import mime from 'mime/lite'
-import { basename, dirname, extname, resolve } from 'pathe'
+import { basename, extname, resolve } from 'pathe'
 
 export class TestRun {
   constructor(private vitest: Vitest) {}
@@ -54,19 +54,35 @@ export class TestRun {
     await this.vitest.report('onUserConsoleLog', log)
   }
 
-  async annotate(testId: string, annotation: TestAnnotation): Promise<TestAnnotation> {
+  async recordArtifact<Artifact extends TestArtifact>(testId: string, artifact: Artifact): Promise<Artifact> {
     const task = this.vitest.state.idMap.get(testId)
     const entity = task && this.vitest.state.getReportedEntity(task)
 
     assert(task && entity, `Entity must be found for task ${task?.name || testId}`)
-    assert(entity.type === 'test', `Annotation can only be added to a test, instead got ${entity.type}`)
+    assert(entity.type === 'test', `Artifacts can only be recorded on a test, instead got ${entity.type}`)
 
-    await this.resolveTestAttachment(entity, annotation)
+    // annotations won't resolve as artifacts for backwards compatibility until next major
+    if (artifact.type === 'internal:annotation') {
+      await this.resolveTestAttachment(entity, artifact.annotation.attachment, artifact.annotation.message)
 
-    entity.task.annotations.push(annotation)
+      entity.task.annotations.push(artifact.annotation)
 
-    await this.vitest.report('onTestCaseAnnotate', entity, annotation)
-    return annotation
+      await this.vitest.report('onTestCaseAnnotate', entity, artifact.annotation)
+
+      return artifact
+    }
+
+    if (Array.isArray(artifact.attachments)) {
+      await Promise.all(
+        artifact.attachments.map(attachment => this.resolveTestAttachment(entity, attachment)),
+      )
+    }
+
+    entity.task.artifacts.push(artifact)
+
+    await this.vitest.report('onTestCaseArtifactRecord', entity, artifact)
+
+    return artifact
   }
 
   async updated(update: TaskResultPack[], events: TaskEventPack[]): Promise<void> {
@@ -75,7 +91,7 @@ export class TestRun {
 
     for (const [id, event, data] of events) {
       await this.reportEvent(id, event, data).catch((error) => {
-        this.vitest.state.catchError(serializeError(error), 'Unhandled Reporter Error')
+        this.vitest.state.catchError(serializeValue(error), 'Unhandled Reporter Error')
       })
     }
 
@@ -106,6 +122,24 @@ export class TestRun {
     }
 
     await this.vitest.report('onTestRunEnd', modules, [...errors] as SerializedError[], state)
+
+    for (const project in this.vitest.state.metadata) {
+      const meta = this.vitest.state.metadata[project]
+      if (!meta?.dumpDir) {
+        continue
+      }
+      const path = resolve(meta.dumpDir, 'vitest-metadata.json')
+      meta.outline = {
+        externalized: Object.keys(meta.externalized).length,
+        inlined: Object.keys(meta.tmps).length,
+      }
+      await writeFile(
+        path,
+        JSON.stringify(meta, null, 2),
+        'utf-8',
+      )
+      this.vitest.logger.log(`Metadata written to ${path}`)
+    }
   }
 
   private hasFailed(modules: TestModule[]) {
@@ -116,6 +150,7 @@ export class TestRun {
     return modules.some(m => !m.ok())
   }
 
+  // make sure the error always has a "stacks" property
   private syncUpdateStacks(update: TaskResultPack[]): void {
     update.forEach(([taskId, result]) => {
       const task = this.vitest.state.idMap.get(taskId)
@@ -146,6 +181,13 @@ export class TestRun {
     const entity = task && this.vitest.state.getReportedEntity(task)
 
     assert(task && entity, `Entity must be found for task ${task?.name || id}`)
+
+    if (event === 'suite-failed-early' && entity.type === 'module') {
+      // the file failed during import
+      await this.vitest.report('onTestModuleStart', entity)
+      await this.vitest.report('onTestModuleEnd', entity)
+      return
+    }
 
     if (event === 'suite-prepare' && entity.type === 'suite') {
       return await this.vitest.report('onTestSuiteReady', entity)
@@ -212,9 +254,8 @@ export class TestRun {
     }
   }
 
-  private async resolveTestAttachment(test: TestCase, annotation: TestAnnotation): Promise<TestAttachment | undefined> {
+  private async resolveTestAttachment(test: TestCase, attachment: TestAttachment | undefined, filename?: string): Promise<TestAttachment | undefined> {
     const project = test.project
-    const attachment = annotation.attachment
     if (!attachment) {
       return attachment
     }
@@ -224,9 +265,11 @@ export class TestRun {
       const hash = createHash('sha1').update(currentPath).digest('hex')
       const newPath = resolve(
         project.config.attachmentsDir,
-        `${sanitizeFilePath(annotation.message)}-${hash}${extname(currentPath)}`,
+        `${filename ? `${sanitizeFilePath(filename)}-` : ''}${hash}${extname(currentPath)}`,
       )
-      await mkdir(dirname(newPath), { recursive: true })
+      if (!existsSync(project.config.attachmentsDir)) {
+        await mkdir(project.config.attachmentsDir, { recursive: true })
+      }
       await copyFile(currentPath, newPath)
 
       attachment.path = newPath

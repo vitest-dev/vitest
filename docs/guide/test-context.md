@@ -94,7 +94,7 @@ function annotate(
 ): Promise<TestAnnotation>
 ```
 
-Add a [test annotation](/guide/test-annotations) that will be displayed by your [reporter](/config/#reporter).
+Add a [test annotation](/guide/test-annotations) that will be displayed by your [reporter](/config/#reporters).
 
 ```ts
 test('annotations API', async ({ annotate }) => {
@@ -108,7 +108,7 @@ An [`AbortSignal`](https://developer.mozilla.org/en-US/docs/Web/API/AbortSignal)
 
 - Test times out
 - User manually cancelled the test run with Ctrl+C
-- [`vitest.cancelCurrentRun`](/advanced/api/vitest#cancelcurrentrun) was called programmatically
+- [`vitest.cancelCurrentRun`](/api/advanced/vitest#cancelcurrentrun) was called programmatically
 - Another test failed in parallel and the [`bail`](/config/#bail) flag is set
 
 ```ts
@@ -119,11 +119,11 @@ it('stop request when test times out', async ({ signal }) => {
 
 #### `onTestFailed`
 
-The [`onTestFailed`](/api/#ontestfailed) hook bound to the current test. This API is useful if you are running tests concurrently and need to have a special handling only for this specific test.
+The [`onTestFailed`](/api/hooks#ontestfailed) hook bound to the current test. This API is useful if you are running tests concurrently and need to have a special handling only for this specific test.
 
 #### `onTestFinished`
 
-The [`onTestFinished`](/api/#ontestfailed) hook bound to the current test. This API is useful if you are running tests concurrently and need to have a special handling only for this specific test.
+The [`onTestFinished`](/api/hooks#ontestfailed) hook bound to the current test. This API is useful if you are running tests concurrently and need to have a special handling only for this specific test.
 
 ## Extend Test Context
 
@@ -382,11 +382,11 @@ import { test as baseTest } from 'vitest'
 
 export const test = baseTest.extend({
   perFile: [
-    ({}, { use }) => use([]),
+    ({}, use) => use([]),
     { scope: 'file' },
   ],
   perWorker: [
-    ({}, { use }) => use([]),
+    ({}, use) => use([]),
     { scope: 'worker' },
   ],
 })
@@ -397,7 +397,7 @@ The value is initialised the first time any test has accessed it, unless the fix
 ```ts
 const test = baseTest.extend({
   perFile: [
-    ({}, { use }) => use([]),
+    ({}, use) => use([]),
     {
       scope: 'file',
       // always run this hook before any test
@@ -407,9 +407,15 @@ const test = baseTest.extend({
 })
 ```
 
+::: warning
+The built-in [`task`](#task) test context is **not available** in file-scoped or worker-scoped fixtures. These fixtures receive a different context object (file or worker context) that does not include test-specific properties like `task`.
+
+If you need access to file-level metadata like the file path, use `expect.getState().testPath` instead.
+:::
+
 The `worker` scope will run the fixture once per worker. The number of running workers depends on various factors. By default, every file runs in a separate worker, so `file` and `worker` scopes work the same way.
 
-However, if you disable [isolation](/config/#isolate), then the number of workers is limited by the [`maxWorkers`](/config/#maxworkers) or [`poolOptions`](/config/#pooloptions) configuration.
+However, if you disable [isolation](/config/#isolate), then the number of workers is limited by the [`maxWorkers`](/config/#maxworkers) configuration.
 
 Note that specifying `scope: 'worker'` when running tests in `vmThreads` or `vmForks` will work the same way as `scope: 'file'`. This limitation exists because every test file has its own VM context, so if Vitest were to initiate it once, one context could leak to another and create many reference inconsistencies (instances of the same class would reference different constructors, for example).
 
@@ -455,55 +461,26 @@ test('types are correct', ({
   // ...
 })
 ```
+
 :::
 
-### `beforeEach` and `afterEach`
-
-::: danger Deprecated
-This is an outdated way of extending context and it will not work when the `test` is extended with `test.extend`.
-:::
-
-The contexts are different for each test. You can access and extend them within the `beforeEach` and `afterEach` hooks.
+When using `test.extend`, the extended `test` object provides type-safe `beforeEach` and `afterEach` hooks that are aware of the new context:
 
 ```ts
-import { beforeEach, it } from 'vitest'
-
-beforeEach(async (context) => {
-  // extend context
-  context.foo = 'bar'
+const test = baseTest.extend<{
+  todos: number[]
+}>({
+  todos: async ({}, use) => {
+    await use([])
+  },
 })
 
-it('should work', ({ foo }) => {
-  console.log(foo) // 'bar'
-})
-```
-
-#### TypeScript
-
-To provide property types for all your custom contexts, you can augment the `TestContext` type by adding
-
-```ts
-declare module 'vitest' {
-  export interface TestContext {
-    foo?: string
-  }
-}
-```
-
-If you want to provide property types only for specific `beforeEach`, `afterEach`, `it` and `test` hooks, you can pass the type as a generic.
-
-```ts
-interface LocalTestContext {
-  foo: string
-}
-
-beforeEach<LocalTestContext>(async (context) => {
-  // typeof context is 'TestContext & LocalTestContext'
-  context.foo = 'bar'
+// Unlike global hooks, these hooks are aware of the extended context
+test.beforeEach(({ todos }) => {
+  todos.push(1)
 })
 
-it<LocalTestContext>('should work', ({ foo }) => {
-  // typeof foo is 'string'
-  console.log(foo) // 'bar'
+test.afterEach(({ todos }) => {
+  console.log(todos)
 })
 ```

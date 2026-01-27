@@ -1,7 +1,7 @@
 import type { Assertion, ExpectStatic } from '@vitest/expect'
 import type { Test } from '@vitest/runner'
 import { chai } from '@vitest/expect'
-import { getSafeTimers } from '@vitest/utils'
+import { delay, getSafeTimers } from '@vitest/utils/timers'
 import { getWorkerState } from '../../runtime/utils'
 
 // these matchers are not supported because they don't make sense with poll
@@ -25,6 +25,25 @@ const unsupported = [
   // rejects,
   // resolves
 ]
+
+/**
+ * Attaches a `cause` property to the error if missing, copies the stack trace from the source, and throws.
+ *
+ * @param error - The error to throw
+ * @param source - Error to copy the stack trace from
+ *
+ * @throws Always throws the provided error with an amended stack trace
+ */
+function throwWithCause(error: any, source: Error) {
+  if (error.cause == null) {
+    error.cause = new Error('Matcher did not succeed in time.')
+  }
+
+  throw copyStackTrace(
+    error,
+    source,
+  )
+}
 
 export function createExpectPoll(expect: ExpectStatic): ExpectStatic['poll'] {
   return function poll(fn, options = {}) {
@@ -64,47 +83,49 @@ export function createExpectPoll(expect: ExpectStatic): ExpectStatic['poll'] {
 
         return function (this: any, ...args: any[]) {
           const STACK_TRACE_ERROR = new Error('STACK_TRACE_ERROR')
-          const promise = () => new Promise<void>((resolve, reject) => {
-            let intervalId: any
-            let timeoutId: any
-            let lastError: any
+          const promise = async () => {
             const { setTimeout, clearTimeout } = getSafeTimers()
-            const check = async () => {
-              try {
-                chai.util.flag(assertion, '_name', key)
-                const obj = await fn()
-                chai.util.flag(assertion, 'object', obj)
-                resolve(await assertionFunction.call(assertion, ...args))
-                clearTimeout(intervalId)
-                clearTimeout(timeoutId)
-              }
-              catch (err) {
-                lastError = err
-                if (!chai.util.flag(assertion, '_isLastPollAttempt')) {
-                  intervalId = setTimeout(check, interval)
+
+            let executionPhase: 'fn' | 'assertion' = 'fn'
+            let hasTimedOut = false
+
+            const timerId = setTimeout(() => {
+              hasTimedOut = true
+            }, timeout)
+
+            chai.util.flag(assertion, '_name', key)
+
+            try {
+              while (true) {
+                const isLastAttempt = hasTimedOut
+
+                if (isLastAttempt) {
+                  chai.util.flag(assertion, '_isLastPollAttempt', true)
+                }
+
+                try {
+                  executionPhase = 'fn'
+                  const obj = await fn()
+                  chai.util.flag(assertion, 'object', obj)
+
+                  executionPhase = 'assertion'
+                  const output = await assertionFunction.call(assertion, ...args)
+
+                  return output
+                }
+                catch (err) {
+                  if (isLastAttempt || (executionPhase === 'assertion' && chai.util.flag(assertion, '_poll.assert_once'))) {
+                    throwWithCause(err, STACK_TRACE_ERROR)
+                  }
+
+                  await delay(interval, setTimeout)
                 }
               }
             }
-            timeoutId = setTimeout(() => {
-              clearTimeout(intervalId)
-              chai.util.flag(assertion, '_isLastPollAttempt', true)
-              const rejectWithCause = (error: any) => {
-                if (error.cause == null) {
-                  error.cause = new Error('Matcher did not succeed in time.')
-                }
-                reject(
-                  copyStackTrace(
-                    error,
-                    STACK_TRACE_ERROR,
-                  ),
-                )
-              }
-              check()
-                .then(() => rejectWithCause(lastError))
-                .catch(e => rejectWithCause(e))
-            }, timeout)
-            check()
-          })
+            finally {
+              clearTimeout(timerId)
+            }
+          }
           let awaited = false
           test.onFinished ??= []
           test.onFinished.push(() => {

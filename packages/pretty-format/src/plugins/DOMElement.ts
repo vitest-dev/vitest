@@ -12,6 +12,7 @@ import {
   printElement,
   printElementAsLeaf,
   printProps,
+  printShadowRoot,
   printText,
 } from './lib/markup'
 
@@ -109,7 +110,10 @@ export const serialize: NewPlugin['serialize'] = (
       refs,
       printer,
     ),
-    printChildren(
+    ((nodeIsFragment(node) || !node.shadowRoot)
+      ? ''
+      : printShadowRoot(Array.prototype.slice.call(node.shadowRoot.children), config, indentation + config.indent, depth, refs, printer))
+    + printChildren(
       Array.prototype.slice.call(node.childNodes || node.children),
       config,
       indentation + config.indent,

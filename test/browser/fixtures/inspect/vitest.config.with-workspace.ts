@@ -1,5 +1,5 @@
-import { playwright } from '@vitest/browser/providers/playwright';
 import { defineConfig } from "vitest/config";
+import { provider } from '../../settings'
 
 export default defineConfig({
   server: { port: 5199 },
@@ -11,10 +11,12 @@ export default defineConfig({
         test: {
           name: "Browser in workspace",
           browser: {
-            provider: playwright(),
+            provider,
             enabled: true,
             headless: true,
-            instances: [{ browser: "chromium" }]
+            instances: [
+              { browser: provider.name === 'webdriverio' ? "chrome" : "chromium" },
+            ],
           },
         },
       },

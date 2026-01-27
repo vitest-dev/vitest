@@ -2,15 +2,15 @@ import type { BrowserCommand, BrowserInstanceOption } from 'vitest/node'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import * as util from 'node:util'
-import { playwright } from '@vitest/browser/providers/playwright'
-import { preview } from '@vitest/browser/providers/preview'
-import { webdriverio } from '@vitest/browser/providers/webdriverio'
+import { playwright } from '@vitest/browser-playwright'
+import { preview } from '@vitest/browser-preview'
+import { webdriverio } from '@vitest/browser-webdriverio'
 import { defineConfig } from 'vitest/config'
 
 const dir = dirname(fileURLToPath(import.meta.url))
 
 const providerName = process.env.PROVIDER || 'playwright'
-const browser = process.env.BROWSER || (providerName === 'playwright' ? 'chromium' : 'chrome')
+const browser = process.env.BROWSER as 'firefox' || (providerName === 'playwright' ? 'chromium' : 'chrome')
 const provider = {
   playwright,
   preview,
@@ -51,6 +51,9 @@ export default defineConfig({
   },
   optimizeDeps: {
     include: ['@vitest/cjs-lib', '@vitest/bundled-lib', 'react/jsx-dev-runtime'],
+  },
+  define: {
+    'import.meta.env.DEFINE_CUSTOM_ENV': JSON.stringify('define-custom-env'),
   },
   test: {
     include: ['test/**.test.{ts,js,tsx}'],
@@ -94,6 +97,11 @@ export default defineConfig({
         },
       },
     },
+    tags: [
+      { name: 'e2e', priority: 10 },
+      { name: 'test', priority: 5 },
+      { name: 'browser', priority: 1 },
+    ],
     alias: {
       '#src': resolve(dir, './src'),
     },

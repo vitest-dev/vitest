@@ -1,22 +1,21 @@
-import type { Locator } from '@vitest/browser/context'
-import type { ExpectPollOptions } from 'vitest'
+import type { ExpectPollOptions, PromisifyDomAssertion } from 'vitest'
+import type { Locator } from 'vitest/browser'
 import { chai, expect } from 'vitest'
 import { getType } from 'vitest/internal/browser'
 import { matchers } from './expect'
-import { processTimeoutOptions } from './utils'
+import { processTimeoutOptions } from './tester-utils'
 
 const kLocator = Symbol.for('$$vitest:locator')
 
-function element<T extends HTMLElement | SVGElement | null | Locator>(elementOrLocator: T, options?: ExpectPollOptions): unknown {
+function element<T extends HTMLElement | SVGElement | null | Locator>(elementOrLocator: T, options?: ExpectPollOptions): PromisifyDomAssertion<HTMLElement | SVGElement | null> {
   if (elementOrLocator != null && !(elementOrLocator instanceof HTMLElement) && !(elementOrLocator instanceof SVGElement) && !(kLocator in elementOrLocator)) {
     throw new Error(`Invalid element or locator: ${elementOrLocator}. Expected an instance of HTMLElement, SVGElement or Locator, received ${getType(elementOrLocator)}`)
   }
 
-  return expect.poll<HTMLElement | SVGElement | null>(function element(this: object) {
+  const expectElement = expect.poll<HTMLElement | SVGElement | null>(function element(this: object) {
     if (elementOrLocator instanceof Element || elementOrLocator == null) {
       return elementOrLocator
     }
-    chai.util.flag(this, '_poll.element', true)
 
     const isNot = chai.util.flag(this, 'negate') as boolean
     const name = chai.util.flag(this, '_name') as string
@@ -28,6 +27,11 @@ function element<T extends HTMLElement | SVGElement | null | Locator>(elementOrL
       // we know that `toHaveLength` requires multiple elements,
       // but types generally expect a single one
       return elementOrLocator.elements() as unknown as HTMLElement
+    }
+
+    if (name === 'toMatchScreenshot' && !chai.util.flag(this, '_poll.assert_once')) {
+      // `toMatchScreenshot` should only run once after the element resolves
+      chai.util.flag(this, '_poll.assert_once', true)
     }
 
     // element selector uses prettyDOM under the hood, which is an expensive call
@@ -47,8 +51,11 @@ function element<T extends HTMLElement | SVGElement | null | Locator>(elementOrL
 
     return result
   }, processTimeoutOptions(options))
+
+  chai.util.flag(expectElement, '_poll.element', true)
+
+  return expectElement
 }
 
 expect.extend(matchers)
-// Vitest typecheck doesn't pick up this assignment for some reason
-Object.assign(expect, { element })
+expect.element = element

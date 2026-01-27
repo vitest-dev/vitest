@@ -14,7 +14,8 @@ import type {
   BenchTask,
 } from '../types/benchmark'
 import { updateTask as updateRunnerTask } from '@vitest/runner'
-import { createDefer, getSafeTimers } from '@vitest/utils'
+import { createDefer } from '@vitest/utils/helpers'
+import { getSafeTimers } from '@vitest/utils/timers'
 import { getBenchFn, getBenchOptions } from '../benchmark'
 import { getWorkerState } from '../utils'
 

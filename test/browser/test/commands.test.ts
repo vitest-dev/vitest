@@ -1,5 +1,5 @@
-import { server } from '@vitest/browser/context'
 import { expect, it } from 'vitest'
+import { server } from 'vitest/browser'
 
 const { readFile, writeFile, removeFile, myCustomCommand } = server.commands
 
@@ -51,7 +51,7 @@ it('can run custom commands', async () => {
   })
 })
 
-declare module '@vitest/browser/context' {
+declare module 'vitest/browser' {
   interface BrowserCommands {
     myCustomCommand: (arg1: string, arg2: string) => Promise<{
       testPath: string

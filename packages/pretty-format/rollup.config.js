@@ -27,10 +27,21 @@ const plugins = [
     preferBuiltins: true,
   }),
   json(),
-  oxc({
-    transform: { target: 'node14' },
-  }),
+  {
+    name: 'process-env',
+    transform(code) {
+      // inline is-react
+      if (code.includes('process.env.NODE_ENV')) {
+        return code.replace(/process\.env\.NODE_ENV/g, '"production"')
+      }
+    },
+  },
   commonjs(),
+  oxc({
+    transform: {
+      target: 'node18',
+    },
+  }),
 ]
 
 export default defineConfig([

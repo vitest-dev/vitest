@@ -4,7 +4,9 @@ import { instances, runBrowserTests } from './utils'
 test('locators work correctly', async () => {
   const { stderr, stdout } = await runBrowserTests({
     root: './fixtures/locators',
-    reporters: [['verbose', { isTTY: false }]],
+    reporters: [
+      ['verbose', { isTTY: false }],
+    ],
   })
 
   expect(stderr).toReportNoErrors()

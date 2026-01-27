@@ -1,4 +1,4 @@
-import { playwright } from '@vitest/browser/providers/playwright'
+import { playwright } from '@vitest/browser-playwright'
 import { chromium } from 'playwright'
 import { expect, test } from 'vitest'
 import { provider } from '../settings'
@@ -27,9 +27,9 @@ test.runIf(provider.name === 'playwright')('[playwright] runs in connect mode', 
 
   await browserServer.close()
 
+  expect(stderr).toBe('')
   expect(stdout).toContain('Tests  2 passed')
   expect(exitCode).toBe(0)
-  expect(stderr).toBe('')
 })
 
 test.runIf(provider.name === 'playwright')('[playwright] warns if both connect and launch mode are configured', async () => {
@@ -56,7 +56,7 @@ test.runIf(provider.name === 'playwright')('[playwright] warns if both connect a
 
   await browserServer.close()
 
+  expect(stderr).toContain('Found both connect and launch options in browser instance configuration.')
   expect(stdout).toContain('Tests  2 passed')
   expect(exitCode).toBe(0)
-  expect(stderr).toContain('Found both connect and launch options in browser instance configuration.')
 })

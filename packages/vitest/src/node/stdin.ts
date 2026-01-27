@@ -1,7 +1,9 @@
+import type { File, Task } from '@vitest/runner'
 import type { Writable } from 'node:stream'
 import type { Vitest } from './core'
+import type { FilterObject } from './watch-filter'
 import readline from 'node:readline'
-import { getTests } from '@vitest/runner/utils'
+import { isTestCase } from '@vitest/runner/utils'
 import { relative, resolve } from 'pathe'
 import prompt from 'prompts'
 import c from 'tinyrainbow'
@@ -36,6 +38,38 @@ ${keys
   .join('\n')}
 `,
   )
+}
+
+function* traverseFilteredTestNames(parentName: string, filter: RegExp, t: Task): Generator<FilterObject> {
+  if (isTestCase(t)) {
+    if (t.name.match(filter)) {
+      const displayName = `${parentName} > ${t.name}`
+      yield { key: t.name, toString: () => displayName }
+    }
+  }
+  else {
+    parentName = parentName.length ? `${parentName} > ${t.name}` : t.name
+    for (const task of t.tasks) {
+      yield* traverseFilteredTestNames(parentName, filter, task)
+    }
+  }
+}
+
+function* getFilteredTestNames(pattern: string, suite: File[]): Generator<FilterObject> {
+  try {
+    const reg = new RegExp(pattern)
+    // TODO: we cannot run tests per workspace yet: filtering files
+    const files = new Set<string>()
+    for (const file of suite) {
+      if (!files.has(file.name)) {
+        files.add(file.name)
+        yield* traverseFilteredTestNames('', reg, file)
+      }
+    }
+  }
+  catch {
+    // `new RegExp` may throw error when input is invalid regexp
+  }
 }
 
 export function registerConsoleShortcuts(
@@ -134,24 +168,13 @@ export function registerConsoleShortcuts(
 
   async function inputNamePattern() {
     off()
-    const watchFilter = new WatchFilter(
+    const watchFilter = new WatchFilter<'object'>(
       'Input test name pattern (RegExp)',
       stdin,
       stdout,
     )
     const filter = await watchFilter.filter((str: string) => {
-      const files = ctx.state.getFiles()
-      const tests = getTests(files)
-      try {
-        const reg = new RegExp(str)
-        return tests
-          .map(test => test.name)
-          .filter(testName => testName.match(reg))
-      }
-      catch {
-        // `new RegExp` may throw error when input is invalid regexp
-        return []
-      }
+      return [...getFilteredTestNames(str, ctx.state.getFiles())]
     })
 
     on()

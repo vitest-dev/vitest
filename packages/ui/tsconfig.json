@@ -5,6 +5,9 @@
     "lib": ["dom", "esnext", "DOM.Iterable"],
     "skipLibCheck": true
   },
+  "vueCompilerOptions": {
+    "checkUnknownComponents": true
+  },
   "include": ["./client/**/*"],
   "exclude": ["dist", "node_modules"]
 }

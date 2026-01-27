@@ -1,9 +1,9 @@
 import type { PrettyFormatOptions } from '@vitest/pretty-format'
 import {
+  createDOMElementFilter,
   format as prettyFormat,
   plugins as prettyFormatPlugins,
 } from '@vitest/pretty-format'
-// since this is already part of Vitest via Chai, we can just reuse it without increasing the size of bundle
 import * as loupe from 'loupe'
 
 type Inspect = (value: unknown, options: Options) => string
@@ -43,22 +43,39 @@ const PLUGINS = [
 
 export interface StringifyOptions extends PrettyFormatOptions {
   maxLength?: number
+  filterNode?: string | ((node: any) => boolean)
 }
 
 export function stringify(
   object: unknown,
   maxDepth = 10,
-  { maxLength, ...options }: StringifyOptions = {},
+  { maxLength, filterNode, ...options }: StringifyOptions = {},
 ): string {
   const MAX_LENGTH = maxLength ?? 10000
   let result
+
+  // Convert string selector to filter function
+  const filterFn = typeof filterNode === 'string'
+    ? createNodeFilterFromSelector(filterNode)
+    : filterNode
+
+  const plugins = filterFn
+    ? [
+        ReactTestComponent,
+        ReactElement,
+        createDOMElementFilter(filterFn),
+        DOMCollection,
+        Immutable,
+        AsymmetricMatcher,
+      ]
+    : PLUGINS
 
   try {
     result = prettyFormat(object, {
       maxDepth,
       escapeString: false,
       // min: true,
-      plugins: PLUGINS,
+      plugins,
       ...options,
     })
   }
@@ -68,24 +85,62 @@ export function stringify(
       maxDepth,
       escapeString: false,
       // min: true,
-      plugins: PLUGINS,
+      plugins,
       ...options,
     })
   }
 
   // Prevents infinite loop https://github.com/vitest-dev/vitest/issues/7249
   return result.length >= MAX_LENGTH && maxDepth > 1
-    ? stringify(object, Math.floor(Math.min(maxDepth, Number.MAX_SAFE_INTEGER) / 2), { maxLength, ...options })
+    ? stringify(object, Math.floor(Math.min(maxDepth, Number.MAX_SAFE_INTEGER) / 2), { maxLength, filterNode, ...options })
     : result
 }
 
-const formatRegExp = /%[sdjifoOc%]/g
+function createNodeFilterFromSelector(selector: string): (node: any) => boolean {
+  const ELEMENT_NODE = 1
+  const COMMENT_NODE = 8
 
-export function format(...args: unknown[]): string {
+  return (node: any) => {
+    // Filter out comments
+    if (node.nodeType === COMMENT_NODE) {
+      return false
+    }
+
+    // Filter out elements matching the selector
+    if (node.nodeType === ELEMENT_NODE && node.matches) {
+      try {
+        return !node.matches(selector)
+      }
+      catch {
+        return true
+      }
+    }
+
+    return true
+  }
+}
+
+export const formatRegExp: RegExp = /%[sdjifoOc%]/g
+
+interface FormatOptions {
+  prettifyObject?: boolean
+}
+
+function baseFormat(args: unknown[], options: FormatOptions = {}): string {
+  const formatArg = (item: unknown, inspecOptions?: LoupeOptions) => {
+    if (options.prettifyObject) {
+      return stringify(item, undefined, {
+        printBasicPrototype: false,
+        escapeString: false,
+      })
+    }
+    return inspect(item, inspecOptions)
+  }
+
   if (typeof args[0] !== 'string') {
     const objects = []
     for (let i = 0; i < args.length; i++) {
-      objects.push(inspect(args[i], { depth: 0, colors: false }))
+      objects.push(formatArg(args[i], { depth: 0, colors: false }))
     }
     return objects.join(' ')
   }
@@ -113,7 +168,7 @@ export function format(...args: unknown[]): string {
           if (typeof value.toString === 'function' && value.toString !== Object.prototype.toString) {
             return value.toString()
           }
-          return inspect(value, { depth: 0, colors: false })
+          return formatArg(value, { depth: 0, colors: false })
         }
         return String(value)
       }
@@ -134,9 +189,9 @@ export function format(...args: unknown[]): string {
       case '%f':
         return Number.parseFloat(String(args[i++])).toString()
       case '%o':
-        return inspect(args[i++], { showHidden: true, showProxy: true })
+        return formatArg(args[i++], { showHidden: true, showProxy: true })
       case '%O':
-        return inspect(args[i++])
+        return formatArg(args[i++])
       case '%c': {
         i++
         return ''
@@ -169,10 +224,18 @@ export function format(...args: unknown[]): string {
       str += ` ${x}`
     }
     else {
-      str += ` ${inspect(x)}`
+      str += ` ${formatArg(x)}`
     }
   }
   return str
+}
+
+export function format(...args: unknown[]): string {
+  return baseFormat(args)
+}
+
+export function browserFormat(...args: unknown[]): string {
+  return baseFormat(args, { prettifyObject: true })
 }
 
 export function inspect(obj: unknown, options: LoupeOptions = {}): string {

@@ -1,3 +1,9 @@
+import type {
+  NonStandardScreenshotComparators,
+  ScreenshotComparatorRegistry,
+  ScreenshotMatcherOptions,
+} from '@vitest/browser/context'
+
 interface BaseMetadata { height: number; width: number }
 export type TypedArray
   = | Buffer<ArrayBufferLike>
@@ -12,14 +18,14 @@ export interface Codec<
 > {
   decode: (
     buffer: TypedArray,
-    options: DecoderOptions
+    options: DecoderOptions,
   ) => Promisable<{
     data: TypedArray
     metadata: DecoderMetadata & BaseMetadata
   }>
   encode: (
     image: { data: TypedArray; metadata: BaseMetadata },
-    options: EncoderOptions
+    options: EncoderOptions,
   ) => Promisable<TypedArray>
 }
 
@@ -39,5 +45,25 @@ export type Comparator<Options extends Record<string, unknown>> = (
      * Note that the comparator might choose to ignore the flag, so a diff image is not guaranteed.
      */
     createDiff: boolean
-  } & Options
+  } & Options,
 ) => Promisable<{ pass: boolean; diff: TypedArray | null; message: string | null }>
+
+type CustomComparatorsToRegister = {
+  [Key in keyof NonStandardScreenshotComparators]: Comparator<NonStandardScreenshotComparators[Key]>
+}
+
+export type CustomComparatorsRegistry
+  = keyof CustomComparatorsToRegister extends never
+    ? { comparators?: Record<string, Comparator<Record<string, unknown>>> }
+    : { comparators: CustomComparatorsToRegister }
+
+declare module 'vitest/node' {
+  export interface ToMatchScreenshotOptions
+    extends Omit<
+      ScreenshotMatcherOptions,
+      'comparatorName' | 'comparatorOptions'
+    >, CustomComparatorsRegistry {}
+
+  export interface ToMatchScreenshotComparators
+    extends ScreenshotComparatorRegistry {}
+}

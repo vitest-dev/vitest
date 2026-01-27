@@ -1,19 +1,17 @@
 import { defineConfig } from 'vitest/config'
+import { createCustomPool } from './pool/custom-pool'
 
 export default defineConfig({
   test: {
-    poolOptions: {
-      custom: {
-        print: 'options are respected',
-        array: [1, 2, 3],
-      },
-    },
     projects: [
       {
         extends: true,
         test: {
           name: 'custom-pool-test',
-          pool: './pool/custom-pool.ts',
+          pool: createCustomPool({
+            print: 'options are respected',
+            array: [1, 2, 3],
+          }),
           exclude: ['**/*.threads.spec.ts'],
         },
        },

@@ -12,9 +12,9 @@
   },
   "devDependencies": {
     "@vitest/ui": "latest",
-    "fastify": "^5.5.0",
-    "supertest": "^6.3.4",
-    "tsx": "^4.20.5",
+    "fastify": "^5.7.1",
+    "supertest": "^7.2.2",
+    "tsx": "^4.21.0",
     "vite": "latest",
     "vitest": "latest"
   },

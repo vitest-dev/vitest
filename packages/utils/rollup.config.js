@@ -16,7 +16,13 @@ const entries = {
   'error': 'src/error.ts',
   'source-map': 'src/source-map.ts',
   'types': 'src/types.ts',
+  'constants': 'src/constants.ts',
+  'offset': 'src/offset.ts',
+  'timers': 'src/timers.ts',
+  'highlight': 'src/highlight.ts',
+  'display': 'src/display.ts',
   'resolver': 'src/resolver.ts',
+  'serialize': 'src/serialize.ts',
 }
 
 const external = [
@@ -42,6 +48,14 @@ const plugins = [
 export default defineConfig([
   {
     input: entries,
+    treeshake: {
+      moduleSideEffects: [
+        {
+          external: true,
+          sideEffects: false,
+        },
+      ],
+    },
     output: {
       dir: 'dist',
       format: 'esm',

@@ -1,11 +1,11 @@
 import type MagicString from 'magic-string'
 import type { SnapshotEnvironment } from '../types'
+import { getCallLastIndex } from '../../../utils/src/helpers'
 import {
-  getCallLastIndex,
   lineSplitRE,
   offsetToLineNumber,
   positionToOffset,
-} from '../../../utils/src/index'
+} from '../../../utils/src/offset'
 
 export interface InlineSnapshot {
   snapshot: string
@@ -24,7 +24,11 @@ export async function saveInlineSnapshots(
   await Promise.all(
     Array.from(files).map(async (file) => {
       const snaps = snapshots.filter(i => i.file === file)
-      const code = await environment.readSnapshotFile(file) as string
+      const code = await environment.readSnapshotFile(file)
+      if (code == null) {
+        throw new Error(`cannot read ${file} when saving inline snapshot`)
+      }
+
       const s = new MagicString(code)
 
       for (const snap of snaps) {

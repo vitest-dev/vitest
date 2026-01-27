@@ -38,6 +38,8 @@ export class ParentBrowserProject {
   public matchersUrl: string
   public stateJs: Promise<string> | string
 
+  public initScripts: string[] = []
+
   public commands: Record<string, BrowserCommand<any>> = {}
   public children: Set<ProjectBrowser> = new Set()
   public vitest: Vitest
@@ -75,18 +77,19 @@ export class ParentBrowserProject {
         return result?.map
       },
       getUrlId: (id) => {
-        const mod = this.vite.moduleGraph.getModuleById(id)
+        const moduleGraph = this.vite.environments.client.moduleGraph
+        const mod = moduleGraph.getModuleById(id)
         if (mod) {
           return id
         }
         const resolvedPath = resolve(this.vite.config.root, id.slice(1))
-        const modUrl = this.vite.moduleGraph.getModuleById(resolvedPath)
+        const modUrl = moduleGraph.getModuleById(resolvedPath)
         if (modUrl) {
           return resolvedPath
         }
         // some browsers (looking at you, safari) don't report queries in stack traces
         // the next best thing is to try the first id that this file resolves to
-        const files = this.vite.moduleGraph.getModulesByFile(resolvedPath)
+        const files = moduleGraph.getModulesByFile(resolvedPath)
         if (files && files.size) {
           return files.values().next().value!.id!
         }
@@ -128,11 +131,6 @@ export class ParentBrowserProject {
     ).then(js => (this.injectorJs = js))
     this.errorCatcherUrl = join('/@fs/', resolve(distRoot, 'client/error-catcher.js'))
 
-    const builtinProviders = ['playwright', 'webdriverio', 'preview']
-    const providerName = project.config.browser.provider?.name || 'preview'
-    if (builtinProviders.includes(providerName)) {
-      this.locatorsUrl = join('/@fs/', distRoot, 'locators', `${providerName}.js`)
-    }
     this.matchersUrl = join('/@fs/', distRoot, 'expect-element.js')
     this.stateJs = readFile(
       resolve(distRoot, 'state.js'),
@@ -149,10 +147,10 @@ export class ParentBrowserProject {
       throw new Error(`Cannot spawn child server without a parent dev server.`)
     }
     const clone = new ProjectBrowser(
+      this,
       project,
       '/',
     )
-    clone.parent = this
     this.children.add(clone)
     return clone
   }
@@ -235,9 +233,9 @@ export class ParentBrowserProject {
         const transformId = srcLink || join(server.config.root, `virtual__${id || `injected-${index}.js`}`)
         await server.moduleGraph.ensureEntryFromUrl(transformId)
         const contentProcessed
-            = content && type === 'module'
-              ? (await server.pluginContainer.transform(content, transformId)).code
-              : content
+          = content && type === 'module'
+            ? (await server.pluginContainer.transform(content, transformId)).code
+            : content
         return {
           tag: 'script',
           attrs: {

@@ -61,7 +61,7 @@ exports[`should fail nested-suite.test.ts 1`] = `"AssertionError: expected true 
 
 exports[`should fail no-assertions.test.ts 1`] = `"Error: expected any number of assertion, but got none"`;
 
-exports[`should fail node-browser-context.test.ts 1`] = `"Error: @vitest/browser/context can be imported only inside the Browser Mode. Your test is running in forks pool. Make sure your regular tests are excluded from the "test.include" glob pattern."`;
+exports[`should fail node-browser-context.test.ts 1`] = `"Error: vitest/browser can be imported only inside the Browser Mode. Your test is running in forks pool. Make sure your regular tests are excluded from the "test.include" glob pattern."`;
 
 exports[`should fail poll-no-awaited.test.ts 1`] = `
 "Error: expect.poll(assertion).toBe() was not awaited. This assertion is asynchronous and must be awaited; otherwise, it is not executed to avoid unhandled rejections:
@@ -123,9 +123,6 @@ Error: Test timed out in 10ms.
 Error: Hook timed out in 16ms."
 `;
 
-exports[`should fail unhandled.test.ts 1`] = `
-"Error: some error
-Error: Uncaught [Error: some error]"
-`;
+exports[`should fail unhandled.test.ts 1`] = `"Error: some error"`;
 
 exports[`should fail unhandled-suite.test.ts 1`] = `"Unknown Error: promise error"`;

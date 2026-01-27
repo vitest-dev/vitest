@@ -1,6 +1,9 @@
+import type { VitestRunner } from './types'
 import type {
   AfterAllListener,
   AfterEachListener,
+  AroundAllListener,
+  AroundEachListener,
   BeforeAllListener,
   BeforeEachListener,
   OnTestFailedHandler,
@@ -9,7 +12,7 @@ import type {
   TaskPopulated,
   TestContext,
 } from './types/tasks'
-import { assertTypes } from '@vitest/utils'
+import { assertTypes } from '@vitest/utils/helpers'
 import { abortContextSignal, abortIfTimeout, withTimeout } from './context'
 import { withFixtures } from './fixture'
 import { getCurrentSuite, getRunner } from './suite'
@@ -21,6 +24,8 @@ function getDefaultHookTimeout() {
 
 const CLEANUP_TIMEOUT_KEY = Symbol.for('VITEST_CLEANUP_TIMEOUT')
 const CLEANUP_STACK_TRACE_KEY = Symbol.for('VITEST_CLEANUP_STACK_TRACE')
+const AROUND_TIMEOUT_KEY = Symbol.for('VITEST_AROUND_TIMEOUT')
+const AROUND_STACK_TRACE_KEY = Symbol.for('VITEST_AROUND_STACK_TRACE')
 
 export function getBeforeHookCleanupCallback(hook: Function, result: any, context?: TestContext): Function | undefined {
   if (typeof result === 'function') {
@@ -265,6 +270,144 @@ export const onTestFinished: TaskHook<OnTestFinishedHandler> = createTestHook(
     )
   },
 )
+
+/**
+ * Registers a callback function that wraps around all tests within the current suite.
+ * The callback receives a `runSuite` function that must be called to run the suite's tests.
+ * This hook is useful for scenarios where you need to wrap an entire suite in a context
+ * (e.g., starting a server, opening a database connection that all tests share).
+ *
+ * **Note:** When multiple `aroundAll` hooks are registered, they are nested inside each other.
+ * The first registered hook is the outermost wrapper.
+ *
+ * **Note:** Unlike `aroundEach`, the `aroundAll` hook does not receive test context or support fixtures,
+ * as it runs at the suite level before any individual test context is created.
+ *
+ * @param {Function} fn - The callback function that wraps the suite. Must call `runSuite()` to run the tests.
+ * @param {number} [timeout] - Optional timeout in milliseconds for the hook. If not provided, the default hook timeout from the runner's configuration is used.
+ * @returns {void}
+ * @example
+ * ```ts
+ * // Example of using aroundAll to wrap suite in a tracing span
+ * aroundAll(async (runSuite) => {
+ *   await tracer.trace('test-suite', runSuite);
+ * });
+ * ```
+ * @example
+ * ```ts
+ * // Example of using aroundAll with AsyncLocalStorage context
+ * aroundAll(async (runSuite) => {
+ *   await asyncLocalStorage.run({ suiteId: 'my-suite' }, runSuite);
+ * });
+ * ```
+ */
+export function aroundAll(
+  fn: AroundAllListener,
+  timeout?: number,
+): void {
+  assertTypes(fn, '"aroundAll" callback', ['function'])
+  const stackTraceError = new Error('STACK_TRACE_ERROR')
+  const resolvedTimeout = timeout ?? getDefaultHookTimeout()
+
+  return getCurrentSuite().on(
+    'aroundAll',
+    Object.assign(fn, {
+      [AROUND_TIMEOUT_KEY]: resolvedTimeout,
+      [AROUND_STACK_TRACE_KEY]: stackTraceError,
+    }),
+  )
+}
+
+/**
+ * Registers a callback function that wraps around each test within the current suite.
+ * The callback receives a `runTest` function that must be called to run the test.
+ * This hook is useful for scenarios where you need to wrap tests in a context (e.g., database transactions).
+ *
+ * **Note:** When multiple `aroundEach` hooks are registered, they are nested inside each other.
+ * The first registered hook is the outermost wrapper.
+ *
+ * @param {Function} fn - The callback function that wraps the test. Must call `runTest()` to run the test.
+ * @param {number} [timeout] - Optional timeout in milliseconds for the hook. If not provided, the default hook timeout from the runner's configuration is used.
+ * @returns {void}
+ * @example
+ * ```ts
+ * // Example of using aroundEach to wrap tests in a database transaction
+ * aroundEach(async (runTest) => {
+ *   await database.transaction(() => runTest());
+ * });
+ * ```
+ * @example
+ * ```ts
+ * // Example of using aroundEach with fixtures
+ * aroundEach(async (runTest, { db }) => {
+ *   await db.transaction(() => runTest());
+ * });
+ * ```
+ */
+export function aroundEach<ExtraContext = object>(
+  fn: AroundEachListener<ExtraContext>,
+  timeout?: number,
+): void {
+  assertTypes(fn, '"aroundEach" callback', ['function'])
+  const stackTraceError = new Error('STACK_TRACE_ERROR')
+  const resolvedTimeout = timeout ?? getDefaultHookTimeout()
+  const runner = getRunner()
+
+  // Create a wrapper function that supports fixtures in the second argument (context)
+  // withFixtures resolves fixtures into context, then we call fn with all 3 args
+  const wrappedFn: AroundEachListener<ExtraContext> = withAroundEachFixtures(runner, fn)
+
+  // Store timeout and stack trace on the function for use in callAroundEachHooks
+  // Setup and teardown phases will each have their own timeout
+  return getCurrentSuite<ExtraContext>().on(
+    'aroundEach',
+    Object.assign(wrappedFn, {
+      [AROUND_TIMEOUT_KEY]: resolvedTimeout,
+      [AROUND_STACK_TRACE_KEY]: stackTraceError,
+    }),
+  )
+}
+
+/**
+ * Wraps an aroundEach listener to support fixtures.
+ * Similar to withFixtures, but handles the aroundEach signature where:
+ * - First arg is runTest function
+ * - Second arg is context (where fixtures are destructured from)
+ * - Third arg is suite
+ */
+function withAroundEachFixtures<ExtraContext>(
+  runner: VitestRunner,
+  fn: AroundEachListener<ExtraContext>,
+): AroundEachListener<ExtraContext> {
+  // Create the wrapper that will be returned
+  const wrapper: AroundEachListener<ExtraContext> = (runTest, context, suite) => {
+    // Create inner function that will be passed to withFixtures
+    // This function receives context (with fixtures resolved) and calls original fn
+    const innerFn = (ctx: any) => fn(runTest, ctx, suite)
+    // Set fixture index to 1 to tell parser to look at second arg of original fn
+    // Set toString to return original fn string so parser extracts correct params
+    ;(innerFn as any).__VITEST_FIXTURE_INDEX__ = 1
+    ;(innerFn as any).toString = () => fn.toString()
+
+    // Use withFixtures to resolve fixtures, passing context as the hook context
+    const fixtureResolver = withFixtures(runner, innerFn)
+    return fixtureResolver(context)
+  }
+
+  return wrapper
+}
+
+export function getAroundHookTimeout(hook: Function): number {
+  return AROUND_TIMEOUT_KEY in hook && typeof hook[AROUND_TIMEOUT_KEY] === 'number'
+    ? hook[AROUND_TIMEOUT_KEY]
+    : getDefaultHookTimeout()
+}
+
+export function getAroundHookStackTrace(hook: Function): Error | undefined {
+  return AROUND_STACK_TRACE_KEY in hook && hook[AROUND_STACK_TRACE_KEY] instanceof Error
+    ? hook[AROUND_STACK_TRACE_KEY]
+    : undefined
+}
 
 function createTestHook<T>(
   name: string,

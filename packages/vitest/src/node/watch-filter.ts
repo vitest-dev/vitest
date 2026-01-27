@@ -1,7 +1,7 @@
 import type { Writable } from 'node:stream'
 import readline from 'node:readline'
 import { stripVTControlCharacters } from 'node:util'
-import { createDefer } from '@vitest/utils'
+import { createDefer } from '@vitest/utils/helpers'
 import c from 'tinyrainbow'
 import { stdout as getStdout } from '../utils/base'
 
@@ -9,13 +9,19 @@ const MAX_RESULT_COUNT = 10
 const SELECTION_MAX_INDEX = 7
 const ESC = '\u001B['
 
-type FilterFunc = (keyword: string) => Promise<string[]> | string[]
+export interface FilterObject {
+  key: string
+  toString: () => string
+}
 
-export class WatchFilter {
+type FilterItemType<T extends 'string' | 'object' = 'string'> = T extends 'string' ? string : FilterObject
+type FilterFuncType<T extends 'string' | 'object' = 'string'> = (keyword: string) => Promise<FilterItemType<T>[]> | FilterItemType<T>[]
+
+export class WatchFilter<T extends 'string' | 'object' = 'string'> {
   private filterRL: readline.Interface
   private currentKeyword: string | undefined = undefined
   private message: string
-  private results: string[] = []
+  private results: FilterItemType<T>[] = []
   private selectionIndex = -1
   private onKeyPress?: (str: string, key: any) => void
   private stdin: NodeJS.ReadStream
@@ -40,7 +46,7 @@ export class WatchFilter {
     }
   }
 
-  public async filter(filterFunc: FilterFunc): Promise<string | undefined> {
+  public async filter(filterFunc: FilterFuncType<T>): Promise<string | undefined> {
     this.write(this.promptLine())
 
     const resultPromise = createDefer<string | undefined>()
@@ -58,7 +64,7 @@ export class WatchFilter {
   }
 
   private filterHandler(
-    filterFunc: FilterFunc,
+    filterFunc: FilterFuncType<T>,
     onSubmit: (result?: string) => void,
   ) {
     return async (str: string | undefined, key: any) => {
@@ -78,12 +84,17 @@ export class WatchFilter {
           onSubmit(undefined)
           return
         case key?.name === 'enter':
-        case key?.name === 'return':
+        case key?.name === 'return': {
+          const selection = this.results[this.selectionIndex]
+          const result = typeof selection === 'string'
+            ? selection
+            : selection?.key
           onSubmit(
-            this.results[this.selectionIndex] || this.currentKeyword || '',
+            result || this.currentKeyword || '',
           )
           this.currentKeyword = undefined
           break
+        }
         case key?.name === 'up':
           if (this.selectionIndex && this.selectionIndex > 0) {
             this.selectionIndex--
@@ -229,6 +240,6 @@ export class WatchFilter {
   }
 
   public getLastResults(): string[] {
-    return this.results
+    return this.results.map(r => (typeof r === 'string' ? r : r.toString()))
   }
 }

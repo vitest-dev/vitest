@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, test } from 'vitest'
 import { extractToMatchScreenshotPaths, render } from './utils'
-import { page, server } from '@vitest/browser/context'
+import { page, server } from 'vitest/browser'
 import { join } from 'pathe'
 
 const blockSize = 19
@@ -15,6 +15,12 @@ const renderTestCase = (colors: readonly [string, string, string]) =>
       <div data-testid="${dataTestId}-3" style="background-color: ${colors[2]}; width: var(--size);"></div>
     </div>
   `)
+
+declare module 'vitest/browser' {
+  interface ScreenshotComparatorRegistry {
+    failing: Record<string, never>
+  }
+}
 
 /**
  * ## Screenshot Testing Strategy
@@ -368,6 +374,161 @@ describe('.toMatchScreenshot', () => {
           },
         },
       )
+    },
+  )
+
+  test('can use custom comparators', async ({ onTestFinished }) => {
+    const filename = globalThis.crypto.randomUUID()
+    const path = join(
+      '__screenshots__',
+      'toMatchScreenshot.test.ts',
+      `${filename}-${server.browser}-${server.platform}.png`,
+    )
+
+    onTestFinished(async () => {
+      await server.commands.removeFile(path)
+    })
+
+    renderTestCase([
+      'oklch(39.6% 0.141 25.723)',
+      'oklch(40.5% 0.101 131.063)',
+      'oklch(37.9% 0.146 265.522)',
+    ])
+
+    const locator = page.getByTestId(dataTestId)
+
+    // Create a reference screenshot by explicitly saving one
+    await locator.screenshot({
+      save: true,
+      path,
+    })
+
+    // Test that `toMatchScreenshot()` correctly uses a custom comparator; since
+    //  the element hasn't changed, it should match, but this custom comparator
+    //  will always fail
+    await expect(locator).toMatchScreenshot(filename)
+
+    let errorMessage: string
+
+    try {
+      await expect(locator).toMatchScreenshot(filename, {
+        comparatorName: 'failing',
+        timeout: 100,
+      })
+    } catch (error) {
+      errorMessage = error.message
+    }
+
+    expect(errorMessage).matches(/^Could not capture a stable screenshot within 100ms\.$/m)
+  })
+
+  // Only run this test if snapshots aren't being updated
+  test.runIf(server.config.snapshotOptions.updateSnapshot !== 'all')(
+    'runs only once after resolving the element',
+    async ({ onTestFinished }) => {
+      const filename = `toMatchScreenshot-runs-only-once-after-resolving-the-element-1`
+      const path = join(
+        '__screenshots__',
+        'toMatchScreenshot.test.ts',
+      )
+
+      const screenshotPath = join(
+        path,
+        `${filename}-${server.browser}-${server.platform}.png`
+      )
+
+      // Create baseline screenshot with original colors
+      renderTestCase([
+        'oklch(39.6% 0.141 25.723)',
+        'oklch(40.5% 0.101 131.063)',
+        'oklch(37.9% 0.146 265.522)',
+      ])
+      const locator = page.getByTestId(dataTestId)
+
+      await locator.screenshot({
+        save: true,
+        path: screenshotPath,
+      })
+
+      onTestFinished(async () => {
+        await server.commands.removeFile(screenshotPath)
+      })
+
+      // Remove element, then re-render with inverted colors after a delay
+      document.body.innerHTML = ''
+
+      const renderDelay = 500
+      setTimeout(() => {
+        renderTestCase([
+          'oklch(37.9% 0.146 265.522)',
+          'oklch(40.5% 0.101 131.063)',
+          'oklch(39.6% 0.141 25.723)',
+        ])
+      }, renderDelay)
+
+      const start = performance.now()
+
+      // Expected behavior:
+      // 1. `expect.element()` polls until element exists (~500ms)
+      // 2. `toMatchScreenshot()` runs ONCE and fails (colors don't match baseline)
+      //
+      // If `toMatchScreenshot()` polled internally, it would retry for 30s.
+      // By checking the elapsed time we verify it only ran once.
+
+      let errorMessage: string
+
+      try {
+        await expect.element(locator).toMatchScreenshot()
+      } catch (error) {
+        errorMessage = error.message
+      }
+
+      expect(typeof errorMessage).toBe('string')
+
+      const [referencePath, actualPath, diffPath] = extractToMatchScreenshotPaths(
+        errorMessage,
+        filename,
+      )
+
+      expect(typeof referencePath).toBe('string')
+      expect(typeof actualPath).toBe('string')
+      expect(typeof diffPath).toBe('string')
+
+      expect(referencePath).toMatch(new RegExp(`${screenshotPath}$`))
+
+      onTestFinished(async () => {
+        await Promise.all([
+          server.commands.removeFile(actualPath),
+          server.commands.removeFile(diffPath),
+        ])
+      })
+
+      expect(
+        errorMessage
+          .replace(/(?:\d+)(.*?)(?:0\.\d{2})/, '<pixels>$1<ratio>')
+          .replace(referencePath, '<reference>')
+          .replace(actualPath, '<actual>')
+          .replace(diffPath, '<diff>')
+      ).toMatchInlineSnapshot(`
+        expect(element).toMatchScreenshot()
+
+        Screenshot does not match the stored reference.
+        <pixels> pixels (ratio <ratio>) differ.
+
+        Reference screenshot:
+          <reference>
+
+        Actual screenshot:
+          <actual>
+
+        Diff image:
+          <diff>
+      `)
+
+      const elapsed = performance.now() - start
+
+      // Elapsed time should be lower than the default `poll`/`element` timeout
+      expect(elapsed).toBeLessThan(30_000)
     },
   )
 })

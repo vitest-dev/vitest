@@ -1,3 +1,4 @@
+import type { ParsedSelector } from 'ivya'
 import type {
   LocatorByRoleOptions,
   LocatorOptions,
@@ -9,10 +10,10 @@ import type {
   UserEventHoverOptions,
   UserEventSelectOptions,
   UserEventUploadOptions,
-} from '@vitest/browser/context'
-import type { ParsedSelector } from 'ivya'
-import { page, server } from '@vitest/browser/context'
+  UserEventWheelOptions,
+} from 'vitest/browser'
 import {
+  asLocator,
   getByAltTextSelector,
   getByLabelSelector,
   getByPlaceholderSelector,
@@ -21,11 +22,24 @@ import {
   getByTextSelector,
   getByTitleSelector,
   Ivya,
-
 } from 'ivya'
+import { page, server, utils } from 'vitest/browser'
+import { __INTERNAL } from 'vitest/internal/browser'
 import { ensureAwaited, getBrowserState } from '../../utils'
-import { getElementError } from '../public-utils'
-import { escapeForTextSelector } from '../utils'
+import { escapeForTextSelector, isLocator, resolveUserEventWheelOptions } from '../tester-utils'
+
+export { convertElementToCssSelector, getIframeScale, processTimeoutOptions } from '../tester-utils'
+export {
+  getByAltTextSelector,
+  getByLabelSelector,
+  getByPlaceholderSelector,
+  getByRoleSelector,
+  getByTestIdSelector,
+  getByTextSelector,
+  getByTitleSelector,
+} from 'ivya'
+
+__INTERNAL._asLocator = asLocator
 
 // we prefer using playwright locators because they are more powerful and support Shadow DOM
 export const selectorEngine: Ivya = Ivya.create({
@@ -61,16 +75,33 @@ export abstract class Locator {
     })
   }
 
-  public click(options: UserEventClickOptions = {}): Promise<void> {
+  public click(options?: UserEventClickOptions): Promise<void> {
     return this.triggerCommand<void>('__vitest_click', this.selector, options)
   }
 
-  public dblClick(options: UserEventClickOptions = {}): Promise<void> {
+  public dblClick(options?: UserEventClickOptions): Promise<void> {
     return this.triggerCommand<void>('__vitest_dblClick', this.selector, options)
   }
 
-  public tripleClick(options: UserEventClickOptions = {}): Promise<void> {
+  public tripleClick(options?: UserEventClickOptions): Promise<void> {
     return this.triggerCommand<void>('__vitest_tripleClick', this.selector, options)
+  }
+
+  public wheel(options: UserEventWheelOptions): Promise<void> {
+    return ensureAwaited<void>(async () => {
+      await this.triggerCommand<void>('__vitest_wheel', this.selector, resolveUserEventWheelOptions(options))
+
+      const browser = getBrowserState().config.browser.name
+
+      // looks like on Chromium the scroll event gets dispatched a frame later
+      if (browser === 'chromium' || browser === 'chrome') {
+        return new Promise((resolve) => {
+          requestAnimationFrame(() => {
+            resolve()
+          })
+        })
+      }
+    })
   }
 
   public clear(options?: UserEventClearOptions): Promise<void> {
@@ -104,7 +135,8 @@ export abstract class Locator {
       return {
         name: file.name,
         mimeType: file.type,
-        base64: bas64String,
+        // strip prefix `data:[<media-type>][;base64],`
+        base64: bas64String.slice(bas64String.indexOf(',') + 1),
       }
     })
     return this.triggerCommand<void>('__vitest_upload', this.selector, await Promise.all(filesPromise), options)
@@ -125,7 +157,7 @@ export abstract class Locator {
   ): Promise<void> {
     const values = (Array.isArray(value) ? value : [value]).map((v) => {
       if (typeof v !== 'string') {
-        const selector = 'element' in v ? v.selector : selectorEngine.generateSelectorSimple(v)
+        const selector = isLocator(v) ? v.selector : selectorEngine.generateSelectorSimple(v)
         return { element: selector }
       }
       return v
@@ -223,7 +255,7 @@ export abstract class Locator {
   public element(): HTMLElement | SVGElement {
     const element = this.query()
     if (!element) {
-      throw getElementError(this._pwSelector || this.selector, this._container || document.body)
+      throw utils.getElementError(this._pwSelector || this.selector, this._container || document.body)
     }
     return element
   }

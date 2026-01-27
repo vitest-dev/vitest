@@ -1,5 +1,10 @@
 import type { WorkerGlobalState } from '../../types/worker'
-import { processError } from '@vitest/utils/error'
+import { serializeValue } from '@vitest/utils/serialize'
+
+// Store globals in case tests overwrite them
+const processListeners = process.listeners.bind(process)
+const processOn = process.on.bind(process)
+const processOff = process.off.bind(process)
 
 const dispose: (() => void)[] = []
 
@@ -7,23 +12,23 @@ export function listenForErrors(state: () => WorkerGlobalState): void {
   dispose.forEach(fn => fn())
   dispose.length = 0
 
-  function catchError(err: unknown, type: string, event: 'uncaughtException' | 'unhandledRejection') {
+  function catchError(err: any, type: string, event: 'uncaughtException' | 'unhandledRejection') {
     const worker = state()
 
-    const listeners = process.listeners(event as 'uncaughtException')
+    const listeners = processListeners(event as 'uncaughtException')
     // if there is another listener, assume that it's handled by user code
     // one is Vitest's own listener
     if (listeners.length > 1) {
       return
     }
 
-    const error = processError(err)
+    const error = serializeValue(err)
+
     if (typeof error === 'object' && error != null) {
       error.VITEST_TEST_NAME = worker.current?.type === 'test' ? worker.current.name : undefined
       if (worker.filepath) {
         error.VITEST_TEST_PATH = worker.filepath
       }
-      error.VITEST_AFTER_ENV_TEARDOWN = worker.environmentTeardownRun
     }
     state().rpc.onUnhandledError(error, type)
   }
@@ -31,11 +36,11 @@ export function listenForErrors(state: () => WorkerGlobalState): void {
   const uncaughtException = (e: Error) => catchError(e, 'Uncaught Exception', 'uncaughtException')
   const unhandledRejection = (e: Error) => catchError(e, 'Unhandled Rejection', 'unhandledRejection')
 
-  process.on('uncaughtException', uncaughtException)
-  process.on('unhandledRejection', unhandledRejection)
+  processOn('uncaughtException', uncaughtException)
+  processOn('unhandledRejection', unhandledRejection)
 
   dispose.push(() => {
-    process.off('uncaughtException', uncaughtException)
-    process.off('unhandledRejection', unhandledRejection)
+    processOff('uncaughtException', uncaughtException)
+    processOff('unhandledRejection', unhandledRejection)
   })
 }

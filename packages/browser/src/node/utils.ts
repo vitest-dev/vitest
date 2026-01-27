@@ -1,7 +1,67 @@
-import type { BrowserProvider, ResolvedBrowserOptions, TestProject } from 'vitest/node'
+import type {
+  BrowserProvider,
+  ResolvedBrowserOptions,
+  ResolvedConfig,
+  TestProject,
+} from 'vitest/node'
+
+import { defaultKeyMap } from '@testing-library/user-event/dist/esm/keyboard/keyMap.js'
+import { parseKeyDef as tlParse } from '@testing-library/user-event/dist/esm/keyboard/parseKeyDef.js'
+import { basename, dirname, relative, resolve } from 'pathe'
+
+declare enum DOM_KEY_LOCATION {
+  STANDARD = 0,
+  LEFT = 1,
+  RIGHT = 2,
+  NUMPAD = 3,
+}
+
+interface keyboardKey {
+  /** Physical location on a keyboard */
+  code?: string
+  /** Character or functional key descriptor */
+  key?: string
+  /** Location on the keyboard for keys with multiple representation */
+  location?: DOM_KEY_LOCATION
+  /** Does the character in `key` require/imply AltRight to be pressed? */
+  altGr?: boolean
+  /** Does the character in `key` require/imply a shiftKey to be pressed? */
+  shift?: boolean
+}
+
+export function parseKeyDef(text: string): {
+  keyDef: keyboardKey
+  releasePrevious: boolean
+  releaseSelf: boolean
+  repeat: number
+}[] {
+  return tlParse(defaultKeyMap, text)
+}
 
 export function replacer(code: string, values: Record<string, string>): string {
   return code.replace(/\{\s*(\w+)\s*\}/g, (_, key) => values[key] ?? _)
+}
+
+export function resolveScreenshotPath(
+  testPath: string,
+  name: string,
+  config: ResolvedConfig,
+  customPath: string | undefined,
+): string {
+  if (customPath) {
+    return resolve(dirname(testPath), customPath)
+  }
+  const dir = dirname(testPath)
+  const base = basename(testPath)
+  if (config.browser.screenshotDirectory) {
+    return resolve(
+      config.browser.screenshotDirectory,
+      relative(config.root, dir),
+      base,
+      name,
+    )
+  }
+  return resolve(dir, '__screenshots__', base, name)
 }
 
 export async function getBrowserProvider(
@@ -15,19 +75,8 @@ export async function getBrowserProvider(
       `${name}Browser name is required. Please, set \`test.browser.instances[].browser\` option manually.`,
     )
   }
-  if (
-    // nothing is provided by default
-    options.provider == null
-    // the provider is provided via `--browser.provider=playwright`
-    // or the config was serialized, but we can infer the factory by the name
-    || ('_cli' in options.provider && typeof options.provider.factory !== 'function')
-  ) {
-    const providers = await import('./providers/index')
-    const name = (options.provider?.name || 'preview') as 'preview' | 'webdriverio' | 'playwright'
-    if (!(name in providers)) {
-      throw new Error(`Unknown browser provider "${name}". Available providers: ${Object.keys(providers).join(', ')}.`)
-    }
-    return providers[name]().factory(project)
+  if (options.provider == null) {
+    throw new Error(`Browser Mode requires the "provider" to always be specified.`)
   }
   const supportedBrowsers = options.provider.supportedBrowser || []
   if (supportedBrowsers.length && !supportedBrowsers.includes(browser)) {
@@ -37,10 +86,10 @@ export async function getBrowserProvider(
       }". Supported browsers: ${supportedBrowsers.join(', ')}.`,
     )
   }
-  if (typeof options.provider.factory !== 'function') {
-    throw new TypeError(`The "${name}" browser provider does not provide a "factory" function. Received ${typeof options.provider.factory}.`)
+  if (typeof options.provider.providerFactory !== 'function') {
+    throw new TypeError(`The "${name}" browser provider does not provide a "providerFactory" function. Received ${typeof options.provider.providerFactory}.`)
   }
-  return options.provider.factory(project)
+  return options.provider.providerFactory(project)
 }
 
 export function slash(path: string): string {

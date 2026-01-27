@@ -1,9 +1,10 @@
-import type { File, Task, TaskResultPack } from '@vitest/runner'
+import type { File, FileSpecification, Task, TaskResultPack } from '@vitest/runner'
 import type { UserConsoleLog } from '../types/general'
 import type { TestProject } from './project'
 import type { MergedBlobs } from './reporters/blob'
 import type { OnUnhandledErrorCallback } from './types/config'
-import { createFileTask } from '@vitest/runner/utils'
+import { createFileTask, generateFileHash } from '@vitest/runner/utils'
+import { relative } from 'pathe'
 import { defaultBrowserPort } from '../constants'
 import { TestCase, TestModule, TestSuite } from './reporters/reported-tasks'
 
@@ -21,10 +22,20 @@ export class StateManager {
   idMap: Map<string, Task> = new Map()
   taskFileMap: WeakMap<Task, File> = new WeakMap()
   errorsSet: Set<unknown> = new Set()
-  processTimeoutCauses: Set<string> = new Set()
   reportedTasksMap: WeakMap<Task, TestModule | TestCase | TestSuite> = new WeakMap()
   blobs?: MergedBlobs
   transformTime = 0
+
+  metadata: Record<string, {
+    externalized: Record<string, string>
+    duration: Record<string, number[]>
+    tmps: Record<string, string>
+    dumpDir?: string
+    outline?: {
+      externalized: number
+      inlined: number
+    }
+  }> = {}
 
   onUnhandledError?: OnUnhandledErrorCallback
 
@@ -76,15 +87,7 @@ export class StateManager {
   }
 
   getUnhandledErrors(): unknown[] {
-    return Array.from(this.errorsSet.values())
-  }
-
-  addProcessTimeoutCause(cause: string): void {
-    this.processTimeoutCauses.add(cause)
-  }
-
-  getProcessTimeoutCauses(): string[] {
-    return Array.from(this.processTimeoutCauses.values())
+    return Array.from(this.errorsSet)
   }
 
   getPaths(): string[] {
@@ -211,6 +214,11 @@ export class StateManager {
     return this.reportedTasksMap.get(task)
   }
 
+  getReportedEntityById(taskId: string): TestModule | TestCase | TestSuite | undefined {
+    const task = this.idMap.get(taskId)
+    return task ? this.reportedTasksMap.get(task) : undefined
+  }
+
   updateTasks(packs: TaskResultPack[]): void {
     for (const [id, result, meta] of packs) {
       const task = this.idMap.get(id)
@@ -241,11 +249,18 @@ export class StateManager {
     ).length
   }
 
-  cancelFiles(files: string[], project: TestProject): void {
+  cancelFiles(files: FileSpecification[], project: TestProject): void {
+    // if we don't filter existing modules, they will be overriden by `collectFiles`
+    const nonRegisteredFiles = files.filter(({ filepath }) => {
+      const relativePath = relative(project.config.root, filepath)
+      const id = generateFileHash(relativePath, project.name)
+      return !this.idMap.has(id)
+    })
+
     this.collectFiles(
       project,
-      files.map(filepath =>
-        createFileTask(filepath, project.config.root, project.config.name),
+      nonRegisteredFiles.map(file =>
+        createFileTask(file.filepath, project.config.root, project.config.name),
       ),
     )
   }

@@ -1,6 +1,88 @@
 import type { MockContext } from 'vitest'
 import { describe, expect, test, vi } from 'vitest'
 
+describe('vi.spyOn() edge cases', () => {
+  test('vi.spyOn() has correct length', () => {
+    const fn0 = vi.spyOn({ fn: () => {} }, 'fn')
+    expect(fn0.length).toBe(0)
+
+    const fnArgs = vi.spyOn({ fn: (..._args: any[]) => {} }, 'fn')
+    expect(fnArgs.length).toBe(0)
+
+    const fn1 = vi.spyOn({ fn: (_arg1: any) => {} }, 'fn')
+    expect(fn1.length).toBe(1)
+
+    const fn2 = vi.spyOn({ fn: (_arg1: any, _arg2: any) => {} }, 'fn')
+    expect(fn2.length).toBe(2)
+
+    const fn3 = vi.spyOn({ fn: (_arg1: any, _arg2: any, _arg3: any) => {} }, 'fn')
+    expect(fn3.length).toBe(3)
+  })
+
+  test('can spy on a proxy with undefined descriptor\'s value', () => {
+    const obj = new Proxy<{ fn: () => number }>({} as any, {
+      get(_, prop) {
+        if (prop === 'fn') {
+          return () => 42
+        }
+      },
+      getOwnPropertyDescriptor(_, prop) {
+        if (prop === 'fn') {
+          return {
+            configurable: true,
+            enumerable: true,
+            value: undefined,
+            writable: true,
+          }
+        }
+      },
+    })
+    const spy = vi.spyOn(obj, 'fn')
+    expect(spy()).toBe(42)
+  })
+
+  describe('vi.spyOn() copies static properties', () => {
+    test('vi.spyOn() copies properties from functions', () => {
+      function a() {}
+      a.HELLO_WORLD = true
+      const obj = {
+        a,
+      }
+
+      const spy = vi.spyOn(obj, 'a')
+
+      expect(obj.a.HELLO_WORLD).toBe(true)
+      expect(spy.HELLO_WORLD).toBe(true)
+    })
+
+    test('vi.spyOn() copies properties from classes', () => {
+      class A {
+        static HELLO_WORLD = true
+      }
+      const obj = {
+        A,
+      }
+
+      const spy = vi.spyOn(obj, 'A')
+
+      expect(obj.A.HELLO_WORLD).toBe(true)
+      expect(spy.HELLO_WORLD).toBe(true)
+    })
+
+    test('vi.spyOn() ignores node.js.promisify symbol', () => {
+      const promisifySymbol = Symbol.for('nodejs.util.promisify.custom')
+      class Example {
+        static [promisifySymbol] = () => Promise.resolve(42)
+      }
+      const obj = { Example }
+
+      const spy = vi.spyOn(obj, 'Example')
+
+      expect(spy[promisifySymbol]).toBe(undefined)
+    })
+  })
+})
+
 describe('vi.spyOn() state', () => {
   test('vi.spyOn() spies on an object and tracks the calls', () => {
     const object = createObject()
@@ -277,6 +359,30 @@ describe('vi.spyOn() settings', () => {
     expect(spy1).toBe(spy2)
 
     object.getter = 33
+    expect(spy2).toHaveBeenCalledTimes(1)
+    expect(spy1).toHaveBeenCalledTimes(1)
+    expect(spy2.mock.calls).toEqual(spy1.mock.calls)
+  })
+
+  test('vi.spyOn() when spying on a static getter spy returns the same spy', () => {
+    const object = createObject()
+    const spy1 = vi.spyOn(object, 'static', 'get')
+    const spy2 = vi.spyOn(object, 'static', 'get')
+    expect(spy1).toBe(spy2)
+
+    const _example = object.static
+    expect(spy2).toHaveBeenCalledTimes(1)
+    expect(spy1).toHaveBeenCalledTimes(1)
+    expect(spy2.mock.calls).toEqual(spy1.mock.calls)
+  })
+
+  test('vi.spyOn() when spying on a static setter spy returns the same spy', () => {
+    const object = createObject()
+    const spy1 = vi.spyOn(object, 'static', 'set')
+    const spy2 = vi.spyOn(object, 'static', 'set')
+    expect(spy1).toBe(spy2)
+
+    object.static = 33
     expect(spy2).toHaveBeenCalledTimes(1)
     expect(spy1).toHaveBeenCalledTimes(1)
     expect(spy2.mock.calls).toEqual(spy1.mock.calls)
@@ -592,6 +698,56 @@ describe('vi.spyOn() restoration', () => {
   })
 })
 
+describe('vi.spyOn() on Vite SSR', () => {
+  test('vi.spyOn() throws an error if a getter returns a non-function value in SSR', () => {
+    const module = {
+      get primitive() {
+        return 42
+      },
+    }
+    expect(() => {
+      // @ts-expect-error types recognize it's not a function
+      vi.spyOn(module, 'primitive')
+    }).toThrowError('vi.spyOn() can only spy on a function. Received number.')
+  })
+
+  test('vi.spyOn() assigns the method on a getter', () => {
+    const method = () => {}
+    const module = {
+      get method() {
+        return method
+      },
+    }
+    const spy = vi.spyOn(module, 'method')
+    expect(spy.getMockImplementation()).toBe(undefined)
+
+    module.method()
+    expect(spy.mock.calls).toEqual([[]])
+    expect(module.method).toBe(spy)
+
+    spy.mockRestore()
+    expect(module.method).toBe(method)
+  })
+
+  test('vi.spyOn() can reassign the SSR getter method', () => {
+    const method = () => {}
+    const module = {
+      get method() {
+        return method
+      },
+    }
+    const spy1 = vi.spyOn(module, 'method')
+    const spy2 = vi.spyOn(module, 'method')
+    expect(vi.isMockFunction(spy1)).toBe(true)
+    expect(vi.isMockFunction(spy2)).toBe(true)
+    expect(spy1).toBe(spy2)
+
+    module.method()
+    expect(spy1.mock.calls).toEqual([[]])
+    expect(spy2.mock.calls).toEqual([[]])
+  })
+})
+
 function assertStateEmpty(state: MockContext<any>) {
   expect(state.calls).toHaveLength(0)
   expect(state.results).toHaveLength(0)
@@ -618,5 +774,6 @@ function createObject() {
     set getter(value: number) {
       getterValue = value
     },
+    static: 42,
   }
 }

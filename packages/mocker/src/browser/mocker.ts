@@ -1,6 +1,6 @@
 import type { CreateMockInstanceProcedure } from '../automocker'
 import type { MockedModule, MockedModuleType } from '../registry'
-import type { ModuleMockOptions } from '../types'
+import type { ModuleMockContext, ModuleMockOptions, TestModuleMocker } from '../types'
 import type { ModuleMockerInterceptor } from './interceptor'
 import { extname, join } from 'pathe'
 import { mockObject } from '../automocker'
@@ -8,7 +8,7 @@ import { AutomockedModule, MockerRegistry, RedirectedModule } from '../registry'
 
 const { now } = Date
 
-export class ModuleMocker {
+export class ModuleMocker implements TestModuleMocker {
   protected registry: MockerRegistry = new MockerRegistry()
 
   private queue = new Set<Promise<void>>()
@@ -66,7 +66,7 @@ export class ModuleMocker {
       )
     }
     const ext = extname(resolved.id)
-    const url = new URL(resolved.url, location.href)
+    const url = new URL(resolved.url, this.getBaseUrl())
     const query = `_vitest_original&ext${ext}`
     const actualUrl = `${url.pathname}${
       url.search ? `${url.search}&${query}` : `?${query}`
@@ -79,6 +79,10 @@ export class ModuleMocker {
       const m = mod.default
       return m?.__esModule ? m : { ...((typeof m === 'object' && !Array.isArray(m)) || typeof m === 'function' ? m : {}), default: m }
     })
+  }
+
+  protected getBaseUrl(): string {
+    return location.href
   }
 
   public async importMock<T>(rawId: string, importer: string): Promise<T> {
@@ -94,7 +98,7 @@ export class ModuleMocker {
 
     if (!mock) {
       if (redirectUrl) {
-        const resolvedRedirect = new URL(this.resolveMockPath(cleanVersion(redirectUrl)), location.href).toString()
+        const resolvedRedirect = new URL(this.resolveMockPath(cleanVersion(redirectUrl)), this.getBaseUrl()).toString()
         mock = new RedirectedModule(rawId, resolvedId, mockUrl, resolvedRedirect)
       }
       else {
@@ -107,10 +111,10 @@ export class ModuleMocker {
     }
 
     if (mock.type === 'automock' || mock.type === 'autospy') {
-      const url = new URL(`/@id/${resolvedId}`, location.href)
+      const url = new URL(`/@id/${resolvedId}`, this.getBaseUrl())
       const query = url.search ? `${url.search}&t=${now()}` : `?t=${now()}`
       const moduleObject = await import(/* @vite-ignore */ `${url.pathname}${query}&mock=${mock.type}${url.hash}`)
-      return this.mockObject(moduleObject, mock.type) as T
+      return this.mockObject(moduleObject, undefined, mock.type) as T
     }
 
     return import(/* @vite-ignore */ mock.redirect)
@@ -118,19 +122,31 @@ export class ModuleMocker {
 
   public mockObject(
     object: Record<string | symbol, any>,
+    mockExports: Record<string | symbol, any> | undefined,
     moduleType: 'automock' | 'autospy' = 'automock',
   ): Record<string | symbol, any> {
-    return mockObject({
-      globalConstructors: {
-        Object,
-        Function,
-        Array,
-        Map,
-        RegExp,
+    const result = mockObject(
+      {
+        globalConstructors: {
+          Object,
+          Function,
+          Array,
+          Map,
+          RegExp,
+        },
+        createMockInstance: this.createMockInstance,
+        type: moduleType,
       },
-      createMockInstance: this.createMockInstance,
-      type: moduleType,
-    }, object)
+      object,
+      mockExports,
+    )
+    return result
+  }
+
+  public getMockContext(): ModuleMockContext {
+    return {
+      callstack: null,
+    }
   }
 
   public queueMock(rawId: string, importer: string, factoryOrOptions?: ModuleMockOptions | (() => any)): void {
@@ -153,7 +169,7 @@ export class ModuleMocker {
           : undefined
 
         const mockRedirect = typeof redirectUrl === 'string'
-          ? new URL(this.resolveMockPath(cleanVersion(redirectUrl)), location.href).toString()
+          ? new URL(this.resolveMockPath(cleanVersion(redirectUrl)), this.getBaseUrl()).toString()
           : null
 
         let module: MockedModule
@@ -211,6 +227,16 @@ export class ModuleMocker {
     return moduleFactory
   }
 
+  public getMockedModuleById(id: string): MockedModule | undefined {
+    return this.registry.getById(id)
+  }
+
+  public reset(): void {
+    this.registry.clear()
+    this.mockedIds.clear()
+    this.queue.clear()
+  }
+
   private resolveMockPath(path: string) {
     const config = this.config
     const fsRoot = join('/@fs/', config.root)
@@ -253,7 +279,7 @@ export interface ModuleMockerRPC {
   resolveMock: (
     id: string,
     importer: string,
-    options: { mock: 'spy' | 'factory' | 'auto' }
+    options: { mock: 'spy' | 'factory' | 'auto' },
   ) => Promise<ResolveMockResult>
 }
 

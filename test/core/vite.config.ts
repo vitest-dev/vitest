@@ -5,6 +5,8 @@ import { defaultExclude, defineConfig } from 'vitest/config'
 import { rolldownVersion } from 'vitest/node'
 
 export default defineConfig({
+  // tests should not fail when base is set
+  base: '/some-url/',
   plugins: [
     {
       name: 'example',
@@ -89,13 +91,14 @@ export default defineConfig({
           /packages\/web-worker/,
           /\.wasm$/,
           /\/wasm-bindgen-no-cyclic\/index_bg.js/,
+          /dep-esm-non-existing/,
         ],
         inline: ['inline-lib'],
       },
     },
     includeTaskLocation: true,
     reporters: process.env.GITHUB_ACTIONS
-      ? ['default', 'github-actions']
+      ? ['default', ['github-actions', { displayAnnotations: false }]]
       : [['default', { summary: true }], 'hanging-process'],
     testNamePattern: '^((?!does not include test that).)*$',
     coverage: {
@@ -111,14 +114,7 @@ export default defineConfig({
         option: 'config-option',
       },
     },
-    poolOptions: {
-      threads: {
-        execArgv: ['--experimental-wasm-modules'],
-      },
-      forks: {
-        execArgv: ['--experimental-wasm-modules'],
-      },
-    },
+    execArgv: ['--experimental-wasm-modules'],
     env: {
       CUSTOM_ENV: 'foo',
     },
@@ -151,6 +147,12 @@ export default defineConfig({
         return false
       }
       if (log.includes('run [...filters]')) {
+        return false
+      }
+      if (log.includes('Cannot find module') && log.includes('/web-worker/some-invalid-path')) {
+        return false
+      }
+      if (log.includes('Cannot find module') && log.includes('/web-worker/workerInvalid-path.ts')) {
         return false
       }
       if (log.startsWith(`[vitest]`) && log.includes(`did not use 'function' or 'class' in its implementation`)) {

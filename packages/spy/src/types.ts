@@ -47,7 +47,7 @@ export type MockParameters<T extends Procedure | Constructable> = T extends Cons
     ? Parameters<T> : never
 
 export type MockReturnType<T extends Procedure | Constructable> = T extends Constructable
-  ? void
+  ? InstanceType<T>
   : T extends Procedure
     ? ReturnType<T> : never
 
@@ -76,7 +76,7 @@ export interface MockContext<T extends Procedure | Constructable = Procedure> {
    * This is an array containing all instances that were instantiated when mock was called with a `new` keyword. Note that this is an actual context (`this`) of the function, not a return value.
    * @see https://vitest.dev/api/mock#mock-instances
    */
-  instances: MockReturnType<T>[]
+  instances: MockProcedureContext<T>[]
   /**
    * An array of `this` values that were used during each call to the mock function.
    * @see https://vitest.dev/api/mock#mock-contexts
@@ -284,7 +284,8 @@ export interface MockInstance<T extends Procedure | Constructable = Procedure> e
    *
    * myMockFn() // 'original'
    */
-  withImplementation<T2>(fn: NormalizedProcedure<T>, cb: () => T2): T2 extends Promise<unknown> ? Promise<this> : this
+  withImplementation(fn: NormalizedProcedure<T>, cb: () => Promise<unknown>): Promise<this>
+  withImplementation(fn: NormalizedProcedure<T>, cb: () => unknown): this
 
   /**
    * Use this if you need to return the `this` context from the method without invoking the actual implementation.
@@ -356,42 +357,98 @@ export interface MockInstance<T extends Procedure | Constructable = Procedure> e
    * await asyncMock() // throws Error<'Async error'>
    */
   mockRejectedValueOnce(error: unknown): this
-}
-/* eslint-enable ts/method-signature-style */
-
-export interface Mock<T extends Procedure | Constructable = Procedure> extends MockInstance<T> {
-  new (...args: MockParameters<T>): T extends Constructable ? InstanceType<T> : MockReturnType<T>
-  (...args: MockParameters<T>): MockReturnType<T>
   /** @internal */
   _isMockFunction: true
 }
+/* eslint-enable ts/method-signature-style */
+
+export type Mock<T extends Procedure | Constructable = Procedure> = MockInstance<T> & (
+  T extends Constructable
+    ? (
+        T extends Procedure
+          // supports both `new Class()` and `Class()`
+          ? {
+              new (...args: ConstructorParameters<T>): InstanceType<T>
+              (...args: Parameters<T>): ReturnType<T>
+            }
+          // supports only `new Class()`
+          : {
+              new (...args: ConstructorParameters<T>): InstanceType<T>
+            }
+      )
+    // any function can be called with the new keyword
+    : {
+        new (...args: MockParameters<T>): MockReturnType<T>
+        (...args: MockParameters<T>): MockReturnType<T>
+      }
+) & { [P in keyof T]: T[P] }
 
 type PartialMaybePromise<T> = T extends Promise<Awaited<T>>
   ? Promise<Partial<Awaited<T>>>
   : Partial<T>
 
-export interface PartialMock<T extends Procedure = Procedure>
-  extends MockInstance<
-    (...args: Parameters<T>) => PartialMaybePromise<ReturnType<T>>
-  > {
-  new (...args: Parameters<T>): ReturnType<T>
-  (...args: Parameters<T>): ReturnType<T>
-}
+type PartialResultFunction<T> = T extends Constructable
+  ? ({
+    new (...args: ConstructorParameters<T>): InstanceType<T>
+  })
+  | ({
+    (this: InstanceType<T>, ...args: ConstructorParameters<T>): void
+  })
+  : T extends Procedure
+    ? (...args: Parameters<T>) => PartialMaybePromise<ReturnType<T>>
+    : T
 
-export type MaybeMockedConstructor<T> = T extends new (
-  ...args: Array<any>
-) => infer R
-  ? Mock<(...args: ConstructorParameters<T>) => R>
+export type PartialMock<T extends Procedure | Constructable = Procedure> = Mock<
+  PartialResultFunction<
+    T extends Mock
+      ? NonNullable<ReturnType<T['getMockImplementation']>>
+      : T
+  >
+>
+
+type DeepPartial<T> = T extends Procedure
+  ? T
+  : T extends Array<infer U>
+    ? Array<DeepPartial<U>>
+    : T extends object
+      ? { [K in keyof T]?: DeepPartial<T[K]> }
+      : T
+
+type DeepPartialMaybePromise<T> = T extends Promise<Awaited<T>>
+  ? Promise<DeepPartial<Awaited<T>>>
+  : DeepPartial<T>
+
+type DeepPartialResultFunction<T> = T extends Constructable
+  ? ({
+    new (...args: ConstructorParameters<T>): InstanceType<T>
+  })
+  | ({
+    (this: InstanceType<T>, ...args: ConstructorParameters<T>): void
+  })
+  : T extends Procedure
+    ? (...args: Parameters<T>) => DeepPartialMaybePromise<ReturnType<T>>
+    : T
+
+type DeepPartialMock<T extends Procedure | Constructable = Procedure> = Mock<
+  DeepPartialResultFunction<
+    T extends Mock
+      ? NonNullable<ReturnType<T['getMockImplementation']>>
+      : T
+  >
+>
+
+export type MaybeMockedConstructor<T> = T extends Constructable
+  ? Mock<T>
   : T
-export type MockedFunction<T extends Procedure> = Mock<T> & {
+export type MockedFunction<T extends Procedure | Constructable> = Mock<T> & {
   [K in keyof T]: T[K];
 }
-export type PartiallyMockedFunction<T extends Procedure> = PartialMock<T> & {
+export type PartiallyMockedFunction<T extends Procedure | Constructable> = PartialMock<T> & {
   [K in keyof T]: T[K];
 }
-export type MockedFunctionDeep<T extends Procedure> = Mock<T>
+export type MockedFunctionDeep<T extends Procedure | Constructable> = Mock<T>
   & MockedObjectDeep<T>
-export type PartiallyMockedFunctionDeep<T extends Procedure> = PartialMock<T>
+export type PartiallyMockedFunctionDeep<T extends Procedure | Constructable> = DeepPartialMock<T>
   & MockedObjectDeep<T>
 export type MockedObject<T> = MaybeMockedConstructor<T> & {
   [K in Methods<T>]: T[K] extends Procedure ? MockedFunction<T[K]> : T[K];
@@ -400,25 +457,25 @@ export type MockedObjectDeep<T> = MaybeMockedConstructor<T> & {
   [K in Methods<T>]: T[K] extends Procedure ? MockedFunctionDeep<T[K]> : T[K];
 } & { [K in Properties<T>]: MaybeMockedDeep<T[K]> }
 
-export type MaybeMockedDeep<T> = T extends Procedure
+export type MaybeMockedDeep<T> = T extends Procedure | Constructable
   ? MockedFunctionDeep<T>
   : T extends object
     ? MockedObjectDeep<T>
     : T
 
-export type MaybePartiallyMockedDeep<T> = T extends Procedure
+export type MaybePartiallyMockedDeep<T> = T extends Procedure | Constructable
   ? PartiallyMockedFunctionDeep<T>
   : T extends object
     ? MockedObjectDeep<T>
     : T
 
-export type MaybeMocked<T> = T extends Procedure
+export type MaybeMocked<T> = T extends Procedure | Constructable
   ? MockedFunction<T>
   : T extends object
     ? MockedObject<T>
     : T
 
-export type MaybePartiallyMocked<T> = T extends Procedure
+export type MaybePartiallyMocked<T> = T extends Procedure | Constructable
   ? PartiallyMockedFunction<T>
   : T extends object
     ? MockedObject<T>
@@ -428,9 +485,7 @@ export interface Constructable {
   new (...args: any[]): any
 }
 
-export type MockedClass<T extends Constructable> = MockInstance<
-  (...args: ConstructorParameters<T>) => InstanceType<T>
-> & {
+export type MockedClass<T extends Constructable> = MockInstance<T> & {
   prototype: T extends { prototype: any } ? Mocked<T['prototype']> : never
 } & T
 

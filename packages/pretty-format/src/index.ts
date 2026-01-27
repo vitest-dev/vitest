@@ -30,21 +30,7 @@ import Immutable from './plugins/Immutable'
 import ReactElement from './plugins/ReactElement'
 import ReactTestComponent from './plugins/ReactTestComponent'
 
-export type {
-  Colors,
-  CompareKeys,
-  Config,
-  NewPlugin,
-  OldPlugin,
-  Options,
-  OptionsReceived,
-  Plugin,
-  Plugins,
-  PrettyFormatOptions,
-  Printer,
-  Refs,
-  Theme,
-} from './types'
+export { createDOMElementFilter } from './plugins/DOMElementFilter'
 
 const toString = Object.prototype.toString
 const toISOString = Date.prototype.toISOString
@@ -444,6 +430,7 @@ export const DEFAULT_OPTIONS: Options = {
   plugins: [],
   printBasicPrototype: true,
   printFunctionName: true,
+  printShadowRoot: true,
   theme: DEFAULT_THEME,
 } satisfies Options
 
@@ -519,6 +506,7 @@ function getConfig(options?: OptionsReceived): Config {
     plugins: options?.plugins ?? DEFAULT_OPTIONS.plugins,
     printBasicPrototype: options?.printBasicPrototype ?? true,
     printFunctionName: getPrintFunctionName(options),
+    printShadowRoot: options?.printShadowRoot ?? true,
     spacingInner: options?.min ? ' ' : '\n',
     spacingOuter: options?.min ? '' : '\n',
   }
@@ -556,6 +544,22 @@ export function format(val: unknown, options?: OptionsReceived): string {
 
   return printComplexValue(val, getConfig(options), '', 0, [])
 }
+
+export type {
+  Colors,
+  CompareKeys,
+  Config,
+  NewPlugin,
+  OldPlugin,
+  Options,
+  OptionsReceived,
+  Plugin,
+  Plugins,
+  PrettyFormatOptions,
+  Printer,
+  Refs,
+  Theme,
+} from './types'
 
 export const plugins: {
   AsymmetricMatcher: NewPlugin

@@ -1,4 +1,4 @@
-import { playwright } from '@vitest/browser/providers/playwright';
+import { provider } from '../../settings'
 import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
@@ -7,8 +7,10 @@ export default defineConfig({
     watch: false,
     browser: {
       enabled: true,
-      provider: playwright(),
-      instances: [{ browser: "chromium" }],
+      provider,
+      instances: [
+        { browser: provider.name === 'webdriverio' ? "chrome" : "chromium" },
+      ],
       headless: true,
     },
   },

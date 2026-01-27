@@ -1,7 +1,6 @@
 import type { VitestRunner } from './types'
 import type { FixtureOptions, TestContext } from './types/tasks'
-import { createDefer, isObject } from '@vitest/utils'
-import { stripLiteral } from 'strip-literal'
+import { createDefer, filterOutComments, isObject } from '@vitest/utils/helpers'
 import { getFileContext } from './context'
 import { getTestFixture } from './map'
 
@@ -131,6 +130,34 @@ export async function callFixtureCleanup(context: object): Promise<void> {
     await cleanup()
   }
   cleanupFnArrayMap.delete(context)
+}
+
+/**
+ * Returns the current number of cleanup functions registered for the context.
+ * This can be used as a checkpoint to later clean up only fixtures added after this point.
+ */
+export function getFixtureCleanupCount(context: object): number {
+  return cleanupFnArrayMap.get(context)?.length ?? 0
+}
+
+/**
+ * Cleans up only fixtures that were added after the given checkpoint index.
+ * This is used by aroundEach to clean up fixtures created inside runTest()
+ * while preserving fixtures that were created for aroundEach itself.
+ */
+export async function callFixtureCleanupFrom(context: object, fromIndex: number): Promise<void> {
+  const cleanupFnArray = cleanupFnArrayMap.get(context)
+  if (!cleanupFnArray || cleanupFnArray.length <= fromIndex) {
+    return
+  }
+  // Get items added after the checkpoint
+  const toCleanup = cleanupFnArray.slice(fromIndex)
+  // Clean up in reverse order
+  for (const cleanup of toCleanup.reverse()) {
+    await cleanup()
+  }
+  // Remove cleaned up items from the array, keeping items before checkpoint
+  cleanupFnArray.length = fromIndex
 }
 
 export function withFixtures(runner: VitestRunner, fn: Function, testContext?: TestContext) {
@@ -271,7 +298,7 @@ function resolveFixtureValue(
 async function resolveFixtureFunction(
   fixtureFn: (
     context: unknown,
-    useFn: (arg: unknown) => Promise<void>
+    useFn: (arg: unknown) => Promise<void>,
   ) => Promise<void>,
   context: unknown,
   cleanupFnArray: (() => void | Promise<void>)[],
@@ -339,7 +366,7 @@ function resolveDeps(
 }
 
 function getUsedProps(fn: Function) {
-  let fnString = stripLiteral(fn.toString())
+  let fnString = filterOutComments(fn.toString())
   // match lowered async function and strip it off
   // example code on esbuild-try https://esbuild.github.io/try/#YgAwLjI0LjAALS1zdXBwb3J0ZWQ6YXN5bmMtYXdhaXQ9ZmFsc2UAZQBlbnRyeS50cwBjb25zdCBvID0gewogIGYxOiBhc3luYyAoKSA9PiB7fSwKICBmMjogYXN5bmMgKGEpID0+IHt9LAogIGYzOiBhc3luYyAoYSwgYikgPT4ge30sCiAgZjQ6IGFzeW5jIGZ1bmN0aW9uKGEpIHt9LAogIGY1OiBhc3luYyBmdW5jdGlvbiBmZihhKSB7fSwKICBhc3luYyBmNihhKSB7fSwKCiAgZzE6IGFzeW5jICgpID0+IHt9LAogIGcyOiBhc3luYyAoeyBhIH0pID0+IHt9LAogIGczOiBhc3luYyAoeyBhIH0sIGIpID0+IHt9LAogIGc0OiBhc3luYyBmdW5jdGlvbiAoeyBhIH0pIHt9LAogIGc1OiBhc3luYyBmdW5jdGlvbiBnZyh7IGEgfSkge30sCiAgYXN5bmMgZzYoeyBhIH0pIHt9LAoKICBoMTogYXN5bmMgKCkgPT4ge30sCiAgLy8gY29tbWVudCBiZXR3ZWVuCiAgaDI6IGFzeW5jIChhKSA9PiB7fSwKfQ
   //   __async(this, null, function*
@@ -366,7 +393,7 @@ function getUsedProps(fn: Function) {
     }
   }
 
-  if (!(first.startsWith('{') && first.endsWith('}'))) {
+  if (!(first[0] === '{' && first.endsWith('}'))) {
     throw new Error(
       `The first argument inside a fixture must use object destructuring pattern, e.g. ({ test } => {}). Instead, received "${first}".`,
     )

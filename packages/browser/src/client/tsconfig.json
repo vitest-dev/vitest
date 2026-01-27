@@ -12,8 +12,7 @@
   "include": [
     "./**/*.ts",
     "../types.ts",
-    "../../matchers.d.ts",
-    "../../../vitest/src/integrations/chai/chai-subset.d.ts"
+    "../../matchers.d.ts"
   ],
   "exclude": [
     "./vite.config.ts"

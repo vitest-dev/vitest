@@ -2,9 +2,9 @@ import type { DiffOptions } from '@vitest/expect'
 import type { SnapshotSerializer } from '@vitest/snapshot'
 import type { SerializedDiffOptions } from '@vitest/utils/diff'
 import type { SerializedConfig } from './config'
-import type { VitestModuleRunner } from './moduleRunner/moduleRunner'
+import type { PublicModuleRunner } from './moduleRunner/types'
 import { addSerializer } from '@vitest/snapshot'
-import { setSafeTimers } from '@vitest/utils'
+import { setSafeTimers } from '@vitest/utils/timers'
 import { getWorkerState } from './utils'
 
 let globalSetup = false
@@ -43,7 +43,7 @@ function setupEnv(env: Record<string, any>) {
 
 export async function loadDiffConfig(
   config: SerializedConfig,
-  moduleRunner: VitestModuleRunner,
+  moduleRunner: PublicModuleRunner,
 ): Promise<SerializedDiffOptions | undefined> {
   if (typeof config.diff === 'object') {
     return config.diff
@@ -70,7 +70,7 @@ export async function loadDiffConfig(
 
 export async function loadSnapshotSerializers(
   config: SerializedConfig,
-  moduleRunner: VitestModuleRunner,
+  moduleRunner: PublicModuleRunner,
 ): Promise<void> {
   const files = config.snapshotSerializers
 

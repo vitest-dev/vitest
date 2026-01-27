@@ -1,9 +1,10 @@
-import type { Awaitable } from '@vitest/utils'
+import type { Awaitable, TestError } from '@vitest/utils'
 import type { DiffOptions } from '@vitest/utils/diff'
 import type { FileSpecification, VitestRunner } from './types/runner'
 import type {
+  AroundAllListener,
+  AroundEachListener,
   File,
-  HookListener,
   SequenceHooks,
   Suite,
   SuiteHooks,
@@ -17,13 +18,14 @@ import type {
   TestContext,
   WriteableTestContext,
 } from './types/tasks'
-import { getSafeTimers, shuffle } from '@vitest/utils'
-import { processError } from '@vitest/utils/error'
+import { processError } from '@vitest/utils/error' // TODO: load dynamically
+import { shuffle } from '@vitest/utils/helpers'
+import { getSafeTimers } from '@vitest/utils/timers'
 import { collectTests } from './collect'
 import { abortContextSignal, getFileContext } from './context'
-import { PendingError, TestRunAbortError } from './errors'
-import { callFixtureCleanup } from './fixture'
-import { getBeforeHookCleanupCallback } from './hooks'
+import { AroundHookMultipleCallsError, AroundHookSetupError, AroundHookTeardownError, PendingError, TestRunAbortError } from './errors'
+import { callFixtureCleanup, callFixtureCleanupFrom, getFixtureCleanupCount } from './fixture'
+import { getAroundHookStackTrace, getAroundHookTimeout, getBeforeHookCleanupCallback } from './hooks'
 import { getFn, getHooks } from './map'
 import { addRunningTest, getRunningTests, setCurrentTest } from './test-state'
 import { limitConcurrency } from './utils/limit-concurrency'
@@ -33,6 +35,42 @@ import { hasFailed, hasTests } from './utils/tasks'
 const now = globalThis.performance ? globalThis.performance.now.bind(globalThis.performance) : Date.now
 const unixNow = Date.now
 const { clearTimeout, setTimeout } = getSafeTimers()
+
+/**
+ * Normalizes retry configuration to extract individual values.
+ * Handles both number and object forms.
+ */
+function getRetryCount(retry: number | { count?: number } | undefined): number {
+  if (retry === undefined) {
+    return 0
+  }
+  if (typeof retry === 'number') {
+    return retry
+  }
+  return retry.count ?? 0
+}
+
+function getRetryDelay(retry: number | { delay?: number } | undefined): number {
+  if (retry === undefined) {
+    return 0
+  }
+  if (typeof retry === 'number') {
+    return 0
+  }
+  return retry.delay ?? 0
+}
+
+function getRetryCondition(
+  retry: number | { condition?: RegExp | ((error: TestError) => boolean) } | undefined,
+): RegExp | ((error: TestError) => boolean) | undefined {
+  if (retry === undefined) {
+    return undefined
+  }
+  if (typeof retry === 'number') {
+    return undefined
+  }
+  return retry.condition
+}
 
 function updateSuiteHookState(
   task: Task,
@@ -129,7 +167,7 @@ export async function callSuiteHook<T extends keyof SuiteHooks>(
   currentTask: Task,
   name: T,
   runner: VitestRunner,
-  args: SuiteHooks[T][0] extends HookListener<infer A, any> ? A : never,
+  args: SuiteHooks[T][0] extends (...args: infer A) => Awaitable<any> ? A : never,
 ): Promise<unknown[]> {
   const sequence = runner.config.sequence.hooks
 
@@ -153,7 +191,7 @@ export async function callSuiteHook<T extends keyof SuiteHooks>(
     return getBeforeHookCleanupCallback(
       hook,
       await hook(...args),
-      name === 'beforeEach' ? args[0] : undefined,
+      name === 'beforeEach' ? args[0] as TestContext : undefined,
     )
   }
 
@@ -179,6 +217,224 @@ export async function callSuiteHook<T extends keyof SuiteHooks>(
   }
 
   return callbacks
+}
+
+function getAroundEachHooks(suite: Suite): AroundEachListener[] {
+  const hooks: AroundEachListener[] = []
+  const parentSuite: Suite | null = 'filepath' in suite ? null : suite.suite || suite.file
+  if (parentSuite) {
+    hooks.push(...getAroundEachHooks(parentSuite))
+  }
+  hooks.push(...getHooks(suite).aroundEach)
+  return hooks
+}
+
+function getAroundAllHooks(suite: Suite): AroundAllListener[] {
+  return getHooks(suite).aroundAll
+}
+
+interface AroundHooksOptions<THook extends Function> {
+  hooks: THook[]
+  hookName: 'aroundEach' | 'aroundAll'
+  callbackName: 'runTest()' | 'runSuite()'
+  onTimeout?: (error: Error) => void
+  invokeHook: (hook: THook, use: () => Promise<void>) => Awaitable<unknown>
+}
+
+function makeAroundHookTimeoutError(
+  hookName: string,
+  phase: 'setup' | 'teardown',
+  timeout: number,
+  stackTraceError?: Error,
+) {
+  const message = `The ${phase} phase of "${hookName}" hook timed out after ${timeout}ms.`
+  const ErrorClass = phase === 'setup' ? AroundHookSetupError : AroundHookTeardownError
+  const error = new ErrorClass(message)
+  if (stackTraceError?.stack) {
+    error.stack = stackTraceError.stack.replace(stackTraceError.message, error.message)
+  }
+  return error
+}
+
+async function callAroundHooks<THook extends Function>(
+  runInner: () => Promise<void>,
+  options: AroundHooksOptions<THook>,
+): Promise<void> {
+  const { hooks, hookName, callbackName, onTimeout, invokeHook } = options
+
+  if (!hooks.length) {
+    await runInner()
+    return
+  }
+
+  const createTimeoutPromise = (
+    timeout: number,
+    phase: 'setup' | 'teardown',
+    stackTraceError: Error | undefined,
+  ): { promise: Promise<never>; clear: () => void } => {
+    let timer: ReturnType<typeof setTimeout> | undefined
+
+    const promise = new Promise<never>((_, reject) => {
+      if (timeout > 0 && timeout !== Number.POSITIVE_INFINITY) {
+        timer = setTimeout(() => {
+          const error = makeAroundHookTimeoutError(hookName, phase, timeout, stackTraceError)
+          onTimeout?.(error)
+          reject(error)
+        }, timeout)
+        timer.unref?.()
+      }
+    })
+
+    const clear = () => {
+      if (timer) {
+        clearTimeout(timer)
+        timer = undefined
+      }
+    }
+
+    return { promise, clear }
+  }
+
+  const runNextHook = async (index: number): Promise<void> => {
+    if (index >= hooks.length) {
+      return runInner()
+    }
+
+    const hook = hooks[index]
+    const timeout = getAroundHookTimeout(hook)
+    const stackTraceError = getAroundHookStackTrace(hook)
+
+    let useCalled = false
+    let setupTimeout: { promise: Promise<never>; clear: () => void }
+    let teardownTimeout: { promise: Promise<never>; clear: () => void } | undefined
+
+    // Promise that resolves when use() is called (setup phase complete)
+    let resolveUseCalled!: () => void
+    const useCalledPromise = new Promise<void>((resolve) => {
+      resolveUseCalled = resolve
+    })
+
+    // Promise that resolves when use() returns (inner hooks complete, teardown phase starts)
+    let resolveUseReturned!: () => void
+    const useReturnedPromise = new Promise<void>((resolve) => {
+      resolveUseReturned = resolve
+    })
+
+    // Promise that resolves when hook completes
+    let resolveHookComplete!: () => void
+    let rejectHookComplete!: (error: Error) => void
+    const hookCompletePromise = new Promise<void>((resolve, reject) => {
+      resolveHookComplete = resolve
+      rejectHookComplete = reject
+    })
+
+    const use = async () => {
+      if (useCalled) {
+        throw new AroundHookMultipleCallsError(
+          `The \`${callbackName}\` callback was called multiple times in the \`${hookName}\` hook. `
+          + `The callback can only be called once per hook.`,
+        )
+      }
+      useCalled = true
+      resolveUseCalled()
+
+      // Setup phase completed - clear setup timer
+      setupTimeout.clear()
+
+      // Run inner hooks - don't time this against our teardown timeout
+      await runNextHook(index + 1)
+
+      // Start teardown timer after inner hooks complete - only times this hook's teardown code
+      teardownTimeout = createTimeoutPromise(timeout, 'teardown', stackTraceError)
+
+      // Signal that use() is returning (teardown phase starting)
+      resolveUseReturned()
+    }
+
+    // Start setup timeout
+    setupTimeout = createTimeoutPromise(timeout, 'setup', stackTraceError)
+
+    // Run the hook in the background
+    ;(async () => {
+      try {
+        await invokeHook(hook, use)
+        if (!useCalled) {
+          throw new AroundHookSetupError(
+            `The \`${callbackName}\` callback was not called in the \`${hookName}\` hook. `
+            + `Make sure to call \`${callbackName}\` to run the ${hookName === 'aroundEach' ? 'test' : 'suite'}.`,
+          )
+        }
+        resolveHookComplete()
+      }
+      catch (error) {
+        rejectHookComplete(error as Error)
+      }
+    })()
+
+    // Wait for either: use() to be called OR hook to complete (error) OR setup timeout
+    try {
+      await Promise.race([
+        useCalledPromise,
+        hookCompletePromise,
+        setupTimeout.promise,
+      ])
+    }
+    finally {
+      setupTimeout.clear()
+    }
+
+    // Wait for use() to return (inner hooks complete) OR hook to complete (error during inner hooks)
+    await Promise.race([
+      useReturnedPromise,
+      hookCompletePromise,
+    ])
+
+    // Now teardownTimeout is guaranteed to be set
+    // Wait for hook to complete (teardown) OR teardown timeout
+    try {
+      await Promise.race([
+        hookCompletePromise,
+        teardownTimeout!.promise,
+      ])
+    }
+    finally {
+      teardownTimeout!.clear()
+    }
+  }
+
+  await runNextHook(0)
+}
+
+async function callAroundAllHooks(
+  suite: Suite,
+  runSuiteInner: () => Promise<void>,
+): Promise<void> {
+  await callAroundHooks(runSuiteInner, {
+    hooks: getAroundAllHooks(suite),
+    hookName: 'aroundAll',
+    callbackName: 'runSuite()',
+    invokeHook: (hook, use) => hook(use, suite),
+  })
+}
+
+async function callAroundEachHooks(
+  suite: Suite,
+  test: Test,
+  runTest: (fixtureCheckpoint: number) => Promise<void>,
+): Promise<void> {
+  await callAroundHooks(
+    // Take checkpoint right before runTest - at this point all aroundEach fixtures
+    // have been resolved, so we can correctly identify which fixtures belong to
+    // aroundEach (before checkpoint) vs inside runTest (after checkpoint)
+    () => runTest(getFixtureCleanupCount(test.context)),
+    {
+      hooks: getAroundEachHooks(suite),
+      hookName: 'aroundEach',
+      callbackName: 'runTest()',
+      onTimeout: error => abortContextSignal(test.context, error),
+      invokeHook: (hook, use) => hook(use, test.context, suite),
+    },
+  )
 }
 
 const packs = new Map<string, [TaskResult | undefined, TaskMeta]>()
@@ -266,6 +522,32 @@ async function callCleanupHooks(runner: VitestRunner, cleanups: unknown[]) {
   }
 }
 
+/**
+ * Determines if a test should be retried based on its retryCondition configuration
+ */
+function passesRetryCondition(test: Test, errors: TestError[] | undefined): boolean {
+  const condition = getRetryCondition(test.retry)
+
+  if (!errors || errors.length === 0) {
+    return false
+  }
+
+  if (!condition) {
+    return true
+  }
+
+  const error = errors[errors.length - 1]
+
+  if (condition instanceof RegExp) {
+    return condition.test(error.message || '')
+  }
+  else if (typeof condition === 'function') {
+    return condition(error)
+  }
+
+  return false
+}
+
 export async function runTest(test: Test, runner: VitestRunner): Promise<void> {
   await runner.onBeforeRunTask?.(test)
 
@@ -296,91 +578,120 @@ export async function runTest(test: Test, runner: VitestRunner): Promise<void> {
   setCurrentTest(test)
 
   const suite = test.suite || test.file
+  const $ = runner.trace!
 
   const repeats = test.repeats ?? 0
   for (let repeatCount = 0; repeatCount <= repeats; repeatCount++) {
-    const retry = test.retry ?? 0
+    const retry = getRetryCount(test.retry)
     for (let retryCount = 0; retryCount <= retry; retryCount++) {
       let beforeEachCleanups: unknown[] = []
-      try {
-        await runner.onBeforeTryTask?.(test, {
+      // fixtureCheckpoint is passed by callAroundEachHooks - it represents the count
+      // of fixture cleanup functions AFTER all aroundEach fixtures have been resolved
+      // but BEFORE the test runs. This allows us to clean up only fixtures created
+      // inside runTest while preserving aroundEach fixtures for teardown.
+      await callAroundEachHooks(suite, test, async (fixtureCheckpoint) => {
+        try {
+          await runner.onBeforeTryTask?.(test, {
+            retry: retryCount,
+            repeats: repeatCount,
+          })
+
+          test.result!.repeatCount = repeatCount
+
+          beforeEachCleanups = await $('test.beforeEach', () => callSuiteHook(
+            suite,
+            test,
+            'beforeEach',
+            runner,
+            [test.context, suite],
+          ))
+
+          if (runner.runTask) {
+            await $('test.callback', () => runner.runTask!(test))
+          }
+          else {
+            const fn = getFn(test)
+            if (!fn) {
+              throw new Error(
+                'Test function is not found. Did you add it using `setFn`?',
+              )
+            }
+            await $('test.callback', () => fn())
+          }
+
+          await runner.onAfterTryTask?.(test, {
+            retry: retryCount,
+            repeats: repeatCount,
+          })
+
+          if (test.result!.state !== 'fail') {
+            if (!test.repeats) {
+              test.result!.state = 'pass'
+            }
+            else if (test.repeats && retry === retryCount) {
+              test.result!.state = 'pass'
+            }
+          }
+        }
+        catch (e) {
+          failTask(test.result!, e, runner.config.diffOptions)
+        }
+
+        try {
+          await runner.onTaskFinished?.(test)
+        }
+        catch (e) {
+          failTask(test.result!, e, runner.config.diffOptions)
+        }
+
+        try {
+          await $('test.afterEach', () => callSuiteHook(suite, test, 'afterEach', runner, [
+            test.context,
+            suite,
+          ]))
+          if (beforeEachCleanups.length) {
+            await $('test.cleanup', () => callCleanupHooks(runner, beforeEachCleanups))
+          }
+          // Only clean up fixtures created inside runTest (after the checkpoint)
+          // Fixtures created for aroundEach will be cleaned up after aroundEach teardown
+          await callFixtureCleanupFrom(test.context, fixtureCheckpoint)
+        }
+        catch (e) {
+          failTask(test.result!, e, runner.config.diffOptions)
+        }
+
+        if (test.onFinished?.length) {
+          await $('test.onFinished', () => callTestHooks(runner, test, test.onFinished!, 'stack'))
+        }
+
+        if (test.result!.state === 'fail' && test.onFailed?.length) {
+          await $('test.onFailed', () => callTestHooks(
+            runner,
+            test,
+            test.onFailed!,
+            runner.config.sequence.hooks,
+          ))
+        }
+
+        test.onFailed = undefined
+        test.onFinished = undefined
+
+        await runner.onAfterRetryTask?.(test, {
           retry: retryCount,
           repeats: repeatCount,
         })
+      }).catch((error) => {
+        failTask(test.result!, error, runner.config.diffOptions)
+      })
 
-        test.result.repeatCount = repeatCount
-
-        beforeEachCleanups = await callSuiteHook(
-          suite,
-          test,
-          'beforeEach',
-          runner,
-          [test.context, suite],
-        )
-
-        if (runner.runTask) {
-          await runner.runTask(test)
-        }
-        else {
-          const fn = getFn(test)
-          if (!fn) {
-            throw new Error(
-              'Test function is not found. Did you add it using `setFn`?',
-            )
-          }
-          await fn()
-        }
-
-        await runner.onAfterTryTask?.(test, {
-          retry: retryCount,
-          repeats: repeatCount,
-        })
-
-        if (test.result.state !== 'fail') {
-          if (!test.repeats) {
-            test.result.state = 'pass'
-          }
-          else if (test.repeats && retry === retryCount) {
-            test.result.state = 'pass'
-          }
-        }
-      }
-      catch (e) {
-        failTask(test.result, e, runner.config.diffOptions)
-      }
-
+      // Clean up fixtures that were created for aroundEach (before the checkpoint)
+      // This runs after aroundEach teardown has completed
       try {
-        await runner.onTaskFinished?.(test)
-      }
-      catch (e) {
-        failTask(test.result, e, runner.config.diffOptions)
-      }
-
-      try {
-        await callSuiteHook(suite, test, 'afterEach', runner, [
-          test.context,
-          suite,
-        ])
-        await callCleanupHooks(runner, beforeEachCleanups)
         await callFixtureCleanup(test.context)
       }
       catch (e) {
-        failTask(test.result, e, runner.config.diffOptions)
+        failTask(test.result!, e, runner.config.diffOptions)
       }
-
-      await callTestHooks(runner, test, test.onFinished || [], 'stack')
-
-      if (test.result.state === 'fail') {
-        await callTestHooks(
-          runner,
-          test,
-          test.onFailed || [],
-          runner.config.sequence.hooks,
-        )
-      }
-
-      test.onFailed = undefined
-      test.onFinished = undefined
 
       // skipped with new PendingError
       if (test.result?.pending || test.result?.state === 'skip') {
@@ -402,9 +713,19 @@ export async function runTest(test: Test, runner: VitestRunner): Promise<void> {
       }
 
       if (retryCount < retry) {
-        // reset state when retry test
+        const shouldRetry = passesRetryCondition(test, test.result.errors)
+
+        if (!shouldRetry) {
+          break
+        }
+
         test.result.state = 'run'
         test.result.retryCount = (test.result.retryCount ?? 0) + 1
+
+        const delay = getRetryDelay(test.retry)
+        if (delay > 0) {
+          await new Promise(resolve => setTimeout(resolve, delay))
+        }
       }
 
       // update retry info
@@ -481,6 +802,7 @@ export async function runSuite(suite: Suite, runner: VitestRunner): Promise<void
     state: mode === 'skip' || mode === 'todo' ? mode : 'run',
     startTime: unixNow(),
   }
+  const $ = runner.trace!
 
   updateTask('suite-prepare', suite, runner)
 
@@ -497,63 +819,81 @@ export async function runSuite(suite: Suite, runner: VitestRunner): Promise<void
     updateTask('suite-finished', suite, runner)
   }
   else {
-    try {
-      try {
-        beforeAllCleanups = await callSuiteHook(
-          suite,
-          suite,
-          'beforeAll',
-          runner,
-          [suite],
-        )
-      }
-      catch (e) {
-        markTasksAsSkipped(suite, runner)
-        throw e
-      }
+    let suiteRan = false
 
-      if (runner.runSuite) {
-        await runner.runSuite(suite)
-      }
-      else {
-        for (let tasksGroup of partitionSuiteChildren(suite)) {
-          if (tasksGroup[0].concurrent === true) {
-            await Promise.all(tasksGroup.map(c => runSuiteChild(c, runner)))
+    try {
+      await callAroundAllHooks(suite, async () => {
+        suiteRan = true
+        try {
+          // beforeAll
+          try {
+            beforeAllCleanups = await $('suite.beforeAll', () => callSuiteHook(
+              suite,
+              suite,
+              'beforeAll',
+              runner,
+              [suite],
+            ))
+          }
+          catch (e) {
+            failTask(suite.result!, e, runner.config.diffOptions)
+            markTasksAsSkipped(suite, runner)
+            return
+          }
+
+          // run suite children
+          if (runner.runSuite) {
+            await runner.runSuite(suite)
           }
           else {
-            const { sequence } = runner.config
-            if (suite.shuffle) {
-              // run describe block independently from tests
-              const suites = tasksGroup.filter(
-                group => group.type === 'suite',
-              )
-              const tests = tasksGroup.filter(group => group.type === 'test')
-              const groups = shuffle<Task[]>([suites, tests], sequence.seed)
-              tasksGroup = groups.flatMap(group =>
-                shuffle(group, sequence.seed),
-              )
-            }
-            for (const c of tasksGroup) {
-              await runSuiteChild(c, runner)
+            for (let tasksGroup of partitionSuiteChildren(suite)) {
+              if (tasksGroup[0].concurrent === true) {
+                await Promise.all(tasksGroup.map(c => runSuiteChild(c, runner)))
+              }
+              else {
+                const { sequence } = runner.config
+                if (suite.shuffle) {
+                  // run describe block independently from tests
+                  const suites = tasksGroup.filter(
+                    group => group.type === 'suite',
+                  )
+                  const tests = tasksGroup.filter(group => group.type === 'test')
+                  const groups = shuffle<Task[]>([suites, tests], sequence.seed)
+                  tasksGroup = groups.flatMap(group =>
+                    shuffle(group, sequence.seed),
+                  )
+                }
+                for (const c of tasksGroup) {
+                  await runSuiteChild(c, runner)
+                }
+              }
             }
           }
         }
-      }
+        finally {
+          // afterAll runs even if beforeAll or suite children fail
+          try {
+            await $('suite.afterAll', () => callSuiteHook(suite, suite, 'afterAll', runner, [suite]))
+            if (beforeAllCleanups.length) {
+              await $('suite.cleanup', () => callCleanupHooks(runner, beforeAllCleanups))
+            }
+            if (suite.file === suite) {
+              const context = getFileContext(suite as File)
+              await callFixtureCleanup(context)
+            }
+          }
+          catch (e) {
+            failTask(suite.result!, e, runner.config.diffOptions)
+          }
+        }
+      })
     }
     catch (e) {
-      failTask(suite.result, e, runner.config.diffOptions)
-    }
-
-    try {
-      await callSuiteHook(suite, suite, 'afterAll', runner, [suite])
-      await callCleanupHooks(runner, beforeAllCleanups)
-      if (suite.file === suite) {
-        const context = getFileContext(suite as File)
-        await callFixtureCleanup(context)
+      // mark tasks as skipped if aroundAll failed before the suite callback was executed
+      if (!suiteRan) {
+        markTasksAsSkipped(suite, runner)
       }
-    }
-    catch (e) {
-      failTask(suite.result, e, runner.config.diffOptions)
+      failTask(suite.result!, e, runner.config.diffOptions)
     }
 
     if (suite.mode === 'run' || suite.mode === 'queued') {
@@ -585,11 +925,35 @@ export async function runSuite(suite: Suite, runner: VitestRunner): Promise<void
 let limitMaxConcurrency: ReturnType<typeof limitConcurrency>
 
 async function runSuiteChild(c: Task, runner: VitestRunner) {
+  const $ = runner.trace!
   if (c.type === 'test') {
-    return limitMaxConcurrency(() => runTest(c, runner))
+    return limitMaxConcurrency(() => $(
+      'run.test',
+      {
+        'vitest.test.id': c.id,
+        'vitest.test.name': c.name,
+        'vitest.test.mode': c.mode,
+        'vitest.test.timeout': c.timeout,
+        'code.file.path': c.file.filepath,
+        'code.line.number': c.location?.line,
+        'code.column.number': c.location?.column,
+      },
+      () => runTest(c, runner),
+    ))
   }
   else if (c.type === 'suite') {
-    return runSuite(c, runner)
+    return $(
+      'run.suite',
+      {
+        'vitest.suite.id': c.id,
+        'vitest.suite.name': c.name,
+        'vitest.suite.mode': c.mode,
+        'code.file.path': c.file.filepath,
+        'code.line.number': c.location?.line,
+        'code.column.number': c.location?.column,
+      },
+      () => runSuite(c, runner),
+    )
   }
 }
 
@@ -608,13 +972,28 @@ export async function runFiles(files: File[], runner: VitestRunner): Promise<voi
         }
       }
     }
-    await runSuite(file, runner)
+    await runner.trace!(
+      'run.spec',
+      {
+        'code.file.path': file.filepath,
+        'vitest.suite.tasks.length': file.tasks.length,
+      },
+      () => runSuite(file, runner),
+    )
   }
 }
 
 const workerRunners = new WeakSet<VitestRunner>()
 
+function defaultTrace<T>(_: string, attributes: any, cb?: () => T): T {
+  if (typeof attributes === 'function') {
+    return attributes() as T
+  }
+  return cb!()
+}
+
 export async function startTests(specs: string[] | FileSpecification[], runner: VitestRunner): Promise<File[]> {
+  runner.trace ??= defaultTrace
   const cancel = runner.cancel?.bind(runner)
   // Ideally, we need to have an event listener for this, but only have a runner here.
   // Adding another onCancel felt wrong (maybe it needs to be refactored)
@@ -660,6 +1039,8 @@ export async function startTests(specs: string[] | FileSpecification[], runner: 
 }
 
 async function publicCollect(specs: string[] | FileSpecification[], runner: VitestRunner): Promise<File[]> {
+  runner.trace ??= defaultTrace
+
   const paths = specs.map(f => typeof f === 'string' ? f : f.filepath)
 
   await runner.onBeforeCollect?.(paths)

@@ -1,8 +1,8 @@
 import type { UserConfig as ViteConfig, Plugin as VitePlugin } from 'vite'
 import type { TestProject } from '../project'
-import type { BrowserConfigOptions, ResolvedConfig, TestProjectInlineConfiguration } from '../types/config'
+import type { BrowserConfigOptions, ResolvedConfig, TestProjectInlineConfiguration, UserConfig } from '../types/config'
 import { existsSync, readFileSync } from 'node:fs'
-import { deepMerge } from '@vitest/utils'
+import { deepMerge } from '@vitest/utils/helpers'
 import { basename, dirname, relative, resolve } from 'pathe'
 import * as vite from 'vite'
 import { configDefaults } from '../../defaults'
@@ -93,15 +93,37 @@ export function WorkspaceVitestPlugin(
           }
         }
 
+        const vitestConfig: UserConfig = {
+          name: { label: name, color },
+        }
+
+        vitestConfig.experimental ??= {}
+
+        // always inherit the global `fsModuleCache` value even without `extends: true`
+        if (testConfig.experimental?.fsModuleCache == null && project.vitest.config.experimental?.fsModuleCache != null) {
+          vitestConfig.experimental.fsModuleCache = project.vitest.config.experimental.fsModuleCache
+        }
+        if (testConfig.experimental?.fsModuleCachePath == null && project.vitest.config.experimental?.fsModuleCachePath != null) {
+          vitestConfig.experimental.fsModuleCachePath = project.vitest.config.experimental.fsModuleCachePath
+        }
+        if (testConfig.experimental?.viteModuleRunner == null && project.vitest.config.experimental?.viteModuleRunner != null) {
+          vitestConfig.experimental.viteModuleRunner = project.vitest.config.experimental.viteModuleRunner
+        }
+        if (testConfig.experimental?.nodeLoader == null && project.vitest.config.experimental?.nodeLoader != null) {
+          vitestConfig.experimental.nodeLoader = project.vitest.config.experimental.nodeLoader
+        }
+        if (testConfig.experimental?.importDurations == null && project.vitest.config.experimental?.importDurations != null) {
+          vitestConfig.experimental.importDurations = project.vitest.config.experimental.importDurations
+        }
+
         return {
+          base: '/',
           environments: {
             __vitest__: {
               dev: {},
             },
           },
-          test: {
-            name: { label: name, color },
-          },
+          test: vitestConfig,
         }
       },
     },
@@ -112,6 +134,7 @@ export function WorkspaceVitestPlugin(
         this.meta.watchMode = false
       },
       config(viteConfig) {
+        const originalDefine = { ...viteConfig.define } // stash original defines for browser mode
         const defines: Record<string, any> = deleteDefineConfig(viteConfig)
 
         const testConfig = viteConfig.test || {}
@@ -184,6 +207,7 @@ export function WorkspaceVitestPlugin(
         }
 
         ;(config.test as ResolvedConfig).defines = defines
+        ;(config.test as ResolvedConfig).viteDefine = originalDefine
 
         const classNameStrategy
           = (typeof testConfig.css !== 'boolean'
@@ -221,7 +245,6 @@ export function WorkspaceVitestPlugin(
     },
     {
       name: 'vitest:project:server',
-      enforce: 'post',
       async configureServer(server) {
         const options = deepMerge({}, configDefaults, server.config.test || {})
         await project._configureServer(options, server)

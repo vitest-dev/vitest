@@ -1,4 +1,6 @@
-import { assertTypes, deepClone, deepMerge, isNegativeNaN, objDisplay, objectAttr, toArray } from '@vitest/utils'
+import { objDisplay } from '@vitest/utils/display'
+import { assertTypes, deepClone, deepMerge, isNegativeNaN, objectAttr, toArray } from '@vitest/utils/helpers'
+import { parseSingleFFOrSafariStack } from '@vitest/utils/source-map'
 import { EvaluatedModules } from 'vite/module-runner'
 import { beforeAll, describe, expect, test } from 'vitest'
 import { deepMergeSnapshot } from '../../../packages/snapshot/src/port/utils'
@@ -304,5 +306,90 @@ describe('isNegativeNaN', () => {
   ${Number.NEGATIVE_INFINITY} | ${false}
   `('isNegativeNaN($value) -> $expected', ({ value, expected }) => {
     expect(isNegativeNaN(value)).toBe(expected)
+  })
+})
+
+describe('parseSingleFFOrSafariStack', () => {
+  test('should parse valid Firefox/Safari stack traces with file protocol', () => {
+    const validStackLine = 'functionName@file:///path/to/file.js:123:45'
+
+    const result = parseSingleFFOrSafariStack(validStackLine)
+
+    expect(result).toEqual({
+      file: 'file:///path/to/file.js',
+      method: 'functionName',
+      line: 123,
+      column: 45,
+    })
+  })
+
+  test('should parse valid Firefox/Safari stack traces with https protocol', () => {
+    const validStackLine = 'functionName@https://example.com/path/to/file.js:123:45'
+
+    const result = parseSingleFFOrSafariStack(validStackLine)
+
+    expect(result).toEqual({
+      file: '/path/to/file.js',
+      method: 'functionName',
+      line: 123,
+      column: 45,
+    })
+  })
+
+  test('should handle stack lines without function names', () => {
+    const stackLineWithoutFunction = '@file:///path/to/file.js:123:45'
+
+    const result = parseSingleFFOrSafariStack(stackLineWithoutFunction)
+
+    expect(result).toEqual({
+      file: 'file:///path/to/file.js',
+      method: '',
+      line: 123,
+      column: 45,
+    })
+  })
+
+  test('should parse https URLs with @fs prefix without function name', () => {
+    const stackLine = '@https://@fs/path/to/file.js:123:4'
+
+    const result = parseSingleFFOrSafariStack(stackLine)
+
+    expect(result).toEqual({
+      file: '/path/to/file.js',
+      method: '',
+      line: 123,
+      column: 4,
+    })
+  })
+
+  test('should parse https URLs with @fs prefix with function name', () => {
+    const stackLine = 'functionName@https://@fs/path/to/file.js:123:4'
+
+    const result = parseSingleFFOrSafariStack(stackLine)
+
+    expect(result).toEqual({
+      file: '/path/to/file.js',
+      method: 'functionName',
+      line: 123,
+      column: 4,
+    })
+  })
+
+  test('should not hang when `Error.stackTraceLimit = 0` (#6039)', { timeout: 5_000 }, async () => {
+    // 40 takes ~30s on M2 CPU when fix is reverted
+    const size = 40
+
+    const obj = Object.fromEntries(
+      [...Array.from({ length: size }).keys()].map(i => [`prop${i}`, i]),
+    )
+
+    class PrettyError extends globalThis.Error {
+      constructor(e: unknown) {
+        Error.stackTraceLimit = 0
+        super(JSON.stringify(e))
+      }
+    }
+
+    parseSingleFFOrSafariStack(new PrettyError(obj).stack!)
   })
 })

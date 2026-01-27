@@ -2,6 +2,7 @@ import type { Reporter, TestRunEndReason } from '../types/reporter'
 import type { BaseOptions, BaseReporter } from './base'
 import type { BlobOptions } from './blob'
 import type { DefaultReporterOptions } from './default'
+import type { GithubActionsReporterOptions } from './github-actions'
 import type { HTMLOptions } from './html'
 import type { JsonOptions } from './json'
 import type { JUnitOptions } from './junit'
@@ -14,6 +15,7 @@ import { JsonReporter } from './json'
 import { JUnitReporter } from './junit'
 import { TapReporter } from './tap'
 import { TapFlatReporter } from './tap-flat'
+import { TreeReporter } from './tree'
 import { VerboseReporter } from './verbose'
 
 export {
@@ -25,6 +27,7 @@ export {
   JUnitReporter,
   TapFlatReporter,
   TapReporter,
+  TreeReporter,
   VerboseReporter,
 }
 export type { BaseReporter, Reporter, TestRunEndReason }
@@ -50,6 +53,7 @@ export const ReportersMap = {
   'tap': TapReporter as typeof TapReporter,
   'tap-flat': TapFlatReporter as typeof TapFlatReporter,
   'junit': JUnitReporter as typeof JUnitReporter,
+  'tree': TreeReporter as typeof TreeReporter,
   'hanging-process': HangingProcessReporter as typeof HangingProcessReporter,
   'github-actions': GithubActionsReporter as typeof GithubActionsReporter,
 }
@@ -60,6 +64,7 @@ export interface BuiltinReporterOptions {
   'default': DefaultReporterOptions
   'verbose': DefaultReporterOptions
   'dot': BaseOptions
+  'tree': BaseOptions
   'json': JsonOptions
   'blob': BlobOptions
   'tap': never
@@ -67,6 +72,7 @@ export interface BuiltinReporterOptions {
   'junit': JUnitOptions
   'hanging-process': never
   'html': HTMLOptions
+  'github-actions': GithubActionsReporterOptions
 }
 
 export type { ReportedHookContext } from './reported-tasks'

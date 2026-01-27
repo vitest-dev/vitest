@@ -89,6 +89,24 @@ describe('suite', () => {
 })
 ```
 
+## Filtering Tags
+
+If your test defines a [tag](/guide/test-tags), you can filter your tests with a `--tags-filter` option:
+
+```ts
+test('renders a form', { tags: ['frontend'] }, () => {
+  // ...
+})
+
+test('calls an external API', { tags: ['backend'] }, () => {
+  // ...
+})
+```
+
+```shell
+vitest --tags-filter=frontend
+```
+
 ## Selecting Suites and Tests to Run
 
 Use `.only` to only run certain suites or tests
@@ -112,6 +130,23 @@ describe('another suite', () => {
   it.only('test', () => {
     // Only this test (and others marked with only) are run
     assert.equal(Math.sqrt(4), 2)
+  })
+})
+```
+
+Run Vitest with a file filter and a line number:
+
+```shell
+vitest ./test/example.test.ts:5
+```
+
+```ts:line-numbers
+import { assert, describe, it } from 'vitest'
+
+describe('suite', () => {
+  // Run only this test
+  it('test', () => {
+    assert.equal(Math.sqrt(4), 3)
   })
 })
 ```

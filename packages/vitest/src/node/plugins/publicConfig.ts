@@ -3,8 +3,8 @@ import type {
   UserConfig as ViteUserConfig,
 } from 'vite'
 import type { ResolvedConfig, UserConfig } from '../types/config'
-import { deepClone, slash } from '@vitest/utils'
-import { findUp } from 'find-up'
+import { deepClone, slash } from '@vitest/utils/helpers'
+import * as find from 'empathic/find'
 import { resolve } from 'pathe'
 import { mergeConfig, resolveConfig as resolveViteConfig } from 'vite'
 import { configFiles } from '../../constants'
@@ -24,7 +24,7 @@ export async function resolveConfig(
       ? false
       : options.config
         ? resolve(root, options.config)
-        : await findUp(configFiles, { cwd: root } as any)
+        : find.any(configFiles, { cwd: root })
   options.config = configPath
 
   const vitest = new Vitest('test', deepClone(options))

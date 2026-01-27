@@ -1,3 +1,4 @@
+import type { Test } from '@vitest/runner'
 import type {
   ChaiPlugin,
   ExpectStatic,
@@ -14,9 +15,7 @@ import {
   getMatcherUtils,
   stringify,
 } from './jest-matcher-utils'
-
 import { equals, iterableEquality, subsetEquality } from './jest-utils'
-
 import { getState } from './state'
 import { wrapAssertion } from './utils'
 
@@ -27,6 +26,7 @@ function getMatcherState(
   const obj = assertion._obj
   const isNot = util.flag(assertion, 'negate') as boolean
   const promise = util.flag(assertion, 'promise') || ''
+  const customMessage = util.flag(assertion, 'message') as string | undefined
   const jestUtils = {
     ...getMatcherUtils(),
     diff,
@@ -34,9 +34,17 @@ function getMatcherState(
     iterableEquality,
     subsetEquality,
   }
+  let task: Test | undefined = util.flag(assertion, 'vitest-test')
+  const currentTestName = task?.fullTestName ?? ''
+
+  if (task?.type !== 'test') {
+    task = undefined
+  }
 
   const matcherState: MatcherState = {
     ...getState(expect),
+    task,
+    currentTestName,
     customTesters: getCustomEqualityTesters(),
     isNot,
     utils: jestUtils,
@@ -52,6 +60,7 @@ function getMatcherState(
     state: matcherState,
     isNot,
     obj,
+    customMessage,
   }
 }
 
@@ -73,7 +82,7 @@ function JestExtendPlugin(
           this: Chai.AssertionStatic & Chai.Assertion,
           ...args: any[]
         ) {
-          const { state, isNot, obj } = getMatcherState(this, expect)
+          const { state, isNot, obj, customMessage } = getMatcherState(this, expect)
 
           const result = expectAssertion.call(state, obj, ...args)
 
@@ -85,7 +94,10 @@ function JestExtendPlugin(
             const thenable = result as PromiseLike<SyncExpectationResult>
             return thenable.then(({ pass, message, actual, expected }) => {
               if ((pass && isNot) || (!pass && !isNot)) {
-                throw new JestExtendError(message(), actual, expected)
+                const errorMessage = customMessage != null
+                  ? customMessage
+                  : message()
+                throw new JestExtendError(errorMessage, actual, expected)
               }
             })
           }
@@ -93,7 +105,10 @@ function JestExtendPlugin(
           const { pass, message, actual, expected } = result as SyncExpectationResult
 
           if ((pass && isNot) || (!pass && !isNot)) {
-            throw new JestExtendError(message(), actual, expected)
+            const errorMessage = customMessage != null
+              ? customMessage
+              : message()
+            throw new JestExtendError(errorMessage, actual, expected)
           }
         }
 

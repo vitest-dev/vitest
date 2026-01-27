@@ -6,21 +6,49 @@ import type { ExternalModulesExecutor } from '../external-executor'
 import type { ModuleExecutionInfo } from './moduleDebug'
 import type { VitestModuleEvaluator } from './moduleEvaluator'
 import type { VitestTransportOptions } from './moduleTransport'
+import type { TestModuleRunner } from './testModuleRunner'
 import * as viteModuleRunner from 'vite/module-runner'
+import { Traces } from '../../utils/traces'
 import { VitestMocker } from './moduleMocker'
 import { VitestTransport } from './moduleTransport'
 
-// eslint-disable-next-line ts/ban-ts-comment
-// @ts-ignore available since Vite 7.1 https://github.com/vitejs/vite/pull/20260
-export type CreateImportMeta = NonNullable<viteModuleRunner.ModuleRunnerOptions['createImportMeta']>
-// eslint-disable-next-line ts/ban-ts-comment
-// @ts-ignore
-export const createNodeImportMeta: CreateImportMeta = viteModuleRunner.createNodeImportMeta
+export type CreateImportMeta = (modulePath: string) => viteModuleRunner.ModuleRunnerImportMeta | Promise<viteModuleRunner.ModuleRunnerImportMeta>
+export const createNodeImportMeta: CreateImportMeta = (modulePath: string) => {
+  if (!viteModuleRunner.createDefaultImportMeta) {
+    throw new Error(`createNodeImportMeta is not supported in this version of Vite.`)
+  }
+
+  const defaultMeta = viteModuleRunner.createDefaultImportMeta(modulePath)
+  const href = defaultMeta.url
+
+  const importMetaResolver = createImportMetaResolver()
+
+  return {
+    ...defaultMeta,
+    main: false,
+    resolve(id: string, parent?: string) {
+      const resolver = importMetaResolver ?? defaultMeta.resolve
+      return resolver(id, parent ?? href)
+    },
+  }
+}
+
+function createImportMetaResolver() {
+  if (!import.meta.resolve) {
+    return
+  }
+
+  return (specifier: string, importer: string) =>
+    import.meta.resolve(specifier, importer)
+}
 
 // @ts-expect-error overriding private method
-export class VitestModuleRunner extends viteModuleRunner.ModuleRunner {
+export class VitestModuleRunner
+  extends viteModuleRunner.ModuleRunner
+  implements TestModuleRunner {
   public mocker: VitestMocker
   public moduleExecutionInfo: ModuleExecutionInfo
+  private _otel: Traces
 
   constructor(private vitestOptions: VitestModuleRunnerOptions) {
     const options = vitestOptions
@@ -32,16 +60,16 @@ export class VitestModuleRunner extends viteModuleRunner.ModuleRunner {
         hmr: false,
         evaluatedModules,
         sourcemapInterceptor: 'prepareStackTrace',
-        // eslint-disable-next-line ts/ban-ts-comment
-        // @ts-ignore
         createImportMeta: vitestOptions.createImportMeta,
       },
       options.evaluator,
     )
+    this._otel = vitestOptions.traces || new Traces({ enabled: false })
     this.moduleExecutionInfo = options.getWorkerState().moduleExecutionInfo
     this.mocker = options.mocker || new VitestMocker(this, {
       spyModule: options.spyModule,
       context: options.vm?.context,
+      traces: this._otel,
       resolveId: options.transport.resolveId,
       get root() {
         return options.getWorkerState().config.root
@@ -66,12 +94,38 @@ export class VitestModuleRunner extends viteModuleRunner.ModuleRunner {
     }
   }
 
+  /**
+   * Vite checks that the module has exports emulating the Node.js behaviour,
+   * but Vitest is more relaxed.
+   *
+   * We should keep the Vite behavour when there is a `strict` flag.
+   * @internal
+   */
+  processImport(exports: Record<string, any>): Record<string, any> {
+    return exports
+  }
+
   public async import(rawId: string): Promise<any> {
-    const resolved = await this.vitestOptions.transport.resolveId(rawId)
-    if (!resolved) {
-      return super.import(rawId)
-    }
-    return super.import(resolved.url)
+    const resolved = await this._otel.$(
+      'vitest.module.resolve_id',
+      {
+        attributes: {
+          'vitest.module.raw_id': rawId,
+        },
+      },
+      async (span) => {
+        const result = await this.vitestOptions.transport.resolveId(rawId)
+        if (result) {
+          span.setAttributes({
+            'vitest.module.url': result.url,
+            'vitest.module.file': result.file,
+            'vitest.module.id': result.id,
+          })
+        }
+        return result
+      },
+    )
+    return super.import(resolved ? resolved.url : rawId)
   }
 
   public async fetchModule(url: string, importer?: string): Promise<EvaluatedModuleNode> {
@@ -155,6 +209,10 @@ export interface VitestModuleRunnerOptions {
   getWorkerState: () => WorkerGlobalState
   mocker?: VitestMocker
   vm?: VitestVmOptions
+  /**
+   * @internal
+   */
+  traces?: Traces
   spyModule?: typeof import('@vitest/spy')
   createImportMeta?: CreateImportMeta
 }

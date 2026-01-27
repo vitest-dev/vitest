@@ -4,14 +4,18 @@ import { resolve } from 'pathe'
 import { globSync } from 'tinyglobby'
 import * as vite from 'vite'
 
+const browserTargets = ['chrome87', 'firefox78', 'safari15.4', 'edge88']
+
 export default vite.defineConfig({
   server: {
     watch: { ignored: ['**/**'] },
   },
   esbuild: {
+    target: browserTargets,
     legalComments: 'inline',
   },
   build: {
+    target: browserTargets,
     minify: false,
     outDir: '../../dist/client',
     emptyOutDir: false,
@@ -31,7 +35,7 @@ export default vite.defineConfig({
         /^vitest\//,
         'vitest',
         /^msw/,
-        '@vitest/browser/context',
+        'vitest/browser',
         '@vitest/browser/client',
       ],
     },

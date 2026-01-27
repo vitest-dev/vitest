@@ -1,8 +1,8 @@
-import type { File, Task, TaskResultPack, Test, TestAnnotation } from '@vitest/runner'
+import type { File, Task, TaskResultPack, Test, TestArtifact } from '@vitest/runner'
 import type { Arrayable } from '@vitest/utils'
-import type { CollectFilteredTests, CollectorInfo, Filter, FilteredTests } from '~/composables/explorer/types'
+import type { CollectFilteredTests, CollectorInfo, Filter, FilteredTests, SearchMatcher } from '~/composables/explorer/types'
 import { isTestCase } from '@vitest/runner/utils'
-import { toArray } from '@vitest/utils'
+import { toArray } from '@vitest/utils/helpers'
 import { client, findById } from '~/composables/client'
 import { testRunState } from '~/composables/client/state'
 import { expandNodesOnEndRun } from '~/composables/explorer/expand'
@@ -29,7 +29,7 @@ export { hasFailedSnapshot }
 export function runLoadFiles(
   remoteFiles: File[],
   collect: boolean,
-  search: string,
+  search: SearchMatcher,
   filter: Filter,
 ) {
   remoteFiles.map(f => [`${f.filepath}:${f.projectName || ''}`, f] as const)
@@ -37,7 +37,7 @@ export function runLoadFiles(
     .map(([, f]) => createOrUpdateFileNode(f, collect))
 
   uiFiles.value = [...explorerTree.root.tasks]
-  runFilter(search.trim(), {
+  runFilter(search, {
     failed: filter.failed,
     success: filter.success,
     skipped: filter.skipped,
@@ -66,9 +66,9 @@ export function preparePendingTasks(packs: TaskResultPack[]) {
   })
 }
 
-export function annotateTest(
+export function recordTestArtifact(
   id: string,
-  annotation: TestAnnotation,
+  artifact: TestArtifact,
 ) {
   const pending = explorerTree.pendingTasks
   const idMap = client.state.idMap
@@ -80,7 +80,13 @@ export function annotateTest(
       pending.set(test.file.id, file)
     }
     file.add(test.id)
-    test.annotations.push(annotation)
+
+    if (artifact.type === 'internal:annotation') {
+      test.annotations.push(artifact.annotation)
+    }
+    else {
+      test.artifacts.push(artifact)
+    }
   }
 }
 
@@ -88,8 +94,9 @@ export function runCollect(
   start: boolean,
   end: boolean,
   summary: CollectorInfo,
-  search: string,
+  search: SearchMatcher,
   filter: Filter,
+  executionTime: number,
 ) {
   if (start) {
     resetCollectorInfo(summary)
@@ -106,7 +113,7 @@ export function runCollect(
   })
 
   queueMicrotask(() => {
-    collectData(summary)
+    collectData(summary, executionTime)
   })
 
   queueMicrotask(() => {
@@ -207,12 +214,12 @@ function traverseReceivedFiles(collect: boolean) {
       continue
     }
     createOrUpdateFileNode(file, collect)
-    createOrUpdateEntry(Array.from(entries).map(id => idMap.get(id)).filter(Boolean) as Task[])
+    createOrUpdateEntry(Array.from(entries, id => idMap.get(id)).filter(Boolean) as Task[])
   }
 }
 
 function doRunFilter(
-  search: string,
+  search: SearchMatcher,
   filter: Filter,
   end = false,
 ) {
@@ -250,7 +257,7 @@ function doRunFilter(
   }
 }
 
-function refreshExplorer(search: string, filter: Filter, end: boolean) {
+function refreshExplorer(search: SearchMatcher, filter: Filter, end: boolean) {
   runFilter(search, filter)
   // update only at the end
   if (end) {
@@ -286,17 +293,21 @@ export function resetCollectorInfo(summary: CollectorInfo) {
   summary.testsIgnore = 0
   summary.testsSkipped = 0
   summary.testsTodo = 0
+  summary.testsExpectedFail = 0
   summary.totalTests = 0
   summary.failedSnapshotEnabled = false
 }
 
-function collectData(summary: CollectorInfo) {
+function collectData(
+  summary: CollectorInfo,
+  time: number,
+) {
   const idMap = client.state.idMap
   const filesMap = new Map(explorerTree.root.tasks.filter(f => idMap.has(f.id)).map(f => [f.id, f]))
-  const useFiles = Array.from(filesMap.values()).map(file => [file.id, findById(file.id)] as const)
+  const useFiles = Array.from(filesMap.values(), file => [file.id, findById(file.id)] as const)
   const data = {
     files: filesMap.size,
-    time: '',
+    time: time > 1000 ? `${(time / 1000).toFixed(2)}s` : `${Math.round(time)}ms`,
     filesFailed: 0,
     filesSuccess: 0,
     filesIgnore: 0,
@@ -309,32 +320,16 @@ function collectData(summary: CollectorInfo) {
     testsIgnore: 0,
     testsSkipped: 0,
     testsTodo: 0,
+    testsExpectedFail: 0,
     totalTests: 0,
     failedSnapshot: false,
     failedSnapshotEnabled: false,
   } satisfies CollectorInfo
 
-  let time = 0
-  for (const [id, f] of useFiles) {
+  for (const [_, f] of useFiles) {
     if (!f) {
       continue
     }
-    const file = filesMap.get(id)
-    if (file) {
-      file.mode = f.mode
-      file.setupDuration = f.setupDuration
-      file.prepareDuration = f.prepareDuration
-      file.environmentLoad = f.environmentLoad
-      file.collectDuration = f.collectDuration
-      file.duration = f.result?.duration != null ? Math.round(f.result?.duration) : undefined
-      file.state = f.result?.state
-    }
-    time += Math.max(0, f.collectDuration || 0)
-    time += Math.max(0, f.setupDuration || 0)
-    time += Math.max(0, f.result?.duration || 0)
-    time += Math.max(0, f.environmentLoad || 0)
-    time += Math.max(0, f.prepareDuration || 0)
-    data.time = time > 1000 ? `${(time / 1000).toFixed(2)}s` : `${Math.round(time)}ms`
     if (f.result?.state === 'fail') {
       data.filesFailed++
     }
@@ -360,6 +355,7 @@ function collectData(summary: CollectorInfo) {
       total,
       ignored,
       todo,
+      expectedFail,
     } = collectTests(f)
 
     data.totalTests += total
@@ -367,6 +363,7 @@ function collectData(summary: CollectorInfo) {
     data.testsSuccess += success
     data.testsSkipped += skipped
     data.testsTodo += todo
+    data.testsExpectedFail += expectedFail
     data.testsIgnore += ignored
   }
 
@@ -380,14 +377,14 @@ function collectData(summary: CollectorInfo) {
   summary.filesTodo = data.filesTodo
   summary.testsFailed = data.testsFailed
   summary.testsSuccess = data.testsSuccess
-  summary.testsFailed = data.testsFailed
   summary.testsTodo = data.testsTodo
+  summary.testsExpectedFail = data.testsExpectedFail
   summary.testsIgnore = data.testsIgnore
   summary.testsSkipped = data.testsSkipped
   summary.totalTests = data.totalTests
 }
 
-function collectTests(file: File, search = '', filter?: Filter) {
+function collectTests(file: File, search: SearchMatcher = () => true, filter?: Filter) {
   const data = {
     failed: 0,
     success: 0,
@@ -396,6 +393,7 @@ function collectTests(file: File, search = '', filter?: Filter) {
     total: 0,
     ignored: 0,
     todo: 0,
+    expectedFail: 0,
   } satisfies CollectFilteredTests
 
   for (const t of testsCollector(file)) {
@@ -405,7 +403,13 @@ function collectTests(file: File, search = '', filter?: Filter) {
         data.failed++
       }
       else if (t.result?.state === 'pass') {
-        data.success++
+        // Check if this is an expected failure
+        if (t.fails) {
+          data.expectedFail++
+        }
+        else {
+          data.success++
+        }
       }
       else if (t.mode === 'skip') {
         data.ignored++
@@ -418,7 +422,7 @@ function collectTests(file: File, search = '', filter?: Filter) {
     }
   }
 
-  data.running = data.total - data.failed - data.success - data.ignored
+  data.running = data.total - data.failed - data.success - data.ignored - data.expectedFail
 
   return data
 }
@@ -428,7 +432,7 @@ export function collectTestsTotalData(
   onlyTests: boolean,
   tests: File[],
   filesSummary: FilteredTests,
-  search: string,
+  search: SearchMatcher,
   filter: Filter,
 ) {
   if (onlyTests) {

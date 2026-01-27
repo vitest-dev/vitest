@@ -1,25 +1,29 @@
-import type { Plugin } from 'vitest/config'
-import type { TestProject } from 'vitest/node'
+import type { BrowserCommand, BrowserProviderOption, BrowserServerFactory } from 'vitest/node'
 import { MockerRegistry } from '@vitest/mocker'
 import { interceptorPlugin } from '@vitest/mocker/node'
 import c from 'tinyrainbow'
 import { createViteLogger, createViteServer } from 'vitest/node'
 import { version } from '../../package.json'
+import { distRoot } from './constants'
 import BrowserPlugin from './plugin'
 import { ParentBrowserProject } from './projectParent'
 import { setupBrowserRpc } from './rpc'
 
-export { distRoot } from './constants'
-export { createBrowserPool } from './pool'
+export type { CustomComparatorsRegistry } from './commands/screenshotMatcher/types'
 
-export type { ProjectBrowser } from './project'
+export function defineBrowserCommand<T extends unknown[]>(
+  fn: BrowserCommand<T>,
+): BrowserCommand<T> {
+  return fn
+}
 
-export async function createBrowserServer(
-  project: TestProject,
-  configFile: string | undefined,
-  prePlugins: Plugin[] = [],
-  postPlugins: Plugin[] = [],
-): Promise<ParentBrowserProject> {
+// export type { ProjectBrowser } from './project'
+export { parseKeyDef, resolveScreenshotPath } from './utils'
+
+export const createBrowserServer: BrowserServerFactory = async (options) => {
+  const project = options.project
+  const configFile = project.vite.config.configFile
+
   if (project.vitest.version !== version) {
     project.vitest.logger.warn(
       c.yellow(
@@ -42,8 +46,10 @@ export async function createBrowserServer(
 
   const mockerRegistry = new MockerRegistry()
 
+  let cacheDir: string
   const vite = await createViteServer({
     ...project.options, // spread project config inlined in root workspace config
+    define: project.config.viteDefine,
     base: '/',
     root: project.config.root,
     logLevel,
@@ -71,11 +77,25 @@ export async function createBrowserServer(
     },
     cacheDir: project.vite.config.cacheDir,
     plugins: [
-      ...prePlugins,
+      {
+        name: 'vitest-internal:browser-cacheDir',
+        configResolved(config) {
+          cacheDir = config.cacheDir
+        },
+      },
+      ...options.mocksPlugins({
+        filter(id) {
+          if (id.includes(distRoot) || id.includes(cacheDir)) {
+            return false
+          }
+          return true
+        },
+      }),
+      options.metaEnvReplacer(),
       ...(project.options?.plugins || []),
       BrowserPlugin(server),
       interceptorPlugin({ registry: mockerRegistry }),
-      ...postPlugins,
+      options.coveragePlugin(),
     ],
   })
 
@@ -84,4 +104,15 @@ export async function createBrowserServer(
   setupBrowserRpc(server, mockerRegistry)
 
   return server
+}
+
+export function defineBrowserProvider<T extends object = object>(options: Omit<
+  BrowserProviderOption<T>,
+  'serverFactory' | 'options'
+> & { options?: T }): BrowserProviderOption {
+  return {
+    ...options,
+    options: options.options || {},
+    serverFactory: createBrowserServer,
+  }
 }

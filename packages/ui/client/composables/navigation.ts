@@ -1,8 +1,11 @@
 import type { File, Task } from '@vitest/runner'
 import type { Params } from './params'
+import { useLocalStorage, watchOnce } from '@vueuse/core'
+import { computed, reactive, ref, watch } from 'vue'
 import { viewport } from './browser'
 import { browserState, client, config, findById } from './client'
 import { testRunState } from './client/state'
+import { showTaskSource } from './codemirror'
 import { activeFileId, columnNumber, lineNumber, selectedTest, viewMode } from './params'
 
 export const currentModule = ref<File>()
@@ -111,14 +114,30 @@ export function navigateTo({ file, line, view, test, column }: Params) {
   showDashboard(false)
 }
 
-export function showReport(task: Task) {
-  navigateTo({
-    file: task.file.id,
-    test: task.type === 'test' ? task.id : null,
-    line: null,
-    view: null,
-    column: null,
-  })
+export function clickOnTask(task: Task) {
+  if (task.type === 'test') {
+    if (viewMode.value === 'editor') {
+      showTaskSource(task)
+    }
+    else {
+      navigateTo({
+        file: task.file.id,
+        line: null,
+        column: null,
+        view: viewMode.value,
+        test: task.id,
+      })
+    }
+  }
+  else {
+    navigateTo({
+      file: task.file.id,
+      test: null,
+      line: null,
+      view: viewMode.value,
+      column: null,
+    })
+  }
 }
 
 export function showCoverage() {

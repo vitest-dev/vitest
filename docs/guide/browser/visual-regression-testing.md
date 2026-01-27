@@ -45,16 +45,16 @@ That's why Vitest includes the browser and platform in screenshot names (like
 
 For stable tests, use the same environment everywhere. We **strongly recommend**
 cloud services like
-[Microsoft Playwright Testing](https://azure.microsoft.com/en-us/products/playwright-testing)
+[Azure App Testing](https://azure.microsoft.com/en-us/products/app-testing/)
 or [Docker containers](https://playwright.dev/docs/docker).
 :::
 
 Visual regression testing in Vitest can be done through the
-[`toMatchScreenshot` assertion](/guide/browser/assertion-api.html#tomatchscreenshot):
+[`toMatchScreenshot` assertion](/api/browser/assertions.html#tomatchscreenshot):
 
 ```ts
 import { expect, test } from 'vitest'
-import { page } from '@vitest/browser/context'
+import { page } from 'vitest/browser'
 
 test('hero section looks correct', async () => {
   // ...the rest of the test
@@ -121,12 +121,30 @@ $ vitest --update
 Review updated screenshots before committing to make sure changes are
 intentional.
 
+## How Visual Tests Work
+
+Visual regression tests need stable screenshots to compare against. But pages aren't instantly stable as images load, animations finish, fonts render, and layouts settle.
+
+Vitest handles this automatically through "Stable Screenshot Detection":
+
+1. Vitest takes a first screenshot (or uses the reference screenshot if available) as baseline
+1. It takes another screenshot and compares it with the baseline
+    - If the screenshots match, the page is stable and testing continues
+    - If they differ, Vitest uses the newest screenshot as the baseline and repeats
+1. This continues until stability is achieved or the timeout is reached
+
+This ensures that transient visual changes (like loading spinners or animations) don't cause false failures. If something never stops animating though, you'll hit the timeout, so consider [disabling animations during testing](#disable-animations).
+
+If a stable screenshot is captured after retries (one or more) and a reference screenshot exists, Vitest performs a final comparison with the reference using `createDiff: true`. This will generate a diff image if they don't match.
+
+During stability detection, Vitest calls comparators with `createDiff: false` since it only needs to know if screenshots match. This keeps the detection process fast.
+
 ## Configuring Visual Tests
 
 ### Global Configuration
 
 Configure visual regression testing defaults in your
-[Vitest config](/guide/browser/config#browser-expect-tomatchscreenshot):
+[Vitest config](/config/browser/expect#tomatchscreenshot):
 
 ```ts [vitest.config.ts]
 import { defineConfig } from 'vitest/config'
@@ -239,7 +257,7 @@ await page.viewport(1280, 720)
 ```
 
 ```ts [vitest.config.ts]
-import { playwright } from '@vitest/browser/providers/playwright'
+import { playwright } from '@vitest/browser-playwright'
 import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
@@ -353,7 +371,7 @@ For teams, you've basically got three options:
 1. **Self-hosted runners**, complex to set up, painful to maintain
 1. **GitHub Actions**, free (for open source), works with any provider
 1. **Cloud services**, like
-[Microsoft Playwright Testing](https://azure.microsoft.com/en-us/products/playwright-testing),
+[Azure App Testing](https://azure.microsoft.com/en-us/products/app-testing/),
 built for this exact problem
 
 We'll focus on options 2 and 3 since they're the quickest to get running.
@@ -576,7 +594,7 @@ jobs:
           fi
 ```
 
-=== Microsoft Playwright Testing
+=== Azure App Testing
 
 Your tests stay local, only the browsers run in the cloud. It's Playwright's
 remote browser feature, but Microsoft handles all the infrastructure.
@@ -588,10 +606,11 @@ screenshots should use the service.
 
 The cleanest approach is using [Test Projects](/guide/projects):
 
+<!-- eslint-disable style/quote-props -->
 ```ts [vitest.config.ts]
 import { env } from 'node:process'
 import { defineConfig } from 'vitest/config'
-import { playwright } from '@vitest/browser/providers/playwright'
+import { playwright } from '@vitest/browser-playwright'
 
 export default defineConfig({
   // ...global Vite config
@@ -614,26 +633,26 @@ export default defineConfig({
           include: ['visual-regression-tests/**/*.test.ts?(x)'],
           browser: {
             enabled: true,
-            provider: playwright(),
+            provider: playwright({
+              connectOptions: {
+                wsEndpoint: `${env.PLAYWRIGHT_SERVICE_URL}?${new URLSearchParams({
+                  'api-version': '2025-09-01',
+                  os: 'linux', // always use Linux for consistency
+                  // helps identifying runs in the service's dashboard
+                  runName: `Vitest ${env.CI ? 'CI' : 'local'} run @${new Date().toISOString()}`,
+                })}`,
+                exposeNetwork: '<loopback>',
+                headers: {
+                  Authorization: `Bearer ${env.PLAYWRIGHT_SERVICE_ACCESS_TOKEN}`,
+                },
+                timeout: 30_000,
+              }
+            }),
             headless: true,
             instances: [
               {
                 browser: 'chromium',
                 viewport: { width: 2560, height: 1440 },
-                connect: {
-                  wsEndpoint: `${env.PLAYWRIGHT_SERVICE_URL}?cap=${JSON.stringify({
-                    os: 'linux', // always use Linux for consistency
-                    // helps identifying runs in the service's dashboard
-                    runId: `Vitest ${env.CI ? 'CI' : 'local'} run @${new Date().toISOString()}`,
-                  })}`,
-                  options: {
-                    exposeNetwork: '<loopback>',
-                    headers: {
-                      'x-mpt-access-key': env.PLAYWRIGHT_SERVICE_ACCESS_TOKEN,
-                    },
-                    timeout: 30_000,
-                  },
-                },
               },
             ],
           },
@@ -643,11 +662,14 @@ export default defineConfig({
   },
 })
 ```
+<!-- eslint-enable style/quote-props -->
 
-The service gives you two environment variables:
+Follow the [official guide to create a Playwright Workspace](https://learn.microsoft.com/en-us/azure/app-testing/playwright-workspaces/quickstart-run-end-to-end-tests?tabs=playwrightcli&pivots=playwright-test-runner#create-a-workspace).
 
-- `PLAYWRIGHT_SERVICE_URL` tells Playwright where to connect
-- `PLAYWRIGHT_SERVICE_ACCESS_TOKEN` is your auth token
+Once your workspace is created, configure Vitest to use it:
+
+1. **Set the endpoint URL**: following the [official guide](https://learn.microsoft.com/en-us/azure/app-testing/playwright-workspaces/quickstart-run-end-to-end-tests?tabs=playwrightcli&pivots=playwright-test-runner#configure-the-browser-endpoint), retrieve the URL and set it as the `PLAYWRIGHT_SERVICE_URL` environment variable.
+1. **Enable token authentication**: [enable access tokens](https://learn.microsoft.com/en-us/azure/app-testing/playwright-workspaces/how-to-manage-authentication?pivots=playwright-test-runner#enable-authentication-using-access-tokens) for your workspace, then [generate a token](https://learn.microsoft.com/en-us/azure/app-testing/playwright-workspaces/how-to-manage-access-tokens#generate-a-workspace-access-token) and set it as the `PLAYWRIGHT_SERVICE_ACCESS_TOKEN` environment variable.
 
 ::: danger Keep that Token Secret!
 Never commit `PLAYWRIGHT_SERVICE_ACCESS_TOKEN` to your repository. Anyone with
@@ -710,10 +732,10 @@ everything.
 The downside? That "works on my machine" conversation when someone generates
 screenshots locally and they don't match CI expectations anymore.
 
-The cloud service makes sense if developers need to run visual tests locally.
+A cloud service makes sense if developers need to run visual tests locally.
 
 Some teams have designers checking their work or developers who prefer catching
 issues before pushing. It allows skipping the push-wait-check-fix-push cycle.
 
-Still on the fence? Start with GitHub Actions. You can always add the cloud
+Still on the fence? Start with GitHub Actions. You can always add a cloud
 service later if local testing becomes a pain point.

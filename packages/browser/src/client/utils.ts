@@ -1,7 +1,8 @@
 import type { VitestRunner } from '@vitest/runner'
-import type { EvaluatedModules, SerializedConfig, WorkerGlobalState } from 'vitest'
+import type { SerializedConfig, WorkerGlobalState } from 'vitest'
+import type { OTELCarrier, Traces } from 'vitest/internal/browser'
 import type { IframeOrchestrator } from './orchestrator'
-import type { CommandsManager } from './tester/utils'
+import type { CommandsManager } from './tester/tester-utils'
 
 export async function importId(id: string): Promise<any> {
   const name = `/@id/${id}`.replace(/\\/g, '/')
@@ -65,8 +66,6 @@ export function ensureAwaited<T>(promise: (error?: Error) => Promise<T>): Promis
 export interface BrowserRunnerState {
   files: string[]
   runningFiles: string[]
-  resolvingModules: Set<string>
-  evaluatedModules: EvaluatedModules
   config: SerializedConfig
   provider: string
   runner: VitestRunner
@@ -80,9 +79,11 @@ export interface BrowserRunnerState {
   iframeId?: string
   sessionId: string
   testerId: string
+  otelCarrier?: OTELCarrier
   method: 'run' | 'collect'
   orchestrator?: IframeOrchestrator
   commands: CommandsManager
+  traces: Traces
   cleanups: Array<() => unknown>
   cdp?: {
     on: (event: string, listener: (payload: any) => void) => void

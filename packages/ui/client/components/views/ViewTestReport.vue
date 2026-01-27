@@ -1,13 +1,20 @@
 <script setup lang="ts">
-import type { TestAnnotation, TestAnnotationLocation } from '@vitest/runner'
+import type { TestArtifactLocation } from '@vitest/runner'
 import type { RunnerTestCase } from 'vitest'
 import { relative } from 'pathe'
+import { computed } from 'vue'
 import { getAttachmentUrl, sanitizeFilePath } from '~/composables/attachments'
 import { browserState, config } from '~/composables/client'
-import { showAnnotationSource } from '~/composables/codemirror'
+import { showAttachmentSource } from '~/composables/codemirror'
 import { isDark } from '~/composables/dark'
 import { mapLeveledTaskStacks } from '~/composables/error'
 import { openScreenshot, useScreenshot } from '~/composables/screenshot'
+import AnnotationAttachmentImage from '../AnnotationAttachmentImage.vue'
+import VisualRegression from '../artifacts/visual-regression/VisualRegression.vue'
+import IconButton from '../IconButton.vue'
+import Modal from '../Modal.vue'
+import ScreenshotError from './ScreenshotError.vue'
+import ViewReportError from './ViewReportError.vue'
 
 const props = defineProps<{
   test: RunnerTestCase
@@ -20,8 +27,8 @@ const failed = computed(() => {
   return mapLeveledTaskStacks(isDark.value, [props.test])[0] as RunnerTestCase | null
 })
 
-function openAnnotation(annotation: TestAnnotation) {
-  return showAnnotationSource(props.test, annotation)
+function openLocation(location?: TestArtifactLocation) {
+  return showAttachmentSource(props.test, location)
 }
 
 const {
@@ -31,7 +38,7 @@ const {
   currentScreenshotUrl,
 } = useScreenshot()
 
-function getLocationString(location: TestAnnotationLocation) {
+function getLocationString(location: TestArtifactLocation) {
   const path = relative(config.value.root, location.file)
   return `${path}:${location.line}:${location.column}`
 }
@@ -97,7 +104,7 @@ const meta = computed(() => {
     </div>
     <template v-else>
       <div bg="green-500/10" text="green-500 sm" p="x4 y2" m-2 rounded>
-        All tests passed in this file
+        The test has passed without any errors
       </div>
     </template>
     <template v-if="test.annotations.length">
@@ -134,7 +141,7 @@ const meta = computed(() => {
               title="Open in Editor"
               class="flex gap-1 text-yellow-500/80 cursor-pointer"
               ws-nowrap
-              @click="openAnnotation(annotation)"
+              @click="openLocation(annotation.location)"
             >
               {{ getLocationString(annotation.location) }}
             </span>
@@ -156,6 +163,44 @@ const meta = computed(() => {
         </div>
 
         <AnnotationAttachmentImage :annotation="annotation" />
+      </div>
+    </template>
+    <template v-if="test.artifacts.length">
+      <h1 m-2>
+        Test Artifacts
+      </h1>
+      <div
+        v-for="artifact, index of test.artifacts"
+        :key="artifact.type + index"
+        bg="yellow-500/10"
+        text="yellow-500 sm"
+        p="x3 y2"
+        m-2
+        rounded
+        role="note"
+      >
+        <div flex="~ gap-2 items-center justify-between" overflow-hidden>
+          <div>
+            <span
+              v-if="artifact.location && artifact.location.file === test.file.filepath"
+              v-tooltip.bottom="'Open in Editor'"
+              title="Open in Editor"
+              class="flex gap-1 text-yellow-500/80 cursor-pointer"
+              ws-nowrap
+              @click="openLocation(artifact.location)"
+            >
+              {{ getLocationString(artifact.location) }}
+            </span>
+            <span
+              v-else-if="artifact.location && artifact.location.file !== test.file.filepath"
+              class="flex gap-1 text-yellow-500/80"
+              ws-nowrap
+            >
+              {{ getLocationString(artifact.location) }}
+            </span>
+          </div>
+        </div>
+        <VisualRegression v-if="artifact.type === 'internal:toMatchScreenshot' && artifact.kind === 'visual-regression'" :regression="artifact" />
       </div>
     </template>
     <template v-if="meta.length">

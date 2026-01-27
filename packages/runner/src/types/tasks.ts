@@ -1,5 +1,6 @@
 import type { Awaitable, TestError } from '@vitest/utils'
 import type { FixtureItem } from '../fixture'
+import type { afterAll, afterEach, aroundAll, aroundEach, beforeAll, beforeEach } from '../hooks'
 import type { ChainableFunction } from '../utils/chain'
 
 export type RunMode = 'run' | 'skip' | 'only' | 'todo' | 'queued'
@@ -17,6 +18,40 @@ export interface TaskBase {
    * Task name provided by the user. If no name was provided, it will be an empty string.
    */
   name: string
+  /**
+   * Full name including the file path, any parent suites, and this task's name.
+   *
+   * Uses ` > ` as the separator between levels.
+   *
+   * @example
+   * // file
+   * 'test/task-names.test.ts'
+   * @example
+   * // suite
+   * 'test/task-names.test.ts > meal planning'
+   * 'test/task-names.test.ts > meal planning > grocery lists'
+   * @example
+   * // test
+   * 'test/task-names.test.ts > meal planning > grocery lists > calculates ingredients'
+   */
+  fullName: string
+  /**
+   * Full name excluding the file path, including any parent suites and this task's name. `undefined` for file tasks.
+   *
+   * Uses ` > ` as the separator between levels.
+   *
+   * @example
+   * // file
+   * undefined
+   * @example
+   * // suite
+   * 'meal planning'
+   * 'meal planning > grocery lists'
+   * @example
+   * // test
+   * 'meal planning > grocery lists > calculates ingredients'
+   */
+  fullTestName?: string
   /**
    * Task mode.
    * - **skip**: task is skipped
@@ -52,10 +87,12 @@ export interface TaskBase {
    */
   result?: TaskResult
   /**
-   * The amount of times the task should be retried if it fails.
+   * Retry configuration for the task.
+   * - If a number, specifies how many times to retry
+   * - If an object, allows fine-grained retry control
    * @default 0
    */
-  retry?: number
+  retry?: Retry
   /**
    * The amount of times the task should be repeated after the successful run.
    * If the task fails, it will not be retried unless `retry` is specified.
@@ -77,6 +114,10 @@ export interface TaskBase {
    * @experimental
    */
   dynamic?: boolean
+  /**
+   * Custom tags of the task. Useful for filtering tasks.
+   */
+  tags?: string[]
 }
 
 export interface TaskPopulated extends TaskBase {
@@ -168,6 +209,12 @@ export interface ImportDuration {
 
   /** The time spent importing & executing the file and all its imports. */
   totalTime: number
+
+  /** Will be set to `true`, if the module was externalized. In this case totalTime and selfTime are identical. */
+  external?: boolean
+
+  /** Which module imported this module first. All subsequent imports are cached. */
+  importer?: string
 }
 
 /**
@@ -191,6 +238,7 @@ export type TaskResultPack = [
 
 export interface TaskEventData {
   annotation?: TestAnnotation | undefined
+  artifact?: TestArtifact | undefined
 }
 
 export type TaskEventPack = [
@@ -221,6 +269,7 @@ export type TaskUpdateEvent
     | 'after-hook-start'
     | 'after-hook-end'
     | 'test-annotation'
+    | 'test-artifact'
 
 export interface Suite extends TaskBase {
   type: 'suite'
@@ -240,6 +289,10 @@ export interface File extends Suite {
    * @default 'forks'
    */
   pool?: string
+  /**
+   * The environment that processes the file on the server.
+   */
+  viteEnvironment?: string
   /**
    * The path to the file in UNIX format.
    */
@@ -282,31 +335,19 @@ export interface Test<ExtraContext = object> extends TaskPopulated {
    * An array of custom annotations.
    */
   annotations: TestAnnotation[]
-}
-
-export interface TestAttachment {
-  contentType?: string
-  path?: string
-  body?: string | Uint8Array
-}
-
-export interface TestAnnotationLocation {
-  line: number
-  column: number
-  file: string
-}
-
-export interface TestAnnotation {
-  message: string
-  type: string
-  location?: TestAnnotationLocation
-  attachment?: TestAttachment
+  /**
+   * An array of artifacts produced by the test.
+   *
+   * @experimental
+   */
+  artifacts: TestArtifact[]
+  fullTestName: string
 }
 
 export type Task = Test | Suite | File
 
 export type TestFunction<ExtraContext = object> = (
-  context: TestContext & ExtraContext
+  context: TestContext & ExtraContext,
 ) => Awaitable<any> | void
 
 // jest's ExtractEachCallbackArgs
@@ -345,18 +386,10 @@ type ExtractEachCallbackArgs<T extends ReadonlyArray<any>> = {
                     : 'fallback']
 
 interface EachFunctionReturn<T extends any[]> {
-  /**
-   * @deprecated Use options as the second argument instead
-   */
   (
     name: string | Function,
     fn: (...args: T) => Awaitable<void>,
-    options: TestCollectorOptions
-  ): void
-  (
-    name: string | Function,
-    fn: (...args: T) => Awaitable<void>,
-    options?: number | TestCollectorOptions
+    options?: number
   ): void
   (
     name: string | Function,
@@ -411,18 +444,10 @@ interface SuiteForFunction {
 }
 
 interface TestCollectorCallable<C = object> {
-  /**
-   * @deprecated Use options as the second argument instead
-   */
-  <ExtraContext extends C>(
-    name: string | Function,
-    fn: TestFunction<ExtraContext>,
-    options: TestCollectorOptions
-  ): void
   <ExtraContext extends C>(
     name: string | Function,
     fn?: TestFunction<ExtraContext>,
-    options?: number | TestCollectorOptions
+    options?: number
   ): void
   <ExtraContext extends C>(
     name: string | Function,
@@ -442,18 +467,70 @@ type ChainableTestAPI<ExtraContext = object> = ChainableFunction<
 
 type TestCollectorOptions = Omit<TestOptions, 'shuffle'>
 
+/**
+ * Retry configuration for tests.
+ * Can be a number for simple retry count, or an object for advanced retry control.
+ */
+export type Retry = number | {
+  /**
+   * The number of times to retry the test if it fails.
+   * @default 0
+   */
+  count?: number
+  /**
+   * Delay in milliseconds between retry attempts.
+   * @default 0
+   */
+  delay?: number
+  /**
+   * Condition to determine if a test should be retried based on the error.
+   * - If a RegExp, it is tested against the error message
+   * - If a function, called with the TestError object; return true to retry
+   *
+   * NOTE: Functions can only be used in test files, not in vitest.config.ts,
+   * because the configuration is serialized when passed to worker threads.
+   *
+   * @default undefined (retry on all errors)
+   */
+  condition?: RegExp | ((error: TestError) => boolean)
+}
+
+/**
+ * Serializable retry configuration (used in config files).
+ * Functions cannot be serialized, so only string conditions are allowed.
+ */
+export type SerializableRetry = number | {
+  /**
+   * The number of times to retry the test if it fails.
+   * @default 0
+   */
+  count?: number
+  /**
+   * Delay in milliseconds between retry attempts.
+   * @default 0
+   */
+  delay?: number
+  /**
+   * Condition to determine if a test should be retried based on the error.
+   * Must be a RegExp tested against the error message.
+   *
+   * @default undefined (retry on all errors)
+   */
+  condition?: RegExp
+}
+
 export interface TestOptions {
   /**
    * Test timeout.
    */
   timeout?: number
   /**
-   * Times to retry the test if fails. Useful for making flaky tests more stable.
-   * When retries is up, the last test error will be thrown.
-   *
+   * Retry configuration for the test.
+   * - If a number, specifies how many times to retry
+   * - If an object, allows fine-grained retry control
    * @default 0
    */
-  retry?: number
+  retry?: Retry
   /**
    * How many times the test will run again.
    * Only inner tests will repeat if set on `describe()`, nested `describe()` will inherit parent's repeat by default.
@@ -472,10 +549,6 @@ export interface TestOptions {
    */
   sequential?: boolean
   /**
-   * Whether the tasks of the suite run in a random order.
-   */
-  shuffle?: boolean
-  /**
    * Whether the test should be skipped.
    */
   skip?: boolean
@@ -491,6 +564,21 @@ export interface TestOptions {
    * Whether the test is expected to fail. If it does, the test will pass, otherwise it will fail.
    */
   fails?: boolean
+  /**
+   * Custom tags of the test. Useful for filtering tests.
+   */
+  tags?: keyof TestTags extends never
+    ? string[] | string
+    : TestTags[keyof TestTags] | TestTags[keyof TestTags][]
+}
+
+export interface TestTags {}
+
+export interface SuiteOptions extends TestOptions {
+  /**
+   * Whether the tasks of the suite run in a random order.
+   */
+  shuffle?: boolean
 }
 
 interface ExtendedAPI<ExtraContext> {
@@ -498,10 +586,19 @@ interface ExtendedAPI<ExtraContext> {
   runIf: (condition: any) => ChainableTestAPI<ExtraContext>
 }
 
+interface Hooks<ExtraContext> {
+  beforeAll: typeof beforeAll
+  afterAll: typeof afterAll
+  beforeEach: typeof beforeEach<ExtraContext>
+  afterEach: typeof afterEach<ExtraContext>
+  aroundEach: typeof aroundEach<ExtraContext>
+  aroundAll: typeof aroundAll
+}
+
 export type TestAPI<ExtraContext = object> = ChainableTestAPI<ExtraContext>
-  & ExtendedAPI<ExtraContext> & {
+  & ExtendedAPI<ExtraContext> & Hooks<ExtraContext> & {
     extend: <T extends Record<string, any> = object>(
-      fixtures: Fixtures<T, ExtraContext>
+      fixtures: Fixtures<T, ExtraContext>,
     ) => TestAPI<{
       [K in keyof T | keyof ExtraContext]: K extends keyof T
         ? T[K]
@@ -510,8 +607,9 @@ export type TestAPI<ExtraContext = object> = ChainableTestAPI<ExtraContext>
           : never;
     }>
     scoped: (
-      fixtures: Fixtures<Partial<ExtraContext>>
+      fixtures: Partial<Fixtures<ExtraContext>>,
     ) => void
+    describe: SuiteAPI<ExtraContext>
   }
 
 export interface FixtureOptions {
@@ -539,7 +637,7 @@ export interface FixtureOptions {
 export type Use<T> = (value: T) => Promise<void>
 export type FixtureFn<T, K extends keyof T, ExtraContext> = (
   context: Omit<T, K> & ExtraContext,
-  use: Use<T[K]>
+  use: Use<T[K]>,
 ) => Promise<void>
 export type Fixture<T, K extends keyof T, ExtraContext = object> = ((
   ...args: any
@@ -551,7 +649,7 @@ export type Fixture<T, K extends keyof T, ExtraContext = object> = ((
     | (T[K] extends any
       ? FixtureFn<T, K, Omit<ExtraContext, Exclude<keyof T, K>>>
       : never)
-export type Fixtures<T extends Record<string, any>, ExtraContext = object> = {
+export type Fixtures<T, ExtraContext = object> = {
   [K in keyof T]:
     | Fixture<T, K, ExtraContext & TestContext>
     | [Fixture<T, K, ExtraContext & TestContext>, FixtureOptions?];
@@ -560,22 +658,14 @@ export type Fixtures<T extends Record<string, any>, ExtraContext = object> = {
 export type InferFixturesTypes<T> = T extends TestAPI<infer C> ? C : T
 
 interface SuiteCollectorCallable<ExtraContext = object> {
-  /**
-   * @deprecated Use options as the second argument instead
-   */
-  <OverrideExtraContext extends ExtraContext = ExtraContext>(
-    name: string | Function,
-    fn: SuiteFactory<OverrideExtraContext>,
-    options: TestOptions
-  ): SuiteCollector<OverrideExtraContext>
   <OverrideExtraContext extends ExtraContext = ExtraContext>(
     name: string | Function,
     fn?: SuiteFactory<OverrideExtraContext>,
-    options?: number | TestOptions
+    options?: number
   ): SuiteCollector<OverrideExtraContext>
   <OverrideExtraContext extends ExtraContext = ExtraContext>(
     name: string | Function,
-    options: TestOptions,
+    options: SuiteOptions,
     fn?: SuiteFactory<OverrideExtraContext>
   ): SuiteCollector<OverrideExtraContext>
 }
@@ -593,18 +683,6 @@ export type SuiteAPI<ExtraContext = object> = ChainableSuiteAPI<ExtraContext> & 
   skipIf: (condition: any) => ChainableSuiteAPI<ExtraContext>
   runIf: (condition: any) => ChainableSuiteAPI<ExtraContext>
 }
-
-/**
- * @deprecated
- */
-export type HookListener<T extends any[], Return = void> = (
-  ...args: T
-) => Awaitable<Return>
-
-/**
- * @deprecated
- */
-export type HookCleanupCallback = unknown
 
 export interface BeforeAllListener {
   (suite: Readonly<Suite | File>): Awaitable<unknown>
@@ -628,11 +706,28 @@ export interface AfterEachListener<ExtraContext = object> {
   ): Awaitable<unknown>
 }
 
+export interface AroundEachListener<ExtraContext = object> {
+  (
+    runTest: () => Promise<void>,
+    context: TestContext & ExtraContext,
+    suite: Readonly<Suite>
+  ): Awaitable<unknown>
+}
+
+export interface AroundAllListener {
+  (
+    runSuite: () => Promise<void>,
+    suite: Readonly<Suite | File>
+  ): Awaitable<unknown>
+}
+
 export interface SuiteHooks<ExtraContext = object> {
   beforeAll: BeforeAllListener[]
   afterAll: AfterAllListener[]
   beforeEach: BeforeEachListener<ExtraContext>[]
   afterEach: AfterEachListener<ExtraContext>[]
+  aroundEach: AroundEachListener<ExtraContext>[]
+  aroundAll: AroundAllListener[]
 }
 
 export interface TaskCustomOptions extends TestOptions {
@@ -659,7 +754,7 @@ export interface TaskCustomOptions extends TestOptions {
 export interface SuiteCollector<ExtraContext = object> {
   readonly name: string
   readonly mode: RunMode
-  options?: TestOptions
+  options?: SuiteOptions
   type: 'collector'
   test: TestAPI<ExtraContext>
   tasks: (
@@ -669,6 +764,7 @@ export interface SuiteCollector<ExtraContext = object> {
   )[]
   scoped: (fixtures: Fixtures<any, ExtraContext>) => void
   fixtures: () => FixtureItem[] | undefined
+  file?: File
   suite?: Suite
   task: (name: string, options?: TaskCustomOptions) => Test<ExtraContext>
   collect: (file: File) => Promise<Suite>
@@ -680,7 +776,7 @@ export interface SuiteCollector<ExtraContext = object> {
 }
 
 export type SuiteFactory<ExtraContext = object> = (
-  test: TestAPI<ExtraContext>
+  test: TestAPI<ExtraContext>,
 ) => Awaitable<void>
 
 export interface RuntimeContext {
@@ -705,13 +801,15 @@ export interface TestContext {
   readonly signal: AbortSignal
 
   /**
-   * Extract hooks on test failed
+   * Register a callback to run when this specific test fails.
+   * Useful when tests run concurrently.
    * @see {@link https://vitest.dev/guide/test-context#ontestfailed}
    */
   readonly onTestFailed: (fn: OnTestFailedHandler, timeout?: number) => void
 
   /**
-   * Extract hooks on test failed
+   * Register a callback to run when this specific test finishes.
+   * Useful when tests run concurrently.
    * @see {@link https://vitest.dev/guide/test-context#ontestfinished}
    */
   readonly onTestFinished: (fn: OnTestFinishedHandler, timeout?: number) => void
@@ -749,3 +847,173 @@ export type SequenceSetupFiles = 'list' | 'parallel'
 export type WriteableTestContext = {
   -readonly [P in keyof TestContext]: TestContext[P]
 }
+
+// test artifacts
+
+/**
+ * Represents a file or data attachment associated with a test artifact.
+ *
+ * Attachments can be either file-based (via `path`) or inline content (via `body`).
+ * The `contentType` helps consumers understand how to interpret the attachment data.
+ */
+export interface TestAttachment {
+  /** MIME type of the attachment (e.g., 'image/png', 'text/plain') */
+  contentType?: string
+  /** File system path to the attachment */
+  path?: string
+  /** Inline attachment content as a string or raw binary data */
+  body?: string | Uint8Array
+}
+
+/**
+ * Source code location information for a test artifact.
+ *
+ * Indicates where in the source code the artifact originated from.
+ */
+export interface TestArtifactLocation {
+  /** Line number in the source file (1-indexed) */
+  line: number
+  /** Column number in the line (1-indexed) */
+  column: number
+  /** Path to the source file */
+  file: string
+}
+
+/**
+ * @experimental
+ *
+ * Base interface for all test artifacts.
+ *
+ * Extend this interface when creating custom test artifacts. Vitest automatically manages the `attachments` array and injects the `location` property to indicate where the artifact was created in your test code.
+ */
+export interface TestArtifactBase {
+  /** File or data attachments associated with this artifact */
+  attachments?: TestAttachment[]
+  /** Source location where this artifact was created */
+  location?: TestArtifactLocation
+}
+
+/**
+ * @deprecated Use {@linkcode TestArtifactLocation} instead.
+ *
+ * Kept for backwards compatibility.
+ */
+export type TestAnnotationLocation = TestArtifactLocation
+
+export interface TestAnnotation {
+  message: string
+  type: string
+  location?: TestArtifactLocation
+  attachment?: TestAttachment
+}
+
+/**
+ * @experimental
+ *
+ * Artifact type for test annotations.
+ */
+export interface TestAnnotationArtifact extends TestArtifactBase {
+  type: 'internal:annotation'
+  annotation: TestAnnotation
+}
+
+interface VisualRegressionArtifactAttachment extends TestAttachment {
+  name: 'reference' | 'actual' | 'diff'
+  width: number
+  height: number
+}
+
+/**
+ * @experimental
+ *
+ * Artifact type for visual regressions.
+ */
+export interface VisualRegressionArtifact extends TestArtifactBase {
+  type: 'internal:toMatchScreenshot'
+  kind: 'visual-regression'
+  message: string
+  attachments: VisualRegressionArtifactAttachment[]
+}
+
+/**
+ * @experimental
+ * @advanced
+ *
+ * Registry for custom test artifact types.
+ *
+ * Augment this interface to register custom artifact types that your tests can produce.
+ *
+ * Each custom artifact should extend {@linkcode TestArtifactBase} and include a unique `type` discriminator property.
+ *
+ * @remarks
+ * - Use a `Symbol` as the **registry key** to guarantee uniqueness
+ * - The `type` property should follow the pattern `'package-name:artifact-name'`, `'internal:'` is a reserved prefix
+ * - Use `attachments` to include files or data; extend {@linkcode TestAttachment} for custom metadata
+ * - `location` property is automatically injected to indicate where the artifact was created
+ *
+ * @example
+ *  ```ts
+ * // Define custom attachment type for generated PDF
+ * interface PDFAttachment extends TestAttachment {
+ *   contentType: 'application/pdf'
+ *   body: Uint8Array
+ *   pageCount: number
+ *   fileSize: number
+ * }
+ *
+ * interface PDFGenerationArtifact extends TestArtifactBase {
+ *   type: 'my-plugin:pdf-generation'
+ *   templateName: string
+ *   isValid: boolean
+ *   attachments: [PDFAttachment]
+ * }
+ *
+ * // Use a symbol to guarantee key uniqueness
+ * const pdfKey = Symbol('pdf-generation')
+ *
+ * declare module 'vitest' {
+ *   interface TestArtifactRegistry {
+ *     [pdfKey]: PDFGenerationArtifact
+ *   }
+ * }
+ *
+ * // Custom assertion for PDF generation
+ * async function toGenerateValidPDF(
+ *   this: MatcherState,
+ *   actual: PDFTemplate,
+ *   data: Record<string, unknown>
+ * ): AsyncExpectationResult {
+ *   const pdfBuffer = await actual.render(data)
+ *   const validation = await validatePDF(pdfBuffer)
+ *
+ *   await recordArtifact(this.task, {
+ *     type: 'my-plugin:pdf-generation',
+ *     templateName: actual.name,
+ *     isValid: validation.success,
+ *     attachments: [{
+ *       contentType: 'application/pdf',
+ *       body: pdfBuffer,
+ *       pageCount: validation.pageCount,
+ *       fileSize: pdfBuffer.byteLength
+ *     }]
+ *   })
+ *
+ *   return {
+ *     pass: validation.success,
+ *     message: () => validation.success
+ *       ? `Generated valid PDF with ${validation.pageCount} pages`
+ *       : `Invalid PDF: ${validation.error}`
+ *   }
+ * }
+ * ```
+ */
+export interface TestArtifactRegistry {}
+
+/**
+ * @experimental
+ *
+ * Union type of all test artifacts, including built-in and custom registered artifacts.
+ *
+ * This type automatically includes all artifacts registered via {@link TestArtifactRegistry}.
+ */
+export type TestArtifact = TestAnnotationArtifact | VisualRegressionArtifact | TestArtifactRegistry[keyof TestArtifactRegistry]

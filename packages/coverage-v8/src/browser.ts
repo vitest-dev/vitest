@@ -1,6 +1,6 @@
 import type { CoverageProviderModule } from 'vitest/node'
 import type { V8CoverageProvider } from './provider'
-import { cdp } from '@vitest/browser/context'
+import { cdp } from 'vitest/browser'
 import { loadProvider } from './load-provider'
 
 const session = cdp()
@@ -68,6 +68,14 @@ function filterResult(coverage: ScriptCoverage['result'][number]): boolean {
   }
 
   if (coverage.url === window.location.href) {
+    return false
+  }
+
+  if (coverage.url.includes('/@id/@vitest/')) {
+    return false
+  }
+
+  if (coverage.url.includes('/@vite/client')) {
     return false
   }
 

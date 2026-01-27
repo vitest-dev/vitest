@@ -2,7 +2,9 @@ import type { MockedModule } from '@vitest/mocker'
 import type { CancelReason } from '@vitest/runner'
 import type { Awaitable, ParsedStack, TestError } from '@vitest/utils'
 import type { StackTraceParserOptions } from '@vitest/utils/source-map'
-import type { ViteDevServer } from 'vite'
+import type { Plugin, ViteDevServer } from 'vite'
+import type { BrowserCommands } from 'vitest/browser'
+import type { BrowserTraceViewMode } from '../../runtime/config'
 import type { BrowserTesterOptions } from '../../types/browser'
 import type { TestProject } from '../project'
 import type { ApiConfig, ProjectConfig } from './config'
@@ -20,26 +22,41 @@ export interface BrowserModuleMocker {
   clear: (sessionId: string) => Promise<void>
 }
 
-export interface BrowserProviderOption {
+export interface BrowserProviderOption<Options extends object = object> {
   name: string
   supportedBrowser?: ReadonlyArray<string>
-  factory: (project: TestProject) => BrowserProvider
+  options: Options
+  providerFactory: (project: TestProject) => BrowserProvider
+  serverFactory: BrowserServerFactory
+}
+
+export interface BrowserServerOptions {
+  project: TestProject
+  coveragePlugin: () => Plugin
+  mocksPlugins: (options: { filter: (id: string) => boolean }) => Plugin[]
+  metaEnvReplacer: () => Plugin
+}
+
+export interface BrowserServerFactory {
+  (options: BrowserServerOptions): Promise<ParentProjectBrowser>
 }
 
 export interface BrowserProvider {
   name: string
   mocker?: BrowserModuleMocker
+  readonly initScripts?: string[]
   /**
    * @experimental opt-in into file parallelisation
    */
   supportsParallelism: boolean
   getCommandsContext: (sessionId: string) => Record<string, unknown>
-  openPage: (sessionId: string, url: string) => Promise<void>
+  openPage: (sessionId: string, url: string, options: { parallel: boolean }) => Promise<void>
   getCDPSession?: (sessionId: string) => Promise<CDPSession>
   close: () => Awaitable<void>
 }
 
 export type BrowserBuiltinProvider = 'webdriverio' | 'playwright' | 'preview'
+export interface _BrowserNames {}
 
 type UnsupportedProperties
   = | 'browser'
@@ -48,7 +65,6 @@ type UnsupportedProperties
     | 'sequence'
     | 'root'
     | 'pool'
-    | 'poolOptions'
   // browser mode doesn't support a custom runner
     | 'runner'
   // non-browser options
@@ -70,14 +86,16 @@ export interface BrowserInstanceOption extends
     | 'testerHtmlPath'
     | 'screenshotDirectory'
     | 'screenshotFailures'
-    | 'provider'
   > {
   /**
    * Name of the browser
    */
-  browser: string
+  browser: keyof _BrowserNames extends never
+    ? string
+    : _BrowserNames[keyof _BrowserNames]
 
   name?: string
+  provider?: BrowserProviderOption
 }
 
 export interface BrowserConfigOptions {
@@ -98,10 +116,21 @@ export interface BrowserConfigOptions {
   /**
    * Configurations for different browser setups
    */
-  instances: BrowserInstanceOption[]
+  instances?: BrowserInstanceOption[]
 
   /**
    * Browser provider
+   * @example
+   * ```ts
+   * import { playwright } from '@vitest/browser-playwright'
+   * export default defineConfig({
+   *   test: {
+   *     browser: {
+   *       provider: playwright(),
+   *     },
+   *   },
+   * })
+   * ```
    */
   provider?: BrowserProviderOption
 
@@ -123,6 +152,7 @@ export interface BrowserConfigOptions {
    * Isolate test environment after each test
    *
    * @default true
+   * @deprecated use top-level `isolate` instead
    */
   isolate?: boolean
 
@@ -131,6 +161,7 @@ export interface BrowserConfigOptions {
    * This option only has effect in headless mode (enabled in CI by default)
    *
    * @default // Same as "test.fileParallelism"
+   * @deprecated use top-level `fileParallelism` instead
    */
   fileParallelism?: boolean
 
@@ -169,6 +200,32 @@ export interface BrowserConfigOptions {
   }
 
   /**
+   * Generate traces that can be viewed on https://trace.playwright.dev/
+   *
+   * This option is supported only by **playwright** provider.
+   */
+  trace?: BrowserTraceViewMode | {
+    mode: BrowserTraceViewMode
+    /**
+     * The directory where all traces will be stored. By default, Vitest
+     * stores all traces in `__traces__` folder close to the test file.
+     */
+    tracesDir?: string
+    /**
+     * Whether to capture screenshots during tracing. Screenshots are used to build a timeline preview.
+     * @default true
+     */
+    screenshots?: boolean
+    /**
+     * If this option is true tracing will
+     * - capture DOM snapshot on every action
+     * - record network activity
+     * @default true
+     */
+    snapshots?: boolean
+  }
+
+  /**
    * Directory where screenshots will be saved when page.screenshot() is called
    * If not set, all screenshots are saved to __screenshots__ directory in the same folder as the test file.
    * If this is set, it will be resolved relative to the project root.
@@ -194,8 +251,8 @@ export interface BrowserConfigOptions {
 
   /**
    * Commands that will be executed on the server
-   * via the browser `import("@vitest/browser/context").commands` API.
-   * @see {@link https://vitest.dev/guide/browser/commands}
+   * via the browser `import("vitest/browser").commands` API.
+   * @see {@link https://vitest.dev/api/browser/commands}
    */
   commands?: Record<string, BrowserCommand<any>>
 
@@ -236,6 +293,10 @@ export interface BrowserCommandContext {
   provider: BrowserProvider
   project: TestProject
   sessionId: string
+  triggerCommand: <K extends keyof BrowserCommands>(
+    name: K,
+    ...args: Parameters<BrowserCommands[K]>
+  ) => ReturnType<BrowserCommands[K]>
 }
 
 export interface BrowserServerStateSession {
@@ -257,6 +318,7 @@ export interface BrowserServerState {
 
 export interface ParentProjectBrowser {
   spawn: (project: TestProject) => ProjectBrowser
+  vite: ViteDevServer
 }
 
 export interface ProjectBrowser {
@@ -267,10 +329,22 @@ export interface ProjectBrowser {
   initBrowserProvider: (project: TestProject) => Promise<void>
   parseStacktrace: (stack: string) => ParsedStack[]
   parseErrorStacktrace: (error: TestError, options?: StackTraceParserOptions) => ParsedStack[]
+  registerCommand: <K extends keyof BrowserCommands>(
+    name: K,
+    cb: BrowserCommand<
+      Parameters<BrowserCommands[K]>,
+      ReturnType<BrowserCommands[K]>
+    >,
+  ) => void
+  triggerCommand: <K extends keyof BrowserCommands>(
+    name: K,
+    context: BrowserCommandContext,
+    ...args: Parameters<BrowserCommands[K]>
+  ) => ReturnType<BrowserCommands[K]>
 }
 
-export interface BrowserCommand<Payload extends unknown[]> {
-  (context: BrowserCommandContext, ...payload: Payload): Awaitable<any>
+export interface BrowserCommand<Payload extends unknown[] = [], ReturnValue = any> {
+  (context: BrowserCommandContext, ...payload: Payload): Awaitable<ReturnValue>
 }
 
 export interface BrowserScript {
@@ -318,6 +392,14 @@ export interface ResolvedBrowserOptions extends BrowserConfigOptions {
   locators: {
     testIdAttribute: string
   }
+  trace: {
+    mode: BrowserTraceViewMode
+    tracesDir?: string
+    screenshots?: boolean
+    snapshots?: boolean
+    // TODO: map locations to test ones
+    // sources?: boolean
+  }
 }
 
 type ToMatchScreenshotResolvePath = (data: {
@@ -359,7 +441,7 @@ type ToMatchScreenshotResolvePath = (data: {
   platform: NodeJS.Platform
   /**
    * The value provided to
-   * {@linkcode https://vitest.dev/guide/browser/config#browser-screenshotdirectory|browser.screenshotDirectory},
+   * {@linkcode https://vitest.dev/config/browser/screenshotdirectory|browser.screenshotDirectory},
    * if none is provided, its default value.
    */
   screenshotDirectory: string

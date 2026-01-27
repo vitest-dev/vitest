@@ -4,7 +4,7 @@ import { existsSync, readFileSync } from 'node:fs'
 import { writeFile } from 'node:fs/promises'
 import { dirname, relative, resolve } from 'node:path'
 import { detectPackageManager, installPackage } from '@antfu/install-pkg'
-import { findUp } from 'find-up'
+import * as find from 'empathic/find'
 import prompt from 'prompts'
 import { x } from 'tinyexec'
 import c from 'tinyrainbow'
@@ -39,27 +39,6 @@ function getBrowserNames(provider: BrowserBuiltinProvider) {
     case 'preview':
       return ['chrome', 'firefox', 'safari']
   }
-}
-
-function getProviderPackageNames(provider: BrowserBuiltinProvider) {
-  switch (provider) {
-    case 'webdriverio':
-      return {
-        types: '@vitest/browser/providers/webdriverio',
-        pkg: 'webdriverio',
-      }
-    case 'playwright':
-      return {
-        types: '@vitest/browser/providers/playwright',
-        pkg: 'playwright',
-      }
-    case 'preview':
-      return {
-        types: '@vitest/browser/matchers',
-        pkg: null,
-      }
-  }
-  throw new Error(`Unsupported provider: ${provider}`)
 }
 
 function getFramework(): prompt.Choice[] {
@@ -156,15 +135,6 @@ function getFrameworkPluginPackage(framework: string) {
   return null
 }
 
-async function updateTsConfig(type: string | undefined | null) {
-  if (type == null) {
-    return
-  }
-  const msg = `Add "${c.bold(type)}" to your tsconfig.json "${c.bold('compilerOptions.types')}" field to have better intellisense support.`
-  log()
-  log(c.yellow('◼'), c.yellow(msg))
-}
-
 function getLanguageOptions(): prompt.Choice[] {
   return [
     {
@@ -250,9 +220,9 @@ function getPossibleProvider(dependencies: Record<string, string>) {
 function getProviderDocsLink(provider: string) {
   switch (provider) {
     case 'playwright':
-      return 'https://vitest.dev/guide/browser/playwright'
+      return 'https://vitest.dev/config/browser/playwright'
     case 'webdriverio':
-      return 'https://vitest.dev/guide/browser/webdriverio'
+      return 'https://vitest.dev/config/browser/webdriverio'
   }
 }
 
@@ -295,7 +265,7 @@ async function generateFrameworkConfigFile(options: {
 
   const configContent = [
     `import { defineConfig } from 'vitest/config'`,
-    `import { ${options.provider} } from '@vitest/browser/providers/${options.provider}'`,
+    `import { ${options.provider} } from '@vitest/browser-${options.provider}'`,
     options.frameworkPlugin ? frameworkImport : null,
     ``,
     'export default defineConfig({',
@@ -306,7 +276,7 @@ async function generateFrameworkConfigFile(options: {
     `      provider: ${options.provider}(),`,
     options.provider !== 'preview' && `      // ${getProviderDocsLink(options.provider)}`,
     `      instances: [`,
-    ...options.browsers.map(browser => `      { browser: '${browser}' },`),
+    ...options.browsers.map(browser => `        { browser: '${browser}' },`),
     `      ],`,
     `    },`,
     `  },`,
@@ -433,7 +403,7 @@ export async function create(): Promise<void> {
   }
 
   const dependenciesToInstall = [
-    '@vitest/browser',
+    `@vitest/browser-${provider}`,
   ]
 
   const frameworkPackage = getFrameworkTestPackage(framework)
@@ -441,10 +411,6 @@ export async function create(): Promise<void> {
     dependenciesToInstall.push(frameworkPackage)
   }
 
-  const providerPkg = getProviderPackageNames(provider)
-  if (providerPkg.pkg) {
-    dependenciesToInstall.push(providerPkg.pkg)
-  }
   const frameworkPlugin = getFrameworkPluginPackage(framework)
   if (frameworkPlugin) {
     dependenciesToInstall.push(frameworkPlugin)
@@ -458,7 +424,7 @@ export async function create(): Promise<void> {
     dependenciesToInstall.filter(pkg => !dependencies[pkg]),
   )
 
-  const rootConfig = await findUp(configFiles, {
+  const rootConfig = find.any(configFiles, {
     cwd: process.cwd(),
   })
 
@@ -512,11 +478,6 @@ export async function create(): Promise<void> {
         stdio: ['pipe', 'inherit', 'inherit'],
       },
     })
-  }
-
-  // TODO: can we do this ourselves?
-  if (lang === 'ts') {
-    await updateTsConfig(providerPkg?.types)
   }
 
   log()

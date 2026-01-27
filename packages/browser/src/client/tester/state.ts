@@ -1,5 +1,6 @@
 import type { BrowserRPC } from '@vitest/browser/client'
 import type { WorkerGlobalState } from 'vitest'
+import { EvaluatedModules } from 'vite/module-runner'
 import { getBrowserState } from '../utils'
 
 const config = getBrowserState().config
@@ -7,8 +8,8 @@ const sessionId = getBrowserState().sessionId
 
 const state: WorkerGlobalState = {
   ctx: {
+    rpc: null as any,
     pool: 'browser',
-    worker: './browser.js',
     workerId: 1,
     config,
     projectName: config.name || '',
@@ -31,8 +32,8 @@ const state: WorkerGlobalState = {
     },
   },
   onCleanup: fn => getBrowserState().cleanups.push(fn),
-  evaluatedModules: getBrowserState().evaluatedModules,
-  resolvingModules: getBrowserState().resolvingModules,
+  evaluatedModules: new EvaluatedModules(),
+  resolvingModules: new Set(),
   moduleExecutionInfo: new Map(),
   metaEnv: null as any,
   rpc: null as any,

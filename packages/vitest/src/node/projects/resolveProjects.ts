@@ -7,18 +7,22 @@ import type {
   UserConfig,
   UserWorkspaceConfig,
 } from '../types/config'
-import { existsSync, promises as fs } from 'node:fs'
+import { existsSync, readdirSync, statSync } from 'node:fs'
 import os from 'node:os'
 import { limitConcurrency } from '@vitest/runner/utils'
-import { deepClone } from '@vitest/utils'
-import { dirname, relative, resolve } from 'pathe'
+import { deepClone } from '@vitest/utils/helpers'
+import { basename, dirname, relative, resolve } from 'pathe'
 import { glob, isDynamicPattern } from 'tinyglobby'
 import { mergeConfig } from 'vite'
 import { configFiles as defaultConfigFiles } from '../../constants'
-import { isTTY } from '../../utils/env'
 import { VitestFilteredOutProjectError } from '../errors'
 import { initializeProject, TestProject } from '../project'
-import { withLabel } from '../reporters/renderers/utils'
+
+// vitest.config.*
+// vite.config.*
+// vitest.unit.config.*
+// vite.unit.config.*
+const CONFIG_REGEXP = /^vite(?:st)?(?:\.\w+)?\.config\./
 
 export async function resolveProjects(
   vitest: Vitest,
@@ -54,6 +58,7 @@ export async function resolveProjects(
     'inspect',
     'inspectBrk',
     'fileParallelism',
+    'tagsFilter',
   ] as const
 
   const cliOverrides = overridesOptions.reduce((acc, name) => {
@@ -83,7 +88,28 @@ export async function resolveProjects(
     projectPromises.push(concurrent(() => initializeProject(
       index,
       vitest,
-      { ...options, root, configFile, test: { ...options.test, ...cliOverrides } },
+      {
+        ...options,
+        root,
+        configFile,
+        plugins: [
+          {
+            name: 'vitest:tags',
+            // don't inherit tags from workspace config, they are merged separately
+            configResolved(config) {
+              ;(config as any).test ??= {}
+              config.test!.tags = options.test?.tags
+            },
+            api: {
+              vitest: {
+                experimental: { ignoreFsModuleCache: true },
+              },
+            },
+          },
+          ...options.plugins || [],
+        ],
+        test: { ...options.test, ...cliOverrides },
+      },
     )))
   })
 
@@ -184,25 +210,9 @@ export async function resolveBrowserProjects(
       return
     }
     const instances = project.config.browser.instances || []
-    const browser = project.config.browser.name
-    if (instances.length === 0 && browser) {
-      instances.push({
-        browser,
-        name: project.name ? `${project.name} (${browser})` : browser,
-      })
-      vitest.logger.warn(
-        withLabel(
-          'yellow',
-          'Vitest',
-          [
-            `No browser "instances" were defined`,
-            project.name ? ` for the "${project.name}" project. ` : '. ',
-            `Running tests in "${project.config.browser.name}" browser. `,
-            'The "browser.name" field is deprecated since Vitest 3. ',
-            'Read more: https://vitest.dev/guide/browser/config#browser-instances',
-          ].filter(Boolean).join(''),
-        ),
-      )
+    if (instances.length === 0) {
+      removeProjects.add(project)
+      return
     }
     const originalName = project.config.name
     // if original name is in the --project=name filter, keep all instances
@@ -231,6 +241,9 @@ export async function resolveBrowserProjects(
       if (name == null) {
         throw new Error(`The browser configuration must have a "name" property. This is a bug in Vitest. Please, open a new issue with reproduction`)
       }
+      if (config.provider?.name != null && project.config.browser.provider?.name != null && config.provider?.name !== project.config.browser.provider?.name) {
+        throw new Error(`The instance cannot have a different provider from its parent. The "${name}" instance specifies "${config.provider?.name}" provider, but its parent has a "${project.config.browser.provider?.name}" provider.`)
+      }
 
       if (names.has(name)) {
         throw new Error(
@@ -251,36 +264,7 @@ export async function resolveBrowserProjects(
     removeProjects.add(project)
   })
 
-  resolvedProjects = resolvedProjects.filter(project => !removeProjects.has(project))
-
-  const headedBrowserProjects = resolvedProjects.filter((project) => {
-    return project.config.browser.enabled && !project.config.browser.headless
-  })
-  if (headedBrowserProjects.length > 1) {
-    const message = [
-      `Found multiple projects that run browser tests in headed mode: "${headedBrowserProjects.map(p => p.name).join('", "')}".`,
-      ` Vitest cannot run multiple headed browsers at the same time.`,
-    ].join('')
-    if (!isTTY) {
-      throw new Error(`${message} Please, filter projects with --browser=name or --project=name flag or run tests with "headless: true" option.`)
-    }
-    const prompts = await import('prompts')
-    const { projectName } = await prompts.default({
-      type: 'select',
-      name: 'projectName',
-      choices: headedBrowserProjects.map(project => ({
-        title: project.name,
-        value: project.name,
-      })),
-      message: `${message} Select a single project to run or cancel and run tests with "headless: true" option. Note that you can also start tests with --browser=name or --project=name flag.`,
-    })
-    if (!projectName) {
-      throw new Error('The test run was aborted.')
-    }
-    return resolvedProjects.filter(project => project.name === projectName)
-  }
-
-  return resolvedProjects
+  return resolvedProjects.filter(project => !removeProjects.has(project))
 }
 
 function cloneConfig(project: TestProject, { browser, ...config }: BrowserInstanceOption) {
@@ -291,6 +275,7 @@ function cloneConfig(project: TestProject, { browser, ...config }: BrowserInstan
     headless,
     screenshotDirectory,
     screenshotFailures,
+    fileParallelism,
     // @ts-expect-error remove just in case
     browser: _browser,
     name,
@@ -314,6 +299,7 @@ function cloneConfig(project: TestProject, { browser, ...config }: BrowserInstan
       screenshotFailures: screenshotFailures ?? currentConfig.screenshotFailures,
       headless: headless ?? currentConfig.headless,
       provider: provider ?? currentConfig.provider,
+      fileParallelism: fileParallelism ?? currentConfig.fileParallelism,
       name: browser,
       instances: [], // projects cannot spawn more configs
     },
@@ -358,14 +344,22 @@ async function resolveTestProjectConfigs(
           throw new Error(`${note} references a non-existing file or a directory: ${file}`)
         }
 
-        const stats = await fs.stat(file)
+        const stats = statSync(file)
         // user can specify a config file directly
         if (stats.isFile()) {
+          const name = basename(file)
+          if (!CONFIG_REGEXP.test(name)) {
+            throw new Error(
+              `The file "${relative(vitest.config.root, file)}" must start with "vitest.config"/"vite.config" `
+              + `or match the pattern "(vitest|vite).*.config.*" to be a valid project config.`,
+            )
+          }
+
           projectsConfigFiles.push(file)
         }
         // user can specify a directory that should be used as a project
         else if (stats.isDirectory()) {
-          const configFile = await resolveDirectoryConfig(file)
+          const configFile = resolveDirectoryConfig(file)
           if (configFile) {
             projectsConfigFiles.push(configFile)
           }
@@ -418,11 +412,11 @@ async function resolveTestProjectConfigs(
 
     const projectsFs = await glob(projectsGlobMatches, globOptions)
 
-    await Promise.all(projectsFs.map(async (path) => {
+    projectsFs.forEach((path) => {
       // directories are allowed with a glob like `packages/*`
       // in this case every directory is treated as a project
       if (path.endsWith('/')) {
-        const configFile = await resolveDirectoryConfig(path)
+        const configFile = resolveDirectoryConfig(path)
         if (configFile) {
           projectsConfigFiles.push(configFile)
         }
@@ -431,9 +425,17 @@ async function resolveTestProjectConfigs(
         }
       }
       else {
+        const name = basename(path)
+        if (!CONFIG_REGEXP.test(name)) {
+          throw new Error(
+            `The projects glob matched a file "${relative(vitest.config.root, path)}", `
+            + `but it should also either start with "vitest.config"/"vite.config" `
+            + `or match the pattern "(vitest|vite).*.config.*".`,
+          )
+        }
         projectsConfigFiles.push(path)
       }
-    }))
+    })
   }
 
   const projectConfigFiles = Array.from(new Set(projectsConfigFiles))
@@ -445,8 +447,8 @@ async function resolveTestProjectConfigs(
   }
 }
 
-async function resolveDirectoryConfig(directory: string) {
-  const files = new Set(await fs.readdir(directory))
+function resolveDirectoryConfig(directory: string) {
+  const files = new Set(readdirSync(directory))
   // default resolution looks for vitest.config.* or vite.config.* files
   // this simulates how `findUp` works in packages/vitest/src/node/create.ts:29
   const configFile = defaultConfigFiles.find(file => files.has(file))

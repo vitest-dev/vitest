@@ -54,7 +54,7 @@ test('initializes project', async () => {
 
   expect(await getFileContent('/vitest.browser.config.ts')).toMatchInlineSnapshot(`
     "import { defineConfig } from 'vitest/config'
-    import { preview } from '@vitest/browser/providers/preview'
+    import { preview } from '@vitest/browser-preview'
 
     export default defineConfig({
       test: {

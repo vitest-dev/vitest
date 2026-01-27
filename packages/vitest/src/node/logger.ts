@@ -4,7 +4,7 @@ import type { TypeCheckError } from '../typecheck/typechecker'
 import type { Vitest } from './core'
 import type { TestProject } from './project'
 import { Console } from 'node:console'
-import { toArray } from '@vitest/utils'
+import { toArray } from '@vitest/utils/helpers'
 import c from 'tinyrainbow'
 import { highlightCode } from '../utils/colors'
 import { printError } from './printError'
@@ -131,6 +131,37 @@ export class Logger {
     return code
   }
 
+  printNoTestTagsFound(): void {
+    this.error(c.bgRed(' ERROR '), c.red('No test tags found in any project. Exiting with code 1.'))
+  }
+
+  printTags(): void {
+    const vitest = this.ctx
+    const rootProject = vitest.getRootProject()
+    const projects = [
+      rootProject,
+      ...vitest.projects.filter(p => p !== rootProject),
+    ]
+
+    const hasTags = projects.some(p => p.config.tags && p.config.tags.length > 0)
+
+    if (!hasTags) {
+      process.exitCode = 1
+      return this.printNoTestTagsFound()
+    }
+
+    for (const project of projects) {
+      const name = project.name
+      if (name) {
+        this.log(formatProjectName(project, ''))
+      }
+      project.config.tags.forEach((tag) => {
+        const tagLog = `${tag.name}${tag.description ? `: ${tag.description}` : ''}`
+        this.log(`  ${tagLog}`)
+      })
+    }
+  }
+
   printNoTestFound(filters?: string[]): void {
     const config = this.ctx.config
 
@@ -247,7 +278,7 @@ export class Logger {
     const output = project.isRootProject()
       ? ''
       : formatProjectName(project)
-    const provider = project.browser.provider.name
+    const provider = project.browser.provider?.name
     const providerString = provider === 'preview' ? '' : ` by ${c.reset(c.bold(provider))}`
     this.log(
       c.dim(
@@ -318,7 +349,8 @@ export class Logger {
         process.exitCode = exitCode !== undefined ? (128 + exitCode) : Number(signal)
       }
 
-      process.exit()
+      // Timeout to flush stderr
+      setTimeout(() => process.exit(), 1)
     }
 
     process.once('SIGINT', onExit)

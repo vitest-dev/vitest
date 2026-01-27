@@ -1,17 +1,25 @@
 import type { File, Suite, Task, Test } from '@vitest/runner'
+import type { Property } from 'estree'
+import type { SerializedConfig } from '../runtime/config'
 import type { TestError } from '../types/general'
 import type { TestProject } from './project'
+import { promises as fs } from 'node:fs'
+import { originalPositionFor, TraceMap } from '@jridgewell/trace-mapping'
 import {
   calculateSuiteHash,
+  createTaskName,
   generateHash,
   interpretTaskModes,
   someTasksAreOnly,
+  validateTags,
 } from '@vitest/runner/utils'
-import { originalPositionFor, TraceMap } from '@vitest/utils/source-map'
+import { unique } from '@vitest/utils/helpers'
 import { ancestor as walkAst } from 'acorn-walk'
 import { relative } from 'pathe'
 import { parseAst } from 'vite'
+import { createIndexLocationsMap } from '../utils/base'
 import { createDebugger } from '../utils/debugger'
+import { detectCodeBlock } from '../utils/test-helpers'
 
 interface ParsedFile extends File {
   start: number
@@ -38,10 +46,19 @@ interface LocalCallDefinition {
   mode: 'run' | 'skip' | 'only' | 'todo' | 'queued'
   task: ParsedSuite | ParsedFile | ParsedTest
   dynamic: boolean
+  tags: string[]
 }
 
 const debug = createDebugger('vitest:ast-collect-info')
 const verbose = createDebugger('vitest:ast-collect-verbose')
+
+function isTestFunctionName(name: string) {
+  return name === 'it' || name === 'test' || name.startsWith('test') || name.endsWith('Test')
+}
+
+function isVitestFunctionName(name: string) {
+  return name === 'describe' || name === 'suite' || isTestFunctionName(name)
+}
 
 function astParseFile(filepath: string, code: string) {
   const ast = parseAst(code)
@@ -73,7 +90,7 @@ function astParseFile(filepath: string, code: string) {
     if (callee.type === 'MemberExpression') {
       if (
         callee.object?.type === 'Identifier'
-        && ['it', 'test', 'describe', 'suite'].includes(callee.object.name)
+        && isVitestFunctionName(callee.object.name)
       ) {
         return callee.object?.name
       }
@@ -106,14 +123,14 @@ function astParseFile(filepath: string, code: string) {
       if (!name) {
         return
       }
-      if (!['it', 'test', 'describe', 'suite'].includes(name)) {
+      if (!isVitestFunctionName(name)) {
         verbose?.(`Skipping ${name} (unknown call)`)
         return
       }
       const property = callee?.property?.name
       let mode = !property || property === name ? 'run' : property
       // they will be picked up in the next iteration
-      if (['each', 'for', 'skipIf', 'runIf'].includes(mode)) {
+      if (['each', 'for', 'skipIf', 'runIf', 'extend', 'scoped'].includes(mode)) {
         return
       }
 
@@ -168,15 +185,40 @@ function astParseFile(filepath: string, code: string) {
         isDynamicEach = property === 'each' || property === 'for'
       }
 
-      debug?.('Found', name, message, `(${mode})`)
+      // Extract tags from the second argument if it's an options object
+      const tags: string[] = []
+      const secondArg = node.arguments?.[1]
+      if (secondArg?.type === 'ObjectExpression') {
+        const tagsProperty = secondArg.properties?.find(
+          (p: any) => p.type === 'Property' && p.key?.type === 'Identifier' && p.key.name === 'tags',
+        ) as Property | undefined
+        if (tagsProperty) {
+          const tagsValue = tagsProperty.value
+          if (tagsValue?.type === 'Literal' && typeof tagsValue.value === 'string') {
+            // tags: 'single-tag'
+            tags.push(tagsValue.value)
+          }
+          else if (tagsValue?.type === 'ArrayExpression') {
+            // tags: ['tag1', 'tag2']
+            for (const element of tagsValue.elements || []) {
+              if (element?.type === 'Literal' && typeof element.value === 'string') {
+                tags.push(element.value)
+              }
+            }
+          }
+        }
+      }
+
+      debug?.('Found', name, message, `(${mode})`, tags.length ? `[${tags.join(', ')}]` : '')
       definitions.push({
         start,
         end,
         name: message,
-        type: name === 'it' || name === 'test' ? 'test' : 'suite',
+        type: isTestFunctionName(name) ? 'test' : 'suite',
         mode,
         task: null as any,
         dynamic: isDynamicEach,
+        tags,
       } satisfies LocalCallDefinition)
     },
   })
@@ -193,6 +235,7 @@ export function createFailedFileTask(project: TestProject, filepath: string, err
     type: 'suite',
     id: /* @__PURE__ */ generateHash(`${testFilepath}${project.config.name || ''}`),
     name: testFilepath,
+    fullName: testFilepath,
     mode: 'run',
     tasks: [],
     start: 0,
@@ -232,37 +275,33 @@ function serializeError(ctx: TestProject, error: any): TestError[] {
   ]
 }
 
-interface ParseOptions {
-  name: string
-  filepath: string
-  allowOnly: boolean
-  pool: string
-  testNamePattern?: RegExp | undefined
-}
-
 function createFileTask(
   testFilepath: string,
   code: string,
   requestMap: any,
-  options: ParseOptions,
+  config: SerializedConfig,
+  filepath: string,
+  fileTags: string[] | undefined,
 ) {
   const { definitions, ast } = astParseFile(testFilepath, code)
   const file: ParsedFile = {
-    filepath: options.filepath,
+    filepath,
     type: 'suite',
-    id: /* @__PURE__ */ generateHash(`${testFilepath}${options.name || ''}`),
+    id: /* @__PURE__ */ generateHash(`${testFilepath}${config.name || ''}`),
     name: testFilepath,
+    fullName: testFilepath,
     mode: 'run',
     tasks: [],
     start: ast.start,
     end: ast.end,
-    projectName: options.name,
+    projectName: config.name,
     meta: {},
     pool: 'browser',
     file: null!,
+    tags: fileTags || [],
   }
   file.file = file
-  const indexMap = createIndexMap(code)
+  const indexMap = createIndexLocationsMap(code)
   const map = requestMap && new TraceMap(requestMap)
   let lastSuite: ParsedSuite = file as any
   const updateLatestSuite = (index: number) => {
@@ -296,7 +335,10 @@ function createFileTask(
             '->',
             `${originalLocation.line}:${originalLocation.column}`,
           )
-          location = originalLocation
+          location = {
+            line: originalLocation.line,
+            column: originalLocation.column,
+          }
         }
         else {
           debug?.(
@@ -315,6 +357,10 @@ function createFileTask(
           `${definition.start}`,
         )
       }
+      // Inherit tags from parent suite and merge with own tags
+      const parentTags = latestSuite.tags || []
+      const taskTags = unique([...parentTags, ...definition.tags])
+
       if (definition.type === 'suite') {
         const task: ParsedSuite = {
           type: definition.type,
@@ -323,26 +369,34 @@ function createFileTask(
           file,
           tasks: [],
           mode,
+          each: definition.dynamic,
           name: definition.name,
+          fullName: createTaskName([latestSuite.fullName, definition.name]),
+          fullTestName: createTaskName([latestSuite.fullTestName, definition.name]),
           end: definition.end,
           start: definition.start,
           location,
           dynamic: definition.dynamic,
           meta: {},
+          tags: taskTags,
         }
         definition.task = task
         latestSuite.tasks.push(task)
         lastSuite = task
         return
       }
+      validateTags(config, taskTags)
       const task: ParsedTest = {
         type: definition.type,
         id: '',
         suite: latestSuite,
         file,
+        each: definition.dynamic,
         mode,
         context: {} as any, // not used on the server
         name: definition.name,
+        fullName: createTaskName([latestSuite.fullName, definition.name]),
+        fullTestName: createTaskName([latestSuite.fullTestName, definition.name]),
         end: definition.end,
         start: definition.start,
         location,
@@ -350,6 +404,8 @@ function createFileTask(
         meta: {},
         timeout: 0,
         annotations: [],
+        artifacts: [],
+        tags: taskTags,
       }
       definition.task = task
       latestSuite.tasks.push(task)
@@ -358,11 +414,13 @@ function createFileTask(
   const hasOnly = someTasksAreOnly(file)
   interpretTaskModes(
     file,
-    options.testNamePattern,
+    config.testNamePattern,
+    undefined,
+    undefined,
     undefined,
     hasOnly,
     false,
-    options.allowOnly,
+    config.allowOnly,
   )
   markDynamicTests(file.tasks)
   if (!file.tasks.length) {
@@ -371,7 +429,7 @@ function createFileTask(
       errors: [
         {
           name: 'Error',
-          message: `No test suite found in file ${options.filepath}`,
+          message: `No test suite found in file ${filepath}`,
         },
       ],
     }
@@ -393,39 +451,30 @@ export async function astCollectTests(
       new Error(`Failed to parse ${testFilepath}. Vite didn't return anything.`),
     )
   }
-  return createFileTask(testFilepath, request.code, request.map, {
-    name: project.config.name,
+  return createFileTask(
+    testFilepath,
+    request.code,
+    request.map,
+    project.serializedConfig,
     filepath,
-    allowOnly: project.config.allowOnly,
-    testNamePattern: project.config.testNamePattern,
-    pool: project.browser ? 'browser' : project.config.pool,
-  })
+    request.fileTags,
+  )
 }
 
 async function transformSSR(project: TestProject, filepath: string) {
-  const request = await project.vite.transformRequest(filepath, { ssr: false })
-  if (!request) {
-    return null
-  }
-  return await project.vite.ssrTransform(request.code, request.map, filepath)
-}
+  // Read original file content to extract pragmas (environment, tags)
+  const originalCode = await fs.readFile(filepath, 'utf-8').catch(() => '')
+  const { env: pragmaEnv, tags: fileTags } = detectCodeBlock(originalCode)
 
-function createIndexMap(source: string) {
-  const map = new Map<number, { line: number; column: number }>()
-  let index = 0
-  let line = 1
-  let column = 1
-  for (const char of source) {
-    map.set(index++, { line, column })
-    if (char === '\n' || char === '\r\n') {
-      line++
-      column = 0
-    }
-    else {
-      column++
-    }
-  }
-  return map
+  // Use environment from pragma if defined, otherwise fall back to config
+  const environment = pragmaEnv || project.config.environment
+  const env = environment === 'jsdom' || environment === 'happy-dom'
+    ? project.vite.environments.client
+    : project.vite.environments.ssr
+
+  const transformResult = await env.transformRequest(filepath)
+
+  return transformResult ? { ...transformResult, fileTags } : null
 }
 
 function markDynamicTests(tasks: Task[]) {

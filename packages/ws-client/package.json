@@ -1,7 +1,7 @@
 {
   "name": "@vitest/ws-client",
   "type": "module",
-  "version": "4.0.0-beta.10",
+  "version": "4.1.0-beta.2",
   "description": "WebSocket client wrapper for communicating with Vitest",
   "author": "Anthony Fu <anthonyfu117@hotmail.com>",
   "license": "MIT",
@@ -30,10 +30,10 @@
     "dist"
   ],
   "engines": {
-    "node": "^18.0.0 || >=20.0.0"
+    "node": "^20.0.0 || ^22.0.0 || >=24.0.0"
   },
   "scripts": {
-    "build": "rimraf dist && rollup -c",
+    "build": "premove dist && rollup -c",
     "dev": "rollup -c --watch --watch.include 'src/**'",
     "typecheck": "tsc --noEmit"
   },
