@@ -1016,3 +1016,25 @@ test('allows custom transformIndexHtml without custom html file', async () => {
   expect(stdout).toContain('✓ |chromium| browser-custom.test.ts')
   expect(exitCode).toBe(0)
 })
+
+test('show a warning if host is exposed', async () => {
+  const { stderr } = await runVitest({
+    config: false,
+    root: './fixtures/basic',
+    reporters: [
+      {
+        onInit() {
+          throw new Error('stop')
+        },
+      },
+    ],
+    browser: {
+      api: {
+        host: 'custom-host',
+      },
+    },
+  })
+  expect(stderr).toContain(
+    'API server is exposed to network, disabling write and exec operations by default for security reasons. This can case some APIs to not work as expected. Set `browser.api.allowExec` manually to hide this warning. See https://vitest.dev/config/browser/api for more details.',
+  )
+})
