@@ -11,8 +11,6 @@ outline: deep
 
 Listen to port and serve API for [the UI](/guide/ui) or [browser server](/guide/browser/). When set to `true`, the default port is `51204`.
 
-<!-- TODO: document options -->
-
 ## api.allowWrite <Version>4.1.0</Version> {#api-allowwrite}
 
 - **Type:** `boolean`

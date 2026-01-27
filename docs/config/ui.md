@@ -16,5 +16,5 @@ This features requires a [`@vitest/ui`](https://www.npmjs.com/package/@vitest/ui
 :::
 
 ::: danger SECURITY ADVICE
-Make sure that your UI server is not exposed to the network. Since Vitest 4.1 if [`api.host`](/config/api) is manually set Vitest will disable the buttons to save the code or run any tests for security reasons.
+Make sure that your UI server is not exposed to the network. Since Vitest 4.1 setting [`api.host`](/config/api) to anything other than `localhost` will disable the buttons to save the code or run any tests for security reasons, effectively making UI a readonly reporter.
 :::

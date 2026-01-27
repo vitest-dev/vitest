@@ -5,7 +5,7 @@ outline: deep
 
 # browser.api
 
-- **Type:** `number | { port?, strictPort?, host? }`
+- **Type:** `number | object`
 - **Default:** `63315`
 - **CLI:** `--browser.api=63315`, `--browser.api.port=1234, --browser.api.host=example.com`
 
