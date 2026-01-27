@@ -545,10 +545,6 @@ export class TestProject {
       {
         ...options,
         coverage: this.vitest.config.coverage,
-        experimental: {
-          ...this.vitest.config.experimental,
-          importDurations: this.vitest.config.experimental.importDurations,
-        },
       },
       server.config,
     )
