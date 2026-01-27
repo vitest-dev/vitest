@@ -607,15 +607,17 @@ export abstract class BaseReporter implements Reporter {
       }
     }
 
-    if (this.ctx.config.experimental.importDurations.print) {
-      this.printImportsBreakdown()
+    const printSetting = this.ctx.config.experimental.importDurations.print
+    if (printSetting === true || printSetting === 'on-warn') {
+      this.printImportsBreakdown(printSetting === 'on-warn')
     }
 
     this.log()
   }
 
-  private printImportsBreakdown() {
+  private printImportsBreakdown(onlyOnWarn: boolean) {
     const testModules = this.ctx.state.getTestModules()
+    const { thresholds } = this.ctx.config.experimental.importDurations
 
     interface ImportEntry {
       importedModuleId: string
@@ -645,6 +647,14 @@ export abstract class BaseReporter implements Reporter {
 
     if (allImports.length === 0) {
       return
+    }
+
+    // If onlyOnWarn mode, check if any import exceeds the warn threshold
+    if (onlyOnWarn) {
+      const hasSlowImport = allImports.some(imp => imp.totalTime >= thresholds.warn)
+      if (!hasSlowImport) {
+        return
+      }
     }
 
     const sortedImports = allImports.sort((a, b) => b.totalTime - a.totalTime)
@@ -700,7 +710,8 @@ export abstract class BaseReporter implements Reporter {
   }
 
   private importDurationTime(duration: number) {
-    const color = duration >= 500 ? c.red : duration >= 100 ? c.yellow : (c: string) => c
+    const { thresholds } = this.ctx.config.experimental.importDurations
+    const color = duration >= thresholds.danger ? c.red : duration >= thresholds.warn ? c.yellow : (c: string) => c
     return color(formatTime(duration).padStart(6))
   }
 

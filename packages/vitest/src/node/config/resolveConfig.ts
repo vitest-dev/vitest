@@ -873,6 +873,9 @@ export function resolveConfig(
     const shouldCollect = resolved.experimental.importDurations.print || resolved.ui
     resolved.experimental.importDurations.limit = shouldCollect ? 10 : 0
   }
+  resolved.experimental.importDurations.thresholds ??= {} as any
+  resolved.experimental.importDurations.thresholds.warn ??= 100
+  resolved.experimental.importDurations.thresholds.danger ??= 500
 
   return resolved
 }

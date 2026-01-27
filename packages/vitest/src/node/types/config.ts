@@ -864,15 +864,33 @@ export interface InlineConfig {
      */
     importDurations?: {
       /**
-       * Print import breakdown to CLI terminal after tests finish.
+       * When to print import breakdown to CLI terminal after tests finish.
+       * - `true`: Always print
+       * - `false`: Never print (default)
+       * - `'on-warn'`: Print only when any import exceeds the warn threshold
        * @default false
        */
-      print?: boolean
+      print?: boolean | 'on-warn'
       /**
        * Maximum number of imports to collect and display.
        * @default 0 (or 10 if `print` or UI is enabled)
        */
       limit?: number
+      /**
+       * Duration thresholds in milliseconds for coloring and warnings.
+       */
+      thresholds?: {
+        /**
+         * Warning threshold - imports exceeding this are shown in yellow/orange.
+         * @default 100
+         */
+        warn?: number
+        /**
+         * Danger threshold - imports exceeding this are shown in red.
+         * @default 500
+         */
+        danger?: number
+      }
     }
 
     /**
@@ -1158,8 +1176,12 @@ export interface ResolvedConfig
 
   experimental: Omit<Required<UserConfig>['experimental'], 'importDurations'> & {
     importDurations: {
-      print: boolean
+      print: boolean | 'on-warn'
       limit: number
+      thresholds: {
+        warn: number
+        danger: number
+      }
     }
   }
 }

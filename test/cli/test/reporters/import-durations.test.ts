@@ -105,4 +105,51 @@ describe('import durations', () => {
     const file = ctx!.state.getFiles()[0]
     expect(file.importDurations).toEqual({})
   })
+
+  it('should print on-warn only when threshold exceeded', async () => {
+    // With default threshold (100ms), should NOT print (imports are ~75ms)
+    const { stdout: stdoutDefault } = await runVitest({
+      root,
+      include: ['**/import-durations.test.ts'],
+      experimental: {
+        importDurations: {
+          print: 'on-warn',
+          limit: 5,
+        },
+      },
+    })
+
+    expect(stdoutDefault).not.toContain('Import Duration Breakdown')
+
+    // With lower threshold (50ms), should print (imports are ~75ms > 50ms)
+    const { stdout: stdoutLow } = await runVitest({
+      root,
+      include: ['**/import-durations.test.ts'],
+      experimental: {
+        importDurations: {
+          print: 'on-warn',
+          limit: 5,
+          thresholds: { warn: 50 },
+        },
+      },
+    })
+
+    expect(stdoutLow).toContain('Import Duration Breakdown')
+  })
+
+  it('should use custom thresholds for coloring', async () => {
+    const { stdout } = await runVitest({
+      root,
+      include: ['**/import-durations.test.ts'],
+      experimental: {
+        importDurations: {
+          print: true,
+          limit: 5,
+          thresholds: { warn: 10, danger: 30 },
+        },
+      },
+    })
+
+    expect(stdout).toContain('Import Duration Breakdown')
+  })
 })
