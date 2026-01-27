@@ -3,7 +3,7 @@ import { Writable } from 'node:stream'
 import { expect, test } from '@playwright/test'
 import { startVitest } from 'vitest/node'
 
-const port = 9000
+const port = 9002
 const pageUrl = `http://localhost:${port}/__vitest__/`
 
 test.describe('ui', () => {
@@ -227,7 +227,7 @@ test.describe('ui', () => {
     // match only failing files when fail filter applied
     await page.getByPlaceholder('Search...').fill('')
     await page.getByText(/^Fail$/, { exact: true }).click()
-    await page.getByText('FAIL (1)').click()
+    await page.getByText('FAIL (2)').click()
     await expect(page.getByTestId('details-panel').getByText('fixtures/error.test.ts', { exact: true })).toBeVisible()
     await expect(page.getByTestId('details-panel').getByText('fixtures/sample.test.ts', { exact: true })).toBeHidden()
 

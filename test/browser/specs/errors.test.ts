@@ -67,8 +67,7 @@ test('throws an error if test reloads the iframe during a test run', async () =>
   )
 })
 
-// TODO: confirm snapshots don't work with exec: false
-test.only('cannot use fs commands if write is disabled', async () => {
+test('cannot use fs commands if write is disabled', async () => {
   const { stderr, fs } = await runInlineBrowserTests({
     'fs-commands.test.ts': `
       import { test, expect, recordArtifact } from 'vitest'
