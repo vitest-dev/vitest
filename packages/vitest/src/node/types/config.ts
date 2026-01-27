@@ -877,6 +877,12 @@ export interface InlineConfig {
        */
       limit?: number
       /**
+       * Fail the test run if any import exceeds the danger threshold.
+       * When failing, the breakdown is always printed regardless of `print` setting.
+       * @default false
+       */
+      failOnDanger?: boolean
+      /**
        * Duration thresholds in milliseconds for coloring and warnings.
        */
       thresholds?: {
@@ -1178,6 +1184,7 @@ export interface ResolvedConfig
     importDurations: {
       print: boolean | 'on-warn'
       limit: number
+      failOnDanger: boolean
       thresholds: {
         warn: number
         danger: number

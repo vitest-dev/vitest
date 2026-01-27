@@ -607,15 +607,19 @@ export abstract class BaseReporter implements Reporter {
       }
     }
 
-    const printSetting = this.ctx.config.experimental.importDurations.print
-    if (printSetting === true || printSetting === 'on-warn') {
-      this.printImportsBreakdown(printSetting === 'on-warn')
+    const { print: printSetting, failOnDanger } = this.ctx.config.experimental.importDurations
+    const shouldPrint = printSetting === true || printSetting === 'on-warn'
+    if (shouldPrint || failOnDanger) {
+      this.checkImportsBreakdown({
+        print: printSetting,
+        failOnDanger,
+      })
     }
 
     this.log()
   }
 
-  private printImportsBreakdown(onlyOnWarn: boolean) {
+  private checkImportsBreakdown(options: { print: boolean | 'on-warn'; failOnDanger: boolean }) {
     const testModules = this.ctx.state.getTestModules()
     const { thresholds } = this.ctx.config.experimental.importDurations
 
@@ -649,12 +653,26 @@ export abstract class BaseReporter implements Reporter {
       return
     }
 
-    // If onlyOnWarn mode, check if any import exceeds the warn threshold
-    if (onlyOnWarn) {
-      const hasSlowImport = allImports.some(imp => imp.totalTime >= thresholds.warn)
-      if (!hasSlowImport) {
-        return
-      }
+    const dangerImports = allImports.filter(imp => imp.totalTime >= thresholds.danger)
+    const warnImports = allImports.filter(imp => imp.totalTime >= thresholds.warn)
+    const hasDangerImports = dangerImports.length > 0
+    const hasWarnImports = warnImports.length > 0
+
+    // Determine if we should print
+    let shouldPrint = false
+    if (options.print === true) {
+      shouldPrint = true
+    }
+    else if (options.print === 'on-warn' && hasWarnImports) {
+      shouldPrint = true
+    }
+    // Always print when failing
+    if (options.failOnDanger && hasDangerImports) {
+      shouldPrint = true
+    }
+
+    if (!shouldPrint) {
+      return
     }
 
     const sortedImports = allImports.sort((a, b) => b.totalTime - a.totalTime)
@@ -707,6 +725,15 @@ export abstract class BaseReporter implements Reporter {
     this.log(c.dim('Total imports: ') + allImports.length)
     this.log(c.dim('Slowest import (total-time): ') + formatTime(slowestImport.totalTime))
     this.log(c.dim('Total import time (self/total): ') + formatTime(totalSelfTime) + c.dim(' / ') + formatTime(totalTotalTime))
+
+    // Fail if danger threshold exceeded
+    if (options.failOnDanger && hasDangerImports) {
+      this.log()
+      this.ctx.logger.error(
+        `ERROR: ${dangerImports.length} import(s) exceeded the danger threshold of ${thresholds.danger}ms`,
+      )
+      process.exitCode = 1
+    }
   }
 
   private importDurationTime(duration: number) {

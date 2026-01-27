@@ -122,6 +122,7 @@ export interface SerializedConfig {
     importDurations: {
       print: boolean | 'on-warn'
       limit: number
+      failOnDanger: boolean
       thresholds: {
         warn: number
         danger: number

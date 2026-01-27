@@ -834,6 +834,9 @@ export const cliOptionsConfig: VitestCLIOptions = {
             description: 'Maximum number of imports to collect and display (default: 0, or 10 if print or UI is enabled).',
             argument: '<number>',
           },
+          failOnDanger: {
+            description: 'Fail the test run if any import exceeds the danger threshold (default: false).',
+          },
           thresholds: {
             description: 'Duration thresholds in milliseconds for coloring and warnings.',
             argument: '',

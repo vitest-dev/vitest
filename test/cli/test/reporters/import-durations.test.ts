@@ -152,4 +152,59 @@ describe('import durations', () => {
 
     expect(stdout).toContain('Import Duration Breakdown')
   })
+
+  it('should fail when failOnDanger is enabled and threshold exceeded', async () => {
+    // With default danger threshold (500ms), should NOT fail (imports are ~75ms)
+    const { exitCode: exitCodeDefault, stderr: stderrDefault } = await runVitest({
+      root,
+      include: ['**/import-durations.test.ts'],
+      experimental: {
+        importDurations: {
+          failOnDanger: true,
+          limit: 5,
+        },
+      },
+    })
+
+    expect(exitCodeDefault).toBe(0)
+    expect(stderrDefault).not.toContain('exceeded the danger threshold')
+
+    // With lower danger threshold (50ms), should fail (imports are ~75ms > 50ms)
+    const { exitCode: exitCodeLow, stderr: stderrLow, stdout: stdoutLow } = await runVitest({
+      root,
+      include: ['**/import-durations.test.ts'],
+      experimental: {
+        importDurations: {
+          failOnDanger: true,
+          limit: 5,
+          thresholds: { danger: 50 },
+        },
+      },
+    })
+
+    expect(exitCodeLow).toBe(1)
+    expect(stderrLow).toContain('exceeded the danger threshold')
+    // Should also print the breakdown when failing
+    expect(stdoutLow).toContain('Import Duration Breakdown')
+  })
+
+  it('should print breakdown when failOnDanger triggers even if print is false', async () => {
+    const { exitCode, stdout, stderr } = await runVitest({
+      root,
+      include: ['**/import-durations.test.ts'],
+      experimental: {
+        importDurations: {
+          print: false,
+          failOnDanger: true,
+          limit: 5,
+          thresholds: { danger: 50 },
+        },
+      },
+    })
+
+    expect(exitCode).toBe(1)
+    expect(stderr).toContain('exceeded the danger threshold')
+    // Should print breakdown even though print is false
+    expect(stdout).toContain('Import Duration Breakdown')
+  })
 })
