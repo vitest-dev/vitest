@@ -1,3 +1,5 @@
+import { expect, test } from 'vitest'
+
 test('expect.soft fails if run with toMatchInlineSnapshot', () => {
   let exceptionThrown = false
   try {
