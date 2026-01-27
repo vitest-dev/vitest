@@ -59,7 +59,7 @@ export async function resolveProjects(
     'inspectBrk',
     'fileParallelism',
     'tagsFilter',
-    'experimental',
+    // 'experimental',
   ] as const
 
   const cliOverrides = overridesOptions.reduce((acc, name) => {
