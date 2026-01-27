@@ -341,6 +341,11 @@ function createSuiteCollector(
       ...options,
     }
     const timeout = options.timeout ?? runner.config.testTimeout
+    const parentMeta = currentSuite?.meta
+    let testMeta = options.meta ?? Object.create(null)
+    if (parentMeta) {
+      testMeta = Object.assign(Object.create(null), parentMeta, testMeta)
+    }
     const task: Test = {
       id: '',
       name,
@@ -365,7 +370,7 @@ function createSuiteCollector(
           : options.todo
             ? 'todo'
             : 'run',
-      meta: options.meta ?? Object.create(null),
+      meta: testMeta,
       annotations: [],
       artifacts: [],
       tags: testTags,
@@ -604,9 +609,10 @@ function createSuite() {
     const isConcurrentSpecified = options.concurrent || this.concurrent || options.sequential === false
     const isSequentialSpecified = options.sequential || this.sequential || options.concurrent === false
 
+    const { meta: parentMeta, ...parentOptions } = currentSuite?.options || {}
     // inherit options from current suite
     options = {
-      ...currentSuite?.options,
+      ...parentOptions,
       ...options,
     }
 
@@ -636,6 +642,11 @@ function createSuite() {
     }
     if (isSequential != null) {
       options.sequential = isSequential && !isConcurrent
+    }
+
+    if (parentMeta) {
+      options.meta ??= Object.create(null)
+      Object.assign(options.meta!, parentMeta)
     }
 
     return createSuiteCollector(

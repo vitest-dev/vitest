@@ -170,6 +170,12 @@ it('user returns data from db', { tags: ['db', 'flaky'] }, () => {
 })
 ```
 
+### meta <Version>4.1.0</Version> {#meta}
+
+- **Type:** `TaskMeta`
+
+Attaches custom [metadata](/api/advanced/metadata) available in reporters.
+
 ### concurrent
 
 - **Type:** `boolean`
