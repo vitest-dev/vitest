@@ -4,7 +4,7 @@
 This is an advanced API. If you just want to configure built-in reporters, read the ["Reporters"](/guide/reporters) guide.
 :::
 
-You can import reporters from `vitest/reporters` and extend them to create your custom reporters.
+You can import reporters from `vitest/node` and extend them to create your custom reporters.
 
 ## Extending Built-in Reporters
 
@@ -18,7 +18,11 @@ export default class MyDefaultReporter extends DefaultReporter {
 }
 ```
 
-Of course, you can create your reporter from scratch. Just implement the `Reporter` interface:
+::: warning
+However, note that exposed reports are not considered stable and can change within a minor version.
+:::
+
+Of course, you can create your reporter from scratch. Just implement the [`Reporter`](/api/advanced/reporters) interface:
 
 And here is an example of a custom reporter:
 
