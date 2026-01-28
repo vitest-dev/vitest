@@ -67,7 +67,7 @@ function createSafeFilter(
     return { matcher: () => true }
   }
   try {
-    return { matcher: createTagsFilter([query], config.value.tags) }
+    return { matcher: createTagsFilter([query], config.value.tags || []) }
   }
   catch (error: any) {
     return { matcher: () => false, error: error.message }

@@ -26,7 +26,7 @@ function updateSnapshot() {
 const toggleMode = computed(() => isDark.value ? 'light' : 'dark')
 
 async function onRunAll(files?: RunnerTestFile[]) {
-  if (config.value.api.allowExec === false) {
+  if (config.value.api?.allowExec === false) {
     return
   }
 
@@ -55,7 +55,7 @@ function expandTests() {
 }
 
 function getRerunTooltip(filteredFiles: RunnerTestFile[] | undefined) {
-  if (config.value.api.allowExec === false) {
+  if (config.value.api?.allowExec === false) {
     return 'Cannot run tests when `api.allowExec` is `false`. Did you expose UI to the internet?'
   }
   return filteredFiles ? (filteredFiles.length === 0 ? 'No test to run (clear filter)' : 'Rerun filtered') : 'Rerun all'
@@ -133,7 +133,7 @@ function getRerunTooltip(filteredFiles: RunnerTestFile[] | undefined) {
         <IconButton
           v-if="!isReport"
           v-tooltip.bottom="getRerunTooltip(filteredFiles)"
-          :disabled="filteredFiles?.length === 0 || !config.api.allowExec"
+          :disabled="filteredFiles?.length === 0 || !config.api?.allowExec"
           icon="i-carbon:play"
           data-testid="btn-run-all"
           @click="onRunAll(filteredFiles)"
