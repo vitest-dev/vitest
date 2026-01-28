@@ -672,21 +672,25 @@ export abstract class BaseReporter implements Reporter {
     const slowestImport = sortedImports[0]
 
     this.log()
-    this.log(c.bold('Import Duration Breakdown') + c.dim(` (ordered by Total Time) (Top ${limit})`))
+    this.log(c.bold('Import Duration Breakdown') + c.dim(` (Top ${limit})`))
+    this.log()
+    this.log(c.dim('Module'.padEnd(50) + ' ' + 'Self'.padStart(6) + ' ' + 'Total'.padStart(6)))
 
     // if there are multiple files, it's highly possible that some of them will import the same large file
     // we group them to show the distinction between those files more easily
-    //     Import Duration Breakdown (ordered by Total Time) (Top 10)
-    // .../fields/FieldFile/__tests__/FieldFile.spec.ts   self:    7ms total:  1.01s ████████████████████
-    //  ↳ tests/support/components/index.ts               self:    0ms total:  861ms █████████████████░░░
-    //  ↳ tests/support/components/renderComponent.ts     self:   59ms total:  861ms █████████████████░░░
-    // ...s__/apps/desktop/form-updater.desktop.spec.ts   self:    8ms total:  991ms ████████████████████
-    // ...sts__/apps/mobile/form-updater.mobile.spec.ts   self:   11ms total:  990ms ████████████████████
-    // shared/components/Form/__tests__/Form.spec.ts      self:    5ms total:  988ms ████████████████████
-    //  ↳ tests/support/components/index.ts               self:    0ms total:  935ms ███████████████████░
-    //  ↳ tests/support/components/renderComponent.ts     self:   61ms total:  935ms ███████████████████░
-    // ...ditor/features/link/__test__/LinkForm.spec.ts   self:    7ms total:  972ms ███████████████████░
-    //  ↳ tests/support/components/renderComponent.ts     self:   56ms total:  936ms ███████████████████░
+    //     Import Duration Breakdown (Top 10)
+    //
+    //     Module                                              Self     Total
+    //     .../fields/FieldFile/__tests__/FieldFile.spec.ts     7ms    1.01s  ████████████████████
+    //      ↳ tests/support/components/index.ts                 0ms     861ms █████████████████░░░
+    //      ↳ tests/support/components/renderComponent.ts      59ms     861ms █████████████████░░░
+    //     ...s__/apps/desktop/form-updater.desktop.spec.ts     8ms     991ms ████████████████████
+    //     ...sts__/apps/mobile/form-updater.mobile.spec.ts    11ms     990ms ████████████████████
+    //     shared/components/Form/__tests__/Form.spec.ts        5ms     988ms ████████████████████
+    //      ↳ tests/support/components/index.ts                 0ms     935ms ███████████████████░
+    //      ↳ tests/support/components/renderComponent.ts      61ms     935ms ███████████████████░
+    //     ...ditor/features/link/__test__/LinkForm.spec.ts     7ms     972ms ███████████████████░
+    //      ↳ tests/support/components/renderComponent.ts      56ms     936ms ███████████████████░
 
     const groupedImports = Object.entries(
       groupBy(topImports, i => i.testModule.id),
@@ -703,7 +707,7 @@ export abstract class BaseReporter implements Reporter {
         const pathDisplay = this.ellipsisPath(imp.importedModuleId, imp.external, groupedImports.length > 1 && index > 0)
 
         this.log(
-          `${pathDisplay} ${c.dim('self:')} ${this.importDurationTime(imp.selfTime)} ${c.dim('total:')} ${this.importDurationTime(imp.totalTime)} ${bar}`,
+          `${pathDisplay} ${this.importDurationTime(imp.selfTime)} ${this.importDurationTime(imp.totalTime)}  ${bar}`,
         )
       })
     }

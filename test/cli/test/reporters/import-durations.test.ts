@@ -91,7 +91,8 @@ describe('import durations', () => {
     })
 
     expect(stdout).toContain('Import Duration Breakdown')
-    expect(stdout).toContain('(ordered by Total Time)')
+    expect(stdout).toContain('Module')
+    expect(stdout).toContain('Self')
     expect(stdout).toContain('Total imports:')
     expect(stdout).toContain('(Top 5)')
   })
