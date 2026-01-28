@@ -269,19 +269,6 @@ Duration thresholds in milliseconds for coloring and warnings:
 - `warn`: Threshold for yellow/warning color (default: 100ms)
 - `danger`: Threshold for red/danger color and `failOnDanger` (default: 500ms)
 
-```js
-experimental: {
-  importDurations: {
-    print: 'on-warn',
-    failOnDanger: true,
-    thresholds: {
-      warn: 50,    // warn when imports take > 50ms
-      danger: 200, // fail when imports take > 200ms
-    },
-  },
-}
-```
-
 ::: info
 [Vitest UI](/guide/ui#import-breakdown) shows a breakdown of imports automatically if at least one file took longer than the `danger` threshold to load.
 :::

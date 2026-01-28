@@ -607,21 +607,18 @@ export abstract class BaseReporter implements Reporter {
       }
     }
 
-    const { print: printSetting, failOnDanger } = this.ctx.config.experimental.importDurations
-    const shouldPrint = printSetting === true || printSetting === 'on-warn'
-    if (shouldPrint || failOnDanger) {
-      this.checkImportsBreakdown({
-        print: printSetting,
-        failOnDanger,
-      })
-    }
+    this.reportImportDurations()
 
     this.log()
   }
 
-  private checkImportsBreakdown(options: { print: boolean | 'on-warn'; failOnDanger: boolean }) {
+  private reportImportDurations() {
+    const { print, failOnDanger, thresholds } = this.ctx.config.experimental.importDurations
+    if (!print && !failOnDanger) {
+      return
+    };
+
     const testModules = this.ctx.state.getTestModules()
-    const { thresholds } = this.ctx.config.experimental.importDurations
 
     interface ImportEntry {
       importedModuleId: string
@@ -659,18 +656,8 @@ export abstract class BaseReporter implements Reporter {
     const hasWarnImports = warnImports.length > 0
 
     // Determine if we should print
-    let shouldPrint = false
-    if (options.print === true) {
-      shouldPrint = true
-    }
-    else if (options.print === 'on-warn' && hasWarnImports) {
-      shouldPrint = true
-    }
-    // Always print when failing
-    if (options.failOnDanger && hasDangerImports) {
-      shouldPrint = true
-    }
-
+    const shouldFail = failOnDanger && hasDangerImports
+    const shouldPrint = (print === true) || (print === 'on-warn' && hasWarnImports) || shouldFail
     if (!shouldPrint) {
       return
     }
@@ -727,7 +714,7 @@ export abstract class BaseReporter implements Reporter {
     this.log(c.dim('Total import time (self/total): ') + formatTime(totalSelfTime) + c.dim(' / ') + formatTime(totalTotalTime))
 
     // Fail if danger threshold exceeded
-    if (options.failOnDanger && hasDangerImports) {
+    if (shouldFail) {
       this.log()
       this.ctx.logger.error(
         `ERROR: ${dangerImports.length} import(s) exceeded the danger threshold of ${thresholds.danger}ms`,
