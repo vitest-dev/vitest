@@ -840,38 +840,38 @@ Enable caching of modules on the file system between reruns.
 
 ### experimental.importDurations.print
 
-- **CLI:** `--experimental.importDurations.print [value]`
+- **CLI:** `--experimental.importDurations.print <boolean|on-warn>`
 - **Config:** [experimental.importDurations.print](/config/experimental#experimental-importdurations-print)
 
-Print import breakdown to CLI terminal after tests finish. Use `--experimental.importDurations.print=on-warn` to print only when imports exceed the warn threshold (default: `false`).
-
-### experimental.importDurations.failOnDanger
-
-- **CLI:** `--experimental.importDurations.failOnDanger`
-- **Config:** [experimental.importDurations.failOnDanger](/config/experimental#experimental-importdurations-failondanger)
-
-Fail the test run if any import exceeds the danger threshold (default: `false`).
+When to print import breakdown to CLI terminal. Use `true` to always print, `false` to never print, or `on-warn` to print only when imports exceed the warn threshold (default: false).
 
 ### experimental.importDurations.limit
 
 - **CLI:** `--experimental.importDurations.limit <number>`
 - **Config:** [experimental.importDurations.limit](/config/experimental#experimental-importdurations-limit)
 
-Maximum number of imports to collect and display (default: `0`, or `10` if print, failOnDanger, or UI is enabled).
+Maximum number of imports to collect and display (default: 0, or 10 if print or UI is enabled).
+
+### experimental.importDurations.failOnDanger
+
+- **CLI:** `--experimental.importDurations.failOnDanger`
+- **Config:** [experimental.importDurations.failOnDanger](/config/experimental#experimental-importdurations-failondanger)
+
+Fail the test run if any import exceeds the danger threshold (default: false).
 
 ### experimental.importDurations.thresholds.warn
 
 - **CLI:** `--experimental.importDurations.thresholds.warn <number>`
-- **Config:** [experimental.importDurations.thresholds](/config/experimental#experimental-importdurations-thresholds)
+- **Config:** [experimental.importDurations.thresholds.warn](/config/experimental#experimental-importdurations-thresholds-warn)
 
-Threshold in milliseconds for yellow/warning color and `print: 'on-warn'` (default: `100`).
+Warning threshold - imports exceeding this are shown in yellow/orange (default: 100).
 
 ### experimental.importDurations.thresholds.danger
 
 - **CLI:** `--experimental.importDurations.thresholds.danger <number>`
-- **Config:** [experimental.importDurations.thresholds](/config/experimental#experimental-importdurations-thresholds)
+- **Config:** [experimental.importDurations.thresholds.danger](/config/experimental#experimental-importdurations-thresholds-danger)
 
-Threshold in milliseconds for red/danger color and `failOnDanger` (default: `500`).
+Danger threshold - imports exceeding this are shown in red (default: 500).
 
 ### experimental.viteModuleRunner
 
