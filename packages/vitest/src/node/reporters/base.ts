@@ -674,7 +674,7 @@ export abstract class BaseReporter implements Reporter {
     this.log()
     this.log(c.bold('Import Duration Breakdown') + c.dim(` (Top ${limit})`))
     this.log()
-    this.log(c.dim('Module'.padEnd(50) + ' ' + 'Self'.padStart(6) + ' ' + 'Total'.padStart(6)))
+    this.log(c.dim(`${'Module'.padEnd(50)} ${'Self'.padStart(6)} ${'Total'.padStart(6)}`))
 
     // if there are multiple files, it's highly possible that some of them will import the same large file
     // we group them to show the distinction between those files more easily
