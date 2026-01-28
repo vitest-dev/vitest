@@ -59,9 +59,6 @@ export function setup(ctx: Vitest, _server?: ViteDevServer): void {
   function setupClient(ws: WebSocket) {
     const rpc = createBirpc<WebSocketEvents, WebSocketHandlers>(
       {
-        async onTaskUpdate(packs, events) {
-          await ctx._testRun.updated(packs, events)
-        },
         getFiles() {
           return ctx.state.getFiles()
         },
@@ -80,12 +77,24 @@ export function setup(ctx: Vitest, _server?: ViteDevServer): void {
               `Test file "${id}" was not registered, so it cannot be updated using the API.`,
             )
           }
+          // silently ignore write attempts if not allowed
+          if (!ctx.config.api.allowWrite) {
+            return
+          }
           return fs.writeFile(id, content, 'utf-8')
         },
         async rerun(files, resetTestNamePattern) {
+          // silently ignore exec attempts if not allowed
+          if (!ctx.config.api.allowExec) {
+            return
+          }
           await ctx.rerunFiles(files, undefined, true, resetTestNamePattern)
         },
         async rerunTask(id) {
+          // silently ignore exec attempts if not allowed
+          if (!ctx.config.api.allowExec) {
+            return
+          }
           await ctx.rerunTask(id)
         },
         getConfig() {
@@ -150,6 +159,11 @@ export function setup(ctx: Vitest, _server?: ViteDevServer): void {
           return getModuleGraph(ctx, project, id, browser)
         },
         async updateSnapshot(file?: File) {
+          // silently ignore exec/write attempts if not allowed
+          // this function both executes the code and write snapshots
+          if (!ctx.config.api.allowExec || !ctx.config.api.allowWrite) {
+            return
+          }
           if (!file) {
             await ctx.updateSnapshot()
           }

@@ -12,7 +12,7 @@ import { ServerMockResolver } from '@vitest/mocker/node'
 import { createBirpc } from 'birpc'
 import { parse, stringify } from 'flatted'
 import { dirname, join, resolve } from 'pathe'
-import { createDebugger, isFileServingAllowed, isValidApiRequest } from 'vitest/node'
+import { createDebugger, isFileLoadingAllowed, isValidApiRequest } from 'vitest/node'
 import { WebSocketServer } from 'ws'
 
 const debug = createDebugger('vitest:browser:api')
@@ -113,11 +113,20 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject, defaultMocke
   }
 
   function checkFileAccess(path: string) {
-    if (!isFileServingAllowed(path, vite)) {
+    if (!isFileLoadingAllowed(vite.config, path)) {
       throw new Error(
         `Access denied to "${path}". See Vite config documentation for "server.fs": https://vitejs.dev/config/server-options.html#server-fs-strict.`,
       )
     }
+  }
+
+  function canWrite(project: TestProject) {
+    return (
+      project.config.browser.api.allowWrite
+      && project.vitest.config.browser.api.allowWrite
+      && project.config.api.allowWrite
+      && project.vitest.config.api.allowWrite
+    )
   }
 
   function setupClient(project: TestProject, rpcId: string, ws: WebSocket) {
@@ -152,6 +161,23 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject, defaultMocke
           }
         },
         async onTaskArtifactRecord(id, artifact) {
+          if (!canWrite(project)) {
+            if (artifact.type === 'internal:annotation' && artifact.annotation.attachment) {
+              artifact.annotation.attachment = undefined
+              vitest.logger.error(
+                `[vitest] Cannot record annotation attachment because file writing is disabled. See https://vitest.dev/config/browser/api.`,
+              )
+            }
+            // remove attachments if cannot write
+            if (artifact.attachments?.length) {
+              const attachments = artifact.attachments.map(n => n.path).filter(r => !!r).join('", "')
+              artifact.attachments = []
+              vitest.logger.error(
+                `[vitest] Cannot record attachments ("${attachments}") because file writing is disabled, removing attachments from artifact "${artifact.type}". See https://vitest.dev/config/browser/api.`,
+              )
+            }
+          }
+
           return vitest._testRun.recordArtifact(id, artifact)
         },
         async onTaskUpdate(method, packs, events) {
@@ -193,15 +219,27 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject, defaultMocke
         },
         async saveSnapshotFile(id, content) {
           checkFileAccess(id)
+          if (!canWrite(project)) {
+            vitest.logger.error(
+              `[vitest] Cannot save snapshot file "${id}". File writing is disabled because server is exposed to the internet, see https://vitest.dev/config/browser/api.`,
+            )
+            return
+          }
           await fs.mkdir(dirname(id), { recursive: true })
-          return fs.writeFile(id, content, 'utf-8')
+          await fs.writeFile(id, content, 'utf-8')
         },
         async removeSnapshotFile(id) {
           checkFileAccess(id)
+          if (!canWrite(project)) {
+            vitest.logger.error(
+              `[vitest] Cannot remove snapshot file "${id}". File writing is disabled because server is exposed to the internet, see https://vitest.dev/config/browser/api.`,
+            )
+            return
+          }
           if (!existsSync(id)) {
             throw new Error(`Snapshot file "${id}" does not exist.`)
           }
-          return fs.unlink(id)
+          await fs.unlink(id)
         },
         getBrowserFileSourceMap(id) {
           const mod = globalServer.vite.moduleGraph.getModuleById(id)

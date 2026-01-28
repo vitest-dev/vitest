@@ -3,7 +3,7 @@ import type { Task, TaskState } from '@vitest/runner'
 import type { TaskTreeNodeType } from '~/composables/explorer/types'
 import { Tooltip as VueTooltip } from 'floating-vue'
 import { computed, nextTick } from 'vue'
-import { client, isReport, runFiles, runTask } from '~/composables/client'
+import { client, config, isReport, runFiles, runTask } from '~/composables/client'
 import { showTaskSource } from '~/composables/codemirror'
 import { explorerTree } from '~/composables/explorer'
 import { hasFailedSnapshot } from '~/composables/explorer/collector'
@@ -121,6 +121,9 @@ const gridStyles = computed(() => {
 })
 
 const runButtonTitle = computed(() => {
+  if (config.value.api?.allowExec === false) {
+    return 'Cannot run tests when `api.allowExec` is `false`. Did you expose UI to the internet?'
+  }
   return type === 'file'
     ? 'Run current file'
     : type === 'suite'
@@ -237,7 +240,7 @@ const tagsBgGradient = computed(() => {
         <div :style="{ background: tagsBgGradient }" class="w-[0.9rem] h-[0.9rem]" rounded-full />
       </div> -->
       <IconAction
-        v-if="!isReport && failedSnapshot"
+        v-if="!isReport && failedSnapshot && config.api?.allowExec && config.api?.allowWrite"
         v-tooltip.bottom="'Fix failed snapshot(s)'"
         data-testid="btn-fix-snapshot"
         title="Fix failed snapshot(s)"
@@ -274,6 +277,7 @@ const tagsBgGradient = computed(() => {
         :title="runButtonTitle"
         icon="i-carbon:play-filled-alt"
         text-green5
+        :disabled="config.api?.allowExec === false"
         @click.prevent.stop="onRun(task)"
       />
     </div>

@@ -111,7 +111,7 @@ const {
           >
             <pre v-html="task.result.htmlError" />
           </div>
-          <template v-else-if="task.result?.errors">
+          <template v-else-if="task.result?.errors && config.root">
             <ViewReportError
               v-for="(error, idx) of task.result.errors"
               :key="idx"

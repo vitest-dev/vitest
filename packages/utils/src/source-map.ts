@@ -35,6 +35,7 @@ const stackIgnorePatterns: (string | RegExp)[] = [
   /node:\w+/,
   /__vitest_test__/,
   /__vitest_browser__/,
+  '/@id/__x00__vitest/browser',
   /\/deps\/vitest_/,
 ]
 

@@ -36,7 +36,6 @@ export interface TransformResultWithSource {
 }
 
 export interface WebSocketHandlers {
-  onTaskUpdate: (packs: TaskResultPack[], events: TaskEventPack[]) => void
   getFiles: () => File[]
   getTestFiles: () => Promise<SerializedTestSpecification[]>
   getPaths: () => string[]

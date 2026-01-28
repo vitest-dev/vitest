@@ -17,7 +17,7 @@ export const coverageConfigured = computed(() => coverage.value?.enabled)
 export const coverageEnabled = computed(() => {
   return (
     coverageConfigured.value
-    && !!coverage.value.htmlReporter
+    && !!coverage.value?.htmlReporter
   )
 })
 export const mainSizes = useLocalStorage<[left: number, right: number]>(

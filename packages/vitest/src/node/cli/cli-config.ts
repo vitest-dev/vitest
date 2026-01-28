@@ -46,6 +46,12 @@ const apiConfig: (port: number) => CLIOptions<ApiConfig> = (port: number) => ({
     description:
       'Set to true to exit if port is already in use, instead of automatically trying the next available port',
   },
+  allowExec: {
+    description: 'Allow API to execute code. (Be careful when enabling this option in untrusted environments)',
+  },
+  allowWrite: {
+    description: 'Allow API to edit files. (Be careful when enabling this option in untrusted environments)',
+  },
   middlewareMode: null,
 })
 
@@ -105,6 +111,12 @@ export const cliOptionsConfig: VitestCLIOptions = {
     argument: '[port]',
     description: `Specify server port. Note if the port is already being used, Vite will automatically try the next available port so this may not be the actual port the server ends up listening on. If true will be set to ${defaultPort}`,
     subcommands: apiConfig(defaultPort),
+    transform(portOrOptions) {
+      if (typeof portOrOptions === 'number') {
+        return { port: portOrOptions }
+      }
+      return portOrOptions
+    },
   },
   silent: {
     description: 'Silent console output from tests. Use `\'passed-only\'` to see logs from failing tests only.',

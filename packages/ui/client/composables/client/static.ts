@@ -64,7 +64,6 @@ export function createStaticClient(): VitestClient {
     getExternalResult: asyncNoop,
     getTransformResult: asyncNoop,
     onDone: noop,
-    onTaskUpdate: noop,
     writeFile: asyncNoop,
     rerun: asyncNoop,
     rerunTask: asyncNoop,

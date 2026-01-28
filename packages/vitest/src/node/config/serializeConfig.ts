@@ -1,5 +1,5 @@
 import type { TestProject } from '../project'
-import type { SerializedConfig } from '../types/config'
+import type { ApiConfig, SerializedConfig } from '../types/config'
 
 export function serializeConfig(project: TestProject): SerializedConfig {
   const { config, globalConfig } = project
@@ -32,6 +32,12 @@ export function serializeConfig(project: TestProject): SerializedConfig {
     pool: config.pool,
     expect: config.expect,
     snapshotSerializers: config.snapshotSerializers,
+    api: ((api: ApiConfig | undefined) => {
+      return {
+        allowExec: api?.allowExec,
+        allowWrite: api?.allowWrite,
+      }
+    })(project.isBrowserEnabled() ? config.browser.api : config.api),
     // TODO: non serializable function?
     diff: config.diff,
     retry: config.retry,

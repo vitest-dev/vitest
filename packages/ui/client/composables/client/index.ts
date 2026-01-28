@@ -67,7 +67,7 @@ export const client = (function createVitestClient() {
   }
 })()
 
-export const config = shallowRef<SerializedConfig>({} as any)
+export const config = shallowRef<Partial<SerializedConfig>>({} as any)
 export const status = ref<WebSocketStatus>('CONNECTING')
 export const availableProjects = shallowRef<string[]>([])
 

@@ -65,11 +65,11 @@ export function getModuleGraph(
     return defineGraph({})
   }
 
-  const externalizedNodes = !config.value.experimental.viteModuleRunner
+  const externalizedNodes = !config.value.experimental?.viteModuleRunner
     ? defineExternalModuleNodes([...data.inlined, ...data.externalized])
     : defineExternalModuleNodes(data.externalized)
   const inlinedNodes
-    = !config.value.experimental.viteModuleRunner
+    = !config.value.experimental?.viteModuleRunner
       ? []
       : data.inlined.map(module =>
         defineInlineModuleNode(module, module === rootPath),

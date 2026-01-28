@@ -25,11 +25,11 @@ const emit = defineEmits<{
 const imports = computed(() => {
   const file = currentModule.value
   const importDurations = file?.importDurations
-  if (!importDurations) {
+  const root = config.value.root
+  if (!importDurations || !root) {
     return []
   }
 
-  const root = config.value.root
   const allImports: ImportEntry[] = []
   for (const filePath in importDurations) {
     const duration = importDurations[filePath]
