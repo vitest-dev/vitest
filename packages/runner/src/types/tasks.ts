@@ -740,10 +740,6 @@ export interface TaskCustomOptions extends TestOptions {
    */
   each?: boolean
   /**
-   * Custom metadata for the task that will be assigned to `task.meta`.
-   */
-  meta?: Partial<TaskMeta>
-  /**
    * Task fixtures.
    */
   fixtures?: FixtureItem[]
