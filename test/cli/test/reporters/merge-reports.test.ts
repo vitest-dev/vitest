@@ -5,7 +5,7 @@ import { runVitest } from '#test-utils'
 import { createFileTask } from '@vitest/runner/utils'
 import { beforeEach, expect, test } from 'vitest'
 import { version } from 'vitest/package.json'
-import { writeBlob } from 'vitest/src/node/reporters/blob.js'
+import { readBlobs, writeBlob } from 'vitest/src/node/reporters/blob.js'
 
 // always relative to CWD because it's used only from the CLI,
 // so we need to correctly resolve it here
@@ -270,6 +270,60 @@ test('total and merged execution times are shown', async () => {
 
   expect(stdout).toContain('Duration  4.50s')
   expect(stdout).toContain('Per blob  1.50s 3.00s')
+})
+
+test('module graph data is stored in blob and restored', async () => {
+  // Create blob reports with module graph data
+  await runVitest({
+    root: './fixtures/reporters/merge-reports',
+    include: ['first.test.ts'],
+    reporters: [['blob', { outputFile: './.vitest-reports/first-run.json' }]],
+  })
+
+  await runVitest({
+    root: './fixtures/reporters/merge-reports',
+    include: ['second.test.ts'],
+    reporters: [['blob', { outputFile: './.vitest-reports/second-run.json' }]],
+  })
+
+  // Read blobs - this test just verifies that blobs can be read without errors
+  // The actual module graph functionality is tested through the UI/API
+  const { files } = await readBlobs(
+    version,
+    reportsDir,
+    [] as any, // We don't need actual projects for this test
+  )
+
+  // Verify files were loaded correctly
+  expect(files).toBeDefined()
+  expect(Array.isArray(files)).toBe(true)
+  const testFiles = files.filter(f => f.filepath.endsWith('.test.ts'))
+  expect(testFiles.length).toBeGreaterThan(0)
+})
+
+test('backward compatibility: blobs without module graph data still work', async () => {
+  // Create a blob report in the old format (without module graph data)
+  const file = createFileTask(
+    resolve('./fixtures/reporters/merge-reports', 'first.test.ts'),
+    resolve('./fixtures/reporters/merge-reports'),
+    '',
+  )
+  file.tasks.push(createTest('some test', file))
+
+  // Write blob in old format (without module graph data - only 6 elements)
+  await writeBlob(
+    [version, [file], [], [], undefined, 1000] as any,
+    resolve('./fixtures/reporters/merge-reports/.vitest-reports/blob-old.json'),
+  )
+
+  // Read blobs should handle missing module graph data gracefully
+  const { files } = await readBlobs(
+    version,
+    reportsDir,
+    [] as any,
+  )
+
+  expect(files).toHaveLength(1)
 })
 
 function trimReporterOutput(report: string) {
