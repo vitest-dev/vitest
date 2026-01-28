@@ -2,7 +2,6 @@ import type { Plugin } from 'vite'
 import type { Vitest } from 'vitest/node'
 import fs from 'node:fs'
 import { fileURLToPath } from 'node:url'
-import { toArray } from '@vitest/utils/helpers'
 import { basename, resolve } from 'pathe'
 import sirv from 'sirv'
 import c from 'tinyrainbow'
@@ -131,14 +130,6 @@ function resolveCoverageFolder(ctx: Vitest) {
   const options = ctx.config
   const htmlReporter
     = options.api?.port && options.coverage?.enabled
-      ? toArray(options.coverage.reporter).find((reporter) => {
-          if (typeof reporter === 'string') {
-            return reporter === 'html'
-          }
-
-          return reporter[0] === 'html'
-        })
-      : undefined
 
   if (!htmlReporter) {
     return undefined
