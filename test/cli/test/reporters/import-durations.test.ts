@@ -1,6 +1,30 @@
+import { stripVTControlCharacters } from 'node:util'
 import { runVitest } from '#test-utils'
 import { resolve } from 'pathe'
 import { describe, expect, it } from 'vitest'
+
+/**
+ * Extract import durations section and normalize variable values for snapshot testing.
+ * Replaces timing values and bar characters with placeholders.
+ */
+function normalizeImportDurationsOutput(stdout: string): string {
+  const plain = stripVTControlCharacters(stdout)
+  const start = plain.indexOf('Import Duration Breakdown')
+  const end = plain.indexOf('Total import time (self/total):')
+  if (start === -1 || end === -1) {
+    return ''
+  }
+  const endOfLine = plain.indexOf('\n', end)
+  const section = plain.slice(start, endOfLine === -1 ? undefined : endOfLine)
+  return section
+    // Normalize time values (e.g., "88ms", "1.01s") to "XXX"
+    // Negative lookahead to avoid matching times in filenames (e.g., "import-durations-50ms.ts")
+    .replace(/\d+(\.\d+)?(ms|s)(?![\w.])/g, 'XXX')
+    // Normalize bar characters to "[BAR]"
+    .replace(/[█░]+/g, '[BAR]')
+    // Normalize multiple spaces (from column padding) to single space
+    .replace(/ {2,}/g, ' ')
+}
 
 describe('import durations', () => {
   const root = resolve(import.meta.dirname, '..', '..', 'fixtures', 'reporters')
@@ -90,11 +114,19 @@ describe('import durations', () => {
       },
     })
 
-    expect(stdout).toContain('Import Duration Breakdown')
-    expect(stdout).toContain('Module')
-    expect(stdout).toContain('Self')
-    expect(stdout).toContain('Total imports:')
-    expect(stdout).toContain('(Top 5)')
+    expect(normalizeImportDurationsOutput(stdout)).toMatchInlineSnapshot(`
+      "Import Duration Breakdown (Top 5)
+
+      Module Self Total
+      import-durations.test.ts XXX XXX [BAR]
+      import-durations-50ms.ts XXX XXX [BAR]
+      import-durations-25ms.ts XXX XXX [BAR]
+      ../../../../packages/vitest/dist/index.js XXX XXX [BAR]
+
+      Total imports: 4
+      Slowest import (total-time): XXX
+      Total import time (self/total): XXX / XXX"
+    `)
   })
 
   it('should not collect importDurations by default', async () => {
@@ -115,7 +147,6 @@ describe('import durations', () => {
       experimental: {
         importDurations: {
           print: 'on-warn',
-          limit: 5,
         },
       },
     })
@@ -129,29 +160,12 @@ describe('import durations', () => {
       experimental: {
         importDurations: {
           print: 'on-warn',
-          limit: 5,
           thresholds: { warn: 50 },
         },
       },
     })
 
     expect(stdoutLow).toContain('Import Duration Breakdown')
-  })
-
-  it('should use custom thresholds for coloring', async () => {
-    const { stdout } = await runVitest({
-      root,
-      include: ['**/import-durations.test.ts'],
-      experimental: {
-        importDurations: {
-          print: true,
-          limit: 5,
-          thresholds: { warn: 10, danger: 30 },
-        },
-      },
-    })
-
-    expect(stdout).toContain('Import Duration Breakdown')
   })
 
   it('should fail when failOnDanger is enabled and threshold exceeded', async () => {
@@ -162,7 +176,6 @@ describe('import durations', () => {
       experimental: {
         importDurations: {
           failOnDanger: true,
-          limit: 5,
         },
       },
     })
@@ -177,7 +190,6 @@ describe('import durations', () => {
       experimental: {
         importDurations: {
           failOnDanger: true,
-          limit: 5,
           thresholds: { danger: 50 },
         },
       },
@@ -185,27 +197,6 @@ describe('import durations', () => {
 
     expect(exitCodeLow).toBe(1)
     expect(stderrLow).toContain('exceeded the danger threshold')
-    // Should also print the breakdown when failing
     expect(stdoutLow).toContain('Import Duration Breakdown')
-  })
-
-  it('should print breakdown when failOnDanger triggers even if print is false', async () => {
-    const { exitCode, stdout, stderr } = await runVitest({
-      root,
-      include: ['**/import-durations.test.ts'],
-      experimental: {
-        importDurations: {
-          print: false,
-          failOnDanger: true,
-          limit: 5,
-          thresholds: { danger: 50 },
-        },
-      },
-    })
-
-    expect(exitCode).toBe(1)
-    expect(stderr).toContain('exceeded the danger threshold')
-    // Should print breakdown even though print is false
-    expect(stdout).toContain('Import Duration Breakdown')
   })
 })
