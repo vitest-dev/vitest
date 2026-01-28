@@ -584,6 +584,8 @@ function isObjectWithKeys(a: any) {
     && !(a instanceof Error)
     && !Array.isArray(a)
     && !(a instanceof Date)
+    && !(a instanceof Set)
+    && !(a instanceof Map)
   )
 }
 
