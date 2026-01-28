@@ -40,7 +40,9 @@ export class V8CoverageProvider extends BaseCoverageProvider<ResolvedCoverageOpt
     return libCoverage.createCoverageMap({})
   }
 
-  async generateCoverage({ allTestsRun }: ReportContext): Promise<CoverageMap> {
+  async generateCoverage(reportContext: ReportContext): Promise<CoverageMap> {
+    this.setReportContext(reportContext)
+    const { allTestsRun } = reportContext
     const start = debug.enabled ? performance.now() : 0
 
     const coverageMap = this.createCoverageMap()

@@ -395,3 +395,12 @@ Concurrency limit used when processing the coverage results.
 - **CLI:** `--coverage.customProviderModule=<path or module name>`
 
 Specifies the module name or path for the custom coverage provider module. See [Guide - Custom Coverage Provider](/guide/coverage#custom-coverage-provider) for more information.
+
+## coverage.changed
+
+- **Type:** `boolean | string`
+- **Default:** `false` (inherits from `test.changed`)
+- **Available for providers:** `'v8' | 'istanbul'`
+- **CLI:** `--coverage.changed`, `--coverage.changed=<commit/branch>`
+
+Collect coverage only for files changed since a specified commit or branch. When set to `true`, it uses staged and unstaged changes.
