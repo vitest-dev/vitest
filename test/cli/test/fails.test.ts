@@ -7,7 +7,7 @@ import { expect, it } from 'vitest'
 import { runInlineTests, runVitest, ts } from '../../test-utils'
 
 const root = resolve(import.meta.dirname, '../fixtures/fails')
-const files = await glob(['**/*.test.ts'], { cwd: root, dot: true, expandDirectories: false })
+const files = await glob(['**/*.test.{ts,js}'], { cwd: root, dot: true, expandDirectories: false })
 
 it.each(files)('should fail %s', async (file) => {
   const { stderr } = await runVitest({ root }, [file])
