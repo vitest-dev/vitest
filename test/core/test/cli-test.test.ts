@@ -275,6 +275,18 @@ test('browser by name', () => {
   expect(options).toEqual({ browser: { name: 'firefox' } })
 })
 
+test('browser.detailsPanelPosition is parsed correctly', () => {
+  expect(getCLIOptions('--browser.detailsPanelPosition=bottom')).toEqual({
+    browser: { detailsPanelPosition: 'bottom' },
+  })
+  expect(getCLIOptions('--browser.detailsPanelPosition right')).toEqual({
+    browser: { detailsPanelPosition: 'right' },
+  })
+  expect(getCLIOptions('--browser.detailsPanelPosition=bottom')).toEqual({
+    browser: { detailsPanelPosition: 'bottom' },
+  })
+})
+
 test('clearScreen', async (ctx) => {
   // skip vm since rolldown native modules break due to RegExp instance
   // https://github.com/vitest-dev/vitest/issues/8754#issuecomment-3727583957

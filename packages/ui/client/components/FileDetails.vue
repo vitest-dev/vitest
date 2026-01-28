@@ -5,6 +5,7 @@ import type { Params } from '~/composables/params'
 import { debouncedWatch } from '@vueuse/core'
 import { toJSON } from 'flatted'
 import { computed, nextTick, ref } from 'vue'
+import DetailsHeaderButtons from '~/components/DetailsHeaderButtons.vue'
 import {
   browserState,
   client,
@@ -241,6 +242,7 @@ const tags = computed(() => {
             :disabled="!current?.filepath"
             @click="open"
           />
+          <DetailsHeaderButtons v-if="browserState" />
         </div>
       </div>
       <div flex="~" items-center bg-header border="b-2 base" text-sm h-41px>

@@ -1,7 +1,7 @@
 import type { File, Task } from '@vitest/runner'
 import type { Params } from './params'
 import { useLocalStorage, watchOnce } from '@vueuse/core'
-import { computed, reactive, ref, watch } from 'vue'
+import { computed, nextTick, reactive, ref, watch } from 'vue'
 import { viewport } from './browser'
 import { browserState, client, config, findById } from './client'
 import { testRunState } from './client/state'
@@ -34,6 +34,31 @@ export const detailSizes = useLocalStorage<[left: number, right: number]>(
     67,
   ],
 )
+
+export const detailsPanelVisible = useLocalStorage<boolean>(
+  'vitest-ui_details-panel-visible',
+  true,
+)
+
+export const detailsPosition = ref<'right' | 'bottom'>('right')
+
+nextTick(() => {
+  watch(config, () => {
+    if (config.value?.browser?.detailsPanelPosition) {
+      detailsPosition.value = config.value.browser.detailsPanelPosition
+    }
+  })
+})
+
+export function hideDetailsPanel() {
+  // setTimeout is used to avoid splitpanes throwing a race condition error
+  setTimeout(() => {
+    detailsPanelVisible.value = false
+  }, 0)
+}
+export function showDetailsPanel() {
+  detailsPanelVisible.value = true
+}
 
 // live sizes of panels in percentage
 export const panels = reactive({
@@ -147,12 +172,6 @@ export function showCoverage() {
   activeFileId.value = ''
 }
 
-export function hideRightPanel() {
-  panels.details.browser = 100
-  panels.details.main = 0
-  detailSizes.value = [100, 0]
-}
-
 function calculateBrowserPanel() {
   // we don't scale webdriverio provider because it doesn't support scaling
   // TODO: find a way to make this universal - maybe show browser separately(?)
@@ -163,15 +182,6 @@ function calculateBrowserPanel() {
     return tabWidth
   }
   return 33
-}
-
-export function showRightPanel() {
-  panels.details.browser = calculateBrowserPanel()
-  panels.details.main = 100 - panels.details.browser
-  detailSizes.value = [
-    panels.details.browser,
-    panels.details.main,
-  ]
 }
 
 export function showNavigationPanel() {
@@ -194,4 +204,13 @@ export function updateBrowserPanel() {
     panels.details.browser,
     panels.details.main,
   ]
+}
+
+export function toggleDetailsPosition() {
+  detailsPosition.value = detailsPosition.value === 'right' ? 'bottom' : 'right'
+  // Reset to default sizes when changing orientation
+  const defaultSize = detailsPosition.value === 'bottom' ? 33 : 50
+  detailSizes.value = [defaultSize, 100 - defaultSize]
+  panels.details.browser = defaultSize
+  panels.details.main = 100 - defaultSize
 }

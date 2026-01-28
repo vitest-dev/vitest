@@ -645,6 +645,10 @@ export default ({ mode }: { mode: string }) => {
                 link: '/config/browser/ui',
               },
               {
+                text: 'browser.detailsPanelPosition',
+                link: '/config/browser/detailspanelposition',
+              },
+              {
                 text: 'browser.viewport',
                 link: '/config/browser/viewport',
               },

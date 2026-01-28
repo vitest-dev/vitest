@@ -100,6 +100,7 @@ Vitest is a next-generation testing framework powered by Vite. This is a monorep
 - Main docs in `docs/` directory
 - Built with `pnpm docs:build`
 - Local dev server: `pnpm docs`
+- When adding cli options, run `pnpm -C docs run cli-table` to update the cli-generated.md file
 
 ## Dependencies and Tools
 
