@@ -53,12 +53,12 @@ it('correctly inherit from the cli', async () => {
     retry: 6,
     passWithNoTests: true,
     bail: 100,
-    experimental: expect.objectContaining({
+    experimental: {
       importDurations: {
         print: true,
         limit: 10,
       },
-    }),
+    },
   })
   expect(config.testNamePattern?.test('math')).toBe(true)
 })

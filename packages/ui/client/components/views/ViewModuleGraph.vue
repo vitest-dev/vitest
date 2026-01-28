@@ -17,7 +17,7 @@ import {
   PositionInitializers,
 } from 'd3-graph-controller'
 import { computed, onMounted, onUnmounted, ref, shallowRef, toRefs, watch } from 'vue'
-import { isReport } from '~/composables/client'
+import { config, isReport } from '~/composables/client'
 import { currentModule } from '~/composables/navigation'
 import IconButton from '../IconButton.vue'
 import Modal from '../Modal.vue'
@@ -43,14 +43,18 @@ const focusedNode = ref<string | null>(null)
 const filteredGraph = shallowRef<ModuleGraph>(graph.value)
 const breakdownIconClass = computed(() => {
   let textClass = ''
-  const importDurations = currentModule.value?.importDurations || {}
+  const importDurations = currentModule.value?.importDurations
+  if (!importDurations) {
+    return textClass
+  }
+  const thresholds = config.value.experimental.importDurations.thresholds
   for (const moduleId in importDurations) {
     const { totalTime } = importDurations[moduleId]
-    if (totalTime >= 500) {
+    if (totalTime >= thresholds.danger) {
       textClass = 'text-red'
       break
     }
-    else if (totalTime >= 100) {
+    else if (totalTime >= thresholds.warn) {
       textClass = 'text-orange'
     }
   }

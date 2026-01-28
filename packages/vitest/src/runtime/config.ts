@@ -121,8 +121,13 @@ export interface SerializedConfig {
   experimental: {
     fsModuleCache: boolean
     importDurations: {
-      print: boolean
+      print: boolean | 'on-warn'
       limit: number
+      failOnDanger: boolean
+      thresholds: {
+        warn: number
+        danger: number
+      }
     }
     viteModuleRunner: boolean
     nodeLoader: boolean

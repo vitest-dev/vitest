@@ -187,17 +187,35 @@ Please leave feedback regarding this feature in a [GitHub Discussion](https://gi
 ```ts
 interface ImportDurationsOptions {
   /**
-   * Print import breakdown to CLI terminal after tests finish.
+   * When to print import breakdown to CLI terminal.
+   * - false: Never print (default)
+   * - true: Always print
+   * - 'on-warn': Print only when any import exceeds warn threshold
    */
-  print?: boolean
+  print?: boolean | 'on-warn'
+  /**
+   * Fail the test run if any import exceeds the danger threshold.
+   * When enabled and threshold exceeded, breakdown is always printed.
+   * @default false
+   */
+  failOnDanger?: boolean
   /**
    * Maximum number of imports to collect and display.
    */
   limit?: number
+  /**
+   * Duration thresholds in milliseconds for coloring and warnings.
+   */
+  thresholds?: {
+    /** Threshold for yellow/warning color. @default 100 */
+    warn?: number
+    /** Threshold for red/danger color and failOnDanger. @default 500 */
+    danger?: number
+  }
 }
 ```
 
-- **Default:** `{ print: false, limit: 0 }` (`limit` is 10 if `print` or UI is enabled)
+- **Default:** `{ print: false, failOnDanger: false, limit: 0, thresholds: { warn: 100, danger: 500 } }` (`limit` is 10 if `print` or UI is enabled)
 
 Configure import duration collection and display.
 
@@ -206,26 +224,54 @@ The `print` option controls CLI terminal output. The `limit` option controls how
 - Self: the time it took to import the module, excluding static imports;
 - Total: the time it took to import the module, including static imports. Note that this does not include `transform` time of the current module.
 
-<img alt="An example of import breakdown in the terminal" src="/reporter-import-breakdown.png" />
+<img alt="An example of import breakdown in the terminal" src="/reporter-import-breakdown.png" img-dark />
+<img alt="An example of import breakdown in the terminal" src="/reporter-import-breakdown-light.png" img-light />
 
 Note that if the file path is too long, Vitest will truncate it at the start until it fits 45 character limit.
 
 ### experimental.importDurations.print {#experimental-importdurationsprint}
 
+- **Type:** `boolean | 'on-warn'`
+- **Default:** `false`
+
+Controls when to print import breakdown to CLI terminal after tests finish. This only works with [`default`](/guide/reporters#default), [`verbose`](/guide/reporters#verbose), or [`tree`](/guide/reporters#tree) reporters.
+
+- `false`: Never print breakdown
+- `true`: Always print breakdown
+- `'on-warn'`: Print only when any import exceeds the `thresholds.warn` value
+
+### experimental.importDurations.failOnDanger {#experimental-importdurationsfailondanger}
+
 - **Type:** `boolean`
 - **Default:** `false`
 
-Print import breakdown to CLI terminal after tests finish. This only works with [`default`](/guide/reporters#default), [`verbose`](/guide/reporters#verbose), or [`tree`](/guide/reporters#tree) reporters.
+Fail the test run if any import exceeds the `thresholds.danger` value. When enabled and the threshold is exceeded, the breakdown is always printed regardless of the `print` setting.
+
+This is useful for enforcing import performance budgets in CI:
+
+```bash
+vitest --experimental.importDurations.failOnDanger
+```
 
 ### experimental.importDurations.limit {#experimental-importdurationslimit}
 
 - **Type:** `number`
-- **Default:** `0` (or `10` if `print` or UI is enabled)
+- **Default:** `0` (or `10` if `print`, `failOnDanger`, or UI is enabled)
 
 Maximum number of imports to collect and display in CLI output, [Vitest UI](/guide/ui#import-breakdown), and third-party reporters.
 
+### experimental.importDurations.thresholds {#experimental-importdurationsthresholds}
+
+- **Type:** `{ warn?: number; danger?: number }`
+- **Default:** `{ warn: 100, danger: 500 }`
+
+Duration thresholds in milliseconds for coloring and warnings:
+
+- `warn`: Threshold for yellow/warning color (default: 100ms)
+- `danger`: Threshold for red/danger color and `failOnDanger` (default: 500ms)
+
 ::: info
-[Vitest UI](/guide/ui#import-breakdown) shows a breakdown of imports automatically if at least one file took longer than 500 milliseconds to load. You can manually set this option to `false` to disable this.
+[Vitest UI](/guide/ui#import-breakdown) shows a breakdown of imports automatically if at least one file took longer than the `danger` threshold to load.
 :::
 
 ## experimental.viteModuleRunner <Version type="experimental">4.1.0</Version> {#experimental-vitemodulerunner}
